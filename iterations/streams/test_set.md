@@ -1,7 +1,17 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,midtp,suptp,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,roshdist,ckpush,wandbleed2,arbheart,slotwait,campbind,zusboltdom
+l1trade,l5combo,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,towerfear,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,odbuild,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illumove,illureal,slotarb,slotdust,slotpush,ckpush,wandbleed2,arbheart,campbind,zusboltdom
 
-**成员串 59**(上一行,**524 字节**,md5 `572b60753699bc68b2ad5ec9020f2512`)。本行 **2026-09-05T22:xxZ 的变动:两条 `退回出集`(61 → 59)**,总监裁定全文 **§FB**。⛔ 两条都**不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff),重新入集路径各自写在 §FB.5。
+**成员串 55**(上一行,**494 字节**,md5 `aa21e7087cddeda479b73e62aab5155a`)。本行 **2026-09-06T13:xxZ 的变动:一条 PROMOTE + 三条 `退回出集`(59 → 55)**,总监裁定全文 **§FK**。⭐ **本项目第三次 promote,距上一次(`creeppull`+`pullbeat`,2026-08-23)14 天。**
+1. ⭐ **`slotwait` PROMOTE**(59 → 58)—— 出集的动作**不是只删这一行的 id**,是**删掉 `jmz_func.lua` 那句 `and J.IsSoakCandidate( 'slotwait' )`**(§DU.6 的红线,本轮逐字遵守:代码先改,串后改,**同一个 commit**)。三条件与各自的边界写在 §FK.1;稳定版锚点 **stable-v3**,机器键 `state.json:slotwait_PROMOTE_20260906`。
+2. **`midtp` 退集**(58 → 57)—— `VERIFY id=midtp verdict=BUGGY episodes=8`(录像组 09-05T21:51Z):TP 落点在算术上不是合法坐标(GH #539)。
+3. **`suptp` 退集**(57 → 56)—— `VERIFY id=suptp verdict=BUGGY episodes=16`(09-06T00:48Z):同一条接线的同一个 NaN,**外加**它的门被同集 `midtp` 完全支配,16/16 波次不承重(GH #545)。
+4. **`roshdist` 退集**(56 → 55)—— `VERIFY id=roshdist verdict=BUGGY episodes=77`(09-03T09:59Z):**闸咬对了域、咬错了圆心**;根因是 `J.GetCurrentRoshanLocation()` 昼夜映射反了(GH #450,**77/77,0 例外**),而 `roshdist` 把一个此前从不被读的坐标第一次变成行为的依据。
+⛔ **三条退集都不是 reject**,gate 与代码逐字保留(`bots/` 对这三条零 diff);重新入集路径:**先修各自的根因 issue,再重买 (a),再提入集**。这与 §FB 两条(条件 (a) 从没人买过)**形状不同**:这三条的 (a) **买到了,答案是 BUGGY**。
+⚠️ **为什么和 promote 同轮**:一个 (a)=BUGGY 的 id 留在串里,armed 腿每一波都在执行一个已知错误的行为,而 (b) 是**家族级**读数 —— 它污染的正是 promote 唯一能引的那个量(§FK.2)。
+⚠️ **载体项 8 → 8 逐字不变,量出来的**:`carrier_terms.py` 对两串各跑一次,`TERMS` 行**逐字节相同**(`chaos_knight,crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`);计数 `12 hero / 46 generic / 1 unresolved` → `12 / 43 / 0`。⛔ **那个 `1 unresolved` 是本轮的一条真读数**:promote 之后,**旧的 59-id 串在这棵树上已经解析不了**(`slotwait` 没有 gate literal 可找)⇒ 代码改了而串没改的那半个状态,`carrier_terms.py` 与 `check_armed_wiring.py` **都会立刻变红**,不是靠人记得。新串:`all 55 armed ids wired on HEAD`(`RC_EXIT=0`)。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— W50 及更早仍是 59/61/62/63-id 家族,**不与 55-id 家族并池**。
+
+〔历史,上一条变动〕**成员串 59**(**524 字节**,md5 `572b60753699bc68b2ad5ec9020f2512`)。**2026-09-05T22:xxZ 的变动:两条 `退回出集`(61 → 59)**,总监裁定全文 **§FB**。⛔ 两条都**不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff),重新入集路径各自写在 §FB.5。
 1. **`tpdying` 退集**(61 → 60)—— armed **17 天**(§A' 08-19 入集),`verify_coverage.py` 读 **verify=0 / 159 份报告**。
 2. **`tpreach` 退集**(60 → 59)—— armed **12 天**(§BC 08-24 入集),同样 **verify=0**。
 ⭐ **退集的理由与 `zusstatic` 不同,必须分清**:`zusstatic` 是**条件 (a) 结构上买不到**;这两条**买得到**,而且各自的验收形状**在入集那天就写好了**(§A'.3 两个检测器 / §BC.4 `tp_channel_death.py` + 按 mode 分层,连降级读法都写了)。**从没人买过的原因不是难,是那份义务只写在 test_set.md 的散文里,没有落到任何一张真正驱动录像组的表上** —— 这正是 §2.5 / GH #413 立法过的那条缺陷,而那条立法只覆盖**裁定**,不覆盖**入集自带的验收义务**(全文 §FB.3,立案 **GH #540**)。
@@ -19227,3 +19237,70 @@ shipped 三条买臂**全部拒绝**。
 - **丙(录像组/语料侧)**:10 帧已逐帧列在 sweep 的 `F` 行。最想要的一帧是
   「带内 + 两手空空 + 1200 环空 + 1200–1600 之间站着一个**正在朝我走**的敌人」——
   朝向/速度 fixture 读不到,**这是本轮唯一一条没有在本容器里付清的账**。
+
+---
+
+## §FK 2026-09-06T13:xxZ 总监 —— **本项目第三次 promote(`slotwait`),而本节最该被读的不是它,是 §FK.2:一个全开镜像波测的那个配置,在构造上永远不可能被 promote —— 于是「连续两周零 promote」的归因不是「改动都不好」,是 measured set ≠ promotable set**;外加 W50 家族裁 NOT-JUDGED、三条 (a)=BUGGY 退集、GH #352 胜负通道第九次 DEGENERATE 结案
+
+**本轮结清的是连续第三轮顺延的那一项**(总监 04:17Z / 07:08Z / 10:11Z 三轮交棒 ①)。
+
+### §FK.1 `slotwait` PROMOTE —— 三条件逐条,连各自的边界一起登记
+
+| 条件 | 读数 | 边界(必须一起读) |
+|---|---|---|
+| (a) 执行且行为正确 | `VERIFY id=slotwait verdict=WORKING episodes=2349`(录像组 09-05T00:58Z,W47 语料 55/55 局宽扫 + 8 局逐帧) | 2,349 是 **d3_strict 的保守界**;方向只有一个可能(循环对扫描集单调 ⇒ 出厂 TRUE 集是 armed 的真子集),所以这个读数**不需要跨腿比较**,也**不吃 4(i-b)** |
+| (b) 胜负无明显负面 | armed 于 W47/W48/W49/W50 四波(62/63/61/59-id 家族,~700 局计分镜像局);家族 gpm(swap-average)**−5.95 / +27.25 / +11.70 / +13.76** | ⛔ **这是家族级读数,不是 id 级** —— 全开波在构造上分摊不了归因;⛔ 且**没有任何 winrate 读数可引**(GH #352,第九波 DEGENERATE)。铁律 2(b) 要的是**粗粒度的「没有明显负面」**,四波里三波为正、均值 +11.7,**是这个,且仅是这个** |
+| (c) 逻辑依据 | 索引域错配,不是判断题:`GetTeamPlayers` 给**玩家 id**(0–4 / 5–9),`GetTeamMember` 要**队伍槽位**(1–5)⇒ 天辉五看四、夜魇**五看一** | 「推之前等队友关键技能转好」是标准打法;本条修的是**代码自己声称在做、而结构上做不到**的那个检查 |
+
+**唯一闸址、无合取项**(`pullcad` 陷阱检查):`slotwait` 全仓只在 `jmz_func.lua:J.ShouldWaitForTeamCooldowns` 出现一次,不与任何 id 合取,`promote_atoms.py` 无相关原子 ⇒ **promote 不冻结任何别人的门**。
+**落地动作**:`local bSlotWait = J.IsModeTurbo() and J.IsSoakCandidate('slotwait')` → `local bSlotWait = J.IsModeTurbo()`;`utils.lua` / `utils.ts` 的两处 `@param` 改写成 `PROMOTED (was soak-candidate 'slotwait')` —— **不改这两处,`test_gate_claim_consistency.lua` 当场变红**(本轮实测:`bots/FunLib/utils.lua:2160 names gate 'slotwait', which nothing in bots/ wires`)。那正是这条棘轮存在的理由(over-claim 方向),**它在本轮真的挡了一次**。
+**下游钉子同轮改**:`tests/test_slotwait_cooldown_scan.lua` 的结构测试从「必须有 `slotwait` 门」翻成「**必须一个门都没有**」(承重的是 id 的**缺席**:promote 后又长回一个门 = 在真实对局里恒 inert,而所有 armed-wiring 检查照样读作干净);`tests/test_slotwait_domain_liveness.py` 的第 1 组同理;`tools/agent/mutstand_slotwait.sh` 的 **M4/M5 重新锚定**(锚点对不上的变异体**什么也没改**,而台子照样会打一行结论 —— GH #550)。
+**读数**:`lua5.1 tests/run_tests.lua slotwait` **15 tests / 0 failures**;`slot` 家族 **87 / 0**;`gate_claim` **16 / 0**;`test_slotwait_domain_liveness.py` **30 checks / 0 failed**;`mutstand_slotwait.sh` **9/9 CAUGHT**(M4/M5 重锚后各自仍咬)。
+
+### §FK.2 ⭐⭐⭐ W50(59-id 家族)裁 **NOT-JUDGED**,而理由是构造性的,不是这一波的数字不好
+
+**先给数字**(`W50_wave.json:harvest`,187 局计分,四粒种子全部过 #269 深度门):
+gpm 均值 **+13.76**、`comps_better.gpm` **2/4**;工具自己的 `suggested` = `hold_or_reject`(它的 bar 是 >5 gpm **且**多数 comps,后一半没过)。
+⚠️ **离散度才是那句话**:逐粒 **−39.01 / −26.67 / +1.08 / +119.64** ⇒ 去掉 6072 剩下三粒均值 **−21.53**。按 4(i-c),说精度的是 arm 自己的跨种子离散度,而这个离散度宽到**均值不构成效应**。
+⚠️ 四个量 `sign_flip=true` 全部按 4(i-c) **登记但不作为否决理由**(那是恒等式 |side|>|arm|);侧项 **−145.37** 且相对 W49(+46.37)**反向**,ab:ba 局数 131:56 ⇒ 若按局加权并池会注入 0.40×(−145.37),这正是 4(i-d) 禁止的那一步。
+
+**⇒ 家族级 promote 在构造上不可能,而这与这一波的数字无关:**
+
+`verify_coverage.py`(**修后版本**,GH #557 的 44% 漏计已于 `09affd33` 修掉)对同一串 59 个 id:
+- **31 个**有机器可读的 VERIFY 行,**28 个一行都没有**;
+- 31 个里:**WORKING 9**(`ckpush` / `slotwait` / `odbuild` / `fieldsip` / `towerfear` / `slotpush` / `wandbleed2` / `wandbleed` / `illumove`)、**BUGGY 3**(`midtp` / `suptp` / `roshdist`)、**INDETERMINATE 19**。
+
+⇒ **(a) 是逐 id 的,(b) 是家族级的,而两者的交集(9 个)从来不是被测的那个配置。**
+promote 那 9 个 = 交付一个**从没被测过的配置**(9 开 50 关);promote 全部 59 个 = **50 个没有 (a)**。
+**这就是「连续两周零 promote」的机械理由**(上一轮 07:08Z 台账里写成「观察,非裁定」的那句,本轮升为裁定):**瓶颈是波次配置,不是「改动都不好」。**
+⛔ **这不是说 (b) 买不到** —— 08-31 §CT ③ 那条仍然成立:(b) 由经济四量的粗读出具,而**粗读只能出具家族级的「没有明显负面」**。本轮 `slotwait` 就是照这个粗粒度促成的,**并把边界写进了代码注释本身**(§FK.1 的 (b) 行)。
+
+**裁定**:W50 家族 **NOT-JUDGED**(既不 promote 也不 reject);**不重发同构的波**;逐 id 的通道是 (a)——它**不需要新的波**,已经存在的 dump 就够(`stayattr` 09-05 的先例)。
+
+### §FK.3 三条 (a)=BUGGY 退集 —— 退的理由与 §FB 那两条形状不同
+
+`midtp`(GH #539)/ `suptp`(#545)/ `roshdist`(#450)。**§FB 那两条是「(a) 从来没人买过」,这三条是「(a) 买到了,答案是 BUGGY」。**
+⚠️ **留在串里的代价是可算的**:(b) 是家族级读数,一个已知咬错的 id 在每一波的 armed 腿上执行 ⇒ 它污染的正是 promote 唯一能引的那个量。`roshdist` 尤其:全语料里 armed 腿会拒掉 **167 个(局,英雄)对 / 274 帧**站在真坑里的 bot。
+⛔ **不是 reject,不删代码**;重新入集 = 先修根因 issue → 重买 (a) → 重提。三条的根因 issue **都已存在且都 open**,本轮各追一条评论说明退集与再入集路径。
+
+### §FK.4 GH #352 胜负通道第九次 DEGENERATE —— **结案(作为「要不要继续每波上交」的问题),而不是作为缺陷关闭**
+
+W50:`winrate_channel=DEGENERATE`、少数侧 **1/211 = 0.0047**(历次最差)、`winner_by engine_natural` **211/211**、`headroom 0.0096`。
+⭐ **这一波把最后一个还活着的替代解释按构造排除了**:`engine_natural 211/211` ⇒ 语料**完全金钱独立**,横扫**不可能**是 `econ_winner` 改写的产物 —— 而那正是 #352 立案时留的那条口子。
+⇒ **裁定三条**:
+1. **不再每波把它作为 ⭐⭐⭐ 上交总监。** 08-31 §CT 已经裁完了它作为**量具**的部分(止血 + 撤回 + 工具自己打四个字段),此后九波每波复现的是**同一个已裁事实**;批测台照常在波次记录里登记 `winrate_channel`,**但不再列进交棒**。
+2. **条件 (b) 不因此冻结。** §CT ③ 逐字仍然有效:winrate 进工具之前的头五十轮,(b) 一直由经济四量的粗读出具。本轮的 `slotwait` promote 就是这条路的第三次使用。
+3. **剩下的那半个问题改名,免得再被当成量具问题攒着**:「一侧 99.5% 横扫」是一个**机器人质量/侧别对称性**问题(归因指向 08-25→08-27 之间的 23 个 commit),不是 (b) 的仪器问题。#352 **保持 open** 承载归因;**验收条件不变**(任一波少数侧 ≥20%)。
+⚠️ **一条看着诱人的假说,本轮当场自否**:`slotwait` 修的正是一个**按侧不对称**的缺陷(天辉看 4/5、夜魇看 1/5),而横扫方向恰好是夜魇 —— 但 **onset 检验立刻否掉它**:这个索引缺陷自 OHA 快照起就在,**不可能解释 08-25 与 08-27 之间才出现的拐点**。登记为「不是解释」,不是「待验证」。
+⭐ 顺带一个**免费的事后读数**:55-id 家族的第一波会在 `slotwait` 已 promote(⇒ 两侧都补齐扫描)的树上跑,`winrate_side_census` 照常登记 —— **不预登记任何方向**,只说明这个读数这次是免费的。
+
+### §FK.5 GH #557 的两个提问,总监答
+
+1. **历史台账格子不回填。** 那个计数器 08-30 才存在,而它读的语料本身(报告散文)在 08-30 之前根本没有可计数的行 ⇒ 回填出来的数**仍然不是当时的读数**,只是今天的解析器跑在旧文本上。**登记事实、不回填**:效率台账里 09-06 之前的「本周完成核验 id 数」一律读作**下界**,`efficiency_202636.md` 起在表头写明。
+2. **`roshdist` 的 BUGGY 本轮就地结清** —— 见 §FK.3(退集 + 追评 #450)。这也是 owner P4.2「每轮 ≥2 个判定完结」本轮的两条之一(另一条是 `slotwait` 的 promote 判定)。
+
+### §FK.6 诚实边界(本节买不到的)
+
+- **`slotwait` 的 (b) 不是 id 级的**,写在代码注释里那句就是它的全部;任何后来的读者要更强的结论,**必须先有一波它的 arm 集就是 promote 集**。
+- **9 个 WORKING 里本轮只 promote 了 1 个**:其余八条各自还欠一步(`towerfear` 有 GH #558 的收窄提议在飞、`slotpush` 的 (a) 已 WORKING 但未裁、`wandbleed`/`wandbleed2` 的 episodes 各只有 1 ⇒ (a) 太薄,等等)。**「有 WORKING」不等于「可以 promote」**,本节不把那八条读成待办清单。
+- **本轮未跑全套 `run_tests.lua`**(GH #124,~100min):跑的是 `slotwait` / `slot` / `gate_claim` 三个过滤器 + 静态门 + smoke,**这是覆盖不是等价**。

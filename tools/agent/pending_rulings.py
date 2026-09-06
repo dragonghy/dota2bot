@@ -24,10 +24,24 @@ Requests in `iterations/queue.json` that are still open (`status` in
 two buckets, because they need two different rulings:
 
   RIDESHARE  -- the request text declares it rides an existing wave at zero
-                AWS increment.  §BB.4 applies: rule it this round.
+                AWS increment.  Rule it THIS ROUND.
   OTHER      -- everything else (archive scans, dedicated-wave asks).  These
-                still need a routing/scheduling ruling, but §BB.4's
-                same-round deadline is not what binds them.
+                still need a routing/scheduling ruling, but the same-round
+                deadline is not what binds them.
+
+WHICH CLAUSE THE SAME-ROUND DEADLINE COMES FROM (2026-09-06, director; the
+batch desk named this line for three consecutive rounds and was right to).
+The deadline used to be cited as §BB.4 alone, and §BB.4 says a rideshare
+ADMISSION is let through in the round it arrives.  Owner priority P4.2
+(2026-09-05T14:5xZ) REPEALED that and overrides it: while the admission
+freeze holds (armed set > 20), the only lawful ruling on an admission
+proposal -- rideshare or not -- is FROZEN-HOLD.  What survived the repeal is
+the DEADLINE, not the outcome, and it survived for a request that is not an
+admission at all: an APPROVED-SCAN rideshare (a read-only archive traversal,
+zero EC2, nothing entering the armed set) is the shape this bucket has
+actually carried since hero-32.  So: this bucket means "a ruling is owed this
+round", and what that ruling may be is decided by P4.2, not here.  Reading it
+as "§BB.4 lets it in" is the misread that clause was repealed for.
 
 ...and, since 2026-08-29 (director, §CG.5), the OTHER END of the same path:
 
@@ -1009,7 +1023,7 @@ def main():
                           % (hero, n, " [WeakHeroes]" if on_weak else ""))
 
     print("=== un-ruled queue requests (director field empty) ===")
-    render(ride, "RIDESHARE (§BB.4: rule this round)")
+    render(ride, "RIDESHARE (rule this round; outcome per owner P4.2, not §BB.4)")
     render(other, "OTHER (routing/slot ruling still owed)")
     print("total open requests: %d" % sum(1 for r in requests if is_open(r)))
 

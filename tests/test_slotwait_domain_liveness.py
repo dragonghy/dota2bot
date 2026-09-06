@@ -61,13 +61,20 @@ UTILS = lua('bots/FunLib/utils.lua')
 JMZ = lua('bots/FunLib/jmz_func.lua')
 HEROES = lua('bots/ts_libs/dota/heroes.lua')
 
-# --- 1. the gate is still where the reading assumes it is ------------------
-print('=== 1. the lever under test still exists, still gated ===')
-check("J.IsSoakCandidate( 'slotwait' )" in JMZ,
-      "jmz_func.lua still resolves the 'slotwait' gate")
-check(JMZ.count("J.IsSoakCandidate( 'slotwait' )") == 1,
-      'the gate is read exactly ONCE (one wrapper, two legs -- it can never '
-      'be half-armed)')
+# --- 1. the lever is still where the reading assumes it is ------------------
+# PROMOTED 2026-09-06 (director, stable-v3): the gate is gone and the flag is
+# `J.IsModeTurbo()`. Before that date these two checks asserted the gate's
+# PRESENCE. The instrument this file pins reads the armed/shipped scan
+# difference, which is unchanged by the promote -- what changes is who supplies
+# the flag -- so the pin moves with it instead of being deleted.
+print('=== 1. the lever under test still exists, now a turbo default ===')
+WRAPPER = JMZ.split('function J.ShouldWaitForTeamCooldowns')[1].split('\nend')[0]
+check("IsSoakCandidate" not in WRAPPER,
+      "the promoted wrapper carries no soak gate at all (a re-grown gate would "
+      "be inert in every real game while every armed-wiring check reads clean)")
+check(WRAPPER.count('J.IsModeTurbo()') == 1,
+      'the turbo flag is read exactly ONCE (one wrapper, two legs -- the two '
+      'predicates can never end up in different index domains)')
 check('IsSoakCandidate' not in UTILS,
       'utils.lua never RESOLVES a gate itself -- it may not import jmz_func, '
       "so the id reaches it only as the bSlotWait parameter (naming the id in "

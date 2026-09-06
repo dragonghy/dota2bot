@@ -133,13 +133,17 @@ mutant "M3 only the spell leg is fixed; the item leg is not" "$UTILS" m3
 # The reason this is ONE wrapper for TWO functions. Two independent reads are
 # not a style difference: they are two conjuncts that can drift apart, which is
 # the `pullcad` shape one level down.
-m4() { perl -0pi -e "s/\tlocal bSlotWait = J.IsModeTurbo\(\) and J.IsSoakCandidate\( 'slotwait' \)\n\treturn J.Utils.HasTeamMemberWithCriticalItemInCooldown\( vLocation, bSlotWait \)\n\t\tor J.Utils.HasTeamMemberWithCriticalSpellInCooldown\( vLocation, bSlotWait \)/\treturn J.Utils.HasTeamMemberWithCriticalItemInCooldown( vLocation, J.IsModeTurbo() and J.IsSoakCandidate( 'slotwait' ) )\n\t\tor J.Utils.HasTeamMemberWithCriticalSpellInCooldown( vLocation, J.IsModeTurbo() and J.IsSoakCandidate( 'slotwait' ) )/" "$JMZ"; }
-mutant "M4 the gate is read once per leg, not once total" "$JMZ" m4
+# PROMOTED 2026-09-06: the wrapper's flag is now `J.IsModeTurbo()` alone, so
+# M4/M5 are re-anchored on that text. An anchor that no longer matches edits
+# nothing and the stand then reports on a mutant identical to the original
+# (GH #550) -- re-anchoring is not cosmetic here.
+m4() { perl -0pi -e "s/\tlocal bSlotWait = J.IsModeTurbo\(\)\n\treturn J.Utils.HasTeamMemberWithCriticalItemInCooldown\( vLocation, bSlotWait \)\n\t\tor J.Utils.HasTeamMemberWithCriticalSpellInCooldown\( vLocation, bSlotWait \)/\treturn J.Utils.HasTeamMemberWithCriticalItemInCooldown( vLocation, J.IsModeTurbo() )\n\t\tor J.Utils.HasTeamMemberWithCriticalSpellInCooldown( vLocation, J.IsModeTurbo() )/" "$JMZ"; }
+mutant "M4 the turbo flag is read once per leg, not once total" "$JMZ" m4
 
 # --- M5: the turbo guard is dropped ------------------------------------------
-# Every gated fix in this repo is turbo-only. Without IsModeTurbo the candidate
-# would be live in normal games the moment it is armed on the farm.
-m5() { perl -0pi -e "s/J.IsModeTurbo\(\) and J.IsSoakCandidate\( 'slotwait' \)/J.IsSoakCandidate( 'slotwait' )/" "$JMZ"; }
+# The promote made this behavior a TURBO DEFAULT, not a global one. Without
+# IsModeTurbo it ships into normal games too, which no wave has measured.
+m5() { perl -0pi -e "s/\tlocal bSlotWait = J.IsModeTurbo\(\)/\tlocal bSlotWait = true/" "$JMZ"; }
 mutant "M5 the wrapper stops being turbo-only" "$JMZ" m5
 
 # --- M6: the evaluation order is swapped -------------------------------------

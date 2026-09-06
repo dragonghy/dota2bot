@@ -13213,7 +13213,37 @@ function J.IsTeamPushingHighGround( bot )
 end
 
 
--- The ONE gate-resolution site for the soak candidate 'slotwait' (turbo-only).
+-- PROMOTED (was soak-candidate 'slotwait') 2026-09-06 -- turbo default, no gate
+-- left. Owner rule 2, all three conditions, each with its own boundary:
+--   (a) WORKING -- replay desk 2026-09-05T00:58Z, W47 corpus, 55/55 games wide
+--       scanned and 8 deep: 2,349 d3_strict frames (the conservative bound) on
+--       the armed leg where the shipped scan answers FALSE and the armed scan
+--       answers TRUE, which is the ONLY direction that can exist here (the loop
+--       is monotone in the scanned set, so the shipped TRUE set is a subset of
+--       the armed one). Side ratio dire:radiant 6.6-10.5x, all four seeds same
+--       sign. Report iterations/reports/replay-check/20260905T005827Z.md.
+--   (b) NO OBVIOUS NEGATIVE -- armed in W47/W48/W49/W50 (the 62/63/61/59-id
+--       families, ~700 scored mirrored games). Family gpm swap-averaged
+--       -5.95 / +27.25 / +11.70 / +13.76. HONEST BOUNDARY: that is a
+--       FAMILY-level reading, not an id-level one -- an all-on wave cannot
+--       attribute economy to one member, and the winrate channel has been
+--       DEGENERATE for nine waves (GH #352), so no win/loss reading exists to
+--       cite. Rule 2(b) asks for a coarse "no obvious negative", and four
+--       waves averaging +11.7 gpm with the id armed on every one of them is
+--       that and nothing more.
+--   (c) The defect is an index-domain error, not a judgement call:
+--       GetTeamPlayers returns PLAYER ids (radiant 0-4 / dire 5-9) and
+--       GetTeamMember takes TEAM SLOTS (1-5). Radiant therefore saw 4 of 5
+--       team members and dire saw 1 of 5, so "don't push yet, a team-mate's
+--       key item/spell is still on cooldown" was answered by a scan that was
+--       structurally blind -- systematically pushing EARLIER than the shipped
+--       logic itself intends. Waiting for team cooldowns before committing to
+--       a push is standard play; this restores the check the code already
+--       claims to make.
+-- KNOWN RESIDUAL, promoted with eyes open: the sibling consumption sites of
+-- the same cluster stay gated and unpromoted ('slotarb' #406, 'slotdust' #411,
+-- 'slotpush' #415 -- the last is (a)=WORKING but not yet ruled). Promoting the
+-- one whose (a) is bought does not promote the family.
 --
 -- GH #467. The same pid-for-slot defect as 'slotpush', on the last two LIVE
 -- members of the bots/FunLib/utils.lua cluster:
@@ -13222,19 +13252,19 @@ end
 -- HERE is only the arming, and for the same structural reason as 'slotpush':
 -- utils.ts may not import jmz_func, so utils cannot read the gate.
 --
--- ONE wrapper for TWO functions, not two wrappers. The gate is read once and
--- threaded into both legs, so 'slotwait' can never be half-armed, and the id
--- appears exactly once in bots/. The two functions are same-origin,
+-- ONE wrapper for TWO functions, not two wrappers. The flag is read once and
+-- threaded into both legs, so the two predicates can never disagree about
+-- which index domain they are in. The two functions are same-origin,
 -- same-consumer and adjacent inside one `if` in
--- aba_push.ShouldWaitForImportantItemsSpells; a separate id each would only
+-- aba_push.ShouldWaitForImportantItemsSpells; a separate flag each would only
 -- build another same-arm conjunction (GH #424, 'outlatch' > 'slotpush').
 --
 -- The `or` preserves the shipped evaluation ORDER (item first, then spell) and
--- its short circuit, so un-armed this wrapper is byte-for-byte the shipped
+-- its short circuit, so outside turbo this wrapper is byte-for-byte the shipped
 -- decision. tests/test_slotwait_cooldown_scan.lua asserts that, and asserts the
 -- scan in both directions on real frames.
 function J.ShouldWaitForTeamCooldowns( vLocation )
-	local bSlotWait = J.IsModeTurbo() and J.IsSoakCandidate( 'slotwait' )
+	local bSlotWait = J.IsModeTurbo()
 	return J.Utils.HasTeamMemberWithCriticalItemInCooldown( vLocation, bSlotWait )
 		or J.Utils.HasTeamMemberWithCriticalSpellInCooldown( vLocation, bSlotWait )
 end

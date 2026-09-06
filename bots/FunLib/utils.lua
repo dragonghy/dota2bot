@@ -2108,11 +2108,13 @@ end
 --- Check if the team has a member with a critical spell in cooldown when the bot walks & arrives to the location.
 --
 -- @param targetLoc - The location to check.
--- @param bSlotWait - Soak candidate 'slotwait'. Resolved in exactly ONE place,
---                    J.ShouldWaitForTeamCooldowns in bots/FunLib/jmz_func.lua;
---                    this file must never name the id (utils.ts may not import
---                    jmz_func -- the circular dependency its own header forbids
---                    -- so the wrapper lives one level up, as with 'slotpush').
+-- @param bSlotWait - PROMOTED (was soak-candidate 'slotwait') 2026-09-06: the
+--                    flag is now J.IsModeTurbo() alone. Resolved in exactly ONE
+--                    place, J.ShouldWaitForTeamCooldowns in
+--                    bots/FunLib/jmz_func.lua; this file never resolves it
+--                    (utils.ts may not import jmz_func -- the circular
+--                    dependency its own header forbids -- so the wrapper lives
+--                    one level up, as with 'slotpush').
 -- @returns True if the team has a member with a critical spell in cooldown, false otherwise.
 --
 -- Sixth and seventh of the pid-shaped GetTeamMember call sites (after 'slotarb'
@@ -2157,10 +2159,10 @@ end
 --- Check if the team has a member with a critical item in cooldown when the bot walks & arrives to the location.
 --
 -- @param targetLoc - The location to check.
--- @param bSlotWait - Soak candidate 'slotwait'; see the sibling
---                    HasTeamMemberWithCriticalSpellInCooldown above for the
---                    defect, the direction and why the gate is threaded in
---                    rather than read here. Same id on purpose: the two are
+-- @param bSlotWait - PROMOTED (was soak-candidate 'slotwait') 2026-09-06; see
+--                    the sibling HasTeamMemberWithCriticalSpellInCooldown above
+--                    for the defect, the direction and why the flag is threaded
+--                    in rather than read here. One flag on purpose: the two are
 --                    same-origin, same-consumer and sit one line apart inside
 --                    the same `if`, so splitting them into two ids would only
 --                    manufacture another same-arm conjunction (GH #424).

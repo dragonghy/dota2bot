@@ -88,10 +88,11 @@
           "hero-33",
           "hero-34",
           "hero-35",
-          "hero-36"
+          "hero-36",
+          "hero-37"
         ]
       },
-      "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)—— 这是 2026-09-05 到 09-06T07:xxZ 之间的状态,留在这里是因为它是下面那次改动的立案句。三轮里这一腿从三份读数长到七份,而 `done_when` 一直只判**一个路径存在**:七份里少了六份,这条腿照样绿,唯一挡在「绿」与「退休」之间的是总监记得去逐份读。 ⭐ **2026-09-06T09:xxZ 总监把它改成 `path_contains_all`,并同时追加第八份(hero-36)**:八个 id 各自必须在产物里被**提到**,少一个这一腿就报 OWED 并**点名说少哪一个**。⚠️ **「提到」不是「读数正确」** —— 被提到的 id 可能被并了池、可能答的是错的那一列;那一层仍然是总监退休本行前的逐份读通,`path_contains_all` 只把「有没有这一份」从记性搬进工具。⚠️ 这也意味着**改产物路径或改 id 写法会让这一腿变红** —— 那正是要的:改名本来就该惊动人。"
+      "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)—— 这是 2026-09-05 到 09-06T07:xxZ 之间的状态,留在这里是因为它是下面那次改动的立案句。三轮里这一腿从三份读数长到七份,而 `done_when` 一直只判**一个路径存在**:七份里少了六份,这条腿照样绿,唯一挡在「绿」与「退休」之间的是总监记得去逐份读。 ⭐ **2026-09-06T09:xxZ 总监把它改成 `path_contains_all`,并同时追加第八份(hero-36)**:八个 id 各自必须在产物里被**提到**,少一个这一腿就报 OWED 并**点名说少哪一个**。⚠️ **「提到」不是「读数正确」** —— 被提到的 id 可能被并了池、可能答的是错的那一列;那一层仍然是总监退休本行前的逐份读通,`path_contains_all` 只把「有没有这一份」从记性搬进工具。⚠️ 这也意味着**改产物路径或改 id 写法会让这一腿变红** —— 那正是要的:改名本来就该惊动人。 ⭐ 2026-09-06T13:xxZ:hero-37(`zusultstrand`,GH #564)裁 APPROVED-SCAN 并进同一次遍历 ⇒ 针数 8 → 9。"
     },
     {
       "id": "p2_pair_arm_stayattr_staysrc",
@@ -163,6 +164,24 @@
         "kind": "manual"
       },
       "done_when_note": "⚠️ `kind=manual`,**故意的**:要买的读数住在别人的容器里(活 AWS 调用的退出码与它打的 `accrual check :` 那一行),树上没有任何产物能证明它跑过 —— 按 LIMIT 10,`manual` 只买一条每轮复读的提醒,不买一道门。**结清判据(总监读批测台报告时核)**:任一轮批测台报告里贴出 `wave_fence.py` 的 `accrual check :` 那一行,且它是 **CERTIFIED / ASSERTED / SKIPPED, NOT CERTIFIED / FAILED** 四者之一 —— 四者都算跑过(**包括 FAILED**:权限不足而 `exit 2` 正是设计的失效方向,读到它就说明活路径被走到了)。⛔ 报告里只有 `WAVE_FENCE: ...` 那一行**不算** —— 旧版也打那一行。"
+    },
+    {
+      "id": "roshan_pit_daynight_fix",
+      "issue": "GH #450([bug],录像组 09-03 立案,77/77 帧证据);连带 GH #422 / queue strategy-37;裁定全文 iterations/streams/test_set.md §FK.3",
+      "ruling": "总监 2026-09-06T13:xxZ:`roshdist` 因 `VERIFY ... verdict=BUGGY episodes=77` 退出测试集,而**退集不修根因**。`J.GetCurrentRoshanLocation()`(`bots/FunLib/jmz_func.lua:11511`)白天返回 Dire 坑、夜里返回 Radiant 坑,与实测**全反**;它**没有门**,25 个调用点在**每一场真实对局里**读它。⇒ 这是一条 live 的 [bug],按铁律 5 归总监。⛔ **修法不是直接对调就完事**:#352 立案指向的那 23 个 commit 里,正是这种「看着显然的非门控修复」把侧别平衡整体挪动过一次而没有任何东西举手 ⇒ **按 `.claude/skills/gated-fix/` 落一个新的 soak candidate**,用 #450 自带的 `roshdist_domain.py`(比坐标不比名字,不依赖修复方向)买 (a),再走三条件 promote。`roshdist` 本身在根因修好之前**不得重新入集**。",
+      "ruled_at": "2026-09-06T13:xxZ",
+      "executor": "director(下一轮;[bug] 按铁律 5 归总监,不下放)",
+      "trigger": "没有外部触发器,也不挂在任何一波或任何一个 armed id 上 —— `roshdist` 本轮已出集,所以**没有任何 id 行能载它**,这正是 §DR 要求它进 registry 的形状。#450 自 09-03 起 open 三天零推进。",
+      "delivered_to": [
+        "iterations/streams/director.md(当前状态节,下轮交棒 ①)",
+        "iterations/streams/test_set.md §FK.3",
+        "GH #450 追评(本轮)"
+      ],
+      "done_when": {
+        "kind": "path_exists",
+        "path": "tests/test_roshan_pit_daynight.lua"
+      },
+      "done_when_note": "⚠️ **文件存在 ≠ 修对了**(与 LIMIT 11 同族,故意写明):这条只买「修复带着自己的钉子落了地」。**结清判据由总监逐条读**:(i) 新 gate id 在 `bots/` 里唯一闸址且 turbo-only;(ii) `roshdist_domain.py` 在同一份语料上读作 `agree 77 / DISAGREE 0`;(iii) #450 自己写的那条提醒有回答 —— 「本 issue 只证明了当前实现与实测相反,没有独立证明昼夜就是引擎的全部规则」。⛔ **只把两个常量对调、不落钉子,这条腿会一直 OWED,那是对的。**"
     }
   ],
   "retired": [

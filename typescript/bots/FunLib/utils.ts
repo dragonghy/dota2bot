@@ -1824,10 +1824,12 @@ export function GetItemFromCountedInventory(bot: Unit, itemName: string, count: 
  * push EARLY. GH #467.
  *
  * @param targetLoc - The location to check.
- * @param bSlotWait - Soak candidate 'slotwait', resolved in exactly one place,
- *                    J.ShouldWaitForTeamCooldowns in bots/FunLib/jmz_func.lua.
- *                    This file may not import jmz_func (circular dependency),
- *                    which is why the gate is threaded in rather than read here.
+ * @param bSlotWait - PROMOTED (was soak-candidate 'slotwait') 2026-09-06: the
+ *                    flag is now J.IsModeTurbo() alone, resolved in exactly one
+ *                    place, J.ShouldWaitForTeamCooldowns in
+ *                    bots/FunLib/jmz_func.lua. This file may not import
+ *                    jmz_func (circular dependency), which is why the flag is
+ *                    threaded in rather than read here.
  * @returns True if the team has a member with a critical spell in cooldown, false otherwise.
  */
 export function HasTeamMemberWithCriticalSpellInCooldown(targetLoc: Vector, bSlotWait?: boolean): boolean {
@@ -1856,11 +1858,11 @@ export function HasTeamMemberWithCriticalSpellInCooldown(targetLoc: Vector, bSlo
 /**
  * Check if the team has a member with a critical item in cooldown when the bot walks & arrives to the location.
  * @param targetLoc - The location to check.
- * @param bSlotWait - Soak candidate 'slotwait'; see the sibling
- *                    HasTeamMemberWithCriticalSpellInCooldown above. Same id on
- *                    purpose: same origin, same consumer, one line apart inside
- *                    the same `if` -- two ids would only build another same-arm
- *                    conjunction (GH #424).
+ * @param bSlotWait - PROMOTED (was soak-candidate 'slotwait') 2026-09-06; see
+ *                    the sibling HasTeamMemberWithCriticalSpellInCooldown
+ *                    above. One flag on purpose: same origin, same consumer,
+ *                    one line apart inside the same `if` -- two ids would only
+ *                    have built another same-arm conjunction (GH #424).
  * @returns True if the team has a member with a critical item in cooldown, false otherwise.
  */
 export function HasTeamMemberWithCriticalItemInCooldown(targetLoc: Vector, bSlotWait?: boolean): boolean {

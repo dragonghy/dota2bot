@@ -416,10 +416,9 @@ end
 tests['[counterfactual C4] the wrapper carries both legs through the gate'] = function()
     -- C1/C3 drive the utils predicates directly. This one drives the shipped
     -- consumer path -- J.ShouldWaitForTeamCooldowns -- so the wrapper's own
-    -- threading is measured, not assumed. The gate is turbo-only, and
-    -- IsModeTurbo/IsSoakCandidate are what the soak file answers, so this test
-    -- pins the wrapper's TWO delegations rather than the arming (the arming is
-    -- pinned by structure below).
+    -- threading is measured, not assumed. PROMOTED 2026-09-06: the flag is now
+    -- IsModeTurbo() alone, so this test pins the wrapper's TWO delegations
+    -- rather than the arming (the shape is pinned by structure below).
     local J, bot = rf.load(DIRE_FX)
     local loc = bot:GetLocation()
     arm_critical_spell(J, GetTeamMember(3), loc, 99)
@@ -427,12 +426,11 @@ tests['[counterfactual C4] the wrapper carries both legs through the gate'] = fu
         'C4 wants the SPELL leg to be the only one that can fire')
     assert(J.Utils.HasTeamMemberWithCriticalSpellInCooldown(loc, true) == true,
         'C4 setup failed')
-    -- Whatever the soak file and the game mode say, the wrapper must equal the
-    -- disjunction of the two legs at the arming those two answers imply. That
-    -- is the whole contract, and it holds in every one of the four worlds
-    -- (turbo/not x armed/not) without this test having to fake either one.
-    local bTurbo = J.IsModeTurbo()
-    local bArmed = bTurbo and J.IsSoakCandidate('slotwait')
+    -- Whatever the game mode says, the wrapper must equal the disjunction of
+    -- the two legs at the flag that answer implies. That is the whole
+    -- contract, and it holds in both worlds (turbo / not turbo) without this
+    -- test having to fake either one.
+    local bArmed = J.IsModeTurbo()
     local expected = J.Utils.HasTeamMemberWithCriticalItemInCooldown(loc, bArmed)
         or J.Utils.HasTeamMemberWithCriticalSpellInCooldown(loc, bArmed)
     assert(J.ShouldWaitForTeamCooldowns(loc) == expected,
@@ -455,19 +453,25 @@ local function strip_comments(src)
     return (src:gsub('%-%-[^\n]*', ' '))
 end
 
-tests['[structure] the wrapper owns the slotwait gate, turbo-first, read ONCE'] = function()
+tests['[structure] the wrapper is PROMOTED: turbo default, no gate left, read ONCE'] = function()
+    -- PROMOTED 2026-09-06 (director, stable-v3). Before that date this test
+    -- asserted the opposite -- that the body named 'slotwait'. It now asserts
+    -- the promoted shape, and the id's ABSENCE is the load-bearing half: a
+    -- promoted behavior that quietly grows a gate again is inert in every real
+    -- game while every armed-wiring check still reads clean (the shape
+    -- AGENTS.md calls the pullcad trap).
     local code = strip_comments(read('bots/FunLib/jmz_func.lua'))
     local fn = code:match('function J%.ShouldWaitForTeamCooldowns%s*%b()(.-)\nend')
     assert(fn, 'the J.ShouldWaitForTeamCooldowns wrapper is gone or reshaped')
-    local iCand = fn:find("J%.IsSoakCandidate%s*%(%s*'slotwait'%s*%)")
-    assert(iCand, "the fix must be gated on 'slotwait'; got: " .. fn)
+    assert(not fn:find('IsSoakCandidate'),
+        'PROMOTED: the wrapper must carry no soak gate at all; got: ' .. fn)
     local iTurbo = fn:find('J%.IsModeTurbo%s*%(%s*%)')
-    assert(iTurbo, 'the fix must be turbo-only; got: ' .. fn)
-    assert(iTurbo < iCand, 'IsModeTurbo() must be evaluated before the slotwait check')
-    -- The whole point of ONE wrapper for TWO functions: the id is read once and
-    -- threaded into both legs, so 'slotwait' can never be half-armed.
-    local _, nReads = fn:gsub("J%.IsSoakCandidate%s*%(%s*'slotwait'%s*%)", '')
-    assert(nReads == 1, 'the gate must be read exactly once and threaded into both ' ..
+    assert(iTurbo, 'the fix must stay turbo-only; got: ' .. fn)
+    -- The whole point of ONE wrapper for TWO functions: the flag is read once
+    -- and threaded into both legs, so the two predicates can never end up in
+    -- different index domains.
+    local _, nReads = fn:gsub('J%.IsModeTurbo%s*%(%s*%)', '')
+    assert(nReads == 1, 'the flag must be read exactly once and threaded into both ' ..
         'legs; found ' .. nReads .. ' reads')
     assert(fn:find('J%.Utils%.HasTeamMemberWithCriticalItemInCooldown%s*%('),
         'the wrapper must delegate to the utils item predicate')
