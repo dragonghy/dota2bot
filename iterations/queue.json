@@ -1883,6 +1883,18 @@
         "ref": "iterations/streams/test_set.md §FK.7",
         "note": "不排波、不入集,故 owner P4.2 的入集冻结不适用(冻结管的是 armed 集变大;本裁定不让任何 id 进集,armed 集本轮 59 -> 55)。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 那是 owed_executions.json 那条腿唯一读得到的机器键。acceptance 一字未改;METHOD-FAILED 按 §CJ 强制:读不出「死亡时大招是否未放」那一列 ⇒ INSTRUMENT-FAILED 退回重裁,**不得**用域大小单独下判断,也**不得**自行套用「域接近 0 ⇒ 不入集」。⚠️ 这是 WIDENING:负读数只能读作「多放的那些放错了」,永远不能读作「杠杆少放了 N 次大招」(请求方已预登记,本裁定逐字保留)。"
       }
+    },
+    {
+      "id": "hero-38",
+      "stream": "hero",
+      "bundle": "zusfightquorum",
+      "seeds": [],
+      "priority": 3,
+      "question": "给 `zusfightquorum` 买条件 (a) 的域。杠杆:`bots/BotLib/hero_zuus.lua` 的 `X.ConsiderR` **团战分支**要求 `J.GetInvUnitCount( false, J.GetNearbyHeroes( bot, 1400, true, ... ) ) >= 5` —— **5 不是这个计数的一个阈值,它就是这个计数的上界**(一方五个英雄),而前面两道过滤器只会做减法(死的/雾里的被 GetNearbyHeroes 扣掉,魔免/无敌/可疑幻象被 CanCastOnNonMagicImmune 扣掉)。本轮已把它落成 gated 修复(turbo-only,未 armed,armed 侧把法定人数降到 3),接线**一处**。**先扫档案,不要为它单发波**(与 hero-2/30/31/32/33/34/35/36/37 同形:零 EC2 只读扫描,十者可并成同一次遍历)。需要的读数:(1) **shipped 分支的域大小** —— Zeus 处于 `J.IsInTeamFight(1400)`(1400 内 ≥2 个 ATTACK 模式友军)且 1400 内**可施法敌方英雄数 == 5** 的帧/episode 计数。本地 1012 个真实帧视角里这个数**一次都没到过 5**(最大 4,只出现 5 次),所以预期是 0;**读出 0 本身就是本请求最值钱的确认**。(2) ⭐ **本请求的价值列**:同样条件下 **== 3 和 == 4 的计数**,即 armed 侧新增的那部分域。本地读数是 16/1012 ≈ 1.6%,但**那 16 个里没有一个的视角是 Zeus 自己**(十个 Zeus 主体帧最多只数到 2)⇒「armed 分支在真实 Zeus 对局里会触发」**本轮没有人说**,这一列是唯一能说它的。(3) ⭐⭐ **视角偏差列(为下一个杠杆预买)**:同一批团战瞬间里,**Zeus 数到的敌人数** vs **同帧己方前排数到的敌人数**。雷神之怒是**全球**技能(该 ability 连 `AbilityCastRange` 键都没有),用施法者的位置去量团战规模,量的是一个后排法师**最不该**站的位置;本地 `f_260819_222052_zuus_w2_leak` 里 Zeus 的两个敌人各自数到 4 而同帧的 Zeus 只数到 2。这一列决定下一轮是不是把计数中心从 Zeus 挪到团战。(4) **分层**:这些瞬间里有多少**同时**已被同文件下方的击杀分支覆盖(`J.WillMagicKillTarget` 判定某个敌人可被大招打死 ⇒ 已经返回 MODERATE)—— **那部分不归本杠杆**,必须能分开,否则 (2) 是错的分子。",
+      "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) 让本组用 `make_fixture.py` 钉帧(最想要的是「Zeus 在团战里,1400 内正好 3 或 4 个可施法敌人,大招可放」那一帧 —— 全语料 10 个 Zeus 主体 fixture 里**一帧都没有**,这是本轮明写没买到的那一块)。**预登记的判读方向**:若 (2) 显示 Zeus 视角下 `>=3` 的团战瞬间本身就近乎为零,则这个 widening 的收益不成立,**不入集**,带 DOMAIN-NOT-REACHED 退回门 —— 但同时 (3) 若显示同帧前排数到 ≥3,那不是「域为零」而是「量错了地方」,下一棒改为视角杠杆而不是丢弃本杠杆。这两条**不许合并**。⚠️ **预登记的归因边界**:本杠杆是 **WIDENING** —— armed 只降低法定人数,**只能增加**这条分支上的大招施放,**不可能减少**一次。负读数**只能**读作「多放的那些放错了(浪费了 250-500 蓝和 130s 冷却)」,**永远不能**读作「杠杆少放了 N 次大招」。⚠️ **METHOD-FAILED 强制**:读不出 (2) 那一列(Zeus 自己视角下的敌人计数分布)⇒ **INSTRUMENT-FAILED**,不得用 (1) 的 0 单独下判断 —— shipped 域为零是本轮**已经在本地测到的**,它不是新读数,单独拿它下判断等于把本地已知当成波次产出。",
+      "status": "open",
+      "requested_at": "2026-09-06T14:xxZ",
+      "requested_by": "hero"
     }
   ],
   "done": [

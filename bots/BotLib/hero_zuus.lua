@@ -1376,6 +1376,71 @@ function X.zuus_ShouldCashUltBeforeDeath( hBot )
 
 end
 
+-- How wide the fight that X.zuus_ShouldUltForTeamFight prices is measured, and
+-- how many enemy heroes have to be inside it.  All three are named constants so
+-- that moving one self-reports in tests/test_zuus_fight_quorum.lua rather than
+-- quietly re-sizing the branch.  The radius is also what X.ConsiderR hands to
+-- J.IsInTeamFight, so the two halves of that condition cannot drift apart.
+X.nUltFightRadius = 1400
+X.nUltFightQuorumShipped = 5
+X.nUltFightQuorumArmed = 3
+
+--- [zusfightquorum] gated (turbo + soak candidate): may the TEAM-FIGHT branch of
+--- X.ConsiderR fire on a fight that is not the entire enemy team?
+---
+--- THE SHIPPED QUORUM IS SET AT THE POPULATION CEILING.  The branch reads
+---
+---     if J.IsInTeamFight( bot, 1400 ) then
+---         local t = J.GetNearbyHeroes( bot, 1400, true, BOT_MODE_NONE )
+---         if J.GetInvUnitCount( false, t ) >= 5 then
+---
+--- and 5 is not a threshold inside the range of that count -- it IS the range's
+--- upper end.  A Dota side holds five heroes, so `>= 5` demands ALL FIVE at once,
+--- and J.GetInvUnitCount only counts the ones that additionally survive
+--- J.CanCastOnNonMagicImmune (visible, not magic immune, not invulnerable, no
+--- suspicious-illusion or forbidden modifier) while J.GetNearbyHeroes has already
+--- dropped everything that is dead or unseen.  One enemy dead, one in fog, one
+--- holding a BKB, or one standing 1401u away is enough to make it false.
+---
+--- ⭐ THE PREMISE IS A MEASUREMENT, NOT AN INTUITION, AND IT IS FALSIFIABLE.
+--- Section 2 of tests/test_zuus_fight_quorum.lua re-runs the count over EVERY
+--- alive hero of EVERY fixture in tests/fixtures -- 1012 real-frame vantage
+--- points as of 2026-09-06 -- and asserts the maximum observed is strictly below
+--- the shipped quorum.  It reads 4, and it reaches 4 exactly five times; the
+--- shipped 5 is reached zero times.  The armed 3 is reached 16 times.  So the
+--- one sentence this lever rests on -- "5 is an off-switch and 3 is a filter" --
+--- is a reading that a corpus with a genuine five-stack in one circle would turn
+--- red, rather than a claim about how Dota is usually played.
+---
+--- ⚠️ THE VANTAGE POINT IS THE OTHER HALF OF THE DEFECT AND THIS LEVER DOES NOT
+--- TOUCH IT.  Thundergod's Wrath is GLOBAL (no AbilityCastRange key at all --
+--- see the note inside X.ConsiderR), so measuring the fight from the CASTER's
+--- position is measuring it from the one position a backline mage should never
+--- be in.  The corpus shows the bias directly: in f_260819_222052_zuus_w2_leak
+--- two of Zeus's own enemies each see FOUR enemies inside 1400 while Zeus, in
+--- the same frame, sees two.  Repointing the count at the fight rather than at
+--- Zeus is a second lever with its own id; one lever at a time, and this one is
+--- the quorum.
+---
+--- WHY 3.  A three-hero fight is where a 275/425/575 magic nuke on every enemy
+--- plus 3s of true sight on all of them starts to be worth a 130s cooldown and
+--- 250-500 mana; below that it is a skirmish and the ult is better banked.  The
+--- kill-secure use of the ult is NOT this branch and is unaffected -- the
+--- J.WillMagicKillTarget block further down already returns MODERATE for a
+--- single finishable enemy at any fight size.
+function X.zuus_ShouldUltForTeamFight( hBot )
+
+	local tNearbyEnemyHeroes = J.GetNearbyHeroes( hBot, X.nUltFightRadius, true, BOT_MODE_NONE )
+	local nInvUnit = J.GetInvUnitCount( false, tNearbyEnemyHeroes )
+
+	if nInvUnit >= X.nUltFightQuorumShipped then return true end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'zusfightquorum' ) ) then return false end
+
+	return nInvUnit >= X.nUltFightQuorumArmed
+
+end
+
 
 function X.ConsiderR()
 
@@ -1468,13 +1533,14 @@ function X.ConsiderR()
 		return BOT_ACTION_DESIRE_HIGH
 	end
 
-	if J.IsInTeamFight( bot, 1400 )
+	-- [zusfightquorum] the quorum that used to stand here read `>= 5`, which is
+	-- the ceiling of the quantity it thresholds and not a point inside its range
+	-- -- an off-switch, not a filter.  Over 1012 real-frame vantage points the
+	-- count never reaches 5.  See X.zuus_ShouldUltForTeamFight.
+	if J.IsInTeamFight( bot, X.nUltFightRadius )
+		and X.zuus_ShouldUltForTeamFight( bot )
 	then
-		local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1400, true, BOT_MODE_NONE )
-		local nInvUnit = J.GetInvUnitCount( false, tableNearbyEnemyHeroes )
-		if nInvUnit >= 5 then
-			return BOT_ACTION_DESIRE_MODERATE
-		end
+		return BOT_ACTION_DESIRE_MODERATE
 	end
 
 	-- modifier_warlock_fatal_bonds
