@@ -50,7 +50,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 -107. **Zeus 团战大招的法定人数 `>= 5` 被设在这个计数的上界上 —— 而这一轮最值钱的东西
    **是把「这不是恒假」这一格弱化写清楚,然后用 1012 个真实帧视角把前提变成一次能失败的测量**
    (报告 `iterations/reports/hero/20260906T142000Z.md`,`state.json:zusfightquorum_20260906`,
-   `queue.json:hero-38`;新 `tests/test_zuus_fight_quorum.lua` **16 例** +
+   `queue.json:hero-38`,GH **#567**;新 `tests/test_zuus_fight_quorum.lua` **16 例** +
    `tests/_zusfightquorum_sweep.lua` + `tools/agent/mutstand_zusfightquorum.sh` **11 变异全杀**;
    `bots/BotLib/hero_zuus.lua` **有真代码行**;选题依据 OWNER_PRIORITIES **P4.4**。)**
    - **本轮的 axis 是新的第七条**:「**一个阈值被设在它所阈值的那个量的上界上**」。
@@ -4824,7 +4824,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 - 2026-09-06T14:20Z(报告 `iterations/reports/hero/20260906T142000Z.md`;轴 **Zeus 的
   `X.ConsiderR` 团战分支要求 1400 内可施法敌人数 `>= 5`,而 5 不是这个计数值域里的
   一个阈值,它就是这个值域的上界:收进 gated `zusfightquorum`,turbo-only 未 armed**;
-  新 backlog `-107`,`state.json:zusfightquorum_20260906`,`queue.json:hero-38`)
+  新 backlog `-107`,`state.json:zusfightquorum_20260906`,`queue.json:hero-38`,GH **#567**)
   **`bots/BotLib/hero_zuus.lua` 有真代码行**(新 `X.zuus_ShouldUltForTeamFight`
   + 三个新常数 `X.nUltFightRadius`/`X.nUltFightQuorumShipped`/`X.nUltFightQuorumArmed`
   + **一处**调用点,半径改成共用常数);新 `tests/test_zuus_fight_quorum.lua`(**16 例**)
