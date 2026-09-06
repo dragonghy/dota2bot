@@ -31,7 +31,15 @@
 set -uo pipefail
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-ARCHIVE=iterations/streams/test_set.md
+# Owner P4.3 (2026-09-06): the two carriers this stand mutates now live in
+# DIFFERENT files.  §DU.5 itself moved to the ruling archive; the harvest
+# banner stayed in the live file, because a harvester meets the live file.
+# Each mutant below is pointed at the half that actually holds its target --
+# a mutant applied to the wrong half changes nothing and is then CAUGHT for
+# the wrong reason (evidence discipline 2's converse: read the diff, confirm
+# the mutant landed).  Verified per-string with grep before re-pointing.
+ARCHIVE=iterations/archive/test_set_archive.md
+LIVE=iterations/streams/test_set.md
 CENSUS=tests/test_replay_437_wandbleed_source.lua
 TEST=test_du5_archive_census.lua
 
@@ -118,8 +126,8 @@ mutant "M2 item 3 reverted to the mixed-unit rate" "$ARCHIVE" m2
 # --- M3: the top-of-file harvest banner keeps the old rate -------------------
 # The SECOND carrier. A test that only looked inside §DU.5 would call this
 # green, and the banner is the copy a harvester meets first.
-m3() { perl -0pi -e 's/最后一项本地命中率 \*\*3\/81 = 3\.70%\*\*/最后一项本地命中率只有 2\/101/' "$ARCHIVE"; }
-mutant "M3 the harvest banner keeps the old rate" "$ARCHIVE" m3
+m3() { perl -0pi -e 's/最后一项本地命中率 \*\*3\/81 = 3\.70%\*\*/最后一项本地命中率只有 2\/101/' "$LIVE"; }
+mutant "M3 the harvest banner keeps the old rate" "$LIVE" m3
 
 # --- M4: the corpus grew; the census test was re-nailed, the archive was not --
 # THE scenario this file exists for, and the one that really happened on 09-03.
@@ -152,8 +160,8 @@ mutant "M6 old kept ratio left undemoted beside the live one" "$ARCHIVE" m6
 # `收割前必读§DU.5`, which is in no file. Without the `cmp -s` NO-OP branch in
 # `mutant` this would have printed CAUGHT-or-SURVIVED off a run that never
 # mutated anything. Anchor on the plain phrase instead.
-m7() { perl -ni -e 'print unless /收割前必读/' "$ARCHIVE"; }
-mutant "M7 the harvest banner line is deleted" "$ARCHIVE" m7
+m7() { perl -ni -e 'print unless /收割前必读/' "$LIVE"; }
+mutant "M7 the harvest banner line is deleted" "$LIVE" m7
 
 # --- M8: right numerator, wrong denominator ----------------------------------
 # The original defect's exact shape, re-introduced with today's numerator: a

@@ -380,7 +380,7 @@ def main():
               "a digit-led section id is never a charter citation")
         check(code == 0, "and the source is not reported")
 
-        # 11c. THE CRASH (GH #572, director 2026-09-06).  `extract_sections`
+        # 11c. THE CRASH (GH #571, director 2026-09-06).  `extract_sections`
         # asserted that the `between` group is `§`-free "by construction".  It
         # is not: the id charset is `[A-Z]{1,2}`, so a first `§` followed by
         # anything else does not match, the engine walks on, and a LATER `§`

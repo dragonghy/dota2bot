@@ -497,6 +497,61 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-06T16:18Z**:**owner P4.3 落地(立项三轮后):`test_set.md` 1 507 101 B / 19 436 行
+  → 47 901 B / 317 行**,移走的正文进 `iterations/archive/test_set_archive.md`,与原文件 `299..EOF`
+  **逐字节相同**(md5 `3de10c97cca4f2a0ffe348c9abb091db`),`§` 标题 **744 → 744**。DoD 写 <50KB,落 47.9KB。
+  ⛔ P4.3 后半(铁律/章程条数减法)**没做,不假装做了**,单独排。
+  **⭐⭐⭐ 本轮最该被读的不是那条 sed,是三个读者 —— 三种失效形状互不相同,而且全部朝绿**:
+  **(甲)** `pending_rulings.py`:**23 个「提议入集」小节全部在被移走的那一半**(live 0 / archive 23)
+  ⇒ 只拆文件不拆读者,它打 `proposal sections scanned: 0` + `ORPHAN_PROPOSAL: none` ——
+  **一个立项目的就是「让没裁的裁定变红」的工具,因为输入消失而变成永远不亮的灯**。
+  ⚠️ 我第一版把配对写成**无条件**的,**当场被它自己的测试抓住**(四条端到端用例传的是**合成**
+  `--test-set`,无条件配对把真实 1.4MB archive 喂了进去,`256 checks, 4 failed`)⇒ 改成
+  **只与真实 `TEST_SET` 自动配对**。**那四条用例是买来的,不是我想到的。**
+  **(乙)** `citation_audit.py`:**引用的命名空间是名字不是文件** —— **251 条已发表的
+  `test_set.md §XX`,168 条今天解析得到**,节一移走就全变 MISSING ⇒ `SECTION_FALLBACKS` 在
+  **`test_set.md` ∪ archive** 上解析,**AMBIGUOUS 也在并集上判**(同一 `§XX` 两半各一个标题 = 真冲突,
+  按先搜到的文件回答就是把它藏起来,`§CA` 重号即此形)。验收是并集读数本身:同一份 251 条语料
+  拆分前后各跑一次,**168 resolved 相同、83 条非 OK 裁定逐行 diff 为空**。
+  ⛔ 中途**用错过一次参数**(`--trunk HEAD`,而工具拼 `<remote>/<trunk>` ⇒ 查了不存在的 `origin/HEAD`),
+  读数 `resolved on trunk 0` —— **那个 0 恰好就是「fallback 没生效」长的样子**,顺带把负控做实了。
+  **(丙)⭐ 这一条我没想到,是套件把它跑红的**:`test_du5_archive_census.lua` + `mutstand_du5_archive.sh`
+  指着 `test_set.md` 当「档案」。我一度读成「没受影响」,**因为 `lua5.1 <该文件>` 退出 0 且零输出 ——
+  它 `return tests`,直接跑什么都不执行**(证据纪律第 3 条的近亲:**模块的退出码 0 不是通过**;
+  已在文件头钉死这一行)。走 runner 立刻 `3 failures: ### §DU.5 is gone from …`。
+  修:两个载体现在分居两半(**banner 留 live**——harvester 先遇到的就是 live;**§DU.5 去 archive**)⇒ 语料改并集;
+  变异台逐条重指(**M1/M2/M6/M8 → archive,M3/M7 → live**,每条先 `grep -c` 量过目标串在哪一半 ——
+  **打错半边的变异体什么也没改,然后因为错误的理由被判 CAUGHT**),**8/8 CAUGHT + baseline GREEN**。
+  ⇒ **拆分类改动的验收不是「我列了读者清单」,是「跑一遍真跑得动的东西」**:甲乙我想到了,**丙我想错了**。
+  **⭐ 顺手量到一个真崩溃并立案 GH #571([harness])**:`citation_audit.py` 的
+  `assert "§" not in m.group("between")` —— docstring 说 `between` 是 `§`-free "by construction",**它不是**
+  (节 id 字符集 `[A-Z]{1,2}`,第一个 `§` 跟的不是它就匹配不上,后一个 `§` 绑上,第一个落进 `between`)。
+  仓库里**现成三条**(`§x.0` 占位两条、`§ 节)` 一条)⇒ **AssertionError,exit 1,一条引用都没审**。
+  **形状比数量重要:一个为执行「永不猜测」而写的 guard,是唯一能把「本应被拒绝的引用」变成「进程死掉」的东西**,
+  而 `claim_precheck.sh` **在发表任何带引用的裁定之前**跑它。修法 `scan_sections -> (bound, unbound)`:
+  **跳过且打印 DECLINED**(⚠️ 静默跳过不算修好:「没有节引用」与「我拒绝读这里的节引用」必须不是同一份输出);
+  测试主判据是 **`charter sections cited 0`** 而非「不崩溃」——**静默吞掉的实现同样不崩溃**。
+  **登记不修**:同语料 **82 条 MISSING + 1 AMBIGUOUS 拆分前就欠着**(散文写 `§XX.N` 而那一级从无标题行),
+  拆分前后逐行相同 ⇒ 与本次无关,不扫进来(已写进 #571 边界节)。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings`;python **105/106 exit 0**,
+  唯一非 0 是 `test_selfcheck_lua_leg.py` 的 **UNCERTIFIABLE**(GH #548)⚠️ **本轮与全量 Lua 套件并发跑,
+  容器更慢 ⇒ 对 #548 不构成新读数**;`test_citation_audit` **74/0**(原 61)、`test_pending_rulings` **256/0**(原 246)、
+  `pending_rulings` 全量输出**拆分前后逐字节相同**、负控 `--test-set-archive /nonexistent.md` **→ 0 proposals**、
+  `carrier_terms` TERMS 行逐字节不变(8 项)、`promote_atoms` exit 0。
+  ⛔ **自检(铁律 10)本轮无有效读数,而且是我造成的**:开工又误用管道(**第三十五发**),
+  重定向重跑后挂在 `trunk health (fast Lua detectors)` >60min,**而我在它还在跑的时候跑了变异台**
+  (故意反复弄脏 `test_set.md`/archive)⇒ 它的 trunk 腿读的是被搅动的树 ⇒ kill,改自己跑全量套件。
+  **新戒律:变异台与自检不许并发** —— 前者故意把树弄脏,后者的立论前提是树干净。
+  **🔴 健康巡检:P4.1 标尺波 ~13 循环零推进,升红;但归因不在批测台** —— 账户 MTD 经付费 CE 量到 **$50.80**,
+  越线部分**多数不是本项目** ⇒ 批测台按 $-tier 政策不能发波,**下一步该 owner 动**
+  (已在 DECISIONS_NEEDED #15 与 09-05 两条燃烧率条目里,**不新开重复条目**)。
+  ⛔ **P4.2 本轮判定完结 0**(整轮给了 P4.3 这个 owner 明写的一次性工作单元);armed **55** 不变。
+  **零 AWS 增量;`bots/`+`game/` 一行未动;本轮不发 owner 邮件**(W36 那封 07:xxZ 已发)。
+  报告:`iterations/reports/director/20260906T161838Z.md`。
+  **下轮交棒**:① ⭐⭐⭐ **回到 P4.2,九个 WORKING 里剩下的八条逐条判**(本轮欠的判定完结在这里补);
+  ② ⭐⭐ GH #450 落新 soak candidate(已挂两轮);③ ⭐ P4.3 后半:铁律/章程条数减法;
+  ④ GH #548 拿掉上限跑一次(**本轮那个 UNCERTIFIABLE 不算第五个读数:并发污染**);
+  ⑤ 登记项:82 条 pre-existing MISSING 引用要不要逐条判。
 - **2026-09-06T13:2xZ**:**连续三轮顺延的 W50 裁定本轮结清,而结清的形状不是「判了」,是「判出它为什么不可判」**
   —— **measured set ≠ promotable set**:条件 (a) 逐 id、条件 (b) 家族级,**两者的交集从来不是被测的那个配置**
   (59 个 armed id:**WORKING 9 / BUGGY 3 / INDETERMINATE 19 / 连一行 VERIFY 都没有 28**;

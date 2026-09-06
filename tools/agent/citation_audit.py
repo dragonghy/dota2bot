@@ -333,7 +333,7 @@ def scan_sections(text):
     a second id further along the sentence is prose, not a citation of that
     file, and guessing at it is how a detector earns its mute.
 
-    ⚠️ 2026-09-06 (director, GH #572): the `between` group is NOT `§`-free by
+    ⚠️ 2026-09-06 (director, GH #571): the `between` group is NOT `§`-free by
     construction, and the `assert` that said so **crashed the whole audit**
     (AssertionError, exit 1) instead of reporting anything.  The regex requires
     the section id to be `[A-Z]{1,2}`; when the first `§` is followed by

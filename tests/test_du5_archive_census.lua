@@ -43,7 +43,18 @@
 package.path = 'tests/?.lua;' .. package.path
 
 local CENSUS_TEST = 'tests/test_replay_437_wandbleed_source.lua'
-local ARCHIVE = 'iterations/streams/test_set.md'
+-- Owner P4.3 (2026-09-06): the two carriers this file checks now live in
+-- DIFFERENT files.  The harvest banner stayed in the live `test_set.md` (it is
+-- what a harvester meets first, which is the whole reason it is a second
+-- carrier); §DU.5 itself moved to the ruling archive.  So the corpus here is
+-- the union, in the same order a reader meets it -- and the `assert(at, ...)`
+-- in `section` below is why this was not a silent pass: the split ran the
+-- suite red on this file until the constant was re-pointed, exactly as it is
+-- supposed to.  ⚠️ `lua5.1 tests/test_du5_archive_census.lua` executes NOTHING
+-- (this file `return`s a table); it must be run through `tests/run_tests.lua`.
+local LIVE = 'iterations/streams/test_set.md'
+local ARCHIVE_FILE = 'iterations/archive/test_set_archive.md'
+local ARCHIVE = LIVE .. ' + ' .. ARCHIVE_FILE
 
 -- A superseded number may stay in the archive, but only in demoted position:
 -- right after this marker, so a reader meets the correction before the number.
@@ -67,6 +78,12 @@ local function slurp(path)
     local src = fh:read('*a')
     fh:close()
     return src
+end
+
+-- The live file and the ruling archive, joined by a newline so a heading on
+-- the archive's first line cannot be swallowed by the live file's last.
+local function corpus()
+    return slurp(LIVE) .. '\n' .. slurp(ARCHIVE_FILE)
 end
 
 -- The two numbers the census test registers. Read from the ratchet CALLS, not
@@ -133,7 +150,7 @@ end
 tests['§DU.5 quotes the kept-frames ratio the census test registers'] = function()
     local fresh, blocked = registered()
     local want = string.format('%d/%d', fresh - blocked, fresh)
-    local sec = section(slurp(ARCHIVE), '### §DU.5')
+    local sec = section(corpus(), '### §DU.5')
     assert(sec:find(want, 1, true), string.format(
         '§DU.5 item 2 must quote the kept-frames ratio %s (kept = fresh %d - '
         .. 'blocked %d, both read off the ratchets in %s). Re-nail the prose, '
@@ -148,7 +165,7 @@ tests['§DU.5 and the harvest banner quote the last-conjunct rate, in FRAMES'] =
     -- victim/attacker-pair denominator -- and nobody had to say which cut it
     -- was, because on the old corpus both cuts happened to read 2.
     local want = string.format('%d/%d', blocked, fresh)
-    local src = slurp(ARCHIVE)
+    local src = corpus()
     local sec = section(src, '### §DU.5')
     assert(sec:find(want, 1, true), string.format(
         '§DU.5 item 3 (the DOMAIN-NOT-REACHED clause) must quote %s -- blocked '
@@ -166,7 +183,7 @@ tests['no superseded ratio stands undemoted in §DU.5 or the banner'] = function
         [string.format('%d/%d', fresh - blocked, fresh)] = true,
         [string.format('%d/%d', blocked, fresh)] = true,
     }
-    local src = slurp(ARCHIVE)
+    local src = corpus()
     for label, text in pairs({ ['§DU.5'] = section(src, '### §DU.5'),
                                ['the harvest banner'] = banner(src) }) do
         for _, hit in ipairs(ratios(text)) do
