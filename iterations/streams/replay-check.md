@@ -12033,3 +12033,76 @@
     **⚠️ 第二十一次登记:自检在本容器不是「约 20s」。**
     **铁律 6**:`GATE_EXIT` 与 push 读数见报告 §8.1;**未用 `RULE6_BYPASS` ⇒ 无
     「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
+- **2026-09-06T15:55Z**:**取上一轮点名的「下一轮第一件事 (1)」—— hero-2 / `cullthresh`
+  归档域普查(穿越口径)。零 EC2、S3 只读、未改 `bots/` 一行。**
+  **宽扫** `replays/` 全部 **780** 个带 run 标签的 `.dem` 逐局取 `analysis.json` 做英雄普查
+  ⇒ **含 Axe 70 局(9.0%,23 个 run)——这是「有录像且含 Axe」的全集,不是抽样**;
+  **深扫 69/70 局(98.6%**,1 局 dumper 读不了,GH #258 同族);**逐帧 8 个瞬间 / 8 局 / 8 个 run**。
+  ```
+  VERIFY id=cullthresh verdict=INDETERMINATE domain=REACHED crossings=501 games=69/69
+  VERIFY id=<hero_axe.lua X.ConsiderR 处决分支,出货腿> verdict=WORKING casts=449 games=69
+  ```
+  - **⭐ 主发现:域到了,而且是本组连续多轮以来第一个到得干净的域。**
+    **501 次带内穿越 / 69 局全覆盖**;可钉帧 **98 个采样瞬间 / 81 episode / 45 局**,
+    其中 **28 帧 / 18 episode / 16 局**在 **175u 之内**。
+    (`INDETERMINATE` 是对**行为正确**的判词不是对域的:`cullthresh` 在 `test_set.md` 里
+    出现 **0** 次、**从未 armed** ⇒ 语料里没有一帧是它执行的。)
+  - **⭐⭐ 三个独立估计量对上了**:穿越模型 **77.1**(申请书 2026-08-30 **预登记的上界**)、
+    池模型 **125.4**、**实测 98** —— 落在两者之间,**预登记的上界读法没有被违反,
+    两个模型都不需要事后重挑**。差额来自**带内滞留**(有目标不是穿过带而是停在带里)。
+    ⚠️ `crossings=501` **不是**「501 次本可执行的击杀」:平均 336 HP/s ⇒ 多数穿越是
+    **一跳打穿**,真实 bot 在 1/30s tick 上看没看到那一瞬,**1 Hz 语料答不了**。
+    **501 = 域存在性,98 = 可钉帧,两者不可互换。**
+  - **⭐ 订正:带按代码是左闭右开 `[250,275)/[350,375)/[450,475)`,不是申请书散文的
+    `(lo, hi]`。** `X.ConsiderR` 比的是 `hp_eff < nKillDamage`(**严格小于**)⇒
+    `hp_eff == 250` **在**域内、`== 275` **不在**。带宽仍是 25、**没有任何已发表量级因此改变**,
+    但**一帧钉不钉得住由端点决定**(centaur `hp = 350` 整那帧只有按代码口径才在域内)。
+  - **⭐ 新增对照列(由逐帧逼出来的,永不与带内帧并池)**:拓宽一根没人到得了的分支
+    买不到任何东西 ⇒ 另计**已在出货线以下**的瞬间:175u 内 **141 个 episode**,
+    **59 个(41.8%)2s 内真的落了斩**,其余多数是**目标死于队友**(102/141 在 5s 内死)。
+    ⇒ 该分支 **WORKING 不是 SILENT**,`cullthresh` 拓宽的是一条**确实在开火**的路。
+  - **⭐ 可钉帧(本请求 `acceptance` 点名要的 `(game, t)`,首选)**:
+    `20260905_125159_slot1__spot_20260905_122410_1_54b839d1469eb9a855534644480c8f72399ff7f3_272131`
+    **t=874.5 medusa**,rank 2,`hp=362` **满血**、**d=29.0u**、**被我方 Lion 定住 2.7s**
+    (873.8–876.5),Axe 那一瞬在**打塔**;出货腿拒(362≥350)、armed 腿斩(362<375);
+    她**192 秒后才死**。备选 `..._638395` t=939.5 PA hp=354 d=70.7(1 秒提前量 vs 一个
+    跑掉的 PA)、`..._60e52a` t=1293.4 lion hp=457 d=82.7(赶在她开雾隐**前 0.3 秒**)。
+    **反面帧同样登记**:`..._11c470` t=1015.5 armed 腿会往 **False Promise** 里砍;
+    `..._272131` t=1314.5 抢刀 0.6s 但**可能挤掉 1315.6 对 shadow_shaman 的那次斩**。
+  - **侧别分层(4(i-a) 披露)**:语料 Axe **radiant 46 / dire 23**(2:1);穿越 **328/173**、
+    带内帧 **63/35**、对照列 **409/223** —— 三个比值都落在供给比上,按 **4(i-b)** 两层同号,
+    **没有侧别信号可读**,不构成任何结论的支撑。
+  - **量具**:新 `tools/batch_test/behavioral/cullthresh_domain.py`(`--selfcheck`
+    **62 PASS / 0 FAIL**)+ `tests/test_cullthresh_domain.py`(**13 tests OK**,从反面
+    钉三种「本轮头条可能被造出来」的形状:幻象同名取帧、穿越不定向、不检 cd/蓝/等级/排除名单)。
+    **幻象守卫按出生时刻(GH #176)本轮丢弃 656,762 个同名快照样本** —— 幻象血低,
+    不挡住它就是把一份幻象普查写成英雄普查。
+  - **本轮开**:**GH #<待填>** `[hero]` —— `X.HasSpecialModifier` 缺
+    `modifier_oracle_false_promise_timer`;**不是假设**:449 次 `axe_culling_blade` 里
+    **2 次真的落在 False Promise 窗口内部**(`..._11c470` t=958.7 → sniper、t=1452.9 → oracle)。
+    **出货腿就有这个缺口,与 `cullthresh` 无关,不作为它的阻塞项。**
+  - **下一轮第一件事**:(1) **hero-31 主体三列**(充能列已明写拿不到,GH #561);
+    (2) hero-30 可买列(两分支分开,不许并池);(3) hero-36 / hero-37(与 13:02Z 同形,
+    modifier 区间重建可复用);(4) hero-32/33 等 dumper 补小兵 hp,否则只能交 INSTRUMENT-BLIND。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;`tpreach_domain.py` 补 `by_seed`
+    (**已连欠五轮**);§3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝
+    (GH #529);`outlatch` 重扫;`campbind` 等 #475;**#477 重 dump 仍是本组的球**;
+    `hero_domain_scan_2_30_31` 的其余读数仍欠。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 29 轮 / #421 第 28 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260906T155500Z.md`;
+    交付件:`iterations/reports/replay-check/domain_hero_2_cullthresh.md`
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(全程 S3 只读,零 EC2);`DUMPER_EXIT=0`(cache HIT);
+    780 个 `analysis.json` `DL_EXIT=0`;69/70 局 `DUMP_EXIT=0`、`unparseable=1`;
+    `cullthresh_domain.py --selfcheck` **`SELFCHECK_EXIT=0`,62 PASS / 0 FAIL**、真语料 `SCAN_EXIT=0`;
+    `WRAPPER_EXIT=0`(13 tests OK)。
+    ⛔ **证据纪律 3 第四十三次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`);第二次改重定向但**被 300s 前台超时挪到后台**,
+    `$?` 没打出来,真码从脚本末行裸读:**`selfcheck worst exit: 3`**
+    (`legs run 10`;FINDINGS `cadence queue-rulings owed-executions`;
+    **`UNCERTIFIABLE (exit 2): trunk-red(python)`** —— `test_rc_wrapper.py` 与
+    `test_selfcheck_lua_leg.py` 没跑成,**不是通过**)。
+    **⚠️ 第二十二次登记:自检在本容器不是「约 20s」** —— 本轮实测 **> 300s**。
+    **铁律 6**:`GATE_EXIT` 与 push 读数见报告 §7.2/§8;**未用 `RULE6_BYPASS` ⇒
+    无「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
