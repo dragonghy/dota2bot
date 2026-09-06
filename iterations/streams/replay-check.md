@@ -12190,3 +12190,98 @@
     家族的行号漂移,点名 `bots/ability_item_usage_generic.lua`,与本轮零交集)。
     **铁律 6**:`GATE_EXIT` 与 push 读数见报告 §11;**未用 `RULE6_BYPASS` ⇒ 无
     「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
+- **2026-09-06T21:55Z**:**取上一轮点名的「下一轮第一件事 (1)」—— hero-30 / `axecallbkb`
+  归档域普查(两个分支分开,不许并池)。零 EC2、S3 只读、零 CE,未改 `bots/` 一行。**
+  (hero-30 是 **FROZEN-HOLD**,该裁定明写「冻结冻的是入集,不是取证」⇒ 本轮只买证据。)
+  **宽扫** `replays/` 全部 **795** 个带 run 标签的 `.dem` 逐局取 `analysis.json` 做英雄普查
+  ⇒ **含 Axe 70 局(8.8%)——「有录像且含 Axe」的全集**(上一轮 780 局时也是 70,
+  **新增的 15 局一局没有 Axe**);**深扫 69/70 局(98.6%**,1 局 dumper 读不了,
+  与 15:55Z 同一局,GH #258 同族),`unparseable=0`;**逐帧 7 局 / 7 个 run**(章程下限 6)。
+  ```
+  VERIFY id=axecallbkb verdict=INDETERMINATE domain=REACHED branch_i=35 branch_ii=1519 games=69/69
+  VERIFY id=<hero_axe.lua X.ConsiderQ 先手分支,出货腿> verdict=WORKING casts=1308 landings=1141 games=69
+  ```
+  - **⭐⭐ 主发现一:`bkbpierce: "Yes"` 这次是本仓语料量到的,不是网页读来的。**
+    1,141 次 `modifier_axe_berserkers_call` 落到敌方英雄身上,**27 次落在当时挂着真魔免的
+    英雄身上**(BKB 20 / 剑刃风暴 7),分布在 **19 局**。逐帧两例:
+    `20260830_004643_slot1` **t=1057.3**(BKB 的 Dragon Knight 正在 TP,嘲讽落上去,
+    `modifier_teleporting` 1057.5 消失 ⇒ **TP 被打断**,DK 1526 → **115** 死)、
+    `20260904_183236_slot1` **t≈1481**(两个 BKB 敌人 55/66u 与 Zeus 同时挂上嘲讽)。
+    ⇒ **(c) 那条腿从「网页说」升格成「本仓语料说」**。**与上一轮 `liondrainbkb` 正好相反** ——
+    同一台量具,那次把前提证伪,这次把前提证实;**决定结果的是语料不是立场**。
+  - **⭐⭐ 主发现二:预登记的 `DOMAIN-NOT-REACHED` 不触发,而预登记的「拆 id」正好命中。**
+    魔免占比 **(i) 11.4% / (ii) 14.1%**,acceptance 要的是「**都**接近 0」⇒ **不触发**,
+    本组**不**建议以「域太小」退回。但两条腿的供给**差 38 倍**:
+    (i) **4 瞬间 / 3 局**(约 17 局一次);(ii) **153 瞬间 / 65 ep / 36 局**
+    (Axe 亲手在打他、且 ±2s 内没有别的路把 Call 放出去)。⇒ **本组建议:先拆 id 再谈入集**
+    (裁定权在总监/英雄组);绑在一个 id 上发一波只能得到一个**由 (ii) 主导、(i) 读不出来**的合数,
+    而 (i) 恰恰是代价上界最干净的那条腿。**归因边界照抄不改:WIDENING,
+    负读数只能读作「多放的那些放错了」,永远不能读作「少放了 N 次」。**
+  - **⭐ (ii) 的价值列(申请书点名不许省的那一列)**:**218 个魔免瞬间里 94 个(43.1%)**
+    的 315u 环内还站着 1–2 个不魔免的敌人 ⇒ 一个**无目标 AoE 嘲讽**被挂在单个敌人的属性上,
+    丢掉的是**整片**。分布 0/1/2/3 = 124/61/33/0(整数小值域**不报中位数**,铁律 4(ii))。
+  - **⭐⭐ 本轮的自捉,又是逐帧核验自己递上来的候选清单抓到量具的**:第一版把
+    **「Axe 自己动不了」**的帧算进了域(`20260905_004904_slot1` t=1442.5:Axe 正被 Pudge 肢解
+    = 被眩晕,身边 91.5u 站着 BKB 的 Spirit Breaker、Call cd=0)——
+    等于**把「否决害我们少放一次」记在一个本来就放不出去的帧上**。守卫落地
+    (`AXE_CANNOT_CAST`:眩晕/沉默/变羊/放逐/恐惧/自己在 TP;**根不在里面 —— 被缠绕仍可施法**)
+    后**重扫全部 69 局**:就绪帧 65,641 → **62,587**(拒 3,054);
+    **分支 (i) 96 → 35(拒 61,63.5%)** —— 因为「环内有人在读条」本身常常意味着
+    **读条的对象就是 Axe**;分支 (ii) 2,221 → 1,519、魔免 258 → 218。
+    **4 个魔免的 (i) 瞬间一个没掉**(全是 TP,Axe 没被控)⇒ 头条不变、分母变小、占比反而升高。
+    与 09-06T19:13Z 的 WK 复活读条窗口**同族同发现方式**。
+  - **⭐ 更正本组自己上一轮的判词**:交付件 §4 把 hero-30 的「正在引导」列判成
+    INSTRUMENT-BLIND(「dump 无引导状态」)——**那一半是错的**。`MODIFIER_ADD/REMOVE`
+    带 `actor` 字段,引导可按**引导者**重建:落在受害者身上的(肢解/枷锁/抽蓝)归 `actor`,
+    落在自己身上的(TP/极寒领域)归自己。**仍 BLIND 的只有 `IsGoingOnSomeone`/`botTarget`**。
+    ⇒ **「dump 里没有这个字段」≠「这个状态重建不出来」**,上一轮把后者当成了前者。
+    另一条不查就会整张表白量的反向核对:`J.GetProperTarget`(`jmz_func.lua:335`)
+    = `bot:GetTarget()`/`GetAttackTarget()`,**自己不带魔免过滤** ⇒ 魔免敌人可以是 `botTarget`,
+    (ii) 的域**不是结构性空的**。
+  - **可钉帧**:**(i) 首选** `20260831_061811_slot1__…_1dd5705f` **t=1209.9**
+    (Bristleback 开 BKB 起 TP,Axe **190.2u 连续两个采样同距**、Q rank3 cd=0 蓝 324;
+    出货腿否决 ⇒ 站满两秒没动作,1211.9 TP 完成逃走);**(ii) 首选**
+    `20260828_002127_slot1__…_3110f323` **t=982.1**(BKB 的 Lina 75.1u,同环 Necrolyte 165.3u
+    + 只剩 **228 血**的 Shadow Shaman 276.9u ⇒ 丢掉一发**三人**嘲讽,正是头注释假设的那个形状)。
+    **反面帧同样登记**:`20260830_004643_slot1` t=1056.5(Call 反正也放了,armed 买不到新东西)、
+    `20260905_004904_slot1` t=1442.5(Axe 被控,域外)。
+  - **侧别分层(4(i-a) 披露)**:语料 radiant 46 / dire 23(2:1);(i) 瞬间/魔免 **21/3 vs 14/1**、
+    (ii) **1,029/164(15.9%) vs 490/54(11.0%)**。按 **4(i-b)** 两层同号(占比都远离 0)
+    ⇒ 结论在两层里各自成立,侧别本身不构成支撑。
+  - **量具**:新 `tools/batch_test/behavioral/axecallbkb_domain.py`(`--selfcheck`
+    **39 PASS / 0 FAIL**)+ `tests/test_axecallbkb_domain.py`(**14 tests OK**,从反面钉六种
+    「本轮头条可能被造出来」的形状:幽魂之灵/虚无当魔免、引导记在受害者头上、被控的 Axe 当域、
+    根当成不能施法、两个分支并池、两个半径平均)。⚠️ **本容器没有 pytest**
+    (`python3 -m pytest` → `No module named pytest`,**没跑成不是失败**),用 `python3 -m unittest`。
+  - **本轮开**:`[hero]` issue 一条(正文全文在报告 §12,MCP 被挡时按铁律 11 不空转)。
+    未开 [harness]:唯一仪器缺口是 bot 侧内部状态,不是 dumper 能补的字段。
+  - **下一轮第一件事**:(1) **hero-36 / `cmrangedhp`(GH #560)** —— 先确认 `creeps[]` 有没有 hp,
+    这一步就决定它是读数还是 METHOD-FAILED 退回;(2) hero-37 / `zusultstrand`(GH #564);
+    (3) **hero-38 / hero-39 尚无总监裁定,请总监先裁** —— ⚠️ **hero-39 点名本组**:
+    它要用**半开**判据重数,而 `cullthresh_domain.py:215` 现在是闭区间,
+    **那正是 GH #570 那个 2 的来源,本组开的 issue 本组该复核**;
+    (4) hero-32/33 等 dumper 补小兵 hp。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;`tpreach_domain.py` 补 `by_seed`
+    (**已连欠七轮**);§3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝
+    (GH #529);`outlatch` 重扫;`campbind` 等 #475;**#477 重 dump 仍是本组的球**。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 31 轮 / #421 第 30 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260906T215500Z.md`;
+    交付件:`iterations/reports/replay-check/domain_scan_hero_2_30_31.md` **§8**
+    (路径由 owed 行钉死不改名;同轮把头部 `SCAN_COVERAGE` 4/9 → **5/9**、§7 的 hero-30 行
+    改成 DELIVERED ——**出现不等于交付**那句话仍在文件里)。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(S3 只读,零 EC2、零 CE);
+    `DUMPER_EXIT=0`(cache HIT);795 个 `analysis.json` `AN_DL_EXIT=0`;
+    69/70 局 `DL/DUMP_EXIT=0`、`unparseable=0`;`axecallbkb_domain.py --selfcheck`
+    **`SELFCHECK_EXIT=0`,39 PASS / 0 FAIL**、真语料 `SCAN_EXIT=0`;`WRAPPER_EXIT=0`(14 tests OK)。
+    ⛔ **证据纪律 3 第四十五次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`);第二次改重定向 + 后台,取到真码
+    **`selfcheck worst exit: 3`**(`legs run 10`;FINDINGS
+    `cadence queue-rulings owed-executions trunk-red(lua)`;
+    **`UNCERTIFIABLE (exit 2): trunk-red(python)`** —— `test_rc_wrapper.py` 与
+    `test_selfcheck_lua_leg.py` 没跑成,**不是通过**)。
+    **⚠️ 第二十四次登记:自检在本容器不是「约 20s」** —— 本轮 > 300s。
+    两条 trunk-red 都**先于本轮存在于工作树上**,与本轮零交集(**本轮未改任何 `.lua`**)。
+    **铁律 6**:`GATE_EXIT` 与 push 读数见报告 §11/§13;**未用 `RULE6_BYPASS` ⇒ 无
+    「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称**。
