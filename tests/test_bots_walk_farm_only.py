@@ -102,6 +102,13 @@ UNRESOLVED_HAND_READ = {
         "dir in {tests/fixtures, tests/frames}",
     """tests/test_fixture_mana_price.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
         "d in {tests/fixtures, tests/frames}",
+    # Hand-read 2026-09-06 (director), at :399-400: the loop is written
+    # `for _, dir in ipairs({ 'tests/fixtures', 'tests/frames' })`, so both
+    # values are literals in the file itself.  Narrower than its sisters above
+    # -- the glob is `<dir>/*.lua`, not the bare directory -- so it reaches
+    # strictly less, and bots/ is not in the enumeration either way.
+    """tests/test_lion_drain_immune_target.lua  ::  'ls ' .. dir .. '/*.lua 2>/dev/null'""":
+        "dir in {tests/fixtures, tests/frames}",
     """tests/test_fixture_kv_getters.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
         "d in {tests/fixtures, tests/frames} -- corpus_files(), the ipairs list "
         "on :121 feeding the popen on :122; the file's other popen (:393) is the "

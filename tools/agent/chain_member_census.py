@@ -183,9 +183,15 @@ _JUDGED_DUP_ROWS = [
     # ⭐ THE ROW GH #442 WAS OPENED FOR.  `line_last_seen` moved 8246 -> 8256 on
     # 2026-09-02 (ten COMMENT lines inserted at :3406) and the row is now keyed
     # by the chain text instead, so that shift is a `LINE NOTE`, not a red.
+    # It slid AGAIN 8256 -> 8341 on 2026-09-06 (commit 23e80a4, the `urnself`
+    # gate, inserted ~85 lines above it in the same file).  Same story, second
+    # instance, and the key absorbed it exactly as designed: the tool stayed
+    # green and printed the LINE NOTE.  What went red was the FRESHNESS check
+    # in tests/test_chain_member_census.py, which is a different claim -- see
+    # GH #574 for whether that check should keep costing an edit per insertion.
     ("bots/ability_item_usage_generic.lua",
      'notallyHero:HasModifier("modifier_juggernaut_healing_ward_heal")',
-     "1585a9b8", 8256,
+     "1585a9b8", 8341,
         "IDEMPOTENT.  The polliwog-charm heal filter repeats one member of the "
         "already-being-healed set.  It LOOKS like the dropped-member shape and "
         "is not: the repo's only sibling enumeration of that set "

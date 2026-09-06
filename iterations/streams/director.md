@@ -497,6 +497,41 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-06T19:19Z**:**开工自检读到 trunk 双红,两条都结清、trunk 回绿;两条都不是 `bots/` 的问题,
+  而是别的组本轮落地的产物在别人的门上碰响的。⭐⭐⭐ 值得读的是第一条:GH #442 花钱关掉的那个红,
+  在上面一层原样长了回来 —— 工具层判「navigation,永不红」,测试层判「逐位相等,否则红」,
+  两层对同一个数字给了相反的处置。**
+  **(1)** `test_chain_member_census.py`:judged 行 recorded line `8256` vs 今天 `8341`,
+  归因 strategy `23e80a4`(`urnself`)往那条 chain **上方**插了 ~85 行,**chain 本身一字未动**。
+  工具照契约**保持绿**(`TOOL_RC=0`,`13 findings, judged 13, new 0, ambiguous 0`);
+  红的是 `:307` 的**新鲜度棘轮**。**最能说明问题的是那条 check 自己的注释就写着它所违反的契约**
+  (「when one drifts the tool prints LINE NOTE and stays green」,下一行断言逐位相等)。
+  ⇒ **只做诚实的那一半**:`8256 → 8341` 回绿;**没动那条 check** —— 它是 `ef0ea24c` 随文件落地、
+  **另一个组刚写下的**主张,新鲜度棘轮有独立动机,**不该由我按自己的读法单方面翻面**
+  ⇒ 三个处置选项(保留 / 降为 NOTE / 自愈)写进 **GH #574** 交回。
+  **负控**:`8341→8340` 该 check **CAUGHT**(exit 1),改回绿 ⇒ **8341 是工具自己的读数,不是凑出来的绿**。
+  **(2)** `test_bots_walk_farm_only.py`:hero `44329f4` 新落的 `test_lion_drain_immune_target.lua`
+  带一条未登记 `io.popen`。**这条 check 的设计就是收一次手读费,处方写在它自己的报错里** ⇒ 手读
+  `:399-400`(`for _, dir in ipairs({'tests/fixtures','tests/frames'})`,两个值都是同文件字面量,
+  glob `<dir>/*.lua` 比四条姊妹**更窄**),登记进 `UNRESOLVED_HAND_READ`。**门按设计收费,不是缺陷,不另立 issue。**
+  ⭐ 顺带确认 hero `44329f4` 那次「revert the census edits」**是对的**,且**没碰**census 测试;
+  它引 `tests/frames/README.md` 拒绝「为了让套件变绿而快速改别组的裁定」——**本轮第 1 条走的是同一条原则**。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings`(容器缺 luacheck,gate 自己装的);
+  push 门已上膛(`ARM_RC=0`);python 全量 **106 passed / 1 非 0**,唯一非 0 是
+  `test_selfcheck_lua_leg.py` **`rc=124` —— 那是我 240s 上限打的,UNCERTIFIABLE,既不是红也不是绿**
+  (GH #548)⇒ **本轮拿掉上限重跑了一次**(欠五轮的第五个读数,读数见报告)。
+  ⛔ **`bots/`+`game/` 一行未动**(改的两个文件是 `tests/*.py` + `tools/agent/*.py`),
+  `smoke 0`;**全量 Lua 套件(~100min)本轮没跑,不声称它绿**。
+  ⚠️ **开工第一条命令又误用管道(第三十六发)**,被 §22 守卫当场拒;**章程第 0 条逐字覆盖这一发,我没照做**
+  ⇒ **不新立措辞**(34/35 发已证明改措辞不解决),登记发数。自检自身 `EXIT=124`(挂在 fast Lua detectors,
+  与上轮同族),但**挂之前已交付本轮全部价值**:两条 trunk 红 + 锚点 3/3 + promote-atom 3/3 + `FROZEN none`。
+  **零 AWS 增量(本轮一次 AWS 调用都没有);本轮不发 owner 邮件**(W36 那封 07:xxZ 已发,本周配额用完)。
+  ⛔ **P4.2 判定完结 0**(整轮给了 trunk 红);armed **55** 不变。
+  报告:`iterations/reports/director/20260906T191914Z.md`。
+  **下轮交棒**:① ⭐⭐⭐ **回到 P4.2,九个 WORKING 里剩下的八条逐条判**(**已连续两轮被挤掉**:
+  上轮 P4.3、本轮 trunk 红);② ⭐⭐ GH #450 落新 soak candidate(**已挂三轮**);
+  ③ ⭐ GH #574 回到写那条 check 的人手上三选一;④ ⭐ P4.3 后半:铁律/章程条数减法(**从没开工**);
+  ⑤ 登记项:82 条 pre-existing MISSING 引用要不要逐条判。
 - **2026-09-06T16:18Z**:**owner P4.3 落地(立项三轮后):`test_set.md` 1 507 101 B / 19 436 行
   → 47 901 B / 317 行**,移走的正文进 `iterations/archive/test_set_archive.md`,与原文件 `299..EOF`
   **逐字节相同**(md5 `3de10c97cca4f2a0ffe348c9abb091db`),`§` 标题 **744 → 744**。DoD 写 <50KB,落 47.9KB。
