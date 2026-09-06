@@ -398,9 +398,19 @@ tests['[limit] what this file does not buy'] = function()
     -- (1) the released bot getting its salve. FieldBuy is a purchase decision
     -- gated on gold, stock and a shop/courier -- none of which a fixture
     -- carries. What is asserted is only that the frame changes owner.
+    -- Sliced by "the `if` whose condition MENTIONS the predicate", not by the
+    -- condition's exact text. Written as `if J.ShouldFieldBuyRegen(bot)` it went
+    -- red on 2026-09-06 when 'buyband' added a second arm and the condition
+    -- became `if ( J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot) )`
+    -- -- the block still carried every precondition this assertion is about, and
+    -- the assertion was reporting on a nil slice. A slice pattern that pins the
+    -- WHOLE condition is a pin on every future arm of it.
     local buy = read_file('bots/item_purchase_generic.lua')
-        :match('if J%.ShouldFieldBuyRegen%(bot%).-\n\tend')
-    assert(buy and buy:find('botGold >= GetItemCost', 1, true)
+        :match('\n\tif [^\n]-J%.ShouldFieldBuyRegen%(bot%).-\n\tend')
+    assert(buy, 'could not slice the ShouldFieldBuyRegen purchase block -- the '
+        .. 'call site moved or its shape changed; re-read it rather than '
+        .. 'loosening this')
+    assert(buy:find('botGold >= GetItemCost', 1, true)
         and buy:find('GetItemStockCount', 1, true),
         'the purchase site still carries preconditions this corpus cannot drive')
     -- (2) the bottle leg. GetCurrentCharges defaults to 0 in the mock, so no
