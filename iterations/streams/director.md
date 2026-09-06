@@ -497,6 +497,42 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-06T22:20Z**:**第四、五次 promote(`odbuild` + `illumove`,锚点 `stable-v4` = `0d3f857f`)
+  + `towerfear` 退回出集;判定完结 3(owner P4.2 要 ≥2,上两轮各 0),armed 55 → 52。**
+  裁定全文 `test_set.md §FO`,三条机器键在 `state.json`。**零 AWS 调用、零波次请求、不发 owner 邮件。**
+  ⭐⭐⭐ **本轮最该被读的是我自己的一个错**:两条 promote 的 (b) 第一稿引的是「W51,55-id 家族,gpm −2.19」——
+  **W51 是 `campgrade` 独占波(`arm_string` 一个 id、`arm_bytes` 9),这两个 id 在它上面根本没 armed**。
+  抓到它靠的是去核「它是不是真在那一波里」,**不是读起来不对劲**:`arm_ids`/`arm_md5`/`arm_bytes`
+  每个波次记录里都有、长得一样,收割报告那句 2(b) 措辞对独占波和家族波**读起来完全一致**
+  ⇒ **只有打开 `arm_string` 才分得出**。改正后逐波从 `W*_wave.json:harvest.mean` 裸读:
+  两个 id 在 **W47/W48/W49/W50 每条腿都 armed**(701 局计分,家族 gpm `−5.95/+27.25/+11.70/+13.76`)。
+  **`towerfear` 退集**:(a) 前半买到(248 episode,occ/dwell/bounce 两层同号),**后半反号**
+  (released episode 摸进塔 700u 攻击圈 **+12.46pp/+35.21pp**,两层同号;点名帧 sniper 179u、hp 504→280)⇒
+  (b) 是家族级读数,留着就是在**promote 唯一能引的量**里跑一个已量到有害半边的杠杆;退集回出厂时钟 = 稳定版。
+  **不是 reject**(`bots/` 零 diff),该 ship 的是 `towerfear`+`towerring` 那一对,冻结期不能入集 ⇒
+  已登记 `owed_executions:towerfear_towerring_pair_readmit`(`kind: manual`,并写明**为什么不能**
+  用 `path_contains_all:'towerring'` —— 本轮 §FO 自己提到它,那个键会当场读成假绿)。
+  ⭐ 顺手机械化一条**析取版 `pullcad` 陷阱**:`promote_atoms.json:tower_fear_ring_disjunction`
+  (删掉 `:964` 那句析取 ⇒ `towerring` 的 arm 从此测不到任何东西,而 wiring 检查照样读 WIRED)。
+  **钉子翻面 6 个**;其中 `test_detector_source_constants.py` 那条是**负对照**用「`odbuild` 活着」
+  来买「独立第二候选必须绿」,promote 后变成在断言它要接受的形状不存在 ⇒ 改成**注入**该形状,
+  牙齿保住且**不再能被下一次 promote 作废**。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck 0 warnings`;`run_tests` illumove 9/0、od 146/0、
+  build_index 9/0、gate_claim 16/0、smoke 3/0;python 全套 **106 passed / 1 failed**(那条红**是本轮的**,
+  同轮修好复跑绿)/ 1 uncertifiable;`check_armed_wiring` **52/52**;`promote_atoms` `FROZEN none`;
+  `stable_anchors` **4/4 OK**;**全量 Lua 套件没跑,不声称它绿**。
+  自检 `EXIT=3`(**重定向,不是管道** —— 章程第 0 条本轮遵守):trunk 红一条
+  `test_gated_helper_nesting_census.lua`(新门中门,`bagsalve` 未 armed 是**单位元**,推导写在报告 §4)
+  ——**不替协同组登记**(GH #574 刚立过「不单方面翻别组裁定」),交回。
+  ⚠️ **更正上一轮的一个归因**:P4.1 不是「13 循环零推进」—— 标尺波 Y1 09-05 已飞已收割
+  (胜率 swap-average **0.550**,44/80),09-05T19:xxZ 已裁**部分完成**;卡住的是 owner 的 A/B 拍板题
+  与 gpm 的**量具**任务。⭐ 而 **+5.0pp 在 80 局上 SE ≈ 5.6pp** ⇒ 那句话是「方向为正、与平手分不开」。
+  ⚠️ **P4.3 回弹已量**:`test_set.md` 今早 47.9KB → 现在 **78.4KB**;**头部 50.1KB**、三个 § 节 28.4KB
+  ⇒ **归档 § 节最多回到 50.1KB,压不住线**,单调增长的是头部里从不驱逐的〔历史〕块。本轮不动手,登记机制。
+  报告:`iterations/reports/director/20260906T222000Z.md`。
+  **下轮交棒**:① ⭐⭐⭐ 继续判定完结,首选 `ckpush`(其次 `slotpush`,注意那条 co-armed 登记行);
+  ② ⭐⭐ GH #450 落新 soak candidate(**已挂四轮**);③ ⭐⭐ `test_set.md` **头部**瘦身(P4.3 后半,
+  现在有机制不只有目标);④ ⭐ GH #574 / GH #548 仍在各自手上;⑤ 协同组:新门中门待登记。
 - **2026-09-06T19:19Z**:**开工自检读到 trunk 双红,两条都结清、trunk 回绿;两条都不是 `bots/` 的问题,
   而是别的组本轮落地的产物在别人的门上碰响的。⭐⭐⭐ 值得读的是第一条:GH #442 花钱关掉的那个红,
   在上面一层原样长了回来 —— 工具层判「navigation,永不红」,测试层判「逐位相等,否则红」,

@@ -86,6 +86,27 @@
         "同一个 commit 里还有三条 (a)=BUGGY 退集(midtp/suptp/roshdist)—— 它们**不改变稳定版**(gate 与代码逐字保留,退的是 arm 串),所以锚点的语义仍然只由 slotwait 那一处 gate 删除决定。",
         "裁定全文 iterations/streams/test_set.md §FK.1;三条件与各自的边界另抄在 bots/FunLib/jmz_func.lua 的 J.ShouldWaitForTeamCooldowns 注释里(那是 promote 后唯一还会被读到的地方)。"
       ]
+    },
+    {
+      "name": "stable-v4",
+      "ref": "refs/heads/stable-v4",
+      "ref_kind": "branch",
+      "ref_sha": "0d3f857fb68374add3c032fbf1a4e73dddbb9026",
+      "promote_commit": "0d3f857fb68374add3c032fbf1a4e73dddbb9026",
+      "promote_commit_subject": "director: PROMOTE odbuild + illumove to turbo defaults (stable-v4), withdraw towerfear",
+      "promoted_ids": [
+        "odbuild",
+        "illumove"
+      ],
+      "promoted_at": "2026-09-06T22:2xZ",
+      "state_json_key": "odbuild_PROMOTE_20260906 + illumove_PROMOTE_20260906",
+      "on_main_first_parent": true,
+      "note": [
+        "第四、五次 promote,与第三次(stable-v3)同一天、相隔约九小时。ref 指着 promote commit 本身 ⇒ 不变量 3 平凡成立(与 stable-v1/v3 同)。",
+        "⭐ 一个锚点带两个 id,而这是刻意的不是省事:两条的 (b) 引的是同一份 W47–W50 家族读数,两条的 gate 删除在同一个 commit 里,所以『稳定版』这一步是由这两处删除共同定义的,拆成两个锚点会造出一个从未存在过的中间树。",
+        "同一个 commit 里还有 `towerfear` 退集 —— 它**不改变稳定版**(gate 与代码逐字保留,退的是 arm 串),所以锚点的语义仍然只由那两处 gate 删除决定(与 stable-v3 同一条理由)。",
+        "裁定全文 iterations/streams/test_set.md §FO;三条件与各自的边界另抄在两处源码注释里(promote 之后唯一还会被读到的地方)。"
+      ]
     }
   ]
 }
