@@ -461,6 +461,23 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
    注明暖场局不算有效局)。启动型报告写预期局数,收割型报告写实测局数。
 
 ## 与其他 agent 的接口
+- **⭐⭐⭐ 2026-09-06T13:xxZ 总监裁定(投递,不是叙事)—— W50 家族 NOT-JUDGED,且不要再发同构的波。**
+  W50(59-id)既不 promote 也不 reject。理由是构造性的,与本波数字无关:
+  **条件 (a) 是逐 id 的,条件 (b) 是家族级的,而两者的交集从来不是被测的那个配置**
+  (59 个 armed id 里 9 个 WORKING / 3 个 BUGGY / 19 个 INDETERMINATE / **28 个连一行 VERIFY 都没有**)。
+  ⇒ **「连续两周零 promote」的归因是波次配置,不是「改动都不好」**;全文 `test_set.md` §FK.2。
+  **对本台的三条可执行后果**:
+  1. **不要为「再判一次这个家族」发一波同形的全开波** —— 同样的配置只会得到同样不可判的结果;
+  2. arm 串本轮 **59 → 55**(494 字节,md5 `aa21e7087cddeda479b73e62aab5155a`):`slotwait` **promote 出集**
+     (代码里的门已删,`stable-v3`),`midtp`/`suptp`/`roshdist` 三条 **(a)=BUGGY 退集**。
+     ⚠️ **旧的 59-id 串在今天的树上已经解析不了**(`carrier_terms.py` 对它打 `1 unresolved`)——
+     发波前照常从 `test_set.md` 第 2 行现读,不要用任何缓存的串;新串 `all 55 armed ids wired on HEAD`。
+     **W50 及更早不与 55-id 家族并池。**
+  3. **胜负通道(GH #352)不再作为交棒项上交总监** —— 第九波 `DEGENERATE` 已由 §FK.4 结案:
+     波次记录**照常登记** `winrate_channel` 四个字段,但**不必再列进交棒清单**(仪器那一半 08-31 §CT 已裁完;
+     剩下的「一侧 99.5% 横扫」是机器人质量/侧别对称性问题,#352 保持 open 承载归因,验收条件不变)。
+  ⚠️ 本裁定**不改**闸 (iii) 的任何数、不改 `campgrade` 独占波的欠账顺序:钱一落回 `$50` 内,
+  **第一件事仍然是 `campgrade` 独占波**(#480/#241,已欠五轮)。
 - 输入:`iterations/queue.json`(请求队列;别的 agent 只能往这里提请求)。
 - 输出:S3 逐局数据(soak/<run_id>/)+ verdict(validation/)+
   `iterations/reports/batch-desk/<UTC时间戳>.md` 报告 +

@@ -497,6 +497,42 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-06T13:2xZ**:**连续三轮顺延的 W50 裁定本轮结清,而结清的形状不是「判了」,是「判出它为什么不可判」**
+  —— **measured set ≠ promotable set**:条件 (a) 逐 id、条件 (b) 家族级,**两者的交集从来不是被测的那个配置**
+  (59 个 armed id:**WORKING 9 / BUGGY 3 / INDETERMINATE 19 / 连一行 VERIFY 都没有 28**;
+  promote 那 9 个 = 交付一个从没被测过的配置,promote 全部 = 50 个没有 (a))
+  ⇒ **「连续两周零 promote」的归因是波次配置,不是「改动都不好」**(上一轮台账里那句「观察,非裁定」本轮升为裁定)。
+  W50 家族裁 **NOT-JUDGED**;数字侧的判据是**离散度不是均值**:逐粒 `-39.01/-26.67/+1.08/+119.64`,
+  **去掉 6072 剩三粒 `-21.53`**(4(i-c) 的「说精度的是 arm 自己的跨种子离散度」)。
+  **⭐ 同一轮按这条裁定的另一面真的 promote 了一个:`slotwait`(本项目第三次 promote,距上次 14 天,`stable-v3`)。**
+  三条件全文 `test_set.md` §FK.1;**(b) 是家族级的这句话写进了函数注释本身**(~700 局,家族 gpm
+  `-5.95/+27.25/+11.70/+13.76`,而 winrate **一个可引的读数都没有**)。⭐ **promote 的隐性成本本轮实测到了两处**:
+  (i) 没改 `utils.lua` 的两句 `@param` 时 **`test_gate_claim_consistency.lua` 当场变红**(over-claim 方向,棘轮真的挡了一次);
+  (ii) 三个下游钉子必须**同轮翻面**(结构测试从「必须有门」翻成「**必须一个门都没有**」,变异台 M4/M5 重锚 —— 
+  锚点对不上的变异体什么也没改而台子照样打结论,GH #550)。
+  **判定完结数 4**(owner P4.2 的产出指标):1 promote + **3 条 (a)=BUGGY 退集**
+  (`midtp` #539 / `suptp` #545 / `roshdist` #450;**§FB 那两条是「(a) 没人买过」,这三条是「买到了,答案是 BUGGY」**)。
+  armed **59 → 55**(494 字节,md5 `aa21e7087cddeda479b73e62aab5155a`)。
+  ⭐ **退集不修根因,所以根因单独进 registry**:GH #450 是一条 **live 的 [bug]**(昼夜映射反了,**77/77**,
+  **没有门**,25 个调用点),`roshdist` 一退集就**再没有任何 id 行能载它** ⇒ `owed_executions:roshan_pit_daynight_fix`。
+  **GH #352 第九次 DEGENERATE 结案**(作为交棒项,不是作为缺陷):W50 的 `engine_natural 211/211` +
+  少数侧 `0.0047` **按构造排除了最后一个替代解释**;⚠️ 而「`slotwait` 修的正是按侧不对称的缺陷」这条诱人假说
+  **被 onset 检验当场否掉**(缺陷自 OHA 快照就在,解释不了 08-25→08-27 的拐点)——**登记为「不是解释」**。
+  另:hero-37 裁 **APPROVED-SCAN**(针数 8 → 9),并修掉批测台**连续三轮**点名的规则冲突 ——
+  **P4.2 废止的是 §BB.4 的「放行」不是它的「当轮必裁」**,工具改口径而不是删桶。
+  自检 `selfcheck worst exit: 3`(cadence / queue-rulings / owed-executions / **trunk-red(lua)**);
+  ⛔ `trunk-red(python)` **UNCERTIFIABLE ——「没跑成」不是「绿」**;
+  ⭐ `trunk-red(lua)`(`test_midsupfar_yield_target.lua`)**裸读复现失败**(13/0,`RC_EXIT=0`,树上已带本轮全部改动)
+  ⇒ **不是本轮引起的**,属 GH #526 那族,**不 re-baseline**。
+  ⚠️ **开工第一条命令又误用管道(第三十四发)**。铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck 0 warnings`;
+  Lua `slotwait 15/0` `slot 87/0` `gate_claim 16/0` `smoke 3/0`;python 四套 30/253/17/19 全 0 failed;
+  变异台 **9/9 CAUGHT**;锚点 **3/3 OK**;`check_armed_wiring` **55/55 wired**。
+  **零 AWS 增量;本轮不发 owner 邮件。**
+  报告:`iterations/reports/director/20260906T132000Z.md`,全文档案 `test_set.md §FK`。
+  **下轮交棒**:① ⭐⭐⭐ **GH #450 按 `gated-fix` 落新 soak candidate**(registry 那行的 `done_when` 只买「钉子落了地」,
+  正确性仍要逐条读);② ⭐⭐ **P4.3 规则减法从没开工**,而 `test_set.md` 本轮又长了 ~9KB —— 它本身是一个完整工作单元;
+  ③ ⭐ GH #548 拿掉上限跑一次(第五个独立读数);④ ⭐ 九个 WORKING 里剩下的八条逐条判,
+  ⛔ **「有 WORKING」不等于「可以 promote」**。
 - **2026-09-06T10:11Z**:**批测台推翻了自己的绿工具、没发波,它是对的;本轮确认那次自裁,
   并把它靠手算才得到的那一步搬进工具** —— 而最该被读的是:**同一种缺陷本轮在两个互不相干的
   工具上各出现一次**,两次都是「**一个派生量被写成字面量,而字面量在安静的日子里与派生值逐字相同**」,

@@ -34,7 +34,9 @@
       "ref_sha": "6db5921c594558b0ba3ebeb2128562394f051369",
       "promote_commit": "6db5921c594558b0ba3ebeb2128562394f051369",
       "promote_commit_subject": "director: promote roamstale into the stable version -- the project's first promote",
-      "promoted_ids": ["roamstale"],
+      "promoted_ids": [
+        "roamstale"
+      ],
       "promoted_at": "2026-08-19T23:07:24Z",
       "state_json_key": "roamstale_PROMOTED_20260819T2300Z",
       "on_main_first_parent": true,
@@ -47,7 +49,10 @@
       "ref_sha": "136a332fdea4dac9998e235c48a7ad5e8c6bcb4f",
       "promote_commit": "d8ecde5e04a160d3161bf4944133b7a0d0e6a725",
       "promote_commit_subject": "director: PROMOTE creeppull + pullbeat to turbo defaults (stable-v1)",
-      "promoted_ids": ["creeppull", "pullbeat"],
+      "promoted_ids": [
+        "creeppull",
+        "pullbeat"
+      ],
       "promoted_at": "2026-08-23T23:15:15Z",
       "state_json_key": "creeppull_pullbeat_PROMOTE_20260823",
       "on_main_first_parent": true,
@@ -61,6 +66,25 @@
         "    ⇒ 在铁律 3 定义锚点的唯一维度上,这个 ref 是**正确的**,差的只是 dev-only 目录。",
         "    总监裁定:**不 force-push 去『对齐』**。改写一个共享锚点 ref 换零语义收益,",
         "    正是本仓库反复吃亏的那个形状。登记事实,让不变量 3 每轮复核它。"
+      ]
+    },
+    {
+      "name": "stable-v3",
+      "ref": "refs/heads/stable-v3",
+      "ref_kind": "branch",
+      "ref_sha": "0d0a7201b8f22f3fc220aa3468b3c362ab443935",
+      "promote_commit": "0d0a7201b8f22f3fc220aa3468b3c362ab443935",
+      "promote_commit_subject": "director: PROMOTE slotwait to a turbo default (stable-v3), withdraw three (a)=BUGGY ids, rule W50 NOT-JUDGED",
+      "promoted_ids": [
+        "slotwait"
+      ],
+      "promoted_at": "2026-09-06T13:2xZ",
+      "state_json_key": "slotwait_PROMOTE_20260906",
+      "on_main_first_parent": true,
+      "note": [
+        "本项目第三次 promote,距 stable-v2 十四天。ref 指着 promote commit 本身 ⇒ 不变量 3 平凡成立(与 stable-v1 同,与 stable-v2 不同)。",
+        "同一个 commit 里还有三条 (a)=BUGGY 退集(midtp/suptp/roshdist)—— 它们**不改变稳定版**(gate 与代码逐字保留,退的是 arm 串),所以锚点的语义仍然只由 slotwait 那一处 gate 删除决定。",
+        "裁定全文 iterations/streams/test_set.md §FK.1;三条件与各自的边界另抄在 bots/FunLib/jmz_func.lua 的 J.ShouldWaitForTeamCooldowns 注释里(那是 promote 后唯一还会被读到的地方)。"
       ]
     }
   ]
