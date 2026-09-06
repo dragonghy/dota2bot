@@ -12106,3 +12106,87 @@
     **⚠️ 第二十二次登记:自检在本容器不是「约 20s」** —— 本轮实测 **> 300s**。
     **铁律 6**:`GATE_EXIT` 与 push 读数见报告 §7.2/§8;**未用 `RULE6_BYPASS` ⇒
     无「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
+- **2026-09-06T19:13Z**:**取上一轮点名的「下一轮第一件事 (1)」—— hero-31 /
+  `wkbonefight` 归档域普查。零 EC2、S3 只读、零 CE,未改 `bots/` 一行。**
+  **宽扫 118/118 局**(12 个跨 08-22..09-06 的 run 下全部 441 个有 `.dem` 的局里,
+  **含 WK 的 118 局全集**,分布在四个 run;另外八个 run 的阵容一局 WK 都没有 ——
+  **供给是按 run 成块的,不是按局随机的**);`DL/DUMP/SCAN_EXIT=0`,**unparseable=0**;
+  **逐帧深查 2 帧 / 2 局 / 2 个 run**。
+  ```
+  VERIFY id=wkbonefight verdict=INDETERMINATE domain=REACHED episodes=2244 games=118/118
+  ```
+  - **⭐ 主发现:域到了,118/118 局都到。** 就绪 + 650 内有敌人,**两层不并池**:
+    `n1600==1` **5,093 帧 / 1,365 ep**;**`n1600>=2` 12,656 帧 / 2,244 ep**,
+    最少的一局也有 **11** 个 episode(均值 19.0,最多 34),≥2 占两层之和 **71.3%**
+    ⇒ 预登记的「≥2 占比接近 0 ⇒ DOMAIN-NOT-REACHED」**不触发**。
+    第 (2) 列分布 0/1/≥2 = **65.6% / 14.5% / 19.9%**(整数小值域**不报中位数**,
+    铁律 4(ii));视野**上界与目击下界都登记**(下界下 ≥2 仍 15.5%),不许互换。
+  - **⭐⭐ 由构造给出的归属(本轮唯一不靠统计的那一条)**:1,024 次
+    `skeleton_king_bone_guard` 释放里,**释放那一刻 1600 内 0 人 515 次、≥2 人 153 次**,
+    这两类**只能**来自第二分支(第一分支要 650 内有目标、且 `==1` 排除 ≥2)
+    ⇒ **≥65.2% 的释放不是第一分支干的**,而第一分支正是本杠杆改的那条。
+    **这同时是收益的减项**:≥2 那一层里第二分支本来就可能开火,所以
+    **12,656 是「被 `==1` 拒掉的机会」的上界,不是 arming 会新增的释放数**。
+  - **⭐ 第 (4) 列(充能层数)确认买不到,没有用 0 顶替**:`snapshots[]` 无 modifier 表;
+    `MODIFIER_STACK_EVENT` **5,910 条 `value` 恒 0**(边沿不是量,§4 的 8 局 367 条在
+    118 局上复现);`talent6` 结构性不可观测 ⇒ `nStack/maxStack>=0.6 or talent6`
+    **本轮未被求值**,前三列全是**上界**。按 §CJ 是**一列 INSTRUMENT-BLIND**,
+    **不是** DOMAIN-NOT-REACHED。
+  - **⭐ dump 推翻了 fixture 侧那个零(但没推翻 GH #274 的判词)**:
+    `X.ConsiderW` 上方注释记「`modifier_skeleton_king_bone_guard` 在 36 个 WK
+    fixture 帧上是 0」并正确地警告那个零在量工具 —— .dem 侧 **118/118 局都有释放**,
+    而 `X.ConsiderW` 是全仓唯一施法点 ⇒ 每次释放都证明当帧 `HasModifier` 为真。
+    **那个零是 `make_fixture.py` 的重建缺口,不是游戏事实。**
+    GH #274「用批测而不是 fixture 定价」仍成立(充能门 + GH #474 两条堵点没变),
+    但它的**第一条理由只对 fixture 语料成立**。
+  - **可钉帧**:首选 `258c39__20260827_123353_slot4` **t=1077.4**
+    (1600 内 **5 人全部有事件目击**、最近 crystal_maiden **121u**、**友军 0**、
+    W rank4 `cd=0` 蓝 825;本局释放时刻 `[431.9,904.8,1029.4,1301.1,1467.3,1524]`
+    ⇒ **这场 1v4→1v5 整个落在 271 秒空档里**);备选
+    `f634e4__20260905_125317_slot6` **t=800.5**(换位秒杀后原地复活、满血对 5 人、
+    最近 59u,13 秒后再次被打死;746.2 之后 **406 秒**无第二次释放)。
+  - **⭐ 逐帧才看得见的一句:两帧都是「W 揣在手里被打死」。** 不是本请求预登记的列,
+    **本轮不作为读数呈报**,建议下一轮补成一列(「死亡时 W 就绪且 1600 内 ≥2 敌人」)。
+  - **⭐ 本轮的自捉,而且是逐帧核验抓到量具的**:第一版把 WK **复活读条窗口**
+    (`hp_pct==0` 而死亡事件说他在场)算进了域 —— `entities.alive_at` 对 WK 是
+    **故意**这样答的(他原地复活,2026-08-21 那条),**那对几何里的敌人正确、
+    对决策者错误**。发现方式是**逐帧核验自己递上来的可钉帧清单**(清单里出现了一个
+    0 血的 WK)。修正后**重扫全部 118 局**,published 的每个数出自同一版本;
+    该守卫拒掉 **421** 帧(≥2 层 12,900 → 12,656)。
+    另一条守卫的**残余量也量了**:`alive_at` 放行「死后仍报正血的冻结流」,
+    该洞本轮实测 **0 帧**。**「应该很小」不是读数。**
+  - **量具**:新 `tools/batch_test/behavioral/wkbonefight_domain.py`(`--selfcheck`
+    **56 PASS / 0 FAIL**)+ `tests/test_wkbonefight_domain.py`(**21 tests OK**,
+    从反面钉四种「本轮头条可能被造出来」的形状:幻象当第二个敌人、尸体当第二个敌人、
+    蓝量门读成常数而不是 70/80/90/100 阶梯、第 (4) 列拿 0 顶替)。
+    ⚠️ **本容器没有 pytest**(`python3 -m pytest` → `No module named pytest`,退出码 1
+    —— **没跑成不是失败**),用 `python3 -m unittest` 跑。
+  - **本轮开的 issue**:**无**(充能列的 [harness] 根因 §4 已立案,本轮只是在
+    118 局 5,910 条上复现,不重复开)。
+  - **下一轮第一件事**:(1) **hero-30 可买列**(两个分支分开,不许并池);
+    (2) hero-36 / hero-37(⚠️ hero-37 顺带问的 loader 问题**本轮已答一半**:
+    `snapshots[]` **没有** `GetRespawnTime` 那一列,键就那 18 个 ⇒ 那条单向绊线拆不了);
+    (3) hero-32/33 等 dumper 补小兵 hp;(4) 「揣着 W 死掉」那一列。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;`tpreach_domain.py` 补 `by_seed`
+    (**已连欠六轮**);§3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝
+    (GH #529);`outlatch` 重扫;`campbind` 等 #475;**#477 重 dump 仍是本组的球**。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 30 轮 / #421 第 29 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260906T191332Z.md`;
+    交付件:`iterations/reports/replay-check/domain_scan_hero_2_30_31.md` §6
+    (路径由 owed 行钉死,不改名;同轮在 §7 给 hero-36/hero-37 补了「还没读」的状态行,
+    让 `path_contains_all` 那道门读得到九个 id ——**出现不等于交付**,已在文件里明写)。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(S3 只读,零 EC2、零 CE);
+    `DUMPER_EXIT=0`(cache HIT);118/118 局 `DL/DUMP/SCAN_EXIT=0`、`unparseable=0`;
+    `wkbonefight_domain.py --selfcheck` **`SELFCHECK_EXIT=0`,56 PASS / 0 FAIL**;
+    `WRAPPER_EXIT=0`(21 tests OK)。
+    ⛔ **证据纪律 3 第四十四次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`);第二次改重定向,被 120s 前台超时挪到后台,
+    真码从脚本末行裸读:**`selfcheck worst exit: 3`**(`legs run 10`;
+    FINDINGS `cadence queue-rulings owed-executions trunk-red(python)`;
+    `UNCERTIFIABLE: none`)。**⚠️ 第二十三次登记:自检在本容器不是「约 20s」。**
+    `trunk-red(python)` 是**先于本轮存在于工作树上的**红(`test_level_premise_registry`
+    家族的行号漂移,点名 `bots/ability_item_usage_generic.lua`,与本轮零交集)。
+    **铁律 6**:`GATE_EXIT` 与 push 读数见报告 §11;**未用 `RULE6_BYPASS` ⇒ 无
+    「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**。
