@@ -211,7 +211,24 @@ mutant caught "M1 the gate lands negated (shipped and armed legs swap)" "$JMZ" m
 # NO-OP -- which the stand reports as a failure precisely because a mutant that
 # never existed is not a mutant that survived. The replacement now drops THIS
 # lever's arm out of the three-arm OR and leaves the other two.
-m2() { perl -0pi -e "s/\tif \( J\.ShouldFieldBuyRegen\(bot\) or J\.ShouldFieldBuyRegenHurt\(bot\)\n\t\tor J\.ShouldFieldBuyRegenTower\(bot\) \)\n/\tif ( J.ShouldFieldBuyRegen(bot)\n\t\tor J.ShouldFieldBuyRegenTower(bot) )\n/" "$PURCHASE"; }
+#
+# ⚠️ RE-ANCHORED A SECOND TIME, 2026-09-06T17:xxZ, and the second failure is the
+# instructive one because it is the SAME failure. The 09-06T04:35Z re-anchor
+# rewrote the WHOLE `if (...)` condition -- correct against a three-arm site, and
+# NO-OP again the moment the 'buyring' round added a fourth arm. An anchor that
+# spells out the syntactic CONTEXT of the thing it edits has to be re-cut every
+# time a neighbour lands; the family this site belongs to grows an arm per round,
+# so that is a standing tax with a NO-OP as the failure mode.
+# ⇒ The anchor is now ARM-LOCAL: it names only the arm this mutant removes, and
+# says nothing about how many other arms exist or what order they are in. This is
+# the same shape `mutstand_buytower.sh` was moved to by the 'buyring' round
+# (95b5d5f8) -- which fixed its own stand's M2 and left this one, so the identical
+# defect sat here until it was re-run.
+# ⇒ GENERAL RULE, and it is the mutation-stand form of the GH #550 lesson: anchor
+# a mutant on the THING IT MUTATES, never on the context that happens to contain
+# it. Uniqueness alone is not enough -- a unique anchor made of its neighbours is
+# still a hostage to them.
+m2() { perl -0pi -e "s/ or J\.ShouldFieldBuyRegenHurt\(bot\)//" "$PURCHASE"; }
 mutant caught "M2 the OR arm is removed from the purchase site" "$PURCHASE" m2
 
 # --- M3, M4: the band stops being the gap ------------------------------------
