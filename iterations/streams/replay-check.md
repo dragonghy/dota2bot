@@ -11738,8 +11738,12 @@
     **是 selfcheck 的干净落地用例抓出来的,不是真语料**;
     (iii) selfcheck 写 `sys.stderr` —— `bot_api.lua:install()` 抹掉 `print`,
     一次性 stand 会**空输出 + 退 0**,长得跟"跑了没发现"一样(GH #546)。
-  - **本轮开**:`[bug]` 嵌套门 ⇒ 条件 (a) 不可分离(全表 + 建议验收:`gate_nesting.py`
-    普查 + 对这 5 对各要一条隔离腿,或按 4a 改走触发级逐帧)。**实际编号见报告 §7 补记。**
+  - **本轮开:GH #553 `[bug]`** 门嵌在门里 ⇒ 条件 (a) 不可分离(全表 + 建议验收:
+    嵌套门普查工具 + 对这 5 对各要一条隔离腿,或按 4a 改走触发级逐帧)。
+    **GH #290 先 push 后发**:`claim_precheck` 第一次 **`PRECHECK_EXIT=3`**
+    (抓到草稿把一个**尚不存在**的工具写成了实路径 —— 建议不是引用),
+    改写后 **`PRECHECK_EXIT=0`**、`refused 0`、`local commits not on origin/main: 0`、
+    `OK to publish`,然后才发;**实际编号与预写一致**。
   - **新欠账**:`tpreach_domain.py` **不自己打每粒种子的 swap-average 表**,
     上面那几个数字是**手算的** —— 正是 4(i-d) 点名的形状。`tpdying_release.py` 已自带
     (`by_seed`),`tpreach_domain.py` 应当补上。
@@ -11758,4 +11762,11 @@
     **`UNCERTIFIABLE (exit 2): trunk-red(python)`**,python 腿 **101 passed / 0 failed /
     1 uncertifiable**(`tests/test_selfcheck_lua_leg.py` 没跑成,9 个 check 未运行,**不是通过**)。
     **⚠️ 第十八次登记:自检在本容器不是「约 20s」。**
-    **铁律 6 / GH #290 / Token**:见报告 §7 / §8 收尾补记。
+    **铁律 6**:`ARM_HOOK_EXIT=0`、`GATE_EXIT=0 CLEAN`(0 warnings;容器里没有 luacheck,
+    gate 自己装的);push 分支 **0**、`HEAD:main` **0**(**`e905db40..f1c7b3a9`**,
+    钩子当场又跑一遍 gate),**一次没被拒、未 rebase**;
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(GH #124)未跑也不声称** —— 本轮**未改任何 Lua**
+    (新增一个 python 工具 + 一个 python 测试 + markdown);
+    新增包装 `tests/test_tpdying_release.py` 单跑 **`WRAPPER_EXIT=0`**。
+    **Token 用量**:`TOKENS total_in=8,076,071 out=67,856 turns=62`(见报告 §8)。
