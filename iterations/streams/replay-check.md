@@ -12528,5 +12528,12 @@
     ⛔ **证据纪律 3 第四十八次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
     `REFUSED ... exit 2, nothing checked`);**第二十七次登记:自检在本容器不是「约 20s」**
     (本轮 > 120s)。自检那条 `TRUNK RED` 是**开工时(修之前)**的树,与修后读数不矛盾。
+    真码裸读 **`selfcheck worst exit: 3`**(`legs run 10`;FINDINGS
+    `cadence queue-rulings owed-executions trunk-red(python)`;**`UNCERTIFIABLE: none`**;
+    `NOT RUN: test_rc_wrapper.py test_selfcheck_lua_leg.py`)。`trunk-red(python)`
+    **就是本轮修掉的那条**;`test_rc_wrapper.py` 在修后的全量里 **PASS**,
+    ⇒ **本轮无人看过的只剩 `test_selfcheck_lua_leg.py`**。
+    `cadence`/`queue-rulings`/`owed-executions` **不归本组解读,登记转总监**。
+    trunk Lua 腿干净(`84 tagged detector file(s), 0 failures` —— **快子集**)。
     **铁律 6**:静态半与 push 读数见报告 §7;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not
     passed」行可抄**;**动态半(GH #124)未跑也不声称**。
