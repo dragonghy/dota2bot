@@ -8669,12 +8669,61 @@ function J.ShouldPunishOverchase( bot )
 					end
 				end
 			end
+			-- [strategy 20260907 / tests/_overchase_sweep.lua] The MIDLINE branch
+			-- carries this guard, and it used the shallowest margin in the tree.
+			-- Corpus census over 110 fixtures / 1021 live hero-frames:
+			--   oc_fire_building 0  /  oc_fire_midline 3
+			-- i.e. EVERY firing of this guard the corpus can witness comes from
+			-- the soft ancient-distance read, and NOT ONE comes from the hard
+			-- "a live structure of ours is within 1200" read. So the branch with
+			-- no structural anchor is the whole lever, and its margin is load
+			-- bearing in a way the 1200 disc's is not.
+			--
+			-- 800u past the midline is not "our territory" -- it is the river
+			-- bank, and it is exactly where the fog reinforcement problem lives:
+			-- leg (c) reads "isolated" off VISIBLE enemies only, so near the
+			-- midline the chaser's support is one screen away and unseen. That
+			-- is the failure AGENTS.md records as costing a batch run (a visible
+			-- 2v2 deep in enemy territory became a 2v4 within seconds), and the
+			-- tree ALREADY has the margin written for that exact reasoning:
+			-- J.SafeToCommitFight's 'depthnum' branch uses 1600, "same
+			-- ancient-distance convention as J.ShouldRegroupNotSolo". This uses
+			-- that number rather than inventing a third one.
+			--
+			-- The BUILDING branch above is deliberately untouched: a live
+			-- structure of ours within 1200 is a hard fact about whose ground
+			-- this is, and the tower is an ally the numbers branch never counts.
+			-- Only the soft read is tightened.
+			--
+			-- STRICTLY NARROWING: this can only turn a collapse OFF, never on,
+			-- so armed it is a subset of the shipped guard. Priced first, not
+			-- assumed -- it refuses exactly 1 of the corpus's 3 firings
+			-- (f_260820_042607_zuus_reserve_cross, pinned in
+			-- tests/test_overchase_midline_margin.lua), where a 0.72-HP Zeus
+			-- turns on a FULL-HP isolated Lion 1436u past the midline with no
+			-- allied building within 1200, counting a 0.44-HP Tidehunter as his
+			-- second body.
+			--
+			-- NO NEW SOAK ID, ON PURPOSE. This whole helper is gated on the
+			-- unpromoted 'overchase' candidate, so a nested
+			-- `J.IsSoakCandidate('<new>')` here would be the conjunction
+			-- `overchase AND <new>`, and an isolation wave arming <new> alone
+			-- would read 0 -- a zero that is STRUCTURALLY IMPOSSIBLE rather than
+			-- informative, which check_armed_wiring.py would still call WIRED
+			-- (GH #606). That is the GH #576/#600/#607 family. The general rule,
+			-- of which the previous round's placement criterion is the other
+			-- half: when the host helper is itself an unpromoted candidate, NO
+			-- placement inside it yields a readable single-arm zero, so a
+			-- narrowing of that host must edit the host's own body and inherit
+			-- its id. Shipped play is unchanged either way -- 'overchase' is not
+			-- promoted, so this function returns nil in every real game -- and a
+			-- wave arming 'overchase' measures the narrowed guard as ONE arm.
 			if not bDeep then
 				local hOwnAncient   = GetAncient( GetTeam() )
 				local hEnemyAncient = GetAncient( GetOpposingTeam() )
 				if hOwnAncient ~= nil and hEnemyAncient ~= nil then
 					bDeep = J.GetLocationToLocationDistance( vEnemyLoc, hOwnAncient:GetLocation() )
-						< J.GetLocationToLocationDistance( vEnemyLoc, hEnemyAncient:GetLocation() ) - 800
+						< J.GetLocationToLocationDistance( vEnemyLoc, hEnemyAncient:GetLocation() ) - 1600
 				end
 			end
 

@@ -27,6 +27,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0OCMID. **【2026-09-07T23:30Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+   产出 `J.ShouldPunishOverchase` 腿 (b) **软读余量 800 → 1600**(**无新 id**,由既有 `overchase` 闸承载,
+   turbo-only,理由见下 ⭐)、`tests/_overchase_sweep.lua`、`tests/test_overchase_midline_margin.lua`(**6/6**)、
+   `tools/agent/mutstand_overchase_midline.sh`(**6/6 CAUGHT,零 SURVIVED**)、
+   `state.json:overchase_midline_20260907`、`test_set.md §FY`;
+   报告 `iterations/reports/strategy/20260907T233000Z.md`;
+   新开 **GH #613**([harness],腿 (a) 三条析取里两条结构性开不了火)、**GH #614**([bug],trunk python 红,归因 `b9938991`);
+   **GH #607 已回帖顺延**;**armed 串一字未动、`queue.json` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **总线 = GH #613 / #614;本条的裁定待总监。**】**
+   **⭐ 主判据(可复用,是上一轮 `ohnum` 那条的推论):当宿主 helper 自己就是一个**未 promote 的候选**时,
+   它体内**不存在**任何能产生可读单臂零的落点。** `J.ShouldPunishOverchase` 整个函数挂在未 promote 的 `overchase` 上
+   ⇒ 体内任何 `J.IsSoakCandidate('<新 id>')` 都是合取 `overchase AND <新 id>`,单臂波必然读 0,
+   **而那个 0 是结构上不可能的**;`check_armed_wiring.py` 照样答 WIRED(GH #606),verdict 读回
+   「测过了,无效应」而没有人举手 —— GH #576/#600/#607 那一族。⇒ 对这类宿主的收窄只能**改宿主自己的函数体、
+   继承宿主的 id**;出厂行为两种写法都是零影响,差别**只在**将来那一波能不能被读懂。
+   **代价要如实登记**:本轮之后早前波次里 `overchase` 的读数描述的是**收窄前**的杠杆(§FY 那一行就是为这个存在的)。
+   **⭐⭐ 缺陷本身**:腿 (b) 是**硬读**(我方活建筑在 1200 内)与**软读**(按祖庭距离过中线 800)的析取,
+   而语料说**承载这条守卫的全部是软读**:`oc_fire_building 0 / oc_fire_midline 3` —— 能见证的每一次触发都来自软读,
+   **没有一次**来自硬读。软读的 800 是全树同族里最浅的一个,`J.SafeToCommitFight` 对**同一个**祖庭距离约定用 **1600**
+   并写明了理由(贴近中线时 visible-only parity 系统性高估安全,雾里增援很近);
+   **腿 (c) 的 isolated 恰恰只读可见敌人** ⇒ 逐字继承那个失效,即 AGENTS.md 记的 2v2 变 2v4 那次。
+   域价钱:`oc_iso_deep 50 → 31`(midline 42 → 23,**building 8 → 8 逐位不变**)、`oc_fires 3 → 2`;
+   **`oc_deep_building 53` 前后逐位相同** —— 「只收窄了软读」是读数不是论证。
+   正对照 `f_260820_042607_zuus_reserve_cross`,**0.72 血宙斯转身打 1.00 满血孤立莱恩**、把 0.44 血潮汐当第二具身体、
+   过中线 1436u、1200 内无我方活建筑。
+   **⭐⭐⭐ 章程 0OHNUM 指名的 (a)/(d) 两条腿:量完,两条都没有杠杆,到此结清。**
+   (d) 那条逻辑是成立的 —— 腿 (a) 要 900 内有 <0.5 血队友、腿 (d) 数 1200 内的队友,**900 是 1200 的真子集**,
+   所以「把濒死队友当作一具完整身体」是守卫触发条件**蕴含**的、不是偶发 —— 但域价钱 **0**:
+   `oc_a_pass 3 == oc_ad_pass 3`(腿 (d) 全语料**一次都没拒绝过**)、`oc_d_numbers_thin 0`。
+   (a) 那条:`oc_a_pursuit_unseen 0` ⇒ 47 次拒绝**全部**是「900 内根本没有濒死队友」,不是缺陷。
+   **两条都是「逻辑成立,域为零」,与 0GRENHARASS/0PINEVADE 同形,登记下来免得下一轮重做。**
+   **⭐⭐⭐⭐ 变异台自己贡献了一条**:M5 第一轮记成 SURVIVED,而那是**锚歧义**不是读数 ——
+   `depthnum` 那五行在 `J.SafeToCommitFight` 与 `J.SafeToCommitFightOnArrival` 里**逐字节相同**,
+   `sub()` 的 GH #550 守卫中止了替换 ⇒ **变异根本没落地却拿到 exit 0**。锚已上移到最近一条不同的行。
+   **这一次是守卫在工作**,而 M2(过度收紧成关掉开关)是本轮自己的近失:**正对照仍然通过**
+   ——它断言的是一次**拒绝**,而全拒的守卫也拒绝它;**只有负对照能分辨「收窄」与「禁用」**,正是 lanefix 那条教训。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) **GH #607 的单臂列**(本轮第二次顺延,**仍不是掉棒**:两条普查行已钉且 `nesting_census` 10/10 绿,
+   欠的是把 `pgchannel`/`tpwatch` 那一行的单臂列**量出来再钉**,尺子 `tests/_pgchannel_sweep.lua` 已在)——
+   ⚠️ 单帧 fixture 上 `tpwatch` 的释放**按构造**不可能开火(`bot.tpChannelStartHealth` 与判据在**同一帧**取,
+   血量差恒为 0)⇒ 那一列要么用**声明的替身**(预置 stamp),要么**如实登记为买不到**;
+   (2) 主体仍必须是一个 `bots/` 行为改动。**不要**再回 `overchase` 找((a)/(d)/(b) 三条腿本轮全部结清);
+   `oc_deep_building 53` / `oc_iso_deep_building 8` 是**这一族里唯一还没被任何杠杆碰过**的一块域,
+   但先读 §FY.2 —— 它一次都没承载过触发,**很可能又是一条「域为零」**,别把工作单元赌在它上面。
+   `J.ShouldPunishDive` 的 `or {}` 已作为 **GH #610** 交出,不要拿回来当主体。
+
 0OHNUM. **【2026-09-07T19:00Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
    产出 gated 候选 **`ohnum`**(`J.ShouldRefuseUnsupportedPunish` + `J.ShouldPunishDive` 内唯一调用点,
    **未 armed**,P4.2 冻结期 = FROZEN-HOLD)、`tests/test_ohnum_refusal.lua`(**8/8**)、
@@ -6473,6 +6519,42 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-07T23:30Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**。
+  `J.ShouldPunishOverchase` 腿 (b) **软读余量 800 → 1600**,**硬读(建筑 1200)一字不动**,
+  **无新 soak id** —— 由既有 `overchase` 闸承载,turbo-only,出厂零影响。
+  ⭐ **不新增 id 本身是本轮的可复用判据,是上一轮 `ohnum` 那条的推论**:宿主 helper 自己就是
+  **未 promote 的候选**时,它体内**不存在**任何能产生可读单臂零的落点(体内任何新 id 都是
+  `overchase AND <新 id>`,单臂波必然读 0,**而那个 0 是结构上不可能的**,`check_armed_wiring.py`
+  照样答 WIRED,GH #606)⇒ 只能改宿主函数体、继承宿主 id。
+  ⭐⭐ **缺陷是量出来的**:腿 (b) 两条分支里,`oc_fire_building 0 / oc_fire_midline 3` ——
+  语料能见证的**每一次**触发都来自**没有锚**的那条软读,而它的 800 是全树同族最浅的一个;
+  `J.SafeToCommitFight` 对**同一个**约定用 1600 并写明了雾气理由,**腿 (c) 只读可见敌人**⇒ 逐字继承那个失效。
+  域价钱:`oc_iso_deep 50 → 31`、`oc_fires 3 → 2`,**`oc_deep_building 53` 前后逐位相同**。
+  正对照 `f_260820_042607_zuus_reserve_cross`:**0.72 血宙斯转身打 1.00 满血孤立莱恩**,
+  把 0.44 血潮汐当第二具身体,过中线 1436u,1200 内无我方活建筑;
+  负对照 = 语料仅有的另外两次触发(lina / tidehunter),都更深,**照旧触发**。
+  ⭐⭐⭐ **章程 0OHNUM 指名的 (a)/(d) 两条腿量完结清,两条都是「逻辑成立,域为零」**:
+  (d) 的重复计数是触发条件**蕴含**的(900 是 1200 真子集),但腿 (d) 全语料**一次都没拒绝过**
+  (`oc_a_pass 3 == oc_ad_pass 3`,`oc_d_numbers_thin 0`);(a) 的 47 次拒绝**全部**是
+  「900 内根本没有濒死队友」(`oc_a_pursuit_unseen 0`)。与 0GRENHARASS/0PINEVADE 同形。
+  变异台 `mutstand_overchase_midline.sh` **6/6 CAUGHT,零 SURVIVED**;
+  ⚠️ **M5 第一轮的 SURVIVED 是锚歧义不是读数**(`depthnum` 五行在 `SafeToCommitFight` 与
+  `SafeToCommitFightOnArrival` 里逐字节相同,GH #550 守卫中止了替换 ⇒ **变异没落地却拿到 exit 0**);
+  **M6 是对变异台自身的对照**(纯注释编辑必须不被抓到),实测正确未被抓到。
+  ⚠️ **一条界(GH #613,本轮新立)**:腿 (a) 三条析取里 `oc_a_attacktarget 0` / `oc_a_ischasing 0`
+  是**结构性的**,`oc_a_recentdmg 3` 独自承担 100% 的释放 —— **比 #611 更隐蔽,因为读数不为零所以没人举手**。
+  开工自检 **exit 3**(第一条命令被它自己以 `stdout is a pipe` 拒了一次,该形状第 5 次复发);
+  **补做了 0DEADGATE 交出的那条**:`git fetch origin main` ⇒ 落后 1(`b9938991`),先 rebase 再开工。
+  `trunk-red(python)` = `test_cmrangedhp_domain.py`,归因 `b9938991` 自己那一半(登记表收了 390、
+  scraper 读不到),**已作为 GH #614 交出,不夹带修**。
+  `[strategy]` open issue 本轮扫过 **#607**(唯一未认领的一条):它请求的两条普查行**已钉且 `nesting_census` 10/10 绿**,
+  欠的单臂列按 P4.4 顺延并**已回帖登记,不是掉棒**。
+  铁律 6:`luacheck_gate.sh` **GATE_EXIT=0 CLEAN / 0 warnings**,**未用 `RULE6_BYPASS`**;
+  定向 `overchase_midline` **6/6**、`nesting_census` **10/10**,全量套件读数见报告。
+  `test_set.md` 新增 **§FY**(**armed 串一字未动** —— 它登记的是「一个 armed id 的**行为内容**变了」);
+  `queue.json` **一字未动**;零 AWS、零 S3、零 EC2、零波次。
+  报告 `iterations/reports/strategy/20260907T233000Z.md`。**总线 = GH #613 / #614;本条待总监裁。**)
 - 2026-09-07T19:00Z(**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**。
   开工自检 `> file; echo EXIT=$?` → **EXIT=0 干净**;第一次调用照例撞上它对**管道**的拒绝
   (`SELFCHECK_EXIT=2 REFUSED`,**没跑成的那一次不是读数**)。
