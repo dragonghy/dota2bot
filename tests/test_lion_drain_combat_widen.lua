@@ -264,6 +264,16 @@ tests['reachability: the mana-refill loop has no supply here either'] = function
     -- Stated so "the third site is untouched" is a measurement too: there are no
     -- creeps in this generator's output, so the creep loop could not have been
     -- validated in this round even if it had been taken.
+    --
+    -- WHAT THIS ASSERTS, spelled out 2026-09-07 (backlog -116) because the line
+    -- reads like a finding and is not one: bot:GetNearbyCreeps is not wired by
+    -- tests/mock/replay_fixture.lua at all, so it falls through to the wildcard
+    -- in tests/mock/bot_api.lua:175 and answers `{}` on EVERY frame for either
+    -- team.  This 0 is therefore the MOCK's, not this fixture's -- it is a
+    -- tripwire that goes red the day the loader wires creeps, not evidence that
+    -- the creep loop has no supply in play.  (Same reading, from the other side:
+    -- tests/test_cm_frostbite_creep_cap.lua section 5 and
+    -- tests/test_lion_drain_refill_domain.lua's HONEST BOUNDS.)
     local _, bot = world(FIXTURE, false)
     assert(#bot:GetNearbyCreeps(1600, true) == 0,
         'creeps appeared in the fixture world; the mana-refill site is a separate '

@@ -1211,6 +1211,101 @@ function X.IsNearLaneFront( bot )
 	return false
 end
 
+--- Is the Reincarnation mana reserve idle -- i.e. is this a frame on which the
+--- 220 mana it is holding back cannot be spent by the thing it is held for?
+---
+--- Soak candidate `wksaveidle` (turbo-only, INERT until armed).
+---
+--- THE DEFECT.  X.ShouldSaveMana below refuses a cast whenever the pool would
+--- drop under Reincarnation's price, and it asks FIVE things to decide that:
+--- hero level, two non-nil handles, R's cooldown, and the arithmetic.  None of
+--- them is "is this Wraith King in any danger of dying".  Reincarnation is not
+--- a cast: its mana is spent at the instant the hero dies.  So the reserve is
+--- the only rule in this file that pays a permanent price (no Wraithfire Blast,
+--- and no Bone Guard -- it is consulted on the first line of BOTH X.ConsiderQ
+--- and X.ConsiderW) for a contingency it never checks the odds of.
+---
+--- THE READING, on the 33 priced Wraith King fixtures (the same corpus split
+--- tests/test_wk_save_mana_lock_census.lua section 1 defines, and for the same
+--- reason -- the other 3 carry no abilities list, so their rank 0 / cost 0 is an
+--- ABSENCE and would manufacture "the reserve did not fire"):
+---
+---   * the reserve fires on 6 of the 33;
+---   * 2 of those 6 hold a Wraith King at FULL health with ZERO enemy heroes
+---     visible inside 1600u -- f_114311_drow_pushguard_silent (level 7,
+---     1044/1044 hp, 271/375 mana) and f_260820_103216_cm_es_aftershock
+---     (level 8, 1110/1110 hp, 280/387 mana).  On those two frames the rule is
+---     holding 220 mana against a death that nothing on the frame threatens;
+---   * the other 4 have 1-2 visible enemies inside 1200u, which is the shape the
+---     reserve exists for.  This lever leaves all 4 alone.
+---
+--- So the domain is 2/33 frames, and it is measured, not argued.  The HP term is
+--- not load-bearing on this corpus in the sense a reader might assume: all 6
+--- firing frames sit at 0.69..1.00 and the two released ones are the only two at
+--- 1.00, so ANY threshold in (0.87, 1.00] selects the same 2.  0.95 is chosen so
+--- that a single regen tick short of full does not flip the answer in game; the
+--- corpus cannot distinguish it from 1.00 and this comment does not pretend it
+--- can.
+---
+--- CONDITION (c), argued rather than assumed.  Standard practice with a hero
+--- whose ultimate is a death trigger is to hold its mana when a fight is
+--- plausible and to spend freely when one is not; Turbo sharpens both halves,
+--- because the pool refills far faster than a fight arrives and because a
+--- Wraithfire Blast not cast in the laning phase is a stun and 40-160 damage
+--- that simply never happened.  At level 6-9 the reserve is most of the pool
+--- (220 against a 272-399 max on the frames above), so "hold it always" is close
+--- to "never cast" for as long as R sits at rank 1.  Note the reserve already
+--- collapses on its own at R rank 3, where Reincarnation is FREE (220/110/0,
+--- npc_dota_hero_skeleton_king.txt AbilityValues/AbilityManaCost, the same read
+--- X.GetRoshanManaFloor's note above cites) -- this lever is about the rank-1/2
+--- window, not about the late game.
+---
+--- ⛔ DIRECTION AND ATTRIBUTION.  This is a WIDENING lever: armed, the bot casts
+--- MORE.  A negative wave reads "the extra casts were bad" and NEVER "N
+--- reincarnations were lost" -- the reserve does not cause a reincarnation, it
+--- only preserves the mana for one, and no offline stand here can price a death
+--- that did not happen.  The two readings are not interchangeable.
+---
+--- ⚠️ HONEST BOUNDS, four, none of them rhetorical:
+---   1. "No enemy hero visible inside 1600u" is not "safe".  Fog is real and the
+---      engine's vision is what J.GetNearbyHeroes reads; a gank walking in from
+---      1700u is invisible to this test.  What the conjunct buys is that the bot
+---      cannot SEE a reason to hoard -- which is the same standard every other
+---      enemy-count branch in this file is held to.  The radius and the exact
+---      call are this file's own: X.ConsiderW builds nEnemysHerosInView with
+---      J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ), and this helper
+---      deliberately reuses it rather than inventing a second radius.
+---   2. A fixture corpus is a set of instants chosen for OTHER investigations.
+---      2/33 is a domain, not a frequency: nothing here says how often this
+---      shape occurs in a game.  Sizing that needs a wave (iterations/queue.json
+---      hero-41).
+---   3. This lever does NOT touch the rank blindness in the same function --
+---      nLV >= 6 stands in for "R is learned" and never asks the rank.  That gap
+---      is registered by tests/test_wk_save_mana_lock_census.lua section 6, its
+---      sibling at the retreat site is the separate candidate `wkreinctr`, and
+---      the priced corpus holds ZERO level->=6 frames with R at rank 0, so it is
+---      not fixable here on evidence.  One lever at a time.
+---   4. The 2 released frames are frames where the reserve was the ONLY thing
+---      the helper said; whether X.ConsiderQ then actually casts is a further
+---      question this helper cannot answer, and section 5 of that same census
+---      file measured that the shipped ConsiderQ returns 0 on all 33 priced
+---      frames regardless.  So "the reserve is released" must not be quoted as
+---      "a blast is cast".
+function X.IsReincarnationReserveIdle()
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wksaveidle' ) )
+	then
+		return false
+	end
+
+	if J.GetHP( bot ) < 0.95
+	then
+		return false
+	end
+
+	return #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) == 0
+end
+
 function X.ShouldSaveMana( nAbility )
 
 	-- (a commented-out `if talent5:IsTrained() then return false end` used to open
@@ -1227,16 +1322,23 @@ function X.ShouldSaveMana( nAbility )
 	-- not, which is why only the reachability clause is struck.  This hero's own t20
 	-- and t25 pricing is still OWED (baton 2 of GH #238 section 6 takes him LAST,
 	-- because two of his rows are FACET rows); do not read this edit as that pricing.
-	if nLV >= 6
-	and nAbility ~= nil
-	and abilityR ~= nil
-	and abilityR:GetCooldownTimeRemaining() <= 3.0
-	and ( bot:GetMana() - nAbility:GetManaCost() < abilityR:GetManaCost() )
+	local bShipped = nLV >= 6
+		and nAbility ~= nil
+		and abilityR ~= nil
+		and abilityR:GetCooldownTimeRemaining() <= 3.0
+		and ( bot:GetMana() - nAbility:GetManaCost() < abilityR:GetManaCost() )
+
+	-- soak candidate `wksaveidle` -- see X.IsReincarnationReserveIdle above.  The
+	-- shipped predicate is computed and BOUND first and the release is only ever
+	-- consulted when it already said true, so the armed leg can move this answer
+	-- true -> false and never the other way.  That is a property of the shape,
+	-- not of today's arithmetic inside the helper.
+	if bShipped and X.IsReincarnationReserveIdle()
 	then
-		return true
+		return false
 	end
 
-	return false
+	return bShipped
 end
 
 

@@ -62,9 +62,24 @@
 --     to open a second request for it.
 --   * THE CORPUS CANNOT ANSWER IT EITHER, and section 4 MEASURES that over
 --     every frame this file drives rather than quoting the one-frame reading
---     tests/test_lion_drain_combat_widen.lua section 3 already took: the dumper
---     schema has no creep channel, so `GetNearbyCreeps` is empty everywhere and
---     this generator can never produce a candidate.  A red there is good news.
+--     tests/test_lion_drain_combat_widen.lua section 3 already took.  CORRECTED
+--     2026-09-07 (backlog -116; the verdict below does NOT move, only the cause
+--     does): the reason is the LOADER'S and not the corpus's --
+--     tests/mock/replay_fixture.lua wires GetNearbyHeroes, GetNearbyTowers and
+--     GetNearbyBarracks to the real frame and never wires GetNearbyCreeps, so
+--     that call falls through to the wildcard in tests/mock/bot_api.lua:175
+--     (`if key:find('^GetNearby') then return {} end`) and answers an empty
+--     table on every frame for either team.  This bullet used to say the DUMPER
+--     SCHEMA has no creep channel.  Both sentences produce the same 0, but they
+--     have opposite revival conditions, and that is why the wrong one is worth
+--     correcting: under the old wording, whoever adds a creep channel to the
+--     dumper would expect these zeros to move -- THEY WOULD NOT, because the
+--     answer never reaches the dumper.  Only wiring the loader moves them.  The
+--     corpus is demonstrably not the blocker: fixture files in this same tree
+--     carry npc_dota_creep_* unit names in their text, which is the reading
+--     tests/test_cm_frostbite_creep_cap.lua and
+--     tests/test_cm_ranged_creep_health.lua already took from the other side.
+--     A red in section 4 is still good news, and still for the same reason.
 --   * NOTHING HERE TOUCHES bots/.  Section 5 asserts the absence: the refill
 --     loop's target test is still literally `J.CanCastOnNonMagicImmune( nCreep )`,
 --     no soak id names it, and `liondrainmi` still lives at exactly one call
@@ -357,10 +372,46 @@ tests['unmeasurable: not one creep exists in this generator\'s entire output'] =
     assert(nFrames == #DRIVEN_FRAMES and nFrames == 13,
         nFrames .. ' frames driven, was 13 -- DRIVEN_FRAMES changed')
     assert(nCreeps == 0,
-        nCreeps .. ' enemy creeps appeared across the driven frames.  The dumper '
-        .. 'schema grew a creep channel: the refill loop\'s domain became '
-        .. 'MEASURABLE and -114 can be re-answered with a count instead of a '
-        .. 'supply argument.  This is good news -- re-take the reading.')
+        nCreeps .. ' enemy creeps appeared across the driven frames.  '
+        .. 'tests/mock/replay_fixture.lua now WIRES bot:GetNearbyCreeps to the '
+        .. 'frame (corrected 2026-09-07, backlog -116 -- it is the loader that '
+        .. 'holds this zero, not the dumper schema): the refill loop\'s domain '
+        .. 'became MEASURABLE and -114 can be re-answered with a count instead '
+        .. 'of a supply argument.  This is good news -- re-take the reading.')
+end
+
+tests['the zero above is the LOADER\'s, and this asserts the mechanism'] = function()
+    -- Backlog -116.  Without this, the previous test is a bare 0 whose cause
+    -- lives only in a comment, and a comment is exactly what was wrong here for
+    -- a round.  Two halves, asserted separately so a future fix to either one
+    -- reports itself:
+    --   (a) the loader wires three GetNearby* families and not this one;
+    --   (b) the corpus is not the blocker -- fixtures do carry creep names.
+    local loader = read_file('tests/mock/replay_fixture.lua')
+    for _, wired in ipairs({ 'GetNearbyHeroes', 'GetNearbyTowers', 'GetNearbyBarracks' }) do
+        assert(loader:find("%.spec%.?" .. wired) or loader:find(wired, 1, true),
+            'the loader no longer mentions ' .. wired .. '; the contrast this '
+            .. 'assertion draws is with the families it DOES wire')
+    end
+    assert(not loader:find('GetNearbyCreeps', 1, true),
+        'GOOD NEWS -- tests/mock/replay_fixture.lua now names GetNearbyCreeps. '
+        .. 'If it wires it to the frame, the zero above is no longer structural '
+        .. 'and every "unmeasurable" claim in this file must be re-taken.')
+    local api = read_file('tests/mock/bot_api.lua')
+    assert(api:find("if key:find('^GetNearby') then return {} end", 1, true),
+        'the wildcard that actually answers bot:GetNearbyCreeps moved out of '
+        .. 'tests/mock/bot_api.lua; re-read where the zero comes from before '
+        .. 'quoting this file')
+    -- (b): the dump is not missing creeps.  Read off a fixture's own text, the
+    -- same reading tests/test_cm_frostbite_creep_cap.lua takes from its side.
+    local seen = false
+    for _, path in ipairs(DRIVEN_FRAMES) do
+        if read_file(path):find('npc_dota_creep_', 1, true) then seen = true end
+    end
+    assert(seen, 'not one driven fixture names npc_dota_creep_* in its text.  '
+        .. 'That would make the dumper a co-cause after all and this file\'s '
+        .. 'HONEST BOUNDS would need re-reading -- which is precisely the '
+        .. 'attribution -116 came to fix, so do not just delete this line')
 end
 
 -- ---------------------------------------------------------------- section 5 --

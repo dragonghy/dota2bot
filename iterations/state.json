@@ -6792,5 +6792,20 @@
       "tools/agent/mutstand_pgchannel.sh(新,**8/8 CAUGHT,零 SURVIVED**)"
     ],
     "next_baton": "总监:pgchannel 登记备案(冻结期 FROZEN-HOLD,不入集);录像组/总监:tpwatch 与本 veto 在 jugg_tp_eaten 上的分歧。GH #598。"
+  },
+  "wksaveidle_20260907": {
+    "date": "2026-09-07T1x:xxZ",
+    "backlog_item": "OWNER_PRIORITIES P4.4(bots/ 主体配额)—— 本组自选。[hero] 未认领 issue 均已交付(#570 已判 PREMISE-FALSIFIED 待总监、#577 的拆 id 已落地),故按章程工作流第 1 步回落到焦点英雄自查。",
+    "owner": "hero",
+    "gate": "wksaveidle (NEW soak id, turbo-only, 未 armed;STANDALONE —— 不与任何 id 合取,`X.IsReincarnationReserveIdle` 里只有它一个 IsSoakCandidate)",
+    "bots_lua_changed": true,
+    "headline": "Wraith King 的 `X.ShouldSaveMana`(出货、无闸)为了「死了能复活」永久扣住 220 蓝,而它判断的五件事里**没有一件问他会不会死**:英雄等级、两个非 nil 句柄、R 的冷却、以及那道减法。Reincarnation **不是一次施法** —— 它的蓝在**死亡那一瞬**才被扣走。⇒ 这是本文件里唯一一条为一个**从不评估概率的**意外事件付**永久**代价的规则,而代价是双份:它被 `X.ConsiderQ` 与 `X.ConsiderW` **各自的第一行**读,所以闸一响,Wraithfire Blast 和 Bone Guard **同时**下架。",
+    "domain_measured_this_round": "33 个**计价过的** WK fixture 帧上量的(语料切法与 `tests/test_wk_save_mana_lock_census.lua` section 1 逐字相同,理由也相同:另外 3 帧没有 abilities 表,空句柄的 rank 0 / cost 0 是**缺席**不是 0,算进去等于把一个缺席塞进每一个比值)。**出货规则在 6/33 上开火;其中恰好 2 帧**是满血 + 1600u 内**零**可见敌方英雄** —— `f_114311_drow_pushguard_silent`(lv7,1044/1044,271/375 蓝)与 `f_260820_103216_cm_es_aftershock`(lv8,1110/1110,280/387 蓝)。另外 4 帧 1200u 内有 1–2 个可见敌人,正是这条储备存在的形状,**本杠杆一个都不碰**。",
+    "star_main_judgement": "⭐ **域是量出来的 2/33,不是论证出来的**,而且**血量那一项在本语料上不承重**:6 个开火帧的血量落在 0.69..1.00,被释放的两帧是仅有的两个 1.00 ⇒ **(0.87, 1.00] 区间里任何阈值选出同样这 2 帧**。取 0.95 是为了在真实对局里少一格回血不至于翻答案,**语料区分不了它,注释与测试都写明了这一点**(变异台 M7 就是这个:0.95→0.60 **行为上零移动**,只被源码断言抓住)。⭐⭐ 另一条同样重要:R 到 3 级时 Reincarnation **免费**(220/110/0,`npc_dota_hero_skeleton_king.txt` AbilityValues/AbilityManaCost,与 `X.GetRoshanManaFloor` 头注引用的是同一次读数)⇒ 这条储备**本来就会自己塌掉**,本杠杆管的是 rank 1/2 那扇窗(等级 6–9 时 220 是 272–399 池子的大半,「永远扣住」≈「永远不放」)。",
+    "change": "bots/BotLib/hero_skeleton_king.lua:新 `X.IsReincarnationReserveIdle()`(定义在 `X.ShouldSaveMana` 之前);`X.ShouldSaveMana` 把出货五项合取式**绑定成 `bShipped`**,随后 `if bShipped and X.IsReincarnationReserveIdle() then return false end`,末句 `return bShipped`。⇒ **armed 只能把答案由 true 变 false,不能反向**,这是**形状**的性质不是今天算术的性质(变异台 M3 专打这一点:去掉 `bShipped and` 今天**行为上零移动**,只有源码断言看得见)。释放条件两项:`J.GetHP( bot ) >= 0.95` 且 `#J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) == 0` —— **1600 这个半径和这一整个调用是本文件自己的**(`X.ConsiderW` 的 `nEnemysHerosInView` 逐字相同),不是新造的数。",
+    "attribution_preregistered": "⛔ 这是 **WIDENING** 杠杆:armed 之后 bot 放得**更多**。负读数**只能**读作「多放出来的那些不该放」,**绝不能**读作「少了 N 次复活」—— 储备不产生复活,它只是把蓝留着,而任何离线台都无法给一次**没有发生的死亡**定价。跨语料的方向由 `tests/test_wk_reserve_idle_release.lua` section 3 用**同一个 `tally()` 调用两次、第二次把两条腿对调**证明(必须读 0 的那条腿在对调调用里必须报出**整个域**,所以那个 0 是被证明会数数的计数器产生的;'staytower' 那轮 M14 的教训)。",
+    "honest_bounds": "四条,写在源码头注与测试头注里:(1) 「1600u 内看不见敌人」**不是**「安全」,雾是真的,从 1700u 走进来的抓人这一项看不见;它买到的是「bot **看不到**囤蓝的理由」,与本文件其它敌人计数分支同一标准。(2) **2/33 是域不是频率** —— fixture 语料是为别的调查切出来的一组瞬间;真实频率要一次波(queue hero-41)。(3) **不碰同一函数里的 rank 盲区**(`nLV >= 6` 顶替「R 学过了」):那一格归 census 文件 section 6 与撤退位点的另一个 id `wkreinctr`,而 33 个计价帧里 **level>=6 且 R rank 0 的帧数为 0**(本轮实测复现),就地没有证据可修 —— 一次一根杠杆,section 7 断言本轮没有顺手把它关掉。(4) **「储备被释放」≠「放了一发技能」**:census section 5 量到出货 `X.ConsiderQ` 在 33 帧上无论储备开关都答 0,本文件 section 6 在两个域帧上**重新推导**了这件事而不是引用它。",
+    "validation": "新 `tests/test_wk_reserve_idle_release.lua` **13/13**;`lua5.1 tests/run_tests.lua wk_` **265 例 0 失败**;新 `tools/agent/mutstand_wksaveidle.sh` 10 变异(M3 = 形状变异,行为零移动只被源码断言抓住;M7 = **诚实缺口**,0.95→0.60 在本语料上零移动;M9 = `pullcad` 陷阱的兄弟形,helper 改名本文件另一个活 id `wkrosh`;M10 = 对**量具自己**的对照,语料walk 悄悄少几帧)。",
+    "next_baton": "批测台 `iterations/queue.json:hero-41`(零 EC2 归档只读扫描,与 hero-2/30..40 同形可并进同一次遍历)。总监:P4.2 冻结期内合法裁定是 **FROZEN-HOLD**,**在 (a) 买到之前不许 promote**;本条**不请求入集**。"
   }
 }
