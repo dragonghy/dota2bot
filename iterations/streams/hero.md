@@ -50,7 +50,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    报告 `iterations/reports/hero/20260907T231502Z.md`。新
    `tests/test_lion_ult_cash_weakest.lua`(**9 例**)+
    `tools/agent/mutstand_lionultcash.sh`(**10/10 CAUGHT**)。
-   登记 `state.json:lionultcash_20260907`,新请求 `queue.json:hero-43`。
+   登记 `state.json:lionultcash_20260907`,新请求 `queue.json:hero-43`,新开 GH **#615**。
    本轮 `[hero]` open issue **一条可认领的都没有**(逐条理由见报告 §1)。
    - **⭐ 不可达是闭式的,不是语料读数**:「击杀」循环与「团战」出口读**同一个列表**
      `nInBonusEnemyList`,用**同一个 nDamage / 同一个 `nCastPoint + 0.25` / 同一个
@@ -5243,7 +5243,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   **`X.ConsiderR` 的「团战对最弱的敌人」出口在出货腿上不可达(闭式)。gated `lionultcash`
   落地打开它,`bots/` 有真代码行。** 新 `X.lion_ShouldCashUltAtWeakest`,新
   `tests/test_lion_ult_cash_weakest.lua`(**9 例**)+ `tools/agent/mutstand_lionultcash.sh`
-  (**10/10 CAUGHT**)。`state.json:lionultcash_20260907`、`queue.json:hero-43`。
+  (**10/10 CAUGHT**)。`state.json:lionultcash_20260907`、`queue.json:hero-43`、GH **#615**(本轮开)。
+  落地 commit `10b474b9`(已在 main 上,**推在开 issue 之前**,GH #290);`claim_precheck.sh` **EXIT=0 clean**。
   **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
   `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
   `run_tests.lua lion` **200 例 0 失败**;`test_smoke_load.lua` exit 0。
