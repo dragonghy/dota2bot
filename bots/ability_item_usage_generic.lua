@@ -7276,6 +7276,88 @@ X.ConsiderItemDesire['item_blood_grenade'] = function(item)
 		end
 	end
 
+	-- [grenharass] SOAK CANDIDATE, turbo only, inert until armed.
+	--
+	-- THE FINDING: BOTH shipped branches of this entry are KILL-CONFIRMS, so a
+	-- 25-gold laning consumable is only ever thrown as an execute.  The first
+	-- loop needs `J.CanKillTarget(enemy, totalDmg)` -- the grenade alone must
+	-- finish the target (275 with the attack extension, and that extension needs
+	-- `IsFacingLocation(..., 15)`, a 15-degree cone).  The second needs
+	-- `J.IsGoingOnSomeone(bot)` AND an ally who is already chasing the same hero
+	-- AND `J.GetTotalEstimatedDamageToTarget(allies) >= enemy:GetHealth()` --
+	-- i.e. the allies' own damage already kills, so the grenade is decoration.
+	-- Nothing in this entry throws a grenade to WIN A TRADE, which is the use
+	-- the item is bought for on every support build in bots/BotLib (51 hero
+	-- files list it) and restocked for all through the lane.
+	--
+	-- MEASURED on the 1012-frame / 109-fixture corpus (tests/_grenharass_sweep.lua):
+	-- 100 frames carry a grenade in a MAIN slot, 40 of those see an enemy hero
+	-- inside the 900 cast range, all 40 clear valid/non-immune/not-illusion --
+	-- and `CanKillTarget(e, 125)` is TRUE on ZERO of them.  The shipped domain
+	-- of this whole function on this corpus is 0, at any facing.
+	--
+	-- THE LEVER, in the item's OWN yardstick rather than a taste threshold: throw
+	-- when the grenade removes at least a third of what the target has left
+	-- (`GetHealth() <= totalDmg * 3`).  That is the trade-winning use -- 50 on
+	-- impact, then 15/s for 5s with a 15% slow -- and it is what a support does
+	-- with a restocking consumable.  Domain: 8 of the 40.
+	--
+	-- DIRECTION IS FIXED BY CONSTRUCTION, not by argument: this is appended
+	-- after both branches RETURN, so arming can only turn BOT_ACTION_DESIRE_NONE
+	-- into a cast.  It can never redirect, delay or outbid a throw the shipped
+	-- code already makes, and it cannot suppress any other item (the dispatcher
+	-- at ~:1084 only reaches this entry when no earlier slot bid).  Unarmed,
+	-- J.IsSoakCandidate is the FIRST conjunct and short-circuits before any
+	-- engine call, so every shipped frame evaluates byte-identically.
+	--
+	-- Gated STANDALONE -- one id in this condition, never a conjunction of two
+	-- (the 'pullcad' trap).  Turbo is written out because this function has no
+	-- IsModeTurbo above it.
+	--
+	-- Every conjunct except the health test is COPIED from the first loop above,
+	-- clause for clause: same `nEnemyHeroes` ring, same IsValidHero /
+	-- CanCastOnNonMagicImmune / not IsSuspiciousIllusion, same
+	-- `nHealth > nHealthCost * 2` self-preservation floor (`nHealthCost` is this
+	-- function's own declared constant -- the health the throw costs the
+	-- thrower), same centre-of-enemies aim point.
+	-- tests/test_grenharass_domain.lua parses both and fails the day either
+	-- copy drifts.
+	--
+	-- HONEST BOUNDS, stated rather than buried.  (1) The corpus cannot reach
+	-- this entry through the shipped dispatcher at all: `J.CanCastAbility`
+	-- short-circuits on `not IsTrained()` for every fixture item handle (the
+	-- sixteenth world assertion, tests/test_itemdesire_world_assertion.lua), so
+	-- the sweep supplies IsTrained/IsActivated to the grenade handle and to it
+	-- only, exactly as the 'urnself' round did.  (2) `nHealth > nHealthCost * 2`
+	-- is TRUE on all 40 frames -- it does not bind here, and is kept because it
+	-- is the shipped rule, not because it was measured to matter.  (3) The mock
+	-- applies NO magic resistance (`GetActualIncomingDamage` returns the raw
+	-- damage), so `CanKillTarget` readings are an UPPER bound -- which is the
+	-- safe direction for the "shipped domain is 0" claim above and the unsafe
+	-- one for any claim that a throw kills.  This lever claims no kill.
+	if J.IsSoakCandidate('grenharass')
+		and J.IsModeTurbo()
+	then
+		for _, enemyHero in pairs(nEnemyHeroes)
+		do
+			if J.IsValidHero(enemyHero)
+			and J.CanCastOnNonMagicImmune(enemyHero)
+			and not J.IsSuspiciousIllusion(enemyHero)
+			and enemyHero:GetHealth() <= totalDmg * 3
+			and nHealth > nHealthCost * 2
+			then
+				local nInRangeEnemy = J.GetEnemiesNearLoc(enemyHero:GetLocation(), nRadius)
+
+				if nInRangeEnemy ~= nil and #nInRangeEnemy >= 1
+				then
+					return BOT_ACTION_DESIRE_HIGH, J.GetCenterOfUnits(nInRangeEnemy), 'ground', 'Blood Grenade'
+				end
+
+				return BOT_ACTION_DESIRE_HIGH, enemyHero:GetLocation(), 'ground', 'Blood Grenade'
+			end
+		end
+	end
+
 	return BOT_ACTION_DESIRE_NONE, 0
 end
 

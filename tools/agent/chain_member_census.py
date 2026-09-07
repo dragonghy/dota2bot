@@ -189,9 +189,15 @@ _JUDGED_DUP_ROWS = [
     # green and printed the LINE NOTE.  What went red was the FRESHNESS check
     # in tests/test_chain_member_census.py, which is a different claim -- see
     # GH #574 for whether that check should keep costing an edit per insertion.
+    # ⭐ AND A THIRD TIME, 8341 -> 8423 on 2026-09-07 (the `grenharass` gate,
+    # +82 lines above it in the same file).  That makes the answer to #574 a
+    # measurement rather than an opinion: THREE insertions into one file, three
+    # edits to this literal, none of them about the finding, and each one paid
+    # by a round that had no other business here.  The key has absorbed all
+    # three; only the freshness check charges.
     ("bots/ability_item_usage_generic.lua",
      'notallyHero:HasModifier("modifier_juggernaut_healing_ward_heal")',
-     "1585a9b8", 8341,
+     "1585a9b8", 8423,
         "IDEMPOTENT.  The polliwog-charm heal filter repeats one member of the "
         "already-being-healed set.  It LOOKS like the dropped-member shape and "
         "is not: the repo's only sibling enumeration of that set "

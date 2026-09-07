@@ -1089,3 +1089,127 @@ bump((shipped and not arm) and 'pair_ne_arm_in_flipset' or 'pair_ne_arm_out_flip
   armed 腿恢复撤退。⚠️ **按「英雄等级 ≥ 6」筛会漏掉大半** —— 本语料 15 个未学习帧只有
   2 个到 6 级;**要按技能等级 0 筛**。
 - **丁 → 英雄组(登记,不催)**:§FR.2 最后一行的血之荼蘼一格。
+
+---
+
+## §FS 2026-09-07T07:30Z 协同组 —— **一个 25 金、51 个购买表都有、整个对线期反复补货的消耗品,两条分支都是击杀确认**;本节最该被读的是 **§FS.4:本轮最强的变异体在本语料上不动任何一个数字(M7),它打的是位置不是行为** —— 以及 **§FS.6:第一版 M12 幸存,而缺陷在断言不在变异体(sweep 自己那半结构解析算了但没人读)**
+
+**认领**:工作流第 1 步扫 `[strategy]` open issue —— `#582`/`#578`/`#575`/`#572`/`#568`
+(本组前五轮已交付、等总监裁)与 `#558`(已认领并交回),更早的
+`#385/#300/#254/#201/#198/#26` 同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,
+按铁律 9 取 owner 优先项 **P4.4(i)**;章程 `0CORPUSPIN` 的「下一格」明写:甲路
+(`J.IsInTeamFight` 团战帧)未到位 ⇒ 走**乙路**,先跑 `item_blood_grenade` 那条缝的**域价钱**。
+
+**⛔ armed 串一字未动、`queue.json` 一字未动**(P4.2 入集冻结,合法裁定 = FROZEN-HOLD)。
+零 AWS、零 S3、零 EC2、零波次。
+
+### §FS.0 先纠一句本组自己的记法 —— 那条缝的根因**不是**「没有 consider 函数」
+
+章程 `0CORPUSPIN` 把这条缝记作「100 携带者 / 0 次投掷」。本轮开工时第一遍
+`grep 'ConsiderItemDesire\["'` **读回了「这个道具根本没有 entry」**,而那是**错的**:
+这个 entry 用的是**单引号** `ConsiderItemDesire['item_blood_grenade']`,双引号的模式
+扫不到它。**根因是另一件事,而且更值得修**:entry 在,只是它的**两条分支都是击杀确认**。
+
+### §FS.1 主判据:两条分支,两个都要求「这一下就把人打死」
+
+| | 已发货分支的开火条件 | 本语料上的命中 |
+|---|---|---|
+| loop 1 | `J.CanKillTarget(enemyHero, totalDmg, MAGICAL)` —— 手雷自己的 **125**(50 撞击 + 15/s×5s)必须够杀;有一条 **275** 的延伸,但它坐在 `bot:IsFacingLocation(enemyHero:GetLocation(), 15)` 这个**15 度**锥形 + `IsInRange(bot, e, GetAttackRange())` 后面 | **0** / 40(275 那一档 3,但只能经由 15 度锥形够到) |
+| loop 2 | `J.IsGoingOnSomeone(bot)` **且**有队友正在追同一个目标 **且** `J.GetTotalEstimatedDamageToTarget(nInRangeAlly, enemyHero) >= enemyHero:GetHealth()` —— **队友自己的伤害已经够杀** | **0**(驱动读数:`cast_ship == 0`) |
+
+⇒ 这棵树把一个**对线期消耗品**当**处决工具**用。条件 (c) 的反面证据是数出来的:
+`bots/BotLib/` 下 **51** 个英雄的购买表里有它,25 金,最大囤 2,整个对线期反复补货。
+
+### §FS.2 域价钱(漏斗,每一层都是数出来的)
+
+```
+1012 活体帧 / 109 fixture
+ 238  携带手雷(任意格)
+ 100  携带在主槽 0-5
+  40  主槽携带 且 900 施法距离内有敌方英雄
+  40  且全部通过 valid / 非魔免 / 非幻象   (cand == loop,过滤器一帧没删)
+   0  且 CanKillTarget(e, 125, MAGICAL)    <- 已发货 loop 1 的门
+   3  (若换 275)                           <- 只能经由 15 度锥形
+  40  且 nHealth > nHealthCost * 2          <- 自保下限,本语料上不约束
+   8  且 GetHealth() <= totalDmg * 3        <- 本杠杆的域(目标血量 225–363)
+```
+
+杠杆写在**道具自己的尺子**上而不是一个口味阈值:**手雷能削掉对方剩余血量的至少三分之一**。
+
+### §FS.3 ⭐ 两把独立的量具落在同一个数上,而测试断言的是**等式**
+
+`domain`(合取项前缀行走)**8** == `cast_armed`(**驱动**:每帧跑两遍已发货的
+`_G.ItemUsageThink`,读回记录到的引擎动作)**8**;`cast_ship` **0**。
+两列都断言,任何一列都不能替另一列说话(变异台 **M8** 专打这个:让前缀行走丢掉阈值)。
+驱动那一列需要给**手雷把手**补 IsTrained/IsActivated/IsFullyCastable ——
+`J.CanCastAbility` 对每个 fixture 道具把手都短路在 `not IsTrained()`(**第十六条世界断言**),
+补法与 `urnself` 那轮逐字相同,**且只补手雷这一个把手**。**M13** 打的就是这个:
+把 IsTrained 拿掉,`cast_armed` 读回 **0** —— 和「这个杠杆什么都没做」印出来一模一样。
+
+### §FS.4 ⭐⭐ 本轮最强的变异体在本语料上不动任何一个数字(M7)
+
+方向在这里是**构造**不是论证:块被追加在两条已发货分支的 `return` **之后**
+⇒ arming 只能把 `BOT_ACTION_DESIRE_NONE` 变成一次投掷,**永远不可能改道、延迟或压过
+已发货代码本来就要做的那次投掷**。**M7 把这个块原样搬到两条分支上面** ——
+语法没问题,**本语料上没有任何一个计数会动**(已发货分支在这里一次都不开火),
+`domain`、`cast_armed`、`flips` 逐位不变。抓住它的**只有结构断言**
+(「gate 必须落在最后一条已发货 `return BOT_ACTION_DESIRE_HIGH` 与最终 `NONE` 之间」)。
+⇒ **可复用的一条:当方向来自位置而不是来自谓词,守住方向的断言必须是位置断言;
+任何行为计数对它都是瞎的。**
+
+### §FS.5 方向零的补集(GH #171 形状,第三次照办)
+
+`flip_true_to_false == 0`,而**同一个 `tally()` 对调双腿再调一次**:
+`flip_true_to_false_swapped == flips == 8`、`flips_swapped == 0`。
+**M6 / M6b** 分别删掉两次调用,两发都 CAUGHT。
+另有 `driven + undriven == loop`(40 帧里 2 帧驱动不起来)—— **一次死掉的驱动
+不许悄悄缩小分母**。
+
+### §FS.6 ⭐ 变异台第一版 M12 幸存,而缺陷在**断言**不在变异体
+
+`M12`(把 **sweep** 的 `strip_comments` 换成恒等式)第一版 **SURVIVED**。
+按证据纪律第 2 条先查断言:sweep 自己那半**结构解析算了,但没有任何断言读它**
+—— 测试用自己的 parser 把同样的事实又读了一遍。⇒ **那半是死仪表**。
+修法**不是删掉它**,而是新增 section 4「**两个 parser 对表**」:
+sweep 走的施法距离/伤害常数、gate 位置、id 计数、已发货两条分支的击杀确认计数,
+逐条与本文件自己的读数断言相等。**理由是算术不是整洁**:sweep 的语料列
+(§FS.2 的 40、§FS.3 的 8)是**用 sweep 解析出来的数**量的,两个 parser 不对表,
+就无法排除「sweep 量的是另一个谓词」。补上之后 **M12 CAUGHT**,
+全台 **15 发 / 15 如声明 / STAND GREEN**。
+
+### §FS.7 诚实边界(写在前面,不埋)
+
+1. mock **不施加魔抗**(`GetActualIncomingDamage` 返回原始伤害)⇒ 每条 CanKillTarget
+   读数都是**上界**。这对「已发货击杀确认命中 **0**」是**安全**方向,对任何
+   「这一投能杀」的声称是**不安全**方向 —— **本杠杆不声称击杀**,测试里没有这样的断言。
+2. `nHealth > nHealthCost * 2` 在 **40/40** 全通过:**本语料上它不约束**。
+   它被保留是因为它是**已发货 entry 自己的规矩**,不是因为量到它有用。
+   **M5** 删掉它时**没有任何域数字会动**,抓住它的是「抄写条款计数 == 3」那条。
+3. 本语料为 owner 优先项 **P2 的回城 TP 调查**而切,**不是**为对线期而切 ——
+   40 是**这份语料的几何**,不是真实对局里的频率。
+
+### §FS.8 产出
+
+`bots/ability_item_usage_generic.lua`(`grenharass` 块)、
+`tests/test_grenharass_domain.lua`(**12/12**)、`tests/_grenharass_sweep.lua`、
+`tools/agent/mutstand_grenharass.sh`(**15/15 GREEN**)、
+`iterations/state.json:grenharass_20260907`;
+报告 `iterations/reports/strategy/20260907T073000Z.md`。
+
+### §FS.9 交棒(总线 **GH #590**)
+
+- **甲 → 总监**:`grenharass` 登记在案,**不提入集**(FROZEN-HOLD)。
+  另附一条规程建议:**§FS.4 的位置断言规则** —— 当一个 gated 块的方向来自
+  **它在函数里的位置**(追加在已发货 `return` 之后)而不是来自谓词,
+  守住方向的断言**必须是位置断言**;任何行为计数对这类变异都是瞎的。
+- **乙 → 批测台**:解冻后 `grenharass` **单臂可读**(entry 内只有这一个 id,
+  一条件一 id)。⚠️ **取证不能只靠这份 fixture 语料** —— 40 帧是 P2 语料的几何。
+- **丙 → 录像组**:核验形状 = 真实 Turbo 对线期里一个**主槽带血之荼蘼**的辅助,
+  **900 内有敌方英雄且该英雄当前血量 ≤ 375** 的时刻:baseline 腿不投,armed 腿投。
+  ⚠️ **按「能不能杀」筛会一帧都筛不到** —— 已发货的门就是击杀确认,本语料命中 0。
+- **丁 → 英雄组(登记,不催)**:`X.ConsiderItemDesire` 的键有**单引号与双引号两种写法**
+  (`['item_blood_grenade']` vs `["item_flask"]`)。任何按 `ConsiderItemDesire\["` 做的
+  普查都会**系统性漏掉单引号那一族**;本轮开工第一遍就是这么读错的(§FS.0)。
+  **数出来的**:双引号 **168** 个键、单引号 **8** 个(`item_blood_grenade`、`item_disperser`、
+  `item_dust`、`item_harpoon`、`item_pavise`、`item_pirate_hat`、`item_smoke_of_deceit`、
+  `item_soul_ring`)—— 漏掉的不是一个,是 **8 个道具的整个决策层**。
