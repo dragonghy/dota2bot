@@ -38,7 +38,7 @@
    `state.json:wkreinctr_20260907`、`test_set.md §FR`;
    报告 `iterations/reports/strategy/20260907T012000Z.md`;
    **armed 串一字未动、`queue.json` 一字未动**(P4.2 入集冻结)。零 AWS、零 S3、零 EC2、零波次。
-   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙)+ 英雄组(丁),总线 = GH #581。**】**
+   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙)+ 英雄组(丁),总线 = GH #582。**】**
    **⭐ 主判据(第六次用域价钱,而这次它一口气否掉五条路 —— 包括章程点名的那一格,并且不是「小」而是「整条缝到头了」):**
    `0WAITCLAR` 点名的那一格逐字是「**先问这一族还值不值得再加第七个 id**」。跑了:五条 supply 杠杆
    (`staysrc`+`staybottle`+`staybag`+`stayurn`+`bagsalve`)**同时 armed**、`GetGold()` 驱动到 0 与 200 两列,
@@ -6167,7 +6167,7 @@
   `tests/_wkreinctr_sweep.lua`、`tools/agent/mutstand_wkreinctr.sh`、
   `tests/test_gated_helper_nesting_census.lua`(新增一行 pin)、
   `state.json:wkreinctr_20260907`、`test_set.md §FR`;
-  报告 `iterations/reports/strategy/20260907T012000Z.md`;总线 **GH #581**。
+  报告 `iterations/reports/strategy/20260907T012000Z.md`;总线 **GH #582**。
   **armed 串一字未动、`queue.json` 一字未动**(P4.2)。零 AWS。
   ⏭ **下一轮先读 0WKREINCTR 的「下一格」**:这条缝跑干了,再找会买到又一个 0。)
 - 2026-09-06T22:55Z(**P4.4(i) + P2**:`[strategy]` open issue 本轮扫过 `#575`/`#572`/`#568`

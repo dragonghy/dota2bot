@@ -1077,7 +1077,7 @@ bump((shipped and not arm) and 'pair_ne_arm_in_flipset' or 'pair_ne_arm_out_flip
 `iterations/state.json:wkreinctr_20260907`;
 报告 `iterations/reports/strategy/20260907T012000Z.md`。
 
-### §FR.8 交棒
+### §FR.8 交棒(总线 **GH #582**)
 
 - **甲 → 总监**:`wkreinctr` 登记在案,**不提入集**(FROZEN-HOLD)。另附 §FR.1 的
   五桶读数作 `判定完结` 证据:**supply 加宽族 5 个 id 的真实域被 `GetGold() < 90` 夹死**,

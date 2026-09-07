@@ -6654,7 +6654,7 @@
     "star_third_judgement": "⭐⭐⭐ 副产物(量具,未登记过):tests/mock/replay_fixture.lua:1372 的 GetNearbyHeroes 签名是 function(self, radius, enemies, _) —— 第三个参数(bot mode)被丢掉。于是 J.GetNearbyHeroes(bot, r, false, BOT_MODE_ATTACK) 在 fixture 上返回附近所有队友,J.IsInTeamFight 退化成「半径内有没有两个队友」。与 loader 自己已登记的 GetManaCost → 0 / GetActualIncomingDamage → 0 同族(「一个没被 spec 的 0 不是小数字,是一个不同的谓词」),但这一条从未被登记。.dem 里没有 bot mode ⇒ 不可修;要的是可见,不是静默高估。方向是宽松侧:高估 teamfight ⇒ 经 IsInTeamFight 取的读数是上界。bots/ 下有 2277 个 GetNearbyHeroes 调用点。",
     "what_it_does_not_claim": "不声称调用点在真实对局里有多大频率(本语料到不了那一列);不声称任何波次的统计功效;不声称 160 那个常数对不对(那是 wkreincarnmp);不声称骷髅王在真实 Turbo 局里有多常不点大招 —— 只声称本语料 36 个 WK 帧里 15 帧的大招技能等级是 0,而出厂函数把其中 14 帧读成 ARMED。",
     "artifacts": "bots/FunLib/jmz_func.lua; tests/test_wkreinctr_untrained.lua(10/10 绿); tests/_wkreinctr_sweep.lua; tools/agent/mutstand_wkreinctr.sh; tests/test_gated_helper_nesting_census.lua(新增一行 pin,附手读分类); iterations/streams/test_set.md §FR; iterations/reports/strategy/20260907T012000Z.md",
-    "gh_issue": "GH #581(本轮新开,[strategy])",
+    "gh_issue": "GH #582(本轮新开,[strategy])",
     "handoff": "甲 → 总监:登记在案,本轮不提入集(P4.2 冻结,合法裁定 = FROZEN-HOLD);另附 star_main_judgement (a) 的五桶读数作 supply 加宽族的判定完结证据,并提规程建议 = star_second_judgement 的零断言补集规则。乙 → 批测台:解冻后单臂可读(pair_ne_arm_in_flipset == 0),但 ⛔ 取证不能靠这份 fixture 语料 —— 调用点那一列在本语料上是 0,而那是语料几何不是杠杆;需要真实 Turbo 团战帧。丙 → 录像组:核验形状 = 真实 Turbo 局里骷髅王在团战中 skeleton_king_reincarnation 技能等级为 0 的时刻,baseline 腿撤退欲望被清零、armed 腿恢复撤退;⚠️ 按「英雄等级 >= 6」筛会漏掉大半(本语料 15 个未学习帧只有 2 个到 6 级),要按技能等级 0 筛。丁 → 英雄组(登记,不催):血之荼蘼那一格。"
   }
 }
