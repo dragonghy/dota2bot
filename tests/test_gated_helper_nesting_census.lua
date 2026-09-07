@@ -219,6 +219,30 @@ local PINNED = {
     -- hands back the DISTANCE, the same value the call site used to compute
     -- inline, so with roshdist off the conjunction is byte-for-byte what
     -- shipped.
+    -- [roshpit 20260907 GH #450] Three rows landed together when
+    -- J.GetCurrentRoshanLocation stopped being ungated (the day/night pit
+    -- mapping is inverted against 77/77 observed roshan deaths). Read by hand
+    -- before pinning, and the inner half is (P) for all three, for one reason
+    -- that is the same at every call site: un-armed, J.GetCurrentRoshanLocation
+    -- returns the SHIPPED constant -- the gate only chooses between the two pit
+    -- vectors, it never returns nil and never kills a branch. So every outer id
+    -- armed alone still sees the pit it always saw. Written as an explicit
+    -- if/else rather than `bDay and A or B` precisely so that "off-candidate is
+    -- the shipped path" holds for a reason and not by luck.
+    -- Outer half is (W) on the two GetDesireHelper rows for the reading the
+    -- 'roshdist' row below already carries -- the outer ids are sibling
+    -- statements in the same 500-line function, not a block enclosing the
+    -- roshan paragraph -- and (W) on the 'roshgate' row too: that file's
+    -- BOT_MODE_ROSHAN desire runs on every frame regardless of 'roshgate'.
+    -- ⚠ The pair question GH #576 added, answered in the direction that matters
+    -- here: 'roshpit' is NOT only reachable when one of these outer ids is
+    -- armed. The pit is read at 25 call sites and most of them (the hero files,
+    -- aba_push, aba_defend, global_cache) carry no gate at all, so a single-arm
+    -- 'roshpit' wave has a domain of its own. Pinned in
+    -- tests/test_roshan_pit_daynight.lua ([gate] / [call sites]).
+    "c12,retnear,towerreach | GetDesireHelper | J.GetCurrentRoshanLocation | roshpit | bots/mode_retreat_generic.lua",                    -- W
+    "campgrade,tbearly | GetDesireHelper | J.GetCurrentRoshanLocation | roshpit | bots/mode_farm_generic.lua",                            -- W
+    "roshgate | GetDesireHelper | J.GetCurrentRoshanLocation | roshpit | bots/mode_roshan_generic.lua",                                   -- W
     "c12,retnear,towerreach | GetDesireHelper | J.IsAtRoshanPit | roshdist | bots/mode_retreat_generic.lua",                              -- W
     "c12,retnear,towerreach | GetDesireHelper | J.IsInLaningPhase | c2,c4 | bots/mode_retreat_generic.lua",                               -- W
     -- [wkreinctr 20260907] 'wkreinctr' joined this row when it added the

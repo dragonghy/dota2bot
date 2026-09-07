@@ -497,6 +497,73 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-07T07:19Z**:**上轮交棒 ③ 结清 —— GH #450(已挂六轮的 live [bug])落成 gated soak
+  candidate `roshpit`;顺带结清 04:45Z 之后新出现的一条 python trunk 红。零 AWS、零波次、不发 owner 邮件。**
+  ⛔ **判定完结 0,连续第三轮低于 owner P4.2 的 ≥2 —— 不粉饰:整轮给了那个 [bug]。**
+  它满足 owner **P4.4**(工作单元主体 = 一个 `bots/` 行为改动),**不满足 P4.2 的产出指标**;
+  ⇒ **下一轮第一件事必须是判定,不是修 bug。**
+  **修法**(按 §FK.3,**不是把两个常量对调**):新增**无闸** worker `J.RoshanPitForTimeOfDay(bArmed)`
+  (两条映射同帧可读),`J.GetCurrentRoshanLocation()` 收缩成**唯一闸址**
+  `J.IsModeTurbo() and J.IsSoakCandidate('roshpit')`,**25 个调用点一行未改、未 armed 逐值等于出厂**
+  (出厂那支刻意写 `if/else` 而非 `bDay and A or B` —— 后者在 A 为 nil 时与出厂不同,
+  「off-candidate 就是出厂路径」要**因为理由成立不是因为运气**)。
+  钉子 `tests/test_roshan_pit_daynight.lua` **11/0**(两条腿各扫**昼夜两侧**含 0/300 边界 ⇒
+  「无条件答某一个坑」的修复过一半死一半;turbo-only / 错侧 / 错 id / 真帧两相位都可达 /
+  闸只解析一次 / `[call sites]` 承重:`bots/` 里没有文件单独点名一个坑常数);
+  变异台 `mutstand_roshan_pit_daynight.sh` **8 CAUGHT / 1 SURVIVED(量程对照)/ 0 ABORTED**,
+  ⭐ 逐发核过**瞄准的 case 都在死者名单里** —— 第一版这台只打前三行,M5 当场就长得像被邻居杀的,
+  **截断就是这么把邻居的战功记到瞄准者头上的**;`test_gated_helper_nesting_census.lua` 的三条新行
+  按该文件的问句读为 **(P)** 并回答了 GH #576 追加的那半问(`roshpit` 有自己的单臂域:25 个调用点里
+  大多数根本没有闸)。
+  ⭐⭐⭐ **最该被读的是修复过程中买到的两件反向证据:**
+  **(i) #450 建议的验收句在装置层面买不到** —— `roshdist_domain.py` 的 `current_pit()` 是**工具自己
+  硬编码**的公式(`:128` + 文件头常量),**它不读 Lua**,改完重跑一个数都不变;⚠️ 而它要的读数
+  **已被现有测量在算术上买下**(观测二值 + `unresolved==0` ⇒ `agree_flipped ≡ DISAGREE_shipped = 77`,
+  **恒等式**);⛔ **但那仍不是条件 (a)** —— §A 量的是**公式指对了坑**不是**行为变了**
+  (『适用于此』vs『在此生效』)。剩余义务收窄成一句写进 `owed_executions.json`。
+  **(ii) 三份 7.38 二手记述说「top at night, bottom at day」= 出厂映射是对的**,一份 7.33 说反面
+  = armed 腿;两份互相矛盾 ⇒ 至多一份描述 7.41,而 `AGENTS.md` 本就拒绝拿摘要当证据。
+  唯一能救出厂映射的**技术**解释也排除了:dumper 的 `t` 与 `DotaTime()` **同源**
+  (`main.go:500-506` 抓号角、`:735-742` 减掉)⇒ 半周期相位偏移不存在。**实测压二手,
+  而这恰恰是它落成 gated candidate 的理由:两边都有说法时,gate 是唯一能让两边同时活着的形状。**
+  未买到的一半照实登记:7.38 那条「15:00 前恒在 bottom pit」**两条腿都没建模**,本轮**没有逐次核过
+  77 个死亡时刻**,所以是登记不是结论。
+  ⭐ **同轮登记第二根杠杆(刻意不并进)**:`J.CheckTimeOfDay()` **从不问引擎**(算 `DotaTime()%600<300`),
+  而引擎自己的 `GetTimeOfDay()`(`BOT_API_REFERENCE.md:346`)在 `bots/` 里**零调用点** ——
+  相位若错,**两条腿的坑都是错的**;`[coupling]` case 钉住「两条腿共用同一个相位读数」,
+  让它哪天落地**必须自己举手**(M6 打得中)。
+  **顺带结清的 trunk 红**:`test_detector_source_constants.py` 的 `zusultstrand_domain:HP_GATE` /
+  `ULTCASH_HP_GATE` **UNREGISTERED`**(录像组 `6eaebe38` 04:20Z 随 hero-37 落地;上轮 04:45Z 还是 0 failed)。
+  照抄 2026-09-03 那批三行的处方:**分类 + 钉住**;牙齿实测:`HP_GATE` 改 `0.29` ⇒ **只红那一条**,
+  还原 `sha256sum -c` OK。
+  ⛔ **更正:这一格不是我修好的。** push `HEAD:main` 被拒 → rebase 冲突 →
+  **录像组(落地那个检测器的人)同一小时里把同一条红修掉了,而且修得更好**:
+  它把 `0.28` 锚在 **`X.zuus_ShouldCashUltBeforeDeath( bot )` 这个调用**上(并断言该调用全文件唯一),
+  我锚的是 `X.ConsiderR` + `literal()` 的**首个匹配** —— 而 `nHealthPercentage` 在那个函数里被比较
+  好几次,**「首个匹配」正是锚点要防的读法**;它还多钉了两个半径,归因也更准(**三发跨两组**,
+  不是我数的第四发)。⇒ **整份取它的**(`git checkout --ours`),我这一侧全部丢弃。
+  ⭐ 与 `outlatch_check1b_reason`(§EV / GH #523)同族的第二发、方向相反:那次是「棒三小时前
+  就被做完了」,这次是**两个会话在同一小时做同一件活,谁都无从知道**;代价从「一次多余登记」
+  变成**我这一侧的整块工作(含一次变异实测)**。**GH #518 的认领字段对两发都是瞎的** ——
+  trunk 红**不属于任何一行 owed/queue 记录**,它只是自检打出来的一行,**没有认领面**;
+  看见红就动手是**正确**的默认,**并发是它的常态失效不是意外**。
+  ⇒ 交棒(登记未做,现在有两份独立证据):这条约定**在落地那一刻没有任何东西举手**,
+  只在别人跑全量 python 时才红,而那个人**通常不是落地者**。
+  ⚠️ **本轮抓到一个「没跑成穿着通过」**:`run_tests.lua A B C D` **只跑第一个**却照打 `0 failures` 退 0
+  (我第一次就这么跑四个邻居文件,读数恰好等于第一个文件自己的数);逐个重跑才拿到真读数。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck 0 warnings`,**未用 `RULE6_BYPASS`**;
+  `run_py_tests.sh` **109 passed / 0 failed / 1 uncertifiable**;**全量 Lua 套件没跑,不声称它绿**。
+  ⚠️ 开工第一条命令**又误用管道**(第三十八发),§22 守卫当场拒;**不新立措辞**,登记发数。
+  `test_set.md` **一字未动**(裁定全文落在 `owed_executions.json` 行内 + GH #450 追评)⇒ 100KB 无回弹。
+  报告:`iterations/reports/director/20260907T071908Z.md`。
+  **下轮交棒**:① ⭐⭐⭐ **判定,不是修 bug**(P4.2 连续三轮欠账)—— 先退休 `owed_executions` 那
+  3 行已标 DONE 的(`hero_domain_scan_2_30_31` / `a_evidence_tpdying` / `a_evidence_tpreach`),
+  它们**每一行都是一次真判定**而不是记账;② ⭐⭐⭐ `slotpush` 判定(**连续第三轮被挤掉**);
+  ③ ⭐⭐ P4.3 后半(头部瘦身,**从没开工**);④ ⭐ 把「新检测器常数未登记」这条约定挪到落地那一刻
+  (自检快腿 / `run_py_tests.sh` 单独报行);⑤ ⭐ runner 对多余参数报错而不是静默丢弃;
+  ⑥ `cadence` GAP(strategy)+ 7 条 `SKIPPED-IN-STREAM` 仍未处理。
+  ⛔ **`roshan_pit_daynight_fix` 那一行本轮不退休,虽然机器键从此读 DONE** —— 行内已写明
+  为什么、剩什么、**不许据键退休**。
 - **2026-09-07T04:45Z**:**开工自检 `EXIT=3` 读到 trunk 双红,两条都结清(复跑自检 `EXIT=3`,
   两条 `trunk-red(*)` 都已不在 findings 里:python `109 passed / 0 failed`(修前 107/1)、
   Lua 检测器 `84 file(s), 0 failures`(修前 RED);⚠️ **但 python 腿被记在

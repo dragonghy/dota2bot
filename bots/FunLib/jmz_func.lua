@@ -12609,14 +12609,53 @@ function J.IsHumanInLoc(vLoc, nRadius)
 	return false
 end
 
-function J.GetCurrentRoshanLocation()
+-- Which pit the day/night rule names, WITHOUT the gate. `bArmed` picks the
+-- mapping so both legs are readable on one frame and the gate itself resolves
+-- in exactly one place (J.GetCurrentRoshanLocation, right below). Same shape as
+-- J.RoshanPitProximity / J.IsAtRoshanPit, deliberately: 25 call sites read the
+-- pit and none of them should learn what a soak candidate is.
+--
+-- ⛔ THE PREMISE THIS FUNCTION DOES NOT OWN. Both legs ask J.CheckTimeOfDay(),
+-- which does NOT ask the engine -- it computes `DotaTime() % 600 < 300` and
+-- calls that "day". The engine's own GetTimeOfDay() (BOT_API_REFERENCE.md:346,
+-- 0.0 midnight / 0.25 dawn / 0.5 noon / 0.75 dusk) has ZERO call sites in
+-- bots/. So if that modulo is out of phase, the pit is wrong on BOTH legs and
+-- neither the shipped mapping nor this candidate is the thing to fix. That is a
+-- second lever with its own id, NOT bundled here (lanefix lesson); registered
+-- on GH #450.
+function J.RoshanPitForTimeOfDay( bArmed )
+	local bDay = J.CheckTimeOfDay() == 'day'
+
+	if bArmed
+	then
+		-- GH #450: over W41's 82 games the corpus carries 77 roshan deaths and
+		-- 77 of them land in the OTHER pit (0 agree, 0 unresolved); the pits are
+		-- 7889.6u apart, so this is an inversion, not a rounding error. The
+		-- competing "roshan swaps pit on every death" hypothesis is refused by
+		-- the same corpus (6 same-phase adjacent death pairs, 6 same pit,
+		-- 0 swaps; all 3 swaps crossed a day/night boundary).
+		if bDay
+		then
+			return J.Utils.RadiantRoshanLoc
+		else
+			return J.Utils.DireRoshanLoc
+		end
+	end
+
 	-- 7.41: Roshan's pit preference switched (day/night swap)
-	if J.CheckTimeOfDay() == 'day'
+	-- Kept as an if/else rather than folded into `bDay and A or B`: that idiom
+	-- differs from the shipped branch when A is nil, and "off-candidate is the
+	-- shipped path" has to hold for reasons, not by luck.
+	if bDay
 	then
 		return J.Utils.DireRoshanLoc
 	else
 		return J.Utils.RadiantRoshanLoc
 	end
+end
+
+function J.GetCurrentRoshanLocation()
+	return J.RoshanPitForTimeOfDay( J.IsModeTurbo() and J.IsSoakCandidate('roshpit') )
 end
 
 function J.GetTormentorLocation(team)
