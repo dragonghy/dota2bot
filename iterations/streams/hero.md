@@ -5061,7 +5061,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **`tests/mock/replay_fixture.lua` 没接它**(接了 heroes/towers/barracks 三个),
     落到 `bot_api.lua` 的通配 `^GetNearby → {}`。⇒ **给 dumper 加通道不会让这些零动一下**。
     结论(`-114` 的 NOT TAKEN)不受影响,但复活条件完全不同。改那句话本身已交给 **`-116`**。
-  - **⚠️ 本轮自曝两条操作事实**:(1) 开工自检**被我自己设的 `timeout 900` 砍断,EXIT=124**
+  - **⚠️ 本轮自曝三条操作事实**:(0) **全量套件也没跑完:`FULL_EXIT=124`**(我自己的
+    `timeout 3000`),终值 **1676 例 0 失败** —— 登记成「跑过的那部分没红」,不是「全量绿」;
+    且**退出码是从日志读的**,后台完成通知报的 exit 0 是外层 shell 的、不是套件的
+    (证据纪律第 3 条,差一步就写成「套件通过」)。
+    (1) 开工自检**被我自己设的 `timeout 900` 砍断,EXIT=124**
     —— **这不是通过**,详见报告 §9;砍断前已读到的两条 trunk 红
     (`test_propertarget_corpus_domain` 1012→1021、`test_salveyield_arbitration`)
     **都不是本轮的**(本轮没加任何帧),与 replay-check 09:49Z 记的 GH #594 同族。
