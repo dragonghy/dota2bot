@@ -95,6 +95,9 @@
    4950,
    5574,
    5705,
+   6421,
+   6487,
+   6619,
    333333
   ],
   "centaur": [
@@ -130,7 +133,8 @@
    4252,
    5025,
    5037,
-   5404
+   5404,
+   6619
   ],
   "chaos_knight": [
    101,
@@ -203,6 +207,7 @@
    5813,
    5830,
    6072,
+   6553,
    111111,
    131313,
    222222,
@@ -312,6 +317,8 @@
    5574,
    5830,
    6072,
+   6421,
+   6553,
    111111,
    222222,
    444444,
@@ -377,6 +384,8 @@
    3749,
    3892,
    3927,
+   6421,
+   6553,
    333333
   ],
   "dragon_knight": [
@@ -469,6 +478,7 @@
    5025,
    5344,
    5404,
+   6553,
    111111,
    131313,
    222222,
@@ -554,6 +564,7 @@
    2914,
    3017,
    4470,
+   6619,
    131313,
    333333
   ],
@@ -591,7 +602,9 @@
    3927,
    4723,
    5813,
-   6072
+   6072,
+   6487,
+   6553
   ],
   "jakiro": [
    101,
@@ -647,6 +660,7 @@
    5058,
    5502,
    5705,
+   6619,
    246802,
    444444,
    778899
@@ -681,6 +695,7 @@
    3954,
    5813,
    6128,
+   6619,
    111111
   ],
   "lich": [
@@ -735,6 +750,7 @@
    4252,
    5705,
    6072,
+   6553,
    246802,
    424242,
    555001,
@@ -798,6 +814,7 @@
    4723,
    5058,
    5502,
+   6487,
    424242,
    555001,
    555555,
@@ -887,6 +904,8 @@
    5813,
    5830,
    6128,
+   6421,
+   6487,
    131313,
    333333,
    778899
@@ -1035,6 +1054,7 @@
    5574,
    5830,
    6128,
+   6619,
    444444,
    555555
   ],
@@ -1157,6 +1177,8 @@
    5705,
    5813,
    6072,
+   6421,
+   6619,
    111111,
    222222,
    424242
@@ -1236,6 +1258,7 @@
    3117,
    5025,
    6128,
+   6421,
    131313
   ],
   "phantom_assassin": [
@@ -1350,6 +1373,7 @@
    3713,
    4401,
    5404,
+   6553,
    111111,
    131313,
    246802,
@@ -1427,6 +1451,7 @@
    2970,
    3101,
    5574,
+   6619,
    111111,
    246802,
    778899
@@ -1534,6 +1559,8 @@
    5574,
    5813,
    5830,
+   6421,
+   6553,
    333333,
    424242,
    555001,
@@ -1657,6 +1684,8 @@
    5037,
    5404,
    5813,
+   6487,
+   6619,
    222222,
    246802,
    424242,
@@ -1750,6 +1779,8 @@
    5502,
    5705,
    6128,
+   6421,
+   6553,
    131313,
    222222,
    333333,
@@ -1828,6 +1859,7 @@
    5502,
    5813,
    6128,
+   6487,
    555001
   ],
   "storm_spirit": [
@@ -1932,6 +1964,8 @@
    4678,
    5058,
    5830,
+   6421,
+   6487,
    111111,
    246802,
    444444,
@@ -1974,6 +2008,7 @@
    4763,
    5574,
    6128,
+   6487,
    131313
   ],
   "vengefulspirit": [
@@ -2033,6 +2068,7 @@
    5025,
    5058,
    5705,
+   6421,
    131313,
    222222,
    777777
@@ -2090,6 +2126,8 @@
    4252,
    4763,
    5813,
+   6487,
+   6619,
    222222,
    333333,
    424242
@@ -2168,6 +2206,7 @@
    2756,
    3101,
    4950,
+   6553,
    111111,
    333333
   ],
@@ -2327,6 +2366,7 @@
    5502,
    5830,
    6128,
+   6487,
    222222,
    555001,
    777777,
@@ -2716,7 +2756,11 @@
   "spot_20260906_032019_1_b73358bc0f764fd4a22171da2ae4556a0d5d38f7_295740",
   "spot_20260906_032023_1_b73358bc0f764fd4a22171da2ae4556a0d5d38f7_e56ba0",
   "spot_20260906_032027_1_b73358bc0f764fd4a22171da2ae4556a0d5d38f7_f2182d",
-  "spot_20260906_032032_1_b73358bc0f764fd4a22171da2ae4556a0d5d38f7_eff51c"
+  "spot_20260906_032032_1_b73358bc0f764fd4a22171da2ae4556a0d5d38f7_eff51c",
+  "spot_20260906_181930_1_44329f419173e5f081a139e345eceecabf8a4348_3af107",
+  "spot_20260906_181933_1_44329f419173e5f081a139e345eceecabf8a4348_3c2be6",
+  "spot_20260906_181936_1_44329f419173e5f081a139e345eceecabf8a4348_fff95f",
+  "spot_20260906_181940_1_44329f419173e5f081a139e345eceecabf8a4348_73aa9d"
  ],
  "seeds": {
   "101": {
@@ -11595,6 +11639,274 @@
      ],
      "runs": [
       "spot_20260906_032032_1_b73358bc0f764fd4a22171da2ae4556a0d5d38f7_eff51c"
+     ]
+    }
+   ]
+  },
+  "6421": {
+   "cands": [
+    "campgrade"
+   ],
+   "dire": [
+    "lion",
+    "skeleton_king",
+    "sniper",
+    "sven",
+    "vengefulspirit"
+   ],
+   "games": 58,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 42
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 1,
+    "crystal_maiden": 4,
+    "death_prophet": 3,
+    "lion": 4,
+    "obsidian_destroyer": 2,
+    "oracle": 5,
+    "skeleton_king": 3,
+    "sniper": 2,
+    "sven": 1,
+    "vengefulspirit": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "crystal_maiden",
+    "death_prophet",
+    "obsidian_destroyer",
+    "oracle"
+   ],
+   "runs": [
+    "spot_20260906_181930_1_44329f419173e5f081a139e345eceecabf8a4348_3af107"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lion",
+      "skeleton_king",
+      "sniper",
+      "sven",
+      "vengefulspirit"
+     ],
+     "games": 58,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 42
+     },
+     "radiant": [
+      "bristleback",
+      "crystal_maiden",
+      "death_prophet",
+      "obsidian_destroyer",
+      "oracle"
+     ],
+     "runs": [
+      "spot_20260906_181930_1_44329f419173e5f081a139e345eceecabf8a4348_3af107"
+     ]
+    }
+   ]
+  },
+  "6487": {
+   "cands": [
+    "campgrade"
+   ],
+   "dire": [
+    "lina",
+    "sven",
+    "tidehunter",
+    "venomancer",
+    "zuus"
+   ],
+   "games": 42,
+   "games_by_cand_side": {
+    "dire": 12,
+    "radiant": 30
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "ember_spirit": 2,
+    "lina": 2,
+    "lion": 5,
+    "slardar": 1,
+    "spirit_breaker": 4,
+    "sven": 1,
+    "tidehunter": 3,
+    "venomancer": 5,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "ember_spirit",
+    "lion",
+    "slardar",
+    "spirit_breaker"
+   ],
+   "runs": [
+    "spot_20260906_181933_1_44329f419173e5f081a139e345eceecabf8a4348_3c2be6"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lina",
+      "sven",
+      "tidehunter",
+      "venomancer",
+      "zuus"
+     ],
+     "games": 42,
+     "games_by_cand_side": {
+      "dire": 12,
+      "radiant": 30
+     },
+     "radiant": [
+      "bristleback",
+      "ember_spirit",
+      "lion",
+      "slardar",
+      "spirit_breaker"
+     ],
+     "runs": [
+      "spot_20260906_181933_1_44329f419173e5f081a139e345eceecabf8a4348_3c2be6"
+     ]
+    }
+   ]
+  },
+  "6553": {
+   "cands": [
+    "campgrade"
+   ],
+   "dire": [
+    "chaos_knight",
+    "crystal_maiden",
+    "queenofpain",
+    "skeleton_king",
+    "warlock"
+   ],
+   "games": 58,
+   "games_by_cand_side": {
+    "dire": 18,
+    "radiant": 40
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "death_prophet": 3,
+    "dragon_knight": 1,
+    "ember_spirit": 2,
+    "lich": 5,
+    "queenofpain": 2,
+    "skeleton_king": 1,
+    "sniper": 4,
+    "warlock": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "dragon_knight",
+    "ember_spirit",
+    "lich",
+    "sniper"
+   ],
+   "runs": [
+    "spot_20260906_181936_1_44329f419173e5f081a139e345eceecabf8a4348_fff95f"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "chaos_knight",
+      "crystal_maiden",
+      "queenofpain",
+      "skeleton_king",
+      "warlock"
+     ],
+     "games": 58,
+     "games_by_cand_side": {
+      "dire": 18,
+      "radiant": 40
+     },
+     "radiant": [
+      "death_prophet",
+      "dragon_knight",
+      "ember_spirit",
+      "lich",
+      "sniper"
+     ],
+     "runs": [
+      "spot_20260906_181936_1_44329f419173e5f081a139e345eceecabf8a4348_fff95f"
+     ]
+    }
+   ]
+  },
+  "6619": {
+   "cands": [
+    "campgrade"
+   ],
+   "dire": [
+    "centaur",
+    "earthshaker",
+    "obsidian_destroyer",
+    "silencer",
+    "slardar"
+   ],
+   "games": 56,
+   "games_by_cand_side": {
+    "dire": 17,
+    "radiant": 39
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "centaur": 3,
+    "earthshaker": 4,
+    "jakiro": 5,
+    "juggernaut": 1,
+    "necrolyte": 2,
+    "obsidian_destroyer": 2,
+    "silencer": 5,
+    "slardar": 1,
+    "venomancer": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "jakiro",
+    "juggernaut",
+    "necrolyte",
+    "venomancer"
+   ],
+   "runs": [
+    "spot_20260906_181940_1_44329f419173e5f081a139e345eceecabf8a4348_73aa9d"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "earthshaker",
+      "obsidian_destroyer",
+      "silencer",
+      "slardar"
+     ],
+     "games": 56,
+     "games_by_cand_side": {
+      "dire": 17,
+      "radiant": 39
+     },
+     "radiant": [
+      "bristleback",
+      "jakiro",
+      "juggernaut",
+      "necrolyte",
+      "venomancer"
+     ],
+     "runs": [
+      "spot_20260906_181940_1_44329f419173e5f081a139e345eceecabf8a4348_73aa9d"
      ]
     }
    ]
