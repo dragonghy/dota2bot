@@ -1,7 +1,18 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom
+tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom
 
-**成员串 48**(上一行,**433 字节**,md5 `51eb44347f25676ec5bf767383eed244`)。本行 **2026-09-07T16:28Z 的变动:两条 `退回出集`(50 → 48)**,总监裁定全文 **§FV**。⛔ **两条都不是 reject**,gate 与代码**逐字保留**(`bots/` 对这两条零 diff);判定完结 **2**(owner P4.2 的产出指标),连续四轮低于 ≥2 之后的第一轮达标。
+**成员串 46**(上一行,**417 字节**,md5 `cd3b46d4e3ca4a446272b330a09a2751`)。本行 **2026-09-07T19:xxZ 的变动:两条 `退回出集`(48 → 46)**,总监裁定全文 **§FW**。⛔ **两条都不是 reject**,gate 与代码**逐字保留**(`bots/` 对这两条零 diff);判定完结 **2**(owner P4.2 的产出指标),连续第二轮达标。
+1. **`l1trade` 退集**(48 → 47)—— armed **≥ 44 天**(`armed_since.json` 下界 2026-07-25),`verify_coverage.py` 读 **verify=0 / 179 份报告**,与上一轮两条同取自**全集最老的那一档**(P4.2「从核验记录最少、最难买 (a) 的 id 清起」)。
+2. **`l5combo` 退集**(47 → 46)—— 同一档、同一读数、同一理由;两条是同一个杠杆的核心腿与辅助腿(`J.ShouldInitiateLaneKill` / `J.ShouldSupportComboKill`),**必须同批处理**:分开退会留下半个对子,而它们的自风险门是按「core 0.75 / support 0.60」成对设计的。
+⭐⭐⭐ **本轮最该被读的一条(§FW.2):一个漏斗死在最后一条合取上,「子句为假」和「仪器看不见这条子句」长得一模一样 —— 而本轮第一版结论就是错的那一个。** 新建的域普查(`tests/_lanekill_domain_sweep.lua`)显示两条腿都**走完了整条合取链**才归零:`l1trade` 842 帧笼罩 → 295 有健康队友 → 138 有敌人在射程 → 131 过自风险 → **155 对候选 (bot,target) 过深度缰绳** → **0 lethal / 0 fires**;`l5combo` 130 → 33 → 30 → 22 → 16 → **11 对有己方核心压在目标上** → **0 / 0**。把它写成「这个杠杆的域是空的」是干净、好引、**错的**。
+两条腿的最后一条合取都是**出向**爆发估计(我方队友 → 敌方目标),而**这套语料在恰好那个方向上是瞎的**:`tests/mock/replay_fixture.lua:714` 给每个英雄的 `GetEstimatedDamageToTarget` 是它在随后窗口里**对 subject 实际造成的伤害** ⇒ ally→enemy 在每一帧恒为 0,**这是语料格式的性质,不是树的性质**(`tests/mock/bot_api.lua:134` 从另一侧写着同一件事,并点名了它同样悄悄缴械的另外两个 helper)。
+⭐⭐ **为什么这个 0 不是一眼可疑的(即它必须被量而不是被读)**:**同一个引擎调用、同一批帧、反方向是活的** —— 两条腿的自风险子句问的是 enemy→me,读到非零的帧 **18(l1trade)/ 9(l5combo)**,并**真的否决掉 138 帧里的 7 帧**。一个在同一批帧上、经同一个调用、一个方向活一个方向死的仪器,**读者盯着一个 `0` 是看不出来的**。⇒ 普查现在把**仪器状态**(`*_est_blind` / `*_est_live` / `*_incoming_live`)与**子句结果**并排打印,两者永不塌缩成同一个数(GH #171 形状)。
+⇒ **本轮买到的不是裁决,是那 44 天 `verify=0` 为什么不会自己结束**:对这两条 id,条件 (a) **不是没人买,是从 fixture 这条路买不到**;每一个伸手去拿便宜工具的会话都会重新导出同一个 0,而**如果不核验,就会写下同一个错结论**。买 (a) 需要在**波次录像**上做行为检测器(引擎自己的估计器在那里是活的)—— 已登记 `iterations/owed_executions.json:lanekill_condition_a_detector`,**不留在散文里**。
+⛔ **退集不销毁买 (a) 的能力**:W39–W53 的 dump 里两条都是 armed 的,检测器从**已经存在的语料**里买,零 AWS、零新局(与 `stayattr` 09-05、§FB 两条逐条同型)。
+⚠️ **两条都不掉进 `pullcad` 陷阱,而这次是断言出来的不是查出来的**:各自**只有一个** gate 点(`jmz_func.lua:9010` / `:8940`),门行上没有第二个 id;`promote_atoms.json` 四行没有一行点名这两个(自检本轮 exit 0)。⭐ **那条断言的第一版是假的,变异台当场量到**:按 id 数自己的闸址计数**看不见第二个 id 加进同一行**(`A and B` 里仍然恰好有一个 `A`),M4 因此 SURVIVED;改成**枚举门前言里读到的每一个 id 并要求它只有这一个**之后 CAUGHT。
+⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py` 对 48-id 与 46-id 两串各跑一次,`TERMS` 行**逐字节相同**(`crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved` 两次;计数 `10 hero / 38 generic` → `10 / 36`(两条都是 generic)⇒ **选种解空间不受影响**。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— W53 及更早**不与 46-id 家族并池**。
+〔历史,上一条变动〕**成员串 48**(上一行,**433 字节**,md5 `51eb44347f25676ec5bf767383eed244`)。本行 **2026-09-07T16:28Z 的变动:两条 `退回出集`(50 → 48)**,总监裁定全文 **§FV**。⛔ **两条都不是 reject**,gate 与代码**逐字保留**(`bots/` 对这两条零 diff);判定完结 **2**(owner P4.2 的产出指标),连续四轮低于 ≥2 之后的第一轮达标。
 1. **`teambrain` 退集**(50 → 49)—— armed **≥ 44 天**(`armed_since.json` 下界 2026-07-25,证据 `state.json:family_bisect_launch` 逐字引用了当天的 FamilyB arm 串),**全集最老的一档**,`verify_coverage.py` 读 **verify=0 / 178 份报告**。理由是 **`zusstatic` 那一型:条件 (a) 结构上买不到** —— `state.json:tpclaim_20260823.audit_verdict_teambrain`(2026-08-23,协同组自己的 backlog item 8 审计)逐字写着「the FINAL ITEM DESIRE IS UNBUYABLE from this corpus, and the reason is structural, not a corpus gap」:它唯一的调用者坐在 `J.IsDefending -> bot:GetActiveMode()` 后面,而那是**第十三条世界断言**(语料里每个英雄每一帧恒 0,`tests/test_activemode_world_assertion.lua`),落点 `X.GetDefendTPLocation` = `GetLaneFrontLocation` 是 **GH #61 已拒**的。⇒ 该审计的结论句是「`teambrain` has been in the armed set with **NO evidence that it ever moves a bid**」,而它写下之后这条 id **又 armed 了 15 天**。
 2. **`capmono` 退集**(49 → 48)—— armed **19 天**(`armed_since.json` exact 2026-08-19),`verify_coverage.py` 读 **verify=0**。这一条与 1 **形状不同,不许混读**:它的 (a) **买到了,答案是 FAILED under isolation**(`state.json:capmono_NOT_PROMOTED_20260820`:32 局镜像 / 806 帧,DiD **−7.9pp ± 9.3**,|t| 0.84,每粒符号 2/4;当初那条 `+16.6pp WORKING` **被它自己的作者与当时的总监双双撤回**),(b) **UNJUDGEABLE**(四个经济量全空,而空的 A-B 只是上界)。
 ⭐ **本轮真正的裁定不是「它没通过」,是「让它继续 armed 的那三条理由已经过期,而没有任何东西替它举手」**:08-20 的裁定明写 `stays armed`,理由 (ii) 是「每一波 capmono-ON 的波都在**免费**为那个**波内**(within-arm)HP 梯度再读积攒 n」。**那笔免费的 n 攒了 19 天、十几波,而那次再读一次都没做过**(`next_step_zero_cost` 至今零执行,`verify=0`)。⇒ **一个「等着被免费买到」的条件,和一个没人买的条件,在 verdict 表里长得一模一样**;差别只在前者写了一句谁也没读的散文。本轮把它**从散文搬进 `iterations/owed_executions.json`**(自检第 9 条腿每轮替它举手),再退集。
@@ -1441,3 +1452,98 @@ pushguard depth **58** / solo **18** / fires **4**;`ShouldPunishDive` shipped **
   钉错一行比留着红更坏。
 - **动态半边不声称全套**(GH #124):跑的是「改动文件 + `stayfield`/`pgchannel`/`retreat`/`gate_claim`/`smoke` +
   全部 `tests/test_*.py`」,逐条读数在报告 §4。
+
+## §FW 2026-09-07T19:xxZ 总监:**两条退回出集(`l1trade` + `l5combo`),armed 48 → 46** —— 本节最该被读的是 **§FW.2:一个死在最后一条合取上的漏斗,「子句为假」和「仪器对这条子句是瞎的」长得一模一样,而本轮的第一版结论就是错的那一个**;以及 **§FW.4:一条断言声称自己在防 `pullcad` 陷阱,变异台量出它根本看不见那个陷阱**
+
+### §FW.0 一句话
+
+两条 id 各 armed ≥44 天、`verify=0`,取自全集最老的一档(owner P4.2)。本轮**先建量具再裁定**:
+新建 `tests/_lanekill_domain_sweep.lua` 给两条腿的**适用帧人口**定价,得到的读数**推翻了它自己的表面结论**,
+并把「44 天没人买 (a)」的原因从「没人做」改写成**「从这条路买不到」**。
+零 AWS、零波次、零 `bots/` diff、不发 owner 邮件。判定完结 **2**(连续第二轮达标)。
+
+### §FW.1 选取依据(P4.2 的排序键,两半都用上)
+
+`arm_since.py --all` 的最老一档(`lower_bound` 2026-07-25,≥44 天)7 条,`verify_coverage.py` 全部 `verify=0`。
+本轮**没有**从这 7 条里随便取两条,排除掉的每一条都有具名理由:
+- `tpcommit` —— 共同 promote 原子 `tp_response_releases_need_commit` 的 **prereq**,§FB 明写「留在集内」;
+- `lf_rescue` —— GH #594/#597 正在它身上买读数(`test_lf_rescue_final_action` 的普查),**正在飞的不动**;
+- `ownhalf` / `overchase` —— §FU.3 已有姿态族域读数(`ownhalf` 79 / ownhalf-only 51;`overchase` 794 对 / fires **3**),
+  形状与本对**不同**(它们的域**不为空且真的会触发**),留给下一轮单独判;
+- `fieldregen` —— 闸在 `item_purchase_generic.lua`,是购买链不是战斗链,与本对不同族。
+⇒ 取 `l1trade` + `l5combo`:同一个杠杆的核心腿与辅助腿,**必须同批**(自风险门按 core 0.75 / support 0.60 成对设计,
+分开退会留下半个对子)。
+
+### §FW.2 ⭐⭐⭐ 立法级:一个死在最后一条合取上的漏斗,两种成因长得一模一样
+
+普查(110 fixtures / **1021 live hero frames**,laning 842 = core 712 + support 130)的漏斗:
+
+| | l1trade(核心腿) | l5combo(辅助腿) |
+|---|---|---|
+| laning 帧 | 712 | 130 |
+| 有健康队友 / 有敌人在射程 | 295 / **138** | — / **33** |
+| 过自风险 | **131** | **30**(再过「第二个敌人」否决 → 22) |
+| 候选 (bot,target) 对 / 过深度门 | 185 / **155** | 26 / **16**(再要求己方核心压在目标上 → **11**) |
+| **lethal** | **0** | **0** |
+| **fires** | **0** | **0** |
+
+**每一条合取都放行了可观的人口,归零发生在最后一条。** 写成「这个杠杆的域是空的」干净、好引、**错**。
+
+两条腿的最后一条合取都是**出向**爆发估计:
+`J.GetTotalEstimatedDamageToTarget(我方在目标附近的队友, 敌方目标) >= 目标 HP + 4s 回复`。
+而 `tests/mock/replay_fixture.lua:714` 给每个英雄的 `GetEstimatedDamageToTarget` 是
+**它在随后窗口里对 subject 实际造成的伤害** ⇒ **ally→enemy 在每一帧恒为 0**,
+这是**语料格式的性质,不是树的性质**。`tests/mock/bot_api.lua:134` 从另一侧写着同一件事
+(并点名了它同样悄悄缴械的另外两个 helper);本轮把 lane-kill 这一对加进那张名单,
+并**给这个性质一个计数器而不是一段散文**。
+
+⭐⭐ **为什么它必须被量而不是被读**:**同一个引擎调用、同一批帧、反方向是活的**。
+两条腿的自风险子句问的是 enemy→me,读到非零的帧 **18 / 9**,并**真的否决掉 138 帧里的 7 帧**
+(`l1_selfrisk_ok 131 < l1_enemies 138`,这一条本身就是断言)。
+**一个在同一批帧上、经同一个调用、一个方向活一个方向死的仪器,盯着一个 `0` 是看不出来的。**
+⇒ 普查现在把**仪器状态**(`*_est_blind` / `*_est_live` / `*_incoming_live`)与**子句结果**并排打印,
+两者永不塌缩成同一个数(GH #171 形状:「桶没被走到」与「桶量到零」不许打印成同一个东西)。
+
+### §FW.3 这买到了什么,和**没有**买到什么
+
+**买到了**:那 44 天 `verify=0` 为什么不会自己结束 —— 对这两条 id,条件 (a) **不是没人买,是从 fixture 这条路买不到**。
+每一个伸手去拿便宜工具的会话都会重新导出同一个 0,**而如果不核验,就会写下同一个错结论**。
+**没有买到**:对杠杆本身的任何裁决。真实对局里引擎自己的估计器是活的,两条腿**能**触发;
+本节没有说它们会,也没有说触发是好事。买 (a) 需要在**波次录像**上做行为检测器 ⇒
+已登记 `iterations/owed_executions.json:lanekill_condition_a_detector`(自检第 9 条腿每轮替它举手),
+**不留在散文里**(§FB.3 / GH #540 的教训)。
+⛔ **退集不销毁买 (a) 的能力**:W39–W53 的 dump 里两条都是 armed 的,检测器从**已经存在的语料**里买,
+零 AWS、零新局(与 `stayattr` 09-05、§FB 两条逐条同型)。
+
+### §FW.4 ⭐⭐ 变异台量到本节自己的两处虚假强度
+
+`tools/agent/mutstand_lanekill_domain.sh`,**7 发 / 7 发如声明 / 控制体 SURVIVED**。两处是台子量出来的,不是我记得的:
+
+1. **M4 SURVIVED 了第一版**:那一版声称在防 `pullcad` 陷阱,做法是数**该 id 自己的闸址数 == 1** ——
+   而 `A and B` 里**仍然恰好有一个 `A`**,第二个 id 加进同一行对它**结构上不可见**。
+   改成**枚举门前言里读到的每一个 id 并要求它只有这一个**之后 CAUGHT。
+   ⇒ 「我检查过没掉进 `pullcad` 陷阱」这句话,在第一版里是**用一个看不见该陷阱的量**满足的。
+2. **M7(闸被整个删掉)是 CAUGHT 的,但不是被行为抓住的**:`[control] 出厂树在每一帧静默` 这条断言
+   在本节所记录的失明下是 **0EQUIV** —— lethality 过不去,helper 有没有闸都返回 nil,
+   `l1_shipped_fires` 两棵树上都是 0。真正抓住 M7 的是 `[source]` 的**字符串钉**。
+   ⇒ **今天守着这两道闸的是一个字符串,这是限制不是优点**(§FT.4 同一条教训第二次出现):
+   要恢复行为级守卫,需要 harness 里有出向伤害模型 —— **与买 (a) 缺的是同一块料**。
+
+M1(让语料看见出向爆发)CAUGHT 是本节最重要的一发:它模拟「harness 被修好」的未来,
+逼 §FW.2 的「结构上买不到」那一半**在那一天变红**,而不是悄悄烂掉。
+
+### §FW.5 落地物
+
+- `tests/_lanekill_domain_sweep.lua`(域普查,阈值全部从 `jmz_func.lua` 解析,M13 规矩)
+- `tests/test_lanekill_domain_census.lua`(**6 tests / 0 failures**,棘轮 + 仪器状态断言 + 源码钉)
+- `tools/agent/mutstand_lanekill_domain.sh`(**7/7 如声明**)
+- `iterations/state.json`:`l1trade_RETURNED_20260907` / `l5combo_RETURNED_20260907`
+- `iterations/owed_executions.json`:`lanekill_condition_a_detector`
+- `iterations/armed_since.json`:两行退出登记(`arm_since.py` 46/46 覆盖)
+
+### §FW.6 诚实边界(本节**没有**做到的事)
+
+1. **没有量过真实对局里这两条腿的触发率** —— 本节所有数字都是 fixture 语料上的,而那正是本节说它瞎掉的那套仪器。
+2. **`ownhalf` / `overchase` 本轮只排除、没判** —— §FU.3 的读数说它们的域不空且 `overchase` 真的 fires 3 次,
+   那是一个**不同形状**的判定,需要它自己的工作单元。
+3. **`*_est_live` 的门是「非零」不是「正确」** —— harness 哪天给出一个错的出向模型,这套断言会转绿而不是转红。

@@ -6,12 +6,16 @@
   "l1trade": {
    "armed_since": "2026-07-25",
    "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch"
+   "source": "state.json:family_bisect_launch",
+   "retired_at": "2026-09-07",
+   "retired_note": "退回出集(test_set.md §FW;state.json:l1trade_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
   },
   "l5combo": {
    "armed_since": "2026-07-25",
    "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch"
+   "source": "state.json:family_bisect_launch",
+   "retired_at": "2026-09-07",
+   "retired_note": "退回出集(test_set.md §FW;state.json:l5combo_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
   },
   "tpcommit": {
    "armed_since": "2026-07-25",

@@ -497,6 +497,42 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-07T19:27Z**:**判定完结 2(`l1trade` + `l5combo` 双双退回出集,armed 48 → 46),连续第二轮达标。**
+  零 AWS、零波次、零 `bots/` diff、不发 owner 邮件。裁定全文 `test_set.md §FW`,机器键
+  `state.json:l1trade_RETURNED_20260907` / `l5combo_RETURNED_20260907`。照上轮交棒「第一件事是判定」执行;
+  自检 exit 3 的三条腿(cadence / queue-rulings / owed-executions)**没有一条是点名总监的 trunk 红**,Lua 侧 85 个检测器 0 failures。
+  ⭐⭐⭐ **本轮最该被读的一条(§FW.2):一个漏斗死在最后一条合取上,「子句为假」和「仪器看不见这条子句」长得一模一样
+  —— 而我的第一版结论就是错的那一个。** 新建 `tests/_lanekill_domain_sweep.lua` 给两条腿定价,
+  两条**都走完了整条合取链**才归零(`l1trade` 842 laning → 295 → 138 → 131 → **155 对过深度门** → 0 lethal / 0 fires;
+  `l5combo` 130 → 33 → 30 → 22 → 16 → **11 对有己方核心压在目标上** → 0 / 0)。
+  写成「这个杠杆的域是空的」干净、好引、**错**:两条腿的最后一条合取都是**出向**爆发估计,
+  而 `replay_fixture.lua:714` 只携带「对 subject 造成的伤害」这一个方向的 ground truth ⇒ ally→enemy **每帧恒 0**,
+  **这是语料格式的性质不是树的性质**(`bot_api.lua:134` 从另一侧写着同一件事并点名了另外两个被它缴械的 helper)。
+  ⭐⭐ **它必须被量而不是被读,理由是同一个引擎调用、同一批帧、反方向是活的**:自风险子句问 enemy→me,
+  非零 **18 / 9** 帧并**真的否决 7/138** ⇒ 一个「一个方向活一个方向死」的仪器,盯着一个 `0` 看不出来;
+  我是被「155 次求值最大比 = **0%**」这个**整齐得不像读数**的数字逼去查的。
+  普查现在把**仪器状态**(`*_est_blind`/`*_est_live`/`*_incoming_live`)与**子句结果**并排打印(GH #171 形状)。
+  ⇒ 买到的是「那 44 天 `verify=0` 为什么不会自己结束」——(a) **不是没人买,是从 fixture 这条路买不到**;
+  **没买到**对杠杆本身的任何裁决。买 (a) 改走波次录像检测器,已登记 `owed_executions.json:lanekill_condition_a_detector`
+  (`done_when` 明写**拒绝**一份「在 fixture 上重跑报 0」的产物)。
+  ⭐⭐ **变异台量到本节自己的两处虚假强度(7/7 如声明,控制体 SURVIVED),两条都不是我记得的:**
+  ①**M4 SURVIVED 了第一版** —— 那一版声称在防 `pullcad` 陷阱,做法是数**该 id 自己的闸址 == 1**,
+  而 `A and B` 里仍然恰好有一个 `A`,**第二个 id 加进同一行对它结构上不可见**;
+  ⇒「我检查过没掉进 `pullcad` 陷阱」是**用一个看不见该陷阱的量**满足的,改成枚举门前言里的每一个 id 后 CAUGHT。
+  ②**M7(闸被整个删掉)CAUGHT,但不是被行为抓住的** —— `[control] 出厂树每帧静默` 在这种失明下是 **0EQUIV**,
+  真正抓住它的是 `[source]` 的**字符串钉** ⇒ **今天守着这两道闸的是一个字符串,这是限制不是优点**(§FT.4 第二发)。
+  ⚠️ **选取不是随手取两条**:最老一档 7 条里排除 `tpcommit`(promote 原子 prereq)、`lf_rescue`(GH #594/#597 正在飞)、
+  `ownhalf`/`overchase`(§FU.3 已量到域不空且 `overchase` fires 3,**是不同形状的判定**)、`fieldregen`(购买链)。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck` 0 警告 / **未用 `RULE6_BYPASS`**;动态半边**不声称全套**
+  (census 6/0、gate_claim 16/0、smoke 3/0、pending_rulings 298/0、arm_since 18/0、verdict_strata 17/0,逐条读数在报告 §4)。
+  一致性:`TERMS` 行逐字节相同(7 → 7)、`all 46 armed ids wired`、`promote_atoms` 4 atoms OK、`arm_since` 46/46。
+  ⚠️ 一条 UNCERTIFIABLE 照实登记:python 套件撞 120s 预算没跑成 —— **不是红也不是通过**,与本轮 diff 无因果。
+  ⚠️ 开工第一条命令又把自检管进 `tail`,守卫当场拒;**不新立措辞**,登记:**第四十二发**。
+  ⚠️ **本轮起手预填了一个猜的 issue 号,自查时删掉**:一个还不存在的号码和一个写错的号码,在读者那里是同一个东西(GH #290 同族)。
+  **下一轮第一件事:判定,而且是判定** —— 两条形状**不同**的线索:(i) `ownhalf`/`overchase`(域买得到、读数没买,
+  **不能照抄 §FW 的理由**);(ii) `fieldregen`。另**一个独立工作单元**:退休 owed registry 里那 4 行 DONE
+  —— 需要**读一遍**四份产物(registry 自己写着 `mention is not correctness`),塞进别的轮会变成没读就退休。
+  报告:`iterations/reports/director/20260907T192746Z.md`。
 - **2026-09-07T16:28Z**:**判定完结 2(`teambrain` + `capmono` 双双退回出集,armed 50 → 48),
   连续四轮低于 owner P4.2 的 ≥2 之后第一轮达标。** 零 AWS、零波次、不发 owner 邮件;
   `bots/` 的改动**与这两条裁定无关**(见下面那条 trunk 红)。裁定全文 `test_set.md` §FV,
