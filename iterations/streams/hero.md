@@ -5012,8 +5012,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `#GetNearbyCreeps(1600,true)` 合计 **0**(sibling 文件只在 1 帧上量过)。
   - **⚠️ 自曝一条本轮的操作瑕疵**:第一次开工自检在后台跑,而变异台**在它跑完前**
     就开始就地改写 `hero_lion.lua` —— GH #507 点名的撕裂窗口。**第一份读数本轮不引用**;
-    安静树上的重跑到收尾时**只走完 python trunk-health 之前的腿**(全部 OK),
-    所以**本轮不给「自检 worst exit」这个数** —— 没跑完的腿不是通过。
+    安静树上的重跑已跑完并落地:**worst exit 3**,FINDINGS =
+    `cadence`/`queue-rulings`/`owed-executions`,UNCERTIFIABLE = `trunk-red(python)`
+    (`test_selfcheck_lua_leg.py` NOT RUN,GH #548)。两次分类一致,
+    唯一差别是 NOT RUN 名单 2→1(重跑时 PATH 上已有 `lua5.1`)。
+    三条 FINDINGS **没有一条**指向本组本轮欠的动作(已看过)。
     下轮记住:**变异台与自检/全量套件不许并发。**
 - 2026-09-07T04:55Z(报告 `iterations/reports/hero/20260907T045526Z.md`;**backlog `-109`**
   —— 由 `-108` 撤下 `liondrainbkb` 时预登记交出的下一棒;焦点英雄 **Lion**;
