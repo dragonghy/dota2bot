@@ -1106,7 +1106,7 @@ function X.ConsiderE()
 			and not botTarget:HasModifier( "modifier_lion_finger_of_death" )
 			and botTarget:GetMana() > 200
 			and J.IsInRange( bot, botTarget, nCastRange )
-			and J.CanCastOnNonMagicImmune( botTarget )
+			and X.lion_IsDrainCombatTargetCastable( botTarget )
 			and J.CanCastOnTargetAdvanced( botTarget )
 			and not J.IsDisabled( botTarget )
 			and not X.MayKillTarget( botTarget )
@@ -1502,7 +1502,10 @@ end
 ---   CHANNEL RUNS INSIDE THE IMMUNITY.  b34547__20260905_004847_slot1:
 ---   `modifier_lion_mana_drain` on bristleback for the full 5.1s [1266.4,
 ---   1271.5], nested inside BKB [1266.1, 1274.1].  That frame is frozen as
----   tests/fixtures/f_260905_004847_lion_drain_bkb.lua.
+---   tests/frames/f_260905_004847_lion_drain_bkb.lua -- STAGED, deliberately
+---   outside the tests/fixtures/ corpus glob (tests/frames/README.md carries
+---   its admission price).  This path said `tests/fixtures/` until 2026-09-07;
+---   it was wrong from the day the frame was staged, and nothing checked it.
 ---
 ---   MANA ACTUALLY MOVES.  d21f34__20260904_123205_slot1, drain [956.6, 959.9]
 ---   inside BKB [956.5, 965.5]: Lion 641 -> 798 across the opening second
@@ -1517,6 +1520,66 @@ end
 --- `J.CanCastOnNonMagicImmune` is the side that is wrong is a separate,
 --- WIDENING lever and needs its own id and its own evidence.
 --- The pin: tests/test_lion_drain_immune_target.lua.  Round: GH #566.
+
+
+--- WIDENED (soak candidate 'liondrainmi', turbo-only, NOT armed): the target
+--- test of X.ConsiderE's 打架抽蓝 branch, which is the FIRST half of the
+--- widening lever the note above leaves open.
+---
+--- WHY THIS BRANCH AND NOT THE OTHER ONE.  The three drain target tests are not
+--- three instances of one question.  Two of them pick an ENEMY HERO in combat,
+--- at cast range, with >200 mana and no Finger on them -- the same target under
+--- the same conditions -- and answer differently:
+---
+---   团战吸蓝  `J.CanCastOnMagicImmune( npcEnemy )`      accepts a spell-immune hero
+---   打架抽蓝  `J.CanCastOnNonMagicImmune( botTarget )`  refuses one
+---
+--- The third (the mana-refill loop) picks a CREEP out of GetNearbyCreeps, which
+--- is a different domain with a different base rate, and it is NOT touched here:
+--- one lever at a time, and its evidence would have to be its own.
+---
+--- The 团战吸蓝 side of that disagreement is now the side with real frames
+--- behind it (the three legs in the note above: order accepted 7.1s into the
+--- immunity, channel nested in the immunity for its full 5.1s, mana measurably
+--- moving).  Those readings are about `lion_mana_drain` as an ability, not about
+--- which `if` block issued the order -- so on the branch below the shipped
+--- answer refuses casts the engine demonstrably accepts and the sibling branch
+--- demonstrably makes.
+---
+--- WIDENING BY CONSTRUCTION, and the direction is what the reading may mean.
+--- The shipped predicate is the first statement, bound, and short-circuits TRUE
+--- before the gate is ever consulted; the armed detour is reachable only when
+--- shipped already said false, and the last statement returns `bShipped`.  So
+--- armed(t) => shipped(t) is false, and the accepted set is a strict SUPERSET.
+--- A negative reading can therefore only mean "those extra drains should not
+--- have been cast" -- it can never mean the lever pointed drains somewhere new.
+--- Gate off (or non-turbo) the function is literally J.CanCastOnNonMagicImmune.
+---
+--- STANDALONE: not conjoined with liondrain / liondrainstop / lionhexaoe, the
+--- three ids already on this hero (the `pullcad` trap -- a gate naming another
+--- candidate freezes false the day that one is promoted).
+---
+--- ⚠️ DOMAIN NOT MEASURED IN THIS ROUND, and it is not the 16 landings GH #566
+--- counted: those are 团战吸蓝's.  This branch's exclusive domain is "going on
+--- someone but NOT in a teamfight", because J.IsInTeamFight makes the branch
+--- above return first.  The request for it is queue.json hero-40.
+--- The pin: tests/test_lion_drain_combat_widen.lua.
+function X.lion_IsDrainCombatTargetCastable( hTarget )
+
+	local bShipped = J.CanCastOnNonMagicImmune( hTarget )
+
+	if bShipped then return true end
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainmi' )
+	then
+		return J.CanCastOnMagicImmune( hTarget )
+	end
+
+	return bShipped
+
+end
+
+
 --- [liondrainstop] gated (turbo + soak candidate): should Lion RELEASE an
 --- already-running Mana Drain channel right now? True only when the same
 --- pressure test that refuses to start one (a hero currently killing him AND

@@ -22,7 +22,34 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--113. **⭐ 下一轮的第一件事(由本轮 `-112` 直接交出,优先于 `-109`):`hero-10` 的请求正文
+-114. **⭐ 下一轮的第一件事(由本轮 `-109` 直接交出):`liondrainmi` 的**第二支**,
+   也就是补蓝那圈 —— 但**先回答「它有没有域」,再决定要不要写代码**,别照抄本轮的形状。**
+   - **为什么单独一条**:本轮把三处选靶拆成两个问题,只答了「敌方英雄」那半。
+     补蓝圈的目标是 `bot:GetNearbyCreeps( 1600, true )` 里的**小兵/野怪**,
+     **另一个域、另一个基率**,GH #566 的三条腿一个字都没测过它。
+   - **⚠️ 先做的是减法不是加法**:小兵/野怪**几乎不可能魔免**(BKB 是英雄物品),
+     所以这一支的加宽很可能**域为零**。**域为零就写成「不取」并把理由钉成断言**
+     (本轮已钉了半条:`#bot:GetNearbyCreeps(1600, true) == 0`,这台生成器**连小兵通道
+     都没有** ⇒ fixture 侧**永远**答不了这个问题)。**不要为了对称而写一个杠杆。**
+   - **可能的例外只有一类,要自己去查不许猜**:带 `modifier_*_magic_immune` 类
+     debuff/buff 的**中立生物或被技能赋予魔免的兵**(例如某些召唤物/幻象)。
+     查法:归档 timeline 里对**非英雄单位**扫出货 `IsMagicImmune` override 点名的
+     那 11 个 modifier 名(名单从 `bots/FunLib/aba_global_overrides.lua` **读**,不许 retype)。
+     这条可以搭 `hero-40` 同一次遍历,**加一列即可,不要另开请求**。
+   - **⚠️ 别碰的两处**:团战吸蓝(GH #566 判定出货正确)与本轮刚落的
+     `X.lion_IsDrainCombatTargetCastable`(未买 (a) 证据,不许再动方向)。
+
+-113. ~~**`hero-10` 的请求正文里有一条前提在仓库自己的一帧上是假的 —— 去重读它。**~~
+   ✅ **2026-09-07T04:55Z 做完(作为 `-109` 那轮的附带一条)。**
+   报告 `iterations/reports/hero/20260907T045526Z.md` §7。本轮**自己重扫三个目录**确认:
+   `f_260905_004847_lion_drain_bkb.lua` 里那个 WK **26 级、`alive = true`、
+   `hp == max_hp == 2972`、`mp == max_mp == 855`** ⇒ **855 > 600**,那条 Roshan 蓝线是
+   **严格**(满池的 70.2%)不是**够不到**。三条限制逐条写进 hero-10 的 `result`
+   (仍 n=1 且不构成对 hero-10 的回答 / 另两个 >12 级 WK **都是死的且 `max_hp = 0`**,
+   容量字段不可引用 / 三个位**全在 glob 外**⇒ 只扫 glob 的普查一律出域);
+   `status`、director 裁定、路由、优先级**一律未动**。**`wkrosh` 定价:登记,不改价**
+   —— `X.GetRoshanManaFloor` 一个字没动(`test_wk_roshan_lategame_reconciliation.lua`
+   已量到在这一位的技能等级上两条腿都放行 ⇒ 杠杆在这一帧上是 no-op)。**原始条目(备查):**
    里有一条前提在仓库自己的一帧上是假的 —— 去重读它,别先去跑扫描。**
    - **事实**:`f_260905_004847_lion_drain_bkb.lua` 里有全树**第一个活着的**、level 12 以上的
      骷髅王(**level 26,`hp == max_hp == 2972`,`max_mp` 855**),而 hero-10 正文说
@@ -83,8 +110,19 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    `tools/agent/mutstand_cullpromise.sh`(**9/9 CAUGHT**)。标签建议 **`PREMISE-FALSIFIED`**,归总监裁。
    **⚠️ 外溢一条,不归本组**:`cullthresh_domain.py:215` 闭区间 vs `make_fixture.py` 半开 —— 见报告 §6。
 
--109. **⭐ 下一轮英雄组的第一个自选杠杆(方向与 -108 相反,别把它当成已经判过):
-   Lion 另外两支的 `J.CanCastOnNonMagicImmune` 是不是**过严** —— 一个 WIDENING 杠杆。**
+-109. ~~**Lion 另外两支的 `J.CanCastOnNonMagicImmune` 是不是过严 —— 一个 WIDENING 杠杆。**~~
+   ✅ **2026-09-07T04:55Z 做完,但只做了两支里的一支(敌方英雄那支),而且这是刻意的。**
+   报告 `iterations/reports/hero/20260907T045526Z.md`,`state.json:liondrainmi_20260907`,
+   `queue.json:hero-40`。新 `X.lion_IsDrainCombatTargetCastable`(**`liondrainmi`**,
+   turbo-only,**未 armed**,STANDALONE),打架抽蓝那一支改调它;
+   团战吸蓝与补蓝圈**逐字未动**,且「未动」本身写成了断言。
+   预登记的三条警告**全部兑现**:(a) 自己的 id、自己的域请求,GH #566 的读数只被用来
+   证明「引擎接受这次施法」、**没有**被当成域;(b) 方向 **WIDENING 由构造保证**
+   (出货谓词第一条语句 + 绑定 + 为真短路 `return true` ⇒ armed 支路只在出货已 false 时可达),
+   并在 **117 个真实英雄位**上跑成驱动读数(魔免 4 / 差集 4,恰好相等);
+   (c) **确实是两个杠杆不是一个** —— 补蓝圈另立 `-114`,而且那条的第一步是**问域不是写码**。
+   **本轮买不到的那一半也写清了**:分支**不可达**(`GetTarget`/`GetAttackTarget` 皆 nil,
+   dumper schema 无 target 通道),真实帧钉的是**决策**不是分支。**原始条目(备查):**
    - **来源**:-108 撤下 `liondrainbkb` 时,录像组和本组都确认「三处挑目标对魔免的
      说法不一致」**是真的**;被证伪的只是**修正方向**。补蓝那圈和「打架抽蓝」那支
      用的是 `J.CanCastOnNonMagicImmune`,而真实帧显示引擎**接受**魔免目标、
@@ -4887,6 +4925,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-07T04:55Z(报告 `iterations/reports/hero/20260907T045526Z.md`;**backlog `-109`**
+  —— 由 `-108` 撤下 `liondrainbkb` 时预登记交出的下一棒;焦点英雄 **Lion**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个 `bots/` 行为改动)
+  **Lion「打架抽蓝」那一支的 WIDENING 杠杆 `liondrainmi` 已 gated 落地。**
+  `state.json:liondrainmi_20260907`,`queue.json:hero-40`。
+  新 `tests/test_lion_drain_combat_widen.lua`(**13 例**)+
+  `tools/agent/mutstand_liondrainmi.sh`(**11/11 CAUGHT** + 对照按设计存活)。
+  **零 arm、零入集提议**(P4.2 冻结)。AWS **一次都没碰**。
+  - **⭐ 立案句在源码里,不在外部 KV**:`X.ConsiderE` 后两处选靶挑的是**同一类目标**
+    (敌方英雄 / 850u 内 / >200 蓝 / 未被 Finger),**答案相反** ——
+    团战吸蓝 `J.CanCastOnMagicImmune` 接受,打架抽蓝 `J.CanCastOnNonMagicImmune` 拒绝。
+    GH #566 已在真实帧上判「接受」那侧对,而那三条腿是关于**这个技能**的
+    (引擎在魔免亮起 7.1s 后仍接受下单 / 引导整条 5.1s 嵌在 BKB 里 / 蓝真的在动 +157 对 +8/s)
+    ⇒ **及于本支**。第三处(补蓝圈,目标是**小兵**)是另一个域,**明确不动并写成断言**。
+  - **⭐⭐ 本轮买到的是「决策」不是「分支」,两句不许合并**:真实帧钉住的是目标测试
+    (gate off 拒绝 / armed+turbo 接受 / armed 但非 turbo 仍拒绝,一次带标注的注入,
+    注入前先断言两个 helper 不可区分)。**分支不可达,而且是本轮自己量的**:
+    `GetTarget()` 与 `GetAttackTarget()` 都是 nil ⇒ `GetProperTarget` nil ⇒ 进不去;
+    根因是 dumper schema **没有 target 通道**(与 `-112` 支 (ii) 同族,重测未转述)。
+    **即便有通道这一帧也到不了**:`IsInTeamFight` 为真,团战吸蓝先 return ——
+    这正是本支**独占域 = 「IsGoingOnSomeone ∧ ¬IsInTeamFight」**、必须由 hero-40 去买的原因。
+  - **⭐⭐⭐ superset 是跑出来的不是论证的**:13 帧 **117 个非自身英雄位**,armed/off 各一遍,
+    逐位断言 armed ⊇ shipped;**魔免位 4,差集 4,恰好相等**(写成等式:多了 = 摸到不该摸的,
+    少了 = 漏了)。4 位**全在 `tests/frames/`**,**`tests/fixtures/` 语料里仍然是 0** ——
+    这两句不许合并,那个 0 就是 `-109` 的前提。
+  - **顺带修一处引用**:PREMISE-FALSIFIED 注里冻结帧的路径写的是 `tests/fixtures/`,
+    而回滚当天它就 staged 在 `tests/frames/`。已把「注里每条 `tests/….lua` 都必须能打开」
+    钉成断言(变异 M11)。
+  - **附带一条(`-113`)**:hero-10 `result` 的「最大 max pool 459 ⇒ 满蓝也够不到 600」
+    在本仓一帧上为假(全树**第一个活着的** >12 级 WK:26 级,`mp == max_mp == 855`,
+    **855 > 600** ⇒ 那条 600 下界是**严格**不是**够不到**)。已按三条限制
+    (仍 n=1 / 另两个高级 WK 都是死的且 `max_hp=0` / 三个位全在 glob 外)写进 hero-10 的
+    `result`,`status`、director 裁定、路由、优先级**一律未动**;`wkrosh` 定价**不动**。
+  - **⚠️ trunk 红一条,不归本组**:`tests/test_detector_source_constants.py` ——
+    `zusultstrand_domain` 的两个 HP 常量 UNREGISTERED(GH #564 那条腿的产物)。
+    自检在本轮任何编辑**之前**跑,与本轮无关;只记录,球在立它的组 / 总监。
 - 2026-09-07T02:03Z(报告 `iterations/reports/hero/20260907T020347Z.md`;**backlog `-112`**
   —— 由上一轮 `-111` 直接交出并写明优先于 `-109`;焦点英雄 **Axe**;
   OWNER_PRIORITIES **P4.4 (ii)** —— 工作单元主体是一个判定完结所需的最后一块证据)
