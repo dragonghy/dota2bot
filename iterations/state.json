@@ -1626,7 +1626,8 @@
     "overlap_not_marginal": ":79 在 IsEnemyTier2Down(:63)之前不可达,而 slotpush 谓词为真的条件(队友靠近敌方二塔/高地塔或距敌方遗迹 3000 内)正是二塔倒下后的状态 ⇒ 否决优先落在 outlatch 自己的域里。",
     "verification": "tests/run_tests.lua test_coarmed_attribution_register.lua:修前 RED(点名 outlatch > slotpush),修后 11/0 裸 exit 0;变异 2/2 CAUGHT(M1 删新加行 / M2 删无关的 midtp > tpreach,各报各的缺陷),复原后基线绿;diff 52 插入 / 0 删除。bots/ 与 game/ 本轮零 diff。",
     "what": "GH #424:`slotpush` 入集(54 → 55)当场造出一条新的同臂合取 `outlatch > slotpush`;本轮读两个调用点、入册 ACKNOWLEDGED、并把限定投递到收割方读的三处。",
-    "why_DL3_does_not_cover": "§DL.3 读过同样三对(c3/outlatch/roshgate 外层,slotpush 内层)并判 (P) 参数闸 —— 那是对的,回答的是 test_gated_helper_nesting_census 的**冻结**问题(只 arm 外层时内层仍是出厂答案)。本条是**归因**问题,现场是全开波次里两个 id 都 armed,(P) 在那里什么都没说。c3/roshgate 今天不在成员串里,所以只有一对亮灯。"
+    "why_DL3_does_not_cover": "§DL.3 读过同样三对(c3/outlatch/roshgate 外层,slotpush 内层)并判 (P) 参数闸 —— 那是对的,回答的是 test_gated_helper_nesting_census 的**冻结**问题(只 arm 外层时内层仍是出厂答案)。本条是**归因**问题,现场是全开波次里两个 id 都 armed,(P) 在那里什么都没说。c3/roshgate 今天不在成员串里,所以只有一对亮灯。",
+    "RETIRED": "2026-09-07T10:xxZ,总监,随 slotpush PROMOTE(test_set.md §FT)。本册的 invalidation 第三条自己写着『slotpush 被 promote —— 两条腿都带否决、混杂离开差分,但跨越那天的 outlatch (a) 依旧不可比;届时**退休该行,不是删掉转绿**』—— 本轮逐字照办。⚠️ 退休的是**归因册**不是**不可比性**:outlatch 的 (a) 现在分三段 —— W38(54-id,无 slotpush)/ W39–W53(slotpush armed,两腿不对称)/ W54 起(slotpush 已 promote,两腿都带否决),**三段互不并池**。已登记 iterations/owed_executions.json:outlatch_three_era_incomparability。"
   },
   "corerole_GATE_LANDED_20260822T070xZ": {
     "attribution_rederived": "Isolation, not inference: with the mode file's global ConsiderHelpAlly stubbed to no-op, gate OFF yields desire 0.00 and ZERO orders (core branch structurally unreachable for a support caller) while ARMED yields 0.72 and the SAME Action_AttackUnit(DK,false). So arming re-routes the opener from ConsiderHelpAlly to ConsiderHelpWhenCoreIsTargeted with bid/target/order identical ON THIS FRAME.",
@@ -6720,5 +6721,19 @@
     "mutation_stand": "tools/agent/mutstand_grenharass.sh —— **15 发 / 15 如声明 / STAND GREEN**(M1–M13 全 CAUGHT,C1 控制组 SURVIVED)。⛔ 第一版 **M12 SURVIVED**,而缺陷在**断言**不在变异体(证据纪律第 2 条):sweep 自己那半结构解析**算了但没人读**(测试用自己的 parser 重新读了一遍)⇒ 把 sweep 的 strip_comments 变成恒等式不动任何断言。修法是新增 section 4「两个 parser 对表」,而不是删掉那半 —— 两个独立 parser 对上,才排除「sweep 量的是另一个谓词」。",
     "outputs": "bots/ability_item_usage_generic.lua(grenharass 块)、tests/test_grenharass_domain.lua(12/12)、tests/_grenharass_sweep.lua、tools/agent/mutstand_grenharass.sh、iterations/state.json:grenharass_20260907、iterations/streams/test_set.md §FS;报告 iterations/reports/strategy/20260907T073000Z.md。",
     "aws": "零 AWS、零 S3、零 EC2、零波次。"
+  },
+  "slotpush_PROMOTE_20260907": {
+    "what": "第七次 promote。`J.IsTeamPushingHighGround`(bots/FunLib/jmz_func.lua)的实参由 `J.IsModeTurbo() and J.IsSoakCandidate('slotpush')` 改成 `J.IsModeTurbo()`;turbo 默认按 team slot 1..5 扫五个队友,非 turbo 逐字未动(flag 形参保留就是为了这句成立)。bots/ 本轮只有这一处 diff,utils.lua 零 diff。",
+    "at": "2026-09-07T10:xxZ",
+    "archive": "iterations/streams/test_set.md §FT",
+    "anchor": "stable-v6",
+    "armed": "51 -> 50(串 md5 e61700f4... -> ecd706ca36424a8969b5585c6867680a,451 字节)",
+    "condition_a": "WORKING 939 —— 录像组 2026-09-03T22:05Z,W42 语料 78/78 局宽扫 + 2 局逐帧。夜魇腿 43.80%(armed)/39.96%(baseline)的高地推进几何帧出厂扫描答不出 TRUE(天辉 1.85%/1.44%)。⭐ 判 WORKING 而非 INDETERMINATE 的理由是**可观测的消费者**:那些窗口里 armed 腿插眼速率 0.49x 自身基线、baseline 腿 1.61x,正是 mode_ward_generic.lua:37 预测的方向。",
+    "condition_b": "十波家族级读数 W39/W40/W42/W44/W45/W46/W47/W48/W49/W50,1795 局计分,gpm -12.58/-27.81/-19.15/-9.60/-6.19/-20.26/-5.95/+27.25/+11.70/+13.76,算术平均 -4.88。成员资格按 §FQ.2 反查(arm_md5 -> git 历史里 test_set.md 第 2 行;shallow clone 需先 git fetch --deepen=400,否则十波里八波读 UNRESOLVED)。",
+    "condition_b_boundary": "⛔ 家族级不是 id 级;全开波无法归因;十波里 arm 串成分几乎每波在变;winrate 通道自 GH #352 起 DEGENERATE,无胜负读数可引。⛔ 均值轻微为负(-4.88),铁律 2(b) 要的粗粒度『无明显负面』是它,但**它不是正面证据**。⚠️ 与 ckpush(§FQ.4)的分界线:那一条的效应量按构造低于噪声底,本条**不是** —— 一波独占波能说得更多 ⇒ **裁定压在 (c) 上,不压在『等不到更好读数』上**。",
+    "condition_c": "GetTeamMember 取队伍槽位 1..5(BOT_API_REFERENCE.md:223),GetTeamPlayers 交回玩家 id(天辉 0-4/夜魇 5-9)。出厂把后者喂给前者:扫描按侧静默收缩(天辉 4/5、夜魇 1/5),且从第 2 步起 IsHeroAlive 守卫问的是另一个英雄。**实参类型错误,不是调参选择**。失效方向闭合:七个调用点全部用 TRUE 压制分心事(眼/神符/前哨/边路商店/秘密商店/Roshan/回线)⇒ 扫得少 = 把 bot 从高地攻坚上摘下来去购物。同缺陷族第四个被修、第二个被 promote(前一个 slotwait 2026-09-06)。",
+    "verification": "tests/test_slotpush_highground_scan.lua 19/0(裸 exit 0);tools/agent/mutstand_slotpush.sh 8 CAUGHT / 0 SURVIVED / 0 ABORTED(RC_EXIT=0);carrier_terms.py 载体项 7->7 TERMS 行逐字节相同,旧 51 串在本树上 1 unresolved 退出码 2、新 50 串 0 unresolved 退出码 0。",
+    "limit_the_most_important_one": "⭐ **这条杠杆的守卫是一个字符串钉,不是行为断言,而这是量出来的**:本轮先写了标准的 promote 行为用例(turbo 下 armed 串动不了读数),它在变异体 M4(有人把闸偷偷加回去)下 **SURVIVED**。原因是 [domain price] 早就写着的事实 —— 本仓库 fixture 语料 94 个 subject-load 上两条腿 **nFlip == 0,从不分歧** ⇒ 该行为断言是 0EQUIV 绿,闸被加回去之后照样绿。处置:M3/M4 不 BRIBE 源码钉,并在变异台与测试文件里逐字写明『被字符串钉抓住是限制不是优点』;行为用例保留,等 [domain price] 变红那天才开始承重。",
+    "residual_gap": "没有任何东西会发现将来有人把 tests/test_slotpush_highground_scan.lua 的 `nFlip == 0` 或 `nTrue == 1` 放松掉(一个文件抓不住自己的断言被放松;与 mutstand_ckpush.sh M9/M10 同一处置)。"
   }
 }

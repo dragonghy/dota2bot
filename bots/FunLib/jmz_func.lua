@@ -13457,25 +13457,68 @@ function J.GetUltLoc(bot, target, nManaCost, nCastRange, s)
 	return dest
 end
 
--- The ONE gate-resolution site for the soak candidate 'slotpush' (turbo-only).
+-- PROMOTED (was soak-candidate 'slotpush') 2026-09-07 -- turbo default, no gate
+-- left. Third of the pid-shaped GetTeamMember call sites (after 'slotarb'
+-- GH #406 and 'slotdust' GH #411), and the first one in bots/FunLib/utils.lua.
+-- Owner rule 2, all three conditions, each with its own boundary:
+--   (a) WORKING -- replay desk 2026-09-03T22:05Z, W42 corpus, 78/78 games wide
+--       scanned and 2 deep: 939 frames on the dire armed leg where the shipped
+--       scan answers FALSE and the armed scan answers TRUE with no dead member
+--       making the frame unjudgeable. 43.80% (armed) / 39.96% (baseline) of the
+--       dire frames that ARE in high-ground push geometry are invisible to the
+--       shipped scan, against 1.85% / 1.44% on radiant -- the side asymmetry the
+--       defect predicts. It has an OBSERVABLE CONSUMER, which is why this is
+--       WORKING and not INDETERMINATE like 'slotarb': in those windows the armed
+--       leg's ward-planting rate falls to 0.49x its own baseline while the
+--       shipped leg's rises to 1.61x, which is the direction
+--       mode_ward_generic.lua:37 predicts (it uses TRUE to crush ward desire to
+--       NONE). Report iterations/reports/replay-check/20260903T220500Z.md.
+--   (b) NO OBVIOUS NEGATIVE -- armed on EVERY harvested wave from W39 through
+--       W50 (W41 never harvested, W43 scrapped, W51 was campgrade's exclusive
+--       wave): W39 -12.58 / W40 -27.81 / W42 -19.15 / W44 -9.60 / W45 -6.19 /
+--       W46 -20.26 / W47 -5.95 / W48 +27.25 / W49 +11.70 / W50 +13.76, ten waves
+--       arithmetic mean -4.88 gpm over 1,795 scored mirrored games. Membership
+--       was MEASURED, not recalled: each wave's arm_md5 was resolved back
+--       against test_set.md line 2 in git history (§FT.2).
+--       HONEST BOUNDARY, and it is the binding one here: that is a FAMILY-level
+--       reading, not an id-level one -- an all-on wave cannot attribute economy
+--       to one member, the arm string's composition changed on nearly every one
+--       of those waves, and the winrate channel has been DEGENERATE since
+--       GH #352, so no win/loss reading exists to cite at all. The ten-wave mean
+--       is mildly NEGATIVE and this ruling does not pretend otherwise; rule 2(b)
+--       asks for a coarse "no obvious negative" and -4.88 gpm of unattributable
+--       family drift is that, but it is NOT positive evidence and must never be
+--       cited as if it were. Unlike 'ckpush' (§FQ.4), this id's effect size is
+--       NOT below the noise floor by construction, so a future exclusive wave
+--       COULD say more -- what makes waiting wrong here is (c), not (b).
+--   (c) SOUND -- and this is what the ruling rests on. GetTeamMember takes a
+--       team SLOT 1..5 (docs/BOT_API_REFERENCE.md:223); GetTeamPlayers hands
+--       back PLAYER IDS (0-4 radiant / 5-9 dire). The shipped line feeds one to
+--       the other, so the scan silently shrinks by side -- radiant reaches 4 of
+--       5, dire reaches 1 of 5 -- and from step 2 on the IsHeroAlive guard is
+--       asked about a DIFFERENT hero than the teamMember it then measures. That
+--       is an argument-type defect, not a tuning choice, and there is no reading
+--       of the code under which the shipped form is what the author meant. The
+--       failure direction is closed: seeing fewer teammates can only make "the
+--       team is pushing" harder to believe, and all seven call sites use TRUE to
+--       SUPPRESS a distraction (ward / rune / outpost / side shop / secret shop
+--       / roshan / going back to lane), so under-scanning peels bots off a
+--       high-ground siege to go shopping. Fourth member of this defect family to
+--       be fixed and the second to promote (after 'slotwait', 2026-09-06).
 --
--- Third of the pid-shaped GetTeamMember call sites (after 'slotarb' GH #406 and
--- 'slotdust' GH #411), and the first one in bots/FunLib/utils.lua. The defect
--- and its measurement live next to the function itself; what lives HERE is only
--- the arming, and it lives here for a structural reason: utils.ts declares in
--- its own header that it must not import anything that can close a dependency
--- cycle, and jmz_func requires utils (J.Utils, line 35). So utils cannot read
--- the gate, and each of the seven mode scripts resolving it for itself would be
--- seven places to miss. One wrapper one level up is the same discipline
--- ClosestDustCarrier uses in ability_item_usage_generic.lua and ClosestCamp
--- uses in mode_farm_generic.lua: one place to arm, no call site that can
--- silently skip the gate. tests/test_slotpush_highground_scan.lua asserts both
--- halves by census -- that J.Utils.IsTeamPushingSecondTierOrHighGround is named
--- exactly once outside utils.lua (right here), and that this wrapper is what
--- all seven mode scripts call.
+-- The wrapper stays even with the gate gone, for the structural reason it was
+-- built for: utils.ts declares in its own header that it must not import
+-- anything that can close a dependency cycle, and jmz_func requires utils
+-- (J.Utils, line 35). So utils cannot read J.IsModeTurbo() either, and each of
+-- the seven mode scripts resolving it for itself would be seven places to miss.
+-- tests/test_slotpush_highground_scan.lua asserts both halves by census -- that
+-- J.Utils.IsTeamPushingSecondTierOrHighGround is named exactly once outside
+-- utils.lua (right here), and that this wrapper is what all seven mode scripts
+-- call -- and now also that no armed string can move this decision any more.
+-- NON-TURBO IS BYTE-FOR-BYTE THE SHIPPED PATH: the flag parameter is kept
+-- precisely so that stays true.
 function J.IsTeamPushingHighGround( bot )
-	return J.Utils.IsTeamPushingSecondTierOrHighGround( bot,
-		J.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' ) )
+	return J.Utils.IsTeamPushingSecondTierOrHighGround( bot, J.IsModeTurbo() )
 end
 
 

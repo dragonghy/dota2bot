@@ -489,17 +489,95 @@ local function strip_comments(src)
     return (src:gsub('%-%-[^\n]*', ' '))
 end
 
-tests['[structure] the wrapper owns the slotpush gate, turbo-first'] = function()
+-- PROMOTED 2026-09-07 (director, test_set.md §FT). Before the promote this case
+-- asserted the OPPOSITE -- that the wrapper carries `IsSoakCandidate('slotpush')`
+-- and that IsModeTurbo() is evaluated before it. Left unflipped it would now be
+-- a test DEMANDING THE DEFECT BE PUT BACK, which is the §DU.6 red line read from
+-- the test side: promoting is deleting the gate, and every nail that pinned the
+-- gate has to turn over in the same commit.
+tests['[structure] the wrapper is turbo-only and NO armed string can move it'] = function()
     local code = strip_comments(read('bots/FunLib/jmz_func.lua'))
     local fn = code:match('function J%.IsTeamPushingHighGround%s*%b()(.-)\nend')
     assert(fn, 'the J.IsTeamPushingHighGround wrapper is gone or reshaped')
-    local iCand = fn:find("J%.IsSoakCandidate%s*%(%s*'slotpush'%s*%)")
-    assert(iCand, "the fix must be gated on 'slotpush'; got: " .. fn)
-    local iTurbo = fn:find('J%.IsModeTurbo%s*%(%s*%)')
-    assert(iTurbo, 'the fix must be turbo-only; got: ' .. fn)
-    assert(iTurbo < iCand, 'IsModeTurbo() must be evaluated before the slotpush check')
+    -- The promote itself: zero gate resolution left in the wrapper. Kept as
+    -- "no IsSoakCandidate at all" rather than "not this id", because the
+    -- pullcad trap is a gate whose condition names a SIBLING candidate.
+    assert(not fn:find('IsSoakCandidate'),
+        'PROMOTED: the wrapper must resolve no soak candidate at all; got: ' .. fn)
+    assert(not code:find("'slotpush'"),
+        "'slotpush' is promoted; jmz_func.lua must not name the id in code any more")
+    assert(fn:find('J%.IsModeTurbo%s*%(%s*%)'),
+        'the fix must stay turbo-only; got: ' .. fn)
     assert(fn:find('J%.Utils%.IsTeamPushingSecondTierOrHighGround%s*%('),
         'the wrapper must delegate to the utils predicate, not reimplement it')
+    -- The flag must be the turbo answer ITSELF, not its negation. Pinned as
+    -- text and not as behaviour because behaviour cannot reach it: the two legs
+    -- never disagree on any fixture in the corpus ([domain price], nFlip == 0),
+    -- so an inverted wrapper -- turbo keeps the defect, normal mode gets the
+    -- repair -- reads identically on every frame this repo owns.
+    -- mutstand_slotpush.sh M3 is that mutant, and this line is its only guard.
+    assert(fn:find('%(%s*bot,%s*J%.IsModeTurbo%s*%(%s*%)%s*%)'),
+        'the flag must be exactly J.IsModeTurbo(), un-negated; got: ' .. fn)
+end
+
+-- ⛔ READ [domain price] FIRST, AND READ IT AS A LIMIT ON THIS CASE.
+-- This case is what a promote SHOULD be nailed with -- in turbo the fixed scan
+-- runs whatever the armed set says, and outside turbo the shipped path is
+-- byte-for-byte intact -- and on THIS corpus it cannot fail. The two legs never
+-- disagree on any fixture (nFlip == 0 over 94 subject-loads), so all four legs
+-- below agree by construction and this case is 0EQUIV-green: it would stay green
+-- if somebody silently re-gated the wrapper on the promoted id. Measured, not
+-- feared: tools/agent/mutstand_slotpush.sh M4 SURVIVES this case and is caught
+-- only by the source-text assertion above.
+-- It is kept anyway, for the day [domain price] goes red -- that ratchet is what
+-- announces a fixture that CAN see this decision, and on that day this case
+-- starts carrying the weight it is written to carry.
+-- WHERE THE REAL BEHAVIOURAL EVIDENCE LIVES: not here. Condition (a) for this
+-- lever was bought on the batch replay corpus, 939 frames on W42's dire armed
+-- leg (iterations/reports/replay-check/20260903T220500Z.md, test_set.md §FT.1).
+-- The fixture corpus buys the SCAN and the DIRECTION; it never bought the
+-- DECISION, and this round did not change that.
+tests['[promote] turbo runs the fixed scan under every armed string'] = function()
+    -- The predicate memoises on a one-second window, and a cached TRUE would
+    -- make every leg after the first agree with the first for free. Wiping the
+    -- store between calls is what keeps each reading its own.
+    local function fresh(J)
+        J.Utils.GameStates.cachedVars = nil
+    end
+    local nCases, nTrue = 0, 0
+    for _, path in ipairs(paths()) do
+        local J, bot, _, fx = rf.load(path)
+        if #GetTeamPlayers(GetTeam()) > 0 then
+            frame_liveness(fx)
+            -- The by-slot answer, taken straight from the predicate, so this
+            -- case cannot pass by agreeing with a stale transcription of it.
+            fresh(J)
+            local want = J.Utils.IsTeamPushingSecondTierOrHighGround(bot, true)
+            if want then nTrue = nTrue + 1 end
+            for _, armed in ipairs({ { slotpush = true }, { roamidle = true }, {} }) do
+                J.IsSoakCandidate = function(id) return armed[id] == true end
+                J.IsModeTurbo = function() return true end
+                fresh(J)
+                assert(J.IsTeamPushingHighGround(bot) == want,
+                    'the turbo answer still moves with the armed set in ' .. path)
+            end
+            -- And the other mode is untouched: non-turbo is the shipped scan,
+            -- even with the promoted id armed.
+            fresh(J)
+            local shipped = J.Utils.IsTeamPushingSecondTierOrHighGround(bot, false)
+            J.IsSoakCandidate = function(id) return id == 'slotpush' end
+            J.IsModeTurbo = function() return false end
+            fresh(J)
+            assert(J.IsTeamPushingHighGround(bot) == shipped,
+                'non-turbo must stay the shipped path in ' .. path)
+            nCases = nCases + 1
+        end
+    end
+    assert(nCases >= 100, 'the battery shrank: ' .. nCases .. ' cases')
+    -- 0EQUIV guard (§DJ.9): if the predicate answered FALSE on every frame,
+    -- all four legs above would agree trivially and this case would be green
+    -- for no reason. The corpus is known to carry the siege frame.
+    assert(nTrue >= 1, 'every frame answered FALSE: the battery proves nothing')
 end
 
 tests['[structure] utils does not name the id; it only takes the flag'] = function()

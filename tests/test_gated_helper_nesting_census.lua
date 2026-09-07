@@ -481,7 +481,18 @@ local PINNED = {
     -- seven call sites appear because the other four modes have no gate of
     -- their own in the same function; that asymmetry is the census's wide net,
     -- not a property of this lever.
-    "c3 | GetDesire | J.IsTeamPushingHighGround | slotpush | bots/mode_laning_generic.lua",                                               -- P
+    -- [PROMOTED 20260907] The three rows `slotpush` arrived in (GH #415) are
+    -- GONE, and this is the "the code changed -- drop the row" branch of the
+    -- failure message, not the "the extractor went blind" one: `slotpush` was
+    -- promoted to a turbo default (test_set.md §FT), so
+    -- `J.IsTeamPushingHighGround` resolves no candidate at all any more and
+    -- there is no conjunction left for the census to see. The rows were
+    -- `c3 | GetDesire`, `outcommit,outlatch | GetDesireHelper` and
+    -- `roshgate | GetDesireHelper`, all read (P) at the time.
+    -- ⭐ WORTH KEEPING: this file is what CAUGHT the promote -- the round that
+    -- deleted the gate ran the mutation stand, went red here, and was told
+    -- exactly which rows to drop. A census that pins what it has read is how
+    -- a promote gets a to-do list instead of a surprise three rounds later.
     -- [GH #455/#456 20260903] 'arbheart' joined this row when it added a second
     -- gate to the same Think.  Read by hand before re-pinning, and it stays
     -- (W): the callee `J.IsCampSwitchSafe` is reached ONLY from the shipped
@@ -557,10 +568,8 @@ local PINNED = {
     -- doing what its header says it does: it keys on the id SET of the enclosing
     -- function, so landing a second gate anywhere in GetDesireHelper rewrites
     -- this row even when nothing about the nesting changed.
-    "outcommit,outlatch | GetDesireHelper | J.IsTeamPushingHighGround | slotpush | bots/mode_outpost_generic.lua",                          -- P
     "overchase | J.ShouldPunishOverchase | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                     -- P
     "ownhalf | J.ShouldPunishDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                            -- P
-    "roshgate | GetDesireHelper | J.IsTeamPushingHighGround | slotpush | bots/mode_roshan_generic.lua",                                     -- P
     -- [GH #326 20260830] 'creepthink' joined this row when it added a second
     -- throttle-bypass clause to the same 400-line Think.  Read by hand before
     -- re-pinning, and it stays (W): the callee `J.GetLanePullDragTarget` is

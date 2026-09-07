@@ -19,12 +19,22 @@
 set -u
 cd "$(dirname "$0")/../.."
 
+# ⚠ EVERY FILE ANY MUTANT TOUCHES MUST BE LISTED HERE, or the restore silently
+#   skips it and the MUTANT STAYS IN THE WORKING TREE -- the GH #418 hazard the
+#   trap below is about, reached from the other direction. Measured 2026-09-07:
+#   M14 was added targeting tests/test_slotpush_highground_scan.lua while this
+#   list still lacked it, and the mutant survived the run, the trap, and the
+#   final restore. The next run then read BASELINE RED and, had it not, the next
+#   `git add -A` would have committed it. The backup is keyed off this list, so
+#   a mutant's target file being absent from it is not a smaller mistake than a
+#   missing trap -- it is the same one.
 FILES=(
     bots/FunLib/utils.lua
     bots/FunLib/jmz_func.lua
     bots/mode_ward_generic.lua
     typescript/bots/FunLib/utils.ts
     tests/test_slotarb_camp_arbitration.lua
+    tests/test_slotpush_highground_scan.lua
 )
 TESTS=(
     test_slotpush_highground_scan
@@ -93,21 +103,73 @@ PAIRS = {
     "M5": ("bots/FunLib/utils.lua",
            "            if IsHeroAlive(playerdId) then\n",
            "            if IsHeroAlive(nSlot) then\n"),
-    # M6: the wrapper loses its turbo half.
+    # ---- M6/M7/M8 RE-ANCHORED 2026-09-07 BY THE PROMOTE (test_set.md §FT). ----
+    # All three used to target the gate conjunction
+    # `J.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' )`.  That string no
+    # longer exists, so left alone all three would ABORT -- scoring nothing while
+    # the stand still printed a verdict, which is the GH #550 / mutstand_ckpush
+    # M11 shape (an anchor that no longer matches changes nothing and the stand
+    # keeps talking).  They now attack the promoted form.
+    #
+    # M6: the wrapper loses its turbo half, so NORMAL-MODE games get the repair
+    #     too.  This repo rules on turbo only, and §FT bought no evidence
+    #     whatsoever about normal mode; the flag parameter is kept downstream
+    #     precisely so the non-turbo leg can stay byte-identical to what the tree
+    #     inherited from upstream OHA.
     "M6": ("bots/FunLib/jmz_func.lua",
-           "\t\tJ.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' ) )\n",
-           "\t\tJ.IsSoakCandidate( 'slotpush' ) )\n"),
-    # M7: the wrapper hard-arms.  Reads as "the gate is right there" to a grep
-    #     and to check_armed_wiring.py alike.
+           "\treturn J.Utils.IsTeamPushingSecondTierOrHighGround( bot, J.IsModeTurbo() )\n",
+           "\treturn J.Utils.IsTeamPushingSecondTierOrHighGround( bot, true )\n"),
+    # M7: ⭐ THE PROMOTE IS SILENTLY UNDONE.  Somebody re-gates the wrapper on the
+    #     promoted id.  Nothing looks wrong -- the header still says PROMOTED and
+    #     check_armed_wiring.py still reads WIRED, because it asks whether a call
+    #     site exists, not whether the predicate can ever be true -- but
+    #     `slotpush` is in no armed string ever again, so the conjunct is frozen
+    #     FALSE (the `pullcad` trap, AGENTS.md) and every real turbo game quietly
+    #     returns to the shipped pid-shaped scan.
+    #     ⛔ CAUGHT BY A SOURCE-TEXT ASSERTION, AND THAT IS A LIMITATION.  House
+    #     rule is to bribe the string pin so "CAUGHT" means a behaviour assertion
+    #     caught it.  Here that is impossible and it was MEASURED, not assumed:
+    #     the bribed version of this mutant was run first and SURVIVED, because
+    #     the fixture corpus never flips this decision (nFlip == 0 over 94
+    #     subject-loads -- the [domain price] premise), so shipped and by-slot
+    #     answer identically on every frame this repo owns and no behavioural
+    #     assertion over this corpus can separate them.  Recorded in full at
+    #     test_set.md §FT.4 and above the [promote] case in the test file.
     "M7": ("bots/FunLib/jmz_func.lua",
-           "\t\tJ.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' ) )\n",
-           "\t\ttrue )\n"),
-    # M8: the wrapper accepts the job and drops the flag -- the pullcad shape:
-    #     wired, armed, inert.
-    "M8": ("bots/FunLib/jmz_func.lua",
+           "\treturn J.Utils.IsTeamPushingSecondTierOrHighGround( bot, J.IsModeTurbo() )\n",
            "\treturn J.Utils.IsTeamPushingSecondTierOrHighGround( bot,\n"
-           "\t\tJ.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' ) )\n",
+           "\t\tJ.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' ) )\n"),
+    # M8: the wrapper accepts the job and drops the flag -- still the pullcad
+    #     shape (wired, called, inert), and post-promote it is also the plain
+    #     REVERT: bSlotPush arrives nil, so turbo is back on the shipped scan
+    #     while every comment in the tree says the lever shipped.
+    "M8": ("bots/FunLib/jmz_func.lua",
+           "\treturn J.Utils.IsTeamPushingSecondTierOrHighGround( bot, J.IsModeTurbo() )\n",
            "\treturn J.Utils.IsTeamPushingSecondTierOrHighGround( bot )\n"),
+    # M13: [ADDED BY THE PROMOTE] THE MODE SELECTION IS INVERTED -- turbo keeps
+    #      the defect and normal mode gets the repair.  The tree reads exactly as
+    #      intended and every corpus battery agrees (see M7 on why).  Caught by
+    #      the same string pin, with the same caveat.
+    "M13": ("bots/FunLib/jmz_func.lua",
+            "\treturn J.Utils.IsTeamPushingSecondTierOrHighGround( bot, J.IsModeTurbo() )\n",
+            "\treturn J.Utils.IsTeamPushingSecondTierOrHighGround( bot, not J.IsModeTurbo() )\n"),
+    # M14: [ADDED BY THE PROMOTE] THE [domain price] RATCHET LOSES ITS SUBJECT.
+    #      That ratchet is the only thing in this repo that will ever announce a
+    #      fixture capable of separating the two legs -- and by M7/M13 above it is
+    #      therefore the only route by which this lever can ever acquire a real
+    #      behavioural guard.  This drops the single subject-load in the whole
+    #      corpus where either leg answers TRUE, so the ratchet would be watching
+    #      an all-FALSE corpus and notice nothing ever again.
+    #      ⚠ ATTACKED FROM THE DATA SIDE ON PURPOSE.  The first draft bribed the
+    #      flip counter itself (`if shipped ~= armed` -> `if false`) and SURVIVED:
+    #      `nFlip == 0` cannot detect its own instrument being switched off,
+    #      because zero is what it asserts.  Same class as mutstand_ckpush.sh
+    #      M9/M10 -- a file cannot catch its own assertion being loosened.
+    #      ⛔ RESIDUAL GAP, STATED RATHER THAN PAPERED OVER: nothing in this repo
+    #      catches a future edit that merely relaxes `nFlip == 0` or `nTrue == 1`.
+    "M14": ("tests/test_slotpush_highground_scan.lua",
+            "        for _, name in pairs(subs) do\n",
+            "        for _, name in pairs(path:find('es_blink_init_621', 1, true) and {} or subs) do\n"),
     # M9: one mode script goes back around the wrapper.  Six of seven call
     #     sites still gated; this is the miss the single-wrapper rule exists
     #     to make impossible to hide.
@@ -117,10 +179,21 @@ PAIRS = {
     # M10: the TypeScript source drifts from the Lua it generates.
     "M10": ("typescript/bots/FunLib/utils.ts",
             "GetTeamMember(bSlotPush ? i : playerdId)", "GetTeamMember(playerdId)"),
-    # M11: the one-lever ratchet stops moving -- the count says three levers
-    #      have landed while the cluster still claims eight sites.
+    # M11: the one-lever ratchet stops moving -- the count claims a site that has
+    #      already been converted is still pid-shaped.
+    # ⚠ RE-ANCHORED 2026-09-07, AND THE RE-ANCHOR IS THE POINT.  The old target
+    #   was `assert(pidShaped == 7,`.  That 7 became 5 on 2026-09-03 when the
+    #   'slotwait' lever converted the last two live utils.lua sites, so the
+    #   target string went ABSENT and M11 has been ABORTing ever since -- scoring
+    #   nothing, taking this stand's exit code to 1, while the round that read it
+    #   still had 12 mutants' worth of confidence.  Identical to what
+    #   mutstand_ckpush.sh M11 recorded on the same date, from a different cause:
+    #   THE RATCHET'S OWN NUMBER IS A MOVING ANCHOR, so any mutant that pins it
+    #   goes stale the next time the ratchet legitimately moves.  Caught here only
+    #   because ABORT is scored separately from CAUGHT -- if a stale mutant scored
+    #   as caught, neither round would have noticed.
     "M11": ("tests/test_slotarb_camp_arbitration.lua",
-            "    assert(pidShaped == 7,", "    assert(pidShaped == 8,"),
+            "    assert(pidShaped == 5,", "    assert(pidShaped == 6,"),
     # M12: the predicate stops looking at the roster at all and answers off the
     #      subject alone.  A "simplification" that passes any test which only
     #      checks that armed and shipped differ.
@@ -149,7 +222,7 @@ fi
 echo "baseline GREEN"
 
 CAUGHT=0; SURVIVED=0; ABORTED=0
-for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12; do
+for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12 M13 M14; do
     restore
     apply_mutant "$m"
     rc=$?
@@ -170,5 +243,5 @@ for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12; do
 done
 restore
 
-echo "=== $CAUGHT caught / $SURVIVED survived / $ABORTED aborted (of 12) ==="
+echo "=== $CAUGHT caught / $SURVIVED survived / $ABORTED aborted (of 14) ==="
 [ "$SURVIVED" -eq 0 ] && [ "$ABORTED" -eq 0 ]

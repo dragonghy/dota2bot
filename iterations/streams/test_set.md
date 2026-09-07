@@ -1,11 +1,19 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,slotpush,wandbleed2,arbheart,campbind,zusboltdom
+l1trade,l5combo,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom
 
-**成员串 51**(上一行,**460 字节**,md5 `e61700f44778dc1ab67166922d22b0bc`)。本行 **2026-09-07T0x:xxZ 的变动:一条 PROMOTE(52 → 51)**,总监裁定全文 **§FQ**。⭐ **本项目第六次 promote**(`ckpush`,锚点 `stable-v5`);判定完结 **1**(owner P4.2 的产出指标)。
+**成员串 50**(上一行,**451 字节**,md5 `ecd706ca36424a8969b5585c6867680a`)。本行 **2026-09-07T10:xxZ 的变动:一条 PROMOTE(51 → 50)**,总监裁定全文 **§FT**。⭐ **本项目第七次 promote**(`slotpush`,锚点 `stable-v6`);判定完结 **1**(owner P4.2 的产出指标)。
+1. ⭐ **`slotpush` PROMOTE**(51 → 50)—— 动作是**把 `jmz_func.lua:J.IsTeamPushingHighGround` 的实参由 `J.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' )` 改成 `J.IsModeTurbo()`**(§DU.6 红线:代码先改、串后改、**同一个 commit**),turbo 默认按 **team slot 1..5** 扫五个队友,**非 turbo 逐字未动**(flag 形参**保留**就是为了这一句成立)。三条件与各自的边界写在 §FT 与源码注释里;机器键 `state.json:slotpush_PROMOTE_20260907`。
+⚠️ **(b) 引的是十波家族级读数**(W39/W40/W42/W44/W45/W46/W47/W48/W49/W50,**1 795 局计分**,家族 gpm `−12.58 / −27.81 / −19.15 / −9.60 / −6.19 / −20.26 / −5.95 / +27.25 / +11.70 / +13.76`,十波算术平均 **−4.88**)。成员资格照 §FQ.2 反查(每波 `arm_md5` → git 历史里的 `test_set.md` 第 2 行),**十个 md5 全部命中且每条都含 `slotpush`**;W41 从未收割、W43 报废、W51 是 `campgrade` 独占波,三者都不在表内。
+⛔ **这个均值是轻微负的,本裁定不粉饰它**:铁律 2(b) 要的是粗粒度的「无明显负面」,家族级不可归因的 −4.88 gpm 是那个,**但它不是正面证据,永远不许当正面证据引**。⚠️ **与 `ckpush` 不同,本条的效应量不是按构造低于噪声**(§FQ.4 那套「等不到更好读数」的论证**不适用**),将来一波独占波**能**说得更多 —— **压住裁定的是 (c) 不是 (b)**。
+⚠️ **载体项 7 → 7,`TERMS` 行逐字节相同**:`carrier_terms.py` 对两串各跑一次,`10 hero / 40 generic` 不变,`TERMS crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`。⭐ **那个 `unresolved` 又一次自己举了手**:promote 之后旧的 51-id 串在这棵树上**解析不了**(`slotpush` 没有 gate literal 可找)⇒ `1 unresolved` **退出码 2**,新串 `0 unresolved` 退出码 0。**代码改了而串没改的那半个状态会立刻变红,不是靠人记得**(与 §FK 同一条)。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— W53(51-id)及更早**不与 50-id 家族并池**。
+⛔ **同轮退休** `state.json:coarmed_outlatch_slotpush_20260902` —— 那条同臂合取册自己写着「`slotpush` 被 promote ⇒ 届时**退休该行,不是删掉转绿**」,本轮照办。⚠️ **退休不等于混杂消失**:两条腿从此都带 `slotpush` 的否决,所以**差分里的混杂走了**,而**跨越今天的 `outlatch` (a) 依旧不可比**(W38 与 W39 起本就不是同一个量,今天起是第三段)。
 1. ⭐ **`ckpush` PROMOTE**(52 → 51)—— 动作是**删掉 `hero_chaos_knight.lua` 里 `X.GetPushCommitTime` 那句 `and J.IsSoakCandidate( 'ckpush' )`**(§DU.6 红线:代码先改、串后改、**同一个 commit**),turbo 默认走修好的 `8 * 60`,**非 turbo 的 `8 * 30` 一字未动**。三条件与各自的边界写在 §FQ 与源码注释里;机器键 `state.json:ckpush_PROMOTE_20260907`。
 ⚠️ **(b) 引的是八波家族级读数**(W42/W44/W45/W46/W47/W48/W49/W50,**1 478 局计分**,家族 gpm `−19.15 / −9.60 / −6.19 / −20.26 / −5.95 / +27.25 / +11.70 / +13.76`,八波算术平均 **−1.06**)。**这八波的成员资格是量出来的不是读来的**:逐波拿 `W*_wave.json:arm_md5` 去 git 历史里反查 `test_set.md` 第 2 行,八个 md5 全部命中且每一条都含 `ckpush`(§FQ.2)——上一轮 §FO 就是在这一步上第一稿引错了波(W51 是独占波)。
 ⚠️ **载体项 8 → 7,`chaos_knight` 出表**:`carrier_terms.py --arm <51 串>` 打 `10 hero / 41 generic / 0 unresolved => 7 term(s)`,`TERMS crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`。`ckpush` 是集内**唯一**载 chaos_knight 的 id ⇒ 它一出集,阵容约束里那一项就消失(**方向是放松,不是收紧**;§DT.3 当初量到的「加这一项在紧的那条边上是零」,反过来同样成立)。**将来任何 chaos_knight 杠杆重新入集时这一项要跟着回来。**
 ⛔ **在此之前起飞的任何一波都不含本次变动** —— W52(52-id,在飞)及更早**不与 51-id 家族并池**。
+
+〔历史,上一条变动〕**成员串 51**(**460 字节**,md5 `e61700f44778dc1ab67166922d22b0bc`)。
 
 〔历史,上一条变动〕**成员串 52**(上一行,**467 字节**,md5 `445ea52100428d4e6c9aab31f3556245`)。本行 **2026-09-06T22:xxZ 的变动:两条 PROMOTE + 一条 `退回出集`(55 → 52)**,总监裁定全文 **§FO**。⭐ **本项目第四、五次 promote,与第三次同一天**;判定完结 **3**(owner P4.2 的产出指标)。
 1. ⭐ **`odbuild` PROMOTE**(55 → 54)—— 动作是**删掉 `hero_obsidian_destroyer.lua` 里那句门**(§DU.6 红线;代码先改、串后改、**同一个 commit**),turbo 默认走修好的 `tObjurgationBuildList`,**非 turbo 一字未动**。三条件与边界写在 §FO.1 与源码注释里;机器键 `state.json:odbuild_PROMOTE_20260906`。
@@ -1213,3 +1221,66 @@ sweep 走的施法距离/伤害常数、gate 位置、id 计数、已发货两�
   **数出来的**:双引号 **168** 个键、单引号 **8** 个(`item_blood_grenade`、`item_disperser`、
   `item_dust`、`item_harpoon`、`item_pavise`、`item_pirate_hat`、`item_smoke_of_deceit`、
   `item_soul_ring`)—— 漏掉的不是一个,是 **8 个道具的整个决策层**。
+
+---
+
+## §FT 2026-09-07T10:xxZ 总监:**第七次 promote(`slotpush`,锚点 `stable-v6`),armed 51 → 50** —— 本节最该被读的是 **§FT.4:这一条的行为钉子在本仓库的语料上买不到,而变异台是这么量出来的,不是这么猜出来的**
+
+上一轮 §FQ.7 把 `slotpush` 点名为「**未裁,下轮首选**」。本轮裁 PROMOTE。
+
+### §FT.1 条件 (a) —— WORKING 939,**而且它有一个可观测的消费者**
+
+录像组 2026-09-03T22:05Z(`iterations/reports/replay-check/20260903T220500Z.md`),W42 语料,**78/78 局宽扫 + 2 局逐帧**,`unparseable` 0。
+读数:夜魇腿上 **43.80%(armed)/ 39.96%(baseline)** 的「本队处于高地推进几何」的帧,**出厂扫描答不出 TRUE**;天辉侧 **1.85% / 1.44%**。**侧别不对称正是缺陷预测的方向**(见 (c))。
+**939** = 夜魇 armed 腿上「armed 判 TRUE、出厂判 FALSE、且无死亡成员导致不可判」的帧数。
+⭐ **它是 WORKING 而不是 INDETERMINATE 的理由是消费者而不是计数**:那些窗口里 armed 腿的插眼速率降到自己平时的 **0.49 倍**,baseline 腿升到 **1.61 倍** —— 正是 `mode_ward_generic.lua:37`(用 TRUE 把插眼 desire 压成 `NONE`)预测的方向。`slotarb` 卡在一个只问一次的闩上、没有这一半,所以它至今 INDETERMINATE。
+
+### §FT.2 条件 (b) —— 十波家族级读数,**成员资格照 §FQ.2 反查**
+
+| 波 | arm_ids | arm_md5(前 8) | `slotpush` armed | 家族 gpm | 计分局 |
+|---|---|---|---|---|---|
+| W39 | 55 | `bfe60fcd` | ✅ | −12.58 | 168 |
+| W40 | 55 | `bfe60fcd` | ✅ | −27.81 | 149 |
+| W42 | 57 | `38423b79` | ✅ | −19.15 | 172 |
+| W44 | 58 | `7009f6c5` | ✅ | −9.60 | 183 |
+| W45 | 60 | `eef5fb2e` | ✅ | −6.19 | 215 |
+| W46 | 62 | `c7e1f92c` | ✅ | −20.26 | 206 |
+| W47 | 62 | `c7e1f92c` | ✅ | −5.95 | 163 |
+| W48 | 63 | `4aefc887` | ✅ | +27.25 | 184 |
+| W49 | 61 | `824ec284` | ✅ | +11.70 | 168 |
+| W50 | 59 | `572b6075` | ✅ | +13.76 | 187 |
+
+**十波算术平均 −4.88 gpm,1 795 局计分。** `slotpush` 于 W39 入集,**此后每一波已收割的波都含它**(W41 从未收割、W43 报废、W51 是 `campgrade` 独占波)。反查方法与 §FQ.2 逐字相同:容器是 shallow clone,先 `git fetch --deepen=400`(不 deepen 只能反查出 6 个 md5,十波里**八波读 UNRESOLVED**),再拿每个 `arm_md5` 去 git 历史里比对 `test_set.md` 第 2 行。
+⛔ **边界,而且这次边界是承重的**:家族级不是 id 级;全开波无法把经济归因到某一个成员;**十波里 arm 串的成分几乎每波都在变**;winrate 通道自 GH #352 起连续 DEGENERATE,**没有任何胜负读数可引**。
+⛔ **均值是轻微负的,不粉饰**:−4.88 gpm。铁律 2(b) 要的是粗粒度的「无明显负面」,这就是那个 —— **但它不是正面证据,不许当正面证据引**。
+⚠️ **与 §FQ.4 的分界线,必须读清楚**:`ckpush` 的 (b) 是**按构造**买不到(1 次施法 / 82 局,低于本项目任何一波的噪声底),所以「等更好的读数」在那里不是选项。**`slotpush` 不是那样** —— 它的效应量不在噪声底下,一波独占波**能**说得更多。⇒ **本裁定压在 (c) 上,不压在「等不到」上**;把 §FQ.4 的论证搬过来是**错的**。
+⚠️ 分层读数按铁律 4(i-a) 登记(swap-average 后的估计量,4(i-c):反号不是否决理由):W47 gpm ab −45.27 / ba +33.37;W48 ab +127.24 / ba −72.75;W49 ab +58.07 / ba −34.66;W50 ab −131.61 / ba +159.12。四波 `sign_flip` 均为 true,`side_gt_arm` 2/2–4/4 —— **这是 |side| > |arm| 的恒等式,不是诊断**。
+
+### §FT.3 条件 (c) —— **这一条是承重的那一条**
+
+`GetTeamMember(n)` 取的是**队伍槽位 1..5**(`docs/BOT_API_REFERENCE.md:223`);`GetTeamPlayers(team)` 交回的是**玩家 id**(天辉 0-4 / 夜魇 5-9)。出厂那一行**把后者喂给前者**,越界返回 nil,于是扫描按侧静默收缩:**天辉 4/5,夜魇 1/5**;并且从第 2 步起,`IsHeroAlive(playerdId)` 这道守卫问的是**另一个英雄**,不是它随后去量的那个 `teamMember`。
+**这是实参类型错误,不是调参选择** —— 没有任何一种读法能让出厂那一行是作者的本意。
+失效方向是**闭合的**:看见更少队友只会让「本队在推进」**更难成立**,而七个调用点**全部**用 TRUE 去压制一件分心事(眼 / 神符 / 前哨 / 边路商店 / 秘密商店 / Roshan / 回线)⇒ 扫得少 = **把 bot 从高地攻坚上摘下来去购物**。标准打法里不该做的那件事。
+本缺陷族(pid 当槽位喂 `GetTeamMember`)的第四个被修的成员、**第二个被 promote 的**(前一个是 `slotwait`,2026-09-06)。
+
+### §FT.4 ⭐ 行为钉子买不到,**而这是量出来的**
+
+`tools/agent/mutstand_slotpush.sh` **8 CAUGHT / 0 SURVIVED / 0 ABORTED**(`RC_EXIT=0`)。但**最该被读的是过程里那一发幸存**:
+本轮先按房规写了「promote 的行为钉子」——turbo 下无论 armed 串是什么都走修好的扫描,三条腿(本 id armed / 无关 id armed / 什么都不 armed)读数必须相同。**它在 M4(有人把闸偷偷加回去)下 SURVIVED。**
+原因在文件里早就写着,而我是被变异台按着头才去读的:`[domain price]` 那条断言 **`nFlip == 0`,94 个 subject-load 上两条腿从不分歧**。⇒ **本仓库的 fixture 语料在结构上分不开出厂扫描与按槽位扫描**,于是那条行为断言是 **0EQUIV 绿** —— 它在闸被加回去之后**照样绿**。
+⇒ **处置(不是删掉那一发,是把结论写下来)**:M3/M4 **不 BRIBE 源码钉**,并在变异台与测试文件里逐字写明「**这两发是被字符串钉抓住的,那是限制不是优点**」。**这条杠杆今天的守卫是一个字符串钉**;哪天 `[domain price]` 变红(=终于进来一个能分开两条腿的 fixture),那条行为用例才开始承重 —— 它因此保留而不是删除。
+⚠️ 同族第二发:M7/M8 的**第一版都攻击了断言自己**(把 `nTrue` 预置成 1 / 把 `nFlip` 计数器写死),**双双幸存** —— **一个文件抓不住自己的断言被放松**(与 `mutstand_ckpush.sh` M9/M10 同一处置)。改从**数据侧**打(抽掉语料里唯一那个 TRUE 的 subject-load)之后两发都 CAUGHT。**残余缺口照实登记**:没有任何东西会发现将来有人把 `nFlip == 0` 或 `nTrue == 1` 放松掉。
+
+### §FT.5 落地物
+
+- `bots/FunLib/jmz_func.lua`:`J.IsTeamPushingHighGround` 的实参 `J.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' )` → `J.IsModeTurbo()`;三条件与边界抄进函数头(promote 之后**唯一还会被读到的地方**)。**`bots/` 本轮只有这一处 diff**;`utils.lua` **零 diff**(flag 形参保留,非 turbo 逐字是出厂路径)。
+- `tests/test_slotpush_highground_scan.lua`:`[structure]` 那条**翻面** —— 由「必须挂 `slotpush` 闸」变成「**一处 `IsSoakCandidate` 都不许有**、`jmz_func.lua` 代码里不许再出现这个 id、且实参必须**恰是** `J.IsModeTurbo()` 未取反」。留着不改它就变成**在要求把缺陷装回来**。新增 `[promote]` 行为用例,**带 §FT.4 那段自陈的 0EQUIV 说明**。17 → 19 用例,**19/0**。
+- `tools/agent/mutstand_slotpush.sh`:新建,8 发。
+- `carrier_terms.py`:载体项 **7 → 7**,`TERMS` 行逐字节相同;⭐ **旧 51 串在本树上 `1 unresolved` 退出码 2,新 50 串 `0 unresolved` 退出码 0** —— 代码改了而串没改的那半个状态会自己变红。
+- `state.json`:新键 `slotpush_PROMOTE_20260907`;**退休** `coarmed_outlatch_slotpush_20260902`(该册自己写着「届时退休该行,不是删掉转绿」)。
+- `stable_anchors.json`:`stable-v6`。
+
+### §FT.6 交棒
+
+- **`outlatch` 的混杂**:两条腿从此都带 `slotpush` 的否决 ⇒ **差分里的混杂走了**,但**跨越今天的 (a) 依旧不可比**(W38 / W39–W53 / W54 起,三段)。已写进 `owed_executions.json`。
+- **同族剩下的两处 pid 缺陷**(`aba_push.lua:584/587`)在录像组 09-03 报告 §7 里量过:同一 107 fixture 上**一次都不答 TRUE**(0 anyTrue / 0 flip)⇒ 与本条不同,它们**连 fixture 侧的域都没有**,不要照抄本条的路径。

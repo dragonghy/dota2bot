@@ -200,6 +200,24 @@
         "kind": "manual"
       },
       "done_when_note": "⚠️ **没有机器键,而这一次那是诚实的**:验收产物是一份**未来的入集提议**,它的 §、它的波号、它落在哪个文件此刻都不存在 ⇒ 没有可以事先钉死的 path。⛔ 特别不能写成 `path_contains_all: iterations/streams/test_set.md contains 'towerring'` —— **本轮的 §FO 自己就提到 towerring**,那个键会在登记的同一秒读成 DONE(假绿)。**裸读得出的验收句**:`test_set.md` 第 2 行**同时**出现 `towerfear` 与 `towerring`(即那一对真的一起入了集),或总监写下一条明确的『不再重新入集』裁定并说明理由。"
+    },
+    {
+      "id": "outlatch_three_era_incomparability",
+      "issue": "GH #424",
+      "ruling": "总监 2026-09-07T10:xxZ,全文 `iterations/streams/test_set.md` §FT.6。`slotpush` 今日 PROMOTE ⇒ 归因册 `state.json:coarmed_outlatch_slotpush_20260902` 按它自己写的 invalidation 第三条退休。⛔ **退休的是归因册,不是不可比性**:`outlatch` 的条件 (a) 从此分**三段** —— (I) W38 及更早(54-id,串里无 `slotpush`);(II) W39–W53(`slotpush` armed,两条腿不对称,armed 腿被 `mode_outpost_generic.lua:45` 的提前 return 按侧不均匀地拿走帧);(III) W54 起(`slotpush` 已 promote,turbo 下**两条腿都带**那个否决)。**三段互不并池。** ⚠️ 第 III 段的混杂**消失**了(两腿同带否决 ⇒ 差分里没有它),所以 III 段是唯一能干净买 `outlatch` (a) 的一段 —— 这是好消息,但它**不能**回头去救 I / II 段的读数。",
+      "ruled_at": "2026-09-07T10:xxZ",
+      "executor": "replay-check(买 `outlatch` (a) 的那一轮)",
+      "trigger": "下一次有人给 `outlatch` 报 VERIFY 行 —— 它此刻还不存在(last_verdict INDETERMINATE episodes=53,2026-09-05T06:57Z),而这正是本行进 registry 而不是进某张 `harvest_obligations` 的理由(§DR)。",
+      "delivered_to": [
+        "iterations/state.json:coarmed_outlatch_slotpush_20260902.RETIRED(归因册自己那一格)",
+        "iterations/streams/test_set.md §FT.6(裁定全文档案)",
+        "iterations/queue.json:strategy-28 的 director 字段(被裁方读的那一格)"
+      ],
+      "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id 的收割清单。⚠️ 被退休的那条 `invalidation` 行**只说了『退休该行』,没说不可比性变成三段** —— 退休一条册子的动作会让读者以为限制随册子一起没了,而**真正的限制在这一刻变强了**(多了一道分界),这就是它必须另起一行的原因。",
+      "done_when": {
+        "kind": "manual",
+        "note": "⚠️ 机器键买不到:验收物是**一次读数被正确分段**,不是一个文件存在。**裸读得出的验收句**:某一轮报告给出 `outlatch` 的 VERIFY 行,并逐字写明它取自哪一段(I / II / III),且**没有**把跨段的波次并池。总监据此退休本行。"
+      }
     }
   ],
   "retired": [
