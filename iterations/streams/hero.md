@@ -44,8 +44,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 -117. ~~**焦点英雄 Wraith King:`X.ShouldSaveMana` 为一件它从不评估概率的事扣住半个蓝池。**~~
    ✅ **2026-09-07T14:09Z 做完:gated `wksaveidle` 落地,`bots/` 有真代码行。**
    报告 `iterations/reports/hero/20260907T140929Z.md`,`state.json:wksaveidle_20260907`,
-   `queue.json:hero-41`。新 `tests/test_wk_reserve_idle_release.lua`(**13 例**)+
-   `tools/agent/mutstand_wksaveidle.sh`。选题依据 OWNER_PRIORITIES **P4.4 (i)**。
+   `queue.json:hero-41`,GH **#599**。新 `tests/test_wk_reserve_idle_release.lua`(**13 例**)+
+   `tools/agent/mutstand_wksaveidle.sh`(**10/10 CAUGHT**)。
+   选题依据 OWNER_PRIORITIES **P4.4 (i)**。落地 commit `3ac6f52f`(已在 main 上,
+   **推在开 issue 之前** —— 铁律 6 的 GH #290 那一条)。
    - **选题**:本轮 [hero] issue **一条未认领的都没有**(#570 待总监裁、#577 的拆 id
      已落地、#566/#587/#564/#567/#560 均已 gated 落地、#593 是量具类),
      而 backlog 头上的 `-116` 按 P4.4 **不能当工作单元主体**(量具/流程/审计类每轮至多
