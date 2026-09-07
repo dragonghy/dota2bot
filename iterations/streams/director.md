@@ -497,6 +497,40 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-07T01:16Z**:**第六次 promote(`ckpush`,锚点 `stable-v5` = `3fe17f9d`),armed 52 → 51;
+  判定完结 1(⛔ 低于章程要求的 ≥2,不假装第二格是完结 —— 它花在 trunk 红上)。零 AWS、零波次、不发 owner 邮件。**
+  裁定全文 `test_set.md §FQ`,机器键 `state.json:ckpush_PROMOTE_20260907`,投递进 `queue.json:strategy-38.director.promote`
+  (**原入集裁定六个字段逐字保留**,只在 `ruling` 行加了去向 —— 第一版我把它整个覆盖掉了,是校验脚本逐字段比对时发现的)。
+  ⭐⭐⭐ **本轮最该被读的是:这一条的 (b) 按构造永远不会有答案,而那是裁定的一部分,不是延期的理由。**
+  可归因效应 **1 次施法 / 82 局**(段内施法率 1.292 vs 1.294 死平),而单波 ~200 局、单粒种子 gpm 离散度上百
+  ⇒ 没有本项目付得起的波能把它的符号从零里分出来。留在集里买不到新东西,只占家族串一格并稀释 promote 唯一能引的量。
+  ⇒ **「有 WORKING 不等于可以 promote」的另一面:剩余不确定性按构造不可测时,继续 armed 是把不可测伪装成待测。**
+  裁定压在条件 (c)(意图修复:`8 * 30` 是 `bots/` 唯一不是 60 的每分钟秒数常数,继承自 `74727e4:485`),
+  **反方理论(Turbo 奖励更早的目标承诺)登记未解决**,不冒充成量到了收益。
+  ⭐⭐ **(b) 的成员资格是反查出来的,不是转述的**:W42–W50 的波次记录**都不存 `arm_string` 字面量**,
+  于是拿每个 `arm_md5` 回 git 历史反查 `test_set.md` 第 2 行(容器是 **shallow clone**,先 `git fetch --deepen 400`),
+  **八个 md5 全部命中**且逐条含 `ckpush`(八波 gpm `−19.15/−9.60/−6.19/−20.26/−5.95/+27.25/+11.70/+13.76`,1478 局,均值 **−1.06**)。
+  ⚠️ 第一次跑这个反查用的判据是「JSON 里有没有 `ckpush` 字符串」,对 W44–W50 **全答 False** ——
+  **一个全 False 的检验和一个「没测到」长得一模一样**;上一轮 §FO 第一稿引错波是同一个门。
+  **同轮结清 trunk 红 + 两条 [harness]**:(1) `test_stable_anchors.py` 红在 `stable-v4` 的
+  `state_json_key` 被写成 `"a + b"` 拼接串 ⇒ 该字段现在接受**字符串或非空字符串列表**,逐元素查,**拼接仍红**(负对照 `NEG_RC=1`);
+  (2) ⭐ **promote 把自己的提议节变成了永久 ORPHAN** —— `pending_rulings.py` 的 `ruled` 只读「在成员串里」与
+  「有 `director_ruling*` 键」,而 promote **同时熄灭这两个**(id 离开成员串正是因为被裁了)⇒ 新增第三信号
+  **PROMOTED**,读 `stable_anchors.json:promoted_ids`(不新造键约定:锚点行是铁律 3 里 promote 成立的判据且自检每轮核它)。
+  `test_pending_rulings` **246 → 270 checks / 0 failed**。
+  **钉子翻面**:`test_ckpush_minute_unit` **14/0**(第 2/3/5/6 节全翻;⭐ 第 3 节原 `dOff == dOn` promote 后是**同一棵树** ⇒
+  0EQUIV 绿,改成绝对量 `ConsiderR() == BOT_ACTION_DESIRE_NONE`);`mutstand_ckpush.sh` **12/12 CAUGHT、0 ABORTED**
+  (M2/M3/M6 重锚到 promote 后的形状,**都 BRIBE 掉先响的字符串钉**;⭐ **M11 的锚自 `0fe65459` 起就失效**,
+  一直 ABORT、台子退出码一直是 1,而 `state.json` 记的是 12/12 —— GH #550 同族)。
+  **载体项 8 → 7,`chaos_knight` 出表**(`ckpush` 是集内唯一载它的 id;方向是放松,重新入集时要跟着回来)。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck 0 warnings`,未用 `RULE6_BYPASS`;`check_armed_wiring` **51/51**;
+  `promote_atoms OK`;`stable_anchors` **5/5 OK**;**全量 Lua 套件没跑,不声称它绿**。
+  自检 `RC_EXIT=3`(cadence / owed-executions / trunk-red(python));⚠️ **自检与变异台又短暂并发**(09-06 刚立的戒律),
+  处置是**把那条红裸读复现**,结论压在裸读上。**P4.3 回弹**:`test_set.md` 78.4KB → **100KB**(本轮是我自己加的裁定全文)。
+  报告:`iterations/reports/director/20260907T011631Z.md`。
+  **下轮交棒**:① ⭐⭐⭐ `slotpush` 判定(注意 co-armed 登记行要同轮退休 + `outlatch` 跨波不可比);
+  ② ⭐⭐ GH #450 落新 soak candidate(**已挂五轮**);③ ⭐⭐ P4.3 后半(头部瘦身 + 规则减法,**从没开工**);
+  ④ ⭐ GH #574 / GH #548 仍在各自手上;⑤ GH #426 的关闭评论若本轮被审批挡住则顺延(全文在 §FQ.8)。
 - **2026-09-06T22:20Z**:**第四、五次 promote(`odbuild` + `illumove`,锚点 `stable-v4` = `0d3f857f`)
   + `towerfear` 退回出集;判定完结 3(owner P4.2 要 ≥2,上两轮各 0),armed 55 → 52。**
   裁定全文 `test_set.md §FO`,三条机器键在 `state.json`。**零 AWS 调用、零波次请求、不发 owner 邮件。**

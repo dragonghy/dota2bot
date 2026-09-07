@@ -110,6 +110,26 @@
         "同一个 commit 里还有 `towerfear` 退集 —— 它**不改变稳定版**(gate 与代码逐字保留,退的是 arm 串),所以锚点的语义仍然只由那两处 gate 删除决定(与 stable-v3 同一条理由)。",
         "裁定全文 iterations/streams/test_set.md §FO;三条件与各自的边界另抄在两处源码注释里(promote 之后唯一还会被读到的地方)。"
       ]
+    },
+    {
+      "name": "stable-v5",
+      "ref": "refs/heads/stable-v5",
+      "ref_kind": "branch",
+      "ref_sha": "3fe17f9dd08beac0a74750df26a0823eebc0ffe8",
+      "promote_commit": "3fe17f9dd08beac0a74750df26a0823eebc0ffe8",
+      "promote_commit_subject": "director: PROMOTE ckpush to a turbo default (stable-v5), armed 52 -> 51",
+      "promoted_ids": [
+        "ckpush"
+      ],
+      "promoted_at": "2026-09-07T0x:xxZ",
+      "state_json_key": "ckpush_PROMOTE_20260907",
+      "on_main_first_parent": true,
+      "note": [
+        "第六次 promote,距 stable-v4 约九小时。ref 指着 promote commit 本身 ⇒ 不变量 3 平凡成立(与 stable-v1/v3/v4 同)。",
+        "稳定版的变化只有一处:hero_chaos_knight.lua `X.GetPushCommitTime` 的 turbo 分支从 `8 * 30` 变成 `8 * 60`。非 turbo 逐字未动 ⇒ 锚点语义只由这一处决定。",
+        "⭐ 这一条的 (b) 与前五次不同:它不是「量到了正面」,是「按构造量不到」—— 可归因效应 1 次施法 / 82 局,而单波 ~200 局。裁定压在条件 (c)(意图修复)上,反方理论(Turbo 奖励更早的目标承诺)已登记未解决。引用本锚点时连引这一句,见 test_set.md §FQ.3 / §FQ.4。",
+        "同一个 commit 里还有两处 harness 修复(stable_anchors 的 state_json_key 复数形式、pending_rulings 的 PROMOTED 第三信号)—— 它们**不改变稳定版**(`bots/` 只有 chaos_knight 那一处 diff),所以锚点语义不受影响。"
+      ]
     }
   ]
 }
