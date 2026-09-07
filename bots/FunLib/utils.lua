@@ -1676,11 +1676,18 @@ end
 --- Check if the team is pushing second tier or high ground.
 --
 -- @param bot - The bot to check.
--- @param bSlotPush - Soak candidate 'slotpush'. Resolved in exactly ONE place,
---                    J.IsTeamPushingHighGround in bots/FunLib/jmz_func.lua;
---                    this file must never name the id (utils.ts may not import
---                    jmz_func -- that is the circular dependency its own header
---                    forbids -- so the wrapper lives one level up).
+-- @param bSlotPush - PROMOTED (was soak-candidate 'slotpush') 2026-09-07,
+--                    stable-v6, armed 51 -> 50. Same shape as bSlotWait below.
+--                    Resolved in exactly ONE place, J.IsTeamPushingHighGround in
+--                    bots/FunLib/jmz_func.lua; this file must never name the id
+--                    (utils.ts may not import jmz_func -- that is the circular
+--                    dependency its own header forbids -- so the wrapper lives
+--                    one level up), which is exactly why the promote that
+--                    removed the gate could not see this line: the claim lives
+--                    in a file the promoter never had to open. Corrected by
+--                    strategy 2026-09-07T10:40Z (GH #595's round) because it
+--                    was the last trunk red blocking iron rule 6's dynamic half
+--                    for every stream; comment only, no behaviour touched.
 -- @returns True if the team is pushing second tier or high ground, false otherwise.
 --
 -- The loop's domain is the team ROSTER and its accessor is GetTeamMember, whose

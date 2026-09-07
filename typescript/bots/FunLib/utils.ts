@@ -1241,10 +1241,15 @@ export function IsNearEnemyHighGroundTower(unit: Unit, range: number): boolean {
  * suppress a distraction, so under-scanning peels bots off a high-ground siege.
  *
  * @param bot - The bot to check.
- * @param bSlotPush - Soak candidate 'slotpush', resolved in exactly one place,
- *                    J.IsTeamPushingHighGround in bots/FunLib/jmz_func.lua.
- *                    This file may not import jmz_func (circular dependency),
- *                    which is why the gate is threaded in rather than read here.
+ * @param bSlotPush - PROMOTED (was soak-candidate 'slotpush') 2026-09-07,
+ *                    stable-v6, armed 51 -> 50. Same shape as bSlotWait below.
+ *                    Resolved in exactly one place, J.IsTeamPushingHighGround in
+ *                    bots/FunLib/jmz_func.lua. This file may not import jmz_func
+ *                    (circular dependency), which is why the gate is threaded in
+ *                    rather than read here -- and why the promote that removed
+ *                    the gate could not see this line. Kept in step with the
+ *                    generated bots/FunLib/utils.lua so a regeneration cannot
+ *                    reintroduce the stale claim.
  * @returns True if the team is pushing second tier or high ground, false otherwise.
  */
 export function IsTeamPushingSecondTierOrHighGround(bot: Unit, bSlotPush?: boolean): boolean {
