@@ -99,7 +99,10 @@
         "illumove"
       ],
       "promoted_at": "2026-09-06T22:2xZ",
-      "state_json_key": "odbuild_PROMOTE_20260906 + illumove_PROMOTE_20260906",
+      "state_json_key": [
+        "odbuild_PROMOTE_20260906",
+        "illumove_PROMOTE_20260906"
+      ],
       "on_main_first_parent": true,
       "note": [
         "第四、五次 promote,与第三次(stable-v3)同一天、相隔约九小时。ref 指着 promote commit 本身 ⇒ 不变量 3 平凡成立(与 stable-v1/v3 同)。",

@@ -61,9 +61,19 @@
 -- makes the two domains impossible to write as one sentence again.
 --
 -- So "repairing the typo" is a real turbo behaviour change that REMOVES
--- push-Phantasm across the stretch where CK's ultimate first comes online. That
--- is a sign only the batch can call, which is exactly what a soak candidate is
--- for. It ships GATED (turbo + 'ckpush'), NOT as a correction.
+-- push-Phantasm across the stretch where CK's ultimate first comes online. It
+-- shipped GATED (turbo + 'ckpush') rather than as a correction, precisely so
+-- that sign question could be handed to the batch.
+--
+-- ⚠ PROMOTED 2026-09-07 (director ruling, test_set.md §FQ): turbo default, no
+-- gate left, non-turbo untouched. And the ruling records WHY the batch never
+-- answered the sign question and never could: the attributable effect is 1 cast
+-- in 82 games (in-band cast rate 1.292 vs 1.294 per game), which no wave this
+-- project can afford will separate from zero. What carried the promote is
+-- condition (c) -- an intent repair with the counter-theory ("turbo rewards an
+-- earlier objective commit") registered, not resolved -- plus (a) WORKING/40 and
+-- eight family-level waves with no obvious negative. Sections 2, 3, 5 and 6 were
+-- flipped in the same commit; each says so at its own head.
 --
 -- ⚠ DIRECTION: this lever is a NARROWING (it removes casts the shipped tree
 -- makes), and it is the FIRST lever in this archive whose shape and whose
@@ -229,32 +239,46 @@ tests['[census] the twin is registered-not-fixed, and its domain is why'] = func
 end
 
 -- ---------------------------------------------------------------------------
--- 2. [gate] the resolution point, driven on a real frame. Gate-off must be the
---    shipped VALUE, and only turbo + this exact id may move it.
+-- 2. [promoted] the resolution point, driven on a real frame.
+--
+--    ⚠ THIS SECTION WAS FLIPPED 2026-09-07 WHEN 'ckpush' WAS PROMOTED (director
+--    ruling, test_set.md §FQ). It used to assert that gate-OFF was the shipped
+--    8 * 30 and that only turbo + this exact id could move it. Both halves have
+--    changed sign: turbo IS the repair now, and NOTHING about the armed set may
+--    move it. The direction that still holds verbatim is the third one --
+--    outside turbo the inherited value is untouched, byte for byte -- and that
+--    is deliberately the assertion left unedited, because it is the one whose
+--    meaning the promote did not change.
 
-tests['[gate] unarmed is the shipped value, 8 * 30'] = function()
+tests['[promoted] turbo is the repaired value, 8 * 60, with nothing armed'] = function()
     local X = ck_module(CK_SUBJECT_FRAMES[1], {}, true)
-    assert(X.GetPushCommitTime() == 8 * 30, string.format(
-        'gate-off returned %s, not the shipped 8 * 30 = 240',
-        tostring(X.GetPushCommitTime())))
-end
-
-tests['[gate] armed in turbo returns the idiomatic 8 * 60'] = function()
-    local X = ck_module(CK_SUBJECT_FRAMES[1], { 'ckpush' }, true)
     assert(X.GetPushCommitTime() == 8 * 60, string.format(
-        'armed gate returned %s, not 8 * 60 = 480',
-        tostring(X.GetPushCommitTime())))
+        'turbo returned %s, not the promoted 8 * 60 = 480. If somebody re-gated '
+        .. 'this, the promote is silently undone and every real turbo game is '
+        .. 'back on the inherited typo.', tostring(X.GetPushCommitTime())))
 end
 
-tests['[gate] outside turbo the repair stays off'] = function()
-    local X = ck_module(CK_SUBJECT_FRAMES[1], { 'ckpush' }, false)
-    assert(X.GetPushCommitTime() == 8 * 30, 'gate escaped the turbo condition')
-end
-
-tests['[off-candidate] an unrelated armed id does not move it'] = function()
-    local X = ck_module(CK_SUBJECT_FRAMES[1], { 'roshdist', 'slotdust', 'tpwatch' }, true)
+tests['[promoted] outside turbo the inherited 8 * 30 is untouched'] = function()
+    local X = ck_module(CK_SUBJECT_FRAMES[1], {}, false)
     assert(X.GetPushCommitTime() == 8 * 30,
-        'some other candidate id moved this gate')
+        'the promote escaped the turbo condition -- this repo only rules on '
+        .. 'turbo, and non-turbo must read the shipped value')
+end
+
+tests['[promoted] the armed set can no longer move it, in either direction'] = function()
+    -- The negative control for "the gate is really gone". Arming the id that
+    -- used to drive this must now be indistinguishable from arming nothing --
+    -- and so must arming a handful of unrelated live ids.
+    local bare  = ck_module(CK_SUBJECT_FRAMES[1], {}, true).GetPushCommitTime()
+    local self_ = ck_module(CK_SUBJECT_FRAMES[1], { 'ckpush' }, true).GetPushCommitTime()
+    local other = ck_module(CK_SUBJECT_FRAMES[1],
+        { 'roshdist', 'slotdust', 'tpwatch' }, true).GetPushCommitTime()
+    assert(bare == self_, "arming 'ckpush' still moves the resolver: the gate "
+        .. 'was not removed, it was only renamed out of the comments')
+    assert(bare == other, 'some other candidate id moves this resolver')
+    -- Outside turbo too: the armed set must not reach the non-turbo leg either.
+    local off = ck_module(CK_SUBJECT_FRAMES[1], { 'ckpush' }, false).GetPushCommitTime()
+    assert(off == 8 * 30, 'the armed set reached the non-turbo leg')
 end
 
 -- ---------------------------------------------------------------------------
@@ -262,34 +286,46 @@ end
 --    the reason it is agreement rather than a passing comparison.
 
 tests['[decision domain] both CK-subject frames sit below BOTH constants'] = function()
+    -- ⚠ THE TWO LEGS ARE NOW THE TWO MODES, NOT TWO ARMED SETS ('ckpush' was
+    -- promoted 2026-09-07, so the armed set no longer separates anything -- see
+    -- section 2). What is compared here is unchanged: the two CONSTANTS, both
+    -- of which still live in the tree, one per mode.
     for _, frame in ipairs(CK_SUBJECT_FRAMES) do
-        local Xoff = ck_module(frame, {}, true)
+        local nPromoted = ck_module(frame, {}, true).GetPushCommitTime()
+        local nInherited = ck_module(frame, {}, false).GetPushCommitTime()
+        assert(nPromoted == 8 * 60 and nInherited == 8 * 30,
+            'section 2 owns these two values; if they moved, fix them there')
         local t = DotaTime()  -- luacheck: ignore
         assert(t < 240, string.format(
-            '%s is at t=%.1f, which is no longer below the shipped 240. It can '
-            .. 'now separate the two legs -- promote it into section 5 and stop '
-            .. 'annotating the clock.', frame, t))
-        -- Both legs answer the SAME thing here, and the answer is "not yet".
-        assert((t > Xoff.GetPushCommitTime()) == false, 'shipped leg opened early')
-        local Xon = ck_module(frame, { 'ckpush' }, true)
-        assert((t > Xon.GetPushCommitTime()) == false, 'armed leg opened early')
+            '%s is at t=%.1f, which is no longer below the inherited 240. It can '
+            .. 'now separate the two constants -- promote it into section 5 and '
+            .. 'stop annotating the clock.', frame, t))
+        -- Both constants answer the SAME thing here, and the answer is "not yet".
+        assert((t > nInherited) == false, 'the inherited constant opened early')
+        assert((t > nPromoted) == false, 'the promoted constant opened early')
     end
 end
 
-tests['[decision domain] and the whole decision agrees too, for a second reason'] = function()
-    -- Not merely "the clause agrees": on these two frames X.ConsiderR bails on
-    -- its FIRST line, because Phantasm is unlearned (section 4 measures that no
-    -- frame at or below 240 has it). So even a corpus that put a CK subject at
-    -- t = 300 would still need a LEARNED ult to separate the decision.
+tests['[decision domain] and the whole decision is closed too, for a second reason'] = function()
+    -- Not merely "the clause is closed": on these two frames X.ConsiderR bails
+    -- on its FIRST line, because Phantasm is unlearned (section 4 measures that
+    -- no frame at or below 240 in the ARCHIVE has it). So even a corpus that put
+    -- a CK subject at t = 300 would still need a LEARNED ult to reach the clock.
+    --
+    -- ⚠ WHY THIS IS NO LONGER A LEG-VS-LEG COMPARISON. Before the promote this
+    -- read `dOff == dOn` over two armed sets. Post-promote those two loads are
+    -- the same tree, so that equality would hold by construction -- an 0EQUIV
+    -- green (§DJ.9): a comparison whose two sides cannot differ reports nothing
+    -- in the same colour as reporting agreement. The observable that survives is
+    -- the ABSOLUTE one: the decision is NONE here, and the clock is not why.
     for _, frame in ipairs(CK_SUBJECT_FRAMES) do
-        local Xoff = ck_module(frame, {}, true)
-        local Xon = ck_module(frame, { 'ckpush' }, true)
-        local dOff = Xoff.ConsiderR()
-        local dOn = Xon.ConsiderR()
-        assert(dOff == dOn, string.format(
-            '%s now separates the two legs at the decision level (%s vs %s) -- '
-            .. 'that is good news, and it means condition (a) is buyable here.',
-            frame, tostring(dOff), tostring(dOn)))
+        local X = ck_module(frame, {}, true)
+        local d = X.ConsiderR()
+        assert(d == BOT_ACTION_DESIRE_NONE, string.format(  -- luacheck: ignore
+            '%s now returns %s from X.ConsiderR -- the decision-level domain is '
+            .. 'no longer empty on this frame, so condition (a) may be buyable '
+            .. 'here after all; re-read section 5 before trusting it.',
+            frame, tostring(d)))
     end
 end
 
@@ -522,48 +558,62 @@ end
 --    band. Labelled ANNOTATED because the archive holds no CK-subject frame
 --    there; this is the assertion section 3 could not buy.
 
-tests['[separability] ANNOTATED clock: the legs disagree across the band'] = function()
-    local Xoff = ck_module(CK_SUBJECT_FRAMES[2], {}, true)
-    local Xon = ck_module(CK_SUBJECT_FRAMES[2], { 'ckpush' }, true)
+tests['[separability] ANNOTATED clock: the two constants disagree across the band'] = function()
+    -- Post-promote the two legs are the two MODES: turbo carries the repair,
+    -- non-turbo carries the inherited value. The band 240 < t < 480 is still the
+    -- stretch the repair takes away, and it is still the whole content of the
+    -- ruling -- what changed is which real games are on which side of it.
+    local nInherited = ck_module(CK_SUBJECT_FRAMES[2], {}, false).GetPushCommitTime()
+    local nPromoted = ck_module(CK_SUBJECT_FRAMES[2], {}, true).GetPushCommitTime()
     -- ANNOTATED: our archive holds no chaos_knight-SUBJECT frame in this band.
     for _, t in ipairs({ 241, 306, 373.4, 423.4, 479 }) do
-        assert(t > Xoff.GetPushCommitTime(),
-            'shipped leg blocked at t=' .. t .. ', inside the band')
-        assert(not (t > Xon.GetPushCommitTime()),
-            'armed leg allowed at t=' .. t .. ', inside the band')
+        assert(t > nInherited,
+            'non-turbo blocked at t=' .. t .. ', inside the band')
+        assert(not (t > nPromoted),
+            'turbo allowed at t=' .. t .. ', inside the band')
     end
     -- ...and agree outside it, in both directions.
     for _, t in ipairs({ 0, 192, 240 }) do
-        assert((t > Xoff.GetPushCommitTime()) == (t > Xon.GetPushCommitTime()),
-            'legs disagreed below the band at t=' .. t)
+        assert((t > nInherited) == (t > nPromoted),
+            'the constants disagreed below the band at t=' .. t)
     end
     for _, t in ipairs({ 481, 900 }) do
-        assert((t > Xoff.GetPushCommitTime()) == (t > Xon.GetPushCommitTime()),
-            'legs disagreed above the band at t=' .. t)
+        assert((t > nInherited) == (t > nPromoted),
+            'the constants disagreed above the band at t=' .. t)
     end
 end
 
 -- ---------------------------------------------------------------------------
--- 6. [source-parity] the gate is a SELECTION, and the branch reads it. Fails on
---    an empty corpus too, which is the point: it checks a different thing from
---    every assertion above.
+-- 6. [source-parity] the resolver is a turbo SELECTION with NO gate left, and
+--    the branch reads it. Fails on an empty corpus too, which is the point: it
+--    checks a different thing from every assertion above.
+--
+--    ⚠ FLIPPED 2026-09-07 BY THE PROMOTE, and flipped in the load-bearing
+--    direction: this used to assert that `IsSoakCandidate( 'ckpush' )` appears
+--    EXACTLY ONCE. Left as it was, it would now be asserting that the thing the
+--    ruling removed is still present -- a ratchet that has to be re-read as
+--    demanding the defect back. It asserts ZERO instead.
 
-tests['[source-parity] the branch reads the resolver, and nothing else moved'] = function()
+tests['[source-parity] the branch reads the resolver, and the gate is gone'] = function()
     local src = read_file(SRC)
     assert(src:find('DotaTime%(%) > X%.GetPushCommitTime%(%)'),
         'the push branch no longer reads X.GetPushCommitTime')
     assert(src:find('function X%.GetPushCommitTime'),
         'X.GetPushCommitTime is gone or renamed')
-    -- Exactly one resolution point for this id in the whole file.
+    -- No gate left anywhere in the file: promoting means the id is in no armed
+    -- string ever again, so a surviving call site would freeze FALSE (the
+    -- `pullcad` trap, AGENTS.md) and silently restore the inherited constant.
     local n = 0
-    for _ in src:gmatch("IsSoakCandidate%( 'ckpush' %)") do n = n + 1 end
-    assert(n == 1, string.format(
-        "'ckpush' resolves at %d places in %s; it must resolve at exactly one",
-        n, SRC))
-    -- And it is conjoined with turbo, not with another candidate id (the
-    -- promote-kills-the-gate trap, AGENTS.md).
-    assert(src:find("J%.IsModeTurbo%(%) and J%.IsSoakCandidate%( 'ckpush' %)"),
-        'the ckpush gate is not the plain turbo + id conjunction any more')
+    for _ in src:gmatch("IsSoakCandidate%s*%(%s*'ckpush'%s*%)") do n = n + 1 end
+    assert(n == 0, string.format(
+        "'ckpush' still resolves at %d place(s) in %s; it was PROMOTED, so a "
+        .. 'gate naming it can never be true again and every real turbo game '
+        .. 'would be back on the inherited 8 * 30', n, SRC))
+    -- The selection is on turbo alone, and the non-turbo leg is untouched.
+    assert(src:find('if J%.IsModeTurbo%(%)%s*\n%s*then%s*\n%s*return 8 %* 60'),
+        'the promoted resolver is not the plain turbo selection returning 8 * 60')
+    assert(src:find('\n\treturn 8 %* 30\n'),
+        'the non-turbo leg no longer returns the inherited 8 * 30')
 end
 
 return tests

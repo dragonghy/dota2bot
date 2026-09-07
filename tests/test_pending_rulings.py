@@ -385,6 +385,52 @@ orph5, _rl, _u = pr.classify_proposals(
     pr.find_proposals(FOUNDING_MD), open_row, set(), founding_state)
 check(not orph5, "an open row did not cover the proposal")
 
+# ---- the THIRD resolution signal: PROMOTED (director 2026-09-07) ----------
+# A promote extinguishes both older signals at once -- the id leaves the member
+# string BECAUSE it was ruled, and the promote record is not a `director_ruling`
+# key -- so without this the round that promotes an id converts its own proposal
+# section into a permanent ORPHAN_PROPOSAL (exit 3, every round after).  Found
+# live promoting `ckpush`; §DQ went orphan the moment the row closed.
+orph5b, rowless5b, _u = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), closed_row, set(), founding_state,
+    promoted={"fieldsip"})
+check(not orph5b,
+      "a PROMOTED id with only closed rows was still scored as an orphan")
+check(not rowless5b,
+      "a promoted proposal that DOES have a row belongs in no bucket at all; "
+      "`rowless` is for proposals with no row (it prints as 'ruled elsewhere')")
+# ...and the boundary in the other direction: promoting SOMETHING ELSE must not
+# silence anything.  (Default-empty is asserted too: the older call sites in
+# this file pass no `promoted` at all and must keep their verdicts.)
+orph5c, _rl, _u = pr.classify_proposals(
+    pr.find_proposals(FOUNDING_MD), closed_row, set(), founding_state,
+    promoted={"some_other_id"})
+check(len(orph5c) == 1 and "closed" in orph5c[0][2],
+      "an unrelated promoted id silenced the orphan leg")
+
+# The registry reader itself, both directions.  It must read `promoted_ids`
+# off the anchor rows and must NOT invent one from a malformed registry.
+import tempfile as _tempfile  # noqa: E402
+
+_anch = os.path.join(_tempfile.mkdtemp(), "anchors.json")
+with open(_anch, "w", encoding="utf-8") as fh:
+    json.dump({"anchors": [{"name": "stable-v1", "promoted_ids": ["aa", "bb"]},
+                           {"name": "stable-v2", "promoted_ids": ["cc"]}]}, fh)
+check(pr.promoted_ids(_anch) == {"aa", "bb", "cc"},
+      "promoted_ids did not read the anchor registry: %r" % (pr.promoted_ids(_anch),))
+check(pr.promoted_ids(os.path.join(os.path.dirname(_anch), "nope.json")) == set(),
+      "a missing registry must read as no promotes, never as a crash")
+with open(_anch, "w", encoding="utf-8") as fh:
+    fh.write("{not json")
+check(pr.promoted_ids(_anch) == set(),
+      "an unparseable registry must read as no promotes")
+# And the live registry must actually carry the promotes this repo has made --
+# an empty answer here would make the new signal vacuous without failing.
+check(len(pr.promoted_ids()) >= 6,
+      "the live stable-anchor registry names %d promoted id(s); this repo has "
+      "made at least 6, so the signal has gone blind"
+      % len(pr.promoted_ids()))
+
 # ---------------------------------------------------------------- GH #376
 # A rideshare row has an EMPTY `bundle` by definition (it asks for no wave), so
 # the link key the orphan leg reads is blank on every correctly-filed one.  The

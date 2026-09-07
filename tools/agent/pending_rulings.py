@@ -696,19 +696,51 @@ def ruled_in_state(cand, state):
     return False
 
 
-def classify_proposals(proposals, requests, armed, state):
+def promoted_ids(path=None):
+    """Ids this repo has PROMOTED, read off the stable-anchor registry.
+
+    THE THIRD RESOLUTION SIGNAL, and it was missing (director 2026-09-07, found
+    by promoting `ckpush`).  The orphan leg asks "could a ruling still land
+    here", and it read two signals: the id is in the member string, or a
+    `director_ruling*` key names it.  A PROMOTE extinguishes both -- the id
+    leaves the member string BECAUSE it was ruled -- so the round that promotes
+    an id turns its own proposal section into a permanent ORPHAN_PROPOSAL, exit
+    3, every round after.  A leg that reddens on the terminal state of the
+    workflow it is policing has stopped measuring the thing it was built for.
+
+    The registry is the right source rather than a `<id>_PROMOTE_*` state key:
+    a promote is only real once the anchor row exists (iron rule 3), the row is
+    checked by tools/agent/stable_anchors.py every round, and a key convention
+    would be a second, unpinned register of the same fact.
+    """
+    path = path or os.path.join(REPO, "iterations", "stable_anchors.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            registry = json.load(fh)
+    except (OSError, ValueError):
+        return set()
+    out = set()
+    for anchor in registry.get("anchors", []):
+        for cand in anchor.get("promoted_ids", []) or []:
+            if isinstance(cand, str):
+                out.add(cand)
+    return out
+
+
+def classify_proposals(proposals, requests, armed, state, promoted=None):
     """(orphans, rowless_ruled, unparsed).
 
     orphans is the only bucket that reddens the exit code; each entry is
     (section, id, reason, [row ids]).
     """
+    promoted = promoted if promoted is not None else set()
     orphans, rowless_ruled, unparsed = [], [], []
     for section, cand, heading in proposals:
         if cand is None:
             unparsed.append((section, heading))
             continue
         rows = queue_rows_for(cand, requests)
-        ruled = cand in armed or ruled_in_state(cand, state)
+        ruled = cand in armed or ruled_in_state(cand, state) or cand in promoted
         row_ids = [r.get("id") for r in rows]
         if not rows:
             if ruled:
@@ -1111,7 +1143,8 @@ def main():
 
     proposals = find_proposals(text)
     orphans, rowless_ruled, unparsed = classify_proposals(
-        proposals, requests, armed_ids(text), load_state(args.state))
+        proposals, requests, armed_ids(text), load_state(args.state),
+        promoted_ids())
 
     print("\n=== orphan admission proposals (test_set.md sections with no queue row) ===")
     print("proposal sections scanned: %d" % len(proposals))

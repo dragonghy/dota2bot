@@ -6595,5 +6595,22 @@
     "what_it_does_not_claim": "不声称这两列就是真实域:把 gold 顶到 200 只移动了一个 .dem 不携带的值、其余合取项全是帧自己的 ⇒ 两列都是真实域的界不是真实域。也不声称任何波次的统计功效,更不声称这六个一起 arm 是安全的(那是只有批测能答的涌现问题)。",
     "artifacts": "tests/test_stayfamily_singlearm.lua(6/6 绿);tests/_stayfamily_singlearm_sweep.lua;tests/test_gated_helper_nesting_census.lua 的两行 pin",
     "gh_issue": "GH #576"
+  },
+  "ckpush_PROMOTE_20260907": {
+    "at": "2026-09-07T0x:xxZ",
+    "what": "本项目第六次 promote:删掉 bots/BotLib/hero_chaos_knight.lua `X.GetPushCommitTime` 里那句 `and J.IsSoakCandidate( 'ckpush' )`,turbo 默认 `8 * 60`(=480s),非 turbo 的继承值 `8 * 30` 逐字未动。armed 52 → 51(460 字节,md5 e61700f44778dc1ab67166922d22b0bc)。",
+    "archive": "iterations/streams/test_set.md §FQ",
+    "issue": "GH #426",
+    "anchor": "stable-v5(branch ref;登记在 iterations/stable_anchors.json)",
+    "cond_a": "VERIFY id=ckpush verdict=WORKING episodes=40(录像组 2026-09-03T07:20Z,W41 82 局 .dem,40 域帧/15 局)。决定性证据是 baseline 腿的反事实帧 20260903_040014_slot4 t=335.5:另外三条 HIGH 路逐条排除(最近敌人 1384u > 1200 施法环、> 700 撤退环;1600 内仅 1 名敌人),CK 正吃一塔塔伤、5 个己方兵在旁,0.3s 后 Phantasm 放出。⛔ 抑制型 gate,armed 侧无正面可观测量;效应量 1 次可归因施法 / 82 局,段内施法率 1.292 vs 1.294 死平;LIMIT 1/2/3 逐字随读数走。",
+    "cond_b": "家族级,八波:W42/W44/W45/W46/W47/W48/W49/W50,gpm −19.15/−9.60/−6.19/−20.26/−5.95/+27.25/+11.70/+13.76,八波算术平均 −1.06,1478 局计分。成员资格由每波 arm_md5 反查 git 历史里的 test_set.md 第 2 行确定(八个 md5 全部命中,逐条含 ckpush),不是从散文转述 —— W42–W50 的波次记录都不存 arm_string 字面量。⛔ 家族级不是 id 级;winrate 通道自 GH #352 起连续 DEGENERATE,无胜负读数可引;按效应量该 id 不可能是这些数字的成因。W51 是 campgrade 独占波不在表内,W52 在飞。",
+    "cond_c": "意图修复:`8 * 30` 是 bots/ 里唯一不是 60 的每分钟秒数常数(落地时 127:2,那 2 处是同一表达式 —— 本处与 rubick 孪生体),逐字继承自 OHA 快照 74727e4:485;把 ~2 分钟冷却的团战大招押在它刚上线那一段去啃一塔是标准打法里不该做的事。⚠️ 反方理论已登记未解决:Turbo 奖励抱团推进,更早的目标承诺是站得住的 Turbo 调参方向;语料在这个效应量上分不开两者 ⇒ 裁定压在「意图修复」上,不压在「量到收益」上。",
+    "why_not_wait": "(b) 按构造不可得:1 次施法 / 82 局,而单波 ~200 局、单粒种子 gpm 离散度上百 ⇒ 没有本项目付得起的波能把它的符号从零里分出来。继续 armed 买不到新东西,只占家族串一格并稀释 promote 唯一能引的量。",
+    "carrier_terms": "8 → 7,chaos_knight 出表(ckpush 是集内唯一载 chaos_knight 的 id)。carrier_terms.py --arm <51 串>:10 hero / 41 generic / 0 unresolved => 7 terms;TERMS crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus。方向是放松不是收紧;将来任何 chaos_knight 杠杆重新入集时这一项要跟着回来。",
+    "nails_flipped": "tests/test_ckpush_minute_unit.lua 14/0(第 2/3/5/6 节全部翻面;第 3 节的 dOff==dOn 改成绝对量,否则 promote 后是 0EQUIV 绿);tools/agent/mutstand_ckpush.sh 12/12 CAUGHT / 0 SURVIVED / 0 ABORTED,M2/M3/M6 重锚且都 BRIBE 掉先响的字符串钉,M6 = promote 被悄悄撤销(pullcad 陷阱)。",
+    "m11_abort_cleared": "M11 的锚在 0fe65459(英雄组 backlog -79)给 test 那行加上共享 FARM_ONLY_FIND_CLAUSE 之后就失效了 ⇒ 一直 ABORT、台子退出码一直是 1,而 state.json 记的是 12/12。GH #550 同族。已重锚到最短承重片段。",
+    "gates": "luacheck_gate.sh GATE_EXIT=0 / 0 警告;check_armed_wiring 51/51 wired;test_ckpush_minute_unit 14/0;mutstand 12/12。",
+    "cost": "零 AWS、零 S3、零 EC2、零波次。",
+    "report": "iterations/reports/director/<本轮时间戳>.md"
   }
 }

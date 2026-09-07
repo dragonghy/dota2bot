@@ -103,11 +103,47 @@ for a in anchors:
 
 # Every anchor must name a promote record that actually exists in state.json --
 # otherwise the registry could drift into describing a promote nobody made.
+#
+# state_json_key is a STRING or a LIST OF STRINGS, and the list form is the fix
+# for a real red rather than a convenience.  A promote round can land TWO
+# independent state records (2026-09-06 promoted odbuild and illumove, one key
+# each), and the stable-v4 row wrote them as the single string
+# "odbuild_PROMOTE_20260906 + illumove_PROMOTE_20260906".  That is not a key, so
+# this check went red -- correctly, and a round late, because nothing at write
+# time asked what shape the field had.  Joining two keys with " + " reads fine to
+# a human and is unresolvable to every reader; the list makes the plural case
+# expressible, and the per-element lookup below keeps the join red.
 with open(os.path.join(REPO, "iterations", "state.json"), encoding="utf-8") as fh:
     state = json.load(fh)
+
+
+def key_list(value):
+    """The keys an anchor names, as a list. Anything else stays empty => red."""
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list) and value and all(isinstance(v, str) for v in value):
+        return list(value)
+    return []
+
+
 for a in anchors:
-    check("%s: state_json_key %s not in state.json" % (a["name"], a["state_json_key"]),
-          a["state_json_key"] in state)
+    keys = key_list(a["state_json_key"])
+    check("%s: state_json_key must be a string or a non-empty list of strings, "
+          "got %r" % (a["name"], a["state_json_key"]), bool(keys))
+    for k in keys:
+        check("%s: state_json_key %s not in state.json" % (a["name"], k),
+              k in state)
+
+# Both directions of the shape rule, on synthetic input -- the registry itself is
+# clean, so without these the branch that decides what counts as a key is never
+# walked.
+check("a plain key is accepted", key_list("roamstale_PROMOTED_20260819T2300Z") ==
+      ["roamstale_PROMOTED_20260819T2300Z"])
+check("two keys as a list are accepted", key_list(["a", "b"]) == ["a", "b"])
+check("the ' + ' join is NOT a key list", key_list("a + b") == ["a + b"],
+      "it must stay a single unresolvable key so the lookup below reds it")
+check("an empty list is not a key list", key_list([]) == [])
+check("a list of non-strings is not a key list", key_list([1, 2]) == [])
 
 
 def rev_parse(sha):

@@ -441,8 +441,9 @@ end
 -- [ckpush, 20260902; evidence sentence corrected 20260903, GH #447]
 -- SECONDS-PER-MINUTE, and why the shape does NOT settle the repair.
 --
--- WHAT THE DEFECT IS. The push branch of X.ConsiderR below is gated on the
--- value this resolver hands back, and unarmed that value is `8 * 30`. `* 30` is
+-- WHAT THE DEFECT WAS. The push branch of X.ConsiderR below is gated on the
+-- value this resolver hands back, and outside turbo that value is still the
+-- inherited `8 * 30` -- which is what the defect looked like. `* 30` is
 -- the only seconds-per-minute constant in bots/ that is not 60; the one other
 -- site that carries it is THE SAME expression, the rubick twin at
 -- FunLib/rubick_hero/chaos_knight.lua (left registered-not-fixed on purpose --
@@ -480,12 +481,66 @@ end
 -- a DOMAIN confusion -- an archive reading worn as a corpus universal -- and
 -- not an arithmetic slip.
 --
--- So the repair ships GATED (turbo + 'ckpush') rather than as a correction, and
--- as a SELECTION rather than a disjunction, so gate-off is the shipped VALUE.
--- The test pins that as an equality on real frames rather than as a claim here.
+-- The repair shipped as a SELECTION rather than a disjunction, so the gate-off
+-- leg was the shipped VALUE; it is now the NON-TURBO leg, and the test still
+-- pins that as an equality on real frames rather than as a claim here.
+--
+-- PROMOTED (was soak-candidate 'ckpush') 2026-09-07 -- turbo default, no gate
+-- left; outside turbo the shipped 8 * 30 is untouched, byte for byte. Owner
+-- rule 2, all three conditions, each with its own boundary:
+--   (a) WORKING -- replay desk 2026-09-03T07:20Z on W41 (82 games of .dem read
+--       frame by frame): `VERIFY id=ckpush verdict=WORKING episodes=40`, 40
+--       domain frames over 15 games, so the domain is NOT empty and SILENT is
+--       refused. The decisive frame is a COUNTERFACTUAL on the baseline leg --
+--       20260903_040014_slot4 t=335.5, where the other three HIGH-desire paths
+--       of X.ConsiderR are excluded one by one (nearest enemy 1384u > the 1200
+--       cast range and > the 700 retreat radius; only 1 enemy within 1600, so
+--       the team-fight conjunct is false), CK is taking tier-1 tower damage
+--       with 5 allied creeps beside him, and Phantasm is cast 0.3s later. Only
+--       the push branch could have opened there.
+--       HONEST BOUNDARY, and it must travel with the reading: this is a
+--       SUPPRESSION gate, so the armed leg has no positive observable -- what
+--       was bought is "the shipped leg really does fire here", not "the armed
+--       leg was seen blocking it". And the effect is SMALL: 1 attributable
+--       cast in 82 games; in-band cast rate 1.292 vs 1.294 per game, dead even.
+--       Report iterations/reports/replay-check/20260903T072000Z.md §4.
+--   (b) NO OBVIOUS NEGATIVE -- armed on every leg of W42/W44/W45/W46/W47/W48/
+--       W49/W50 (membership re-derived at ruling time from each wave record's
+--       arm_md5 against the armed string in git history, not from prose).
+--       Family gpm swap-averaged -19.15 / -9.60 / -6.19 / -20.26 / -5.95 /
+--       +27.25 / +11.70 / +13.76 over 1,478 scored mirrored games; arithmetic
+--       mean of the eight -1.06. HONEST BOUNDARY: that is a FAMILY-level
+--       reading, not an id-level one -- an all-on wave cannot attribute economy
+--       to one member -- and the winrate channel has been DEGENERATE since GH
+--       #352, so no win/loss number exists to cite. At 1 cast per 82 games this
+--       id cannot have produced any of those numbers in either direction; rule
+--       2(b) asks for a coarse "no obvious negative" and this is that, and
+--       nothing more.
+--   (c) `8 * 30` is the only seconds-per-minute constant in bots/ that is not
+--       60 (127:2 at landing, and the other 2 was this same expression in the
+--       rubick twin), inherited verbatim from the upstream OHA snapshot, so
+--       the author wrote "8 minutes" and got 4. Committing a ~2-minute-cooldown
+--       teamfight ultimate to chipping a tier-1 tower in the window where it
+--       first comes online is the standard thing not to do with it; the repair
+--       restores the threshold the code's own arithmetic says it meant.
+--       REGISTERED COUNTER-THEORY, not smoothed over: turbo rewards grouped
+--       pushing, so an EARLIER objective commit is a defensible turbo tuning,
+--       and the corpus cannot separate the two theories at this effect size --
+--       no batch we can afford will ever resolve the sign of 1 cast per 82
+--       games. The ruling therefore rests on (c) being an intent repair, not on
+--       a measured gain. If the earlier commit time is ever wanted, it must be
+--       a deliberate turbo constant with its own evidence, not an inherited
+--       typo left in place because it might be accidentally right.
+--       Ruling: iterations/streams/test_set.md §FQ.
+-- KNOWN RESIDUAL, promoted with eyes open: the rubick twin at
+-- bots/FunLib/rubick_hero/chaos_knight.lua keeps the inherited `8 * 30`. Its
+-- domain is empty (corpus_hero_census.py --hero rubick: files=0, games=0), so
+-- condition (a) is unbuyable for it BY CONSTRUCTION -- it stays
+-- registered-not-fixed, and the census in section 1 of the test pins that the
+-- remaining inline site is exactly that one.
 function X.GetPushCommitTime()
 
-	if J.IsModeTurbo() and J.IsSoakCandidate( 'ckpush' )
+	if J.IsModeTurbo()
 	then
 		return 8 * 60
 	end
@@ -537,7 +592,9 @@ function X.ConsiderR()
 	end
 
 
-	-- [ckpush] threshold resolves in X.GetPushCommitTime -- see its header.
+	-- [ckpush] threshold resolves in X.GetPushCommitTime -- see its header. That
+	-- resolver is PROMOTED (turbo default 8 * 60, no gate left); non-turbo still
+	-- reads the inherited 8 * 30.
 	if J.IsPushing( bot )
 		and DotaTime() > X.GetPushCommitTime()
 	then

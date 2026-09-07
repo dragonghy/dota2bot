@@ -92,16 +92,30 @@ MUTANTS = {
     "M1": [(HERO,
             "\t\tand DotaTime() > X.GetPushCommitTime()\n",
             "\t\tand DotaTime() > 8 * 30\n")],
-    # M2: the gate hard-arms.  The lever stops being dark and ships the
-    #     NARROWING to every real game -- the one thing a gated fix may not do,
-    #     and here it is the direction the corpus says is unsettled.
+    # M2: [RE-ANCHORED 2026-09-07 BY THE PROMOTE] the repair escapes turbo, so a
+    #     normal-mode game gets it too.  Before the promote this mutant
+    #     hard-armed the gate; the promote IS that edit, ruled and registered, so
+    #     the mutant now attacks the boundary the promote kept -- this repo rules
+    #     on turbo only, and the non-turbo leg must stay byte-identical to what
+    #     the tree inherited.  BRIBED: the source-parity pattern is loosened in
+    #     the same mutant, so a string pin cannot be what catches it.
     "M2": [(HERO,
-            "\tif J.IsModeTurbo() and J.IsSoakCandidate( 'ckpush' )\n",
-            "\tif true\n")],
-    # M3: the gate loses its turbo half, so a normal-mode game can arm it.
+            "\tif J.IsModeTurbo()\n",
+            "\tif true\n"),
+           (TEST,
+            "    assert(src:find('if J%.IsModeTurbo%(%)%s*\\n%s*then%s*\\n%s*return 8 %* 60'),",
+            "    assert(src:find('return 8 %* 60'),")],
+    # M3: [RE-ANCHORED 2026-09-07] the turbo selection is INVERTED: turbo reads
+    #     the inherited 240 and normal mode reads the repaired 480.  Both
+    #     directions of section 2 have to be load-bearing for this to die; a
+    #     suite that only asserted the turbo value would let it through.
+    #     BRIBED the same way as M2.
     "M3": [(HERO,
-            "\tif J.IsModeTurbo() and J.IsSoakCandidate( 'ckpush' )\n",
-            "\tif J.IsSoakCandidate( 'ckpush' )\n")],
+            "\tif J.IsModeTurbo()\n",
+            "\tif not J.IsModeTurbo()\n"),
+           (TEST,
+            "    assert(src:find('if J%.IsModeTurbo%(%)%s*\\n%s*then%s*\\n%s*return 8 %* 60'),",
+            "    assert(src:find('return 8 %* 60'),")],
     # M4: gate-off stops being the SHIPPED value -- 240 becomes 300.  Truthiness
     #     is unchanged on both CK-subject frames (both sit at t < 240), so only
     #     the value-for-value [gate] assertion can see it.  This is the mutant
@@ -112,15 +126,24 @@ MUTANTS = {
     #     "split the difference" edit that quietly changes what is being tested
     #     while every prose claim in the tree still says 480.
     "M5": [(HERO, "\t\treturn 8 * 60\n", "\t\treturn 8 * 45\n")],
-    # M6: the gate resolves in TWO places -- the second one hard-armed inside
-    #     the branch.  This is GH #418 exactly: an ungated behaviour change
-    #     riding inside a gated fix under a comment that still claims the gate.
+    # M6: [RE-ANCHORED 2026-09-07] THE PROMOTE IS SILENTLY UNDONE.  Somebody
+    #     re-gates the resolver on the promoted id.  Nothing about the tree looks
+    #     wrong -- the comment still says PROMOTED, check_armed_wiring still
+    #     passes because it only asks whether a call site exists -- but 'ckpush'
+    #     is in no armed string ever again, so the conjunct is frozen FALSE (the
+    #     `pullcad` trap, AGENTS.md) and every real turbo game silently returns
+    #     to the inherited 8 * 30.  BRIBED on BOTH source-text pins, so the only
+    #     thing left that can catch it is the behavioural assertion that turbo
+    #     answers 480 with nothing armed.
     "M6": [(HERO,
-            "\t-- [ckpush] threshold resolves in X.GetPushCommitTime -- see its header.\n"
-            "\tif J.IsPushing( bot )\n",
-            "\t-- [ckpush] threshold resolves in X.GetPushCommitTime -- see its header.\n"
-            "\tlocal nExtra = J.IsSoakCandidate( 'ckpush' ) and 0 or 0\n"
-            "\tif nExtra == 0 and J.IsPushing( bot )\n")],
+            "\tif J.IsModeTurbo()\n",
+            "\tif J.IsModeTurbo() and J.IsSoakCandidate( 'ckpush' )\n"),
+           (TEST,
+            "    assert(n == 0, string.format(",
+            "    assert(n >= 0, string.format("),
+           (TEST,
+            "    assert(src:find('if J%.IsModeTurbo%(%)%s*\\n%s*then%s*\\n%s*return 8 %* 60'),",
+            "    assert(src:find('return 8 %* 60'),")],
     # M7: THE MEASUREMENT GOES BLIND.  The corpus scan is pointed at a glob that
     #     matches nothing, so "no frame below 240 has Phantasm" and "12 frames in
     #     the band" both become statements about an empty set -- and both would
@@ -154,9 +177,19 @@ MUTANTS = {
     # M11: the census stops seeing the tree.  "exactly 1 inline * 30 site left"
     #      would then be a claim about an empty scan -- and it would read as 0,
     #      so the assertion has to be two-sided to survive this.
+    # ⚠ RE-ANCHORED 2026-09-07, AND THE RE-ANCHOR IS THE POINT.  The old target
+    #   was the whole `io.popen('find ' .. dir .. ' -name "*.lua" 2>/dev/null')`
+    #   line.  That line acquired the shared FARM_ONLY_FIND_CLAUSE (GH #365 §2 /
+    #   #438) some time after this stand landed, so the target string went
+    #   ABSENT: M11 has been ABORTing -- scoring nothing, and taking the stand's
+    #   exit code to 1 -- ever since, while state.json still recorded 12/12
+    #   CAUGHT.  Same family as GH #550: a mutant whose anchor no longer matches
+    #   changes nothing and the stand still prints a verdict.  The anchor is now
+    #   the SHORTEST load-bearing fragment (the glob itself), which is the part
+    #   the mutant is actually about.
     "M11": [(TEST,
-             "io.popen('find ' .. dir .. ' -name \"*.lua\" 2>/dev/null')",
-             "io.popen('find ' .. dir .. ' -name \"*.luaX\" 2>/dev/null')")],
+             "-name \"*.lua\" '",
+             "-name \"*.luaX\" '")],
     # M12: the registered-not-fixed TWIN is silently repaired.  One lever per
     #      round is a rule, and rubick is DOMAIN-EMPTY, so this edit ships an
     #      unvalidatable behaviour change with no gate and no ruling.
