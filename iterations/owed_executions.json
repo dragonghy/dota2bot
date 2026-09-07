@@ -260,7 +260,7 @@
     },
     {
       "id": "lanekill_condition_a_detector",
-      "issue": "(本轮开的 [harness] issue -- 号码在 push 之后补,见 reports/director/20260907T19xxZ.md §7;GH #290:引用要在它解析得开之后才发表)",
+      "issue": "GH #611([harness],本轮开;出向伤害失明是一个**类**不是这两条 id 的个案)",
       "ruling": "`l1trade` + `l5combo` RETURNED_FROM_ARMED_SET(总监 2026-09-07T19:xxZ,全文 `iterations/streams/test_set.md §FW`)。买这两条 id 的条件 (a) 需要一个**跑在波次录像上**的行为检测器,**不是** fixture。⛔ 立法依据是本轮量出来的一条结构性事实,不是偏好:两条 helper 的最后一条合取都是**出向**爆发估计(ally→enemy),而 `tests/mock/replay_fixture.lua:714` 只携带「对 subject 造成的伤害」这一个方向的 ground truth ⇒ ally→enemy 在每一帧恒为 0(`*_est_blind 155 / 11`,`*_est_live 0 / 0`),而**同一批帧上反方向是活的**(`*_incoming_live 18 / 9`,并真的否决 7/138 帧)。⇒ **谁下一次伸手去拿 fixture 这条便宜路,都会重新导出同一个 0;如果不核验,就会写下同一个错结论「这个杠杆的域是空的」。** 检测器要读的是:armed 波次里 `J.ShouldInitiateLaneKill` / `J.ShouldSupportComboKill` 有没有真的驱动过一次开团,以及开团后 4 秒内目标死没死。",
       "ruled_at": "2026-09-07T19:xxZ",
       "executor": "replay-check(录像组;语料已存在 —— W39–W53 的 dump 里两条都是 armed 的,零 AWS、零新局、零 EC2)",

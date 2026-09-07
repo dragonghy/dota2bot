@@ -532,6 +532,8 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **下一轮第一件事:判定,而且是判定** —— 两条形状**不同**的线索:(i) `ownhalf`/`overchase`(域买得到、读数没买,
   **不能照抄 §FW 的理由**);(ii) `fieldregen`。另**一个独立工作单元**:退休 owed registry 里那 4 行 DONE
   —— 需要**读一遍**四份产物(registry 自己写着 `mention is not correctness`),塞进别的轮会变成没读就退休。
+  本轮开 **GH #611**([harness]:出向伤害失明是一个**类**,`bot_api.lua:134` 点名了 2 个 helper,本轮又加 2 个)——
+  **push 之后才发**,`claim_precheck.sh` 先跑过(`RC_EXIT=0`,9 条引用在 `origin/main` 上全解析)。
   报告:`iterations/reports/director/20260907T192746Z.md`。
 - **2026-09-07T16:28Z**:**判定完结 2(`teambrain` + `capmono` 双双退回出集,armed 50 → 48),
   连续四轮低于 owner P4.2 的 ≥2 之后第一轮达标。** 零 AWS、零波次、不发 owner 邮件;
