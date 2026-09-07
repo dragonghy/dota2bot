@@ -12468,3 +12468,64 @@
     **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
     **动态半(GH #124)未跑也不声称**。
     **Token**:`TOKENS total_in=13,477,172 out=88,674 turns=91`。
+- **2026-09-07T06:30Z**:**补窟窿轮,两件都是本组自己欠的**。零 EC2、S3 只读、零 CE,
+  **未改 `bots/` 一行**。
+  - **(1) 上一轮 `6eaebe38` 带进 trunk 的 python RED 修好了**。批测台 06:12Z 溯源到位,
+    且它那句判读**是对的、本轮照办**:「前三例是门把正常动作误判成红,**本例是门抓到了
+    一个真的漏做的步骤** ⇒ 修落地方,不修门」。`HP_CENSUS` 补两行(都 MIRROR):
+    `zusultstrand_domain:HP_GATE` → `hero_zuus.lua:1520` `nHealthPercentage <= 0.28`;
+    `:ULTCASH_HP_GATE` → `jmz_func.lua:8190` `J.GetHP( bot ) > 0.45`。
+    ⚠️ **两个数不许收敛**:0.28 是 `zusultstrand` 骑着的已发货合取项,0.45 是**另一个 id**
+    `ultcash` 的门,overlap 层能单独报那一桶**正因为 0.28 <= 0.45**(已加方向断言)。
+    顺手钉了同族两个半径(`ULTCASH_RADIUS`→1200 环、`CHASE_RADIUS`→`X.nUltCashChaseRadius`)。
+    **变异台四死四**:检测器改数(M1/M2)、**已发货 Lua 改数(M3)**、整条合取项删掉(M4),
+    四个都翻红;还原后 `git diff --stat` 两文件均空。`DSC_EXIT=0`;
+    全量 `tests/run_py_tests.sh` **110 passed / 0 failed / 1 uncertifiable**
+    (`test_selfcheck_lua_leg.py`,先于本轮存在,**没跑成不是通过**)。
+  - **(2) ⭐ 上一轮新欠的「重扫 §9 `cmrangedhp` / §6 `wkbonefight`」——前提是错的,账退回**。
+    那条欠账写的是「那两份读数是用**按名字取时间序**的老写法出的」;**读源码当场翻**:
+    `cmrangedhp.real_hero_streams` 按 `(hero, idx)`+出生时刻取(自带
+    `PASS illusion_stream_dropped`),`wkbonefight` 走 `entities.frames_by_hero`(按 `idx`
+    分流 + horn 前才留 + 同名两条留活得久的那条,**不让排序决定**)——**两处都比
+    `zusultstrand` 的修法更早**。
+    **把读法结论变成读数(4 局 77,944 行)**:`(idx, t)` **逐行唯一**(`{1: 77944}`)⇒
+    按 idx 取 + 按 t 排序是全序,**行序不确定性无处可入**;`index_by_t` 的 0.1s 桶
+    **碰撞 0 次**;而**按名字取**同一时刻最多叠 **25 行**(g4 drow_ranger **25 条流**,
+    g1 luna 17 条)——`ep_died 82→198` 的来源在这里看得见,只是没落在这两个模块上。
+    ⇒ **两份既有读数不作废,不重扫。**
+  - **(3) 顺手买到的更强一条:`entities.death_times` 按英雄名取,但这 4 局没被幻象污染**。
+    每个事件死亡拿**本体自己的 hp 序列**(`hp>0 → hp<=0`)在 ±2s 内对:
+    **`ev=170 hp=170 uncorroborated=0`**,**40 个「局×英雄」格子逐格相等**,
+    含 luna(17 流)、drow_ranger(25 流)。这是两台互不相干仪器的**第二次逐局吻合**
+    (上一轮是 Zeus 152 局 741 对 741)。**变异台**:注入一行假幻象死亡 ⇒ 当场
+    `uncorroborated=1 at t=[300.0]` ⇒ `0` 不是量具太松。
+    ⚠️ **诚实边界**:4 局不是全集,只 2 局带大量幻象流;结论是「这批语料里没找到污染」,
+    **不是**「dumper 保证不发幻象死亡行」。
+  - **⚠️ 未被本轮洗白的既有限度**:`cmrangedhp` 的 `died_in_window` 是**按小兵名字**归因的
+    UPPER bound(小兵在战斗日志里连 `idx` 都没有),精确谓词是 `killed_by_frostbite`。
+    **那是小兵名字问题,不是幻象问题,不要合并记账。**
+  - **给自己立的门(本组三次漏登记:08-29 / 09-03 / 09-07)**:
+    **落地任何新检测器前先跑 `python3 tests/test_detector_source_constants.py`**(<2s)。
+  - **下一轮第一件事**:(1) **§5 那一帧钉 fixture**
+    (`spot_20260827_091422_…_15b77f__20260827_091703_slot12` zuus `t=473.1`;
+    **本轮已把该局 `.dem` + timeline 拉到手过**,工作单元换成补窟窿才没做);
+    (2) hero-38/hero-39 请总监先裁,**hero-39 点名本组**(`cullthresh_domain.py:215`
+    闭区间 vs 半开,**已连欠四轮**);(3) hero-32/33 等 GH #581 落地。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;`tpreach_domain.py` 补 `by_seed`
+    (**已连欠十轮**);§3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝
+    (GH #529);`outlatch` 重扫;`campbind` 等 #475;**#477 重 dump 仍是本组的球**。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 34 轮 / #421 第 33 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260907T064925Z.md`。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(S3 只读,零 EC2、零 CE);
+    `DUMPER_EXIT=0`(cache HIT `46fe9c6a2b084f9b`);4 局 `DL/DUMP_EXIT=0`;
+    `DSC_EXIT=0`;`PYTRUNK_EXIT=2`(**110 passed / 0 failed / 1 uncertifiable**——
+    退出码 2 是那一条「没跑成」,不是失败);`CM_SELFCHECK_EXIT=0`(65 PASS / 0 FAIL)、
+    `WK_SELFCHECK_EXIT=0`(56 PASS / 0 FAIL);`ROWID_EXIT=0`、`DEATHCHECK_EXIT=0`、
+    变异台 M1–M5 各自按预期翻红。
+    ⛔ **证据纪律 3 第四十八次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`);**第二十七次登记:自检在本容器不是「约 20s」**
+    (本轮 > 120s)。自检那条 `TRUNK RED` 是**开工时(修之前)**的树,与修后读数不矛盾。
+    **铁律 6**:静态半与 push 读数见报告 §7;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not
+    passed」行可抄**;**动态半(GH #124)未跑也不声称**。

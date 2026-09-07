@@ -347,6 +347,15 @@ HP_CENSUS = {
     'illumove_pairs:HP_CUT':             ('MIRROR', 'illusions.lua X.ConfuseEnemyWithIllusions `J.GetHP(bot) < 0.4` -- the branch `illureal` opens; pinned below'),
     'wandbleed_trigger:HP_MAX':          ('MIRROR', "the 'wandbleed' branch ceiling `nHPrate < 0.45` in ability_item_usage_generic.lua item_magic_wand; pinned below"),
     'wandbleed_trigger:HP_MIN_EXCLUSIVE': ('MIRROR', "J.ShouldDrinkWandInLimbo's 25% floor -- the SAME shipped literal wandlimbo_domain:HP_FRAC mirrors; pinned below"),
+    # [replay-check 2026-09-07] Landed unregistered with zusultstrand_domain.py
+    # (6eaebe38, replay-check 04:27Z) and turned trunk python RED on a clean
+    # tree ~1h45m later -- the same shape as the 2026-08-29 and 2026-09-03
+    # notes above, and the THIRD time this stream landed the module without the
+    # rows.  Both numbers are mirror claims made in prose in that module's own
+    # comments (`nHealthPercentage <= 0.28`, "J.IsDyingUnderAttack's HP gate"),
+    # and a mirror claim that is only prose is a comment: pinned below.
+    'zusultstrand_domain:HP_GATE':       ('MIRROR', 'hero_zuus.lua ConsiderR retreat branch `nHealthPercentage <= 0.28`, the conjunct guarding X.zuus_ShouldCashUltBeforeDeath; pinned below'),
+    'zusultstrand_domain:ULTCASH_HP_GATE': ('MIRROR', "J.IsDyingUnderAttack's `J.GetHP( bot ) > 0.45` early-out (jmz_func.lua); pinned below"),
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
     'detect:LIMBO_HP':                   ('INDEPENDENT', 'shares 0.40 with the proxy by coincidence'),
@@ -1200,6 +1209,59 @@ check('the exclusive band is non-empty (min < max)',
       WBT.HP_MIN_EXCLUSIVE < WBT.HP_MAX,
       '(min=%r max=%r -- an inverted band files every cast as shared)'
       % (WBT.HP_MIN_EXCLUSIVE, WBT.HP_MAX))
+
+# --------------------------------------------------------------------------
+# [replay-check 2026-09-07] zusultstrand_domain's four source-facing constants.
+# The two HP ones are the census rows added above; the two radii are the same
+# class of claim (the module names a Lua site in a comment and then retypes the
+# number), and the domain reading of 2026-09-07T04:20Z -- 1,843 frames / 257
+# episodes -- is only about `zusultstrand` while all four still equal their
+# sites.  Note the two HP numbers are NOT the same constant: 0.28 is the shipped
+# retreat-branch conjunct the armed term rides behind, 0.45 is a DIFFERENT id's
+# (`ultcash`) early-out, and that module's overlap layer reports the second as a
+# separate bucket precisely because 0.28 <= 0.45.  Converging them would be a
+# defect, so each is pinned to its own site.
+import zusultstrand_domain as ZUS                       # noqa: E402
+
+ZUUS_LUA = os.path.join(ROOT, 'bots', 'BotLib', 'hero_zuus.lua')
+
+eq('zusultstrand_domain.ULTCASH_HP_GATE mirrors IsDyingUnderAttack\'s HP early-out',
+   float(ZUS.ULTCASH_HP_GATE),
+   literal('J.IsDyingUnderAttack',
+           r'J\.GetHP\(\s*bot\s*\)\s*>\s*(?P<n>[\d.]+)'))
+eq('zusultstrand_domain.ULTCASH_RADIUS mirrors that helper\'s enemy ring',
+   float(ZUS.ULTCASH_RADIUS),
+   call_arg('J.IsDyingUnderAttack', 'J.GetNearbyHeroes', index=1,
+            where={2: 'true'}))
+eq('zusultstrand_domain.CHASE_RADIUS mirrors X.nUltCashChaseRadius',
+   float(ZUS.CHASE_RADIUS), assignment('X.nUltCashChaseRadius', ZUUS_LUA))
+
+# 0.28 sits in ConsiderR, whose body is far too large to anchor on the function
+# alone -- and `nHealthPercentage` is compared in several branches of that same
+# function, so "the first match" is the reading the anchor exists to prevent.
+# Anchor on the CALL to X.zuus_ShouldCashUltBeforeDeath, which is what makes
+# this conjunct the armed term's companion, over the comment-stripped file (the
+# wandbleed idiom above) so the prose in that branch cannot satisfy the search.
+ZUUS_SRC = '\n'.join(
+    l for l in open(ZUUS_LUA, encoding='utf-8').read().splitlines()
+    if not l.strip().startswith('--'))
+check('X.zuus_ShouldCashUltBeforeDeath still has exactly ONE call site',
+      ZUUS_SRC.count('X.zuus_ShouldCashUltBeforeDeath( bot )') == 1,
+      str(ZUUS_SRC.count('X.zuus_ShouldCashUltBeforeDeath( bot )')))
+ZUS_HP = re.search(
+    r'X\.zuus_ShouldCashUltBeforeDeath\(\s*bot\s*\)[\s\S]{0,200}?'
+    r'nHealthPercentage\s*<=\s*([\d.]+)', ZUUS_SRC)
+check('the retreat branch still carries its nHealthPercentage conjunct',
+      ZUS_HP is not None,
+      '-- the clause left the branch, so zusultstrand_domain.HP_GATE now '
+      'bounds a domain that does not exist')
+if ZUS_HP:
+    eq('zusultstrand_domain.HP_GATE mirrors that conjunct',
+       float(ZUS.HP_GATE), float(ZUS_HP.group(1)))
+check('the two HP gates are distinct numbers, low one first (0.28 <= 0.45)',
+      ZUS.HP_GATE < ZUS.ULTCASH_HP_GATE,
+      '(gate=%r ultcash=%r -- inverting them makes the overlap layer report '
+      'the whole domain)' % (ZUS.HP_GATE, ZUS.ULTCASH_HP_GATE))
 
 OA_SRC = OA.read_source_constants()
 eq('odaoe is gated by exactly one soak id', OA_SRC['gate_ids'], ['odaoe'])
