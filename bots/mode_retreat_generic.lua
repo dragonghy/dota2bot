@@ -233,7 +233,19 @@ function GetDesireHelper()
     -- 1600 ring empty, where the guards below tolerate company.
     -- GATED on soak candidate 'stayfield2' (turbo-only): this line is INERT
     -- in every shipped game until that id is armed and promoted.
-    if J.ShouldRegenNotWalkHome(bot) then
+    -- [pgchannel] THE CHANNEL IS THE RETREAT. Nothing in the chain below has any
+    -- notion of "I am already leaving, by the fastest exit there is", so a
+    -- retreat floor fired on a mid-channel bot spends the scroll and leaves the
+    -- hero where it stands -- this file's own J.ShouldAbandonTpChannel note says
+    -- how ("the caller raises retreat desire so the move order cancels the
+    -- channel"). Witnessed on f_260819_222030_jugg_tp_start.
+    -- A VETO, not a conjunct on one guard: the first shape of this fix sat on
+    -- the pushguard floor above and was measured to be a NO-OP on its own frame
+    -- (0.92 -> 0.75, the next floor down, from a promoted guard). Its two
+    -- releases live in the helper; the burst one is live, tpwatch's is not yet.
+    -- GATED on soak candidate 'pgchannel' (turbo-only): INERT in every shipped
+    -- game until that id is armed.
+    if J.ShouldLetTpChannelFinish(bot) then
         return BOT_MODE_DESIRE_NONE
     end
 

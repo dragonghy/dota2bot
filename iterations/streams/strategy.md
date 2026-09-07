@@ -27,6 +27,46 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0PGCHANNEL. **【2026-09-07T13:40Z 新增,**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+   工作流第 1 步扫 `[strategy]` open issue —— `#595`/`#590`/`#582`/`#578`/`#575`/`#572`/`#568`
+   (本组前七轮已交付、等总监裁)与 `#558`(已认领并交回)⇒ **无未认领的带帧证据条目**;
+   产出 gated 候选 **`pgchannel`**(`J.ShouldLetTpChannelFinish` + `mode_retreat_generic` 唯一调用点,
+   **未 armed**,P4.2 冻结期 = FROZEN-HOLD)、`tests/test_pgchannel_veto.lua`(**7/7**)、
+   `tests/_pgchannel_sweep.lua` / `tests/_posture_domain_sweep.lua`、
+   `tools/agent/mutstand_pgchannel.sh`(**8/8 CAUGHT,零 SURVIVED**)、`state.json:pgchannel_20260907`;
+   报告 `iterations/reports/strategy/20260907T134000Z.md`;**armed 串一字未动、`queue.json` 一字未动**;
+   零 AWS、零 S3、零 EC2、零波次。**总线 = GH #597。**】**
+   **⭐ 主判据(可复用,超出本主题):一个「窄」的修法窄到只压住**一条**竞标者时,
+   它是不是修复,取决于**第二条竞标者是谁 —— 而那是个读数,不是设计判断。**
+   第一版按最窄原则写成 `J.ShouldAbortDeepSoloPush(bot) and not <exempt>`,
+   在**它自己的证据帧**上实测 **0.92 → 0.75**:接手的是 `J.ShouldRetreatLaneBurst`
+   (**lanesurv 族、PROMOTED、活的**,7:17 仍在其对线期域 `t < 8*60` 内)。
+   **0.75 取消一条 TP 读条和 0.92 一样彻底** ⇒ 那一版只改了一个数字,
+   **而它的每一条 gate-plumbing 断言都会通过**(id 在、闸在、调用点在、方向是严格子集)。
+   抓住它的唯一东西是**把 `mode_retreat_generic` 的真 `GetDesireHelper` 开在真帧上、两条腿都读**。
+   ⇒ 缺陷不是 pushguard 的,是**整条链**的 ⇒ 改成 VETO 坐在链**之上**。
+   **⭐⭐ 缺陷本身**:`J.ShouldAbortDeepSoloPush` 是 PROMOTED、每局 turbo 都活,撤退消费点是链上第一条(0.92);
+   这条路径**从没问过「我是不是已经在走了」**,而后果是这棵树**自己**写在 `J.ShouldAbandonTpChannel`
+   抬头里的:「the caller raises retreat desire so the move order cancels the channel」。
+   证据帧 `f_260819_222030_jugg_tp_start` t=437.1(`modifier_teleporting` **elapsed 0.1**,
+   深度>2500,lich 476u/viper 739u,最近队友 4000+)⇒ 真链读数 **0.92**;
+   同一局下一帧 `..._jugg_tp_eaten` t=439.5 = 结果(**卷轴已花 `tp_cd 37.7`、hp 733→313、人还在同一深处**)。
+   **⚠️ 两条界**:(i) `.dem` 说不出**哪条指令**打断了读条(TP 读条不被伤害打断 ⇒ 自陈移动指令是首选解释,
+   但同 2.4s 内一次晕眩给出一样的两帧;无 bot 侧日志可闭合);
+   (ii) **撤退欲望不是唯一竞标者** ⇒ **本杠杆移走撤退那条闸,不承诺读条落地**。
+   **⚠️ 释放腿未被见证**:活的那条 `J.IsIncomingBurstLethal`(无闸纯谓词)**0/23** 帧触发;
+   哑的那条是 `tpwatch`(从未 armed)⇒ 今天只由前者释放。promote 时必须回答 tpwatch 有没有跟着走。
+   **⛔ 下一格(本组下一轮第一项)**:先扫未认领 `[strategy]` issue(带帧证据优先);
+   否则 —— 主体**仍必须**是一个 `bots/` 行为改动,且**不必再跑一次族级域价钱**
+   (读数已在 `tests/_posture_domain_sweep.lua`,110 fixtures / **1021 live frames**):
+   按域从大到小取 —— (1) **`ownhalf` 的 51 帧 ownhalf-only**,本族**最大**的一块未买证据的域,
+   且该 id gated 未 promote;(2) `overchase` 的 (a)/(d) 两条腿(iso∧deep **50 对 → 只有 3 帧触发**);
+   ⚠️ `oc_lowally_is_self` **112** vs `oc_lowally_near` **74** 是**设计意图**(被追的那个自己继续跑)
+   **不是缺陷**,不要拿它当杠杆;(3) `J.ShouldPunishDive` 的 `pairs(tEnemies)` 缺 `or {}`
+   (两个姐妹都有,而它是 PROMOTED、每帧从 `mode_team_roam` 的 GetDesire 调用)——
+   `pd_raised` **0/1021** 作不了证,**只能当 issue 交出去,不能当本组行为改动的主体**。
+   **不要**再从 `ConsiderItemDesire` 的单引号族里找(0PINEVADE 已定价三条)。
+
 0PINEVADE. **【2026-09-07T10:40Z 新增,**认领开工自检的 **TRUNK RED 3/84 Lua detector**(它挡住**全队**铁律 6 的动态那半);
    工作流第 1 步扫 `[strategy]` open issue —— `#590`/`#582`/`#578`/`#575`/`#572`/`#568`(本组前六轮已交付、等总监裁)
    与 `#558`(已认领并交回)⇒ **无未认领的带帧证据条目**;
@@ -6319,6 +6359,57 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-07T13:40Z(**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**。
+  `[strategy]` open issue 本轮扫过 `#595`/`#590`/`#582`/`#578`/`#575`/`#572`/`#568`
+  (本组前七轮已交付、等总监裁)与 `#558`(已认领并交回,触发条件是 P4.2 解冻)
+  ⇒ **无未认领的带帧证据条目**。开工自检 **EXIT=124(400s 超时,死在 `trunk health (python)` 上)**
+  —— **超时不是通过**,trunk 的 python 那侧本轮没人看过;在它之前的几条腿干净
+  (unlanded / citation / **stable anchor 6/6** / **promote-atom OK, FROZEN none**)。
+  ⚠️ **第 10 次**当轮第一条命令撞上它对**管道**的拒绝。
+  产出 gated 候选 **`pgchannel`**(**未 armed**,P4.2 冻结期 = FROZEN-HOLD)、
+  `tests/test_pgchannel_veto.lua`(**7/7**,真实帧正/负控制)、
+  `tests/_pgchannel_sweep.lua` + `tests/_posture_domain_sweep.lua`(两台仪器)、
+  `tools/agent/mutstand_pgchannel.sh`(**8/8 CAUGHT,零 SURVIVED**)、
+  `state.json:pgchannel_20260907`;报告 `iterations/reports/strategy/20260907T134000Z.md`;
+  **armed 串一字未动、`queue.json` 一字未动**。零 AWS、零 S3、零 EC2、零波次。
+  **总线 = GH #597。**
+  **⭐ 缺陷:撤退链里没有一条守卫知道「我已经在走了,而且走的是最快的那条路」。**
+  `J.ShouldAbortDeepSoloPush` 是 **PROMOTED、每局 turbo 都活**,它的撤退消费点是链上**第一条**
+  (0.92);而这棵树**自己**在 `J.ShouldAbandonTpChannel` 抬头写着后果 ——
+  「the caller raises retreat desire so the move order cancels the channel」。
+  证据帧 `f_260819_222030_jugg_tp_start` t=437.1:`modifier_teleporting` **elapsed 0.1**
+  (读条刚起)、深度>2500、lich 476u/viper 739u、最近队友 4000+;把**真** `GetDesireHelper`
+  开在这一帧上 = **0.92**。同一局下一帧 `..._jugg_tp_eaten` t=439.5 是结果:
+  **没有 modifier_teleporting、`tp_cd 37.7`(卷轴已花)、hp 733→313、人还在同一个深处**。
+  **⭐⭐ 本轮最该被读的:第一版是个 no-op,而只有把真链开在真帧上才说得出来。**
+  第一版是 pushguard 那条闸上的 `and not <exempt>` 合取项 ⇒ 实测 **0.92 → 0.75**,
+  接手的是 `J.ShouldRetreatLaneBurst`(**lanesurv 族,PROMOTED,活的**,7:17 仍在其对线期域内)。
+  **0.75 取消读条和 0.92 一样彻底** ⇒ 那版只改了一个数字,**而它的每一条 gate-plumbing 断言都通过**。
+  ⇒ **缺陷不是 pushguard 的,是整条链的** ⇒ 改成 **VETO**,与另外两条 veto 一起坐在链**之上**。
+  钉在测试第四条断言 + 变异台 **M6**(M6 被抓两次:放置断言 + armed 读数)。
+  **可复用:一个「窄」修法窄到只压住一条竞标者时,它是不是修复取决于第二条竞标者是谁 ——
+  而那是个读数,不是设计判断。**
+  **⚠️ 两条界,都写进了源码**:(i) `.dem` 说不出**哪条指令**打断了读条(TP 读条不被伤害打断,
+  「自陈移动指令」是首选解释且那条 0.92 是量出来的,但同 2.4s 内一次晕眩会给出一样的两帧;
+  无 bot 侧日志可闭合);(ii) **撤退欲望不是唯一竞标者** —— 别的 mode 赢下拍卖照样取消读条,
+  本轮测的东西看不见它们 ⇒ **本杠杆移走撤退那条闸,不承诺读条落地**。
+  **⚠️ 释放腿未被见证**:活的那条 `J.IsIncomingBurstLethal`(**无闸纯谓词**)在 **0/23** 帧触发;
+  哑的那条是 `tpwatch`(从未 armed)⇒ **今天这条 veto 只由前者释放**。
+  **交出去、本组不裁**:`jugg_tp_eaten` 上 `tpwatch` 与本 veto 答案相反(该帧已掉 36% 最大生命,
+  正是 tpwatch 要放弃的构型;而地面真值是读条在**离落地约 0.5s** 时被打断、卷轴照花、人照留在深处)。
+  **域**(110 fixtures / **1021 live frames**):channeling **23**,其中 shipped ≥0.75 的 **4** 帧
+  armed 后 **4/4 释放**;与 pushguard 触发域交集 **1**;armed 后 20/23 帧读数变化。
+  **姿态族域价钱一并量出**(`_posture_domain_sweep.lua`,下一轮不必重跑):
+  pushguard depth **58**/solo **18**/fires **4**;`ShouldPunishDive` shipped **28**、
+  `ownhalf` **79**(**ownhalf-only 51**);`overchase` 794 对 / iso∧deep **50** / fires **3**。
+  **两条定价后拒绝**:pushguard 队友否决腿不过滤幻象(敌人腿过滤)⇒ 域 **0/40**;
+  `ShouldPunishDive` 的 `pairs(tEnemies)` 缺 `or {}`(两个姐妹都有)⇒ `pd_raised` **0/1021**,
+  作不了证,只登记不落。
+  **下一格(下一轮第一项)**:先扫未认领 `[strategy]` issue;否则主体仍必须是 `bots/` 改动,
+  按已量到的域从大到小取 —— **`ownhalf` 的 51 帧 ownhalf-only 是本族最大的一块未买证据的域**;
+  其次 `overchase` 的 (a)/(d) 两条腿(50 对 → 3 帧);
+  ⚠️ `oc_lowally_is_self` **112** vs `oc_lowally_near` **74** 是**设计意图**不是缺陷,不要拿它当杠杆;
+  **不要**再从 `ConsiderItemDesire` 单引号族里找。)
 - 2026-09-07T10:40Z(**认领开工自检的 TRUNK RED 3/84 Lua detector** —— 它挡住**全队**铁律 6 的动态那半。
   `[strategy]` open issue 本轮扫过 `#590`/`#582`/`#578`/`#575`/`#572`/`#568`(本组前六轮已交付、等总监裁)
   与 `#558`(已认领并交回)⇒ **无未认领的带帧证据条目**。开工自检 **worst exit 3**

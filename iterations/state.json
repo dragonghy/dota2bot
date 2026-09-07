@@ -6763,5 +6763,34 @@
     "dust_unmeasurable_not_empty": "item_dust 携带者 24 帧,但**三条分支在本语料上都买不到读数**,且这是 UNMEASURABLE 不是 EMPTY:分支 1 要 `dInfo.time_since_seen` 落在 **(0.2, 0.5)**,而 tests/mock/replay_fixture.lua 自己声明「每个 fixture 全可见、每次目击都是当前的」⇒ 它只会发 **0 或 999**,那个窗口**结构性不可达**;分支 3 实测 `J.IsUnitWillGoInvisible` 在 5 个「有敌人在 1050 内」的帧上命中 **0/5**;分支 2 靠 `bot:WasRecentlyDamagedByPlayer`,走 mock 的 `^Was -> false` 默认。",
     "instrument_note_already_known": "顺带核对并**确认这不是新发现**:`bot:GetActiveMode()` 在全部 **1021** 个 live 帧上读 **0**(mock 的 `^Get -> 0` 泛默认)。这已经是**第十三条 world assertion**,tests/test_activemode_world_assertion.lua + tests/test_activemode_call_site_census.lua(compare_lines==209)已登记。**本轮唯一的增量、且尚未登记**:那 209 行**按算符分层**是 `== <named mode>` 与 `~= <named mode>` 两类,前者被 mock 压成恒 **FALSE**、后者压成恒 **TRUE**(即**空过的守卫**),而 world-assertion 文件的散文只写了 FALSE 那一半(「Ten shipped J predicates degenerate to false」)。本组用自己的 python 粗扫读到 129 / 87(**未**用该 census 的 strip_line_comment,故与其 209 不可直接相减)⇒ **交给下一轮或总监:用 census 自己的扫描器补一层算符分层。**",
     "aws_spend": "none"
+  },
+  "pgchannel_20260907": {
+    "owner": "strategy",
+    "date": "2026-09-07T13:40Z",
+    "bots_lua_changed": true,
+    "status": "GATED, NOT ARMED -- P4.2 入集冻结期,本轮不申请入集(FROZEN-HOLD)。",
+    "cand_id": "pgchannel",
+    "backlog_item": "章程 0PINEVADE 的「下一格」:主体必须是一个 bots/ 行为改动,从本组自己的范围(TP 纪律 / 支援仲裁 / 推进-防守姿态)里取一个域一定非零的谓词,先跑域价钱再动手。",
+    "headline": "撤退链里没有任何一条守卫知道「我已经在走了,而且走的是最快的那条路」。J.ShouldAbortDeepSoloPush 是 PROMOTED、每局 turbo 都活的,它的撤退消费点是链上第一条(0.92);本文件自己在 J.ShouldAbandonTpChannel 的抬头里写着后果 ——「the caller raises retreat desire so the move order cancels the channel」。于是一个正在读条 TP 的英雄被 0.92 顶回去:卷轴花掉、人还留在原地。",
+    "witnessed_frame": "f_260819_222030_jugg_tp_start,t=437.1(7:17):juggernaut 深度 >2500、最近队友 4,000+、lich 476u / viper 739u 在身上、modifier_teleporting **elapsed 0.1**(读条刚起)、tp_cd 0。把 mode_retreat_generic 的**真** GetDesireHelper 开在这一帧上:**0.92**,就是 pushguard 那条闸。同一局下一帧 f_260819_222030_jugg_tp_eaten(t=439.5)是结果:没有 modifier_teleporting、**tp_cd 37.7(卷轴已花)**、hp 733->313、人还站在 240u 外的同一个深处。",
+    "domain_price": "110 fixtures / 1021 live hero frames(tests/_pgchannel_sweep.lua):**channeling 23**;其中 shipped 撤退读数 >= 0.75 的 **4** 帧(0.92 jugg_tp_start / 0.75 jugg_tp_eaten / 0.974 wk_tower_in_reach DK / 0.777 luna_ring_bid);与 pushguard 触发域的交集 **1** 帧。armed 后 4/4 全部释放,20/23 帧读数变化。姿态族的域价钱另见 tests/_posture_domain_sweep.lua:pushguard depth 58 / solo 18 / fires 4;ShouldPunishDive shipped 28、ownhalf 79(ownhalf-only 51);overchase 794 pairs / iso∧deep 50 / fires 3。",
+    "the_first_draft_was_a_no_op_and_only_the_real_chain_said_so": "第一版写成 pushguard 那条闸上的 `and not <exempt>` 合取项。在**它自己的证据帧**上实测:0.92 -> **0.75** —— 接手的是 J.ShouldRetreatLaneBurst(lanesurv 族、**PROMOTED、活的**,7:17 仍在它的对线期域内)。0.75 取消读条和 0.92 一样彻底 ⇒ 那一版只改了一个数字。**任何 gate-plumbing 测试都会放它过去。** 抓住它的是「把真链开在真帧上、两条腿都读」。⇒ 缺陷不是 pushguard 的,是**整条链**的 ⇒ 改成 VETO,和另外两条 veto(ShouldStayAndRegen / ShouldRegenNotWalkHome)一起坐在链**之上**。钉死在 tests/test_pgchannel_veto.lua 的第四条断言 + 变异台 M6。",
+    "releases": "两条:(a) **活的** —— J.IsIncomingBurstLethal(bot, 3.0),一个**没有闸**的纯谓词,armed 当天就生效:可见敌人此刻就能在读条窗口内打死我,读条就不是出路;(b) **今天是哑的** —— J.ShouldAbandonTpChannel('tpwatch',从未 armed)。**如实登记:今天这条 veto 只由 (a) 释放**,而 (a) 在本语料 **0/23** 帧上触发过 ⇒ **释放腿未被见证**。它是 `not`,所以 arm/promote tpwatch 只会把 veto 变**窄**。pgchannel 若要 promote,必须同时回答 tpwatch 有没有跟着走。",
+    "disagreement_handed_off": "f_260819_222030_jugg_tp_eaten 上两条守卫的答案相反:该帧读条已掉 36% 最大生命(1155 -> 313 中的 420),正是 tpwatch 写来要放弃的构型;而地面真值是**读条在离落地约 0.5s 时被打断、卷轴照花、人照留在深处**。本组**不裁**这一条(tpwatch 不在本组范围且是哑的),把它交出去。",
+    "direction": "veto 返回 NONE,且只在 modifier_teleporting 在身时返回 ⇒ 只能**降低**撤退欲望,永远不能新建或抬高一条闸。",
+    "limits": [
+      "因果的界:.dem 说不出**哪一条指令**打断了那次读条。TP 读条不被伤害打断,所以「自己发的移动指令」是首选解释,而那条 0.92 是**量出来的**;但同一 2.4s 内的一次晕眩会产生完全一样的两帧。无 bot 侧日志可闭合(AGENTS.md:print() 到不了控制台)。",
+      "杠杆的界:撤退欲望不是唯一竞标者。任何别的 mode 赢下拍卖照样发指令、照样取消读条,而本轮测的东西看不见那些 mode。本杠杆**移走撤退那条闸,不承诺读条落地**。",
+      "释放腿 (a) 在本语料 0/23 帧触发 ⇒ 未被见证(不是构造性豁空:它是活代码,能触发)。"
+    ],
+    "artifacts": [
+      "bots/FunLib/jmz_func.lua: J.ShouldLetTpChannelFinish(新)",
+      "bots/mode_retreat_generic.lua: 唯一调用点,坐在 RETREAT GUARD CHAIN BEGIN 标记**之上**",
+      "tests/test_pgchannel_veto.lua(新,7/7,真实帧正/负控制)",
+      "tests/_pgchannel_sweep.lua(新,语料普查)",
+      "tests/_posture_domain_sweep.lua(新,姿态族域价钱)",
+      "tools/agent/mutstand_pgchannel.sh(新,**8/8 CAUGHT,零 SURVIVED**)"
+    ],
+    "next_baton": "总监:pgchannel 登记备案(冻结期 FROZEN-HOLD,不入集);录像组/总监:tpwatch 与本 veto 在 jugg_tp_eaten 上的分歧。GH #597。"
   }
 }

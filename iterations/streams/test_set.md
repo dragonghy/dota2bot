@@ -1284,3 +1284,69 @@ sweep 走的施法距离/伤害常数、gate 位置、id 计数、已发货两�
 
 - **`outlatch` 的混杂**:两条腿从此都带 `slotpush` 的否决 ⇒ **差分里的混杂走了**,但**跨越今天的 (a) 依旧不可比**(W38 / W39–W53 / W54 起,三段)。已写进 `owed_executions.json`。
 - **同族剩下的两处 pid 缺陷**(`aba_push.lua:584/587`)在录像组 09-03 报告 §7 里量过:同一 107 fixture 上**一次都不答 TRUE**(0 anyTrue / 0 flip)⇒ 与本条不同,它们**连 fixture 侧的域都没有**,不要照抄本条的路径。
+
+## §FU 2026-09-07T13:40Z 协同组 —— **读条中的 TP 就是撤退本身**,而撤退链上第一条闸(PROMOTED)每帧都在取消它;本节最该被读的是 **§FU.2:第一版是个 no-op,而抓住它的不是任何一条 gate 断言,是把真链开在真帧上**
+
+### §FU.0 一句话
+
+新 gated 候选 **`pgchannel`**(`J.ShouldLetTpChannelFinish`,`bots/mode_retreat_generic.lua`
+唯一调用点,坐在 `RETREAT GUARD CHAIN: BEGIN` 之上)。**未 armed**:P4.2 冻结期,
+本节**不申请入集**(FROZEN-HOLD),**不申请波次**,`queue.json` 一字未动。
+全文档案 `iterations/state.json:pgchannel_20260907`,报告
+`iterations/reports/strategy/20260907T134000Z.md`,总线 **GH #597**。
+
+### §FU.1 缺陷与证据帧
+
+`J.ShouldAbortDeepSoloPush` 是 **PROMOTED**(每局 turbo 都活),其撤退消费点是守卫链
+**第一条**(0.92)。这条路径**从未问过「我是不是已经在走了」**,而后果由这棵树自己写在
+`J.ShouldAbandonTpChannel` 抬头:「the caller raises retreat desire so the move order
+cancels the channel」。
+**证据帧** `f_260819_222030_jugg_tp_start` t=437.1:`modifier_teleporting` **elapsed 0.1**、
+深度 >2500、lich 476u / viper 739u、最近队友 4,000+ ⇒ 把**真** `GetDesireHelper` 开在这一帧上
+读到 **0.92**。同一局下一帧 `..._jugg_tp_eaten` t=439.5 是**结果**:无 `modifier_teleporting`、
+`tp_cd 37.7`(**卷轴已花**)、hp **733 → 313**、人还站在 240u 外的同一个深处。
+
+### §FU.2 ⭐ 主判据:第一版是 no-op,且**每一条 gate-plumbing 断言都会放它过去**
+
+第一版写成 pushguard 那条闸上的 `and not <exempt>` 合取项。实测 **0.92 → 0.75**:
+接手的是 `J.ShouldRetreatLaneBurst`(**lanesurv 族、PROMOTED、活的**,7:17 仍在其对线期域
+`t < 8*60` 内)。**0.75 取消读条和 0.92 一样彻底。**
+⇒ **可复用一条:一个「窄」修法窄到只压住一条竞标者时,它是不是修复,取决于第二条竞标者是谁 ——
+而那是个读数,不是设计判断。**
+钉在 `tests/test_pgchannel_veto.lua` 第四条断言 + `tools/agent/mutstand_pgchannel.sh` **M6**
+(M6 被抓两次:放置断言 + armed 读数)。
+
+### §FU.3 域(110 fixtures / **1021 live hero frames**)
+
+`channeling` **23**;其中 shipped 撤退读数 ≥0.75 的 **4** 帧,armed 后 **4/4 释放**;
+与 pushguard 触发域交集 **1**;armed 后 20/23 帧读数变化。
+**姿态族域价钱一并量出**(`tests/_posture_domain_sweep.lua`,下一轮不必重跑):
+pushguard depth **58** / solo **18** / fires **4**;`ShouldPunishDive` shipped **28**、
+`ownhalf` **79**(**ownhalf-only 51**);`overchase` 794 对 / iso∧deep **50** / fires **3**。
+
+### §FU.4 两条界 + 一条未被见证的释放腿(登记,不许当作已解决)
+
+1. **因果的界**:`.dem` 说不出**哪一条指令**打断了那次读条。TP 读条不被伤害打断 ⇒
+   自陈移动指令是首选解释,且那条 0.92 是**量出来的**;但同 2.4s 内一次晕眩会给出一样的两帧。
+2. **杠杆的界**:撤退欲望**不是唯一竞标者** ⇒ **本杠杆移走撤退那条闸,不承诺读条落地。**
+3. **释放腿未被见证**:活的那条 `J.IsIncomingBurstLethal`(**无闸纯谓词**)在 **0/23** 帧触发过;
+   哑的那条是 `tpwatch`(从未 armed)⇒ **今天这条 veto 只由前者释放**。
+   它是 `not` ⇒ arm/promote `tpwatch` 只会把 veto 变**窄**。**`pgchannel` 若要 promote,
+   必须同时回答 `tpwatch` 有没有跟着走。**
+
+### §FU.5 交给总监 / 录像组的一条分歧(本组不裁)
+
+`f_260819_222030_jugg_tp_eaten` 上两条守卫答案**相反**:该帧读条已掉 **36% 最大生命**
+(1155 的 420),正是 `tpwatch` 写来要**放弃**的构型;而地面真值是**读条在离落地约 0.5s
+时被打断、卷轴照花、人照留在深处**。
+
+### §FU.6 产物与门
+
+`bots/FunLib/jmz_func.lua`(一个新谓词)+ `bots/mode_retreat_generic.lua`(唯一调用点);
+`tests/test_pgchannel_veto.lua`(**新,7/7**,真实帧正/负控制);
+`tests/_pgchannel_sweep.lua` / `tests/_posture_domain_sweep.lua`(两台仪器);
+`tools/agent/mutstand_pgchannel.sh`(**8/8 CAUGHT,零 SURVIVED**);
+`state.json:pgchannel_20260907`;**GH #597**。
+铁律 6 静态门:`bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**(冷启自装)。
+动态半:定向过滤 `retreat`/`tp_`/`pgchannel`/`gate_claim`/`push` 合计 **167 tests, 0 failures**;
+**全量套件在本容器未跑完(GH #124)⇒ 登记为「未跑完」,不是「通过」。**

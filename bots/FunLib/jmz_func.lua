@@ -8165,6 +8165,75 @@ function J.ShouldAbortDeepSoloPush( bot )
 	return nDefenders >= 2
 end
 
+-- [pgchannel] THE GUARD ABOVE CAN CANCEL THE EXIT IT IS ASKING FOR.
+-- J.ShouldAbortDeepSoloPush is PROMOTED -- live in every turbo game -- and its
+-- retreat consumer is the FIRST guard in mode_retreat_generic's priority chain
+-- (0.92, a value picked to outbid an active kill-chase). Nothing in that path
+-- asks whether the bot is ALREADY leaving by TP, and this file states the
+-- consequence itself, two screens down, in J.ShouldAbandonTpChannel's own
+-- header: "the caller raises retreat desire so the move order cancels the
+-- channel". So on a deep + solo + two-converging frame where the bot is
+-- mid-channel, the shipped chain spends the scroll and leaves the hero exactly
+-- where the guard just decided he must not be.
+-- WITNESSED, not argued -- f_260819_222030_jugg_tp_start, t=437.1 (7:17):
+-- juggernaut at +2500 depth, nearest ally 4,000+ away, lich 476u and viper 739u
+-- on him, `modifier_teleporting` 0.1s ELAPSED (the channel had just begun),
+-- tp_cd 0. Driving the real chain on that real frame returns 0.92 -- the
+-- pushguard floor, measured, not inferred (tests/_pgchannel_sweep.lua). The
+-- desk's next freeze of the same game, f_260819_222030_jugg_tp_eaten at t=439.5,
+-- is the outcome: no `modifier_teleporting`, tp_cd 37.7 (the scroll is SPENT),
+-- hp 733 -> 313, and the hero still standing at the same deep spot 240u away.
+-- LIMIT, stated because no bot-side logging can close it (AGENTS.md: print()
+-- never reaches the console): a .dem cannot name WHICH order broke that
+-- channel. A TP channel is not broken by damage, so a self-issued move order is
+-- the leading explanation and the 0.92 above is a measured one -- but a stun in
+-- the same 2.4s would produce the same two frames.
+-- ⭐ THE FIRST SHAPE OF THIS FIX WAS A NO-OP ON ITS OWN WITNESSED FRAME, AND
+-- ONLY DRIVING THE REAL CHAIN SAID SO. Written as a `not` conjunct on the
+-- pushguard floor itself, the frame above falls through 0.92 -> **0.75**, from
+-- J.ShouldRetreatLaneBurst -- `lanesurv`-family, PROMOTED, live, and still
+-- inside its laning-phase domain at 7:17 (turbo laning is t < 8*60). A retreat
+-- floor of 0.75 cancels a channel exactly as well as one of 0.92, so that
+-- version changed a number and nothing else. The census that caught it is
+-- tests/_pgchannel_sweep.lua, which drives mode_retreat_generic's real
+-- GetDesireHelper on the real frame in both arms; a gate-plumbing test on the
+-- pushguard conjunct would have passed.
+-- ⇒ THE DEFECT IS NOT PUSHGUARD'S, IT IS THE CHAIN'S: no guard in it has any
+-- notion of "I am already leaving, by the fastest exit there is". So this is a
+-- VETO, and it sits with the other two vetoes ABOVE the chain
+-- (J.ShouldStayAndRegen / J.ShouldRegenNotWalkHome), not inside it.
+-- WHAT IT DOES: while the channel is up, retreat desire is NONE -- the channel
+-- IS the retreat. Two live releases keep that from being unconditional:
+--   * J.IsIncomingBurstLethal( bot, 3.0 ) -- an UNGATED pure predicate, so this
+--     release is live the day the id is armed: if the visible enemies can
+--     already kill me inside the channel window, the channel is not an exit and
+--     holding it is just dying stationary.
+--   * J.ShouldAbandonTpChannel -- `tpwatch`, whose entire job is deciding when
+--     a channel under fire must die. TODAY IT IS INERT (its own 'tpwatch' gate
+--     has never been armed), so state it plainly rather than let the source
+--     imply an arbitration that is not running: today this veto is released by
+--     the burst test alone. It is a `not`, so arming or promoting tpwatch makes
+--     the veto NARROWER, never wider -- and at pgchannel's own promote time the
+--     right question is whether tpwatch went with it.
+-- Direction: the veto returns NONE, i.e. it can only LOWER retreat desire on
+-- frames where the bot is mid-channel -- it can never create or raise a floor.
+-- The push-desire caps in the three push wrappers are left untouched: "do not
+-- push while channeling" is right either way.
+-- LIMIT (second one, and it bounds the whole lever): retreat desire is not the
+-- only bidder. Any other mode that wins the auction issues an order and cancels
+-- the channel just the same, and nothing measured here can see those modes.
+-- This lever removes the retreat floor; it does not promise the channel lands.
+-- Gated turbo + 'pgchannel'; shipped play is unchanged until this id is armed.
+function J.ShouldLetTpChannelFinish( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'pgchannel' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+	if not bot:HasModifier( 'modifier_teleporting' ) then return false end
+	if J.IsIncomingBurstLethal( bot, 3.0 ) then return false end
+	if J.ShouldAbandonTpChannel( bot ) then return false end
+	return true
+end
+
 -- [homeroute -> REMOVED 2026-07-23 by owner directive] "turbo 的原则就是
 -- 尽量少 TP/走路回家": the low-HP-limbo pathology (44 segments/50 games) is
 -- now answered by FIELD REGEN instead -- a mid-game salve re-purchase via
