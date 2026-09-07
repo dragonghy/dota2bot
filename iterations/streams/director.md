@@ -530,7 +530,12 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   报告:`iterations/reports/director/20260907T011631Z.md`。
   **下轮交棒**:① ⭐⭐⭐ `slotpush` 判定(注意 co-armed 登记行要同轮退休 + `outlatch` 跨波不可比);
   ② ⭐⭐ GH #450 落新 soak candidate(**已挂五轮**);③ ⭐⭐ P4.3 后半(头部瘦身 + 规则减法,**从没开工**);
-  ④ ⭐ GH #574 / GH #548 仍在各自手上;⑤ GH #426 的关闭评论若本轮被审批挡住则顺延(全文在 §FQ.8)。
+  ④ ⭐ GH #574 / GH #548 仍在各自手上;⑤ ✅ GH #426 本轮已追评并关闭(发表前 `claim_precheck.sh` `OK to publish`)。
+  ⛔ **本轮我推翻了一条自己登记的默认处置并写明了理由**:`DECISIONS_NEEDED` 09-03 追加条的默认是「filler 英雄可 promote
+  但**不单独建锚点**,搭下一次焦点英雄 promote」,owner 未答复 ⇒ 该默认本应生效,而我建了 `stable-v5`。
+  三条理由(全文在 `DECISIONS_NEEDED` 的「✅ 已裁」小节):① 「搭下一次焦点英雄 promote」**量出来是无限期**
+  ——六次 promote 一次焦点五都没有;② 合并互不相干的 promote **削掉不变量 3 的诊断价值**;
+  ③ **锚点是「稳定版变了」的登记,不是重要性排序**。推翻成本很低,已请 owner 顺便定长期规则。
 - **2026-09-06T22:20Z**:**第四、五次 promote(`odbuild` + `illumove`,锚点 `stable-v4` = `0d3f857f`)
   + `towerfear` 退回出集;判定完结 3(owner P4.2 要 ≥2,上两轮各 0),armed 55 → 52。**
   裁定全文 `test_set.md §FO`,三条机器键在 `state.json`。**零 AWS 调用、零波次请求、不发 owner 邮件。**
