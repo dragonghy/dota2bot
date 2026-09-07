@@ -272,6 +272,29 @@ local PINNED = {
     "c12,retnear,towerreach | GetDesireHelper | J.IsWkReincarnationArmed | wkreincarnmp,wkreinctr | bots/mode_retreat_generic.lua",       -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldAbandonTpChannel | tpwatch | bots/mode_retreat_generic.lua",                      -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldCounterTradeKite | l1kite | bots/mode_retreat_generic.lua",                       -- W
+    -- [pgchannel 20260907] The outer half is (W) for the reading the 'roshdist'
+    -- row already carries -- c12/retnear/towerreach are sibling statements in the
+    -- same 500-line GetDesireHelper, not a block enclosing the veto paragraph, so
+    -- arming 'pgchannel' alone is not arming a no-op. This is the SAME row shape
+    -- the two lines around it carry.
+    "c12,retnear,towerreach | GetDesireHelper | J.ShouldLetTpChannelFinish | pgchannel | bots/mode_retreat_generic.lua",                  -- W
+    -- [pgchannel 20260907] The second row is a REAL nesting, not the wide net,
+    -- and it is (I). J.ShouldLetTpChannelFinish's last release is
+    -- `if J.ShouldAbandonTpChannel(bot) then return false end`, i.e. the
+    -- conjunction `... and not tpwatch-helper`; un-armed that helper returns the
+    -- literal `false`, which is the identity element of `and not`. So arming
+    -- 'pgchannel' alone measures 'pgchannel', and arming or promoting 'tpwatch'
+    -- can only make the veto NARROWER -- the direction the helper's own header
+    -- states and the one that cannot turn a measured lever into a no-op.
+    -- ⚠ THE ROW ALSO CARRIES A SIDE EFFECT, which is why it is worth a paragraph
+    -- rather than a letter: J.ShouldAbandonTpChannel stamps
+    -- `bot.tpChannelStartHealth` ABOVE its own 'tpwatch' gate. That bookkeeping
+    -- is preserved rather than lost -- when the veto fires, GetDesireHelper
+    -- returns before the chain's own call to that helper (the row two lines up),
+    -- but pgchannel has already called it on that same frame, so the stamp still
+    -- happens exactly once per frame. An (I) reading about RETURN VALUES would
+    -- have missed that; it is checked here because the callee is not pure.
+    "pgchannel | J.ShouldLetTpChannelFinish | J.ShouldAbandonTpChannel | tpwatch | bots/FunLib/jmz_func.lua",                             -- I
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRegenNotWalkHome | stayfield2 | bots/mode_retreat_generic.lua",                   -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/mode_retreat_generic.lua",             -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRetreatPastMidline | midguard | bots/mode_retreat_generic.lua",                   -- W

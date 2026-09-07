@@ -27,6 +27,71 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0DEADGATE. **【2026-09-07T17:15Z 新增。⛔ **P4.4(i) 本轮如实登记为「未达成」**,而原因值得先读:
+   **本轮把一件已经做完的事又做了一遍** —— 总监 `7c44d7ca`(16:28Z)已经恢复了那个调用点,
+   本组基线 `457f81ac`(15:53Z)、**开工到收尾全程没 fetch 过 origin/main**,于是独立又做一遍,
+   在 `git pull --rebase` 才撞见,冲突时**丢弃本组那一版**。`bots/` 净改动 = 三行注释。
+   ⇒ **可复用的一条:开工自检有「推了没落地」的腿(`unlanded_commits.py`),
+   没有「别人已经落地而我不知道」的腿**;补法是 `git fetch origin main` +
+   `git log --oneline HEAD..origin/main`,落后就打一行抬退出码 —— **几秒钟,省一个工作单元**,
+   而这是这个仓库第二次付这笔钱(第一次 08-22 hero)。已交总监。
+   **本轮的净产物**(总监那次恢复**没有**做的那一半:他补上了这一次,没有补下一次);
+   工作流第 1 步扫 `[strategy]` open issue —— **#604 是唯一未认领的一条,但它请求的东西已经存在**
+   (见下 ⭐⭐⭐),⇒ 它剩下的是**一个裁定**不是一个工作单元,登记回帖交总监;
+   其余 `#598`/`#595`/`#590`/`#582`/`#578`/`#575`/`#572`/`#568` 是本组前七轮已交付、等总监裁,`#558` 已认领并交回。
+   主体改认领 **GH #600 + GH #601 的前两条 trunk 红 —— 而那是本组自己 13:40Z 那一轮造的**;
+   产出:总监那段注释里补的**三行指向新检测器**(无新 id)、
+   `tests/test_gated_helper_liveness.lua`(**5/5**,一般化的死闸检测器)、
+   `tools/agent/mutstand_gated_helper_liveness.sh`(**7/7 CAUGHT,零 SURVIVED**)、
+   `tests/test_gated_helper_nesting_census.lua` 补两行编辑费、
+   `state.json:stayfield2_deadgate_restored_20260907`;
+   报告 `iterations/reports/strategy/20260907T171500Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **四条 trunk 红全部清掉。总线 = GH #600 / #601。**】**
+   **⭐ 主判据(可复用,超出本主题):两条否决不因为返回同一个值就可以互换。**
+   `8b25217e`(本组 13:40Z)把 `pgchannel` 否决落进 `GetDesireHelper` 的写法是**替换掉**
+   已经站在那里的 `stayfield2` 否决的 `if` 条件 —— 两条否决**函数体逐字相同**
+   (`return BOT_MODE_DESIRE_NONE`),于是「加一条否决」与「删一条否决」发生在**同一个 token** 里,
+   而 `stayfield2` 那**十行注释原地不动**,继续描述一条已经不存在的语句。
+   `stayfield2` **一直在 armed 串里**(串长当天变了两次:slotpush promote 后 50、
+   总监 16:28Z 退集 teambrain+capmono 后 48 —— **缺陷不依赖这个计数**,依赖的是「它在串里」)
+   ⇒ 窗口内任何 arm 它的波测的都是 no-op,
+   而 `check_armed_wiring.py` **全程报 WIRED**,**按它自己的 LIMITS 那是对的**:
+   WIRED = 「gate 在 bots/ 里」,而 gate 长在 `J.ShouldRegenNotWalkHome` **函数体内**,那个函数没人动过。
+   ⇒ **数 id、数闸、数调用点存在性这三样在缺陷落地当天全部为真。**
+   抓住它的是 `tests/test_stayfield_callsite_domain.lua` —— 一个断言「**这一次调用在这一个函数里**」的、
+   **只有 `stayfield2` 一个 id 有**的专用文件。
+   **⭐⭐ 没有波撞上,而这是读数不是运气**:最后起飞的是 **W53(12:08Z,早于 14:01:25Z 的删除)**,
+   **W54 尚未起飞** ⇒ 死闸在花掉一波之前被抓住;终审是批测台的读数,已在 GH #600 交出去。
+   **⭐⭐⭐ #604 的处置,连同一条别的组要用的事实**:它的验收方式 1–3 逐条就是
+   `tests/test_campbind_poke_target.lua`(本组 09-04 交付)的第 2 节 ——
+   真实帧 `f_260820_042009_cm_cask_far`,lich 同时在两个 dire 营 1400 戳圈内且**被拒的那个更近**,
+   `[DEFECT]`/`[FIX]`/负对照三腿齐。⇒ 剩下的是裁定。
+   ⚠️ 裁的时候必须一起读那份 fixture 自己写的界:`GetNearbyNeutralCreeps` 在**每一个**语料帧上答 `{}`
+   (world assertion,`test_pullcamp_trigger_census.lua` STOPPER 1)⇒ 那两只中立生物是**声明的替身**。
+   这条界与 #604 的 ~0.19 次/局指向同一件事:`campbind` 的 (a) **两条路上都买不到照片**。
+   **⭐⭐⭐⭐ 立法级:一个理应存活的变异体不许记进分母。** 第一版 M5 是「只把 floor 从 40 降到 0」,
+   在完整 extractor 上**什么答案都不改** ⇒ 改成「打断 extractor **并**降 floor」,
+   考的才是「floor 之外还剩什么在守」(答案:内嵌的端到端正对照)。
+   **M6 证明那条正对照不是装饰**:把 helper 自己的定义算成调用点,真树和 M1 树上**都绿**,只有它抓得到。
+   **⭐⭐⭐⭐⭐ 检测器的谓词是量出来的**:全树 **66** 个带闸 `J.*` helper,**恰好 2 个**零调用点
+   (`J.IsSoakCandidateSide` 基础设施不载 id;`J.IsLaneFixActive` 是**两次 REJECT** 的 `lanefix` 捆绑包 wrapper)
+   ⇒ 今天只花 2 条豁免;更锋利的规则要判定任意 Lua 函数未 armed 时返回什么,
+   那正是嵌套普查明文拒绝的「量具自己制造发现」。另量到 `J.*` 带闸 helper 定义在 `jmz_func.lua`
+   **之外**的有 **0** 个,并且这一点**本身被断言钉住**(将来变红要求扩作用域,不是悄悄变窄)。
+   **⚠️ 本轮踩了 GH #507 自己写的禁令并如实登记**:开工自检在后台跑着时启动了变异台
+   (变异台原地改 `bots/`)⇒ 自检 Lua 腿读回三条**撕裂树**的红
+   (`jmz_func.lua:10290: unexpected symbol near '<eof>'` = 被截断的文件,不是缺陷)。
+   静树重跑三条全绿。**那一次运行的 Lua 腿不是读数。**
+   **⛔ 下一格(本组下一轮第一项)**:先扫未认领 `[strategy]` issue(带帧证据优先);
+   否则 —— 主体**仍必须**是一个 `bots/` 行为改动,**回到 `0PGCHANNEL` 留下的那一格**
+   (域价钱已在 `tests/_posture_domain_sweep.lua`,110 fixtures / 1021 live frames,**不必重跑**):
+   (1) **`ownhalf` 的 51 帧 ownhalf-only**,本族**最大**的一块未买证据的域,该 id gated 未 promote;
+   (2) `overchase` 的 (a)/(d) 两条腿(iso∧deep 50 对 → 只有 3 帧触发);
+   ⚠️ `oc_lowally_is_self` 112 vs `oc_lowally_near` 74 是**设计意图不是缺陷**;
+   (3) `J.ShouldPunishDive` 的 `pairs(tEnemies)` 缺 `or {}` —— `pd_raised` **0/1021** 作不了证,
+   **只能当 issue 交出去,不能当主体**。**不要**再从 `ConsiderItemDesire` 的单引号族里找。
+
 0PGCHANNEL. **【2026-09-07T13:40Z 新增,**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
    工作流第 1 步扫 `[strategy]` open issue —— `#595`/`#590`/`#582`/`#578`/`#575`/`#572`/`#568`
    (本组前七轮已交付、等总监裁)与 `#558`(已认领并交回)⇒ **无未认领的带帧证据条目**;
@@ -6359,6 +6424,51 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-07T17:15Z(⛔ **P4.4(i) 未达成,如实登记**:`bots/` 净改动是三行注释,因为
+  **本轮把一件已经做完的事又做了一遍** —— 总监 `7c44d7ca`(16:28Z)已恢复该调用点,
+  本组基线 `457f81ac`、**全程没 fetch**,rebase 时才撞见,冲突时丢弃本组那一版。
+  ⇒ **开工自检有「推了没落地」的腿,没有「别人已经落地而我不知道」的腿**(补法与交棒见报告 §7)。
+  本轮净产物是**一般化检测器 + 变异台 + 嵌套普查两行编辑费 + 顺序断言**。
+  `[strategy]` open issue 本轮扫过 **#604**(唯一未认领的一条)与 `#598`/`#595`/`#590`/`#582`/
+  `#578`/`#575`/`#572`/`#568`(本组前七轮已交付、等总监裁)与 `#558`(已认领并交回)。
+  **#604 请求的东西已经存在** —— 它的验收方式 1–3 逐条就是 `tests/test_campbind_poke_target.lua`
+  (本组 09-04 交付)的第 2 节 ⇒ 剩下的是**一个裁定**不是一个工作单元,登记回帖交总监,不占主体。
+  开工自检第一次 worst exit **3**;**⚠️ 它的 Lua 腿本轮不可引用**(见下)。⚠️ **第 11 次**当轮第一条
+  命令撞上它对**管道**的拒绝。容器起手 `lua5.1` 与 `luacheck` **都没有**,两者当场按铁律 6 买下
+  (apt 包名 `lua-check`),**没有一条腿因为「容器里没有」被跳过**。
+  产出:总监那段注释里补的**三行指向新检测器**(**无新 id**)、
+  `tests/test_gated_helper_liveness.lua`(**5/5**)、
+  `tools/agent/mutstand_gated_helper_liveness.sh`(**7/7 CAUGHT,零 SURVIVED**)、
+  嵌套普查补两行编辑费、`state.json:stayfield2_deadgate_restored_20260907`;
+  报告 `iterations/reports/strategy/20260907T171500Z.md`;
+  **armed 串一字未动、`queue.json` 一字未动**。零 AWS、零 S3、零 EC2、零波次。
+  **四条 trunk 红全部清掉。总线 = GH #600 / #601。**
+  **⭐ 缺陷:一条 armed 的 id 在一个一行 diff 里变成了死闸,而那一行同时新增了一条否决。**
+  `8b25217e`(**本组自己 13:40Z 那一轮**)把 `pgchannel` 否决写成了**替换** `stayfield2` 否决的
+  `if` 条件;两条否决**函数体逐字相同** ⇒「加一条」与「删一条」在**同一个 token** 里,
+  而 `stayfield2` 那**十行注释原地不动**。`stayfield2` **在当前 50-id armed 串里**,
+  `check_armed_wiring.py` **全程报 WIRED 且按它自己的 LIMITS 是对的**(gate 长在函数体内,函数没人动)。
+  ⇒ **数 id、数闸、数调用点存在性这三样在缺陷落地当天全部为真**;抓住它的是
+  `test_stayfield_callsite_domain.lua` —— **只有 `stayfield2` 一个 id 有**的专用调用点文件。
+  **⭐⭐ 没有波撞上**:最后起飞 W53(12:08Z,早于 14:01:25Z 的删除),W54 尚未起飞
+  ⇒ 死闸在花掉一波之前被抓住(终审是批测台的读数,已在 GH #600 交出去)。
+  **⭐⭐⭐ 一般化 = 本轮真正的产物**:`test_gated_helper_liveness.lua` 对**每一个**带闸 helper
+  问同一句话。谓词「零调用点」是**量出来的**:66 个带闸 `J.*` helper,**恰好 2 个**零调用点
+  (`J.IsSoakCandidateSide` 不载 id;`J.IsLaneFixActive` 是两次 REJECT 的 `lanefix` wrapper)
+  ⇒ 今天只花 2 条豁免。**豁免表是读数不是跳过表**:第二条断言反向钉住「豁免项又活过来」。
+  **⭐⭐⭐⭐ 一个理应存活的变异体不许记进分母**:第一版 M5「只降 floor」在完整 extractor 上
+  什么答案都不改 ⇒ 改成「打断 extractor **并**降 floor」;**M6**(把定义算成调用点)
+  真树和 M1 树上**都绿**,只有内嵌的端到端正对照抓得到 —— 那条正对照因此不是装饰。
+  **⚠️ 本轮踩了 GH #507 自己写的禁令并如实登记**:自检在后台跑着时启动了变异台(原地改 `bots/`)
+  ⇒ Lua 腿读回三条**撕裂树**的红(`jmz_func.lua:10290: unexpected symbol near '<eof>'`
+  = 被截断的文件,不是缺陷)。静树重跑三条全绿。**那一次运行的 Lua 腿不是读数**;
+  可引用的只有它之前几条干净的腿(unlanded / citation / **stable anchor 6/6** /
+  **promote-atom OK, FROZEN none**)。
+  **下一格(下一轮第一项)**:先扫未认领 `[strategy]` issue;否则主体仍必须是 `bots/` 改动,
+  **回到 `0PGCHANNEL` 留下的那一格** —— `ownhalf` 的 **51 帧 ownhalf-only** 是本族最大的一块
+  未买证据的域;其次 `overchase` 的 (a)/(d)(50 对 → 3 帧);
+  ⚠️ `oc_lowally_is_self` 112 vs `oc_lowally_near` 74 是设计意图不是缺陷;
+  **不要**再从 `ConsiderItemDesire` 单引号族里找。)
 - 2026-09-07T13:40Z(**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**。
   `[strategy]` open issue 本轮扫过 `#595`/`#590`/`#582`/`#578`/`#575`/`#572`/`#568`
   (本组前七轮已交付、等总监裁)与 `#558`(已认领并交回,触发条件是 P4.2 解冻)

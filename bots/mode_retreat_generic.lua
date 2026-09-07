@@ -254,7 +254,10 @@ function GetDesireHelper()
     -- `J.ShouldRegenNotWalkHome(bot)` with `J.ShouldLetTpChannelFinish(bot)`,
     -- leaving its comment block above (still describing a call that was no
     -- longer there) and taking the ONLY call site of an ARMED id to zero.
-    -- Restored above. Shipped play never moved (both helpers are false when
+    -- Restored above; `tests/test_gated_helper_liveness.lua` (strategy 17:15Z)
+    -- is what now turns red on the NEXT one of these, for every gated helper
+    -- rather than for the one id that happened to own a call-site test.
+    -- Shipped play never moved (both helpers are false when
     -- their id is unarmed) -- what died was the MEASUREMENT: every wave from
     -- that tree would have read `stayfield2` as a no-op and called it "tested,
     -- no effect". Both lines are vetoes returning the same NONE, so with one id
