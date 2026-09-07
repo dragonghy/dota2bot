@@ -350,8 +350,9 @@ HP_CENSUS = {
     # [replay-check 2026-09-07] Landed unregistered with zusultstrand_domain.py
     # (6eaebe38, replay-check 04:27Z) and turned trunk python RED on a clean
     # tree ~1h45m later -- the same shape as the 2026-08-29 and 2026-09-03
-    # notes above, and the THIRD time this stream landed the module without the
-    # rows.  Both numbers are mirror claims made in prose in that module's own
+    # notes above.  THREE occurrences of the class now, across TWO streams:
+    # 08-29 (wandlimbo) and this one are replay-check's; the 09-03 trio landed
+    # with a strategy commit.  Both numbers are mirror claims made in prose in that module's own
     # comments (`nHealthPercentage <= 0.28`, "J.IsDyingUnderAttack's HP gate"),
     # and a mirror claim that is only prose is a comment: pinned below.
     'zusultstrand_domain:HP_GATE':       ('MIRROR', 'hero_zuus.lua ConsiderR retreat branch `nHealthPercentage <= 0.28`, the conjunct guarding X.zuus_ShouldCashUltBeforeDeath; pinned below'),
