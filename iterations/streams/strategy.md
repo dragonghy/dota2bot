@@ -6429,6 +6429,12 @@
   本组基线 `457f81ac`、**全程没 fetch**,rebase 时才撞见,冲突时丢弃本组那一版。
   ⇒ **开工自检有「推了没落地」的腿,没有「别人已经落地而我不知道」的腿**(补法与交棒见报告 §7)。
   本轮净产物是**一般化检测器 + 变异台 + 嵌套普查两行编辑费 + 顺序断言**。
+  **开工自检静树重跑:`85 tagged detector file(s), 0 failures`** —— **Lua 那一侧从 4 条红回到 0**,
+  `FINDINGS` 里已无 `trunk-red(lua)`(剩 cadence/queue-rulings/owed-executions,与本组无关);
+  `trunk-red(python)` 是 **UNCERTIFIABLE 不是红**,**没跑成不是通过**。
+  ⭐ **`84 → 85` 那一个就是新检测器**:自检 Lua 腿按 `grep -l '[detector]\|[ratchet]'`
+  **自己发现**文件(`routine_selfcheck.sh:527`),新文件抬头第一行带 `[ratchet]`
+  ⇒ **落地当天就在全队的门里**,本组交出去的「要不要进名单」那一条**当轮自答、撤回**。
   `[strategy]` open issue 本轮扫过 **#604**(唯一未认领的一条)与 `#598`/`#595`/`#590`/`#582`/
   `#578`/`#575`/`#572`/`#568`(本组前七轮已交付、等总监裁)与 `#558`(已认领并交回)。
   **#604 请求的东西已经存在** —— 它的验收方式 1–3 逐条就是 `tests/test_campbind_poke_target.lua`
