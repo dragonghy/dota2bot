@@ -303,6 +303,120 @@
       "recover_verdict_per_run_download: two runs, two separate sub-directories under `soak/` (NOT `validation/`), per GH #225.",
       "pooling: pool the make-up seeds with W53's surviving seed 7154 ONLY -- re-compute the arm md5 at harvest and check it is still e61700f44778dc1ab67166922d22b0bc. Whether 7156 joins that pool is the director's call (GH #592), not the harvest's.",
       "winrate_channel_registered: W53's channel was DEGENERATE at its limit (0 minority-side wins / 179). Register the channel value again; do not quote winrate in either direction while it reads DEGENERATE."
-    ]
+    ],
+    "status_code_outcome": "UNREADABLE, both machines -- the SECOND time this exact window closed unread, and the arithmetic (registered 09-05) predicted it. On-demand machines carry no SIR, so the only possible code is EC2 StateReason.Code, which expires ~1h after termination (GH #375). Read this round at 15:1xZ: `describe-instances --instance-ids i-0e7ed4a3bf4135ea0 i-04aaed93e47e369a7` => DESC2_EXIT=0 with `Reservations: []` (an EMPTY TABLE, not InvalidInstanceID.NotFound -- the empty table is itself the evidence the records aged out); an account-wide filter on terminated,shutting-down,running,pending returned [] as well. Arithmetic: launch 12:22:18/12:22:23Z, last S3 upload 13:03:28Z/13:15:31Z (41.2/53.1 min of work), so both were dead well before 14:14Z and the ~1h record window closed before this round's 15:14Z trigger. The previous round WROTE this obligation down as item 1 of its hand-off and this round executed it as its first AWS action; the code was still gone. => This is not a scheduling failure and no schedule fixes it: a ~3h trigger cadence cannot read a ~1h window opened by a ~45min machine. The durable fix (machine writes its own shutdown.json to S3) is still owed by the director (raised 09-05).",
+    "harvest": {
+      "harvested_at": "2026-09-07T15:1x-15:4xZ",
+      "arm_string_recomputed_from": "the PINNED tree 523f21baf14a03cadfb5df7002ba7124d70375c2 (not origin/main, not this charter's prose): `git show <pin>:iterations/streams/test_set.md | sed -n 2p | tr -d '\\n'` => 51 ids / 460 bytes / md5 e61700f44778dc1ab67166922d22b0bc, byte-identical to the value registered at launch.",
+      "download_layout": "each run synced into its OWN directory (r7144 / r7162 / r7154), never flattened -- this is the R2 guard against the 2026-08-19 same-second basename collision. recover_verdict.py reported source_dirs 3, pooled_basename_dirs_overridden 0.",
+      "overrides_used": "NONE -- no --allow-pooled-basenames, no --allow-unparseable, no --min-arm-depth. There is therefore no 'this is a SKIP, not a pass' line to quote.",
+      "per_run": {
+        "7144": {
+          "RV_EXIT": 0,
+          "files": 48,
+          "loaded": 48,
+          "unparseable": 0,
+          "ab_games": 27,
+          "ba_games": 15,
+          "arm_depth": 19.29,
+          "scored_games": 42,
+          "gpm": -18.88,
+          "xpm": -6.73,
+          "deaths": 0.27,
+          "last_hits": -0.85,
+          "strata": "gpm ab -47.10 / ba +9.35 / side -28.23 flip; xpm ab -19.20 / ba +5.73 flip; deaths ab +0.62 / ba -0.08 flip; last_hits ab +14.38 / ba -16.08 flip"
+        },
+        "7162": {
+          "RV_EXIT": 0,
+          "files": 64,
+          "loaded": 64,
+          "unparseable": 0,
+          "ab_games": 40,
+          "ba_games": 18,
+          "arm_depth": 24.83,
+          "scored_games": 58,
+          "gpm": 31.24,
+          "xpm": 18.33,
+          "deaths": -0.37,
+          "last_hits": 2.58,
+          "strata": "gpm ab -57.57 / ba +120.04 / side -88.81 flip; xpm ab -47.11 / ba +83.78 flip; deaths ab +1.15 / ba -1.89 flip; last_hits ab +4.34 / ba +0.81 NO flip"
+        }
+      },
+      "both_seeds_clear_the_depth_gate": "19.29 and 24.83 games/leg, both >= the GH #269 floor of 8. thin_arm_seeds is empty. This is what the make-up run was bought for and it delivered: the two seeds W53 lost to capacity are back, at depth."
+    },
+    "pooled_reading": {
+      "_scope": "W53 = 3 of 4 seeds. Pool = the two make-up seeds (7144, 7162) + W53's one clean survivor (7154). Seed 7156 is NOT in this pool: whether a reclaimed-but-scored seed may be pooled is GH #592 and belongs to the director, not this desk. This is an intra-wave completion on ONE tree and ONE 51-id string -- it is NOT the GH #363/#449 cross-wave pooling fork.",
+      "RVPOOL_EXIT": 0,
+      "input": "files_seen 160 / games_loaded 160 / source_dirs 3 / unparseable 0 / pooled_basename_dirs_overridden 0; scored_games 142, unfinished 0",
+      "per_seed_gpm": "7144 -18.88 (ab -47.10 / ba +9.35); 7154 -32.77 (ab -97.24 / ba +31.69); 7162 +31.24 (ab -57.57 / ba +120.04)",
+      "per_seed_arm_depth": "7144 19.29 / 7154 17.95 / 7162 24.83 -- all three clear the GH #269 floor, thin_arm_seeds empty",
+      "mean": {
+        "gpm": -6.8,
+        "xpm": -3.04,
+        "deaths": 0.07,
+        "last_hits": -1.17
+      },
+      "comps_better": "gpm 1/3, xpm 1/3, deaths 1/3, last_hits 1/3",
+      "strata_registered_not_concluded": "gpm ab -67.30 / ba +53.69 / side -60.50 / sign_flip / side>arm 3/3; xpm ab -27.71 / ba +21.63 / side -24.67 / flip / 2/3; deaths ab +0.80 / ba -0.66 / side +0.73 / flip / 3/3; last_hits ab +11.50 / ba -13.85 / side +12.68 / flip / 2/3. Per rule 4(i-c) these are swap-averaged estimators, so a sign flip is an IDENTITY (|side| > |arm|), not a verdict -- registered, not concluded.",
+      "movement_vs_the_two_seed_reading": "The wave's headline gpm went -8.40 (2 seeds, BOTH leg-truncated) -> -6.80 (3 seeds, all three depth-clean). Anything downstream that was scoped off -8.40 was scoped off half a wave with truncated ba legs.",
+      "honest_boundary": "-6.80 is NOT evidence of anything. The three per-seed arms are -18.88 / -32.77 / +31.24, a range of 64.1 gpm around a mean of -6.80; against the GH #30 zero-point (per-seed sigma ~30, so SE ~17 at n=3) this sits inside the noise. What it does support is exactly what iron rule 2(b) asks for and no more: on gpm there is no clear negative. deaths (+0.07) and last_hits (-1.17) remain on the harmful side, comps_better is 1/3 on every one of the four metrics. The ruling is not this desk's.",
+      "winrate_channel": "DEGENERATE, and at the limit: minority side won 0 of 160 finished games (share 0.0000), side census radiant 0 / dire 160. Bounded to 0.500 +/- 0.000. MUST NOT be cited as iron-rule-2(b) support in EITHER direction (GH #352). Together with W53's own 0-of-179 this is 339 consecutive finished games in which radiant never won."
+    },
+    "changeover_measurement": {
+      "_why": "GH #591 asks the director to re-derive reclaim_blind.py's hard-coded `changeover 40.0 min`. This round's corpus measures it DIRECTLY for the first time, off the wave's own analysis files rather than by fitting reclaim outcomes.",
+      "method": "flip = (first ba-leg game START) - launch, where the leg is read from each analysis.json's own `script_version` stamp (`mirror:<cand>:s<seed>:radiant` = ab, `:dire` = ba) and the start is the file's basename timestamp; wall = median `wall_s`; the predicted first ba RESULT is flip + wall, checked against the actual first S3 upload of a ba-leg object.",
+      "readings_min": [
+        {
+          "seed": "7144",
+          "market": "on-demand (make-up)",
+          "flip": 26.98,
+          "wall": 12.18,
+          "predicted_first_ba": 39.17,
+          "actual_first_ba": 39.18
+        },
+        {
+          "seed": "7154",
+          "market": "spot, ran to completion",
+          "flip": 27.1,
+          "wall": 12.18,
+          "predicted_first_ba": 39.28,
+          "actual_first_ba": 39.07
+        },
+        {
+          "seed": "7156",
+          "market": "spot, reclaimed",
+          "flip": 27.75,
+          "wall": 12.18,
+          "predicted_first_ba": 39.93,
+          "actual_first_ba": 39.7
+        },
+        {
+          "seed": "7162",
+          "market": "on-demand (make-up)",
+          "flip": 27.8,
+          "wall": 12.18,
+          "predicted_first_ba": 39.98,
+          "actual_first_ba": 39.52
+        }
+      ],
+      "finding": "The constant is not one number, it is the sum of two measurable terms: flip 27.4 +/- 0.4 min (n=4, spread 0.82) and wall 12.18 min (n=4, identical to 2dp). Their sum is 39.6 +/- 0.4 min, and the hard-coded 40.0 sits at the UPPER EDGE of that band -- which is exactly the shape that produces `paired BEFORE the flip` messages: any machine whose own sum is 39.2-39.9 pairs before 40.0 without anything having moved.",
+      "bracket_violation_leg_1_explained": "seed 7156 `paired after only 39.6 min (BEFORE the 40.0 min flip)`: its 5 ba games uploaded at 39.70 / 39.90 / 40.02 / 40.10 / 40.60 min after launch -- i.e. AFTER its own measured first-ba time of 39.70, all inside the ~2-minute spot interruption grace window that follows the 39.6-min notice. Nothing moved earlier; the model has no term for the grace window.",
+      "bracket_violation_leg_2_explained": "seed 7162 `reclaimed at 48.5 min PAST the flip yet unpaired`: it was not unpaired. Its own row reads ab42/ba3 -- three ba games exist. recover_verdict.py labels that same seed THIN-ARM (depth 5.60 < 8); reclaim_blind.py labels it NO-PAIR. The two tools disagree on one seed, and reclaim_blind's PAIRED column is conflating `ba == 0` with `ba > 0 but below the depth floor`. Fix the label and this leg of the violation disappears without touching any constant.",
+      "recommendation_to_the_director": "Do NOT re-fit 40.0 as a free parameter. Derive it per wave from that wave's own corpus (flip + wall, both read above), and split reclaim_blind's PAIRED column into NO-PAIR / THIN-ARM / PAIRED so it stops disagreeing with recover_verdict on the same input. This desk did not edit the tool: #591 is on the director's desk and the previous aws_run.sh overreach (raised 09-05T15:0xZ) is still un-ruled."
+    },
+    "ab_leg_overshoot": {
+      "_finding": "The ab leg is systematically ~2x the ba leg on machines that were NEVER reclaimed. W53's harvest attributed the ab-heavy shape to reclaim truncation; that is true for the extreme cases (ba 0/3/5) but it is not the baseline. The baseline is already lopsided.",
+      "clean_machine_evidence": "7154 (spot, instance-terminated-by-user) ab29/ba13; 7144 (on-demand make-up, ran to completion) ab27/ba15; 7162 (on-demand make-up, ran to completion) ab40/ba18. Ratio 2.2 / 1.8 / 2.2.",
+      "mechanism": "mirror_ab.sh's collect() flips sides the moment `n >= TARGET` for the current stamp, but the runner keeps 16 slots in flight. At ab start all 16 slots launch together, so the first cohort alone (~16 games, ~12.2 min) already meets a TARGET of 12, and a second cohort has started before the 60s poll notices. ab therefore overshoots to 2-3x TARGET; by the time the ba leg starts the slots are staggered, so ba overshoots only mildly.",
+      "cost_of_it": "arm_depth is the harmonic mean, so it is governed by the THIN leg: 7154's 42 games buy depth 17.95, where a balanced 21/21 would buy 21.0 from the same 42 games (+17%). 7162: 58 games buy 24.83 where 29/29 buys 29.0 (+17%). About one game in seven is paid for and then discarded by the estimator.",
+      "second_order_effect": "Because the flip lands at ~27 min of a ~40-53 min machine life, the ba leg occupies only the LAST ~15-25% of the run. A capacity reclaim after minute ~30 therefore lands on the ba leg specifically -- which is W53 exactly (reclaims at 31.2 / 39.6 / 48.5 min gave ba 0 / 5 / 3). The directional damage the previous harvest noted is not just 'ab runs first'; it is that ab runs first FOR 27 OF THE 40 MINUTES.",
+      "not_fixed_here": "Harness change, not this desk's to make while the aws_run.sh overreach is un-ruled. Filed as an issue."
+    },
+    "cost": {
+      "billing_side_status": "NOT SETTLED THIS ROUND. The budgets snapshot is still stamped 2026-09-07T12:04:15Z -- byte-identical to the previous round's -- and the CE cross-check returns 64.4088949308 to the last digit, the same number the previous round read. Both machines launched at 12:22Z, i.e. AFTER that snapshot, so by construction neither is in either source. Per charter step 2 (b) no incremental reconciliation is attempted.",
+      "machine_hours_bounds": "lower bound, hard: launch -> last S3 upload = 41.2 min (7144) and 53.1 min (7162), i.e. 0.687 h and 0.885 h. Upper bound, soft: the EC2 records had aged out by 15:14Z, so both terminated before ~14:14Z => < 1.87 h. The interval is too wide to tighten the GH #454 on-demand constant; reported as an interval, NOT as a re-derivation.",
+      "gh454_leg_yi2": "Leg (b2) takes the machine-hour mean of `instance-terminated-by-user` machines. These two are on-demand and carry no SIR at all, and their EC2 codes were unreadable, so their contribution to that leg is ZERO -- the same structural hole registered last round: the tighter the spot market, the more make-up machines, and the fewer samples leg (b2) gets.",
+      "declared_pending_this_round": "$2.02 = $0.770 (W53's spot wave, still not in MTD) + $1.25 (these two on-demand machines, the previous round's own conservative estimate). wave_fence.py with that term: projected $66.429, fence $80.00, headroom $13.571, CLEAR."
+    }
   }
 }
