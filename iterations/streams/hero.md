@@ -5190,7 +5190,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   **`X.ConsiderW` 的「先远」冻兵半区拿近兵的血量批准砍远兵。gated `cmfarcreep` 落地,
   `bots/` 有真代码行。** 新 `X.cm_IsFarCreepFloorMet`,新
   `tests/test_cm_far_creep_floor.lua`(**17 例**)+ `tools/agent/mutstand_cmfarcreep.sh`
-  (**10/10 CAUGHT**)。`state.json:cmfarcreep_20260907`、`queue.json:hero-42`、GH issue 本轮开。
+  (**10/10 CAUGHT**)。`state.json:cmfarcreep_20260907`、`queue.json:hero-42`、GH **#612**(本轮开)。
+  落地 commit `1642591b`(已在 main 上,**推在开 issue 之前**,GH #290);`claim_precheck.sh` **EXIT=0 clean**。
   **零 arm、零入集提议**(P4.2 冻结)。AWS **只做了只读身份自举**(为回答 `-119` 的可行性),
   零 EC2、零花费。本轮 [hero] open issue **一条可认领的都没有**(#570 已判待总监裁标签、
   #608 是上一轮自己开的、#593 量具类、#599/#577/#587/#566/#564/#560 均已 gated 落地)
