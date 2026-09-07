@@ -6749,7 +6749,8 @@
     "what_did_not_soften": "域内计数一个都没软化,理由是算术不是保守:`ratchet` 只对「重述语料规模」的量成立;对「这是我的发现」的量,一次行为改动可以把它推**上去**,而 ratchet 对上涨一言不发(wkreinctr 变异台实测 M6 把一个域计数 14 -> 24)。所以 salveyield 的 11/3/2/2/1 仍是等号,并**另加一条嵌套单调断言**(a1>=a2>=...>=a5),让「重新登记」不能只靠改一个字面量蒙混过去。",
     "honest_bound": "salveyield 的重新登记里写明:bots/ 在这段区间**不是静止的**(git log -- bots/ 自 2026-09-05 起含 ckpush/odbuild/illumove 三次 PROMOTE),所以「只有第一行动了」**不构成增长的证明**,只**给出替代解释的界**:任何与该读数相容的行为改动,必须让第 2-5 行逐位不变、同时恰好给第 1 行加两帧。",
     "gates": "luacheck_gate.sh GATE_EXIT=0 CLEAN(未用 RULE6_BYPASS);四个受影响文件 propertarget 4/0、salveyield 29/0、stayfield2 20/0、corpus_scale 10/0;四文件 luacheck 0 警告。Lua 全量套件本轮未跑完 ⇒ 不声称全树绿。",
-    "aws_spend": "none (no EC2, no S3, no dumper, no wave)"
+    "aws_spend": "none (no EC2, no S3, no dumper, no wave)",
+    "issue": "[strategy] GH #595(本轮开立)。顺带交给总监的一条:test_activemode_call_site_census.lua 的 compare_lines==209 补算符分层。"
   },
   "itemdesire_singlequote_priced_20260907": {
     "owner": "strategy",

@@ -36,7 +36,7 @@
    `state.json:corpuspin_110th_20260907` + `state.json:itemdesire_singlequote_priced_20260907`;
    报告 `iterations/reports/strategy/20260907T104000Z.md`;
    **`bots/` 一字未动、armed 串一字未动、`queue.json` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
-   **已交棒总监(甲:六条待裁 + 算符分层)+ 录像组(丙:团战帧,第三次交)。**】**
+   **已交棒总监(甲:六条待裁 + 算符分层)+ 录像组(丙:团战帧,第三次交)。总线 = GH #595。**】**
    **⭐ 主判据:第五次复发,而三条红没有一条是发现。**
    第 110 个 fixture(**1012 → 1021** live frames,**109 → 110** files)打红三个文件,
    逐条读:`r.frames == 1012`、`#corpus().pairs == 73`、`LIVE_FRAMES==1012` ×2 + `SIGN_SUBSAMPLE==109`
