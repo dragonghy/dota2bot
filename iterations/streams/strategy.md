@@ -6551,7 +6551,11 @@
   `[strategy]` open issue 本轮扫过 **#607**(唯一未认领的一条):它请求的两条普查行**已钉且 `nesting_census` 10/10 绿**,
   欠的单臂列按 P4.4 顺延并**已回帖登记,不是掉棒**。
   铁律 6:`luacheck_gate.sh` **GATE_EXIT=0 CLEAN / 0 warnings**,**未用 `RULE6_BYPASS`**;
-  定向 `overchase_midline` **6/6**、`nesting_census` **10/10**,全量套件读数见报告。
+  定向 `overchase_midline` **6/6**、`nesting_census` **10/10**;
+  ⚠️ **全量套件本轮没跑完(GH #124 的形状,不是失败)**:收尾读数 **1107 通过 / 0 failures**,
+  进程仍在跑 —— **这是「没跑完」不是「通过」**,后面的没人看过(报告附录一)。
+  ⚠️ **一处顺序自我登记**:#613/#614 是 push **之前**发的(违 GH #290);#607 回帖已走完整流程
+  (先 push,`claim_precheck.sh` **exit 0 / refused 0**,再发 `#issuecomment-5576354956`)。下一轮起一律先 push(报告附录二)。
   `test_set.md` 新增 **§FY**(**armed 串一字未动** —— 它登记的是「一个 armed id 的**行为内容**变了」);
   `queue.json` **一字未动**;零 AWS、零 S3、零 EC2、零波次。
   报告 `iterations/reports/strategy/20260907T233000Z.md`。**总线 = GH #613 / #614;本条待总监裁。**)
