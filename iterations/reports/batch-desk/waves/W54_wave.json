@@ -1,0 +1,123 @@
+{
+ "wave": "W54",
+ "_note": "Routine test-version-vs-stable-version wave (charter step 4b) on the FULL 46-id member string. Launched 2026-09-07T21:14:49-21:15:11Z, all four machines SPOT. NEW FAMILY: the arm string moved 51 -> 48 -> 46 since W53 (slotpush promoted to stable-v6; teambrain/capmono/l1trade/l5combo all 退回出集), so W54 is NOT poolable with W53 or W52.",
+ "market": "spot",
+ "ref_pin": "--ref took the full 40-char SHA 0d62930936c6d5415efa4fa20f54e4c5a002f646, never a branch name (the run_id of every machine carries it verbatim).",
+ "tree_verified": "git ls-remote origin main read TWICE: once at selection time and once inside the launch script immediately before gate (i), with exit 9 wired on any drift. Both reads returned 0d62930936c6d5415efa4fa20f54e4c5a002f646, and local HEAD == origin/main at launch.",
+ "arm_ids": 46,
+ "arm_bytes": 417,
+ "arm_md5": "cd3b46d4e3ca4a446272b330a09a2751",
+ "arm_string": "tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom",
+ "arm_source": "git show origin/main:iterations/streams/test_set.md line 2, identity RECOMPUTED this round with split(',') (not wc -l, which undercounts a file with no trailing newline). The recomputed triple matches test_set.md's own self-claim byte for byte.",
+ "arm_delta_vs_W53": "-5 ids, +0. slotpush (promoted, stable-v6), teambrain + capmono (director §FV, 退回出集, NOT rejects), l1trade + l5combo (director §FW 19:xxZ, 退回出集 as one pair, NOT rejects). P4.2 freeze holding: zero new admissions.",
+ "pooling_claim": "DO NOT POOL with W52 or W53. Different arm string => different family. W54 opens a new family at 1 seed-slate / 4 seeds.",
+ "seeds": [
+  7789,
+  7527,
+  7529,
+  7719
+ ],
+ "seed_index_note": "seed_roster_index.py --build run BEFORE selection (charter step 5); ROSTER_EXIT=0, index held 237 seeds afterwards.",
+ "seed_selection_note": "Fresh draft, window right-shifted to [7501,7900] (W53's seeds ran up to 7162). Overlap of the window with the freshly built roster index is the EMPTY SET, checked as a set intersection. Term-popcount distribution over the 400 unused seeds in the window: {\"0\": 37, \"1\": 132, \"2\": 131, \"3\": 80, \"4\": 19, \"5\": 1}. Selection maximised the MINIMUM per-term carrier count over all 4-subsets of the 60 highest-popcount unused seeds, tie-broken on the total (best = min 2 / total 17).",
+ "carrier_terms": "crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus",
+ "carrier_terms_gate": "CARRIER_TERMS derived from the 46 armed ids: 10 hero-scoped, 36 generic, 0 unresolved => 7 terms. The TERMS line is byte-identical to W53's: the two ids that left the set this round (l1trade/l5combo) were both generic, so dropping them cannot move a hero term.",
+ "carrier_gate": "CARRIER_GATE ids=10 seeds=4 exit=0 (seed_draft.py --assert-carrier-from-arm, terms DERIVED from the arm string, not hand-typed). Per-term carrier counts: {\"crystal_maiden\": 2, \"lion\": 2, \"obsidian_destroyer\": 4, \"pudge\": 2, \"skeleton_king\": 2, \"spirit_breaker\": 2, \"zuus\": 3} -- every term >= 2, the same bar W50/W52/W53 cleared.",
+ "acquisition_config_note": "`--slots 16 --hours 2 --rec-slots 8 --games 12`, byte-identical to W39-W53. --rec-slots 8 passed EXPLICITLY (spot_run.sh's default is 1). A --dry-run was executed first and its plan line read before any live launch.",
+ "expected_games": "~96 scored (4 seeds x 12 games x 2 legs) registered for comparability ONLY. This pre-registered quantity has been running ~75% low (W49 168, W51 214, W52 214) and must NOT be used as the denominator for an under- or over-delivery claim in either direction.",
+ "machines": [
+  {
+   "seed": 7527,
+   "instance_id": "i-0f54672e00323252c",
+   "az": "us-west-2a",
+   "az_requested": "us-west-2a",
+   "instance_type": "c6i.4xlarge",
+   "run_id": "spot_20260907_211447_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_e6fdc1",
+   "lifecycle": "spot (verified per-machine by describe-instances InstanceLifecycle; the run_id's `spot_` prefix is a hard-coded string and is NOT evidence)",
+   "launch_time": "2026-09-07T21:14:49.000Z",
+   "launched_at": "2026-09-07T21:14:49.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544)",
+   "sir": "sir-evzfmfvj",
+   "sir_state_at_launch": "active / fulfilled",
+   "create": "2026-09-07T21:14:48.000Z",
+   "sir_source": "describe-spot-instance-requests, read FIRST-HAND IN THE LAUNCH ROUND (GH #556): SIR rows age out in ~1-3h",
+   "update": "fill at harvest from SIR Status.UpdateTime -- reclaim_blind.py (gate iv) reads THIS key, not terminated_at"
+  },
+  {
+   "seed": 7529,
+   "instance_id": "i-09623dfd42eb501c2",
+   "az": "us-west-2c",
+   "az_requested": "us-west-2b",
+   "az_note": "RING REDIRECT: us-west-2b answered InsufficientInstanceCapacity (max retries 4) and the #256 ring moved this machine to us-west-2c. Per #256 this is an in-ring redirect, NOT a market degradation -- it stayed spot and the instance type never changed.",
+   "instance_type": "c6i.4xlarge",
+   "run_id": "spot_20260907_211450_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_8b5d8e",
+   "lifecycle": "spot (verified by InstanceLifecycle)",
+   "launch_time": "2026-09-07T21:15:05.000Z",
+   "launched_at": "2026-09-07T21:15:05.000Z",
+   "sir": "sir-2b57nfch",
+   "sir_state_at_launch": "active / fulfilled",
+   "create": "2026-09-07T21:15:04.000Z",
+   "update": "fill at harvest"
+  },
+  {
+   "seed": 7719,
+   "instance_id": "i-02b609861c82db5bf",
+   "az": "us-west-2c",
+   "az_requested": "us-west-2c",
+   "instance_type": "c6i.4xlarge",
+   "run_id": "spot_20260907_211506_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_77e00d",
+   "lifecycle": "spot (verified by InstanceLifecycle)",
+   "launch_time": "2026-09-07T21:15:08.000Z",
+   "launched_at": "2026-09-07T21:15:08.000Z",
+   "sir": "sir-cywzp69g",
+   "sir_state_at_launch": "active / fulfilled",
+   "create": "2026-09-07T21:15:08.000Z",
+   "update": "fill at harvest"
+  },
+  {
+   "seed": 7789,
+   "instance_id": "i-061b45e795aec1058",
+   "az": "us-west-2d",
+   "az_requested": "us-west-2d",
+   "instance_type": "c6i.4xlarge",
+   "run_id": "spot_20260907_211509_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_3958d7",
+   "lifecycle": "spot (verified by InstanceLifecycle)",
+   "launch_time": "2026-09-07T21:15:11.000Z",
+   "launched_at": "2026-09-07T21:15:11.000Z",
+   "sir": "sir-iirqpswg",
+   "sir_state_at_launch": "active / fulfilled",
+   "create": "2026-09-07T21:15:11.000Z",
+   "update": "fill at harvest"
+  }
+ ],
+ "slate_anchor": "last machine up 2026-09-07T21:15:11Z (max, GH #469 ruling 1) -> gate (i) unlock 2026-09-08T03:15:11Z. slate spread 22s. Read the tool, not this line.",
+ "az_spread": {
+  "distinct_azs": 3,
+  "topology": "2a / 2c / 2c / 2d",
+  "EXPOSURE_REGISTERED": "GH #252's acceptance criterion is literally 'four AZs mutually distinct' and this wave got THREE: us-west-2b had no c6i.4xlarge capacity, so the #256 ring redirected seed 7529's machine into us-west-2c, where seed 7719's machine also lives. This is the GH #460 shape (the ring's stop condition is 'this machine launched', not 'this wave is decorrelated'), one notch short of the 1/4 collapse #460 was filed on. Pre-registered consequence: a single us-west-2c capacity event now costs TWO of the four seeds, not one, and the charter's default disposition ('one machine reclaimed = re-run that one seed', fence: max 2 on-demand re-runs per wave) still covers that case. Registered at launch, not at harvest."
+ },
+ "gates": {
+  "gate_i_throttle": "THROTTLE_EXIT=0, UNLOCKED, margin +31956s past the W53 anchor's 12:22:11Z unlock. Run as the LAST command before spot_run.sh (GH #469: the gate binds the action, not the decision), at 21:14:47Z.",
+  "gate_ii_new_to_test": "SATISFIED. Since W53 was launched on 523f21baf14a, origin/main moved to 0d62930936c6d5415efa4fa20f54e4c5a002f646 and the armed member string changed twice (51 -> 48 -> 46: slotpush promoted to stable-v6, teambrain/capmono retired by director §FV, l1trade/l5combo retired by §FW at 19:xxZ). A changed arm string is by itself a new tree+set combination with zero accumulated seeds, so the 'cumulative seeds < 8' limb is satisfied too: W54 is this family's FIRST slate.",
+  "gate_ii_wiring": "ARM_WIRING_EXIT=0 -- 'all 46 armed ids wired on HEAD', and HEAD == origin/main == the pinned SHA. No DO NOT LAUNCH line.",
+  "gate_iii_fence": "WAVE_FENCE: CLEAR (exit 0). MTD $64.409 (budgets, free) + CE cross-read 64.4088949308 (two sources digit-identical), --pending 2.02 ASSERTED, --planned 0.85, projected $67.279, fence $80.00 derived this run (lowest ACTUAL alert not yet crossed), operative ceiling min(fence,brake)=$80.00, headroom $12.721. No RULE6/no-accrual skip line: the ASSERTED branch was used.",
+  "gate_iv_inputs_harvest_owed": "NO HARVEST OWED. W53's verdict was recovered at 15:14Z (3 of 4 grains; seed 7156's admission to the pool is GH #592, still unruled with one comment, all of it this desk's own). Nothing was in flight at 21:11Z: describe-instances returned zero running/pending account-wide before this wave launched, and check_costs.sh's running-instance section was empty. The two on-demand re-run machines of 12:22Z self-terminated ~14:22Z; their EC2 StateReason.Code is permanently unreadable (GH #375, ~1h retention vs a 3h trigger interval), which is registered as a lost reading, NOT as a clean one.",
+  "gate_iv_reclaim_blind": "STILL exit 2 on W53, verbatim for the FOURTH round (BRACKET VIOLATED / UNDECIDABLE). THIS WAVE DOES NOT CLAIM THE GATE PASSED. What this round added is a MEASUREMENT of what the refusal can and cannot decide -- see gate_iv_invariance_measurement. The market chosen (spot) is the one the gate's own decision function returns for EVERY value of the disputed constant, and it is also owner GH #158's standing default, so the constant has no remaining degree of freedom over this wave's market."
+ },
+ "gate_iv_invariance_measurement": {
+  "why": "#591 has asked the director to re-derive the changeover constant for four rounds. This round measured, rather than argued, what re-deriving it could buy.",
+  "finding_1_UNSATISFIABLE": "The real, unmutated tool refuses for EVERY constant swept from 10 to 120 minutes (17 values). The bracket is not 'wrong at 40.0', it is UNSATISFIABLE on this input: clause (a) needs c <= 39.6 (seed 7156 is paired at 39.6 min) while clause (b) needs c >= 48.5 (seed 7162 was reclaimed at 48.5 min and counted unpaired). 48.5 > 39.6 => empty feasible set. Both edges quoted verbatim from the tool at c=39.6 and c=48.5. CONSEQUENCE: re-deriving the constant -- exactly what #591 asks for -- CANNOT clear this gate on W53, at any value.",
+  "finding_2_VERDICT_INVARIANT": "On a mutation stand (a file COPY with only the bracket short-circuit removed; the shipped tool was not touched) the verdict is 'not blinded -- the wave delivered 2 paired seed(s)' for every constant from 10 to 120 min. Mechanism, read off the source, not inferred: BLINDED requires BOTH (1) paired_n <= 1 AND (2) an early capacity reclaim; classify_machine() takes changeover_min as a parameter but never reads it, so paired_n is constant-independent, and at paired_n=2 the attribution clause (the only consumer of the constant) is unreachable. The attribution count does move across the sweep (0 -> 1 -> 2 -> 3) and never reaches the branch.",
+  "finding_3_THE_FIX_IS_THE_LABEL": "Running the REAL tool with --min-arm-depth 5.0 (which lets seed 7162's ba leg of depth 5.60 count as a pairing, i.e. probes what the desk's own 15:14Z proposal -- split PAIRED into NO-PAIR/THIN-ARM/PAIRED -- would do to clause (b)) makes the bracket SATISFIABLE on the interval [31.3, 39.6], and inside it the unmutated tool returns exit 0 / not blinded. The 15:14Z measured constant 39.6 +/- 0.4 lands on that interval's upper edge; the hard-coded 40.0 sits just OUTSIDE it. HONESTY BOUNDARY: --min-arm-depth 5.0 is a PROBE of the bracket's feasibility, NOT a proposal to lower the depth bar -- the depth bar is GH #269's promote-side门 and this desk is not touching it.",
+  "what_is_NOT_claimed": "Not claimed: that gate (iv) passed, that exit 2 may be read as a pass, or that this reasoning generalises to a future wave. It is input-specific: on the NEXT harvested wave the desk re-runs the gate and re-measures, and if paired_n <= 1 there the constant becomes load-bearing again and the market goes back to depending on #591."
+ },
+ "self_destruct": "spot_run.sh self-terminate + 2h watchdog + one-time spot request (a reclaim does not silently relaunch); instance-initiated-shutdown-behavior=terminate. The wave-budget guard did not refuse: 12 games / 16 slots fits inside a 2h watchdog.",
+ "launch_round_roll_call": "describe-instances immediately after launch: exactly FOUR instances account-wide, all four in this wave, all four InstanceLifecycle=spot, all four state=running, all four c6i.4xlarge. Zero on-demand: owner GH #158's spot-first rule executed with no degradation to --on-demand (the only degradation was the in-ring AZ redirect above).",
+ "leak_check": "At launch: 4 running/pending account-wide, all four are W54's. Standing cost remains only AMI ami-0a990a26d89c66547.",
+ "harvest_obligations": [
+  "Re-run recover_verdict.py from S3 (standard harvest path), NOT the instance's self-produced verdict.",
+  "Copy winrate_channel and mean.winrate_headroom into the harvest report; if winrate_channel == DEGENERATE, do not write winrate as a reading.",
+  "Fill each machine's `update` from SIR Status.UpdateTime -- gate (iv) reads that key. Read the SIRs EARLY: they age out in ~1-3h and a 2h watchdog plus a ~3h trigger interval puts a late round outside the window (GH #375/#556).",
+  "Re-run gate (iv) on W54's own record and re-measure: the invariance finding above is input-specific and does NOT carry forward.",
+  "us-west-2c carries two of the four seeds: a single AZ event there costs two seeds. Re-run fence is still max 2 on-demand re-runs per wave (GH #408)."
+ ]
+}
