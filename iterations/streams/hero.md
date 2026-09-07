@@ -22,8 +22,61 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--120. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动;`-119` 在录像组交货前
-   不要再排进工作单元。**
+-121. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。三条**都不许**排成主体
+   (各自在等一份别人手里的供给):`-119`(等录像组造 timeline)、`-120` 的 CM 距离项
+   (等 `queue.json:hero-42`)、`-120b` 的 `lionultcash` 域(等 `queue.json:hero-43`)。**
+   - **⭐ 本轮(`-120b`)顺手看到、没做、且看起来是同一族的两条线索**,都在
+     `bots/BotLib/hero_lion.lua` `X.ConsiderR` 里,**都要先量域再动手**:
+     (甲) **「击杀」循环与「打架」分支的到达约定互相矛盾,差 400**:前者从
+     `nInBonusEnemyList`(`nCastRange + 400`)里挑目标并**不做任何距离检查**就
+     `return HIGH`,而「打架」分支写 `J.IsInRange( botTarget, bot, nCastRange + 200 )`、
+     「撤退」分支干脆只读 `nInRangeEnemyList`(`nCastRange` 整)。同一个函数三种约定,
+     **最松的那一条挂在血最少的时候会开火的分支上**。⇒ 送进 `ActionQueue_UseAbilityOnEntity`
+     的是一个要**走过去**才放得出的单;而喂给 `J.WillMagicKillTarget` 的延迟仍是
+     `nCastPoint + 0.25`,**没有把那段路的时间算进去**。
+     (乙) **「撤退」出口(`R死前大`)不做任何目标选择**:它对 `nInRangeEnemyList` 的
+     **第一个**通过者就开火(loader 与引擎都按距离升序 ⇒ 实际是「最近的那个」),
+     既不挑最弱也不问致不致命。⚠️ **但先把这条的价值论证做完再动手** ——
+     本轮已经证明:能走到「撤退」出口,意味着上面的「团战」块已经跑过且
+     `nCastRange + 400` 内**最弱的那个也不致命**,所以在这个出口上「挑最弱」
+     **不可能兑现成一次击杀**。「挑最近」和「挑最弱」在这里差别很小,
+     **不要凭「挑最弱显然更好」就改**。
+   - **⛔ 仍然不许**顺手改 `lionultcash` 的合取或 id:它在等 hero-43 的域读数,
+     而 `wkreinctr`(GH #582)、`cmrangedhp`/`cmcreepcap` 同理各自在等自己的域。
+
+-120b. ~~**按 P4.4 (i) 找一个焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-07T23:15Z 做完:Lion `X.ConsiderR` 的「团战对最弱的敌人」出口在出货腿上
+   **不可达**(闭式),gated `lionultcash` 打开它。`bots/` 有改动。**
+   报告 `iterations/reports/hero/20260907T231502Z.md`。新
+   `tests/test_lion_ult_cash_weakest.lua`(**9 例**)+
+   `tools/agent/mutstand_lionultcash.sh`(**10/10 CAUGHT**)。
+   登记 `state.json:lionultcash_20260907`,新请求 `queue.json:hero-43`。
+   本轮 `[hero]` open issue **一条可认领的都没有**(逐条理由见报告 §1)。
+   - **⭐ 不可达是闭式的,不是语料读数**:「击杀」循环与「团战」出口读**同一个列表**
+     `nInBonusEnemyList`,用**同一个 nDamage / 同一个 `nCastPoint + 0.25` / 同一个
+     `J.WillMagicKillTarget`**;走到后者就意味着前者已证明该列表无一元素致命,
+     而 `npcWeakestEnemy` 正是该列表里已通过 `X.CanCastAbilityROnTarget` 的元素。
+     两个选择器只差 `J.IsValidHero` / `J.IsValid`,而在这条列表上两者**同答**
+     (都退化为 `not IsNull and IsAlive`)。
+   - **⭐⭐ 证明方式是驱动不是读源码**:在真实帧穷举的是**致命性谕示**而不是谁的血量,
+     所以那是整个立方体不是一次取样。三点三中:闸关逐字等于出货、armed 只在出货
+     拒绝的那一个点上不同、两腿都开火时**目标相同**。
+   - **⭐⭐⭐ 一条注释在描述它从来没做过的事**:块上面的
+     `[ultcash / freehunt#1] a DYING lion cashes the finger out even at ult level 1`,
+     买到的是**进块**;块内唯一可达的出口是下面那条蓝杖 AoE 分支。
+     `digest_20260723.md` 的「握着大招死 128 例/50 局」里点名 **lion 5**。
+   - **⚠️ 自捉:本文件 §1 的断言当场推翻了本轮第一版限度。** 初稿写「档案 0 帧进得了
+     函数体」,那是只扫了三个**以 Lion 为 subject** 的帧;按「Lion 作为任意单位出现」
+     枚举真数是 **27 活体 / 5 可施 / 0 在域内**(那 5 个 HP 全在 0.838 以上)。
+     **写错了 5,是断言抓住的不是复读抓住的。**
+     另一条形状要分开记:`WasRecentlyDamagedByAnyHero` 档案里**答得出来**(27 里 5 个),
+     只是**与可施的那 5 个不相交** ⇒ 「量具答不出来」与「答得出来但从不共现」
+     是两种限度,§1 分开计数。
+   - **⚠️ 两条操作自曝**:(1) 开工自检**第 6 次**用管道读退出码被脚本拒绝执行
+     (证据纪律 3);(2) 变异台的 `want` 串里带反引号,在 bash 双引号里那是**命令替换**,
+     M5 因此判成「红得不对」—— **`want` 串永远别用双引号包反引号**。
+
+-120. **⭐ 已由 `-120b` 消费(按 P4.4 (i) 找焦点英雄的 `bots/` 行为改动)。以下线索仍未做:**
    - **理由(2026-09-07T20:05Z 由 `-119` 自己的可行性检查交出)**:`-119` 要的三帧
      重切,吃的是 behav-dump 的 timeline JSON,而那两局
      (`20260720_080225`、`20260723_073148`)的 timeline **树里没有**
@@ -5184,6 +5237,44 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-07T23:15Z(报告 `iterations/reports/hero/20260907T231502Z.md`;**backlog:`-120b` 做完、
+  新开 `-121`**;焦点英雄 **Lion**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动)
+  **`X.ConsiderR` 的「团战对最弱的敌人」出口在出货腿上不可达(闭式)。gated `lionultcash`
+  落地打开它,`bots/` 有真代码行。** 新 `X.lion_ShouldCashUltAtWeakest`,新
+  `tests/test_lion_ult_cash_weakest.lua`(**9 例**)+ `tools/agent/mutstand_lionultcash.sh`
+  (**10/10 CAUGHT**)。`state.json:lionultcash_20260907`、`queue.json:hero-43`。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
+  `run_tests.lua lion` **200 例 0 失败**;`test_smoke_load.lua` exit 0。
+  本轮 [hero] open issue **一条可认领的都没有**(逐条理由见报告 §1)⇒ 走工作流第 1 步回落分支。
+  - **⭐ 缺陷是闭式的,不是语料读数**:「击杀」循环与「团战」出口读**同一个列表**
+    `nInBonusEnemyList`,用**同一个 nDamage / 同一个 `nCastPoint + 0.25` / 同一个
+    `J.WillMagicKillTarget`**;走到后者就意味着前者已证明该列表**无一元素致命**,
+    而 `npcWeakestEnemy` 正是该列表里已通过 `X.CanCastAbilityROnTarget` 的元素
+    ⇒ 它的致命性**由构造为假**。两个选择器只差 `J.IsValidHero` / `J.IsValid`,
+    而在这条列表上两者**同答**(都退化为 `not IsNull and IsAlive`)。
+  - **⭐⭐ 证明方式是驱动不是读源码**:真实帧 `f_222428_lion_lich_burst`,穷举的是
+    **致命性谕示**而不是任何一方的血量 ⇒ 那是**整个立方体**不是一次取样。三点三中:
+    谁都不致命时出货**一发不放**、armed 打最弱的斧王;lich 致命两腿都打 lich;
+    axe 致命两腿都打 axe。**闸关逐字等于出货,armed 只在出货拒绝的那一个点上不同,
+    两腿都开火时目标相同。**
+  - **⭐⭐⭐ 一条注释在描述它从来没做过的事**:块上面的
+    `[ultcash / freehunt#1] a DYING lion cashes the finger out even at ult level 1` ——
+    那个析取买到的是**进块**,块内唯一可达的出口是下面那条蓝杖 AoE 分支。
+  - **⚠️ 自捉:本文件 §1 的断言当场推翻了本轮第一版限度。** 初稿写「档案 0 帧进得了
+    函数体」,那是只扫了三个**以 Lion 为 subject** 的帧;按「Lion 作为任意单位出现」
+    枚举真数是 **27 活体 / 5 可施 / 0 在域内**(5 个可施帧的 HP 全在 0.838 以上,
+    阈值是 0.4)。**写错了 5,是断言抓住的。** 另一条要分开记:
+    `WasRecentlyDamagedByAnyHero` 档案里**答得出来**(27 里 5 个为真),
+    只是**与可施的那 5 个不相交** ⇒ 「量具答不出来」与「答得出来但从不共现」
+    是两种不同的限度,§1 分开计数。
+  - **⚠️ 两条操作自曝**:(1) 开工自检**第 6 次**用管道读退出码被脚本拒绝执行
+    (证据纪律 3,`SELFCHECK_EXIT=2 REFUSED`);重定向到文件后 **EXIT=3**。
+    (2) 变异台的 `want` 串里带反引号 —— 在 bash 双引号里那是**命令替换**,匹配串被
+    悄悄改写,M5 因此判成「红得不对」。**`want` 串永远别用双引号包反引号。**
+  - **⚠️ 第三条(旧账重犯)**:第一版探针输出零行、退出码 0,**长得像通过** ——
+    mock 覆盖了全局 `print`(`-118` §9(3) 记过同一条)。改走 `io.stderr:write`。
 - 2026-09-07T20:05Z(报告 `iterations/reports/hero/20260907T200530Z.md`;**backlog:`-119` 挂起、
   新开 `-120`**;焦点英雄 **Crystal Maiden**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是
   一个 `bots/` 行为改动)

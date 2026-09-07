@@ -1199,8 +1199,12 @@ function X.ConsiderR()
 			end
 		end
 
+		-- [lionultcash] The lethality term below is the one the 击杀 loop above
+		-- has ALREADY asked, about the same list, with the same arguments -- so
+		-- as shipped this exit cannot return.  See X.lion_ShouldCashUltAtWeakest.
 		if npcWeakestEnemy ~= nil
-			and J.WillMagicKillTarget( bot, npcWeakestEnemy, nDamage , nCastPoint + 0.25 )
+			and X.lion_ShouldCashUltAtWeakest( bot, npcWeakestEnemy, nCastRange, nHP,
+					J.WillMagicKillTarget( bot, npcWeakestEnemy, nDamage , nCastPoint + 0.25 ) )
 		then
 			return BOT_ACTION_DESIRE_HIGH, npcWeakestEnemy, 'R团战'..J.Chat.GetNormName( npcWeakestEnemy )
 		end
@@ -1389,6 +1393,86 @@ function X.GetAbilityRDamageBonus()
 	
 
 	return nModifierCount * nDamageBonus
+
+end
+
+
+--- Does the "团战对最弱的敌人" exit of X.ConsiderR still fire when the finger
+--- will NOT kill the weakest enemy?  Soak candidate `lionultcash`, turbo-only.
+---
+--- WHY THIS IS A QUESTION AT ALL.  The shipped exit reads
+---
+---     if npcWeakestEnemy ~= nil
+---         and J.WillMagicKillTarget( bot, npcWeakestEnemy, nDamage, nCastPoint + 0.25 )
+---
+--- and it is UNREACHABLE, in closed form, not as a corpus reading.  The 击杀
+--- loop thirty lines above it walks `nInBonusEnemyList` -- the SAME list this
+--- block draws npcWeakestEnemy from -- and returns BOT_ACTION_DESIRE_HIGH on
+--- the first element satisfying
+---
+---     J.IsValidHero( e ) and X.CanCastAbilityROnTarget( e )
+---         and J.WillMagicKillTarget( bot, e, nDamage, nCastPoint + 0.25 )
+---
+--- Same list, same nDamage, same delay, same helper.  Reaching the line above
+--- therefore means NO element of that list satisfies that conjunction, and
+--- npcWeakestEnemy is an element of that list which has already passed
+--- X.CanCastAbilityROnTarget -- so its WillMagicKillTarget is false by
+--- construction.  The two loops differ in one predicate only, J.IsValidHero vs
+--- J.IsValid, and on this list they are the same answer: both reduce to
+--- `not IsNull and IsAlive` once X.CanCastAbilityROnTarget has passed
+--- (J.CanCastOnNonMagicImmune already demands CanBeSeen and not IsInvulnerable;
+--- J.GetNearbyHeroes returns heroes, so IsHero holds and IsBuilding does not).
+---
+--- ⇒ The comment above the block -- "[ultcash / freehunt#1] a DYING lion cashes
+--- the finger out even at ult level 1" -- describes something this exit has
+--- never done.  What the `or J.IsDyingUnderAttack( bot )` disjunct actually
+--- buys is entry to the BLOCK, whose only reachable exit is the scepter AoE
+--- branch below.
+---
+--- WIDENING, and one-directional by construction: the shipped lethality answer
+--- is computed by the caller and handed in as `bShippedLethal`, this function
+--- returns true on it FIRST, and the armed path is reachable only after it
+--- answered false.  So armed accepts a strict SUPERSET of shipped, on the same
+--- frames, with the SAME target (npcWeakestEnemy is chosen before this call and
+--- is not re-picked here).  A negative reading may only be read as "those
+--- cashed fingers were not worth their cooldown"; it can NEVER be read as "the
+--- lever removed a cast" or "the lever moved the target".
+---
+--- The three armed conjuncts, each with its reason:
+---   * HP < 0.4 -- the low-HP half of the block's own entry condition.  In the
+---     pure J.IsInTeamFight half at full HP, spending a 100s+ ultimate on a
+---     target it cannot kill is not obviously right, so that half is left shut.
+---     `nHP` is PASSED IN rather than re-derived, and that is not tidiness:
+---     J.GetHP( bot ) is NOT the same number as the block's own `nHP`.  For a
+---     unit on the bot's own team J.GetHP reads OriginalGetHealth() /
+---     OriginalGetMaxHealth() (jmz_func.lua:4079), while `nHP` is
+---     bot:GetHealth()/bot:GetMaxHealth() (:410).  Re-deriving would let this
+---     conjunct and the block's entry condition disagree about the same 0.4.
+---   * took hero damage in the last 2.0s -- he is being killed, not merely
+---     walking around low.  This is the same discriminator J.IsDyingUnderAttack
+---     uses, written out HERE rather than by calling that helper: it is gated
+---     on 'ultcash', and conjoining two candidate ids is the pullcad trap.
+---   * inside nCastRange -- npcWeakestEnemy is picked from nInBonusEnemyList
+---     (nCastRange + 400), so without this term the armed leg could order a
+---     cast on a target Lion must WALK 400 units toward, which turns "cash the
+---     ult before dying" into a dive.  This lever does not import that problem.
+function X.lion_ShouldCashUltAtWeakest( hBot, hTarget, nCastRange, nBotHP, bShippedLethal )
+
+	if bShippedLethal then return true end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'lionultcash' ) ) then return bShippedLethal end
+
+	if hBot == nil or hTarget == nil then return bShippedLethal end
+
+	if type( nCastRange ) ~= 'number' or type( nBotHP ) ~= 'number' then return bShippedLethal end
+
+	if nBotHP >= 0.4 then return bShippedLethal end
+
+	if not hBot:WasRecentlyDamagedByAnyHero( 2.0 ) then return bShippedLethal end
+
+	if not J.IsInRange( hTarget, hBot, nCastRange ) then return bShippedLethal end
+
+	return true
 
 end
 
