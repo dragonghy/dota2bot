@@ -12740,3 +12740,77 @@
     fixture;09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3`
     dragon_knight t=1142.4);#419 / #421 仍零评论。
   - 完整报告:`iterations/reports/replay-check/20260907T125958Z.md`
+- **2026-09-07T15:53Z**:**W52 首检轮 —— 一笔条件 (a) 买到、一笔证明「买不到」,
+  而当轮最贵的一行是「宽扫表的头条读数四分之三是侧偏」。** 零 EC2、零 CE、零 AWS
+  (只读 S3);**`bots/`、`tests/`、`tools/` 一行未改**,改动全在 `iterations/` 下的 markdown。
+  - **吞吐回到章程**:宽扫 **47/47 局**(W52 的 2/4 个 run 全量,1 局 unparseable 单独登记),
+    **深查 7 局**(下限 6;上两轮 1 局 / 0 局,本轮按「下一轮回到 6 局」补回)。
+  - **`VERIFY id=zusult verdict=WORKING episodes=11`** / **`VERIFY id=zusboltdom
+    verdict=WORKING episodes=6`** / **`VERIFY id=campbind verdict=INDETERMINATE episodes=0`**。
+  - **`zusult`+`zusboltdom` 买到条件 (a)**:门域内漏放 armed **0/99 机会帧**
+    vs baseline **11/167(6.6/100)**。⭐ **侧偏是自己消掉的,而且不靠 swap-average**:
+    镜像波里英雄→队伍在一粒种子内是死的(逐局复核:6743 的 Zeus 恒 team=2,6858 恒 team=3),
+    所以一粒种子内「Zeus armed」与物理侧**完全共线**;但**两粒种子的共线方向相反**,
+    而 armed 腿在**两个物理侧上都读 0**。⇒ 效应在侧翻转下存活。
+    **归属按跨波登记不冒充同波分解**:门整个挂在 `zusult` 后面
+    (`hero_zuus.lua:464`),baseline 那侧**根本没有门**;分解靠消费者拆分
+    (baseline `considerW2=6 / Q=4 / ambiguous=1`,armed 全 0)+ W45 上
+    `zusult` 单 armed 读 8.0/100 且**七发全是 ConsiderW2** 这条已量过的事实。
+    **过宽的反证也给了**:点施法闪电波 armed **26.91/局** vs baseline 29.68(−9%,两粒同号)
+    ⇒ 分支照常开火,只在门域内被摁住。帧证据 `20260907_010129_slot4` t=339.2
+    `ABILITY zuus -> dota_unknown [zuus_lightning_bolt]`(**target=`dota_unknown` = 点施法**,
+    kill-AoE 分支签名)→ luna `hp=0.63`、zeus `hp=1.00`、`mp=187`、`Rlvl=1`、**`zlvl=6<10`**
+    ⇒ `via=considerW2` 是**被判别子认证的**,不是默认值。
+  - **`campbind` 是 INDETERMINATE,不是 SILENT —— 而且这个结论本身就是本轮的产物**:
+    47 局 2 粒种子,**两条腿的 in-window `non_nearest` 都是 0**;全语料 13 条
+    `non_nearest`(armed 6 / baseline 7,**量级相同 ⇒ 工具自己的假阳率**)**全部**落在
+    t=680.9–1530.6,即窗口外打野。逐帧核验了其中两条 armed
+    (`002328_slot7` zuus t=798 站桩七秒打食人魔、`d(wave)=3327` 且在变大;
+    `004833_slot2` silencer t=1435.8 满血砍狼)——**W46 那条「WHY THE WINDOW MATTERS」
+    教训在第二份语料上原样复现**。⇒ **不是接线问题,是频次问题**:可判读面
+    ~0.19 次/局,而「计划营 ≠ 最近营」还要再砍一个数量级 ⇒ **例行波买不到它的 (a)**,
+    本轮开 issue 请总监裁改走 fixture 钉帧。
+  - **拉营族(`pullcamp`+`pullcad`+`pulldrag`+`pullthink`)的 (a) 顺带买到,按族登记**
+    (章程 4a,不许记到单 id 头上):in-window 戳营 armed **52** vs baseline **14**,
+    窄化到「窗口内+行军刻度+hp≥0.50」后 armed 12/8/18/6 vs baseline 0/0/3/0,
+    **四格全部同号无反号**。逐帧看了三次真拉营(`003649_slot4` t=132.5 armed,
+    `d(wave)` 2735→996;`003641_slot2` t=278.5 armed;`010053_slot5` t=322.5 **baseline**
+    —— 出厂腿不是「不拉营」,只是频次低得多)。
+  - **⭐ 当轮最贵的一行,是一个池化表和一个分层表的差**:`sweep_summary.md` 上
+    `died_with_ult_ready` = **armed 236 vs baseline 134**(看着像 +76% 回归);
+    `sweep_strata.py` 重打后 **`arm=+0.814` 而 `side=+2.957`** ——
+    **约 78% 是 Radiant 偏置**,而且这两个 run 的分层是 **35:12 偏配**
+    (6743 17:7、6858 18:5)⇒ **池化 = 按局加权 = 铁律 4(i-d) 明令禁止的手法**。
+    按 4(i-c) FLIP 不是对 `arm` 的否决(恒等式),`arm` 两粒同号(`neg/n 0/2`),
+    但 **`sd=0.601` 只有 2 个自由度 ⇒ 登记待观察,不进裁定**。
+    同表里唯一四格同号又低离散的是 **`tp_under_threat` `arm=−1.414 sd=0.193 2/2` 无 FLIP**
+    (同族 `lowhp_limbo` −0.401/0.111/2/2)。
+    **可迁移的一句**:`sweep_strata.py` 2026-09-02 就建好了,**但宽扫脚本自己不调它**
+    ⇒ 只看 `sweep_summary.md` 的读者拿到的是一份**预先算好的铁律违例**。本轮开 [harness]。
+  - **trunk Lua 红 4/84 独立复现登记,不重复开 issue**:`test_gated_helper_nesting_census`
+    (`pgchannel|tpwatch` 新嵌套)+ `stayfield` 三条;工作树 `git status` **空** ⇒ 是 trunk 的红。
+    **已由 GH #601(15:39Z)覆盖**。`cadence`/`queue-rulings`/`owed-executions`
+    **不归本组解读,转总监**。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(S3 只读);`DUMPER_EXIT=0`(cache HIT
+    `46fe9c6a2b084f9b`);两次宽扫各自写出 `sweep_complete.json`;
+    `CB2_EXIT=0`(`--selfcheck` 4/4 PASS);`ZGATE_EXIT=0`;`STRATA_EXIT=0`;
+    自检 **`SELFCHECK_EXIT=3`**(重定向),**第三十次登记它在本容器不是「约 20s」**(约 9 分钟)。
+    ⛔ **证据纪律 3 第五十次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED … exit 2, nothing checked`);**附议批测台第十四轮的请求**:给它一个独有退出码或 wrapper。
+    **铁律 6**:静态半见报告末尾追记;**动态半(GH #124)本轮不跑也不声称** ——
+    `bots/`/`tests/`/`tools/` 一行未改。
+  - **一个 join 坑,本轮自己踩了又自己抓住(登记给下一个人)**:**`.dem` 同名跨 run 撞车
+    这条老坑,会以「元数据 join」的形状二次出现** —— 我第一版把
+    `game -> (seed, 分层)` 的字典**只按 game 名建键**,而两个 run 里有 6 个同名局
+    (`002328_slot7` 等)⇒ 分层表把 23 局的 run 算成 28 局。修法是键用 `(sweep_dir, game)`。
+    **老坑写的是「下载要按 run 分目录」,而它这次咬的是下载之后的那一步。**
+  - **下一轮第一件事**:(1) **补扫 W52 剩下两个 run**(`af2874`/6877、`0e6ccf`/6907),
+    把 `sweep_strata` 的 `sd` 自由度从 2 抬到 4 —— 第五节那两个读数**卡在自由度上,
+    不是卡在效应量上**;(2) 深查维持 6 局。
+  - **存量顺延**:`campgrade` 第十二轮 / 61-id 家族 W49 两笔条件 (a);
+    `tpreach_domain.py` 补 `by_seed`(**已连欠十三轮**);`roshdist` 的 BUGGY(77)交总监;
+    09-07T12:59Z §3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝(GH #529);
+    `outlatch` 重扫;**#477 重 dump —— 本轮以另一种方式交付了它要的东西,是否还需要请总监裁**;
+    `cmqreach` 钉帧 fixture;09-04T16:01Z §2.1 那一帧;F2 那一帧
+    (`272131__20260905_125215_slot3` dragon_knight t=1142.4);#419 / #421 仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260907T155304Z.md`
