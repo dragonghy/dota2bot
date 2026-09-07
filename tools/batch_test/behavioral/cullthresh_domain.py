@@ -86,6 +86,10 @@ LIMITS (read these before quoting any number)
  5. MODIFIER STATE is reconstructed from ADD/REMOVE intervals, which are not
     sampled, so immunity/aegis windows shorter than 1s are still seen.  A
     modifier the dumper does not emit would make the domain too large.
+    CONTAINMENT IS HALF-OPEN (`add <= t < remove`) -- see active_modifiers for
+    why the right endpoint is not a rounding detail but a sign flip, and
+    tests/test_cullthresh_domain.py for the pin.  Any reading taken with this
+    file before 2026-09-07 used CLOSED containment and has to be re-taken.
 
 USAGE
     cullthresh_domain.py --selfcheck
@@ -207,12 +211,38 @@ def build_modifier_intervals(events, names):
 
 
 def active_modifiers(intervals, target, t):
+    """Modifier names live on `target` at `t`, HALF-OPEN: `add <= t < remove`.
+
+    ⭐ 2026-09-07: this used to be CLOSED (`a <= t <= b`), and the endpoint was
+    not a rounding detail -- it was the whole of GH #570's evidence.  A cast
+    that KILLS its target removes the buff in the same 0.1s bucket, so the
+    MODIFIER_REMOVE lands at exactly the cast timestamp; closed containment then
+    reads "the cull fired while the buff was live" off a cast that ENDED the
+    buff.  Those two have OPPOSITE sign, and on the one game anyone has, every
+    hit was of the second kind:
+
+        sniper cast t=958.7  in window [953.8, 958.7]   (dur 4.9s)
+        oracle cast t=1452.9 in window [1452.7, 1452.9] (dur 0.2s)
+
+    -- both exactly ON the right endpoint, and both windows are shorter than
+    every window no cull touched (7.0 / 8.5 / 8.5 / 8.5s), i.e. the "hits" are
+    the windows the counted event itself closed.  Game
+    `20260828_124358_slot1__spot_20260828_121642_..._11c470`; frozen rows and
+    the arithmetic in tests/test_axe_cull_promise_premise.lua section 6.
+
+    Half-open is also what tools/batch_test/replayscope/make_fixture.py's own
+    reconstruction uses, so the two instruments now agree at the boundary; the
+    director wrote the premise into the ruling itself
+    (`queue.json:hero-39` = APPROVED-SCAN, `add <= t < remove` mandatory --
+    iterations/reports/director/20260906T222000Z.md section 2).  Endpoint
+    semantics are pinned behaviourally in tests/test_cullthresh_domain.py.
+    """
     hits = set()
     for (tgt, name), spans in intervals.items():
         if tgt != target:
             continue
         for a, b in spans:
-            if a <= t <= b:
+            if a <= t < b:
                 hits.add(name)
                 break
     return hits

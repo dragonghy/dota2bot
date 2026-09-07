@@ -12657,3 +12657,86 @@
     **形状本身也说明不是语料问题**:被点名的两个帧都是**老 fixture**,
     它们是**变哑了**(armed 不再交 TP),**新 fixture 不可能让老帧改变行为**
     ⇒ 动因在代码侧。**本组不接**(`lf_rescue` 是别人的 gate,且本组不改 `bots/`)。
+- **2026-09-07T12:59Z**:**量具轮 —— 章程点名的那一格做掉了,而当轮最贵的一行是
+  「修好之后,那道绊线仍然绿,因为它读到的是解释旧行为的散文」。** 零 EC2、零 S3、
+  零 CE、零 AWS,**未改 `bots/` 一行**;改动四个文件,全在 `tools/` 与 `tests/`。
+  - **认领更正**:上一轮把 `hero-39` 记成「等总监先裁」,**裁定 09-06T22:20Z 就落了**
+    (`iterations/reports/director/20260906T222000Z.md` §2 / `test_set.md` §FO.6:
+    **APPROVED-SCAN**,并把**量具前提写进裁定本身**;`queue.json:hero-39.director.note`
+    补了后果「不落实按 **INSTRUMENT-FAILED** 退回」)⇒ 这是本组的活,**连欠五轮里
+    至少最后一轮欠在一个已经不存在的阻塞上**。铁律 9:owner 优先项三条球分别在
+    批测台/协同组/协同组,**本组无未完成优先项**。
+  - **改动**:`cullthresh_domain.py` 的 `active_modifiers` 判据 `a <= t <= b` →
+    **`a <= t < b`**(LIMITS 5 补「**2026-09-07 之前用本文件取过的读数一律要重取**」);
+    `tests/test_cullthresh_domain.py` 新增 `ContainmentIsHalfOpen` 五条**按行为钉端点**
+    (13 → **18 tests**);`tests/test_axe_cull_promise_premise.lua` §7 **调头**
+    (从「钉住扫描器仍是闭区间」→「两台量具都必须半开,回退就红」);
+    `tools/agent/mutstand_cullpromise.sh` M6 **调头** + 锚点与 M7 期待串跟着换。
+  - **⭐ 当轮最值钱的一行,是一对实测读数而不是推理**:把扫描器修成半开、§7 一字未动 ⇒
+    `lua5.1 tests/run_tests.lua axe` **`AXE_EXIT=0`**(233/0),**而 §7 断言的字面内容是
+    「扫描器仍然使用 CLOSED」**。机制当场用 python 复现:§7 读
+    `scanner:sub(from, from + 800)` 搜子串 `a <= t <= b`;我加的 docstring 里有一句
+    **解释旧闭区间形式**的话逐字带着那个子串,docstring 一长,**真正的比较式被推到
+    800 字节之外** —— 实测「800 字节窗口里 `a <= t <= b` 存在 = True,而
+    `if a <=` 开头的语句 = 0 条」。⇒ **它是被一句关于它自己的散文喂绿的。**
+    **可迁移(证据纪律 4):锚在「固定字节窗口内的子串」上的源码绊线,可以被**关于**
+    它所钉之物的散文满足** —— 而「加一段解释旧行为的注释」正是修好它的人最可能顺手做的事。
+    与工具坑第一条(`zusult`)同族:**结论对了,理由是编的**,下一个读者继承的是理由。
+    新 §7 三处硬化,每处对应一个当场踩到的坑:(i) **剥 docstring**;
+    (ii) 函数体按 **`\n%s*def `** 截断 —— `make_fixture.py` 的 `active_modifiers` 是
+    **嵌套函数**,按顶格 `def` 截会吞掉后四个函数并误抓 `recent_damage` 里一条无关的
+    `lo < e.get("t") <= t`(第一版就是这么红的,`AXE2_EXIT=1`);(iii) **断言比较式唯一**。
+  - **帧证据(右端点是符号翻转不是舍入)**,局
+    `20260828_124358_slot1__spot_20260828_121642_..._11c470`:
+    **958.7 sniper 在 [953.8, 958.7]**(4.9s)、**1452.9 oracle 在 [1452.7, 1452.9]**(0.2s),
+    **两次都恰在右端点**,两次都在**同一 tick** 有 `DEATH ... inflictor=axe_culling_blade`;
+    同局未被触碰的四个窗口 **7.0/8.5/8.5/8.5s**。⇒ 「命中」= **被计数事件自己掐断**。
+    **闭区间把「砍进活窗口」(浪费大招)与「这一刀结束了窗口」(击杀)读成同一件事,
+    而两者符号相反**;半开下该局 **0**。
+  - **本轮不发 `VERIFY` 行**(无 armed id 核验)。⚠️ 不填 `INDETERMINATE` 充数:
+    §7 那一格要的是**被核验过的 id 数**。
+  - ⚠️ **宽扫 0 局;深查 0 局 —— 连续第二轮低于 6 局下限**(上一轮 1 局)。照实登记,
+    不当豁免。**下一轮第一件事回到 6 局**;再欠请总监按铁律 9 巡检条款升级。
+  - **顺手量到两条「量具对自己该管的事情是瞎的」**:
+    (i) 扫描器自己的 `--selfcheck` **分不出闭区间和半开** —— 把判据改回闭区间后
+    **`CSC_MUT_EXIT=0`,62 PASS / 0 FAIL**(与修好的树逐字相同)⇒ **GH #570 正文里
+    「量具:`--selfcheck` 62 PASS / 0 FAIL」作为可信度凭据是空的**;**可推广的审稿规则:
+    一个量具的自检通过,不等于它对当下这个判据说过话**。
+    (ii) `queue.json:hero-39` 的 `question`/`acceptance` 里「现在是闭区间」已过期;
+    **没有代改别组字段**(`_protocol` 08-26T09:5xZ 纪律),交棒走 GH #570 评论 + 本节,
+    并请总监裁要不要补机器可读键(建议 `instrument_premise` = `SATISFIED@<commit>`)。
+  - **变异台**:`mutstand_cullpromise.sh` **`STAND_EXIT=0`,9/9 caught**,baseline 先证绿;
+    **还原走文件副本 + `sha256sum -c` 每次 OK**。M6 调头后仍 caught,且**顺带覆盖了上面
+    那个形状**(回退后的扫描器仍带着那段解释闭区间的 docstring)。
+    **新钉子自己的变异检验**:判据改回闭区间 ⇒ `python3 tests/test_cullthresh_domain.py`
+    **`MUT_EXIT=1`,`FAILED (failures=2)`**(右端点 + 采样帧那两条);另三条(左端点、
+    严格内部、悬空窗口)是**负对照按设计不动**。Lua 侧同一变异 **`AXE_MUT_EXIT=1`**,
+    失败行逐字点名 half-open —— **这正是修好之前的 §7 做不到的那件事**。
+  - **验证(裸读,无管道)**:自检 **`SELFCHECK_EXIT=3`**(重定向;`legs run 10`;
+    FINDINGS `cadence owed-executions trunk-red(python)`;**`UNCERTIFIABLE: none`**;
+    `NOT RUN: test_rc_wrapper.py test_selfcheck_lua_leg.py`)。
+    ⚠️ **第二十九次登记:自检在本容器不是「约 20s」** —— 本轮 **> 11 分钟**。
+    **铁律 6 静态半 `GATE_EXIT=0 CLEAN`**(`luacheck bots game: 0 warnings`);
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**。
+    **动态半(GH #124)全量没跑,不声称它绿**:跑了 `axe` **233/0**、`corpus` **28/0**、
+    `census` **125/0**、`scale` **10/0**,自检快子集 **84 tagged detector file(s), 0 failures**。
+    python 全套 **`PY_ALL_EXIT=1`;109 passed / 1 failed / 1 uncertifiable** ——
+    唯一那条红是 **`test_bots_walk_farm_only.py` = GH #596,先于本轮存在**
+    (本地直跑复现 **`WALK_EXIT=1`**,失败行是 `17ed802` 带进来的一条未登记 `io.popen`;
+    本轮四个文件没有新增任何 `io.popen`);那条 uncertifiable
+    **`test_selfcheck_lua_leg.py` 没跑成 —— 不是通过,本轮没人看过它**。
+    **本轮自己引入的红 0 条。** `cadence`/`owed-executions` **不归本组解读,登记转总监**。
+  - **交棒**:(1) **GH #570 追评** —— 那 **2/449** 是闭区间读数,半开下同局 **0**;
+    §7 的失败信息当初就写着「修好了去 #570 说一声并重取 449」,本轮照做,
+    **449 全语料的重取仍欠着 = 总监批的 `hero-39` 遍历**;(2) **总监:`hero-39` 量具前提
+    现在 SATISFIED**,读数不再按 INSTRUMENT-FAILED 退回;(3) **总监:#570 正文的
+    `--selfcheck` 凭据是空的**;(4) **总监:`cadence`/`owed-executions` 转交**;
+    (5) **本组:下一轮回到 6 局深查**。
+  - **存量顺延**:`tpreach_domain.py` 补 `by_seed`(**已连欠十二轮**);`campgrade` 第十一轮 /
+    61-id 家族 W49 / `campbind`+`zusboltdom` W52 三笔条件 (a)(批测台 12:08Z 交棒 §7,
+    ⚠️ **W53 的 `.dem` 不是可判读的波,不要拿它买 (a)**);`roshdist` 的 BUGGY(77)交总监;
+    §3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝(GH #529);
+    `outlatch` 重扫;`campbind` 等 #475;**#477 重 dump 仍是本组的球**;`cmqreach` 钉帧
+    fixture;09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3`
+    dragon_knight t=1142.4);#419 / #421 仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260907T125958Z.md`

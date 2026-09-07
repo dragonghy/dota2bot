@@ -32,6 +32,17 @@
 #     section must stop passing -- otherwise it was asserting that a frame the
 #     veto never read is a frame the veto would change.
 #
+# ⭐ 2026-09-07 (replay-check).  THE SCANNER IS FIXED and M6 turned around; see
+# the note on M6 itself.  Section 7 of the test was rewritten in the same change
+# because the old form of it did NOT survive the fix honestly: it asserted the
+# substring `a <= t <= b` inside `scanner:sub(from, from + 800)`, and adding a
+# docstring that EXPLAINS the old closed form pushed the real comparison past
+# byte 800 while leaving the literal sitting in the prose -- so it passed, green,
+# on a tree where it was reading no comparison at all.  M6 now covers that shape
+# for free: the reverted scanner still carries that docstring, so a tripwire that
+# a sentence can satisfy scores SURVIVED here.  Evidence discipline 4: the same
+# conclusion (green on trunk) was being reached by the wrong reason.
+#
 # DISCIPLINE (inherited from tools/agent/mutstand_zusfightquorum.sh):
 #   * out-of-tree restore, verified with `sha256sum -c`;
 #   * `trap restore EXIT` BEFORE the first mutant is applied (GH #418);
@@ -104,7 +115,7 @@ SPHERE=$'\t\tor npcEnemy:HasModifier( \'modifier_item_sphere_target\' )'
 INJECT='        if npcEnemy:HasModifier(FP) then fired = fired + 1 return true end'
 CAST_ROW='    { t = 1203.9, target = '"'"'npc_dota_hero_phantom_assassin'"'"', death_t = 1203.9, dmg =  16 },'
 WINDOW_ROW='    { target = '"'"'npc_dota_hero_oracle'"'"',      add = 1452.7, remove = 1452.9 },'
-SCANNER_CMP='            if a <= t <= b:'
+SCANNER_CMP='            if a <= t < b:'
 GEN_CMP='            live = [(s, e) for (s, e) in ivs if s <= t < e]'
 FRAME_MOD="{ name = 'modifier_oracle_false_promise_timer', remaining = 0.1, elapsed = 0.1, stacks = 0 }, "
 FRAME_HP='hp = 437, max_hp = 2253'
@@ -191,13 +202,18 @@ sub "$TEST" "$WINDOW_ROW" \
 score "M5" "that is the frame GH #570 always needed"
 
 # ---------------------------------------------------------------------------
-# M6: the scanner is quietly fixed to half-open.  That is a GOOD change, and it
-#     still has to be loud: it moves the 449-cast count that opened the issue, so
-#     the stand must force somebody to re-take that reading.
+# M6: the scanner reverts to closed containment.  ⭐ 2026-09-07 THIS MUTANT
+#     CHANGED DIRECTION.  It used to mutate the scanner FROM closed TO half-open
+#     -- because the tree shipped the closed scanner and the stand's job was to
+#     make the good fix loud enough that somebody re-took the 449-cast reading.
+#     The fix has now landed (replay-check, on the director's ruling: half-open
+#     is mandatory for the hero-39 traversal), so the direction that must be
+#     loud is the REVERT.  The re-take is still owed and is tracked on GH #570,
+#     not here.
 echo
-echo "=== M6: the domain scanner switches to half-open containment ==="
-sub "$SCANNER" "$SCANNER_CMP" '            if a <= t < b:'
-score "M6" "no longer uses CLOSED containment"
+echo "=== M6: the domain scanner reverts to CLOSED containment ==="
+sub "$SCANNER" "$SCANNER_CMP" '            if a <= t <= b:'
+score "M6" 'cullthresh_domain.py must use HALF-OPEN containment'
 
 # ---------------------------------------------------------------------------
 # M7: the generator drifts the OTHER way, to closed.  Then the staged frame
@@ -207,7 +223,7 @@ echo
 echo "=== M7: the fixture generator switches to closed containment ==="
 sub "$GENERATOR" "$GEN_CMP" \
     '            live = [(s, e) for (s, e) in ivs if s <= t <= e]'
-score "M7" "no longer uses HALF-OPEN containment"
+score "M7" 'make_fixture.py must use HALF-OPEN containment'
 
 # ---------------------------------------------------------------------------
 # M8: the supply control.  Strip the modifier out of the staged frame and every

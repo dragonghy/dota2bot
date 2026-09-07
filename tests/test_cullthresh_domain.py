@@ -191,6 +191,91 @@ class ControlColumnIsNotThePayoffColumn(unittest.TestCase):
             self.assertEqual(len(r["shipped_rows"]), ctl_n, hp)
 
 
+class ContainmentIsHalfOpen(unittest.TestCase):
+    """`add <= t < remove`, and the right endpoint is a SIGN FLIP not a rounding
+    detail.
+
+    Until 2026-09-07 `active_modifiers` used CLOSED containment.  A cast that
+    KILLS its target removes the buff in the same 0.1s bucket, so the
+    MODIFIER_REMOVE lands at exactly the cast timestamp -- closed containment
+    then reads "fired while the buff was live" off the cast that ENDED the
+    buff, and those two have opposite sign.  The rows below are the real ones
+    from `20260828_124358_slot1__spot_20260828_121642_..._11c470`, the single
+    game GH #570 drew both of its hits from; frozen with the surrounding
+    arithmetic in tests/test_axe_cull_promise_premise.lua section 6.
+
+    Pinned BEHAVIOURALLY, not as a source string: section 7 of that Lua file
+    reads the comparison out of both instruments' text, which catches a drift
+    but cannot say which way the drift decides.  The director wrote the
+    premise into the ruling itself (`queue.json:hero-39` = APPROVED-SCAN,
+    half-open mandatory -- iterations/reports/director/20260906T222000Z.md
+    section 2).
+    """
+
+    # target, add, remove -- verbatim from the frozen WINDOWS table
+    W_SNIPER = ("npc_dota_hero_sniper", 953.8, 958.7)
+    W_ORACLE = ("npc_dota_hero_oracle", 1452.7, 1452.9)
+
+    @staticmethod
+    def _iv(target, add, remove, name="modifier_illusion"):
+        ev = [{"t": add, "type": "MODIFIER_ADD", "target": target,
+               "inflictor": name},
+              {"t": remove, "type": "MODIFIER_REMOVE", "target": target,
+               "inflictor": name}]
+        return C.build_modifier_intervals(ev, {name})
+
+    def test_left_endpoint_is_included(self):
+        tgt, add, rem = self.W_SNIPER
+        iv = self._iv(tgt, add, rem)
+        self.assertEqual(C.active_modifiers(iv, tgt, add), {"modifier_illusion"})
+
+    def test_right_endpoint_is_excluded(self):
+        for tgt, add, rem in (self.W_SNIPER, self.W_ORACLE):
+            iv = self._iv(tgt, add, rem)
+            self.assertEqual(
+                C.active_modifiers(iv, tgt, rem), set(),
+                f"{tgt} @ {rem} sits ON the right endpoint: the cull's own kill "
+                f"removed the buff.  Counting it is GH #570's miscount.")
+
+    def test_strictly_inside_is_still_seen(self):
+        # the negative control for the two above: half-open must not be a way
+        # of never seeing anything.  A cull landing strictly inside a live
+        # window is the frame GH #570 always needed and never had.
+        tgt, add, rem = self.W_SNIPER
+        iv = self._iv(tgt, add, rem)
+        self.assertEqual(C.active_modifiers(iv, tgt, (add + rem) / 2.0),
+                         {"modifier_illusion"})
+
+    def test_still_open_window_has_no_right_endpoint(self):
+        # build_modifier_intervals closes a dangling ADD at +inf; half-open
+        # must not turn that into "never active".
+        ev = [{"t": 953.8, "type": "MODIFIER_ADD",
+               "target": self.W_SNIPER[0], "inflictor": "modifier_illusion"}]
+        iv = C.build_modifier_intervals(ev, {"modifier_illusion"})
+        self.assertEqual(C.active_modifiers(iv, self.W_SNIPER[0], 9999.0),
+                         {"modifier_illusion"})
+
+    def test_a_removal_on_the_sample_tick_does_not_veto_the_band_row(self):
+        # the same endpoint, one layer up, where it decides a domain count:
+        # REMOVE at exactly the snapshot's t must free the frame, ADD at
+        # exactly the snapshot's t must veto it.
+        rem = [{"t": 0.5, "type": "MODIFIER_ADD", "target": L,
+                "inflictor": "modifier_item_aeon_disk_buff"},
+               {"t": 1.0, "type": "MODIFIER_REMOVE", "target": L,
+                "inflictor": "modifier_item_aeon_disk_buff"}]
+        r = C.scan_game(tl([snap(1.0, AXE, 1, 2, 0, 2000),
+                            snap(1.0, L, 2, 3, 100, 260)], rem), "g")
+        self.assertEqual(len(r["band_rows"]), 1,
+                         "the buff came off ON this tick; the frame is in domain")
+
+        add = [{"t": 1.0, "type": "MODIFIER_ADD", "target": L,
+                "inflictor": "modifier_item_aeon_disk_buff"}]
+        r = C.scan_game(tl([snap(1.0, AXE, 1, 2, 0, 2000),
+                            snap(1.0, L, 2, 3, 100, 260)], add), "g")
+        self.assertEqual(r["band_rows"], [],
+                         "the buff went ON at this tick; the frame is refused")
+
+
 class SelfcheckStillPasses(unittest.TestCase):
     def test_selfcheck_exits_zero(self):
         tool = os.path.join(os.path.dirname(__file__), "..", "tools",
