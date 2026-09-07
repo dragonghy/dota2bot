@@ -6700,7 +6700,7 @@
     "real_frame_coverage": "**决策 = 真实帧覆盖(一次带标注的注入);分支 = 不可达,而且是本轮自己量的。** (1) 决策:`tests/frames/f_260905_004847_lion_drain_bkb.lua` t=1266.5 是全树唯一一枚 Lion 主体的、带 BKB 魔免敌人的帧;bristleback **1246 蓝、386.9u、未被 Finger、未被 disable、CanCastOnTargetAdvanced 通过** —— 分支其余每一项合取都是录像给的。mock 不装出货的 `IsMagicImmune` 覆写 ⇒ 先断言**无注入时两个 helper 不可区分**(比较是空的),再注入一次并断言注入生效,然后读 gate off/on 两个答案。(2) 分支:**不可达,measured** —— `bot:GetTarget()` 与 `bot:GetAttackTarget()` 在这一帧上都是 nil ⇒ `J.GetProperTarget( bot )` = nil ⇒ 打架抽蓝那一支进不去;`J.IsGoingOnSomeone( bot )` 亦为 false。并且**即便有 target 通道这一帧也到不了**:`J.IsInTeamFight( bot, 1000 )` 为真、团战吸蓝那一支接受同一个目标并先 return —— 这正是本支**独占域**是「打架但不在团战」的原因,也是 hero-40 必须自己去买的原因。(3) 补蓝圈:`#bot:GetNearbyCreeps(1600, true) == 0`,这台生成器**没有小兵通道** ⇒ 那一支即便被取了本轮也验不了,这句同样写成断言。",
     "limits": "(i) **域完全没测**,而且**不是 GH #566 那 16 次落点**(那些是团战吸蓝的);本支独占域是「IsGoingOnSomeone ∧ ¬IsInTeamFight」,读数请求 `queue.json:hero-40`。(ii) **117 位里只有 4 位魔免,全部在 `tests/frames/`,`tests/fixtures/` 语料里仍然是 0** —— 这两句不许合并(backlog -109 的前提就是那个 0)。4 位里 3 位是 Black King Bar、1 位是剑刃风暴。(iii) 借来的证据只说**引擎接受这次施法**,不说**在这里放它是好主意**;Mana Drain 是多秒定身引导,引导期间 `J.CanNotUseAbility( bot )` 为真 ⇒ 「多放一次」在残血近身时是代价,这正是 hero-40 第 (3) 列存在的理由。(iv) 本轮**没跑完整套件**(~100min,GH #124)⇒ 「全量绿」本轮没有人说;跑的是 `lion` / `smoke` / `gate_claim` 三个过滤子集与静态门。",
     "next_baton": "**批测台** `queue.json:hero-40`(零 EC2 归档只读扫描,可与 hero-2/30..39 并进同一次遍历)。**总监**:P4.2 冻结期内本轮**零入集提议**,不需要裁定;若要给标签,本条目的正确形状是「已 gated 落地、待域读数」,不是待判。**在 (a) 买到之前不许 promote。**",
-    "gh_issue": "立案见本轮报告 §1;GH issue 由本轮报告的 §7 给出正文(MCP 可用时开,否则下轮补)。",
+    "gh_issue": "GH **#587**(立案 + 域请求的公开面;标签 `hero`)。上游:GH #566(`liondrainbkb` 撤案,PREMISE-FALSIFIED)提供本轮借用的三条腿。",
     "report": "iterations/reports/hero/20260907T045526Z.md"
   }
 }

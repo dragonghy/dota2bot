@@ -4929,7 +4929,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   —— 由 `-108` 撤下 `liondrainbkb` 时预登记交出的下一棒;焦点英雄 **Lion**;
   OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个 `bots/` 行为改动)
   **Lion「打架抽蓝」那一支的 WIDENING 杠杆 `liondrainmi` 已 gated 落地。**
-  `state.json:liondrainmi_20260907`,`queue.json:hero-40`。
+  `state.json:liondrainmi_20260907`,`queue.json:hero-40`,**GH #587**。
   新 `tests/test_lion_drain_combat_widen.lua`(**13 例**)+
   `tools/agent/mutstand_liondrainmi.sh`(**11/11 CAUGHT** + 对照按设计存活)。
   **零 arm、零入集提议**(P4.2 冻结)。AWS **一次都没碰**。
