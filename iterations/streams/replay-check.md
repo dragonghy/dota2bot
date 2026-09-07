@@ -12290,3 +12290,87 @@
     又跑了一次 gate,同样 `GATE_EXIT=0 CLEAN`);**未用 `RULE6_BYPASS` ⇒ 无
     「SKIPPED, not passed」行可抄**;**动态半(GH #124)未跑也不声称**。
     **Token**:`TOKENS total_in=15,162,430 out=97,851 turns=91`。
+- **2026-09-07T01:14Z**:**取上一轮点名的「下一轮第一件事 (1)」—— hero-36 /
+  `cmrangedhp`(GH #560)归档域普查,先回答被点名的判据「`creeps[]` 到底有没有 hp」。**
+  零 EC2、S3 只读、零 CE,未改 `bots/` 一行。
+  **宽扫 180/180 局**(归档 799 个带 run 标签的 `.dem` 里含 CM 的 **645 局 / 180 个 run**,
+  **按 run 分层每 run 抽 1 局**;`DL/DUMP/SCAN_EXIT=0`,**失败 0 局**、`unparseable=0`);
+  **逐帧深查 7 局 / 7 个 run**。⚠️ **180 不是 645,不冒充全集。**
+  ```
+  VERIFY id=cmrangedhp verdict=INDETERMINATE domain=REACHED episodes=544 games=180
+  ```
+  - **⭐ 判据的答案是「没有」,而且是量出来的不是读源码断言的**:
+    `creep_key_shapes = { "t|team|x|y": 18,709,698 }` —— **一千八百七十万行小兵采样,
+    单一键形,零例外**;没有 `hp`、没有 `name`、**连 `idx` 都没有**。
+    ⇒ 第 (2) 列(下单瞬间那只远程兵的真实血量)按 acceptance 的 METHOD-FAILED 分支是
+    **INSTRUMENT-BLIND,退回重裁**;本组**未**套用「域接近 0 ⇒ 不入集」。
+    第 (3) 列的另一半同样 BLIND(`snapshots[]` 无攻击力,180/180 局)⇒ `2*ad` 读不到,
+    **不许用 0 顶替**。**同一堵墙同时卡住 hero-32 / hero-33** ⇒ 本轮开 [harness] issue。
+  - **⭐⭐ 10 分钟那道门:语料自带对照组,不是猜的。** 那道门只挡**四个字面名**:
+    `lane_ranged` **538 发 100% 在 t>600、最早 600.4**;`lane_melee` **428 发 100%、最早 600.8**;
+    而**不**被挡的 `lane_other`(全是 flagbearer)201 发里 156 发在 600 之前(最早 **276.2**)、
+    `neutral` 2,066 发最早 **207.6**。**966/966 无一例外的硬墙 + 同语料同批局的对照组。**
+    且 `DotaTime() > 10*60` 在 `hero_crystal_maiden.lua` 里**只出现在这个块的两条分支上**
+    ⇒ 这堵墙本身就是该块的签名,比几何门更硬地把 544 发归给了它。
+  - **⭐ 重新定尺寸(源码 + 语料各出一半,单看任何一边都得不到)**:
+    `cm_GetFrostbiteCreepCap` 在 `cmcreepcap` 未 armed 时返回**平铺 1200**,
+    而挑选器只收 `GetHealth() <= 1100` ⇒ **`health <= nCreepCap` 对每个出口恒真**。
+    ⇒ GH #560 的第二个代价方向(「撒低」)**单独 arm `cmrangedhp` 结构上到不了**;
+    而且本语料 **544/544 都在 Frostbite 4 级**,那一档 cap 仍是 1200 ⇒ 即使 hero-33 同时 armed,
+    那半个代价**在这份语料上也是空的**。**代码可分离 ≠ 效果可分离**(新测试文件那句断言不推翻)。
+  - **价值列买到的一半(两个单边界,前提写在键名里)**:下界 **98/539 = 18.2% 无前提地证明**
+    不在浪费窗口 `(2*ad,460]` 内;干净 episode **286** 个里条件上界 <=460 的 **191 = 66.8%**;
+    因**施法前**有英雄伤害行而撤回上界 **121**。⇒ 最强一句是「**至多 81.8% 的域是浪费的冻结**」,
+    真实占比买不到。**侧别(4(i-a))**:radiant 235 发(19.8% / 66.7%)、dire 309 发(16.9% / 66.9%),
+    **两层同号且几乎同值**。
+  - **可钉帧**:`20260830_005820_slot1__…_40db63` **t=600.4** —— 满蓝、W 4 级 cd=0、1600u 内无敌人、
+    1200u 内无友军;0.8 秒前她自己平 A 打掉 88;Frostbite 四跳 **100/100/100/23** 收掉
+    ⇒ **施法瞬间血量 = 323**(末跳被截断),**323 <= 460 正落在杠杆要关的窗口里**,而出口报 **500**;
+    代价 **120 蓝 + 6 秒她唯一单体控**。**反面帧**:`20260827_064311_slot1__…` t=1526.2,
+    升级远程兵 **974 血**,armed 后决策不变(6 发升级兵下界 500/528/616/700/900/968 全在窗口外)。
+  - **⭐⭐ 本轮的自捉,又是逐帧核验自己递上来的候选清单抓到量具的(连续第三轮同族)**:
+    `20260831_005511_slot1__…_89e581` t=705.5,队友 Storm Spirit 在**施法前 0.4 秒**打掉 221,
+    而第一版的前摇只有 **0.2 秒** ⇒ 那一行没被看见,条件上界活下来报出
+    **「这只兵只有 22 血」**,而挑选器读到的约 **243**。根因是物理的:`ConsiderW` 读
+    `GetHealth()` 到战斗日志 ABILITY 行之间隔着 Frostbite 的 **0.35 秒吟唱**加转身与下令延迟。
+    修正 `DECISION_PRE_ROLL = 1.0` 后**重扫全部 180 局**:干净 episode **338→286**、
+    上界<=460 **241→191**、新增登记 `ub_withdrawn_pre_cast_dmg = 121`;
+    **published 的每个数出自同一版本**。与 09-06 的 WK 复活读条窗口、Axe「自己动不了」守卫
+    **同族同发现方式** —— 三轮都是量具而不是游戏。
+  - **量具**:新 `tools/batch_test/behavioral/cmrangedhp_domain.py`(`--selfcheck`
+    **65 PASS / 0 FAIL**;四个下界**从源码里读**不是抄成常量 —— GH #560 自己写的
+    「不能失败的断言不是证据」照办)+ `tests/test_cmrangedhp_domain.py`(**37 tests OK**)。
+    ⚠️ **本容器没有 pytest**(退出码 1 —— **没跑成不是失败**),用 `python3 -m unittest`。
+  - **本轮开的 issue**:**[harness]** dumper `creeps[]` 缺 `name`/`hp`/`idx`(带 18,709,698 行键形普查、
+    与 `buildings[]` 逐字同形的修法、体积代价与 `-creep-detail` 建议、一条硬验收);
+    **GH #560 评论**(重新定尺寸 + 对照组 + 两个单边界 + 可钉帧),不新开 issue。
+  - **下一轮第一件事**:(1) **hero-37 / `zusultstrand`(GH #564)**;
+    (2) hero-38 / hero-39 请总监先裁 —— ⚠️ **hero-39 点名本组**(`cullthresh_domain.py:215`
+    闭区间 vs 半开,GH #570 那个 2 的来源,**已连欠两轮**);
+    (3) hero-32 / hero-33 等本轮 [harness] issue 落地,**同一个量具能一起解锁**;
+    (4) 报告 §4.5 那一例「modifier 0.7 秒被摘、无死亡行」查清楚 ——
+    可能是 dumper 漏记死亡行,那样 `died_in_window` 会从上界变成**有洞的**上界。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;`tpreach_domain.py` 补 `by_seed`
+    (**已连欠八轮**);§3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝
+    (GH #529);`outlatch` 重扫;`campbind` 等 #475;**#477 重 dump 仍是本组的球**。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 32 轮 / #421 第 31 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260907T011415Z.md`;
+    交付件:`iterations/reports/replay-check/domain_scan_hero_2_30_31.md` **§9**
+    (路径由 owed 行钉死不改名;同轮把头部 `SCAN_COVERAGE` 5/9 → **6/9**、§7 的 hero-36 行
+    改成 DELIVERED,并给 hero-32/33 两行补了本轮的语料撑腰句)。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(S3 只读,零 EC2、零 CE);
+    `DUMPER_EXIT=0`(cache HIT);`AN_DL_EXIT=0`(27,342 个 `analysis.json`);
+    180/180 局 `DL/DUMP/SCAN_EXIT=0`、`scan_fail.log` **0 行**、`unparseable=0`;
+    `cmrangedhp_domain.py --selfcheck` **`SELFCHECK_EXIT=0`,65 PASS / 0 FAIL**、`AGG_EXIT=0`;
+    `WRAPPER_EXIT=0`(37 tests OK)。
+    ⛔ **证据纪律 3 第四十六次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`);改重定向后被前台超时挪到后台,真码从脚本末行裸读:
+    **`selfcheck worst exit: 3`**(`legs run 10`;FINDINGS
+    `cadence owed-executions trunk-red(python)`;**`UNCERTIFIABLE (exit 2): none`**)。
+    **⚠️ 第二十五次登记:自检在本容器不是「约 20s」** —— 本轮实测 > 120s。
+    `trunk-red(python)` **先于本轮存在于工作树上**,与本轮零交集(**本轮未改任何 `.lua`**)。
+    **铁律 6**:`ARM_HOOK_EXIT=0`、`GATE_EXIT=0 CLEAN`(`luacheck bots game` **0 warnings**,
+    冷启自己装了 `lua-check`);**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(GH #124)未跑也不声称**。push 读数见报告 §11 的补记。

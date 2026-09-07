@@ -5,15 +5,18 @@
 **零 EC2、零发波、S3 只读、零 CE**;未改 `bots/` 或 `game/` 一行。
 
 ```
-SCAN_COVERAGE: 5 / 9 readings delivered  -- INCOMPLETE
+SCAN_COVERAGE: 6 / 9 readings delivered  -- INCOMPLETE
   DELIVERED : hero-35 (axebhrecast, full four columns)         -- 09-06T09:5xZ
               hero-34 (liondrainbkb)  -> domain_hero_34_liondrainbkb.md
               hero-2  (cullthresh)    -> domain_hero_2_cullthresh.md
-              hero-31 (wkbonefight, 三列 + 第四列明写买不到)   -- §6,本轮
-              hero-30 (axecallbkb, 两个分支分开,域都到了)     -- §8,本轮
+              hero-31 (wkbonefight, 三列 + 第四列明写买不到)   -- §6
+              hero-30 (axecallbkb, 两个分支分开,域都到了)     -- §8
+              hero-36 (cmrangedhp, 域到了 + 价值列 BLIND)      -- §9,本轮
               hero-2/30/35 供给前提(Axe 语料量,三条请求共用)
-  BLIND     : hero-31 充能层数列(§4 + §6.5);hero-32、hero-33 小兵血量列(§4)
-  NOT YET   : hero-32、hero-33、hero-36、hero-37 读数(§7 逐条说欠什么)
+  BLIND     : hero-31 充能层数列(§4 + §6.5);hero-32、hero-33 小兵血量列(§4);
+              hero-36 第 (2) 列与 2*ad(§9.1)—— 与 hero-32/33 是**同一堵墙**,
+              本轮开了 [harness] issue 要 dumper 给 creeps[] 补 name/hp/idx
+  NOT YET   : hero-32、hero-33、hero-37 读数(§7 逐条说欠什么)
 ⛔ 总监:本行的 done_when 现在判**九个 id 的字面出现**(path_contains_all,
    hero-36 起改的)。**出现不等于交付** —— 本文件为了让那道门读得到,
    在 §7 给 hero-36 / hero-37 写了「还没读」的状态行。
@@ -465,9 +468,9 @@ arming 会新增的释放数,而是「第一分支被 `==1` 拒掉的机会」�
 | 请求 | 本文件里的状态 | 还欠什么 |
 |---|---|---|
 | **hero-30**(`axecallbkb`) | **DELIVERED → §8**(2026-09-06T21:5xZ) | 两个分支分开交付,域**都到了**((i) 11.4% / (ii) 14.1%,`DOMAIN-NOT-REACHED` 不触发);⚠️ §4 判「正在引导」INSTRUMENT-BLIND **本轮被推翻**(见 §8.11),仍 BLIND 的只有 `IsGoingOnSomeone`/`botTarget` |
-| **hero-32**(`zusboltdmg`) | **NOT YET / 部分 BLIND** | 小兵血量与远程/近战之分,`creepSnap` 只有 `{t,team,x,y}` ⇒ 等 dumper |
-| **hero-33**(`cmcreepcap`) | **NOT YET / 部分 BLIND** | 同上 |
-| **hero-36**(`cmrangedhp`,GH #560) | **NOT YET(本轮只登记,未读)** | 价值列是「下单瞬间那只远程兵的真实血量」,`creepSnap` 无 hp 无名字 ⇒ 按 acceptance 的 METHOD-FAILED 强制,读不出就是 **INSTRUMENT-BLIND 退回重裁**,**不得**套用「分布落在中段 ⇒ 不入集」 |
+| **hero-32**(`zusboltdmg`) | **NOT YET / 部分 BLIND** | 小兵血量与远程/近战之分,`creepSnap` 只有 `{t,team,x,y}` ⇒ 等 dumper。⭐ 2026-09-07:这句现在有语料读数撑着(**18,709,698 行单一键形**,§9.1),并且已开 [harness] issue 要 `name`/`hp`/`idx`;落地后**同一个量具**能把三条腿一起解锁 |
+| **hero-33**(`cmcreepcap`) | **NOT YET / 部分 BLIND** | 同上。⚠️ 另加一条 09-07 的源码事实(§9.3):`cmcreepcap` 未 armed 时 cap 是**平铺 1200**,而挑选器只收 `<=1100` ⇒ 出货树上 cap 项**恒真**;且 hero-36 语料里 **544/544 都在 Frostbite 4 级**,那一档 cap 仍是 1200 —— 本腿的域**不在**远程兵那个出口上,要从别处买 |
+| **hero-36**(`cmrangedhp`,GH #560) | **DELIVERED → §9**(2026-09-07T01:1xZ) | 域**到了**(544 发 / 143 局,10 分钟那道门带对照组);价值列第 (2) 与 `2*ad` **INSTRUMENT-BLIND**(`creeps[]` 18,709,698 行单一键形 `t\|team\|x\|y`,`snapshots[]` 无攻击力)⇒ 按 §CJ **退回重裁**,本组**未**套用「域接近 0 ⇒ 不入集」;买到了两个单边界(§9.4)与一条重新定尺寸的源码事实(§9.3) |
 | **hero-37**(`zusultstrand`,GH #564) | **NOT YET(本轮只登记,未读)** | (1) 撤退 + HP≤28% + 大招可放的域;(2) 价值列「揣着大招死掉」;(3) 最近敌人距离;(4) 与 `ultcash` 的重叠分层。⚠️ 顺带一条本轮**顺手答了一半**的 loader 问题:`snapshots[]` **没有** `GetRespawnTime` 那一列(键是 `t/hero/idx/team/player_id/x/y/hp/hp_pct/mp/max_mp/mp_pct/level/items/abilities/tp_cd/tp_cdlen/net_worth`)⇒ §6 那条单向绊线**拆不了**,比较式左端仍不是帧数据 |
 
 ⛔ **这一节存在的唯一理由是让 `path_contains_all` 那道门读得到九个 id,
@@ -660,3 +663,91 @@ DOMAIN-NOT-REACHED 退回门」。实测 **(i) 11.4% / (ii) 14.1%**,**都不接�
 `GetProperTarget`,离线无对应字段),已按上界 + 两层收紧交付。
 ⇒ 「dump 里没有这个字段」和「这个状态重建不出来」**不是同一句话**,
 上一轮把后者当成了前者。
+
+---
+
+## 9. hero-36(`cmrangedhp`,GH #560)—— 域**到了**,价值列 **INSTRUMENT-BLIND**(2026-09-07T01:1xZ)
+
+**执行**:录像组。零 EC2、S3 只读、零 CE;未改 `bots/` 一行。
+量具:`tools/batch_test/behavioral/cmrangedhp_domain.py`(`--selfcheck` **65 PASS / 0 FAIL**)
++ `tests/test_cmrangedhp_domain.py`(**37 tests OK**,`python3 -m unittest`)。
+完整报告:`iterations/reports/replay-check/20260907T011415Z.md`。
+
+```
+VERIFY id=cmrangedhp verdict=INDETERMINATE domain=REACHED episodes=544 games=180
+```
+
+**语料**:归档 799 个带 run 标签的 `.dem` 里含 Crystal Maiden 的 **645 局 / 180 个 run**;
+**按 run 分层每 run 抽 1 局 ⇒ 宽扫 180/180 局**(`DL/DUMP/SCAN_EXIT=0`,失败 0,`unparseable=0`),
+**逐帧深查 7 局 / 7 个 run**。⚠️ **180 不是 645**,比例读数按 180 局呈报。
+
+### 9.1 被裁定点名的那个判据,答案是「没有」,而且是量出来的
+
+`creep_key_shapes = { "t|team|x|y": 18,709,698 }` —— **一千八百七十万行小兵采样,单一键形,零例外**。
+没有 `hp`、没有 `name`、连 `idx` 都没有。⇒ 第 (2) 列(**下单瞬间那只远程兵的真实血量**)
+按 acceptance 的 METHOD-FAILED 分支是 **INSTRUMENT-BLIND,退回重裁**;
+本组**不**套用「域接近 0 ⇒ 不入集」。**同一堵墙同时卡住 hero-32 与 hero-33**
+(三条腿的价值列同源)⇒ 本轮开了 [harness] issue。
+第 (3) 列的另一半同样 BLIND:`snapshots[]` **没有攻击力**(180/180 局),
+所以 `2*ad` 这个收件门读不到 —— **不许用 0 顶替**。
+
+### 9.2 域到了,而且 10 分钟那道门**自带对照组**
+
+`ranged_exit_casts` = **544**(538 基础 + 6 升级),143/180 局,均值 3.02 发/局
+(每局分布见报告 §3;整数小值域**不报中位数**)。
+
+| 目标 | 是四个字面名之一 | 施法 | t>600 | 最早 |
+|---|---|---|---|---|
+| `lane_ranged` | **是** | 538 | **100%** | **600.4** |
+| `lane_melee` | **是** | 428 | **100%** | **600.8** |
+| `lane_other`(flagbearer) | 否 | 201 | 22.4% | 276.2 |
+| `neutral` | 否 | 2,066 | 73.2% | 207.6 |
+
+⇒ 被门挡的两类在 600 秒有一堵硬墙(**966/966**),不被门挡的两类从 200 多秒就开始。
+`DotaTime() > 10*60` 在该文件里**只出现在这个块的两条分支上** ⇒ 这堵墙是该块的签名。
+
+### 9.3 ⭐ 重新定尺寸:出货树上 cap 项**恒真**,单独 arm 只能咬四个下界
+
+`cm_GetFrostbiteCreepCap` 在 `cmcreepcap` 未 armed 时返回**平铺 1200**,而挑选器只收
+`GetHealth() <= 1100` ⇒ `health <= nCreepCap` 对**每个出口**恒真。
+⇒ GH #560 的第二个代价方向(「撒低」,窗口 `(nCreepCap,1100]`)**单独 arm `cmrangedhp` 到不了**;
+而且本语料 **544/544 都在 Frostbite 4 级**,4 级那一档 cap 仍是 1200 ⇒ 即使 hero-33 同时 armed,
+那半个代价在这份语料上**也是空的**。**代码可分离(新测试文件已断言)≠ 效果可分离。**
+
+### 9.4 价值列买到的那一半(两个单边界,前提写在键名里)
+
+| 量 | 读数 |
+|---|---|
+| 下界 > 460(**无前提**证明不在浪费窗口) | **98 / 539 = 18.2%** |
+| 干净 episode(Frostbite 是致命一击 **且** 决策窗口内无第二个英雄伤害行) | **286** |
+| 其中条件上界 <= 460(在浪费窗口内,**带前提**) | **191 = 66.8%** |
+| 因施法前有英雄伤害行而**撤回**上界 | **121** |
+
+⇒ 能说的最强一句:**至多 81.8% 的域是"浪费的冻结"**,且能查证归属的 286 个 episode 里
+三分之二落在浪费窗口内;**真实占比买不到**。
+**侧别(4(i-a))**:radiant 235 发(下界>460 **19.8%**,上界<=460 **66.7%**)/
+dire 309 发(**16.9%** / **66.9%**)—— **两层同号且几乎同值**(4(i-b) 满足)。
+
+### 9.5 可钉帧 + 反面帧 + 本轮自捉
+
+- **首选** `20260830_005820_slot1__…_40db63` **t=600.4**:CM 满蓝、W 4 级 cd=0、1600u 内无敌人、
+  1200u 内无友军;0.8 秒前她自己平 A 打掉 88;Frostbite 四跳 **100/100/100/23** 收掉
+  ⇒ **施法瞬间血量 = 323**(末跳被截断),**323 <= 460,正落在杠杆要关的窗口里**,而出口报 **500**。
+  代价:**120 蓝 + 6 秒她唯一单体控**。(这一帧的**自动**上界被 1.0 秒前摇保守地撤回了,
+  323 是**手工核验**;两句不合并。)
+- **反面帧** `20260827_064311_slot1__…` **t=1526.2**:升级远程兵 **974 血**,armed 后决策不变;
+  6 发升级兵下界 500/528/616/700/900/968 **全在窗口外**。
+- **⭐ 自捉(又是逐帧核验自己的候选清单抓到量具)**:`20260831_005511_slot1__…_89e581` t=705.5,
+  队友 Storm Spirit 在**施法前 0.4 秒**打掉 221,而第一版前摇只有 0.2 秒 ⇒ 上界活下来报出
+  **"这只兵只有 22 血"**,挑选器读到的约 **243**。根因是 Frostbite **0.35 秒吟唱**
+  把决策帧推到 ABILITY 行之前。修正 `DECISION_PRE_ROLL=1.0` 后**重扫全部 180 局**:
+  干净 episode **338→286**、上界<=460 **241→191**、新增 `ub_withdrawn_pre_cast_dmg=121`。
+  **published 的每个数出自同一版本。**
+
+### 9.6 限度
+
+`died_in_window` 按**名字**归属(小兵在 dump 里连 idx 都没有)⇒ 上界;
+`killed_by_frostbite` **精确**(一个施法者同时只有一发),条件上界只挂在精确谓词上。
+条件上界的前提是「**没有别的英雄**打它」,不是「没有别的东西打它」。
+`2*ad` 与 bot mode BLIND ⇒ 分支归属计数(几何三门全过 **464/544 = 85.3%**)是**上界**;
+几何 0 敌人那 467 发是**下界**(看不见不存在的英雄)。
