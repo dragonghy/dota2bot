@@ -130,6 +130,27 @@
         "⭐ 这一条的 (b) 与前五次不同:它不是「量到了正面」,是「按构造量不到」—— 可归因效应 1 次施法 / 82 局,而单波 ~200 局。裁定压在条件 (c)(意图修复)上,反方理论(Turbo 奖励更早的目标承诺)已登记未解决。引用本锚点时连引这一句,见 test_set.md §FQ.3 / §FQ.4。",
         "同一个 commit 里还有两处 harness 修复(stable_anchors 的 state_json_key 复数形式、pending_rulings 的 PROMOTED 第三信号)—— 它们**不改变稳定版**(`bots/` 只有 chaos_knight 那一处 diff),所以锚点语义不受影响。"
       ]
+    },
+    {
+      "name": "stable-v6",
+      "ref": "refs/heads/stable-v6",
+      "ref_kind": "branch",
+      "ref_sha": "f0474dbbcb442b3160091831bac782ecdbd25d09",
+      "promote_commit": "f0474dbbcb442b3160091831bac782ecdbd25d09",
+      "promote_commit_subject": "director: PROMOTE slotpush to a turbo default (stable-v6), armed 51 -> 50",
+      "promoted_ids": [
+        "slotpush"
+      ],
+      "promoted_at": "2026-09-07T10:xxZ",
+      "state_json_key": "slotpush_PROMOTE_20260907",
+      "on_main_first_parent": true,
+      "note": [
+        "第七次 promote,距 stable-v5 约三小时。ref 指着 promote commit 本身 ⇒ 不变量 3 平凡成立(与 stable-v1/v3/v4/v5 同,与 stable-v2 不同)。",
+        "稳定版的变化只有一处:`bots/FunLib/jmz_func.lua` 的 `J.IsTeamPushingHighGround` 把实参由 `J.IsModeTurbo() and J.IsSoakCandidate('slotpush')` 换成 `J.IsModeTurbo()` ⇒ turbo 下 `IsTeamPushingSecondTierOrHighGround` 按 team slot 1..5 扫五个队友,而不是把玩家 id 当槽位喂给 `GetTeamMember`。**非 turbo 逐字未动**(下游 flag 形参刻意保留就是为了这句成立),`utils.lua` 零 diff ⇒ 锚点语义只由这一处决定。",
+        "⭐ **引用本锚点时连引这一句**:这一条的 (b) 是**十波家族级 1795 局、均值 -4.88 gpm —— 轻微为负**。它过的是铁律 2(b) 的粗粒度门(家族级不可归因的漂移),**不是正面证据**。⚠️ 与 stable-v5(`ckpush`)的分界线必须读清楚:那一条的效应量**按构造**低于噪声底,所以「等更好的读数」在那里不是选项;**本条不是那样**,独占波能说得更多 ⇒ **裁定压在条件 (c)(实参类型错误,不是调参选择)上**。把 §FQ.4 的论证搬到本条上是错的。",
+        "⛔ **这条 promote 的守卫是一个字符串钉,不是行为断言,而这是量出来的**:标准的 promote 行为用例在「有人把闸偷偷加回去」这个变异体下 **SURVIVED**,因为本仓库 fixture 语料 94 个 subject-load 上出厂扫描与按槽位扫描 **nFlip == 0,从不分歧**(`[domain price]` 前提)。全文 test_set.md §FT.4;哪天 `[domain price]` 变红,那条行为用例才开始承重。",
+        "同一个 commit 里还有测试与变异台的维护(census 掉三行、mutstand 重锚 M6/M7/M8/M11、新增 M13/M14、FILES 补一个文件)—— 它们**不改变稳定版**(`bots/` 只有上面那一处 diff),所以锚点语义不受影响。"
+      ]
     }
   ]
 }
