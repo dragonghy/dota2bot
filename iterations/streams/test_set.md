@@ -1,7 +1,11 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom
+tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
 
-**成员串 46**(上一行,**417 字节**,md5 `cd3b46d4e3ca4a446272b330a09a2751`)。本行 **2026-09-07T19:xxZ 的变动:两条 `退回出集`(48 → 46)**,总监裁定全文 **§FW**。⛔ **两条都不是 reject**,gate 与代码**逐字保留**(`bots/` 对这两条零 diff);判定完结 **2**(owner P4.2 的产出指标),连续第二轮达标。
+**成员串 45**(上一行,**408 字节**,md5 `f4292f7bb9a5f112ed34af62cbe3c2a8`)。本行 **2026-09-07T22:xxZ 的变动:一条 `退回出集`(46 → 45)**,总监裁定全文 **§FX**。⛔ **不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff);判定完结 **1**。
+- **`campbind` 退集**(46 → 45)—— 与前几轮两条**不同**:它不是从 P4.2 的最老一档选出来的(armed 仅 **2 天**),而是**录像组 09-04T21:56Z 在 GH #475 请裁、连续六轮没等到的那条三选一**,全文 §FX。
+
+上一轮(**2026-09-07T19:xxZ**,46 → 两条退集后的 46)的表头保留在下面三行,不要与本行混读:
+**成员串 46**(**417 字节**,md5 `cd3b46d4e3ca4a446272b330a09a2751`)。**2026-09-07T19:xxZ 的变动:两条 `退回出集`(48 → 46)**,总监裁定全文 **§FW**。⛔ **两条都不是 reject**,gate 与代码**逐字保留**(`bots/` 对这两条零 diff);判定完结 **2**(owner P4.2 的产出指标),连续第二轮达标。
 1. **`l1trade` 退集**(48 → 47)—— armed **≥ 44 天**(`armed_since.json` 下界 2026-07-25),`verify_coverage.py` 读 **verify=0 / 179 份报告**,与上一轮两条同取自**全集最老的那一档**(P4.2「从核验记录最少、最难买 (a) 的 id 清起」)。
 2. **`l5combo` 退集**(47 → 46)—— 同一档、同一读数、同一理由;两条是同一个杠杆的核心腿与辅助腿(`J.ShouldInitiateLaneKill` / `J.ShouldSupportComboKill`),**必须同批处理**:分开退会留下半个对子,而它们的自风险门是按「core 0.75 / support 0.60」成对设计的。
 ⭐⭐⭐ **本轮最该被读的一条(§FW.2):一个漏斗死在最后一条合取上,「子句为假」和「仪器看不见这条子句」长得一模一样 —— 而本轮第一版结论就是错的那一个。** 新建的域普查(`tests/_lanekill_domain_sweep.lua`)显示两条腿都**走完了整条合取链**才归零:`l1trade` 842 帧笼罩 → 295 有健康队友 → 138 有敌人在射程 → 131 过自风险 → **155 对候选 (bot,target) 过深度缰绳** → **0 lethal / 0 fires**;`l5combo` 130 → 33 → 30 → 22 → 16 → **11 对有己方核心压在目标上** → **0 / 0**。把它写成「这个杠杆的域是空的」是干净、好引、**错的**。
@@ -1547,3 +1551,118 @@ M1(让语料看见出向爆发)CAUGHT 是本节最重要的一发:它模拟「ha
 2. **`ownhalf` / `overchase` 本轮只排除、没判** —— §FU.3 的读数说它们的域不空且 `overchase` 真的 fires 3 次,
    那是一个**不同形状**的判定,需要它自己的工作单元。
 3. **`*_est_live` 的门是「非零」不是「正确」** —— harness 哪天给出一个错的出向模型,这套断言会转绿而不是转红。
+
+## §FX 2026-09-07T22:xxZ 总监:**`campbind` 退回出集(46 → 45)** —— 本节最该被读的是 **§FX.2:录像组请裁的「三选一」里,2 和 3 根本不互斥,而把它读成互斥正是这根棒卡了六轮的原因**;以及 **§FX.3:这一次「域为零」真的是域的零,不是仪器的零 —— §FW.2 要求的那道检查在这里做了,而且过了**
+
+### §FX.0 一句话
+
+`campbind` 的条件 (a) 在例行波里**结构上买不到**(两份独立语料、97 局、两个波次族:可判读面为 **0**),
+而它 armed 的每一轮都在**替 `pulldrag` 付一笔已量出来的代价**;⇒ **退出测试集,改走 fixture 路径**,
+disposition = `DOMAIN-NOT-REACHED-IN-WAVES`,**不是 reject**,gate 与 `bots/` 逐字保留。
+
+### §FX.1 这根棒欠了六轮,而它是本轮 trunk 红的根
+
+录像组 **2026-09-04T21:56Z** 在 GH #475 追评里请裁三选一,此后
+`replay-check.md` 连续在 **11004 / 11089 / 11195 / 11286 / 11347 / 11437 / 12903** 七处
+把「仍等 #475 三选一再裁」写进 LIVE 当前状态,并且**每一轮都附带「不要再扫更多局」**
+—— 也就是说这根棒不只是欠着,它**堵着**:被裁方已经按裁定的形状停下了。
+开工自检的 `test_stale_waits.py` 本轮点的就是 `replay-check.md:12903` 这一行
+(理由行自带修法:*fix the charter line, do not loosen this test*)。
+⚠️ **那条红的成因不在措辞里** —— 那一行把**已落地的入集裁定**(#475,09-04T10:13Z,W46 起生效)
+和**未落地的再裁**写成同一件事「等 #475」,于是检测器看见「等一个已经落地的裁定」而变红。
+**措辞是对的一半、错的一半,而红的是错的那一半。** 本节把再裁做掉,那一行才有得改(§FX.5)。
+
+### §FX.2 ⭐⭐⭐ 立法级:被请裁的「三选一」不是三选一
+
+录像组给的三条是:
+1. 接受「逻辑依据 + 单调性」(armed 戳集 ⊆ 出厂戳集,严格子集);
+2. 给它一个**定向 fixture**,用 fixture 代替波次证据;
+3. **退出测试集**,别再占一个 id 位。
+
+**2 和 3 是正交的,而它们被写成了互斥的。** 一个杠杆**不需要占着 armed 串里的一个位置**
+才能被 fixture 钉住:fixture 断言的是**决策**,它既不需要这个 id 出现在某一波的 arm 串里,
+也不需要那一波的录像。⇒ 正确答案是 **2 且 3**,不是 2 或 3。
+**而把它读成互斥,恰好是让这根棒卡住的那个形状**:每一轮的读法都是
+「要么现在接受(1),要么现在放弃(3),否则就再等等(2)」,于是**「再等等」永远是最便宜的一格**
+—— 一个每轮都不必付代价的默认值,连续六轮。⚠️ **这不是录像组的错**:
+它明写了「录像组不做这个决定」,三条也确实穷举了处置空间;丢的是**总监没有取的那一步**。
+
+### §FX.3 ⭐⭐ 这次的零是域的零,不是仪器的零(§FW.2 要求的检查,做了,过了)
+
+§FW.2 立的规矩:一个漏斗死在最后一条合取上时,「子句为假」和「仪器看不见这条子句」长得一模一样,
+**必须去量仪器在那个方向上活不活**。本节照做:
+
+| 检查 | 读数 |
+|---|---|
+| 工具自检 | `campbind_poke.py --selfcheck` **4/4 PASS**,含「未被打扰的营地读作没动」的**假阳性对照** |
+| liveness | `tests/test_campbind_poke_liveness.py` **17 检查 / 0 失败** |
+| 变异台 | `tools/agent/mutstand_campbind_poke.sh` **6 变异 6 CAUGHT**,`sha256sum -c` 还原 OK |
+| **同一仪器、同一批帧、有没有非零** | **有,而且两个方向都有**:W46 归属到**最近**营地 armed **7** / baseline **1**;拉营族 (a) in-window armed **52** vs baseline **14**,窄化后 **12/8/18/6 vs 0/0/3/0** 四格同号 |
+
+⇒ 归属腿在这批帧上**是活的**,`non_nearest == 0` 是**域的读数**。这与 §FW 那两条**形状相反**:
+那里最后一条合取是出向爆发估计、语料在那个方向恒 0(仪器瞎);这里同一条腿在同一批帧上答得出非零。
+
+⚠️ **一条不许被吞掉的例外(本节唯一一处仪器确实没答上来的地方)**:
+W46 语料里**唯一**那个可能咬的瞬间 —— `20260904_125801_slot6` spirit_breaker(armed, pos4),
+t=330.7 右键 `forest_troll_berserker`、t=334.7 右键 `kobold_taskmaster`(4 秒内两个不同族 = 两个不同营地)
+—— **归属失败**:C0 位移仅 12–176u、C1 全程 0,都够不到 250u 的归属阈值 ⇒ 记 `unattributed`,不入结论。
+**所以准确的说法不是「仪器看见了并答否」,是「仪器在唯一一帧上答不出」。**
+⭐ 而这恰好**就是**选 fixture 路径的理由,不是反对它的理由:fixture 直接断言决策,
+**根本不需要位移归属**,那 250u 阈值在 fixture 上不存在。
+
+### §FX.4 判据:三条件逐条,和「留集」这一侧的**已量出的**代价
+
+- **(c) 逻辑依据 —— 成立。** 入集裁定(#475,09-04T10:13Z)自己核过四格:唯一闸点
+  `bots/FunLib/jmz_func.lua:8993` 是**独立门**、不与 `pullcamp` 合取(不踩 `pullcad` 陷阱);
+  符号单调(armed 戳集 ⊆ 出厂戳集,没有 over 方向);载体 `generic`(`TERMS` 行两串逐字节相同);
+  「站着不动」的最坏上界 **15 秒且只在 1:00–6:00**(由 `J.ShouldPullNeutralCamp` 的窗口自己封死)。
+- **(b) 胜负无明显负面 —— 粗粒度成立,而且只到粗粒度。** W53 三粒种子池化 gpm **−6.80**
+  (queue `strategy-42:result`),该字段自己写着**这不是改善的证据**:三粒 arm 是 −18.88 / −32.77 / +31.24,
+  极差 64.1,落在 GH #30 的噪声里;胜率**退化**(少数侧 0/160)按 GH #352 **两个方向都不许引**。
+- **(a) 录像组核验执行 —— 买不到,而这已经量了两次:**
+
+| 语料 | 局数 | in-window 戳(armed/base) | 可判读面(计划营 ≠ 最近营) | 判决 |
+|---|---|---|---|---|
+| W46(`…_d7082b` 4470 / `…_b77771` 4252) | 宽扫 50、深查 8 | 57 / 7 | **1**,且**不可归属** | INDETERMINATE |
+| W52(两个 run,2 粒种子) | 47 | 52 / 14 | **0** | INDETERMINATE |
+
+两份语料**互相独立、来自不同波次族**,合计 **97 局**,可归属的单向证据 **0**。
+W52 那条评论还把密度算出来了:满足前半条(≥2 活营同在 1400u 内)的戳 **13 次 / 9 局 ≈ 0.19 次/局**,
+后半条(计划营 ≠ 最近营)**一次没出现**。⇒ **例行波再发多少波都会得到同一份 INDETERMINATE。**
+
+⭐ **而「先留着,等以后哪波撞上」不是免费的默认值 —— 代价在入集裁定自己的限定 ⚠️ 第 2 条里写着**:
+`campbind` 与 `pulldrag` **不正交**,armed 之后 `J.GetLanePullDragTarget` 问的营地与被激怒的小野
+**第一次是同一个箱子** ⇒ **`pulldrag` 的 connect 读数换了定义域,不许与 W45 及更早的波并池**。
+`pulldrag` 现在 armed **13 天**、`verify_coverage.py` 读 **verify=0**。
+⇒ 每多留一轮,是拿**一条已证买不到的证据**,去换**另一条 id 的可并池语料**。这笔交换不划算,而且它有数。
+
+### §FX.5 裁定(投递照章程 §2.5:档案 / 机器字段 / 活线程,三处齐)
+
+1. **`campbind` 退出测试集**,armed 串 46 → 45。**不是 reject**:gate、helper、调用点
+   (`J.GetCampPullPokeTarget`,唯一闸点 `jmz_func.lua:8993`)**逐字保留**,`bots/` 本轮零 diff。
+   disposition **`DOMAIN-NOT-REACHED-IN-WAVES`** —— ⛔ **不许**读成「测过了,无效应」
+   (入集裁定的收割限定第 1 条已经预先禁止过这一种读法,本节重申)。
+2. **条件 (a) 改走 fixture 路径**(录像组的第 2 条),已登记
+   `owed_executions.json:campbind_condition_a_fixture`。目标帧就是 §FX.3 那一帧
+   (`20260904_125801_slot6` spirit_breaker t=330.7 / t=334.7)。
+   `done_when` 明写**拒绝**一份「在例行波语料上重跑报 0」的产物 —— 那正是本节判定买不到的东西。
+3. **⚠️ 一条我现在核不了的前提,连同它的后果一起登记(不许烂在散文里)**:那一帧属于 **W46**,
+   而 W46 的 timeline **已随容器回收**,`.dem` 是否仍在 S3 **本轮没有核**(总监不动 AWS 的钱,
+   S3 只读也没跑)。⇒ owed 行里写死:**若该帧的语料取不回来**,这条**不是继续欠着**,
+   而是**当场转为永久退集**(`DOMAIN-NOT-REACHED`)并在报告里说出来。
+   **时限是真实存在的**:同族的 W44 录像约 **09-25** 过期(GH #477)。
+4. **不取第 1 条(纯单调性接受)。** 单调子集只保证「不会让 bot 去戳它本来不戳的东西」,
+   它**不保证掉的那些戳是该掉的**,而 §FX.4 的 15 秒站桩上界说明这一侧**有代价不是零**。
+   铁律 2 的 (a) 要的是「真的执行且行为正确」,拿单调性顶替 (a) 等于把三条件改成两条件。
+
+**下一棒**:录像组(`owed_executions.json` 那一行;先核 `.dem` 在不在,再决定是钉 fixture 还是回报永久退集)。
+批测台无动作 —— 下一波 arm 串从 `test_set.md` 第 2 行取,自然就少了这一个 id。
+
+### §FX.6 诚实边界(本节**没有**做到的事)
+
+1. **没有核 W46 的 `.dem` 还在不在 S3** —— 见 §FX.5 第 3 条,后果已写进 owed 行的 `done_when`。
+2. **没有量 `campbind` 退集之后 `pulldrag` 的 connect 读数**是否真的恢复可并池 ——
+   §FX.4 那笔代价是从入集裁定的限定条款**读来的**,不是本轮**测出来的**。
+   它足以支持「留集不是免费的」,**不足以**支持任何关于 `pulldrag` 读数会变多好的说法。
+3. **没有判 `ownhalf` / `overchase` / `fieldregen`** —— 上一轮 §FW.6 指名的那三条**原样顺延**,
+   本轮取了 GH #475 是因为**那根棒欠了六轮且堵着被裁方**,不是因为它更好判。

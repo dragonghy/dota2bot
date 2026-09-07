@@ -98,6 +98,7 @@ USAGE
 import argparse
 import json
 import os
+import re
 import sys
 import glob
 import collections
@@ -154,6 +155,11 @@ HERO_SRC = os.path.join(
     "..", "..", "..", "bots", "BotLib", "hero_crystal_maiden.lua")
 
 
+_INLINE_FLOOR_RE = re.compile(r"nEnemysStrongestCreepsHealth[12]\s*>\s*(\d+)")
+_FARCALL_RE = re.compile(r"X\.cm_IsFarCreepFloorMet\s*\(([^()]*)\)")
+_FARCALL_FLOOR_RE = re.compile(r",\s*(\d+)\s*$")
+
+
 def consumer_floors(path=None):
     """Read the four floors out of hero_crystal_maiden.lua's money block.
 
@@ -162,24 +168,54 @@ def consumer_floors(path=None):
     someone raises `> 460` to `> 560`, `500` stops clearing every floor, the
     'arming can only narrow' sentence stops being true, and this returns a
     different list so selfcheck goes red.
+
+    ⚠️ ONE OF THE FOUR MOVED HOUSE ON 2026-09-07 AND THIS READER DID NOT MOVE
+    WITH IT.  `cmfarcreep` (1642591b) routed the far half's relaxed floor
+    through `X.cm_IsFarCreepFloorMet( near, far, 390 )`, so `Health1 > 390`
+    stopped being an inline comparison.  The Lua twin of this scraper
+    (tests/test_cm_ranged_creep_health.lua) was taught the new home in that
+    same commit; THIS one was not, and a line-scan keyed on `>` silently
+    dropped 390 -- the floor `cmrangedhp`'s 500 clears most narrowly.  The
+    repair is to read the call's third argument, NOT to lower the expected
+    count: a three-floor list would certify a shape the file does not have.
+
+    Two shapes are read, mirroring the Lua twin so the two instruments cannot
+    drift apart again:
+      * `nEnemysStrongestCreepsHealth[12] > <literal>` -- the inline floors;
+      * `X.cm_IsFarCreepFloorMet( ..., <literal> )` -- the relocated one.
+
+    COMMENTS ARE STRIPPED FIRST.  The block's own documentation writes the
+    relocated term out as ``...Health1 > 390`` and today that abbreviation is
+    the only reason a comment is not read as code -- spell the identifier out
+    in prose and an unstripped scan would "find" the floor in a sentence while
+    the code's real floor sat anywhere at all.  That is the text-judge family
+    this repo has now recorded four times; here it is pre-empted rather than
+    caught.  Returns None ("unknown", never a default) when the source cannot
+    be read or when the far call has lost its literal floor.
     """
     path = path or HERO_SRC
     try:
         src = open(path, encoding="utf-8").read()
     except OSError:
         return None
-    # The money block is the only place these five terms appear as code.
+    # The money block is the only place these five terms appear as code.  The
+    # two delimiters are themselves comments, so the block is cut out BEFORE
+    # comments are stripped.
     body = src.split("--无英雄目标时冰冻小兵打钱", 1)
     if len(body) < 2:
         return None
     body = body[1].split("--进攻", 1)[0]
-    floors = []
-    for line in body.splitlines():
-        if "nEnemysStrongestCreepsHealth" not in line or ">" not in line:
-            continue
-        for tok in line.replace("(", " ").replace(")", " ").split():
-            if tok.isdigit():
-                floors.append(int(tok))
+    code = "\n".join(line.split("--", 1)[0] for line in body.splitlines())
+    floors = [int(lit) for lit in _INLINE_FLOOR_RE.findall(code)]
+    for args in _FARCALL_RE.findall(code):
+        lit = _FARCALL_FLOOR_RE.search(args)
+        if lit is None:
+            # The call is there but its floor is no longer a literal: this
+            # reader can no longer recover the fourth floor.  Say "unknown"
+            # so both consumers go red, rather than hand back a short list
+            # that reads exactly like a file with one term fewer.
+            return None
+        floors.append(int(lit.group(1)))
     return floors
 
 

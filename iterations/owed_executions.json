@@ -276,6 +276,27 @@
         "path": "iterations/reports/replay-check/a_evidence_lanekill.md"
       },
       "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句**:该报告里同时出现 —— 两条 helper 各自的 `VERIFY id=<id> verdict=… episodes=…` 行、检测器读的是**波次录像**而不是 `tests/fixtures`、以及 ab/ba 两个分层的读数(铁律 4 计量条 (i-a))。⛔ **一份在 fixture 上重跑一遍并报告 0 的产物不满足本行** —— 那正是 §FW.2 量到的那个 0,它是仪器状态不是读数;总监据此拒绝退休本行。"
+    },
+    {
+      "id": "campbind_condition_a_fixture",
+      "issue": "GH #475(入集帖 + 09-04T21:56Z 的三选一请裁);GH #604(W52 复读,同一份 INDETERMINATE)",
+      "ruling": "`campbind` RETURNED_FROM_ARMED_SET(总监 2026-09-07T22:xxZ,全文 `iterations/streams/test_set.md §FX`,armed 46 → 45)。⛔ **不是 reject**,gate 与唯一闸点 `bots/FunLib/jmz_func.lua:8993` 逐字保留。条件 (a) 改走 **fixture** 这条路,**不是**波次录像 —— 与同日 §FW 那两条**方向相反**,理由也相反,不许照抄:那两条是「fixture 语料在那个方向上瞎了 ⇒ 去波次买」;这一条是「波次的可判读面结构上是空的 ⇒ 去 fixture 买」。⭐ 立法依据是量出来的密度,不是偏好:两份独立语料、不同波次族、合计 **97 局**,满足前半条(≥2 活营同在 1400u 内)的戳 13 次 / 9 局 ≈ **0.19 次/局**,满足后半条(计划营 ≠ 最近营)**一次没出现**;W46 唯一那个候选瞬间**归属失败**(位移 12–176u,够不到 250u 阈值)。⇒ **例行波再发多少波都会得到同一份 INDETERMINATE。** ⚠️ 仪器非瞎已单独核过(§FX.3):同一条归属腿在同一批帧上两个方向都有非零读数(最近营归属 armed 7 / baseline 1;拉营族 in-window 52 vs 14),所以那个 0 是**域的**零。",
+      "ruled_at": "2026-09-07T22:xxZ",
+      "executor": "replay-check(录像组;它是提出第 2 条的那一方,也是唯一拿得到该帧语料的一方)",
+      "trigger": "没有外部触发器,但**有一个真实时限**:目标帧属于 **W46**,W46 的 timeline 已随容器回收,`.dem` 是否仍在 S3 **总监本轮没核**(不动 AWS)。同族的 W44 录像约 **2026-09-25** 过期(GH #477)⇒ 越早取越好。",
+      "delivered_to": [
+        "iterations/streams/test_set.md §FX(裁定全文档案)",
+        "iterations/state.json:campbind_RETURNED_20260907",
+        "iterations/queue.json:strategy-42 的 director 字段(再裁,追加在入集裁定之后)",
+        "GH #475 追评(活线程;录像组请裁的就是这一条)",
+        "iterations/owed_executions.json(本行)"
+      ],
+      "why_registered_here": "§DR:常驻义务,不属于任何一波。⚠️ `campbind` **已经退集**,所以 arm 串里没有任何 id 行能载它 —— 与 `lanekill_condition_a_detector` / `roshan_pit_daynight_fix` 同形。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/replay-check/a_evidence_campbind.md"
+      },
+      "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句 —— 两条出路,任一条都算完成,而且必须二选一说清是哪条**:(甲) **fixture 路成了**:该报告里出现一个新的 `tests/fixtures/` 帧(源 `20260904_125801_slot6` spirit_breaker,t≈330.7 与 t≈334.7)+ 一条断言 `J.GetCampPullPokeTarget` 在该帧上返回的**计划营地**与 `tNeut[1]` 的**最近营地**是**不同**的箱子 + 一条 `VERIFY id=campbind verdict=<WORKING|BUGGY>` 行;(乙) **语料取不回来**:该报告逐字写出「W46 `.dem` 不可恢复」及其核法(S3 列举的裸读输出),此时按 §FX.5 第 3 条**当场转永久退集**(`DOMAIN-NOT-REACHED`),**不是继续欠着**。⛔ **明确拒收的一种产物**:一份「在例行波语料上重跑 `campbind_poke.py` 又报 0」的报告 —— 那正是本裁定判定买不到的东西,再买一次不构成 (a),也不构成 (乙)。"
     }
   ],
   "retired": [

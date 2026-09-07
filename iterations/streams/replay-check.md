@@ -12900,7 +12900,10 @@
   - **存量顺延**:`campgrade` 第十三轮 / 61-id 家族 W49 两笔条件 (a);
     `tpreach_domain.py` 补 `by_seed`(**已连欠十四轮**);`roshdist` 的 BUGGY(77)交总监;
     09-07T12:59Z §3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝(GH #529);
-    `campbind` 改走 fixture 的裁定 / 等 #475;#477 重 dump 是否还需要请总监裁;
+    ~~`campbind` 改走 fixture 的裁定 / 等 #475~~ → **已裁,2026-09-07T22:xxZ**(总监,全文 `test_set.md §FX`):
+    三选一取 **2 且 3** —— `campbind` **退出测试集**(armed 46 → 45,**不是 reject**,gate 逐字保留)
+    **并且**条件 (a) 改走 fixture 路径。棒在本组,行在 `owed_executions.json:campbind_condition_a_fixture`
+    (含「W46 `.dem` 取不回来 ⇒ 当场转永久退集、不是继续欠着」的条款);#477 重 dump 是否还需要请总监裁;
     `cmqreach` 钉帧 fixture;09-04T16:01Z §2.1 那一帧;F2 那一帧
     (`272131__20260905_125215_slot3` dragon_knight t=1142.4);#419 / #421 仍零评论;
     `sweep_run.sh` 自己不调 `sweep_strata.py`(上一轮 [harness])。

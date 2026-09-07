@@ -1,265 +1,267 @@
 {
- "_note": "每个 armed id 的入集时刻,机器可读。总监 2026-09-07T1x:xxZ 立,执行 2026-09-07T13:31Z 那一轮掉在报告散文里的交棒(全文 test_set.md §FU.1)。读它的工具:tools/agent/arm_since.py。⛔ 立这一行的理由不是「查起来麻烦」,是**上一轮的答案是容器的性质不是实验室的性质**:那一轮用 `git log iterations/streams/test_set.md` 问「armed 了多久」,而 Routine 容器是 shallow clone —— `--deepen=400` 之后该文件的历史仍然只到 2026-08-30,于是 51 个 id 里 40 个答「不知道」。同一个形状在 §FQ.2 的 arm_md5 反查上出现过一次(不 deepen 只解得出 6 个 md5)。⇒ 答案改从**仓库里全长发行的散文**里取:test_set.md 的入集章节(权威)、`iterations/reports/director/<UTC>.md` 的文件名(时刻在文件名上,散文被重写也不会漂)、以及 `state.json` 的 `<id>_<YYYYMMDD>` 键(最弱,只给前两者看不见的 id 用)。",
- "_precision_note": "`exact` = 有一条点名该 id 的入集事件(裁定当天);`lower_bound` = **下界不是等式**(GH #106 的家规):这些 id 早于 director 报告存档的起点(2026-08-19T00:53Z),它们的界来自一条**逐字引用了当天 arm 串**的 state.json 波次记录。下界仍然是真读数,而且 P4.2 按它排序时这些行无论如何都排在最老那一端。",
- "_maintenance": "入集裁定落地时**同一个 commit 里**加一行(`armed_since` / `precision` / `source`);退集或 promote 时给该行盖 `retired_at`(**不要删行** —— 删掉之后重新入集就再也说不出上一段 armed 了多久)。`arm_since.py` 对「armed 但没有行」和「有行但不在串里且没盖 `retired_at`」都 exit 3。⚠️ 它**判登记不判真相**:一行写错的日期它看不出来,只有当散文里能解析出的日期与 `exact` 行不一致时它才报 CONTRADICTION,而且**不自动改**。",
- "ids": {
-  "l1trade": {
-   "armed_since": "2026-07-25",
-   "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch",
-   "retired_at": "2026-09-07",
-   "retired_note": "退回出集(test_set.md §FW;state.json:l1trade_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
-  },
-  "l5combo": {
-   "armed_since": "2026-07-25",
-   "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch",
-   "retired_at": "2026-09-07",
-   "retired_note": "退回出集(test_set.md §FW;state.json:l5combo_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
-  },
-  "tpcommit": {
-   "armed_since": "2026-07-25",
-   "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch"
-  },
-  "lf_rescue": {
-   "armed_since": "2026-07-25",
-   "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch"
-  },
-  "teambrain": {
-   "armed_since": "2026-07-25",
-   "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch",
-   "retired_at": "2026-09-07",
-   "retired_note": "退回出集(test_set.md §FV;state.json:teambrain_RETURNED_20260907)。条件 (a) 结构上买不到。"
-  },
-  "ownhalf": {
-   "armed_since": "2026-07-25",
-   "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch"
-  },
-  "overchase": {
-   "armed_since": "2026-07-25",
-   "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch"
-  },
-  "fieldregen": {
-   "armed_since": "2026-07-25",
-   "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch"
-  },
-  "wandbleed": {
-   "armed_since": "2026-08-19",
-   "precision": "lower_bound",
-   "source": "state.json:bundle14_VERDICT_20260819"
-  },
-  "capmono": {
-   "armed_since": "2026-08-19",
-   "precision": "exact",
-   "source": "reports/director/20260819T111000Z.md",
-   "retired_at": "2026-09-07",
-   "retired_note": "退回出集(test_set.md §FV;state.json:capmono_RETURNED_20260907)。(a) FAILED under isolation,留集的理由已过期。"
-  },
-  "cmrguard": {
-   "armed_since": "2026-08-19",
-   "precision": "exact",
-   "source": "reports/director/20260819T045448Z.md"
-  },
-  "tpdead": {
-   "armed_since": "2026-08-19",
-   "precision": "exact",
-   "source": "reports/director/20260819T190000Z.md"
-  },
-  "zusult": {
-   "armed_since": "2026-08-19",
-   "precision": "exact",
-   "source": "reports/director/20260819T210000Z.md"
-  },
-  "wandlimbo": {
-   "armed_since": "2026-08-19",
-   "precision": "exact",
-   "source": "reports/director/20260819T210000Z.md"
-  },
-  "blinkflee": {
-   "armed_since": "2026-08-20",
-   "precision": "exact",
-   "source": "reports/director/20260820T190000Z.md"
-  },
-  "liondrainstop": {
-   "armed_since": "2026-08-20",
-   "precision": "exact",
-   "source": "reports/director/20260820T190000Z.md"
-  },
-  "odaoe": {
-   "armed_since": "2026-08-21",
-   "precision": "exact",
-   "source": "reports/director/20260821T070000Z.md"
-  },
-  "pullcamp": {
-   "armed_since": "2026-08-22",
-   "precision": "exact",
-   "source": "reports/director/20260822T090649Z.md"
-  },
-  "stayfield": {
-   "armed_since": "2026-08-22",
-   "precision": "exact",
-   "source": "reports/director/20260822T110000Z.md"
-  },
-  "stayfield2": {
-   "armed_since": "2026-08-22",
-   "precision": "exact",
-   "source": "state.json:stayfield2_20260822"
-  },
-  "fieldbuy": {
-   "armed_since": "2026-08-22",
-   "precision": "exact",
-   "source": "state.json:fieldbuy_20260822"
-  },
-  "pullcad": {
-   "armed_since": "2026-08-23",
-   "precision": "exact",
-   "source": "test_set.md:306"
-  },
-  "pulllane": {
-   "armed_since": "2026-08-24",
-   "precision": "exact",
-   "source": "test_set.md:295"
-  },
-  "pulldrag": {
-   "armed_since": "2026-08-25",
-   "precision": "exact",
-   "source": "state.json:pulldrag_20260825"
-  },
-  "tpgap": {
-   "armed_since": "2026-08-24",
-   "precision": "exact",
-   "source": "state.json:tpgap_20260824"
-  },
-  "campsel": {
-   "armed_since": "2026-08-24",
-   "precision": "exact",
-   "source": "state.json:campsel_20260824"
-  },
-  "tbearly": {
-   "armed_since": "2026-08-24",
-   "precision": "exact",
-   "source": "state.json:tbearly_20260824"
-  },
-  "tpdeathbuy": {
-   "armed_since": "2026-08-25",
-   "precision": "exact",
-   "source": "state.json:tpdeathbuy_20260825"
-  },
-  "campfarm": {
-   "armed_since": "2026-08-25",
-   "precision": "exact",
-   "source": "test_set.md:159"
-  },
-  "abilanc": {
-   "armed_since": "2026-08-26",
-   "precision": "exact",
-   "source": "reports/director/20260826T095500Z.md"
-  },
-  "bbfight": {
-   "armed_since": "2026-08-26",
-   "precision": "exact",
-   "source": "test_set.md:137"
-  },
-  "bbshort": {
-   "armed_since": "2026-08-26",
-   "precision": "exact",
-   "source": "test_set.md:137"
-  },
-  "pullthink": {
-   "armed_since": "2026-08-26",
-   "precision": "exact",
-   "source": "test_set.md:138"
-  },
-  "aimguard": {
-   "armed_since": "2026-08-28",
-   "precision": "exact",
-   "source": "test_set.md:116"
-  },
-  "campvoid": {
-   "armed_since": "2026-08-28",
-   "precision": "exact",
-   "source": "test_set.md:102"
-  },
-  "wkqdmg": {
-   "armed_since": "2026-08-29",
-   "precision": "exact",
-   "source": "test_set.md:97"
-  },
-  "fieldsip": {
-   "armed_since": "2026-08-29",
-   "precision": "exact",
-   "source": "test_set.md:95"
-  },
-  "creepthink": {
-   "armed_since": "2026-08-30",
-   "precision": "exact",
-   "source": "test_set.md:90"
-  },
-  "lionqdmg": {
-   "armed_since": "2026-08-30",
-   "precision": "exact",
-   "source": "test_set.md:90"
-  },
-  "cmqreach": {
-   "armed_since": "2026-08-30",
-   "precision": "exact",
-   "source": "test_set.md:90"
-  },
-  "rotscope": {
-   "armed_since": "2026-08-31",
-   "precision": "exact",
-   "source": "test_set.md:87"
-  },
-  "roamidle": {
-   "armed_since": "2026-09-01",
-   "precision": "exact",
-   "source": "test_set.md:84"
-  },
-  "outlatch": {
-   "armed_since": "2026-09-01",
-   "precision": "exact",
-   "source": "test_set.md:84"
-  },
-  "illureal": {
-   "armed_since": "2026-09-01",
-   "precision": "exact",
-   "source": "test_set.md:81"
-  },
-  "slotarb": {
-   "armed_since": "2026-09-01",
-   "precision": "exact",
-   "source": "state.json:slotarb_20260901"
-  },
-  "slotdust": {
-   "armed_since": "2026-09-02",
-   "precision": "exact",
-   "source": "state.json:slotdust_20260902"
-  },
-  "wandbleed2": {
-   "armed_since": "2026-09-02",
-   "precision": "exact",
-   "source": "state.json:wandbleed2_20260902"
-  },
-  "arbheart": {
-   "armed_since": "2026-09-04",
-   "precision": "exact",
-   "source": "test_set.md:59"
-  },
-  "campbind": {
-   "armed_since": "2026-09-05",
-   "precision": "exact",
-   "source": "test_set.md:53"
-  },
-  "zusboltdom": {
-   "armed_since": "2026-09-05",
-   "precision": "exact",
-   "source": "test_set.md:53"
+  "_note": "每个 armed id 的入集时刻,机器可读。总监 2026-09-07T1x:xxZ 立,执行 2026-09-07T13:31Z 那一轮掉在报告散文里的交棒(全文 test_set.md §FU.1)。读它的工具:tools/agent/arm_since.py。⛔ 立这一行的理由不是「查起来麻烦」,是**上一轮的答案是容器的性质不是实验室的性质**:那一轮用 `git log iterations/streams/test_set.md` 问「armed 了多久」,而 Routine 容器是 shallow clone —— `--deepen=400` 之后该文件的历史仍然只到 2026-08-30,于是 51 个 id 里 40 个答「不知道」。同一个形状在 §FQ.2 的 arm_md5 反查上出现过一次(不 deepen 只解得出 6 个 md5)。⇒ 答案改从**仓库里全长发行的散文**里取:test_set.md 的入集章节(权威)、`iterations/reports/director/<UTC>.md` 的文件名(时刻在文件名上,散文被重写也不会漂)、以及 `state.json` 的 `<id>_<YYYYMMDD>` 键(最弱,只给前两者看不见的 id 用)。",
+  "_precision_note": "`exact` = 有一条点名该 id 的入集事件(裁定当天);`lower_bound` = **下界不是等式**(GH #106 的家规):这些 id 早于 director 报告存档的起点(2026-08-19T00:53Z),它们的界来自一条**逐字引用了当天 arm 串**的 state.json 波次记录。下界仍然是真读数,而且 P4.2 按它排序时这些行无论如何都排在最老那一端。",
+  "_maintenance": "入集裁定落地时**同一个 commit 里**加一行(`armed_since` / `precision` / `source`);退集或 promote 时给该行盖 `retired_at`(**不要删行** —— 删掉之后重新入集就再也说不出上一段 armed 了多久)。`arm_since.py` 对「armed 但没有行」和「有行但不在串里且没盖 `retired_at`」都 exit 3。⚠️ 它**判登记不判真相**:一行写错的日期它看不出来,只有当散文里能解析出的日期与 `exact` 行不一致时它才报 CONTRADICTION,而且**不自动改**。",
+  "ids": {
+    "l1trade": {
+      "armed_since": "2026-07-25",
+      "precision": "lower_bound",
+      "source": "state.json:family_bisect_launch",
+      "retired_at": "2026-09-07",
+      "retired_note": "退回出集(test_set.md §FW;state.json:l1trade_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
+    },
+    "l5combo": {
+      "armed_since": "2026-07-25",
+      "precision": "lower_bound",
+      "source": "state.json:family_bisect_launch",
+      "retired_at": "2026-09-07",
+      "retired_note": "退回出集(test_set.md §FW;state.json:l5combo_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
+    },
+    "tpcommit": {
+      "armed_since": "2026-07-25",
+      "precision": "lower_bound",
+      "source": "state.json:family_bisect_launch"
+    },
+    "lf_rescue": {
+      "armed_since": "2026-07-25",
+      "precision": "lower_bound",
+      "source": "state.json:family_bisect_launch"
+    },
+    "teambrain": {
+      "armed_since": "2026-07-25",
+      "precision": "lower_bound",
+      "source": "state.json:family_bisect_launch",
+      "retired_at": "2026-09-07",
+      "retired_note": "退回出集(test_set.md §FV;state.json:teambrain_RETURNED_20260907)。条件 (a) 结构上买不到。"
+    },
+    "ownhalf": {
+      "armed_since": "2026-07-25",
+      "precision": "lower_bound",
+      "source": "state.json:family_bisect_launch"
+    },
+    "overchase": {
+      "armed_since": "2026-07-25",
+      "precision": "lower_bound",
+      "source": "state.json:family_bisect_launch"
+    },
+    "fieldregen": {
+      "armed_since": "2026-07-25",
+      "precision": "lower_bound",
+      "source": "state.json:family_bisect_launch"
+    },
+    "wandbleed": {
+      "armed_since": "2026-08-19",
+      "precision": "lower_bound",
+      "source": "state.json:bundle14_VERDICT_20260819"
+    },
+    "capmono": {
+      "armed_since": "2026-08-19",
+      "precision": "exact",
+      "source": "reports/director/20260819T111000Z.md",
+      "retired_at": "2026-09-07",
+      "retired_note": "退回出集(test_set.md §FV;state.json:capmono_RETURNED_20260907)。(a) FAILED under isolation,留集的理由已过期。"
+    },
+    "cmrguard": {
+      "armed_since": "2026-08-19",
+      "precision": "exact",
+      "source": "reports/director/20260819T045448Z.md"
+    },
+    "tpdead": {
+      "armed_since": "2026-08-19",
+      "precision": "exact",
+      "source": "reports/director/20260819T190000Z.md"
+    },
+    "zusult": {
+      "armed_since": "2026-08-19",
+      "precision": "exact",
+      "source": "reports/director/20260819T210000Z.md"
+    },
+    "wandlimbo": {
+      "armed_since": "2026-08-19",
+      "precision": "exact",
+      "source": "reports/director/20260819T210000Z.md"
+    },
+    "blinkflee": {
+      "armed_since": "2026-08-20",
+      "precision": "exact",
+      "source": "reports/director/20260820T190000Z.md"
+    },
+    "liondrainstop": {
+      "armed_since": "2026-08-20",
+      "precision": "exact",
+      "source": "reports/director/20260820T190000Z.md"
+    },
+    "odaoe": {
+      "armed_since": "2026-08-21",
+      "precision": "exact",
+      "source": "reports/director/20260821T070000Z.md"
+    },
+    "pullcamp": {
+      "armed_since": "2026-08-22",
+      "precision": "exact",
+      "source": "reports/director/20260822T090649Z.md"
+    },
+    "stayfield": {
+      "armed_since": "2026-08-22",
+      "precision": "exact",
+      "source": "reports/director/20260822T110000Z.md"
+    },
+    "stayfield2": {
+      "armed_since": "2026-08-22",
+      "precision": "exact",
+      "source": "state.json:stayfield2_20260822"
+    },
+    "fieldbuy": {
+      "armed_since": "2026-08-22",
+      "precision": "exact",
+      "source": "state.json:fieldbuy_20260822"
+    },
+    "pullcad": {
+      "armed_since": "2026-08-23",
+      "precision": "exact",
+      "source": "test_set.md:306"
+    },
+    "pulllane": {
+      "armed_since": "2026-08-24",
+      "precision": "exact",
+      "source": "test_set.md:295"
+    },
+    "pulldrag": {
+      "armed_since": "2026-08-25",
+      "precision": "exact",
+      "source": "state.json:pulldrag_20260825"
+    },
+    "tpgap": {
+      "armed_since": "2026-08-24",
+      "precision": "exact",
+      "source": "state.json:tpgap_20260824"
+    },
+    "campsel": {
+      "armed_since": "2026-08-24",
+      "precision": "exact",
+      "source": "state.json:campsel_20260824"
+    },
+    "tbearly": {
+      "armed_since": "2026-08-24",
+      "precision": "exact",
+      "source": "state.json:tbearly_20260824"
+    },
+    "tpdeathbuy": {
+      "armed_since": "2026-08-25",
+      "precision": "exact",
+      "source": "state.json:tpdeathbuy_20260825"
+    },
+    "campfarm": {
+      "armed_since": "2026-08-25",
+      "precision": "exact",
+      "source": "test_set.md:159"
+    },
+    "abilanc": {
+      "armed_since": "2026-08-26",
+      "precision": "exact",
+      "source": "reports/director/20260826T095500Z.md"
+    },
+    "bbfight": {
+      "armed_since": "2026-08-26",
+      "precision": "exact",
+      "source": "test_set.md:137"
+    },
+    "bbshort": {
+      "armed_since": "2026-08-26",
+      "precision": "exact",
+      "source": "test_set.md:137"
+    },
+    "pullthink": {
+      "armed_since": "2026-08-26",
+      "precision": "exact",
+      "source": "test_set.md:138"
+    },
+    "aimguard": {
+      "armed_since": "2026-08-28",
+      "precision": "exact",
+      "source": "test_set.md:116"
+    },
+    "campvoid": {
+      "armed_since": "2026-08-28",
+      "precision": "exact",
+      "source": "test_set.md:102"
+    },
+    "wkqdmg": {
+      "armed_since": "2026-08-29",
+      "precision": "exact",
+      "source": "test_set.md:97"
+    },
+    "fieldsip": {
+      "armed_since": "2026-08-29",
+      "precision": "exact",
+      "source": "test_set.md:95"
+    },
+    "creepthink": {
+      "armed_since": "2026-08-30",
+      "precision": "exact",
+      "source": "test_set.md:90"
+    },
+    "lionqdmg": {
+      "armed_since": "2026-08-30",
+      "precision": "exact",
+      "source": "test_set.md:90"
+    },
+    "cmqreach": {
+      "armed_since": "2026-08-30",
+      "precision": "exact",
+      "source": "test_set.md:90"
+    },
+    "rotscope": {
+      "armed_since": "2026-08-31",
+      "precision": "exact",
+      "source": "test_set.md:87"
+    },
+    "roamidle": {
+      "armed_since": "2026-09-01",
+      "precision": "exact",
+      "source": "test_set.md:84"
+    },
+    "outlatch": {
+      "armed_since": "2026-09-01",
+      "precision": "exact",
+      "source": "test_set.md:84"
+    },
+    "illureal": {
+      "armed_since": "2026-09-01",
+      "precision": "exact",
+      "source": "test_set.md:81"
+    },
+    "slotarb": {
+      "armed_since": "2026-09-01",
+      "precision": "exact",
+      "source": "state.json:slotarb_20260901"
+    },
+    "slotdust": {
+      "armed_since": "2026-09-02",
+      "precision": "exact",
+      "source": "state.json:slotdust_20260902"
+    },
+    "wandbleed2": {
+      "armed_since": "2026-09-02",
+      "precision": "exact",
+      "source": "state.json:wandbleed2_20260902"
+    },
+    "arbheart": {
+      "armed_since": "2026-09-04",
+      "precision": "exact",
+      "source": "test_set.md:59"
+    },
+    "campbind": {
+      "armed_since": "2026-09-05",
+      "precision": "exact",
+      "source": "test_set.md:53",
+      "retired_at": "2026-09-07",
+      "retired_note": "退回出集(test_set.md §FX;state.json:campbind_RETURNED_20260907)。条件 (a) 在例行波里结构上买不到 —— 两份独立语料 97 局,可判读面(计划营 ≠ 最近营)为 0,密度约 0.19 次/局且后半条一次没出现;仪器非瞎(同批帧上归属腿两个方向都有非零读数)。改走 fixture 路径(owed 行 campbind_condition_a_fixture)。⛔ 不是 reject,gate 逐字保留。"
+    },
+    "zusboltdom": {
+      "armed_since": "2026-09-05",
+      "precision": "exact",
+      "source": "test_set.md:53"
+    }
   }
- }
 }

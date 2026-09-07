@@ -92,6 +92,78 @@ class TestFloorsAreReadNotRetyped(unittest.TestCase):
         self.assertIsNone(M.consumer_floors("/nonexistent/hero.lua"))
 
 
+class TestRelocatedFloorIsStillRead(unittest.TestCase):
+    """`cmfarcreep` (1642591b) moved the far half's relaxed floor out of an
+    inline `Health1 > 390` and into `X.cm_IsFarCreepFloorMet( near, far, 390 )`.
+    The Lua twin (tests/test_cm_ranged_creep_health.lua) was taught the new home
+    in that same commit; this reader was not, and a scan keyed on `>` dropped
+    390 -- the floor `cmrangedhp`'s 500 clears most narrowly -- while still
+    answering with a clean-looking three-element list.  These pin the repair
+    from the wrong side: the relocated floor must be READ, and a reading that
+    cannot recover it must say `unknown` rather than say `three floors`."""
+
+    @staticmethod
+    def _floors_of(mutated):
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".lua", delete=False,
+                                         encoding="utf-8") as f:
+            f.write(mutated)
+            p = f.name
+        try:
+            return M.consumer_floors(p)
+        finally:
+            os.unlink(p)
+
+    def test_the_relocated_floor_is_in_the_reading(self):
+        self.assertIn(390, M.consumer_floors())
+
+    def test_a_raised_relocated_floor_would_break_the_narrowing_claim(self):
+        # The sibling of test_a_raised_floor_would_break_the_narrowing_claim,
+        # aimed at the term that stopped being an inline comparison.  Without
+        # it, 390 could be raised to 590 and this module would keep reporting
+        # "500 clears every floor".
+        src = open(M.HERO_SRC, encoding="utf-8").read()
+        mutated = src.replace(
+            "nEnemysStrongestCreepsHealth2, 390 )",
+            "nEnemysStrongestCreepsHealth2, 590 )", 1)
+        self.assertNotEqual(src, mutated)
+        floors = self._floors_of(mutated)
+        self.assertIn(590, floors)
+        self.assertNotIn(390, floors)
+        self.assertFalse(all(500 > x for x in floors))
+
+    def test_a_non_literal_floor_reads_as_unknown_not_as_three_floors(self):
+        # If the call keeps its shape but loses its literal, the honest answer
+        # is "this reader can no longer recover the fourth floor".  A short
+        # list is indistinguishable from a file that really has three.
+        src = open(M.HERO_SRC, encoding="utf-8").read()
+        mutated = src.replace(
+            "nEnemysStrongestCreepsHealth2, 390 )",
+            "nEnemysStrongestCreepsHealth2, nFarFloor )", 1)
+        self.assertNotEqual(src, mutated)
+        self.assertIsNone(self._floors_of(mutated))
+
+    def test_a_floor_spelled_out_in_a_comment_is_not_read_as_code(self):
+        # The block's own documentation writes the relocated term as
+        # `...Health1 > 390`, and that abbreviation is the ONLY reason an
+        # unstripped scan does not read prose as code today.  Spell the
+        # identifier out and a comment-blind reader "finds" a floor that no
+        # longer has to exist anywhere in the code.  Fourth occurrence of the
+        # text-judge family in this repo; pre-empted here rather than caught.
+        src = open(M.HERO_SRC, encoding="utf-8").read()
+        mutated = src.replace(
+            "nEnemysStrongestCreepsHealth2, 390 )",
+            "nEnemysStrongestCreepsHealth2, 590 )", 1)
+        mutated = mutated.replace(
+            "-- [cmfarcreep] gate off the middle term is `...Health1 > 390`",
+            "-- [cmfarcreep] gate off the middle term is "
+            "`nEnemysStrongestCreepsHealth1 > 390`", 1)
+        floors = self._floors_of(mutated)
+        # The comment says 390; the code says 590.  The reading follows code.
+        self.assertIn(590, floors)
+        self.assertNotIn(390, floors)
+
+
 class TestCapTermIsVacuousOnShippedTree(unittest.TestCase):
     """cm_GetFrostbiteCreepCap is a flat 1200 with cmcreepcap un-armed, and the
     picker admits only health <= 1100, so the cap term cannot bite."""
