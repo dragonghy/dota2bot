@@ -35,7 +35,7 @@
    `tests/_pgchannel_sweep.lua` / `tests/_posture_domain_sweep.lua`、
    `tools/agent/mutstand_pgchannel.sh`(**8/8 CAUGHT,零 SURVIVED**)、`state.json:pgchannel_20260907`;
    报告 `iterations/reports/strategy/20260907T134000Z.md`;**armed 串一字未动、`queue.json` 一字未动**;
-   零 AWS、零 S3、零 EC2、零波次。**总线 = GH #597。**】**
+   零 AWS、零 S3、零 EC2、零波次。**总线 = GH #598。**】**
    **⭐ 主判据(可复用,超出本主题):一个「窄」的修法窄到只压住**一条**竞标者时,
    它是不是修复,取决于**第二条竞标者是谁 —— 而那是个读数,不是设计判断。**
    第一版按最窄原则写成 `J.ShouldAbortDeepSoloPush(bot) and not <exempt>`,
@@ -6372,7 +6372,7 @@
   `tools/agent/mutstand_pgchannel.sh`(**8/8 CAUGHT,零 SURVIVED**)、
   `state.json:pgchannel_20260907`;报告 `iterations/reports/strategy/20260907T134000Z.md`;
   **armed 串一字未动、`queue.json` 一字未动**。零 AWS、零 S3、零 EC2、零波次。
-  **总线 = GH #597。**
+  **总线 = GH #598。**
   **⭐ 缺陷:撤退链里没有一条守卫知道「我已经在走了,而且走的是最快的那条路」。**
   `J.ShouldAbortDeepSoloPush` 是 **PROMOTED、每局 turbo 都活**,它的撤退消费点是链上**第一条**
   (0.92);而这棵树**自己**在 `J.ShouldAbandonTpChannel` 抬头写着后果 ——

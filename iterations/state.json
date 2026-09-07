@@ -6791,6 +6791,6 @@
       "tests/_posture_domain_sweep.lua(新,姿态族域价钱)",
       "tools/agent/mutstand_pgchannel.sh(新,**8/8 CAUGHT,零 SURVIVED**)"
     ],
-    "next_baton": "总监:pgchannel 登记备案(冻结期 FROZEN-HOLD,不入集);录像组/总监:tpwatch 与本 veto 在 jugg_tp_eaten 上的分歧。GH #597。"
+    "next_baton": "总监:pgchannel 登记备案(冻结期 FROZEN-HOLD,不入集);录像组/总监:tpwatch 与本 veto 在 jugg_tp_eaten 上的分歧。GH #598。"
   }
 }

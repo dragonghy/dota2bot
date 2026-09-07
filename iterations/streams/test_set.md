@@ -1293,7 +1293,7 @@ sweep 走的施法距离/伤害常数、gate 位置、id 计数、已发货两�
 唯一调用点,坐在 `RETREAT GUARD CHAIN: BEGIN` 之上)。**未 armed**:P4.2 冻结期,
 本节**不申请入集**(FROZEN-HOLD),**不申请波次**,`queue.json` 一字未动。
 全文档案 `iterations/state.json:pgchannel_20260907`,报告
-`iterations/reports/strategy/20260907T134000Z.md`,总线 **GH #597**。
+`iterations/reports/strategy/20260907T134000Z.md`,总线 **GH #598**。
 
 ### §FU.1 缺陷与证据帧
 
@@ -1346,7 +1346,7 @@ pushguard depth **58** / solo **18** / fires **4**;`ShouldPunishDive` shipped **
 `tests/test_pgchannel_veto.lua`(**新,7/7**,真实帧正/负控制);
 `tests/_pgchannel_sweep.lua` / `tests/_posture_domain_sweep.lua`(两台仪器);
 `tools/agent/mutstand_pgchannel.sh`(**8/8 CAUGHT,零 SURVIVED**);
-`state.json:pgchannel_20260907`;**GH #597**。
+`state.json:pgchannel_20260907`;**GH #598**。
 铁律 6 静态门:`bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**(冷启自装)。
 动态半:定向过滤 `retreat`/`tp_`/`pgchannel`/`gate_claim`/`push` 合计 **167 tests, 0 failures**;
 **全量套件在本容器未跑完(GH #124)⇒ 登记为「未跑完」,不是「通过」。**
