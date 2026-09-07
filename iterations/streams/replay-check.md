@@ -12380,3 +12380,91 @@
     **发表在 push 之后**:两份草稿 `claim_precheck.sh` 各 `EXIT=0 clean`、领先 origin/main **0** 个 commit;
     开 **GH #581**([harness],`creeps[]` 缺 `name`/`hp`/`idx`),**GH #560 评论** `#issuecomment-5563711418`。
     **Token**:`TOKENS total_in=31,021,843 out=142,676 turns=159`。
+- **2026-09-07T04:20Z**:**取上一轮点名的「下一轮第一件事 (1)」—— hero-37 /
+  `zusultstrand`(GH #564)归档域普查**,九条腿里唯一一条**价值列被预登记为
+  METHOD-FAILED 强制项**的。零 EC2、S3 只读、零 CE,未改 `bots/` 一行。
+  **宽扫 152/152 局**(归档 `dem21/` 6,976 局 / 194 run 里,`analysis.json` 含
+  `zuus` 且**有 `.dem`** 的 **5,785 局 / 152 run**,**按 run 分层每 run 抽 1 局**;
+  `DL/DUMP/SCAN_EXIT=0`,**失败 0 局**)。⚠️ **152 不是 5,785,不冒充全集。**
+  ```
+  VERIFY id=zusultstrand verdict=INDETERMINATE domain=REACHED episodes=257 games=152
+  ```
+  - **⭐ 域到了,而且价值列也买到了 —— 两道预登记的退回门都不触发。**
+    (1) 域 **1,843 帧 / 257 episode / 103 局**(每局分布不报中位数,铁律 4(ii):
+    0 发 **49 局** / 1 发 32 / 2 发 28 / 3 发 21 / 4 发 10 / 5 发 7 / 6 发 4 / 7 发 1,
+    均值 1.69)⇒ `DOMAIN-NOT-REACHED` 不触发。
+    (2) **198/257 = 77.0%** 的 episode 在 6 秒内以 Zeus 死亡收场,
+    其中 **192 次大招仍未放**(187/198 的死亡就落在 episode 末帧 **0.5 秒**内)
+    ⇒ **METHOD-FAILED 分支不触发**。全局对照(**不并读**):741 次可读死亡里
+    **201 次(27.1%)握着可放的大招**。
+    (3) 收窄项 `nUltCashChaseRadius=1600`:内 **1,645 帧 = 89.3%**、外 **198 = 10.7%**
+    ⇒ **既不空转也不放行一切,但只切掉十分之一**。
+    (4) ⚠️ **PARTIAL,几何这条路走不通**:`ultcash` 的 1200 环覆盖 **80.5% 的域帧 /
+    96.1% 的 episode**,唯一分得开两根杠杆的 `GetEstimatedDamageToTarget` 是活
+    bot API 预测、录像里没有;回溯代理 372 帧(20.2%)**不是那个谓词,
+    既不是上界也不是估计**。⇒ 两根杠杆的分离度**本轮买不到**。
+  - **⭐⭐ 本轮的自捉,连续第四轮抓到的是量具不是游戏,而且这次它压掉的正是
+    唯一那条强制列**:两次独立全量普查只有两个计数对不上
+    (`deaths_holding_castable_ult` 190→193、`retreat_proxy_frames` 685→707)。
+    根因两条:(i) **dumper 同一 tick 内行序不确定**(同一份 `.dem` 连跑三次,
+    行**集合**逐行相同、`events` 逐字相同,**行序不同**、三次 md5 三个值);
+    (ii) **`hero`+`player_id` 不唯一标识一个单位 —— 幻象同名同 pid,只有 `idx` 不同**
+    (一局里 Zeus 的 idx 1534 有 6,514 行、1622/2084 各 326 行,位置不同;
+    全语料 Zeus 幻象行 **71,512**)。**代价不是抖了两个数**:幻象帧把 episode
+    拖过真实死亡时刻 ⇒ **`ep_died` 修好前 82、修好后 198(同语料同窗口,2.4 倍)**。
+    改按 `idx` 取本体、死亡从**本体自己的 hp 序列**读之后,两次独立全量普查
+    **逐位相同**(`DIFFERING KEYS: NONE`),且新旧两个仪器
+    (hp 序列 vs 战斗日志 DEATH 行)在 **152/152 局逐局同数(741)**。
+    ⚠️ 第一次核验时只比了「行数/null 数/最早 null 的 t/Zeus 行数」四个**聚合量**、
+    四个全同就判「串行确定」—— **那是拿聚合量当逐帧核验**,md5 一比就翻了。
+  - **可钉帧**:`spot_20260827_091422_…_15b77f__20260827_091703_slot12` **t=473.1**
+    —— hp **0.18**、ult **rank1 / cd=0**、mp **405**(rank1 只要 250)、
+    slardar **304.9u**、前 2 秒英雄伤害 **405**;**34 帧 8.3 秒全在域内**,
+    HP 18%→3% 一路没放,**t=481.6 死**,而这局 Zeus 的**第一发大招在 t=600.8**
+    —— 死后 **119 秒**。
+  - **顺手的 loader 问题:答案是「没有」**,而且是量出来的:
+    `snapshots[]` **12,014,888 行、单一键形、零例外**,无任何重生列
+    (`tp_cd`/`tp_cdlen` 是 TP)⇒ `tests/test_zuus_ult_strand.lua` §6 那条
+    **单向绊线原样保留**。⚠️ 不改变 GH #564 的结论 —— 那条结论**本来就读法无关**。
+  - **量具**:新 `tools/batch_test/behavioral/zusultstrand_domain.py`
+    (`--selfcheck` **75 PASS / 0 FAIL**;250/375/500 与 130 **从 KV 快照读**不抄成常量;
+    每个合取项各有一条能把计数归零的断言;幻象/行序/两个死亡计数各有专门对照)。
+  - **本轮开的 issue**:**[harness]** dumper 的两条身份缺口(同 tick 行序不确定 +
+    `hero`/`player_id` 不区分幻象),带复现读数、**82→198 的实测代价**与一条硬验收;
+    **GH #564 评论**(四列读数 + 可钉帧 + 第 (4) 列 PARTIAL 的理由),不新开 issue。
+  - **下一轮第一件事**:(1) hero-38 / hero-39 请总监先裁 —— ⚠️ **hero-39 点名本组**
+    (`cullthresh_domain.py:215` 闭区间 vs 半开,GH #570 那个 2 的来源,**已连欠三轮**);
+    (2) **§5 那一帧钉 fixture**(域 + 价值列都买到了的唯一一根杠杆,钉帧回报最高);
+    (3) hero-32 / hero-33 等 09-07 的 [harness] issue(`creeps[]` 缺 `name`/`hp`/`idx`)落地;
+    (4) ⭐ **本轮新欠的账**:用新的幻象/行序修法**重扫 §9(`cmrangedhp`)与
+    §6(`wkbonefight`)** —— 那两份读数是用**按名字取时间序**的老写法出的,
+    `ep_died 82→198` 那个量级说明这**不是**理论风险。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;`tpreach_domain.py` 补 `by_seed`
+    (**已连欠九轮**);§3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝
+    (GH #529);`outlatch` 重扫;`campbind` 等 #475;**#477 重 dump 仍是本组的球**。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 33 轮 / #421 第 32 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260907T042001Z.md`;
+    交付件:`iterations/reports/replay-check/domain_scan_hero_2_30_31.md` **§10**
+    (路径由 owed 行钉死不改名;同轮把头部 `SCAN_COVERAGE` 6/9 → **7/9**、§7 的 hero-37 行
+    改成 DELIVERED)。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(S3 只读,零 EC2、零 CE);
+    `DUMPER_EXIT=0`(cache HIT `46fe9c6a2b084f9b`);`LS_EXIT=0`;`AN_DL_EXIT=0`
+    (10,658 个 `analysis.json`);152/152 局 `DL/DUMP/SCAN_EXIT=0`、`scan_fail.log` **0 行**;
+    `zusultstrand_domain.py --selfcheck` **`SELFCHECK_EXIT=0`,75 PASS / 0 FAIL**;
+    `AGG1_EXIT=0`/`AGG2_EXIT=0`,两次独立全量普查 **`DIFFERING KEYS: NONE`**。
+    ⛔ **证据纪律 3 第四十七次踩,又是当轮第一条命令**(`| tail -60`,脚本当场自拒
+    `REFUSED ... exit 2, nothing checked`);第二次改重定向**但加了 `timeout 400`**,
+    取到 **`EXIT=124`** —— **那是 timeout 杀的,自检没跑完,那一轮读数作废**
+    (本轮**第二个**「没跑成不是通过」现场);第三次去掉 timeout 后台重跑,
+    真码裸读 **`selfcheck worst exit: 3`**(`legs run 10`;FINDINGS
+    `cadence owed-executions trunk-red(python) trunk-red(lua)`;
+    `UNCERTIFIABLE (exit 2): none`,但正文
+    `UNCERTIFIABLE tests/test_selfcheck_lua_leg.py (did NOT run)` 一行仍在)。
+    **⚠️ 第二十六次登记:自检在本容器不是「约 20s」** —— 本轮 **> 400s**。
+    两条 `trunk-red` **先于本轮存在于工作树上**,与本轮零交集(**本轮未改任何 `.lua`**)。
+    **铁律 6**:`ARM_HOOK_EXIT=0`;静态半与 push 读数见报告 §12;
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
+    **动态半(GH #124)未跑也不声称**。
+    **Token**:`TOKENS total_in=13,477,172 out=88,674 turns=91`。
