@@ -497,6 +497,49 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-07T04:45Z**:**开工自检 `EXIT=3` 读到 trunk 双红,两条都结清、trunk 回绿;
+  ⭐⭐⭐ 值得读的是**两条红是同一个缺陷族的两个实例**,而**第一条是我自己上一轮的 promote 打出来的**。**
+  形状:**一条断言把「今天armed了哪些 id」或「今天有几个 fixture」冻成字面量,于是任何一次
+  正当的 promote / landing 都能让它转红,而红的地方与那次改动无关**(`pullcad`、GH #579 同族:
+  门在、数据在、两边各自都对,**约定在两者之间没写下来**)。零 AWS、零波次、不发 owner 邮件。
+  **(1) `test_carrier_hero_guard.py`(python,GH #585 上半)**:`ckpush` promote 退掉了集内**唯一**
+  载 `chaos_knight` 的 id,而 `:112-114` 硬编码七个词项的名册 ⇒ 按构造转红。
+  该检查的立案句是**「GH #473 这次改动不丢词项」**(一个**差分**命题),写成名册后变成
+  「今天armed了哪些 id」,**每一次 promote 都能重打一次**。⇒ **把基线取下来而不是冻住它**:
+  `hero_guard_scope` 就是 GH #473 甲的全部(拒绝 narrow 的树在 `_resolve_site` 里正好落回改动前的
+  file-path 读法),对**同一批活体 id** 两读相减 ⇒ **GAINED `['pudge']` / LOST `[]` / 两侧 unresolved 均 0**,
+  docstring 声称的东西第一次成为被测量的量。**`chaos_knight` 两侧都不在** —— 它随 `ckpush` 正当离场,
+  从来不是 narrowing 产生的词项,**这恰好证明旧断言钉的是 arm 串的成分不是这次改动**。`32 → 27 checks, 0 failed`。
+  ⚠️ **诚实边界(量出来的)**:新加的 `lost` 检查**今天不可能红,因此今天买不到东西** ——
+  51 个活体 id 里**只有 1 个**(`rotscope`)在 narrowing 下改读法,而 `generic` 基线不携带词项,
+  没有东西可丢;两台变异台都抓到了缺陷但 **`lost` 两次沉默**。它是留给「第二个 id 开始 narrow」的棘轮,
+  **这句话已逐字进代码注释**。⭐ 并且 `rotscope` 哪天出集,`gained` 走 else 分支退回 LAYER 1
+  那条**从不依赖 armed 集**的真实树断言 —— **不让它变成我刚修好的同一个陷阱**。
+  **牙齿不是我自己说的**:仓库自带、**写给旧 32 检查版**的 `mutstand_carrier_hero_guard.sh` 对新版跑通,
+  **11 CAUGHT / 2 SURVIVED(均 range control,工具自判 CORRECT)/ 0 ABORTED**,还原后 `27 checks, 0 failed`。
+  **(2) `test_wkreinctr_untrained.lua:238`(Lua,GH #585 下半)**:`assert(C.fixtures == 109)`,
+  GH #106/#127 族;按检测器**自带的处方**改两行(`cs.ratchet` + `cs.corpus`,逐字照抄 `test_staybottle` 先例),
+  **两条零断言刻意保留为等式**(`corpus_scale.lua` 自己写明零命题已增长免疫)。
+  **不是「断言少了」**:两个量都是逐 fixture 求和,append 只能抬高;**下降**才是它们要抓的漂移,ratchet 原样抓得住。
+  **负控**:registered 抬到 2000 ⇒ 当场红(`live hero frames FELL to 1012 … do not re-baseline`),
+  还原后 **md5 逐字节相同**。⭐ **为什么这次动了别组的文件而上轮 GH #574 拒绝动**:差别不在「谁写的」,
+  在**主张有没有争议** —— #574 是设计意图本身有争议的新鲜度棘轮(该由写它的人三选一),
+  这一条是**检测器与被测文件的机械冲突,检测器自带处方且有已关闭的同形先例 GH #538**;
+  我没改变它主张的任何东西,只把「等于」换成「不许下降」,append-only 语义下**对缺陷的覆盖相同**。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck 0 warnings`,**未用 `RULE6_BYPASS`**;`ARM_RC=0`;
+  ⛔ **`bots/`+`game/` 一行未动**(两个文件都在 `tests/`);**全量 Lua 套件没跑,不声称它绿**。
+  ⚠️ **开工第一条命令又误用管道(第三十七发)**,被 §22 守卫当场拒;**章程第 0 条逐字覆盖这一发,我没照做**
+  ⇒ **不新立措辞**(34/35 发已证明改措辞不解决),登记发数;其余读退出码的命令全走了 `rc.sh`。
+  ⛔ **判定完结 0**(低于章程 P4.2 的 ≥2 —— 整轮花在 trunk 双红上);armed **51** 不变;
+  `test_set.md` **一字未动**(本轮无裁定全文)⇒ 100KB 无回弹。
+  报告:`iterations/reports/director/20260907T044500Z.md`。
+  **下轮交棒**:① ⭐⭐⭐ **退休 `owed_executions` 里那 3 行已标 DONE 的**
+  (`hero_domain_scan_2_30_31` / `a_evidence_tpdying` / `a_evidence_tpreach`)——
+  **本轮刻意不做**:每行 `done_when_note` 都写着「只判产物存在不判内容(LIMIT 11),
+  总监据此判 WORKING/BUGGY/SILENT」,且 `a_evidence_*` 要按铁律 4(i-a) 核 ab/ba 两层
+  ⇒ 三行 = 三次真判定,不是记账;② ⭐⭐⭐ `slotpush` 判定(**已连续两轮被挤掉**);
+  ③ ⭐⭐ GH #450 落新 soak candidate(**已挂六轮**);④ ⭐⭐ P4.3 后半(头部瘦身,**从没开工**);
+  ⑤ ⭐ GH #574 / GH #548 仍在各自手上;⑥ `cadence` GAP(strategy)+ 7 条 `SKIPPED-IN-STREAM` 未处理。
 - **2026-09-07T01:16Z**:**第六次 promote(`ckpush`,锚点 `stable-v5` = `3fe17f9d`),armed 52 → 51;
   判定完结 1(⛔ 低于章程要求的 ≥2,不假装第二格是完结 —— 它花在 trunk 红上)。零 AWS、零波次、不发 owner 邮件。**
   裁定全文 `test_set.md §FQ`,机器键 `state.json:ckpush_PROMOTE_20260907`,投递进 `queue.json:strategy-38.director.promote`

@@ -43,6 +43,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local PIN = 'tests/fixtures/f_073148_zuus_lina.lua'
 local WK = 'npc_dota_hero_skeleton_king'
@@ -232,11 +233,15 @@ end
 
 tests['[corpus] the sweep drives the real corpus and lands 14 helper flips'] = function()
     local G, C, F = sweep()
-    assert(C.live == 1012, 'the corpus is now ' .. tostring(C.live)
-        .. ' live hero frames, not 1012 -- every number below is against a '
-        .. 'different denominator')
-    assert(C.fixtures == 109, 'the corpus is now ' .. tostring(C.fixtures)
-        .. ' fixtures, not 109')
+    -- GH #585 / #538: these two were equalities pinning the corpus SIZE, which
+    -- is the GH #106 / #127 defect -- the next fixture anyone lands turns them
+    -- red without anything they measure having moved.  Both are sums over
+    -- fixtures, so append can only raise them; a DROP is the behaviour move
+    -- these lines were written to catch, and ratchet still catches it exactly.
+    -- The two zero-claims below stay equalities on purpose (already
+    -- growth-immune, and the attribution argument is made from them).
+    cs.ratchet(C.live, 1012, 'live hero frames')
+    cs.corpus(C.fixtures, 'fixture corpus')
     assert(C.raises == 0, tostring(C.raises) .. ' frame(s) raised inside the '
         .. 'driven helper; a raise is not a FALSE')
     assert(C.arm_leak == 0, 'the sweep armed more than one id, so its flips '

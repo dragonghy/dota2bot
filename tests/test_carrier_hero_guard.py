@@ -102,16 +102,71 @@ def main():
     #    is the load-bearing half: this change can only be shipped if it does
     #    not turn today's waves loud, and a bare "pudge in terms" would not say
     #    that.
+    #
+    #    STATED AS THE DIFFERENTIAL IT IS, and the reason is a red this file
+    #    served on 2026-09-07.  "Loses nothing" was first written as a
+    #    hardcoded roster of the seven terms the live string happened to derive
+    #    the day GH #473 landed -- and a roster is a claim about WHICH IDS ARE
+    #    ARMED, not about this change.  Promoting `ckpush` (stable-v5) retired
+    #    the last id carrying `chaos_knight`, the roster's term vanished for
+    #    exactly the right reason, and the assertion went red pointing at a file
+    #    the promote never touched.  Every future promote could do it again.
+    #    `pullcad` and GH #579 are the same family: gate, data and both sides
+    #    each correct, with the convention between them never written down.
+    #
+    #    So take the baseline instead of freezing it.  `hero_guard_scope` IS the
+    #    whole of GH #473 甲 -- a tree that declines to narrow falls through
+    #    `_resolve_site` to the pre-existing file-path reading -- so deriving
+    #    the SAME live ids both ways measures the change and nothing else.  What
+    #    survives a promote is the shape of the delta, not its contents.
     with open(os.path.join(ROOT, "iterations/streams/test_set.md"), encoding="utf-8") as fh:
         arm = fh.read().splitlines()[1]
     ids = ct.parse_arm(arm)
     terms, rows, summary = ct.derive_terms(ids, ROOT, tree=tree)
+
+    pre = ct.Tree(ROOT)
+    pre.hero_guard_scope = lambda rel, lineno: (frozenset(), "ok")
+    base_terms, _base_rows, base_summary = ct.derive_terms(ids, ROOT, tree=pre)
+
     check(summary["unresolved"] == 0,
           "live arm string derives 0 unresolved (got %d)" % summary["unresolved"])
-    check("pudge" in terms, "pudge is now a carrier term of the live arm string")
-    for want in ("chaos_knight", "crystal_maiden", "lion", "obsidian_destroyer",
-                 "skeleton_king", "spirit_breaker", "zuus"):
-        check(want in terms, "pre-existing term %s survives the change" % want)
+    # If the BASELINE is loud, the delta below is not a reading of this change.
+    check(base_summary["unresolved"] == 0,
+          "the pre-change reading is quiet too, so the delta is attributable "
+          "(got %d unresolved)" % base_summary["unresolved"])
+
+    lost = sorted(set(base_terms) - set(terms))
+    gained = sorted(set(terms) - set(base_terms))
+    # Not true by construction: narrowing short-circuits the caller walk, so a
+    # site that resolves `unmapped`/`unbalanced` drops an id to `unresolved` and
+    # takes its file-path terms with it.
+    #
+    # ⚠️ BOUNDARY, measured 2026-09-07 and not inferred: on TODAY's tree this
+    # check cannot fail, so it buys nothing today.  Exactly one live id changes
+    # reading under narrowing (`rotscope`: generic/[] -> hero/[pudge]), and a
+    # baseline of `generic` carries no terms, so there is nothing available to
+    # lose.  Two mutation stands agree -- breaking the scanner (-> unbalanced)
+    # and forcing a wrong-but-mapped hero were both caught, by OTHER checks,
+    # with `lost` silent in both.  It is a ratchet for the tree where a second
+    # id narrows, and it should be read as one until this note is re-measured.
+    check(not lost,
+          "the narrowing loses no term the file-path reading already had "
+          "(lost %s)" % lost)
+
+    if "rotscope" in ids:
+        check(gained == ["pudge"],
+              "the narrowing gains exactly pudge on the live arm string "
+              "(gained %s)" % gained)
+    else:
+        # The measured instance left the live string (promoted or retired), so
+        # the arm string can no longer buy this claim.  Say so out loud and put
+        # the weight back on the real-tree claim in LAYER 1.1, which never
+        # depended on what is armed.
+        print("NOTE rotscope is no longer armed; the gain is claimed on the "
+              "real tree instead (gained on the live string: %s)" % gained)
+        check(ct.derive_id(tree, "rotscope")["heroes"] == {"pudge"},
+              "rotscope still narrows to pudge on the real tree, which is where "
+              "the gain is claimed once it leaves the arm string")
 
     # 4. the multi-line condition that is NOT a failure.  `creepthink`'s gate
     #    literal sits INSIDE a three-line `if` condition, so at the gate line
