@@ -173,6 +173,46 @@ local TRIPLE = {
       responder = 'npc_dota_hero_jakiro' },
 }
 
+-- The enumerated silent-armed frames: rescue frames where the shipped chain,
+-- ARMED, issues no action. Enumerated rather than counted, so both directions
+-- are red -- a new one is a finding, and one LEAVING is a finding too (the
+-- GH #106 lesson this file already applies to its counts). Each entry carries
+-- the REASON, and the reason is re-derived below rather than restated.
+--
+-- ⭐ GH #594, and the entry to read before adding a third. The census counted
+-- ONE of these until 2026-09-05 and TWO after, with `bots/` byte-identical
+-- across that line. The commit that moved it (`b4d5f01f`) changed the fixture
+-- LOADER, not the bots: it stubbed `GetExtrapolatedLocation`, whose absence had
+-- made `J.CanEnemyInterruptTpChannel` raise (`jmz_func.lua:2908`, `sLoc` was the
+-- `^Get -> 0` catch-all's number). That raise happened inside
+-- `J.GetRescueTpTarget`, which the census prefilters through `pcall` -- so the
+-- axe frame was not answering "no rescue here", it was being DELETED from the
+-- corpus by its own harness. Measured both ways on 2026-09-07, one file-copy
+-- restore stand apart:
+--     stub absent   pcall(J.GetRescueTpTarget, axe) -> false, "attempt to
+--                   index local 'sLoc' (a number value)"   => not a hit
+--     stub present  -> npc_dota_hero_sniper               => a hit, and silent
+-- ⇒ NOT a behaviour regression. The frame joined the hit set, and once driven
+-- it refuses for the reason already enumerated on Lina: an enemy tower within
+-- 888 (aiug's `#nNearbyEnemyTowers > 0`), two branches above the rescue.
+--
+-- THE TRANSFERABLE HALF, which is the same sentence `b4d5f01f` wrote about its
+-- own repair one layer down: A RAISE IS NOT A READING. A prefilter that asks
+-- through `pcall` scores a raising frame as "measured, answered no". Every
+-- count in this file taken before that date is therefore a count over a corpus
+-- the mock had censored, and un-censoring it can only ADD frames. When a
+-- fixture-mock repair lands, the census counts here move for reasons that have
+-- nothing to do with `bots/` -- check the loader before hunting a regression.
+local SILENT_ARMED = {
+    { path = 'tests/fixtures/f_260819_122930_lich_rescue_doomed.lua',
+      hero = 'npc_dota_hero_lina',
+      reason = 'enemy tower within 888 (aiug), GH #37 frame B' },
+    { path = 'tests/fixtures/f_260820_043124_axe_blink_flee_529.lua',
+      hero = 'npc_dota_hero_axe',
+      reason = 'enemy tower within 888 (aiug); entered the census with the '
+            .. 'GH #492 loader repair, see GH #594' },
+}
+
 local function fixture_files()
     local p = assert(io.popen('ls tests/fixtures'))
     local files = {}
@@ -459,8 +499,39 @@ tests['[census] every rescue frame in the corpus, armed vs off'] = function()
         .. ' rescue frames put a TP on the engine (was 37/39)')
 
     -- The exceptions are enumerated, so a NEW one is a red rather than noise.
-    assert(c.armed_none <= 1, 'a new silent armed rescue frame appeared: '
-        .. table.concat(c.armed_none_frames, ', '))
+    -- Enumerated BY NAME, not by count: `<= N` would let one exception be
+    -- swapped for another silently, and the count is exactly the quantity a
+    -- loader repair moves for reasons outside `bots/` (GH #594, SILENT_ARMED).
+    local expected_silent = {}
+    for _, s in ipairs(SILENT_ARMED) do
+        expected_silent[s.path:match('[^/]+$') .. '/' .. s.hero] = s.reason
+    end
+    for _, tag in ipairs(c.armed_none_frames) do
+        assert(expected_silent[tag] ~= nil,
+            'a new silent armed rescue frame appeared: ' .. tag
+            .. ' (all silent: ' .. table.concat(c.armed_none_frames, ', ')
+            .. '). Do NOT just widen the count: establish WHY it is silent, '
+            .. 'and whether it is a behaviour regression or a frame the '
+            .. 'fixture mock had been censoring, then add it to SILENT_ARMED '
+            .. 'with that reason.')
+    end
+    -- The other direction: an enumerated frame that is no longer silent. Name
+    -- it, rather than reporting only that two counts differ -- the whole point
+    -- of enumerating is that the message says WHICH frame moved.
+    local found_silent = {}
+    for _, tag in ipairs(c.armed_none_frames) do found_silent[tag] = true end
+    local vanished = {}
+    for tag in pairs(expected_silent) do
+        if not found_silent[tag] then vanished[#vanished + 1] = tag end
+    end
+    table.sort(vanished)
+    assert(#vanished == 0,
+        'SILENT_ARMED lists frame(s) the census no longer finds silent: '
+        .. table.concat(vanished, ', ') .. ' (census found '
+        .. c.armed_none .. ': ' .. table.concat(c.armed_none_frames, ', ')
+        .. '). Either the frame started producing an action -- a finding, say '
+        .. 'what unblocked it -- or it left the rescue hit set entirely, which '
+        .. 'is a loader/corpus question, not a bots/ one (GH #594)')
     assert(c.armed_err <= 1, 'a new failing armed rescue frame appeared: '
         .. table.concat(c.armed_err_frames, ', '))
 
@@ -470,18 +541,29 @@ tests['[census] every rescue frame in the corpus, armed vs off'] = function()
         .. ' action(s) on rescue frames -- the gate leaks')
 end
 
-tests['[census] the one silent armed frame is the shipped enemy-tower guard'] = function()
-    -- Enumerated rather than tolerated: Lina stands within 888 of an ENEMY
-    -- tower, and the TP consider refuses before it ever reaches the rescue
-    -- branch (aiug:5095). Pin the reason, so if the count moves the message
-    -- says which guard moved.
-    local J, bot = frame('tests/fixtures/f_260819_122930_lich_rescue_doomed.lua',
-        'npc_dota_hero_lina', { armed = true })
-    assert(#bot:GetNearbyTowers(888, true) > 0,
-        'the silent frame no longer has an enemy tower in reach -- re-derive it')
-    local log = drive(J, bot)
-    assert(log ~= nil and #log == 0,
-        'the enemy-tower guard stopped suppressing the rescue on this frame')
+tests['[census] every silent armed frame is the shipped enemy-tower guard'] = function()
+    -- Enumerated rather than tolerated: each of these responders stands within
+    -- 888 of an ENEMY tower, and the TP consider refuses there -- two branches
+    -- above the rescue, before `J.GetRescueTpTarget` is ever consulted. Pin the
+    -- reason per frame, so when the census count moves the message says which
+    -- guard moved rather than only that a number did.
+    --
+    -- Both halves are re-derived here rather than asserted off the census: the
+    -- tower is read off the frame, and the silence off the shipped drive. A
+    -- frame that goes silent for a DIFFERENT reason therefore fails here even
+    -- though the count above still closes.
+    assert(#SILENT_ARMED >= 1, 'SILENT_ARMED emptied; the census pairing is void')
+    for _, s in ipairs(SILENT_ARMED) do
+        local tag = s.path:match('[^/]+$') .. '/' .. s.hero
+        local J, bot = frame(s.path, s.hero, { armed = true })
+        assert(bot ~= nil, tag .. ': the frame no longer loads')
+        assert(#bot:GetNearbyTowers(888, true) > 0,
+            tag .. ': no enemy tower in reach any more, but it is still listed '
+            .. 'as silent for "' .. s.reason .. '" -- re-derive the reason')
+        local log = drive(J, bot)
+        assert(log ~= nil and #log == 0,
+            tag .. ': the enemy-tower guard stopped suppressing the rescue')
+    end
 end
 
 tests['[bracket] the corpus cannot locate the rescue rate, only bracket it'] = function()

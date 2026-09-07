@@ -100,6 +100,13 @@ UNRESOLVED_HAND_READ = {
         "tests/frames}; same shape as the ult sister above",
     """tests/test_wk_q_castrange_meter_domain.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "dir in {tests/fixtures, tests/frames}",
+    # Hand-read 2026-09-07 (director), at :193-197: `corpus_paths()` loops
+    # `for _, dir in ipairs({ FIXTURE_DIR, STAGED_DIR })`, and those two are
+    # literals at :176-177 ('tests/fixtures' / 'tests/frames').  Byte-identical
+    # in shape to the hex/ult sisters above; bots/ is not in the enumeration.
+    """tests/test_lion_considere_earlyreturn_domain.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
+        "tests/frames}",
     """tests/test_fixture_mana_price.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
         "d in {tests/fixtures, tests/frames}",
     # Hand-read 2026-09-06 (director), at :399-400: the loop is written

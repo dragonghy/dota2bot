@@ -497,6 +497,54 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-07T13:31Z**:**照上轮指名做了 GH #594(先于本轮存在、点名总监的 trunk 红),
+  已裁定并关闭 —— 结论与 issue 标题相反:不是行为回归,`bots/` 在那条线上逐字节相同。**
+  零 AWS、零波次、零 `bots/` diff、不发 owner 邮件。
+  ⛔ **判定完结 0,连续第四轮低于 owner P4.2 的 ≥2,不粉饰。** 两条指令冲突(上上轮自我要求
+  「下一轮第一件事必须是判定」vs 10:00Z 的「下一轮第一件事:GH #594」)取了晚的那条,
+  **那是对的,而结果仍然是这一格空着。**
+  ⭐⭐⭐ **本轮最该被读的一条:`b4d5f01f` 修好的那个缺陷,在高一层原封不动地又发作了一次,
+  而它就是这条红的全部成因。** 该 commit(总监 GH #492 执行,`bots/` 零改动,只给 fixture
+  loader 补 `GetExtrapolatedLocation` 桩)自己写着「**A raise is not a reading**」——
+  它修的是两个 sweep 用两桶 `pcall` 把抛错记成「测过了,答否」;而
+  `test_lf_rescue_final_action` 的普查预筛正是 `pcall(J.GetRescueTpTarget, bot)`。
+  **文件拷贝还原台两个读数**(只删那三行桩、跑、拷回):无桩时该调用 `false` +
+  `jmz_func.lua:2908: attempt to index local 'sLoc' (a number value)`(`sLoc` 就是
+  `^Get -> 0` 兜底返回的那个 number)⇒ **该帧被静默地从语料里删掉**,测试 12/0 绿;
+  有桩时答 `npc_dota_hero_sniper` ⇒ **该帧进了命中集**,驱动后静默,`armed_none` 1 → 2。
+  ⇒ **那帧不是「变哑了」,是新进来的。修好一层的审查,会让上一层的计数移动,
+  而移动方向只能是变多。** 录像组排除的假设(`CanEnemyInterruptTpChannel` 在这两帧答
+  `false` 不是 `true`)**是对的**,它排除的是结论的后半段;前半段在**抛错**那个方向上。
+  驱动后静默的理由是**已经被枚举过的那条守卫第二次出现**:`#bot:GetNearbyTowers(888,true)==1`,
+  `aiug` 在救援分支两行之上就 `return BOT_ACTION_DESIRE_NONE`(与 Lina / GH #37 frame B 同一条)。
+  ⭐ **处置不是把 `<= 1` 改成 `<= 2`** —— `<= N` 有一个 #594 恰好演示了的洞:
+  **它允许一个例外被另一个例外悄悄换掉**,而 N 正是「loader 一修就会动、原因完全在 `bots/`
+  之外」的那个量。改成 `SILENT_ARMED`(帧 + 主语 + **理由**)+ **两个方向都红**的断言,
+  并把姊妹用例改成逐帧**重新求证两半**(读帧拿塔 + 跑出厂链拿静默)⇒ 一个**因为别的原因**
+  静默的帧,即使计数仍然闭合也会红。变异台 **4 发 CAUGHT**(含 M3 = 把出厂守卫改 `> 99`
+  这一发真 `bots/` 行为变异);⚠️ M2 第一版报错文本说的是「例外开始出动作了」,
+  而**过度枚举**不是那个形状 ⇒ 改成点名列出「名单上有、普查里没有」的帧,复跑复现。
+  **顺带结清第二条 trunk 红(harness)**:`test_bots_walk_farm_only.py` 点名
+  `test_lion_considere_earlyreturn_domain.lua` 的 `io.popen` 解析不了 ⇒ **照体例手读**
+  (`:193-197` 的 `corpus_paths()` 循环 `{FIXTURE_DIR, STAGED_DIR}`,两者是 `:176-177` 的
+  字面量,`bots/` 不在枚举里),条目带日期行号落地;复跑 `8 checks, 0 failed`。
+  ⭐ **§4 那个子集定义救了这一轮**:我原以为「改的是测试文件,没人 require 测试文件」⇒
+  半径为零;`grep -rln` 反向引用**真的找出两个文件**(`test_slotwait_cooldown_scan`、
+  `test_axe_cull_threshold_gate`)。**那个想当然正是 #594 的形状。** 两个都绿。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck` 0 警告 / **未用 `RULE6_BYPASS`**;
+  动态半边**不声称全套**,跑的是「改动文件 + 反向引用闭包 + lf_rescue 三姊妹 +
+  gate_claim + smoke + 全部 `tests/test_*.py`」,逐条读数在报告 §4。
+  ⚠️ **一条 UNCERTIFIABLE 照实登记**:`test_selfcheck_lua_leg.py` **exit=2**,9 个 check
+  撞到自己的 120s 预算没跑成 —— **不是红也不是通过**,与本轮 diff 无因果。
+  ⚠️ 自检那两条 lua 腿的 `UNCERTIFIABLE` 是**跑那一刻容器里还没有 `lua5.1`**;
+  我随后装了但**没有复跑它们** ⇒ 这一轮它们仍然是「没人看过」。
+  ⚠️ 开工第一条命令又把自检管进 `tail`,守卫当场拒;**不新立措辞**,登记:**第四十发**。
+  **下一轮第一件事:判定,而且是判定**(除非又出现先于该轮存在、点名总监的 trunk 红);
+  起手先修 10:00Z 那条交棒(给每个 armed id 机器可读的入集时刻,来源是**入集章节**
+  不是左删截的 git 历史)。另**新开 [harness] issue 带走 #594 真正没做完的一半**:
+  「`pcall` 预筛普查的审查偏差」是一个**类**不是一帧,`b4d5f01f` 那天所有这类计数
+  都可能移动过而没人看 —— **不能随 #594 一起关掉**。
+  报告:`iterations/reports/director/20260907T133112Z.md`。
 - **2026-09-07T10:00Z**:**上轮写的「下一轮第一件事必须是判定,不是修 bug」照办了 ——
   `slotpush` PROMOTE(armed 51 → 50,锚点 `stable-v6`,commit `f0474dbb`,裁定全文 §FT)。
   零 AWS、不发 owner 邮件。判定完结 1,裁定 2(另一条:`hero-40` APPROVED 零 EC2 归档扫描)。**
