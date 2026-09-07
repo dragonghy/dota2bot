@@ -221,7 +221,31 @@ local PINNED = {
     -- shipped.
     "c12,retnear,towerreach | GetDesireHelper | J.IsAtRoshanPit | roshdist | bots/mode_retreat_generic.lua",                              -- W
     "c12,retnear,towerreach | GetDesireHelper | J.IsInLaningPhase | c2,c4 | bots/mode_retreat_generic.lua",                               -- W
-    "c12,retnear,towerreach | GetDesireHelper | J.IsWkReincarnationArmed | wkreincarnmp | bots/mode_retreat_generic.lua",                 -- W
+    -- [wkreinctr 20260907] 'wkreinctr' joined this row when it added the
+    -- `not abilityR:IsTrained()` veto to J.IsWkReincarnationArmed. Read by hand
+    -- before pinning, and it is (W) on the outer half and (P) on the inner one.
+    -- Outer (W): the three outer ids are SIBLING statements inside the same
+    -- 500-line GetDesireHelper, not a block enclosing the WK paragraph at ~:198,
+    -- which runs on every frame regardless of them -- the same reading the two
+    -- rows above already carry.
+    -- Inner (P): un-armed, `J.IsSoakCandidate( 'wkreinctr' )` is the FIRST
+    -- conjunct of its own `if`, so it short-circuits before J.IsModeTurbo and
+    -- before the engine's IsTrained(), the early `return false` is never taken,
+    -- and the helper is byte-identical to what shipped -- including for the
+    -- sibling id below it.
+    -- ⭐ WHAT THIS ROW NOW RECORDS: this helper carries TWO ids, and unlike the
+    -- 'stayattr'/'staysrc' pair further down they are SEQUENTIAL rather than
+    -- side by side -- 'wkreinctr' returns before 'wkreincarnmp' is reached. Each
+    -- is therefore INDEPENDENTLY SUFFICIENT, which is the shape where arming one
+    -- can measure a correct ZERO wherever the other also fires. Measured rather
+    -- than argued: tests/_wkreinctr_sweep.lua drives all three configurations
+    -- over the 36 live Wraith King frames and reports `pair_ne_arm` = 1 (that
+    -- one frame belongs to 'wkreincarnmp') with `pair_ne_arm_in_flipset` = 0.
+    -- Direction is additive by construction on its own arm: a veto placed
+    -- before every other test can only turn TRUE into FALSE, and the sweep's
+    -- `flip_false_to_true` is 0 with the swapped tally reporting the whole
+    -- domain.
+    "c12,retnear,towerreach | GetDesireHelper | J.IsWkReincarnationArmed | wkreincarnmp,wkreinctr | bots/mode_retreat_generic.lua",       -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldAbandonTpChannel | tpwatch | bots/mode_retreat_generic.lua",                      -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldCounterTradeKite | l1kite | bots/mode_retreat_generic.lua",                       -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRegenNotWalkHome | stayfield2 | bots/mode_retreat_generic.lua",                   -- W

@@ -27,6 +27,74 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0WKREINCTR. **【2026-09-07T01:20Z 新增,**OWNER_PRIORITIES P4.4(i)(球在本组)**;
+   工作流第 1 步扫 `[strategy]` open issue —— `#578`/`#575`/`#572`/`#568`(本组前四轮已交付、等总监裁)与
+   `#558`(已认领并交回),更早的 `#385/#300/#254/#201/#198/#26` 同为存量或无帧证据
+   ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项;
+   产出 `bots/FunLib/jmz_func.lua` 的 `J.IsWkReincarnationArmed` **前置一条 gated 否决**
+   (`wkreinctr`,turbo **显式**,**未 armed**,STANDALONE)、`tests/test_wkreinctr_untrained.lua`(**10/10**)、
+   `tests/_wkreinctr_sweep.lua`、`tools/agent/mutstand_wkreinctr.sh`、
+   `tests/test_gated_helper_nesting_census.lua`(新增一行 pin,附手读分类)、
+   `state.json:wkreinctr_20260907`、`test_set.md §FR`;
+   报告 `iterations/reports/strategy/20260907T012000Z.md`;
+   **armed 串一字未动、`queue.json` 一字未动**(P4.2 入集冻结)。零 AWS、零 S3、零 EC2、零波次。
+   **已交棒总监(甲)+ 批测台(乙)+ 录像组(丙)+ 英雄组(丁),总线 = GH #581。**】**
+   **⭐ 主判据(第六次用域价钱,而这次它一口气否掉五条路 —— 包括章程点名的那一格,并且不是「小」而是「整条缝到头了」):**
+   `0WAITCLAR` 点名的那一格逐字是「**先问这一族还值不值得再加第七个 id**」。跑了:五条 supply 杠杆
+   (`staysrc`+`staybottle`+`staybag`+`stayurn`+`bagsalve`)**同时 armed**、`GetGold()` 驱动到 0 与 200 两列,
+   到达 supply 子句 **125**、仍被否决 **63**,逐件数 = **真的两手空空 45**(归 `fieldbuy`)+ **背包 tango/faerie_fire 8**
+   (`bagsalve` 已裁)+ **空瓶 3**(正确)+ **带灵龛没在跳 7**(`urnself` 已定价拒绝)+
+   **⭐ 主槽带着词表不认识的回复消耗品 `0`**。**最后那个 0 就是答案:不加。**
+   合上 §FP.5 的两列更强一句:四条加宽在 `gold ≥ 90` 一侧全为 0 是**结构**(它们全坐在
+   `not bHasRegen and GetGold() < 90` 的 `not bHasRegen` 后面)⇒ **整族 5 个 id 的真实域被夹在
+   「受伤 ∧ 未被追 ∧ 不到 90 金」里** —— 这是给**总监做判定完结**的读数(P4.2 要集合变小),不是给本组加杠杆的。
+   同轮另外四条候选**也全部跑了价钱、全部被否**(登记为「定价后拒绝」):
+   `撤退:1/撤退:2` 词表少三味(帽内 **0/0/0**)、`mode_retreat_generic:457` 回基地补蓝(域 **3**,
+   唯一带药那帧距泉水 1225 < 2000 ⇒ item 层本来就拒绝喝 ⇒ **回家是对的**)、
+   净化药水自饮的危险半径写成 `800 + aetherRange`(**投掷射程**;兄弟 `item_flask` 同位置写**裸的 900**
+   ⇒ **买以太之镜会让 bot 更不敢喝自己的药水**,方向严格错 —— 但语料里 **0 把**)、
+   `item_blood_grenade` 的收尾判据把 5 秒 DoT 当瞬伤(携带者 **100**/1012、900 内有敌人 **40**、
+   `CanKillTarget(e,125)` 命中 **0** ⇒ **整份语料一次没开过火**;独立发现,交英雄组)。
+   **⭐⭐ 落地的杠杆 `wkreinctr`:一个 `GetAbilityByName` 的把手,被当成「这个技能存在」。**
+   `J.IsWkReincarnationArmed`(**SHIPPED**)的唯一调用点 `mode_retreat_generic ~:198`(**也 SHIPPED、无 gate**)
+   把它的答案花在 **`return BOT_MODE_DESIRE_NONE`** 上 —— **整个撤退模式**清零,位置在**整条 guard chain 之上**。
+   而 `bot:GetAbilityByName` 对**没点技能点**的技能**照样返回活把手**,level 0 技能**不在冷却里**
+   ⇒ 守卫放行,剩下 `GetMana() >= 160` 骷髅王从第一分钟起都满足 ⇒ **没点大招的骷髅王读作 ARMED**。
+   `GetLevel() >= 6` 是**英雄等级**,对技能点去了哪里**一个字都没说**。
+   **树在八行之外就知道该问什么**:同一函数体内的 huskar 块写着
+   `if hAbility and hAbility:IsTrained() and hAbility:GetLevel() >= 3 then`。**这一行只是没被带过来。**
+   域:WK 帧 **36** / 出厂 TRUE **24** / 其中大招等级 0 的 **14**(**出厂每 100 个 TRUE 里 58 个**);
+   钉帧 `f_073148_zuus_lina` **英雄等级 7、大招技能等级 0、冷却 0.0、蓝 224**。
+   **⭐⭐⭐ 两列读数,而第二列的零必须带标签**:调用点自己的两个合取项把 14 按 `GetLevel()>=6` 砍到 **2**、
+   再按 `J.IsInTeamFight(bot,1200)` 砍到 **0** —— 36 帧无一有两个队友在 1200 内。
+   **那是这份语料的几何(为 P2 回城 TP 调查而切,不是为团战),不是杠杆的性质**;
+   **且是从宽松侧读的**(见 ⭐⭐⭐⭐⭐)。两列**分别断言**,谁也不能替谁说话。
+   **⭐⭐⭐⭐ 立法级(量具):一个断言 `== 0` 的计数器,证明不了自己数得动 —— 这次它长在本杠杆自己的 pair 列上。**
+   `pair_ne_arm_in_flipset` 第一版是 `if shipped and not arm then bump(...) end`,下游断言 `== 0`;
+   变异台 **M15 直接 SURVIVED** —— 删掉 bump,计数器仍是 0,**和「驱动过、确实一帧都没有」读起来一模一样**
+   (GH #171 形状)。`tally()` 对调双腿那一招治的是 `flips`,**没有人把同一条纪律推广到 pair 列**。
+   修法同源:两半走**同一个 bump**,必须读 0 的那一支正是必须报出全集的那一支;
+   测试同时断言 `out == 1` 与 `in + out == pair_ne_arm`,重跑 **M15 CAUGHT**。
+   ⇒ **可复用的一条:任何被断言为 0 的计数器都要有一个走同一个 bump 的补集。**
+   **⭐⭐⭐⭐⭐ 副产物(量具,从未登记过):mock 的 `GetNearbyHeroes` 忽略第三个参数(bot mode)。**
+   `tests/mock/replay_fixture.lua:1372` 的签名是 `function(self, radius, enemies, _)` ⇒
+   `J.GetNearbyHeroes(bot, r, false, BOT_MODE_ATTACK)` 在 fixture 上返回**附近所有队友**,
+   `J.IsInTeamFight` 退化成「半径内有没有两个队友」。与 loader 自己已登记的 `GetManaCost → 0` /
+   `GetActualIncomingDamage → 0` **同族**,**但这一条没登记过**;`.dem` 里没有 bot mode ⇒ **不可修**,
+   要的是**可见**不是静默高估。方向是**宽松侧** ⇒ 经它取的读数是**上界**。`bots/` 下 **2277** 个调用点。
+   **下一格(本组下一轮第一项)**:先扫未认领 `[strategy]` issue(带帧证据的优先);
+   否则按 **P4.4 在 `bots/` 上取一个小杠杆** —— **但先读这一句**:
+   ⛔ **这份 fixture 语料(1012 帧 / 109 fixture)对「野外续航 / 回城 TP」这条缝已经跑干了**,
+   本轮五条候选路的域分别是 0/0/3(假阳性)/0/0。**再在这条缝上找,买到的会是又一个 0。**
+   两条出路,**都要先付价钱**:(甲)换**语料**——向录像组要**团战帧**(`wkreinctr` 的调用点列正需要它,
+   而且 `IsInTeamFight` 这条线整个没被本语料照亮过);(乙)换**缝**——本轮点名两处未动的:
+   `item_blood_grenade` 的「100 携带者 / 0 次投掷」(⚠️ 那需要一条**新行为**不是一次收窄,
+   **方向不由构造固定**,按大捆绑教训要格外小心),以及 `J.IsInTeamFight` 本身
+   **只数 ATTACK 模式的队友、一次都不问敌人在不在**(⚠️ **350+ 调用点,绝不可动 helper 本身** ——
+   只能在**单个调用点**上加 gated 合取项)。
+   **照旧先跑域价钱、每个变异体的锚先数一遍(词边界锚定 + 命令真的作用到文件上)、
+   恒零的断言先证明它数得动 —— 而「恒零」现在包括 pair 列(⭐⭐⭐⭐)。**
+
 0WAITCLAR. **【2026-09-06T22:55Z 新增,**OWNER_PRIORITIES P4.4(i) + P2(球在本组)**;
    工作流第 1 步扫 `[strategy]` open issue —— `#575`/`#572`/`#568`(本组前三轮已交付、等总监裁)与
    `#558`(已认领并交回),更早的 `#385/#300/#254/#201/#198/#26` 同为存量或无帧证据
@@ -6065,6 +6133,43 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-07T01:20Z(**P4.4(i)**:`[strategy]` open issue 本轮扫过 `#578`/`#575`/`#572`/`#568`
+  (本组前四轮已交付、等总监裁)与 `#558`(已认领并交回),更早的 `#385/#300/#254/#201/#198/#26`
+  同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项。
+  开工自检 **EXIT=3**(`cadence` / `owed-executions` / `trunk-red(python)`;
+  trunk RED 是 **`tests/test_stable_anchors.py`**,**批测台 00:32Z 已立 GH #579**,不归本组,只登记。
+  ⚠️ 又一次第一条命令撞上它对**管道**的拒绝,`SELFCHECK_EXIT=2 REFUSED` 而外层读到 `tail` 的 0)。
+  **⭐ 主判据(第六次用域价钱,而这次它一口气否掉五条路,并且结论不是「小」而是「整条缝到头了」):**
+  `0WAITCLAR` 点名的「这一族还值不值得再加第七个 id」跑了 —— 五条 supply 杠杆同时 armed、
+  `GetGold()` 两列驱动,残余 **63** 帧逐件数:两手空空 **45** + 背包 tango/faerie_fire **8** + 空瓶 **3**
+  + 带灵龛没在跳 **7** + **主槽带着词表不认识的回复消耗品 `0`** ⇒ **不加**。
+  合上 §FP.5 更强一句:整族 5 个 id 的真实域被 `not bHasRegen and GetGold() < 90` 夹在
+  「受伤 ∧ 未被追 ∧ 不到 90 金」里 —— **这是给总监做判定完结的读数**。
+  同轮另外四条候选(`撤退:1/2` 词表、`mode_retreat_generic:457` 回基地补蓝、净化药水自饮的
+  `800 + aetherRange` **投掷射程当危险圈**、血之荼蘼收尾判据把 5 秒 DoT 当瞬伤)**全部跑了价钱、全部被否**,
+  登记为「**定价后拒绝**」。
+  **⭐⭐ 落地的杠杆 `wkreinctr`**:`J.IsWkReincarnationArmed`(**SHIPPED**)的唯一调用点
+  `mode_retreat_generic ~:198`(**也 SHIPPED、无 gate**)把答案花在 **`return BOT_MODE_DESIRE_NONE`** 上
+  —— **整个撤退模式**清零,在**整条 guard chain 之上**。而 `bot:GetAbilityByName` 对**没点技能点**的技能
+  **照样返回活把手**,level 0 技能**不在冷却里** ⇒ 守卫放行、`GetMana() >= 160` 恒真
+  ⇒ **没点大招的骷髅王读作 ARMED**。**树在八行之外就知道该问什么**:同一函数体内的 huskar 块
+  写着 `hAbility:IsTrained()`。域 **14**/24 出厂 TRUE(**每 100 个 TRUE 里 58 个**);
+  钉帧 `f_073148_zuus_lina` **英雄等级 7、大招技能等级 0、蓝 224**。
+  **⭐⭐⭐ 两列,而第二列的零带标签**:调用点把 14 按 `GetLevel()>=6` 砍到 **2**、再按
+  `IsInTeamFight(1200)` 砍到 **0** —— **那是语料几何不是杠杆**,且从**宽松侧**读。
+  **⭐⭐⭐⭐ 立法级(量具):断言 `== 0` 的计数器证明不了自己数得动 —— M15 SURVIVED,
+  而红的是断言不是变异体。** 两半改走**同一个 bump** 后 **M15 CAUGHT**。
+  ⇒ **任何零断言都要有一个走同一个 bump 的补集**(「对调双腿」不是 `tally()` 的性质,是零断言的性质)。
+  **⭐⭐⭐⭐⭐ 副产物(量具,从未登记过)**:`replay_fixture.lua:1372` 的 `GetNearbyHeroes`
+  **丢掉第三个参数(bot mode)** ⇒ `J.IsInTeamFight` 在 fixture 上退化成「半径内有没有两个队友」;
+  与 loader 已登记的 `GetManaCost → 0` 同族,`.dem` 无 bot mode ⇒ **不可修,要可见**;`bots/` 下 **2277** 个调用点。
+  产出:`bots/FunLib/jmz_func.lua`、`tests/test_wkreinctr_untrained.lua`(**10/10**)、
+  `tests/_wkreinctr_sweep.lua`、`tools/agent/mutstand_wkreinctr.sh`、
+  `tests/test_gated_helper_nesting_census.lua`(新增一行 pin)、
+  `state.json:wkreinctr_20260907`、`test_set.md §FR`;
+  报告 `iterations/reports/strategy/20260907T012000Z.md`;总线 **GH #581**。
+  **armed 串一字未动、`queue.json` 一字未动**(P4.2)。零 AWS。
+  ⏭ **下一轮先读 0WKREINCTR 的「下一格」**:这条缝跑干了,再找会买到又一个 0。)
 - 2026-09-06T22:55Z(**P4.4(i) + P2**:`[strategy]` open issue 本轮扫过 `#575`/`#572`/`#568`
   (本组前三轮已交付、等总监裁)与 `#558`(已认领并交回),更早的 `#385/#300/#254/#201/#198/#26`
   同为存量或无帧证据 ⇒ **无未认领的带帧证据条目**,按铁律 9 取优先项。

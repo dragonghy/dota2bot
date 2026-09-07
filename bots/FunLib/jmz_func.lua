@@ -10299,6 +10299,87 @@ end
 function J.IsWkReincarnationArmed( bot )
 	local abilityR = bot:GetAbilityByName( 'skeleton_king_reincarnation' )
 	if abilityR == nil or abilityR:GetCooldownTimeRemaining() > 1.0 then return false end
+	-- [wkreinctr / owner priority P2 kin, 2026-09-07] The clause BELOW this one
+	-- argues about the PRICE of the ultimate. This one is about whether the bot
+	-- owns the ultimate at all, and it is the conjunct that was never written.
+	--
+	-- The defect, as two engine facts that this function reads only one of.
+	-- `bot:GetAbilityByName` hands back a live handle for an ability with NO
+	-- skill point in it -- an unlearned ability is not a nil, it is a level-0
+	-- ability -- and a level-0 ability is not on cooldown, so
+	-- `GetCooldownTimeRemaining()` answers 0.0 and the guard above passes. What
+	-- is left is `bot:GetMana() >= 160`, which any Wraith King satisfies from
+	-- the first minute. So a WK who has not put a point in Reincarnation reads
+	-- ARMED, and the single call site --
+	--
+	--     if bTeamFight and botName == "npc_dota_hero_skeleton_king"
+	--         and bot:GetLevel() >= 6 and J.IsWkReincarnationArmed(bot)
+	--     then return BOT_MODE_DESIRE_NONE end
+	--     (mode_retreat_generic.lua ~:198, SHIPPED, no candidate gate)
+	--
+	-- returns BOT_MODE_DESIRE_NONE, i.e. it suppresses the WHOLE retreat mode
+	-- for that frame, above the entire guard chain. The bot stands in a team
+	-- fight on the strength of a free life it does not have. `GetLevel() >= 6`
+	-- is a HERO level and says nothing about where the skill points went.
+	--
+	-- ⭐ THE TREE ALREADY KNEW, AND IT KNEW IT EIGHT LINES FROM THE CALL SITE.
+	-- mode_retreat_generic's huskar block, in the same GetDesireHelper:
+	--     local hAbility = bot:GetAbilityByName('huskar_berserkers_blood')
+	--     if hAbility and hAbility:IsTrained() and hAbility:GetLevel() >= 3 then
+	-- Same engine call, same file, same function -- and it asks IsTrained()
+	-- before believing the handle. So does the offensive-blink helper
+	-- ('axeblink': "the bot is Axe and has actually LEARNED Call (an unlearned
+	-- Call means there is no combo to wait for)"). This line was simply never
+	-- brought along.
+	--
+	-- Direction is fixed by CONSTRUCTION: this is a veto placed before every
+	-- other test, so arming can only turn TRUE into FALSE -- the armed TRUE set
+	-- is a strict SUBSET of the shipped one, and the only behaviour it can
+	-- produce at the call site is RESTORING the retreat mode that the shipped
+	-- read suppressed. It can never suppress a retreat that shipped allows.
+	-- Un-armed, J.IsSoakCandidate is the FIRST conjunct, so neither
+	-- J.IsModeTurbo nor the engine's IsTrained() is reached and the sibling
+	-- 'wkreincarnmp' clause below evaluates byte-identically.
+	--
+	-- Gated STANDALONE -- one id in this condition, never a conjunction of two
+	-- (the 'pullcad' trap). It shares the helper with 'wkreincarnmp' but not the
+	-- expression: this clause returns before that one is reached, so each is
+	-- INDEPENDENTLY SUFFICIENT and a single-arm wave can read either
+	-- (tests/_wkreinctr_sweep.lua measures the pair and reports it). Turbo is
+	-- NOT structural on this path -- neither this function nor the call site
+	-- asks above it -- so it is asked explicitly here.
+	--
+	-- Honest bounds, all measured on the 1012-live-frame corpus
+	-- (tests/_wkreinctr_sweep.lua, tests/test_wkreinctr_untrained.lua):
+	-- (1) 36 of those frames are a Wraith King. The shipped helper answers TRUE
+	--     on 24 of them, and 14 of those 24 -- 58% of every TRUE it produces --
+	--     sit on a Reincarnation at ability level 0. Those 14 are the flip set
+	--     of this clause and each is emitted as a row, so "the corpus has no
+	--     untrained ults" can never read the same as "it has them and this
+	--     function rejects them earlier".
+	-- (2) THE CALL SITE IS NOT REACHED ON THIS CORPUS AND THAT IS STATED, NOT
+	--     SMOOTHED OVER. Its own two extra conjuncts cut the 14 to 2 via
+	--     `GetLevel() >= 6` (f_073148_zuus_lina and f_080225_wk_revive, both a
+	--     hero level 7 with no point in the ultimate -- real replay frames, not
+	--     a constructed case), and then to 0 via `J.IsInTeamFight(bot, 1200)`,
+	--     which is FALSE on all 36 WK frames because none of them has two
+	--     allies inside 1200. So the measured flip set is 14 at the HELPER and
+	--     0 at the CALL SITE, and the sweep asserts both columns. The zero is a
+	--     property of this corpus's geometry, not of the lever: the corpus was
+	--     cut for the P2 home-TP investigation, not for team fights.
+	-- (3) The mock cannot filter GetNearbyHeroes by bot mode (it ignores the
+	--     third argument), so its J.IsInTeamFight OVER-counts attack-mode
+	--     allies. That makes the call-site zero in (2) an UPPER bound read from
+	--     the permissive side -- the live reachable set is <= it, never more.
+	-- (4) A frame is an instant. This says the decision at t rests on an
+	--     ultimate that does not exist; it does not model the WK taking the
+	--     point one second later.
+	if J.IsSoakCandidate( 'wkreinctr' )
+	and J.IsModeTurbo()
+	and not abilityR:IsTrained()
+	then
+		return false
+	end
 	local nReq = 160
 	if J.IsModeTurbo() and J.IsSoakCandidate( 'wkreincarnmp' ) then
 		nReq = abilityR:GetManaCost()
