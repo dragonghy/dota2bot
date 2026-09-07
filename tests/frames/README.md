@@ -33,6 +33,8 @@ it.
 |---|---|
 | `f_260905_004847_lion_drain_bkb.lua` | GH #566's falsification pin (`b34547 / 20260905_004847_slot1`, t=1266.5 = 21:06, heroes up to level 27, the tree's first frame from the LATE-GAME era). It is the only frame in the tree where a Mana Drain is running ON a Black-King-Bar-immune hero, which is what retired `liondrainbkb`. Admitting it turns **12+ files** red across the suite -- see its reopen list below. Used by `tests/test_lion_drain_immune_target.lua` (by name) and seen by the two tree-enumerating scans noted there. |
 | `f_20260831_004433_cm_creepreach.lua` | GH #354 section 5's pinned instant (`69e067 / 20260831_004433_slot1`, t=1190.4 = 19:50, heroes up to level 22). The corpus before it topped out at level 19 and t≈790, so admitting it turns **25 test files** red -- see the census below. Used by `tests/test_cm_creep_reach_real_frame.lua`, `tests/test_axe_t15_in_domain.lua`, `tests/test_axe_bkb_supply_staged_frame.lua`, `tests/test_alchemist_rage_clock_staged_frame.lua`, `tests/test_skill_point_stall_frame.lua` and `tests/test_cm_q_creep_aoe_reach.lua`. |
+| `f_260831_061811_axe_call_tp_channel.lua` | GH #577 section 5's FIRST coordinate (`731a21 / 20260831_061811_slot1`, t=1209.9 = 20:09, Axe at level 19). Branch (i) of `axecallbkb_i`, with **zero invented state**: Berserker's Call is rank 3 at **cd 0 in the replay**, the enemy 190.2u away carries **both** `modifier_black_king_bar_immune` (a name the shipped `IsMagicImmune` override reads) **and** `modifier_teleporting`, and the replay corroborates the channel behaviourally -- Bristleback holds 190.2u across two consecutive 1.0s samples and is gone by t=1211.9. It replaces `tests/test_axe_call_immune_veto.lua` section 3's **three-flip** counterfactual with two reader repairs. Used by `tests/test_axe_call_staged_frames.lua` (by name). Also carries an ally Lion at level 18 with Finger at rank 2, which is why `tests/test_lion_ult_reserve_domain.lua` moved n from 1 to 2 -- **paid in the same round**, see below. Admission price to `tests/fixtures/` **NOT measured**. |
+| `f_260828_002127_axe_call_bkb_ring.lua` | GH #577 section 5's SECOND coordinate (`db92df / 20260828_002127_slot1`, t=982.1 = 16:22, Axe at level 22). Branch (ii)'s **value column**: a spell-immune Lina at 75.1u (inside the 225u initiation range) with Necrolyte at 165.3u and a 228-HP Shadow Shaman at 276.9u -- both non-immune, both inside the 315u Call radius -- i.e. the three-hero taunt the shipped veto throws away. It does **not** make branch (ii) reachable, and `tests/test_axe_call_staged_frames.lua` section 5 says why at the schema level. Also carries a **dead** level-19 Wraith King, which is why `tests/test_wk_level_supply_horizon.lua` moved -- **paid in the same round**, see below. Admission price to `tests/fixtures/` **NOT measured**. |
 | `f_260828_124358_axe_cull_promise.lua` | GH #570's falsification pin (`11c470 / 20260828_124358_slot1`, t=1452.8 = 24:12, Axe at level 30). It is the only frame in the tree carrying `modifier_oracle_false_promise_timer` on any unit, and it is the frame on which the veto GH #570 asked for would have deleted the cast that killed oracle 0.1s later. It is also the tree's first frame from **t > 1400** (the corpus tops out near t=790 / level 19, and the two staged frames above at t=1266.5 / level 27), so its admission price is at least the price those two carry. **That price is NOT measured** -- this round did not move the file and run the suite, and nothing here claims a number for it; paying it is its own work unit, as this file has said since GH #357. Used by `tests/test_axe_cull_promise_premise.lua` (by name). |
 
 ## Reopen list: GH #357's three real re-decisions -- all PAID
@@ -162,11 +164,20 @@ GH #166 §9 widening, which is still untaken).
 
 ### Already paid, because staging does not hide the frame from them
 
-Two scans enumerate `tests/frames/` on purpose, so they saw this frame the day
-it was staged and were settled in the same round:
+Some scans enumerate `tests/frames/` on purpose, so they see a frame the day it
+is staged and have to be settled in the same round.
+
+⚠️ **THIS LIST IS NOT THE SET OF SUCH SCANS -- it is the set somebody
+remembered**, and on 2026-09-06 that difference cost a day of trunk red. The
+2026-09-06 round settled the two files below and stopped, because they were the
+two named here; `tests/test_wk_level_supply_horizon.lua` enumerates this
+directory too, was not on the list, and went red unnoticed with a real finding
+inside it (first row above). Before staging a frame, **grep for the directory**
+(`rg -l 'tests/frames' tests/`), do not read this table and stop.
 
 | file | what was done |
 |---|---|
+| `tests/test_wk_level_supply_horizon.lua` | ⚠️ **NOT settled that round, and it went RED ON TRUNK for a day.** This file is a THIRD scan that enumerates this directory, and it was not on the list below, so nobody looked. Settled 2026-09-07 by the round that staged the two Axe frames -- and the delay hid a real finding: `f_260905_004847_lion_drain_bkb.lua` carries the tree's first **LIVE** Wraith King above level 12 (level 26, `hp == max_hp == 2972`, **max_mp 855**). Every staged WK above 12 before it was dead with `max_hp = 0`, which is why its pool was flagged unquotable. The live one is quotable, and **855 > the shipped 600 Roshan mana floor** -- so queue `hero-10`'s "the largest max pool among those frames is 459, i.e. below 600 with a full bar" is false on a frame the repo owns. Still n=1: that answers "unreachable", not the rate hero-10 asks for. |
 | `tests/test_lion_ult_reserve_domain.lua` | Split section 2 and section 5 by **exact** Finger rank, so every cost-400 reading stays scoped to the 2026-08-31 frame it was taken on, and gave rank 3 its own live wire (0 -> 1). HONEST BOUND (B) is now RETIRABLE and is explicitly **not retired** -- the 600 line is still unmeasured. |
 | `tests/test_wk_q_castrange_meter_domain.lua` | live-WK instants 36 -> 37, body bucket 18 -> 19 (a live level-26 skeleton_king with Q trained and off cooldown). The KV/zero split is unchanged, so section 1's finding holds as measured. |
 

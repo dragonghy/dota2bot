@@ -327,11 +327,23 @@ tests['1. the castable funnel over the whole archive, buckets exhaustive'] = fun
     -- revocations, 7/4/5 by ability, exactly as before. The new instant is a CM
     -- at 41.0% HP with 97.9% mana, so she can afford everything she owns --
     -- which is why she enters the funnel and leaves it whole.
-    assert(t.instants == 50, 'live-CM instants: expected 50, got ' .. t.instants)
-    assert(t.handles == 218, 'CM ability handles: expected 218, got ' .. t.handles)
-    assert(t.trained == 204, 'trained handles: expected 204, got ' .. t.trained)
-    assert(t.pre  == 165, 'castable before the price: expected 165, got ' .. t.pre)
-    assert(t.post == 149, 'castable after the price: expected 149, got ' .. t.post)
+    --
+    -- 2026-09-07 (hero, backlog -112): re-measured again, same shape and for the
+    -- same reason. tests/frames/f_260831_061811_axe_call_tp_channel.lua is an
+    -- AXE-subject frame staged for branch (i) of `axecallbkb_i`, and it happens
+    -- to carry an enemy Crystal Maiden -- level 17, 90.4% HP, 93.7% mana -- so
+    -- this file's tree enumeration picks her up as the 51st live-CM instant.
+    -- Every count on the way IN grew by exactly one instant's worth of handles
+    -- (50->51 instants, 218->223 handles, 204->209 trained, 165->170 pre,
+    -- 149->154 post) and NOTHING on the way OUT moved: pre-post is 16 before and
+    -- 16 after. She can afford everything she owns, so she enters the funnel and
+    -- leaves it whole -- and section 4's registry of LIVE decisions did not gain
+    -- a member, which is the assertion that would have called a new bid a finding.
+    assert(t.instants == 51, 'live-CM instants: expected 51, got ' .. t.instants)
+    assert(t.handles == 223, 'CM ability handles: expected 223, got ' .. t.handles)
+    assert(t.trained == 209, 'trained handles: expected 209, got ' .. t.trained)
+    assert(t.pre  == 170, 'castable before the price: expected 170, got ' .. t.pre)
+    assert(t.post == 154, 'castable after the price: expected 154, got ' .. t.post)
 
     local revoked = t.pre - t.post
     assert(revoked == 16, 'revocations: expected 16, got ' .. revoked)
@@ -475,7 +487,7 @@ tests['4. the zero desires come with the constants that cause them -- and the on
             if h ~= nil and (h:GetAOERadius() or 0) == 0 then nRadius0 = nRadius0 + 1 end
         end
     end
-    assert(nInstants == 50, 'instants moved: ' .. nInstants)
+    assert(nInstants == 51, 'instants moved: ' .. nInstants)
 
     -- The registry, both directions, each red naming its own member.
     for key, want in pairs(LIVE_BIDS) do
@@ -498,11 +510,11 @@ tests['4. the zero desires come with the constants that cause them -- and the on
         .. ' ~= ' .. (5 * nInstants))
 
     -- ... and here is why the remaining silence is still not a null result.
-    assert(nMode == 50, 'GetActiveMode is the mock default on every instant')
-    assert(nGoing == 50, 'J.IsGoingOnSomeone is false on every instant')
-    assert(nRetreat == 50, 'J.IsRetreating is false on every instant')
-    assert(nAoE == 50, 'FindAoELocation is the count=0 loader stand-in everywhere')
-    assert(nRadius0 == 50, 'GetAOERadius answers 0 on every instant (section 5)')
+    assert(nMode == 51, 'GetActiveMode is the mock default on every instant')
+    assert(nGoing == 51, 'J.IsGoingOnSomeone is false on every instant')
+    assert(nRetreat == 51, 'J.IsRetreating is false on every instant')
+    assert(nAoE == 51, 'FindAoELocation is the count=0 loader stand-in everywhere')
+    assert(nRadius0 == 51, 'GetAOERadius answers 0 on every instant (section 5)')
 end
 
 -- ===========================================================================

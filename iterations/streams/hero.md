@@ -22,8 +22,29 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--112. **⭐ 下一轮英雄组的第一件事(由本轮 `-111` 直接交出,优先于 `-109`):
-   用 GH #577 §5 给的两个坐标钉帧。**
+-113. **⭐ 下一轮的第一件事(由本轮 `-112` 直接交出,优先于 `-109`):`hero-10` 的请求正文
+   里有一条前提在仓库自己的一帧上是假的 —— 去重读它,别先去跑扫描。**
+   - **事实**:`f_260905_004847_lion_drain_bkb.lua` 里有全树**第一个活着的**、level 12 以上的
+     骷髅王(**level 26,`hp == max_hp == 2972`,`max_mp` 855**),而 hero-10 正文说
+     「那些帧里最大的 max pool 是 **459**,即满蓝也够不到 600」⇒ **855 > 600**,
+     出货那条 Roshan 蓝线是**严格**不是**够不到**。读数与限制写在
+     `tests/test_wk_level_supply_horizon.lua` section 6(断言里,不是散文里)。
+   - **⚠️ 三条不许省**:(a) **仍然 n=1**,这答的是「够不到」那一半,**不是** hero-10 要的
+     那个 rate(归档 timeline 上的分布),不许把它写成「hero-10 已答」;
+     (b) 另外两个 staged 的高级骷髅王**都是死的且 `max_hp = 0`**,它们的池
+     **在任何方向上都不可引用** —— 别把三个并成一个样本;
+     (c) 这条**不是本组自找的**,它是 09-06 那天 trunk 红里躺着的,先看一眼 `-112` 报告 §4
+     再决定要不要顺手把 `wkrosh` 的定价一起动。
+
+-112. ~~**用 GH #577 §5 给的两个坐标钉帧。**~~ ✅ **2026-09-07T02:03Z 做完,两个都钉了。**
+   报告 `iterations/reports/hero/20260907T020347Z.md`,`state.json:axecallbkb_frames_20260907`。
+   帧 (i) 把支 (i) 的验证成本从**三个反事实翻转降到零发明状态**(cd 在录像里就是 0;
+   免疫与引导各由帧自己的 modifier 列表承载);帧 (ii) **没有**让支 (ii) 变可达,但把理由
+   从「语料运气」升级成 **「dumper 的 snapshot schema 没有 target/mode 通道 ⇒ 这台生成器
+   造不出可达帧,只有波能」**,并买到了支 (ii) 的**价值列**(1 魔免 + 2 不魔免同在 315u 圈)。
+   新 `tests/test_axe_call_staged_frames.lua` **19 例** + `mutstand_axecall_frames.sh` **10/10**。
+   连带结掉**四个**枚举 `tests/frames/` 的扫描(**两个从 09-06 起就红在 trunk 上**),
+   并把「grep 目录,别读那张表」写进 `tests/frames/README.md`。**原始条目(备查):**
    - (i) `20260831_061811_slot1__spot_20260831_061721_1_1dd5705f43a6bb10f1071464db32035199` **t=1209.9**
      (Bristleback 开着 BKB 起 TP,Axe 190.2u **连续两个采样同距**,Q rank3 cd=0 蓝 324;
      出货腿否决 ⇒ 站满两秒没动作;1211.9 TP 完成逃走)。
@@ -4866,6 +4887,62 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-07T02:03Z(报告 `iterations/reports/hero/20260907T020347Z.md`;**backlog `-112`**
+  —— 由上一轮 `-111` 直接交出并写明优先于 `-109`;焦点英雄 **Axe**;
+  OWNER_PRIORITIES **P4.4 (ii)** —— 工作单元主体是一个判定完结所需的最后一块证据)
+  **GH #577 §5 的两个坐标都钉成帧了,而且两支各买到了不同的东西。**
+  `state.json:axecallbkb_frames_20260907`。新 `tests/test_axe_call_staged_frames.lua`(**19 例**)
+  + `tools/agent/mutstand_axecall_frames.sh`(**10/10 CAUGHT**)。`bots/` **只有 28 行注释**,
+  两个 id 逐字未动、**均未 armed**;**零 arm、零入集提议**(P4.2 冻结)。AWS **只读、零花费**。
+  - **⭐ 帧 (i) 把支 (i) 的验证成本从三个反事实翻转降到零发明状态**
+    (`f_260831_061811_axe_call_tp_channel.lua`,t=1209.9):Call 在**录像里就是** rank 3 / cd 0 / 蓝 324;
+    190.2u 外的钢背是 265u 圈内**唯一活着的敌人**,**同时**挂着 `modifier_black_king_bar_immune`
+    和 `modifier_teleporting`;录像行为佐证——**连续两个采样同距**,t=1211.9 已 TP 走。
+    原来那三个翻转现在是**两次读数器修复**。
+    2×2:闸关 **0** → arm `_i` **0.75 `Q-打断钢背`** → arm `_ii` 单独 **0**(可分)→ arm 两个 = arm `_i`。
+    两条隔离腿把「闸买的是什么」变成读数:**只修引导不修免疫,出货自己就打 0.75**
+    ⇒ 闸动的是**免疫项**,不是「会不会打断」;**只修免疫不修引导,armed 也是 0** ⇒ 引导前提还在。
+  - **⚠️ 两次修复效力不等,已钉成断言**:免疫那次**与出货 `IsMagicImmune` override 自己点名的
+    modifier 表一致**(量具从该文件读出);引导那次**没有任何出货判据**——出货 `IsChanneling`
+    override **一个 modifier 都不读**。引用 section 3 必须连这条一起引。
+  - **⭐⭐ 帧 (ii) 没有让支 (ii) 变可达,但把「为什么不可达」升级了**
+    (`f_260828_002127_axe_call_bkb_ring.lua`,t=982.1):三条堵点里 `J.IsDisabled` **让开了**
+    (315u 内每个敌人都 false)——那条确实是语料运气;另外两条是**结构性**的:
+    behav dumper 的 `snapshot` struct **19 个 json 字段里没有 target 通道也没有 active-mode 通道**,
+    所以 `GetProperTarget` 恒 nil、`GetActiveMode()` 答 **0**(**不在 BOT_MODE_* 枚举里**,NONE=1001)
+    ⇒ `IsGoingOnSomeone` **按构造为假**,在 `make_fixture.py` 能产出的**每一帧**上都如此。
+    **⇒ 没有 fixture 能给支 (ii) 定域,只有波能。** 这条**可证伪**(dumper 长出通道就变红,F4/F5 打的就是它),
+    且「arm `_ii` 在自己的价值列上什么都不改变」是**行为断言**:0 → 0。
+  - 帧 (ii) 买到的是支 (ii) 的**价值列、真实状态**:带 BKB 的火女 **75.1u**(在 225u 先手射程内),
+    同一个 **315u** 圈里还有 **165.3u** 的瘟疫法师和**只剩 228 血**、**276.9u** 的萨满,**两个都不魔免**
+    ⇒ 出货那条否决扔掉的是**一发三人嘲讽**。这句话从 09-05 起是论证,现在是帧。
+  - **⚠️ 连带四个扫描,其中两个从 09-06 起就红在 trunk 上**:`tests/frames/README.md` 那张
+    「会枚举本目录的扫描」表**不是那类扫描的集合,是有人记得的那些**(全树 `grep -l 'tests/frames' tests/`
+    = **21 个文件**)。`test_wk_level_supply_horizon`(3 vs 记录 2)与 `test_lion_drain_immune_target`
+    (5 vs 记录 4)**从 09-06 那两轮 staged 帧起就红着没人看见**;`test_lion_ult_reserve_domain` 与
+    `test_cm_ult_reach_meter_domain` 是本轮变红。**四个全部结掉**,并把「**grep 目录,别读那张表**」
+    写进 README。
+  - **⭐⭐ 那片红里藏着一条归 `hero-10` 的真发现**:`f_260905_004847_lion_drain_bkb.lua` 带着全树
+    **第一个活着的**、level 12 以上的骷髅王(**level 26,`hp == max_hp == 2972`,`max_mp` 855**)。
+    在它之前每一个 staged 的高级骷髅王都**是死的且 `max_hp = 0`** ⇒ 旁边那个 711 的池
+    **在任何方向上都不可引用**。这一个**没有字段被清零**,所以池是真读数,而
+    **855 > 出货的 600 Roshan 蓝线** ⇒ hero-10 正文里「最大 max pool 是 **459**,满蓝也够不到 600」
+    **在仓库自己拥有的一帧上是假的**;600 是**严格**不是**够不到**。⚠️ **仍然 n=1**,
+    答的是「够不到」那一半,不是 hero-10 要的 rate。
+  - 其余两个结掉的读数:`lion_ult_reserve` rank-2 芬格 n **1→2**,按它自己写的指令**重取**——
+    **最小池没动**(仍 1551、仍来自 08-31 那帧),新那个**低两级却池更大**(lvl 18 / 1579)
+    ⇒ HONEST BOUND (A) **被加强不是被限定**;`cm_ult_reach_meter` live-CM **50→51**,
+    入口四个数各 **+5**、**出口一个都没动**(pre−post 前后都是 16)⇒ 她整条穿过漏斗,
+    LIVE 注册表没有新成员。顺带修掉**三处顺序依赖**(`lion_ult` / `wk_supply` / `lion_drain_immune`
+    原来都取「枚举到的最后一个」,n>1 起就看 `ls` 顺序了)。
+  - **不归本组、未修,登记**:`tests/test_fixture_mana_price.lua` **在加我的帧之前就红**
+    (1 个焦点五 handle 读 0 蓝而 KV 给了非零价梯,指向 `replay_fixture.lua:mana_ladder()`),
+    加帧后**读数不变**。`routine_selfcheck.sh` 同轮 worst exit **3**
+    (cadence / owed-executions / **trunk-red(python)**),与 GH #579 同族。
+  - 静态门 `luacheck_gate.sh` **EXIT=0 / 0 警告**;`run_tests.lua axe` **233 例 0 失败**。
+  - **下一棒**:两支的**证据能到的地方都到了** ⇒ 只能是总监的入集/定价裁定(P4.2 解冻后),
+    或按「只有一半的代价能单独 arm 到」直接给 (ii) 定价否掉。已投递 GH #577。
+    `hero-10` 的球因上面那条 855 而动。
 - 2026-09-06T22:48Z(报告 `iterations/reports/hero/20260906T224858Z.md`;**认领 GH #577**
   —— 带帧证据的 [hero] issue,22:16Z 录像组把 hero-30 的域读数交付回本组;焦点英雄 **Axe**;
   OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个 `bots/` 行为改动)

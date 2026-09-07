@@ -6612,5 +6612,25 @@
     "gates": "luacheck_gate.sh GATE_EXIT=0 / 0 警告;check_armed_wiring 51/51 wired;test_ckpush_minute_unit 14/0;mutstand 12/12。",
     "cost": "零 AWS、零 S3、零 EC2、零波次。",
     "report": "iterations/reports/director/<本轮时间戳>.md"
+  },
+  "axecallbkb_frames_20260907": {
+    "date": "2026-09-07T02:0xZ",
+    "backlog_item": "章程 backlog `-112`(由上一轮 `-111` 直接交出,优先于 `-109`):用 GH #577 §5 给的两个坐标钉帧。选题依据 OWNER_PRIORITIES **P4.4 (ii)**(工作单元主体 = 一个判定完结所需的最后一块证据)。",
+    "owner": "hero",
+    "gate": "无新 id。`axecallbkb_i` / `axecallbkb_ii` 逐字未动,两者仍**未 armed**。`bots/` 本轮**只有注释**(28 行,全是 `---`),行为零变化。",
+    "bots_lua_changed": false,
+    "headline": "两个坐标都**逐字复现**,而且第一个把支 (i) 的验证成本从**三个反事实翻转**降到**零发明状态**:`f_260831_061811_axe_call_tp_channel.lua`(t=1209.9)上 Berserker's Call **在录像里就是 rank 3 / cd 0 / 蓝 324**,190.2u 外那个敌人**同时**挂着 `modifier_black_king_bar_immune`(出货 `IsMagicImmune` override **自己点名**的 modifier)和 `modifier_teleporting`,而且录像**行为上佐证**了这个引导:钢背在 190.2u **连续两个采样同距**,t=1211.9 已经不在了(TP 完成)。原来那三个翻转现在是**两次读数器修复 + 零发明**。",
+    "asymmetry_two_repairs_not_equal": "⚠️ **两次修复的效力不等,已钉成断言不留给读者推断**:免疫那次是**与出货读数器自己的判据一致**(override 逐字点名 `modifier_black_king_bar_immune`,量具从该文件读出而不是重打);引导那次**没有任何出货判据可对齐**(出货 `IsChanneling` override 只加了一条 `CanBeSeen` 就转发引擎,**一个 modifier 都不读**)⇒ `modifier_teleporting` 是**帧的**ground truth,不是**读数器的**。引用 section 3 必须连这条一起引。",
+    "branch_ii_upgrade": "⭐ **支 (ii) 仍然只有源码级覆盖,但理由从「语料运气不好」升级成「这台生成器造不出可达帧」**。三条堵点在 `f_260828_002127_axe_call_bkb_ring.lua`(t=982.1)上重读:`J.IsDisabled` 那条**让开了**(315u 内每个敌人都 false)—— 那条确实是语料运气;另外两条是**结构性**的:behav dumper 的 `snapshot` struct **没有 target 通道也没有 active-mode 通道**(19 个 json 字段,逐个扫过),所以 `J.GetProperTarget` 恒 nil、`bot:GetActiveMode()` 答 **0**(**不在 BOT_MODE_* 枚举里**,BOT_MODE_NONE=1001)⇒ `J.IsGoingOnSomeone` **按构造为假**,在 make_fixture 能产出的**每一帧**上都如此,不是这一帧碰巧。**⇒ 没有任何 fixture 能给支 (ii) 定域,只有波能。**这条**可证伪**:dumper 哪天长出 target 或 mode 通道,该断言当场变红并说明原因(F4/F5 就是这么打的)。",
+    "branch_ii_value_column": "那一帧买到的是支 (ii) 的**价值列**、且是真实状态:带 BKB 的火女 75.1u(在 225u 先手射程内)、**同一个 315u 圈里**还站着 165.3u 的瘟疫法师和 **只剩 228 血**、276.9u 的萨满,**两个都不魔免** ⇒ 出货那条否决扔掉的是**一发三人嘲讽**。「Call 是 No Target 的 AoE,拿一个敌人的属性去 gate 它等于扔掉圈里其他所有人」这句话从 09-05 起是**论证**,现在是**帧**。",
+    "validation": "新 `tests/test_axe_call_staged_frames.lua` **19 例 0 失败**;`lua5.1 tests/run_tests.lua axe` **233 例 0 失败**;新 `tools/agent/mutstand_axecall_frames.sh` **10/10 CAUGHT**(EXIT=0),其中 **F3**(出货 override 不再点名 BKB modifier ⇒ 免疫「修复」退化成「发明」)、**F4/F5**(dumper 长出 target / mode 通道 ⇒ 支 (ii) 的结构性论断必须撤回)、**F8**(免疫修复变 no-op ⇒ 若 DEFECT 例仍读 0,这一帧就不是在隔离免疫项)是三条值得读的。静态门 `luacheck_gate.sh` **EXIT=0 / 0 警告**。",
+    "self_catch": "F2 第一版锚 `{ name = 'modifier_teleporting'` 在帧里**命中两次**(钢背和敌方冰女**同时**在 TP 撤退),变异台按 GH #550 的规矩**拒绝施加并记成 SURVIVED**(9/10)—— 这是护栏在工作,但它不会告诉你你指的是哪个单位。改成穿过前一个 modifier 的唯一锚后 10/10。",
+    "staging_price": "两帧都 **staged 在 `tests/frames/`,未进语料**,按名字加载;进 `tests/fixtures/` 的准入价**本轮没有测量**,也没有任何数字声称它(与 `f_260828_124358_axe_cull_promise.lua` 同一处置)。新测试 section 6 把「staged 不是 admitted」钉成断言而不是承诺(F10 就是打它的)。",
+    "collateral_four_scans_settled": "⚠️ **本轮最该被下游读到的一条,而且它不是本组自找的**:`tests/frames/README.md` 里那张「会枚举本目录的扫描」表**不是那类扫描的集合,是有人记得的那些**。全树 `grep -l 'tests/frames' tests/` 有 **21 个文件**。后果已经发生过:(1) `tests/test_wk_level_supply_horizon.lua` 从 **2026-09-06 起就红在 trunk 上**没人看见,因为 09-06 那轮只结了表上那两个;(2) `tests/test_lion_drain_immune_target.lua` 同样从 09-06 起红(4 → 5)。本轮把**四个**扫描一起结掉,并把「grep 目录,别读那张表」写进 README。",
+    "collateral_wk_finding": "⭐⭐ **那一天的 trunk 红里藏着一条真发现,归 `hero-10`**:`f_260905_004847_lion_drain_bkb.lua` 带着全树**第一个活着的**、level 12 以上的骷髅王(**level 26,`hp == max_hp == 2972`,`max_mp` 855**)。在它之前每一个 staged 的高级骷髅王都是**死的**且 `max_hp = 0` —— 正因为同一条记录把一个容量字段清零了,旁边那个 711 的池**在任何方向上都不可引用**。这一个**没有任何字段被清零**,所以它的池是**真读数**,而 **855 > 出货的 600 Roshan 蓝线** ⇒ `hero-10` 正文里「那些帧里最大的 max pool 是 459,即满蓝也够不到 600」**在仓库自己拥有的一帧上是假的**;600 是**严格**不是**够不到**。⚠️ **仍然 n=1**:这答的是「够不到」那一半,不是 hero-10 要的那个 rate。",
+    "collateral_other_settles": "`tests/test_lion_ult_reserve_domain.lua`:rank-2 芬格瞬间 n **1 → 2**(新帧带一个 level 18 的友方莱恩),HONEST BOUND (A) 按它自己写的指令**重取而不是重设基线** —— **最小池没动**(仍是 1551,仍来自 08-31 那帧),新那个**低两级却池更大**(1579),方向与闭式带宽论证一致;顺带修掉一个**顺序依赖**(原来 `for ... do rank2 = r end` 取的是枚举到的最后一个,n=2 起就看目录顺序了,改成取**最小池**,这也正是「池底」论证要的估计量)。`tests/test_cm_ult_reach_meter_domain.lua`:live-CM 瞬间 50 → **51**(新帧带一个 level 17 的敌方冰女),入口四个数各 +5(一个瞬间的全部 handle),**出口一个都没动**(pre−post 前后都是 16)⇒ 她整条穿过漏斗,section 4 的 LIVE 注册表没有新成员。",
+    "limits": "(1) 支 (ii) 的**行为覆盖仍然是零**,本轮买到的是「为什么永远是零」+ 价值列,不是覆盖;(2) 引导修复没有出货判据(见 asymmetry 一条);(3) 两帧的准入价未测;(4) `--roles` 两局的 analysis.json **都不可归因到 soak 种子**,make_fixture 按 GH #57 拒绝猜 ⇒ 两帧**不带 roles**,本文件没有任何断言读 `jmz.GetPosition`;(5) 本轮**零 arm、零入集提议**(P4.2 冻结期)。",
+    "aws": "只读:`session_setup.sh` + 两次 `s3 cp`(两个 `.dem`,合计 ~48MB)+ 缓存命中的 dumper。**零 EC2、零 CE、零花费**。",
+    "next_baton": "支 (i) 现在有**零发明状态**的真实帧覆盖 + 域读数(35 瞬间/3 局),支 (ii) 有域读数(1,519/36)+ 价值列但**永远拿不到 fixture 覆盖** ⇒ 两支的**证据能到的地方都到了**,下一步只能是总监的入集/定价裁定(P4.2 解冻后),或者按 (ii) 的「只有撒高那一半」式定价直接否掉。已投递 GH #577。"
   }
 }

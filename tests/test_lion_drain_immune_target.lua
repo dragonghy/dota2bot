@@ -416,23 +416,63 @@ tests['supply: the whole TREE holds exactly one, and it is the staged frame'] = 
         p:close()
         assert(n > 0, dir .. ' enumerated to nothing -- this scan would be vacuous')
     end
-    -- FOUR, and the split is the reading.  Three are modifier_juggernaut_blade_fury
-    -- in non-Lion-subject corpus fixtures -- which independently reproduces the
-    -- count tests/test_axe_bkb_supply_staged_frame.lua records from its own
-    -- scanner ("all 3 immune instants are blade_fury and 3 of 3 carry no Black
-    -- King Bar").  The fourth is this round's staged frame, and it is the tree's
-    -- FIRST immunity that comes from a Black King Bar.
-    assert(nImmune == 4, nImmune .. ' spell-immune hero-instants across BOTH '
-        .. 'directories, was 4 as of 2026-09-06: ' .. table.concat(sWhere, '; ')
+    -- SEVEN, and the split is still the reading.  FOUR are
+    -- modifier_juggernaut_blade_fury -- three in non-Lion-subject corpus
+    -- fixtures, which independently reproduces the count
+    -- tests/test_axe_bkb_supply_staged_frame.lua records from its own scanner
+    -- ("all 3 immune instants are blade_fury and 3 of 3 carry no Black King
+    -- Bar"), plus one in the staged f_260828_124358_axe_cull_promise.lua.
+    -- THREE come from a Black King Bar, and all three are staged frames.
+    --
+    -- ⚠️ 4 -> 7 IN TWO STEPS, AND THE FIRST ONE WENT UNRECORDED.  This equality
+    -- read 4 and was RED ON TRUNK from 2026-09-06: the round that staged
+    -- f_260828_124358_axe_cull_promise.lua (GH #570) added a fourth blade_fury
+    -- instant and did not settle this scan.  2026-09-07 (hero, backlog -112)
+    -- added the two Axe Call frames, each carrying a Black-King-Bar enemy, and
+    -- settled all three.  The lesson is in tests/frames/README.md: the list of
+    -- "scans that enumerate tests/frames/" in that file is the set somebody
+    -- remembered, not the set that exists.  Grep for the directory instead.
+    assert(nImmune == 7, nImmune .. ' spell-immune hero-instants across BOTH '
+        .. 'directories, was 7 as of 2026-09-07: ' .. table.concat(sWhere, '; ')
         .. '. More is more supply for the WIDENING question section 4 leaves open.')
-    local nBkb, sBkb = 0, nil
+    local nBkb, bOwn = 0, false
+    local OWN_ROW = FIXTURE .. ' / ' .. BB .. ' / ' .. BKB_MOD
     for _, row in ipairs(sWhere) do
-        if row:find(BKB_MOD, 1, true) then nBkb = nBkb + 1; sBkb = sBkb or row end
+        if row:find(BKB_MOD, 1, true) then
+            nBkb = nBkb + 1
+            if row == OWN_ROW then bOwn = true end
+        end
     end
-    assert(nBkb == 1 and sBkb == FIXTURE .. ' / ' .. BB .. ' / ' .. BKB_MOD,
-        'the tree holds ' .. nBkb .. ' Black-King-Bar immunity instant(s) and the '
-        .. 'first is ' .. tostring(sBkb) .. ' -- was exactly 1, this round\'s staged '
-        .. 'frame. The falsifier in section 2 is taken on that instant.')
+    -- ⭐ THE READING BACKLOG -109 ASKS FOR, and it has moved.  This was "exactly
+    -- 1, and it is this file's own staged frame", which is what made section 2's
+    -- falsifier the only Black-King-Bar instant in the tree.  There are now
+    -- THREE -- and the other two are the 2026-09-07 Axe frames, i.e. the
+    -- widening question's supply is no longer a single frame owned by one test.
+    -- STILL ZERO IN tests/fixtures/: all three are staged, so no corpus glob
+    -- sees any of them, and backlog -109's "the corpus itself still has none"
+    -- is unchanged.  Do not merge those two sentences.
+    assert(nBkb == 3, 'the tree holds ' .. nBkb .. ' Black-King-Bar immunity '
+        .. 'instant(s), was 3 as of 2026-09-07. More supply is good news for the '
+        .. 'WIDENING question, and it has to be re-read rather than re-baselined.')
+    -- MEMBERSHIP, not "the first one".  Until 2026-09-07 there was exactly one
+    -- such instant, so "first" and "the one this file reads" were the same row
+    -- and the distinction cost nothing.  With three of them "first" is whatever
+    -- `ls` returns first -- an ordering artifact -- while what section 2 actually
+    -- needs is that ITS OWN frame is still in the tree carrying that modifier.
+    assert(bOwn, 'this file\'s own staged frame is no longer among the '
+        .. 'Black-King-Bar immunity instants: ' .. table.concat(sWhere, '; ')
+        .. '. The falsifier in section 2 is taken on that instant, so it has to '
+        .. 'be re-anchored before anything here is quoted.')
+    local nBkbCorpus = 0
+    for _, row in ipairs(sWhere) do
+        if row:find(BKB_MOD, 1, true) and row:find('^tests/fixtures/') then
+            nBkbCorpus = nBkbCorpus + 1
+        end
+    end
+    assert(nBkbCorpus == 0, nBkbCorpus .. ' Black-King-Bar immunity instant(s) '
+        .. 'are now inside tests/fixtures/, was 0. Backlog -109 rests on that '
+        .. 'zero: the CORPUS carries no spell-immune enemy, so every reading '
+        .. 'taken over the glob alone is out of domain for the widening question.')
 end
 
 return tests

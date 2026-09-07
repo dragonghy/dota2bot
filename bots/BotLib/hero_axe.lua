@@ -535,6 +535,34 @@ end
 --- on this frame, and J.IsDisabled answers TRUE for the only in-ring enemy.  Any
 --- test that drove it would be driving stubs, which is gate plumbing, not local
 --- validation.  It is labelled as such in the test rather than left to be inferred.
+---
+--- ⭐ BOTH OF THOSE BOUNDS MOVED 2026-09-07 (hero, backlog -112, GH #577 §5).
+--- Two archived frames were pinned into tests/frames/ and are driven by
+--- tests/test_axe_call_staged_frames.lua.  Read that file before quoting either
+--- paragraph above; neither is deleted, because each is still true OF THE CORPUS
+--- FRAME it was taken on.
+---   * BRANCH (i) NO LONGER NEEDS THREE FLIPS.  On
+---     f_260831_061811_axe_call_tp_channel.lua (t=1209.9) Call is rank 3 at cd 0
+---     IN THE REPLAY, and the enemy 190.2u away carries BOTH
+---     `modifier_black_king_bar_immune` -- a name the shipped IsMagicImmune
+---     override reads -- AND `modifier_teleporting`, with the replay
+---     corroborating the channel behaviourally (he holds 190.2u across two
+---     consecutive samples and is gone by t=1211.9).  What used to be three
+---     invented flips is now two READER repairs and no invention.  ⚠️ The two
+---     repairs do not have equal standing: the immunity one agrees with the
+---     shipped override's own modifier list, the channel one has no shipped
+---     criterion to agree with.  The test asserts that asymmetry.
+---   * BRANCH (ii) IS STILL SOURCE-LEVEL-ONLY, but for a STRONGER reason.  Of
+---     the three blockers, J.IsDisabled was corpus luck and is gone on
+---     f_260828_002127_axe_call_bkb_ring.lua.  The other two are STRUCTURAL: the
+---     behav dumper's snapshot schema carries no target channel and no
+---     active-mode channel, so J.GetProperTarget is nil and J.IsGoingOnSomeone
+---     false on EVERY frame make_fixture.py can produce -- not on this one by
+---     accident.  ⇒ no fixture will ever size branch (ii); only a wave can.
+---     That frame does carry (ii)'s VALUE COLUMN on real state, which is the
+---     other half worth having: a spell-immune Lina at 75.1u with Necrolyte at
+---     165.3u and a 228-HP Shadow Shaman at 276.9u, both non-immune, both inside
+---     the 315u radius -- the three-hero taunt the shipped veto throws away.
 --- ⚠️ CONSEQUENCE FOR THE VERDICT, registered before the wave and not after: the
 --- two branches share one id, so a negative read cannot be attributed to either.
 --- If a wave reads negative, the next rung is to SPLIT the id, not to reject the

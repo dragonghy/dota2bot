@@ -78,15 +78,28 @@
 -- HONEST BOUNDS -- load-bearing, quote these with any number above
 -- ===========================================================================
 --
--- (A) n = 1 AT FINGER RANK 2.  The 380 in the ruling was a MINIMUM OVER ~500
---     FRAMES per game across 1216; the 1551 here is a minimum over ONE
---     instant, and it happens to be a full-mana one.  These are not the same
---     estimator and 1551 must never be quoted as "the rank-2 pool bottom".
---     What IS robust at n=1 is the closed-form band-width argument above,
---     which reads no frame's mana at all -- only the two ability ladders and
---     the pool, both of which are KV facts.  The DOMAIN question at rank 2 is
---     supply-starved, not answered; section 5 is the ratchet that forces a
---     re-read when the archive gains more rank-2 Lions.
+-- (A) n = 2 AT FINGER RANK 2 (was 1; widened 2026-09-07, hero, backlog -112).
+--     The ratchet section 5 installed for exactly this purpose fired, and the
+--     re-take it demanded is done rather than re-baselined:
+--
+--         tests/frames/f_20260831_004433_cm_creepreach.lua      Lion lvl 20, max_mp 1551
+--         tests/frames/f_260831_061811_axe_call_tp_channel.lua  Lion lvl 18, max_mp 1579
+--
+--     Both price Finger at 400.  THE MINIMUM DID NOT MOVE: it is still 1551,
+--     and the frame that supplies it is still the 2026-08-31 one -- so every
+--     number below stands at the wider sample.  The second instant sits TWO
+--     HERO LEVELS LOWER and carries a LARGER pool, which is the direction the
+--     closed-form band-width argument predicts and the reverse of what the
+--     revival condition needs.
+--     STILL NOT A POOL BOTTOM.  The 380 in the ruling was a MINIMUM OVER ~500
+--     FRAMES per game across 1216; 1551 is now a minimum over TWO instants,
+--     and BOTH are full-mana ones (1551/1551 and 1579/1579).  n=2 of the same
+--     kind is not the ruling's estimator either, so 1551 must never be quoted
+--     as "the rank-2 pool bottom".  What IS robust at any n is the closed-form
+--     band-width argument above, which reads no frame's mana at all -- only the
+--     two ability ladders and the pool, both of which are KV facts.  The DOMAIN
+--     question at rank 2 is supply-starved, not answered; section 5 remains the
+--     ratchet that forces a re-read when the archive gains more rank-2 Lions.
 -- (B) FINGER RANK 3 (cost 600) IS ENTIRELY UNMEASURED -- zero instants.
 -- (C) "稳定到 hero level 12+" IS NOT ESTABLISHED.  One frame exists above
 --     level 11.  The revival condition has begun to fire, not finished.
@@ -96,10 +109,18 @@
 --     (`lion_finger_of_death` AbilityManaCost = [200, 400, 600]) -- two
 --     sources, eleven days apart, same ladder.  Section 4 asserts that
 --     agreement rather than asserting either source alone.
--- (E) THE FRAME IS STAGED, NOT ADMITTED.  f_20260831_004433_cm_creepreach.lua
+-- (E) THE FRAMES ARE STAGED, NOT ADMITTED.  f_20260831_004433_cm_creepreach.lua
 --     lives in tests/frames/, and this file reads it BY NAME.  Admitting it to
 --     tests/fixtures/ moves census readings belonging to other levers (GH
 --     #357); nothing here does that.
+--     ⚠️ AMENDED 2026-09-07: this bound used to say "exactly one named frame
+--     supplies the rank-2 instant", and section 5 asserted it that way.  It no
+--     longer does -- there are two, and the selector below now takes the
+--     MINIMUM-POOL one rather than whichever the enumeration happened to reach
+--     last.  That is not cosmetic: with n=2 the old `for ... do rank2 = r end`
+--     made the reading depend on directory order, and the argument it feeds is
+--     about a pool BOTTOM, so the minimum is also the estimator the ruling's
+--     own reasoning asks for.
 --
 -- Zero behaviour change: no gate, no new candidate id, no bots/ edit beyond a
 -- comment correction in hero_lion.lua's SkillsComplement, whose text asserted
@@ -298,18 +319,40 @@ end
 -- written: a staged frame is invisible to the CORPUS globs, not to a scan that
 -- claims to read the tree.
 --
--- These cases are ACKNOWLEDGED, NOT RE-TAKEN.  The round that landed the frame
--- was withdrawing `liondrainbkb`, not re-measuring `lionult`.  The split below
--- is by EXACT rank, which keeps every reading in this file scoped to the sample
--- it was taken on (one rank-2 instant, cost 400, the 2026-08-31 staged frame),
--- and gives rank 3 its own wire instead of quietly folding it into "rank >= 2".
--- HONEST BOUND (A) is untouched by this: n is still 1 at rank 2.
+-- The rank-3 case is ACKNOWLEDGED, NOT RE-TAKEN.  The round that landed that
+-- frame was withdrawing `liondrainbkb`, not re-measuring `lionult`.  The split
+-- below is by EXACT rank, which keeps every reading in this file scoped to the
+-- sample it was taken on, and gives rank 3 its own wire instead of quietly
+-- folding it into "rank >= 2".
+--
+-- ⚠️ 2026-09-07 (hero, backlog -112): a THIRD staged frame landed --
+-- f_260831_061811_axe_call_tp_channel.lua, t=1209.9, an Axe-subject frame that
+-- happens to carry an ally Lion at level 18 with Finger at RANK 2 -- and this
+-- one DOES move HONEST BOUND (A), so it is RE-TAKEN rather than acknowledged.
+-- n at rank 2 goes 1 -> 2.  The re-take is the two assertions below: every
+-- rank-2 instant still prices at 400, and the MINIMUM pool over them is still
+-- 1551, from the same 2026-08-31 frame.  The added instant is two hero levels
+-- LOWER with a LARGER pool (1579), which strengthens the closed-form argument
+-- rather than qualifying it.
 tests['[hero] lionult: the revival condition has fired -- rank 2 exists'] = function()
     local _, rows = funnel()
     local nRank2, nAboveEleven = 0, 0
-    local rank2
+    local rank2, minPool, minPath = nil, nil, nil
     for _, r in ipairs(rows) do
-        if r.rRank == 2 then nRank2 = nRank2 + 1; rank2 = rank2 or r end
+        if r.rRank == 2 then
+            nRank2 = nRank2 + 1
+            rank2 = rank2 or r
+            -- Every rank-2 instant, not just the first: the cost claim is about
+            -- the ladder, so one instant off the ladder is the finding.
+            assert(r.rCost == RULING_RANK2_COST,
+                'the rank-2 Finger on ' .. r.path .. ' prices at ' .. r.rCost
+                .. ', not the ' .. RULING_RANK2_COST .. ' the ruling names. The '
+                .. 'revival condition is about a specific number; if the number '
+                .. 'moved, the condition has to be re-read before this file is quoted.')
+            if minPool == nil or r.maxMp < minPool then
+                minPool, minPath = r.maxMp, r.path
+            end
+        end
     end
     for _, r in ipairs(rows) do
         if r.rCost >= RULING_RANK2_COST then nAboveEleven = nAboveEleven + 1 end
@@ -318,17 +361,21 @@ tests['[hero] lionult: the revival condition has fired -- rank 2 exists'] = func
         'no live-Lion instant carries Finger at rank >= 2 any more. The '
         .. 'revival condition of the GH #73 ruling is un-fired again and this '
         .. 'whole file is back to being a level-1 reading.')
-    assert(rank2.rCost == RULING_RANK2_COST,
-        'the rank-2 Finger on ' .. rank2.path .. ' prices at ' .. rank2.rCost
-        .. ', not the ' .. RULING_RANK2_COST .. ' the ruling names. The '
-        .. 'revival condition is about a specific number; if the number moved, '
-        .. 'the condition has to be re-read before this file is quoted.')
-    assert(nRank2 == 1,
-        'the tree now holds ' .. nRank2 .. ' rank-2 Finger instants (EXACT rank), not 1. '
-        .. 'HONEST BOUND (A) -- "n = 1, so 1551 is not a pool bottom" -- was '
-        .. 'the single largest limit on this reading, and it has moved. '
-        .. 'Re-take the rank-2 domain question with the wider sample instead '
-        .. 'of quoting the n=1 numbers below.')
+    -- A hard equality, not a ratchet, for the reason section 5 gives: the count
+    -- IS the honest bound, so a third instant costs an edit here and a re-read
+    -- of (A), exactly as the second one did.
+    assert(nRank2 == 2,
+        'the tree now holds ' .. nRank2 .. ' rank-2 Finger instants (EXACT rank), not 2. '
+        .. 'HONEST BOUND (A) -- the minimum-over-n estimator and its n -- is the '
+        .. 'single largest limit on this reading, and it has moved. Re-take the '
+        .. 'rank-2 domain question with the wider sample instead of quoting the '
+        .. 'n=2 numbers below.')
+    -- The re-take itself: widening the sample did NOT move the number every
+    -- reading below is built on.
+    assert(minPool == 1551 and minPath == RANK2_FRAME,
+        'the minimum rank-2 pool is now ' .. tostring(minPool) .. ' on '
+        .. tostring(minPath) .. ', recorded 1551 on ' .. RANK2_FRAME
+        .. '. Section 5 and HONEST BOUND (A) are both computed from this pair.')
 end
 
 tests['[hero] lionult: rank 3 is unmeasured, and says so'] = function()
@@ -445,13 +492,20 @@ tests['[hero] lionult: the ruling\'s assumed pool bottom is off by 4x'] = functi
     -- EXACT rank, for the reason section 2 gives: since 2026-09-06 the tree also
     -- holds a rank-3 instant, and `>= 2` would silently re-aim every reading
     -- below (all of which are about the cost-400 line) at the rank-3 frame.
+    -- MINIMUM pool, not "whichever the enumeration reached last".  Since
+    -- 2026-09-07 there are two rank-2 instants, so the old last-wins selector
+    -- made this reading depend on directory order; and the argument it feeds is
+    -- about a pool BOTTOM, so the minimum is the estimator the ruling's own
+    -- reasoning asks for.  See HONEST BOUND (E).
     local rank2
-    for _, r in ipairs(rows) do if r.rRank == 2 then rank2 = r end end
+    for _, r in ipairs(rows) do
+        if r.rRank == 2 and (rank2 == nil or r.maxMp < rank2.maxMp) then rank2 = r end
+    end
     assert(rank2 ~= nil, 'no rank-2 instant; section 2 explains what that means')
     assert(rank2.path == RANK2_FRAME,
-        'the rank-2 instant is now ' .. rank2.path .. ', not the staged frame '
-        .. 'this file reads by name. HONEST BOUND (E) assumed exactly one '
-        .. 'named frame supplies it.')
+        'the minimum-pool rank-2 instant is now ' .. rank2.path .. ', not the '
+        .. 'staged frame this file reads by name. The numbers below are all '
+        .. 'computed against that frame; re-take them on the new one.')
     -- The ruling reasoned that cost 400 would bite against a pool bottom of
     -- 380. On the one frame where the cost really is 400:
     assert(rank2.maxMp > RULING_ASSUMED_POOL_BOTTOM,
