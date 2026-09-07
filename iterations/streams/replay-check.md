@@ -12821,3 +12821,85 @@
     `cmqreach` 钉帧 fixture;09-04T16:01Z §2.1 那一帧;F2 那一帧
     (`272131__20260905_125215_slot3` dragon_knight t=1142.4);#419 / #421 仍零评论。
   - 完整报告:`iterations/reports/replay-check/20260907T155304Z.md`
+- **2026-09-07T18:50Z**:**上一轮写死的那个问题有了答案,而答案是反的;顺带量出
+  `outlatch` 的量具把 10% 的成功占领读成了中断。** 零 EC2、零 CE、零 AWS(只读 S3);
+  **`bots/`、`tests/`、`tools/` 一行未改**,改动全在 `iterations/` 下的 markdown。
+  - **吞吐**:宽扫 **85/86 局**(W52 **全部四个 run**,1 局 unparseable 单独登记),
+    **深查 8 局**(下限 6)。⭐ 顺带一条可复现性读数:上一轮扫过的
+    `212ea5`/`7e6283` 本轮从 S3 重扫,**逐格复现 24/6/1 与 23/6/0** ⇒
+    下面 4 粒 vs 2 粒的对比,差的是**种子数不是语料口径**。
+  - **`VERIFY id=outlatch verdict=INDETERMINATE episodes=0`** —— 它的域(「第一次
+    `GetUnitList` 返回空」)**不在 dump 里**,这是工具 docstring 写死的边界;
+    施法计数是侧偏未消除的估计量且**跨种子反号**(6743/6858 强负、6907 强正),
+    按 4(i-b) 登记不结论。**INDETERMINATE 不是 SILENT。**
+  - **⭐ 上一轮挂起的两条读数,加倍种子后的结论**(`STRATA_EXIT=0`,`ab=59 ba=26 seeds=4`):
+    上一轮点名为「同表里**唯一**四格同号又低离散」的 **`tp_under_threat` 塌了**
+    (2 粒 `arm=−1.414 sd=0.193 2/2` 无 FLIP → 4 粒 **`arm=−0.247 sd=1.257 2/4 FLIP`**,
+    效应量掉 5.7 倍、离散涨 6.5 倍);活下来的是上一轮**只写在括号里**的
+    **`lowhp_limbo`**(`arm=−0.402 sd=0.086 **4/4** 无 FLIP`,sd 又收窄 22%);
+    `died_with_ult_ready` **没有 firm up 反而变松**(`arm=+0.594 sd=0.919 1/4 FLIP`)。
+    **可迁移的一句:「低离散」在 2 粒种子上是两个自由度的低离散,而它这次恰好挑中了错的那一行。**
+    两条读数当时长得几乎一样(都 2/2 同号、sd 都是 0.1 量级),**区分它们的信息在 2 粒上
+    根本不存在** ⇒ 那不是判断失误,是**在一个不含答案的读数上做了一次二选一**。
+    **纪律:2 粒种子上不做同表内的行间排序;要排序就先加种子。**
+    另两条 4/4 同号无 FLIP(登记不裁定):`tp_home_wasteful` −0.365/0.289、
+    `laning_past_midline_death` −0.628/0.333。
+  - **`outlatch` 重扫(存量清单里那一笔)**:**GH #511 的核心事实在第二份独立语料上复现**
+    —— 中断是两条腿上的多数(armed 53% / base 69%,85 局 4 粒种子),
+    「两条腿一样 ⇒ 出厂缺陷不归任何 armed id」成立。⚠️ 本波**没有 arm `outcommit`**,
+    所以这是**又一份修前读数**,不是修后对照。
+  - **⭐ 而量具自己有一个系统性偏差,方向与被测修法耦合**:`outlatch_capture.py` 的
+    `--complete-s 5.0` 按**单次尝试的时长**判完成,但占领进度**在同时施法者之间可加** ——
+    按(局 + 塔 + 移除时刻)归组并对开着的 channel 数积分,**易主的组全部 ≥5.8 施法者·秒,
+    没易主的全部 ≤5.3**,阴性对照(41 个单人易主组)同样落在 5.9–6.0。
+    5 个多人组逐帧核了 4 个(`005025_slot5` CK 3.5+lion 2.5=**6.0**;`004906_slot8`
+    silencer 3.7+slardar 2.1=**5.8**;`010100_slot7` oracle 4.9+WK **1.1**=**6.0**;
+    `003650_slot4` CM 3.9+zuus 2.0=**5.9**),**四组里没有任何一个英雄自己的 channel 到过 5.0 秒,
+    四座塔全部易主** ⇒ 八次施法被地板全判成中断。反向那一半也核了:
+    `004856_slot7` sven **5.1s** 单人不易主、`004827_slot7` axe **5.3s** 单人不易主
+    ⇒ 地板把真中断读成完成。**全语料 11/113 次尝试(≈10%)被误判,11/11 全是搭车者。**
+    修正后:armed **51%**(不是 53%)、base **61%**(不是 69%),`unk` 3 次单列不并腿。
+  - **对 #511 验收口径的直接后果(第五节,已追评)**:协同组给 (乙) 写的验收是
+    「`outlatch_capture.py` 的中断率与修前基线比」——**当前口径下不能这样用**,
+    不是因为不准,而是**偏差与修法同向耦合**:误判 11/11 来自多人同施法组,
+    而 `outcommit` 做的正是**让 channel 活得更久** ⇒ 第二个施法者出现的机会随修法改变
+    ⇒ **误判率本身不是常数**。且地板**两端各错一次且方向相反**(净额 armed −2pp / base −8pp)。
+  - **两条 UNDECIDABLE,登记不用来定判据**:`003641_slot2` CK **重发 12 次**
+    (t=1229.4–1246.1,每次 0.2–3.1s)——**#511 那个形状原样复现**;塔确实在 1243.5→1248.5
+    之间易主且窗口内无第二施法者,但买下它的是最后 3.1s 还是与前一次 2.8s 之间
+    **0.1 秒接缝上进度没清零**(相加 5.9,正好落在完成带),**这份 dump 判不了**。
+  - **一条零长度的「尝试」不是行为**:`003647_slot4` lich 自己走满 5.9s,queenofpain
+    在 **925.6 那一帧 ADD 同帧 REMOVE(0.0s)** 被地板判「中断」——
+    **那是从一次时间戳碰撞里造出一个缺陷**(她也是 `unk` 三条之一,`team=None`)。
+  - **本轮自己踩了又自己抓住(登记给下一个人)**:第一版归组脚本把
+    `teams.get(actor) is None` **静默归进 `base`**,base 读成 70 次尝试,
+    与 `outlatch_capture.py` 自己的 67 **对不上 3** —— **那个 3 是唯一露出来的破绽**。
+    与上一轮那条 join 坑(「每层局数之和必须等于该 run 的局数」)是**同一个判别子的第二种形状**:
+    **凡是把一个三值的量塞进二元桶,先让它跟一个独立算出的总数对拍。**
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(只读 S3);`DUMPER_EXIT=0`(缓存命中);
+    四个 run 各写出 `sweep_complete.json` `exit_code=0`;`OUTLATCH_EXIT=0`;
+    `OL_SELFCHECK_EXIT=0`(33 checks / 0 failed,**按本轮 4.1 不作为可信度凭据** ——
+    偏差恰好不在它自己那些用例里);`STRATA_EXIT=0`;
+    自检 **`SELFCHECK_EXIT=3`**(重定向;`legs run 10`;FINDINGS `unlanded cadence
+    queue-rulings owed-executions`;UNCERTIFIABLE `trunk-red(python)`;NOT RUN
+    `test_rc_wrapper.py test_selfcheck_lua_leg.py`)。**第三十一次登记它在本容器不是「约 20s」。**
+    ⭐ python 全套 **110 passed / 0 failed / 2 uncertifiable** —— 上一轮那条
+    `test_bots_walk_farm_only.py`(GH #596)**本轮已绿**。`unlanded` 那 1 条
+    (`c1bcc31` on `origin/claude/admiring-hawking-aowm4l`)**是英雄组的,转总监**;
+    `cadence`/`queue-rulings`/`owed-executions` 同样**不归本组解读,转总监**。
+    ⛔ **证据纪律 3 第五十一次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED … exit 2, nothing checked`);**再次附议给它一个独有退出码或 wrapper**。
+    **铁律 6**:静态半见报告末尾追记;**动态半(GH #124)本轮不跑也不声称** ——
+    `bots/`/`tests/`/`tools/` 一行未改。
+  - **下一轮第一件事**:(1) **落地第五节的组级判据**(改
+    `tools/batch_test/behavioral/outlatch_capture.py`,带变异台 + 用本轮 8 局做真帧对照)——
+    否则 #511 的 (乙) 验收会拿一把**已知有偏且与修法耦合**的尺子去量。
+    **这是本组自己的工具,棒不出组,别等别人。**(2) 深查维持 6 局。
+  - **存量顺延**:`campgrade` 第十三轮 / 61-id 家族 W49 两笔条件 (a);
+    `tpreach_domain.py` 补 `by_seed`(**已连欠十四轮**);`roshdist` 的 BUGGY(77)交总监;
+    09-07T12:59Z §3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝(GH #529);
+    `campbind` 改走 fixture 的裁定 / 等 #475;#477 重 dump 是否还需要请总监裁;
+    `cmqreach` 钉帧 fixture;09-04T16:01Z §2.1 那一帧;F2 那一帧
+    (`272131__20260905_125215_slot3` dragon_knight t=1142.4);#419 / #421 仍零评论;
+    `sweep_run.sh` 自己不调 `sweep_strata.py`(上一轮 [harness])。
+  - 完整报告:`iterations/reports/replay-check/20260907T185034Z.md`
