@@ -344,8 +344,19 @@ tests['[reverse] dropping it makes the mode-filtered call over-permissive'] = fu
     -- file, and it is the argument for the split below: nothing in 开工自检 can
     -- discover an untagged file, so the new source-attributed breakdown would
     -- not have named it either.
-    assert(s.in_teamfight_1500 == 93, string.format(
-        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (93 when pinned)',
+    -- 93 -> 96 on 2026-09-07T09:xxZ (replay-check): the replay desk added the
+    -- `zusultstrand` creation frame (f_20260827_091703_slot12_zuus_473_1,
+    -- tests/test_replay_260827_zuus_ultstrand_creation.lua), contributing 3 TRUE
+    -- readings -- t=473.1 is mid-fight by construction, which is the whole reason
+    -- it is a fixture: Zeus is at 17.6% HP with Slardar 305u away. MEASURED BY
+    -- HOLDING IT OUT, not inferred: with the fixture moved aside this file runs
+    -- 12 tests / 0 failures, so the +3 is this frame's and nothing else's.
+    -- Hero-frames 1012 -> 1021, not 1022: ogre_magi is DEAD on that frame (hp 0,
+    -- alive=false, lying on the same spot as tidehunter) and this sweep counts
+    -- only `u.alive`. mode_nonzero is still 0 and the filter is still ignored on
+    -- every one of the 1021 -- once again only the denominator moved.
+    assert(s.in_teamfight_1500 == 96, string.format(
+        'J.IsInTeamFight(bot,1500) read TRUE on %d/%d hero-frames (96 when pinned)',
         s.in_teamfight_1500, s.hero_frames))
 end
 

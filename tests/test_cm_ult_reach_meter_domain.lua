@@ -339,11 +339,30 @@ tests['1. the castable funnel over the whole archive, buckets exhaustive'] = fun
     -- 16 after. She can afford everything she owns, so she enters the funnel and
     -- leaves it whole -- and section 4's registry of LIVE decisions did not gain
     -- a member, which is the assertion that would have called a new bid a finding.
-    assert(t.instants == 51, 'live-CM instants: expected 51, got ' .. t.instants)
-    assert(t.handles == 223, 'CM ability handles: expected 223, got ' .. t.handles)
-    assert(t.trained == 209, 'trained handles: expected 209, got ' .. t.trained)
-    assert(t.pre  == 170, 'castable before the price: expected 170, got ' .. t.pre)
-    assert(t.post == 154, 'castable after the price: expected 154, got ' .. t.post)
+    --
+    -- 2026-09-07T09:xxZ (replay-check): re-measured a third time, same shape and
+    -- for the same reason. tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua
+    -- is a ZEUS-subject frame -- the `zusultstrand` creation frame pinned by
+    -- tests/test_replay_260827_zuus_ultstrand_creation.lua -- and it happens to
+    -- carry an ALLIED Crystal Maiden (level 11, 100% HP, 35.4% mana: 294/831),
+    -- so this file's tree enumeration picks her up as the 52nd live-CM instant.
+    -- Every count on the way IN grew by exactly one instant's worth of handles
+    -- (51->52 instants, 223->228 handles, 209->214 trained, 170->175 pre,
+    -- 154->159 post) and NOTHING on the way OUT moved: pre-post is 16 before and
+    -- 16 after. MEASURED BY HOLDING THE FIXTURE OUT, not inferred: with it moved
+    -- aside this file runs 8 tests / 0 failures on the old numbers, so the whole
+    -- delta is that one frame's.
+    -- ⚠️ Her 35.4% mana is the lowest of the three frames added since this block
+    -- started tracking them, and it did NOT produce a revocation: she is level 11
+    -- with 294 mana, which still covers what she has trained. Had it produced one,
+    -- pre-post would have moved and section 4's registry of LIVE decisions would
+    -- have gained a member -- that is the assertion that would call a new bid a
+    -- finding, and it stayed put.
+    assert(t.instants == 52, 'live-CM instants: expected 52, got ' .. t.instants)
+    assert(t.handles == 228, 'CM ability handles: expected 228, got ' .. t.handles)
+    assert(t.trained == 214, 'trained handles: expected 214, got ' .. t.trained)
+    assert(t.pre  == 175, 'castable before the price: expected 175, got ' .. t.pre)
+    assert(t.post == 159, 'castable after the price: expected 159, got ' .. t.post)
 
     local revoked = t.pre - t.post
     assert(revoked == 16, 'revocations: expected 16, got ' .. revoked)
@@ -487,7 +506,7 @@ tests['4. the zero desires come with the constants that cause them -- and the on
             if h ~= nil and (h:GetAOERadius() or 0) == 0 then nRadius0 = nRadius0 + 1 end
         end
     end
-    assert(nInstants == 51, 'instants moved: ' .. nInstants)
+    assert(nInstants == 52, 'instants moved: ' .. nInstants)
 
     -- The registry, both directions, each red naming its own member.
     for key, want in pairs(LIVE_BIDS) do
@@ -510,11 +529,11 @@ tests['4. the zero desires come with the constants that cause them -- and the on
         .. ' ~= ' .. (5 * nInstants))
 
     -- ... and here is why the remaining silence is still not a null result.
-    assert(nMode == 51, 'GetActiveMode is the mock default on every instant')
-    assert(nGoing == 51, 'J.IsGoingOnSomeone is false on every instant')
-    assert(nRetreat == 51, 'J.IsRetreating is false on every instant')
-    assert(nAoE == 51, 'FindAoELocation is the count=0 loader stand-in everywhere')
-    assert(nRadius0 == 51, 'GetAOERadius answers 0 on every instant (section 5)')
+    assert(nMode == 52, 'GetActiveMode is the mock default on every instant')
+    assert(nGoing == 52, 'J.IsGoingOnSomeone is false on every instant')
+    assert(nRetreat == 52, 'J.IsRetreating is false on every instant')
+    assert(nAoE == 52, 'FindAoELocation is the count=0 loader stand-in everywhere')
+    assert(nRadius0 == 52, 'GetAOERadius answers 0 on every instant (section 5)')
 end
 
 -- ===========================================================================

@@ -174,11 +174,25 @@ end
 -- add the entry, do not loosen the detector, and do not spend the round
 -- wondering what nova_damage has to do with the corpus (it has nothing to do
 -- with it; that is the whole point of this comment).
+--
+-- ⭐ #110 LANDED 2026-09-07 (replay-check) and it was the predicted collision,
+-- to the line. The 110th fixture is the `zusultstrand` creation frame
+-- (tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua, pinned by
+-- tests/test_replay_260827_zuus_ultstrand_creation.lua); the detector went red
+-- naming exactly the line the note above names, and holding the fixture out
+-- cleared it. Entry added as instructed -- the detector was NOT loosened, and
+-- the round was NOT spent wondering what nova_damage has to do with the corpus.
+-- It has nothing to do with it: 110 is Crystal Nova's KV damage value.
 local NOT_A_CORPUS_PIN = {
     ['assert(hits == 3 and total == 109,'] =
         'tests/test_fieldcreep_veto.lua: `total` is summed DAMAGE from three '
         .. 'creep hits (109 HP), not a fixture count -- the next line asserts '
         .. 'the biggest of them is >= 25',
+    ["assert(h:GetSpecialValueInt('nova_damage') == 110, 'nova_damage: pinned 110, fixture KV '"] =
+        'tests/test_cm_q_creep_aoe_reach.lua: 110 is crystal_maiden_crystal_nova\'s '
+        .. 'KV `nova_damage` at the pinned rank, read off the fixture loader\'s KV '
+        .. 'snapshot -- an ABILITY VALUE, not a fixture count. Predicted by the '
+        .. 'note above on 2026-09-05 and confirmed on the day #110 landed',
 }
 
 tests['[detector] no test pins the live corpus size with an equality'] = function()

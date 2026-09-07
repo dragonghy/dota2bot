@@ -38,9 +38,14 @@
 -- that is NEVER READ AGAIN.  A dead local.  The price is computed, the ladder
 -- charges it, and the value is dropped one line later.  Both of Crystal Maiden's
 -- reads are of this kind, so CM is STRUCTURALLY immune to the ladder through
--- bindings -- and 14 real CM frames in the corpus sit in a band where the ladder
+-- bindings -- and 15 real CM frames in the corpus sit in a band where the ladder
 -- would otherwise have flipped a gate.  The arithmetic is identical to Axe's and
 -- Lion's; only reading the binding tells you that it means nothing here.
+-- (14 -> 15 on 2026-09-07, replay-check: the `zusultstrand` creation frame's CM,
+-- 294/831.  Updated HERE and not only at the assertion on purpose -- this file's
+-- own opening paragraph is about the shape where the assertion stays green and
+-- only the SENTENCE explaining it goes false, and leaving a stale 14 in the prose
+-- while §4 pins 15 would be that shape, in this file, about itself.)
 --
 -- ---------------------------------------------------------------------------
 -- THE ONE THAT IS NOT A NO-OP -- `zusult`'s fixture domain was EMPTY (§6)
@@ -52,12 +57,19 @@
 --     if nCost == nil or nCost <= 0 then return false end
 --
 -- Before `c386d5f3` that read answered 0 on every frame, so the gate returned
--- false at that line ALWAYS, in every fixture, for every caller.  Corpus: 42
--- alive-Zeus frames, 16 of them with Reincarnation... with Thundergod's Wrath
--- trained and off cooldown -- 16 frames where the gate's own preconditions hold
--- and it still could not fire.  Today 7 of those 16 reach the decision (mana
--- below the price); the other 9 return false one line later as already
--- affordable.  The domain went 0 -> 7.
+-- false at that line ALWAYS, in every fixture, for every caller.  Corpus: 45
+-- alive-Zeus frames, 17 of them with Thundergod's Wrath trained and off
+-- cooldown -- 17 frames where the gate's own preconditions hold and it still
+-- could not fire.  Today 7 of those 17 reach the decision (mana below the
+-- price); the other 10 return false one line later as already affordable.
+-- The domain went 0 -> 7.
+-- (Corpus numbers re-derived 2026-09-07, replay-check.  They had ALREADY drifted
+-- before this round: the prose said 42/16 while §6b's assertion had been re-pinned
+-- to 44/16 on 09-03 -- the same green-assertion/false-sentence shape this file's
+-- opening paragraph is about.  Both are now 45/17, and the stray
+-- "with Reincarnation..." -- Wraith King's ultimate, in a Zeus paragraph -- is
+-- struck.  The 7 does NOT move: the frame added this round holds 405 mana against
+-- the rank-1 price of 250, so it lands in the affordable half.)
 --
 -- What that does and does not mean, stated precisely because the difference is
 -- the whole point: the ENGINE always priced abilities, so real Turbo games were
@@ -378,11 +390,33 @@ tests['[4] 16 of 90 live-Q focus-hero frames sit where the ladder flips a gate']
     -- frame) added one live-Q crystal_maiden frame and one zuus frame. Only the
     -- two `n` denominators moved (48->49, 40->41): neither hero gained a FLIP,
     -- so every flip count below -- and the ratio §4 is about -- is unchanged.
+    --
+    -- ⭐ RE-DERIVED AGAIN 2026-09-07 (replay-check), AND THIS ONE IS NOT LIKE THE
+    -- LAST ONE -- IT MOVED A FLIP COUNT, NOT ONLY A DENOMINATOR.
+    -- tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua (the `zusultstrand`
+    -- creation frame, tests/test_replay_260827_zuus_ultstrand_creation.lua) is a
+    -- ZEUS-subject frame that also carries a live Lion and a live Crystal Maiden,
+    -- so three denominators move by one: zuus 41->42, lion 23->24,
+    -- crystal_maiden 49->50. Zeus and Lion gain no flip. CRYSTAL MAIDEN DOES, and
+    -- the arithmetic is worth writing down rather than trusting:
+    --   mp 294 / 831 = 0.3538 = f     Crystal Nova at rank 4 costs 175
+    --   fA = (294 - 175) / 831 = 0.1432
+    --   bFarm: f > 0.3 AND fA <= 0.3  -> TRUE  (farm 9 -> 10, either 14 -> 15)
+    --   bSpam: f >= 0.39              -> FALSE (0.3538 < 0.39; spam stays 10)
+    -- MEASURED BY HOLDING THE FIXTURE OUT, not inferred: with it moved aside this
+    -- file runs 9 tests / 0 failures on the old numbers, so the whole delta is
+    -- that one frame's.
+    -- ⚠️ AND HERE IS THE PART THAT KEEPS THE FLIP HONEST: the flip that moved is
+    -- CRYSTAL MAIDEN's, and CM is not in LIVE_Q. Her two bindings are DEAD (§2),
+    -- so the live-Q ratio below moves only in its denominator (16/90 -> 16/92)
+    -- and this new flip is one more member of exactly the set §2 exists to say
+    -- means nothing behaviourally. It is still recorded, because the arithmetic
+    -- is what it is and hiding it would be the §2 trap in reverse.
     local EXPECT = {
         axe            = { n = 26, farm = 5, spam = 3, either = 6 },
-        zuus           = { n = 41, farm = 4, spam = 3, either = 6 },
-        lion           = { n = 23, farm = 3, spam = 2, either = 4 },
-        crystal_maiden = { n = 49, farm = 9, spam = 10, either = 14 },
+        zuus           = { n = 42, farm = 4, spam = 3, either = 6 },
+        lion           = { n = 24, farm = 3, spam = 2, either = 4 },
+        crystal_maiden = { n = 50, farm = 10, spam = 10, either = 15 },
         skeleton_king  = { n = 31, farm = 4, spam = 5, either = 5 },
     }
     for sHero, want in pairs(EXPECT) do
@@ -400,12 +434,19 @@ tests['[4] 16 of 90 live-Q focus-hero frames sit where the ladder flips a gate']
         if LIVE_Q[sHero] then nLive = nLive + s.n nEither = nEither + s.either end
     end
     -- 89 -> 90 with the GH #437 fixture's CM frame; the 16 flips are unchanged.
-    assert(nLive == 90 and nEither == 16,
-        'live-Q total: expected 16 flips over 90 frames, got ' .. nEither
+    -- 90 -> 92 on 2026-09-07 with the `zusultstrand` creation frame, which carries
+    -- a live Zeus and a live Lion (both LIVE_Q); its CM is not counted here. The
+    -- 16 flips are again unchanged -- neither of those two sits in the band.
+    assert(nLive == 92 and nEither == 16,
+        'live-Q total: expected 16 flips over 92 frames, got ' .. nEither
             .. ' over ' .. nLive)
     -- The CM half of the same table is the §2 point in numbers: fourteen frames
     -- whose arithmetic says "flip" and whose code says "nobody reads this".
-    assert(per['crystal_maiden'].either == 14,
+    -- 14 -> 15 on 2026-09-07: the `zusultstrand` creation frame's CM sits in the
+    -- band (294/831 = 0.3538 before, 0.1432 after Crystal Nova's rank-4 175).
+    -- One more frame whose arithmetic says "flip" and whose code says "nobody
+    -- reads this" -- the sentence below is unchanged, only its count.
+    assert(per['crystal_maiden'].either == 15,
         'the CM rows must stay counted and stay void -- see §2')
 end
 
@@ -421,7 +462,13 @@ tests['[5] negative control: with the pre-ladder price of 0 the flip band is emp
     -- an empty loop
     local nSeen = 0
     for _, s in pairs(per) do nSeen = nSeen + s.n end
-    assert(nSeen == 170, 'the control must sweep the same 170 frames, saw ' .. nSeen)
+    -- 170 -> 173 on 2026-09-07 (replay-check): the `zusultstrand` creation frame
+    -- carries three live focus heroes with a trained slot-0 ability (zuus, lion,
+    -- crystal_maiden), so the same +1/+1/+1 that moved §4's three denominators
+    -- moves this sweep's total. The control's own claim -- every `either` is 0 at
+    -- a zero price -- is untouched; only the "and it really saw the frames" number
+    -- moved.
+    assert(nSeen == 173, 'the control must sweep the same 173 frames, saw ' .. nSeen)
 end
 
 -- ---------------------------------------------------------------------------
@@ -495,8 +542,15 @@ tests['[6b] corpus: 16 Zeus frames hold a ready ult, and the old gate died on al
     -- 2026-09-03 (replay-check): 43 -> 44 alive Zeus frames with the GH #437
     -- fixture; its zuus holds a rank-1 ult on 37.8s cooldown, so READY and DENY
     -- are untouched and the domain this section is about did not move.
-    assert(nAlive == 44 and nReady == 16 and nDeny == 7,
-        'zusult corpus domain moved -- expected 44 alive Zeus frames, 16 with a '
+    -- 2026-09-07 (replay-check): 44 -> 45, and this time READY moves too --
+    -- 16 -> 17. The `zusultstrand` creation frame
+    -- (f_20260827_091703_slot12_zuus_473_1) is a Zeus at 17.6% HP holding a
+    -- rank-1 ult on cooldown 0 with 405 mana; READY is exactly what that frame
+    -- is FOR. DENY stays 7 because 405 clears the rank-1 price of 250 -- the
+    -- frame enters this domain and is affordable, which is the whole point of
+    -- the widening it pins. Held out: 9 tests / 0 failures on the old numbers.
+    assert(nAlive == 45 and nReady == 17 and nDeny == 7,
+        'zusult corpus domain moved -- expected 45 alive Zeus frames, 17 with a '
             .. 'ready ult, 7 of those unaffordable; got ' .. nAlive .. ' / '
             .. nReady .. ' / ' .. nDeny)
     -- The pre-ladder domain is 0 by construction, not by measurement: the gate's

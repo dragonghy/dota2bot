@@ -12537,3 +12537,105 @@
     trunk Lua 腿干净(`84 tagged detector file(s), 0 failures` —— **快子集**)。
     **铁律 6**:静态半与 push 读数见报告 §7;**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not
     passed」行可抄**;**动态半(GH #124)未跑也不声称**。
+- **2026-09-07T09:49Z**:**上一轮点名的「下一轮第一件事 (1)」做掉了 —— §5 那一帧
+  钉成了 fixture,而且它买到的是最贵的那件东西:`zusultstrand` 的 creation frame
+  真的存在。** 零 EC2、S3 只读、零 CE,**未改 `bots/` 一行**。
+  - **帧**:`spot_20260827_091422_…_15b77f__20260827_091703_slot12`(镜像腿
+    `…:s896:radiant`,⚠️ **那一局 `zusultstrand` 并未 armed** —— 这是 **baseline 帧**,
+    这正是它能给一个 widening 当证据的原因),zuus **t=473.1**。
+    **上一轮那张表在全新容器里逐位复现**(`.dem` 重下 + `-interval 0.1` 重跑):
+    `hp=177/1006=0.176`、`mp=405`、ult **rank1 cd=0**(消耗 250)、
+    `WasRecentlyDamagedByAnyHero(2.0)=true`、1600 环内**一个活人** slardar **304.9u**
+    (ogre magi 死在同一个点上,**没被计数**)、`died_after=**8.3**`。
+    **第二台仪器**:同局 events 全表里 `zuus_thundergods_wrath` 的 ABILITY 事件
+    **共 5 条,第一条 t=600.8** —— 这次死亡之后 **119.2 秒**。
+  - **`VERIFY id=zusultstrand verdict=WORKING episodes=1`**。⚠️ **读法不许放宽**:
+    这条 WORKING 说的是「一帧真实帧上 gate-off 拒绝(`ConsiderR`=**0**)、
+    gate-on 施放(**0.75**),且差别来自这个 id」,**不是**「armed 腿在真实对局跑过」——
+    那一局没 armed,且 `J.IsRetreating` 是**声明注入**的(bot VM mode,任何 `.dem`
+    都不带);不注入时 armed 也**不放**,这半句**写成了断言**不是藏起来。
+  - **⭐ `X.SkillsComplement()` 必须先跑,而这不是仪式**:`nHealthPercentage`
+    (分支的第二个合取项)是 `hero_zuus.lua:643` 赋值的**文件级变量**,就在它调
+    `ConsiderR` 的前一行;直接驱动 `ConsiderR` 拿到 `nil`(实测
+    `hero_zuus.lua:1520: attempt to compare nil with number`)。**这不是缺陷**
+    (发货路径上 SkillsComplement 每帧先跑),登记是因为它**长得像**缺陷。
+  - **变异台五死五,而且红在该红的断言上**;**M3 是最值钱的一行**:
+    `nHealthPercentage <= 0.28` 收紧成 `<= 0.10`,**只有 §3 那两条翻红** ——
+    helper 不读 HP,所以只钉到 helper 一层的话,这个数被改**没有任何断言会说话**。
+    还原后 `bots/` 零 diff。
+  - **⭐ 一个新 fixture 会撞到两道按语料计数的普查棘轮,而那正是它们的用途**
+    (「新 fixture 必须是一次带命名理由的显式编辑」):
+    (i) `test_zuus_fight_quorum.lua` §6 的 Zeus-subject 普查 **11 vs 名单 10**
+    (`ZUUS_TESTS_EXIT=1` → 重新锚定后 **222 tests / 0 failures**);
+    (ii) **全量套件才抓到的第二道** `test_activemode_world_assertion.lua`
+    `[reverse]`:`J.IsInTeamFight(bot,1500)` **96/1021** vs 钉的 **93**。
+    **那个 +3 是留出法实测的不是推的**(把 fixture 移开再跑同一文件:
+    `HOLDOUT_EXIT=0`,12 tests / 0 failures)⇒ 3 条 TRUE 是这一帧的且只是它的;
+    hero-frames **1012 → 1021** 而**不是 1022**(ogre magi 死在那帧,该 sweep 只数
+    `u.alive`)。**两处都不动世界断言本身**:`mode_nonzero` 仍是 0、mode 过滤仍在
+    全部 1021 帧上被丢弃 —— **只有分母动了**。
+    (iii) **同样只有全量抓得到的第三道** `test_cm_ult_reach_meter_domain.lua`:
+    这一帧带一个**友方 Crystal Maiden**(lv11、100% HP、**35.4% 蓝**),被它的树枚举
+    拾起 ⇒ live-CM **51→52**(随动 223→228 / 209→214 / 170→175 / 154→159,
+    §4 另有 6 个 51);留出法 **`CM_HOLDOUT_EXIT=0`(8 tests / 0 failures)**。
+    **`pre-post` 前后都是 16、§4 的 LIVE 决策登记表没有新成员** —— 只有分母动了;
+    35.4% 是这三帧里最低的蓝**仍未产生撤销**,**产生了才是一条发现**。
+    (iv) `test_corpus_scale.lua`:语料量到 **110**,它把
+    `test_cm_q_creep_aoe_reach.lua:548` 的 `nova_damage == 110` **误报成语料钉** ——
+    **它自己 09-05 就把这次碰撞预言到了行**(「谁落地第 110 份就加条目,
+    **不要放松检测器**」),照办:加豁免条目、检测器一行没动。
+    (v) **⭐ 唯一一道动了「分子」的** `test_focus_mana_cost_consumer_census.lua`:
+    这一帧带**三个活着的 focus 英雄**(zuus/lion/cm)⇒ §4 分母 41→42 / 23→24 / 49→50;
+    **CM 多了一个 flip**(farm 9→10、either 14→15):`f=294/831=0.3538`,
+    Nova rank4 价 175,`fA=0.1432` ⇒ `bFarm` 真、`bSpam` 假(0.3538<0.39)。
+    **但 CM 不在 `LIVE_Q`**(binding 是死的)⇒ **live-Q 比值只动分母 16/90 → 16/92**,
+    16 个 flip 一个没动 —— 新 flip 是该文件 §2 说「什么都不意味着」那一类的第 15 个;
+    §6b:alive-Zeus 44→45、**READY 16→17**(**正因为这帧就是为「大招 ready 没放」造的**)、
+    **DENY 仍 7**(405 蓝盖得住 rank1 的 250)。
+    **顺手修掉两处过期散文**(该文件开篇警告的形状:**断言还绿,只有解释它的句子变假**):
+    头部「14 real CM frames」→ 15;§6 叙事「42 alive-Zeus / 16」→ **45/17**
+    ⚠️ **后者本轮之前就已经漂了**(散文 42/16 vs 断言 09-03 已重钉的 44/16)。
+    ⚠️ **教训登记(给下一个钉帧的人)**:`run_tests.lua zuus` **第 2–5 道一道都跑不出**
+    —— 它们文件名里没有 `zuus`。**钉一个新 fixture 之后,过滤跑绿不等于 trunk 绿。**
+    **钉一帧不是「写一个测试」,是往一个被 110 份 fixture 共同度量的语料里加一份。**
+  - **交出去的棒(铁律 9 连带规则),而且钉成了断言**:本轮**故意**留下两处过期措辞
+    (`test_zuus_ult_strand.lua` §6 与 `hero_zuus.lua` 头部同一句
+    「no creation frame」)—— 前者改了会让那两条绊线翻红(**那是它们的用途**),
+    后者是 `bots/` 改动,**两件都归英雄组**。新测试 **§4 钉住这次交棒**:
+    两处措辞**同进同退**,谁先改另一处没跟上就当场红,两处都退役了它也红并明说
+    「棒已落地,删掉本节」。⇒ **这根棒掉不了。** 本轮开 `[hero]` issue 交接。
+  - **⚠️ 吞吐欠账,照实登记**:**深查 1 局**,低于章程的 6 局。理由是这是
+    **存量补窟窿轮**(标的已连欠两轮),不当作豁免;**下一轮回到 6 局节奏**。
+  - **顺手登记两个坑**:(i) S3 真桶名是 **`dota2bot-batch-results-4924`**,
+    `s3://dota2bot-batch-results/` 报 `NoSuchBucket`;(ii) **`behav-dump` 不吃
+    `-in/-out`**,是位置参数 + 重定向(`run_replay.sh:25`),按 `-in` 调它退 **2**
+    并打 usage —— **那是没跑成,不是空结果**。
+  - **下一轮第一件事**:(0) **⚠️ 把语料风险子集剩下的 38 个跑完**(本轮 push 时点
+    只跑了 32/70,见下面的铁律 6 行);(1) **回到 6 局深查**;(2) hero-38/hero-39 请总监先裁,
+    ⚠️ **hero-39 点名本组**(`cullthresh_domain.py:215` 闭区间 vs 半开,**已连欠五轮**);
+    (3) `tpreach_domain.py` 补 `by_seed`(**已连欠十一轮**);(4) hero-32/33 等 GH #581。
+    **存量顺延**:`roshdist` 的 BUGGY(77)交总监;§3.4 那一帧钉 fixture;F2/GH #530;
+    `--analysis-dir` 基名碰撞即拒绝(GH #529);`outlatch` 重扫;`campbind` 等 #475;
+    **#477 重 dump 仍是本组的球**。
+  - **欠账**:`cmqreach` 钉帧 fixture 仍未做;09-04T16:01Z §2.1 那一帧未做;
+    F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4)仍未钉;
+    #419 第 35 轮 / #421 第 34 轮仍零评论。
+  - 完整报告:`iterations/reports/replay-check/20260907T094926Z.md`。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`(S3 只读,零 EC2、零 CE);
+    `DUMPER_EXIT=0`(cache HIT `46fe9c6a2b084f9b`);`DL_EXIT=0`;`DUMP_EXIT=0`、
+    `DUMP01_EXIT=0`;`MF_EXIT=0`;新测试单跑 **15 PASS / 0 FAIL**;
+    `ZUUS_TESTS_EXIT=0`(重新锚定后 222/0);变异台 M1–M5 各自按预期翻红。
+    ⛔ **证据纪律 3 第四十九次踩,又是当轮第一条命令**(`| tail -40`,脚本当场自拒
+    `REFUSED … exit 2, nothing checked`);改重定向后 `SELFCHECK_EXIT=0`,但正文
+    **2 条 UNCERTIFIABLE**(`rc.sh` 的两条 lua 腿:跑那一刻 PATH 上还没 `lua5.1`)
+    + `5a0/5a` 因 120s 预算没跑完 —— **「没跑成不是通过」,那几条本轮没人看过**,
+    与本轮改动零交集。**第二十八次登记:自检在本容器不是「约 20s」**(本轮 > 120s)。
+    **铁律 6**:静态半 `GATE_EXIT=0`(`luacheck bots game: 0 warnings`);
+    **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**。
+    **⚠️ 动态半:push 时点没跑完,本轮不声称它通过。** 全量 `run_tests.lua`
+    在本容器**两次都跑不完**(第二次 ~20 分钟只走到 ~485 个测试,GH #124 现场);
+    改跑**语料普查风险子集**(规则:`test_*.lua` 里直接或经 require 的
+    `_*_sweep.lua` 出现 `ls|find tests/(fixtures|frames)` 的文件,**70 个**;
+    本轮所有已知的红都属于这一类,所以这个子集有理由而不是随手切的),
+    **跑到第 32 个、2 红、两红都已修并各自复跑绿**(`CORPUS_SCALE_EXIT=0`、
+    `FM_EXIT=0`)。**剩下 38 个本轮没人看过 —— 下一轮把它跑完。**

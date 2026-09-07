@@ -87,6 +87,16 @@ local ZUUS_FRAMES = {
     'tests/fixtures/f_260819_222052_zuus_w2_leak.lua',
     'tests/fixtures/f_260820_042607_zuus_reserve_cross.lua',
     'tests/fixtures/f_260820_042607_zuus_reserve_safe.lua',
+    -- [replay-check 2026-09-07] Added with a named cause, which is what this
+    -- list asks for: the `zusultstrand` creation frame (17.6% HP, ult ready,
+    -- Slardar at 305u, dead 8.3s later) --
+    -- tests/test_replay_260827_zuus_ultstrand_creation.lua.  It is listed HERE
+    -- because section 6's census globs Zeus-subject fixtures and went red on the
+    -- count the moment the file landed.  It changes nothing about the QUORUM
+    -- lever: its fight radius holds one living enemy (Ogre Magi lies dead on the
+    -- same spot and does not count), so it stays far under the armed quorum 3
+    -- and section 6's tripwire keeps saying what it said.
+    'tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua',
 }
 
 -- A frame whose whole enemy side is alive and passes J.CanCastOnNonMagicImmune,
