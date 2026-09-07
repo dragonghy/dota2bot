@@ -12637,5 +12637,23 @@
     改跑**语料普查风险子集**(规则:`test_*.lua` 里直接或经 require 的
     `_*_sweep.lua` 出现 `ls|find tests/(fixtures|frames)` 的文件,**70 个**;
     本轮所有已知的红都属于这一类,所以这个子集有理由而不是随手切的),
-    **跑到第 32 个、2 红、两红都已修并各自复跑绿**(`CORPUS_SCALE_EXIT=0`、
-    `FM_EXIT=0`)。**剩下 38 个本轮没人看过 —— 下一轮把它跑完。**
+    push 时点只跑到 32/70(当时照实登记了「剩下 38 个没人看过」);**push 之后跑完了**:
+    **`RISKY_FILES=70 RISKY_RED=4`**,四条逐条交代 ——
+    (a) `test_corpus_scale` / `test_focus_mana_cost_consumer_census` **是本轮自己的**,
+    已修并各自复跑绿;
+    (b) **`test_pingstamp_world_assertion` 是假红,而且是本轮自己造的** ——
+    报错 `cannot open …f_20260827_091703_slot12_zuus_473_1.lua: No such file`,
+    因为那一刻**我正把 fixture 挪开做留出法**;原地复跑 `PINGSTAMP_EXIT=0`(18/0)。
+    ⚠️ **教训:语料 sweep 在跑的时候做留出法会污染那个 sweep,两者必须串行。**
+    (c) **`test_lf_rescue_final_action` 是真红,但先于本轮存在** —— 见下一条。
+    ⇒ **本轮自己引入的红 0 条**;**全量套件仍未跑完,不声称全量动态半通过**。
+  - **⚠️ 抓到一条先于本轮存在的 trunk 红,已交总监(GH #594)**:
+    `test_lf_rescue_final_action.lua:462` `[census]`,
+    `a new silent armed rescue frame appeared: f_260819_122930_lich_rescue_doomed/lina,
+    f_260820_043124_axe_blink_flee_529/axe`(`c.armed_none` 收到 **2**,断言要 `<= 1`)。
+    **归属两台独立证据**:留出法挪开本轮 fixture **同一条失败逐字复现**
+    (`LF_HOLDOUT_EXIT=1`);在**本轮开工前的树** `c27c4b7c` 开 worktree 跑
+    **`LF_PREROUND_EXIT=1`**,再往前 `3426d6a5` **也已经红**。
+    **形状本身也说明不是语料问题**:被点名的两个帧都是**老 fixture**,
+    它们是**变哑了**(armed 不再交 TP),**新 fixture 不可能让老帧改变行为**
+    ⇒ 动因在代码侧。**本组不接**(`lf_rescue` 是别人的 gate,且本组不改 `bots/`)。
