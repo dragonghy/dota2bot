@@ -22,7 +22,60 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--114. **⭐ 下一轮的第一件事(由本轮 `-109` 直接交出):`liondrainmi` 的**第二支**,
+-115. **⭐ 下一轮的第一件事(由本轮 `-114` 交出):把 `-114` 的**同一台读法**转到
+   `X.ConsiderE` 的**第一处早退** —— `X.IsOtherAbilityFullyCastable() or nSkillLV <= 1`。**
+   - **为什么是它**:`-114` 这一轮为了给补蓝圈定域,把 `X.ConsiderE` 三处选靶的**守卫**
+     逐条读了一遍,读出来一件与选靶无关的事:**后两支(团战吸蓝 / 打架抽蓝)全部坐在
+     那道早退下游**,即「Q、W、R 三个技能**全都放不出来**」才轮到抽蓝。源码里已有一段
+     `[liondrain]` 注承认这一点并把它当**理由**(「这正是应该走开的状态」),
+     但**没有任何读数说这道早退有多常真** —— 它可能是整个 E 的**主约束**,
+     那样的话 `liondrainmi` 买到的域会比 hero-40 (1) 列估的小一个量级。
+   - **⚠️ 先做的仍然是减法**:`nSkillLV <= 1` 那半是**等级**不是冷却,
+     Turbo 的等级曲线比普通局快得多 —— 先分清两半各自否决了多少,
+     **不要**把「E 很少放」直接读成「冷却卡住了」。`-114` 的教训正是这个形状:
+     一个合取项的真实约束力,和它读起来像不像约束,是两件事。
+   - **供给**:这一条**能在本地买到读数**(与 `-114` 相反)—— 8 个语料 Lion 帧
+     的技能等级与冷却都在帧里,`tests/test_lion_ult_reserve_domain.lua` 已有同形漏斗
+     (24 → 13 → 3 → 3 → 0)可以照抄形状。**别开 queue 请求**,先把本地那 8 帧跑完。
+   - **⚠️ 别碰的三处**:补蓝圈(本轮已判 **NOT TAKEN**,理由钉在
+     `tests/test_lion_drain_refill_domain.lua`,重开需要 hero-40 第四列读到非 0)、
+     团战吸蓝(GH #566 判定出货正确)、`X.lion_IsDrainCombatTargetCastable`
+     (未买 (a) 证据,不许再动方向)。
+
+-114. ~~**`liondrainmi` 的**第二支**,也就是补蓝那圈。**~~ ✅ **2026-09-07T07:5xZ 做完:
+   判 NOT TAKEN,`bots/` 零改动 —— 而且是按 `-114` 自己要求的顺序,先答域再决定写不写码。**
+   报告 `iterations/reports/hero/20260907T075xxxZ.md`。新
+   `tests/test_lion_drain_refill_domain.lua`(**12 例**)+
+   `tools/agent/mutstand_liondrainrefill.sh`(**12/12 CAUGHT**)。
+   - **读数 (1) —— 两个半径同为 1600,而且是解析出来的不是抄的**:补蓝那一支的第一条
+     合取项是 `#hEnemyList == 0`,`hEnemyList` 每 tick 在 `X.SkillsComplement` 里由
+     `J.GetNearbyHeroes(bot, 1600, true, …)` 赋值(全文件**只赋一次**,已断言);
+     两行之后的候选来自 `bot:GetNearbyCreeps( 1600, true )`。**同一个圈**
+     ⇒ 这一支的候选兵,按它自己的守卫,坐在一个**被判定没有敌方英雄**的圈里。
+   - **读数 (2) —— 11 个免疫名里 9 个拼着某个英雄的内部名,而其中恰好 1 个是 `lion`**:
+     把 shipped `IsMagicImmune` override 的名单对 `bots/BotLib/hero_*.lua` 的**文件名**
+     做机械 join(**不是**对 Dota 语义做判断)。9 个解析成功;剩下 2 个是
+     `modifier_magic_immune`(通用)与 `modifier_black_king_bar_immune`(BKB,
+     **本仓自己的出装表**里就有,已断言)。⇒ 在一个已判无英雄的圈里,兵能魔免的供给
+     只剩:buff 活过施加者离圈、看不见的敌人、那两个无前缀通道,
+     以及 **`modifier_lion_mana_drain_immunity` —— 名单里唯一拼着本英雄自己名字的那个,
+     也是读数 (1) 唯一管不到的那个**。
+   - **⭐ 判 NOT TAKEN 而不是「域未知,发请求」的理由就是那个单例**:守卫之内幸存的供给
+     由一个**带着这个技能自己名字**的 modifier 主导 ⇒ 加宽这里,首先买到的是
+     「允许 Mana Drain 指回一个 Mana Drain 已经标记过的单位」。本文件**不声称**知道该
+     modifier 的游戏语义,只断言仓库说了什么:名字在 shipped 免疫读者的名单里(section 2),
+     且带着它的单位被出货谓词拒绝、被加宽谓词接受(section 3,一次带标注的注入,
+     注入前先断言两个谓词不可区分)。**两条读数同向,所以第三条读数不会改变结论。**
+   - **⚠️ 唯一未解通道已按 `-114` 的指示加挂成 hero-40 的第四列(没有另开请求)**:
+     内生魔免(引擎自己的 `IsMagicImmune`,或无前缀的 `modifier_magic_immune`)
+     落在野怪/召唤物上 —— `GetNearbyCreeps` 按 `docs/BOT_API_REFERENCE.md` 是
+     lane + jungle + summons 都返回的。**读到 0 就把 NOT TAKEN 从供给论证升级成读数。**
+   - **fixture 侧永远答不了它,而且这次是 13 帧一起量的不是转述**:
+     `#GetNearbyCreeps(1600, true)` 合计 **0**(sibling 文件只在 1 帧上量过)。
+   - **「不取」写成了缺席断言**:补蓝圈的目标测试仍逐字是 `J.CanCastOnNonMagicImmune( nCreep )`、
+     圈内**没有** `IsSoakCandidate`、`liondrainmi` 的 helper 仍**只有一个**调用点。
+     变异台的 **M9(有人直接把它加宽,不带闸)** 与 **M10(有人塞个闸进去)** 就是这两条的复活线。
+   **原始条目(备查):**
    也就是补蓝那圈 —— 但**先回答「它有没有域」,再决定要不要写代码**,别照抄本轮的形状。**
    - **为什么单独一条**:本轮把三处选靶拆成两个问题,只答了「敌方英雄」那半。
      补蓝圈的目标是 `bot:GetNearbyCreeps( 1600, true )` 里的**小兵/野怪**,
@@ -4925,6 +4978,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-07T07:58Z(报告 `iterations/reports/hero/20260907T075814Z.md`;**backlog `-114`**
+  —— 由上一轮 `-109` 直接交出的下一棒;焦点英雄 **Lion**;
+  OWNER_PRIORITIES **P4.4 (ii)** —— 工作单元主体是一个判定完结所需的最后一块证据)
+  **`liondrainmi` 的第二支(补蓝那圈)判 NOT TAKEN,`bots/` 零改动。**
+  新 `tests/test_lion_drain_refill_domain.lua`(**12 例**)+
+  `tools/agent/mutstand_liondrainrefill.sh`(**12/12 CAUGHT**)。
+  `queue.json:hero-40` **加第四列**(**没有另开请求**)。
+  **零 arm、零入集提议**(P4.2 冻结)。AWS **一次都没碰**。
+  - **⭐ 这一轮的形状本身就是 `-114` 的验收**:先答「有没有域」,再决定写不写码;
+    域为零就写成「不取」并把理由钉成断言;**不要为了对称写一个杠杆**。照办了。
+  - **读数 (1) 两个半径同为 1600,解析出来的不是抄的**:守卫 `#hEnemyList == 0`
+    (`J.GetNearbyHeroes(bot, 1600, true, …)`,全文件只赋一次)与候选
+    `bot:GetNearbyCreeps( 1600, true )` **是同一个圈** ⇒ 候选兵坐在一个
+    **被判定没有可见敌方英雄**的圈里。M1/M2 从两个方向各抓一次,
+    红字直说「两圈之间的圆环是**新供给**,`-114` 要重答不是重新基线」。
+  - **读数 (2) 11 个免疫名 9 个拼着英雄内部名,其中恰好 1 个是 `lion`**:
+    对 `bots/BotLib/hero_*.lua` **文件名**做机械 join(**最长**前缀,不是首个 ——
+    `lich` 与 `life_stealer` 同时存在)。剩下 2 个无前缀:通用名 + BKB,
+    而 `item_black_king_bar` 就在 **Lion 自己的出装表**里(断言取自本仓不取自常识)。
+  - **⭐⭐ 判 NOT TAKEN 而非「域未知,发请求」的全部依据是那个单例**:守卫之内幸存的供给
+    由 **`modifier_lion_mana_drain_immunity`** 主导 —— 名单里唯一拼着**本技能自己名字**、
+    也是读数 (1) 唯一管不到的那个(施加者按构造站在圈心)。加宽这里首先买到的是
+    「允许 Mana Drain 指回一个 Mana Drain 已标记过的单位」。**不声称**知道该 modifier 的
+    游戏语义,只断言仓库说了什么(名字在名单里 + 带着它的单位被出货拒绝被加宽接受)。
+    **两条读数同向 ⇒ 第三条读数不会改变结论。**
+  - **⭐⭐⭐ 「不取」写成了缺席断言**:目标测试仍逐字 `J.CanCastOnNonMagicImmune( nCreep )`、
+    圈内**没有** `IsSoakCandidate`、`liondrainmi` 的 helper 仍**只有一个**调用点。
+    **M9(直接加宽不带闸)/ M10(塞个闸进去)就是这两条的复活线。**
+  - **唯一未解通道 = 内生魔免(野怪/召唤物)**,已按 `-114` 原话「加一列即可,不要另开请求」
+    挂成 hero-40 第四列。**读到 0 就把 NOT TAKEN 从供给论证升级成读数。**
+  - **fixture 侧永远答不了它,这次是 13 帧一起量的不是转述**:
+    `#GetNearbyCreeps(1600,true)` 合计 **0**(sibling 文件只在 1 帧上量过)。
+  - **⚠️ 自曝一条本轮的操作瑕疵**:第一次开工自检在后台跑,而变异台**在它跑完前**
+    就开始就地改写 `hero_lion.lua` —— GH #507 点名的撕裂窗口。**第一份读数本轮不引用**;
+    安静树上的重跑到收尾时**只走完 python trunk-health 之前的腿**(全部 OK),
+    所以**本轮不给「自检 worst exit」这个数** —— 没跑完的腿不是通过。
+    下轮记住:**变异台与自检/全量套件不许并发。**
 - 2026-09-07T04:55Z(报告 `iterations/reports/hero/20260907T045526Z.md`;**backlog `-109`**
   —— 由 `-108` 撤下 `liondrainbkb` 时预登记交出的下一棒;焦点英雄 **Lion**;
   OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个 `bots/` 行为改动)
