@@ -115,6 +115,31 @@ end
 --- the whole point of this file is a clause that read as satisfied while its
 --- population was empty: a bare 0 here must never be indistinguishable from a
 --- scan that never ran.
+--- Is this handle's KV price zero AT ITS OWN RANK?
+---
+--- Written 2026-09-06 (hero, GH #566) after this test went red on a frame whose
+--- Wraith King holds Reincarnation at RANK 3.  The predicate here used to read
+--- rung ONE -- `ladder(...)[1] == 0` -- which silently assumes a mana ladder is
+--- non-increasing in "is it free", i.e. that an ability free at some rank is
+--- free at rank 1.  `skeleton_king_reincarnation` is the counter-example the
+--- corpus had never carried: its ladder is DESCENDING, `220 110 0`, so it is
+--- genuinely free at rank 3 and genuinely priced at rank 1.  Reading rung 1
+--- classified a correct 0 as an UNEXPLAINED gap and pointed the reader at
+--- mana_ladder() in the loader, which is not where the problem was.
+---
+--- The rank-aware question is also the one section 3's own header asks for --
+--- "per-handle and by cause, so it stays true as the corpus grows" -- and it is
+--- strictly narrower: on a flat or ascending ladder it answers exactly what the
+--- rung-1 test answered.  Level 0 cannot reach here (an untrained handle is
+--- priced by the loader, so it is never in the free residue), but the clamp is
+--- written anyway so that a future level-0 caller cannot index nil.
+local function kv_zero_at(sUnit, sAbility, nLevel)
+    local steps = ladder(sUnit, sAbility)
+    if steps == nil or #steps == 0 then return false end
+    local idx = math.min(math.max(nLevel or 1, 1), #steps)
+    return steps[idx] == 0
+end
+
 local function scan()
     local c = {
         files = 0, frames_with_units = 0,
@@ -166,7 +191,7 @@ local function scan()
                                         c.focus_free_no_entry = c.focus_free_no_entry + 1
                                     elseif e['AbilityManaCost'] == nil then
                                         c.focus_free_no_key = c.focus_free_no_key + 1
-                                    elseif (ladder(u.name, a.name) or { -1 })[1] == 0 then
+                                    elseif kv_zero_at(u.name, a.name, a.level) then
                                         c.focus_free_kv_zero = c.focus_free_kv_zero + 1
                                     else
                                         c.focus_free_unexplained = c.focus_free_unexplained + 1

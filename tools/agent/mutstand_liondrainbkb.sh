@@ -200,15 +200,17 @@ sub "$TEST" "    rawget(bb, '__spec').IsMagicImmune = true  -- INJECTION, see HO
 score "M6" "the injection took"
 
 # ---------------------------------------------------------------------------
-# M7: A CONTROL ON THE SUPPLY SCAN.  If the scan stopped visiting enemy
-#     hero-instants, "exactly 1 spell-immune instant in 9 frames" would be
-#     vacuously true -- the same shape of blindness the previous version of this
-#     stand checked for when the count it protected was 0.
+# M7: A CONTROL ON THE SUPPLY SCAN.  If the corpus scan stopped visiting enemy
+#     hero-instants, its zero would be vacuously true -- and that zero is the
+#     ORIGINAL tripwire this file has carried since before the withdrawal, still
+#     unfired because the falsifying frame is staged in tests/frames/ rather than
+#     admitted to the corpus.  A vacuous zero there would read exactly like a
+#     corpus that genuinely holds no spell-immune enemy.
 echo
 echo "=== M7: the supply scan stops visiting enemy hero-instants ==="
 sub "$TEST" "            if h:GetTeam() ~= bot:GetTeam() then" \
             "            if false then"
-score "M7" "enemy hero-instants moved from the measured 45"
+score "M7" "corpus enemy hero-instants moved from the measured 40"
 
 # ---------------------------------------------------------------------------
 # M8: THE FROZEN FRAME ITSELF IS MUTATED.  The target's immunity modifier is
