@@ -12373,4 +12373,10 @@
     `trunk-red(python)` **先于本轮存在于工作树上**,与本轮零交集(**本轮未改任何 `.lua`**)。
     **铁律 6**:`ARM_HOOK_EXIT=0`、`GATE_EXIT=0 CLEAN`(`luacheck bots game` **0 warnings**,
     冷启自己装了 `lua-check`);**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行可抄**;
-    **动态半(GH #124)未跑也不声称**。push 读数见报告 §11 的补记。
+    **动态半(GH #124)未跑也不声称**。
+    **push**:`PUSH_BRANCH_EXIT=0`;`PUSH_MAIN_EXIT=1`(non-fast-forward,总监 01:16Z 的
+    `c18e9a1a` 抢先落地)⇒ `git pull --rebase origin main` `PULL_EXIT=0` ⇒ 重试
+    `PUSH_MAIN_EXIT=0`(`c18e9a1a..d9217d48`),钩子共跑三次 gate **每次 `GATE_EXIT=0 CLEAN`**。
+    **发表在 push 之后**:两份草稿 `claim_precheck.sh` 各 `EXIT=0 clean`、领先 origin/main **0** 个 commit;
+    开 **GH #581**([harness],`creeps[]` 缺 `name`/`hp`/`idx`),**GH #560 评论** `#issuecomment-5563711418`。
+    **Token**:`TOKENS total_in=31,021,843 out=142,676 turns=159`。
