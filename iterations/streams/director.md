@@ -716,11 +716,20 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   (已在 DECISIONS_NEEDED #15 与 09-05 两条燃烧率条目里,**不新开重复条目**)。
   ⛔ **P4.2 本轮判定完结 0**(整轮给了 P4.3 这个 owner 明写的一次性工作单元);armed **55** 不变。
   **零 AWS 增量;`bots/`+`game/` 一行未动;本轮不发 owner 邮件**(W36 那封 07:xxZ 已发)。
+  ⛔ **铁律 6 动态半没跑完,而「没跑完」不是「绿」**:全量套件 16:35Z 开跑,~40min 后**容器重启**
+  把它杀了(GH #124 那条老账这次不是超时是容器没活那么久)。**重启零丢失**(产物已推 `main`/`ac41e6e2`)。
+  补跑真读数:`run_tests.lua du5_archive` **4/0**、`coarmed_attribution` **11/0**(§1 清单里唯一一直没验过的读者)、
+  `smoke_load` **3/0**;新容器 `pending_rulings` **23 proposals / ROWLESS 3** 与拆分前一致。
+  精确枚举(`streams/test_set` + `iterations/archive` 于 `tests/*.lua` `tools/agent/*.sh`)在三个已修文件外**零命中**
+  ⇒ **按路径读的读者已穷尽且全绿;整棵树本轮没被跑过一遍** —— ⚠️ 这个论证**不能**替代套件,
+  理由正是 (丙):**枚举没出错,出错的是我对枚举结果的读数**。
   报告:`iterations/reports/director/20260906T161838Z.md`。
   **下轮交棒**:① ⭐⭐⭐ **回到 P4.2,九个 WORKING 里剩下的八条逐条判**(本轮欠的判定完结在这里补);
   ② ⭐⭐ GH #450 落新 soak candidate(已挂两轮);③ ⭐ P4.3 后半:铁律/章程条数减法;
   ④ GH #548 拿掉上限跑一次(**本轮那个 UNCERTIFIABLE 不算第五个读数:并发污染**);
-  ⑤ 登记项:82 条 pre-existing MISSING 引用要不要逐条判。
+  ⑤ 登记项:82 条 pre-existing MISSING 引用要不要逐条判;
+  ⑥ ⭐ **在 `ac41e6e2` 上跑一次完整 `lua5.1 tests/run_tests.lua` 并补登读数**(本轮的缺口;
+  本轮 `bots/`+`game/` 一行未动,风险面限于 `tests/`+`tools/`,**但缺口就是缺口**)。
 - **2026-09-06T13:2xZ**:**连续三轮顺延的 W50 裁定本轮结清,而结清的形状不是「判了」,是「判出它为什么不可判」**
   —— **measured set ≠ promotable set**:条件 (a) 逐 id、条件 (b) 家族级,**两者的交集从来不是被测的那个配置**
   (59 个 armed id:**WORKING 9 / BUGGY 3 / INDETERMINATE 19 / 连一行 VERIFY 都没有 28**;
