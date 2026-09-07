@@ -104,16 +104,18 @@ local function default_for(key, ...)
     -- structurally false on EVERY fixture frame, at any damage number. **41 call
     -- expressions on 40 lines** under bots/ route through it -- the "42" this
     -- comment first carried is a `grep -c` line count, and (as of 2026-09-05)
-    -- SIX of those 46 lines are prose that discusses the call without making
+    -- SEVEN of those 47 lines are prose that discusses the call without making
     -- it: two hero_axe.lua header comments, the hero_zuus.lua correction
     -- block that names X.ConsiderW's inline kill test, hero_skeleton_king.lua:801
     -- (the GH #390 "family (GetActualIncomingDamage, GetAbilityDamage GH #175,
     -- GetManaCost," enumeration), and TWO in the `zusboltdmg` block above
     -- X.GetBoltRangedKillDamage (it quotes the snipe predicate, and it names the
     -- call again to say the predicate is monotone in the damage handed to it).
-    -- The grep count moved 42 -> 43 -> 44 -> 46 because somebody wrote a
-    -- SENTENCE, four times; the code lines (40) and the calls (41) did not move
-    -- any of those times.
+    -- The grep count moved 42 -> 43 -> 44 -> 46 -> 47 because somebody wrote a
+    -- SENTENCE, five times; the code lines (40) and the calls (41) did not move
+    -- any of those times.  The fifth is the `grenharass` block in
+    -- ability_item_usage_generic.lua (2026-09-07), whose honest-bounds note says
+    -- this default returns the raw damage and is therefore an upper bound.
     -- tests/test_incoming_damage_callsite_census.lua §1 derives all three, and
     -- (since GH #394) pins all three with the two LOAD-BEARING ones asserted
     -- FIRST -- so "only the grep count is red" is now something the test says
