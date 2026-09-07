@@ -36,21 +36,44 @@ WHAT IT READS
                                                              -> a channel attempt
     buildings name `watch_tower`, field `team`               -> ownership flips
     snapshots                                                -> the frame track
-  An attempt is COMPLETE when its channel lasted >= --complete-s (default 5.0).
-  That floor is NOT asserted and it is NOT the game's channel time copied into
-  a constant.  It is CHECKED against ground truth on every run: a capture that
-  actually finished flips the outpost's `team` field, so `verify_floor()` pairs
-  each attempt with the ownership flips that follow it and prints the two
-  clusters it separates.  On the corpus this was written for the check comes
-  back clean -- every flip has a preceding attempt, flip-producing attempts run
-  5.2-6.0 s, and the longest attempt that produced NO flip is 4.4 s -- so 5.0
-  sits in a real gap.  ⚠️ The gap is a gap, not an emptiness: three attempts
-  land at 4.2 / 4.4 / 5.2, so a floor moved into that band re-labels individual
-  attempts.  It does not move the reading (armed 68-76% / base 75-79% aborted
-  across floors 4.0-5.5, same four zero-yield episodes at every floor), but the
-  claim to make is "robust over that band", never "the distribution is empty
-  there".  `--dump-durations` prints every duration so a new corpus can be
-  re-checked before the number is reused.
+  COMPLETION IS A GROUP PROPERTY, NOT AN ATTEMPT PROPERTY (GH #609)
+  ⚠️ This changed 2026-09-07.  Until then an attempt was COMPLETE when its own
+  channel lasted >= --complete-s (default 5.0), and that is WRONG in a way that
+  is invisible in the aggregate: capture progress on one outpost is ADDITIVE
+  across simultaneous casters.  Two heroes channelling together fill the bar in
+  roughly half the time, and finishing it removes the modifier from BOTH on the
+  same frame -- so a per-hero length test records every hitch-hiker as an
+  abort.  On the W52 corpus (85 games, 4 seeds) that was 11/113 attempts
+  (~10%), and 11/11 of them sat inside multi-caster groups.
+
+  So: a group is one CONTIGUOUS COVERAGE INTERVAL on one outpost -- a maximal
+  stretch during which at least one channel is open -- and the quantity
+  compared with the threshold is CASTER-SECONDS, the integral of the number of
+  open channels over that stretch.  Every member of a group shares the group's
+  verdict, because the bar they filled is one bar.  The flag is `--complete-cs`
+  (default 5.8); `--complete-s` is REFUSED rather than reinterpreted, because a
+  saved command line meaning "5.0 seconds of one hero" must not silently start
+  meaning "5.0 caster-seconds of a group".
+
+  The threshold is NOT asserted and it is NOT the game's channel time copied
+  into a constant.  It is CHECKED against ground truth on every run: a capture
+  that actually finished flips the outpost's `team` field, so `verify_floor()`
+  pairs each GROUP with the ownership flips that follow it and prints the two
+  clusters it separates.  On W52 the separation is clean and wide: every
+  flipping group is >= 5.8 caster-seconds (5.8, 5.9, 6.0), and the largest
+  non-flipping group is 5.3 -- a wider empty band than the 4.4/5.2 one the old
+  per-attempt floor sat in.  ⚠️ Two exceptions are pre-registered UNDECIDABLE
+  and do NOT define the band's endpoints: a chaos_knight who re-issued the
+  order 12 times (`20260907_003641_slot2`) flipped its outpost off groups of
+  2.8 and 3.1 caster-seconds, and this dump cannot say whether the last 3.1 s
+  channel bought it or whether progress simply never cleared across the 0.1 s
+  seam between two re-issues.  ⚠️ An empty band is an empty band, not a
+  measurement of the endpoint: any threshold inside 5.3-5.8 reproduces this
+  corpus exactly, so 5.8 is "the low edge of the flipping cluster", never "the
+  value the corpus picked out".  `--dump-groups` prints every group's
+  caster-seconds with its flip status so a new corpus can re-verify the band
+  before the number is reused; `--dump-durations` still prints raw per-attempt
+  lengths.
 
 WHAT IT WILL NOT DO
   It will not attribute a cast-count difference to `outlatch`.  Cast counts are
@@ -67,6 +90,8 @@ USAGE
   outlatch_capture.py --selfcheck
 Exit: 0 ok / 1 a selfcheck case failed / 2 could not run (bad input).
 """
+# Mutation stand: tools/agent/mutstand_outlatch_capture.sh (M8/M9/M10 cover the
+# grouping key, the caster-second integral, and the threshold band).
 
 import argparse
 import collections
@@ -78,13 +103,17 @@ import sys
 CAPTURE_ABILITY = "ability_capture"
 CAPTURE_MODIFIER = "modifier_watch_tower_capturing"
 WATCH_TOWER = "watch_tower"
-DEFAULT_COMPLETE_S = 5.0
+# Caster-seconds, not seconds.  See the group-property note in the docstring.
+DEFAULT_COMPLETE_CS = 5.8
 # Two attempts by the same hero separated by less than this are one visit to
 # the outpost.  Episode grouping only shapes the narrative rows; the strata
 # table below is computed from raw attempts and does not depend on it.
 EPISODE_GAP_S = 5.0
 
 RADIANT, DIRE = 2, 3
+# 'unk' carries attempts whose actor game.teams could not resolve.  It is a
+# bucket, not a leg, and it is never added to either of the other two.
+LEGS = ("armed", "base", "unk")
 
 
 def _armed_team(side):
@@ -95,8 +124,8 @@ def _armed_team(side):
     raise ValueError("unknown side %r" % (side,))
 
 
-def read_game(timeline, armed_team, complete_s=DEFAULT_COMPLETE_S):
-    """One game -> {casts, attempts, episodes, flips}.
+def read_game(timeline, armed_team, complete_cs=DEFAULT_COMPLETE_CS):
+    """One game -> {casts, attempts, groups, episodes, flips}.
 
     `timeline` is a parsed dumper timeline dict.  Every attempt is tagged with
     the leg ('armed'/'base') of the hero that cast it, resolved through
@@ -125,18 +154,68 @@ def read_game(timeline, armed_team, complete_s=DEFAULT_COMPLETE_S):
             continue
         actor = e.get("actor")
         if e.get("type") == "MODIFIER_ADD":
-            open_by_actor[actor] = e["t"]
+            open_by_actor[actor] = (e["t"], e.get("target"))
         elif e.get("type") == "MODIFIER_REMOVE" and actor in open_by_actor:
-            t0 = open_by_actor.pop(actor)
-            dur = e["t"] - t0
+            t0, outpost = open_by_actor.pop(actor)
             attempts.append({
-                "actor": actor, "t0": t0, "t1": e["t"], "dur": dur,
-                "complete": dur >= complete_s, "leg": leg_of(actor),
+                "actor": actor, "t0": t0, "t1": e["t"], "dur": e["t"] - t0,
+                "outpost": outpost or e.get("target"), "leg": leg_of(actor),
             })
     # A channel still open at the last event (game ended mid-channel) is NOT
     # counted either way: calling it aborted would invent a defect out of the
     # recording boundary.
     unclosed = len(open_by_actor)
+
+    # Completion, per the group note in the module docstring: one bar, one
+    # verdict.  A group is one CONTIGUOUS COVERAGE INTERVAL on one outpost --
+    # a maximal stretch during which at least one channel is open -- and the
+    # compared quantity is the integral of the number of open channels over it.
+    #
+    # ⚠️ Not "the attempts that end on the same frame", which was this fix's
+    # first cut and is too narrow: co-casters need not stop together.  In
+    # `20260907_063731_slot4` zuus channelled South 1544.3-1549.2 while
+    # skeleton_king rode along 1547.0-1548.0 and left early; the outpost
+    # flipped (team 2 -> 3 at the 1554.4 sample) off 5.9 caster-seconds that a
+    # removal-frame key splits into a 4.9 "abort" and a 1.0 "abort".
+    grouped = collections.OrderedDict()
+    for a in attempts:
+        # An attempt whose outpost did not resolve is kept on its OWN key.
+        # Falling back to a shared sentinel would let two towers' channels
+        # overlap into one bar and read as a completion neither earned.
+        key = a["outpost"] or ("?unresolved", a["actor"])
+        grouped.setdefault(key, []).append(a)
+    groups = []
+    for key, lst in grouped.items():
+        # Opens sort BEFORE closes at an equal timestamp, so a hero who joins
+        # on the exact frame another finishes is inside that bar, not the sole
+        # member of a zero-length one of his own (the 20260907_003647_slot4
+        # queenofpain shape).  A real gap, even 0.1 s, still splits.
+        marks = sorted([(a["t0"], 1, a) for a in lst] + [(a["t1"], -1, a) for a in lst],
+                       key=lambda m: (m[0], -m[1]))
+        n_open, prev_t, caster_s, members, t0 = 0, None, 0.0, [], None
+        for t, delta, a in marks:
+            if n_open:
+                caster_s += n_open * (t - prev_t)
+            if delta > 0:
+                if not n_open:
+                    t0, caster_s, members = t, 0.0, []
+                members.append(a)
+            n_open += delta
+            prev_t = t
+            if not n_open and members:
+                complete = caster_s >= complete_cs
+                for m in members:
+                    m["complete"] = complete
+                    m["group_caster_s"] = caster_s
+                    m["group_n"] = len(members)
+                groups.append({
+                    "outpost": key if isinstance(key, str) else "?unresolved",
+                    "t0": t0, "t1": t, "caster_s": caster_s, "n": len(members),
+                    "complete": complete, "actors": [m["actor"] for m in members],
+                })
+                members = []
+    groups.sort(key=lambda g: g["t1"])
+    unresolved_outpost = sum(1 for a in attempts if not a["outpost"])
 
     # Outpost ownership.  Keyed by rounded position: entity indices are not
     # stable keys (this stream's 2026-09-04 finding), positions are, because
@@ -172,8 +251,9 @@ def read_game(timeline, armed_team, complete_s=DEFAULT_COMPLETE_S):
                 cur = [a]
         episodes.append(_episode(actor, cur))
 
-    return {"casts": casts, "attempts": attempts, "episodes": episodes,
-            "flips": flips, "unclosed": unclosed}
+    return {"casts": casts, "attempts": attempts, "groups": groups,
+            "episodes": episodes, "flips": flips, "unclosed": unclosed,
+            "unresolved_outpost": unresolved_outpost}
 
 
 def _episode(actor, attempts):
@@ -190,30 +270,46 @@ def _episode(actor, attempts):
     }
 
 
-def verify_floor(games, complete_s=DEFAULT_COMPLETE_S, window_s=6.0):
-    """Cross-check --complete-s against ground truth (outpost ownership flips).
+def verify_floor(games, complete_cs=DEFAULT_COMPLETE_CS, window_s=6.0):
+    """Cross-check --complete-cs against ground truth (outpost ownership flips).
 
     A capture that finished flips the outpost's `team`; buildings are sampled
     every 5 s, so the flip is observed up to one sample AFTER the channel ends
-    -- hence `window_s`.  Returns the two clusters the floor is separating plus
-    the disagreements, and never decides anything on its own: a caller that
-    wants a verdict reads `misfiled` / `orphan_flips`.
+    -- hence `window_s`.  Pairs GROUPS, not attempts: the flip is one event and
+    the bar is one bar, so pairing per attempt double-counts a multi-caster
+    capture and then calls each member a separate disagreement.  Returns the
+    two clusters the threshold is separating plus the disagreements, and never
+    decides anything on its own: a caller that wants a verdict reads
+    `misfiled` / `orphan_flips`.
+
+    ⚠️ Flips are keyed by POSITION and groups by the outpost NAME the combat
+    log carries, and this function does not join the two -- a flip anywhere on
+    the map inside the window counts.  On this corpus the two outposts are
+    never captured within 6 s of each other, so the join would change nothing;
+    on a corpus where they are, this check gets looser, never stricter.
     """
     produced, no_flip, orphan_flips = [], [], []
     for g in games:
         r = g["result"]
-        for a in r["attempts"]:
-            hit = [f for f in r["flips"] if -0.5 <= f["t"] - a["t1"] <= window_s]
-            (produced if hit else no_flip).append(a["dur"])
+        for grp in r["groups"]:
+            hit = [f for f in r["flips"] if -0.5 <= f["t"] - grp["t1"] <= window_s]
+            (produced if hit else no_flip).append(grp)
         for f in r["flips"]:
-            if not any(-0.5 <= f["t"] - a["t1"] <= window_s for a in r["attempts"]):
+            if not any(-0.5 <= f["t"] - grp["t1"] <= window_s for grp in r["groups"]):
                 orphan_flips.append((g["game"], f))
-    # An attempt the floor calls complete but that produced no flip, or one it
-    # calls aborted that did -- either is the floor disagreeing with the game.
-    misfiled = ([d for d in no_flip if d >= complete_s],
-                [d for d in produced if d < complete_s])
-    return {"produced": sorted(produced), "no_flip": sorted(no_flip),
-            "orphan_flips": orphan_flips, "misfiled": misfiled}
+    # A group the threshold calls complete but that produced no flip, or one it
+    # calls aborted that did -- either is the threshold disagreeing with the
+    # game.  Both halves are kept as GROUPS too, so a caller can ask the
+    # question GH #609 turned on: are any of the survivors multi-caster?
+    mis_hi = [grp for grp in no_flip if grp["caster_s"] >= complete_cs]
+    mis_lo = [grp for grp in produced if grp["caster_s"] < complete_cs]
+    return {"produced": sorted(g["caster_s"] for g in produced),
+            "no_flip": sorted(g["caster_s"] for g in no_flip),
+            "produced_groups": produced, "no_flip_groups": no_flip,
+            "orphan_flips": orphan_flips,
+            "misfiled": ([g["caster_s"] for g in mis_hi],
+                         [g["caster_s"] for g in mis_lo]),
+            "misfiled_groups": (mis_hi, mis_lo)}
 
 
 def hero_track(timeline, hero, t0, t1):
@@ -242,7 +338,7 @@ def hero_track(timeline, hero, t0, t1):
     return rows
 
 
-def scan_dirs(dirs, complete_s=DEFAULT_COMPLETE_S):
+def scan_dirs(dirs, complete_cs=DEFAULT_COMPLETE_CS):
     per_key = collections.defaultdict(collections.Counter)
     games = []
     for d in dirs:
@@ -256,20 +352,27 @@ def scan_dirs(dirs, complete_s=DEFAULT_COMPLETE_S):
                 continue
             timeline = json.load(open(tl_path))
             armed = _armed_team(row["side"])
-            r = read_game(timeline, armed, complete_s)
+            r = read_game(timeline, armed, complete_cs)
             stratum = "ab" if row["side"] == "radiant" else "ba"
             games.append({"run": os.path.basename(d.rstrip("/")), "game": row["game"],
                           "seed": row["seed"], "stratum": stratum, "result": r,
                           "path": tl_path})
-            for leg in ("armed", "base"):
+            # 'unk' is a THIRD bucket, never folded into either leg: an actor
+            # game.teams cannot resolve made those casts on some team, and
+            # quietly filing it under 'base' is how a leg reads 70 attempts
+            # where the corpus has 67 (this stream, 2026-09-07).  Carrying it
+            # openly is what lets the three buckets be reconciled against a
+            # total computed some other way.
+            for leg in LEGS:
                 key = (row["seed"], stratum, leg)
+                want = None if leg == "unk" else leg
                 per_key[key]["games"] += 0
-                per_key[key]["attempts"] += sum(1 for a in r["attempts"] if a["leg"] == leg)
+                per_key[key]["attempts"] += sum(1 for a in r["attempts"] if a["leg"] == want)
                 per_key[key]["completed"] += sum(1 for a in r["attempts"]
-                                                 if a["leg"] == leg and a["complete"])
-                per_key[key]["casts"] += sum(1 for c in r["casts"] if c["leg"] == leg)
+                                                 if a["leg"] == want and a["complete"])
+                per_key[key]["casts"] += sum(1 for c in r["casts"] if c["leg"] == want)
                 per_key[key]["wasted_s"] += sum(a["dur"] for a in r["attempts"]
-                                                if a["leg"] == leg and not a["complete"])
+                                                if a["leg"] == want and not a["complete"])
             per_key[(row["seed"], stratum, "armed")]["games"] += 1
     return games, per_key
 
@@ -288,8 +391,9 @@ def selfcheck():
         return {"game": {"teams": teams or {"h_a": RADIANT, "h_b": DIRE}},
                 "events": events, "buildings": buildings or [], "snapshots": []}
 
-    def ev(t, typ, infl, actor):
-        return {"t": t, "type": typ, "inflictor": infl, "actor": actor}
+    def ev(t, typ, infl, actor, target=None):
+        return {"t": t, "type": typ, "inflictor": infl, "actor": actor,
+                "target": target}
 
     # 1. one clean completed channel
     r = read_game(tl([ev(10.0, "ABILITY", CAPTURE_ABILITY, "h_a"),
@@ -399,6 +503,112 @@ def selfcheck():
     ck("9f flip outside the window not credited", v["produced"] == [])
     ck("9g and that flip is reported as an orphan", len(v["orphan_flips"]) == 1)
 
+    # ---------------------------------------------------------------- GH #609
+    # 10. THE GROUP RULE.  Capture progress is additive across simultaneous
+    #     casters, so completion belongs to the bar, not to one hero's channel.
+    NORTH, SOUTH = "#DOTA_OutpostName_North", "#DOTA_OutpostName_South"
+
+    def chan(t0, t1, actor, outpost):
+        return [ev(t0, "MODIFIER_ADD", CAPTURE_MODIFIER, actor, outpost),
+                ev(t1, "MODIFIER_REMOVE", CAPTURE_MODIFIER, actor, outpost)]
+
+    # 10a THE CASE THE OLD FLOOR GOT WRONG: two 3.0 s channels on one outpost,
+    #     ending on the same frame.  Each member alone is below ANY single-hero
+    #     floor the tool has ever shipped (5.0), and the group finished the bar.
+    r = read_game(tl(chan(100.0, 103.0, "h_a", NORTH)
+                     + chan(100.0, 103.0, "h_b", NORTH)), RADIANT)
+    ck("10a two overlapping 3.0s channels are ONE group", len(r["groups"]) == 1)
+    ck("10b the group is complete", r["groups"][0]["complete"] is True)
+    ck("10c caster-seconds is the INTEGRAL (3+3=6), not the max (3)",
+       abs(r["groups"][0]["caster_s"] - 6.0) < 1e-9)
+    ck("10d every member inherits the group verdict",
+       all(a["complete"] is True for a in r["attempts"]))
+    ck("10e and every member alone is below the old 5.0 single-hero floor",
+       all(a["dur"] < 5.0 for a in r["attempts"]))
+
+    # 10f/10g THE GROUPING KEY NEEDS BOTH DIMENSIONS.  Same frame at DIFFERENT
+    #     outposts is two bars; same outpost at DIFFERENT frames is two bars.
+    r = read_game(tl(chan(100.0, 103.0, "h_a", NORTH)
+                     + chan(100.0, 103.0, "h_b", SOUTH)), RADIANT)
+    ck("10f same frame, different outposts -> two groups", len(r["groups"]) == 2)
+    ck("10g neither is complete", all(not g["complete"] for g in r["groups"]))
+    r = read_game(tl(chan(100.0, 103.0, "h_a", NORTH)
+                     + chan(200.0, 203.0, "h_b", NORTH)), RADIANT)
+    ck("10h same outpost, different frames -> two groups", len(r["groups"]) == 2)
+
+    # 10i AN ATTEMPT WITH NO OUTPOST IS NEVER POOLED.  A shared sentinel key
+    #     would merge two towers' channels and manufacture a completion.
+    r = read_game(tl(chan(100.0, 103.0, "h_a", None)
+                     + chan(100.0, 103.0, "h_b", None)), RADIANT)
+    ck("10j unresolved outposts stay in singleton groups", len(r["groups"]) == 2)
+    ck("10k and they are counted, not swallowed", r["unresolved_outpost"] == 2)
+
+    # 10l THE ZERO-LENGTH ATTEMPT (20260907_003647_slot4 queenofpain): she was
+    #     added and removed on the frame lich's 5.9 s channel completed.
+    #     Calling that an abort invents a defect out of a timestamp collision.
+    r = read_game(tl(chan(919.7, 925.6, "h_a", NORTH)
+                     + chan(925.6, 925.6, "h_b", NORTH)), RADIANT)
+    ck("10m the 0.0s attempt joins the completing group", len(r["groups"]) == 1)
+    ck("10n and is not recorded as an abort",
+       all(a["complete"] is True for a in r["attempts"]))
+
+    # 10o verify_floor pairs GROUPS with flips, not attempts: a two-caster
+    #     capture is ONE success, and per-attempt pairing would report the same
+    #     flip twice and then call each member a separate disagreement.
+    b = [{"t": 105.0, "name": WATCH_TOWER, "x": 1, "y": 1, "team": 3,
+          "hp": 1, "hp_pct": 1, "alive": True},
+         {"t": 106.0, "name": WATCH_TOWER, "x": 1, "y": 1, "team": 2,
+          "hp": 1, "hp_pct": 1, "alive": True}]
+    v = verify_floor([{"game": "g", "result": read_game(
+        tl(chan(100.0, 103.0, "h_a", NORTH) + chan(100.0, 103.0, "h_b", NORTH),
+           buildings=b), RADIANT)}])
+    ck("10p one flip-producing group, not two attempts", v["produced"] == [6.0])
+    ck("10q nothing misfiled", v["misfiled"] == ([], []))
+    ck("10r and the multi-caster group is not in the aborted half",
+       v["misfiled_groups"][1] == [])
+
+    # 10s CO-CASTERS NEED NOT STOP TOGETHER (20260907_063731_slot4): zuus held
+    #     South 1544.3-1549.2 while skeleton_king rode along 1547.0-1548.0 and
+    #     left early.  The outpost flipped off those 5.9 caster-seconds, and a
+    #     removal-frame key reads them as a 4.9 abort plus a 1.0 abort.
+    r = read_game(tl(chan(1544.3, 1549.2, "h_a", SOUTH)
+                     + chan(1547.0, 1548.0, "h_b", SOUTH)), RADIANT)
+    ck("10s staggered co-casters are ONE group", len(r["groups"]) == 1)
+    ck("10t caster-seconds 4.9 + 1.0 = 5.9", abs(r["groups"][0]["caster_s"] - 5.9) < 1e-6)
+    ck("10u the group completes", r["groups"][0]["complete"] is True)
+
+    # 10v A REAL GAP STILL SPLITS (20260907_063637_slot3): viper re-issued the
+    #     order four times on South across 0.1-0.2 s seams for 6.7 raw
+    #     caster-seconds and the outpost never changed hands.  Summing across a
+    #     seam would call that a capture the game says did not happen.
+    r = read_game(tl(chan(1363.2, 1366.1, "h_a", SOUTH)
+                     + chan(1366.2, 1369.1, "h_a", SOUTH)), RADIANT)
+    ck("10w a 0.1s seam splits the coverage", len(r["groups"]) == 2)
+    ck("10x and neither half completes", all(not g["complete"] for g in r["groups"]))
+
+    # 11. WHERE THE THRESHOLD MAY SIT -- two corpora, and they do not agree to
+    #     better than the dump's own 0.1 s timestamp resolution.
+    #       W52 (85 games, 4 seeds): every flipping group >= 5.8 caster-seconds
+    #         (the 5.8 is silencer 3.7 + slardar 2.1, 20260907_004906_slot8);
+    #         every non-flipping group <= 5.3.
+    #       W53 (65 games, 4 seeds): every flipping group >= 5.9 apart from one
+    #         re-issue episode; the largest NON-flipping group is 5.8
+    #         (obsidian_destroyer alone, 20260907_064926_slot6, 1282.1-1287.9,
+    #         South stayed team 2 on every sample 1274.4-1309.4).
+    #     So 5.8 flipped on one corpus and did not on the other.  The two
+    #     bracket the real value into [5.8, 5.9] and no threshold satisfies
+    #     both: 5.8 misfiles the W53 obsidian_destroyer group, 5.9 misfiles the
+    #     W52 silencer+slardar group.  Exactly one boundary group either way.
+    #     ⚠️ WHAT THESE PINS DELIBERATELY DO NOT SAY: which of 5.8 / 5.9 is
+    #     right.  Nothing here catches a move between them, because nothing in
+    #     the data distinguishes them; an assertion that "caught" it would be
+    #     the constant checking itself.  5.8 is kept because it was chosen
+    #     first, not because W53 confirmed it.
+    ck("11a threshold is above the largest non-flipping group on W52 (5.3)",
+       DEFAULT_COMPLETE_CS > 5.3)
+    ck("11b threshold is at or below the smallest flipping group on W53 (5.9)",
+       DEFAULT_COMPLETE_CS <= 5.9)
+
     print("SELFCHECK %d checks, %d failed" % (checks, len(failures)))
     for f in failures:
         print("  FAIL", f)
@@ -409,14 +619,31 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("dirs", nargs="*")
     ap.add_argument("--selfcheck", action="store_true")
-    ap.add_argument("--complete-s", type=float, default=DEFAULT_COMPLETE_S)
+    ap.add_argument("--complete-cs", type=float, default=DEFAULT_COMPLETE_CS,
+                    help="completion threshold in CASTER-SECONDS per group "
+                         "(default %.1f)" % DEFAULT_COMPLETE_CS)
+    # Refused, not silently reinterpreted: the old flag meant "seconds of one
+    # hero's channel" and the new quantity is a group integral (GH #609).
+    ap.add_argument("--complete-s", type=float, default=None,
+                    help=argparse.SUPPRESS)
     ap.add_argument("--dump-durations", action="store_true",
-                    help="print every attempt duration, so the bimodal gap "
-                         "behind --complete-s can be re-checked on a new corpus")
+                    help="print every attempt duration (raw per-hero lengths)")
+    ap.add_argument("--dump-groups", action="store_true",
+                    help="print every group's caster-seconds with its flip "
+                         "status, so the band behind --complete-cs can be "
+                         "re-verified on a new corpus")
     ap.add_argument("--track", metavar="GAME:HERO:T0:T1",
                     help="print the per-second frame track for one hero")
     args = ap.parse_args()
 
+    if args.complete_s is not None:
+        sys.stderr.write(
+            "--complete-s was removed (GH #609): completion is now a GROUP\n"
+            "property measured in caster-seconds, not one hero's channel\n"
+            "length.  Re-run with --complete-cs (default %.1f) once you have\n"
+            "decided what the new quantity's threshold should be.\n"
+            % DEFAULT_COMPLETE_CS)
+        return 2
     if args.selfcheck:
         return selfcheck()
     if not args.dirs:
@@ -426,7 +653,7 @@ def main():
     dirs = []
     for d in args.dirs:
         dirs.extend(sorted(glob.glob(d)) if any(c in d for c in "*?[") else [d])
-    games, per_key = scan_dirs(dirs, args.complete_s)
+    games, per_key = scan_dirs(dirs, args.complete_cs)
     if not games:
         sys.stderr.write("no games found\n")
         return 2
@@ -448,28 +675,53 @@ def main():
             tot[(key[2], f)] += v[f]
     print()
     print("BY LEG (abort rate is a within-leg ratio, so it is the one number "
-          "here that side bias does not carry)")
-    for leg in ("armed", "base"):
+          "here that side bias does not carry; 'unk' is its own bucket)")
+    for leg in LEGS:
         att, comp = tot[(leg, "attempts")], tot[(leg, "completed")]
         rate = (att - comp) / att * 100 if att else float("nan")
         print("  %-5s attempts %3d  completed %3d  aborted %3d (%.0f%%)  wasted %.1fs"
               % (leg, att, comp, att - comp, rate, tot[(leg, "wasted_s")]))
+    # Reconciliation against a total computed a different way.  The three
+    # buckets must account for every attempt; a mismatch means an attempt fell
+    # out of the leg split, which is the shape that hid last round's bug.
+    raw = sum(len(g["result"]["attempts"]) for g in games)
+    split = sum(tot[(leg, "attempts")] for leg in LEGS)
+    print("  reconcile: %d attempts in the corpus, %d in the three buckets%s"
+          % (raw, split, "" if raw == split else "   <-- MISMATCH"))
 
     flips = [(g["game"], f) for g in games for f in g["result"]["flips"]]
     print()
     print("outpost ownership flips: %d in %d games" % (len(flips), len(games)))
 
-    vf = verify_floor(games, args.complete_s)
+    groups = [grp for g in games for grp in g["result"]["groups"]]
+    multi = [grp for grp in groups if grp["n"] > 1]
+    unres = sum(g["result"]["unresolved_outpost"] for g in games)
+    print("capture groups: %d (%d multi-caster); attempts with no outpost "
+          "resolved: %d" % (len(groups), len(multi), unres))
+
+    vf = verify_floor(games, args.complete_cs)
     print()
-    print("FLOOR CHECK against ground truth (an ownership flip is a finished capture)")
-    print("  attempts followed by a flip : %s" % (
+    print("THRESHOLD CHECK against ground truth (an ownership flip is a "
+          "finished capture); the unit is CASTER-SECONDS per group")
+    print("  groups followed by a flip   : %s" % (
         " ".join("%.1f" % d for d in vf["produced"]) or "(none)"))
-    print("  longest attempt with NO flip: %s" % (
+    print("  largest group with NO flip  : %s" % (
         "%.1f" % max(vf["no_flip"]) if vf["no_flip"] else "(none)"))
-    print("  flips with no preceding attempt: %d" % len(vf["orphan_flips"]))
-    print("  misfiled by floor %.1f: %d called complete without a flip, "
+    print("  flips with no preceding group: %d" % len(vf["orphan_flips"]))
+    mis_hi, mis_lo = vf["misfiled_groups"]
+    print("  misfiled by threshold %.1f: %d called complete without a flip, "
           "%d called aborted that flipped"
-          % (args.complete_s, len(vf["misfiled"][0]), len(vf["misfiled"][1])))
+          % (args.complete_cs, len(mis_hi), len(mis_lo)))
+    # GH #609's acceptance (2): after the group rule, no MULTI-CASTER group may
+    # sit in the aborted-but-flipped half.  Printed unconditionally, including
+    # the zero, so the reading is a measurement and not an absence of output.
+    mis_lo_multi = [grp for grp in mis_lo if grp["n"] > 1]
+    print("  of those, multi-caster groups: %d  (GH #609 acceptance (2): must "
+          "be 0)" % len(mis_lo_multi))
+    for grp in mis_lo_multi:
+        print("    MULTI-CASTER MISFILE %s t=%.1f cs=%.1f n=%d %s"
+              % (grp["outpost"], grp["t1"], grp["caster_s"], grp["n"],
+                 ",".join(a.replace("npc_dota_hero_", "") for a in grp["actors"])))
 
     print()
     print("ZERO-YIELD EPISODES (>=2 attempts, 0 completed) -- the frames to watch")
@@ -486,6 +738,20 @@ def main():
         print()
         print("attempt durations (s), sorted:")
         print("  " + " ".join("%.1f" % d for d in durs))
+
+    if args.dump_groups:
+        flipped = {id(grp) for grp in vf["produced_groups"]}
+        print()
+        print("GROUP BAND (n_casters, flipped, caster-seconds) -- re-verify the "
+              "empty band on every new corpus before reusing the threshold")
+        rows = collections.defaultdict(list)
+        for grp in groups:
+            rows[(grp["n"], id(grp) in flipped)].append(grp["caster_s"])
+        for key in sorted(rows):
+            vals = sorted(rows[key])
+            print("  n=%d flipped=%-5s groups=%-4d %s"
+                  % (key[0], key[1], len(vals),
+                     " ".join("%.1f" % v for v in vals)))
 
     if args.track:
         game, hero, t0, t1 = args.track.split(":")
