@@ -497,6 +497,46 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-07T16:28Z**:**判定完结 2(`teambrain` + `capmono` 双双退回出集,armed 50 → 48),
+  连续四轮低于 owner P4.2 的 ≥2 之后第一轮达标。** 零 AWS、零波次、不发 owner 邮件;
+  `bots/` 的改动**与这两条裁定无关**(见下面那条 trunk 红)。裁定全文 `test_set.md` §FV,
+  机器键 `state.json:teambrain_RETURNED_20260907` / `capmono_RETURNED_20260907`。
+  ⭐ **先补了排序键本身(上一轮交出的那根棒,起手第一件事)**:`iterations/armed_since.json`
+  + `tools/agent/arm_since.py` + `tests/test_arm_since.py`(**18 checks 0 failed**),
+  **50/50 覆盖**。立它的理由不是「查起来麻烦」,是**上一轮那个「不知道」是容器的性质不是实验室的性质**
+  —— shallow clone 下 `--deepen=400` 之后 `test_set.md` 的历史仍只到 08-30,40/51 答不出来。
+  改从**仓库里全长发行的东西**取:入集章节 / director 报告的**文件名** / `state.json` 的 `<id>_<date>` 键;
+  早于报告存档(08-19T00:53Z)的 9 条取 `lower_bound`,界的证据是逐字引用了当天 arm 串的
+  `family_bisect_launch`。**本轮两条退集用的就是它排出来的序**(`teambrain` armed ≥44 天,全集最老)。
+  ⭐⭐⭐ **本轮最该被读的一条(§FV.3):一个「等着被免费买到」的条件,和一个没人买的条件,
+  在 verdict 表里长得一模一样。** `capmono` 08-20 裁定的 `stays armed` 理由 (ii) 是「每一波
+  capmono-ON 的波都在**免费**为 within-arm HP 梯度再读积攒 n」—— **那个论证是对的,而它有一个
+  没写下来的到期日**:19 天、十几波之后那次再读一次都没做过。⇒ 裁定的不是「它没通过」,
+  是**留集的理由已过期而没有任何东西替它举手**;把义务从散文搬进 `owed_executions.json` 再退集。
+  ⭐⭐ **顺带结清一条先于本轮存在的 trunk 红,而它比看上去重**(§FV.2,GH #606/#607):
+  开工自检 `RC_EXIT=3` 报 4 条 Lua 检测器红,成因是 `8b25217e`(协同组 13:40Z,`pgchannel`)
+  **把 `if J.ShouldRegenNotWalkHome(bot) then` 整行替换掉了** —— 那是 **armed id `stayfield2`
+  的唯一消费点**,注释还原样留在上面描述一个不存在的调用。⛔ **出厂行为一个字没变**
+  (两个 helper 各自 id 未 armed 时都答 false),**死掉的是测量**:那棵树发出的每一波都会把
+  `stayfield2` 读成 no-op,而那在 verdict 表里长得就像「测过了,无效应」。已恢复(3 红转绿,
+  `stayfield` 56 tests 0 failures)。**立案句是发波前那道门对此没有举手**:
+  `check_armed_wiring.py --ref bcea31e` 在那棵坏树上照样答 `stayfield2 WIRED, 1 site` ——
+  它验的是**闸址**不是**可达性**(GH #606,附两个方向的验收)。
+  ⚠️ **第 4 条红没修,而那是有意的**:`test_gated_helper_nesting_census.lua` 要的是
+  `pgchannel` 两条普查行**被回答之后再钉**,回答的形状(单臂可读性)是协同组自己那把尺子
+  `_pgchannel_sweep.lua` 的活 ⇒ 整条交回(GH #607,附总监从源码读到的一半,明写**未经驱动证实**)。
+  ⚠️ 顺手抓到「文本裁判把自己的注释读成代码」第四发:`test_pgchannel_veto.lua:147` 的调用点
+  `gsub` 不剥注释,把我写下的说明里引用的调用字面文本读成第二个调用点 ⇒ 改成读剥离后的源码,
+  变异一发(真加第二调用点)CAUGHT。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck` 0 警告 / **未用 `RULE6_BYPASS`**;动态半边**不声称全套**
+  (跑的是 `stayfield`/`pgchannel`/`retreat`/`tp_`/`gate_claim`/`smoke` + 全部 py,逐条读数在报告 §4)。
+  ⚠️ 一条 UNCERTIFIABLE 照实登记:`tests/test_selfcheck_lua_leg.py` 撞自己的 120s 预算没跑成
+  —— **不是红也不是通过**,与本轮 diff 无因果(自检那一轮也是它)。
+  ⚠️ 开工第一条命令又把自检管进 `tail`,守卫当场拒;**不新立措辞**,登记:**第四十一发**。
+  **下一轮第一件事:判定,而且是判定**(除非又出现先于该轮存在、点名总监的 trunk 红)。
+  两条现成的线索:(i) `arm_since.py --all` 的最老那一档里还有 7 条 `lower_bound`(≥44 天)
+  且 `verify=0`,与本轮两条同型;(ii) `owed_executions.json` 新增的两行本身不需要总监再动。
+  报告:`iterations/reports/director/20260907T162811Z.md`。
 - **2026-09-07T13:31Z**:**照上轮指名做了 GH #594(先于本轮存在、点名总监的 trunk 红),
   已裁定并关闭 —— 结论与 issue 标题相反:不是行为回归,`bots/` 在那条线上逐字节相同。**
   零 AWS、零波次、零 `bots/` diff、不发 owner 邮件。

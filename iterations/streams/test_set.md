@@ -1,7 +1,16 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-l1trade,l5combo,tpcommit,lf_rescue,teambrain,ownhalf,overchase,fieldregen,wandbleed,capmono,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom
+l1trade,l5combo,tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom
 
-**成员串 50**(上一行,**451 字节**,md5 `ecd706ca36424a8969b5585c6867680a`)。本行 **2026-09-07T10:xxZ 的变动:一条 PROMOTE(51 → 50)**,总监裁定全文 **§FT**。⭐ **本项目第七次 promote**(`slotpush`,锚点 `stable-v6`);判定完结 **1**(owner P4.2 的产出指标)。
+**成员串 48**(上一行,**433 字节**,md5 `51eb44347f25676ec5bf767383eed244`)。本行 **2026-09-07T16:28Z 的变动:两条 `退回出集`(50 → 48)**,总监裁定全文 **§FV**。⛔ **两条都不是 reject**,gate 与代码**逐字保留**(`bots/` 对这两条零 diff);判定完结 **2**(owner P4.2 的产出指标),连续四轮低于 ≥2 之后的第一轮达标。
+1. **`teambrain` 退集**(50 → 49)—— armed **≥ 44 天**(`armed_since.json` 下界 2026-07-25,证据 `state.json:family_bisect_launch` 逐字引用了当天的 FamilyB arm 串),**全集最老的一档**,`verify_coverage.py` 读 **verify=0 / 178 份报告**。理由是 **`zusstatic` 那一型:条件 (a) 结构上买不到** —— `state.json:tpclaim_20260823.audit_verdict_teambrain`(2026-08-23,协同组自己的 backlog item 8 审计)逐字写着「the FINAL ITEM DESIRE IS UNBUYABLE from this corpus, and the reason is structural, not a corpus gap」:它唯一的调用者坐在 `J.IsDefending -> bot:GetActiveMode()` 后面,而那是**第十三条世界断言**(语料里每个英雄每一帧恒 0,`tests/test_activemode_world_assertion.lua`),落点 `X.GetDefendTPLocation` = `GetLaneFrontLocation` 是 **GH #61 已拒**的。⇒ 该审计的结论句是「`teambrain` has been in the armed set with **NO evidence that it ever moves a bid**」,而它写下之后这条 id **又 armed 了 15 天**。
+2. **`capmono` 退集**(49 → 48)—— armed **19 天**(`armed_since.json` exact 2026-08-19),`verify_coverage.py` 读 **verify=0**。这一条与 1 **形状不同,不许混读**:它的 (a) **买到了,答案是 FAILED under isolation**(`state.json:capmono_NOT_PROMOTED_20260820`:32 局镜像 / 806 帧,DiD **−7.9pp ± 9.3**,|t| 0.84,每粒符号 2/4;当初那条 `+16.6pp WORKING` **被它自己的作者与当时的总监双双撤回**),(b) **UNJUDGEABLE**(四个经济量全空,而空的 A-B 只是上界)。
+⭐ **本轮真正的裁定不是「它没通过」,是「让它继续 armed 的那三条理由已经过期,而没有任何东西替它举手」**:08-20 的裁定明写 `stays armed`,理由 (ii) 是「每一波 capmono-ON 的波都在**免费**为那个**波内**(within-arm)HP 梯度再读积攒 n」。**那笔免费的 n 攒了 19 天、十几波,而那次再读一次都没做过**(`next_step_zero_cost` 至今零执行,`verify=0`)。⇒ **一个「等着被免费买到」的条件,和一个没人买的条件,在 verdict 表里长得一模一样**;差别只在前者写了一句谁也没读的散文。本轮把它**从散文搬进 `iterations/owed_executions.json`**(自检第 9 条腿每轮替它举手),再退集。
+⛔ **退集不销毁买 (a) 的能力,两条都是**:`capmono` 的再读用的是**已经存在的** 32 局语料(零 AWS、零新局),`teambrain` 的结论本来就是「这套仪器买不到」——退集不改变其中任何一句。与 §FB(`tpdying`/`tpreach`)、`stayattr` 09-05 三个先例逐条同型。
+⚠️ **两条都不掉进 `pullcad` 陷阱,查过了**:各自**只有一个** gate 点(`jmz_func.lua:7647` / `mode_team_roam_generic.lua:128`),门行上没有第二个 id;`promote_atoms.json` 四行**没有一行**点名这两个(exit 0)。⚠️ **`tpclaim` 是唯一挂在 `teambrain` 上的东西**(源码注释:only reachable with 'teambrain' armed),而它**本来就不在 armed 串里**(gated、未 armed)⇒ **本次退集没有冻死任何一个 armed 杠杆**;将来 `tpclaim` 提入集必须**先**把 `teambrain` 重新入集,否则它的 armed 腿结构上是空的。
+⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py` 对 50-id 与 48-id 两串各跑一次,`TERMS` 行**逐字节相同**(`crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved` 两次;计数 `10 hero / 40 generic` → `10 / 38`(两条都是 generic)⇒ **选种解空间不受影响**。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— W53(51-id)及更早**不与 48-id 家族并池**。
+⭐ **本轮同时补上了「armed 了多久」这个量本身**:`iterations/armed_since.json` + `tools/agent/arm_since.py`(§FV.1),因为上一轮问这个问题时得到的答案**是容器的性质不是实验室的性质**(shallow clone 的 git 历史左删截)。**这两条退集用的就是它排出来的序**。
+〔历史,上一条变动〕**成员串 50**(当时的第 2 行,**451 字节**,md5 `ecd706ca36424a8969b5585c6867680a`)。本行 **2026-09-07T10:xxZ 的变动:一条 PROMOTE(51 → 50)**,总监裁定全文 **§FT**。⭐ **本项目第七次 promote**(`slotpush`,锚点 `stable-v6`);判定完结 **1**(owner P4.2 的产出指标)。
 1. ⭐ **`slotpush` PROMOTE**(51 → 50)—— 动作是**把 `jmz_func.lua:J.IsTeamPushingHighGround` 的实参由 `J.IsModeTurbo() and J.IsSoakCandidate( 'slotpush' )` 改成 `J.IsModeTurbo()`**(§DU.6 红线:代码先改、串后改、**同一个 commit**),turbo 默认按 **team slot 1..5** 扫五个队友,**非 turbo 逐字未动**(flag 形参**保留**就是为了这一句成立)。三条件与各自的边界写在 §FT 与源码注释里;机器键 `state.json:slotpush_PROMOTE_20260907`。
 ⚠️ **(b) 引的是十波家族级读数**(W39/W40/W42/W44/W45/W46/W47/W48/W49/W50,**1 795 局计分**,家族 gpm `−12.58 / −27.81 / −19.15 / −9.60 / −6.19 / −20.26 / −5.95 / +27.25 / +11.70 / +13.76`,十波算术平均 **−4.88**)。成员资格照 §FQ.2 反查(每波 `arm_md5` → git 历史里的 `test_set.md` 第 2 行),**十个 md5 全部命中且每条都含 `slotpush`**;W41 从未收割、W43 报废、W51 是 `campgrade` 独占波,三者都不在表内。
 ⛔ **这个均值是轻微负的,本裁定不粉饰它**:铁律 2(b) 要的是粗粒度的「无明显负面」,家族级不可归因的 −4.88 gpm 是那个,**但它不是正面证据,永远不许当正面证据引**。⚠️ **与 `ckpush` 不同,本条的效应量不是按构造低于噪声**(§FQ.4 那套「等不到更好读数」的论证**不适用**),将来一波独占波**能**说得更多 —— **压住裁定的是 (c) 不是 (b)**。
@@ -1350,3 +1359,85 @@ pushguard depth **58** / solo **18** / fires **4**;`ShouldPunishDive` shipped **
 铁律 6 静态门:`bash tools/agent/luacheck_gate.sh` ⇒ **GATE_EXIT=0,0 警告**(冷启自装)。
 动态半:定向过滤 `retreat`/`tp_`/`pgchannel`/`gate_claim`/`push` 合计 **167 tests, 0 failures**;
 **全量套件在本容器未跑完(GH #124)⇒ 登记为「未跑完」,不是「通过」。**
+
+---
+
+## §FV 2026-09-07T16:28Z 总监:**两条退回出集(`teambrain` + `capmono`),armed 50 → 48** —— 本节最该被读的是 **§FV.3:一个「等着被免费买到」的条件,和一个没人买的条件,在 verdict 表里长得一模一样**;以及 **§FV.2:一条 armed id 的唯一调用点被另一条 id 的落地覆盖掉了,而 `bots/` 的出厂行为一个字都没变**
+
+### §FV.1 先补量具:「armed 了多久」在本容器里曾经是容器的性质,不是实验室的性质
+
+上一轮(13:31Z)交出的棒:**给每个 armed id 一个机器可读的入集时刻,来源是入集章节,不是左删截的 git 历史。**
+立这条棒的现场是 10:00Z 那轮:P4.2 说「从核验记录最少的 id 清起」,而「armed 了多久」是那个排序键的另一半,
+当时的答法是 `git log iterations/streams/test_set.md` —— **Routine 容器是 shallow clone**,`--deepen=400` 之后
+该文件的历史仍然只到 **08-30**,于是 51 个 id 里 **40 个答「不知道」**。⭐ **那个「不知道」是 clone 的性质,
+不是仓库的性质** —— 同一形状在 §FQ.2 的 `arm_md5` 反查上出现过一次(不 deepen 只解得出 6 个 md5,十波里八波 UNRESOLVED)。
+
+落地物:**`iterations/armed_since.json`(50 行,本轮 48 + 2 条盖了 `retired_at`)+ `tools/agent/arm_since.py`**。
+三个来源,全部是**仓库里全长发行的东西**,一个都不问 git:
+(A) `test_set.md` 的入集章节(权威,交棒点名的那个);
+(B) `iterations/reports/director/<UTC>.md` 的**文件名**(时刻在文件名上,散文被重写也不会漂;存档起点 2026-08-19T00:53Z);
+(C) `state.json` 的 `<id>_<YYYYMMDD>` 键(最弱,只给前两者看不见的 id 用)。
+**覆盖:50/50。** 早于 (B) 存档起点的 9 条(七月那个 bundle)取 `lower_bound`,界的证据是**逐字引用了当天 arm 串**的
+`state.json:family_bisect_launch`(8 条,2026-07-25)与 `bundle14_VERDICT_20260819`(`wandbleed`)。
+⚠️ **下界是地板不是等式**(GH #106 家规),而它们无论如何都排在最老那一端 —— **本轮两条退集用的就是它排出来的序**。
+
+⭐ **解析器匹配的是形式不是关键词,而这一条是量出来的不是设计出来的**:第一版匹配任何含「入集」的行并收走该行所有反引号 id,
+在真文件上把 §DK.3 的 **`\`slotarb\` 的入集是条件性的**」读成了一次 `slotarb` 入集事件,日期取自恰好在它上面的那一节。
+**一个错的日期比没有日期更坏** —— 它是 P4.2 的排序键,假老把 id 顶到退集队首,假新把它藏起来。
+`tests/test_arm_since.py`(**18 checks, 0 failed**)把四种真实散文形式钉成阴性(`不提入集` / `重新入集路径` /
+`的入集是条件性的` / `X 退集`),并钉住三条失效方向:**armed 但没有行 ⇒ exit 3**(不是打一个「-」然后 exit 0,
+那是 `pending_rulings.py` 的 `none` 形状)、**有行但不在串里且没盖 `retired_at` ⇒ exit 3**(退集时**删行**会通过其它每一条检查,
+并悄悄销毁「上一段 armed 了多久」)、**散文与 `exact` 行不一致 ⇒ 报 CONTRADICTION 且不自动改**
+(「存档被重写了」和「钉子写错了」从工具内部看长得一样)。
+
+### §FV.2 顺带结清一条先于本轮存在的 trunk 红:一条 armed id 的唯一调用点被覆盖掉了
+
+开工自检(铁律 10,`RC_EXIT=3`)报 **4 条 Lua 检测器红**,全部指向 `bots/mode_retreat_generic.lua`,
+成因是 **`8b25217e`(协同组 09-07T13:40Z,`pgchannel`)**:它把撤退链里的
+`if J.ShouldRegenNotWalkHome(bot) then` **整行替换**成 `if J.ShouldLetTpChannelFinish(bot) then`,
+**把上面那段 `stayfield2` 的注释原样留着**(描述一个已经不存在的调用),于是
+**`J.ShouldRegenNotWalkHome` 在 `bots/` 里的调用点从 1 变成 0** —— 而 `stayfield2` **是 armed 串里的 id**。
+
+⛔ **出厂行为一个字都没变**(两个 helper 在各自 id 未 armed 时都答 false)⇒ 真实对局零影响。
+**死掉的是测量**:从那棵树发出的每一波都会把 `stayfield2` 读成 no-op,而在 verdict 表里那长得就像
+**「测过了,无效应」**(§AZ / GH #148 那一族的又一发,这次的载体是**调用点**不是**域**)。
+处置:**把 `stayfield2` 那一行按原位恢复**,`pgchannel` 的否决**平排在它下面**(协同组自己的落地说明写的就是
+「a VETO above the chain, **beside the other two**」),并在源码里写下**两条否决的归因边界**:
+两条都返回同一个 `NONE`,所以**单臂 armed 时顺序不可能有影响**,**两条同时 armed 时同满足的那一帧归给排在前面的那条,不可归因**。
+⇒ `stayfield` 三条检测器 **56 tests, 0 failures**(此前 3 红)。
+
+⭐ **顺手抓到一发「文本裁判把自己的注释读成代码」(`tpclaim_20260823` 记过同族第三发)**:
+`tests/test_pgchannel_veto.lua:147` 用 `gsub` 数调用点,而我写的那段说明**引了那句调用的字面文本**,
+于是**代码里恰好一个调用点的树被读成两个**并变红。修法不是改我的措辞(那只是让下一发再来一次),
+是**让计数读注释剥离后的源码** —— 调用点是**代码**。⚠️ **失效方向本来就是坏的那一侧**:
+它会因为一句注释而红,却数得到藏在 `--[[ ]]` 里的**真**第二调用点。
+变异台一发:**真的加第二个调用点 ⇒ CAUGHT**(文件拷贝还原台,`pgchannel` 7/7 绿)。
+
+### §FV.3 ⭐⭐⭐ 立法级:一个「等着被免费买到」的条件,和一个没人买的条件,在 verdict 表里长得一模一样
+
+`capmono` 的 08-20 裁定写的是 **`stays armed`**,三条理由里的第 (ii) 条是:
+「每一波 capmono-ON 的波都在**免费**为那次 **within-arm HP 梯度再读**积攒 n」——
+**那是一个正确的论证**(波内梯度对 ±15pp 的跨种子噪声免疫),而它有一个**没写下来的到期日**。
+**19 天、十几波之后,那次再读一次都没做过**(`next_step_zero_cost` 零执行,`verify_coverage.py` 读 `verify=0`)。
+
+⇒ **这一条不是「capmono 没通过」,是「让它留在集合里的那条理由已经过期,而没有任何东西替它举手」。**
+一个 id 停在「等一个免费读数」上和停在「没人管」上,在 `verify_coverage.py` 的表里**同一行同一个 0**;
+差别**只在一句谁也没读的散文里**。这与 §FB(`tpdying`/`tpreach`:验收形状在入集当天就写好了,而那份义务只住在散文里)
+是**同一个缺陷的第二种长相**,而这一次连「谁欠着」都写清楚了 —— 欠的人就是每一轮读到它的人。
+⇒ 本轮把两条义务**搬进 `iterations/owed_executions.json`**(自检第 9 条腿每轮替它举手并 exit 3),**再**退集。
+**退集不销毁买 (a) 的能力**:`capmono` 的再读用的是**已经存在的** 32 局语料(零 AWS、零新局)。
+
+### §FV.4 诚实边界(本节每一条都是本轮**没有**做到的事)
+
+- **`teambrain` 的退集理由是「这套仪器买不到 (a)」,不是「它没用」。** 2026-07-25 的
+  `wave_teambrain_VERDICT` 里那批仲裁目标读数(TP 落地死亡 4.8x → 1.83x、TP 量 +41% → +19%、同帧三连 TP 消失)
+  **看起来像 (a)**,而它们全部是 **wave12(12-id)与 13-id 波的跨波差** ⇒ 被
+  `state.json:residual_IS_A_CONSTANT_RULING_20260821T1700Z` 明文**废止**的那种读法(「这波 −24 那波 −34,所以那个 id 有用」)。
+  **我没有为 `teambrain` 重新买到任何 (a),也没有推翻那批读数** —— 我说的只是:按今天的记账规矩,它们不能当 (a) 引。
+- **`bots/` 对这两条 id 零 diff。** 本轮唯一的 `bots/` 改动是 §FV.2 恢复的那三行(`stayfield2` 的调用点)+ 一段注释。
+- **`test_gated_helper_nesting_census.lua` 仍然红,本轮没修,而那是有意的**:它要的是
+  `pgchannel` 那两行普查行**被回答之后再钉**,而回答的形状(单臂可读性)是 `_pgchannel_sweep.lua` 那把尺子的活,
+  **它是协同组的杠杆、协同组的尺子**;我从源码读到的那一半写在交棒里,**没有把它写成 PINNED**——
+  钉错一行比留着红更坏。
+- **动态半边不声称全套**(GH #124):跑的是「改动文件 + `stayfield`/`pgchannel`/`retreat`/`gate_claim`/`smoke` +
+  全部 `tests/test_*.py`」,逐条读数在报告 §4。

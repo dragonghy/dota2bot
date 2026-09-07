@@ -62,6 +62,13 @@ local function read_file(path)
     return s
 end
 
+-- Long-comment form first, then line comments -- the other order leaves the
+-- `--[[` opener's own line stripped and its body behind.
+local function strip_lua_comments(src)
+    src = src:gsub('%-%-%[%[.-%]%]', ' ')
+    return (src:gsub('%-%-[^\n]*', ' '))
+end
+
 local tests = {}
 
 tests['[frame] the positive-control frame really is mid-channel'] = function()
@@ -142,7 +149,15 @@ tests['[gate] the helper is turbo-only and gated, and has one call site'] = func
     assert(body:find('J.ShouldAbandonTpChannel( bot )', 1, true),
         'the deference to tpwatch is gone from the helper')
 
-    local retreat = read_file('bots/mode_retreat_generic.lua')
+    -- COMMENT-STRIPPED, because a call site is CODE and this count is the whole
+    -- assertion. Landed uncounted: the director's 2026-09-07 note above this
+    -- very veto quotes the call text while explaining what happened here, and
+    -- an unstripped gsub read that prose as a second call site and went red on
+    -- a tree whose code had exactly one. Same family as tpclaim_20260823's
+    -- "a text judge reading its own header back as code" -- and the failure
+    -- direction is the bad one: it reddens over a comment while a real second
+    -- call site hidden inside a `--[[ ]]` block would still be counted.
+    local retreat = strip_lua_comments(read_file('bots/mode_retreat_generic.lua'))
     local _, n = retreat:gsub('J%.ShouldLetTpChannelFinish%(bot%)', '')
     assert(n == 1, 'expected exactly one call site in mode_retreat_generic.lua, '
         .. 'found ' .. tostring(n) .. ' -- one lever, one call site')
@@ -151,7 +166,7 @@ tests['[gate] the helper is turbo-only and gated, and has one call site'] = func
     -- read. (Scope stated: these two files. A consumer added in a third file
     -- would need its own check, and adding one is the change that should carry
     -- it.)
-    local _, nAll = read_file('bots/FunLib/jmz_func.lua'):gsub(
+    local _, nAll = strip_lua_comments(read_file('bots/FunLib/jmz_func.lua')):gsub(
         'ShouldLetTpChannelFinish', '')
     assert(nAll == 1, 'ShouldLetTpChannelFinish appears ' .. tostring(nAll)
         .. ' times in jmz_func.lua; exactly the definition was expected')

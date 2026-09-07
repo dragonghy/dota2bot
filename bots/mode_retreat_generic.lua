@@ -233,6 +233,10 @@ function GetDesireHelper()
     -- 1600 ring empty, where the guards below tolerate company.
     -- GATED on soak candidate 'stayfield2' (turbo-only): this line is INERT
     -- in every shipped game until that id is armed and promoted.
+    if J.ShouldRegenNotWalkHome(bot) then
+        return BOT_MODE_DESIRE_NONE
+    end
+
     -- [pgchannel] THE CHANNEL IS THE RETREAT. Nothing in the chain below has any
     -- notion of "I am already leaving, by the fastest exit there is", so a
     -- retreat floor fired on a mid-channel bot spends the scroll and leaves the
@@ -245,6 +249,18 @@ function GetDesireHelper()
     -- releases live in the helper; the burst one is live, tpwatch's is not yet.
     -- GATED on soak candidate 'pgchannel' (turbo-only): INERT in every shipped
     -- game until that id is armed.
+    -- [director 2026-09-07] THIS VETO WAS LANDED **ON TOP OF** THE 'stayfield2'
+    -- LINE, NOT BESIDE IT: the commit that added it replaced
+    -- `J.ShouldRegenNotWalkHome(bot)` with `J.ShouldLetTpChannelFinish(bot)`,
+    -- leaving its comment block above (still describing a call that was no
+    -- longer there) and taking the ONLY call site of an ARMED id to zero.
+    -- Restored above. Shipped play never moved (both helpers are false when
+    -- their id is unarmed) -- what died was the MEASUREMENT: every wave from
+    -- that tree would have read `stayfield2` as a no-op and called it "tested,
+    -- no effect". Both lines are vetoes returning the same NONE, so with one id
+    -- armed the order between them cannot matter; with BOTH armed a frame that
+    -- satisfies both is credited to whichever is first, so the overlap is not
+    -- attributable and the two must not be read as independent on that frame.
     if J.ShouldLetTpChannelFinish(bot) then
         return BOT_MODE_DESIRE_NONE
     end
