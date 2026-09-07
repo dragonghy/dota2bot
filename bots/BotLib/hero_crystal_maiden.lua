@@ -1001,6 +1001,91 @@ function X.cm_GetFrostbiteCreepCap( hAbility )
 end
 
 
+--- Whether the FAR creep branch's mana-backed relaxed floor is met.  Soak
+--- candidate `cmfarcreep`, turbo-only, INERT until armed.  Written 2026-09-07
+--- under OWNER_PRIORITIES P4.4 (bots/ 主体配额).
+---
+--- THE DEFECT -- A FLOOR APPLIED TO A QUANTITY THAT IS NOT THE TARGET'S.
+--- X.ConsiderW's "无英雄目标时冰冻小兵打钱" block has two halves, and each half
+--- picks its own creep out of its own list:
+---
+---     nEnemysCreeps1 = bot:GetNearbyCreeps( nCastRange + 100, true )   -- NEAR
+---     nEnemysCreeps2 = bot:GetNearbyCreeps( 1400, true )               -- WIDE
+---     ...Creeps1/...Health1 = X.cm_GetStrongestUnit( nEnemysCreeps1 )
+---     ...Creeps2/...Health2 = X.cm_GetStrongestUnit( nEnemysCreeps2 )
+---
+--- The "再近" half reads Health1 in all three of its terms and casts on Creeps1.
+--- The "先远" half casts on Creeps2 and reads Health2 in its 460 floor and in its
+--- `<= nCreepCap` cap -- but its relaxed floor reads **Health1**:
+---
+---     if ( ...Health2 > 460 or ( ...Health1 > 390 and nMP > 0.45 ) )
+---         and ...Health2 <= nCreepCap
+---     then  return BOT_ACTION_DESIRE_LOW, ...Creeps2
+---
+--- That is the ONLY term in either half that tests one creep to authorise a cast
+--- on a different one.  Same family as `cmrangedhp` (a number that is not the
+--- unit's health) and `cmcreepcap` (a cap that is not this rank's), arriving
+--- through the third side of the same comparison: here both numbers are honest
+--- healths and the wrong one is read.
+---
+--- WHY IT MATTERS MOST IN EXACTLY THE STATE THE BRANCH EXISTS FOR.  When there
+--- is no qualifying creep in the NEAR list at all, Health1 is not 0 and it is not
+--- the far creep's health -- X.cm_GetStrongestUnit initialises its running
+--- maximum to `GetBot():GetAttackDamage()` and returns it untouched, so Health1
+--- falls back to Crystal Maiden's attack damage.  Her ranged base is 39-45 and
+--- neither buy list carries a damage item, so that fallback is a hero-stat
+--- argument away from 390 at every level this block can open at (`nLV >= 5`), not
+--- a coincidence of one frame.  ⇒ whenever the far creep is the ONLY candidate --
+--- which is the whole point of the "先远" half running first -- the relaxed floor
+--- is false and the branch can fire only above 460.  The mana term it is paired
+--- with (`nMP > 0.45`) never gets to buy anything there.
+---
+--- ⚠️ THAT PARAGRAPH IS ARITHMETIC, NOT A FRAME READING, AND THE TWO MUST NOT BE
+--- MERGED.  `GetAttackDamage` answers 0 on every fixture frame -- a .dem slice
+--- carries neither attack damage nor attack speed (tests/mock/bot_api.lua) -- so
+--- the corpus cannot report her real attack damage and this file does not pretend
+--- it can.  What section 4 of the test pins is the FALLBACK'S IDENTITY (the
+--- initialiser is the attack-damage read, not 0 and not Health2), which is the
+--- half that decides the shape.
+---
+--- WHY IT IS A GATE.  It strictly WIDENS the branch's only relaxed floor, i.e. it
+--- ADDS casts, and this stream ships an action-adding change dark until a wave has
+--- sized its domain.
+---
+--- DIRECTION IS BY CONSTRUCTION, NOT BY MONOTONICITY.  The shipped test is
+--- evaluated FIRST and returns true on its own; the armed path is only ever
+--- reached after it answered false.  So the accepted set is a strict SUPERSET of
+--- the shipped one for any pair of inputs whatsoever -- no argument about
+--- `Health1 <= Health2` is load-bearing, and none is made.  (It happens to hold
+--- while `cmrangedhp` is unarmed, because Creeps1 is a subset of Creeps2; with
+--- that lever armed the ranged early-exit reports list-order-dependent healths and
+--- it need not.  Writing the widening as an OR on top of the shipped term makes
+--- this lever's direction independent of that one -- the `pullcad` lesson applied
+--- to arithmetic rather than to gate ids.)
+---
+--- WHAT IS DELIBERATELY LEFT ALONE.  One term moves.  The 460 floor, the
+--- `<= nCreepCap` cap, the creep-name curfew, the `DotaTime() > 10*60` clause, the
+--- near half's 410/360 pair and the target itself are untouched -- arming cannot
+--- change WHICH creep is frozen, only whether the far half fires at all.
+---
+--- WHAT IS NOT KNOWN.  The domain is UNSIZED and this corpus structurally cannot
+--- size it: no fixture carries a creep UNIT (creeps appear only as combat-log
+--- rows, with no health and no handle) and bot:GetNearbyCreeps answers an empty
+--- table on every frame -- both pinned as one-way tripwires in
+--- tests/test_cm_far_creep_floor.lua section 5, the same blocker `cmrangedhp` and
+--- `cmcreepcap` both record.  Size it on a wave: iterations/queue.json `hero-42`.
+--- Do NOT promote this on the (c) argument alone.
+function X.cm_IsFarCreepFloorMet( nNearHealth, nFarHealth, nFloor )
+
+	if nNearHealth > nFloor then return true end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'cmfarcreep' ) ) then return false end
+
+	return nFarHealth > nFloor
+
+end
+
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then
@@ -1189,7 +1274,14 @@ function X.ConsiderW()
 					and nEnemysStrongestCreeps2:GetUnitName() ~= 'npc_dota_creep_goodguys_melee'
 					and nEnemysStrongestCreeps2:GetUnitName() ~= 'npc_dota_creep_goodguys_ranged' ) )
 		then
-			if ( nEnemysStrongestCreepsHealth2 > 460 or ( nEnemysStrongestCreepsHealth1 > 390 and nMP > 0.45 ) )
+			-- [cmfarcreep] gate off the middle term is `...Health1 > 390`, byte for
+			-- byte; the floor stays a literal HERE so it reads beside its siblings
+			-- (460 above, the cap below, 410/360 in the near half).  See
+			-- X.cm_IsFarCreepFloorMet: the far half is the only place in this block
+			-- where a floor is applied to a creep other than the one being cast on.
+			if ( nEnemysStrongestCreepsHealth2 > 460
+					or ( X.cm_IsFarCreepFloorMet( nEnemysStrongestCreepsHealth1, nEnemysStrongestCreepsHealth2, 390 )
+							and nMP > 0.45 ) )
 				and nEnemysStrongestCreepsHealth2 <= nCreepCap
 			then
 				return BOT_ACTION_DESIRE_LOW, nEnemysStrongestCreeps2

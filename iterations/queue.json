@@ -1981,6 +1981,18 @@
    "requested_by": "hero 2026-09-07T1x:xxZ",
    "status": "pending",
    "result": ""
+  },
+  {
+   "id": "hero-42",
+   "stream": "hero",
+   "bundle": "cmfarcreep (turbo-only soak candidate, NOT armed -- P4.2 冻结期内本条不请求入集)",
+   "seeds": [],
+   "priority": 3,
+   "question": "**零 EC2 归档只读扫描,与 hero-2/30..41 同形,可并进同一次遍历。** 给 `cmfarcreep` 量域(`bots/BotLib/hero_crystal_maiden.lua` `X.cm_IsFarCreepFloorMet`)。**背景**:`X.ConsiderW` 的「无英雄目标时冰冻小兵打钱」块有两半,各自从自己的列表挑兵 —— 近 `bot:GetNearbyCreeps(nCastRange+100, true)` 与广 `bot:GetNearbyCreeps(1400, true)`。「先远」那一半**施法对象是广列表的兵(Creeps2)**,它的 460 下界与 `<= nCreepCap` 上限都读 `Health2`,**唯独那条带蓝的放宽下界读 `Health1`(近列表的兵)**。近兵不合格时 `X.cm_GetStrongestUnit` 的滚动最大值原样返回其初始化值 `GetBot():GetAttackDamage()` ⇒ **远兵是唯一候选时,放宽下界恒假**。gated 修复已落地(未 armed,方向是 WIDENING,只会增加施法)。三列读数,分母一律带上(CM 的局数 / CM 帧数):(1) **域的规模**:`crystal_maiden_frostbite` 施法事件中出自**这一块**的那些(注意与击杀/打断TP/团战/冻随从/进攻各分支分开,否则分子是错的),按目标是 lane creep / neutral / 玩家随从分层,并按 `DotaTime() > 10*60` 前后分层(10 分钟前这一块只放行**非**四种 lane creep 的目标);(2) ⭐ **本请求的价值列 = armed 会多开的那些火**:CM 处于该块可开状态(`GetActiveMode()` 不是 LANING/RETREAT/ATTACK、1600u 内 0 个可见敌方英雄、1200u 内 <3 个友方英雄、`nLV>=5`)的瞬间里,**广列表最强兵血量落在 `(390, 460]`、近列表最强兵血量 `<= 390`、且 `nMP > 0.45`** 的次数 —— 这正好是出货拒绝而 armed 接受的那一格;(3) **代价列**:每次 (2) 命中,记该远兵与 CM 的**距离**、以及施法后 3 秒内该兵是否死亡。(3) 回答这条杠杆最诚实的疑虑:广列表半径 1400 远超 Frostbite 的施法距离(`GetCastRange()+30`,块内 0 敌人时被抬到 `GetAttackRange()+60`),多开的火可能让她**走过去**冻一只兵。⚠️ **量具前提**:(2) 的两个血量必须按 `X.cm_GetStrongestUnit` 的**同一套过滤**取(存活、非 fountain_glyph、非魔免、非无敌、`GetHealth() <= 1100`、非远古、`GetMagicResist() < 1.05 - hp/1100`、非他人目标、名字不含 siege、`nLV < 25` 或中立),否则「最强兵」不是同一个量;远程兵那条早退口在 `cmrangedhp` 未 armed 时报的是常数 500,**本请求按真实血量取,并把落在早退口的瞬间单列一列**,好让两条杠杆的域可分。",
+   "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「该块可开 + 广列表最强兵 `(390,460]` + 近列表最强兵 `<=390` + mp>0.45」那一帧,好让本组用 `make_fixture.py` 钉帧。**预登记的判读方向**:若 (2) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回,不入集,**并且不得**因此声称缺陷不存在(源码里的交叉读是事实,`tests/test_cm_far_creep_floor.lua` §1 钉着);若 (2) 非零而 (3) 显示多开的火里相当比例距离超过施法距离,则本杠杆要**先加距离项再谈入集**,而不是直接判负。**预登记的归因边界(方向由构造保证)**:出货腿先算并自己 return,armed 腿只在它答 false 后可达 ⇒ armed 接受的施法是 shipped 的**严格超集**,**目标身份不变**。所以负读数只能读作「那些远兵不值 125-155 蓝」,**永远不能**读作「杠杆取消了一次施法」或「杠杆换了目标」。⚠️ **METHOD-FAILED(§CJ)强制**:读不出 (2) 那两个血量(按上面同一套过滤取的近/广最强兵)⇒ **INSTRUMENT-BLIND 退回重裁**,不得自行套用「域为 0 ⇒ 不入集」那条预登记 —— 那条假设的是量具工作而读数如此,不是量具读不出来。**为什么必须走档案而不是 fixture**:全仓 fixture **没有任何 creep 单位**,`bot:GetNearbyCreeps` 在 10/10 个 CM 主体帧上返回空表(`tests/test_cm_far_creep_floor.lua` §5 两条单向绊线,与 hero-36 记的是同一道墙)。",
+   "requested_by": "hero 2026-09-07T20:05Z",
+   "status": "pending",
+   "result": ""
   }
  ],
  "done": [

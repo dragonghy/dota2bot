@@ -175,11 +175,30 @@ end
 --- The four floors X.ConsiderW applies to the reported health, READ OUT OF THE
 --- SOURCE rather than re-typed here.  If someone moves 460 the sweep in section
 --- 3 moves with it instead of certifying a shape the file no longer has.
+---
+--- ⚠️ ONE OF THE FOUR MOVED HOUSE ON 2026-09-07 AND THE COUNT DID NOT DROP.
+--- `cmfarcreep` routed the far half's relaxed floor through
+--- X.cm_IsFarCreepFloorMet( near, far, 390 ), so `Health1 > 390` is no longer an
+--- inline comparison -- but the floor still exists and is still applied to a
+--- number this picker reports, which is the only property section 3 uses.  The
+--- scraper therefore reads the call's third argument as the fourth floor rather
+--- than the count being lowered to 3.  Lowering it would have been the wrong
+--- repair: the sweep would then certify a three-floor shape the file does not
+--- have, and the 390 term -- the one `cmrangedhp`'s 500 clears most narrowly --
+--- would drop out of the direction argument silently.
 local function consumer_floors()
     local body = strip_comments(fn_body(read_file(SRC), 'ConsiderW'))
     local floors = {}
     for lit in body:gmatch('nEnemysStrongestCreepsHealth[12]%s*>%s*(%d+)') do
         floors[#floors + 1] = assert(tonumber(lit))
+    end
+    for lit in body:gmatch('X%.cm_IsFarCreepFloorMet%b()') do
+        local nFloor = lit:match(',%s*(%d+)%s*%)$')
+        assert(nFloor, 'X.cm_IsFarCreepFloorMet is called without a literal '
+            .. 'floor as its last argument; this scraper can no longer recover '
+            .. 'the fourth floor, and section 3 would certify a shape short of '
+            .. 'one term. Read the call site.')
+        floors[#floors + 1] = assert(tonumber(nFloor))
     end
     return floors, body
 end

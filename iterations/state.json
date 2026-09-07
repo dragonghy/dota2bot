@@ -6897,22 +6897,37 @@
     "evidence_still_buyable": "同 l1trade",
     "pullcad_trap_checked": "1 gate site, 门行上无第二个 id"
   },
-    "ohnum_20260907": {
-      "owner": "strategy",
-      "date": "2026-09-07T19:xxZ",
-      "cand_id": "ohnum",
-      "bots_lua_changed": true,
-      "status": "GATED, NOT ARMED -- P4.2 入集冻结期,本轮不申请入集(FROZEN-HOLD)。",
-      "backlog_item": "章程 0DEADGATE 的「下一格」第 (1) 项:先扫未认领 [strategy] issue(#607 是唯一未认领的一条,但它请求的是量具读数不是行为改动 ⇒ 按 OWNER_PRIORITIES P4.4 只能当附带,留给下一轮),主体取 `ownhalf` 的 51 帧 ownhalf-only —— 本族最大的一块未买证据的域。",
-      "headline": "`J.SafeToCommitFight` 的 (b) 分支用 `#allies >= #enemies` 放行。那条地板是为**出厂** punish 域写的:那里的目标按构造在我方某座活着的建筑 1200 内 —— **塔就是那个没被计数的队友**,所以那里的「平手」其实是平手加一座塔。`ownhalf` 扩展把地板原样保留、却把建筑拿掉了(它的全部意义就是河道到 T1-1200 之间那块死区),于是这条地板承担了扩出来的域的大部分。",
-      "domain_price": "110 fixtures / 1021 live hero frames(tests/_ohnum_sweep.lua,与 tests/_posture_domain_sweep.lua 独立复现同一组数):pd_shipped **28**、pd_ownhalf **79**、pd_ownhalf_only **51**;这 51 帧里 **31 帧靠平手放行、20 帧真有人数优势**,其中 **17 帧是字面上的 1v1**;这 51 帧的目标到我方最近活着建筑的距离**最小 1253u**(即 ownhalf-only ⟺ 1200 内无建筑,是量出来的不是假设的)。",
-      "measured_effect": "四臂同帧对比:`ohnum_alone_fires 28 / ohnum_alone_changed 0`(单臂可读、读数为零);`ownhalf+ohnum`:`both_changed 31`,且 **31 帧全部 both_to_nil,both_switched 0** —— 「拒掉第一个目标后会不会改判给下一个敌人」这条担心量出来是 0。",
-      "why_the_callsite_is_where_it_is": "调用点落在**共享的** `bInDomain and J.SafeToCommitFight` 提交行(**出厂 PROMOTED 路径**)上,**不在** `nInvadeDepth >= 800` 那个 `ownhalf` 分支里;helper 的第一条释放读的是**世界**(目标 1200 内有没有我方活建筑)而不是另一道闸。⇒ 单臂 arm `ohnum` 的波**真的够得到**这个调用点,读到 0 是**语料事实**(出厂域按构造贴着建筑),不是结构上不可能。若放进 `ownhalf` 分支(narrowing 一个 `ownhalf` 域时最自然的位置),同一个 0 就不可读,而 `check_armed_wiring.py` 照样答 WIRED(GH #606)—— 那正是 GH #576/#600/#607 一直在立的案。这条替代写法不是靠注释挡住的:`tools/agent/mutstand_ohnum.sh` M4 真去做那个搬移,`tests/test_ohnum_refusal.lua` 的 placement 钉把它抓住。",
-      "pinned_frames": "正对照 `f_260820_043637_axe_ring_close` / skywrath_mage:24% 血的天怒法师在 2v2 平手上转身打 89% 血的斧王、188u,最近我方建筑 **3,092u** ⇒ armed 后目标 axe → nil。负对照 A(同一扩展域内的**人数优势**)`f_20260827_091703_slot12_zuus_473_1` / tidehunter:3v1,armed 不动。负对照 B(**出厂域**,而且语料自己给它起名叫 parity)`f_260819_183613_storm_collapse_parity` / axe:同样是平手,但建筑就在旁边 ⇒ 建筑释放生效,PROMOTED 的出厂 punish 一字未动。",
-      "mutation_stand": "tools/agent/mutstand_ohnum.sh:**7/7 CAUGHT,零 SURVIVED**。M3 = dead-wiring 孪生体(helper/id/闸/调用点全对,armed 答案逐字等于出厂);M4 = **本轮自己的近失**(把调用搬进 `ownhalf` 分支);M5 = 删掉建筑释放(唯一会波及 PROMOTED 出厂行为的变异);M6 = 删掉 lethal 释放 —— 语料**买不到**这条释放的照片,所以这一发源码变异是它**唯一**的对照,并在测试的 LIMIT 段里被**声明为替身**。",
-      "limits": "(1) mock 的 `GetEstimatedDamageToTarget` 在**每一帧**都答 0(`lethal_release 0`)⇒ 本条目引用的所有读数里 lethal 释放**一次都没开过**,51 帧全是 numbers 分支帧。**31 次拒绝是真实对局会拒绝的数量的上界** —— 语料里最刺眼的一例就是 `f_260820_043124_axe_blink_kill` 拒掉了一个 **16% 血**的 WK,那在真帧上很可能被 lethal 释放放行。(2) `bot:GetAttackRange()` 在 mock 里对每个英雄都答 150 ⇒ 本轮任何读数都没有读「打得到打不到」,那是 `roamreach` 的问题不是本杠杆的。",
-      "census": "`tests/test_gated_helper_nesting_census.lua` 新增一行 `ownhalf | J.ShouldPunishDive | J.ShouldRefuseUnsupportedPunish | ohnum | bots/FunLib/jmz_func.lua` —— **(I)**,未 armed 时 helper 第二行返回字面 `false`,`not false` 就是它加入的那个 `and` 的单位元。这一行是本文件里**第一行把单臂列量出来再钉的**(#607 对 pgchannel 两行提的正是这个要求)。",
-      "verification": "`lua5.1 tests/run_tests.lua ohnum` 8/8;`gated_helper_nesting_census` 10/10;`bash tools/agent/luacheck_gate.sh` 见报告。",
-      "aws": "zero:无 EC2、无 S3、无 Cost Explorer、无发波、queue.json 一字未动。"
-    }
+  "ohnum_20260907": {
+    "owner": "strategy",
+    "date": "2026-09-07T19:xxZ",
+    "cand_id": "ohnum",
+    "bots_lua_changed": true,
+    "status": "GATED, NOT ARMED -- P4.2 入集冻结期,本轮不申请入集(FROZEN-HOLD)。",
+    "backlog_item": "章程 0DEADGATE 的「下一格」第 (1) 项:先扫未认领 [strategy] issue(#607 是唯一未认领的一条,但它请求的是量具读数不是行为改动 ⇒ 按 OWNER_PRIORITIES P4.4 只能当附带,留给下一轮),主体取 `ownhalf` 的 51 帧 ownhalf-only —— 本族最大的一块未买证据的域。",
+    "headline": "`J.SafeToCommitFight` 的 (b) 分支用 `#allies >= #enemies` 放行。那条地板是为**出厂** punish 域写的:那里的目标按构造在我方某座活着的建筑 1200 内 —— **塔就是那个没被计数的队友**,所以那里的「平手」其实是平手加一座塔。`ownhalf` 扩展把地板原样保留、却把建筑拿掉了(它的全部意义就是河道到 T1-1200 之间那块死区),于是这条地板承担了扩出来的域的大部分。",
+    "domain_price": "110 fixtures / 1021 live hero frames(tests/_ohnum_sweep.lua,与 tests/_posture_domain_sweep.lua 独立复现同一组数):pd_shipped **28**、pd_ownhalf **79**、pd_ownhalf_only **51**;这 51 帧里 **31 帧靠平手放行、20 帧真有人数优势**,其中 **17 帧是字面上的 1v1**;这 51 帧的目标到我方最近活着建筑的距离**最小 1253u**(即 ownhalf-only ⟺ 1200 内无建筑,是量出来的不是假设的)。",
+    "measured_effect": "四臂同帧对比:`ohnum_alone_fires 28 / ohnum_alone_changed 0`(单臂可读、读数为零);`ownhalf+ohnum`:`both_changed 31`,且 **31 帧全部 both_to_nil,both_switched 0** —— 「拒掉第一个目标后会不会改判给下一个敌人」这条担心量出来是 0。",
+    "why_the_callsite_is_where_it_is": "调用点落在**共享的** `bInDomain and J.SafeToCommitFight` 提交行(**出厂 PROMOTED 路径**)上,**不在** `nInvadeDepth >= 800` 那个 `ownhalf` 分支里;helper 的第一条释放读的是**世界**(目标 1200 内有没有我方活建筑)而不是另一道闸。⇒ 单臂 arm `ohnum` 的波**真的够得到**这个调用点,读到 0 是**语料事实**(出厂域按构造贴着建筑),不是结构上不可能。若放进 `ownhalf` 分支(narrowing 一个 `ownhalf` 域时最自然的位置),同一个 0 就不可读,而 `check_armed_wiring.py` 照样答 WIRED(GH #606)—— 那正是 GH #576/#600/#607 一直在立的案。这条替代写法不是靠注释挡住的:`tools/agent/mutstand_ohnum.sh` M4 真去做那个搬移,`tests/test_ohnum_refusal.lua` 的 placement 钉把它抓住。",
+    "pinned_frames": "正对照 `f_260820_043637_axe_ring_close` / skywrath_mage:24% 血的天怒法师在 2v2 平手上转身打 89% 血的斧王、188u,最近我方建筑 **3,092u** ⇒ armed 后目标 axe → nil。负对照 A(同一扩展域内的**人数优势**)`f_20260827_091703_slot12_zuus_473_1` / tidehunter:3v1,armed 不动。负对照 B(**出厂域**,而且语料自己给它起名叫 parity)`f_260819_183613_storm_collapse_parity` / axe:同样是平手,但建筑就在旁边 ⇒ 建筑释放生效,PROMOTED 的出厂 punish 一字未动。",
+    "mutation_stand": "tools/agent/mutstand_ohnum.sh:**7/7 CAUGHT,零 SURVIVED**。M3 = dead-wiring 孪生体(helper/id/闸/调用点全对,armed 答案逐字等于出厂);M4 = **本轮自己的近失**(把调用搬进 `ownhalf` 分支);M5 = 删掉建筑释放(唯一会波及 PROMOTED 出厂行为的变异);M6 = 删掉 lethal 释放 —— 语料**买不到**这条释放的照片,所以这一发源码变异是它**唯一**的对照,并在测试的 LIMIT 段里被**声明为替身**。",
+    "limits": "(1) mock 的 `GetEstimatedDamageToTarget` 在**每一帧**都答 0(`lethal_release 0`)⇒ 本条目引用的所有读数里 lethal 释放**一次都没开过**,51 帧全是 numbers 分支帧。**31 次拒绝是真实对局会拒绝的数量的上界** —— 语料里最刺眼的一例就是 `f_260820_043124_axe_blink_kill` 拒掉了一个 **16% 血**的 WK,那在真帧上很可能被 lethal 释放放行。(2) `bot:GetAttackRange()` 在 mock 里对每个英雄都答 150 ⇒ 本轮任何读数都没有读「打得到打不到」,那是 `roamreach` 的问题不是本杠杆的。",
+    "census": "`tests/test_gated_helper_nesting_census.lua` 新增一行 `ownhalf | J.ShouldPunishDive | J.ShouldRefuseUnsupportedPunish | ohnum | bots/FunLib/jmz_func.lua` —— **(I)**,未 armed 时 helper 第二行返回字面 `false`,`not false` 就是它加入的那个 `and` 的单位元。这一行是本文件里**第一行把单臂列量出来再钉的**(#607 对 pgchannel 两行提的正是这个要求)。",
+    "verification": "`lua5.1 tests/run_tests.lua ohnum` 8/8;`gated_helper_nesting_census` 10/10;`bash tools/agent/luacheck_gate.sh` 见报告。",
+    "aws": "zero:无 EC2、无 S3、无 Cost Explorer、无发波、queue.json 一字未动。"
+  },
+  "cmfarcreep_20260907": {
+    "date": "2026-09-07T2x:xxZ",
+    "backlog_item": "OWNER_PRIORITIES P4.4 (i)(bots/ 行为改动作为工作单元主体)。本轮 [hero] open issue **一条可认领的都没有**(#570 已判 PREMISE-FALSIFIED 待总监裁标签、#608 是上一轮自己开的读数交付、#593 量具类、#599/#577/#587/#566/#564/#560 均已 gated 落地)⇒ 走章程工作流第 1 步回落分支,焦点英雄 **Crystal Maiden**。章程 backlog 头上的 `-119`(重切三个无 abilities 表的 v1 fixture)**本轮没做,原因写进报告 §7 并保留在 backlog 顶部**:它是量具/语料类,P4.4 规定这类每轮至多**附带**一条、不得作主体;而且它需要 `20260720_080225` / `20260723_073148` 两局的 behav-dump timeline,**树里没有**(`iterations/streams/hero.md:1275` 已登记:S3 只存 `.dem` + `analysis.json`),要先跑 dumper —— 那是录像组的活。",
+    "owner": "hero",
+    "gate": "cmfarcreep (NEW soak id, turbo-only, 未 armed;STANDALONE —— 不与任何 id 合取,`X.cm_IsFarCreepFloorMet` 里只有它一个 IsSoakCandidate,新文件 §3 有断言)",
+    "bots_lua_changed": true,
+    "headline": "`bots/BotLib/hero_crystal_maiden.lua` `X.ConsiderW` 的「无英雄目标时冰冻小兵打钱」块有**两半**,各自从**自己的列表**里挑兵:近(`nCastRange+100`)与广(`1400`)。「再近」那一半三个项全读 `Health1`、施法对象是 `Creeps1`,**自洽**;「先远」那一半施法对象是 `Creeps2`、460 下界与 `<= nCreepCap` 上限都读 `Health2`,**唯独它那条『带蓝放宽』的下界读的是 `Health1`** ⇒ 这是两半里**唯一**一处「拿 A 兵的血量去批准砍 B 兵」。",
+    "domain_measured_this_round": "**没有量到域,而且这份语料结构上量不到** —— 全仓 fixture **没有任何 creep 单位**(creep 只作为 `recent_damage` 战斗日志行出现,无血量无 handle),`bot:GetNearbyCreeps` 在 10 个 CM 主体帧上对 700/1400 两个半径都返回空表。两条都以**单向绊线**钉在 `tests/test_cm_far_creep_floor.lua` §5(与 `cmrangedhp`/`cmcreepcap` 同一道墙,三个文件各自登记)。⇒ 域走 `queue.json:hero-42`(零 EC2 归档只读扫描,与 hero-2/30..41 同形可并一次遍历)。",
+    "star_main_judgement": "⭐ **缺陷咬得最狠的地方,恰好是这一半存在的理由。** `X.cm_GetStrongestUnit` 把它的滚动最大值初始化成 `GetBot():GetAttackDamage()` 并在没有单位合格时**原样返回** ⇒ 近列表为空时 `Health1` **不是 0、也不是远兵的血量**,而是 CM 的攻击力。她远程基础攻击 39-45、两张购买表都不买伤害装 ⇒ 这个回退值在本块能开的每个等级(`nLV >= 5`)上都远低于 390。**于是:远兵是唯一候选的那一刻——正是「先远」先跑的那个状态——放宽下界恒假,分支只能在 460 以上开火,与它配对的 `nMP > 0.45` 什么也买不到。** ⚠️ **这一段是照英雄属性表与购买表算的,不是帧读数,两句不许并成一句**:`GetAttackDamage` 在每一帧都答 0(.dem 切片不带攻击力/攻速,量具限制),§4 把这个 0 钉成单向绊线并**拒绝**把它读成「实战里回退值就是 0」;§4 在真实帧上钉的是**回退值的身份**(初始化式是那个攻击力读数,不是 0 也不是 Health2),那才是决定形状的那一半。 ⭐⭐ **方向由构造保证,不靠单调性。** 出货那条腿**先算、自己 return**,armed 那条腿只有在它答 false 之后才可达 ⇒ 对**任意**一对输入,接受集都是出货的严格超集,**没有任何一句依赖 `Health1 <= Health2`,也没有做这个论证**(`cmrangedhp` armed 时远程兵早退口报的是随列表顺序变化的血量,那条单调性本来就会破;把放宽写成出货项之上的 OR,让本杠杆的方向**与那条杠杆无关** —— `pullcad` 的教训用在算术上而不是 gate id 上)。",
+    "change": "新 `X.cm_IsFarCreepFloorMet( nNearHealth, nFarHealth, nFloor )`:出货腿 `if nNearHealth > nFloor then return true end` 逐字保留并先返回;未 armed / 非 turbo 一律 `return false`(= 出货谓词逐位相同);armed 才 `return nFarHealth > nFloor`。调用点把 `nEnemysStrongestCreepsHealth1 > 390` 换成 `X.cm_IsFarCreepFloorMet( ...Health1, ...Health2, 390 )` —— **下界仍是调用点上的字面量**,好让它跟兄弟项(上面的 460、下面的 cap、近半的 410/360)排在一起读;helper 自带副本会漂(变异台 M6 就是这个)。**只动这一项**:460 下界、`<= nCreepCap`、兵名宵禁、`DotaTime() > 10*60`、近半的 410/360、以及**目标本身**全不动 —— arming **改不了冻哪只兵**,只改远半开不开火。",
+    "attribution_preregistered": "**这是 WIDENING,只会增加施法。** 负读数只能读成「那些远兵不值 125-155 蓝」,**永远不能**读成「杠杆取消了一次施法」或「杠杆换了目标」。方向由**求值顺序**保证(出货腿先返回),不由数值大小关系保证。",
+    "honest_bounds": "(1) **域未量,且本语料量不到**(见 domain_measured_this_round);(2) 「她攻击力远低于 390」是属性表+购买表的算术,**不是帧读数**,`GetAttackDamage` 在每帧答 0 是量具限制;(3) 本轮**没有**碰 `cmrangedhp` / `cmcreepcap` 的逻辑,但**改了 `tests/test_cm_ranged_creep_health.lua` 的一个刮取器**:它按内联正则数「四个下界」,而本改动把 390 那个搬进了 helper 调用的第三个实参 ⇒ 刮取器现在**也读那个实参**,**计数仍是 4 不是降成 3**(降成 3 会让 §3 的方向扫描去认证一个文件已经没有的形状,并让 390 —— 500 最险险越过的那个下界 —— 悄悄退出方向论证)。这一处修改的理由逐字写在被改函数的头注里;(4) **全量套件本轮没跑完**(~100min,GH #124)⇒「全量绿」本轮没有人说。",
+    "validation": "新 `tests/test_cm_far_creep_floor.lua` **17/17**;`lua5.1 tests/run_tests.lua cm` **275 例 0 失败**(改动覆盖面全在其中,含被我改了刮取器的 `test_cm_ranged_creep_health.lua`);新 `tools/agent/mutstand_cmfarcreep.sh` **10 变异 10/10 CAUGHT**(M5 = **把改动无闸发货**的那一个:调用点交换前两个实参,出货腿就去读远兵,而所有 gate-off / turbo-only 断言照样全绿,只有 §1 的实参顺序断言看得见;M3 = 死接线孪生;M7 = **求值顺序**,答案在任何输入上都不动,没有任何值断言看得见;M8 = 对 §5 那个 0 的量具对照;M9 = `liondrainbkb` 的超集≠正确;M10 = 回退值身份);`bash tools/agent/luacheck_gate.sh` **GATE_EXIT=0 CLEAN(0 warnings),没用 RULE6_BYPASS**;smoke_load 3/3;gate_claim 16/16。⚠️ 变异台**在开工自检退出后才跑**(自检 `EXIT=3`,tree 静默确认 0 个 lua5.1 进程),没有再踩 GH #507 的并发撕裂窗口。",
+    "next_baton": "**批测台** `queue.json:hero-42`(零 EC2 归档只读,与 hero-2/30..41 **并一次遍历**);**总监**:P4.2 冻结期内本条**不请求入集**,只请登记 id。**开 GH issue** 一条([hero],本轮开)。"
+  }
 }
