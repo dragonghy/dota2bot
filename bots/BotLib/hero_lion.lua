@@ -1077,6 +1077,21 @@ function X.ConsiderE()
 	-- true (IsChanneling) so X.SkillsComplement returns on its second line --
 	-- Lion cannot cast anything at all until the channel ends, and the only
 	-- release is X.ConsiderStopDrain, which fires only on J.IsRetreating.
+	-- MEASURED 2026-09-07 (this note was an argument with no reading under it
+	-- until then; pinned in tests/test_lion_considere_earlyreturn_domain.lua).
+	-- Over every live-Lion instant in the archive: Mana Drain is fully castable
+	-- on 20 of 27, and of those 20 the line above rejects 17 -- so it is the
+	-- MAIN constraint on everything below, not a formality.  Split into its two
+	-- halves by MARGINAL veto (the instants only that half rejects):
+	-- IsOtherAbilityFullyCastable 15/20, nSkillLV <= 1 just 1/20 -- the level
+	-- clause is very nearly redundant, and it is the CASTABILITY half doing the
+	-- work.  Within that half it is the BASICS, not the ult: Impale is castable
+	-- on 12/20 and Hex on 11/20 against Finger's 5/20, so the three abilities
+	-- this note names symmetrically do not contribute symmetrically.
+	-- The three instants that DO fall through all have every basic unavailable,
+	-- which is this note's own claim, asserted there rather than restated.
+	-- ⚠️ 3/27 is a CEILING, never a rate: all three of those frames were cut by
+	-- earlier rounds BECAUSE Lion's drain was interesting on them.
 	if not X.lion_IsDrainSafeToStart( bot ) then return 0 end
 
 	--团战吸蓝
