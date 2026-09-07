@@ -43,6 +43,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local FIXTURE = 'tests/fixtures/f_260819_222559_od_eclipse_solo.lua'
 local HERO = 'npc_dota_hero_medusa'
@@ -313,9 +314,12 @@ end
 
 tests['[corpus] the sweep drives the real corpus and lands one flip'] = function()
     local G, C, F, B = sweep()
-    assert(C.live == 1012, 'the corpus is now ' .. tostring(C.live)
-        .. ' live hero frames, not 1012 -- every number below is against a '
-        .. 'different denominator')
+    -- ⛔ THE DENOMINATOR GOES THROUGH corpus_scale (GH #106 / #127). This was
+    -- `== 1012` and is the same defect the detector caught one file over -- it
+    -- simply could not see this one, because its rule is "a literal equal to
+    -- TODAY'S FIXTURE COUNT" and 1012 is a FRAME count. Same defect, different
+    -- denominator, no detector: hence the repair by hand here.
+    cs.ratchet(C.live, 1012, 'live hero frames')
     assert(C.raises == 0, tostring(C.raises) .. ' frame(s) raised inside the '
         .. 'driven function; a raise is not a measurement')
     assert(C.arm_leak == 0, 'the sweep armed more than one id')

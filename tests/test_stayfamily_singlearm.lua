@@ -58,6 +58,7 @@
 -- arm TOGETHER -- that is the emergent-aggregate question only a batch answers.
 
 package.path = 'tests/?.lua;' .. package.path
+local cs = require('corpus_scale')
 
 local JMZ = 'bots/FunLib/jmz_func.lua'
 local IDS = { 'stayattr', 'staytower', 'staysrc', 'staybottle', 'staybag', 'stayurn' }
@@ -130,8 +131,10 @@ end
 
 tests['[corpus] every id is single-arm readable in a real game'] = function()
     local _, C = sweep()
-    assert(C.live == 1012, 'the corpus is now ' .. tostring(C.live)
-        .. ' live hero frames, not 1012')
+    -- ⛔ THE DENOMINATOR GOES THROUGH corpus_scale (GH #106 / #127); see the
+    -- note in tests/test_waitclar_mana_trip.lua. A frame count is invisible to
+    -- the fixture-count detector, so this one was repaired by hand alongside it.
+    cs.ratchet(C.live, 1012, 'live hero frames')
     assert(C.raises == 0, tostring(C.raises) .. ' frame(s) raised inside the '
         .. 'driven function; a raise is not a measurement')
     assert(C.gold_nonzero == 0, 'gold is suddenly readable off a .dem ('
