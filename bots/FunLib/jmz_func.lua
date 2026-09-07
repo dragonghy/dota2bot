@@ -8432,6 +8432,77 @@ function J.ShouldSuppressDive( bot, vLoc, target )
 	return false
 end
 
+-- [ohnum, strategy 20260907] A PUNISH WITH NO BUILDING BEHIND IT NEEDS THE
+-- NUMBERS, NOT PARITY.
+--
+-- J.SafeToCommitFight's (b) branch admits a commit on `#allies >= #enemies`.
+-- That floor was written for the SHIPPED punish domain, where the target is by
+-- construction within 1200 of one of our live buildings: the tower is the ally
+-- the count does not name, so "parity" there is really parity plus a tower.
+-- The 'ownhalf' extension keeps that same floor while removing the building --
+-- its whole point is the dead zone between the river and T1-1200 -- and the
+-- corpus says the floor is then carrying most of the domain: over 110 fixtures
+-- / 1021 live frames, 51 frames enter the punish domain ONLY through the
+-- 'ownhalf' depth test, the nearest allied building to those targets is 1253u
+-- away at the closest, and 31 of the 51 pass on parity rather than advantage --
+-- 17 of them a literal 1v1 (tests/_ohnum_sweep.lua). A 1v1 turn in our own
+-- jungle is not the collapse this trigger was built for ("nearby controllers +
+-- a core TP guarantee the kill"); it is a duel that the desire's own HP remap
+-- cannot refuse, because the remap is a CAP and not a gate.
+--
+-- TRUE = refuse this punish target. Three releases keep it narrow:
+--   * a live allied building within the shipped 1200 of the target -- that is
+--     the shipped domain, and nothing here applies to it. This is what makes
+--     the id readable without 'ownhalf': it reads the WORLD (is there a
+--     building) rather than the other gate, so its call site sits on the
+--     shipped path and its zero on that path is a measurement and not a
+--     structural impossibility.
+--   * LETHAL is still a go. Same carve-out the 'depthnum' margin makes one
+--     screen up, and it reads the same two numbers, so a confirmed burst kill
+--     never needs numbers.
+--   * otherwise require ADVANTAGE (+1), the same asymmetry 'depthnum' applies
+--     to the enemy half -- here for the mirror-image reason: on our own ground
+--     the fog reinforcements are THEIRS to be surprised by, but a parity read
+--     with no tower is still a coin-flip trade at 0.98 desire.
+-- Direction is a strict narrowing by construction: the call site joins as
+-- `and not <this>`, so armed it can only REMOVE a punish target, never add one.
+-- LIMIT, stated because the corpus cannot close it: the mock's
+-- GetEstimatedDamageToTarget answers 0 on every fixture frame, so the LETHAL
+-- release above is never the branch that decides in any reading quoted here --
+-- all 51 domain frames are numbers-branch frames. The release is asserted by
+-- source and by a mutation, not witnessed on a frame.
+-- Gated turbo + 'ohnum'; shipped play is unchanged until this id is armed.
+function J.ShouldRefuseUnsupportedPunish( bot, target )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'ohnum' ) then return false end
+	if bot == nil or not J.IsValidHero( target ) then return false end
+
+	local vLoc = target:GetLocation()
+
+	-- The shipped domain's own radius, repeated here on purpose rather than
+	-- shared: this helper must answer "is a building behind this punish" even
+	-- if a future caller reaches it from somewhere other than ShouldPunishDive.
+	-- tests/test_ohnum_refusal.lua pins the two radii equal, so they cannot
+	-- drift apart silently.
+	for _, building in pairs( GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) or {} )
+	do
+		if J.IsValidBuilding( building )
+		and GetUnitToUnitDistance( target, building ) <= 1200
+		then
+			return false
+		end
+	end
+
+	local tAllies = J.GetAlliesNearLoc( vLoc, 1200 )
+	if J.GetTotalEstimatedDamageToTarget( tAllies, target )
+		>= target:GetHealth() + target:GetHealthRegen() * 5.0
+	then
+		return false
+	end
+
+	return #tAllies < #J.GetEnemiesNearLoc( vLoc, 1200 ) + 1
+end
+
 -- [GH #7] Turbo "punish the dive" collapse trigger. Owner replay review: an
 -- enemy over-extends / dives one of our towers and nobody collapses, even
 -- though a stun + a core TP would guarantee the kill. In turbo the TP cooldown
@@ -8511,7 +8582,19 @@ function J.ShouldPunishDive( bot )
 			end
 			-- Over-extended on our ground -> only punish when the collapse is
 			-- genuinely winning (lethal or numbers).
-			if bInDomain and J.SafeToCommitFight( bot, enemy ) then
+			-- [ohnum 20260907] ...and, with no live building of ours behind the
+			-- target, only on ADVANTAGE rather than parity. The conjunct sits
+			-- HERE, on the shipped path, and not inside the 'ownhalf' branch
+			-- above: this helper decides from the world (no building within
+			-- 1200) instead of from the other gate, so `check_armed_wiring`'s
+			-- WIRED and the wave's reading mean the same thing. Un-armed the
+			-- helper returns the literal `false` on its second line, i.e. `not
+			-- false` = the identity element of this `and`
+			-- (tests/test_gated_helper_nesting_census.lua, shape (I)).
+			if bInDomain
+			and J.SafeToCommitFight( bot, enemy )
+			and not J.ShouldRefuseUnsupportedPunish( bot, enemy )
+			then
 				return enemy
 			end
 		end

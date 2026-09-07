@@ -593,6 +593,35 @@ local PINNED = {
     -- this row even when nothing about the nesting changed.
     "overchase | J.ShouldPunishOverchase | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                     -- P
     "ownhalf | J.ShouldPunishDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                            -- P
+    -- [ohnum 20260907] It is (I), and unlike most (I) rows in this file the
+    -- un-armed identity is the POINT of the lever's placement rather than a
+    -- property it happened to have. The conjunct reads `and not
+    -- J.ShouldRefuseUnsupportedPunish( bot, enemy )`; un-armed the helper hits
+    -- `if not J.IsSoakCandidate( 'ohnum' ) then return false end` on its second
+    -- line, and `not false` is the identity element of the `and` it joined.
+    -- ⭐ WHAT THIS ROW RECORDS THAT NO OTHER ROW HERE DOES: the single-arm
+    -- column was MEASURED, and it was measured because the call site was
+    -- deliberately placed where it COULD be. The call sits on the shared
+    -- `bInDomain and J.SafeToCommitFight` commit line -- the SHIPPED (PROMOTED)
+    -- path -- not inside the `nInvadeDepth >= 800` branch that carries
+    -- 'ownhalf'; and the helper's first release reads the WORLD (is a live
+    -- allied building within the shipped 1200 of the target) rather than the
+    -- other gate. So a wave arming 'ohnum' alone genuinely reaches this call:
+    -- tests/_ohnum_sweep.lua drives all four arms over 110 fixtures / 1021 live
+    -- frames and reports `ohnum_alone_fires 28, ohnum_alone_changed 0` -- a
+    -- zero that is a fact about the corpus (every shipped-domain target has a
+    -- building within 1200 of it), not a fact about the code's shape. With
+    -- 'ownhalf' co-armed the same sweep reports `both_changed 31, both_to_nil
+    -- 31, both_switched 0` out of `pd_ownhalf_only 51`.
+    -- ⚠ HAD THE CALL GONE IN THE OTHER PLACE -- inside the 'ownhalf' branch,
+    -- which is where a narrowing of the 'ownhalf' domain obviously belongs --
+    -- this row would be a real conjunction, the same zero would be structural
+    -- and unreadable, and `check_armed_wiring.py` would still answer WIRED
+    -- (GH #606: it verifies the gate's address, not its reachability). That
+    -- alternative is not left to a comment: tools/agent/mutstand_ohnum.sh M4
+    -- performs the move and the placement pin in tests/test_ohnum_refusal.lua
+    -- catches it.
+    "ownhalf | J.ShouldPunishDive | J.ShouldRefuseUnsupportedPunish | ohnum | bots/FunLib/jmz_func.lua",                                   -- I
     -- [GH #326 20260830] 'creepthink' joined this row when it added a second
     -- throttle-bypass clause to the same 400-line Think.  Read by hand before
     -- re-pinning, and it stays (W): the callee `J.GetLanePullDragTarget` is

@@ -6896,5 +6896,23 @@
     "readmission": "同 l1trade,必须与 l1trade 同批",
     "evidence_still_buyable": "同 l1trade",
     "pullcad_trap_checked": "1 gate site, 门行上无第二个 id"
-  }
+  },
+    "ohnum_20260907": {
+      "owner": "strategy",
+      "date": "2026-09-07T19:xxZ",
+      "cand_id": "ohnum",
+      "bots_lua_changed": true,
+      "status": "GATED, NOT ARMED -- P4.2 入集冻结期,本轮不申请入集(FROZEN-HOLD)。",
+      "backlog_item": "章程 0DEADGATE 的「下一格」第 (1) 项:先扫未认领 [strategy] issue(#607 是唯一未认领的一条,但它请求的是量具读数不是行为改动 ⇒ 按 OWNER_PRIORITIES P4.4 只能当附带,留给下一轮),主体取 `ownhalf` 的 51 帧 ownhalf-only —— 本族最大的一块未买证据的域。",
+      "headline": "`J.SafeToCommitFight` 的 (b) 分支用 `#allies >= #enemies` 放行。那条地板是为**出厂** punish 域写的:那里的目标按构造在我方某座活着的建筑 1200 内 —— **塔就是那个没被计数的队友**,所以那里的「平手」其实是平手加一座塔。`ownhalf` 扩展把地板原样保留、却把建筑拿掉了(它的全部意义就是河道到 T1-1200 之间那块死区),于是这条地板承担了扩出来的域的大部分。",
+      "domain_price": "110 fixtures / 1021 live hero frames(tests/_ohnum_sweep.lua,与 tests/_posture_domain_sweep.lua 独立复现同一组数):pd_shipped **28**、pd_ownhalf **79**、pd_ownhalf_only **51**;这 51 帧里 **31 帧靠平手放行、20 帧真有人数优势**,其中 **17 帧是字面上的 1v1**;这 51 帧的目标到我方最近活着建筑的距离**最小 1253u**(即 ownhalf-only ⟺ 1200 内无建筑,是量出来的不是假设的)。",
+      "measured_effect": "四臂同帧对比:`ohnum_alone_fires 28 / ohnum_alone_changed 0`(单臂可读、读数为零);`ownhalf+ohnum`:`both_changed 31`,且 **31 帧全部 both_to_nil,both_switched 0** —— 「拒掉第一个目标后会不会改判给下一个敌人」这条担心量出来是 0。",
+      "why_the_callsite_is_where_it_is": "调用点落在**共享的** `bInDomain and J.SafeToCommitFight` 提交行(**出厂 PROMOTED 路径**)上,**不在** `nInvadeDepth >= 800` 那个 `ownhalf` 分支里;helper 的第一条释放读的是**世界**(目标 1200 内有没有我方活建筑)而不是另一道闸。⇒ 单臂 arm `ohnum` 的波**真的够得到**这个调用点,读到 0 是**语料事实**(出厂域按构造贴着建筑),不是结构上不可能。若放进 `ownhalf` 分支(narrowing 一个 `ownhalf` 域时最自然的位置),同一个 0 就不可读,而 `check_armed_wiring.py` 照样答 WIRED(GH #606)—— 那正是 GH #576/#600/#607 一直在立的案。这条替代写法不是靠注释挡住的:`tools/agent/mutstand_ohnum.sh` M4 真去做那个搬移,`tests/test_ohnum_refusal.lua` 的 placement 钉把它抓住。",
+      "pinned_frames": "正对照 `f_260820_043637_axe_ring_close` / skywrath_mage:24% 血的天怒法师在 2v2 平手上转身打 89% 血的斧王、188u,最近我方建筑 **3,092u** ⇒ armed 后目标 axe → nil。负对照 A(同一扩展域内的**人数优势**)`f_20260827_091703_slot12_zuus_473_1` / tidehunter:3v1,armed 不动。负对照 B(**出厂域**,而且语料自己给它起名叫 parity)`f_260819_183613_storm_collapse_parity` / axe:同样是平手,但建筑就在旁边 ⇒ 建筑释放生效,PROMOTED 的出厂 punish 一字未动。",
+      "mutation_stand": "tools/agent/mutstand_ohnum.sh:**7/7 CAUGHT,零 SURVIVED**。M3 = dead-wiring 孪生体(helper/id/闸/调用点全对,armed 答案逐字等于出厂);M4 = **本轮自己的近失**(把调用搬进 `ownhalf` 分支);M5 = 删掉建筑释放(唯一会波及 PROMOTED 出厂行为的变异);M6 = 删掉 lethal 释放 —— 语料**买不到**这条释放的照片,所以这一发源码变异是它**唯一**的对照,并在测试的 LIMIT 段里被**声明为替身**。",
+      "limits": "(1) mock 的 `GetEstimatedDamageToTarget` 在**每一帧**都答 0(`lethal_release 0`)⇒ 本条目引用的所有读数里 lethal 释放**一次都没开过**,51 帧全是 numbers 分支帧。**31 次拒绝是真实对局会拒绝的数量的上界** —— 语料里最刺眼的一例就是 `f_260820_043124_axe_blink_kill` 拒掉了一个 **16% 血**的 WK,那在真帧上很可能被 lethal 释放放行。(2) `bot:GetAttackRange()` 在 mock 里对每个英雄都答 150 ⇒ 本轮任何读数都没有读「打得到打不到」,那是 `roamreach` 的问题不是本杠杆的。",
+      "census": "`tests/test_gated_helper_nesting_census.lua` 新增一行 `ownhalf | J.ShouldPunishDive | J.ShouldRefuseUnsupportedPunish | ohnum | bots/FunLib/jmz_func.lua` —— **(I)**,未 armed 时 helper 第二行返回字面 `false`,`not false` 就是它加入的那个 `and` 的单位元。这一行是本文件里**第一行把单臂列量出来再钉的**(#607 对 pgchannel 两行提的正是这个要求)。",
+      "verification": "`lua5.1 tests/run_tests.lua ohnum` 8/8;`gated_helper_nesting_census` 10/10;`bash tools/agent/luacheck_gate.sh` 见报告。",
+      "aws": "zero:无 EC2、无 S3、无 Cost Explorer、无发波、queue.json 一字未动。"
+    }
 }

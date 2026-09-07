@@ -27,6 +27,55 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0OHNUM. **【2026-09-07T19:00Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+   产出 gated 候选 **`ohnum`**(`J.ShouldRefuseUnsupportedPunish` + `J.ShouldPunishDive` 内唯一调用点,
+   **未 armed**,P4.2 冻结期 = FROZEN-HOLD)、`tests/test_ohnum_refusal.lua`(**8/8**)、
+   `tests/_ohnum_sweep.lua`、`tools/agent/mutstand_ohnum.sh`(**7/7 CAUGHT,零 SURVIVED**)、
+   `tests/test_gated_helper_nesting_census.lua` 新增一行(**(I)**,本文件第一行**量出来的单臂列**)、
+   `state.json:ohnum_20260907`;报告 `iterations/reports/strategy/20260907T190000Z.md`;
+   新开 **GH #610**([bug] `pairs(tEnemies)` 缺 `or {}`,即 `0DEADGATE` 第 (3) 项交出的那一棒);
+   **armed 串一字未动、`test_set.md` 与 `queue.json` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **总线 = GH #610;`ohnum` 的裁定待总监。**】**
+   **⭐ 主判据(可复用,超出本主题):一个「收窄 X 域」的杠杆,调用点该放在哪里,由**它的零读数将来能不能被读懂**决定,
+   而不是由它收窄的是谁决定。** 本轮的杠杆收窄的是 `ownhalf` 的域,于是**最自然**的落点是
+   `nInvadeDepth >= 800` 那个 `ownhalf` 分支里 —— 而那会把它变成 `ownhalf AND ohnum`:
+   单臂 arm `ohnum` 的波读到 0,**那个 0 是结构上的不可能**,`check_armed_wiring.py` 照样答 WIRED
+   (GH #606:验闸址不验可达性),verdict 读回「测过了,无效应」而没有人举手 —— GH #576/#600/#607 那一族。
+   改法是把调用点放到**共享的** `bInDomain and J.SafeToCommitFight` 提交行(**出厂 PROMOTED 路径**)上,
+   并让 helper 的第一条释放读**世界**(目标 1200u 内有没有我方活建筑)而不是**另一道闸**。
+   ⇒ 单臂波**真的够得到**,读数 `ohnum_alone_fires 28 / ohnum_alone_changed 0` 是**语料事实**
+   (出厂域按构造贴着建筑),不是结构性的零。**这条替代写法不是靠注释挡住的**:
+   `mutstand_ohnum.sh` **M4 真去做那次搬移**,placement 钉抓住它。
+   **⭐⭐ 缺陷本身**:`J.SafeToCommitFight` 的 (b) 分支按 `#allies >= #enemies` 放行,
+   而那条地板是为**出厂**域写的 —— 那里目标按构造在我方建筑 1200u 内,**塔就是那个没被计数的队友**。
+   `ownhalf` 保留地板、拿掉建筑 ⇒ 域价钱:`pd_shipped 28 / pd_ownhalf 79 / pd_ownhalf_only 51`,
+   **51 帧里 31 帧靠平手放行(17 帧字面 1v1)、20 帧真有优势**,这 51 帧的目标到我方最近活建筑
+   **最小 1253u**(把「ownhalf-only ⟺ 1200 内无建筑」从推理变成读数)。正对照:
+   `f_260820_043637_axe_ring_close`,**24% 血天怒在 2v2 平手上转身打 89% 血斧王**,最近建筑 3,092u。
+   armed 后 `both_changed 31`,且 **31 帧全部 `both_to_nil`、`both_switched 0`** ——
+   「拒掉第一个目标会不会改判给下一个敌人」量出来是 0。
+   **⚠️ 两条界(语料关不上,收割时要按它读检测器差分)**:(i) mock 的
+   `GetEstimatedDamageToTarget` **每一帧都答 0**(`lethal_release 0`)⇒ helper 的 **lethal 释放一次都没开过**,
+   51 帧全是 numbers 分支帧,**31 次拒绝是真实对局的上界**;语料里最刺眼的一例是
+   `f_260820_043124_axe_blink_kill` 拒掉一个 **16% 血的 WK**,真帧上很可能被 lethal 放行 ——
+   所以 M6(删 lethal 释放)是**声明的替身**,不是默认可信。(ii) `bot:GetAttackRange()` 对每个英雄都答 **150**
+   ⇒ 本轮没有任何读数读过「打不打得到」,那是 `roamreach` 的问题。
+   **⭐⭐⭐ 变异台第一轮 6/7 不是它更差,是它话说错了**:M4 红在**正确的测试**上,但 `want` 串
+   对不上真正开火的那条断言 ⇒ `score` 的 `RED but with the WRONG MESSAGE` 分支判成 survived。
+   改的是**断言的措辞**(让它自己说出「被搬进了 ownhalf 分支」并打印三个位置)和 `want`,**不是判据**。
+   那条分支这次拦住了一次「变异台看起来更好看」的自我说服,**要留着**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) **先做 GH #607** —— 它是**唯一未认领的 `[strategy]` issue**,本轮因 P4.4
+   (量具类每轮至多一条附带,而那一格被本轮的普查行占了)只能压后,**不是掉棒**。
+   它要的是把 `pgchannel` 两条普查行的**单臂列量出来再钉**,体例就照本轮 `ohnum` 那一行
+   (`tests/_pgchannel_sweep.lua` 已是那把尺子;⚠️ 单帧 fixture 上 `tpwatch` 的释放**按构造**
+   不可能开火 —— `bot.tpChannelStartHealth` 与判据在**同一帧**取,血量差恒为 0 ——
+   所以那一列要么用**声明的替身**(预置 stamp)要么如实登记为买不到);
+   (2) 主体仍必须是一个 `bots/` 行为改动:`overchase` 的 (a)/(d) 两条腿
+   (iso∧deep 50 对 → 只有 3 帧触发;⚠️ `oc_lowally_is_self` 112 vs `oc_lowally_near` 74
+   是**设计意图不是缺陷**)。域价钱已在 `tests/_posture_domain_sweep.lua`,**不必重跑**。
+   **不要**再从 `ConsiderItemDesire` 的单引号族里找;`J.ShouldPunishDive` 的 `or {}` 已作为 **GH #610** 交出,不要拿回来当主体。
+
 0DEADGATE. **【2026-09-07T17:15Z 新增。⛔ **P4.4(i) 本轮如实登记为「未达成」**,而原因值得先读:
    **本轮把一件已经做完的事又做了一遍** —— 总监 `7c44d7ca`(16:28Z)已经恢复了那个调用点,
    本组基线 `457f81ac`(15:53Z)、**开工到收尾全程没 fetch 过 origin/main**,于是独立又做一遍,
@@ -6424,6 +6473,31 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-07T19:00Z(**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**。
+  开工自检 `> file; echo EXIT=$?` → **EXIT=0 干净**;第一次调用照例撞上它对**管道**的拒绝
+  (`SELFCHECK_EXIT=2 REFUSED`,**没跑成的那一次不是读数**)。
+  ⭐ **上一轮留下的那条补法当轮就照做了**:`git fetch origin main` + `git log HEAD..origin/main`
+  → **落后 0**,本地 = `origin/main` = `497cf7a`,2 秒。
+  `[strategy]` open issue 本轮扫到 **#607 是唯一未认领的一条** —— 但它请求的是**量具读数**
+  (把 `pgchannel` 两条普查行的单臂列量出来再钉),按 P4.4「量具/流程类每轮至多作为附带一条」
+  **不能当主体**,而那一格被本轮的普查行占了 ⇒ **压后,不是掉棒**,已写进下一格第 (1) 项。
+  主体取章程 `0DEADGATE` 下一格第 (1) 项:**`ownhalf` 的 51 帧 ownhalf-only**。
+  产出 gated 候选 **`ohnum`**(`J.ShouldRefuseUnsupportedPunish`,**未 armed**,FROZEN-HOLD)、
+  `tests/test_ohnum_refusal.lua`(**8/8**)、`tests/_ohnum_sweep.lua`、
+  `tools/agent/mutstand_ohnum.sh`(**7/7 CAUGHT,零 SURVIVED**)、嵌套普查新增一行(**(I)**,
+  本文件第一行**量出来的单臂列**)、`state.json:ohnum_20260907`;新开 **GH #610**
+  (`0DEADGATE` 第 (3) 项交出的那一棒)。
+  **⭐ 本轮最该被复用的一条:调用点放哪里,由「它的零读数将来能不能被读懂」决定,
+  不由「它收窄的是谁」决定。** 见 backlog `0OHNUM`。
+  域价钱 `pd_shipped 28 / pd_ownhalf 79 / pd_ownhalf_only 51`,**51 帧里 31 帧靠平手放行**;
+  armed 后 `both_changed 31`、**全部 `both_to_nil`、`both_switched 0`**;
+  单臂 `ohnum_alone_fires 28 / ohnum_alone_changed 0`(**语料事实,不是结构性零**)。
+  ⚠️ 两条界:mock 的 `GetEstimatedDamageToTarget` **每帧答 0** ⇒ lethal 释放一次没开过、
+  **31 次拒绝是上界**(最刺眼一例拒了 16% 血 WK);`GetAttackRange()` 每个英雄都答 **150**。
+  铁律 6:`luacheck_gate.sh` **GATE_EXIT=0 CLEAN / 0 warnings**(容器自己装的 `lua-check`),
+  推送门已上膛,**未用 `RULE6_BYPASS`**;定向组全绿,全量套件读数见报告。
+  `test_set.md` 与 `queue.json` **一字未动**;零 AWS、零 S3、零 EC2、零波次。
+  报告 `iterations/reports/strategy/20260907T190000Z.md`。**总线 = GH #610;`ohnum` 待总监裁。**)
 - 2026-09-07T17:15Z(⛔ **P4.4(i) 未达成,如实登记**:`bots/` 净改动是三行注释,因为
   **本轮把一件已经做完的事又做了一遍** —— 总监 `7c44d7ca`(16:28Z)已恢复该调用点,
   本组基线 `457f81ac`、**全程没 fetch**,rebase 时才撞见,冲突时丢弃本组那一版。
