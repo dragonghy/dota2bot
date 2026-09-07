@@ -473,7 +473,15 @@ tests['[w1correction] GH #231\'s published table reproduces exactly, unmodelled'
     local n3 = count(function(r)
         return r.ally_missing_ok and r.quiet_ally and not (r.self_fires and r.quiet_self)
     end)
-    assert(#corpus().pairs == 73, 'the pair axis moved: ' .. #corpus().pairs)
+    -- ⭐ 2026-09-07 (strategy): a ratchet, for the reason the test FOUR LINES
+    -- ABOVE this one already writes out in full. `pairs` is built by the same
+    -- `corpus()` sweep as `c.units` / `c.with_mods` / `c.with_dmg`, so it is a
+    -- SUM OVER FIXTURES in exactly their sense -- and those three were converted
+    -- while this one, in the next test of the same file, was left an equality.
+    -- It went red on the 110th fixture (73 -> 75) with nothing it measures
+    -- having moved, and took 铁律 6's dynamic half down with it for every
+    -- stream. The doctrine was not missing here; it was applied unevenly.
+    cs.ratchet(#corpus().pairs, 73, 'the pair axis')
     assert(n1 == 6 and n2 == 2 and n3 == 1, string.format(
         'GH #231 published 6/2/1; this census reads %d/%d/%d', n1, n2, n3))
 end
@@ -532,11 +540,38 @@ local function d5(r) return d4(r) and r.ally_missing_ok end
 local function d6(r) return d5(r) and r.ally_clean end
 
 tests['[domain] the nesting down to this lever\'s own conjunct'] = function()
-    assert(count(d1) == 9, 'self branch fires: ' .. count(d1))
-    assert(count(d2) == 3, '+ holder quiet at 900: ' .. count(d2))
-    assert(count(d3) == 2, '+ holder not healed/hit: ' .. count(d3))
-    assert(count(d4) == 2, '+ holder quiet at 1000: ' .. count(d4))
-    assert(count(d5) == 1, '+ ally over the ally floor: ' .. count(d5))
+    -- ⛔ THESE STAY EQUALITIES, and the reason is arithmetic, not symmetry with
+    -- the ratchets above. `pairs` / `units` / `with_mods` RE-STATE how big the
+    -- corpus is; these five re-state THIS FILE'S FINDING -- how far the salve's
+    -- own conjunct chain gets. A behaviour change can move a finding UP (the
+    -- 'wkreinctr' stand measured a mutant taking a domain count 14 -> 24), and
+    -- `ratchet` is silent about up. An equality is the only instrument here.
+    --
+    -- RE-BASELINED 2026-09-07 (strategy) on the 110-fixture / 1021-live-frame
+    -- corpus, from 9/3/2/2/1 taken on the 109-fixture one. What was re-measured,
+    -- and what makes it growth rather than behaviour: ONLY THE TOP ROW MOVED,
+    -- 9 -> 11. The appended fixture contributes two more frames on which the
+    -- salve's self branch fires, and BOTH are dropped by the very next conjunct
+    -- (`quiet_self`), so rows 2-5 are digit-identical -- 3/2/2/1 before and
+    -- after.
+    --
+    -- ⚠️ HONEST BOUND, stated because bots/ was NOT static across the interval
+    -- (`git log -- bots/` since 2026-09-05 carries three PROMOTES -- ckpush,
+    -- odbuild, illumove -- alongside the gated landings): "only the top row
+    -- moved" does not PROVE growth. What it does is bound the alternative --
+    -- any behaviour change compatible with this reading has to leave rows 2-5
+    -- digit-identical while adding exactly two frames to row 1. That is why the
+    -- five are re-taken TOGETHER and why the nesting check below is asserted
+    -- separately: a single re-typed literal cannot show either.
+    local a1, a2 = count(d1), count(d2)
+    local a3, a4, a5 = count(d3), count(d4), count(d5)
+    assert(a1 == 11 and a2 == 3 and a3 == 2 and a4 == 2 and a5 == 1, string.format(
+        'the nesting moved from 11/3/2/2/1 to %d/%d/%d/%d/%d -- if a fixture was '
+        .. 'appended, re-take all five and say so; if not, this is behaviour',
+        a1, a2, a3, a4, a5))
+    assert(a1 >= a2 and a2 >= a3 and a3 >= a4 and a4 >= a5,
+        'the nesting stopped nesting: ' .. a1 .. '/' .. a2 .. '/' .. a3
+        .. '/' .. a4 .. '/' .. a5 .. ' -- each row is a strict superset of the next')
 end
 
 tests['[domain] end-to-end is 1 under GH #231\'s convention and 0 under the corrected one'] = function()

@@ -6735,5 +6735,32 @@
     "verification": "tests/test_slotpush_highground_scan.lua 19/0(裸 exit 0);tools/agent/mutstand_slotpush.sh 8 CAUGHT / 0 SURVIVED / 0 ABORTED(RC_EXIT=0);carrier_terms.py 载体项 7->7 TERMS 行逐字节相同,旧 51 串在本树上 1 unresolved 退出码 2、新 50 串 0 unresolved 退出码 0。",
     "limit_the_most_important_one": "⭐ **这条杠杆的守卫是一个字符串钉,不是行为断言,而这是量出来的**:本轮先写了标准的 promote 行为用例(turbo 下 armed 串动不了读数),它在变异体 M4(有人把闸偷偷加回去)下 **SURVIVED**。原因是 [domain price] 早就写着的事实 —— 本仓库 fixture 语料 94 个 subject-load 上两条腿 **nFlip == 0,从不分歧** ⇒ 该行为断言是 0EQUIV 绿,闸被加回去之后照样绿。处置:M3/M4 不 BRIBE 源码钉,并在变异台与测试文件里逐字写明『被字符串钉抓住是限制不是优点』;行为用例保留,等 [domain price] 变红那天才开始承重。",
     "residual_gap": "没有任何东西会发现将来有人把 tests/test_slotpush_highground_scan.lua 的 `nFlip == 0` 或 `nTrue == 1` 放松掉(一个文件抓不住自己的断言被放松;与 mutstand_ckpush.sh M9/M10 同一处置)。"
+  },
+  "corpuspin_110th_20260907": {
+    "owner": "strategy",
+    "date": "2026-09-07T10:40Z",
+    "bots_lua_changed": false,
+    "backlog_item": "开工自检 RC_EXIT=3 报 TRUNK RED 3/84 Lua detector。三条红全是同一族(GH #106 -> GH #127 -> 2026-09-02 director -> 2026-09-07 strategy 三文件 = 第五次),而它挡住的是全队铁律 6 的动态那半。按铁律 9/铁律 6 认领。",
+    "headline": "第 110 个 fixture(1012 -> 1021 live frames,109 -> 110 files)把三个文件打红,而三个红全是「重述语料规模」的量,没有一个是发现:test_propertarget_corpus_domain.lua `r.frames == 1012`、test_salveyield_arbitration.lua `#corpus().pairs == 73`、test_stayfield2_marginal_domain.lua `LIVE_FRAMES==1012` x2 + `SIGN_SUBSAMPLE==109`。",
+    "the_measurement_that_separates_the_two_kinds": "stayfield2 这个文件是本轮最干净的一次分离:第 110 个 fixture 只动了它的两个语料重述量(1012->1021, 109->110),它的**十一个发现逐位不变** —— S=24, ST=5, margin=19, dmg/supply/both=0/18/1, T_ONLY_HP_BAND=6, SIGN_MARGIN_NEG/POS=14/5, SIGN_NATURAL_NEG=56。salveyield 同理:pair 轴 73->75 是重述,而 6/2/1 那张表一位没动;唯一动了的发现是 d1 9->11,且 d2..d5 (3/2/2/1) 逐位不变 —— 新帧命中 self 分支两次、两次都被紧邻的下一个合取项 quiet_self 挡掉。",
+    "detector_recall_the_new_evasion": "⭐ 本轮的可复用产物不是修红,是**检测器学到一种新的躲法**。test_corpus_scale.lua 的判据逐字是「一个等于今天 fixture 数的整数字面量,出现在 `==` 右边」。三条红全躲过去了,而躲法有两种、不是一种:(1) **换分母**(1012 live frames / 73 pairs)—— 上一轮(corpuspin_20260907)已经点名过;(2) **⭐ 新:经由具名常量的间接**。`local SIGN_SUBSAMPLE = 109` + `assert(tonumber(sub) == SIGN_SUBSAMPLE)` —— 109 在它落地那天**正好就是 fixture 数**,检测器**照样看不见**,因为 `==` 右边是个**标识符**。把字面量提升成具名常量(这套件在别处到处推荐的、更整洁的写法)**等于给它发了张豁免证**。检测器自己那段「WHAT IT THEREFORE DOES NOT CATCH」把 (1) 的近亲写到了,**(2) 一个字都没有**。",
+    "fix_and_why_the_predicate_is_narrow": "新增 `assignment_literal` + `equality_compared_names`:`local NAME = <整数>` 只在 **NAME 在同一文件里被 `==` 比较过**时才算命中。第二个合取项不是调参,是**用测量买来的**:今天 N=110 时,tests/ 里 594 个赋值式整数常量中**恰好 1 个**等于 110(`local Q_MANA_R3 = 110`,Axe Q 三级蓝耗),而它**只在 `>=` 下被用过** ⇒ 相等性要求把它排掉,**本次扩展今天多花 0 条豁免**。朴素写法(「任何等于 N 的赋值」)今天就要多付 1 条,并把 NOT_A_CORPUS_PIN 已经在付的**每落一个 fixture 一次碰撞**的账**大致翻倍**。",
+    "positive_control": "端到端正控制跑过,不是只跑了 parser 单测:往 tests/test_gate_claim_consistency.lua 尾部临时插 `local PC_PIN = 110` + `local _ = (0 == PC_PIN)`,检测器**当场红并点名该行**(RC_EXIT=1);还原后 `git diff --stat` 为空。另有五条负控制钉在 tests/test_corpus_scale.lua 的 `[detector] the indirection hop is wired, and it is narrow`:注释掉的声明 / 浮点 / 表达式 / 字面量只是表达式的一部分 / `>=` 用法的名字不收集 / `==` 左边的名字要收集。",
+    "what_did_not_soften": "域内计数一个都没软化,理由是算术不是保守:`ratchet` 只对「重述语料规模」的量成立;对「这是我的发现」的量,一次行为改动可以把它推**上去**,而 ratchet 对上涨一言不发(wkreinctr 变异台实测 M6 把一个域计数 14 -> 24)。所以 salveyield 的 11/3/2/2/1 仍是等号,并**另加一条嵌套单调断言**(a1>=a2>=...>=a5),让「重新登记」不能只靠改一个字面量蒙混过去。",
+    "honest_bound": "salveyield 的重新登记里写明:bots/ 在这段区间**不是静止的**(git log -- bots/ 自 2026-09-05 起含 ckpush/odbuild/illumove 三次 PROMOTE),所以「只有第一行动了」**不构成增长的证明**,只**给出替代解释的界**:任何与该读数相容的行为改动,必须让第 2-5 行逐位不变、同时恰好给第 1 行加两帧。",
+    "gates": "luacheck_gate.sh GATE_EXIT=0 CLEAN(未用 RULE6_BYPASS);四个受影响文件 propertarget 4/0、salveyield 29/0、stayfield2 20/0、corpus_scale 10/0;四文件 luacheck 0 警告。Lua 全量套件本轮未跑完 ⇒ 不声称全树绿。",
+    "aws_spend": "none (no EC2, no S3, no dumper, no wave)"
+  },
+  "itemdesire_singlequote_priced_20260907": {
+    "owner": "strategy",
+    "date": "2026-09-07T10:40Z",
+    "bots_lua_changed": false,
+    "verdict": "PRICED THEN REJECTED(定价后拒绝)—— 两条杠杆都不落地,按章程「域为 0 就登记、不落空杠杆」。",
+    "backlog_item": "章程 0GRENHARASS 的「下一格」乙路:§1 点名的 8 个**单引号** ConsiderItemDesire entry 里,属本组范围(视野/开雾/续航)的三条 item_dust / item_smoke_of_deceit / item_soul_ring,先跑域价钱再决定动哪一条。",
+    "domain_price": "110 fixtures / 1021 live frames,主槽(0-5)/ 任意格(0-8)携带者帧:item_dust **24 / 36**、item_smoke_of_deceit **8 / 19**、item_soul_ring **3 / 3**。",
+    "smoke_defect_real_but_domain_zero": "**缺陷是真的**:`X.ConsiderItemDesire['item_smoke_of_deceit']`(~:7365)里,bot **自己**身边的敌人**从来不是否决项**。外层 `if (#nInRangeEnemy == 0) or (#nInRangeTower == 0)` 只决定要不要去扫**队友**,而那个扫描只会把 `isThereEnemyNearby` 置**真**、从不读 bot 自己的处境;于是「敌方英雄**和**敌方塔都在 1200 内」这一支**直接跳过整个扫描**,`isThereEnemyNearby` 保持 false,然后照常开雾 —— 而迷雾在敌方英雄/塔进入 **1025** 时就破。**但域 = 0**:8 个主槽携带帧上 `J.GetAllyList(bot,1200)` **全是 0**(`#nInRangeAlly >= 2` 恒假),Roshan 那两支要 `GetRoshanKillTime() > roshDeathTime`(mock 恒 0)。⇒ 登记缺陷、不落杠杆;等某轮语料出现「带雾 + 身边有队友 + 敌人在 1200 内」的帧再谈。",
+    "dust_unmeasurable_not_empty": "item_dust 携带者 24 帧,但**三条分支在本语料上都买不到读数**,且这是 UNMEASURABLE 不是 EMPTY:分支 1 要 `dInfo.time_since_seen` 落在 **(0.2, 0.5)**,而 tests/mock/replay_fixture.lua 自己声明「每个 fixture 全可见、每次目击都是当前的」⇒ 它只会发 **0 或 999**,那个窗口**结构性不可达**;分支 3 实测 `J.IsUnitWillGoInvisible` 在 5 个「有敌人在 1050 内」的帧上命中 **0/5**;分支 2 靠 `bot:WasRecentlyDamagedByPlayer`,走 mock 的 `^Was -> false` 默认。",
+    "instrument_note_already_known": "顺带核对并**确认这不是新发现**:`bot:GetActiveMode()` 在全部 **1021** 个 live 帧上读 **0**(mock 的 `^Get -> 0` 泛默认)。这已经是**第十三条 world assertion**,tests/test_activemode_world_assertion.lua + tests/test_activemode_call_site_census.lua(compare_lines==209)已登记。**本轮唯一的增量、且尚未登记**:那 209 行**按算符分层**是 `== <named mode>` 与 `~= <named mode>` 两类,前者被 mock 压成恒 **FALSE**、后者压成恒 **TRUE**(即**空过的守卫**),而 world-assertion 文件的散文只写了 FALSE 那一半(「Ten shipped J predicates degenerate to false」)。本组用自己的 python 粗扫读到 129 / 87(**未**用该 census 的 strip_line_comment,故与其 209 不可直接相减)⇒ **交给下一轮或总监:用 census 自己的扫描器补一层算符分层。**",
+    "aws_spend": "none"
   }
 }

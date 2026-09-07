@@ -150,6 +150,60 @@ local function equality_literals(line)
     return out
 end
 
+--- ⭐ THE INDIRECTION HOLE (2026-09-07, strategy). `local NAME = <integer>` on a
+--- non-comment line, returned as (name, value).
+---
+--- WHY THIS EXISTS, measured rather than imagined. The three trunk reds this
+--- detector was supposed to prevent, and did not, on 2026-09-07:
+---
+---   tests/test_propertarget_corpus_domain.lua   `r.frames == 1012`
+---   tests/test_salveyield_arbitration.lua       `#corpus().pairs == 73`
+---   tests/test_stayfield2_marginal_domain.lua   `tonumber(sub) == SIGN_SUBSAMPLE`
+---                                               with `local SIGN_SUBSAMPLE = 109`
+---
+--- The first two evade it the way the previous round already named: the literal
+--- is a DIFFERENT denominator (live hero frames, holder/ally pairs), so it is
+--- never equal to the fixture count and never compared. The third is a NEW
+--- evasion and the reason for this function: 109 WAS the fixture count on the
+--- day that line landed, and the detector still could not see it, because the
+--- right-hand side of the `==` is an IDENTIFIER. Hoisting a literal into a named
+--- constant -- the tidier way to write it, and the way this suite recommends
+--- everywhere else -- silently exempted it.
+---
+--- ⛔ WHY THE PREDICATE IS "declared here AND equality-compared here", not "any
+--- assignment". The detector's subject is EQUALITY PINS; following a name is
+--- meant to reach the same pins through one more hop, not to widen the subject
+--- to every integer constant in the suite. Measured on today's tree at N=110:
+---   * 594 assignment-form integer constants exist in tests/;
+---   * exactly 1 of them equals 110 (`local Q_MANA_R3 = 110`, Axe's Q mana at
+---     rank 3, tests/test_axe_call_staged_frames.lua:84);
+---   * it is compared only with `>=`, never `==`, so the equality requirement
+---     rejects it and this extension costs ZERO new exemptions today.
+--- The plain form ("any assignment equal to N") would have cost one exemption
+--- immediately and roughly DOUBLED the per-fixture collision rate the
+--- NOT_A_CORPUS_PIN note above is already paying. That is the trade this
+--- narrower predicate declines, and it declines it on a measurement.
+local function assignment_literal(line)
+    if line:match('^%s*%-%-') then return nil end
+    local code = line:match('^(.-)%-%-') or line
+    local name, digits, dot = code:match('^%s*local%s+([%a_][%w_]*)%s*=%s*(%d+)(%.?)%s*$')
+    if name == nil or dot == '.' then return nil end
+    return name, tonumber(digits)
+end
+
+--- Names this file compares with `==` (either side), as a set.
+local function equality_compared_names(lines)
+    local names = {}
+    for _, line in ipairs(lines) do
+        if not line:match('^%s*%-%-') then
+            local code = line:match('^(.-)%-%-') or line
+            for n in code:gmatch('==%s*([%a_][%w_]*)') do names[n] = true end
+            for n in code:gmatch('([%a_][%w_]*)%s*==') do names[n] = true end
+        end
+    end
+    return names
+end
+
 -- Literals this detector may NOT read as a corpus pin, each with the reason it
 -- is something else. Keyed by the trimmed CODE of the line, not by a line
 -- number: a line that moves keeps its exemption, and a line whose code CHANGES
@@ -207,16 +261,26 @@ tests['[detector] no test pins the live corpus size with an equality'] = functio
         -- there is nothing here for a corpus pin to be about.
         if path ~= 'tests/test_corpus_scale.lua' then
         local fh = assert(io.open(path, 'r'))
-        local lineno = 0
-        for line in fh:lines() do
-            lineno = lineno + 1
+        local lines = {}
+        for line in fh:lines() do lines[#lines + 1] = line end
+        fh:close()
+        -- Second pass over the same file, so a constant declared below its use
+        -- is still followed. Cheap: these files are a few hundred lines.
+        local compared = equality_compared_names(lines)
+        for lineno, line in ipairs(lines) do
+            local flagged = false
             for _, v in ipairs(equality_literals(line)) do
-                if v == n and NOT_A_CORPUS_PIN[line:gsub('^%s+', '')] == nil then
-                    hits[#hits + 1] = path .. ':' .. lineno .. ': ' .. line:gsub('^%s+', '')
-                end
+                if v == n then flagged = true end
+            end
+            -- The indirection hop: `local NAME = <fixture count>` counts only
+            -- when NAME is equality-compared in this same file. See
+            -- assignment_literal's note for why the second clause is required.
+            local name, val = assignment_literal(line)
+            if name ~= nil and val == n and compared[name] then flagged = true end
+            if flagged and NOT_A_CORPUS_PIN[line:gsub('^%s+', '')] == nil then
+                hits[#hits + 1] = path .. ':' .. lineno .. ': ' .. line:gsub('^%s+', '')
             end
         end
-        fh:close()
         end
     end
     assert(#hits == 0, string.format(
@@ -225,6 +289,43 @@ tests['[detector] no test pins the live corpus size with an equality'] = functio
         .. 'anything they measure having changed. Use tests/corpus_scale.lua -- ratchet() '
         .. 'for a per-fixture sum, universal() for an "all of them" claim, corpus() for '
         .. 'the size itself.\n  %s', #hits, n, table.concat(hits, '\n  ')))
+end
+
+tests['[detector] the indirection hop is wired, and it is narrow'] = function()
+    -- A guard nobody has watched fail is a guard nobody knows is wired up --
+    -- section 1's rule, applied to the extension. Every clause of the predicate
+    -- gets the mutation it must reject, because the whole cost argument for this
+    -- extension rests on the SECOND clause being real.
+    local name, val = assignment_literal('local SIGN_SUBSAMPLE  = 109   -- declared slice')
+    assert(name == 'SIGN_SUBSAMPLE' and val == 109,
+        'the real evading line is not parsed: ' .. tostring(name) .. '/' .. tostring(val))
+
+    assert(assignment_literal('-- local SIGN_SUBSAMPLE = 109') == nil,
+        'a commented-out declaration must not be followed (GH #267 discipline)')
+    assert(assignment_literal('local T = 101.9') == nil,
+        'a float is a timestamp, not a count -- same guard as equality_literals')
+    assert(assignment_literal('local T = n + 1') == nil,
+        'only a bare integer literal is a pin; an expression is a derivation')
+    assert(assignment_literal('local T = 109 + OFFSET') == nil,
+        'a literal that is only part of an expression must not be read as the value')
+
+    -- Clause two, in both directions, on the two real lines that motivated it.
+    local compared = equality_compared_names({
+        'local SIGN_SUBSAMPLE  = 109',
+        'assert(tonumber(sub) == SIGN_SUBSAMPLE, ...)',
+        'local Q_MANA_R3 = 110',
+        'assert(bot:GetMana() >= Q_MANA_R3, ...)',
+    })
+    assert(compared['SIGN_SUBSAMPLE'],
+        'the name whose equality made it a pin was not collected')
+    assert(not compared['Q_MANA_R3'],
+        'a name used only under >= was collected -- the extension just widened '
+        .. 'to every integer constant in the suite, which is exactly what its '
+        .. 'cost argument says it does not do')
+
+    -- And the left-hand form, which a one-sided pattern would miss.
+    local lhs = equality_compared_names({ 'assert(LIVE_FRAMES == n)' })
+    assert(lhs['LIVE_FRAMES'], 'a name on the LEFT of == was not collected')
 end
 
 tests['[detector] every declared exemption still names a live line'] = function()

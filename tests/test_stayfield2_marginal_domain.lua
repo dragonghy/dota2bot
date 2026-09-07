@@ -102,7 +102,28 @@ local LINA = 'tests/fixtures/f_260822_063722_lina_tp_home.lua'
 -- with S=1 T=1 supply=1. MARGIN and every MARGIN_* / SIGN_MARGIN_* count below
 -- are unchanged, i.e. what stayfield2 OWNS did not move -- which is the reading
 -- this file exists for, and it is now stated over a larger denominator.
-local LIVE_FRAMES     = 1012  -- live hero frames, every hero of every fixture
+local cs = require('corpus_scale')
+-- ⭐ 2026-09-07 (strategy): the two constants that RE-STATE how big the corpus
+-- is are no longer equalities. LIVE_FRAMES is a FLOOR (cs.ratchet); SIGN_SUBSAMPLE
+-- is GONE entirely -- its one use is now `cs.corpus(...)`, which asks the live
+-- corpus rather than a remembered number, so keeping the constant would leave a
+-- literal whose only remaining job is to be re-typed. Every other constant in
+-- this block stays an equality, because every other one is this file's own
+-- FINDING about stayfield2, and a finding can be moved UP by a behaviour change
+-- that `ratchet` would not see.
+--
+-- The 110th fixture is the measurement that separates the two kinds, and it is
+-- unusually clean: it moved exactly the two corpus restatements (1012 -> 1021,
+-- 109 -> 110) and left ALL ELEVEN findings digit-identical -- S=24, ST=5,
+-- margin=19, dmg/supply/both = 0/18/1, T_ONLY_HP_BAND=6, SIGN_MARGIN_NEG/POS =
+-- 14/5, SIGN_NATURAL_NEG=56. Eleven numbers that did not move, and the two that
+-- did are the two that were never about stayfield2.
+--
+-- ⛔ SIGN_SUBSAMPLE was also the line that taught tests/test_corpus_scale.lua's
+-- detector a new evasion: 109 WAS the fixture count the day it landed, and the
+-- detector still could not see it, because the `==` compared against a NAME.
+-- That hole is closed in the same commit as this file (`assignment_literal`).
+local LIVE_FRAMES     = 1012  -- FLOOR: live hero frames, every hero of every fixture
 local S_FIRES         = 24    -- J.ShouldRegenNotGoHome true
 local ABSORBED        = 5     -- ... and J.ShouldStayAndRegen already true
 local MARGIN          = 19    -- ... and NOT already true: what stayfield2 owns
@@ -111,8 +132,7 @@ local MARGIN_SUPPLY   = 18    -- of MARGIN: only T5 (supply) failed
 local MARGIN_BOTH     = 1     -- of MARGIN: both failed
 local T_ONLY_HP_BAND  = 6     -- T true with hp in (0.55, 0.75] -- S cannot speak
 local BAG_FRAMES      = 15    -- frames carrying a backpacked salve
-local SIGN_SUBSAMPLE  = 109   -- fixture.self on every fixture (declared slice)
-local SIGN_NATURAL_NEG = 56   -- ... whose natural retreat bid is NEGATIVE
+local SIGN_NATURAL_NEG = 56   -- of the declared slice: natural retreat bid NEGATIVE
 local SIGN_MARGIN_NEG = 14    -- of MARGIN: the guard RAISES the bid
 local SIGN_MARGIN_POS = 5     -- of MARGIN: the guard LOWERS the bid
 
@@ -443,7 +463,7 @@ tests['[recorded] the margin is SMALLER than the predicate: 5 of 24 S frames are
     local nF, nS, nT, nST, nM =
         out:match('COUNT frames=(%d+) S=(%d+) T=(%d+) ST=(%d+) margin=(%d+)')
     assert(nF, 'the sweep did not report a COUNT line: ' .. out)
-    assert(tonumber(nF) == LIVE_FRAMES, 'the live-frame denominator moved: ' .. nF)
+    cs.ratchet(tonumber(nF), LIVE_FRAMES, 'the live-frame denominator')
     assert(tonumber(nS) == S_FIRES, 'S fires moved from ' .. S_FIRES .. ': ' .. out)
     assert(tonumber(nST) == ABSORBED, 'the absorbed count moved from ' .. ABSORBED .. ': ' .. out)
     assert(tonumber(nM) == MARGIN, 'the margin moved from ' .. MARGIN .. ': ' .. out)
@@ -482,7 +502,17 @@ tests['[recorded] the two implications are measured, not assumed'] = function()
         'the T-only HP band moved from ' .. T_ONLY_HP_BAND .. ': ' .. out)
     local chk, bad = out:match('RING mono_checked=(%d+) mono_violations=(%d+)')
     assert(chk, 'the sweep did not report a RING line: ' .. out)
-    assert(tonumber(chk) == LIVE_FRAMES, 'the ring check lost frames: ' .. out)
+    -- ⭐ 2026-09-07 (strategy): the load-bearing half of this line is that the
+    -- ring check ran over EVERY live frame, not over a remembered 1012. The
+    -- sweep prints its own denominator on the COUNT line, so equating the two
+    -- says exactly that -- over whatever the corpus is today, which the literal
+    -- never did. Strictly stronger AND growth-immune, the same trade
+    -- tests/corpus_scale.lua makes for every "all N of N" claim.
+    local nF = out:match('COUNT frames=(%d+)')
+    assert(nF, 'the sweep did not report a COUNT line: ' .. out)
+    assert(tonumber(chk) == tonumber(nF),
+        'the ring check lost frames: it covered ' .. chk .. ' of the sweep\'s own '
+        .. nF .. ' live frames: ' .. out)
     assert(tonumber(bad) == 0,
         'GetNearbyHeroes stopped being monotone in its radius -- the '
         .. '1600 => 1200 implication is void: ' .. out)
@@ -536,9 +566,14 @@ tests['[recorded] most of that movement is the bid going UP, not down'] = functi
     assert(sub, 'the sweep did not report a SIGN line: ' .. out)
     assert(tonumber(neg) + tonumber(zero) + tonumber(pos) == tonumber(sub),
         'the sign census does not partition its subsample: ' .. out)
-    assert(tonumber(sub) == SIGN_SUBSAMPLE,
-        'the declared subsample changed size from ' .. SIGN_SUBSAMPLE
-        .. ' -- it is fixture.self on every fixture, fixed by the corpus: ' .. out)
+    -- ⭐ 2026-09-07 (strategy): `cs.corpus`, not an equality, and the reason is
+    -- written in this line's OWN message -- "it is fixture.self on every
+    -- fixture, fixed by the corpus". A quantity that says so about itself is a
+    -- RE-STATEMENT OF THE CORPUS SIZE, and pinning it to 109 charged an edit fee
+    -- on the 110th fixture while telling the reader nothing about stayfield2.
+    -- The partition check above it (neg + zero + pos == sub) is what actually
+    -- guards this line, and it is growth-immune.
+    cs.corpus(tonumber(sub), 'the sign subsample (fixture.self per fixture)')
     -- ⭐ The load-bearing pair. Both are recorded as exact numbers because the
     -- claim is a RATIO, and a ratio quoted without its two counts is the shape
     -- 铁律 4(ii) forbids.
@@ -568,14 +603,22 @@ end
 --============================================================================
 
 tests['[limit] the corpus is biased, so these are shapes and floors, not rates'] = function()
-    -- The fixtures were cut to pin OTHER decisions. 1012 live hero frames is a
-    -- large denominator but not a random sample of turbo play, so nothing here
-    -- is a frequency for a real game. What IS transportable is the closed form
-    -- (source-parsed) and the SIGN of the effect, neither of which depends on
-    -- how the frames were chosen.
+    -- The fixtures were cut to pin OTHER decisions. A thousand-odd live hero
+    -- frames is a large denominator but not a random sample of turbo play, so
+    -- nothing here is a frequency for a real game. What IS transportable is the
+    -- closed form (source-parsed) and the SIGN of the effect, neither of which
+    -- depends on how the frames were chosen.
+    --
+    -- ⭐ 2026-09-07 (strategy): this test's SUBJECT is "the denominator is big
+    -- but biased", and a literal 1012 stated neither half of that -- it stated
+    -- "the corpus is exactly the size it was on 2026-09-03", which is not a
+    -- limit at all. `ratchet` states the half that IS load-bearing (the
+    -- denominator never silently shrank out from under the sentence) and stops
+    -- charging for the half that never was.
     local out = sweep()
-    assert(out:find('COUNT frames=' .. LIVE_FRAMES, 1, true) ~= nil,
-        'the denominator changed; re-read this limit before quoting a rate')
+    local n = tonumber(out:match('COUNT frames=(%d+)'))
+    assert(n, 'the sweep did not report a COUNT line: ' .. out)
+    cs.ratchet(n, LIVE_FRAMES, 'live hero frames (this limit\'s denominator)')
 end
 
 tests['[limit] the corpus cannot discriminate the attribution radius, only the source can'] = function()

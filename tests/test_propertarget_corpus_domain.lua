@@ -38,15 +38,38 @@ local function sweep()
     return r
 end
 
-tests['[recorded] the corpus is 1012 live-hero frames'] = function()
-    -- Pinned so a corpus that GREW is visible as a red line here rather than
+tests['[recorded] the live-hero corpus never shrinks'] = function()
+    -- Pinned so a corpus that SHRANK is visible as a red line here rather than
     -- silently changing every percentage in the report that cites this file.
     -- 2026-09-03 (replay-check): 1003 -> 1012, the nine live heroes of
     -- f_260902_154755_cm_wandbleed_residue.lua (GH #437's frame, landed under
     -- the director's ruling in owed_executions.json). The zero below was
     -- re-measured on the grown corpus, not carried over: it still holds.
+    --
+    -- ⭐ 2026-09-07 (strategy): the equality `r.frames == 1012` is GONE, and the
+    -- reason is arithmetic, not taste. `frames` is a SUM OVER FIXTURES, so the
+    -- only movement it can report under append is UP -- and the sentence this
+    -- file exists to defend is the universal below (`nil == frames`), which is
+    -- STRICTLY STRONGER than any pinned denominator: it keeps holding over the
+    -- fixtures nobody has written yet, where `== 1012` only ever spoke about
+    -- the 1012 we had. The equality therefore bought nothing the next line does
+    -- not already buy, and charged an edit fee every time the corpus grew --
+    -- it went red on 1012 -> 1021 (f_260906_* ; corpus 109 -> 110 fixtures) and
+    -- blocked 铁律 6's dynamic half for EVERY stream until someone re-typed a
+    -- literal. That is `tests/corpus_scale.lua`'s own argument, and this file
+    -- is the FIFTH member of the family to make it (GH #106 5 files -> GH #127
+    -- 7 files/18 assertions -> 2026-09-02 director, one file -> 2026-09-07
+    -- strategy, three files).
+    --
+    -- ⛔ WHAT DID NOT SOFTEN, and why: every domain count below keeps its
+    -- equality. `ratchet` only speaks about quantities that RE-STATE the corpus
+    -- size; a count that is this file's own FINDING must stay an equality,
+    -- because a behaviour change can move it UP and `ratchet` says nothing
+    -- about up (measured on the 'wkreinctr' mutation stand: M6 moved a domain
+    -- count 14 -> 24 and ratchet was silent).
+    local cs = require('corpus_scale')
     local r = sweep()
-    assert(r.frames == 1012, 'the live-hero frame count moved: ' .. r.frames .. ' (was 1012)')
+    cs.ratchet(r.frames, 1012, 'live-hero frames')
 end
 
 tests['[recorded] J.GetProperTarget is nil on every frame of the corpus'] = function()
