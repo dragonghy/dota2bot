@@ -6977,6 +6977,21 @@
     "honest_bounds": "1. **档案买不到这个 lever 的域**(上面的 27/5/0),所以 §0.1 的读数靠**三条带标签的注入**:大招 rank 2 / cd 0 / IsFullyCastable、subject 的 GetHealth 降到 300(823 的 0.365;真实帧是 0.430,刚好在外)、WasRecentlyDamagedByAnyHero 为真。§3 在取任何读数之前**先断言这三条注入真的被读到了**。2. **几何与名单是真的、没动**:两个敌人的血量、坐标、距离、modifier 全来自 .dem;**没有为了让目标砍不死而伪造血量** —— §2 动的是**致命性谕示**,这正是穷举成立的原因。3. **「兑现一发砍不死的大招值不值它的冷却」本轮不判**。本轮判的是「出货那个出口开不了火」与「armed 是同目标的严格超集」。价值那一问是波次读数(hero-43)。4. 归因边界:负读数**只能**读作「那些兑现出去的大招不值」,**永远不能**读作「杠杆删掉了一次施法」或「杠杆换了目标」。",
     "issue": "GH #615(本轮开,[hero]);落地 commit `10b474b9` 已在 main 上,**推在开 issue 之前**(GH #290);`claim_precheck.sh` **EXIT=0 clean**(local commits not on origin/main: 0)。"
   },
+    "lionrreach_20260908": {
+      "backlog_item": "hero -121 (P4.4 (i): 本轮工作单元主体是一个 bots/ 行为改动;线索甲「三种到达约定互相矛盾,差 400」)",
+      "bots_lua_changed": "bots/BotLib/hero_lion.lua —— 新 helper `X.lion_ShouldCommitUltKill` + `X.ConsiderR` 的**两处**大招落单点(「击杀」循环、「团战对最弱的敌人」出口的致命性实参)都改接它。闸关时逐字复现出货判据。",
+      "change": "新 `X.lion_ShouldCommitUltKill( hBot, hTarget, nCastRange, bShippedLethal )`:出货致命性由调用点先算并**作为实参传入**,helper 除 armed 那一条外**每条路径都原样返回 `bShippedLethal`**,armed 只能把 true 变 false ⇒ **NARROWING,严格子集,目标不变**(目标在调用之前就选好,helper 不重选)。⭐ **两个调用点,一个谓词,第二个是承重的**:只过滤「击杀」循环会把 dive **搬家**而不是移除 —— 被它拒掉的 band 目标带着**为真的**出货致命性答案继续走到三十行下的「团战」出口,而那个出口正是因为「击杀」循环先吞掉一切致命成员才不可达(`lionultcash`)⇒ 单点版本会**把死代码复活**并对同一个射程外目标开火。`tests/test_lion_ult_reach.lua` §3 不是论证而是**调用**那条出口自己的谓词证明的(它答 true)。",
+      "date": "2026-09-08T01:5xZ",
+      "domain": "语料域(`tests/fixtures` + `tests/frames` 共 115 帧,§1 断言而非叙述):Lion 存活 **27** 帧;其中 **5** 帧有可施敌人落在 band(`nCastRange` 外、`nCastRange+400` 内),共 **5** 个;这 5 帧里 **2** 帧的 band 成员**同时是最弱可施成员**(frame B 的 silencer、`f_megabundle_051728_slardar_idle` 的 zuus)—— 这 2 帧是档案里**仅有的**能展示「团战」泄漏的帧。⚠️ **第一版限度写的是 24 帧 / 1 个泄漏帧**:那次扫描只读了 `tests/fixtures`,漏了 `tests/frames`;**是 §1 的断言抓住的,不是复读抓住的**(与上一轮 27/5/0 那次自捉同族)。",
+      "gate": "lionrreach(NEW soak id,turbo-only,**未 armed**;STANDALONE —— 不与任何 id 合取。P4.2 冻结期内本组**不提入集**,只登记。)",
+      "gh_issue": "#617",
+      "headline": "⭐ **Lion `X.ConsiderR` 在一个函数里对同一个技能用了三套到达约定,而最松的那一套挂在前置条件最少的分支上。** 「击杀」循环取 `nInBonusEnemyList`(`nCastRange + 400`)且**一个距离判断都不做**就 `return HIGH`;「打架」分支写 `J.IsInRange( botTarget, bot, nCastRange + 200 )`;「撤退」出口只读 `nInRangeEnemyList`(`nCastRange` 整)。「打架」要 `J.IsGoingOnSomeone`、「团战/撤退」要 `IsInTeamFight/IsRetreating`,而「击杀」循环**什么前置都不要**且排在最前 ⇒ 对线、打钱、走回家的路上都可能开火。它交给引擎的 `ActionQueue_UseAbilityOnEntity` 对射程外目标**先是一条移动指令**:Lion 走过去。真实帧上那段是 **345.8u / 300 移速 ≈ 1.15s**,而 `X.SkillsComplement` 在排完 R 之后立刻 `return` ⇒ 这段时间 Q/W/E **一个都不会被考虑**。",
+      "not_in_this_id": "「打架」分支自己的 +200 松弛(另一个列表、另一条分支,且它至少问了)、蓝杖 AoE 分支的 `nCastRange + 150`(价值分支不是击杀主张)、以及 `nCastPoint + 0.25` 这个延迟本身(把走路时间计进致命性估计是**另一条、小得多的**杠杆,合取两个 id 是 pullcad 陷阱)。",
+      "owner": "hero",
+      "validation": "新 `tests/test_lion_ult_reach.lua` **10 例 0 失败**;`lua5.1 tests/run_tests.lua lion` **210 例 0 失败**;新 `tools/agent/mutstand_lionrreach.sh` **10 变异 10/10 CAUGHT**(M5 = 删掉第二个调用点,正是本 id 唯一靠单元测试看不见的失效形状);`bash tools/agent/luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 RULE6_BYPASS。⭐ **两条腿都是驱动出来的**:frame A(`tests/fixtures/f_260820_162821_lion_drain_lethal.lua`,Lion 主体,luna 353.1u / cm 616.3u 在射程内、lina 1245.8u 在 band)上把**致命性谕示**在名单上穷举,四点四中:闸关逐字等于出货,armed 只在 lina 那一个点上不同,两腿都开火时**目标相同**;frame B(`tests/fixtures/f_260820_043120_viper_defend_poked.lua`,`J.IsInTeamFight(bot,600)` 在**真实帧上就为真**、无需注入)上 silencer 1078.7u **同时**是「击杀」循环的候选与「团战」出口的 `npcWeakestEnemy` ⇒ 两扇门必须一起关。",
+      "value_question_owed": "「那些被拒掉的走位到底值不值」不在本文件里裁 —— 它是波次读数,已作为 `queue.json:hero-44` 提出(零 EC2 归档只读扫描)。",
+      "why_not_a_new_opinion": "这句话是**隔壁杠杆自己写过的**:`X.lion_ShouldCashUltAtWeakest` 的第三条合取(`J.IsInRange( hTarget, hBot, nCastRange )`)带着注「without this term the armed leg could order a cast on a target Lion must WALK 400 units toward, which turns 'cash the ult before dying' into a dive. This lever does not import that problem.」—— 出货的「击杀」循环**正带着这个问题**。本 id 就是那条合取被搬回它被写来说明的那条分支。"
+    },
   "tpstamp_20260908": {
     "owner": "strategy",
     "date": "2026-09-08T02:xxZ",

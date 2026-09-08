@@ -1168,7 +1168,10 @@ function X.ConsiderR()
 		if J.IsValidHero( npcEnemy )
 			and X.CanCastAbilityROnTarget( npcEnemy )
 		then
-			if J.WillMagicKillTarget( bot, npcEnemy, nDamage, nCastPoint + 0.25 )
+			-- [lionrreach] the list is nCastRange + 400 and this exit asks no
+			-- distance question at all -- see X.lion_ShouldCommitUltKill.
+			if X.lion_ShouldCommitUltKill( bot, npcEnemy, nCastRange,
+					J.WillMagicKillTarget( bot, npcEnemy, nDamage, nCastPoint + 0.25 ) )
 			then
 				return BOT_ACTION_DESIRE_HIGH, npcEnemy, 'R击杀'..J.Chat.GetNormName( npcEnemy )
 			end
@@ -1202,9 +1205,15 @@ function X.ConsiderR()
 		-- [lionultcash] The lethality term below is the one the 击杀 loop above
 		-- has ALREADY asked, about the same list, with the same arguments -- so
 		-- as shipped this exit cannot return.  See X.lion_ShouldCashUltAtWeakest.
+		-- [lionrreach] the SECOND place this function commits the finger to a
+		-- member of nInBonusEnemyList, and the leak the kill loop's reach term
+		-- would otherwise open: a band target the kill loop refuses arrives
+		-- here still carrying a true shipped lethality answer.  Same predicate,
+		-- same id, applied to the same claim -- X.lion_ShouldCommitUltKill.
 		if npcWeakestEnemy ~= nil
 			and X.lion_ShouldCashUltAtWeakest( bot, npcWeakestEnemy, nCastRange, nHP,
-					J.WillMagicKillTarget( bot, npcWeakestEnemy, nDamage , nCastPoint + 0.25 ) )
+					X.lion_ShouldCommitUltKill( bot, npcWeakestEnemy, nCastRange,
+						J.WillMagicKillTarget( bot, npcWeakestEnemy, nDamage , nCastPoint + 0.25 ) ) )
 		then
 			return BOT_ACTION_DESIRE_HIGH, npcWeakestEnemy, 'R团战'..J.Chat.GetNormName( npcWeakestEnemy )
 		end
@@ -1473,6 +1482,88 @@ function X.lion_ShouldCashUltAtWeakest( hBot, hTarget, nCastRange, nBotHP, bShip
 	if not J.IsInRange( hTarget, hBot, nCastRange ) then return bShippedLethal end
 
 	return true
+
+end
+
+
+--- May X.ConsiderR commit the finger to a target it cannot reach?  Soak
+--- candidate `lionrreach`, turbo-only.  NARROWING.
+---
+--- WHY THIS IS A QUESTION AT ALL.  X.ConsiderR draws two lists,
+---
+---     nInRangeEnemyList  = J.GetNearbyHeroes( bot, nCastRange, ... )
+---     nInBonusEnemyList  = J.GetNearbyHeroes( bot, nCastRange + 400, ... )
+---
+--- and then uses THREE different reach conventions on them, inside one
+--- function, for one ability:
+---
+---     击杀 loop   nInBonusEnemyList (nCastRange + 400), NO distance test
+---     打架 branch J.IsInRange( botTarget, bot, nCastRange + 200 )
+---     撤退 loop   nInRangeEnemyList (nCastRange, i.e. 0 slack)
+---
+--- The loosest of the three sits on the branch with the LEAST situational
+--- precondition: the 击杀 loop is first, and unlike 打架 (J.IsGoingOnSomeone)
+--- or 团战/撤退 (J.IsInTeamFight / J.IsRetreating) it has none at all -- it can
+--- fire while Lion is laning, farming or walking home.  What it hands the
+--- engine is `ActionQueue_UseAbilityOnEntity( abilityR, target )` on a unit up
+--- to 400 units outside cast range, and that order is a MOVE order first: Lion
+--- walks the gap.  X.SkillsComplement returns immediately after queueing R, so
+--- for as long as the desire holds, Q/W/E are never even considered -- the bot
+--- walks at a fleeing target with its other three spells down.
+---
+--- This function is not a new opinion.  The neighbouring lever's own third
+--- conjunct (X.lion_ShouldCashUltAtWeakest, `J.IsInRange( hTarget, hBot,
+--- nCastRange )`) was written with the note "without this term the armed leg
+--- could order a cast on a target Lion must WALK 400 units toward, which turns
+--- 'cash the ult before dying' into a dive.  This lever does not import that
+--- problem."  The shipped 击杀 loop HAS that problem.  This id is that same
+--- sentence applied to the branch it was written about.
+---
+--- WHY REFUSING COSTS NO KILL.  X.ConsiderR is re-entered every frame.
+--- Refusing here does not abandon the target: it stops LION'S ABILITY LAYER
+--- from being a movement decision.  Whatever mode owns him (attack / roam /
+--- retreat) keeps deciding where he stands, and the very first frame the target
+--- is actually inside nCastRange the same loop fires with the same argument.
+--- What is given up is only the self-initiated approach -- a 400-unit walk
+--- toward an enemy hero, by a support whose own frames in this repo's corpus
+--- sit at 354-607 hp.
+---
+--- TWO CALL SITES, ONE PREDICATE, and the second one is load-bearing.  Both
+--- places X.ConsiderR commits the finger to a member of nInBonusEnemyList route
+--- through here.  Filtering only the 击杀 loop would MOVE the dive rather than
+--- remove it: a band target refused there still reaches the 团战 exit thirty
+--- lines below carrying a true J.WillMagicKillTarget answer, and that exit --
+--- proven unreachable as shipped precisely because the kill loop swallows every
+--- lethal member first (see X.lion_ShouldCashUltAtWeakest) -- would then become
+--- reachable and finger the same out-of-range target.  Arming this id without
+--- the second call site would therefore RESURRECT dead code as its side effect.
+---
+--- DIRECTION, one-way by construction: the shipped lethality answer is computed
+--- by the caller and handed in as `bShippedLethal`; every path here returns it
+--- except the armed one, which can only turn a true into a false.  So armed
+--- fires on a strict SUBSET of shipped, on the same frames, with the same
+--- target (the caller has already chosen it; this function never re-picks).  A
+--- negative reading may only be read as "those refused walks were worth taking";
+--- it can NEVER be read as "the lever added a cast" or "the lever moved one".
+---
+--- NOT IN THIS ID, deliberately: the 打架 branch's own +200 slack (different
+--- list, different branch, and it at least asks the question), the scepter AoE
+--- branch's `nCastRange + 150` (an AoE-value branch, not a kill claim), and the
+--- `nCastPoint + 0.25` delay itself -- pricing the walk into the lethality
+--- estimate is a second, much smaller lever and conjoining ids is the pullcad
+--- trap.  Domain, the driven proof and the corpus limit:
+--- tests/test_lion_ult_reach.lua.
+function X.lion_ShouldCommitUltKill( hBot, hTarget, nCastRange, bShippedLethal )
+
+	if not bShippedLethal then return bShippedLethal end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'lionrreach' ) ) then return bShippedLethal end
+
+	if hBot == nil or hTarget == nil then return bShippedLethal end
+
+	if type( nCastRange ) ~= 'number' then return bShippedLethal end
+
+	return J.IsInRange( hTarget, hBot, nCastRange )
 
 end
 

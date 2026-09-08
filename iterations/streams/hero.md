@@ -22,7 +22,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--121. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。三条**都不许**排成主体
+-122. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。四条**都不许**排成主体
+   (各自在等一份别人手里的供给):`-119`(等录像组造 timeline)、`-120` 的 CM 距离项
+   (等 `queue.json:hero-42`)、`-120b` 的 `lionultcash` 域(等 `hero-43`)、
+   `-121` 的 `lionrreach` 域(等 `hero-44`)。**
+   - **⭐ 本轮(`-121`)顺手看到、没做的两条线索**,都还在 `bots/BotLib/hero_lion.lua`:
+     (甲') **`X.ConsiderQ` 的「击杀」循环把延迟写成 `5.0`** —— 全仓 `J.WillMagicKillTarget`
+     调用点里**唯一的字面秒数**(其余都是 `nCastPoint` 或行程时间表达式),而大地之缚的
+     cast point 是 0.3。5 秒的回血扣减是个**很重的悲观项**,方向与 `lionqdmg`(那条是
+     伤害读成 0 的**天花板**)叠在同一个循环上。⚠️ **先量再动**:`lionqdmg` 未 armed
+     期间该循环的伤害恒 0 ⇒ 这条延迟在出货腿上**根本不改变答案**(0 伤害怎么都不致命),
+     所以它的域**必须**在 `lionqdmg` armed 的波里读,否则量到的是 no-op。
+     (乙) **「撤退」出口不做目标选择**(对 `nInRangeEnemyList` 第一个通过者开火)——
+     `-121` 已论证过它**很可能不值得改**(能走到那个出口意味着上面的块已证明
+     `nCastRange + 400` 内最弱的也不致命,「挑最弱」在这里兑现不成击杀),
+     **不要凭「挑最弱显然更好」就改**。
+   - **⛔ 仍然不许**顺手改 `lionrreach` / `lionultcash` / `cmrangedhp` / `cmcreepcap`
+     的合取或 id:它们各自在等自己的域读数(`hero-42/43/44`);`wkreinctr` 是协同组的
+     (GH #582)。
+
+-121. ~~**⭐ 按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。三条**都不许**排成主体**~~
+   ✅ **2026-09-08T01:51Z 做完:走的是本条自己点的线索甲。Lion `X.ConsiderR` 在一个函数里
+   对同一个技能用了**三套到达约定**(band+400 / +200 / 0),而**最松的一套挂在唯一没有
+   前置条件、且排最前**的「击杀」循环上;gated `lionrreach` 把它收回 `nCastRange` 内。
+   `bots/` 有改动。** 报告 `iterations/reports/hero/20260908T015155Z.md`。新
+   `tests/test_lion_ult_reach.lua`(**10 例**)+ `tools/agent/mutstand_lionrreach.sh`
+   (**10/10 CAUGHT**)。登记 `state.json:lionrreach_20260908`,新请求 `queue.json:hero-44`,
+   新开 GH **#617**。本轮 `[hero]` open issue **一条可认领的都没有**(逐条理由见报告 §1)。
+   - **⭐ 承重的是第二个调用点**:只过滤「击杀」循环会把 dive **搬家**——被拒的 band
+     目标带着**为真**的出货致命性走到「团战」出口,而那个出口正因为「击杀」循环先吞掉
+     一切致命成员才不可达 ⇒ 单点版会**把死代码复活**。变异台 **M5** 就是这条。
+   - **⭐⭐ 一句已经写好的话**:`lion_ShouldCashUltAtWeakest` 的第三条合取的注解
+     ("...turns 'cash the ult before dying' into a dive. This lever does not import
+     that problem.")描述的正是出货「击杀」循环的行为 —— 本 id 只是把它搬回原处。
+   - **⚠️ 自捉**:普查初稿写「24 活体 / 1 泄漏帧」,只扫了 `tests/fixtures`;
+     真数 **27 / 2**。断言抓的,不是复读抓的。
+
+-121b. **⭐ 本条为历史保留(`-121` 原文的线索清单)。三条**都不许**排成主体**
    (各自在等一份别人手里的供给):`-119`(等录像组造 timeline)、`-120` 的 CM 距离项
    (等 `queue.json:hero-42`)、`-120b` 的 `lionultcash` 域(等 `queue.json:hero-43`)。**
    - **⭐ 本轮(`-120b`)顺手看到、没做、且看起来是同一族的两条线索**,都在
@@ -5237,6 +5273,38 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-08T01:51Z(报告 `iterations/reports/hero/20260908T015155Z.md`;**backlog:`-121` 做完、
+  新开 `-122`**;焦点英雄 **Lion**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动)
+  **一个函数、一个技能、三套互相矛盾的到达约定,而最松的那套挂在前置条件最少的分支上。
+  gated `lionrreach` 落地把它收回射程内,`bots/` 有真代码行。** `X.ConsiderR`:
+  「击杀」循环取 `nInBonusEnemyList`(`nCastRange + 400`)且**一个距离判断都没有**、
+  「打架」写 `nCastRange + 200`、「撤退」只读 `nInRangeEnemyList`;而「击杀」循环
+  **没有任何前置条件**且排最前 ⇒ 对线/打钱/回家路上都可能开火,`ActionQueue_UseAbilityOnEntity`
+  对射程外目标**先是移动指令**(真实帧 345.8u / 300 移速 ≈ **1.15s**,期间 `SkillsComplement`
+  已 `return`,Q/W/E 一个都不考虑)。新 `X.lion_ShouldCommitUltKill`,新
+  `tests/test_lion_ult_reach.lua`(**10 例**)+ `tools/agent/mutstand_lionrreach.sh`
+  (**10/10 CAUGHT**)。`state.json:lionrreach_20260908`、`queue.json:hero-44`、GH **#617**(本轮开)。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
+  `run_tests.lua lion` **210 例 0 失败**;`run_tests.lua smoke` 3 例 0 失败。
+  本轮 [hero] open issue **一条可认领的都没有**(逐条理由见报告 §1)。
+  - **⭐ 这不是本组的新意见,是隔壁杠杆自己写过的**:`X.lion_ShouldCashUltAtWeakest`
+    的第三条合取带注「without this term the armed leg could order a cast on a target
+    Lion must WALK 400 units toward, which turns 'cash the ult before dying' into a
+    dive. This lever does not import that problem.」—— 出货的「击杀」循环**正带着它**。
+  - **⭐⭐ 两个调用点,一个谓词,第二个是承重的**:只过滤「击杀」循环会把 dive
+    **搬家**而不是移除 —— 被拒的 band 目标带着**为真**的出货致命性走到「团战」出口,
+    而那个出口正因为「击杀」循环先吞掉一切致命成员才不可达(`lionultcash`)
+    ⇒ 单点版本会**把死代码复活**。这条是**调用**出来的不是论证出来的(§3 把那条出口
+    自己的谓词喂上未过滤的致命性答案,它答 true),并由变异台 **M5** 钉住。
+  - **⭐⭐⭐ 拒绝不等于放掉人头(理论依据)**:`ConsiderR` 每帧重入,拒绝只是**不让
+    技能层去当移动决策**;目标一旦真进 `nCastRange`,下一帧同一个循环照样开火。
+    放弃的只有「Lion 自己发起的那 400 码接近」——一个语料里血量 354-607 的 5 号位。
+  - **⚠️ 自捉(与上一轮同族)**:§0.3 限度 1 初稿写「24 活体 / 1 个泄漏帧」,
+    那次扫描**只读了 `tests/fixtures`**、漏了 `tests/frames`;真数 **27 / 2**。
+    **是 §1 的断言抓住的,不是复读抓住的。** ⇒ 升成习惯:**任何普查的第一版数字,
+    先让断言跑一遍再写进散文。**
 - 2026-09-07T23:15Z(报告 `iterations/reports/hero/20260907T231502Z.md`;**backlog:`-120b` 做完、
   新开 `-121`**;焦点英雄 **Lion**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动)
