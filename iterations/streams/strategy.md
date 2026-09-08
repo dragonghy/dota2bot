@@ -27,6 +27,54 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0SHADOW2. **【2026-09-08T16:55Z 新增。**P4.4 归属 = **(ii) 一个判定完结所需的最后一块证据**,不是 (i)**;
+   认领依据 = 上一轮「下一格」第 (2) 条逐条执行(「先量再改」)+ **OWNER_PRIORITIES P2**。
+   工作流第 1 步扫到的新 `[strategy]` issue **一条也没有**(#635/#628/#622/#619 都是本组自己开的)。
+   产出:`tests/_tpquiet_sweep.lua` **扩列**(**没有**新建第三个全语料 sweep,章程明令)、
+   `tests/test_tpscroll_branch_shadow_census.lua`(**9/9**)、`tools/agent/mutstand_shadowcensus.sh`
+   (**13 腿:12 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
+   `state.json:tpscroll_shadow_census_20260908`、`bots/FunLib/jmz_func.lua` 一处**载荷性注释更正**;
+   报告 `iterations/reports/strategy/20260908T165542Z.md`;**issue:本轮开(编号在下一次提交回填 —— 铁律 6 的 GH #290 顺序:先 push 再发表引用)**;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 主判据:「查到 shadow」本身不是判决,符号要一格一格量。** 同一张 4x4 表剩下的格子量完
+   (1021 活帧,同一次行走):`t3_trigger 9` / `t3_shadowed_by_t1 5` / `t3_shadowed_by_t2 3` /
+   **`t3_shadowed_by_either 6`(三分之二)**;`stayfield_true_in_t3 2` / **`_shadowed 1`**;
+   `r4_shadowed_by_t2 4` / `r4_shadowed_by_t3 6` / `r4_shadowed_by_any_retreat 9`;`t2_trigger 30`。
+   **而本格的 shadow 是良性的,与上一轮相反**:被 '撤退:1' 接走的 5 帧**全部** hp < 0.19(接走者自己的封顶),
+   在那条带上 '撤退:1' 的守卫集**严格更强**(PROMOTED `ShouldStayAndRegen` 覆盖 [0.18,0.19) +
+   gated `tpquiet` 覆盖 [0.10,0.18)),对面 'stayfield' 地板 0.18 ⇒ **输掉竞速不会让 bot 少一道守卫**。
+   这句从**打印出来的行**读,不从计数读(5 帧里 **4 帧 < 0.12** = 被 `or botHP < 0.12` 析取接走,**不需要任何近期伤害**)。
+   **⭐⭐ 交给总监的那块证据:`stayfield` 入集。** 它在 `new_gated_awaiting_ab` 里,standing plan 是与
+   `stayfield2` 同一波 arm。它**唯一的调用点**是 '撤退:3',本语料下**至多 3/9 帧可达**,
+   触发内答 TRUE 的 2 帧里 **1 帧被遮** ⇒ **一波 arm 最多读到 1 帧**,而 no-op 从裁定侧看正是「tested, no effect」
+   (GH #622 同族,往上游挪了一条分支)。另一端 `stayfield_armed_true 24` ⇒ **意见 24 帧宽,23 帧在这个地址上无家可归**。
+   **⭐⭐⭐ 三个候选杠杆全部定价 = 空域,每个零都钉着让它变空的那条子句**(GH #171:「没量过」和「零」不许是同一句话):
+   (1) '撤退:2' 空环腿 `t2_ring_empty 2` 但 `t2_empty_below_band 2`(两帧都 <0.10),且照抄 `tpquiet` 是
+   **闭式 no-op**(分支**要求** 6.0s 内被打过,helper 在**同一调用同一窗口**上拒绝 ⇒ `t2_empty_damaged_only 0`);
+   (2) '撤退:3' 深带臂 —— **洞是真的**(`t3_below_stayfloor 5`/9:'stayfield' 的带 [0.18,0.55] 对上一路开到 0 血的分支)
+   但 `t3_deep_in_band 1` + **`t3_deep_src 0`**(唯一那帧身上没有可喝的)⇒ **一帧 fixture 都做不出来**,是**语料请求**;
+   (3) 在 '撤退:1' 上给 'stayfield' 开第二地址 —— **闭式为空**([0.18,0.19) 一个百分点,已被 PROMOTED 的守卫占着)。
+   **⭐⭐⭐⭐ 载荷性更正:'撤退:2' 的豁免理由写错了,而错的是算术。** 原文「requires enemies AND recent hero damage」——
+   **后半是合取项,前半不是**:封顶 `0.15 + 0.24*nEnemyCount` **基数非零** ⇒ `nEnemyCount == 0` 时仍以
+   `botHP < 0.15` + 伤害子句**单独**开火,1600 环全空。**豁免保留,但从此站在读数上不站在那句话上**。
+   「写给 X 侧的理由被 Y 侧继承」的**第五个实例**,第一个由**算术**而非域计数推翻的。
+   **⭐⭐⭐⭐⭐ 变异台头条:M2 第一版被记成「红但消息不对 = 视为存活」,其实是 caught。**
+   清零封顶基数后**先到达的是分支触发那条断言**,不是两行后的空环列 ⇒ 台子在等一句**代码产生不出来的话**。
+   **⇒ 台子的 `want` 必须是读者实际拿到的那句话,不是作者希望它说的那句话。**
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) **`stayfield2` 的同形状还没量过,而它是本轮结论的直接下一步**:它在 `mode_retreat_generic` 的
+   早退链里**排在 PROMOTED 的 `J.ShouldStayAndRegen` 下面**,两条返回**同一个** `BOT_MODE_DESIRE_NONE`
+   ⇒ **同一个 shadow 形状换了个文件**,而那一格决定 `stayfield2` 那半波能不能读到东西。
+   量法不需要驱动那条链:**两个 helper 在同一帧上的真值集**即可(`ShouldStayAndRegen` 是 shipped,
+   `ShouldRegenNotWalkHome` armed 在 'stayfield2' 上),**继续扩同一个 sweep,不要新建**;
+   (2) **语料请求(新,已在报告与 issue 里交出)**:'撤退:3' 触发内 + hp ∈ [0.10,0.18) +
+   包里带 **tango/faerie_fire/有充能的瓶子**(不是大药)+ 6 秒无英雄伤害 + 2500 环空 + 1200 内无敌塔
+   ⇒ 拿到它,'撤退:3' 深带臂**立刻可建**;
+   (3) 上一轮的 `nosrc_attr_only 0` 语料请求**仍然挂着**,本轮同样没动;
+   (4) ⛔ **不要**改共享地板、**不要**回 `overchase`、**不要**再找 `IsFieldRegenSituation` 的第五条子句、
+   **不要**给 '撤退:2' 加守卫(本轮把那条豁免从散文改成读数,再动它必须先推翻 `t2_ring_empty 2` 那两帧的血量),
+   **也不要**为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆 —— 那样的杠杆拿不到本组必须带的真实帧 fixture。】**
+
 0TPQUIET. **【2026-09-08T14:31Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
    认领依据 = 上一轮「下一格」第 (1) 条 + **OWNER_PRIORITIES P2**(决策侧,球在本组)。上一轮「下一格」第 (4) 条
    明令 `J.IsFieldRegenSituation` 的矿脉挖完 ⇒ 本轮**没碰那个函数**,换**结构维度**:
@@ -6747,6 +6795,63 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-08T16:55Z(**P4.4 归属 = (ii) 一个判定完结所需的最后一块证据**,**不是 (i)** ——
+  三个候选杠杆全部定价出**空域**,硬造一个域为零的 gated 杠杆拿不到本组必须带的真实帧 fixture;
+  认领依据 = 上一轮「下一格」第 (2) 条逐条执行(「先量再改」)+ **OWNER_PRIORITIES P2**。
+  工作流第 1 步扫到的新 `[strategy]` issue **一条也没有**)。
+  ⭐ **立案句:「查到 shadow」本身不是判决,符号要一格一格量。** 上一轮留下的 `both_triggers 6` 只花掉 1 帧
+  ⇒ 这个形状**不是那一个杠杆的性质**。把同一张 4x4 表剩下的格子在**同一次语料行走**上量完(1021 活帧,
+  **扩 `_tpquiet_sweep.lua` 的列,没有新建第三个全语料 sweep**):`t3_trigger 9` /
+  `t3_shadowed_by_t1 5` / `t3_shadowed_by_t2 3` / **`t3_shadowed_by_either 6`(三分之二)**;
+  `stayfield_true_in_t3 2` / **`stayfield_true_in_t3_shadowed 1`**;`r4_shadowed_by_t2 4` /
+  `r4_shadowed_by_t3 6` / `r4_shadowed_by_any_retreat 9`;`t2_trigger 30`;
+  `tpdeep_true_in_r4_shadowed_by_t2/_by_t3` **0 / 0**(**显式的零**:上一轮那条 `tpdeep` 域更正**不需要第二次**)。
+  ⭐⭐ **而本格的 shadow 与上一轮符号相反 —— 它是良性的。** 被 `撤退:1` 接走的 5 帧**全部** hp < 0.19
+  (接走者自己的封顶),而在那条带上 `撤退:1` 的守卫集**严格更强**:PROMOTED `J.ShouldStayAndRegen`
+  覆盖 `[0.18,0.19)` + gated `tpquiet` 覆盖 `[0.10,0.18)`,对面 `stayfield` 走 `IsFieldRegenSituation`
+  **地板 0.18** ⇒ **输掉这场竞速不会让 bot 少一道守卫**。这句**从打印出来的行读,不从计数读**
+  (计数说不出这句话);同一批行还说:5 帧里 **4 帧在 0.12 以下** = 被 `撤退:1` 的 `or botHP < 0.12`
+  析取接走,**一点近期伤害都不需要**。
+  ⭐⭐⭐ **交给总监的那块证据(本轮的 P4.4(ii)):`stayfield` 入集。** 它在 `new_gated_awaiting_ab` 里,
+  standing plan(`state.json:2108`)是与 `stayfield2` **同一波** arm。它**唯一的调用点**是 `撤退:3`;
+  本语料下那条分支**至多 3/9 帧可达**,helper 在触发内答 TRUE 的 **2** 帧里 **1 帧被上游遮住**
+  ⇒ **一波 arm 最多读到 1 帧**,而 no-op 从裁定侧看正是「tested, no effect」(GH #622 同族,
+  往上游挪了一条分支)。另一端 `stayfield_armed_true 24` ⇒ **这个意见有 24 帧宽,23 帧在这个地址上无家可归**。
+  建议二选一(**本组不自裁、不提入集** —— P4.2 是冻结期):(a) 这一波把 `stayfield` 的验收改走
+  fixture/检测器,不指望胜负读数;(b) 先把 `stayfield2` 那一格量掉再决定。
+  ⭐⭐⭐⭐ **三个候选杠杆全部定价 = 空域,每个零都钉着让它变空的那条子句**(GH #171:
+  「没量过」和「量出来是零」不许是同一句话):(1) `撤退:2` 空环腿 `t2_ring_empty 2` 但
+  `t2_empty_below_band 2`(**两帧都 <0.10**,家族按设计不说话),且照抄 `tpquiet` 是**闭式 no-op**
+  ——分支**要求** 6.0s 内被英雄打过,helper 在**同一个调用、同一个窗口**上拒绝 ⇒ `t2_empty_damaged_only 0`;
+  (2) `撤退:3` 深带臂(镜像 `tpdeep` 对 `回复状态` 做的事)**洞是真的且是同一个减法**
+  ——`stayfield` 的带 `[0.18,0.55]` 对上一路开到 0 血的分支 ⇒ **`t3_below_stayfloor 5`/9 帧完全无守卫,
+  armed 与否无关**——但 `t3_deep_in_band 1` + **`t3_deep_src 0`**(唯一那帧**身上没有可喝的**)
+  ⇒ **一帧 fixture 都做不出来**,这是**语料请求**不是设计异议;(3) 在 `撤退:1` 上给 `stayfield`
+  开第二个地址 **闭式为空**(分支封顶 `botHP<0.19`,`stayfield` 的带从 0.18 起 ⇒ 重叠
+  **一个百分点**,已被 PROMOTED 的守卫占着)。
+  ⭐⭐⭐⭐⭐ **载荷性注释更正(`bots/FunLib/jmz_func.lua` 四兄弟表),而错的是算术。**
+  原文把 `撤退:2` 的豁免写成「a genuine escape: it **requires enemies AND** recent hero damage」——
+  **后半是合取项,前半不是**:封顶 `0.15 + 0.24*nEnemyCount` **基数非零** ⇒ `nEnemyCount == 0` 时
+  分支仍以 `botHP < 0.15` + 伤害子句**单独**开火,1600 环**全空**,正是 P2 在别处称为病例的形状。
+  **豁免保留,但从此站在读数上而不是那句话上**(`t2_ring_empty 2`,两帧都 <0.10)。
+  「写给 X 侧的理由被 Y 侧继承」的**第五个实例**,也是**第一个由算术而非域计数推翻的**;
+  语料日后长出一帧落在 `[0.10,0.18)`,census 文件会变红、豁免被**重新裁定**而不是被继承。
+  ⚠️ **变异台自己抓到的一条:M2 第一版被记成「红但消息不对 = 视为存活」,其实是 caught。**
+  清零封顶基数后**先到达的是分支触发那条断言**(整条分支缩水),不是两行之后的空环列 ⇒
+  台子在等一句**代码在这个变异下产生不出来的话**。**⇒ 台子的 `want` 必须是读者实际拿到的那句话,
+  不是作者希望它说的那句话**;要求一句产生不了的消息,会把一个**被抓住的**变异体报成漏网。
+  产出:`tests/_tpquiet_sweep.lua`(扩列)、`tests/test_tpscroll_branch_shadow_census.lua`(**9/9**)、
+  `tools/agent/mutstand_shadowcensus.sh`(**13 腿:12 CAUGHT + 控制项 SURVIVED(正确),零 SURVIVED,STAND GREEN**)、
+  `state.json:tpscroll_shadow_census_20260908`、`bots/FunLib/jmz_func.lua` 一处注释更正;
+  报告 `iterations/reports/strategy/20260908T165542Z.md`;**issue:本轮开(编号在下一次提交回填 —— 铁律 6 的 GH #290 顺序:先 push 再发表引用)**;
+  验证:`luacheck_gate.sh` **exit 0 / 0 警告**(**没有用 `RULE6_BYPASS`**)、
+  `test_tpquiet_shadowed_branch.lua` 在扩列后的 sweep 上**仍 15/15**(**跑过,不是假设**)、
+  邻域 `smoke_load`/`gate_claim_consistency`/`gated_helper_liveness`/`gated_helper_nesting_census`/
+  `tphome_tp_leg_counterfactual`/`tpdeep_recover_band`/`stayfield` 全绿;全量套件(~100min,GH #124)
+  **没跑也不声称**。**armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+  开工自检 **worst exit 3**(`UNCERTIFIABLE: none`),其中 trunk python 红是
+  `chain_member_census.py` 的行号棘轮,**批测台已开成 GH #637**,不是本轮的也不属本组。
 
 - 2026-09-08T14:31Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**;认领依据 = 上一轮「下一格」第 (1) 条
   + **OWNER_PRIORITIES P2**。上一轮明令「`J.IsFieldRegenSituation` 的矿脉挖完,不要再找第五条子句」——

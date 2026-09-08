@@ -5815,14 +5815,30 @@ end
 -- X.ConsiderItemDesire["item_tpscroll"] (ability_item_usage_generic) has four
 -- branches that set `tpLoc = J.GetTeamFountain()`:
 --   撤退:1   botHP < 0.19                     -> `not J.ShouldStayAndRegen` (PROMOTED)
---   撤退:2   botHP < 0.15 + 0.24*nEnemyCount  -> none (a genuine escape: it
---                                                requires enemies AND recent
---                                                hero damage, so P2's "危险时
---                                                撤退合法" applies and nothing
---                                                below touches it)
+--   撤退:2   botHP < 0.15 + 0.24*nEnemyCount  -> none (the family's standing
+--                                                exemption; the reason first
+--                                                written here was WRONG -- see
+--                                                the correction below)
 --   撤退:3   botHP < 0.34 or sum < 0.43, lvl>=9 -> `not J.ShouldRegenNotTpHome`
 --                                                ('stayfield', gated)
 --   回复状态 sum < 0.3 or botHP < 0.2, lvl>=6  -> NOTHING
+--
+-- ⛔ CORRECTION 2026-09-08 (strategy, tests/test_tpscroll_branch_shadow_census.lua).
+-- This table used to justify the 撤退:2 exemption as "a genuine escape: it
+-- REQUIRES ENEMIES AND recent hero damage".  The second half is a conjunct; the
+-- first half is not, and the cap arithmetic says so: `0.15 + 0.24*nEnemyCount`
+-- has a NONZERO BASE, so at nEnemyCount == 0 the branch still fires on
+-- `botHP < 0.15` with the damage clause alone -- an EMPTY 1600 ring, i.e. the
+-- same "nothing is chasing this bot" shape P2 calls a pathology everywhere else.
+-- The exemption is kept, but on the measurement rather than on that sentence:
+-- over 1021 live corpus frames that leg is `t2_ring_empty 2`, and BOTH frames
+-- are below 0.10, where this family declines to speak by design (the 'tpdeep'
+-- low edge: a 115/85/135 field sip cannot lift a bot back to 0.18).  A veto
+-- copied from 'tpquiet' would also be a no-op by closed form -- the branch
+-- REQUIRES WasRecentlyDamagedByAnyHero(6.0) and that helper REFUSES on the same
+-- call with the same window (`t2_empty_damaged_only 0`).  If the corpus ever
+-- grows a frame on this leg inside [0.10, 0.18), the census file goes red and
+-- the exemption gets re-decided rather than inherited.
 -- The fourth one is not an escape and says so in its own conjuncts: it asks for
 -- `J.GetProperTarget(bot) == nil`, `bot:GetAttackTarget() == nil`, `X.CanJuke()`
 -- and at most one enemy inside 1600, and — unlike 撤退:1 and 撤退:2 — it does
