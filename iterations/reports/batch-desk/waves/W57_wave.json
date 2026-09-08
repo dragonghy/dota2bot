@@ -39,7 +39,18 @@
    "sir_source": "describe-spot-instance-requests, read FIRST-HAND IN THE LAUNCH ROUND (GH #556)",
    "instance_initiated_shutdown_behavior": "terminate (queried per-machine, not assumed)",
    "spot_run_exit": 0,
-   "spot_price_quoted_at_launch": 0.2782
+   "spot_price_quoted_at_launch": 0.2782,
+   "status_code": "instance-terminated-no-capacity",
+   "sir_status_code": "instance-terminated-no-capacity",
+   "update": "2026-09-08T15:32:20.000Z",
+   "sir_terminal_update": "2026-09-08T15:32:20.000Z",
+   "update_source": "describe-spot-instance-requests Status.UpdateTime, read FIRST-HAND in THIS harvest round. NOT copied from sir_fulfilled_at (that key is the FULFILLED transition; copying it forward manufactures ~53s of survival for every machine).",
+   "machine_hours": 0.1722,
+   "machine_hours_source": "(SIR terminal Status.UpdateTime read this round) - (describe-instances LaunchTime written in the launch round). Two-ended by necessity: the EC2 console row expires before the harvest round can read it.",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "scored": false
   },
   {
    "seed": 8764,
@@ -60,7 +71,18 @@
    "sir_source": "describe-spot-instance-requests, read FIRST-HAND IN THE LAUNCH ROUND (GH #556)",
    "instance_initiated_shutdown_behavior": "terminate (queried per-machine, not assumed)",
    "spot_run_exit": 0,
-   "spot_price_quoted_at_launch": 0.2594
+   "spot_price_quoted_at_launch": 0.2594,
+   "status_code": "instance-terminated-no-capacity",
+   "sir_status_code": "instance-terminated-no-capacity",
+   "update": "2026-09-08T15:32:20.000Z",
+   "sir_terminal_update": "2026-09-08T15:32:20.000Z",
+   "update_source": "describe-spot-instance-requests Status.UpdateTime, read FIRST-HAND in THIS harvest round. NOT copied from sir_fulfilled_at (that key is the FULFILLED transition; copying it forward manufactures ~53s of survival for every machine).",
+   "machine_hours": 0.1714,
+   "machine_hours_source": "(SIR terminal Status.UpdateTime read this round) - (describe-instances LaunchTime written in the launch round). Two-ended by necessity: the EC2 console row expires before the harvest round can read it.",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "scored": false
   },
   {
    "seed": 8814,
@@ -81,7 +103,18 @@
    "sir_source": "describe-spot-instance-requests, read FIRST-HAND IN THE LAUNCH ROUND (GH #556)",
    "instance_initiated_shutdown_behavior": "terminate (queried per-machine, not assumed)",
    "spot_run_exit": 0,
-   "spot_price_quoted_at_launch": 0.2817
+   "spot_price_quoted_at_launch": 0.2817,
+   "status_code": "instance-terminated-by-user",
+   "sir_status_code": "instance-terminated-by-user",
+   "update": "2026-09-08T16:15:13.000Z",
+   "sir_terminal_update": "2026-09-08T16:15:13.000Z",
+   "update_source": "describe-spot-instance-requests Status.UpdateTime, read FIRST-HAND in THIS harvest round. NOT copied from sir_fulfilled_at (that key is the FULFILLED transition; copying it forward manufactures ~53s of survival for every machine).",
+   "machine_hours": 0.8825,
+   "machine_hours_source": "(SIR terminal Status.UpdateTime read this round) - (describe-instances LaunchTime written in the launch round). Two-ended by necessity: the EC2 console row expires before the harvest round can read it.",
+   "ab": 31,
+   "ba": 20,
+   "arm_depth": 24.31,
+   "scored": true
   },
   {
    "seed": 8939,
@@ -102,7 +135,18 @@
    "sir_source": "describe-spot-instance-requests, read FIRST-HAND IN THE LAUNCH ROUND (GH #556)",
    "instance_initiated_shutdown_behavior": "terminate (queried per-machine, not assumed)",
    "spot_run_exit": 0,
-   "spot_price_quoted_at_launch": 0.2585
+   "spot_price_quoted_at_launch": 0.2585,
+   "status_code": "instance-terminated-by-user",
+   "sir_status_code": "instance-terminated-by-user",
+   "update": "2026-09-08T16:14:50.000Z",
+   "sir_terminal_update": "2026-09-08T16:14:50.000Z",
+   "update_source": "describe-spot-instance-requests Status.UpdateTime, read FIRST-HAND in THIS harvest round. NOT copied from sir_fulfilled_at (that key is the FULFILLED transition; copying it forward manufactures ~53s of survival for every machine).",
+   "machine_hours": 0.8756,
+   "machine_hours_source": "(SIR terminal Status.UpdateTime read this round) - (describe-instances LaunchTime written in the launch round). Two-ended by necessity: the EC2 console row expires before the harvest round can read it.",
+   "ab": 28,
+   "ba": 13,
+   "arm_depth": 17.76,
+   "scored": true
   }
  ],
  "slate_anchor": "last machine up 2026-09-08T15:22:18Z (max, GH #469 ruling 1) => gate (i) unlocks 2026-09-08T21:22:18Z. The first-machine reading would be 21:22:00Z. slate spread 18s. DO NOT copy this timestamp into the next round as the unlock -- run wave_throttle.py and read the line IT prints.",
@@ -122,6 +166,81 @@
   "gate_iv_constant_caveat": "The gate's header still prints the hard-coded `measured bracket 34.80 < x <= 40.63`. W56's harvest produced the FIRST counter-example on record -- all four flip times (42.8 / 54.8 / 43.0 / 46.1 min) fell OUTSIDE that upper bound -- and the constant is still written down, so more waves will not narrow it. GH #591, handed to the director again this round.",
   "gate_iv_inputs_harvest_owed": "NONE at launch (see top-level harvest_owed_at_launch)."
  },
- "harvest": null,
- "cost": null
+ "harvest": {
+  "harvested_at": "2026-09-08T18:2xZ",
+  "rv_exit": 0,
+  "seeds_returned": "2 of 4",
+  "reclaimed_seeds": [
+   8718,
+   8764
+  ],
+  "files_seen": 104,
+  "games_loaded": 104,
+  "scored_games": 92,
+  "source_dirs": 2,
+  "unparseable": 0,
+  "pooled_basename_dirs_overridden": 0,
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "unfinished": 0,
+  "arm_identity_recomputed": "44 ids / 397 bytes / md5 fe7a309fc06a229e97290b2db4c3bed3 -- read off origin/main test_set.md LINE 2 (GH #631: the charter prose still says line 3, which is prose and yields a silent empty per_seed).",
+  "mean": {
+   "gpm": 2.75,
+   "xpm": -4.31,
+   "deaths": 0.48,
+   "last_hits": -1.27
+  },
+  "comps_better": {
+   "gpm": "2/2",
+   "xpm": "1/2",
+   "deaths": "0/2",
+   "last_hits": "0/2"
+  },
+  "strata": {
+   "gpm": {
+    "ab": 98.77,
+    "ba": -93.28,
+    "side": 96.03,
+    "sign_flip": true
+   },
+   "xpm": {
+    "ab": 40.29,
+    "ba": -48.89,
+    "side": 44.59,
+    "sign_flip": true
+   },
+   "deaths": {
+    "ab": 0.07,
+    "ba": 0.89,
+    "side": -0.41,
+    "sign_flip": false
+   },
+   "last_hits": {
+    "ab": -11.0,
+    "ba": 8.47,
+    "side": -9.73,
+    "sign_flip": true
+   }
+  },
+  "winrate_channel": "DEGENERATE",
+  "winrate_minority_side_share": 0.0,
+  "winrate_side_census": {
+   "radiant": 0,
+   "dire": 104
+  },
+  "winrate_note": "GH #352 8th consecutive DEGENERATE. Minority-side share 0.0000: all 104 finished games went to dire. NOT a first -- W30 (08-31) read 0/231 = 0.0000 and the 08-27 sample read 0/48; this is a RETURN to that floor after two waves that were merely near it. Sequence W55 0.0645 -> W56 0.0245 -> W57 0.0000, monotone down over three waves, against an acceptance bar of >= 0.20. winrate and comps_better.winrate MUST NOT be cited as rule 2(b) support.",
+  "suggested_field": "hold_or_reject (the TOOL's field, not a desk reading -- the desk does not adjudicate)"
+ },
+ "cost": {
+  "total_machine_hours": 2.1017,
+  "self_terminated_machine_hours": [
+   0.8825,
+   0.8756
+  ],
+  "self_terminated_mean_h": 0.879,
+  "gh454_b2_check": "NOT TRIGGERED: mean of the SELF-TERMINATED machines only = 0.8790 h/machine, threshold 1.00. Reclaimed machines are excluded by construction -- they are the part (b2) exists to route around.",
+  "spot_compute_estimate_usd": 0.5673,
+  "estimate_scope": "SPOT COMPUTE ONLY (machine_hours x price quoted at launch). Excludes DataTransfer-Out, PublicIPv4 and request charges. This is a LOWER BOUND, not a settled per-wave cost; the billing-side (b1) reading is owed to the next round.",
+  "gh454_b1_status": "Cannot be settled this round: the CE/budgets snapshot in hand (refreshed 15:04:11Z) PREDATES the 15:22Z launch, so it contains zero of W57."
+ }
 }
