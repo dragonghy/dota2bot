@@ -42,7 +42,15 @@
    "sir_source": "describe-spot-instance-requests, read FIRST-HAND IN THE LAUNCH ROUND (GH #556): SIR rows age out in ~1-3h",
    "update": "2026-09-07T21:16:25.000Z",
    "status_code": "instance-terminated-no-capacity",
-   "outcome": "RECLAIMED 96 SECONDS AFTER LAUNCH (21:14:49Z -> 21:16:25Z). SIR state closed, Status.Code instance-terminated-no-capacity; the instance's own StateReason.Code reads Server.SpotInstanceTermination. Read FIRST-HAND in the launch round, ~19 minutes after the event, so the ~1-3h SIR ageing window (GH #375/#556) was never in play for this one. Survival is far below any changeover value ever proposed: this machine banked zero games and cannot have flipped legs, so seed 7527's paired difference is void on the spot arm."
+   "outcome": "RECLAIMED 96 SECONDS AFTER LAUNCH (21:14:49Z -> 21:16:25Z). SIR state closed, Status.Code instance-terminated-no-capacity; the instance's own StateReason.Code reads Server.SpotInstanceTermination. Read FIRST-HAND in the launch round, ~19 minutes after the event, so the ~1-3h SIR ageing window (GH #375/#556) was never in play for this one. Survival is far below any changeover value ever proposed: this machine banked zero games and cannot have flipped legs, so seed 7527's paired difference is void on the spot arm.",
+   "terminated_at": "2026-09-07T21:16:25.000Z",
+   "update_source": "SIR Status.UpdateTime, read first-hand this harvest round (2026-09-08T00:1xZ, ~2.1h after termination -- still inside the SIR window). Written to BOTH `update` (the key reclaim_blind.py reads) and `terminated_at` (GH #580).",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "games_delivered": 0,
+   "harvest_note": "SPOT ARM DELIVERED ZERO: preempted 97s after launch; its S3 prefix holds exactly 1 object (soak_farm.log), no per-game files. Seed 7527's readings below come from the ON-DEMAND REPAIR machine (see `rerun`), not from this one.",
+   "leg_count_note": "0/0 is this MACHINE's own delivery (preempted at 97s, zero per-game files in S3), not the seed's readings -- seed 7527's ab27/ba16-class numbers were produced by the on-demand repair machine recorded under `rerun`. reclaim_blind.py reads machines[] and must see the spot slate's own truth; nulls made it answer UNDECIDABLE (exit 2 = nothing checked, never a pass)."
   },
   {
    "seed": 7529,
@@ -58,7 +66,14 @@
    "sir": "sir-2b57nfch",
    "sir_state_at_launch": "active / fulfilled",
    "create": "2026-09-07T21:15:04.000Z",
-   "update": "fill at harvest"
+   "update": "2026-09-07T22:09:12.000Z",
+   "terminated_at": "2026-09-07T22:09:12.000Z",
+   "update_source": "SIR Status.UpdateTime, read first-hand this harvest round (2026-09-08T00:1xZ, ~2.1h after termination -- still inside the SIR window). Written to BOTH `update` (the key reclaim_blind.py reads) and `terminated_at` (GH #580).",
+   "status_code": "instance-terminated-by-user",
+   "ab": 42,
+   "ba": 16,
+   "arm_depth": 23.17,
+   "games_delivered": 58
   },
   {
    "seed": 7719,
@@ -73,7 +88,14 @@
    "sir": "sir-cywzp69g",
    "sir_state_at_launch": "active / fulfilled",
    "create": "2026-09-07T21:15:08.000Z",
-   "update": "fill at harvest"
+   "update": "2026-09-07T22:09:12.000Z",
+   "terminated_at": "2026-09-07T22:09:12.000Z",
+   "update_source": "SIR Status.UpdateTime, read first-hand this harvest round (2026-09-08T00:1xZ, ~2.1h after termination -- still inside the SIR window). Written to BOTH `update` (the key reclaim_blind.py reads) and `terminated_at` (GH #580).",
+   "status_code": "instance-terminated-by-user",
+   "ab": 34,
+   "ba": 24,
+   "arm_depth": 28.14,
+   "games_delivered": 58
   },
   {
    "seed": 7789,
@@ -88,7 +110,14 @@
    "sir": "sir-iirqpswg",
    "sir_state_at_launch": "active / fulfilled",
    "create": "2026-09-07T21:15:11.000Z",
-   "update": "fill at harvest"
+   "update": "2026-09-07T21:59:37.000Z",
+   "terminated_at": "2026-09-07T21:59:37.000Z",
+   "update_source": "SIR Status.UpdateTime, read first-hand this harvest round (2026-09-08T00:1xZ, ~2.1h after termination -- still inside the SIR window). Written to BOTH `update` (the key reclaim_blind.py reads) and `terminated_at` (GH #580).",
+   "status_code": "instance-terminated-by-user",
+   "ab": 29,
+   "ba": 13,
+   "arm_depth": 17.95,
+   "games_delivered": 42
   }
  ],
  "slate_anchor": "last machine up 2026-09-07T21:15:11Z (max, GH #469 ruling 1) -> gate (i) unlock 2026-09-08T03:15:11Z. slate spread 22s. Read the tool, not this line.",
@@ -134,13 +163,96 @@
   "launch_time": "2026-09-07T21:35:27.000Z",
   "run_id": "spot_20260907_213525_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_e8a868",
   "ref_pin": "Same 40-char SHA as the slate, 0d62930936c6d5415efa4fa20f54e4c5a002f646 -- NOT `main`. A repair machine that fetched `main` could arm a different string than the slate it is repairing and destroy the pooling premise (the shape GH #592 registered on W53).",
-  "status_code": "fill at harvest from EC2 StateReason.Code -- an on-demand machine has no SIR, and that code is unreadable ~1h after termination (GH #375). The 2h watchdog puts termination near 23:35Z, so a harvest round later than ~00:35Z loses it permanently. This is the fourth wave in a row where that reading is at risk; the standing fix request is the shutdown.json proposal filed 09-05.",
+  "status_code": "UNREADABLE -- PERMANENTLY LOST (GH #375 realized). describe-instances returned an EMPTY reservation list for this id (and for all five W54 ids) at 2026-09-08T00:1xZ: EC2 had already aged the terminated instances out, so StateReason.Code can never be read for this machine. The empty output is NOT 'nothing wrong' -- it is the reading being gone.",
   "fences": {
    "per_seed": "seed 7527 re-run ONCE (the one-shot fence, GH #271 shape)",
    "per_wave": "1 of the maximum 2 on-demand repair machines per wave used",
    "gate_i": "A repair machine opens no new 6h window and is not itself subject to one (GH #498 ruling 3, director 2026-09-05): gate (i) throttles NEW spending decisions, and a repair buys back a seed already paid for inside this wave's budget.",
    "gate_iii": "Re-run through the fence in its own right: WAVE_FENCE CLEAR (exit 0), --planned 0.63 --pending 2.87 ($2.02 carried + $0.85 W54 slate), projected $67.909, headroom $12.091."
   },
-  "disposition_was_pre_registered": "Charter step 5 and OWNER_PRIORITIES's 回收处置 both say: one machine reclaimed = that seed's paired difference is void, re-run that ONE seed, never void the wave. Executed the same round as the reclaim rather than deferred to harvest."
+  "disposition_was_pre_registered": "Charter step 5 and OWNER_PRIORITIES's 回收处置 both say: one machine reclaimed = that seed's paired difference is void, re-run that ONE seed, never void the wave. Executed the same round as the reclaim rather than deferred to harvest.",
+  "status_code_deadline_postmortem": "The launch round predicted the code would stay readable until ~00:35Z by anchoring on the 2h WATCHDOG CEILING (23:35Z + ~1h). The machine did not run to the watchdog: its last S3 upload is 22:18:31Z, and by the spot machines' own upload->terminate gap (2m32s / 4m22s) it self-terminated ~22:21-22:23Z, which closed the ~1h window near 23:25Z -- about 70 minutes EARLIER than the predicted deadline. The estimate failed toward the DANGEROUS side (it said there was time when there was not), because the deadline is anchored to ACTUAL termination and a self-terminating machine beats its own watchdog by design. Any future deadline of this kind must be anchored on expected COMPLETION, not on the watchdog ceiling.",
+  "ab": 27,
+  "ba": 15,
+  "arm_depth": 19.29,
+  "games_delivered": 42,
+  "machine_hours_bound": "[0.7178 h, 2.0 h] -- lower bound is launch 21:35:27Z to last S3 upload 22:18:31Z (a fact); upper bound is the 2h watchdog. Point estimate ~0.76 h by analogy with the spot machines' upload->terminate gap is an INFERENCE, not a measurement, and is excluded from the GH #454 (乙2) mean by construction (an on-demand machine has no SIR)."
+ },
+ "harvest": {
+  "round": "2026-09-08T00:12-00:5xZ",
+  "tool": "tools/batch_test/soak/recover_verdict.py",
+  "rv_exit": 0,
+  "download_layout": "four per-run subdirectories, never flattened (GH #225)",
+  "input": {
+   "files_seen": 224,
+   "games_loaded": 224,
+   "source_dirs": 4,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0
+  },
+  "scored_games": 200,
+  "unfinished_games": 0,
+  "seeds_scored": "4/4",
+  "thin_arm_seeds": [],
+  "min_arm_depth": 8,
+  "mean": {
+   "gpm": -7.45,
+   "xpm": -3.11,
+   "deaths": 0.24,
+   "last_hits": -0.98,
+   "winrate": 0.496,
+   "winrate_headroom": 0.0167
+  },
+  "comps_better": {
+   "gpm": "2/4",
+   "xpm": "1/4",
+   "deaths": "1/4",
+   "last_hits": "1/4",
+   "winrate": "0/4"
+  },
+  "strata": {
+   "gpm": {
+    "ab": -120.98,
+    "ba": 106.08,
+    "side": -113.53,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "xpm": {
+    "ab": -66.83,
+    "ba": 60.6,
+    "side": -63.72,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "deaths": {
+    "ab": 1.14,
+    "ba": -0.66,
+    "side": 0.9,
+    "sign_flip": true,
+    "side_gt_arm": "4/4"
+   },
+   "last_hits": {
+    "ab": -1.34,
+    "ba": -0.62,
+    "side": -0.36,
+    "sign_flip": false,
+    "side_gt_arm": "4/4"
+   }
+  },
+  "per_seed_gpm": {
+   "7527": 4.14,
+   "7529": -16.9,
+   "7719": -29.64,
+   "7789": 12.59
+  },
+  "winrate_channel": "DEGENERATE",
+  "winrate_minority_side_share": 0.0089,
+  "winrate_side_census": {
+   "radiant": 2,
+   "dire": 222
+  },
+  "winrate_note": "DEGENERATE -- the tool refused the channel itself (minority side won 2 of 224 finished games, share 0.0089 < 0.20; bounded to 0.5 +/- 0.0167). Neither the 0.496 nor the 0/4 may be cited as rule 2(b) evidence in either direction.",
+  "suggested": "hold_or_reject"
  }
 }
