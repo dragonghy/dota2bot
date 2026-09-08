@@ -46,6 +46,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      钉成「仍然无界」。要动先想清楚「走向野怪营地」的代价是什么。
      (乙) **`X.ConsiderQ`(Berserker's Call)全线是收窄的**(`nRadius - 50` / `nRadius - 90`),
      一个到达缺陷都没有 —— 这是**已经查过的否定结果**,写下来免得下一轮再查一遍。
+   - **⛔⛔ 新增开工步骤(本轮收尾自捉,GH #643 报告 §1)**:宣布「`[hero]` open issue 没有
+     可认领的」**之前必须把分页翻完**。`mcp__github__list_issues(state=OPEN, perPage=50)`
+     返回的是**第一页**,而本仓库 open 数 500+、`hasNextPage: true`;本章程里这句话已经
+     **连续四轮**只覆盖最新的一页。**默认值挡在结论和事实之间,而结论恰好是本组每轮
+     第一步的判据。** 翻页方式:把上一次返回的 `pageInfo.endCursor` 传给 `after`。
+   - **⭐ 下一轮先看这几条第二页上的 `[hero]` open issue(本轮没排到,不是看过后否决的)**:
+     **#577**(`axecallbkb` 域读数已交付,**建议先拆 id** —— 看起来最像本组的活)、
+     #562(`axebhrecast` 域读数交付,门内 273、成本收益 ≈ 4:1,**建议不入集**;标签是
+     总监的,但「拆不拆」是本组的)、#567 / #564 / #560 / #554 / #549 / #541 / #537 /
+     #533 / #525 / #512 / #502。**⛔ #570 仍不许碰**(`X.HasSpecialModifier` 出货名单,
+     `-124` 的禁令逐字不变)。
    - **⭐ 下一轮开工顺序(这条已连续三轮有效,继续保留)**:开工自检**跑完**再动变异台,
      **不要并行**(GH #507)。本轮遵守了(用 `until ! pgrep -f "[r]outine_selfcheck.sh"`
      阻塞等),没有复发。
@@ -62,8 +73,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    `bots/` 有真代码行。** 报告 `iterations/reports/hero/20260908T202000Z.md`。
    新 `tests/test_axe_battle_hunger_fight_reach.lua`(**14 例**)+
    `tools/agent/mutstand_axebhreach.sh`(**10/10 CAUGHT**,基线 `axe` 261 例绿)。
-   登记 `state.json:axebhreach_20260908`,新请求 `queue.json:hero-50`,新开 GH **#642**。
-   本轮 `[hero]` open issue **一条可认领的都没有**(12 条逐条理由见报告 §1)。
+   登记 `state.json:axebhreach_20260908`,新请求 `queue.json:hero-50`,新开 GH **#643**。
+   ⚠️ **本轮 `[hero]` open issue 只看了最新的 12 条**(见报告 §1 的当轮更正:第一版把
+   `list_issues` 的**第一页**当成了全部,而 open 总数 500+ / `hasNextPage: true`)。
+   那 12 条没有可认领的;**更早的十几条本轮一条都没枚举**,其中 **#577** 看起来是本组的活。
    - **⭐ 承重的不是又一条到达项,是「这个落单点是一条**选择规则**」**:另外五个英雄落单点
      都是**首次命中**循环(错的是一次出价被拉长),这一个是**最小值搜索** —— 它只留下
      +200 环里血最低的那一个,所以环外的赢家**把同一个循环刚认证为合法的射程内候选挤掉**。
@@ -5607,11 +5620,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   `nInBonusEnemyList`(`nCastRange + 200`)且**一个距离项都没有**的英雄落单点。
   新 `X.axe_IsHungerFightTargetInReach`,新 `tests/test_axe_battle_hunger_fight_reach.lua`
   (**14 例**)+ `tools/agent/mutstand_axebhreach.sh`(**10/10 CAUGHT**,基线 `axe` 261 例绿)。
-  `state.json:axebhreach_20260908`、`queue.json:hero-50`、GH **#642**(本轮开)。
+  `state.json:axebhreach_20260908`、`queue.json:hero-50`、GH **#643**(本轮开)。
   **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
   `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;86 个 fast-Lua detector
   **0 红**;census/registry 族 python 检测器 15 个全 0;`test_bots_walk_farm_only.py` 8 checks 0 failed。
-  本轮 [hero] open issue **一条可认领的都没有**(12 条逐条理由见报告 §1)。
+  ⚠️ **本轮 [hero] open issue 只看了最新的 12 条,没有可认领的;更早的十几条没枚举** ——
+  第一版把 `list_issues` 的**第一页**当成了全部(open 总数 500+,`hasNextPage: true`),
+  收尾时自捉并当轮更正(报告 §1)。**注意这句话在本章程里已连续出现四轮**,而分页默认值
+  一直挡在它和事实之间。**「翻完分页再宣布没有可认领」已写进 `-128` 的开工步骤。**
   - **⭐ 承重的是「选择规则 vs 首次命中」**:另外五个英雄落单点都是首次命中循环(错的是一次
     出价被拉长),这一个是**最小值搜索** —— 只留下 +200 环里血最低的那一个,所以环外的赢家
     **把同一个循环刚认证为合法的射程内候选挤掉**。**错的是一次交换,不只是一次拉长。**

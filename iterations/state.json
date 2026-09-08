@@ -7325,7 +7325,7 @@
   "axebhreach_20260908": {
     "owner": "hero",
     "date": "2026-09-08T20:2xZ",
-    "backlog_item": "hero -127(P4.4 (i):本轮工作单元主体是一个 bots/ 行为改动)。本轮 [hero] open issue 逐条看过,一条可认领的都没有(理由见报告 §1),故按章程工作流第 1 步回落到焦点英雄自查;选 Axe 是因为他上一次被动是 09-08T08:16Z(`axecullreach`,R 的选靶列表),而 W(Battle Hunger)已登记的两个 id(`axebhpure`/`axebhrecast`)一个管伤害类型、一个管重复施法,**都不管到达**。",
+    "backlog_item": "hero -127(P4.4 (i):本轮工作单元主体是一个 bots/ 行为改动)。⚠️ 本轮 [hero] open issue **只看了最新的 12 条**(第一版报告把 list_issues 的第一页当成了全部;open 总数 500+ / hasNextPage true —— 收尾时自捉并当轮更正,见报告 §1),那 12 条没有可认领的、更早的十几条没枚举,故按章程工作流第 1 步回落到焦点英雄自查;选 Axe 是因为他上一次被动是 09-08T08:16Z(`axecullreach`,R 的选靶列表),而 W(Battle Hunger)已登记的两个 id(`axebhpure`/`axebhrecast`)一个管伤害类型、一个管重复施法,**都不管到达**。",
     "headline": "⭐ **X.ConsiderW 的 团战 落单点不是一次过长的出价,是一条『搜索集比自己射程宽』的选择规则。** 八个落单点里六个把目标绑在 `nCastRange` 上(击杀/对线/撤退读 `nInRangeEnemyList`;先手/肉山/Tormentor 直接 `J.IsInRange( ..., nCastRange )`)。团战那个是**唯一**一个遍历 `nInBonusEnemyList`(`nCastRange + 200`)且**一个距离项都没有**的英雄落单点。⭐⭐ **与本流之前四条到达项(`lionrreach` #617 / `wkqlane` #621 / `cmlaneband` #630 / `zusjumpland` #634)的区别是承重的**:那四条都是**首次命中**循环,错的是**一次**出价被拉长;这一条是**最小值搜索** —— 它只留下 +200 环里血最低的那一个然后对他出价,所以环外的赢家不只是**多走一段路**,而是**把同一个循环刚刚认证为合法的射程内候选挤掉**;而被挤掉的那个**下面没有任何落单点接得住**(闭式:对线/撤退两个英雄落单点读 `nInRangeEnemyList` 并施加同一组四条过滤 + 各自额外的合取,armed 子集为空 ⇒ 它们也开不了火)。**错的是一次交换,不只是一次拉长。**",
     "gate": "axebhreach(NEW soak id,turbo-only,**未 armed**;STANDALONE —— `X.axe_IsHungerFightTargetInReach` 里只有它一个 IsSoakCandidate。变异台 M9 就是 pullcad 陷阱:把同一个 `if` 里三行之外的 `axebhrecast` 合取进来,10/10 被抓。)",
     "bots_lua_changed": "bots/BotLib/hero_axe.lua —— 新 helper `X.axe_IsHungerFightTargetInReach( hTarget, nCastRange )`;`X.ConsiderW` 团战最小值搜索的过滤条件末尾加一条合取。闸关时对任何输入返回 `true` ⇒ 逐字是出货谓词(§5.1 在两个方向上驱动:闸关、非 turbo)。",
@@ -7337,7 +7337,7 @@
     "left_alone": "+200 搜索环**不动**(本 lever 过滤环,不缩环);打野落单点的 `nCastRange + 100` 中立生物读数**不动**(目标是**小兵**,前提是 `J.IsFarming`,§5.4 把它钉成**仍然无界**,免得后来人把本文件读成「已经修好了」);`axebhrecast` / `axebhpure` **一行不动**(§5.5 断言前者仍接在 3 个site 上)。",
     "armed": "NO —— P4.2 入集冻结期内不提入集,合法裁定是 FROZEN-HOLD。零 arm、零发波、零 AWS、零 EC2、零 S3。",
     "queue": "hero-50(零 EC2 归档只读扫描,与 hero-2/30..49 同形,可并进同一次遍历)",
-    "issue": "GH #642",
+    "issue": "GH #643",
     "report": "iterations/reports/hero/20260908T202000Z.md"
   }
 }
