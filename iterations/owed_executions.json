@@ -87,7 +87,8 @@
           "hero-46",
           "hero-47",
           "hero-48",
-          "hero-49"
+          "hero-49",
+          "hero-50"
         ]
       },
       "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)—— 这是 2026-09-05 到 09-06T07:xxZ 之间的状态,留在这里是因为它是下面那次改动的立案句。三轮里这一腿从三份读数长到七份,而 `done_when` 一直只判**一个路径存在**:七份里少了六份,这条腿照样绿,唯一挡在「绿」与「退休」之间的是总监记得去逐份读。 ⭐ **2026-09-06T09:xxZ 总监把它改成 `path_contains_all`,并同时追加第八份(hero-36)**:八个 id 各自必须在产物里被**提到**,少一个这一腿就报 OWED 并**点名说少哪一个**。⚠️ **「提到」不是「读数正确」** —— 被提到的 id 可能被并了池、可能答的是错的那一列;那一层仍然是总监退休本行前的逐份读通,`path_contains_all` 只把「有没有这一份」从记性搬进工具。⚠️ 这也意味着**改产物路径或改 id 写法会让这一腿变红** —— 那正是要的:改名本来就该惊动人。 ⭐ 2026-09-06T13:xxZ:hero-37(`zusultstrand`,GH #564)裁 APPROVED-SCAN 并进同一次遍历 ⇒ 针数 8 → 9。 ⭐⭐ 2026-09-08T16:0xZ:针数 **9 → 20**(hero-38..48 一次补齐,其中 38/39/40 是回填)。⚠️ 针数变大**不是**进度倒退的记账错误 —— 那三份读数本来就欠着,只是这条腿看不见它们。⛔ **hero-42 的针脚是「被提到」不是「读数」**:本轮裁定明写它排在 GH #581 之后,执行方留一行点名 #581 的状态行即满足针脚(与 hero-32/33 同款),**不许**为了让针脚变绿而交一份把 (2) 写成 0 的报告。",
@@ -399,6 +400,32 @@
         ]
       },
       "done_when_note": "⭐ **这是 `text_absent` 的第一个真实用户**(上一轮 09-08T13:00Z 落地该 kind 时逐字登记「此刻没有任何一条活着的 owed 行用它」,并写下「下一条『把这句写错的话改掉』形状的裁定就是它的第一个真实用户」——这就是那一条)。⛔ **反面那一半买得到,正面那一半买不到,所以只钉反面**:两端仪器一旦服务了 charges,`tests/test_blind_a_wandlimbo_tpdead.lua` §1b/§1c 会**当场转红**,改这个文件的人必须重写头里那两句(它们是这条盲区的字面描述)⇒ 那两句消失 = 仪器被买了。⚠️ **absence 不等于替换它的东西是对的**(该 kind 自带的限度):这一行读 DONE 只说「那两句没了」,**不说**新仪器读数正确,更不说 `wandlimbo` 该重新入集 —— 重新入集要走 §GC 的三条件,由总监重判。⚠️ 文件被删 ⇒ **UNCERTIFIABLE 不是 DONE**(该 kind 自带的假阳防护)。 ⛔ **本行第一版的两条 needle 都打错了(大小写 + 跨行折断),于是它在被写下的同一分钟读 DONE** —— 已修正,两条 needle 在裁定时刻**逐字验在场**(见 §GC.7)。"
+    },
+    {
+      "id": "cmrguard_castrange_instrument",
+      "issue": "总监 2026-09-08 立;裁定全文 `iterations/streams/test_set.md §GD`(§GD.2/§GD.3/§GD.5);仪器缺口本身待开 [harness] issue(本轮 MCP 未试,issue 号仍空)",
+      "ruling": "总监 2026-09-08T2x:xxZ:`cmrguard` **退回出集**(42 → 41),理由是条件 (a) 在 **fixture 路径**上买不到。veto 环是 `hCc:GetCastRange() + X.nRGuardCloseBuffer`,而那个 cast range 读的是**敌方**英雄的技能句柄 —— 本仓库的 fixture 加载器从不服务它,落 `tests/mock/bot_api.lua:184` 的 `^Get -> 0` 兜底。实测 110 份 fixture / 487 个 curated hard-CC 句柄:**读得出 cast range 的 137 个恰好等于 KV 服务的 137 个,350 个 0 全部来自兜底**(其中仅 100 个碰巧是引擎真答案)。⭐ **立案帧本身就在盲区里**:armed 且不由测试作者写入 cast range 时,`X.cm_IsRSafeToOpen` 在 Jakiro `ice_path` 1138.6u 那一帧**放行**(1138.6 > 0 + 400)。⛔ **退集不是 reject**:gate、helper 与两个常数逐字保留,`bots/`+`game/` 零 diff。",
+      "ruled_at": "2026-09-08T2x:xxZ",
+      "executor": "**两半都要,只买一半仍然买不到 (a)**:(i) `tests/mock/special_value_shapes.lua` 的 KV roster 从焦点五扩到 curated hard-CC 载体(生成器 `tools/agent/special_value_shape_census.py --snapshot`);(ii) `tests/mock/replay_fixture.lua` 的 `AbilityCastRange` getter 改成**无条件装**(与它三十行之下的 `AbilityDamage` 同形),这样一个 0 才意味着「KV 没声明」。⭐ **第三件不属于仪器但属于同一次购买**:replay 路径**已经够得着**(`tools/batch_test/behavioral/cmrguard_counterfactual.py` 持有 datafeed 锚定的 per-level 表并逐字声明它),重读归**录像组** —— 而 `state.json:cmrguard_NOT_PROMOTED_20260820` **本来就点名要这次重读**(用 replay-check §3.1 的 PRE-CAST 帧约定重跑 `cmrguard_precision.py`),20 天没人取。重新入集申请归英雄组/协同组,总监审。",
+      "trigger": "**没有外部触发器**,而这正是它进 registry 的理由:`cmrguard` 已出集 ⇒ 没有 id 行载它;这条仪器缺口**不属于任何一波** ⇒ 没有 `W<N>_wave.json:harvest_obligations` 行载它(§DR / GH #413 同型)。实际取它的时机:任何一轮有余量、且愿意动 mock KV roster 的工作单元;或者有人提 `cmrguard`/`cmrcap` 重新入集的那一刻(以先到者为准)。⚠️ **它不是一条 id 的债**:读敌方 cast range 的调用点恰好两个,另一个是 `jmz_func.lua:7108` 的 `ccburst` 窗口 —— **已发行、无门、每一局都在跑**,今天同样没有任何 fixture 能测它的 delivery 项。",
+      "delivered_to": [
+        "iterations/owed_executions.json(本行)",
+        "iterations/streams/test_set.md §GD(裁定全文)",
+        "iterations/armed_since.json(`cmrguard` 的 retired_note)",
+        "iterations/state.json:cmrguard_RETURNED_20260908",
+        "tests/test_blind_a_cmrguard.lua + tests/_blind_a_cmrguard_sweep.lua + tools/agent/mutstand_blind_a_cmrguard.sh"
+      ],
+      "why_registered_here": "退集之后买 (a) 的能力**没有被销毁但换了执行人并换了性质**:它从「读一份录像」变成「改一台 mock 的 KV roster」。写进已出集 id 的散文里就是 §DR / GH #540 量过的掉棒形状。⭐ 而这一条比一般的掉棒更需要一行,理由是 §GD.5:**加载器自己在三十行之下已经为相邻的 `AbilityDamage` 诊断并修好了一模一样的危险,并把理由逐字写下来了**(『两者从读数上不可分辨』,『lionqdmg 与 zusboltcap 都压在那个 0 上』)—— 而紧挨着它上面的 `AbilityCastRange` 没有修,一条 armed 的 id 就压在后者的 0 上骑了十个波次。**一次没有推广的修复和一堵没有仪器的墙一样拦不住人**;这一行就是给它装的那根针。",
+      "done_when": {
+        "kind": "text_absent",
+        "path": "tests/test_blind_a_cmrguard.lua",
+        "text": [
+          "an enemy's cast range is never read",
+          "exactly the 137 the KV serves",
+          "the armed gate ALLOWS the channel"
+        ]
+      },
+      "done_when_note": "⛔ **三条 needle 在裁定时刻逐字验在场(各出现 1 次)** —— 这是 §GC.7 的直接教训:上一行的两条 needle 分别错在一个字母的大小写与跨注释折行,而『needle 从未匹配过』与『那句话被删掉了』在这个 kind 里逐字节不可分辨,失效方向是 DONE。⭐ **只钉反面那一半**:两半仪器一旦落地,`tests/test_blind_a_cmrguard.lua` 的 §1b/§2a/§2b 会**当场转红**(M1/M2 变异体逐一验过 CAUGHT),改这个文件的人必须重写头里那三句 —— 它们是这条盲区的字面描述 ⇒ 三句消失 = 仪器被买了。⚠️ **absence 不等于替换它的东西是对的**:本行读 DONE 只说那三句没了,**不说**新仪器读数正确,更不说 `cmrguard` 该重新入集 —— 重新入集要走三条件由总监重判。⚠️ 文件被删 ⇒ **UNCERTIFIABLE 不是 DONE**(该 kind 自带的假阳防护)。"
     }
   ],
   "retired": [

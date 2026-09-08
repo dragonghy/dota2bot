@@ -1,6 +1,8 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,wandbleed,cmrguard,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
-**成员串 42**(上一行,**380 字节**,md5 `f5b9da19646c9d7c2b96a19e768a8b7b`)。本行 **2026-09-08T1x:xxZ 的变动:两条 `退回出集`(44 → 42)**,总监裁定全文 **§GC**。⛔ **两条都不是 reject**,gate 与两个 helper 体**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(owner P4.2 的产出指标)。
+tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
+**成员串 41**(上一行,**371 字节**,md5 `fd21d5ddc2759c2a7adf829074d51c63`)。本行 **2026-09-08T2x:xxZ 的变动:一条 `退回出集`(42 → 41)**,总监裁定全文 **§GD**。⛔ **不是 reject**,gate、helper 与两个常数(`X.nRGuardCloseBuffer=400` / `X.nRGuardRangeCap=200`)**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **1**(owner P4.2 的产出指标,**不达 ≥2,理由见报告 §6,不粉饰**)。
+1. **`cmrguard` 退集**(42 → 41)—— armed **20 天**、`verify=0`,是 2026-08-19 那一档 `verify=0` 的**最后一条**(前两条 `wandlimbo`/`tpdead` 于 §GC 退集)。条件 (a) 在 **fixture 路径**上买不到:veto 环是 `hCc:GetCastRange() + 400`,而那个 cast range 读的是**敌方**技能句柄,加载器从不服务它 —— 落 `bot_api.lua:184` 的 `^Get -> 0` 兜底。**487 个 curated hard-CC 句柄里读得出 cast range 的 137 个,恰好等于 KV 服务的那 137 个;350 个 0 全部来自兜底**(其中仅 100 个碰巧是引擎真答案)。⭐ **立案帧本身就在盲区里**:不由测试作者写入 cast range 时,armed 的 `cmrguard` 在 20260819_003005(Jakiro ice_path **1138.6u**)**放行**了那条要了 CM 命的通道 —— `1138.6 > 0 + 400`。全文 §GD。
+**上一轮(2026-09-08T19:xxZ,44 → 42,§GC)的两条,留作沿革:**
 1. **`wandlimbo` 退集**(44 → 43)—— armed **20 天**、`verify=0`,条件 (a) **在两条仪器路径上都买不到**:helper 的第一条合取是 `GetCurrentCharges() < 6`,而 fixture 侧 953 个 wand/stick 句柄**全部读 0**(落到 `bot_api.lua:184` 的 `^Get -> 0` 兜底),replay 侧 `dumper/main.go` 里 **`charge` 一次都不出现**(只发 `Items []string`)。全文 §GC。
 2. **`tpdead` 退集**(43 → 42)—— armed **20 天**、`verify=0`,它是 §GA.1 逐字点名的「两个释放」之一,而那一轮**只裁了 `tpdying`**。同一个函数体、同一道 `tpcommit` 门:单独 armed 逐位 no-op,同时 armed 则读数**连符号都不可分解**。全文 §GC。
 ⭐⭐⭐ **本轮最该被读的一条(§GC.2):两条 id 各自都有一份绿的、钉在真实帧上的 fixture 测试,而两份都由测试作者**亲手写进了该杠杆唯一转轴的那个输入**。**
@@ -2192,4 +2194,142 @@ arm `tpdead` 单臂 ⇒ `td_armed_alone_nonnil 0`;arm `tpcommit` 单臂当**对�
 4. **没有做 §GC.2 那条处方**(桩转轴普查),只登记进 backlog。
 5. **没有核 `tpdead` 退集对 `promote_atoms.json` 那一行的长期影响** —— 本节只主张「退集不是 promote,故该行不动」,
    **不主张**两个 subject 都出集之后那一行还需不需要存在;它的 RELEASE CONDITION 逐字未变。
+6. **patch 检查本轮未做**(低频;上一次 §GA.0 做过,无新 patch)。
+
+---
+
+## §GD 2026-09-08T2x:xxZ 总监:**`cmrguard` 退回出集(42 → 41)** —— 2026-08-19 那一档 `verify=0` 的最后一条;本节最该被读的是 **§GD.2:这条杠杆的 veto 环读的是敌方技能的 cast range,而本仓库的 fixture 加载器从不读它 —— 于是 armed 的 gate 在**它自己的立案帧**上放行**;以及 **§GD.5:同一个加载器在三十行之下,已经为**相邻的那个 key** 诊断并修好了一模一样的危险**
+
+### §GD.0 一句话
+
+`cmrguard` 退回出集,armed **42 → 41**。**判定完结 1**(⛔ **不达 owner P4.2 的 ≥2,不粉饰**,理由 §GD.7)。
+零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+机器键 `state.json:cmrguard_RETURNED_20260908`;量具 `tests/test_blind_a_cmrguard.lua`(**11 checks / 0 failed**)、
+`tests/_blind_a_cmrguard_sweep.lua`、`tools/agent/mutstand_blind_a_cmrguard.sh`(**8 CAUGHT / 0 SURVIVED / control_ok=1**)。
+
+### §GD.1 选取依据(不是偏好)
+
+上一轮(§GC)的「下次触发 ①」逐字写着**判 `cmrguard`**,并写着「它的 (a) 买不买得到**本节没有量**,原样留给下一轮」(§GC.6 第 3 条)。
+`arm_since.py` + `verify_coverage.py` 复读:2026-08-19 的 20 天档里,`verify=0` 的三条是 `cmrguard`/`tpdead`/`wandlimbo`,
+**前两条已于 §GC 退集,本条是最后一条**。
+
+### §GD.2 ⭐⭐⭐ 主轴:**armed 的 gate 在它自己的立案帧上放行**
+
+`cmrguard`(`bots/BotLib/hero_crystal_maiden.lua:1612`)的判据是
+
+```
+GetUnitToUnitDistance(cm, e) <= ( hCc:GetCastRange() or 0 ) + X.nRGuardCloseBuffer   -- 400
+```
+
+除最后一项外每一项都是 dump 里的真数据。而最后一项是 **GH #34 那次收窄的全部内容**
+(收窄之前 gate 是 range-blind 的,只看「有没有」不看「够不够得着」),
+并且它读的是**敌方**英雄的技能句柄 —— 那正是本仓库加载器唯一不服务的地方。
+
+实测(`tests/test_blind_a_cmrguard.lua` §1a–§1c,真帧 `f_260819_003005_cm_selfpreserve`,
+即 hero.md backlog #2 / GH #34 的**立案帧**:Jakiro 持 ready 的 `ice_path` 距 CM **1138.6u**,
+0.6s 后把她从通道里打断、她随即死亡):
+
+| 读什么 | 读到 | 来源 |
+|---|---|---|
+| Jakiro 距离 | **1138.6** | 真帧 |
+| `ice_path:GetLevel()` | ≥1 | 真帧 |
+| `ice_path:GetCooldownTimeRemaining()` | 0 | 真帧 |
+| `J.GetReadyHardCc(jakiro)` | **非 nil** | 真帧(能力那一半买到了) |
+| `ice_path:GetCastRange()` | **0** | ⛔ `tests/mock/bot_api.lua:184` 的 `^Get -> 0` 兜底 |
+| `X.cm_IsRSafeToOpen(bot)`,armed,**不写入 cast range** | **true = 放行** | `1138.6 > 0 + 400` |
+| 同上,写入 `GetCastRange = 1000` | **false = 拦下** | 杠杆本身没坏 |
+
+⇒ **仪器坏了,不是杠杆坏了。** 但 (a) 问的是「这个输入到底出没出现过」,
+而在 fixture 路径上**它一次都没有出现过**。
+
+### §GD.3 ⭐⭐ 塌缩是**全量**的,而且量出来的是**来源**不是值
+
+`tests/_blind_a_cmrguard_sweep.lua`(110 份 fixture,~3s,`G`/`C` 行按房规钉进测试头):
+
+```
+G KV_ROSTER 5 (axe,crystal_maiden,lion,skeleton_king,zuus)
+C FIXTURES 110   C HARDCC_HANDLES 487
+C CR_ZERO 350    C CR_NONZERO 137
+C KV_SERVED 137  C CATCHALL 350   C ACCIDENTALLY_RIGHT 100
+C READY 304      C READY_ZERO 217
+```
+
+⭐ **`CR_NONZERO 137` 与 `KV_SERVED 137` 逐位相同,`CR_ZERO 350` 与 `CATCHALL 350` 逐位相同。**
+也就是说:**整份语料里没有任何一个 0 是「读了 KV、发现没声明 cast range」得到的**,
+每一个 0 都是兜底那一行。读得出来的四个载体(`crystal_maiden_frostbite` 600、`lion_impale` 650、
+`lion_voodoo` 575、`skeleton_king_hellfire_blast` 525)**全部是焦点五英雄自己的技能**;
+其余 14 个载体(jakiro/witch_doctor/ogre_magi/chaos_knight/shadow_shaman/sven/dragon_knight/
+storm_spirit/earthshaker/centaur/slardar/tidehunter/axe)一律读 0。
+
+⛔ **而 0 是分不出来的:** `axe_berserkers_call` 的真答案**就是** 0(无目标、自身半径),
+它那 28 个 0 与 `jakiro_ice_path` 那 33 个 0 **走的是同一行代码**。
+100/350 碰巧是对的 —— **对的值,错的理由**,且从读数上不可分辨。
+剩下 250 个方向一致:**把远程 CC 一律当成自身半径**,把环缩到 400,**恰好是掐死这条 gate 的那一边**(§GB.2 形状)。
+
+### §GD.4 ⭐ 第三例「绿的真帧测试 + 作者供给的转轴」(§GC.2 的形状)
+
+`tests/test_replay_260819_cm_r_range.lua` 在立案帧上先做
+`rawget(icePath, '__spec').GetCastRange = 1000`(它自己的注释称这是个 **under-estimate**),再断言 gate 拦下。
+**那份测试没有错**:1000 大致就是引擎的答案,而「给定这个输入,决策对不对」正是子句测试该问的。
+它只是**不是 (a)** —— (a) 问的是那个输入有没有被**读**到。
+§GC.2 立的规律在本节第三次兑现,而这一次**被写进去的值直接决定立案帧的判决**。
+
+⚠️ 本节把针脚从宽形改成**窄形**:`GetCastRange = 1000` 这个子串在那份文件里**出现两次**
+(另一处是 Centaur 的「假装它是远程」变异),于是宽针脚在 ice_path 那行被删掉时**仍然是绿的** ——
+`mutstand_blind_a_cmrguard.sh` 的 **M6 第一轮 SURVIVED,而它是对的、断言是错的**(纪律 2 的正面兑现,与 §GC.4 同型)。
+改钉整条 `rawget(icePath, '__spec').GetCastRange = 1000` 之后 CAUGHT。
+
+### §GD.5 ⭐⭐ 底下那件更贵的:**同一个加载器已经为相邻的 key 诊断并修好了同一个危险**
+
+`tests/mock/replay_fixture.lua` 里,`AbilityCastRange` 的 getter **只在该 key 被声明时才装**
+(`if cast_range ~= nil then ...`)。而**三十行之下**,`AbilityDamage` 的 getter 是**给 KV 英雄的每一条技能无条件装**的,
+加载器自己的注释逐字写着理由:一条没有 `AbilityDamage` 的技能必须答 0 **因为加载器读了 KV 没找到**,
+而不是因为**什么都没装、通用的 `^Get` 兜底替它答了**;两者**「从读数上不可分辨」**,
+且**「作为证据并不等价:`lionqdmg` 与 `zusboltcap` 都压在那个 0 上」**。
+
+⇒ **房子已经把这个失效模式诊断清楚、写下来、并对一个 key 修好了;紧挨着它上面的那个 key 没有修,
+而一条 armed 的 id 正压在后者的 0 上。** 这不是新发现的问题,是**一次没有推广的修复**。
+(`tests/test_blind_a_cmrguard.lua` §3b 解析两处分支,不引用散文。)
+
+### §GD.6 三堵墙,与「这不是 reject」
+
+1. **fixture 路径**:§GD.2/§GD.3。
+2. **波次路径**:`cmrguard` 在 **W39/40/41/52/53/54/55/56/57/58** 里**只以全量成员串的一员出现**
+   (命中长度 380–501 字节,无一条短串)⇒ **一次都没有被单臂 arm 过**,条件 (b) 也从来没有过读数。
+   (与 §GC.1 对 `wandlimbo`/`tpdead` 的同一读法。)
+3. **它自己的 promote 门槛结构上够不着**:`state.json:cmrguard_NOT_PROMOTED_20260820` 把 promote 条件挂在
+   「**#63 + #66 的修订落地之后**」再重跑 `cmrguard_precision.py`。那两条修订就是 **`cmrcap`** 与 **`esaftershock`**,
+   而 `iterations/armed_since.json` 里**两条都没有行** ⇒ **从未 armed 过**;
+   `cmrcap` 还额外要求**与 `cmrguard` 同臂**(axeblink 陷阱:单独 armed 逐位无操作)。
+   ⭐ 本节另量到比那条注释更强的一句:**只要 range 项是兜底的 0,`cmrcap` 在任何帧上都改变不了判决**
+   —— `math.min(0, 200) == 0`,已作为断言钉进 §2c(两份 fixture 上 armed±`cmrcap` 判决逐位相同)。
+
+⛔ **退集不是 reject**:gate(`hero_crystal_maiden.lua:1612`)、helper 体、`X.nRGuardCloseBuffer = 400`、
+`X.nRGuardRangeCap = 200` **逐字保留**,`bots/`+`game/` **零 diff**;(c) 逻辑依据成立且未被取代。
+重新入集的条件写进 owed 行 `cmrguard_castrange_instrument`,**不留在散文里**。
+
+⚠️ **不掉进 `pullcad` 陷阱,查过了**:`iterations/promote_atoms.json` 里 **`cmrguard` 零次出现**(§3c 钉住),
+没有任何一条 atom 的 subject/prereq 点名它 ⇒ 本次退集**没有冻死任何一个 armed 杠杆**。
+⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py --arm` 对 42-id 与 41-id 两串各跑一次,
+`TERMS` 行**逐字节相同**(`crystal_maiden` 由 `cmqreach` 承载),`0 unresolved` 两次,`10 hero → 9 hero`
+⇒ 选种解空间不受影响。⛔ **W58 及更早不与 41-id 家族并池。**
+
+⚠️ **债不是这一条 id 的**:读敌方 cast range 的调用点**恰好两个**(§3a 钉住),另一个是
+`jmz_func.lua:7108` 的 `ccburst` 窗口 —— **已发行、无门、每一局都在跑**。
+于是今天**没有任何 fixture 能测那条已发行路径的 delivery 项**,而且错的方向一样。
+买这台仪器不是给一条退集候选帮忙。
+
+### §GD.7 诚实边界(本节**没有**做到的事)
+
+1. ⛔ **判定完结 1,不达 owner P4.2 的 ≥2。** 不粉饰:本轮的预算花在**买下让这条裁定成立的读数**
+   (sweep + 11 条断言 + 8 发变异台)上,而 §GC 的 ① 逐字只点了这一条 id。
+   **不为凑数去裁一条没量过的 id** —— 那正好是 P4.2 想禁止的方向(「推进的度量是集合变小」不是「裁定条数变大」)。
+   下一轮的 ① 强制是**再取两条**,从 `verify_coverage.py` 的 `narrat=1` 四条(`campsel`/`pulllane`/`pullthink`/`roamidle`)清起。
+2. **没有量 replay 路径**。`tools/batch_test/behavioral/cmrguard_counterfactual.py` 持有 datafeed 锚定的
+   per-level cast range 表并**逐字声明它是 out-of-frame 锚**,所以那条路径**够得着转轴** ——
+   这正是 `cmrguard` 与 `wandlimbo`(两端都瞎)的分野。本节**没有重跑它**:语料在 S3,
+   重读归录像组,且 2026-08-20 的裁定**本来就点名要这次重读**(见 owed 行)。
+3. **没有做「桩转轴普查」**(§GC 的 backlog 99):本节是它的第三个实例,不是它的落地。
+4. **没有买仪器**。两半(KV roster 扩到 hard-CC 载体 + getter 无条件装)都只登记进 owed 行。
+5. **没有重新解释 2026-08-20 的 precision ~40% / recall 1/4**:那些数出自 replay 路径,本节不碰它们。
 6. **patch 检查本轮未做**(低频;上一次 §GA.0 做过,无新 patch)。

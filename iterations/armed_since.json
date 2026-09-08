@@ -66,7 +66,9 @@
     "cmrguard": {
       "armed_since": "2026-08-19",
       "precision": "exact",
-      "source": "reports/director/20260819T045448Z.md"
+      "source": "reports/director/20260819T045448Z.md",
+      "retired_at": "2026-09-08",
+      "retired_note": "退回出集(test_set.md §GD;state.json:cmrguard_RETURNED_20260908)。armed 42 → 41。条件 (a) 在 fixture 路径上买不到:veto 环是 `hCc:GetCastRange() + 400`,而那个 cast range 读的是**敌方**英雄的技能句柄,本仓库的 fixture 加载器从不读它 —— 落 `tests/mock/bot_api.lua:184` 的 `^Get -> 0` 兜底。实测(tests/_blind_a_cmrguard_sweep.lua,110 份 fixture / 487 个 curated hard-CC 句柄):读得出 cast range 的 137 个**恰好等于** KV 服务的 137 个,350 个 0 **全部**来自兜底,其中只有 100 个碰巧是引擎的真答案(自身半径 CC)。⭐ 立案帧本身就在盲区里:armed 且不由测试作者写入 cast range 时,`cm_IsRSafeToOpen` 在 20260819_003005(Jakiro ice_path 1138.6u)**放行**该通道 —— 1138.6 > 0 + 400。绿的 `tests/test_replay_260819_cm_r_range.lua` 先写 `GetCastRange = 1000` 再断言,是正确的子句测试但不是 (a)(§GC.2 形状第三例)。另:W39–W58 九个波次里 `cmrguard` 只以全量成员串(380–501 字节)的一员出现,**一次都没有被单臂 arm 过** ⇒ 条件 (b) 也从来没有过读数;且 2026-08-20 的 not-promoted 裁定把 promote 条件挂在「#63 + #66 的修订落地之后」,而那两条修订就是 `cmrcap` 与 `esaftershock`,**两条都从未 armed 过**(本文件无行),`cmrcap` 还要求与 `cmrguard` 同臂。⛔ 退集不是 reject:gate、helper、`X.nRGuardCloseBuffer=400`、`X.nRGuardRangeCap=200` 逐字保留,`bots/`+`game/` 零 diff。买 (a) 见 owed 行 `cmrguard_castrange_instrument`。"
     },
     "tpdead": {
       "armed_since": "2026-08-19",

@@ -7339,5 +7339,18 @@
     "queue": "hero-50(零 EC2 归档只读扫描,与 hero-2/30..49 同形,可并进同一次遍历)",
     "issue": "GH #643",
     "report": "iterations/reports/hero/20260908T202000Z.md"
+  },
+  "cmrguard_RETURNED_20260908": {
+    "decision": "`cmrguard` 退回出集,armed 42 → 41。⛔ 退集不是 reject:gate(bots/BotLib/hero_crystal_maiden.lua:1612)、helper 体、X.nRGuardCloseBuffer=400、X.nRGuardRangeCap=200 逐字保留,bots/+game/ 零 diff,条件 (c) 成立且未被取代。裁定全文 iterations/streams/test_set.md §GD(§GD.0–§GD.7)。",
+    "why_1_fixture_path": "条件 (a) 在 fixture 路径上买不到。veto 环是 `hCc:GetCastRange() + 400`,cast range 读的是**敌方**技能句柄,而加载器从不服务它 —— 落 tests/mock/bot_api.lua:184 的 `^Get -> 0` 兜底。tests/_blind_a_cmrguard_sweep.lua(110 fixture / 487 个 curated hard-CC 句柄):CR_NONZERO 137 与 KV_SERVED 137 逐位相同,CR_ZERO 350 与 CATCHALL 350 逐位相同 ⇒ 整份语料里没有一个 0 是「读了 KV 发现没声明」得到的。KV_ROSTER 只有焦点五(axe,crystal_maiden,lion,skeleton_king,zuus)。",
+    "why_1_the_decisive_reading": "立案帧本身就在盲区里:f_260819_003005_cm_selfpreserve(GH #34 / hero.md backlog #2,Jakiro 持 ready ice_path 距 CM 1138.6u,0.6s 后打断通道、她随即死亡)。距离/等级/冷却都真读自 dump,GetReadyHardCc(jakiro) 非 nil;而 ice_path:GetCastRange() 读 0 ⇒ armed 且不写入 cast range 时 X.cm_IsRSafeToOpen 返回 true(放行),1138.6 > 0 + 400。写入 GetCastRange=1000 则返回 false。仪器坏了,不是杠杆坏了。",
+    "why_2_wave_path": "W39/40/41/52/53/54/55/56/57/58 里 cmrguard 只以全量成员串的一员出现(命中长度 380–501 字节,无短串)⇒ 从未被单臂 arm 过 ⇒ 条件 (b) 也从来没有过读数。",
+    "why_3_promote_bar_unreachable": "state.json:cmrguard_NOT_PROMOTED_20260820 把 promote 条件挂在「#63 + #66 的修订落地之后」。那两条修订是 cmrcap 与 esaftershock,iterations/armed_since.json 里两条都没有行 ⇒ 从未 armed;cmrcap 还要求与 cmrguard 同臂。⭐ 本轮另量到更强的一句:只要 range 项是兜底的 0,cmrcap 在任何帧上都改变不了判决(math.min(0,200)==0),已作为断言钉住。",
+    "why_4_the_debt_is_not_this_ids": "读敌方 cast range 的调用点恰好两个:cmrguard(已退集)与 jmz_func.lua:7108 的 ccburst 窗口 —— 已发行、无门、每一局都在跑。今天没有任何 fixture 能测那条已发行路径的 delivery 项,错的方向一样。",
+    "the_finding_underneath": "tests/mock/replay_fixture.lua 里 AbilityCastRange 的 getter 只在该 key 被声明时才装;三十行之下 AbilityDamage 的 getter 给 KV 英雄的每一条技能无条件装,加载器自己的注释逐字写着理由(一个 0 必须来自「读了 KV 没找到」而不是「什么都没装、兜底替它答了」,两者『从读数上不可分辨』,而 lionqdmg / zusboltcap 都压在那个 0 上)。⇒ 房子已诊断清楚并对相邻 key 修好,紧挨着的这个 key 没修,而一条 armed 的 id 正压在后者的 0 上。这是一次没有推广的修复,不是新问题。",
+    "stubbed_pivot_third_instance": "§GC.2 形状第三例:tests/test_replay_260819_cm_r_range.lua 在立案帧上先写 rawget(icePath,'__spec').GetCastRange = 1000(它自己称之为 under-estimate)再断言。测试没错(1000 大致就是引擎答案,子句测试就该这么问),它只是不是 (a)。",
+    "instruments": "tests/test_blind_a_cmrguard.lua 11 checks / 0 failed;tests/_blind_a_cmrguard_sweep.lua(~3s,拆出 fast leg,GH #358 的 120s 预算);tools/agent/mutstand_blind_a_cmrguard.sh 8 CAUGHT / 0 SURVIVED / control_ok=1,六个文件 git diff --quiet 逐字节还原 YES。⚠️ M6 第一轮 SURVIVED 而它是对的、断言是错的:GetCastRange = 1000 在那份测试里出现两次,宽针脚在 ice_path 那行被删时仍然绿;改钉整条 rawget 语句后 CAUGHT(纪律 2 的正面兑现)。",
+    "side_effects_checked": "promote_atoms.json 里 cmrguard 零次出现(pullcad 陷阱查过,本次退集没有冻死任何 armed 杠杆);carrier_terms.py --arm 对 42-id 与 41-id 两串各跑一次,TERMS 行逐字节相同(7 项,crystal_maiden 由 cmqreach 承载),0 unresolved 两次,10 hero → 9 hero ⇒ 选种解空间不受影响。⛔ W58 及更早不与 41-id 家族并池。",
+    "next": "买 (a) 见 owed 行 cmrguard_castrange_instrument。⛔ 本轮判定完结 1,不达 owner P4.2 的 ≥2,理由与补法见 §GD.7 第 1 条:下一轮 ① 强制再取两条,从 verify_coverage.py 的 narrat=1 四条(campsel/pulllane/pullthink/roamidle)清起。"
   }
 }

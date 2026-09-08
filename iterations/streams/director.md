@@ -521,6 +521,55 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     (本轮就是这么抓到的;换一个把它写在工作单元末尾的轮次,这一行会**生下来就是退休的**)。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-08T22:11Z**:**`cmrguard` 退回出集(42 → 41),判定完结 1(⛔ 不达 ≥2,不粉饰);而本轮最该被读的是 —— 这条 gate 的 veto 环读的是敌方技能的 cast range,加载器从不读它,于是 armed 的 gate 在**它自己的立案帧**上放行了那条要了 CM 命的通道。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+  取活依据是上一轮「下次触发」的 **①**(§GC.6 第 3 条逐字把 `cmrguard` 留给下一轮:「它的 (a) 买不买得到本节没有量」)。
+  全文 `iterations/reports/director/20260908T221132Z.md`,裁定全文档案 `test_set.md §GD`(§GD.0–§GD.7),
+  机器键 `state.json:cmrguard_RETURNED_20260908`。
+  ⭐⭐⭐ **主轴(§GD.2)**:判据是 `GetUnitToUnitDistance(cm,e) <= ( hCc:GetCastRange() or 0 ) + 400`,
+  最后一项是 **GH #34 那次收窄的全部内容**,而它读的是**敌方**句柄。立案帧 `f_260819_003005`
+  (Jakiro 持 ready `ice_path` **1138.6u**,0.6s 后打断通道、CM 随即死亡):距离/等级/冷却**都真读自 dump**、
+  `GetReadyHardCc` 非 nil(**能力那一半买到了**),而 `GetCastRange()` 读 **0**(落 `bot_api.lua:184` 兜底)
+  ⇒ armed 且不由作者写入时 `cm_IsRSafeToOpen` **返回 true = 放行**(`1138.6 > 0 + 400`);写入 1000 则拦下。
+  **仪器坏了不是杠杆坏了**,但 (a) 问的正是「这个输入出没出现过」。
+  ⭐⭐ **塌缩是全量的,而且量的是来源不是值(§GD.3)**:110 fixture / 487 个 curated hard-CC 句柄,
+  **`CR_NONZERO 137` 与 `KV_SERVED 137` 逐位相同,`CR_ZERO 350` 与 `CATCHALL 350` 逐位相同** ——
+  **整份语料里没有一个 0 是「读了 KV 发现没声明」得到的**;`KV_ROSTER` 只有焦点五。
+  ⛔ 而 0 分不出来:`axe_berserkers_call` 的真答案就是 0,它那 28 个 0 与 `jakiro_ice_path` 那 33 个
+  **走同一行代码**;100/350 碰巧对(**对的值、错的理由**),剩下 250 个方向一致地把环缩到 400。
+  ⭐⭐ **底下那件更贵的(§GD.5):一次没有推广的修复。** 同一个加载器三十行之下给 `AbilityDamage` 的 getter
+  **无条件装**,并逐字写着理由(一个 0 必须来自「读了 KV 没找到」而不是兜底替它答了,两者**「从读数上不可分辨」**,
+  而 `lionqdmg`/`zusboltcap` 都压在那个 0 上);**紧挨着它上面的 `AbilityCastRange` 没有修**,
+  一条 armed 的 id 就压在后者的 0 上骑了十个波次。
+  ⚠️ **债不是这一条 id 的**:读敌方 cast range 的调用点**恰好两个**,另一个是 `jmz_func.lua:7108` 的
+  `ccburst` 窗口 —— **已发行、无门、每一局都在跑**。
+  **三堵墙**(§GD.6):fixture 路径买不到;波次路径 W39..W58 **只以全量成员串的一员出现、从未单臂 arm**
+  ⇒ (b) 也没有读数;**它自己的 promote 门槛结构上够不着** —— `cmrguard_NOT_PROMOTED_20260820` 把 promote 挂在
+  「#63 + #66 修订落地之后」,那两条就是 `cmrcap` 与 `esaftershock`,**两条都从未 armed**,
+  且 ⭐ **只要 range 项是兜底的 0,`cmrcap` 在任何帧上都改变不了判决**(`math.min(0,200)==0`,已钉成断言)。
+  ⛔ **退集不是 reject**:gate、helper、`nRGuardCloseBuffer=400`、`nRGuardRangeCap=200` 逐字保留,零 `bots/` diff。
+  ⚠️ `pullcad` 陷阱查过:`promote_atoms.json` 里 `cmrguard` **零次出现**;载体项 **7 → 7 逐字不变**
+  (`carrier_terms.py` 两串各一次,`TERMS` 逐字节相同,`0 unresolved` 两次,`10 hero → 9 hero`)。
+  ⛔ **W58 及更早不与 41-id 家族并池。**
+  量具:`tests/test_blind_a_cmrguard.lua`(**11 checks / 0 failed**)、`tests/_blind_a_cmrguard_sweep.lua`、
+  `tools/agent/mutstand_blind_a_cmrguard.sh`(**8 CAUGHT / 0 SURVIVED / control_ok=1**,六文件还原逐字节 YES)。
+  ⚠️ **M6 第一次 SURVIVED,而它是对的、断言是错的**(纪律 2,与 §GC.4 同型):`GetCastRange = 1000`
+  在那份测试里**出现两次**,宽针脚在 ice_path 那行被删时仍绿;改钉整条 `rawget` 语句后 CAUGHT。
+  owed 行 `cmrguard_castrange_instrument` 三条 needle **在裁定时刻逐字验在场**(§GC.7 的直接教训),
+  复读 **OWED**(`still contains 3 of 3`),19 → 20 行。
+  ⭐ **§BB.4 同轮义务**:`hero-50`(`axebhreach`,GH #642,20:2xZ 到)裁 **APPROVED-SCAN**(与 hero-41..49 同档),
+  理由**逐条核过源码**(gate 未 armed 原样放行;团战落单点确实是 `nInBonusEnemyList` 上的**最小值搜索且无距离项**;
+  `nCastRange = GetCastRange() + aetherRange`);⚠️ **没核「唯一性」那一句**,按请求方自述采信,读数不依赖它。
+  ⛔ **判定完结 1,不达 ≥2**:预算花在买读数上,**不为凑数去裁没量过的 id**。
+  MTD 不作新声称,转载批测台 15:10Z:**$66.105**,三条线均未跨。armed 串 **42 → 41**(目标 ≤20)。
+  ⛔ **「后台包装吞掉真码」第七次兑现**(第一条自检带 `timeout 400`,真码 **124**,harness 报 0),守卫**仍未立**,顺延。
+  ⚠️ 纪律 3 本轮**一发**(第一条命令走了管道,§22 守卫当场拒);**不新立措辞**,登记而已。
+  ⛔ 动态半(Lua 全量)未跑不作声称(零 `bots/` diff)。
+  **下次触发**:①⭐**再取两条判定完结**(P4.2 的 ≥2,本轮 1),从 `verify_coverage.py` 的 `narrat=1`
+  四条清起:`campsel`/`pulllane`/`pullthink`/`roamidle` ②**给「后台包装吞掉真码」立守卫**(第七次,顺延)
+  ③GH #358 的 120s 预算要人裁(顺延)④`hero_domain_scan` 九份读数逐份读通(顺延)
+  ⑤backlog 100(`text_absent` 注册时守卫)⑥backlog 99(桩转轴普查;本轮是**第三个实例**不是落地)
+  ⑦**为 cast-range 仪器缺口开 [harness] issue**(本轮 MCP 未试,owed 行已登记,issue 号仍空)
 - **2026-09-08T19:xxZ**:**两条退回出集(44 → 42),判定完结 2(达标);而本轮最该被读的不是裁定 —— 是「两条 id 各有一份绿的、钉在真实帧上的 fixture 测试,而两份都由作者亲手写进了该杠杆唯一转轴的那个输入」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
   取活依据是上一轮「下次触发」的 **①**(⭐**≥2 判定完结**,上一轮 **0**,逐字写着「排在任何新裁定之前」)。
