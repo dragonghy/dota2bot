@@ -302,14 +302,55 @@ check("no two live findings share a key either (each judgement names ONE site)",
       len(dup_keys) == len(dup) and len(par_keys) == len(parity),
       "%d keys for %d findings" % (len(dup_keys) + len(par_keys),
                                    len(dup) + len(parity)))
-# The line numbers are still recorded, and they are still correct today.  They
-# are navigation: when one drifts the tool prints LINE NOTE and stays green.
-check("every judged row's recorded line matches the finding it names TODAY",
-      all(cmc.JUDGED_DUP_LINES[cmc.dup_key(d)] == d["line"] for d in dup)
-      and all(cmc.JUDGED_PARITY_LINES[cmc.parity_key(p)] == p["line"]
+# The line numbers are recorded as NAVIGATION -- a place to look, never the
+# identity of a finding (the key is `(file, locator, 8 hex of the chain)`, and
+# the check three lines up is what pins that).  The tool has always agreed:
+# when a recorded line drifts, `chain_member_census.py` prints LINE NOTE and
+# STAYS GREEN.
+#
+# ⭐⭐ THIS CHECK USED TO DISAGREE WITH THE TOOL, AND THE DISAGREEMENT WAS
+# SETTLED BY MEASUREMENT (GH #574 asked; GH #637 collected the bill; director
+# 2026-09-08 ruling, test_set.md §GB.5).  The literal it guarded moved FIVE
+# times -- 8246 -> 8256 -> 8341 -> 8423 -> 8435 -> 8445 -> 8458 -- and not one
+# of those moves was about the finding.  Every one was an insertion ABOVE it in
+# the same file (comment lines, the `urnself` gate, `grenharass`, `tpdeep`,
+# `tpquiet`), i.e. the toll was charged to whichever round happened to edit
+# `ability_item_usage_generic.lua`, for a fact that changes nothing about the
+# judgement.  The key absorbed all five exactly as GH #442 designed it to.
+#
+# AND THE FAILURE DIRECTION IS THE REASON IT IS NOT MERELY WASTE.  Twice the
+# toll was NOT paid, and each time it left `origin/main` RED (8423 -> 8435 was
+# already red on trunk before the round that found it; 8445 -> 8458 landed with
+# `tpquiet` and was still red a day later, filed as GH #637).  A red trunk that
+# means "someone inserted lines somewhere above an unrelated finding" teaches
+# the next reader that the whole file is noise -- which is the one thing a
+# ratchet cannot afford, because ITS other twelve checks are the ones that go
+# red the day a real lost chain member lands.
+#
+# So drift is now reported and not fatal, matching the tool.  What replaces it
+# is the property the number was standing in for: every judged row still HAS a
+# navigation entry, and it is a usable line number.  A row that lost its entry
+# (or carries a junk one) is a real defect -- it makes the finding unfindable --
+# and that check cannot be tripped by an insertion in an unrelated file.
+drifted = ([(cmc.dup_key(d), cmc.JUDGED_DUP_LINES[cmc.dup_key(d)], d["line"])
+            for d in dup if cmc.JUDGED_DUP_LINES[cmc.dup_key(d)] != d["line"]]
+           + [(cmc.parity_key(p), cmc.JUDGED_PARITY_LINES[cmc.parity_key(p)],
+               p["line"]) for p in parity
+              if cmc.JUDGED_PARITY_LINES[cmc.parity_key(p)] != p["line"]])
+for key, recorded, today in drifted:
+    print("  LINE NOTE  judged row %s records :%d, found at :%d today "
+          "(navigation only -- the key still resolves; GH #574/#637)"
+          % (key[2], recorded, today))
+check("every judged row still carries a usable navigation line",
+      all(isinstance(cmc.JUDGED_DUP_LINES.get(cmc.dup_key(d)), int)
+          and cmc.JUDGED_DUP_LINES[cmc.dup_key(d)] > 0 for d in dup)
+      and all(isinstance(cmc.JUDGED_PARITY_LINES.get(cmc.parity_key(p)), int)
+              and cmc.JUDGED_PARITY_LINES[cmc.parity_key(p)] > 0
               for p in parity),
-      str([(cmc.dup_key(d), cmc.JUDGED_DUP_LINES[cmc.dup_key(d)], d["line"])
-           for d in dup if cmc.JUDGED_DUP_LINES[cmc.dup_key(d)] != d["line"]]))
+      str([(cmc.dup_key(d), cmc.JUDGED_DUP_LINES.get(cmc.dup_key(d)))
+           for d in dup
+           if not isinstance(cmc.JUDGED_DUP_LINES.get(cmc.dup_key(d)), int)
+           or cmc.JUDGED_DUP_LINES[cmc.dup_key(d)] <= 0]))
 
 dropped = [k for k, v in cmc.JUDGED_DUP.items() if v.startswith("GH #434 DROPPED")]
 check("exactly FOUR duplicates are judged dropped-member, eight idempotent",

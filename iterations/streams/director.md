@@ -497,6 +497,49 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-08T16:12Z**:**八条一次裁完(hero-41..48,APPROVED-SCAN);而本轮最该被读的两条都不是裁定 —— ①针脚表在它被立起来的下一轮就漏了三根,②一条每轮点名的 trunk 红,归因只是「有人在它上方插了几行」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+  ⛔ **判定完结 0,不达 owner P4.2 的 ≥2** —— 不粉饰,理由与补法见报告 §6;**下次触发 ① 强制是它**。
+  全文 `iterations/reports/director/20260908T161232Z.md`,裁定全文档案 `test_set.md §GB`(§GB.1–§GB.5)。
+  取活依据是上一轮「下次触发」的 **①**(自检 `queue-rulings` 腿**每轮**点名),到本轮已从七条变成**八条**(hero-48 14:31Z 到)。
+  ⭐ **裁定不是 FROZEN-HOLD 而是 APPROVED-SCAN**:上一轮排活时写的是 FROZEN-HOLD,**照请求原文读那句是错的** ——
+  八条在 `bundle` 里逐字写着「NOT armed —— P4.2 冻结期内**本条不请求入集**」,P4.2 冻的是 armed 集变大;
+  先例自 hero-31 起统一,hero-40(09-07T10:xxZ)的判词逐字给了理由,本轮把它抬成这一档的引用点。
+  ⭐⭐ **裁定的实质内容是三处预贴标签,不是盖章:已知的三堵墙递给执行方的不是空白,是一个指向「不入集」那一边的错数。**
+  hero-42(`cmfarcreep`)要 `creeps[]` 的 hp/name 而 `creepSnap` 只有 `{t,team,x,y}`(GH #581,与卡死 hero-32/33/36 同一堵墙)⇒
+  **排在 #581 之后、本次遍历跳过、留一行点名的状态行**;hero-45 的 (4) 要 Bone Guard 充能 ≥60%,而 dump **递过来一个正好错的 0**
+  (产物 §4/§6.5)⇒ 预贴 **BLIND-BY-KNOWN-WALL**,那个 0 会读成「从来没压掉过一个满充能的嘲讽」;
+  hero-47 的移速、hero-48 的朝向若拿不到,**两个「自然的默认值」各自让读数变成 DOMAIN-NOT-REACHED,方向都恰好掐死本杠杆**。
+  §GA.1 立的是「买不到与没人去买长得一样」,**本轮补的更窄也更贵:撞墙的列常常不是交白卷,而是交一个看起来正常的数字**。
+  ⭐⭐ **第二件(顺手撞到,比裁定贵)**:`owed_executions.json:hero_domain_scan_2_30_31` 的 `done_when` 09-06 才从
+  `path_exists` 换成 `path_contains_all`(立案句就是「产物读 DONE 而欠的读数不在里面」),而 **hero-38/39(09-06T22:xxZ 裁)
+  与 hero-40(09-07T10:xxZ 裁)三条批准搭车、三条都没进针脚表**(产物里各出现 **0** 次)⇒ 这条腿在**三份从未开工的读数之上照样读 DONE**;
+  **换针脚之后的第一轮和第二轮各漏一次**。缺陷不是裁定也不是工具,是**「裁定搭车」与「加一根针」是两个手工动作而第二个没人拿着**。
+  ⇒ 立机器键 **`director.owed_row`**(八条自带 + hero-2/30..40 **十二行回填**)与
+  **`tests/test_domain_scan_pass_pins.py`(5 checks)**:两个集合**相等**(左→右抓这次漂移,右→左抓「钉了没人欠 ⇒ 永远红」的镜像),
+  另钉两侧不许同时为空、`kind/path` 仍指着那份产物、rider 的 `deliverable` 必须以该路径**开头**。
+  变异台 `tools/agent/mutstand_domain_scan_pins.sh` **5 CAUGHT / 0 SURVIVED / control_ok=1**、还原 `sha256sum -c` 逐字节 YES,
+  **五发全部是「欠得比裁定少」的方向,M1 就是 hero-40 今天之前的真实状态**;`test_mutstand_restore_trap.py` 对新台五项全 ok。
+  针数 **9 → 20**,改完当场点名 `11 of 20 required mention(s) are absent`。⚠️ 针数变大不是记账倒退。
+  ⭐ **第三件([bug] GH #637,章程 2a,当轮修掉)**:自检的 `trunk-red(python)` 是
+  `test_chain_member_census.py` 的 freshness 检查,报文 `(…'1585a9b8'), 8445, 8458`。那个字面量**移动了五次**
+  (`8246→8256→8341→8423→8435→8445→8458`),**没有一次是因为 finding 变了**,全是同一文件里它上方的插入;
+  键 `(文件,定位串,8 位 hex)` 五次全吸收(GH #442 的设计),**只有这条检查在收费**,而**五次里两次没人付、每次都把 `origin/main` 留成红的**
+  —— 一条写着「有人在无关 finding 上方插了几行」的红 trunk **教会下一个读者整份 ratchet 是噪声**,而那份文件另外十二条正是「真丢了 member 就当天红」的那些。
+  修法:drift 打 `LINE NOTE` **保持绿**(与工具自己的语义对齐,是这条检查在跟它唱反调),顶替它的是**每条 judged 行仍有一个可用的导航行号**
+  (缺了/垃圾值 ⇒ 真缺陷,且**无法被另一个文件的插入触发**);**`8445` 不改**(改它就是把第五次通行费也付了,正是 #637 说别做的)。
+  反向核验:导航值改 `0` ⇒ **红(exit 1)**;**纯注释编辑 ⇒ 绿**;两次之后 `git diff --quiet` 逐字节 YES。
+  铁律 6:`GATE_EXIT=0 CLEAN` + `py gate 86 ran / 0 findings / 0 uncertifiable`(2 个新测试未进 manifest 照跑)+
+  `test_chain_member_census.py` all checks passed。**未用 `RULE6_BYPASS`。** ⛔ 动态半(Lua)未跑不作声称(零 `bots/` diff)。
+  自检真码 `EXIT=3`(10 条腿):`cadence`(3 个洞全在 strategy、3.6–4.5h、该组本轮有实产出 ⇒ **不升级**)、
+  `queue-rulings`(**本轮清零**)、`owed-executions`(设计中;本轮把其中一行从**假绿**改成点名 OWED)、`trunk-red(python)`(**本轮修掉**)。
+  ⛔ **「后台包装吞掉真码」第五次兑现**(harness 报 `exit code 0`,真码 3),守卫**仍未立**,顺延。
+  ⚠️ 纪律 3 本轮**零发**(措辞改成「任何要读退出码的命令」之后的第一轮零发)。
+  MTD 不作新声称,转载批测台 15:10Z:**$66.105**,三条线均未跨。armed 串 **44 → 44**(目标 ≤20)。
+  **下次触发**:①⭐**≥2 判定完结**(P4.2 的产出指标,本轮 0,**排在任何新裁定之前**,从核验记录最少的清起)
+  ②`hero_domain_scan` 九份读数逐份读通(顺延)③`test_gated_helper_nesting_census.lua` 当 GH #622 的仪器读一遍(顺延)
+  ④GH #358 的 120s 预算要人裁(顺延)⑤**给「后台包装吞掉真码」立守卫**(第五次兑现,顺延)
+  ⑥GH #633 没买到的那一半(`I/O error` 走 verdict 2)⑦`text_absent` 的第一个真实用户(顺延)
 - **2026-09-08T13:00Z**:**`text_absent` 落地并退休它自己那一行(19 → 18) —— 一条裁定的「反面那一半」永远买得到。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、无 promote/reject、`DECISIONS_NEEDED` +0。
   取活依据是上一轮「下次触发」的 **④**(GH #523,**原样顺延 3 轮**);它也是 registry 里唯一一条

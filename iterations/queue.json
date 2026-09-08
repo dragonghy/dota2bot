@@ -50,7 +50,8 @@
         "wave": "none (归档扫描,零 EC2,零新波次)",
         "at": "2026-08-25T13:xxZ",
         "ref": "test_set.md §BF.2",
-        "note": "**ROUTED_ARCHIVE_SCAN —— 本轮十条归档扫描请求的**统一路由裁定**(§BF.2),沿 hero-10/hero-11(§AZ.5)的先例。**它们的共同形状:零 EC2、零新波次、只要归档语料的一次扫描,卡住它们的既不是名额也不是钱,只是一个路由裁定 ⇒ **当场放行**。批测台按各自 `priority` 在任意一次归档扫描轮里执行,可合并同类项(hero-15/hero-12 只要 Zeus 帧、hero-16 同源可搭,hero-3 同理;hero-13/hero-2 只要 Axe 帧;hero-14/hero-17 只要 Lion/CM 帧)。⚠️ **这条裁定的边界,请照抄不要外推**:它是**路由**裁定,**不是对任何一条请求前提的背书**。总监本轮没有逐条复核这十条的机制论证 —— 放行的依据是「它们的唯一成本是不裁」(§BB.4),不是「它们都对」。读数回来之后每一条仍要各自的实质裁定;哪一条的前提被读数否掉,是**那时**的结论,不构成对本次路由的追认或推翻。"
+        "note": "**ROUTED_ARCHIVE_SCAN —— 本轮十条归档扫描请求的**统一路由裁定**(§BF.2),沿 hero-10/hero-11(§AZ.5)的先例。**它们的共同形状:零 EC2、零新波次、只要归档语料的一次扫描,卡住它们的既不是名额也不是钱,只是一个路由裁定 ⇒ **当场放行**。批测台按各自 `priority` 在任意一次归档扫描轮里执行,可合并同类项(hero-15/hero-12 只要 Zeus 帧、hero-16 同源可搭,hero-3 同理;hero-13/hero-2 只要 Axe 帧;hero-14/hero-17 只要 Lion/CM 帧)。⚠️ **这条裁定的边界,请照抄不要外推**:它是**路由**裁定,**不是对任何一条请求前提的背书**。总监本轮没有逐条复核这十条的机制论证 —— 放行的依据是「它们的唯一成本是不裁」(§BB.4),不是「它们都对」。读数回来之后每一条仍要各自的实质裁定;哪一条的前提被读数否掉,是**那时**的结论,不构成对本次路由的追认或推翻。",
+        "owed_row": "hero_domain_scan_2_30_31"
       },
       "acceptance_amendment_hero_20260830": "英雄组 2026-08-30 订正本行 `acceptance` 里那段**预登记**的「为什么帧语料答不了」(state.json:hero2_BANDPOWER_20260830,新文件 tests/test_axe_culling_band_power.lua 10 例)。**订正的是算式所定价的人口,不是算式本身。**\n\n原文按 band/health_pool 定价(25/~1000 ⇒ 3 帧期望命中 0.08,要 ~40 帧),这是**池模型**:它问的是「均匀抽一帧,敌人血量落进那个 25 点窗口的概率」。本轮用仓库自己的语料把它复现了(ready-Axe 帧上活敌英雄血池中位数 **1131**,n=96 ⇒ 25/1131 = 0.0221 ⇒ **45.2 帧/命中**,与原文的「roughly 40」对得上,所以复现不是猜)。**但敌人从来不是均匀地待在带里** —— 它是**从上方穿过**带往下走的,唯一的问题是采样点落不落在这次穿越里。采样周期 dt、血量速度 v 时带内停留 band/v ⇒ 一次穿越被抓到的概率 **p = min(1, band/(v·dt))**,**这个量里没有血池项**。\n\nv 可以由语料自己定价:fixture 的 `observed.burst` 就是「此后 5s 内敌方英雄实际打出的伤害」,是录像里的真值。58 枚 fixture 带非零 burst,**中位 58.3 HP/s、最大 360**:\n  · p(中位) = 25/58.3 = **0.429** ⇒ **2.3 次穿越/命中**\n  · p(最快) = 25/360 = **0.069** ⇒ **14.4 次穿越/命中**\n⇒ 穿越人口比随机帧人口在中位 burst 下效率 **19.4 倍**,即使在语料记录过的最快 burst 下仍有 **3.1 倍**。\n\n**⇒ 对本请求的两条实际影响:**\n(1) 原 acceptance 那句「A frame-side scan of the archive has the same defect unless it yields hundreds of in-ring frames」**收回一半**:**归档 1 Hz 时间线的扫描不受这条限制**,只要统计口径从「in-ring 帧」换成「**穿越**」——即「Culling ready 且敌方英雄在 375u 内,该敌人血量在相邻两帧之间**跨过** [150+100·lv, damage[lv]) 这条带」的次数。真正结构上答不了的是 **fixture 库**(它装的是孤立瞬间,按构造一次穿越都没有),原文把这两句压成了一句。\n(2) **本请求不依赖 GH #310。** #310(施法瞬间的目标 HP)对**逐次施放的核验**是必需的;对**域的定量**不是,后者要的是穿越不是瞬间。不要把本行挂在 #310 后面等。\n\n**预登记的量级期望(先写下来,免得读数回来之后再挑模型)**:若归档里能凑出 N 次上述穿越,带内被抓到的帧数期望是 Σ min(1, 25/(v_i·1s));按中位 burst 粗算 ≈ 0.43·N。**⚠️ 这是捕获率的上界**(穿越模型假设匀速单调下穿、采样相位独立;治疗/回血/一跳打穿整条带都往**更少**的方向破坏它)⇒ 读成「至少要这么多次穿越」,**不得**读成「这么多就够」。\n\n**仍然成立、且仍是本行第一顺位障碍的**:批测台 2026-08-23T08:15Z 那条读数 —— **归档里 npc_dota_hero_axe 出现 0/306 局**,分母为 0 是种子配置问题不是稀有性;GH #46 的现成答案是 `--find axe → 899/910/911`。**先有带 Axe 的种子,穿越口径才有东西可数。**\n\n**本轮没有做的事**:`hero-2` 的修复**仍未落地**(它是加动作的改动,本组规矩要真实帧,语料仍然没有);`bots/`/`game/` 零行改动;无新 gate id;零 AWS。",
       "supply_unblocked_hero_20260905": "**英雄组 2026-09-05:本行的第一顺位障碍(『归档里没有 Axe』)被一个已在仓库里的文件证伪,同轮本组把杠杆本体**落地了**(gated `cullthresh`)。**\n\n(1) **障碍作废**:`result` 字段里批测台 2026-08-23T08:15Z 的读数是「npc_dota_hero_axe 出现 0/306 局,是种子配置问题不是稀有性」。**今天这句话为假**:`tests/fixtures/tl_260905_010226_axe_outchan.json` 是**逐字切自 dumper 归档时间线**的一段(run `spot_20260905_003250`,**seed 4763**,180 个 0.1s 快照),而它的 subject 就是 `axe`。⇒ 不必再等 GH #46 的 `--find axe` 种子集,**现行种子里已经有 Axe 在跑**。⚠️ 边界:本组只证明了「归档里存在含 Axe 的对局」,**没有**量过它有多少局 —— 那是本请求要买的数,不是它的前提。\n\n(2) **口径照 `acceptance_amendment_hero_20260830` 走,不是帧口径**:数**穿越**(Culling ready、敌方英雄在 375u 内、该敌人血量在相邻两帧之间跨过 `(150+100·lv, damage[lv]]`),不是数「带内帧」。预登记的量级期望仍是那条的**上界**读法(≈0.43·N),**不得**读成「这么多就够」。\n\n(3) **本请求的用途变了一格**:杠杆已经写了,所以这个读数不再决定「要不要写」,而是决定「**能不能 arm / 值不值得入集**」。带一个可钉帧的 (game, t) 回来,本组直接 `make_fixture.py` 钉住「shipped 不放、armed 放」那一帧 —— 那是 `cullthresh` 今天唯一缺的东西(见 `tests/test_axe_cull_threshold_gate.lua` §5:全语料 29 个 Axe 瞬间 / 23 个 Culling 可放 / 3 行环内敌人 / 带内 **0**,而那个 0 按构造是 fixture 库答不了的)。\n\n**球**:批测台(归档扫描,零 EC2,总监 §BF.2 早已放行)。"
@@ -1759,7 +1760,8 @@
         "at": "2026-09-05T15:5xZ",
         "ref": "iterations/streams/test_set.md §EX.6; OWNER_PRIORITIES.md P4.2",
         "note": "⛔ 开工自检的 queue-rulings 腿把本行打成 `RIDESHARE (§BB.4: rule this round)`,但 §BB.4 已被 OWNER_PRIORITIES.md P4.2 的「优先级澄清」(2026-09-05T14:5xZ,commit ffeb0aa6)废止并压过 ⇒ 本轮的裁定不是「当轮放行」而是「当轮裁 FROZEN-HOLD」:登记、不入集、不视为掉棒。\n\n⚠️ FROZEN-HOLD 不是对证据的否定。英雄组 13:5xZ 已落地 gated `axecallbkb`(commit c1cce307,turbo-only,未 armed),桌面证据完好:odota/dotaconstants build/abilities.json 记 axe_berserkers_call 的 bkbpierce = \"Yes\",仓内 tests/mock/special_value_shapes.lua 对上 radius 315 / cd 18 16 14 12 / mana 90 100 110 120。\n\n⭐ 也不是掉棒 —— 本请求要的是零 EC2 的只读档案扫描(与 hero-2 并成同一次遍历),而冻结冻的是**入集**,不是**取证**。⇒ 本裁定明写:证据继续买(两个分支分开报、不许并池,按 acceptance 原样),解冻后凭现成证据重提,那时不需要重买 (a)。\n\n预登记的判读方向与归因边界照 acceptance 原样保留,总监不改:两个分支的魔免占比都接近 0 ⇒ 这根杠杆没有可兑现的收益;两个分支共用一个 id,任何负读数不能归因给其中任何一个,那时的下一棒是拆 id。",
-        "unfreeze_condition": "armed 集 <= 20(P4.2 的解冻线);当前 61,距离还差 41"
+        "unfreeze_condition": "armed 集 <= 20(P4.2 的解冻线);当前 61,距离还差 41",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1784,7 +1786,8 @@
           "iterations/streams/test_set.md §EY.4(全文档案)"
         ],
         "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 三份读数写进同一个文件(每份自带 N frames / M episodes / K games 与至少一个 (game, t)),路径是**裁定的一部分**,因为 owed 腿只读得出「文件在不在」",
-        "status_note": "⚠️ `status` 故意留在 **`pending`**(已裁但未执行),不新造 `approved_scan` 这种拼写:`pending_rulings.py` 的已知词汇只有 OPEN_STATES(pending/running/harvested)+ CLOSED_STATES(done/rejected),队列里已经有 **34 行**落在词汇之外(GH #317 让它们计为 open,但漂移信号本身还在)。总监不该再给它加一行。执行完毕的判据不在这个字段上,在 `iterations/owed_executions.json:hero_domain_scan_2_30_31` 的 `done_when`。"
+        "status_note": "⚠️ `status` 故意留在 **`pending`**(已裁但未执行),不新造 `approved_scan` 这种拼写:`pending_rulings.py` 的已知词汇只有 OPEN_STATES(pending/running/harvested)+ CLOSED_STATES(done/rejected),队列里已经有 **34 行**落在词汇之外(GH #317 让它们计为 open,但漂移信号本身还在)。总监不该再给它加一行。执行完毕的判据不在这个字段上,在 `iterations/owed_executions.json:hero_domain_scan_2_30_31` 的 `done_when`。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1808,7 +1811,8 @@
           "iterations/owed_executions.json:hero_domain_scan_2_30_31.ruling",
           "iterations/streams/test_set.md §FE.1"
         ],
-        "note": "`zusboltdmg`:桌面证据是**闭式为死**(`GetAbilityDamage()` 只读顶层 `AbilityDamage` KV,`zuus_lightning_bolt` 不声明它 ⇒ 平伤恒 0 ⇒ 判据退化成 `1 < m*b`,与血量无关且出厂 b=0.09 ⇒ 该分支任何等级都不开火)。**闭式为死是「杠杆现在不做事」的证明,不是「armed 之后有收益」的证明**——后者正是这次遍历要买的域,所以批准的是遍历。两条腿(塔目标 / 990 线兵)按申请书分开报。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。"
+        "note": "`zusboltdmg`:桌面证据是**闭式为死**(`GetAbilityDamage()` 只读顶层 `AbilityDamage` KV,`zuus_lightning_bolt` 不声明它 ⇒ 平伤恒 0 ⇒ 判据退化成 `1 < m*b`,与血量无关且出厂 b=0.09 ⇒ 该分支任何等级都不开火)。**闭式为死是「杠杆现在不做事」的证明,不是「armed 之后有收益」的证明**——后者正是这次遍历要买的域,所以批准的是遍历。两条腿(塔目标 / 990 线兵)按申请书分开报。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1832,7 +1836,8 @@
           "iterations/owed_executions.json:hero_domain_scan_2_30_31.ruling",
           "iterations/streams/test_set.md §FE.1"
         ],
-        "note": "`cmcreepcap`:`1200` 恰是 Frostbite 4 级那一档被当成了每一级的上限,而 1-3 级各多放行 600/400/200 血——**自变量是等级**,所以 acceptance 里「按等级分层、不许并池」不是格式要求:并池会把 4 级那层按构造的恒零掺进 1-3 级的读数里,把唯一有域的那三层稀释成没有。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。"
+        "note": "`cmcreepcap`:`1200` 恰是 Frostbite 4 级那一档被当成了每一级的上限,而 1-3 级各多放行 600/400/200 血——**自变量是等级**,所以 acceptance 里「按等级分层、不许并池」不是格式要求:并池会把 4 级那层按构造的恒零掺进 1-3 级的读数里,把唯一有域的那三层稀释成没有。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1856,7 +1861,8 @@
           "iterations/owed_executions.json:hero_domain_scan_2_30_31.ruling",
           "iterations/streams/test_set.md §FE.1"
         ],
-        "note": "`liondrainbkb`(GH #549):三处挑目标对魔免的说法不一致,只有「团战吸蓝」那支用了**穿魔免**的谓词,而 Lion 四个主动全是 `SPELL_IMMUNITY_ENEMIES_NO`。⭐ 申请书自己点出的第 (4) 列(下了单、1-2s 内没进 `modifier_lion_mana_drain`)**比第 (2) 列值钱**,理由在申请书里已写对:它不需要枚举魔免来源就看得见引擎拒了这次施法。若两列打架,以 (4) 为准并把 (2) 当作归因线索呈报。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。"
+        "note": "`liondrainbkb`(GH #549):三处挑目标对魔免的说法不一致,只有「团战吸蓝」那支用了**穿魔免**的谓词,而 Lion 四个主动全是 `SPELL_IMMUNITY_ENEMIES_NO`。⭐ 申请书自己点出的第 (4) 列(下了单、1-2s 内没进 `modifier_lion_mana_drain`)**比第 (2) 列值钱**,理由在申请书里已写对:它不需要枚举魔免来源就看得见引擎拒了这次施法。若两列打架,以 (4) 为准并把 (2) 当作归因线索呈报。\n\n⭐ **与 hero-2 / hero-30 / hero-31 并成同一次遍历**(先例 §EY.4:hero-31 的裁定已把第三个挂上去,本轮把第四、五、六个挂上去)。六者都是对**已落盘语料**的只读扫描,分开跑六遍是同一份 I/O 付六次;产物仍写进裁定里那一个路径 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`——**路径不改名**:它是 `owed_executions.json` 那一腿唯一读得到的机器键,改名会让已经交付出去的那条裁定在自检里变成一条没人认领的新行(§DR 的立案形状)。六份读数各自独立呈报,**不许并池**。\n\n⚠️ **acceptance 原样保留,总监一个字不改**:本请求自己写的分层要求(不许并池)、铁律 4(ii)(整数小值域不报中位数,要分布或占比)、以及「至少给一个 (game, t) 供 make_fixture.py 钉帧」都原样成立。\n\n⛔ **本裁定不承诺条件 (a) 会被买到**,也不改 armed 串:P4.2 的冻结**冻的是入集不是取证**(§EX.6)。预登记的判读方向按申请书原文——域接近 0 ⇒ 带 DOMAIN-NOT-REACHED 退回,不入集,**即使桌面算术闭式成立**。\n\n⚠️ **METHOD-FAILED 分支(§CJ,强制)**:若语料里读不出该列(dumper 不记、实体名对不上、事件缺失),正确的产出是**一份写明「量具不可执行」的 INSTRUMENT-BLIND 退回**,回总监重裁;**执行方不得自行套用「域接近 0 ⇒ 不入集」那一条**——「没测到」与「测到是零」在这条判据下长得一样,而它们的后果相反。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1874,7 +1880,8 @@
         "wave": null,
         "at": "2026-09-06T07:xxZ",
         "ref": "iterations/streams/test_set.md §FG.2; GH #554",
-        "note": "与 hero-32/33/34(09-06T04:17Z 裁)完全同型,同一条款:零 EC2、只读档案遍历,不排波、不入集,搭 hero-2/30/31 已在跑的那一次遍历。产物路径不改名 —— iterations/reports/replay-check/domain_scan_hero_2_30_31.md 是 owed_executions.json 那一腿唯一读得到的机器键,改名等于让那条腿看不见它。acceptance 一字未改。METHOD-FAILED 按 §CJ 强制写进:读不出 (2) 那一列(射程内未中招的敌方英雄数)⇒ INSTRUMENT-BLIND 退回重裁,不得自行套用『分布集中在 0 ⇒ 不入集』那条预登记 —— 那条预登记假设的是量具工作而读数为 0,不是量具读不出来。"
+        "note": "与 hero-32/33/34(09-06T04:17Z 裁)完全同型,同一条款:零 EC2、只读档案遍历,不排波、不入集,搭 hero-2/30/31 已在跑的那一次遍历。产物路径不改名 —— iterations/reports/replay-check/domain_scan_hero_2_30_31.md 是 owed_executions.json 那一腿唯一读得到的机器键,改名等于让那条腿看不见它。acceptance 一字未改。METHOD-FAILED 按 §CJ 强制写进:读不出 (2) 那一列(射程内未中招的敌方英雄数)⇒ INSTRUMENT-BLIND 退回重裁,不得自行套用『分布集中在 0 ⇒ 不入集』那条预登记 —— 那条预登记假设的是量具工作而读数为 0,不是量具读不出来。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1892,7 +1899,8 @@
         "wave": null,
         "at": "2026-09-06T09:xxZ",
         "ref": "iterations/streams/test_set.md §FI.2; GH #560",
-        "note": "与 hero-32/33/34(09-06T04:17Z)/hero-35(07:xxZ)完全同型,同一条款:零 EC2、只读档案遍历,不排波、不入集,搭 hero-2/30/31 已在跑的那一次遍历。产物路径不改名 —— iterations/reports/replay-check/domain_scan_hero_2_30_31.md 是 owed_executions.json 那一腿唯一读得到的机器键。acceptance 一字未改。METHOD-FAILED 按 §CJ 强制写进:读不出 (2) 那一列(下单瞬间该 ranged lane creep 的真实血量)⇒ INSTRUMENT-BLIND 退回重裁,不得自行套用『分布落在 (460, nCreepCap] 中段 ⇒ 不入集』那条预登记 —— 那条假设的是量具工作而读数如此,不是量具读不出来。请求正文里那道 DotaTime() > 10*60 的分层要求照做。⭐ 本轮同时把这一腿的 done_when 从 path_exists 换成 path_contains_all:八个 id(hero-2/30/31/32/33/34/35/36)少提一个就报 OWED 并点名 —— 从 hero-36 起,搭车不再是把一份读数放进一个没人替它举手的位置。"
+        "note": "与 hero-32/33/34(09-06T04:17Z)/hero-35(07:xxZ)完全同型,同一条款:零 EC2、只读档案遍历,不排波、不入集,搭 hero-2/30/31 已在跑的那一次遍历。产物路径不改名 —— iterations/reports/replay-check/domain_scan_hero_2_30_31.md 是 owed_executions.json 那一腿唯一读得到的机器键。acceptance 一字未改。METHOD-FAILED 按 §CJ 强制写进:读不出 (2) 那一列(下单瞬间该 ranged lane creep 的真实血量)⇒ INSTRUMENT-BLIND 退回重裁,不得自行套用『分布落在 (460, nCreepCap] 中段 ⇒ 不入集』那条预登记 —— 那条假设的是量具工作而读数如此,不是量具读不出来。请求正文里那道 DotaTime() > 10*60 的分层要求照做。⭐ 本轮同时把这一腿的 done_when 从 path_exists 换成 path_contains_all:八个 id(hero-2/30/31/32/33/34/35/36)少提一个就报 OWED 并点名 —— 从 hero-36 起,搭车不再是把一份读数放进一个没人替它举手的位置。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1908,7 +1916,8 @@
         "wave": "none -- zero EC2, read-only archive traversal; rides the SAME single pass already approved for hero-2/30/31/32/33/34/35/36 (ninth reading on one artefact)",
         "at": "2026-09-06T13:xxZ",
         "ref": "iterations/streams/test_set.md §FK.7",
-        "note": "不排波、不入集,故 owner P4.2 的入集冻结不适用(冻结管的是 armed 集变大;本裁定不让任何 id 进集,armed 集本轮 59 -> 55)。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 那是 owed_executions.json 那条腿唯一读得到的机器键。acceptance 一字未改;METHOD-FAILED 按 §CJ 强制:读不出「死亡时大招是否未放」那一列 ⇒ INSTRUMENT-FAILED 退回重裁,**不得**用域大小单独下判断,也**不得**自行套用「域接近 0 ⇒ 不入集」。⚠️ 这是 WIDENING:负读数只能读作「多放的那些放错了」,永远不能读作「杠杆少放了 N 次大招」(请求方已预登记,本裁定逐字保留)。"
+        "note": "不排波、不入集,故 owner P4.2 的入集冻结不适用(冻结管的是 armed 集变大;本裁定不让任何 id 进集,armed 集本轮 59 -> 55)。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 那是 owed_executions.json 那条腿唯一读得到的机器键。acceptance 一字未改;METHOD-FAILED 按 §CJ 强制:读不出「死亡时大招是否未放」那一列 ⇒ INSTRUMENT-FAILED 退回重裁,**不得**用域大小单独下判断,也**不得**自行套用「域接近 0 ⇒ 不入集」。⚠️ 这是 WIDENING:负读数只能读作「多放的那些放错了」,永远不能读作「杠杆少放了 N 次大招」(请求方已预登记,本裁定逐字保留)。",
+        "owed_row": "hero_domain_scan_2_30_31"
       },
       "result": "2026-09-07T04:2xZ **录像组交付四列读数**(零 EC2、S3 只读、零 CE;152 局 / 152 个含 Zeus 的 run,每 run 抽 1 局,`DL/DUMP/SCAN_EXIT=0`、失败 0 局):`iterations/reports/replay-check/domain_scan_hero_2_30_31.md` §10。(1) 域 **1,843 帧 / 257 episode / 103 局**(每局 episode 分布不报中位数,铁律 4(ii);0 发 49 局 / 1 发 32 / 2 发 28 / 3 发 21 / 4 发 10 / 5 发 7 / 6 发 4 / 7 发 1)⇒ 预登记的 `DOMAIN-NOT-REACHED` 退回门**不触发**。(2) ⭐ **价值列买到了,METHOD-FAILED 分支不触发**:**198/257 = 77.0%** 的 episode 在 6 秒内以 Zeus 死亡收场,其中 **192 次大招仍未放**(187/198 的死亡就在 episode 末帧 0.5 秒内);全局对照(不并读)741 次可读死亡里 **201 次(27.1%)握着可放的大招**。(3) 收窄项 `nUltCashChaseRadius=1600`:1600 内 **1,645 帧 = 89.3%**、外 **198 = 10.7%**(episode 尺度 252/257 = 98.1%)⇒ 既不空转也不放行一切,但只切掉十分之一。(4) **PARTIAL,几何走不通**:`ultcash` 的 1200 环覆盖 **80.5% 的域帧 / 96.1% 的 episode**,唯一分得开两根杠杆的 `GetEstimatedDamageToTarget` 是活 bot API 预测、录像里没有;回溯代理 372 帧(20.2%)**不是那个谓词,既不是上界也不是估计**。顺手的 loader 问题答案是**没有**:`snapshots[]` **12,014,888 行单一键形**、无重生列 ⇒ `tests/test_zuus_ult_strand.lua` §6 单向绊线原样保留(GH #564 的结论本来就读法无关,不等这一列)。可钉帧 `spot_20260827_091422_…_15b77f__20260827_091703_slot12` **t=473.1**(hp 0.18、ult rank1 cd=0、mp 405 vs 250、slardar 304.9u、前 2s 英雄伤害 405;34 帧 8.3 秒全在域内,t=481.6 死,这局第一发大招在 t=600.8 —— 死后 119 秒)。⭐ **本轮自捉**:dumper 同 tick 行序不确定 + `hero`/`player_id` 不区分幻象(只有 `idx` 区分,Zeus 幻象行全语料 71,512)⇒ 幻象帧把 episode 拖过真实死亡时刻,**修好前 `ep_died` 82、修好后 198(2.4 倍)**;改按 `idx` 取本体、死亡从本体 hp 序列读之后,两次独立全量普查**逐位相同**,且 hp 序列与战斗日志 **152/152 局逐局同数(741)**。已开 [harness] issue。⚠️ 方向仍是 **WIDENING**(请求方预登记,本组逐字保留);域计数是**上界**(`J.IsRetreating` 不可观测)。**下一棒在总监**(是否入集另受 owner P4.2 冻结线约束);本组不自行套用任何 §CJ 标签。status 未动。"
     },
@@ -1928,7 +1937,8 @@
         "wave": "none -- zero EC2, read-only archive traversal; rides the SAME single pass already approved for hero-2/30/31/32/33/34/35/36/37 (tenth reading on one artefact)",
         "at": "2026-09-06T22:xxZ",
         "ref": "iterations/streams/test_set.md §FO.6",
-        "note": "不排波、不入集,故 owner P4.2 的入集冻结不适用(冻结管的是 armed 集变大;本裁定不让任何 id 进集,armed 集本轮 55 -> 52)。⛔ **本裁定只批扫描,不预批入集**:`zusfightquorum` 现在是 gated 且未 armed,它将来的入集提议在冻结解除(armed ≤ 20)前的唯一合法裁定仍是 FROZEN-HOLD。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 那是 owed_executions.json 那条腿唯一读得到的机器键。acceptance 一字未改;METHOD-FAILED 按 §CJ 强制:读不出 (2) 那一列(Zeus 自己视角下的敌人计数分布)⇒ INSTRUMENT-FAILED,**不得**用 (1) 的 0 单独下判断。⚠️ 这是 WIDENING:负读数只能读作「多放的那些放错了」,永远不能读作「杠杆少放了 N 次大招」(请求方已预登记,本裁定逐字保留)。⚠️ (3) 那一列(视角偏差)**保留**:它决定下一棒是不是把计数中心从施法者挪到团战,与 (2) 的判读**不许合并**。"
+        "note": "不排波、不入集,故 owner P4.2 的入集冻结不适用(冻结管的是 armed 集变大;本裁定不让任何 id 进集,armed 集本轮 55 -> 52)。⛔ **本裁定只批扫描,不预批入集**:`zusfightquorum` 现在是 gated 且未 armed,它将来的入集提议在冻结解除(armed ≤ 20)前的唯一合法裁定仍是 FROZEN-HOLD。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md —— 那是 owed_executions.json 那条腿唯一读得到的机器键。acceptance 一字未改;METHOD-FAILED 按 §CJ 强制:读不出 (2) 那一列(Zeus 自己视角下的敌人计数分布)⇒ INSTRUMENT-FAILED,**不得**用 (1) 的 0 单独下判断。⚠️ 这是 WIDENING:负读数只能读作「多放的那些放错了」,永远不能读作「杠杆少放了 N 次大招」(请求方已预登记,本裁定逐字保留)。⚠️ (3) 那一列(视角偏差)**保留**:它决定下一棒是不是把计数中心从施法者挪到团战,与 (2) 的判读**不许合并**。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1945,7 +1955,8 @@
         "wave": "none -- zero EC2, read-only archive traversal; rides the SAME single pass as hero-2/30..38 (eleventh reading on one artefact)",
         "at": "2026-09-06T22:xxZ",
         "ref": "iterations/streams/test_set.md §FO.6",
-        "note": "不排波、不入集,零 EC2。⛔ **量具前提是本裁定的一部分**:执行前必须确认扫描用的是**半开**判据 `add <= t < remove`;`tools/batch_test/behavioral/cullthresh_domain.py:215` 现在是闭区间 `a <= t <= b`,用它原样跑会**复现 #570 的那个 2**,那不是本请求要的读数 —— 这一条不落实,读数按 INSTRUMENT-FAILED 退回。⛔ **(甲)/(乙) 两条预登记判读不许合并**,标签(PREMISE-FALSIFIED)归总监,本裁定不预判。⚠️ 这是 NARROWING:负读数只能读作「否决删掉了 N 次施法」,绝不能读作「少浪费了 N 次大招」。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md。"
+        "note": "不排波、不入集,零 EC2。⛔ **量具前提是本裁定的一部分**:执行前必须确认扫描用的是**半开**判据 `add <= t < remove`;`tools/batch_test/behavioral/cullthresh_domain.py:215` 现在是闭区间 `a <= t <= b`,用它原样跑会**复现 #570 的那个 2**,那不是本请求要的读数 —— 这一条不落实,读数按 INSTRUMENT-FAILED 退回。⛔ **(甲)/(乙) 两条预登记判读不许合并**,标签(PREMISE-FALSIFIED)归总监,本裁定不预判。⚠️ 这是 NARROWING:负读数只能读作「否决删掉了 N 次施法」,绝不能读作「少浪费了 N 次大招」。产物路径**不改名**:iterations/reports/replay-check/domain_scan_hero_2_30_31.md。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1967,7 +1978,8 @@
         "ref": "iterations/reports/director/20260907T10xxxxZ.md",
         "executor": "replay-check",
         "note": "⭐ **批准的是量域,不是杠杆。** 本裁定对 `liondrainmi` 将来是否入集**零表态** —— 冻结解除前不该提。\n\n**总监加的第 (丁) 条限定,两处,申请里都没有:**\n(丁-1) ⛔ **(2) 那一列单独一个数字不构成收益。** 申请自己写了本杠杆是 **WIDENING**(源码由构造保证:出货谓词先算并绑定、为真时短路 return true),所以 (2) 的命中数**恒等于**「armed 会多放出来的抽蓝次数」的**上界**,而不是它的价值 —— Mana Drain 是多秒定身引导且引导期间 `J.CanNotUseAbility(bot)` 为真,残血近身多放一次是代价不是收益。⇒ **(2) 与 (3) 必须同轮交付,不许先交 (2)**;单交 (2) 是一个只有分子的比(hero-35 `axebhrecast` 第一稿同型)。\n(丁-2) ⚠️ **(4a)/(4b) 读到 0 的退回门。** 申请自己写了「读到 0 就把 NOT TAKEN 从供给论证升级成读数」—— ⛔ **只有在扫描窗口被证明覆盖到野区时才成立**。补蓝那一支的域按定义是「附近没有敌方英雄」,那多半就是野区/清完线之后;而 fixture 语料 13 帧实测 `#GetNearbyCreeps(1600,true)` 合计 **0**。⇒ **先给覆盖率,再给那个 0**;拿一个盲窗的 0 去关一条通道,与 `zusult_gate.py` 那台「第一帧就 TypeError、整轮零输出」的死量具是同一种账(GH #478 全族)。\n\n⚠️ **本裁定不背书 (1) 的实现**:申请自己指出 `X.IsOtherAbilityFullyCastable()` 那道早退必须按出货代码的合取式实现,漏掉它量到的是「Lion 在打架」而不是「Lion 只剩抽蓝可放」—— 那是**申请方的验收条件**,总监这里照抄提醒,不是已核验。",
-        "status_note": "status 保持 `pending`(=归档扫描尚未执行),不是 `done` —— 本轮裁的是**批准**,不是**完成**。⚠️ 刻意不新造 `approved_archive_scan` 这种状态词:`pending_rulings.py` 的 `UNKNOWN STATUS`(GH #317 词汇漂移)按未知状态计开,新词会让那个计数器每轮多一行噪声。裁定本身在本 `director` 字段里,`ruled` 由它判,不由 status 判。"
+        "status_note": "status 保持 `pending`(=归档扫描尚未执行),不是 `done` —— 本轮裁的是**批准**,不是**完成**。⚠️ 刻意不新造 `approved_archive_scan` 这种状态词:`pending_rulings.py` 的 `UNKNOWN STATUS`(GH #317 词汇漂移)按未知状态计开,新词会让那个计数器每轮多一行噪声。裁定本身在本 `director` 字段里,`ruled` 由它判,不由 status 判。",
+        "owed_row": "hero_domain_scan_2_30_31"
       }
     },
     {
@@ -1980,7 +1992,22 @@
       "acceptance": "按 hero 组 pre-flight 的形状给 N instants / M games,三列各自带分母。**⚠️ 预登记的归因方向,不许合并**:被提议的杠杆是 **WIDENING** —— armed 只会**增加**施法(源码层由构造保证:出货五项合取式先算并绑定成 `bShipped`,释放只在 `bShipped` 已为真时可达,末句 `return bShipped`;钉在 `tests/test_wk_reserve_idle_release.lua` section 1 的源码断言 + section 3 的跨语料方向计数,后者用同一个 `tally()` 调两次、第二次两条腿对调,所以那个必须为 0 的方向是**被证明会数数的**计数器产生的)。任何负读数**只能**读作「多放出来的那些技能不该放」,**绝不能**读作「少了 N 次复活」—— 储备不产生复活,离线台无法给一次没有发生的死亡定价。 **⚠️ (2) 读到 0 不是域为空的证据**:先说清扫描窗口有没有覆盖到 WK 等级 6–9 的那段(R 到 3 级时 Reincarnation 免费、储备自己塌掉,所以这条杠杆的窗口在**前中期**,与 hero-10 的地平线限制同族但方向相反 —— 那条怕语料太早,这条怕语料太晚)。 **⚠️ (3) 的死亡列不要做显著性检验**:2/33 的本地域说明供给很薄,这一列是**方向性的诚实检查**不是判决。 **本条不请求入集**(P4.2 冻结),买的是 (a) 之前的域/频率读数。",
       "requested_by": "hero 2026-09-07T1x:xxZ",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "wave": "none —— 零 EC2、只读归档遍历;搭 hero-2/30..40 已批准的同一次遍历",
+        "at": "2026-09-08T16:0xZ",
+        "ref": "iterations/streams/test_set.md §GB;先例 §EY.4(hero-31)/ §FE.1(hero-32/33/34)/ §FK.7(hero-37)/ hero-40 的 2026-09-07T10:xxZ 裁定(『申请方自己写明本条不请求入集』⇒ 不触发 P4.2 的 FROZEN-HOLD 条款)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "delivered_to": [
+          "iterations/queue.json:hero-41.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.done_when.contains",
+          "iterations/streams/test_set.md §GB"
+        ],
+        "note": "**APPROVED-SCAN,与 hero-2/30..40 同一次遍历。**不排波、不入集、零 EC2。P4.2 的入集冻结**不适用**:申请方在 `bundle` 里逐字写着「本条不请求入集」,冻结冻的是 armed 集变大,本裁定不让任何 id 进集(§EX.6 已立)。\n**acceptance 一字未改**;METHOD-FAILED 按 §CJ 强制:点名的那一列读不出 ⇒ INSTRUMENT-BLIND 退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」——那条预登记假设的是量具工作而读数为 0,不是量具读不出来。\n**产物路径不改名**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——它是 `owed_executions.json:hero_domain_scan_2_30_31` 那条腿唯一读得到的机器键。\n\n`wksaveidle`(WIDENING,源码由构造保证是严格超集)。**三列全部可买**:等级/冷却/蓝在 snapshots 里(hero-31 已实测可读),1600u 内敌方英雄数按位置重建,(3) 的 8s 死亡窗口是纯事件侧。\n⭐ **总监加的限定(与 hero-40 的丁-1 同款):(2) 与 (3) 必须同轮交付,不许先交 (2)。**(2) 是「armed 会多放出来的技能窗口」的**上界**,不是收益;单交 (2) 是一个只有分子的比。\n⚠️ 申请方预登记的地平线限定照做:(2) 读到 0 之前先说清扫描窗口有没有覆盖 WK 等级 6–9 那段(R 到 3 级后储备自己塌掉),否则 0 是窗口的性质不是域的性质。\n\n⛔⛔ **本轮八条裁定的共同主轴(总监加的,申请书里没有):已知的三堵墙递给执行方的不是空白,是一个指向同一边的错数。**\n`path_contains_all` 的九个 id 里有两个(hero-32/33)至今 NOT YET,卡在 `creepSnap` 只有 `{t,team,x,y}`(GH #581);hero-31 的充能列在产物 §6.5 写着「买不到,**不用 0 顶替**」,而 §4 更进一步:**dump 会递给你一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` 恒假。⇒ 一条撞墙的列如果按「读到 0」交上来,它**不是**一个弱读数,它是一个**系统性偏向不入集的假读数**,而两者在 verdict 表里长得一模一样(§GA.1 同族)。**本轮把每一堵已知的墙提前点名并预贴标签,就是不让执行方用一轮去重新发现它。**"
+      }
     },
     {
       "id": "hero-42",
@@ -1992,7 +2019,22 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「该块可开 + 广列表最强兵 `(390,460]` + 近列表最强兵 `<=390` + mp>0.45」那一帧,好让本组用 `make_fixture.py` 钉帧。**预登记的判读方向**:若 (2) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回,不入集,**并且不得**因此声称缺陷不存在(源码里的交叉读是事实,`tests/test_cm_far_creep_floor.lua` §1 钉着);若 (2) 非零而 (3) 显示多开的火里相当比例距离超过施法距离,则本杠杆要**先加距离项再谈入集**,而不是直接判负。**预登记的归因边界(方向由构造保证)**:出货腿先算并自己 return,armed 腿只在它答 false 后可达 ⇒ armed 接受的施法是 shipped 的**严格超集**,**目标身份不变**。所以负读数只能读作「那些远兵不值 125-155 蓝」,**永远不能**读作「杠杆取消了一次施法」或「杠杆换了目标」。⚠️ **METHOD-FAILED(§CJ)强制**:读不出 (2) 那两个血量(按上面同一套过滤取的近/广最强兵)⇒ **INSTRUMENT-BLIND 退回重裁**,不得自行套用「域为 0 ⇒ 不入集」那条预登记 —— 那条假设的是量具工作而读数如此,不是量具读不出来。**为什么必须走档案而不是 fixture**:全仓 fixture **没有任何 creep 单位**,`bot:GetNearbyCreeps` 在 10/10 个 CM 主体帧上返回空表(`tests/test_cm_far_creep_floor.lua` §5 两条单向绊线,与 hero-36 记的是同一道墙)。",
       "requested_by": "hero 2026-09-07T20:05Z",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "wave": "none —— 零 EC2、只读归档遍历;搭 hero-2/30..40 已批准的同一次遍历",
+        "at": "2026-09-08T16:0xZ",
+        "ref": "iterations/streams/test_set.md §GB;先例 §EY.4(hero-31)/ §FE.1(hero-32/33/34)/ §FK.7(hero-37)/ hero-40 的 2026-09-07T10:xxZ 裁定(『申请方自己写明本条不请求入集』⇒ 不触发 P4.2 的 FROZEN-HOLD 条款)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "delivered_to": [
+          "iterations/queue.json:hero-42.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.done_when.contains",
+          "iterations/streams/test_set.md §GB"
+        ],
+        "note": "**APPROVED-SCAN,与 hero-2/30..40 同一次遍历。**不排波、不入集、零 EC2。P4.2 的入集冻结**不适用**:申请方在 `bundle` 里逐字写着「本条不请求入集」,冻结冻的是 armed 集变大,本裁定不让任何 id 进集(§EX.6 已立)。\n**acceptance 一字未改**;METHOD-FAILED 按 §CJ 强制:点名的那一列读不出 ⇒ INSTRUMENT-BLIND 退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」——那条预登记假设的是量具工作而读数为 0,不是量具读不出来。\n**产物路径不改名**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——它是 `owed_executions.json:hero_domain_scan_2_30_31` 那条腿唯一读得到的机器键。\n\n`cmfarcreep`(WIDENING)。⛔ **本条的价值列结构上买不到,而且今天就知道** —— (2) 要「广列表最强兵血量落在 (390,460] **且**近列表最强兵 ≤390」,(1) 要按 lane creep / neutral / 玩家随从**分层**:两者都要 `creeps[]` 的 **hp 与 name**,而 `creepSnap` 只有 `{t,team,x,y}`(产物 §7 / §9.1,18,709,698 行单一键形;[harness] **GH #581** open)。**这正是卡死 hero-32/33/36 的同一堵墙。**\n⇒ **排期裁定:本条排在 GH #581 落地之后**,执行方本次遍历读到这一行就**跳过它**,在产物里留一行状态(与 hero-32/33 同款写法,点名 #581),**不要交一份把 (2) 写成 0 的报告**——那个 0 会被下一个读者读成 DOMAIN-NOT-REACHED,而它其实是量具盲。\n⭕ #581 落地后**同一个量具**同时解锁 hero-32/33/36/42 四条腿,不需要重裁。\n\n⛔⛔ **本轮八条裁定的共同主轴(总监加的,申请书里没有):已知的三堵墙递给执行方的不是空白,是一个指向同一边的错数。**\n`path_contains_all` 的九个 id 里有两个(hero-32/33)至今 NOT YET,卡在 `creepSnap` 只有 `{t,team,x,y}`(GH #581);hero-31 的充能列在产物 §6.5 写着「买不到,**不用 0 顶替**」,而 §4 更进一步:**dump 会递给你一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` 恒假。⇒ 一条撞墙的列如果按「读到 0」交上来,它**不是**一个弱读数,它是一个**系统性偏向不入集的假读数**,而两者在 verdict 表里长得一模一样(§GA.1 同族)。**本轮把每一堵已知的墙提前点名并预贴标签,就是不让执行方用一轮去重新发现它。**"
+      }
     },
     {
       "id": "hero-43",
@@ -2004,7 +2046,22 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「块开了 + 无人致命 + 最弱可施目标在 nCastRange 内 + Lion HP<0.4 + 2s 内被英雄打过」那一帧,好让本组用 `make_fixture.py` 钉帧,把 §0.3 限度 1 的 27/5/0 换成一个真实档案读数。**预登记的判读方向**:若 (2) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回,不入集,**并且不得**因此声称缺陷不存在 —— 出货出口不可达是**闭式结论**,`tests/test_lion_ult_cash_weakest.lua` §0/§2 钉着,与 (2) 的大小无关;(2) 为 0 只说明「这个 Lion 在这份语料里很少走到那里」。若 (2) 非零而 (3) 的三条同时满足占比接近 0,则本杠杆要**先重划合取**再谈入集,而不是直接判负。**预登记的归因边界(方向由构造保证)**:出货答案由调用点先算、作为实参传入,helper 第一句 `if bShippedLethal then return true end` ⇒ armed 接受的施法是 shipped 的**严格超集**,**且目标身份不变**(`npcWeakestEnemy` 在调用前就选定)。所以负读数只能读作「那些兑现出去的大招不值它的冷却」,**永远不能**读作「杠杆取消了一次施法」或「杠杆换了目标」。⚠️ **METHOD-FAILED(§CJ)强制**:读不出 (2) 那个「无一成员致命」的判据(需要对列表每个成员重算致命性,不能只看被施法的那一个)⇒ **INSTRUMENT-BLIND 退回重裁**,不得自行套用「域为 0 ⇒ 不入集」—— 那条假设的是量具工作而读数如此,不是量具读不出来。**为什么必须走档案而不是 fixture**:本轮已经量过,`tests/fixtures/` + `tests/frames/` 一共 27 个活体 Lion 瞬间,只有 5 个大招真的可施,而那 5 个 HP 全在 0.838 以上;域在树里是 0。",
       "requested_by": "hero 2026-09-07T23:xxZ",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "wave": "none —— 零 EC2、只读归档遍历;搭 hero-2/30..40 已批准的同一次遍历",
+        "at": "2026-09-08T16:0xZ",
+        "ref": "iterations/streams/test_set.md §GB;先例 §EY.4(hero-31)/ §FE.1(hero-32/33/34)/ §FK.7(hero-37)/ hero-40 的 2026-09-07T10:xxZ 裁定(『申请方自己写明本条不请求入集』⇒ 不触发 P4.2 的 FROZEN-HOLD 条款)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "delivered_to": [
+          "iterations/queue.json:hero-43.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.done_when.contains",
+          "iterations/streams/test_set.md §GB"
+        ],
+        "note": "**APPROVED-SCAN,与 hero-2/30..40 同一次遍历。**不排波、不入集、零 EC2。P4.2 的入集冻结**不适用**:申请方在 `bundle` 里逐字写着「本条不请求入集」,冻结冻的是 armed 集变大,本裁定不让任何 id 进集(§EX.6 已立)。\n**acceptance 一字未改**;METHOD-FAILED 按 §CJ 强制:点名的那一列读不出 ⇒ INSTRUMENT-BLIND 退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」——那条预登记假设的是量具工作而读数为 0,不是量具读不出来。\n**产物路径不改名**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——它是 `owed_executions.json:hero_domain_scan_2_30_31` 那条腿唯一读得到的机器键。\n\n`lionultcash`(WIDENING,helper 第一句 `if bShippedLethal then return true end` ⇒ 严格超集、目标不变)。**三列可买**:Lion 供给 1,702 局(产物 §1),`J.IsInTeamFight`/HP/冷却/蓝都在 snapshots 侧。\n⭐ **总监加的限定**:(1) 的两个析取(teamfight 那一半 / 低血那一半)**分开报,不许并池**——申请方自己已预登记,本裁定把它抬成验收条件:并池会把两个不同的域混成一个没有域的数。\n⭐ **(2) 与 (3) 同轮交付**(同 hero-41):(2) 是域,(3) 才是价格。\n\n⛔⛔ **本轮八条裁定的共同主轴(总监加的,申请书里没有):已知的三堵墙递给执行方的不是空白,是一个指向同一边的错数。**\n`path_contains_all` 的九个 id 里有两个(hero-32/33)至今 NOT YET,卡在 `creepSnap` 只有 `{t,team,x,y}`(GH #581);hero-31 的充能列在产物 §6.5 写着「买不到,**不用 0 顶替**」,而 §4 更进一步:**dump 会递给你一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` 恒假。⇒ 一条撞墙的列如果按「读到 0」交上来,它**不是**一个弱读数,它是一个**系统性偏向不入集的假读数**,而两者在 verdict 表里长得一模一样(§GA.1 同族)。**本轮把每一堵已知的墙提前点名并预贴标签,就是不让执行方用一轮去重新发现它。**"
+      }
     },
     {
       "id": "hero-44",
@@ -2016,7 +2073,22 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「击杀循环开火 + 目标 gap 落在 200-400u」那一帧,好让本组用 `make_fixture.py` 钉帧,把 §0.3 限度 1 里那 5 个 band 成员换成一个真正**开过火**的瞬间。**预登记的判读方向**:若 (2) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在(三套约定的源码交叉读是事实,`tests/test_lion_ult_reach.lua` §0 钉着);若 (2) 非零而 (3) 显示这些落单在 3 秒内**多数真的放出了大招且目标死亡**,那么本杠杆**掐掉的是真击杀**,下一棒是**重新划线**(例如只拒 gap > 200u,或把走路时间计进 `J.WillMagicKillTarget` 的延迟 —— 那是另一个 id)而**不是**直接判负;若 (3) 显示放出去的比例低或 Lion 自死率高,那才是入集的理由。**预登记的归因边界(方向由构造保证)**:helper 除 armed 那一条外每条路径都原样返回 `bShippedLethal`,armed 只能把 true 变 false ⇒ armed 施法是 shipped 的**严格子集**,**目标身份不变**。所以任何读数都**不能**读作「杠杆增加了一次施法」或「杠杆换了目标」;负读数只能读作「那些被拒掉的走位本来是值得走的」。⚠️ **METHOD-FAILED(§CJ)强制**:读不出 (2) 的 gap(该次落单时目标与 Lion 的距离、以及当帧的 `nCastRange`,后者含 aether 与 1200 上限)⇒ **INSTRUMENT-BLIND 退回重裁**,不得自行套用「域为 0 ⇒ 不入集」。**为什么必须走档案而不是 fixture**:全仓 115 帧里 Lion 存活 27 帧,band 里有可施敌人的只有 5 帧、其中「最弱也在 band」的只有 2 帧,而**开过火**的一帧都没有(致命性在 fixture 上要靠谕示穷举)。",
       "requested_by": "hero 2026-09-08T01:5xZ",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "wave": "none —— 零 EC2、只读归档遍历;搭 hero-2/30..40 已批准的同一次遍历",
+        "at": "2026-09-08T16:0xZ",
+        "ref": "iterations/streams/test_set.md §GB;先例 §EY.4(hero-31)/ §FE.1(hero-32/33/34)/ §FK.7(hero-37)/ hero-40 的 2026-09-07T10:xxZ 裁定(『申请方自己写明本条不请求入集』⇒ 不触发 P4.2 的 FROZEN-HOLD 条款)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "delivered_to": [
+          "iterations/queue.json:hero-44.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.done_when.contains",
+          "iterations/streams/test_set.md §GB"
+        ],
+        "note": "**APPROVED-SCAN,与 hero-2/30..40 同一次遍历。**不排波、不入集、零 EC2。P4.2 的入集冻结**不适用**:申请方在 `bundle` 里逐字写着「本条不请求入集」,冻结冻的是 armed 集变大,本裁定不让任何 id 进集(§EX.6 已立)。\n**acceptance 一字未改**;METHOD-FAILED 按 §CJ 强制:点名的那一列读不出 ⇒ INSTRUMENT-BLIND 退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」——那条预登记假设的是量具工作而读数为 0,不是量具读不出来。\n**产物路径不改名**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——它是 `owed_executions.json:hero_domain_scan_2_30_31` 那条腿唯一读得到的机器键。\n\n`lionrreach`(NARROWING,除 armed 那条外每条路径原样返回 `bShippedLethal` ⇒ 只能把 true 变 false)。**四列可买**:英雄间距离由位置重建,(3) 的 3s 窗口纯事件侧。\n⭐ **铁律 4(ii) 抬成验收条件**:gap **按桶报**(0-100/100-200/200-300/300-400u),**不许只报均值、不许报中位数**——整数小值域的中位数会把刀口藏起来(§AZ 的 `med n_rc` 现场)。\n⚠️ 归因方向逐字保留:负读数只能读作「否决删掉了 N 次施法」,**绝不能**读作「少浪费了 N 次大招」。\n⚠️ (4) 泄漏列(第二个调用点)与 (1)-(3) **分开报**:那是另一个域,合并会让两个域互相稀释。\n\n⛔⛔ **本轮八条裁定的共同主轴(总监加的,申请书里没有):已知的三堵墙递给执行方的不是空白,是一个指向同一边的错数。**\n`path_contains_all` 的九个 id 里有两个(hero-32/33)至今 NOT YET,卡在 `creepSnap` 只有 `{t,team,x,y}`(GH #581);hero-31 的充能列在产物 §6.5 写着「买不到,**不用 0 顶替**」,而 §4 更进一步:**dump 会递给你一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` 恒假。⇒ 一条撞墙的列如果按「读到 0」交上来,它**不是**一个弱读数,它是一个**系统性偏向不入集的假读数**,而两者在 verdict 表里长得一模一样(§GA.1 同族)。**本轮把每一堵已知的墙提前点名并预贴标签,就是不让执行方用一轮去重新发现它。**"
+      }
     },
     {
       "id": "hero-45",
@@ -2028,7 +2100,22 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「对线期间分支开火 + 目标 gap 落在 160-330u」那一帧,好让本组用 `make_fixture.py` 钉帧,把 §0.3 限度 1 里那 6 个 band 成员换成一个真正**开过火**的瞬间。**预登记的判读方向**:若 (2) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在(十个落单点的到达约定交叉读是**闭式事实**,`tests/test_wk_q_lane_reach.lua` §0 与 §3 钉着);若 (2) 非零而 (3) 显示这些落单在 3 秒内**多数真的把技能放了出去且 WK 没死**,那么本杠杆掐掉的是**真的成功骚扰**,下一棒是**重新划线**(例如只拒 gap > 160u)而**不是**直接判负;若 (3) 显示放出去的比例低、或 WK 自死率高、或 (4) 显示常常压掉一个满充能的 Bone Guard,那才是入集的理由。**预登记的归因边界(方向由构造保证)**:出货答案是**无条件 `true`**,armed 只能把 true 变 false ⇒ armed 施法是 shipped 的**严格子集**,且本 helper **不参与选靶**(目标在调用前就选好了)。所以任何读数都**不能**读作「杠杆增加了一次施法」或「杠杆换了目标」;负读数只能读作「那些被拒掉的接近本来是值得走的」。⚠️ **METHOD-FAILED(§CJ)强制**:读不出 (2) 的 gap(该次落单时目标与 WK 的距离、**以及当帧的 `nCastRange`** —— 后者含上面那条 `+260` 孤身远程敌人延长块,**不读它就会把延长态误判成越界**)⇒ **INSTRUMENT-BLIND 退回重裁**,不得自行套用「域为 0 ⇒ 不入集」。**为什么必须走档案而不是 fixture**:全仓 115 帧里 WK 存活 37 帧,band 里有敌人的只有 6 帧,而**开过火**的一帧都没有 —— 而且 `GetCastRange` 在 fixture 上恒答 0(meter-zero 家族),`creeps[]` 又没有攻击目标(GH #581),所以那条 `>= 4` 的合取**在档案上根本不可读**,只能去有 .dem 的地方量。",
       "requested_by": "hero 2026-09-08T05:0xZ",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "wave": "none —— 零 EC2、只读归档遍历;搭 hero-2/30..40 已批准的同一次遍历",
+        "at": "2026-09-08T16:0xZ",
+        "ref": "iterations/streams/test_set.md §GB;先例 §EY.4(hero-31)/ §FE.1(hero-32/33/34)/ §FK.7(hero-37)/ hero-40 的 2026-09-07T10:xxZ 裁定(『申请方自己写明本条不请求入集』⇒ 不触发 P4.2 的 FROZEN-HOLD 条款)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "delivered_to": [
+          "iterations/queue.json:hero-45.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.done_when.contains",
+          "iterations/streams/test_set.md §GB"
+        ],
+        "note": "**APPROVED-SCAN,与 hero-2/30..40 同一次遍历。**不排波、不入集、零 EC2。P4.2 的入集冻结**不适用**:申请方在 `bundle` 里逐字写着「本条不请求入集」,冻结冻的是 armed 集变大,本裁定不让任何 id 进集(§EX.6 已立)。\n**acceptance 一字未改**;METHOD-FAILED 按 §CJ 强制:点名的那一列读不出 ⇒ INSTRUMENT-BLIND 退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」——那条预登记假设的是量具工作而读数为 0,不是量具读不出来。\n**产物路径不改名**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——它是 `owed_executions.json:hero_domain_scan_2_30_31` 那条腿唯一读得到的机器键。\n\n`wkqlane`(NARROWING,出货答案是无条件 `true` ⇒ armed 只能把 true 变 false、不可能移动目标)。(1)(2)(3) 三列可买,供给 1,910 局。\n⛔⛔ **(4) 机会成本列今天就知道买不到,而且它会递给你一个错的 0。** (4) 问「当帧 Bone Guard 是否 `IsFullyCastable` **且充能 ≥ 60%**」,而**充能层数**正是产物 §6.5 明写「买不到,不用 0 顶替」的那一列,§4 还实测了 **dump 递过来的是一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` **恒假** ⇒ (4) 会读成「**从来没有压掉过一个满充能的嘲讽**」。\n⇒ **预贴标签:(4) 交 BLIND-BY-KNOWN-WALL(§CJ),点名产物 §4/§6.5 与 GH #293 家族**;**不许**把这个 0 写进读数,**更不许**用它论证「机会成本不存在 ⇒ 不入集」。(1)(2)(3) 照买,gap 按桶(0-80/80-160/160-250/250-330u)。\n\n⛔⛔ **本轮八条裁定的共同主轴(总监加的,申请书里没有):已知的三堵墙递给执行方的不是空白,是一个指向同一边的错数。**\n`path_contains_all` 的九个 id 里有两个(hero-32/33)至今 NOT YET,卡在 `creepSnap` 只有 `{t,team,x,y}`(GH #581);hero-31 的充能列在产物 §6.5 写着「买不到,**不用 0 顶替**」,而 §4 更进一步:**dump 会递给你一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` 恒假。⇒ 一条撞墙的列如果按「读到 0」交上来,它**不是**一个弱读数,它是一个**系统性偏向不入集的假读数**,而两者在 verdict 表里长得一模一样(§GA.1 同族)。**本轮把每一堵已知的墙提前点名并预贴标签,就是不让执行方用一轮去重新发现它。**"
+      }
     },
     {
       "id": "hero-46",
@@ -2040,7 +2127,22 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「`X.ConsiderR` 开火 + 目标 gap 落在 75-200u + 当帧嘲讽可施且 315 内 ≥2 个敌人」那一帧,好让本组用 `make_fixture.py` 把它钉成 fixture,补上本轮**唯一**没能被帧驱动的那一半(见下)。**预登记的判读方向**:若 (2) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在(「循环读宽表、窄表是死局部」是**闭式事实**,`tests/test_axe_cull_reach.lua` §1/§8 与 `tests/test_axe_culling_threshold_preflight.lua` §3 钉着);若 (2) 非零而 (3) 显示这些落单在 3 秒内**多数真的放出了 Culling 且目标真的死了**,那么本杠杆掐掉的是**真的击杀**(还连带退 CD),下一棒是**重新划线**(例如只拒 gap > 75u)而**不是**直接判负;若 (3) 显示放出去或击杀的比例低、或 Axe 自死率高、或 (4) 显示常常压掉一个可施的嘲讽且身边 ≥2 个敌人,那才是入集的理由。**预登记的归因边界**:在 `X.ConsiderR` 内部,armed 池 ⊆ shipped 池(同 helper、更小半径,`tests/test_axe_cull_reach.lua` §5 在 33 帧上逐帧断言)⇒ 读数**不能**读作「杠杆新增了一次 Culling」。⛔ **但英雄层面不是纯 narrowing**:被拒的那一帧接着落到 `X.ConsiderQ` / `X.ConsiderW`,它们可能开火 —— 这正是杠杆的目的,所以**「armed 的 Axe 施法总数」不是本 id 的读数**,按它下结论是读错了量。⚠️ **METHOD-FAILED(§CJ)强制**:读不出 (2) 的 gap(该次落单时目标与 Axe 的距离、**以及当帧的 `abilityR:GetCastRange()`**)⇒ **INSTRUMENT-BLIND 退回重裁**,不得自行套用「域为 0 ⇒ 不入集」。**为什么必须走档案而不是 fixture**:全仓 33 个 Axe 帧里 Culling 可施的只有 8 帧,低于斩杀线的敌人落在 band 的只有 **2** 帧(两帧都已端到端驱动),而**开过火之后发生了什么**一帧也答不了;更要紧的是 (4) 那一列 —— `X.ConsiderQ` 的每条分支都挂在 mode 谓词(`J.IsGoingOnSomeone` / `IsPushing` / `IsFarming`)后面,fixture 世界结构性恒假,所以「嘲讽会不会改为开火」**只能**去有 .dem 的地方量。",
       "requested_by": "hero 2026-09-08T07:5xZ",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "wave": "none —— 零 EC2、只读归档遍历;搭 hero-2/30..40 已批准的同一次遍历",
+        "at": "2026-09-08T16:0xZ",
+        "ref": "iterations/streams/test_set.md §GB;先例 §EY.4(hero-31)/ §FE.1(hero-32/33/34)/ §FK.7(hero-37)/ hero-40 的 2026-09-07T10:xxZ 裁定(『申请方自己写明本条不请求入集』⇒ 不触发 P4.2 的 FROZEN-HOLD 条款)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "delivered_to": [
+          "iterations/queue.json:hero-46.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.done_when.contains",
+          "iterations/streams/test_set.md §GB"
+        ],
+        "note": "**APPROVED-SCAN,与 hero-2/30..40 同一次遍历。**不排波、不入集、零 EC2。P4.2 的入集冻结**不适用**:申请方在 `bundle` 里逐字写着「本条不请求入集」,冻结冻的是 armed 集变大,本裁定不让任何 id 进集(§EX.6 已立)。\n**acceptance 一字未改**;METHOD-FAILED 按 §CJ 强制:点名的那一列读不出 ⇒ INSTRUMENT-BLIND 退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」——那条预登记假设的是量具工作而读数为 0,不是量具读不出来。\n**产物路径不改名**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——它是 `owed_executions.json:hero_domain_scan_2_30_31` 那条腿唯一读得到的机器键。\n\n`axecullreach`(在 `X.ConsiderR` 内部 NARROWING、严格子集 —— 两个池由同一 helper 用更小半径建)。**四列可买**:Axe 的供给障碍已在产物 §1 正式作废(**190 个有 `.dem` 的 Axe 局**,9 个 run 分层抽),冷却在 snapshots 侧、315u 环内存活敌人数按位置重建(hero-30 的裁定已把这一列判为可买)。\n⭐ **gap 按桶**(0-25/25-75/75-125/125-200u),不许只报均值(铁律 4(ii))。\n⚠️ (3)(b) 的权重由申请方写明并被本裁定采纳:**Culling 击杀会退 CD**,所以「目标真的死了」比一次普通施法值钱 —— 若 (3) 显示这些落单多数真的击杀,下一棒是**重新划线**(例如只拒 gap>75u),**不是**判负。\n\n⛔⛔ **本轮八条裁定的共同主轴(总监加的,申请书里没有):已知的三堵墙递给执行方的不是空白,是一个指向同一边的错数。**\n`path_contains_all` 的九个 id 里有两个(hero-32/33)至今 NOT YET,卡在 `creepSnap` 只有 `{t,team,x,y}`(GH #581);hero-31 的充能列在产物 §6.5 写着「买不到,**不用 0 顶替**」,而 §4 更进一步:**dump 会递给你一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` 恒假。⇒ 一条撞墙的列如果按「读到 0」交上来,它**不是**一个弱读数,它是一个**系统性偏向不入集的假读数**,而两者在 verdict 表里长得一模一样(§GA.1 同族)。**本轮把每一堵已知的墙提前点名并预贴标签,就是不让执行方用一轮去重新发现它。**"
+      }
     },
     {
       "id": "hero-47",
@@ -2052,7 +2154,22 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「对线期消耗骚扰分支开火 + 目标 gap 落在 75-200u + 当帧 Freezing Field 可施」那一帧,好让本组用 `make_fixture.py` 把它钉成 fixture,补上本轮**没能被帧驱动**的那一半(`tests/test_cm_w_lane_band.lua` §0.3 限度 2)。**预登记的判读方向**:若 (1) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在(「这条分支读 `+200` 环且零距离项、而同函数另外六个落单点都绑距离」是**闭式事实**,`tests/test_cm_w_lane_band.lua` §2/§3/§5 钉着;§2 还在真实帧上驱动了出货选择器**真的**选出一个 711.9u 的候选);若 (2) 非零而 (3) 显示这些落单多数**真的放出了 Frostbite 且目标真的被冻住**、同时 (c) 掉血低,那么本杠杆掐掉的是**真的骚扰**,下一棒是**重新划线**(例如只拒 gap > 75u)而**不是**直接判负;若 (3) 显示放出去的比例低、或 (c) 显示 CM 常在这些接近里被换掉、或 (4) 显示常常压掉一个可施的 R,那么本 id 的三条件 (a)/(c) 都已到手,可在 P4.2 解冻后提入集。",
       "requested_by": "hero 2026-09-08T11:0xZ",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "wave": "none —— 零 EC2、只读归档遍历;搭 hero-2/30..40 已批准的同一次遍历",
+        "at": "2026-09-08T16:0xZ",
+        "ref": "iterations/streams/test_set.md §GB;先例 §EY.4(hero-31)/ §FE.1(hero-32/33/34)/ §FK.7(hero-37)/ hero-40 的 2026-09-07T10:xxZ 裁定(『申请方自己写明本条不请求入集』⇒ 不触发 P4.2 的 FROZEN-HOLD 条款)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "delivered_to": [
+          "iterations/queue.json:hero-47.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.done_when.contains",
+          "iterations/streams/test_set.md §GB"
+        ],
+        "note": "**APPROVED-SCAN,与 hero-2/30..40 同一次遍历。**不排波、不入集、零 EC2。P4.2 的入集冻结**不适用**:申请方在 `bundle` 里逐字写着「本条不请求入集」,冻结冻的是 armed 集变大,本裁定不让任何 id 进集(§EX.6 已立)。\n**acceptance 一字未改**;METHOD-FAILED 按 §CJ 强制:点名的那一列读不出 ⇒ INSTRUMENT-BLIND 退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」——那条预登记假设的是量具工作而读数为 0,不是量具读不出来。\n**产物路径不改名**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——它是 `owed_executions.json:hero_domain_scan_2_30_31` 那条腿唯一读得到的机器键。\n\n`cmlaneband`(NARROWING)。供给 2,063 局。\n⛔ **执行前先自检一个字段,拿不到就明写:(1) 的前置里有「目标移速 < CM 移速」。** 移速若不在 dump 里,**不许用出厂移速常数顶替**——那会让这一条前置在整份语料上恒真或恒假,把 (1) 的分子做成一个看起来正常的错数(与 hero-31 充能 0 顶替同族)。拿不到就按 §CJ 交 INSTRUMENT-BLIND 并点名缺的是哪个字段。\n⭐ **gap 按桶**(0-25/25-75/75-150/150-200u),不许只报均值。\n⚠️ TP 打断那个落单点**不在本 id 域内**(申请方自己划走的,逐字保留),数 (1) 时必须与它分开。\n\n⛔⛔ **本轮八条裁定的共同主轴(总监加的,申请书里没有):已知的三堵墙递给执行方的不是空白,是一个指向同一边的错数。**\n`path_contains_all` 的九个 id 里有两个(hero-32/33)至今 NOT YET,卡在 `creepSnap` 只有 `{t,team,x,y}`(GH #581);hero-31 的充能列在产物 §6.5 写着「买不到,**不用 0 顶替**」,而 §4 更进一步:**dump 会递给你一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` 恒假。⇒ 一条撞墙的列如果按「读到 0」交上来,它**不是**一个弱读数,它是一个**系统性偏向不入集的假读数**,而两者在 verdict 表里长得一模一样(§GA.1 同族)。**本轮把每一堵已知的墙提前点名并预贴标签,就是不让执行方用一轮去重新发现它。**"
+      }
     },
     {
       "id": "hero-48",
@@ -2064,7 +2181,22 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「进攻落单点开火 + gap 落在 band 内 + 落点到目标 > range(即真的空放)」那一帧,好让本组用 `make_fixture.py` 把它钉成 fixture。⚠️ **但要先解决一件事**:`make_fixture.py` 目前**不 dump facing**,所以即使拿到 (game, t),钉出来的 fixture 仍然答不了这个 lever 的判据 —— 本请求因此**连带一条 harness 请求**:请在 dumper/fixture 里带上 `facing`(与 GH #581 的 `creeps[]` 缺列、#586 的身份缺口同族)。没有它,这个 id 的端到端只能靠注入(`tests/test_zuus_jump_landing_reach.lua` §4 付的就是这个价,并断言了注入生效)。**预登记的判读方向**:若 (1) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在(「这个落单点在起跳点量一个从落点量的量」是**闭式几何事实**,`tests/test_zuus_jump_landing_reach.lua` §2 在零注入的真实帧上给了 695.23u / 320.23u / 1070.23u 三个数,§3 给了 360 个朝向的两侧分布);若 (3) 显示空放占比低(比如 <10%),说明 bot 在进攻时基本都朝着目标,本杠杆掐掉的是**边角**,下一棒是**退集**而不是判负;若 (3) 显示空放占比可观、或 (4)(b) 显示这些跳跃常把 Zeus 送死,那么三条件 (a)/(c) 都已到手,可在 P4.2 解冻后提入集。",
       "requested_by": "hero 2026-09-08T13:5xZ",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
+        "wave": "none —— 零 EC2、只读归档遍历;搭 hero-2/30..40 已批准的同一次遍历",
+        "at": "2026-09-08T16:0xZ",
+        "ref": "iterations/streams/test_set.md §GB;先例 §EY.4(hero-31)/ §FE.1(hero-32/33/34)/ §FK.7(hero-37)/ hero-40 的 2026-09-07T10:xxZ 裁定(『申请方自己写明本条不请求入集』⇒ 不触发 P4.2 的 FROZEN-HOLD 条款)",
+        "executor": "replay-check",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "delivered_to": [
+          "iterations/queue.json:hero-48.director",
+          "iterations/owed_executions.json:hero_domain_scan_2_30_31.done_when.contains",
+          "iterations/streams/test_set.md §GB"
+        ],
+        "note": "**APPROVED-SCAN,与 hero-2/30..40 同一次遍历。**不排波、不入集、零 EC2。P4.2 的入集冻结**不适用**:申请方在 `bundle` 里逐字写着「本条不请求入集」,冻结冻的是 armed 集变大,本裁定不让任何 id 进集(§EX.6 已立)。\n**acceptance 一字未改**;METHOD-FAILED 按 §CJ 强制:点名的那一列读不出 ⇒ INSTRUMENT-BLIND 退回重裁,**不得**自行套用「域接近 0 ⇒ 不入集」——那条预登记假设的是量具工作而读数为 0,不是量具读不出来。\n**产物路径不改名**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——它是 `owed_executions.json:hero_domain_scan_2_30_31` 那条腿唯一读得到的机器键。\n\n`zusjumpland`(NARROWING)。供给 1,882 局(zuus)。\n⛔ **执行前先自检朝向字段:落点 = 起跳点 + `hop_distance` × **bot 自己的朝向**,而本 id 的立案句就是「在起跳点量一个从落点量的量」。**朝向拿不到就按 §CJ 交 INSTRUMENT-BLIND**,⛔ **不许用「朝向 = 指向目标」当默认值** —— 那个默认恰好让落点永远朝目标去、gap 恒为最优,读出来就是 DOMAIN-NOT-REACHED,**方向正好是掐死本杠杆的那一边**(与 hero-45 (4) 同型)。\n⚠️ 撤退那个落单点是文件里唯一带朝向项的地方,申请方**故意不动**它;数 (1) 时与它分开。\n\n⛔⛔ **本轮八条裁定的共同主轴(总监加的,申请书里没有):已知的三堵墙递给执行方的不是空白,是一个指向同一边的错数。**\n`path_contains_all` 的九个 id 里有两个(hero-32/33)至今 NOT YET,卡在 `creepSnap` 只有 `{t,team,x,y}`(GH #581);hero-31 的充能列在产物 §6.5 写着「买不到,**不用 0 顶替**」,而 §4 更进一步:**dump 会递给你一个正好错的 0** ⇒ `nStack/maxStack >= 0.6` 恒假。⇒ 一条撞墙的列如果按「读到 0」交上来,它**不是**一个弱读数,它是一个**系统性偏向不入集的假读数**,而两者在 verdict 表里长得一模一样(§GA.1 同族)。**本轮把每一堵已知的墙提前点名并预贴标签,就是不让执行方用一轮去重新发现它。**"
+      }
     }
   ],
   "done": [
