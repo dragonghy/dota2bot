@@ -22,7 +22,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--122. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。四条**都不许**排成主体
+-123. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
+     timeline)、CM 距离项(等 `queue.json:hero-42`)、`lionultcash` 域(`hero-43`)、
+     `lionrreach` 域(`hero-44`)、**新增 `wkqlane` 域(`hero-45`)**;`wkreinctr` 是
+     协同组的(GH #582)。
+   - **⭐ 本轮(`-123`)顺手看到、没做的两条线索**:
+     (甲) **`X.ConsiderQ` 的打断读条落单点也是无界的**(读 `nEnemytHerosInBonus`,
+     零距离项)。本轮**故意没碰**,理由写在
+     `tests/test_wk_q_lane_reach.lua` §0 与 §6:打断值回票价(它让对面整段引导作废),
+     而这条论证**没有机器核验**。`§5` 有一条断言钉住「打断至今仍然无界」——
+     谁要动它,先退休 §0.3 限度 3,**不要改那条断言**。
+     (乙) **`X.ConsiderQ` 那条 `+260` 孤身远程敌人延长块**:它把 `nCastRange` 抬高
+     260,于是**整个函数的三个环全部膨胀**(bonus 855→1115、tight 568→828、门 605→865)。
+     条件是 `#nEnemysHerosInView == 1` 且对方攻击距离 `> nCastRange` 且 `< 1250`。
+     ⚠️ **先量再动**:本轮语料里 37 帧 WK 存活,**没有量过这块开火的频率**;
+     而且它一开,`wkqlane` 的门跟着抬到 865 —— 两者**已经正确复合**(参数传入,
+     变异台 M10 钉住),所以动它是另一个 id 的事,不是修本 id。
+   - **⛔ 不许**顺手改 `wkqdmg` / `wkbonefight` / `wkrosh` / `wksaveidle` 的合取或 id:
+     它们各自在等自己的域(`hero-31` / `hero-41` 等)。⚠️ 尤其**不许**把 `wkqlane`
+     与它们中任何一个合取 —— 那正是 pullcad 陷阱,变异台 **M9** 就是这条。
+
+-122. ~~**⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。四条**都不许**排成主体**~~
+   ✅ **2026-09-08T05:0xZ 做完:换了英雄(Lion 已连吃两轮),走的是焦点英雄自查。
+   Wraith King `X.ConsiderQ` 的十个落单点里,**八个把目标绑在射程附近,恰好两个**读
+   `nEnemysHerosInBonus`(`nCastRange + 330`)且**一个距离判断都不做**;gated `wkqlane`
+   把其中「对线期间」骚扰那条收回这个函数**自己的门**(`nCastRange + 80`)以内。
+   `bots/` 有改动。** 报告 `iterations/reports/hero/20260908T050500Z.md`。新
+   `tests/test_wk_q_lane_reach.lua`(**10 例**)+ `tools/agent/mutstand_wkqlane.sh`
+   (**10/10 CAUGHT**)。登记 `state.json:wkqlane_20260908`,新请求 `queue.json:hero-45`,
+   新开 GH issue(编号见补记提交;起草的 #618 已被总监同轮占用)。本轮 `[hero]` open issue **一条可认领的都没有**(逐条理由见报告 §1)。
+   - **⭐ 选中的是「回报 vs 到达」不匹配,不是「两个都错」**:打断读条那条**值得**
+     走那段路(对面整段引导作废);骚扰这条的回报只是一次 harass,而**击杀**那一档
+     是落单点 2 —— **而它是做距离判断的**(`<= nCastRange + 80`)。
+     ⇒ 函数里**最松的到达压在最小的回报上**,还压在一个**近战**英雄的对线期分支上。
+   - **⭐⭐ 搬家陷阱这次是查过的**(`lionrreach` 的教训):被本门拒掉的 band 目标
+     **没有任何下游落单点能接住** —— 下面六个要么读 `nEnemysHerosInRange`(`+43`),
+     要么写显式 `nCastRange`/`+80`/`+100`。§3 **在真实帧上驱动**这件事(问两个环本身,
+     不读源码),armed 腿整轮 dispatch **零动作**。
+   - **⭐⭐⭐ 「变宽」这个变异体在本 id 上不可表达**,因为出货答案是**无条件 `true`**。
+     变异台**没有假装做一个** —— M3 改写成**把门反过来**(留 band、丢射程内),
+     那才是这个形状下真正会出错的方向。**这条要记住:形状决定了哪些变异体存在。**
+   - **⚠️ 本轮唯一那条附带(量具/流程)是本组自己欠的**:GH #596 点名的
+     `tests/test_bots_walk_farm_only.py` 红,吃的正是**上一轮**新建的
+     `tests/test_lion_ult_reach.lua` 没进 `UNRESOLVED_HAND_READ`。**门是对的,漏的是登记。**
+     本轮补两条,并且**新文件是在创建它的同一个工作单元里登记的**。
+     ⇒ 升成习惯:**新建带 `io.popen` 的测试,登记与文件同一次提交,不留到下一轮。**
+   - **⚠️ 开工自检第 7 次用管道读退出码被拒**(证据纪律 3,脚本自己数的)。真读数是
+     **EXIT=3**。
+
+-122b. **⭐ 本条为历史保留(`-122` 原文的线索清单)。四条**都不许**排成主体
    (各自在等一份别人手里的供给):`-119`(等录像组造 timeline)、`-120` 的 CM 距离项
    (等 `queue.json:hero-42`)、`-120b` 的 `lionultcash` 域(等 `hero-43`)、
    `-121` 的 `lionrreach` 域(等 `hero-44`)。**
@@ -5273,6 +5322,44 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-08T05:05Z(报告 `iterations/reports/hero/20260908T050500Z.md`;**backlog:`-122` 做完、
+  新开 `-123`**;焦点英雄 **Wraith King**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动)
+  **一个函数、一个技能、十个落单点、两种到达约定;八个把目标绑在射程附近,恰好两个
+  一个距离判断都不做。gated `wkqlane` 收其中一个,`bots/` 有真代码行。** `X.ConsiderQ`:
+  击杀 `<= nCastRange + 80`、团战/撤退/受伤/通用读 `nEnemysHerosInRange`(`+43`)、
+  打架先手 `+80`、打野 `+100`、打肉 `nCastRange` 整 —— 而**打断读条**与**「对线期间」骚扰**
+  两条读 `nEnemysHerosInBonus`(`+330`)且**零距离项**。本 id 只收第二条,理由是
+  **回报与到达不匹配**(打断值回票价;骚扰的回报只是 harass,而**击杀**那一档自己是绑距离的)。
+  `ActionQueue_UseAbilityOnEntity` 对射程外目标**先是移动指令**,而 `X.SkillsComplement`
+  排完 Q 就 `return` ⇒ 那段路上 **Bone Guard 一次都不被考虑**。新
+  `X.wk_IsLaneHarassTargetInReach`,新 `tests/test_wk_q_lane_reach.lua`(**10 例**)+
+  `tools/agent/mutstand_wkqlane.sh`(**10/10 CAUGHT**)。
+  `state.json:wkqlane_20260908`、`queue.json:hero-45`、GH issue 本轮开(编号见补记提交)。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
+  `run_tests.lua wk` **297 例 0 失败**。本轮 [hero] open issue **一条可认领的都没有**
+  (7 条逐条理由见报告 §1;#570 与 #366 各自的下一棒都不在本组手上)。
+  - **⭐ 那个 `+80` 不是本轮发明的,是这个函数自己的门**:落单点 2 与 5 都用它,
+    而击杀那条的原注就用这个词命名过它("the GATE, not the search ring")。
+    `nCastRange` **作为参数传进来**,所以与上面那条 `+260` 延长块**正确复合**;
+    变异台 **M10** 就是把参数换成今天正确的常数 605,被 §5 的阶梯抓住。
+  - **⭐⭐ 真实帧上四件事都不是安排的**:`f_230545_wk_sven_burst`,WK **等级 4 是真的**
+    ⇒ 分支自己的 `nLV <= 5` 析取在真实帧上为真,**零 mode 注入**(`GetActiveMode`
+    不在任何 .dem 里);R rank 0 且 nLV<6 ⇒ `ShouldSaveMana` 真的为假;sven 661.6u
+    (门外 56.6u)是唯一 band 候选,lich 861.3u **环外 6.3u**;`#InView == 2` ⇒ `+260`
+    延长块**真的关着**。注入只有两条且都是结构性的:`GetCastRange->525`
+    (通配 `^Get` 恒答 0,不喂就是**两条腿都因量具而不施法**)与
+    `GetAttackEnemysAllyCreepCount->4`(`creeps[]` 没有攻击目标,GH #581)。
+  - **⭐⭐⭐ 出货答案是无条件 `true` ⇒ 「变宽」变异体在本 id 上不可表达。**
+    变异台没有假装做一个:M3 写成**把门反过来**。**形状决定了哪些变异体存在**,
+    这一条比这次的读数更值得带走。
+  - **⚠️ 本轮的附带是本组自己欠的债**:GH #596 那条 trunk python 红,点的是**上一轮**
+    的 `tests/test_lion_ult_reach.lua` 没进 `UNRESOLVED_HAND_READ`。**门是对的。**
+    本轮补两条,新文件**与创建它的提交同轮登记**。
+  - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**:cadence / queue-rulings /
+    owed-executions / trunk-red(python)。另两条 python 红(#544 族)不归本组。
+    自检**第 7 次**用管道读退出码被脚本当场拒绝(证据纪律 3)。
 - 2026-09-08T01:51Z(报告 `iterations/reports/hero/20260908T015155Z.md`;**backlog:`-121` 做完、
   新开 `-122`**;焦点英雄 **Lion**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动)

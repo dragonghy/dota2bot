@@ -699,6 +699,108 @@ function X.wk_GetBlastKillDamage( hAbility )
 end
 
 
+--- The reach term the 对线期间 (lane-harass) firing point of X.ConsiderQ has
+--- never had.  Soak candidate `wkqlane` (turbo-only, INERT until armed).
+---
+--- THE DEFECT, closed form.  X.ConsiderQ builds TWO search rings off one cast
+--- range and then bids from TEN firing points.  Eight of the ten bound the
+--- target to roughly the cast range:
+---
+---     kill-confirm       GetUnitToUnitDistance(...) <= nCastRange + 80
+---     teamfight          nEnemysHerosInRange   (nCastRange + 43)
+---     打架先手           J.IsInRange( npcTarget, bot, nCastRange + 80 )
+---     retreat            nEnemysHerosInRange
+---     farming            bot:GetNearbyNeutralCreeps( nCastRange + 100 )
+---     roshan             J.IsInRange( npcTarget, bot, nCastRange )
+---     recently-damaged   nEnemysHerosInRange
+---     generic            nEnemysHerosInRange
+---
+--- Exactly TWO iterate nEnemysHerosInBonus (nCastRange + 330) with no distance
+--- term at all: the channel interrupt, and this lane-harass branch.  The
+--- interrupt is defensible on its own terms -- a channel is worth walking for,
+--- and it costs the enemy the whole channel.  This branch is not: its payoff is
+--- a HARASS (a 1.0-1.6s stun plus the dot) on a target the bot's own creeps are
+--- already beating on, and the kill case is firing point 2, which DOES bound
+--- distance.  So the loosest reach in the function sits under the smallest
+--- payoff.
+---
+--- WHAT THE ENGINE IS HANDED.  X.SkillsComplement queues
+--- `ActionQueue_UseAbilityOnEntity( abilityQ, castQTarget )` and `return`s.  On
+--- a target outside cast range that order is a MOVE order first: Wraith King --
+--- a melee hero, in the laning phase, at hero level <= 5 -- walks up to 330
+--- units toward an enemy hero, and for as long as the desire holds
+--- SkillsComplement returns before X.ConsiderW is ever consulted, so Bone Guard
+--- is off the table too.  Same family as `lionrreach` (GH #617) on a different
+--- hero, and the same sentence Lion's X.lion_ShouldCashUltAtWeakest already
+--- writes about ITSELF ("could order a cast on a target Lion must WALK 400
+--- units toward, which turns ... into a dive").
+---
+--- ARMED: the target must be inside `nCastRange + 80`.  That number is not
+--- invented here -- it is THIS FUNCTION'S OWN gate, used by the kill-confirm
+--- branch and by 打架先手, and the note on the kill-confirm branch above names
+--- it in those words ("the GATE, not the search ring").  nCastRange is passed
+--- in rather than re-read so the lever composes with the +260 lone-ranged-enemy
+--- extension above instead of silently ignoring it.
+---
+--- DIRECTION BY CONSTRUCTION, not by today's data.  The armed predicate is a
+--- strict SUBSET of the shipped one (`true`) for every input, so arming this id
+--- can only REMOVE lane-harass casts, never add or move one.  A negative wave
+--- read is attributable to "those 250-unit approaches were worth taking" and
+--- NEVER to a cast this lever created.
+---
+--- NO RELOCATION -- the `lionrreach` trap, checked rather than assumed.  A
+--- target in the band (nCastRange + 80, nCastRange + 330] that this gate
+--- refuses cannot be picked up by any firing point BELOW it: all six of them
+--- are bounded by nEnemysHerosInRange (nCastRange + 43) or by an explicit
+--- nCastRange/+80/+100 test, listed above.  The two points ABOVE it are the
+--- channel interrupt (a different predicate, untouched) and the kill-confirm
+--- branch (already bounded by +80).  So on the band the armed leg is NO CAST,
+--- not a cast that moved.  tests/test_wk_q_lane_reach.lua section 3 drives that
+--- rather than quoting it.
+---
+--- REFUSING IS NOT FORFEITING THE HARASS (condition (c)).  X.ConsiderQ re-enters
+--- every frame; the instant the enemy is genuinely inside cast range the same
+--- branch fires with the same target.  What is given up is only the approach
+--- Wraith King initiates HIMSELF -- and standard laning practice for a melee
+--- hero is precisely not to walk out of one's own creep wave to land a harass
+--- spell, least of all onto an enemy whose creep aggro (the `>= 4` conjunct) is
+--- about to be reset by the walk itself.
+---
+--- THE REAL FRAME (tests/test_wk_q_lane_reach.lua):
+--- tests/fixtures/f_230545_wk_sven_burst.lua, t=306.0, Wraith King the subject
+--- at hero LEVEL 4 -- so the branch's own `nLV <= 5` disjunct is TRUE on the
+--- real frame, with no mode injected (bot:GetActiveMode() is bot-VM state and is
+--- in no .dem; 13th world assertion).  Reincarnation is rank 0 and nLV < 6, so
+--- X.ShouldSaveMana is really false.  One enemy in the bonus ring: sven at
+--- 661.6u, which is 56.6u BEYOND the +80 gate and 193.4u inside the +330 ring.
+--- lich is at 861.3u, 6.3u outside the ring, so the ring really does hold
+--- exactly one candidate and `#nEnemysHerosInView == 2` really does keep the
+--- +260 extension shut.
+---
+--- ⚠️ TWO INJECTIONS, both named, both structural rather than convenient:
+---   1. GetCastRange -> 525.  GetCastRange is on no spec in tests/mock, so the
+---      generic `^Get` default answers 0 on every archive frame (the meter-zero
+---      family the kill-confirm note above records).  At 0 the bonus ring is 330
+---      and sven is not even in the list, so the shipped branch is unreachable
+---      and BOTH legs would answer "no cast" for a reason that is about the
+---      harness.  525 is this ability's own AbilityCastRange, already in the
+---      tree at tests/mock/special_value_shapes.lua.
+---   2. J.GetAttackEnemysAllyCreepCount -> 4.  The dumper's creeps[] carries
+---      only {t,team,x,y} (GH #581): no attack target, so no archive frame can
+---      answer this conjunct either way.
+--- Geometry, roster, health, level, ranks and cooldowns are REAL and untouched.
+function X.wk_IsLaneHarassTargetInReach( npcEnemy, nCastRange )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkqlane' ) )
+	then
+		return true
+	end
+
+	return J.IsInRange( npcEnemy, bot, nCastRange + 80 )
+
+end
+
+
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable()
@@ -881,6 +983,8 @@ function X.ConsiderQ()
 	end
 
 	--对线期间对敌方英雄使用
+	-- [wkqlane] the reach term this branch never had.  See
+	-- X.wk_IsLaneHarassTargetInReach below; gate off it is `true`, byte for byte.
 	if bot:GetActiveMode() == BOT_MODE_LANING or nLV <= 5
 	then
 		for _, npcEnemy in pairs( nEnemysHerosInBonus )
@@ -890,6 +994,7 @@ function X.ConsiderQ()
 				and J.CanCastOnTargetAdvanced( npcEnemy )
 				and not J.IsDisabled( npcEnemy )
 				and J.GetAttackEnemysAllyCreepCount( npcEnemy, 1400 ) >= 4
+				and X.wk_IsLaneHarassTargetInReach( npcEnemy, nCastRange )
 			then
 				return BOT_ACTION_DESIRE_HIGH, npcEnemy
 			end

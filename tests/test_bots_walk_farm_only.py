@@ -126,6 +126,15 @@ UNRESOLVED_HAND_READ = {
     """tests/test_lion_ult_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
         "tests/frames}",
+    # Hand-read 2026-09-08 (hero), at :140-144: identical shape to the entry
+    # above -- `corpus_paths()` over {FIXTURE_DIR, STAGED_DIR}, literals at
+    # :116-117, one caller (:224) passing no argument.  Registered in the SAME
+    # work unit that created the file, which is the half GH #596 says was
+    # missed the previous round (the director's entry above is that round's
+    # debt, paid on main first; this conflict is the two payments meeting).
+    """tests/test_wk_q_lane_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
+        "tests/frames}",
     """tests/test_fixture_mana_price.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
         "d in {tests/fixtures, tests/frames}",
     # Hand-read 2026-09-06 (director), at :399-400: the loop is written
