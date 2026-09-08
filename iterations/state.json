@@ -7044,6 +7044,6 @@
   "injections": "⚠️ **两条,都具名,都是结构性的而不是方便性的**:(1) `GetCastRange -> 525` —— `GetCastRange` 不在 `tests/mock` 的任何 spec 上,通配 `^Get` 在**每一帧**都答 0(meter-zero 家族,`X.ConsiderQ` 击杀分支的原注已登记过);0 之下 bonus 环只有 330,sven **根本不在列表里**,于是**两条腿都会答「不施法」,而理由是关于量具的不是关于游戏的**。525 是这个技能自己的 `AbilityCastRange`,**本来就在树里**(`tests/mock/special_value_shapes.lua`)。(2) `J.GetAttackEnemysAllyCreepCount -> 4` —— dumper 的 `creeps[]` 只有 `{t,team,x,y}`(GH #581),**没有攻击目标**,所以**没有任何归档帧**能回答这个合取项。几何、阵容、血量、英雄等级、技能等级、冷却**全是真的且未动**。§4 先断言两条注入**真的被读到**,再取任何读数。",
   "not_in_this_id": "**本 id 不碰打断读条那个落单点**(函数里另一个无界点)。§0 论证了它站得住(打断值回票价),但那条论证**没有机器核验,也不声称有**;§5 有一条断言钉住「打断至今仍然无界」,好让后来的人不能把本文件读成已经修了它。同样不碰 `wkqdmg` / `wkbonefight` / `wkrosh` / `wksaveidle` / `wkreinctr`(最后一条是协同组的,GH #582)。",
   "value_question_owed": "那 250 码的接近到底值不值,本轮**不判**,也判不了(fixture 上没有一帧真的开过火)。`queue.json:hero-45`(零 EC2 归档只读,与 hero-2/30..44 同形可并进同一次遍历)。",
-  "gh_issue": "本轮开,编号见补记提交(起草的 #618 已被总监同轮占用)"
+  "gh_issue": "#621(起草时写的 #618 已被总监同轮占用;按 GH #290 先 push 再发引用)"
  }
 }

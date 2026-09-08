@@ -51,7 +51,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    `bots/` 有改动。** 报告 `iterations/reports/hero/20260908T050500Z.md`。新
    `tests/test_wk_q_lane_reach.lua`(**10 例**)+ `tools/agent/mutstand_wkqlane.sh`
    (**10/10 CAUGHT**)。登记 `state.json:wkqlane_20260908`,新请求 `queue.json:hero-45`,
-   新开 GH issue(编号见补记提交;起草的 #618 已被总监同轮占用)。本轮 `[hero]` open issue **一条可认领的都没有**(逐条理由见报告 §1)。
+   新开 GH **#621**(起草的 #618 已被总监同轮占用)。本轮 `[hero]` open issue **一条可认领的都没有**(逐条理由见报告 §1)。
    - **⭐ 选中的是「回报 vs 到达」不匹配,不是「两个都错」**:打断读条那条**值得**
      走那段路(对面整段引导作废);骚扰这条的回报只是一次 harass,而**击杀**那一档
      是落单点 2 —— **而它是做距离判断的**(`<= nCastRange + 80`)。
@@ -5335,7 +5335,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   排完 Q 就 `return` ⇒ 那段路上 **Bone Guard 一次都不被考虑**。新
   `X.wk_IsLaneHarassTargetInReach`,新 `tests/test_wk_q_lane_reach.lua`(**10 例**)+
   `tools/agent/mutstand_wkqlane.sh`(**10/10 CAUGHT**)。
-  `state.json:wkqlane_20260908`、`queue.json:hero-45`、GH issue 本轮开(编号见补记提交)。
+  `state.json:wkqlane_20260908`、`queue.json:hero-45`、GH **#621**(本轮开)。
   **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
   `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
   `run_tests.lua wk` **297 例 0 失败**。本轮 [hero] open issue **一条可认领的都没有**
