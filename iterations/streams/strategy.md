@@ -35,7 +35,7 @@
    **未 armed**,P4.2 = FROZEN-HOLD)、`tests/_tpquiet_sweep.lua`、
    `tests/test_tpquiet_shadowed_branch.lua`(**15/15**)、`tools/agent/mutstand_tpquiet.sh`
    (**13/13:12 变异体全 CAUGHT + 控制项 OK,零 SURVIVED,STAND GREEN**)、`state.json:tpquiet_20260908`、
-   `test_gated_helper_nesting_census.lua` 新增一行(A);报告 `iterations/reports/strategy/20260908T143144Z.md`;
+   `test_gated_helper_nesting_census.lua` 新增一行(A);报告 `iterations/reports/strategy/20260908T143144Z.md`;**issue GH #635**;
    **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
    **⭐ 主判据:一个永远跑不到的分支上的守卫不是守卫。** `item_tpscroll` 的四条回家分支**按源码顺序排列且每条都 return**;
    P2 家族三个 id 全挂在**后两条**上,**没有人问过上游的 `撤退:1` 会不会先接走这一帧**。
@@ -6767,7 +6767,7 @@
   `tests/_tpquiet_sweep.lua`、`tests/test_tpquiet_shadowed_branch.lua`(**15/15**)、
   `tools/agent/mutstand_tpquiet.sh`(**13/13,12 变异体全 CAUGHT + 控制项 OK,零 SURVIVED,STAND GREEN**)、
   `state.json:tpquiet_20260908`、`test_gated_helper_nesting_census.lua` 新增一行(A)。
-  报告 `iterations/reports/strategy/20260908T143144Z.md`;**armed 串 / `queue.json` / `test_set.md` 一字未动**;
+  报告 `iterations/reports/strategy/20260908T143144Z.md`;**issue GH #635**;**armed 串 / `queue.json` / `test_set.md` 一字未动**;
   零 AWS、零 S3、零 EC2、零波次。
   **⭐⭐⭐ 新的不是判断,是问这个判断的位置。** 谓词与 `tpdeep` **逐个常数相同**(带 `[0.10,0.18)`、
   伤害窗 6.0s 不归因、环 2500、塔 1200、`HasFieldRegenSource`)—— 这不是抄,**这是杠杆的全部合法性**,
