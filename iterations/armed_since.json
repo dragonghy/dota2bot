@@ -47,7 +47,9 @@
     "fieldregen": {
       "armed_since": "2026-07-25",
       "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch"
+      "source": "state.json:family_bisect_launch",
+      "retired_at": "2026-09-08",
+      "retired_note": "退回出集(test_set.md §FZ;state.json:fieldregen_RETURNED_20260908)。P4.2 最老一档(armed 45 天,verify=0),七个波次(W39/40/41/52/53/54/55)只在全量成员串里、一次未被单臂 arm。条件 (a) **从 fixture 那条路结构上买不到**:该块自带 `not J.IsInLaningPhase()`,而语料 1021 帧里 842(82.5%)是对线期 ⇒ 其可读谓词只在 **6** 帧成立(tests/_fieldregen_overlap_sweep.lua)。⛔ 同一份 sweep 的 `overlap_any 0` 是**仪器的零**,不许当作「与 fieldbuy 族不重叠」的证据。gate 与整块逐字保留,bots/ 零 diff。重新入集须走**波次录像**的 (a),见 owed_executions.json:fieldregen_condition_a_from_waves。"
     },
     "wandbleed": {
       "armed_since": "2026-08-19",

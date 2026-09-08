@@ -316,6 +316,61 @@
         "kind": "manual"
       },
       "done_when_note": "⚠️ **`kind: manual` 是查过之后的选择,不是偷懒**:真正的验收句是**两条命令各自退出 0** —— `python3 tests/test_wave_throttle.py` 与 `python3 tests/test_wave_gate_keys.py` —— 而 `tools/agent/pending_rulings.py:801-806` 支持的四种 kind(`json_value` / `path_exists` / `path_absent` / `path_contains_all`)**没有一种表达得了「这条命令退 0」**:`json_value` 只比顶层键、`path_contains_all` 只做子串。硬套一个会得到**假 DONE**(比如子串命中一个我无权规定其拼法的 gate 键名),而这一行的保守侧是**让棒保持可见**。⇒ 记成 manual,每轮报 OWED,由总监读那两条命令的裸退出码后退休。**诚实的空值算完成,编的不算**:`launched_at` 真取不回来时,合规的产物是逐字写下 `UNCERTIFIABLE` 加上取不回来的核法(裸读输出),不是填一个看起来像时刻的字符串 —— 后者会让这两条检查变绿而把节流闸永久地喂上假锚点,那正是 `tests/test_wave_gate_keys.py` 自己点名拒收的东西。"
+    },
+    {
+      "id": "fieldregen_condition_a_from_waves",
+      "issue": "P4.2 最老一档;裁定全文 iterations/streams/test_set.md §FZ;机器键 state.json:fieldregen_RETURNED_20260908",
+      "ruling": "总监 2026-09-08T07:19Z:`fieldregen` 退回出集(45 → 44)。⛔ **不是 reject**,gate 与 `bots/item_purchase_generic.lua:776` 整块逐字保留(`bots/`+`game/` 零 diff)。退集的判据是**条件 (a) 从 fixture 那条路结构上买不到**:该块自带 `not J.IsInLaningPhase()`,而语料 1021 帧里 **842(82.5%)是对线期** ⇒ 其可读谓词只在 **6** 帧成立。⚠️ 同一份 sweep 的 `overlap_any 0` 是**仪器的零**,**不许**被引用成「与 fieldbuy 四臂族不重叠」。",
+      "ruled_at": "2026-09-08T07:19Z",
+      "executor": "任何提出重新入集的一方(录像组或协同组);总监审批",
+      "trigger": "**提出重新入集的那一刻**,而不是某个日期 —— 这一行的作用是让「下次谁想把它 armed 回去」必须先回答 (a) 怎么买。",
+      "delivered_to": [
+        "iterations/streams/test_set.md §FZ(全文档案)",
+        "iterations/state.json:fieldregen_RETURNED_20260908(机器字段)",
+        "iterations/armed_since.json:ids.fieldregen.retired_note",
+        "iterations/owed_executions.json(本行)"
+      ],
+      "why_registered_here": "退集本身已完成,**欠的是重新入集的前提**:没有这一行,下一个想 arm 它的人会重新走 fixture 那条本轮量出结构失明的路,而 `verify_coverage` 只会再报一次 verify=0(§FB/§FW 同族的复发形状)。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ `kind: manual` 是查过之后的选择:验收句是**「重新入集申请里带了一个跑在波次录像上的 (a) 取证方案」**,这是一句关于**文档内容**的判断,`pending_rulings.py` 支持的四种 kind(`json_value`/`path_exists`/`path_absent`/`path_contains_all`)没有一种表达得了它 —— `path_contains_all` 只做子串,硬套会被一句提到 `.dem` 的散文平凡满足(**假 DONE**)。⇒ 记成 manual,每轮报 OWED。**它也可以由「无人再提出入集」自然退休**:若 30 天内无人申请,总监可读一遍 `test_set.md:2` 确认 `fieldregen` 不在串里后退休本行。"
+    },
+    {
+      "id": "ownhalf_condition_a_or_return",
+      "issue": "P4.2 最老一档;裁定全文 iterations/streams/test_set.md §FZ.5;机器键 state.json:ownhalf_KEPT_20260908",
+      "ruling": "总监 2026-09-08T07:19Z:`ownhalf` **留集**,理由具名 —— 它是 `ohnum` 域的**唯一使能者**(shipped 路径上 `J.ShouldPunishDive` 只有在「敌人 1200 内有我方建筑」时才到达 `J.ShouldRefuseUnsupportedPunish`,而那恰是后者首个循环的**补集**:同半径、同目标、同 unit list)。实测 `ohnum` 单臂 **28 → 28**,`ownhalf`+`ohnum` **79 → 48**。退 `ownhalf` 会把一条 2 天大的 id 冻在读不出的零上。⚠️ 这组读数**已在树里**(`tests/test_ohnum_refusal.lua` 头 + `tests/_ohnum_sweep.lua`,逐位相同),本轮是**重新推导**不是新发现。",
+      "ruled_at": "2026-09-08T07:19Z",
+      "executor": "录像组(条件 (a) 的取证方);总监做退集/promote 判定",
+      "trigger": "**armed 满 60 天(2026-09-23)**,或 `ohnum` 先行退集/promote 之时 —— 以先到者为准。理由:本行的留集理由是**依赖关系**,依赖的一头一旦消失,留集就失去它唯一的具名依据。",
+      "delivered_to": [
+        "iterations/streams/test_set.md §FZ.5(全文档案)",
+        "iterations/state.json:ownhalf_KEPT_20260908(机器字段)",
+        "iterations/owed_executions.json(本行)"
+      ],
+      "why_registered_here": "⭐ **这一行存在的理由就是 §FX.2 立的那条**:「再等等是唯一一格不必付代价的」。`ownhalf` 本轮被判**留集**,若不登记,它会**安静地再骑 45 天**而没有任何腿替它举手 —— 那正是本轮之所以要判它的原因(顺延 3 轮)。登记之后,留集**每轮都要报 OWED**。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "验收句二选一,两条都裸读得出:(1) `python3 tools/agent/verify_coverage.py` 里 `ownhalf` 那一行的 verify 列 **> 0**(条件 (a) 买到了);或 (2) `ownhalf` 不再出现在 `iterations/streams/test_set.md` 第 2 行的成员串里(退集了)。⚠️ 两条都**不是**四种 kind 表达得了的:(1) 要读一张表的某一列,(2) 要判一个**子串的缺席**而 `path_absent` 判的是**文件**不是子串。硬套 `path_contains_all` 会把「串里有 ownhalf」读成完成,方向**恰好反了**。⇒ manual。"
+    },
+    {
+      "id": "overchase_new_body_first_reading",
+      "issue": "裁定全文 iterations/streams/test_set.md §FZ.5;机器键 state.json:overchase_KEPT_20260908;上游 §FY(协同组 2026-09-07T23:xxZ 换体)",
+      "ruling": "总监 2026-09-08T07:19Z:`overchase` **留集**,理由具名 —— 协同组在 2026-09-07T23:xxZ 换掉了 `J.ShouldPunishOverchase` 的**函数体**(§FY,midline 收窄,因宿主自身是未 promote 候选而**继承宿主 id**)。⇒ 它的 45 天 `arm_since` 是**这个名字**的年龄,不是**当前这条杠杆**的;P4.2 的排序键(最老 + verify=0)若照搬,会退掉一条**一天大**的杠杆。⛔ **不改 `armed_since.json` 的日期** —— 改了会让登记表与每一份在旧函数体下 arm 过它的波次记录互相矛盾;登记 caveat 而不是重写历史。",
+      "ruled_at": "2026-09-08T07:19Z",
+      "executor": "批测台(第一份读新函数体的波次读数);总监做后续判定",
+      "trigger": "**下一波把 `overchase` 纳入成员串的波次收割之时** —— 那一波是第一份描述新杠杆的读数。",
+      "delivered_to": [
+        "iterations/streams/test_set.md §FZ.5(全文档案)",
+        "iterations/state.json:overchase_KEPT_20260908(机器字段)",
+        "iterations/owed_executions.json(本行)"
+      ],
+      "why_registered_here": "**不可比性不会自己举手**:`arm_since.py` 那一行只有一个日期,没有地方承载「函数体在这个日期之后被换过」。§FY 自己登记了这件事,但登记在 `test_set.md` 的档案里 —— 而**按 P4.2 选 id 的人读的是 `arm_since.py` 的输出**(本轮我就是这么选的,靠人读 §FY 才没退错)。⇒ 除了档案,必须在这里有一行。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "验收句:**存在一份收割于 2026-09-07T23:xxZ 之后、成员串含 `overchase` 的 `W*_verdict.json`**,且该波读数在引用时被标注为「新函数体」。⚠️ 这是一句关于**读数出处与标注**的判断,四种 kind 都表达不了(`path_exists` 只判文件在不在,判不了它收割于哪个时刻、更判不了标注)。⇒ manual。"
     }
   ],
   "retired": [

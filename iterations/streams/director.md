@@ -497,6 +497,57 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-08T07:19Z**:**三条判定全部落地 —— `fieldregen` 退回出集(45 → 44),`ownhalf` / `overchase` 留集且各自具名。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、无 promote。判定完结 **3**(连续第三轮)。
+  取活依据是上一轮 ⑨① 自己排的第一条(「判定,而且是判定」,**已顺延 2 轮**);顺延到此为止(实际 3 轮)。
+  全文 `iterations/reports/director/20260908T071937Z.md`,裁定档案 `test_set.md §FZ`,
+  机器键 `state.json:fieldregen_RETURNED_20260908` / `ownhalf_KEPT_20260908` / `overchase_KEPT_20260908`。
+  ⭐⭐ **本轮最该被读的一条(§FZ.2):一句「disjoint by construction」,真值域是它自己驱动的那四条谓词。**
+  供给侧在**同一笔 `item_flask` 购买**上有**五个**索取者(`fieldregen` :776 + 四臂 :833),
+  四臂逐字写着互斥由构造保证、`_buytower_sweep` / `_buyring_sweep` **断言 `overlap_* == 0`** ——
+  而 `fieldregen` **在族内每一份 sweep 里都不出现**(非探针、非臂、非计数桶)。它买同一件物品、早 57 行、
+  **无下界**、**三条环境子句一条都不问** ⇒ 够得到那四条臂各自被写出来去拥有的帧,
+  **包括 `buytower`/`buyring` 这两条整条杠杆就是一个取反子句的臂**。
+  且关系是**抢先不是共现**(共用 `not IsThereHealingInStash`,`fieldregen` 先跑,药进 stash 后 :833 被自己的子句拒掉)。
+  co-armed register 早有 `['fieldregen > fieldbuy']`,但注释写着「**not known** to sit inside either branch」
+  —— **混杂登记了,机制没有**;本轮补机制。
+  ⭐⭐ **§FZ.3 诚实:本轮两条候选发现都已经在树里,其中一条就写在我正要引用其教训的那一节。**
+  (i) `ohnum` 的结构零(单臂 **28→28**、`ownhalf`+`ohnum` **79→48**)**逐位相同**地写在
+  `tests/test_ohnum_refusal.lua` 头 + `_ohnum_sweep.lua` 里 —— **我重新推了一遍已记录的结果**;
+  值得登记的只是**一条口径**(该文件标题把「调用点可达」与「谓词在 shipped 路径不可满足」合成一句;两件事都真,
+  前者让 WIRED 诚实,后者让单臂裁决不携带信息),**不开 issue**。
+  (ii) 语料 **82.5% 是对线期**(842/1021)**已写在 §FW.2**。
+  ⇒ **「没找到已记录的读数」的成本就是把它重新推一遍**(1726 行 test_set + 11604 行章程)。
+  ⭐ **§FZ.4 量具当场推翻了我自己的表面结论,这是本轮的分水岭。** 新 sweep 报 `overlap_any 0`,
+  而漏斗是 `1021 → laning 842 / not_laning 179 → … → 全合取 6`:杀死它的是 `not J.IsInLaningPhase()`
+  (`fieldregen` 按构造过线后,四臂经 `IsFieldRegenSituation` **无对线子句**)⇒ **两边被量在互不相交的两片上**,
+  那个 0 **两个方向都不构成证据**。把它读成域的零会得到**方向相反**的裁定。
+  ⭐ **两条「留集」不是「再等等」**(§FX.2):各自进 `owed_executions.json`(16 → **19** 行),
+  带裸读得出的 `done_when`,**从今天起每轮举手**。`ownhalf` 留集理由 = `ohnum` 域的**唯一使能者**;
+  `overchase` 留集理由 = 函数体 09-07T23:xxZ 被 §FY 换过 ⇒ **45 天是名字的年龄不是杠杆的**
+  (**不改 `armed_since.json` 日期** —— 改了会与每份旧体下 arm 过它的波次记录矛盾;登记 caveat 而非重写历史)。
+  ⭐ **§6:新闸落地第二天第一个被它挡住的又是我自己,而这次我动了。** `py_gate.py` 拒了我的新变异台
+  (`leaves a restoring EXIT trap in effect`),判得对(trap 体内联 `cp` 而非调用具名 `restore`,GH #418 形状);
+  **修 trap 而不是给闸加白名单**,修后 `84 ran / 0 findings / EXIT=0`。**本轮未用 `RULE6_BYPASS`。**
+  落地物:`tests/_fieldregen_overlap_sweep.lua`(30s,**不进快腿**,GH #358 预算)、
+  `tests/test_fieldregen_family_overlap.lua`(**纯源码断言**,6/6)、
+  `tools/agent/mutstand_fieldregen_overlap.sh`(**7/7 CAUGHT / 0 SURVIVED**,控制体未被抓,还原逐字节 YES;
+  ⚠️ **M2 的锚不是 stash 那一行** —— 它在该文件出现 **3 次**而 `perl -0pi` 不带 `/g` 改第一处,
+  那正是 `fieldregen` 块,GH #550 同型;改锚到唯一的 `RegenRing(bot) )`)。
+  成员串 45 → 44,408 → **397** 字节,md5 → **`fe7a309fc06a229e97290b2db4c3bed3`**;`arm_since.py` 读 **44/44**。
+  铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck` 0 警告 / **未用 bypass**;`py_gate` 84/0/EXIT=0。
+  ⛔ **动态半全套未跑不作声称**;⛔ **读 test_set.md 的 49 文件子集跑了但 13 分钟未竟 ⇒ 不作「子集全绿」声称**,
+  截至提交唯一观察到的红是**动手前就红**的 `test_gated_helper_nesting_census.lua`(协同组 `607ce30b` 的 `tprecov`)。
+  ⛔ **开工自检真码 `RC_EXIT=3`,10 条腿全跑完**(与上一轮 `124` 被砍不同):
+  `FINDINGS: cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)`,`UNCERTIFIABLE: none`。
+  两条 trunk Lua 红**都不是本轮引入也不是本轮修的**(`test_activemode_call_site_census` 的注释提及 3→4 需重取数;
+  `test_gated_helper_nesting_census` 的 `tprecov` 新嵌套需读后再钉)——**归属别组的落地产物,不代改**。
+  ⚠️ **纪律 3 又一发,又是本轮第一条命令**(`| tail -60` 被 §22 守卫当场拒,那一次什么都没检查);
+  09-04 的措辞**逐字覆盖它**,**不新立措辞**,登记而已 —— **拦下它的是守卫不是我记住了**。
+  零 AWS ⇒ 不对 MTD 作新声称;`DECISIONS_NEEDED` +0;**patch 检查仍未做**(低频顺延,已连续多轮)。
+  **下次触发**:①两条 trunk Lua 红逐条 ②核 §2.2 那根棒(`w55_record_launched_at_and_gate_iv_inputs`,**挡着 W56**)
+  ③GH #358 的 120s 预算要人裁 ④退休 owed registry 里那 4 行 DONE(**需读一遍**四份产物)
+  ⑤上一轮 ⑨③ 原样顺延 ⑥**patch 检查**(建议下一轮强制做掉)⑦**把那份 49 文件子集跑完**。
 - **2026-09-08T04:20Z**:**GH #616 落地 —— 快 python ratchet 进 push 闸(84/114 选入,11.86s)。**
   零 AWS、零波次、零 `bots/`+`game/` diff、不发 owner 邮件、无 promote/reject。
   取活依据是上一轮 ⑨ 自己排的第 ① 条(它当轮明写「本轮不实现,值得单独一轮带验证」)。

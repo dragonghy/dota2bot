@@ -1,6 +1,7 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
-
+tpcommit,lf_rescue,ownhalf,overchase,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
+**成员串 44**(上一行,**397 字节**,md5 `fe7a309fc06a229e97290b2db4c3bed3`)。本行 **2026-09-08T0x:xxZ 的变动:一条 `退回出集`(45 → 44)**,总监裁定全文 **§FZ**。⛔ **不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff);判定完结 **3**。
+- **`fieldregen` 退集**(45 → 44)—— P4.2 最老一档(armed **45 天**,verify=0),条件 (a) **从 fixture 那条路结构上买不到**(域 6/1021 帧,成因是语料 82.5% 是对线期而这条杠杆按构造是**过线后**的),且它是四臂 `fieldbuy` 族**已登记但机制未名**的混杂项;本轮把机制命名为**抢先**(同一函数体 :776 vs :833,同一件 `item_flask`,共用 stash 闸)。全文 §FZ。
 **成员串 45**(上一行,**408 字节**,md5 `f4292f7bb9a5f112ed34af62cbe3c2a8`)。本行 **2026-09-07T22:xxZ 的变动:一条 `退回出集`(46 → 45)**,总监裁定全文 **§FX**。⛔ **不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff);判定完结 **1**。
 - **`campbind` 退集**(46 → 45)—— 与前几轮两条**不同**:它不是从 P4.2 的最老一档选出来的(armed 仅 **2 天**),而是**录像组 09-04T21:56Z 在 GH #475 请裁、连续六轮没等到的那条三选一**,全文 §FX。
 
@@ -1724,3 +1725,133 @@ oc_fires 3      | oc_fire_building 0 | oc_fire_midline 3
 腿 (a) 是**三条析取**,而语料上 **`oc_a_attacktarget 0` / `oc_a_ischasing 0` / `oc_a_recentdmg 3`** —— **100% 的释放来自单一析取**,另两条**结构性地**开不了火(`replay_fixture.lua` 重写了 `WasRecentlyDamagedByHero`,却没重写 `GetAttackTarget`(每个 unit 答 nil)与 `IsRunning`/`IsFacingLocation`)。
 
 **比 GH #611 更隐蔽的地方在于:读数不为零,所以没有人举手。** `oc_a_pass 3` 看起来像一条正常的窄域读数,实际是「三条腿里只有一条被测过」。**这两条界都不触及腿 (b)** —— 它只读位置与祖庭,正是 fixture 帧携带的 ground truth。
+
+---
+
+## §FZ 2026-09-08T0x:xxZ 总监:**`fieldregen` 退回出集(45 → 44),`ownhalf` / `overchase` 留集且各自具名** —— 本节最该被读的是 **§FZ.2:一族四条臂逐字写着「disjoint by construction」并被三个 sweep 断言为 0,而那个断言的作用域是**它自己驱动的那四条谓词**,同一笔购买的**第五个索取者**在任何一份族内 sweep 里都不出现**;以及 **§FZ.3:本轮两条候选发现**都已经在树里了**,其中一条就写在我正要引用其教训的那一节(§FW.2)里**
+
+### §FZ.0 一句话
+
+上一轮 ⑨① 指名的三条(`ownhalf`/`overchase`/`fieldregen`,已顺延 **3** 轮)本轮**全部判掉**:
+一条退集、两条留集且各自带机器可读的欠条。**先建量具再裁定**,而量具**当场推翻了它自己的表面结论**——
+新 sweep 报 `overlap_any 0`,而那个 0 是**仪器的零**;把它读成域的零就会得到一个方向相反的裁定。
+零 AWS、零波次、零 `bots/`+`game/` diff、不发 owner 邮件。判定完结 **3**(连续第三轮达标)。
+
+### §FZ.1 选取依据,和「留集不是免费默认值」这一侧的代价
+
+`arm_since.py --all` 最老一档(`lower_bound` 2026-07-25,**45 天**)现存 5 条,`verify_coverage.py` 全部 **verify=0**。
+其中 `tpcommit`(§FB 明写留集,promote 原子 prereq)与 `lf_rescue`(GH #594/#597 正在其上买读数,**正在飞的不动**)
+沿用既有理由排除,**其余三条就是本节的三条**。
+
+⭐ **三条共有一个此前没被登记的读数**:它们在 **W39/W40/W41/W52/W53/W54/W55 七个波次里全部只以
+成员串内的一员出现,一次都没有被单臂 arm 过**(逐波扫 `iterations/reports/batch-desk/waves/W*_wave.json`,
+命中长度 410–503 字节,即全量成员串,无一条短串)。⇒ 45 天里没有任何一波在问它们的问题。
+
+### §FZ.2 ⭐⭐⭐ 立法级:一句「disjoint by construction」,真值域是它自己驱动的那四条谓词
+
+供给侧这一族在**同一笔 `item_flask` 购买**上有**五个**索取者,而族内的互斥断言驱动**四个**:
+
+```
+bots/item_purchase_generic.lua:776   `fieldregen` 内联块
+bots/item_purchase_generic.lua:833   fieldbuy or buyband or buytower or buyring
+```
+
+:833 那四条是**一起设计的**,互斥**由构造保证**——`buytower` 把塔环取反、`buyring` 把英雄环取反、
+`buyband` 取 `fieldbuy` 0.55 天花板之上那一条——四条里有三条在**自己的注释里逐字这么写**
+(「so the three arms are disjoint by construction」「so the four arms stay disjoint by construction」)。
+`tests/_buytower_sweep.lua` / `tests/_buyring_sweep.lua` **断言**它:
+`overlap_tower_buy` / `overlap_tower_hurt` / `overlap_ring_buy` / `overlap_ring_hurt` / `overlap_ring_tower` 必须全 0。
+
+⭐ **那个断言在四条之间为真,对第五条一个字也没说,而树里没有任何地方说过这件事。**
+`fieldregen` 在族内**每一份 sweep 里都不出现**——不作为探针、不作为臂、不作为计数桶(逐份核过)。
+它买**同一件**物品,在**同一个 `ItemPurchaseThink` 体内**、早 57 行,**没有下界**(`< 0.45`,向下敞开)、
+**三条环境子句一条都不问**(无 1600 英雄环、无 1200 塔环、无归属窗)。
+⇒ 它在自己的域上**够得到那四条臂各自被写出来去拥有的帧**,包括 `buytower` 与 `buyring` 这两条
+**整条杠杆就是一个取反子句**、而 `fieldregen` 从不问那个子句的臂。
+
+⭐⭐ **而且关系是抢先不是共现,方向由行序钉死。** 两个块共用尾部引擎闸,其中有
+`not IsThereHealingInStash(bot)`;`fieldregen` **先跑**。它一买,药进 stash(该块只在离泉水 2500 之外跑),
+于是**当帧及其后**,:833 那个 `if` 被**它自己的 stash 子句**拒掉。
+**早的那个块不是与晚的那个共享帧,它消费掉晚的那个存在的理由。**
+`tests/test_coarmed_attribution_register.lua:293` 早就带着 `['fieldregen > fieldbuy'] = true`,
+但它是一条 **WIDE 行**,注释逐字写着这次调用「is **not known** to sit inside either branch」
+——**混杂被登记了,机制没有**。本节补的就是那个机制。
+
+### §FZ.3 ⭐⭐ 诚实:本轮两条候选发现,**都已经在树里**,其中一条就在 §FW.2
+
+**这一条排在裁定之前,因为它改变了本节别处该被怎么读。**
+
+1. **`ohnum` 的「结构零」**。我从源码读出 `J.ShouldRefuseUnsupportedPunish` 的首个循环
+   (allied building ≤1200 of target)**恰是** shipped 路径上让控制流到达它的那个条件的**补集**
+   (同半径、同目标、同 unit list),于是 shipped 路径上它**不可能**返回 true;
+   实测 `ohnum` 单臂 **28 → 28(零)**,`ownhalf`+`ohnum` **79 → 48(−31)**。
+   ⛔ **这一整段已经写在 `tests/test_ohnum_refusal.lua` 的头里,数字逐位相同**
+   (`pd_shipped 28` / `pd_ownhalf 79` / `both_changed 31` / `ohnum_alone_changed 0`),
+   由 `tests/_ohnum_sweep.lua` 量出。**我重新推了一遍已经记录的结果。**
+   那份文件的说法是「这个零是**测量**不是结构零」,并**自己写明**「reads zero because the shipped
+   domain is **building-proximate by construction**」。⇒ 值得登记的只有**一条口径**,不是一条发现:
+   那句标题把**两件不同的事**合在一起了——**调用点可达**(真,这正是 `check_armed_wiring` 的 WIRED 诚实的原因)
+   与**谓词在 shipped 路径上不可满足**(也真,这正是单臂 `ohnum` 波的裁决**不携带信息**的原因)。
+   **本轮不为此开 issue**,该文件的口径可辩护。
+2. **语料 82.5% 是对线期**(842/1021)。**已经写在 §FW.2 里**(「laning 842 = core 712 + support 130」)
+   ——**就写在我正要引用其教训的那一节**。
+
+⇒ 本轮真正新增的产物只有一件:**`tests/_fieldregen_overlap_sweep.lua` + `tests/test_fieldregen_family_overlap.lua`**
+(第五个索取者对四条臂的重叠,族内 sweep **结构上看不见**的那一问)。
+**代价读数登记在此**:两条候选各花掉一次独立推导,而两份记录都在树里、都可检索
+——1726 行的 `test_set.md` 加 11604 行的章程,**「没找到已记录的读数」的成本就是把它重新推一遍**。
+
+### §FZ.4 量具,和它当场推翻的那个表面结论
+
+`tests/_fieldregen_overlap_sweep.lua`(110 fixtures / **1021** live turbo hero-frames,4084 次单臂探针):
+
+```
+fr_pred 6      arm_fieldbuy 33   arm_buyband 20   arm_buyring 10   arm_buytower 8
+overlap_fieldbuy 0   overlap_buyband 0   overlap_buytower 0   overlap_buyring 0   overlap_any 0
+arm_leak 0   fr_pred_err 0   arm_err 0
+```
+
+⛔ **`overlap_any 0` 不是「它们不重叠」,是仪器的零,而这正是 §FW.2 那个形状。**
+漏斗逐条(独立驱动):`live/turbo 1021` → **`laning_true 842`(82.5%)/ `not_laning 179`** →
+`hp45 134` → `noflask 893` → `notango 579` → **全部合取 6**。
+杀死它的是 `not J.IsInLaningPhase()`:`fieldregen` 按构造是**过线后**的杠杆,
+而这份语料 82.5% 是对线期;四条臂经 `J.IsFieldRegenSituation` 进域,**没有对线子句**,所以它们在这里有域。
+⇒ **两边被量在这份语料互不相交的两片上**,那个 0 对这一对**两个方向都不构成证据**。
+sweep 把 `fr_pred` 与 `overlap_*` **并排打印**就是为了这两者永远不会被混读。
+
+⚠️ **抢先是源码读数(行序 + 共用 stash 闸),不是驱动出来的** —— 这份语料驱动不了它。逐字登记,不上调。
+
+### §FZ.5 判据:三条件逐条
+
+| id | (a) 录像核验 | (b) 批测胜负 | (c) 逻辑依据 | 裁定 |
+|---|---|---|---|---|
+| `fieldregen` | **verify=0 / 45 天**;fixture 路**结构上买不到**(域 6/1021);七波从未单臂 | 七波只在全量串里,**无单臂读数** | 成立但**已被同族四条臂以更细的形状重写**(有下界、有三条环境子句) | **退回出集** 45 → 44 |
+| `ownhalf` | verify=0 / 45 天 | 同上 | ⭐ **它是 `ohnum` 域的唯一使能者**(`ohnum` 单臂 28→28 零;`ownhalf`+`ohnum` 79→48) | **留集** |
+| `overchase` | verify=0 / 45 天 | 同上 | ⭐ **函数体 2026-09-07T23:xxZ 被协同组换过**(§FY)⇒ **45 天是这个名字的年龄,不是当前这条杠杆的** | **留集** |
+
+⛔ **两条「留集」不是「再等等」**:§FX.2 立过的那条——「再等等是唯一一格不必付代价的」——
+本节按它办:两条留集**各自进 `owed_executions.json`**,带裸读得出的 `done_when`,
+于是它们**从今天起会每轮举手**,而不是安静地再骑 45 天。
+
+⛔ **`fieldregen` 退集不是 reject**:gate(`item_purchase_generic.lua:776`)与其整块**逐字保留**,
+`bots/`+`game/` **零 diff**。重新入集的条件写进 owed 行:**(a) 必须从波次录像买,不许再从 fixture 语料买**
+——本节量出的正是后者对这条杠杆结构上失明。
+
+### §FZ.6 落地物
+
+- `tests/_fieldregen_overlap_sweep.lua`(重语料 sweep,`_` 前缀,30s,**不进快腿**——Lua 检测器腿已在 120s 预算边缘,GH #358)
+- `tests/test_fieldregen_family_overlap.lua`(**纯源码断言**,毫秒级,6/6;语料读数以定值引在头里,同 `test_ohnum_refusal.lua` 的做法)
+- `tools/agent/mutstand_fieldregen_overlap.sh`:**7/7 CAUGHT,零 SURVIVED**,控制体(纯注释编辑)**未被抓到**,
+  `git diff --quiet` 还原逐字节 YES。⚠️ **M2 的锚不是 stash 那一行本身**:那一行在该文件里出现 **3 次**,
+  而 `perl -0pi` 不带 `/g` 改的是**第一处**——那正是 `fieldregen` 块——**一个悄悄切了别的块却照样打 CAUGHT 的变异**(GH #550 同型)。改锚到唯一的 `RegenRing(bot) )`。
+- `iterations/state.json:fieldregen_RETURNED_20260908`、`iterations/armed_since.json`(retired 行)、
+  `iterations/owed_executions.json`(三行:退集后的 (a) 路径 / `ownhalf` / `overchase`)
+
+### §FZ.7 诚实边界(本节**没有**做到的事)
+
+1. **没有驱动出抢先** —— §FZ.4 末尾那条,重复登记:行序与共用闸是**读**出来的。
+2. **没有量 `fieldregen` 退集之后四条臂的读数是否真的变干净** —— 那要一波单臂波次,本节不发波。
+3. **没有核 `ownhalf` 留集的代价** —— 它继续在成员串里当混杂项;本节只主张「退它会冻死 `ohnum`」,
+   **不主张**留它对别的 id 无害。
+4. **`overchase` 的新身体没有被任何波次读过** —— §FY 落地至今零波次,本节只登记不可比性。
+5. **patch 检查本轮仍未做**(低频,已连续多轮顺延)。
