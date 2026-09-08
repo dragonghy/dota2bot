@@ -22,7 +22,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--123. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+-124. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
+     timeline)、CM 距离项(`hero-42`)、`lionultcash` 域(`hero-43`)、`lionrreach` 域
+     (`hero-44`)、`wkqlane` 域(`hero-45`)、**新增 `axecullreach` 域(`hero-46`)**;
+     `wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):把 Oracle 的
+     `modifier_oracle_false_promise_timer` 加进去会让
+     `tests/test_axe_cull_promise_premise.lua` §2 变红,而那条红的正确处置是
+     **回去 reopen GH #570**,不是改断言。前提在真实帧上已被证伪(闭区间 vs 半开)。
+   - **⭐ 本轮(`-124`)顺手看到、没做的三条线索,都在 `bots/BotLib/hero_axe.lua`**:
+     (甲) **`X.ConsiderQ` 的「带线嘲讽小兵」分支取 `laneCreepList[1]`** —— 它拿的是
+     `GetNearbyLaneCreeps` 的第一个,而**兵的选择只影响嘲讽的圆心**(Call 是无目标
+     技能,`ActionQueue_UseAbility`)。⚠️ **先量再动**:这条分支的门是
+     `#hEnemyList == 0` 且 `#laneCreepList >= 4` 且 `DotaTime() > 6*60`,在语料上
+     **一次都没开过火**(本轮 33 帧全部 `ConsiderQ == 0`),所以它的域**必须**去档案里读。
+     (乙) **Roshan 那段写了两遍**:`J.IsDoingRoshan(bot)` 一段(:702)与
+     `bot:GetActiveMode() == BOT_MODE_ROSHAN` 一段(:738),判据几乎相同、后者多两个
+     血/蓝下限。这是**可读性**问题不是行为问题(前者先返回),**不要当成行为改动的主体**;
+     真要动,先证明两个谓词在真实帧上会分叉。
+     (丙) **`X.ConsiderR` 的 `GetHealthRegen() * 0.8`** —— 0.8 秒的回血预算是循环
+     自己的时间假设,而它下的单在 175 外**要先走路**。本轮**故意没碰**:差额只有 ~0.2s,
+     Turbo 里换算成血量是个位数,而语料里 `GetHealthRegen()` **恒为 0**
+     (`tests/test_axe_cull_reach.lua` §9 断言)⇒ 这条**离线根本量不了**。
+     它是脚注,不是杠杆;谁要动它,先拿到非零回血的语料。
+   - **⛔ 不许**顺手改 `cullthresh` / `axecull` / `axebhpure` / `axecallbkb_i` / `axecallbkb_ii`
+     的合取或 id,尤其**不许**把 `axecullreach` 与 `cullthresh` 合取 —— 那正是 pullcad
+     陷阱,变异台 **M10** 就是这条。
+
+-123. ~~**⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-08T08:07Z 做完:换了英雄(Axe;焦点五里他此前的 gated id 全在阈值/穿透侧,
+   到达侧一个都没有)。`X.ConsiderR` 建了两个敌人列表、读宽的那个(`nCastRange + 200`),
+   窄的那个(`nCastRange`,实测 175)**从写下起就是死局部**,而循环体里一个距离项都没有;
+   gated `axecullreach` 把候选池换回窄的那个。`bots/` 有改动。** 报告
+   `iterations/reports/hero/20260908T080711Z.md`。新 `tests/test_axe_cull_reach.lua`
+   (**14 例**)+ `tools/agent/mutstand_axecullreach.sh`(**11/11 CAUGHT**)。登记
+   `state.json:axecullreach_20260908`,新请求 `queue.json:hero-46`。本轮 `[hero]` open issue
+   **一条可认领的都没有**(8 条逐条理由见报告 §1)。详见「当前状态」节同一轮的条目。
+   - **⭐ 承重的是压制,不是那段路**:`X.ConsiderR` 是 `X.SkillsComplement` 第一臂且
+     无条件 `return` ⇒ 整段接近过程里 `X.ConsiderQ`(Berserker's Call,半径 315,把
+     band 几乎整个包住)与 `X.ConsiderW`(Battle Hunger)**一次都不被问到**。
+   - **⭐⭐ 一个在别处重算量的断言,对量的构造是瞎的**(M9 的教训,见「当前状态」)。
+
+-123b. **⭐ 本条为历史保留(`-123` 原文的线索清单)。**
    - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
      timeline)、CM 距离项(等 `queue.json:hero-42`)、`lionultcash` 域(`hero-43`)、
      `lionrreach` 域(`hero-44`)、**新增 `wkqlane` 域(`hero-45`)**;`wkreinctr` 是
@@ -5322,6 +5364,50 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-08T08:07Z(报告 `iterations/reports/hero/20260908T080711Z.md`;**backlog:`-123` 做完、
+  新开 `-124`**;焦点英雄 **Axe**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动)
+  **一个函数建了两个敌人列表,读宽的那个,窄的那个从写下起就是死局部;而循环体里
+  一个距离项都没有。gated `axecullreach` 把候选池换回窄的那个,`bots/` 有真代码行。**
+  `X.ConsiderR`:`nInRangeEnemyList = GetAroundEnemyHeroList( nCastRange )`(实测 **175**)
+  **从不读**,唯一那条开火循环遍历 `nInBonusEnemyList`(`nCastRange + 200` = **375**)
+  ⇒ 选靶环比技能到得了的地方宽 **114%**。**这个文件里其它每一处到达都比原值更紧**
+  (`X.ConsiderQ` 打断 `-50`、先手 `-90`、带线 `-50`、打野 `-50`),只有这一处**加**。
+  新 `X.IsCullReachOn` + `X.CullTargetPool`,新 `tests/test_axe_cull_reach.lua`(**14 例**)+
+  `tools/agent/mutstand_axecullreach.sh`(**11/11 CAUGHT**)。
+  `state.json:axecullreach_20260908`、`queue.json:hero-46`、GH issue 本轮开(见报告 §7/§10)。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
+  `run_tests.lua axe` **247 例 0 失败**。本轮 [hero] open issue **一条可认领的都没有**
+  (8 条逐条理由见报告 §1)。
+  - **⭐ 代价的机制是压制,不是那段路本身**:`X.ConsiderR` 是 `X.SkillsComplement` 的
+    **第一臂**且出价 >0 就无条件 `return` ⇒ band 里站着一个低于斩杀线的敌人时,
+    **整段接近过程中** `X.ConsiderQ`(嘲讽,半径 **315**,把 band 几乎整个包住)与
+    `X.ConsiderW` **一次都不被问到**。真实帧 `f_260828_002127_axe_call_bkb_ring` t=982.1:
+    **三个存活敌人 75.1 / 165.3 / 276.9 全在 315 内**,嘲讽 rank 3 / CD 0 / 319 蓝 vs 110 耗
+    / `IsFullyCastable` 为真,而出货腿把这一帧花在一个**够不着 101.9u** 的 Culling 上。
+  - **⭐⭐ 搬家陷阱这次是最干净的一种**:`X.ConsiderR` 全函数**只有一条开火分支**,
+    其后直接 `return NONE` ⇒ 函数内**没有任何下游落单点**能接住被拒的 band 目标。
+    §6 钉成**计数**断言,M7 在源码里插第二条开火分支被抓。
+  - **⛔ 但英雄层面不是纯 narrowing,引用时必须带上**:被拒的帧接着落到 Q/W,它们
+    **可能开火** —— 这正是杠杆的目的 ⇒ **「armed 的 Axe 施法更少」不是本 id 的预测**。
+  - **⭐⭐⭐ 一个在别处重算量的断言,对量的构造是瞎的。** M9(把 armed 池加宽到
+    `+400`)时 §5 **仍然绿** —— 因为 §5 自己用 `GetCastRange()` 重算两个池,看不见
+    那两行被改;唯一的红是 §3 说「翻转不再发生」,**红了但没点名原因**。补了两条
+    **在构造处**钉半径的断言才变成 caught。**这一条比这次的读数更值得带走。**
+  - **⚠️ 中止的变异体不是通过的变异体**:M9 第一版 ANCHOR AMBIGUOUS(`X.ConsiderW`
+    开头有逐字节相同的一对),脚本 `exit 3` 中止而 `score` 记成 **SURVIVED**,先报了 10/11。
+  - **⚠️ 兄弟绊线按名字响了,改写成更强而不是放松**:`test_axe_culling_threshold_preflight.lua`
+    §3 原本断言「循环读 `nInBonusEnemyList`」且「`nInRangeEnemyList` 只出现一次」——
+    那正是它自己那句 "registered here, not fixed: a separate lever" 描述的缺陷。
+    改成**闸关时有效池就是宽的那个**,在真实帧上驱动(2 vs 3):保留拼写、改掉答案的
+    编辑通过旧版、通不过新版。
+  - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**,第 **8** 次因用管道读退出码被拒。
+    两条 trunk 红**都不是本轮的**(`git diff` 里 `GetActiveMode` 出现 0 次,已核):
+    `test_activemode_call_site_census`(注释提及 3→4)与
+    `test_gated_helper_nesting_census`(协同组的 `tprecov`,GH #622 在问同一件事)。
+  - **⚠️ 自捉**:初稿散文写「22 帧 Culling 可施」,那是拿硬编码蓝耗表在原始 table 上
+    数的;经真实 `IsFullyCastable()` 是 **8**。**以 8 为准**,且数字先跑扫描再写散文。
 - 2026-09-08T05:05Z(报告 `iterations/reports/hero/20260908T050500Z.md`;**backlog:`-122` 做完、
   新开 `-123`**;焦点英雄 **Wraith King**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动)

@@ -1219,6 +1219,84 @@ function X.IsCullThresholdOn()
 end
 
 
+--- Soak candidate `axecullreach` (turbo-only, INERT until armed) -- written
+--- 2026-09-08 under OWNER_PRIORITIES P4.4 (i).  GH issue filed the same round.
+---
+--- THE DEFECT, and it is a REACH mismatch, not a threshold one -- `cullthresh`
+--- above is about HOW LOW the target's health has to be, this one is about HOW
+--- FAR AWAY it may stand.  X.ConsiderR builds TWO enemy lists:
+---
+---     local nInRangeEnemyList = J.GetAroundEnemyHeroList( nCastRange )        -- 175
+---     local nInBonusEnemyList = J.GetAroundEnemyHeroList( nCastRange + 200 )  -- 375
+---
+--- and its one firing loop reads the SECOND, with no distance term anywhere in
+--- the loop body.  The first list was DEAD -- computed every frame and never
+--- read -- until this lever; that is the tell, and it is the same shape the Lion
+--- round gated as `lionrreach` (GH #617).  `nCastRange` is measured, not assumed:
+--- `abilityR:GetCastRange()` answers 175 on all three real frames in
+--- tests/test_axe_cull_reach.lua, so the loop selects targets up to 114% FARTHER
+--- than the ability can reach.
+---
+--- EVERY OTHER REACH IN THIS FILE IS TIGHTER THAN ITS RAW VALUE, which is why
+--- the +200 reads as an oversight rather than a policy: X.ConsiderQ's channel
+--- interrupt uses `nRadius - 50`, its initiation branch `nRadius - 90`, its
+--- lane-taunt `nRadius - 50` and its neutral-farm branch `nRadius - 50`.  This
+--- loop is the only place in hero_axe.lua that ADDS.
+---
+--- WHY IT COSTS SOMETHING, and the mechanism is DOMINANCE, not the walk itself.
+--- X.ConsiderR is the FIRST arm of X.SkillsComplement and that arm `return`s
+--- unconditionally once its desire clears 0.  So for every frame a sub-threshold
+--- enemy sits in the (175, 375] band, the bot queues a Culling Blade it cannot
+--- yet reach AND never asks X.ConsiderQ or X.ConsiderW at all.  Berserker's
+--- Call's radius is 315 -- most of the band is INSIDE it -- so the suppressed
+--- question is precisely "should I taunt the target I am walking at".  On the
+--- real frame tests/frames/f_260828_002127_axe_call_bkb_ring.lua (t=982.1) all
+--- three living enemies stand at 75.1u / 165.3u / 276.9u, Call is rank 3 with
+--- cooldown 0 and 319 mana against a 110 cost, and the shipped tree spends the
+--- frame ordering a Culling Blade at the one 101.9u OUT of reach.
+---
+--- WHY IT IS A GATE, and the direction is a property of the CODE.  Armed, the
+--- loop reads a list built by the SAME helper with a SMALLER radius, so the
+--- armed pool is a subset of the shipped one and this lever can only ever
+--- DELETE a Culling order, never add one (asserted on real frames, not argued).
+--- Gate OFF, X.CullTargetPool returns nInBonusEnemyList and the branch is the
+--- shipped one byte for byte.
+---
+--- THE HERO-LEVEL CONSEQUENCE IS NOT A NARROWING, and it is stated rather than
+--- hidden: a frame the armed loop declines falls through to X.ConsiderQ and
+--- X.ConsiderW, which may then fire.  That is the POINT of the lever, and it is
+--- also why "armed Axe casts fewer spells" is NOT a prediction of it.  The
+--- fixture corpus cannot show that half -- X.ConsiderQ's mode predicates
+--- (J.IsGoingOnSomeone / IsPushing / IsFarming) are structurally false in the
+--- fixture world, so all three frames answer 0 there whatever this gate does.
+--- tests/test_axe_cull_reach.lua asserts that limit instead of papering it.
+---
+--- ⛔ THIS HELPER NAMES EXACTLY ONE ID.  It must never be conjoined with
+--- `cullthresh` or `axecull`: a gate naming a sibling freezes FALSE the day the
+--- sibling is promoted (the `pullcad` trap) and check_armed_wiring.py still
+--- calls it WIRED.  The two levers are orthogonal (threshold vs reach) and a
+--- wave arming both buys their composite, not either.
+function X.IsCullReachOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecullreach' )
+
+end
+
+
+--- The pool X.ConsiderR's execute loop selects from.  Armed: only enemies the
+--- ability can actually reach this frame.  Unarmed: the shipped bonus ring.
+function X.CullTargetPool( tInRangeEnemyList, tInBonusEnemyList )
+
+	if X.IsCullReachOn()
+	then
+		return tInRangeEnemyList
+	end
+
+	return tInBonusEnemyList
+
+end
+
+
 function X.CullKillThreshold( nSkillLV )
 
 	local nKillDamage = 150 + 100 * nSkillLV
@@ -1271,8 +1349,12 @@ function X.ConsiderR()
 	
 	
 	--直接斩杀血量低于斩杀线的敌人
-	for _, npcEnemy in pairs( nInBonusEnemyList )
-	do 
+	-- The pool is chosen by X.CullTargetPool: the shipped bonus ring (nCastRange
+	-- + 200) while `axecullreach` is unarmed, and the ability's real reach
+	-- (nCastRange) once it is armed.  Read that helper's header for the fact,
+	-- the direction guarantee, and the hero-level consequence.
+	for _, npcEnemy in pairs( X.CullTargetPool( nInRangeEnemyList, nInBonusEnemyList ) )
+	do
 		if J.IsValidHero( npcEnemy )
 			and npcEnemy:CanBeSeen()
 			and npcEnemy:GetHealth() + npcEnemy:GetHealthRegen() * 0.8 < nKillDamage

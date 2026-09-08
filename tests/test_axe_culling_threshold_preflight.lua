@@ -432,22 +432,50 @@ T['section 3: X.ConsiderR has exactly ONE firing branch'] = function()
         .. 'that reasoning has to be redone', n))
 end
 
-T['section 3: the firing branch iterates the +200 list, so the effective ring is 375'] = function()
+-- ============================================================================
+-- THE RATCHET FIRED, 2026-09-08.  The separate lever this case registered has
+-- LANDED -- gated, as `axecullreach` (hero stream, OWNER_PRIORITIES P4.4 (i)).
+-- ============================================================================
+-- This case used to assert `for _, npcEnemy in pairs( nInBonusEnemyList )` and
+-- that `nInRangeEnemyList` appeared EXACTLY ONCE in X.ConsiderR (the assignment,
+-- never read).  Both were descriptions of the defect its own comment named and
+-- declined to fix: "registered here, not fixed: it is a separate lever with its
+-- own domain and its own cost side".  That lever is now written.  The loop
+-- selects its pool through X.CullTargetPool, which hands back the bonus list
+-- while `axecullreach` is unarmed and the bare cast-range list once it is.
+--
+-- WHAT THIS PRE-FLIGHT STILL NEEDS, AND WHY THE CASE STAYS.  RING = 375 above,
+-- and section 2's whole corpus scan with it, is a claim about the UNARMED tree.
+-- So the assertion is no longer "the loop reads the wide list" (it no longer
+-- literally does) but the thing that claim was standing in for: with the gate
+-- OFF the effective pool IS the wide one.  That is now DRIVEN on a real frame
+-- rather than read off the source, which is strictly stronger -- a future edit
+-- that keeps the spelling and changes the answer would have passed the old form.
+-- `axecullreach`'s own file is tests/test_axe_cull_reach.lua.
+T['section 3: with axecullreach UNARMED the effective ring is still 375'] = function()
     local body = consider_r_body(read_file(SRC))
     assert(body:find('nInBonusEnemyList = J%.GetAroundEnemyHeroList%( nCastRange %+ 200 %)'),
         'the bonus list is no longer nCastRange + 200; RING above is wrong')
-    assert(body:find('for _, npcEnemy in pairs%( nInBonusEnemyList %)'),
-        'the firing loop no longer iterates nInBonusEnemyList; re-check the effective ring')
-    -- The bare cast-range list is computed and never read.  That is what makes the
-    -- effective ring 375 and not 175, and it means the branch returns DESIRE_HIGH on
-    -- targets up to 200u out of cast range -- registered here, not fixed: it is a
-    -- separate lever with its own domain and its own cost side.
-    local reads = 0
-    for _ in body:gmatch('nInRangeEnemyList') do reads = reads + 1 end
-    assert(reads == 1, string.format(
-        'nInRangeEnemyList now appears %d times in X.ConsiderR (was 1: the assignment, never '
-        .. 'read).  If it is now used, the effective ring changed and section 2 must be re-run',
-        reads))
+    assert(body:find('X%.CullTargetPool%( nInRangeEnemyList, nInBonusEnemyList %)'),
+        'the firing loop no longer selects its pool through X.CullTargetPool with '
+        .. '(nInRangeEnemyList, nInBonusEnemyList) in that order; re-check the effective ring')
+
+    -- Driven: the gate-off pool is the wide one, on a real frame that separates
+    -- the two lists (Shadow Shaman sits at 276.9u -- outside 175, inside 375).
+    local rf = require('mock.replay_fixture')
+    local FRAME = 'tests/frames/f_260828_002127_axe_call_bkb_ring.lua'
+    local J = rf.load(FRAME)
+    J.IsSoakCandidate = function() return false end
+    local X = rf.load_hero('axe')
+    local wide = J.GetAroundEnemyHeroList(175 + 200)
+    local tight = J.GetAroundEnemyHeroList(175)
+    assert(#wide == 3 and #tight == 2, 'the frame no longer separates the two pools ('
+        .. #tight .. ' vs ' .. #wide .. ', was 2 vs 3); it cannot witness this any more')
+    local pool = X.CullTargetPool(tight, wide)
+    assert(#pool == #wide, 'with the gate OFF the pool holds ' .. #pool
+        .. ' enemies, not the wide list\'s ' .. #wide .. ' -- RING = 375 and every '
+        .. 'reading in section 2 are claims about the UNARMED tree, and the unarmed '
+        .. 'tree just moved')
 end
 
 return T

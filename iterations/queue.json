@@ -2029,6 +2029,18 @@
    "requested_by": "hero 2026-09-08T05:0xZ",
    "status": "pending",
    "result": ""
+  },
+  {
+   "id": "hero-46",
+   "stream": "hero",
+   "bundle": "axecullreach (turbo-only soak candidate, NOT armed -- P4.2 冻结期内本条不请求入集)",
+   "seeds": [],
+   "priority": 3,
+   "question": "**零 EC2 归档只读扫描,与 hero-2/30..45 同形,可并进同一次遍历。** 给 `axecullreach` 量域(`bots/BotLib/hero_axe.lua` `X.CullTargetPool`)。**背景**:`X.ConsiderR` 建了两个敌人列表 —— `nInRangeEnemyList`(`nCastRange`,实测 **175**)与 `nInBonusEnemyList`(`nCastRange + 200` = **375**)—— 唯一那条开火循环读**宽的那个**且**循环体里一个距离项都没有**,窄的那个从写下起就是**死局部**。gated 修复只把候选池换成窄的那个(未 armed;在 `X.ConsiderR` 内部方向是 **NARROWING、严格子集**,因为两个池由同一个 helper 用更小半径建)。**要四列读数,分母一律带上(Axe 局数 / Axe 帧数)**:(1) **`X.ConsiderR` 开火了几次**(出货腿真的 `return HIGH` 的瞬间数);(2) **其中目标距离 > 175 的占比** —— 这一列就是本 lever 的域,**按 gap 分桶**(0-25 / 25-75 / 75-125 / 125-200u,**别只报均值**,铁律 4(ii));(3) **代价列**:每次 (2) 命中,记该次落单后 **3 秒内**(a) Culling 是否真的放出去了、(b) 目标是否真的死了、(c) Axe 自己是否死亡 —— 这三个数直接回答「那 200 码的接近值不值」,而 Culling **击杀会退 CD**,所以 (b) 的价值比一次普通施法高;(4) **机会成本列**:每次 (2) 命中的当帧,Berserker's Call 是否 `IsFullyCastable`、以及**嘲讽 315 半径内有几个存活敌人** —— 因为 `X.ConsiderR` 是 `X.SkillsComplement` 的第一臂且出价 >0 就无条件 `return`,那一帧 `X.ConsiderQ` / `X.ConsiderW` **根本没被考虑**,这一列量的正是被顺带压掉的东西(真实帧 `f_260828_002127_axe_call_bkb_ring` t=982.1 上这个数是 **3**)。⚠️ **分层**:(2)(3)(4) 都按 ab / ba 两层分别报**读数**(不是局数,铁律 4(i-a));计数类量**不报中位数**,或必须同时给占比(4(ii))。⚠️ **`cullthresh` 若在同一条腿 armed,(1)(2) 是两者的合力**:它加宽斩杀线、本 id 收窄到达环,机制正交但读数会叠 —— 要分因就分腿,或在只有本 id armed 的腿上读。",
+   "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「`X.ConsiderR` 开火 + 目标 gap 落在 75-200u + 当帧嘲讽可施且 315 内 ≥2 个敌人」那一帧,好让本组用 `make_fixture.py` 把它钉成 fixture,补上本轮**唯一**没能被帧驱动的那一半(见下)。**预登记的判读方向**:若 (2) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在(「循环读宽表、窄表是死局部」是**闭式事实**,`tests/test_axe_cull_reach.lua` §1/§8 与 `tests/test_axe_culling_threshold_preflight.lua` §3 钉着);若 (2) 非零而 (3) 显示这些落单在 3 秒内**多数真的放出了 Culling 且目标真的死了**,那么本杠杆掐掉的是**真的击杀**(还连带退 CD),下一棒是**重新划线**(例如只拒 gap > 75u)而**不是**直接判负;若 (3) 显示放出去或击杀的比例低、或 Axe 自死率高、或 (4) 显示常常压掉一个可施的嘲讽且身边 ≥2 个敌人,那才是入集的理由。**预登记的归因边界**:在 `X.ConsiderR` 内部,armed 池 ⊆ shipped 池(同 helper、更小半径,`tests/test_axe_cull_reach.lua` §5 在 33 帧上逐帧断言)⇒ 读数**不能**读作「杠杆新增了一次 Culling」。⛔ **但英雄层面不是纯 narrowing**:被拒的那一帧接着落到 `X.ConsiderQ` / `X.ConsiderW`,它们可能开火 —— 这正是杠杆的目的,所以**「armed 的 Axe 施法总数」不是本 id 的读数**,按它下结论是读错了量。⚠️ **METHOD-FAILED(§CJ)强制**:读不出 (2) 的 gap(该次落单时目标与 Axe 的距离、**以及当帧的 `abilityR:GetCastRange()`**)⇒ **INSTRUMENT-BLIND 退回重裁**,不得自行套用「域为 0 ⇒ 不入集」。**为什么必须走档案而不是 fixture**:全仓 33 个 Axe 帧里 Culling 可施的只有 8 帧,低于斩杀线的敌人落在 band 的只有 **2** 帧(两帧都已端到端驱动),而**开过火之后发生了什么**一帧也答不了;更要紧的是 (4) 那一列 —— `X.ConsiderQ` 的每条分支都挂在 mode 谓词(`J.IsGoingOnSomeone` / `IsPushing` / `IsFarming`)后面,fixture 世界结构性恒假,所以「嘲讽会不会改为开火」**只能**去有 .dem 的地方量。",
+   "requested_by": "hero 2026-09-08T07:5xZ",
+   "status": "pending",
+   "result": ""
   }
  ],
  "done": [
