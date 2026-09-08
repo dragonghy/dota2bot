@@ -536,8 +536,12 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   那正是 `fieldregen` 块,GH #550 同型;改锚到唯一的 `RegenRing(bot) )`)。
   成员串 45 → 44,408 → **397** 字节,md5 → **`fe7a309fc06a229e97290b2db4c3bed3`**;`arm_since.py` 读 **44/44**。
   铁律 6:`GATE_EXIT=0 CLEAN` / `luacheck` 0 警告 / **未用 bypass**;`py_gate` 84/0/EXIT=0。
-  ⛔ **动态半全套未跑不作声称**;⛔ **读 test_set.md 的 49 文件子集跑了但 13 分钟未竟 ⇒ 不作「子集全绿」声称**,
-  截至提交唯一观察到的红是**动手前就红**的 `test_gated_helper_nesting_census.lua`(协同组 `607ce30b` 的 `tprecov`)。
+  ⛔ **动态半全套未跑不作声称**;✅ **读 test_set.md 的 49 文件子集提交后跑完(约 25 分钟):
+  `SUBSET_EXIT=1`,`656 ok, 1 failed`,唯一红是**动手前就红**的 `test_gated_helper_nesting_census.lua`
+  (协同组 `607ce30b` 的 `tprecov`)⇒ **成员串 45 → 44 在这 49 个文件上造成新红 0**(回填,见报告 §7)。
+  ⚠️ **纪律 3 的「后台包装」形状本轮第二次兑现**(上一轮已登记):harness 给该后台任务报 **`exit code 0`**,
+  真码是 **`SUBSET_EXIT=1`** —— 插在中间的是**后台包装本身**(报的是复合命令末尾 `echo` 的码);
+  **没吃亏的唯一原因是我按 `rc.sh` 的习惯先把真码 echo 进了输出文件**,这条路径**目前仍无人守卫**。
   ⛔ **开工自检真码 `RC_EXIT=3`,10 条腿全跑完**(与上一轮 `124` 被砍不同):
   `FINDINGS: cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)`,`UNCERTIFIABLE: none`。
   两条 trunk Lua 红**都不是本轮引入也不是本轮修的**(`test_activemode_call_site_census` 的注释提及 3→4 需重取数;
@@ -547,7 +551,10 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   零 AWS ⇒ 不对 MTD 作新声称;`DECISIONS_NEEDED` +0;**patch 检查仍未做**(低频顺延,已连续多轮)。
   **下次触发**:①两条 trunk Lua 红逐条 ②核 §2.2 那根棒(`w55_record_launched_at_and_gate_iv_inputs`,**挡着 W56**)
   ③GH #358 的 120s 预算要人裁 ④退休 owed registry 里那 4 行 DONE(**需读一遍**四份产物)
-  ⑤上一轮 ⑨③ 原样顺延 ⑥**patch 检查**(建议下一轮强制做掉)⑦**把那份 49 文件子集跑完**。
+  ⑤上一轮 ⑨③ 原样顺延 ⑥**patch 检查**(建议下一轮强制做掉)
+  ⑦~~把那份 49 文件子集跑完~~ **本轮已完成**(见上,新红 0)
+  ⑧**给「后台包装吞掉真码」立一道守卫** —— `rc.sh` 只长在自检那一条命令上,后台任务/发波循环/批量脚本
+  里没有任何东西举手;本轮第二次现场兑现,两次都是靠习惯躲过的。
 - **2026-09-08T04:20Z**:**GH #616 落地 —— 快 python ratchet 进 push 闸(84/114 选入,11.86s)。**
   零 AWS、零波次、零 `bots/`+`game/` diff、不发 owner 邮件、无 promote/reject。
   取活依据是上一轮 ⑨ 自己排的第 ① 条(它当轮明写「本轮不实现,值得单独一轮带验证」)。
