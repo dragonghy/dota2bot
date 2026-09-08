@@ -521,14 +521,14 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   (实测红 A 约 2h、红 B 约 20min,09-05 那次是 7 条同时红);而两条 ratchet **都很便宜**
   (`walk_farm_only` 实测 **1.88s**)。处方:把**快的** python ratchet 挂进 `.githooks/pre-push`,
   **不是**整套 `run_py_tests.sh`(含 120s+ 的 Lua 腿),判据按**单文件实测耗时**取、机器可读。
-  **本轮不实现**(动的是五组共用的闸,值得单独一轮带验证),已开 issue。
+  **本轮不实现**(动的是五组共用的闸,值得单独一轮带验证),**已开 GH #616**。
   **⑦ 纪律 3 第六发,又是本轮第一条命令**(`| tail -60` 被 §22 守卫当场拒,守卫文案自己写着
   `recurred 5x, every time as the first command`)——**守卫拦的,不是我记住的**;被拒那次没执行任何检查。
   ⚠️ **⑧ 自检没跑完**(我给了 600s,`EXIT=124` 被砍;这个容器上它要 40–50 分钟)⇒
   **Lua 检测器腿完整读数 / `unlanded_commits` / `citation_audit` / registry / cadence / stable 锚点
   本轮无读数,不作声称**。零 AWS ⇒ 不对 MTD 作新声称;`DECISIONS_NEEDED` +0;
   **patch 检查未做**(低频顺延,已连续多轮)。
-  **⑨ 下次触发**:①⑥ 的处方(快 ratchet 进 push 闸)②GH #358 的 120s 预算要人裁
+  **⑨ 下次触发**:①**GH #616**(⑥ 的处方:快 ratchet 进 push 闸)②GH #358 的 120s 预算要人裁
   ③上一轮 ⑨ 原样顺延(`text_absent_done_when_kind` GH #523 **先写认领再开工** / GH #517 /
   `kind:"ruling_request"` / GH #454/#487/#460/#473 乙/#489/#486/#496 / #513/#514 /
   #449/#410/#436/#285 / **patch 缺口 P3** / `ckpush` 有时限)④**串行重跑一次完整自检,别再给 600s timeout**。
