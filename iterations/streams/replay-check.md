@@ -13136,3 +13136,87 @@
     09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
     #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`。
   - 完整报告:`iterations/reports/replay-check/20260908T033000Z.md`
+- **2026-09-08T06:48Z**:**W55 全波重扫买到判据的第四份语料(34 组,分歧 0);同一次重扫让
+  GH #609 验收 (2) 第一次变红,而逐帧证明那 3 条红全长在阈值那个量上,判据在同样 3 组上读对 3/3。**
+  零 EC2、零 CE、零付费 AWS(只读 S3);**`bots/`、`game/`、`tests/`、任何工具本轮均零 diff**
+  —— 这是一次**纯读数轮**,产物是语料、读数、帧证据。
+  - **吞吐**:宽扫 **68 局**(W55 家族 `7d960677`,四个 run `c16294`/`2bdcec`/`8c8ccc`/`2d0a14`;
+    `dem_found` 28+16+32+16=92 − 暖场 24 − unparseable 0 = **68**),深查 **6 局**(下限 6)。
+    ⚠️ **分母口径**:W55 的 verdict 读到 186 局(`.analysis.json` 口径),录像只有 `--rec-slots 8`
+    那部分落盘 ⇒ **68 = 「存在录像的镜像局」全集,不是波次全集**。上一轮那个 8 局(起飞时快照)
+    **作废并被本轮取代**。
+  - **⭐⭐ 本轮最该被下一个人读到的一行:一个恰好等于阈值的和,永远落在阈值下方。**
+    三组 misfile 的 `caster_s` 打印成 `5.8`,真值是 **`5.7999999999999545`**(0.1 秒片段累加的
+    二进制浮点),`>= 5.8` 为 **False**,差 **4.5e-14**。
+    ⇒ **阈值判据在它自己的调参点上是坏的**,而四轮阈值狩猎的夹逼区间 `[5.8, 5.9]` 的**左端点正是这个点**。
+    W52 上验收 (2) 读作 0 **是运气**(那 98 组没有一组恰好落在 5.8),**不是规则更强**。
+  - **⭐ 第二条根因:0.0 秒的「施法者」是引擎在填满那一帧制造的。**
+    三组的第二名成员分别 0.1s / 0.0s / 0.0s,帧轨显示 ogre_magi 到 1189.5 才进 140u、
+    obsidian_destroyer **从未进过 140u**(最近 255u)、zuus 1449.5 才到 145u。
+    ⇒ 这不是「两人合力填条」,是**一个人填完 + 一个蹭到判决的搭车者**;
+    分组规则忠实记录了引擎,错的是**拿 caster-seconds 当完成判据**。
+  - **读数**:W55 **68 局 / 34 组,判据 vs ground truth 分歧 0**(25 flip 全 `value==0`,
+    9 no-flip 全 `value!=0`,fallback 组 0);**分层披露 `ab` 20/0+0/7、`ba` 5/0+0/2,两层各自 0**。
+    **累计四份语料 W52 98 + W53/W54 88 + W55 34 = 220 组,分歧 0。**
+    ⚠️ 每腿中断率(armed 4/17、base 5/20)计数类、侧偏未消除(4(i-b)),**不写进结论**;
+    `outcommit`/`outchan` **都不在 W55 的 45-id 臂串里**(现算核对)⇒ 中断全长在出厂腿上。
+  - **⭐ #511 的域(先逐帧后聚合)**:9 个中断组,判读走**基本事实**(channel 期间吃没吃伤害 +
+    最近**活着非幻象**敌方英雄距离,距离走 `frames_by_hero`+`alive_at`),**不再调距离阈值**:
+    **3 真打断**(lion 200u/370 伤、viper 501u/46 伤、CM 342 伤)、**4 零伤害自弃**
+    (necrolyte/dragon_knight 视野内无活敌,skeleton_king 5,310u,lion 2,917u)、
+    **2 边界**(jakiro ×2,吃 0 伤但 chaos_knight 在 642–809u —— **硬判要靠一个调出来的距离阈值,所以不判**)。
+    最干净那一例:`c16294/20260908_033651_slot2` jakiro 北塔 **17 秒里两进两出**
+    (140u→933u→140u),channel 3.8s + 2.1s = **5.9 秒,够填满一整条 6 秒的条**,
+    **hp 恒 1.00、一次伤害没吃、零占领**。⇒ 上一轮 chaos_knight 是**原地重发十三次**,
+    这一轮 jakiro 是**走开再回来** —— **同一笔浪费,两种外观**。
+  - ```
+    VERIFY id=outlatch verdict=INDETERMINATE episodes=0
+    VERIFY id=outcommit verdict=NOT-ARMED episodes=0
+    ```
+    `outlatch` **第五次同一结论,是重复不是新证据**(域不在 dump 里)。
+    **兑现上一轮点名的第 (2) 条:不再用同一条路买第六次**,已把裁定请求交总监
+    (改走 fixture,与 `campbind` 同型;或退集)。
+  - **⛔ 本轮踩的坑,而且是本工具四个月前就钉死过的那个**:临时帧脚本按 `s['hero']` 过滤
+    `snapshots` 取 `me[0]`,读出「luna 已死却在施法」(d=10037 hp=0.00)。**那一条是假的** ——
+    那一帧 `npc_dota_hero_luna` 有 **13 条 snapshot 行**(同 team/pid,只有 `idx` 不同),
+    12 条是 hp=0 的幻象/残留流,**只有 idx=1316 是活人**(距北塔 269u,hp=1.00)。
+    `outlatch_capture.hero_track()` **本身没有这个洞**(强制走 `entities.frames_by_hero`,
+    docstring 钉的是同型 21 行 luna 案)。⇒ **可迁移的一句:这条坑不是「工具的洞」,
+    是「每个新写的读法的默认值」;一次性脚本也必须走 `frames_by_hero`,不许自己 `for s in snapshots`。**
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`;`SWEEP_*_EXIT=0` ×4(四个 `sweep_complete.json`
+    各 `exit_code=0`,unparseable 合计 0);`OLC_SELFCHECK_EXIT=0` **74/0**;`LIVENESS_EXIT=0` **25/0**;
+    `PROBE_SELFCHECK_EXIT=0` **27/0**;`MUTSTAND_EXIT=0` **23 CAUGHT/0**(restore byte-for-byte);
+    `MUTSTAND_PROBE_EXIT=0` **12 CAUGHT/0**;`OLC_FULL_EXIT=0`。
+    ⚠️ **新登记一个「长得像跑过了」的退出码**:`python3 -m pytest tests/test_outlatch_capture_liveness.py`
+    → **退出 5 = `no tests ran`**;容器里没装 pytest 时 → **退出 1 = `No module named pytest`**。
+    **1 和 5 都不是绿**;那个文件是独立脚本,正确调用是 `python3 tests/…`(=0,25/0)。
+    ⛔ **证据纪律 3 第五十五次踩,又是当轮第一条命令**(开工自检带 `| tail -60`,脚本自己拒跑
+    打 `SELFCHECK_EXIT=2 REFUSED`,harness 报的 `EXIT=0` 是 `tail` 的);**第六次附议给它独有退出码或 wrapper**。
+    ⚠️ **第三十三次登记它在本容器不是「约 20s」**(实测 **>19 分钟**,本轮唯一长尾)。
+    开工自检 **`SELFCHECK_EXIT=3`**,归因块原样:`legs run 10`;
+    `FINDINGS (exit 3) cadence queue-rulings owed-executions trunk-red(python) **trunk-red(lua)**`;
+    `UNCERTIFIABLE (exit 2): none`;`NOT RUN (inside a leg): tests/test_selfcheck_lua_leg.py`。
+    ⚠️ **`UNCERTIFIABLE: none` 与 `NOT RUN (inside a leg)` 不是一回事**:日志中途那行
+    `UNCERTIFIABLE tests/test_selfcheck_lua_leg.py` 是腿内标记,归因块把它记在 `NOT RUN`。
+    **照抄归因块,别照抄中途那行。**
+    **⭐ `trunk-red(lua)` 是本轮新增项**(上一轮只有 python):`test_activemode_call_site_census.lua`
+    (注释提及数 3→4,ratchet 自己说是**散文改动**)与 **`test_gated_helper_nesting_census.lua`
+    (新 gate-inside-a-gate `tprecov | J.ShouldSipNotTpRecover | J.HasFieldRegenSource | bagsalve`
+    —— 这条不是散文:若内层 helper 未 armed 时不是外层合取的单位元,单独 arm `tprecov`
+    测到的是 no-op 而 `check_armed_wiring.py` 仍叫它 WIRED,与「promote 冻结 gate」同族,
+    建议总监优先看)**;python 腿一条 judged-row 行号 FAIL(8423→8435)。
+    **五项均不归本组解读,转总监**(本会话 `bots/`/`game/`/`tests/` 零 diff)。
+    **铁律 6**:本轮零 Lua 改动;静态半见报告 §七;动态半(GH #124)**不跑也不声称**。
+  - **本轮的评论**:#609(验收 (2) 在 W55 上 3/34 变红 + 两条根因 + 三组帧轨;重申阈值降级为叙述量,
+    验收 (2) 改挂判据;并登记 W52 的 0 是运气)、#511(jakiro 两进两出帧表 + 9 组中断人口普查)。
+  - **下一轮第一件事**:(1) **等总监对 `outlatch` 的裁定**,在裁定到达前不买第六次;
+    (2) 把本轮两条根因**钉进 `verify_floor` 自检**(一个真值恰等于阈值的合成组、一个 0.0 秒成员的组)
+    —— 现在只有语料证据没有 pin;⚠️ 那会改工具,**记得连变异台一起改**(别重蹈 `M5 ANCHOR MISSING`);
+    (3) 深查维持 6 局。
+  - **存量顺延**:`campgrade` 第十七轮 / 61-id 家族 W49 两笔条件 (a);
+    `tpreach_domain.py` 补 `by_seed`(**已连欠十八轮**);`roshdist` 的 BUGGY(77)交总监;
+    09-07T12:59Z §3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝(GH #529);
+    `campbind` 条件 (a) 改走 fixture;#477 重 dump 是否还需要请总监裁;`cmqreach` 钉帧 fixture;
+    09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
+    #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`。
+  - 完整报告:`iterations/reports/replay-check/20260908T064838Z.md`
