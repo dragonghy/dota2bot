@@ -7307,9 +7307,9 @@
     "ref": "iterations/streams/test_set.md §GC"
   },
   "retreat_veto_shadow_census_20260908": {
-    "date": "2026-09-08T2x:xxZ",
+    "date": "2026-09-08T19:40Z",
     "owner": "strategy",
-    "issue": "OWNER_PRIORITIES P2(决策侧)+ **P4.4(ii)**(判定完结所需的最后一块证据,不是新杠杆);章程 0SHADOW2「下一格」(1) 逐条执行。姊妹档案:state.json:tpscroll_shadow_census_20260908 / tpquiet_20260908 / tpdeep_20260908。",
+    "issue": "OWNER_PRIORITIES P2(决策侧)+ **P4.4(ii)**(判定完结所需的最后一块证据,不是新杠杆);**GH #642**;章程 0SHADOW2「下一格」(1) 逐条执行。姊妹档案:state.json:tpscroll_shadow_census_20260908 / tpquiet_20260908 / tpdeep_20260908。",
     "change": "**没有新 gated id,也没有 bots/ 改动** —— 本轮是判定证据不是杠杆(见 verdict_evidence_for_director)。产出:`tests/_tpquiet_sweep.lua` **再扩列**(**没有**新建第四个全语料 sweep)、`tests/test_retreat_veto_reachability.lua`(**8/8**)、`tools/agent/mutstand_retreatveto.sh`(**12 腿:11 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)。armed 串 / `queue.json` / `test_set.md` **一字未动**;零 AWS、零 S3、零 EC2、零波次。",
     "why": "前两次普查都在 `X.ConsiderItemDesire[\"item_tpscroll\"]` 里,那里每个触发都是**上界**(`X` 是 file-local)。同一形状在 `bots/mode_retreat_generic.lua` 里第二次出现,而**那一格不是上界是恒等式**:`if J.ShouldStayAndRegen(bot) then return BOT_MODE_DESIRE_NONE end` 与 `if J.ShouldRegenNotWalkHome(bot) then return BOT_MODE_DESIRE_NONE end` **相邻,中间没有任何 return**(`MRG_RETURNS_BETWEEN 0`,两处独立推导)⇒ 「第二条被求值」**恰好等于**「第一条答 FALSE」。",
     "numbers": "1021 活帧同一次行走:`srnwh_armed_true 24`(= `stayfield_armed_true 24`,`core_disagree 0`)/ `srnwh_armed_true_shadowed 5` / **`srnwh_armed_true_live 19`**;`swh_shipped_true 13` = 5 + `swh_true_srnwh_false 8`;`srnwh_shipped_true 0`(闸门反真空)、`stayfield2_arm_leak 0`。",

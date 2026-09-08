@@ -32,7 +32,7 @@
    新 `[strategy]` issue **一条也没有**。产出:`tests/_tpquiet_sweep.lua` **再扩列**(**没有**新建第四个
    全语料 sweep)、`tests/test_retreat_veto_reachability.lua`(**8/8**)、
    `tools/agent/mutstand_retreatveto.sh`(**12 腿:11 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
-   `state.json:retreat_veto_shadow_census_20260908`;报告 `iterations/reports/strategy/20260908T194001Z.md`;
+   `state.json:retreat_veto_shadow_census_20260908`;报告 `iterations/reports/strategy/20260908T194001Z.md`;**issue GH #642**;
    **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
    **⭐ 主判据:前两次普查给的是上界,这一次给的是恒等式。** 普查一、二住在 `item_tpscroll` 里,那里每个触发
    都只能是上界(`X` 是 file-local)。`bots/mode_retreat_generic.lua` 的早退链不一样:
@@ -6874,7 +6874,7 @@
   验证:静态门 `luacheck_gate.sh` **EXIT=0 CLEAN / 0 警告**;sweep 的**全部消费者**+闸门一致性
   **六个全 EXIT=0**(15/15、9/9、10/10、**8/8**、5/5、16/16);变异台 **12 腿 STAND GREEN(exit 0)**;
   开工自检 **worst exit 3**(python trunk 腿 **UNCERTIFIABLE**,120s 没跑完 —— **不是通过**)。
-  报告 `iterations/reports/strategy/20260908T194001Z.md`;backlog 见 **0RETVETO**。
+  报告 `iterations/reports/strategy/20260908T194001Z.md`;**issue GH #642**;backlog 见 **0RETVETO**。
 
 - 2026-09-08T16:55Z(**P4.4 归属 = (ii) 一个判定完结所需的最后一块证据**,**不是 (i)** ——
   三个候选杠杆全部定价出**空域**,硬造一个域为零的 gated 杠杆拿不到本组必须带的真实帧 fixture;
