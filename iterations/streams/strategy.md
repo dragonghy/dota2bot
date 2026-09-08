@@ -32,7 +32,7 @@
    新 `[strategy]` issue **一条也没有**。产出:`tests/_tpquiet_sweep.lua` **第三次扩列**(**没有**新建
    第五个全语料 sweep)、`tests/test_fieldsip_atom_pricing.lua`(**15/15**)、
    `tools/agent/mutstand_fieldsip.sh`(**13 腿:12 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
-   `state.json:fieldsip_atom_pricing_20260908`;报告 `iterations/reports/strategy/20260908T225504Z.md`;
+   `state.json:fieldsip_atom_pricing_20260908`;报告 `iterations/reports/strategy/20260908T225504Z.md`;**issue GH #645**;
    **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
    ⚠️ **连续第三轮 (ii)**:「下一格」第 (1) 条要求先找杠杆,本轮**找了没有** —— 第 (4) 条把周边地面封死,
    而它同一句话写明「**不要**为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆」。本轮量出来的正好说明为什么:
@@ -6949,7 +6949,8 @@
   **不是通过也不是失败**;套件本身 115 passed / 0 failed,快速 Lua 检测器 86 文件 0 失败)。
   ⚠️ 自检第一次调用因 stdout 接进 `tail` 被脚本**主动拒绝**(`REFUSED ... this is NOT a pass`),
   改重定向后重跑 —— **证据纪律 3 的护栏在工作**。
-  报告 `iterations/reports/strategy/20260908T225504Z.md`;**armed 串 / `queue.json` / `test_set.md` 一字未动**;
+  报告 `iterations/reports/strategy/20260908T225504Z.md`;**issue GH #645**;
+  **armed 串 / `queue.json` / `test_set.md` 一字未动**;
   零 AWS、零 S3、零 EC2、零波次;backlog 见 **0FSATOM**。
 
 - 2026-09-08T19:40Z(**P4.4 归属 = (ii)**,不是 (i) —— 本轮量完之后能建的杠杆一个都没有,

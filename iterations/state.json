@@ -7356,7 +7356,7 @@
   "fieldsip_atom_pricing_20260908": {
     "date": "2026-09-08T22:55Z",
     "owner": "strategy",
-    "issue": "OWNER_PRIORITIES P2(供给/持有两侧)+ **P4.4(ii)**(一个判定完结所需的最后一块证据,不是新杠杆);章程 0RETVETO「下一格」第 (2) 条逐条执行。姊妹档案:state.json:retreat_veto_shadow_census_20260908 / tpscroll_shadow_census_20260908 / tpquiet_20260908 / fieldsip_20260829。",
+    "issue": "OWNER_PRIORITIES P2(供给/持有两侧)+ **P4.4(ii)**(一个判定完结所需的最后一块证据,不是新杠杆);**GH #645**;章程 0RETVETO「下一格」第 (2) 条逐条执行。姊妹档案:state.json:retreat_veto_shadow_census_20260908 / tpscroll_shadow_census_20260908 / tpquiet_20260908 / fieldsip_20260829。",
     "change": "**没有新 gated id,也没有 bots/ 改动** —— 本轮是判定证据不是杠杆。产出:`tests/_tpquiet_sweep.lua` **第三次扩列**(**没有**新建第五个全语料 sweep,章程明令)、`tests/test_fieldsip_atom_pricing.lua`(**15/15**)、`tools/agent/mutstand_fieldsip.sh`(**13 腿:12 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)。armed 串 / `queue.json` / `test_set.md` **一字未动**;零 AWS、零 S3、零 EC2、零波次。",
     "why": "promote atom `field_hold_needs_magnitude` 注册了三个 id,前两轮按**可达性**给两条持有腿定了价(`stayfield` 至多 2 帧、`stayfield2` 恰好 19 帧)。**第三条腿 `fieldsip` 定不了价 —— 而这正是重点**:它根本没挂在任何分支上,它是**另外两条腿共同包裹的那个谓词内部的一个合取项**。所以它的价钱只能是「当这个 atom 按 standing plan 作为**一波**arm 时,它对另外两条腿的域做了什么」——而这恰好是一个共同 promote 原子存在的**唯一**理由,也是 atom 注册十一天来没人问过的那一句。",
     "headline": "⭐ **这个 atom 按它自己的 standing plan arm 成一波,持有侧的活域是零。** 同一次 1021 活帧行走:`srnwh_armed_true_live 19`(`stayfield2` 的活域,是**域**不是上界)→ 共同 arm `fieldsip` 后 **`fs_sf2_live_killed 19` / `fs_sf2_live_survives 0`**;另一半 `stayfield_true_in_t3 2`(**上界**)→ **`fs_sf1_ceil_killed 2` / `fs_sf1_ceil_survives 0`**。⇒ 两条持有腿在那一波里**都会读回「tested, no effect」**,而 `check_armed_wiring.py` 照样会说 WIRED —— `pullcad` 的形状,**这次是在发波之前说的,不是之后**。",
