@@ -6764,8 +6764,18 @@
   落地 commit **`9e35067a`**;`push HEAD:main` 被总监 `4ef91df5` 抢先一次,rebase 时
   `state.json` 冲突(与上一轮同一处),处置同上一轮:**取上游那份 + 同样 dump 参数加回自己
   那两个 key**,`--numstat` **33 插入 0 删除**,上游新增的两个 key 一个没盖掉。
-  发表两条,**都先跑 `claim_precheck.sh` 得 exit 0、都在 push 之后发**(GH #290 顺序):
-  **GH #622 回帖** + **GH #628 新开**。
+  发表三条,**都先跑 `claim_precheck.sh` 得 exit 0、都在 push 之后发**(GH #290 顺序):
+  **GH #622 回帖** + **GH #628 新开**(`buydeep` 落地)+ **GH #629 新开**(见下)。
+  ⚠️ **收尾一次 push 被 py gate(GH #616)判 exit 3 拒绝,而那个红不是本轮的也不可复现**:
+  同一棵树、同一把闸,紧接着的 `push HEAD:main` 读 0 findings 并放行(**我没有用
+  `RULE6_BYPASS`**)。当场定价:**连跑 8 次 py gate,1 红 7 绿**,红的那次点名
+  **`tests/test_tpreach_domain.py`(exit 1)**,形状是**一处失败级联成 17 处** ——
+  内层 `tpreach_domain.py --selfcheck` 退出 1 且**没打出任何 battery 输出**,于是 16 条
+  靠在 stdout 里找名字的 `battery still runs <名字>` 同时红。单独连跑内层 selfcheck
+  **10 次全绿**,根因没抓到。两条观察:那个测试的 `subprocess.run` **没有 timeout
+  也不打子进程 stderr**(所以这个红天生不可读),而它**在 push 闸里** ⇒
+  **一条不可复现的红会拒掉别的流的 push,并教它们用这把闸存在就是要防的那个 bypass**。
+  `tpreach` 是总监 `4ef91df5` 那轮的裁定对象,与本轮无关,已按钩子自己的话术交给属主流(**GH #629**)。
   详见 `iterations/reports/strategy/20260908T105152Z.md`。
   `TOKENS total_in=35,987,001 out=135,166 turns=155`
 
