@@ -5574,6 +5574,19 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 		-- turns that file red.
 		if botHP < 0.19
 			and not J.ShouldStayAndRegen( bot )   -- [GH #2] turbo: heal in lane, don't TP home
+			-- [tpquiet / owner priority P2, 2026-09-08] The band the veto above
+			-- cannot reach ON THIS BRANCH. Its own [0.18, 0.75] against this
+			-- branch's `botHP < 0.19` cap leaves it one percentage point (the
+			-- correction two comments up, pinned in
+			-- tests/test_tphome_tp_leg_counterfactual.lua), so 6 of this
+			-- branch's 7 corpus trigger frames sit below anything that guards
+			-- it. And this branch is UPSTREAM of '回复状态' and RETURNS: on 1 of
+			-- 'tpdeep''s 2 domain frames it fires first, so that sibling's veto
+			-- is never evaluated (tests/_tpquiet_sweep.lua,
+			-- `tpdeep_true_in_r4_shadowed 1`). Same predicate as the sibling,
+			-- separate id so one armed id never moves two call sites. Gated on
+			-- 'tpquiet' + turbo: this line is inert in every shipped game.
+			and not J.ShouldSipNotTpQuietHome( bot )
 			and ( bot:WasRecentlyDamagedByAnyHero( 8.0 ) or botHP < 0.12 )
 			and botName ~= 'npc_dota_hero_huskar'
 			and ( botName ~= 'npc_dota_hero_slark' or bot:GetLevel() <= 5 )

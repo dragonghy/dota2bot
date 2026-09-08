@@ -27,6 +27,44 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TPQUIET. **【2026-09-08T14:31Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+   认领依据 = 上一轮「下一格」第 (1) 条 + **OWNER_PRIORITIES P2**(决策侧,球在本组)。上一轮「下一格」第 (4) 条
+   明令 `J.IsFieldRegenSituation` 的矿脉挖完 ⇒ 本轮**没碰那个函数**,换**结构维度**:
+   不是再加一条子句,而是**问这个判断被摆在了哪条分支上**。产出 gated 候选 **`tpquiet`**
+   (`J.ShouldSipNotTpQuietHome` + `X.ConsiderItemDesire["item_tpscroll"]` 的 **`撤退:1` 分支唯一调用点**,
+   **未 armed**,P4.2 = FROZEN-HOLD)、`tests/_tpquiet_sweep.lua`、
+   `tests/test_tpquiet_shadowed_branch.lua`(**15/15**)、`tools/agent/mutstand_tpquiet.sh`
+   (**13/13:12 变异体全 CAUGHT + 控制项 OK,零 SURVIVED,STAND GREEN**)、`state.json:tpquiet_20260908`、
+   `test_gated_helper_nesting_census.lua` 新增一行(A);报告 `iterations/reports/strategy/20260908T143144Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 主判据:一个永远跑不到的分支上的守卫不是守卫。** `item_tpscroll` 的四条回家分支**按源码顺序排列且每条都 return**;
+   P2 家族三个 id 全挂在**后两条**上,**没有人问过上游的 `撤退:1` 会不会先接走这一帧**。
+   全语料 1021 活帧、读数取自 **shipped** 的姊妹函数:`tpdeep_true 2` / `tpdeep_true_in_r4 2`
+   (= 姊妹自己发表的 `domain_and_branch_open 2`)/ **`tpdeep_true_in_r4_shadowed 1`**
+   ⇒ **姊妹 `tpdeep` 的活域是 1 不是 2**;被遮的那一帧**正是姊妹测试自己点名的**
+   `f_megabundle_051728_ogre_lanefront_deep` lion 11.2%/6级。**不是姊妹算错** —— 它问「我的分支开着吗」答案对,
+   它问不出「有没有更早的分支先 return」。**GH #606 那一族(闸址≠可达性)往上游挪了一条分支。**
+   **⭐⭐ `撤退:1` 值得一根杠杆靠两件事同时成立**:四条里**最安静**(`nEnemyCount == 0`,1600 环全空;
+   两个姊妹都容许 1 个),又是**活血量带里唯一没有 bag-aware 守卫的**(唯一守卫 `ShouldStayAndRegen` 带
+   `[0.18,0.75]` 对分支自封顶 `botHP<0.19` = **一个百分点**,而 **7 个触发帧里 6 帧在 0.18 以下**)。
+   **⭐⭐⭐ 新的不是判断,是问这个判断的位置。** 常数与 `tpdeep` **逐个相同**,写成**两个被解析函数之间的算术**;
+   **不直接调姊妹**因为一个 armed id 会推动两个调用点、把已排给 `tpdeep` 的波读废(M5)。
+   **`overlap` 故意不断言 0**(与谁都不共用调用点 ⇒ **重叠是结论本身**):`both_armed_true 2` 照登记(铁律 4 (i-a)),
+   取而代之成立的是**源码顺序**,**结构钉**。
+   **⭐⭐⭐⭐ 变异台头条:M10 第一版 SURVIVED。** 顺序钉原本 sweep 算、测试断言 ⇒ 把 sweep 那行换成字面 `1` 后
+   **每个计数逐位不变**(顺序不是计数),断言读了变异体自己写的常数。**⇒ 断言的输入不许由被检查的东西生产。**
+   补的 **M13** 又暴露第二个洞:同一行 return 也结尾 `撤退:2`/`撤退:3`,全文件 `find` **会被姊妹的 return 满足**。
+   **M9 = GH #550 正面复现**:把带行「整理」成姊妹 inline 写法**行为一字不变**,却让姊妹的台子以**姊妹的名义**中止。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) 主体仍必须是一个 `bots/` 行为改动;
+   (2) **本轮量出来的缺口 = `both_triggers 6`** —— 被遮的只有 1 帧,但**两条分支触发同时开着的有 6 帧**
+   ⇒ 这类 shadow **不止一处**。**同一形状还没查过的**:`stayfield` 挂在 `撤退:3` 上会不会被 `撤退:1`/`撤退:2` 遮住?
+   `撤退:2` 与 `回复状态` 之间有没有同样的交叠?**先量再改**,扩 `_tpquiet_sweep.lua` 的两个 `*_trigger` 上界 + S 行,
+   **不要新建第三个全语料 sweep**;
+   (3) **不要**改共享地板、**不要**回 `overchase`、**不要**再找 `IsFieldRegenSituation` 的第五条子句(上一轮已封);
+   (4) 上一轮的 `nosrc_attr_only 0` **语料请求仍然挂着**(要一帧:地板以下 + 两手空空 + 1600 环空 +
+   3 秒内被一个 3000 外的英雄打过),本轮**没动它**,因为它写明「第一步是要那一帧,不是先改代码」。】**
+
 0BUYDEEP. **【2026-09-08T10:51Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
    认领依据 = 上一轮「下一格」第 (2) 项(`stop_source 8`)+ **OWNER_PRIORITIES P2**(供给侧,球在本组)。
    工作流第 1 步扫到的唯一新 `[strategy]` issue **#622 是批测台提的一个问题**(它自己写着「本台不改协同组的 `bots/`」),
@@ -6709,6 +6747,56 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-08T14:31Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**;认领依据 = 上一轮「下一格」第 (1) 条
+  + **OWNER_PRIORITIES P2**。上一轮明令「`J.IsFieldRegenSituation` 的矿脉挖完,不要再找第五条子句」——
+  本轮**没碰那个函数**,换了一个**结构维度**:不是再加一条子句,而是**问这个判断被摆在了哪条分支上**)。
+  ⭐ **立案句:一个永远跑不到的分支上的守卫不是守卫。** `item_tpscroll` 的**四条回家分支按源码顺序排列,
+  而且每一条都 `return`**;P2 家族三个 id 全挂在**后两条**(`stayfield`→`撤退:3`,`tprecov`/`tpdeep`→`回复状态`)。
+  **没有人问过上游的 `撤退:1` 会不会先接走这一帧。** 全语料 1021 活帧、读数取自 **shipped** 的姊妹函数:
+  `tpdeep_true 2` / `tpdeep_true_in_r4 2`(= 姊妹自己发表的 `domain_and_branch_open 2`)/
+  **`tpdeep_true_in_r4_shadowed 1`** ⇒ **姊妹的活域是 1 不是 2,发表读数高了一倍**;
+  被遮的那一帧**正是姊妹测试自己点名的** `f_megabundle_051728_ogre_lanefront_deep` lion 11.2%/6级。
+  **这不是姊妹算错**:它问的是「我的分支开着吗」,答案对;它问不出「有没有更早的分支先 return」。
+  是 **GH #606 那一族(闸址≠可达性)往上游挪了一条分支**。
+  ⭐⭐ **`撤退:1` 值得一根杠杆,靠的是两件事同时成立**:它是四条里**最安静的**
+  (`nEnemyCount == 0`,1600 环**全空**;两个姊妹都容许 1 个),又是**活血量带里唯一没有 bag-aware 守卫的**
+  ——唯一守卫 `J.ShouldStayAndRegen`(PROMOTED)带 `[0.18,0.75]` 对分支自封顶 `botHP<0.19` = **一个百分点**
+  (08-29 本组自己写下的更正,已钉在 `test_tphome_tp_leg_counterfactual.lua`),而 **7 个触发帧里 6 帧在 0.18 以下**。
+  产出 gated 候选 **`tpquiet`**(`J.ShouldSipNotTpQuietHome` + `撤退:1` **唯一**调用点,**未 armed**,P4.2 = FROZEN-HOLD)、
+  `tests/_tpquiet_sweep.lua`、`tests/test_tpquiet_shadowed_branch.lua`(**15/15**)、
+  `tools/agent/mutstand_tpquiet.sh`(**13/13,12 变异体全 CAUGHT + 控制项 OK,零 SURVIVED,STAND GREEN**)、
+  `state.json:tpquiet_20260908`、`test_gated_helper_nesting_census.lua` 新增一行(A)。
+  报告 `iterations/reports/strategy/20260908T143144Z.md`;**armed 串 / `queue.json` / `test_set.md` 一字未动**;
+  零 AWS、零 S3、零 EC2、零波次。
+  **⭐⭐⭐ 新的不是判断,是问这个判断的位置。** 谓词与 `tpdeep` **逐个常数相同**(带 `[0.10,0.18)`、
+  伤害窗 6.0s 不归因、环 2500、塔 1200、`HasFieldRegenSource`)—— 这不是抄,**这是杠杆的全部合法性**,
+  所以「与姊妹相同」写成**两个被解析函数之间的算术**,任一侧漂移当场红。
+  **不直接调姊妹**的理由:一个 armed id 会同时推动两个调用点 ⇒ 已排给 `tpdeep` 的波读不出结论(变异体 M5)。
+  **`overlap` 故意不断言为 0**(姊妹与 `tprecov` **共用调用点**才需要带不相交;本杠杆与谁都不共用,
+  **重叠是结论本身**):`both_armed_true 2` / `both_armed_true_and_both_triggers 1` **照登记**(铁律 4 (i-a)),
+  取而代之成立的是**源码顺序**,而**那是顺序不是计数**,故**结构钉**。
+  分区**逐位闭合**:`t1_trigger 7 = band_high 1 + band_low 4 + source 0 + damage 0 + ring 1 + tower 0 + domain 1`;
+  `quiet_shipped_true 0`、`flips 2`/`flip_false_to_true 0` 且换腿 `0`/`2`、`arm_leak 0`;
+  反真空 `quiet_with_any_tower 4`、环边际 `quiet_ring_margin 3`;
+  **两条带沿域代价都是 0** ⇒ **只能结构钉,不拿域计数当替身**(姊妹 M6/M7 的教训,在它咬人之前用上)。
+  **⭐⭐⭐⭐ 变异台头条:M10 第一版 SURVIVED,教的正是本轮该学的。** 顺序钉原本 **sweep 算、测试断言**,
+  于是把 sweep 那行换成字面 `1` 之后**每个计数逐位不变**(顺序不是计数),断言**读了变异体自己写的常数**。
+  ⇒ **断言的输入不许由被检查的东西生产**:改成**在断言它的文件里**从源码求,manifest 降级为「必须一致」。
+  补上的 **M13**(删掉 `撤退:1` 自己的 return)又暴露第二个洞:**同一行 `return ... tpLoc ...` 也结尾 `撤退:2`/`撤退:3`**,
+  全文件 `find` 会**被姊妹的 return 满足** ⇒ return 必须在**分支自己的范围内**找。
+  **M9 是 GH #550 的正面复现**:把带行「整理」成姊妹的 inline 写法**行为一字不变**,却让 `mutstand_tpdeep.sh`
+  的锚变歧义 ⇒ **以姊妹的名义中止姊妹整台台子**;故本 helper **给常数起名**,并把 `INLINE_* == 1`
+  **钉在做这件事的地方**。
+  **⭐⭐⭐⭐⭐ 附带一条(开 issue,不落地)**:另一条 `撤退:1`(~5292,补装备那条)里
+  `mode ~= A or mode ~= B or mode ~= C or mode ~= D` **恒为真** —— 「推塔/进攻时别回家补装备」这条排除
+  **从来没生效过**(作者要的是 `and`)。**但它不能作主体,理由是算术**:按第 13 条 world assertion,
+  `GetActiveMode()` 不在 dump 里、mock 答 0、`BOT_MODE_*` 都 ≥1001 ⇒ 语料上 De Morgan 修正版**同样恒真**,
+  armed/unarmed 在 1021 帧上**逐字节相同,域为 0** —— 落地它就是 `stayattr` 陷阱。
+  **开工自检**:第一次调用被工具自己 **REFUSED(exit 2,管道)**——证据纪律 3,第 5 次复发;改 `> file` 重跑,
+  `worst exit 3`(unlanded/cadence/queue-rulings/owed-executions),python 腿 **113 passed / 0 failed / 2 UNCERTIFIABLE**,
+  fast Lua detectors **86 文件 0 失败**。铁律 6 静态门 `luacheck_gate.sh` **exit 0 / 0 警告**;
+  **本轮没有用 `RULE6_BYPASS`**;动态半全量套件**没整跑**(只跑受影响面定向子集,不冒充全绿)。
 
 - 2026-09-08T10:51Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**;认领依据 = 上一轮「下一格」+ **P2**;
   唯一新的 `[strategy]` issue **#622 是批测台提的一个问题**,按 P4.4 作为**附带一条**结清,不当主体)。

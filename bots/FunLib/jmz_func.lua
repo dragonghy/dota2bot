@@ -6036,6 +6036,99 @@ function J.ShouldRegenNotWalkHome( bot )
 	return J.ShouldRegenNotGoHome( bot )
 end
 
+-- [tpquiet / owner priority P2, 2026-09-08] THE SAME JUDGEMENT, AT THE BRANCH
+-- THAT ACTUALLY REACHES THE FRAME.  This helper is not a new opinion about when
+-- a hurt bot should stay in the field -- 'tpdeep' already formed that opinion
+-- and every constant below is ITS constant.  What is new is WHERE the opinion
+-- is asked, and the reason is a measurement.
+--
+-- ⭐ THE DEFECT IS A SHADOW, NOT A MISSING CLAUSE.  X.ConsiderItemDesire
+-- ["item_tpscroll"] contains four home-TP branches in source order, and each one
+-- RETURNS.  '撤退:1' (the `botHP < 0.19` branch inside the retreat block, ~line
+-- 5576) sits UPSTREAM of '回复状态' (~line 5961) -- so on any frame where both
+-- triggers are open, '撤退:1' fires and the two vetoes 'tprecov'/'tpdeep' carry
+-- are never evaluated at all.  Measured over the whole fixture corpus
+-- (tests/_tpquiet_sweep.lua, 1021 live hero-frames):
+--
+--     tpdeep_true                  2   -- the sibling's whole domain
+--     tpdeep_true_in_r4            2   -- both inside the '回复状态' trigger
+--     tpdeep_true_in_r4_shadowed   1   -- ...and ONE of them is also inside
+--                                      --    '撤退:1', which returns first
+--     both_triggers                6   -- frames where both branches are open
+--
+-- So the sibling's live domain on this corpus is 1, not 2: half of what its own
+-- `domain_and_branch_open 2` reading reported, because that reading asked
+-- whether ITS branch was open and never asked whether an EARLIER branch would
+-- have returned first.  This is the call-site reachability family (GH #606: a
+-- gate address is not reachability), arriving one branch upstream of where the
+-- family has been looking.
+--
+-- ⭐⭐ '撤退:1' IS THE QUIETEST OF THE FOUR, AND THE ONLY ONE WITH NO BAG-AWARE
+-- VETO IN ITS LIVE BAND.  It requires `nEnemyCount == 0` -- an EMPTY 1600 ring,
+-- where '回复状态' tolerates one enemy and '撤退:3' tolerates one -- so it is the
+-- branch whose own trigger proves hardest that nothing is chasing this bot.  Its
+-- only regen veto is the PROMOTED J.ShouldStayAndRegen, whose band is
+-- [0.18, 0.75] against a branch that caps at `botHP < 0.19`: one percentage
+-- point of overlap, already pinned as arithmetic in
+-- tests/test_tphome_tp_leg_counterfactual.lua.  Below 0.18 -- which is where 6
+-- of this branch's 7 corpus trigger frames live -- the branch carries NO regen
+-- veto whatsoever.
+--
+-- ⭐⭐⭐ WHY A SEPARATE ID AND NOT A SECOND CALL TO J.ShouldDeepSipNotTpRecover.
+-- The predicate is the same, so the tempting edit is to call the sibling here.
+-- That would make one armed id move TWO call sites at once, which is exactly the
+-- non-independence the retreat guard chain was reordered to remove and which
+-- would make the wave already planned for 'tpdeep' unreadable: a verdict on
+-- 'tpdeep' could no longer say which branch produced it.  One id per call site.
+--
+-- ⛔ THE OVERLAP COLUMN IS NOT ZERO HERE, AND MUST NOT BE FAKED TO ZERO.  The
+-- sibling's stand asserts `overlap 0` because IT shares a call site with
+-- 'tprecov' and disjoint bands are what make those two attributable.  This one
+-- shares no call site with anybody, so the honest column is a different one:
+-- `both_armed_true_and_both_triggers`, and on every such frame '撤退:1' returns
+-- first, so with both ids armed only THIS one can change behaviour.  That is a
+-- fact about SOURCE ORDER, so it is pinned structurally (the '撤退:1' return
+-- appears before the '回复状态' trigger in the file), never by a count.
+--
+-- Direction is fixed by CONSTRUCTION: a veto appended to a conjunction can only
+-- turn this branch's TRUE into FALSE, i.e. only PREVENT base trips.  It can
+-- never send home a bot that was not already going.  Unarmed, J.IsSoakCandidate
+-- is asked first, so the shipped answer is byte-identical and no engine call
+-- below it is reached.  Gated STANDALONE -- one id in this function, never a
+-- conjunction of two (the 'pullcad' trap).  Turbo is asked explicitly: nothing
+-- on this path asks it for us.
+--
+-- Condition (c) is the sibling's, unchanged: a tango is 115 health over 16s and
+-- a faerie fire is 85 instantly, against a fountain round trip that measured
+-- 20.3 seconds of a ~20 minute Turbo game (f_260822_063722_lina_tp_home), and
+-- standard advice is explicit that unnecessary fountain trips are wasted time.
+-- The constants are NAMED rather than inlined so that "the sibling's numbers,
+-- not new ones" is an assertion a test can make against both functions at once
+-- (tests/test_tpquiet_shadowed_branch.lua) -- and so that no line of this helper
+-- is byte-identical to a line tools/agent/mutstand_tpdeep.sh anchors on (GH
+-- #550: an ambiguous anchor aborts the SIBLING's stand under the sibling's
+-- name).
+function J.ShouldSipNotTpQuietHome( bot )
+	if not J.IsSoakCandidate( 'tpquiet' ) then return false end
+	if not J.IsModeTurbo() then return false end
+
+	-- Every one of these five is J.ShouldDeepSipNotTpRecover's own constant.
+	local QUIET_BAND_HI, QUIET_BAND_LO = 0.18, 0.10
+	local QUIET_DMG_WINDOW = 6.0
+	local QUIET_RING, QUIET_TOWER = 2500, 1200
+
+	local nHP = J.GetHP( bot )
+	if nHP >= QUIET_BAND_HI then return false end
+	if nHP < QUIET_BAND_LO then return false end
+
+	if not J.HasFieldRegenSource( bot ) then return false end
+	if bot:WasRecentlyDamagedByAnyHero( QUIET_DMG_WINDOW ) then return false end
+	if #J.GetNearbyHeroes( bot, QUIET_RING, true, BOT_MODE_NONE ) > 0 then return false end
+	if #bot:GetNearbyTowers( QUIET_TOWER, true ) > 0 then return false end
+
+	return true
+end
+
 -- [fieldbuy / owner priority P2, 2026-08-22] The SUPPLY side of the same fix.
 --
 -- Owner's turbo rule is "don't go home to heal -- buy a salve and heal in the

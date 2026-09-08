@@ -796,6 +796,36 @@ local PINNED = {
     -- pair's tests moves (tools/agent/mutstand_tpdeep.sh M5).
     "tprecov | J.ShouldSipNotTpRecover | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
     "tpdeep | J.ShouldDeepSipNotTpRecover | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
+    -- [tpquiet 20260908] The THIRD caller of the same inner helper, and the
+    -- identity answer is the one the two rows above already carry, unchanged:
+    -- un-armed 'bagsalve', J.HasFieldRegenSource's backpack block is skipped and
+    -- the helper returns its main-inventory scan -- ADDITIVE-ONLY, so the inner
+    -- gate can only ever turn a FALSE into a TRUE and never removes a source the
+    -- shipped scan found (measured for this pair on 2026-09-08: `src_bag_more
+    -- 15 / less 0`). So arming 'tpquiet' alone is not measuring a no-op, and
+    -- that is not left as an inference: tests/_tpquiet_sweep.lua drives the
+    -- helper with 'tpquiet' as the ONLY armed id (`arm_leak 0`) over all 1021
+    -- live frames and reads `quiet_armed_true 2` against `quiet_shipped_true 0`.
+    -- ⭐ WHAT THIS ROW ADDS THAT NEITHER ROW ABOVE DOES, and the reason it gets a
+    -- paragraph: this id does NOT share a call site with its two siblings -- it
+    -- is the same predicate one branch UPSTREAM, on '撤退:1' -- so GH #576's pair
+    -- question ("can a single-arm wave read the outer id") has a different
+    -- answer here, and a worse-shaped one. 'tpquiet' and 'tpdeep' both answer
+    -- TRUE on 2 of the same frames (`both_armed_true 2`) and their bands are
+    -- deliberately IDENTICAL rather than disjoint, so the disjointness argument
+    -- the 'tpdeep' row rests on is unavailable by construction. What decides an
+    -- overlapping frame instead is SOURCE ORDER: '撤退:1' returns before the
+    -- '回复状态' trigger is reached, so with both armed only 'tpquiet' can move
+    -- anything. That is not a count and is never asserted as one -- it is
+    -- derived from the comment-stripped source inside
+    -- tests/test_tpquiet_shadowed_branch.lua (reading it out of the sweep
+    -- manifest let mutstand_tpquiet.sh's M10 through with a hard-coded 1).
+    -- ⛔ And the same order is why the 'tpdeep' row's own domain reading is an
+    -- over-count: 1 of its 2 domain frames is inside '撤退:1' too
+    -- (`tpdeep_true_in_r4_shadowed 1`), so that frame is credited to a veto that
+    -- never runs on it. Filed as an issue rather than corrected in the sibling's
+    -- assertions from here. (A).
+    "tpquiet | J.ShouldSipNotTpQuietHome | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P
     -- [waitclar 20260906] A second caller of the same inner helper, and the
     -- identity answer is the same one the row above already carries: un-armed,
