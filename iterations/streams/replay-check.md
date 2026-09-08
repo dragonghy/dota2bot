@@ -13501,4 +13501,10 @@
     加 `154954_slot5` t=1397.4 作干净对照;(2) 收 W58,**先跑 §(0)** 再谈四格,
     并先看这波有没有**对侧 draft 存活**;(3) 上轮欠的 transit 列钉帧
     (`0eb22d/20260908_094909_slot6` t=1191.5)与 `cd3359`/`40e63a` 补扫;(4) 深查维持 6 局。
+  - **本轮的评论/issue**:**新开 GH #641**([harness]:`lionqdmg_domain` 的 `ready` 谓词把
+    不可施法的帧算成机会,带 §5.3 帧锚 + §5.4 读数)、**GH #632 留言
+    `issuecomment-5590427433`**(W57 = 验收第 3 条的第一个实测样本,并指出载体断言
+    只有发波前静态检查、没有收割后复检)。两份草稿 `claim_precheck.sh` **EXIT=0**,
+    **先 push 后发表**(GH #290)。铁律 6 静态半随 push 自跑:`0 warnings` / `GATE_EXIT=0 CLEAN`,
+    **无 `RULE6_BYPASS`**。
   - 完整报告:`iterations/reports/replay-check/20260908T184600Z.md`
