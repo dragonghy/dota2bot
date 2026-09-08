@@ -6497,6 +6497,150 @@ function J.ShouldFieldBuyRegenRing( bot )
 	return true
 end
 
+-- [buydeep / owner priority P2 supply side, 2026-09-08] The FIFTH arm of the same
+-- purchase site, and the last free clause of J.IsFieldRegenSituation: its FLOOR.
+--
+-- ⭐ THE DEFECT, AND IT IS THE SAME SHAPE AS 'buytower' AND 'buyring' -- a clause
+-- whose stated rationale belongs to a consumer this arm is not.  The floor is
+-- `nHP < 0.18 -> false`, and J.IsFieldRegenSituation's own comment gives its
+-- reason in its own words: "Hurt enough that the bot wants to leave, not so hurt
+-- that the next stray creep wave kills it.  BELOW THE FLOOR THE GENUINE ESCAPE
+-- RETREAT STANDS."  That is an argument about NOT CANCELLING A RETREAT, which is
+-- what the hold-side wrappers J.ShouldRegenNotGoHome / J.ShouldRegenNotWalkHome
+-- do.  This arm cancels nothing: it adds an OR arm to a purchase.  A bot that
+-- buys a salve at 12% HP and then retreats anyway has lost nothing and arrives at
+-- the fountain -- or at the next lane -- carrying the salve.
+--
+-- ⭐⭐ AND THE ARITHMETIC THAT MAKES THE FLOOR RIGHT FOR THE DECISION SIDE DOES
+-- NOT REACH HERE EITHER.  J.ShouldDeepSipNotTpRecover ('tpdeep', 2026-09-08) is
+-- the decision-side lever in this same band, and it carries a 0.10 BOTTOM for a
+-- reason it spells out: a field sip is 115 (tango) / 85 (faerie fire) / 135 (a
+-- bottle charge), so below `0.18 - sip/MaxHealth` one sip can no longer lift the
+-- bot back over the family's own floor and holding it there is holding it at a
+-- health it cannot leave.  A SALVE IS 400.  Against the level-6+ turbo range that
+-- decision-side arithmetic is built on (900-1400 max health), 400 is 0.29-0.44 of
+-- the bar -- so `nHP + 400/MaxHealth >= 0.18` holds at EVERY health in this band,
+-- including zero.  The bottom edge the decision side needed is arithmetically
+-- absent here, so it is absent in the code, and that is why this arm carries the
+-- floor as its ONLY moved clause rather than as a moved floor plus a new one.
+-- Written as a CONSTANT band, never as a magnitude test on the sip: a magnitude
+-- test is the 'fieldsip' trap (see J.ShouldSipNotTpRecover's block).
+--
+-- ⭐⭐⭐ MEASURED ON THE CORPUS, NOT ARGUED, AND THE FIRST READING WAS WRONG.
+-- tests/_tpdeep_sweep.lua left a counter behind -- `stop_source 8`: eight frames
+-- inside the '回复状态' branch's own trigger, inside the deep band, that the
+-- decision side refuses because the bot has nothing to drink.  Eight frames with
+-- nothing in the bag is precisely what a SUPPLY arm is for, and taking that 8 as
+-- this lever's domain is the mistake this block exists to record as avoided:
+-- **8 says "no supply", it does not say "safe"**.  Driven (tests/_buydeep_sweep.lua),
+-- five of the eight are refused by clauses this arm keeps -- three carry
+-- ATTRIBUTED hero damage inside 3 seconds and two more have an enemy inside 1600
+-- with the attribution clause silent -- so the branch-trigger slice of this arm's
+-- domain is **3**, not 8.  Over the whole corpus (1021 live turbo hero frames,
+-- and the purchase site does not care about that branch): 29 frames sit below the
+-- floor, 12 of those carry nothing drinkable, and **6** of the 12 clear the ring,
+-- attribution and tower clauses.  6 is the domain.  Of those 6, three sit below
+-- 0.10 -- i.e. half of this arm's domain is exactly what a copied 0.10 bottom
+-- would have thrown away, which is why the arithmetic above had to be done rather
+-- than the sibling's constant copied.
+--
+-- ⭐⭐⭐⭐ WHY A SEPARATE FUNCTION THAT REPEATS CLAUSES, A FOURTH TIME.  The three
+-- shortcuts fail for the three reasons the 'buyband' / 'buytower' / 'buyring'
+-- blocks already record, and one of them is sharper here than for any of them:
+-- lowering the floor INSIDE J.IsFieldRegenSituation would move 'stayfield',
+-- 'stayfield2' and 'fieldbuy' on one arm -- the 'lanefix' bundle shape -- and
+-- unlike the ceiling or the ring it would also reach the HOLD side at a health
+-- where the tree's own comment says the escape retreat is correct, i.e. it would
+-- change hold behaviour in exactly the band where changing it is most dangerous.
+-- Putting a second id inside J.ShouldFieldBuyRegen puts it behind that function's
+-- own gate, so no single-arm wave could see it (the second form of the 'pullcad'
+-- trap, GH #542).  A floor ARGUMENT on the shared predicate re-baselines the
+-- seven files that parse its declaration (recorded in the 'buyband' block).
+--
+-- DISJOINTNESS IS AN INVERTED CLAUSE, exactly as it is for 'buytower' and
+-- 'buyring'.  All four sibling arms require `nHP >= 0.18` -- 'fieldbuy' through
+-- J.IsFieldRegenSituation, the other three in their own first band statement --
+-- and this one requires `nHP < 0.18`.  No isolation wave can credit this arm with
+-- a sibling's frames or a sibling with this arm's, and the sweep asserts all four
+-- overlaps are 0 rather than arguing it.
+--
+-- Condition (c): a salve is 100 gold for 400 health over 13 seconds drunk where
+-- the bot stands, against a fountain round trip the replay desk measured at a
+-- ~40 second median on its own corpus (GH #120) -- a fifth of a turbo game.  At
+-- 12% HP that trade is at its most valuable, not its most marginal: the bot is
+-- one creep wave from dying and the salve is the difference between staying on
+-- the map and spending a fifth of the game walking.  Standard advice is explicit
+-- both that unnecessary fountain trips are wasted time and that a salve is
+-- CANCELLED by enemy hero damage -- which is why the empty-1600-ring and
+-- attributed-damage clauses inherited below are the precondition for the purchase
+-- working at all rather than mere conservatism.
+--
+-- Honest bounds.  (1) What is measured is a PURCHASE PREDICATE turning true, not
+-- a trip home being cancelled: the nine engine clauses at the call site (stock,
+-- gold, stash, courier distance, empty slot) are not readable from a fixture, and
+-- neither is the trip.  (2) Gold is not networked into a .dem (GH #495), so
+-- `botGold >= GetItemCost` at the call site is unmeasurable here and the domain
+-- is the gold-blind superset of the live one -- the bound all four sibling arms
+-- carry.  (3) This buys a salve for a bot that may die before drinking it, and at
+-- this health that is likelier than for any sibling arm; the exposure is bounded
+-- at 100 gold and is the cheaper error than the ~40 second walk it replaces.
+-- (4) Like 'buyband', 'buytower' and 'buyring' it deliberately does NOT copy the
+-- gated 'fieldcreep' creep-damage veto: naming another candidate's id here would
+-- freeze this clause FALSE the day that id is promoted (the 'pullcad' trap in its
+-- first form).  Measured rather than waved at -- the sweep's
+-- `deep_with_creep_damage` counts the frames on which the two arms of the call
+-- site would disagree while 'fieldcreep' is armed.
+--
+-- Gated STANDALONE -- one id, never conjoined with another -- and turbo is asked
+-- structurally on the second line.  Unarmed it returns false on its first line,
+-- so the shipped purchase order is byte-identical.
+function J.ShouldFieldBuyRegenDeep( bot )
+	if not J.IsSoakCandidate( 'buydeep' ) then return false end
+	if not J.IsModeTurbo() then return false end
+
+	-- The lever, and it is this one line: the family's floor, INVERTED.  Spelt
+	-- INLINE rather than through a `local nHP`, and that is not style: the
+	-- two-line form is byte-identical to J.ShouldDeepSipNotTpRecover's band, whose
+	-- upper edge tools/agent/mutstand_tpdeep.sh anchors its M5 on -- so writing it
+	-- that way would have made a sibling stand's anchor AMBIGUOUS and aborted a
+	-- stand for a lever this one says nothing about.  Anchor uniqueness is part of
+	-- a lever's declaration, not a detail of somebody's regex (GH #550).  There is
+	-- no bottom edge, and that is the arithmetic in the block above, not an
+	-- omission.
+	if J.GetHP( bot ) >= 0.18 then return false end
+
+	-- The three surroundings clauses of J.IsFieldRegenSituation, in its own order
+	-- and with its own constants, kept in their SHIPPED direction: the only thing
+	-- this lever moves is the floor.  Duplicated rather than called, for the
+	-- reasons in the block above; tests/_buydeep_sweep.lua parses both copies and
+	-- fails the day either drifts.
+	if #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) > 0 then return false end
+
+	-- Attribution: recent hero damage counts only while its author is still in
+	-- reach.  Duplicated rather than routed through J.HasNearbyHeroDamager, whose
+	-- one-caller invariant tests/test_stayattr_global_ult.lua asserts by count.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) then
+		local hDamagers = J.GetNearbyHeroes( bot, 3000, true, BOT_MODE_NONE )
+		for _, hEnemy in pairs( hDamagers ) do
+			if J.IsValidHero( hEnemy )
+				and bot:WasRecentlyDamagedByHero( hEnemy, 3.0 )
+			then
+				return false
+			end
+		end
+	end
+
+	if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
+
+	-- The same conjunction all four siblings ask, spelt as a statement rather than
+	-- a returned negation so this line is its own anchor.
+	if J.HasFieldRegenSource( bot ) and J.IsFieldSipEnough( bot ) then
+		return false
+	end
+
+	return true
+end
+
 -- [itemtrip / GH #120] The OTHER end of the same "don't walk home" family, and
 -- the one nothing in this tree could speak on: the HEALTHY trip home.
 --

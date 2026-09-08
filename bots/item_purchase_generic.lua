@@ -830,8 +830,22 @@ function ItemPurchaseThink()
 	-- disjoint by construction; same standalone shape and same reason as the two arms
 	-- above (GH #542), and unarmed it returns false on its first line, so the shipped
 	-- purchase order is unchanged.
+	-- [buydeep, 2026-09-08] The fifth arm, and the last free clause of
+	-- J.IsFieldRegenSituation: its 0.18 FLOOR. That clause's own comment gives a
+	-- hold-side reason for it -- "below the floor the genuine escape retreat stands"
+	-- -- which does not transfer to a purchase: this arm cancels no retreat bid, it
+	-- only adds a salve, and a bot that retreats anyway arrives carrying it. The
+	-- decision-side lever in the same band ('tpdeep') needs a 0.10 bottom because a
+	-- 115-135 sip cannot lift a bot back over 0.18; a salve is 400, so that bottom
+	-- is arithmetically absent here and the floor is the ONLY moved clause. Inverted
+	-- rather than lowered, so the five arms stay disjoint by construction -- all four
+	-- siblings require nHP >= 0.18 (6 corpus frames, of which 3 are below 0.10, i.e.
+	-- half the domain a copied bottom would have discarded). Same standalone shape
+	-- and same reason as the three arms above (GH #542); unarmed it returns false on
+	-- its first line, so the shipped purchase order is unchanged.
 	if ( J.ShouldFieldBuyRegen(bot) or J.ShouldFieldBuyRegenHurt(bot)
-		or J.ShouldFieldBuyRegenTower(bot) or J.ShouldFieldBuyRegenRing(bot) )
+		or J.ShouldFieldBuyRegenTower(bot) or J.ShouldFieldBuyRegenRing(bot)
+		or J.ShouldFieldBuyRegenDeep(bot) )
 	and bot:IsAlive()
 	and bot:FindItemSlot('item_flask') < 0
 	and not IsThereHealingInStash(bot)

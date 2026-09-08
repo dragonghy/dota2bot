@@ -27,6 +27,64 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0BUYDEEP. **【2026-09-08T10:51Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+   认领依据 = 上一轮「下一格」第 (2) 项(`stop_source 8`)+ **OWNER_PRIORITIES P2**(供给侧,球在本组)。
+   工作流第 1 步扫到的唯一新 `[strategy]` issue **#622 是批测台提的一个问题**(它自己写着「本台不改协同组的 `bots/`」),
+   按 P4.4 作为**附带一条**结清,不当主体。产出 gated 候选 **`buydeep`**
+   (`J.ShouldFieldBuyRegenDeep` + `item_purchase_generic.lua` 购买点**第五条 OR 臂**,**未 armed**,P4.2 = FROZEN-HOLD)、
+   `tests/_buydeep_sweep.lua`、`tests/test_buydeep_purchase_floor.lua`(**17/17**)、
+   `tools/agent/mutstand_buydeep.sh`(**22 变异体:21 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
+   `state.json:buydeep_20260908` + `state.json:tprecov_bagsalve_identity_20260908`;
+   报告 `iterations/reports/strategy/20260908T105152Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 主判据:本轮的第一件产物是「对上一轮读数的一次更正」,而章程自己写下的警告兑现了。**
+   「下一格」点名 `stop_source 8` 时附了一句「8 只说明没补给,不说明安全,**不许**把 8 直接当成域」。
+   先定价:**8 帧里 5 帧被本臂原样继承的子句拒掉**(5 帧全部落在 1600 环内)⇒ **分支触发切片的域是 3,不是 8**。
+   ⛔ 而 `stop_source_attr 0` **是关于走法不是关于语料**:那 8 帧里**有 3 帧带已归因伤害**,但同时在环内,
+   前缀走把它们记到环名下 ⇒ 加一条**与顺序无关**的列 `stop_source_attr_any 3` 让刀口露出来(计量三条 (ii)/(iii));
+   变异台 **M21** 把它改成尊重顺序(3 塌回 0),**被抓**。
+   **⭐⭐ 缺陷是「写给 HOLD 侧的理由被一个什么都不取消的消费者继承」的第四个实例,也是最后一个。**
+   `J.IsFieldRegenSituation` 四条子句(地板/天花板/环/塔),三条已各有一条独立买臂
+   (`buyband`/`buytower`/`buyring`,均 2026-09-06),本轮补上**地板**。地板的注释自陈
+   「BELOW THE FLOOR THE GENUINE ESCAPE RETREAT STANDS」—— 那是关于**不取消撤退 bid** 的话,
+   而买大药不取消任何东西。域:1021 活帧 → 地板以下 **29** → 两手空空 **12** → 环挡 **6** / 归因挡 **4**
+   (`nosrc_attr_only 0`)/ 塔挡 **0**(反真空 `deep_with_any_tower 18`)⇒ **域 6**,
+   分区写成减法断言 `12 − 6 == 6`,且**两条独立路线相等**(驱动 `flips_buydeep 6` = 前缀走 `deep_domain 6`)。
+   钉帧 `f_181441_zuus_lowhp_limbo`(**fixture 名就是 `fieldregen` 引用的验收检测器 d23**):
+   12 级 zuus 214/1354 = **15.81%**,最近敌人 **2,016.8u**,世界里一座敌塔都没有,3 秒无伤害,
+   身上带一个**空瓶** ⇒ shipped 四臂全拒 —— **不是因为危险,也不是因为有补给,而是因为太残血**。
+   **⭐⭐⭐ 下沿的缺席是算术,而且只能结构钉。** 决策侧兄弟 `tpdeep` 带 0.10 下沿,理由是野外一口
+   115/85/135 **抬不回 0.18**;**大药是 400**(900–1400 血区间的 0.29–0.44)⇒ 处处能抬回,**下沿在这里
+   算术上不存在**。抄兄弟的常数会**丢掉域的一半**(6 帧里 3 帧在 0.10 以下)。⇒ 用 `DEEP_NO_LOW_EDGE`
+   **结构钉**(两种拼法都数),**不拿域计数当替身** —— 域计数是下一轮会 re-baseline 的,**缺席是下一轮会
+   「顺手补齐」的**。变异台 **M5** 就是这条,**被抓两次**(结构钉一次、0.096 那帧一次)。
+   **⭐⭐⭐⭐ 锚唯一性差点把账记到兄弟头上(GH #550)。** 地板本来自然写成家族通用的
+   `local nHP = ...` + `if nHP >= 0.18 then return false end`,而第二行与 `tpdeep` 的带上沿**逐字节相同**,
+   `mutstand_tpdeep.sh` 的 **M5 正锚在它上面**且**把歧义锚当整台失败** ⇒ 那样落地会让**一个与 `tpdeep`
+   毫无关系的改动整台中止 `tpdeep` 的台子,并显示在 `tpdeep` 名下**。改成 inline 单行(全文件 1 次),
+   并**在本文件里钉住**(`DEEP_FLOOR_INLINE` + `TPDEEP_BAND_LINE_COUNT == 1`)——
+   **让它在做这件事的地方变红,而不是在会被误归因的地方变红**。变异台 **M6**,**被抓**。
+   **⭐⭐⭐⭐⭐ 附带一条已结清:GH #622。** `J.HasFieldRegenSource` 在 `bagsalve` 未 armed 时对
+   `J.ShouldSipNotTpRecover` 的合取**是单位元,(A) additive-only ⇒ `tprecov` 不是共同 arm 原子,可单独入集**。
+   量出来的三条:`src_bag_more 15 / less 0`(内层单调不减)、**`tprecov_solo 238`(单独 armed 远不是 no-op)**、
+   `tprecov_more 10 / less 0`(只会更常否决回城 = 安全方向)。⛔ 附带更正:#622 引用的那条 trunk 红
+   **已由本组 `9ec01f60`(07:47Z)修好**,#622 开在那之前的树上。
+   **⚠️ 本轮自伤(GH #507 撕裂窗口,第二次)**:变异台在后台原地改写同一棵树时,我用临时探针读了新 helper 的域,
+   读回 `buydeep_solo 56` / `fire 282`(**含 hp = 1.0 的帧**)—— 那是 **M3「地板被取反」变异体**的读数。
+   **暴露它的不是纪律,是 6 和 56 对不上**;已在静止树上重跑(6 / 6 / 0,与 sweep 逐位一致)。
+   教训往前挪一格:**后台台子在跑时,任何读数的第一个问题是「这棵树现在是谁的」,而能问出这个问题的
+   是手里另有一个数可以对。**
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) 主体仍必须是一个 `bots/` 行为改动;
+   (2) **本轮量出来的缺口 = `nosrc_attr_only 0`**:本语料**零帧**被归因子句**单独**拒掉 ⇒ 归因子句在
+   **地板以下**这条带上**没有专属对照**,`stayattr` 那条「全局大招从 7.5k 外读成贴脸」的形状在这条带上
+   **既证不了也证伪不了**。**第一步是向录像组/语料侧要那一帧**(地板以下 + 两手空空 + 1600 环空 +
+   3 秒内被一个 3000 外的英雄打过),**不是先改代码**;
+   (3) **不要**去改共享地板(一次动 `stayfield`/`stayfield2`/`fieldbuy` 三家 = lanefix),**不要**回 `overchase`;
+   (4) ⛔ **`J.IsFieldRegenSituation` 的四条子句到本轮已经全部各自有臂**(地板 `buydeep` / 天花板 `buyband` /
+   环 `buyring` / 塔 `buytower`)⇒ **这条「一次反转一条子句」的矿脉挖完了**,下一轮**不要再去找第五条子句**,
+   那里没有了。】**
+
 0TPDEEP. **【2026-09-08T07:47Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
    认领依据 = 下面 0TPRECOV 的「下一格」逐条执行 + **OWNER_PRIORITIES P2**。产出 gated 候选 **`tpdeep`**
    (`J.ShouldDeepSipNotTpRecover` + 『回复状态』分支里紧挨着 `tprecov` 的第二个合取项,**未 armed**,
@@ -6651,6 +6709,52 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-08T10:51Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**;认领依据 = 上一轮「下一格」+ **P2**;
+  唯一新的 `[strategy]` issue **#622 是批测台提的一个问题**,按 P4.4 作为**附带一条**结清,不当主体)。
+  `J.IsFieldRegenSituation` 有四条子句决定供给侧能不能开口,**三条已各自被一条独立买臂反转过**
+  (`buyband` 天花板 / `buytower` 塔 / `buyring` 环,均 09-06),本轮补上**第四条也是最后一条:地板**。
+  地板的注释自陈「BELOW THE FLOOR THE GENUINE ESCAPE RETREAT STANDS」—— 一句关于**不取消撤退 bid** 的话,
+  而**买一瓶大药不取消任何东西**:12% 血买了药然后照样撤退的 bot,是**带着药**到的泉水。
+  ⇒ 新 gated **`buydeep`**(`J.ShouldFieldBuyRegenDeep`,standalone 一个 id,turbo 显式问,gate-first),
+  购买点**第五条 OR 臂**;**共享谓词一个字没动**(`SIT_NIDS 1` / `SIT_HAS_BUYDEEP 0`)。
+  ⭐ **本轮第一件产物是对上一轮读数的一次更正,而章程自己写下的警告兑现了**:
+  「下一格」点名 `stop_source 8` 并警告「8 只说明没补给,不说明安全」——
+  先定价,**8 帧里 5 帧被本臂原样继承的子句拒掉** ⇒ **分支触发切片的域是 3,不是 8**。
+  ⛔ 且 `stop_source_attr 0` **是关于走法不是关于语料**(那 8 帧里 3 帧带已归因伤害,但同时在环内,
+  被前缀走记到环名下)⇒ 加一条**与顺序无关**的 `stop_source_attr_any 3` 让刀口露出来;变异台 M21 抓这条。
+  域(全语料,购买点不关心哪条分支在出价):1021 活帧 → 地板以下 **29** → 两手空空 **12** →
+  环挡 **6** / 归因挡 **4**(`nosrc_attr_only 0`)/ 塔挡 **0**(反真空 `deep_with_any_tower 18`)
+  ⇒ **域 6**,分区写成减法断言 `12 − 6 == 6`,**两条独立路线相等**(`flips_buydeep 6` = `deep_domain 6`)。
+  钉帧 `f_181441_zuus_lowhp_limbo`(fixture 名就是 `fieldregen` 引用的验收检测器 d23):12 级 zuus
+  **214/1354 = 15.81%**,最近敌人 2,016.8u,世界里一座敌塔都没有,3 秒无伤害,身上一个**空瓶**。
+  ⭐⭐ **下沿的缺席是算术,只能结构钉**:兄弟 `tpdeep` 的 0.10 来自「一口 115/85/135 抬不回 0.18」,
+  **大药 400**(900–1400 血的 0.29–0.44)⇒ 处处抬得回;抄那个常数会**丢掉域的一半**(6 帧里 3 帧在 0.10 以下)。
+  用 `DEEP_NO_LOW_EDGE` 结构钉(两种拼法都数),**不拿域计数当替身**(上一轮 M6/M7 的教训);M5 被抓两次。
+  ⭐⭐⭐ **锚唯一性(GH #550)**:地板若写成家族通用的两行,第二行与 `tpdeep` 的带上沿**逐字节相同**,
+  而 `mutstand_tpdeep.sh` 的 M5 正锚在它上面且**把歧义锚当整台失败** ⇒ 会**整台中止兄弟的台子并显示在兄弟名下**。
+  改成 inline 单行并**在本文件里钉住**(`DEEP_FLOOR_INLINE` / `TPDEEP_BAND_LINE_COUNT == 1`)——
+  让它在**做这件事的地方**变红。M6 被抓。
+  `tests/test_buydeep_purchase_floor.lua` **17/17**;`tools/agent/mutstand_buydeep.sh`
+  **22 变异体:21 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**;
+  `state.json` 新增 `buydeep_20260908`。
+  ⭐⭐⭐⭐ **附带一条已结清 —— GH #622**:`J.HasFieldRegenSource` 在 `bagsalve` 未 armed 时,
+  对 `J.ShouldSipNotTpRecover` 的合取**是单位元,(A) additive-only ⇒ `tprecov` 不是共同 arm 原子,
+  解冻后可单独入集、单独 arm**。量出来的三条:`src_bag_more 15 / less 0`(内层单调不减)、
+  **`tprecov_solo 238`(单独 armed 远不是 no-op)**、`tprecov_more 10 / less 0`(只会更常否决回城 = 安全方向)。
+  结论写进 `state.json:tprecov_bagsalve_identity_20260908`。⛔ 附带更正:#622 引用的那条 trunk 红
+  **已由本组 `9ec01f60`(07:47Z)修好**,#622 开在那之前的树上。
+  ⚠️ **本轮自伤(GH #507 撕裂窗口,第二次)**:变异台在后台**原地改写同一棵树**时,临时探针读回
+  `buydeep_solo 56` / `fire 282`(含 hp = 1.0 的帧)—— 那是 **M3「地板被取反」变异体**的读数。
+  **暴露它的不是纪律,是 6 和 56 对不上**;已在静止树上重跑(6 / 6 / 0,与 sweep 逐位一致),
+  报告里每一个数都来自静止树。教训:**后台台子在跑时,任何读数的第一个问题是「这棵树现在是谁的」。**
+  `buydeep` **gated 未 armed,P4.2 冻结期按 FROZEN-HOLD,本轮不申请入集**;
+  `queue.json` / `test_set.md` / armed 串一字未动。未花 AWS 钱。
+  开工自检 `SELFCHECK_EXIT=3`(findings = cadence / queue-rulings / owed-executions,**三条都不归本组**;
+  另有 `UNCERTIFIABLE (exit 2) trunk-red(python)` —— 那条腿本容器 120s 内没跑完,**没跑成不是通过**);
+  自检**第一次调用被脚本自己拒了**(stdout 是管道,证据纪律 3,脚本自记第 6 次复发),
+  且那一遍**与本轮改树并发**,其 trunk 读数不予采信 —— 基线改在 **HEAD 的 detached worktree** 上并行跑。
+  详见 `iterations/reports/strategy/20260908T105152Z.md`。
 
 - 2026-09-08T07:47Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**;认领依据 = 上一轮「下一格」+ **P2**)。
   上一轮自己量出来的 `stop_floor 29` 就是本轮的立案句:共享 **0.18** 地板挡掉『回复状态』31 帧触发里的 29 帧

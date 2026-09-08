@@ -486,6 +486,30 @@ local PINNED = {
     -- 'fieldcreep' disagreement at 1 of the 10 domain frames.
     "buyring | J.ShouldFieldBuyRegenRing | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                  -- A
     "buyring | J.ShouldFieldBuyRegenRing | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                     -- I
+    -- [buydeep 20260908] The FIFTH arm of that same purchase site -- the one that
+    -- inverts the family's 0.18 FLOOR -- and its two rows are the same two a fourth
+    -- time, re-read against THIS function's own clause order rather than copied:
+    --   (A) J.HasFieldRegenSource under 'bagsalve' -- un-armed the callee skips its
+    --       backpack loop and returns its byte-for-byte SHIPPED main-slot answer,
+    --       not a frozen constant, so arming 'buydeep' alone measures 'buydeep'.
+    --       Arming 'bagsalve' can only make the callee MORE true, i.e. can only
+    --       REMOVE buys -- additive in the safe direction. Driven rather than
+    --       argued: tests/_buydeep_sweep.lua reads `flip_true_to_false` 0 and
+    --       `arm_leak` 0 over the same live corpus with a one-id-wide stub.
+    --   (I) J.IsFieldSipEnough under 'fieldsip' -- un-armed it is the literal
+    --       `true`. Spelt as a STATEMENT like 'buyring' above, for the same
+    --       anchor-uniqueness reason (GH #550); the identity argument is unchanged.
+    -- ⭐ THE ABSENT ROW IS INFORMATIVE FOR THE FOURTH TIME, and for the same
+    -- reason: no (P) row for J.IsFieldRegenSituation under 'fieldcreep', because
+    -- this function does not CALL that predicate -- it repeats three of its clauses
+    -- inline and inverts the fourth (the floor). Copying the sibling's gated creep
+    -- veto would name another candidate's id in this body and freeze that clause
+    -- FALSE the day it is promoted (the pullcad trap). The cost is a duplication
+    -- that can drift, and it is paid where it can be seen: every constant in both
+    -- copies is parsed and compared in tests/test_buydeep_purchase_floor.lua, which
+    -- also pins the width of the 'fieldcreep' disagreement on this arm's domain.
+    "buydeep | J.ShouldFieldBuyRegenDeep | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                  -- A
+    "buydeep | J.ShouldFieldBuyRegenDeep | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                     -- I
     -- [staytower 20260906] The FIFTH id joined this row, and it is the first one
     -- on it that SUBTRACTS.  Classification does not move -- still (P), by the
     -- same short-circuit argument the four siblings use, and a stronger form of
@@ -612,6 +636,13 @@ local PINNED = {
     -- identity element of the `or` it joined -- so the shipped purchase order is
     -- byte-identical and arming either outer id alone still measures that id.
     "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenRing | buyring | bots/item_purchase_generic.lua",                   -- W
+    -- [buydeep 20260908] The sixth row on the same Think, (W) for the same reason
+    -- as the four above it: 'fieldregen'/'tpdeathbuy' guard OTHER blocks of this
+    -- function, and this predicate is a new OR arm on the 'fieldbuy' block.
+    -- Un-armed J.ShouldFieldBuyRegenDeep returns false on its first line -- the
+    -- identity element of the `or` it joined -- so the shipped purchase order is
+    -- byte-identical and arming either outer id alone still measures that id.
+    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenDeep | buydeep | bots/item_purchase_generic.lua",                   -- W
     "fieldsip | J.IsFieldSipEnough | J.FieldRegenSipValue | bagsalve | bots/FunLib/jmz_func.lua",                                         -- A
     "l1kite | J.ShouldCounterTradeKite | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                           -- P
     "l1trade | J.ShouldInitiateLaneKill | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                          -- P
