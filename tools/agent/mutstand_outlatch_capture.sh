@@ -115,9 +115,13 @@ mutate "M2 unclosed channel counted as aborted" \
 # M3 bake the FALLBACK threshold in, so --complete-cs stops meaning anything
 # on a dump with no `value` field and the band in the report becomes
 # unverifiable.
+# ⚠️ 2026-09-08: this anchor moved when the comparison grew CS_EPS, and the
+# stand said so (`ANCHOR MISSING`) instead of quietly measuring nothing --
+# which is the whole reason that branch exists.  If you touch the fallback
+# comparison again, re-read this line before trusting the run.
 mutate "M3 fallback threshold hardcoded" \
-	'                    complete, via = caster_s >= complete_cs, "caster_s"' \
-	'                    complete, via = caster_s >= DEFAULT_COMPLETE_CS, "caster_s"'
+	'                    complete, via = caster_s >= complete_cs - CS_EPS, "caster_s"' \
+	'                    complete, via = caster_s >= DEFAULT_COMPLETE_CS - CS_EPS, "caster_s"'
 
 # M4 file an unknown hero under 'base'.  Silently moves casts onto the leg
 # that did not make them.
@@ -284,6 +288,52 @@ mutate "M22 flip credited to the earliest group in range" \
 mutate "M20 agreement table drops half the off-diagonal" \
 	'    crit["disagree"] = crit["zero_noflip"] + crit["nonzero_flip"]' \
 	'    crit["disagree"] = crit["zero_noflip"]'
+
+# ---------------------------------------------------------------- 2026-09-08
+# The two W55 root causes (selfcheck section 13).  Both are defects of the
+# THRESHOLD QUANTITY -- the half that decided nothing on W55 because the
+# criterion carried the verdict -- which is exactly why they went four rounds
+# with corpus evidence and no pin.
+
+# M23 drop the tolerance from the threshold comparison, i.e. the code as it
+# stood through W55.  A group whose exact caster-second value IS the threshold
+# then reads below it, because `caster_s` sums differences of dump timestamps
+# (1449.5 - 1443.8 = 5.699999999999818) and not the tidy decimals a hand-written
+# case would use.  This is root cause 甲, and it produced 1 of the 3 misfiles.
+mutate "M23 threshold comparison loses its tolerance (group cs_complete)" \
+	'                    "cs_complete": caster_s >= complete_cs - CS_EPS,' \
+	'                    "cs_complete": caster_s >= complete_cs,'
+
+# M23b the same removal on verify_floor's side.  The group table can read
+# right while the MISFILE lists -- the numbers GH #609's acceptance is scored
+# on -- still put the exact-equality group in the aborted half.
+mutate "M23b tolerance dropped in verify_floor's misfile split" \
+	'    mis_lo = [grp for grp in produced if grp["caster_s"] < complete_cs - CS_EPS]' \
+	'    mis_lo = [grp for grp in produced if grp["caster_s"] < complete_cs]'
+
+# M23c the opposite failure: an epsilon big enough to swallow a real 0.1 s dump
+# step.  That is not a tolerance, it is the threshold moving to 5.7 without
+# saying so -- the direction that manufactures captures.
+mutate "M23c tolerance widened past the dump's own resolution" \
+	'CS_EPS = 1e-9' \
+	'CS_EPS = 0.15'
+
+# M24 count every member as a caster, including the 0.0 s ADD+REMOVE pair the
+# engine hands a hero standing in the radius on the frame the bar fills.  This
+# is root cause 乙: it made 2 of W55's 3 "multi-caster misfiles" out of heroes
+# who never channelled, and it reads as a defect in the GROUPING (the expensive
+# thing to go hunting for) rather than in the counter.
+mutate "M24 a 0.0s member counts as a caster" \
+	'                    "n_casters": sum(1 for m in members if m["t1"] > m["t0"]),' \
+	'                    "n_casters": len(members),'
+
+# M24b the mirror: drop zero-length members from the count of MEMBERS too.  The
+# bar's membership is a different question from its casters (10m/10n pin that
+# the hitch-hiker belongs to the bar and is not an abort), and collapsing the
+# two loses the ability to say "one caster, two members" at all.
+mutate "M24b membership count collapses onto the caster count" \
+	'"caster_s": caster_s, "n": len(members),' \
+	'"caster_s": caster_s, "n": sum(1 for m in members if m["t1"] > m["t0"]),'
 
 restore
 echo "=== restore verification ==="

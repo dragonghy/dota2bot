@@ -144,6 +144,19 @@ CAPTURE_MODIFIER = "modifier_watch_tower_capturing"
 WATCH_TOWER = "watch_tower"
 # Caster-seconds, not seconds.  See the group-property note in the docstring.
 DEFAULT_COMPLETE_CS = 5.8
+# Tolerance for the threshold comparison (2026-09-08, W55 root cause 甲).
+# `caster_s` is a sum of DIFFERENCES OF DUMP TIMESTAMPS, so a group whose exact
+# value is the threshold need not compare >= to it: on
+# `c16294/20260908_033606_slot8` jakiro held 1443.8-1449.5 and ogre_magi joined
+# 1449.5-1449.6, i.e. 5.7 + 0.1 = 5.8 exactly, and the float sum is
+# 5.7999999999999545 -- short by 4.5e-14, filed as a misfile against a 5.8
+# threshold.  (The literal `5.7 + 0.1` is exactly 5.8 in binary64; it is
+# `1449.5 - 1443.8 = 5.699999999999818` that loses it, which is why writing the
+# constants by hand does not reproduce the defect.)  1e-9 is ~1e3 times larger
+# than the worst error these magnitudes can accumulate and ~1e8 times smaller
+# than the dump's own 0.1 s timestamp resolution, so it cannot move a group
+# whose true value differs from the threshold by anything the dump can express.
+CS_EPS = 1e-9
 # Two attempts by the same hero separated by less than this are one visit to
 # the outpost.  Episode grouping only shapes the narrative rows; the strata
 # table below is computed from raw attempts and does not depend on it.
@@ -259,7 +272,7 @@ def read_game(timeline, armed_team, complete_cs=DEFAULT_COMPLETE_CS):
                     # No value anywhere in this group: an older dump.  Fall
                     # back to the threshold and SAY SO, so a fallback reading
                     # is never counted as a `value` reading downstream.
-                    complete, via = caster_s >= complete_cs, "caster_s"
+                    complete, via = caster_s >= complete_cs - CS_EPS, "caster_s"
                 else:
                     complete, via = removed_zero, "value"
                 for m in members:
@@ -270,9 +283,22 @@ def read_game(timeline, armed_team, complete_cs=DEFAULT_COMPLETE_CS):
                 groups.append({
                     "outpost": key if isinstance(key, str) else "?unresolved",
                     "t0": t0, "t1": t, "caster_s": caster_s, "n": len(members),
+                    # 2026-09-08, W55 root cause 乙.  `n` counts MEMBERS; a
+                    # member can be 0.0 s long, because on the frame the bar
+                    # fills the engine hands a hero who just stepped inside the
+                    # radius an ADD and a REMOVE(value=0) at the same
+                    # timestamp.  Such a member bought NOTHING (it adds 0.0 to
+                    # the integral) yet it turns `n` from 1 into 2, so a reader
+                    # asking GH #609's question -- "are the misfiled groups
+                    # multi-caster?" -- gets a yes off a hero who never
+                    # channelled.  Both numbers are carried: `n` is the
+                    # membership of the bar (10m/10n keep the zero-length
+                    # member inside it, which is correct), `n_casters` is how
+                    # many members actually contributed time.
+                    "n_casters": sum(1 for m in members if m["t1"] > m["t0"]),
                     "complete": complete, "complete_via": via,
                     "removed_zero": removed_zero, "remove_values": vals,
-                    "cs_complete": caster_s >= complete_cs,
+                    "cs_complete": caster_s >= complete_cs - CS_EPS,
                     "actors": [m["actor"] for m in members],
                 })
                 members = []
@@ -381,8 +407,12 @@ def verify_floor(games, complete_cs=DEFAULT_COMPLETE_CS, window_s=6.0):
     # calls aborted that did -- either is the threshold disagreeing with the
     # game.  Both halves are kept as GROUPS too, so a caller can ask the
     # question GH #609 turned on: are any of the survivors multi-caster?
-    mis_hi = [grp for grp in no_flip if grp["caster_s"] >= complete_cs]
-    mis_lo = [grp for grp in produced if grp["caster_s"] < complete_cs]
+    # ⚠️ Both comparisons carry CS_EPS, and they must carry the SAME one: a
+    # tolerant `>=` with a bare `<` leaves a group whose value equals the
+    # threshold in NEITHER half (it would vanish from both misfile lists while
+    # still being a group), and the reverse puts it in BOTH.
+    mis_hi = [grp for grp in no_flip if grp["caster_s"] >= complete_cs - CS_EPS]
+    mis_lo = [grp for grp in produced if grp["caster_s"] < complete_cs - CS_EPS]
     # The criterion actually in use (`MODIFIER_REMOVE.value`, threshold only as
     # a fallback) against the same ground truth, as a 2x2 -- the shape that
     # makes "it agrees" a counted claim instead of an adjective.  Groups whose
@@ -839,6 +869,68 @@ def selfcheck():
        v["criterion"]["disagree"] == [])
     ck("12s and the flip is not also an orphan", v["orphan_flips"] == [])
 
+    # ------------------------------------------------------------ 2026-09-08
+    # 13. THE TWO ROOT CAUSES BEHIND W55's THREE MULTI-CASTER MISFILES.  Both
+    #     were defects of the THRESHOLD QUANTITY, not of the criterion (which
+    #     read those same three groups right, 3/3).  Until this section they
+    #     had corpus evidence and no pin.
+    #
+    # 13a 甲 -- BINARY FLOAT.  `caster_s` sums differences of dump timestamps,
+    #     so a group whose exact value IS the threshold can compare below it.
+    #     Real frames (`c16294/20260908_033606_slot8`): jakiro 1443.8-1449.5
+    #     (5.7) and ogre_magi joining for the last 1449.5-1449.6 (0.1) = 5.8
+    #     exactly, summed as 5.7999999999999545.
+    #     ⚠️ The first line is not decoration: it is what makes the tolerance
+    #     load-bearing.  Without it a reader can "fix" 13b by rounding the
+    #     inputs and this section still passes while the defect is back.
+    R_T0, R_T1, R_T2 = 1443.8, 1449.5, 1449.6
+    raw = (R_T1 - R_T0) + (R_T2 - R_T1)
+    ck("13a the float sum of the real frames is BELOW the bare constant",
+       raw < DEFAULT_COMPLETE_CS and abs(raw - DEFAULT_COMPLETE_CS) < 1e-12)
+    r = read_game(tl(chan(R_T0, R_T1, "h_a", NORTH)
+                     + chan(R_T1, R_T2, "h_b", NORTH)), RADIANT)
+    g = r["groups"][0]
+    ck("13b a group whose exact value IS the threshold reads complete",
+       len(r["groups"]) == 1 and g["cs_complete"] is True and g["complete"] is True)
+    b2 = [{"t": 1449.0, "name": WATCH_TOWER, "x": 1, "y": 1, "team": 2,
+           "hp": 1, "hp_pct": 1, "alive": True},
+          {"t": 1452.0, "name": WATCH_TOWER, "x": 1, "y": 1, "team": 3,
+           "hp": 1, "hp_pct": 1, "alive": True}]
+    v = verify_floor([{"game": "g", "result": read_game(
+        tl(chan(R_T0, R_T1, "h_a", NORTH) + chan(R_T1, R_T2, "h_b", NORTH),
+           buildings=b2), RADIANT)}])
+    ck("13c and it is NOT a misfile against the ground-truth flip",
+       v["misfiled"] == ([], []) and len(v["produced_groups"]) == 1)
+
+    # 13d THE TOLERANCE MUST NOT SWALLOW A REAL STEP.  The dump's resolution is
+    #     0.1 s; a group one step short is short, and an epsilon big enough to
+    #     hide that would be the threshold quietly moving to 5.7.
+    r = read_game(tl(chan(100.0, 105.7, "h_a", NORTH)), RADIANT)
+    ck("13d one 0.1s dump step below the threshold is still incomplete",
+       r["groups"][0]["cs_complete"] is False
+       and r["groups"][0]["complete"] is False)
+
+    # 13e 乙 -- THE 0.0-SECOND "CASTER".  On the frame the bar fills, a hero who
+    #     has just stepped inside the radius gets an ADD and a REMOVE(value=0)
+    #     at the same timestamp (`8c8ccc/20260908_033611_slot4`: luna held 5.8 s
+    #     alone, zuus arrived at 1449.5 exactly).  He belongs to the bar (10m),
+    #     he contributes 0.0 caster-seconds, and he must not be counted as a
+    #     second CASTER -- that is the number GH #609's acceptance (2) reads.
+    r = read_game(tl(chanv(1443.7, 1449.5, "h_a", NORTH, 0)
+                     + chanv(1449.5, 1449.5, "h_b", NORTH, 0)), RADIANT)
+    g = r["groups"][0]
+    ck("13e the 0.0s hitch-hiker is a MEMBER of the bar", g["n"] == 2)
+    ck("13f but not a caster: he bought 0.0 caster-seconds", g["n_casters"] == 1)
+    ck("13g and he did not move the integral",
+       abs(g["caster_s"] - 5.8) < 1e-6)
+
+    # 13h THE CONTROL.  A group with two members who BOTH channelled reads two
+    #     casters -- without this, 13f passes on a reader that always says 1.
+    r = read_game(tl(chan(100.0, 103.0, "h_a", NORTH)
+                     + chan(100.0, 103.0, "h_b", NORTH)), RADIANT)
+    ck("13h a real two-caster group reads n_casters == 2",
+       r["groups"][0]["n"] == 2 and r["groups"][0]["n_casters"] == 2)
+
     print("SELFCHECK %d checks, %d failed" % (checks, len(failures)))
     for f in failures:
         print("  FAIL", f)
@@ -965,12 +1057,22 @@ def main():
     # GH #609's acceptance (2): after the group rule, no MULTI-CASTER group may
     # sit in the aborted-but-flipped half.  Printed unconditionally, including
     # the zero, so the reading is a measurement and not an absence of output.
-    mis_lo_multi = [grp for grp in mis_lo if grp["n"] > 1]
+    # ⚠️ 2026-09-08: read off `n_casters`, not `n`.  A member can be 0.0 s long
+    # (the engine's ADD+REMOVE pair on the frame the bar fills), and counting
+    # him made 2 of W55's 3 "multi-caster misfiles" out of a hero who never
+    # channelled.  Both numbers are printed so this is a stated change of
+    # quantity, not a silently kinder count.
+    mis_lo_multi = [grp for grp in mis_lo if grp["n_casters"] > 1]
+    mis_lo_members = [grp for grp in mis_lo if grp["n"] > 1]
     print("  of those, multi-caster groups: %d  (GH #609 acceptance (2): must "
-          "be 0)" % len(mis_lo_multi))
-    for grp in mis_lo_multi:
-        print("    MULTI-CASTER MISFILE %s t=%.1f cs=%.1f n=%d %s"
-              % (grp["outpost"], grp["t1"], grp["caster_s"], grp["n"],
+          "be 0) -- by members, incl. 0.0s hitch-hikers: %d"
+          % (len(mis_lo_multi), len(mis_lo_members)))
+    for grp in mis_lo_members:
+        print("    %s %s t=%.1f cs=%.1f n=%d casters=%d %s"
+              % ("MULTI-CASTER MISFILE" if grp["n_casters"] > 1
+                 else "misfile w/ 0.0s member",
+                 grp["outpost"], grp["t1"], grp["caster_s"], grp["n"],
+                 grp["n_casters"],
                  ",".join(a.replace("npc_dota_hero_", "") for a in grp["actors"])))
 
     print()

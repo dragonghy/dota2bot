@@ -13224,3 +13224,57 @@
     09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
     #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`。
   - 完整报告:`iterations/reports/replay-check/20260908T064838Z.md`
+- **2026-09-08T09:48Z**:**上一轮点名的「下一轮第一件事 (2)」落地了 —— W55 那两条根因现在有 pin,
+  而且两条都在变异台上被证明能红。** 零 EC2、零 CE、零付费 AWS(只读 S3);**`bots/`、`game/` 一行未改**,
+  改动只在 `tools/batch_test/behavioral/outlatch_capture.py` 与
+  `tools/agent/mutstand_outlatch_capture.sh`(**本组自己的量具,棒不出组**)。
+  - **吞吐**:宽扫 **8/8 局**(W56 家族 `6aeea8c` 四个 run,四个 `sweep_complete.json` 各
+    `exit_code=0`,`dem_found=8 skipped=6 swept=2 unparseable=0`),**深查 6 局**(下限 6)。
+  - **⛔ 这份快照的形状要先读**:W56 **09:21:31Z 起飞**,扫的是 **09:42–09:45Z 的落盘快照**,
+    而落盘的 8 局 **`side` 全是 `radiant`** ⇒ `ab` 8 局 / `ba` **0 局**,四个 (分层×腿) 格空两格。
+    **按 4(i-a)/(i-b),这份语料上任何 armed−baseline 计数读数都不成立**(armed=天辉、baseline=夜魇,
+    腿与侧完全共线)。**8 局不是 W56 全集**,下一轮重扫作废并取代。
+  - **⭐ 两条根因的 pin**(`--selfcheck` §13,**74 → 82 checks, 0 failed**):
+    (甲)**`caster_s` 是时间戳之差的和** —— `1449.5 − 1443.8 = 5.699999999999818`,
+    真值恰为 5.8 的组读成 5.7999999999999545(短 4.5e-14)。⚠️ **`5.7 + 0.1` 在 binary64 里恰好是 5.8,
+    所以拿漂亮常数手写的用例复现不出它**(§13a 第一条断言钉的就是这句)。修法 `CS_EPS = 1e-9`,
+    **`cs_complete` / fallback / `verify_floor` 的 mis_hi+mis_lo 四处同一个 eps**(只给一侧会让边界组两边都不落或都落)。
+    (乙)**`n` 数的是成员不是施法者** —— 填满那一帧引擎给半径内刚起手的英雄补 `ADD`+`REMOVE(value=0)`,
+    0.0 秒成员把 `n` 1→2。新增 **`n_casters`**(`t1>t0` 的成员数),`n` 原样保留(10m/10n 仍对),
+    报告行**两个数都打**、标签分开 ⇒ 是换了量,不是悄悄变宽容。
+  - **变异台 `MUTSTAND_EXIT=0` 28 CAUGHT / 0 SURVIVED**(新增 M23/M23b/M23c/M24/M24b:去容差×2、
+    容差放大到 0.15 吞掉 0.1s 台阶、0.0 秒成员算施法者、成员数塌成施法者数)。
+    ⛔ **过程中 `M3` 打了 `ANCHOR MISSING`**(CS_EPS 改掉了它锚的那一行,整轮当场判 27/1)——
+    **上一轮怕的 `M5 ANCHOR MISSING` 那一族,区别是这次它喊了出来而不是静默量空气**;已改锚 + 留提醒。
+  - ```
+    VERIFY id=cmqreach verdict=INDETERMINATE episodes=61
+    ```
+    **不是 SILENT,也不是样本量问题**:(1) cell (1) **结构性不可测**(战斗日志无施法坐标 +
+    dumper 丢小兵 DAMAGE ⇒ 对着兵线的 nova 无从重建落点);(2) cell (2) 是**侧偏未消除的计数**,
+    而本轮**只有一个分层**(armed gap 44:walk 24/stand 9/away 11;baseline gap 17:7/5/5,
+    但 armed=天辉、baseline=夜魇)⇒ 4(i-b) 禁止读成 armed−baseline。
+    ⇒ 条件 (a) **买不到这条 dump 上**,与 `outlatch`(#623)、`campbind`(§FX)**同型:要走 fixture**。
+    **`outlatch` 本轮没有买第六次**(#623 仍零评论)⇒ **不写它的 VERIFY 行**,重复报同一结论正是上一轮明令禁止的。
+  - **⭐ 逐帧买到的量具缺陷(GH #625)**:`8ef6e7/20260908_092326_slot7`,CM **t=1519.3 用 `item_tpscroll`**
+    (`modifier_teleporting` 1519.3→1522.3),gap 帧 **t=1521.4 正落在这条 TP 通道内部**,
+    位移 **10,387u / 3.0s ≈ 3,462 u/s**(移速 ~300)⇒ `movement()` 把它打成 `away d=−9779`。
+    两句可迁移的:(i) TP 帧**只能落进 `away`,不可能伪造 `stand`(引擎拒单)**⇒ 方向严格保守;
+    (ii) 更根本的是**域定义漏了一个状态** —— 通道帧上那条 creep AoE 分支根本不该被算进域。
+    本轮**不改它**(同一工作单元已改过另一件量具,且这条要连 selfcheck + 变异台一起做)。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`;`SWEEP_*_EXIT=0` ×4;`OLC_SELFCHECK_EXIT=0` **82/0**;
+    `LIVENESS_EXIT=0` **25/0**;`MUTSTAND_EXIT=0` **28/0**(restore byte-for-byte);
+    `CMQ_SELFCHECK_EXIT=0` **10/10**;`OLC_W56_EXIT/CMQ_W56_EXIT/CMQ_FRAMES_EXIT=0`;`ARM_EXIT=0`。
+    ⛔ **证据纪律 3 第五十六次踩,又是当轮第一条命令**(开工自检带 `| tail -40`,脚本自拒
+    `SELFCHECK_EXIT=2 REFUSED`,harness 报的 `EXIT=0` 是 `tail` 的);**第七次附议给它独有退出码或 wrapper**。
+    ⚠️ **第三十四次登记它在本容器不是「约 20s」**(>19 分钟仍在最后一条 Lua 腿上);
+    python 腿逐字 `49 checks, 0 failures, 9 uncertified`(5a0/5a/5a2/5b/5c/5d/5e/5f/5g 全因 120s 预算耗尽,
+    **没跑成不是通过**)⇒ **Lua 那一侧本轮既不声称干净也不声称红**。
+    **铁律 6**:本轮零 Lua 改动;静态半随 `git push` 由 `.githooks/pre-push` 自跑;动态半(GH #124)**不跑也不声称**。
+  - **下一轮第一件事**:(1) `cmqreach_domain.py` 的 TP/通道守卫(#625),**同一工作单元内连变异体一起**;
+    (2) W56 全波重扫,两个分层齐了才谈 armed−baseline;(3) `outlatch` 继续不买第六次,等 #623;(4) 深查维持 6 局。
+  - **存量顺延**:`campgrade` 第十八轮 / 61-id 家族 W49 两笔条件 (a);`tpreach_domain.py` 补 `by_seed`
+    (**已连欠十九轮**);`roshdist` 的 BUGGY(77)交总监;09-07T12:59Z §3.4 那一帧钉 fixture;F2/GH #530;
+    `--analysis-dir` 基名碰撞即拒绝(GH #529);`campbind` 条件 (a) 改走 fixture;#477 重 dump 是否还需请总监裁;
+    09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
+    #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`。
+  - 完整报告:`iterations/reports/replay-check/20260908T094829Z.md`
