@@ -39,7 +39,8 @@ cd "$(dirname "$0")/.." 2>/dev/null || true
 
 if [ "${RULE6_BYPASS:-}" = "1" ]; then
     printf 'RULE6_BYPASS=1 -- the static gate was SKIPPED, not passed.\n'
-    printf '  This push carries an UNCHECKED iron rule 6 static half. Say so in your report.\n'
+    printf '  This push carries an UNCHECKED iron rule 6 static half (Lua luacheck\n'
+    printf '  AND the fast python ratchets, GH #616). Say so in your report.\n'
     exit 0
 fi
 
@@ -47,7 +48,7 @@ bash tools/agent/luacheck_gate.sh
 rc=$?
 
 case "$rc" in
-    0) exit 0 ;;
+    0) : ;;
     3)
         printf 'PUSH REFUSED -- iron rule 6 static half is RED (see the warnings above).\n'
         printf '  Fix them, or push anyway with:  RULE6_BYPASS=1 git push ...\n'
@@ -63,6 +64,47 @@ case "$rc" in
         # measured what unlanded work costs).
         printf 'PUSH REFUSED -- iron rule 6 static half could NOT RUN (gate exit %d).\n' "$rc"
         printf '  That is not a pass. Buy it (apt-get install -y lua-check) or push with:\n'
+        printf '    RULE6_BYPASS=1 git push ...   (and record the bypass in your report)\n'
+        exit 1
+        ;;
+esac
+
+# ---------------------------------------------------------------------------
+# The FAST python ratchets (GH #616, director ruling 2026-09-08).
+#
+# Everything above this line is the LUA static half.  The python ratchets were
+# in no push gate at all, so the only leg that ever ran them was the director's
+# 开工自检 -- one stream out of five, every 2h.  Measured cost of that: a red
+# sat on `main` ~2h (09-07 `test_bots_walk_farm_only.py`), ~20min (09-08
+# `test_mutstand_restore_trap.py`), and 09-05 read SEVEN at once -- each time
+# with the stream that tripped it already gone.  The ratchets were working;
+# what was missing was the feedback reaching the author.
+#
+# Scope is the fast ones only.  `tests/run_py_tests.sh` carries legs like
+# `test_selfcheck_lua_leg.py` (120s budget, GH #358) and stays where it is.
+# Membership is decided by MEASURED SECONDS in tools/agent/py_gate_manifest.json,
+# never by filename -- a name-based selector is the defect shape this repo has
+# paid for repeatedly (a detector that knows one spelling calls the others
+# absent).  Regenerate with:  python3 tools/agent/py_gate_measure.py
+#
+# Same 0/2/3 vocabulary, same refusal on BOTH 2 and 3, as the Lua half.
+# ---------------------------------------------------------------------------
+python3 tools/agent/py_gate.py
+prc=$?
+
+case "$prc" in
+    0) exit 0 ;;
+    3)
+        printf 'PUSH REFUSED -- iron rule 6 python half is RED (see the FAIL lines above).\n'
+        printf '  If the named test is not about your change, the red was ALREADY on trunk:\n'
+        printf '  say so in your report and tell the owning stream (that notice is the whole\n'
+        printf '  point of GH #616 -- before this, nobody but the director ever saw it).\n'
+        printf '  Fix them, or push anyway with:  RULE6_BYPASS=1 git push ...\n'
+        exit 1
+        ;;
+    *)
+        printf 'PUSH REFUSED -- iron rule 6 python half could NOT RUN (gate exit %d).\n' "$prc"
+        printf '  That is not a pass. See the lines above, or push with:\n'
         printf '    RULE6_BYPASS=1 git push ...   (and record the bypass in your report)\n'
         exit 1
         ;;

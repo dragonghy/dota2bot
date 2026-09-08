@@ -297,6 +297,24 @@
         "path": "iterations/reports/replay-check/a_evidence_campbind.md"
       },
       "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句 —— 两条出路,任一条都算完成,而且必须二选一说清是哪条**:(甲) **fixture 路成了**:该报告里出现一个新的 `tests/fixtures/` 帧(源 `20260904_125801_slot6` spirit_breaker,t≈330.7 与 t≈334.7)+ 一条断言 `J.GetCampPullPokeTarget` 在该帧上返回的**计划营地**与 `tNeut[1]` 的**最近营地**是**不同**的箱子 + 一条 `VERIFY id=campbind verdict=<WORKING|BUGGY>` 行;(乙) **语料取不回来**:该报告逐字写出「W46 `.dem` 不可恢复」及其核法(S3 列举的裸读输出),此时按 §FX.5 第 3 条**当场转永久退集**(`DOMAIN-NOT-REACHED`),**不是继续欠着**。⛔ **明确拒收的一种产物**:一份「在例行波语料上重跑 `campbind_poke.py` 又报 0」的报告 —— 那正是本裁定判定买不到的东西,再买一次不构成 (a),也不构成 (乙)。"
+    },
+    {
+      "id": "w55_record_launched_at_and_gate_iv_inputs",
+      "issue": "GH #<ISSUE> (本轮开的 [batch]);根因语境 GH #616(python ratchet 不在任何 push 闸里)",
+      "ruling": "总监 2026-09-08T0x:xxZ:`W55_wave.json` 的四台机器 `launched_at` 全为 `null`,且 `gates` 缺 (iv) 前半条(inputs/harvest),导致 `tests/test_wave_throttle.py` 与 `tests/test_wave_gate_keys.py` 双双在 trunk 上红。⛔ **总监不代填** —— 两个检查逐字写着 `Owner: the batch desk (it is the only seat that knows whether the gate ran)` 与 `Do NOT invent a value to turn this green; that is the exact failure this file was written against.`,而总监没有 W55 的发波现场。⚠️ **这不只是一条红:它挡着下一波** —— gate (i) 节流闸用上一波的 `launched_at` 当锚点算解锁时刻,W55 没有这个字段 ⇒ gate (i) 在 W56 上结构上只会继续报 UNCERTIFIABLE,而检查自己写着 `That is not a pass -- do not launch on it.`",
+      "ruled_at": "2026-09-08T0x:xxZ",
+      "executor": "batch-desk(批测台;它是唯一知道 W55 发波现场与 (iv) 前半条跑没跑的一方)",
+      "trigger": "**W56 发波之前**,而不是下一次收割 —— 这根棒的时限是发波闸自己。",
+      "delivered_to": [
+        "GH #<ISSUE> 正文(活线程)",
+        "iterations/owed_executions.json(本行)",
+        "iterations/reports/director/20260908T0xxxxxZ.md §trunk"
+      ],
+      "why_registered_here": "§DR / GH #413 同形:这是一条**记录修补**义务,不属于任何一个 id、也不属于 W55 自己的 `harvest_obligations`(那张表是**发波当时**写的波次局部清单,没有一行可以承载「回头补自己的记录」)⇒ 除了投递到对方线程,必须在这里有一行,否则没有任何腿替它举手。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ **`kind: manual` 是查过之后的选择,不是偷懒**:真正的验收句是**两条命令各自退出 0** —— `python3 tests/test_wave_throttle.py` 与 `python3 tests/test_wave_gate_keys.py` —— 而 `tools/agent/pending_rulings.py:801-806` 支持的四种 kind(`json_value` / `path_exists` / `path_absent` / `path_contains_all`)**没有一种表达得了「这条命令退 0」**:`json_value` 只比顶层键、`path_contains_all` 只做子串。硬套一个会得到**假 DONE**(比如子串命中一个我无权规定其拼法的 gate 键名),而这一行的保守侧是**让棒保持可见**。⇒ 记成 manual,每轮报 OWED,由总监读那两条命令的裸退出码后退休。**诚实的空值算完成,编的不算**:`launched_at` 真取不回来时,合规的产物是逐字写下 `UNCERTIFIABLE` 加上取不回来的核法(裸读输出),不是填一个看起来像时刻的字符串 —— 后者会让这两条检查变绿而把节流闸永久地喂上假锚点,那正是 `tests/test_wave_gate_keys.py` 自己点名拒收的东西。"
     }
   ],
   "retired": [

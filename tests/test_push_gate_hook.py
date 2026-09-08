@@ -143,8 +143,20 @@ check(sc.count("core.hooksPath") == 0,
 # ---------------------------------------------------------------------------
 tmp = tempfile.mkdtemp(prefix="pushgate-")
 try:
-    def fake_repo(gate_exit):
-        """A throwaway tree with the real hook and a stub gate."""
+    def fake_repo(gate_exit, py_exit=0):
+        """A throwaway tree with the real hook and stubs for BOTH halves.
+
+        The python half (GH #616) was added to this hook on 2026-09-08, and it
+        is stubbed here for the same reason the Lua half always was: case 6
+        below is about ONE thing -- that the hook maps a half's 0/2/3 onto
+        allow/refuse -- and a real gate would make it also depend on whether
+        the working tree happens to be clean today.  Stubbing keeps the
+        subject isolated; the python half's own mapping is asserted
+        end-to-end, against the real gate, in tests/test_py_gate_hook.py.
+
+        `py_exit` defaults to 0 so every existing case still reads as "the LUA
+        half decided this".
+        """
         d = tempfile.mkdtemp(dir=tmp)
         os.makedirs(os.path.join(d, "tools", "agent"))
         os.makedirs(os.path.join(d, ".githooks"))
@@ -153,6 +165,9 @@ try:
         with open(stub, "w") as fh:
             fh.write("#!/usr/bin/env bash\nprintf 'STUBGATE\\n'\nexit %d\n" % gate_exit)
         os.chmod(stub, 0o755)
+        pystub = os.path.join(d, "tools", "agent", "py_gate.py")
+        with open(pystub, "w") as fh:
+            fh.write("import sys\nprint('STUBPY')\nsys.exit(%d)\n" % py_exit)
         return d
 
     def run_hook(d, env_extra=None):
@@ -192,6 +207,32 @@ try:
     check("STUBGATE" not in rb.stdout + rb.stderr,
           "6d3: and the bypass short-circuits before the 13s gate (otherwise "
           "the escape hatch costs what it escapes)")
+    check("STUBPY" not in rb.stdout + rb.stderr,
+          "6d4: before the PYTHON half too (GH #616) -- a bypass that skips "
+          "one half and runs the other is neither of the two things its "
+          "banner claims")
+    check("python" in rb.stdout + rb.stderr,
+          "6d5: and the bypass banner NAMES the python half among what went "
+          "unchecked.  A banner listing only luacheck would be copied into a "
+          "round report honestly and still understate the skip")
+
+    # 6e: the LUA half is clean but the PYTHON half is red / uncertifiable.
+    # Without these, every case above is satisfied by a hook that never
+    # reaches the python gate at all -- which is exactly what this hook did
+    # until 2026-09-08.
+    dp3 = fake_repo(0, py_exit=3)
+    rp3 = run_hook(dp3)
+    check(rp3.returncode != 0,
+          "6e: Lua clean + PYTHON RED => push REFUSED (got %d)" % rp3.returncode)
+    check("python half is RED" in rp3.stdout + rp3.stderr,
+          "6e2: and names the PYTHON half, distinguishably from the Lua "
+          "refusal -- two gates behind one error message is a refusal the "
+          "pusher cannot act on")
+    dp2 = fake_repo(0, py_exit=2)
+    rp2 = run_hook(dp2)
+    check(rp2.returncode != 0,
+          "6f: Lua clean + python COULD-NOT-RUN => REFUSED as well; the 0/2/3 "
+          "vocabulary is the same on both halves (got %d)" % rp2.returncode)
 
     # arming, in a fresh git repo that has never seen core.hooksPath
     repo = tempfile.mkdtemp(dir=tmp)

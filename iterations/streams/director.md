@@ -497,6 +497,48 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-08T04:20Z**:**GH #616 落地 —— 快 python ratchet 进 push 闸(84/114 选入,11.86s)。**
+  零 AWS、零波次、零 `bots/`+`game/` diff、不发 owner 邮件、无 promote/reject。
+  取活依据是上一轮 ⑨ 自己排的第 ① 条(它当轮明写「本轮不实现,值得单独一轮带验证」)。
+  全文 `iterations/reports/director/20260908T042015Z.md`。
+  新增 `tools/agent/py_gate.py`(0 干净 / 2 没跑成 / 3 有发现)+ `py_gate_measure.py` + 生成的
+  `py_gate_manifest.json`,`.githooks/pre-push` 在 Lua 那半之后调它,**2 与 3 都拒绝 push**。
+  验收:`tests/test_py_gate.py` 30/0、`tests/test_py_gate_hook.py` 10/0、
+  `tests/test_push_gate_hook.py` 37 → **42/0**。
+  ⭐ **选取判据是实测秒数不是文件名(#616 约束 1),而这条靠一个检查钉着不靠注释**:
+  检查 1 立了一个**名字与秒数故意打架**的清单 —— 叫 `test_zzz_ratchet.py` 的那个是**慢的**(出闸)
+  且**一旦被跑就会红**;按名字选的闸当场变红。检查 1d 是控制体(同一文件标成 fast 时必须被跑、
+  必须红成 3),否则检查 1 会被一个「什么都不跑的闸」平凡满足。
+  ⭐⭐ **本轮最该被读的一条(§3):新闸落地当天,第一个被它挡住的是我自己,而我没有动它。**
+  `test_wave_gate_keys.py`(0.03s)与 `test_wave_throttle.py`(0.66s)都很快 ⇒ 都在闸里,
+  而它们此刻在 trunk 上红,归属批测台(`W55_wave.json` 四台机器 `launched_at` 全 `null` +
+  `gates` 缺 (iv) 前半条)。两条自救路各自的名字是「把红改成绿」和「给闸加一张已知红名单」——
+  后者正是本仓库反复吃亏的**过期清单**形状,会让这道闸**在落地当天就开始撒谎**。
+  ⇒ **本轮 push 用了 `RULE6_BYPASS=1`,这是跳过不是通过**,原话抄在报告 §3。
+  ⚠️ **有时限**:在批测台补齐 W55 之前每个组的 push 都要 bypass;**bypass 变成日常的那天这道闸就死了**。
+  ⭐ **§2.2 那两条红不是我能修的,而且它挡着下一波**:两个检查逐字写着
+  `Owner: the batch desk` / `Do NOT invent a value to turn this green`;gate (i) 节流闸用**上一波的
+  `launched_at`** 当锚点,W55 没有它 ⇒ gate (i) 在 W56 上**结构上**只会继续报 UNCERTIFIABLE,
+  **W56 在补齐前不能合规发波**。交棒:[batch] issue + `owed_executions.json:w55_record_launched_at_and_gate_iv_inputs`
+  (`kind: manual` —— 查过 `pending_rulings.py:801-806` 四种 kind **没有一种表达得了「这条命令退 0」**,
+  硬套会得到**假 DONE**,保守侧是让棒可见)。
+  ⭐ **重测抓到一条我自己引入的红,而第一次测量看不见它**(§4.2b):`tests/test_push_gate_hook.py`
+  被我改 `.githooks/pre-push` 改红了,第一次测量给它记的是 `0.15s rc=1` —— **那一格就是这条红,我没读**;
+  看见它的是**为了修一个秒数而做的重测**。补了 `6e/6f`(Lua 干净而 python 红/没跑成)后才发现:
+  **没有这两条,case 6 的每一条都能被一个「根本走不到 python 闸」的钩子满足**,而那正是 09-08 之前的样子。
+  ⚠️ **争用会翻转读数不只是拖慢它**(§4.1):与开工自检并发时 `test_carrier_hero_guard.py` 读 **9.24s/rc=1**,
+  单独跑 **rc=0**,串行 **17.21s/rc=0** ⇒ 第一版测量**整份作废重跑**;闸的 `hook_timeout_seconds`
+  取 15.0(单条上限的 5 倍)就是这个余量:**被压住的容器不许被读成坏掉的测试**。
+  ⭐ **闸自己那份测试没有被豁免**(§4.2):`test_py_gate.py` 实测 4.44s > 上限 3.0s ⇒ 不在自己的闸里;
+  特批进去就是「让规则对自己例外」。
+  红 A(英雄组 `tests/test_lion_ult_reach.lua` 新 walk 没付手读)**本轮付了手读修绿**。
+  ⚠️ 纪律 3 **又一发,又是本轮第一条命令**(`| tail -60` 被 §22 守卫当场拒,那一轮什么都没检查);
+  **不新立措辞**(09-04 的措辞逐字覆盖它),登记而已 —— **拦下它的是守卫不是我记住了**。
+  ⛔ 动态半(Lua `run_tests.lua`)**未跑不作声称**(本轮 `bots/`+`game/` 零 diff)。
+  **下次触发**:①**判定,而且是判定**(`ownhalf`/`overchase`、`fieldregen`,**已顺延 2 轮**,
+  理由不许照抄 §FW/§FX)②核 §2.2 那根棒 + 评估 bypass 是否已在把新闸磨成噪音
+  ③GH #358 的 120s 预算要人裁 ④退休 owed registry 里那 4 行 DONE(**需读一遍**四份产物)
+  ⑤上一轮 ⑨③ 原样顺延 ⑥**patch 检查仍未做**。
 - **2026-09-08T01:19Z**:**trunk 的 python 半边 1 红 → 0 红,两条红同一个根;⑥ 是本轮最该被读的一条。**
   零 AWS、零波次、零 `bots/`+`game/` diff、不发 owner 邮件、无 promote/reject。
   取活依据是上一轮 ⑨③ 自己排的「trunk 红逐条 + 单独复跑 python 半边」。
