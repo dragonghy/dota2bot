@@ -57,7 +57,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    gated `axecullreach` 把候选池换回窄的那个。`bots/` 有改动。** 报告
    `iterations/reports/hero/20260908T080711Z.md`。新 `tests/test_axe_cull_reach.lua`
    (**14 例**)+ `tools/agent/mutstand_axecullreach.sh`(**11/11 CAUGHT**)。登记
-   `state.json:axecullreach_20260908`,新请求 `queue.json:hero-46`。本轮 `[hero]` open issue
+   `state.json:axecullreach_20260908`,新请求 `queue.json:hero-46`,新开 GH **#625**。本轮 `[hero]` open issue
    **一条可认领的都没有**(8 条逐条理由见报告 §1)。详见「当前状态」节同一轮的条目。
    - **⭐ 承重的是压制,不是那段路**:`X.ConsiderR` 是 `X.SkillsComplement` 第一臂且
      无条件 `return` ⇒ 整段接近过程里 `X.ConsiderQ`(Berserker's Call,半径 315,把
@@ -5375,7 +5375,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   (`X.ConsiderQ` 打断 `-50`、先手 `-90`、带线 `-50`、打野 `-50`),只有这一处**加**。
   新 `X.IsCullReachOn` + `X.CullTargetPool`,新 `tests/test_axe_cull_reach.lua`(**14 例**)+
   `tools/agent/mutstand_axecullreach.sh`(**11/11 CAUGHT**)。
-  `state.json:axecullreach_20260908`、`queue.json:hero-46`、GH issue 本轮开(见报告 §7/§10)。
+  `state.json:axecullreach_20260908`、`queue.json:hero-46`、GH **#625**(本轮开)。
   **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
   `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
   `run_tests.lua axe` **247 例 0 失败**。本轮 [hero] open issue **一条可认领的都没有**

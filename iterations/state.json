@@ -7115,6 +7115,6 @@
     "limits_asserted": "两条限度**写成断言**而不是散文:(i) `X.ConsiderQ` 在三帧上、armed 与否都答 **0** —— fixture 世界结构性没有 mode 状态(`J.IsGoingOnSomeone` / `IsPushing` / `IsFarming` 恒假)⇒ **「嘲讽会改为开火」那一半本轮没有被帧驱动**,能机器核验的只有**压制**这件事(§7 读 `X.SkillsComplement`,断言 R 臂在 Q 臂之前且无条件 `return`,源码级且如此标注);(ii) 语料里敌人 `GetHealthRegen()` **全为 0** ⇒ 循环里那个 `* 0.8` 的回血预算**离线是死的**,本文件不拿它当证据。两条都写成「哪天语料能答了就变红,退休限度而不是删断言」。",
     "sibling_ratchet": "`tests/test_axe_culling_threshold_preflight.lua` §3 那条**按名字响了**:它原本断言 `for _, npcEnemy in pairs( nInBonusEnemyList )` 且 `nInRangeEnemyList` 在 `X.ConsiderR` 里**只出现一次(赋值,从不读)** —— 那正是它自己那句「registered here, not fixed: it is a separate lever with its own domain and its own cost side」描述的缺陷。本轮把它改写成**驱动**版本:闸关时**有效池就是宽的那个**,在能区分两个池的真实帧上驱动断言(2 vs 3),比原来的字符串形式**更强**(保留拼写、改掉答案的编辑会通过旧版)。RING=375 与该文件 §2 的整份扫描仍然成立 —— 它们是**关于未 armed 的树**的断言。",
     "value_question_owed": "那 200 码的接近到底值不值(Culling 击杀会退 CD、给友军移速),本轮**不判**,也判不了:fixture 上 band 那两帧都没真的开过火,且嘲讽那一半 fixture 世界答不了。`queue.json:hero-46`(零 EC2 归档只读,与 hero-2/30..45 同形可并进同一次遍历)。",
-    "gh_issue": "本轮新开(见报告 §7;按 GH #290 先 push 再发引用)"
+    "gh_issue": "#625(本轮开;按 GH #290 先 push 再发引用,claim_precheck.sh EXIT=0 clean / local commits not on origin/main: 0)"
   }
 }
