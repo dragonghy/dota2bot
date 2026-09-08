@@ -13575,7 +13575,7 @@
     (`0eb22d/20260908_094909_slot6` t=1191.5);(4) 盯 GH #644,英雄组付价后把 `.staged` `mv` 进 `tests/frames/`。
   - **本轮的评论/issue**:**新开 GH #644**(`[hero]`:三帧驱动读数 + 两条路各 13 红的价目
     + 四条「是裁定不是计数」的棘轮,含 GH #390 要的那一帧 + 复现配方)、
-    **GH #641 追评**(B 帧是同族新形状)。
+    **GH #641 追评 `issuecomment-5592544988`**(B 帧是同族新形状)。
   - 完整报告:`iterations/reports/replay-check/20260908T220000Z.md`
   - **铁律 6**:`ARM_GATE_EXIT=0` / `GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`),
     **无 `RULE6_BYPASS`**;动态半未跑不声称。**本轮未改任何 `bots/` 文件。**
