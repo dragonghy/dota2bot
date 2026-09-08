@@ -532,10 +532,29 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⛔ 动态半(Lua)未跑不作声称(零 `bots/` diff)。零 AWS ⇒ 不对 MTD 作新声称(转载批测台 12:20Z:
   MTD `$66.105`、诚实重建 ≈ `$68.105`、`$80`/`$90`/`$100` 均未跨)。四组本轮均有产出,节奏无洞,
   无待总监插手的 [bug]/[harness],无待审批的测试集变更。
-  **下次触发**:①**`hero_domain_scan` 九份读数逐份读通**(上一轮 ① 顺延;总监自己那一半)
-  ②`test_gated_helper_nesting_census.lua` 当 GH #622 的仪器读一遍(上一轮 ②)
-  ③GH #358 的 120s 预算要人裁(顺延)④**给「后台包装吞掉真码」立守卫**(上一轮 ⑥,本轮第四次兑现)
-  ⑤`text_absent` 的第一个真实用户 —— 下一条「把这句写错的话改掉」形状的裁定,`done_when` 伸手去拿它而不是写 `manual`。
+  ⭐ **第二件(顺手撞到,比第一件更贵,[harness] GH #633)**:铁律 6 的静态门**在一棵零 Lua diff 的树上读 RED**
+  —— `bots/Customize/soak_side.lua`(gitignored、farm-only 的 arming switch)在开工自检**并发**跑时被创建又删除,
+  `luacheck` **先走树、后打开走到的东西** ⇒ `I/O error` ⇒ `LUACHECK RED ... on the WORKING TREE`(**一句关于这棵树的假话**),
+  而自 GH #213 起这道门坐在 `.githooks/pre-push` 里 ⇒ **它拒绝的是一次与被推内容无关的 push**。
+  `ls -la` 抓到现行:**硬链接数 0**。⭐ 立案句:**GH #229/#243 已经为 python 普查修过同一个竞态,修法是「按名字排除」**
+  (`lua_corpus.py` repair (1):*removes the race at the source rather than making it survivable*)——
+  **唯独这道门没拿到那个修法,而它是唯一一条能拒绝 push 的腿**。本轮窄修:`--exclude-files bots/Customize/soak_side.lua`;
+  钉子 `tests/test_luacheck_gate_soakswitch.py` **两半都钉**(源码半 + 行为半:磁盘上放语法坏掉的 switch 门仍读
+  `GATE_EXIT=0`,**控制先跑**证明 luacheck 自己确实会红;行为半跑**窄 target** 以免自己撞上 push 闸的预算)。
+  ⚠️ **没买到的那一半**(#633 留 open 的理由):`lua_corpus.py` 的 repair (2) —— 任何**别的**文件在走树与打开之间
+  消失时该答 **exit 2(没跑成)**,而这道门对任何 I/O error 仍读 **exit 3(RED)**,两者许可的下一步动作相反。
+  push 闸读数:`GATE_EXIT=0 CLEAN` + `py gate: 85 ran / 0 findings / EXIT=0`(那多出来的一条是门自己点名的新测试,
+  未进 manifest ⇒ 照跑,实测 0.14s;**不为它重跑 `py_gate_measure.py`**)。**未用 `RULE6_BYPASS`。**
+  ⚠️ 自检重跑到收尾(13:19Z)仍在最后一条腿(fast Lua detectors)上,**真码没读到 ⇒ 不对它作整体声称**;
+  已打印的腿逐条登记在报告 §9(unlanded OK / cadence 3 个昨天的洞 / orphan none / owed 18 行 2 RESIDUAL /
+  expired 无 / 6 锚点全 OK / promote-atom OK & FROZEN none / **python trunk UNCERTIFIABLE = GH #358 那条**)。
+  **下次触发**:①⭐**把 `hero-41`…`hero-47` 七条 RIDESHARE 一次裁掉**(自检 `queue-rulings` 腿**每轮都点名**,
+  `director` 字段至今空着;P4.2 冻结期的合法裁定是 **FROZEN-HOLD**,难的不是判是**投递**:七个字段 + 一节档案 + 一条评论)
+  ②**`hero_domain_scan` 九份读数逐份读通**(上一轮 ① 顺延;总监自己那一半)
+  ③`test_gated_helper_nesting_census.lua` 当 GH #622 的仪器读一遍(上一轮 ②)
+  ④GH #358 的 120s 预算要人裁(顺延)⑤**给「后台包装吞掉真码」立守卫**(上一轮 ⑥,本轮第四次兑现)
+  ⑥`text_absent` 的第一个真实用户 —— 下一条「把这句写错的话改掉」形状的裁定,`done_when` 伸手去拿它而不是写 `manual`
+  ⑦**GH #633 没买到的那一半**:`I/O error` 形状的行与真警告分开,前者走 `verdict 2`。
 - **2026-09-08T10:1xZ**:**四行 owed 读 DONE,逐份读完只有两行可退休;另外两行自己的散文早就写着「不许据此退休」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、无 promote/reject。
   取活依据是上一轮「下次触发」的 **④**(退休 4 行 DONE,**需读一遍**四份产物,**已顺延 3 轮**)与 **⑥**
