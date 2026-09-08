@@ -55,19 +55,58 @@ WHAT IT READS
   saved command line meaning "5.0 seconds of one hero" must not silently start
   meaning "5.0 caster-seconds of a group".
 
+  COMPLETION IS READ OFF `MODIFIER_REMOVE.value`, NOT OFF A THRESHOLD (2026-09-08)
+  ⚠️ This changed again.  The caster-second threshold above is now only a
+  FALLBACK, kept for dumps whose events carry no `value` field.  The reason is
+  that no threshold can be right: the dump's timestamp resolution (0.1 s) is
+  equal to the difference the threshold has to resolve.  On W54 the 50 flipping
+  groups measure 5.9 (33 of them), 6.0 (16) and 6.1 (1) -- a real 6.0 s channel
+  is usually recorded as 5.9 -- while a channel interrupted at 5.95 s is also
+  recorded as 5.9.  Four rounds of this stream hunted that threshold and the
+  bracket [5.8, 5.9] closed on a 0.1 s counter-example, twice, from opposite
+  sides.
+  The outcome was in the combat log the whole time, one field over: the capture
+  modifier's `MODIFIER_REMOVE` carries `value=0` when the bar finished and
+  `value!=0` when the channel was cut.  In `20260907_122407_slot7` (93cef1) the
+  SAME GAME has venomancer removing a 5.9 s North channel with `value=1` and no
+  flip, and skeleton_king removing a 5.9 s South channel with `value=0` and a
+  flip: two events the length cannot separate and one field can.  Agreement
+  with ownership flips is 88/88 groups over W53+W54, and 0 disagreements
+  precisely where the threshold is known to be wrong.
+  ⚠️ WHAT IS NOT CLAIMED: what `value` means in the engine (stack count? a
+  natural-expiry flag?).  The dump cannot say, and the criterion does not need
+  it -- condition (a) wants a reading that agrees with ground truth without a
+  tuned constant, and this is one.
+  A group is complete when ANY member removed with 0 (one bar, one verdict --
+  hitch-hikers take the same zero on the same frame, which is how the W54
+  four-caster group reads `rmv=0,0,0,0`).  A group whose members carry NO value
+  at all falls back to the caster-second threshold and is reported separately,
+  so a fallback reading can never be mistaken for a `value` reading.
+
   The threshold is NOT asserted and it is NOT the game's channel time copied
   into a constant.  It is CHECKED against ground truth on every run: a capture
   that actually finished flips the outpost's `team` field, so `verify_floor()`
   pairs each GROUP with the ownership flips that follow it and prints the two
-  clusters it separates.  On W52 the separation is clean and wide: every
-  flipping group is >= 5.8 caster-seconds (5.8, 5.9, 6.0), and the largest
-  non-flipping group is 5.3 -- a wider empty band than the 4.4/5.2 one the old
-  per-attempt floor sat in.  ⚠️ Two exceptions are pre-registered UNDECIDABLE
-  and do NOT define the band's endpoints: a chaos_knight who re-issued the
-  order 12 times (`20260907_003641_slot2`) flipped its outpost off groups of
-  2.8 and 3.1 caster-seconds, and this dump cannot say whether the last 3.1 s
-  channel bought it or whether progress simply never cleared across the 0.1 s
-  seam between two re-issues.  ⚠️ An empty band is an empty band, not a
+  clusters it separates.
+  ⚠️ CORRECTED 2026-09-08, on a re-sweep of the same 85 W52 games.  This
+  paragraph used to say the W52 separation was "clean and wide" -- every
+  flipping group >= 5.8, largest non-flipping 5.3.  Both halves of that came
+  out of the many-to-one flip pairing this file carried until today: one flip
+  was credited to EVERY group whose window contained it, which quietly moved
+  aborted groups into the flipping cluster.  With one flip credited to one
+  group, W52's largest NON-flipping group is 9.3 caster-seconds (three
+  overlapping zuus channels, all removing with value=1, no flip) and a 6.3 one
+  sits beside it -- i.e. the "empty band" the threshold lived in does not
+  exist on this corpus at all, and the threshold misfiles 3 of 98 groups here.
+  The old sentence was not a wrong constant, it was a wrong CORPUS READING,
+  and it is why four rounds went looking for a better threshold instead of a
+  better quantity.
+  ⚠️ The two pre-registered UNDECIDABLE groups are now DECIDED: the
+  chaos_knight who re-issued the order 12 times (`20260907_003641_slot2`) took
+  the outpost on his THIRTEENTH channel, 3.1 s long, the only one of the
+  thirteen that removed with `value=0`.  3.1 s cannot fill a fresh 6 s bar, so
+  progress carried across the 0.1 s re-issue seams -- but only partly: 15.6 s
+  of channel over 16.7 s of standing bought one 6 s capture.  ⚠️ An empty band is an empty band, not a
   measurement of the endpoint: any threshold inside 5.3-5.8 reproduces this
   corpus exactly, so 5.8 is "the low edge of the flipping cluster", never "the
   value the corpus picked out".  `--dump-groups` prints every group's
@@ -160,6 +199,12 @@ def read_game(timeline, armed_team, complete_cs=DEFAULT_COMPLETE_CS):
             attempts.append({
                 "actor": actor, "t0": t0, "t1": e["t"], "dur": e["t"] - t0,
                 "outpost": outpost or e.get("target"), "leg": leg_of(actor),
+                # The outcome field.  Read off THIS event -- the one that ends
+                # THIS attempt -- so it can never pick up a neighbouring
+                # channel's value the way an (actor, t) lookup table can when
+                # two removals share a timestamp.  `None` means the dump
+                # carries no value, and stays distinct from "did not complete".
+                "rmv": e.get("value"),
             })
     # A channel still open at the last event (game ended mid-channel) is NOT
     # counted either way: calling it aborted would invent a defect out of the
@@ -203,15 +248,32 @@ def read_game(timeline, armed_team, complete_cs=DEFAULT_COMPLETE_CS):
             n_open += delta
             prev_t = t
             if not n_open and members:
-                complete = caster_s >= complete_cs
+                # Completion, per the `MODIFIER_REMOVE.value` note in the
+                # module docstring.  One bar, one verdict: if ANY member
+                # removed with 0 the bar finished on that member's frame, and
+                # the hitch-hikers took the same zero on the same frame.
+                vals = [m["rmv"] for m in members]
+                seen = [v for v in vals if v is not None]
+                removed_zero = None if not seen else any(v == 0 for v in seen)
+                if removed_zero is None:
+                    # No value anywhere in this group: an older dump.  Fall
+                    # back to the threshold and SAY SO, so a fallback reading
+                    # is never counted as a `value` reading downstream.
+                    complete, via = caster_s >= complete_cs, "caster_s"
+                else:
+                    complete, via = removed_zero, "value"
                 for m in members:
                     m["complete"] = complete
+                    m["complete_via"] = via
                     m["group_caster_s"] = caster_s
                     m["group_n"] = len(members)
                 groups.append({
                     "outpost": key if isinstance(key, str) else "?unresolved",
                     "t0": t0, "t1": t, "caster_s": caster_s, "n": len(members),
-                    "complete": complete, "actors": [m["actor"] for m in members],
+                    "complete": complete, "complete_via": via,
+                    "removed_zero": removed_zero, "remove_values": vals,
+                    "cs_complete": caster_s >= complete_cs,
+                    "actors": [m["actor"] for m in members],
                 })
                 members = []
     groups.sort(key=lambda g: g["t1"])
@@ -287,26 +349,60 @@ def verify_floor(games, complete_cs=DEFAULT_COMPLETE_CS, window_s=6.0):
     the map inside the window counts.  On this corpus the two outposts are
     never captured within 6 s of each other, so the join would change nothing;
     on a corpus where they are, this check gets looser, never stricter.
+
+    ⚠️ A flip is credited to AT MOST ONE group -- the last one that ended
+    before it.  Crediting every group whose window contains the flip is how a
+    re-issue burst manufactures a disagreement out of one capture (see the
+    comment on the loop below).
     """
     produced, no_flip, orphan_flips = [], [], []
     for g in games:
         r = g["result"]
-        for grp in r["groups"]:
-            hit = [f for f in r["flips"] if -0.5 <= f["t"] - grp["t1"] <= window_s]
-            (produced if hit else no_flip).append(grp)
+        # ONE FLIP BELONGS TO ONE GROUP (2026-09-08).  A flip is credited to
+        # the LAST group that ended before it, not to every group whose window
+        # contains it.  ⚠️ The many-to-one version manufactured a disagreement
+        # out of a re-issue burst: in 20260907_003641_slot2 chaos_knight's
+        # aborted group ends 1242.9 and the completing one ends 1246.1, and the
+        # single flip at 1248.5 sits inside BOTH 6 s windows -- so the aborted
+        # group was filed as "did not complete yet the outpost flipped".  The
+        # capture happened on the frame the bar finished; the group that ended
+        # nearest before the flip is the only one that can have finished it.
+        credited = {}
         for f in r["flips"]:
-            if not any(-0.5 <= f["t"] - grp["t1"] <= window_s for grp in r["groups"]):
+            cands = [grp for grp in r["groups"]
+                     if -0.5 <= f["t"] - grp["t1"] <= window_s]
+            if not cands:
                 orphan_flips.append((g["game"], f))
+                continue
+            credited[id(max(cands, key=lambda grp: grp["t1"]))] = f
+        for grp in r["groups"]:
+            (produced if id(grp) in credited else no_flip).append(grp)
     # A group the threshold calls complete but that produced no flip, or one it
     # calls aborted that did -- either is the threshold disagreeing with the
     # game.  Both halves are kept as GROUPS too, so a caller can ask the
     # question GH #609 turned on: are any of the survivors multi-caster?
     mis_hi = [grp for grp in no_flip if grp["caster_s"] >= complete_cs]
     mis_lo = [grp for grp in produced if grp["caster_s"] < complete_cs]
+    # The criterion actually in use (`MODIFIER_REMOVE.value`, threshold only as
+    # a fallback) against the same ground truth, as a 2x2 -- the shape that
+    # makes "it agrees" a counted claim instead of an adjective.  Groups whose
+    # verdict came from the fallback are listed SEPARATELY: pooling them would
+    # let a threshold reading be reported as a `value` reading.
+    by_val = [grp for grp in produced + no_flip if grp.get("complete_via") == "value"]
+    by_cs = [grp for grp in produced + no_flip if grp.get("complete_via") != "value"]
+    flipped = {id(grp) for grp in produced}
+    crit = {"n": len(by_val), "fallback_n": len(by_cs),
+            "zero_flip": [], "zero_noflip": [], "nonzero_flip": [], "nonzero_noflip": []}
+    for grp in by_val:
+        bucket = ("zero_" if grp["complete"] else "nonzero_") + \
+                 ("flip" if id(grp) in flipped else "noflip")
+        crit[bucket].append(grp)
+    crit["disagree"] = crit["zero_noflip"] + crit["nonzero_flip"]
     return {"produced": sorted(g["caster_s"] for g in produced),
             "no_flip": sorted(g["caster_s"] for g in no_flip),
             "produced_groups": produced, "no_flip_groups": no_flip,
             "orphan_flips": orphan_flips,
+            "criterion": crit,
             "misfiled": ([g["caster_s"] for g in mis_hi],
                          [g["caster_s"] for g in mis_lo]),
             "misfiled_groups": (mis_hi, mis_lo)}
@@ -391,9 +487,12 @@ def selfcheck():
         return {"game": {"teams": teams or {"h_a": RADIANT, "h_b": DIRE}},
                 "events": events, "buildings": buildings or [], "snapshots": []}
 
-    def ev(t, typ, infl, actor, target=None):
-        return {"t": t, "type": typ, "inflictor": infl, "actor": actor,
-                "target": target}
+    def ev(t, typ, infl, actor, target=None, value=None):
+        e = {"t": t, "type": typ, "inflictor": infl, "actor": actor,
+             "target": target}
+        if value is not None:
+            e["value"] = value
+        return e
 
     # 1. one clean completed channel
     r = read_game(tl([ev(10.0, "ABILITY", CAPTURE_ABILITY, "h_a"),
@@ -604,10 +703,141 @@ def selfcheck():
     #     the data distinguishes them; an assertion that "caught" it would be
     #     the constant checking itself.  5.8 is kept because it was chosen
     #     first, not because W53 confirmed it.
-    ck("11a threshold is above the largest non-flipping group on W52 (5.3)",
+    #     ⚠️ 2026-09-08: on a re-sweep of the same 85 W52 games with one flip
+    #     credited to one group, the "largest non-flipping group is 5.3" half
+    #     of this is FALSE -- it is 9.3 (zuus x3, rmv=1,1,1), with a 6.3 next
+    #     to it.  The band is not empty on W52 either.  These two assertions
+    #     are kept because the constant is still the fallback for a dump with
+    #     no `value` field, and 5.8 is still the low edge of W52's flipping
+    #     cluster; they are no longer evidence that a threshold can work.
+    ck("11a fallback threshold is above W52's flipping-cluster low edge minus one step",
        DEFAULT_COMPLETE_CS > 5.3)
-    ck("11b threshold is at or below the smallest flipping group on W53 (5.9)",
+    ck("11b fallback threshold is at or below the smallest flipping group on W53 (5.9)",
        DEFAULT_COMPLETE_CS <= 5.9)
+
+    # ------------------------------------------------------------ 2026-09-08
+    # 12. THE CRITERION.  `MODIFIER_REMOVE.value == 0` decides completion; the
+    #     threshold is only the fallback for dumps without the field.
+    def chanv(t0, t1, actor, outpost, rmv):
+        return [ev(t0, "MODIFIER_ADD", CAPTURE_MODIFIER, actor, outpost),
+                ev(t1, "MODIFIER_REMOVE", CAPTURE_MODIFIER, actor, outpost,
+                   value=rmv)]
+
+    # 12a/12b THE PAIR NO THRESHOLD CAN SEPARATE (20260907_122407_slot7, one
+    #     game): venomancer's 5.9 s North channel removed with value=1 and the
+    #     outpost did not flip; skeleton_king's 5.9 s South channel removed
+    #     with value=0 and it did.  Same length, opposite outcome.
+    r = read_game(tl(chanv(1028.2, 1034.1, "h_a", NORTH, 1)
+                     + chanv(1100.0, 1105.9, "h_a", SOUTH, 0)), RADIANT)
+    north = [g for g in r["groups"] if g["outpost"] == NORTH][0]
+    south = [g for g in r["groups"] if g["outpost"] == SOUTH][0]
+    ck("12a equal lengths", abs(north["caster_s"] - south["caster_s"]) < 1e-6)
+    ck("12b value=1 aborted, value=0 complete",
+       north["complete"] is False and south["complete"] is True)
+    ck("12c both read by value, not by the threshold",
+       north["complete_via"] == "value" and south["complete_via"] == "value")
+    ck("12d and the threshold ALONE would have called both the same",
+       north["cs_complete"] == south["cs_complete"],
+       )
+
+    # 12e ONE BAR, ONE VERDICT: a hitch-hiker takes the same zero on the same
+    #     frame (the W54 four-caster group reads rmv=0,0,0,0).  Any member's
+    #     zero completes the group -- but a missing value must not vote.
+    r = read_game(tl(chanv(100.0, 103.0, "h_a", NORTH, 0)
+                     + chanv(101.0, 103.0, "h_b", NORTH, 1)), RADIANT)
+    ck("12e any member's zero completes the group",
+       len(r["groups"]) == 1 and r["groups"][0]["complete"] is True)
+    ck("12f and every member inherits it",
+       all(a["complete"] is True for a in r["attempts"]))
+    # ...including when the zero is NOT the first member.  Reading only the
+    # first member's value passes 12e by accident; this is the order that
+    # separates "any member" from "the member that happened to open first".
+    r = read_game(tl(chanv(100.0, 103.0, "h_a", NORTH, 1)
+                     + chanv(101.0, 103.0, "h_b", NORTH, 0)), RADIANT)
+    ck("12f2 the zero counts wherever it sits in the group",
+       len(r["groups"]) == 1 and r["groups"][0]["complete"] is True)
+
+    # 12g A SHORT GROUP WITH value=0 IS COMPLETE, a long one with value!=0 is
+    #     not -- i.e. the criterion, not the constant, is deciding.  If someone
+    #     re-wires completion back to caster-seconds, this is what goes red.
+    r = read_game(tl(chanv(100.0, 102.0, "h_a", NORTH, 0)), RADIANT)
+    ck("12g 2.0 cs with value=0 completes", r["groups"][0]["complete"] is True)
+    r = read_game(tl(chanv(100.0, 110.0, "h_a", NORTH, 1)), RADIANT)
+    ck("12h 10.0 cs with value=1 does not", r["groups"][0]["complete"] is False)
+
+    # 12i THE FALLBACK IS DECLARED, NEVER SILENT.  A dump with no `value` at
+    #     all still reads, by the threshold, and says which one it used.
+    r = read_game(tl(chan(100.0, 106.0, "h_a", NORTH)), RADIANT)
+    ck("12i no value anywhere -> threshold fallback",
+       r["groups"][0]["complete"] is True
+       and r["groups"][0]["complete_via"] == "caster_s"
+       and r["groups"][0]["removed_zero"] is None)
+
+    # 12j A MISSING VALUE IS NOT A ZERO.  Mixing them would let a dropped event
+    #     read as a capture -- the direction that flatters the channel.
+    r = read_game(tl(chan(100.0, 103.0, "h_a", NORTH)
+                     + chanv(100.0, 103.0, "h_b", NORTH, 1)), RADIANT)
+    ck("12j one member with no value does not complete the group",
+       r["groups"][0]["complete"] is False
+       and r["groups"][0]["complete_via"] == "value")
+
+    # 12k THE VALUE IS READ OFF THE ATTEMPT'S OWN REMOVE EVENT.  Two channels
+    #     ending on the same frame with different values must keep their own:
+    #     an (actor, t)-keyed side table is the shape that swaps them.
+    r = read_game(tl(chanv(100.0, 103.0, "h_a", NORTH, 0)
+                     + chanv(100.0, 103.0, "h_b", SOUTH, 1)), RADIANT)
+    by_post = {g["outpost"]: g for g in r["groups"]}
+    ck("12l same-frame removals keep their own values",
+       by_post[NORTH]["remove_values"] == [0]
+       and by_post[SOUTH]["remove_values"] == [1])
+
+    # 12m verify_floor's 2x2 counts the criterion against ground truth, and the
+    #     off-diagonal must be reachable -- an agreement table that cannot
+    #     disagree is not evidence.
+    b0 = [{"t": 105.0, "name": WATCH_TOWER, "x": 1, "y": 1, "team": 3,
+           "hp": 1, "hp_pct": 1, "alive": True},
+          {"t": 106.0, "name": WATCH_TOWER, "x": 1, "y": 1, "team": 2,
+           "hp": 1, "hp_pct": 1, "alive": True}]
+    agree = {"game": "g", "result": read_game(
+        tl(chanv(100.0, 103.0, "h_a", NORTH, 0), buildings=b0), RADIANT)}
+    v = verify_floor([agree])
+    ck("12m value=0 followed by a flip lands on the diagonal",
+       len(v["criterion"]["zero_flip"]) == 1 and v["criterion"]["disagree"] == [])
+    dis = {"game": "g", "result": read_game(
+        tl(chanv(100.0, 103.0, "h_a", NORTH, 1), buildings=b0), RADIANT)}
+    v = verify_floor([dis])
+    ck("12n value!=0 followed by a flip is a DISAGREEMENT, and is surfaced",
+       len(v["criterion"]["nonzero_flip"]) == 1 and len(v["criterion"]["disagree"]) == 1)
+    v = verify_floor([{"game": "g", "result": read_game(
+        tl(chan(100.0, 106.0, "h_a", NORTH), buildings=b0), RADIANT)}])
+    ck("12o a fallback group is counted apart from the value groups",
+       v["criterion"]["n"] == 0 and v["criterion"]["fallback_n"] == 1)
+
+    # 12p ONE FLIP BELONGS TO ONE GROUP -- the last that ended before it.  The
+    #     real shape (20260907_003641_slot2): chaos_knight re-issued the order
+    #     twelve times, every one removing with value=1, and the thirteenth
+    #     channel (3.1 s, ending 1246.1) removed with value=0; South flipped at
+    #     1248.5.  That single flip sits inside the 6 s window of the aborted
+    #     group ending 1242.9 TOO, and crediting both files the aborted one as
+    #     "did not complete yet the outpost flipped" -- a disagreement made out
+    #     of one capture.  This is also the answer to the pre-registered
+    #     UNDECIDABLE in the module docstring: 3.1 s cannot fill a fresh 6 s
+    #     bar, so progress carried across the 0.1 s re-issue seams.
+    b1 = [{"t": 1240.0, "name": WATCH_TOWER, "x": 1, "y": 1, "team": 2,
+           "hp": 1, "hp_pct": 1, "alive": True},
+          {"t": 1248.5, "name": WATCH_TOWER, "x": 1, "y": 1, "team": 3,
+           "hp": 1, "hp_pct": 1, "alive": True}]
+    burst = {"game": "g", "result": read_game(
+        tl(chanv(1239.9, 1242.9, "h_a", SOUTH, 1)
+           + chanv(1243.0, 1246.1, "h_a", SOUTH, 0), buildings=b1), RADIANT)}
+    v = verify_floor([burst])
+    ck("12p the flip is credited to exactly one group",
+       len(v["produced_groups"]) == 1 and len(v["no_flip_groups"]) == 1)
+    ck("12q and it is the group that ended nearest before it",
+       abs(v["produced_groups"][0]["t1"] - 1246.1) < 1e-6)
+    ck("12r so the re-issue burst is NOT a criterion disagreement",
+       v["criterion"]["disagree"] == [])
+    ck("12s and the flip is not also an orphan", v["orphan_flips"] == [])
 
     print("SELFCHECK %d checks, %d failed" % (checks, len(failures)))
     for f in failures:
@@ -700,9 +930,29 @@ def main():
           "resolved: %d" % (len(groups), len(multi), unres))
 
     vf = verify_floor(games, args.complete_cs)
+    crit = vf["criterion"]
     print()
-    print("THRESHOLD CHECK against ground truth (an ownership flip is a "
-          "finished capture); the unit is CASTER-SECONDS per group")
+    print("CRITERION CHECK -- MODIFIER_REMOVE `value==0` vs ground truth "
+          "(an ownership flip is a finished capture)")
+    print("  groups read by value: %d   by the caster-second FALLBACK: %d"
+          % (crit["n"], crit["fallback_n"]))
+    print("            | flip  no-flip")
+    print("  value==0  | %4d   %5d" % (len(crit["zero_flip"]), len(crit["zero_noflip"])))
+    print("  value!=0  | %4d   %5d" % (len(crit["nonzero_flip"]), len(crit["nonzero_noflip"])))
+    print("  disagreements: %d   (the off-diagonal; W53+W54 = 0/88)"
+          % len(crit["disagree"]))
+    for grp in crit["disagree"]:
+        print("    DISAGREE %s t=%.1f cs=%.1f n=%d rmv=%s flip=%s %s"
+              % (grp["outpost"], grp["t1"], grp["caster_s"], grp["n"],
+                 ",".join("-" if v is None else str(v) for v in grp["remove_values"]),
+                 id(grp) in {id(g) for g in vf["produced_groups"]},
+                 ",".join(a.replace("npc_dota_hero_", "") for a in grp["actors"])))
+    # The threshold the criterion replaced, kept as a NARRATIVE quantity: it is
+    # what a reader needs to see the 0.1 s collision for themselves, and it is
+    # the only thing left if a future dump drops the `value` field.
+    print()
+    print("THRESHOLD CHECK (fallback quantity only, kept for the record) "
+          "against the same ground truth; the unit is CASTER-SECONDS per group")
     print("  groups followed by a flip   : %s" % (
         " ".join("%.1f" % d for d in vf["produced"]) or "(none)"))
     print("  largest group with NO flip  : %s" % (
@@ -752,6 +1002,17 @@ def main():
             print("  n=%d flipped=%-5s groups=%-4d %s"
                   % (key[0], key[1], len(vals),
                      " ".join("%.1f" % v for v in vals)))
+        # The same rows split by the criterion, because the band and the
+        # criterion answer the same question and only one of them can be
+        # checked against the other.
+        print("  per group: cs / rmv values / flipped")
+        for grp in sorted(groups, key=lambda g: g["caster_s"]):
+            print("    %5.1f cs n=%d rmv=%-9s flipped=%-5s via=%-8s %s"
+                  % (grp["caster_s"], grp["n"],
+                     ",".join("-" if v is None else str(v)
+                              for v in grp["remove_values"]),
+                     id(grp) in flipped, grp["complete_via"],
+                     ",".join(a.replace("npc_dota_hero_", "") for a in grp["actors"])))
 
     if args.track:
         game, hero, t0, t1 = args.track.split(":")

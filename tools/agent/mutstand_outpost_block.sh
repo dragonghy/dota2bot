@@ -25,6 +25,13 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 cp "$TOOL" "$WORK/tool.orig"
+# The restore check compares against THE BYTES THE STAND STARTED FROM, not
+# against HEAD.  ⚠️ It used `git diff --quiet` until 2026-09-08, which calls a
+# perfectly restored file DIRTY whenever the tool has uncommitted edits -- i.e.
+# exactly while a change to it is being developed, which is the only time the
+# stand is being run.  That run reported `caught=12 survived=0` and then told
+# its own author not to trust it.
+( cd "$REPO" && sha256sum "${TOOL#$REPO/}" > "$WORK/sums" )
 
 purge_cache() {
 	find "$REPO/tools/batch_test/behavioral/__pycache__" \
@@ -129,6 +136,21 @@ mutate "M6 flip not joined to this outpost" \
 	'                if -0.5 <= f["t"] - grp["t1"] <= window_s and f["pos"] == post]' \
 	'                if -0.5 <= f["t"] - grp["t1"] <= window_s]'
 
+# M11 credit one flip to EVERY group whose window contains it, which is what
+# this probe did until 2026-09-08: chaos_knight's aborted 3.0 cs group and the
+# 3.1 cs group that bought the capture both printed flip=True
+# (20260907_003641_slot2), and the criterion then read as disagreeing with
+# ground truth on a group that captured nothing.
+mutate "M11 one flip credited to every group in range" \
+	'        keep = max(sharers, key=lambda r: r["t1"])' \
+	'        keep = None'
+
+# M12 keep the credit on the EARLIEST sharer instead of the latest.  Same
+# one-to-one bookkeeping, wrong end of the burst.
+mutate "M12 flip credited to the earliest sharer" \
+	'        keep = max(sharers, key=lambda r: r["t1"])' \
+	'        keep = min(sharers, key=lambda r: r["t1"])'
+
 # M7 read a MISSING REMOVE value as "did not complete".  This is the
 # difference between "the field says no" and "there is no field", and it is
 # the one that would quietly turn a join bug into a fleet of fake aborts.
@@ -172,7 +194,7 @@ mutate "M10 enemy frames back to a name filter" \
 echo
 echo "MUTSTAND caught=$CAUGHT survived=$SURVIVED"
 restore
-if ( cd "$REPO" && git diff --quiet -- "${TOOL#$REPO/}" ); then
+if ( cd "$REPO" && sha256sum -c --status "$WORK/sums" ); then
 	echo "restore: clean (working tree matches what the stand started from)"
 else
 	echo "restore: DIRTY -- the stand did not put the file back, do not trust the run"

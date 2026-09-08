@@ -208,6 +208,26 @@ def probe_game(timeline, armed_team, complete_cs=olc.DEFAULT_COMPLETE_CS,
             "min_enemy_t": min_at, "min_enemy_hero": min_who,
             "enemy_samples": n_samples,
         })
+    # ONE FLIP BELONGS TO ONE GROUP (2026-09-08).  Same rule, same reason, as
+    # `outlatch_capture.verify_floor`: the flip that ends a re-issue burst sits
+    # inside the window of the ABORTED group before it too, and crediting both
+    # prints `flip=True` on a group that captured nothing -- in
+    # 20260907_003641_slot2 that put chaos_knight's 3.0 cs `rmv=1,1` group in
+    # the flip column beside the 3.1 cs `rmv=0` group that actually bought it,
+    # and the 2x2 below then reported a criterion disagreement that is not one.
+    # The credit goes to the group that ended NEAREST BEFORE the flip on that
+    # outpost; the rest keep every other column and lose only the flip.
+    by_flip = collections.defaultdict(list)
+    for row in rows:
+        if row["flip"]:
+            by_flip[(tuple(row["pos"]), row["flip_t"])].append(row)
+    for _key, sharers in by_flip.items():
+        if len(sharers) < 2:
+            continue
+        keep = max(sharers, key=lambda r: r["t1"])
+        for row in sharers:
+            if row is not keep:
+                row["flip"], row["flip_t"] = False, None
     return {"groups": rows, "unresolved": unresolved, "no_samples": no_samples}
 
 
@@ -475,6 +495,30 @@ def selfcheck():
              snaps(caster, 1, RAD, off, base_ts)
              + snaps(foe, 2, DIRE, foe_at, base_ts),
              teams)
+    # 13. ONE FLIP BELONGS TO ONE GROUP (20260907_003641_slot2).  Two groups
+    #     end 3.2 s apart and one flip follows both inside the window; the
+    #     credit belongs to the later one, which is the one that removed with
+    #     value 0.  Crediting both prints `flip=True` on a group that captured
+    #     nothing and turns one capture into a criterion disagreement.
+    t13 = tl(chan(1239.9, 1242.9, caster, "#DOTA_OutpostName_North", rmv=1)
+             + chan(1243.0, 1246.1, caster, "#DOTA_OutpostName_North", rmv=0),
+             build(NORTH, [1235.0, 1240.0], DIRE) + build(NORTH, [1248.5], RAD),
+             # base_ts is kept in front: `frames_by_hero` identifies the real
+             # hero by a pre-horn sample, so a track that starts at t=1239 is
+             # dropped as a duplicate entity stream and the group reads
+             # "unresolved" (this case failed exactly that way when written).
+             snaps(caster, 1, RAD, NORTH,
+                   base_ts + [1239.0, 1240.0, 1243.0, 1245.0, 1246.0])
+             + snaps(foe, 2, DIRE, (0, 0),
+                     base_ts + [1239.0, 1240.0, 1243.0, 1245.0, 1246.0]),
+             teams)
+    r13 = sorted(probe_game(t13, RAD)["groups"], key=lambda g: g["t1"])
+    ck("13a two groups, one flip", len(r13) == 2)
+    ck("13b the flip is credited to the later group only",
+       r13[1]["flip"] is True and r13[0]["flip"] is False)
+    ck("13c and the credited group is the one that removed with 0",
+       r13[1]["removed_zero"] is True and r13[0]["removed_zero"] is False)
+
     g12 = probe_game(t12, RAD)["groups"][0]
     ck("12a caster offset still resolves the post", g12["pos"] == list(NORTH))
     ck("12b distance is measured to the outpost (860), not the caster (1000)",

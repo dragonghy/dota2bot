@@ -235,6 +235,67 @@ ck("4h hero_track resolves the canon key, not the engine name",
    "an empty track reads exactly like 'the hero was not there'")
 
 
+# ---------------------------------------------------------------- section 5
+# THE COMPLETION CRITERION (2026-09-08).  Completion is read off the capture
+# modifier's `MODIFIER_REMOVE.value` (0 = the bar finished), and the
+# caster-second threshold is only the fallback for dumps without the field.
+# Four rounds of this stream hunted that threshold before anyone read this
+# field; these pins are what makes the criterion's disappearance loud.
+ck("5a the dumper still emits a `value` on every combat-log event",
+   re.search(r"Value\s+uint32\s+`json:\"value\"`", dumper),
+   "the field has no omitempty, so on a current dump a MISSING value means an "
+   "old dump -- not an event the engine declined to tag")
+ck("5b and it still fills it from the combat log entry, not from a name table",
+   "Value:      m.GetValue()" in dumper,
+   "if this becomes a resolved name the criterion is reading a string")
+
+
+def chanv(t0, t1, actor, outpost, rmv):
+    return [{"t": t0, "type": "MODIFIER_ADD", "inflictor": OC.CAPTURE_MODIFIER,
+             "actor": actor, "target": outpost},
+            {"t": t1, "type": "MODIFIER_REMOVE", "inflictor": OC.CAPTURE_MODIFIER,
+             "actor": actor, "target": outpost, "value": rmv}]
+
+
+NORTH, SOUTH = "#DOTA_OutpostName_North", "#DOTA_OutpostName_South"
+
+# 5c THE PAIR NO THRESHOLD CAN SEPARATE, from one real game
+# (20260907_122407_slot7, run 93cef1): venomancer held North for 5.9 s and
+# removed with value=1 (no flip); skeleton_king held South for 5.9 s and
+# removed with value=0 (flip).  Equal lengths, opposite outcomes.
+r = OC.read_game(tl(chanv(1028.2, 1034.1, "h_a", NORTH, 1)
+                    + chanv(1100.0, 1105.9, "h_a", SOUTH, 0)), 2)
+g = {x["outpost"]: x for x in r["groups"]}
+ck("5c equal-length channels are separated by the value, not the length",
+   abs(g[NORTH]["caster_s"] - g[SOUTH]["caster_s"]) < 1e-6
+   and g[NORTH]["complete"] is False and g[SOUTH]["complete"] is True,
+   "if this goes red, completion is back on a threshold and no threshold can "
+   "be right: the dump's 0.1 s resolution equals the difference to resolve")
+ck("5d and the reader says which criterion it used",
+   g[NORTH]["complete_via"] == "value" and g[SOUTH]["complete_via"] == "value")
+
+# 5e the fallback still exists and is still declared, so a dump without the
+# field reads by the threshold and can never be mistaken for a value reading.
+plain = [{"t": 100.0, "type": "MODIFIER_ADD", "inflictor": OC.CAPTURE_MODIFIER,
+          "actor": "h_a", "target": NORTH},
+         {"t": 106.0, "type": "MODIFIER_REMOVE", "inflictor": OC.CAPTURE_MODIFIER,
+          "actor": "h_a", "target": NORTH}]
+gf = OC.read_game(tl(plain), 2)["groups"][0]
+ck("5e a dump with no value falls back to the threshold and labels it",
+   gf["complete_via"] == "caster_s" and gf["removed_zero"] is None)
+
+# 5f the agreement table must be able to disagree.  A 2x2 whose off-diagonal
+# is unreachable is not evidence about the criterion, it is decoration.
+b = [{"t": 105.0, "name": OC.WATCH_TOWER, "x": 1, "y": 1, "team": 3,
+      "hp": 1, "hp_pct": 1, "alive": True},
+     {"t": 106.0, "name": OC.WATCH_TOWER, "x": 1, "y": 1, "team": 2,
+      "hp": 1, "hp_pct": 1, "alive": True}]
+v = OC.verify_floor([{"game": "g", "result": OC.read_game(
+    tl(chanv(100.0, 103.0, "h_a", NORTH, 1), buildings=b), 2)}])
+ck("5f a value!=0 group that flipped is reported as a disagreement",
+   len(v["criterion"]["disagree"]) == 1)
+
+
 def main():
     failed = [c for c in CHECKS if not c[1]]
     for name, ok, detail in CHECKS:

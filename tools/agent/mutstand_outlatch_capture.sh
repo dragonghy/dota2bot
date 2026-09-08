@@ -112,11 +112,12 @@ mutate "M2 unclosed channel counted as aborted" \
         attempts.append({"actor": _a, "t0": _t0, "t1": _t0, "dur": 0.0,
                          "outpost": _op, "leg": leg_of(_a)})'''
 
-# M3 bake the completion threshold in, so --complete-cs stops meaning anything
-# and the band in the report becomes unverifiable.
-mutate "M3 completion threshold hardcoded" \
-	'        complete = caster_s >= complete_cs' \
-	'        complete = caster_s >= DEFAULT_COMPLETE_CS'
+# M3 bake the FALLBACK threshold in, so --complete-cs stops meaning anything
+# on a dump with no `value` field and the band in the report becomes
+# unverifiable.
+mutate "M3 fallback threshold hardcoded" \
+	'                    complete, via = caster_s >= complete_cs, "caster_s"' \
+	'                    complete, via = caster_s >= DEFAULT_COMPLETE_CS, "caster_s"'
 
 # M4 file an unknown hero under 'base'.  Silently moves casts onto the leg
 # that did not make them.
@@ -129,8 +130,8 @@ mutate "M4 unknown actor defaults to base" \
 # M5 drop the upper edge of the flip window: any later flip in the game gets
 # credited to this attempt, so aborted channels start reading as captures.
 mutate "M5 flip window unbounded" \
-	'            hit = [f for f in r["flips"] if -0.5 <= f["t"] - grp["t1"] <= window_s]' \
-	'            hit = [f for f in r["flips"] if -0.5 <= f["t"] - grp["t1"]]'
+	'                     if -0.5 <= f["t"] - grp["t1"] <= window_s]' \
+	'                     if -0.5 <= f["t"] - grp["t1"]]'
 
 # M7 put the frame track back on a raw name filter over `snapshots` -- the
 # first cut of this reader, which printed 21 luna rows per second in
@@ -219,6 +220,70 @@ mutate "M13 members do not inherit the group verdict" \
 mutate "M14 equal-timestamp join falls outside the bar" \
 	'                       key=lambda m: (m[0], -m[1]))' \
 	'                       key=lambda m: (m[0], m[1]))'
+
+# ---------------------------------------------------------------- 2026-09-08
+# The criterion.  Completion is now read off `MODIFIER_REMOVE.value` and the
+# caster-second threshold is only the fallback for dumps without the field.
+# These six break the join, the aggregation, the direction, the fallback and
+# the agreement table -- i.e. every way the new reading can be wrong while
+# still printing a clean-looking 2x2.
+
+# M15 a MISSING value votes as "not zero" instead of leaving the group to the
+# fallback.  An older dump then reads as one where every capture failed, and
+# nothing in the output says the field was absent.
+mutate "M15 a missing value is read as a non-zero" \
+	'                seen = [v for v in vals if v is not None]' \
+	'                seen = vals'
+
+# M16 require EVERY member to remove with zero.  One bar, one verdict is the
+# whole point: the hitch-hikers on the W54 four-caster group all take the same
+# zero, but any member who left early carries a non-zero and would sink it.
+mutate "M16 all members must remove with zero" \
+	'                removed_zero = None if not seen else any(v == 0 for v in seen)' \
+	'                removed_zero = None if not seen else all(v == 0 for v in seen)'
+
+# M17 invert the criterion.  This is the reading a plausible mis-guess of the
+# field'"'"'s meaning produces (`value` as "progress made"), and it agrees with
+# ground truth exactly nowhere.
+mutate "M17 criterion inverted" \
+	'                removed_zero = None if not seen else any(v == 0 for v in seen)' \
+	'                removed_zero = None if not seen else any(v != 0 for v in seen)'
+
+# M18 let only the first member'"'"'s value vote.  Passes the co-caster case
+# whenever the zero happens to open first, which is why 12f2 exists.
+mutate "M18 only the first member's value votes" \
+	'                removed_zero = None if not seen else any(v == 0 for v in seen)' \
+	'                removed_zero = None if not seen else (seen[0] == 0)'
+
+# M19 make the threshold a second, conjunctive gate on top of the criterion.
+# The four rounds of threshold hunting are exactly the thing this removes: a
+# 2.0 caster-second group that removed with 0 DID finish the bar.
+mutate "M19 threshold still gates a value-complete group" \
+	'                    complete, via = removed_zero, "value"' \
+	'                    complete, via = (removed_zero and caster_s >= complete_cs), "value"'
+
+# M21 credit a flip to EVERY group whose window contains it, which is what this
+# reader did until 2026-09-08.  One capture at the end of a re-issue burst then
+# also lands on the aborted group before it, and the criterion is reported as
+# disagreeing with ground truth on a group that captured nothing.
+mutate "M21 one flip credited to every group in range" \
+	'            credited[id(max(cands, key=lambda grp: grp["t1"]))] = f' \
+	'''            for _c in cands:
+                credited[id(_c)] = f'''
+
+# M22 credit the FIRST group in range instead of the last.  Same one-to-one
+# bookkeeping, wrong end: the capture happens when the bar finishes, so the
+# group that ended nearest before the flip is the only one that can own it.
+mutate "M22 flip credited to the earliest group in range" \
+	'            credited[id(max(cands, key=lambda grp: grp["t1"]))] = f' \
+	'            credited[id(min(cands, key=lambda grp: grp["t1"]))] = f'
+
+# M20 count only half the off-diagonal as a disagreement.  The 2x2 then reports
+# perfect agreement on a corpus where the criterion missed a real capture --
+# the direction that flatters the criterion this stream just landed.
+mutate "M20 agreement table drops half the off-diagonal" \
+	'    crit["disagree"] = crit["zero_noflip"] + crit["nonzero_flip"]' \
+	'    crit["disagree"] = crit["zero_noflip"]'
 
 restore
 echo "=== restore verification ==="

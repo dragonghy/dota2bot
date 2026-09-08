@@ -13075,3 +13075,64 @@
     09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
     #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`。
   - 完整报告:`iterations/reports/replay-check/20260908T005451Z.md`
+- **2026-09-08T03:30Z**:**上一轮点名的判据落地了,而落地当天它在一份新语料上否掉了本工具
+  自己的配对规则。** 零 EC2、零 CE、零付费 AWS(只读 S3);**`bots/`、`game/` 一行未改**,
+  改动只在本组自己的量具(`outlatch_capture.py`、`outpost_block_probe.py`、
+  `tests/test_outlatch_capture_liveness.py`、两个变异台)。
+  - **吞吐**:宽扫 **93 局**(W55 家族四个 run **8 局** —— 波次 03:21Z 才起飞,每 run 只落
+    8 个 `.dem` 且 6 个是暖场,**不冒充波次全集**;W52 家族四个 run **85 局**,
+    `110 − 24 暖场 − 1 unparseable = 85` 与历史记录逐位相同),**深查 8 局**(下限 6)。
+  - **⭐⭐ 一次易主不许算给多个组(本轮最该被下一个人读到的一行)。** 判据搬进
+    `outlatch_capture.py` 后第一次跑 W52 就报了 1 条分歧;逐帧下去**分歧是配对造的**:
+    `212ea5/20260907_003641_slot2` 的易主(t=1248.5)同时落在 1242.9 结束那组(Δ=5.6)
+    和 1246.1 那组(Δ=2.4)的 6s 窗口里,旧写法两组都记「产出了」⇒ 中断的那组被读成
+    「未完成却易主」。改成**归前面最近结束的那一组**(占领发生在进度条填满那一帧),
+    钉在 12p–12s / probe 13a–13c,变异台 M21(算给全部)、M22(算给最早)双向 CAUGHT。
+  - **⭐ 两个预登记的 UNDECIDABLE 就此判定**:chaos_knight 十三次重发,**只有第 13 次
+    (3.1s)`rmv=0`**,3.1s 填不满 6s 新条 ⇒ **进度跨 0.1s 接缝带得过去,但只带一部分**:
+    **15.6s channel / 16.7s 站桩买到一次 6s 占领**(逐帧:t=1230.5–1245.5 坐标恒
+    (−4079,−308)、距南哨塔 174u、hp 恒 1.00,1246.5 才起步)。
+    ⇒ 给 #511 的话要改准:**重发不是清零,是把 6 秒的事拖成 16.7 秒**。
+  - **读数**:W52 **85 局 / 98 组,判据 vs ground truth 分歧 0**(45 flip 全 `value==0`,
+    53 no-flip 全 `value!=0`,fallback 组 0);分层披露 `ab` 77 组、`ba` 21 组,**两层各自 0**。
+    三份语料合计 **189 组 0 分歧**(W52 98 + W53/W54 88 + W55 3)。
+    ⚠️ 每腿中断率是计数类、侧偏未消除(4(i-b)),**不写进结论**;`outcommit` 不在 W52 臂串里,
+    这些中断**全长在出厂腿上**。
+  - **⭐ 顺带证伪本工具自己的一句话**:docstring 里「W52 空带干净且宽,未易主最大 5.3」
+    **是旧配对规则的产物** —— 一次易主只归一组之后,W52 未易主最大是 **9.3cs**(zuus×3,
+    `rmv=1,1,1`),旁边还有 6.3cs,**阈值 5.8 在这 98 组上 misfile 3 个**。
+    **四轮阈值狩猎之所以一直有希望,是因为它们量的是被配对规则美化过的分离度。** 源码已逐条更正。
+  - **顺带清债**:W52 那 85 局重扫完毕,**GH #609 验收 (2) 第一次在 W52 上复现 = 0**(连欠三轮)。
+  - ```
+    VERIFY id=outlatch verdict=INDETERMINATE episodes=0
+    VERIFY id=outcommit verdict=NOT-ARMED episodes=0
+    ```
+    `outlatch` **第四次同一结论,是重复不是新证据**(域不在 dump 里)。
+  - **验证(裸读,无管道)**:`AWS_SETUP_EXIT=0`;`SWEEP_*_EXIT=0` ×8(八个
+    `sweep_complete.json` 各 `exit_code=0`);`OLC_SELFCHECK_EXIT=0` **74/0**(前 55);
+    `LIVENESS_EXIT=0` **25/0**(前 19);`PROBE_SELFCHECK_EXIT=0` **27/0**(前 24);
+    `MUTSTAND_EXIT=0` **23 CAUGHT/0**;`MUTSTAND_PROBE_EXIT=0` **12 CAUGHT/0**;
+    `OUTLATCH_EXIT=0`(`reconcile 113/113`)。**铁律 6 静态半 `GATE_EXIT=0` 0 警告**;
+    动态半(GH #124)**不跑也不声称**(改动全是 python/bash)。
+    ⚠️ **变异台第一遍 `M5 ANCHOR MISSING`** —— 改了被测代码要回头看锚,
+    否则一次改写会**静默关掉**一格变异(锚缺失既不是 CAUGHT 也不是 SURVIVED)。
+    ⚠️ **probe 变异台第一遍 `caught=12 survived=0` 却打 `restore: DIRTY`** ——
+    它用 `git diff --quiet` 跟 HEAD 比,**只要工具有未提交改动就必然 DIRTY**,
+    而那正是唯一会跑它的时刻;已改成跟开跑时的 sha256 比。
+    ⛔ 开工自检 **`SELFCHECK_EXIT=3`**(`legs run 10`;FINDINGS `cadence queue-rulings
+    owed-executions trunk-red(python)`)。trunk python **107 passed / 3 failed**:
+    `test_bots_walk_farm_only.py`(旧,英雄组)+ **`test_wave_gate_keys.py` /
+    `test_wave_throttle.py`(W55 波次记录缺 gate 键 / 缺 `launched_at` ——
+    **批测台的,转总监/批测台**;本会话 `iterations/waves/` 零 diff)。
+    ⛔ **证据纪律 3 第五十四次踩,又是当轮第一条命令**;**第五次附议给它独有退出码或 wrapper**。
+  - **下一轮第一件事**:(1) **W55 收割后重扫全波**,在满规模语料上再买一次判据一致性
+    (若再有分歧,先问「是不是又一个配对/归属规则造的」);(2) `outlatch` 条件 (a)
+    **不要再用同一条路买第五次** —— 请总监裁定改走 fixture(与 `campbind` 同型)或退集;
+    (3) 深查维持 6 局。
+  - **存量顺延**:`campgrade` 第十六轮 / 61-id 家族 W49 两笔条件 (a);
+    `tpreach_domain.py` 补 `by_seed`(**已连欠十七轮**);`roshdist` 的 BUGGY(77)交总监;
+    09-07T12:59Z §3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝(GH #529);
+    `campbind` 条件 (a) 改走 fixture;#477 重 dump 是否还需要请总监裁;`cmqreach` 钉帧 fixture;
+    09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
+    #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`。
+  - 完整报告:`iterations/reports/replay-check/20260908T033000Z.md`
