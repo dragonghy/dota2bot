@@ -6621,6 +6621,18 @@
   `tests/test_tprecov_recover_trip.lua` **14/14**;`tools/agent/mutstand_tprecov.sh` **9/9 CAUGHT**。
   `state.json` 新增 `tprecov_20260908`。**`tprecov` gated 未 armed,P4.2 冻结期按 FROZEN-HOLD,
   本轮不申请入集**;`queue.json`/`test_set.md`/armed 串一字未动。未花 AWS 钱。
+  **全量套件抓到本轮自己的一处破坏(已修)**:`tests/test_bagsalve_backpack_source.lua` 的
+  `J.HasFieldRegenSource` 调用点普查 6→7 变红 —— 那个文件自己写着「**COUNT IS NOT THE
+  PROPERTY**,不许只把数字抬上去」,于是按它要求把 `ShouldSipNotTpRecover` **登记进第二份名单**
+  (自带 `IsModeTurbo`)并写明它**为什么不在第一份名单里**,再抬 anti-vacuum 下限(`bagsalve` 18/18)。
+  同一次全量里 `test_blinkflee_scope_ruling.lua` 的两条红**单独重跑 14/14 全绿** ⇒ 归因是
+  **并发负载下子进程尺子没跑完**,那个文件正确地拒绝把半截 manifest 读成零 —— 钉子在工作,不是 trunk 红。
+  **铁律 6 python 半本轮拒绝了 push,而红不是本组的**:GH #616 本轮把快 python 棘轮放进 pre-push,
+  `test_wave_gate_keys.py` 因 `W55_wave.json:gates` 缺 `inputs`/`harvest` 键而红;
+  已在**干净的 `origin/main` checkout** 上裸跑复现(`TRUNK_EXIT=1`,本轮 8 个改动文件无一是波次记录),
+  按横幅走 `RULE6_BYPASS=1`,抄下那一行:**`RULE6_BYPASS=1 -- the static gate was SKIPPED, not passed.`**
+  (静态半本轮是**手跑通过**的,`GATE_EXIT=0 CLEAN`)。归属已点名 **GH #620**([batch])。
+  全量套件本轮**未跑完**(GH #124),如实登记为**没有读数**,不当通过。总线 **GH #619**。
   详见 `iterations/reports/strategy/20260908T044131Z.md`。
 
 - 2026-09-08T01:25Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**。
