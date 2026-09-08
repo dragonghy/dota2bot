@@ -609,7 +609,8 @@ function X.ConsiderQ()
 	do
 		if J.IsValidHero( npcEnemy )
 			and J.CanCastOnNonMagicImmune( npcEnemy )
-			and J.WillMagicKillTarget( bot, npcEnemy, nDamage, 5.0 )
+			and X.lion_IsImpaleKillTargetInReach( bot, npcEnemy, nCastRange,
+					J.WillMagicKillTarget( bot, npcEnemy, nDamage, 5.0 ) )
 		then
 			nTargetLocation = npcEnemy:GetLocation()
 			return BOT_ACTION_DESIRE_HIGH, nTargetLocation, 'Q-击杀'..J.Chat.GetNormName( npcEnemy )
@@ -1558,6 +1559,100 @@ function X.lion_ShouldCommitUltKill( hBot, hTarget, nCastRange, bShippedLethal )
 	if not bShippedLethal then return bShippedLethal end
 
 	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'lionrreach' ) ) then return bShippedLethal end
+
+	if hBot == nil or hTarget == nil then return bShippedLethal end
+
+	if type( nCastRange ) ~= 'number' then return bShippedLethal end
+
+	return J.IsInRange( hTarget, hBot, nCastRange )
+
+end
+
+
+--- Is the Earth Spike kill target inside the range Earth Spike can be cast at?
+---
+--- Soak candidate `lionqkill` (turbo-only, INERT until armed).
+---
+--- THE DEFECT.  X.ConsiderQ returns a CAST POINT (X.SkillsComplement :458 feeds
+--- it to ActionQueue_UseAbilityOnLocation).  Twelve drop-out points in that
+--- function emit one, and eleven of them are provably inside cast range:
+---
+---   Aoe / 团战 / Farm x2 / Push / Farm-neutrals   bot:FindAoELocation(...,
+---       bot:GetLocation(), nCastRange, ...) -- targetloc is by construction
+---       within nCastRange of the base (J.GetAoeEnemyHeroLocation :299 wraps
+---       the same call, same nCastRange)
+---   攻击                                          J.GetDelayCastLocation(...,
+---       nCastRange, 260, ...) -- returns nil beyond nCastRange + 244 and
+---       otherwise clamps to nCastRange + 8 (jmz_func.lua :3036-3046)
+---   撤退 / 常规 / Roshan / Tormentor              read nInRangeEnemyList
+---       (nCastRange) or test J.IsInRange( ..., nCastRange ) outright
+---
+--- The twelfth is the 击杀 loop, and it is the ONLY one that can emit a point
+--- the ability cannot be cast at: it iterates nInBonusEnemyList
+--- (`nCastRange + 200`) and has NO distance term of any kind, then returns
+--- `npcEnemy:GetLocation()` verbatim.  A cast order on a point outside cast
+--- range is a MOVE order first, so Lion walks up to 200 units at the target.
+---
+--- WHAT THAT COSTS ON THIS HERO, and it is not the walk.  X.SkillsComplement
+--- stamps `lastCastQTime = DotaTime()` (:459) whenever castQDesire > 0 -- when
+--- the BID is made, not when the spell actually leaves.  X.ConsiderW's first
+--- guard is `lastCastQTime > DotaTime() - 0.8` (:791).  For an in-range bid the
+--- spell fires, Q goes on cooldown, IsFullyCastable() turns false and the Hex
+--- lock lifts one tick later.  For an out-of-range bid nothing is cast, so the
+--- next tick re-enters the same loop, re-bids, and re-stamps -- Hex is locked
+--- out for the WHOLE walk, renewed every frame by a cast that has not happened.
+--- That failure mode exists only on the branch that can bid out of range, which
+--- is why the term belongs here and not on the 攻击 branch's own slack.
+---
+--- ⛔ THE DOMAIN IS BEHIND ANOTHER GATE TODAY, AND THAT IS THE POINT OF LANDING
+--- IT NOW.  The 击杀 loop is dead on shipped defaults: X.GetImpaleKillDamage
+--- (:572) returns hAbility:GetAbilityDamage(), lion_impale declares no top-level
+--- AbilityDamage, so nDamage is a hard 0 and J.WillMagicKillTarget is false
+--- against anything alive (GH #175 filed exactly this and declined to fix it).
+--- The id that un-deadens it is `lionqdmg`, already registered and not yet
+--- waved.  So arming `lionqkill` ALONE measures a no-op -- and that is a fact
+--- about the wave order, NOT a reason to conjoin the two ids in code (naming
+--- `lionqdmg` in this predicate is the pullcad trap, and §5 of the test asserts
+--- this function does not).  It is registered as a promote-time atom instead:
+--- iterations/queue.json hero-49 asks for the pair, never for this id alone.
+---
+--- The reason to land the term BEFORE `lionqdmg` is waved: `lionqdmg` resurrects
+--- a kill branch that has no reach term, so a wave of `lionqdmg` alone buys a
+--- widening and a dive in one reading with no way to separate them.  With this
+--- term already in the tree the pair reads as one question.
+---
+--- DIRECTION, one-way by construction: the shipped answer is computed by the
+--- caller and handed in as `bShippedLethal`; every path returns it except the
+--- armed one, which can only turn a true into a false.  Armed fires on a strict
+--- SUBSET of shipped, same frames, same target (the loop has already chosen it;
+--- this function never re-picks).  A negative reading may only be read as "those
+--- refused walks were worth taking"; NEVER as "the lever added or moved a cast".
+---
+--- CONDITION (c).  Standard practice with a 0.3s-cast-point line nuke on a
+--- 823-hp support is that the spell is a tool of the position you are already
+--- in, not a reason to change position: walking an unknown distance at an enemy
+--- hero to finish him is the carry's job, not Lion's, and in Turbo the same 200
+--- units are also 200 units further from the tower he is standing under.
+---
+--- ⚠️ HONEST BOUNDS, three:
+---   1. The 4-in-band reading in §2 is a reading about the RING, not about the
+---      branch firing.  The branch's own gate cannot fire on this corpus at all
+---      (the hard 0 above), so §4 pays two declared injections to reach it.
+---   2. `nCastRange` here is the caller's own local (`GetCastRange() +
+---      aetherRange + 20`), passed in rather than re-derived, so the aether
+---      lens bonus and the file's own +20 compose exactly as the other eleven
+---      drop-out points see them.
+---   3. NOT in this id: the 攻击 branch's `nCastRange + 300` guard (it is
+---      already clamped downstream by J.GetDelayCastLocation, so its slack is
+---      56 units of dead guard, not a dive), and the dead second Farm block at
+---      :765 (unreachable for every input -- strictly stronger AoE count than
+---      the block at :675 that shares all three of its guards).  Both are
+---      registered in tests/test_lion_q_kill_reach.lua §6, neither is fixed here.
+function X.lion_IsImpaleKillTargetInReach( hBot, hTarget, nCastRange, bShippedLethal )
+
+	if not bShippedLethal then return bShippedLethal end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'lionqkill' ) ) then return bShippedLethal end
 
 	if hBot == nil or hTarget == nil then return bShippedLethal end
 

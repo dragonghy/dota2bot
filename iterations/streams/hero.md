@@ -22,7 +22,70 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--126. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+-127. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
+     timeline)、CM 的 `cmfarcreep` 域(`hero-42`)、`lionultcash` 域(`hero-43`)、
+     `lionrreach` 域(`hero-44`)、`wkqlane` 域(`hero-45`)、`axecullreach` 域(`hero-46`)、
+     `cmlaneband` 域(`hero-47`)、`zusjumpland` 域(`hero-48`)、**新增 `lionqkill` 域
+     (`hero-49`)**;`wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`,逐字不变。
+   - **⛔ 不许**顺手把 `lionqdmg` 合取进 `lionqkill` 的谓词 —— 那正是 pullcad 陷阱,而
+     这两个 id 就在同一个循环里紧挨着,所以这条特别近;变异台 **M10** 就是它。
+     依赖已经**用 promote-atom 的形式提请**(见 `-126` 的接力棒条),不许改用代码合取。
+   - **⭐ 本轮(`-127`)顺手看到、没做的两条线索,都在 `bots/BotLib/hero_lion.lua`**:
+     (甲) **`X.ConsiderQ` 底部第二个 Farm 块对任何输入都不可达** —— 与上面那个 Farm 块
+     共享全部三条守卫和同一条 `#nNeutralCreeps >= 3`,却要求**更强**的 AoE 计数(3 vs 2)。
+     **死代码,不是行为杠杆**;弄活它是一次**变宽**,按 P4.4 不能当主体,走
+     `tests/test_dead_numeric_local_census.lua` 那一族。已被
+     `tests/test_lion_q_kill_reach.lua` §6 限度 3 钉住。
+     (乙) **`X.ConsiderQ` 的「攻击」分支 `if nSkillLV >= 2 or nMP > 0.68 or J.GetHP(botTarget) < 0.5`
+     是一条析取**,而 `nSkillLV >= 2` 从 Impale 二级起恒真 ⇒ 另外两条(其中一条是这个分支
+     **唯一**的省蓝条款)从那时起是死项。⚠️ **先量再动**:把它收成合取是一次**收窄**,
+     方向可能对,但「作者本来想写 and」是**推测不是证据**;要动先量出 rank>=2 帧的占比。
+   - **⭐ 下一轮开工顺序(这条已连续两轮有效,继续保留)**:开工自检**跑完**再动变异台,
+     **不要并行**(GH #507)。本轮遵守了,没有复发。
+   - **⭐ 自检退出码只能用文件重定向读**(`> /tmp/sc.log 2>&1; echo "EXIT=$?"`)。
+     用管道读会被脚本当场 REFUSED —— 本轮是**第 11 次**踩到,且**又是本轮第一条命令**。
+
+-126. ~~**⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-08T17:05Z 做完:换了英雄(Lion;上一次动他是 09-08T02:01Z 的 `lionrreach`,
+   收的是 **R** 的击杀循环,而 **Q(Earth Spike)整条链上只有一个已登记 id(`lionqdmg`),
+   管的是伤害不是到达**)。`X.ConsiderQ` 返回的是一个**施法点**,十二个落单点里**十一个**
+   证得出它在 `nCastRange` 内,**第十二个是击杀循环,零距离项**。gated `lionqkill` 把
+   那一项补上。`bots/` 有真代码行。** 报告 `iterations/reports/hero/20260908T170500Z.md`。
+   新 `tests/test_lion_q_kill_reach.lua`(**12 例**)+ `tools/agent/mutstand_lionqkill.sh`
+   (**10/10 CAUGHT**)。登记 `state.json:lionqkill_20260908`,新请求 `queue.json:hero-49`,
+   新开 GH **#640**。本轮 `[hero]` open issue **一条可认领的都没有**(12 条逐条理由见报告 §1)。
+   - **⭐ 承重的不是又一条到达项,是一条只有 Q 才有的代价**:`X.SkillsComplement` 在**出价**时
+     (不是在法术离手时)盖 `lastCastQTime`,而 `X.ConsiderW` 第一条守卫是
+     `lastCastQTime > DotaTime() - 0.8`。射程内的出价会真的施法 ⇒ Q 进 CD ⇒ 锁一帧后自动
+     解除;射程外的出价什么也没施 ⇒ 下一帧同一循环再出价、**再盖章** ⇒ **整段路上 Hex 被
+     一次没发生的施法逐帧续锁**。这就是为什么到达项属于击杀循环,不属于「攻击」分支的 slack。
+   - **⭐⭐ 本轮最值得带走的是「域藏在另一道闸后面」这件事本身,以及它的正确处置**:
+     击杀循环在出货默认下是**死的**(`GetAbilityDamage()` 恒 0,GH #175),解死它的是
+     **`lionqdmg`**,已登记未发波。⇒ **`lionqdmg` 单独发波买到的是「一次变宽」+「一次送死」
+     挤在一个读数里,分不开。** 正确处置是**先把到达项落地**、再把依赖用
+     **promote-atom** 提请(`impale_kill_needs_damage`,subject=`lionqdmg`、prereq=`lionqkill`,
+     **单向**),**绝不**在谓词里合取(那是 pullcad 陷阱,M10 就是它)。
+   - **⭐⭐⭐ 「本杠杆单独 arm 是惰性的」必须驱动出来,不能写成散文** —— 那恰恰是 verdict
+     会读回成「tested, no effect」的那句话。§5 在整份语料上驱动了它,而且断言的是一个
+     **精确的 1** 而不是 0:出货在 §4 的注入下唯一驱动出的那次施法来自**常规**分支
+     (`f_260905_004847_lion_drain_bkb`,Lion 24 级、bristleback 386.86u,环内)。
+   - **⚠️ 第一版 §5 断言「出货驱动出 0 次施法」,当场红了** —— 注入 B(敌人压到 40 血)
+     把常规分支也一起打开了。**红的是断言不是代码**;当时若改注入而不是改断言,就是为了
+     让一句话成立而修改量具。
+   - **⚠️ 变异台 M5/M8 第一版被记成「红但消息不对」**,因为它们先被 §3 抓住而 `want` 写的是
+     §4 的消息。**`want` 要写变异体第一句会说的话,不是写你希望它说的话** —— 与上一轮 M10
+     完全同型的一课,**连续两轮**。
+   - **⚠️ 这个文件里锚点歧义是真实风险**:`X.lion_IsImpaleKillTargetInReach` 的四条守卫行与
+     `X.lion_ShouldCommitUltKill` 的**逐字相同**(故意的一致性)。变异台因此写死一条规矩:
+     **每个锚点都必须跨过带 id 的那一行**。
+   - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**:cadence / owed-executions,**都不是本轮的**;
+     另有一条 UNCERTIFIABLE(`test_selfcheck_lua_leg.py` 120.1s 没跑完)。自检**第 11 次**
+     用管道读退出码被当场拒绝,**且又是本轮第一条命令**。
+   - ✅ **上两轮自捉的「自检与变异台并行」(GH #507)本轮没有复发。**
+
+-126b. **⭐ 本条为历史保留(`-126` 原文的线索清单)。**
    - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
      timeline)、CM 的 `cmfarcreep` 域(`hero-42`)、`lionultcash` 域(`hero-43`)、
      `lionrreach` 域(`hero-44`)、`wkqlane` 域(`hero-45`)、`axecullreach` 域(`hero-46`)、
@@ -5467,6 +5530,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-08T17:05Z(报告 `iterations/reports/hero/20260908T170500Z.md`;**backlog:`-126` 做完、
+  新开 `-127`**;焦点英雄 **Lion**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动)
+  **`X.ConsiderQ` 返回的是一个施法点;十二个落单点里十一个证得出它在射程内,第十二个
+  一个距离项都没有。gated `lionqkill` 把那一项补上,`bots/` 有真代码行。**
+  六个落单点走 `bot:FindAoELocation(..., bot:GetLocation(), nCastRange, ...)`(targetloc 按构造
+  就在环内);「攻击」走 `J.GetDelayCastLocation(..., nCastRange, 260, ...)`(超过
+  `nCastRange + 244` 返回 nil,否则钳到 `nCastRange + 8`);撤退/常规/肉山/Tormentor 读
+  `nInRangeEnemyList` 或直接 `J.IsInRange`。**击杀循环遍历 `nInBonusEnemyList`
+  (`nCastRange + 200`),零距离项,原样 `return npcEnemy:GetLocation()`。**
+  新 `X.lion_IsImpaleKillTargetInReach`,新 `tests/test_lion_q_kill_reach.lua`(**12 例**)
+  + `tools/agent/mutstand_lionqkill.sh`(**10/10 CAUGHT**)。
+  `state.json:lionqkill_20260908`、`queue.json:hero-49`、GH **#640**(本轮开)。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
+  本轮 [hero] open issue **一条可认领的都没有**(12 条逐条理由见报告 §1)。
+  - **⭐ 承重的不是又一条到达项,是一条只有 Q 才有的代价**:`X.SkillsComplement` 在**出价**时
+    盖 `lastCastQTime`,`X.ConsiderW` 第一条守卫是 `lastCastQTime > DotaTime() - 0.8`。
+    射程内的出价会施法 ⇒ Q 进 CD ⇒ 锁一帧后解除;射程外的出价什么也没施 ⇒ 下一帧再出价
+    **再盖章** ⇒ **整段路上 Hex 被一次没发生的施法逐帧续锁**。
+  - **⭐⭐ 真实帧上那段几何是零注入的**:115 个 frame 文件 → 27 个活 Lion → 27 个 Impale 已点
+    → `nCastRange + 200` 列表里 **22 次**敌方英雄出现,**18 内 / 4 外**。钉帧
+    `f_222428_lion_lich_burst`:`GetCastRange()` 从 KV 答**真实的 650**,加文件自带 20 ⇒ **670**;
+    lich **676.42u**(出环 **6.42u**)、axe **740.90u**。端到端(付两条申报注入)**12 个 frame
+    驱动出施法,armed 后 10 个逐位不变、2 个被拒**(676.42 / 867.91,都在环外)。
+  - **⭐⭐⭐ 域藏在另一道闸后面,而正确处置不是合取**:击杀循环在出货默认下是**死的**
+    (`GetAbilityDamage()` 恒 0,GH #175),解死它的是 **`lionqdmg`**(已登记未发波)。
+    ⇒ `lionqdmg` 单独发波买到的是「变宽」+「送死」挤在一个读数里。⇒ 先落地到达项,
+    再把依赖用 **promote-atom** 提请(`impale_kill_needs_damage`,subject=`lionqdmg`、
+    prereq=`lionqkill`,**单向**;裁定权在总监,GH #640 与 `queue.json:hero-49` 都写了)。
+    **绝不**在谓词里合取 —— 那是 pullcad 陷阱,变异台 **M10** 就是它。
+  - **⚠️ 第一版 §5 断言「出货驱动出 0 次施法」,当场红了**:注入 B 把**常规**分支也打开了。
+    改的是断言,不是注入。**为了让一句话成立而修改量具,是这一步最容易走的岔路。**
+  - **⚠️ 变异台 M5/M8 第一版「红但消息不对」**,因为它们先被 §3 抓住而 `want` 写的是 §4 的
+    消息。**`want` 要写变异体第一句会说的话** —— 与上一轮 M10 同型,**连续两轮**。
+  - **⚠️ 锚点歧义在这个文件里是真实风险**:新 helper 的四条守卫行与 `X.lion_ShouldCommitUltKill`
+    的**逐字相同**;变异台因此规定**每个锚点都必须跨过带 id 的那一行**。
+  - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**:cadence / owed-executions,都不是本轮的;
+    另一条 UNCERTIFIABLE 是 `test_selfcheck_lua_leg.py` 120.1s 没跑完。自检**第 11 次**
+    用管道读退出码被拒,**又是本轮第一条命令**。
+  - ✅ **「自检与变异台并行」(GH #507)本轮没有复发。**
 - 2026-09-08T13:55Z(报告 `iterations/reports/hero/20260908T135500Z.md`;**backlog:`-125` 做完、
   新开 `-126`**;焦点英雄 **Zeus**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动)

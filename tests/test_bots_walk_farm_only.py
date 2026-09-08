@@ -167,6 +167,18 @@ UNRESOLVED_HAND_READ = {
     """tests/test_cm_w_lane_band.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
         "tests/frames}",
+    # Hand-read 2026-09-08 (hero), at :137-152: `corpus_paths()` takes no
+    # parameter, its four callers (:246, :377, :435, :500) pass none, and the
+    # loop is `for _, dir in ipairs({ FIXTURE_DIR, STAGED_DIR })` over the
+    # literals at :113-114 ('tests/fixtures' / 'tests/frames').  Same shape as
+    # the lion/wk/axe/cm/zuus sisters above; bots/ is not in the enumeration.
+    # The file's other popen (:425) is `grep -rl "'lionqkill'" bots` -- CAND is
+    # a literal at :105, so it resolves statically and is measured by execution,
+    # not by this list.  Registered in the SAME work unit that created the file
+    # (GH #596's habit, and the fifth round to keep it).
+    """tests/test_lion_q_kill_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
+        "tests/frames}",
     """tests/test_fixture_mana_price.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
         "d in {tests/fixtures, tests/frames}",
     # Hand-read 2026-09-06 (director), at :399-400: the loop is written
