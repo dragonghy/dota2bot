@@ -13432,6 +13432,8 @@
     09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
     #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`;
     `outlatch` 继续不买第六次(等 #623)。
-  - **本轮的评论/issue**:GH #632(验收第 1 条兑现)、新开 [harness] issue
-    (cell (2) 的三分读的是一批赶路帧)。GH #637 由批测台开,本组不重复留言。
+  - **本轮的评论/issue**:GH #632 `issuecomment-5588127725`(验收第 1 条兑现)、
+    **新开 GH #638**([harness]:cell (2) 的三分读的是一批赶路帧,含建议钉的那一帧
+    与被排除的「逃命污染」阴性结果)。GH #637 由批测台开,本组不重复留言。
+    两份草稿均 `claim_precheck.sh` **EXIT=0**,且**先 push 后发表**(GH #290)。
   - 完整报告:`iterations/reports/replay-check/20260908T153800Z.md`
