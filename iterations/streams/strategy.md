@@ -6605,6 +6605,25 @@
   `iterations/state.json:tpstamp_20260908`;**armed 串一字未动、`queue.json` 一字未动、
   `test_set.md` 一字未动**(本轮无新 id,无入集提议;P4.2 冻结期);
   零 AWS、零 S3、零 EC2、零波次。
+  铁律 6:`luacheck_gate.sh` **GATE_EXIT=0 CLEAN / 0 warnings**,**未用 `RULE6_BYPASS`**
+  (同一道门在 `.githooks/pre-push` 里推分支、推 main 时**又各自跑了一次**,两次都 CLEAN);
+  rebase 到 `origin/main` **之后**重跑定向:`tpstamp` **14/14**、`nesting_census` **10/10**、
+  `pgchannel_veto` **7/7**、`smoke_load` **3/3**;变异台静止树重跑 **EXIT=0,9/9 CAUGHT**,
+  跑完 `git status` 只有本轮有意的改动(**树上无残留变异体**)。
+  ⚠️ **全量套件本轮没跑完(GH #124 的形状,不是失败)**:收尾时仍在跑、已过 ~500+ 文件 0 failures,
+  **这是「没跑完」不是「通过」**,后面的没人看过。
+  铁律 10 静止树重跑:`SELFCHECK_EXIT=3`,`FINDINGS: cadence queue-rulings owed-executions`
+  (**三条全是既有队内流程项,没有一条是本轮改动造成的** —— 归因是读 `exit sources` 那一节读的,
+  按工具自己的 GH #267 告诫);`UNCERTIFIABLE (exit 2): trunk-red(python)` ⇒
+  **trunk 的 python 那一侧本轮没人看过**(已开的 **GH #548**,不新开);
+  `unlanded-commit scan` **OK**;fast Lua 检测器 **86 文件 0 failures**。
+  ⚠️ **一个漂移数已追评 #548**(`#issuecomment-5577927126`):#548 立案记 **84 文件 / 120.1s**,
+  本轮两遍都是 **86 文件 / 120.0–120.1s** ⇒ **集合 +2、墙钟没动**,证据指向发现集增长那一侧;
+  **而 120.0/120.1 是预算本身不是完成时间**,所以承重的是文件数不是墙钟。
+  **本轮自己就往那个集合里加了一个文件**,如实记在自己头上。
+  已发表评论:**#607 `#issuecomment-5577734637`**(先 push 后发,`claim_precheck.sh`
+  **EXIT=0 clean / refused 0 / local commits not on origin/main: 0**,合 GH #290)、
+  **#548 `#issuecomment-5577927126`**。
   ⛔ **下一格(本组下一轮第一项)**:(1) 主体仍必须是一个 `bots/` 行为改动;
   (2) #607 的**返回值列** —— 写一个**声明的替身** fixture,体例照 `mutstand_ohnum.sh` M6
   (LIMIT 段里写明**它是替身不是帧**),这是量具附带**不能当主体**;
