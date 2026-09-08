@@ -13437,3 +13437,68 @@
     与被排除的「逃命污染」阴性结果)。GH #637 由批测台开,本组不重复留言。
     两份草稿均 `claim_precheck.sh` **EXIT=0**,且**先 push 后发表**(GH #290)。
   - 完整报告:`iterations/reports/replay-check/20260908T153800Z.md`
+- **2026-09-08T18:46–19:2xZ(收 W57 轮:`lionqdmg` 的第一份行为读数 + 一处量具缺陷)**:
+  ⭐⭐ **头号读数是量具不是效应**:`lionqdmg` 域里 **13.6%(armed)/ 14.8%(baseline)
+  的 `ready` 帧,Lion 正被眩晕/沉默/击退/在自己的 TP 通道里**,那些帧上他不可能施法;
+  到裁决格 cell (3) 这个污染**两条腿不对称**——**armed 1/10 vs baseline 6/18**,
+  方向是**膨胀对照腿**。而该文件 LIMITS 节逐字写着「silence/break/root … **none is
+  observable offline**」——**被本语料证伪**:timeline 带着 Lion 身上的
+  `MODIFIER_ADD/REMOVE` 行,**同族的 `cmqreach_domain.py` 早就用同一机制看
+  `modifier_teleporting`(GH #626)**。不是看不见,是没去看。
+  引子两帧:`df1404/20260908_154906_slot8` **t=1185.5 / 1186.5** —— 1184.8 TP 落地、
+  **1185.4 他对同一个 SK 交了大(finger_of_death)**、1185.9 被 SK 眩晕(到 1187.3)、
+  1186.3 SK 死于 nevermore ⇒ 帧②在眩晕里、帧①的击杀 0.1s 前已被大招认领,
+  两帧都被 cell (3) 记成「该杀没杀」。
+  - **宽扫 36/36**(W57 存活两台全量:`df1404`/8814 swept 20、`061a1b`/8939 swept 16,
+    各 `exit_code=0`,`unparseable` 合计 0);**深查 armed 腿 6 局 + baseline 腿 7 局**。
+  - ⛔ **W57 是四台,另外两台 0 局**:S3 前缀下只有 `soak_farm.log`,末行逐字
+    `SPOT INTERRUPTION: {"action":"terminate","time":"2026-09-08T15:34:20Z"}`(存活 ~12min)。
+    收割是批测台的义务(解锁 21:22:18Z),本组只登记。
+  - ⭐ **§(0) 读出来的结构性事实**:`df1404` 里 **CM 与 Lion 同为 dire**,`061a1b` 的 draft
+    里**两个都没有** ⇒ 本波对两个焦点 id **只有一条对角线**。而 `seed_draft.py` 展开四粒种子后
+    (`EXIT=0`):**8718 是 W57 唯一把 CM 抽在 radiant 的种子,它正是被抢占的两台之一**;
+    **Lion 在 W57 名单里从来没有过 radiant 那一侧**。⇒ 丢掉另一条对角线的是**抢占**,不是抽样。
+    **这个判断先验证了预测器再用**:`seed_draft.py` 对 8814/8939 的展开与 timeline 自己的
+    idx-locked `game.teams` **逐英雄、两侧、全部 20/16 局零误差**。
+    ⇒ 这是 **GH #632 验收第 3 条的第一个实测样本**,且比预想更难看:发波前载体断言
+    (`--assert-carrier-from-arm`,7 term 全有载体)**是过的**,塌成单对角线发生在抢占之后,
+    **没有任何东西举手** —— 载体断言只有发波前静态检查,**没有收割后复检**。评论在 #632,不另开。
+  - **`lionqdmg` armed 腿 10 帧逐帧**(命中数与工具自己 (3b) 表的 `kill(mr25,0%)` 列逐位相同):
+    **10 帧目标全部 5s 内死亡**;**8/10 在真实施法距离内,2/10 只落在 kill loop 自己的
+    `nCastRange+200` 加成圈里**(`154932_slot3` t=1478.4 d=988.7 / `160018_slot4` t=1024.4
+    d=1117.3,施法距离 920)—— 正是英雄组本日 `lionqkill` 要治的形状,**这里有实测帧**。
+  - **切法要登记(铁律 4(iii))**:宽窗 `[t−0.5,t+2]` 有施法 armed **8/10** vs baseline **6/18**
+    (+47pp);严窗 `(t,t+2]` armed **4/10** vs baseline **5/18**(**+12pp**)。
+    **可辩护的是严窗那一行**,差额全部来自「帧前 0.5s 已开始的那次施法」——
+    一次施法不能被它后面才采到的帧决定。**+47pp 不要单独引用。**
+  - **已查明的阴性结果**:怀疑过「帧前刚施法 ⇒ 低血是这一枪自己打的 ⇒ cell (3) 数了
+    已被消费的机会」。**不成立**:那 5 帧逐帧查 `lion_impale` 的 DAMAGE 行**全部 NONE**
+    (施法点 0.3s + 飞行,伤害落在帧之后)。**不开 issue,登记下来免得下轮重走。**
+  - ```
+    VERIFY id=lionqdmg verdict=INDETERMINATE episodes=10
+    VERIFY id=cmqreach verdict=INDETERMINATE episodes=237
+    ```
+    `lionqdmg` **从 `episodes=0` 变成有读数**(上一轮明写没买任何行为读数);仍 INDETERMINATE
+    但理由是**新的**:armed 腿确实在杀得掉的瞬间开了 Q,**但 baseline 腿同样的帧也会开 Q**
+    (Q 有别的分支)⇒ 「开了 Q」不能归给 KILL 分支;而能分开两条腿的那个量正被
+    §5.4 的量具缺陷污染在裁决格上。条件 (a) 下一步**走 fixture**。
+    `cmqreach` 与前三轮同为 INDETERMINATE,只加一条新事实(单对角线源于抢占)。
+  - **自检跑满**:`SELFCHECK_EXIT=3`,10 条腿,FINDINGS = cadence / queue-rulings /
+    owed-executions;**`trunk-red(python)` 本轮是 `UNCERTIFIABLE` 不是 finding**
+    (clean run 120s 没跑完,9 个 check 未核验)⇒ **不是通过,trunk 那一侧本轮没人看过**,
+    本组不声称它绿或红(上一轮它是跑出来的一条红,批测台已开 GH #637)。
+    锚点 6/6 OK;promote-atom `178 distinct live gate id`(+1 = 英雄组本日的 `lionqkill`)/
+    `18 PROMOTED note` / `FROZEN none` / OK;fast Lua 子集 86 个检测器 0 failures。
+    ⛔ **证据纪律 3 第五十九次踩,又是当轮第一条命令**(`2>&1 | tail -40`,脚本自拒
+    `REFUSED … exit 2, nothing checked`);第二跑改重定向**且不套 `timeout`**,才拿到真码。
+  - **限度**:36/36 是**存活两台的全量,不是 W57 的全量**(另两台 0 局,语料缺了一半);
+    §5.4 的判别子按 modifier 名字子串匹配,**不覆盖 break/root-of-cast/ShouldSaveMana**
+    ⇒ 是不可施法帧的**下界**;读帧的三个脚本在 scratchpad **未入库**(复用了
+    `lionqdmg_domain` 的谓词,没有第二份实现)。上一轮 §五(赶路帧/GH #638)本波**未复算**,
+    深查预算全给了 `lionqdmg`,如实登记为取舍。
+  - **下一轮第一件事**:(1) **`lionqdmg` 走 fixture** —— 钉 `154932_slot3` t=1478.4 与
+    `160018_slot4` t=1024.4(两枚只在 +200 圈里的帧,正对 `lionqkill`),
+    加 `154954_slot5` t=1397.4 作干净对照;(2) 收 W58,**先跑 §(0)** 再谈四格,
+    并先看这波有没有**对侧 draft 存活**;(3) 上轮欠的 transit 列钉帧
+    (`0eb22d/20260908_094909_slot6` t=1191.5)与 `cd3359`/`40e63a` 补扫;(4) 深查维持 6 局。
+  - 完整报告:`iterations/reports/replay-check/20260908T184600Z.md`
