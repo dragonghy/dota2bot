@@ -214,6 +214,7 @@
    6743,
    6858,
    6877,
+   7529,
    111111,
    131313,
    222222,
@@ -330,6 +331,8 @@
    6907,
    7154,
    7162,
+   7529,
+   7719,
    111111,
    222222,
    444444,
@@ -400,6 +403,8 @@
    6877,
    7144,
    7156,
+   7719,
+   7789,
    333333
   ],
   "dragon_knight": [
@@ -495,6 +500,9 @@
    6553,
    6858,
    7154,
+   7527,
+   7529,
+   7719,
    111111,
    131313,
    222222,
@@ -544,6 +552,7 @@
    3968,
    4470,
    5037,
+   7789,
    131313,
    444444
   ],
@@ -620,7 +629,8 @@
    5813,
    6072,
    6487,
-   6553
+   6553,
+   7529
   ],
   "jakiro": [
    101,
@@ -713,6 +723,9 @@
    5813,
    6128,
    6619,
+   7529,
+   7719,
+   7789,
    111111
   ],
   "lich": [
@@ -770,6 +783,8 @@
    6553,
    6858,
    7156,
+   7527,
+   7789,
    246802,
    424242,
    555001,
@@ -930,6 +945,8 @@
    6907,
    7144,
    7156,
+   7527,
+   7719,
    131313,
    333333,
    778899
@@ -1016,6 +1033,7 @@
    6907,
    7154,
    7156,
+   7527,
    246802,
    444444,
    777777
@@ -1126,6 +1144,7 @@
    6128,
    6877,
    7154,
+   7789,
    777777
   ],
   "obsidian_destroyer": [
@@ -1217,6 +1236,10 @@
    6907,
    7144,
    7162,
+   7527,
+   7529,
+   7719,
+   7789,
    111111,
    222222,
    424242
@@ -1298,6 +1321,7 @@
    6128,
    6421,
    6858,
+   7527,
    131313
   ],
   "phantom_assassin": [
@@ -1383,6 +1407,8 @@
    6877,
    7144,
    7162,
+   7719,
+   7789,
    444444
   ],
   "queenofpain": [
@@ -1615,6 +1641,8 @@
    7154,
    7156,
    7162,
+   7527,
+   7789,
    333333,
    424242,
    555001,
@@ -1669,6 +1697,7 @@
    5502,
    6877,
    7154,
+   7529,
    246802,
    424242,
    444444,
@@ -1743,6 +1772,7 @@
    6487,
    6619,
    6743,
+   7719,
    222222,
    246802,
    424242,
@@ -1924,6 +1954,8 @@
    6907,
    7154,
    7156,
+   7529,
+   7789,
    555001
   ],
   "storm_spirit": [
@@ -2032,6 +2064,7 @@
    6487,
    6907,
    7162,
+   7527,
    111111,
    246802,
    444444,
@@ -2137,6 +2170,7 @@
    6421,
    6877,
    7156,
+   7719,
    131313,
    222222,
    777777
@@ -2257,6 +2291,8 @@
    6743,
    6858,
    7162,
+   7529,
+   7719,
    424242
   ],
   "warlock": [
@@ -2279,6 +2315,7 @@
    3101,
    4950,
    6553,
+   7527,
    111111,
    333333
   ],
@@ -2447,6 +2484,9 @@
    7154,
    7156,
    7162,
+   7527,
+   7529,
+   7789,
    222222,
    555001,
    777777,
@@ -2850,7 +2890,11 @@
   "spot_20260907_062206_1_523f21baf14a03cadfb5df7002ba7124d70375c2_dc6b6d",
   "spot_20260907_062208_1_523f21baf14a03cadfb5df7002ba7124d70375c2_5acea8",
   "spot_20260907_122216_1_523f21baf14a03cadfb5df7002ba7124d70375c2_1d6304",
-  "spot_20260907_122221_1_523f21baf14a03cadfb5df7002ba7124d70375c2_93cef1"
+  "spot_20260907_122221_1_523f21baf14a03cadfb5df7002ba7124d70375c2_93cef1",
+  "spot_20260907_211450_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_8b5d8e",
+  "spot_20260907_211506_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_77e00d",
+  "spot_20260907_211509_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_3958d7",
+  "spot_20260907_213525_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_e8a868"
  ],
  "seeds": {
   "101": {
@@ -12541,6 +12585,207 @@
     }
    ]
   },
+  "7527": {
+   "cands": [
+    "tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom"
+   ],
+   "dire": [
+    "lion",
+    "oracle",
+    "skeleton_king",
+    "sven",
+    "zuus"
+   ],
+   "games": 42,
+   "games_by_cand_side": {
+    "dire": 15,
+    "radiant": 27
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "dragon_knight": 3,
+    "lich": 5,
+    "lion": 4,
+    "medusa": 1,
+    "obsidian_destroyer": 2,
+    "oracle": 5,
+    "skeleton_king": 1,
+    "sven": 3,
+    "warlock": 4,
+    "zuus": 2
+   },
+   "positions_verified": true,
+   "radiant": [
+    "dragon_knight",
+    "lich",
+    "medusa",
+    "obsidian_destroyer",
+    "warlock"
+   ],
+   "runs": [
+    "spot_20260907_213525_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_e8a868"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "lion",
+      "oracle",
+      "skeleton_king",
+      "sven",
+      "zuus"
+     ],
+     "games": 42,
+     "games_by_cand_side": {
+      "dire": 15,
+      "radiant": 27
+     },
+     "radiant": [
+      "dragon_knight",
+      "lich",
+      "medusa",
+      "obsidian_destroyer",
+      "warlock"
+     ],
+     "runs": [
+      "spot_20260907_213525_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_e8a868"
+     ]
+    }
+   ]
+  },
+  "7529": {
+   "cands": [
+    "tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom"
+   ],
+   "dire": [
+    "crystal_maiden",
+    "juggernaut",
+    "obsidian_destroyer",
+    "viper",
+    "zuus"
+   ],
+   "games": 58,
+   "games_by_cand_side": {
+    "dire": 16,
+    "radiant": 42
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "chaos_knight": 3,
+    "crystal_maiden": 5,
+    "dragon_knight": 1,
+    "ember_spirit": 2,
+    "juggernaut": 1,
+    "obsidian_destroyer": 2,
+    "skywrath_mage": 5,
+    "spirit_breaker": 4,
+    "viper": 3,
+    "zuus": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "chaos_knight",
+    "dragon_knight",
+    "ember_spirit",
+    "skywrath_mage",
+    "spirit_breaker"
+   ],
+   "runs": [
+    "spot_20260907_211450_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_8b5d8e"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "crystal_maiden",
+      "juggernaut",
+      "obsidian_destroyer",
+      "viper",
+      "zuus"
+     ],
+     "games": 58,
+     "games_by_cand_side": {
+      "dire": 16,
+      "radiant": 42
+     },
+     "radiant": [
+      "chaos_knight",
+      "dragon_knight",
+      "ember_spirit",
+      "skywrath_mage",
+      "spirit_breaker"
+     ],
+     "runs": [
+      "spot_20260907_211450_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_8b5d8e"
+     ]
+    }
+   ]
+  },
+  "7719": {
+   "cands": [
+    "tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom"
+   ],
+   "dire": [
+    "death_prophet",
+    "juggernaut",
+    "lion",
+    "pudge",
+    "viper"
+   ],
+   "games": 58,
+   "games_by_cand_side": {
+    "dire": 24,
+    "radiant": 34
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "crystal_maiden": 4,
+    "death_prophet": 2,
+    "dragon_knight": 3,
+    "juggernaut": 1,
+    "lion": 4,
+    "obsidian_destroyer": 2,
+    "pudge": 5,
+    "slardar": 1,
+    "vengefulspirit": 5,
+    "viper": 3
+   },
+   "positions_verified": true,
+   "radiant": [
+    "crystal_maiden",
+    "dragon_knight",
+    "obsidian_destroyer",
+    "slardar",
+    "vengefulspirit"
+   ],
+   "runs": [
+    "spot_20260907_211506_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_77e00d"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "death_prophet",
+      "juggernaut",
+      "lion",
+      "pudge",
+      "viper"
+     ],
+     "games": 58,
+     "games_by_cand_side": {
+      "dire": 24,
+      "radiant": 34
+     },
+     "radiant": [
+      "crystal_maiden",
+      "dragon_knight",
+      "obsidian_destroyer",
+      "slardar",
+      "vengefulspirit"
+     ],
+     "runs": [
+      "spot_20260907_211506_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_77e00d"
+     ]
+    }
+   ]
+  },
   "777777": {
    "cands": [
     "nodive"
@@ -12716,6 +12961,73 @@
       "spot_20260719_232911_1_main",
       "spot_20260719_232911_2_main",
       "spot_20260720_064050_1_main"
+     ]
+    }
+   ]
+  },
+  "7789": {
+   "cands": [
+    "tpcommit,lf_rescue,ownhalf,overchase,fieldregen,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,campbind,zusboltdom"
+   ],
+   "dire": [
+    "drow_ranger",
+    "lich",
+    "nevermore",
+    "skeleton_king",
+    "zuus"
+   ],
+   "games": 42,
+   "games_by_cand_side": {
+    "dire": 13,
+    "radiant": 29
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "death_prophet": 3,
+    "drow_ranger": 1,
+    "juggernaut": 1,
+    "lich": 4,
+    "nevermore": 2,
+    "obsidian_destroyer": 2,
+    "pudge": 5,
+    "skeleton_king": 3,
+    "spirit_breaker": 4,
+    "zuus": 5
+   },
+   "positions_verified": true,
+   "radiant": [
+    "death_prophet",
+    "juggernaut",
+    "obsidian_destroyer",
+    "pudge",
+    "spirit_breaker"
+   ],
+   "runs": [
+    "spot_20260907_211509_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_3958d7"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "drow_ranger",
+      "lich",
+      "nevermore",
+      "skeleton_king",
+      "zuus"
+     ],
+     "games": 42,
+     "games_by_cand_side": {
+      "dire": 13,
+      "radiant": 29
+     },
+     "radiant": [
+      "death_prophet",
+      "juggernaut",
+      "obsidian_destroyer",
+      "pudge",
+      "spirit_breaker"
+     ],
+     "runs": [
+      "spot_20260907_211509_1_0d62930936c6d5415efa4fa20f54e4c5a002f646_3958d7"
      ]
     }
    ]
