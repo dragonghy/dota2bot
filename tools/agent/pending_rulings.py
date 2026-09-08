@@ -216,6 +216,30 @@ LIMITS FOR THE OWED LEG (in addition to 1-8 below)
     that was FIXED from one that was merely reworded past the needle, and a
     needle short enough to appear elsewhere in the file reads OWED forever.
     Quote needles long enough to be unique, and read the file through.
+    ⛔ 2026-09-08, MEASURED BY THE KIND'S FIRST REAL USER, ON ITS FIRST RUN:
+    **a needle that NEVER matched is byte-for-byte indistinguishable from one
+    whose sentence was removed, and the failure direction is DONE.**  The kind
+    already refuses an EMPTY or malformed needle set (it would pass on any
+    path); a needle that is merely mistyped is not that, and nothing catches
+    it.  `wandlimbo_charge_instrument` was registered with two needles that
+    were wrong in the two most ordinary ways there are -- one differed in a
+    single letter's case (`the substring` vs the file's `The substring`), one
+    was quoted across a comment line-wrap so the file never held it as one
+    string -- and the row therefore read **DONE, with "the director should
+    retire this row" printed under it, in the same minute it was written**,
+    on an instrument purchase nobody had begun.  It was caught only because
+    the ruling author happened to run the leg immediately.  A row written at
+    the end of a work unit would have been born retired.
+    ⇒ Until a guard exists, **run `--owed-only` in the SAME work unit that
+    registers a `text_absent` row and confirm it reads OWED.**  A new row of
+    this kind that reads DONE has almost certainly mistyped its needles, not
+    found its work already done -- and note the two failures above are the
+    ones a human proof-read least reliably catches, because both needles LOOK
+    exactly like the sentence they were copied from.
+    ⭕ The guard that would close it, registered rather than built (director
+    backlog): the row records, per needle, that it MATCHED at ruling time --
+    the one moment the distinction is still observable.  Nothing checkable
+    later can recover it, which is why this is a limit and not a bug.
 12. **A claim is a say-so, and the tool cannot check it.**  `claimed_by` /
     `claimed_at` (GH #518) buy one thing: an owed row that somebody has
     STARTED reads IN-FLIGHT instead of OWED, so the second session of the

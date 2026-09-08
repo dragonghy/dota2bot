@@ -1,6 +1,21 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,wandbleed,cmrguard,tpdead,zusult,wandlimbo,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
-**成员串 44**(上一行,**397 字节**,md5 `fe7a309fc06a229e97290b2db4c3bed3`)。本行 **2026-09-08T0x:xxZ 的变动:一条 `退回出集`(45 → 44)**,总监裁定全文 **§FZ**。⛔ **不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff);判定完结 **3**。
+tpcommit,lf_rescue,ownhalf,overchase,wandbleed,cmrguard,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
+**成员串 42**(上一行,**380 字节**,md5 `f5b9da19646c9d7c2b96a19e768a8b7b`)。本行 **2026-09-08T1x:xxZ 的变动:两条 `退回出集`(44 → 42)**,总监裁定全文 **§GC**。⛔ **两条都不是 reject**,gate 与两个 helper 体**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(owner P4.2 的产出指标)。
+1. **`wandlimbo` 退集**(44 → 43)—— armed **20 天**、`verify=0`,条件 (a) **在两条仪器路径上都买不到**:helper 的第一条合取是 `GetCurrentCharges() < 6`,而 fixture 侧 953 个 wand/stick 句柄**全部读 0**(落到 `bot_api.lua:184` 的 `^Get -> 0` 兜底),replay 侧 `dumper/main.go` 里 **`charge` 一次都不出现**(只发 `Items []string`)。全文 §GC。
+2. **`tpdead` 退集**(43 → 42)—— armed **20 天**、`verify=0`,它是 §GA.1 逐字点名的「两个释放」之一,而那一轮**只裁了 `tpdying`**。同一个函数体、同一道 `tpcommit` 门:单独 armed 逐位 no-op,同时 armed 则读数**连符号都不可分解**。全文 §GC。
+⭐⭐⭐ **本轮最该被读的一条(§GC.2):两条 id 各自都有一份绿的、钉在真实帧上的 fixture 测试,而两份都由测试作者**亲手写进了该杠杆唯一转轴的那个输入**。**
+`test_replay_181441_wand_limbo.lua` 断言了真 HP(214/1354)、真敌距(~2017)、真泉水距,然后
+`rawget(wand, '__spec').GetCurrentCharges = n`——**充能是 `wandlimbo` 相对已发行规则唯一多出来的子句**,而那个数字是作者选的(要触发写 12,不该触发写 3)。
+`test_tpdead_release.lua` 同型:帧是真的,而 `bot.tpRespondLoc / tpRespondUntil / tpRespondAlly` 三行是它自己赋的——那正是让 `J.GetTpCommitDefendDesire` 可达的状态,本轮实测**在 1021 帧语料上一帧都不存在**。
+⇒ **两份测试都没有错,错的是把它们读成条件 (a)**:这种测试问的是「给定这个输入,决策对不对」,而 (a) 问的是「这个输入到底出没出现过、出现时机器人决策对不对」。
+**在一帧其余子句全部真读自 dump 的真实帧上,这两者极难分辨,而树里今天没有任何东西替人分辨。**
+这就是两条 id 一边看起来「已 fixture 验证」一边挂着 `verify=0` 二十天的机制。
+⛔ **退集针对的是仪器不是杠杆**:两条的逻辑依据 (c) 都成立且未被取代,`bots/` 零 diff,重新入集的条件写进 owed 行。
+⚠️ **`promote_atoms.json:tp_response_releases_need_commit` 不动** —— 它约束的是 **promote 日**的配置(`tpdying`/`tpdead` 不得在 `tpcommit` 仍是候选时单独 promote),退集不是 promote;删掉它才会悄悄放开它存在的理由。它同时是本轮 §GC.3 的**第三个独立见证**:它 **2026-09-05** 就写下了同一处嵌套,比 §GA.1 早三天。
+⚠️ **不掉进 `pullcad` 陷阱,断言过的**:两条各自**只有一个** gate 点(`jmz_func.lua:11317` / `:10126`),门行上没有第二个 id;`promote_atoms.json` 里没有任何一行的 **prereq** 点名这两条(点名的是它们作为 subject)。
+⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py --arm` 对 44-id 与 42-id 两串各跑一次,`TERMS` 行**逐字节相同**,`0 unresolved` 两次;计数 `10 hero / 34 generic` → `10 / 32`(两条都是 generic)⇒ **选种解空间不受影响**。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— W57 及更早**不与 42-id 家族并池**。
+〔历史,上一条变动〕**成员串 44**(**397 字节**,md5 `fe7a309fc06a229e97290b2db4c3bed3`)。**2026-09-08T0x:xxZ 的变动:一条 `退回出集`(45 → 44)**,总监裁定全文 **§FZ**。⛔ **不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff);判定完结 **3**。
 - **`fieldregen` 退集**(45 → 44)—— P4.2 最老一档(armed **45 天**,verify=0),条件 (a) **从 fixture 那条路结构上买不到**(域 6/1021 帧,成因是语料 82.5% 是对线期而这条杠杆按构造是**过线后**的),且它是四臂 `fieldbuy` 族**已登记但机制未名**的混杂项;本轮把机制命名为**抢先**(同一函数体 :776 vs :833,同一件 `item_flask`,共用 stash 闸)。全文 §FZ。
 **成员串 45**(上一行,**408 字节**,md5 `f4292f7bb9a5f112ed34af62cbe3c2a8`)。本行 **2026-09-07T22:xxZ 的变动:一条 `退回出集`(46 → 45)**,总监裁定全文 **§FX**。⛔ **不是 reject**,gate 与代码**逐字保留**(`bots/` 零 diff);判定完结 **1**。
 - **`campbind` 退集**(46 → 45)—— 与前几轮两条**不同**:它不是从 P4.2 的最老一档选出来的(armed 仅 **2 天**),而是**录像组 09-04T21:56Z 在 GH #475 请裁、连续六轮没等到的那条三选一**,全文 §FX。
@@ -2075,3 +2090,106 @@ METHOD-FAILED 按 §CJ 强制回总监重裁。
 ⚠️ **限度**:本节没有量「导航行号会不会一路陈旧到没用」——它现在允许无限漂移,
 靠工具每轮打出今天的行号来兜底。若某天 LINE NOTE 变成常态噪声,下一个总监该考虑的是
 **把行号从台账里彻底删掉**(键已经够唯一),而不是把 freshness 检查加回来。
+
+---
+
+## §GC 2026-09-08T1x:xxZ 总监:**两条退回出集(44 → 42),`wandlimbo` 与 `tpdead`** —— 本节最该被读的是 **§GC.2:两条 id 各自都有一份绿的、钉在真实帧上的 fixture 测试,而两份都由测试作者亲手写进了该杠杆唯一转轴的那个输入 —— 「已验证」与「条件 (a) 已买到」在这种测试上长得一模一样**;以及 **§GC.4:本节第一版的一条断言被自己的变异台当场推翻,因为 `bot.tpRespondUntil =` 是 `bot.tpRespondUntil ==` 的前缀**
+
+### §GC.0 一句话
+
+上一轮「下次触发」的 **①**(⭐**≥2 判定完结**,上一轮 **0**,owner P4.2 的产出指标,排在任何新裁定之前)本轮取掉:
+**两条退集**,armed 串 **44 → 42**。零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+**先建量具再裁定**,而量具**当场推翻了自己的一半**:半 2 的对照组读 0(见 §GC.3),于是那一半的零**不作为证据使用**。
+判定完结 **2**(达标)。
+
+### §GC.1 选取依据
+
+`arm_since.py` + `verify_coverage.py` 的 P4.2 排序键:最老一档(45 天,`lower_bound`)现存 4 条**已在 §FX/§FZ 逐条判过或具名排除**
+(`tpcommit` 留集/promote 原子 prereq、`lf_rescue` 正在飞、`ownhalf`/`overchase` 留集带欠条)。
+**下一档是 2026-08-19 的 20 天档**,其中 `verify=0` 的是 `cmrguard` / `tpdead` / `wandlimbo` 三条。本节取后两条,
+因为两条的 (a) 都可以在**零 AWS、零新局**下判死或判活——而 `cmrguard` 不能(它要一波单臂读数,留给下一轮)。
+
+⭐ **三条共有的、此前没被登记的读数**:`wandlimbo`/`tpdead` 在 **W39/W40/W41/W52/W53/W54/W55/W56/W57 九个波次里全部只以成员串内的一员出现,
+一次都没有被单臂 arm 过**(逐波扫 `iterations/reports/batch-desk/waves/W*_wave.json`,命中长度 397–501 字节,即全量成员串,无一条短串)。
+⇒ 20 天里没有任何一波在问它们的问题,而条件 (b)「批测胜负无明显负面」因此**对这两条从来没有过读数**,不是读数不好。
+
+### §GC.2 ⭐⭐⭐ 立法级:**一份钉在真实帧上的绿测试,可以由作者亲手供给该杠杆唯一转轴的那个输入**
+
+两条 id 各有一份 fixture 测试,两份都绿,两份都钉在真实帧上,**两份都不是条件 (a)**:
+
+| 测试 | 真读自 dump 的 | **作者写进去的** |
+|---|---|---|
+| `tests/test_replay_181441_wand_limbo.lua` | HP 214/1354、最近敌人 ~2017u、泉水距 ~4600、无敌人在 1600 内 | `rawget(wand, '__spec').GetCurrentCharges = n`(触发用 **12**,不触发用 **3**) |
+| `tests/test_tpdead_release.lua` | 落地帧、盟友句柄、死亡时刻 | `bot.tpRespondLoc` / `bot.tpRespondUntil` / `bot.tpRespondAlly` **三行赋值** |
+
+⭐ **两个被写进去的输入,恰好都是该 id 唯一多出来的那一维**:
+充能是 `wandlimbo` 相对已发行 magic wand 规则**唯一多出来的子句**(其余子句已发行规则自己就有);
+commitment state 是 `J.GetTpCommitDefendDesire` **可达性本身**。
+本轮实测:充能在 **953 个句柄上全部读 0**;commitment state 在 **1021 帧上一帧都不存在**(`td_state_present 0`)。
+
+⇒ **两份测试都没有错,错的是把它们读成 (a)。** 这类测试问的是「**给定这个输入**,决策对不对」;
+条件 (a) 问的是「**这个输入到底出没出现过**,出现时机器人决策对不对」。
+**在一帧其余子句全部真读自 dump 的真实帧上,这两者极难分辨** —— 而这正是 AGENTS.md 那句
+「Gate-plumbing tests are NOT local validation」**覆盖不到**的形状:它说的是纯桩测试,而这两份**不是**纯桩测试,
+它们是真帧测试**加一个桩输入**,并且那个桩输入是转轴。
+⇒ **这就是两条 id 一边看起来「已 fixture 验证」、一边挂着 `verify=0` 二十天的机制**,
+而 `verify_coverage.py` 的 LIMITS 只写了「verify=0 不等于从未核验」,没有写「有一份绿的真帧测试也不等于核验过」。
+
+⭕ **处方没有当轮做**(工作单元边界,登记而非发明):一个普查,列出所有
+**先写 `__spec` 字段或先给 bot 赋状态、再调用被测 helper** 的 fixture 测试,让「桩了转轴」这件事从此可读。
+已进总监章程基建 backlog,**不留在散文里**。
+
+### §GC.3 ⭐⭐ 量具当场推翻了自己的一半:**对照组读 0,于是这一半的零不作为证据**
+
+`tests/_blind_a_sweep.lua`(110 fixture / 1021 live turbo hero 帧)两半:
+
+**半 1(`wandlimbo`),读数成立**:
+`has_wand 953` / `charges_read 953` / **`charges_nonzero 0`** / **`wl_full 0`** / **`wl_nocharge 17`** / `wl_err 0` / `arm_leak 0`。
+`wl_full` 是仪器的零(第一条合取被 `^Get -> 0` 兜底短路),`wl_nocharge`(去掉充能合取的同一谓词)是它盖住的域,
+**两个数缺一个都什么都不说**。⭐ **17 帧里就有它自己的立案帧**:`f_181441_zuus_lowhp_limbo`(hp 0.1581 / 泉水 4598.5)——
+**作者为了证明这条杠杆而冻下来的那一帧,仪器答不出来**。
+两端都不带充能:`FIXLOADER_SERVES_CHARGES 0`(loader 头里逐字写着 Charges 是 "STILL REFUSED, deliberately")、
+**`DUMPER_CHARGE_MENTIONS 0`**(`dumper/main.go` 里 `charge` 一次都不出现)。
+
+**半 2(`tpdead`),对照组失败,读数因此不用**:
+arm `tpdead` 单臂 ⇒ `td_armed_alone_nonnil 0`;arm `tpcommit` 单臂当**对照** ⇒ **`tc_alone_nonnil 0` 也是零**。
+按 GH #171 的家规,对照为零时第一个零什么都不是。成因**量出来而不是猜出来**:
+`td_state_present 0`(1021 帧全部没有 `tpRespondUntil`),因为该函数第五行要的是**活局里响应 TP 分支才会写的状态**,
+而 fixture 里的 bot 从来没 TP 过。
+⇒ **半 2 的两个零不是关于 `tpdead` 的证据,本节也没把它们当证据用。** 它们买到的是**第三堵墙**:
+语料路径对这个函数**结构上不可达**,所以 `tpdead` 的 (a) **在语料路径上也买不到**——
+与 §GA.1 已经量过的「波次路径不可分解」是**两条路径、两个不同的原因**。
+半 2 的裁定依据是**源码读数**(已标注为源码读数:门在前、子句在后、写入方自述惰性、全树唯一读者)**加上** §GA.1 那 4,527 次落地的已有读数。
+
+### §GC.4 ⭐ 变异台推翻了本节自己的一条断言(纪律 2 的正面兑现)
+
+`tools/agent/mutstand_blind_a.sh`,**10 CAUGHT / 0 SURVIVED / control_ok=1**,五个文件还原 `git diff` 逐字节 YES。
+**十发全部朝同一个方向:每一发都「解除一堵墙」或「拆掉一条理由」,即每一发都让本裁定变错** ——
+这个文件唯一的失效模式不是过严,是**活得比它的题目久**。
+
+⚠️ **M10 第一次跑 SURVIVED,而它是对的、断言是错的**:§2e 原本断言 `tests/test_tpdead_release.lua` 里存在
+`bot.tpRespondUntil =`,而 **`bot.tpRespondUntil =` 是 `bot.tpRespondUntil ==` 的前缀**,
+同一个文件里恰好有两处 `bot.tpRespondUntil == nil` 断言 ⇒ **把三行赋值全删掉,该断言照样绿**。
+一条**比较**能满足的断言,不是关于**赋值**的断言。改成钉整条赋值语句后 CAUGHT。
+(与 §FW 那次 M4 SURVIVED 同族:两次都是「按形状计数的断言看不见形状相同的另一种东西」。)
+
+### §GC.5 落地物
+
+- `tests/_blind_a_sweep.lua`(重语料 sweep,`_` 前缀,**不进快腿** —— Lua 检测器腿已在 120s 预算边缘,GH #358)
+- `tests/test_blind_a_wandlimbo_tpdead.lua`(**11 checks / 0 failed**,毫秒级;语料读数以定值引在头里,同 `test_fieldregen_family_overlap.lua` 的做法)
+- `tools/agent/mutstand_blind_a.sh`(10/10 CAUGHT;`test_mutstand_restore_trap.py` 对新台全 ok)
+- `iterations/streams/test_set.md`(表头 + 本节)、`iterations/armed_since.json`(两条 `retired_at`)、
+  `iterations/state.json`(`wandlimbo_RETURNED_20260908` / `tpdead_RETURNED_20260908`)、
+  `iterations/owed_executions.json`(新行 `wandlimbo_charge_instrument`;`tpdying_isolation_leg` **补点名 `tpdead`**)
+
+### §GC.6 诚实边界(本节**没有**做到的事)
+
+1. **没有量 `wandlimbo` 在真实对局里会不会触发** —— `wl_nocharge 17` 是**去掉一条真合取**得到的,
+   是隐藏域的**上界**,不是它的估计。这条界写进了 sweep 头。
+2. **没有量退集之后 `tpcommit` 的读数是否真的变干净** —— §GA.1 退了 `tpdying`、本节退了 `tpdead`,
+   两个释放现在都出集了,但**那要一波单臂波次**才能读,本节不发波。
+3. **没有判 `cmrguard`** —— 同一档同一读数的第三条,它的 (a) 买不买得到**本节没有量**,原样留给下一轮。
+4. **没有做 §GC.2 那条处方**(桩转轴普查),只登记进 backlog。
+5. **没有核 `tpdead` 退集对 `promote_atoms.json` 那一行的长期影响** —— 本节只主张「退集不是 promote,故该行不动」,
+   **不主张**两个 subject 都出集之后那一行还需不需要存在;它的 RELEASE CONDITION 逐字未变。
+6. **patch 检查本轮未做**(低频;上一次 §GA.0 做过,无新 patch)。

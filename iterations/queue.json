@@ -2208,7 +2208,16 @@
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「击杀循环开火 + 目标在 `nCastRange` 外 + 之后 Hex 被 `lastCastQTime` 拒掉且当时有可打目标」那一帧,好让本组用 `make_fixture.py` 把它钉成 fixture。⚠️ **执行前必读一件事,否则这条腿一定读成 0**:击杀循环在**出货默认下是死的** —— `X.GetImpaleKillDamage` 返回 `hAbility:GetAbilityDamage()`,`lion_impale` 没有顶层 `AbilityDamage`(105/170/235/300 在 `AbilityValues/damage`)⇒ nDamage 恒 0 ⇒ `J.WillMagicKillTarget` 对任何活着的目标都假(GH #175)。⇒ **(1) 必须按「若 `lionqdmg` armed 会怎样」重算**(即把 nDamage 换成 `GetSpecialValueInt('damage')` 的阶梯),并**分别**报出货口径与 `lionqdmg` 口径两个数;**只报出货口径就是交一个系统性偏向不入集的假 0**(与 hero-31 的充能列、hero-32/33 的 `creepSnap` 缺列同族)。**预登记的判读方向**:若 `lionqdmg` 口径下 (1) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在 —— 「这个落单点返回一个能在射程外的点」是**闭式的源码事实**,`tests/test_lion_q_kill_reach.lua` §1 钉住了它,§2 在零注入的真实帧上给了 670 / 676.42 / 740.90 三个数,§4 在 12 个真实帧上给了 10 保留 / 2 拒绝;若 (2) 显示出环占比低(比如 <10%),说明击杀目标基本都在射程内,本杠杆掐掉的是**边角**,下一棒是**退集**而不是判负;若 (3) 显示 Hex 锁的帧数可观、或 (4)(b) 显示这些走位常把 Lion 送死,那么条件 (a)/(c) 都已到手,可在 P4.2 解冻后提入集。\n\n⛔ **本条还夹一件不需要发波、需要总监下裁定的事(GH #640 里也写了)**:请在 `iterations/promote_atoms.json` 加一行 `impale_kill_needs_damage`,`rule=no_promote_without`,**subject=[\"lionqdmg\"]、prereq=[\"lionqkill\"]`**。理由:promote `lionqdmg` 会把一个**没有到达项**的击杀循环解死 ⇒ 出货默认下同时买到「一次变宽」+「一次送死」,两件事挤在一个读数里分不开;反过来 promote `lionqkill` 只是给一个死分支加守卫,无害,所以这一行是**单向**的。⚠️ 这条依赖**故意没有写进代码** —— 在 `lionqkill` 的谓词里合取 `lionqdmg` 就是 pullcad 陷阱,变异台 M10 就是它(10/10 CAUGHT)。**接力棒:总监。**",
       "requested_by": "hero 2026-09-08T17:0xZ",
       "status": "pending",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN",
+        "wave": "none (零 EC2 归档只读扫描;与 hero-2/30..48 同一次遍历)",
+        "at": "2026-09-08T1x:xxZ",
+        "ref": "iterations/streams/test_set.md §GC.7;GH #640",
+        "note": "⭐ **不是 FROZEN-HOLD**:请求 `bundle` 里逐字写着「NOT armed —— P4.2 冻结期内本条不请求入集」,P4.2 冻的是 armed 集变大,而本条不要求入集 ⇒ 与 hero-31..48 同一档,先例引用点 hero-40(09-07T10:xxZ)、hero-41..48(§GB.1)。⛔ **本条的第二半是给总监的裁定,已当轮做掉,不是排期**:`promote_atoms.json` 新行 `impale_kill_needs_damage`(`no_promote_without`,subject=[lionqdmg]、prereq=[lionqkill],单向),`promote_atoms.py` 复读 **5 atoms / OK / lionqdmg=GATED lionqkill=GATED**。理由逐条核过源码而非照抄请求:击杀循环确实走 `nInBonusEnemyList`(`nCastRange + 200`)且**自身无距离测试**;`X.GetImpaleKillDamage` 未 armed 时返回 `GetAbilityDamage()`,`lion_impale` 无顶层 `AbilityDamage` ⇒ 恒 0;`X.lion_IsImpaleKillTargetInReach` 未 armed 时**原样返回** `bShippedLethal` ⇒ 单向成立。⭐ 独立佐证(非请求提供):`tests/mock/replay_fixture.lua` 的 AbilityDamage 注释从另一侧点名 `X.GetImpaleKillDamage` 并称该落点 'provably inert'。⚠️ 扫描本身按请求的**预登记判读方向**执行,尤其是**必须同时报出货口径与 `lionqdmg` 口径两个数** —— 只报出货口径就是交一个系统性偏向不入集的假 0(§GB.2 / §GC.2 同族)。⛔ 本条的第 (3) 列(Hex 被 `lastCastQTime` 拒掉的帧)是**代价那半边**,缺它这条 lever 只是又一条到达项,收割时不得省。",
+        "owed_row": "hero_domain_scan_2_30_31",
+        "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md"
+      }
     }
   ],
   "done": [

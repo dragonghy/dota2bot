@@ -145,6 +145,52 @@
         "the one a wave would have to measure), or rewrite :964 so the promoted half no longer",
         "swallows towerring's arm. Either retires this row; deleting it to get green does not."
       ]
+    },
+    {
+      "name": "impale_kill_needs_damage",
+      "rule": "no_promote_without",
+      "subject": [
+        "lionqdmg"
+      ],
+      "prereq": [
+        "lionqkill"
+      ],
+      "ruled_at": "2026-09-08T1x:xxZ",
+      "ruled_by": "director",
+      "ref": "iterations/streams/test_set.md §GC.7; GH #640 / queue.json:hero-49(英雄组请裁,接力棒明写「总监」); 归档扫描裁定 APPROVED-SCAN 同轮",
+      "direction": "one-way: promoting lionqkill while lionqdmg stays gated is NOT constrained by this row.",
+      "note": [
+        "REGISTERED BEFORE A VIOLATION, per this file's own README. Nothing is wrong today:",
+        "both ids are gated, and the kill loop is DEAD in every shipped game.",
+        "WHAT THE ROW STOPS is the promote-day configuration, and the mechanism is that the two",
+        "ids sit on OPPOSITE SIDES of the same branch. hero_lion.lua X.ConsiderQ's kill loop walks",
+        "nInBonusEnemyList = J.GetNearbyHeroes(bot, nCastRange + 200, ...) and returns",
+        "npcEnemy:GetLocation() with NO distance test of its own -- the twelfth of twelve exit",
+        "points, and the only one that can hand ActionQueue_UseAbilityOnLocation a point outside",
+        "nCastRange. It is inert only because its lethality test is fed nDamage = 0:",
+        "X.GetImpaleKillDamage returns hAbility:GetAbilityDamage(), and lion_impale declares no",
+        "top-level AbilityDamage (105/170/235/300 live in AbilityValues/damage), so",
+        "J.WillMagicKillTarget is false for every living target (GH #175).",
+        "VERIFIED INDEPENDENTLY, not taken from the request: tests/mock/replay_fixture.lua's own",
+        "AbilityDamage note reaches the same 0 from the other side -- it names",
+        "hero_lion.lua X.GetImpaleKillDamage among the focus callers whose abilities declare no",
+        "such field, and calls that landing 'provably inert'.",
+        "SO PROMOTING lionqdmg ALONE un-deadens a reach-less branch: one promote buys BOTH a",
+        "widening (the loop starts firing) AND a suicide path (it fires at targets outside cast",
+        "range, and X.SkillsComplement stamps lastCastQTime on the BID, so X.ConsiderW's first",
+        "guard re-locks Hex every frame the out-of-range bid repeats). Two changes in one reading,",
+        "inseparable -- the lanefix lesson, one promote early.",
+        "WHY ONE-WAY: X.lion_IsImpaleKillTargetInReach returns its bShippedLethal argument",
+        "unchanged unless (turbo AND lionqkill), i.e. it is a pure narrowing guard on a branch that",
+        "is already dead. Promoting it alone changes nothing and is not constrained.",
+        "⛔ WHY THIS IS A ROW AND NOT A CONJUNCTION IN THE LUA: writing",
+        "`IsSoakCandidate('lionqkill') and IsSoakCandidate('lionqdmg')` into the guard is the",
+        "pullcad trap verbatim (AGENTS.md: promoting an id silently kills any gate that names it) --",
+        "the predicate would freeze FALSE the day either id is promoted. The hero group's own",
+        "mutation stand M10 is that mutant, 10/10 CAUGHT.",
+        "RELEASE CONDITION (what would retire this row): lionqkill promoted, or the kill loop given",
+        "a reach test that does not depend on a candidate id, or lionqdmg rejected."
+      ]
     }
   ]
 }

@@ -44,7 +44,7 @@
     {
       "id": "hero_domain_scan_2_30_31",
       "issue": "GH #274 / GH #474 / GH #27(hero-31);hero-2 与 hero-30 见各自 queue 行;GH #549(hero-34);hero-32 / hero-33 见各自 queue 行;GH #554(hero-35);GH #560(hero-36);GH #564(hero-37);hero-38/39/40 见各自 queue 行;GH #581(hero-45/48 引用,并且是 hero-42 的阻塞项);GH #621(hero-47);GH #634(hero-48)",
-      "ruling": "总监 2026-09-05T19:xxZ,全文 `iterations/streams/test_set.md` §EY.4。hero-31(`wkbonefight`)批准为**零 EC2 只读档案遍历**,并与 hero-2、hero-30(`axecallbkb`)**并成同一次遍历**,产物写进 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`。三份读数各自独立呈报(不许并池),acceptance 按各自请求原样。 ⭐ **2026-09-06T04:xxZ 总监追加(§FE.1):hero-32(`zusboltdmg`)/ hero-33(`cmcreepcap`)/ hero-34(`liondrainbkb`)搭同一次遍历**,三者同为零 EC2 只读扫描。**产物路径不变**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——id 与路径是本腿唯一读得到的机器键,改名会把一条已交付的裁定变成一条没人认领的新行。六份读数各自独立呈报,不许并池;各自的 acceptance 原样成立;METHOD-FAILED 走 §CJ 的 INSTRUMENT-BLIND 退回,不得自行套用「域接近 0 ⇒ 不入集」。 ⭐ **2026-09-06T09:xxZ 总监再追加 hero-35(`axebhrecast`, GH #554,07:xxZ 已裁)与 hero-36(`cmrangedhp`, GH #560),同一条款 APPROVED-SCAN**,`test_set.md` §FI.2。**产物路径仍不改名。**八份读数各自独立呈报,不许并池。 ⭐⭐ **2026-09-08T16:0xZ 总监一次追加 hero-41..48 八条,同一条款 APPROVED-SCAN**(`test_set.md` §GB),并**回填 hero-38/39/40** —— 那三条 09-06T22:xxZ / 09-07T10:xxZ 就已批准搭这次遍历,却**从来没有进过针脚表**,于是这条腿在三份未开工的读数之上照样读 DONE。**这是 hero-36 把 `path_exists` 换成 `path_contains_all` 想修的那个缺陷本身,在换完的下一轮又发生了一次**,原因是针脚表**靠人记得去加**。本轮同时立机器不变量:`director.owed_row` 键 + `tests/test_domain_scan_pass_pins.py` 双向钉死(队列里挂在本腿上的 id 集合 ≡ 针脚集合),**下一条搭车的裁定如果忘了加针脚,红的是测试不是记性**。产物路径仍不改名。",
+      "ruling": "总监 2026-09-05T19:xxZ,全文 `iterations/streams/test_set.md` §EY.4。hero-31(`wkbonefight`)批准为**零 EC2 只读档案遍历**,并与 hero-2、hero-30(`axecallbkb`)**并成同一次遍历**,产物写进 `iterations/reports/replay-check/domain_scan_hero_2_30_31.md`。三份读数各自独立呈报(不许并池),acceptance 按各自请求原样。 ⭐ **2026-09-06T04:xxZ 总监追加(§FE.1):hero-32(`zusboltdmg`)/ hero-33(`cmcreepcap`)/ hero-34(`liondrainbkb`)搭同一次遍历**,三者同为零 EC2 只读扫描。**产物路径不变**(`iterations/reports/replay-check/domain_scan_hero_2_30_31.md`)——id 与路径是本腿唯一读得到的机器键,改名会把一条已交付的裁定变成一条没人认领的新行。六份读数各自独立呈报,不许并池;各自的 acceptance 原样成立;METHOD-FAILED 走 §CJ 的 INSTRUMENT-BLIND 退回,不得自行套用「域接近 0 ⇒ 不入集」。 ⭐ **2026-09-06T09:xxZ 总监再追加 hero-35(`axebhrecast`, GH #554,07:xxZ 已裁)与 hero-36(`cmrangedhp`, GH #560),同一条款 APPROVED-SCAN**,`test_set.md` §FI.2。**产物路径仍不改名。**八份读数各自独立呈报,不许并池。 ⭐⭐ **2026-09-08T16:0xZ 总监一次追加 hero-41..48 八条,同一条款 APPROVED-SCAN**(`test_set.md` §GB),并**回填 hero-38/39/40** —— 那三条 09-06T22:xxZ / 09-07T10:xxZ 就已批准搭这次遍历,却**从来没有进过针脚表**,于是这条腿在三份未开工的读数之上照样读 DONE。**这是 hero-36 把 `path_exists` 换成 `path_contains_all` 想修的那个缺陷本身,在换完的下一轮又发生了一次**,原因是针脚表**靠人记得去加**。本轮同时立机器不变量:`director.owed_row` 键 + `tests/test_domain_scan_pass_pins.py` 双向钉死(队列里挂在本腿上的 id 集合 ≡ 针脚集合),**下一条搭车的裁定如果忘了加针脚,红的是测试不是记性**。产物路径仍不改名。 ⭐ **2026-09-08T1x:xxZ 总监再追加(§GC.7):hero-49(`lionqkill`)搭同一次遍历,APPROVED-SCAN**,针脚同轮加上(§GB.3 立的机器键 `director.owed_row`:裁定搭车与加一根针是两个手工动作,而上一轮量到第二个没人拿着)。⚠️ hero-49 的 acceptance 有一条**别的 rider 都没有的硬约束**:击杀循环在出货默认下是死的(nDamage 恒 0),**必须同时报出货口径与 `lionqdmg` 口径两个数**,只报前者就是交一个系统性偏向不入集的假 0。",
       "ruled_at": "2026-09-05T19:xxZ",
       "executor": "录像组(replay-check)",
       "trigger": "没有外部触发器,也**不挂在任何一波上** —— 这正是它进 registry 的理由(§DR):hero-30 的 FROZEN-HOLD 裁定 15:5xZ 已写「与 hero-2 并成同一次遍历」,而那句话此前**只活在一个 queue 行的散文里**,没有任何一张被驱动的表载着它。",
@@ -86,7 +86,8 @@
           "hero-45",
           "hero-46",
           "hero-47",
-          "hero-48"
+          "hero-48",
+          "hero-49"
         ]
       },
       "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)—— 这是 2026-09-05 到 09-06T07:xxZ 之间的状态,留在这里是因为它是下面那次改动的立案句。三轮里这一腿从三份读数长到七份,而 `done_when` 一直只判**一个路径存在**:七份里少了六份,这条腿照样绿,唯一挡在「绿」与「退休」之间的是总监记得去逐份读。 ⭐ **2026-09-06T09:xxZ 总监把它改成 `path_contains_all`,并同时追加第八份(hero-36)**:八个 id 各自必须在产物里被**提到**,少一个这一腿就报 OWED 并**点名说少哪一个**。⚠️ **「提到」不是「读数正确」** —— 被提到的 id 可能被并了池、可能答的是错的那一列;那一层仍然是总监退休本行前的逐份读通,`path_contains_all` 只把「有没有这一份」从记性搬进工具。⚠️ 这也意味着**改产物路径或改 id 写法会让这一腿变红** —— 那正是要的:改名本来就该惊动人。 ⭐ 2026-09-06T13:xxZ:hero-37(`zusultstrand`,GH #564)裁 APPROVED-SCAN 并进同一次遍历 ⇒ 针数 8 → 9。 ⭐⭐ 2026-09-08T16:0xZ:针数 **9 → 20**(hero-38..48 一次补齐,其中 38/39/40 是回填)。⚠️ 针数变大**不是**进度倒退的记账错误 —— 那三份读数本来就欠着,只是这条腿看不见它们。⛔ **hero-42 的针脚是「被提到」不是「读数」**:本轮裁定明写它排在 GH #581 之后,执行方留一行点名 #581 的状态行即满足针脚(与 hero-32/33 同款),**不许**为了让针脚变绿而交一份把 (2) 写成 0 的报告。",
@@ -349,7 +350,13 @@
       "done_when": {
         "kind": "manual"
       },
-      "done_when_note": "⚠️ `kind: manual`，而这一次是诚实的不是偷懒的：验收物是**一波还不存在的波次的读数**，今天没有任何路径、任何 json 键能描述它；伪造一个 `path_exists` 只会在文件在时报 DONE（这正是 LIMIT 13 本轮量到的缺陷）。**裸读得出的验收句**：某一波以 `tpcommit` armed 、`tpdying` **未** armed 发出，对同一批 seed，并用 `tools/batch_test/behavioral/tpdying_release.py --assert-arm` 出两腿读数（死亡率 + 钉住帧），按铁律 4(i-a) 同时给 ab/ba 两层、按 4(i-c) 每粒 swap-average。总监据此才能把 `tpdying` 判成 WORKING/BUGGY/SILENT。"
+      "done_when_note": "⚠️ `kind: manual`，而这一次是诚实的不是偷懒的：验收物是**一波还不存在的波次的读数**，今天没有任何路径、任何 json 键能描述它；伪造一个 `path_exists` 只会在文件在时报 DONE（这正是 LIMIT 13 本轮量到的缺陷）。**裸读得出的验收句**：某一波以 `tpcommit` armed 、`tpdying` **未** armed 发出，对同一批 seed，并用 `tools/batch_test/behavioral/tpdying_release.py --assert-arm` 出两腿读数（死亡率 + 钉住帧），按铁律 4(i-a) 同时给 ab/ba 两层、按 4(i-c) 每粒 swap-average。总监据此才能把 `tpdying` 判成 WORKING/BUGGY/SILENT。",
+      "amended_at": "2026-09-08T1x:xxZ",
+      "amendment": "⭐ 总监 2026-09-08T1x:xxZ(全文 §GC):**`tpdead` 本轮也退回出集,于是这条隔离腿的验收句必须点名它** —— 原文只写了「arm `tpcommit` 而**不** arm `tpdying`」,那是 §GA.1 当轮只裁了两个释放中的一个留下的形状。⛔ **只不 arm 一个释放的隔离腿买不到任何一条的 (a)**:剩下那一条仍然在同一个函数体里改同一个净值。⇒ 验收句更新为:**同一批 seed,arm `tpcommit` 而 `tpdying` 与 `tpdead` 两个释放都不 arm**,对照现有 W49 读数,按铁律 4(i-a) 同时给 ab/ba 两层、按 4(i-c) 每粒 swap-average。⭐ 本轮另外买到一条与它相关的读数:该函数在 **fixture 语料上结构不可达**(第五行要活局才写的 `tpRespondUntil`,实测 `td_state_present` **0/1021 帧**)⇒ 这条腿**没有便宜的语料替代路线**,波次是唯一的路,与 `tpdying` 那条「便宜替代路线存在但是难例」的登记**不同**。",
+      "subjects": [
+        "tpdying",
+        "tpdead"
+      ]
     },
     {
       "id": "tpreach_bc4_cell_reread",
@@ -368,6 +375,30 @@
         "kind": "manual"
       },
       "done_when_note": "⚠️ `kind: manual`：验收物是**一份还不存在的重读**，今天没有路径可指。**裸读得出的验收句**：某份录像组产物给出 §BC.4 非撤退 cell 的两腿读数，粒种子数 > 4，同时给 ab/ba 两层（4(i-a)）与每粒 swap-average（4(i-c)），**且那张表由 `tpreach_domain.py` 自己打印**（不是手算，4(i-d)）；并说明在 p50 以外至少一张 reach 表上那个组成比信号的行为。⛔ 撤退 cell 依然**不设阈值只报数**（§BC.1，GH #3 花了 -15 GPM 学到的那一条）。"
+    },
+    {
+      "id": "wandlimbo_charge_instrument",
+      "issue": "总监 2026-09-08 立;裁定全文 `iterations/streams/test_set.md §GC`(§GC.2/§GC.3);仪器缺口本身待开 [harness] issue",
+      "ruling": "总监 2026-09-08T1x:xxZ:`wandlimbo` **退回出集**(44 → 43,与 `tpdead` 同批 44 → 42),理由是条件 (a) **在两条仪器路径上都买不到**,不是没人去买。helper 的第一条合取是 `hItem:GetCurrentCharges() < 6`,而 item charges 在证据链的**两端都不存在**:fixture 侧 `replay_fixture.lua` 不服务 charge getter(落 `bot_api.lua:184` 的 `^Get -> 0` 兜底,实测 953/953 个句柄读 0),replay 侧 `tools/batch_test/behavioral/dumper/main.go` 全文件 `charge` 出现 **0** 次(只发 `Items []string`)。⭐ 于是域读 **0**,而 **0 恰好是掐死这条 id 的那个答案**(§GB.2 形状:墙递回来的不是空白,是一个长得很正常、方向唯一的数)。⛔ **退集不是 reject**:gate(`jmz_func.lua:11317`)与整个 helper 逐字保留,`bots/`+`game/` 零 diff,逻辑依据 (c) 成立且未被取代。",
+      "ruled_at": "2026-09-08T1x:xxZ",
+      "executor": "谁买仪器谁执行:dumper 侧改 `main.go`(Go,要 `get_dumper.sh` 重建);fixture 侧改 `tests/mock/replay_fixture.lua` + `make_fixture.py`。**两端都要**,只买一端仍然买不到 (a)。买完之后重新入集申请归英雄组/协同组,总监审。",
+      "trigger": "**没有外部触发器**,而这正是它进 registry 的理由:`wandlimbo` 已出集 ⇒ 没有 id 行载它;这条仪器缺口**不属于任何一波** ⇒ 没有 `W<N>_wave.json:harvest_obligations` 行载它(§DR / GH #413 同型)。实际取它的时机:任何一轮有余量、且愿意动 dumper 的工作单元;或者有人提 `wandlimbo` 重新入集的那一刻(以先到者为准)。⚠️ 它同时是**一整类 id 的前置**,不只这一条:凡以充能为子句的杠杆(bottle 腿的 `stayfield`/`fieldsip`、未来任何 wand/stick 杠杆)都卡在同一堵墙上。",
+      "delivered_to": [
+        "iterations/owed_executions.json(本行)",
+        "iterations/streams/test_set.md §GC(裁定全文)",
+        "iterations/armed_since.json(`wandlimbo` 的 retired_note)",
+        "iterations/state.json:wandlimbo_RETURNED_20260908"
+      ],
+      "why_registered_here": "退集之后,买 (a) 的能力**没有被销毁但换了执行人并换了性质**:它从「读一份录像」变成「改两个仪器」。写进已退集 id 的散文里就是 §DR / GH #540 量过的掉棒形状 —— 一条出集 id 的散文没有任何腿会替它举手。⭐ 而这一条比一般的掉棒更需要一行:**墙早就写在树里了**(`jmz_func.lua` 的 `stayfield` 注释逐字写着两句 declaration,并因此拒绝把 wand 计入),而 `wandlimbo` **仍然**在三周后以充能为第一条合取入了集,并骑了九个波次。**一堵写下来但没有仪器的墙拦不住任何人**;这一行就是给它装的那根针。",
+      "done_when": {
+        "kind": "text_absent",
+        "path": "tests/test_blind_a_wandlimbo_tpdead.lua",
+        "text": [
+          "The substring \"charge\" does not occur",
+          "so the call falls through bot_api.lua"
+        ]
+      },
+      "done_when_note": "⭐ **这是 `text_absent` 的第一个真实用户**(上一轮 09-08T13:00Z 落地该 kind 时逐字登记「此刻没有任何一条活着的 owed 行用它」,并写下「下一条『把这句写错的话改掉』形状的裁定就是它的第一个真实用户」——这就是那一条)。⛔ **反面那一半买得到,正面那一半买不到,所以只钉反面**:两端仪器一旦服务了 charges,`tests/test_blind_a_wandlimbo_tpdead.lua` §1b/§1c 会**当场转红**,改这个文件的人必须重写头里那两句(它们是这条盲区的字面描述)⇒ 那两句消失 = 仪器被买了。⚠️ **absence 不等于替换它的东西是对的**(该 kind 自带的限度):这一行读 DONE 只说「那两句没了」,**不说**新仪器读数正确,更不说 `wandlimbo` 该重新入集 —— 重新入集要走 §GC 的三条件,由总监重判。⚠️ 文件被删 ⇒ **UNCERTIFIABLE 不是 DONE**(该 kind 自带的假阳防护)。 ⛔ **本行第一版的两条 needle 都打错了(大小写 + 跨行折断),于是它在被写下的同一分钟读 DONE** —— 已修正,两条 needle 在裁定时刻**逐字验在场**(见 §GC.7)。"
     }
   ],
   "retired": [

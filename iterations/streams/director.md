@@ -496,7 +496,79 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     与协同组建议的「套件级锁」一起收口 —— 二者是同一个共享开关的两半:
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
+99. **桩转轴普查**(总监 2026-09-08T1x:xxZ 立,依据 `test_set.md §GC.2` 的实测,**未落地,登记而非发明**)。
+    **立案句**:一份 fixture 测试可以钉在**真实帧**上、断言一大排**真读自 dump** 的子句、绿着,
+    **同时由测试作者亲手写进该杠杆唯一转轴的那个输入**——于是它读起来像条件 (a),而它不是。
+    本轮两条退集 id **各有一份这样的测试**:`test_replay_181441_wand_limbo.lua` 写
+    `rawget(wand,'__spec').GetCurrentCharges = n`(充能是 `wandlimbo` 相对已发行规则**唯一多出来**的子句),
+    `test_tpdead_release.lua` 写 `bot.tpRespondLoc/tpRespondUntil/tpRespondAlly` 三行
+    (那是让 `J.GetTpCommitDefendDesire` **可达**的状态,实测语料 **0/1021 帧**有它)。
+    ⚠️ **AGENTS.md 的「Gate-plumbing tests are NOT local validation」覆盖不到这个形状**:
+    它说的是纯桩测试,而这两份是**真帧测试 + 一个桩输入**,且那个桩输入正是转轴。
+    ⇒ 工具形状:普查所有**先写 `__spec` 字段 / 先给 bot 赋状态、再调用被测 helper** 的 fixture 测试,
+    与 `verify_coverage.py` 并排读——**让「桩了转轴」这件事从此可读**,而不是每次靠人逐份读出来。
+    ⛔ **它不是判决**(house 惯例):桩一个转轴常常是**对的**(负控、边界、gate 开关三态),
+    普查要报的是「这一份桩了转轴」,不是「这一份不算数」;判是不是 (a) 仍归总监。
+100. **`text_absent` 的注册时守卫**(总监 2026-09-08T1x:xxZ 立,`pending_rulings.py` LIMIT 11 新增段,**未落地**)。
+    **立案句是本轮自己踩的**:`text_absent` 这个 kind 的**第一个真实用户**(`wandlimbo_charge_instrument`)
+    在**被写下的同一分钟读 DONE**,下面还印着「the director should retire this row」——
+    两条 needle 分别错在**一个字母的大小写**和**跨注释折行**,而 **needle 从未匹配过**与
+    **needle 所在的句子被删掉了**在这个 kind 里**逐字节不可分辨**,失效方向是 **DONE**。
+    该 kind 已经拒绝**空的/写坏的** needle 集合,但打错的 needle 不属于那一类。
+    ⇒ 守卫形状:行在**裁定时刻**逐 needle 记下它**匹配过**(那是这个区别**唯一还可观测**的一刻);
+    事后任何检查都恢复不了它,所以这是 limit 不是 bug。
+    ⭕ 在守卫落地之前,**注册 `text_absent` 行的那个工作单元必须当轮跑一次 `--owed-only` 并确认读 OWED**
+    (本轮就是这么抓到的;换一个把它写在工作单元末尾的轮次,这一行会**生下来就是退休的**)。
+
 ## 当前状态(每次触发后更新)
+- **2026-09-08T19:xxZ**:**两条退回出集(44 → 42),判定完结 2(达标);而本轮最该被读的不是裁定 —— 是「两条 id 各有一份绿的、钉在真实帧上的 fixture 测试,而两份都由作者亲手写进了该杠杆唯一转轴的那个输入」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+  取活依据是上一轮「下次触发」的 **①**(⭐**≥2 判定完结**,上一轮 **0**,逐字写着「排在任何新裁定之前」)。
+  全文 `iterations/reports/director/20260908T19xxxxZ.md`,裁定全文档案 `test_set.md §GC`(§GC.0–§GC.7),
+  机器键 `state.json:wandlimbo_RETURNED_20260908` / `tpdead_RETURNED_20260908`。
+  **`wandlimbo` 退集**:(a) **两条仪器路径都买不到** —— helper 第一条合取是 `GetCurrentCharges() < 6`,
+  fixture 侧 **953/953** 个 wand/stick 句柄读 **0**(落 `bot_api.lua:184` 的 `^Get -> 0` 兜底),
+  replay 侧 `dumper/main.go` 里 `charge` **零次出现**。`wl_full 0` 是**仪器的零**,`wl_nocharge 17` 是它盖住的域;
+  ⭐ **17 帧里就有它自己的立案帧**(`f_181441_zuus_lowhp_limbo`)—— 作者为证明这条杠杆冻下来的那一帧,仪器答不出来。
+  **`tpdead` 退集**:它是 §GA.1 **逐字点名**的「两个释放」之一,而那一轮**只裁了 `tpdying`**;同一函数体、同一道 `tpcommit` 门。
+  ⭐ 本轮另买到**第三堵墙**:该函数第五行要活局才写的 `tpRespondUntil`,实测 `td_state_present` **0/1021** ⇒ **语料路径也不可达**。
+  ⭐⭐⭐ **主轴(§GC.2)**:`test_replay_181441_wand_limbo.lua` 断言真 HP/真敌距/真泉水距,然后
+  `rawget(wand,'__spec').GetCurrentCharges = n`(触发写 12,不触发写 3);`test_tpdead_release.lua` 帧是真的,
+  而 `tpRespondLoc/Until/Ally` 三行自己赋。**两份测试都没错,错的是把它们读成 (a)** ——
+  这类测试问「给定这个输入决策对不对」,(a) 问「这个输入到底出没出现过」。
+  **AGENTS.md 那句「Gate-plumbing tests are NOT local validation」覆盖不到这个形状**(它说的是纯桩测试,
+  这两份是真帧测试**加一个桩输入**,且桩的是转轴)⇒ 这就是两条 id 一边看着「已 fixture 验证」、一边 `verify=0` 二十天的机制。
+  处方(**桩转轴普查**)**登记进 backlog 99,未落地** —— 工作单元边界。
+  ⭐⭐ **第二件(本轮自己踩的,`text_absent` 的第一个真实用户当场找到该 kind 的洞)**:
+  新 owed 行 `wandlimbo_charge_instrument` **在被写下的同一分钟读 DONE**,下面印着「the director should retire this row」——
+  两条 needle 分别错在**一个字母的大小写**与**跨注释折行**,而 **needle 从未匹配过**与**那句话被删掉了**
+  在这个 kind 里**逐字节不可分辨**,失效方向是 **DONE**。needle 已改为在裁定时刻**逐字验在场**,行现读 **OWED**;
+  限度写进 `pending_rulings.py` LIMIT 11,守卫进 backlog 100。**抓到它靠的是当轮跑了 `--owed-only`** —— 换一轮写在末尾就生下来是退休的。
+  ⭐ **第三件(章程 §BB.4,同轮义务)**:`hero-49`(`lionqkill`,GH #640,17:56Z 到)裁 **APPROVED-SCAN**(与 hero-41..48 同档),
+  **并当轮做掉它夹带的那件总监活**:`promote_atoms.json` 新行 `impale_kill_needs_damage`
+  (`no_promote_without`,subject=[`lionqdmg`]、prereq=[`lionqkill`],**单向**),`promote_atoms.py` 复读 **5 atoms / OK**。
+  ⛔ **理由逐条核过源码不是照抄请求**:击杀循环走 `nInBonusEnemyList`(`nCastRange+200`)**自身无距离测试**;
+  `X.GetImpaleKillDamage` 未 armed 返回 `GetAbilityDamage()` 而 `lion_impale` 无顶层 `AbilityDamage` ⇒ 恒 0;
+  `X.lion_IsImpaleKillTargetInReach` 未 armed **原样返回** `bShippedLethal` ⇒ 单向成立。
+  独立佐证(非请求提供):`replay_fixture.lua` 的 AbilityDamage 注释从另一侧点名同一个 getter 并称该落点 'provably inert'。
+  针脚(§GB.3 的机器键)**两半同轮都加了**:`director.owed_row` + `contains` 加 `hero-49`,
+  并**实测单边删除会红**(exit 1)、还原后绿。
+  量具:`tests/_blind_a_sweep.lua`、`tests/test_blind_a_wandlimbo_tpdead.lua`(**11 checks / 0 failed**)、
+  `tools/agent/mutstand_blind_a.sh`(**10 CAUGHT / 0 SURVIVED / control_ok=1**,五个文件还原逐字节 YES)。
+  ⚠️ **M10 第一次 SURVIVED,而它是对的、断言是错的**:`bot.tpRespondUntil =` 是 `bot.tpRespondUntil ==` 的**前缀**,
+  同文件恰有两处 `== nil` 断言 ⇒ 删光三行赋值仍绿;改钉整条赋值语句后 CAUGHT(纪律 2 的正面兑现)。
+  ⚠️ **半 2 的对照组失败,那一半的零因此不作为证据用**(GH #171 家规);它买到的是第三堵墙,不是读数。
+  载体项 **7 → 7 逐字不变**(`carrier_terms.py` 两串各跑一次,`0 unresolved` 两次,`10 hero / 34 → 32 generic`)。
+  MTD 不作新声称,转载批测台 15:10Z:**$66.105**,三条线均未跨。armed 串 **44 → 42**(目标 ≤20)。
+  ⛔ **「后台包装吞掉真码」第六次兑现**(harness 报 `exit code 0`,自检真码 **3**),守卫**仍未立**,顺延。
+  自检 10 条腿:`cadence`、`queue-rulings`(**本轮清零:hero-49**)、`owed-executions`、`trunk-red(python)` UNCERTIFIABLE(GH #358 的 120s,**不是通过**)。
+  ⚠️ 纪律 3 本轮**一发**:第一条命令是 `routine_selfcheck.sh … | tail -60`,§22 守卫当场拒;**不新立措辞**,登记而已。
+  ⛔ 动态半(Lua 全量)未跑不作声称(零 `bots/` diff)。
+  **下次触发**:①**判 `cmrguard`**(20 天档 `verify=0` 的第三条,§GC.6 明写留给下一轮;它要一波单臂读数,先判买不买得到)
+  ②`hero_domain_scan` 九份读数逐份读通(顺延)③GH #358 的 120s 预算要人裁(顺延)
+  ④**给「后台包装吞掉真码」立守卫**(第六次兑现,顺延)⑤GH #633 没买到的那一半(`I/O error` 走 verdict 2)
+  ⑥backlog 100(`text_absent` 注册时守卫)⑦backlog 99(桩转轴普查)
+  ⑧**为 `wandlimbo` 的仪器缺口开 [harness] issue**(本轮 MCP 未试,owed 行已登记,issue 号仍空)
 - **2026-09-08T16:12Z**:**八条一次裁完(hero-41..48,APPROVED-SCAN);而本轮最该被读的两条都不是裁定 —— ①针脚表在它被立起来的下一轮就漏了三根,②一条每轮点名的 trunk 红,归因只是「有人在它上方插了几行」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
   ⛔ **判定完结 0,不达 owner P4.2 的 ≥2** —— 不粉饰,理由与补法见报告 §6;**下次触发 ① 强制是它**。

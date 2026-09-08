@@ -71,7 +71,9 @@
     "tpdead": {
       "armed_since": "2026-08-19",
       "precision": "exact",
-      "source": "reports/director/20260819T190000Z.md"
+      "source": "reports/director/20260819T190000Z.md",
+      "retired_at": "2026-09-08",
+      "retired_note": "退回出集(test_set.md §GC;state.json:tpdead_RETURNED_20260908)。条件 (a) 结构上买不到,且**两条路径两个原因**:语料路径上 J.GetTpCommitDefendDesire 不可达(td_state_present 0/1021),波次路径上读数不可分解(§GA.1)。它是 §GA.1 逐字点名的「两个释放」之一而那一轮只裁了 tpdying;买 (a) 见 owed 行 tpdying_isolation_leg(本轮补点名 tpdead)。"
     },
     "zusult": {
       "armed_since": "2026-08-19",
@@ -81,7 +83,9 @@
     "wandlimbo": {
       "armed_since": "2026-08-19",
       "precision": "exact",
-      "source": "reports/director/20260819T210000Z.md"
+      "source": "reports/director/20260819T210000Z.md",
+      "retired_at": "2026-09-08",
+      "retired_note": "退回出集(test_set.md §GC;state.json:wandlimbo_RETURNED_20260908)。条件 (a) 在**两条仪器路径上都买不到**:helper 第一条合取是 `GetCurrentCharges() < 6`,fixture 侧 953 个句柄全读 0(bot_api.lua:184 的 `^Get -> 0` 兜底),replay 侧 dumper/main.go 里 `charge` 零次出现。买 (a) 的前置是仪器采购,见 owed 行 wandlimbo_charge_instrument。"
     },
     "blinkflee": {
       "armed_since": "2026-08-20",

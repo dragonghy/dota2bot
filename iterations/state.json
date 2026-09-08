@@ -7279,5 +7279,31 @@
     "queue": "iterations/queue.json:hero-49",
     "issue": "GH #640",
     "report": "iterations/reports/hero/20260908T170500Z.md"
+  },
+  "wandlimbo_RETURNED_20260908": {
+    "ruling": "RETURNED_TO_TESTSET_OUT (退回≠reject),出集,成员串 44→43(与 tpdead 同批 44→42)",
+    "three_conditions": "(a) **买不到**,不是没买 —— 两条仪器路径都不带 item charges;(b) **从来没有过读数** —— 九个波次(W39/40/41/52/53/54/55/56/57)全部只在全量成员串里,零单臂;(c) **成立且未被取代**(d23 lowhp_limbo,真实帧 20260722_181441,子句刻意窄)",
+    "why_a_is_unbuyable": "helper 第一条合取是 hItem:GetCurrentCharges() < 6。fixture 侧:replay_fixture.lua 用 api.MakeAbility(name,{IsFullyCastable=true}) 造句柄,不服务 charge getter,落到 tests/mock/bot_api.lua:184 的 `^Get -> 0` 兜底;实测 953/953 个 wand/stick 句柄读 0。replay 侧:tools/batch_test/behavioral/dumper/main.go 只发 `Items []string`,全文件 `charge` 出现 **0** 次 ⇒ 行为检测器也重建不出这条子句。",
+    "instrument_zero_vs_domain_zero": "wl_full 0 是仪器的零(第一条合取短路),wl_nocharge 17 是它盖住的域;两个数缺一个都什么都不说。⭐ 17 帧里包含它自己的立案帧 f_181441_zuus_lowhp_limbo(hp 0.1581 / 泉水 4598.5)—— 作者为证明这条杠杆而冻下来的那一帧,仪器答不出来。",
+    "the_wall_was_already_written": "jmz_func.lua 的 stayfield 注释(同一文件,helper 上方约 5800 行)逐字写着两句:「a fixture can never answer TRUE through the bottle leg -- the mock's GetCurrentCharges default is 0. Declared, not hidden.」与「its charge count -- the thing that decides whether it heals at all -- is not in the dump.」,并**因此**拒绝把 wand 计入。wandlimbo 仍于 2026-08-19 以充能计数为第一条合取入集。⇒ 一堵写下来但没有仪器的墙拦不住任何人。",
+    "green_test_is_not_condition_a": "tests/test_replay_181441_wand_limbo.lua 绿、钉真实帧、断言真 HP/真敌距/真泉水距 —— 而 `rawget(wand,'__spec').GetCurrentCharges = n` 是作者写进去的(触发用 12,不触发用 3),且充能是 wandlimbo 相对已发行规则唯一多出来的子句。全文 test_set.md §GC.2。",
+    "gate": "bots/FunLib/jmz_func.lua:11317 的 gate 与整个 J.ShouldDrinkWandInLimbo 逐字保留,永不 arm,直到仪器采购落地并重新申请入集;bots/+game/ 零 diff",
+    "readmission_condition": "dumper 发 per-item charges **且** fixture loader 服务 GetCurrentCharges。owed 行 wandlimbo_charge_instrument;tests/test_blind_a_wandlimbo_tpdead.lua §1b/§1c 在任一端被服务的当天转红。",
+    "instrument": "tests/_blind_a_sweep.lua(110 fixture / 1021 live turbo 帧);tests/test_blind_a_wandlimbo_tpdead.lua 11 checks;tools/agent/mutstand_blind_a.sh 10 CAUGHT / 0 SURVIVED / control_ok=1",
+    "ref": "iterations/streams/test_set.md §GC"
+  },
+  "tpdead_RETURNED_20260908": {
+    "ruling": "RETURNED_TO_TESTSET_OUT (退回≠reject),出集,成员串 43→42(与 wandlimbo 同批 44→42)",
+    "three_conditions": "(a) **买不到**,两条路径两个不同原因(见下);(b) **从来没有过读数** —— 九个波次全部只在全量成员串里,零单臂;(c) 成立(GH #37,11 次跟踪救援中位落地→盟友 2289u)",
+    "carry_across": "⭐ 这是 §GA.1 的**接力棒**:那一轮逐字点名「两个释放(tpdying/tpdead)」、把 tpdying 判为 (a) 结构上买不到并退集,而 **tpdead 同一函数体、同一道门、同一个不可分解的净值**,当轮没有被裁,又 armed 了一天。本轮补裁。",
+    "why_a_is_unbuyable_wave_path": "两个子句都住在 J.GetTpCommitDefendDesire 里,该函数第二行是 `if not J.IsSoakCandidate('tpcommit') then return nil end`(jmz_func.lua:10062,子句 :10126)⇒ 单独 armed 逐位 no-op;两者同时 armed 时 armed−baseline 是「钉的创建(tpcommit)+ 释放(tpdead)」的净值,§GA.1 已量:连符号都不可分解(W49,4527 次响应 TP 落地 / 70 game-legs)。",
+    "why_a_is_unbuyable_corpus_path": "⭐ 本轮新买到的第三堵墙:该函数第五行要 `bot.tpRespondLoc`/`bot.tpRespondUntil`,那是活局响应 TP 分支才写的状态;实测 td_state_present **0/1021 帧** ⇒ 语料路径**结构上不可达**。因此 sweep 半 2 的两个零(td_armed_alone_nonnil 0 / **对照 tc_alone_nonnil 也是 0**)按 GH #171 家规**不作为证据使用**;半 2 的裁定依据是源码读数 + §GA.1 的已有读数。",
+    "green_test_is_not_condition_a": "tests/test_tpdead_release.lua 绿、帧是真的 —— 而 bot.tpRespondLoc / tpRespondUntil / tpRespondAlly **三行由测试自己赋值**,那正是让该函数可达的状态。全文 test_set.md §GC.2。",
+    "writer_is_ungated_but_inert": "bot.tpRespondAlly = hRescueAlly 在 ability_item_usage_generic.lua 里**无门**跑在每一局,但全树唯一读者在门内(断言:门外读者 0 处),该文件自己也写着「only J.GetTpCommitDefendDesire reads it, and only with the 'tpdead' candidate armed」。",
+    "promote_atom_untouched": "⚠️ promote_atoms.json:tp_response_releases_need_commit **不动** —— 它约束 promote 日的配置,退集不是 promote;删它才会悄悄放开它存在的理由。它同时是这处嵌套的**第三个独立见证**(2026-09-05 立,比 §GA.1 早三天)。",
+    "gate": "bots/FunLib/jmz_func.lua:10126 的子句逐字保留,永不 arm,直到隔离腿给出读数;bots/+game/ 零 diff",
+    "readmission_condition": "一条隔离腿:同一批 seed,arm tpcommit 而**两个释放都不 arm**,对照现有 W49 读数。owed 行 tpdying_isolation_leg(本轮补点名 tpdead)。花一波的钱 ⇒ 批测台排期,不是录像组能自取的活。",
+    "instrument": "tests/_blind_a_sweep.lua;tests/test_blind_a_wandlimbo_tpdead.lua 11 checks;tools/agent/mutstand_blind_a.sh 10 CAUGHT / 0 SURVIVED",
+    "ref": "iterations/streams/test_set.md §GC"
   }
 }
