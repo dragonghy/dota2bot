@@ -51,7 +51,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    承诺门**(`nCastRange + 50`,「进攻」落单点写的那个)以内。`bots/` 有真代码行。** 报告
    `iterations/reports/hero/20260908T111410Z.md`。新 `tests/test_cm_w_lane_band.lua`(**12 例**)
    + `tools/agent/mutstand_cmlaneband.sh`(**10/10 CAUGHT**)。登记
-   `state.json:cmlaneband_20260908`,新请求 `queue.json:hero-47`,新开 GH issue(号见报告 §8/§7)。
+   `state.json:cmlaneband_20260908`,新请求 `queue.json:hero-47`,新开 GH **#630**。
    本轮 `[hero]` open issue **一条可认领的都没有**(13 条逐条理由见报告 §1)。
    - **⭐ 选中的是「回报 vs 到达」不匹配,与 `wkqlane` 逐字同一条论证**:打断值回票价
      (对面整个 TP 作废);骚扰的回报只是一次 harass,而**击杀**那一档是这个函数的
@@ -5429,7 +5429,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   排完 W 就 `return` ⇒ 那段路上 `X.ConsiderR`(Freezing Field)**一次都不被考虑**,
   一趟花 125-155 蓝。新 `X.cm_IsLaneHarassTargetInReach`,新 `tests/test_cm_w_lane_band.lua`
   (**12 例**)+ `tools/agent/mutstand_cmlaneband.sh`(**10/10 CAUGHT**)。
-  `state.json:cmlaneband_20260908`、`queue.json:hero-47`、GH issue 本轮开(号见报告)。
+  `state.json:cmlaneband_20260908`、`queue.json:hero-47`、GH **#630**(本轮开)。
   **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
   `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
   `run_tests.lua cm` **287 例 0 失败**;113 个 python 检测器逐个跑 **0 红**。

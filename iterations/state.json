@@ -7204,6 +7204,6 @@
     "limits_asserted": "⚠️ **「这条分支整体开火」不是本轮买到的读数**,两条原因都是量具不是游戏,写在 §0.3 限度 2 并由 §4 断言注入真的生效:(a) `bot:GetActiveMode()` 是 bot-VM 状态、任何 .dem 里都没有(`wkqlane` 记过的第 13 世界断言),而整个「对线期消耗」块坐在它后面;(b) fixture loader 给**每个单位**都发 `GetCurrentMovementSpeed = 300`,于是分支自己那条「目标移速 < CM 移速」在整份语料上是 `300 < 300` —— **一个 loader 常数悄悄缴械了一整条分支,而它读起来像「域为空」**(GH #611 / #613 同族);(c) 这一帧 CM 是 342/604 = 56.6%,而分支要 `nHP > 0.6`,§4 把 `GetHealth` 顶到 400 —— **这一条是真的在覆盖帧数据**,也正因为如此,本轮站得住的读数是**零注入的 §2**,§4 只是接线。",
     "sibling_ratchet": "§5 钉两条本文件**没有**修的东西,好让后来人发现而不是继承:(i) TP 打断**至今仍然无界**(它仍读 bonus 环、区间里没有任何 `IsInRange`/`GetUnitToUnitDistance`)—— 谁要给它加距离项,**先退休 §0.3 限度 3**,不要改那条断言;(ii) 那条读 `nEnemysHeroesInView[1]`(**1600** 环,比本 id 关掉的 band 还宽 970 码)的落单点仍在 —— **登记未修**。",
     "value_question_owed": "iterations/queue.json `hero-47`(零 EC2 归档只读扫描,四列读数 + ab/ba 分层 + gap 分桶)。⛔ P4.2 冻结期内**不请求入集**;合法裁定是 FROZEN-HOLD。",
-    "gh_issue": "#628(本轮开;若号被占以实际发出的为准,报告里写实际号)"
+    "gh_issue": "#630(本轮开)"
   }
 }
