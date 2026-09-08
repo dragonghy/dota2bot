@@ -22,7 +22,61 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--125. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+-126. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
+     timeline)、CM 的 `cmfarcreep` 域(`hero-42`)、`lionultcash` 域(`hero-43`)、
+     `lionrreach` 域(`hero-44`)、`wkqlane` 域(`hero-45`)、`axecullreach` 域(`hero-46`)、
+     `cmlaneband` 域(`hero-47`)、**新增 `zusjumpland` 域(`hero-48`)**;
+     `wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`,逐字不变。
+   - **⛔ 不许**顺手改 `zusbind` / `zusstatic` / `zusboltcap` / `zusboltdom` / `zusult`
+     的合取或 id,尤其**不许**把 `zusjumpland` 与 `zusbind` 合取 —— 那正是 pullcad 陷阱,
+     而 `zusbind` 就在这个文件里被反复调用,所以这条特别近;变异台 **M10** 就是它。
+   - **⭐ 本轮(`-126`)顺手看到、没做的两条线索**:
+     (甲) **`X.ConsiderD`(Nimbus)第一条分支用「队友到队友目标」的 1200 批准 Zeus
+     自己的一次施法**,而 Zeus 到落点的距离一次都没量。**看起来是同族缺陷,查 KV 之后
+     作废**:`zuus_cloud` 的 `AbilityCastRange` 是 **0**,而
+     `tests/test_wk_q_castrange_meter_domain.lua:110-113` 已写明「Nimbus 的真实答案就是 0」
+     (全球施法)⇒ **无界到达在那里是设计,不是缺陷**。谁再看到这个形状,先读那三行。
+     (乙) **`X.ConsiderE` 的 `nCastRange = 600 + nSkillLV * 100` 是 KV `range` 键的手抄
+     阶梯**,而 `tests/test_zuus_jump_landing_reach.lua` §2 证明该键在真实帧上答得出 700。
+     换成读是**纯可读性**改动、按 P4.4 **不能当主体**,且**不免费**(手抄阶梯正是 handle
+     绑错时函数还能工作的原因);要动先退休该文件 §0.3 限度 4。
+   - **⭐ 下一轮开工顺序(本轮花了一次重跑买来的)**:开工自检**跑完**再动变异台,
+     或者反过来 —— **不要并行**。GH #507 的撕裂窗口这一次有了实际后果(自检 python 腿
+     报 UNCERTIFIABLE「could not read its input」),详见本轮报告 §8。
+
+-125. ~~**⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-08T13:55Z 做完:换了英雄(Zeus;他 18 个已登记 id 一个都不在 Heavenly Jump 上)。
+   `X.ConsiderE` 的「进攻」落单点在**起跳点**量一个从**落点**量的量 —— 跳跃是无目标位移,
+   冲击波从落点搜 `range`,而这个落单点写的是 `J.IsInRange( bot, targetHero, nCastRange )`。
+   gated `zusjumpland` 把量的位置搬到落点。`bots/` 有真代码行。** 报告
+   `iterations/reports/hero/20260908T135500Z.md`。新 `tests/test_zuus_jump_landing_reach.lua`
+   (**15 例**)+ `tools/agent/mutstand_zusjumpland.sh`(**10/10 CAUGHT**)。登记
+   `state.json:zusjumpland_20260908`,新请求 `queue.json:hero-48`。
+   本轮 `[hero]` open issue **一条可认领的都没有**(11 条逐条理由见报告 §1)。
+   - **⭐ 这不是又一个「环太宽」,是一个大小正确、圆心错误的环**:`lionrreach`(#617)/
+     `wkqlane`(#621)/`cmlaneband`(#630)那三个错在**一个**方向(修法是收窄);这一个
+     **两个方向都错** —— 真实帧上 360 个朝向里约一半打得中、一半打不中,而出货那一项
+     对这 360 个**给同一个答案**。
+   - **⭐⭐ 承重的是那条不对称**:同函数三十行上方的**撤退**落单点是本文件里**唯一**推理
+     朝向的地方 ⇒ 这个函数**已经知道**跳跃有方向;缺这一项的恰恰是那个**回报由方向决定**
+     的落单点。
+   - **⭐⭐⭐ 一条前置断言的措辞可以吃掉整个诊断。** M10 第一版被记成「红但消息不对」,
+     只因为 §5 standalone 用例的**第一条前置断言**写的是无信息的 `'the stand is not set up'`
+     ——而在合取闸下它恰好是第一条会失败的断言。改写成它自己的判据后才 10/10。
+     **前置断言不是脚手架,它是这个用例在最常见的失败路径上说的第一句话。**
+   - **⚠️ 两把量具同一轮里朝同一个方向都答「什么也没发生」,而且都不抛异常**:
+     `GetFacing` 掉进 mock 的 `^Get -> 0` 兜底(语料里每个英雄每一帧都朝正东,GH #611/#613
+     同族),以及初稿在 `rf.record_actions` 上**读错参数下标**(日志不含 `self`,技能是
+     `args[1]`)⇒ 在一个确实下了施法单的帧上报告「没有施法」。**这就是 §4 断言每一条注入
+     生效、而不是从结果反推的原因。**
+   - **⚠️ 自捉纪律滑点,与上一轮同一条,但这次有实际后果**:开工自检与变异台时间重叠
+     (GH #507),自检 python 腿报 UNCERTIFIABLE「could not read its input」,在安静树上
+     **重跑了一次**才拿到读数(113/1/1 → 修完 113+1)。
+   - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**,第 **10** 次因用管道读退出码被拒。
+
+-125b. **⭐ 本条为历史保留(`-125` 原文的线索清单)。**
    - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
      timeline)、CM 的 `cmfarcreep` 域(`hero-42`)、`lionultcash` 域(`hero-43`)、
      `lionrreach` 域(`hero-44`)、`wkqlane` 域(`hero-45`)、`axecullreach` 域(`hero-46`)、
@@ -5413,6 +5467,62 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-08T13:55Z(报告 `iterations/reports/hero/20260908T135500Z.md`;**backlog:`-125` 做完、
+  新开 `-126`**;焦点英雄 **Zeus**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动)
+  **这不是又一个「环太宽」,是一个大小正确、圆心错误的环。gated `zusjumpland` 把量的位置
+  从起跳点搬到落点,`bots/` 有真代码行。**
+  `X.ConsiderE`(Heavenly Jump)只有两个落单点。跳跃是**无目标位移**:英雄沿自己的朝向跳
+  `hop_distance`(375/450/525/600),落地后冲击波从**落点**搜 `range`(700/800/900/1000)。
+  「进攻」那个落单点写的是 `J.IsInRange( bot, targetHero, nCastRange )`,而 `nCastRange`
+  **就是 `range` 阶梯**(函数自己的注释:「the radius the landing shockwave searches,
+  NOT a cast range」)⇒ 它在**起跳点**量一个从**落点**量的量,两点最多差 `hop_distance`
+  (rank 1 = **375 / 700,超过半径的一半**)。新
+  `X.zuus_IsJumpTargetInShockwaveReach`,新 `tests/test_zuus_jump_landing_reach.lua`
+  (**15 例**)+ `tools/agent/mutstand_zusjumpland.sh`(**10/10 CAUGHT**)。
+  `state.json:zusjumpland_20260908`、`queue.json:hero-48`。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
+  `run_tests.lua zuus` **237 例 0 失败**;`run_py_tests.sh` **113+1 passed**(那 1 条红是
+  本轮自己的 `io.popen` 未登记,同一工作单元内补上);86 个 fast-Lua detector **0 红**。
+  本轮 [hero] open issue **一条可认领的都没有**(11 条逐条理由见报告 §1)。
+  - **⭐ 与 `lionrreach`(#617)/`wkqlane`(#621)/`cmlaneband`(#630)同族但不是同一个缺陷**:
+    那三个是环**太宽**,错在**一个**方向;这一个环的**大小是对的、圆心是错的**,而且
+    **两个方向都错** —— 真实帧上 360 个朝向里约一半打得中、一半打不中,而出货那一项
+    对这 360 个**给同一个答案**。
+  - **⭐⭐ 承重的是那条不对称,不是算术**:同函数三十行上方的**撤退**落单点
+    (`not bot:IsFacingLocation( targetHero:GetLocation(), 120 )`)是本文件里**唯一**推理
+    朝向的地方,而它推理朝向正因为方向就是它买的东西 ⇒ 这个函数**已经知道**跳跃有方向;
+    缺这一项的恰恰是那个**回报由方向决定**的落单点(伤害 + 1.4s / 80% 减速)。
+  - **⭐⭐ 真实帧上那段读数是零注入的**:`f_230510_dp_luna_standoff` t 帧,Zeus 为 subject。
+    `GetSpecialValueInt('hop_distance')` 答**真实的 375**、`('range')` 答**真实的 700**;
+    zeus (6240.6,−4675.4) 与 oracle (5948.3,−5306.2) 相距 **695.23u** —— 在出货 700 环内
+    **还剩 4.77u**,在 `range−hop`=325 之外 **370.23u**。正对目标落点距目标 **320.23u**
+    (打中);正背离落点距目标 **1070.23u**,**差 370.23u 打不中**。
+  - **⭐⭐⭐ 一条前置断言的措辞可以吃掉整个诊断**:M10(pullcad 陷阱)第一版被记成
+    「**红但消息不对**」,只因为 §5 standalone 用例的**第一条前置断言**写的是无信息的
+    `'the stand is not set up'` —— 在合取闸下它恰好是第一条会失败的断言。改写成它自己的
+    判据后才 10/10。**前置断言不是脚手架。**
+  - **⚠️ 两把量具同一轮里朝同一个方向都答「什么也没发生」,而且都不抛异常**:
+    `GetFacing` 不在任何 fixture 的 unit spec 里 ⇒ 掉进 `bot_api.lua` 的 `^Get -> 0` 兜底,
+    **静默**答 0(语料里每个英雄每一帧都朝正东;GH #611/#613 同族);以及初稿在
+    `rf.record_actions` 上**读错参数下标**(日志不含 `self`,技能是 `args[1]`)⇒ 在一个
+    **确实下了施法单**的帧上报告「没有施法」。**§4 因此断言每一条注入生效,不从结果反推。**
+  - **⭐ 登记两条没修的**(§0.3 限度 3/4,§6 有断言钉住):**撤退落单点**故意不碰
+    (它买的是位移本身,且它已带着本文件唯一的朝向项);`nCastRange = 600 + nSkillLV * 100`
+    是 KV `range` 键的**手抄阶梯**(§2 证明该键答得出 700),换成读是纯可读性改动、
+    按 P4.4 不能当主体,且不免费。
+  - **⭐ 一次自己检查掉的错误方向,写下来防复发**:第一个候选缺陷是 `X.ConsiderD`(Nimbus)
+    用「队友到队友目标」的 1200 批准 Zeus 自己的施法。**查 KV 之后作废** ——
+    `zuus_cloud` 的 `AbilityCastRange` 是 **0**,`tests/test_wk_q_castrange_meter_domain.lua`
+    :110-113 已写明「Nimbus 的真实答案就是 0」(全球施法)⇒ **无界到达在那里是设计**。
+  - **⚠️ 自捉纪律滑点,与上一轮同一条,但这次有实际后果**:开工自检(后台)与变异台
+    (原地重写 `bots/` 源码)**时间重叠**(GH #507 撕裂窗口),自检 python 腿报
+    `UNCERTIFIABLE -- could not read its input`,在安静树上**重跑了一次**才拿到读数。
+    下一轮:两者**不要并行**。
+  - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**:cadence / queue-rulings / owed-executions,
+    **都不是本轮的**;另有一条 UNCERTIFIABLE(`test_selfcheck_lua_leg.py` 120.1s 没跑完)。
+    自检**第 10 次**用管道读退出码被脚本当场拒绝(证据纪律 3)。
 - 2026-09-08T11:14Z(报告 `iterations/reports/hero/20260908T111410Z.md`;**backlog:`-124` 做完、
   新开 `-125`**;焦点英雄 **Crystal Maiden**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动)

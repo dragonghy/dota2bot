@@ -152,6 +152,18 @@ UNRESOLVED_HAND_READ = {
     # io.popen.  Same shape as the lion/wk/axe sisters above; bots/ is not in
     # the enumeration.  Registered in the SAME work unit that created the file
     # (GH #596's habit, and the third round to keep it).
+    # Hand-read 2026-09-08 (hero), at :182-193: `corpus_paths()` takes no
+    # parameter, its one caller (:277) passes none, and the loop is
+    # `for _, dir in ipairs({ FIXTURE_DIR, STAGED_DIR })` over the literals at
+    # :161-162 ('tests/fixtures' / 'tests/frames').  Same shape as the
+    # lion/wk/axe/cm sisters above; bots/ is not in the enumeration.  The
+    # file's other popen (:623) is `grep -rl "'zusjumpland'" bots` -- CAND is a
+    # literal at :155, so it resolves statically and is measured by execution,
+    # not by this list.  Registered in the SAME work unit that created the file
+    # (GH #596's habit, and the fourth round to keep it).
+    """tests/test_zuus_jump_landing_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
+        "tests/frames}",
     """tests/test_cm_w_lane_band.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
         "tests/frames}",

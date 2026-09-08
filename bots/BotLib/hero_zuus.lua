@@ -1634,9 +1634,64 @@ function X.GetRanged( bot, nRadius )
 end
 
 
+--- [zusjumpland] Heavenly Jump's payload is searched from where the hop LANDS,
+--- and X.ConsiderE's 进攻 firing point measures the target from where the hop
+--- TAKES OFF.  The two points differ by `hop_distance` (375/450/525/600), and
+--- nothing in that firing point looks at which way the hop goes.
+---
+--- The other firing point in the same function -- the retreat one, thirty lines
+--- up -- is the ONLY place in this file that reasons about hop direction, and it
+--- reasons about it precisely because the hop's direction is what that branch is
+--- buying (`not bot:IsFacingLocation( targetHero:GetLocation(), 120 )`, i.e. hop
+--- AWAY).  So the function already knows the hop has a direction; the 进攻 point
+--- is where that knowledge is missing, and it is the point whose payoff -- the
+--- shockwave's damage + 80% slow -- is the thing the direction decides.
+---
+--- ARMED THIS IS A STRICT NARROWING, by construction: the shipped predicate is
+--- evaluated first and a false answer returns false unchanged, so the armed leg
+--- can only ever turn a shipped TRUE into FALSE.  That keeps `CanBeSeen()` --
+--- J.IsInRange's own first conjunct -- on both legs; recomputing the distance
+--- here instead would have quietly dropped it.
+---
+--- nHop is READ, not laddered.  `GetSpecialValueInt( 'hop_distance' )` answers a
+--- truthful 375 at rank 1 off the KV snapshot (measured, tests/test_zuus_jump_
+--- landing_reach.lua §2), so the ladder above this function -- `600 + nSkillLV *
+--- 100`, which is the `range` key spelled out by hand -- is not copied a second
+--- time.  A handle that cannot answer the key at all (the `zusbind` world, where
+--- index 2 need not be Heavenly Jump) yields nHop = 0, the landing point
+--- collapses onto the bot, and the whole armed clause degenerates to the shipped
+--- answer.  That degeneracy is the fallback; there is no second branch to test.
+---
+--- ⚠️ THE QUANTITY THIS LEVER TURNS ON IS NOT IN THE FIXTURE CORPUS.
+--- make_fixture.py dumps x/y and no facing (tests/mock/replay_fixture.lua:613),
+--- so `GetFacing()` falls through bot_api's `^Get -> 0` catch-all and answers a
+--- silent 0 -- every hop in every fixture points due east, and nothing raises.
+--- Same family as GH #611/#613.  What the corpus CAN answer is the geometry:
+--- 5 of 10 real in-ring sightings (over the frames where Heavenly Jump is
+--- actually ranked) sit beyond `range - hop_distance`, i.e. in the band where
+--- facing decides whether the shockwave connects at all.  Any end-to-end
+--- reading of this lever has to INJECT a facing and say so.
+function X.zuus_IsJumpTargetInShockwaveReach( hBot, hTarget, hAbility, nSearchRadius )
+
+	if not J.IsInRange( hBot, hTarget, nSearchRadius ) then return false end
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusjumpland' )
+	then
+		local nHop = hAbility:GetSpecialValueInt( 'hop_distance' )
+		if type( nHop ) ~= 'number' or nHop < 0 then nHop = 0 end
+
+		local vLanding = J.GetFaceTowardDistanceLocation( hBot, nHop )
+
+		return GetUnitToLocationDistance( hTarget, vLanding ) <= nSearchRadius
+	end
+
+	return true
+
+end
+
 function X.ConsiderE()
 
-	if not abilityE:IsFullyCastable() 
+	if not abilityE:IsFullyCastable()
 		or bot:IsRooted()
 	then
 		return BOT_ACTION_DESIRE_NONE
@@ -1687,8 +1742,13 @@ function X.ConsiderE()
 	if J.IsGoingOnSomeone( bot )
 	then
 		local targetHero = J.GetProperTarget( bot )
+		-- [zusjumpland] was `J.IsInRange( bot, targetHero, nCastRange )`.  Gate
+		-- off, the helper IS that call.  See X.zuus_IsJumpTargetInShockwaveReach:
+		-- nCastRange here is the shockwave's SEARCH RADIUS off the landing point,
+		-- not a cast range, and this is the firing point that never asks which
+		-- way the hop goes.
 		if J.IsValidHero( targetHero )
-			and J.IsInRange( bot, targetHero, nCastRange )
+			and X.zuus_IsJumpTargetInShockwaveReach( bot, targetHero, abilityE, nCastRange )
 			and J.CanCastOnNonMagicImmune( targetHero )
 		then
 			return BOT_ACTION_DESIRE_HIGH
