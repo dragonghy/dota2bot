@@ -27,6 +27,56 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0FSATOM. **【2026-09-08T22:55Z 新增。**P4.4 归属 = **(ii) 一个判定完结所需的最后一块证据,不是 (i)**;
+   认领依据 = 上一轮「下一格」第 (2) 条逐条执行 + **OWNER_PRIORITIES P2**。工作流第 1 步扫到的
+   新 `[strategy]` issue **一条也没有**。产出:`tests/_tpquiet_sweep.lua` **第三次扩列**(**没有**新建
+   第五个全语料 sweep)、`tests/test_fieldsip_atom_pricing.lua`(**15/15**)、
+   `tools/agent/mutstand_fieldsip.sh`(**13 腿:12 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
+   `state.json:fieldsip_atom_pricing_20260908`;报告 `iterations/reports/strategy/20260908T225504Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   ⚠️ **连续第三轮 (ii)**:「下一格」第 (1) 条要求先找杠杆,本轮**找了没有** —— 第 (4) 条把周边地面封死,
+   而它同一句话写明「**不要**为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆」。本轮量出来的正好说明为什么:
+   **这一族当前的瓶颈不是缺杠杆,是已有的三条腿会在同一波里互相抵消。**
+   **⭐ 主判据:promote atom `field_hold_needs_magnitude` 按它自己的 standing plan arm 成一波,持有侧的活域是零。**
+   `fieldsip` 是三条腿里**唯一没挂在任何分支上**的一条(它是另外两条腿共同包裹的谓词内部的一个合取项),
+   所以它只能这样定价。同一次 1021 活帧行走:`srnwh_armed_true_live 19` → 共同 arm 后
+   **`fs_sf2_live_killed 19` / `fs_sf2_live_survives 0`**;`stayfield_true_in_t3 2`(上界)→
+   **`fs_sf1_ceil_killed 2` / `fs_sf1_ceil_survives 0`** ⇒ **两条持有腿都会读回「tested, no effect」**,
+   而 `check_armed_wiring.py` 照样说 WIRED。**`pullcad` 的形状,这次说在发波之前。**
+   **⭐⭐ 而同一个数字也是这个 atom 的立论依据 ⇒ 归因缺陷,不是 bug 报告。** 拿走的 22 帧**就是**交出去的 22 帧
+   (`fs_hold_kills 22 == fs_buy_gains 22`,两列各自独立驱动后断言相等),而供给侧正是 owner P2「买大药」住的地方;
+   被杀的 19 帧里有一帧是 **`f_260822_063722_lina_tp_home`** —— **owner P2 自己的钉帧**,
+   也是该 helper 注释自陈「本 id 为之存在」的病例。⇒ **转移是正确行为,坏的是把它和持有侧放一波读。**
+   **⭐⭐⭐ armed 后它不是量级判断是「有没有大药」,而这句是两个解析常数之间的除法**:
+   `135/0.25 = 540`(`SIP_NONFLASK_MAX_BAR`)/ `400/0.25 = 1600`(`SIP_FLASK_MAX_BAR`,
+   `fs_maxhp_le_flask_bar 944/1021` ⇒ **77 帧上谓词无论带什么都不可满足**)。
+   **⛔ 而这句在全语料上是假的,本文件把它断言成假的**:`fs_maxhp_le_nonflask_bar` **17 不是 0**
+   ⇒ 只在结论依赖的集合上断言(`fs_sf2_killed_above_nonflask_bar 19/19`、`_le_flask_bar 19/19`)。
+   **论证闭式而不量它的文件会发表一句假话** —— GH #171 的姊妹形状。
+   **⭐⭐⭐⭐ 变异台头条(用了三个批次)**:(a) **M3 计数看不见** —— sip 守卫从最后挪到最前,
+   纯合取无副作用 ⇒ **每个语料计数逐位不变**,只有结构钉看得见;(b) **M10 危险方向又是「看着像清理」那个**
+   —— 被杀集门槛列已 19/19,收紧看不见,换成 `SIP_FLASK_MAX_BAR` 让它**塌成 0**;
+   (c) **`must()` 保护不了一个「干净值是零」的列** —— 第一版 M8 改名那个 bump **SURVIVED**:
+   零初始化让 key **永远不会消失只会多出一个**(⇒ 需要**对 key 集合的闭包检查**,**M13** 是补的那条腿),
+   而那个 bump **根本不执行**(死分支,**等价变异体**)⇒ 只能查「两个出口对活域穷尽」,M8 改成**翻转极性**。
+   **第三种「写它的分支从没跑过」对 `must()` 和闭包检查都是隐形的。**
+   **⭐⭐⭐⭐⭐ 交给总监**:`field_hold_needs_magnitude` 是**promote 期约束不是 arm 期约束**,
+   混同两者正是会产出一个什么都测不到的波。建议(不代总监决定):(1) 持有两条腿**单独 arm**买 (a)
+   (§ED.5 已记 W24/W25/W26 真跑过该配置);(2) `fieldsip` **单独 arm** 买它自己的 (a)(它在本语料上是
+   **供给侧**杠杆 +22 帧);(3) **promote 时三者同进同退,原约束不变**。与上一轮交出的「两半不对称」
+   **是同一个波的两个独立理由**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体必须是一个 `bots/` 行为改动,而且这一轮不许再退回证据** —— 连续三轮 (ii) 已到章程说的
+   「不是常态」的边界;**换族去找**(本族三条腿的定价到本轮为止已经完整,再量下去是重复劳动);
+   (2) **P1 拉野的球从 2026-08-19 起就在本组手里**(`pullcamp` 的 SILENT 根因**至今无结论**,
+   OWNER_PRIORITIES 明写「当前球在:协同组(1)」)。它是 **owner 多次点名**的项、是 **P4.4(i) 形状**、
+   且**不在本组任何「不要动」清单上** —— **下一轮优先做它**:先量 `IsLanePullSafe` 和平期闸门 +
+   6:00 宵禁在 Turbo 对线期的可达性(死条件就修,场景稀缺就给频率证据),**同样扩已有 sweep,不要新建**;
+   (3) 三条语料请求**仍然挂着,本轮都没动**:'撤退:3' 深带臂那一帧、`nosrc_attr_only` 那一帧,
+   以及本轮新增的**无**(本轮没有产生新的语料需求);
+   (4) ⛔ **不要**再给 `field_hold_needs_magnitude` 这一族做第四次普查、**不要**改共享地板、
+   **不要**回 `overchase`、**不要**再找 `IsFieldRegenSituation` 的第五条子句、**不要**给 '撤退:2' 加守卫。】**
+
 0RETVETO. **【2026-09-08T19:40Z 新增。**P4.4 归属 = **(ii) 一个判定完结所需的最后一块证据**,不是 (i)**;
    认领依据 = 上一轮「下一格」第 (1) 条逐条执行 + **OWNER_PRIORITIES P2**。工作流第 1 步扫到的
    新 `[strategy]` issue **一条也没有**。产出:`tests/_tpquiet_sweep.lua` **再扩列**(**没有**新建第四个
@@ -6847,6 +6897,60 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-08T22:55Z(**P4.4 归属 = (ii) 一个判定完结所需的最后一块证据,不是 (i)**;认领依据 =
+  上一轮「下一格」第 (2) 条逐条执行 + **OWNER_PRIORITIES P2**。工作流第 1 步扫到的新 `[strategy]`
+  issue **一条也没有**。⚠️ **连续第三轮 (ii)** —— 「下一格」第 (1) 条要求先找杠杆,本轮**找了没有**:
+  第 (4) 条把周边地面封死,而它同一句话写明「**不要**为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆」;
+  本轮量出来的正好说明为什么,**瓶颈不是缺杠杆,是已有的三条腿会在同一波里互相抵消**)。
+  ⭐ **主判据:promote atom `field_hold_needs_magnitude` 按它自己的 standing plan arm 成一波,
+  持有侧的活域是零。** `fieldsip` 是三条腿里**唯一没挂在任何分支上**的一条(它是另外两条腿共同包裹的
+  谓词 `J.ShouldRegenNotGoHome` 内部的**最后一条合取项**),所以它只能这样定价 —— 这也是一个共同
+  promote 原子存在的**唯一**理由,atom 注册十一天来没人问过。同一次 1021 活帧行走(**扩
+  `_tpquiet_sweep.lua` 的列,第三次,没有新建第五个全语料 sweep**):`srnwh_armed_true_live 19` →
+  共同 arm 后 **`fs_sf2_live_killed 19` / `fs_sf2_live_survives 0`**;`stayfield_true_in_t3 2`(**上界**)→
+  **`fs_sf1_ceil_killed 2` / `fs_sf1_ceil_survives 0`** ⇒ **两条持有腿都会读回「tested, no effect」**,
+  而 `check_armed_wiring.py` 照样说 WIRED。**`pullcad` 的形状,这次说在发波之前。**
+  ⭐⭐ **而同一个数字也是这个 atom 的立论依据 ⇒ 归因缺陷,不是 bug 报告。** 拿走的 22 帧**就是**
+  交出去的 22 帧(`fs_hold_bare_true 24 → fs_hold_sip_true 2` ⇒ `fs_hold_kills 22`;
+  `fs_buy_solo_true 33 → fs_buy_pair_true 55` ⇒ `fs_buy_gains 22`;**两列各自独立驱动后断言相等**),
+  而供给侧正是 owner P2「买大药」住的地方;被杀的 19 帧里有一帧是 **`f_260822_063722_lina_tp_home`**
+  —— **owner P2 自己的钉帧**,也是该 helper 注释自陈「本 id 为之存在」的病例。
+  ⇒ **转移是正确行为,坏的是把它和持有侧放一波读。**
+  ⭐⭐⭐ **armed 后它不是量级判断是「有没有大药」,而这句是两个解析常数之间的除法**:
+  `135/0.25 = 540`(`SIP_NONFLASK_MAX_BAR`)/ `400/0.25 = 1600`(`SIP_FLASK_MAX_BAR`;
+  `fs_maxhp_le_flask_bar 944`/1021 ⇒ **77 帧上谓词无论带什么都不可满足**)。
+  ⛔ **而这句在全语料上是假的,本文件把它断言成假的**:`fs_maxhp_le_nonflask_bar` **17 不是 0**
+  ⇒ 只在结论依赖的那个集合上断言(`fs_sf2_killed_above_nonflask_bar 19/19`、`_le_flask_bar 19/19`)。
+  **论证闭式而不去量它的文件会发表一句假话** —— GH #171 的姊妹形状。
+  结构钉:六个调用点(**定义不是调用点**,不减就恰好差一)= **1 持有 + 5 供给**,
+  且 **5/5 自身 gate 都在 sip 调用上游**(`SIP_BUY_SELFGATED 5`)⇒ 单独 arm 它动不了供给侧,
+  **源码顺序推导 + 驱动确认**(`fs_sip_alone_moves_buy 0`);门 **fail-open**(promote 要删整行不能只删 id,
+  `wandbleed2` 陷阱);分割保持 `fs_partition_both 0` / `fs_partition_neither 0`;
+  方向经**换腿的同一个 tally**(`fs_hold_gains 0` 而 `_swapped 22`;`fs_buy_losses 0` 而 `_swapped 22`)。
+  ⭐⭐⭐⭐ **变异台头条(用了三个批次)**:(a) **M3 计数看不见** —— sip 守卫从最后挪到最前,纯合取无副作用
+  ⇒ **每个语料计数逐位不变**,只有结构钉看得见;(b) **M10 危险方向又是「看着像清理」那个** ——
+  被杀集门槛列已 19/19,**收紧看不见**,换成 `SIP_FLASK_MAX_BAR` 让它**塌成 0**;
+  (c) ⭐ **`must()` 保护不了一个「干净值是零」的列** —— 第一版 M8 改名那个 bump **SURVIVED**:
+  零初始化让 key **永远不会消失只会多出一个**(⇒ 需要**对 key 集合的闭包检查**,**M13** 是补的腿),
+  而那个 bump **根本不执行**(死分支,**等价变异体**)⇒ 只能查「两个出口对活域穷尽」,M8 改成**翻转极性**。
+  **第三种「写它的分支从没跑过」对 `must()` 和闭包检查都是隐形的。**
+  ⭐⭐⭐⭐⭐ **交给总监**:`field_hold_needs_magnitude` 是 **promote 期约束不是 arm 期约束**,
+  混同两者正是会产出一个什么都测不到的波。建议(不代总监决定):(1) 持有两条腿**单独 arm** 买 (a)
+  (§ED.5 已记 W24/W25/W26 真跑过该配置);(2) `fieldsip` **单独 arm** 买它自己的 (a)
+  (本语料上它是**供给侧**杠杆,+22 帧买大药);(3) **promote 时三者同进同退,原约束不变**。
+  与上一轮交出的「两半不对称(≤2 帧 vs 19 帧)」**是同一个波的两个独立理由**:合起来 =
+  **那一波按 standing plan 发,三条腿会同时读不到东西。**
+  验证:静态门 `luacheck_gate.sh` **EXIT=0 CLEAN / 0 警告**(**没有用 `RULE6_BYPASS`**);
+  新测试 **15/15**;sweep 的**全部既有消费者**重跑全绿(读数逐位不变 —— 多 id stub 的字符串路径
+  逐字节不变);变异台 **13 腿 STAND GREEN(exit 0)**;开工自检 **`SELFCHECK_RC=3`**
+  (FINDINGS = cadence / queue-rulings / owed-executions,均既存;python trunk 腿另有
+  **UNCERTIFIABLE 一处** —— `test_selfcheck_lua_leg.py` 的 9 个 check 卡在 **120.1s vs 120s 预算**,
+  **不是通过也不是失败**;套件本身 115 passed / 0 failed,快速 Lua 检测器 86 文件 0 失败)。
+  ⚠️ 自检第一次调用因 stdout 接进 `tail` 被脚本**主动拒绝**(`REFUSED ... this is NOT a pass`),
+  改重定向后重跑 —— **证据纪律 3 的护栏在工作**。
+  报告 `iterations/reports/strategy/20260908T225504Z.md`;**armed 串 / `queue.json` / `test_set.md` 一字未动**;
+  零 AWS、零 S3、零 EC2、零波次;backlog 见 **0FSATOM**。
 
 - 2026-09-08T19:40Z(**P4.4 归属 = (ii)**,不是 (i) —— 本轮量完之后能建的杠杆一个都没有,
   而量出来的东西直接决定一个已注册 promote atom 怎么发波;认领依据 = 上一轮「下一格」第 (1) 条

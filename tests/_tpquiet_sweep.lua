@@ -354,6 +354,111 @@ local norm1 = wrap1:gsub('ShouldRegenNotTpHome', 'W'):gsub("'stayfield'", "'ID'"
 local norm2 = wrap2:gsub('ShouldRegenNotWalkHome', 'W'):gsub("'stayfield2'", "'ID'"):gsub('%s+', ' ')
 G.WRAPPERS_IDENTICAL_MOD_ID = (wrap1 ~= '' and norm1 == norm2) and 1 or 0
 
+-- ⭐⭐⭐⭐⭐ FOURTH CENSUS (2026-09-08): 'fieldsip', the THIRD leg of the
+-- 'field_hold_needs_magnitude' promote atom, and the only one of the three
+-- never priced.  The other two legs were priced by REACHABILITY (which branch
+-- gets there first).  This one cannot be: it is not wired to a branch at all,
+-- it is a conjunct INSIDE the predicate both other legs wrap.  Its price is
+-- therefore what it does to THEIR domains when the atom is armed as one wave --
+-- which is the question the atom exists to answer and the one nobody has asked.
+--
+-- ⭐ THE CLOSED FORM THAT MAKES THIS A STRUCTURAL FACT AND NOT A CORPUS COUNT.
+-- The bar is `FieldRegenSipValue(bot) >= MIN_FRACTION * GetMaxHealth()`, and
+-- every accepted sip is a CONSTANT out of one parsed table.  So the largest
+-- NON-flask sip clears the bar only on a bot whose max health is at or under
+--     SIP_NONFLASK_MAX_BAR = max(non-flask heals) / MIN_FRACTION
+-- and above that health the predicate is not a magnitude test at all -- it is
+-- "is one of the accepted sources a salve".  Both operands are parsed off
+-- jmz_func.lua, so the division is arithmetic between two read values, never a
+-- number typed into this file; the corpus then reports how many frames sit at
+-- or under that bar (an anti-vacuum: a zero there is what licenses reading the
+-- armed helper as salve-only, and a nonzero there would void it).
+local sipfn = strip_comments(jmz:match('function J%.IsFieldSipEnough.-\nend')) or ''
+local sipval = strip_comments(jmz:match('function J%.FieldRegenSipValue.-\nend')) or ''
+G.SIP_FN = (sipfn ~= '') and 1 or 0
+G.SIPVAL_FN = (sipval ~= '') and 1 or 0
+G.SIP_MIN_FRACTION = tonumber(jmz:match('J%.FIELD_SIP_MIN_FRACTION = ([%d%.]+)')) or -1
+local sipheal = jmz:match('J%.FIELD_SIP_HEAL = {.-}') or ''
+local nFlask, nNonFlask, nHeals = -1, -1, 0
+for sName, sVal in sipheal:gmatch('(item_[%w_]+)%s*=%s*(%d+)') do
+    nHeals = nHeals + 1
+    local nVal = tonumber(sVal)
+    if sName == 'item_flask' then
+        nFlask = nVal
+    elseif nVal > nNonFlask then
+        nNonFlask = nVal
+    end
+end
+G.SIP_HEAL_ENTRIES = nHeals
+G.SIP_HEAL_FLASK = nFlask
+G.SIP_HEAL_MAX_NONFLASK = nNonFlask
+-- The two bars, in HEALTH, that the parsed constants imply.  Rounded to whole
+-- health because that is the unit both sides of the comparison live in.
+G.SIP_NONFLASK_MAX_BAR = (nNonFlask > 0 and G.SIP_MIN_FRACTION > 0)
+    and math.floor(nNonFlask / G.SIP_MIN_FRACTION) or -1
+G.SIP_FLASK_MAX_BAR = (nFlask > 0 and G.SIP_MIN_FRACTION > 0)
+    and math.floor(nFlask / G.SIP_MIN_FRACTION) or -1
+-- ⛔ THE GATE FAILS OPEN, and that is load-bearing in BOTH directions here:
+-- unarmed the helper is the literal `true` (so every shipped consumer is
+-- byte-for-byte its pre-fieldsip expression), and a PROMOTE that deleted only
+-- the id -- not the line -- would freeze it at `true` forever.  That is the
+-- 'wandbleed2' trap already recorded in state.json against this very helper;
+-- pinned here as a structural count so the shape cannot arrive silently.
+G.SIP_GATE_FAILS_OPEN = count(sipfn, "if not J.IsSoakCandidate( 'fieldsip' ) then return true end")
+-- ⭐⭐ ITS SIX CALL SITES, SPLIT.  One on the HOLD side (inside
+-- J.ShouldRegenNotGoHome, the predicate BOTH other atom legs wrap) and five on
+-- the BUY side.  The split decides what arming this id ALONE can move, and it
+-- is a count off the source, not a claim: each buy consumer's FIRST line is its
+-- own `IsSoakCandidate` early-return, so with only 'fieldsip' armed all five
+-- return false before they ever reach the conjunction.  `BUY_SELFGATED` counts
+-- the ones that do this; it must equal the number of buy consumers.
+-- ⛔ THE DEFINITION IS NOT A CALL SITE.  A whole-file count of the name also
+-- matches `function J.IsFieldSipEnough(`, which would report SEVEN addresses
+-- for six and make the hold/buy split below fail to add up by exactly one.
+-- Subtracted here rather than in the reader, so the number this file publishes
+-- means what its name says.
+local jmz_bare = strip_comments(jmz)
+G.SIP_CALLSITES_FILE = count(jmz_bare, 'J.IsFieldSipEnough(')
+    - count(jmz_bare, 'function J.IsFieldSipEnough(')
+local srngh = strip_comments(jmz:match('function J%.ShouldRegenNotGoHome.-\nend')) or ''
+G.SRNGH_FN = (srngh ~= '') and 1 or 0
+G.SRNGH_SIP_CALLS = count(srngh, 'J.IsFieldSipEnough(')
+-- Appended, never inserted: the sip clause is the LAST guard in the hold
+-- predicate, so the shipped clause ORDER above it is unchanged and the shipped
+-- answer is reached by the shipped route.  Pinned by locating the LAST guard
+-- and then asking which one it is -- the M4 lesson from the third census (find
+-- the statement, THEN ask what it is), never by counting what follows a call:
+-- a slice that starts AT the call has already cut off that call's own `if not`,
+-- so an "everything after" count is off by one in a direction that reads as a
+-- clean zero.  Measured while building this cell.
+G.SRNGH_GUARDS = count(srngh, 'if not J.')
+local at_last_guard = nil
+do
+    local at = 1
+    while true do
+        local i = srngh:find('if not J.', at, true)
+        if i == nil then break end
+        at_last_guard, at = i, i + 1
+    end
+end
+local SIP_GUARD = 'if not J.IsFieldSipEnough('
+G.SRNGH_SIP_IS_LAST_GUARD = (at_last_guard ~= nil
+    and srngh:sub(at_last_guard, at_last_guard + #SIP_GUARD - 1) == SIP_GUARD) and 1 or 0
+local BUY_FNS = { 'ShouldFieldBuyRegen', 'ShouldFieldBuyRegenHurt',
+    'ShouldFieldBuyRegenTower', 'ShouldFieldBuyRegenRing', 'ShouldFieldBuyRegenDeep' }
+local nBuySip, nBuySelfGated = 0, 0
+for _, sFn in ipairs(BUY_FNS) do
+    local body = strip_comments(jmz:match('function J%.' .. sFn .. '.-\nend')) or ''
+    if count(body, 'J.IsFieldSipEnough(') > 0 then nBuySip = nBuySip + 1 end
+    -- Its own gate, and it must come BEFORE the sip call for the "fieldsip
+    -- alone cannot move the buy side" reading to be structural.
+    local at_gate = body:find('if not J.IsSoakCandidate(', 1, true)
+    local at_sip = body:find('J.IsFieldSipEnough(', 1, true)
+    if at_gate and at_sip and at_gate < at_sip then nBuySelfGated = nBuySelfGated + 1 end
+end
+G.SIP_BUY_CONSUMERS = nBuySip
+G.SIP_BUY_SELFGATED = nBuySelfGated
+
 -- The call site: exactly one, in the branch it claims, and no id in the branch
 -- condition itself (the 'pullcad' trap -- the gate lives in the helper).
 G.T1_QUIETVETO = count(b1, 'J.ShouldSipNotTpQuietHome')
@@ -492,7 +597,18 @@ for _, k in ipairs({ 'fixtures', 'live', 'raises',
     'swh_true_srnwh_false', 'core_disagree', 'stayfield2_arm_leak',
     'sf2_live_in_t3', 'sf2_live_hp_in_band',
     'sf2_live_swh_damaged', 'sf2_live_swh_noflask', 'sf2_live_swh_ring_occupied',
-    'sf2_live_swh_above_ceil', 'sf2_live_unexplained' }) do
+    'sf2_live_swh_above_ceil', 'sf2_live_unexplained',
+    -- fourth census (2026-09-08): 'fieldsip', the atom's third leg
+    'fs_hold_bare_true', 'fs_hold_sip_true', 'fs_hold_kills', 'fs_hold_gains',
+    'fs_hold_kills_swapped', 'fs_hold_gains_swapped',
+    'fs_buy_solo_true', 'fs_buy_pair_true', 'fs_buy_gains', 'fs_buy_losses',
+    'fs_buy_gains_swapped', 'fs_buy_losses_swapped',
+    'fs_sip_alone_moves_buy', 'fs_situation', 'fs_situation_src',
+    'fs_partition_both', 'fs_partition_neither',
+    'fs_maxhp_le_nonflask_bar', 'fs_maxhp_le_flask_bar',
+    'fs_sf2_live_survives', 'fs_sf2_live_killed',
+    'fs_sf2_killed_above_nonflask_bar', 'fs_sf2_killed_le_flask_bar',
+    'fs_sf1_ceil_survives', 'fs_sf1_ceil_killed' }) do
     rawset(c, k, 0)
 end
 
@@ -512,8 +628,17 @@ for _, path in ipairs(fixture_files()) do
                 if ok and bot ~= nil then
                     bump('live')
                     local sArmed = nil
+                    -- A STRING arms exactly one id -- byte-for-byte the previous
+                    -- behaviour, and every census above still passes a string.
+                    -- A TABLE arms a set, which the fourth census needs: the
+                    -- atom's own question is what TWO ids do to each other, and
+                    -- it cannot be asked one id at a time.  The table branch is
+                    -- keyed on `== true` so a set built with a stray key cannot
+                    -- arm something by being merely non-nil.
                     J.IsSoakCandidate = function(sId)
-                        return sArmed ~= nil and sId == sArmed
+                        if sArmed == nil then return false end
+                        if type(sArmed) == 'table' then return sArmed[sId] == true end
+                        return sId == sArmed
                     end
                     local sFx = path:match('([^/]+)%.lua$')
                     local sHero = u.name:gsub('npc_dota_hero_', '')
@@ -556,9 +681,46 @@ for _, path in ipairs(fixture_files()) do
                     local okWalkArm, walk_true = pcall(J.ShouldRegenNotWalkHome, bot)
                     local okLeak, leak_true = pcall(J.ShouldRegenNotTpHome, bot)
                     if okLeak and leak_true then bump('stayfield2_arm_leak') end
+
+                    -- ⭐⭐⭐⭐⭐ FOURTH CENSUS READS.  Six armings of the SAME
+                    -- frame, each one a configuration a wave could actually
+                    -- ship, so every column below is a difference between two
+                    -- real answers rather than a re-implementation of either.
+                    --   hold_bare : nothing armed       -- the shipped hold
+                    --   hold_sip  : {fieldsip}          -- the magnitude leg alone
+                    --   sf2_pair  : {stayfield2,fieldsip} -- the atom's own wave
+                    --   sf1_pair  : {stayfield,fieldsip}  -- ...its other half
+                    --   buy_solo  : {fieldbuy}          -- the supply leg alone
+                    --   buy_pair  : {fieldbuy,fieldsip}
+                    sArmed = nil
+                    local okHB, hold_bare = pcall(J.ShouldRegenNotGoHome, bot)
+                    sArmed = 'fieldsip'
+                    local okHS, hold_sip = pcall(J.ShouldRegenNotGoHome, bot)
+                    -- ⛔ ANTI-VACUUM FOR THE STRUCTURAL SPLIT.  With ONLY the
+                    -- magnitude id armed, all five buy consumers must still be
+                    -- FALSE -- each stops at its OWN gate, upstream of the sip
+                    -- call (SIP_BUY_SELFGATED).  A nonzero here says that
+                    -- source-order reading is wrong on the drive, and it is the
+                    -- one column that could turn "armed alone this id is
+                    -- hold-side-only" from a fact into a guess.  Asserted 0.
+                    for _, fBuy in ipairs({ J.ShouldFieldBuyRegen, J.ShouldFieldBuyRegenHurt,
+                        J.ShouldFieldBuyRegenTower, J.ShouldFieldBuyRegenRing,
+                        J.ShouldFieldBuyRegenDeep }) do
+                        local okB, bTrue = pcall(fBuy, bot)
+                        if okB and bTrue then bump('fs_sip_alone_moves_buy') end
+                    end
+                    sArmed = { stayfield2 = true, fieldsip = true }
+                    local okPair2, sf2_pair = pcall(J.ShouldRegenNotWalkHome, bot)
+                    sArmed = { stayfield = true, fieldsip = true }
+                    local okPair1, sf1_pair = pcall(J.ShouldRegenNotTpHome, bot)
+                    sArmed = 'fieldbuy'
+                    local okBS, buy_solo = pcall(J.ShouldFieldBuyRegen, bot)
+                    sArmed = { fieldbuy = true, fieldsip = true }
+                    local okBP, buy_pair = pcall(J.ShouldFieldBuyRegen, bot)
                     sArmed = nil
 
                     if not (okShip and okArm and okSib and okStayShip and okStayArm
+                        and okHB and okHS and okPair1 and okPair2 and okBS and okBP
                         and okSwh and okWalkShip and okWalkArm and okLeak) then
                         bump('raises')
                     else
@@ -796,6 +958,96 @@ for _, path in ipairs(fixture_files()) do
                         -- was taken with the wrong id armed -- the failure mode
                         -- that would silently invent or erase a shadow.
                         if stay_true ~= walk_true then bump('core_disagree') end
+
+                        -- ⭐⭐⭐⭐⭐ CELL D: 'fieldsip'.  Not a reachability cell
+                        -- -- this id is not wired to a branch at all -- so its
+                        -- price is what it does to the OTHER two legs' domains
+                        -- when the atom is armed as ONE wave, which is the only
+                        -- question a co-promote atom exists to answer.
+                        hold_bare = hold_bare and true or false
+                        hold_sip = hold_sip and true or false
+                        sf2_pair = sf2_pair and true or false
+                        sf1_pair = sf1_pair and true or false
+                        buy_solo = buy_solo and true or false
+                        buy_pair = buy_pair and true or false
+                        if hold_bare then bump('fs_hold_bare_true') end
+                        if hold_sip then bump('fs_hold_sip_true') end
+                        -- DIRECTION THROUGH A COUNTER PROVED TO COUNT: the same
+                        -- `tally` called a second time with the legs swapped, so
+                        -- the column that must read 0 is the column that reports
+                        -- the whole domain on the swapped call.  A pure
+                        -- narrowing can only take the hold TRUE -> FALSE.
+                        tally(hold_bare, hold_sip, 'fs_hold_kills', 'fs_hold_gains')
+                        tally(hold_sip, hold_bare, 'fs_hold_kills_swapped', 'fs_hold_gains_swapped')
+                        -- ...and the same for the supply side, where the id can
+                        -- only move FALSE -> TRUE (the two consumers read one
+                        -- conjunction with opposite polarity).
+                        if buy_solo then bump('fs_buy_solo_true') end
+                        if buy_pair then bump('fs_buy_pair_true') end
+                        tally(buy_pair, buy_solo, 'fs_buy_gains', 'fs_buy_losses')
+                        tally(buy_solo, buy_pair, 'fs_buy_gains_swapped', 'fs_buy_losses_swapped')
+                        -- ⛔ THE PARTITION, MEASURED ON THE ARMED CONFIGURATION.
+                        -- Hold and buy read the SAME conjunction with opposite
+                        -- polarity, so inside the situation exactly one of them
+                        -- must be true on every frame -- under BOTH armings.
+                        -- Both impossible states are zero-initialised and
+                        -- asserted 0: 'campvoid' (GH #265) is the shape where a
+                        -- narrowing leaves frames owned by nobody.
+                        local bSit = J.IsFieldRegenSituation(bot)
+                        if bSit then
+                            bump('fs_situation')
+                            if hold_sip and buy_pair then bump('fs_partition_both') end
+                            if not hold_sip and not buy_pair then bump('fs_partition_neither') end
+                            if J.HasFieldRegenSource(bot) then bump('fs_situation_src') end
+                        end
+                        -- ⭐ THE ANTI-VACUUM FOR THE CLOSED FORM.  Above
+                        -- SIP_NONFLASK_MAX_BAR health the armed predicate is not
+                        -- a magnitude test but a salve-only presence test.  A
+                        -- frame at or under that bar would be a counterexample,
+                        -- so it is counted rather than argued away.
+                        local nMaxHP = bot:GetMaxHealth()
+                        if nMaxHP ~= nil and nMaxHP <= G.SIP_NONFLASK_MAX_BAR then
+                            bump('fs_maxhp_le_nonflask_bar')
+                        end
+                        if nMaxHP ~= nil and nMaxHP <= G.SIP_FLASK_MAX_BAR then
+                            bump('fs_maxhp_le_flask_bar')
+                        end
+
+                        -- ⭐⭐ THE ATOM'S OWN NUMBER.  Of the frames each hold
+                        -- leg reaches ALIVE, how many survive the wave that arms
+                        -- the magnitude leg alongside it.  For 'stayfield2' the
+                        -- live set is an IDENTITY (MRG_RETURNS_BETWEEN == 0), so
+                        -- these two are a domain; for 'stayfield' the '撤退:3'
+                        -- trigger is an upper BOUND, so its pair is a ceiling
+                        -- and is named as one.
+                        if walk_true and not swh then
+                            if sf2_pair then bump('fs_sf2_live_survives')
+                            else
+                                bump('fs_sf2_live_killed')
+                                -- ⭐ WHERE EACH KILLED FRAME SITS RELATIVE TO
+                                -- THE TWO PARSED BARS.  Above the non-flask bar
+                                -- and at or under the flask bar means: on THIS
+                                -- frame the armed predicate is exactly "is one
+                                -- of the accepted sources a salve".  Counted on
+                                -- the killed set specifically, because that is
+                                -- the set the atom's reading depends on -- the
+                                -- corpus-wide `fs_maxhp_le_nonflask_bar` is NOT
+                                -- zero, so the salve-only reading has to be
+                                -- earned here rather than inherited from it.
+                                if nMaxHP ~= nil and nMaxHP > G.SIP_NONFLASK_MAX_BAR then
+                                    bump('fs_sf2_killed_above_nonflask_bar')
+                                end
+                                if nMaxHP ~= nil and nMaxHP <= G.SIP_FLASK_MAX_BAR then
+                                    bump('fs_sf2_killed_le_flask_bar')
+                                end
+                                out:write(string.format('D %s %s %.3f %d %d\n',
+                                    sFx, sHero, nHP, bot:GetLevel(), nMaxHP or -1))
+                            end
+                        end
+                        if stay_true and bT3 then
+                            if sf1_pair then bump('fs_sf1_ceil_survives')
+                            else bump('fs_sf1_ceil_killed') end
+                        end
                         if deep_true and bR4 then
                             if bT2 then bump('tpdeep_true_in_r4_shadowed_by_t2') end
                             if bT3 then bump('tpdeep_true_in_r4_shadowed_by_t3') end
