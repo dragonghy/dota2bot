@@ -107,6 +107,16 @@ UNRESOLVED_HAND_READ = {
     """tests/test_lion_considere_earlyreturn_domain.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
         "tests/frames}",
+    # Hand-read 2026-09-08 (director), at :156-158: `corpus_paths()` loops
+    # `for _, dir in ipairs({ FIXTURE_DIR, STAGED_DIR })`, and those two are
+    # literals at :136-137 ('tests/fixtures' / 'tests/frames'); its one caller
+    # (:249) passes no argument.  Same shape as the hex/ult sisters above;
+    # bots/ is not in the enumeration.  The file's other popen (:473) is
+    # `grep -rl "lionultcash" bots` -- CAND is a literal at :130, so it
+    # resolves statically and is measured by execution, not by this list.
+    """tests/test_lion_ult_cash_weakest.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
+        "tests/frames}",
     """tests/test_fixture_mana_price.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
         "d in {tests/fixtures, tests/frames}",
     # Hand-read 2026-09-06 (director), at :399-400: the loop is written

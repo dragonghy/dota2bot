@@ -497,6 +497,41 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-08T01:19Z**:**trunk 的 python 半边 1 红 → 0 红,两条红同一个根;⑥ 是本轮最该被读的一条。**
+  零 AWS、零波次、零 `bots/`+`game/` diff、不发 owner 邮件、无 promote/reject。
+  取活依据是上一轮 ⑨③ 自己排的「trunk 红逐条 + 单独复跑 python 半边」。
+  全文 `iterations/reports/director/20260908T011919Z.md`。
+  **红 A** `test_bots_walk_farm_only.py`(英雄组 `10b474b9` 09-07T23:18Z):新语料 walk 没付手读。
+  **我付了手读**——`corpus_paths()` :156-158 只枚举 :136-137 两个字面量(`tests/fixtures`/`tests/frames`),
+  唯一调用点 :249 不传参 ⇒ `bots/` 不在枚举里;按检查自己的方子加 `UNRESOLVED_HAND_READ`,不删检查。
+  ⭐⭐ **红 B** `test_mutstand_restore_trap.py`(录像组 09-08T00:58Z)**的 finding 是假的**:
+  `mutstand_outpost_block.sh` :174-179 先 `restore` 再 `git diff --quiet` 并在脏时 `exit 1`,
+  它**验证了**;红是因为检查体是字面串 **`"sha256sum" in src`**。
+  **这正是同一个文件在它下面第二条检查里已经修过一次的病**(那条注释逐字写着
+  「a detector that sees one spelling of the thing and calls the other spellings absent」)——
+  **同一份文件、同一个病、隔 5 天在隔壁那条检查上原样复发**。而被判死的拼法**更强**:
+  hash 只证台子自己的备份往返一致,`git diff` 比 index ⇒ 连「备份取自已变异的文件」也抓,
+  且只朝吵的方向错。普查 93 hash / 1 git diff / **0 台什么都不证**。
+  按**拼法**加宽而非放松门:非空泛证据 `proves nothing→False`、`git diff` 少 `--quiet`→`False`。
+  **⑤ 复跑读数 `111 passed, 0 failed, 1 uncertifiable`,但 `RC_EXIT=2` ⇒ 我不说「绿」**;
+  那条 uncertifiable 是 `test_selfcheck_lua_leg` 的 Lua 腿顶爆 120s 预算(**86 文件**,
+  上一轮 84,**GH #358,不是本轮引入**)——⚠️ 预算正被语料增长挤爆,会常态化。
+  **⑥ ⭐⭐ 结构性**:两条红都是别组落地正常产物时撞响 ratchet,而 **python ratchet 不在任何 push 闸里**
+  (铁律 6 的钩子只管 Lua 静态那半)⇒ **只有总监开工自检看得见**,平均要红小半天
+  (实测红 A 约 2h、红 B 约 20min,09-05 那次是 7 条同时红);而两条 ratchet **都很便宜**
+  (`walk_farm_only` 实测 **1.88s**)。处方:把**快的** python ratchet 挂进 `.githooks/pre-push`,
+  **不是**整套 `run_py_tests.sh`(含 120s+ 的 Lua 腿),判据按**单文件实测耗时**取、机器可读。
+  **本轮不实现**(动的是五组共用的闸,值得单独一轮带验证),已开 issue。
+  **⑦ 纪律 3 第六发,又是本轮第一条命令**(`| tail -60` 被 §22 守卫当场拒,守卫文案自己写着
+  `recurred 5x, every time as the first command`)——**守卫拦的,不是我记住的**;被拒那次没执行任何检查。
+  ⚠️ **⑧ 自检没跑完**(我给了 600s,`EXIT=124` 被砍;这个容器上它要 40–50 分钟)⇒
+  **Lua 检测器腿完整读数 / `unlanded_commits` / `citation_audit` / registry / cadence / stable 锚点
+  本轮无读数,不作声称**。零 AWS ⇒ 不对 MTD 作新声称;`DECISIONS_NEEDED` +0;
+  **patch 检查未做**(低频顺延,已连续多轮)。
+  **⑨ 下次触发**:①⑥ 的处方(快 ratchet 进 push 闸)②GH #358 的 120s 预算要人裁
+  ③上一轮 ⑨ 原样顺延(`text_absent_done_when_kind` GH #523 **先写认领再开工** / GH #517 /
+  `kind:"ruling_request"` / GH #454/#487/#460/#473 乙/#489/#486/#496 / #513/#514 /
+  #449/#410/#436/#285 / **patch 缺口 P3** / `ckpush` 有时限)④**串行重跑一次完整自检,别再给 600s timeout**。
 - **2026-09-07T22:15Z**:**判定完结 1(`campbind` 退回出集,armed 46 → 45)+ 一条 [harness] trunk 红修绿。**
   零 AWS、零波次、零 `bots/` diff、不发 owner 邮件。⛔ **本轮取的不是上一轮自己指名的那三条**
   (`ownhalf`/`overchase`/`fieldregen` 原样顺延),理由具名:GH #475 的三选一是**录像组 09-04T21:56Z 请的裁**,

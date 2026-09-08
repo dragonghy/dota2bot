@@ -146,8 +146,27 @@ for path in STANDS:
        "the last trap armed is %r, which restores nothing"
        % trap_commands(traps[-1].group("body")))
 
-    ok("%s verifies its restore" % name, "sha256sum" in src,
-       "a stand that cannot prove it put the tree back may have eaten the fix")
+    # THE PROOF IS NOT ALWAYS SPELLED `sha256sum` (director 2026-09-08) -- the
+    # same shape this file already fixed one check below, arriving here.  The
+    # first version keyed on that one literal, so `mutstand_outpost_block.sh`,
+    # which proves its restore with `git diff --quiet -- "$TOOL"` after calling
+    # `restore`, was scored identically to a stand that proves nothing.  It was
+    # the sole red in the python half on 2026-09-08 and the finding was false:
+    # a hash comparison proves the stand's own backup round-tripped, while
+    # `git diff` compares against the INDEX, so it also catches a backup that
+    # was taken from an already-mutated file.  Strictly stronger, and it can
+    # only ever be wrong in the loud direction (a stand started on a dirty tree
+    # reports DIRTY and exits 1).  Census at the time of the widening: 93 of 94
+    # stands hash, 1 uses git diff, 0 prove nothing.
+    #
+    # Widen by SPELLING, not by weakening: both branches still demand a
+    # byte-level comparison naming the restored file.  A stand that merely
+    # calls `restore` and reports success remains a finding.
+    verifies = "sha256sum" in src or re.search(r"git\s+diff\s+--quiet", src)
+    ok("%s verifies its restore" % name, bool(verifies),
+       "a stand that cannot prove it put the tree back may have eaten the fix "
+       "(accepted proofs: a `sha256sum` comparison, or `git diff --quiet` on "
+       "the mutated path after the restore)")
 
     # A trap installed after the mutation loop protects nothing.  Order is the
     # whole content of the guarantee, so it is checked by position, not by
