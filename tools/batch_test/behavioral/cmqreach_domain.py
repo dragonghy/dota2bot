@@ -71,6 +71,19 @@ HONEST BOUNDARIES (all of these are registered in the printout, not buried here)
     not observable offline.  The gap-frame count is therefore an upper bound on
     frames where a creep site would actually be REACHED.  It is not an upper
     bound in the other direction and is not an effect size.
+  * TELEPORT CHANNELS ARE NOT DECISION FRAMES (GH #626, added 2026-09-08).  A
+    frame inside CM's own `modifier_teleporting` span leaves the domain: she is
+    committed to a teleport decided BEFORE the frame and the creep-AoE branch
+    cannot act there at all.  This is a DOMAIN defect, not a scoring one -- the
+    same shape as `zusult` (the instrument filed a cast the gate does not own
+    against the gate).  The scorer is guarded too, one step further out: a
+    movement window that CROSSES a channel is left unscored rather than
+    labelled, because the 10,387u landing displacement that motivated this
+    (`8ef6e7/20260908_092326_slot7`, CM t=1521.4, read `away d=-9779` at
+    ~3,462 u/s against a ~300 u/s move speed) is not evidence about the branch
+    in either direction.  Both counts are printed, separately labelled: this is
+    an instrument correction, and the drop in `away` it produces is NOT an
+    effect.
   * 铁律 4(i-a): every headline number is printed in all four (stratum x leg)
     cells.  4(i-b): these are counts, the physical-side term is NOT cancelled in
     them -- opposite signs across strata mean noise and must not be read as an
@@ -111,6 +124,10 @@ MOVE_U = 100.0               # walk/stand deadband
 DEATH_WINDOW_S = 20.0        # hero-25 cell (3)
 SAMPLE_TOL_S = 0.6           # a hero snapshot must be this close to a creep sample
 CREEP_TEAMS = (2, 3)         # 4 = neutrals; lane creeps only
+TP_MODIFIER = "modifier_teleporting"
+TP_UNCLOSED_S = 4.0          # a channel still open at the cut-off (capmono_refusal's
+                             # value); longer than any scroll channel, so the
+                             # exclusion is never understated at the recording edge
 
 
 def dist(ax, ay, bx, by):
@@ -187,8 +204,10 @@ def best_pair(cx, cy, creeps, r, reach):
 class Game(object):
     """CM's track, the creep samples, and her nova events -- nothing else."""
 
-    def __init__(self, path):
-        d = json.load(open(path))
+    def __init__(self, src):
+        # a dict is accepted so --selfcheck can build a synthetic timeline with
+        # the real frame's shape instead of asserting against a re-implementation
+        d = src if isinstance(src, dict) else json.load(open(src))
         self.teams = d["game"]["teams"]
 
         # identity lock by earliest-appearing idx (GH #176 discipline)
@@ -219,6 +238,8 @@ class Game(object):
         self.novas = []                                  # cast instants
         self.deaths = []
         self.nova_dmg = collections.defaultdict(list)    # t -> [victim hero]
+        tp_open = None
+        self.tp_spans = []                               # CM's own TP channels
         for e in d["events"]:
             if e["type"] == "ABILITY" and e.get("inflictor") == NOVA:
                 self.novas.append(e["t"])
@@ -226,7 +247,24 @@ class Game(object):
                 self.nova_dmg[round(e["t"], 1)].append(e.get("target"))
             elif e["type"] == "DEATH" and canon(e.get("target")) == CM:
                 self.deaths.append(e["t"])
+            # GH #626.  Exact from ADD/REMOVE, never inferred from displacement:
+            # a movement cap would also swallow every blink/force-staff frame,
+            # and would MISS the channel frames themselves (she stands still in
+            # them -- t=1520.4 and t=1521.4 are the same position).
+            # `canon(target)` is what makes this CM's OWN channel and not a
+            # teammate's; a global slot would exclude her frames for somebody
+            # else's teleport.
+            elif (e.get("inflictor") == TP_MODIFIER
+                  and canon(e.get("target")) == CM):
+                if e["type"] == "MODIFIER_ADD":
+                    tp_open = e["t"]
+                elif e["type"] == "MODIFIER_REMOVE" and tp_open is not None:
+                    self.tp_spans.append((tp_open, e["t"]))
+                    tp_open = None
+        if tp_open is not None:                          # open at the cut-off
+            self.tp_spans.append((tp_open, tp_open + TP_UNCLOSED_S))
         self.novas.sort()
+        self.tp_spans.sort()
 
     def at(self, t):
         """CM's snapshot nearest to t, or None past SAMPLE_TOL_S."""
@@ -242,6 +280,16 @@ class Game(object):
     def after(self, t, dt):
         """CM's snapshot nearest to t+dt, or None."""
         return self.at(t + dt)
+
+    def in_tp(self, t):
+        """Is t inside one of CM's own teleport channels?  (GH #626)"""
+        return any(t0 <= t <= t1 for (t0, t1) in self.tp_spans)
+
+    def tp_crosses(self, t0, t1):
+        """Does [t0, t1] touch a channel?  Guards the MOVEMENT window, which is
+        the wider condition: a channel opening 0.5s after an otherwise legal gap
+        frame still makes the position 2s later say nothing about the branch."""
+        return any(not (b < t0 or a > t1) for (a, b) in self.tp_spans)
 
     def enemy_creeps(self, t):
         return [(x, y) for (x, y, team) in self.creeps[t] if team != self.cm_team]
@@ -263,12 +311,19 @@ class Game(object):
         return cast, cast + RADIUS
 
 
-def frames(g, mana_floor):
-    """Every creep-sample frame where CM is alive and Nova is genuinely ready."""
+def frames(g, mana_floor, stats=None):
+    """Every creep-sample frame where CM is alive and Nova is genuinely ready.
+
+    `stats['tp_frames']` counts the frames dropped for being inside one of CM's
+    own teleport channels -- printed, never silently absorbed."""
     out = []
     for t in g.creep_times:
         s = g.at(t)
         if s is None or s["hp_pct"] <= 0:
+            continue
+        if g.in_tp(t):                                   # GH #626: not a decision frame
+            if stats is not None:
+                stats["tp_frames"] = stats.get("tp_frames", 0) + 1
             continue
         ab = g.nova_state(s)
         if ab is None or ab["level"] < SKILL_LV_MIN or ab["cd"] > 0:
@@ -280,10 +335,10 @@ def frames(g, mana_floor):
     return out
 
 
-def gap_frames(g, mana_floor):
+def gap_frames(g, mana_floor, stats=None):
     """Frames where the shipped search reaches a legal >=2 point and armed does not."""
     rows = []
-    for (t, s, cast, search) in frames(g, mana_floor):
+    for (t, s, cast, search) in frames(g, mana_floor, stats):
         creeps = g.enemy_creeps(t)
         if len(creeps) < COUNT_MIN:
             continue
@@ -301,7 +356,14 @@ def gap_frames(g, mana_floor):
 
 
 def movement(g, row):
-    """Cell (2): does she close on the point the shipped search handed her?"""
+    """Cell (2): does she close on the point the shipped search handed her?
+
+    Returns (label, delta), or None when the frame cannot be scored.  A window
+    that touches a teleport channel is NOT scored (GH #626): the landing is a
+    ~3,500 u/s displacement the branch had no part in, and standing still inside
+    a channel is not the branch refusing an order either."""
+    if g.tp_crosses(row["t"], row["t"] + MOVE_WINDOW_S):
+        return None
     later = g.after(row["t"], MOVE_WINDOW_S)
     if later is None or later["hp_pct"] <= 0:
         return None
@@ -315,6 +377,17 @@ def movement(g, row):
     return "stand", delta
 
 
+def unscored_reason(g, row):
+    """Why a gap frame carries no walk/stand/away label.  Kept apart from
+    `movement` so the report can never pool a TP window (an instrument
+    correction) with a missing snapshot (a recording gap)."""
+    if movement(g, row) is not None:
+        return None
+    if g.tp_crosses(row["t"], row["t"] + MOVE_WINDOW_S):
+        return "tp"
+    return "no_snapshot"
+
+
 def cells(rows):
     """The four (stratum x leg) buckets, fixed printing order (铁律 4(i-a))."""
     return [("%s/%s" % (stratum_of(side), leg),
@@ -325,6 +398,7 @@ def cells(rows):
 
 def collect(dirs, mana_floor):
     games, gaps, ready, novas, cmmin = [], [], [], [], []
+    stats = {"tp_frames": 0, "tp_windows": 0}
     for (run, game, cand, seed, side, tl) in load_sweeps(dirs):
         g = Game(tl)
         if not g.cm:
@@ -336,20 +410,24 @@ def collect(dirs, mana_floor):
         for n in g.novas:
             novas.append({"_side": side, "_leg": leg, "t": n, "_game": game,
                           "_run": run, "victims": g.nova_dmg.get(round(n, 1), [])})
-        for (t, _s, _c, _r) in frames(g, mana_floor):
+        for (t, _s, _c, _r) in frames(g, mana_floor, stats):
             ready.append({"_side": side, "_leg": leg, "t": t, "_game": game})
         for r in gap_frames(g, mana_floor):
             r["_run"], r["_game"], r["_side"], r["_leg"] = run, game, side, leg
             mv = movement(g, r)
             r["move"], r["delta"] = (mv[0], mv[1]) if mv else (None, None)
+            # why it is unscored, so the two reasons never pool into one number
+            r["unscored"] = unscored_reason(g, r)
+            if r["unscored"] == "tp":
+                stats["tp_windows"] += 1
             r["died_20s"] = any(0 < dt <= DEATH_WINDOW_S
                                 for dt in (d - r["t"] for d in g.deaths))
             gaps.append(r)
-    return games, gaps, ready, novas, cmmin
+    return games, gaps, ready, novas, cmmin, stats
 
 
 def report(dirs, mana_floor):
-    games, gaps, ready, novas, cmmin = collect(dirs, mana_floor)
+    games, gaps, ready, novas, cmmin, stats = collect(dirs, mana_floor)
     print("=== cmqreach domain (queue.json:hero-25, cell (2) is the ruling cell) ===")
     print("games with a CM carrier: %d" % len(games))
     if not games:
@@ -389,14 +467,24 @@ def report(dirs, mana_floor):
     print("   ready frames (alive, rank>=%d, cd 0, mp>=%.0f, at a creep sample): %d"
           % (SKILL_LV_MIN, mana_floor, len(ready)))
     print("   gap frames: %d" % len(gaps))
+    print("   -- GH #626 instrument correction, NOT an effect (both printed):")
+    print("      frames dropped for being inside CM's own TP channel: %d"
+          % stats["tp_frames"])
+    print("      gap frames left UNSCORED because the %.1fs movement window"
+          % MOVE_WINDOW_S)
+    print("      touches a TP channel: %d   (these used to read 'away')"
+          % stats["tp_windows"])
     if not gaps:
         print("\n   DOMAIN EMPTY on this corpus.  Per hero-25 acceptance (丁) this is")
         print("   written as 域空 and points at state.json:cmqreach_20260830.known_gap")
         print("   item (1) -- it is NOT '测过了没效果'.")
     for name, rows in cells(gaps):
         mv = collections.Counter(r["move"] for r in rows)
-        print("      %-12s gap %3d   walk %2d  stand %2d  away %2d  unscored %2d"
-              % (name, len(rows), mv["walk"], mv["stand"], mv["away"], mv[None]))
+        un = collections.Counter(r.get("unscored") for r in rows)
+        print("      %-12s gap %3d   walk %2d  stand %2d  away %2d  "
+              "unscored %2d (tp %d / no-snap %d)"
+              % (name, len(rows), mv["walk"], mv["stand"], mv["away"], mv[None],
+                 un["tp"], un["no_snapshot"]))
     tot = collections.Counter(r["move"] for r in gaps)
     scored = sum(v for k, v in tot.items() if k)
     if scored:
@@ -435,6 +523,11 @@ def report(dirs, mana_floor):
     print("   * COUNT_MIN = %d is the lowest threshold at any creep site; sites at"
           % COUNT_MIN)
     print("     >=3/4/5 have strictly smaller domains than the number above.")
+    print("   * GH #626: frames inside CM's own `%s` span are OUT" % TP_MODIFIER)
+    print("     of the domain (she is committed to a teleport decided before the")
+    print("     frame), and a movement window touching a channel is unscored.")
+    print("     The `away` count therefore is NOT comparable to a pre-#626 run;")
+    print("     the difference is an instrument correction, not a behaviour change.")
     return 0
 
 
@@ -479,6 +572,86 @@ def selfcheck():
     chk("rings: no aether => cast 732", abs(CAST_RANGE_KV + CAST_RANGE_PAD - 732.0) < 1e-9)
     chk("rings: shipped search = cast + radius = 1157",
         abs(CAST_RANGE_KV + CAST_RANGE_PAD + RADIUS - 1157.0) < 1e-9)
+
+    # ---- GH #626: the TP channel.  Built from the frame that bought it,
+    # `8ef6e7/20260908_092326_slot7`, so the CONTROL (same marks, TP events
+    # removed) reproduces the defect -- t=1521.4 in the gap list reading
+    # `away` on a ~10,000u landing -- and the fixed reader excludes it.
+    # A pin that only asserted the exclusion would pass on a reader that
+    # returns nothing at all.
+    def w56_tl(events):
+        pos = [(1518.4, 4941.0, -5802.0),        # gap frame candidate
+               (1520.4, 5219.0, -5689.0),        # inside the channel, standing
+               (1521.4, 5219.0, -5689.0),        # the frame scored `away d=-9779`
+               (1522.4, -5131.0, -4815.0),       # the landing
+               (1523.4, -5131.0, -4815.0)]
+        snaps = [{"hero": "npc_dota_hero_crystal_maiden", "idx": 1, "team": 2,
+                  "t": t, "x": x, "y": y, "hp_pct": 1.0, "mp": 1023.0,
+                  "items": [], "abilities": [{"name": NOVA, "level": 4, "cd": 0.0}]}
+                 for (t, x, y) in pos]
+        # one enemy creep pair, 150u apart, placed so BOTH sampled positions are
+        # genuine gap frames (nearest legal centre inside 1157 and outside 732)
+        creeps = []
+        for t in (1518.4, 1521.4):
+            creeps.append({"t": t, "x": 6500.0, "y": -5802.0, "team": 3})
+            creeps.append({"t": t, "x": 6500.0, "y": -5652.0, "team": 3})
+        return {"game": {"teams": {}}, "snapshots": snaps,
+                "creeps": creeps, "events": events}
+
+    tp_ev = [{"type": "MODIFIER_ADD", "t": 1519.3,
+              "target": "npc_dota_hero_crystal_maiden", "inflictor": TP_MODIFIER},
+             {"type": "MODIFIER_REMOVE", "t": 1522.3,
+              "target": "npc_dota_hero_crystal_maiden", "inflictor": TP_MODIFIER}]
+
+    ctrl = Game(w56_tl([]))
+    ctrl_rows = gap_frames(ctrl, MANA_FLOOR)
+    ctrl_t = [round(r["t"], 1) for r in ctrl_rows]
+    chk("CONTROL: without the TP events both sampled frames are gap frames",
+        ctrl_t == [1518.4, 1521.4])
+    ctrl_1521 = [r for r in ctrl_rows if abs(r["t"] - 1521.4) < 1e-6]
+    mv = movement(ctrl, ctrl_1521[0]) if ctrl_1521 else None
+    chk("CONTROL: the channel frame reproduces the defect (`away`, ~1e4 u)",
+        mv is not None and mv[0] == "away" and mv[1] < -9000)
+
+    st = {}
+    fixed = Game(w56_tl(tp_ev))
+    chk("channel spans read exactly off ADD/REMOVE",
+        fixed.tp_spans == [(1519.3, 1522.3)])
+    rows = gap_frames(fixed, MANA_FLOOR, st)
+    chk("GH #626: the frame inside the channel leaves the gap domain",
+        [round(r["t"], 1) for r in rows] == [1518.4])
+    chk("the dropped frame is counted, not absorbed", st.get("tp_frames") == 1)
+    chk("a frame outside the channel stays in the domain", len(rows) == 1)
+    chk("movement window crossing the channel start is UNSCORED",
+        movement(fixed, rows[0]) is None)
+    chk("the unscored reason is 'tp', not pooled with a recording gap",
+        unscored_reason(fixed, rows[0]) == "tp")
+    chk("a scored frame has no unscored reason",
+        unscored_reason(ctrl, ctrl_1521[0]) is None)
+    # a gap frame whose lookahead has no snapshot at all is the OTHER reason
+    late = Game(w56_tl([]))
+    late.cm = [s for s in late.cm if s["t"] <= 1521.4]
+    chk("a missing lookahead snapshot reads 'no_snapshot', not 'tp'",
+        unscored_reason(late, ctrl_1521[0]) == "no_snapshot")
+    chk("in_tp is closed at both ends",
+        fixed.in_tp(1519.3) and fixed.in_tp(1522.3) and not fixed.in_tp(1522.4))
+    chk("tp_crosses is wider than in_tp (window opens before the channel)",
+        (not fixed.in_tp(1518.4)) and fixed.tp_crosses(1518.4, 1520.4))
+    chk("tp_crosses is false for a window clear of every channel",
+        not fixed.tp_crosses(1500.0, 1502.0))
+
+    # identity: a TEAMMATE's teleport must not empty CM's domain
+    other = Game(w56_tl([dict(e, target="npc_dota_hero_lion") for e in tp_ev]))
+    chk("another hero's channel does not exclude CM's frames",
+        other.tp_spans == [] and len(gap_frames(other, MANA_FLOOR)) == 2)
+
+    # a channel still open at the recording cut-off still excludes its frames
+    unc = Game(w56_tl(tp_ev[:1]))
+    chk("a channel open at the cut-off spans TP_UNCLOSED_S",
+        unc.tp_spans == [(1519.3, 1519.3 + TP_UNCLOSED_S)])
+    chk("cut-off channel still excludes the frame inside it",
+        [round(r["t"], 1) for r in gap_frames(unc, MANA_FLOOR)] == [1518.4])
+
     print("selfcheck %d/%d" % (ok[1], ok[0]))
     return 0 if ok[1] == ok[0] else 1
 

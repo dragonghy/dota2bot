@@ -26,6 +26,7 @@ geometry, not on one hand-picked pair.
 
 import os
 import random
+import re
 import subprocess
 import sys
 
@@ -48,7 +49,20 @@ p = subprocess.run([sys.executable, TOOL, '--selfcheck'],
                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 out = p.stdout.decode()
 check('module selfcheck exits 0 (bare, not through a pipe)', p.returncode == 0)
-check('module selfcheck reports every check green', '/10' in out and '10/10' in out)
+
+# The count is read, not hardcoded to one value: the first version of this line
+# was `'10/10' in out`, which turned every ADDED assertion into a red test
+# (2026-09-08, when GH #626's battery took it to 26).  A literal is still wanted
+# in the SHRINKING direction -- deleting assertions must not pass quietly -- so
+# the pin is a ratchet: all green, and never fewer than we have already banked.
+RATCHET = 26                         # raise when the module's battery grows
+m = re.search(r'selfcheck (\d+)/(\d+)', out)
+check('module selfcheck prints its count at all', m is not None)
+if m:
+    ran, total = int(m.group(1)), int(m.group(2))
+    check('module selfcheck reports every check green', ran == total)
+    check('module selfcheck battery has not shrunk (>= %d)' % RATCHET,
+          total >= RATCHET)
 
 import cmqreach_domain as C                                       # noqa: E402
 
@@ -136,8 +150,51 @@ def test_mana_floor_is_conservative():
           C.MANA_FLOOR_LO < C.MANA_FLOOR)
 
 
+# ---- 7. GH #626: a teleport channel is not a decision frame ----------------
+def test_tp_channel_is_out_of_domain():
+    """A second door on the guard, independent of the module's own battery.
+
+    The module selfcheck builds the same frame; this one exists so that an edit
+    deleting BOTH the guard and its selfcheck case still turns the python suite
+    red.  Deliberately minimal: it asserts the two predicates and the domain
+    exit, not the geometry (§2-4 above already own the geometry).
+    """
+    snaps = [{'hero': 'npc_dota_hero_crystal_maiden', 'idx': 1, 'team': 2,
+              't': t, 'x': x, 'y': y, 'hp_pct': 1.0, 'mp': 1023.0, 'items': [],
+              'abilities': [{'name': C.NOVA, 'level': 4, 'cd': 0.0}]}
+             for (t, x, y) in ((1518.4, 4941.0, -5802.0),
+                               (1521.4, 5219.0, -5689.0),
+                               (1523.4, -5131.0, -4815.0))]
+    creeps = [{'t': t, 'x': 6500.0, 'y': y, 'team': 3}
+              for t in (1518.4, 1521.4) for y in (-5802.0, -5652.0)]
+    tp = [{'type': 'MODIFIER_ADD', 't': 1519.3,
+           'target': 'npc_dota_hero_crystal_maiden',
+           'inflictor': C.TP_MODIFIER},
+          {'type': 'MODIFIER_REMOVE', 't': 1522.3,
+           'target': 'npc_dota_hero_crystal_maiden',
+           'inflictor': C.TP_MODIFIER}]
+
+    def tl(events):
+        return {'game': {'teams': {}}, 'snapshots': snaps, 'creeps': creeps,
+                'events': events}
+
+    ctrl = C.Game(tl([]))
+    fixed = C.Game(tl(tp))
+    ctrl_t = [round(r['t'], 1) for r in C.gap_frames(ctrl, C.MANA_FLOOR)]
+    fixed_t = [round(r['t'], 1) for r in C.gap_frames(fixed, C.MANA_FLOOR)]
+    check('CONTROL: without the TP events the channel frame IS a gap frame '
+          '(otherwise the exclusion below proves nothing)', ctrl_t == [1518.4, 1521.4])
+    check('a frame inside CM\'s own TP channel leaves the gap domain',
+          fixed_t == [1518.4])
+    check('the channel span is read exactly off ADD/REMOVE',
+          fixed.tp_spans == [(1519.3, 1522.3)])
+    check('a movement window crossing the channel is unscored, and says why',
+          C.unscored_reason(fixed, C.gap_frames(fixed, C.MANA_FLOOR)[0]) == 'tp')
+
+
 for fn in (test_falsy_zero, test_monotone_in_reach, test_lens_against_bruteforce,
-           test_source_constants, test_mana_floor_is_conservative):
+           test_source_constants, test_mana_floor_is_conservative,
+           test_tp_channel_is_out_of_domain):
     fn()
 
 if fails:
