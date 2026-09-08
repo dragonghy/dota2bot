@@ -7249,7 +7249,7 @@
   "tpscroll_shadow_census_20260908": {
     "date": "2026-09-08T17:0xZ",
     "owner": "strategy",
-    "issue": "OWNER_PRIORITIES P2(决策侧)+ **P4.4(ii)**(判定完结所需的最后一块证据,不是新杠杆);章程 0TPQUIET「下一格」(2) 逐条执行。姊妹档案:state.json:tpquiet_20260908 / tpdeep_20260908 / buydeep_20260908。",
+    "issue": "OWNER_PRIORITIES P2(决策侧)+ **P4.4(ii)**(判定完结所需的最后一块证据,不是新杠杆);**GH #639**;章程 0TPQUIET「下一格」(2) 逐条执行。姊妹档案:state.json:tpquiet_20260908 / tpdeep_20260908 / buydeep_20260908。",
     "change": "**没有新 gated id,也没有行为改动** —— 这是本轮的结论不是本轮的遗漏(见 verdict)。产出:`tests/_tpquiet_sweep.lua` **扩列**(不新建第三个全语料 sweep,章程明令)、`tests/test_tpscroll_branch_shadow_census.lua`(**9/9**)、`tools/agent/mutstand_shadowcensus.sh`(**13/13,零 SURVIVED,STAND GREEN**),以及 `bots/FunLib/jmz_func.lua` 里一处**载荷性注释更正**(见 correction)。armed 串 / queue.json / test_set.md **一字未动**;零 AWS、零 S3、零 EC2、零波次。",
     "why": "上一轮量出 `both_triggers 6` 却只花掉 1 帧,说明 shadow 形状**不是那一个杠杆的性质**。把同一张 4x4 表剩下的格子在**同一次语料行走**上量完(1021 活帧):`t3_trigger 9` / `t3_shadowed_by_t1 5` / `t3_shadowed_by_t2 3` / **`t3_shadowed_by_either 6`**(**三分之二**);`stayfield_true_in_t3 2` / **`stayfield_true_in_t3_shadowed 1`**;`r4_shadowed_by_t2 4` / `r4_shadowed_by_t3 6` / `r4_shadowed_by_any_retreat 9`;`t2_trigger 30`。",
     "verdict_evidence_for_director": "**这是 `stayfield` 入集判定的那块证据(P4.4(ii))。** 该 id 在 `new_gated_awaiting_ab` 里,standing plan 是与 `stayfield2` 同一波 arm。它**唯一的调用点**是 '撤退:3';本语料下那条分支**至多 3/9 帧可达**,helper 在触发内答 TRUE 的 2 帧里**有 1 帧被上游遮住** ⇒ **一波 arm 最多读到 1 帧**,而 no-op 从裁定侧看起来正是「tested, no effect」。与 GH #622 同族(第一波买到的是 no-op),只是往上游挪了一条分支。另一端的量:`stayfield_armed_true 24` —— 这个意见有 24 帧宽,**23 帧在这个地址上无家可归**。",

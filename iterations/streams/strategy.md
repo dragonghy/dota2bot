@@ -34,7 +34,7 @@
    `tests/test_tpscroll_branch_shadow_census.lua`(**9/9**)、`tools/agent/mutstand_shadowcensus.sh`
    (**13 腿:12 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
    `state.json:tpscroll_shadow_census_20260908`、`bots/FunLib/jmz_func.lua` 一处**载荷性注释更正**;
-   报告 `iterations/reports/strategy/20260908T165542Z.md`;**issue:本轮开(编号在下一次提交回填 —— 铁律 6 的 GH #290 顺序:先 push 再发表引用)**;
+   报告 `iterations/reports/strategy/20260908T165542Z.md`;**issue GH #639**;
    **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
    **⭐ 主判据:「查到 shadow」本身不是判决,符号要一格一格量。** 同一张 4x4 表剩下的格子量完
    (1021 活帧,同一次行走):`t3_trigger 9` / `t3_shadowed_by_t1 5` / `t3_shadowed_by_t2 3` /
@@ -6844,7 +6844,7 @@
   产出:`tests/_tpquiet_sweep.lua`(扩列)、`tests/test_tpscroll_branch_shadow_census.lua`(**9/9**)、
   `tools/agent/mutstand_shadowcensus.sh`(**13 腿:12 CAUGHT + 控制项 SURVIVED(正确),零 SURVIVED,STAND GREEN**)、
   `state.json:tpscroll_shadow_census_20260908`、`bots/FunLib/jmz_func.lua` 一处注释更正;
-  报告 `iterations/reports/strategy/20260908T165542Z.md`;**issue:本轮开(编号在下一次提交回填 —— 铁律 6 的 GH #290 顺序:先 push 再发表引用)**;
+  报告 `iterations/reports/strategy/20260908T165542Z.md`;**issue GH #639**;
   验证:`luacheck_gate.sh` **exit 0 / 0 警告**(**没有用 `RULE6_BYPASS`**)、
   `test_tpquiet_shadowed_branch.lua` 在扩列后的 sweep 上**仍 15/15**(**跑过,不是假设**)、
   邻域 `smoke_load`/`gate_claim_consistency`/`gated_helper_liveness`/`gated_helper_nesting_census`/
