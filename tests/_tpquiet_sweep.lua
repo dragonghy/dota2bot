@@ -71,6 +71,8 @@
 --   T <kind> <fixture> <hero> <hp> <lvl>
 --       one frame of the SECOND shadow census (2026-09-08, charter 0TPQUIET
 --       「下一格」(2)): kind is t3_by_t1 | t3_by_t2 | r4_by_t2 | r4_by_t3.
+--       The THIRD census (charter 0SHADOW2「下一格」(1)) adds
+--       sf2_shadowed | sf2_live, in bots/mode_retreat_generic.lua.
 --   DONE
 --
 -- ⭐⭐⭐ THE SECOND CENSUS AND WHY IT IS THE SAME MEASUREMENT, NOT A NEW ONE.
@@ -89,6 +91,33 @@
 -- enclosing `nMode == BOT_MODE_RETREAT` are all unreadable from here), so a
 -- shadow count is a ceiling on the shadow and every hit gets a printed row.
 -- Absence of the final DONE line is a failed subprocess.
+--
+-- ⭐⭐⭐⭐ THE THIRD CENSUS (2026-09-08, charter 0SHADOW2「下一格」(1)) AND WHY
+-- IT IS THE ONE CELL OF THIS SHAPE THAT NEEDS NO BOUNDS AT ALL.  The two
+-- censuses above live in X.ConsiderItemDesire["item_tpscroll"], where every
+-- trigger is an UPPER BOUND because `X` is file-local.  The same shape occurs a
+-- second time in a different file -- bots/mode_retreat_generic.lua, whose early
+-- veto chain is:
+--
+--     if J.ShouldStayAndRegen( bot )     then return BOT_MODE_DESIRE_NONE end  -- PROMOTED
+--     if J.ShouldRegenNotWalkHome( bot ) then return BOT_MODE_DESIRE_NONE end  -- gated 'stayfield2'
+--
+-- and there the shadow is not a bound but an IDENTITY: both lines are top-level
+-- `if <helper>(bot) then return` statements with NOTHING between them, so the
+-- second helper is evaluated on exactly the frames where the first answers
+-- FALSE.  No `X.CanJuke`, no `nMode`, no fixture-unreadable conjunct enters it.
+-- That is asserted structurally (`MRG_RETURNS_BETWEEN == 0`) rather than
+-- described, and it is what makes `srnwh_armed_true_live` an EXACT reachable
+-- domain for 'stayfield2' rather than a ceiling.
+--
+-- ⛔ AND THE SIGN HAS TO BE MEASURED AGAIN, per the previous round's own
+-- finding.  Here the two vetoes point the SAME way (both return NONE = do not
+-- go home), so a shadowed frame costs the bot no guard -- what it costs is the
+-- MEASUREMENT: a wave arming 'stayfield2' reads those frames as no-ops, and
+-- "tested, no effect" is what a no-op looks like from the verdict side.
+-- 'stayfield2' is half of the registered promote atom 'field_hold_needs_
+-- magnitude' (stayfield + stayfield2 + fieldsip), and the previous round already
+-- priced the OTHER half at "at most 1 corpus frame".  This cell prices this one.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -96,6 +125,7 @@ local rf = require('mock.replay_fixture')
 local out = io.stdout
 local AIUG = 'bots/ability_item_usage_generic.lua'
 local JMZ = 'bots/FunLib/jmz_func.lua'
+local MRG = 'bots/mode_retreat_generic.lua'
 
 local function read_file(path)
     local f = assert(io.open(path, 'r'), path .. ' is not readable')
@@ -234,6 +264,96 @@ G.STAY_CEIL = tonumber(fieldsit and fieldsit:match('nHP < [%d%.]+ or nHP > ([%d%
 G.STAY_WRAPPER_ROUTES = count(strip_comments(jmz:match('function J%.ShouldRegenNotTpHome.-\nend')) or '',
     'J.ShouldRegenNotGoHome')
 
+-- ⭐⭐⭐⭐ THE THIRD CENSUS'S STRUCTURE: bots/mode_retreat_generic.lua.
+-- Everything here is read off the COMMENT-STRIPPED body of GetDesireHelper --
+-- that file's prose block quotes both helper names, both `BOT_MODE_DESIRE_NONE`
+-- returns and the whole shadow argument, so an unstripped read would let the
+-- comment satisfy every assertion below (the §EN mistake, and this file is the
+-- worst offender for it in the tree).
+local mrg = read_file(MRG)
+local mrg_bare = strip_comments(mrg)
+-- The chain lives in GetDesireHelper; slicing to that function keeps a call in
+-- some later helper from answering a whole-file `find` (the M13 shape).  The
+-- slice runs to the NEXT top-level `function`, never to the first `\nend\n` --
+-- a non-greedy match on that would stop at the first unindented `end` and hand
+-- back a fragment that silently contains none of the calls (measured: it made
+-- every column below read 0 while MRG_HELPER_FN still read 1).
+local at_helper = mrg_bare:find('function GetDesireHelper()', 1, true)
+local at_next_fn = at_helper and mrg_bare:find('\nfunction ', at_helper + 1, true)
+local helper = (at_helper and at_next_fn) and mrg_bare:sub(at_helper, at_next_fn) or nil
+G.MRG_HELPER_FN = helper and 1 or 0
+helper = helper or ''
+G.MRG_SWH_CALLS = count(helper, 'J.ShouldStayAndRegen(bot)')
+G.MRG_SRNWH_CALLS = count(helper, 'J.ShouldRegenNotWalkHome(bot)')
+G.FILE_SRNWH_CALLS = count(mrg_bare, 'J.ShouldRegenNotWalkHome')
+local at_swh = helper:find('if J.ShouldStayAndRegen(bot) then', 1, true)
+local at_srnwh = helper:find('if J.ShouldRegenNotWalkHome(bot) then', 1, true)
+G.MRG_SWH_BEFORE_SRNWH = before(at_swh, at_srnwh)
+-- Each call's OWN return, located from that call rather than by a whole-file
+-- search: `return BOT_MODE_DESIRE_NONE` appears many times in this function and
+-- a shared anchor would make every ordering claim vacuous.
+-- ⛔ THE FIRST `return` AFTER THE CALL, NOT THE FIRST `return NONE` AFTER IT.
+-- Searching for the CONSTANT skips over a return that carries a different
+-- desire and silently lands on the NEXT veto's -- so a mutant that changes this
+-- line's return value keeps reading as "returns NONE" (measured while building
+-- the stand: that is exactly how M4 first went undetected).  Locate the return,
+-- THEN ask what it returns.
+local RET_NONE = 'return BOT_MODE_DESIRE_NONE'
+local function first_return_after(s, at)
+    if at == nil then return nil end
+    return s:find('return', at, true)
+end
+local function returns_none_at(s, at)
+    return (at ~= nil and s:sub(at, at + #RET_NONE - 1) == RET_NONE) and 1 or 0
+end
+local at_swh_ret = first_return_after(helper, at_swh)
+local at_srnwh_ret = first_return_after(helper, at_srnwh)
+G.MRG_SWH_RETURNS_NONE = (at_swh_ret and at_srnwh and at_swh_ret < at_srnwh)
+    and returns_none_at(helper, at_swh_ret) or 0
+G.MRG_SRNWH_RETURNS_NONE = returns_none_at(helper, at_srnwh_ret)
+G.MRG_RETURNS_DISTINCT = (at_swh_ret and at_srnwh_ret and at_swh_ret < at_srnwh_ret) and 1 or 0
+-- ⭐ THE IDENTITY THIS CELL RESTS ON, AND THE ONLY REASON IT NEEDS NO BOUNDS:
+-- between the promoted veto's return and the gated veto's call there is NOTHING
+-- ELSE THAT RETURNS.  So "the second helper is evaluated" is exactly "the first
+-- answered FALSE" -- not a ceiling, an identity.  A future guard slipped in
+-- between turns this to nonzero and the exactness claim goes red with it.
+G.MRG_RETURNS_BETWEEN = (at_swh_ret and at_srnwh)
+    and count(helper:sub(at_swh_ret + #RET_NONE, at_srnwh), 'return') or -1
+-- ...and how many returns stand UPSTREAM of the pair.  Those cap the ABSOLUTE
+-- reachability of both lines (a dead bot, a WK reincarnation, a pre-horn human
+-- lane), but they are COMMON to both, so they cancel out of the shadow between
+-- them.  Pinned as a number so a fourth one added upstream cannot arrive
+-- silently.
+G.MRG_RETURNS_ABOVE = at_swh and count(helper:sub(1, at_swh), 'return') or -1
+-- ⭐⭐ "SAME CORE PREDICATE, TWO CALL SITES" AS ARITHMETIC BETWEEN TWO PARSED
+-- FUNCTIONS.  'stayfield' and 'stayfield2' are the same wrapper around
+-- J.ShouldRegenNotGoHome differing only in the id string and the function name,
+-- which is what makes the per-frame identity column below a check on the DRIVE
+-- rather than a restatement of the source.
+-- ⭐⭐⭐ THE PROMOTED VETO'S OWN CONSTANTS, so the "why is it false here" split
+-- below is arithmetic between two parsed functions rather than a re-implementation
+-- of it.  Only the clauses the closed form needs are parsed: its band (which must
+-- CONTAIN the gated helper's band) and its ring (which must be NO WIDER than the
+-- gated helper's), because those two containments are what make two of the four
+-- possible reasons structurally impossible.
+local stayfn = strip_comments(jmz:match('function J%.ShouldStayAndRegen.-\nend')) or ''
+G.SWH_FN = (stayfn ~= '') and 1 or 0
+G.SWH_LO = tonumber(stayfn:match('nHP < ([%d%.]+) or nHP >')) or -1
+G.SWH_HI = tonumber(stayfn:match('nHP < [%d%.]+ or nHP > ([%d%.]+)')) or -1
+G.SWH_DMG_WINDOW = tonumber(stayfn:match('WasRecentlyDamagedByAnyHero%( ([%d%.]+) %)')) or -1
+G.SWH_RING = tonumber(stayfn:match('J%.GetNearbyHeroes%( bot, (%d+)')) or -1
+G.FIELDSIT_RING = tonumber(fieldsit and fieldsit:match('J%.GetNearbyHeroes%( bot, (%d+)')) or -1
+G.SWH_ATTR_GATED = count(stayfn, "IsSoakCandidate( 'stayattr' )")
+G.SWH_TOWER_GATED = count(stayfn, "IsSoakCandidate( 'staytower' )")
+
+local wrap1 = strip_comments(jmz:match('function J%.ShouldRegenNotTpHome.-\nend')) or ''
+local wrap2 = strip_comments(jmz:match('function J%.ShouldRegenNotWalkHome.-\nend')) or ''
+G.WALK_WRAPPER_ROUTES = count(wrap2, 'J.ShouldRegenNotGoHome')
+G.WALK_WRAPPER_NIDS = count(wrap2, 'IsSoakCandidate')
+local norm1 = wrap1:gsub('ShouldRegenNotTpHome', 'W'):gsub("'stayfield'", "'ID'"):gsub('%s+', ' ')
+local norm2 = wrap2:gsub('ShouldRegenNotWalkHome', 'W'):gsub("'stayfield2'", "'ID'"):gsub('%s+', ' ')
+G.WRAPPERS_IDENTICAL_MOD_ID = (wrap1 ~= '' and norm1 == norm2) and 1 or 0
+
 -- The call site: exactly one, in the branch it claims, and no id in the branch
 -- condition itself (the 'pullcad' trap -- the gate lives in the helper).
 G.T1_QUIETVETO = count(b1, 'J.ShouldSipNotTpQuietHome')
@@ -365,7 +485,14 @@ for _, k in ipairs({ 'fixtures', 'live', 'raises',
     -- pricing of '撤退:3''s DEEP leg (below its only veto's floor)
     't3_below_stayfloor', 't3_deep_in_band', 't3_deep_src', 't3_deep_src_nodmg',
     't3_deep_src_nodmg_ring', 't3_deep_domain', 't3_deep_domain_unshadowed',
-    't3_deep_with_any_tower', 't3_at_or_above_stayfloor' }) do
+    't3_deep_with_any_tower', 't3_at_or_above_stayfloor',
+    -- third census (2026-09-08): the mode_retreat_generic veto chain
+    'swh_shipped_true', 'srnwh_shipped_true', 'srnwh_armed_true',
+    'srnwh_armed_true_shadowed', 'srnwh_armed_true_live',
+    'swh_true_srnwh_false', 'core_disagree', 'stayfield2_arm_leak',
+    'sf2_live_in_t3', 'sf2_live_hp_in_band',
+    'sf2_live_swh_damaged', 'sf2_live_swh_noflask', 'sf2_live_swh_ring_occupied',
+    'sf2_live_swh_above_ceil', 'sf2_live_unexplained' }) do
     rawset(c, k, 0)
 end
 
@@ -397,6 +524,14 @@ for _, path in ipairs(fixture_files()) do
                     -- gate must make it false on every frame -- the anti-vacuum
                     -- for the armed column below).
                     local okStayShip, stay_shipped = pcall(J.ShouldRegenNotTpHome, bot)
+                    -- Third census: the mode_retreat_generic pair, both read
+                    -- UNARMED first.  J.ShouldStayAndRegen is PROMOTED, so its
+                    -- unarmed answer IS its shipped answer and it is the one
+                    -- that decides whether the gated line below it is reached
+                    -- at all; J.ShouldRegenNotWalkHome unarmed must be false
+                    -- everywhere (the gate anti-vacuum).
+                    local okSwh, swh = pcall(J.ShouldStayAndRegen, bot)
+                    local okWalkShip, walk_shipped = pcall(J.ShouldRegenNotWalkHome, bot)
                     sArmed = 'tpquiet'
                     -- The arming must be ONE id wide.  A stub arming them all
                     -- would let another live id move this answer while the flip
@@ -412,9 +547,19 @@ for _, path in ipairs(fixture_files()) do
                     -- ...and the '撤退:3' veto armed on ITS own id, same frame.
                     sArmed = 'stayfield'
                     local okStayArm, stay_true = pcall(J.ShouldRegenNotTpHome, bot)
+                    -- ...and the WALK-half id, armed on its own id alone.  The
+                    -- two ids are deliberately separate (one per call site), so
+                    -- arming this one must leave the OTHER wrapper false --
+                    -- otherwise the per-id A/B this evidence is for cannot tell
+                    -- the two halves apart on any frame.
+                    sArmed = 'stayfield2'
+                    local okWalkArm, walk_true = pcall(J.ShouldRegenNotWalkHome, bot)
+                    local okLeak, leak_true = pcall(J.ShouldRegenNotTpHome, bot)
+                    if okLeak and leak_true then bump('stayfield2_arm_leak') end
                     sArmed = nil
 
-                    if not (okShip and okArm and okSib and okStayShip and okStayArm) then
+                    if not (okShip and okArm and okSib and okStayShip and okStayArm
+                        and okSwh and okWalkShip and okWalkArm and okLeak) then
                         bump('raises')
                     else
                         shipped = shipped and true or false
@@ -572,6 +717,85 @@ for _, path in ipairs(fixture_files()) do
                             bump('stayfield_true_in_t3')
                             if bT1 or bT2 then bump('stayfield_true_in_t3_shadowed') end
                         end
+
+                        -- ⭐⭐⭐⭐ CELL C: bots/mode_retreat_generic.lua, the one
+                        -- cell of this shape with no bounds in it.  The two
+                        -- vetoes are adjacent top-level `if helper(bot) then
+                        -- return NONE end` statements with nothing between them
+                        -- (pinned as MRG_RETURNS_BETWEEN == 0), so:
+                        --   reached(srnwh)  ==  not swh
+                        -- exactly, and the live domain below is a DOMAIN, not a
+                        -- ceiling.  The three returns UPSTREAM of the pair cap
+                        -- both lines equally and therefore cancel here; they are
+                        -- pinned as a count, not described.
+                        swh = swh and true or false
+                        walk_shipped = walk_shipped and true or false
+                        walk_true = walk_true and true or false
+                        if swh then bump('swh_shipped_true') end
+                        if walk_shipped then bump('srnwh_shipped_true') end
+                        if walk_true then
+                            bump('srnwh_armed_true')
+                            if swh then
+                                bump('srnwh_armed_true_shadowed')
+                                note('sf2_shadowed')
+                            else
+                                bump('srnwh_armed_true_live')
+                                note('sf2_live')
+                                -- Does the live half also sit in '撤退:3'?  That
+                                -- is where the OTHER half of the same promote
+                                -- atom ('stayfield') hangs, and the two are
+                                -- meant to be armed in ONE wave -- so an
+                                -- overlap here is an attribution problem for
+                                -- that wave, not a bug in either id.
+                                if bT3 then bump('sf2_live_in_t3') end
+                                if nHP >= G.STAY_FLOOR and nHP <= G.STAY_CEIL then
+                                    bump('sf2_live_hp_in_band')
+                                end
+                                -- ⭐⭐⭐ WHY THE PROMOTED VETO IS FALSE HERE,
+                                -- and two of the four candidate reasons are
+                                -- ruled out in CLOSED FORM by containments the
+                                -- source itself carries:
+                                --   * band: [0.18, 0.55] is inside [0.18, 0.75],
+                                --     so HP can never be the reason;
+                                --   * ring: the gated helper demands an EMPTY
+                                --     1600 ring, the promoted one only checks
+                                --     1200, so a 1200 occupant is impossible.
+                                -- Both are counted anyway and asserted to 0
+                                -- downstream -- a closed form nobody measures is
+                                -- prose.  What is LEFT is exactly the two blind
+                                -- spots the 'stayfield2' comment names.
+                                local bDmg = bot:WasRecentlyDamagedByAnyHero(G.SWH_DMG_WINDOW)
+                                local bFlask = J.IsItemAvailable('item_flask') ~= nil
+                                    or bot:HasModifier('modifier_flask_healing')
+                                    or bot:HasModifier('modifier_tango_heal')
+                                if bDmg then bump('sf2_live_swh_damaged') end
+                                if not bFlask then bump('sf2_live_swh_noflask') end
+                                if #J.GetNearbyHeroes(bot, G.SWH_RING, true, BOT_MODE_NONE) > 0 then
+                                    bump('sf2_live_swh_ring_occupied')
+                                end
+                                if nHP > G.SWH_HI or nHP < G.SWH_LO then
+                                    bump('sf2_live_swh_above_ceil')
+                                end
+                                -- Neither named blind spot: the promoted veto is
+                                -- false for some clause FURTHER DOWN its body.
+                                -- Reported as a number, never assumed to be 0 --
+                                -- this file does not claim its enumeration of
+                                -- that function is complete.
+                                if not bDmg and bFlask then bump('sf2_live_unexplained') end
+                            end
+                        end
+                        -- Anti-vacuum in the other direction: frames where the
+                        -- PROMOTED veto fires and the gated one would not.  A
+                        -- zero here would mean the two opinions never disagree
+                        -- and the shadow column could not be read.
+                        if swh and not walk_true then bump('swh_true_srnwh_false') end
+                        -- ⭐ SAME CORE PREDICATE, CHECKED ON THE DRIVE.  The two
+                        -- wrappers are byte-identical modulo the id (asserted
+                        -- structurally), so their armed answers must agree frame
+                        -- by frame.  A disagreement means one of the two reads
+                        -- was taken with the wrong id armed -- the failure mode
+                        -- that would silently invent or erase a shadow.
+                        if stay_true ~= walk_true then bump('core_disagree') end
                         if deep_true and bR4 then
                             if bT2 then bump('tpdeep_true_in_r4_shadowed_by_t2') end
                             if bT3 then bump('tpdeep_true_in_r4_shadowed_by_t3') end

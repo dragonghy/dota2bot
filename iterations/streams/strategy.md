@@ -27,6 +27,58 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0RETVETO. **【2026-09-08T19:40Z 新增。**P4.4 归属 = **(ii) 一个判定完结所需的最后一块证据**,不是 (i)**;
+   认领依据 = 上一轮「下一格」第 (1) 条逐条执行 + **OWNER_PRIORITIES P2**。工作流第 1 步扫到的
+   新 `[strategy]` issue **一条也没有**。产出:`tests/_tpquiet_sweep.lua` **再扩列**(**没有**新建第四个
+   全语料 sweep)、`tests/test_retreat_veto_reachability.lua`(**8/8**)、
+   `tools/agent/mutstand_retreatveto.sh`(**12 腿:11 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
+   `state.json:retreat_veto_shadow_census_20260908`;报告 `iterations/reports/strategy/20260908T194001Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 主判据:前两次普查给的是上界,这一次给的是恒等式。** 普查一、二住在 `item_tpscroll` 里,那里每个触发
+   都只能是上界(`X` 是 file-local)。`bots/mode_retreat_generic.lua` 的早退链不一样:
+   `if J.ShouldStayAndRegen(bot) then return NONE end` 与 `if J.ShouldRegenNotWalkHome(bot) then return NONE end`
+   **相邻,中间没有任何 return**(`MRG_RETURNS_BETWEEN 0`,sweep 与测试**两处独立推导**)
+   ⇒ 「第二条被求值」**恰好等于**「第一条答 FALSE」,`srnwh_armed_true_live` 是**域不是天花板**。
+   读数(1021 活帧):`srnwh_armed_true 24`(= `stayfield_armed_true 24`,**逐帧** `core_disagree 0`)/
+   `srnwh_armed_true_shadowed 5` / **`srnwh_armed_true_live 19`**;`swh_shipped_true 13` = 5 + `swh_true_srnwh_false 8`;
+   `srnwh_shipped_true 0`、`stayfield2_arm_leak 0`。
+   **⭐⭐ 交给总监的那块证据:promote atom `field_hold_needs_magnitude` 的两半不对称。**
+   `stayfield` 与 `stayfield2` 是**同一个谓词**(wrapper 除 id 外逐字相同 + 逐帧核对)挂在两个地址上,
+   standing plan 是同一波 arm。上一轮量出前者**至多可达 1 帧**,本轮量出后者**恰好可达 19 帧**
+   ⇒ **同一波产出的不是两个可比读数,而是一个杠杆加一个近乎 no-op**,事后**无法拆开归因**。
+   建议(交总监,不代总监决定):两半分波,或把该波明确记作 `stayfield2` 单腿的读数。
+   **⭐⭐⭐ 符号仍然一格一格量,本格是三次里最强的良性**:两条线返回**同一个** `BOT_MODE_DESIRE_NONE`
+   ⇒ 被遮的 5 帧上 bot 的决策**逐字相同**,丢的只是**测量**。**钉在结构上**
+   (`MRG_SWH_RETURNS_NONE`/`MRG_SRNWH_RETURNS_NONE`),不钉在计数上。
+   (普查一:吃掉一个域帧;普查二:赢家守得至少一样好;普查三:赢家做**同一个决定**。)
+   **⭐⭐⭐⭐ 载荷性更正:`stayfield2` 自己的注释把两个盲点排错了序。** 注释把「未归因的危险读数」放第一位
+   (附 lina 钉帧),flask/tango-only 的补给读数放第二;本语料上 **`sf2_live_swh_noflask` 19/19** vs
+   **`sf2_live_swh_damaged` 1/19**、`sf2_live_unexplained 0` ⇒ **活域是补给读数买来的,不是危险读数**。
+   注释没写错(钉帧是真的)但**不具代表性**。连带算术:`stayattr` 最多把这 19 帧里的 **1 帧**变成被遮
+   ⇒ **两个 id 同波最多在一帧上互相干扰,不构成混淆**。
+   **⛔ 四个候选原因里两个被闭式排除,而且照样量了**(没人量的闭式就是散文):**带**——gated 的 [0.18,0.55]
+   **落在** PROMOTED 的 [0.18,0.75] 之内 ⇒ `sf2_live_swh_above_ceil 0`;**环**——gated 要 1600 全空、
+   PROMOTED 只看 1200 ⇒ `sf2_live_swh_ring_occupied 0`。两个包含关系都**解析**自两个函数(M6/M7 各钉一个)。
+   **⭐⭐⭐⭐⭐ 变异台头条三条**:(a) **M4 第一版会逃掉** —— 顺序钉找的是 `return BOT_MODE_DESIRE_NONE`
+   这个**常数**,改掉本行返回值后 `find` **跳过本行落到下游 `pgchannel` 的 return 上**,仍读作「returns NONE」
+   ⇒ **先定位 return,再问它返回什么**(两处同时改);而那正是「良性」判决唯一的支点。
+   (b) **M10 的方向才是能看见的那个方向** —— flask 读数**收紧**看不见(已 19/19,涨不上去),**放宽**才致命:
+   把 PROMOTED 的 flask-only 与 gated 的 source 读数合并(**看着像清理**),19 **塌成 0**,本轮更正整个反过来。
+   (c) **M8 必须瞄准干净树上读 0 的那一列** —— 改名一个被 bump 的计数只会让它变成 0(`== 19` 当普通失败抓到);
+   危险的是把**干净值本来就是 0** 的列从零初始化表删掉,key 不出现、`nil` 抵达断言,只有 `must` 分得清
+   「没量过」和「量出来是零」(GH #171)。另:1200 环那行在 jmz_func 里**出现三次**,单独做锚点会 AMBIGUOUS
+   中止 —— **护栏在工作,不是变异体**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) **主体优先回到 P4.4(i) 的一个 `bots/` 行为改动** —— 本轮与上一轮**连续两轮**都是 (ii),
+   章程允许但不是常态;先找杠杆,找不到再退回证据;
+   (2) **`fieldsip` 是这个 atom 的第三条腿,一次都没被定价过。** `field_hold_needs_magnitude` 注册的是
+   三个 id(`stayfield`/`stayfield2`/`fieldsip`),本轮与上一轮各定价一个;第三个的调用点在哪、可达几帧,
+   **同样扩这个 sweep,仍然不要新建**。定价完这个 atom 才算量完,总监才拿得到完整的发波建议;
+   (3) 两条语料请求**仍然挂着,本轮都没动**:'撤退:3' 深带臂那一帧,以及 `nosrc_attr_only` 那一帧;
+   (4) ⛔ **不要**改共享地板、**不要**回 `overchase`、**不要**再找 `IsFieldRegenSituation` 的第五条子句、
+   **不要**给 '撤退:2' 加守卫(动它必须先推翻 `t2_ring_empty 2` 那两帧的血量),
+   **也不要**为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆。】**
+
 0SHADOW2. **【2026-09-08T16:55Z 新增。**P4.4 归属 = **(ii) 一个判定完结所需的最后一块证据**,不是 (i)**;
    认领依据 = 上一轮「下一格」第 (2) 条逐条执行(「先量再改」)+ **OWNER_PRIORITIES P2**。
    工作流第 1 步扫到的新 `[strategy]` issue **一条也没有**(#635/#628/#622/#619 都是本组自己开的)。
@@ -6795,6 +6847,34 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-08T19:40Z(**P4.4 归属 = (ii)**,不是 (i) —— 本轮量完之后能建的杠杆一个都没有,
+  而量出来的东西直接决定一个已注册 promote atom 怎么发波;认领依据 = 上一轮「下一格」第 (1) 条
+  逐条执行 + **OWNER_PRIORITIES P2**。工作流第 1 步扫到的新 `[strategy]` issue **一条也没有**)。
+  ⭐ **立案句:前两次普查给的是上界,这一次给的是恒等式。** `bots/mode_retreat_generic.lua` 的早退链里
+  `J.ShouldStayAndRegen`(PROMOTED)与 `J.ShouldRegenNotWalkHome`(gated `stayfield2`)**相邻,
+  中间没有任何 return**(`MRG_RETURNS_BETWEEN 0`,sweep 与测试两处独立推导)⇒「第二条被求值」
+  **恰好等于**「第一条答 FALSE」,可达域是**域不是天花板** —— 三次普查里第一个能这么说的格子
+  (**扩 `_tpquiet_sweep.lua` 的列,没有新建第四个全语料 sweep**)。
+  读数(1021 活帧):`srnwh_armed_true 24`(= `stayfield_armed_true 24`,**逐帧** `core_disagree 0`)/
+  `srnwh_armed_true_shadowed 5` / **`srnwh_armed_true_live 19`**;`swh_shipped_true 13` = 5 +
+  `swh_true_srnwh_false 8`;`srnwh_shipped_true 0`、`stayfield2_arm_leak 0`(闸门与单 id 反真空)。
+  ⭐⭐ **交给总监的那块证据:promote atom `field_hold_needs_magnitude` 的两半不对称。**
+  `stayfield` 与 `stayfield2` 是**同一个谓词**挂两个地址(wrapper 除 id 外逐字相同 + 逐帧核对),
+  standing plan 是同一波 arm;上一轮量出前者**至多可达 1 帧**,本轮量出后者**恰好 19 帧**
+  ⇒ **一个杠杆加一个近乎 no-op,事后无法拆开归因**。建议两半分波,或把该波明确记作 `stayfield2` 单腿读数。
+  ⭐⭐⭐ **符号仍然一格一格量,本格是三次里最强的良性**:两条线返回**同一个** `BOT_MODE_DESIRE_NONE`
+  ⇒ 被遮的 5 帧上 bot 的决策**逐字相同**,丢的只是**测量**;**钉在结构上不钉在计数上**。
+  ⭐⭐⭐⭐ **载荷性更正:`stayfield2` 注释把两个盲点排错了序** —— `sf2_live_swh_noflask` **19/19**
+  vs `sf2_live_swh_damaged` **1/19**、`sf2_live_unexplained 0` ⇒ **活域是补给读数买来的,不是危险读数**;
+  连带算术:`stayattr` 最多把这 19 帧里的 1 帧变成被遮 ⇒ 两个 id 同波**不构成混淆**。
+  ⭐⭐⭐⭐⭐ **变异台头条:M4 第一版会逃掉** —— 顺序钉找的是 `return BOT_MODE_DESIRE_NONE` 这个**常数**,
+  改掉本行返回值后 `find` 跳过本行、落到下游 `pgchannel` 的 return 上,仍读作「returns NONE」
+  ⇒ **先定位 return,再问它返回什么**;而那正是「良性」判决唯一的支点。
+  验证:静态门 `luacheck_gate.sh` **EXIT=0 CLEAN / 0 警告**;sweep 的**全部消费者**+闸门一致性
+  **六个全 EXIT=0**(15/15、9/9、10/10、**8/8**、5/5、16/16);变异台 **12 腿 STAND GREEN(exit 0)**;
+  开工自检 **worst exit 3**(python trunk 腿 **UNCERTIFIABLE**,120s 没跑完 —— **不是通过**)。
+  报告 `iterations/reports/strategy/20260908T194001Z.md`;backlog 见 **0RETVETO**。
 
 - 2026-09-08T16:55Z(**P4.4 归属 = (ii) 一个判定完结所需的最后一块证据**,**不是 (i)** ——
   三个候选杠杆全部定价出**空域**,硬造一个域为零的 gated 杠杆拿不到本组必须带的真实帧 fixture;
