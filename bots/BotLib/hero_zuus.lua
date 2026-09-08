@@ -1351,16 +1351,41 @@ X.nUltCashChaseRadius = 1600
 --- nobody near, a Zeus at 28% who was clipped two seconds ago frequently lives,
 --- and cashing costs him 250-500 mana and the ult for the next two minutes.
 ---
---- ⚠️ COVERAGE, and the two sentences may not be merged.  The corpus drives the
+--- ⚠️ COVERAGE, and the sentences may not be merged.  The corpus drives the
 --- SHIPPED right-hand side on real frames (GetCooldown reads a truthful 130 on
---- all 7 Zeus-subject frames that carry the handle) and drives the armed radius
---- term on real frames (6 of 8 have an enemy hero inside 1600).  It holds NO
---- creation frame for the branch as a whole: the only Zeus frame under 28% HP
---- (f_181441_zuus_lowhp_limbo, 15.8%) has the ult on a 2.2s cooldown AND its
---- nearest enemy at 2017u.  "The armed branch fires" is therefore NOT a reading
---- this round bought -- tests/test_zuus_ult_strand.lua section 6 states that as
---- the limit it is, and the left-hand 0 those frames report is a LOADER GAP
---- (nothing installs GetRespawnTime) and not frame data.
+--- every Zeus-subject frame that carries the handle) and drives the armed radius
+--- term on real frames (both admissions and refusals occur).  The left-hand 0
+--- those frames report is still a LOADER GAP (nothing installs GetRespawnTime)
+--- and not frame data.
+---
+--- ⭐ THE CREATION FRAME EXISTS, 2026-09-07 (replay-check, GH #593) -- this
+--- paragraph used to say the opposite and is corrected rather than deleted,
+--- because the old sentence has been quoted.  What used to stand here: "It holds
+--- NO creation frame for the branch as a whole", resting on
+--- f_181441_zuus_lowhp_limbo being the corpus's only sub-28% Zeus (ult on a 2.2s
+--- cooldown, nearest enemy 2017u).  The frame that retires it is
+--- tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua -- soak run
+--- 20260827_091703_slot12, t=473.1, a BASELINE leg (this id was not armed in that
+--- game, which is exactly why it can price a widening): 177/1006 hp = 17.6%,
+--- Thundergod's Wrath rank 1 at cooldown 0 with 405 mana against a 250 cost,
+--- damaged by two heroes inside 2.0s, a living Slardar 304.9u away.  Ground truth
+--- from two unrelated instruments: the fixture's own observed.died_after = 8.3,
+--- and that game's event table puts the FIRST zuus_thundergods_wrath cast at
+--- t=600.8 -- 119.2s after this death.  He died holding it, with four enemy
+--- heroes alive and the spell global.
+---
+--- ⚠️ WHAT THAT FRAME DOES NOT BUY, three limits, none rhetorical.  (1) It is the
+--- HELPER's conjuncts that the frame satisfies with zero injection; driving
+--- X.ConsiderR end to end additionally needs J.IsRetreating, which is bot-VM mode
+--- that no .dem carries -- the 0 -> 0.75 flip is bought with that one DECLARED
+--- substitution, and the un-injected answer (still 0) is written as an assertion
+--- next to it.  (2) One frame is not a frequency: the domain (257 episodes / 152
+--- games, of which 198 died within 6s and 192 of those still holding the ult) is
+--- the replay-check archive scan, not this instant.  (3) The overlap with this
+--- file's own `ultcash` is not cancelled by it -- J.IsDyingUnderAttack answers
+--- false here only because GetEstimatedDamageToTarget is absent from the replay.
+--- Pinned in tests/test_replay_260827_zuus_ultstrand_creation.lua and in
+--- tests/test_zuus_ult_strand.lua section 6.
 function X.zuus_ShouldCashUltBeforeDeath( hBot )
 
 	local bShipped = hBot:GetRespawnTime() > abilityR:GetCooldown()

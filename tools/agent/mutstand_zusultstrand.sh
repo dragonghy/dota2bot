@@ -228,5 +228,39 @@ sub "$HERO" "$RADIUS" 'X.nUltCashChaseRadius = 16000'
 score "M9" "admitted EVERY real Zeus frame"
 
 # ---------------------------------------------------------------------------
+# M10 and M11 were added 2026-09-08 (hero) when GH #593's creation frame retired
+# section 6's "no creation frame" tripwire.  A tripwire that asserted a ZERO
+# needed no control -- it could not pass vacuously.  Its replacement asserts a
+# POSITIVE count on a named frame, and that shape has two ways to be green while
+# saying nothing, so it gets one control each.
+#
+# M10: THE SUPPLY CONTROL.  Drop the creation frame back out of the list the
+#      section iterates.  Everything else -- the helper, the gate, the named
+#      constant, the prose -- survives review, and the retirement then rests on a
+#      frame the section never loads.  This is the exact state the file was in
+#      BEFORE this round, so a green here would mean the retirement was an edit
+#      to a sentence rather than a reading.
+echo
+echo "=== M10: the creation frame is dropped from the list section 6 iterates ==="
+sub "$TEST" "    'tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua',
+}" "}"
+score "M10" "no longer satisfies the armed helper"
+
+# ---------------------------------------------------------------------------
+# M11: THE CONJUNCT CONTROL, and the reason the count is `== 1` and not `>= 1`.
+#      Loosen the health bar the section applies -- the frame set then admits
+#      Zeus frames that are NOT creation frames, while the named frame is still
+#      among them.  Under `>= 1` plus a name this passes; under an exact count it
+#      cannot.  The mutant is not cosmetic: 0.28 is the branch's own bar, and a
+#      section that no longer applies it is measuring its own list.
+echo
+echo "=== M11: section 6 stops applying the branch's own 28% bar ==="
+sub "$TEST" "            and bot:GetHealth() / bot:GetMaxHealth() <= 0.28
+            and X.zuus_ShouldCashUltBeforeDeath(bot)" \
+            "            and bot:GetHealth() / bot:GetMaxHealth() <= 1.00
+            and X.zuus_ShouldCashUltBeforeDeath(bot)"
+score "M11" "satisfy the armed helper end to end, not 1"
+
+# ---------------------------------------------------------------------------
 echo
 echo "=== $CAUGHT/$TOTAL CAUGHT ==="

@@ -78,7 +78,16 @@ local ZUUS_FRAMES = {
     'tests/fixtures/f_260819_142047_zuus_ult_denied.lua',
     'tests/fixtures/f_260819_142047_zuus_ult_manalock.lua',
     'tests/fixtures/f_260819_222052_zuus_w2_leak.lua',
+    -- Added 2026-09-08 (hero stream) paying GH #593: the CREATION frame the
+    -- corpus lacked when this file was written. Listing it here is what retires
+    -- section 6's second tripwire -- the tripwire fires on the list, so the
+    -- retirement is a reading and not an edit to a sentence.
+    'tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua',
 }
+
+-- The creation frame, named once so section 6 can say WHICH frame carries the
+-- reading rather than only how many do.
+local CREATION_FRAME = 'tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua'
 
 local tests = {}
 
@@ -380,8 +389,20 @@ tests['section 6: TRIPWIRE -- no fixture reports a respawn time'] = function()
     end
 end
 
-tests['section 6: TRIPWIRE -- the corpus holds no creation frame'] = function()
-    local nCandidate = 0
+-- RETIRED 2026-09-08 (hero stream, GH #593). What stood here was a one-way
+-- tripwire asserting `nCandidate == 0` and calling its own red GOOD NEWS. It is
+-- red now, and this is the reading it asked for -- so the limit is replaced by
+-- the count it was waiting for, in the same place, rather than deleted.
+--
+-- ⚠️ WHAT THIS SECTION DOES AND DOES NOT SAY, and the two may not be merged.
+-- It says the HELPER's three conjuncts are satisfied together by real frame
+-- data on one archived instant. It does NOT say the BRANCH cast an ultimate:
+-- X.ConsiderR's outer `J.IsRetreating` is bot-VM mode, no .dem carries it, and
+-- the 0 -> 0.75 end-to-end flip is bought with that ONE named substitution in
+-- tests/test_replay_260827_zuus_ultstrand_creation.lua section 3, whose own
+-- section 5 states the un-injected answer (still 0) as an assertion.
+tests['section 6: the corpus holds the creation frame, and this is which one'] = function()
+    local tCandidate = {}
     for _, path in ipairs(ZUUS_FRAMES) do
         local X, _, bot, _, fx = on_frame(path, { armed = true })
         local h = ult_handle(bot, fx)
@@ -390,23 +411,49 @@ tests['section 6: TRIPWIRE -- the corpus holds no creation frame'] = function()
             and bot:GetHealth() / bot:GetMaxHealth() <= 0.28
             and X.zuus_ShouldCashUltBeforeDeath(bot)
         then
-            nCandidate = nCandidate + 1
+            tCandidate[#tCandidate + 1] = path
         end
     end
-    assert(nCandidate == 0, string.format(
-        'GOOD NEWS: %d frame(s) now satisfy the armed branch end to end. This round '
-        .. 'bought no such frame and said so; take the reading and retire the limit '
-        .. 'in the header of bots/BotLib/hero_zuus.lua.', nCandidate))
+    assert(#tCandidate >= 1,
+        'the corpus no longer satisfies the armed helper end to end on ANY frame. '
+        .. 'This is a REGRESSION of the reading GH #593 delivered, not a return to '
+        .. 'the old limit: either the fixture stopped loading, the helper stopped '
+        .. 'reading it, or ' .. CREATION_FRAME .. ' left the list above.')
+    -- Counted exactly, not `>= 1`. A loosened conjunct here (the 28% bar, the
+    -- castability read, the armed flag on on_frame) admits frames that are not
+    -- creation frames, and a `>= 1` written next to a named frame would stay
+    -- green through exactly that -- the assertion would then be measuring the
+    -- list rather than the helper.
+    assert(#tCandidate == 1, string.format(
+        '%d frames now satisfy the armed helper end to end, not 1. If a second '
+        .. 'creation frame really entered tests/fixtures/, that is GOOD NEWS and it '
+        .. 'needs its own price (which game, which instant, what happened next) '
+        .. 'before this count moves. If nothing was added to ZUUS_FRAMES, one of '
+        .. "this test's own conjuncts has been loosened.", #tCandidate))
+    local bNamed = false
+    for _, path in ipairs(tCandidate) do
+        if path == CREATION_FRAME then bNamed = true end
+    end
+    assert(bNamed, string.format(
+        'the creation frame is no longer %s (the %d frame(s) that qualify are other '
+        .. 'ones). GH #593 priced THAT instant -- 17.6%% hp, rank-1 ult off cooldown, '
+        .. '405 mana, a chaser at 304.9u, dead 8.3s later with the ult unspent -- so '
+        .. 'a different frame carrying the reading needs its own price, not this '
+        .. "one's.", CREATION_FRAME, #tCandidate))
 end
 
-tests['section 6: the one sub-28%% frame misses on two other conjuncts'] = function()
-    -- Stated as an assertion so "no creation frame" carries its REASON and not
-    -- just its count -- the difference between a limit and an excuse.
+tests['section 6: the OTHER sub-28%% frame misses on two other conjuncts'] = function()
+    -- Kept after the retirement above, and it is not redundant with it: this is
+    -- the frame that shows the helper's conjuncts are what SELECT the creation
+    -- frame. A second sub-28% Zeus that the armed helper still refuses is the
+    -- difference between "the bar admits the corpus" and "the bar admits this
+    -- instant". (It used to be the corpus's ONLY sub-28% frame; since GH #593 it
+    -- is one of two, and that is the whole change to this test.)
     local X, _, bot, _, fx = on_frame('tests/fixtures/f_181441_zuus_lowhp_limbo.lua',
         { armed = true })
     assert(bot:GetHealth() / bot:GetMaxHealth() <= 0.28,
-        'f_181441_zuus_lowhp_limbo is no longer under the 28% bar; the header quotes '
-        .. 'it as the corpus\'s only sub-28% Zeus frame.')
+        'f_181441_zuus_lowhp_limbo is no longer under the 28% bar; this test exists '
+        .. 'to price a sub-28% frame the armed helper still refuses.')
     local h = ult_handle(bot, fx)
     assert(h ~= nil and not h:IsFullyCastable(),
         'the ult is now castable on f_181441_zuus_lowhp_limbo -- one of the two '

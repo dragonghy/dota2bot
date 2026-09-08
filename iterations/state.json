@@ -7371,5 +7371,23 @@
     "limits": "(i) `stayfield` 那一半的 2 帧是**上界**(`X` 是 file-local,'撤退:3' 触发读不全),所以「2/2 被杀」是「至多 2,且没有一个活下来」,不是域;`stayfield2` 那 19 是**域**(`MRG_RETURNS_BETWEEN 0`)。(ii) 本语料是 `fieldcreep` 收窄**之后**的那一版(见 `downstream_hard_note`),跨界并池仍然是错的。(iii) 本轮**没有**裁定任何 id,**没有**动 armed 串 / `test_set.md` / `queue.json`,**没有**开新的 gated 杠杆。",
     "tests": "`tests/test_fieldsip_atom_pricing.lua` —— 15 例全绿;结构一半在本文件里**独立于 sweep 再解析一遍**,再与 manifest 逐项对表(`agree()`),分歧即「两边读的不是同一棵树」。",
     "handoff": "**总监**:按 verdict_evidence_for_director 裁 `field_hold_needs_magnitude` 那一波的形状(拆波 / 或明确记作某单腿读数)。**协同组下一轮**:见章程「下一格」。**批测台**:本轮**无请求**,零 AWS。"
+  },
+  "zusultstrand_creationframe_20260908": {
+    "owner": "hero",
+    "date": "2026-09-08T23:xxZ",
+    "backlog_item": "hero `-129`;认领 GH #593([hero] open issue,**第二页**上的 —— 本轮按 `-128` 新立的开工步骤把分页翻完才宣布,而它就在第二页)。OWNER_PRIORITIES **P4.4 (ii)**:工作单元主体是**一个判定完结所需的最后一块证据**(不是 (i) 的新行为改动)。",
+    "headline": "`zusultstrand` 的创建帧已经存在了,而两处「corpus holds NO creation frame」限度还在原地写着相反的话。本轮把限度**换成它自己要的那个读数**:新 fixture 进 `ZUUS_FRAMES`,§6 的单向绊线退役成一条**指名道姓**的正向断言(域内 ≥1 帧 **且** 那一帧是 `f_20260827_091703_slot12_zuus_473_1`),`bots/BotLib/hero_zuus.lua` 头部那一段**更正而不是删除**(旧句被引用过)。交棒测试的 §4 按它自己的失败信息**删掉,不是重新上膛**。",
+    "gate": "zusultstrand(既有 soak id,turbo-only,**仍未 armed**;本轮**没有**动任何谓词、没有新 id、没有 arm)",
+    "bots_lua_changed": "是,但**只有注释**:`X.zuus_ShouldCashUltBeforeDeath` 头部的 COVERAGE 段。**零可执行 diff** —— 本轮不是 P4.4 (i) 的行为改动轮,是 (ii) 的证据轮。",
+    "change": "(1) `tests/test_zuus_ult_strand.lua`:`ZUUS_FRAMES` 加 `tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua`,新增具名常量 `CREATION_FRAME`;§6 的 `nCandidate == 0` 绊线换成「`#tCandidate >= 1` **且** `CREATION_FRAME` 在其中」;§6 第三条(f_181441 仍被 armed helper 拒)的**措辞**从「语料唯一的 sub-28% 帧」改成「两个 sub-28% 帧里被拒的那一个」,断言本身不动 —— 它现在承担的是**「是合取项在选帧,不是血线在放行」**。(2) `bots/BotLib/hero_zuus.lua` 头部 COVERAGE 段更正,并写进三条限度。(3) `tests/test_replay_260827_zuus_ultstrand_creation.lua`:删掉 §4 HANDOVER(该节自己的失败信息要求的处置),文件头的「本文件故意不改那两处」改成「棒已落地」。",
+    "direction": "本轮**不改行为**,所以没有新的方向声明。`zusultstrand` 自己的方向不变:**WIDENING**(出货合取项恒假 ⇒ arm 只能增加大招施放)。负读数只能读作「多放的放亏了」,永远不能读作「少放了 N 次」。",
+    "reading": "创建帧的三个合取项由**真实帧数据零注入**满足:177/1006 hp = **17.6%**、Thundergod's Wrath rank 1 **cd 0** / mp **405** ≥ 施法消耗 **250**、2.0s 内被两个英雄伤害过、1600 环内活着的追击者 **1 个**(slardar **304.9u**)。地面真相两台互不相干的仪器:fixture 自带 `observed.died_after = 8.3`;同局 events 全表里 `zuus_thundergods_wrath` 的**第一条** ABILITY 事件在 **t=600.8**,即这次死亡之后 **119.2 秒**。⭐ 该局是 **baseline 腿**(`zusultstrand` 未 armed)—— 这正是它能给一个 widening 当证据、而不是给一次 armed 运行当核验的原因。",
+    "tests": "`lua5.1 tests/run_tests.lua zuus`:改前 **237 例 0 失败**,改后 **236 例 0 失败**(-1 = 删掉的 §4)。§6 那条新断言**是被真实帧驱动通过的**(fixture 不加载就会当场 error,不是静默跳过)。变异台 `tools/agent/mutstand_zusultstrand.sh` 重跑见报告。",
+    "limits": "(1) 买到的是**助手函数**三个合取项在真实帧上同时成立,**不是**「分支在真实对局里放过大招」:`X.ConsiderR` 外层的 `J.IsRetreating` 是 bot VM mode,`.dem` 不带;端到端 0 → 0.75 带**一处具名注入**,不注入时 armed 侧仍是 0(已写成断言)。(2) **1 帧不是 257 个 episode**,更不是频率。(3) 与同文件 `ultcash` 的重叠**没有消掉**:`J.IsDyingUnderAttack` 在这一帧答 false,只是因为 `GetEstimatedDamageToTarget` 录像里没有。(4) §6 的 respawn 绊线**原样保留**:`GetRespawnTime` 仍然没有任何东西接线,比较式左端仍是 loader gap 不是帧数据。",
+    "left_alone": "没有碰任何谓词、任何常数、`X.nUltCashChaseRadius`、`ultcash` 分支,也没有提任何入集提议(P4.2 冻结期内合法裁定是 FROZEN-HOLD)。",
+    "armed": "无(本轮零 arm、零入集提议、零 AWS、零 EC2、零 S3)",
+    "queue": "`iterations/queue.json:hero-51` —— **接棒登记**,不是新扫描:`zusultstrand` 现在缺的只有条件 (a) 的一波 armed 波次(批测台的球),连同解冻后要读的四列与归因边界一并预登记,免得铁律 9 那种掉棒再来一次。",
+    "issue": "GH #593(本轮认领并做完它点名的两件事;验收方式是该 issue 自己写的:退役两处 + 删掉新测试 §4 + `run_tests.lua zuus` 保持 0 failures)",
+    "report": "iterations/reports/hero/20260908T23xxZ.md"
   }
 }

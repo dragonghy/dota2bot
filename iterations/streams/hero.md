@@ -22,7 +22,55 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--128. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+-129. **⭐ 下一轮:回到 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**
+   本轮(`-129` 之前的 `-128`)走的是 **P4.4 (ii)**(判定完结的最后一块证据,GH #593),
+   `bots/` 只有注释 diff。**连着两轮都不碰可执行代码是不行的**,下一轮回 (i)。
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`、CM 的 `cmfarcreep` 域
+     (`hero-42`)、`lionultcash`(`hero-43`)、`lionrreach`(`hero-44`)、`wkqlane`(`hero-45`)、
+     `axecullreach`(`hero-46`)、`cmlaneband`(`hero-47`)、`zusjumpland`(`hero-48`)、
+     `lionqkill`(`hero-49`)、`axebhreach`(`hero-50`)、**新增 `zusultstrand` 的 armed 波
+     (`hero-51`,本轮登记)**;`wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`,逐字不变(GH #570)。
+   - **✅ #577 从「下一轮先看」里划掉**:本轮核对,本组这一侧**早已付掉** —— 拆 id 在
+     `state.json:axecallbkb_split_20260906`,两个坐标在
+     `tests/frames/f_260831_061811_axe_call_tp_channel.lua` /
+     `tests/frames/f_260828_002127_axe_call_bkb_ring.lua`(`tests/test_axe_call_staged_frames.lua`)。
+     余下的是总监的标签与登记。**教训:`-128` 是按 issue 标题排的优先级,而那两棒是在标题
+     写好之后才落的地** ⇒ 排下一轮的活时,**先看那个 id 在 `state.json` 里最新的一条**,
+     不要只读 issue 标题。
+   - **⭐ 第二页上还没排到的 `[hero]`**:#599 / #587 / #567 / #566 / #564 / #563 / #562
+     (以及更后面的页,本轮只翻到第二页)。#562 的「拆不拆」仍是本组的。
+   - **⭐⭐ 本轮买到的一课,下一轮直接用**:**一条断言「零」的绊线不需要控制变异体
+     (它没法空过);把它换成「正向计数 + 具名对象」的那一刻,它长出两条空过的路** ——
+     (甲) 对象根本没进被遍历的那个列表(**供给**),(乙) 断言自己的合取项被放宽,于是
+     计数里混进不是那个对象的东西(**刀口**)。所以正向替代品要 **`== N` 不是 `>= 1`**,
+     并且各配一条控制(本轮 M10 / M11)。
+   - **⚠️ 一条待回答的普遍问题,已登记在本轮报告 §8,下一次写「到达」族的 (c) 论证前必须
+     先答**:出货把目标交给 `ActionQueue_UseAbilityOnEntity`,**射程外 = 先走路再放**,
+     不是「什么都没发生」⇒ 到达族的代价故事默认要按**一次走位**写。这是**观察**,
+     不是对既有裁定的推翻(`axebhreach` 那条是**最小值搜索挤掉射程内候选** = 一次
+     **交换**,不受影响)。
+   - **⭐ 开工顺序(连续四轮有效)**:开工自检**跑完**再动变异台,**不要并行**(GH #507)。
+     本轮遵守(`until ! pgrep -f "[r]outine_selfcheck.sh"` 阻塞等),没有复发。
+   - **⛔⛔ 自检退出码只能用文件重定向读**(`> /tmp/sc.log 2>&1; echo "EXIT=$?"`)。
+     本轮是**第 13 次**踩管道、**连续第三轮**、**又是本轮第一条命令** —— 而 `-128` 已经把
+     它写成「第一条命令的模板」了。**把它写进 backlog 三轮都没挡住它**,所以下一轮
+     **换形状**:开工的第一条 Bash 命令**只准是**
+     `nohup bash -c 'bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?" >> /tmp/sc.log' >/dev/null 2>&1 &`
+     ——**后台起、写文件、退出码写进同一个文件**,于是「读」这一步与管道无关。
+   - **⚠️ 自检的 `trunk-red(python)` UNCERTIFIABLE 要在安静的树上重跑**:它明说
+     「nothing writing under `bots/`」。本轮那半不安静(我在 python 腿跑的时候改了
+     `hero_zuus.lua` 的注释)⇒ 那条**既不能读作 trunk 红,也不能读作通过**。
+     下一轮**要么先等自检跑完再动 `bots/`,要么在报告里照这句写清楚**。
+
+-128. ~~**⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-08T23:09Z 做完的是 P4.4 *(ii)* 而不是 (i)**:认领 GH **#593**(第二页上的
+   `[hero]` issue —— 本轮按 `-128` 新立的开工步骤**把分页翻完了**,而它就在第二页)。
+   `zusultstrand` 的创建帧已经存在,两处「no creation frame」限度还写着相反的话;本轮把
+   限度**换成它自己要的那个读数**。报告 `iterations/reports/hero/20260908T230955Z.md`,
+   `state.json:zusultstrand_creationframe_20260908`,`queue.json:hero-51`(接棒登记)。
+   `run_tests.lua zuus` 237 → **236 例 0 失败**(-1 = 按 issue 验收删掉的 §4);
+   `mutstand_zusultstrand.sh` 9 → **11 变异 11/11 CAUGHT**;`luacheck_gate.sh` **EXIT=0 CLEAN**。
    - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
      timeline)、CM 的 `cmfarcreep` 域(`hero-42`)、`lionultcash` 域(`hero-43`)、
      `lionrreach` 域(`hero-44`)、`wkqlane` 域(`hero-45`)、`axecullreach` 域(`hero-46`)、
@@ -5610,6 +5658,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-08T23:09Z(报告 `iterations/reports/hero/20260908T230955Z.md`;**backlog:`-128` 做完、
+  新开 `-129`**;焦点英雄 **Zeus**;OWNER_PRIORITIES **P4.4 (ii)** —— 工作单元主体是
+  **一个判定完结所需的最后一块证据**,不是 (i) 的行为改动;`bots/` 只有注释 diff,零可执行改动)
+  **`zusultstrand` 的创建帧 2026-09-07 就已经存在了,而两处「corpus holds NO creation frame」
+  限度还在原地写着相反的话。本轮认领 GH #593,把限度换成它自己要的那个读数。**
+  新 fixture `tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua` 进 `ZUUS_FRAMES`
+  (**退役因此是一次读数,不是一次改句子** —— 绊线是对那个列表开火的);
+  §6 换成**指名道姓**的正向断言(`#tCandidate == 1` **且**那一帧是 `CREATION_FRAME`);
+  `bots/BotLib/hero_zuus.lua` 头部 COVERAGE 段**更正而不是删除**(旧句被引用过)+ 三条限度;
+  `tests/test_replay_260827_zuus_ultstrand_creation.lua` §4 HANDOVER **按它自己的失败信息删掉**。
+  `state.json:zusultstrand_creationframe_20260908`、`queue.json:hero-51`(**接棒登记**:
+  这个 id 现在缺的只有条件 (a) 的一波 armed 波次,球在批测台)。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3、零 CE。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;`run_tests.lua zuus`
+  237 → **236 例 0 失败**(-1 = 删掉的 §4);`gate_claim` 16 例、`smoke` 3 例 0 失败;
+  fast Lua detector **86 个 0 红**(在改动后的树上)。
+  ✅ **本轮把 `[hero]` 的分页翻完了才判断**(`-128` 立的开工步骤第一次执行):第一页 10 条
+  全是本组自己开的「已 gated 落地」交棒帖,第二页里 **#593 是可认领的**。
+  - **⭐⭐ 本轮的看门狗是一条元教训**:**断言「零」的绊线没法空过,所以不需要控制变异体;
+    把它换成「正向计数 + 具名对象」的那一刻,它长出两条空过的路** —— (甲) 对象根本没进
+    被遍历的列表(**供给**,变异台新增 **M10**:把创建帧从 `ZUUS_FRAMES` 拿掉,helper/闸/
+    具名常量/散文全部存活,而那**正是本轮之前的状态**);(乙) 断言自己的合取项被放宽
+    (**刀口**,新增 **M11**:28% 血线放到 1.00 ⇒ 域里混进不是创建帧的 Zeus 帧,而具名那帧
+    仍在其中 ⇒ **`>= 1` + 具名会照绿**)。**这就是计数写 `== 1` 不写 `>= 1` 的理由。**
+    stand 9 → **11 变异 11/11 CAUGHT**。
+  - **⚠️ 限度四条,一条都不许合并**:(1) 买到的是**助手函数**三个合取项在真实帧上同时成立,
+    **不是**「分支在真实对局里放过大招」(`J.IsRetreating` 是 bot VM mode,`.dem` 不带;
+    端到端 0 → 0.75 带**一处具名注入**,不注入时 armed 侧仍是 0,已写成断言);(2) 1 帧不是
+    257 个 episode;(3) 与 `ultcash` 的重叠**没消掉**;(4) **§6 的 respawn 绊线原样保留** ——
+    `GetRespawnTime` 仍无接线,比较式左端仍是 loader gap。
+  - **✅ #577 划掉**:本组这一侧早已付掉(拆 id 09-06 + 两个坐标 09-07 已钉帧)。
+    **教训:`-128` 按 issue 标题排优先级,而那两棒是在标题写好之后落的地** ⇒ 排活先看
+    `state.json` 里那个 id 最新的一条。
+  - **⚠️ 顺手登记的否定结果**(免得下轮重查):Zeus `X.ConsiderD`(Nimbus)队友循环**没有**
+    bot→目标距离项**而这不是缺陷**(`zuus_cloud` 的 `AbilityCastRange` base = `0` = 全局);
+    五个焦点英雄的 `GetSpecialValue*` 键**逐个对过 KV 快照,没有新的结构性零**。
+  - **⚠️ 一条待回答的普遍问题(报告 §8)**:射程外的目标交给 `ActionQueue_UseAbilityOnEntity`
+    的后果是**先走一段路再放**,不是「什么都没发生」⇒ **到达族的 (c) 论证下次要按一次走位
+    来写**。这是**观察**,不是对既有裁定的推翻。
+  - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**:unlanded / cadence / queue-rulings /
+    owed-executions,**都不是本轮的**;另有 9 个 check 120s 没跑完的 UNCERTIFIABLE
+    (与前三轮逐字同一条),以及一条 `trunk-red(python)` UNCERTIFIABLE —— 它明说要在
+    **安静的树**上重跑,而本轮那半**不安静**(我在 python 腿跑的时候改了 `hero_zuus.lua`
+    的注释)⇒ **既不能读作 trunk 红,也不能读作通过**。
+  - **⛔ 自检第 13 次被管道读退出码当场 REFUSED,连续第三轮,又是第一条命令。**
+    写进 backlog 三轮没挡住 ⇒ `-129` 改成**换形状**:第一条 Bash 命令只准是后台起、
+    写文件、**退出码写进同一个文件**的那一条。
+  - ✅ **「自检与变异台并行」(GH #507)连续四轮没有复发。**
 - 2026-09-08T20:20Z(报告 `iterations/reports/hero/20260908T202000Z.md`;**backlog:`-127` 做完、
   新开 `-128`**;焦点英雄 **Axe**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动)

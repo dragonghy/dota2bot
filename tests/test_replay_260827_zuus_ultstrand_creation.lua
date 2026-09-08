@@ -26,13 +26,14 @@
 -- conjunct the branch reads is satisfied here by REAL frame data, and the armed
 -- decision differs from the shipped one on this exact instant.
 --
--- ⚠️ THIS FILE DELIBERATELY DOES NOT EDIT test_zuus_ult_strand.lua OR THE
--- hero_zuus.lua HEADER. Adding this path to that file's ZUUS_FRAMES list turns
--- its section-6 tripwires red -- which is what those tripwires are FOR ("GOOD
--- NEWS", in their own words) -- and retiring the limit in the shipped Lua header
--- is a bots/ edit. Both are the hero group's call; the baton is handed over in
--- the [hero] issue this round opened, and section 4 below pins the handover so
--- it cannot be silently dropped.
+-- ✅ BATON LANDED 2026-09-08 (hero stream, GH #593). When this file was written
+-- it deliberately left both artefacts stale and pinned the handover in a section
+-- 4 that asserted the two stale limits moved TOGETHER. Both have now been
+-- retired: this path is in test_zuus_ult_strand.lua's ZUUS_FRAMES and its
+-- section 6 states the creation frame as a reading (with the name of the frame),
+-- and the hero_zuus.lua header carries the correction plus its three limits.
+-- Section 4 was deleted rather than re-armed -- that is what its own failure
+-- message instructed the round that landed the baton to do.
 --
 -- WHAT IS REAL AND WHAT IS DECLARED -- THE TWO MAY NOT BE MERGED
 -- --------------------------------------------------------------
@@ -222,27 +223,14 @@ tests['section 3: the flip is the LEVER -- same frame, same injection'] = functi
 end
 
 -- ---------------------------------------------------------------- section 4 --
--- The handover, pinned. This file deliberately leaves two artefacts stale (see
--- the header); these assertions make that staleness self-reporting rather than a
--- thing a future round has to remember.
-
-tests['section 4: HANDOVER -- the stale "no creation frame" limits still stand'] = function()
-    local function read(path)
-        local fh = assert(io.open(path, 'r'), 'cannot open ' .. path)
-        local body = fh:read('*a'); fh:close(); return body
-    end
-    local strand = read('tests/test_zuus_ult_strand.lua')
-    local hero = read('bots/BotLib/hero_zuus.lua')
-    local bStrandStale = strand:find('the corpus holds no creation frame') ~= nil
-    local bHeroStale = hero:find('It holds NO\n--- creation frame') ~= nil
-    assert(bStrandStale == bHeroStale, string.format(
-        'the two "no creation frame" limits have drifted apart (test_zuus_ult_strand '
-        .. '= %s, hero_zuus header = %s). They were written as one claim and must be '
-        .. 'retired as one.', tostring(bStrandStale), tostring(bHeroStale)))
-    assert(bStrandStale, 'GOOD NEWS: the "no creation frame" limit has been retired in '
-        .. 'both places. The [hero] baton this file hands over has landed -- delete '
-        .. 'this section rather than re-arming it.')
-end
+-- DELETED 2026-09-08 (hero stream, GH #593). It asserted that the two "no
+-- creation frame" limits were both still stale, and that they moved together.
+-- They moved together, in the round that landed this baton, and the section's own
+-- failure message said to delete it rather than re-arm it. The one thing it was
+-- protecting -- that neither artefact is retired while the other still claims the
+-- limit -- is now protected by the artefacts themselves: test_zuus_ult_strand.lua
+-- section 6 goes red if this fixture ever stops satisfying the armed helper, and
+-- names this file as where the end-to-end reading lives.
 
 -- ---------------------------------------------------------------- section 5 --
 -- The limits, as one-way tripwires. Each going red is GOOD NEWS: it means the
