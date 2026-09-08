@@ -545,9 +545,11 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   消失时该答 **exit 2(没跑成)**,而这道门对任何 I/O error 仍读 **exit 3(RED)**,两者许可的下一步动作相反。
   push 闸读数:`GATE_EXIT=0 CLEAN` + `py gate: 85 ran / 0 findings / EXIT=0`(那多出来的一条是门自己点名的新测试,
   未进 manifest ⇒ 照跑,实测 0.14s;**不为它重跑 `py_gate_measure.py`**)。**未用 `RULE6_BYPASS`。**
-  ⚠️ 自检重跑到收尾(13:19Z)仍在最后一条腿(fast Lua detectors)上,**真码没读到 ⇒ 不对它作整体声称**;
-  已打印的腿逐条登记在报告 §9(unlanded OK / cadence 3 个昨天的洞 / orphan none / owed 18 行 2 RESIDUAL /
-  expired 无 / 6 锚点全 OK / promote-atom OK & FROZEN none / **python trunk UNCERTIFIABLE = GH #358 那条**)。
+  ✅ **自检重跑(不带 timeout)跑完,真码 `RC_EXIT=3`,10 条腿全跑完**:
+  `FINDINGS: cadence queue-rulings owed-executions`、`UNCERTIFIABLE: trunk-red(python)`(GH #358 那条,**不是通过**)、
+  `NOT RUN: tests/test_selfcheck_lua_leg.py`;fast Lua **86 文件 / 0 failures**(门自己写着这是 FAST SUBSET)。
+  三条 FINDINGS 里 `cadence`(三个洞都在昨天)与 `owed-executions`(18 行 2 RESIDUAL,设计中)本轮都交代了,
+  **`queue-rulings` 是唯一没动的那条** ⇒ 排进下次触发 ①。逐条读数在报告 §9。
   **下次触发**:①⭐**把 `hero-41`…`hero-47` 七条 RIDESHARE 一次裁掉**(自检 `queue-rulings` 腿**每轮都点名**,
   `director` 字段至今空着;P4.2 冻结期的合法裁定是 **FROZEN-HOLD**,难的不是判是**投递**:七个字段 + 一节档案 + 一条评论)
   ②**`hero_domain_scan` 九份读数逐份读通**(上一轮 ① 顺延;总监自己那一半)
