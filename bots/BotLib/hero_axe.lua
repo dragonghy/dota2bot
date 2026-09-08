@@ -936,6 +936,117 @@ function X.axe_IsBattleHungerFresh( hTarget )
 end
 
 
+--- The reach term the 团战 (teamfight) firing point of X.ConsiderW has never
+--- had.  Soak candidate `axebhreach` (turbo-only, INERT until armed).  Written
+--- 2026-09-08 under OWNER_PRIORITIES P4.4 (i).
+---
+--- THE DEFECT.  X.ConsiderW builds TWO search rings off one cast range --
+---     nInRangeEnemyList = J.GetAroundEnemyHeroList( nCastRange )
+---     nInBonusEnemyList = J.GetAroundEnemyHeroList( nCastRange + 200 )
+--- -- and then bids from EIGHT firing points.  SIX of them bound the target to
+--- the cast range, by one of the two conventions this function itself writes:
+---
+---     kill loop     nInRangeEnemyList
+---     先手          J.IsInRange( botTarget, bot, nCastRange )
+---     lane harass   nInRangeEnemyList
+---     retreat       nInRangeEnemyList
+---     roshan        J.IsInRange( bot, botTarget, nCastRange )
+---     tormentor     J.IsInRange( bot, botTarget, nCastRange )
+---
+--- The 团战 min-search is the ONE hero-targeting point that iterates the +200
+--- ring carrying no distance term at all.  (The jungle pick reads
+--- `bot:GetNearbyNeutralCreeps( nCastRange + 100 )` and is unbounded too; it is
+--- deliberately NOT touched -- see WHAT IS LEFT ALONE.)
+---
+--- WHY THIS IS NOT JUST ANOTHER 200-UNIT WALK, and this is the whole lever.
+--- The other five hero points are FIRST-MATCH loops: a candidate that fails
+--- hands the branch to the next one.  This one is a MIN-SEARCH.  It keeps the
+--- single lowest-health enemy in the +200 ring and bids on HIM -- so an
+--- out-of-range winner does not merely ADD a walk, it DISPLACES every in-range
+--- candidate the same loop already certified legal.  Electing the far weak
+--- enemy IS the decision not to cast on the near one, and no later firing point
+--- picks the near one up (see NO RELOCATION).  What the engine is then handed is
+--- `bot:ActionQueue_UseAbilityOnEntity( abilityW, castWTarget )`, and on an
+--- out-of-range target that order is a MOVE order first: a melee Axe walks the
+--- gap, toward whichever enemy is closest to dying -- which in a teamfight is
+--- the backline he did not decide to dive.  Same family as `lionrreach`
+--- (GH #617) / `wkqlane` (GH #621) / `cmlaneband` (GH #630) / `zusjumpland`
+--- (GH #634), and NOT the same defect: those four each widen ONE bid.  This one
+--- is a selection rule whose search set is wider than its own reach, so the
+--- error it makes is a swap, not only a stretch.
+---
+--- ARMED: a candidate must be inside `nCastRange`.  That bound is not invented
+--- here -- it is this function's OWN gate: three firing points spell it
+--- `J.IsInRange( ..., nCastRange )` and three more read it off
+--- nInRangeEnemyList.  nCastRange is PASSED IN rather than re-read, so the
+--- aether-lens term (X.SkillsComplement sets aetherRange = 225 on
+--- item_aether_lens, and both of this file's buy lists carry the item) composes
+--- exactly as the other six points see it.
+---
+--- DIRECTION BY CONSTRUCTION, not by today's data.  The armed candidate set is
+--- a strict SUBSET of the shipped one and the branch takes a MINIMUM over it:
+---   * shipped elects nobody           => armed elects nobody;
+---   * shipped's winner is in range    => he is in the armed subset and is
+---                                        still its minimum => armed elects the
+---                                        SAME hero, byte for byte;
+---   * shipped's winner is out of range => armed elects the weakest REACHABLE
+---                                        candidate, or nobody.
+--- So arming can never add a cast, and can never move one onto a target FURTHER
+--- away.  A negative wave read is attributable to "those approaches were worth
+--- taking"; it can never mean the lever invented a cast.
+---
+--- NO RELOCATION, in closed form rather than by inspection -- the `lionrreach`
+--- trap, answered.  If the armed subset is empty then NO enemy inside
+--- nCastRange passed {J.IsValid, X.axe_IsBattleHungerFresh,
+--- J.CanCastOnNonMagicImmune, J.CanCastOnTargetAdvanced}.  The two
+--- hero-targeting firing points BELOW this one (lane harass, retreat) iterate
+--- nInRangeEnemyList and apply that same four-term filter plus extra conjuncts
+--- of their own, so neither can fire on a hero either.  A refused frame is
+--- therefore NO HERO CAST, not a cast that moved.  The only bid still reachable
+--- below is the jungle pick, whose target is a neutral creep -- a different unit
+--- class, not the displaced hero.  Section 5.4 of
+--- tests/test_axe_battle_hunger_fight_reach.lua pins that pick UNBOUNDED so a
+--- later round cannot read this file as having fixed it.
+---
+--- WHAT IS DELIBERATELY LEFT ALONE.  One conjunct at ONE site.
+---   * The +200 search ring stays.  This lever filters the ring; it does not
+---     shrink it.  A future round that wants to argue the ring itself should say
+---     so and own it.
+---   * The jungle pick's unbounded `nCastRange + 100` neutral read stays: its
+---     target is a CREEP, its premise is J.IsFarming, and a walk toward a camp
+---     shares none of this branch's cost story.  Section 5 asserts it is still
+---     unbounded so a later round cannot read this file as having fixed it.
+---   * `axebhrecast` and `axebhpure` are untouched.  This conjunct sits BESIDE
+---     X.axe_IsBattleHungerFresh in the same `if`, each carrying its own id, and
+---     the two ids are NEVER conjoined inside one predicate -- that is the
+---     pullcad trap, and it is mutation M9 of tools/agent/mutstand_axebhreach.sh.
+---     Composition is fine and is what independent conjuncts are for; a
+---     dependency written as a code conjunction is not.
+---
+--- WHAT IS NOT KNOWN, stated precisely because it is NOT "the domain is empty".
+--- The domain is UNSIZED, and the corpus cannot size it, because the BRANCH
+--- PREMISE and the BAND never co-occur offline.  J.IsInTeamFight( bot, 1200 )
+--- wants two nearby allies, and on every one of the 6 corpus frames that puts an
+--- enemy hero in the band Axe has at most one; the premise itself holds on 6
+--- OTHER frames, and the intersection is ZERO.  Section 1 counts all of that
+--- rather than narrating it.  So section 3 drives the ELECTION on the real frame
+--- with the premise injected (the geometry, the health, the ranks and the 600
+--- cast range are real and untouched), and section 4 drives X.SkillsComplement
+--- END TO END with nothing injected but the cooldown on the 6 premise-real
+--- frames: the branch really fires on 4 of them, on all 4 the elected enemy is
+--- already inside nCastRange, and arming changes the action on none of the 6.
+--- That pair is what separates "inert where it should be" from DEAD WIRING; it
+--- is NOT a domain size.  Size it on a wave: iterations/queue.json `hero-50`.
+--- Do NOT promote on the (c) argument alone.
+function X.axe_IsHungerFightTargetInReach( hTarget, nCastRange )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'axebhreach' ) ) then return true end
+
+	return J.IsInRange( bot, hTarget, nCastRange )
+
+end
+
+
 function X.ConsiderW()
 
 
@@ -1010,6 +1121,7 @@ function X.ConsiderW()
 				and X.axe_IsBattleHungerFresh( npcEnemy )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
 				and J.CanCastOnTargetAdvanced( npcEnemy )
+				and X.axe_IsHungerFightTargetInReach( npcEnemy, nCastRange )
 			then
 				local npcEnemyHealth = npcEnemy:GetHealth()
 				if ( npcEnemyHealth < npcWeakestEnemyHealth )

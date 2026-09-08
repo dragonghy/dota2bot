@@ -2218,6 +2218,19 @@
         "owed_row": "hero_domain_scan_2_30_31",
         "deliverable": "iterations/reports/replay-check/domain_scan_hero_2_30_31.md"
       }
+    },
+    {
+      "id": "hero-50",
+      "stream": "hero",
+      "bundle": "axebhreach (turbo-only soak candidate, NOT armed -- P4.2 冻结期内本条不请求入集) -- GH #642",
+      "seeds": [],
+      "priority": 3,
+      "question": "**零 EC2 归档只读扫描,与 hero-2/30..49 同形,可并进同一次遍历。** 给 `axebhreach` 量域(`bots/BotLib/hero_axe.lua` `X.axe_IsHungerFightTargetInReach`)。**背景**:`X.ConsiderW`(Battle Hunger)有八个落单点,六个把目标绑在 `nCastRange` 上;**团战**那个是唯一一个遍历 `nInBonusEnemyList`(`nCastRange + 200`)且一个距离项都没有的**英雄**落单点,而且它不是首次命中循环,是**最小值搜索** —— 它只保留环里血最低的那一个,所以环外的赢家会**把射程内的合法候选挤掉**(闭式:下面的对线/撤退落单点读 `nInRangeEnemyList` 并施加同一组四条过滤,接不住被挤掉的那个)。出货把目标交给 `bot:ActionQueue_UseAbilityOnEntity`,射程外 ⇒ 先走路。**要四列读数,分母一律带上(Axe 局数 / Axe 帧数)**:(1) **团战落单点开火了几次**(出货腿真的 `return HIGH, npcWeakestEnemy, 'W-团战…'` 的瞬间数);(2) 其中 **`GetUnitToUnitDistance(bot, target) > nCastRange` 的占比** —— 这一列就是本 lever 的域,**按超出量分桶**(0-25 / 25-75 / 75-150 / >150u,**别只报均值**,铁律 4(ii));(3) ⭐ **本请求真正独有的一列,也是「交换 vs 拉长」那句话的证据**:域内那些帧上,**`nInRangeEnemyList` 里有没有另一个通过同样四条过滤(`J.IsValid` / `X.axe_IsBattleHungerFresh` / `J.CanCastOnNonMagicImmune` / `J.CanCastOnTargetAdvanced`)的敌人** —— 有,就是一次**被挤掉的合法施法**(本 lever 把它换回来);没有,就只是一次**被拒的走位**(本 lever 直接省掉)。**两种要分开计数**,它们的 (c) 论证不一样。(4) 域内 Axe 在随后 3s 里 (a) 位移了多远、(b) 死了几次(Axe 是近战先手,团战里朝「最快要死的那个敌人」走通常就是朝后排走)。",
+      "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「团战落单点开火 + 赢家在 `nCastRange` 外 + 同一帧 `nInRangeEnemyList` 里另有一个通过四条过滤的敌人」那一帧,好让本组用 `make_fixture.py` 把它钉成 fixture(**现在语料里没有这样的帧,而且不是巧合**:`tests/test_axe_battle_hunger_fight_reach.lua` §1 断言分支前提与 band 在 115 帧语料里**交集为 0**)。⚠️ **执行前必读两件事,否则这条腿会读错**:(甲) **分支前提是 `J.IsInTeamFight( bot, 1200 )`**,即 1200 内 ≥2 个处于 `BOT_MODE_ATTACK` 的友军 —— 用真实 bot mode 统计,**不要**用「1200 内有 2 个友军」代替(离线 mock 正是这么退化的,方向**偏宽**,见该文件 §0.3 限度 2);(乙) `nCastRange = abilityW:GetCastRange() + aetherRange`,**阶梯是 600/700/800/900 且 aether lens 加 225** —— 用 rank 和背包**逐帧算**,别用常数。**预登记的判读方向**:若 (1) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在 ——「这个落单点会对射程外的目标出价」是**闭式的源码事实**,§2 钉住了它,§3 在真实帧上给了 600 / 641.1 / 464.0 三个数;若 (2) 的出环占比很低,说明团战赢家基本都在射程内(§4 在 4 个真实端到端帧上已经是这个读数),下一棒是**退集**而不是判负;若 (3)「被挤掉」那一列可观,条件 (c) 就已到手,可在 P4.2 解冻后提入集。",
+      "requested_by": "hero 2026-09-08T20:2xZ",
+      "status": "open",
+      "result": null,
+      "director": null
     }
   ],
   "done": [
