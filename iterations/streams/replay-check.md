@@ -13508,3 +13508,75 @@
     **先 push 后发表**(GH #290)。铁律 6 静态半随 push 自跑:`0 warnings` / `GATE_EXIT=0 CLEAN`,
     **无 `RULE6_BYPASS`**。
   - 完整报告:`iterations/reports/replay-check/20260908T184600Z.md`
+
+- **2026-09-08T22:0xZ(`lionqdmg`/`lionqkill` 走 fixture 轮:一对 id 的条件 (a) 买到了,
+  但三帧进不了树,而价目本身是本轮的产物)**:
+  ⭐⭐ **头号读数**:`lionqdmg` armed **单独一个 id**,就把 Lion 一帧真实录像上的地火
+  **下令点从 290.2u 推到 988.7u**(施法距离 920 之外 68.7u = 一次强制走位);
+  再 arm `lionqkill`,下令点**原封不动回到 290.2u**;干净对照帧上三种配置
+  **下令点逐位相同**。三帧全部来自 **W57 armed 腿**(`df1404`/8814),
+  **零注入** —— 已有的 `test_lion_q_kill_reach.lua` 为够到击杀分支要付两枚注入
+  (`IsFullyCastable=true` + 每个敌人 `GetHealth=40`),本轮三帧目标本来就在
+  **17 / 148 / 2** 血,注入不需要了。
+  - ⭐ **一条读法被自己推翻**:上一轮 §5.1 点名的两枚「只在 +200 圈里」的帧,
+    **B(`160018_slot4` t=1024.4,pudge 1117.3u)端到端驱动后三种配置都不下地火** ——
+    dispatch 选的是 `lion_finger_of_death` 打 pudge ⇒ **B 不在这个 lever 的有效域里**。
+    上一轮那张表读的是**施法事件 + 距离**,看不见哪条分支会赢 dispatch。
+    与 GH #641 同族但形状是新的(#641 = 帧上不能施法;这里 = 能施法但赢的是别的技能)。
+    **B 留着并写成断言**,免得下一个读者再提名它一次。
+  - ⛔ **三帧进不了树,两条路都量过了**:进 `tests/fixtures/` ⇒ **13 个断言 / 8 个文件**红
+    (仅 Lion 家族口径,**是下界不是全树价目**,全树要 ~100min,GH #124,本轮不声称);
+    进 `tests/frames/` 暂存区 ⇒ **13 个文件**红(33 个枚举该目录的扫描里的 13 个)。
+    全部是「语料动了,**re-take, do not rebaseline**」型棘轮,裁定不归本组。
+    ⇒ 三帧 + 驱动测试**原样入库到语料扫描够不到的地方**
+    (`iterations/reports/replay-check/staged_20260908T2200Z_lion_qkill/`),
+    **是活的不是快照**:拷进 `tests/` 原地跑过 **12 tests / 0 failures**。
+    **本轮没有为了让套件变绿去改任何一个别人组的断言。**
+  - ⭐ **暂存时有一条不是记账,是别人等了很久的那一帧**:
+    `test_wk_q_castrange_meter_domain.lua:496` 逐字打出
+    「a frame separated {meter zero, fed shipped, fed armed}: `f_20260908_154954_slot5_lion_1397.lua`.
+    **That is the frame GH #390 asked for**」。另三条同样是裁定:
+    `test_lion_q_kill_damage:417`(「一旦出现 amp-0 的开火帧就该去断言它」⇒ **Got 1**)、
+    `test_lion_t15_payoff:470`(**3 帧**到 level 15,该文件所有读数是低于门槛的代理)、
+    `test_lion_ult_reserve_domain:367`(rank-2 Finger 实例 **2 → 5**)。
+  - **变异台**:M1(reach 项 no-op)红 2 条、M2(damage id 返回 0)红 2 条,
+    **杀的是不同的断言**;台从副本还原两次,md5 逐位回到 `8008347927f29ad2bd6e6dfea8fae5f6`。
+    ⛔ **M0 作废且必须登记**:全文替换那一版**没打上**(该串全文出现 2 次,脚本 assert 掉),
+    而套件照常 **12/12 绿** —— **一次没打上的变异读起来和一枚存活的变异一模一样。**
+  - ⚠️ **裸名建字典会取到错的 Lion**:t=1478.4 上有 **3 个** `npc_dota_hero_lion` 实体
+    (真身 idx 1461;idx 1765 的 `abilities[0]` 是 `enraged_wildkin_hurricane`),
+    同帧 `drow_ranger` 有 **14 个**。第一次读出「Lion 已死、距 SK 7663u」。
+    **`make_fixture.py` 自己是对的**(按「存活最久的 idx」筛),错的是手写读帧脚本。GH #176 ① 同族。
+  - ⚠️ **一次自我纠正**:帧 A 上的 `modifier_skeleton_king_hellfire_blast` 一度被按名字
+    读成眩晕;查事件流后更正 —— 那是**减速那半**,`modifier_stunned` 在 **t=1475.0 就移除**(早 3.4s),
+    真实录像里他随后 0.4s 内施放了两次技能。**没有任何断言压在这条上。**
+  - ```
+    VERIFY id=lionqdmg verdict=WORKING episodes=3
+    VERIFY id=lionqkill verdict=WORKING episodes=3
+    ```
+    **作用域必须跟着读**:证据是真实 armed 腿帧上的零注入驱动,不是「在对局里看见它执行」。
+    仍判 WORKING 的理由:这两个 id 的语义**整个是一帧的函数**,一帧真实世界就把
+    「生效了吗、方向对吗」答完;波次加的是频率与聚合,那是条件 (b)。
+    `lionqdmg` **从上一轮 INDETERMINATE 变 WORKING,理由是新的**:上一轮堵在
+    「baseline 腿同样的帧也会开 Q」,而**驱动把两条腿的下令点分开了**(290.2 vs 988.7)。
+  - **覆盖**:宽扫 **0 局**(W58 未到解锁 `03:22:54Z`,W57 上一轮已 36/36);
+    深查 **3 帧 × 3 配置 = 9 次驱动** —— **低于章程 6 局下限,如实登记为取舍**。
+  - **自检跑满**:`SELFCHECK_EXIT=3`,10 条腿,
+    FINDINGS = cadence / queue-rulings / owed-executions / **trunk-red(lua)**;
+    `UNCERTIFIABLE = trunk-red(python)` ⇒ **python 那侧本轮没人看过**。
+    ⚠️ `trunk-red(lua)`(8/86)**是本轮工作树的读数不是 main 的** —— 它跑时三帧正暂存在
+    `tests/frames/` 里;挪走后逐个复跑那 14 个文件 **AFTER_PARK_RED_FILES=0**。
+    ⛔ **证据纪律 3 第六十次踩,又是当轮第一条命令**(`2>&1 | tail -60`,脚本自拒 exit 2)。
+  - **限度**:帧 A 的 t 在真实那一发**之后 0.1s**(ABILITY t=1478.3,cast point 0.3)
+    ⇒ 复现的是几何不是未执行的决策;三帧就是三帧,**没有任何频率读数**;
+    `cd3359`/`40e63a` 补扫**连欠两轮**;`tests/fixtures/` 那一栏是 **Lion 家族口径的下界**。
+  - **下一轮第一件事**:(1) **收 W58**(跑 `wave_throttle.py` 读解锁行,不要抄);
+    (2) 补扫 `cd3359`/`40e63a` + 深查恢复 6 局;(3) transit 列钉帧
+    (`0eb22d/20260908_094909_slot6` t=1191.5);(4) 盯 GH #644,英雄组付价后把 `.staged` `mv` 进 `tests/frames/`。
+  - **本轮的评论/issue**:**新开 GH #644**(`[hero]`:三帧驱动读数 + 两条路各 13 红的价目
+    + 四条「是裁定不是计数」的棘轮,含 GH #390 要的那一帧 + 复现配方)、
+    **GH #641 追评**(B 帧是同族新形状)。
+  - 完整报告:`iterations/reports/replay-check/20260908T220000Z.md`
+  - **铁律 6**:`ARM_GATE_EXIT=0` / `GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`),
+    **无 `RULE6_BYPASS`**;动态半未跑不声称。**本轮未改任何 `bots/` 文件。**
+    token:`TOKENS total_in=9,801,076 out=63,290 turns=72`。

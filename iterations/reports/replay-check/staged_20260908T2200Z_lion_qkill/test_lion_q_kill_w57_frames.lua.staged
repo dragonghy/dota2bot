@@ -1,0 +1,348 @@
+-- Three REAL W57 frames driven through the `lionqdmg` / `lionqkill` pair.
+--
+-- =========================================================================
+-- §0  WHY THIS FILE EXISTS, NEXT TO tests/test_lion_q_kill_reach.lua
+--
+-- That file already drives the reach term, but it pays TWO DECLARED INJECTIONS
+-- to get there (its own limit 1): `IsFullyCastable = true` on the handle and
+-- `GetHealth = 40` on every nearby enemy, because on its single corpus frame
+-- the kill branch cannot fire on the health the replay actually recorded.  An
+-- injected 40 hp is a world nobody observed, so "the branch fires" was, until
+-- now, a statement about the injection.
+--
+-- These three frames are from the ARMED leg of W57 run
+-- spot_20260908_152203_1_43c6da3c..._df1404 (seed 8814) -- the wave in which
+-- `lionqdmg` was itself armed -- and they carry targets at 17, 148 and 2 hp on
+-- the replay's own numbers.  Nothing below injects health, castability, or
+-- anything else: `rf.load` lays the frame down and X.SkillsComplement is driven
+-- as shipped.
+--
+-- The frames (replay-check 2026-09-08T18:46Z §5.1 nominated the first two as
+-- the "+200-ring" sightings and the third as the clean in-range control):
+--
+--   A  20260908_154932_slot3 @ t=1478.4   skeleton_king  d = 988.7   hp 17
+--   B  20260908_160018_slot4 @ t=1024.4   pudge          d = 1117.3  hp 148
+--   C  20260908_154954_slot5 @ t=1397.4   skeleton_king  d = 297.3   hp 2
+--
+-- X.ConsiderQ's own reach number on all three is
+--   nCastRange = GetCastRange() 650 + aetherRange 250 + 20 = 920,
+-- and the 击杀 loop iterates `nCastRange + 200` = 1120.  So A (988.7) and
+-- B (1117.3) are in the bonus ring and OUT of cast range; C (297.3) is in both.
+-- §1 asserts both halves of that number off the frame rather than trusting it.
+--
+-- §0.1  WHAT THE DRIVE ACTUALLY SHOWED, INCLUDING THE PART THAT CONTRADICTS
+--       THE ROUND THAT NOMINATED THE FRAMES
+--
+--   A  gate off        -> Earth Spike ordered at 290.2u   (an in-range branch)
+--      lionqdmg        -> Earth Spike ordered at 988.7u   (the kill loop wins)
+--      + lionqkill     -> Earth Spike ordered at 290.2u   (reach term refuses)
+--   B  all three configs -> NO Earth Spike order at all; the dispatch orders
+--      lion_finger_of_death on pudge instead, in every config.
+--   C  all three configs -> Earth Spike ordered at 297.3u, unmoved.
+--
+-- A is the whole argument for the pair, bought without an injection: arming the
+-- damage id ALONE moves the ordered cast point 68.7 units beyond the range the
+-- ability can be cast at, which is a MOVE order first (§0 of the reach test),
+-- and arming the reach term with it puts the order back exactly where the
+-- shipped tree had it.  C is the false-positive control: the reach term does
+-- not touch an in-range cast.
+--
+-- B is a CORRECTION to the reading that nominated it.  That reading came from
+-- cast events plus a distance, which cannot see which branch would have won the
+-- dispatch; driven end to end, Earth Spike is never the order on that frame at
+-- any arming, so B is outside this lever's effective domain and must not be
+-- counted as a "+200-ring sighting" of it.  Same family as GH #641: the domain
+-- tool counts frames the branch does not own.  §4 pins B in that role -- it is
+-- kept precisely so the next reader does not re-nominate it.
+--
+-- §0.2  LIMITS (each has an assertion in §5)
+--   1. Frame A's t sits 0.1s AFTER the real `lion_impale` order (the replay's
+--      ABILITY event is at t=1478.3, against a 0.3s cast point), so the frame
+--      reproduces the GEOMETRY of that instant, not an un-acted decision.  What
+--      §2/§3 prove is that the armed lever moves the bid on this world state.
+--      They do NOT prove the bot walked in the real game at 1478.4.
+--   2. Three frames are three frames.  Nothing here sizes how often a lethal
+--      target sits in the band; that needs a wave.
+--   3. The mock does not model a cast point in progress, and Lion carries
+--      `modifier_skeleton_king_hellfire_blast` (the SLOW half of Hellfire
+--      Blast; his `modifier_stunned` was removed at t=1475.0, 3.4s earlier) on
+--      frame A.  He was castable there -- the replay has him casting twice in
+--      the following 0.4s -- but no assertion below rests on that.
+-- =========================================================================
+
+package.path = 'tests/?.lua;' .. package.path
+local rf = require('mock.replay_fixture')
+
+local UNIT   = 'npc_dota_hero_lion'
+local IMPALE = 'lion_impale'
+local DMGID  = 'lionqdmg'
+local CAND   = 'lionqkill'
+
+local FRAME_A = 'iterations/reports/replay-check/staged_20260908T2200Z_lion_qkill/f_20260908_154932_slot3_lion_1478.lua'
+local FRAME_B = 'iterations/reports/replay-check/staged_20260908T2200Z_lion_qkill/f_20260908_160018_slot4_lion_1024.lua'
+local FRAME_C = 'iterations/reports/replay-check/staged_20260908T2200Z_lion_qkill/f_20260908_154954_slot5_lion_1397.lua'
+
+-- X.ConsiderQ's arithmetic, ASSERTED off the frame in §1, never trusted here.
+local KV_CAST_RANGE = 650
+local AETHER        = 250
+local SLACK         = 20
+local RING          = KV_CAST_RANGE + AETHER + SLACK    -- 920
+local BONUS         = 200                               -- the 击杀 loop's extra
+
+local EPS = 0.1
+
+local tests = {}
+
+--- Load a frame with Lion as the subject and arm exactly the ids in `tOn`.
+local function frame(path, tOn)
+    local J, bot = rf.load(path, UNIT)
+    J.IsSoakCandidate = function(id) return tOn[id] == true end
+    J.IsModeTurbo = function() return true end
+    local X = rf.load_hero('lion')
+    return J, bot, X
+end
+
+--- Drive the REAL dispatch with NO injections and report what it ordered.
+--- Returns: distance of the Earth Spike cast point (nil if none was ordered),
+--- the list of every ability order it made, and the handles.
+local function drive(path, tOn)
+    local J, bot, X = frame(path, tOn)
+    local log = rf.record_actions(bot)
+    X.SkillsComplement()
+    local nDist, tOrders = nil, {}
+    for _, a in ipairs(log) do
+        if a.fn:match('UseAbility') then
+            local h = a.args[1]
+            local sName = (h ~= nil and h.GetName ~= nil) and h:GetName() or '?'
+            tOrders[#tOrders + 1] = sName
+            if sName == IMPALE and type(a.args[2]) == 'table' and a.args[2].x ~= nil then
+                nDist = GetUnitToLocationDistance(bot, a.args[2])
+            end
+        end
+    end
+    return nDist, tOrders, bot, X, J
+end
+
+local function enemy(bot, sName)
+    for _, e in ipairs(bot:GetNearbyHeroes(2000, true, BOT_MODE_NONE)) do
+        if e:GetUnitName() == sName then return e end
+    end
+    return nil
+end
+
+-- ---------------------------------------------------------------- section 1 --
+-- The three frames are what §0 says they are.  Every number the later sections
+-- lean on is read off the fixture here, so a regenerated fixture that moved
+-- fails HERE with a distance, not silently three sections later.
+
+tests['§1 the ring is 920 and both of its parts are real on all three frames'] = function()
+    for _, path in ipairs({ FRAME_A, FRAME_B, FRAME_C }) do
+        local _, bot = frame(path, {})
+        local hQ = assert(bot:GetAbilityByName(IMPALE), path .. ': no Earth Spike handle')
+        assert(hQ:GetLevel() == 4, path .. ': Earth Spike is rank ' .. hQ:GetLevel() .. ', not 4')
+        assert(hQ:GetCastRange() == KV_CAST_RANGE,
+            path .. ': KV cast range is ' .. hQ:GetCastRange() .. ', not ' .. KV_CAST_RANGE)
+        -- The aether half is an ITEM, not a constant: assert Lion holds it.
+        local bLens = false
+        for _, s in ipairs(bot.__spec and bot.__spec.items or {}) do
+            if s == 'aether_lens' then bLens = true end
+        end
+        if not bLens then
+            local h = bot.FindItemSlot and bot:FindItemSlot('item_aether_lens') or nil
+            bLens = (h ~= nil and h ~= -1)
+        end
+        assert(bLens, path .. ': Lion does not hold an aether lens, so the 250 in '
+            .. 'the ' .. RING .. ' this file asserts is not on this frame')
+    end
+end
+
+tests['§1 A and B sit in the bonus ring and outside cast range; C is inside'] = function()
+    local tCase = {
+        { FRAME_A, 'npc_dota_hero_skeleton_king', 988.7,  17,  false },
+        { FRAME_B, 'npc_dota_hero_pudge',         1117.3, 148, false },
+        { FRAME_C, 'npc_dota_hero_skeleton_king', 297.3,  2,   true  },
+    }
+    for _, c in ipairs(tCase) do
+        local path, sTarget, nWant, nHp, bInRange = c[1], c[2], c[3], c[4], c[5]
+        local _, bot = frame(path, {})
+        local hT = assert(enemy(bot, sTarget), path .. ': ' .. sTarget .. ' not in the frame')
+        local d = GetUnitToUnitDistance(bot, hT)
+        assert(math.abs(d - nWant) < EPS,
+            path .. ': distance is ' .. string.format('%.1f', d) .. ', not ' .. nWant)
+        assert(hT:GetHealth() == nHp,
+            path .. ': ' .. sTarget .. ' has ' .. hT:GetHealth() .. ' hp, not ' .. nHp)
+        assert((d <= RING) == bInRange,
+            path .. ': in-cast-range is ' .. tostring(d <= RING) .. ', expected ' .. tostring(bInRange))
+        assert(d <= RING + BONUS,
+            path .. ': ' .. string.format('%.1f', d) .. ' is outside the ' .. (RING + BONUS)
+                .. ' bonus ring too, so the 击杀 loop never sees this target at all')
+    end
+end
+
+-- ---------------------------------------------------------------- section 2 --
+-- The GH #175 ceiling, driven on real health instead of quoted.  This is the
+-- half test_lion_q_kill_reach.lua has to inject its way past.
+
+tests['§2 gate off, the kill damage is 0 and nothing on these frames is lethal'] = function()
+    local tCase = {
+        { FRAME_A, 'npc_dota_hero_skeleton_king' },
+        { FRAME_B, 'npc_dota_hero_pudge' },
+        { FRAME_C, 'npc_dota_hero_skeleton_king' },
+    }
+    for _, c in ipairs(tCase) do
+        local J, bot, X = frame(c[1], {})
+        local hQ = bot:GetAbilityByName(IMPALE)
+        assert(X.GetImpaleKillDamage(hQ) == 0,
+            c[1] .. ': shipped kill damage is ' .. tostring(X.GetImpaleKillDamage(hQ))
+                .. ', not the hard 0 of GH #175 -- the premise of this whole file moved')
+        local hT = assert(enemy(bot, c[2]))
+        assert(J.WillMagicKillTarget(bot, hT, X.GetImpaleKillDamage(hQ), 5.0) == false,
+            c[1] .. ': the shipped read is lethal against ' .. hT:GetHealth() .. ' hp')
+    end
+    -- The sharpest form of it: frame C's target is on TWO hit points, and the
+    -- shipped read is still not lethal against it.
+    local J, bot, X = frame(FRAME_C, {})
+    local hQ = bot:GetAbilityByName(IMPALE)
+    local hT = enemy(bot, 'npc_dota_hero_skeleton_king')
+    assert(hT:GetHealth() == 2, 'frame C target is on ' .. hT:GetHealth() .. ' hp, not 2')
+    assert(J.WillMagicKillTarget(bot, hT, X.GetImpaleKillDamage(hQ), 5.0) == false,
+        'the shipped read finally kills something -- on a 2 hp target, which is the '
+            .. 'floor; if this passes, GH #175\'s ceiling is not a ceiling')
+end
+
+tests['§2 armed, the kill damage is the rank-4 KV and all three become lethal'] = function()
+    local tCase = {
+        { FRAME_A, 'npc_dota_hero_skeleton_king' },
+        { FRAME_B, 'npc_dota_hero_pudge' },
+        { FRAME_C, 'npc_dota_hero_skeleton_king' },
+    }
+    for _, c in ipairs(tCase) do
+        local J, bot, X = frame(c[1], { [DMGID] = true })
+        local hQ = bot:GetAbilityByName(IMPALE)
+        local nDmg = X.GetImpaleKillDamage(hQ)
+        assert(nDmg == 300, c[1] .. ': armed kill damage is ' .. tostring(nDmg)
+            .. ', not the rank-4 KV 300')
+        local hT = assert(enemy(bot, c[2]))
+        assert(J.WillMagicKillTarget(bot, hT, nDmg, 5.0) == true,
+            c[1] .. ': 300 magic is still not lethal against ' .. hT:GetHealth() .. ' hp')
+    end
+end
+
+-- ---------------------------------------------------------------- section 3 --
+-- The pair, end to end, on frame A.  No injections.
+
+tests['§3 frame A: the damage id ALONE walks the cast point out of range'] = function()
+    local dOff = drive(FRAME_A, {})
+    local dDmg = drive(FRAME_A, { [DMGID] = true })
+    assert(dOff ~= nil, 'frame A orders no Earth Spike with the gate off')
+    assert(dDmg ~= nil, 'frame A orders no Earth Spike with ' .. DMGID .. ' armed')
+    assert(dOff <= RING, 'the shipped order is already out of range: ' .. string.format('%.1f', dOff))
+    assert(dDmg > RING, DMGID .. ' armed still orders inside cast range ('
+        .. string.format('%.1f', dDmg) .. ') -- the widening this file measures is gone')
+    assert(math.abs(dDmg - 988.7) < EPS, 'armed order is at ' .. string.format('%.1f', dDmg)
+        .. ', not the skeleton_king at 988.7')
+    assert(math.abs(dOff - 290.2) < EPS, 'shipped order is at ' .. string.format('%.1f', dOff)
+        .. ', not 290.2')
+    -- The cost, in the unit that matters: how far Lion is ordered to walk.
+    assert(dDmg - RING > 60 and dDmg - RING < 80,
+        'the forced walk is ' .. string.format('%.1f', dDmg - RING) .. 'u, not the ~68.7 measured')
+end
+
+tests['§3 frame A: adding the reach term puts the order back where shipped had it'] = function()
+    local dOff  = drive(FRAME_A, {})
+    local dBoth = drive(FRAME_A, { [DMGID] = true, [CAND] = true })
+    assert(dBoth ~= nil, 'the pair orders no Earth Spike at all -- the reach term did not '
+        .. 'refuse a bid, it removed the cast')
+    assert(math.abs(dBoth - dOff) < EPS, 'with the pair armed the order is at '
+        .. string.format('%.1f', dBoth) .. ', shipped is at ' .. string.format('%.1f', dOff))
+    assert(dBoth <= RING)
+end
+
+tests['§3 the reach predicate itself answers the three frames as the geometry says'] = function()
+    local tCase = {
+        { FRAME_A, 'npc_dota_hero_skeleton_king', false },
+        { FRAME_B, 'npc_dota_hero_pudge',         false },
+        { FRAME_C, 'npc_dota_hero_skeleton_king', true  },
+    }
+    for _, c in ipairs(tCase) do
+        local _, bot, X = frame(c[1], { [DMGID] = true, [CAND] = true })
+        local hT = assert(enemy(bot, c[2]))
+        assert(X.lion_IsImpaleKillTargetInReach(bot, hT, RING, true) == c[3],
+            c[1] .. ': reach predicate answered ' ..
+            tostring(X.lion_IsImpaleKillTargetInReach(bot, hT, RING, true)))
+        -- One-way by construction: it can only turn a true into a false.
+        assert(X.lion_IsImpaleKillTargetInReach(bot, hT, RING, false) == false,
+            c[1] .. ': the predicate manufactured a lethal the caller did not hand it')
+    end
+end
+
+-- ---------------------------------------------------------------- section 4 --
+-- Frame C is the false-positive control, and frame B is the correction.
+
+tests['§4 frame C: an in-range cast is byte-identical under all three armings'] = function()
+    local dOff  = drive(FRAME_C, {})
+    local dDmg  = drive(FRAME_C, { [DMGID] = true })
+    local dBoth = drive(FRAME_C, { [DMGID] = true, [CAND] = true })
+    assert(dOff ~= nil and dDmg ~= nil and dBoth ~= nil,
+        'frame C stopped ordering Earth Spike; it is no longer a control')
+    assert(math.abs(dOff - 297.3) < EPS, 'frame C shipped order moved to ' .. string.format('%.1f', dOff))
+    assert(math.abs(dDmg - dOff) < EPS and math.abs(dBoth - dOff) < EPS,
+        'frame C: off=' .. string.format('%.1f', dOff) .. ' dmg=' .. string.format('%.1f', dDmg)
+            .. ' both=' .. string.format('%.1f', dBoth) .. ' -- the pair moved an IN-RANGE cast')
+end
+
+tests['§4 frame B is NOT in the domain: Earth Spike is never the order there'] = function()
+    for _, tOn in ipairs({ {}, { [DMGID] = true }, { [DMGID] = true, [CAND] = true } }) do
+        local dQ, tOrders = drive(FRAME_B, tOn)
+        assert(dQ == nil, 'frame B ordered Earth Spike at ' .. tostring(dQ)
+            .. ' -- it is in the domain after all, and §0.1 B is stale')
+        local bFinger = false
+        for _, s in ipairs(tOrders) do if s == 'lion_finger_of_death' then bFinger = true end end
+        assert(bFinger, 'frame B no longer orders Finger of Death either; the branch that '
+            .. 'outranks Earth Spike here has changed and B needs re-reading')
+    end
+end
+
+-- ---------------------------------------------------------------- section 5 --
+-- The limits of §0.2, each one an assertion rather than a sentence.
+
+tests['§5 limit 1: frame A is 0.1s after the replay\'s own Earth Spike order'] = function()
+    local fh = assert(io.open(FRAME_A, 'r'))
+    local body = fh:read('*a')
+    fh:close()
+    assert(body:find('t=1478.4', 1, true),
+        'frame A is no longer the t=1478.4 instant, so limit 1 is describing another frame')
+    -- The 0.1s is a fact about the REPLAY, not about the fixture, so all this
+    -- file can pin is that the claim is still attached to the right instant and
+    -- that the fixture has not been silently regenerated at a different t.
+    assert(body:find('20260908_154932_slot3', 1, true))
+end
+
+tests['§5 limit 3: Lion is slowed on frame A and NOT stunned'] = function()
+    local fh = assert(io.open(FRAME_A, 'r'))
+    local body = fh:read('*a')
+    fh:close()
+    local iLion = assert(body:find("name = 'npc_dota_hero_lion'", 1, true))
+    local sBlock = body:sub(iLion, iLion + 4000)
+    local iEnd = sBlock:find('}, },', 1, true) or #sBlock
+    sBlock = sBlock:sub(1, iEnd)
+    assert(sBlock:find('modifier_skeleton_king_hellfire_blast', 1, true),
+        'frame A no longer carries the Hellfire Blast slow on Lion')
+    assert(not sBlock:find('modifier_stunned', 1, true),
+        'frame A now carries modifier_stunned on Lion -- §0.2 limit 3 says it does not, '
+            .. 'and every drive above would be reading an uncastable frame')
+end
+
+tests['§5 limit 2: the corpus is three frames, and all three are live Lion'] = function()
+    local n = 0
+    for _, path in ipairs({ FRAME_A, FRAME_B, FRAME_C }) do
+        local ok, chunk = pcall(dofile, path)
+        assert(ok and type(chunk) == 'table', path .. ' does not load')
+        for _, u in ipairs(chunk.units or {}) do
+            if u.name == UNIT and u.alive ~= false then n = n + 1 end
+        end
+    end
+    assert(n == 3, 'live-Lion frames in this file\'s corpus: ' .. n .. ' (was 3)')
+end
+
+return tests
