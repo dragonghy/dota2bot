@@ -7205,5 +7205,14 @@
     "sibling_ratchet": "§5 钉两条本文件**没有**修的东西,好让后来人发现而不是继承:(i) TP 打断**至今仍然无界**(它仍读 bonus 环、区间里没有任何 `IsInRange`/`GetUnitToUnitDistance`)—— 谁要给它加距离项,**先退休 §0.3 限度 3**,不要改那条断言;(ii) 那条读 `nEnemysHeroesInView[1]`(**1600** 环,比本 id 关掉的 band 还宽 970 码)的落单点仍在 —— **登记未修**。",
     "value_question_owed": "iterations/queue.json `hero-47`(零 EC2 归档只读扫描,四列读数 + ab/ba 分层 + gap 分桶)。⛔ P4.2 冻结期内**不请求入集**;合法裁定是 FROZEN-HOLD。",
     "gh_issue": "#630(本轮开)"
+  },
+  "text_absent_kind_20260908": {
+    "date": "2026-09-08T13:0xZ",
+    "owner": "director",
+    "issue": "GH #523;裁定全文 iterations/streams/test_set.md §EV;owed 行 text_absent_done_when_kind(本轮退休)",
+    "change": "`tools/agent/pending_rulings.py` 新增 done_when `kind: \"text_absent\"`(字段 `path` + `text`,`text` 可裸串可列表):**文件在 且 这几段字面文本都不在里面** ⇒ DONE;文本还在 ⇒ OWED(点名剩哪几句、几分之几);**文件读不到 ⇒ UNCERTIFIABLE,不是 DONE**;空的/写坏的 needle 集合 ⇒ UNCERTIFIABLE。",
+    "why": "§EV 的通则:凡是「把这句写错的话改掉」形状的裁定,**正面那一半(替换得对不对)不可读,反面那一半(错话还在不在)永远可读**。`outlatch_check1b_reason` 从前者正确地推出 `kind: manual`,**却从来没问过后者** —— 那两句是字面串,这个 kind 会在 07:01Z 当场读 DONE,那一行根本不会被登记成掉棒。",
+    "validation": "`tests/test_pending_rulings.py` **361 → 378 checks / 0 failed**(新增断言全部写在假阳方向);`tools/agent/mutstand_text_absent.sh` **5 CAUGHT / 0 SURVIVED / control_ok=1**、还原逐字节 YES,**五发全部是假阳方向**(错误地读成 DONE):M1 删掉存在性前置 ⇒ 被删掉的产物读 DONE(本 kind 唯一的假阳,§EV 事前点名);M2 读不动的文件读 DONE;M3 空 needle 集合在任何文件上通过;M4 错话还在却读 DONE;M5 只查第一条 needle ⇒ 半截活退休。`tests/test_mutstand_restore_trap.py` 认得新台(trap/ordering/restore 三条 ok);`py_gate` 84 ran / 0 findings / EXIT=0。",
+    "limits": "⚠️ **此刻没有任何一条活着的 owed 行用它** —— 立案案例 `outlatch_check1b_reason` 在这个 kind 存在之前就退休了。**这条限度是登记的,不是用一行发明出来的 registry 行去满足断言**(那正好是 LIMIT 9 的形状)。⚠️ 它分不清「改对了」和「只是换了个说法绕过 needle」;needle 太短会永远读 OWED。⇒ needle 要长到唯一,并且**仍然要把文件读一遍**(LIMIT 11)。⭐ 现场教训:那条「kind 必须穿得过白名单」的断言第一版把不该出现的串写成**字面量**,于是它出现在了它正断言其缺席的那个文件里、当场自己红 —— 这个 kind 的 LIMIT 在它自己的测试里兑现了一次。needle 改成运行时拼出来的。"
   }
 }

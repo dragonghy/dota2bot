@@ -86,7 +86,30 @@ if ! ensure_lua_tool luacheck; then
     verdict 2
 fi
 
-out=$(luacheck "${targets[@]}" --formatter plain 2>&1)
+# `bots/Customize/soak_side.lua` is EXCLUDED BY NAME, and the reason is a race
+# this gate lost on 2026-09-08 (director; GH #229 / GH #243 are the same race in
+# the python censuses, repaired there the same way).  That file is the
+# gitignored, farm-only arming switch: sixteen Lua gate tests and 开工自检
+# create and delete it mid-run.  A `luacheck bots game` that walks the tree
+# while one of them is mid-flight lists the file and then cannot open it, and
+# the gate printed:
+#
+#     bots/Customize/soak_side.lua: I/O error (couldn't read: No such file...)
+#     LUACHECK RED -- iron rule 6 requires 0 warnings on the WORKING TREE.
+#
+# -- a false sentence about the tree, and since GH #213 put this gate in
+# `.githooks/pre-push`, a REFUSED PUSH for a reason that has nothing to do with
+# the diff.  The switch was never corpus (gitignored, farm-written, one table
+# literal, no guards), so excluding it removes the race at its source rather
+# than making it survivable -- `tools/agent/lua_corpus.py`'s repair (1), word
+# for word, in the one tool that never got it.
+# ⚠️ What this does NOT buy: any OTHER file vanishing between the walk and the
+# read still reads RED here.  `lua_corpus.py` bought that half for the censuses
+# (`CorpusVanished` -> exit 2); this gate has not, and until it does, a RED
+# naming an I/O error rather than a warning is a race to re-run, not a finding.
+out=$(luacheck "${targets[@]}" \
+        --exclude-files bots/Customize/soak_side.lua \
+        --formatter plain 2>&1)
 rc=$?
 if [ "$rc" -ne 0 ]; then
     printf '%s\n' "$out" | head -40

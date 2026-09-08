@@ -204,6 +204,18 @@ LIMITS FOR THE OWED LEG (in addition to 1-8 below)
     grade the work: a mentioned id can be mentioned wrongly, pooled with
     another stratum, or answered with the wrong column.  That read-through
     remains the director's, and this limit remains true of it.
+    ⭐ 2026-09-08: `text_absent` (GH #523) narrows it by one more step, in
+    the opposite direction, and the direction is the point.  For a ruling
+    shaped "that sentence is wrong, take it out", the POSITIVE half -- is
+    what replaced it correct -- is unreadable and stays with the director;
+    the NEGATIVE half -- is the wrong sentence still there -- is a literal
+    substring and is always readable.  `outlatch_check1b_reason` derived
+    `kind: manual` from the first half and never asked the second, so a row
+    that was already executed sat OWED and was registered as a dropped
+    baton.  What the kind still does not buy: it cannot tell a sentence
+    that was FIXED from one that was merely reworded past the needle, and a
+    needle short enough to appear elsewhere in the file reads OWED forever.
+    Quote needles long enough to be unique, and read the file through.
 12. **A claim is a say-so, and the tool cannot check it.**  `claimed_by` /
     `claimed_at` (GH #518) buy one thing: an owed row that somebody has
     STARTED reads IN-FLIGHT instead of OWED, so the second session of the
@@ -864,7 +876,7 @@ def _machine_key_status(row, repo=REPO):
         return ("OWED",
                 "no machine check (kind=manual) -- this row is a reminder, not a gate")
     if kind not in ("json_value", "path_exists", "path_absent",
-                    "path_contains_all"):
+                    "path_contains_all", "text_absent"):
         return "UNCERTIFIABLE", "done_when kind %r is not one this tool can read" % (kind,)
     rel = cond.get("path") or ""
     full = os.path.join(repo, rel)
@@ -912,6 +924,57 @@ def _machine_key_status(row, repo=REPO):
         return ("DONE",
                 "%s exists and mentions all %d rideshare id(s) -- mention is "
                 "not correctness; the director still reads it through"
+                % (rel, len(needles)))
+    if kind == "text_absent":
+        # GH #523, director 2026-09-05 (test_set.md §EV), landed 2026-09-08.
+        # The shape it answers: a ruling of the form "that sentence is wrong,
+        # take it out".  `outlatch_check1b_reason` reasoned correctly from
+        # "no assertion can read whether a comment is CORRECT" to
+        # `kind: manual` -- and never asked the easy half, whether the two
+        # wrong sentences are still THERE.  They were literal strings, so the
+        # answer was buyable all along and the row would have read DONE at
+        # 07:01Z on the day it was registered.  General rule, worth stating in
+        # the tool rather than only in the archive: for a "fix this wrong
+        # sentence" ruling the POSITIVE half is unreadable and the NEGATIVE
+        # half always readable.
+        #
+        # Three states, and the asymmetry is the whole design: a file that
+        # cannot be read is UNCERTIFIABLE, never DONE.  Deleting the file
+        # makes every needle absent, so a naive "the text is not in what I
+        # read" would call a vanished artefact executed -- this kind's one
+        # false positive.  "The file is gone" is `path_absent`'s case and it
+        # already has a home; here it is a refusal.
+        needles = cond.get("text")
+        if isinstance(needles, str):
+            needles = [needles]
+        if not needles or not all(isinstance(n, str) and n for n in needles):
+            return ("UNCERTIFIABLE",
+                    "done_when kind text_absent carries no readable `text` "
+                    "list -- an empty needle set is absent from every file, "
+                    "so it would pass on any file at all")
+        if not os.path.exists(full):
+            return ("UNCERTIFIABLE",
+                    "%s does not exist, so the text cannot be read as absent "
+                    "FROM it -- a deleted file is `path_absent`'s case, and "
+                    "reading DONE here is this kind's only false positive"
+                    % (rel,))
+        try:
+            with open(full, encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError as exc:
+            return ("UNCERTIFIABLE",
+                    "%s could not be read (%s)" % (rel, exc))
+        present = [n for n in needles if n in text]
+        if present:
+            return ("OWED",
+                    "%s still contains %d of %d sentence(s) the ruling asked "
+                    "to be gone: %s"
+                    % (rel, len(present), len(needles),
+                       ", ".join(repr(n) for n in present)))
+        return ("DONE",
+                "%s exists and none of the %d sentence(s) the ruling asked to "
+                "be gone are in it -- absence is not correctness of whatever "
+                "replaced them; the director still reads it through"
                 % (rel, len(needles)))
     try:
         with open(full, encoding="utf-8") as fh:

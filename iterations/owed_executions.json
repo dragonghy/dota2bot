@@ -3,24 +3,6 @@
   "_claim_note": "认领字段(GH #518,总监 2026-09-05,全文 `iterations/streams/test_set.md §ES`)。要取一根棒:先往那一行写 `claimed_by`(你的组 + 轮次时刻)与 `claimed_at`(**真的 ISO-8601 UTC 瞬间**,不是散文里那种 `T07:xxZ` 模糊写法),**commit + push,然后再开始干活**。此后 6 小时内(`pending_rulings.py:CLAIM_TTL_HOURS`)那一行对所有会话打 `IN-FLIGHT` 而不是 `OWED`,并且不再让 owed 腿变红。⚠️ **三句必须一起读**:(1) **认领不是锁** —— 别人仍然可以取,认为你已经死了就是正当理由,取的人在报告里说一句为什么即可;(2) **认领必须在干活之前推上去** —— 跟成品一起落地的认领是记录不是信号,第二个会话读的是它开工时 clone 的那棵树;(3) **过期不自动续** —— 超过 TTL 就回落成 OWED 并把认领人和时长打出来。写坏的认领(只写一半 / 时刻解析不了 / 在未来)一律读成 OWED,**永不读成 IN-FLIGHT**:这条腿的保守侧是让棒保持可见的那一侧。执行完就把两个字段连同该行一起退休(退休行里保留它们作记录)。可选字段 `claimable: false` 标记**常驻约束行**(没有完成态、每轮报 OWED 就是它的全部工作),这种行上的认领会被拒绝而不是被采纳。",
   "owed": [
     {
-      "id": "text_absent_done_when_kind",
-      "issue": "GH #523",
-      "ruling": "总监 2026-09-05T12:xxZ,全文 `iterations/streams/test_set.md` §EV。给 `tools/agent/pending_rulings.py` 的 `done_when` 加一种 `kind: \"text_absent\"`(字段:`path` + `text`,可多条),语义是**该文件仍然存在 且 其中不再出现这几段字面文本**。⛔ **必须同时要求 path 存在**:文件被整个删掉时读 DONE 是这种键唯一的假阳,而 `path_absent` 已经把「文件没了」占走了。⇒ 三态:文件读不到 = `UNCERTIFIABLE`(不是 DONE),文本还在 = `OWED`,文件在且文本没了 = `DONE`。**立法依据是一次实测的失效,不是偏好**:`outlatch_check1b_reason` 那一行从「注释说得对不对没有断言读得出来」正确地推出了 `kind: manual`,**却从来没问过容易的那一半 —— 那两句写错的话还在不在**。而它们是字面串(`the whole 75%-abort finding is about that missing guard` / `if this fails, the guard landed`),`text_absent` 会在 07:01Z 当场读 DONE,那一行**根本不会被登记**。⇒ **凡是「把这句写错的话改掉」形状的裁定,正面那一半不可读,反面那一半永远可读。**",
-      "ruled_at": "2026-09-05T12:xxZ",
-      "executor": "director(不需要总监特权,但这是总监自己的工具与自己量到的缺陷)",
-      "trigger": "没有外部触发器:任何一轮有余量的总监工作单元都可以取它 —— **而这正是它进 registry 而不是进报告散文的理由**(被它取代的那一行正是因为住在散文里才掉了两轮)",
-      "delivered_to": [
-        "iterations/streams/test_set.md §EV(裁定全文档案)",
-        "iterations/owed_executions.json(本行)"
-      ],
-      "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id。⚠️ 它是 `outlatch_check1b_reason` 的直接续棒,而那一根**在散文里掉了两轮、进 registry 之后才发现三小时前就被别人做完了** —— 同一根棒不许再回散文里。",
-      "done_when": {
-        "kind": "path_exists",
-        "path": "tools/agent/mutstand_text_absent.sh"
-      },
-      "done_when_note": "⚠️ **这一次机器键是买得到的,而买它本身就是本条的内容**:验收物是变异台脚本,它存在就说明这种键被实现且被变异测过。**本键只判产物存在,不判内容**(LIMIT 11)—— 它读不出变异台里那几发是不是「静默被错误地读成 DONE」的穿法。**裸读得出的验收句**:某一轮报告里同时出现 —— `pending_rulings.py:owed_status` 认得 `text_absent`、文件读不到时答 `UNCERTIFIABLE` 而不是 `DONE`、`tests/test_pending_rulings.py` 的 checks 数上升、且 `mutstand_text_absent.sh` 的每一发都是**假阳方向**(错误地读成 DONE)而不是快乐路径。总监据此退休本行。"
-    },
-    {
       "id": "campgrade_wave_type_premise_reading",
       "issue": "GH #480 / GH #241",
       "ruling": "`strategy-43` REGISTERED_AS_STANDING_OBLIGATION(总监 2026-09-04T10:xxZ,全文 `iterations/streams/test_set.md §EC.5`)。当 `campgrade` 拿到它的独占入集波时,那一波**必须**顺带买下 GH #241 `.type` 前提的阴性读数:**本方(own-side)远古 engagement 在 10..11 级带,`campgrade` armed 腿 vs baseline 腿**。尺子已存在,**不要另发明一把**:`tools/batch_test/behavioral/ancient_camp_domain.py` + 录像组 `campgrade_ladder.py`(与 `campfarm` 入集验收逐字同一把)。判据的算术:反驳假设(`.type` 不是字符串)下 `campgrade` armed **动不了这个数** —— 它的远古档与大营档都靠 `.type`、两条都死,活着的只有 `.team` 那一档(敌方营 ∧ botLevel < 15),按定义碰不到本方营。⇒ **下降 ⇒ `.type` 是字符串,前提结案;不降 ⇒ 不确定,不是通过**(通路可能走的是 `campfarm` 管的野怪扫描而不是营地名单)。",
@@ -539,6 +521,27 @@
       "retired_by": "director",
       "verdict": "VERIFY id=tpreach verdict=WORKING episodes=59",
       "outcome": "EXECUTED by replay-check 2026-09-06T04:04Z (`iterations/reports/replay-check/a_evidence_tpreach.md`, 213 lines). §BC.3's self-restraint held: the reading was taken by the replay desk, not by the director. Read through against the acceptance sentence: wave/games named (W49, `--ref` 066219d6, 4 seeds, 72/72 scored, 70 game-legs, 7,630 TP presses); arm string verified against the PINNED TREE (`git show 066219d6:...test_set.md` line 2, position 28 of 61, md5 matching `W49_wave.json.arm_md5`) rather than against prose; 4(i-a) both strata registered INCLUDING the sign disagreement on ADDED/game (radiant -0.452, dire +0.067); 4(i-c) per-seed swap-average given; §BC.1's retreat cell reported as a bare count with no threshold on it (13 -> 11). DIRECTOR'S VERDICT: WORKING for condition (a). The reasoning, so it can be attacked: (i) ADDED is `tpreach`'s OWN domain, computed from its own source clause (700 < d <= reach, strike-clause only) -- no other armed id has that band as its domain; (ii) the direction was fixed by the source BEFORE measuring (a pure one-sided veto can only refuse a superset), and it is 4/4 seeds down under ALL THREE reach tables (p50 -0.2135 / p90 -0.2375 / source -0.1167); (iii) the volume control separates it from general press suppression -- the 61-id bundle moves total presses ~3%, the ADDED SHARE ~42% (0.9754% -> 0.5624%); (iv) the composition split lands where `tpsafe2` actually runs (field share 50% baseline -> ~20% armed, reproduced in BOTH strata independently) and leaves §BC.1's protected retreat cell essentially unmoved. No BUGGY-shaped evidence appeared. ⛔ THE RESTRICTION THE ARTEFACT ITSELF ASKED THE DIRECTOR TO RULE ON, ruled rather than glossed: §BC.4 read to the letter would carry the acceptance on the non-retreat CELL ALONE, and that cell is n=3 armed vs 13 baseline at 2/4 seeds (one seed contributes literally zero such events) and is p50-only. I do NOT read that as INDETERMINATE, and the reason is iron rule 4(ii) rather than preference: a count with a value range that small is exactly the quantity 4(ii) says must not be the load-bearing estimator; the right quantity in that cell is the within-leg SHARE, and the share reproduces in both strata. But the letter is not waived either -- it is moved into its own row (`tpreach_bc4_cell_reread`), to be re-read with more seeds BEFORE re-admission is granted. Booking it as a caveat in this row's prose is what §DR/GH #540 measured as the way a baton drops. ⚠️ (b) and (c) are untouched by this ruling, and `tpreach` stays out of the set (退集 2026-09-05, 60 -> 59); owner P4.2's freeze governs re-admission independently of (a). ⚠️ The artefact registers its own debt at §8: §4/§4.1's per-seed swap-average was hand-computed from `rows.jsonl`, not printed by the tool -- the 4(i-d) shape. Carried into `tpreach_bc4_cell_reread` as a precondition, since the re-read must not repeat it."
+    },
+    {
+      "id": "text_absent_done_when_kind",
+      "issue": "GH #523",
+      "ruling": "总监 2026-09-05T12:xxZ,全文 `iterations/streams/test_set.md` §EV。给 `tools/agent/pending_rulings.py` 的 `done_when` 加一种 `kind: \"text_absent\"`(字段:`path` + `text`,可多条),语义是**该文件仍然存在 且 其中不再出现这几段字面文本**。⛔ **必须同时要求 path 存在**:文件被整个删掉时读 DONE 是这种键唯一的假阳,而 `path_absent` 已经把「文件没了」占走了。⇒ 三态:文件读不到 = `UNCERTIFIABLE`(不是 DONE),文本还在 = `OWED`,文件在且文本没了 = `DONE`。**立法依据是一次实测的失效,不是偏好**:`outlatch_check1b_reason` 那一行从「注释说得对不对没有断言读得出来」正确地推出了 `kind: manual`,**却从来没问过容易的那一半 —— 那两句写错的话还在不在**。而它们是字面串(`the whole 75%-abort finding is about that missing guard` / `if this fails, the guard landed`),`text_absent` 会在 07:01Z 当场读 DONE,那一行**根本不会被登记**。⇒ **凡是「把这句写错的话改掉」形状的裁定,正面那一半不可读,反面那一半永远可读。**",
+      "ruled_at": "2026-09-05T12:xxZ",
+      "executor": "director(不需要总监特权,但这是总监自己的工具与自己量到的缺陷)",
+      "trigger": "没有外部触发器:任何一轮有余量的总监工作单元都可以取它 —— **而这正是它进 registry 而不是进报告散文的理由**(被它取代的那一行正是因为住在散文里才掉了两轮)",
+      "delivered_to": [
+        "iterations/streams/test_set.md §EV(裁定全文档案)",
+        "iterations/owed_executions.json(本行)"
+      ],
+      "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id。⚠️ 它是 `outlatch_check1b_reason` 的直接续棒,而那一根**在散文里掉了两轮、进 registry 之后才发现三小时前就被别人做完了** —— 同一根棒不许再回散文里。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "tools/agent/mutstand_text_absent.sh"
+      },
+      "done_when_note": "⚠️ **这一次机器键是买得到的,而买它本身就是本条的内容**:验收物是变异台脚本,它存在就说明这种键被实现且被变异测过。**本键只判产物存在,不判内容**(LIMIT 11)—— 它读不出变异台里那几发是不是「静默被错误地读成 DONE」的穿法。**裸读得出的验收句**:某一轮报告里同时出现 —— `pending_rulings.py:owed_status` 认得 `text_absent`、文件读不到时答 `UNCERTIFIABLE` 而不是 `DONE`、`tests/test_pending_rulings.py` 的 checks 数上升、且 `mutstand_text_absent.sh` 的每一发都是**假阳方向**(错误地读成 DONE)而不是快乐路径。总监据此退休本行。",
+      "retired_at": "2026-09-08T13:0xZ",
+      "retired_by": "director",
+      "outcome": "EXECUTED by director 2026-09-08T13:0xZ, in one work unit. 落地物三件:(1) `tools/agent/pending_rulings.py` 的 `_machine_key_status()` 认得 `kind: \"text_absent\"`(字段 `path` + `text`,`text` 可以是一条裸串或一个串列表);三态按 §EV 逐字实现 —— **文件读不到 = UNCERTIFIABLE(不是 DONE)**、文本还在 = OWED(detail 点名还剩哪几句、几分之几)、文件在且几句都没了 = DONE(那一行仍写着「absence 不等于替换它的东西是对的」,LIMIT 11 的边界不许被这个 kind 吃掉);空的/写坏的 needle 集合读 UNCERTIFIABLE(它对每个文件都成立,会在任何路径上通过)。(2) `tests/test_pending_rulings.py` **361 → 378 checks / 0 failed**,新增的每一条断言都写在**假阳方向**。(3) `tools/agent/mutstand_text_absent.sh`:**5 CAUGHT / 0 SURVIVED / control_ok=1**、还原逐字节 YES,**五发全部是假阳方向**(错误地读成 DONE),不是快乐路径 —— 这是本行 `done_when_note` 点名要的那句。⭐ 一处现场教训值得抄:那条「kind 必须能穿过白名单」的断言,第一版把不该出现的串写成**字面量**,于是它出现在了它正断言其缺席的那个文件里,当场自己红 —— needle 改成运行时拼出来的。这正是本 kind 的 LIMIT 所写的那句(needle 要够长够独特、并且要把文件读一遍)在它自己的测试里兑现了一次。⚠️ **登记一条真实限度,不拿一行发明出来的 registry 行去满足断言**:此刻**没有任何一条活着的 owed 行用 `text_absent`** —— 它的立案案例 `outlatch_check1b_reason` 在这个 kind 存在之前就退休了。它写在 `tests/test_pending_rulings.py` 的注释与 `pending_rulings.py` 的 LIMIT 11 里:**下一条「把这句写错的话改掉」形状的裁定就是它的第一个真实用户**,写 `done_when` 的人该伸手去拿它。"
     }
   ],
   "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。"

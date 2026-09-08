@@ -1033,6 +1033,105 @@ _ride = [r for r in pr.load_owed() + (_real_rows or [])
 check(_ride and _ride[0].get("done_when", {}).get("kind") == "path_contains_all",
       "the eight-reading rideshare row is not on the kind that checks its ids")
 
+# ---- done_when kind `text_absent` (director 2026-09-05 §EV, landed 2026-09-08,
+# GH #523).  The defect it answers: `outlatch_check1b_reason` reasoned correctly
+# from "no assertion reads whether a comment is CORRECT" to `kind: manual`, and
+# never asked the readable half -- whether the two wrong sentences are still
+# THERE.  So the load-bearing assertion is again a PAIR on the SAME file: OWED
+# while the sentence is in it, DONE once it is gone.
+#
+# Every assertion below is written in the FALSE-POSITIVE direction: the failure
+# that costs something here is a row reading DONE while the wrong sentence is
+# still shipped, or while the artefact it was supposed to be in has vanished.
+_tmpdir = tempfile.mkdtemp(prefix="pr_textabsent_")
+try:
+    _art = os.path.join("tests", "test_guard.lua")
+    os.makedirs(os.path.join(_tmpdir, "tests"))
+    _wrong = "if this fails, the guard landed"
+    _also = "the whole 75%-abort finding is about that missing guard"
+
+    def _write(body):
+        with open(os.path.join(_tmpdir, _art), "w", encoding="utf-8") as fh:
+            fh.write(body)
+
+    _write("-- %s\n-- %s\nlocal x = 1\n" % (_wrong, _also))
+    _row = {"done_when": {"kind": "text_absent", "path": _art,
+                          "text": [_wrong, _also]}}
+    _st, _detail = pr.owed_status(_row, repo=_tmpdir)
+    check(_st == "OWED",
+          "a file that still carries both wrong sentences read %s" % _st)
+    check("2 of 2" in _detail and _wrong in _detail,
+          "the OWED detail did not name WHICH sentence is still there: %s" % _detail)
+
+    # One of two removed is still OWED -- the kind is `text_absent`, not
+    # `some_text_absent`, and a half-done edit is the case that would most
+    # easily be waved through.
+    _write("-- %s\nlocal x = 1\n" % (_also,))
+    _st, _detail = pr.owed_status(_row, repo=_tmpdir)
+    check(_st == "OWED", "one of two wrong sentences left still read %s" % _st)
+    check("1 of 2" in _detail, "the partial OWED detail lost the count: %s" % _detail)
+
+    _write("-- the guard is asserted below\nlocal x = 1\n")
+    _st, _detail = pr.owed_status(_row, repo=_tmpdir)
+    check(_st == "DONE", "both wrong sentences gone still read %s" % _st)
+    check("not correctness" in _detail,
+          "the DONE line did not keep LIMIT 11's boundary visible: %s" % _detail)
+
+    # THE false positive this kind can have: deleting the file makes every
+    # needle absent.  "The file is gone" is `path_absent`'s case; here it must
+    # refuse, because a vanished artefact is not an executed ruling (GH #171).
+    os.remove(os.path.join(_tmpdir, _art))
+    _st, _detail = pr.owed_status(_row, repo=_tmpdir)
+    check(_st == "UNCERTIFIABLE",
+          "a DELETED artefact read %s -- absent-because-deleted is this "
+          "kind's only false positive" % _st)
+    check("path_absent" in _detail,
+          "the refusal did not point at the kind that owns the deleted-file "
+          "case: %s" % _detail)
+
+    # An unreadable path (a directory) is the same refusal, reached through
+    # the other door: os.path.exists is true and the read raises.
+    _row_dir = {"done_when": {"kind": "text_absent", "path": "tests",
+                              "text": [_wrong]}}
+    check(pr.owed_status(_row_dir, repo=_tmpdir)[0] == "UNCERTIFIABLE",
+          "an unreadable path did not refuse")
+
+    # An empty / unwritable needle set is absent from every file, so it would
+    # pass on any file at all -- the old defect wearing the new kind's name.
+    _write("-- %s\n" % (_wrong,))
+    for _bad in ([], None, "", [""], [_wrong, ""], [_wrong, 3]):
+        check(pr.owed_status({"done_when": {"kind": "text_absent",
+                                            "path": _art, "text": _bad}},
+                             repo=_tmpdir)[0] == "UNCERTIFIABLE",
+              "text_absent with an unreadable needle set (%r) did not refuse"
+              % (_bad,))
+
+    # A bare string is the shape a hurried author writes, and dropping it
+    # would refuse a perfectly readable row; accept it as one needle.
+    _st, _ = pr.owed_status({"done_when": {"kind": "text_absent",
+                                           "path": _art, "text": _wrong}},
+                            repo=_tmpdir)
+    check(_st == "OWED", "a bare-string needle read %s, not OWED" % _st)
+finally:
+    shutil.rmtree(_tmpdir, ignore_errors=True)
+
+# The kind must be reachable through the whitelist, not just implemented below
+# it -- an unlisted kind reads UNCERTIFIABLE and the branch is dead code.  This
+# one runs against the REAL repo, so the needle is BUILT AT RUNTIME: the first
+# version quoted the absent string as a literal, which put it in the very file
+# it was asserting the string to be absent from, and the check failed on its
+# own text (LIMIT 11's "read the file through", collected immediately).
+_absent_needle = "".join(["no-such", "-needle-", "%08x" % 0xDEADBEEF])
+check(pr.owed_status({"done_when": {"kind": "text_absent",
+                                    "path": "tests/test_pending_rulings.py",
+                                    "text": [_absent_needle]}})[0] == "DONE",
+      "text_absent is implemented but not reachable through the kind whitelist")
+# ⚠ No LIVE registry row uses `text_absent` yet: its founding case
+# (`outlatch_check1b_reason`) was retired before the kind existed.  That is a
+# real limit and is recorded as one rather than papered over with a row
+# invented to make an assertion pass -- the next ruling of the "take that
+# sentence out" shape is the one that should carry it.
+
 # ---- the `residual` field (director 2026-09-08, GH #627, LIMIT 13).
 # The defect it answers: a `done_when` that outlived its obligation reads DONE
 # forever, and the leg then prints "the director should retire this row" at a

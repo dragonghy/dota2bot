@@ -497,6 +497,45 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-08T13:00Z**:**`text_absent` 落地并退休它自己那一行(19 → 18) —— 一条裁定的「反面那一半」永远买得到。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、无 promote/reject、`DECISIONS_NEEDED` +0。
+  取活依据是上一轮「下次触发」的 **④**(GH #523,**原样顺延 3 轮**);它也是 registry 里唯一一条
+  **executor = director、trigger 写着「任何一轮有余量的总监工作单元都可以取」**的行 —— **没有别人会取它**。
+  全文 `iterations/reports/director/20260908T130003Z.md`,裁定全文档案仍是 `test_set.md §EV`
+  (**本轮不新增章节:这是一次执行不是一条新裁定**),机器键 `state.json:text_absent_kind_20260908`。
+  ⭐ **落地的形状(§EV 逐字)**:`pending_rulings.py` 认得 `done_when.kind = "text_absent"`(`path` + `text`,
+  `text` 可裸串可列表)。**文件在 且 几句字面文本都不在里面 ⇒ DONE**(那一行仍写着「absence 不等于替换它的
+  东西是对的」);**还剩几句 ⇒ OWED 并点名剩哪几句、几分之几**;⛔ **文件读不到 / 被删了 ⇒ UNCERTIFIABLE
+  不是 DONE** —— 删文件会让每条 needle 都「不在里面」,这是本 kind 唯一的假阳,而「文件没了」是
+  `path_absent` 的格子;**空的 / 写坏的 needle 集合 ⇒ UNCERTIFIABLE**(它对每个文件都成立,会在任何路径上通过)。
+  ⭐⭐ **本轮最该被读的一条:那条「kind 必须穿得过白名单」的断言,第一版把不该出现的串写成了字面量,
+  于是它出现在了它正断言其缺席的那个文件里,当场自己红。** 这不是笑话 —— 它是这个 kind 的 LIMIT
+  **在它自己的测试里兑现了一次**(`text_absent` 分不清「改对了」与「换了个说法绕过 needle」,
+  也不知道 needle 会不会在别处出现)⇒ needle 要长到唯一、**并且仍然要把文件读一遍**;修法是把 needle
+  **运行时拼出来**,经过写进注释。
+  ⚠️ **一条登记的限度,不是一行发明出来的 registry 行**:**此刻没有任何一条活着的 owed 行用 `text_absent`**
+  —— 立案案例 `outlatch_check1b_reason` 在这个 kind 存在之前就退休了。房子里的惯例是「一个没人够得到的 kind
+  什么都不证明」,而 `path_contains_all` / `residual` 当时**都有真实的活行**;这一条没有,**我没有为了让断言
+  变绿去发明一行**(那正好是 LIMIT 9 的形状)。限度写在 `tests/test_pending_rulings.py` 注释 + `pending_rulings.py`
+  LIMIT 11 两处。**下一条「把这句写错的话改掉」形状的裁定就是它的第一个真实用户。**
+  验收:`tests/test_pending_rulings.py` **361 → 378 checks / 0 failed**(新增断言**全部写在假阳方向**);
+  变异台 `mutstand_text_absent.sh` **5 CAUGHT / 0 SURVIVED / control_ok=1**、还原逐字节 YES,
+  **五发全部是假阳方向**(M1 删存在性前置 ⇒ 被删的产物读 DONE / M2 读不动读 DONE / M3 空 needle 通吃 /
+  M4 错话还在读 DONE / M5 只查第一条 needle ⇒ 半截活退休);`test_mutstand_restore_trap.py` 认得新台;
+  `py_gate` **84 ran / 0 findings / EXIT=0**;owed 腿复读 **18 行、2 行 RESIDUAL、零行打印「请退休我」**。
+  ⛔ **开工自检第一次带 `timeout 400` 被砍在 python trunk 那条腿上,真码 `EXIT=124`,而 harness 报 `exit code 0`**
+  ——「后台包装吞掉真码」**第四次兑现**,躲过去的仍只是「把真码 echo 进文件」这个习惯(上一轮 ⑥ 要立的守卫
+  **本轮仍未立**)。⚠️ 新学到的:**自检不能带一个比它自己短的 timeout 跑**(上一轮实测约 55 分钟),
+  被砍的日志**前半截看起来完全正常**(anchors OK / promote-atom OK),砍点恰好落在最容易红的那条腿之前;
+  已不带 timeout 重跑,读数见报告 §9。⚠️ 纪律 3 本轮一发(**第一条命令又是 `| tail -60`**,§22 守卫当场拒),
+  **不新立措辞**,登记而已。
+  ⛔ 动态半(Lua)未跑不作声称(零 `bots/` diff)。零 AWS ⇒ 不对 MTD 作新声称(转载批测台 12:20Z:
+  MTD `$66.105`、诚实重建 ≈ `$68.105`、`$80`/`$90`/`$100` 均未跨)。四组本轮均有产出,节奏无洞,
+  无待总监插手的 [bug]/[harness],无待审批的测试集变更。
+  **下次触发**:①**`hero_domain_scan` 九份读数逐份读通**(上一轮 ① 顺延;总监自己那一半)
+  ②`test_gated_helper_nesting_census.lua` 当 GH #622 的仪器读一遍(上一轮 ②)
+  ③GH #358 的 120s 预算要人裁(顺延)④**给「后台包装吞掉真码」立守卫**(上一轮 ⑥,本轮第四次兑现)
+  ⑤`text_absent` 的第一个真实用户 —— 下一条「把这句写错的话改掉」形状的裁定,`done_when` 伸手去拿它而不是写 `manual`。
 - **2026-09-08T10:1xZ**:**四行 owed 读 DONE,逐份读完只有两行可退休;另外两行自己的散文早就写着「不许据此退休」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、无 promote/reject。
   取活依据是上一轮「下次触发」的 **④**(退休 4 行 DONE,**需读一遍**四份产物,**已顺延 3 轮**)与 **⑥**
