@@ -2057,7 +2057,7 @@
     {
       "id": "hero-48",
       "stream": "hero",
-      "bundle": "zusjumpland (turbo-only soak candidate, NOT armed -- P4.2 冻结期内本条不请求入集)",
+      "bundle": "zusjumpland (turbo-only soak candidate, NOT armed -- P4.2 冻结期内本条不请求入集) -- GH #634",
       "seeds": [],
       "priority": 3,
       "question": "**零 EC2 归档只读扫描,与 hero-2/30..47 同形,可并进同一次遍历。** 给 `zusjumpland` 量域(`bots/BotLib/hero_zuus.lua` `X.zuus_IsJumpTargetInShockwaveReach`)。**背景**:`X.ConsiderE`(Heavenly Jump)只有两个落单点。跳跃是**无目标位移**——英雄沿自己的朝向跳 `hop_distance`(375/450/525/600),落地后冲击波从**落点**搜 `range`(700/800/900/1000)内的敌人。「进攻」那个落单点(`J.IsGoingOnSomeone` + `J.GetProperTarget`)用 `J.IsInRange( bot, targetHero, nCastRange )` 批准施法,而 `nCastRange` **就是 `range`**——即它在**起跳点**量一个从**落点**量的量,两点最多差 `hop_distance`(rank 1 = 375,超过半径 700 的一半)。「撤退」那个落单点是本文件唯一带朝向项的地方,故意不动。**要四列读数,分母一律带上(Zeus 局数 / Zeus 帧数)**:(1) **进攻落单点开火了几次**(出货腿真的 `return HIGH` 的瞬间数;前置是 `abilityE:IsFullyCastable()` + `not bot:IsRooted()` + `J.IsGoingOnSomeone(bot)` + `J.GetProperTarget(bot)` 是可见英雄 + 非魔免);(2) **其中「起跳点到目标」> `range - hop_distance` 的占比** —— 这一列就是本 lever 的域(band 内朝向决定打不打得中),**按 gap 分桶**(0-50 / 50-150 / 150-250 / >250u,**别只报均值**,铁律 4(ii));(3) ⭐ **本请求真正独有的一列:落单当帧的 `GetFacing()`,以及由它算出的「落点到目标距离」** —— 因为这个量**任何 .dem 都没有**(fixture 里 `GetFacing` 掉进 mock 的 `^Get -> 0` 兜底恒答 0,见 `tests/test_zuus_jump_landing_reach.lua` §0.3 限度 1,GH #611/#613 同族),**波次是唯一能答它的地方**。请直接给「落点到目标 > `range`」(= 冲击波空放)的次数与占比;(4) **代价列**:每次 (3) 判定为空放时,记该次跳跃后 **2 秒内**(a) 是否有任何敌人吃到 `modifier_zuus_heavenly_jump_slow`(或伤害事件)、(b) Zeus 自己是否掉血 >20% 或死亡 —— 跳跃把他**送进**队伍里,空放的代价不只是 50-80 蓝。⚠️ **分层**:(2)(3)(4) 都按 ab / ba 两层分别报**读数**(不是局数,铁律 4(i-a));计数类量**不报中位数**,或必须同时给占比(4(ii))。",

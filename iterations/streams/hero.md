@@ -53,7 +53,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    gated `zusjumpland` 把量的位置搬到落点。`bots/` 有真代码行。** 报告
    `iterations/reports/hero/20260908T135500Z.md`。新 `tests/test_zuus_jump_landing_reach.lua`
    (**15 例**)+ `tools/agent/mutstand_zusjumpland.sh`(**10/10 CAUGHT**)。登记
-   `state.json:zusjumpland_20260908`,新请求 `queue.json:hero-48`。
+   `state.json:zusjumpland_20260908`,新请求 `queue.json:hero-48`,新开 GH **#634**。
    本轮 `[hero]` open issue **一条可认领的都没有**(11 条逐条理由见报告 §1)。
    - **⭐ 这不是又一个「环太宽」,是一个大小正确、圆心错误的环**:`lionrreach`(#617)/
      `wkqlane`(#621)/`cmlaneband`(#630)那三个错在**一个**方向(修法是收窄);这一个

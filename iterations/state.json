@@ -7231,7 +7231,7 @@
     "verification": "`bash tools/agent/luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 RULE6_BYPASS;`lua5.1 tests/run_tests.lua zuus` **237 例 0 失败**(其中新文件 15 例);`bash tests/run_py_tests.sh` **113 passed / 1 failed / 1 uncertifiable → 修完 113+1 passed**(那条红是本轮自己的:新测试的 `io.popen` 未登记进 `UNRESOLVED_HAND_READ`,**同一工作单元内**补上,GH #596 的习惯第四轮保住);86 个 fast-Lua detector **0 红**。",
     "limits": "(1) ⚠️ **本 lever 转的那个量不在语料里,而 mock 照答不误**:`GetFacing` 不在任何 fixture 的 unit spec 里,于是掉进 `bot_api.lua` 的 `^Get -> 0` 兜底,**静默**答 0 —— 这份语料里每个英雄每一帧都朝正东,且**不抛异常**。与 GH #611(出向伤害恒 0)/ #613(三条析取里两条恒假)同族,也与本组上一轮的 `GetCurrentMovementSpeed = 300` 同族。⇒ 本文件**没有任何一个数**是「armed 在真实对局里多久拒一次」;§1 数**几何**(不需要朝向),§3 把朝向当**注入参数**扫(用例名里就写着 `[injected facing]`),§4 注入一个朝向并**断言注入生效**。(2) §1 是分支域的上界,不是分支域(见 domain)。(3) **登记未修**:撤退落单点故意不碰(它买的就是位移本身,且它已带着本文件唯一的朝向项);§6 钉住「helper 只接了一个落单点」,将来谁把撤退也接进去会在这里被告知本文件假设了没有。(4) **登记未修**:`nCastRange = 600 + nSkillLV * 100` 是 KV `range` 键的手抄阶梯,§2 证明该键在真实帧上答得出 700;换成读是**纯可读性**改动、按 P4.4 不能当主体,且不免费(手抄阶梯正是 handle 绑错时函数还能工作的原因)。",
     "cost": "零 AWS、零 EC2、零 S3。",
-    "issue": "TBD -- 按铁律 6 / GH #290,issue 在 push **之后**才开(引用先落地再发表);号码在紧随其后的回填提交里补上",
+    "issue": "GH #634",
     "queue": "hero-48",
     "status": "landed on main, GATED and NOT ARMED (P4.2 冻结期内不请求入集;合法裁定是 FROZEN-HOLD)"
   }
