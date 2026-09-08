@@ -5927,6 +5927,91 @@ function J.ShouldSipNotTpRecover( bot )
 	return true
 end
 
+-- [tpdeep / owner priority P2, 2026-09-08] The half of the SAME branch that the
+-- sibling above cannot reach, and the reason it cannot is a measurement rather
+-- than a design choice: J.ShouldSipNotTpRecover copies the P2 family's own 0.18
+-- floor, and that floor stops 29 of the '回复状态' branch's 31 corpus trigger
+-- frames (tests/_tprecov_sweep.lua, `stop_floor 29`).  The branch that actually
+-- fires at low HP therefore lives almost entirely BELOW the band every id in
+-- this family is allowed to speak in.
+--
+-- ⭐ WHY THE FLOOR IS RIGHT FOR THE FAMILY AND STILL WRONG FOR THIS BRANCH.  The
+-- floor encodes "below this, the genuine escape retreat stands" -- and for the
+-- 撤退 branches that is exactly right, because those branches ASK for danger
+-- (撤退:2 requires enemies AND recent hero damage).  This branch proves the
+-- opposite about itself in its own conjuncts: `J.GetProperTarget(bot) == nil`,
+-- `bot:GetAttackTarget() == nil`, `X.CanJuke()`, at most one enemy inside 1600,
+-- and -- alone among the four -- NO `bot:WasRecentlyDamagedByAnyHero` at all.
+-- A branch that fires only when nothing is happening is not an escape, so the
+-- shared floor is guarding it against a danger its own trigger has excluded.
+--
+-- ⛔ THE SHARED FLOOR IS NOT TOUCHED.  Lowering `J.IsFieldRegenSituation`'s 0.18
+-- would move 'stayfield', 'stayfield2' and 'fieldbuy' in the same edit -- three
+-- levers on one push, which is the lanefix bundle mistake.  This is a SEPARATE
+-- predicate with its own band, and the band is DISJOINT from the sibling's by
+-- construction: 'tprecov' owns [0.18, ..), this owns [0.10, 0.18).  Disjoint is
+-- the point -- arming one id can never move the other's reading, which is the
+-- non-independence GH #29 reordered the retreat chain to fix.
+--
+-- Every clause here is strictly TIGHTER than the sibling's, on every axis:
+--   * ring    2500, not 1200.  A hero at ~300 movespeed covers ~2400 units in
+--     8 seconds, half of a tango's 16-second duration; below 18% HP the bot
+--     needs the sip to actually finish, so "nobody can reach me inside half the
+--     sip" is the reachability version of the sibling's "nobody is on me".
+--   * damage  6.0s and UNATTRIBUTED, not 3.0s and attributed.  The sibling's
+--     attribution exists so a global ult from across the map does not read as a
+--     hero on top of the bot ('stayattr'); in this band that escape hatch is
+--     given up on purpose -- any hero damage inside 6 seconds means a fight,
+--     and a fight at 12% HP is not a place to drink.
+--   * tower   1200 enemy towers, same radius as the sibling and as
+--     J.IsFieldRegenSituation (copied, not chosen).
+--
+-- The 0.10 bottom is the conservative end of an arithmetic, not a taste: a field
+-- sip is 115 (tango) / 85 (faerie fire) / 135 (a bottle charge), so the HP at
+-- which one sip can no longer lift the bot back to the family's own 0.18 floor
+-- is `0.18 - sip/MaxHealth` -- 0.052 for a 900-HP hero, 0.098 for a 1400-HP one
+-- across the level-6+ turbo range.  0.10 is the top of that range, rounded up.
+-- It is a CONSTANT rather than a magnitude test on purpose: a magnitude test
+-- here is the 'fieldsip' trap (see the sibling's block above), and this corpus
+-- cannot distinguish the constant either way -- both domain frames sit above it
+-- -- so it is pinned STRUCTURALLY and never by a domain count.
+--
+-- Condition (c): the fountain round trip measured 20.3 seconds of a ~20 minute
+-- turbo game on the frame P2 itself pins, against a tango that pays 115 over 16
+-- seconds without leaving the lane.  Standard advice is explicit that
+-- unnecessary fountain trips are wasted time, and equally explicit that regen is
+-- cancelled by hero damage -- which is why the empty-2500 ring and the 6-second
+-- damage window are the precondition for the sip working at all, not decoration.
+--
+-- Direction is fixed by CONSTRUCTION: another veto appended to the same
+-- conjunction, so arming can only turn the branch's TRUE into FALSE -- it can
+-- only PREVENT base trips and can never send home a bot that was not going.
+-- Gated STANDALONE -- one id in this function, never a conjunction of two (the
+-- 'pullcad' trap).  Turbo is asked explicitly: nothing on this path asks.
+function J.ShouldDeepSipNotTpRecover( bot )
+	if not J.IsSoakCandidate( 'tpdeep' ) then return false end
+	if not J.IsModeTurbo() then return false end
+
+	local nHP = J.GetHP( bot )
+	-- The band, disjoint from the sibling above: it owns [0.18, ..), this owns
+	-- [0.10, 0.18).  The upper edge is the family's floor, copied verbatim.
+	if nHP >= 0.18 then return false end
+	if nHP < 0.10 then return false end
+
+	-- Something to drink that this branch has not already vetoed -- the same
+	-- set minus the flask, for the same closed-form reason as the sibling.
+	if not J.HasFieldRegenSource( bot ) then return false end
+
+	-- Unattributed and over twice the sibling's window: in this band any hero
+	-- damage at all means a fight, and the attribution escape hatch is given up.
+	if bot:WasRecentlyDamagedByAnyHero( 6.0 ) then return false end
+
+	if #J.GetNearbyHeroes( bot, 2500, true, BOT_MODE_NONE ) > 0 then return false end
+	if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
+
+	return true
+end
+
 -- [stayfield2 / owner priority P2, 2026-08-22] The WALK half of the same fix.
 -- Owner priority P2 asks for both home routes, and mode_retreat_generic is the
 -- other one: when it wins the bid the bot walks (or TPs) back to the fountain,

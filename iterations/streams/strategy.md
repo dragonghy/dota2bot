@@ -27,7 +27,57 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0TPRECOV. **【2026-09-08T04:41Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+0TPDEEP. **【2026-09-08T07:47Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+   认领依据 = 下面 0TPRECOV 的「下一格」逐条执行 + **OWNER_PRIORITIES P2**。产出 gated 候选 **`tpdeep`**
+   (`J.ShouldDeepSipNotTpRecover` + 『回复状态』分支里紧挨着 `tprecov` 的第二个合取项,**未 armed**,
+   P4.2 冻结期 = FROZEN-HOLD)、`tests/_tpdeep_sweep.lua`、`tests/test_tpdeep_recover_band.lua`(**18/18**)、
+   `tools/agent/mutstand_tpdeep.sh`(**10/10 CAUGHT,零 SURVIVED**)、`state.json:tpdeep_20260908`;
+   报告 `iterations/reports/strategy/20260908T074701Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 立案句就是上一轮自己量出来的 `stop_floor 29`**:共享 0.18 地板挡掉『回复状态』31 帧触发里的 29 帧
+   ⇒ **真正在低血开火的那条分支几乎整个住在这一族被允许说话的血量带以下**。地板对两条 `撤退` 分支是对的
+   (`撤退:2` **要求**有敌人且刚被打过),但『回复状态』**在自己的合取式里证明了自己不是撤退**
+   (`GetProperTarget==nil` / `GetAttackTarget==nil` / `CanJuke` / 1600 内 ≤1 敌,且**四条里唯一不要求**
+   `WasRecentlyDamagedByAnyHero`;这四个数是**剥注释后从源码数出来的**)⇒ 地板在这条分支上挡的是
+   一种它自己的触发条件已经排除掉的危险。
+   **⭐⭐ 主判据(可复用):两条杠杆共用一个调用点时,「能不能归因」必须按构造给、再被量出来。**
+   血量带**互斥**:`tprecov` 拥有 `[0.18, ..)`、`tpdeep` 拥有 `[0.10, 0.18)`;
+   `_tpdeep_sweep.lua` 把两个 helper **各自 armed 在自己的 id 上、在同一帧**上驱动全部 1021 活帧,
+   读 **`overlap 0`**,而**两条都真的开火**(`238` / `2`)⇒ 零不是空转出来的
+   (「两条都 > 0」是同一个测试里的断言)。**分区还在真实帧上见证过**:被 `tpdeep` 以 `band_high` 拒掉的
+   那 2 帧**恰好就是兄弟的 2 个域帧**,而 `f_260902_154755_cm_wandbleed_residue` 这**一个 fixture**
+   上同时坐着本轮的钉帧(od 0.161)和兄弟的域帧(zuus 0.185)。
+   **⭐⭐⭐ 共享地板一字未动,取而代之的是每条子句都严格紧于兄弟**:环 **2500**(不是 1200 ——
+   300 移速 8 秒走 2400 = 一个大树 16 秒的一半,「半个 sip 之内没人够得着我」);伤害窗口 **6.0s 不归因**
+   (不是 3.0s 归因 —— 归因那个逃生口在这条带里**故意放弃**);塔 1200 照抄。下沿 **0.10** 是
+   `0.18 − sip/MaxHealth` 在等级 6+ turbo 区间(900→0.052 / 1400→0.098)的**保守端**,
+   **写成常数不是幅值判断**(幅值判断在这里就是 `fieldsip` 陷阱)。
+   **域**:`trigger 31` / `deep 29`(与上一轮 `stop_floor 29` 逐位相接)/ 分区
+   `band_high 2 + band_low 12 + source 8 + damage 2 + ring 5 + tower 0 + domain 2`;
+   **反事实域 `domain_and_branch_open` = 2**(兄弟是 1)⇒ 这一族在该调用点上的活域 1 帧 → 3 帧,无重复计数。
+   **⭐⭐⭐⭐ 变异台 M5 是「对但绿」,而它的形状是「旁边还有另一条杠杆」特有的**:删掉带的**上沿**
+   (「兄弟已经管 0.18 以上了,这行冗余」)—— 钉帧逐位相同、分区帧照绿、所有 stop 桶不变,
+   **唯一会动的是跨 1021 帧的 `overlap`,0 → 139**。M6/M9 是**语料防不住**的两条
+   (下沿挡 12 帧却**零域代价** `band_low_otherwise_domain 0`;区分 6s 与 3s 的**唯一一帧**坐在下沿以下)
+   ⇒ 两条带沿**只能结构钉**,不拿域计数当替身 —— 这是上一轮 M6/M7 的教训**在它咬人之前**用上。
+   **⭐⭐⭐⭐⭐ 顺手抓到一个不是本轮引入的 trunk 红**:`tests/test_gated_helper_nesting_census.lua`
+   **在 HEAD 上就是红的**(在 HEAD 的 detached worktree 上独立复现 `10 tests, 1 failures`,
+   点名 `tprecov | J.ShouldSipNotTpRecover | J.HasFieldRegenSource | bagsalve`)——
+   上一轮 `tprecov` 落地给了 `bagsalve` 普查一行、**没给这个嵌套普查一行**,trunk 因此红了整整一轮。
+   两行(`tprecov` 补登 + `tpdeep` 新登)本轮一并钉上,类别 (A);`bagsalve` 调用点普查 7→8。
+   **教训不是「记得登普查」,是「单文件绿 ≠ 套件绿」,而上一轮把两者当成一回事报了。**
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) 主体仍必须是一个 `bots/` 行为改动;
+   (2) **本轮量出来的下一个候选 = `stop_source 8`**:深带 29 帧里有 8 帧**在带内但手上什么都没有**,
+   那正是 `fieldbuy`(补给侧)申明的域,而 `fieldbuy` 自己带着 `J.IsFieldRegenSituation`
+   ⇒ **同一条 0.18 地板把补给侧也挡在这 8 帧之外**,即补给侧在深带上有一个与本轮决策侧**同形**的洞。
+   ⚠️ **但 8 只说明「没补给」,不说明「安全」** —— 前缀走把危险读排在补给读**之后**,这 8 帧的
+   危险/环/塔读数**本轮没量过**;接这条的第一步是**先量它们的危险读数**,**不许**把 8 直接当成域;
+   (3) **不要**去改共享地板(改一次动三个 id);**不要**回 `overchase`;**不要**把 GH #610 的 `or {}`
+   或 GH #607 的返回值列当**主体**;
+   (4) `sum < 0.3` 那半边触发式全语料 0 次单独开火,别把工作单元赌在它上面。】**
+
+0TPRECOV. **【2026-09-08T04:41Z 新增;其「下一格」第 (2) 项已由 0TPDEEP(2026-09-08T07:47Z)接走并落地。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
    认领依据 **OWNER_PRIORITIES P2**(决策侧「低血不回家」,球在本组)。产出 gated 候选 **`tprecov`**
    (`J.ShouldSipNotTpRecover` + `X.ConsiderItemDesire["item_tpscroll"]` 的 **`回复状态`** 分支内唯一调用点,
    **未 armed**,P4.2 冻结期 = FROZEN-HOLD)、`tests/_tprecov_sweep.lua`、
@@ -6601,6 +6651,53 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-08T07:47Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**;认领依据 = 上一轮「下一格」+ **P2**)。
+  上一轮自己量出来的 `stop_floor 29` 就是本轮的立案句:共享 **0.18** 地板挡掉『回复状态』31 帧触发里的 29 帧
+  ⇒ **真正在低血开火的那条分支,几乎整个住在这一族被允许说话的血量带以下**。
+  地板对两条 `撤退` 分支是对的(`撤退:2` **要求**有敌人且刚被打过),但『回复状态』**在自己的合取式里
+  证明了自己不是撤退**(`GetProperTarget==nil` / `GetAttackTarget==nil` / `CanJuke` / 1600 内 ≤1 敌,
+  且**四条里唯一不要求** `WasRecentlyDamagedByAnyHero` —— 四个数都是剥注释后从源码数出来的)。
+  ⇒ 新 gated **`tpdeep`**(`J.ShouldDeepSipNotTpRecover`,standalone 一个 id,turbo 显式问,gate-first),
+  **共享地板一字未动**(改它一次移动 `stayfield`/`stayfield2`/`fieldbuy` = lanefix),
+  取而代之一条**自己的**深带谓词,每条子句都严格紧于兄弟:环 **2500**(300 移速 8 秒走 2400 =
+  一个大树 16 秒的一半)、伤害窗口 **6.0s 不归因**(归因逃生口**故意放弃**)、塔 1200 照抄;
+  下沿 **0.10** = `0.18 − sip/MaxHealth` 在等级 6+ 区间的保守端(900→0.052 / 1400→0.098),
+  **写成常数不是幅值判断**(幅值判断即 `fieldsip` 陷阱)。
+  ⭐ **本轮的结构头条:两条杠杆共用一个调用点,而带互斥是按构造给、再被量出来的** ——
+  `tprecov` 拥有 `[0.18, ..)`、`tpdeep` 拥有 `[0.10, 0.18)`;两个 helper 各自 armed 在自己的 id 上、
+  在同一帧驱动全部 1021 活帧,读 **`overlap 0`**,而**两条都真的开火**(238 / 2)⇒ 零不是空转
+  (「两条都 > 0」写成同一测试里的断言)。分区还在真实帧上见证:被 `band_high` 拒掉的 2 帧
+  **恰好是兄弟的 2 个域帧**,且 `f_260902_154755_cm_wandbleed_residue` **一个 fixture** 上同时坐着
+  本轮钉帧(od 0.161)与兄弟域帧(zuus 0.185)。
+  域:`trigger 31` / `deep 29`(与上一轮 `stop_floor 29` 逐位相接)/ 分区
+  `band_high 2 + band_low 12 + source 8 + damage 2 + ring 5 + tower 0 + domain 2`;
+  **反事实域 2**(兄弟 1)⇒ 该调用点上这一族的活域 1 帧 → 3 帧,无重复计数。
+  方向按构造单向(追加 veto ⇒ 只会阻止回城),`deep_shipped_true 0`,交换双腿 tally 证明计数器在计数。
+  `tests/test_tpdeep_recover_band.lua` **18/18**;`tools/agent/mutstand_tpdeep.sh` **10/10 CAUGHT,零 SURVIVED**
+  (**M5「对但绿」**:删掉带的上沿 —— 钉帧逐位相同、所有 stop 桶不变,**唯一会动的是 `overlap` 0→139**;
+  M6/M9 语料防不住 ⇒ 两条带沿只能结构钉)。`state.json` 新增 `tpdeep_20260908`。
+  **`tpdeep` gated 未 armed,P4.2 冻结期按 FROZEN-HOLD,本轮不申请入集**;
+  `queue.json` / `test_set.md` / armed 串一字未动。未花 AWS 钱。
+  ⚠️ **顺手抓到并修好 3 处 trunk 红,没有一处是本轮引入的**(全部在裸的 HEAD detached worktree
+  上独立复现过,不是从工作树推断):
+  (1) `tests/test_gated_helper_nesting_census.lua` `10 tests, 1 failures`,点名
+  `tprecov | J.ShouldSipNotTpRecover | J.HasFieldRegenSource | bagsalve` —— **本组上一轮自己掉的棒**:
+  `tprecov` 落地给了 `bagsalve` 普查一行、**没给这个嵌套普查一行**,trunk 红了整整一轮;
+  两行一并钉上(类别 A),`bagsalve` 调用点普查 7→8。
+  (2) `tests/test_activemode_call_site_census.lua` `commented_out 3→4` —— 第 4 条 prose 是
+  `hero_skeleton_king.lua:772`(**`wkqlane` 落地,英雄组 05:0xZ**),与 GH #267 在 `hero_zuus.lua`
+  上抓到的**同形,第二个实例**;**RE-TAKEN 不是 RAISED**(`get_active_mode` 没动 = 253 ⇒ 无可执行行变化),
+  连带 raw 总数 256→257。该文件 LIMIT 段自己写着「会在下一个 stream 开工时才红」—— 正是如此发生的。
+  (3) `tools/agent/chain_member_census.py` 的 freshness 行第 **4** 次搬家(GH #574),
+  而**第三次的账根本没人付**:HEAD 上已是 `8423 → 8435` 红着的,我的调用点注释再 +10 到 8445。
+  ⇒ 这笔收费不只是重复出现,它正在**被跳过**,而那比继续付更糟。
+  **三条的共同根因是一条:推送者自己的闸看不见它们。教训是「单文件绿 ≠ 套件绿」。**
+  `python3 tools/agent/py_gate.py` → `PY_GATE_EXIT=0`(#616 快棘轮里**没有** (3) 那个文件,
+  这正是它能红着进 main 的原因)。
+  自检本轮**第一次调用被脚本自己拒了**(stdout 是管道,证据纪律 3,脚本自记第 6 次复发),改文件重定向后 exit 3;
+  且**第一遍与本轮改树并发**(GH #507)⇒ 那遍读数不予采信,已在静止树上重跑。
+  详见 `iterations/reports/strategy/20260908T074701Z.md`。
 
 - 2026-09-08T04:41Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**;认领依据 **P2**)。
   `X.ConsiderItemDesire["item_tpscroll"]` 里**四条**分支把 `tpLoc` 设成自家泉水:`撤退:1` 挂 PROMOTED 的

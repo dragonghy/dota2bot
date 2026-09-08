@@ -195,9 +195,18 @@ _JUDGED_DUP_ROWS = [
     # edits to this literal, none of them about the finding, and each one paid
     # by a round that had no other business here.  The key has absorbed all
     # three; only the freshness check charges.
+    # ⭐⭐ A FOURTH TIME, 8423 -> 8445 on 2026-09-08, and this one is the
+    # strongest evidence #574 has: the shift came in TWO pieces and the FIRST
+    # was never paid.  8423 -> 8435 was already red on `origin/main` before this
+    # round started (reproduced bare on a detached HEAD worktree,
+    # `HEAD_PY_EXIT=1`), i.e. a landing shifted this literal and left trunk red
+    # behind it; 8435 -> 8445 is the `tpdeep` call-site comment, +10 lines in the
+    # same file.  So the toll is not merely recurring, it is being SKIPPED --
+    # which is worse than paying it, because a red trunk teaches the next reader
+    # that this check is noise.  Re-taken here by the round that tripped over it.
     ("bots/ability_item_usage_generic.lua",
      'notallyHero:HasModifier("modifier_juggernaut_healing_ward_heal")',
-     "1585a9b8", 8423,
+     "1585a9b8", 8445,
         "IDEMPOTENT.  The polliwog-charm heal filter repeats one member of the "
         "already-being-healed set.  It LOOKS like the dropped-member shape and "
         "is not: the repo's only sibling enumeration of that set "

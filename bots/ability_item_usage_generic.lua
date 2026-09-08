@@ -5978,6 +5978,16 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			-- else).  Gated on the 'tprecov' soak candidate + turbo, so this
 			-- line is inert in every shipped game until it is armed.
 			and not J.ShouldSipNotTpRecover( bot )
+			-- [tpdeep / owner priority P2, 2026-09-08] The other half of the
+			-- same branch.  The conjunct above copies this family's 0.18 floor,
+			-- and that floor stops 29 of this branch's 31 corpus trigger frames
+			-- -- i.e. the branch fires almost entirely BELOW the band the family
+			-- is allowed to speak in.  A SEPARATE id with a DISJOINT band
+			-- ([0.10, 0.18) against the sibling's [0.18, ..)), so arming either
+			-- one can never move the other's reading.  See
+			-- J.ShouldDeepSipNotTpRecover for why the shared floor is left alone
+			-- and why every clause down there is tighter than the sibling's.
+			and not J.ShouldDeepSipNotTpRecover( bot )
 			and bot:DistanceFromFountain() > nMinTPDistance + 200
 			and nEnemyCount <= 1 and nAllyCount <= 1
 			and J.GetProperTarget( bot ) == nil

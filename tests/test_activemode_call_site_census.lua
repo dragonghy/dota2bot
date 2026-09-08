@@ -146,12 +146,26 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- The census must SEE the commented-out mentions and REFUSE to count them.
     -- Asserting only the executable number would pass just as well on a scanner
     -- that could not read comments at all -- which is what 255 came from.
-    assert(c.commented_out == 3,
-        'GetActiveMode() mentions inside comments moved from 3 to ' .. c.commented_out ..
+    -- RE-TAKEN 3 -> 4 (and the raw total 256 -> 257) on 2026-09-08 by strategy,
+    -- which found this red on `origin/main` rather than in its own diff. The
+    -- fourth prose mention is bots/BotLib/hero_skeleton_king.lua:772, a doc line
+    -- of the 'wkqlane' landing (hero, 2026-09-08T05:0xZ) explaining that
+    -- `bot:GetActiveMode()` is bot-VM state and therefore absent from every .dem
+    -- -- i.e. exactly the shape GH #267 named on hero_zuus.lua, second instance.
+    -- ⛔ RE-TAKEN, NOT RAISED, and the distinction is the whole point of this
+    -- pair: `get_active_mode` did NOT move (253, asserted green in the test
+    -- above throughout), so nothing executable changed and folding the comment
+    -- into that count would make the next doc line demand the same courtesy.
+    -- Note what this cost: the file's own LIMIT block says a landing that moves
+    -- these counts goes red at the NEXT stream's 开工 rather than at the
+    -- pusher's gate -- and that is precisely what happened, for the second time
+    -- in eleven days.
+    assert(c.commented_out == 4,
+        'GetActiveMode() mentions inside comments moved from 4 to ' .. c.commented_out ..
         ' -- that is a prose change, NOT a call-site change; re-take THIS number, ' ..
         'never fold it into get_active_mode')
-    assert(c.get_active_mode + c.commented_out == 256,
-        'executable + commented must equal the raw pattern count (256); if it does ' ..
+    assert(c.get_active_mode + c.commented_out == 257,
+        'executable + commented must equal the raw pattern count (257); if it does ' ..
         'not, strip_line_comment cut somewhere it should not have')
 
     -- Direct unit checks on the cut, including the one the naive `find("--")`

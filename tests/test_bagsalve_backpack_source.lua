@@ -380,9 +380,17 @@ tests['[reverse] turbo is structural: both callers ask the situation first'] = f
     -- see tests/test_tprecov_recover_trip.lua), so it copies the clauses it
     -- needs and asks IsModeTurbo on its second line. The loop below is what
     -- holds the property; the count is only the anti-vacuum floor.
+    -- [tpdeep 20260908] The eighth caller joins the same list for the same
+    -- reason, and for one more that is specific to it: J.ShouldDeepSipNotTpRecover
+    -- exists to work BELOW J.IsFieldRegenSituation's 0.18 floor (that floor stops
+    -- 29 of its call site's 31 corpus trigger frames), so routing through the
+    -- situation predicate would make it identically FALSE on its whole band --
+    -- not merely drag J.IsFieldSipEnough along. It therefore copies the clauses
+    -- it needs, tightens each one, and asks IsModeTurbo on its second line. The
+    -- loop below is what holds the property; the count is the anti-vacuum floor.
     for _, name in ipairs({ 'ShouldStayAndRegen', 'ShouldFieldBuyRegenHurt',
         'ShouldFieldBuyRegenTower', 'ShouldFieldBuyRegenRing',
-        'ShouldSipNotTpRecover' }) do
+        'ShouldSipNotTpRecover', 'ShouldDeepSipNotTpRecover' }) do
         local body = code:match('function J%.' .. name .. '%( bot %)(.-)\nend\n')
         assert(body, 'could not slice J.' .. name
             .. ', which calls J.HasFieldRegenSource without going through the '
@@ -394,8 +402,8 @@ tests['[reverse] turbo is structural: both callers ask the situation first'] = f
             .. 'helper has no turbo clause of its own, so this ships the '
             .. 'behaviour into normal mode')
     end
-    assert(nCalls == 7,
-        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not 7. Every '
+    assert(nCalls == 8,
+        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not 8. Every '
         .. 'caller must reach turbo before calling it, either by asking '
         .. 'J.IsFieldRegenSituation first or by its own IsModeTurbo; add the new '
         .. 'one to one of the two lists above rather than only raising this number')

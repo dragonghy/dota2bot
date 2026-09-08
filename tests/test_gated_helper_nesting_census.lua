@@ -737,6 +737,34 @@ local PINNED = {
     -- and 'staytower'). Landing a SEVENTH id on this helper turns that file red
     -- until its own single-arm column is measured.
     "stayattr,staybag,staybottle,staysrc,staytower,stayurn | J.ShouldStayAndRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
+    -- [tprecov 20260908 / tpdeep 20260908] Two more callers of the same inner
+    -- helper, on a DIFFERENT outer function, and the identity answer is the one
+    -- the row above already carries: un-armed, J.HasFieldRegenSource skips its
+    -- 'bagsalve' backpack loop and returns the SHIPPED main-slot answer, so it
+    -- is additive-only and arming either outer id alone still measures that id.
+    -- (A). Both sweeps drive 'bagsalve' through a one-id-wide stub over all 1021
+    -- live frames and read `arm_leak` 0 (tests/_tprecov_sweep.lua,
+    -- tests/_tpdeep_sweep.lua).
+    -- ⛔ THE 'tprecov' ROW IS A BACKFILL, and saying so is the point of this
+    -- comment: that helper landed on 2026-09-08T04:41Z and its own file went
+    -- 14/14, but this census was never given its row -- so trunk carried a RED
+    -- suite-level test from that landing until the next round tripped over it.
+    -- The lesson is not "remember the census": it is that a per-file green is
+    -- not a suite green, and the two were reported as if they were the same.
+    -- ⭐ WHAT THIS PAIR ADDS ON TOP OF (A), and why it gets a paragraph. These
+    -- two ids do not merely share an inner helper -- they share a CALL SITE (the
+    -- '回复状态' branch of X.ConsiderItemDesire["item_tpscroll"] carries both as
+    -- consecutive conjuncts), which is the configuration GH #576 warns about:
+    -- a member string carrying both could not attribute a suppressed trip to
+    -- either. Answered by CONSTRUCTION rather than by argument -- their HP bands
+    -- are disjoint ('tprecov' owns [0.18, ..), 'tpdeep' owns [0.10, 0.18)) --
+    -- and then MEASURED rather than trusted: tests/_tpdeep_sweep.lua drives both
+    -- helpers, each armed on its own id, over the same 1021 live frames and
+    -- reads `overlap 0` with both helpers firing (238 and 2). Deleting the
+    -- band's upper edge turns that column into 139 and nothing else in the
+    -- pair's tests moves (tools/agent/mutstand_tpdeep.sh M5).
+    "tprecov | J.ShouldSipNotTpRecover | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
+    "tpdeep | J.ShouldDeepSipNotTpRecover | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",   -- A
     "wlok | X.ConsiderE | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_warlock.lua",                                                       -- P
     -- [waitclar 20260906] A second caller of the same inner helper, and the
     -- identity answer is the same one the row above already carries: un-armed,
