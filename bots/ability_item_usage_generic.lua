@@ -5966,6 +5966,18 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 		and not bot:HasModifier( "modifier_arc_warden_tempest_double" )
 	then
 		if	X.CanJuke()
+			-- [tprecov / owner priority P2, 2026-09-08] The fourth home-TP
+			-- branch of this function, and the only one carrying no regen veto
+			-- at all: 撤退:1 has the PROMOTED J.ShouldStayAndRegen, 撤退:3 has
+			-- the gated J.ShouldRegenNotTpHome, 撤退:2 is a genuine escape and
+			-- is left alone -- and this one, which asks for no recent damage at
+			-- all, has nothing.  See J.ShouldSipNotTpRecover for why copying
+			-- 撤退:1's conjunct here would be a no-op by closed form (the three
+			-- conjuncts on the next lines already falsify every disjunct of that
+			-- guard a fixture can reach, leaving `GetGold() >= 90` and nothing
+			-- else).  Gated on the 'tprecov' soak candidate + turbo, so this
+			-- line is inert in every shipped game until it is armed.
+			and not J.ShouldSipNotTpRecover( bot )
 			and bot:DistanceFromFountain() > nMinTPDistance + 200
 			and nEnemyCount <= 1 and nAllyCount <= 1
 			and J.GetProperTarget( bot ) == nil

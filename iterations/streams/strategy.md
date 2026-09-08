@@ -27,6 +27,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TPRECOV. **【2026-09-08T04:41Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+   认领依据 **OWNER_PRIORITIES P2**(决策侧「低血不回家」,球在本组)。产出 gated 候选 **`tprecov`**
+   (`J.ShouldSipNotTpRecover` + `X.ConsiderItemDesire["item_tpscroll"]` 的 **`回复状态`** 分支内唯一调用点,
+   **未 armed**,P4.2 冻结期 = FROZEN-HOLD)、`tests/_tprecov_sweep.lua`、
+   `tests/test_tprecov_recover_trip.lua`(**14/14**)、`tools/agent/mutstand_tprecov.sh`(**9/9 CAUGHT,零 SURVIVED**)、
+   `state.json:tprecov_20260908`;报告 `iterations/reports/strategy/20260908T044131Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 缺陷:一个函数里有四条分支把 `tpLoc` 设成自家泉水,三条挂了回复守卫,第四条什么都没挂。**
+   `撤退:1` 挂 PROMOTED 的 `J.ShouldStayAndRegen`;`撤退:3` 挂 gated 的 `J.ShouldRegenNotTpHome`(`stayfield`);
+   `撤退:2` 是真撤退(要求有敌人**且**刚被英雄打过)—— 按 owner「危险时撤退合法」**故意不动,并写成断言**
+   (它的回复守卫数必须保持 0),免得下一轮「顺手补齐」;**第四条 `回复状态` 是四条里唯一不要求
+   `WasRecentlyDamagedByAnyHero` 的**,也就是 P2 点名的「没人追你的时候低血回城」,而它什么守卫都没有。
+   语料里 **31/1021 帧**满足它的触发。
+   **⭐⭐ 主判据(可复用,是 `test_stayfield_callsite_domain.lua` 那条判据的第三个实例):
+   把已发布的那个守卫抄过来,按闭式是 no-op —— 不是样本量问题。** gold 不进 `.dem`(GH #495)⇒
+   `GetGold()` 恒 0 ⇒ `J.ShouldStayAndRegen` 唯一能为真的路是 `bHasFlask` 三项析取
+   (主槽 `item_flask` / `modifier_flask_healing` / `modifier_tango_heal`),**而这条分支自己把三项全否定了**
+   ⇒ 在这个调用点它化简成 `bot:GetGold() >= 90` 而已,**与 2026-08-29 对 `撤退:1` 的更正逐字同一个闭式**。
+   量出来的对照:`sar_true_any 13`(独立复现该函数源码自记的 13)、`sar_true_in_trigger 1`、
+   `sar_blocked_by_branch 1`(那一帧靠 `modifier_tango_heal` 为真,分支已 veto)。
+   **⭐⭐⭐ 于是算术挑了谓词,不是口味**:能改变这里的守卫必须读一个**分支尚未否定**的补给源
+   = `J.HasFieldRegenSource` 减去大药(携带的 tango / tango_single / faerie_fire / 有充能 bottle)。
+   ⛔ **刻意不走 `J.ShouldRegenNotGoHome`**,两条理由都是数字:(1) `fieldsip`(当前串里 armed)要求
+   sip ≥ 0.25·MaxHealth,大药被分支自己的 `itemFlask == nil` 排除后上限 135 ⇒ 要求 MaxHealth ≤ 540,
+   在本分支 `GetLevel() >= 6` 下**不可能** —— 那正是 `stayfield` 踩过的坑;
+   (2) `J.IsFieldRegenSituation` 的 **0.18 地板**排除本分支 31 帧里的 **29 帧**。
+   地板**逐字照抄进新谓词、不动共享那份**(改共享地板一次移动 stayfield/stayfield2/fieldbuy = lanefix)。
+   **⭐⭐⭐⭐ 变异台记两件事**:M5 是「对但绿」——改成走 `J.ShouldRegenNotGoHome`,钉帧上答案**逐位相同**、
+   所有行为断言照绿,变掉的东西 fixture 看不见(`fieldsip` 骑在里面 ⇒ 实验室当前串上域为空),**只有结构钉看得见**;
+   M6/M7 是**语料防不住**的两条(0.18 地板在补给读与归因伤害读之前就停掉 29/31 ⇒ 删掉任一条,
+   本文件**所有语料计数逐位不变**)⇒ 四条收窄子句**逐条结构钉死**,不拿域计数当替身。
+   **⭐⭐⭐⭐⭐ 本轮自伤(已修并写进台子 header)**:第一版变异台 M3/M4 记成 SURVIVED,
+   而那是**锚歧义/锚缺失**——`if not J.IsModeTurbo() then return false end` 在 `jmz_func.lua` 里有 **29 处**,
+   `sub()` 的 GH #550 守卫中止了替换,**变异根本没落地却让那条腿跑了基线**。已加 `sub_or_die`:
+   锚失败**中止整台**,不再被报成「钉子有洞」。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) 主体仍必须是一个 `bots/` 行为改动;
+   (2) **本轮量出来的下一个杠杆 = `stop_floor 29`**:真正在低血开火的那条分支**几乎整个住在
+   P2 一族被允许说话的血量带以下**,而 `回复状态` **证明自己不是撤退**
+   (`GetProperTarget==nil` / `GetAttackTarget==nil` / `CanJuke` / 1600 内 ≤1 敌,且不要求刚被打过)
+   ⇒ 给这条**被证明非撤退**的分支一个**自己的**、低于 0.18 的深带谓词,**不要**去改共享地板;
+   (3) **不要**回 `overchase`,**不要**把 GH #610 的 `or {}` 或 GH #607 的返回值列当**主体**
+   (后者是量具附带,本轮第三次顺延,**不是掉棒**:两条普查行已钉、issue 仍在);
+   (4) 触发式 `sum < 0.3` 那一半**全语料 0 次单独开火**(`trigger_sum_leg 0`)—— 别把工作单元
+   赌在那个析取上。】**
+
 0TPSTAMP. **【2026-09-08T01:25Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
    产出 record-only 的 `J.StampTpChannelHealth`(**无新 id**,由既有 `tpwatch` 闸承载,turbo-only)
    + `mode_retreat_generic.GetDesireHelper` 最上面的唯一调用点、`tests/_tpstamp_sweep.lua`(四臂尺子)、
@@ -6555,6 +6601,27 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-08T04:41Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**;认领依据 **P2**)。
+  `X.ConsiderItemDesire["item_tpscroll"]` 里**四条**分支把 `tpLoc` 设成自家泉水:`撤退:1` 挂 PROMOTED 的
+  `J.ShouldStayAndRegen`、`撤退:3` 挂 gated 的 `J.ShouldRegenNotTpHome`、`撤退:2` 是真撤退(有敌人**且**
+  刚被打过,按 owner「危险时撤退合法」**不动**,并把「它的回复守卫数 = 0」写成断言),
+  **第四条 `回复状态` 什么都没挂** —— 而它是四条里**唯一不要求 `WasRecentlyDamagedByAnyHero`** 的,
+  正是 owner P2 点名的「没人追你的时候低血回城」;语料 **31/1021 帧**满足它的触发。
+  ⭐ **把已发布的那个守卫抄过来按闭式是 no-op**:gold 不进 `.dem`(GH #495)⇒ `GetGold()` 恒 0 ⇒
+  `J.ShouldStayAndRegen` 只能靠 `bHasFlask` 三项析取为真,**而这条分支把三项全否定了**
+  ⇒ 在这里它化简成 `GetGold() >= 90` 而已(`sar_true_any 13` / `sar_true_in_trigger 1` /
+  `sar_blocked_by_branch 1`)。**这是 `test_stayfield_callsite_domain.lua` 那条判据的第三个实例。**
+  ⇒ 算术挑了谓词:gated **`tprecov`**(`J.ShouldSipNotTpRecover`,standalone 一个 id,turbo 显式问)
+  读**分支尚未否定**的补给源(`J.HasFieldRegenSource` 减去大药),**刻意不走** `J.ShouldRegenNotGoHome`
+  (`fieldsip` 会让它在当前串上域为空;`IsFieldRegenSituation` 的 0.18 地板排除 29/31)。
+  方向按构造单向(追加 veto ⇒ 只会阻止回城)。反事实域 **1 帧**
+  (`f_114311_drow_pushguard_silent` viper lvl8 hp=0.191,faerie_fire,1600 内 0 敌,3s 无英雄伤害);
+  负对照 `f_231411_ck_zoned`(1200 内有敌人)armed 必须不扣人。
+  `tests/test_tprecov_recover_trip.lua` **14/14**;`tools/agent/mutstand_tprecov.sh` **9/9 CAUGHT**。
+  `state.json` 新增 `tprecov_20260908`。**`tprecov` gated 未 armed,P4.2 冻结期按 FROZEN-HOLD,
+  本轮不申请入集**;`queue.json`/`test_set.md`/armed 串一字未动。未花 AWS 钱。
+  详见 `iterations/reports/strategy/20260908T044131Z.md`。
 
 - 2026-09-08T01:25Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**。
   TP channel 的「起始血量」基线 **hoist 成 record-only 的 `J.StampTpChannelHealth`**,

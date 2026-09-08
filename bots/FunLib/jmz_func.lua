@@ -5808,6 +5808,125 @@ function J.ShouldRegenNotTpHome( bot )
 	return J.ShouldRegenNotGoHome( bot )
 end
 
+-- [tprecov / owner priority P2, 2026-09-08] The FOURTH home-TP branch, and the
+-- only one of the four with no regen veto of any kind.
+--
+-- ⭐ THE DEFECT, AS A TABLE OF FOUR SIBLINGS IN ONE FUNCTION.
+-- X.ConsiderItemDesire["item_tpscroll"] (ability_item_usage_generic) has four
+-- branches that set `tpLoc = J.GetTeamFountain()`:
+--   撤退:1   botHP < 0.19                     -> `not J.ShouldStayAndRegen` (PROMOTED)
+--   撤退:2   botHP < 0.15 + 0.24*nEnemyCount  -> none (a genuine escape: it
+--                                                requires enemies AND recent
+--                                                hero damage, so P2's "危险时
+--                                                撤退合法" applies and nothing
+--                                                below touches it)
+--   撤退:3   botHP < 0.34 or sum < 0.43, lvl>=9 -> `not J.ShouldRegenNotTpHome`
+--                                                ('stayfield', gated)
+--   回复状态 sum < 0.3 or botHP < 0.2, lvl>=6  -> NOTHING
+-- The fourth one is not an escape and says so in its own conjuncts: it asks for
+-- `J.GetProperTarget(bot) == nil`, `bot:GetAttackTarget() == nil`, `X.CanJuke()`
+-- and at most one enemy inside 1600, and — unlike 撤退:1 and 撤退:2 — it does
+-- NOT require `bot:WasRecentlyDamagedByAnyHero`. It is the quiet-field trip
+-- owner priority P2 names, and it is the branch the corpus actually reaches:
+-- 31 of 1021 live hero frames satisfy its trigger (tests/_tprecov_sweep.lua).
+--
+-- ⭐⭐ WHY THIS IS NOT "JUST WIRE THE PROMOTED VETO IN", AND THE ANSWER IS A
+-- CLOSED FORM, NOT A PREFERENCE.  The obvious fix is to copy 撤退:1's conjunct
+-- (`not J.ShouldStayAndRegen(bot)`) into this branch.  Measured over the whole
+-- corpus, that guard is TRUE on exactly ONE frame in this branch's trigger set
+-- (f_260902_154755_cm_wandbleed_residue, zuus lvl 10 at 18.5% HP) — and on that
+-- frame it is TRUE only because of `modifier_tango_heal`, which this branch
+-- ALREADY vetoes on.  That is not a sampling accident.  With gold unreadable
+-- from a replay (GH #495 — `bot:GetGold()` is 0 on all 1021 live frames), the
+-- only way J.ShouldStayAndRegen reaches TRUE is its `bHasFlask` disjunction:
+--     J.IsItemAvailable('item_flask') ~= nil
+--     or bot:HasModifier('modifier_flask_healing')
+--     or bot:HasModifier('modifier_tango_heal')
+-- and this branch already carries the negation of ALL THREE (`itemFlask == nil`
+-- plus the two modifier vetoes).  ⇒ at THIS call site the promoted veto reduces
+-- to `bot:GetGold() >= 90` and nothing else — digit for digit the same closed
+-- form the 2026-08-29 correction proved for 撤退:1, reached by the same three
+-- conjuncts.  This is the third instance of the criterion
+-- tests/test_stayfield_callsite_domain.lua pinned: **a guard's domain is its
+-- predicate INTERSECTED with the rest of the conjunction it was dropped into**,
+-- and here the intersection is the empty set for every reason a fixture can see.
+--
+-- ⭐⭐⭐ SO THE ARITHMETIC PICKS THE PREDICATE, not taste.  A useful guard here
+-- must read a supply source the branch does not already negate.  The branch
+-- negates: a main-slot flask, and the in-flight flask / tango / clarity /
+-- filler / urn / spirit-vessel / healing-ward / bottle modifiers.  It does NOT
+-- negate a CARRIED tango, tango_single, faerie_fire or charged bottle — which
+-- is exactly J.HasFieldRegenSource's set minus the flask.  So that is what this
+-- reads, and the flask leg of it is dead here by construction rather than by
+-- choice.
+--
+-- ⛔ DELIBERATELY NOT ROUTED THROUGH J.ShouldRegenNotGoHome, and both reasons
+-- are numbers:
+--   (1) `J.IsFieldSipEnough` ('fieldsip', ARMED in the current member string)
+--       requires FieldRegenSipValue >= 0.25 * GetMaxHealth.  With the flask
+--       (400) excluded by this branch's own `itemFlask == nil`, the best
+--       reachable sip is item_bottle at 135, so the test reduces to
+--       `MaxHealth <= 540` — impossible for the `bot:GetLevel() >= 6` this
+--       branch requires.  Routing through it would ship a lever that is EMPTY
+--       on the string the lab is running, which is precisely the trap
+--       tests/test_stayfield_callsite_domain.lua documented for 'stayfield'.
+--   (2) `J.IsFieldRegenSituation`'s floor is `nHP < 0.18 -> false`, and 29 of
+--       this branch's 31 corpus trigger frames are BELOW it.  That floor is not
+--       wrong — below it the genuine escape retreat stands — but it means the
+--       whole P2 family is structurally unable to speak on this branch.  The
+--       floor is copied here verbatim as the conservative end rather than
+--       lowered: lowering it would move 'stayfield', 'stayfield2' and
+--       'fieldbuy' in the same edit, which is the lanefix bundle mistake.
+--
+-- Danger is read the ATTRIBUTED way the family settled on ('stayattr'), and
+-- every clause is strictly TIGHTER than the branch it guards: the branch
+-- tolerates one enemy inside 1600, this requires zero inside 1200; the branch
+-- reads no buildings at all, this vetoes on an enemy tower inside 1200 (the
+-- radius J.IsFieldRegenSituation itself uses, copied rather than chosen).
+--
+-- Condition (c): a tango is 115 health over 16s and a faerie fire is 85
+-- instantly, against a fountain round trip that measured 20.3 seconds of a
+-- ~20 minute Turbo game on the frame owner priority P2 itself pins
+-- (f_260822_063722_lina_tp_home).  Standard advice is explicit that
+-- unnecessary fountain trips are wasted time; the empty-1200-ring and
+-- attributed-damage clauses are not merely conservative here — a tango is
+-- cancelled by hero damage, so they are the precondition for the sip working
+-- at all.
+--
+-- Direction is fixed by CONSTRUCTION: this is a veto appended to a
+-- conjunction, so arming can only turn this branch's TRUE into FALSE, i.e. only
+-- PREVENT base trips.  It can never send home a bot that was not already going.
+-- Unarmed, J.IsSoakCandidate is the first thing asked, so it short-circuits
+-- before any engine call below it and the shipped answer is byte-identical.
+-- Gated STANDALONE -- one id in this function, never a conjunction of two (the
+-- 'pullcad' trap).  Turbo is asked explicitly: nothing on this path asks.
+function J.ShouldSipNotTpRecover( bot )
+	if not J.IsSoakCandidate( 'tprecov' ) then return false end
+	if not J.IsModeTurbo() then return false end
+
+	-- The family's own floor, copied verbatim from J.IsFieldRegenSituation /
+	-- J.ShouldStayAndRegen: below it the genuine escape retreat stands.
+	if J.GetHP( bot ) < 0.18 then return false end
+
+	-- Something to drink that this branch has not already vetoed.  The flask
+	-- leg of this helper is unreachable from here (`itemFlask == nil`), which
+	-- is stated in the block above rather than re-implemented as an exclusion.
+	if not J.HasFieldRegenSource( bot ) then return false end
+
+	-- Attributed danger: recent hero damage only vetoes when the hero that
+	-- dealt it is still within reach.  Same radius and window as the sibling.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 )
+		and J.HasNearbyHeroDamager( bot, 3000, 3.0 )
+	then
+		return false
+	end
+
+	if #J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE ) > 0 then return false end
+	if #bot:GetNearbyTowers( 1200, true ) > 0 then return false end
+
+	return true
+end
+
 -- [stayfield2 / owner priority P2, 2026-08-22] The WALK half of the same fix.
 -- Owner priority P2 asks for both home routes, and mode_retreat_generic is the
 -- other one: when it wins the bid the bot walks (or TPs) back to the fountain,
