@@ -6976,5 +6976,23 @@
     "next_baton": "**总监**:(1) 按 [hero] issue 裁标签并登记新 id `lionultcash`;(2) P4.2 冻结期内合法裁定是 **FROZEN-HOLD**(登记、不入集、不视为掉棒)—— 本组**不提**入集提议,只登记**预登记的 arm 顺序**:解冻后单 arm,不与任何 id 合发。**批测台**:`queue.json:hero-43`(零 EC2 归档只读遍历,与 hero-2/30..42 同形可并一次遍历)—— 买这个 lever 的域,并**分开报**「块开了」与「出口开了」两列。**英雄组下轮**:不要把这条排成主体,除非 hero-43 交了货。",
     "honest_bounds": "1. **档案买不到这个 lever 的域**(上面的 27/5/0),所以 §0.1 的读数靠**三条带标签的注入**:大招 rank 2 / cd 0 / IsFullyCastable、subject 的 GetHealth 降到 300(823 的 0.365;真实帧是 0.430,刚好在外)、WasRecentlyDamagedByAnyHero 为真。§3 在取任何读数之前**先断言这三条注入真的被读到了**。2. **几何与名单是真的、没动**:两个敌人的血量、坐标、距离、modifier 全来自 .dem;**没有为了让目标砍不死而伪造血量** —— §2 动的是**致命性谕示**,这正是穷举成立的原因。3. **「兑现一发砍不死的大招值不值它的冷却」本轮不判**。本轮判的是「出货那个出口开不了火」与「armed 是同目标的严格超集」。价值那一问是波次读数(hero-43)。4. 归因边界:负读数**只能**读作「那些兑现出去的大招不值」,**永远不能**读作「杠杆删掉了一次施法」或「杠杆换了目标」。",
     "issue": "GH #615(本轮开,[hero]);落地 commit `10b474b9` 已在 main 上,**推在开 issue 之前**(GH #290);`claim_precheck.sh` **EXIT=0 clean**(local commits not on origin/main: 0)。"
+  },
+  "tpstamp_20260908": {
+    "owner": "strategy",
+    "date": "2026-09-08T02:xxZ",
+    "cand_id": "tpwatch (无新 id —— 收窄宿主自己的函数体并继承宿主的 id)",
+    "bots_lua_changed": true,
+    "status": "GATED, NOT ARMED -- P4.2 入集冻结期,本轮不申请入集(FROZEN-HOLD)。tpwatch 至今从未 armed 过任何一波。",
+    "backlog_item": "章程 0OCMID 的「下一格」:(2) 主体必须是一个 bots/ 行为改动;(1) GH #607 的单臂列作为本轮唯一一条量具附带(P4.4)。",
+    "headline": "`J.ShouldAbandonTpChannel`(tpwatch)判「这条 TP 正在被吃掉」,靠的是当前血量与 `bot.tpChannelStartHealth` 的差。而那个 stamp 在 bots/ 里**只有一个写入者,且它住在谓词自己的函数体内** ⇒ 基线不是「channel 开始时的血量」,而是「channel 期间第一次有人**调用到**这个谓词那一帧的血量」。两个调用点都是有条件的:退却链的调用**排在 PROMOTED 的 pushguard 地板之下**(链在第一个开火的守卫处 return),而 `J.ShouldLetTpChannelFinish` 在自己的 'pgchannel' 闸就 return 了。",
+    "domain_price": "110 fixtures / 1021 live hero frames / **23 帧带 modifier_teleporting**(tests/_tpstamp_sweep.lua,四臂同帧)。出厂臂 **21 stamped / 2 missed**;`pgchannel` 单臂 **22 / 1**;`tpwatch` 单臂(= 本次修法)**23 / 0**;`tpwatch+pgchannel` **23 / 0**。",
+    "measured_effect": "**coupling_frames 1**(缺陷本身):`f_260819_222030_jugg_tp_start` / juggernaut 上,arm 一个**与这个 stamp 毫无关系**的 id(`pgchannel`)决定了 `tpwatch` 有没有基线;该帧出厂 desire **0.92** = 从源码里**解析出来**的 pushguard 地板,即链在 pushguard 处 return、根本没走到 stamp。**coupling_open_armed 0**(修后):在 tpwatch 自己的臂上,再加 `pgchannel` 已经什么都不动。",
+    "why_no_new_id": "宿主 `J.ShouldAbandonTpChannel` 自己就是一个**未 promote、且从未 armed** 的候选 ⇒ 这一族里**不存在**任何能产生可读单臂零的落点:任何 `IsSoakCandidate('<新 id>')` 都是合取 `tpwatch AND <新 id>`,单臂波必然读 0,而那个 0 是**结构上不可能的**,`check_armed_wiring.py` 照样答 WIRED(GH #606/#576/#600/#607)。⇒ 改宿主自己的函数体、继承宿主的 id。**代价登记:tpwatch 从未 armed 过任何一波**(见 J.ShouldLetTpChannelFinish 的 header),所以没有任何既往读数描述修前的杠杆,**零读数作废**。",
+    "direction": "按构造单向:hoist 只能让 stamp 取得**更早**,所以记下的基线 >= 出厂会记下的那个,`startHealth - currentHealth` >= 原值 ⇒ `tpwatch` 只会**更常**开火,不会更少 —— 而且只在它本来就已经有 channel、有新鲜英雄伤害、且掉了 30% 血的帧上。晚取的基线是**有方向的**偏差:它取在「守卫本该注意到的那部分伤害」之后,于是 tpwatch **系统性欠开火**,偏向让一条正在被吃掉的 channel 跑完 —— 正是 dossier #24 那个结局。",
+    "pinned_frames": "正对照一 `f_260819_222030_jugg_tp_start` / juggernaut(t=437.1,7:17,深推、单人、mid-channel,`modifier_teleporting` 已过 0.1s):出厂 stamp = nil、desire 0.92;armed 后 stamp = 该帧血量。正对照二 `f_260819_222559_od_eclipse_pair` / juggernaut:同样 mid-channel、出厂 desire 0(链上方某条 veto 返回 NONE),**arm `pgchannel` 也照样没有 stamp** ⇒ 两个证人**因不同原因失败,只有 hoist 同时够得到两个**,「arm pgchannel 就行了」被这一帧证伪。反真空对照 `f_260819_222030_jugg_tp_eaten` / juggernaut:同样 mid-channel,但出厂链**走到了** stamp(desire 0.75,不是 pushguard 地板)⇒「出厂漏 2/23」是有判别力的读数不是恒真。域外对照 `f_260820_043637_axe_ring_close` / axe(无 channel):三个臂都不产生基线。",
+    "tests": "tests/test_tpstamp_channel_baseline.lua **14/14**;tests/_tpstamp_sweep.lua(尺子,四臂);tests/test_gated_helper_nesting_census.lua **10/10**(新增一行 (W) + GH #607 的单臂列钉进旧那一行);tools/agent/mutstand_tpstamp.sh **9/9 CAUGHT,零 SURVIVED,EXIT=0**。",
+    "mutstand_notes": "第一轮 6/9:M4 SURVIVED 是**变异体自己写错了**(它把调用插在 early-out 的**开头那一行之上**,即根本没搬动),不是钉子有洞;M5/M9 是 `want` 串对不上真正开火的那条断言(M9 顺带把 M7 的 nil-guard 断言也打红了 ⇒ 会用 M7 的名义报 M9 的发现)。三处都改的是**变异体与措辞**,判据一个字没动。",
+    "limits": "(i) 本 row 的**返回值列**仍然买不到:`J.ShouldAbandonTpChannel` 与它的 stamp 在**同一次调用、同一帧**内取值,单帧 fixture 上血量差恒为 0 ⇒ arm={pgchannel} 与 arm={pgchannel,tpwatch} **按构造**相等,**不是因为 id 惰性**。要买必须用**声明的替身**(预置一个来自更早一帧的 stamp),已如实登记为未买。(ii) `f_260819_222030_jugg_tp_eaten` 在 `J.ShouldLetTpChannelFinish` 的 header 里被描述为**没有** `modifier_teleporting`,而经 `tests/mock/replay_fixture.lua` 驱动时 juggernaut **带着**它(loader 的 `active_modifiers()` 按事件流重建区间,这个 t 落在区间内)。本轮的断言不依赖哪一边对 —— 它只断言**出厂链走到了 stamp**,那是链的性质不是那个 modifier 的性质。",
+    "next": "(甲) 总监:本改动已登记,**本轮不申请入集**(P4.2 冻结)。(乙) 将来 `tpwatch` 入集时:它与 `pgchannel` 现在**可以**同波单独读了(coupling_open_armed 0),这正是本轮买到的东西。(丙) GH #607 的返回值列仍欠一个**声明的替身**——见 limits (i)。"
   }
 }

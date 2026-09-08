@@ -155,6 +155,26 @@ function GetDesireHelper()
         bot.lastRespawnTime = DotaTime()
     end
 
+    -- [tpwatch / GH #607] Record-only, and it sits HERE for the same reason the
+    -- two recorders above do: it must see every frame of a TP channel, and every
+    -- return below this point hides one from it.
+    -- `J.ShouldAbandonTpChannel` (the `tpwatch` guard at the chain's VERYHIGH
+    -- slot) compares health against `bot.tpChannelStartHealth`, and until now the
+    -- ONLY writer of that stamp was that predicate's own body. The chain returns
+    -- on the first guard that fires and the call sits BELOW the PROMOTED
+    -- pushguard floor, so a channeling frame that trips pushguard never reached
+    -- the stamp at all. Measured over the corpus (tests/_tpstamp_sweep.lua, 110
+    -- fixtures / 1021 live / 23 channeling): shipped leaves it unwritten on 2/23,
+    -- and on `f_260819_222030_jugg_tp_start` (juggernaut, shipped desire 0.92 =
+    -- the parsed pushguard floor) arming `pgchannel` -- an id with nothing to do
+    -- with this stamp -- is what makes it appear. A baseline stamped late is
+    -- stamped after some of the damage, so it is biased toward `tpwatch` NOT
+    -- firing.
+    -- Gated turbo + 'tpwatch' inside the helper; writes nothing when unarmed, so
+    -- shipped play is byte-identical. It returns no desire: this line can never
+    -- change what GetDesireHelper answers on an unarmed tree.
+    J.StampTpChannelHealth(bot)
+
     if not bot:IsAlive()
     or bot:HasModifier('modifier_dazzle_nothl_projection_soul_clone')
     or bot:HasModifier('modifier_skeleton_king_reincarnation_scepter_active')

@@ -27,6 +27,42 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TPSTAMP. **【2026-09-08T01:25Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
+   产出 record-only 的 `J.StampTpChannelHealth`(**无新 id**,由既有 `tpwatch` 闸承载,turbo-only)
+   + `mode_retreat_generic.GetDesireHelper` 最上面的唯一调用点、`tests/_tpstamp_sweep.lua`(四臂尺子)、
+   `tests/test_tpstamp_channel_baseline.lua`(**14/14**)、`tools/agent/mutstand_tpstamp.sh`(**9/9 CAUGHT,零 SURVIVED**)、
+   `tests/test_gated_helper_nesting_census.lua` 新增一行 (W) **且把 GH #607 的单臂列钉进旧那一行**(**10/10**)、
+   `state.json:tpstamp_20260908`;报告 `iterations/reports/strategy/20260908T012539Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **GH #607 的单臂列这一棒本轮交清了一半**(可买的那一半),另一半如实登记为买不到。
+   **⭐ 主判据(可复用,是 0OCMID / 0OHNUM 那条的第三个实例,也是第一次落在「副作用」而不是「返回值」上):
+   一个 helper 的 bookkeeping 副作用,其发生时机由**调用它的那条链在哪里 return** 决定 ——
+   而链的 return 点**受 armed 集影响** ⇒ **arm 一个 id 会改掉另一个 id 的测量基线**。**
+   本例:`bot.tpChannelStartHealth` 在 `bots/` 里**只有一个写入者且住在谓词自己体内**,
+   退却链的调用**排在 PROMOTED 的 pushguard 0.92 地板之下**,`J.ShouldLetTpChannelFinish`
+   在自己的 `pgchannel` 闸就 return ⇒ 四臂读数 出厂 21/23、`pgchannel` 22/23、`tpwatch` **23/23**,
+   `coupling_frames 1`(缺陷)、`coupling_open_armed 0`(修后)。
+   **这是 `mode_retreat_generic` 自己的 GH #29 注释点名过的东西,在一个新位置上复发。**
+   **⭐⭐ 偏差有方向,而方向是「让守卫欠开火」**:晚取的基线取在守卫本该注意到的伤害**之后**,
+   差值偏小 ⇒ `tpwatch` 系统性欠开火,**恰好偏向 dossier #24 那个结局**。
+   修法方向按构造单向(stamp 只写一次 ⇒ 只能更早 ⇒ 只会更常开火)。
+   **⭐⭐⭐ 变异台第一轮 6/9,三条全是台子自己话说错了**:M4 SURVIVED 是**变异体根本没搬动**
+   (插在 early-out 开头那行**之上**)—— **一个什么都没做的变异体活下来是正确的,不是钉子有洞**;
+   M9 第一版连 `== nil then` 一起改掉,于是先打红 M7 的断言 ⇒ **台子会用 M7 的名义报 M9 的发现**。
+   **M7 单独值得记**:把 stamp 变成每帧重写,stamped 普查读成更好看的 **23/23**,而 `tpwatch` 永不开火 ——
+   **只看「有没有 stamp」的读数看不见它**,`[direction]` 那条断言就是为它存在的。
+   **⭐⭐⭐⭐ 本轮自伤**:开工自检在后台跑整轮,变异台**同时原地改写同一棵树**(GH #507 撕裂窗口,
+   变异台自己 header 就写着)⇒ 那一遍自检读数**不予采信**,已在静止树上重跑。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) 主体仍必须是一个 `bots/` 行为改动;
+   (2) **GH #607 的返回值列** —— 欠一个**声明的替身** fixture(预置来自更早一帧的
+   `tpChannelStartHealth`),体例照 `mutstand_ohnum.sh` M6,LIMIT 段里**写明它是替身不是帧**;
+   **不许**以「测了,读数 0」的形状落地(谓词与 stamp 同帧取值 ⇒ 单帧差恒 0,**按构造**不是惰性);
+   这是量具附带,**不能当主体**;
+   (3) **不要**回 `overchase`(0OCMID 三条腿已结清),**不要**把 GH #610 的 `or {}` 当主体;
+   (4) 一条可查线索:`f_260819_222030_jugg_tp_eaten` 的 `modifier_teleporting` 二义
+   (header 说没有 / mock loader 说有),它同时坐在 `test_pgchannel_veto.lua` 引用的那条链上。】**
+
 0OCMID. **【2026-09-07T23:30Z 新增。**OWNER_PRIORITIES P4.4(i) 达成:工作单元主体 = 一个 `bots/` 行为改动**;
    产出 `J.ShouldPunishOverchase` 腿 (b) **软读余量 800 → 1600**(**无新 id**,由既有 `overchase` 闸承载,
    turbo-only,理由见下 ⭐)、`tests/_overchase_sweep.lua`、`tests/test_overchase_midline_margin.lua`(**6/6**)、
@@ -6519,6 +6555,60 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-08T01:25Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**。
+  TP channel 的「起始血量」基线 **hoist 成 record-only 的 `J.StampTpChannelHealth`**,
+  唯一调用点放在 `mode_retreat_generic.GetDesireHelper` **最上面**(与已有的死点/proven-killer
+  两个记录器并排,理由相同:**它下面的每一个 return 都会藏起一帧**)。
+  **无新 soak id** —— 由既有 `tpwatch` 闸承载,turbo-only,**两道闸都排在写入之前**⇒ 未 armed 时
+  这个函数一个字节都不写、也不返回任何 desire,出厂逐位不变。
+  ⭐ **缺陷**:`J.ShouldAbandonTpChannel` 靠 `bot.tpChannelStartHealth` 判「channel 正在被吃掉」,
+  而那个 stamp 在 `bots/` 里**只有一个写入者、且住在谓词自己体内** ⇒ 基线不是「channel 开始时的血量」,
+  是「**第一次有人调用到这个谓词**那一帧的血量」;两个调用点都有条件(退却链的那个**排在 PROMOTED
+  的 pushguard 0.92 地板之下**,链在第一个开火的守卫处 return;`J.ShouldLetTpChannelFinish`
+  在自己的 `pgchannel` 闸就 return)。**偏差有方向**:晚取的基线取在伤害之后 ⇒ `tpwatch`
+  **系统性欠开火**,偏向让一条正在被吃掉的 channel 跑完 —— **恰好是 dossier #24 那个结局**。
+  ⭐⭐ **读数(`tests/_tpstamp_sweep.lua`,110 fixtures / 1021 live / 23 帧带 `modifier_teleporting`,四臂同帧)**:
+  出厂 **21 stamped / 2 missed**、`pgchannel` 单臂 **22/1**、**`tpwatch` 单臂 23/0**、两个都 arm **23/0**;
+  **`coupling_frames 1`** = 缺陷本身(`f_260819_222030_jugg_tp_start`/juggernaut,出厂 desire **0.92**
+  = **解析出来**的 pushguard 地板 ⇒ 链在那里 return、没走到 stamp;arm 一个**毫无关系**的 id
+  `pgchannel` 才让基线出现)——**这正是本文件自己的 GH #29 注释点名的「arming 两个 id 互相改变对方行为」**;
+  **`coupling_open_armed 0`** = 修后,在 tpwatch 自己的臂上再加 `pgchannel` 什么都不动。
+  ⭐⭐⭐ **两个证人因不同原因失败,这是「arm pgchannel 就行了」被证伪的地方**:
+  第二个漏帧 `f_260819_222559_od_eclipse_pair`/juggernaut 出厂 desire 0(链**上方**的 veto),
+  **arm `pgchannel` 也照样没有 stamp** ⇒ 只有 hoist 同时够得到两个。
+  反真空对照 `f_260819_222030_jugg_tp_eaten`(同样 mid-channel,出厂链**走到了** stamp,desire 0.75)
+  ⇒「出厂漏 2/23」是**有判别力的读数**不是恒真。
+  `tests/test_tpstamp_channel_baseline.lua` **14/14**;
+  `tools/agent/mutstand_tpstamp.sh` **9/9 CAUGHT,零 SURVIVED,EXIT=0**。
+  ⚠️ **第一轮 6/9,三条全是台子自己话说错了,不是钉子有洞**:**M4 SURVIVED 是变异体根本没搬动**
+  (插在 early-out 开头那一行**之上**)—— 一个什么都没做的变异体活下来是**正确的**;
+  M5/M9 是 `want` 串对不上真正开火的断言,**M9 尤其**:它第一版连 `== nil then` 一起改掉,
+  于是**先打红 M7 的 nil-guard 断言** ⇒ 台子会**用 M7 的名义报 M9 的发现**。
+  改的全是**变异体与措辞**,判据一字未动。**M7(把 stamp 变成每帧无条件重写)是本轮最该留的一条**:
+  它让 stamped 普查读成更好看的 **23/23**,而差值恒 ~0、`tpwatch` 永不开火 ——
+  **只看「有没有 stamp」的读数看不见它**,所以 `[direction]` 那条断言必须存在。
+  **附带一条(P4.4 量具配额)= GH #607 的单臂列**:那一行原来挂的是论证,本轮钉进四臂表,
+  并**收回**其中一句 ——「pgchannel 已经在同一帧调用过,**所以 stamp 每帧仍恰好发生一次**」
+  **只在它被写出来的那条臂上为真**;`pgchannel` 未 armed 时那一帧 stamp 发生**零次**。
+  新增的一行(本轮调用点)也带**量出来的**单臂列(23/23 vs 21/23),不是第七段论证。
+  ⚠️ **#607 的返回值列仍然买不到,如实登记**:谓词与它的 stamp 在**同一次调用同一帧**取值 ⇒
+  单帧 fixture 上血量差恒为 0,`arm={pgchannel}` 与 `arm={pgchannel,tpwatch}` **按构造相等,
+  不是因为 id 惰性**;要买必须用**声明的替身**(预置更早一帧的 stamp)。**不许**以「测了,读数 0」落地。
+  ⚠️ **本轮自伤,登记**:开工自检在后台跑整轮,而**变异台同时原地改写同一棵树** ——
+  正是变异台自己 header 写着的 GH #507 撕裂窗口 ⇒ 那一遍自检的 Lua 腿读到中间态,
+  **该遍读数不予采信**,已在**静止的树上重跑**(见报告 §7/附录)。
+  另:第一条命令又被自检以 `stdout is a pipe` 拒了一次(**该形状第 6 次复发**,evidence discipline 3)。
+  ⚠️ **一条留给下一个人的线索**:`f_260819_222030_jugg_tp_eaten` 的 `modifier_teleporting`
+  读数两处不一致(`J.ShouldLetTpChannelFinish` 的 header 说没有,mock loader 的
+  `active_modifiers()` 说有)—— **本轮无一条断言依赖哪边对**,已写进测试的 LIMIT 段。
+  `iterations/state.json:tpstamp_20260908`;**armed 串一字未动、`queue.json` 一字未动、
+  `test_set.md` 一字未动**(本轮无新 id,无入集提议;P4.2 冻结期);
+  零 AWS、零 S3、零 EC2、零波次。
+  ⛔ **下一格(本组下一轮第一项)**:(1) 主体仍必须是一个 `bots/` 行为改动;
+  (2) #607 的**返回值列** —— 写一个**声明的替身** fixture,体例照 `mutstand_ohnum.sh` M6
+  (LIMIT 段里写明**它是替身不是帧**),这是量具附带**不能当主体**;
+  (3) **不要**回 `overchase`(0OCMID 已结清三条腿),**不要**把 GH #610 的 `or {}` 拿回来当主体。)
 
 - 2026-09-07T23:30Z(**P4.4(i) 达成:主体 = 一个 `bots/` 行为改动**。
   `J.ShouldPunishOverchase` 腿 (b) **软读余量 800 → 1600**,**硬读(建筑 1200)一字不动**,

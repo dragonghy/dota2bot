@@ -7611,6 +7611,65 @@ function J.ShouldAbandonTpChannel( bot )
 		>= bot:GetMaxHealth() * 0.30
 end
 
+-- [tpwatch, GH #607/#511 family] THE BASELINE ABOVE IS NOT THE CHANNEL'S START
+-- HEALTH -- IT IS THE HEALTH ON THE FIRST FRAME SOMEBODY CALLED THE PREDICATE.
+-- `bot.tpChannelStartHealth` has exactly one writer in bots/ and that writer
+-- lives inside J.ShouldAbandonTpChannel itself, so the stamp is taken only when
+-- control reaches the call. Both callers are conditional:
+--   * mode_retreat_generic's chain calls it BELOW the PROMOTED
+--     J.ShouldAbortDeepSoloPush floor, and that chain returns on the first
+--     guard that fires -- a frame that trips pushguard never reaches the stamp;
+--   * J.ShouldLetTpChannelFinish returns false at its own
+--     J.IsSoakCandidate('pgchannel') line before it ever gets to the call.
+-- MEASURED, not argued (tests/_tpstamp_sweep.lua, 110 fixtures / 1021 live
+-- frames / 23 carrying `modifier_teleporting`): the shipped chain leaves the
+-- stamp UNWRITTEN on 2/23 channeling frames, and on 1 of those arming an
+-- UNRELATED id flips it -- `f_260819_222030_jugg_tp_start`, juggernaut, the very
+-- frame the pgchannel line was written for. Shipped desire there is 0.92, the
+-- parsed pushguard floor, i.e. the chain returned at pushguard and line 312
+-- never ran. Arm `pgchannel` and the stamp appears; that is `pgchannel`
+-- deciding `tpwatch`'s baseline, the cross-id coupling mode_retreat_generic's
+-- own GH #29 note calls out as breaking the "one variable at a time" premise
+-- the soak-candidate A/B rests on.
+-- A late stamp is not merely noisy, it is DIRECTIONAL: it is taken after some
+-- of the damage the guard exists to notice, so the difference it later measures
+-- is too small and `tpwatch` UNDER-fires -- biased toward letting a channel
+-- that is being eaten run to its end, which is the one outcome dossier #24 is
+-- about.
+-- WHAT THIS DOES: a record-only stamp, called from the top of
+-- mode_retreat_generic's GetDesireHelper (beside the death-spot and
+-- proven-killer recorders already there, and for the same reason -- it must run
+-- BEFORE the early-outs, not after them). It never returns a desire and never
+-- reads one.
+-- NO NEW ID, ON PURPOSE. The host predicate is itself an un-promoted candidate
+-- whose gate has never been armed, so there is no placement inside this family
+-- that yields a READABLE single-arm zero: any `IsSoakCandidate('<new id>')` here
+-- would be the conjunction `tpwatch AND <new id>`, a single-arm wave would read
+-- 0, and that 0 would be structurally impossible rather than a corpus fact
+-- (GH #576/#600/#606/#607). So this narrows the host's own body and inherits
+-- the host's id. Cost, registered: `tpwatch` has never been armed in any wave
+-- (see J.ShouldLetTpChannelFinish's header), so no prior reading describes the
+-- pre-fix lever and none is invalidated.
+-- DIRECTION, by construction: the hoisted stamp can only be taken EARLIER in a
+-- channel, so the recorded baseline is >= the one the shipped code would have
+-- recorded, so `startHealth - currentHealth` is >= what it was. `tpwatch` can
+-- only fire MORE often, never less -- and only on frames where it already had
+-- a channel, fresh hero damage and a 30% loss.
+-- Gated turbo + 'tpwatch'; both gates run FIRST, so with the id unarmed this
+-- function writes nothing at all and shipped play is byte-identical.
+function J.StampTpChannelHealth( bot )
+	if not J.IsModeTurbo() then return end
+	if not J.IsSoakCandidate( 'tpwatch' ) then return end
+	if bot == nil or not bot:IsAlive() then return end
+	if not bot:HasModifier( 'modifier_teleporting' ) then
+		bot.tpChannelStartHealth = nil
+		return
+	end
+	if bot.tpChannelStartHealth == nil then
+		bot.tpChannelStartHealth = bot:GetHealth()
+	end
+end
+
 -- ============================================================================
 -- [TeamBrain phase 1 / wave12 dossier 20260725] Response arbitration for TP
 -- answers, per the owner's global-strategy directive. The 24:5 landing-death

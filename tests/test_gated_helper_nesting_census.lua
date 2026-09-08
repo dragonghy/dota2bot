@@ -271,6 +271,22 @@ local PINNED = {
     -- domain.
     "c12,retnear,towerreach | GetDesireHelper | J.IsWkReincarnationArmed | wkreincarnmp,wkreinctr | bots/mode_retreat_generic.lua",       -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldAbandonTpChannel | tpwatch | bots/mode_retreat_generic.lua",                      -- W
+    -- [tpwatch 20260908, GH #607] (W), and it is the strongest (W) in this file
+    -- rather than the usual wide-net one. c12/retnear/towerreach are sibling
+    -- STATEMENTS further down the same 500-line GetDesireHelper; this call sits
+    -- ABOVE all of them and above every early-out, which is the entire point of
+    -- the lever (a return anywhere below hides a frame from the stamp).
+    -- SINGLE-ARM COLUMN, DRIVEN not argued (tests/_tpstamp_sweep.lua, four arms
+    -- over 110 fixtures / 1021 live / 23 channeling frames): arm={tpwatch}
+    -- stamps 23/23, arm={} stamps 21/23. So arming the id alone is emphatically
+    -- not arming a no-op, and the 2-frame gap is the corpus fact the lever was
+    -- built from -- not a structural zero.
+    -- The identity question this census asks has a second answer here worth
+    -- writing down: the callee returns NOTHING. It cannot join a conjunction,
+    -- cannot raise or lower a desire, and cannot change what GetDesireHelper
+    -- answers on an unarmed tree. Its only output is the side effect, which is
+    -- why the reading above is a stamp count and not a desire diff.
+    "c12,retnear,towerreach | GetDesireHelper | J.StampTpChannelHealth | tpwatch | bots/mode_retreat_generic.lua",                        -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldCounterTradeKite | l1kite | bots/mode_retreat_generic.lua",                       -- W
     -- [pgchannel 20260907] The outer half is (W) for the reading the 'roshdist'
     -- row already carries -- c12/retnear/towerreach are sibling statements in the
@@ -288,12 +304,42 @@ local PINNED = {
     -- states and the one that cannot turn a measured lever into a no-op.
     -- ⚠ THE ROW ALSO CARRIES A SIDE EFFECT, which is why it is worth a paragraph
     -- rather than a letter: J.ShouldAbandonTpChannel stamps
-    -- `bot.tpChannelStartHealth` ABOVE its own 'tpwatch' gate. That bookkeeping
-    -- is preserved rather than lost -- when the veto fires, GetDesireHelper
-    -- returns before the chain's own call to that helper (the row two lines up),
-    -- but pgchannel has already called it on that same frame, so the stamp still
-    -- happens exactly once per frame. An (I) reading about RETURN VALUES would
-    -- have missed that; it is checked here because the callee is not pure.
+    -- `bot.tpChannelStartHealth` ABOVE its own 'tpwatch' gate.
+    -- [GH #607, strategy 2026-09-08] THE SINGLE-ARM COLUMN, MEASURED. The
+    -- previous version of this paragraph argued that the stamp "still happens
+    -- exactly once per frame" because pgchannel calls the helper before the
+    -- chain does. Driven rather than argued (tests/_tpstamp_sweep.lua, four
+    -- arms, 110 fixtures / 1021 live frames / 23 carrying modifier_teleporting):
+    --
+    --   arm                    stamped   missed
+    --   (nothing)                  21        2
+    --   pgchannel                  22        1
+    --   tpwatch                    23        0
+    --   pgchannel + tpwatch        23        0
+    --   coupling_frames 1     coupling_open_armed 0
+    --
+    -- The claim was true only on the arm it was written for. With pgchannel
+    -- UNARMED the chain returns at the PROMOTED pushguard floor before it ever
+    -- reaches its own call, and the stamp happens ZERO times that frame --
+    -- `f_260819_222030_jugg_tp_start`, juggernaut, shipped desire 0.92, which is
+    -- the parsed pushguard floor. So arming 'pgchannel' was deciding whether
+    -- 'tpwatch' had a baseline at all: an id moving another id's measurement,
+    -- the coupling the GH #29 note in mode_retreat_generic calls out as breaking
+    -- the "one variable at a time" premise. `coupling_frames 1` is that, counted.
+    -- CLOSED by hoisting the stamp to a record-only J.StampTpChannelHealth call
+    -- above GetDesireHelper's early-outs (same id, no new one -- the host is an
+    -- un-promoted candidate, so an inner id could only ever read a structurally
+    -- impossible zero). `coupling_open_armed 0` is the after: on tpwatch's own
+    -- arm, adding pgchannel now moves nothing.
+    -- ⚠ WHAT IS STILL NOT BOUGHT, stated rather than let read as "measured, no
+    -- difference": the RETURN-VALUE column for this row. J.ShouldAbandonTpChannel
+    -- compares against a stamp taken during the same call, so on a single-frame
+    -- fixture the health difference is identically 0 and arm={pgchannel} must
+    -- equal arm={pgchannel,tpwatch} BY CONSTRUCTION -- not because the id is
+    -- inert. Buying it needs a declared stand-in (a preset stamp from an earlier
+    -- frame), and it is registered as unbought until someone writes one.
+    -- An (I) reading about RETURN VALUES would have missed the side effect
+    -- entirely; it is checked here because the callee is not pure.
     "pgchannel | J.ShouldLetTpChannelFinish | J.ShouldAbandonTpChannel | tpwatch | bots/FunLib/jmz_func.lua",                             -- I
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRegenNotWalkHome | stayfield2 | bots/mode_retreat_generic.lua",                   -- W
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/mode_retreat_generic.lua",             -- W
