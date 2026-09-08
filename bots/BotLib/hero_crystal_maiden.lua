@@ -1086,6 +1086,77 @@ function X.cm_IsFarCreepFloorMet( nNearHealth, nFarHealth, nFloor )
 end
 
 
+--- [cmlaneband] gated (turbo + soak candidate): may X.ConsiderW's lane-harass
+--- firing point commit Frostbite to a hero it cannot reach?  INERT until armed.
+--- Written 2026-09-08 (hero stream) under OWNER_PRIORITIES P4.4 (i).
+---
+--- WHAT IS WRONG.  X.ConsiderW builds TWO hero rings off one cast range --
+--- `nEnemysHeroesInRange` (nCastRange) and `nEnemysHeroesInBonus`
+--- (nCastRange + 200) -- and then bids from eight firing points.  Six of the
+--- eight bound the target to roughly the cast range:
+---
+---     kill-confirm       nEnemysHeroesInRange
+---     teamfight          J.GetNearbyHeroes( bot, nCastRange, ... )
+---     protect-self       nEnemysHeroesInRange
+---     lane last term     nEnemysHeroesInRange
+---     进攻               J.IsInRange( npcTarget, bot, nCastRange + 50 )
+---     撤退               J.IsInRange( npcEnemy,  bot, nCastRange - 80 )
+---     roshan             J.IsInRange( botTarget, bot, nCastRange )
+---
+--- Exactly TWO read nEnemysHeroesInBonus with no distance term at all: the TP
+--- interrupt, and the 对线期消耗 lane-harass branch this helper guards.
+---
+--- THIS HELPER IS ABOUT THE SECOND ONE, AND DELIBERATELY NOT ABOUT THE FIRST.
+--- An interrupt is worth walking for -- it costs the enemy a whole teleport,
+--- and the same argument was made and left standing for Wraith King's Q
+--- (GH #621, tests/test_wk_q_lane_reach.lua section 0).  The lane-harass
+--- branch's payoff is a HARASS on a target the branch itself has already
+--- described as slower than CM, and the KILL case is the first firing point in
+--- the function, which does bound distance.  So the loosest reach in the
+--- function sits under the smallest payoff.
+---
+--- WHAT IT COSTS.  X.SkillsComplement hands the engine
+--- `ActionQueue_UseAbilityOnEntity( abilityW, castWTarget )`, and on an
+--- out-of-range target that order is a MOVE order first: CM walks the gap, in
+--- lane, at 125-155 mana a cast.  The dispatch `return`s the moment W is
+--- queued, so X.ConsiderR (Freezing Field) is not consulted for as long as the
+--- desire holds.  Same family as `lionrreach` (GH #617) and `wkqlane`
+--- (GH #621) on a third hero.
+---
+--- THE SLACK IS THE FUNCTION'S OWN, NOT A NEW NUMBER.  `+50` is what the 进攻
+--- firing point -- the other place in this function that COMMITS to one chosen
+--- hero -- already allows.  Armed, the lane-harass branch may commit exactly
+--- where the offence branch would commit, and nowhere further.
+---
+--- ⚠️ `nCastRange` IS A PARAMETER, not a constant re-typed here.  The caller's
+--- value already carries `+ 30`, `aetherRange`, and the lone-enemy attack-range
+--- extension above it, so the gate composes with all three instead of freezing
+--- one of today's values (the `pullcad` lesson applied to arithmetic).
+---
+--- DIRECTION IS SINGLE.  Gate off the answer is an unconditional `true`, so the
+--- armed set is a strict subset of the shipped one: arming can only ever REFUSE
+--- a cast, never add one.  A negative reading may not be read as "CM cast more".
+--- It also cannot RELOCATE a refused cast inside this function: every firing
+--- point below reads a ring that is tighter (nCastRange, +50, -80) or demands a
+--- different target class, so a refused band hero is refused outright.
+---
+--- ⚠️ WHAT THIS ROUND DID NOT BUY.  That the branch AS A WHOLE fires on an
+--- archive frame is NOT a reading this round holds -- two of its conjuncts are
+--- undrivable offline, and both reasons are about the harness, not the game:
+--- `bot:GetActiveMode()` is bot-VM state that is in no .dem, and the fixture
+--- loader hands EVERY unit `GetCurrentMovementSpeed = 300`, so the branch's own
+--- `target speed < bot speed` term is `300 < 300` on every frame in the corpus.
+--- tests/test_cm_w_lane_band.lua section 6 states both as the limits they are.
+--- Size the domain on a wave: iterations/queue.json `hero-47`.
+function X.cm_IsLaneHarassTargetInReach( hBot, hTarget, nCastRange )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'cmlaneband' ) ) then return true end
+
+	return J.IsInRange( hTarget, hBot, nCastRange + 50 )
+
+end
+
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then
@@ -1205,6 +1276,7 @@ function X.ConsiderW()
 		if( nMP > 0.78 or bot:GetMana()> nKeepMana )
 		then
 			if J.IsValid( nWeakestEnemyHeroInBonus )
+				and X.cm_IsLaneHarassTargetInReach( bot, nWeakestEnemyHeroInBonus, nCastRange )
 				and nHP > 0.6
 				and #nTowers == 0
 				and #nEnemysCreeps2 + #nEnemysHeroesInBonus <= 5

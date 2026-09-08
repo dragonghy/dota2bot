@@ -145,6 +145,16 @@ UNRESOLVED_HAND_READ = {
     """tests/test_axe_cull_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
         "tests/frames}",
+    # Hand-read 2026-09-08 (hero), at :160-175: `corpus_paths()` takes no
+    # parameter, its one caller (:253) passes none, and the loop is
+    # `for _, dir in ipairs({ FIXTURE_DIR, STAGED_DIR })` over the literals at
+    # :137-138 ('tests/fixtures' / 'tests/frames').  It is the file's only
+    # io.popen.  Same shape as the lion/wk/axe sisters above; bots/ is not in
+    # the enumeration.  Registered in the SAME work unit that created the file
+    # (GH #596's habit, and the third round to keep it).
+    """tests/test_cm_w_lane_band.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
+        "tests/frames}",
     """tests/test_fixture_mana_price.lua  ::  'ls ' .. d .. ' 2>/dev/null'""":
         "d in {tests/fixtures, tests/frames}",
     # Hand-read 2026-09-06 (director), at :399-400: the loop is written

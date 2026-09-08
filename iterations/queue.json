@@ -2041,6 +2041,18 @@
    "requested_by": "hero 2026-09-08T07:5xZ",
    "status": "pending",
    "result": ""
+  },
+  {
+   "id": "hero-47",
+   "stream": "hero",
+   "bundle": "cmlaneband (turbo-only soak candidate, NOT armed -- P4.2 冻结期内本条不请求入集)",
+   "seeds": [],
+   "priority": 3,
+   "question": "**零 EC2 归档只读扫描,与 hero-2/30..46 同形,可并进同一次遍历。** 给 `cmlaneband` 量域(`bots/BotLib/hero_crystal_maiden.lua` `X.cm_IsLaneHarassTargetInReach`)。**背景**:`X.ConsiderW`(Frostbite)从一个 cast range 建两个环 —— `nEnemysHeroesInRange`(`nCastRange`,实测 **630** = KV 600 + 文件自带 30)与 `nEnemysHeroesInBonus`(`nCastRange + 200` = **830**)—— 八个落单点里**六个**把目标绑在 `nCastRange` / `+50` / `-80` 上,**恰好两个**读宽的那个且**一个距离项都没有**:TP 打断,和「对线期消耗」骚扰。本 id 只收第二个(打断值回票价,与 `wkqlane` GH #621 同一条论证,逐字保留)。**要四列读数,分母一律带上(CM 局数 / CM 帧数)**:(1) **对线期消耗那条骚扰分支开火了几次**(出货腿真的 `return HIGH` 的瞬间数;它的前置是 `GetActiveMode()==BOT_MODE_LANING` + `#nTowers==0` + `nMP>0.78 或 mana>220` + `nHP>0.6` + `#creeps(1400)+#bonus<=5` + 目标未被控 + **目标移速 < CM 移速**);(2) **其中目标距离 > 680 的占比** —— 这一列就是本 lever 的域,**按 gap 分桶**(0-25 / 25-75 / 75-150 / 150-200u,**别只报均值**,铁律 4(ii));(3) **代价列**:每次 (2) 命中,记该次落单后 **3 秒内**(a) Frostbite 是否真的放出去了、(b) 目标是否真的被冻住/被杀、(c) CM 自己是否掉血 >20% 或死亡 —— 这三个数直接回答「那 200 码的接近值不值」,而**对线期的 CM 是全场最脆的位置之一**,(c) 的权重比别的英雄高;(4) **机会成本列**:每次 (2) 命中的当帧,`X.ConsiderR`(Freezing Field)是否 `IsFullyCastable` —— 因为 `X.SkillsComplement` 排完 W 就 `return`,那一帧 R **根本没被考虑**。⚠️ **分层**:(2)(3)(4) 都按 ab / ba 两层分别报**读数**(不是局数,铁律 4(i-a));计数类量**不报中位数**,或必须同时给占比(4(ii))。⚠️ **两条本地量不到的前置,波次是唯一能答的地方**:`GetActiveMode()` 是 bot-VM 状态、任何 .dem 里都没有;fixture loader 给**每个单位**都发 `GetCurrentMovementSpeed = 300`,于是「目标移速 < CM 移速」这条合取在整个语料上是 `300 < 300` —— 所以 (1) 这一列本地**结构上读不到**,不是「域为空」。",
+   "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「对线期消耗骚扰分支开火 + 目标 gap 落在 75-200u + 当帧 Freezing Field 可施」那一帧,好让本组用 `make_fixture.py` 把它钉成 fixture,补上本轮**没能被帧驱动**的那一半(`tests/test_cm_w_lane_band.lua` §0.3 限度 2)。**预登记的判读方向**:若 (1) 在整份语料里是 **0**,带 `DOMAIN-NOT-REACHED` 退回、不入集,**并且不得**因此声称缺陷不存在(「这条分支读 `+200` 环且零距离项、而同函数另外六个落单点都绑距离」是**闭式事实**,`tests/test_cm_w_lane_band.lua` §2/§3/§5 钉着;§2 还在真实帧上驱动了出货选择器**真的**选出一个 711.9u 的候选);若 (2) 非零而 (3) 显示这些落单多数**真的放出了 Frostbite 且目标真的被冻住**、同时 (c) 掉血低,那么本杠杆掐掉的是**真的骚扰**,下一棒是**重新划线**(例如只拒 gap > 75u)而**不是**直接判负;若 (3) 显示放出去的比例低、或 (c) 显示 CM 常在这些接近里被换掉、或 (4) 显示常常压掉一个可施的 R,那么本 id 的三条件 (a)/(c) 都已到手,可在 P4.2 解冻后提入集。",
+   "requested_by": "hero 2026-09-08T11:0xZ",
+   "status": "pending",
+   "result": ""
   }
  ],
  "done": [

@@ -22,7 +22,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--124. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+-125. **⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
+     timeline)、CM 的 `cmfarcreep` 域(`hero-42`)、`lionultcash` 域(`hero-43`)、
+     `lionrreach` 域(`hero-44`)、`wkqlane` 域(`hero-45`)、`axecullreach` 域(`hero-46`)、
+     **新增 `cmlaneband` 域(`hero-47`)**;`wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`,逐字不变。
+   - **⭐ 本轮(`-125`)顺手看到、没做的两条线索,都在 `bots/BotLib/hero_crystal_maiden.lua`**:
+     (甲) **`X.ConsiderW` 那条读 `nEnemysHeroesInView[1]` 的落单点** —— 那是 **1600** 环,
+     比本轮关掉的 band **还宽 970 码**,是这个函数里最松的到达。本轮**故意没碰**,理由写在
+     `tests/test_cm_w_lane_band.lua` §0.3 限度 4 并有 §5 断言钉住:它自己那条
+     「目标 350 内 ≥5 个友军」合取让**它的域是另一个问题**,不是「它站得住」。
+     ⚠️ **先量再动**:没有量过这条合取在真实对局里的开火频率。谁要动它,**先退休限度 4**。
+     (乙) **`X.ConsiderW` :1105 的 `nCastRange = bot:GetAttackRange() + 60` 是死分支** ——
+     它的守卫是 `nCastRange < bot:GetAttackRange()`,而 Frostbite 的 KV cast range 是 **600**、
+     文件再 `+30` ⇒ 630,CM 攻击距离 600 ⇒ `630 < 600` **恒假**。这是**可读性/死代码**问题,
+     **不是行为杠杆**(把它弄活是一次**加宽**,方向错),按 P4.4 不能当主体;要处理走
+     `tests/test_dead_numeric_local_census.lua` 那一族。
+   - **⛔ 不许**顺手改 `cmfarcreep` / `cmcreepcap` / `cmrangedhp` / `cmqreach` 的合取或 id,
+     尤其**不许**把 `cmlaneband` 与 `cmfarcreep` 合取 —— 那正是 pullcad 陷阱,而
+     **`X.ConsiderW` 自己就在调用 `cmfarcreep`**,所以这条特别近;变异台 **M9** 就是它。
+
+-124. ~~**⭐ 下一轮:按 P4.4 (i) 继续找焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-08T11:14Z 做完:换了英雄(Crystal Maiden;她此前的 gated id 全在小兵/回复侧,
+   英雄到达侧一个都没有)。`X.ConsiderW`(Frostbite)八个落单点、两种到达约定;六个把目标
+   绑在 `nCastRange` / `+50` / `-80` 上,**恰好两个**读 `nEnemysHeroesInBonus`(`nCastRange + 200`)
+   且一个距离判断都不做。gated `cmlaneband` 收其中「对线期消耗」骚扰那条到这个函数**自己的
+   承诺门**(`nCastRange + 50`,「进攻」落单点写的那个)以内。`bots/` 有真代码行。** 报告
+   `iterations/reports/hero/20260908T111410Z.md`。新 `tests/test_cm_w_lane_band.lua`(**12 例**)
+   + `tools/agent/mutstand_cmlaneband.sh`(**10/10 CAUGHT**)。登记
+   `state.json:cmlaneband_20260908`,新请求 `queue.json:hero-47`,新开 GH issue(号见报告 §8/§7)。
+   本轮 `[hero]` open issue **一条可认领的都没有**(13 条逐条理由见报告 §1)。
+   - **⭐ 选中的是「回报 vs 到达」不匹配,与 `wkqlane` 逐字同一条论证**:打断值回票价
+     (对面整个 TP 作废);骚扰的回报只是一次 harass,而**击杀**那一档是这个函数的
+     **第一个**落单点、**并且它是绑距离的**。而且这次压的是**对线期的辅助**。
+   - **⭐⭐ 本轮最值得带走的不是读数,是那条 loader 常数**:fixture loader 给**每个单位**
+     都发 `GetCurrentMovementSpeed = 300`,于是分支自己那条「目标移速 < CM 移速」在整份
+     语料上是 `300 < 300` —— **一个量具常数悄悄缴械一整条分支,而它读起来像「域为空」**
+     (GH #611/#613 同族)。加上 `GetActiveMode` 不在任何 .dem 里,**「这条分支整体开火」
+     不是本轮买到的读数** —— 站得住的是**零注入的 §2**(出货选择器在真实帧上**真的**
+     选出一个 711.9u 的候选),§4 只是接线。
+   - **⭐⭐⭐ 注释棘轮头一次由造成它的那次提交自己重取**
+     (`test_activemode_call_site_census.lua` 4→5,raw 257→258)。前两次都是下一个流开工
+     踩到、替别人重取的 —— 那正是该文件 LIMIT 块自己抱怨的事。**升成习惯:自己的文档行
+     动了哪条棘轮,同一次提交里重取。**
+   - **⚠️ 自捉一条纪律滑点**:变异台与后台还在跑的开工自检**时间重叠**(GH #507 撕裂窗口)。
+     事后核对无影响(自检 python 113/0、fast-Lua 86/0,§6 所有门都在自检结束后重跑),
+     但**本来就不该发生**。
+   - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**,第 **9** 次因用管道读退出码被拒。
+
+-124b. **⭐ 本条为历史保留(`-124` 原文的线索清单)。**
    - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`(等录像组造
      timeline)、CM 距离项(`hero-42`)、`lionultcash` 域(`hero-43`)、`lionrreach` 域
      (`hero-44`)、`wkqlane` 域(`hero-45`)、**新增 `axecullreach` 域(`hero-46`)**;
@@ -5364,6 +5413,55 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-08T11:14Z(报告 `iterations/reports/hero/20260908T111410Z.md`;**backlog:`-124` 做完、
+  新开 `-125`**;焦点英雄 **Crystal Maiden**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动)
+  **一个函数、一个技能、八个落单点、两种到达约定;六个把目标绑在射程附近,恰好两个
+  一个距离判断都不做。gated `cmlaneband` 收其中一个,`bots/` 有真代码行。**
+  `X.ConsiderW`(Frostbite):击杀/团战/保护自己/对线期最后一条读 `nEnemysHeroesInRange`
+  (`nCastRange`,实测 **630** = KV 600 + 文件自带 30)、进攻写 `nCastRange + 50`、撤退写
+  `nCastRange - 80`、Roshan 写 `nCastRange` 整 —— 而 **TP 打断**与**「对线期消耗」骚扰**
+  两条读 `nEnemysHeroesInBonus`(`nCastRange + 200` = **830**)且**零距离项**。本 id 只收第二条,
+  理由与 `wkqlane`(GH #621)**逐字同一条**:打断值回票价(对面整个 TP 作废);骚扰的回报
+  只是一次 harass,而**击杀**那一档是这个函数的**第一个**落单点、**并且它是绑距离的**。
+  ⇒ 函数里**最松的到达压在最小的回报上**,而且这次压在**对线期的辅助**身上。
+  `ActionQueue_UseAbilityOnEntity` 对射程外目标**先是移动指令**,而 `X.SkillsComplement`
+  排完 W 就 `return` ⇒ 那段路上 `X.ConsiderR`(Freezing Field)**一次都不被考虑**,
+  一趟花 125-155 蓝。新 `X.cm_IsLaneHarassTargetInReach`,新 `tests/test_cm_w_lane_band.lua`
+  (**12 例**)+ `tools/agent/mutstand_cmlaneband.sh`(**10/10 CAUGHT**)。
+  `state.json:cmlaneband_20260908`、`queue.json:hero-47`、GH issue 本轮开(号见报告)。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;
+  `run_tests.lua cm` **287 例 0 失败**;113 个 python 检测器逐个跑 **0 红**。
+  本轮 [hero] open issue **一条可认领的都没有**(13 条逐条理由见报告 §1)。
+  - **⭐ 那个 `+50` 不是本轮发明的,是这个函数自己的承诺门**:「进攻」落单点 —— 同函数里
+    另一个**对一个选定英雄做承诺**的地方 —— 写的就是 `J.IsInRange( npcTarget, bot, nCastRange + 50 )`。
+    `nCastRange` **作为参数传进来**,所以与调用方折进去的三样东西正确复合(文件自带 `+30`、
+    `aetherRange`、上方那条「视野里只有 1 个敌人时抬到攻击距离 + 60」的延长块);
+    变异台 **M10** 就是把参数冻成今天正确的常数 680,被 §5 的阶梯抓住。
+  - **⭐⭐ 真实帧上的那段读数是零注入的**:`f_megabundle_052241_sniper_l1trade_chase`
+    t=210,CM 为 subject。`GetCastRange()` 从 KV 快照答**真实的 600**(CM 是焦点五)⇒ 两个环
+    真的是 630 / 830;`vengeful_spirit` **711.9u**(门外 31.9u、环内 118.1u)是**整个 bonus 环里
+    唯一的敌方英雄** ⇒ 出货的 `X.cm_GetWeakestUnit` **真的**把它选出来,**候选不是测试挑的**。
+  - **⭐⭐⭐ 本轮最值得带走的不是读数,是那条 loader 常数**:fixture loader 给**每个单位**
+    都发 `GetCurrentMovementSpeed = 300`,于是分支自己那条「目标移速 < CM 移速」在整份语料上
+    是 `300 < 300` —— **一个量具常数悄悄缴械一整条分支,而它读起来像「域为空」**
+    (GH #611/#613 同族)。加上 `GetActiveMode` 不在任何 .dem 里、这一帧 CM 是 56.6% 而分支
+    要 `nHP > 0.6` ⇒ **「这条分支整体开火」不是本轮买到的读数**;§4 端到端那段付了**三条注入**
+    的价,并把三条都断言了「真的被读到」。**站得住的是 §2,不是 §4。**
+  - **⭐ 登记两条没修的**(§5 有断言钉住):TP 打断**至今仍然无界**(要动先退休 §0.3 限度 3);
+    那条读 `nEnemysHeroesInView[1]`(**1600** 环,比本 id 关掉的 band 还宽 970 码)的落单点
+    **仍在,登记未修** —— 它自己的「目标 350 内 ≥5 个友军」合取让它的域是另一个问题。
+  - **⚠️ 本轮附带两处登记,都在创建它们的同一个工作单元里**:`UNRESOLVED_HAND_READ` 收
+    新测试的 `io.popen`(GH #596 的习惯,第三轮保住);`test_activemode_call_site_census.lua`
+    的注释棘轮 **4→5**(raw 257→258)—— **这条棘轮头一次由造成它的那次提交自己重取**,
+    前两次都是下一个流开工踩到、替别人重取的。`get_active_mode` 仍是 253,**重取不是抬高**。
+  - **⚠️ 自捉一条纪律滑点**:变异台(原地重写出货源码)与后台还在跑的开工自检**时间重叠**
+    (GH #507 撕裂窗口)。事后核对无影响(自检 python 113/0、fast-Lua 86/0,所有门都在自检
+    结束**之后**重跑),但**本来就不该发生**。
+  - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**:cadence / queue-rulings / owed-executions,
+    **都不是本轮的**;另有一条 UNCERTIFIABLE(`test_selfcheck_lua_leg.py` 120.1s 没跑完,
+    **不是红也不是通过**)。自检**第 9 次**用管道读退出码被脚本当场拒绝(证据纪律 3)。
 - 2026-09-08T08:07Z(报告 `iterations/reports/hero/20260908T080711Z.md`;**backlog:`-123` 做完、
   新开 `-124`**;焦点英雄 **Axe**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动)
