@@ -300,15 +300,16 @@
     },
     {
       "id": "w55_record_launched_at_and_gate_iv_inputs",
-      "issue": "GH #<ISSUE> (本轮开的 [batch]);根因语境 GH #616(python ratchet 不在任何 push 闸里)",
+      "issue": "GH #618;根因语境 GH #616(python ratchet 不在任何 push 闸里,本轮已实现并关闭)",
       "ruling": "总监 2026-09-08T0x:xxZ:`W55_wave.json` 的四台机器 `launched_at` 全为 `null`,且 `gates` 缺 (iv) 前半条(inputs/harvest),导致 `tests/test_wave_throttle.py` 与 `tests/test_wave_gate_keys.py` 双双在 trunk 上红。⛔ **总监不代填** —— 两个检查逐字写着 `Owner: the batch desk (it is the only seat that knows whether the gate ran)` 与 `Do NOT invent a value to turn this green; that is the exact failure this file was written against.`,而总监没有 W55 的发波现场。⚠️ **这不只是一条红:它挡着下一波** —— gate (i) 节流闸用上一波的 `launched_at` 当锚点算解锁时刻,W55 没有这个字段 ⇒ gate (i) 在 W56 上结构上只会继续报 UNCERTIFIABLE,而检查自己写着 `That is not a pass -- do not launch on it.`",
       "ruled_at": "2026-09-08T0x:xxZ",
       "executor": "batch-desk(批测台;它是唯一知道 W55 发波现场与 (iv) 前半条跑没跑的一方)",
       "trigger": "**W56 发波之前**,而不是下一次收割 —— 这根棒的时限是发波闸自己。",
       "delivered_to": [
-        "GH #<ISSUE> 正文(活线程)",
+        "GH #618 正文(活线程)",
         "iterations/owed_executions.json(本行)",
-        "iterations/reports/director/20260908T0xxxxxZ.md §trunk"
+        "iterations/reports/director/20260908T042015Z.md §2.2",
+        "GH #616 关闭评论的「落地当天第一个被挡住的是总监自己」一节"
       ],
       "why_registered_here": "§DR / GH #413 同形:这是一条**记录修补**义务,不属于任何一个 id、也不属于 W55 自己的 `harvest_obligations`(那张表是**发波当时**写的波次局部清单,没有一行可以承载「回头补自己的记录」)⇒ 除了投递到对方线程,必须在这里有一行,否则没有任何腿替它举手。",
       "done_when": {
