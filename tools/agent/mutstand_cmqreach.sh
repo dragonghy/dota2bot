@@ -23,30 +23,43 @@ set -u
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TOOL="$REPO/tools/batch_test/behavioral/cmqreach_domain.py"
+# GH #632 landed the carrier-structure section in BOTH carrier-sliced censuses,
+# so the stand covers both files.  A stand that only mutated cmqreach would call
+# every lionqdmg regression a pass.
+TOOL2="$REPO/tools/batch_test/behavioral/lionqdmg_domain.py"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 cp "$TOOL" "$WORK/tool.orig"
-( cd "$REPO" && sha256sum "${TOOL#$REPO/}" > "$WORK/sums" )
+cp "$TOOL2" "$WORK/tool2.orig"
+( cd "$REPO" && sha256sum "${TOOL#$REPO/}" "${TOOL2#$REPO/}" > "$WORK/sums" )
 
 purge_cache() {
-	find "$REPO/tools/batch_test/behavioral/__pycache__" -name 'cmqreach_domain*' -delete 2>/dev/null
+	find "$REPO/tools/batch_test/behavioral/__pycache__" \
+		\( -name 'cmqreach_domain*' -o -name 'lionqdmg_domain*' \) -delete 2>/dev/null
 }
 
 run_detectors() {
-	# Returns 0 only if BOTH the module battery and the python-suite door pass.
-	# The suite door is included on purpose: it is the one that stays red when
-	# an edit deletes the guard AND the module's own case for it.
+	# Returns 0 only if the module battery AND both python-suite doors pass.
+	# The suite doors are included on purpose: they are the ones that stay red
+	# when an edit deletes a guard AND the module's own case for it.
 	purge_cache
 	python3 -B "$TOOL" --selfcheck > "$WORK/self.log" 2>&1
 	local a=$?
 	purge_cache
 	python3 -B "$REPO/tests/test_cmqreach_domain.py" > "$WORK/suite.log" 2>&1
 	local b=$?
-	[ $a -eq 0 ] && [ $b -eq 0 ]
+	purge_cache
+	python3 -B "$REPO/tests/test_lionqdmg_domain.py" > "$WORK/suite2.log" 2>&1
+	local c=$?
+	[ $a -eq 0 ] && [ $b -eq 0 ] && [ $c -eq 0 ]
 }
 
-restore() { cp "$WORK/tool.orig" "$TOOL"; purge_cache; }
+restore() {
+	cp "$WORK/tool.orig" "$TOOL"
+	cp "$WORK/tool2.orig" "$TOOL2"
+	purge_cache
+}
 
 # Upgrade the trap now that `restore` and the backup both exist.  Until this
 # line the trap was `rm -rf "$WORK"` alone, which on an interrupt deleted the
@@ -56,10 +69,13 @@ trap 'restore; rm -rf "$WORK"' EXIT
 CAUGHT=0
 SURVIVED=0
 
-mutate() {
+mutate() { mutate_in "$TOOL" "$@"; }
+
+mutate_in() {
+	local target="$1"; shift
 	local name="$1"; shift
 	restore
-	python3 -B - "$TOOL" "$@" <<'PY'
+	python3 -B - "$target" "$@" <<'PY'
 import sys
 path, old, new = sys.argv[1], sys.argv[2], sys.argv[3]
 src = open(path).read()
@@ -170,6 +186,79 @@ mutate "M8 unscored reasons pooled onto 'no_snapshot'" \
 mutate "M9 channel inferred from the landing instead of the ADD" \
 	'                    self.tp_spans.append((tp_open, e["t"]))' \
 	'                    self.tp_spans.append((e["t"], e["t"]))'
+
+# ------------------------------------------------------------------ GH #632
+# The carrier-structure section.  Its defect mode is a READING, not a crash, so
+# every mutant below leaves the tool exiting 0 and only changes what a reader is
+# told.  A stand that only covered the geometry would call all of them a pass.
+
+# M10 flip the leg inversion.  This is the single line the whole section rests
+# on; with it wrong, every run is reported on the wrong physical side and the
+# "structurally empty" cells are named backwards -- which reads like a real
+# finding rather than an error.
+mutate "M10 carrier side no longer inverts on the baseline leg" \
+	'    return side if leg == "armed" else other_side(side)' \
+	'    return side'
+
+# M11 make the two carrier sides fill the SAME pair.  The claim "one run can
+# never fill four cells" then quietly becomes "one run fills two, always the
+# same two", and pooling an opposite-draft run would look like it adds nothing.
+mutate "M11 reachable pair no longer depends on the carrier side" \
+	'    return ("%s/armed" % stratum_of(carrier_side),
+            "%s/baseline" % stratum_of(other_side(carrier_side)))' \
+	'    return ("%s/armed" % stratum_of(carrier_side),
+            "%s/baseline" % stratum_of(carrier_side))'
+
+# M12 stop flagging a carrier that appears on both sides of one run.  MIXED is
+# the one case where the run-as-unit rule does not hold; silently taking the
+# first side would average a non-mirror run as if it were a mirror run.
+mutate "M12 MIXED run silently reduced to one side" \
+	'        if len(d["sides"]) == 1:
+            d["carrier_side"] = sorted(d["sides"])[0]' \
+	'        if True:
+            d["carrier_side"] = sorted(d["sides"])[0]'
+
+# M13 delete the sentence.  The computation stays correct and the report still
+# prints the cell supply -- but the reader is no longer told that an empty cell
+# cannot be filled by more games, which is the exact misreading that cost the
+# previous round its stated precondition.
+mutate "M13 'NOT A SAMPLE SIZE' line removed from the report" \
+	'        print("      THIS IS NOT A SAMPLE SIZE.  No number of extra games in the")' \
+	'        print("      (empty)")'
+
+# M14 drop the unit-of-comparison line.  Without it the section documents the
+# structure and then leaves the reader to invent an estimator -- and the one
+# they invent by default is the pooled, game-weighted difference 4(i-d) bans.
+mutate "M14 run-as-unit line removed from the report" \
+	'    print("   ⇒ UNIT OF A LEG DIFFERENCE IS THE RUN/DRAFT: take armed-minus-")' \
+	'    print("   ⇒ (unit unstated)")'
+
+# --- the same section in the sibling census (lionqdmg, carrier = Lion) ------
+# Same defect class, different file.  M15 is the whole section going missing;
+# M16 is the subtler one -- the section survives but is built from the games
+# that passed the stratum filter, so a `--stratum ab` invocation would report
+# the OTHER stratum's cells as structurally empty when they are merely filtered.
+
+# M15 the section is no longer emitted at all.
+mutate_in "$TOOL2" "M15 lionqdmg drops the carrier-structure section" \
+	'    head += carrier_structure_md(carrier_games)' \
+	'    head += []'
+
+# M16 the section is built after the stratum filter instead of before.
+mutate_in "$TOOL2" "M16 lionqdmg records carrier games after the stratum filter" \
+	'        carrier_games.append((run_name, game_name, side, cell[1], 0.0))
+        if stratum != "all" and cell[0] != stratum:
+            continue' \
+	'        if stratum != "all" and cell[0] != stratum:
+            continue
+        carrier_games.append((run_name, game_name, side, cell[1], 0.0))'
+
+# M17 soften the sentence in the sibling only.  The two tools would then say
+# different things about the same structural fact, and a reader who only ever
+# sees one of them would never know.
+mutate_in "$TOOL2" "M17 lionqdmg softens 'NOT A SAMPLE SIZE'" \
+	'                "**THIS IS NOT A SAMPLE SIZE.** No number of extra games in the",' \
+	'                "(these cells are empty)",'
 
 restore
 echo "=== restore verification ==="

@@ -13360,3 +13360,77 @@
     本波是**碰巧**有 1 个 dire + 2 个 radiant run,四个都同侧的话整波只有两格,**没有任何东西会举手**)。
     两份草稿跑过 `claim_precheck.sh` → **EXIT=0 / OK to publish**,且**先 push 后发表**(GH #290)。
   - 完整报告:`iterations/reports/replay-check/20260908T130506Z.md`
+- **2026-09-08T15:38–16:0xZ(落地轮:把「四格由 draft 决定」钉进量具)**:
+  批测台 15:10Z 才发 W57(15:21–15:22Z 起飞,2h 看门狗)⇒ **触发时零新局**,
+  按章程第 2 条转向补课 + 落地上一轮自己交出去的下一棒。
+  **宽扫 36/36 局**(W56 家族 `0eb22d`+`8ef6e7` 两个 run 全量**重新下载重新 dump**,
+  `SWEEP_*_EXIT=0` ×2,`unparseable` 0);**深查 6 局逐帧**。
+  - ⭐ **GH #632 验收第 1 条已兑现**:`carrier_side_of` / `reachable_cells` /
+    `carrier_structure` 三个纯函数 + 排在所有四格表**之前**的 `-- 0. CARRIER STRUCTURE`
+    节,落进 `cmqreach_domain.py`,并**同族落进 `lionqdmg_domain.py`**(它按 Lion 一个
+    carrier 切,四格结构一模一样,此前没有这一节;三个谓词 import 而非再抄一份)。
+    两格结构性为空时明打**「THIS IS NOT A SAMPLE SIZE」**,并写死
+    **「腿差的单位是 run/draft」**。
+    **非有不可的理由**:没有它,单 run 的四格表把两个空格打成 `nan/min` ——
+    **`nan` 长得像「这轮没测到」,真相是「这个 draft 下永远测不到」**,
+    上一轮我自己就是在这个形状上写下了错误的前提。
+  - **独立重扫与 #632 的表逐位相同**:`0eb22d` armed `97/220.7=0.4395`、
+    baseline `121/276.7=0.4373`,腿差 **+0.0022**;`8ef6e7` 填的是互补的另一条对角线。
+  - **变异台 `MUTSTAND_CMQ_EXIT=0` 17 CAUGHT / 0 SURVIVED**(restore 逐字节 OK)。
+    新增八枚**全部针对「读法」不是「崩溃」**(每枚都照常 exit 0,只改变读者被告知什么):
+    M10 侧不取反 / M11 对角线不依赖 carrier 侧 / M12 MIXED 被悄悄降成单侧 /
+    M13-M14 删掉那两句话 / M15 lionqdmg 整节不发 / **M16 lionqdmg 在分层过滤之后
+    才记 carrier**(`--stratum ab` 会把另一层报成结构性为空)/ M17 单方面软化措辞。
+    M15/M16 靠**源码序**断言,M17 靠**跨工具措辞钉**(两个工具那两句话必须逐字相同)。
+    `CMQ_SELFCHECK_EXIT=0` **38/38**(ratchet 26→38);`TEST_CMQ_EXIT=0`;`TEST_LIONQDMG_EXIT=0`。
+  - ⭐ **逐帧 6 局读出来的是量具作用域,不是效应**:cell (2) 的 `walk/stand/away` 三分,
+    读的那批帧里 **48%–54%(≥280u/s over 4s,无歧义赶路)/ 71%–81%(≥200u/s over 3s)
+    是 CM 正在接近满速横穿地图的帧** —— 四条腿占比几乎相同(48/54/48/52)⇒
+    **域的性质不是腿效应**,但「`walk` 占优 ⇒ 引擎会走进兵线」这句读法**失去依据**
+    (她本来就在走)。引子帧:`0eb22d/20260908_094909_slot6` **t=1191.5**,
+    满血满蓝、**2000u 内零敌方英雄**、~300u/s 向东南。
+    **本轮不动阈值不改域**(#511 + 本文件「`MOVE_WINDOW_S` 先钉帧再谈」),
+    先钉帧先登记,下轮再谈落地。
+  - **先逐帧后聚合,然后聚合把我自己的假说否掉了**:`094837_slot1` t=1580.5 那一帧
+    确是逃命(SK 81u / pudge 60u 三人包夹,hp 0.21→0.09→1583.5 死),看着像
+    与 GH #626 同形的系统性污染;判别子 `hp<30% 且 1000u 内有活着的敌方英雄`
+    (幻象按 `hp_pct>0` 过滤,GH #176 ③)在 **130 个 `away` 帧里只命中 1 帧(0.8%)**,
+    放宽到 `hp<50%/1200u` 也只有 3/417 ⇒ **「逃命污染」不成立,不开 issue,
+    登记为已查明的阴性结果**(免得下一轮再花一轮走同一条路)。
+  - cell (3)「gap 后 20s 内 CM 死亡」**run 内**腿差 +5.2pp(9/97 vs 5/121)/
+    +0.5pp(12/117 vs 8/82),同号但量级差一个数量级,**n=9/5/12/8 太小不下结论**;
+    且 `deaths` 按英雄名取(幻象之死记在本名下,GH #176 ①)⇒ **上界**。
+  - ```
+    VERIFY id=cmqreach verdict=INDETERMINATE episodes=417
+    VERIFY id=lionqdmg verdict=INDETERMINATE episodes=0
+    ```
+    `cmqreach` **理由第三次升级不是重复**(结构性不可测 → 腿差被侧项压制 →
+    域里约一半是赶路帧);条件 (a) 仍只能走 fixture。`lionqdmg` 那一行**是为了
+    不让它被计成「本轮核验过了」**——本轮只给它加了 §(0) 节,没买任何行为读数。
+  - **自检本轮跑满了**:`SELFCHECK_EXIT=3`,**10 条腿,`UNCERTIFIABLE none`**
+    (FINDINGS = cadence / queue-rulings / owed-executions / trunk-red(python))。
+    ⛔ **证据纪律 3 第五十八次踩,又是当轮第一条命令**(`2>&1 | tail -40`,脚本自拒
+    `SELFCHECK_EXIT=2 REFUSED`);**但第二跑不套 `timeout` 了**——上一轮的 `EXIT=124`
+    是自己掐的,本轮因此拿到了真的退出码。**可迁移的一句仍然是:管道会偷走退出码,
+    `timeout` 会伪造一个。**
+    `trunk-red(python)` = `tests/test_chain_member_census.py`,**不是本轮的改动**:
+    本轮工作树只动 5 个文件,`bots/ability_item_usage_generic.lua` 与
+    `tools/agent/chain_member_census.py` 一字未动,而该断言只读这两者
+    ⇒ **不需要 stash 就能确证 main 上也红**。读数 `8445 → 8458`,**第五次搬家**,
+    **又是红着进的 main**,已评论 GH #574(不认领,不是本组的文件)。
+  - **限度**:36/36 是**两个 run 的全量,不是 W56 的 76 局全量**——`40e63a` 的 draft
+    里没有 CM,`cd3359` 与 `8ef6e7` 同为 CM-radiant,对本轮要证的结构性事实不增加
+    新信息;**这是取舍不是覆盖不足**。§五三个阈值**都是探索性的,一个都没钉住**。
+  - **下一轮第一件事**:(1) **收 W57**,并按新的 §(0) 节先看每个 run 里 CM/Lion 的队伍
+    再谈四格;(2) §五那条**先钉帧**(`0eb22d/20260908_094909_slot6` t=1191.5)再谈落地
+    transit 列;(3) 补扫 `cd3359`/`40e63a`;(4) 深查维持 6 局。
+  - **存量顺延**:`campgrade` 第二十轮 / 61-id 家族 W49 两笔条件 (a);
+    `tpreach_domain.py` 补 `by_seed`(**已连欠二十一轮**);`roshdist` 的 BUGGY(77)交总监;
+    09-07T12:59Z §3.4 那一帧钉 fixture;F2/GH #530;`--analysis-dir` 基名碰撞即拒绝(GH #529);
+    `campbind` 条件 (a) 改走 fixture;#477 重 dump 是否还需请总监裁;`cmqreach` 钉帧 fixture;
+    09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
+    #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`;
+    `outlatch` 继续不买第六次(等 #623)。
+  - **本轮的评论/issue**:GH #632(验收第 1 条兑现)、GH #574(行号钉第五次搬家)、
+    新开 [harness] issue(cell (2) 的三分读的是一批赶路帧)。
+  - 完整报告:`iterations/reports/replay-check/20260908T153800Z.md`

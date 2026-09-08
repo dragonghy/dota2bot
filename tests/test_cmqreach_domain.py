@@ -55,7 +55,7 @@ check('module selfcheck exits 0 (bare, not through a pipe)', p.returncode == 0)
 # (2026-09-08, when GH #626's battery took it to 26).  A literal is still wanted
 # in the SHRINKING direction -- deleting assertions must not pass quietly -- so
 # the pin is a ratchet: all green, and never fewer than we have already banked.
-RATCHET = 26                         # raise when the module's battery grows
+RATCHET = 38                         # raise when the module's battery grows
 m = re.search(r'selfcheck (\d+)/(\d+)', out)
 check('module selfcheck prints its count at all', m is not None)
 if m:
@@ -192,9 +192,59 @@ def test_tp_channel_is_out_of_domain():
           C.unscored_reason(fixed, C.gap_frames(fixed, C.MANA_FLOOR)[0]) == 'tp')
 
 
+# ---- 8. GH #632: a structurally empty cell is not a small sample -----------
+def test_cells_are_decided_by_the_draft():
+    """The second door on the carrier-structure section.
+
+    The defect this guards is a READING, not a crash: the previous round wrote
+    "re-sweep until all four cells are populated" as a precondition, which is
+    unsatisfiable inside one mirror run and was only ever met by pooling runs
+    whose drafts put CM on opposite sides.  A reader who deletes the section
+    loses the only place that says so, so this test asserts both the structure
+    and the fact that the report PRINTS the words.
+    """
+    one_run = [('r1', 'g1', 'radiant', 'armed', 30.0),
+               ('r1', 'g2', 'dire', 'baseline', 30.0)]
+    per_run, supply = C.carrier_structure(one_run)
+    check('one mirror run has one carrier side',
+          per_run['r1']['carrier_side'] == 'radiant')
+    check('one mirror run supplies exactly two cells',
+          sorted(c for c in C.CELL_ORDER if supply[c]) == ['ab/armed', 'ba/baseline'])
+    check('the unfilled cells have no supplying run at all -- that is what '
+          'makes them structural rather than under-sampled',
+          supply['ab/baseline'] == [] and supply['ba/armed'] == [])
+    check('the two carrier sides fill disjoint pairs',
+          not (set(C.reachable_cells('radiant')) & set(C.reachable_cells('dire'))))
+    check('carrier_side_of inverts the leg rule in all four combinations',
+          [C.carrier_side_of(s, l) for s in ('radiant', 'dire')
+           for l in ('armed', 'baseline')]
+          == ['radiant', 'dire', 'dire', 'radiant'])
+
+    # the section must SAY it, not merely compute it
+    import io
+    import contextlib
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        C.print_carrier_structure(one_run)
+    txt = buf.getvalue()
+    check('the report names the structurally empty cells',
+          'STRUCTURALLY EMPTY' in txt
+          and 'ab/baseline' in txt and 'ba/armed' in txt)
+    check('the report says the words "NOT A SAMPLE SIZE"',
+          'NOT A SAMPLE SIZE' in txt)
+    check('the report states the unit of a leg difference is the run/draft',
+          'UNIT OF A LEG DIFFERENCE IS THE RUN' in txt)
+
+    both = [('r1', 'g1', 'radiant', 'armed', 30.0),
+            ('r1', 'g2', 'radiant', 'baseline', 30.0)]
+    check('a carrier on both sides of one run is flagged MIXED',
+          C.carrier_structure(both)[0]['r1']['carrier_side'] == 'MIXED')
+
+
 for fn in (test_falsy_zero, test_monotone_in_reach, test_lens_against_bruteforce,
            test_source_constants, test_mana_floor_is_conservative,
-           test_tp_channel_is_out_of_domain):
+           test_tp_channel_is_out_of_domain,
+           test_cells_are_decided_by_the_draft):
     fn()
 
 if fails:

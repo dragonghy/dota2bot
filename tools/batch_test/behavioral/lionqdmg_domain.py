@@ -155,6 +155,14 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stayfield_domain import SIDE_TEAM, canon, dist, load_sweeps, stratum_of  # noqa: E402
+# GH #632: this census slices by ONE carrier hero (Lion), exactly like
+# cmqreach_domain slices by CM, so its four cells are decided by the draft and
+# not by sampling.  The three predicates are imported rather than re-derived --
+# a second copy is a second thing to get wrong, and the mutation stand that
+# proves them load-bearing (tools/agent/mutstand_cmqreach.sh) anchors on the
+# one in cmqreach_domain.py.
+from cmqreach_domain import (carrier_side_of, carrier_structure,  # noqa: E402
+                             reachable_cells)
 
 CAND_ID = "lionqdmg"
 LION = "lion"                              # canon() form
@@ -637,6 +645,61 @@ def cell_of(side, lion_team):
     return stratum_of(side), leg
 
 
+CELL_ORDER_STR = ("ab/armed", "ab/baseline", "ba/armed", "ba/baseline")
+
+
+def carrier_structure_md(games):
+    """GH #632, section (0): which runs can supply which of the four cells.
+
+    Printed BEFORE every table below, because an empty cell here is a property
+    of the DRAFT (Lion's team is a constant inside one mirror run, and
+    `leg == armed` iff that team is the armed side), not of the sample size.
+    The computation is `cmqreach_domain.carrier_structure`; only the rendering
+    is local.  The two sentences a reader must not lose ("NOT A SAMPLE SIZE"
+    and the run-as-unit rule) are pinned in tests/test_lionqdmg_domain.py
+    against the cmqreach wording, so the two tools cannot drift apart.
+    """
+    per_run, supply = carrier_structure(games)
+    out = ["## (0) carrier structure -- read before every table below", "",
+           "Lion's team is a constant inside one mirror run, so each run fills",
+           "a DIAGONAL PAIR of cells and leaves the other two empty.", "",
+           "| run | Lion side | games | fills |", "|---|---|---|---|"]
+    for run, d in per_run.items():
+        out.append("| `%s` | %s | %d | %s |"
+                   % (run, d["carrier_side"], d["games"], ", ".join(d["fills"])))
+    mixed = [r for r, d in per_run.items() if d["carrier_side"] == "MIXED"]
+    if mixed:
+        out += ["", "⚠ **NOT A MIRROR RUN**: %s -- the carrier changed sides "
+                "inside the run, so the run-as-unit rule below does not hold "
+                "for it." % ", ".join("`%s`" % r for r in mixed)]
+    out += ["", "| cell | supplying runs |", "|---|---|"]
+    for c in CELL_ORDER_STR:
+        runs = ", ".join("`%s`" % r for r in supply[c]) or "**none**"
+        out.append("| %s | %s |" % (c, runs))
+    empty = [c for c in CELL_ORDER_STR if not supply[c]]
+    out.append("")
+    if empty:
+        out += ["⛔ **STRUCTURALLY EMPTY**: %s." % ", ".join(empty),
+                "**THIS IS NOT A SAMPLE SIZE.** No number of extra games in the",
+                "runs above can fill these cells; only a run whose DRAFT puts the",
+                "carrier on the other side can. Do not write 'need more games',",
+                "and do not read a missing cell as a zero."]
+    else:
+        out += ["All four cells have a supplying run -- but the two legs of one",
+                "stratum then come from DIFFERENT runs, so a same-stratum leg",
+                "difference is a CROSS-RUN comparison."]
+    out += ["",
+            "⇒ **UNIT OF A LEG DIFFERENCE IS THE RUN/DRAFT**: take armed-minus-",
+            "baseline INSIDE a run (the side term cancels exactly, the carrier's",
+            "physical side being constant there), then take the arithmetic mean",
+            "across runs. Never pool games and never weight by game count --",
+            "铁律 4(i-d) with the unit changed from seed to run.", ""]
+    return out
+
+
+CELL_ORDER_STR = ("ab/armed", "ab/baseline", "ba/armed", "ba/baseline")
+
+
 def summarize(cells):
     """Render the four-cell tables.  Means and shares only -- 铁律 4(ii)."""
     out = []
@@ -846,12 +909,16 @@ def run(dirs, stratum="all", witness=0, kill_witness=0):
     arms = set()
     witnesses = []
     kill_rows = []
+    carrier_games = []                       # GH #632, section (0)
     for run_name, game_name, cand, seed, side, tl in rows:
         arms.add(cand)
         game = Game(tl)
         if not game.has_lion:
             continue
         cell = cell_of(side, game.lion_team)
+        # recorded BEFORE the stratum filter: which cells the corpus could ever
+        # supply is a property of the drafts, not of what this invocation reads.
+        carrier_games.append((run_name, game_name, side, cell[1], 0.0))
         if stratum != "all" and cell[0] != stratum:
             continue
         a = cells[cell]
@@ -930,6 +997,7 @@ def run(dirs, stratum="all", witness=0, kill_witness=0):
             % (len(rows), len(armed_ids), banner),
             "stratum filter: %s" % stratum,
             ""]
+    head += carrier_structure_md(carrier_games)
     body = summarize(cells)
     tail = []
     if witnesses:

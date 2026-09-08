@@ -88,6 +88,21 @@ HONEST BOUNDARIES (all of these are registered in the printout, not buried here)
     cells.  4(i-b): these are counts, the physical-side term is NOT cancelled in
     them -- opposite signs across strata mean noise and must not be read as an
     armed-minus-baseline difference.
+  * THE FOUR CELLS OF A SINGLE-CARRIER DETECTOR ARE DECIDED BY THE DRAFT, NOT BY
+    SAMPLING (replay-check 2026-09-08, GH #632).  CM's team is a constant inside
+    one mirror run, and `leg == armed` iff that team is the armed side, so a run
+    can only ever fill a DIAGONAL PAIR of cells: carrier radiant => `ab/armed` +
+    `ba/baseline`; carrier dire => `ba/armed` + `ab/baseline`.  The other two
+    stay empty however many games that run produces.  The previous round wrote
+    "re-sweep until all four cells are populated" as a precondition and that
+    precondition was wrong: the four cells only filled because runs with the
+    carrier on OPPOSITE sides were pooled, which makes "same stratum, other leg"
+    a cross-run comparison.  `carrier_structure()` below prints this before any
+    four-cell table, and says the words "NOT a sample size" on a structurally
+    empty cell, so a reader never has to rediscover it.  The unit of a leg
+    difference here is therefore the RUN/DRAFT (take it inside a run, where the
+    side term cancels exactly, then average across runs) -- 4(i-d)'s shape with
+    the unit changed from seed to run.
 
 usage:  cmqreach_domain.py <sweep_dir> [sweep_dir ...]
         cmqreach_domain.py --selfcheck
@@ -396,6 +411,61 @@ def cells(rows):
             for leg in ("armed", "baseline")]
 
 
+def other_side(side):
+    return "dire" if side == "radiant" else "radiant"
+
+
+def carrier_side_of(side, leg):
+    """The carrier's PHYSICAL side, from (armed side, leg).
+
+    This is the inversion of the single line in collect() that assigns the leg
+    (`armed` iff the carrier's team is the armed side), not a second opinion
+    about it.
+    """
+    return side if leg == "armed" else other_side(side)
+
+
+def reachable_cells(carrier_side):
+    """The two (stratum x leg) cells a run can fill when its draft puts the
+    carrier on `carrier_side`.  The other two are structurally empty in that
+    run -- more games cannot fill them, only a different draft can.
+    """
+    return ("%s/armed" % stratum_of(carrier_side),
+            "%s/baseline" % stratum_of(other_side(carrier_side)))
+
+
+CELL_ORDER = ("ab/armed", "ab/baseline", "ba/armed", "ba/baseline")
+
+
+def carrier_structure(games):
+    """Which runs can supply which cells, from the games list alone.
+
+    Returns (per_run, supply): `per_run[run]` carries the carrier's physical
+    side and the game count; `supply[cell]` is the list of runs able to fill
+    that cell.  A run whose carrier appears on BOTH sides is reported as
+    `MIXED` -- that is not a mirror run, and the run-as-unit legislation above
+    does not hold for it, so it is flagged rather than quietly averaged.
+    """
+    per_run = collections.OrderedDict()
+    for (run, _game, side, leg, _span) in games:
+        d = per_run.setdefault(run, {"sides": set(), "games": 0})
+        d["sides"].add(carrier_side_of(side, leg))
+        d["games"] += 1
+    supply = dict((c, []) for c in CELL_ORDER)
+    for run, d in per_run.items():
+        if len(d["sides"]) == 1:
+            d["carrier_side"] = sorted(d["sides"])[0]
+            d["fills"] = reachable_cells(d["carrier_side"])
+        else:
+            # not a mirror draft (or a carrier-identity bug): it can reach every
+            # cell, and that is a finding, not a convenience.
+            d["carrier_side"] = "MIXED"
+            d["fills"] = CELL_ORDER
+        for c in d["fills"]:
+            supply[c].append(run)
+    return per_run, supply
+
+
 def collect(dirs, mana_floor):
     games, gaps, ready, novas, cmmin = [], [], [], [], []
     stats = {"tp_frames": 0, "tp_windows": 0}
@@ -426,6 +496,46 @@ def collect(dirs, mana_floor):
     return games, gaps, ready, novas, cmmin, stats
 
 
+def print_carrier_structure(games):
+    """Section 0.  Printed BEFORE every four-cell table so an empty cell is
+    never read as a sample-size problem (GH #632)."""
+    per_run, supply = carrier_structure(games)
+    print("\n-- 0. CARRIER STRUCTURE (read before any four-cell table below)")
+    print("   CM's team is a constant inside one mirror run, so each run fills")
+    print("   a DIAGONAL PAIR of cells and leaves the other two empty.")
+    for run, d in per_run.items():
+        print("      %-40s carrier=%-8s games %3d  fills %s"
+              % (run, d["carrier_side"], d["games"], ", ".join(d["fills"])))
+    mixed = [r for r, d in per_run.items() if d["carrier_side"] == "MIXED"]
+    if mixed:
+        print("   ⚠ NOT A MIRROR RUN: %s -- the carrier changed sides inside the"
+              % ", ".join(mixed))
+        print("     run, so the run-as-unit rule below does NOT hold for it.")
+    print("   cell supply (runs that can fill each cell):")
+    for c in CELL_ORDER:
+        runs = supply[c]
+        print("      %-12s %d run(s)%s"
+              % (c, len(runs), ("  " + ", ".join(runs)) if runs else ""))
+    empty = [c for c in CELL_ORDER if not supply[c]]
+    if empty:
+        print("   ⛔ STRUCTURALLY EMPTY: %s" % ", ".join(empty))
+        print("      THIS IS NOT A SAMPLE SIZE.  No number of extra games in the")
+        print("      runs above can fill these cells; only a run whose DRAFT puts")
+        print("      the carrier on the other side can.  Do not write 'need more")
+        print("      games' and do not read a missing cell as a zero.")
+    else:
+        print("   all four cells have a supplying run -- but note that the two")
+        print("   legs of one stratum then come from DIFFERENT runs, so a")
+        print("   same-stratum leg difference is a CROSS-RUN comparison.")
+    print("   ⇒ UNIT OF A LEG DIFFERENCE IS THE RUN/DRAFT: take armed-minus-")
+    print("     baseline INSIDE a run (the side term cancels exactly, the")
+    print("     carrier's physical side being constant there), then take the")
+    print("     arithmetic mean across runs.  Never pool games and never weight")
+    print("     by game count -- 铁律 4(i-d) with the unit changed from seed to")
+    print("     run.")
+    return per_run, supply
+
+
 def report(dirs, mana_floor):
     games, gaps, ready, novas, cmmin, stats = collect(dirs, mana_floor)
     print("=== cmqreach domain (queue.json:hero-25, cell (2) is the ruling cell) ===")
@@ -441,6 +551,8 @@ def report(dirs, mana_floor):
     for (_r, _g, _s, leg, _m) in games:
         lv[leg] += 1
     print("carrier games per leg: %s" % dict(lv))
+
+    print_carrier_structure(games)
 
     print("\n-- 1. CELL (1): actual nova cast points.  NOT MEASURABLE, and the")
     print("   reason is the corpus, not the sample size: the combat log carries")
@@ -651,6 +763,58 @@ def selfcheck():
         unc.tp_spans == [(1519.3, 1519.3 + TP_UNCLOSED_S)])
     chk("cut-off channel still excludes the frame inside it",
         [round(r["t"], 1) for r in gap_frames(unc, MANA_FLOOR)] == [1518.4])
+
+    # ---- GH #632: the four cells are decided by the draft, not by sampling --
+    # The precondition this replaces ("re-sweep until all four cells are
+    # populated") was wrong, so the pins are about STRUCTURE, not about counts.
+    chk("carrier side inverts the leg rule (armed leg => carrier is on the "
+        "armed side)", carrier_side_of("radiant", "armed") == "radiant"
+        and carrier_side_of("radiant", "baseline") == "dire"
+        and carrier_side_of("dire", "armed") == "dire"
+        and carrier_side_of("dire", "baseline") == "radiant")
+    chk("a radiant carrier fills exactly ab/armed + ba/baseline",
+        sorted(reachable_cells("radiant")) == ["ab/armed", "ba/baseline"])
+    chk("a dire carrier fills exactly ba/armed + ab/baseline",
+        sorted(reachable_cells("dire")) == ["ab/baseline", "ba/armed"])
+    chk("the two carrier sides fill DISJOINT cell pairs (that is why one run "
+        "can never fill four cells)",
+        not (set(reachable_cells("radiant")) & set(reachable_cells("dire"))))
+    chk("the two pairs together cover all four cells",
+        set(reachable_cells("radiant")) | set(reachable_cells("dire"))
+        == set(CELL_ORDER))
+
+    # one run, carrier on radiant, both strata sampled: two cells, and the
+    # other two are STRUCTURALLY empty -- the whole point of the section.
+    one_run = [("r1", "g1", "radiant", "armed", 30.0),
+               ("r1", "g2", "dire", "baseline", 30.0),
+               ("r1", "g3", "radiant", "armed", 30.0)]
+    per_run, supply = carrier_structure(one_run)
+    chk("a single mirror run reads one carrier side",
+        per_run["r1"]["carrier_side"] == "radiant" and per_run["r1"]["games"] == 3)
+    chk("a single run supplies exactly two of the four cells",
+        sorted(c for c in CELL_ORDER if supply[c]) == ["ab/armed", "ba/baseline"])
+    chk("the empty cells of a single run have NO supplying run (structural, "
+        "not a sample size)", supply["ab/baseline"] == [] and supply["ba/armed"] == [])
+
+    # pooling an opposite-draft run is the ONLY way the four cells fill, and it
+    # makes each stratum's two legs come from different runs.
+    two_runs = one_run + [("r2", "g4", "dire", "armed", 30.0),
+                          ("r2", "g5", "radiant", "baseline", 30.0)]
+    per_run2, supply2 = carrier_structure(two_runs)
+    chk("an opposite-draft run reads the opposite carrier side",
+        per_run2["r2"]["carrier_side"] == "dire")
+    chk("four cells fill only across runs, never within one",
+        all(supply2[c] for c in CELL_ORDER)
+        and supply2["ab/armed"] == ["r1"] and supply2["ab/baseline"] == ["r2"])
+    chk("the two legs of one stratum come from DIFFERENT runs (this is the "
+        "cross-run comparison the section warns about)",
+        supply2["ab/armed"] != supply2["ab/baseline"]
+        and supply2["ba/armed"] != supply2["ba/baseline"])
+
+    mixed = carrier_structure(one_run + [("r1", "g9", "radiant", "baseline", 30.0)])[0]
+    chk("a carrier on both sides of one run is flagged MIXED, not averaged",
+        mixed["r1"]["carrier_side"] == "MIXED"
+        and set(mixed["r1"]["fills"]) == set(CELL_ORDER))
 
     print("selfcheck %d/%d" % (ok[1], ok[0]))
     return 0 if ok[1] == ok[0] else 1

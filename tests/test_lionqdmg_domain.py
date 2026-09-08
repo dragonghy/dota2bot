@@ -400,11 +400,77 @@ def _frame(enemy_hp, enemy_x, q_level=1, cd=0.0, mp=500.0, lion_level=6,
     return L.scan_game(g)[0]
 
 
+def test_carrier_structure_section():
+    """GH #632: the four cells are decided by the draft, not by sampling.
+
+    This census slices by ONE carrier (Lion), so a run can only fill a diagonal
+    pair of cells and the other two can never be filled by more games.  The
+    section must exist AND say so; the two sentences are pinned against the
+    cmqreach wording so the sibling tools cannot drift into saying different
+    things about the same structural fact.
+    """
+    one_run = [('r1', 'g1', 'radiant', 'armed', 0.0),
+               ('r1', 'g2', 'dire', 'baseline', 0.0)]
+    md = '\n'.join(L.carrier_structure_md(one_run))
+    check('the section exists at all', '(0) carrier structure' in md)
+    check('it names the run and the carrier side',
+          '`r1`' in md and 'radiant' in md)
+    check('it names the two structurally empty cells',
+          'STRUCTURALLY EMPTY' in md
+          and 'ab/baseline' in md and 'ba/armed' in md)
+    check('it says the words "THIS IS NOT A SAMPLE SIZE"',
+          'THIS IS NOT A SAMPLE SIZE' in md)
+    check('it states the unit of a leg difference',
+          'UNIT OF A LEG DIFFERENCE IS THE RUN' in md)
+    check('a carrier on both sides of one run is flagged, not averaged',
+          'MIXED' in '\n'.join(L.carrier_structure_md(
+              [('r1', 'g1', 'radiant', 'armed', 0.0),
+               ('r1', 'g2', 'radiant', 'baseline', 0.0)])))
+    both = L.carrier_structure_md(one_run + [('r2', 'g3', 'dire', 'armed', 0.0),
+                                             ('r2', 'g4', 'radiant', 'baseline', 0.0)])
+    md2 = '\n'.join(both)
+    check('with an opposite-draft run pooled in, nothing is structurally empty '
+          'any more -- and the section says the comparison went cross-run',
+          'STRUCTURALLY EMPTY' not in md2 and 'CROSS-RUN' in md2)
+
+    # no drift between the two carrier-sliced tools: same computation, same
+    # two sentences.  A future edit that softens one of them turns this red.
+    import cmqreach_domain as C
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        C.print_carrier_structure(one_run)
+    for phrase in ('THIS IS NOT A SAMPLE SIZE',
+                   'UNIT OF A LEG DIFFERENCE IS THE RUN'):
+        check('cmqreach and lionqdmg say the same thing: %r' % phrase,
+              phrase in buf.getvalue() and phrase in md)
+    check('both tools agree on which cells one radiant-carrier run fills',
+          C.reachable_cells('radiant') == ('ab/armed', 'ba/baseline'))
+
+    # --- two wiring facts a unit test on the renderer alone cannot see -------
+    # `run()` needs a corpus, so these are asserted on the source.  The ORDER
+    # is the contract: which cells the drafts could ever supply is a property
+    # of the corpus, not of what one invocation chose to read, so the record
+    # must be taken BEFORE the stratum filter drops half the games.  Recorded
+    # after it, a `--stratum ab` run would report the `ba` cells as
+    # structurally empty when they are merely filtered out -- the section would
+    # then manufacture exactly the misreading it exists to prevent.
+    src = open(TOOL).read()
+    check('run() actually emits the section (a renderer nothing calls is not '
+          'a section)', 'head += carrier_structure_md(carrier_games)' in src)
+    rec = src.find('carrier_games.append(')
+    filt = src.find('if stratum != "all" and cell[0] != stratum:')
+    check('the carrier record is taken BEFORE the stratum filter',
+          0 < rec < filt)
+
+
 for fn in (test_source_constants, test_mr25_is_tighter, test_upper_bound_direction,
            test_episodes, test_ready_clauses, test_reach, test_outcome_column,
            test_outcome_is_an_upper_bound, test_two_witnesses_are_never_merged,
            test_stale_victims_need_both_halves,
-           test_cross_stream_join_is_underscore_insensitive):
+           test_cross_stream_join_is_underscore_insensitive,
+           test_carrier_structure_section):
     fn()
 
 if fails:
