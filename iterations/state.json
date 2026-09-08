@@ -7116,5 +7116,43 @@
     "sibling_ratchet": "`tests/test_axe_culling_threshold_preflight.lua` §3 那条**按名字响了**:它原本断言 `for _, npcEnemy in pairs( nInBonusEnemyList )` 且 `nInRangeEnemyList` 在 `X.ConsiderR` 里**只出现一次(赋值,从不读)** —— 那正是它自己那句「registered here, not fixed: it is a separate lever with its own domain and its own cost side」描述的缺陷。本轮把它改写成**驱动**版本:闸关时**有效池就是宽的那个**,在能区分两个池的真实帧上驱动断言(2 vs 3),比原来的字符串形式**更强**(保留拼写、改掉答案的编辑会通过旧版)。RING=375 与该文件 §2 的整份扫描仍然成立 —— 它们是**关于未 armed 的树**的断言。",
     "value_question_owed": "那 200 码的接近到底值不值(Culling 击杀会退 CD、给友军移速),本轮**不判**,也判不了:fixture 上 band 那两帧都没真的开过火,且嘲讽那一半 fixture 世界答不了。`queue.json:hero-46`(零 EC2 归档只读,与 hero-2/30..45 同形可并进同一次遍历)。",
     "gh_issue": "#625(本轮开;按 GH #290 先 push 再发引用,claim_precheck.sh EXIT=0 clean / local commits not on origin/main: 0)"
+  },
+  "tpdying_a_INDETERMINATE_20260908": {
+    "owner": "director",
+    "date": "2026-09-08T10:1xZ",
+    "backlog_item": "退休 owed registry 的 DONE 行(上一轮交棒 ④,已顺延 3 轮);裁定全文 iterations/streams/test_set.md §GA.1",
+    "headline": "`a_evidence_tpdying` 交付合格并退休,`tpdying` 的 (a) 判 **INDETERMINATE,而且是结构性的**:它的子句嵌在 `tpcommit` 的门里(`jmz_func.lua:8913` 第二行 return nil)⇒ 单独 armed 逐位 no-op;两者同时 armed 时读数是「钉的创建 + 两个释放 + 被移动的分母」的净值,连符号都不可分解(章程 4a)。⇒ **它的 (a) 在 all-on 镜像波上是买不到的,不是没人去买** —— 这两件事在 verdict 表里都写作 verify=0,而只有后者催一催会好。",
+    "evidence": "iterations/reports/replay-check/a_evidence_tpdying.md(W49、--ref 066219d6、4 粒种子、72/72 计分局、70 game-legs、4,527 次响应 TP 落地;两个检测器 --selfcheck 23 PASS/0 FAIL;4(i-a) 两层读数含反号登记;4(i-c) 每粒 swap-average 由工具打印,4/4 粒同向;零 gpm/xpm)",
+    "residual": "iterations/owed_executions.json:tpdying_isolation_leg(隔离腿:同一批 seed,arm tpcommit 而不 arm tpdying;花一波的钱 ⇒ 走 queue.json + 批测台)",
+    "class": "GH #622(协同组同日为 tprecov 开的 gate-inside-a-gate);普查 tests/test_gated_helper_nesting_census.lua 此刻在 trunk 上红",
+    "not_claimed": "(b)/(c) 未触及;tpdying 仍在集外(09-05 退集);不主张重新入集"
+  },
+  "tpreach_a_WORKING_20260908": {
+    "owner": "director",
+    "date": "2026-09-08T10:1xZ",
+    "backlog_item": "同上;裁定全文 iterations/streams/test_set.md §GA.2",
+    "headline": "`a_evidence_tpreach` 交付合格并退休,`tpreach` 的 (a) 判 **WORKING**:ADDED 是它自己的域、方向由源码事前钉死、4/4 粒种子向下且三张 reach 表全过、体积对照把它与普遍少按 TP 分开(总按压 ~3% vs ADDED 占比 ~42%)、组成比落在 tpsafe2 真会跑的那一格且两层各自复现,§BC.1 保护的撤退格几乎没动(13→11)。",
+    "verify_line": "VERIFY id=tpreach verdict=WORKING episodes=59",
+    "restriction": "§BC.4 按字面读要由非撤退 cell 单独承载验收,而那一格 n=3:13 / 2-of-4 粒种子 / 只在 p50 表上成立。**不豁免,搬走**:iterations/owed_executions.json:tpreach_bc4_cell_reread —— 重新入集前必须用更多粒种子重读,且 swap-average 表要由 tpreach_domain.py 自己打印(4(i-d))。不读成 INDETERMINATE 的理由是铁律 4(ii):值域这么小的计数不许当承重估计量,该格该读的是层内占比,而占比两层各自复现。",
+    "not_claimed": "(b)/(c) 未触及;tpreach 仍在集外(09-05 退集,60→59);owner P4.2 冻结独立管着重新入集"
+  },
+  "owed_residual_field_20260908": {
+    "owner": "director",
+    "date": "2026-09-08T10:1xZ",
+    "backlog_item": "GH #627([harness],本轮开并实现);裁定/全文 iterations/streams/test_set.md §GA.3",
+    "headline": "四行 owed 读 DONE,逐份读完只有两行可退休;另外两行**自己的散文早就写着「不许据此退休」,而工具在它下面一行每轮打印「请退休我」** —— §AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。新增可选字段 `residual`:机器键满足且字段非空 ⇒ 状态 RESIDUAL,是 finding、进退出码、永不打印 retire 那一行。",
+    "acceptance": "tests/test_pending_rulings.py 349 → 361 checks / 0 failed(RC_EXIT=0),载重断言是同一行的一对(同一份满足的键:无字段 DONE、有字段 RESIDUAL)+ 对照体(无字段必须仍打印 retire,否则该断言平凡真);变异台 tools/agent/mutstand_owed_residual.sh 7 CAUGHT / 0 SURVIVED / control_ok=1,还原 git diff 逐字节 YES",
+    "rows_now_residual": [
+      "roshan_pit_daynight_fix",
+      "hero_domain_scan_2_30_31"
+    ],
+    "not_claimed": "hero_domain_scan 的九份读数本轮未逐份读通(LIMIT 11 那一层 residual 也买不到);roshan 的残留未推进(挂在 P4.2 解冻后);没有任何腿在数 residual 字段的年龄"
+  },
+  "patch_check_20260908": {
+    "owner": "director",
+    "date": "2026-09-08T10:1xZ",
+    "backlog_item": "章程 2f 低频 patch 检查(上一轮交棒 ⑥「建议下一轮强制做掉」,已顺延多轮);全文 §GA.0",
+    "headline": "做了,**无新 patch**:datafeed patchnoteslist 裸读 RC_EXIT=0,117 条,最新仍是 7.41e(ts 1785394800 = 2026-07-30),与 08-19 建档、09-01 复核逐位相同 ⇒ 缺口边界不变(7.41b–e),patch_gap 工单 P1–P4 一条不改。",
+    "not_claimed": "docs/PATCH_UPDATE_GUIDE.md 的 'Last updated for' 本轮不改(P4 的前置 P1–P3 未做完;改它等于伪造进度)"
   }
 }

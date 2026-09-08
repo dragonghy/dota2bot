@@ -1855,3 +1855,110 @@ sweep 把 `fr_pred` 与 `overlap_*` **并排打印**就是为了这两者永远�
    **不主张**留它对别的 id 无害。
 4. **`overchase` 的新身体没有被任何波次读过** —— §FY 落地至今零波次,本节只登记不可比性。
 5. **patch 检查本轮仍未做**(低频,已连续多轮顺延)。
+
+---
+
+## §GA 2026-09-08T10:1xZ 总监:**四行 owed 读 DONE,逐份读完只有两行可退休** —— 本节最该被读的是 **§GA.3:另外两行**自己的散文早就写着「不许据此退休」,而工具在它下面一行每轮打印「请退休我」**;以及 **§GA.1:一个 id 的 (a) 可以是**结构上买不到的**,而买不到与「没人去买」在 verdict 表里长得一模一样**
+
+零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、无 promote/reject。
+取活依据是上一轮「下次触发」自己排的第 ④ 条(退休 owed registry 里那 4 行 DONE,**需读一遍**四份产物,
+**已顺延 3 轮**)与第 ⑥ 条(patch 检查,**建议下一轮强制做掉**,已顺延多轮)。
+
+**读完四份的结果:2 退休 / 2 不可退休。** 后者是本节的主体。
+
+### §GA.0 patch 检查(章程 2f,低频)—— 做了,**无新 patch**
+
+`https://www.dota2.com/datafeed/patchnoteslist?language=english` 裸读 `RC_EXIT=0`,
+**117 条,最新仍是 7.41e(ts 1785394800 = 2026-07-30)**。与 08-19 建档、09-01 复核的读数
+**逐位相同** ⇒ 缺口边界没变,仍是 7.41b–e 四个版本,`patch_gap_7.41b-e.md` 的 P1–P4 分片
+一条都不需要改。`docs/PATCH_UPDATE_GUIDE.md` 的 "Last updated for" **本轮不改**(P4 的前置 P1–P3 未做完;
+改它等于伪造进度,那是该文件 08-19 就写下的自我约束)。
+
+### §GA.1 `a_evidence_tpdying` —— 交付合格,**判 INDETERMINATE,而且是结构性的**
+
+产物 `iterations/reports/replay-check/a_evidence_tpdying.md`(194 行,录像组 09-06T04:04Z)。
+按 `done_when_note` 的验收句逐条读通:§A'.3 约束 3 点名的**两个检测器都建了并跑了**
+(`tpdying_release.py --selfcheck` 23 PASS / 0 FAIL)、波次与局数写明(W49、`--ref` 066219d6、
+4 粒种子、72/72 计分局、unparseable 0、70 game-legs、**4,527 次响应 TP 落地**)、
+铁律 4(i-a) 两个分层给的是**读数不是局数**(并把 pinned frames 的**反号**登记了)、
+4(i-c) 每粒 swap-average **由工具自己打**、**全文零 gpm/xpm**。
+
+⭐⭐ **判 INDETERMINATE 的理由不是语料不够,是嵌套**:`tpdying` 的子句住在
+`J.GetTpCommitDefendDesire` 里,而那个函数第二行是 `if not J.IsSoakCandidate('tpcommit') then return nil end`
+(`jmz_func.lua:8913`,子句 `:8958`)⇒ **单独 armed 逐位 no-op**;两者同时 armed 的那一波里,
+`armed − baseline` 是**钉的创建(`tpcommit`)+ 两个释放(`tpdying`/`tpdead`)+ 被移动的分母(`teambrain`)**
+的净值。章程 4a 禁止把 bundle differential 记到单个 id 头上,而这里**连符号都不可分解**
+(创建把 pinned frames 推上去,两个释放推下来)。
+
+⇒ **`tpdying` 的 (a) 在一条 all-on 镜像波上是结构上买不到的**,不是没人去买。
+这两件事在 verdict 表里长得一模一样(`verify=0`),而只有第二种是催一催就会好的。
+⭐ **这一条不新建仪器,因为它已经有一个**:`tests/test_gated_helper_nesting_census.lua`
+就是这一类的普查,它**此刻在 trunk 上红**(协同组 `tprecov`,`607ce30b`),
+而协同组今天刚为同一个形状开了 **GH #622**。`tpdying` 给 #622 补的是**量过的那一半**:
+嵌套不只是「入集时可能买到 no-op」,它让**这条 id 自己的 (a) 在嵌套还在的时候就买不到**
+—— 4,527 次落地 / 70 game-legs 也答不出来。
+
+**本行退休**(义务已履行:执行方录像组不欠任何东西了),残留义务**换了执行人并开始花钱**,
+故另立一行 `tpdying_isolation_leg`(隔离腿:同一批 seed,arm `tpcommit` 而**不** arm `tpdying`)。
+⛔ **把它写进已退休行的 outcome 散文里就是 §DR / GH #540 量过的掉棒形状:一条已退休行的散文,没有任何腿会替它举手。**
+
+### §GA.2 `a_evidence_tpreach` —— 判 **WORKING**,而 §BC.4 的字面要求**没有被豁免,是被搬走了**
+
+产物 `iterations/reports/replay-check/a_evidence_tpreach.md`(213 行,录像组 09-06T04:04Z)。
+§BC.3 的自我制约守住了(读数由录像组取,不是总监自己看)。arm 串是对**钉住的那棵树**核的
+(`git show 066219d6:...test_set.md` 第 2 行第 28 位 / 61,md5 与 `W49_wave.json.arm_md5` 对上),不是对散文核的。
+
+**判 WORKING 的理由,写成可以被攻击的形状**:(i) ADDED 是 `tpreach` **自己的**域
+(`700 < d <= reach`,仅 STRIKE 子句),没有第二条 armed id 以这条带为域;
+(ii) 方向**由源码事前钉死**(纯单侧否决只能拒绝一个超集),而它 **4/4 粒种子向下、三张 reach 表全过**
+(p50 −0.2135 / p90 −0.2375 / source −0.1167);
+(iii) **体积对照**把它与「普遍少按 TP」分开 —— 61-id bundle 让总按压动 ~3%,而 **ADDED 占比动 ~42%**
+(0.9754% → 0.5624%);(iv) 组成比落在 `tpsafe2` **真的会跑**的那一格
+(field share baseline 50% → armed ~20%,**两个分层各自独立复现**),而 §BC.1 保护的撤退格几乎没动(13 → 11)。
+
+⛔ **产物点名要总监裁的那条限制,裁了而不是糊过去**:§BC.4 按字面读要由**非撤退 cell 单独**承载验收,
+而那一格是 n=3 : 13、**2/4 粒种子**(有一粒四条腿上全零)、**且只在 p50 这张表上成立**。
+**我不把它读成 INDETERMINATE,理由是铁律 4(ii) 而不是偏好**:值域这么小的计数正是 4(ii) 说的
+「不许当承重估计量」的那种量;那一格该读的是**层内占比**,而占比两层各自复现。
+**但字面要求也没有被豁免** —— 它搬进了 `tpreach_bc4_cell_reread`:**重新入集之前**必须用更多粒种子重读那一格,
+且那张每粒 swap-average 表**要由 `tpreach_domain.py` 自己打印**(产物 §8 自登的债,4(i-d) 形状)。
+⭕ 本行退休。(b)/(c) 未触及;`tpreach` 仍在集外(09-05 退集,60 → 59);owner P4.2 冻结独立于 (a) 管着重新入集。
+
+### §GA.3 ⭐⭐⭐ 另外两行:**行自己的散文说「不可退休」,工具在它下面一行说「请退休我」**
+
+| 行 | 机器键 | 为什么读 DONE | 为什么不可退休 |
+|---|---|---|---|
+| `roshan_pit_daynight_fix` | `path_exists tests/test_roshan_pit_daynight.lua` | 该文件 09-07 落地 ⇒ 此后**永远为真** | **同一轮**把残留收窄成「一波 armed `roshpit` 的**行为**读数」,并在行内逐字写下「机器键此后读 DONE,**而本行不许据此退休**」 |
+| `hero_domain_scan_2_30_31` | `path_contains_all`(九个 id) | 九个 id 全被**提到**了 | 产物自己的 §7 逐字写着 **hero-32 / hero-33 没交**(卡在 dumper 的 `creeps[]` schema:18,709,698 行单一键形 `t|team|x|y`);另外 **hero-2 / hero-34 交到了另外两个路径**,而入集裁定当时写的是「产物路径不变」 |
+
+**这就是 §AW.1 / §DR 立案的那个形状——裁定落进了没有人读的字段——在替它立法的 registry 内部复现了一次。**
+两行都不是「有人偷懒」:两处收窄都是**上一任总监当轮就写清楚了的**,写在 `done_when_note` 与 `residual` 该在的位置上,
+只是**那个位置当时不存在**。
+
+**处方(本轮实现,GH #627)**:新增可选行字段 **`residual`**(非空字符串)。
+机器键满足 **且** 该字段非空 ⇒ 状态 **RESIDUAL**:它是 finding、进退出码,**永远不打印 retire 那一行**。
+- `owed_status()` 拆成 `_machine_key_status()`(纯读键)+ overlay,**键的读数保留在 detail 里**
+  ——「产物确实到了」是真的,而且正是本行仍然开着**而不是从没开始**的一半理由;
+- 键**未**满足时 overlay 不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);
+- **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉恰好等于
+  在一个**作者正想说反话**的行上恢复 retire 那一行;
+- `LIMIT 13` 写明买不到什么:**看不见没人写下来的 residual**(LIMIT 9 同形),
+  也不检查 residual 文本仍然为真 ⇒ 残留真没了要**手动清字段**,在那之前一直报 RESIDUAL,**这个方向是安全的那一侧**。
+
+**验收**:`tests/test_pending_rulings.py` **349 → 361 checks / 0 failed**(裸读 `RC_EXIT=0`),
+载重断言是**同一行的一对**(同一份满足的键:无字段 DONE、有字段 RESIDUAL)+ **一个对照体**
+(无字段的行**必须仍然**打印 retire 那一行,否则「不打印 retire」那条断言平凡真)。
+变异台 `tools/agent/mutstand_owed_residual.sh` **7 CAUGHT / 0 SURVIVED / control_ok=1**,
+还原 `git diff` 逐字节 YES,裸读 `RC_EXIT=0`。
+⚠️ **M5 第一版是空变异**(在 `finding = True` 之前插 `finding = False`,被后一行覆盖)⇒ 它 SURVIVED,
+**差一点被读成断言的洞**;按证据纪律 2 先怀疑断言,查出来是**变异自己的锚下错了**——登记在脚本注释里。
+
+### §GA.4 本节买不到的东西(一句都不许合并)
+
+1. **`hero_domain_scan_2_30_31` 的九份读数本轮没有逐份读通** —— 只读了它的 §7 状态表与 hero-2/hero-34
+   两份产物的头部。`residual` 买到的是「这一行不再谎称自己可退休」,**不是**那九份读数正确。
+   逐份读通仍是退休它的前置,那一层 `path_contains_all` 与 `residual` **都**买不到(LIMIT 11)。
+2. **`roshan_pit_daynight_fix` 的残留没有被推进** —— 它挂在 owner P4.2 解冻之后,本轮只让它不再说谎。
+3. **`tpdying` / `tpreach` 的 (b) 与 (c) 一个字都没碰**;两条都在集外,本节不主张重新入集。
+4. **没有量 `residual` 字段会不会被滥用成「永久缓刑」** —— 它每轮报 finding,但**没有任何腿在数它的年龄**;
+   下一个总监该看的是这个字段有没有开始变成一张过期清单。

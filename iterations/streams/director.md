@@ -497,6 +497,60 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **#229 是「同时写」,这一条是「写完不擦」,后者不需要并发就能造假读数且跨轮存活。**
 
 ## 当前状态(每次触发后更新)
+- **2026-09-08T10:1xZ**:**四行 owed 读 DONE,逐份读完只有两行可退休;另外两行自己的散文早就写着「不许据此退休」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、无 promote/reject。
+  取活依据是上一轮「下次触发」的 **④**(退休 4 行 DONE,**需读一遍**四份产物,**已顺延 3 轮**)与 **⑥**
+  (patch 检查,上一轮逐字写「**建议下一轮强制做掉**」)——**两条都取了**。
+  全文 `iterations/reports/director/20260908T101500Z.md`,裁定档案 `test_set.md §GA`,机器键
+  `state.json:tpdying_a_INDETERMINATE_20260908` / `tpreach_a_WORKING_20260908` /
+  `owed_residual_field_20260908` / `patch_check_20260908`。
+  ⭐⭐⭐ **本轮最该被读的一条(§GA.3):`roshan_pit_daynight_fix` 与 `hero_domain_scan_2_30_31`
+  的 `done_when` 活得比它们的义务还久** —— 前者的键(`tests/test_roshan_pit_daynight.lua` 存在)自 09-07 起
+  **永远为真**,而**同一轮**把残留收窄成「一波 armed `roshpit` 的**行为**读数」并在行内写下「不许据此退休」;
+  后者九个 id 全被**提到**⇒键读 DONE,而产物 §7 逐字写着 **hero-32 / hero-33 没交**、
+  且 **hero-2 / hero-34 交到了另外两个路径**(入集裁定当时写的是「产物路径不变」)。
+  ⇒ **行自己的散文说不可退休,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的形状,
+  在替它立法的 registry 内部复现了一次。** 两处收窄**当轮都写清楚了**,只是**那个位置当时不存在**。
+  处方 **GH #627**:新增可选字段 **`residual`**(非空串 ⇒ 状态 **RESIDUAL**:finding、进退出码、
+  **永不打印 retire 那一行**);`owed_status()` 拆成 `_machine_key_status()` + overlay,**键的读数留在 detail 里**;
+  键未满足时 overlay 不生效;**写坏的 residual 读 UNCERTIFIABLE 而不是被丢掉**(丢掉恰好等于在一个
+  作者正想说反话的行上恢复 retire 那一行);`LIMIT 13` 写明它看不见**没人写下来的** residual。
+  ⭐ **§GA.1 判定:`tpdying` 的 (a) 判 INDETERMINATE,而且是结构性的** —— 它的子句嵌在 `tpcommit` 的门里
+  (`jmz_func.lua:8913` 第二行 `return nil`)⇒ 单独 armed 逐位 no-op;同 armed 时读数是
+  「钉的创建 + **两个**释放 + 被移动的分母」的净值,**连符号都不可分解**(章程 4a)。
+  ⇒ **它的 (a) 在 all-on 镜像波上买不到,不是没人去买** —— 两者在 verdict 表里都写作 `verify=0`,
+  **只有后者催一催会好**。不新建仪器:普查 `tests/test_gated_helper_nesting_census.lua` 就是这一类
+  (**此刻 trunk 红**,协同组 `tprecov`),协同组**今天刚为同一形状开了 GH #622**;`tpdying` 给 #622 补的是
+  **量过的那一半**(4,527 次落地 / 70 game-legs 也答不出来)。残留另立 `tpdying_isolation_leg`。
+  ⭐ **§GA.2 判定:`tpreach` 的 (a) 判 WORKING**(ADDED 是它自己的域、方向由源码事前钉死、4/4 粒种子 ×
+  三张 reach 表、体积对照 3% vs 42%、组成比落在 `tpsafe2` 真会跑的那格且两层各自复现、§BC.1 的撤退格 13→11)。
+  **§BC.4 的字面要求没被豁免,是被搬走了**:非撤退 cell n=3:13 / 2-of-4 粒 / 只在 p50 表上成立 ⇒
+  进 `tpreach_bc4_cell_reread`,**重新入集前**用更多粒种子重读、且表由 `tpreach_domain.py` 自己打印(4(i-d))。
+  **不读成 INDETERMINATE 的理由是铁律 4(ii) 不是偏好**:值域这么小的计数不许当承重估计量。
+  ⭐ **§GA.0 patch 检查做了:无新 patch** —— `patchnoteslist` 117 条,最新仍 **7.41e**(ts 1785394800),
+  与 08-19 / 09-01 逐位相同;`PATCH_UPDATE_GUIDE.md` 的 "Last updated for" **不改**(P4 的前置未做完)。
+  验收:`test_pending_rulings.py` **349 → 361 / 0 failed**;变异台 `mutstand_owed_residual.sh`
+  **7 CAUGHT / 0 SURVIVED / control_ok=1**、还原逐字节 YES;`py_gate` **84 ran / 0 findings / EXIT=0**;
+  owed 腿复读 19 行、**两行 RESIDUAL、零行打印「请退休我」**。
+  ⚠️ **M5 第一版是空变异**(插在 `finding = True` 之前被后一行覆盖)⇒ SURVIVED,差点被读成断言的洞;
+  纪律 2 先怀疑断言,查出是**变异自己的锚下错了**。⚠️ **变异台在未 `git add` 的改动上跑,还原检查会假红**
+  (它按 index 比)——这是用法不是缺陷,值得下一个人知道。
+  ⛔ **开工自检跑完了(约 55 分钟),真码 `RC_EXIT=3`,10 条腿全跑完**(收尾前才回来,所以本轮工作单元不是它挑的):
+  `FINDINGS: cadence queue-rulings owed-executions`、`UNCERTIFIABLE: trunk-red(python)`
+  (唯一那条是 `test_selfcheck_lua_leg.py` 顶爆 120s 预算,**GH #358**,9 个检查没跑成 ⇒ **不是通过**)。
+  ⭐ **上一轮交棒 ① 的两条 trunk Lua 红,本轮读到是绿的**:自检 trunk 腿 **86 文件 / 0 failures**,
+  单独复核 `test_gated_helper_nesting_census` + `test_activemode_call_site_census` ⇒
+  **10 tests, 0 failures,`RC_EXIT=0`** —— **归属组自己修的**,本轮不代改也不居功。
+  ⚠️ 纪律 3 本轮一发(第一条命令又是 `| tail`,守卫当场拒,**不新立措辞**);
+  ⚠️ **「后台包装吞掉真码」第三次兑现**:harness 报 `exit code 3`,这次**恰好**等于真码 ——
+  **恰好相同不是被守住**,躲过去的仍是 `rc.sh` 把真码打进了输出文件。
+  ⛔ 动态半(Lua)未跑不作声称(零 `bots/` diff)。零 AWS ⇒ 不对 MTD 作新声称;`DECISIONS_NEEDED` +0。
+  **下次触发**:①**`hero_domain_scan` 九份读数逐份读通**(本轮唯一**明知没做**的那一层,也是它退休的唯一前置)
+  ②~~两条 trunk Lua 红~~ **已绿**;接替它的是**把 `test_gated_helper_nesting_census.lua` 当 GH #622 的仪器读一遍**
+  (§GA.1 刚给 #622 补了半个论据,而那份普查是唯一说得出「还有几条 id 是这个形状」的东西)
+  ③**GH #358 的 120s 预算要人裁** —— 自检里唯一那条 exit 2 已经常态化(9 个检查每轮 UNCERTIFIABLE)
+  ④上一轮 ⑤ 原样顺延(⭐ `text_absent` GH #523 **本轮找到第二个真实用户**:
+  `hero_domain_scan` §7 的「NOT YET」是字面串)⑥「后台包装吞掉真码」的守卫(上一轮 ⑧,原样顺延)。
 - **2026-09-08T07:19Z**:**三条判定全部落地 —— `fieldregen` 退回出集(45 → 44),`ownhalf` / `overchase` 留集且各自具名。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、无 promote。判定完结 **3**(连续第三轮)。
   取活依据是上一轮 ⑨① 自己排的第一条(「判定,而且是判定」,**已顺延 2 轮**);顺延到此为止(实际 3 轮)。

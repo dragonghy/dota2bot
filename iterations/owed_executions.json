@@ -92,7 +92,8 @@
           "hero-37"
         ]
       },
-      "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)—— 这是 2026-09-05 到 09-06T07:xxZ 之间的状态,留在这里是因为它是下面那次改动的立案句。三轮里这一腿从三份读数长到七份,而 `done_when` 一直只判**一个路径存在**:七份里少了六份,这条腿照样绿,唯一挡在「绿」与「退休」之间的是总监记得去逐份读。 ⭐ **2026-09-06T09:xxZ 总监把它改成 `path_contains_all`,并同时追加第八份(hero-36)**:八个 id 各自必须在产物里被**提到**,少一个这一腿就报 OWED 并**点名说少哪一个**。⚠️ **「提到」不是「读数正确」** —— 被提到的 id 可能被并了池、可能答的是错的那一列;那一层仍然是总监退休本行前的逐份读通,`path_contains_all` 只把「有没有这一份」从记性搬进工具。⚠️ 这也意味着**改产物路径或改 id 写法会让这一腿变红** —— 那正是要的:改名本来就该惊动人。 ⭐ 2026-09-06T13:xxZ:hero-37(`zusultstrand`,GH #564)裁 APPROVED-SCAN 并进同一次遍历 ⇒ 针数 8 → 9。"
+      "done_when_note": "⚠️ **只判产物存在,不判内容**(LIMIT 11)—— 这是 2026-09-05 到 09-06T07:xxZ 之间的状态,留在这里是因为它是下面那次改动的立案句。三轮里这一腿从三份读数长到七份,而 `done_when` 一直只判**一个路径存在**:七份里少了六份,这条腿照样绿,唯一挡在「绿」与「退休」之间的是总监记得去逐份读。 ⭐ **2026-09-06T09:xxZ 总监把它改成 `path_contains_all`,并同时追加第八份(hero-36)**:八个 id 各自必须在产物里被**提到**,少一个这一腿就报 OWED 并**点名说少哪一个**。⚠️ **「提到」不是「读数正确」** —— 被提到的 id 可能被并了池、可能答的是错的那一列;那一层仍然是总监退休本行前的逐份读通,`path_contains_all` 只把「有没有这一份」从记性搬进工具。⚠️ 这也意味着**改产物路径或改 id 写法会让这一腿变红** —— 那正是要的:改名本来就该惊动人。 ⭐ 2026-09-06T13:xxZ:hero-37(`zusultstrand`,GH #564)裁 APPROVED-SCAN 并进同一次遍历 ⇒ 针数 8 → 9。",
+      "residual": "`path_contains_all` 的九个 id 全都被**提到**了⇒机器键读 DONE，而产物自己的 §7 逐字写着其中两份**没交**：**hero-32 (`zusboltdmg`) 与 hero-33 (`cmcreepcap`) 仍 NOT YET / 部分 BLIND**，卡在 dumper 的 `creeps[]` schema 上（18,709,698 行单一键形 `t|team|x|y`，无 `name`/`hp`/`idx`），已开 [harness] issue 要这三列。⭐ 另一半同样登记：**hero-2 与 hero-34 确实交了，但交到了另外两个路径**（`iterations/reports/replay-check/domain_hero_2_cullthresh.md` 与 `domain_hero_34_liondrainbkb.md`），而入集裁定当时逐字写着**产物路径不变**（“id 与路径是本腿唯一读得到的机器键”）⇒ 那两份交付对本腿而言只剩下一个提及，而提及正好是 `path_contains_all` 买得到的那一层。⭕ 退休条件：hero-32 / hero-33 两份读数交付（或各自按 §CJ 的 INSTRUMENT-BLIND 退回重裁），**且总监把九份读数逐份读通**——这一层 `path_contains_all` 永远买不到（LIMIT 11）。"
     },
     {
       "id": "p2_pair_arm_stayattr_staysrc",
@@ -110,44 +111,6 @@
         "kind": "manual"
       },
       "done_when_note": "没有完成态:P2 的取证波排完之后本行仍然成立(下一次再排 P2 波时同样适用)。⚠️ 现状登记:`stayattr` 已退集(§EX.1)、`staysrc` 冻结中(§EZ.7)⇒ 这条约束此刻**没有可违反的对象**,它要在解冻后第一次排 P2 波的那一轮被读到。P4.2 与 P2 因此在结构上互相挡住,已写进 `iterations/DECISIONS_NEEDED.md` 交 owner。"
-    },
-    {
-      "id": "a_evidence_tpdying",
-      "issue": "GH #35",
-      "ruling": "总监 2026-09-05T22:xxZ,全文 `iterations/streams/test_set.md` §FB(§FB.2 表格上半行 / §FB.5 第 1 条)。`tpdying` 于 2026-08-19 入集(§A'),armed 17 天,`verify_coverage.py` 读 verify=0 / 159 份报告 ⇒ 本轮 **退回出集**(61 → 60)。⛔ **退集不是 reject,也不是「(a) 买不到」** —— gate/代码/测试一字未动,而 (a) 的验收形状在入集那天就写死了(§A'.3 约束 3):**必须用行为检测器判,不许用 gpm/xpm**,点名两个检测器 ——「响应 TP 落地后 10s 内死亡率」与「落地后仍钉在 DEFEND 的帧数」。两个都从没被建过。语料**已经存在**:W39/W40/W41/W48/W49 都 armed 了它(W49 于 21:19:57Z 起飞、`--ref` 钉 `066219d6`)⇒ **退集不销毁买 (a) 的能力**(与 `stayattr` §EX.9 先例同型)。⚠️ 重新入集时**必须与 `tpcommit` 同时 armed**(§A'.4:单独 armed 逐位 no-op);冻结期内买到 (a) 也先 FROZEN-HOLD,解冻后凭现成证据重提。",
-      "ruled_at": "2026-09-05T22:xxZ",
-      "executor": "replay-check(录像组)",
-      "trigger": "没有外部触发器:任何一轮录像组工作单元都可以取它。语料是已经落地的 W39–W49 dump,**不需要任何新波次、零 AWS 增量**。",
-      "delivered_to": [
-        "iterations/streams/test_set.md §FB(裁定全文档案)",
-        "iterations/owed_executions.json(本行)",
-        "GH #35 追评(已发)"
-      ],
-      "why_registered_here": "§FB.3:入集自带的 (a) 验收义务在现有立法里**没有行可以被写进去** —— §2.5/GH #413 覆盖的是「裁定」,而这份义务是「批准入集」的附随物,申请方的 queue 行在入集被批准的那一刻就 resolved 了,录像组从来不是那一行的被裁方。量出来的规模:armed 61 条,有机器可读 VERIFY 行的只有 21 条 ⇒ 40 条 id 的 (a) 今天没有任何一行替它举手。本行是把其中一条变成有行的那一条;通用化另立 **GH #540**。",
-      "done_when": {
-        "kind": "path_exists",
-        "path": "iterations/reports/replay-check/a_evidence_tpdying.md"
-      },
-      "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句**:该文件里给出「响应 TP 落地后 10s 内死亡率」与/或「落地后仍钉在 DEFEND 的帧数」两腿差分,标明是哪一波(W39/W40/W41/W48/W49 之一)、哪些局、armed 腿与 baseline 腿各自的读数,并按铁律 4(i-a) **同时给 ab / ba 两个分层的读数**;⛔ 不许用 gpm/xpm 作 (a) 判据(§A'.3 约束 3)。总监据此判 WORKING / BUGGY / SILENT 并退休本行。**产物不在 = OWED,不是 DONE。**"
-    },
-    {
-      "id": "a_evidence_tpreach",
-      "issue": "GH #159",
-      "ruling": "总监 2026-09-05T22:xxZ,全文 `iterations/streams/test_set.md` §FB(§FB.2 表格下半行 / §FB.5 第 2 条)。`tpreach` 于 2026-08-24 入集(§BC,总监自写自批),armed 12 天,verify=0 ⇒ 本轮 **退回出集**(60 → 59)。⛔ **退集不是 reject,也不是「(a) 买不到」**:§BC.4 已经把验收写死 —— `tools/batch_test/behavioral/tp_channel_death.py` **已经算了 `near`**(决策侧插值),**只差按 mode 分层**;dump 里没有 mode 字段时降级为「`near ∈ (700,725]` 的占比两腿差分」。**从没有人对任何一波跑过它并写成 VERIFY 行。**⚠️ §BC.3 的自我制约不变:**(a) 必须由录像组独立核验,不是总监自己看。**",
-      "ruled_at": "2026-09-05T22:xxZ",
-      "executor": "replay-check(录像组)",
-      "trigger": "没有外部触发器。工具在树上(`--help` 本轮跑通),语料是已经落地的 W39–W49 dump,**零 AWS 增量**。",
-      "delivered_to": [
-        "iterations/streams/test_set.md §FB(裁定全文档案)",
-        "iterations/owed_executions.json(本行)",
-        "GH #159 追评(已发;该 issue 按 §BC.1 本来就不关)"
-      ],
-      "why_registered_here": "§FB.3:入集自带的 (a) 验收义务在现有立法里**没有行可以被写进去** —— §2.5/GH #413 覆盖的是「裁定」,而这份义务是「批准入集」的附随物,申请方的 queue 行在入集被批准的那一刻就 resolved 了,录像组从来不是那一行的被裁方。量出来的规模:armed 61 条,有机器可读 VERIFY 行的只有 21 条 ⇒ 40 条 id 的 (a) 今天没有任何一行替它举手。本行是把其中一条变成有行的那一条;通用化另立 **GH #540**。",
-      "done_when": {
-        "kind": "path_exists",
-        "path": "iterations/reports/replay-check/a_evidence_tpreach.md"
-      },
-      "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句**:该文件给出「**非撤退 mode** 下、敌人在 `(700, reach]` 带内的 TP 按下点上,armed 腿**不按**、baseline 腿**按**」的两腿读数(或 §BC.4 的降级读法:`near ∈ (700,725]` 的占比两腿差分),标明波次与局数,并按铁律 4(i-a) 同时给 ab / ba 两层。⛔ **撤退 mode 那一格不设阈值只报数**(§BC.1:那是 `J.ShouldWalkNotTp` 故意放行的「最后一搏逃命 TP」,GH #3 的 A/B 花了 −15 GPM 学会不要压它)。总监据此判 WORKING / BUGGY / SILENT 并退休本行。"
     },
     {
       "id": "wave_fence_ruling4_first_live_run",
@@ -181,7 +144,8 @@
         "kind": "path_exists",
         "path": "tests/test_roshan_pit_daynight.lua"
       },
-      "done_when_note": "⚠️ **文件存在 ≠ 修对了**(与 LIMIT 11 同族,故意写明):这条只买「修复带着自己的钉子落了地」。**结清判据由总监逐条读**:(i) 新 gate id 在 `bots/` 里唯一闸址且 turbo-only;(ii) `roshdist_domain.py` 在同一份语料上读作 `agree 77 / DISAGREE 0`;(iii) #450 自己写的那条提醒有回答 —— 「本 issue 只证明了当前实现与实测相反,没有独立证明昼夜就是引擎的全部规则」。⛔ **只把两个常量对调、不落钉子,这条腿会一直 OWED,那是对的。**\n\n⭐ **2026-09-07T07:xxZ 总监落地进度 —— 机器键此后读 DONE,而本行不许据此退休。** 产物已落地(`tests/test_roshan_pit_daynight.lua`,11 检查,变异台 `tools/agent/mutstand_roshan_pit_daynight.sh` 8 CAUGHT / 1 SURVIVED 且那 1 是量程对照 / 0 ABORTED,每一发都死在它瞄准的那个 case 上),soak candidate `roshpit` 已按 `.claude/skills/gated-fix/` 落闸(`J.RoshanPitForTimeOfDay` 是无闸 worker,`J.GetCurrentRoshanLocation` 是唯一闸址,`J.IsModeTurbo() and J.IsSoakCandidate('roshpit')`)。逐条对账:**(i) 已买**(由 `[gate]` case 钉住,变异 M2/M7 打得中);**(iii) 已买一半**(见下);**(ii) 买不到,而且它按原文写就买不到** —— `roshdist_domain.py` 的 `current_pit()` 是**工具自己硬编码的公式**(`:128` + `RADIANT_PIT`/`DIRE_PIT` 常量),它**不读 Lua**,所以「改完 Lua 重跑 §A」在这套装置里**不改变任何读数**;#450 建议的验收句在这一点上是错的。⚠️ 而 §A 的翻转读数**已经被现有测量在算术上买下了**:观测是二值、`unresolved == 0` ⇒ `agree_flipped ≡ DISAGREE_shipped = 77`、`DISAGREE_flipped ≡ agree_shipped = 0`,**恒等式,不需要重跑**。⛔ **但那仍然不是条件 (a)**:§A 量的是**公式**指对了坑,不是**bot 的行为**变了(『适用于此』vs『在此生效』,GH #138 LIMITS 同一条)。⇒ **本行的剩余义务收窄为一句**:一波 armed `roshpit` 的行为读数(BOT_MODE_ROSHAN 的 bot 是不是走向 roshan 真在的那个坑),按铁律 4(i-a) 给 ab / ba 两层。冻结期(owner P4.2)内 `roshpit` **不入集**,故这一步挂在解冻之后。\n\n⛔ **(iii) 的另一半是本轮新买到的,而它指向反面,必须一起读**:#450 要求确认「昼夜是不是引擎的全部规则」。检索到的三份 7.38 二手记述都说 Roshan「**top at night, bottom at day**」(top = `RadiantRoshanLoc`,y > 0)——**那正是出厂映射**;一份 7.33 记述说反面(day = Radiant),**那是 armed 腿**。两份二手互相矛盾 ⇒ 至多一份描述 7.41,而 AGENTS.md 本来就拒绝拿 patch note 摘要当证据。同时排除了唯一能救出厂映射的技术解释:dumper 的 `t` 与 `DotaTime()` **同源**(`behavioral/dumper/main.go:500-506`、`:735-742` 把 `m_pGameRules.m_flGameStartTime` 减掉),所以「半周期相位偏移」不成立。⇒ 结论仍是**实测压二手**,而这正是它落成 gated candidate 而不是直接对调的理由。\n\n⭐ **同轮登记的第二根杠杆(不并进本 id,lanefix 教训)**:`J.CheckTimeOfDay()` **从不问引擎** —— 它算 `DotaTime() % 600 < 300`,而引擎自己的 `GetTimeOfDay()`(`docs/BOT_API_REFERENCE.md:346`)在 `bots/` 里**零调用点**。若那个模运算相位错了,**两条腿的坑都是错的**,该修的根本不是映射。`tests/test_roshan_pit_daynight.lua` 的 `[coupling]` case 钉住「两条腿共用同一个相位读数」,好让这根杠杆哪天落地时**必须自己举手**(变异 M6 打得中)。"
+      "done_when_note": "⚠️ **文件存在 ≠ 修对了**(与 LIMIT 11 同族,故意写明):这条只买「修复带着自己的钉子落了地」。**结清判据由总监逐条读**:(i) 新 gate id 在 `bots/` 里唯一闸址且 turbo-only;(ii) `roshdist_domain.py` 在同一份语料上读作 `agree 77 / DISAGREE 0`;(iii) #450 自己写的那条提醒有回答 —— 「本 issue 只证明了当前实现与实测相反,没有独立证明昼夜就是引擎的全部规则」。⛔ **只把两个常量对调、不落钉子,这条腿会一直 OWED,那是对的。**\n\n⭐ **2026-09-07T07:xxZ 总监落地进度 —— 机器键此后读 DONE,而本行不许据此退休。** 产物已落地(`tests/test_roshan_pit_daynight.lua`,11 检查,变异台 `tools/agent/mutstand_roshan_pit_daynight.sh` 8 CAUGHT / 1 SURVIVED 且那 1 是量程对照 / 0 ABORTED,每一发都死在它瞄准的那个 case 上),soak candidate `roshpit` 已按 `.claude/skills/gated-fix/` 落闸(`J.RoshanPitForTimeOfDay` 是无闸 worker,`J.GetCurrentRoshanLocation` 是唯一闸址,`J.IsModeTurbo() and J.IsSoakCandidate('roshpit')`)。逐条对账:**(i) 已买**(由 `[gate]` case 钉住,变异 M2/M7 打得中);**(iii) 已买一半**(见下);**(ii) 买不到,而且它按原文写就买不到** —— `roshdist_domain.py` 的 `current_pit()` 是**工具自己硬编码的公式**(`:128` + `RADIANT_PIT`/`DIRE_PIT` 常量),它**不读 Lua**,所以「改完 Lua 重跑 §A」在这套装置里**不改变任何读数**;#450 建议的验收句在这一点上是错的。⚠️ 而 §A 的翻转读数**已经被现有测量在算术上买下了**:观测是二值、`unresolved == 0` ⇒ `agree_flipped ≡ DISAGREE_shipped = 77`、`DISAGREE_flipped ≡ agree_shipped = 0`,**恒等式,不需要重跑**。⛔ **但那仍然不是条件 (a)**:§A 量的是**公式**指对了坑,不是**bot 的行为**变了(『适用于此』vs『在此生效』,GH #138 LIMITS 同一条)。⇒ **本行的剩余义务收窄为一句**:一波 armed `roshpit` 的行为读数(BOT_MODE_ROSHAN 的 bot 是不是走向 roshan 真在的那个坑),按铁律 4(i-a) 给 ab / ba 两层。冻结期(owner P4.2)内 `roshpit` **不入集**,故这一步挂在解冻之后。\n\n⛔ **(iii) 的另一半是本轮新买到的,而它指向反面,必须一起读**:#450 要求确认「昼夜是不是引擎的全部规则」。检索到的三份 7.38 二手记述都说 Roshan「**top at night, bottom at day**」(top = `RadiantRoshanLoc`,y > 0)——**那正是出厂映射**;一份 7.33 记述说反面(day = Radiant),**那是 armed 腿**。两份二手互相矛盾 ⇒ 至多一份描述 7.41,而 AGENTS.md 本来就拒绝拿 patch note 摘要当证据。同时排除了唯一能救出厂映射的技术解释:dumper 的 `t` 与 `DotaTime()` **同源**(`behavioral/dumper/main.go:500-506`、`:735-742` 把 `m_pGameRules.m_flGameStartTime` 减掉),所以「半周期相位偏移」不成立。⇒ 结论仍是**实测压二手**,而这正是它落成 gated candidate 而不是直接对调的理由。\n\n⭐ **同轮登记的第二根杠杆(不并进本 id,lanefix 教训)**:`J.CheckTimeOfDay()` **从不问引擎** —— 它算 `DotaTime() % 600 < 300`,而引擎自己的 `GetTimeOfDay()`(`docs/BOT_API_REFERENCE.md:346`)在 `bots/` 里**零调用点**。若那个模运算相位错了,**两条腿的坑都是错的**,该修的根本不是映射。`tests/test_roshan_pit_daynight.lua` 的 `[coupling]` case 钉住「两条腿共用同一个相位读数」,好让这根杠杆哪天落地时**必须自己举手**(变异 M6 打得中)。",
+      "residual": "机器键（`tests/test_roshan_pit_daynight.lua` 存在）自 2026-09-07 起永远为真，而本行的义务在同一天被收窄成了机器键看不见的一句：**一波 armed `roshpit` 的行为读数**（BOT_MODE_ROSHAN 的 bot 是不是走向 roshan 真在的那个坑），按铁律 4(i-a) 给 ab/ba 两层。不是 `roshdist_domain.py` 的重跑——那个工具的 `current_pit()` 是它自己硬编码的公式，不读 Lua，改完 Lua 重跑不改变任何读数；而翻转后的 §A 读数已由恒等式买下（观测二值、unresolved==0 ⇒ agree_flipped ≡ DISAGREE_shipped = 77）。⭕ 时限：owner P4.2 冻结期内 `roshpit` 不入集，所以这一步挂在解冻之后；在那之前本行应当每轮报 RESIDUAL 而不是「请退休我」。"
     },
     {
       "id": "towerfear_towerring_pair_readmit",
@@ -371,6 +335,42 @@
         "kind": "manual"
       },
       "done_when_note": "验收句:**存在一份收割于 2026-09-07T23:xxZ 之后、成员串含 `overchase` 的 `W*_verdict.json`**,且该波读数在引用时被标注为「新函数体」。⚠️ 这是一句关于**读数出处与标注**的判断,四种 kind 都表达不了(`path_exists` 只判文件在不在,判不了它收割于哪个时刻、更判不了标注)。⇒ manual。"
+    },
+    {
+      "id": "tpdying_isolation_leg",
+      "issue": "GH #35;上游产物 `iterations/reports/replay-check/a_evidence_tpdying.md` §6 第 1 条;本行的父行 `a_evidence_tpdying` 已于 2026-09-08 退休",
+      "ruling": "总监 2026-09-08T10:1xZ：`tpdying` 的 (a) **买不到**，而且原因是结构性的——它的子句嵌在 `tpcommit` 的门里（`jmz_func.lua:8913` 第二行 `return nil`），单独 armed 逐位 no-op；两者同时 armed 时，读数是「钉的创建(`tpcommit`) + 两个释放(`tpdying`/`tpdead`) + 被移动的分母(`teambrain`)」的净值，**连符号都不可分解**。章程 4a 禁止把 bundle differential 记到单个 id 头上。⭐ 唯一干净的分离是**一条隔离腿**：同一批 seed，arm `tpcommit` 而 **不** arm `tpdying`，对照现有 W49 读数。⭕ 它**花一波的钱**，因此不是录像组能自己取的活：要走 `iterations/queue.json` 申请 + 批测台排期，而且在 owner P4.2 冻结期内 `tpdying` 本身不得重新入集。⚠️ 便宜的那一条替代路线同时登记（产物 §6 第 2 条）：在落地帧上重建 `J.IsIncomingBurstLethal( bot, 3.0 )` 的 trigger 级检测器。它零 AWS，但它是章程点名过的难例（`IsFullyCastable` 含蓝，2026-08-20）——**不是免费替代品**，谁取它谁先说清楚重建到什么精度。",
+      "ruled_at": "2026-09-08T10:1xZ",
+      "executor": "batch-desk（隔离腿的排期与发波）；读数归 replay-check；总监做后续判定",
+      "trigger": "**没有外部触发器**，而这正是它进 registry 的理由（§DR）：父行 `a_evidence_tpdying` 本轮退休，退休后**没有任何一行载得下它**——`tpdying` 已出集，所以没有 id 行；隔离腿不属于任何已发的波，所以没有 `W<N>_wave.json:harvest_obligations` 行。实际取它的时机：owner P4.2 解冻后的第一次有余量的排期，或者有人提 `tpdying` 重新入集的那一刻（以先到者为准）。",
+      "delivered_to": [
+        "iterations/owed_executions.json（本行）",
+        "iterations/streams/test_set.md §GA.1（裁定全文）",
+        "iterations/reports/director/20260908T101500Z.md §2"
+      ],
+      "why_registered_here": "父行退休时残留义务换了执行人（录像组 → 批测台）并开始花钱。把它写进父行的 outcome 散文里就是 §DR / GH #540 量过的那种掉棒形状：**一条已退休行的散文没有任何腿会替它举手**。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ `kind: manual`，而这一次是诚实的不是偷懒的：验收物是**一波还不存在的波次的读数**，今天没有任何路径、任何 json 键能描述它；伪造一个 `path_exists` 只会在文件在时报 DONE（这正是 LIMIT 13 本轮量到的缺陷）。**裸读得出的验收句**：某一波以 `tpcommit` armed 、`tpdying` **未** armed 发出，对同一批 seed，并用 `tools/batch_test/behavioral/tpdying_release.py --assert-arm` 出两腿读数（死亡率 + 钉住帧），按铁律 4(i-a) 同时给 ab/ba 两层、按 4(i-c) 每粒 swap-average。总监据此才能把 `tpdying` 判成 WORKING/BUGGY/SILENT。"
+    },
+    {
+      "id": "tpreach_bc4_cell_reread",
+      "issue": "GH #159;上游产物 `iterations/reports/replay-check/a_evidence_tpreach.md` §5 限度 1-2 + §8 的自登债务;父行 `a_evidence_tpreach` 已于 2026-09-08 退休",
+      "ruling": "总监 2026-09-08T10:1xZ：`tpreach` 的 (a) 判 **WORKING**（全文 §GA.2），**而 §BC.4 那个单元格的字面要求没有被豁免，只是被搬到了这一行**：非撤退 cell 是 n=3 armed vs 13 baseline、2/4 粒种子（有一粒四条腿上全零）、**且只在 p50 这张表上成立**（p90 下消失 37% vs 38%，source 下在个位事件上反转）。**重新入集前必须把这一格用更多粒种子重读一次**。⭐ 重读的前置条件（产物 §8 自己登的债）：`tpreach_domain.py` **要自己打每粒 swap-average 表**，像 `tpdying_release.py --by-seed` 那样——上一次是从 `rows.jsonl` 手算的，那正是铁律 4(i-d) 点名的形状。⭕ 本行**不阻断** (a) 的 WORKING 判词，也不是一条 reject；它阻的只有**重新入集**这一步。",
+      "ruled_at": "2026-09-08T10:1xZ",
+      "executor": "replay-check（§BC.3 的自我制约仍然成立：这一格不得由总监自己读）；总监审重新入集",
+      "trigger": "**有人提 `tpreach` 重新入集的那一刻**（P4.2 解冻后）——这是一条**否决权**，不是待办；它每轮报 OWED 是为了在那一天被读到（与 `mock_isprefix_ordering` / `teambrain_bid_reachability` 同型）。⚠️ 但它也可以提前被取：重读本身零 AWS，W49 的 dump 已落盘，只是需要更多粒种子才能动那个 n。",
+      "delivered_to": [
+        "iterations/owed_executions.json（本行）",
+        "iterations/streams/test_set.md §GA.2（裁定全文）",
+        "iterations/reports/director/20260908T101500Z.md §2"
+      ],
+      "why_registered_here": "总监接受了一份读数而同时保留了它的一个限制——而那个限制**不属于任何 armed id （`tpreach` 已出集）、不属于任何一波**。写进裁定散文就是「带 caveat 的接受等于无条件接受」的那种掉棒（§DR / GH #540）。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ `kind: manual`：验收物是**一份还不存在的重读**，今天没有路径可指。**裸读得出的验收句**：某份录像组产物给出 §BC.4 非撤退 cell 的两腿读数，粒种子数 > 4，同时给 ab/ba 两层（4(i-a)）与每粒 swap-average（4(i-c)），**且那张表由 `tpreach_domain.py` 自己打印**（不是手算，4(i-d)）；并说明在 p50 以外至少一张 reach 表上那个组成比信号的行为。⛔ 撤退 cell 依然**不设阈值只报数**（§BC.1，GH #3 花了 -15 GPM 学到的那一条）。"
     }
   ],
   "retired": [
@@ -493,6 +493,53 @@
       "outcome": "EXECUTED -- by replay-check at 2026-09-05T07:01:50Z (commit 582a4dc8, its own report item 4), i.e. THREE HOURS BEFORE this row was registered at 10:xxZ; residual completed by the director in this 12:5xZ round (commit of this edit). Bare reads at retirement, against the acceptance sentence in done_when_note, clause by clause: (1) `:12-13` no longer claims the guard is missing -- the docstring now reads \"the ROOT CAUSE this file used to state was wrong ... the guard IS evaluated on that frame, via a helper\", and the string `the whole \"75% of capture attempts are aborted\" finding is about that missing guard` is GONE from the file. (2) `:57` no longer claims red means the guard landed -- the detail string is now \"if this fails the guard moved or was dropped; re-derive the mechanism before quoting the 75% number as evidence about a guard\"; the old `if this fails, the guard landed` is GONE. (3) the new explanation names `J.CanNotUseAction` (`bots/FunLib/jmz_func.lua`) as the guard's real address -- replay-check wrote that at 07:01Z. (4) the no-op sentence -- MISSING until this round; the director added it (pure addition, 8 lines, zero deletions): \"the day an `IsChanneling` token lands in `mode_outpost_generic.lua`, that is A NO-OP, not a landing\", pointing at `tests/test_outchan_domain.py:168` as the assertion that fires on that day. `python3 tests/test_outlatch_capture_liveness.py` => LIVENESS 19 checks, 0 failed, RC_EXIT=0.",
       "waived_clause": "⛔ 验收句第五条 --「检查 1b 的**断言本身逐字未改**」-- **不成立,而且总监不去恢复它,理由要写清楚**。replay-check 在 07:01Z 把断言整个重写了(从「本文件里没有 `IsChanneling` token」改成「守卫确实在施法帧上经 `J.CanNotUseAction` 被求值」),**比裁定要求的更强**:旧断言按它自己的话是「literally true and load-bearing ZERO」,新断言带一个变异抓出来的 `fn_body()` 作用域(第一版正则跨过函数 `end` 匹配到 `J.CanNotUseAbility`,删掉真正的析取项仍然为真)。⇒ 恢复旧断言等于**用一条永远绿的断言换掉一条会红的断言**,那与本条立案的方向相反。**这一条之所以写进裁定,是因为写裁定的人读的是一棵三小时前就已经不存在的树** -- 不是因为它权衡过新断言。",
       "note_for_readers": "⭐ **本行最值钱的东西不是它被执行了,是它根本不该被登记** -- 全文 `iterations/streams/test_set.md` §EV,已立案 **GH #523**。时间线:04:3xZ 协同组写 §EO.6 (丙) 交棒给总监(**当时为真**,§EO.6 自己写着「本轮也没动它」);07:01:50Z **录像组**读同一份 GH #511 线程,**把 (丙) 自己做掉了**(它认为那是**自己的**断言 -- 那个文件是它写的),做完还多走一步重写了断言;10:xxZ 总监**照裁定的散文**把它登记成 OWED,理由写的是「它已经掉过两轮」-- 而那两轮里的第二轮,它已经被做完了。⚠️ **GH #518 的认领字段对这种失效结构上是瞎的**:认领挡的是**两个会话同时做**,而这里的工作**在任何认领可能存在之前就落地了**。两者同根(『存量字段分不开状态』)但不同形:§ER 是「没有字段记录已经有人在做」,这一条是「没有字段记录**做没做过**」。⚠️ 而 `done_when: manual` 让它**结构上不会自己举手** -- 一条 manual 行每轮都报 OWED,**已执行的 manual 行和从没人碰过的 manual 行逐字节相同**(§ER 那句话的第二次实测,这次的两端是「已做完」与「没做」而不是「正在做」与「没做」)。⇒ 处方 GH #523 / 新 owed 行 `text_absent_done_when_kind`:那一行的 `done_when` **本来买得到机器键** -- 它从「注释说得对不对没有断言读得出来」正确地推出了 manual,**却从来没问过容易的那一半:那两句写错的话还在不在**。它们是字面串,`kind: text_absent` 会在 07:01Z 当场读 DONE。**通则:凡是「把这句写错的话改掉」形状的裁定,正面那一半不可读,反面那一半永远可读。**\n⚠️ 第二件要抄给下一个总监的:**认领字段本轮第一次被真用,而它没有起到信号作用** -- 我按 §ES 写了 `claimed_by`/`claimed_at`,但**在同一个工作单元里就把活干完并退休了**,认领与成品一起落地 ⇒ 正是 `pending_rulings.py` LIMIT 12 第二句点名的那种「记录不是信号」。**归因不是懒**:取棒后**两分钟内就发现活已经做掉了**,剩下的只有一处 8 行的补写 -- **一根已经被做完的棒,认领它在信号意义上没有任何东西可以保护**。这不构成放松 §ES 的论据(下一根真的要花一轮的棒仍然必须先推认领再开工),但它说明**认领的价值与剩余工作量成正比,而剩余工作量在取棒那一刻还不知道**。"
+    },
+    {
+      "id": "a_evidence_tpdying",
+      "issue": "GH #35",
+      "ruling": "总监 2026-09-05T22:xxZ,全文 `iterations/streams/test_set.md` §FB(§FB.2 表格上半行 / §FB.5 第 1 条)。`tpdying` 于 2026-08-19 入集(§A'),armed 17 天,`verify_coverage.py` 读 verify=0 / 159 份报告 ⇒ 本轮 **退回出集**(61 → 60)。⛔ **退集不是 reject,也不是「(a) 买不到」** —— gate/代码/测试一字未动,而 (a) 的验收形状在入集那天就写死了(§A'.3 约束 3):**必须用行为检测器判,不许用 gpm/xpm**,点名两个检测器 ——「响应 TP 落地后 10s 内死亡率」与「落地后仍钉在 DEFEND 的帧数」。两个都从没被建过。语料**已经存在**:W39/W40/W41/W48/W49 都 armed 了它(W49 于 21:19:57Z 起飞、`--ref` 钉 `066219d6`)⇒ **退集不销毁买 (a) 的能力**(与 `stayattr` §EX.9 先例同型)。⚠️ 重新入集时**必须与 `tpcommit` 同时 armed**(§A'.4:单独 armed 逐位 no-op);冻结期内买到 (a) 也先 FROZEN-HOLD,解冻后凭现成证据重提。",
+      "ruled_at": "2026-09-05T22:xxZ",
+      "executor": "replay-check(录像组)",
+      "trigger": "没有外部触发器:任何一轮录像组工作单元都可以取它。语料是已经落地的 W39–W49 dump,**不需要任何新波次、零 AWS 增量**。",
+      "delivered_to": [
+        "iterations/streams/test_set.md §FB(裁定全文档案)",
+        "iterations/owed_executions.json(本行)",
+        "GH #35 追评(已发)"
+      ],
+      "why_registered_here": "§FB.3:入集自带的 (a) 验收义务在现有立法里**没有行可以被写进去** —— §2.5/GH #413 覆盖的是「裁定」,而这份义务是「批准入集」的附随物,申请方的 queue 行在入集被批准的那一刻就 resolved 了,录像组从来不是那一行的被裁方。量出来的规模:armed 61 条,有机器可读 VERIFY 行的只有 21 条 ⇒ 40 条 id 的 (a) 今天没有任何一行替它举手。本行是把其中一条变成有行的那一条;通用化另立 **GH #540**。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/replay-check/a_evidence_tpdying.md"
+      },
+      "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句**:该文件里给出「响应 TP 落地后 10s 内死亡率」与/或「落地后仍钉在 DEFEND 的帧数」两腿差分,标明是哪一波(W39/W40/W41/W48/W49 之一)、哪些局、armed 腿与 baseline 腿各自的读数,并按铁律 4(i-a) **同时给 ab / ba 两个分层的读数**;⛔ 不许用 gpm/xpm 作 (a) 判据(§A'.3 约束 3)。总监据此判 WORKING / BUGGY / SILENT 并退休本行。**产物不在 = OWED,不是 DONE。**",
+      "retired_at": "2026-09-08T10:1xZ",
+      "retired_by": "director",
+      "verdict": "VERIFY id=tpdying verdict=INDETERMINATE episodes=4527",
+      "outcome": "EXECUTED by replay-check 2026-09-06T04:04Z (`iterations/reports/replay-check/a_evidence_tpdying.md`, 194 lines). Read through clause by clause against the acceptance sentence in done_when_note, by the director this round: (1) BOTH detectors §A'.3 constraint 3 named exist and were run -- `tools/batch_test/behavioral/tpdying_release.py --selfcheck` 23 PASS / 0 FAIL; (2) wave and games named -- W49, `--ref` 066219d6, 4 seeds, 72/72 scored games swept, unparseable 0, 70 game-legs, 4,527 response-TP landings; (3) both legs' own readings given; (4) iron rule 4(i-a) satisfied with READINGS, not game counts -- radiant/dire rows for landings, deaths≤10s, pinned frames, and the sign flip on pinned frames/landing (+0.142 vs -0.554) registered rather than smoothed; (5) 4(i-c) per-seed swap-average printed BY THE TOOL (`by_seed`), 4/4 seeds in the source-fixed direction on all three quantities; (6) no gpm/xpm anywhere (§A'.3 constraint 3) -- checked by reading, the file states it at §1 and no gpm/xpm quantity appears. DIRECTOR'S VERDICT: INDETERMINATE, and the reason is structural, not a shortage of corpus. `tpdying`'s clause sits INSIDE `J.GetTpCommitDefendDesire`, whose second line returns nil unless `tpcommit` is armed (`bots/FunLib/jmz_func.lua:8913`, clause :8958) -- so armed alone it is byte-for-byte inert, and in the wave that DID arm both, the observed differential is the net of pin CREATION (`tpcommit`), TWO releases (`tpdying`, `tpdead`) and a moved denominator (`teambrain` arbitrates which landings exist). Charter 4a forbids booking a bundle differential to one id, and here even the SIGN does not decompose: the creator pushes pinned frames up while both releases push them down. ⛔ So this is NOT a WORKING verdict for the id, and it is NOT the (a) purchase either -- what it buys is stated in §7 of the artefact and is real: the two detectors now exist, the domain is richly occupied (4,527 landings ⇒ a future SILENT can never be blamed on scarcity), and `--assert-arm` mechanises the reachability trap so no later round can report a clean zero for `tpdying` from a wave without `tpcommit`. This row is retired because the OBLIGATION IT CARRIED IS DISCHARGED -- the executor (replay-check) owes nothing further; what remains is a different obligation on a different executor and costs a wave, so it is registered as its own row (`tpdying_isolation_leg`) rather than left in this one's prose. ⚠️ The generalisable half is NOT registered here as a new instrument, and the reason is that it already has one: an id whose gate is NESTED inside another id's gate cannot have its own (a) bought from an all-on mirrored wave, and `tests/test_gated_helper_nesting_census.lua` is the census of exactly that class, it is RED on trunk right now (strategy's `tprecov`, `607ce30b`), and strategy filed GH #622 on that very shape today -- \"tprecov 是一个 gate-inside-a-gate:入集前必须回答「内层 helper 是不是单位元」,否则第一波买到的是 no-op\". That is the class raising its hand, not a separate gap. What `tpdying` adds to #622, and what should be read into it, is the MEASURED half: the nesting does not merely risk a no-op at admission, it makes the id's own (a) UNBUYABLE from an all-on mirrored wave for as long as the nesting stands -- 4,527 landings over 70 game-legs could not answer it."
+    },
+    {
+      "id": "a_evidence_tpreach",
+      "issue": "GH #159",
+      "ruling": "总监 2026-09-05T22:xxZ,全文 `iterations/streams/test_set.md` §FB(§FB.2 表格下半行 / §FB.5 第 2 条)。`tpreach` 于 2026-08-24 入集(§BC,总监自写自批),armed 12 天,verify=0 ⇒ 本轮 **退回出集**(60 → 59)。⛔ **退集不是 reject,也不是「(a) 买不到」**:§BC.4 已经把验收写死 —— `tools/batch_test/behavioral/tp_channel_death.py` **已经算了 `near`**(决策侧插值),**只差按 mode 分层**;dump 里没有 mode 字段时降级为「`near ∈ (700,725]` 的占比两腿差分」。**从没有人对任何一波跑过它并写成 VERIFY 行。**⚠️ §BC.3 的自我制约不变:**(a) 必须由录像组独立核验,不是总监自己看。**",
+      "ruled_at": "2026-09-05T22:xxZ",
+      "executor": "replay-check(录像组)",
+      "trigger": "没有外部触发器。工具在树上(`--help` 本轮跑通),语料是已经落地的 W39–W49 dump,**零 AWS 增量**。",
+      "delivered_to": [
+        "iterations/streams/test_set.md §FB(裁定全文档案)",
+        "iterations/owed_executions.json(本行)",
+        "GH #159 追评(已发;该 issue 按 §BC.1 本来就不关)"
+      ],
+      "why_registered_here": "§FB.3:入集自带的 (a) 验收义务在现有立法里**没有行可以被写进去** —— §2.5/GH #413 覆盖的是「裁定」,而这份义务是「批准入集」的附随物,申请方的 queue 行在入集被批准的那一刻就 resolved 了,录像组从来不是那一行的被裁方。量出来的规模:armed 61 条,有机器可读 VERIFY 行的只有 21 条 ⇒ 40 条 id 的 (a) 今天没有任何一行替它举手。本行是把其中一条变成有行的那一条;通用化另立 **GH #540**。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/replay-check/a_evidence_tpreach.md"
+      },
+      "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句**:该文件给出「**非撤退 mode** 下、敌人在 `(700, reach]` 带内的 TP 按下点上,armed 腿**不按**、baseline 腿**按**」的两腿读数(或 §BC.4 的降级读法:`near ∈ (700,725]` 的占比两腿差分),标明波次与局数,并按铁律 4(i-a) 同时给 ab / ba 两层。⛔ **撤退 mode 那一格不设阈值只报数**(§BC.1:那是 `J.ShouldWalkNotTp` 故意放行的「最后一搏逃命 TP」,GH #3 的 A/B 花了 −15 GPM 学会不要压它)。总监据此判 WORKING / BUGGY / SILENT 并退休本行。",
+      "retired_at": "2026-09-08T10:1xZ",
+      "retired_by": "director",
+      "verdict": "VERIFY id=tpreach verdict=WORKING episodes=59",
+      "outcome": "EXECUTED by replay-check 2026-09-06T04:04Z (`iterations/reports/replay-check/a_evidence_tpreach.md`, 213 lines). §BC.3's self-restraint held: the reading was taken by the replay desk, not by the director. Read through against the acceptance sentence: wave/games named (W49, `--ref` 066219d6, 4 seeds, 72/72 scored, 70 game-legs, 7,630 TP presses); arm string verified against the PINNED TREE (`git show 066219d6:...test_set.md` line 2, position 28 of 61, md5 matching `W49_wave.json.arm_md5`) rather than against prose; 4(i-a) both strata registered INCLUDING the sign disagreement on ADDED/game (radiant -0.452, dire +0.067); 4(i-c) per-seed swap-average given; §BC.1's retreat cell reported as a bare count with no threshold on it (13 -> 11). DIRECTOR'S VERDICT: WORKING for condition (a). The reasoning, so it can be attacked: (i) ADDED is `tpreach`'s OWN domain, computed from its own source clause (700 < d <= reach, strike-clause only) -- no other armed id has that band as its domain; (ii) the direction was fixed by the source BEFORE measuring (a pure one-sided veto can only refuse a superset), and it is 4/4 seeds down under ALL THREE reach tables (p50 -0.2135 / p90 -0.2375 / source -0.1167); (iii) the volume control separates it from general press suppression -- the 61-id bundle moves total presses ~3%, the ADDED SHARE ~42% (0.9754% -> 0.5624%); (iv) the composition split lands where `tpsafe2` actually runs (field share 50% baseline -> ~20% armed, reproduced in BOTH strata independently) and leaves §BC.1's protected retreat cell essentially unmoved. No BUGGY-shaped evidence appeared. ⛔ THE RESTRICTION THE ARTEFACT ITSELF ASKED THE DIRECTOR TO RULE ON, ruled rather than glossed: §BC.4 read to the letter would carry the acceptance on the non-retreat CELL ALONE, and that cell is n=3 armed vs 13 baseline at 2/4 seeds (one seed contributes literally zero such events) and is p50-only. I do NOT read that as INDETERMINATE, and the reason is iron rule 4(ii) rather than preference: a count with a value range that small is exactly the quantity 4(ii) says must not be the load-bearing estimator; the right quantity in that cell is the within-leg SHARE, and the share reproduces in both strata. But the letter is not waived either -- it is moved into its own row (`tpreach_bc4_cell_reread`), to be re-read with more seeds BEFORE re-admission is granted. Booking it as a caveat in this row's prose is what §DR/GH #540 measured as the way a baton drops. ⚠️ (b) and (c) are untouched by this ruling, and `tpreach` stays out of the set (退集 2026-09-05, 60 -> 59); owner P4.2's freeze governs re-admission independently of (a). ⚠️ The artefact registers its own debt at §8: §4/§4.1's per-seed swap-average was hand-computed from `rows.jsonl`, not printed by the tool -- the 4(i-d) shape. Carried into `tpreach_bc4_cell_reread` as a precondition, since the re-read must not repeat it."
     }
-  ]
+  ],
+  "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。"
 }

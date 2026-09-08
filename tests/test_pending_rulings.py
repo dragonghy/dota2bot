@@ -976,7 +976,7 @@ for _r in _real_rows:
     for _f in ("id", "issue", "executor", "trigger", "done_when"):
         check(_r.get(_f), "real owed row %r is missing %s" % (_r.get("id"), _f))
     _st, _ = pr.owed_status(_r)
-    check(_st in ("DONE", "OWED", "UNCERTIFIABLE"),
+    check(_st in ("DONE", "RESIDUAL", "OWED", "UNCERTIFIABLE"),
           "real owed row %r produced an unknown state" % _r.get("id"))
 
 # ---- done_when kind `path_contains_all` (director 2026-09-06, LIMIT 11).
@@ -1032,6 +1032,89 @@ _ride = [r for r in pr.load_owed() + (_real_rows or [])
          if r.get("id") == "hero_domain_scan_2_30_31"]
 check(_ride and _ride[0].get("done_when", {}).get("kind") == "path_contains_all",
       "the eight-reading rideshare row is not on the kind that checks its ids")
+
+# ---- the `residual` field (director 2026-09-08, GH #627, LIMIT 13).
+# The defect it answers: a `done_when` that outlived its obligation reads DONE
+# forever, and the leg then prints "the director should retire this row" at a
+# row whose OWN PROSE says it must not be retired.  Measured on two live rows
+# (`roshan_pit_daynight_fix`, `hero_domain_scan_2_30_31`).  So the load-bearing
+# assertion is again a PAIR: the same row, same satisfied key, DONE without the
+# field and RESIDUAL with it.
+_tmpdir = tempfile.mkdtemp(prefix="pr_residual_")
+try:
+    _art = os.path.join("tests", "test_landed.lua")
+    os.makedirs(os.path.join(_tmpdir, "tests"))
+    with open(os.path.join(_tmpdir, _art), "w", encoding="utf-8") as _fh:
+        _fh.write("-- the pin landed\n")
+
+    _base = {"id": "r", "done_when": {"kind": "path_exists", "path": _art}}
+    check(pr.owed_status(_base, repo=_tmpdir)[0] == "DONE",
+          "the control row (no residual, key satisfied) did not read DONE")
+
+    _with = dict(_base, residual="one wave's behavioural reading is still owed")
+    _st, _detail = pr.owed_status(_with, repo=_tmpdir)
+    check(_st == "RESIDUAL",
+          "a satisfied key + a recorded residual read %s, not RESIDUAL" % _st)
+    check("behavioural reading" in _detail,
+          "the RESIDUAL detail dropped the residual text itself: %s" % _detail)
+    # The key's own reading must SURVIVE the overlay: "the artefact arrived"
+    # is true and is half the reason a reader needs the row.
+    check("exists" in _detail,
+          "the RESIDUAL detail hid the machine key's own reading: %s" % _detail)
+
+    # An unmet key keeps its own sharper sentence -- the overlay must not
+    # replace "the file is not there" with "there is a residual".
+    _unmet = {"id": "r", "residual": "still owed",
+              "done_when": {"kind": "path_exists", "path": "nope.lua"}}
+    _st, _detail = pr.owed_status(_unmet, repo=_tmpdir)
+    check(_st == "OWED", "an unmet key with a residual read %s, not OWED" % _st)
+    check("nope.lua" in _detail,
+          "the residual overlay swallowed the unmet key's own detail: %s" % _detail)
+
+    # A residual nobody can read must refuse rather than vanish: dropping it
+    # restores the exact "retire me" line the field exists to stop.
+    for _bad in (True, "", "   ", 3, []):
+        check(pr.owed_status(dict(_base, residual=_bad), repo=_tmpdir)[0]
+              == "UNCERTIFIABLE",
+              "an unreadable residual (%r) did not refuse" % (_bad,))
+
+    # ...and the arrow line, which is the part a human actually acts on.
+    # `render_owed` reads the REAL repo, so the rendered pair points its key
+    # at a file that is certainly there -- this test file.
+    _rbase = {"id": "r", "issue": "-", "executor": "-", "trigger": "-",
+              "done_when": {"kind": "path_exists",
+                            "path": os.path.join("tests",
+                                                 "test_pending_rulings.py")}}
+    _rwith = dict(_rbase, residual="one wave's behavioural reading is still owed")
+    _out = io.StringIO()
+    with contextlib.redirect_stdout(_out):
+        _lvl = pr.render_owed([_rwith])
+    _text = _out.getvalue()
+    check(_lvl == 3, "a RESIDUAL row did not raise the leg's exit level")
+    check("NOT retirable" in _text,
+          "the RESIDUAL arrow line did not say the row is not retirable:\n%s" % _text)
+    check("should retire this row" not in _text,
+          "the RESIDUAL row still printed the retire line -- that sentence IS "
+          "the defect this field answers:\n%s" % _text)
+    # Control: the same row without the field must still print it, or the
+    # check above is satisfied by a tool that never prints the line at all.
+    _out = io.StringIO()
+    with contextlib.redirect_stdout(_out):
+        pr.render_owed([_rbase])
+    check("should retire this row" in _out.getvalue(),
+          "the control (no residual) stopped asking for retirement -- the "
+          "assertion above would then be vacuous")
+finally:
+    shutil.rmtree(_tmpdir, ignore_errors=True)
+
+# The registry must actually carry the field -- a field nobody reaches proves
+# nothing (same sentence as the rideshare check above, same reason).
+_res_rows = [r for r in pr.load_owed() if isinstance(r.get("residual"), str)
+             and r["residual"].strip()]
+check(_res_rows,
+      "no live row carries `residual`; the two rows measured on 2026-09-08 "
+      "(roshan_pit_daynight_fix / hero_domain_scan_2_30_31) were the reason "
+      "for the field, so an empty set means one of them lost it")
 
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:

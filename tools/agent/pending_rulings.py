@@ -172,9 +172,12 @@ leg (`owed-executions`) so that GH #267's attribution names it rather than
 folding it into `queue-rulings`.
 
 Each row carries a `done_when` the ruling itself can state as an acceptance
-criterion, and the three states are DONE / OWED / UNCERTIFIABLE.  The
-asymmetry is deliberate and is the whole point of the file: a condition that
-could not be READ is never reported as executed.
+criterion, and the four states are DONE / RESIDUAL / OWED / UNCERTIFIABLE.
+The asymmetry is deliberate and is the whole point of the file: a condition
+that could not be READ is never reported as executed.  RESIDUAL is the
+fourth (director 2026-09-08, GH #627): the machine key is satisfied AND the
+director has recorded, in the row's own `residual` field, an obligation that
+survives it -- see LIMIT 13.
 
 LIMITS FOR THE OWED LEG (in addition to 1-8 below)
 ---------------------------------------------------
@@ -218,6 +221,29 @@ LIMITS FOR THE OWED LEG (in addition to 1-8 below)
         is a record, not a signal.
     An unreadable or half-written claim reads OWED, never IN-FLIGHT: the
     conservative side of this leg is the one that keeps the baton visible.
+13. **A `done_when` written at registration can outlive the obligation it
+    was written for** -- and when it does, it goes DONE and this leg prints
+    `the director should retire this row` at a row that must not be retired.
+    Measured 2026-09-08, on four DONE rows of which only two were retirable:
+      * `roshan_pit_daynight_fix` -- key `path_exists tests/test_roshan_pit_daynight.lua`.
+        The file landed 09-07, so the key has read DONE ever since; the SAME
+        round narrowed the residual to "one wave's behavioural reading of an
+        armed `roshpit`", and wrote **inside the row** that it "不许据此退休".
+      * `hero_domain_scan_2_30_31` -- key `path_contains_all` over nine ids.
+        All nine are mentioned, so it reads DONE; §7 of that very artefact
+        says in as many words that two of the nine (hero-32 / hero-33) are
+        NOT delivered, blocked on a dumper schema gap.
+    In both, the row's own prose already said "not retirable" -- and the
+    tool said the opposite, one line below it, every round.  Prose in a
+    field nothing reads is the failure this whole file exists to answer
+    (§AW.1 / §DR), reproduced INSIDE the registry that answers it.
+    `residual` is the field that makes that sentence machine-read: a
+    non-empty string ⇒ state RESIDUAL, a finding, never "retire me".
+    ⚠️ What it does NOT buy: it cannot notice a residual nobody wrote down
+    (LIMIT 9's shape again -- writing it IS the act being asked for), and it
+    cannot check that the residual text is true or still current.  A row
+    whose residual has actually been discharged reads RESIDUAL forever until
+    the director clears the field; that direction is the safe one.
 
 LIMITS (read these before quoting the output)
 ---------------------------------------------
@@ -789,12 +815,48 @@ def load_owed(path=OWED):
 
 
 def owed_status(row, repo=REPO):
-    """Evaluate one row's `done_when`.  Returns (state, detail).
+    """Evaluate one row, machine key first, then the director's residual.
 
-    state is DONE / OWED / UNCERTIFIABLE.  A condition that could not be READ
-    yields UNCERTIFIABLE, never DONE (GH #171's rule, and here the failure
-    direction is what matters: a vanished artefact must not read as
-    "executed").
+    Returns (state, detail); state is DONE / RESIDUAL / OWED / UNCERTIFIABLE.
+
+    A condition that could not be READ yields UNCERTIFIABLE, never DONE
+    (GH #171's rule, and here the failure direction is what matters: a
+    vanished artefact must not read as "executed").
+
+    RESIDUAL (LIMIT 13) is the DONE-but-not-retirable case: the key is
+    satisfied and the row carries a `residual` string saying what survives
+    it.  It is deliberately layered ON TOP of the key rather than replacing
+    it -- the reader still gets to see that the artefact arrived, which is
+    true and is half of why the row is still open.
+    """
+    state, detail = _machine_key_status(row, repo=repo)
+    residual = row.get("residual")
+    if residual is None:
+        return state, detail
+    if not isinstance(residual, str) or not residual.strip():
+        # A residual nobody can read must not be silently dropped: dropping
+        # it turns the row back into the "retire me" line this field exists
+        # to prevent, and it would do so on a row whose author was TRYING to
+        # say something.  UNCERTIFIABLE is the honest state and is a finding.
+        return ("UNCERTIFIABLE",
+                "%s -- and this row's `residual` field is not a non-empty "
+                "string (%r), so what survives the machine key cannot be read"
+                % (detail, residual))
+    if state != "DONE":
+        # An unmet key already keeps the row open and already names why.
+        # Reporting RESIDUAL here would replace the sharper sentence with a
+        # vaguer one.
+        return state, detail
+    return ("RESIDUAL",
+            "%s -- BUT the row records a residual the key cannot see: %s"
+            % (detail, residual.strip()))
+
+
+def _machine_key_status(row, repo=REPO):
+    """The `done_when` half of `owed_status`.  Returns (state, detail).
+
+    state is DONE / OWED / UNCERTIFIABLE -- the residual overlay is applied
+    by the caller, so that this half stays a pure reading of the key.
     """
     cond = row.get("done_when") or {}
     kind = cond.get("kind")
@@ -973,6 +1035,11 @@ def render_owed(rows, now=None):
         # The claim can only soften a row that is still owed.  A DONE row's
         # claim is bookkeeping -- it must not turn "retire me" into "somebody
         # is on it", which would be a claim outranking the artefact.
+        # RESIDUAL is deliberately NOT softened by a claim.  A claim says
+        # somebody is working; a residual says the director recorded work
+        # that outlived the artefact.  Letting the first hide the second
+        # would reproduce, one field over, the "record mistaken for signal"
+        # failure LIMIT 12 already carries.
         shown = "IN-FLIGHT" if (state == "OWED" and claim == "IN-FLIGHT") else state
         head = "  %-11s %-22s %-10s executor=%s" % (
             shown, row.get("id", "?"), row.get("issue", "?"), row.get("executor", "?"))
@@ -999,6 +1066,14 @@ def render_owed(rows, now=None):
             # a registry nobody prunes becomes wallpaper, which is the GH #276
             # failure this file keeps being warned about.
             print("      -> executed; the director should retire this row")
+        elif state == "RESIDUAL":
+            # LIMIT 13.  The artefact arrived and the row is still open, so
+            # the one thing this line must never say is "retire me" -- that
+            # sentence is what it was built to stop printing.
+            finding = True
+            print("      -> artefact arrived, but this row is NOT retirable: "
+                  "a residual is recorded above; discharge it or narrow it, "
+                  "and clear `residual` only when it is actually gone")
         elif shown == "IN-FLIGHT":
             inflight += 1
             print("      -> somebody is already on this one; prefer another baton. "
