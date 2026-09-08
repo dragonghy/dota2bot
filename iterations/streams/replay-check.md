@@ -13255,7 +13255,7 @@
     但 armed=天辉、baseline=夜魇)⇒ 4(i-b) 禁止读成 armed−baseline。
     ⇒ 条件 (a) **买不到这条 dump 上**,与 `outlatch`(#623)、`campbind`(§FX)**同型:要走 fixture**。
     **`outlatch` 本轮没有买第六次**(#623 仍零评论)⇒ **不写它的 VERIFY 行**,重复报同一结论正是上一轮明令禁止的。
-  - **⭐ 逐帧买到的量具缺陷(本轮新开 [bug] issue,号见报告 §九 回填)**:`8ef6e7/20260908_092326_slot7`,CM **t=1519.3 用 `item_tpscroll`**
+  - **⭐ 逐帧买到的量具缺陷(GH #626)**:`8ef6e7/20260908_092326_slot7`,CM **t=1519.3 用 `item_tpscroll`**
     (`modifier_teleporting` 1519.3→1522.3),gap 帧 **t=1521.4 正落在这条 TP 通道内部**,
     位移 **10,387u / 3.0s ≈ 3,462 u/s**(移速 ~300)⇒ `movement()` 把它打成 `away d=−9779`。
     两句可迁移的:(i) TP 帧**只能落进 `away`,不可能伪造 `stand`(引擎拒单)**⇒ 方向严格保守;
@@ -13270,7 +13270,7 @@
     python 腿逐字 `49 checks, 0 failures, 9 uncertified`(5a0/5a/5a2/5b/5c/5d/5e/5f/5g 全因 120s 预算耗尽,
     **没跑成不是通过**)⇒ **Lua 那一侧本轮既不声称干净也不声称红**。
     **铁律 6**:本轮零 Lua 改动;静态半随 `git push` 由 `.githooks/pre-push` 自跑;动态半(GH #124)**不跑也不声称**。
-  - **下一轮第一件事**:(1) `cmqreach_domain.py` 的 TP/通道守卫(本轮新开的 [bug] issue),**同一工作单元内连变异体一起**;
+  - **下一轮第一件事**:(1) `cmqreach_domain.py` 的 TP/通道守卫(GH #626),**同一工作单元内连变异体一起**;
     (2) W56 全波重扫,两个分层齐了才谈 armed−baseline;(3) `outlatch` 继续不买第六次,等 #623;(4) 深查维持 6 局。
   - **存量顺延**:`campgrade` 第十八轮 / 61-id 家族 W49 两笔条件 (a);`tpreach_domain.py` 补 `by_seed`
     (**已连欠十九轮**);`roshdist` 的 BUGGY(77)交总监;09-07T12:59Z §3.4 那一帧钉 fixture;F2/GH #530;
