@@ -13353,4 +13353,10 @@
     `campbind` 条件 (a) 改走 fixture;#477 重 dump 是否还需请总监裁;`cmqreach` 钉帧 fixture;
     09-04T16:01Z §2.1 那一帧;F2 那一帧(`272131__20260905_125215_slot3` dragon_knight t=1142.4);
     #419 / #421 仍零评论;`sweep_run.sh` 自己不调 `sweep_strata.py`。
+  - **本轮的评论/issue**:#626 `issuecomment-5585672310`(守卫+变异台落地,验收三条逐条兑现;
+    并**订正我自己在该帖里写下的补救方案**);**新开 GH #632**([harness] 交总监:
+    单 carrier 英雄检测器的四格由 draft 决定,建议 4(i) 补一条「腿差的单位是 run/draft」,
+    并请总监裁「是否要求批测台在同一波里为焦点英雄安排对侧 draft 的 run」——
+    本波是**碰巧**有 1 个 dire + 2 个 radiant run,四个都同侧的话整波只有两格,**没有任何东西会举手**)。
+    两份草稿跑过 `claim_precheck.sh` → **EXIT=0 / OK to publish**,且**先 push 后发表**(GH #290)。
   - 完整报告:`iterations/reports/replay-check/20260908T130506Z.md`
