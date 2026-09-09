@@ -521,6 +521,49 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     (本轮就是这么抓到的;换一个把它写在工作单元末尾的轮次,这一行会**生下来就是退休的**)。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-09T01:30Z**:**两条退回出集(41 → 39),判定完结 2(达标);而本轮最该被读的不是裁定 —— 是「本仓库的加载器在 2026-09-02 就把这个机制诊断出来、命名了它、并修好了 —— 修的是隔壁那个 getter」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+  取活依据是上一轮「下次触发」的 **①**(逐字点名 `verify_coverage.py` 的 `narrat=1` 四条)。
+  全文 `iterations/reports/director/20260909T013000Z.md`,裁定全文档案 `test_set.md §GE`(§GE.0–§GE.7),
+  机器键 `state.json:roamidle_RETURNED_20260909` / `campsel_RETURNED_20260909`。
+  ⭐⭐⭐ **主轴(§GE.3):一次没有推广的修复,第二实例**(第一个是 §GD.5 的 `AbilityDamage`/`AbilityCastRange`)。
+  `tests/mock/replay_fixture.lua:847-863` 逐字写着 ``was `0 == 1174`, FALSE on every frame of the corpus …
+  failing CLOSED and silently`` —— **同一个哨兵数字、同一种比较、同一个失败方向**,而它修的是 `GetItemSlotType`;
+  `GetCurrentActionType` 没修,一条 armed 的 id 就压在没修的那个上面。
+  ⇒ **缺陷不是没人诊断过,是诊断只落到了它被看见的那个 key 上。**
+  ⭐⭐ **`roamidle` 退集**:gate 只在 `bRelocated` 上开火,而 `J.CheckBotIdleState` 只经一条析取写 true;
+  `api.install` 把未知 ALL_CAPS 解析成 ≥1001 哨兵(IDLE **1174**/ITEM **1021**/FARM **1017**),
+  未 spec 的 `^Get` 兜底答 **0** ⇒ 三条比较在语料**每一帧**都是 `0 == 非零`,**全假**,`bRelocated` 构造性不可达。
+  实测 `GetCurrentActionType` 与 `GetActiveMode` **各 0/110 份 fixture**;dumper 里 `action_type`/`ActionType`/
+  `NumQueuedActions` **各 0 次**。真帧对照:不写转轴 ⇒ **确实 latch 了 idle** 而 `bRelocated` 假;写入 ⇒ 同帧开火。
+  ⭐ **方向与 §GD 相反:失败向关** —— 杠杆不开火,读数回来是「测了,没效果」,**没有任何计数会举手**。
+  ⭐⭐ **`campsel` 退集**:转轴 `camp.cattr.{team,type}` 不在任何仪器里 —— 语料 `cattr` **0 命中**;
+  dumper 的 `creepSnap` **恰好 `{t,team,x,y}`**(无 name 无 type)⇒ `.type` 从 .dem 也重建不出(GH #581 同墙)。
+  ⭐ **这一条是它自己的绿测试在头部写明的**(「a DECLARED STAND-IN」)—— **诚实的测试,只是它不是 (a)**。
+  ⚠️ SUBJECT 半边(真英雄真等级)是真的 ⇒ 它是**两个操作数买到了一个**,而 (a) 要两个。
+  ⛔ **退集不是 reject**:gate/helper/调用点逐字保留,零 `bots/` diff。
+  ⚠️ `pullcad` 陷阱查过:`promote_atoms.json` 零次点名两条;⭐ 特别核过 `campsel` 与 `slotarb` **同住 `ClosestCamp`**
+  但是**两个独立实参**,`slotarb` 功能逐字不受影响。载体项 **7 → 7 逐字不变**(`TERMS` 行逐字节相同,`0 unresolved` 两次,
+  `9 hero / 32 → 30 generic`)。⛔ **W58 及更早不与 39-id 家族并池。**
+  量具:`tests/test_blind_a_roamidle_campsel.lua`(**12 checks / 0 failed**)、
+  `tools/agent/mutstand_blind_a_roamidle_campsel.sh`(**12 CAUGHT / 0 SURVIVED / control_ok=1**,
+  八文件还原走树外副本 + `git diff --quiet` 每轮校验,收尾 `git status` 只剩两个新文件)。
+  ⚠️ **M5 第一次 SURVIVED,而它是对的、断言是错的**(纪律 2,**第三次**):needle 写成裸串 `S-B`,该串在那份测试里
+  **出现四次**,删掉承重的那一处仍绿;改钉**标签连同它所标注的操作数**后 CAUGHT。
+  **三个现场的共同形状:needle 比它要钉的东西宽。**
+  ⭐ **§BB.4 同轮义务**:`hero-51`(`zusultstrand`,GH #593)裁 **APPROVED-SCAN**(与 hero-41..50 同档),
+  **理由逐条核过源码**;⭐ widening 方向由结构直接成立(`if bShipped then return true end` 排在 gate **之前**)。
+  ⛔ **不**把它挂进 `hero_domain_scan` 针脚(它不是扫描请求,而那条针脚表两个方向都判相等,错挂会钉红)。
+  MTD 不作新声称,转载批测台 15:10Z:**$66.105**,三条线均未跨。armed 串 **41 → 39**(目标 ≤20)。
+  ⛔ **「后台包装吞掉真码」第八次兑现**(harness 报 0,自检真码 **3**,仅因命令里写了 `; echo "EXIT=$?"` 才留住),守卫**仍未立**,顺延。
+  ⚠️ 纪律 3 本轮**两发**:(i) 第一条命令走管道,§22 守卫当场拒;(ii) 我一度把 `lua5.1 <测试文件>` 退出 0 读成「通过」——
+  那是**模块加载成功、一条断言都没跑**(skill 里逐字写着的第三种同形物)。**不新立措辞**,登记而已。
+  ⛔ 动态半(Lua 全量)未跑不作声称(零 `bots/` diff)。自检 `trunk-red(python)` 再撞 GH #358 的 120s(**UNCERTIFIABLE 不是通过**)。
+  **下次触发**:①⭐**裁 `pulllane` 与 `pullthink`**(`narrat=1` 仅剩这两条;⚠️ `pulllane` 的门写作
+  `J.IsSoakCandidate( 'pulllane' )` **带空格**,不带空格的 grep 会误读成「无调用点」,本轮踩过)
+  ②**给「后台包装吞掉真码」立守卫**(第八次,顺延)③GH #358 的 120s 预算要人裁(顺延)
+  ④`hero_domain_scan` 九份读数逐份读通(顺延)⑤backlog 100 / backlog 99(**桩转轴普查本轮是第四个实例**,仍未落地)
+  ⑥**为两处仪器缺口开 [harness] issue**(本轮 MCP 未试,owed 行已登记,issue 号仍空)
 - **2026-09-08T22:11Z**:**`cmrguard` 退回出集(42 → 41),判定完结 1(⛔ 不达 ≥2,不粉饰);而本轮最该被读的是 —— 这条 gate 的 veto 环读的是敌方技能的 cast range,加载器从不读它,于是 armed 的 gate 在**它自己的立案帧**上放行了那条要了 CM 命的通道。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
   取活依据是上一轮「下次触发」的 **①**(§GC.6 第 3 条逐字把 `cmrguard` 留给下一轮:「它的 (a) 买不买得到本节没有量」)。

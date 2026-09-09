@@ -426,6 +426,39 @@
         ]
       },
       "done_when_note": "⛔ **三条 needle 在裁定时刻逐字验在场(各出现 1 次)** —— 这是 §GC.7 的直接教训:上一行的两条 needle 分别错在一个字母的大小写与跨注释折行,而『needle 从未匹配过』与『那句话被删掉了』在这个 kind 里逐字节不可分辨,失效方向是 DONE。⭐ **只钉反面那一半**:两半仪器一旦落地,`tests/test_blind_a_cmrguard.lua` 的 §1b/§2a/§2b 会**当场转红**(M1/M2 变异体逐一验过 CAUGHT),改这个文件的人必须重写头里那三句 —— 它们是这条盲区的字面描述 ⇒ 三句消失 = 仪器被买了。⚠️ **absence 不等于替换它的东西是对的**:本行读 DONE 只说那三句没了,**不说**新仪器读数正确,更不说 `cmrguard` 该重新入集 —— 重新入集要走三条件由总监重判。⚠️ 文件被删 ⇒ **UNCERTIFIABLE 不是 DONE**(该 kind 自带的假阳防护)。"
+    },
+    {
+      "id": "roamidle_actiontype_instrument",
+      "issue": "总监 2026-09-09 立;裁定全文 `iterations/streams/test_set.md §GE`(§GE.2/§GE.3);仪器缺口本身待开 [harness] issue(本轮 MCP 未试,issue 号仍空)",
+      "ruling": "总监 2026-09-09T0x:xxZ:`roamidle` **退回出集**(41 → 40),理由是条件 (a) 在**两条仪器路径上都买不到**。gate 只在 `bRelocated` 上开火,而 `J.CheckBotIdleState` 只经一条析取写 true(`GetCurrentActionType() == BOT_ACTION_TYPE_IDLE or botMode == BOT_MODE_ITEM or botMode == BOT_MODE_FARM`)。`api.install` 把未知 ALL_CAPS 解析成 ≥1001 哨兵(IDLE 1174 / ITEM 1021 / FARM 1017),未 spec 的 `^Get` 兜底答 0 ⇒ 三条比较在语料每一帧都是 `0 == 非零`,全假,`bRelocated` 构造性不可达。实测:`GetCurrentActionType` 与 `GetActiveMode` 在 110 份 fixture 里**各 0 次**;dumper 里 `action_type`/`ActionType`/`NumQueuedActions` **各 0 次**。⭐ **方向与 §GD 相反:失败向关** —— 杠杆不开火,读数回来是「测了没效果」,没有计数会举手。⛔ **退集不是 reject**:gate、helper、调用点逐字保留,`bots/`+`game/` 零 diff。",
+      "ruled_at": "2026-09-09T0x:xxZ",
+      "executor": "任何要重新提 `roamidle` 入集的人。**买法(§GE.3 的推广)**:`tests/mock/replay_fixture.lua` 为 `GetCurrentActionType` 装 getter —— 该文件 847-863 行**已经为隔壁的 `GetItemSlotType` 诊断并修好了一模一样的危险**(逐字:``was `0 == 1174`, FALSE on every frame of the corpus … failing CLOSED and silently``),这一条只是**把那次修复推广过去**。⛔ 但它会改变 110 份 fixture 上所有读该 API 的判决,是一个**独立杠杆**,不许搭在别的改动里顺手做。replay 侧另需 dumper 发 action type(未评估成本)。买到之后 `tests/test_blind_a_roamidle_campsel.lua` 的 [1b]/[1d]/[1f]/[3a] 会**自己变红**,那就是重新提入集的信号。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "trigger": "有人要重新提 `roamidle` 入集,或有人动 `tests/mock/replay_fixture.lua` 的 getter 装配 —— 这是一条**否决权**,不是待办;它每轮报 OWED 是为了在那一天被读到。⭐ 它还有一个**自动触发器**:`tests/test_blind_a_roamidle_campsel.lua` 的 [1b]/[1d]/[1f]/[3a] 在读数被买到的那一刻会自己变红。"
+    },
+    {
+      "id": "campsel_camp_record_instrument",
+      "issue": "总监 2026-09-09 立;裁定全文 `iterations/streams/test_set.md §GE`(§GE.4);与 GH #581 是同一堵墙",
+      "ruling": "总监 2026-09-09T0x:xxZ:`campsel` **退回出集**(40 → 39),理由是转轴 `camp.cattr.{team,type}` **不在任何一条仪器里**:fixture 语料 `cattr` **0 命中**(该 id 自己的绿测试在头部就写明「The CAMP half is not in the corpus and is not pretended to be」「a DECLARED STAND-IN」——**诚实的测试,只是它不是 (a)**);dumper 的 `creepSnap` **恰好是 `{t,team,x,y}`**,无 name 无 type ⇒ `.type`(ancient)从 .dem 也重建不出来。⚠️ SUBJECT 半边(真英雄真等级)是真的 —— 它是**两个操作数买到了一个**,而 (a) 要两个。⛔ **退集不是 reject**:gate、wrapper、lever body 逐字保留,`bots/` 零 diff;`slotarb` 同住 `ClosestCamp` 但**是另一个实参**,不受影响。",
+      "ruled_at": "2026-09-09T0x:xxZ",
+      "executor": "录像组 / 任何要重新提 `campsel` 入集的人。⭐ **应与 GH #581 一并做,不单开** —— 卡死 hero-32/33/36/42 的是同一堵墙(creep 快照只有 `{t,team,x,y}`)。买到之后 `tests/test_blind_a_roamidle_campsel.lua` 的 [2a]/[2b] 会自己变红。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "trigger": "GH #581 被处理的那一轮(同一堵墙,**不单开**),或有人要重新提 `campsel` 入集。⭐ 自动触发器同上:[2a]/[2b] 在语料或 dumper 拿到营地记录时自己变红。"
+    },
+    {
+      "id": "zusultstrand_postthaw_arm_order",
+      "issue": "总监 2026-09-09 立(hero-51 / GH #593 / GH #564);裁定见 `iterations/queue.json:hero-51.result`",
+      "ruling": "总监 2026-09-09T0x:xxZ:hero-51 裁 **APPROVED-SCAN**(与 hero-41..50 同档)。它**不请求入集**(P4.2 冻结期内唯一合法裁定是 FROZEN-HOLD),登记的是**解冻后的 arm 顺序与分母**,免得接力棒再掉(铁律 9)。⭐ **理由逐条核过源码不是照抄请求**:`zusultstrand` 不在 39-id 串内(未 armed);`X.nUltCashChaseRadius = 1600` 在 `hero_zuus.lua:1293`;`ultcash`/`J.IsDyingUnderAttack` 确在同文件(:1338/:1551)故分层可做;**widening 方向从源码结构直接成立** —— `if bShipped then return true end` 排在 gate **之前**,故 armed 只能在 shipped 的 TRUE 集上**加**,永不可能把一个 shipped 的 true 变 false。",
+      "ruled_at": "2026-09-09T0x:xxZ",
+      "executor": "batch-desk(P4.2 解冻、armed ≤20 之后排 `zusultstrand` armed 的那一波)+ 录像组(读数)。**要交的四列**:(1) 撤退分支实际 return 的瞬间数(分母 Zeus 局/帧);(2) 其后 6s 内 Zeus 是否死、死时大招放没放(与 baseline 腿 77.0% / 192 直接可比);(3) 被 1600 切掉与留下的比例;(4) 与 `ultcash` 覆盖的重叠分层。⚠️ **归因边界**:本 lever 是 WIDENING,负读数**只能**读作「多放的那几次放亏了」,**永不能**读作「少放了 N 次大招」—— 后者这台仪器买不到。加铁律 4(i-a) 的 ab/ba 两层读数。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "trigger": "owner P4.2 的入集冻结解除的那一轮(armed 集 ≤ 20),或 owner 另行放行 —— 那时按本行登记的四列与 arm 顺序排波。这正是 hero-51 登记它的理由(铁律 9:修好不等于做完,下一棒要显式交出去)。"
     }
   ],
   "retired": [

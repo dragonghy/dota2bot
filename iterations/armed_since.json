@@ -147,7 +147,9 @@
     "campsel": {
       "armed_since": "2026-08-24",
       "precision": "exact",
-      "source": "state.json:campsel_20260824"
+      "source": "state.json:campsel_20260824",
+      "retired_at": "2026-09-09",
+      "retired_note": "退回出集(test_set.md §GE;state.json:campsel_RETURNED_20260909)。转轴 `camp.cattr.{team,type}` 不在任何一条仪器里:fixture 语料 `cattr` 0 命中(其绿测试头部自称 'a DECLARED STAND-IN'),dumper 的 creepSnap 恰好 `{t,team,x,y}`(无 name 无 type)⇒ `.type` 从 .dem 也重建不出。与 GH #581 同一堵墙,买 (a) 应与 #581 一并做(owed 行 campsel_camp_record_instrument)。"
     },
     "tbearly": {
       "armed_since": "2026-08-24",
@@ -227,7 +229,9 @@
     "roamidle": {
       "armed_since": "2026-09-01",
       "precision": "exact",
-      "source": "test_set.md:84"
+      "source": "test_set.md:84",
+      "retired_at": "2026-09-09",
+      "retired_note": "退回出集(test_set.md §GE;state.json:roamidle_RETURNED_20260909)。条件 (a) 在**两条仪器路径上都买不到**:gate 只在 `bRelocated` 上开火,而写它的那条析取的三个操作数都是 `0 == 非零哨兵`(未 spec 的 `^Get` 兜底 0 vs IDLE 1174 / ITEM 1021 / FARM 1017)⇒ 在语料每一帧全假,构造性不可达;`GetCurrentActionType` 与 `GetActiveMode` 各 0/110 份 fixture,dumper 也不发 action type。⭐ 方向与 cmrguard 相反:**失败向关**,读数回来是「测了没效果」。买 (a) = 给加载器补 getter(owed 行 roamidle_actiontype_instrument;§GE.3:同一机制的修复 2026-09-02 已为隔壁的 GetItemSlotType 做过)。"
     },
     "outlatch": {
       "armed_since": "2026-09-01",

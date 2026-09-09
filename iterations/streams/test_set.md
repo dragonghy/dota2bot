@@ -1,6 +1,14 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,campsel,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,roamidle,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
-**成员串 41**(上一行,**371 字节**,md5 `fd21d5ddc2759c2a7adf829074d51c63`)。本行 **2026-09-08T2x:xxZ 的变动:一条 `退回出集`(42 → 41)**,总监裁定全文 **§GD**。⛔ **不是 reject**,gate、helper 与两个常数(`X.nRGuardCloseBuffer=400` / `X.nRGuardRangeCap=200`)**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **1**(owner P4.2 的产出指标,**不达 ≥2,理由见报告 §6,不粉饰**)。
+tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
+**成员串 39**(上一行,**354 字节**,md5 `433070c6d8fde3758555302db49047ab`)。本行 **2026-09-09T0x:xxZ 的变动:两条 `退回出集`(41 → 39)**,总监裁定全文 **§GE**。⛔ **不是 reject**,两条的 gate、helper 与调用点**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(达 owner P4.2 的 ≥2)。
+1. **`roamidle` 退集**(41 → 40)—— `verify=0`,条件 (a) 在**两条仪器路径上都买不到**。gate 只在 `bRelocated` 上开火,而 `J.CheckBotIdleState` 只经一条析取写 true:`GetCurrentActionType() == BOT_ACTION_TYPE_IDLE or botMode == BOT_MODE_ITEM or botMode == BOT_MODE_FARM`。`api.install` 把未知 ALL_CAPS 全局解析成 **≥1001 的哨兵**(IDLE **1174** / ITEM **1021** / FARM **1017**),而未 spec 的 `^Get` 兜底答 **0** ⇒ 三条比较在语料**每一帧**都是 `0 == 非零`,**全假**。实测:`GetCurrentActionType` 与 `GetActiveMode` 在 **110 份 fixture 里各出现 0 次**;replay 侧 `dumper/main.go` 里 `action_type` / `ActionType` / `NumQueuedActions` **一次都不出现**。⭐ **方向与 §GD 相反**:cmrguard 的兜底 0 把 veto 环**顶开**(放行),这一条**失败向关**——杠杆干脆不开火,读数回来是「测了,没效果」,**没有任何计数会举手**。全文 §GE。
+2. **`campsel` 退集**(40 → 39)—— `verify=0`,转轴是 `rec = camp.cattr` 喂给 `IsEnemyCamp`(读 `.team`)与 `IsAncientCamp`(读 `.type`),而**营地记录不在任何一条仪器里**:fixture 语料 `cattr` **0 命中**;dumper 的 `creepSnap` **恰好是 `{t,team,x,y}`** —— 无 name 无 type,于是 `.type`(ancient)从 .dem **也重建不出来**(GH #581 同一堵墙)。⭐ 这一条**是它自己的绿测试在头部写明的**:「The CAMP half is not in the corpus and is not pretended to be」「a DECLARED STAND-IN」—— 诚实的测试,只是**它不是 (a)**。全文 §GE。
+⭐⭐⭐ **本轮最该被读的一条(§GE.3):这是「一次没有推广的修复」的第二个实例**(第一个是 §GD.5 的 `AbilityDamage` 修了、紧邻的 `AbilityCastRange` 没修)。`tests/mock/replay_fixture.lua:847-863` **逐字诊断了本轮这个机制、命名了它、并把它修好了 —— 修的是隔壁那个 getter**:「unspecced, `^Get` defaults to 0, so `GetItemSlotType(slot) == ITEM_SLOT_TYPE_MAIN` was **`0 == 1174`**, FALSE on every frame of the corpus. Every branch behind one was constructively unreachable, **failing CLOSED and silently**」。**同一个哨兵数字、同一种比较、同一个失败方向**;`GetItemSlotType` 拿到了 getter,`GetCurrentActionType` 没有,而一条 armed 的 id 就压在没修的那个上面。
+⚠️ **退集针对的是仪器不是杠杆**:两条的逻辑依据 (c) 都成立且未被取代,`bots/` 零 diff,重新入集的条件由 `tests/test_blind_a_roamidle_campsel.lua` 的四条「若买到就变红」断言自己看着([1b]/[1d]/[1f]/[2a]/[2b]/[3a])。
+⚠️ **不掉进 `pullcad` 陷阱,断言过的**:两条各**只有一个** gate 点(`mode_team_roam_generic.lua:651` / `mode_farm_generic.lua:66`),门行上没有第二个 id;`promote_atoms.json` **零次**点名这两条。⭐ 特别核过 `campsel` 与 `slotarb` **同住一个 wrapper**(`ClosestCamp`)—— 但它们是**两个独立实参、各占一行**,故 `slotarb` 留在集内且**功能不受影响**。
+⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py --arm` 对 41-id 与 39-id 两串各跑一次,`TERMS` 行**逐字节相同**,`0 unresolved` 两次;计数 `9 hero / 32 generic` → `9 / 30`(两条都是 generic)⇒ **选种解空间不受影响**。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— W58 及更早**不与 39-id 家族并池**。
+〔沿革,上一条变动〕**成员串 41**(上一行,**371 字节**,md5 `fd21d5ddc2759c2a7adf829074d51c63`)。本行 **2026-09-08T2x:xxZ 的变动:一条 `退回出集`(42 → 41)**,总监裁定全文 **§GD**。⛔ **不是 reject**,gate、helper 与两个常数(`X.nRGuardCloseBuffer=400` / `X.nRGuardRangeCap=200`)**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **1**(owner P4.2 的产出指标,**不达 ≥2,理由见报告 §6,不粉饰**)。
 1. **`cmrguard` 退集**(42 → 41)—— armed **20 天**、`verify=0`,是 2026-08-19 那一档 `verify=0` 的**最后一条**(前两条 `wandlimbo`/`tpdead` 于 §GC 退集)。条件 (a) 在 **fixture 路径**上买不到:veto 环是 `hCc:GetCastRange() + 400`,而那个 cast range 读的是**敌方**技能句柄,加载器从不服务它 —— 落 `bot_api.lua:184` 的 `^Get -> 0` 兜底。**487 个 curated hard-CC 句柄里读得出 cast range 的 137 个,恰好等于 KV 服务的那 137 个;350 个 0 全部来自兜底**(其中仅 100 个碰巧是引擎真答案)。⭐ **立案帧本身就在盲区里**:不由测试作者写入 cast range 时,armed 的 `cmrguard` 在 20260819_003005(Jakiro ice_path **1138.6u**)**放行**了那条要了 CM 命的通道 —— `1138.6 > 0 + 400`。全文 §GD。
 **上一轮(2026-09-08T19:xxZ,44 → 42,§GC)的两条,留作沿革:**
 1. **`wandlimbo` 退集**(44 → 43)—— armed **20 天**、`verify=0`,条件 (a) **在两条仪器路径上都买不到**:helper 的第一条合取是 `GetCurrentCharges() < 6`,而 fixture 侧 953 个 wand/stick 句柄**全部读 0**(落到 `bot_api.lua:184` 的 `^Get -> 0` 兜底),replay 侧 `dumper/main.go` 里 **`charge` 一次都不出现**(只发 `Items []string`)。全文 §GC。
@@ -2197,6 +2205,120 @@ arm `tpdead` 单臂 ⇒ `td_armed_alone_nonnil 0`;arm `tpcommit` 单臂当**对�
 6. **patch 检查本轮未做**(低频;上一次 §GA.0 做过,无新 patch)。
 
 ---
+
+## §GE 2026-09-09T0x:xxZ 总监:**`roamidle` 与 `campsel` 退回出集(41 → 39)** —— 本节最该被读的是 **§GE.3:本仓库的 fixture 加载器在 2026-09-02 就诊断出了本轮这个一模一样的机制、命名了它、并把它修好了 —— 修的是隔壁那个 getter**;这是「一次没有推广的修复」的**第二个实例**(第一个是 §GD.5)
+
+### §GE.0 一句话
+
+`roamidle` 与 `campsel` 退回出集,armed **41 → 39**。**判定完结 2**(达 owner P4.2 的 ≥2)。
+零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+取活依据是上一轮「下次触发」的 **①**(逐字点名 `verify_coverage.py` 的 `narrat=1` 四条:
+`campsel`/`pulllane`/`pullthink`/`roamidle`;本轮取其中两条)。
+
+### §GE.1 判据:(a) 问的不是「决策对不对」
+
+两条 id 各有一份**绿的、钉在真实帧上的**测试,而两份都由作者**亲手写进了该杠杆的转轴输入**——
+与 §GC.2 完全同型。这类测试问「**给定这个输入**,决策对不对」;(a) 问「**这个输入到底出没出现过**」。
+区别在于本轮两份测试都**自己把这件事写在头部**(见 §GE.2、§GE.4),所以本节不是抓错,是**采信它们的自述并去量**。
+
+### §GE.2 `roamidle`:三条析取在语料每一帧全假,且**失败向关**
+
+gate(`bots/mode_team_roam_generic.lua:651`)只在 `bRelocated` 上开火,而
+`J.CheckBotIdleState`(`jmz_func.lua`)只经一条析取写 true:
+
+    if bot:GetCurrentActionType() == BOT_ACTION_TYPE_IDLE
+    or botMode == BOT_MODE_ITEM
+    or botMode == BOT_MODE_FARM then
+
+`api.install` 把未知 ALL_CAPS 全局解析成**互不相同的 ≥1001 哨兵**(实测 IDLE **1174** /
+ITEM **1021** / FARM **1017**),而未 spec 的 `^Get` 兜底答 **0**
+⇒ 三条比较都是 `0 == 非零`,**在语料每一帧全假**,`bRelocated` **构造性不可达**。
+
+**实测读数**(均为真跑,非推断):
+* `GetCurrentActionType` 在 **110 份 fixture 中出现 0 次**;`GetActiveMode` 同样 **0 次**。
+* 全套测试里**只有两个文件**提到这个 getter:它自己的绿测试,和本轮新增的盲测。
+* replay 侧 `tools/batch_test/behavioral/dumper/main.go` 里 `action_type` / `ActionType` /
+  `NumQueuedActions` **一次都不出现**(该文件里唯一的 "idle" 是第 675 行一句散文)。
+* **驱动真帧的对照实验**(`tests/test_blind_a_roamidle_campsel.lua` [1b]/[1c]):
+  在 `f_260819_181742_ss_chase_start` 上,不写转轴 ⇒ 助手**确实 latch 了 idle**(`idle == true`,
+  每一条它读得到的谓词都成立)而 `bRelocated` **假**;由作者写入转轴 ⇒ **同一帧**开火。
+  ⇒ 这一读数量的是**仪器**,不是一条死杠杆。
+
+⭐ **方向与 §GD 相反,而这正是它更难被发现的原因。** `cmrguard` 的兜底 0 把 veto 环**顶开**
+(它**放行**了那条要了 CM 命的通道);这一条**失败向关** —— 杠杆干脆不开火,波次读数回来是
+「测了,没效果」,**没有任何计数会举手**。两个都静默,只有一个**看起来像个结果**。
+
+### §GE.3 ⭐⭐⭐ 一次没有推广的修复(第二个实例)
+
+`tests/mock/replay_fixture.lua:847-863`(strategy 2026-09-02 留)**逐字诊断了本轮这个机制**:
+
+> `api.install` auto-resolves every unknown ALL_CAPS global to a distinct sentinel >= 1001.
+> What was missing is the GETTER above -- and unspecced, `^Get` defaults to 0, so
+> `GetItemSlotType(slot) == ITEM_SLOT_TYPE_MAIN` was **`0 == 1174`**, FALSE on every frame of
+> the corpus. Every branch behind one was constructively unreachable, **failing CLOSED and
+> silently**
+
+**同一个哨兵数字(1174)、同一种比较、同一个失败方向。** 那一轮为 `GetItemSlotType` 补了 getter
+并把结论写成散文;**`GetCurrentActionType` 没有补**,而一条 armed 的 id 就压在没补的那个上面。
+⇒ 与 §GD.5(`AbilityDamage` 无条件装、紧挨其上的 `AbilityCastRange` 没装)构成**同一族的第二例**:
+**缺陷不是没人诊断过,是诊断只落到了它被看见的那个 key 上。**
+⛔ 本轮**不**顺手去补这个 getter:补它会改变 110 份 fixture 上**所有**读这条 API 的判决,
+是一个独立杠杆,属于工作单元边界之外。登记为 owed 行 `roamidle_actiontype_instrument`。
+
+### §GE.4 `campsel`:营地记录不在任何一条仪器里
+
+转轴是 `aba_site.lua` 的 `rec = camp.cattr`,喂给 `IsEnemyCamp`(读 `.team`)与
+`IsAncientCamp`(读 `.type`)。
+* **fixture 侧**:语料里 `cattr` **0 命中**。而这一条**是它自己的绿测试在头部写明的** ——
+  「The CAMP half is not in the corpus and **is not pretended to be**」、
+  「a **DECLARED STAND-IN**」、「No count in this file is claimed to be corpus data」。
+  **诚实的测试,只是它不是 (a)。**
+* **replay 侧**:dumper 的 `creepSnap` **恰好是 `{t, team, x, y}`**(机器读出并排序断言),
+  **无 name 无 type** ⇒ 一个营地的 `.type`(ancient)从 .dem **也重建不出来**。
+  与卡死 hero-32/33/36/42 的 GH #581 是**同一堵墙**。
+
+⚠️ **`campsel` 的 SUBJECT 半边是真的**(真英雄、真等级),所以它不是「什么都没有」——
+它是**两个操作数里买到了一个**。(a) 要的是两个。
+
+### §GE.5 退集不是 reject;`slotarb` 特别核过
+
+⛔ gate、helper、调用点**逐字保留**,`bots/`+`game/` **零 diff**(由 [3c] 双向钉住:
+gate 行还在、helper 的第二返回值还在、两条各**恰好一个**调用点)。
+⚠️ **`pullcad` 陷阱**:`promote_atoms.json` **零次**点名这两条;两条的门行上都没有第二个 id。
+⭐ **特别核过 `campsel` 与 `slotarb` 同住一个 wrapper**(`mode_farm_generic.lua` 的 `ClosestCamp`)——
+但它们是 `GetClosestNeutralSpwan` 的**两个独立实参、各占一行**,
+`slotarb` 留在集内、**功能逐字不受影响**。这正是 §BA.2 那种「被 promote/退集冻死」的形状要查的地方。
+⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py --arm` 对两串各跑一次,
+`TERMS` 行**逐字节相同**,`0 unresolved` 两次;`9 hero / 32 generic` → `9 / 30`(两条都是 generic)。
+⛔ **W58 及更早不与 39-id 家族并池。**
+
+### §GE.6 量具与纪律
+
+* `tests/test_blind_a_roamidle_campsel.lua` —— **12 checks / 0 failed**(经
+  `lua5.1 tests/run_tests.lua`,退出码 **0 未经管道**,走 `rc.sh`)。
+* `tools/agent/mutstand_blind_a_roamidle_campsel.sh` —— **12 CAUGHT / 0 SURVIVED / control_ok=1**,
+  八个文件还原走**树外文件副本** + `git diff --quiet` 每轮校验(实测最终 `git status` 只剩两个新文件)。
+  ⭐ **每个变异都朝同一个方向跑**:要么**买到**那份缺失的读数(M1/M3/M7/M8/M11/M12),
+  要么**溶掉盲的理由**(M2/M4/M5/M6/M9/M10)—— 这个文件不会因为太严而错,只会因为**活得比它的主题长**而错。
+* ⚠️ **M5 第一次 SURVIVED,而它是对的、断言是错的**(纪律 2,与 §GC/§GD 同型,**第三次**):
+  needle 写作裸串 `S-B`,而该串在那份测试里**出现四次**(声明、赋值标记、断言块两处),
+  于是把**承重的那一处**(LABELLED SYNTHETIC 里的声明行)删掉之后仍绿。
+  改钉**标签连同它所标注的操作数**(`S-B  \`bot:GetCurrentActionType()\``)后 CAUGHT。
+  ⇒ 这条经验现在有三个独立现场(`GetCastRange = 1000` 两处、`tpRespondUntil =` 是 `==` 的前缀、本次),
+  **共同形状是:needle 比它要钉的东西宽**。
+* ⛔ **动态半(Lua 全量 ~100min,GH #124)未跑,不作声称**;本轮 `bots/` 零 diff。
+* 自检 10 条腿:`114 passed / 0 failed / 2 uncertifiable`,两条 UNCERTIFIABLE 是
+  `test_luacheck_gate_soakswitch.py`(容器缺 luacheck,由铁律 6 的 gate 自己买)与
+  `test_selfcheck_lua_leg.py`;`trunk-red(python)` 腿再次撞 GH #358 的 **120s 预算**(**UNCERTIFIABLE 不是通过**)。
+
+### §GE.7 下一棒
+
+* owed 行 **`roamidle_actiontype_instrument`**:为 `GetCurrentActionType` 补加载器 getter
+  (§GE.3 的推广),补上即可按 [1b] 的红重新提议入集。
+* owed 行 **`campsel_camp_record_instrument`**:营地记录进语料或进 dumper(与 GH #581 同一堵墙,
+  **应与 #581 一并做,不单开**)。
+* ⭐ **本轮没做而下一轮该做的**:`narrat=1` 还剩 **`pulllane` 与 `pullthink`** 两条未裁
+  (本轮预算花在买读数与建变异台上,**不为凑数去裁没量过的 id**)。
 
 ## §GD 2026-09-08T2x:xxZ 总监:**`cmrguard` 退回出集(42 → 41)** —— 2026-08-19 那一档 `verify=0` 的最后一条;本节最该被读的是 **§GD.2:这条杠杆的 veto 环读的是敌方技能的 cast range,而本仓库的 fixture 加载器从不读它 —— 于是 armed 的 gate 在**它自己的立案帧**上放行**;以及 **§GD.5:同一个加载器在三十行之下,已经为**相邻的那个 key** 诊断并修好了一模一样的危险**
 

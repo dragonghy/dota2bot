@@ -7389,5 +7389,24 @@
     "queue": "`iterations/queue.json:hero-51` —— **接棒登记**,不是新扫描:`zusultstrand` 现在缺的只有条件 (a) 的一波 armed 波次(批测台的球),连同解冻后要读的四列与归因边界一并预登记,免得铁律 9 那种掉棒再来一次。",
     "issue": "GH #593(本轮认领并做完它点名的两件事;验收方式是该 issue 自己写的:退役两处 + 删掉新测试 §4 + `run_tests.lua zuus` 保持 0 failures)",
     "report": "iterations/reports/hero/20260908T23xxZ.md"
+  },
+  "roamidle_RETURNED_20260909": {
+    "ruling": "总监 2026-09-09T0x:xxZ **退回出集**(armed 41 → 40)。⛔ 不是 reject:gate(`bots/mode_team_roam_generic.lua:651`)、helper 的第二返回值 `bRelocated`、调用点**逐字保留**,`bots/`+`game/` **零 diff**。",
+    "why": "条件 (a) 在**两条仪器路径上都买不到**。gate 只在 `bRelocated` 上开火,而 `J.CheckBotIdleState` 只经一条析取写 true:`GetCurrentActionType() == BOT_ACTION_TYPE_IDLE or botMode == BOT_MODE_ITEM or botMode == BOT_MODE_FARM`。`api.install` 把未知 ALL_CAPS 全局解析成**互不相同的 ≥1001 哨兵**(实测 IDLE **1174** / ITEM **1021** / FARM **1017**),而未 spec 的 `^Get` 兜底答 **0** ⇒ 三条比较在语料**每一帧**都是 `0 == 非零`,全假,`bRelocated` **构造性不可达**。",
+    "readings": "`GetCurrentActionType` 与 `GetActiveMode` 在 **110 份 fixture 中各出现 0 次**;`tools/batch_test/behavioral/dumper/main.go` 里 `action_type` / `ActionType` / `NumQueuedActions` **各 0 次**。真帧对照实验(`tests/test_blind_a_roamidle_campsel.lua` [1b]/[1c]):在 `f_260819_181742_ss_chase_start` 上不写转轴 ⇒ 助手**确实 latch 了 idle** 而 `bRelocated` 假;写入转轴 ⇒ **同一帧**开火。⇒ 量的是仪器,不是死杠杆。",
+    "direction": "⭐ **与 `cmrguard`(§GD)相反:失败向关**。cmrguard 的兜底 0 把 veto 环顶开(**放行**);这一条杠杆**干脆不开火**,波次读数回来是「测了,没效果」,**没有任何计数会举手** —— 两个都静默,只有一个看起来像个结果。",
+    "generalisation_gap": "⭐⭐⭐ **一次没有推广的修复,第二实例**(第一个是 §GD.5 的 AbilityDamage/AbilityCastRange)。`tests/mock/replay_fixture.lua:847-863` **逐字诊断了同一机制、同一哨兵数字 1174、同一失败方向**,并把它**修好了 —— 修的是隔壁的 `GetItemSlotType`**;`GetCurrentActionType` 没修,而一条 armed 的 id 就压在没修的那个上面。",
+    "instrument": "tests/test_blind_a_roamidle_campsel.lua(12 checks / 0 failed);tools/agent/mutstand_blind_a_roamidle_campsel.sh(12 CAUGHT / 0 SURVIVED / control_ok=1)",
+    "issue": "iterations/streams/test_set.md §GE;owed 行 roamidle_actiontype_instrument"
+  },
+  "campsel_RETURNED_20260909": {
+    "ruling": "总监 2026-09-09T0x:xxZ **退回出集**(armed 40 → 39)。⛔ 不是 reject:gate(`bots/mode_farm_generic.lua:66`)、`ClosestCamp` wrapper、`aba_site.lua` 的 lever body **逐字保留**,`bots/` **零 diff**。",
+    "why": "转轴是 `rec = camp.cattr` 喂给 `IsEnemyCamp`(读 `.team`)与 `IsAncientCamp`(读 `.type`),而**营地记录不在任何一条仪器里**。",
+    "readings": "fixture 语料 `cattr` **0 命中**;dumper 的 `creepSnap` 机器读出并排序后**恰好是 `{t,team,x,y}`** —— 无 name 无 type ⇒ `.type`(ancient)从 .dem **也重建不出来**。与卡死 hero-32/33/36/42 的 **GH #581 是同一堵墙**。",
+    "self_declared": "⭐ 这一条**是它自己的绿测试在头部写明的**:「The CAMP half is not in the corpus and **is not pretended to be**」「a **DECLARED STAND-IN**」「No count in this file is claimed to be corpus data」。**诚实的测试,只是它不是 (a)**。",
+    "partial": "⚠️ SUBJECT 半边是真的(真英雄、真等级,而 level 是两个谓词读的唯一 bot 操作数)⇒ 它是**两个操作数买到了一个**;(a) 要两个。",
+    "slotarb": "⭐ 特别核过:`campsel` 与仍在集内的 `slotarb` **同住 `ClosestCamp` 一个 wrapper**,但它们是 `GetClosestNeutralSpwan` 的**两个独立实参、各占一行**,故 `slotarb` **功能逐字不受影响**(§BA.2 那种冻死形状本轮不成立)。",
+    "instrument": "tests/test_blind_a_roamidle_campsel.lua(12 checks / 0 failed);tools/agent/mutstand_blind_a_roamidle_campsel.sh(12 CAUGHT / 0 SURVIVED / control_ok=1)",
+    "issue": "iterations/streams/test_set.md §GE;owed 行 campsel_camp_record_instrument"
   }
 }
