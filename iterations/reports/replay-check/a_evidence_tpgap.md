@@ -182,7 +182,7 @@ team-vision 见证是**单向的**:命中证明看得见,不命中什么都不�
 ## 6. 交棒
 
 - **GH #159 追评**:本文全文读数 + §2 承重帧 + §4 的仪器读数。
-- **新 [harness] issue**:请求 dumper snapshot 补 `move_speed` 与 `visible_to_team`
+- **新 [harness] issue(GH #662)**:请求 dumper snapshot 补 `move_speed` 与 `visible_to_team`
   两个字段。验收:同一份 W60 语料重跑 `tpgap_domain.py`,`0 EXCUSED / 1 SHOULD-HAVE-REFUSED /
   10 UNSETTLED` 里的 **10 枚 UNSETTLED 全部落到 EXCUSED 或 SHOULD-HAVE-REFUSED**。
   ⭐ 它不是一条 id 的债:`tp_channel_death.py` 全家(`tpreach`/`tpcommit`/`tpdying`/`tpdead`)

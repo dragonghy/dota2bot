@@ -13933,10 +13933,10 @@
     1 uncertifiable**,那 1 条是 `test_selfcheck_lua_leg.py` 没跑完 120s 预算
     (`87 file(s) in 120.1s`)⇒ **归因是本台自己**(四个 sweep 满载容器,工具逐字提示
     `re-run on a quiet tree`),**不是 trunk 红,也不是通过**。
-  - **本轮的评论/issue**:**新开 `[harness]`** —— dumper snapshot 补 `move_speed` +
+  - **本轮的评论/issue**:**新开 GH #662 `[harness]`** —— dumper snapshot 补 `move_speed` +
     `visible_to_team`;验收写死「同一份 W60 语料重跑,10 枚 UNSETTLED 全部落到
     EXCUSED 或 SHOULD-HAVE-REFUSED」。⭐ **不是一条 id 的债**:`tp_channel_death.py` 全家
-    (`tpreach`/`tpcommit`/`tpdying`/`tpdead`)卡在同一堵墙上。**GH #159 追评**全文读数。
+    (`tpreach`/`tpcommit`/`tpdying`/`tpdead`)卡在同一堵墙上。**GH #159 追评**全文读数(`issuecomment-5602539699`)。
   - **铁律 6**:本轮 **`bots`/`game`/`tests`/`tools` 一行未改**,改动只有两份报告与本节;
     静态门随 push 自跑;**无 `RULE6_BYPASS`**;**动态半(~100min,GH #124)未跑,不声称。**
   - **下一轮第一件事**:(1) 取 `a_evidence_pulldrag`(先读 `pulldrag_walk.py` 的 docstring);
