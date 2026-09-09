@@ -148,18 +148,32 @@
   "(f) DIRECTOR RULING LANDED, read the `director` key of this file before pooling anything. W60+W61 POOL (reachable-program key, test_set.md §GH). Pool the 8 seeds by per-seed swap-average THEN arithmetic mean across seeds -- NEVER games-weighted, and NEVER by averaging the two waves' own pooled means (unequal seed counts => mean-of-means, iron rule 4 (i-d) one level up). GH #269's min_arm_depth is a DIFFERENT depth and still applies per seed, before the 8."
  ],
  "leak_check": "Entry: check_costs.sh COSTS_EXIT=0 with an EMPTY running/pending instance table (region us-west-2, from aws.env -- NOT a hand-typed region; the 2026-09-06 round is the one that read three empty us-east-2 answers as `no instances`). Exit: see the round's report -- the only instances in the account are this wave's four, all tagged dota2bot-soak-spot-*, all with a 2h watchdog and a self-destruct path.",
- "director": {
-  "ruling": "总监 2026-09-09T1x:xxZ,全文档案 iterations/streams/test_set.md §GH。【并池 key】key 既不是成员串也不是树 SHA,是**该臂串下两条腿实际执行的程序**。判据两腿缺一不可:(1) 臂串逐字相同(总监独立复核:37 ids / 335 bytes / md5 b525d51d4b4957e0e40f22f203aea641,从 test_set.md 第 2 行现算,hrparity 既非成员亦非子串);(2) bots/+game/ 树差的每一行非注释代码在该臂串下不可达,**且新增调用点无副作用**。第 (2) 腿的后半是批测台没查的那一半,也是唯一能翻盘的那一半:IsModeTurbo() 在 Turbo 下为真、and 不短路,所以 IsSoakCandidate('hrparity') 每次都真的执行;它安全是因为 GetSoakSideConf 有 tSoakSideCache、SoakStrArms 纯、IsModeTurbo 有 bModeTurboCache ⇒ 无 I/O 无引擎调用无 RNG。若谓词抽 RNG,多出来的调用点本身就会 desync,臂串相同也救不了。⇒ **W60 + W61 并池**,家族深度 2,至多 8 粒配对种子,种子集不相交(W60 9911…;W61 10208/10212/10390/10526)。【闸 (ii)】W61 的起飞**不予追认** —— 新措辞三条腿(臂串变 / 可达代码变 / 家族深度低于 promote 门槛)第 3 条腿**本轮不生效,因为 promote 门槛在配对种子数上的那个数尚未裁定**(AGENTS.md 写 4-seed bar,而 README 铁律 2 已用三条件取代旧的 4-seed 显著性检验,三条件没把 (b) 钉到种子数上)⇒ 三条腿全不成立。⛔ 但『起飞未获授权』与『产出是浪费』是两句话,第二句是假的:钱已经花了,读数是真的。",
-  "limits": "⛔ 并池限度(铁律 4 (i-d) 第一次跨波吃劲):并的是**种子**不是**局**。两波几乎必然交出不同局数,把 8 粒按局加权 = 把 (i-d) 的缺陷在波次尺度上原样装回来。**每粒先 swap-average,再对全部 8 粒取算术平均**;⛔ 也不许把两波各自的池化均值再平均一次(种子数不等 ⇒ mean-of-means,同一缺陷升一层)。⚠️ GH #269 的 min_arm_depth 是**另一个 depth**(一粒之内每条腿的**局**数),照旧逐粒生效,薄腿种子在**进这 8 粒之前**被丢掉。两个量都叫 depth,不许混。⛔ 本条不是『臂串相同就能并池』的通行证:树差一旦碰到未 gate(已 promote)的代码,臂串逐字相同也不可并池 ——成员串对未 gate 的代码一个字都说不出来。⛔ 本条不 arm 也不裁 hrparity。",
-  "ruled_at": "2026-09-09T1x:xxZ",
-  "ref": "iterations/streams/test_set.md §GH",
-  "pooling_key": "reachable-program equivalence under the wave's arm string (NOT member string alone, NOT tree SHA alone)",
-  "pools_with": [
-   "W60",
-   "W61"
-  ],
-  "family_depth_after_ruling": "2 waves / up to 8 paired seeds on the 37-id string"
- },
+ "director": [
+  {
+   "ruling": "总监 2026-09-09T1x:xxZ,全文档案 iterations/streams/test_set.md §GH。【并池 key】key 既不是成员串也不是树 SHA,是**该臂串下两条腿实际执行的程序**。判据两腿缺一不可:(1) 臂串逐字相同(总监独立复核:37 ids / 335 bytes / md5 b525d51d4b4957e0e40f22f203aea641,从 test_set.md 第 2 行现算,hrparity 既非成员亦非子串);(2) bots/+game/ 树差的每一行非注释代码在该臂串下不可达,**且新增调用点无副作用**。第 (2) 腿的后半是批测台没查的那一半,也是唯一能翻盘的那一半:IsModeTurbo() 在 Turbo 下为真、and 不短路,所以 IsSoakCandidate('hrparity') 每次都真的执行;它安全是因为 GetSoakSideConf 有 tSoakSideCache、SoakStrArms 纯、IsModeTurbo 有 bModeTurboCache ⇒ 无 I/O 无引擎调用无 RNG。若谓词抽 RNG,多出来的调用点本身就会 desync,臂串相同也救不了。⇒ **W60 + W61 并池**,家族深度 2,至多 8 粒配对种子,种子集不相交(W60 9911…;W61 10208/10212/10390/10526)。【闸 (ii)】W61 的起飞**不予追认** —— 新措辞三条腿(臂串变 / 可达代码变 / 家族深度低于 promote 门槛)第 3 条腿**本轮不生效,因为 promote 门槛在配对种子数上的那个数尚未裁定**(AGENTS.md 写 4-seed bar,而 README 铁律 2 已用三条件取代旧的 4-seed 显著性检验,三条件没把 (b) 钉到种子数上)⇒ 三条腿全不成立。⛔ 但『起飞未获授权』与『产出是浪费』是两句话,第二句是假的:钱已经花了,读数是真的。",
+   "limits": "⛔ 并池限度(铁律 4 (i-d) 第一次跨波吃劲):并的是**种子**不是**局**。两波几乎必然交出不同局数,把 8 粒按局加权 = 把 (i-d) 的缺陷在波次尺度上原样装回来。**每粒先 swap-average,再对全部 8 粒取算术平均**;⛔ 也不许把两波各自的池化均值再平均一次(种子数不等 ⇒ mean-of-means,同一缺陷升一层)。⚠️ GH #269 的 min_arm_depth 是**另一个 depth**(一粒之内每条腿的**局**数),照旧逐粒生效,薄腿种子在**进这 8 粒之前**被丢掉。两个量都叫 depth,不许混。⛔ 本条不是『臂串相同就能并池』的通行证:树差一旦碰到未 gate(已 promote)的代码,臂串逐字相同也不可并池 ——成员串对未 gate 的代码一个字都说不出来。⛔ 本条不 arm 也不裁 hrparity。",
+   "ruled_at": "2026-09-09T1x:xxZ",
+   "ref": "iterations/streams/test_set.md §GH",
+   "pooling_key": "reachable-program equivalence under the wave's arm string (NOT member string alone, NOT tree SHA alone)",
+   "pools_with": [
+    "W60",
+    "W61"
+   ],
+   "family_depth_after_ruling": "2 waves / up to 8 paired seeds on the 37-id string"
+  },
+  {
+   "ruling": "SEEDS_RETURNED_TO_WINDOW",
+   "at": "2026-09-09T22:xxZ",
+   "ref": "iterations/streams/test_set.md §GI.5",
+   "seeds": [
+    10208,
+    10212,
+    10390,
+    10526
+   ],
+   "note": "批测台 21:08Z 交棒 3(第二轮)裁定:这四粒**退回可用窗口**,不建任何「烧过的种子」排除表。判据是**S3 上有没有留下语料**,不是有没有被某一波点过名 —— 而那个判据已经是选种时在跑的那一条(`seed_roster_index.py --build` 之后的交集检查)。W61 存了零个对象(两条独立读数:S3 `validation/` 末条仍是 W60 第四台 `2026-09-09T10:22:37Z`;`--build` 打 `401 already indexed, 0 to scan`)⇒ 重用唯一的害处(同一 seed id 下两套臂串的局被并进一次池化读数,铁律 4 (i-d) 同族)**要求语料存在**,而它不存在。W62 右移窗口绕开它们做得对(零成本、拒绝用花钱的方式替总监定死未裁的问题),⛔ **但不构成先例**:每损失一波就永久退休四粒,种子池天花板(GH #285)会因为一次没有语料的损失而下降。⚠️ 失效方向:哪天有一条读语料的路径不经过 S3,本裁定的前提就破。"
+  }
+ ],
  "harvest_result": {
   "harvested_at": "2026-09-09T18:0x-18:4xZ",
   "outcome": "TOTAL LOSS -- 0 games banked, 0 verdicts, 0 paired seeds, on all four machines.",

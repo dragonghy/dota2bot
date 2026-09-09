@@ -125,8 +125,8 @@ the PRECONDITION under which `$0.000` is true:
 
     pending == 0 is certifiable if and only if nothing is running.
 
-So: the tool reads `ec2 describe-instances` (free, account-wide, no filter --
-the budget has none either) and
+So: the tool reads `ec2 describe-instances` (free, no tag filter -- the budget
+has none either) and
 
     nothing running, no --pending      -> pending = $0.000, marked CERTIFIED
     something running, no --pending    -> exit 2, listing what is running
@@ -139,13 +139,36 @@ which prints a line calling itself SKIPPED, not certified (the `RULE6_BYPASS`
 pattern from GH #213) and is meant to be quoted in the round's report.
 
 Two boundaries, stated rather than assumed:
-  * the enumeration is ACCOUNT-WIDE ON PURPOSE.  `dota2bot-batch` has no cost
-    filter today, so every running instance in the account does consume this
-    fence's headroom regardless of whose project it is.  If the owner ever adds
-    the `Project` filter (DECISIONS_NEEDED #15) this check becomes
+  * the enumeration is UNFILTERED BY TAG ON PURPOSE.  `dota2bot-batch` has no
+    cost filter today, so every running instance in the account does consume
+    this fence's headroom regardless of whose project it is.  If the owner ever
+    adds the `Project` filter (DECISIONS_NEEDED #15) this check becomes
     over-conservative -- it would throttle us for somebody else's compute.  That
     is the failure direction that files its own bug report, and the tool prints
     whether the budget carries `CostFilters` so the day it changes is visible.
+  * RULING 5 -- THE SCOPE OF THAT ZERO IS NOW PRINTED, BECAUSE IT WAS A CLAIM.
+    Director, 2026-09-09 (GH #677's round; the finding is not GH #677 itself).
+    Until this ruling the line above said `account-wide` and the docstring said
+    `ACCOUNT-WIDE ON PURPOSE`, while `ec2 describe-instances` is a REGIONAL
+    call and `~/.aws/config` pins `region = us-west-2`
+    (`tools/batch_test/aws/bootstrap_creds.sh`).  So the reading was one region
+    and the claim was the account -- and the budget it protects has no region
+    filter either, so a `c7a.16xlarge` burning in `us-east-1` was invisible to
+    a check that printed CERTIFIED.  Same family as everything else in this
+    file: a claim wider than its reading, silent by shape, failing toward MORE
+    spending, and biting exactly when spend is high.  It surfaced while ruling
+    on `headroom $0.292`, whose sole named cause is foreign compute that our
+    own leak checks (also `us-west-2`, from `aws.env`) have never covered.
+    The remedy is NOT a new constant: the tool enumerates the account's enabled
+    regions (`ec2 describe-regions`, free) and reads each.  Where that
+    enumeration cannot be had -- the restricted `dota2bot-agent` may lack
+    `ec2:DescribeRegions` -- it falls back to the configured region and
+    DEGRADES THE CLAIM rather than the gate: the zero is then printed as
+    `CERTIFIED WITHIN SCOPE`, never as account-wide, and a `WAVE_FENCE SCOPE:`
+    line rides after the verdict line so the caveat travels with the sentence
+    people copy into reports.  Deliberately NOT an exit 2: turning a
+    false-label defect into a permanent launch outage is a policy change, and
+    the desk is already fence-blocked; the honest label is the fix.
   * exit 2 here means could-not-run, as everywhere else in this file.  A
     blocked launch is the safe failure; a launch on an uncertified zero is not.
 
@@ -253,13 +276,39 @@ def state_disagreements(thresholds, actual):
     return bad
 
 
+def scope_line(scope):
+    """Ruling 5.  One line saying WHERE the accrual reading actually looked.
+
+    `scope` is the dict `read_accruing_instances` returns, or None when there
+    was no live enumeration at all (offline / --no-accrual-check).  Returns
+    (line, complete) -- `complete` False means no zero from this read may be
+    called account-wide.
+    """
+    if not scope:
+        return None, False
+    regions = scope.get("regions") or []
+    shown = ", ".join(regions[:6]) + ("  +%d more" % (len(regions) - 6)
+                                      if len(regions) > 6 else "")
+    if scope.get("complete"):
+        return ("accrual scope    : %d region(s) read [%s]  <- COMPLETE: every "
+                "region this account has enabled" % (len(regions), shown),
+                True)
+    why = scope.get("why") or "enumeration incomplete"
+    return ("accrual scope    : %d region(s) read [%s]  <- SCOPE-LIMITED, NOT "
+            "the account (%s). A zero below does not exclude accrual "
+            "elsewhere." % (len(regions), shown, why), False)
+
+
 def certify_pending(instances, pending_supplied, cost_filters=None,
-                    check_enabled=True, skip_reason="--no-accrual-check"):
+                    check_enabled=True, skip_reason="--no-accrual-check",
+                    scope=None):
     """Ruling 4.  Decide what the `pending` term is allowed to be.
 
-    `instances` is a list of dicts (id / type / state / launched / project) or
-    None when the enumeration itself could not be run.  `pending_supplied` is
-    the operator's `--pending`, or None when they did not pass one.
+    `instances` is a list of dicts (id / type / state / launched / project /
+    region) or None when the enumeration itself could not be run.
+    `pending_supplied` is the operator's `--pending`, or None when they did not
+    pass one.  `scope` (Ruling 5) says which regions the list came from; a zero
+    is only ever called account-wide when that scope is complete.
 
     Returns (exit_code, lines, pending).  exit_code 0 means the caller may go
     on to the fence arithmetic; 2 means could-not-run and pending is None.
@@ -292,7 +341,7 @@ def certify_pending(instances, pending_supplied, cost_filters=None,
 
     if cost_filters:
         lines.append(
-            "budget filters   : %s  <- the account-wide accrual below may "
+            "budget filters   : %s  <- the untagged accrual below may "
             "OVER-count for a filtered budget (over-conservative; see Ruling "
             "4)" % json.dumps(cost_filters, sort_keys=True)[:200])
     else:
@@ -300,23 +349,45 @@ def certify_pending(instances, pending_supplied, cost_filters=None,
             "budget filters   : none  <- so every instance in the account "
             "does land in this budget, whoever owns it")
 
+    sline, complete = scope_line(scope)
+    if sline:
+        lines.append(sline)
+
     if not instances:
+        where = "account-wide" if complete else "in the region(s) above"
         if pending_supplied is not None:
             lines.append(
-                "accrual check    : CERTIFIED ZERO (0 accruing instances "
-                "account-wide), but --pending $%.3f was given and is used as "
-                "the larger claim." % pending_supplied)
+                "accrual check    : CERTIFIED %s (0 accruing instances %s), "
+                "but --pending $%.3f was given and is used as the larger "
+                "claim." % ("ZERO" if complete else "ZERO WITHIN SCOPE",
+                            where, pending_supplied))
             return 0, lines, pending_supplied
-        lines.append(
-            "accrual check    : CERTIFIED (0 accruing instances account-wide, "
-            "read this run) -- pending $0.000 is a reading, not a default.")
+        if complete:
+            lines.append(
+                "accrual check    : CERTIFIED (0 accruing instances "
+                "account-wide, read this run) -- pending $0.000 is a reading, "
+                "not a default.")
+        else:
+            # "a reading, not a default" is orthogonal to scope and survives
+            # verbatim: a one-region zero is still READ.  Dropping that clause
+            # here is what assertion 11 caught when this branch was first
+            # written -- Ruling 5 narrows the CLAIM, it does not demote the
+            # reading to an assumption.
+            lines.append(
+                "accrual check    : CERTIFIED WITHIN SCOPE ONLY (0 accruing "
+                "instances in the region(s) above, read this run) -- pending "
+                "$0.000 is a reading, not a default, but it is NOT an "
+                "account-wide zero: the budget has no region filter, so "
+                "accrual in an unread region lands on this fence unseen "
+                "(Ruling 5).")
         return 0, lines, 0.0
 
     for inst in instances:
         lines.append(
-            "  accruing       : %s %s [%s] launched %s project=%s"
+            "  accruing       : %s %s [%s] %s launched %s project=%s"
             % (inst.get("id", "?"), inst.get("type", "?"),
-               inst.get("state", "?"), inst.get("launched", "?"),
+               inst.get("state", "?"), inst.get("region", "(region unread)"),
+               inst.get("launched", "?"),
                inst.get("project") or "(untagged)"))
 
     if pending_supplied is not None:
@@ -513,12 +584,63 @@ def parse_instances(payload):
     return rows
 
 
+def read_regions():
+    """The account's enabled regions (`ec2 describe-regions`, free).
+
+    Raises Uncertifiable when the call cannot be made -- `dota2bot-agent` is
+    permission-scoped and may not carry `ec2:DescribeRegions`.  The caller
+    degrades the CLAIM, not the gate (Ruling 5).
+    """
+    payload = _awsx(["ec2", "describe-regions", "--output", "json"])
+    names = sorted(r.get("RegionName") for r in payload.get("Regions", [])
+                   if r.get("RegionName"))
+    if not names:
+        raise Uncertifiable("describe-regions returned no region names")
+    return names
+
+
 def read_accruing_instances():
-    """Ruling 4's free read.  Account-wide, no tag filter.  Never priced."""
-    payload = _awsx(["ec2", "describe-instances", "--filters",
-                     "Name=instance-state-name,Values=" +
-                     ",".join(ACCRUING_STATES), "--output", "json"])
-    return parse_instances(payload)
+    """Ruling 4's free read.  No tag filter, never priced.
+
+    Returns (rows, scope).  `ec2 describe-instances` is REGIONAL, so one call
+    reads one region; Ruling 5 is why the scope travels with the rows instead
+    of the caller assuming it covered the account.
+    """
+    filters = ["Name=instance-state-name,Values=" + ",".join(ACCRUING_STATES)]
+
+    def read_one(region=None):
+        args = ["ec2", "describe-instances", "--filters"] + filters
+        if region:
+            args += ["--region", region]
+        return parse_instances(_awsx(args + ["--output", "json"]))
+
+    try:
+        regions = read_regions()
+    except Uncertifiable as exc:
+        rows = read_one()                       # the configured default region
+        for row in rows:
+            row["region"] = "(configured default)"
+        return rows, {"regions": ["(configured default)"], "complete": False,
+                      "why": "describe-regions unavailable: %s"
+                             % str(exc)[:120]}
+
+    rows, read, failed = [], [], []
+    for region in regions:
+        try:
+            found = read_one(region)
+        except Uncertifiable as exc:
+            failed.append("%s (%s)" % (region, str(exc)[:60]))
+            continue
+        read.append(region)
+        for row in found:
+            row["region"] = region
+            rows.append(row)
+    rows.sort(key=lambda r: (r["launched"] or "", r["id"] or ""))
+    scope = {"regions": read, "complete": not failed}
+    if failed:
+        scope["why"] = "%d region(s) unreadable: %s" % (len(failed),
+                                                        "; ".join(failed))
+    return rows, scope
 
 
 # ----------------------------------------------------------------- CLI
@@ -554,6 +676,7 @@ def main(argv=None):
     offline = args.actual is not None
     instances = None
     cost_filters = None
+    scope = None
     try:
         if offline:
             if args.limit is None or args.thresholds is None:
@@ -588,14 +711,14 @@ def main(argv=None):
         accrual_enabled = not args.no_accrual_check
         if accrual_enabled:
             try:
-                instances = read_accruing_instances()
+                instances, scope = read_accruing_instances()
             except Uncertifiable as exc:
                 print("accrual read     : FAILED -- %s" % exc)
-                instances = None
+                instances, scope = None, None
 
     acc_code, acc_lines, pending = certify_pending(
         instances, args.pending, cost_filters=cost_filters,
-        check_enabled=accrual_enabled, skip_reason=skip_reason)
+        check_enabled=accrual_enabled, skip_reason=skip_reason, scope=scope)
     for line in acc_lines:
         print(line)
     if acc_code != 0:
@@ -606,6 +729,14 @@ def main(argv=None):
                         brake=args.brake, owner_line=args.owner_line)
     for line in lines:
         print(line)
+    # Ruling 5: the caveat rides AFTER the verdict, because the verdict line is
+    # the one that gets copied into the round's report.
+    _, complete = scope_line(scope)
+    if scope and not complete:
+        print("WAVE_FENCE SCOPE : the accrual zero above covered %d region(s), "
+              "NOT the account (%s). Quote this line in the round's report."
+              % (len(scope.get("regions") or []),
+                 scope.get("why") or "enumeration incomplete"))
     return code
 
 

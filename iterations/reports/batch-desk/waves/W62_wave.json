@@ -106,6 +106,13 @@
  "harvest_notes": [
   "(a) ON-DEMAND TERMINATION CODES AGE OUT. W60's harvest round could not read StateReason.Code because EC2 drops it from describe-instances ~1h after termination (GH #375) and the harvest round fired ~3h after launch. These four are on-demand, so the same window applies: if a harvest round wants per-machine termination codes it must read them EARLY. There are no SIRs to fall back on -- describe-spot-instance-requests returns nothing for on-demand machines (confirmed this round: SIR count is already 0, W61's four having aged out).",
   "(b) DO NOT read W62's survival as evidence that the AZ ring (GH #664) was fixed. It was not touched; this slate simply got all four AZs it asked for.",
-  "(c) The changeover constant reclaim_blind.py prints (`measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min`) is a HARD-CODED HISTORICAL CONSTANT, not a measurement of the wave being checked -- registered by the 09-08T00:12Z round as its headline finding. It will print on W62's harvest too."
- ]
+  "(c) The changeover constant reclaim_blind.py prints (`measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min`) is a HARD-CODED HISTORICAL CONSTANT, not a measurement of the wave being checked -- registered by the 09-08T00:12Z round as its headline finding. It will print on W62's harvest too.",
+  "⭐ 总监 2026-09-09T22:xxZ(本文件 `director` 键全文):收割轮**也要跑一次 `wave_fence.py`** —— 它只读、免费,而不发波的轮次正是那条新读数(`accrual scope :`,RULING 5)悄悄不发生的形状;把那一行原样抄进报告。另:**下一个发波轮不发波**,围栏当轮现跑求值、不抄数。"
+ ],
+ "director": {
+  "ruling": "NO_WAVE_NEXT_LAUNCH_ROUND",
+  "at": "2026-09-09T22:xxZ",
+  "ref": "iterations/streams/test_set.md §GI.1 / §GI.2 / §GI.3",
+  "note": "交棒 2(GH #677)裁定,三条:(1) **下一个发波轮不发波** —— 围栏照旧成立,且**必须当轮现跑 `wave_fence.py` 求值,不许抄 `$0.292` 或任何数**。(2) 「等月初重置」**作为计划被否**:重置后的天花板是 **`$50` 不是 `$80`**(围栏 = 下一个尚未跨过的告警档;离线重构 `fence $50.00` / `headroom $48.900 after this wave`,⚠️ 同一次输出自打 `OFFLINE` 与 `SKIPPED, NOT CERTIFIED` 两行免责)。(3) 「现在升级给 owner」**作为一封新邮件被否**:同一问题已随 W36 邮件(09-06)在 owner 手里(`DECISIONS_NEEDED` 第 15 条),本轮以增量入档,随周日 W37 那封发;提前发信的两个触发条件见 §GI.4。⭐ **本轮同时修了闸 (iii) 自己**(RULING 5):accrual 检查此前把**一个区域**的读数印成 `account-wide`。下一轮跑闸 (iii) 时请把 `accrual scope :` 那一行**原样抄进报告**(`owed_executions.json:wave_fence_ruling5_multiregion_first_read` 的结清判据);⚠️ 别的区域真有实例在计费时,闸 (iii) 会从 CLEAR 变成 `UNCERTIFIABLE (exit 2)` —— **那是修法在生效,不是回归**。"
+ }
 }

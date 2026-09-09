@@ -112,22 +112,6 @@
    "done_when_note": "没有完成态:P2 的取证波排完之后本行仍然成立(下一次再排 P2 波时同样适用)。⚠️ 现状登记:`stayattr` 已退集(§EX.1)、`staysrc` 冻结中(§EZ.7)⇒ 这条约束此刻**没有可违反的对象**,它要在解冻后第一次排 P2 波的那一轮被读到。P4.2 与 P2 因此在结构上互相挡住,已写进 `iterations/DECISIONS_NEEDED.md` 交 owner。"
   },
   {
-   "id": "wave_fence_ruling4_first_live_run",
-   "issue": "GH #515(批测台 09:12Z 交棒 ②);裁定全文 iterations/streams/test_set.md §FI.1",
-   "ruling": "总监 2026-09-06T09:xxZ:确认批测台 09:12Z 的自裁(工具打 CLEAR 而它不发波,它是对的),并把那一步搬进 `wave_fence.py`(RULING 4:`--pending` 是被检查的声明,不再默认 $0.000)。⚠️ **新增的两个活 AWS 读(`ec2 describe-instances`、预算的 `CostFilters`)在总监的容器里一次都没被执行过** —— 总监不花 AWS 的钱,凭据也未 bootstrap。纯核心与 CLI 接线由 tests/test_wave_fence.py 42 checks + mutstand_wave_fence.sh(9 CAUGHT + 1 控制 SURVIVED)覆盖,**这是覆盖不是等价**。",
-   "ruled_at": "2026-09-06T09:xxZ",
-   "executor": "batch-desk(下一轮跑闸 (iii) 的那一次)",
-   "trigger": "没有外部触发器,也不挂在任何一波上 —— 这正是它进 registry 的理由(§DR):它是一条**常驻义务**(「下一次真跑闸 (iii) 时把活路径的读数报回来」),没有任何一张 `W<N>_wave.json:harvest_obligations` 有行可以载它。",
-   "delivered_to": [
-    "iterations/streams/batch-desk.md(章程 4 (iii) 正文)",
-    "iterations/streams/test_set.md §FI.1"
-   ],
-   "done_when": {
-    "kind": "manual"
-   },
-   "done_when_note": "⚠️ `kind=manual`,**故意的**:要买的读数住在别人的容器里(活 AWS 调用的退出码与它打的 `accrual check :` 那一行),树上没有任何产物能证明它跑过 —— 按 LIMIT 10,`manual` 只买一条每轮复读的提醒,不买一道门。**结清判据(总监读批测台报告时核)**:任一轮批测台报告里贴出 `wave_fence.py` 的 `accrual check :` 那一行,且它是 **CERTIFIED / ASSERTED / SKIPPED, NOT CERTIFIED / FAILED** 四者之一 —— 四者都算跑过(**包括 FAILED**:权限不足而 `exit 2` 正是设计的失效方向,读到它就说明活路径被走到了)。⛔ 报告里只有 `WAVE_FENCE: ...` 那一行**不算** —— 旧版也打那一行。"
-  },
-  {
    "id": "roshan_pit_daynight_fix",
    "issue": "GH #450([bug],录像组 09-03 立案,77/77 帧证据);连带 GH #422 / queue strategy-37;裁定全文 iterations/streams/test_set.md §FK.3",
    "ruling": "总监 2026-09-06T13:xxZ:`roshdist` 因 `VERIFY ... verdict=BUGGY episodes=77` 退出测试集,而**退集不修根因**。`J.GetCurrentRoshanLocation()`(`bots/FunLib/jmz_func.lua:11511`)白天返回 Dire 坑、夜里返回 Radiant 坑,与实测**全反**;它**没有门**,25 个调用点在**每一场真实对局里**读它。⇒ 这是一条 live 的 [bug],按铁律 5 归总监。⛔ **修法不是直接对调就完事**:#352 立案指向的那 23 个 commit 里,正是这种「看着显然的非门控修复」把侧别平衡整体挪动过一次而没有任何东西举手 ⇒ **按 `.claude/skills/gated-fix/` 落一个新的 soak candidate**,用 #450 自带的 `roshdist_domain.py`(比坐标不比名字,不依赖修复方向)买 (a),再走三条件 promote。`roshdist` 本身在根因修好之前**不得重新入集**。",
@@ -589,6 +573,25 @@
     ]
    },
    "trigger": "`gate_ii_new_to_test_executable` 的第 3 条腿**卡在本行上** ⇒ 只要那一行还欠着,本行每轮跟着它一起被读到。"
+  },
+  {
+   "id": "wave_fence_ruling5_multiregion_first_read",
+   "issue": "无外部 issue(总监 2026-09-09T22:xxZ 自立,裁 GH #677 时在 `wave_fence.py` 上量到)。裁定全文 `iterations/streams/test_set.md §GI.3`。",
+   "ruling": "总监 2026-09-09T22:xxZ:`wave_fence.py` 的 RULING 4 accrual 检查**声称账户级、实读一个区域**(`ec2 describe-instances` 是区域调用;`bootstrap_creds.sh` 写死 `region = us-west-2`),而它保护的预算**没有区域过滤器**。⇒ 已改为枚举账户已启用的全部区域(`ec2 describe-regions`,免费)逐区读;枚举拿不到时(受限用户可能没有 `ec2:DescribeRegions`)**退回配置区域并降级措辞而不是降级门**:零读成 `CERTIFIED WITHIN SCOPE ONLY`,永不读成账户级,并在裁决行之后追加一行 `WAVE_FENCE SCOPE :`。⛔ **故意不做成 exit 2**:把一个标签缺陷变成永久发波中断是政策改动,而本台此刻已经被围栏挡住;诚实的标签才是修法。⚠️ **纯核心与 CLI 接线由 `tests/test_wave_fence.py` 71 checks + `mutstand_wave_fence_scope.sh` 4 CAUGHT / 0 SURVIVED 覆盖,这是覆盖不是等价** —— 与被它续棒的 `wave_fence_ruling4_first_live_run` 逐字同一句话,理由也同一条:总监不发 AWS 调用。",
+   "ruled_at": "2026-09-09T22:xxZ",
+   "executor": "batch-desk(下一轮跑闸 (iii) 的那一次;**不必为它专门发波**,`wave_fence.py` 是只读的、免费的,不发波的轮次照样可以跑)",
+   "trigger": "没有外部触发器,也不挂在任何一波上(§DR 常驻义务)。⚠️ **本行的风险比前一根棒更高**:下一轮是 W62 **收割**轮,不发波 ⇒ 闸 (iii) 结构上可以整轮不跑,而那正是这条读数悄悄不发生的形状。",
+   "delivered_to": [
+    "tools/batch_test/soak/wave_fence.py(RULING 5 正文 + 运行时输出行 —— **投递终点是批测台真正会跑的那个工具**,不是散文)",
+    "iterations/streams/batch-desk.md(章程 5 选种/闸 (iii) 正文)",
+    "iterations/streams/test_set.md §GI.3",
+    "GH #677 追评"
+   ],
+   "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id。⭐ 直接续 `wave_fence_ruling4_first_live_run` 那一根 —— **而那一根本轮退休时量出的教训正是「manual 的提醒被复读八轮、没人执行」**,所以本行的结清判据写成**逐字串**,让读报告的人一眼判得出,不必回忆自己上轮想过什么。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "⚠️ `kind=manual`,**理由与前一根棒逐字相同**:要买的读数住在别人的容器里(活 AWS 调用打出的那一行),树上没有产物能证明它跑过。**结清判据(总监读批测台报告时核,一眼判得出)**:任一轮批测台报告里贴出 `accrual scope :` 开头的那一行**原文**,且它落在两种形状之一 —— `COMPLETE: every region this account has enabled`(枚举成功;此时区域数就是账户已启用的区域数)或 `SCOPE-LIMITED, NOT the account (...)`(枚举失败或部分失败;括号里必须带 why)。⛔ **只贴 `accrual check :` 那一行不算** —— 那一行改版前后都存在,正是它八轮里长得一模一样。⛔ **只贴 `WAVE_FENCE:` 裁决行更不算**(前一根棒已经把这条写进过)。⭐ **`SCOPE-LIMITED` 也算结清**:权限不足是设计好的失效方向,读到它就说明活路径被走到了 —— 但那一轮的零**不许**在任何地方被复述成账户级的零。"
   }
  ],
  "retired": [
@@ -778,6 +781,25 @@
    "retired_at": "2026-09-08T13:0xZ",
    "retired_by": "director",
    "outcome": "EXECUTED by director 2026-09-08T13:0xZ, in one work unit. 落地物三件:(1) `tools/agent/pending_rulings.py` 的 `_machine_key_status()` 认得 `kind: \"text_absent\"`(字段 `path` + `text`,`text` 可以是一条裸串或一个串列表);三态按 §EV 逐字实现 —— **文件读不到 = UNCERTIFIABLE(不是 DONE)**、文本还在 = OWED(detail 点名还剩哪几句、几分之几)、文件在且几句都没了 = DONE(那一行仍写着「absence 不等于替换它的东西是对的」,LIMIT 11 的边界不许被这个 kind 吃掉);空的/写坏的 needle 集合读 UNCERTIFIABLE(它对每个文件都成立,会在任何路径上通过)。(2) `tests/test_pending_rulings.py` **361 → 378 checks / 0 failed**,新增的每一条断言都写在**假阳方向**。(3) `tools/agent/mutstand_text_absent.sh`:**5 CAUGHT / 0 SURVIVED / control_ok=1**、还原逐字节 YES,**五发全部是假阳方向**(错误地读成 DONE),不是快乐路径 —— 这是本行 `done_when_note` 点名要的那句。⭐ 一处现场教训值得抄:那条「kind 必须能穿过白名单」的断言,第一版把不该出现的串写成**字面量**,于是它出现在了它正断言其缺席的那个文件里,当场自己红 —— needle 改成运行时拼出来的。这正是本 kind 的 LIMIT 所写的那句(needle 要够长够独特、并且要把文件读一遍)在它自己的测试里兑现了一次。⚠️ **登记一条真实限度,不拿一行发明出来的 registry 行去满足断言**:此刻**没有任何一条活着的 owed 行用 `text_absent`** —— 它的立案案例 `outlatch_check1b_reason` 在这个 kind 存在之前就退休了。它写在 `tests/test_pending_rulings.py` 的注释与 `pending_rulings.py` 的 LIMIT 11 里:**下一条「把这句写错的话改掉」形状的裁定就是它的第一个真实用户**,写 `done_when` 的人该伸手去拿它。"
+  },
+  {
+   "id": "wave_fence_ruling4_first_live_run",
+   "issue": "GH #515(批测台 09:12Z 交棒 ②);裁定全文 iterations/streams/test_set.md §FI.1",
+   "ruling": "总监 2026-09-06T09:xxZ:确认批测台 09:12Z 的自裁(工具打 CLEAR 而它不发波,它是对的),并把那一步搬进 `wave_fence.py`(RULING 4:`--pending` 是被检查的声明,不再默认 $0.000)。⚠️ **新增的两个活 AWS 读(`ec2 describe-instances`、预算的 `CostFilters`)在总监的容器里一次都没被执行过** —— 总监不花 AWS 的钱,凭据也未 bootstrap。纯核心与 CLI 接线由 tests/test_wave_fence.py 42 checks + mutstand_wave_fence.sh(9 CAUGHT + 1 控制 SURVIVED)覆盖,**这是覆盖不是等价**。",
+   "ruled_at": "2026-09-06T09:xxZ",
+   "executor": "batch-desk(下一轮跑闸 (iii) 的那一次)",
+   "trigger": "没有外部触发器,也不挂在任何一波上 —— 这正是它进 registry 的理由(§DR):它是一条**常驻义务**(「下一次真跑闸 (iii) 时把活路径的读数报回来」),没有任何一张 `W<N>_wave.json:harvest_obligations` 有行可以载它。",
+   "delivered_to": [
+    "iterations/streams/batch-desk.md(章程 4 (iii) 正文)",
+    "iterations/streams/test_set.md §FI.1"
+   ],
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "⚠️ `kind=manual`,**故意的**:要买的读数住在别人的容器里(活 AWS 调用的退出码与它打的 `accrual check :` 那一行),树上没有任何产物能证明它跑过 —— 按 LIMIT 10,`manual` 只买一条每轮复读的提醒,不买一道门。**结清判据(总监读批测台报告时核)**:任一轮批测台报告里贴出 `wave_fence.py` 的 `accrual check :` 那一行,且它是 **CERTIFIED / ASSERTED / SKIPPED, NOT CERTIFIED / FAILED** 四者之一 —— 四者都算跑过(**包括 FAILED**:权限不足而 `exit 2` 正是设计的失效方向,读到它就说明活路径被走到了)。⛔ 报告里只有 `WAVE_FENCE: ...` 那一行**不算** —— 旧版也打那一行。",
+   "retired_at": "2026-09-09T22:xxZ",
+   "retired_by": "总监(章程 2a/2d;本行的结清判据逐字写着「总监读批测台报告时核」)",
+   "outcome": "**结清 —— 而且它在 2026-09-08T03:16Z 就已经被满足了,本行在 registry 里多待了八轮。** `done_when_note` 要的是「任一轮批测台报告里贴出 `wave_fence.py` 的 `accrual check :` 那一行,且它是 CERTIFIED / ASSERTED / SKIPPED / FAILED 四者之一」。**首次满足**:`iterations/reports/batch-desk/20260908T031600Z.md:76` 逐字 `accrual check : CERTIFIED ZERO (0 accruing instances account-wide)`,并注明「未用 `--no-accrual-check` ⇒ 无「SKIPPED, NOT CERTIFIED」行」——两半都在,活 AWS 路径确实被走到了。此后 09-08 09:20Z / 15:10Z / 21:08Z、09-09 03:11Z / 09:09Z / 15:13Z / 18:20Z / 21:08Z **连续八轮各贴一次**。⚠️ **`kind=manual` 的失效形状,本行自己量出来了**:门是人,而人这八轮里读的是别的东西。自检的 owed 腿每轮都把它打成 OWED,**打对了产物、打错了世界** —— LIMIT 10 说 manual 只买一条复读的提醒,本行现在能补一句:**那条提醒被复读了八轮而没有人执行它所提醒的那个动作**,登记在此,不抹平。\n⭐⭐ **它买到的东西比它要买的多,而且正是本轮 Ruling 5 的来路**:那八行读数**每一行都写着 `account-wide`**,而 `ec2 describe-instances` 是区域调用、`~/.aws/config` 钉死 `region = us-west-2`(`tools/batch_test/aws/bootstrap_creds.sh`)。⇒ 一条为「证明活路径跑过」而设的义务,在总监**没有 AWS 凭据、一次调用都没发**的情况下,把那条路径的**措辞缺陷**交到了他手里。本轮已修(`wave_fence.py` RULING 5,全文 `iterations/streams/test_set.md §GI.3`)。⛔ **两件事都是真的,不许合并成一句**:义务达成(路径跑过了)与读数标错(它标成账户级)是两回事;**这八行读数此刻仍然只覆盖 us-west-2**,退休本行**不追认**它们是账户级的零。"
   }
  ],
  "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。"

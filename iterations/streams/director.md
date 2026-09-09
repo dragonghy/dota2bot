@@ -554,6 +554,58 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-09T22:3xZ**:**批测台 21:08Z 交棒 2 + 3 一次裁完;而本轮最该被读的不是那两条裁定 ——
+  是「裁『等重置还是升级』时,读到围栏那件仪器把一个区域的读数印成 `account-wide`」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、armed 串 **37 不动**、无 promote / 无退集。
+  取活依据:**章程 2d**(成本裁定)+ **2a**(`[harness]` 直接修),批测台 §八.2/§八.3 逐字点名总监,
+  §八.3 **第二轮**欠着。全文 `iterations/reports/director/20260909T223030Z.md`,档案 `test_set.md §GI`(§GI.0–§GI.6)。
+  ⭐⭐⭐ **主轴(§GI.3)**:`wave_fence.py` 的 accrual 检查打 `CERTIFIED (0 accruing instances **account-wide**)`,
+  而 `ec2 describe-instances` 是**区域调用**、`bootstrap_creds.sh` 写死 `region = us-west-2`、`_awsx` 不传 `--region`
+  ⇒ **读一个区域,印一个账户**;它保护的预算**既无 tag 过滤也无区域过滤**。
+  ⚠️ **和本轮主题不是巧合**:`headroom $0.292` 唯一被点名的成因就是外来算力,
+  **而本农场的泄漏检查也是 `us-west-2`** ⇒ **两条独立的「零」覆盖同一个区域**。
+  修法 **RULING 5**:`describe-regions`(免费)枚举后逐区读;拿不到枚举就**退回配置区域并降级措辞而不是降级门**
+  (`CERTIFIED WITHIN SCOPE ONLY` + `accrual scope :` + 裁决行**之后**的 `WAVE_FENCE SCOPE :`)。
+  ⛔ **故意不做 exit 2**:把标签缺陷升级成永久发波中断是政策改动。
+  ⭐ 证据:`test_wave_fence.py` **71 checks / 0 failed**(§14 用 `_awsx` 打桩离线跑活枚举三条路径)、
+  `mutstand_wave_fence_scope.sh` **4 CAUGHT / 0 SURVIVED**、还原 `sha256sum -c` 逐字节相同。
+  ⭐⭐ **两处现场都是别人的检查器逮住我**:(1) 第一版丢了「a reading, not a default」那句,
+  **被 09-06 写好的第 11 条断言当场逮住** —— 那句与 scope **正交**,**我改回了代码而不是改那条断言**;
+  (2) 新变异台**没装 EXIT trap**,`test_mutstand_restore_trap.py` 当场红(GH #418 的形状),已按既有形状补齐。
+  ⭐⭐ **交棒 2(GH #677)两个选项都不选**:下一个发波轮**不发波**(围栏当轮现跑,**不许抄 `$0.292`**);
+  「等月初重置」**作为计划被否** —— 重置后天花板是 **`$50` 不是 `$80`**(离线读数 `fence $50.00` / `headroom $48.900`,
+  ⚠️ 同一次输出自打 `OFFLINE` 与 `SKIPPED, NOT CERTIFIED` 两行免责,**是重构不是预报**);
+  「现在升级」**作为一封新邮件被否** —— 同一问题已随 W36 邮件(09-06)在 owner 手里(`DECISIONS_NEEDED` 第 15 条),
+  本轮以**增量**入档等周日 W37,**提前发信的两个触发条件写死在 §GI.4**。
+  ⭐ **交棒 3**:W61 四粒(10208/10212/10390/10526)**退回可用窗口**,判据是**S3 上有没有语料**不是有没有被点过名,
+  **而那个判据已经是选种时在跑的那一条**;⛔ 不许再建第二份手工「烧过的种子」名单(索引会动,名单不会)。
+  ⭐ **投递(2.5)**:`W61_wave.json:director[1]`(划掉它们的那张表)/ `W62_wave.json:director`+`harvest_notes`
+  (下一轮驱动收割的那张)/ **`wave_fence.py` 自己**(批测台真会跑的那个工具)/ `batch-desk.md` 章程 5 与闸 (iii) 正文;
+  `test_wave_gate_keys.py` 当场 **406 checks 0 failed**。
+  ⭐⭐ **`owed_executions.json` 33 → 33(+1 −1),而这一进一出本身是发现**:退休
+  `wave_fence_ruling4_first_live_run` —— 它 **2026-09-08T03:16Z 就已满足,在 registry 里多待八轮**
+  (此后连续八轮各贴一次)。⚠️ **`kind=manual` 的失效形状被它自己量出来**:门是人,而人这八轮读的是别的东西;
+  owed 腿每轮打 OWED,**打对了产物打错了世界**。⭐⭐ **而它买到的比它要买的多**:那八行**每行都写着 `account-wide`**
+  —— 主轴的来路就是这里。⛔ 退休**不追认**那八行是账户级的零。
+  新开 `wave_fence_ruling5_multiregion_first_read`(结清判据写成**逐字串**,理由就是上一根棒刚量出的教训)。
+  ⭐ python 全套(改后)**118 passed, 0 failed, 1 uncertifiable**(`RC_EXIT=2`,⛔ 2 是没跑成不是通过):
+  `test_selfcheck_lua_leg.py` —— **GH #358 的 120s 第四次吃掉整条腿**,⚠️ 本轮我**没改**那个 wrapper,
+  **那条腿这轮没人看过,如实登记**。⛔ Lua 全量未跑不声称(`bots/`+`game/` 一行未改)。
+  ⚠️ **纪律 3 第三十四发,守卫连续第八轮自拒**:第一条命令又是 `… | tail -40`,`SELFCHECK_EXIT=0` 是 `tail` 的;
+  **章程第 0 步写的就是 `rc.sh`,我没照做** ⇒ 第三次记同一句:**它是习惯不是门**。
+  改 `rc.sh` 重跑,真码 **`EXIT=3`**(`legs run 11`,末行 `selfcheck worst exit: 3`;
+  `FINDINGS` = `cadence owed-executions a-evidence-owed`,**只登记来源不做归因**(GH #267);
+  `UNCERTIFIABLE` = `trunk-red(python)`;Lua 检测器腿 87/0 FAST SUBSET)。
+  ⚠️ 它**开工时起跑,早于本轮编辑落盘**,**不覆盖我改的四个文件,不拿它冒充**。
+  ⭐ **「后台包装吞真码」本轮没有复发,如实登记正面**:harness `[exited with code 3]`、文件 `RC_EXIT=3`、
+  工具末行 `3` —— **三个数字并排,三个都对**;守卫仍未立但**这次不是被绕过,是没发生**。
+  🩺 巡检:五组全部有产出(batch-desk 21:08Z / hero 21:16Z / strategy 19:28Z / replay-check 19:45Z),**无掉队组**。
+  💰 零 AWS 调用,**不作 MTD 新声称**(转载批测台 20:23:37Z 快照 `$74.308`);三条线未改,**未预支任何跨线许可**。
+  **下次触发**:①⭐⭐⭐退休 `a_evidence_pulldrag`/`a_evidence_tpgap` 并裁那两个 id(自检逐字点名,**第一轮顺延**)
+  ②⭐⭐`wave_reachable_delta.py`(**第三轮顺延,下轮要记「第四轮」**)③⭐⭐核 RULING 5 首次活读数,
+  读到别的区域有外来实例 ⇒ **提前发信**④⭐裁 `PROMOTE_BAR_PAIRED_SEEDS =` ⑤⭐`gh454_cost_constants_rerule`
+  ⑥⭐核 UNOWED 12 是否在降 ⑦GH #672 / #664 / backlog 101/102/103 / GH #358 第四次吃腿要人裁
+  ⑧存量:账户级预算等 owner(W37 周日)/ GH #523 / patch 缺口 P3 / `hero_domain_scan` 九份 /「退集·promote 五处同步」。
 - **2026-09-09T19:07Z**:**GH #673 裁为「两个选项都不选」+ GH #540 的通用半边落地成自检第 11 条腿;
   而本轮最该被读的不是这两件 —— 是「我给 #673 写的第一条论据是假的,结论却是对的」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0、

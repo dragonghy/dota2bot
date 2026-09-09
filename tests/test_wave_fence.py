@@ -245,6 +245,166 @@ check(rows[1]["project"] == "final-table-trainer" and rows[0]["project"] is None
 check(wf.parse_instances({}) == [],
       "an empty payload is an empty list, not a crash")
 
+# ---- 13. RULING 5: a zero is only "account-wide" when the scope says so.
+#          Director, 2026-09-09.  The defect these assertions have teeth
+#          against is NOT a wrong number -- `certify_pending` returned the same
+#          $0.000 before and after.  It is that the WORD on the line was
+#          `account-wide` while `ec2 describe-instances` is regional and
+#          `~/.aws/config` pins one region, so a foreign instance in another
+#          region was certified absent.  Hence every assertion below is about
+#          the sentence, and 13c is the one that fails if the old wording is
+#          put back.
+COMPLETE = {"regions": ["us-east-1", "us-west-2"], "complete": True}
+LIMITED = {"regions": ["us-west-2"], "complete": False,
+           "why": "describe-regions unavailable: AccessDenied"}
+
+code, lines, pending = wf.certify_pending([], None, scope=COMPLETE)
+text = "\n".join(lines)
+check((code, pending) == (0, 0.0), "complete scope + no instances => certified zero")
+check("account-wide" in text and "WITHIN SCOPE" not in text,
+      "a complete-scope zero may still be called account-wide")
+check("2 region(s) read" in text and "COMPLETE" in text,
+      "the scope line names how many regions were actually read")
+
+code, lines, pending = wf.certify_pending([], None, scope=LIMITED)
+text = "\n".join(lines)
+check((code, pending) == (0, 0.0),
+      "13c-guard: scope-limited zero still returns 0 -- degrade the CLAIM, "
+      "not the gate (a launch outage would be a policy change)")
+check("CERTIFIED WITHIN SCOPE ONLY" in text,
+      "13c: a scope-limited zero is NOT certified account-wide", text)
+check("account-wide zero" in text and "NOT an" in text,
+      "13c: the line says in words that this is not an account-wide zero")
+check("SCOPE-LIMITED" in text and "AccessDenied" in text,
+      "the scope line carries WHY the enumeration was incomplete")
+
+# The `--pending` variant of the same branch: the label still has to degrade.
+code, lines, pending = wf.certify_pending([], 1.76, scope=LIMITED)
+check((code, pending) == (0, 1.76), "--pending is still taken as the larger claim")
+check("ZERO WITHIN SCOPE" in "\n".join(lines),
+      "the asserted-pending branch degrades its label too")
+code, lines, _ = wf.certify_pending([], 1.76, scope=COMPLETE)
+check("CERTIFIED ZERO (" in "\n".join(lines),
+      "...and does not degrade it when the scope is complete")
+
+# scope=None is the offline / --no-accrual-check path: no scope line at all,
+# and nothing may claim account-wide from it either.
+line, complete = wf.scope_line(None)
+check(line is None and complete is False,
+      "no live enumeration => no scope line, and `complete` is False")
+code, lines, pending = wf.certify_pending(
+    [], None, check_enabled=False, skip_reason="offline mode")
+check(code == 0 and "SKIPPED, NOT CERTIFIED" in "\n".join(lines),
+      "offline still prints the SKIPPED line, unchanged by Ruling 5")
+
+# An accruing instance prints its region, so "which region is burning" is
+# readable off the gate output instead of reconstructed afterwards.
+rows = [{"id": "i-aaa", "type": "c7a.16xlarge", "state": "running",
+         "launched": "2026-09-06T02:00:00+00:00",
+         "project": "final-table-trainer", "region": "us-east-1"}]
+code, lines, pending = wf.certify_pending(rows, None, scope=COMPLETE)
+check(code == 2 and pending is None,
+      "instances accruing + no --pending is still UNCERTIFIABLE (Ruling 4)")
+check("us-east-1" in "\n".join(lines),
+      "the accruing line names the region the instance is in")
+rows_noregion = [dict(rows[0])]
+del rows_noregion[0]["region"]
+check("(region unread)" in "\n".join(wf.certify_pending(
+          rows_noregion, 1.0, scope=LIMITED)[1]),
+      "a row with no region says so rather than printing a blank")
+
+# ---- 14. RULING 5, the enumeration itself.  `read_accruing_instances` is the
+#          function that DECIDES `complete`, so leaving it untested would leave
+#          the whole ruling resting on a flag nothing checks.  The AWS boundary
+#          is one function (`_awsx`), so the honest offline test is to stub
+#          that and assert on the calls made and the scope returned.
+def stub_awsx(regions=("us-east-1", "us-west-2"), instances=None,
+              regions_fail=False, fail_regions=()):
+    """Return (fake_awsx, calls).  `instances` maps region -> payload rows."""
+    calls = []
+
+    def fake(args):
+        calls.append(list(args))
+        if args[1] == "describe-regions":
+            if regions_fail:
+                raise wf.Uncertifiable("AccessDenied for DescribeRegions")
+            return {"Regions": [{"RegionName": r} for r in regions]}
+        region = args[args.index("--region") + 1] if "--region" in args else None
+        if region in fail_regions:
+            raise wf.Uncertifiable("timed out")
+        rows = (instances or {}).get(region, [])
+        return {"Reservations": [{"Instances": rows}]}
+
+    return fake, calls
+
+
+def inst(iid, region_hint=""):
+    return {"InstanceId": iid, "InstanceType": "c7a.16xlarge",
+            "State": {"Name": "running"},
+            "LaunchTime": "2026-09-06T02:00:00+00:00",
+            "Tags": [{"Key": "Project", "Value": "final-table-trainer"}]}
+
+
+saved_awsx = wf._awsx
+try:
+    # 14a. Happy path: every enabled region is read, rows carry their region.
+    fake, calls = stub_awsx(instances={"us-east-1": [inst("i-east")]})
+    wf._awsx = fake
+    rows, scope = wf.read_accruing_instances()
+    check(scope["complete"] is True, "all regions readable => scope complete")
+    check(scope["regions"] == ["us-east-1", "us-west-2"],
+          "the scope names the regions read", "got %r" % scope["regions"])
+    check([r["region"] for r in rows] == ["us-east-1"],
+          "the row is stamped with the region it was found in")
+    check(sum(1 for c in calls if c[1] == "describe-instances") == 2,
+          "one describe-instances per region, not one for the account")
+    check(all("--region" in c for c in calls if c[1] == "describe-instances"),
+          "each per-region call passes --region explicitly")
+
+    # 14b. THE ONE THAT MATTERS: no DescribeRegions permission.  The gate must
+    #      still run (fall back to the configured region) and must NOT call the
+    #      result complete -- that flag is the entire difference between an
+    #      honest zero and the defect this ruling fixes.
+    fake, calls = stub_awsx(regions_fail=True)
+    wf._awsx = fake
+    rows, scope = wf.read_accruing_instances()
+    check(rows == [], "fallback still returns a reading")
+    check(scope["complete"] is False,
+          "14b: describe-regions denied => the scope is NOT complete")
+    check("describe-regions unavailable" in scope.get("why", ""),
+          "the fallback says why it is incomplete")
+    check(sum(1 for c in calls if c[1] == "describe-instances") == 1
+          and not any("--region" in c for c in calls
+                      if c[1] == "describe-instances"),
+          "the fallback reads exactly the configured default region")
+
+    # 14c. A partial failure is incomplete too -- and names the region, so the
+    #      next round knows which one to re-read rather than re-deriving it.
+    fake, calls = stub_awsx(regions=("us-east-1", "eu-west-1", "us-west-2"),
+                            fail_regions=("eu-west-1",),
+                            instances={"us-west-2": [inst("i-west")]})
+    wf._awsx = fake
+    rows, scope = wf.read_accruing_instances()
+    check(scope["complete"] is False, "one unreadable region => not complete")
+    check(scope["regions"] == ["us-east-1", "us-west-2"],
+          "only the regions actually read are listed")
+    check("eu-west-1" in scope.get("why", ""),
+          "the unreadable region is named", "got %r" % scope.get("why"))
+    check([r["id"] for r in rows] == ["i-west"],
+          "rows from the readable regions are still returned")
+
+    # 14d. End to end through certify_pending: a denied DescribeRegions plus an
+    #      empty region must never print the word this ruling exists to remove.
+    fake, _ = stub_awsx(regions_fail=True)
+    wf._awsx = fake
+    rows, scope = wf.read_accruing_instances()
+    text = "\n".join(wf.certify_pending(rows, None, scope=scope)[1])
+    check("CERTIFIED WITHIN SCOPE ONLY" in text
+          and "account-wide, read this run" not in text,
+          "14d: the fallback's zero reaches the report as scope-limited")
+finally:
+    wf._awsx = saved_awsx
+
 for line in failures:
     print(line)
 print("%d checks, %d failed" % (checks, len(failures)))
