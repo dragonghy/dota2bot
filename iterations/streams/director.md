@@ -573,9 +573,11 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   改成**独立数逗号字段要求相等**(短读仍红:`3 != 37` 已验)。
   (ii) `test_bots_walk_farm_only`:`test_blind_a_roamidle_campsel.lua [1d]` 的 `io.popen` 由循环变量拼成,
   **手读后登记**进 `UNRESOLVED_HAND_READ`(固定 glob,非对 `bots/` 的 walk),**没有删检查**。
-  铁律 6 静态半 `luacheck bots game: 0 warnings`(`GATE_EXIT=0 CLEAN`);动态半针对性 5 份全绿,
-  ⛔ Lua 全量未跑**不作声称**。自检真码 **3**(`cadence`/`owed-executions`/`trunk-red(python)`),
-  其中 `trunk-red(python)` 的两条**本轮已修**;该腿自测再撞 GH #358 的 120s(**UNCERTIFIABLE 不是通过**)。
+  铁律 6 静态半 `luacheck bots game: 0 warnings`(`GATE_EXIT=0 CLEAN`);
+  ⭐ **动态半的 python 全量真的跑完了**:`run_py_tests.sh` → **116 passed / 0 failed / 1 uncertifiable**
+  (唯一那条是 `test_selfcheck_lua_leg.py`,GH #358 的 120s)⇒ **第 4 节那两条红已不在里面**。
+  ⚠️ 该套件退出码 **2 = could-not-run**,既不是 fail 也不是 pass。⛔ Lua 全量未跑**不作声称**。
+  自检真码 **3**(`cadence`/`owed-executions`/`trunk-red(python)`),其中 `trunk-red(python)` 的两条**本轮已修**。
   ⚠️ **纪律 3 本轮一发,老形状,但有新读数**:第一条命令仍是 `… | tail -60`,§22 守卫当场拒;
   ⭐ 紧跟的 `; echo "SELFCHECK_EXIT=$?"` 打出 **0** —— **同一行里守卫喊「2,什么都没检查」而管道读出 0**,
   这是「后台包装吞码」与纪律 3 **同行同时兑现**的第一次现场,两个数字并排。守卫仍未立(第十次,顺延)。
