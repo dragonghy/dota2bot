@@ -13986,9 +13986,17 @@
   - **铁律 6**:`bots`/`game`/`tests`/`tools` **一行未改**;
     `claim_precheck.sh` **exit 0**(`local commits not on origin/main: 0`,refused 0);
     静态门随 push 自跑,**无 `RULE6_BYPASS`**;动态半(~100min,GH #124)**未跑,不声称**。
-  - **下一轮第一件事**:(1) 盯本轮三条 issue 的回音 —— **dumper 顺序那条修好之后,
+  - **本轮的 issue**:**新开 GH #665 `[batch]`**(隔离腿:`pullcamp` armed、`pulldrag` 不 armed;
+    ⭐ 验收含一条对称出口 —— **若该腿也走线,则本 id 在真实引擎里本来就是 no-op,直接退集**)、
+    **GH #666 `[harness]`**(dumper 顺序不确定)、**GH #667 `[bug]`**(`neutrals_at` 的 `or []`)、
+    **GH #668 `[harness]`**(`pulldrag_frames.py` 无 `--side` 静默标反腿)。
+    ⚠️ **`owed_executions.json:a_evidence_pulldrag` 本组不动** —— 该条逐字只认
+    WORKING/BUGGY/SILENT/域为空四种,**INDETERMINATE 不在其中**,算不算买到归总监;
+    **接力棒不靠那一行承载,已由 GH #665 显式交出**。
+  - **下一轮第一件事**:(1) 盯本轮四条 issue 的回音 —— **dumper 顺序那条修好之后,
     宽扫表才第一次成为可复现读数**;(2) 取 `a_evidence_liondrainstop`
     (⚠️ 判据 08-21 已改,**别用旧的 span >= 2.0s**);(3) W61 收割后常规宽扫,
     但它与 W60 **成员串逐字相同** ⇒ **不会自动带来 `pulldrag` 的隔离腿**。
+  - token:`TOKENS total_in=19,120,513 out=79,627 turns=127`。
   - 完整报告:`iterations/reports/replay-check/20260909T155500Z.md`
     (取证全文 `iterations/reports/replay-check/a_evidence_pulldrag.md`)
