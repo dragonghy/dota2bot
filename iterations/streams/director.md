@@ -554,6 +554,82 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-09T19:07Z**:**GH #673 裁为「两个选项都不选」+ GH #540 的通用半边落地成自检第 11 条腿;
+  而本轮最该被读的不是这两件 —— 是「我给 #673 写的第一条论据是假的,结论却是对的」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0、
+  armed 串 **37 不动**、无 promote / 无退集。取活依据:**章程 2a**(批测台 18:20Z §十一 / GH #673
+  逐字点名总监裁)+ **上一轮「下次触发」① 的第三轮点名**(⛔「第三轮不许再用时效性挤掉 #540」)。
+  ⭐ **两件都做了,而这正是那句自缚要防的形状**:2a 是章程序列不是时效性,
+  **但它长得跟时效性一模一样**,而 #540 已被同一个形状挤掉过两轮。
+  全文 `iterations/reports/director/20260909T190700Z.md`。
+  ⭐⭐⭐ **主轴(#673)**:批测台给的二选一(教普查「可选参数」概念 / 调用点显式传 `nil`)**都不选**。
+  概念**早就有**(判词表六个词里四个就是它:`DEFAULTED`/`UNREAD`/`BRANCHED`/`VENDORED`,
+  `IsInTeamFight`/`RoshanPitProximity`/`MoveBotSafely` 都是手判的一行);
+  **它不自动的理由在这个 helper 自己身上看得见** —— nil 卫兵说的是**被调用体容忍 nil**,
+  从来不是**调用点有意省略**,两者对扫描器逐字节相同。**具体**:若对线消耗那点(`hero_axe:1247`)
+  掉了 `X.axe_IsHungerHarassIdle`,自动规则默默放行而**行为真的会变**(合取项取常真 ⇒
+  接受一个**已有攻击目标**的敌人当替代者 ⇒ 据此否掉一次 recast)⇒ **自动规则对这个 helper
+  头注释写明要防的缺陷是瞎的**。第二条路更差:`f(a,b)` 与 `f(a,b,nil)` **逐字节等价**,
+  改了只是把红换成一句假话。⇒ 落地**一行手判**(`DEFAULTED`,计数 2)。
+  ⛔⛔ **草稿里的第一条论据是假的,已删并留痕**:「自动规则还会扫掉 GH #452 那两条 TEETH」——
+  **不会**,`SetContains`(`return not not set[key]`)与 `NumActionTypeInQueue` 对缺的那个参数
+  **都没有 nil 分支**。发表前去 `bots/FunLib/utils.lua:1219,1260` 读源码才发现。
+  **结论正确、理由虚假的裁定,在下游与一个错裁定长得一样**(与本轮 GH #672 登记的形状同族:
+  门是对的,门给的理由把人指向错的地方)。
+  ⚠️ 方向如实记:那个默认是**放宽**的(否决更容易发生),**良性不是因为方向**,
+  是 `:1215`/`:1267` 两点**没有站点专属条款可丢**;**计数 (2) 就是守卫**(M1 当场红,不是承诺)。
+  ⭐ 证据:变异台 **3 CAUGHT / 0 SURVIVED**(计数 2→3 / 判词换词 / 整行删掉=批测台看到的那个红),
+  control **45 checks `CTL_EXIT=0`**,还原 `cmp` **逐字节相同**。
+  ⭐⭐ **GH #540 通用半边 = `tools/agent/a_evidence_owed.py` + 自检第 11 条腿 `a-evidence-owed`**。
+  规则一句话:**armed id 必须要么有 VERIFY 判决、要么有 `owed_executions.json` 一行点名它;
+  两者皆无 = 发现 exit 3**。⚠️ **失效方向就是全部意义(ask 3)**:什么都不欠的 id
+  **永远不许**读成「没什么可欠的」—— **沉默正是那 40 条的来路**。
+  **选检查器不是省事**:手写行覆盖的是**有人想到的 id**,而缺陷永远在**没人想到的那个**上;
+  armed 集自己在翻(立案日 61 → 今天 37)⇒ 判据钉在 **arm 串**上。
+  ⛔ **`retired` 不算覆盖**(`path_exists` 判产物不判判决,LIMIT 11)——
+  「已退休且仍无 VERIFY 行」正是这条腿存在的理由;让它算数 = 登记表自己结自己的案。
+  ⭐ **实测 `armed 37 / verdict 24 / owed-row 1 / UNOWED 12`** ——
+  ⚠️ **是 12 不是上一轮预估的 11**(预估是散文,这是量出来的),差异登记不抹平。
+  ⭐ 证据:`mutstand_a_evidence_owed.sh` **5 CAUGHT / 0 SURVIVED**
+  (retired 算覆盖 / 读不动的登记表当空表 / 先查覆盖后查判决 / 丢掉 `covers_ids` /
+  **发现照印但不进退出码**),control GREEN、还原后 `git diff` 空;
+  新测试 **25 checks 0 failed**;`selfcheck_exit_attribution` 46 / `selfcheck_py_leg` 26 /
+  `a_evidence_route` 32 / `pending_rulings` 482 **均未连带红**。
+  ⚠️ 写测试时自己中两发(`--route-arg` 过不了 argparse ⇒ **每个合成用例 exit 2**;
+  两棵合成树共用目录**互相覆盖** ⇒ 用例读到没人写过的判决)——**两次都指向工具而错在脚手架**,
+  已逐字留在文件注释里。
+  ⚠️ **已知代价写在前面**:这条腿落地后**每轮每组自检都会 exit 3**,直到那 12 条各有判决或登记行;
+  **这是 ask 3 要的**,所以它每行都带**了结办法**(一行登记)与**路由类**(买法是什么)。
+  ⭐ **#540 不关**:ask 1/3 满足,**ask 2(`done_when` 从入集小节推导)未满足,不假装做了**。
+  ⭐ **`owed_executions.json` 本轮 +0 行,而这是有意的**:腿本身就是那 12 条的常驻举手,
+  再手写 12 行等于把 #540 拒绝掉的设计做一遍;**若下一轮有组读到腿仍不动**,那时才开行(登记「谁去买」)。
+  🩺 巡检:五组全部有产出(batch-desk 18:20Z / hero 17:10Z / strategy 16:51Z / replay-check 15:55Z),
+  **无掉队组**;owner 优先项无 12 轮零推进的升级项。
+  💰 零 AWS 调用,**不作 MTD 新声称**(转载批测台 15:13Z `$71.130`,⚠️ 不含 W59/W60/W61,系统性偏低);
+  ⛔ 未预支跨线许可,W62 发波前批测台**必须当轮现跑 `wave_fence.py`**。三条线未改。
+  ⚠️ **纪律 3 第三十三发,守卫连续第七轮自拒**:第一条命令又是 `… | tail -60`,
+  ⭐ 同一行 `SELFCHECK_EXIT=` 打出 **2**(守卫这次把真码送了出来);
+  **章程第 0 步写的是 `rc.sh`,我没照做** —— 与 09-04 那一发逐字同型,**是习惯不是门**。
+  ⭐ **自检跑完了,真码 `EXIT=3`**(工具末行 `selfcheck worst exit: 3`,`legs run 10`,
+  `FINDINGS: cadence owed-executions trunk-red(python)`、`UNCERTIFIABLE none`,
+  `anchors 6/6 OK`/`FROZEN none`/`promote-atoms OK`);⚠️ 它**开工时起跑,早于本轮编辑落盘** ⇒
+  那条 `trunk-red(python)` **就是本轮修掉的 #673**,读数**不覆盖我改的四个文件,不拿它冒充**。
+  ⛔ **「后台包装吞真码」第十三、十四次**(自检 + python 全套各一次):harness 均报
+  `[exited with code 0]`,而文件里分别是 `EXIT=3` 与 `PY_SUITE_EXIT=2`。守卫顺延。
+  ⭐ **python 全套(改后)`118 passed, 0 failed, 1 uncertifiable`** ——
+  `0 failed` **就是 #673 修掉的证据**(批测台上一轮同一命令是 `116 / 1 failed / 1`,
+  failed 那条正是 `test_call_arity_census.py`)。
+  ⛔ `UNCERTIFIABLE tests/test_selfcheck_lua_leg.py` 如实登记:**GH #358 的 120s 第三次吃掉整条腿**
+  (`87 file(s) … in 120.1s`),⚠️ **而它恰好是唯一切我改过的 wrapper 的测试** ——
+  我的插入点在两个切片锚**之前**,边界一字未动,**正面旁证是 `test_selfcheck_py_leg.py` 通过**;
+  **结构完好有旁证,但那条腿本身这轮没人看过。**
+  ⛔ Lua 全量未跑不声称(`bots/`+`game/` 一行未改)。
+  **下次触发**:①⭐⭐⭐批测台交棒 2(W61 四粒种子 10208/10212/10390/10526 退不退回可用窗口,
+  **卡着 W62 选种,顺延第一轮**)②⭐⭐GH #672(`reclaim_blind.py` 假理由行,三态化 + 验收已给)
+  ③⭐⭐`wave_reachable_delta.py`(闸 (ii) 可执行体,**顺延第二轮**)④⭐裁 `PROMOTE_BAR_PAIRED_SEEDS =`
+  ⑤⭐核 `a-evidence-owed` 的 UNOWED 12 有没有在降 ⑥`gh454_cost_constants_rerule`
+  ⑦backlog 101/102/103、「后台包装吞真码」守卫(第十三次)、GH #358 要人裁
+  ⑧存量:账户级预算等 owner / GH #523 / patch 缺口 P3 / `hero_domain_scan` 九份 /「退集·promote 五处同步」。
 - **2026-09-09T16:03Z**:**批测台交棒 1+2 一次裁完(并池 key 定名 / 闸 (ii) 改判);而本轮最该被读的不是那两条裁定 —— 是「它们是同一个事实读两遍,方向相反,而闸 (ii) 的旧措辞只读了让钱白花的那一遍」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0、
   armed 串 **37 不动**、无 promote / 无退集。取活依据是**章程 2b/2d** + 批测台 15:13Z §十一 交棒 1、2

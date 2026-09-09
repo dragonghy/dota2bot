@@ -270,6 +270,36 @@ else
     unchecked 'the owed-execution check'
 fi
 
+# [director 2026-09-09, GH #540] The leg above reads the registry and asks "is
+# anything in it still owed".  This one asks the question the registry CANNOT
+# be asked, because the row was never opened: for every ARMED id, is anything
+# anywhere raising a hand for its condition (a)?
+#
+# Founding measurement (GH #540, 2026-09-05): 61 armed ids, 21 with a
+# machine-readable VERIFY line -- 40 with nothing.  The diagnosis is structural
+# rather than lazy.  Iron rule 2.5 delivers a RULING to the field the ruled
+# party reads; a condition-(a) obligation is not a ruling but an attachment of
+# "admission approved", and the `queue.json` row carrying the admission belongs
+# to the REQUESTING stream and resolves the instant admission is granted.  The
+# replay desk is never that row's addressee, so the obligation had no row it
+# could be written into -- GH #332 / #413's filing sentence a third time.
+#
+# So the home is not a fourth copy of the obligation, it is the arm string
+# itself: whatever is armed when this runs is what gets asked about, including
+# ids admitted after this leg was written.  That is why it is a checker and not
+# the 40 hand-written rows GH #540 also offered -- rows cover the ids someone
+# thought of, and the defect is always found on the id nobody did.
+#
+# Cheap: one JSON file plus the route census's `--json`, no wave, no AWS.
+sc_leg 'a-evidence-owed'
+printf '\n=== condition-(a) obligations (armed ids with nobody asking) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/a_evidence_owed.py
+    note $?
+else
+    unchecked 'the condition-(a) obligation check'
+fi
+
 # Added 2026-08-28T19:xxZ (strategy).  The leg above watches ONE end of the
 # delivery path -- a request nobody ruled.  The other end had nothing on it:
 # a stream still recording "等总监裁 `X` 入集(仍挂着)" after that ruling

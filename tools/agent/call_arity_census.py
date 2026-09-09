@@ -223,6 +223,60 @@ ALLOWLIST = {
     ("bots/mode_roam_generic.lua", "J.Utils.MoveBotSafely", "UNDER", 1, 2):
         (1, "DEFAULTED: targetPos nil -> bot location + RandomVector(260), "
             "substituted on GetSafeDestination's first line"),
+
+    # Landed 2026-09-08 with the soak candidate 'axebhrecast'; went red on
+    # 2026-09-09 (batch-desk 18:20Z §十一, the first round this leg finished --
+    # the earlier rounds never ran it, so nobody had read the line).
+    # THE RULING (director, 2026-09-09).  Batch-desk offered two repairs --
+    # teach the census an "optional parameter" concept, or change the call
+    # sites -- and the answer is NEITHER.
+    #   (1) The concept already exists and is spelled DEFAULTED/UNREAD/
+    #       BRANCHED/VENDORED.  What it deliberately is NOT is automatic, and
+    #       the reason is visible in THIS helper: a nil guard says the CALLEE
+    #       tolerates nil, never that the CALL SITE meant to omit.  Those two
+    #       are byte-identical to a scanner.  Concretely -- if the lane-harass
+    #       site at hero_axe:1247 dropped its `X.axe_IsHungerHarassIdle`
+    #       argument, the proposed auto-rule would bless the omission in
+    #       silence, and the behaviour would change: the conjunct defaults to
+    #       TRUE, so the alternative test would accept an enemy who already has
+    #       an attack target -- a candidate that site's own acceptance terms
+    #       reject -- and veto a recast on the strength of it.  The auto-rule is
+    #       blind to exactly the defect this helper's header was written to
+    #       avoid.
+    #       ⚠️ Batch-desk's cost objection is real and is accepted, not waved
+    #       away: every new optional parameter now costs a hand verdict.  The
+    #       price is one row per new PARAMETER (not per call site), it is three
+    #       lines, and it buys the judgement above.
+    #       ⛔ Not an argument, and struck from an earlier draft of this note
+    #       because it was FALSE: that the auto-rule would also sweep the
+    #       GH #452 TEETH rows.  It would not -- `____exports.SetContains`
+    #       (`return not not set[key]`) and `NumActionTypeInQueue` have no nil
+    #       branch on the missing parameter, so both stay findings under it.
+    #       Checked in `bots/FunLib/utils.lua:1219,1260` before this row landed.
+    #   (2) Passing a literal `nil` third argument at the two sites is
+    #       byte-for-byte the same Lua.  It would launder the row past the
+    #       census while changing no behaviour -- a worse outcome than the red,
+    #       because the next reader would believe a judgement had been made.
+    # THE READING.  X.axe_IsBattleHungerFresh(hTarget, tCandidates, fExtra)
+    # forwards fExtra to X.axe_HasHungerAlternative, whose only read of it is
+    # `( fExtra == nil or fExtra( npcOther ) )` -- so nil makes that conjunct
+    # the constant true.  Note the direction honestly: the default is
+    # PERMISSIVE (the alternative test gets looser, so the recast veto fires
+    # more often), not conservative.  What makes it benign is not the
+    # direction, it is that the two 2-argument sites have no site-specific
+    # acceptance term to lose: hero_axe:1215 (teamfight, over
+    # nInBonusEnemyList) and hero_axe:1267 (retreat, over nInRangeEnemyList)
+    # apply only J.IsValid/CanCastOnNonMagicImmune/CanCastOnTargetAdvanced,
+    # which the alternative test already applies to the alternative itself.
+    # The one site that DOES carry an extra conjunct -- the lane-harass loop at
+    # hero_axe:1247, `X.axe_IsHungerHarassIdle` -- passes it, and is exact.
+    # !! What would make this row wrong: a THIRD two-argument site, at a loop
+    # that does carry its own acceptance term.  The count (2) is what catches
+    # that, not this sentence.
+    ("bots/BotLib/hero_axe.lua", "X.axe_IsBattleHungerFresh", "UNDER", 2, 3):
+        (2, "DEFAULTED: fExtra nil -> the extra conjunct is constant true, at "
+            "`fExtra == nil or fExtra( npcOther )`; both sites carry no "
+            "site-specific term to pass"),
     # The tree's only OVER member, and it was invisible for as long as the
     # resolver keyed on `____exports.CMLaneAssignment` while the call site
     # writes `CaptainMode.CMLaneAssignment`.  `userSwitchedRole` is a
