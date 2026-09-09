@@ -27,6 +27,54 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0HRREACH. **【2026-09-09T08:02Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第三轮 (i));
+   认领依据 = 工作流第 1 步扫到的**新** `[strategy]` issue **一条也没有** ⇒ 取「下一格」,
+   **而逐条遵守「下一格」的结果是换族**(见 ⭐)。产出:新 gated id **`hrreach`**
+   (`bots/FunLib/jmz_func.lua` 的 `J.GetLaneHarassResponse` 的 `'fire'` 分支,turbo-only)、
+   `tests/_lanekill_domain_sweep.lua` **扩列**(**没有**新建第六个全语料 sweep)、
+   `tests/test_hrreach_guard.lua`(**14/14**)、`tools/agent/mutstand_hrreach.sh`
+   (**10 腿:9 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
+   `state.json:hrreach_20260909`;报告 `iterations/reports/strategy/20260909T080202Z.md`;**issue GH #657**;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 本轮先做的事是「不做上一轮点名的那两处」,而那是执行不是绕过**:0DRAGNOLANE「下一格」第 (2) 条
+   给该族剩下两处各挂了**明确前置并写明不许绕过** ——(A) 等 lane 几何语料、(B) 等一个非零 flip 域
+   (`frontamt_differs` 仍 **0/1021**);**两个前置本轮都没到位**,第 (4) 条又封死周边地面**并明写
+   「不要为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆」** ⇒ 在章程范围内**换族到「对线期策略」**。
+   **⭐⭐ 缺陷:选择集比它喂的那个动作宽,而它是替换 Think 里最先跑、无条件返回的那一格。**
+   `J.GetLaneHarassResponse` 收 **1100u 探测半径**内的敌人取血最低者返回,唯一调用方
+   (`mode_laning_generic.lua` 战斗响应地板)立刻花成 `bot:Action_AttackUnit(x, true)`,
+   **引擎服务打不到的攻击命令的方式是走过去** ⇒ 探测半径**静悄悄地**成了追击半径。
+   **⭐⭐⭐ 这是修复不是新政策**:正确约定**已在这个 helper 自己的调用方里出厂**
+   (`bot:GetNearbyHeroes( botAttackRange, ... )`)—— **一个动作两套约定,松的那套占着优先权**。
+   **读数**:出厂 **12 nil + 18 back + 54 fire = 84 闭合**;armed **61 + 18 + 5 = 84 同样闭合**;
+   `hr_fire_d_gt900` **8** / `hr_fire_d_max_u` **1078**(证人含 **175 射程近战 Axe**);
+   `hr_closes` **49**、禁止方向 `hr_opens` **0** / `hr_back_moved` **0**。
+   ⛔ **发波前先说(GH #622)**:**没有任何 fixture 带 `attack_range`** ⇒ `GetAttackRange` 每帧答
+   **常数 150**(`hr_range_stub` **84/84**),**GH #656 的形状**;49 里 **41** 是桩在说话,
+   **只有 `hr_closes_universal` 8 扛得住真射程 —— 引用 8,不要引用 49**。
+   ⛔⛔ **同轮量到、故意不修的第二个缺陷**:同一 helper **数敌人到 1100、数队友到 900**,
+   `hr_asym_flips` **2**;第 5 节用**源码钉**把定价钉在它描述的代码上(M12 棘轮)。
+   **变异台头条**:(a) **M5 是两路核对存在的理由** —— `GetAttackRange()` 换成字面量 1100 后
+   **计数恒等式 `hr_closes == hr_fire − hr2_fire` 依然成立(0 == 54−54)**,只有
+   `hr_fire_d_gt900`(出厂驱动)== `hr_closes_universal`(差分)这条**两路**核对看得见;
+   (b) **M7 计数盲靠一个同轮先补的源码钉才抓得住**(每帧都是射程桩 ⇒ 无条件 bump 后 manifest 逐位不变);
+   (c) **M9 零值列用极性而非改名**(`hr_opens` 干净树读 0,改名是等价变异体);
+   (d) **M8 第一次跑时台子自己 abort**(`ANCHOR AMBIGUOUS (2 hits)`)—— **GH #550 的纪律按设计生效,
+   这不是失败**;一行锚点不够用,改两行后全绿。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是 `bots/` 行为改动**;**首选**本轮已定价、已用源码钉钉住、**故意留着**的那一处 ——
+   `J.GetLaneHarassResponse` 的**两半径寡不敌众判断**(`hr_asym_flips` **2**)。定价**已在案**,
+   不必重走语料;要做的是给它自己的 id 和自己的差分列。
+   ⚠️ 动它会让 `tests/test_hrreach_guard.lua` 第 5 节**打红 —— 那是设计好的**:先读那条消息,
+   再把第 5 节**改写成对新代码的描述**,**不要**把断言删掉了事;
+   (2) ⭐ **不要**碰 `hrreach` 自己的射程守卫去「顺便」把域做大 —— **域小是语料的事(射程桩),
+   不是守卫的事**;先买第 (3) 条那条语料;
+   (3) 语料请求(与 **GH #656** 同族,已写进 #657):让 `tests/mock/replay_fixture.lua` 或 dumper
+   投影**每个英雄的 `GetAttackRange()`**;这一条**同时**解锁本 id 从 8 帧升到真实域与 #656 点名的
+   另外 13 个 id。另两条旧的仍挂着:'撤退:3' 深带臂那一帧、`nosrc_attr_only` 那一帧;
+   (4) ⛔ **仍然不要**动 lane 守卫族剩下的两处(前置未到位)、**不要**新建第六个全语料 sweep、
+   **不要**回 `field_hold_needs_magnitude` 一族、**不要**为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆。】**
+
 0DRAGNOLANE. **【2026-09-09T04:52Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第二轮 (i));
    认领依据 = 上一轮「下一格」第 (1)(2) 条**逐条执行** + **OWNER_PRIORITIES P1**。工作流第 1 步扫到的
    新 `[strategy]` issue **一条也没有**。产出:新 gated id **`dragnolane`**(`bots/FunLib/jmz_func.lua`
@@ -7026,6 +7074,55 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-09T08:02Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第三轮 (i);认领依据 =
+  工作流第 1 步扫到的**新** `[strategy]` issue **一条也没有**,于是取「下一格」——
+  **而逐条遵守「下一格」的结果是换族**)。
+  ⭐ **本轮先做的事是「不做上一轮点名的那两处」,那是执行不是绕过**:0DRAGNOLANE「下一格」第 (2) 条
+  给该族剩下两处各挂了一个**明确前置并写明不许绕过** ——(A) 等语料(lane 几何投影)、
+  (B) 等一个非零 flip 域(`frontamt_differs` 仍 0/1021);**两个前置本轮都没到位**,而第 (4) 条
+  又封死了周边地面**并明写「不要为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆」**。⇒ 在章程范围里
+  **换族到「对线期策略」**,并**用已存在的 `tests/_lanekill_domain_sweep.lua` 扩列**(没有新建 sweep)。
+  ⭐⭐ **缺陷:选择集比它喂的那个动作宽,而它是替换 Think 里最先跑、无条件返回的那一格。**
+  `J.GetLaneHarassResponse` 把 **1100u 探测半径**内的敌人收进 `tValid` 取血最低者返回,
+  唯一调用方(`mode_laning_generic.lua` 战斗响应地板)立刻把它花成 `bot:Action_AttackUnit(x, true)`,
+  **而引擎服务一条打不到的攻击命令的方式是走过去** ⇒「我是不是在被骚扰」的半径**静悄悄地**
+  成了「我会追多远」的半径,且这一格跑在补刀/反补**之前**。
+  ⭐⭐⭐ **这是修复不是新政策**:正确的约定**已经在这个 helper 自己的调用方里出厂了** ——
+  `mode_laning_generic.lua` 的辅助骚扰块做同一件事用的是 `bot:GetNearbyHeroes( botAttackRange, ... )`。
+  **一个动作两套约定,松的那套占着优先权。**(同型:GH #475 `campbind`、`midsupfar`。)
+  落地 gated id **`hrreach`**(turbo-only):`'fire'` 分支的候选集收窄为**本机攻击距离之内**的,
+  一个都没有就 `return nil` 让出厂补刀/反补主体接管;**探测半径 1100 与 `'back'` 分支一字未动**。
+  **读数**(110 fixtures / **84** 进入帧):出厂 **12 nil + 18 back + 54 fire = 84 闭合**,
+  armed **61 + 18 + 5 = 84 同样闭合**;`hr_fire_d_gt900` **8**、`hr_fire_d_max_u` **1078**
+  (证人含 **175 射程的近战 Axe**,`f_260820_043120_viper_defend_paired`);
+  `hr_closes` **49**,禁止方向 `hr_opens` **0** / `hr_back_moved` **0**(按构造:候选集是真子集)。
+  ⛔ **发波前先说(GH #622,提前问):49 里大部分是关于加载器的陈述。** **没有任何 fixture 带
+  `attack_range`** ⇒ `GetAttackRange` 每帧答**常数 150**(`hr_range_stub` **84/84**、`hr_range_live` **0**),
+  这正是**当天早上刚立的 GH #656** 的形状;49 里 **41** 是桩在说话,**只有 `hr_closes_universal` 8
+  扛得住真射程**。**引用 8,不要引用 49。**
+  ⭐⭐⭐⭐ **那个 8 被两条独立的路核对过**:`hr_fire_d_gt900` 出自**出厂驱动**的目标距离、
+  `hr_closes_universal` 出自**差分**,第 3 节断言相等。**M5 变异体专为此设**:把 `GetAttackRange()`
+  换成字面量 1100 后**计数恒等式 `hr_closes == hr_fire − hr2_fire` 依然成立(0 == 54−54)**,
+  只有两路核对能把「按射程判」和「按什么都不判」分开(现场:`says 8, differential says 0`)。
+  ⛔⛔ **同轮量到、故意不修的第二个缺陷**:同一 helper **数敌人到 1100、数队友到 900**
+  ⇒ 寡不敌众判断在两个不同半径上比人口;`hr_asym_enemy_band` **12** / `hr_asym_ally_band` **5** /
+  `hr_asym_flips` **2**。**该有自己的轮次和自己的 id**(lanefix 教训),第 5 节用**源码钉**把定价
+  钉在它描述的代码上(M12 棘轮),**M8 变异体现场验证了它**。
+  `tools/agent/mutstand_hrreach.sh` **10 腿全绿**(M3 顺序盲 / **M5 两路核对** / M7 计数盲**先补钉才抓得住** /
+  M8 棘轮 / M9 零值列**用极性而非改名** / M10 控制项 SURVIVED)。**M8 第一次跑时台子自己 abort**
+  (`ANCHOR AMBIGUOUS (2 hits)`)—— GH #550 纪律按设计生效,改两行锚点后重跑全绿。
+  报告 `iterations/reports/strategy/20260909T080202Z.md`;issue **GH #657**;下一格见 backlog 0HRREACH。
+  **铁律 6**:静态门 `luacheck_gate.sh` **EXIT=0**(0 警告);动态全套跑不完(GH #124),逐文件跑了
+  `test_hrreach_guard` **14/14**、`gated_helper_nesting_census` **10/10**、`gate_claim_consistency` **16/16**、
+  `lanekill_domain_census` **6/6**,另跑**自检那 86 个 tagged 检测器 `ran=86 red=0`**(最终树)。
+  **没有用 `RULE6_BYPASS`。**
+  开工自检:第一次被脚本自己拒(`REFUSED: stdout is a PIPE`,evidence discipline 3 第 **7** 次现场生效);
+  第二次**被我自己的 `timeout 400` 砍在最后一条腿上读回 `EXIT=124` —— 那不是通过**,已用 1500s 重跑到底:
+  **`worst exit 3` / `legs run 10` / findings = cadence、owed-executions、trunk-red(python) /
+  UNCERTIFIABLE none**。两条 python 红**逐条核实不是本轮引入**:`test_bots_walk_farm_only.py` 点名
+  `tests/test_blind_a_roamidle_campsel.lua`、`test_carrier_terms.py` 点名 `test_set.md` 第 2 行,
+  **两个文件本轮都没碰过**;改 `state.json` 后后者**逐字复现同一条 FAIL**,那本身就是正面证据。
 
 - 2026-09-09T04:52Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第二轮 (i);认领依据 =
   上一轮「下一格」第 (1)(2) 条逐条执行 + **OWNER_PRIORITIES P1**。工作流第 1 步扫到的新

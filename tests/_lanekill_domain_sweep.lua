@@ -86,6 +86,21 @@ G.L5_CORE_HP = l5 and tonumber(l5:match('GetHP%( a %) >= (0%.%d+)'))
 -- The laning-phase floor both helpers sit behind (turbo leg, c2 unarmed).
 local lane = block(src, 'function J.IsInLaningPhase()')
 G.LANE_FLOOR = lane and tonumber(lane:match('bTurbo and (%d+) %* 60 or'))
+-- J.GetLaneHarassResponse's own numbers, parsed out of the shipped source in
+-- the order it states them (the M13 lesson: move a number in jmz_func and this
+-- census moves with it instead of quietly measuring the old one).
+local hr = block(src, 'function J.GetLaneHarassResponse( bot )')
+G.HR = hr and 1 or 0
+G.HR_DMG_WIN = hr and tonumber(hr:match('WasRecentlyDamagedByAnyHero%( ([%d%.]+) %)'))
+G.HR_ENEMY_R = hr and tonumber(hr:match('GetNearbyHeroes%( bot, (%d+), true'))
+G.HR_ALLY_R = hr and tonumber(hr:match('GetNearbyHeroes%( bot, (%d+), false'))
+G.HR_STEP = hr and tonumber(hr:match('/ n %* (%d+),'))
+-- DECLARED, not parsed and not measured: the longest attack range any hero in
+-- this patch can reach (Sniper, 550 base + Take Aim + talent).  It is the bound
+-- that makes `hr_fire_d_gt900` a statement about Dota rather than about
+-- tests/mock/bot_api.lua's 150-unit GetAttackRange default.  It is an argument,
+-- so it is labelled as one; every other G row here is parsed from source.
+G.HR_UNIVERSAL_REACH_DECLARED = 900
 
 local gk = {}
 for k in pairs(G) do gk[#gk + 1] = k end
@@ -123,7 +138,21 @@ for _, k in ipairs({ 'fixtures', 'live', 'lane', 'lane_core', 'lane_sup',
     'l1_est_blind', 'l1_est_live', 'l5_est_blind', 'l5_est_live',
     -- The SAME engine call, read in the other direction on the SAME frames, so
     -- "the instrument is directional" is measured here and not merely argued.
-    'l1_incoming_live', 'l5_incoming_live' }) do
+    'l1_incoming_live', 'l5_incoming_live',
+    -- J.GetLaneHarassResponse funnel, in the order the helper walks it.
+    'hr_lane', 'hr_dmg2', 'hr_dmg2_lane', 'hr_valid_zero', 'hr_valid_nonzero',
+    'hr_back', 'hr_fire', 'hr_fire_lane', 'hr_nil', 'hr_raised',
+    -- How far the 'fire' handle is from the bot that is ordered to attack it.
+    'hr_fire_d_gt900', 'hr_fire_d_gt700', 'hr_fire_d_gt_stubreach',
+    'hr_fire_d_max_u',
+    -- Whether this corpus can say what the subject's reach is at all.
+    'hr_range_stub', 'hr_range_live',
+    -- The two-radius parity test (enemies to 1100, allies to 900).
+    'hr_asym_ally_band', 'hr_asym_enemy_band', 'hr_asym_flips',
+    -- 'hrreach' differential (same function, second drive, id armed).
+    'hr2_fire', 'hr2_back', 'hr2_nil', 'hr2_raised',
+    'hr_closes', 'hr_closes_universal', 'hr_closes_stubonly',
+    'hr_opens', 'hr_back_moved', 'hr_target_swapped' }) do
     rawset(c, k, 0)
 end
 
@@ -332,6 +361,148 @@ for _, path in ipairs(fixture_files()) do
                             armed = {}
                             local oks, stgt = pcall(J.ShouldSupportComboKill, bot)
                             if oks and stgt ~= nil then bump('l5_shipped_fires') end
+                        end
+                    end
+
+                    -- ---- J.GetLaneHarassResponse (2026-09-09 column set).
+                    -- Priced OUTSIDE `if bLane`: unlike the two helpers above,
+                    -- this one carries no laning gate of its own -- the laning
+                    -- phase is a property of its only CALLER, so pricing it
+                    -- inside bLane would report the caller's domain as the
+                    -- helper's. `hr_lane` re-splits it afterwards.
+                    armed = {}
+                    if bLane then bump('hr_lane') end
+                    if bot:WasRecentlyDamagedByAnyHero(G.HR_DMG_WIN or 2.0) then
+                        bump('hr_dmg2')
+                        if bLane then bump('hr_dmg2_lane') end
+
+                        -- The bot's OWN reach, and whether this corpus can say
+                        -- what it is.  tests/mock/bot_api.lua defaults
+                        -- GetAttackRange to 150 and NO fixture carries an
+                        -- attack_range field, so on this corpus the answer is a
+                        -- CONSTANT STUB, not ground truth (GH #656's shape).
+                        -- Every bucket below that compares against it is
+                        -- therefore a statement about the loader; the
+                        -- `_gt900` / `_gt700` buckets are the ones that are not
+                        -- (see the G_HR_UNIVERSAL_REACH note).
+                        local nMyReach = bot:GetAttackRange()
+                        if nMyReach == 150 then bump('hr_range_stub')
+                        else bump('hr_range_live') end
+
+                        local tE = J.GetNearbyHeroes(bot, G.HR_ENEMY_R or 1100,
+                            true, BOT_MODE_NONE) or {}
+                        local tValid = {}
+                        for _, e in pairs(tE) do
+                            if J.IsValidHero(e) and not J.IsSuspiciousIllusion(e)
+                                and J.CanBeAttacked(e) then
+                                tValid[#tValid + 1] = e
+                            end
+                        end
+                        if #tValid == 0 then
+                            bump('hr_valid_zero')
+                        else
+                            bump('hr_valid_nonzero')
+                            -- The parity test the helper runs, and the SAME
+                            -- test with both populations read at one radius.
+                            -- The helper counts enemies to HR_ENEMY_R and
+                            -- allies to HR_ALLY_R; when those differ, an enemy
+                            -- in the band counts as a harasser while an ally
+                            -- standing at the identical distance does not.
+                            local tA9 = J.GetNearbyHeroes(bot, G.HR_ALLY_R or 900,
+                                false, BOT_MODE_NONE) or {}
+                            local tA11 = J.GetNearbyHeroes(bot, G.HR_ENEMY_R or 1100,
+                                false, BOT_MODE_NONE) or {}
+                            local bOutnumShipped = #tValid > (1 + #tA9)
+                            local bOutnumEven = #tValid > (1 + #tA11)
+                            if #tA11 > #tA9 then bump('hr_asym_ally_band') end
+                            if bOutnumShipped ~= bOutnumEven then
+                                bump('hr_asym_flips')
+                                out:write(string.format('F %s %s hr_asym_flips\n',
+                                    short, u.name))
+                            end
+                            for _, e in pairs(tValid) do
+                                if GetUnitToUnitDistance(bot, e) > (G.HR_ALLY_R or 900) then
+                                    bump('hr_asym_enemy_band')
+                                    break
+                                end
+                            end
+                        end
+
+                        local okh, sResp, xResp = pcall(J.GetLaneHarassResponse, bot)
+                        if not okh then
+                            bump('hr_raised')
+                        elseif sResp == 'back' then
+                            bump('hr_back')
+                        elseif sResp == 'fire' then
+                            bump('hr_fire')
+                            if bLane then bump('hr_fire_lane') end
+                            -- THE READING THIS COLUMN SET EXISTS FOR.  The
+                            -- caller turns this handle into
+                            -- `bot:Action_AttackUnit(x, true)`, an order the
+                            -- engine serves by WALKING to the target when it is
+                            -- out of reach.  So the distance of the returned
+                            -- target is the distance the bot is being sent.
+                            local d = GetUnitToUnitDistance(bot, xResp)
+                            if d > c.hr_fire_d_max_u then
+                                rawset(c, 'hr_fire_d_max_u', math.floor(d))
+                            end
+                            -- LOADER-INDEPENDENT.  No hero in this patch
+                            -- attacks past ~900 (Sniper is the longest at
+                            -- 550 base + Take Aim + talent), so a target beyond
+                            -- G_HR_UNIVERSAL_REACH is out of reach whatever the
+                            -- subject's real attack range is -- these two
+                            -- buckets survive the GetAttackRange stub.
+                            if d > 900 then bump('hr_fire_d_gt900') end
+                            if d > 700 then bump('hr_fire_d_gt700') end
+                            -- LOADER-DEPENDENT, and named so: 150 is the stub.
+                            if d > nMyReach then bump('hr_fire_d_gt_stubreach') end
+                            if bLane and d > 900 then
+                                out:write(string.format('F %s %s hr_fire_far_lane\n',
+                                    short, u.name))
+                            end
+                        else
+                            bump('hr_nil')
+                        end
+
+                        -- DIFFERENTIAL: the same shipped function driven a
+                        -- second time with 'hrreach' armed. Both drives close
+                        -- over the whole entered population, so a zero column
+                        -- can never be confused with a column that never ran.
+                        armed = { hrreach = true }
+                        local ok2, s2, x2 = pcall(J.GetLaneHarassResponse, bot)
+                        armed = {}
+                        if not ok2 then
+                            bump('hr2_raised')
+                        elseif s2 == 'fire' then
+                            bump('hr2_fire')
+                        elseif s2 == 'back' then
+                            bump('hr2_back')
+                        else
+                            bump('hr2_nil')
+                        end
+                        -- The two FORBIDDEN directions and the one permitted
+                        -- one. `hr_opens` and `hr_back_moved` must read 0 on a
+                        -- clean tree: the armed candidate set is a strict
+                        -- subset, so it can only delete a 'fire'.
+                        if okh and ok2 then
+                            if sResp ~= 'fire' and s2 == 'fire' then
+                                bump('hr_opens')
+                            end
+                            if (sResp == 'back') ~= (s2 == 'back') then
+                                bump('hr_back_moved')
+                            end
+                            if sResp == 'fire' and s2 ~= 'fire' then
+                                bump('hr_closes')
+                                -- Split the kill by WHY, because on this corpus
+                                -- most of it is the 150 stub talking. Only the
+                                -- >900 half survives a real GetAttackRange.
+                                local dk = GetUnitToUnitDistance(bot, xResp)
+                                if dk > 900 then bump('hr_closes_universal')
+                                else bump('hr_closes_stubonly') end
+                            end
+                            if sResp == 'fire' and s2 == 'fire' and xResp ~= x2 then
+                                bump('hr_target_swapped')
+                            end
                         end
                     end
                 end

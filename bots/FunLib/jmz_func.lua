@@ -9763,8 +9763,11 @@ end
 --   * outnumbered at my position -> ('back', a 420u step toward home):
 --     make space instead of tanking the poke pocket,
 --   * else -> ('fire', the weakest harasser): return fire like native does.
--- Pure helper (no gate inside): only reachable from the armed-only Think
--- bodies, so shipped behavior is unchanged.
+-- Only reachable from the armed-only Think bodies, so shipped behavior is
+-- unchanged. NO LONGER a gate-free helper: the 'fire' branch carries the
+-- soak candidate 'hrreach' (2026-09-09), which narrows that branch's candidate
+-- set to harassers actually in attack reach. Unarmed, the first conjunct is
+-- false and the branch below returns the shipped answer byte for byte.
 function J.GetLaneHarassResponse( bot )
 	if bot == nil or not bot:IsAlive() then return nil end
 	if not bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end
@@ -9789,6 +9792,53 @@ function J.GetLaneHarassResponse( bot )
 		local n = math.sqrt( dx * dx + dy * dy )
 		if n < 1 then return nil end
 		return 'back', Vector( vB.x + dx / n * 420, vB.y + dy / n * 420, vB.z )
+	end
+
+	-- Soak candidate 'hrreach' (2026-09-09). THE SEARCH SET IS WIDER THAN THE
+	-- ACTION IT FEEDS. `tValid` is everything inside the 1100u DETECTION
+	-- radius, but the caller spends this handle as
+	-- `bot:Action_AttackUnit( x, true )` -- an order the engine serves by
+	-- WALKING to the target when it is out of reach. So the distance of the
+	-- returned harasser is the distance the bot is sent, on the code path that
+	-- runs BEFORE farming and returns unconditionally.
+	--
+	-- The correct scoping for this exact action already ships thirty lines
+	-- into this helper's own caller: mode_laning_generic.lua's harass block
+	-- searches `bot:GetNearbyHeroes( botAttackRange, ... )` and then attacks.
+	-- Two conventions for one action, and the loose one sits on the path with
+	-- priority over everything. This is not a new policy -- it is that
+	-- convention, applied where it was missing.
+	--
+	-- Measured (tests/_lanekill_domain_sweep.lua, 110 fixtures): 84 frames
+	-- reach this helper, 54 return 'fire', and on 8 of those the handed-back
+	-- target is beyond 900u -- out of attack reach for EVERY hero in the patch,
+	-- whatever the subject's real range is (max seen 1078u; witnesses include
+	-- Axe, a 175-reach melee, in f_260820_043120_viper_defend_paired). Those 8
+	-- are the loader-independent floor of the domain: this corpus carries no
+	-- attack_range field at all, so GetAttackRange answers a constant 150 stub
+	-- on 84/84 frames (GH #656's shape) and any bucket compared against it
+	-- measures the loader, not Dota.
+	--
+	-- Armed, pick the weakest harasser AMONG THOSE IN REACH; if none is, return
+	-- nil so the caller's shipped last-hit/deny body runs instead of walking
+	-- the bot at someone it cannot hit. Direction is one-way by construction:
+	-- the candidate set is a strict subset, so armed can only DELETE a 'fire',
+	-- never create one, never alter a 'back', and never change which frames
+	-- enter the helper. Detection radius is deliberately untouched -- being
+	-- poked from 1100u is still what makes this a harass response; it is only
+	-- the answer "charge them" that is being narrowed.
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'hrreach' )
+	then
+		local hInReach, nInReach = nil, math.huge
+		local nMyReach = bot:GetAttackRange()
+		for _, e in pairs( tValid ) do
+			if GetUnitToUnitDistance( bot, e ) <= nMyReach
+			and e:GetHealth() < nInReach then
+				nInReach, hInReach = e:GetHealth(), e
+			end
+		end
+		if hInReach == nil then return nil end
+		return 'fire', hInReach
 	end
 
 	local hWeakest, nWeakest = nil, math.huge
