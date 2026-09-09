@@ -590,9 +590,19 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   上轮查过是工具侧的洞,下轮再看)。
   ⚠️ **纪律 3 第三十二发,老形状**:第一条命令又是 `… | tail -60`,守卫**连续第六轮**当场自拒;
   ⭐ 同一行 `; echo "$?"` 打出 **0** —— 守卫喊「2,什么都没检查」而管道读出 0,两个数字并排。
-  ⛔ **自检 worst exit 本轮读不到、不声称**(重定向那次被移到后台,收尾时仍停在最后一条 Lua 腿);
-  已读到 `cadence` 2 findings 与 `trunk-red(python)` **`UNCERTIFIABLE — 9 checks did not run; this is NOT a pass`**
-  (GH #358 的 120s,**第二次**吃掉整条腿 ⇒ 顺延理由在变弱)。⛔ Lua 全量未跑不声称。
+  ⭐ **自检收尾时跑完了,真码 `EXIT=3`**(`legs run 10`,工具末行 `selfcheck worst exit: 3`,两个数字一致):
+  `FINDINGS` = `cadence` / `owed-executions`(⚠️ 后者里是**本轮自己新开的两行**);
+  `UNCERTIFIABLE` = `trunk-red(python)`(GH #358 的 120s,**第二次**吃掉整条腿 ⇒ 顺延理由在变弱,
+  工具自己写明 `it is NOT evidence that trunk is red`);Lua 检测器腿 **87/0(FAST SUBSET)**。
+  ⛔ **「后台包装吞真码」第十二次兑现**:harness 报 `[exited with code 0]`,而文件首行 `EXIT=3`、
+  工具末行 `3` —— **三个数字并排,两个真一个假**。守卫仍未立,顺延。⛔ Lua 全量未跑不声称。
+  ⭐ 铁律 6 静态门在**两次 push 上各跑一次**,均 `0 warnings / GATE_EXIT=0 CLEAN`,**无 `RULE6_BYPASS`**;
+  `HEAD:main` 首次 rejected(录像组 `b29e826f` 抢先),`pull --rebase` 干净(1/1),
+  ⭐ **rebase 后重验事实底座**(臂串仍 37/335/`b525d51d…`、`hrparity` 仍缺席、§GH 恰一节、owed 33 行)再 push ⇒ `b29e826f..96b89de7`。
+  ⚠️ commit message 里的反引号 `` `and` `` 被 shell 命令替换吃掉一个词、留下缺主语的句子,当场 `--amend -F` 修回。
+  ⭐ **铁律 11 未触发,MCP 可用**:GH **#663** 追评已发(`#issuecomment-5604986596`),
+  发前 `claim_precheck.sh` **`clean` / `OK to publish` / `PRECHECK_EXIT=0`**(`paths cited 7 / resolved 7 / refused 0`,
+  `local commits not on origin/main: 0`);**#663 不关**。
   MTD 不作新声称(转载批测台 15:13Z **$71.130**,⚠️ 不含 W59/W60/W61,系统性偏低);
   ⛔ **未预支 `$80` 跨线许可**,下一波须**跑 `wave_fence.py`**,不许抄数。三条线未改。
   **下次触发**:①⭐⭐**GH #540(11 条自动开 owed 行)顺延到第二轮,已按上轮自己的要求点名 ——
