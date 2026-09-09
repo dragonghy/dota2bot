@@ -127,6 +127,12 @@ local function visible_enemies(J, bot)
     return #J.GetNearbyHeroes(bot, VIEW_RADIUS, true, BOT_MODE_NONE)
 end
 
+--- The enemy-hero TABLE X.ConsiderW computes and now hands to the helper.  Same
+--- call, same radius; section 2 counts `#` of this and the helper walks it.
+local function visible_table(J, bot)
+    return J.GetNearbyHeroes(bot, VIEW_RADIUS, true, BOT_MODE_NONE)
+end
+
 --- Is any enemy hero inside the 650 the branch's J.IsInRange asks for?  A
 --- GEOMETRIC PROXY for that term and labelled as one: the term itself reads
 --- J.GetProperTarget, which section 5 measures as structurally nil here.
@@ -191,19 +197,75 @@ tests['section 2: 13 real WK instants, and the shipped clause discards most of t
     for _, path in ipairs(WK_FRAMES) do
         local X, J, bot, _, fx = on_frame(path)
         assert(fx.self == WK, path .. ' is not a WK-subject frame; WK_FRAMES is stale')
-        local n = visible_enemies(J, bot)
+        local t = visible_table(J, bot)
+        local n = #t
         byCount[n] = (byCount[n] or 0) + 1
         -- shipped: the same helper with the gate down.
-        if X.IsBoneGuardEnemyCountOk(n) then nShipped = nShipped + 1 end
+        if X.IsBoneGuardEnemyCountOk(n, t, REACH) then nShipped = nShipped + 1 end
         local XA = select(1, on_frame(path, { armed = true }))
-        if XA.IsBoneGuardEnemyCountOk(n) then nArmed = nArmed + 1 end
+        if XA.IsBoneGuardEnemyCountOk(n, t, REACH) then nArmed = nArmed + 1 end
     end
     assert(#WK_FRAMES == 13, 'frame count changed; re-read the numbers below')
     assert((byCount[0] or 0) == 4 and (byCount[1] or 0) == 2 and (byCount[2] or 0) == 7,
         ('visible-enemy histogram moved: 0->%d 1->%d 2->%d (was 4/2/7)'):format(
             byCount[0] or 0, byCount[1] or 0, byCount[2] or 0))
     assert(nShipped == 2, 'shipped clause admits ' .. nShipped .. ' of 13, expected 2')
-    assert(nArmed == 9, 'armed clause admits ' .. nArmed .. ' of 13, expected 9')
+    assert(nArmed == 6, 'armed clause admits ' .. nArmed .. ' of 13, expected 6')
+end
+
+-- THE NARROWING, MEASURED.  This is the section the 2026-09-09 change exists for
+-- and the one that would have to be re-argued to widen the leg back to 1600.
+tests['section 2: 3 of the old armed leg 9 were priced on enemies out of reach'] = function()
+    local nOld, nNew, tDropped = 0, 0, {}
+    for _, path in ipairs(WK_FRAMES) do
+        local X, J, bot = on_frame(path, { armed = true })
+        local t = visible_table(J, bot)
+        local n = #t
+        -- The leg as it read before 2026-09-09: any non-zero 1600 count.
+        local bOld = n >= 1
+        local bNew = X.IsBoneGuardEnemyCountOk(n, t, REACH)
+        if bOld then nOld = nOld + 1 end
+        if bNew then nNew = nNew + 1 end
+        if bOld and not bNew then
+            tDropped[#tDropped + 1] = ('%s (%d in view, %d in reach)'):format(
+                path:gsub('tests/fixtures/', ''), n, X.wk_CountBoneGuardEngaged(t, REACH))
+        end
+    end
+    assert(nOld == 9 and nNew == 6,
+        ('old leg %d, new leg %d of 13 (was 9 -> 6)'):format(nOld, nNew))
+    assert(#tDropped == 3,
+        ('%d frame(s) dropped, expected 3: %s'):format(#tDropped, table.concat(tDropped, '; ')))
+    -- Named, because the argument is about these specific geometries: two frames
+    -- hold ONE enemy in the ring and a second one far off -- a duel the 1600
+    -- count read as a teamfight -- and one holds NONE at all inside 650.
+    local sAll = table.concat(tDropped, '; ')
+    for _, sWant in ipairs({ 'laning_safe', 'sven_burst', 'reincarn_gap' }) do
+        assert(sAll:find(sWant, 1, true),
+            sWant .. ' is no longer among the dropped frames: ' .. sAll)
+    end
+    assert(sAll:find('sven_burst.lua (2 in view, 0 in reach)', 1, true),
+        'the zero-in-reach case study moved; it is the clearest statement of the '
+        .. 'defect (the old leg counted a "2v2" with nobody the skeletons could '
+        .. 'reach): ' .. sAll)
+end
+
+tests['section 2: the engaged ring is a subset of the view ring, on every frame'] = function()
+    -- The structural fact the call site relies on: #tEnemies is the 1600 count,
+    -- and the helper walks THAT table, so engaged <= view always.  This is what
+    -- makes "armed fires at n=0" impossible in the real branch rather than
+    -- merely unobserved -- section 3 leans on it.
+    local byEngaged = {}
+    for _, path in ipairs(WK_FRAMES) do
+        local X, J, bot = on_frame(path, { armed = true })
+        local t = visible_table(J, bot)
+        local e = X.wk_CountBoneGuardEngaged(t, REACH)
+        byEngaged[e] = (byEngaged[e] or 0) + 1
+        assert(e <= #t, path .. ': engaged ' .. e .. ' > view ' .. #t)
+    end
+    assert((byEngaged[0] or 0) == 6 and (byEngaged[1] or 0) == 3
+        and (byEngaged[2] or 0) == 4,
+        ('engaged-enemy histogram moved: 0->%d 1->%d 2->%d (was 6/3/4)'):format(
+            byEngaged[0] or 0, byEngaged[1] or 0, byEngaged[2] or 0))
 end
 
 tests['section 2: inside the branch geometry the shipped clause admits 1 of 7'] = function()
@@ -211,22 +273,33 @@ tests['section 2: inside the branch geometry the shipped clause admits 1 of 7'] 
     -- hero inside the 650 the branch reaches for.  ONE-SIDED TRIPWIRE -- more
     -- fixtures can only move these counts, and the day the ratio inverts this
     -- goes red and says so.
-    local nReach, nReachShipped, sExample = 0, 0, nil
+    local nReach, nReachShipped, nReachArmed, sExample = 0, 0, 0, nil
     for _, path in ipairs(WK_FRAMES) do
         local X, J, bot, heroes = on_frame(path)
         if enemy_within_reach(bot, heroes) then
             nReach = nReach + 1
+            local t = visible_table(J, bot)
             local n = visible_enemies(J, bot)
-            if X.IsBoneGuardEnemyCountOk(n) then
+            assert(n == #t, path .. ': the count and the table disagree')
+            if X.IsBoneGuardEnemyCountOk(n, t, REACH) then
                 nReachShipped = nReachShipped + 1
             elseif sExample == nil then
                 sExample = path .. ' (' .. n .. ' visible enemies)'
+            end
+            local XA = select(1, on_frame(path, { armed = true }))
+            if XA.IsBoneGuardEnemyCountOk(n, t, REACH) then
+                nReachArmed = nReachArmed + 1
             end
         end
     end
     assert(nReach == 7, 'frames with an enemy inside ' .. REACH .. ': ' .. nReach .. ', expected 7')
     assert(nReachShipped == 1,
         'shipped clause admits ' .. nReachShipped .. ' of those ' .. nReach .. ', expected 1')
+    -- 5, not 7: inside the branch geometry the narrowed leg still triples what
+    -- shipped admits, and the two it declines are the ones holding a single
+    -- enemy in the ring -- i.e. the duels shipped was right to price as duels.
+    assert(nReachArmed == 5,
+        'armed clause admits ' .. nReachArmed .. ' of those ' .. nReach .. ', expected 5')
     assert(sExample ~= nil,
         'no discarded frame found -- section 2 has nothing to show and the '
         .. 'headline "6 of 7 are discarded" is no longer supported')
@@ -236,60 +309,117 @@ end
 -- Direction, by construction.  A single-value assertion is what let `cullthresh`
 -- ship a guard that silently narrowed its own lever, so this sweeps the ladder.
 
-tests['section 3: armed is a strict superset of shipped, over the whole ladder'] = function()
-    local X = on_frame(WK_FRAMES[1])
-    local XA = select(1, on_frame(WK_FRAMES[1], { armed = true }))
-    local nWidened = 0
-    for n = 0, 10 do
-        local bShipped = X.IsBoneGuardEnemyCountOk(n)
-        local bArmed = XA.IsBoneGuardEnemyCountOk(n)
-        assert(type(bShipped) == 'boolean' and type(bArmed) == 'boolean',
-            'the helper answered a non-boolean at n=' .. n)
-        if bShipped then
-            assert(bArmed, ('n=%d: shipped releases and armed does not. This lever '
-                .. 'is only allowed to ADD releases; a removal is silent -- no '
-                .. 'counter reports a Bone Guard that was not cast.'):format(n))
+-- The ladder is now swept over (count, table) PAIRS, because the narrowed leg
+-- reads both.  Sweeping the count alone against no table would exercise only the
+-- restrictive fallback and report a superset that holds vacuously -- the shape
+-- that let the Axe round's mutants survive a correct fix (hero 2026-09-09T17:10Z).
+tests['section 3: armed is a superset of shipped, over the ladder x every frame'] = function()
+    local nWidened, nPairs = 0, 0
+    for _, path in ipairs(WK_FRAMES) do
+        local X, J, bot = on_frame(path)
+        local XA = select(1, on_frame(path, { armed = true }))
+        local t = visible_table(J, bot)
+        for n = 0, 10 do
+            local bShipped = X.IsBoneGuardEnemyCountOk(n, t, REACH)
+            local bArmed = XA.IsBoneGuardEnemyCountOk(n, t, REACH)
+            nPairs = nPairs + 1
+            assert(type(bShipped) == 'boolean' and type(bArmed) == 'boolean',
+                'the helper answered a non-boolean at n=' .. n .. ' on ' .. path)
+            if bShipped then
+                assert(bArmed, ('%s n=%d: shipped releases and armed does not. This '
+                    .. 'lever is only allowed to ADD releases; a removal is silent '
+                    .. '-- no counter reports a Bone Guard that was not cast.')
+                    :format(path, n))
+            end
+            if bArmed and not bShipped then nWidened = nWidened + 1 end
         end
-        if bArmed and not bShipped then nWidened = nWidened + 1 end
     end
-    assert(nWidened == 9,
-        'armed widens ' .. nWidened .. ' counts in 0..10, expected 9 (n=2..10)')
+    assert(nPairs == 143, 'expected 13 frames x 11 counts = 143 pairs, got ' .. nPairs)
+    -- 40 = the 4 frames holding 2 enemies inside 650, each widening every count
+    -- except n=1 (where shipped already releases).  A frame with fewer than 2 in
+    -- the ring widens NOTHING, which is the whole point of the narrowing.
+    assert(nWidened == 40,
+        'armed widens ' .. nWidened .. ' of 143 (count, frame) pairs, expected 40')
+end
+
+tests['section 3: a missing table falls back to the shipped duel test'] = function()
+    -- The RESTRICTIVE default, asserted rather than assumed.  A permissive one
+    -- would restore the old 1600-ring leg for any caller that forgot the
+    -- argument, and no counter would report it.
+    local XA = select(1, on_frame(WK_FRAMES[1], { armed = true }))
+    for n = 0, 10 do
+        assert(XA.IsBoneGuardEnemyCountOk(n) == (n == 1),
+            ('armed with no table answered %s at n=%d; the fallback must be the '
+            .. 'shipped `== 1`'):format(tostring(XA.IsBoneGuardEnemyCountOk(n)), n))
+    end
 end
 
 tests['section 3: neither leg releases with nobody in view'] = function()
-    local X = on_frame(WK_FRAMES[1])
-    local XA = select(1, on_frame(WK_FRAMES[1], { armed = true }))
-    assert(X.IsBoneGuardEnemyCountOk(0) == false, 'shipped fires at 0 enemies')
-    assert(XA.IsBoneGuardEnemyCountOk(0) == false,
-        'armed fires at 0 enemies -- widening the count term must not turn the '
-        .. 'branch into an unconditional release')
+    -- Each frame paired with ITS OWN count, which is the only pairing the call
+    -- site can produce (n = #tEnemies).  Section 2 pins engaged <= view, so a
+    -- zero view count forces a zero engaged count and the armed disjunct cannot
+    -- reach.  Four of the 13 frames really are at n=0, so this is measured.
+    local nZero = 0
+    for _, path in ipairs(WK_FRAMES) do
+        local X, J, bot = on_frame(path)
+        local XA = select(1, on_frame(path, { armed = true }))
+        local t = visible_table(J, bot)
+        if #t == 0 then
+            nZero = nZero + 1
+            assert(X.IsBoneGuardEnemyCountOk(0, t, REACH) == false,
+                'shipped fires at 0 enemies on ' .. path)
+            assert(XA.IsBoneGuardEnemyCountOk(0, t, REACH) == false,
+                'armed fires at 0 enemies on ' .. path .. ' -- widening the count '
+                .. 'term must not turn the branch into an unconditional release')
+        end
+    end
+    assert(nZero == 4, 'expected 4 frames with nobody in view, got ' .. nZero)
 end
 
 -- ---------------------------------------------------------------- section 4 --
 -- Gate hygiene.  Inert unless turbo AND this id armed.
 
+-- EVERY control below hands over a table that WOULD open the armed disjunct
+-- (WK_FRAMES[1] holds 2 enemies inside 650, section 2's histogram).  Passing no
+-- table would drop these onto the restrictive fallback, where the shipped answer
+-- comes back whether the gate is open or shut and the control proves nothing.
+local function opener_table(path)
+    local _, J, bot = on_frame(path, { armed = true })
+    local t = J.GetNearbyHeroes(bot, VIEW_RADIUS, true, BOT_MODE_NONE)
+    local XA = rf.load_hero('skeleton_king')
+    assert(XA.wk_CountBoneGuardEngaged(t, REACH) >= 2,
+        path .. ' no longer holds 2 enemies inside ' .. REACH .. '; section 4 has '
+        .. 'stopped being a control and now passes for the wrong reason')
+    assert(XA.IsBoneGuardEnemyCountOk(3, t, REACH) == true,
+        'the armed leg does not open on this table; section 4 proves nothing')
+    return t
+end
+
 tests['section 4: unarmed reproduces the shipped duel test exactly'] = function()
+    local t = opener_table(WK_FRAMES[1])
     local X = on_frame(WK_FRAMES[1])
     for n = 0, 5 do
-        assert(X.IsBoneGuardEnemyCountOk(n) == (n == 1),
+        assert(X.IsBoneGuardEnemyCountOk(n, t, REACH) == (n == 1),
             'unarmed answer at n=' .. n .. ' is not the shipped `== 1`')
     end
 end
 
 tests['section 4: armed but NOT turbo reproduces the shipped duel test'] = function()
+    local t = opener_table(WK_FRAMES[1])
     local X = select(1, on_frame(WK_FRAMES[1], { armed = true, nonTurbo = true }))
     for n = 0, 5 do
-        assert(X.IsBoneGuardEnemyCountOk(n) == (n == 1),
+        assert(X.IsBoneGuardEnemyCountOk(n, t, REACH) == (n == 1),
             'non-turbo answer at n=' .. n .. ' is not the shipped `== 1`; this gate '
             .. 'is turbo-only')
     end
 end
 
 tests['section 4: another id armed does not open this one'] = function()
+    local t = opener_table(WK_FRAMES[1])
     local _, J = on_frame(WK_FRAMES[1])
     J.IsSoakCandidate = function(id) return id == 'wkbuild' end
     local X = rf.load_hero('skeleton_king')
-    assert(X.IsBoneGuardEnemyCountOk(3) == false,
+    assert(X.IsBoneGuardEnemyCountOk(3, t, REACH) == false,
         'a different armed id opened wkbonefight -- the gate reads the wrong name')
 end
 
@@ -366,6 +496,54 @@ tests['section 6: X.ConsiderW calls the helper and no longer hardcodes `== 1`'] 
         .. 'the two is dead and the reader cannot tell which')
     assert(body:find('BOT_ACTION_DESIRE_HIGH', 1, true),
         'branch 1 no longer returns BOT_ACTION_DESIRE_HIGH')
+end
+
+tests['section 6: the call site hands over its OWN table and the branch radius'] = function()
+    local body = fn_body(live_source(), 'ConsiderW')
+    assert(body:find('X.IsBoneGuardEnemyCountOk( #nEnemysHerosInView, nEnemysHerosInView, nEngageRange )', 1, true),
+        'X.ConsiderW no longer passes the table it walked and the radius it '
+        .. 'reaches with.  A count-only call lands on the restrictive fallback, '
+        .. 'so the lever silently narrows to the shipped duel test and nothing '
+        .. 'goes red -- no counter reports a Bone Guard that was not cast.')
+    -- ONE place for the 650.  The next conjunct must read the same local, or the
+    -- two rings drift apart and the engaged count stops meaning "in reach".
+    assert(body:find('local nEngageRange = 650', 1, true),
+        'the branch radius is no longer a named local set to 650')
+    assert(body:find('J.IsInRange( npcTarget, bot, nEngageRange )', 1, true),
+        'the proper-target reach test no longer reads nEngageRange; the count '
+        .. 'ring and the reach ring can now drift apart')
+    assert(not body:find('bot, 650', 1, true),
+        'a raw 650 is back in X.ConsiderW alongside the local; one of the two is '
+        .. 'dead and the reader cannot tell which')
+end
+
+tests['section 6: the engaged-count predicate is CALLED, not merely passed'] = function()
+    -- The orphan trap of 2026-09-09: a new named predicate handed around as a
+    -- function value is invisible to the closure and to
+    -- tests/test_hero_export_reachability.py, which counted exactly that as the
+    -- 35th orphan against a ceiling of 34.  Fix the code, not the ceiling.
+    local src = live_source()
+    local body = fn_body(src, 'IsBoneGuardEnemyCountOk')
+    assert(body:find('X.wk_CountBoneGuardEngaged(', 1, true),
+        'the gate no longer calls X.wk_CountBoneGuardEngaged -- the engaged-ring '
+        .. 'premise is back out of the `if` and the leg is priced on 1600 again')
+    assert(src:find('function X.wk_CountBoneGuardEngaged(', 1, true),
+        'X.wk_CountBoneGuardEngaged is gone from the live source')
+end
+
+tests['section 6: the armed leg keeps the shipped duel as a literal disjunct'] = function()
+    -- This is what makes DIRECTION BY CONSTRUCTION survive the narrowing.  If
+    -- `nEnemies == 1` stops being a disjunct of the armed leg, the lever can
+    -- REMOVE a release, and a removal is unobservable in a wave read.
+    local body = fn_body(live_source(), 'IsBoneGuardEnemyCountOk')
+    local sArmed = body:match('then%s*(.-)%s*end') or ''
+    assert(sArmed:find('nEnemies == 1', 1, true),
+        'the armed leg no longer accepts the shipped duel outright, so it is no '
+        .. 'longer a superset of shipped and a negative wave read stops being '
+        .. 'attributable to "more releases were bad": ' .. sArmed)
+    assert(sArmed:find('>= 2', 1, true),
+        'the engaged threshold is no longer 2; the leg no longer encodes the '
+        .. '"joins a 3v3" premise it is justified by: ' .. sArmed)
 end
 
 tests['section 6: the gate is turbo-only and names exactly this id'] = function()

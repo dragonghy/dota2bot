@@ -1253,16 +1253,48 @@ end
 --- Berserker's Call, on a different mechanism (a COUNT premise, not an immunity
 --- one) in a different file.
 ---
---- ARMED (`wkbonefight`, turbo only): any non-zero count passes.
+--- ARMED (`wkbonefight`, turbo only): the shipped duel, OR a fight the release
+--- can actually join -- TWO OR MORE enemy heroes inside the branch's own 650.
+---
+--- NARROWED 2026-09-09 (hero, spending the hero-31 domain read that had sat
+--- delivered and unconsumed since 2026-09-06:
+--- iterations/reports/replay-check/domain_scan_hero_2_30_31.md section 6).  The
+--- armed leg used to read `nEnemies >= 1` against the 1600 ring, and THAT IS NOT
+--- THE RING THE PARAGRAPH ABOVE ARGUES ON.  The dominance premise is written out
+--- one screen up -- "a release that joins a 3v3 buys strictly more hero-facing
+--- attack-seconds than one that joins a 1v1" -- and it is a claim about heroes
+--- the 40s melee skeletons will REACH.  It never entered the `if`: at 1600 an
+--- enemy 1550 away, walking the other way, counted toward the "3v3" that
+--- justified the release.  The premise is now a conjunct, on the same 650 the
+--- next conjunct down already asks of the proper target -- not a second,
+--- invented distance.
+---
+--- This is why the hero-31 read is an UPPER bound twice over and not once.  The
+--- report already says so for the charge gate (column 4 is INSTRUMENT-BLIND:
+--- the dumper does not record modifier stack counts, GH #27 family, so
+--- `nStack / maxStack >= 0.6` was never evaluated).  The second bound is this
+--- one: its 12,656 frames / 2,244 episodes of `n1600 >= 2` are priced on the
+--- 1600 ring, so they bound the opportunities the OLD armed leg would have
+--- taken, not the ones this leg takes.  Its column (3) is the one to re-read
+--- against this code, because it is the column that was split on a ring at all.
 ---
 --- DIRECTION BY CONSTRUCTION, not by today's data -- the `cullthresh` lesson of
---- 2026-09-05.  `n == 1` implies `n >= 1`, so the armed predicate is a strict
---- SUPERSET of the shipped one for every integer n.  Arming this id can only ADD
---- releases; it can never remove one.  A negative wave read is therefore
---- attributable to "more Bone Guard releases were bad" and never to a release
---- this lever took away.  tests/test_wk_bone_guard_enemy_count.lua section 3
---- sweeps the whole count ladder rather than asserting a single value, because
---- that is the shape of test that caught `cullthresh`'s first, wrong guard.
+--- 2026-09-05, and it SURVIVES the narrowing because the shipped test is a
+--- literal disjunct.  `nEnemies == 1` is accepted by the armed leg by
+--- construction, so the armed predicate is still a SUPERSET of the shipped one
+--- for every integer n and every table.  Arming this id can only ADD releases;
+--- it can never remove one.  A negative wave read is therefore attributable to
+--- "more Bone Guard releases were bad" and never to a release this lever took
+--- away.  tests/test_wk_bone_guard_enemy_count.lua section 3 sweeps the whole
+--- count ladder rather than asserting a single value, because that is the shape
+--- of test that caught `cullthresh`'s first, wrong guard.
+---
+--- NO NEW ID, deliberately.  The engaged-count conjunct is reachable only from
+--- inside the armed branch, so with the gate down this file is byte-identical in
+--- behaviour to what it shipped; there is nothing here for the P4.2 admission
+--- freeze to hold.  A missing table falls back to the shipped duel test -- the
+--- RESTRICTIVE default, because a permissive one would silently restore the
+--- 1600-ring leg the moment a caller forgot the argument (section 6 mutant M6).
 ---
 --- COVERAGE, stated before anyone quotes this as fixture-validated: the BRANCH
 --- is not fixture-drivable, for the two upstream reasons the block above and
@@ -1273,10 +1305,33 @@ end
 --- change touches.  The counts are engine-vision-limited (J.GetNearbyHeroes
 --- wraps bot:GetNearbyHeroes), so "2 visible enemies" means WK can really see
 --- two.  Sizing still needs a wave: iterations/queue.json hero-31.
-function X.IsBoneGuardEnemyCountOk( nEnemies )
+--- How many of `tEnemies` stand inside the ring the release actually engages.
+---
+--- `nRadius` is the branch's own 650, handed in by the call site so the number
+--- is read off ONE place.  Argument order here is J.IsInRange's own
+--- ( origin, target, radius ): that makes the CanBeSeen test land on the enemy,
+--- which is the unit whose visibility the count is about.
+function X.wk_CountBoneGuardEngaged( tEnemies, nRadius )
+	if tEnemies == nil then return 0 end
+
+	local nCount = 0
+	for _, npcEnemy in pairs( tEnemies )
+	do
+		if J.IsValid( npcEnemy )
+			and J.IsInRange( bot, npcEnemy, nRadius )
+		then
+			nCount = nCount + 1
+		end
+	end
+
+	return nCount
+end
+
+function X.IsBoneGuardEnemyCountOk( nEnemies, tEnemies, nRadius )
 	if J.IsModeTurbo() and J.IsSoakCandidate( 'wkbonefight' )
 	then
-		return nEnemies >= 1
+		return nEnemies == 1
+			or X.wk_CountBoneGuardEngaged( tEnemies, nRadius or 650 ) >= 2
 	end
 
 	return nEnemies == 1
@@ -1299,10 +1354,14 @@ function X.ConsiderW()
 	local nEnemysHerosInView = J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE )
 	local npcTarget = J.GetProperTarget( bot )
 
+	-- The branch's engagement ring, read off ONE place now that two conjuncts
+	-- ask for it.  Same literal, same site; nothing below changes value.
+	local nEngageRange = 650
+
 	--辅助进攻
 	if J.IsValidHero( npcTarget )
-		and X.IsBoneGuardEnemyCountOk( #nEnemysHerosInView )
-		and J.IsInRange( npcTarget, bot, 650 )
+		and X.IsBoneGuardEnemyCountOk( #nEnemysHerosInView, nEnemysHerosInView, nEngageRange )
+		and J.IsInRange( npcTarget, bot, nEngageRange )
 		and ( nStack / maxStack >= 0.6 or talent6:IsTrained() )
 	then
 		return BOT_ACTION_DESIRE_HIGH
