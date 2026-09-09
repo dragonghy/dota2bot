@@ -345,6 +345,34 @@ check([i for _n, _t, ids in sw.stale_hits(live16, SETTLED) for i in ids] == ["ca
       "-- CLAUSE_SPLIT was widened past sentence punctuation: %s"
       % sw.stale_hits(live16, SETTLED))
 
+# (f) The borrow rule's own失效 (director 2026-09-09, §GG.5).  It reaches back
+# when a clause "names no id", and that was implemented as "matches no
+# id-SHAPED backtick" -- so a clause whose subject is a quoted TOOL READING
+# counted as subject-less and imported the previous clause's ids.  The fixture
+# is the live batch-desk shape that was trunk-red when this was found: the
+# second clause states the self-check leg's verbatim output, which SAYS
+# NOTHING IS WAITING, and the glue turned it into a wait on `pullcad` -- an id
+# nothing on the line asks about, on another stream's charter, with the test's
+# remedy ("fix the charter line") aimed at prose that was already correct.
+QUOTED_READING_AFTER_ID = """# 章程
+
+## 当前状态(每次触发后更新)
+- 2026-08-29T12:19Z:promote 时约束 **`FROZEN none`**(`campexit` 陷阱未复发);\
+入集等待 `no expired admission wait`(6 章程 / 55 已结 id)。
+"""
+p17 = charter(QUOTED_READING_AFTER_ID)
+live17, _rest17 = sw.split_charter(p17)
+check(sw.stale_hits(live17, SETTLED) == [],
+      "a clause quoting a tool reading borrowed the previous clause's id and "
+      "became a wait: %s" % sw.stale_hits(live17, SETTLED))
+
+# (f2) ...and the narrowing must not reach further than that.  A clause that
+# really does name no referent at all still borrows, i.e. (c) above is not
+# collateral damage -- asserted here on the same tree as (f) so the pair moves
+# together.
+check([i for _n, _t, ids in sw.stale_hits(live14, SETTLED) for i in ids] == ["campexit"],
+      "the quoted-reading narrowing also killed the id-less borrow (c)")
+
 # --- INVARIANT 9 (director 2026-09-03, GH #448): a REPORT of a wait is not a
 # wait.  The founding line is verbatim the only STALE the 07:0xZ self-check
 # printed -- the director's own sentence describing the PREVIOUS round's

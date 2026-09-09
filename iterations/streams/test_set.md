@@ -2579,3 +2579,100 @@ as an **EMPTY table**」,并把它当作「this line reads false locally」的**
 4. **没有落地「桩转轴普查」**(§GC 的 backlog 99):本节是它的**第四个实例**,不是它的落地。
 5. **没有跑动态半全量**(~100min,GH #124);`bots/` 零 diff,静态门与两个针对性套件已过。
 6. **patch 检查本轮未做**(低频;§GA.0 做过,无新 patch)。
+
+---
+
+## §GG 2026-09-09T10:xxZ 总监:**`narrat=2` 四条的裁定 —— 一条也不退集**;本节最该被读的是 **§GG.2:前四轮把「(a) 买不到」量在了错的那条路上,而另一条路上的仪器一直躺在仓库里**
+
+### §GG.0 一句话
+
+`liondrainstop` / `ownhalf` / `pulldrag` / `tpgap` 四条(`verify_coverage.py` 的 `narrat=2` 一档)
+**全部裁为「不退集」**:条件 (a) 的失效**不是「买不到」,是「投递没做」**(§FB.2 的第二类,
+逐字不许与第一类混着写)。armed 串 **37 不变**,`bots/`+`game/` **零 diff**,零 AWS、零波次,
+不发 owner 邮件,`DECISIONS_NEEDED` +0。产物:量具 `tools/agent/a_evidence_route.py`
+(+ `tests/test_a_evidence_route.py` 32 检查 / `tools/agent/mutstand_a_evidence_route.sh`
+**6 CAUGHT / 0 SURVIVED**),`owed_executions.json` **+4 行**,顺手修掉一条 trunk 红(§GG.5)。
+取活依据是上一轮「下次触发」的 **①**(逐字点名这四条,并逐字要求 `pulldrag` **先查再裁**)。
+
+### §GG.1 判据:三个机器读数并排,而不是第四次手工定价
+
+前四轮(§GD/§GE/§GF)每轮用**整整一个工作单元**给一到两条 id 手工定价,结论都是「(a) 买不到 ⇒ 退集」。
+本轮先问一个更早的问题:**这条 id 的 (a) 有几条路可以买?** 三个读数就够分辨:
+
+| 读数 | 问的是 | 来源 |
+|---|---|---|
+| `verify` | 有没有过判决 | `verify_coverage.py` 的同一条正则、同一份语料(不许两个计数器漂移) |
+| `waves` | 语料存不存在 | `W*_wave.json` 的 **`arm_string` 字段**(⛔ 不是全文子串:那些记录的散文里点名的是**被撤下**的 id) |
+| `tools` | 仪器存不存在 | `tools/batch_test/behavioral/*.py` 的**主题句**是否点名这条 id |
+
+分类(五类,互斥且穷尽,由工具自己断言):`VERIFIED` / `DELIVER`(有语料 + 有主题句点名的仪器)/
+`MENTION`(有语料,但只在别人正文里被点名)/ `BUILD`(有语料,无任何仪器)/ `NO-CORPUS`(没进过任何 arm 串)。
+
+### §GG.2 ⭐⭐⭐ 主轴:全 37 条 armed id 的读数是 `VERIFIED 22 / DELIVER 12 / MENTION 3 / BUILD 0 / NO-CORPUS 0`
+
+**15 条没有判决的 id,没有一条是「买不到」。** 每一条都在 **≥7 波**的 arm 串里活过(15 条全部 10 波,最近 W58),
+12 条有工具在**自己的主题句**里点名它。§GD..§GF 三轮的退集判据全部来自 **fixture 加载器**那条路——
+而 (a) 有**两条**路,另一条(批测录像上的行为检测器)**不经过加载器**,且对这 12 条**已经存在于 trunk 上**。
+⛔ **这不推翻 §GE/§GF 的三条退集**(那三条判的是各自转轴子句在语料里问不出口,读数仍成立);
+它说的是**提问顺序**:先问「哪条路」,再决定要不要花一轮去 fixture 侧定价。
+
+**先例不是推理**:09-05(§FB)对 `tpdying`/`tpreach` 开的两行 owed(同样的「投递没做」形状),
+**09-08 两行都被结清**(`iterations/reports/replay-check/a_evidence_tpdying.md`
+`VERIFY id=tpdying verdict=INDETERMINATE episodes=4527`、`a_evidence_tpreach.md`
+`VERIFY id=tpreach verdict=WORKING episodes=59`),**2/2,约 3 天**。⭐ 而那两条当时是**已经退集**才去买的 ——
+**退集并不是买到 (a) 的前提**,这一条钉死了本轮「不退集」的选择。
+
+### §GG.3 四条的逐条裁定
+
+* **`pulldrag` DELIVER** —— `pulldrag_walk.py` 主题句逐字「(a)-evidence for the `pulldrag` soak candidate:
+  WHICH WAY does the puller walk between pokes?」。⚠️ 上一轮警告的「大概率同一堵 lane-front 墙」
+  **查过了,不成立**:`gated_getter_stub_census.py --id pulldrag --all` 打的是 `GetAssignedLane` **STUB0**
+  —— 那是 **fixture 那条路**的墙,而这条 id 的仪器**不走 fixture**。**先查再裁的那一步救下了一次搬结论。**
+* **`tpgap` DELIVER** —— `tpgap_domain.py` 主题句逐字「`tpgap` condition (a): does the gap-band retreat
+  guard actually refuse?」,且**读数早在 `queue.json:strategy-14` 预登记**(方向收窄 ⇒ 子域内按压下降 +
+  反向哨兵不塌,⛔ 不是「按压数必须下降」)。桩普查对它 **零 STUB0**。
+* **`liondrainstop` DELIVER** —— `lion_drain_census.py` 主题句逐字「`liondrainstop` condition-(a) census」;
+  ⚠️ 判据已被总监 2026-08-21 换过(`span>=2.0s` 与结局**共因**),现行是 **post-domain residual**,门槛 GH #86 §5。
+* **`ownhalf` MENTION,与上面三条不是同一件事** —— 全仓**没有任何检测器在主题句点名它**;
+  它唯一的出现是 `capmono_refusal.py` 正文把它当作 capmono 的**混杂因子**
+  (逐字「`ownhalf`/`overchase`/`l1trade`/`l5combo` push the other way」)——**反过来的意思**。
+  ⇒ 采购是**建仪器**,不是跑现成的。⛔ 仍然**不是**「(a) 买不到」:语料在,缺的是仪器,而**缺仪器是报价不是否决**。
+
+### §GG.4 量具自己的两条纪律(它们是本节能被引用的理由)
+
+1. **分母全打印,空分母 abort**(exit 2)。没有 wave 记录 ⇒ 全体 `NO-CORPUS`;没有检测器 ⇒ 有语料的全体 `BUILD`;
+   **两种错误都长得像一次跑完了、发现债很多的普查** —— 与 §GG 前一轮那份普查的 `strip_comments` 两发同族。
+2. **`DELIVER` 是「有工具在主题句点名它」,不是「这工具答得对/跑得通/域非空」**;`BUILD` 是「还没有仪器」,
+   **不是「买不到」**。两条 LIMIT 逐字写在工具输出的末尾,引用本节必须连它们一起引。
+   ⭐ **`MENTION` 这一类是量出来的,不是设计出来的**:第一版用**文件名**判归属,把 `liondrainstop`
+   判错(它的仪器按英雄命名:`lion_drain_census.py`);第二版用**头部任意位置**,把 `ownhalf`/`overchase`
+   抬成 `DELIVER`(混杂因子句)—— **两个错误方向相反,主题句是同时挡住它们的那条线**,四份手读的 docstring 是它的判据。
+
+### §GG.5 顺手修掉的一条 trunk 红([harness],章程 2a):`test_stale_waits.py`
+
+自检 `trunk-red(python)` 唯一那条。`stale_waits.wait_scopes` 的「借用规则」——
+一个带 outstanding 标记而**不点名任何 id** 的子句,借上一子句的 id —— 判「不点名 id」用的是
+**id 形状的反引号**(`BACKTICKED`)。于是 batch-desk 章程里这一句:
+
+    …**`FROZEN none`**(`pullcad` 陷阱未复发);入集等待 `no expired admission wait`(6 章程 / 55 已结 id)
+
+的第二个子句**明明点名了自己的主语**(自检腿的逐字输出,而且那句话的意思是**没有任何等待**),
+却因为主语不是 id 形状而被判「无主语」⇒ 借来 `pullcad` ⇒ 报成一条 STALE。
+**危害不是那条红本身,是它的处方**:测试逐字写着「fix the charter line, do not loosen this test」,
+指向**另一个组**的、**内容完全正确**的一行散文。
+修法:借用规则改判**任意反引号**(`ANY_BACKTICK`),id 抽取仍用 `BACKTICKED`(窄的那个问题保持窄)。
+钉法:`tests/test_stale_waits.py` 新增 INVARIANT 8(f)/(f2) —— 现场那一行的最小复现 + (c) 不被误伤;
+把修改还原 ⇒ 两条同时变红(实测 `MUT_EXIT=1`),还原后 **49 检查 0 失败**;
+`mutstand_stale_waits_report.sh` 复跑 M1–M5 全 CAUGHT、`RESTORE ok`(M6 `SKIPPED` 是存量形状,非本轮引入)。
+代价已写进工具 LIMIT 5b(「等 \`见上\` 裁定」这类写法会漏报 —— **少报不是造假**,方向与 LIMIT 4 一致)。
+
+### §GG.6 本节没有做的事(边界)
+
+1. **没有 promote、没有退集、没有 reject**,armed 串 **37 一字未动**;`bots/`+`game/` 零 diff。
+2. **没有给另外 11 条 DELIVER/MENTION 开 owed 行**:本轮只为**读过 docstring 的四条**开(4 行)。
+   把它推广成「按普查自动开行」是 GH #540 的内容,**仍未做**。
+3. **没有跑任何检测器**:本节买的是「该跑哪一个」,不是读数。域是否非空、工具能否跑通,**都不在本节的声称里**。
+4. **没有核语料保留**:`waves` 说的是这条 id 在 arm 串里活过,**不是** S3 上那批 `.dem` 现在还在。
+   录像组取棒时要自己确认;拿不到就说拿不到(那本身是一条关于语料保留的发现)。
+5. **没有跑 Lua 动态半全量**(~100min,GH #124);`bots/` 零 diff。
+6. **patch 检查本轮未做**(低频;§GA.0 做过,无新 patch)。

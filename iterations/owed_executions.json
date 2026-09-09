@@ -491,6 +491,54 @@
         ]
       },
       "trigger": "**没有外部触发器**(同上,`pullthink` 已出集,不属于任何一波)。⭐ **自动触发器**:`tests/test_blind_a_pulllane_pullthink.lua` 的 [2a]/[2b]/[2c] 在读数被买到、或那句过期注释被修好的那一刻会自己变红。"
+    },
+    {
+      "id": "a_evidence_pulldrag",
+      "issue": "总监 2026-09-09T10:xxZ 立;裁定全文 `iterations/streams/test_set.md §GG`;量具 `tools/agent/a_evidence_route.py`(读数 `VERIFIED 22 / DELIVER 12 / MENTION 3 / BUILD 0 / NO-CORPUS 0`,37 条 armed id 全覆盖)。本行不是新证据请求,是**把一份已经存在的义务写成一行** —— 那正是它此前掉的原因。",
+      "ruling": "总监 2026-09-09T10:xxZ:`pulldrag` **不退集** —— 条件 (a) 的失效不是「买不到」,是**投递没做**。判据是三个机器读数并排:`verify=0`(从来没有 VERIFY 行)、`waves=10`(它在十波的 arm 串里活过 ⇒ 语料存在)、`pulldrag_walk.py` **在自己的主题句里点名这个 id**(⇒ 仪器存在)。⛔ **不许把这一条与 §GE/§GF 的退集混着写**(§FB.2):那三条退的是**fixture 加载器**答不出的 id,而这一条走的是**另一条路** —— 批测录像上的行为检测器,不经过加载器。",
+      "ruled_at": "2026-09-09T10:xxZ",
+      "executor": "录像组。**买法**:`tools/batch_test/behavioral/pulldrag_walk.py`(主题句逐字:「(a)-evidence for the `pulldrag` soak candidate: WHICH WAY does the puller walk between pokes?」)。它自己写清了为什么 `pullcamp_domain.py --drag` **结构上答不了这个问题**(那个签名按**朝泉水的分量**认证拖拽,而本 id 的全部内容就是「别再朝泉水走」,四个营地上那个余弦最大 0.048)⇒ **不要用 pullcamp 的 DRAG/CONNECT 列代替它**。 ⭐ **先读那份 docstring 再动手** —— `DELIVER` 只说「有工具在主题句里点名它」,**不说这工具答得对、跑得通、或域非空**(量具的 LIMITS 逐字如此)。三种结果都算买到:WORKING / BUGGY / SILENT;**域为空也算买到**,那是一条关于杠杆的发现,写成 `VERIFY id=pulldrag verdict=… episodes=…` 即可。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/replay-check/a_evidence_pulldrag.md"
+      },
+      "trigger": "**没有外部触发器,这正是它进 registry 的理由**:入集申请那一行的 `director` 字段里躺着的是**入集**裁定(`APPROVED_ADMITTED`),`status` 停在 `harvested_pending_verification` —— 波已收割、核验待办,而**没有任何一张按轮驱动的表载这一步**(§FB.3 / GH #413 / GH #332 同型)。实际取它的时机:任何一轮录像组有余量的工作单元;⭐ 无需新波次、零 AWS 增量 —— 该 id 在 **10 波**的 arm 串里出现过(最近 W58),买的是**已归档语料**。"
+    },
+    {
+      "id": "a_evidence_tpgap",
+      "issue": "总监 2026-09-09T10:xxZ 立;裁定全文 `iterations/streams/test_set.md §GG`;量具 `tools/agent/a_evidence_route.py`(读数 `VERIFIED 22 / DELIVER 12 / MENTION 3 / BUILD 0 / NO-CORPUS 0`,37 条 armed id 全覆盖)。本行不是新证据请求,是**把一份已经存在的义务写成一行** —— 那正是它此前掉的原因。",
+      "ruling": "总监 2026-09-09T10:xxZ:`tpgap` **不退集** —— 条件 (a) 的失效不是「买不到」,是**投递没做**。判据是三个机器读数并排:`verify=0`(从来没有 VERIFY 行)、`waves=10`(它在十波的 arm 串里活过 ⇒ 语料存在)、`tpgap_domain.py` **在自己的主题句里点名这个 id**(⇒ 仪器存在)。⛔ **不许把这一条与 §GE/§GF 的退集混着写**(§FB.2):那三条退的是**fixture 加载器**答不出的 id,而这一条走的是**另一条路** —— 批测录像上的行为检测器,不经过加载器。",
+      "ruled_at": "2026-09-09T10:xxZ",
+      "executor": "录像组。**买法**:`tools/batch_test/behavioral/tpgap_domain.py`(主题句逐字:「`tpgap` condition (a): does the gap-band retreat guard actually refuse?」)。**读数早就预登记过**:`queue.json:strategy-14` 里写死了方向是**收窄** ⇒ 「子域内的按压下降,而反向哨兵(撤退 TP 成功率)不塌」,⛔ **不是**「按压数必须下降」。 ⭐ **先读那份 docstring 再动手** —— `DELIVER` 只说「有工具在主题句里点名它」,**不说这工具答得对、跑得通、或域非空**(量具的 LIMITS 逐字如此)。三种结果都算买到:WORKING / BUGGY / SILENT;**域为空也算买到**,那是一条关于杠杆的发现,写成 `VERIFY id=tpgap verdict=… episodes=…` 即可。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/replay-check/a_evidence_tpgap.md"
+      },
+      "trigger": "**没有外部触发器,这正是它进 registry 的理由**:入集申请那一行的 `director` 字段里躺着的是**入集**裁定(`APPROVED_ADMITTED`),`status` 停在 `harvested_pending_verification` —— 波已收割、核验待办,而**没有任何一张按轮驱动的表载这一步**(§FB.3 / GH #413 / GH #332 同型)。实际取它的时机:任何一轮录像组有余量的工作单元;⭐ 无需新波次、零 AWS 增量 —— 该 id 在 **10 波**的 arm 串里出现过(最近 W58),买的是**已归档语料**。"
+    },
+    {
+      "id": "a_evidence_liondrainstop",
+      "issue": "总监 2026-09-09T10:xxZ 立;裁定全文 `iterations/streams/test_set.md §GG`;量具 `tools/agent/a_evidence_route.py`(读数 `VERIFIED 22 / DELIVER 12 / MENTION 3 / BUILD 0 / NO-CORPUS 0`,37 条 armed id 全覆盖)。本行不是新证据请求,是**把一份已经存在的义务写成一行** —— 那正是它此前掉的原因。",
+      "ruling": "总监 2026-09-09T10:xxZ:`liondrainstop` **不退集** —— 条件 (a) 的失效不是「买不到」,是**投递没做**。判据是三个机器读数并排:`verify=0`(从来没有 VERIFY 行)、`waves=10`(它在十波的 arm 串里活过 ⇒ 语料存在)、`lion_drain_census.py` **在自己的主题句里点名这个 id**(⇒ 仪器存在)。⛔ **不许把这一条与 §GE/§GF 的退集混着写**(§FB.2):那三条退的是**fixture 加载器**答不出的 id,而这一条走的是**另一条路** —— 批测录像上的行为检测器,不经过加载器。",
+      "ruled_at": "2026-09-09T10:xxZ",
+      "executor": "录像组。**买法**:`tools/batch_test/behavioral/lion_drain_census.py`(主题句逐字:「`liondrainstop` condition-(a) census over an arbitrary Lion corpus」)。⚠️ **判据已被总监 2026-08-21 改过一次,别用旧的**:`span >= 2.0s` 过滤与结局**共因**(短通道是因为 Lion 死了),现行主判据是 **post-domain residual**(通道结束 − 首个域内时刻),对**每一条**域内通道,无 span 过滤;判定门槛 GH #86 §5:效应 ≥ 2.0s,或 ≥12 个双臂种子的配对读数。 ⭐ **先读那份 docstring 再动手** —— `DELIVER` 只说「有工具在主题句里点名它」,**不说这工具答得对、跑得通、或域非空**(量具的 LIMITS 逐字如此)。三种结果都算买到:WORKING / BUGGY / SILENT;**域为空也算买到**,那是一条关于杠杆的发现,写成 `VERIFY id=liondrainstop verdict=… episodes=…` 即可。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/replay-check/a_evidence_liondrainstop.md"
+      },
+      "trigger": "**没有外部触发器,这正是它进 registry 的理由**:入集申请那一行的 `director` 字段里躺着的是**入集**裁定(`APPROVED_ADMITTED`),`status` 停在 `harvested_pending_verification` —— 波已收割、核验待办,而**没有任何一张按轮驱动的表载这一步**(§FB.3 / GH #413 / GH #332 同型)。实际取它的时机:任何一轮录像组有余量的工作单元;⭐ 无需新波次、零 AWS 增量 —— 该 id 在 **10 波**的 arm 串里出现过(最近 W58),买的是**已归档语料**。"
+    },
+    {
+      "id": "instrument_ownhalf_a_evidence",
+      "issue": "总监 2026-09-09T10:xxZ 立;裁定全文 `iterations/streams/test_set.md §GG`;量具 `tools/agent/a_evidence_route.py`(读数 `VERIFIED 22 / DELIVER 12 / MENTION 3 / BUILD 0 / NO-CORPUS 0`,37 条 armed id 全覆盖)。本行不是新证据请求,是**把一份已经存在的义务写成一行** —— 那正是它此前掉的原因。",
+      "ruling": "总监 2026-09-09T10:xxZ:`ownhalf` **不退集,但它与上面三条不是同一件事** —— 普查判它 `MENTION` 而不是 `DELIVER`:全仓**没有任何行为检测器在主题句里点名 `ownhalf`**;它唯一的出现是在 `capmono_refusal.py` 的正文里,而且是作为 **capmono 的混杂因子**被点名的(逐字:「`ownhalf`/`overchase`/`l1trade`/`l5combo` push the other way」)—— 那是**反过来**的意思,不是它的仪器。⇒ 这一条的采购是**给它命名/建一个仪器**,不是跑一份现成的。⛔ 同样**不是**「(a) 买不到」:语料存在(10 波,最近 W58),缺的是仪器,而缺仪器**是一笔报价,不是一个否决**(量具 LIMITS 逐字如此)。",
+      "ruled_at": "2026-09-09T10:xxZ",
+      "executor": "录像组 / 协同组(谁先有余量)。**最便宜的形状**:`ownhalf` 是 `J.ShouldPunishDive` 的**加宽域**(`bots/FunLib/jmz_func.lua:9079-9131`,shipped 那条要求附近有己方建筑,armed 那条去掉建筑项)⇒ (a) 的问题是「加宽出来的那些帧上,追击是否真的发生且没有把人送掉」,**域差**天然是它的分母。⚠️ `overchase` 同类同因(也是 MENTION,同一份 `capmono_refusal.py` 混杂因子句),两条可以并成同一个检测器的两列。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "tools/batch_test/behavioral/ownhalf_domain.py"
+      },
+      "trigger": "没有外部触发器(同上三条)。⭐ **自动触发器**:一旦有人给它建了检测器,`tools/agent/a_evidence_route.py` 下一轮就会把 `ownhalf` 从 `MENTION` 抬成 `DELIVER` —— 那一刻本行该被换成一条 `a_evidence_ownhalf` 投递行。"
     }
   ],
   "retired": [

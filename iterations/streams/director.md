@@ -540,6 +540,52 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     armed 串长度 / arm 行字段数为**下界**的断言,报出来;正确写法是**独立数一遍再要求相等**。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-09T10:12Z**:**`narrat=2` 四条(`liondrainstop`/`ownhalf`/`pulldrag`/`tpgap`)全部裁为「不退集」;而本轮最该被读的不是这四条裁定 —— 是「条件 (a) 有两条路,前四轮各花一整轮定的价,量的全是其中一条」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0、
+  armed 串 **37 不动**、无 promote / 无退集。取活依据是上一轮「下次触发」的 **①**(逐字点名这四条,
+  并逐字要求 `pulldrag` **先查再裁**)。全文 `iterations/reports/director/20260909T101220Z.md`,
+  裁定全文档案 `test_set.md §GG`(§GG.0–§GG.6)。
+  ⭐⭐⭐ **主轴(§GG.2)**:新量具对**全 37 条** armed id 读出
+  **`VERIFIED 22 / DELIVER 12 / MENTION 3 / BUILD 0 / NO-CORPUS 0`** ——
+  **15 条没有判决的 id 里,零条属于「(a) 买不到」**:每条都在 **10 波**的 arm 串里活过(最近 W58,语料存在),
+  12 条有检测器在**自己的主题句**里点名它(仪器存在)。§GD..§GF 三轮的退集判据全部出自 **fixture 加载器**那条路,
+  而 (a) 的另一条路(批测录像行为检测器)**不经过加载器、且早就在 trunk 上**。
+  ⛔ **不推翻那三条退集**(它们判的是转轴子句在语料里问不出口,读数仍成立);改的是**提问顺序**。
+  ⭐ **先例撑着不是推理**:09-05 同形的 `a_evidence_tpdying`/`a_evidence_tpreach` 两行 owed,
+  **09-08 两行都结清**(`INDETERMINATE 4527` / `WORKING 59`),**2/2 约 3 天**;
+  而那两条是**已经退集**才去买的 ⇒ **退集不是买到 (a) 的前提** —— 这一条钉死了本轮「不退集」。
+  ⭐ **上一轮那句「先查再裁」真的救下一次搬结论**:`pulldrag` 确实撞 `GetAssignedLane` **STUB0**,
+  **但那是 fixture 那条路上的墙**,而它的仪器 `pulldrag_walk.py` 不走 fixture ——
+  照搬会写下一条**理由正确、结论相反**的退集。
+  ⭐⭐ 落地四件:`tools/agent/a_evidence_route.py`(读 `verify`/`waves`/`tools` 三个量,判五类;
+  `waves` 从 **`arm_string` 字段**读**不是全文子串** —— 那些记录的散文点名的是**被撤下**的 id,实测子串把
+  `pulldrag` 读成 13 波、字段读成 10)、`tests/test_a_evidence_route.py`(**32 检查 0 失败**)、
+  `tools/agent/mutstand_a_evidence_route.sh`(**6 CAUGHT / 0 SURVIVED**,`control_ok`)、
+  `owed_executions.json` **+4 行**(3 条投递 + 1 条建仪器,25 → 29)。
+  ⭐ **量具自己错过两次,方向相反,都被手读的 docstring 挡下**:按**文件名**判归属把 `liondrainstop` 判错
+  (仪器按英雄命名 `lion_drain_census.py`);按**头部任意位置**判又把 `ownhalf`/`overchase` 抬成 `DELIVER`
+  (它们在 `capmono_refusal.py` 里是**混杂因子**,「push the other way」)⇒ 判据定为**主题句**(docstring 首段),
+  并为此单立 `MENTION` 一类。M3/M4 钉住这两发。
+  ⭐ **顺手修掉唯一一条 trunk 红([harness],章程 2a)**:`test_stale_waits.py`。
+  `wait_scopes` 的借用规则把「不点名 id」实现成「没有 **id 形状**的反引号」,于是 batch-desk 章程里
+  ``…`FROZEN none`(`pullcad` 陷阱未复发);入集等待 `no expired admission wait`…`` 的第二个子句
+  ——**主语是自检腿的逐字输出,而且那句话的意思是「没有等待」**——被判无主语、借来 `pullcad` 报成 STALE。
+  **危害是它的处方**:测试逐字要求「fix the charter line」,指向**另一个组**的、**完全正确**的一行散文。
+  改判**任意反引号**(`ANY_BACKTICK`),id 抽取仍用 `BACKTICKED`;新增 INVARIANT 8(f)/(f2),
+  还原修改 ⇒ 两条同时红(`MUT_EXIT=1`),还原后 **49 检查 0 失败**,`mutstand_stale_waits_report.sh`
+  M1–M5 全 CAUGHT / `RESTORE ok`;代价写进 LIMIT 5b(**少报不是造假**)。
+  ⭐ **自检真码 `EXIT=3`**(legs 10,`UNCERTIFIABLE: none`):`cadence`/`owed-executions`/`stale-waits`/
+  `trunk-red(python)` —— 后两条**是同一条,本轮已修**;`owed-executions` 里是**本轮自己新开的 4 行**。
+  ⚠️ `git stash` 复跑「main 是不是也红」**本轮没做,不声称**;Lua 全量未跑不声称(快检测器腿 86/0)。
+  ⛔ **「后台包装吞掉真码」第十次兑现**(harness 报 `[exited with code 0]`,`; echo "EXIT=$?"` 打出 **3**,
+  两个数字并排),守卫**仍未立**,顺延。⚠️ **纪律 3 第一条命令又踩管道**,§22 守卫当场拒(第二十四次)。
+  **零 AWS 花费**,MTD 不作新声称(转载批测台 09:09Z 口径),三条线均未跨。
+  **下次触发**:①⭐**给另外 11 条 DELIVER/MENTION 自动开 owed 行**(GH #540,一条覆盖 11 个 id)
+  ②⭐**P4.2 的下一格换形状了**:`BUILD 0 / NO-CORPUS 0` ⇒ **靠「(a) 买不到」退集把 armed 压到 ≤20
+  这条路今天走不通**,能压的只有 **promote**(投递 → 判决 → 三条件)—— 这句要在下轮开头被读到
+  ③backlog 101(条件性穿透探针,顺延)④「后台包装吞真码」守卫(第十一次,顺延)
+  ⑤GH #358 的 120s 要人裁(顺延)⑥`hero_domain_scan` 九份读数(顺延)
+  ⑦「退集/promote 的五处同步」清单或脚本(顺延)⑧存量:账户级预算等 owner / `$0.90` 重裁 / GH #523 / patch 缺口 P3。
 - **2026-09-09T07:15Z**:**§GF.3 的处方落成仪器(顺延四轮的 backlog,本轮不再顺延);而本轮最该被读的不是那张采购单 —— 是「这个普查自己写的时候错了两次,两次的产物都是**更小更干净的答案**而不是报错,两次都只被『reach 计数与 finding 计数印在同一行』救下来」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0、
   armed 串 **37 不动**、无 promote / 无退集。

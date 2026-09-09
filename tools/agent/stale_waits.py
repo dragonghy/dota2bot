@@ -75,6 +75,15 @@ LIMITS (read these before quoting the output)
    direction: this tool under-reports rather than inventing waits.
 5. It says nothing about whether a wait is *justified*, only whether its
    stated object already moved.
+5b. **The borrow rule stops at any backtick** (director 2026-09-09, §GG.5).
+   A clause with an outstanding marker and no backticked span at all borrows
+   the previous clause's ids; a clause carrying ANY inline-code span is read as
+   naming its own referent and borrows nothing.  Cost of the narrowing, stated
+   rather than discovered: a genuine wait written as "等 `见上` 裁定" -- the id
+   in the previous clause, this one quoting something that is not an id -- now
+   goes unreported.  That is LIMIT 4's direction (under-report, never invent),
+   and it replaces the opposite error, which was live: a clause quoting the
+   self-check's own `no expired admission wait` output was turned into a wait.
 6. **The mention/use exemption is a text match too** (RESOLVED_MARKERS).  A
    block that quotes an expired wait while declaring it over is exempt for
    that id, which is what makes the tool survivable -- and it is equally an
@@ -131,6 +140,9 @@ BULLET = re.compile(r"^- \*{0,2}20\d\d-\d\d-\d\d")
 # the time may be absent entirely, which sorts before any timed entry that day.
 STAMP = re.compile(r"^- \*{0,2}(20\d\d-\d\d-\d\d(?:T[\dxX]{2}:[\dxX]{2})?)")
 BACKTICKED = re.compile(r"`([a-z][a-z0-9_]{2,})`")
+# Any inline-code span, whatever it holds.  Used ONLY to decide whether a
+# clause names its own referent (see wait_scopes); never to extract ids.
+ANY_BACKTICK = re.compile(r"`[^`]+`")
 PROMOTED = re.compile(r"PROMOTED \(was soak-candidate '([a-z0-9_]+)'\)")
 
 # Both halves must be present on the same line.  The admission half keeps the
@@ -376,7 +388,24 @@ def wait_scopes(text):
         # An outstanding marker in a clause that names no id at all is talking
         # about the ids just before it -- otherwise a semicolon silences a
         # genuine expired wait.
-        if not BACKTICKED.search(clause) and i > 0:
+        #
+        # "NAMES NO ID" IS NOT "MATCHES NO ID PATTERN" (director 2026-09-09,
+        # §GG.5).  The glue was gated on BACKTICKED, which only matches an
+        # id-SHAPED span, so a clause whose subject is a quoted TOOL READING
+        # counted as subject-less and imported the previous clause's ids.
+        # Measured, and it was trunk-red for at least a round:
+        #
+        #   `FROZEN none`(`pullcad` 陷阱未复发);入集等待 `no expired admission wait`
+        #
+        # The second clause states its own subject -- the self-check leg's
+        # verbatim output -- and says nothing is waiting.  Glued to the first,
+        # it produced STALE id=pullcad: a wait that no sentence in the charter
+        # asserts, on a charter belonging to another stream, with the remedy
+        # ("fix the charter line") pointing at prose that is already correct.
+        # A backticked span of ANY shape is a clause naming its own referent,
+        # so the glue is off there; ids are still read with BACKTICKED, which
+        # is the narrower question and stays narrow.
+        if not ANY_BACKTICK.search(clause) and i > 0:
             scopes.append(parts[i - 1] + clause)
         else:
             scopes.append(clause)
