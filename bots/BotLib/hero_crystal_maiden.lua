@@ -1644,6 +1644,94 @@ function X.cm_IsRSafeToOpen( hBot )
 	return true
 end
 
+--- The escape term X.ConsiderR's HEAD-COUNT disjunct never had -- soak candidate
+--- `cmrcrowd` (turbo-only, INERT until armed).
+---
+--- THE DEFECT.  Branch 1 of X.ConsiderR opens the channel on
+---     `#nEnemysHeroesInRange >= 3 or aoeCanHurtCount >= 2`
+--- and the two disjuncts are not two readings of one idea.  The right-hand one
+--- is a QUALITY test the function computes six lines above itself: an enemy is
+--- counted only if he is disabled, or standing close enough that
+--- `nRadius * 0.82 - GetCurrentMovementSpeed()` still reaches him -- i.e. only if
+--- he cannot simply leave.  The left-hand one is a bare HEAD COUNT of the same
+--- list with the quality test dropped.  So the one path in this function that
+--- opens on a crowd is the one path that never asks whether the crowd can be hit,
+--- and it SHORT-CIRCUITS the test: `or` evaluates left first, so three mobile
+--- enemies at 735u release the channel while two of them standing still would
+--- have had to earn it.  This is the shape the file already rejects everywhere
+--- else, arriving through the one door that does not check.
+---
+--- WHAT IT COSTS, on the real frame this was written from.
+--- `tests/fixtures/f_260820_043039_cm_cask_close.lua` (20260820_043039_slot1,
+--- t=515.5, 8:35) -- CM at 267/890 hp (0.30), THREE visible enemies inside the
+--- 734.8u field (witch_doctor 546u, slardar 571u, shadow_shaman 609u), ZERO
+--- allied heroes inside 1200u.  Every one of the three is outside
+--- `734.8 * 0.82 - 300 = 302.5` and none is disabled, so `aoeCanHurtCount == 0`
+--- and the head count is the SOLE reason for the bid.  Shipped X.ConsiderR
+--- answers 0.75 there.  The fixture's ground truth is `died_after = 0.2`: she was
+--- dead two tenths of a second later, so the 10s channel this bid asks for is one
+--- she did not have.  Zero injection beyond the AoE-radius anchor named under
+--- LIMITS.
+---
+--- CONDITION (c), argued rather than assumed.  crystal_maiden_freezing_field is
+--- `AbilityChannelTime 10` with `AbilityCooldown 100/95/90` (KV, mirrored in
+--- tests/mock/special_value_shapes.lua): casting it converts CM into a
+--- stationary, silence-able target for ten seconds, and its damage is paid out in
+--- 0.1s explosion ticks over that whole window rather than on impact.  Standard
+--- practice with a channelled AoE is therefore to open it on enemies that are
+--- COMMITTED -- held by a disable, or too deep to walk out -- and this file
+--- already writes that down; the head-count path is the exception, not the rule.
+--- Three enemies who can walk cover the 735u radius in ~1.5s at 300 movespeed, so
+--- what the bid buys on such a frame is a couple of ticks against a 90-100s
+--- cooldown, in Turbo, where the whole game is ~20 minutes.
+---
+--- ARMED (`cmrcrowd`, turbo only): the head-count disjunct additionally requires
+--- `aoeCanHurtCount >= 1` -- ONE enemy who cannot leave, not two.  The
+--- `aoeCanHurtCount >= 2` disjunct is untouched, so a genuinely pinned pair still
+--- releases the channel with no ally in sight.
+---
+--- DIRECTION BY CONSTRUCTION, not by today's data (the `cullthresh` lesson).  The
+--- armed predicate is the shipped one AND an extra conjunct on one disjunct, so
+--- the armed release set is a strict SUBSET of the shipped one for every
+--- (head count, hurt count) pair.  Arming this id can only REMOVE releases; it
+--- can never add one.  A negative wave read is attributable to "the withheld
+--- channels were worth opening" and never to a cast this lever invented.
+--- tests/test_cm_r_crowd_release.lua §3 sweeps the whole (count, hurt) grid
+--- rather than asserting a single cell, which is the shape of test that caught
+--- `cullthresh`'s first, wrong guard.
+---
+--- ⚠️ LIMITS, four, none rhetorical:
+---   1. `GetAOERadius()` is not one of the seven getters the fixture loader
+---      specs, so it answers 0 offline and every reading above rides the 835
+---      Liquipedia ANCHOR that tests/test_replay_260819_cm_r_range.lua
+---      established and GH #502 ruled must not be sourced from the KV's 810.
+---      Anchor moves ⇒ these numbers move.
+---   2. `GetCurrentMovementSpeed()` is not in the dump; the mock answers a flat
+---      300.  On the frame above the answer survives that -- the quality test
+---      admits nobody for any movespeed above 56.5, and hero movespeed is never
+---      that low -- but a frame whose nearest enemy sits between
+---      `nRadius*0.82 - ms` and `nRadius*0.82` is decided by the mock, not by the
+---      game.  Say so before quoting a corpus-wide hurt count.
+---   3. 1 domain frame is not a frequency.  Of the 10 Crystal-Maiden-subject
+---      fixtures exactly one carries three enemies inside the field; how often
+---      the shape occurs per game needs a wave (iterations/queue.json hero-52).
+---   4. This lever does NOT touch branch 1's missing ALLY term -- `nAllies` is
+---      computed at the top of X.ConsiderR and read only by branch 2.  Whether a
+---      solo CM should ever open on a crowd is a separate question with a
+---      separate id; one lever at a time.
+X.nRCrowdHurtFloor = 1
+
+function X.cm_IsFieldCrowdReleaseOk( nAoeCanHurtCount )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmrcrowd' )
+	then
+		return nAoeCanHurtCount >= X.nRCrowdHurtFloor
+	end
+
+	return true
+
+end
+
 function X.ConsiderR()
 
 	if not abilityR:IsFullyCastable()
@@ -1676,7 +1764,10 @@ function X.ConsiderR()
 	if bot:GetActiveMode() ~= BOT_MODE_RETREAT
 		or ( bot:GetActiveMode() == BOT_MODE_RETREAT and bot:GetActiveModeDesire() <= 0.85 )
 	then
-		if ( #nEnemysHeroesInRange >= 3 or aoeCanHurtCount >= 2 )
+		-- [cmrcrowd] the escape term the head-count disjunct never had.  See
+		-- X.cm_IsFieldCrowdReleaseOk above; gate off it is `true`, byte for byte.
+		if ( ( #nEnemysHeroesInRange >= 3 and X.cm_IsFieldCrowdReleaseOk( aoeCanHurtCount ) )
+			 or aoeCanHurtCount >= 2 )
 		then
 			return BOT_ACTION_DESIRE_HIGH
 		end

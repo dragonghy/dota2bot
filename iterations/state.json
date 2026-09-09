@@ -7424,5 +7424,23 @@
     "mutation_stand": "`tools/agent/mutstand_pullnolane.sh` **12 腿全绿**。承重的三条:**M3 顺序盲**(守卫仍在、仍点名自己的 id、仍比 `LANE_NONE`,只是挪到 `GetLaneFrontLocation` **之下** ⇒ 所有存在性检查照过,语料列塌成 0);**M6 harness 半边**(把 mock 的 `LANE_NONE` 放回哨兵,`bots/` 一个字不动,整轮读数静悄悄退回修复前);**M10 看着像清理**(把 sweep 的 `lane_none` 列改写成字面 `lane == 0`,manifest 每个计数逐位不变、`lane_zero == lane_none` 变成构造性为真,唯一断言常数仍是 0 的那条消失 —— 计数看不见,只有源码钉看得见)。另:`guard_opens` 是干净树上读 0 的列,按 mutstand_fieldsip 的 M8/M13 教训**用极性而非改名**变异(改名是等价变异体:那条分支根本不执行)。",
     "verification": "`bash tools/agent/luacheck_gate.sh` 见报告;`lua5.1 tests/run_tests.lua pullnolane_guard` **10/10**;受 LANE_* 改动波及的相邻测试逐个跑过:`pullcamp_trigger_census` 29/29、`pull_camp` 16/16、`pulldrag_lane_step` 13/13、`towerfear_clock_leg` 15/15、`towerring_attack_circle` 18/18、`farmfear_block2_dominated` 8/8、`replay_071903_sven_idle` 6/6,全 0 failures。",
     "report": "iterations/reports/strategy/20260909T013540Z.md"
+  },
+  "cmrcrowd_20260909": {
+    "owner": "hero",
+    "date": "2026-09-09T02:0xZ",
+    "backlog_item": "hero -129(P4.4 (i):本轮工作单元主体是一个 bots/ 行为改动 —— `-128` 那轮走的是 (ii),章程明写「连着两轮都不碰可执行代码是不行的」)。[hero] open issue **两页都翻完了**(铁律:分页翻完再宣布),第一页 10 条 + 第二页 8 条几乎全是本组自己开的「已 gated 落地」交棒帖,#644/#641 是 lionqdmg 域的裁决材料(球在总监/批测台),故回落到焦点英雄自查;选 Crystal Maiden 是因为她已登记的三个 R 域 id(`cmrguard`/`cmrcap`/`cmrself`)全在 `X.cm_IsRSafeToOpen` 这道**前置**闸上,而 `X.ConsiderR` **分支体自己**的释放条件一个 id 都没有。",
+    "headline": "⭐ **X.ConsiderR 分支 1 的两个析取项不是同一个想法的两种写法:右边那个是质量测试,左边那个是同一张表的裸人头数。** `aoeCanHurtCount` 只数「被控住、或者近到 `nRadius*0.82 - GetCurrentMovementSpeed()` 还够得着」的敌人 —— 也就是**走不掉**的敌人;而 `#nEnemysHeroesInRange >= 3` 把这个测试整条丢掉,并且因为 `or` 先算左边,**三个人头一到就把质量测试短路掉**。⇒ 这个函数里唯一一条「对着一群人开大」的路,正是唯一一条**从不问这群人能不能被打到**的路。⭐⭐ 与本流之前六条到达项(`lionrreach`/`wkqlane`/`cmlaneband`/`zusjumpland`/`lionqkill`/`axebhreach`)**不同族**:那些错在**选靶列表比射程宽**,这一条的列表是对的(就是场里的三个人),错的是**释放判据比它自己隔六行算出来的判据松**。",
+    "gate": "cmrcrowd(NEW soak id,turbo-only,**未 armed**;STANDALONE —— `X.cm_IsFieldCrowdReleaseOk` 里只有它一个 IsSoakCandidate。变异台 **M9** 就是 pullcad 陷阱:把同文件三个 helper 之外的 `cmrguard` 合取进来,10/10 被抓。)",
+    "bots_lua_changed": "bots/BotLib/hero_crystal_maiden.lua —— 新常量 `X.nRCrowdHurtFloor = 1` + 新 helper `X.cm_IsFieldCrowdReleaseOk( nAoeCanHurtCount )`;`X.ConsiderR` 分支 1 的人头析取项末尾加一条合取。闸关时对任何输入返回 `true` ⇒ 逐字是出货谓词(§2.1/§2.2 在三个 off-world 上驱动:闸关、非 turbo、armed 了别的 id)。",
+    "change": "armed 时人头那条路额外要求 `aoeCanHurtCount >= 1` —— **一个**走不掉的敌人,不是两个。`aoeCanHurtCount >= 2` 那条析取项**逐字不动**,所以一对真被钉住的敌人照样能在没有队友的情况下释放大招。",
+    "direction": "**严格子集,由形状保证**:armed 谓词 = 出货谓词 ∧(一条只加在其中一个析取项上的合取),所以对每一个 (人头数, hurt 数) 格子,armed 释放集 ⊂ 出货释放集。**只能删除释放,永远不能新增一次。** 负读数只能读作「被扣下的那几次开大是值得开的」,永远不能读作「这条 lever 让她多开了 N 次」。§3.1 在整张 (0..5, 0..hurt) 网格上扫,并**同时断言被删掉的格子集合恰好是 `3:0 4:0 5:0`**(§3.2)—— 只断言「子集」的话,一个恒 false 的变异体也是子集(cullthresh 的教训)。",
+    "reading": "**钉帧,除 AoE 半径锚外零注入**:`tests/fixtures/f_260820_043039_cm_cask_close.lua`(20260820_043039_slot1 @ t=515.5,8:35)。CM **267/890 = 0.30 血**;场里 **3 个可见敌人**在 734.8u 的场内(witch_doctor 546u / slardar 571u / shadow_shaman 609u),**1200u 内 0 个队友**;三个都没被控,且都在 `734.8*0.82 - 300 = 302.5` 之外 ⇒ **`aoeCanHurtCount == 0`**,人头数是这次出价的**唯一**理由。出货 `X.ConsiderR()` 答 **0.75**;armed 答 **0**(端到端翻转,没有任何一条下游分支接住它)。**地面真相 `died_after = 0.2`** —— 这次出价要的是一段 10 秒读条,而她 0.2 秒后就死了。语料域:10 个 CM-subject fixture 里**恰好 1 个**带这个形状,其余 9 帧 armed 与出货**逐位相同**(§5.2)。",
+    "tests": "tests/test_cm_r_crowd_release.lua(**18 例**,6 节:①源码形状/唯一调用点/pullcad ②三个 off-world 的闸 ③网格方向扫 + 被删格子集合 ④真实帧端到端翻转 ⑤域普查 + 域外静默 ⑥两个仪表)。变异台 tools/agent/mutstand_cmrcrowd.sh **10/10 CAUGHT**(基线 `cm` 过滤 316 例绿),含两条**对台子自己的控制**:M8(把钉帧从列出的语料里拿掉,域普查必须红)与 M10(把 835 锚挪到 600,凡是引用距离的读数必须红)。",
+    "limits": "四条,一条都不许合并:(1) **`GetAOERadius` 不是 loader 供的七个 getter 之一**,离线答 0,本文件所有距离都骑在 `tests/test_replay_260819_cm_r_range.lua` 立的 **835 Liquipedia 锚**上(GH #502 已裁定不许改用 KV 的 810);锚一动读数全动,§6.1 钉住。(2) **`GetCurrentMovementSpeed` 不在 dump 里,mock 答固定 300**;钉帧上这个结论扛得住(最近的敌人要到 movespeed **56.5** 以下才会被数进 hurt,英雄移速永远不会那么低,§6.2 把这个余量算出来断言),但**别的帧的 hurt 数不能继承这份稳健性**。(3) **1 帧不是频率**:10 个 CM fixture 里 1 个带这个形状,那是**域**;每局出现几次要一波(queue `hero-52`)。(4) 本 lever **不碰**分支 1 缺失的**队友项**(`nAllies` 在 `X.ConsiderR` 顶上算出来、只被分支 2 读)—— 「单人该不该对着一群人开大」是另一个问题、另一个 id。一次一根杠杆。",
+    "left_alone": "⚠️ 顺手看到、**故意没动**的两条:(甲) 分支 1 的**队友项**(见限度 4)。(乙) `nWeakestEnemyHeroInRange` / `nWeakestEnemyHeroHealth1` 在 `X.ConsiderR` 里赋值后**一个读者都没有** —— 那是死局部量(`dead_numeric_local_census` 那一族),不是行为缺陷,删它是另一次改动。",
+    "armed": "否。P4.2 冻结期内本轮**零 arm、零入集提议**;合法裁定是 FROZEN-HOLD。",
+    "queue": "iterations/queue.json `hero-52`(解冻后的 armed 波次登记 + 要读的四列)",
+    "issue": "GH #648",
+    "report": "iterations/reports/hero/20260909T020205Z.md"
   }
 }

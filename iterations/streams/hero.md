@@ -22,7 +22,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--129. **⭐ 下一轮:回到 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**
+-130. **⭐ 下一轮:继续 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**
+   本轮(`-129`)做的就是 (i),`bots/` 有真代码行(`cmrcrowd`)。下一轮同样走 (i)。
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`、CM 的 `cmfarcreep` 域
+     (`hero-42`)、`lionultcash`(`hero-43`)、`lionrreach`(`hero-44`)、`wkqlane`(`hero-45`)、
+     `axecullreach`(`hero-46`)、`cmlaneband`(`hero-47`)、`zusjumpland`(`hero-48`)、
+     `lionqkill`(`hero-49`)、`axebhreach`(`hero-50`)、`zusultstrand`(`hero-51`)、
+     **新增 `cmrcrowd`(`hero-52`,本轮登记)**;`wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`,逐字不变(GH #570)。
+   - **⛔ 不许**把 `cmrcrowd` 与 `cmrguard`/`cmrself`/`cmrcap` 合取进一个谓词 —— 那是 pullcad
+     陷阱,而这四个 id **就住在同一个函数域里**(前三个在 `X.cm_IsRSafeToOpen`,本条在它下面
+     三个 helper);变异台 **M9** 就是它。要表达依赖用 promote-atom,不许写进代码。
+   - **⭐⭐ 本轮买到的一课,下一轮直接用**:**「同一个函数自己算出来的判据」是最好找的缺陷线索,
+     而且它与「选靶列表比射程宽」不同族。** 本轮的形状是:一个 `or` 的两个析取项,右边是质量
+     测试、左边是同一张表的裸计数,而 `or` 先算左边 ⇒ **裸计数把质量测试短路掉**。
+     找法:在焦点英雄文件里 grep `or` 两侧读同一个列表的释放条件,看**哪一侧没有过滤**。
+     ⚠️ 配套的方法论一条:**只断言「armed ⊆ shipped」不够**(恒 false 也是子集),必须
+     **同时把被删掉的格子集合列出来断言相等**(本轮 §3.2 = `3:0 4:0 5:0`;M6 就是靠它抓住的)。
+   - **⭐ 已查过的否定结果,别再查一遍**:Zeus `X.ConsiderQ` 的**十个**落单点**全部**绑在
+     `nCastRange` 上(FindAoELocation / GetVulnerableWeakestUnit / GetVulnerableUnitNearLoc /
+     GetNearbyLaneCreeps / GetNearbyNeutralCreeps / 直接 `J.IsInRange`),**一个到达缺陷都没有**。
+     Zeus `X.ConsiderR` 的 `lowHPCount` 循环走裸 `GetUnitList( UNIT_LIST_ENEMY_HEROES )` 且只有
+     `e ~= nil` 一道守卫(全仓惯例是 `J.IsValidHero`),但**唯一有区别的那一项是 `IsAlive()`,
+     而 fixture 世界的 `GetUnitList` 按构造只装活人** ⇒ **域恒 0,钉不了帧**,不要再排它。
+   - **⭐ 仪表登记(下次写 CM 的 R 域读数前必看)**:`GetAOERadius` 离线答 **0**(不是 loader 供的
+     七个 getter 之一),所有 CM 大招距离读数骑在 **835 Liquipedia 锚**上,GH #502 已裁定不许
+     改用 KV 的 810;`GetCurrentMovementSpeed` 不在 dump 里,mock 答**固定 300**。
+   - **⭐ 开工顺序(连续五轮有效,本轮没有复发)**:开工自检**跑完**再动变异台/`bots/`,
+     **不要并行**(GH #507)。本轮用 `until ! pgrep -f "[r]outine_selfcheck.sh"` 阻塞等,
+     并且**在自检跑完之前一行 `bots/` 都没动** ⇒ `trunk-red(python)` 那条这次可以正着读。
+   - **⛔⛔ 自检退出码只能用文件重定向读**:`-129` 换的形状**部分生效** —— 本轮仍然第一条命令
+     踩了管道(**第 14 次**),但 REFUSED 出现在「跑自检」这一步、当场改回文件重定向重跑,
+     没有污染任何结论。下一轮**第一条 Bash 命令只准是**
+     `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?"`(不接 `| tail`)。
+   - **⭐ 第二页上仍没排到的 `[hero]`**:#587 / #567 / #566 / #564 / #563 / #562 / #560 / #554 /
+     #549。**#562 的「拆不拆」仍是本组的**(但它是登记动作不是 `bots/` 改动,只能当附带一条)。
+
+-129. ~~**⭐ 下一轮:回到 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-09T02:02Z 做完(就是 (i),`bots/` 有真代码行)**:焦点英雄 **Crystal Maiden**,
+   新 gated `cmrcrowd`。`X.ConsiderR` 分支 1 的 `#nEnemysHeroesInRange >= 3 or aoeCanHurtCount >= 2`
+   里,右边是同函数往上六行算出来的**质量测试**(被控住 / 近到 `nRadius*0.82 − 移速` 还够得着,
+   即**走不掉**),左边是同一张表的**裸人头数**,而 `or` 先算左边 ⇒ 三个人头一到就把质量测试
+   **短路**掉。armed 时人头那条路额外要求 `aoeCanHurtCount >= 1`。钉帧
+   `tests/fixtures/f_260820_043039_cm_cask_close.lua`(t=515.5,CM 267/890=0.30,场内 3 个敌人
+   546/571/609u、1200u 内 0 个队友、hurt=**0**)出货 **0.75** → armed **0**,**除 835 AoE 锚外
+   零注入**,地面真相 **`died_after = 0.2`**。报告 `iterations/reports/hero/20260909T020205Z.md`,
+   `state.json:cmrcrowd_20260909`,`queue.json:hero-52`,GH **#648**。
+   `run_tests.lua cm` **316 例 0 失败**;新 `tests/test_cm_r_crowd_release.lua` **18 例**;
+   `mutstand_cmrcrowd.sh` **10/10 CAUGHT**;`luacheck_gate.sh` **EXIT=0 CLEAN**。
+
+-129b. **⭐(存档)上一轮 `-129` 立的条款,已由本轮执行:**
    本轮(`-129` 之前的 `-128`)走的是 **P4.4 (ii)**(判定完结的最后一块证据,GH #593),
    `bots/` 只有注释 diff。**连着两轮都不碰可执行代码是不行的**,下一轮回 (i)。
    - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`、CM 的 `cmfarcreep` 域
@@ -5658,6 +5707,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-09T02:02Z(报告 `iterations/reports/hero/20260909T020205Z.md`;**backlog:`-129` 做完、
+  新开 `-130`**;焦点英雄 **Crystal Maiden**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动,有真可执行代码行)
+  **`X.ConsiderR` 分支 1 的两个析取项不是同一个想法的两种写法:右边那个是质量测试,左边那个是
+  同一张表的裸人头数 —— 而 `or` 先算左边,所以三个人头一到就把质量测试短路掉。这个函数里唯一
+  一条「对着一群人开大」的路,正是唯一一条从不问这群人能不能被打到的路。gated `cmrcrowd` 把那
+  一项补上。**
+  `aoeCanHurtCount` 只数**走不掉**的敌人(被控住,或近到 `nRadius*0.82 − GetCurrentMovementSpeed()`
+  还够得着);`#nEnemysHeroesInRange >= 3` 读同一张表却把这个测试整条丢掉。armed 时人头那条路
+  额外要求 `aoeCanHurtCount >= 1`(**一个**,不是两个),`aoeCanHurtCount >= 2` 那条**逐字不动**。
+  新 `X.cm_IsFieldCrowdReleaseOk` + `X.nRCrowdHurtFloor = 1`,新
+  `tests/test_cm_r_crowd_release.lua`(**18 例**)+ `tools/agent/mutstand_cmrcrowd.sh`(**10/10 CAUGHT**,
+  基线 `cm` 316 例绿)。`state.json:cmrcrowd_20260909`、`queue.json:hero-52`、GH **#648**(本轮开)。
+  **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3、零 CE。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;`gate_claim` 16 例、`smoke` 3 例
+  0 失败;82 个带 tag 的 fast Lua detector **1 红,与开工自检逐字同一条,不是本轮的**。
+  ✅ **本轮把 `[hero]` 的分页翻完了才判断**(两页 20 条逐条理由见报告 §1):除 #644 外全是本组
+  自己开的「已 gated 落地」交棒帖,#644/#641 是 `lionqdmg` 域的裁决材料(球在总监/批测台)。
+  - **⭐⭐ 本轮的看门狗是「只断言子集不够」**:armed ⊆ shipped 由形状保证(只加一条合取),
+    但**一个恒 `false` 的变异体也是子集**。§3.2 因此**把被删掉的格子集合列出来断言相等**
+    (`3:0 4:0 5:0`),而变异台 **M6**(hurt 门槛 1 → 2)正是靠它被抓住的 —— M6 让人头析取项
+    **蕴含**它旁边的质量析取项,分支 1 塌成 `aoeCanHurtCount >= 2`,lever 从「让人头那条路检查
+    一下到达」**变成「把人头那条路删掉」**,而所有闸测试照过。
+  - **⭐⭐ 钉帧除 AoE 锚外零注入,而且地面真相把代价说死了**:`f_260820_043039_cm_cask_close`
+    t=515.5,CM **267/890 = 0.30**,场内 **3** 个可见敌人(546/571/609u)、1200u 内 **0** 个队友、
+    三个都没被控且都在 `734.8×0.82 − 300 = 302.5` 之外 ⇒ **hurt = 0**,人头数是这次出价的
+    **唯一**理由;出货 **0.75** → armed **0**(§4.2 **同时**断言没有下游分支接住它)。
+    **`died_after = 0.2`** —— 这次出价要的是一段 **10 秒**读条。域:10 个 CM fixture 里**恰好 1 个**,
+    其余 9 帧 armed 与出货**逐位相同**。
+  - **⚠️ 限度四条,一条都不许合并**:(1) `GetAOERadius` 离线答 **0**,所有距离骑在 **835
+    Liquipedia 锚**上(GH #502 裁定不许改用 KV 的 810);(2) `GetCurrentMovementSpeed` 不在 dump 里,
+    mock 答**固定 300** —— 钉帧扛得住(要 movespeed < **56.5** 才会翻,§6.2 断言余量 < 60),
+    但**别的帧的 hurt 数不能继承这份稳健性**;(3) 1 帧是**域**不是频率(要一波,`hero-52`);
+    (4) **不碰**分支 1 缺失的**队友项**(`nAllies` 只被分支 2 读)——「单人该不该对着一群人开大」
+    是另一个 id。
+  - **⚠️ 顺手登记的否定结果**(免得下轮重查):Zeus `X.ConsiderQ` **十个**落单点**全部**绑在
+    `nCastRange` 上,一个到达缺陷都没有;Zeus `X.ConsiderR` 的 `lowHPCount` 循环虽然只有
+    `e ~= nil` 一道守卫(全仓惯例是 `J.IsValidHero`),但**唯一有区别的那一项是 `IsAlive()`,
+    而 fixture 的 `GetUnitList` 按构造只装活人** ⇒ **域恒 0,钉不了帧**。
+  - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**:cadence / owed-executions / trunk-red(python)
+    (`test_bots_walk_farm_only.py` + `test_carrier_terms.py`)/ trunk-red(lua)
+    (`test_coarmed_attribution_register.lua`)—— **都不是本组的**,后三条都指向上一个 commit
+    `ffb0248`(总监 armed 集 41 → 39);另有 9 个 check 120s 没跑完的 UNCERTIFIABLE(与前四轮
+    逐字同一条,GH #548)。⭐ **`-129` 要的那句话本轮可以正着说**:自检跑的时候树是**安静的**
+    (自检跑完前一行 `bots/` 都没动)⇒ 那两条 python 红**可以**读作 trunk 红。
+  - **⛔ 自检第 14 次被管道读退出码当场 REFUSED,又是第一条命令** —— 但 `-129` 换的形状
+    **部分生效**:REFUSED 落在「跑自检」这一步、当场改回文件重定向重跑,**没有污染任何结论**。
+  - ✅ **「自检与变异台并行」(GH #507)连续五轮没有复发。**
 - 2026-09-08T23:09Z(报告 `iterations/reports/hero/20260908T230955Z.md`;**backlog:`-128` 做完、
   新开 `-129`**;焦点英雄 **Zeus**;OWNER_PRIORITIES **P4.4 (ii)** —— 工作单元主体是
   **一个判定完结所需的最后一块证据**,不是 (i) 的行为改动;`bots/` 只有注释 diff,零可执行改动)
