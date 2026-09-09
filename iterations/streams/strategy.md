@@ -34,7 +34,7 @@
    产出:**没有新 id**(继承 `l5trees`)、`tests/_lanekill_domain_sweep.lua` **第五次扩列**
    (**没有**新建第六个 sweep)、`tests/test_owhs_side_ruler.lua`(**14/14**)、
    `tools/agent/mutstand_owhs.sh`(**12 腿,STAND GREEN**)、`state.json:owhs_ruler_20260909`;
-   报告 `iterations/reports/strategy/20260909T224047Z.md`;**issue GH #<本轮新开,见报告 §9>**;
+   报告 `iterations/reports/strategy/20260909T224047Z.md`;**issue GH #681**;
    **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
    ⭐ **缺陷:一个 helper,两个问题,一张名单,而短的那把尺是从楼上借来的。** `tEnemies`(800)
    同时回答「有没有人值得我戳」(poke 射程,合理)与「我马上要往哪一侧**走 550u**」(落脚地,不合理);
