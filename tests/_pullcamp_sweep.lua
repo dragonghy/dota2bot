@@ -13,6 +13,9 @@
 --   NEWONLY <fixture> <hero> <sec>      frame the travel lead newly admits
 --   WIT <fixture> <hero> <team> <pos> <x> <y> <hp01> <pullsafe> <neut1400>
 --   NEUTDMG <fixture> <hero> <support> <hits> <value> <t>
+--   DRG <fixture> <hero> <t> <lane>   one frame where the 'dragnolane' guard
+--       (GH #652) turns J.GetLanePullDragTarget's answer from a drag
+--       destination computed off an unresolvable lane id into a clean nil
 --   GRD <fixture> <hero> <t> <lane>   one frame where the 'pullnolane' guard
 --       (GH #648) turns the shipped function's answer from "fell through the
 --       lane guard and raised at GetLaneFrontLocation" into a clean nil
@@ -264,6 +267,113 @@ for _, path in ipairs(fixture_files()) do
                         bump('guard_opens')
                     end
                 end
+
+                -- [GH #652 20260909] PRICING THE THREE REMAINING SITES that
+                -- carry the GH #648 defect (a lane guard written against `nil`
+                -- while the engine says "no lane" with LANE_NONE == 0).  The
+                -- previous round repaired ONE of the four and named the other
+                -- three explicitly; this block prices each of them BEFORE
+                -- anything is written, so "one lever at a time" picks the
+                -- lever on a reading rather than on which line was easiest.
+                --
+                -- Runs last in the frame body, on the same per-frame-fresh J,
+                -- and sets its own gate overrides -- nothing here can reach a
+                -- counter above.
+                do
+                    -- (A) J.ShouldLaneRecoverFarm (jmz_func.lua:7960).  Its
+                    -- lane block is `if nLane ~= nil then ... end`, so on a
+                    -- LANE_NONE frame the block RUNS with 0 as a lane id.  But
+                    -- three guards sit above it and one of them is
+                    -- J.GetDistanceFromLaneFront, which calls the function the
+                    -- loader refuses (GH #61) -- so the question "can this site
+                    -- flip here" is answered before it is asked.  A raise
+                    -- naming GetLaneFrontLocation is positive proof the frame
+                    -- never reached the lane block.
+                    J.IsModeTurbo = function() return true end
+                    J.IsSoakCandidate = function(sId) return sId == 'lf_recover' end
+                    local okA, vA = pcall(J.ShouldLaneRecoverFarm, bot)
+                    if not okA then
+                        bump('lrf_raise')
+                        if tostring(vA):find('GetLaneFrontLocation', 1, true) then
+                            bump('lrf_raise_lanefront')
+                        end
+                    elseif vA then
+                        bump('lrf_true')
+                    else
+                        bump('lrf_false')
+                    end
+
+                    -- (B) J.ShouldCreepPullLane (jmz_func.lua:9440).  Its lane
+                    -- block reads GetLaneFrontAmount for BOTH teams with the
+                    -- same lane id and compares them, so whatever LANE_NONE
+                    -- does to that read, it does to it SYMMETRICALLY.  The
+                    -- flip domain of a repair here is therefore exactly the
+                    -- frames where the two reads differ; counted directly
+                    -- rather than argued, because this site is inside a
+                    -- PROMOTED helper ('creeppull', live in every turbo game).
+                    local fo = GetLaneFrontAmount(GetTeam(), lane, false)
+                    local fe = GetLaneFrontAmount(GetOpposingTeam(), lane, false)
+                    if fo ~= nil and fe ~= nil then
+                        bump('frontamt_both_nonnil')
+                        if fo ~= fe then bump('frontamt_differs') end
+                        if fe > fo then bump('frontamt_pushed') end
+                    end
+
+                    -- (C) J.GetLanePullDragTarget (jmz_func.lua:10523).  Its
+                    -- guard is `if nLane == nil then return nil end` -- the
+                    -- same unreachable condition GH #648 repaired one function
+                    -- earlier -- and below it the function samples 21 points
+                    -- along the lane and returns the closest one to the camp.
+                    -- So on a LANE_NONE frame the answer is a point derived
+                    -- from a lane id the engine cannot resolve, handed back to
+                    -- mode_roam_generic as a drag destination.  Two facts are
+                    -- counted: whether the lane sampler answers at all here,
+                    -- and what the shipped function returns with its own gate
+                    -- ('pulldrag', turbo) armed and nothing else.
+                    if GetLocationAlongLane(lane, 0.5) ~= nil then
+                        bump('alongline_nonnil')
+                    end
+                    J.IsSoakCandidate = function(sId) return sId == 'pulldrag' end
+                    local okC, vC = pcall(J.GetLanePullDragTarget, bot, loc)
+                    if not okC then
+                        bump('drag_raise')
+                    elseif vC ~= nil then
+                        bump('drag_nonnil')
+                    else
+                        bump('drag_nil')
+                    end
+
+                    -- The SAME shipped function, driven a second time with
+                    -- 'dragnolane' armed on top of the same 'pulldrag'.  Two
+                    -- drives of one function, not one drive of two
+                    -- implementations: the differential is a measurement.
+                    -- The oracle needs no refused call here -- this function
+                    -- returns a value rather than raising, so nil vs non-nil
+                    -- IS the answer.  `drag_opens` is the forbidden direction
+                    -- (a guard can only ever REMOVE a destination), and it is
+                    -- a column that reads 0 on a clean tree, so the mutation
+                    -- stand varies its POLARITY rather than its name.
+                    J.IsSoakCandidate = function(sId)
+                        return sId == 'pulldrag' or sId == 'dragnolane'
+                    end
+                    local okD, vD = pcall(J.GetLanePullDragTarget, bot, loc)
+                    if not okD then
+                        bump('drag2_raise')
+                    elseif vD ~= nil then
+                        bump('drag2_nonnil')
+                    else
+                        bump('drag2_nil')
+                    end
+                    if okC and vC ~= nil and okD and vD == nil then
+                        bump('drag_closes')
+                        out:write(string.format('DRG %s %s %.1f %s\n',
+                            path, u.name, t, tostring(lane)))
+                    end
+                    if okC and vC == nil and okD and vD ~= nil then
+                        bump('drag_opens')
+                    end
+                    if okC and vC == nil and not okD then bump('drag_opens') end
+                end
             end
         end
     end
@@ -280,6 +390,10 @@ for _, k in ipairs({
     'spnc_nil', 'spnc_nonnil', 'spnc_raise', 'spnc_raise_lanefront',
     'lane_none', 'guard_nil', 'guard_nonnil', 'guard_raise',
     'guard_closes', 'guard_opens',
+    'lrf_raise', 'lrf_raise_lanefront', 'lrf_true', 'lrf_false',
+    'frontamt_both_nonnil', 'frontamt_differs', 'frontamt_pushed',
+    'alongline_nonnil', 'drag_raise', 'drag_nonnil', 'drag_nil',
+    'drag2_raise', 'drag2_nonnil', 'drag2_nil', 'drag_closes', 'drag_opens',
     'neut_dmg', 'neut_dmg_support', 'neut_dmg_support_window',
 }) do
     out:write(string.format('C %s %d\n', k, c[k]))

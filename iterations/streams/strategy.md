@@ -27,6 +27,72 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0DRAGNOLANE. **【2026-09-09T04:52Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第二轮 (i));
+   认领依据 = 上一轮「下一格」第 (1)(2) 条**逐条执行** + **OWNER_PRIORITIES P1**。工作流第 1 步扫到的
+   新 `[strategy]` issue **一条也没有**。产出:新 gated id **`dragnolane`**(`bots/FunLib/jmz_func.lua`
+   的 `J.GetLanePullDragTarget`,turbo-only,住在已有的 `pulldrag` 门内)、新共享谓词
+   **`J.IsLaneAssigned( bot )`**(**纯谓词**:无 gate、无副作用、无自身行为)、
+   `tests/_pullcamp_sweep.lua` **第二次扩列**(**没有**新建第六个全语料 sweep)、
+   `tests/test_lanenone_site_pricing.lua`(**12/12**)、`tools/agent/mutstand_dragnolane.sh`
+   (**14 腿:13 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
+   `tests/test_gated_helper_nesting_census.lua` 的 `pulldrag` 行按手读重钉为 `dragnolane,pulldrag`、
+   `state.json:dragnolane_20260909`;报告 `iterations/reports/strategy/20260909T045234Z.md`;**issue GH #652**;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 本轮先做的事是「不动 `bots/`」:三处放在同一次 1021 活帧行走上各自定价,两处因此落选。**
+   (A) `J.ShouldLaneRecoverFarm` —— **0 帧到得了它的 lane 块**(`J.GetDistanceFromLaneFront` 压在上面,
+   调的正是加载器拒答的那个函数,GH #61):`lrf_raise_lanefront` **631** / `lrf_false` **390** /
+   `lrf_true` **0**,**631+390 = 1021 人口闭合**(两个数加不回语料,「0 帧到达」讲的就是一个没被命名的子集)。
+   (B) `J.ShouldCreepPullLane` —— 它的块拿**同一个 lane id** 读**两队**的 `GetLaneFrontAmount` 再比大小,
+   坏 lane id **对称**降级 ⇒ `frontamt_differs` **0/1021**、`frontamt_pushed` **0**,修它是**全语料实测 no-op**;
+   而那处在**已 promote** 的 `creeppull` 里 ⇒ 桌上的交易是**拿活体行为风险换一个实测零**。
+   (C) 中选 `J.GetLanePullDragTarget` —— `alongline_nonnil` **1021/1021**、`drag_nonnil` **1021**、
+   `drag_nil` **0**:只 arm 它自己的 `pulldrag`,它**每一帧**都交出一个由引擎解不了的 lane id 算出来的拖拽落点。
+   **⭐⭐ 这是修复不是新政策**:该函数**自己的头注释**在守卫上方十六行就写着「the engine cannot say where
+   the lane is ⇒ 返回 nil,调用方照出厂样子往家走;**An engine that cannot answer must never redirect a
+   pull into the fog**」—— `LANE_NONE` **就是**引擎在说它说不出路在哪。
+   **⭐⭐⭐ 差分(同一个已发布函数驱动两次)**:`drag2_nil` **1021** / `drag2_nonnil` **0** ⇒
+   `drag_closes` **1021 == `drag_nonnil`**(**覆盖到达该子句的全部人口**,不是「有些帧变了」),
+   禁止方向 `drag_opens` **0**,`DRG` 证人行 **1021 == drag_closes**(一列全零分不出「方向成立」和
+   「计数从没跑过」)。**GH #648 的读数未被扰动**(同一次 sweep:`guard_closes` 仍 **18**、`guard_opens` **0**、
+   `lane_nil` **0**、`lane_none` **1021**)—— 两轮仍是互相独立的测量,这一条自己成了断言。
+   ⛔ **发波之前先说(GH #622,提前问)**:`drag_nonnil` 1021 **有一半是关于加载器的陈述**
+   (mock 对任何 lane id 都答 `Vector(0,0,0)`;lane 分配是 bot-VM 状态,不在 `.dem` 里 = STOPPER 4)。
+   **若真引擎对 lane 0 答 nil**,21 次采样得空路径、`#tPath >= 2` 为假 ⇒ **出厂代码本来就退化成 nil**,
+   本修复**是惰性的**;它**只在另一种情况下咬合**。语料**能**独立于加载器确定的是:**出厂那条守卫
+   根本开不了火**(`lane_nil` 0/1021 vs `lane_none` 1021/1021)。⛔⛔ **恒等式还有反方向**:
+   有 lane 的帧上 `dragnolane` 自己**恰好是单位元** ⇒ **单独 arm 会读回「tested, no effect」而
+   `check_armed_wiring.py` 说 WIRED**(`pullcad` 形状)。**建议(交总监,不代总监决定):与 `pulldrag`
+   同进同退(promote 时作为同一个原子一并去 gate),不单独发波;4.2 冻结期内记 FROZEN-HOLD。**
+   **⭐⭐⭐⭐ 自检当场抓到一件事,不是事后补的**:`test_gated_helper_nesting_census.lua` 在改动落盘后
+   **立刻打红**并点名新的 gate-inside-a-gate,要求**先手读再钉**。答案 **(P)**:未 armed 时第一个合取项
+   为假,函数**逐字交回出厂值**,这条门**只能删除**一个落点、永不新增(实测 `drag_opens` 0/1021)。
+   手读连同**反方向恒等式警告**已写进那一行的钉注。
+   **变异台头条**:(a) **M3 顺序盲在这里比 `pullnolane` 那轮更硬** —— 把守卫挪到 21 次采样**之下**、
+   `return vDest` **之前**,**返回值逐位不变** ⇒ **整份 manifest(含差分)逐位不变**,只有源码顺序钉看得见;
+   它毁掉的正是守卫存在的理由(本要拦住的采样现在跑了);(b) **M6 常数谓词** —— `J.IsLaneAssigned` 改成
+   `return false`,**差分完好无损**(语料每帧都是 LANE_NONE),只有真实帧上 `LANE_MID` 必须读 **true**
+   这个**反方向**断言能把「在读 lane」和「在答 no」分开;(c) **M9 harness 半边** —— mock 的 `LANE_NONE`
+   放回哨兵,`bots/` 一字不动,全部读数静悄悄退回修复前;(d) **M11 计数盲** —— `alongline_nonnil` 列改成
+   无条件 bump,**manifest 逐位不变**(两种写法都是 1021),**本轮先补了一个源码钉才抓得住**;
+   (e) **M12 棘轮** —— 悄悄把**落选的 site B** 修好:定价必须**钉在它描述的代码上**;
+   (f) **M13** `drag_opens` 干净树上读 0 ⇒ 按 `mutstand_fieldsip.sh` 的 M8/M13 教训**用极性而非改名**变异。
+   **第一版三条 WRONG MESSAGE 也记下来**,那是台子的用法本身:M2/M4/M5 的 `want` 写成了「我希望他看到的」
+   而不是「他**实际**看到的」(`cs.universal` 在计数断言**之前**先红)⇒ 台子会把**抓住了的**变异体记成 survived。已改。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是 `bots/` 行为改动**;本族**还剩两处**,定价**已在案**且已被
+   `tests/test_lanenone_site_pricing.lua` 的**棘轮钉在源码上**(任何一轮悄悄改掉那两条守卫都会打红,
+   并被告知「若那是修复,先重新定价」);
+   (2) ⭐ **但两处各有一个明确前置,不许绕过** —— **(A)** 前置是**语料**:`J.GetDistanceFromLaneFront`
+   那条腿被 GH #61 拒答挡着 ⇒ 本语料 0 帧到达;dumper 若能投影 `GetAssignedLane()` / lane 几何,
+   这一族的**真实域立刻可测**。**在语料到位之前不要动它** —— 那会是一个域为零的 gated 杠杆,
+   正是 0FSATOM 那一轮明令禁止的东西。**(B)** 前置是**先给它一个非零的 flip 域**:`frontamt_differs`
+   必须先在某条语料上不为 0,否则是买**一个实测零 + 一份活体行为风险**(它在 promote 过的 `creeppull` 里);
+   (3) 语料请求:**本轮这条与 #648 那条同族**(`GetAssignedLane()` / lane 几何的投影,已写进 #652);
+   另两条旧的仍挂着:'撤退:3' 深带臂那一帧、`nosrc_attr_only` 那一帧;
+   (4) ⛔ **不要**再给 `pullcamp` 的秒窗 / 1500 reach / `>= 0.5` HP 门做第四次普查、**不要**在 `pulllane`
+   未裁定前动 `PULL_CAMP_LANE_GAP`、**不要**新建第六个全语料 sweep、**不要**回
+   `field_hold_needs_magnitude` 一族、**不要**为了凑 P4.4(i) 硬造一个域为零的 gated 杠杆。】**
+
 0PULLNOLANE. **【2026-09-09T01:35Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续三轮 (ii) 的链条到本轮结束);
    认领依据 = 上一轮「下一格」第 (1)(2) 条**逐条执行** + **OWNER_PRIORITIES P1**。工作流第 1 步扫到的
    新 `[strategy]` issue **一条也没有**。产出:新 gated id **`pullnolane`**(`bots/FunLib/jmz_func.lua`
@@ -6960,6 +7026,46 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-09T04:52Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第二轮 (i);认领依据 =
+  上一轮「下一格」第 (1)(2) 条逐条执行 + **OWNER_PRIORITIES P1**。工作流第 1 步扫到的新
+  `[strategy]` issue **一条也没有**)。
+  ⭐ **本轮先做的事是「不动 `bots/`」** —— 上一轮点名的**三处**放在**同一次 1021 活帧行走**上
+  **各自定价**,结果**两处落选**:(A) `J.ShouldLaneRecoverFarm` **0 帧到得了它的 lane 块**
+  (`lrf_raise_lanefront` **631** / `lrf_false` **390** / `lrf_true` **0**,**631+390=1021 人口闭合**);
+  (B) `J.ShouldCreepPullLane` 拿**同一个 lane id** 读**两队**的 `GetLaneFrontAmount` ⇒ **对称**降级 ⇒
+  `frontamt_differs` **0/1021**,修它是**全语料实测 no-op**,而它在**已 promote** 的 `creeppull` 里
+  (拿活体行为风险换一个实测零);(C) 中选 `J.GetLanePullDragTarget` —— `alongline_nonnil` **1021/1021**、
+  `drag_nonnil` **1021**、`drag_nil` **0**:只 arm `pulldrag`,它**每一帧**都交出一个由引擎解不了的
+  lane id 算出来的拖拽落点。
+  ⭐⭐ **这是修复不是新政策**:该函数**自己的头注释**在守卫上方十六行已写死政策
+  (「An engine that cannot answer must never redirect a pull into the fog」),而 `LANE_NONE` **就是**
+  引擎在说它说不出路在哪 —— 已声明的政策只是**在引擎真正用来表达它的那个值上没有实现**。
+  落地 gated id **`dragnolane`**(turbo-only,住在 `pulldrag` 门内)+ **共享纯谓词
+  `J.IsLaneAssigned( bot )`**(无 gate、无副作用),供剩余两处下一轮改成一次调用而非第四份常数副本。
+  差分(同一函数驱动两次):`drag2_nil` **1021** / `drag2_nonnil` **0** ⇒ `drag_closes`
+  **1021 == drag_nonnil**(覆盖全部人口),`drag_opens` **0**,`DRG` 证人行 **1021 == drag_closes**。
+  **GH #648 读数未被扰动**(`guard_closes` 仍 18 / `guard_opens` 0 / `lane_nil` 0 / `lane_none` 1021)。
+  ⛔ **发波前先说(GH #622)**:`drag_nonnil` 1021 有一半是**关于加载器**的陈述;真引擎若对 lane 0 答 nil,
+  出厂代码**本来就退化成 nil**、本修复是惰性的。语料**能**独立确定的是**出厂守卫根本开不了火**。
+  ⛔⛔ 反方向:有 lane 的帧上它自己**恰好是单位元** ⇒ 单独 arm 会读回「tested, no effect」而
+  `check_armed_wiring.py` 说 WIRED(`pullcad` 形状)。**建议与 `pulldrag` 同进同退,不单独发波;
+  4.2 冻结期记 FROZEN-HOLD。**
+  ⭐⭐⭐ **自检当场抓到一件事**:`test_gated_helper_nesting_census.lua` 在改动落盘后**立刻打红**,
+  点名新的 gate-inside-a-gate 并要求**先手读再钉**;答案 **(P)**(未 armed 逐字交回出厂值,这条门
+  **只能删除**一个落点,实测 `drag_opens` 0/1021),手读连同反方向恒等式警告已写进钉注,复跑 **10/10**。
+  `tools/agent/mutstand_dragnolane.sh` **14 腿全绿**(M3 顺序盲**返回值逐位不变**、M6 常数谓词、
+  M9 harness 半边、M11 计数盲**先补钉才抓得住**、M12 棘轮钉住落选的 site B、M13 用极性而非改名)。
+  报告 `iterations/reports/strategy/20260909T045234Z.md`;issue **GH #652**;下一格见 backlog 0DRAGNOLANE。
+  **铁律 6**:静态门 `luacheck_gate.sh` **EXIT=0**(0 警告);动态全套跑不完(GH #124),
+  逐文件跑了 `lanenone_site_pricing` **12/12**、`gated_helper_nesting_census` **10/10**、
+  `pullnolane_guard`(变异台 baseline)绿。**没有用 `RULE6_BYPASS`**。
+  开工自检 `SELFCHECK_EXIT=3`(findings = cadence / owed-executions / trunk-red(python) / trunk-red(lua);
+  **UNCERTIFIABLE none**)。两条 Lua 红逐条核实归属:`test_coarmed_attribution_register`
+  **不是本轮引入**(退集棘轮,GH #650 在总监手里,本轮没碰 `test_set.md`);
+  `test_gated_helper_nesting_census` **是本轮引入的,已钉好并复跑绿**。
+  **第一次读自检退出码被脚本自己拒了**(`REFUSED: stdout is a PIPE`)—— evidence discipline 3
+  第 6 次现场生效,已改走 `> /tmp/sc.log 2>&1; echo "EXIT=$?"`。
 
 - 2026-09-09T01:35Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动** —— 连续三轮 (ii) 的链条到本轮结束;
   认领依据 = 上一轮「下一格」第 (1)(2) 条逐条执行 + **OWNER_PRIORITIES P1**。工作流第 1 步扫到的新

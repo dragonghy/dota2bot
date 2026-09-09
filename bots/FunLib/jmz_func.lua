@@ -2550,6 +2550,34 @@ function J.GetDistanceFromLaneFront(bot)
 	return J.GetDistance(GetLaneFrontLocation(GetTeam(), bot:GetAssignedLane(), 0), bot:GetLocation())
 end
 
+-- [GH #652, 20260909] DOES THIS BOT HAVE A LANE THE ENGINE CAN RESOLVE?
+--
+-- `bot:GetAssignedLane()` answers one of the four documented lane constants
+-- (docs/BOT_API_REFERENCE.md:1910 -- LANE_NONE = 0, LANE_TOP = 1, LANE_MID = 2,
+-- LANE_BOT = 3). The engine's way of saying "this bot has no lane" is therefore
+-- LANE_NONE, which is the NUMBER 0 -- not nil. Four sites in this file guard
+-- their lane geometry with `nLane == nil` / `nLane ~= nil` instead, and every
+-- one of those conditions is unreachable: measured over the fixture corpus,
+-- `lane_nil` is 0 / 1021 while `lane_none` is 1021 / 1021 (the counters live in
+-- tests/_pullcamp_sweep.lua; GH #648 repaired the first of the four).
+--
+-- This predicate is the shared vocabulary for the remaining three, so the next
+-- repair is a call rather than a fourth copy of the constant. It is PURE: no
+-- gate, no side effect, no behaviour of its own -- a caller decides what to do
+-- with the answer, and (until each site's own soak candidate is armed) the
+-- shipped behaviour at those sites is unchanged.
+--
+-- nil is still rejected. The engine has never been observed to answer nil here,
+-- but a predicate named "is a lane assigned" that answered TRUE for nil would be
+-- wrong in the one direction that matters, and the guards it replaces all
+-- rejected nil.
+function J.IsLaneAssigned( bot )
+	if bot == nil then return false end
+	local nLane = bot:GetAssignedLane()
+	if nLane == nil then return false end
+	return nLane ~= ( LANE_NONE or 0 )
+end
+
 function J.GetEscapeLoc()
 
 	local bot = GetBot()
@@ -10522,6 +10550,62 @@ function J.GetLanePullDragTarget( bot, vCamp )
 
 	local nLane = bot:GetAssignedLane()
 	if nLane == nil then return nil end
+	-- [GH #652, 20260909] Soak candidate 'dragnolane'. THE GUARD ABOVE IS THE
+	-- SECOND OF THE FOUR UNREACHABLE LANE GUARDS (GH #648 repaired the first,
+	-- in J.ShouldPullNeutralCamp). The engine says "no lane" with LANE_NONE ==
+	-- 0, not with nil, so `nLane == nil` fires on 0 of 1021 measured frames
+	-- while the state it was written to reject is present on 1021 of 1021.
+	--
+	-- WHY THIS SITE AND NOT THE OTHER TWO. All three were priced on the same
+	-- 1021-frame walk before this line was written (tests/_pullcamp_sweep.lua,
+	-- asserted in tests/test_lanenone_site_pricing.lua):
+	--   * J.ShouldLaneRecoverFarm (:7960) -- 0 frames REACH its lane block:
+	--     J.GetDistanceFromLaneFront sits above it and raises on the call the
+	--     loader refuses (`lrf_raise_lanefront` 631, `lrf_false` 390,
+	--     `lrf_true` 0). Unpriceable here, so it is not touched.
+	--   * J.ShouldCreepPullLane (:9440) -- its block reads GetLaneFrontAmount
+	--     for BOTH teams with the SAME lane id and compares them, so a bad lane
+	--     id degrades the two reads symmetrically: `frontamt_differs` is 0 /
+	--     1021 and `frontamt_pushed` 0, i.e. a repair there is a measured no-op
+	--     on the whole corpus -- and that site is inside a PROMOTED helper
+	--     ('creeppull'), so a no-op repair there buys a live-behaviour risk for
+	--     nothing.
+	--   * HERE -- `alongline_nonnil` 1021 / 1021 and `drag_nonnil` 1021,
+	--     `drag_nil` 0: with only its own 'pulldrag' gate armed, this function
+	--     answers a NON-NIL drag destination on every frame, computed from a
+	--     lane id the engine cannot resolve.
+	--
+	-- WHAT IT DOES AND WHY THAT IS A REPAIR, NOT A POLICY. This function's own
+	-- header already declares the policy, sixteen lines above: it "returns nil
+	-- -- and the caller then walks home-ward exactly as shipped -- when ... the
+	-- engine cannot say where the lane is. An engine that cannot answer must
+	-- never redirect a pull into the fog." LANE_NONE IS the engine saying it
+	-- cannot say where the lane is. Nothing new is decided here; the declared
+	-- policy simply had no implementation on the value the engine uses to say
+	-- it.
+	--
+	-- ⛔ READ BEFORE ARMING IT AS A LEVER (GH #622, asked in advance). This is
+	-- a gate inside the 'pulldrag' gate, and its in-engine domain is NARROWER
+	-- than the 1021 above. `drag_nonnil` 1021 is partly a statement about the
+	-- LOADER: the mock answers Vector(0,0,0) for GetLocationAlongLane at any
+	-- lane id, and lane assignment is bot-VM state that is absent from the .dem
+	-- (the census's STOPPER 4), so the corpus cannot say what the real engine
+	-- answers for lane 0. If it answers nil, the 21 samples produce an empty
+	-- path, `#tPath >= 2` is false and the shipped code ALREADY degrades to nil
+	-- -- this repair is then inert. The repair bites in exactly the other case:
+	-- the engine resolves lane 0 to something, and that something becomes a
+	-- drag destination. What the corpus DOES settle, loader-independently, is
+	-- that the shipped guard cannot fire at all, so the declared policy is
+	-- unimplemented either way. Recommendation carried in GH #652: promote it
+	-- WITH 'pulldrag' as part of that candidate's own repair rather than buying
+	-- it a wave of its own, which would risk the 'pullcad' reading ("tested, no
+	-- effect" while check_armed_wiring.py says WIRED).
+	--
+	-- Gated all the same: 'pulldrag' has banked readings (GH #117 connect rate),
+	-- and an armed 'pulldrag' wave must not silently change what it measures.
+	if J.IsSoakCandidate( 'dragnolane' ) and not J.IsLaneAssigned( bot ) then
+		return nil
+	end
 
 	if bot.pullDragCampX == vCamp.x and bot.pullDragCampY == vCamp.y
 		and bot.pullDragLane == nLane

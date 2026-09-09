@@ -708,7 +708,27 @@ local PINNED = {
     -- both.  Not a conjunction at all: it is this census's wide net doing what
     -- the header says it does.  'creepthink' is additive on its own arm anyway
     -- (armed it can only SKIP a `return`, never add one).
-    "creepthink,pullcad,pullthink | Think | J.GetLanePullDragTarget | pulldrag | bots/mode_roam_generic.lua",                              -- W
+    -- [dragnolane 20260909 GH #652] 'dragnolane' joined this row when it
+    -- repaired J.GetLanePullDragTarget's unreachable `nLane == nil` guard (the
+    -- engine says "no lane" with LANE_NONE == 0). Read by hand before
+    -- re-pinning, and the new inner half is (P): un-armed, the added clause is
+    -- `J.IsSoakCandidate('dragnolane') and ...`, whose first conjunct is false,
+    -- so the function returns the SHIPPED value on every frame -- the gate can
+    -- only ever REMOVE a destination, never add or change one, measured
+    -- `drag_opens` 0 / 1021 in tests/_pullcamp_sweep.lua. Arming any outer id
+    -- alone therefore measures exactly what it measured before this clause
+    -- landed. The (W) reading below is unchanged and still carries the row.
+    --
+    -- ⛔ THE CONVERSE IS THE PART WORTH WRITING DOWN, and GH #652 says it in
+    -- advance rather than after a wave (the GH #622 question): the identity
+    -- runs the OTHER way too. On every frame where a lane IS assigned,
+    -- 'dragnolane' is itself the identity element of the conjunction it joined,
+    -- so arming 'dragnolane' ALONE, on a wave whose bots all have lanes, reads
+    -- back "tested, no effect" while check_armed_wiring.py calls it WIRED --
+    -- the `pullcad` shape. Its own recommendation is therefore to promote it
+    -- WITH 'pulldrag' rather than to buy it a wave; that is a promote-time
+    -- constraint on the id, not a fact this row's classification changes.
+    "creepthink,pullcad,pullthink | Think | J.GetLanePullDragTarget | dragnolane,pulldrag | bots/mode_roam_generic.lua",                   -- W
     -- [campbind 20260904] 'campbind' joined the same 400-line Think when it
     -- bound the camp-pull poke to the PLANNED camp.  Read by hand before
     -- pinning, and it is (P): un-armed -- and in any game that is not Turbo --
