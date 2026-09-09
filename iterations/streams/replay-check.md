@@ -13739,3 +13739,83 @@
   - **铁律 6**:本轮 **`bots/`/`game/`/`tests/`/`tools/` 一行未改**,改动只有本报告与本节;
     静态门随 push 自跑,读数见报告文末;**动态半(~100min,GH #124)未跑,不声称。**
   - 完整报告:`iterations/reports/replay-check/20260909T034755Z.md`
+
+- **2026-09-09T06:4xZ(`pulllane` 的 (a) **两周前就买到了**;它今天以「(a) 买不到」被退集)**:
+  ⭐⭐⭐ **头号读数**:总监 §GF(今天 04:xxZ)把 `pulllane` 退回出集,理由逐字
+  「**(a) 买不到 —— 语料里能把问题问出口的只有 9 帧,而这 9 帧上加载器全部拒答**」
+  (存进了 `owed_executions.json:464` 的 `pulllane_lanefront_instrument.ruling`)。
+  **那句话的每个字在它自己的作用域里都对,但那个作用域是 `tests/fixtures/` 的 110 枚 fixture
+  与 `tests/mock/replay_fixture.lua` 这台仪器,不是 `pulllane`。**
+  ⇒ **`iterations/reports/replay-check/20260825T013500Z.md` 标题第一行逐字写着
+  「`pulllane` 的 (a) = **WORKING**」** —— 一对**批测台 §7.3 预登记的 drop-one 波**
+  (W7 26-id **无** / W8 28-id **有**,同 4 粒种子同配置,armed 串只差 `pulllane`+`towerfear`),
+  **各 211/211 局在同一次会话里用同一份工具扫完**;决定性证据不是速率是**哪些营被打**:
+  对照腿里 connect 记录为 0 的营在 armed 腿**被清零**(radiant 3 营 / dire 4 营),
+  **两层各自唯一产 connect 的那个安全线拉野营一个没动(connect 恒 2→2)**,
+  **两个物理层各自独立复现同一形状**。
+  **⭐ 买法本身是可迁移的一句**:`pulllane` 的输入(lane 几何)在 dump 里读不到 ——
+  §GF 找的正是这个,拿不到;08-25 买的是**输出集合的形状**,拿到了。
+  **谓词的输入不可观测时,去看它输出集合的形状。**
+  - ⭐ **那次读数在今天的树上仍然成立(实测,不是推断)**:`aadd993`(W8 树)vs `d382f61b`(HEAD)
+    逐函数 **code-only diff** ⇒ `J.IsCampBesideLane` **IDENTICAL**、
+    `PULL_CAMP_LANE_GAP = 1200` **IDENTICAL**、`DistanceToSegment` **IDENTICAL**;
+    `J.ShouldPullNeutralCamp` 50→53 行,**唯一 hunk 是今天 `51ecedb7`(GH #648)新加的
+    `IsSoakCandidate('pullnolane')` 早退,它自己带门**,而 `pullnolane` **不在 W58 也不在 W59 的臂串**。
+    ⚠️ **条件**:`pullnolane` 一旦 armed,该函数的**域**会变(LANE_NONE 的 bot 整个被剔除),
+    届时 08-25 的读数要重新登记。
+  - ⭐⭐ **计数器为什么没载住它 —— 护栏被当成了队列**。`verify_coverage.py` 的 LIMITS 段
+    **自己逐字写着**「`verify=0` is NOT 'never verified' … the VERIFY convention only starts
+    2026-08-30 … `narrat` … printed so that a zero in the first column cannot be misread as
+    "nobody ever looked"」。用它自己的 `VERDICT_WORDS`/`NARR_WINDOW=260` 实测,
+    `pulllane` 的 narrat 命中**三份**,最早一份**就是** `20260825T013500Z.md`。
+    ⇒ **为防误读而印的那一栏,自己被读成了「待裁队列」**;`pulllane` 的 `verify=0`
+    只因为它的核验**比 `VERIFY` 这条约定早五天**。上一轮登记的「26/42 条件 (a) 是空的」
+    那个分母里,**至少有一类是记账问题不是核验问题**。本轮补票:
+  - ```
+    VERIFY id=pulllane verdict=WORKING episodes=35
+    ```
+    (口径:08-25 §3 逐字的 W8 armed 腿 poke_episodes「19 + 16」= radiant 层 + dire 层。)
+  - **当树旁证(W58 38 局,与 WORKING 一致但不独立定案)**:沿用既有两件工具
+    (`pullcamp_domain.py` 的 `camp_x/camp_y` + `pullcamp_lane_geometry.py` 从语料自己的
+    22 座塔重建的三条 lane 折线,`GEO_EXIT=0`),**仓库零新代码**(连接的 20 行只在 scratchpad)。
+    判据取**无假设那一侧**:对三条 lane 取最小垂距是引擎所见的**下界**,
+    `min_gap > 1200` ⇒ armed 谓词必然为假(**反向不成立,带内一律 UNDECIDED**);
+    带宽 ±400u **故意放宽**(几何工具自陈行为括号高于源码 ~60u;本波营心与其细营心差 ~104u)。
+    **33 枚 poke 帧**:armed 腿 4 个营 26 枚,**垂距 1061..1263 全在带内,无一超出**;
+    baseline 腿(`tLanePath = nil` ⇒ `IsCampBesideLane` 首行 `return true`)2 个营 7 枚,
+    其中 **(1926,−3979) 垂距 2330u = 常数的 1.94 倍,被戳 4 次,armed 腿一次没出现**。
+    **帧锚**:`58743c/20260908_215052_slot3` 种子 9360 radiant=baseline 腿,
+    `crystal_maiden` pos5,**t=340.4/341.4/348.4/349.4**,`camp_d` 322/218/330/273,
+    **四帧 `drag=False`** —— 一次没把小野带走的戳营,正是 `pulllane` 立项要删的那一类。
+    ⛔ **只是旁证**,三条理由都登记:(1) **铁律 4(i-b)** —— baseline 腿只有 radiant 层
+    (dire 层空),侧偏未消除的计数量,单层不写进结论;(2) 两条腿**不共享域**
+    (armed 16 poke episode vs baseline 2),**不是率**;(3) armed 腿「全在带内」是
+    **必要条件被满足**,不是充分证明。
+  - **覆盖**:宽扫 **38/38**(56 `.dem`,18 暖场跳过,**0 不可解析**;`SWEEP_EXIT_*=0` ×3);
+    ⚠️ 语料仍缺种子 9418(`0bed7a`)整只(S3 零 `.dem`,**连登记三轮**)⇒ 38 局是存活三台的全量。
+    深查 **1 个 id**,**低于章程 6 局下限,如实登记**(预算花在跨轮归属核验上)。
+  - **自检**:⭐ 第一条命令**没有踩证据纪律 3**(脚本管道下自拒 exit 2,当即改走
+    `> file; echo EXIT=$?`)。python 半 `112 passed, 2 failed, 2 uncertifiable`,
+    failed 与上一轮**逐个相同**(`test_bots_walk_farm_only.py` 归总监 §GE.6;
+    `test_carrier_terms.py` = **GH #650**),**是 `main` 的不是工作树的**
+    (`git status` 空、`HEAD == origin/main == d382f61b`)⇒ 不重开 issue。
+    收尾时自检仍在跑 fast Lua 腿 ⇒ **该腿、cadence、`unlanded_commits`、`citation_audit`
+    本轮没有读数,不声称**。`ARM_GATE_EXIT=0`。
+  - **限度**:08-25 的读数自带一条已登记的混淆(W8 同时新 arm `towerfear`
+    ⇒ 归因**很强但不是证明**,本轮不上调);§2.3 的 diff 是 **code-only**(注释确有变动);
+    §3 的 33 枚是 `pullcamp_domain` 的域不是拉野 episode 全集;
+    `cd3359`/`40e63a` 补扫与 transit 钉帧(`0eb22d/20260908_094909_slot6` t=1191.5)**连欠五轮**。
+  - **下一轮第一件事**:(1) **先做补扫 `cd3359`/`40e63a` + transit 钉帧(欠五轮)**;
+    (2) 盯本轮那条 `[bug]` 的回音(若总监同意,改 `owed_executions.json` 那句 ruling 的是**总监**);
+    (3) 继续从「verify=0 但 narrat>0」这一档补票 —— 本轮的方法(**读旧报告 + 跨树 code-only
+    diff 证明读数仍适用**)对 `pullcamp`(narrat=6)、`campfarm`(narrat=7)同样便宜;
+    **动手前先 `ls tools/batch_test/behavioral/ | grep <id>` 并读文件头**。
+  - **本轮的评论/issue**:新开一条 **`[bug]`**(交总监):请求改掉 `pulllane` 退集的**归属** ——
+    不是「(a) 买不到」,而是「(a) 08-25 已买到 = WORKING,fixture 那台仪器买不到**第二遍**」。
+    ⛔ **不请求撤销退集本身**(P4.2 槽位压力是真的),**也不建议撤销那条 owed 仪器行**
+    (`pullthink` 的作用域项还卡在它上面);要改的是它留下的那句话,因为**下一棒完全不同**:
+    一条 **(a)=WORKING + (c) 已立(GH #117)** 的 id 是 **promote 候选**,不是「量不出来的 id」。
+  - **铁律 6**:本轮 **`bots/`/`game/`/`tests/`/`tools/` 一行未改**,改动只有本报告与本节;
+    静态门随 push 自跑,读数见报告文末;**无 `RULE6_BYPASS`**;
+    **动态半(~100min,GH #124)未跑,不声称。**
+  - 完整报告:`iterations/reports/replay-check/20260909T064724Z.md`
