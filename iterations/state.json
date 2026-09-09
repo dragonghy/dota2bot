@@ -7473,5 +7473,23 @@
     "next": "本族**还剩两处**(`J.ShouldLaneRecoverFarm`、`J.ShouldCreepPullLane`),两处都**已定价、且定价已被 `tests/test_lanenone_site_pricing.lua` 的棘轮钉在源码上**(任何一轮悄悄改掉那两条守卫会打红,并被告知「若那是修复,先重新定价」)。(A) 要动的前置是**语料请求**:`J.GetDistanceFromLaneFront` 那条腿被 GH #61 拒答挡着,dumper 若能投影 `GetAssignedLane()` / lane 几何,这一族的**真实域立刻可测**(已在 GH #648 写进 #648,本轮在 #652 复述)。(B) 要动的前置是**先给它一个非零的 flip 域**:`frontamt_differs` 必须先在某条语料上不为 0,否则修它是买一个实测零 + 一份活体行为风险。",
     "status": "GATED,未 armed,未发波。**FROZEN-HOLD**(4.2 冻结期)。promote 建议:与 `pulldrag` **同一个原子**去 gate,不单独买波。",
     "aws": "zero calls, zero spend —— 本组不花 AWS 的钱(铁律 1)。本轮零 `awsx`、零 S3、零 EC2、零波次。"
+  },
+  "cmwface_20260909": {
+    "owner": "hero",
+    "date": "2026-09-09T05:2xZ",
+    "backlog_item": "hero -130(P4.4 (i):工作单元主体是一个 bots/ 行为改动,连续第二轮走 (i))。本轮**先测域再写杠杆**:Lion 的 Hex 自保支路有同一个缺陷形状,但整个 fixture 语料里 **0 帧**能钉(11 个 Hex 可施放瞬间里一个都没有「3 秒内被英雄打过 + 射程内有敌人」),按 tests/test_lion_hex_reserve_domain.lua 立的先例**不写**;改测五个焦点英雄的全语料可达性,CM 是唯一有域的那个。",
+    "headline": "⭐ **X.ConsiderW 有五条会放冰封禁制的支路,只有一条问 CM 此刻朝哪儿看 —— 而那条正是防守支路。** 击杀 / 打断TP / 团战 / 对线期消耗 四条都不问朝向;只有 `保护自己`(premise = `bot:WasRecentlyDamagedByAnyHero( 3.0 )`)带着 `bot:IsFacingLocation( npcEnemy:GetLocation(), 45 )`。冰封禁制是**单位指向**技能,引擎在读条里自己转身,朝向从来不是施法前提 —— 这个 45° 锥形挡不住任何引擎会挡的东西,只挡掉一次合法施法。⭐⭐ **而且它与自己的 premise 反相关**:被集火的辅助正在往反方向走,朝向跟着移动指令走 ⇒「刚刚有英雄打了我」恰好是她**最不可能**正看着他的状态。这个函数里唯一一条为「我正在挨打」而存在的路,是唯一一条要求她**还没转身逃跑**才肯走的路。",
+    "gate": "cmwface(NEW soak id,turbo-only,**未 armed**;STANDALONE —— `X.cm_IsSelfDefenseFacingOk` 里只有它一个 IsSoakCandidate。变异台 **M7** 就是 pullcad 陷阱:把同文件的 `cmrcrowd` 合取进来,被 §1.2 抓住。)",
+    "bots_lua_changed": "bots/BotLib/hero_crystal_maiden.lua —— 新常量 `X.nWSelfDefenseFacingCone = 45` + 新 helper `X.cm_IsSelfDefenseFacingOk( hBot, hTarget )`;`X.ConsiderW` 的 `保护自己` 支路把裸的 `bot:IsFacingLocation(...)` 换成对该 helper 的调用。闸关时逐字是出货谓词(同一个 handle、同一个 location、锥形 45)—— §2.1 用**桩**把这三样读出来,不是读源码文本。",
+    "change": "armed 时朝向锥形不再能否决这条防守支路(helper 直接返回 true,**并且不再询问引擎** —— §2.2 断言 `calls == 0`,这就是变异台 M4「死接线」那一条)。支路其余七个守卫(有效性、非魔免、CanCastOnTargetAdvanced、未被控、未被缴械、premise 两项)**逐字不动**,四条兄弟支路**不碰**。",
+    "direction": "只会**增加**一次施法,永不减少也永不改向 —— §4.2 在整张 10 帧网格上断言:凡 armed 与出货不同的格子,出货侧必须是 `none`,且 desire 必须是 NONE → HIGH。",
+    "reading": "钉帧 `tests/fixtures/f_260820_103216_cm_es_aftershock.lua`(tl_103216 @ t=473.5)。CM 292/1110=0.26 血,冰封禁制 4 级、冷却 0、531 法力对 155 花费;**两个**敌方英雄在它真实的 600u 射程内 —— earthshaker 195.94u、zuus 268.02u —— 且**两个都刚打过她**(ES 前 2.5s 内 331,Zeus 前 3.8s 内 588);两个都没被控、没被缴械,七个非朝向守卫全过。出货的 `X.SkillsComplement` **什么都没下单**;armed 端到端下单 `crystal_maiden_frostbite -> npc_dota_hero_earthshaker`,`X.ConsiderW` 0 → 0.75。**零注入**:没有 mode、没有 HP、没有移速、没有冷却、没有射程锚(600 由 loader 从 KV 供)。地面真相 `died_after = 1`。域:10 个 CM-subject fixture 里**恰好 1 个**,§4.1 按**集合相等**断言(不是「钉帧在里面」)。",
+    "tests": "新 `tests/test_cm_w_selfdefense_facing.lua`(**17 例**,§1 源码形状 / §2 桩上的闸语义 / §3 钉帧 / §4 域与方向 / §5 兄弟位点 / §6 仪表);新 `tools/agent/mutstand_cmwface.sh`(**8 变异**,基线 `cm` **333 例**绿)。`luacheck_gate.sh` EXIT=0 CLEAN。",
+    "limits": "⚠️⚠️ **一条必须先读的限度**:`IsFacingLocation` **在语料里没有答案** —— make_fixture.py 只 dump x/y,不 dump 朝向,loader 因此不给它装 spec,mock 的通用 `Is*` 默认答 **false**,在 bots/ 下 **317** 个调用点上、每一帧都如此。§6.1 用**一个 360° 的锥形**证明这是**默认值而不是计算**(任何朝向都落在 360° 里,能算的实现不可能答 false),§6.2 断言语料里没有任何 unit 带 facing/heading/rotation/yaw/angle 字段。⇒ **§3.2 的 0 → HIGH 是 mock 默认造成的,不是记录下来的朝向造成的;本条 NOT CLAIM 出货树在那局里真的没放冰封禁制。** 钉帧买到的是:真实帧上支路的**其余每一个合取项同时成立**(零注入),且 armed 之后下单对象是**真的刚打过她的那个具名英雄**。**锥形到底多久挡一次是频率,要一波:queue.json `hero-53`。** ⚠️ 第二条:1 帧是**域**不是频率。⚠️ 第三条:**兄弟位点不在本杠杆里** —— 同一行锥形也长在 `hero_skeleton_king.lua`(X.ConsiderQ 的 `受到伤害时保护自己`)和 `hero_zuus.lua` 上,本轮**不 gate 它们**(一次一个杠杆),§5.2 记下了决定「本轮动 CM 不动 WK」的那次测量:全语料里**恰好 1 帧**过得了 WK 那条支路的非几何合取项(lv>=6 + 地狱火爆轰就绪 + 3s 内被英雄打过),而那一帧**最近的敌方英雄在 1699u**,已经越过 `J.GetNearbyHeroes` 自己 clamp 的 **1600u** 上限 ⇒ 无论射程取多少,那条支路的语料域**是空的**。",
+    "left_alone": "四条兄弟 Frostbite 支路;支路自己的两项 premise;`保护自己` 的其余七个守卫;出货腿上的锥形(仍然活着,仍然是 45);WK / Zeus 的同形位点。",
+    "armed": "否 —— **零 arm、零入集提议**。P4.2 冻结期内合法裁定是 FROZEN-HOLD。",
+    "queue": "hero-53(解冻后的 armed 取证波;登记的是顺序,不是入集请求)",
+    "issue": "见报告 §7",
+    "report": "iterations/reports/hero/20260909T052022Z.md"
   }
 }

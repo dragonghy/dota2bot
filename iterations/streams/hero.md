@@ -22,8 +22,77 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--130. **⭐ 下一轮:继续 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**
-   本轮(`-129`)做的就是 (i),`bots/` 有真代码行(`cmrcrowd`)。下一轮同样走 (i)。
+-131. **⭐ 下一轮:继续 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**
+   `-129`(`cmrcrowd`)与 `-130`(`cmwface`)连着两轮都是 (i)。下一轮同样走 (i)。
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`、CM 的 `cmfarcreep` 域
+     (`hero-42`)、`lionultcash`(`hero-43`)、`lionrreach`(`hero-44`)、`wkqlane`(`hero-45`)、
+     `axecullreach`(`hero-46`)、`cmlaneband`(`hero-47`)、`zusjumpland`(`hero-48`)、
+     `lionqkill`(`hero-49`)、`axebhreach`(`hero-50`)、`zusultstrand`(`hero-51`)、
+     `cmrcrowd`(`hero-52`)、**新增 `cmwface`(`hero-53`,本轮登记)**;
+     `wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`,逐字不变(GH #570)。
+   - **⛔ 不许**把 `cmwface` 与 `cmrcrowd`/`cmrguard`/`cmrself`/`cmrcap`/`cmlaneband` 合取进
+     一个谓词 —— pullcad 陷阱,变异台 **M7** 就是它。
+   - **⭐⭐ 本轮买到的第一课,下一轮直接用:先测域,再写杠杆。**
+     本轮先在 **Lion** 身上找到了 `-130` 那个形状(`X.ConsiderW` 的 `保护自己`:premise 是
+     「有英雄打我」,循环里对候选一个字都不问),**然后按 `test_lion_hex_reserve_domain.lua`
+     的先例量了域 —— 24 个活 Lion 瞬间 → 11 个 Hex 可施放 → 其中「3s 内被英雄打过」0 个
+     ⇒ 域空 ⇒ 不写**。改用一张全语料可达性表(`census_focus.lua`:每帧的等级/血线/已就绪技能/
+     600·900·1200u 三环敌人数/3s 内是否被打)直接把靶子选出来。**这张表值得重建一次就留着。**
+   - **⭐⭐ 本轮买到的第二课,是关于变异台自己的:`want` 串不许取自 assert 消息。**
+     `run_tests.lua` **对每个失败都打测试名,只对最后一个打 assert 消息** ⇒ 取自消息的
+     `want` **只在该变异体恰好只红一条断言时有效**,红第二条就悄悄退化成
+     「RED but with the WRONG MESSAGE」= **记成 survived**。M1/M2 第一次就这么写的,
+     **记成 0/2,而套件实际把 M1 抓了六次**。**假阴性长得和真阴性一模一样,而且方向恰好是
+     让你去补一条其实已经存在的断言。** 改用**测试名**后 8/8。已写进 `mutstand_cmwface.sh` 头部。
+   - **⭐ 仪表登记(下次写任何「朝向 / 站位角度」族的读数前必看)**:`IsFacingLocation`
+     **在语料里没有答案** —— dump 不带朝向,loader 不装 spec,mock 通用 `Is*` 默认答 **false**,
+     `bots/` 下 **317** 个调用点全中。判它是**默认值而不是计算**的办法在
+     `test_cm_w_selfdefense_facing.lua` §6.1:**问一个 360° 的锥形**,能算的实现不可能答 false。
+     ⇒ 任何骑在这个谓词上的 armed/shipped 差,**都不能读作「出货在真实对局里做错了」**。
+   - **⭐ 已查过的否定结果,别再查一遍**:(甲) Lion Hex 自保支路,域空(上面);
+     (乙) **WK** 的同形锥形(`X.ConsiderQ` 的 `受到伤害时保护自己`)域也是空的 ——
+     全语料**恰好 1 帧**过非几何合取项(lv>=6 + 地狱火爆轰就绪 + 3s 内被打),而那帧
+     最近敌人 **1699u** > `J.GetNearbyHeroes` 自己 clamp 的 **1600u** ⇒ 射程取多少都空;
+     (丙) Zeus `X.ConsiderQ` 的十个落单点**全部**绑在 `nCastRange` 上,一个到达缺陷都没有;
+     (丁) Zeus `X.ConsiderR` 的 `lowHPCount` 循环域恒 0(fixture 的 `GetUnitList` 按构造只装活人)。
+   - **⭐ 仪表登记(CM)**:`GetAOERadius` 离线答 **0**,CM 大招距离读数骑 **835** Liquipedia 锚
+     (GH #502 裁定不许改用 KV 的 810);`GetCurrentMovementSpeed` 不在 dump 里,mock 答**固定 300**。
+     **但 `GetCastRange` / `GetManaCost` / `GetCastPoint` / `GetSpecialValue*` 是 loader 从 KV 真供的**
+     —— 本轮的 600u 冰封禁制射程**不是注入的锚**,别再为它写锚。
+   - **⛔⛔ 自检退出码:本轮踩了第 15 次管道,并且发现了**第二个**坑。**
+     (甲) 管道:第一条命令又接了 `| tail`,脚本当场 REFUSED(exit 2,什么都没检查),
+     当场改回文件重定向,**没污染结论**;(乙) **`timeout`**:第二次重跑加了 `timeout 400`,
+     它在 python 腿上被 SIGKILL、**EXIT=124** —— 那也**不是通过**,是「没跑成」。
+     ⇒ 下一轮第一条 Bash 命令**只准是**
+     `nohup bash -c 'bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?" >> /tmp/sc.log' >/dev/null 2>&1 &`
+     —— **既不接管道,也不加 `timeout`**(整轮实测约 **20 分钟**,python 腿最慢)。
+   - **⭐ 开工顺序(连续六轮有效)**:自检**跑完**再动 `bots/`(GH #507)。本轮**只做到一半** ——
+     python 腿是安静的(可以正着读),但 **fast Lua detectors 那条腿与我第一次 `bots/` 编辑重叠**。
+     处理办法**照抄本轮**:不要把重叠的那条读作通过,**在成品树上自己重跑那条腿**
+     (发现式逐字照搬自检:`grep -l '\[detector\]\|\[ratchet\]' tests/test_*.lua` + 四个具名文件),
+     本轮读数 **ran=86 red=0**。
+   - **⭐ 第二页上仍没排到的 `[hero]`**:#587 / #567 / #566 / #564 / #563 / #562 / #560 / #554 /
+     #549。**#562 的「拆不拆」仍是本组的**(登记动作,只能当附带一条)。
+
+-130. ~~**⭐ 下一轮:继续 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-09T05:20Z 做完(就是 (i),`bots/` 有真代码行)**:焦点英雄 **Crystal Maiden**,
+   新 gated `cmwface`。`X.ConsiderW` 有**五条**会放冰封禁制的支路(击杀/打断TP/团战/保护自己/
+   对线期消耗),**只有一条**问 CM 此刻朝哪儿看 —— 而那条正是**防守**支路
+   (`bot:IsFacingLocation( npcEnemy:GetLocation(), 45 )`)。冰封禁制是**单位指向**技能,引擎
+   在读条里自转,朝向从来不是施法前提;**而且这个锥形与它自己的 premise 反相关** ——
+   被集火的辅助正在往反方向走,朝向跟着移动指令走。armed 时锥形不再能否决该支路。
+   钉帧 `tests/fixtures/f_260820_103216_cm_es_aftershock.lua`(t=473.5,CM 292/1110=0.26,
+   ES **195.94u** / Zeus **268.02u** 两个**都刚打过她**,七个非朝向守卫全过,出货 `SkillsComplement`
+   **零下单** → armed **端到端**下单 `frostbite -> earthshaker`,**零注入**,`died_after = 1`)。
+   报告 `iterations/reports/hero/20260909T052022Z.md`,`state.json:cmwface_20260909`,
+   `queue.json:hero-53`,GH **#653**。
+   `run_tests.lua cm` **333 例 0 失败**;新 `tests/test_cm_w_selfdefense_facing.lua` **17 例**;
+   `mutstand_cmwface.sh` **8/8 CAUGHT**;`luacheck_gate.sh` **EXIT=0 CLEAN**;
+   fast Lua detectors 成品树上 **86 个 0 红**。
+   ⚠️ **限度第一条,引用钉帧前必读**:`IsFacingLocation` 在语料里**没有答案**,mock 答 false ⇒
+   **0 → HIGH 是 mock 默认造成的,本条不主张出货树在那局里真没放冰封禁制**;买到的是
+   「其余每个合取项在真实帧上同时成立 + 下单对象是真的刚打过她的那个具名英雄」。频率要一波。
    - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`、CM 的 `cmfarcreep` 域
      (`hero-42`)、`lionultcash`(`hero-43`)、`lionrreach`(`hero-44`)、`wkqlane`(`hero-45`)、
      `axecullreach`(`hero-46`)、`cmlaneband`(`hero-47`)、`zusjumpland`(`hero-48`)、
@@ -5707,6 +5776,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-09T05:20Z(报告 `iterations/reports/hero/20260909T052022Z.md`;**backlog:`-130` 做完、
+  新开 `-131`**;焦点英雄 **Crystal Maiden**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
+  `bots/` 行为改动,有真可执行代码行,**连续第二轮走 (i)**)
+  **`X.ConsiderW` 有五条会放冰封禁制的支路,只有一条问 CM 此刻朝哪儿看 —— 而那条正是防守支路。
+  冰封禁制是单位指向技能,引擎在读条里自转,朝向从来不是施法前提;更要命的是这个 45° 锥形
+  与它自己的 premise 反相关 —— 被集火的辅助正在往反方向走,朝向跟着移动指令走,所以
+  「刚刚有英雄打了我」恰好是她最不可能正看着他的状态。这个函数里唯一一条为「我正在挨打」
+  而存在的路,是唯一一条要求她「还没转身逃跑」才肯走的路。gated `cmwface` 把它摘掉。**
+  新 `X.cm_IsSelfDefenseFacingOk` + `X.nWSelfDefenseFacingCone = 45`,新
+  `tests/test_cm_w_selfdefense_facing.lua`(**17 例**)+ `tools/agent/mutstand_cmwface.sh`
+  (**8/8 CAUGHT**,基线 `cm` **333 例**绿)。`state.json:cmwface_20260909`、`queue.json:hero-53`、
+  GH **#653**(本轮开)。**零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。
+  **零 AWS、零 EC2、零 S3、零 CE。**
+  `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;fast Lua detectors
+  **成品树上 86 个 0 红**(自检自己那次与我的第一次 `bots/` 编辑重叠,**不算数**,见下)。
+  - **⭐⭐ 本轮的头等收获是一次「不写」**:先在 **Lion** 身上找到同一个缺陷形状,**再按
+    `test_lion_hex_reserve_domain.lua` 的先例量域** —— 24 个活 Lion 瞬间 → 11 个 Hex 可施放 →
+    其中「3s 内被英雄打过」**0 个** ⇒ **域空 ⇒ 不写**。然后用一张全语料可达性表
+    (每帧等级/血线/已就绪技能/三环敌人数/是否刚被打)把靶子选出来:同一个锥形长在 CM、WK、
+    Zeus 三个焦点英雄身上,**只有 CM 有域**(WK 那条全语料恰好 1 帧过非几何合取项,而那帧
+    最近敌人 **1699u** > `J.GetNearbyHeroes` 自己 clamp 的 **1600u** ⇒ 射程取多少都空)。
+  - **⭐ 钉帧比 `cmrcrowd` 那轮强在两处**:(甲) 读数走**真的 `X.SkillsComplement` 派发**
+    (`rf.record_actions` 读下单),不是直接调 `ConsiderX`;(乙) **零注入** —— 没有 mode/HP/
+    移速/冷却/射程锚,600u 射程是 loader 从 KV 真供的。域 **1/10**,§4.1 按**集合相等**断言,
+    §4.2 断言方向(WIDENING:只能 `none →` 有单,不能改向)。
+  - **⚠️⚠️ 限度第一条,引用钉帧前必读**:`IsFacingLocation` **在语料里没有答案**(dump 不带
+    朝向,loader 不装 spec,mock 通用 `Is*` 默认答 false,`bots/` 下 **317** 个调用点全中)。
+    §6.1 用**一个 360° 的锥形**证明那是**默认值不是计算**;§6.2 断言没有 unit 带
+    facing/heading/rotation/yaw/angle。⇒ **0 → HIGH 是 mock 默认造成的,本轮不主张出货树在
+    那一局里真的没放冰封禁制**;买到的是「其余每个合取项在真实帧上同时成立 + 下单对象是
+    真的刚打过她的那个具名英雄」。**这是本轮与 axeblink 陷阱擦肩而过的地方。**
+  - **⭐⭐ 关于变异台自己的一课**:`want` 串**不许取自 assert 消息** —— `run_tests.lua`
+    对每个失败打测试名,**只对最后一个打消息** ⇒ 取自消息的 want 红第二条断言就悄悄退化成
+    「WRONG MESSAGE」= **记成 survived**。M1/M2 起初正是如此,**记成 0/2,而套件实际把 M1
+    抓了六次**。改用**测试名**后 8/8。**假阴性长得和真阴性一模一样。**
+  - **⚠️ 开工自检 EXIT=3(有发现,不是通过)**:cadence / owed-executions / trunk-red(python)
+    (`test_bots_walk_farm_only.py` + `test_carrier_terms.py`,外加 `test_selfcheck_lua_leg.py`
+    **UNCERTIFIABLE 没跑**)—— **都不是本组的**。✅ **python 那条腿是安静的**(它打完结果我才动
+    第一行 `bots/`)⇒ 那两条红**可以**正着读。⚠️ 但 **fast Lua detectors 那条腿与我的编辑重叠**,
+    所以**我在成品树上自己重跑了它**(发现式逐字照搬),读数 **ran=86 red=0**。
+  - **⛔⛔ 自检退出码本轮踩了第 15 次管道,并且发现了第二个坑:`timeout`。**
+    第二次重跑加了 `timeout 400`,它在 python 腿上被 SIGKILL、**EXIT=124** —— 那**也不是通过**。
+    下一轮第一条命令**既不接管道也不加 timeout**(整轮实测约 **20 分钟**)。
 - 2026-09-09T02:02Z(报告 `iterations/reports/hero/20260909T020205Z.md`;**backlog:`-129` 做完、
   新开 `-130`**;焦点英雄 **Crystal Maiden**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动,有真可执行代码行)

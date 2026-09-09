@@ -1157,6 +1157,78 @@ function X.cm_IsLaneHarassTargetInReach( hBot, hTarget, nCastRange )
 end
 
 
+--- The heading cone X.ConsiderW's SELF-DEFENCE branch reads before it is allowed
+--- to Frostbite the hero who is hitting Crystal Maiden.  Kept as a named number
+--- so the gate below and tests/test_cm_w_selfdefense_facing.lua read the same 45
+--- the shipped tree read, from one place.
+X.nWSelfDefenseFacingCone = 45
+
+
+--- SOAK CANDIDATE 'cmwface' (turbo-only).  Not armed; gate OFF is the shipped
+--- predicate, byte for byte -- the same call on the same handle with the same
+--- cone.
+---
+--- THE DEFECT, in one line of shipped source (X.ConsiderW, the 保护自己 branch):
+---
+---     and bot:IsFacingLocation( npcEnemy:GetLocation(), 45 )
+---
+--- X.ConsiderW has FIVE branches that commit Frostbite -- 击杀 (kill), 打断TP
+--- (interrupt a teleport), 团战 (team fight, most dangerous), 保护自己 (self
+--- defence) and 对线期消耗 (lane harass).  Exactly ONE of them asks where Crystal
+--- Maiden happens to be looking, and it is the defensive one: the branch whose
+--- trigger is `bot:WasRecentlyDamagedByAnyHero( 3.0 )`, i.e. the branch that only
+--- opens while a hero is beating on her.
+---
+--- THE FACT.  Frostbite is UNIT-TARGETED (crystal_maiden_frostbite,
+--- DOTA_ABILITY_BEHAVIOR_UNIT_TARGET).  The engine turns the caster through the
+--- cast point for a unit-targeted order; heading is not a precondition of the
+--- cast, and no other Frostbite branch in this file treats it as one.  So the
+--- cone forbids nothing the engine forbids -- it only suppresses a legal cast.
+---
+--- WHY THAT LANDS ON THE DEFENSIVE BRANCH HARDEST.  Its premise and its guard
+--- point in opposite directions.  A support who is being focused is walking away
+--- from whoever is focusing her, and a hero's heading follows her movement order,
+--- so "a hero damaged me in the last 3 seconds" is exactly the state in which she
+--- is LEAST likely to be looking at him.  The one branch that exists to answer
+--- being attacked is gated on not having turned to run.
+---
+--- WHAT DELIBERATELY DOES NOT CHANGE.  One conjunct, one branch.  Every other
+--- guard on the loop stays (validity, non-magic-immune, CanCastOnTargetAdvanced,
+--- not already disabled, not disarmed), the branch's own two-part premise stays,
+--- the cone stays live on the shipped leg, and the four sibling branches are not
+--- touched.  The lever can only ADD a cast, never remove one
+--- (tests/test_cm_w_selfdefense_facing.lua section 4.2 asserts that direction
+--- over the whole CM corpus).
+---
+--- ⚠️ WHAT THIS ROUND DID NOT BUY -- READ BEFORE QUOTING THE PIN.  `IsFacingLocation`
+--- is NOT answerable from the corpus: make_fixture.py dumps x/y and no heading,
+--- so the loader installs no spec for it and the mock's generic Is* default
+--- answers FALSE at all 317 call sites under bots/.  Therefore the pin frame's
+--- NONE -> HIGH flip is produced by the mock's default, NOT by a recorded
+--- heading, and this note does NOT claim that the shipped tree failed to cast in
+--- that game.  What the pin DOES buy is that on a real frame every OTHER conjunct
+--- of the branch holds at once -- two enemy heroes who had just dealt her damage,
+--- both inside Frostbite's real 600 cast range, neither disabled nor disarmed,
+--- the spell off cooldown and affordable, and she died 1.0s later.  How often the
+--- cone actually blocks is a FREQUENCY and needs a wave: iterations/queue.json
+--- `hero-53`.
+---
+--- ⚠️ THE SIBLINGS ARE NOT IN THIS LEVER.  The identical cone sits in
+--- hero_skeleton_king.lua (X.ConsiderQ's 受到伤害时保护自己 branch) and in
+--- hero_zuus.lua.  They are the same upstream idiom and probably the same defect,
+--- but they are NOT gated here: one lever at a time, and the Wraith King branch's
+--- corpus domain is EMPTY anyway (measured -- no WK fixture carries level >= 6,
+--- Hellfire Blast ready, hero damage inside 3s and an enemy in cast range at
+--- once), so it could not be pinned this round even if it rode along.
+function X.cm_IsSelfDefenseFacingOk( hBot, hTarget )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmwface' ) then return true end
+
+	return hBot:IsFacingLocation( hTarget:GetLocation(), X.nWSelfDefenseFacingCone )
+
+end
+
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then
@@ -1254,7 +1326,10 @@ function X.ConsiderW()
 				and J.CanCastOnTargetAdvanced( npcEnemy )
 				and not J.IsDisabled( npcEnemy )
 				and not npcEnemy:IsDisarmed()
-				and bot:IsFacingLocation( npcEnemy:GetLocation(), 45 )
+				-- [cmwface] the heading cone this branch alone carries; see
+				-- X.cm_IsSelfDefenseFacingOk for why it is the DEFENSIVE branch
+				-- that cannot afford it.
+				and X.cm_IsSelfDefenseFacingOk( bot, npcEnemy )
 			then
 				return BOT_ACTION_DESIRE_HIGH, npcEnemy
 			end

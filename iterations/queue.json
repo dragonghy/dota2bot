@@ -2262,6 +2262,17 @@
       "acceptance": "解冻后单 arm(或与不相交的 id 同波)跑一波,交出上面四列 + 铁律 4(i-a) 要求的 ab/ba 两个分层读数。⚠️ **归因边界,负读数只有一种读法**:本 lever 是 **NARROWING**,armed 释放集按形状是出货释放集的**严格子集**(§3.1/§3.2 在整张网格上扫过),所以负读数**只能**读作「被扣下的那几次开大是值得开的」,**永远不能**读作「这条 lever 让她多开了 N 次」。⚠️ **两条不许合并的仪表限度**:(a) `GetAOERadius` 离线答 0,所有距离读数骑在 835 Liquipedia 锚上(GH #502);波次侧若能从 `.dem` 量到真实场半径,那是**独立的第二意见**,请单列。(b) `GetCurrentMovementSpeed` 不在 dump 里,mock 答固定 300 —— 波次侧的 `aoeCanHurtCount` 若用真实移速算,读数与本 fixture 的**不可直接并池**。",
       "requested_by": "hero 2026-09-09T02:0xZ",
       "status": "open"
+    },
+    {
+      "id": "hero-53",
+      "stream": "hero",
+      "bundle": "cmwface (turbo-only soak candidate, NOT armed -- P4.2 冻结期内本条不请求入集,只登记解冻后的 arm 顺序与分母)",
+      "seeds": [],
+      "priority": 2,
+      "question": "**这一条要买的是「频率」,而且比平常更要紧,因为离线**根本**买不到方向。** 杠杆:`X.ConsiderW` 的 `保护自己` 支路是五条 Frostbite 支路里唯一一条要求 `bot:IsFacingLocation( target, 45 )` 的,而冰封禁制是单位指向技能(引擎在读条里自转),朝向不是施法前提;armed 时这条锥形不再能否决该支路。钉帧 `tests/fixtures/f_260820_103216_cm_es_aftershock.lua`(t=473.5,CM 0.26 血,ES 195.94u / Zeus 268.02u **两个都刚打过她**,七个非朝向守卫全过,出货零下单 → armed 下单 Frostbite 打 ES,零注入,`died_after = 1`)买到的是**可达性与选靶**;⛔ **买不到的是锥形本身** —— `IsFacingLocation` 不在 dump 里,mock 对 bots/ 下 **317** 个调用点一律答 false(§6.1 用 360° 锥形证明那是默认值不是计算)。一波 armed 要读的四列:(1) `保护自己` 支路**因为锥形而被挡下**的瞬间数,分母 = 该支路其余合取项全部成立的瞬间数 —— **这一列就是整条 lever 的域,而且是离线永远读不到的那一列**;(2) 被挡下的那些瞬间,CM 在随后 10s 内**是否死了**(钉帧上是 1.0s);(3) armed 侧**多出来的** Frostbite 施放,以及它落在谁身上 —— 是不是「刚打过她的那个人」(钉帧上是,但一帧不是分布);(4) **分层**:多出来的施放里有多少本来就会被上面四条兄弟支路之一接住(那部分不归本杠杆,必须能分开)。",
+      "acceptance": "解冻后单 arm(或与不相交的 id 同波)跑一波,交出上面四列 + 铁律 4(i-a) 要求的 ab/ba 两个分层读数。⚠️ **归因边界,负读数只有一种读法**:本 lever 是 **WIDENING**(只删一个合取项),armed 的释放集按形状是出货释放集的**超集**,`tests/test_cm_w_selfdefense_facing.lua` §4.2 在整张 10 帧网格上断言了这个方向(凡不同的格子,出货侧必须是 `none`)⇒ 负读数**只能**读作「多放出来的那几次冰封禁制不值得放」,**永远不能**读作「这条 lever 让她少放了 N 次」。⚠️ **一条不许合并的仪表限度**:波次侧若能从 `.dem` 量到真实朝向,那是本条**唯一**的第一手读数,不是 fixture 读数的第二意见 —— 请单列。⚠️ **兄弟位点**:同形锥形还长在 `hero_skeleton_king.lua`(X.ConsiderQ)和 `hero_zuus.lua` 上,**不在本条里**;WK 那条的语料域已测为空(1 帧过非几何合取项,最近敌人 1699u > `J.GetNearbyHeroes` 自己 clamp 的 1600u),要动它需要自己的 id 和自己的波。",
+      "requested_by": "hero 2026-09-09T05:2xZ",
+      "status": "open"
     }
   ],
   "done": [
