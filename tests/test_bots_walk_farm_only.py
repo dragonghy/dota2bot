@@ -82,6 +82,10 @@ UNRESOLVED_HAND_READ = {
         "luaFiles('bots') x2 and luaFiles('tests/fixtures'); carries the clause",
     """tests/test_tpclaim_stamp_on_commit.lua  ::  'find ' .. dir .. ' -name "*.lua" ' .. require('lua_source_scan').FARM_ONLY_FIND_CLAUSE .. ' | sort'""":
         "lua_files_under('bots'); carries the clause",
+    """tests/test_blind_a_roamidle_campsel.lua  ::  'grep -l ' .. key .. ' tests/fixtures/*.lua 2>/dev/null | wc -l'""":
+        "[1d] loops key over {'GetCurrentActionType', 'GetActiveMode'}; the "
+        "path is the fixed glob tests/fixtures/*.lua, not a walk of bots/, so "
+        "it cannot reach bots/Customize/ regardless of the parameter's value",
     """tests/test_itemtrip_supply_gap.lua  ::  'ls "' .. dir .. '"'""":
         "ls('bots', ...) x2 and ls('tests/fixtures', ...); `ls \"bots\"` is NOT "
         "recursive, so it never reaches bots/Customize/ at all",

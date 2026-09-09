@@ -70,7 +70,19 @@ def main():
         print("UNCERTIFIABLE: cannot read the arm string from test_set.md (%s)" % exc)
         sys.exit(2)
     ids = ct.parse_arm(arm)
-    check(len(ids) >= 40, "test_set.md line 2 parsed as an arm string (%d ids)" % len(ids))
+    # ⚠️ THE FLOOR WAS THE WRONG SHAPE (director 2026-09-09, same defect as
+    # `test_coarmed_attribution_register`'s `n >= 40` the round before).  This
+    # check wants to catch a SHORT READ -- parse_arm returning three ids off a
+    # 37-id line -- and a floor cannot express that: it goes red for the arm
+    # string SHRINKING, which is the team doing exactly what owner P4.2 asked
+    # (target <= 20).  It went red at 37.
+    #
+    # Counting the commas independently does express it: a short read moves the
+    # two numbers apart, and a legitimate promote/return moves them together.
+    want = len([s for s in arm.split(",") if s.strip()])
+    check(len(ids) == want and len(ids) > 0,
+          "test_set.md line 2 parsed as an arm string (%d ids from %d "
+          "comma-separated fields)" % (len(ids), want))
     terms, rows, summary = ct.derive_terms(ids, ROOT, tree=tree)
     scoped = {r["id"] for r in rows if r["kind"] == "hero"}
     # [director 2026-08-29, GH #221/#276] These two checks used to be FROZEN

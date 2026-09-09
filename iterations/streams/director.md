@@ -520,7 +520,72 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     ⭕ 在守卫落地之前,**注册 `text_absent` 行的那个工作单元必须当轮跑一次 `--owed-only` 并确认读 OWED**
     (本轮就是这么抓到的;换一个把它写在工作单元末尾的轮次,这一行会**生下来就是退休的**)。
 
+101. **条件性穿透的探针**(总监 2026-09-09T07:xxZ 立,**未落地,由本轮的普查自己点名**)。
+    `gated_getter_stub_census.py` 的 `SERVED` 只说**「加载器认得这个名字」**,不说
+    **「这一帧的答案来自帧」**。§GD 实测的正是两者之差:`sp.GetCastRange` 装上了,
+    487 个句柄里 **350 个**仍从它**穿过去**落到同一个兜底 0(`CR_ZERO 350` 与 `CATCHALL 350` 逐位相同)。
+    **文本扫描看得见安装,永远看不见穿透** ⇒ 这一形只能用**一次运行**买:
+    跑遍 110 帧、对每个被调用的 getter 记「答案来自 `__spec` / 来自兜底」,并按 armed id 归属。
+    ⭕ 在探针落地之前,**任何引用该普查 `SERVED` 行的结论都必须逐字带上这条限制**;
+    `tests/test_gated_getter_stub_census.py` 已把 `GetCastRange == 'SERVED'` **钉成断言**,
+    所以这条限制**改动时会变红,不会悄悄变成一个声称**。
+
+102. **「armed 集大小的下界」这类断言的守卫**(总监 2026-09-09T07:xxZ 立,**未落地**)。
+    **立案句是两轮两个文件的同一条错误措辞**:`test_coarmed_attribution_register` 的 `n >= 40`
+    (09-09T04:24Z 修)与 `test_carrier_terms` 的 `len(ids) >= 40`(本轮修)。
+    两条都想抓**短读**,而**地板表达不了短读**;它们实际抓到的是 armed 串**在变小**,
+    也就是团队照 owner P4.2(目标 ≤20)做事 —— **失效方向是「为做对事而变红」**。
+    ⚠️ 关键是这**不是巧合而是结构**:那个量被设计成单调减,所以任何压在它上面的下界
+    **迟早**会红,且每次都要花一轮去读懂。⇒ 守卫形状:普查 `tests/` 里以
+    armed 串长度 / arm 行字段数为**下界**的断言,报出来;正确写法是**独立数一遍再要求相等**。
+
 ## 当前状态(每次触发后更新)
+- **2026-09-09T07:15Z**:**§GF.3 的处方落成仪器(顺延四轮的 backlog,本轮不再顺延);而本轮最该被读的不是那张采购单 —— 是「这个普查自己写的时候错了两次,两次的产物都是**更小更干净的答案**而不是报错,两次都只被『reach 计数与 finding 计数印在同一行』救下来」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0、
+  armed 串 **37 不动**、无 promote / 无退集。
+  取活依据是上一轮「下次触发」的 **②**(逐字:「把 §GF.3 的处方落成检测器……**第四个实例仍未落地**」)。
+  全文 `iterations/reports/director/20260909T071500Z.md`,产物 GH **#656**。
+  ⭐ **不取 ①(裁 `narrat=2` 四条)是有意的**:① 每轮买一条 id 的判定,② 买的是**下一条 id 的判定成本**,
+  而它已顺延四轮 —— **顺延本身就是它该被取的理由**。
+  ⭐⭐ 落地四件:`tools/agent/gated_getter_stub_census.py`(从 `IsSoakCandidate` 站点走到所在顶层函数,
+  `--depth 2` 再进它点名的 `J.*`/`X.*` helper,收**引擎** getter,按加载器分
+  `SERVED`/`REFUSED`/`DEFAULT`/`STUB0`/`NILGLOB`)、`tests/test_gated_getter_stub_census.py`(**普查说了什么**)、
+  `tests/test_gated_getter_stub_control.lua`(载入真帧,读**加载器做了什么**,15 个 STUB0 名字逐个)、
+  `tools/agent/mutstand_gated_getter_stub.sh`(**7 CAUGHT / 0 SURVIVED**,双对照 `control_ok`)。
+  **两份测试是两个问题** —— §GD..§GF 四轮的整个缺陷类就住在这两个问题的缝里。
+  ⭐ 读数(arm 37,depth 2):`gate-sites 36`(1 条在顶层函数外,诚实残差)、`fns-read 288`、
+  `engine-getter-calls 968`、`repo-Get-calls-skipped 494`、**`ids-with-STUB0 14`**、`ids-with-NILGLOB 2`。
+  采购单前三:`GetAssignedLane` **6 条 id**、`GetActiveMode` **5**、`GetHealthRegen` **5**;
+  `NILGLOB` = `GetRoshanDesire`/`GetTreeLocation`(**抛异常,是响的失效,另一种采购**)。
+  ⭐ **阳性对照,只有一次,用掉了**:`GetAnimActivity` 正是 §GF **用整整一轮手工**定价的那一个,
+  本轮普查**不知道那条裁定**、从源码独立走到同一个答案。
+  ⭐⭐⭐ **主轴**:两条缺陷都不报错 —— (i) `strip_comments` 顺手抹掉字符串 ⇒
+  `IsSoakCandidate('pulllane')` **不再包含它自己的 id** ⇒ `gate-sites 0 … ids-with-STUB0 0`,
+  **37 条全体**,一个自信的**空答案**;(ii) 同一函数**截断**而非补空格 ⇒ 偏移平移 ⇒
+  36 个站点里 **18 个**落在所有函数区间外,而普查把它印成 `18 outside any top-level fn`,
+  **把自己的缺陷报成了 `bots/` 的性质**(修后 35/36)。两条都被原样放回做 M1/M2,均 CAUGHT。
+  ⚠️ 第三条同族:一开始不分调用形式,`J.GetManaCost`/`X.GetOne` 被当成引擎 getter 报了三十多行;
+  判据改成**名字前面那个字符**,M3 钉住。
+  ⛔ **`SERVED` 只说「加载器认得这个名字」,不说「答案来自帧」** —— §GD 那一形(条件性穿透,
+  350/487)**本工具找不到**,已逐字写进 docstring **并钉成断言**(backlog 101)。
+  ⭐ **顺手修掉两条 trunk 红([harness],章程 2a)**:(i) `test_carrier_terms` 的 `len(ids) >= 40`
+  与上一轮修掉的 `n >= 40` **同一条错误措辞、下一轮又独立红一次** ⇒ 立 backlog 102;
+  改成**独立数逗号字段要求相等**(短读仍红:`3 != 37` 已验)。
+  (ii) `test_bots_walk_farm_only`:`test_blind_a_roamidle_campsel.lua [1d]` 的 `io.popen` 由循环变量拼成,
+  **手读后登记**进 `UNRESOLVED_HAND_READ`(固定 glob,非对 `bots/` 的 walk),**没有删检查**。
+  铁律 6 静态半 `luacheck bots game: 0 warnings`(`GATE_EXIT=0 CLEAN`);动态半针对性 5 份全绿,
+  ⛔ Lua 全量未跑**不作声称**。自检真码 **3**(`cadence`/`owed-executions`/`trunk-red(python)`),
+  其中 `trunk-red(python)` 的两条**本轮已修**;该腿自测再撞 GH #358 的 120s(**UNCERTIFIABLE 不是通过**)。
+  ⚠️ **纪律 3 本轮一发,老形状,但有新读数**:第一条命令仍是 `… | tail -60`,§22 守卫当场拒;
+  ⭐ 紧跟的 `; echo "SELFCHECK_EXIT=$?"` 打出 **0** —— **同一行里守卫喊「2,什么都没检查」而管道读出 0**,
+  这是「后台包装吞码」与纪律 3 **同行同时兑现**的第一次现场,两个数字并排。守卫仍未立(第十次,顺延)。
+  MTD 不作新声称,转载批测台 **$66.105**,三条线均未跨。
+  **下次触发**:①⭐裁 `narrat=2` 四条(`liondrainstop`/`ownhalf`/`pulldrag`/`tpgap`),
+  ⚠️ `pulldrag` 先查再裁;⭐**这一步现在有工具**:先跑 `--id <id> --all`,四条里三条已在采购单上点名
+  ②⭐backlog 102(下界断言守卫)③⭐backlog 101(条件性穿透探针)
+  ④为 `GetAnimActivity` 单开 [harness](四个缺口里**最便宜**,且现有 2 条 armed id 压着)
+  ⑤「后台包装吞掉真码」守卫(第十次,顺延)⑥GH #358 的 120s 要人裁(顺延)
+  ⑦`hero_domain_scan` 九份读数(顺延)⑧⭐「退集/promote 的五处同步」收成清单或脚本(顺延)
 - **2026-09-09T04:24Z**:**两条退回出集(39 → 37),判定完结 2(达标),`narrat=1` 一档清空;而本轮最该被读的不是裁定 —— 是「同一个加载器里同时住着两种失败模式,而只有一种会举手,会举手的那种正是前三轮各烧一整轮才挖出来的那三条的解药」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
   取活依据是上一轮「下次触发」的 **①**(逐字点名 `narrat=1` 仅剩 `pulllane`/`pullthink`,并逐字警告门**带空格**)。
