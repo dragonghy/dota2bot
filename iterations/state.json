@@ -7442,5 +7442,23 @@
     "queue": "iterations/queue.json `hero-52`(解冻后的 armed 波次登记 + 要读的四列)",
     "issue": "GH #649",
     "report": "iterations/reports/hero/20260909T020205Z.md"
+  },
+  "pulllane_RETURNED_20260909": {
+    "ruling": "总监 2026-09-09T04:xxZ **退回出集**(armed 39 → 38)。⛔ 不是 reject:gate `J.IsSoakCandidate( 'pulllane' )`(`bots/FunLib/jmz_func.lua:10386`,**注意括号内带空格**)、`tLanePath` 搭建、子句 `J.IsCampBesideLane( camp.location, tLanePath )` 与 `PULL_CAMP_LANE_GAP = 1200` **逐字保留**,`bots/`+`game/` **零 diff**。",
+    "why": "条件 (a) 买不到:转轴子句在语料上**一次也没被调用过**。⚠️ **而第一个假设是错的** —— `GetNeutralSpawners()` 在 110/110 帧为 `{}`,于是「营地名册就是那堵墙」自己送上门(正是 §GE 判 `campsel` 用的那堵墙),**但它不是这里的约束墙**。真正的墙更靠前:`J.ShouldPullNeutralCamp` 必须先过 `GetLaneFrontLocation`,而**加载器对它拒答**(`LOADER REFUSES … unresolved (GH #61). The dump does not carry lane fronts`)。",
+    "readings": "全 1100 句柄归属:dead **79** / `IsCore` **929** / 时间窗 **67** / :12:42 刻 **14** / 800内有敌 **2** / `nLane == nil` **0** / **够到 lane front 9,而这 9 条上加载器全部拒答**。阳性对照(同帧、同上门、再喂一个距 bot 600u 的合成己方营地):non-nil **0/1100**,`J.IsCampBesideLane` 被调用 **0 次** ⇒ 名册不是约束墙。另:`GetLocationAlongLane` 全语料 6930 次采样**只有 1 个不同点**(地图原点)⇒ 即便有营地,该子句量的也是「到原点的距离」。",
+    "direction": "**失败向关**,与 §GE 同向:杠杆不开火,读数回来是「测了,没效果」。但**成因与前三轮相反**:这一条的缺失输入**大声拒答并自报家门**,不是静默答 0 —— 见 `generalisation_gap`。",
+    "generalisation_gap": "⭐⭐⭐ **同一个加载器里住着两种失败模式,只有一种举手**。`GetLaneFrontLocation` 拒答(响);`GetAnimActivity` 答 0(哑)。**拒答那一种就是解药,而且已经实现好了** ⇒ 连续三轮的「一次没有推广的修复」(§GD.5 / §GE.3)本轮升级:漏掉的不是一个姊妹 getter,是**一条加载器只对一个 getter 执行的策略**。处方:凡有 gate 压在上面的 getter,加载器应**拒答**而非答 0。",
+    "pullcamp_interaction": "⚠️ `pullcamp` **仍在集内**,而它的历史读数是与 `pulllane` 同 armed 取的。退掉后 `tLanePath = nil` ⇒ `J.IsCampBesideLane` 首行 `return true`(已核源码 `jmz_func.lua:10448`)⇒ **逐字节 no-op**,`pullcamp` 回到 GH #117 §4 之前的选点行为。⛔ **W58 及更早不与 37-id 家族并池。**",
+    "instrument": "tests/test_blind_a_pulllane_pullthink.lua(13 checks / 0 failed);tools/agent/mutstand_blind_a_pulllane_pullthink.sh(13 CAUGHT / 0 SURVIVED / control_ok=1);语料 sweep tests/_blind_a_pulllane_pullthink_sweep.lua",
+    "issue": "iterations/streams/test_set.md §GF;owed 行 pulllane_lanefront_instrument"
+  },
+  "pullthink_RETURNED_20260909": {
+    "ruling": "总监 2026-09-09T04:xxZ **退回出集**(armed 38 → 37)。⛔ 不是 reject:**两个半边**(节流跳过 + wind-up hold)与两处 gate 点 `J.IsSoakCandidate('pullthink')` **逐字保留**,`bots/`+`game/` **零 diff**。",
+    "why": "**两个操作数各自独立地死**。作用域项 `bot.roamCampPull ~= nil` 要 `J.ShouldPullNeutralCamp` 非 nil,而它**全上门 + 强制 turbo 之下仍 1100/1100 返回 nil**(与 `pulllane` 同因,见该键)。节流项 `J.Utils.IsBotThinkingMeaningfulAction` 在 **1100/1100 为 false** —— ⭐ 而它为 false 时 **baseline 腿也不提前 return**,于是两条腿在语料**每一帧逐字节相同**。机制:`bot:GetAnimActivity()` 未被加载器 spec,落 `bot_api.lua` 的 `^Get -> 0` 兜底,**1100/1100 读 0**,而 0 不是引擎会发的任何 `ACTIVITY_*`。",
+    "stale_reason": "⭐⭐ **源码注释自己的理由已经过期**。`mode_roam_generic.lua:210-211` 逐字称「ACTIVITY_* are undefined globals under the mock, so utils.lua builds meaningfulActivities as an **EMPTY table**」,并把它当作两条独立理由之一。**实测为假**:`api.install` 解析出 `ACTIVITY_RUN` **1153** / `ACTIVITY_ATTACK` **1154**,表是**满的**。判据是唯一能定案的那种 —— **注入真哨兵,节流项当场翻 true**(`[2c]`)。**结论活着,两条理由死了一条**(纪律 4)。",
+    "cheapest_purchase": "⭐ 实际后果:表既然是满的,`GetAnimActivity` 就是加载器**够得着**的一个 getter ⇒ 这是四轮裁定挖出的**四个仪器缺口里最便宜的一个,dumper 一行都不用动**(对比 `roamidle`/`campsel`/`cmrguard` 都要动 dumper 或 KV roster)。",
+    "instrument": "tests/test_blind_a_pulllane_pullthink.lua(13 checks / 0 failed);tools/agent/mutstand_blind_a_pulllane_pullthink.sh(13 CAUGHT / 0 SURVIVED / control_ok=1)",
+    "issue": "iterations/streams/test_set.md §GF;owed 行 pullthink_animactivity_instrument"
   }
 }

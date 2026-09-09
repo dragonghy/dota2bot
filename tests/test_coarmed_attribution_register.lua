@@ -496,11 +496,41 @@ tests['the extractor still sees the tree it is reading'] = function()
 end
 
 tests['the arm string parses, and a failure to parse is a failure'] = function()
-    local armed, n = parse_arm(read_file(TEST_SET))
+    local text = read_file(TEST_SET)
+    local armed, n = parse_arm(text)
     assert(armed ~= nil, 'arm string unreadable: ' .. tostring(n))
-    assert(n >= 40, 'parsed only ' .. n .. ' armed id(s) from ' .. TEST_SET
-        .. '; the set was 45 on 2026-08-29 and a short read silently shrinks '
-        .. 'the join this file exists to compute')
+
+    -- [GH #648-adjacent, director 2026-09-09 §GF] THIS WAS A FLOOR (`n >= 40`,
+    -- "the set was 45 on 2026-08-29") AND THE FLOOR WAS THE WRONG SHAPE.  The
+    -- failure it wants to catch is a SHORT READ -- the extractor matching part
+    -- of the line and silently shrinking the join.  A floor cannot express that,
+    -- because the armed set is *supposed* to shrink: owner P4.2 sets the target
+    -- at `armed <= 20`, and four consecutive director rulings (§GC/§GD/§GE/§GF)
+    -- retired ids to get there.  So the floor went red for the team doing
+    -- exactly what the owner asked -- it was already red on trunk at 39, and
+    -- would have gone redder at 37, 30, 20 without the extractor ever breaking.
+    --
+    -- Replaced by the check the sentence above actually describes: count the ids
+    -- on the raw arm line INDEPENDENTLY of parse_arm, and require agreement.
+    -- That catches a short read exactly (the parser would see fewer than the
+    -- line carries) and is immune to the set legitimately shrinking.
+    local sArmLine = nil
+    local seen_heading = false
+    for line in (text .. '\n'):gmatch('([^\n]*)\n') do
+        local t = line:gsub('%s+$', '')
+        if t:find('当前测试集', 1, true) then seen_heading = true end
+        if seen_heading and sArmLine == nil and t:match('^[%w_]+,[%w_,]+$') then
+            sArmLine = t
+        end
+    end
+    assert(sArmLine ~= nil, 'no arm line found for the independent count')
+
+    local nCommas = select(2, sArmLine:gsub(',', ''))
+    assert(n == nCommas + 1, 'SHORT READ: parse_arm returned ' .. n
+        .. ' id(s) but the arm line carries ' .. (nCommas + 1)
+        .. ' comma-separated token(s) -- the extractor is what changed, and a '
+        .. 'short read silently shrinks the join this file exists to compute')
+    assert(n >= 1, 'the armed set parsed empty')
     -- Prose must not be mistaken for the arm string, and the FIRST match must
     -- win -- the file carries 12 historical members strings of the same shape.
     local synthetic = table.concat({

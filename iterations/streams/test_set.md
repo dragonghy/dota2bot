@@ -1,11 +1,14 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulllane,pulldrag,tpgap,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,pullthink,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
-**成员串 39**(上一行,**354 字节**,md5 `433070c6d8fde3758555302db49047ab`)。本行 **2026-09-09T0x:xxZ 的变动:两条 `退回出集`(41 → 39)**,总监裁定全文 **§GE**。⛔ **不是 reject**,两条的 gate、helper 与调用点**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(达 owner P4.2 的 ≥2)。
-1. **`roamidle` 退集**(41 → 40)—— `verify=0`,条件 (a) 在**两条仪器路径上都买不到**。gate 只在 `bRelocated` 上开火,而 `J.CheckBotIdleState` 只经一条析取写 true:`GetCurrentActionType() == BOT_ACTION_TYPE_IDLE or botMode == BOT_MODE_ITEM or botMode == BOT_MODE_FARM`。`api.install` 把未知 ALL_CAPS 全局解析成 **≥1001 的哨兵**(IDLE **1174** / ITEM **1021** / FARM **1017**),而未 spec 的 `^Get` 兜底答 **0** ⇒ 三条比较在语料**每一帧**都是 `0 == 非零`,**全假**。实测:`GetCurrentActionType` 与 `GetActiveMode` 在 **110 份 fixture 里各出现 0 次**;replay 侧 `dumper/main.go` 里 `action_type` / `ActionType` / `NumQueuedActions` **一次都不出现**。⭐ **方向与 §GD 相反**:cmrguard 的兜底 0 把 veto 环**顶开**(放行),这一条**失败向关**——杠杆干脆不开火,读数回来是「测了,没效果」,**没有任何计数会举手**。全文 §GE。
-2. **`campsel` 退集**(40 → 39)—— `verify=0`,转轴是 `rec = camp.cattr` 喂给 `IsEnemyCamp`(读 `.team`)与 `IsAncientCamp`(读 `.type`),而**营地记录不在任何一条仪器里**:fixture 语料 `cattr` **0 命中**;dumper 的 `creepSnap` **恰好是 `{t,team,x,y}`** —— 无 name 无 type,于是 `.type`(ancient)从 .dem **也重建不出来**(GH #581 同一堵墙)。⭐ 这一条**是它自己的绿测试在头部写明的**:「The CAMP half is not in the corpus and is not pretended to be」「a DECLARED STAND-IN」—— 诚实的测试,只是**它不是 (a)**。全文 §GE。
-⭐⭐⭐ **本轮最该被读的一条(§GE.3):这是「一次没有推广的修复」的第二个实例**(第一个是 §GD.5 的 `AbilityDamage` 修了、紧邻的 `AbilityCastRange` 没修)。`tests/mock/replay_fixture.lua:847-863` **逐字诊断了本轮这个机制、命名了它、并把它修好了 —— 修的是隔壁那个 getter**:「unspecced, `^Get` defaults to 0, so `GetItemSlotType(slot) == ITEM_SLOT_TYPE_MAIN` was **`0 == 1174`**, FALSE on every frame of the corpus. Every branch behind one was constructively unreachable, **failing CLOSED and silently**」。**同一个哨兵数字、同一种比较、同一个失败方向**;`GetItemSlotType` 拿到了 getter,`GetCurrentActionType` 没有,而一条 armed 的 id 就压在没修的那个上面。
-⚠️ **退集针对的是仪器不是杠杆**:两条的逻辑依据 (c) 都成立且未被取代,`bots/` 零 diff,重新入集的条件由 `tests/test_blind_a_roamidle_campsel.lua` 的四条「若买到就变红」断言自己看着([1b]/[1d]/[1f]/[2a]/[2b]/[3a])。
-⚠️ **不掉进 `pullcad` 陷阱,断言过的**:两条各**只有一个** gate 点(`mode_team_roam_generic.lua:651` / `mode_farm_generic.lua:66`),门行上没有第二个 id;`promote_atoms.json` **零次**点名这两条。⭐ 特别核过 `campsel` 与 `slotarb` **同住一个 wrapper**(`ClosestCamp`)—— 但它们是**两个独立实参、各占一行**,故 `slotarb` 留在集内且**功能不受影响**。
+tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulldrag,tpgap,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
+**成员串 37**(上一行,**335 字节**,md5 `b525d51d4b4957e0e40f22f203aea641`)。本行 **2026-09-09T04:xxZ 的变动:两条 `退回出集`(39 → 37)**,总监裁定全文 **§GF**。⛔ **不是 reject**,两条的 gate、helper、常数与调用点**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(达 owner P4.2 的 ≥2)。**这两条是 `verify_coverage.py` 的 `narrat=1` 最后两条,该档就此清空。**
+1. **`pulllane` 退集**(39 → 38)—— `verify=0`,转轴 `J.IsCampBesideLane( camp.location, tLanePath )` 在语料上**一次也没被调用过**。⚠️ **而第一个假设是错的,是阳性对照说的**:`GetNeutralSpawners()` 在 **110/110 帧为 `{}`**(0 个营地句柄),于是「营地名册就是那堵墙」是自己送上门的读法 —— 也正是 §GE 判 `campsel` 的那堵墙。**它不是这里的约束墙**:上门、强制 turbo、**再喂一个距 bot 600u 的合成己方营地**,读数**纹丝不动**(non-nil **0/1100**,`J.IsCampBesideLane` 被调用 **0 次**)。真正的墙在更前面。
+2. **`pullthink` 退集**(38 → 37)—— `verify=0`,**两个操作数各自独立地死**:作用域项 `bot.roamCampPull ~= nil` 要 `J.ShouldPullNeutralCamp` 非 nil,而它**全上门、全 turbo 之下仍在 1100/1100 句柄上返回 nil**(与 `pulllane` 同因);节流项 `J.Utils.IsBotThinkingMeaningfulAction` 在 **1100/1100 上为 false** —— 而它为 false 时 **baseline 腿也不提前 return**,于是两条腿在语料**每一帧逐字节相同**。
+⭐⭐⭐ **本轮最该被读的一条(§GF.3):同一个加载器里同时住着两种失败模式,而只有一种会举手。** 两个输入都不在语料里,加载器对它们的处理**方向相反**:`GetLaneFrontLocation` **大声拒答并自报家门**(`LOADER REFUSES: … is unresolved (GH #61). The dump does not carry lane fronts; do not compare against (0,0,0). Declare your assumption …`);`GetAnimActivity` **静静地答 0**(`bot_api.lua` 的 `^Get -> 0` 兜底,1100/1100)。**同一个加载器、同一类缺失数据、相反的失败方向** —— 而**拒答那一种就是解药,并且已经实现好了**。⇒ 连续三轮的主轴都是「一次没有推广的修复」(§GD.5 `AbilityDamage` 修了紧邻的 `AbilityCastRange` 没修;§GE.3 `GetItemSlotType` 修了 `GetCurrentActionType` 没修),**而本轮漏掉的不再是一个姊妹 getter,是一条加载器只对一个 getter 执行、对其余一概不执行的策略**。
+⭐⭐ **第二件(§GF.4):`pullthink` 源码注释自己的理由已经过期了。** `mode_roam_generic.lua:210-211` 逐字写着「ACTIVITY_* are undefined globals under the mock, so utils.lua builds meaningfulActivities as an **EMPTY table**」,并把它当作「this line reads false locally」的**两条独立理由之一**。**实测为假**:`api.install` 把未知 ALL_CAPS 解析成 ≥1001 哨兵 ⇒ `ACTIVITY_RUN` **1153**、`ACTIVITY_ATTACK` **1154**,那张表是**满的**。判据是唯一能定案的那种 —— **注入一个真哨兵,节流项当场翻 true**(`[2c]`)。**结论活着,两条理由死了一条**(纪律 4:对的答案骑在一条已经不成立的理由上)。⭐ 而且这有**实际后果**:表既然是满的,`GetAnimActivity` 就是加载器**够得着**的一个 getter ⇒ `pullthink` 的节流项是这四轮裁定挖出的四个仪器缺口里**最便宜的一个,dumper 一行都不用动**。
+⭐ **归属清单(全 1100 句柄,每一个停在哪)**:dead **79** / `IsCore` **929** / 时间窗 **67** / :12:42 刻 **14** / 800 内有敌 **2** —— 这五条是**诚实的域过滤**(这是一条 pos-4/5 对线期杠杆,而语料以核心、以非 60-360s 为主);`nLane == nil` **0**(**GH #648 的论点实测成立**:引擎答 `LANE_NONE == 0`,那条 guard 打不响);**够到 lane front 的恰好 9 条,而这 9 条上加载器全部拒答**。⇒ **语料里能把问题问出口的只有 9 帧,仪器在 9 帧上全部拒答。** 这个 9 同时是给买单人的报价:**这是一笔小而准的采购,不是全语料改造**。
+⚠️ **退集针对的是仪器不是杠杆**:两条的 (c) 都成立且未被取代(`pulllane` 是 GH #117 的拖拽实测,`pullthink` 是 GH #186 的「42% 的 poke 帧从不下拖拽令」),`bots/` 零 diff,重新入集的条件由 `tests/test_blind_a_pulllane_pullthink.lua` 的「若买到就变红」断言自己看着(`[1a]`/`[1b]`/`[1d]`/`[2a]`/`[2b]`/`[2c]`)。
+⚠️ **`pullcamp` 仍在集内,而它的读数是与 `pulllane` 同 armed 取的**:退掉 `pulllane` 后 `tLanePath = nil` ⇒ `J.IsCampBesideLane` 首行 `return true` ⇒ **逐字节 no-op**(已核源码,不是承诺),`pullcamp` 回到 §4 之前的选点行为。⛔ **因此 W58 及更早不与 37-id 家族并池。**
+⚠️ **不掉进 `pullcad` 陷阱,断言过的**:`promote_atoms.json` **零次**点名这两条;`pulllane` **恰好一个** gate 点、`pullthink` **恰好两个**(节流跳过 + wind-up hold,设计上就是一条 id)。⭐ **`pulllane` 的门写作 `J.IsSoakCandidate( 'pulllane' )` —— 括号里带空格**;不带空格的 grep 会读回「无调用点」并把一条**活着的**杠杆当死的退掉,上一轮的「下次触发 ①」逐字警告过这一点,**本轮把它钉成了 M10**。
 ⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py --arm` 对 41-id 与 39-id 两串各跑一次,`TERMS` 行**逐字节相同**,`0 unresolved` 两次;计数 `9 hero / 32 generic` → `9 / 30`(两条都是 generic)⇒ **选种解空间不受影响**。
 ⛔ **在此之前起飞的任何一波都不含本次变动** —— W58 及更早**不与 39-id 家族并池**。
 〔沿革,上一条变动〕**成员串 41**(上一行,**371 字节**,md5 `fd21d5ddc2759c2a7adf829074d51c63`)。本行 **2026-09-08T2x:xxZ 的变动:一条 `退回出集`(42 → 41)**,总监裁定全文 **§GD**。⛔ **不是 reject**,gate、helper 与两个常数(`X.nRGuardCloseBuffer=400` / `X.nRGuardRangeCap=200`)**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **1**(owner P4.2 的产出指标,**不达 ≥2,理由见报告 §6,不粉饰**)。
@@ -2455,3 +2458,124 @@ storm_spirit/earthshaker/centaur/slardar/tidehunter/axe)一律读 0。
 4. **没有买仪器**。两半(KV roster 扩到 hard-CC 载体 + getter 无条件装)都只登记进 owed 行。
 5. **没有重新解释 2026-08-20 的 precision ~40% / recall 1/4**:那些数出自 replay 路径,本节不碰它们。
 6. **patch 检查本轮未做**(低频;上一次 §GA.0 做过,无新 patch)。
+
+---
+
+## §GF 2026-09-09T04:xxZ 总监:**`pulllane` 与 `pullthink` 退回出集(39 → 37)** —— 本节最该被读的是 **§GF.3:同一个加载器里同时住着两种失败模式,而只有一种会举手**;`narrat=1` 一档就此清空
+
+### §GF.0 一句话
+
+`pulllane` 与 `pullthink` 退回出集,armed **39 → 37**。**判定完结 2**(达 owner P4.2 的 ≥2)。
+零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+取活依据是上一轮「下次触发」的 **①**(逐字点名 `verify_coverage.py` 的 `narrat=1` 仅剩这两条,
+并逐字警告 `pulllane` 的门**带空格**)。这两条清完,**`narrat=1` 档从四条降到零**。
+
+### §GF.1 判据:与 §GC/§GD/§GE 同一把尺
+
+(a) 问的是「这个输入到底出没出现过」,不是「给定这个输入决策对不对」。两条 id 各有绿测试
+(`tests/test_pullthink_anim_throttle.lua` 在自己头部逐字承认它 **injects the activity**;
+`pulllane` 的子句用手搭的路径喂),那些测试都没错,**错的是把它们读成 (a)**。
+
+### §GF.2 `pullthink`:两个操作数各自独立地死
+
+门是一条合取 `bot.roamCampPull ~= nil and J.IsSoakCandidate('pullthink')`,守的是
+`J.Utils.IsBotThinkingMeaningfulAction` 的提前 return 跳不跳。armed 腿要与 baseline 腿有差别,
+**两个操作数都得成立**,而语料把它们**各自独立地杀掉**:
+
+* **作用域项** —— `bot.roamCampPull` 由 `J.ShouldPullNeutralCamp` 写入,而后者
+  **在全上门 + 强制 turbo 之下仍然 1100/1100 返回 nil**(原因见 §GF.5)。构造性不可达。
+* **节流项** —— `IsBotThinkingMeaningfulAction` 在 **1100/1100 句柄上为 false**。
+  ⭐ 关键在于:**它为 false 时 baseline 腿也不提前 return** ⇒ 两条腿在语料**每一帧逐字节相同**。
+  失败**向关**:杠杆不开火,读数回来是「测了,没效果」,**没有任何计数会举手**(与 §GE 同向)。
+
+机制:`bot:GetAnimActivity()` 未被加载器 spec,落 `bot_api.lua` 的 `^Get -> 0` 兜底,
+**1100/1100 读 0**,而 0 不是引擎会发的任何 `ACTIVITY_*`。
+
+### §GF.3 ⭐⭐⭐ 主轴:同一个加载器,两种失败模式,只有一种举手
+
+两个输入都不在语料里。加载器对它们的处理**方向相反**:
+
+| 输入 | 加载器行为 | 后果 |
+|---|---|---|
+| `GetLaneFrontLocation` | **拒答,并自报家门**:`LOADER REFUSES: … is unresolved (GH #61). The dump does not carry lane fronts; do not compare against (0,0,0). Declare your assumption …` | 9 帧当场报错,**看得见** |
+| `GetAnimActivity` | **静静答 0**(`^Get -> 0` 兜底) | 1100/1100 读 0,杠杆静默失效,**没人举手** |
+
+**同一个加载器、同一类缺失数据、相反的失败方向 —— 而拒答那一种就是解药,并且已经实现好了。**
+⇒ 连续三轮的主轴都是「一次没有推广的修复」:§GD.5(`AbilityDamage` 无条件装、紧邻的
+`AbilityCastRange` 没装)、§GE.3(`GetItemSlotType` 修了、`GetCurrentActionType` 没修),
+**而本轮漏掉的不再是一个姊妹 getter,是一条加载器只对一个 getter 执行、对其余一概不执行的策略**。
+⇒ **可迁移的处方**:凡是有 gate 压在上面的 getter,加载器应当**拒答**(像 `GetLaneFrontLocation`),
+**不是答 0**(像 `GetAnimActivity` / `GetCurrentActionType` / `AbilityCastRange`)。
+这三条 getter 正好是前三轮各自烧掉一整轮才挖出来的那三个。
+
+### §GF.4 ⭐⭐ 第二件:源码注释自己的理由已经过期
+
+`mode_roam_generic.lua:210-211` 逐字写着
+「ACTIVITY_* are undefined globals under the mock, so utils.lua builds meaningfulActivities
+as an **EMPTY table**」,并把它当作「this line reads false locally」的**两条独立理由之一**。
+
+**实测为假。** `api.install` 把未知 ALL_CAPS 解析成 ≥1001 哨兵 ⇒ `ACTIVITY_RUN` **1153**、
+`ACTIVITY_ATTACK` **1154**、`ACTIVITY_ATTACK2` **1155** …… 那张表是**满的**。
+判据是唯一能定案的那种:**注入一个真哨兵,节流项当场翻 true**(`[2c]`,`GetAnimActivity=1154 ⇒ true`)。
+
+**结论活着,两条理由死了一条** —— 纪律 4 的野生标本(对的答案骑在一条**已经不成立**的理由上)。
+⭐ 且有实际后果:表既然是满的,`GetAnimActivity` 就是加载器**够得着**的一个 getter ⇒
+`pullthink` 的节流项是这四轮裁定挖出的四个仪器缺口里**最便宜的一个,dumper 一行都不用动**。
+`[2c]` 特意断言那句过期注释**仍在源码里**,所以**修好它的那一天这条断言会自己变红** ——
+断言与它的主题一起退休,而不是悄悄活得比主题久。
+
+### §GF.5 `pulllane`:第一个假设是错的,是阳性对照说的
+
+转轴是 `J.ShouldPullNeutralCamp` 营地循环的第三条子句
+`J.IsCampBesideLane( camp.location, tLanePath )`,`tLanePath` 由 armed 时 21 次
+`GetLocationAlongLane` 采样搭成。
+
+⚠️ **自己送上门的读法是错的。** `GetNeutralSpawners()` 在 **110/110 帧为 `{}`**(0 个营地句柄),
+于是「营地名册就是那堵墙」看着成立 —— 而那正是 §GE 判 `campsel` 用的墙,**顺手复用极其诱人**。
+**阳性对照否掉了它**:上门、强制 turbo、**再喂一个距 bot 600u 的合成己方营地**,
+读数**纹丝不动**(non-nil **0/1100**,`J.IsCampBesideLane` 被调用 **0 次**)。
+
+**归属清单(全 1100 句柄,每一个停在哪)**:
+
+| 停在哪 | 数量 | 性质 |
+|---|---|---|
+| dead | 79 | 诚实域过滤 |
+| `IsCore` | **929** | 诚实域过滤(这是 pos-4/5 杠杆,语料以核心为主) |
+| 时间窗 60-360s | 67 | 诚实域过滤 |
+| :12/:42 刻 | 14 | 诚实域过滤 |
+| 800 内有敌 | 2 | 诚实域过滤 |
+| `nLane == nil` | **0** | **GH #648 的论点实测成立**:引擎答 `LANE_NONE == 0`,那条 guard 打不响 |
+| 够到 lane front | **9** | **而这 9 条上加载器全部拒答** |
+
+⇒ **语料里能把问题问出口的只有 9 帧,仪器在这 9 帧上全部拒答。** (a) 买不到 ——
+但诚实的说法是「**lane front 不在 dump 里**」,不是「没有营地」。
+这个 9 同时是给买单人的报价:**一笔小而准的采购,不是全语料改造**。
+
+### §GF.6 量具与自查
+
+* `tests/test_blind_a_pulllane_pullthink.lua` —— **13 checks / 0 failed**。
+* `tools/agent/mutstand_blind_a_pulllane_pullthink.sh` —— **13 CAUGHT / 0 SURVIVED / control_ok=1**,
+  五文件还原走树外副本 + 每轮 `git diff --quiet` 校验。
+* ⚠️ **M8 第一次 SURVIVED,而它是对的、断言是错的**(纪律 2,**第四次**)。
+  `[1e]` 原本**把 helper 的五条域过滤逐条抄进测试**再数存活者;M8 把 helper 自己的拉野窗口
+  6min 拉到 12min,测试**纹丝不动地绿着** —— **抄来的域看不见域在动**,那个「9」是关于**测试**的数,
+  不是关于 helper 的数。改成**驱动真 helper、数够到拒答的帧**(够到拒答 ⟺ 通过全部过滤),
+  一个字都不抄,M8 当场 CAUGHT。**与前三次同形:针脚比它要钉的东西宽/偏。**
+* ⚠️ **`test_corpus_scale` 检测器当场逮到本轮自己的新文件**(`assert(nFrames == 110)`,GH #106/#127 的
+  耦合面),已按它指定的 `tests/corpus_scale.lua` 改写(`corpus`/`universal`/`ratchet`);
+  **零claim 保持等式**(模块自己写明「deliberately not softened」)。检测器复跑 **10/0**。
+* ⚠️ **`lua5.1 <sweep> ` 退出 0 且零输出,那不是通过**:mock 的 `api.install` 把 `_G.print` 换成
+  no-op(引擎没有控制台),于是 print 式 sweep**长得和干净跑完一模一样**。改走 `io.stderr` 才见读数。
+  这是纪律 3 家族的**新形状**(不是管道吃退出码,是**被测环境吃掉 stdout**),登记备查。
+
+### §GF.7 本节没有做的事(边界)
+
+1. **没有买任何仪器**。两条的缺口都只登记进 `iterations/owed_executions.json`。
+2. **没有 reject 任何杠杆**:gate、helper、`PULL_CAMP_LANE_GAP = 1200`、两个 `pullthink` 半边
+   **逐字保留**,`bots/`+`game/` 零 diff(`[3c]` 钉住)。
+3. **没有动 `pullcamp`**:它仍在集内。但它的历史读数是与 `pulllane` **同 armed** 取的,
+   退掉后 `tLanePath = nil` ⇒ `J.IsCampBesideLane` 首行 `return true` ⇒ **逐字节 no-op**(已核源码),
+   `pullcamp` 回到 §4 之前的选点行为。⛔ **W58 及更早不与 37-id 家族并池。**
+4. **没有落地「桩转轴普查」**(§GC 的 backlog 99):本节是它的**第四个实例**,不是它的落地。
+5. **没有跑动态半全量**(~100min,GH #124);`bots/` 零 diff,静态门与两个针对性套件已过。
+6. **patch 检查本轮未做**(低频;§GA.0 做过,无新 patch)。

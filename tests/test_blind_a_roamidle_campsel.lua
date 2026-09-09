@@ -192,11 +192,24 @@ tests['[1d] the pivot appears in 0 fixtures, and exactly one test writes it'] = 
     end
 
     -- The only writer in the whole suite is the id's own green test.
-    local r = io.popen('grep -l GetCurrentActionType tests/*.lua 2>/dev/null')
-    local files = r:read('*a'); r:close()
-    local n = select(2, files:gsub('\n', ''))
-    assert(n == 2, 'expected exactly two test files naming the pivot (its own '
-        .. 'green test and this one); got ' .. n .. ':\n' .. files)
+    --
+    -- ⚠️ COUNTED IN CODE, NOT IN PROSE (director 2026-09-09, §GF).  This was a
+    -- bare `grep -l`, and it went red the moment the NEXT blind-A ruling
+    -- (§GF, pulllane/pullthink) cross-referenced this one by name in a comment.
+    -- Nothing had written the pivot; a file had merely talked about it.  The
+    -- assertion's own title says "writes it", so the needle was wider than the
+    -- thing it pins -- the same shape as §GF's own M8 and §GD/§GE's M5/M6.
+    local r = io.popen('ls tests/*.lua 2>/dev/null')
+    local files, n = '', 0
+    for path in r:lines() do
+        if codeOnly(read_file(path)):find('GetCurrentActionType', 1, true) then
+            n = n + 1
+            files = files .. path .. '\n'
+        end
+    end
+    r:close()
+    assert(n == 2, 'expected exactly two test files WRITING the pivot in code '
+        .. '(its own green test and this one); got ' .. n .. ':\n' .. files)
     assert(files:find('test_roamidle_recovery_clobber.lua', 1, true),
         'the id\'s own test must be one of them')
 end

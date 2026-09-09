@@ -521,6 +521,53 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     (本轮就是这么抓到的;换一个把它写在工作单元末尾的轮次,这一行会**生下来就是退休的**)。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-09T04:24Z**:**两条退回出集(39 → 37),判定完结 2(达标),`narrat=1` 一档清空;而本轮最该被读的不是裁定 —— 是「同一个加载器里同时住着两种失败模式,而只有一种会举手,会举手的那种正是前三轮各烧一整轮才挖出来的那三条的解药」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
+  取活依据是上一轮「下次触发」的 **①**(逐字点名 `narrat=1` 仅剩 `pulllane`/`pullthink`,并逐字警告门**带空格**)。
+  全文 `iterations/reports/director/20260909T042427Z.md`,裁定全文档案 `test_set.md §GF`(§GF.0–§GF.7),
+  机器键 `state.json:pulllane_RETURNED_20260909` / `pullthink_RETURNED_20260909`。
+  ⭐⭐⭐ **主轴(§GF.3)**:两个输入都不在语料里,加载器处理**方向相反** —— `GetLaneFrontLocation` **拒答并自报家门**
+  (`LOADER REFUSES … unresolved (GH #61). The dump does not carry lane fronts`),`GetAnimActivity` **静静答 0**
+  (`^Get -> 0` 兜底,1100/1100)。**拒答那一种就是解药,而且已经实现好了。**
+  ⇒ 连续三轮的「一次没有推广的修复」(§GD.5 / §GE.3)本轮**升级**:漏掉的不再是一个姊妹 getter,
+  是**一条加载器只对一个 getter 执行、对其余一概不执行的策略**。处方:凡有 gate 压在上面的 getter,应**拒答**而非答 0。
+  ⭐⭐ **`pullthink` 退集**:**两个操作数各自独立地死**。作用域项 `bot.roamCampPull` 要 `J.ShouldPullNeutralCamp` 非 nil,
+  实测**全上门 + 强制 turbo 之下仍 1100/1100 返回 nil**;节流项 `IsBotThinkingMeaningfulAction` **1100/1100 为 false**,
+  ⭐ 而它 false 时 **baseline 腿也不提前 return** ⇒ 两条腿逐帧逐字节相同。
+  ⭐ **且它源码注释自己的理由已过期(§GF.4)**:`mode_roam_generic.lua:210-211` 逐字称 meaningfulActivities 是
+  **EMPTY table** 并当作两条独立理由之一 —— **实测为假**(`ACTIVITY_RUN` **1153** / `ACTIVITY_ATTACK` **1154**,表是满的);
+  判据是**注入真哨兵、节流项当场翻 true**(`[2c]`)。**结论活着,两条理由死了一条**(纪律 4)。
+  ⭐ 实际后果:表既然是满的,`GetAnimActivity` 是加载器**够得着**的 getter ⇒ 这是四轮四个仪器缺口里**最便宜的一个,dumper 一行不用动**。
+  ⭐⭐ **`pulllane` 退集**:转轴子句 `J.IsCampBesideLane` 在语料**一次也没被调用过**。
+  ⚠️ **第一个假设是错的,是阳性对照说的** —— `GetNeutralSpawners()` 确实 110/110 为 `{}`(正是 §GE 判 `campsel` 的那堵墙,
+  顺手复用极其诱人),**但它不是约束墙**:喂一个距 bot 600u 的合成己方营地,读数**纹丝不动**(non-nil 0/1100,子句调用 **0 次**)。
+  归属(全 1100):dead 79 / `IsCore` **929** / 时间窗 67 / :12:42 刻 14 / 800内有敌 2 / `nLane==nil` **0**(**GH #648 论点实测成立**)/
+  **够到 lane front 恰好 9,而这 9 条上加载器全部拒答** ⇒ **能把问题问出口的只有 9 帧,仪器 9 帧全拒答**;这个 9 也是报价(**小而准的采购**)。
+  ⛔ **退集不是 reject**:gate/helper/`PULL_CAMP_LANE_GAP=1200`/`pullthink` 两个半边逐字保留,零 `bots/` diff。
+  ⚠️ `pullcamp` **仍在集内**且其历史读数与 `pulllane` 同 armed 取的:退掉后 `tLanePath=nil` ⇒ `IsCampBesideLane` 首行 `return true` ⇒ **逐字节 no-op**(已核源码)。⛔ **W58 及更早不与 37-id 家族并池。**
+  ⚠️ `pullcad` 陷阱查过:`promote_atoms.json` 零次点名两条;`pulllane` 恰一个 gate 点、`pullthink` 恰两个。
+  量具:`tests/test_blind_a_pulllane_pullthink.lua`(**13 checks / 0 failed**)、
+  `tools/agent/mutstand_blind_a_pulllane_pullthink.sh`(**13 CAUGHT / 0 SURVIVED / control_ok=1**)。
+  ⚠️ **M8 第一次 SURVIVED,而它是对的、断言是错的**(纪律 2,**第四次**):`[1e]` **把 helper 的五条域过滤逐条抄进测试**,
+  于是 M8 把 helper 自己的窗口 6→12min 时测试纹丝不动地绿着 —— **抄来的域看不见域在动**。改成**驱动真 helper、数够到拒答的帧**,当场 CAUGHT。
+  ⭐ **顺手修掉两条 trunk 红([harness],章程 2a)**:(i) `test_coarmed_attribution_register` 的 `n >= 40` **是错的形状** ——
+  它要抓短读,而**地板表达不了短读**,且 armed 集**本来就该缩**(P4.2 目标 ≤20)⇒ 那条断言在为「团队照 owner 说的做」而变红
+  (39 上已红)。改成**独立数 arm 行逗号并要求相等**,变异验过(丢一个 id ⇒ `SHORT READ: … 36 … 37`)。
+  (ii) `test_corpus_scale` **当场逮到本轮自己的新文件**(`== 110`),按 `tests/corpus_scale.lua` 改写。
+  另修我自己触发的一条:§GE `[1d]` 说「writes it」而实现是裸 `grep -l`,被本轮**注释里的交叉引用**打红 ⇒ 改用 `codeOnly()` 在代码里数;§GE 变异台复跑 **12/0** 未削弱。
+  ⚠️ **新形状的纪律 3**:`lua5.1 <sweep>` **退出 0 且零输出不是通过** —— mock 把 `_G.print` 换成 no-op,print 式 sweep **长得和干净跑完一样**;改走 `io.stderr` 才见读数(**不是管道吃退出码,是被测环境吃 stdout**)。
+  ⭐ **push 闸抓到本轮裁定漏掉的一步**(`tests/test_arm_since.py`:`STALE ROW: pulllane/pullthink has a row but is not in the armed string`)——
+  我更新了 arm 串、`state.json`、owed 行、档案,**唯独漏了 `armed_since.json` 的退休戳**。⚠️ 退集的动作散在**五个文件**里,
+  只有这一处有机器检查;§GE 那轮做对是**照抄上一轮**,不是有东西举手。补戳后 18/0。
+  MTD 不作新声称,转载批测台 03:11Z:**$66.105**,三条线均未跨。armed 串 **39 → 37**(目标 ≤20)。
+  ⛔ **「后台包装吞掉真码」第九次兑现**(自检真码 2→124→3,harness 报 0),守卫**仍未立**,顺延。
+  ⛔ 动态半(Lua 全量)未跑不作声称(零 `bots/` diff);针对性 7 份全绿。自检 `trunk-red(python)` 再撞 GH #358 的 120s(**UNCERTIFIABLE 不是通过**)。
+  **下次触发**:①⭐**换判据取活**:`narrat=1` 已空,从 `narrat=2` 四条(`liondrainstop`/`ownhalf`/`pulldrag`/`tpgap`)清起,仍按 ≥2;
+  ⚠️ `pulldrag` 同属拉野家族、大概率同一堵 lane-front 墙 —— **先查再裁**,不要搬 §GF 的结论(本轮差点搬错)
+  ②⭐**把 §GF.3 的处方落成检测器**(普查「有 gate 压着、而加载器答兜底 0」的 getter;四轮四条都是撞出来的)——与 backlog 99 同一件事,**第四个实例仍未落地**
+  ③**给「后台包装吞掉真码」立守卫**(第九次,顺延)④GH #358 的 120s 预算要人裁(顺延)
+  ⑤`hero_domain_scan` 九份读数逐份读通(顺延)⑥**为两处仪器缺口开 [harness] issue**(本轮 MCP 未试,owed 行已登记,issue 号仍空)
+  ⑦⭐**把「退集/promote 的五处同步」收成一张清单或脚本**(本轮漏的正是唯一有机器检查的那一处)
 - **2026-09-09T01:30Z**:**两条退回出集(41 → 39),判定完结 2(达标);而本轮最该被读的不是裁定 —— 是「本仓库的加载器在 2026-09-02 就把这个机制诊断出来、命名了它、并修好了 —— 修的是隔壁那个 getter」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
   取活依据是上一轮「下次触发」的 **①**(逐字点名 `verify_coverage.py` 的 `narrat=1` 四条)。
@@ -564,6 +611,7 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ②**给「后台包装吞掉真码」立守卫**(第八次,顺延)③GH #358 的 120s 预算要人裁(顺延)
   ④`hero_domain_scan` 九份读数逐份读通(顺延)⑤backlog 100 / backlog 99(**桩转轴普查本轮是第四个实例**,仍未落地)
   ⑥**为两处仪器缺口开 [harness] issue**(本轮 MCP 未试,owed 行已登记,issue 号仍空)
+  ⑦⭐**把「退集/promote 的五处同步」收成一张清单或脚本**(本轮漏的正是唯一有机器检查的那一处)
 - **2026-09-08T22:11Z**:**`cmrguard` 退回出集(42 → 41),判定完结 1(⛔ 不达 ≥2,不粉饰);而本轮最该被读的是 —— 这条 gate 的 veto 环读的是敌方技能的 cast range,加载器从不读它,于是 armed 的 gate 在**它自己的立案帧**上放行了那条要了 CM 命的通道。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0。
   取活依据是上一轮「下次触发」的 **①**(§GC.6 第 3 条逐字把 `cmrguard` 留给下一轮:「它的 (a) 买不买得到本节没有量」)。

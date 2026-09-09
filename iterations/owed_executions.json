@@ -459,6 +459,38 @@
         "kind": "manual"
       },
       "trigger": "owner P4.2 的入集冻结解除的那一轮(armed 集 ≤ 20),或 owner 另行放行 —— 那时按本行登记的四列与 arm 顺序排波。这正是 hero-51 登记它的理由(铁律 9:修好不等于做完,下一棒要显式交出去)。"
+    },
+    {
+      "id": "pulllane_lanefront_instrument",
+      "issue": "总监 2026-09-09 立;裁定全文 `iterations/streams/test_set.md §GF`(§GF.3/§GF.5);仪器缺口本身待开 [harness] issue(本轮 MCP 未试,issue 号仍空)",
+      "ruling": "总监 2026-09-09T04:xxZ:`pulllane` 退回出集,(a) 买不到 —— 语料里能把问题问出口的**只有 9 帧**(全 1100 句柄的归属表见 §GF.5),而这 9 帧上 `GetLaneFrontLocation` 被加载器**拒答**(`LOADER REFUSES … unresolved (GH #61). The dump does not carry lane fronts`)。⚠️ **不要复用 §GE 判 `campsel` 的那堵墙**:`GetNeutralSpawners()` 确实 110/110 为 `{}`,但**阳性对照否掉了它**(喂一个合成营地,读数纹丝不动,子句仍被调用 0 次)。",
+      "ruled_at": "2026-09-09T04:xxZ",
+      "executor": "录像组 / 任何要重新提 `pulllane` 入集的人。**买法**:dumper 侧发 lane front(`tools/batch_test/behavioral/dumper/main.go`,Go,要 `get_dumper.sh` 重建),或 fixture 侧让 `tests/mock/replay_fixture.lua` 用真值 spec `GetLaneFrontLocation`。⛔ **不许**把它改回 `function() return Vector(0,0,0) end` —— 加载器 847-890 行逐字解释了拒答的理由,把拒答换成 0 只是把一个**响的**失败换成一个**哑的**失败。⭐ **报价只有 9 帧**:这是一笔小而准的采购,不是全语料改造。",
+      "done_when": {
+        "kind": "text_absent",
+        "path": "tests/test_blind_a_pulllane_pullthink.lua",
+        "text": [
+          "the instrument declines to answer on all nine",
+          "REFUSES, loudly, by name"
+        ]
+      },
+      "trigger": "**没有外部触发器**,而这正是它进 registry 的理由:`pulllane` 已出集 ⇒ 没有 id 行载它;这条仪器缺口**不属于任何一波** ⇒ 没有 `W<N>_wave.json:harvest_obligations` 行载它(§DR / GH #413 同型)。实际取它的时机:任何一轮有余量、且愿意动 dumper 或加载器的工作单元;或有人提 `pulllane` 重新入集的那一刻。⭐ **自动触发器**:`tests/test_blind_a_pulllane_pullthink.lua` 的 [1d]/[1e] 在读数被买到的那一刻会自己变红。"
+    },
+    {
+      "id": "pullthink_animactivity_instrument",
+      "issue": "总监 2026-09-09 立;裁定全文 `iterations/streams/test_set.md §GF`(§GF.2/§GF.4);仪器缺口本身待开 [harness] issue(本轮 MCP 未试,issue 号仍空)",
+      "ruling": "总监 2026-09-09T04:xxZ:`pullthink` 退回出集,**两个操作数各自独立地死**。节流项 `bot:GetAnimActivity()` 未被加载器 spec,落 `bot_api.lua` 的 `^Get -> 0` 兜底,**1100/1100 读 0**;⭐ 它为 false 时 **baseline 腿也不提前 return**,故两条腿逐帧逐字节相同。作用域项 `bot.roamCampPull` 与 `pulllane` 同因(见 `pulllane_lanefront_instrument`)。**两端都要买,只买一端仍然买不到 (a)。**",
+      "ruled_at": "2026-09-09T04:xxZ",
+      "executor": "录像组 / 任何要重新提 `pullthink` 入集的人。⭐ **这是四个仪器缺口里最便宜的一个,dumper 一行都不用动**:`meaningfulActivities` 那张表**是满的**(§GF.4 实测 `ACTIVITY_RUN` 1153 / `ACTIVITY_ATTACK` 1154 —— 源码注释说它 EMPTY 那句**已经过期**),所以只需 `tests/mock/replay_fixture.lua` 为 `GetAnimActivity` **无条件装** getter(与它三十行之下的 `AbilityDamage` 同形)。⛔ 但作用域项仍卡在 `pulllane` 那堵墙上,**两端都买到才算买到 (a)**。⚠️ 顺带把 `bots/mode_roam_generic.lua:210-211` 那句过期注释修掉 —— `[2c]` 会在那一刻自己变红,那是设计好的。",
+      "done_when": {
+        "kind": "text_absent",
+        "path": "tests/test_blind_a_pulllane_pullthink.lua",
+        "text": [
+          "ANSWERS 0, silently, via bot_api.lua",
+          "the cheapest of the four instrument gaps"
+        ]
+      },
+      "trigger": "**没有外部触发器**(同上,`pullthink` 已出集,不属于任何一波)。⭐ **自动触发器**:`tests/test_blind_a_pulllane_pullthink.lua` 的 [2a]/[2b]/[2c] 在读数被买到、或那句过期注释被修好的那一刻会自己变红。"
     }
   ],
   "retired": [
