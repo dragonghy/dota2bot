@@ -107,10 +107,37 @@ def main():
     body = body[1].split('\nend\n', 1)[0] if len(body) > 1 else ''
     check("gated on 'pulldrag'", "J.IsSoakCandidate( 'pulldrag' )" in body)
     check('turbo-only', 'J.IsModeTurbo()' in body)
-    check("gate is STANDALONE (no conjunction with another candidate id)",
-          len(re.findall(r"IsSoakCandidate\(\s*'(\w+)'\s*\)", body)) == 1,
-          'a second candidate id inside this gate freezes it FALSE the day that '
-          'id is promoted')
+    # [GH #652 20260909] THIS CHECK WAS NARROWED TO WHAT IT SAYS.  It used to
+    # assert `count(IsSoakCandidate) == 1` over the whole body, and LAYER 3
+    # above states the reason as a CONJUNCTION: `IsSoakCandidate('pulldrag') and
+    # IsSoakCandidate('pullcamp')` freezes FALSE the day the second id is
+    # promoted, because a promoted id is in no armed string.  A count is a wider
+    # net than that reason: a second id in a SEPARATE statement, gating a
+    # different clause, freezes nothing -- promoting either one removes only its
+    # own line and leaves the other armable.  The count refused 'dragnolane'
+    # (the LANE_NONE repair, GH #652) on a rationale that does not apply to it,
+    # which is this repo's own recurring shape -- a guard whose condition is not
+    # the thing it was written to catch -- one layer up, in the checker.
+    #
+    # What replaces it keeps both teeth and adds one:
+    #   (1) the pullcad shape itself: no boolean expression may conjoin two
+    #       candidate ids.  That is the failure LAYER 3 names, asserted directly.
+    #   (2) 'pulldrag' must hold its own line, not ride inside another gate.
+    #   (3) a RATCHET on the id set: exactly these two ids may appear here, so a
+    #       third one cannot arrive silently while (1) stays green.
+    ids = re.findall(r"IsSoakCandidate\(\s*'(\w+)'\s*\)", body)
+    conjoined = [ln.strip() for ln in body.split('\n')
+                 if len(re.findall(r"IsSoakCandidate\(\s*'\w+'\s*\)", ln)) > 1]
+    check('no gate conjoins two candidate ids (the pullcad freeze)',
+          not conjoined,
+          'this line freezes FALSE the day either id is promoted: '
+          + (conjoined[0] if conjoined else ''))
+    check("'pulldrag' gates the function on a line of its own",
+          "if not J.IsSoakCandidate( 'pulldrag' ) then return nil end" in body)
+    check('the candidate ids in this function are exactly the registered two',
+          sorted(set(ids)) == ['dragnolane', 'pulldrag'],
+          'found %s -- a new gate landed here; read it against the pullcad '
+          'trap and register it before widening this list' % sorted(set(ids)))
     check('unreadable lane falls back rather than muting the pull',
           'if nLane == nil then return nil end' in body)
     check('the drag site consumes it',
