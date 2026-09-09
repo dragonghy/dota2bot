@@ -13827,3 +13827,63 @@
     **动态半(~100min,GH #124)未跑,不声称。**
     token:`TOKENS total_in=10,749,314 out=60,828 turns=76`。
   - 完整报告:`iterations/reports/replay-check/20260909T064724Z.md`
+
+- **2026-09-09T10:0xZ(欠了五轮的补扫付清;transit 钉帧**第一次被量了价**,并因此**不落地**)**:
+  ⭐⭐ **头号读数**:那条被当作「跑一条 `make_fixture.py`」carry 了五轮的欠账,
+  **实际是一个带价目表的入集/staging 工作单元**。实测(把 fixture 挪进/挪出各跑一遍,读 diff):
+  放进 **`tests/fixtures/`** ⇒ **4 文件 / 5 断言**红(`test_alchemist_rage_clock_staged_frame`
+  的「语料自己还做不到」主张失效、`test_axe_t15_in_domain` 的天赋面 cap **1→2**、
+  BKB 槽 0→2、CM instants 52→53);改放 **`tests/frames/`**(README 的正规 staging)⇒
+  前四个全绿,但**另外 6 文件 / 9 断言**红 —— 它们**枚举 `tests/frames/` 目录本身**。
+  ⛔ **9 条里至少一条不是计数是判读**:`test_wk_level_supply_horizon` 的新槽是树里
+  **第二个** 12 级以上、活着、池子可引用的 WK(level 20,`max_mp=735` **> 出厂 Roshan 600**),
+  直接顶到 queue `hero-10` 的立项句「最大池 459,满蓝也在 600 以下」。
+  **n=1 变 n=2 是英雄组的判读,不是本组的** ⇒ 本轮**树上零改动**,把价交给英雄组,
+  复现命令写进报告(下一棒不必重新找帧)。
+  **可迁移的一句:没被量过价的欠账,会一直看起来像一分钟的活。**
+  - ⭐ **补扫付清**:`cd3359` **18/18** + `40e63a` **22/22** = **40/40 局**
+    (52 `.dem`,12 暖场跳过,**0 不可解析**,`SWEEP_EXIT_*=0` ×2)。
+    ⚠️ **差点写成「语料被清了」**:`soak/<run>/` 下四个 W56 run **全是 0 个 `.dem`**;
+    `.dem` 在桶顶层的 **`dem21/<run>/`**,`sweep_run.sh:48-55` 自己写着。
+    判别子一条命令:`awsx s3 ls s3://<bucket>/` 看见 `PRE dem21/`。
+  - `40e63a` 的 `cmqreach` **exit 2 拒答**(`games with a CM carrier: 0`,
+    逐字 `do NOT read this as 'tested, no effect'`)⇒ 上一轮**按 draft 推断**的那句话,
+    本轮 22 局实扫独立坐实,且量具自己把「这个 draft 下永远测不到」说了出来。
+  - ⭐ **逐帧(先逐帧后聚合)**:`cd3359` 全部 **12 个 cell-(3) 命中帧**跨 **10 局**逐帧读 ——
+    **6 个 hp=1.00、8 个 hp≥0.87;10 个的死亡在 7.8–20.0s 之后**,只有 2 帧近到能谈因果
+    (4.2s / 1.6s),**而那两帧恰好是最低血的两帧(0.68 / 0.37)**⇒ cell (3) 里真正
+    「帧与死亡有关」的那一小撮**是被血量挑出来的,不是被 gate 挑出来的**。
+    钉帧那一帧同为 cell-(3) 命中:满血满蓝、最近敌人 **2790u**、帧前 4s 位移 **1437u(≈359u/s)**,
+    **12.0s 后才第一次交火、17.3s 后才死** —— 20s 窗口跨过了一整次横穿。
+  - **聚合(第三个 draft)**:`cd3359` transit 占比 **56% armed / 55% baseline**(≥280u/s over 4s),
+    与 `0eb22d` 48/54、`8ef6e7` 48/52 **同形 ⇒ 域的性质不是腿效应**;
+    新量「gap 帧里 **72%** 的瞬间 2000u 内无活敌英雄」(⛔ 79 vs 62 的腿差按 4(i-b) 不入结论)。
+    cell (3) 三 draft 腿差 **+5.2 / +0.5 / −0.4 —— 第三个换号**,「armed 腿死得多」拿不到第三票。
+  - ⚠️ **我自己那把尺子的污染,当场量了边界**:上游 `movement()` 只护**帧后**窗口(GH #626),
+    **帧前没有** ⇒ 一次传送落地被读成 2235 u/s 的冲刺。实测 88 个 fast4 里
+    **帧前触 TP 的 2 个、>450u/s 的 2 个 = ~2.3%**,56%→54%,**结论不动**;
+    ⇒ GH #638 的 transit 列必须同时排掉 `tp_crosses(t-W, t)`。
+  - ```
+    VERIFY id=cmqreach verdict=INDETERMINATE episodes=158
+    ```
+    第四轮 INDETERMINATE,理由第四次升级(①结构不可测 →②腿差被侧项压制 →③半数赶路帧 →
+    ④**本轮**:第三 draft 让 cell (3) 换号 + 12 个命中帧里 10 个的死亡在十几秒和一次横穿之外)。
+  - **覆盖**:宽扫 **40/40**;深查 **11 局**(达到章程 6 局下限)。
+    ⚠️ 40/40 是**这两个 run** 的全量,不是 W56 的全量(另两个 run 09-08 已扫,本轮未重扫)。
+  - **自检**:⛔ 第一条命令又踩管道形状,**工具自己拒答**(逐字
+    `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`)⇒
+    登记为那道自拒门**第四轮起作用**;第二次改重定向**但带了 `timeout 600`** ⇒
+    **`EXIT=124` 是本台自己砍的**(GH #514 形状,批测台上一轮自陈过,**本台本轮复发**)
+    ⇒ **本轮没有工具自己的 `SELFCHECK_EXIT`**,不从已打印的腿反推。
+    读得到的:稳定版锚点 6/6 OK、`FROZEN none`、5 个 co-promote 原子全 ok、
+    python 腿 `113 passed, 2 failed, 2 uncertifiable`(两条红点名 `batch-desk.md`,属总监/批测台)。
+    ⭐ **fast Lua 腿的红全部是本台自己造成的**(自检跑到 Lua 腿时那枚未定案 fixture 还在树上,
+    4 个文件逐字点名了它),**移走后 A/B 复跑 0 红**,收尾时 `bots`/`game`/`tests`/`tools` 零改动。
+  - **本轮的评论/issue**:**新开 GH `[hero]`** —— 交出 §5.1 那张 9 条断言的价目表,
+    点名 `test_wk_level_supply_horizon` 那条**不是计数是判读**的(hero-10);
+    验收:付掉并落地这枚 frame,**或**明确回「不值得,`cmqreach` 的 (a) 另想办法」——
+    **两种都行,悬着不行**(五轮了)。⛔ transit 的两条新料**追评 GH #638**,不另开。
+  - **铁律 6**:本轮 **`bots`/`game`/`tests`/`tools` 一行未改**,改动只有本报告与本节;
+    静态门随 push 自跑;**无 `RULE6_BYPASS`**;**动态半(~100min,GH #124)未跑,不声称。**
+    token:`TOKENS total_in=11,462,840 out=57,128 turns=80`。
+  - 完整报告:`iterations/reports/replay-check/20260909T100201Z.md`
