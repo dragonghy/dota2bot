@@ -13799,8 +13799,15 @@
     failed 与上一轮**逐个相同**(`test_bots_walk_farm_only.py` 归总监 §GE.6;
     `test_carrier_terms.py` = **GH #650**),**是 `main` 的不是工作树的**
     (`git status` 空、`HEAD == origin/main == d382f61b`)⇒ 不重开 issue。
-    收尾时自检仍在跑 fast Lua 腿 ⇒ **该腿、cadence、`unlanded_commits`、`citation_audit`
-    本轮没有读数,不声称**。`ARM_GATE_EXIT=0`。
+    ⭐ 收尾时自检跑完:**`SELFCHECK_EXIT=3`**,`FINDINGS: cadence owed-executions trunk-red(python)`,
+    **fast Lua 子集 86 个检测器 0 failures**,三条全是已知项 ⇒ **无新发现,不开 issue**。
+    `ARM_GATE_EXIT=0`,`GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`)。
+  - ⭐ **顺带一条 `[harness]`(写进 #655 §七,不单开)**:`claim_precheck.sh` 在**浅 clone**
+    容器里把 `aadd993` 报成 **OFF-TRUNK**(`PRECHECK_EXIT=3` / `DO NOT PUBLISH YET`);
+    `git fetch --deepen 2000 origin main` 后 `git merge-base --is-ancestor` **退 0**,
+    复跑 **`PRECHECK2_EXIT=0` clean** ⇒ **clone 深度造成的假阳性**。
+    工具的 CITATIONS 行打了 `(shallow clone)`,但 **finding 自己没说这可能是深度伪影**,
+    而读者看的是 finding。**与上一轮的「`--deepen 600` 假象」同族。**
   - **限度**:08-25 的读数自带一条已登记的混淆(W8 同时新 arm `towerfear`
     ⇒ 归因**很强但不是证明**,本轮不上调);§2.3 的 diff 是 **code-only**(注释确有变动);
     §3 的 33 枚是 `pullcamp_domain` 的域不是拉野 episode 全集;
@@ -13810,7 +13817,7 @@
     (3) 继续从「verify=0 但 narrat>0」这一档补票 —— 本轮的方法(**读旧报告 + 跨树 code-only
     diff 证明读数仍适用**)对 `pullcamp`(narrat=6)、`campfarm`(narrat=7)同样便宜;
     **动手前先 `ls tools/batch_test/behavioral/ | grep <id>` 并读文件头**。
-  - **本轮的评论/issue**:新开一条 **`[bug]`**(交总监):请求改掉 `pulllane` 退集的**归属** ——
+  - **本轮的评论/issue**:**新开 GH #655** `[bug]`(交总监):请求改掉 `pulllane` 退集的**归属** ——
     不是「(a) 买不到」,而是「(a) 08-25 已买到 = WORKING,fixture 那台仪器买不到**第二遍**」。
     ⛔ **不请求撤销退集本身**(P4.2 槽位压力是真的),**也不建议撤销那条 owed 仪器行**
     (`pullthink` 的作用域项还卡在它上面);要改的是它留下的那句话,因为**下一棒完全不同**:
@@ -13818,4 +13825,5 @@
   - **铁律 6**:本轮 **`bots/`/`game/`/`tests/`/`tools/` 一行未改**,改动只有本报告与本节;
     静态门随 push 自跑,读数见报告文末;**无 `RULE6_BYPASS`**;
     **动态半(~100min,GH #124)未跑,不声称。**
+    token:`TOKENS total_in=10,749,314 out=60,828 turns=76`。
   - 完整报告:`iterations/reports/replay-check/20260909T064724Z.md`
