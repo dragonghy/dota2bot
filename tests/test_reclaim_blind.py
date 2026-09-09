@@ -423,6 +423,52 @@ def main():
           "24g a code of neither shape still reads 'unknown SIR status_code' -- the new "
           "diagnosis is aimed, not a blanket rewording")
 
+    # --- 25: GH #661.  The on-demand branch had NO vocabulary: it refused a
+    # missing code and a SIR code, then returned any other string.  Batch-desk
+    # wrote a whole paragraph of prose ("LOST -- EC2 aged this instance out ...")
+    # into `status_code` because that was the truth, and the gate printed the
+    # paragraph in the termination-code column and exited 0.  The acceptance
+    # test batch-desk handed over is 25a/25b: both must be exit 2.
+    def od(code):
+        row = {"seed": 1, "market": "on-demand", "survival_min": 52.0,
+               "ab": 30, "ba": 14, "arm_depth": 16.0}
+        if code is not None:
+            row["status_code"] = code
+        return {"wave": "x", "machines": [row]}
+
+    check(rb.evaluate(od("banana pancakes"))[0] == 2,
+          "25a prose in an on-demand status_code -> exit 2 (it exited 0 and printed "
+          "the prose as the termination code)")
+    check(rb.evaluate(od(""))[0] == 2,
+          "25b the EMPTY STRING -> exit 2 -- the sharpest shape: literally zero "
+          "reading, formerly certified as a termination code")
+    etext = "\n".join(rb.evaluate(od(""))[1])
+    check("unknown EC2 StateReason.Code" in etext,
+          "25c ... refused for being outside the EC2 vocabulary, naming the value")
+    check("GH #375" in etext and "MISSING reading" in etext,
+          "25d ... and it names the reason the field goes missing (the ~1h age-out) "
+          "so the next round does not answer by explaining the absence in the field")
+    # 25e: the point of a whitelist is that the true readings still pass.
+    for good in (rb.EC2_SELF_SHUTDOWN, rb.EC2_USER_SHUTDOWN,
+                 "Server.InternalError", "Server.ScheduledStop"):
+        check(rb.evaluate(od(good))[0] == 0,
+              "25e a real EC2 StateReason.Code (%s) still reads clean -- refusing a "
+              "true reading is its own lie" % good)
+    # 25f: the hazard a blanket `Server.*` allowance would have waved through.
+    # An on-demand row carrying spot's own EC2 spelling is the SAME mislabelled
+    # spot machine 23f refuses in SIR vocabulary -- its reclaim would walk out of
+    # the attribution clause.  This is where this fix is deliberately NARROWER
+    # than the suggestion in GH #661.
+    for spotty in rb.EC2_SPOT_ONLY_CODES:
+        stext = "\n".join(rb.evaluate(od(spotty))[1])
+        check(rb.evaluate(od(spotty))[0] == 2,
+              "25f spot's EC2 spelling (%s) on an on-demand row -> exit 2" % spotty)
+        check("contradicts itself" in stext,
+              "25g ... for the same self-contradiction as 23f, not as an unknown code")
+    # 25h: the whitelist is on the ON-DEMAND branch only -- a spot row is
+    # untouched, so every wave recorded before today reads exactly as it did.
+    check(rb.evaluate(W21)[0] == 0, "25h spot rows are unchanged by the new vocabulary")
+
     # --- 17: end to end through the CLI ------------------------------------
     code, out = run_cli(W21)
     check(code == 0, "17a CLI on W21 exits 0")

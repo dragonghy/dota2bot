@@ -218,6 +218,31 @@ KNOWN_MARKETS = (MARKET_SPOT, MARKET_ON_DEMAND)
 # drift, not an unknown market state -- see this file's header.
 EC2_CODE_PREFIXES = ("Server.", "Client.")
 
+# The EC2 `StateReason.Code` vocabulary an ON-DEMAND row may speak (GH #661).
+# Until 2026-09-09 there was no vocabulary here at all: the on-demand branch
+# refused a missing code and a SIR code, then returned ANY other string, so
+# `"banana pancakes"` and `""` both certified as termination codes.  Paired with
+# the fact that the field is structurally unreadable by harvest time (terminated
+# instances age out of describe-instances in ~1h, GH #375, while the wave rhythm
+# puts harvest ~3h after launch), that made the on-demand attribution clause
+# unable to fail out loud: a reading that can never be taken, behind a check that
+# can never refuse it.  The failure direction is the dangerous one -- "did not
+# read" silently recorded as "read".
+EC2_SELF_SHUTDOWN = "Client.InstanceInitiatedShutdown"   # `shutdown` from inside the box
+EC2_USER_SHUTDOWN = "Client.UserInitiatedShutdown"       # TerminateInstances from outside
+# Ways AWS itself ends an on-demand box.  None is a spot reclaim, so none can
+# reach the attribution clause -- but each is a real thing the API says, and
+# refusing a true reading is its own kind of lie.
+EC2_SERVER_CODES = ("Server.InternalError", "Server.ScheduledStop")
+KNOWN_EC2_CODES = (EC2_SELF_SHUTDOWN, EC2_USER_SHUTDOWN) + EC2_SERVER_CODES
+
+# Spot's own EC2 spelling.  On an on-demand row this is the SAME
+# self-contradiction the SIR refusal catches, only spelled in EC2 vocabulary --
+# a mislabelled spot machine whose reclaim would otherwise walk out of the
+# attribution clause.  Listed separately, and checked BEFORE the whitelist,
+# because a blanket `Server.*` allowance would wave exactly this one through.
+EC2_SPOT_ONLY_CODES = ("Server.SpotInstanceTermination", "Server.SpotInstanceShutdown")
+
 # The measured bracket the default constant sits inside.  Printed every run so
 # the next person can see what would narrow it.  Narrowed 2026-08-30 (GH #332):
 # W24 seed 1633 is a first-hand paired survivor at 40.63 min, shorter than the
@@ -300,6 +325,25 @@ def read_status_code(machine, market, where):
                 "this file will not pick: a mislabelled spot machine would "
                 "drop its reclaim out of the attribution clause"
                 % (where, code))
+        if code in EC2_SPOT_ONLY_CODES:
+            raise Undecidable(
+                "%s: market says on-demand but status_code %r is spot's own EC2 "
+                "spelling -- an on-demand instance has no spot request, so this "
+                "record contradicts itself exactly as a SIR code would.  Same "
+                "refusal, same reason: a mislabelled spot machine would drop its "
+                "reclaim out of the attribution clause"
+                % (where, code))
+        if code not in KNOWN_EC2_CODES:
+            raise Undecidable(
+                "%s: unknown EC2 StateReason.Code %r on an on-demand row "
+                "(known: %s).  This branch used to accept any string at all, so "
+                "prose and the empty string both certified as termination codes "
+                "(GH #661).  If the instance aged out of describe-instances "
+                "before the harvest round could read it (GH #375), that is a "
+                "MISSING reading and has to read as exit 2 -- do not write the "
+                "explanation into this field, because a field that explains its "
+                "own absence is indistinguishable from one that was read"
+                % (where, code, ", ".join(KNOWN_EC2_CODES)))
         return code
 
     if code in KNOWN_CODES:
@@ -457,7 +501,8 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
         lines.append("market     : %d of %d machine(s) on-demand (GH #408 refill) -- "
                      "they count for yield and can never satisfy the attribution "
                      "clause, because an on-demand row is refused if it carries a "
-                     "SIR code at all"
+                     "SIR code at all, or spot's EC2 spelling, or any code outside "
+                     "the EC2 vocabulary (GH #661)"
                      % (n_od, len(rows)))
     n_lower = sum(1 for r in rows if r["bound"] == BOUND_LOWER)
     if n_lower:
