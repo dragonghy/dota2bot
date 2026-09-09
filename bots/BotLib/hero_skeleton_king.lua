@@ -908,7 +908,10 @@ function X.ConsiderQ()
 	-- sentence explaining WHY the branch is dark is the half that went false.
 	-- That is the green-assertion / false-sentence shape
 	-- tests/test_focus_mana_cost_consumer_census.lua opens by warning about,
-	-- occurring in bots/, about a meter.
+	-- occurring in bots/, about a meter.  Keep the family membership in the
+	-- record, because it is now the family's FIRST repaired member: the
+	-- meter-zero family is GetActualIncomingDamage, GetAbilityDamage (GH #175),
+	-- GetManaCost and GetAOERadius (GH #386), and this cast range was its fifth.
 	--
 	-- MEASURED 2026-09-09, gates all off, WK driven as SUBJECT
 	-- (tests/test_focus_decision_reachability.lua section 3):
