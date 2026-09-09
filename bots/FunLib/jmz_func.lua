@@ -9784,6 +9784,44 @@ function J.GetLaneHarassResponse( bot )
 
 	local tAllies = J.GetNearbyHeroes( bot, 900, false, BOT_MODE_NONE )
 	local nOurs = 1 + ( tAllies ~= nil and #tAllies or 0 )
+
+	-- Soak candidate 'hrparity' (2026-09-09). THE OUTNUMBERED TEST COMPARES
+	-- TWO POPULATIONS READ AT DIFFERENT RADII. The left side of `#tValid >
+	-- nOurs` is everyone this helper counted as a harasser, out to 1100u; the
+	-- right side is everyone it counted as help, out to 900u. So an enemy
+	-- standing at 1000u is a member of the mob while an ally standing at the
+	-- IDENTICAL distance is not on the field at all -- and the verdict that
+	-- comes out of that comparison is 'back', a 420u step toward the fountain
+	-- that abandons the lane on the code path that runs before any last hit.
+	--
+	-- This is not a policy about how far away help still counts; no such
+	-- policy is written anywhere in this helper. It is one comparison whose
+	-- two sides are measured with different rulers, and the ruler that is too
+	-- short is on the side that keeps the bot in its lane.
+	--
+	-- Armed, the ally count is read on the SAME disc the enemy count already
+	-- committed to (tests assert the two radii are equal rather than that this
+	-- one is 1100: symmetry is the property, 1100 is only today's value).
+	-- Direction is one-way by construction: the 1100 ally set is a superset of
+	-- the 900 one, so nOurs can only grow, `#tValid > nOurs` can only go from
+	-- true to false, and armed can only DELETE a 'back' -- never create one,
+	-- never change which frames enter, and never touch the 'fire' branch's own
+	-- candidate set.
+	--
+	-- Measured (tests/_lanekill_domain_sweep.lua, 110 fixtures): of the 84
+	-- frames that enter this helper, 12 carry an enemy in the 900-1100 band and
+	-- 5 carry an ally there; on 2 the two rulers give genuinely different
+	-- verdicts. Unlike 'hrreach' below, this domain does not lean on any
+	-- stubbed getter -- it is read from hero POSITIONS, which every fixture
+	-- carries for real, so the 2 is a statement about Dota and not about the
+	-- loader (GH #656's shape does not apply here, and the new guard's tests
+	-- assert that the two ally discs actually differ on this corpus).
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'hrparity' )
+	then
+		local tAlliesEven = J.GetNearbyHeroes( bot, 1100, false, BOT_MODE_NONE )
+		nOurs = 1 + ( tAlliesEven ~= nil and #tAlliesEven or 0 )
+	end
+
 	if #tValid > nOurs then
 		local vB = bot:GetLocation()
 		local vF = J.GetTeamFountain()

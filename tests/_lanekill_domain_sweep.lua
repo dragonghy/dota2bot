@@ -95,6 +95,15 @@ G.HR_DMG_WIN = hr and tonumber(hr:match('WasRecentlyDamagedByAnyHero%( ([%d%.]+)
 G.HR_ENEMY_R = hr and tonumber(hr:match('GetNearbyHeroes%( bot, (%d+), true'))
 G.HR_ALLY_R = hr and tonumber(hr:match('GetNearbyHeroes%( bot, (%d+), false'))
 G.HR_STEP = hr and tonumber(hr:match('/ n %* (%d+),'))
+-- 'hrparity' (2026-09-09) reads the ally count a SECOND time on its own radius.
+-- Parsed out of the armed block itself, not assumed to be 1100: the property
+-- the guard claims is that the two sides of the outnumbered test use ONE ruler,
+-- so the census reads the ruler the code actually picked up and
+-- tests/test_hrparity_guard.lua asserts it equals HR_ENEMY_R. A hardcoded 1100
+-- here would keep agreeing with a guard that had stopped symmetrising.
+local hrp = hr and hr:find("IsSoakCandidate( 'hrparity' )", 1, true)
+G.HR_PARITY_R = hrp
+    and tonumber(hr:sub(hrp):match('GetNearbyHeroes%( bot, (%d+), false'))
 -- DECLARED, not parsed and not measured: the longest attack range any hero in
 -- this patch can reach (Sniper, 550 base + Take Aim + talent).  It is the bound
 -- that makes `hr_fire_d_gt900` a statement about Dota rather than about
@@ -152,7 +161,21 @@ for _, k in ipairs({ 'fixtures', 'live', 'lane', 'lane_core', 'lane_sup',
     -- 'hrreach' differential (same function, second drive, id armed).
     'hr2_fire', 'hr2_back', 'hr2_nil', 'hr2_raised',
     'hr_closes', 'hr_closes_universal', 'hr_closes_stubonly',
-    'hr_opens', 'hr_back_moved', 'hr_target_swapped' }) do
+    'hr_opens', 'hr_back_moved', 'hr_target_swapped',
+    -- 'hrparity' differential (same function, third drive, only that id armed)
+    -- plus the SECOND, independent path to the same number: `hp_pred_flips` is
+    -- arithmetic on the raw populations, `hp_back_closes` is what the shipped
+    -- function actually did when driven armed. They are equal only if the guard
+    -- keys on the parity test at all (the M5 lesson from the 'hrreach' round).
+    'hp2_fire', 'hp2_back', 'hp2_nil', 'hp2_raised', 'hp_noparse',
+    'hp_pred_flips', 'hp_back_closes', 'hp_back_opens', 'hp_nil_moved',
+    'hp_fire_opened', 'hp_ally_disc_differs', 'hp_ally_illusion', 'hp_ally_illusion_noapi', 'hp_ally_nonempty',
+    -- The two ids live in the SAME helper, so a wave that arms both is a third
+    -- behaviour, not the sum of two readings.  Measured here rather than argued
+    -- later: `hp_opened_far` is the honest bad news about arming 'hrparity'
+    -- alone, `hpb_*` is what the pair does together.
+    'hp_opened_d_max_u',
+    'hpb_fire', 'hpb_back', 'hpb_nil', 'hpb_raised', 'hpb_flip_ends_nil' }) do
     rawset(c, k, 0)
 end
 
@@ -426,6 +449,52 @@ for _, path in ipairs(fixture_files()) do
                                     break
                                 end
                             end
+                            -- 'hrparity' PREDICTION, on the radius parsed out
+                            -- of the armed block (never assumed).  A missing
+                            -- parse is counted, not defaulted: silently reading
+                            -- 1100 here would let a guard that had stopped
+                            -- symmetrising keep agreeing with its own census.
+                            if G.HR_PARITY_R == nil then
+                                bump('hp_noparse')
+                            else
+                                local tAp = J.GetNearbyHeroes(bot, G.HR_PARITY_R,
+                                    false, BOT_MODE_NONE) or {}
+                                -- Does this corpus even distinguish the two ally
+                                -- discs?  Unlike GetAttackRange (a constant stub
+                                -- on every frame, GH #656), positions are real
+                                -- fixture data -- and this column is the proof
+                                -- rather than the claim.
+                                if #tAp ~= #tA9 then bump('hp_ally_disc_differs') end
+                                -- PRICED, NOT FIXED (the next lever in this
+                                -- helper, or the evidence that it cannot be
+                                -- priced here): the enemy side drops illusions
+                                -- and unattackable units before counting, the
+                                -- ally side counts whatever GetNearbyHeroes
+                                -- hands back.  So the outnumbered test can
+                                -- still be asymmetric AFTER 'hrparity' -- on
+                                -- filtering rather than on radius.
+                                -- Two columns, because a zero here has two
+                                -- possible causes and they are not the same
+                                -- finding (the GH #171 shape): "this corpus
+                                -- carries no ally illusions" and "the loader
+                                -- has no IsIllusion to ask" must never be read
+                                -- off one number.
+                                if #tAp > 0 then bump('hp_ally_nonempty') end
+                                for _, a in pairs(tAp) do
+                                    if a.IsIllusion == nil then
+                                        bump('hp_ally_illusion_noapi')
+                                        break
+                                    elseif a:IsIllusion() then
+                                        bump('hp_ally_illusion')
+                                        break
+                                    end
+                                end
+                                if bOutnumShipped ~= (#tValid > (1 + #tAp)) then
+                                    bump('hp_pred_flips')
+                                    out:write(string.format('F %s %s hp_pred_flips\n',
+                                        short, u.name))
+                                end
+                            end
                         end
 
                         local okh, sResp, xResp = pcall(J.GetLaneHarassResponse, bot)
@@ -503,6 +572,88 @@ for _, path in ipairs(fixture_files()) do
                             if sResp == 'fire' and s2 == 'fire' and xResp ~= x2 then
                                 bump('hr_target_swapped')
                             end
+                        end
+
+                        -- DIFFERENTIAL 2: the same shipped function, a THIRD
+                        -- drive, with only 'hrparity' armed.  Kept separate
+                        -- from the 'hrreach' drive above on purpose -- the two
+                        -- ids sit in the same helper and an isolation wave arms
+                        -- one of them, so the census has to be able to say what
+                        -- each one does ALONE (the lanefix bundle lesson).
+                        armed = { hrparity = true }
+                        local ok3, s3, x3 = pcall(J.GetLaneHarassResponse, bot)
+                        armed = {}
+                        if not ok3 then
+                            bump('hp2_raised')
+                        elseif s3 == 'fire' then
+                            bump('hp2_fire')
+                        elseif s3 == 'back' then
+                            bump('hp2_back')
+                        else
+                            bump('hp2_nil')
+                        end
+                        -- Direction, one way by construction: the armed ally
+                        -- set is a SUPERSET, so nOurs can only grow and the
+                        -- outnumbered verdict can only go true -> false.  Armed
+                        -- may delete a 'back'; it may never create one, and it
+                        -- may never move a frame into or out of the nil bucket
+                        -- (nil is decided above the parity test entirely).
+                        if okh and ok3 then
+                            if sResp == 'back' and s3 ~= 'back' then
+                                bump('hp_back_closes')
+                            end
+                            if sResp ~= 'back' and s3 == 'back' then
+                                bump('hp_back_opens')
+                            end
+                            if (sResp == nil) ~= (s3 == nil) then
+                                bump('hp_nil_moved')
+                            end
+                            if sResp ~= 'fire' and s3 == 'fire' then
+                                bump('hp_fire_opened')
+                                -- WHERE the opened fire is pointed.  A frame
+                                -- that stops retreating hands the caller an
+                                -- attack order, and the caller serves an
+                                -- out-of-reach one by WALKING -- which is
+                                -- exactly the defect 'hrreach' exists for. This
+                                -- column is the reason this round does not
+                                -- recommend arming 'hrparity' by itself.
+                                -- MEASURED, not thresholded: no bucket here can
+                                -- be loader-independent, because whether a
+                                -- given distance is "out of reach" needs
+                                -- GetAttackRange and this corpus stubs it at
+                                -- 150 (GH #656).  The distance itself is real
+                                -- fixture data, so the census reports it and
+                                -- the per-hero reach argument is made on the
+                                -- named witnesses in test_hrparity_guard.lua,
+                                -- where the subject's patch range can be cited.
+                                local dO = GetUnitToUnitDistance(bot, x3)
+                                if dO > c.hp_opened_d_max_u then
+                                    rawset(c, 'hp_opened_d_max_u', math.floor(dO))
+                                end
+                            end
+                        end
+
+                        -- DIFFERENTIAL 3: BOTH ids armed.  Two gates in one
+                        -- helper compose; a wave that arms the pair measures
+                        -- this drive and neither of the two above.
+                        armed = { hrparity = true, hrreach = true }
+                        local ok4, s4 = pcall(J.GetLaneHarassResponse, bot)
+                        armed = {}
+                        if not ok4 then
+                            bump('hpb_raised')
+                        elseif s4 == 'fire' then
+                            bump('hpb_fire')
+                        elseif s4 == 'back' then
+                            bump('hpb_back')
+                        else
+                            bump('hpb_nil')
+                        end
+                        if okh and ok3 and ok4
+                            and sResp == 'back' and s3 == 'fire' and s4 == nil then
+                            -- The frames 'hrparity' un-retreats and 'hrreach'
+                            -- then declines to charge: the pair leaves the bot
+                            -- standing in its lane on the shipped farm body.
+                            bump('hpb_flip_ends_nil')
                         end
                     end
                 end

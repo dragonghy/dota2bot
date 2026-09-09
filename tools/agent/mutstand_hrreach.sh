@@ -44,10 +44,16 @@
 #     twice over -- the source-order pin is the one that would still catch it
 #     if the columns ever stopped being sensitive, and that is why it is
 #     asserted separately rather than inferred from the counts.
-#   * M8 IS THE RATCHET (M12's lesson). Silently repair the OTHER defect this
-#     round measured and deliberately did not fix -- the two-radius parity
-#     test. The pricing in section 5 has to stay attached to the code it
-#     describes, or a later reader cites numbers for a helper that changed.
+#   * M8 IS THE RATCHET (M12's lesson). It was written as "silently repair the
+#     OTHER defect this round measured and deliberately did not fix". That
+#     repair landed on 2026-09-09 as the gated id 'hrparity', so the same edit
+#     now stands for the OTHER failure at the same spot -- the repair leaving
+#     its gate. ⚠️ RECORD THE MISS THAT TAUGHT THIS: section 5's original pin
+#     matched the FIRST `GetNearbyHeroes( bot, N, false` in the helper and
+#     asserted 900, and a GATED repair leaves that line exactly where it was --
+#     so the pin stayed GREEN while the helper changed under it. This leg only
+#     ever caught the ungated form. A ratchet has to name the shipped default
+#     AND require the repair where it lives; section 5 was rewritten to do both.
 #   * M9 IS THE ZERO-VALUED COLUMN, taught by mutstand_fieldsip.sh's M8/M13.
 #     `hr_opens` reads 0 on a clean tree, so renaming its bump is an
 #     EQUIVALENT mutant -- the branch never executes. Vary its POLARITY.
@@ -222,8 +228,11 @@ sub_or_die "$SWEEP" "$SWEEP_STUB" $'                        bump(\'hr_range_stub
 score "M7 stub column becomes a bump    " \
     "no longer tests the stub value"
 
-# M8 -- THE RATCHET.  Silently repair the asymmetry this round priced and
-# deliberately left alone.
+# M8 -- THE RATCHET.  Re-aimed 2026-09-09, when the round that priced the
+# asymmetry here landed the repair as the gated id 'hrparity': this mutant is
+# now "the repair leaves its gate and becomes the shipped default", i.e. an
+# accidental promote.  The leg is unchanged because the edit is the same edit --
+# what changed is which mistake it stands for.
 sub_or_die "$JMZ" "$ALLYR" $'\tlocal tAllies = J.GetNearbyHeroes( bot, 1100, false, BOT_MODE_NONE )\n\tlocal nOurs = 1 + ( tAllies ~= nil and #tAllies or 0 )\n'
 score "M8 asymmetry silently repaired   " \
     "no longer reads enemies at 1100 and allies at 900"

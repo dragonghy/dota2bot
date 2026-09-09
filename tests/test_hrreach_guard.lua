@@ -279,25 +279,48 @@ tests['[hrreach] the stub column is a real comparison, not a bump'] = function()
         'hr_range_live is no longer the other arm of that same comparison')
 end
 
--- ================== 5. the asymmetry is priced and ratcheted, NOT fixed here
+-- ============ 5. the asymmetry: priced here, repaired under its own gate next
+--
+-- ⛔ REWRITTEN 2026-09-09 BY THE ROUND THAT LANDED 'hrparity', which is the
+-- outcome this section was built to force -- and it recorded one thing about
+-- itself on the way through. THE OLD PIN WOULD NOT HAVE GONE RED. It read
+-- `GetNearbyHeroes%( bot, (%d+), false` and asserted the answer was 900; the
+-- repair lands as a SECOND ally read inside a gate, leaving the shipped 900
+-- first in the body, so the match kept finding 900 and the section kept
+-- passing while describing a helper that had changed. A ratchet aimed at an
+-- ungated edit does not see a gated one -- which is the only kind this group
+-- is allowed to write. The rule that survives: pin what the SHIPPED default
+-- still does AND require the repair to be named where it lives.
 
-tests['[hrreach] the second defect stays measured and unfixed'] = function()
-    -- M12 ratchet: pricing has to stay pinned to the code it describes. If a
-    -- later round quietly repairs the two-radius parity test inside this
-    -- helper, this goes red and asks for a re-price instead of letting the
-    -- recorded numbers rot.
+tests['[hrreach] the second defect is priced here and gated next door'] = function()
     local body = stripped_body()
     local nE = body:match('GetNearbyHeroes%( bot, (%d+), true')
     local nA = body:match('GetNearbyHeroes%( bot, (%d+), false')
     assert(nE == '1100' and nA == '900',
-        'the helper no longer reads enemies at 1100 and allies at 900 ' ..
-        '(got ' .. tostring(nE) .. '/' .. tostring(nA) .. '). If that is the ' ..
-        'asymmetry fix, it needs its own id and its own re-priced reading -- ' ..
-        'section 5 of this file is describing code that no longer exists.')
+        'the SHIPPED default no longer reads enemies at 1100 and allies at 900 ' ..
+        '(got ' .. tostring(nE) .. '/' .. tostring(nA) .. '). The asymmetry ' ..
+        'repair is a soak candidate; if it has become the default that is a ' ..
+        'promote and both this section and tests/test_hrparity_guard.lua ' ..
+        'section 1 have to be rewritten in the same change.')
+    -- The repair exists, is gated, and is NOT this id. Two levers in one helper
+    -- is the thing the lanefix bundle lesson is about, so it is pinned as a
+    -- fact rather than left to whoever reads the diff.
+    assert(body:find("IsSoakCandidate%(%s*'hrparity'%s*%)"),
+        'the two-radius parity test is unrepaired and no gated repair is ' ..
+        'named in this helper -- if the fix was reverted, re-open the reading')
+    assert(not body:find("IsSoakCandidate%(%s*'hrreach'%s*%)%s*and"),
+        "'hrreach' has gained a conjunct; it is supposed to be one id that " ..
+        'can be armed and read in isolation from the parity guard')
     assert(C('hr_asym_flips') > 0,
         'the asymmetry no longer flips any verdict; re-check before citing it')
     assert(C('hr_asym_enemy_band') >= C('hr_asym_flips'),
         'more verdicts flip than there are frames with an enemy in the band')
+    -- The 'hrreach' readings this file exists for must be UNDISTURBED by the
+    -- sibling landing next to them: same helper, same corpus, same numbers.
+    assert(C('hr_closes') == C('hr_fire') - C('hr2_fire')
+        and C('hr_closes_universal') == C('hr_fire_d_gt900'),
+        'the hrparity guard perturbed the hrreach differential -- the two ' ..
+        'levers are supposed to be measurable one at a time')
 end
 
 -- ======================================= 6. the witness frame, on real bytes
