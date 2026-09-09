@@ -580,6 +580,14 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⛔ **「后台包装吞掉真码」第十次兑现**(harness 报 `[exited with code 0]`,`; echo "EXIT=$?"` 打出 **3**,
   两个数字并排),守卫**仍未立**,顺延。⚠️ **纪律 3 第一条命令又踩管道**,§22 守卫当场拒(第二十四次)。
   **零 AWS 花费**,MTD 不作新声称(转载批测台 09:09Z 口径),三条线均未跨。
+  **[同轮收尾追加,push 之后]** ⑨ **push 记录**:`HEAD:main` 首次 rejected(录像组 `48a74f7c` 抢先),
+  `pull --rebase` **干净(1/1)**;复跑量具 ⇒ 分母 `reports 192 → 193`、**五类计数逐位不变**,
+  两个套件 32/0 与 49/0 仍绿,补一条 commit 把这次复核写进 §GG 与报告,再 push ⇒ `48a74f7c..7a681749`。
+  会话分支因 rebase 与远端分叉(远端是 rebase 前那枚),用 `--force-with-lease` 推平 —— 
+  **它承载的历史已经在 main 上,不是别人的分支**。静态门在**四次 push 上各跑一次**,
+  均 `0 warnings / GATE_EXIT=0 CLEAN`,**无 `RULE6_BYPASS`**。
+  ⑩ **GH 评论**:#540 追评已发(`claim_precheck.sh` 发前跑过,`clean / OK to publish / PRECHECK_EXIT=0`);
+  **本轮 MCP 可用,未触发铁律 11**。#540 **不关** —— 剩下 11 条的自动开行仍是它的内容。
   **下次触发**:①⭐**给另外 11 条 DELIVER/MENTION 自动开 owed 行**(GH #540,一条覆盖 11 个 id)
   ②⭐**P4.2 的下一格换形状了**:`BUILD 0 / NO-CORPUS 0` ⇒ **靠「(a) 买不到」退集把 armed 压到 ≤20
   这条路今天走不通**,能压的只有 **promote**(投递 → 判决 → 三条件)—— 这句要在下轮开头被读到
