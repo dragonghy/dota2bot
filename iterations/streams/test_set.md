@@ -2605,6 +2605,10 @@ as an **EMPTY table**」,并把它当作「this line reads false locally」的**
 | `waves` | 语料存不存在 | `W*_wave.json` 的 **`arm_string` 字段**(⛔ 不是全文子串:那些记录的散文里点名的是**被撤下**的 id) |
 | `tools` | 仪器存不存在 | `tools/batch_test/behavioral/*.py` 的**主题句**是否点名这条 id |
 
+⚠️ **分母会随仓库长,类计数不一定跟着动**:本节的读数取自裁定时刻的树
+(`reports 192`);同一轮 rebase 到 `48a74f7c` 之后复跑为 `reports 193`,而
+**五类计数逐位相同**。引用本节时引类计数,分母只作「这一次读了多少」的记录。
+
 分类(五类,互斥且穷尽,由工具自己断言):`VERIFIED` / `DELIVER`(有语料 + 有主题句点名的仪器)/
 `MENTION`(有语料,但只在别人正文里被点名)/ `BUILD`(有语料,无任何仪器)/ `NO-CORPUS`(没进过任何 arm 串)。
 
