@@ -910,16 +910,50 @@ end
 --- whenever J.HasAghanimsShard is true.  That term is the premise of the (c)
 --- argument expressed as code, the way `cmcreepcap`'s t25 row is.
 ---
---- WHAT IS NOT KNOWN.  The domain is UNSIZED.  Corpus supply, measured rather than
---- assumed (tests/test_axe_battle_hunger_recast.lua section 2): three Axe-SUBJECT
---- frames carry an enemy holding the real debuff, with 0.2s / 5.4s / 6.5s left, and
---- on two of them that enemy is the ONLY one inside Battle Hunger's cast range --
---- so on those two the armed side declines rather than spreads, which is the cost
---- side of this lever showing up in the corpus.  The one frame that can show the
---- SPREAD is f_260820_043637_axe_ring_close, and driving it needs two labelled
---- flips because no fixture frame reports a bot mode.  Size it on a wave:
---- iterations/queue.json `hero-35`.  Do NOT promote on the (c) argument alone.
-function X.axe_IsBattleHungerFresh( hTarget )
+--- ⭐ THE DOMAIN CAME BACK MEASURED, AND IT NARROWED THIS LEVER -- 2026-09-09.
+--- GH #562 (replay-check, `owed_executions.json:hero_domain_scan_2_30_31`, 72 games /
+--- 577 replay episodes / 273 of them inside this gate's shard premise) stratified the
+--- in-gate episodes by the ONE thing the dominance argument above rests on -- whether
+--- another candidate was there to take the cast:
+---
+---     pure cost    (target lived, ZERO other candidate)  121 episodes  1.68 / game
+---     pure benefit (target lived, >= 1 other candidate)   30 episodes  0.42 / game
+---     kill-confirm (target died within 5s)               122 episodes  (97 to Axe)
+---
+--- i.e. cost : benefit ~ 4 : 1, and 81.3% of in-gate episodes had NO alternative at
+--- all.  The reading did not find a new defect; it found that the sentence three
+--- paragraphs up -- "re-applying is dominated wherever ANOTHER CANDIDATE EXISTS" --
+--- was never written into the code.  The veto fired on the premise's antecedent
+--- unchecked, so on four in-gate episodes out of five the armed side forfeited a
+--- refresh worth `12 - remaining` seconds and bought nothing with it.
+---
+--- SO THE PREMISE IS NOW A CONJUNCT: X.axe_HasHungerAlternative.  The veto fires only
+--- when the SAME list this call site is iterating carries a candidate that is not
+--- already hungered and that the site would accept.  This is a NARROWING OF THE ARMED
+--- LEG, not a new lever and not a new id: the refusal set shrinks, so the armed
+--- accepted set grows toward -- and stays inside -- the shipped one.  Both directional
+--- claims above therefore still hold verbatim (armed ⊆ shipped; `armed casts =>
+--- shipped casts`), and the corpus frame that used to read as a DECLINE now reads as
+--- the shipped cast, which is the 121-episode stratum disappearing.
+---
+--- ⚠️ ONE OVER-APPROXIMATION, REGISTERED RATHER THAN ARGUED AWAY.  At the 团战 site
+--- the alternative test deliberately omits X.axe_IsHungerFightTargetInReach, because
+--- that conjunct carries a DIFFERENT soak id (`axebhreach`) and letting this lever's
+--- decision depend on another id's armed state is the pullcad trap.  So when both are
+--- armed the alternative test can certify a candidate the reach term would refuse,
+--- and that residue is exactly the reach ring's +200 band.  The other two sites carry
+--- no gated conjunct and are exact (the lane loop's own
+--- `GetAttackTarget() == nil` is passed in as fExtra).
+---
+--- WHAT IS NOT KNOWN.  The BENEFIT half is still not fixture-drivable.  Corpus supply,
+--- measured rather than assumed (tests/test_axe_battle_hunger_recast.lua section 2):
+--- three Axe-SUBJECT frames carry an enemy holding the real debuff, with 0.2s / 5.4s /
+--- 6.5s left, and on two of them that enemy is the ONLY one inside Battle Hunger's
+--- cast range -- those two are the cost stratum, and they are what section 3 now pins
+--- as a no-op.  The 30 benefit episodes GH #562 located ((game, t) listed in its
+--- table) are the frames that would drive the spread; asking for them is queue.json
+--- `hero-35`.  Do NOT promote on the (c) argument alone.
+function X.axe_IsBattleHungerFresh( hTarget, tCandidates, fExtra )
 
 	local bShipped = not hTarget:HasModifier( 'modifier_axe_battle_hunger_self' )
 
@@ -927,11 +961,71 @@ function X.axe_IsBattleHungerFresh( hTarget )
 		and J.IsModeTurbo() and J.IsSoakCandidate( 'axebhrecast' )
 		and not J.HasAghanimsShard( bot )
 		and hTarget:HasModifier( 'modifier_axe_battle_hunger' )
+		and X.axe_HasHungerAlternative( hTarget, tCandidates, fExtra )
 	then
 		return false
 	end
 
 	return bShipped
+
+end
+
+
+--- The premise of `axebhrecast` as a predicate: does THIS call site's own candidate
+--- list hold somebody else worth the cast?  Carries no soak id of its own on purpose
+--- -- it is only ever reached from inside the armed branch of
+--- X.axe_IsBattleHungerFresh, so with the gate off it is unreachable and gate-OFF
+--- behaviour is byte-for-byte the shipped veto.
+---
+--- `tCandidates == nil` answers FALSE, i.e. NO VETO.  That is the conservative
+--- default in this lever's direction: an unproven alternative must never cost a
+--- refresh, and it keeps every one-argument caller (the tests' corpus sweeps) on the
+--- shipped answer instead of silently re-baselining them.
+---
+--- The terms are the site's own acceptance terms, minus anything gated.  `fExtra` is
+--- how a site adds its extra unconditional conjunct (the lane loop's
+--- `GetAttackTarget() == nil`); it is not a hook for a second gate.
+--- The identity test is redundant with the debuff test -- hTarget carries the debuff
+--- whenever this is reached -- and is kept because "another" is the whole claim.
+function X.axe_HasHungerAlternative( hTarget, tCandidates, fExtra )
+
+	if tCandidates == nil then return false end
+
+	for _, npcOther in pairs( tCandidates )
+	do
+		if npcOther ~= hTarget
+			and J.IsValid( npcOther )
+			and not npcOther:HasModifier( 'modifier_axe_battle_hunger' )
+			and not npcOther:HasModifier( 'modifier_axe_battle_hunger_self' )
+			and J.CanCastOnNonMagicImmune( npcOther )
+			and J.CanCastOnTargetAdvanced( npcOther )
+			and ( fExtra == nil or fExtra( npcOther ) )
+		then
+			return true
+		end
+	end
+
+	return false
+
+end
+
+
+--- The lane-harass loop's own extra conjunct, lifted to a name so the alternative
+--- test at that site is the SAME predicate the site applies rather than a looser
+--- restatement of it.  Pure read, no gate.
+---
+--- ⚠️ THE SITE CALLS IT TOO, and that is deliberate rather than tidiness.  Passing
+--- it in as a function VALUE and leaving `npcEnemy:GetAttackTarget() == nil` written
+--- out at the site would make this the first function-value alias under bots/BotLib/,
+--- and tests/test_hero_export_reachability.py says in its own LIMITS that such an
+--- alias defeats its closure ("the fix is here, not in the ceiling").  It caught this
+--- on the push gate.  Calling it at the site keeps the census reading the truth
+--- without touching the instrument or its ratchet -- and the predicate is then
+--- written once, which is the property the fExtra argument wanted in the first place.
+--- Gate-free and behaviour-identical: same read, same operator, same answer.
+function X.axe_IsHungerHarassIdle( hUnit )
+
+	return hUnit:GetAttackTarget() == nil
 
 end
 
@@ -1118,7 +1212,7 @@ function X.ConsiderW()
 		for _, npcEnemy in pairs( nInBonusEnemyList )
 		do
 			if J.IsValid( npcEnemy )
-				and X.axe_IsBattleHungerFresh( npcEnemy )
+				and X.axe_IsBattleHungerFresh( npcEnemy, nInBonusEnemyList )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
 				and J.CanCastOnTargetAdvanced( npcEnemy )
 				and X.axe_IsHungerFightTargetInReach( npcEnemy, nCastRange )
@@ -1149,8 +1243,8 @@ function X.ConsiderW()
 			if J.IsValid( npcEnemy )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
 				and J.CanCastOnTargetAdvanced( npcEnemy )
-				and npcEnemy:GetAttackTarget() == nil
-				and X.axe_IsBattleHungerFresh( npcEnemy )
+				and X.axe_IsHungerHarassIdle( npcEnemy )
+				and X.axe_IsBattleHungerFresh( npcEnemy, nInRangeEnemyList, X.axe_IsHungerHarassIdle )
 			then
 				hCastTarget = npcEnemy
 				sCastMotive = 'W-对线消耗:'..J.Chat.GetNormName( hCastTarget )
@@ -1170,7 +1264,7 @@ function X.ConsiderW()
 			if J.IsValid( npcEnemy )
 				and J.CanCastOnNonMagicImmune( npcEnemy )
 				and J.CanCastOnTargetAdvanced( npcEnemy )
-				and X.axe_IsBattleHungerFresh( npcEnemy )
+				and X.axe_IsBattleHungerFresh( npcEnemy, nInRangeEnemyList )
 			then
 				hCastTarget = npcEnemy
 				sCastMotive = 'W-撤退:'..J.Chat.GetNormName( hCastTarget )

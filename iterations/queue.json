@@ -1873,8 +1873,8 @@
       "priority": 3,
       "question": "GH #554。给 `axebhrecast` 买条件 (a) 的域。杠杆:bots/BotLib/hero_axe.lua 的 X.ConsiderW 在八处重复 `and not <target>:HasModifier( 'modifier_axe_battle_hunger_self' )`,意思是「别把战意饥渴浪费在已经中了的人身上」——而这个名字目标永远挂不上(两条独立理由:它是**施法者那侧**的名字;而且施法者那侧在本 patch 里拼作 `modifier_axe_battle_hunger_self_movespeed`,裸的 `_self` 在全语料 0 次,HasModifier 是精确名查表)。本轮已落地 gated 修复(turbo-only,未 armed),接线三处:团战最弱目标搜索 / 对线消耗循环 / 撤退循环。**先扫档案,不要为它单发波**(与 hero-2 / hero-30 / hero-31 / hero-32 / hero-33 / hero-34 同形:零 EC2 的只读扫描,七者可并成同一次遍历)。需要的读数,都在已落盘的 W39-W49 dump 里:(1) `axe_battle_hunger` 的施法事件总数,以及其中**目标已经挂着 `modifier_axe_battle_hunger`** 的那一部分(这是缺陷的直接计数,不需要任何推断);(2) ⭐ **本请求的价值列**:在那些「重放」瞬间,Axe 的战意饥渴射程(rank 600/700/800/900,请按当时 rank 取)内**还有几个没中招的敌方英雄** —— 这一列决定杠杆是**换人**(收益)还是**放弃**(成本),而 fixture 层结构上买不到它(见下);(3) 那些重放里,目标身上 debuff 的**剩余时间**分布(重放只值 `12 - remaining` 秒,这是定价的分母);(4) 分层:这些重放各自出自哪条分支——击杀循环 / IsGoingOnSomeone / 团战 / 对线 / 撤退 / 打野 / Roshan / Tormentor。**只有团战 / 对线 / 撤退三条归本杠杆**,其余五条本轮明确不接线,读数里必须能把它们分开,否则 (1) 是错的分子。",
       "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) 让本组用 make_fixture.py 钉帧(最想要的是「团战 / 对线 / 撤退 三条之一 + 目标已中招 + 射程内还有另一个没中招的敌方英雄」那一帧 —— 那正是语料现在买不到的**收益侧**)。**预登记的判读方向**:若 (2) 的分布集中在 0(重放时射程内没有别的候选),则本杠杆在实战里只会是**放弃**不是**换人**,收益不成立,不入集,带 DOMAIN-NOT-REACHED 退回门。**预登记的归因边界(方向由构造保证)**:出货谓词先算并绑定,armed 只能把 true 变 false ⇒ armed 接受的 (分支,目标) 对是 shipped 的严格子集,`armed 放技能 ⇒ shipped 放技能`。⚠️ **但这不是动作数的窄化**:armed 可以在同一帧发出指向另一个目标的同一个技能,所以**不许**把负读数读成「杠杆少放了 N 次技能」,要按 (4) 的分层看目标换了没有。**为什么必须走档案而不是 fixture**:能端到端驱动的那一帧(f_260820_043124_axe_blink_flee_529)上,已中招的 Wraith King 是 800u 内**唯一**的敌人,所以 fixture 只能演成本侧;而且**没有任何 fixture 帧报告 bot mode**,三条接线分支全都要标注过的 mode 翻转才跑得到(loader 缺口,不是语料缺口)。",
-      "status": "pending",
-      "result": null,
+      "status": "delivered-and-consumed",
+      "result": "2026-09-06T10:0xZ 录像组交付读数(GH #562,报告 iterations/reports/replay-check/domain_scan_hero_2_30_31.md §2):72 局 / 3,437 次施法 / 577 episode,夏德前提过滤后**门内 273**(3.79/局,68/72 局有贡献)。价值列 (2) 门内分布:0 候选 **81.3%** / 1 → 16.5% / 2 → 1.8% / 3 → 0.4%。分层:纯成本 **121** / 纯收益 **30** / 击杀确认 122(97 死于 Axe 自己)⇒ **成本 : 收益 ≈ 4 : 1**。第 (4) 列(八条分支的分层)**INSTRUMENT-BLIND**(dump 不带 bot 侧 mode 或分支身份)⇒ 门内 273 只是三个接线位点域的**上界**。2026-09-09T17:xxZ 英雄组**消费**了这份读数:它证伪的不是杠杆而是**杠杆的写法** —— helper 抬头写着的「另有候选时重放才被支配」这一项从来没进过 `if`。已就地收窄(`X.axe_HasHungerAlternative` 作为 armed 腿的新合取项,**无新 id**,`axebhrecast` 仍未 armed),纯成本那 121 个 episode 按构造不再触发。state.json:axebhrecast_premise_20260909;报告 iterations/reports/hero/20260909T17xxxxZ.md。⚠️ **旧的 4:1 是未收窄那一版的读数,不要再当否决理由引用。**",
       "director": {
         "ruling": "APPROVED-SCAN(零 EC2、只读档案遍历;不排波、不入集)",
         "wave": null,
@@ -1882,7 +1882,8 @@
         "ref": "iterations/streams/test_set.md §FG.2; GH #554",
         "note": "与 hero-32/33/34(09-06T04:17Z 裁)完全同型,同一条款:零 EC2、只读档案遍历,不排波、不入集,搭 hero-2/30/31 已在跑的那一次遍历。产物路径不改名 —— iterations/reports/replay-check/domain_scan_hero_2_30_31.md 是 owed_executions.json 那一腿唯一读得到的机器键,改名等于让那条腿看不见它。acceptance 一字未改。METHOD-FAILED 按 §CJ 强制写进:读不出 (2) 那一列(射程内未中招的敌方英雄数)⇒ INSTRUMENT-BLIND 退回重裁,不得自行套用『分布集中在 0 ⇒ 不入集』那条预登记 —— 那条预登记假设的是量具工作而读数为 0,不是量具读不出来。",
         "owed_row": "hero_domain_scan_2_30_31"
-      }
+      },
+      "next": "**语料侧(录像组)**:把 #562 点名的纯收益帧钉成 fixture —— 首选 `a57e1e__20260902_034511_slot4` **t=1191.5**(目标 pudge / rank 4 / 剩余 6.00s / **3 个未中招候选**),备选 `cbb744__20260901_101041_slot1` t=835.9、`26717d__20260902_033258_slot4` t=933.3。⚠️ #562 自己声明**视野未核**(射程判定用上帝视角坐标,bot 走的是可见敌人列表),make_fixture 之后要先核可见性。收益侧现在只能在 ring 帧上驱动**谓词**,钉到这一帧才第一次能端到端驱动。**不需要新波次**(纯档案只读)。"
     },
     {
       "id": "hero-36",

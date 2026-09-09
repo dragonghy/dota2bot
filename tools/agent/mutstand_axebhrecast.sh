@@ -153,7 +153,11 @@ echo
 echo "=== M3: the armed branch becomes unreachable (the dead-wiring twin) ==="
 sub "$HERO" "		and hTarget:HasModifier( 'modifier_axe_battle_hunger' )" \
             "		and false"
-score "M3" "armed, mode retreat"
+# 2026-09-09: the want string moved from the e2e decline case to section 6's ring
+# frame.  It had to: the flee frame the e2e drives has no alternative candidate, so
+# after the premise conjunct landed BOTH legs stand down there and the case can no
+# longer see a dead armed branch.  The ring frame can.
+score "M3" "armed must still refuse the refresh on"
 
 # ---------------------------------------------------------------------------
 # M4: one call site reverts to the shipped literal.  Reads as a tidy-up -- the
@@ -161,7 +165,7 @@ score "M3" "armed, mode retreat"
 #     other two sites still call it -- and silently drops a third of the lever.
 echo
 echo "=== M4: the retreat call site reverts to the shipped literal ==="
-sub "$HERO" "				and X.axe_IsBattleHungerFresh( npcEnemy )
+sub "$HERO" "				and X.axe_IsBattleHungerFresh( npcEnemy, nInRangeEnemyList )
 			then
 				hCastTarget = npcEnemy
 				sCastMotive = 'W-撤退:'" \
@@ -215,6 +219,42 @@ sub "$TEST" "        for _, h in pairs(heroes) do
             "        for _, h in pairs({}) do
             nUnits = nUnits + 1"
 score "M8" "the census must actually have walked the corpus"
+
+# ---------------------------------------------------------------------------
+# M9: THE PREMISE CONJUNCT IS DROPPED.  This is the lever exactly as it shipped
+#     dark on 2026-09-06, i.e. the configuration GH #562 measured at 4:1 cost to
+#     benefit -- 121 in-gate episodes where the armed side forfeited a refresh
+#     with nobody to spread it to.  It is a REGRESSION mutant, not a hypothetical:
+#     the tempting edit here is "the list argument is noise, drop it".
+echo
+echo "=== M9: the 'another candidate exists' premise is dropped (the 4:1 lever) ==="
+sub "$HERO" "		and hTarget:HasModifier( 'modifier_axe_battle_hunger' )
+		and X.axe_HasHungerAlternative( hTarget, tCandidates, fExtra )" \
+            "		and hTarget:HasModifier( 'modifier_axe_battle_hunger' )"
+score "M9" "armed must be a no-op where there is nobody to spread to"
+
+# ---------------------------------------------------------------------------
+# M10: the missing-list default flips to permissive.  Reads as a tidy-up ("no
+#      list means don't restrict") and silently restores the veto at every
+#      one-argument call site -- including any a later round adds without
+#      noticing the argument exists.
+echo
+echo "=== M10: an absent candidate list is read as 'an alternative exists' ==="
+sub "$HERO" "	if tCandidates == nil then return false end" \
+            "	if tCandidates == nil then return true end"
+score "M10" "with no list to prove an alternative with"
+
+# ---------------------------------------------------------------------------
+# M11: an already-hungered bystander counts as an alternative.  Direction is
+#      untouched, the premise is still asked, and the lever still narrows -- it
+#      just spreads onto somebody who is already carrying the debuff, which is
+#      the very refresh it exists to avoid.
+echo
+echo "=== M11: another CARRIER counts as an alternative (spread onto a refresh) ==="
+sub "$HERO" "			and not npcOther:HasModifier( 'modifier_axe_battle_hunger' )
+" \
+            ""
+score "M11" "another carrier is not an alternative"
 
 # ---------------------------------------------------------------------------
 # The EXIT trap restores and verifies; do not restore-and-delete here.

@@ -567,10 +567,17 @@ end
 tests['§5.5 the sibling freshness lever is untouched'] = function()
     local src = read_file(SRC)
     local n = 0
-    for _ in src:gmatch('and X%.axe_IsBattleHungerFresh%( npcEnemy %)') do n = n + 1 end
+    for _ in src:gmatch('and X%.axe_IsBattleHungerFresh%( npcEnemy[,%s]') do n = n + 1 end
     assert(n == 3, 'X.axe_IsBattleHungerFresh is wired at ' .. n
         .. ' sites, was 3 (teamfight / lane harass / retreat).  `axebhrecast` is '
         .. 'a different lever and this round does not move it.')
+    -- 2026-09-09: the sibling gained a candidate-list argument (GH #562's 4:1
+    -- stratification), so the pattern above no longer requires the one-argument
+    -- form.  What this case is for is unchanged and still asserted: the COUNT is 3,
+    -- and `axebhreach` neither gained nor lost a site because of it.
+    local _, nReach = src:gsub('X%.axe_IsHungerFightTargetInReach%(', '')
+    assert(nReach == 2, 'the reach lever must appear exactly twice (its definition '
+        .. 'and its one call site), got ' .. nReach)
 end
 
 return tests

@@ -37,6 +37,31 @@
 -- the refresh's full 240 finishes him.  The armed side declined the kill.  Section 4
 -- pins that site UNWIRED so the draft cannot come back.
 --
+-- ⭐ 2026-09-09: THE PREMISE BECAME A CONJUNCT, AND SECTION 3 FLIPPED WITH IT
+-- ---------------------------------------------------------------------------
+-- GH #562 sized the domain on 72 real games (577 replay episodes, 273 inside the
+-- shard premise) and stratified it by the one thing this lever's dominance argument
+-- rests on -- whether another candidate was there to take the cast:
+--
+--     pure cost    (target lived, ZERO other candidate)   121   1.68 / game
+--     pure benefit (target lived, >= 1 other candidate)    30   0.42 / game
+--     kill-confirm (target died within 5s)                122   (97 of them to Axe)
+--
+-- cost : benefit ~ 4 : 1; 81.3% of in-gate episodes had no alternative at all.  That
+-- is not a new defect, it is this lever's OWN sentence ("dominated wherever another
+-- candidate exists") never having been written into the code.  The armed leg now
+-- carries X.axe_HasHungerAlternative as a conjunct, so it only refuses a refresh when
+-- the site's own list holds somebody else it would accept.
+--
+-- ⚠️ THIS RE-BASELINES SECTION 3 AND THAT IS THE POINT, NOT AN ACCIDENT.  On the
+-- drivable frame the hungered Wraith King is the ONLY enemy in cast range -- section 1
+-- measured that and section 3 used to assert the armed side "declines, and issues
+-- nothing at all".  That decline WAS the 121-episode stratum, one instance of it, and
+-- the case now asserts the opposite: armed and shipped issue the SAME order.  A round
+-- reading this file later should read the two cases as one pair, not as a weakened
+-- test.  The veto itself is pinned live in section 6 on the ring frame, where an
+-- alternative really is present.
+--
 -- HONEST BOUNDS -- READ BEFORE QUOTING ANY NUMBER FROM HERE
 -- ---------------------------------------------------------
 --   * DIRECTION IS STRUCTURAL BUT IT IS NOT "FEWER ACTIONS".  The shipped predicate
@@ -165,6 +190,18 @@ local function joined(orders)
     return (#orders == 0) and '(no action)' or table.concat(orders, ' | ')
 end
 
+--- Every enemy hero of `bot` on the loaded frame, as the candidate list a call site
+--- would be iterating.  Built from the loader's own table, not from a fixture regex.
+--- Declared HERE rather than beside its first use: the census in section 2 needs it,
+--- and a `local function` further down would be a nil global read from up here.
+local function enemy_list(bot, heroes)
+    local t = {}
+    for _, h in pairs(heroes) do
+        if h:GetTeam() ~= bot:GetTeam() and h:IsAlive() then t[#t + 1] = h end
+    end
+    return t
+end
+
 -- ---------------------------------------------------------------- section 1 --
 -- Ground truth on the untouched frame.  None of this is colour: every number here
 -- is a clause of the branch section 3 drives.
@@ -258,9 +295,14 @@ tests['defect (i): the shipped veto is always-true on every unit of every frame'
         local J, bot, heroes = rf.load(path)
         J.IsSoakCandidate = function() return false end
         local X = rf.load_hero('axe')
+        -- The list is handed in (2026-09-09) so this census keeps testing the GATE
+        -- and not the premise: with no list the armed leg stands down by design, and
+        -- a shipped sweep that passes nothing would go green even if the candidate
+        -- check were deleted outright.
+        local list = enemy_list(bot, heroes)
         for name, h in pairs(heroes) do
             nChecked = nChecked + 1
-            assert(X.axe_IsBattleHungerFresh(h) == true,
+            assert(X.axe_IsBattleHungerFresh(h, list) == true,
                 'shipped veto fired on ' .. name .. ' in ' .. path
                 .. ' -- it is not supposed to be able to')
             if h:HasModifier(MOD_TARGET) then nCarriers = nCarriers + 1 end
@@ -299,10 +341,19 @@ tests['e2e: gate OFF + cooldown flip -- Axe re-hungers the already-hungered WK']
     end
 end
 
-tests['e2e: gate ON + cooldown flip -- Axe declines, and issues nothing at all'] = function()
+tests['e2e: gate ON + cooldown flip -- NO alternative, so armed casts what shipped casts'] = function()
+    -- Was `#orders == 0` until 2026-09-09.  See the header: this frame is one
+    -- instance of GH #562's 121-episode pure-cost stratum -- section 1 already
+    -- measured that the hungered Wraith King is the only enemy inside 800u -- and the
+    -- premise conjunct is what turns the forfeited refresh back into the cast.
     for _, mode in ipairs({ 'retreat', 'fight', 'lane' }) do
-        local orders = run({ armed = true, ready = true, mode = mode })
-        assert(#orders == 0, 'armed, mode ' .. mode .. ': ' .. joined(orders))
+        local shipped = run({ ready = true, mode = mode })
+        local armed = run({ armed = true, ready = true, mode = mode })
+        assert(joined(armed) == joined(shipped),
+            'armed must be a no-op where there is nobody to spread to, mode ' .. mode
+            .. ': shipped ' .. joined(shipped) .. ' / armed ' .. joined(armed))
+        assert(joined(armed):find('axe_battle_hunger %-> ' .. WK),
+            'and the order really is the re-cast, mode ' .. mode .. ': ' .. joined(armed))
     end
 end
 
@@ -403,13 +454,19 @@ tests['direction: the helper binds the shipped answer and returns it last'] = fu
 end
 
 tests['direction: armed answers are a SUBSET of shipped, over the whole corpus'] = function()
-    local nDiff = 0
+    -- The sweep now passes the frame's whole enemy set as the candidate list, which
+    -- is the widest list any call site can hand in -- so it is the sweep that gives
+    -- the veto its best chance to fire, and any refusal it finds still has to be a
+    -- carrier.
+    local nDiff, nCarriers = 0, 0
     for _, path in ipairs(AXE_FRAMES) do
-        local J, _, heroes = rf.load(path)
+        local J, bot, heroes = rf.load(path)
         J.IsSoakCandidate = function(id) return id == CAND end
         local X = rf.load_hero('axe')
+        local list = enemy_list(bot, heroes)
         for name, h in pairs(heroes) do
-            local armed = X.axe_IsBattleHungerFresh(h)
+            if h:HasModifier(MOD_TARGET) then nCarriers = nCarriers + 1 end
+            local armed = X.axe_IsBattleHungerFresh(h, list)
             if armed ~= true then
                 nDiff = nDiff + 1
                 assert(h:HasModifier(MOD_TARGET) == true,
@@ -419,7 +476,28 @@ tests['direction: armed answers are a SUBSET of shipped, over the whole corpus']
             end
         end
     end
-    assert(nDiff == 3, 'armed must differ on exactly the 3 carriers, got ' .. nDiff)
+    assert(nCarriers == 3, 'the corpus still carries 3 debuff instances, got ' .. nCarriers)
+    -- NOT `== nCarriers`: a carrier with no alternative beside him is NOT refused any
+    -- more, and that asymmetry is the 2026-09-09 change.  Refusals are a subset of
+    -- carriers; the exact split is section 6's job, on named frames.
+    assert(nDiff <= nCarriers, 'refusals must be a subset of the carriers, got '
+        .. nDiff .. ' refusal(s) over ' .. nCarriers .. ' carrier(s)')
+end
+
+tests['direction: with NO candidate list the armed answer is the shipped answer'] = function()
+    -- The conservative default, driven rather than asserted off the source.  Every
+    -- one-argument caller -- and every future one -- keeps shipped behaviour, so an
+    -- unproven alternative can never cost a refresh.
+    for _, path in ipairs(AXE_FRAMES) do
+        local J, _, heroes = rf.load(path)
+        J.IsSoakCandidate = function(id) return id == CAND end
+        local X = rf.load_hero('axe')
+        for name, h in pairs(heroes) do
+            assert(X.axe_IsBattleHungerFresh(h) == true,
+                'armed refused ' .. name .. ' in ' .. path .. ' with no list to '
+                .. 'prove an alternative with')
+        end
+    end
 end
 
 tests['correctness: arming is a byte-for-byte no-op where nobody is hungered'] = function()
@@ -429,11 +507,12 @@ tests['correctness: arming is a byte-for-byte no-op where nobody is hungered'] =
     local J, bot, heroes = rf.load(RING_FIXTURE)
     J.IsSoakCandidate = function(id) return id == CAND end
     local X = rf.load_hero('axe')
+    local list = enemy_list(bot, heroes)
     local n = 0
     for name, h in pairs(heroes) do
         if not h:HasModifier(MOD_TARGET) then
             n = n + 1
-            assert(X.axe_IsBattleHungerFresh(h) == true,
+            assert(X.axe_IsBattleHungerFresh(h, list) == true,
                 'arming changed the answer for ' .. name .. ', who carries no Battle '
                 .. 'Hunger at all -- the veto is inverted or reads the wrong modifier')
         end
@@ -450,6 +529,177 @@ tests['wiring: exactly three call sites, and they are the three named ones'] = f
     -- two patterns double-count the spaced form.
     local _, nLiteral = body:gsub('HasModifier%(%s*\'' .. MOD_SELF_TESTED .. '\'%s*%)', '')
     assert(nLiteral == 5, 'the other five sites must keep the literal veto, got ' .. nLiteral)
+    -- 2026-09-09: and every one of the three hands in a candidate list.  A site that
+    -- calls with the target alone is back to the 4:1 stratum GH #562 measured, and
+    -- would do it silently -- the conservative default answers "no alternative", so
+    -- the lever would just stop firing there rather than go red.
+    local _, nListed = body:gsub('X%.axe_IsBattleHungerFresh%(%s*npcEnemy%s*,%s*nIn', '')
+    assert(nListed == 3, 'all 3 call sites must pass the list they are iterating, got '
+        .. nListed)
+    assert(body:find('X%.axe_IsBattleHungerFresh%(%s*npcEnemy%s*,%s*nInBonusEnemyList%s*%)'),
+        'the teamfight site must hand in its own +200 ring, not the narrower list')
+    local _, nIdle = body:gsub('X%.axe_IsHungerHarassIdle', '')
+    assert(nIdle == 2, 'the lane site must both CALL its extra conjunct and hand it '
+        .. 'in as fExtra, got ' .. nIdle .. ' mention(s).  Passing it only as a value '
+        .. 'makes it the first function-value alias under bots/BotLib/, which '
+        .. 'tests/test_hero_export_reachability.py reads as an orphan -- see that '
+        .. 'file\'s LIMITS and the helper\'s header.')
+    assert(body:find('X%.axe_IsHungerHarassIdle%( npcEnemy %)'),
+        'and the call must be the site\'s own conjunct, on its own candidate')
+end
+
+-- ---------------------------------------------------------------- section 6 --
+-- The premise conjunct (2026-09-09, GH #562).  Both strata on named real frames:
+-- the veto must still fire where a spread is available, and must NOT fire where it
+-- is not.  Section 3 already drives the second one end to end; here it is stated on
+-- the predicate, where the two can sit side by side.
+
+tests['premise: the veto still fires on the ring frame, where an alternative IS there'] = function()
+    local J, bot, heroes = rf.load(RING_FIXTURE)
+    J.IsSoakCandidate = function(id) return id == CAND end
+    local X = rf.load_hero('axe')
+    local list = enemy_list(bot, heroes)
+    local carrier, sCarrier = nil, nil
+    local nFresh = 0
+    for name, h in pairs(heroes) do
+        if h:GetTeam() ~= bot:GetTeam() and h:IsAlive() then
+            if h:HasModifier(MOD_TARGET) then carrier, sCarrier = h, name
+            else nFresh = nFresh + 1 end
+        end
+    end
+    assert(carrier ~= nil, 'the ring frame must carry a hungered enemy; it is the '
+        .. 'benefit-side frame this section rests on')
+    assert(nFresh >= 1, 'and at least one enemy who is NOT hungered, got ' .. nFresh)
+    assert(X.axe_HasHungerAlternative(carrier, list) == true,
+        'the alternative test must see those ' .. nFresh .. ' fresh enemies')
+    assert(X.axe_IsBattleHungerFresh(carrier, list) == false,
+        'armed must still refuse the refresh on ' .. tostring(sCarrier)
+        .. ' when there is somebody else to spread to -- if this passes, the '
+        .. 'premise conjunct did not narrow the lever, it killed it')
+    assert(X.axe_IsBattleHungerFresh(carrier) == true,
+        'and the same carrier with no list must fall through to shipped')
+end
+
+tests['premise: on the flee frame the carrier is alone, so the veto stands down'] = function()
+    -- The 121-episode stratum, on the frame section 1 measured.  The list handed in
+    -- is the one the retreat and lane sites iterate: enemies inside cast range.
+    local J, bot, heroes = rf.load(FIXTURE)
+    J.IsSoakCandidate = function(id) return id == CAND end
+    local X = rf.load_hero('axe')
+    local nRange = bot:GetAbilityByName(BH):GetCastRange()
+    local inRange = {}
+    for _, h in pairs(heroes) do
+        if h:GetTeam() ~= bot:GetTeam() and h:IsAlive()
+            and GetUnitToUnitDistance(bot, h) <= nRange then
+            inRange[#inRange + 1] = h
+        end
+    end
+    assert(#inRange == 1 and inRange[1]:HasModifier(MOD_TARGET),
+        'the premise of this case: one enemy in range and he is the carrier, got '
+        .. #inRange)
+    assert(X.axe_HasHungerAlternative(inRange[1], inRange) == false,
+        'a list holding only the carrier himself is NOT an alternative')
+    assert(X.axe_IsBattleHungerFresh(inRange[1], inRange) == true,
+        'so the armed leg must stand down and let the refresh happen')
+end
+
+--- The ring frame, armed, with the carrier and the list section 6 keeps re-using.
+--- `opt.nonTurbo` / `opt.shard` are the two premise flips, applied AFTER load exactly
+--- as run() applies them.
+local function ring(opt)
+    opt = opt or {}
+    local J, bot, heroes = rf.load(RING_FIXTURE)
+    J.IsSoakCandidate = function(id) return id == CAND end
+    if opt.nonTurbo then GetGameMode = function() return 1 end end
+    if opt.shard then J.HasAghanimsShard = function() return true end end
+    local X = rf.load_hero('axe')
+    local carrier = nil
+    for _, h in pairs(heroes) do
+        if h:GetTeam() ~= bot:GetTeam() and h:IsAlive() and h:HasModifier(MOD_TARGET) then
+            carrier = h
+        end
+    end
+    assert(carrier ~= nil, 'the ring frame must carry a hungered enemy')
+    return X, carrier, enemy_list(bot, heroes)
+end
+
+tests['premise: NON-turbo is the shipped answer even where an alternative exists'] = function()
+    -- The turbo half of the gate, asserted on the frame where the veto CAN fire.
+    -- Section 3's non-turbo case can no longer see this: its frame has no
+    -- alternative, so both legs stand down there for the other reason.
+    local X, carrier, list = ring({ nonTurbo = true })
+    assert(X.axe_IsBattleHungerFresh(carrier, list) == true,
+        'armed but non-turbo must answer the shipped true')
+end
+
+tests['premise: the SHARD stands the armed leg down even where an alternative exists'] = function()
+    -- Same re-aim for the shard premise, and for the same reason.  With the shard
+    -- Battle Hunger stacks, so a re-cast is a second stack and spreading is no
+    -- longer dominant -- the lever must not fire no matter who else is standing there.
+    local X, carrier, list = ring({ shard = true })
+    assert(X.axe_IsBattleHungerFresh(carrier, list) == true,
+        'armed with shard must answer the shipped true')
+    local Xno, carrierNo, listNo = ring()
+    assert(Xno.axe_IsBattleHungerFresh(carrierNo, listNo) == false,
+        'control: without the shard the same frame DOES refuse -- otherwise the case '
+        .. 'above passes for the wrong reason')
+end
+
+tests['premise: fExtra is the site`s own conjunct, and it can veto the alternative'] = function()
+    -- The lane loop passes X.axe_IsHungerHarassIdle.  Driven on the ring frame so the
+    -- ONLY thing separating the two answers is fExtra.
+    local J, bot, heroes = rf.load(RING_FIXTURE)
+    J.IsSoakCandidate = function(id) return id == CAND end
+    local X = rf.load_hero('axe')
+    local list = enemy_list(bot, heroes)
+    local carrier = nil
+    for _, h in pairs(heroes) do
+        if h:GetTeam() ~= bot:GetTeam() and h:IsAlive() and h:HasModifier(MOD_TARGET) then
+            carrier = h
+        end
+    end
+    assert(carrier ~= nil, 'the ring frame must carry a hungered enemy')
+    assert(X.axe_HasHungerAlternative(carrier, list) == true, 'without fExtra: alternative')
+    assert(X.axe_HasHungerAlternative(carrier, list, function() return false end) == false,
+        'a refusing fExtra must remove every alternative')
+    assert(X.axe_IsBattleHungerFresh(carrier, list, function() return false end) == true,
+        'and that must carry through to the lever itself')
+    -- And the named one is a real predicate over the frame, not a stub.
+    for _, h in ipairs(list) do
+        assert(X.axe_IsHungerHarassIdle(h) == (h:GetAttackTarget() == nil),
+            'X.axe_IsHungerHarassIdle must be exactly the lane loop`s conjunct')
+    end
+end
+
+tests['premise: an already-hungered bystander is not an alternative'] = function()
+    -- The one way this conjunct could be written and still be wrong: counting other
+    -- carriers as somewhere to spread to.  Built on the flee frame's real units.
+    local J, bot, heroes = rf.load(FIXTURE)
+    J.IsSoakCandidate = function(id) return id == CAND end
+    local X = rf.load_hero('axe')
+    local carrier, other = nil, nil
+    for _, h in pairs(heroes) do
+        if h:GetTeam() ~= bot:GetTeam() and h:IsAlive() then
+            if h:HasModifier(MOD_TARGET) then carrier = h elseif other == nil then other = h end
+        end
+    end
+    assert(carrier ~= nil and other ~= nil, 'the frame needs a carrier and a bystander')
+    assert(X.axe_HasHungerAlternative(carrier, { other }) == true,
+        'a fresh bystander IS an alternative (control for the case above)')
+    -- ONE labelled flip, and it is the only injected byte in this section: give the
+    -- bystander the debuff too.  The loader builds HasModifier off a name table
+    -- captured at load, so the flip goes on the spec rather than on that table.
+    local spec = rawget(other, '__spec')
+    local base = spec.HasModifier
+    spec.HasModifier = function(u, sName)
+        if sName == MOD_TARGET then return true end
+        return base(u, sName)
+    end
+    assert(other:HasModifier(MOD_TARGET) == true, 'the flip must be visible')
+    assert(other:HasModifier(MOD_SELF_TESTED) == false, 'and it must not answer everything')
+    assert(X.axe_HasHungerAlternative(carrier, { other }) == false,
+        'another carrier is not an alternative -- spreading onto him is the very '
+        .. 'refresh this lever is trying to avoid')
 end
 
 -- ---------------------------------------------------------------- section KV --
