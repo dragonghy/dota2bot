@@ -47,6 +47,23 @@ NOT observable, and this is a hard boundary rather than an omission:
     TP slot is 9+ and is excluded, and `resolveTP` returns (0,0) both for "no
     TP at all" and for "TP off cooldown".  So `not HasSufficientTp()` and
     `charges <= 2` cannot be evaluated either.
+    ⚠ CORRECTION (replay-check 2026-09-09, W58): the (0,0) sentence above is
+    the benign half of it.  `tp_cdlen` is ALSO non-zero for a hero who holds
+    NO scroll at all, so it is not a possession proxy in either direction and
+    a reader who reaches for it gets a confident wrong answer.  Frame
+    evidence: run `…_6d0c2a` / `20260908_212429_slot7` /
+    `npc_dota_hero_skeleton_king`, t=935.9…946.9 -- `tp_cdlen` is a constant
+    40.0 and `tp_cd` a constant 0.0 across all eleven frames, while his last
+    `item_tpscroll` cast was t=766.9 (176 s earlier), no purchase followed it,
+    and he buys one himself at t=947.1 (dying at t=947.2).  He was holding
+    nothing while the field read 40.  (`tp_cd` itself is fine: 166,156 of
+    902,496 snapshot rows in the W58 corpus are > 0, so it is not stuck.)
+    A second instrument fault sits next to it and is NOT resolved here: over
+    that same hero and game before t=942.9 the dump carries 6 `PURCHASE`
+    item_tpscroll events against 8 `ITEM` (cast) events, i.e. charges
+    reconstructed from the two streams go NEGATIVE -- so at least one stream
+    is lossy.  Any TP-family (a)-verification that rebuilds charges from
+    buys-minus-casts inherits that silently.
 
 Every count this tool prints is therefore an UPPER BOUND on the true domain
 (the observable conjuncts only) and a LOWER BOUND on nothing.  It is labelled

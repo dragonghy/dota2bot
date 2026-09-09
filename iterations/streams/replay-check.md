@@ -13580,3 +13580,70 @@
   - **铁律 6**:`ARM_GATE_EXIT=0` / `GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`),
     **无 `RULE6_BYPASS`**;动态半未跑不声称。**本轮未改任何 `bots/` 文件。**
     token:`TOKENS total_in=9,801,076 out=63,290 turns=72`。
+
+- **2026-09-09T01:0xZ(`tpdeathbuy` 首次条件 (a) = WORKING;以及本组差点毁掉协同组 672 行)**:
+  ⭐⭐⭐ **头号读数**:`tpdeathbuy` 判 **WORKING**,`episodes=14`。唯一可归因窗口
+  (`t<=240` —— 常规备用 TP 块要 `currentTime > 4*60`,240 秒前它开不了火;
+  + 低血 + 3.1s 内被英雄伤害 + 远离己方泉水,排除 `mode_roam_generic` 的回城疗伤购买)里:
+  **armed 腿 14 次(dire 8 / radiant 6),baseline 腿 0 次(两层都是 0)**。
+  **baseline 的 0 是算术要求的不是运气** —— 这一块出厂写作 `botHP < 0.08 and botHP >= 1`,
+  `botHP` 是 0..1 分数,**两界互斥 ⇒ 出厂即死代码**,armed 才把游离下界去掉
+  (既有工具的源码腿逐字打 `WIDENING -- shipped set is EMPTY`)。
+  帧锚(前几枚):`58743c/…_slot6` viper t=40.0 hp=4.9% L1 dF=11173 dmg←pudge 0.10s;
+  `58743c/…_slot8` slardar t=102.0 hp=3.5%;`0c8bbd/…_slot7` drow_ranger t=187.0 hp=1.9%;
+  `58743c/…_slot8` zuus t=226.0 hp=2.6%。
+  **每个计数都是真实域的上界**(金币带 / `not HasSufficientTp()` / `charges<=2`
+  三个合取项在 dump 里不可评估,只会减少真实触发)。
+  - ⛔⛔ **本轮最该被读的不是那个读数**:我按 `<id>_domain.py` 惯例给 `tpdeathbuy`
+    **从零写了一个工具并 `Write` 落盘**,而**协同组三周前(`3b735978`)已经写过同名同题的 672 行**,
+    覆盖发生了。发现它的**不是我的记忆,是 `git status` 打出 `M` 而不是 `A`**。
+    已 `git checkout HEAD --` 完整还原,我的版本不入库。
+    **命名惯例本身就是这个坑的形状**:`<id>_domain.py` 是全队约定,于是
+    「我要为 id X 写工具」和「X 的工具已存在」**必然重名**,而 `Write` 对已存在文件
+    **不报警只覆盖**。⇒ **动手前先 `ls tools/batch_test/behavioral/ | grep <id>`。**
+    代价核算:既有工具**比我的好**(27 例自检 vs 我 6 例;`t<=240` 的归因窗口是纯结构的,
+    比我的「level<18 + 前 120s 无 TP 施法」干净;它文件头早就写着 slots 9+ 被排除)——
+    我这一轮**重新发现了它文件头里已经写好的东西**,深查因此只覆盖 1 个 id,
+    **低于章程 6 局下限,如实登记**。
+  - ⭐ **不是全白费:两条真正新的量具事实**,已作为**更正**写进那份既有工具的文件头
+    (本轮唯一的代码改动,`bots/` 一个字没动):
+    (1) ⛔ **`tp_cdlen` 对「手上一张卷轴都没有」的英雄读 40.0** —— 原文件头写
+    `resolveTP` 对「没有 TP」和「不在冷却」都返回 `(0,0)`,**那是良性的一半**。
+    反例逐帧:`6d0c2a/20260908_212429_slot7` skeleton_king,`t=935.9…946.9`
+    **十一帧 `tp_cdlen` 恒 40.0 / `tp_cd` 恒 0.0**,最后一次施法 t=766.9(176s 前)、
+    其后无购买,而他 **t=947.1 自己买了一张**(947.2 死亡)。
+    ⇒ **它在任何方向上都不是持有代理**,伸手去拿的人会拿到**自信的错误答案**
+    (本轮我就是那个人,一度把它当「单向可靠」写进自己的工具)。
+    `tp_cd` 本身没坏:902,496 行里 166,156 行 >0。
+    (2) ⚠️ **`PURCHASE` 与 `ITEM`(施法)两流对不上账**:同局同英雄 t<942.9
+    购买 6 次 / 施法 8 次 ⇒ 由两流重建的充能**变负**,而负充能不会有任何东西举手。
+    **任何用「买减用」重建充能的 TP 家族 (a) 核验都静默继承。** 已开 [harness] issue。
+    **这两条不否决上面的读数**:它靠 `t<=240` 的结构窗口,不依赖持有量。
+  - ⭐ **42 个 armed id 里 26 个的条件 (a) 是空的**(口径:`VERIFY id=` 扫**全部 933 份报告**、
+    五个目录,不只本组):**20 个从未出现过任何 `VERIFY` 行** —— `tpcommit, lf_rescue,
+    ownhalf, overchase, cmrguard, blinkflee, liondrainstop, pullcamp, fieldbuy, pulllane,
+    pulldrag, tpgap, campsel, tbearly, campfarm, abilanc, pullthink, aimguard, campvoid,
+    roamidle`;另 **6 个只有 `episodes=0`** —— `odaoe, stayfield, stayfield2, rotscope,
+    slotdust, arbheart`。「条件 (a) 是零 promote 的唯一堵点」这句话**现在有分母:26/42**。
+    这是本组的取货单,不开 issue。
+  - ```
+    VERIFY id=tpdeathbuy verdict=WORKING episodes=14
+    ```
+  - **覆盖**:宽扫 **38/38**(56 个 `.dem`,18 个暖场跳过,**0 不可解析**);
+    ⚠️ **语料缺一粒种子整只** —— 9418(`…_0bed7a`)11.5 分钟被抢占,S3 上**零 `.dem`**,
+    38 局是**存活三台的全量,不是 W58 的全量**。深查 **1 个 id**(14 枚唯一可归因帧
+    + 一份口径不同的独立复算 11 枚,两者帧集逐帧重合)。
+  - **自检跑满**:`SELFCHECK_EXIT=3`,10 条腿,FINDINGS = cadence / owed-executions;
+    `UNCERTIFIABLE = trunk-red(python)` ⇒ **python 那一侧本轮没人看过**;
+    fast Lua 子集 86 个检测器 0 failures;锚点 6/6;`FROZEN none`;5 个 promote 原子全 GATED。
+    ⛔ **证据纪律 3 第六十一次踩,又是当轮第一条命令**(脚本自拒 exit 2,它自己数着「第 5 次」)。
+    既有 `tpdeathbuy_domain.py`:`ORIG_SC_EXIT=0` `27 PASS / 0 FAIL`,语料跑 `ORIG_RUN_EXIT=0`。
+  - **限度**:14 枚是「买了 TP」这个投影,不是逐帧看见 `PurchaseItem` 执行;
+    金币带 / `HasSufficientTp` / 充能三项 dump 里不可评估 ⇒ 计数是**域的上界**;
+    `cd3359`/`40e63a` 补扫与 transit 钉帧(`0eb22d/20260908_094909_slot6` t=1191.5)**连欠三轮**。
+  - **下一轮第一件事**:(1) 从上面 20 个空白 id 里挑**已有 domain 工具**的两个
+    (`campsel_domain.py` / `campvoid_escape.py` 都在库里)—— **先 `ls | grep`,不要再重写一遍**;
+    (2) 补扫 `cd3359`/`40e63a` + transit 钉帧(**欠三轮**);(3) W59 若已发波,
+    先跑 `wave_throttle.py` 读解锁行再收。
+  - **本轮的评论/issue**:新开 **[harness]**(TP 持有量在 dump 里无可靠投影 + 两流对不上账)。
+  - 完整报告:`iterations/reports/replay-check/20260909T010204Z.md`
