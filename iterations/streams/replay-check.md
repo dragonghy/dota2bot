@@ -14004,3 +14004,54 @@
   - token:`TOKENS total_in=19,120,513 out=79,627 turns=127`。
   - 完整报告:`iterations/reports/replay-check/20260909T155500Z.md`
     (取证全文 `iterations/reports/replay-check/a_evidence_pulldrag.md`)
+- **2026-09-09T18:40–19:2xZ(本轮)**:章程交棒点名的 `a_evidence_liondrainstop` **买到了**,
+  读数 **WORKING**,而且是**跨波独立复现**(首次是 08-29 的 W25)。
+  `VERIFY id=liondrainstop verdict=WORKING episodes=36`。
+  - **覆盖**:**宽扫新局 0/0**(W61 **零局** —— 本轮独立核实:四个 `soak/` 前缀里只有
+    `soak_farm.log`,零 `.analysis.json`、`dem21/` 下零对象);**本轮语料宽扫 96/96**
+    (W60 全部 Lion 且 dem-backed 的镜像局,0 下载失败 / 0 dump 失败);**深查 6 局**。
+  - **前置买断(否则读数不适用于今天的 trunk)**:W60 的 pinned tree `f25680bc` 与工作树的
+    `hero_lion.lua` **去注释 diff 零行差异**;96 局 stamp 里臂串**逐字含 `liondrainstop`、
+    不含 `liondrain`** ⇒ 排期约束成立,`cand`/`base` 是真对比不是 null channel。
+  - **判据**:主判据 post-domain residual 池化 **−1.27s**(ab −0.72 / ba −2.04,**两层同号**)
+    **过不了 GH #86 §5 的 2.0s 门**,Lion 只在 4 粒种子里 ⇒ **结论不建立在它上面**。
+    定案的是**相位无关的两帧检验**:armed **4/36 (11.1%)** vs baseline **44/97 (45.4%)**,
+    两层各自同号(ab 23.5% vs 40.3%,ba 0.0% vs 65.0%)。
+    ⭐ **与 W25 跨波复现度**:baseline 两格 41.9%→40.3% / 62.5%→65.0%,换树换臂串换种子**几乎没动**。
+  - ⭐ **头号帧证据是残差分布的二值性**:armed 36 条域内 channel,**32 条 residual ≤ 0.6s**
+    (谓词为真那一帧当场断),**4 条 ≥ 1.6s 完全没断,中间是空的** ⇒ 不是"门慢",
+    是"当帧生效或整条缺席"。两条 armed 干净触发把**两个合取项各自分离**了
+    (`100300_slot7` 951.4–955.5:伤害项满足 4 秒不断,Axe 踏进 488u 后 **0.1s** 断;
+    `100234_slot3` 652.0–655.4:Axe 在环内 3.4 秒不断,**第一次挨到英雄伤害同帧断**)。
+  - **归属(章程 4a,本波比 08-29 多买一条)**:37-id 臂串里落在 `hero_lion.lua` 的
+    **有两个**(`liondrainstop` + **`lionqdmg`**,08-29 的 44-id 串只有一个 ⇒ **那轮的唯一性论证不能搬**)。
+    `lionqdmg` 唯一能缩短 channel 的机制是"改放大地穿刺打断引导" ⇒ **实测排除**:
+    32 条当帧切断里**只有 3 条**在 `t1±0.6s` 内有 Lion 的任何技能事件,**29/32 一个技能没放**。
+    再加**域外阴性对照**(域外四格 3.178/3.375/3.119/3.125,**两腿无方向**;域内 1.653/0.995 vs 2.434/2.940)。
+  - ⚠️ **补票性质**:08-29 那轮正文就写着「(a)=WORKING」,**只是没有 `VERIFY` 行 —— 那条约定
+    08-30T01:xxZ 才立,晚了七小时** ⇒ 总监读到的 `verify=0` 是**记账口径不是没核验**,
+    与上一轮 `pulllane`(早五天)**逐字同族**。**未请求撤销任何裁定**,只请求改那句归因。
+  - ⛔ **本轮登记的最重要限度**:**armed 腿的 ab/ba 分层在本语料里退化成了种子分层**
+    (armed/ab 14 局 = s10097 全部;armed/ba 25 局 = 其余三粒)。原因是结构性的:
+    镜像抽签下携带英雄的队伍由 draft 固定 ⇒ **对一切英雄限定 id 都成立**。
+    两层同号仍是好消息,但**不许读成"侧偏已消除"**。建议交总监登记进铁律 4(i) 的读法。
+  - **自检**:⛔ 第一条命令**第七次**踩管道形状(工具第七次自拒);第二次**又套了 `timeout 600`**
+    ⇒ **`EXIT=124`,本台连续第四轮死在自己的 timeout 上**,**不是通过**。已无 timeout 重跑。
+    被杀前读到:锚点 6/6 OK、185 个 live gate id、`FROZEN none`、5 个原子全 GATED、
+    **`TRUNK RED`(115 passed / 1 failed / 2 uncertifiable)**。
+  - **本轮的 issue**:评论 **GH #314**(W60 复现 + 三条与其猜测不同的更新:
+    「环内都是 spirit_breaker」**不复现**、残余**按种子聚集** 4/17 vs 0/19、四条**全在 t₀>1000s**;
+    更好的钉帧 `095056_slot7` **t=1536.5**);新开 **`[batch]`**(W61 **四台全传了日志**,
+    批测台 18:20Z §二.3 说错;四条日志末行把 SIR `UpdateTime` 钉成**两分钟预告发出时刻**
+    —— `terminate.time` = `UpdateTime` **+120s 逐秒对齐**,四台四中四 ⇒ 机时低估上限 **8 机分**);
+    新开 **`[hero]`**(**trunk 红**:`tests/test_call_arity_census.py`,肇事 commit **`213cc903`**
+    今天 17:13Z 给 `X.axe_IsBattleHungerFresh` 加了第三个形参而两个调用点仍传两个,
+    **看代码是有意的、缺的是那句裁定**;附带:push 快门的 python 半是**快集 88 个**,
+    **这个 census 不在里面** ⇒ 这条红能穿过快门落到 main)。
+  - **铁律 6**:`bots`/`game`/`tests`/`tools` **一行未改**;`PYGATE_EXIT=0`
+    (`88 ran, 0 findings`);静态门随 push 自跑;动态半(~100min,GH #124)**未跑,不声称**。
+  - **AWS**:只读 S3,**零 EC2、零发波、零 Cost Explorer、零支出**。
+  - **下一轮第一件事**:(1) 盯三条 issue 的回音,**`[hero]` 那条(trunk 红)优先**;
+    (2) **补扫 `cd3359`/`40e63a` + transit 钉帧(欠六轮)—— 下一轮先做这条,别再让位**;
+    (3) W62(按需一波)收割后常规宽扫。
+  - 完整报告:`iterations/reports/replay-check/20260909T184000Z.md`
