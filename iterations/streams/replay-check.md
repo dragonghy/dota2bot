@@ -13944,3 +13944,51 @@
     (3) `a_evidence_liondrainstop` 第三(⚠️ 判据 08-21 已改,**别用旧的 span≥2.0s**)。
   - token:`TOKENS total_in=19,218,613 out=60,169 turns=116`。
   - 完整报告:`iterations/reports/replay-check/20260909T131500Z.md`
+- **2026-09-09T15:3x-16:0xZ(W60 宽扫 96/96 + `pulldrag` 条件 (a))**:
+  批测台 15:13Z 刚发 W61,**尚无结果** ⇒ 按步骤 2 补最缺核验的 id,
+  即上一轮点名的 `a_evidence_pulldrag`。宽扫 **96/96 局、unparseable 0**
+  (容器全新,重跑是为了拿 dump,**不是新增覆盖** —— 而正是这次重跑撞出了下面那条)。
+  - `VERIFY id=pulldrag verdict=INDETERMINATE episodes=159`
+  - ⭐⭐ **头号产出是结构事实,零 AWS 可查,也不会靠加局数消失:这一波没有
+    `pulldrag` 的 shipped 腿。** 调用点 `mode_roam_generic.lua:454` 整个长在
+    `:383 if bot.roamCampPull ~= nil` 里,而 `roamCampPull` 的唯一来源
+    `J.ShouldPullNeutralCamp` 第一行就是 `pullcamp` 的门 ⇒ baseline 腿上拖拽分支
+    **一次也不执行**。两条腿是「lane 落点的拖拽」与「没有拖拽」,而识别本 id 需要的是
+    **「fountain 落点的拖拽」——它在语料里一次也没出现过**。
+    ⚠️ **与 `pullcad` 陷阱不是一回事**:本 id 的**门**是独立的(故意不与 `pullcamp` 合取,
+    理由逐字在 `test_set.md:320`),`check_armed_wiring.py` 说 WIRED 是**对的**;
+    出事的是**运行时的域**。⇒ **「门没有合取」不蕴含「域没有嵌套」;调用点长在谁的
+    分支里,谁就是它事实上的前置。**
+  - **逐帧在先,而阴性对照把承重帧拦下了**:armed 那段(`…7a68aa/20260909_100909_slot3`
+    lion t=278.4 POKE 后)**7 个外走步全部 `cos_lane >= 0.95`、`|cos_home| <= 0.26`**,
+    并每次折返回营地再戳 —— 最像"在生效"的一段;但 **baseline 腿**同一 lion、同族营地
+    (`…095701_slot8`,该局 cand=radiant,分支**不可能执行**)戳完之后 `cos_lane` 一样是
+    **+0.96/+0.97**。⇒ ⭐ **「朝线走」不是杠杆的签名,是辅助戳完野回线的默认动作。**
+  - **聚合每一种切法两层都反号**(ab armed lane_win 39% / baseline **82%**;
+    ba armed **76%** / baseline 44%)⇒ 铁律 4(i-b) **噪声,不进结论**;
+    且反号**有结构解释**:子域由四个**物理营地**定义,营地属于某一侧。
+  - ⚠️ **两条仪器缺陷(影响面大于本 id)**:(1) **dumper 输出不确定** —— 同一 `.dem`
+    同一二进制两遍出**三份不同 md5** 的 timeline,`snapshots/creeps/buildings/wards`
+    **same_multiset 但 same_order=False**(Go map 形状),`detect.py` 对顺序敏感 ⇒
+    同一局 findings **111/114/116**;同一份 96 局、代码零 diff,**宽扫表跨轮 13 个里 11 个
+    对不上**(最大 +2.9%)⇒ **宽扫表不是可复现读数**(铁律 4(i-b) 恰好一直挡着它)。
+    本组读数**不受影响且是查过的**:帧索引 `frames[hero][t]` 字典、该局 **0 个重复
+    `(hero,idx,t)` 键** ⇒ 乱序是恒等变换。(2) **`neutrals_at()` 把「不知道」洗成
+    「没有跟」** —— `CREEP_STALE=1.6` 而 creeps **每 3.00s 才采一次**(554/554 实测)
+    ⇒ **47% 的帧结构上答不了**,而消费点 `nb = g.neutrals_at(t2) or []` 把 `None` 与 `[]`
+    合流,单边把 `shipped_drag` 压成 False。与 §GF.3 同族**第三次**出现,
+    而这次**拒答的实现已经写好了**,是消费点抹掉的。
+  - **自检**:⛔ 第一条命令**第六次**踩管道形状(工具第六次自拒);第二次**又带了
+    `timeout 400`** ⇒ **本台连续第三轮死在自己的 timeout 上**(GH #514 形状)。
+    读到的腿:锚点 6/6 OK、185 个 live gate id、`FROZEN none`、5 个原子全 GATED、
+    python 腿 **117 passed / 0 failed / 1 uncertifiable**(仍是 `test_selfcheck_lua_leg.py`
+    的 120s 预算,**与上一轮逐字同因**:本台 sweep 满载容器)。**不是红,也不是通过。**
+  - **铁律 6**:`bots`/`game`/`tests`/`tools` **一行未改**;
+    `claim_precheck.sh` **exit 0**(`local commits not on origin/main: 0`,refused 0);
+    静态门随 push 自跑,**无 `RULE6_BYPASS`**;动态半(~100min,GH #124)**未跑,不声称**。
+  - **下一轮第一件事**:(1) 盯本轮三条 issue 的回音 —— **dumper 顺序那条修好之后,
+    宽扫表才第一次成为可复现读数**;(2) 取 `a_evidence_liondrainstop`
+    (⚠️ 判据 08-21 已改,**别用旧的 span >= 2.0s**);(3) W61 收割后常规宽扫,
+    但它与 W60 **成员串逐字相同** ⇒ **不会自动带来 `pulldrag` 的隔离腿**。
+  - 完整报告:`iterations/reports/replay-check/20260909T155500Z.md`
+    (取证全文 `iterations/reports/replay-check/a_evidence_pulldrag.md`)
