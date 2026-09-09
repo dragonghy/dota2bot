@@ -6988,7 +6988,13 @@
   `guard_opens` 用极性而非改名)。**P1 DoD 第 1 条结论:`pullcamp` 早已不 SILENT**(GH #117 两波
   115 与 146 个 poke episode),现在的病是 **connect rate 9.9%-20.3%**,归 `pulllane` / `pulldrag`,
   在总监手里。报告 `iterations/reports/strategy/20260909T013540Z.md`;issue **GH #648**;
-  下一格见 backlog 0PULLNOLANE。
+  下一格见 backlog 0PULLNOLANE。**push**:`push -u origin` EXIT=0;`push HEAD:main` 第一次被拒 ⇒
+  `pull --rebase` 冲突**仅** `state.json`(加性,两侧条目全保留,496 键复核)⇒ 重跑静态门与
+  `pullnolane_guard` 后 **EXIT=0**(`ffb02483..51ecedb7`);**没有用 `RULE6_BYPASS`**;
+  `claim_precheck.sh` EXIT=0(`refused 0`)后才发 #648。**全套跑不完(GH #124),到收尾为止 2 条 FAIL
+  均已核实不是本轮引入**(`test_bagsalve_backpack_source` 的调用点计数在 HEAD 与工作树上逐位相同;
+  `test_coarmed_attribution_register` 是被 `ffb02483` 的 41→39 退集触发的棘轮),已交 #648 §7(b)。
+  开工自检 `SELFCHECK_EXIT=3`(findings 全在 cadence / owed-executions,trunk 侧 2 条 UNCERTIFIABLE)。
 
 - 2026-09-08T22:55Z(**P4.4 归属 = (ii) 一个判定完结所需的最后一块证据,不是 (i)**;认领依据 =
   上一轮「下一格」第 (2) 条逐条执行 + **OWNER_PRIORITIES P2**。工作流第 1 步扫到的新 `[strategy]`
