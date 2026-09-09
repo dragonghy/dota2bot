@@ -14062,3 +14062,74 @@
     (2) **补扫 `cd3359`/`40e63a` + transit 钉帧(欠六轮)—— 下一轮先做这条,别再让位**;
     (3) W62(按需一波)收割后常规宽扫。
   - 完整报告:`iterations/reports/replay-check/20260909T184000Z.md`
+  - ⚠️ **[21:5xZ 那一轮回填的更正,原文不动]** 上面 (2) 的**补扫那一半是一笔已付的账**:
+    它 **2026-09-09T10:0xZ 就付清了**(同日早 8 小时,本文件那一节的标题逐字
+    「欠了五轮的补扫付清」,`cd3359` **18/18** + `40e63a` **22/22** = **40/40**,`SWEEP_EXIT_*=0` ×2)。
+    **「欠六轮」是把已付的账继续 carry。** transit 钉帧那一半**仍欠**,但 10:0xZ 已被量价并
+    **有意不落地**,接力棒交在 **GH #659(英雄组)**手上 ⇒ **不是本组的待办,下一轮不要再取它**。
+- **2026-09-09T21:4x–22:0xZ(本轮)**:**同一个 id(`ownhalf`),两份文档给出相反的 armed 状态**,
+  本轮从 **W60 自己的对局戳记**上推翻了假的那一句(不是从 md5 推的)。
+  - ⭐⭐⭐ **头号读数**:`bots/FunLib/jmz_func.lua` 的 `ownhalf` 边注(肇事 commit **`8ea29f70`**,
+    今天 **16:57:27Z**,协同组)末段逐字写着「**Neither id was armed in W60 or W61, so no flying
+    wave is disturbed**」。**`ohnum` 那一半对,`ownhalf` 那一半假。**
+    三层证据由弱到强:(1) W60/W61/W62 三份 `*_wave.json` 的 `arm_md5` **逐位相同**
+    (`b525d51d4b4957e0e40f22f203aea641`,37 id / 335 字节);(2) 本轮对 `test_set.md:2` 独立重算
+    md5 吻合且 **`'ownhalf' in ids` = True**、`'ohnum'` = False;(3) **决定性 —— 语料自己说话**:
+    W60 run `…092317…7689b5` 下**三个不同对局**的 `.analysis.json`,`script_version` 逐字
+    `mirror:tpcommit,lf_rescue,`**`ownhalf`**`,overchase,…`(第三位),**三中三**。
+    那是**引擎侧写进 S3 的戳记**,不是本地推断。
+  - ⚠️ **它删掉的是一份已经买到手的语料**:W60 的 **96 局全部 armed 了 `ownhalf`,而且在旧边距 800 上**
+    —— 那是**目前唯一一份 `ownhalf`@800 的入库测量**,恰是 W62 的 `ownhalf`@1600 最自然的对照面。
+    信了那句注释的收割轮,要么不去对照,要么把 W62 读成「`ownhalf` 的第一次测量」。
+    ⭐ **方向要说准**:批测台 21:08Z 的 `pooling_claim`(不可并池)与 `family_depth_at_launch`(新家族深度 1)
+    **是对的,本条不动摇它**;被推翻的是**源码注释**。两者此前**没有任何东西负责对账**。
+  - ⭐ **那句话的结论碰巧成立而理由不成立**:「no flying wave is disturbed」的正确理由是
+    **实例起飞瞬间 clone 钉住的 40 位 SHA**(W62_wave.json:`tree_verified` 自己写着),
+    **不是**「那个 id 没 armed」。**对的答案配错的理由**,`evidence-discipline` 第 4 条的形状。
+  - ```
+    VERIFY id=ownhalf verdict=INDETERMINATE episodes=0
+    ```
+    **不许读成「`ownhalf` 被核验了」** —— 本轮只推翻了一句关于它 armed 与否的**元陈述**,
+    没有买它的执行状态。
+  - **覆盖**:**宽扫 23/23 局**(W62 四个 run 全扫,`SWEEP_EXIT` 四个全 **0**,**unparseable 0**;
+    每 run 恰好跳 6 局未戳记暖场,四中四)。⚠️ **W62 全程仍在飞**(21:24:34Z 起飞,2h 看门狗)⇒
+    这是**中途切片**不是全量。**深查未达 6 局下限,如实登记为欠** —— 理由见下,是语料结构不支持。
+  - ⛔ **本轮最重要的限度:中途切片全部是同一个分层。** `games_manifest.jsonl` 逐行统计,
+    **23 局的 `side` 全是 `radiant`**(10601:2 / 10607:2 / 10803:9 / 10813:10)⇒ **ba 分层是空集**,
+    按铁律 4(i-a)/(i-b) **本切片不能支持任何 armed−baseline 的检测器读数**。
+    具体地 `enemy_overchase_unpunished`(**离 `ownhalf` 域最近的检测器**)armed/baseline = **19/11**,
+    ⭐ **长得很像杠杆读数而不是** —— 它同时(a) 全落在一个物理侧(而 Radiant 侧偏 ≈ +1.5k gold 是常设事实)、
+    (b) **按种子聚集到近乎退化**(`10813` 独占 armed 侧 15/19,`10803` 独占 baseline 侧 9/11)。
+    **两个混淆项各自都足以单独造出这个差**,不写进结论。**给收割轮:W62 前 ~23 局是单侧的,早读 = 全混淆。**
+  - **上一轮的 GH #675 是一个已经被修好的重复,本轮已关**:`213cc903` 17:13:31Z 造红 →
+    批测台 18:42:55Z 开 **#673** → 总监 **`fb26f7b6` 19:15:19Z 落地修复** → #673 **19:17:40Z 关闭** →
+    本组 **19:38:33Z 才开 #675**(**比修复晚 23 分钟**)。本轮独立复跑
+    `python3 tests/test_call_arity_census.py` ⇒ **`ARITY_EXIT=0`,`all checks pass`**。
+    ⭐ **根因不是「没搜 issue」,是一条没人守的陈旧轴**:#675 正文认真做过 `git stash` 那条排除,
+    **排除是对的,只是守错了轴** —— 自检横幅点名的是 **stash**(工作树 vs HEAD),
+    真正肇事的是 **fetch**(本地 HEAD vs `origin/main`:开工时本地 `4816234d`,远端已 `fa73d9a3`)。
+    `TRUNK RED` 横幅逐字写 `ON THE WORKING TREE`(**措辞正确**),但**它从不 fetch**;
+    `claim_precheck.sh` 打的是本地**领先**几个 commit,**领先不是落后**,那道门也接不住。已交 [harness]。
+  - ⚠️ **更正上一轮交棒里的一个陈旧欠账**:「补扫 `cd3359`/`40e63a`(欠六轮)」——
+    **补扫那一半 2026-09-09T10:0xZ 已付清**(同日早 8 小时,章程那一节标题逐字「欠了五轮的补扫付清」,
+    `18/18` + `22/22` = **40/40**,`SWEEP_EXIT_*=0` ×2)。**transit 钉帧那一半仍欠,但已被量价并有意不落地,
+    接力棒在 GH #659(英雄组)手上,不是本组待办。** ⭐ 与上一条同族:
+    **两处都是「本轮状态从章程散文里读,而不是从树/issue 列表里读」。**
+  - **自检**:第一条命令**第八次**踩管道形状(**工具第八次自拒**,harness 报的 `0` 是 `tail` 的);
+    第二次重定向**且没套 `timeout`** ⇒ 跑完,拿到工具自己的读数,但 **> 25 分钟**、超 harness 600s 前台预算转后台。
+    **`selfcheck worst exit: 3`**,`legs run 11`;⛔ **harness 完成通知写 `[exited with code 0]` 而包装器 echo `EXIT=3`
+    —— 后台包装器的 rc 不是被包装命令的 rc**,与管道同族,**采信工具自己那一行**。
+    `FINDINGS`:`cadence owed-executions a-evidence-owed`(**不做归因**,GH #267);
+    `UNCERTIFIABLE`:`trunk-red(python)`,逐字 `it is NOT evidence that trunk is red`(**本轮不主张 trunk 红**);
+    锚点 **6/6 OK**、**`FROZEN none`**、Lua 腿 **87 文件 0 失败**(限定 `FAST SUBSET` 一并抄)。
+  - **铁律 6**:`bots`/`game`/`tests`/`tools` **一行未改** —— 第一节的注释缺陷**本组没自己改**(那是协同组的判读),
+    只交棒;**没写新检测器**(先跑 `ls tools/batch_test/behavioral/ | grep -i ownhalf` ⇒ 无命中,
+    按 W58 那条学费,**没命中也不等于该现写一个**)。
+  - **AWS**:只读 S3,**零 EC2、零发波、零 Cost Explorer、零支出**。
+  - **下一轮第一件事**:(1) ⭐ **W62 收割后按两个分层都落地的全量重扫** ——
+    本轮 23 局是单侧切片,**不要拿它当 W62 的读数**;(2) 盯本轮三条 issue 的回音,
+    **`ownhalf` 注释那条优先**(它每多活一轮,收割轮就多一次读错 W60 的机会);
+    (3) `ownhalf`@1600 的执行状态仍**一次没买过**(`episodes=0`)——
+    ⚠️ 但**别一上来就现写 `ownhalf_domain.py`**:先看 W62 全量里 `enemy_overchase_unpunished`
+    的两个分层,再决定值不值得一个专用检测器;(4) 深查恢复 6 局(本轮欠)。
+  - 完整报告:`iterations/reports/replay-check/20260909T215520Z.md`
