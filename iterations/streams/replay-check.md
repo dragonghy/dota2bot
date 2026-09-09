@@ -13889,3 +13889,58 @@
     静态门随 push 自跑;**无 `RULE6_BYPASS`**;**动态半(~100min,GH #124)未跑,不声称。**
     token:`TOKENS total_in=11,462,840 out=57,128 turns=80`。
   - 完整报告:`iterations/reports/replay-check/20260909T100201Z.md`
+
+- **2026-09-09T13:1xZ(W60 96/96 宽扫;`tpgap` 的 (a) 买到了一个**关于仪器**的读数)**:
+  ⭐⭐ **头号读数不是杠杆是量具**:`tpgap` 子域里 **11 枚 armed 按下逐枚定案**,
+  **0 EXCUSED / 1 SHOULD-HAVE-REFUSED / 10 UNSETTLED** —— 那 10 枚全部倒在
+  **恰好两个 dump 里没有的字段**上(**4 枚移速** `GetCurrentMovementSpeed()`、
+  **6 枚能见度** `GetNearbyHeroes(..., true, ...)` 的可见性过滤)。
+  **`0 EXCUSED` 要读清楚:不是「没有一枚该被豁免」,是这台仪器一枚都豁免不了。**
+  08-26 本组记过「拒绝是缺席,离线看不见」;本轮补硬的一句是 **放行也定不了案** ——
+  除非那一帧同时满足「采样步长 ≥285」**且**「见证命中」,**96 局只出现 1 次**,
+  而那一次就是反例。⇒ 这条 (a) 不是「再多看几局」能买到的,是**一笔小而准的仪器采购**。
+  - ```
+    VERIFY id=tpgap verdict=INDETERMINATE episodes=26
+    ```
+    (26 = 子域本身:armed 11 + baseline 15,96 局腿。全文
+    `iterations/reports/replay-check/a_evidence_tpgap.md` —— **discharge 了今天 10:xxZ
+    落到本组头上的 `owed_executions:a_evidence_tpgap`**。)
+  - ⭐ **承重帧(手查,不是照抄工具)**:`20260909_093852_slot7` seed 10097
+    `queenofpain` **t=549.6**,zuus **563 u**(gap 带唯一敌人),血量 **371**,
+    zuus 连招 3 s 内**实打 396**(arc 119 + static 11/7/7/5 + jump 17 + 平A 47 + bolt 183),
+    **t=551.3 死于通道第 1.7 秒**。三条 fall-through 全排除:563 > 350;
+    采样步长 **401/401/346 全 ≥285**(**观测反驳**,不是假设);无 stun/root/hex;
+    **能见度见证命中**。⇒ **armed 腿没拒**,唯一剩下的解释是引擎估计量自己读低了。
+    **08-26 `slardar t=1382.2` 之后第二枚反例。**
+  - **聚合按铁律 4 登记后不入结论**:子域 `d(share)` radiant **−0.0074** / dire **+0.0088**
+    ⇒ **两层反号**、计数类、侧偏未消除 ⇒ **(i-b) 噪声**;工具独立判 `REFUSE`。
+    全带 150 vs 198 两层同号下降,⛔ **不是 `tpgap` 的域**(37-id 捆绑,对照层自己不干净)
+    ⇒ **不记到它头上**。**反向哨兵没塌**:撤退按下 1011 vs 1154,存活率 **86.3% vs 85.2%**。
+    逐种子子域格子 **0–5**,密度 **0.11/局** ⇒ strategy-14 预登记的第二嫌疑「子域太稀」
+    **被量出来了**(预登记逐字禁止「那时放宽谓词」)。
+  - **可达性先验证再读数**:`git show f25680bc:…/test_set.md` 第 2 行 ⇒ `tpgap` 是 **16/37**,
+    串 **335 字节 / md5 `b525d51d…`** 与 `W60_wave.json:arm_md5` **逐位一致**
+    ⇒ 预登记第一嫌疑「arm 串漏了它」**排除**。
+  - **覆盖**:宽扫 **96/96**(4 run × 32 `.dem`,24 暖场跳过,**0 不可解析**,`SWEEP_EXIT=0` ×4);
+    深查 **1 个 id / 11 枚帧逐枚定案 + 3 枚手查**。
+    ⚠️ **96 是录像口径的全量,不是 W60 的全量**(计分 221 局 ⇒ **43.4%**),两个口径都登记。
+  - **零新代码**:动手前按 W58 教训先 `ls tools/batch_test/behavioral/ | grep tpgap` ⇒
+    `tpgap_domain.py` 08-26 就在 trunk(本组自己写的),本轮只跑它
+    (`--selfcheck` **50 PASS / 0 FAIL**)。
+  - **自检**:⛔ 第一条命令**第五次**踩管道形状(工具自拒 exit 2);第二次改重定向
+    **但又带了 `timeout 600`** ⇒ **`EXIT=144` 是本台自己砍的**,**GH #514 形状连续第二轮复发**;
+    第三次去掉 timeout 才拿到工具自己的读数。python 腿 **117 passed / 0 failed /
+    1 uncertifiable**,那 1 条是 `test_selfcheck_lua_leg.py` 没跑完 120s 预算
+    (`87 file(s) in 120.1s`)⇒ **归因是本台自己**(四个 sweep 满载容器,工具逐字提示
+    `re-run on a quiet tree`),**不是 trunk 红,也不是通过**。
+  - **本轮的评论/issue**:**新开 `[harness]`** —— dumper snapshot 补 `move_speed` +
+    `visible_to_team`;验收写死「同一份 W60 语料重跑,10 枚 UNSETTLED 全部落到
+    EXCUSED 或 SHOULD-HAVE-REFUSED」。⭐ **不是一条 id 的债**:`tp_channel_death.py` 全家
+    (`tpreach`/`tpcommit`/`tpdying`/`tpdead`)卡在同一堵墙上。**GH #159 追评**全文读数。
+  - **铁律 6**:本轮 **`bots`/`game`/`tests`/`tools` 一行未改**,改动只有两份报告与本节;
+    静态门随 push 自跑;**无 `RULE6_BYPASS`**;**动态半(~100min,GH #124)未跑,不声称。**
+  - **下一轮第一件事**:(1) 取 `a_evidence_pulldrag`(先读 `pulldrag_walk.py` 的 docstring);
+    (2) 盯那条 `[harness]` 的回音 —— 一旦落地,**同一份 W60 语料重跑就能一次性定案 10 枚**;
+    (3) `a_evidence_liondrainstop` 第三(⚠️ 判据 08-21 已改,**别用旧的 span≥2.0s**)。
+  - token:`TOKENS total_in=19,218,613 out=60,169 turns=116`。
+  - 完整报告:`iterations/reports/replay-check/20260909T131500Z.md`
