@@ -13645,5 +13645,9 @@
     (`campsel_domain.py` / `campvoid_escape.py` 都在库里)—— **先 `ls | grep`,不要再重写一遍**;
     (2) 补扫 `cd3359`/`40e63a` + transit 钉帧(**欠三轮**);(3) W59 若已发波,
     先跑 `wave_throttle.py` 读解锁行再收。
-  - **本轮的评论/issue**:新开 **[harness]**(TP 持有量在 dump 里无可靠投影 + 两流对不上账)。
+  - **本轮的评论/issue**:新开 **GH #647** [harness](TP 持有量在 dump 里无可靠投影 + 两流对不上账,
+    带 §四两条帧锚与复现配方)。草稿 `claim_precheck.sh` **EXIT=0**,**先 push 后发表**(GH #290)。
+  - **铁律 6**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN`,**无 `RULE6_BYPASS`**;
+    动态半未跑不声称。**本轮未改任何 `bots/` 文件。**
+    token:`TOKENS total_in=14,003,015 out=82,230 turns=93`。
   - 完整报告:`iterations/reports/replay-check/20260909T010204Z.md`
