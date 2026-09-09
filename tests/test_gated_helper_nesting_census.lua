@@ -648,6 +648,23 @@ local PINNED = {
     "l1trade | J.ShouldInitiateLaneKill | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                          -- P
     "l5combo | J.ShouldSupportComboKill | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                          -- P
     "l5trees | DoSupportLaningThink | J.IsLaneFixOn | lanefix,lf_ | bots/mode_laning_generic.lua",                                        -- W
+    -- [deepnum 20260909] (P), and the row carries a second fact the census
+    -- itself cannot see. Un-armed, J.IsLaneFrontTooDeepToHold returns the
+    -- SHIPPED verdict -- the deep tier's `(1 + nAllies) <= nEnemies` on the
+    -- 1000u ally disc -- not a constant that freezes the caller's branch, so
+    -- arming 'l5trees' alone still measures 'l5trees'. Armed, 'deepnum' widens
+    -- the ally disc to the 1600 the enemy side already uses, exactly the way
+    -- 'depthnum' takes a deeper margin inside J.SafeToCommitFight.
+    -- ⭐ AND THE CONJUNCTION IS NOT THE ONLY PATH TO THIS HELPER. The census's
+    -- wide net finds this call because it sits in a function the 'l5trees'
+    -- block also lives in; the SAME helper is called a second time from the
+    -- laning Think body, which is reachable through `bCustomLastHit` -- an
+    -- ungated disjunct (an override laning module, or a pos-1 paired with a
+    -- human pos-5). So a wave arming 'deepnum' alone reaches it for real, and
+    -- the GH #606 shape ("single-arm zero is structurally impossible while
+    -- check_armed_wiring.py answers WIRED") does not apply here. That premise
+    -- is pinned where it can rot, in tests/test_deepnum_parity.lua section 6.
+    "l5trees | DoSupportLaningThink | J.IsLaneFrontTooDeepToHold | deepnum | bots/mode_laning_generic.lua",                               -- P
     "midguard | J.ShouldRetreatPastMidline | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                       -- P
     "midsupyield,midtp,suptp,tparrive | J.ShouldTpSupportTowerFight | J.CanEnemyInterruptTpChannel | tpreach | bots/FunLib/jmz_func.lua",  -- P
     "midsupyield,midtp,suptp,tparrive | J.ShouldTpSupportTowerFight | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",          -- P

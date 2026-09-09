@@ -110,6 +110,27 @@ G.HR_PARITY_R = hrp
 -- tests/mock/bot_api.lua's 150-unit GetAttackRange default.  It is an argument,
 -- so it is labelled as one; every other G row here is parsed from source.
 G.HR_UNIVERSAL_REACH_DECLARED = 900
+-- Mechanism 3 of the same mega-bundle: J.IsLaneFrontTooDeepToHold's own
+-- numbers, parsed in the order the source states them.  DN_ARMED_R is read out
+-- of the 'deepnum' block itself and never assumed to be 1600 -- the property
+-- the guard claims is that the deep tier's two counts use ONE ruler, so the
+-- census picks up the ruler the code actually chose and
+-- tests/test_deepnum_parity.lua asserts it equals DN_ENEMY_R.  A hardcoded
+-- 1600 here would keep agreeing with a guard that had stopped symmetrising.
+local dn = block(src, 'function J.IsLaneFrontTooDeepToHold( bot, vLoc )')
+G.DN = dn and 1 or 0
+G.DN_FLOOR = dn and tonumber(dn:match('nDepth <= (%d+) then return false end'))
+G.DN_ALLY_R = dn and tonumber(dn:match('GetNearbyHeroes%( bot, (%d+), false'))
+-- Anchored on the SHALLOW-TIER BODY, not on the first `nDepth <=` in the
+-- function: the floor test one screen above has the identical shape, and the
+-- first draft of this row silently read 400 as the tier boundary.  The two
+-- routes below then disagreed (4 vs 2) -- which is the whole point of running
+-- both, so it is recorded here rather than quietly repaired.
+G.DN_TIER = dn and tonumber(dn:match('nDepth <= (%d+) then%s*\n%s*return nAllies == 0'))
+G.DN_ENEMY_R = dn and tonumber(dn:match('GetEnemiesNearLoc%( vLoc, (%d+) %)'))
+local dnp = dn and dn:find("IsSoakCandidate( 'deepnum' )", 1, true)
+G.DN_ARMED_R = dnp
+    and tonumber(dn:sub(dnp):match('GetNearbyHeroes%( bot, (%d+), false'))
 
 local gk = {}
 for k in pairs(G) do gk[#gk + 1] = k end
@@ -175,7 +196,14 @@ for _, k in ipairs({ 'fixtures', 'live', 'lane', 'lane_core', 'lane_sup',
     -- later: `hp_opened_far` is the honest bad news about arming 'hrparity'
     -- alone, `hpb_*` is what the pair does together.
     'hp_opened_d_max_u',
-    'hpb_fire', 'hpb_back', 'hpb_nil', 'hpb_raised', 'hpb_flip_ends_nil' }) do
+    'hpb_fire', 'hpb_back', 'hpb_nil', 'hpb_raised', 'hpb_flip_ends_nil',
+    -- 'deepnum' / J.IsLaneFrontTooDeepToHold (mechanism 3), priced at
+    -- vLoc = bot:GetLocation().  Two routes to one number by design:
+    -- `dn_pred_flips` is arithmetic on the raw populations, `dn_closes` is what
+    -- the shipped function did when driven armed.
+    'dn_live', 'dn_lane', 'dn_noancient', 'dn_underfloor', 'dn_tier1',
+    'dn_tier2', 'dn_tier2_enemies', 'dn_disc_differs', 'dn_pred_flips',
+    'dn_shipped_true', 'dn_armed_true', 'dn_closes', 'dn_opens', 'dn_raised' }) do
     rawset(c, k, 0)
 end
 
@@ -654,6 +682,95 @@ for _, path in ipairs(fixture_files()) do
                             -- then declines to charge: the pair leaves the bot
                             -- standing in its lane on the shipped farm body.
                             bump('hpb_flip_ends_nil')
+                        end
+                    end
+
+                    -- ---- mechanism 3 of the SAME mega-bundle:
+                    -- J.IsLaneFrontTooDeepToHold, and the 'deepnum' guard on
+                    -- its deep tier.  Priced OUTSIDE the `bLane` block on
+                    -- purpose: unlike the two helpers above, this one carries
+                    -- no laning-phase conjunct of its own, so restricting the
+                    -- census to laning frames would price the CALLER's domain
+                    -- and print it under the helper's name.  `dn_lane` keeps
+                    -- the caller's slice visible without deciding it.
+                    --
+                    -- ⛔ PRICING CONVENTION, and it is a limit not a result.
+                    -- The helper is a function of (bot, vLoc) and the real
+                    -- vLoc is a lane-front location, which this corpus cannot
+                    -- produce: the loader REFUSES GetLaneFrontLocation (GH #61)
+                    -- and lane geometry is an open corpus request (GH #648 /
+                    -- #652).  So every row below is taken at
+                    -- vLoc = bot:GetLocation() -- the one spot the frame
+                    -- actually witnesses a hero standing on, and the same vLoc
+                    -- tests/test_replay_megabundle_laning.lua already drives.
+                    -- At that vLoc the two discs share a centre, so what these
+                    -- rows measure is exactly the RADIUS half of the defect
+                    -- (1000 vs 1600) and nothing about the centre half.  A
+                    -- reader who wants the centre priced needs the corpus
+                    -- request, not a bigger number here.
+                    local vHere = bot:GetLocation()
+                    local hOwnA = GetAncient(GetTeam())
+                    local hEnyA = GetAncient(GetOpposingTeam())
+                    bump('dn_live')
+                    if bLane then bump('dn_lane') end
+                    if hOwnA == nil or hEnyA == nil then
+                        bump('dn_noancient')
+                    else
+                        -- ARITHMETIC PATH: raw populations only, no gate, no
+                        -- call into the helper.  Everything here is positions
+                        -- and ancients, the two things this corpus answers
+                        -- without a stub.
+                        local nDepth = J.GetLocationToLocationDistance(vHere, hOwnA:GetLocation())
+                            - J.GetLocationToLocationDistance(vHere, hEnyA:GetLocation())
+                        if nDepth <= (G.DN_FLOOR or 400) then
+                            bump('dn_underfloor')
+                        elseif nDepth <= (G.DN_TIER or 1600) then
+                            bump('dn_tier1')
+                        else
+                            bump('dn_tier2')
+                            local function count_allies(r)
+                                local n = 0
+                                for _, a in pairs(J.GetNearbyHeroes(bot, r, false, BOT_MODE_NONE) or {}) do
+                                    if J.IsValidHero(a) then n = n + 1 end
+                                end
+                                return n
+                            end
+                            local nNear = count_allies(G.DN_ALLY_R or 1000)
+                            local nWide = count_allies(G.DN_ARMED_R or 1600)
+                            local nEn = #J.GetEnemiesNearLoc(vHere, G.DN_ENEMY_R or 1600)
+                            if nWide > nNear then bump('dn_disc_differs') end
+                            if nEn > 0 then bump('dn_tier2_enemies') end
+                            -- The arithmetic statement of the flip, computed
+                            -- from the populations rather than from the
+                            -- function: shipped says "too deep", the one-ruler
+                            -- comparison says "holdable".
+                            if (1 + nNear) <= nEn and (1 + nWide) > nEn then
+                                bump('dn_pred_flips')
+                                out:write(string.format('F %s %s dn_pred_flips\n',
+                                    short, u.name))
+                            end
+                        end
+
+                        -- DRIVE PATH: the shipped function twice, unarmed and
+                        -- with only 'deepnum' armed.  `dn_closes` must come out
+                        -- equal to `dn_pred_flips` -- two independent routes to
+                        -- one number, which is the only thing that can catch a
+                        -- guard that stopped keying on the parity test.
+                        armed = {}
+                        local okD1, d1 = pcall(J.IsLaneFrontTooDeepToHold, bot, vHere)
+                        armed = { deepnum = true }
+                        local okD2, d2 = pcall(J.IsLaneFrontTooDeepToHold, bot, vHere)
+                        armed = {}
+                        if not okD1 or not okD2 then
+                            bump('dn_raised')
+                        else
+                            if d1 then bump('dn_shipped_true') end
+                            if d2 then bump('dn_armed_true') end
+                            -- By construction the armed ally set is a superset,
+                            -- so only true -> false is reachable.  `dn_opens`
+                            -- is the FORBIDDEN direction and is asserted zero.
+                            if d1 and not d2 then bump('dn_closes') end
+                            if d2 and not d1 then bump('dn_opens') end
                         end
                     end
                 end

@@ -9815,8 +9815,17 @@ end
 --   * outnumbered at my position -> ('back', a 420u step toward home):
 --     make space instead of tanking the poke pocket,
 --   * else -> ('fire', the weakest harasser): return fire like native does.
--- Only reachable from the armed-only Think bodies, so shipped behavior is
--- unchanged. NO LONGER a gate-free helper: the 'fire' branch carries the
+-- Shipped behavior is unchanged -- but NOT, as this line said until
+-- 2026-09-09, because the Think bodies that call it are armed-only. They are
+-- not: their guard is `bCustomLastHit or bSupLastHit or bLaneFixSupport or
+-- bLaneFixCoreLH or bBodyBlock`, and bCustomLastHit is true with nothing armed
+-- (an override laning module, or a pos-1 paired with a human pos-5). What
+-- keeps this helper inert is that BOTH of its behaviour changes carry their
+-- own soak gates, which is a property of the helper and not of its callers.
+-- The distinction cost a round: the sibling mechanism-3 helper carried the
+-- same false claim and NO gate of its own, and the claim was what made that
+-- look safe (see J.IsLaneFrontTooDeepToHold's header, 'deepnum').
+-- NO LONGER a gate-free helper: the 'fire' branch carries the
 -- soak candidate 'hrreach' (2026-09-09), which narrows that branch's candidate
 -- set to harassers actually in attack reach. Unarmed, the first conjunct is
 -- false and the branch below returns the shipped answer byte for byte.
@@ -9952,7 +9961,39 @@ end
 --   * far past the midline (depth > 1600): visible PARITY is not safety
 --     (the depthnum lesson -- fog reinforcements are close); require numbers
 --     ADVANTAGE over the visible enemies within 1600 of the spot.
--- Pure helper -- only reachable from the armed-only Think bodies.
+-- ⚠️ NOT a purely armed-only helper, despite what this header said until
+-- 2026-09-09: the Think that calls it is guarded by
+-- `bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or
+-- bBodyBlock`, and the FIRST of those disjuncts is not a soak gate at all --
+-- `bCustomLastHit` is true for any hero with an override laning module
+-- (Utils.BuggyHeroesDueToValveTooLazy) and for a pos-1 paired with a human
+-- pos-5. On those bots this helper is LIVE in shipped games, so a change here
+-- needs its own gate rather than inheriting the caller's (the 0OVERCHASE rule
+-- points the other way only when the host really is gate-locked).
+--
+-- [deepnum 2026-09-09] THE DEEP TIER COMPARES TWO COUNTS TAKEN WITH TWO
+-- RULERS. `(1 + nAllies) <= nEnemies` reads our bodies on the SHALLOW tier's
+-- 1000 disc -- a count computed for a different question ("am I alone here?")
+-- -- while the enemies it is compared against are read on 1600. An ally at
+-- 1300 is off the board; an enemy at the SAME 1300 is a besieger. The short
+-- ruler sits on the "pull back" side, so the branch enforces a rule stricter
+-- than the one its own comment states, and states nothing about doing so.
+-- This is a repair, not a new policy: every other numbers test in this tree
+-- reads both sides on ONE disc (SafeToCommitFight 1200/1200,
+-- ShouldRegroupNotSolo 1500/1500, ShouldRefuseUnsupportedPunish 1200/1200,
+-- ShouldNotChaseWhenLow 1200/1200, ShouldAbortRoshanAttempt 900/900), and 1600
+-- is the number this branch already picked for itself. Armed, the ally count
+-- is re-read on the enemy side's own disc; the shipped 1000 read stays byte
+-- for byte and still answers the shallow tier alone.
+-- Direction, by construction: the armed ally set is a SUPERSET, so the verdict
+-- can only go true -> false -- armed may keep a deep front, it can never
+-- abandon one the shipped code held.
+-- STILL UNEQUAL, and deliberately so: the two discs share a radius but not a
+-- CENTRE (allies around the bot, enemies around vLoc). That half cannot be
+-- priced on this corpus -- the loader refuses GetLaneFrontLocation (GH #61)
+-- and lane geometry is an open corpus request (GH #648/#652), so the real vLoc
+-- of a live frame is unknown and any vLoc this round invented would measure
+-- the invention. Registered, not shipped.
 function J.IsLaneFrontTooDeepToHold( bot, vLoc )
 	if bot == nil or vLoc == nil then return false end
 	local hOwn = GetAncient( GetTeam() )
@@ -9972,6 +10013,14 @@ function J.IsLaneFrontTooDeepToHold( bot, vLoc )
 		return nAllies == 0
 	end
 	local nEnemies = #J.GetEnemiesNearLoc( vLoc, 1600 )
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'deepnum' ) then
+		local nWide = 0
+		local tWide = J.GetNearbyHeroes( bot, 1600, false, BOT_MODE_NONE )
+		for _, a in pairs( tWide or {} ) do
+			if J.IsValidHero( a ) then nWide = nWide + 1 end
+		end
+		return ( 1 + nWide ) <= nEnemies
+	end
 	return ( 1 + nAllies ) <= nEnemies
 end
 

@@ -27,6 +27,80 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0DEEPNUM. **【2026-09-09T19:28Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第六轮 (i));
+   认领依据 = 工作流第 1 步扫了 #649–#673,**新的 `[strategy]` issue 一条也没有**(带该前缀的
+   #670/#660/#657/#652 全是本组自己交的)⇒ 取 0OHMARGIN「下一格」并**逐条遵守**:
+   (1) 主体是 `bots/` 改动 ✅、(2) 不回那三个姿态 helper ✅、(3) 不碰幻象过滤 ✅、
+   (5) **第三次用上那条判据的姊妹形态** —— 不是「常数与旁边的注释矛盾」,而是
+   **「一次比较的两侧用了两把尺,而其中一把是从楼上另一个问题借来的」**。
+   产出:新 gated id **`deepnum`**(`J.IsLaneFrontTooDeepToHold` 深档,turbo-only,**自带闸**)、
+   `tests/_lanekill_domain_sweep.lua` **第四次扩列**(**没有**新建第六个 sweep)、
+   `tests/test_deepnum_parity.lua`(**13/13**)、`tools/agent/mutstand_deepnum.sh`(**11 腿**,见下)、
+   `tests/test_gated_helper_nesting_census.lua` 新增并注解一行、`state.json:deepnum_20260909`;
+   报告 `iterations/reports/strategy/20260909T192805Z.md`;**issue GH #674**;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   ⭐ **缺陷:一次比较的两侧用了两把尺,而短的那把是从楼上借来的。** 深档(depth > 1600)问的是
+   「这个点位我们人数占不占优」,它自己的注释写着 `numbers ADVANTAGE over the visible enemies
+   within 1600 of the spot`;但 `( 1 + nAllies ) <= nEnemies` 里的 `nAllies` **是浅档**为
+   「我是不是一个人」算的 **1000** 计数 ⇒ **站在 1300 的队友不在场上,站在同一个 1300 的敌人是围攻者**。
+   短尺**恰好在「撤」的那一侧**,于是分支执行的规则比它自己的注释**更严**,并且对此只字未提。
+   **让它无从辩解的那一帧**:`f_260822_063559_slardar_tp_forward` necrolyte —— **敌 luna 1328u 计入,
+   友 slardar 1331u(远 3 个单位)不在场上**。
+   ⭐⭐ **修复不是新政策**:没发明数字。1600 是**这条分支自己**已选定的盘,而本树里**每一个**
+   「我们 vs 他们」的计数比较都用同一把尺(`SafeToCommitFight` / `SafeToCommitFightOnArrival` 1200、
+   `ShouldRegroupNotSolo` 1500、`ShouldRefuseUnsupportedPunish` / `ShouldNotChaseWhenLow` 1200、
+   `ShouldAbortRoshanAttempt` 900,**两侧同值**),**只有这一处是 1000 vs 1600**。
+   断言的是**两半径相等**不是「新的是 1600」(M4 退回 1000 / M5 overshoot 2400,同一条断言抓住)。
+   ⚠️ **本轮最重要的附带发现,而且它是承重的:这个 helper 的抬头说自己 armed-only,那是假的。**
+   调用它的 Think 由 `bCustomLastHit or …` 把门,而 `bCustomLastHit = local_mode_laning_generic or
+   (pos1 and IsPosxHuman(5)) or (IsSoakCandidate('c3') and pos<=3)` —— **前两个析取项不需要任何
+   armed id** ⇒ **这个 helper 在真实对局里是活的**。正因为那句假话,机制 3 的 helper 里**只有它
+   身上没有闸**;所以修复**必须自带 id**,而不是按 `0OVERCHASE` 继承宿主(那条规则说的是宿主
+   **真被闸锁住**的情形)。抬头已就地改写,前提由测试第 6 节 + 变异台 **M9** 钉住。
+   **同族第二处顺手改了措辞**:`J.GetLaneHarassResponse`(机制 1,`hrreach`/`hrparity` 的宿主)
+   抬头同一句 —— 那里**结论不变**(两条腿各自带闸),但**理由是假的**。
+   ⛔ **量具缺口(已写进 issue 交总监)**:`test_gate_claim_consistency.lua` 抓「注释声称的闸不存在」;
+   **「注释声称自己被闸保护、其实没有」是反方向,现在没有任何量具在看** —— 本轮两处都是人读出来的。
+   **读数(115 fixtures / 1021 live frames,两条独立的路)**:`dn_underfloor` 871 / `dn_tier1` 66 /
+   `dn_tier2` **84**(闭合到 1021)、`dn_tier2_enemies` 52、`dn_disc_differs` **13**(算术上界)、
+   `dn_pred_flips` **2** == `dn_closes` **2**、**禁止方向 `dn_opens` 0**、`dn_shipped_true` **71 → 69**。
+   **13 与 2 本就该不同**(更宽的盘只有把计数跨过 `<= nEnemies` 才改结论)⇒ 断言的是**界不是等号**;
+   变异台 **M6** 现场把 `dn_closes` 打到 **33 > 13**,**只有那条界看得见**。
+   证人两帧由 sweep 自己点名:`f_260819_223607_sniper_rooted` sniper(友 lich 1244u / 敌 CM 622u)、
+   `f_260820_103216_cm_es_aftershock` juggernaut(友 jakiro 1242u / 敌 viper 818u);
+   负对照两帧(盘变了、答案不变 = 分辨「收窄」与「关掉」):`f_260820_042612_axe_blink_init_573`
+   juggernaut(1+1≤2 仍太深)、`f_260822_063559_slardar_tp_forward` necrolyte(敌 4,仍太深)。
+   ⛔ **发波前先说(GH #622)**:(甲) **只修了半径,没修圆心** —— 两张盘共半径**不共心**
+   (队友在 bot 周围、敌人在 vLoc 周围);**这一半在这份语料上结构上定不了价**(加载器**拒绝**
+   `GetLaneFrontLocation`,GH #61;lane 几何 = 未买到的 GH #648/#652)⇒ 全部读数取
+   **vLoc = `bot:GetLocation()`**(帧真正见证过有人站在那儿的唯一一点,也正是
+   `test_replay_megabundle_laning.lua` 早就在用的 vLoc),**登记,不落地,不折进读数**;
+   (乙) **没有在飞的波被扰动**(新 id,不可能在任何臂串里);
+   (丙) **单独 arm 是安全的**(与 `hrparity` 的「不要单独发」相反):本 id 改的是**一个布尔裁决**,
+   两个出口都是**站位**(守在原地 vs 后撤 1500),没有把攻击手柄交给下游 ⇒ 没有隔壁缺陷可掉进去。
+   ⚠️ **变异台第一版有两条腿的 `want` 写错,已就地改正并把原因留在脚本里**(不是绕过):
+   **M3** 第一版把整块搬到 `return` 之下 —— 在 Lua 里那是**语法错误**(return 必须结束块),
+   腿是红的但**理由读者用不了**,`WRONG MESSAGE` 计分规则**正是为这种红设的**,现改为
+   「算完 `nWide` 然后丢掉」(存在/位置检查全过,只有两路核对看得见);
+   **M10** 第一版期待「sweep 没报告这个计数器」,可本 sweep 的计数器**按 GH #171 全部零初始化**
+   (「没到过」与「量到零」不许长得一样)⇒ 剪掉 bump 得到的是**报告出来的 0**,
+   `want` 已改成读者真正拿到的那句。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是一个 `bots/` 行为改动**;
+   (2) ⛔ **不要**再动 `J.IsLaneFrontTooDeepToHold` 的**圆心**那一半,直到第 (4) 条的 lane 几何到位
+   —— 否则量到的是你自己造的 vLoc,不是 Dota;
+   (3) ⭐ **首选那条已经被本轮定价、但故意留着的线索**:`J.ShouldRetreatLaneBurst`
+   (队友 700 / 敌人 1100)与 `J.GetOffWaveHarassSpot`(队友 1200 / 敌人 800)——
+   **先按判据 (5) 查它们是不是同一族缺陷**:两处的半径**各自有没有写下来的理由**?
+   本轮拒绝了 `ShouldRetreatLaneBurst`(它的 700 有注释 `A peel-capable ally BESIDE me`,
+   与常数不矛盾,且两侧问的不是同一个问题 ⇒ **定价然后拒绝**),`GetOffWaveHarassSpot` **未查**;
+   (4) 语料请求仍挂着五条:`GetAttackRange()` 投影(GH #656/#657,同时解锁 13 个 id)、
+   `GetAssignedLane()` / lane 几何投影(GH #648/#652,**本轮新增了第二个买家**)、
+   '撤退:3' 深带臂那一帧、`nosrc_attr_only` 那一帧、带友方幻象且加载器答得出 `IsIllusion` 的帧;
+   (5) **本轮新增的一条可复用判据**:**一个 helper 声称「只有 armed 路径能到我」时,去读它的
+   调用点的闸表达式,一个析取项一个析取项地读** —— 本轮那句假话已经站了 48 天,
+   而它承重的地方正是「这处改动要不要自带闸」。】**
+
 0OHMARGIN. **【2026-09-09T16:51Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第五轮 (i));
    认领依据 = 工作流第 1 步扫到的**新** `[strategy]` issue **一条也没有**(最新的 #660 是本组上一轮自己交的)
    ⇒ 取 0HRPARITY「下一格」:第 (1) 条要 `bots/` 改动,第 (2)(3) 条把骚扰 helper 周边地面全封死
@@ -7175,6 +7249,75 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-09T19:28Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第六轮 (i);认领依据 =
+  工作流第 1 步扫了 #649–#673,**新的 `[strategy]` issue 一条也没有**——带该前缀的
+  #670/#660/#657/#652 全是本组前几轮自己交出去的;于是取 backlog 最上面一条 0OHMARGIN
+  「下一格」并逐条遵守 (1)(2)(3),第 (5) 条判据用的是它的**姊妹形态**:
+  **一次比较的两侧用了两把尺,而其中一把是从楼上另一个问题借来的**)。
+  ⭐ **缺陷**:`J.IsLaneFrontTooDeepToHold` 的**深档**(depth > 1600)问「这个点位我们人数占不占优」,
+  注释自己写着 `numbers ADVANTAGE over the visible enemies within 1600 of the spot`;
+  可 `( 1 + nAllies ) <= nEnemies` 里的 `nAllies` **是浅档**为**另一个问题**(「我是不是一个人」)
+  算出来的 **1000** 计数 ⇒ **站在 1300 的队友不在场上,站在同一个 1300 的敌人是围攻者**。
+  短的那把尺**恰好在「撤」的那一侧**,分支执行的规则因此比它自己的注释**更严**,而且只字未提。
+  **让它无从辩解的那一帧**:`f_260822_063559_slardar_tp_forward` necrolyte ——
+  **敌方 luna 在 1328u 被计入,友方 slardar 在 1331u(远 3 个单位)不在场上**。
+  ⭐⭐ **修复不是新政策**:没发明数字 —— 1600 是**这条分支自己**已选定的盘;本树里每一个
+  「我们 vs 他们」的计数比较都两侧同值(1200/1200 ×4、1500/1500、900/900),**只有这一处 1000 vs 1600**。
+  落地 gated id **`deepnum`**(turbo-only,**自带闸**);出厂的 1000 一字未动(仍独自回答浅档),
+  敌人侧 1600、门限 1600、floor 400、`1 +` 全未动。**方向按构造单向**(armed 队友集是超集)⇒
+  只能 true → false:**可以留下一条深线,永远不能放弃一条出厂守着的线**。
+  ⚠️ **本轮最重要的附带发现,而且它是承重的:这个 helper 的抬头说自己 armed-only,那句话是假的。**
+  调用它的 Think 由 `bCustomLastHit or …` 把门,而 `bCustomLastHit` 的**前两个析取项
+  (override 对线模块 / pos1+人类 pos5)不需要任何 armed id** ⇒ **它在真实对局里是活的**。
+  正因为那句假话,机制 3 的三个 helper 里**只有它身上没有闸**;所以本轮修复**必须自带 id**,
+  而不是按 `0OVERCHASE` 继承宿主(那条规则说的是宿主**真被闸锁住**的情形)。抬头已就地改写,
+  前提由 `test_deepnum_parity.lua` 第 6 节 + 变异台 **M9** 钉住。**同族第二处顺手改了措辞**:
+  `J.GetLaneHarassResponse`(机制 1)抬头同一句——**结论不变**(两条腿各自带闸)但**理由是假的**。
+  ⛔ **量具缺口(已写进 issue 交总监)**:`test_gate_claim_consistency.lua` 抓的是
+  「注释声称的闸不存在」;**反方向(声称自己被闸保护、其实没有)现在没有任何量具在看**。
+  **读数**(`_lanekill_domain_sweep.lua` **第四次扩列**,115 fixtures / **1021** live frames,两条独立的路):
+  `dn_underfloor` 871 / `dn_tier1` 66 / `dn_tier2` **84**(闭合到 1021)、`dn_tier2_enemies` 52、
+  `dn_disc_differs` **13**(**算术上界**)、`dn_pred_flips` **2** == `dn_closes` **2**、
+  **禁止方向 `dn_opens` 0**、`dn_shipped_true` **71 → 69**、`dn_raised` 0。
+  **13 与 2 本就该不同**(更宽的盘只有把计数**跨过** `<= nEnemies` 才改结论)⇒ 断言成**界不是等号**;
+  **M6** 现场把 `dn_closes` 打到 **33 > 13**,**只有那条界看得见**。
+  证人两帧由 sweep 自己 `F ... dn_pred_flips` 点名(sniper 友 lich 1244u / 敌 CM 622u;
+  juggernaut 友 jakiro 1242u / 敌 viper 818u);**负对照两帧**(盘变了、答案不变 = 分辨
+  「收窄」与「关掉」):`f_260820_042612_axe_blink_init_573`(1+1≤2 仍太深)、
+  `f_260822_063559_slardar_tp_forward`(敌 4,仍太深)。
+  ⛔ **发波前先说(GH #622)**:(甲) **只修了半径没修圆心**——两张盘共半径**不共心**;
+  **这一半在这份语料上结构上定不了价**(加载器**拒绝** `GetLaneFrontLocation`,GH #61;
+  lane 几何 = 未买到的 GH #648/#652)⇒ 全部读数取 **vLoc = `bot:GetLocation()`**,
+  **登记,不落地,不折进读数**;(乙) 新 id,**没有在飞的波被扰动**;
+  (丙) **单独 arm 是安全的**(与 `hrparity` 相反):两个出口都是**站位**,没有把攻击手柄交给下游。
+  **开工自检的 Lua 检测器腿在改到一半的树上点名了本次改动**
+  (`test_gated_helper_nesting_census` 的 `l5trees | … | deepnum` 行)——**那是 GH #606 的棘轮
+  按设计生效,不是失败**;手工判 **(P)**(un-armed 返回出厂裁决而非冻死调用方的常量),
+  行已登记并额外写下这道网看不见的第二件事:**同一 helper 还有第二个调用点,经无闸的
+  `bCustomLastHit` 可达 ⇒ 单 arm `deepnum` 真的到得了**,GH #606 那种结构性单臂零在此不成立。
+  ⚠️ **变异台第一版两条腿的 `want` 写错,已就地改正并把原因留在脚本里(不是绕过)**:
+  **M3** 第一版把整块搬到 `return` 之下 —— Lua 里那是**语法错误**,腿红但**理由读者用不了**,
+  `WRONG MESSAGE` 计分规则**正是为这种红设的**;改为「算完 `nWide` 然后丢掉」。
+  **M10** 第一版期待「sweep 没报告这个计数器」,可本 sweep 的计数器**按 GH #171 全部零初始化**
+  ⇒ 剪掉 bump 得到的是**报告出来的 0**,`want` 已改成读者真正拿到的那句。
+  报告 `iterations/reports/strategy/20260909T192805Z.md`;issue **GH #674**;下一格见 backlog 0DEEPNUM。
+  变异台 `mutstand_deepnum.sh` **11 腿:10 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**
+  (第一遍是 **STAND RED 9/2**,红的是**量具自己的**两条 `want`,不是护栏漏掉变异体)。
+  **铁律 6**:静态门 `luacheck_gate.sh` **EXIT=0**(`luacheck bots game: 0 warnings`),push 门已上膛;
+  动态全套跑不完(GH #124),逐文件全绿:`test_deepnum_parity` **13/13**、
+  `test_gated_helper_nesting_census` **10/10**、`test_replay_megabundle_laning` **6/6**、
+  `test_hrparity_guard` **12/12**、`test_hrreach_guard` **14/14**、
+  `test_gate_claim_consistency` **16/16**、`test_lanekill_domain_census` **6/6**、
+  `test_smoke_load` **3/3**。**没有用 `RULE6_BYPASS`。**
+  开工自检:第一次又被脚本自己拒(`REFUSED: stdout is a PIPE`,evidence discipline 3
+  **连续第三轮**同一个开场);第二次走 `> /tmp/sc.log; echo EXIT=$?`,**真实退出码 3**,
+  归因逐字取自它自己的 `exit sources` 节:`cadence owed-executions trunk-red(python) trunk-red(lua)`,
+  `UNCERTIFIABLE: none`。其中 `trunk-red(python)` = `tests/test_call_arity_census.py`
+  (115 passed / 1 failed)—— **不是本轮造成的**,正是今天总监立的 **GH #673**;
+  `trunk-red(lua)` = **本轮改到一半的树**(见上),已在本轮内修好并复跑 10/10 绿。
+  报告 `iterations/reports/strategy/20260909T192805Z.md`;issue **GH #674**;下一格见 backlog 0DEEPNUM。
+
 
 - 2026-09-09T16:51Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第五轮 (i);认领依据 =
   工作流第 1 步扫到的**新** `[strategy]` issue **一条也没有**,取 backlog 最上面一条
