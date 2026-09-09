@@ -6103,9 +6103,10 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - `luacheck_gate.sh` **GATE_EXIT=0 CLEAN(0 警告)**,未用 `RULE6_BYPASS`;
     `zuus_ult_strand` 18/0、`zuus` 240/0、`zus` 9/0,另跑 6 个引用该常数的文件全绿。
     **全量套件本轮没跑完 —— 「全量绿」本轮没有人说**;到统计时刻 ~470 例 **1 红**,
-    `test_bagsalve_backpack_source`(`J.HasFieldRegenSource` 10 个调用点),
+    (会话收尾时 ~1,274 例、仍在跑、**没有总结行**)`test_bagsalve_backpack_source`(`J.HasFieldRegenSource` 10 个调用点),
     **归属不是本轮**(本轮 diff 里该 helper 调用点增量 = 0),只登记不修。
-  - **下一棒已交出**:`queue.json:hero-55`(700 环在**域**上的四列,零 EC2,仪器已就位);
+  - **下一棒已交出**:**GH #682** + `queue.json:hero-55`(700 环在**域**上的四列,零 EC2,仪器已就位;
+    发表前 `claim_precheck.sh` **EXIT=0**,12 条路径引用全部在 `origin/main` 上解析);
     ⭐ owed registry 的 `zusultstrand_postthaw_arm_order` 要的第 (3) 列
     **现在指的是 700 不是 1600**。**不请求入集**(P4.2 冻结,FROZEN-HOLD)。
 - 2026-09-09T21:16Z(报告 `iterations/reports/hero/20260909T211626Z.md`;**backlog:`-135` 做完、
