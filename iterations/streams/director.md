@@ -539,6 +539,20 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     **迟早**会红,且每次都要花一轮去读懂。⇒ 守卫形状:普查 `tests/` 里以
     armed 串长度 / arm 行字段数为**下界**的断言,报出来;正确写法是**独立数一遍再要求相等**。
 
+103. **处方路径:`citation_audit.py` 表达不了「这条路径故意还不存在」**
+    (总监 2026-09-09T13:xxZ 立,**未落地,由本轮的 `claim_precheck.sh` 自己点名**)。
+    **立案现场**:GH #661 的追评草稿里,`ondemand_termcode_read_time` 那条 owed 行的**指定落点**
+    被写成反引号完整路径。工具判 `MISSING path` + `DO NOT PUBLISH YET`(`RC_EXIT=3`),
+    ⭐ **而且判得对** —— 从解析器的角度,「指定买法的落点」与「一处失效的引用」**字面上无法区分**。
+    ⚠️ 现有豁免**只有一条**(`paths absent from trunk BY DESIGN (gitignored)`),
+    而处方路径既不 gitignored 也不该被当成引用。
+    **代价的形状是危险的那一侧**:唯一的出路是**改措辞绕开自己的检查器**(本轮就是这么发出去的),
+    于是每一条「指定买法」的裁定都在训练作者从门旁边走过去 ——
+    **与本轮修的 GH #661 同族:门在、被调用、退出码正常,而它守的东西从旁边过去了。**
+    ⇒ 守卫形状:给处方路径一个**可声明**的标记(如 `TO-BUY:<path>`),
+    解析器把它单列成一类(既不 resolve 也不算 finding),并**要求它在某条 owed 行的
+    `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
+
 ## 当前状态(每次触发后更新)
 - **2026-09-09T13:15Z**:**GH #661 的 (乙) 半边落地(`reclaim_blind.py` 按需分支现在有 EC2 词表);而本轮最该被读的不是那个补丁 —— 是「同一份 `W60_wave.json`,修前 `exit 0`、修后 `exit 2`」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0、
@@ -586,9 +600,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **本轮被 2a 挤掉,这是它顺延的第一轮;若下轮再被挤,要点名「第二轮」**
   ②⭐P4.2 的下一格:`BUILD 0 / NO-CORPUS 0` ⇒ 能压 armed 的只有 **promote**
   ③⭐`gh454_cost_constants_rerule`(先决条件:`check_costs.sh` 里 09-09 两行不再为空)
-  ④backlog 101 / 102(顺延)⑤「后台包装吞真码」守卫(第十一次,顺延)
-  ⑥GH #358 的 120s 要人裁 / `hero_domain_scan` 九份读数 / 「退集·promote 五处同步」清单(均顺延)
-  ⑦存量:账户级预算等 owner / GH #523 / patch 缺口 P3。
+  ④⭐**backlog 103(本轮新立)**:`citation_audit.py` 只有 gitignored 一条豁免,
+  **没有「处方路径」这一类** —— 本轮 `claim_precheck.sh` 判 `MISSING path` 判得对
+  (指定买法的落点 `write_shutdown_intent.sh` 故意不存在,而「处方」与「失效引用」字面上无法区分),
+  代价是发表前要**绕开自己的检查器**改措辞。给它一个可声明的形状(如 `TO-BUY:<path>`)。
+  ⑤backlog 101 / 102(顺延)⑥「后台包装吞真码」守卫(第十一次,顺延)
+  ⑦GH #358 的 120s 要人裁 / `hero_domain_scan` 九份读数 / 「退集·promote 五处同步」清单(均顺延)
+  ⑧存量:账户级预算等 owner / GH #523 / patch 缺口 P3。
 - **2026-09-09T10:12Z**:**`narrat=2` 四条(`liondrainstop`/`ownhalf`/`pulldrag`/`tpgap`)全部裁为「不退集」;而本轮最该被读的不是这四条裁定 —— 是「条件 (a) 有两条路,前四轮各花一整轮定的价,量的全是其中一条」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、不发 owner 邮件、`DECISIONS_NEEDED` +0、
   armed 串 **37 不动**、无 promote / 无退集。取活依据是上一轮「下次触发」的 **①**(逐字点名这四条,
