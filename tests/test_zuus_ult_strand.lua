@@ -43,7 +43,16 @@
 --     fixtures that carry the ult handle (section 3 -- GetCooldown has been
 --     served off the KV snapshot since 2026-09-04, so it is a read), and the
 --     armed radius term, which is enemy-hero POSITIONS and is frame data
---     (section 5: 6 of 8 frames have a chaser inside 1600).
+--     (section 5: 6 of 8 handle-carrying frames have a chaser inside the radius).
+--   * ⭐ THE RADIUS WAS NARROWED 1600 -> 700 ON 2026-09-09 and section 7 is where
+--     that lives.  The archive scan this lever asked for came back
+--     (queue.json:hero-37) and priced 1600 on the branch's own domain at 98.1% of
+--     EPISODES -- so the helper's "narrowed, not a blank cheque" paragraph was
+--     false at the value it was written with.  Section 7 names the one real frame
+--     the new value moves (f_073148_zuus_lina, nearest enemy 979.8u) and asserts
+--     the creation frame is not moved.  ⚠️ It does NOT price 700 on the domain:
+--     that reading is cut by the 1600 predicate and prices only the 1600 leg.
+--     Requested as queue.json:hero-55.
 --   * ⚠️ THE LEFT-HAND 0 THOSE FRAMES REPORT IS A LOADER GAP, NOT FRAME DATA,
 --     AND THE TWO SENTENCES MAY NOT BE MERGED.  Nothing under tests/mock/
 --     installs GetRespawnTime, so the generic `^Get` default answers 0
@@ -440,6 +449,120 @@ tests['section 6: the corpus holds the creation frame, and this is which one'] =
         .. '405 mana, a chaser at 304.9u, dead 8.3s later with the ult unspent -- so '
         .. 'a different frame carrying the reading needs its own price, not this '
         .. "one's.", CREATION_FRAME, #tCandidate))
+end
+
+-- ---------------------------------------------------------------- section 7 --
+-- The RADIUS, narrowed 1600 -> 700 on 2026-09-09 because the archive scan the
+-- lever asked for came back and priced the old value at 98.1% of episodes
+-- (queue.json:hero-37, replay-check domain_scan_hero_2_30_31.md section 10).
+--
+-- ⚠️ THE TWO INSTRUMENTS IN THIS SECTION MAY NOT BE MERGED WITH THAT ONE.  The
+-- 98.1% is an ARCHIVE reading over 1,843 domain frames / 257 episodes / 152
+-- games; what this section reads is 9 fixtures, which is not the branch's domain
+-- (most of them are neither retreating nor under 28%).  This section can say
+-- WHICH real frames the new value moves and that the motivating instant survives.
+-- It cannot say what fraction of the domain 700 admits -- no column cuts the
+-- corpus by 700, and a reading cut by predicate X prices only the leg written
+-- with X.  That column is requested as queue.json:hero-55.
+
+--- Override the shipped radius with a LABELLED constant.  Every call site is a
+--- declared substitution: 1600 is no longer a value this tree holds, and a test
+--- that read it back without saying so would be quoting a retired number as if
+--- the source still stated it.
+local function inject_radius(X, nUnits)
+    X.nUltCashChaseRadius = nUnits
+end
+
+local RADIUS_OLD = 1600
+local MOVED_FRAME = 'tests/fixtures/f_073148_zuus_lina.lua'  -- nearest enemy 979.8u
+
+tests['section 7: the shipped radius is 700 and the source says why'] = function()
+    local X = rf.load_hero('zuus')
+    assert(X.nUltCashChaseRadius == 700, string.format(
+        'X.nUltCashChaseRadius is %s, not 700. The value is not free: 700 is this '
+        .. 'repo\'s own "an enemy can strike me this instant" ring '
+        .. '(J.CanEnemyInterruptTpChannel searches R=700 unarmed, and '
+        .. 'tools/batch_test/behavioral/tpreach_domain.py derives the same bound '
+        .. 'from the corpus -- reach > 700 needs GetAttackRange() > 550). Moving it '
+        .. 'is a re-argument, not an edit.', tostring(X.nUltCashChaseRadius)))
+
+    -- The narrowing rests on a claim about the branch ABOVE the helper, so that
+    -- claim is asserted rather than left in prose: if the enclosing conjunct
+    -- stops being "was damaged by a hero in the last 2 seconds", the
+    -- collinearity argument for why 1600 measured as a tautology is gone.
+    local body = strip_comments(fn_body(read_file(SRC), 'ConsiderR'))
+    assert(body:find('WasRecentlyDamagedByAnyHero%s*%(%s*2%.0%s*%)') ~= nil,
+        'X.ConsiderR no longer guards this branch with '
+        .. 'bot:WasRecentlyDamagedByAnyHero( 2.0 ). The radius is argued down to '
+        .. '700 BECAUSE that conjunct already implies "an enemy was within its own '
+        .. 'attack range moments ago"; without it, re-argue the ring.')
+end
+
+tests['section 7: the narrowing MOVES a real frame, and this is which one'] = function()
+    -- Not `>= 1 frame moved`: a count without a name would stay green if some
+    -- unrelated frame started moving and this one stopped.
+    local Xold, _, botOld = on_frame(MOVED_FRAME, { armed = true })
+    inject_radius(Xold, RADIUS_OLD)                       -- LABELLED injection
+    assert(Xold.zuus_ShouldCashUltBeforeDeath(botOld) == true, string.format(
+        '%s no longer passes the armed leg at the RETIRED radius %d. This frame is '
+        .. 'the whole real-frame evidence that 1600 -> 700 changed an answer; if it '
+        .. 'stopped passing at 1600, the narrowing is now a no-op on this corpus '
+        .. 'and the mutation stand below is anchored on nothing.',
+        MOVED_FRAME, RADIUS_OLD))
+
+    local Xnew, _, botNew = on_frame(MOVED_FRAME, { armed = true })
+    assert(Xnew.zuus_ShouldCashUltBeforeDeath(botNew) == false, string.format(
+        '%s still passes the armed leg at the SHIPPED radius. Its nearest enemy '
+        .. 'hero is Lina at 979.8u -- outside every attack range in the pool, so '
+        .. 'she is not a reason the death being priced would happen. That refusal '
+        .. 'is the narrowing.', MOVED_FRAME))
+end
+
+tests['section 7: the creation frame is NOT moved by the narrowing'] = function()
+    -- The narrowing is only defensible if it keeps the instant that motivated the
+    -- lever. GH #593 priced that instant; a narrowing that killed it would be a
+    -- second off-switch wearing the first one's argument.
+    local X, _, bot = on_frame(CREATION_FRAME, { armed = true })
+    assert(X.zuus_ShouldCashUltBeforeDeath(bot) == true, string.format(
+        '%s no longer passes the armed leg at the shipped radius. Its chaser is a '
+        .. 'living Slardar at 304.9u -- well inside 700 -- so a refusal here means '
+        .. 'the radius term stopped reading positions, not that the frame changed.',
+        CREATION_FRAME))
+end
+
+tests['section 7: the corpus census at both radii, counted exactly'] = function()
+    -- ⚠️ NO HANDLE FILTER HERE, deliberately, and this is the difference from
+    -- section 5. X.zuus_ShouldCashUltBeforeDeath never touches the subject's
+    -- ability array -- it reads the file-level abilityR upvalue and enemy
+    -- POSITIONS -- so filtering by ult_handle would silently drop the one frame
+    -- the narrowing moves (f_073148_zuus_lina is the corpus's only frame whose
+    -- ability array stops before the ultimate). Section 5's filter is right for
+    -- section 5, which is reading GetCooldown; it would have hidden this.
+    local nOld, nNew = 0, 0
+    for _, path in ipairs(ZUUS_FRAMES) do
+        local Xo, _, bo = on_frame(path, { armed = true })
+        inject_radius(Xo, RADIUS_OLD)                     -- LABELLED injection
+        if Xo.zuus_ShouldCashUltBeforeDeath(bo) then nOld = nOld + 1 end
+
+        local Xn, _, bn = on_frame(path, { armed = true })
+        if Xn.zuus_ShouldCashUltBeforeDeath(bn) then nNew = nNew + 1 end
+    end
+    assert(#ZUUS_FRAMES == 9, string.format(
+        'the Zeus frame list holds %d frames, not the 9 these counts were read on. '
+        .. 'A frame was added or removed; re-read the census rather than moving the '
+        .. 'numbers.', #ZUUS_FRAMES))
+    assert(nOld == 7, string.format(
+        'the retired radius %d admits %d of %d frames, not 7.', RADIUS_OLD, nOld,
+        #ZUUS_FRAMES))
+    assert(nNew == 6, string.format(
+        'the shipped radius admits %d of %d frames, not 6.', nNew, #ZUUS_FRAMES))
+    assert(nNew < nOld,
+        'the narrowing admits at least as many frames as the value it replaced -- '
+        .. 'on this corpus it is then a no-op, and no real frame backs it.')
+    -- Still a reading and not a second off-switch: both outcomes occur.
+    assert(nNew > 0,
+        'the shipped radius admits 0 of the real Zeus frames -- that is an '
+        .. 'off-switch, which is exactly the defect this lever was written against.')
 end
 
 tests['section 6: the OTHER sub-28%% frame misses on two other conjuncts'] = function()

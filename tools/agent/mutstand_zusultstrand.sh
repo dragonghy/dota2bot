@@ -98,7 +98,7 @@ GATE_LINE=$'\tif not ( J.IsModeTurbo() and J.IsSoakCandidate( \'zusultstrand\' )
 SHIPPED=$'\tlocal bShipped = hBot:GetRespawnTime() > abilityR:GetCooldown()'
 CHASER=$'\tif tChasers == nil or #tChasers == 0 then return false end'
 CALL_SITE=$'\t\tif X.zuus_ShouldCashUltBeforeDeath( bot )'
-RADIUS='X.nUltCashChaseRadius = 1600'
+RADIUS='X.nUltCashChaseRadius = 700'
 KV_COOLDOWN=$'            [\'AbilityCooldown\'] = { base = \'130\', bonus = {  } },\n            [\'AbilityManaCost\'] = { base = \'250 375 500\', bonus = {  } },'
 
 # ---------------------------------------------------------------------------
@@ -260,6 +260,37 @@ sub "$TEST" "            and bot:GetHealth() / bot:GetMaxHealth() <= 0.28
             "            and bot:GetHealth() / bot:GetMaxHealth() <= 1.00
             and X.zuus_ShouldCashUltBeforeDeath(bot)"
 score "M11" "satisfy the armed helper end to end, not 1"
+
+# ---------------------------------------------------------------------------
+# M12 and M13 were added 2026-09-09 (hero) with the 1600 -> 700 narrowing.  A
+# narrowing needs its own controls for the same reason the creation-frame count
+# did: section 7 asserts that a real frame MOVED, and there are two ways for that
+# to be green while saying nothing.
+#
+# M12: THE REVERT.  Put the retired radius back.  Everything else -- the helper,
+#      the id, the call site, the named constant, the whole argument in the
+#      header -- survives review, and the narrowing then exists only as prose.
+#      This is the exact state the tree was in before this round, so a green here
+#      would mean section 7 is measuring its own injection rather than the source.
+echo
+echo "=== M12: the chaser radius is reverted to the retired 1600 ==="
+sub "$HERO" "$RADIUS" 'X.nUltCashChaseRadius = 1600'
+score "M12" "still passes the armed leg at the SHIPPED radius"
+
+# ---------------------------------------------------------------------------
+# M13: THE ANCHOR CONTROL.  Section 7 pins the narrowing on ONE named frame
+#      (f_073148_zuus_lina, nearest enemy 979.8u).  Drop that frame out of the
+#      list the census iterates: the "moved" test still passes -- it loads the
+#      frame by name -- but the census counts lose the only frame that differs
+#      between the two radii, so 7/9 and 6/9 collapse to the same number.  Under
+#      a `nNew < nOld` written without exact counts this passes; with them it
+#      cannot.  The mutant is the shape a future round would actually produce:
+#      someone prunes the frame list and never notices the anchor left with it.
+echo
+echo "=== M13: the frame the narrowing moves is dropped from the census list ==="
+sub "$TEST" "    'tests/fixtures/f_073148_zuus_lina.lua',
+" ""
+score "M13" "frames, not the 9 these counts were read on"
 
 # ---------------------------------------------------------------------------
 echo

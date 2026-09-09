@@ -14,7 +14,9 @@ WHAT THIS ANSWERS (queue row hero-37; GH #564; director ruling APPROVED-SCAN
 The shipped conjunct is structurally false (right side is the constant 130, left
 side is at most 75 in turbo), so this branch has never fired.  The landed gated
 fix (`zusultstrand`, turbo-only, NOT armed) replaces it with "an enemy hero is
-inside X.nUltCashChaseRadius = 1600".
+inside X.nUltCashChaseRadius".  ⚠️ THAT CONSTANT MOVED 1600 -> 700 on 2026-09-09
+and every reading this tool has published so far was taken at 1600 -- see the
+CHASE_RADIUS block below before quoting any of them.
 
 ⚠️  DIRECTION, pre-registered by the request and repeated here so no reader has
 to go find it: this is a **WIDENING**.  Arming can only ADD ult casts on this
@@ -57,10 +59,11 @@ THE FOUR COLUMNS, AND WHAT THE ARCHIVE CAN ACTUALLY ANSWER
   (3) nearest enemy hero distance at the domain instants                 -> READ
       (geometry), with the vision caveat registered in BOTH directions and
       never swapped:
-        * a hero inside 1600 need not have been VISIBLE -> the "inside" count
-          is an UPPER bound on what `J.GetNearbyHeroes(..., true, ...)` returns;
-        * zero heroes inside 1600 geometrically IMPLIES zero visible -> the
-          "outside" count is a SOUND refutation for those frames.
+        * a hero inside CHASE_RADIUS need not have been VISIBLE -> the
+          "inside" count is an UPPER bound on what
+          `J.GetNearbyHeroes(..., true, ...)` returns;
+        * zero heroes inside CHASE_RADIUS geometrically IMPLIES zero visible ->
+          the "outside" count is a SOUND refutation for those frames.
   (4) the `ultcash` overlap layer                                     -> PARTIAL
       `J.IsDyingUnderAttack` = HP<=45% + hero-damaged within 2s + >=1 enemy
       within 1200 + sum of `GetEstimatedDamageToTarget(3s)` >= current HP.
@@ -100,7 +103,27 @@ ZEUS = "npc_dota_hero_zuus"
 DAMAGE_LOOKBACK = 2.0   # WasRecentlyDamagedByAnyHero( 2.0 ) -- from the source
 DEATH_WINDOW = 6.0      # "and then he actually died" -- this tool's choice
 EPISODE_GAP = 1.0       # frames this far apart or closer are one episode
-CHASE_RADIUS = 1600.0   # X.nUltCashChaseRadius -- the armed narrowing term
+# X.nUltCashChaseRadius -- the armed narrowing term.  NARROWED 1600 -> 700 on
+# 2026-09-09 by the hero stream, BECAUSE OF THIS TOOL'S OWN READING: at 1600 the
+# term admitted 1,645/1,843 domain frames (89.3%) and 252/257 episodes (98.1%),
+# i.e. it was not narrowing anything.  Mirrored from the Lua by
+# tests/test_detector_source_constants.py, which is why this value moves in the
+# same commit as the source rather than drifting behind it.
+#
+# ⚠️ EVERY PUBLISHED READING FROM THIS TOOL SO FAR WAS TAKEN AT 1600 --
+# iterations/reports/replay-check/domain_scan_hero_2_30_31.md section 10 in
+# particular.  Those numbers price the 1600 leg and nothing else; a reading cut
+# by predicate X prices only the leg written with X.  The 700 column does not
+# exist yet and is requested as queue.json:hero-55.
+#
+# ⚠️ AND THE RING NESTING INVERTED, which changes what column (4) means.  At 1600
+# the chase ring CONTAINED ultcash's 1200; at 700 it is strictly INSIDE it, so
+# every frame this term now admits is also inside the ultcash ring.  The two
+# levers still differ -- ultcash additionally wants HP<=45% and the
+# GetEstimatedDamageToTarget prediction that exists in no replay -- but the
+# GEOMETRIC half of the overlap layer is now total by construction, and reading
+# `ultcash_ring_only` as evidence of separation would be reading an identity.
+CHASE_RADIUS = 700.0
 ULTCASH_RADIUS = 1200.0 # J.IsDyingUnderAttack's ring
 HP_GATE = 0.28          # nHealthPercentage <= 0.28
 ULTCASH_HP_GATE = 0.45  # J.IsDyingUnderAttack's HP gate
@@ -338,16 +361,16 @@ def scan_game(tl, game_id, mana_ladder, cd_ladder):
             ]
             nearest = enemies[0][0] if enemies else None
             out["nearest_enemy"].append(nearest)
-            n1600 = sum(1 for d, _ in enemies if d <= CHASE_RADIUS)
-            n1200 = sum(1 for d, _ in enemies if d <= ULTCASH_RADIUS)
+            n_chase = sum(1 for d, _ in enemies if d <= CHASE_RADIUS)
+            n_ultcash = sum(1 for d, _ in enemies if d <= ULTCASH_RADIUS)
             # SECOND reading with illusions dropped, under its own key.  The
             # lever's own call -- J.GetNearbyHeroes(bot, 1600, true, MODE_NONE)
-            # -- carries NO illusion filter, so `n1600` (illusions included) is
+            # -- carries NO illusion filter, so `n_chase` (illusions included) is
             # the lever-faithful one and this is the conservative companion.
-            n1600_real = sum(1 for d, h in enemies_real if d <= CHASE_RADIUS)
-            if n1600_real > 0:
+            n_chase_real = sum(1 for d, h in enemies_real if d <= CHASE_RADIUS)
+            if n_chase_real > 0:
                 out["in_chase_radius_real_only"] += 1
-            if n1600 > 0:
+            if n_chase > 0:
                 out["in_chase_radius"] += 1
                 sb["in_chase_radius"] += 1
             else:
@@ -355,7 +378,7 @@ def scan_game(tl, game_id, mana_ladder, cd_ladder):
                 sb["out_chase_radius"] += 1
 
             # (4) ultcash overlap layers
-            if n1200 > 0:
+            if n_ultcash > 0:
                 out["ultcash_ring_only"] += 1
                 sb["ultcash_ring_only"] += 1
                 if dmg_in(t, t + 3.0) >= float(s.get("hp") or 0):
@@ -379,7 +402,7 @@ def scan_game(tl, game_id, mana_ladder, cd_ladder):
                     out["retreat_proxy_frames"] += 1
                     sb["retreat_proxy_frames"] += 1
 
-            hits.append((t, s, nearest, n1600, n1200, rank))
+            hits.append((t, s, nearest, n_chase, n_ultcash, rank))
 
         # --- episodes -------------------------------------------------
         cur = []
@@ -447,7 +470,7 @@ def _close_episode(cur, deaths, ult_casts, game_id, pid):
         "frames": len(cur),
         "rank": cur[0][5],
         "min_nearest_enemy": round(min(nearest), 1) if nearest else None,
-        "any_in_1600": any(h[3] > 0 for h in cur),
+        "any_in_chase": any(h[3] > 0 for h in cur),
         "any_in_1200": any(h[4] > 0 for h in cur),
         "died_within_window": bool(died),
         "death_t": round(died[0], 1) if died else None,
@@ -480,7 +503,7 @@ def aggregate(paths):
         "zeus_snapshots_null_abilities": 0,
         "ep_died": 0,
         "ep_died_ult_uncast": 0,
-        "ep_in_1600": 0,
+        "ep_in_chase": 0,
         "nearest_enemy": [],
         "top_episodes": [],
         "per_game_frames": {},
@@ -517,15 +540,15 @@ def aggregate(paths):
                 agg["ep_died"] += 1
                 if not e["ult_cast_before_death"]:
                     agg["ep_died_ult_uncast"] += 1
-            if e["any_in_1600"]:
-                agg["ep_in_1600"] += 1
+            if e["any_in_chase"]:
+                agg["ep_in_chase"] += 1
             agg["top_episodes"].append(e)
     agg["rank_hist"] = dict(agg["rank_hist"])
     agg["key_shapes"] = dict(agg["key_shapes"])
     # the pin-worthy frames first: died, ult still uncast, enemy inside 1600
     agg["top_episodes"].sort(
         key=lambda e: (e["died_within_window"] and not e["ult_cast_before_death"],
-                       e["any_in_1600"], e["frames"]),
+                       e["any_in_chase"], e["frames"]),
         reverse=True)
     agg["top_episodes"] = agg["top_episodes"][:40]
     ne = sorted(agg["nearest_enemy"])
@@ -534,8 +557,8 @@ def aggregate(paths):
         "min": round(ne[0], 1) if ne else None,
         "max": round(ne[-1], 1) if ne else None,
         "mean": round(sum(ne) / len(ne), 1) if ne else None,
-        "le_1200": sum(1 for d in ne if d <= ULTCASH_RADIUS),
-        "le_1600": sum(1 for d in ne if d <= CHASE_RADIUS),
+        "le_ultcash": sum(1 for d in ne if d <= ULTCASH_RADIUS),
+        "le_chase": sum(1 for d in ne if d <= CHASE_RADIUS),
     }
     del agg["nearest_enemy"]
     return agg
@@ -574,12 +597,19 @@ def _death_at(tl, t, log_row=True):
 
 
 def _base_tl(**kw):
-    """One Zeus frame that IS in the domain, plus an enemy at 800u."""
+    """One Zeus frame that IS in the domain, plus an enemy inside CHASE_RADIUS.
+
+    The enemy default is EXPRESSED IN THE CONSTANT rather than written as a
+    literal.  It used to be a bare 800, which was inside the 1600 ring and is
+    outside the 700 one -- so the day the lever narrowed, every check below that
+    merely needs "a domain frame" would have started failing for a reason that
+    has nothing to do with what it tests.
+    """
     hp_pct = kw.get("hp_pct", 0.20)
     rank = kw.get("rank", 2)
     cd = kw.get("cd", 0)
     mp = kw.get("mp", 400)
-    ex = kw.get("enemy_x", 800)
+    ex = kw.get("enemy_x", CHASE_RADIUS / 2.0)
     dmg_t = kw.get("dmg_t", 99.0)
     dmg_actor_hero = kw.get("dmg_actor_hero", True)
     snaps = []
@@ -652,15 +682,32 @@ def selfcheck():
           scan_game(_base_tl(dmg_actor_hero=False), "g", mana, cd_lad)["frames"], 0)
 
     # --- (3) the radius term, both sides of the boundary --------------
-    far = scan_game(_base_tl(enemy_x=1601), "g", mana, cd_lad)
-    check("enemy_outside_1600_still_in_domain", far["frames"], 1)
-    check("enemy_outside_1600_not_in_chase", far["in_chase_radius"], 0)
-    check("enemy_outside_1600_counted_out", far["out_chase_radius"], 1)
-    check("enemy_outside_1600_no_ultcash_ring", far["ultcash_ring_only"], 0)
-    edge = scan_game(_base_tl(enemy_x=1600), "g", mana, cd_lad)
-    check("enemy_at_1600_is_inside", edge["in_chase_radius"], 1)
-    mid = scan_game(_base_tl(enemy_x=1400), "g", mana, cd_lad)
-    check("enemy_at_1400_in_1600_not_1200", (mid["in_chase_radius"], mid["ultcash_ring_only"]), (1, 0))
+    # Written against CHASE_RADIUS, never against its current value.  These were
+    # literals (1601 / 1600 / 1400) until 2026-09-09, and the day the lever
+    # narrowed they would have gone red while testing nothing about the boundary
+    # -- a boundary check that names a number the tool no longer holds is
+    # measuring the check.
+    far = scan_game(_base_tl(enemy_x=CHASE_RADIUS + 1), "g", mana, cd_lad)
+    check("enemy_outside_chase_still_in_domain", far["frames"], 1)
+    check("enemy_outside_chase_not_in_chase", far["in_chase_radius"], 0)
+    check("enemy_outside_chase_counted_out", far["out_chase_radius"], 1)
+    edge = scan_game(_base_tl(enemy_x=CHASE_RADIUS), "g", mana, cd_lad)
+    check("enemy_at_chase_edge_is_inside", edge["in_chase_radius"], 1)
+    beyond = scan_game(_base_tl(enemy_x=max(CHASE_RADIUS, ULTCASH_RADIUS) + 1),
+                       "g", mana, cd_lad)
+    check("enemy_outside_both_rings_no_ultcash_ring", beyond["ultcash_ring_only"], 0)
+
+    # ⭐ THE RING NESTING, asserted rather than left to the header.  At 1600 the
+    # chase ring contained ultcash's 1200 and this check read the other way
+    # round; at 700 it is strictly inside it, so a frame can be in the ultcash
+    # ring and NOT in the chase ring, and never the reverse.  If someone widens
+    # the lever back past 1200 this goes red and says the overlap layer changed
+    # meaning, instead of the layer quietly changing meaning.
+    check("chase_ring_is_inside_the_ultcash_ring", CHASE_RADIUS <= ULTCASH_RADIUS, True)
+    between = scan_game(_base_tl(enemy_x=(CHASE_RADIUS + ULTCASH_RADIUS) / 2.0),
+                        "g", mana, cd_lad)
+    check("enemy_between_the_rings_is_ultcash_only",
+          (between["in_chase_radius"], between["ultcash_ring_only"]), (0, 1))
 
     # --- (2) the value column ----------------------------------------
     r = scan_game(_death_at(_base_tl(), 103.0), "g", mana, cd_lad)
@@ -733,7 +780,10 @@ def selfcheck():
     # an enemy illusion DOES count for the lever (J.GetNearbyHeroes has no
     # illusion filter) and is excluded only in the companion column
     tlj = _base_tl(enemy_x=5000)
-    tlj["snapshots"].append(_snap(100.0, "npc_dota_hero_lina", 3, 900, 0, 1000, 1.0, 500, 1, 0, pid=6, idx=99))
+    # the illusion's distance is expressed in the constant for the same reason
+    # the boundary checks are: it was a bare 900, inside the old 1600 ring and
+    # outside the current 700 one.
+    tlj["snapshots"].append(_snap(100.0, "npc_dota_hero_lina", 3, CHASE_RADIUS / 2.0, 0, 1000, 1.0, 500, 1, 0, pid=6, idx=99))
     tlj["snapshots"].append(_snap(101.0, "npc_dota_hero_lina", 3, 5000, 0, 1000, 1.0, 500, 1, 0, pid=6, idx=2))
     rj = scan_game(tlj, "g", mana, cd_lad)
     check("enemy_illusion_counts_for_the_lever", rj["in_chase_radius"], 1)

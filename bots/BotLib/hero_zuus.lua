@@ -1289,8 +1289,66 @@ end
 -- X.zuus_ShouldCashUltBeforeDeath believes the death it is pricing is going to
 -- happen.  It is NOT a reach term: Thundergod's Wrath is global (see the note
 -- inside X.ConsiderR).  Written as a named constant so moving it self-reports in
--- tests/test_zuus_ult_strand.lua section 5.
-X.nUltCashChaseRadius = 1600
+-- tests/test_zuus_ult_strand.lua sections 5 and 7.
+--
+-- ⭐ NARROWED 1600 -> 700 on 2026-09-09 (hero stream), and the reason is a
+-- reading, not a preference.  The archive domain scan this lever asked for came
+-- back (queue.json:hero-37, replay-check
+-- iterations/reports/replay-check/domain_scan_hero_2_30_31.md section 10) and it
+-- prices the 1600 ring on the branch's OWN domain: 1,645 of 1,843 domain frames
+-- are inside it (89.3%), and at the scale the decision is actually taken --
+-- episodes -- 252 of 257 are inside it (98.1%).  A conjunct that admits 98.1% of
+-- the domain is not a narrowing; the paragraph above the helper called this term
+-- the thing that keeps the widening from being a blank cheque, and at 1600 that
+-- sentence was not true.
+--
+-- ⭐ WHY IT MEASURED AS A NEAR-TAUTOLOGY -- the cause is collinearity, not a
+-- badly chosen number, and it is visible in the source without any reading.  The
+-- enclosing conjunct in X.ConsiderR is `bot:WasRecentlyDamagedByAnyHero( 2.0 )`.
+-- A hero who damaged Zeus within the last 2.0 seconds was, within those 2.0
+-- seconds, inside its OWN attack range of him -- so "some enemy hero within
+-- 1600" is very nearly implied by the line above it.  The frame/episode split in
+-- the reading is the fingerprint of exactly that: 1600 cuts 10.7% of FRAMES but
+-- only 1.9% of EPISODES, i.e. it removes frames from episodes that still contain
+-- admitted frames.  For a branch that fires once (HIGH desire -> the ult is
+-- cast), cutting frames without cutting episodes changes no decision at all.
+--
+-- ⭐ WHY 700, WHICH IS THIS REPO'S OWN RING AND NOT A NEW NUMBER.  The question
+-- the term is supposed to ask is "is somebody still able to be killing him right
+-- now", and this tree already owns a measured answer to it:
+-- `J.CanEnemyInterruptTpChannel` (bots/FunLib/jmz_func.lua) searches R = 700
+-- unarmed for "an enemy who could strike me this instant", and
+-- tools/batch_test/behavioral/tpreach_domain.py derives that same bound from the
+-- corpus rather than from memory -- its measured reach table tops out at
+-- skywrath 700, and it states that `reach(enemy) > 700` requires
+-- `GetAttackRange() > 550`, i.e. a long-ranged hero.  700 is therefore the ring
+-- inside which ANY hero in the pool can be landing attacks.
+--
+-- ⚠️ WHAT WAS DELIBERATELY NOT DONE: the per-chaser `hEnemy:GetAttackRange() +
+-- 150` form would be sharper than any constant, and it is rejected on purpose.
+-- Nothing under tests/mock installs GetAttackRange from frame data (the dump
+-- does not carry it -- tpreach_domain.py says so in its own header), so the
+-- fixture loader answers the generic 150 default and the term would read as
+-- "distance <= 300" on every real frame while looking like it read the engine.
+-- That is the defect GH #656 catalogues (14 armed ids pressing on a getter the
+-- loader answers with a silent 0); a constant is honest here and the getter is
+-- not.
+--
+-- ⚠️ WHAT THE NARROWING BOUGHT ON REAL FRAMES, and it is one frame, stated as
+-- one frame.  Over the 9 Zeus-subject fixtures the helper answers true on 7 at
+-- 1600 and on 6 at 700; the single frame that MOVED is f_073148_zuus_lina, whose
+-- nearest enemy hero is Lina at 979.8u -- outside every attack range in the pool,
+-- so she is not the reason a death would happen.  The creation frame
+-- (f_20260827_091703_slot12_zuus_473_1, Slardar at 304.9u) is NOT moved, which is
+-- the point: the instant that motivated the lever still fires.  Section 7 of
+-- tests/test_zuus_ult_strand.lua drives both radii on those frames.
+--
+-- ⚠️ AND WHAT IT DID NOT BUY: no column prices the 700 ring on the DOMAIN.  The
+-- reading above is cut by the 1600 predicate, and a reading cut by predicate X
+-- prices only the leg written with X -- so "700 admits N% of episodes" is a
+-- number nobody has.  Requested as queue.json:hero-55; until it lands, the claim
+-- here is that 1600 was measured not to narrow, NOT that 700 was measured to.
+X.nUltCashChaseRadius = 700
 
 --- [zusultstrand] gated (turbo + soak candidate): may the RETREAT branch of
 --- X.ConsiderR cash Thundergod's Wrath out before Zeus dies?
@@ -1350,6 +1408,15 @@ X.nUltCashChaseRadius = 1600
 --- all -- it is about whether the death being priced actually happens.  With
 --- nobody near, a Zeus at 28% who was clipped two seconds ago frequently lives,
 --- and cashing costs him 250-500 mana and the ult for the next two minutes.
+---
+--- ⚠️ CORRECTED 2026-09-09, and the sentence above is kept rather than rewritten
+--- because it has been quoted.  AT THE RADIUS IT WAS WRITTEN WITH (1600) IT WAS
+--- FALSE.  The archive scan this lever asked for (queue.json:hero-37) priced that
+--- ring on this branch's own domain and it admits 98.1% of episodes (252/257) --
+--- a blank cheque with a conjunct in front of it.  The cause and the repair are
+--- argued at X.nUltCashChaseRadius, which is now 700; the paragraph above is true
+--- again only at that value, and the reading that would price 700 on the domain
+--- does not exist yet (requested as queue.json:hero-55).
 ---
 --- ⚠️ COVERAGE, and the sentences may not be merged.  The corpus drives the
 --- SHIPPED right-hand side on real frames (GetCooldown reads a truthful 130 on
