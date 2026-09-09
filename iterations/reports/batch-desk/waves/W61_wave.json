@@ -45,14 +45,14 @@
     "skeleton_king",
     "spirit_breaker"
    ],
-   "sir": null,
-   "create": null,
-   "update": null,
-   "survival_min": null,
-   "status_code": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null
+   "sir": "sir-44ifpf4j",
+   "create": "2026-09-09T15:23:43.000Z",
+   "update": "2026-09-09T15:31:35.000Z",
+   "survival_min": 7.87,
+   "status_code": "instance-terminated-no-capacity",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0
   },
   {
    "seed": 10212,
@@ -71,14 +71,14 @@
     "spirit_breaker",
     "zuus"
    ],
-   "sir": null,
-   "create": null,
-   "update": null,
-   "survival_min": null,
-   "status_code": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null
+   "sir": "sir-ngp7p8tj",
+   "create": "2026-09-09T15:23:48.000Z",
+   "update": "2026-09-09T15:26:26.000Z",
+   "survival_min": 2.63,
+   "status_code": "instance-terminated-no-capacity",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0
   },
   {
    "seed": 10390,
@@ -98,14 +98,14 @@
     "pudge",
     "zuus"
    ],
-   "sir": null,
-   "create": null,
-   "update": null,
-   "survival_min": null,
-   "status_code": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null
+   "sir": "sir-ca87mgjk",
+   "create": "2026-09-09T15:24:17.000Z",
+   "update": "2026-09-09T15:31:35.000Z",
+   "survival_min": 7.3,
+   "status_code": "instance-terminated-no-capacity",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0
   },
   {
    "seed": 10526,
@@ -126,14 +126,14 @@
     "spirit_breaker",
     "zuus"
    ],
-   "sir": null,
-   "create": null,
-   "update": null,
-   "survival_min": null,
-   "status_code": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null
+   "sir": "sir-h5vzpcyj",
+   "create": "2026-09-09T15:24:28.000Z",
+   "update": "2026-09-09T15:30:35.000Z",
+   "survival_min": 6.12,
+   "status_code": "instance-terminated-no-capacity",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0
   }
  ],
  "self_destruct": "2h watchdog per machine, plus self-termination on completion; spot reclaim also terminates. `kill all` ids for this wave: i-0984433a6439724ee i-0f92525201097ccb5 i-0a3be0185f32b8dae i-033a7cf8439da603f.",
@@ -159,5 +159,16 @@
    "W61"
   ],
   "family_depth_after_ruling": "2 waves / up to 8 paired seeds on the 37-id string"
+ },
+ "harvest_result": {
+  "harvested_at": "2026-09-09T18:0x-18:4xZ",
+  "outcome": "TOTAL LOSS -- 0 games banked, 0 verdicts, 0 paired seeds, on all four machines.",
+  "evidence": "(1) SIR rows read first-hand this round (they had not aged out): all four carry Status.Code `instance-terminated-no-capacity` with Status.Message `Your Spot instance was terminated because there is no Spot capacity available that matches your request.` Update times 15:26:26Z / 15:30:35Z / 15:31:35Z / 15:31:35Z against creates 15:23:43-15:24:28Z. (2) S3 scan: newest object under validation/ is 2026-09-09T10:22:37Z (W60's), and a per-run-id count of validation objects matching 20260909_1523 / _1524 is 0 -- checked per prefix, not inferred from the newest-object timestamp alone. (3) Under soak/ the wave left exactly three `soak_farm.log` files (the 152346/seed-10212 machine, dead at 2.63 min, left nothing at all) and NO analysis/demclaim objects.",
+  "how_far_they_got": "Fully up, and killed at the last possible moment before useful work: seed 10208's log shows the pinned tree cloned (`252a5781 hero: record the round's publication readings and token usage`), soak_pool.lua written (41 heroes), plain_deploy.sh done, the 16-slot farm started with SOAK_REC_SLOTS=8, and `validate_onspot.sh` invoked with the full 37-id arm string and seed 10208 -- then `SPOT INTERRUPTION: {\"action\":\"terminate\",\"time\":\"2026-09-09T15:33:35Z\"}`. The notice time is 2 min after the SIR UpdateTime 15:31:35Z, which is the standard two-minute interruption warning; the two readings corroborate each other rather than conflict. The arm string in that log is a THIRD independent derivation of the 37 ids (test_set.md line 2 at gate time, the launch script's own re-derivation, and now the machine's own command line).",
+  "yield": "0/4 paired seeds. Every machine: ab=0, ba=0, arm_depth=0.0 -- its own integers, zero-filled per harvest instruction (c), never null and never a pooled value.",
+  "machine_hours": "23.92 machine-minutes total = 0.3986 h over four machines, mean 0.0997 h/machine. Bill-side cost not yet splittable; the model-side residue at the $0.28/h band is ~$0.11 for the wave.",
+  "rule454_yi2": "NOT COMPUTABLE ON THIS WAVE, and the reason is the clause's own text: (乙2) averages machine-hours over machines that SELF-TERMINATED (`instance-terminated-by-user`), excluding reclaimed ones. Zero of W61's four self-terminated, so the average is over an empty set. Registering this as a reading, not a pass: the 0.0997 h/machine above is the reclaimed-machine figure and must NOT be compared against the 1.00 h/machine threshold.",
+  "rule454_yi1": "OWED, tenth consecutive round. Still unsplittable inside the daily USW2-SpotUsage line, and this wave is additionally too small (~$0.11) to be separable even if the line were split.",
+  "pooling": "The director's W60+W61 pooling ruling (test_set.md §GH) is UNAFFECTED IN LAW AND EMPTY IN FACT: the reachable-program key still holds, but W61 contributes 0 seeds, so the pooled family is W60's 4 paired seeds and depth stays 1 wave / 4 seeds. The first depth-2, 8-paired-seed read since W52 did not happen."
  }
 }
