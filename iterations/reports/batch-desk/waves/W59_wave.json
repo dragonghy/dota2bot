@@ -44,7 +44,16 @@
       "sir_fulfilled_at": "2026-09-09T03:23:28.000Z",
       "sir_update_semantics": "`update` and `terminated_at` are BOTH written at harvest from SIR Status.UpdateTime (GH #580: reclaim_blind.py reads `update`). At launch only sir_fulfilled_at is known -- do NOT compute survival from it at harvest (that path invents ~62s lifetimes and a phantom BRACKET VIOLATED); re-read Status.UpdateTime first-hand in the harvest round.",
       "az_spot_price_at_launch_usd_per_hour": "0.2732",
-      "instance_initiated_shutdown_behavior": "terminate (queried per-machine, separately)"
+      "instance_initiated_shutdown_behavior": "terminate (queried per-machine, separately)",
+      "update": "2026-09-09T04:08:34.000Z",
+      "terminated_at": "2026-09-09T04:08:34.000Z",
+      "status_code": "instance-terminated-by-user",
+      "survival_min": 45.53,
+      "survival_source": "SIR Status.UpdateTime, read FIRST-HAND in this harvest round (2026-09-09T06:2xZ) -- NOT sir_fulfilled_at.",
+      "ab": 28,
+      "ba": 14,
+      "arm_depth": 18.67,
+      "legs_source": "recover_verdict.py RV_EXIT=0 THIS harvest round over the four per-run subdirs (GH #225, not flattened). Seed 9583 produced ZERO objects beyond one non-analysis file, so it never reaches per_seed at all -- its 0/0 is written here explicitly rather than left absent, because an absent key is what made this same gate UNDECIDABLE on W41."
     },
     {
       "seed": 9532,
@@ -63,7 +72,16 @@
       "sir_fulfilled_at": "2026-09-09T03:23:28.000Z",
       "sir_update_semantics": "`update` and `terminated_at` are BOTH written at harvest from SIR Status.UpdateTime (GH #580: reclaim_blind.py reads `update`). At launch only sir_fulfilled_at is known -- do NOT compute survival from it at harvest (that path invents ~62s lifetimes and a phantom BRACKET VIOLATED); re-read Status.UpdateTime first-hand in the harvest round.",
       "az_spot_price_at_launch_usd_per_hour": "0.2582",
-      "instance_initiated_shutdown_behavior": "terminate (queried per-machine, separately)"
+      "instance_initiated_shutdown_behavior": "terminate (queried per-machine, separately)",
+      "update": "2026-09-09T03:47:06.000Z",
+      "terminated_at": "2026-09-09T03:47:06.000Z",
+      "status_code": "instance-terminated-no-capacity",
+      "survival_min": 24.03,
+      "survival_source": "SIR Status.UpdateTime, read FIRST-HAND in this harvest round (2026-09-09T06:2xZ) -- NOT sir_fulfilled_at.",
+      "ab": 10,
+      "ba": 0,
+      "arm_depth": 0.0,
+      "legs_source": "recover_verdict.py RV_EXIT=0 THIS harvest round over the four per-run subdirs (GH #225, not flattened). Seed 9583 produced ZERO objects beyond one non-analysis file, so it never reaches per_seed at all -- its 0/0 is written here explicitly rather than left absent, because an absent key is what made this same gate UNDECIDABLE on W41."
     },
     {
       "seed": 9583,
@@ -82,7 +100,16 @@
       "sir_fulfilled_at": "2026-09-09T03:23:28.000Z",
       "sir_update_semantics": "`update` and `terminated_at` are BOTH written at harvest from SIR Status.UpdateTime (GH #580: reclaim_blind.py reads `update`). At launch only sir_fulfilled_at is known -- do NOT compute survival from it at harvest (that path invents ~62s lifetimes and a phantom BRACKET VIOLATED); re-read Status.UpdateTime first-hand in the harvest round.",
       "az_spot_price_at_launch_usd_per_hour": "0.2811",
-      "instance_initiated_shutdown_behavior": "terminate (queried per-machine, separately)"
+      "instance_initiated_shutdown_behavior": "terminate (queried per-machine, separately)",
+      "update": "2026-09-09T03:32:13.000Z",
+      "terminated_at": "2026-09-09T03:32:13.000Z",
+      "status_code": "instance-terminated-no-capacity",
+      "survival_min": 9.1,
+      "survival_source": "SIR Status.UpdateTime, read FIRST-HAND in this harvest round (2026-09-09T06:2xZ) -- NOT sir_fulfilled_at.",
+      "ab": 0,
+      "ba": 0,
+      "arm_depth": 0.0,
+      "legs_source": "recover_verdict.py RV_EXIT=0 THIS harvest round over the four per-run subdirs (GH #225, not flattened). Seed 9583 produced ZERO objects beyond one non-analysis file, so it never reaches per_seed at all -- its 0/0 is written here explicitly rather than left absent, because an absent key is what made this same gate UNDECIDABLE on W41."
     },
     {
       "seed": 9839,
@@ -101,7 +128,16 @@
       "sir_fulfilled_at": "2026-09-09T03:23:28.000Z",
       "sir_update_semantics": "`update` and `terminated_at` are BOTH written at harvest from SIR Status.UpdateTime (GH #580: reclaim_blind.py reads `update`). At launch only sir_fulfilled_at is known -- do NOT compute survival from it at harvest (that path invents ~62s lifetimes and a phantom BRACKET VIOLATED); re-read Status.UpdateTime first-hand in the harvest round.",
       "az_spot_price_at_launch_usd_per_hour": "0.2602",
-      "instance_initiated_shutdown_behavior": "terminate (queried per-machine, separately)"
+      "instance_initiated_shutdown_behavior": "terminate (queried per-machine, separately)",
+      "update": "2026-09-09T03:47:06.000Z",
+      "terminated_at": "2026-09-09T03:47:06.000Z",
+      "status_code": "instance-terminated-no-capacity",
+      "survival_min": 23.95,
+      "survival_source": "SIR Status.UpdateTime, read FIRST-HAND in this harvest round (2026-09-09T06:2xZ) -- NOT sir_fulfilled_at.",
+      "ab": 10,
+      "ba": 0,
+      "arm_depth": 0.0,
+      "legs_source": "recover_verdict.py RV_EXIT=0 THIS harvest round over the four per-run subdirs (GH #225, not flattened). Seed 9583 produced ZERO objects beyond one non-analysis file, so it never reaches per_seed at all -- its 0/0 is written here explicitly rather than left absent, because an absent key is what made this same gate UNDECIDABLE on W41."
     }
   ],
   "slate_anchor": "last machine up 2026-09-09T03:23:10Z (max, GH #469 ruling 1) => gate (i) unlocks 2026-09-09T09:23:10Z. The first-machine reading would be 09:23:02Z. Slate spread 8s -- the tightest on record (W58 18s). DO NOT copy this timestamp into the next round as the unlock: run wave_throttle.py and read the line IT prints.",
@@ -120,5 +156,87 @@
     "gate_iv_inputs_harvest_owed": "NONE -- see the top-level harvest_owed_at_launch key for the evidence. (This copy is provenance only; tests/test_wave_gate_keys.py treats the top-level key as authoritative.)"
   },
   "leak_check": "At launch: exactly 4 running/pending account-wide, all four are W59's own, all `spot`. Account-level query, NOT tag-filtered (the budget is not tag-filtered either -- GH #515/#528). No fifth machine, no orphan, no foreign c7a/r7a workload (none in-region since 09-06). Standing cost remains only AMI ami-0a990a26d89c66547.",
-  "rule454_yi1_status": "OWED, fifth consecutive round, and this round the reason is a measurement rather than a hedge. The 09-08 SpotUsage:c6i.4xlarge line reads $1.341348 and the 09-08 PublicIPv4:InUseAddress line reads $0.029350 -- BOTH byte-identical to the readings taken at 2026-09-09T00:1xZ, three hours earlier. Against 10.1499 known machine-hours for 09-08's four waves, the spot line implies $0.1322/h (51% of the day's cheapest AZ quote) and the independent IPv4 line back-solves to 5.87 address-hours (57.8% of known machine-hours): two independent lines agreeing that roughly half of 09-08 has not landed. Settle W55/W56/W57/W58/W59 in one pass once it does."
+  "rule454_yi1_status": "OWED, fifth consecutive round, and this round the reason is a measurement rather than a hedge. The 09-08 SpotUsage:c6i.4xlarge line reads $1.341348 and the 09-08 PublicIPv4:InUseAddress line reads $0.029350 -- BOTH byte-identical to the readings taken at 2026-09-09T00:1xZ, three hours earlier. Against 10.1499 known machine-hours for 09-08's four waves, the spot line implies $0.1322/h (51% of the day's cheapest AZ quote) and the independent IPv4 line back-solves to 5.87 address-hours (57.8% of known machine-hours): two independent lines agreeing that roughly half of 09-08 has not landed. Settle W55/W56/W57/W58/W59 in one pass once it does.",
+  "harvest": {
+    "harvested_at": "2026-09-09T06:2xZ",
+    "rv_exit": 0,
+    "arm_string_at_harvest": "39 ids / 354 bytes / md5 433070c6d8fde3758555302db49047ab, computed live this round off the LAUNCH TREE 66a8a15b's test_set.md line 2 -- byte-identical to the launch record. Today's origin/main line 2 is already 37 ids / 335 bytes / b525d51d4b4957e0e40f22f203aea641, so harvesting off `main` (what the charter prose still says) would have recomputed against a string no machine ever ran. Second consecutive round walking that edge; GH #631.",
+    "input": {
+      "files_seen": 80,
+      "games_loaded": 80,
+      "source_dirs": 3,
+      "unparseable": 0,
+      "pooled_basename_dirs_overridden": 0,
+      "scored_games": 42,
+      "unfinished": 0,
+      "min_arm_depth": 8,
+      "thin_arm_seeds": []
+    },
+    "per_seed": {
+      "9531": {
+        "ab": 28,
+        "ba": 14,
+        "arm_depth": 18.67,
+        "gpm": -7.79,
+        "gpm_ab": 30.72,
+        "gpm_ba": -46.3,
+        "xpm": 5.29,
+        "deaths": -0.1,
+        "last_hits": -0.24,
+        "scored": true
+      },
+      "9532": {
+        "ab": 10,
+        "ba": 0,
+        "arm_depth": 0.0,
+        "excluded": "NO-PAIR"
+      },
+      "9583": {
+        "ab": 0,
+        "ba": 0,
+        "arm_depth": 0.0,
+        "excluded": "TOTAL LOSS -- 1 S3 object, 0 analysis.json, reclaimed at 9.1 min"
+      },
+      "9839": {
+        "ab": 10,
+        "ba": 0,
+        "arm_depth": 0.0,
+        "excluded": "NO-PAIR"
+      }
+    },
+    "mean": {
+      "gpm": -7.79,
+      "xpm": 5.29,
+      "deaths": -0.1,
+      "last_hits": -0.24
+    },
+    "comps_better": {
+      "gpm": "0/1",
+      "xpm": "1/1",
+      "deaths": "1/1",
+      "last_hits": "0/1"
+    },
+    "mean_caveat": "ONE scored seed. `mean` IS that seed; comps_better's denominator is 1; cross-seed dispersion information is ZERO. reclaim_blind.py's own header: a one-seed wave is an orphan with better paperwork.",
+    "strata": {
+      "gpm": {
+        "ab": 30.72,
+        "ba": -46.3,
+        "side": 38.51,
+        "sign_flip": true,
+        "side_gt_arm": "1/1"
+      },
+      "note": "Registered per rule 4(i-a); per (i-c) a sign flip on a side-bias-cancelled estimator is an identity, not a diagnosis, and is NOT a reason to reject."
+    },
+    "winrate_channel": "DEGENERATE (10th consecutive wave). minority side won 0 of 80 finished games (share 0.0000 < 0.20); census {radiant 0, dire 80}; winner_by {engine_natural: 80}; winrate 0.5 +/- headroom 0.0. Minority-share series is now 0.0645 -> 0.0245 -> 0.0000 -> 0.1552 -> 0.0000: last round's non-zero reading did NOT persist. MUST NOT be cited as rule 2(b) support.",
+    "gate_iv_verdict": "RECLAIM_BLIND_EXIT=1 -- BLINDED. Verbatim: `yield: 1 paired seed(s) of 4 machine(s)` / `attribution: 3 machine(s) reclaimed before the flip` / `VERDICT: BLINDED -- yield <= 1 AND the loss is capacity.` / `NEXT WAVE: launch --on-demand (ONE wave), then revert to spot.` The FIRST invocation returned exit 2 (`UNDECIDABLE: seed 9531: missing leg count 'ab'`) because the launch round cannot know the leg counts; backfilling ab/ba/arm_depth per machine -- the fixed harvest action established last round -- is what made the gate decidable. Seed 9583's 0/0 is written EXPLICITLY even though it never reaches per_seed, because an absent key is the shape that made this gate exit 2 on W41.",
+    "next_wave_market": "ON-DEMAND for W60, ONE wave, then revert to spot. Gate output, not a desk judgement. Consequences the launch round must carry: fence (iii) uses the on-demand single-wave constant ~$2.15, NOT $1.10; and an on-demand machine has NO SIR, so its row needs \"market\": \"on-demand\" + \"status_code\": \"<EC2 StateReason.Code>\" (GH #408 second half).",
+    "gh591_bracket": "ZERO INFORMATION, sixth round. Longest orphan 24.03 min (below the 34.80 lower edge), shortest paired survivor 45.53 min (above the 40.63 upper edge): all four readings fall OUTSIDE the bracket, so it did not move. Last round had narrowed it to 38s above the constant.",
+    "gh454_leg_yi2": "DOES NOT FIRE. Only one machine self-terminated (9531, instance-terminated-by-user); its 0.7588 h/machine is below the 1.00 h threshold. The three reclaimed machines are excluded by the clause's own wording.",
+    "gh454_leg_yi1": "OWED, sixth consecutive round. The paid CE daily x usage-type pull this round returns an EMPTY group set for 2026-09-09 -- W59 has not landed at all, ~2.2h after the last machine died (charter-pinned EC2 lag 4.3-11.3h). Price-side single-wave estimate $0.4658 (EC2 spot $0.4572 + 1.7102 machine-hours x $0.005/h IPv4 $0.0086); per machine 9531 $0.2073 / 9532 $0.1034 / 9583 $0.0426 / 9839 $0.1039. That is NOT the billing-side reading (乙1) asks for.",
+    "gh454_textbook": "W59 is the cleanest instance on record of #454's own legislative sentence. The wave is CHEAP ($0.4658 = 42.3% of the $1.10 constant) precisely BECAUSE capacity destroyed it, and it bought exactly 1 paired seed. The retired money-side trigger (>$1.10) could never fire here; and the replacement machine-hours trigger (乙2) also stays silent, because averaging over SELF-TERMINATED machines only leaves a single machine that happened to run full. BOTH legs are silent on a wave that lost 3 of 4 machines to capacity. Registered for the director, with a suggested third leg: `>= half a wave's machines reclaimed with instance-terminated-no-capacity` fires on W17/W17-R/W19/W19-R/W59 and stays silent on W18/W20/W21/W24/W25/W28.",
+    "gh454_jia_direction_measured": "NEW AND LOAD-BEARING. An independent second clock (S3 last-object LastModified; uploads do not expire, GH #332's survival_bound lower) was read per machine against SIR Status.UpdateTime: 9531 SIR 04:08:34Z vs S3 04:05:07Z (SIR 3.45 min LATER); 9532 SIR 03:47:06Z vs S3 03:48:19Z (SIR 73s EARLIER); 9583 SIR 03:32:13Z vs S3 03:32:22Z (SIR 9s EARLIER); 9839 SIR 03:47:06Z vs S3 03:48:29Z (SIR 83s EARLIER). So for the three RECLAIMED machines the box was still alive and still uploading after Status.UpdateTime -- UpdateTime is a LOWER bound on survival there, the OPPOSITE sign from mechanism (甲) (`UpdateTime lags real termination => machine-hours over-estimated`), which last round was left carrying the 09-07 puzzle alone. Mechanically consistent (a spot reclaim notifies first and terminates ~2 min later, and SIR status tracks the notice). HONEST LIMITS, registered as `direction measured opposite`, NOT as `(甲) falsified`: only ONE self-terminated machine this wave and on it SIR is 3.45 min LATER (with (甲)); 09-07's machine mix was never read per-machine so this sign cannot be carried there; and an S3 upload time is itself only a bound, not the shutdown instant. Net: the desk's machine-hours are if anything UNDER-counted on reclaimed machines (<=~2 min each, <=0.1h of 1.71h ~ 6%), and 09-07's `18% below the day's cheapest quote` is back to three candidate mechanisms.",
+    "az_spread_outcome": "The 4/4 AZ spread bought NOTHING. 9583 (2c) reclaimed at 9.1 min; 9532 (2b) and 9839 (2d) reclaimed in the SAME SECOND 03:47:06Z across TWO DIFFERENT AZs. Third measurement point falsifying `one AZ event costs one seed`, and the strongest one: it reproduced under the most favourable placement configuration on record (every requested AZ granted, zero re-aims). Does NOT argue for dropping --az (it suppresses a different quantity at zero cost); it argues that GH #403 must not be closed on this round's 4/4 self-heal.",
+    "leak_check_at_harvest": "LEAK_EXIT=0. Account-wide running/pending = 0 (NOT tag-filtered). Standing cost remains only AMI ami-0a990a26d89c66547.",
+    "report": "iterations/reports/batch-desk/20260909T060700Z.md"
+  }
 }
