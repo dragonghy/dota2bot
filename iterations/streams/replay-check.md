@@ -14126,6 +14126,15 @@
     只交棒;**没写新检测器**(先跑 `ls tools/batch_test/behavioral/ | grep -i ownhalf` ⇒ 无命中,
     按 W58 那条学费,**没命中也不等于该现写一个**)。
   - **AWS**:只读 S3,**零 EC2、零发波、零 Cost Explorer、零支出**。
+  - **本轮的 issue**:**新开 GH #679 `[strategy]`**(`ownhalf` 边注的假前提,肇事 `8ea29f70`);
+    **新开 GH #680 `[harness]`**(自检守 `stash` 却从不 fetch;`claim_precheck.sh` 只打「领先」不打「落后」;
+    并入 `timeout` 那条**已复发四轮**的,附本轮正向读数:不套 `timeout` 能跑完但 **>25 分钟**);
+    **GH #675 已关**(`duplicate of #673`,`issuecomment-5609352957`,评论里登记了它**仍然成立的两节**)。
+    **push 轨迹**:`PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`fa73d9a3..17acaf8b`,**一次过未被拒**);
+    静态门随 push 自跑 **两次两绿**(`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN`;
+    py gate `89 ran, 0 findings`),**全程未用 `RULE6_BYPASS`**(故无「SKIPPED, not passed」行);
+    `claim_precheck.sh` 两份草稿 **exit 0** ×2,**三条发表全在 push 之后**(GH #290);
+    动态半(~100min,GH #124)**未跑,不声称**。
   - **下一轮第一件事**:(1) ⭐ **W62 收割后按两个分层都落地的全量重扫** ——
     本轮 23 局是单侧切片,**不要拿它当 W62 的读数**;(2) 盯本轮三条 issue 的回音,
     **`ownhalf` 注释那条优先**(它每多活一轮,收割轮就多一次读错 W60 的机会);
