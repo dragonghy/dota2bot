@@ -43,12 +43,40 @@
 -- (tests/frames/README.md's own method note: both runs exit 0, so an exit code
 -- decides nothing here):
 --
---     into tests/fixtures/  -> 4 files / 5 assertions red
---     into tests/frames/    -> 6 files / 9 assertions red  <- PAID 2026-09-09
+--     into tests/frames/    ->  6 files /  9 assertions red  <- PAID 2026-09-09
+--     into tests/fixtures/  -> 24 files / 40 assertions red  <- NOT paid
 --
--- The staging price is paid; the admission price is not, and admitting the
--- frame is a separate work unit with a separate list.  Independently measured
--- this round and matching GH #659's table file for file.
+-- ⚠️ THE SECOND NUMBER WAS WRONG IN THIS FILE, IN GH #659, AND IN
+-- tests/frames/README.md UNTIL 2026-09-09T14:xxZ, WHERE IT READ 4 files / 5
+-- assertions.  Corrected here by re-measuring; the defect is worth more than the
+-- correction, because it is a defect of the INSTRUMENT and not of the arithmetic:
+--
+--   * both prices were measured over one file list -- `rg -l 'tests/frames'
+--     tests/`, the 35 files that MENTION THE STAGED DIRECTORY.  For staging that
+--     list is exactly right: staging can only be seen by a file that reads
+--     tests/frames/.
+--   * admission does not change tests/frames/.  It changes the CORPUS GLOB, so
+--     its scope is the corpus-enumerating set -- the 88 files that run
+--     `ls tests/fixtures`, glob `tests/fixtures/*.lua`, or go through the
+--     sightings helper.
+--   * the two lists are not merely different sizes.  On the admission question
+--     the staging list is ANTI-CORRELATED with the answer: a file that
+--     enumerates BOTH directories cannot move when a frame is carried from one
+--     to the other, and those are exactly the files the staging list finds.
+--     tests/test_cm_ult_reach_meter_domain.lua is the worked example -- the old
+--     table charged admission 2 assertions for it, and measured, it costs ZERO.
+--
+--   Measured 2026-09-09T13:xxZ over the 88-file corpus-enumerating scope, by
+--   moving the file in, running all 88, moving it back, and diffing against a
+--   baseline taken the same way (baseline: 86 green, 2 red before anything moved
+--   -- test_roshdist_pit_truth_operand and test_salveally_missing_floor, both
+--   pre-existing trunk reds, neither this frame's).  Full table in
+--   tests/frames/README.md.
+--
+-- The staging price is paid; the admission price is NOT, it is six times the
+-- file count that was published for it, and most of its rows belong to other
+-- desks (the level-gate family, strategy, harness).  Admitting the frame is a
+-- separate work unit with a separate list, and it is not a small one.
 --
 -- THE ONE ROW THAT WAS A JUDGEMENT AND NOT A COUNT (queue hero-10)
 --
@@ -193,6 +221,156 @@ tests['§3 the second live late-game Wraith King: pool above 600, mana below it'
     -- ⚠️ n = 2, and two frames from two games are not a rate.  hero-10 asks for
     -- a distribution over archived timelines; nothing here supplies one, and
     -- the request stays pending for that reason and no other.
+end
+
+-- ---------------------------------------------------------------- section 4 --
+-- THE OTHER ROW THAT WAS A JUDGEMENT AND NOT A COUNT, ANSWERED HERE INSTEAD OF
+-- BEING LEFT IN THE ADMISSION BILL.
+--
+-- The admission price table charges tests/test_axe_t15_in_domain.lua one
+-- assertion for this frame:
+--
+--     assert(nMaxTalent == 1, '... If the surface widened, the t15 PICK may
+--                              finally be observable and this bound should be
+--                              RE-TAKEN, NOT RESTATED.')
+--
+-- The frame does widen it -- death_prophet carries two `special_bonus_*` rows
+-- where 1,010 corpus hero-units carry at most one.  So the bound is taken here,
+-- on the real frame, WITHOUT admitting it, and the answer is: the t15 pick is
+-- still unobservable, and the sentence that said so was measuring the wrong
+-- thing.
+--
+--   * "the dump carries AT MOST ONE special_bonus per hero" was never a CAP.
+--     It was the maximum of a sample, and this frame moves it to 2.  A bound
+--     stated as a sample max re-opens every time the sample grows, which is
+--     why it kept turning up as a line item in admission bills.
+--   * the load-bearing half -- a hero's talent list is never COMPLETE, so a
+--     missing talent is not evidence of a talent not taken -- survives the
+--     widening and is now demonstrable on a single unit rather than by
+--     cross-referencing levels: this frame's death_prophet is level 20, owes
+--     three talent tiers (10/15/20), and shows two.  Nevermore on the same
+--     frame is level 20 and shows ZERO.
+--   * measured over corpus + this frame: 26 hero-units owe two or more tiers
+--     and NOT ONE of them shows a complete set.  That statement does not move
+--     when the corpus grows, which is what makes it the bound worth ratcheting.
+--   * and the widening is not the instrument changing.  Both of death_prophet's
+--     rows are GENERIC class names (`special_bonus_h_p200`,
+--     `special_bonus_attack_speed50`); `special_bonus_unique_*` is still zero
+--     everywhere, so GH #260's H1 (the dumper drops unique rows before the
+--     leveled-talent branch) is untouched.  Two rows is what a hero who trained
+--     two GENERIC tiers looks like -- not a wider instrument.
+--
+-- ⇒ tests/test_axe_t15_in_domain.lua's VERDICT does not move, and whoever pays
+--   the admission bill pays this row by citing this section, not by re-deriving
+--   it.
+
+local function talent_census(bWithFrame)
+    local paths = {}
+    local p = assert(io.popen('ls tests/fixtures'))
+    for name in p:lines() do
+        if name:match('^f_.*%.lua$') then paths[#paths + 1] = 'tests/fixtures/' .. name end
+    end
+    p:close()
+    assert(#paths > 0, 'the corpus enumerator came back empty -- every count '
+        .. 'below would be vacuous, and an empty enumerator and an empty corpus '
+        .. 'are the same integer')
+    if bWithFrame then paths[#paths + 1] = FRAME end
+
+    local function owed(nLevel)
+        local n = 0
+        for _, t in ipairs({ 10, 15, 20, 25 }) do if (nLevel or 0) >= t then n = n + 1 end end
+        return n
+    end
+
+    local c = { units = 0, max_shown = 0, unique = 0, owes_two = 0, complete = 0,
+                worst_deficit = 0, worst = '' }
+    for _, path in ipairs(paths) do
+        local fx = dofile(path)
+        for _, u in ipairs((type(fx) == 'table' and fx.units) or {}) do
+            if u.name and u.name:match('^npc_dota_hero_') and #(u.abilities or {}) > 0 then
+                c.units = c.units + 1
+                local nShown = 0
+                for _, a in ipairs(u.abilities or {}) do
+                    if a.name:match('^special_bonus') then
+                        nShown = nShown + 1
+                        if a.name:match('^special_bonus_unique') then c.unique = c.unique + 1 end
+                    end
+                end
+                if nShown > c.max_shown then c.max_shown = nShown end
+                local nOwed = owed(u.level)
+                if nOwed >= 2 then
+                    c.owes_two = c.owes_two + 1
+                    if nShown >= nOwed then c.complete = c.complete + 1 end
+                    if nOwed - nShown > c.worst_deficit then
+                        c.worst_deficit = nOwed - nShown
+                        c.worst = u.name .. ' lvl' .. tostring(u.level)
+                            .. ' shows ' .. nShown .. ' of ' .. nOwed
+                    end
+                end
+            end
+        end
+    end
+    return c
+end
+
+tests['§4 the talent surface: the widening is real, and the bound survives it'] = function()
+    local corpus = talent_census(false)
+    local both   = talent_census(true)
+
+    -- (a) the widening, and that it is THIS frame's.
+    assert(corpus.max_shown == 1, 'the corpus alone now shows '
+        .. corpus.max_shown .. ' talent rows on some hero, not 1.  Then this '
+        .. 'frame is no longer what widened the surface and (b) below is about '
+        .. 'somebody else\'s frame -- re-take it')
+    assert(both.max_shown == 2, 'corpus + this frame shows ' .. both.max_shown
+        .. ' talent rows at most, recorded 2.  If it grew again the same '
+        .. 'question comes back: a sample max is not a cap, so re-take (c), '
+        .. 'which is the half that carries the verdict')
+
+    -- (b) the two rows are GENERIC, so the instrument did not change (GH #260 H1).
+    local fx = dofile(FRAME)
+    local dp
+    for _, u in ipairs(fx.units) do
+        if u.name == 'npc_dota_hero_death_prophet' then dp = u end
+    end
+    assert(dp ~= nil, 'the death_prophet slot is gone from this frame; it is the '
+        .. 'unit carrying the two talent rows this section reads')
+    local tRows = {}
+    for _, a in ipairs(dp.abilities or {}) do
+        if a.name:match('^special_bonus') then tRows[#tRows + 1] = a.name end
+    end
+    table.sort(tRows)
+    assert(#tRows == 2, 'the widening unit now shows ' .. #tRows
+        .. ' talent rows, recorded 2 (' .. table.concat(tRows, ', ') .. ')')
+    assert(tRows[1] == 'special_bonus_attack_speed50' and tRows[2] == 'special_bonus_h_p200',
+        'the two rows are now ' .. table.concat(tRows, ', ')
+        .. ', recorded special_bonus_attack_speed50 / special_bonus_h_p200')
+    assert(both.unique == 0, both.unique .. ' `special_bonus_unique_*` rows are '
+        .. 'now visible.  That is a change in the INSTRUMENT, not in a build: GH '
+        .. '#260 H1 said the dumper drops them before the leveled-talent branch. '
+        .. 'tests/test_fixture_talent_blindness.lua and '
+        .. 'tests/test_lategame_talent_visibility.lua are the files that ruled on '
+        .. 'it and both have to be re-read')
+
+    -- (c) the bound that replaces "at most one": incompleteness, which does not
+    --     move when the corpus grows.
+    assert(both.owes_two >= 26, 'only ' .. both.owes_two .. ' hero-units owe two '
+        .. 'or more talent tiers, recorded at least 26.  A shrinking denominator '
+        .. 'means the sample this bound rests on is going away, not that the '
+        .. 'bound got stronger')
+    assert(both.complete == 0, both.complete .. ' hero-unit(s) now show a '
+        .. 'COMPLETE talent set.  That is the reading that would finally make a '
+        .. 'trained talent observable, and it is the one tests/test_axe_t15_in_domain.lua '
+        .. 'section 6 hangs its "the t15 PICK is unobservable" bound on.  Re-read '
+        .. 'that file before quoting either')
+    assert(both.worst_deficit == 3, 'the worst talent deficit is now '
+        .. both.worst_deficit .. ' (' .. both.worst .. '), recorded 3 '
+        .. '(npc_dota_hero_nevermore lvl20 shows 0 of 3)')
+    assert(corpus.complete == 0 and corpus.worst_deficit == 2,
+        'the corpus WITHOUT this frame now reads complete=' .. corpus.complete
+        .. ' worst_deficit=' .. corpus.worst_deficit .. ', recorded 0 / 2.  The '
+        .. 'contrast between the two censuses is what makes the deficit this '
+        .. 'frame\'s contribution rather than the archive\'s')
 end
 
 return tests

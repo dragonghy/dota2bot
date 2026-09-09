@@ -22,7 +22,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--133. **⭐ 下一轮:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**
+-134. **⭐ 下一轮:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**
+   这条**逐字继承 `-133`/`-132`**(本轮又执行了一次,仍是绿的)。红了 = 语料长出**第五个活决策**,
+   那是 P4.4 (i) 的靶子,直接做;没红 = 不要再从源码里找焦点五的杠杆。
+   - **⛔⛔ `-133` 的第一候选(把 transit 帧入集)本轮做了,结论是**不入集**,不要再排它。**
+     理由不是「不值得」:**入集价被重量了,是 24 文件 / 40 断言,不是公布过的 4 文件 / 5 断言**
+     (6 倍文件 / 8 倍断言),而且其中 **9 行不归本组**。逐文件表 + 方法 + 归属已在
+     `tests/frames/README.md` 的 `### NOT paid` 节;**不要重量,去读那张表**。
+     报告:`iterations/reports/hero/20260909T143000Z.md`。
+   - **⭐⭐ 本轮那一课,下次给任何 staged 帧定价前必看:**
+     两个价钱是用**同一个文件清单**量的(`rg -l 'tests/frames' tests/`),
+     而那是 **staging 的仪表**:入集不改 `tests/frames/`,它改**语料 glob**,
+     作用域是**枚举语料的 88 个文件**。更要命的是在入集这个问题上两者**反相关** ——
+     **同时枚举两个目录的文件在帧被搬动时不可能动**,而那正是 staging 清单找出来的那批
+     (`test_cm_ult_reach_meter_domain`:旧表记 2 个断言,**实测 0**)。
+     ⇒ **一般结论:对一枚「纪元帧」,入集价 = 那个纪元的 reopen list,不是这枚帧的 diff。**
+   - **⭐ 已经付掉、下次直接引用不要重推**:#659 那条「不是计数是判读」的 t15 天赋面界,
+     **本轮没有入集就取掉了**,在 `tests/test_cm_cmqreach_transit_frame.lua` **§4**(该文件 3→4 例):
+     「至多一条」是**样本最大值不是 cap**;承重的是**不完整性**(欠 ≥2 档的 26 个单位**没有一个**
+     显示完整集,最大亏空 3),它不随语料变大而动;两条新行都是**通用行**,`unique` 仍全树 0
+     ⇒ GH #260 H1 未动,**t15 裁定不动**。`test_axe_t15_in_domain` §6 的失败文案已指向它。
+   - **⛔ 表里三行是升级不是成本**(`turbo_ternary_dominance` / `zeus_aether_cast_range` /
+     `slotwait_cooldown_scan`),所以「要不要入集」是一个**有正反两侧的裁定**,归总监,不归本组自己拍。
+   - **⛔⛔ 自检:本轮**没有**犯管道(逐字按规定形状跑,脚本没 REFUSED)。**新坑是另一个**:
+     我在它的 python 腿跑着的时候开了 88 文件的基线扫,**争 CPU** ⇒ 5a–5g 九个**计时**检查
+     全部 UNCERTIFIABLE ⇒ 那一侧这轮没人看过。**下一轮:自检跑完再跑任何重活**,
+     不只是「再动树」。阻塞写法照旧:
+     `until ! pgrep -f "[r]outine_selfcheck.sh" >/dev/null; do sleep 15; done`
+     (⚠️ 别用忙等 `do :; done`,它自己就是在抢 CPU)。
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):见 `-133` 那张清单,本轮未变。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`(GH #570)。
+   - **⭐ 第二页上仍没排到的 `[hero]`**:#587 / #567 / #566 / #564 / #563 / #562 / #560 /
+     #554 / #549。**#562 的「拆不拆」仍是本组的**(登记动作,只能当附带一条)。
+
+-133. ~~**⭐ 下一轮:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**~~
+   ✅ **2026-09-09T14:30Z 执行完毕。§2.1 绿(11 例 0 失败)⇒ 仍走 (ii);第一候选「入集」做了,
+   结论是**不入集**,理由见 `-134` 第一条。** ↓ 原文保留
+   **⭐ 原文:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**
    这条**逐字继承 `-132`**(它本轮执行了一次,是绿的,规矩因此仍然有效):红了 = 语料长出了
    **第五个活决策**,红线里直接打印它是哪个英雄哪一帧下的什么单 —— 那就是 P4.4 (i) 的靶子,直接做。
    没红 = **不要再从源码里找焦点五的杠杆**,理由见 `-132`(183 个活体瞬间 / 4 个决策 / 4 个都已挂 lever)。
@@ -5903,6 +5939,47 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-09T14:30Z(报告 `iterations/reports/hero/20260909T143000Z.md`;**backlog:`-133` 做完、
+  新开 `-134`**;焦点英雄 **Crystal Maiden / Wraith King / Axe**;OWNER_PRIORITIES **P4.4 (ii)** ——
+  主体是一个判定完结所需的最后一块证据:「这枚帧该不该入集」)
+  **裁定:不入集。理由不是「不值得」,是入集价被重量了 —— `-133` 逐字写着「价钱是量过的」,
+  而它不是:公布过的 4 文件 / 5 断言,实测 24 文件 / 40 断言(6 倍文件 / 8 倍断言)。**
+  - **⭐⭐ 错的是仪表不是算术。** #659 的两张价目表用**同一个清单**量:`rg -l 'tests/frames' tests/`
+    —— 那是 **staging 的仪表**。入集不改 `tests/frames/`,改的是**语料 glob**,作用域是
+    **枚举语料的 88 个文件**;而且两者在入集这个问题上**反相关**:**同时枚举两个目录的文件,
+    在帧被搬动时不可能动**,那正是 staging 清单找出来的那批。worked example:
+    `test_cm_ult_reach_meter_domain` 旧表记 **2 个断言的入集价**,**实测 0**
+    (它自己的注释就写着「Every corpus file from BOTH directories」)。
+    ⇒ 那张表**既点名了一个根本不动的文件,又漏掉了 21 个真动的**。
+  - **实测**:baseline 86 绿 / **2 红**(`roshdist_pit_truth_operand`、`salveally_missing_floor`,
+    **本轮之前就红着的 trunk 红,与本帧无关**)→ `git mv` 入集后 **25 红** → 还原后抽查 5 个全部回绿。
+    净 **24 文件动 / 断言 2→42(本帧 40 条)**。**读 diff 不读退出码**(两侧都非 0)。
+    逐文件表(每行带**原始失败文本**)进了 `tests/frames/README.md` 的 `### NOT paid` 节。
+  - **⭐ 一般结论(可带走)**:**对一枚「纪元帧」,入集价 = 那个纪元的 reopen list,不是这枚帧的 diff。**
+    证据:24 行里有两行正是 README 从 GH #357 起就挂着未付的那两行(`level_gate_census` 的
+    level≥20 零 + 四个 INERT 裁定;`IsLateGame` 的 `mode_farm_generic:393/507` TEETH),
+    因为本帧与 `creepreach` **同一个后期纪元**。
+  - **⭐ 三行是升级不是成本**:`turbo_ternary_dominance`(「pin the decision on that frame
+    instead of relying on the arithmetic alone」)、`zeus_aether_cast_range`(「**GOOD NEWS** …
+    retarget it」,本帧 Zeus 带 aether_lens)、`slotwait_cooldown_scan`(「the ITEM leg is
+    **no longer domain-empty**」)⇒ 入不入集是**有正反两侧的裁定,归总监**。
+  - **⭐⭐ #659 那条「不是计数是判读」的行:答掉了,而且没有入集就答掉了。**
+    `tests/test_cm_cmqreach_transit_frame.lua` **新 §4**(3→**4 例**,全绿):「dump 每个英雄
+    至多一条天赋」**是样本最大值不是 cap**(death_prophet 带两条);承重的是**不完整性** ——
+    语料 + 本帧里 **26 个欠 ≥2 档的单位,0 个显示完整集**,最大亏空 **3**(20 级 nevermore 显示 0),
+    而「完整集 == 0」**不随语料变大而动**;两条新行都是**通用行**、`special_bonus_unique_*`
+    全树仍 **0** ⇒ GH #260 **H1 未动**,`test_axe_t15_in_domain` 的**裁定不动**(其 §6 失败文案已指向 §4)。
+    变异台 **2/2 CAUGHT**;⚠️ M1 第一次「存活」**不是存活是没变异**(正则要求尾随逗号,
+    而那是列表最后一项)——**先证明变异落了盘再读结果**。
+  - **⛔ 本轮 `bots/` 一个字未改**,新 gated id 0,`state.json` 新条目 0,`queue.json` 未动;
+    **零 AWS / 零 EC2 / 零 S3 / 零 CE**。改正走 **#659 追评**,未开新 issue。
+  - `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;10 个具名文件全 0 失败
+    (含 `focus_decision_reachability` 11、`axe_t15_in_domain` 8、`fixture_talent_blindness` 9、
+    `smoke_load` 3、`gate_claim` 16);detectors 成品树见报告 §8。
+  - **⛔⛔ 自检**:第一条命令**按 `-133` 逐字规定的形状跑,脚本没有 REFUSED**(管道连击中断)。
+    **新坑**:我在它的 **python 腿跑着时**开了 88 文件基线扫,**争 CPU** ⇒ 5a–5g 九个**计时**检查
+    全 **UNCERTIFIABLE** ⇒ trunk 的 python 侧这轮**没人看过**(不是通过)。自检真实 **EXIT=3**
+    (findings = cadence owed-executions)。规矩补进 `-134`:**自检跑完再跑任何重活**,不只是再动树。
 - 2026-09-09T10:51Z(报告 `iterations/reports/hero/20260909T105153Z.md`;**backlog:`-132` 做完、
   新开 `-133`**;焦点英雄 **Wraith King / Crystal Maiden**;OWNER_PRIORITIES **P4.4 (ii)** ——
   工作单元主体是一个判定完结所需的最后一块证据,**不是 (i)**,理由见下第一条)

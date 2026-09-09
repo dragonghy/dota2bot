@@ -529,7 +529,16 @@ tests['[hero] axe t15: the talent PICK is unobservable, in domain or out'] = fun
         .. 'The cap of ONE is the reason a missing talent is not evidence of a '
         .. 'talent not taken -- a level-22 hero has three down and the dump shows '
         .. 'at most one.  If the surface widened, the t15 PICK may finally be '
-        .. 'observable and this bound should be re-taken, not restated.')
+        .. 'observable and this bound should be re-taken, not restated.  '
+        .. 'ALREADY TAKEN 2026-09-09 for the one frame known to widen it '
+        .. '(tests/frames/f_260908_094909_cm_cmqreach_transit.lua, a '
+        .. 'death_prophet with two rows): see '
+        .. 'tests/test_cm_cmqreach_transit_frame.lua section 4.  Its answer, in '
+        .. 'one line -- "at most one" was a SAMPLE MAX, not a cap; the bound that '
+        .. 'carries this verdict is INCOMPLETENESS (no hero-unit owing two or '
+        .. 'more talent tiers has ever shown a complete set: 0 of 26, worst '
+        .. 'deficit 3), it survives the widening, and the t15 VERDICT DOES NOT '
+        .. 'MOVE.  Cite that section rather than re-deriving it.')
     assert(nAxeWithTalent == 0,
         nAxeWithTalent .. ' of ' .. nAxe .. ' Axe frames now name a talent. '
         .. 'That is the first observation of an Axe t-pick in this archive; if it '

@@ -35,7 +35,7 @@ it.
 | `f_20260831_004433_cm_creepreach.lua` | GH #354 section 5's pinned instant (`69e067 / 20260831_004433_slot1`, t=1190.4 = 19:50, heroes up to level 22). The corpus before it topped out at level 19 and t≈790, so admitting it turns **25 test files** red -- see the census below. Used by `tests/test_cm_creep_reach_real_frame.lua`, `tests/test_axe_t15_in_domain.lua`, `tests/test_axe_bkb_supply_staged_frame.lua`, `tests/test_alchemist_rage_clock_staged_frame.lua`, `tests/test_skill_point_stall_frame.lua` and `tests/test_cm_q_creep_aoe_reach.lua`. |
 | `f_260831_061811_axe_call_tp_channel.lua` | GH #577 section 5's FIRST coordinate (`731a21 / 20260831_061811_slot1`, t=1209.9 = 20:09, Axe at level 19). Branch (i) of `axecallbkb_i`, with **zero invented state**: Berserker's Call is rank 3 at **cd 0 in the replay**, the enemy 190.2u away carries **both** `modifier_black_king_bar_immune` (a name the shipped `IsMagicImmune` override reads) **and** `modifier_teleporting`, and the replay corroborates the channel behaviourally -- Bristleback holds 190.2u across two consecutive 1.0s samples and is gone by t=1211.9. It replaces `tests/test_axe_call_immune_veto.lua` section 3's **three-flip** counterfactual with two reader repairs. Used by `tests/test_axe_call_staged_frames.lua` (by name). Also carries an ally Lion at level 18 with Finger at rank 2, which is why `tests/test_lion_ult_reserve_domain.lua` moved n from 1 to 2 -- **paid in the same round**, see below. Admission price to `tests/fixtures/` **NOT measured**. |
 | `f_260828_002127_axe_call_bkb_ring.lua` | GH #577 section 5's SECOND coordinate (`db92df / 20260828_002127_slot1`, t=982.1 = 16:22, Axe at level 22). Branch (ii)'s **value column**: a spell-immune Lina at 75.1u (inside the 225u initiation range) with Necrolyte at 165.3u and a 228-HP Shadow Shaman at 276.9u -- both non-immune, both inside the 315u Call radius -- i.e. the three-hero taunt the shipped veto throws away. It does **not** make branch (ii) reachable, and `tests/test_axe_call_staged_frames.lua` section 5 says why at the schema level. Also carries a **dead** level-19 Wraith King, which is why `tests/test_wk_level_supply_horizon.lua` moved -- **paid in the same round**, see below. Admission price to `tests/fixtures/` **NOT measured**. |
-| `f_260908_094909_cm_cmqreach_transit.lua` | GH #659's transit pin (`0eb22d / 20260908_094909_slot6`, t = 1191.5 = 19:51, CM the subject at dump idx 1534 -- globally unique, so no illusion ambiguity). The extreme case of the shape the replay group's `cmqreach` cell-(3) instrument scores: full health, 98.7% mana, ~359 u/s in a straight line, **no enemy hero within 2790u** -- and dead 17.3s later, with the first hero damage landing 12.0s after the frame. Its **staging price was measured and PAID in the round that landed it** (2026-09-09): 6 files / 9 assertions, listed below. Its **admission price to `tests/fixtures/` is 4 files / 5 assertions and is NOT paid** -- that is a separate work unit. Used by `tests/test_cm_cmqreach_transit_frame.lua` (by name). It also carries the tree's **second live Wraith King above level 12** (level 20, `mp 556 / max_mp 735`), which is the row queue `hero-10` turns on -- read in `tests/test_wk_level_supply_horizon.lua` section 6. |
+| `f_260908_094909_cm_cmqreach_transit.lua` | GH #659's transit pin (`0eb22d / 20260908_094909_slot6`, t = 1191.5 = 19:51, CM the subject at dump idx 1534 -- globally unique, so no illusion ambiguity). The extreme case of the shape the replay group's `cmqreach` cell-(3) instrument scores: full health, 98.7% mana, ~359 u/s in a straight line, **no enemy hero within 2790u** -- and dead 17.3s later, with the first hero damage landing 12.0s after the frame. Its **staging price was measured and PAID in the round that landed it** (2026-09-09): 6 files / 9 assertions, listed below. Its **admission price to `tests/fixtures/` was published as 4 files / 5 assertions; re-measured 2026-09-09 it is 24 files / 40 assertions** and is NOT paid -- see the section below for why the first number came out of the wrong instrument. Used by `tests/test_cm_cmqreach_transit_frame.lua` (by name). It also carries the tree's **second live Wraith King above level 12** (level 20, `mp 556 / max_mp 735`), which is the row queue `hero-10` turns on -- read in `tests/test_wk_level_supply_horizon.lua` section 6. |
 | `f_260828_124358_axe_cull_promise.lua` | GH #570's falsification pin (`11c470 / 20260828_124358_slot1`, t=1452.8 = 24:12, Axe at level 30). It is the only frame in the tree carrying `modifier_oracle_false_promise_timer` on any unit, and it is the frame on which the veto GH #570 asked for would have deleted the cast that killed oracle 0.1s later. It is also the tree's first frame from **t > 1400** (the corpus tops out near t=790 / level 19, and the two staged frames above at t=1266.5 / level 27), so its admission price is at least the price those two carry. **That price is NOT measured** -- this round did not move the file and run the suite, and nothing here claims a number for it; paying it is its own work unit, as this file has said since GH #357. Used by `tests/test_axe_cull_promise_premise.lua` (by name). |
 
 ## Reopen list: GH #357's three real re-decisions -- all PAID
@@ -203,12 +203,79 @@ assertion.
 | `tests/test_wk_q_lane_reach.lua` | 1 | WK alive on **37 -> 38**. **Only the denominator**: nearest enemy ~3.7k, so neither band (6/6) nor gate (11) moved. 6/37 -> 6/38 -- the thinness this file reports got thinner. |
 | `tests/test_zuus_jump_landing_reach.lua` | 1 | Zeus alive on **48 -> 49**. **Only the denominator**: nearest enemy ~5.4k, so the geometry stays 5 band / 5 direction-proof over 5 frames. |
 
-### NOT paid: admission to `tests/fixtures/`
+### NOT paid: admission to `tests/fixtures/` -- **24 files / 40 assertions**
 
-**4 files / 5 assertions**, measured the same way and left standing on purpose:
-`test_alchemist_rage_clock_staged_frame.lua` (t=1191.5 lands in the armed band
-`[900,1800)`), `test_axe_bkb_supply_staged_frame.lua` (BKB slots 0 -> 2),
-`test_axe_t15_in_domain.lua` (talent-face cap 1 -> 2, whose own text says "this
-bound should be re-taken, not re-stated"), and
-`test_cm_ult_reach_meter_domain.lua` x2. Admitting the frame is its own work
-unit with its own list, exactly as this file has said since GH #357.
+⚠️ **This number was published as 4 files / 5 assertions** -- in GH #659's price
+table, in this section, and in `tests/test_cm_cmqreach_transit_frame.lua`'s
+header. Re-measured 2026-09-09 (hero): **24 files / 40 assertions**, six times
+the file count and eight times the assertion count. The old figure is struck,
+not adjusted: it was not a miscount, it was **the staging instrument pointed at
+the admission question.**
+
+**Why the wrong number came out, and why it is worth more than the correction.**
+Both prices were measured over one file list -- `rg -l 'tests/frames' tests/`,
+the 35 files that *mention the staged directory*. For staging that scope is
+exactly right. Admission does not change `tests/frames/`; it changes the
+**corpus glob**, so its scope is the corpus-enumerating set: the **88** test
+files that run `ls tests/fixtures`, glob `tests/fixtures/*.lua`, or go through
+the sightings helper. And the staging list is not merely narrower -- on the
+admission question it is **anti-correlated with the answer**, because a file
+that enumerates *both* directories cannot see a frame carried from one to the
+other. Those are precisely the files the staging list finds.
+`tests/test_cm_ult_reach_meter_domain.lua` is the worked example: the old table
+charged admission **2** assertions for it; measured, it costs **0**. So the
+published table both named a file that does not move and missed 21 that do.
+
+**Method** (same discipline as the staging measurement above, wider scope):
+baseline run of all 88, `git mv` into `tests/fixtures/`, run all 88 again,
+`git mv` back, diff the per-file failure counts. Exit codes decide nothing --
+the runner exits non-zero on either side once anything is red, and the baseline
+already had two reds of its own. Baseline: **86 green, 2 red**
+(`test_roshdist_pit_truth_operand`, `test_salveally_missing_floor` -- both
+pre-existing trunk reds, neither this frame's). After admission: **25 red**, of
+which 23 go green -> red and `test_salveally_missing_floor` gains a second
+failing case; total failing assertions **2 -> 42**.
+
+| file | assertions | what moves | whose |
+|---|---|---|---|
+| `tests/test_focus_decision_reachability.lua` | 5 | ⭐ the routing census the **hero charter's own rule** stands on: WK alive-frames 36 -> 37, CM 50 -> 51, Zeus 45 -> 46, and the by-hero pin at 183 instants. Section 2.1 (the gate the charter reads each round) is NOT among them. | **hero** |
+| `tests/test_wk_level_supply_horizon.lua` | 4 | the ledger already re-taken at staging, re-based again on the admitted glob | **hero** |
+| `tests/test_focus_mana_cost_consumer_census.lua` | 3 | WK flip census n 31 -> 32; the negative control's sweep 173 -> 176; `zusult` domain 45/17/7 -> 46/18/7 | **hero** |
+| `tests/test_cm_cmqreach_transit_frame.lua` | 3 | loads the frame **by name** from `tests/frames/` -- a path repair, not a re-decision | **hero** |
+| `tests/test_level_gate_census.lua` | 2 | `level >= 20` **0 -> 6 hero-slots** (its own text: "the four INERT verdicts above were argued from *that hero does not exist*") and `frames_past_18min` **0 -> 1**, which un-vacuums `J.IsLateGame()` and reopens the TEETH verdicts on `mode_farm_generic:393` / `:507` | level-gate family / strategy |
+| `tests/test_wk_roshan_mana_floor.lua` | 2 | WK rows **36 -> 37**, learned-Blast frames **31 -> 32** -- the two denominators its "the shipped 600 admits 0 of 36" reading is stated over | **hero** |
+| `tests/test_wk_roshan_mana_ceiling.lua` | 2 | ⚠️ **not a denominator.** Its mana model has no intelligence reading for **`mithril_hammer`**, which the new WK carries, so the model refuses to score the frame at all: "add it from the item data and RE-CHECK the crossing levels in this file's header -- they are computed from this table" | **hero** |
+| `tests/test_wk_save_mana_lock_census.lua` | 2 | WK frames **36 -> 37**, priced corpus **33 -> 34** | **hero** |
+| `tests/test_wk_bone_guard_talent_bypass.lua` | 2 | WK frames **36 -> 37** in both the census and the drive | **hero** |
+| `tests/test_axe_t15_in_domain.lua` | 1 | talent surface 1 -> 2. **Its own text: "this bound should be RE-TAKEN, not restated."** ⇒ **Taken 2026-09-09 without admitting the frame**, in `tests/test_cm_cmqreach_transit_frame.lua` section 4: the "at most one" was a *sample max*, not a cap; the load-bearing half (no unit owing >= 2 tiers ever shows a complete set -- 0 of 26, worst deficit 3) survives, both new rows are generic so GH #260 H1 is untouched, and the t15 **verdict does not move**. Whoever pays this bill cites that section. | **hero -- PAID** |
+| `tests/test_axe_cull_immune_veto.lua` | 1 | "zero Black King Bars anywhere in the corpus" **0 -> 2 slots** -- the zero the "this lever cannot be sized locally" claim rests on | **hero** |
+| `tests/test_axe_bkb_supply_staged_frame.lua` | 1 | the sister ratchet that pins *the glob is still clean*, i.e. that no staged frame has been admitted | **hero** |
+| `tests/test_alchemist_rage_clock_staged_frame.lua` | 1 | the corpus max time crosses the armed band `[900,1800)`, so "the corpus alone still cannot -- so the frame IS the first" stops being this file's claim to make | **hero** |
+| `tests/test_alchemist_rage_objective_clock.lua` | 1 | the sister `[corpus]` ratchet: "no fixture in `tests/fixtures` can tell armed from factory" | **hero** |
+| `tests/test_turbo_ternary_dominance.lua` | 1 | ⭐ **an UPGRADE, not a cost.** t=1191.5 lands inside `[1080,1500)`; that file argues **from arithmetic alone** *because* no frame could distinguish the legs. Its own failure line: "pin the decision on that frame instead of relying on the arithmetic alone" | strategy / harness |
+| `tests/test_bbfight_turbo_respawn_ceiling.lua` | 1 | archive level ceiling **19 -> 22**: "re-read whether the branch is still corpus-unreachable for TWO reasons or only one" | strategy |
+| `tests/test_zeus_aether_cast_range.lua` | 1 | ⭐ **an UPGRADE.** 1 of 111 fixtures would carry an **Aether Lens** (this frame's Zeus), and the file says so itself: "That is GOOD NEWS: the declared anchor in this file can be replaced by a real inventory. Do not delete this case -- retarget it" | **hero** |
+| `tests/test_relicguard_siege_gate.lua` | 1 | subjects at level >= 15: **2 -> 3** | strategy |
+| `tests/test_slotdust_dust_arbitration.lua` | 1 | the fixture item vocabulary changes size (**124**), which its instrument case I2 pins | strategy |
+| `tests/test_slotwait_cooldown_scan.lua` | 1 | ⭐ **an UPGRADE.** "a member now holds an ImportantItem (1 of 233) -- the ITEM leg is **no longer domain-empty**". A leg that could only ever read zero gains its first sample | strategy |
+| `tests/test_salvepool_missing_floor.lua` | 1 | largest archived HP pool **-> 3398** (the frame's Sven), which its five-to-one span reading is stated over | strategy |
+| `tests/test_salveally_missing_floor.lua` | 1 | **already red on trunk**; admission adds a second failing case (same 3398 pool; holder-ally pairs -> 75) | strategy |
+| `tests/test_itemdesire_world_assertion.lua` | 1 | the mock's unstubbed-API crash census 1 -> 2 distinct statements | harness |
+| `tests/test_wk_reserve_idle_release.lua` | 1 | priced WK frames **33 -> 34** | **hero** |
+
+**Three of the 24 rows are UPGRADES, not costs** (`turbo_ternary_dominance`,
+`zeus_aether_cast_range`, `slotwait_cooldown_scan`): each names a reading that
+today can only come back empty or arithmetic-only, and each says in its own
+failure text that this frame is what would let it be taken for real. A price
+table that lists only what breaks would have hidden them, which is a second
+reason not to quote a bill without reading the lines.
+
+**So admission is a work unit this desk cannot finish alone**: 9 of the 24 rows
+belong to strategy, the level-gate family or harness, and two of those
+(`level_gate_census`'s four INERT verdicts, and `IsLateGame`'s TEETH verdicts on
+`mode_farm_generic`) are the *same* rows this file has listed as unpaid since GH
+#357 -- because this frame is from the same late-game era as
+`f_20260831_004433_cm_creepreach.lua`, and any frame from that era carries that
+list with it. That is the general finding, and it is the one to read before
+pricing the next staged frame: **for an era frame, the admission price is the
+era's reopen list, not the frame's diff.**
