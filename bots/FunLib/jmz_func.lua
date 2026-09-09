@@ -10265,6 +10265,49 @@ function J.ShouldPullNeutralCamp( bot )
 	-- our favor there is nothing to reset -- fall through and keep laning.
 	local nLane = bot:GetAssignedLane()
 	if nLane == nil then return nil end
+	-- [GH #648, 20260909] THE GUARD ABOVE TESTS FOR A VALUE THE ENGINE NEVER
+	-- RETURNS. `GetAssignedLane()` answers one of the four documented lane
+	-- constants (docs/BOT_API_REFERENCE.md:1910 -- LANE_NONE = 0, LANE_TOP = 1,
+	-- LANE_MID = 2, LANE_BOT = 3), and the engine's "this bot has no lane"
+	-- answer is LANE_NONE, which is the NUMBER 0, not nil. So `nLane == nil`
+	-- is a guard whose condition is unreachable, and the no-lane state it was
+	-- written to catch walks straight past it into GetLaneFrontLocation and
+	-- GetLocationAlongLane as a lane id those two functions cannot resolve.
+	--
+	-- THIS IS NOT AN INFERENCE FROM PROSE. tests/test_pullcamp_trigger_census.lua
+	-- has recorded the shape since 20260822 as its fourth STOPPER ("It is not
+	-- nil, so the `nLane == nil` guard passes and a bogus lane id is handed to
+	-- GetLocationAlongLane"), and the corpus reads it both ways on every frame:
+	-- `lane_zero` == `frames` == 1021 and `lane_nil` == 0. The shipped guard
+	-- therefore fires on 0 of 1021 measured frames while the state it means to
+	-- reject is present on 1021 of 1021.  A guard that cannot fire is the
+	-- `pullcamp` family's own recurring defect (GH #13's vision clause, GH
+	-- #277's 800 veto), found a third time by asking the same question of a
+	-- clause nobody had priced.
+	--
+	-- WHAT IT DOES AND WHY THAT IS A REPAIR, NOT A POLICY. Returning nil on
+	-- LANE_NONE is BYTE-FOR-BYTE the policy the line above already declares --
+	-- "no lane, no pull" -- applied to the value the engine actually uses to
+	-- say it. Nothing new is decided here; the alternative (invent a lane for
+	-- a laneless bot) is the behaviour the missing guard produces today.
+	--
+	-- ⛔ READ BEFORE ARMING IT AS A LEVER. This is a gate INSIDE the 'pullcamp'
+	-- gate, so the unit-element question (GH #622) has to be answered before a
+	-- wave, not after: on every frame where a lane IS assigned this clause is
+	-- exactly a unit element, and a wave that arms it expecting a behavioural
+	-- delta will read back "tested, no effect" while check_armed_wiring.py
+	-- still calls it WIRED -- the 'pullcad' shape, said in advance. Its domain
+	-- is the frequency of LANE_NONE among pos-4/5 bots inside the 60-360s
+	-- laning window, and that number is NOT knowable from this corpus: lane
+	-- assignment is bot-VM state, not entity state, so it is absent from the
+	-- .dem and the loader answers a constant 0 (the census's STOPPER 4). The
+	-- recommendation carried in GH #648 is therefore to promote it WITH
+	-- 'pullcamp' as part of that candidate's own repair, not to buy it a wave.
+	-- Gated all the same, so an armed 'pullcamp' wave does not silently change
+	-- what it measures underneath the readings already banked for it.
+	if J.IsSoakCandidate( 'pullnolane' ) and nLane == ( LANE_NONE or 0 ) then
+		return nil
+	end
 	local vFront = GetLaneFrontLocation( GetTeam(), nLane, 0 )
 	local vMid   = GetLocationAlongLane( nLane, 0.5 )
 	local hOwn   = GetAncient( GetTeam() )

@@ -13,6 +13,9 @@
 --   NEWONLY <fixture> <hero> <sec>      frame the travel lead newly admits
 --   WIT <fixture> <hero> <team> <pos> <x> <y> <hp01> <pullsafe> <neut1400>
 --   NEUTDMG <fixture> <hero> <support> <hits> <value> <t>
+--   GRD <fixture> <hero> <t> <lane>   one frame where the 'pullnolane' guard
+--       (GH #648) turns the shipped function's answer from "fell through the
+--       lane guard and raised at GetLaneFrontLocation" into a clean nil
 --   DONE
 -- Absence of the final DONE line is treated by the test as a failed subprocess.
 
@@ -90,6 +93,13 @@ for _, path in ipairs(fixture_files()) do
                 if no800 then bump('no800') end
                 if lane == nil then bump('lane_nil') end
                 if lane == 0 then bump('lane_zero') end
+                -- [GH #648 20260909] The same frame counted against the
+                -- engine's own no-lane sentinel rather than against nil.
+                -- Kept separate from `lane_zero` on purpose: that column is a
+                -- statement about the LOADER (it answers a constant 0), this
+                -- one is a statement about the CONSTANT the shipped guard now
+                -- compares to, and the test asserts they agree.
+                if lane == (LANE_NONE or 0) then bump('lane_none') end
                 if camp_up then bump('camp_up') end
                 if spawners then bump('spawners_nonempty') end
                 -- [GH #277 20260828] The 800 clause vs the clause that
@@ -213,6 +223,46 @@ for _, path in ipairs(fixture_files()) do
                     else
                         bump('spnc_nil')
                     end
+
+                    -- [GH #648 20260909] The SAME shipped function, driven a
+                    -- second time with 'pullnolane' armed on top of the same
+                    -- 'pullcamp'.  Two drives of one function, not one drive
+                    -- of two implementations: the differential below is a
+                    -- measurement, not an argument.
+                    --
+                    -- The oracle is STOPPER 3 turned into an instrument.  The
+                    -- loader refuses GetLaneFrontLocation (GH #61), and that
+                    -- call sits immediately BELOW the lane guard -- so a raise
+                    -- naming GetLaneFrontLocation is positive proof that the
+                    -- guard let the frame through, and a clean nil in its
+                    -- place is positive proof that the guard stopped it.  No
+                    -- world is declared to read this.
+                    J.IsSoakCandidate = function(sId)
+                        return sId == 'pullcamp' or sId == 'pullnolane'
+                    end
+                    local ok2, v2 = pcall(J.ShouldPullNeutralCamp, bot)
+                    if not ok2 then
+                        bump('guard_raise')
+                    elseif v2 ~= nil then
+                        bump('guard_nonnil')
+                    else
+                        bump('guard_nil')
+                    end
+                    -- The differential, and its forbidden direction.  A guard
+                    -- can only ever REMOVE a pull, so `guard_opens` must be 0
+                    -- over the whole corpus; and a counter of all zeros cannot
+                    -- tell "the direction holds" from "the tally never ran",
+                    -- so the same frames drive `guard_closes`, which must be
+                    -- the whole population of frames that reach the clause.
+                    if (not ok) and ok2 and v2 == nil then
+                        bump('guard_closes')
+                        out:write(string.format('GRD %s %s %.1f %s\n',
+                            path, u.name, t, tostring(lane)))
+                    end
+                    if ok and v == nil and not ok2 then bump('guard_opens') end
+                    if ok and v == nil and ok2 and v2 ~= nil then
+                        bump('guard_opens')
+                    end
                 end
             end
         end
@@ -228,6 +278,8 @@ for _, k in ipairs({
     'depth_honest', 'depth_past_mid', 'depth_forced_nil', 'depth_own_half',
     'depth_inert',
     'spnc_nil', 'spnc_nonnil', 'spnc_raise', 'spnc_raise_lanefront',
+    'lane_none', 'guard_nil', 'guard_nonnil', 'guard_raise',
+    'guard_closes', 'guard_opens',
     'neut_dmg', 'neut_dmg_support', 'neut_dmg_support_window',
 }) do
     out:write(string.format('C %s %d\n', k, c[k]))

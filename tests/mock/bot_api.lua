@@ -467,6 +467,23 @@ function M.install(opts)
     G.TEAM_DIRE = 3
     G.TEAM_NEUTRAL = 4
 
+    -- [GH #648 20260909] The LANE_* family, pinned for exactly the reason the
+    -- TEAM_* family above was: they are documented engine values
+    -- (docs/BOT_API_REFERENCE.md:1910 -- LANE_NONE = 0, LANE_TOP = 1,
+    -- LANE_MID = 2, LANE_BOT = 3) that shipped code COMPARES AGAINST, and the
+    -- sentinel table below answered 1024..1027 for them. Every such comparison
+    -- was therefore false for a reason that has nothing to do with the frame:
+    -- `bot:GetAssignedLane()` reads 0 in the fixture world (STOPPER 4 of
+    -- tests/test_pullcamp_trigger_census.lua), so `== LANE_MID` was false
+    -- against 1026 and would have been false against 2 -- but `== LANE_NONE`,
+    -- which is the engine's way of saying "this bot has no lane", was false
+    -- against 1024 while being TRUE against the engine's own 0. A mock that
+    -- cannot express the no-lane state cannot test a guard against it.
+    G.LANE_NONE = 0
+    G.LANE_TOP = 1
+    G.LANE_MID = 2
+    G.LANE_BOT = 3
+
     -- Auto-define ALL_CAPS engine constants: each unknown ALL_CAPS global
     -- resolves to a distinct, stable number. Everything else stays nil.
     local const_ids = {}

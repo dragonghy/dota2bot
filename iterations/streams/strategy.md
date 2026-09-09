@@ -27,6 +27,69 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0PULLNOLANE. **【2026-09-09T01:35Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续三轮 (ii) 的链条到本轮结束);
+   认领依据 = 上一轮「下一格」第 (1)(2) 条**逐条执行** + **OWNER_PRIORITIES P1**。工作流第 1 步扫到的
+   新 `[strategy]` issue **一条也没有**。产出:新 gated id **`pullnolane`**(`bots/FunLib/jmz_func.lua`
+   的 `J.ShouldPullNeutralCamp`,turbo-only,住在已有的 `pullcamp` 门内)、`tests/_pullcamp_sweep.lua`
+   **扩列**(**没有**新建 sweep)、`tests/test_pullnolane_guard.lua`(**10/10**)、
+   `tools/agent/mutstand_pullnolane.sh`(**12 腿:11 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,
+   STAND GREEN**)、`tests/mock/bot_api.lua` 钉住 LANE_* 四常数、`state.json:pullnolane_20260909`;
+   报告 `iterations/reports/strategy/20260909T013540Z.md`;**issue GH #648**;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 先回答「下一格」第 (2) 条问的两个闸门:都不是死条件,频率证据在案** ——
+   `timewin`(6:00 宵禁)**389/1021**、`pullsafe`(`J.IsLanePullSafe` 和平期闸门)**402/1021**;
+   调用点的 1800 环把 `peacetime_lane_support 39` 砍到 `peacetime_live 22`、把 `chain_new 18` 砍到
+   `chain_new_live 9`;`no800_not_pullsafe 331` / `pullsafe_not_no800 0`(GH #277 包含关系原样复现)。
+   **⭐⭐ 而第三条闸门是死的 —— 死的是本来该拦路的那条守卫。** `bot:GetAssignedLane()` 只答四个文档常数
+   (`docs/BOT_API_REFERENCE.md:1910`,`LANE_NONE = 0`),引擎说「没有路」用的是 **`LANE_NONE` = 数字 0,
+   不是 `nil`**;而守卫写的是 `if nLane == nil then return nil end` ⇒ **条件不可达**,
+   它本要拦的状态径直被当作 lane id 交给 `GetLaneFrontLocation` / `GetLocationAlongLane`。
+   读数:**`lane_nil` 0/1021**(守卫一帧都开不了火)vs **`lane_none` 1021/1021**(它本要拦的状态每帧都在)。
+   差分(同一个已发布函数驱动两次):`spnc_raise_lanefront` **18** → armed 后 **`guard_closes` 18 /
+   `guard_raise` 0**,禁止方向 **`guard_opens` 0**,两次驱动各自对全语料闭合。
+   **⭐⭐⭐ 这不是新观察,而那正是它的分量**:同一句话从 **20260822** 起就写在
+   `tests/test_pullcamp_trigger_census.lua` 的第四条 STOPPER 里,但被归档成关于**加载器**的事实
+   (「链子为什么不能端到端驱动」),于是 `bots/` 十八天一个字没改。读成关于**守卫**的事实,
+   它说的就是这条守卫开不了火 —— `pullcamp` 一族**第三次**同类缺陷(GH #13 视野子句、
+   GH #277 的 800 否决、本条),三次都是「一条子句从来没被定过价」。
+   **⭐⭐⭐⭐ 判读器是把 STOPPER 3 反过来当仪器,所以整条差分零声明**:加载器**拒答**
+   `GetLaneFrontLocation`(GH #61)而那次调用紧挨守卫下面 ⇒ 点名它的 raise = 「放行」的正面证据,
+   同位置的干净 nil = 「拦住」的正面证据。**需要先声明 lane 几何才能看见的普查,量的是自己的声明。**
+   ⛔ **发波之前先说的那句话(GH #622 的问题,提前问)**:1021/1021 是关于**加载器**的陈述不是关于 Dota 的
+   (lane 分配是 bot-VM 状态不在 `.dem` 里,即 STOPPER 4 本身);凡是**有** lane 的帧上这个合取项
+   **恰好是单位元** ⇒ **单独 arm 它买 (a) 会读回「tested, no effect」而 `check_armed_wiring.py` 说 WIRED**。
+   **建议(交总监,不代总监决定):与 `pullcamp` 同进同退(promote 时一并去 gate),不要单独发波;
+   4.2 冻结期内记 FROZEN-HOLD。**
+   **⭐⭐⭐⭐⭐ 同轮改 `tests/mock/bot_api.lua` 不是越界**:哨兵表把 `LANE_NONE` 自动编号成 **1024**,
+   一个**表达不出「没有路」**的 mock 测不了针对它的守卫,且 `== LANE_NONE` 为假的**理由与帧无关** ——
+   与同文件上面三行已钉住的 `TEAM_RADIANT`/`TEAM_DIRE` 缺陷**逐字同族**。**两个方向都断言**
+   (= 文档值 且 不在 >=1000 哨兵段),再哨兵化会红不会哑;实测:改之前 `lane_none` 读 **0**,改之后 **1021**。
+   **变异台头条**:(a) **M3 顺序盲** —— 守卫仍在/仍点名 id/仍比 `LANE_NONE`,只是挪到
+   `GetLaneFrontLocation` **之下**,**所有存在性检查照过**而语料列塌成 0;(b) **M6 harness 半边** ——
+   把 mock 的 `LANE_NONE` 放回哨兵,**`bots/` 一字不动**,整轮读数静悄悄退回修复前;
+   (c) **M10 看着像清理** —— 把 sweep 的 `lane_none` 列写成字面 `lane == 0`,**manifest 每个计数逐位不变**、
+   `lane_zero == lane_none` 变成构造性为真,**只有源码钉看得见**;
+   (d) `guard_opens` 是干净树上读 0 的列,按 `mutstand_fieldsip.sh` 的 M8/M13 教训**用极性而非改名**变异
+   (改名是**等价变异体**:那条分支根本不执行)。
+   **P1 DoD 第 1 条的结论**:`pullcamp` **早已不 SILENT** —— GH #117 两波后测量记录 283 局 115 个
+   poke episode、348 局 146 个,它**在真实对局里开火**;这一族现在的病是 **connect rate 9.9%-20.3%**,
+   归 `pulllane` / `pulldrag`,两个 id 都在总监手里等裁定。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是 `bots/` 行为改动** —— 本轮已把链条掰回来,不要再退回证据轮;
+   (2) ⭐ **现成的下一个杠杆,形状已定价、语料已在手**:同一个缺陷在这一族里**还有三处**
+   —— `jmz_func.lua:7960`(`lf_recover` 的 lane 路径最小距离)、`:9440`(`J.ShouldCreepPullLane`
+   的 `GetLaneFrontAmount` 两侧读数)、`:10480`(`J.GetLanePullDragTarget`)—— **全部**只写
+   `nLane == nil` / `nLane ~= nil`,**没有一处**测 `LANE_NONE`。本轮按「一次一个杠杆」**只修了
+   `ShouldPullNeutralCamp`**,其余三处**显式留给下一轮**:一处一个 id,或(更可能正确)
+   **一个共享的 `J.IsLaneAssigned( bot )` 谓词 + 一个 id**,先在 `_pullcamp_sweep.lua` 上给三处各自定价再动手;
+   (3) 语料请求:**本轮新增一条** —— `GetAssignedLane()` 不在 dump 里(STOPPER 4 / GH #89 同族),
+   dumper 若能投影它,本守卫族的**真实域立刻可测**(已写进 #648);另两条旧的仍挂着:
+   '撤退:3' 深带臂那一帧、`nosrc_attr_only` 那一帧;
+   (4) ⛔ **不要**再给 `pullcamp` 的秒窗 / 1500 reach / `>= 0.5` HP 门做第四次普查(本轮连同
+   20260822 普查已把它们定价两次)、**不要**在 `pulllane` 未裁定前动 `PULL_CAMP_LANE_GAP`
+   (GH #117 裁定明写「收紧前必须先跑几何核验,不许跳过」)、**不要**新建第六个全语料 sweep、
+   **不要**回 `field_hold_needs_magnitude` 一族。】**
+
 0FSATOM. **【2026-09-08T22:55Z 新增。**P4.4 归属 = **(ii) 一个判定完结所需的最后一块证据,不是 (i)**;
    认领依据 = 上一轮「下一格」第 (2) 条逐条执行 + **OWNER_PRIORITIES P2**。工作流第 1 步扫到的
    新 `[strategy]` issue **一条也没有**。产出:`tests/_tpquiet_sweep.lua` **第三次扩列**(**没有**新建
@@ -6897,6 +6960,35 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-09T01:35Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动** —— 连续三轮 (ii) 的链条到本轮结束;
+  认领依据 = 上一轮「下一格」第 (1)(2) 条逐条执行 + **OWNER_PRIORITIES P1**。工作流第 1 步扫到的新
+  `[strategy]` issue **一条也没有**)。
+  ⭐ **先回答「下一格」问的两个闸门:都不是死条件** —— `timewin`(6:00 宵禁)**389/1021**、
+  `pullsafe`(`J.IsLanePullSafe`)**402/1021**;调用点的 1800 环把 `peacetime_lane_support 39` 砍到
+  **22**、把 `chain_new 18` 砍到 **9**(频率证据,不是死条件)。
+  ⭐⭐ **而第三条闸门是死的:`if nLane == nil then return nil end` 条件不可达。**
+  `bot:GetAssignedLane()` 只答四个文档常数(`docs/BOT_API_REFERENCE.md:1910`),引擎说「没有路」用的是
+  **`LANE_NONE` = 数字 0,不是 nil** ⇒ **`lane_nil` 0/1021**(守卫一帧都开不了火)vs
+  **`lane_none` 1021/1021**(它本要拦的状态每帧都在);那个值被径直交给 `GetLaneFrontLocation` /
+  `GetLocationAlongLane` 当 lane id。落地 gated id **`pullnolane`**(turbo-only,住在 `pullcamp` 门内,
+  `nLane == nil` 之下、第一次读 lane 之上),差分 **`guard_closes` 18 / `guard_raise` 0 /
+  `guard_opens` 0**,两次驱动各自对全语料闭合。**这是修复不是新政策**:返回 nil 逐字就是上一行
+  已声明的政策,只是施加在引擎真正用来表达它的那个值上。
+  ⭐⭐⭐ **不是新观察,而那正是分量所在**:同一句话从 20260822 起就在
+  `tests/test_pullcamp_trigger_census.lua` 的 STOPPER 4 里,被归档成关于**加载器**的事实,
+  于是 `bots/` 十八天没动 —— `pullcamp` 一族第三次同类缺陷(GH #13 / GH #277 / 本条)。
+  判读器是把 STOPPER 3(加载器拒答 `GetLaneFrontLocation`)**反过来当仪器**,所以整条差分**零声明**。
+  ⛔ **发波前先说**:1021/1021 是关于**加载器**的陈述不是关于 Dota 的;有 lane 的帧上该合取项
+  **恰好是单位元** ⇒ 单独 arm 会读回「tested, no effect」而 `check_armed_wiring.py` 说 WIRED
+  (`pullcad` 形状)。**建议与 `pullcamp` 同进同退,不单独发波;4.2 冻结期记 FROZEN-HOLD。**
+  同轮把 `tests/mock/bot_api.lua` 的 LANE_* 四常数钉到文档值(哨兵读 1024,与同文件已钉住的
+  `TEAM_RADIANT`/`TEAM_DIRE` 缺陷逐字同族;**两个方向都断言**)。
+  `tools/agent/mutstand_pullnolane.sh` **12 腿全绿**(M3 顺序盲 / M6 harness 半边 / M10 看着像清理 /
+  `guard_opens` 用极性而非改名)。**P1 DoD 第 1 条结论:`pullcamp` 早已不 SILENT**(GH #117 两波
+  115 与 146 个 poke episode),现在的病是 **connect rate 9.9%-20.3%**,归 `pulllane` / `pulldrag`,
+  在总监手里。报告 `iterations/reports/strategy/20260909T013540Z.md`;issue **GH #648**;
+  下一格见 backlog 0PULLNOLANE。
 
 - 2026-09-08T22:55Z(**P4.4 归属 = (ii) 一个判定完结所需的最后一块证据,不是 (i)**;认领依据 =
   上一轮「下一格」第 (2) 条逐条执行 + **OWNER_PRIORITIES P2**。工作流第 1 步扫到的新 `[strategy]`
