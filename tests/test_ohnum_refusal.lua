@@ -13,11 +13,16 @@
 -- below comes from driving the SHIPPED J.ShouldPunishDive on a real dumped
 -- frame, in named arms, and comparing the hero it returns.
 --
--- CORPUS (tests/_ohnum_sweep.lua, 110 fixtures / 1021 live hero frames):
---   pd_shipped 28 | pd_ownhalf 79 | pd_ownhalf_only 51
---   domain_parity 31 / domain_advantage 20   (of the 51)
---   both_changed 31, and all 31 are both_to_nil -- both_switched is 0
---   ohnum_alone_changed 0 over the 28 shipped fires
+-- CORPUS (tests/_ohnum_sweep.lua, 110 fixtures / 1021 live hero frames).
+-- Re-read 2026-09-09 after the 'ownhalf' invade-depth margin was put on the
+-- tree's own 1600u convention; the pre-narrowing column is kept beside each so
+-- an older quotation of these numbers can be recognised for what it is:
+--   pd_shipped 28 (28) | pd_ownhalf 56 (79) | pd_ownhalf_only 28 (51)
+--   domain_parity 16 (31) / domain_advantage 12 (20)   (of the 28)
+--   both_changed 16 (31), and all 16 are both_to_nil -- both_switched is 0
+--   ohnum_alone_changed 0 (0) over the 28 (28) shipped fires
+-- The shipped-path columns are digit-for-digit unchanged, which is the point:
+-- the narrowing moved this lever's domain, not the promoted path it sits on.
 --
 -- ⭐ WHY `ohnum_alone_changed 0` IS A MEASUREMENT AND NOT A STRUCTURAL ZERO,
 -- which is the whole reason the call site sits where it does. The conjunct
@@ -50,11 +55,28 @@
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
 
--- POSITIVE CONTROL. Skywrath Mage at 24% HP turns on an 89%-HP Axe 188u away,
--- 3,092u from the nearest live building of ours, on a visible 2v2. Axe is the
--- counter-initiator in that fight; "parity" is the only thing admitting it.
-local POS = { 'tests/fixtures/f_260820_043637_axe_ring_close.lua',
-    'npc_dota_hero_skywrath_mage' }
+-- POSITIVE CONTROL. Bristleback at 6.8% HP turns on a 59.7%-HP Chaos Knight
+-- 275u away, 1,716u from the nearest live building of ours, on a visible 2v2.
+-- "Parity" is the only thing admitting that punish.
+--
+-- ⚠️ THIS WITNESS MOVED ON 2026-09-09, and the reason is a reading, not a
+-- preference. The original case (Skywrath Mage on
+-- f_260820_043637_axe_ring_close) entered the domain at an invade depth of
+-- 1,157u, i.e. only via the 'ownhalf' branch's old 800u margin; that margin was
+-- put on the tree's own 1600u ancient-distance convention the same day (see the
+-- note at the margin in J.ShouldPunishDive and tests/test_ownhalf_margin.lua),
+-- so the frame is no longer in domain at all and this lever has no subject
+-- there. The replacement sits at invade depth 2,826u -- past the margin by
+-- 1,226u -- so it witnesses 'ohnum' rather than the margin underneath it.
+-- REGISTERED WITH IT: 'ownhalf' is the sole enabler of this lever's domain, so
+-- the narrowing took 'ohnum' with it. Measured on the same corpus,
+-- tests/_ohnum_sweep.lua before -> after: both_changed 31 -> 16,
+-- domain_parity 31 -> 16, domain_advantage 20 -> 12, while the shipped-path
+-- columns (ohnum_alone_fires 28, ohnum_alone_changed 0, pd_shipped 28) are
+-- digit-for-digit unchanged. Any earlier reading of 'ohnum' describes the
+-- pre-narrowing domain.
+local POS = { 'tests/fixtures/f_260819_122930_lich_rescue_doomed.lua',
+    'npc_dota_hero_bristleback' }
 -- NEGATIVE CONTROL A -- advantage, in the SAME extended domain: three of ours
 -- around a lone Slardar. The lever must not touch this one.
 local NEG_ADV = { 'tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua',
@@ -128,8 +150,8 @@ tests['[frame] the positive-control frame really is the case it claims'] = funct
     local tgt = got.ownhalf
     assert(tgt ~= nil, 'the ownhalf arm no longer returns a punish target on '
         .. 'the positive-control frame; this lever has no subject there')
-    assert(hero_name(tgt) == 'axe', 'the ownhalf arm now punishes '
-        .. hero_name(tgt) .. ', not the Axe this case was cut around')
+    assert(hero_name(tgt) == 'chaos_knight', 'the ownhalf arm now punishes '
+        .. hero_name(tgt) .. ', not the Chaos Knight this case was cut around')
     assert(got.shipped == nil, 'the SHIPPED domain now fires on the '
         .. 'positive-control frame, so it is no longer an ownhalf-only frame '
         .. 'and this case is measuring something else')
@@ -144,8 +166,9 @@ tests['[frame] the positive-control frame really is the case it claims'] = funct
     local nE = #J.GetEnemiesNearLoc(vLoc, 1200)
     assert(nA == 2 and nE == 2, 'the engage point now reads ' .. nA .. ' allies '
         .. 'v ' .. nE .. ' enemies, not the 2-v-2 parity this case pins')
-    assert(J.GetHP(bot) < 0.30, 'the punisher is no longer the low-HP Skywrath '
-        .. 'this case was cut around (HP ' .. tostring(J.GetHP(bot)) .. ')')
+    assert(J.GetHP(bot) < 0.30, 'the punisher is no longer the low-HP '
+        .. 'Bristleback this case was cut around (HP '
+        .. tostring(J.GetHP(bot)) .. ')')
 end
 
 tests['[frame] armed, the unsupported parity punish is refused'] = function()
@@ -252,7 +275,11 @@ tests['[source] the call site joins the SHIPPED path, not the ownhalf branch'] =
     assert(at, 'J.ShouldPunishDive is gone')
     local body = dive:sub(at, (dive:find('\nfunction J.', at + 10) or #dive))
     local call = body:find('ShouldRefuseUnsupportedPunish', 1, true)
-    local ownhalf_branch = body:find('nInvadeDepth >= 800', 1, true)
+    -- Anchored WITHOUT the margin's value. This pin carried `nInvadeDepth >=
+    -- 800` until 2026-09-09 and went red when the margin moved -- a placement
+    -- claim that had quietly become a claim about a number it does not own
+    -- (the M13 lesson: a threshold belongs to the source, not to the pin).
+    local ownhalf_branch = body:find('nInvadeDepth >= ', 1, true)
     local safe = body:find('J.SafeToCommitFight( bot, enemy )', 1, true)
     assert(call and ownhalf_branch and safe,
         'the call, the ownhalf depth test or the commit gate is missing')

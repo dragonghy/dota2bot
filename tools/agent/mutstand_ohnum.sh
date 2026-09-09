@@ -99,7 +99,12 @@ BLDG=$'\tfor _, building in pairs( GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) or 
 LETHAL=$'\tif J.GetTotalEstimatedDamageToTarget( tAllies, target )\n\t\t>= target:GetHealth() + target:GetHealthRegen() * 5.0\n\tthen\n\t\treturn false\n\tend\n'
 VERDICT=$'\treturn #tAllies < #J.GetEnemiesNearLoc( vLoc, 1200 ) + 1\n'
 CALL=$'\t\t\tif bInDomain\n\t\t\tand J.SafeToCommitFight( bot, enemy )\n\t\t\tand not J.ShouldRefuseUnsupportedPunish( bot, enemy )\n\t\t\tthen\n\t\t\t\treturn enemy\n\t\t\tend'
-DEPTH=$'\t\t\t\tif nInvadeDepth >= 800 then bInDomain = true end'
+# The invade-depth line, WITH its margin, because a literal substitution needs
+# the exact bytes. It moved 800 -> 1600 on 2026-09-09 (the tree's own
+# ancient-distance convention; see tests/test_ownhalf_margin.lua), and this
+# anchor went ABSENT rather than silently mutating something else -- the GH
+# #550 guard doing its job. Re-aimed, not weakened.
+DEPTH=$'\t\t\t\tif nInvadeDepth >= 1600 then bInDomain = true end'
 
 # ---------------------------------------------------------------------------
 echo "=== baseline ==="
@@ -164,7 +169,7 @@ score "M3" "the refusal did not fire"
 echo
 echo "=== M4: the call is moved INSIDE the ownhalf branch ==="
 sub "$JMZ" "$CALL" $'\t\t\tif bInDomain\n\t\t\tand J.SafeToCommitFight( bot, enemy )\n\t\t\tthen\n\t\t\t\treturn enemy\n\t\t\tend'
-sub "$JMZ" "$DEPTH" $'\t\t\t\tif nInvadeDepth >= 800\n\t\t\t\tand not J.ShouldRefuseUnsupportedPunish( bot, enemy )\n\t\t\t\tthen bInDomain = true end'
+sub "$JMZ" "$DEPTH" $'\t\t\t\tif nInvadeDepth >= 1600\n\t\t\t\tand not J.ShouldRefuseUnsupportedPunish( bot, enemy )\n\t\t\t\tthen bInDomain = true end'
 score "M4" "moved off the shared commit line and into the ownhalf branch"
 
 # ---------------------------------------------------------------------------

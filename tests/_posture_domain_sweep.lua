@@ -61,6 +61,11 @@ G.DIVE_COLLAPSE_R = dive and tonumber(dive:match('GetNearbyHeroes%( bot, (%d+), 
 G.DIVE_BUILDING_R = dive and tonumber(dive:match('building %) <= (%d+)'))
 G.DIVE_OWNHALF = dive and tonumber(dive:match('nInvadeDepth >= (%d+)'))
 G.CHASE_COLLAPSE_R = chase and tonumber(chase:match('GetNearbyHeroes%( bot, (%d+), true'))
+-- The SOFT ancient-distance margin of the overchase midline branch. Parsed, not
+-- written down, because the 2026-09-09 lever asserts DIVE_OWNHALF == this one
+-- (symmetry is the property; 1600 is only today's value) and a pin that carried
+-- its own copy of the number could not see the two drift apart.
+G.CHASE_MIDLINE = chase and tonumber(chase:match('GetLocation%(%) %) %- (%d+)'))
 G.CHASE_ISOLATED_R = chase and tonumber(chase:match('GetEnemiesNearLoc%( vEnemyLoc, (%d+) %)'))
 G.CHASE_ALLY_R = chase and tonumber(chase:match('GetAlliesNearLoc%( vEnemyLoc, (%d+) %)'))
 G.CHASE_LOW_HP = chase and tonumber(chase:match('GetHP%( ally %) < (0%.%d+)'))
@@ -89,6 +94,8 @@ for _, k in ipairs({ 'fixtures', 'live',
     'pg_depth', 'pg_depth_solo', 'pg_fires', 'pg_raised',
     'pg_ally_blocked', 'pg_ally_blocked_illusion',
     'pd_pairs', 'pd_fires_shipped', 'pd_fires_ownhalf', 'pd_ownhalf_only', 'pd_raised',
+    'pd_oh_nobuilding', 'pd_oh_ge_dive', 'pd_oh_ge_chase', 'pd_oh_band',
+    'pd_oh_band_frames', 'pd_oh_margins_equal', 'pd_oh_margins_differ',
     'oc_pairs', 'oc_isolated', 'oc_deep', 'oc_iso_deep', 'oc_fires', 'oc_raised',
     'oc_lowally_near', 'oc_lowally_is_self' }) do
     rawset(c, k, 0)
@@ -146,6 +153,69 @@ for _, path in ipairs(fixture_files()) do
                     elseif fired then
                         bump('pg_fires')
                         out:write(string.format('F %s %s pg_fires\n', short, u.name))
+                    end
+
+                    -- ---- The 'ownhalf' branch's MARGIN, priced pair by pair on
+                    -- the population arithmetic (positions and ancients only --
+                    -- no getter this corpus stubs), so the driven reading below
+                    -- has a second, independent road to the same number.
+                    --
+                    -- pd_pairs was declared by the round that wrote this file and
+                    -- never bumped: a column that could only ever print 0, sitting
+                    -- beside real ones. Bumped here, where the helper's own funnel
+                    -- is walked.
+                    local hOA, hEA = GetAncient(GetTeam()), GetAncient(GetOpposingTeam())
+                    local tBld = GetUnitList(UNIT_LIST_ALLIED_BUILDINGS)
+                    local bBandFrame = false
+                    for _, e in pairs(J.GetNearbyHeroes(bot, G.DIVE_COLLAPSE_R or 1600,
+                        true, BOT_MODE_NONE) or {}) do
+                        if J.IsValidHero(e) and not J.IsSuspiciousIllusion(e)
+                            and not J.IsMeepoClone(e) then
+                            bump('pd_pairs')
+                            local bBld = false
+                            for _, b in pairs(tBld or {}) do
+                                if J.IsValidBuilding(b)
+                                    and GetUnitToUnitDistance(e, b)
+                                        <= (G.DIVE_BUILDING_R or 1200) then
+                                    bBld = true
+                                    break
+                                end
+                            end
+                            if not bBld and hOA ~= nil and hEA ~= nil then
+                                bump('pd_oh_nobuilding')
+                                local vE = e:GetLocation()
+                                local nDepth =
+                                    J.GetLocationToLocationDistance(vE, hEA:GetLocation())
+                                    - J.GetLocationToLocationDistance(vE, hOA:GetLocation())
+                                local nDive, nChase = G.DIVE_OWNHALF, G.CHASE_MIDLINE
+                                if nDive ~= nil and nDepth >= nDive then
+                                    bump('pd_oh_ge_dive')
+                                end
+                                if nChase ~= nil and nDepth >= nChase then
+                                    bump('pd_oh_ge_chase')
+                                end
+                                -- The BAND: in domain under this helper's own
+                                -- margin, out of it under the sibling's. Empty
+                                -- exactly when the two margins agree, which is
+                                -- what the guard test pins.
+                                if nDive ~= nil and nChase ~= nil
+                                    and nDepth >= nDive and nDepth < nChase then
+                                    bump('pd_oh_band')
+                                    bBandFrame = true
+                                    out:write(string.format(
+                                        'F %s %s pd_oh_band depth=%d\n',
+                                        short, u.name, math.floor(nDepth)))
+                                end
+                            end
+                        end
+                    end
+                    if bBandFrame then bump('pd_oh_band_frames') end
+                    if G.DIVE_OWNHALF ~= nil and G.CHASE_MIDLINE ~= nil then
+                        if G.DIVE_OWNHALF == G.CHASE_MIDLINE then
+                            bump('pd_oh_margins_equal')
+                        else
+                            bump('pd_oh_margins_differ')
+                        end
                     end
 
                     -- ---- ShouldPunishDive: shipped domain vs the 'ownhalf'

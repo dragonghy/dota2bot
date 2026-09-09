@@ -9084,8 +9084,10 @@ function J.ShouldPunishDive( bot )
 	-- full radiant wave for 26s beside two idle full-HP heroes; 232228 WK
 	-- with stun ready hovered 900u from a 66% Jugg for 17s; explains the
 	-- +1212% unpunished-dive fingerprint). Under 'ownhalf' an enemy CLEARLY
-	-- on our half (>=800 closer to OUR ancient than to its own) counts as
-	-- in-domain too; SafeToCommitFight keeps the same lethal-or-numbers
+	-- on our half counts as in-domain too -- "clearly" at the tree's own
+	-- ancient-distance convention, which the sibling helpers write as 1600 and
+	-- this branch carried as 800 until 2026-09-09 (see the note at the margin
+	-- itself); SafeToCommitFight keeps the same lethal-or-numbers
 	-- discipline, and the team_roam desire stays HP-remapped (cap, not gate).
 	local bOwnHalf = J.IsSoakCandidate( 'ownhalf' )
 
@@ -9122,7 +9124,57 @@ function J.ShouldPunishDive( bot )
 				local nInvadeDepth =
 					J.GetLocationToLocationDistance( vEnemyLoc, hEnemyAncient:GetLocation() )
 					- J.GetLocationToLocationDistance( vEnemyLoc, hOwnAncient:GetLocation() )
-				if nInvadeDepth >= 800 then bInDomain = true end
+				-- [strategy 20260909 / tests/_posture_domain_sweep.lua] THE MARGIN
+				-- OF THIS BRANCH AND THE MARGIN OF ITS SIBLING ARE THE SAME
+				-- QUANTITY, AND THEY DISAGREED. Both ask "is this enemy far
+				-- enough onto OUR ground to be treated as an invader", both
+				-- compute it as the same ancient-distance difference, and both
+				-- hand the answer to the same commit test (J.SafeToCommitFight).
+				-- J.ShouldPunishOverchase's midline branch says 1600; this one
+				-- said 800. The two numbers were never reconciled -- the sibling
+				-- was corrected on corpus evidence on 2026-09-07 and this branch,
+				-- written first, was not revisited.
+				--
+				-- This is not a new policy. 1600 is the tree's OWN ancient-
+				-- distance convention, written down twice with its reason:
+				-- J.SafeToCommitFight's 'depthnum' branch ("same ancient-distance
+				-- convention as J.ShouldRegroupNotSolo") and the overchase midline
+				-- branch. The reason is the failure this whole family exists to
+				-- avoid: the commit test reads VISIBLE bodies only, and within a
+				-- screen of the midline the other side's reinforcements are in
+				-- fog -- AGENTS.md's 2v2-becomes-2v4. 800u past the midline is the
+				-- river bank, not "CLEARLY on our half" as the comment above
+				-- claims; the constant contradicted the sentence justifying it.
+				--
+				-- STRICTLY NARROWING: the domain at the larger margin is a subset
+				-- of the domain at the smaller, so armed this can only DELETE a
+				-- punish, never create one, and it cannot touch the shipped
+				-- building branch above (measured bit-identical: pd_fires_shipped
+				-- 28 before and after).
+				--
+				-- NO NEW SOAK ID, ON PURPOSE -- the 0OVERCHASE rule. This branch
+				-- is already gated on the unpromoted 'ownhalf' candidate, so a
+				-- nested J.IsSoakCandidate here would be the conjunction
+				-- `ownhalf AND <new>`, and a wave arming <new> alone would read a
+				-- STRUCTURALLY impossible 0 that check_armed_wiring.py still calls
+				-- WIRED (GH #606, the #576/#600/#607 family). So the narrowing
+				-- edits the host's own body and inherits the host's id.
+				--
+				-- Priced first (110 fixtures / 1021 live hero-frames): of the 97
+				-- (bot, enemy) pairs the ownhalf branch admitted, 43 -- on 37
+				-- distinct frames -- were admitted ONLY by the shallow margin
+				-- (pd_oh_band), and 54 survive at the sibling's. The witnesses are
+				-- named by the sweep itself (F lines), e.g.
+				-- f_260819_142047_zuus_ult_denied at depth 1157/1169.
+				--
+				-- The tests assert the two margins are EQUAL, not that this one is
+				-- 1600: symmetry is the property, 1600 is only today's value.
+				--
+				-- REGISTERED CONSEQUENCE: 'ownhalf' is the sole enabler of
+				-- 'ohnum''s effective domain (state.json:ownhalf_KEPT_20260908), so
+				-- this narrows 'ohnum''s reachable frames by the same band. Neither
+				-- id was armed in W60 or W61, so no flying wave is disturbed.
+				if nInvadeDepth >= 1600 then bInDomain = true end
 			end
 			-- Over-extended on our ground -> only punish when the collapse is
 			-- genuinely winning (lethal or numbers).

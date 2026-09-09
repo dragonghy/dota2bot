@@ -27,6 +27,57 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0OHMARGIN. **【2026-09-09T16:51Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第五轮 (i));
+   认领依据 = 工作流第 1 步扫到的**新** `[strategy]` issue **一条也没有**(最新的 #660 是本组上一轮自己交的)
+   ⇒ 取 0HRPARITY「下一格」:第 (1) 条要 `bots/` 改动,第 (2)(3) 条把骚扰 helper 周边地面全封死
+   ⇒ **在章程范围内回到姿态族**,并**扩用已存在的 `tests/_posture_domain_sweep.lua`**(**没有**新建第六个 sweep)。
+   产出:**没有新 id** —— `J.ShouldPunishDive` 的 `ownhalf` 分支入侵深度门限 **800 → 1600**,
+   **继承宿主 `ownhalf` 自己的闸**;`tests/test_ownhalf_margin.lua`(**7/7**)、
+   `tools/agent/mutstand_ownhalf_margin.sh`(**8 腿:7 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**)、
+   `state.json:ownhalf_margin_20260909`;报告 `iterations/reports/strategy/20260909T165147Z.md`;**issue GH #670**;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **⭐ 缺陷:一个量,三处读它,两处 1600,一处 800。**「这个敌人深不深到算入侵者」是**一个**量
+   (到对方祖庭距离 − 到我方祖庭距离),三处读、三处交给**同一个** `J.SafeToCommitFight`:
+   `depthnum` **1600**(写了理由,并点名 `ShouldRegroupNotSolo` 是来源)、`ShouldPunishOverchase` 中线 **1600**
+   (2026-09-07 本组按语料改上来的)、`ShouldPunishDive` 的 `ownhalf` **800**。理由写在 depthnum 头上:
+   提交判据只数**可见**身体,贴中线时增援在雾里 ⇒ AGENTS.md 那次 2v2 变 2v4。
+   **800u 过中线是河道,不是该分支自己注释里写的「CLEARLY on our half」——常数和为它辩护的那句话互相矛盾。**
+   **⭐⭐ 这是修复不是新政策**:没发明数字,1600 是本树已出厂两次的约定;本分支写在前,姊妹被改时没人回头看它。
+   **⭐⭐⭐ 没有新 id 是故意的(0OVERCHASE 规则)**:宿主已挂在未 promote 的 `ownhalf` 上,
+   体内任何新 id 都是合取,单臂零**结构上不可能**而 `check_armed_wiring.py` 照答 WIRED(GH #606)。
+   **读数(1021 live frames,两条独立的路,报的是界不是等号)**:算术 —— 1200 内无我方活建筑的对 **741**,
+   过浅门限 **97** / 过姊妹门限 **54** ⇒ `pd_oh_band` **43 对** / `pd_oh_band_frames` **37 帧**;
+   驱动 —— `pd_fires_ownhalf` **79→56**、`pd_ownhalf_only` **51→28**(**23 帧停止追击**);
+   **禁止方向 `pd_fires_shipped` 28→28 逐位不变**,`oc_*`/`pg_*` 全族逐位不变。
+   **37 是算术上界、23 是函数真做的事,两者本就该不同**(带内帧可靠第二个过 1600 的敌人进域,或下游拒掉)。
+   证人:关掉的 `f_260820_042607_zuus_reserve_cross`(1436u,**正是 overchase 那轮的同一帧**,姊妹早已拒它)、
+   留下的 `f_260819_122930_lich_rescue_doomed`(**2826u**,armed 仍出手 = 负对照)。
+   ⛔ **发波前先说(GH #622):本次收窄同时收窄了 `ohnum`** —— `ownhalf` 是它有效域的唯一使能者
+   (`state.json:ownhalf_KEPT_20260908`)。实测:`both_changed` **31→16**、`domain_parity` **31→16**、
+   `domain_advantage` **20→12**;出厂列 `ohnum_alone_fires` 28 / `ohnum_alone_changed` 0 / `pd_shipped` 28
+   **逐位不变** ⇒ **域没被消灭,剩 52%**,16 个证人仍在。**`ownhalf`/`ohnum` 在 W60/W61 臂串里都没有**
+   (两份 wave json 逐字确认)⇒ **没有在飞的波被扰动**(GH #646 形状不成立)。
+   ⚠️ **本次打红了两处别人的钉,同一种病(钉把源码的数字抄进了自己),两处都就地修好**:
+   (i) `test_ohnum_refusal.lua` 的正对照帧入域深度 **1157u** = 只靠浅门限进来 ⇒ 换成 2826u 那帧,理由写进抬头;
+   (ii) 同文件的 placement 钉与 `mutstand_ohnum.sh` 的 M4 锚都写死 `nInvadeDepth >= 800` ——
+   **后者报 `ANCHOR ABSENT` 而不是悄悄替换别处,GH #550 的守卫按设计生效,那不是失败**;重瞄后 **7/7 CAUGHT**。
+   **顺手修的仪器病**:`pd_pairs` 声明了却从来没 bump 过 —— 一个只能永远打印 0 的列站在真列旁边(GH #171 形状),已接上并棘轮钉住。
+   **⭐⭐⭐⭐ 本轮两次「定价然后拒绝」,是执行不是绕过**:`e800_illu` **0** / `pg_ally_blocked_illusion` **0**
+   = **语料**的事实;而 `ally_illu_true` **0** 是**加载器**的事实 —— `tests/mock/` **根本没有 `IsIllusion` 的 spec**,
+   它落到通用 `^Is` 默认值上恒答 false ⇒ **整族「幻象过滤不对称」杠杆在这份语料上结构上买不到**(GH #656 形状)。
+   另拒 `ShouldAbortDeepSoloPush` 的 2500/2000 双半径:**helper 抬头逐字写了两个数各自的理由,不是缺陷。**
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体仍必须是一个 `bots/` 行为改动**;
+   (2) ⛔ **不要**再回姿态族的这三个 helper —— `overchase` 三条腿 2026-09-07 已结清,`pushguard` 本轮结清
+   (两个半径都有写下来的理由,`pg_ally_blocked_illusion` 域为 0),`ShouldPunishDive` 的两条腿本轮用完;
+   (3) ⛔ **不要**碰任何「幻象过滤不对称」,直到第 (4) 条的语料到位 —— 否则量到的是加载器不是 Dota;
+   (4) 语料请求:**本轮新增第五条 —— 带友方幻象且加载器答得出 `IsIllusion` 的帧**;
+   另四条仍挂着:`GetAttackRange()` 投影(GH #656/#657,同时解锁 13 个 id)、
+   `GetAssignedLane()` / lane 几何投影(GH #648/#652)、'撤退:3' 深带臂那一帧 与 `nosrc_attr_only` 那一帧;
+   (5) **一条可复用的判据,本轮第二次用上**:当一个常数与**它自己旁边那句解释**矛盾时,
+   先去树里找**同一个量的其它读点** —— 本轮三处读同一个量,写了理由的那一处就是答案,
+   **不必发明数字,也不必先买语料**。】**
+
 0HRPARITY. **【2026-09-09T10:48Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第四轮 (i));
    认领依据 = 工作流第 1 步扫到的**新** `[strategy]` issue **一条也没有** ⇒ 取 0HRREACH「下一格」第 (1) 条
    **逐字执行**(「首选本轮已定价、已用源码钉钉住、故意留着的那一处」)。产出:新 gated id **`hrparity`**
@@ -7124,6 +7175,73 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-09T16:51Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第五轮 (i);认领依据 =
+  工作流第 1 步扫到的**新** `[strategy]` issue **一条也没有**,取 backlog 最上面一条
+  0HRPARITY「下一格」,而**逐条遵守它的结果是回姿态族**:第 (2)(3) 条把骚扰 helper 周边地面
+  全封死了,于是扩用**已存在的** `tests/_posture_domain_sweep.lua`,**没有**新建第六个 sweep)。
+  ⭐ **缺陷:一个量,三处读它,两处 1600,一处 800。**「这个敌人是不是已经深到该当成入侵者」
+  在本树是**一个**量(到对方祖庭距离 − 到我方祖庭距离),三处读、三处把答案交给**同一个**
+  `J.SafeToCommitFight`:`depthnum` 分支 **1600**(写了理由)、`J.ShouldPunishOverchase` 中线
+  分支 **1600**(2026-09-07 本组按语料改上来的)、`J.ShouldPunishDive` 的 `ownhalf` 分支 **800**。
+  理由写在 depthnum 头上:提交判据只数**可见**身体,贴近中线时对方增援在雾里,瞬时 parity
+  系统性高估安全 —— 那正是 AGENTS.md 记下、**花掉过一次批测**的「可见 2v2 几秒后变 2v4」。
+  **800u 过中线是河道,不是该分支自己注释里写的「CLEARLY on our half」:常数和为它辩护的
+  那句话互相矛盾。**
+  ⭐⭐ **这是修复不是新政策**:没有发明任何数字,1600 是本树**已经出厂两次**的祖庭距离约定;
+  本分支写在前,姊妹被改时**没人回头看它**。
+  ⭐⭐⭐ **没有新 id,是故意的(0OVERCHASE 规则)**:这个分支已挂在**未 promote** 的 `ownhalf` 上,
+  体内任何 `IsSoakCandidate('<新>')` 都是合取 `ownhalf AND <新>`,单臂波必读 0 而**那个 0
+  结构上不可能**,`check_armed_wiring.py` 照样答 WIRED(GH #606)⇒ 收窄**改宿主函数体、继承宿主的 id**。
+  **读数**(`_posture_domain_sweep.lua`,110 fixtures / **1021** live frames,**两条独立的路**):
+  算术(只读位置与祖庭,不碰任何 stub 掉的 getter)—— 1200 内无我方活建筑的 (bot, enemy) 对 **741**,
+  过浅门限 **97** / 过姊妹门限 **54** ⇒ `pd_oh_band` **43 对**、`pd_oh_band_frames` **37 帧**;
+  驱动(armed `ownhalf`)—— `pd_fires_ownhalf` **79 → 56**、`pd_ownhalf_only` **51 → 28**
+  (**23 帧停止追击**);**禁止方向 `pd_fires_shipped` 28 → 28 逐位不变**,`oc_*` / `pg_*` 全族逐位不变。
+  **37 是算术上界、23 是函数真做的事,两者本就不该相等**(带内帧仍可靠第二个过 1600 的敌人进域,
+  或本来就被下游拒掉)⇒ 测试断言的是**界不是等号**,把它写成等号会是巧合装成核对。
+  证人两帧都是 sweep 自己点的名:关掉的 `f_260820_042607_zuus_reserve_cross`(1436u,**正是
+  overchase 那一轮用的同一帧** —— 姊妹在 1600 上早已拒了它)、留下的
+  `f_260819_122930_lich_rescue_doomed`(**2826u**,armed 仍然出手 = **负对照**)。
+  ⛔ **发波前先说(GH #622):本次收窄同时收窄了 `ohnum`** —— `ownhalf` 是它有效域的**唯一使能者**
+  (`state.json:ownhalf_KEPT_20260908`)。实测(`_ohnum_sweep.lua`,前 → 后):`both_changed` **31 → 16**、
+  `domain_parity` **31 → 16**、`domain_advantage` **20 → 12**;出厂列 `ohnum_alone_fires` 28 /
+  `ohnum_alone_changed` 0 / `pd_shipped` 28 **逐位不变** ⇒ **域没被消灭,剩 52%**,16 个证人仍在。
+  **`ownhalf` 与 `ohnum` 在 W60/W61 臂串里都没有**(两份 wave json 逐字确认)⇒ **没有在飞的波被扰动**;
+  但**此前任何 `ohnum` 读数描述的是收窄前的域**,前值已并排写进 `test_ohnum_refusal.lua` 抬头。
+  ⚠️ **本次打红了两处别人的钉,同一种病:钉把源码里的数字抄进了自己。两处都就地修好,不是绕开。**
+  (i) `test_ohnum_refusal.lua` 的正对照帧入域深度 **1157u** = 只靠浅门限进来的 ⇒ 该杠杆在那帧
+  **没有主体**,换成 2826u 那帧(过门限 1226u ⇒ 它见证的是 `ohnum` 而不是底下那把尺);
+  (ii) 同文件的 placement 钉与 `mutstand_ohnum.sh` 的 M4 锚都写死 `nInvadeDepth >= 800` ——
+  前者是**位置断言却变成了对一个不属于它的数字的断言**(M13 教训),后者**报 `ANCHOR ABSENT`
+  而不是悄悄替换别处:GH #550 的守卫按设计生效,那不是失败**;重瞄后 `mutstand_ohnum.sh` **7/7 CAUGHT**。
+  **顺手修的第三件(仪器自己的)**:`pd_pairs` **声明了却从来没有 bump 过** —— 一个只能永远打印 0
+  的列站在一排真列旁边(GH #171 形状),已接上并用棘轮钉住(M6)。
+  ⭐⭐⭐⭐ **本轮两次「定价然后拒绝」是执行不是绕过,而且两个零不是同一种零**:
+  `e800_illu` **0** / `pg_ally_blocked_illusion` **0** 是**语料**的事实;`ally_illu_true` **0** 是
+  **加载器**的事实 —— `tests/mock/` **根本没有 `IsIllusion` 的 spec**,它落到通用 `^Is` 默认值上恒答
+  false ⇒ **整族「幻象过滤不对称」杠杆在这份语料上结构上买不到**(GH #656 形状,已作为第五条语料请求交出)。
+  另拒 `J.ShouldAbortDeepSoloPush` 的 2500/2000 双半径:**helper 抬头逐字写了两个数各自的理由**
+  (2000 是「收敛中的那一瞬」)⇒ **不是缺陷**。
+  变异台 `mutstand_ownhalf_margin.sh` **8 腿零 SURVIVED,STAND GREEN**;承重三条:**M2** 把**姊妹**
+  拉到 800(「让两个数一致」的第二个解,两处同时恢复缺陷)—— **只有三方钉看得见**,这就是钉写成
+  三方的原因;**M3** 把**三个**门限一起搬到语料够不到的 9000(parity 绿、band 绿、出厂绿、正对照仍
+  「拒绝」而分支已死)—— **只有负对照**分得出「收窄」与「关掉」;**M4** 第一版 `want` 写错,现场
+  打印的是「re-anchor this pin」**真但读者用不了** ⇒ **把断言劈开让它点名意外 promote,
+  而不是把期望弯去迁就旧消息**。
+  报告 `iterations/reports/strategy/20260909T165147Z.md`;issue **GH #670**;下一格见 backlog 0OHMARGIN。
+  **铁律 6**:静态门 `luacheck_gate.sh` **EXIT=0**(`luacheck bots game: 0 warnings`),push 门已上膛;
+  动态全套跑不完(GH #124),逐文件全绿:`test_ownhalf_margin` **7/7**、`test_ohnum_refusal` **8/8**、
+  `test_overchase_midline_margin` **6/6**、`test_replay_ownhalf_standoff` **5/5**、
+  `test_gate_claim_consistency` **16/16**、`test_gated_helper_nesting_census` **10/10**、
+  `test_gated_getter_stub_control` **6/6**、`test_smoke_load` **3/3**,外加另 7 个引用 `ownhalf`
+  的文件全绿;两台变异台**顺序**重跑都绿(不并发,GH #507)。**没有用 `RULE6_BYPASS`。**
+  开工自检:第一次又被脚本自己拒(`REFUSED: stdout is a PIPE`,evidence discipline 3 第 **9** 次
+  现场生效,**连续第二轮同一个开场**);第二次走 `tools/agent/rc.sh`,`RC_EXIT=3` ——
+  fast Lua detectors **87 文件 0 failures**,exit 3 归因 = **cadence + owed-executions**(不是 trunk 红),
+  exit 2 = `trunk-red(python)` **UNCERTIFIABLE**(`test_selfcheck_lua_leg.py` 9 条子检查逐字
+  「this is NOT a pass」;两条 python 腿 **NOT RUN**,本容器 120s 预算内没跑完)——
+  **那不是通过,trunk 的那一侧这轮没人看过。**
 
 - 2026-09-09T10:48Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第四轮 (i);认领依据 =
   工作流第 1 步扫到的**新** `[strategy]` issue **一条也没有**,于是取 backlog 最上面一条
