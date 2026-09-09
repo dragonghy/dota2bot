@@ -14036,22 +14036,29 @@
     镜像抽签下携带英雄的队伍由 draft 固定 ⇒ **对一切英雄限定 id 都成立**。
     两层同号仍是好消息,但**不许读成"侧偏已消除"**。建议交总监登记进铁律 4(i) 的读法。
   - **自检**:⛔ 第一条命令**第七次**踩管道形状(工具第七次自拒);第二次**又套了 `timeout 600`**
-    ⇒ **`EXIT=124`,本台连续第四轮死在自己的 timeout 上**,**不是通过**。已无 timeout 重跑。
+    ⇒ **`EXIT=124`,本台连续第四轮死在自己的 timeout 上**,**不是通过**。已无 timeout 重跑,
+    但**收尾时 >45 分钟仍未结束**(卡在 fast Lua detectors 腿)⇒ **`SELFCHECK2_EXIT=STILL_RUNNING`,
+    本轮没有一个完整的自检退出码**。
     被杀前读到:锚点 6/6 OK、185 个 live gate id、`FROZEN none`、5 个原子全 GATED、
     **`TRUNK RED`(115 passed / 1 failed / 2 uncertifiable)**。
-  - **本轮的 issue**:评论 **GH #314**(W60 复现 + 三条与其猜测不同的更新:
+  - **本轮的 issue**:评论 **GH #314**(`issuecomment-5607638212`;W60 复现 + 三条与其猜测不同的更新:
     「环内都是 spirit_breaker」**不复现**、残余**按种子聚集** 4/17 vs 0/19、四条**全在 t₀>1000s**;
-    更好的钉帧 `095056_slot7` **t=1536.5**);新开 **`[batch]`**(W61 **四台全传了日志**,
+    更好的钉帧 `095056_slot7` **t=1536.5**);新开 **GH #674 `[batch]`**(W61 **四台全传了日志**,
     批测台 18:20Z §二.3 说错;四条日志末行把 SIR `UpdateTime` 钉成**两分钟预告发出时刻**
     —— `terminate.time` = `UpdateTime` **+120s 逐秒对齐**,四台四中四 ⇒ 机时低估上限 **8 机分**);
-    新开 **`[hero]`**(**trunk 红**:`tests/test_call_arity_census.py`,肇事 commit **`213cc903`**
+    新开 **GH #675 `[hero]`**(**trunk 红**:`tests/test_call_arity_census.py`,肇事 commit **`213cc903`**
     今天 17:13Z 给 `X.axe_IsBattleHungerFresh` 加了第三个形参而两个调用点仍传两个,
     **看代码是有意的、缺的是那句裁定**;附带:push 快门的 python 半是**快集 88 个**,
     **这个 census 不在里面** ⇒ 这条红能穿过快门落到 main)。
-  - **铁律 6**:`bots`/`game`/`tests`/`tools` **一行未改**;`PYGATE_EXIT=0`
-    (`88 ran, 0 findings`);静态门随 push 自跑;动态半(~100min,GH #124)**未跑,不声称**。
+  - **铁律 6**:`bots`/`game`/`tests`/`tools` **一行未改**;`PYGATE_EXIT=0`(`88 ran, 0 findings`);
+    静态门随 push 自跑,**四次 push 四次绿,全程未用 `RULE6_BYPASS`**(故无「SKIPPED, not passed」行);
+    `PUSH2_EXIT=1`(main 被拒 `fetch first`)→ `PULL_EXIT=0` rebase 到 `34eeeed7` → `PUSH3_EXIT=0`;
+    `claim_precheck.sh` 对 #314 草稿 **exit 0**(`refused 0`),三条 issue **全在 push 之后发表**(GH #290);
+    动态半(~100min,GH #124)**未跑,不声称**。
   - **AWS**:只读 S3,**零 EC2、零发波、零 Cost Explorer、零支出**。
-  - **下一轮第一件事**:(1) 盯三条 issue 的回音,**`[hero]` 那条(trunk 红)优先**;
+  - **下一轮第一件事**:(1) 盯 **GH #314 / #674 / #675** 的回音,**#675(trunk 红)优先**;
+    (1b) **单开一条给总监**:让 `routine_selfcheck.sh` 像拒答管道那样**拒答被 `timeout` 包着的调用**
+    —— 管道那条工具自己拦了七轮七次,`timeout` 这条只写在散文里,**已复发四轮**;
     (2) **补扫 `cd3359`/`40e63a` + transit 钉帧(欠六轮)—— 下一轮先做这条,别再让位**;
     (3) W62(按需一波)收割后常规宽扫。
   - 完整报告:`iterations/reports/replay-check/20260909T184000Z.md`
