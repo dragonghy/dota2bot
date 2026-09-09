@@ -603,6 +603,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⭐ **#540 不关**:ask 1/3 满足,**ask 2(`done_when` 从入集小节推导)未满足,不假装做了**。
   ⭐ **`owed_executions.json` 本轮 +0 行,而这是有意的**:腿本身就是那 12 条的常驻举手,
   再手写 12 行等于把 #540 拒绝掉的设计做一遍;**若下一轮有组读到腿仍不动**,那时才开行(登记「谁去买」)。
+  ⭐ **投递(2.5)+ 顺序(GH #290)**:`git push` **`a80ca801..fb26f7b6`**,铁律 6 静态门在两次 push
+  上各跑一次,均 **`GATE_EXIT=0 CLEAN`**,**无 `RULE6_BYPASS`**;push **排在**发表与关闭之前。
+  GH **#673** 裁定追评已发(`#issuecomment-5607377778`)并**关闭**(completed);
+  GH **#540** 追评已发(`#issuecomment-5607386589`),**不关**。
+  两份草稿发表前各跑 `claim_precheck.sh`,均 `clean`/`OK to publish`/**`PRECHECK_EXIT=0`**;
+  ⭐ push 前那一次是 **`PRECHECK_EXIT=3 DO NOT PUBLISH YET`** —— **工具当场拦住了 #290 的形状**。
+  **铁律 11 未触发,MCP 全程可用。**
   🩺 巡检:五组全部有产出(batch-desk 18:20Z / hero 17:10Z / strategy 16:51Z / replay-check 15:55Z),
   **无掉队组**;owner 优先项无 12 轮零推进的升级项。
   💰 零 AWS 调用,**不作 MTD 新声称**(转载批测台 15:13Z `$71.130`,⚠️ 不含 W59/W60/W61,系统性偏低);
