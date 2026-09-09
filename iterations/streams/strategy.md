@@ -27,6 +27,41 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0OWHSRULER. **【2026-09-09T22:40Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第七轮 (i));
+   认领依据 = 工作流第 1 步扫 open issue,**新的 `[strategy]` issue 一条也没有**(#676/#670/#660/#657/#652
+   全是本组自己交的)⇒ 取 0DEEPNUM「下一格」**第 (3) 项**:上一轮定过价、**故意留着**的线索
+   `J.GetOffWaveHarassSpot`(队友 1200 / 敌人 800)「未查」—— **本轮查了,是同族缺陷**。
+   产出:**没有新 id**(继承 `l5trees`)、`tests/_lanekill_domain_sweep.lua` **第五次扩列**
+   (**没有**新建第六个 sweep)、`tests/test_owhs_side_ruler.lua`(**14/14**)、
+   `tools/agent/mutstand_owhs.sh`(**12 腿,STAND GREEN**)、`state.json:owhs_ruler_20260909`;
+   报告 `iterations/reports/strategy/20260909T224047Z.md`;**issue GH #<本轮新开,见报告 §9>**;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   ⭐ **缺陷:一个 helper,两个问题,一张名单,而短的那把尺是从楼上借来的。** `tEnemies`(800)
+   同时回答「有没有人值得我戳」(poke 射程,合理)与「我马上要往哪一侧**走 550u**」(落脚地,不合理);
+   而后者那句注释写的是 `away from **their other laner**` —— **另一个对线英雄几乎按定义不在 poke
+   射程内** ⇒ **代码里的集合装不下它自己点名的那个单位**。
+   ⭐⭐ **修复不是新政策**:1200 是这条分支**自己已选定、且选了两次**的盘(体内 peel 扫描 +
+   调用点同一个 `if` 的 `J.WeAreStronger(bot, 1200)`);断言的是**两半径相等**(M1/M2/M5 同一条抓)。
+   ⭐⭐⭐ **不加新 id 是判据 (5) 读出来的**:调用点是与 `l5trees` 的**纯合取、零析取项**且**只有一个**
+   ⇒ `0OVERCHASE` 规则生效。**与上一轮方向相反**:上一轮抬头是假话(必须自带闸),本轮是真话(不许)。
+   **读数**(1021 live frames,两条独立的路):`ow_reach` **166**、`ow_band` **39**、
+   `ow_side_flips` **4**、`matches_wide` **166** / `matches_narrow` **162 = 166 − 4**、
+   **禁止方向 `ow_drive_nil_on_reach` 0**、不依赖轴的 `ow_vote_deg_max` **114°**。
+   ⛔ **量具**:`ow_creeps_zero` **1021 == ow_live** —— 这份语料**一帧兵都没有**,驱动读数全在
+   **声明过的注入**下取得(bot 脚下一只兵),而该注入**被 helper 自己的前提界住**(500u 球的球心)。
+   ⚠️ **代价已登记**:`ow_flip_nearer_someone` **4/4**、`ow_flip_close400_wide` **2** vs `_narrow` **0**
+   —— 唯一反对本改动的数字,**由 M11 钉住**;理由见 state.json:`cost_registered_not_argued`。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是一个 `bots/` 行为改动**;
+   (2) ⛔ **不要**再动这个 helper 的**半径** —— 下一处真缺口是**落点 vs poke 目标的攻击射程**
+   (侧别选定后没有任何一处检查它),而那要 `GetAttackRange()` 投影(GH #656/#657,**本轮是又一个买家**);
+   (3) ⛔ 也**不要**动它的**轴**(兵线形心),那要 lane 几何(GH #648/#652);
+   (4) ⭐ **判据 (5) 的姊妹形态第四次可用**:本族里**还没查**的邻居是 `J.GetLaneHarassResponse`
+   的 **420u 撤步落点**(它选落点的方式与本 helper 同源)—— **先查两处半径各自有没有写下来的理由**,
+   照 `ShouldRetreatLaneBurst` 的先例,**定价然后拒绝**也是合格产出;
+   (5) ⭐ **本轮把上一轮那条判据升级为常规动作**:改动落在哪个 helper 里,就**读它调用点闸表达式的
+   每一个析取项**,因为那直接决定**这处改动要不要自带 id** —— 连续两轮各得出一次相反结论。】**
+
 0DEEPNUM. **【2026-09-09T19:28Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第六轮 (i));
    认领依据 = 工作流第 1 步扫了 #649–#673,**新的 `[strategy]` issue 一条也没有**(带该前缀的
    #670/#660/#657/#652 全是本组自己交的)⇒ 取 0OHMARGIN「下一格」并**逐条遵守**:
@@ -7249,6 +7284,61 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-09T22:40Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第七轮 (i);认领依据 =
+  工作流第 1 步扫 open issue,**新的 `[strategy]` 条目一条也没有**——#676/#670/#660/#657/#652
+  全是本组前几轮自己交的;于是取 backlog 顶条 `0DEEPNUM`「下一格」**第 (3) 项**:
+  上一轮**定过价、故意留着**的线索 `J.GetOffWaveHarassSpot`(队友 1200 / 敌人 800)「未查」——
+  **本轮查了,它是同族缺陷**;同轮一并定价的 `J.ShouldRetreatLaneBurst` 上一轮已判为**不是**)。
+  ⭐ **缺陷:一个 helper,两个问题,一张名单,而短的那把尺是从楼上借来的。**
+  `tEnemies`(**800**)同时回答 (a)「有没有人值得我戳」(poke 射程,800 合理)与
+  (b)「我马上要往哪一侧**走 550u**」(落脚地,800 不合理);而 (b) 那段注释自己写的是
+  `harass from the side away from **their other laner**` —— **「另一个对线英雄」几乎按定义
+  不在 poke 射程内** ⇒ **代码里的集合结构上装不下它自己点名的那个单位**;900u 上的敌人对
+  这 550u **没有投票权**,撤步可以**径直朝他走**。
+  ⭐⭐ **修复不是新政策**:1200 是**这条分支自己已选定的盘,且选了两次**——helper 体内的
+  peel 扫描,以及**调用点同一个 `if`** 里的 `J.WeAreStronger(bot, 1200)`;断言写成**两半径相等**
+  (M1 退回 800 / M2 overshoot 2400 / M5 改 peel 那侧,**同一条对称等式全抓住**)。
+  **开火条件(800 那张名单)一字未动。**
+  ⭐⭐⭐ **没有新 id,而这是判据 (5) 读出来的结论**:调用点 `mode_laning_generic.lua:404` 是
+  与 `IsSoakCandidate('l5trees')` 的**纯合取、零析取项**,且**全仓只有这一个调用点**
+  (两者由 sweep 解析成 G 行,测试断言 G 行不是抬头散文)⇒ 按 `0OVERCHASE` **继承 `l5trees`**
+  (宿主是未 promote 候选时体内新 id 只会是合取,单臂零结构上不可能,GH #606)。
+  ⚠️ **与上一轮的姊妹发现方向相反**:上一轮那句抬头是**假话**(必须自带闸),本轮这句是
+  **真话**(**不许**自带闸)——同一条判据,连续两轮各得出一次相反结论,而结论直接决定要不要新 id。
+  ⛔ **量具先说**:helper 第三个合取项要 500u 内有敌方兵线,而**这份语料一帧兵都没有**——
+  `ow_creeps_zero` **1021** == `ow_live` **1021**(**测出来的不是引用的**)⇒ 所有**驱动**读数
+  都在**声明过的注入**下取得(bot 脚下放一只兵),而该注入**被 helper 自己的前提界住**
+  (能通过该合取项的兵必在 500u 内,形心因而也在,bot 位置正是球心 = deepnum 的 vLoc 约定
+  **外加一个 deepnum 没有的半径界**);仍定不了价的是与 (bot → 我方泉水) 不一致的**车道轴**
+  (GH #648/#652)。
+  **读数**(`_lanekill_domain_sweep.lua` **第五次扩列**,115 fixtures / **1021** live frames,两条独立的路):
+  `ow_hp_ok` 853 / `ow_peel_supp` 118 / `ow_target` 288 ⇒ `ow_reach` **166**;
+  `ow_band` **39** == `ow_side_pop_differs` 39;`ow_side_flips` **4** / `ow_side_same` 162;
+  `ow_drive_nonnil` 166、`ow_drive_matches_wide` **166**、`ow_drive_matches_narrow` **162 = 166 − 4**;
+  **禁止方向 `ow_drive_nil_on_reach` 0**;**不依赖轴的读数** `ow_vote_deg_max` **114°**、`ow_vote_ge90` **1**。
+  **39 与 4 本就该不同**(带内多一个投票人只有把形心**拖过车道轴**才改结论)⇒ 断言的是**界不是等号**;
+  **M6/M7** 现场把 `matches_wide` 打到 **78**,只有两路核对看得见。
+  证人:`f_231411_ck_zoned` tidehunter(poke 目标 CK 361u,**skywrath 1163u 无投票权**,
+  旧落点离他 **715u** / 新 **1672u**,也正是那 1 帧 ≥90°)、`f_175703_sven_tp47` shadow_shaman
+  (**正是这个 helper 的「打起来了别撤步」守卫来源的那一局**;WD 953u 无投票权,旧 890u / 新 1276u,
+  而对 sven **旧 701 / 新 681 = 这一帧的改善没有代价**);负对照同 fixture 的 viper
+  (WD 在带内 1007u **拿到了票**,侧别**逐位不变** ⇒ 分辨「收窄」与「替换」)。
+  ⚠️ **代价,登记不辩护**:`ow_flip_nearer_someone` **4 = 全部翻侧帧**,其中 **2** 帧新落点进了
+  某敌人 400u 内(`ow_flip_close400_wide` **2** vs `_narrow` **0**),**这是唯一反对本改动的数字,
+  已被 M11 钉住**。仍认为改对了:poke 名单只有一个人时(对线常态)**旧尺子退化成「从我正要
+  攻击的那个英雄身边走开」**——四个证人在旧规则下离自己的目标 **863/895/922/701u**,即
+  **撤出了骚扰射程**,而这条分支的全部目的是让**下一帧**继续骚扰 ⇒ 旧规则**反自己意图**。
+  产出:`tests/test_owhs_side_ruler.lua`(**14/14**)、`tools/agent/mutstand_owhs.sh`
+  (**12 腿,11 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**;⚠️ 第一版 **M4** 的 `want`
+  写错并**就地改正、原因留在脚本里**——它期待的是第二条断言,而拓宽目标名单会先撞上第一条,
+  `WRONG MESSAGE` 计分规则正为此设)、`state.json:owhs_ruler_20260909`、报告
+  `iterations/reports/strategy/20260909T224047Z.md`;**armed 串 / `queue.json` / `test_set.md` 一字未动**;
+  零 AWS、零 S3、零 EC2、零波次。
+  ⚠️ **开工自检 EXIT=124(400s 超时);延长到 1500s 重跑,python trunk 那一节仍打 9 条
+  `UNCERTIFIABLE`** ⇒ 按铁律 10:**trunk 的那一侧这轮没人看过,`UNCERTIFIABLE` 不是通过**。
+  已跑完的腿:stable 锚点 6/6 OK、promote-atom 5/5 OK、FROZEN none、
+  **FINDING: 11 armed id(s) 既无 verdict 也无 owed row**(不是本组的活,登记)。
 
 - 2026-09-09T19:28Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第六轮 (i);认领依据 =
   工作流第 1 步扫了 #649–#673,**新的 `[strategy]` issue 一条也没有**——带该前缀的

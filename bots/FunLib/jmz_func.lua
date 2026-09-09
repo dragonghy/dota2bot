@@ -7217,7 +7217,23 @@ end
 -- clears the 500 aggro radius), on the side AWAY from the average enemy-hero
 -- position (owner's target-selection rule reduced: harass from the side away
 -- from their other laner). Pure positional helper -- the caller gates it
--- (turbo + 'l5trees') and issues the move.
+-- (turbo + 'l5trees') and issues the move. That gate claim is CHECKED, not
+-- inherited prose: the one call site (mode_laning_generic, the cut-2 branch) is
+-- a pure conjunction opening `J.IsModeTurbo() and J.IsSoakCandidate('l5trees')`,
+-- with no disjunct that can reach here without the id.
+--
+-- [RULER 20260909] TWO QUESTIONS, ONE LIST -- fixed. The 800 list answers "is
+-- anyone in poke range worth pressuring"; the side choice below answers "which
+-- way am I about to WALK 550u", and the sentence it implements says away from
+-- their OTHER laner -- exactly the laner who is typically NOT the one inside
+-- poke range. Served by one list, an enemy at 900 had no vote and the sidestep
+-- could put me ~350 from them, on their wave, alone. So the side choice now
+-- reads its own census at the radius THIS BRANCH ALREADY USES TWICE (the peel
+-- scan below and the caller's `J.WeAreStronger(bot, 1200)` on the very `if`
+-- that reaches here) -- no new number, and no new soak id: the change rides
+-- 'l5trees' because a second id inside an unpromoted gate can never be armed
+-- alone (GH #606). Widening the vote can never change WHETHER the helper fires
+-- (that is the 800 list's job, untouched) -- only which side it picks.
 function J.GetOffWaveHarassSpot( bot )
 	if bot == nil or not bot:IsAlive() then return nil end
 	if J.GetHP( bot ) < 0.5 then return nil end
@@ -7272,9 +7288,12 @@ function J.GetOffWaveHarassSpot( bot )
 	-- Perpendicular candidates (left/right of the lane axis).
 	local px, py = -dy, dx
 
-	-- Pick the side AWAY from the enemy heroes' average position.
+	-- Pick the side AWAY from the enemy heroes' average position. Its own
+	-- census (see [RULER 20260909] in the header): everyone the step could walk
+	-- into gets a vote, not just the one being poked.
+	local tSideEnemies = J.GetNearbyHeroes( bot, 1200, true, BOT_MODE_NONE )
 	local nEx, nEy, nEn = 0, 0, 0
-	for _, e in pairs( tEnemies ) do
+	for _, e in pairs( tSideEnemies or {} ) do
 		if J.IsValidHero( e ) then
 			local v = e:GetLocation()
 			nEx, nEy, nEn = nEx + v.x, nEy + v.y, nEn + 1

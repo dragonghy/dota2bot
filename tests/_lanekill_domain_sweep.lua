@@ -131,6 +131,58 @@ G.DN_ENEMY_R = dn and tonumber(dn:match('GetEnemiesNearLoc%( vLoc, (%d+) %)'))
 local dnp = dn and dn:find("IsSoakCandidate( 'deepnum' )", 1, true)
 G.DN_ARMED_R = dnp
     and tonumber(dn:sub(dnp):match('GetNearbyHeroes%( bot, (%d+), false'))
+-- Mechanism 4 of the same laning bundle: J.GetOffWaveHarassSpot ('l5trees'
+-- cut 2).  Every radius is parsed off the LOCAL IT IS ASSIGNED TO, never off
+-- "the first GetNearbyHeroes in the block": after this round the helper holds
+-- two enemy scans, and the whole property under test is that the SIDE scan is
+-- no longer the TARGET scan.  A positional read would keep agreeing with a
+-- helper that had merged them back together.
+local ow = block(src, 'function J.GetOffWaveHarassSpot( bot )')
+G.OW = ow and 1 or 0
+G.OW_TGT_R = ow and tonumber(ow:match('tEnemies = J%.GetNearbyHeroes%( bot, (%d+), true'))
+G.OW_SIDE_R = ow and tonumber(ow:match('tSideEnemies = J%.GetNearbyHeroes%( bot, (%d+), true'))
+G.OW_ALLY_R = ow and tonumber(ow:match('tAllies = J%.GetNearbyHeroes%( bot, (%d+), false'))
+G.OW_AGGRO_R = ow and tonumber(ow:match('GetNearbyLaneCreeps%( (%d+), true %)'))
+G.OW_STEP = ow and tonumber(ow:match('px %* (%d+)'))
+G.OW_HP = ow and tonumber(ow:match('GetHP%( bot %) < (0%.%d+)'))
+G.OW_LOOKBACK = ow and tonumber(ow:match('WasRecentlyDamagedByAnyHero%( (%d+%.%d+) %)'))
+-- The one call site, parsed out of the caller rather than described here: the
+-- claim "this helper is reachable only under 'l5trees'" is load-bearing for the
+-- decision NOT to give this change an id of its own, and last round's sister
+-- finding was exactly a header making that claim falsely.
+local lg = read_file('bots/mode_laning_generic.lua')
+local owc = lg:find('J.GetOffWaveHarassSpot(bot)', 1, true)
+G.OW_CALLSITES = 0
+do
+    local at = 1
+    while true do
+        local hit = lg:find('J.GetOffWaveHarassSpot(bot)', at, true)
+        if hit == nil then break end
+        G.OW_CALLSITES = G.OW_CALLSITES + 1
+        at = hit + 10
+    end
+end
+-- The gate expression guarding that call site, taken verbatim from the `if`
+-- that opens the branch, so the test can read it for disjunctions.
+G.OW_GATE_HAS_L5 = 0
+G.OW_GATE_HAS_OR = 0
+G.OW_GATE_WESTRONGER_R = nil
+if owc then
+    local head = lg:sub(1, owc)
+    -- the last `if` that opens a branch before the call
+    local ifat, at = nil, 1
+    while true do
+        local hit = head:find('\n\tif ', at, true)
+        if hit == nil then break end
+        ifat, at = hit, hit + 1
+    end
+    if ifat then
+        local gate = head:sub(ifat)
+        if gate:find("IsSoakCandidate('l5trees')", 1, true) then G.OW_GATE_HAS_L5 = 1 end
+        if gate:find(' or ', 1, true) then G.OW_GATE_HAS_OR = 1 end
+        G.OW_GATE_WESTRONGER_R = tonumber(gate:match('WeAreStronger%(bot, (%d+)%)'))
+    end
+end
 
 local gk = {}
 for k in pairs(G) do gk[#gk + 1] = k end
@@ -201,6 +253,18 @@ for _, k in ipairs({ 'fixtures', 'live', 'lane', 'lane_core', 'lane_sup',
     -- vLoc = bot:GetLocation().  Two routes to one number by design:
     -- `dn_pred_flips` is arithmetic on the raw populations, `dn_closes` is what
     -- the shipped function did when driven armed.
+    -- 'l5trees' cut 2 / J.GetOffWaveHarassSpot (mechanism 4).  `ow_creeps_zero`
+    -- is the INSTRUMENT column and it comes first on purpose: the helper cannot
+    -- fire on a frame without an enemy lane creep within OW_AGGRO_R, and this
+    -- corpus carries no creeps at all, so every `ow_drive_*` row below is taken
+    -- under the declared stub described at the census itself.  A reader who
+    -- skips that column will read the drive rows as Dota; they are not.
+    'ow_live', 'ow_creeps_zero', 'ow_creeps_live', 'ow_hp_ok', 'ow_peel_supp',
+    'ow_target', 'ow_reach', 'ow_side_pop_differs', 'ow_band',
+    'ow_vote_ge90', 'ow_vote_deg_max', 'ow_side_flips', 'ow_side_same',
+    'ow_drive_nonnil', 'ow_drive_nil_on_reach', 'ow_drive_raised',
+    'ow_drive_matches_wide', 'ow_drive_matches_narrow', 'ow_step_u',
+    'ow_flip_close400_wide', 'ow_flip_close400_narrow', 'ow_flip_nearer_someone',
     'dn_live', 'dn_lane', 'dn_noancient', 'dn_underfloor', 'dn_tier1',
     'dn_tier2', 'dn_tier2_enemies', 'dn_disc_differs', 'dn_pred_flips',
     'dn_shipped_true', 'dn_armed_true', 'dn_closes', 'dn_opens', 'dn_raised' }) do
@@ -771,6 +835,226 @@ for _, path in ipairs(fixture_files()) do
                             -- is the FORBIDDEN direction and is asserted zero.
                             if d1 and not d2 then bump('dn_closes') end
                             if d2 and not d1 then bump('dn_opens') end
+                        end
+                    end
+
+                    -- ---- mechanism 4 of the SAME laning bundle:
+                    -- J.GetOffWaveHarassSpot ('l5trees' cut 2), and the ruler
+                    -- its SIDE choice reads.
+                    --
+                    -- ⛔ INSTRUMENT FIRST, and it is a limit not a result.  The
+                    -- helper's third conjunct is `GetNearbyLaneCreeps(500,true)
+                    -- non-empty`, and this corpus carries NO CREEPS ON ANY
+                    -- FRAME (`ow_creeps_zero`; the same fact
+                    -- J.IsLaneZonedByEnemy's header states from the other end).
+                    -- So the drive rows below inject ONE creep, and they say so
+                    -- in their names.  The injection is bounded by the helper's
+                    -- own precondition rather than invented: a creep list that
+                    -- passes the conjunct is a list of creeps within
+                    -- OW_AGGRO_R of the bot, so its centroid is within
+                    -- OW_AGGRO_R of a point this frame really did witness a
+                    -- hero standing on.  Putting the single creep AT the bot is
+                    -- the centre of that ball -- the deepnum vLoc convention,
+                    -- with a radius bound the deepnum case did not have.  What
+                    -- it still cannot price is a lane axis that disagrees with
+                    -- (bot -> own fountain); that is the open corpus request
+                    -- (GH #648 / #652), and `ow_vote_ge90` is the column that
+                    -- survives it -- see below.
+                    local vMe = bot:GetLocation()
+                    bump('ow_live')
+                    local okC, tRealCreeps = pcall(function()
+                        return bot:GetNearbyLaneCreeps(G.OW_AGGRO_R or 500, true)
+                    end)
+                    if okC and tRealCreeps ~= nil and #tRealCreeps > 0 then
+                        bump('ow_creeps_live')
+                    else
+                        bump('ow_creeps_zero')
+                    end
+
+                    -- The helper's own conjuncts, in its order, on real data.
+                    local bOwHp = J.GetHP(bot) >= (G.OW_HP or 0.5)
+                    if bOwHp then bump('ow_hp_ok') end
+                    local bPeel = false
+                    if bot:WasRecentlyDamagedByAnyHero(G.OW_LOOKBACK or 2.0) then
+                        bPeel = true
+                    else
+                        for _, a in pairs(J.GetNearbyHeroes(bot, G.OW_ALLY_R or 1200,
+                            false, BOT_MODE_NONE) or {}) do
+                            if J.IsValidHero(a) and a.WasRecentlyDamagedByAnyHero ~= nil
+                                and a:WasRecentlyDamagedByAnyHero(G.OW_LOOKBACK or 2.0) then
+                                bPeel = true
+                                break
+                            end
+                        end
+                    end
+                    if bPeel then bump('ow_peel_supp') end
+                    local tOwT = J.GetNearbyHeroes(bot, G.OW_TGT_R or 800, true, BOT_MODE_NONE) or {}
+                    local bOwTgt = false
+                    for _, e in pairs(tOwT) do
+                        if J.IsValidHero(e) and not J.IsSuspiciousIllusion(e) then
+                            bOwTgt = true
+                            break
+                        end
+                    end
+                    if bOwTgt then bump('ow_target') end
+
+                    if bOwHp and not bPeel and bOwTgt then
+                        -- Every conjunct the corpus can answer is satisfied;
+                        -- only the creep conjunct is missing, and it is missing
+                        -- for instrument reasons.
+                        bump('ow_reach')
+                        local tOwS = J.GetNearbyHeroes(bot, G.OW_SIDE_R or 1200,
+                            true, BOT_MODE_NONE) or {}
+                        -- The two votes, each counted the way the helper counts
+                        -- them (J.IsValidHero, no illusion filter on the side
+                        -- census -- untouched this round and deliberately so).
+                        local function centroid(t)
+                            local x, y, n = 0, 0, 0
+                            for _, e in pairs(t) do
+                                if J.IsValidHero(e) then
+                                    local v = e:GetLocation()
+                                    x, y, n = x + v.x, y + v.y, n + 1
+                                end
+                            end
+                            if n == 0 then return nil end
+                            return x / n - vMe.x, y / n - vMe.y, n
+                        end
+                        local ax, ay, nN = centroid(tOwT)
+                        local bx, by, nW = centroid(tOwS)
+                        if nW ~= nil and nN ~= nil and nW > nN then
+                            bump('ow_side_pop_differs')
+                        end
+                        for _, e in pairs(tOwS) do
+                            if J.IsValidHero(e)
+                                and GetUnitToUnitDistance(bot, e) > (G.OW_TGT_R or 800) then
+                                bump('ow_band')
+                                break
+                            end
+                        end
+                        -- LOADER-INDEPENDENT column: the angle between the two
+                        -- vote directions needs no lane axis at all.  A flip
+                        -- happens iff the axis perpendicular separates them, so
+                        -- an angle >= 90 degrees means MORE THAN HALF of all
+                        -- conceivable lane axes flip the side on this frame.
+                        -- This is the row that survives the missing lane
+                        -- geometry; `ow_side_flips` below does not.
+                        if ax ~= nil and bx ~= nil then
+                            local la = math.sqrt(ax * ax + ay * ay)
+                            local lb = math.sqrt(bx * bx + by * by)
+                            if la > 1 and lb > 1 then
+                                local cosv = (ax * bx + ay * by) / (la * lb)
+                                if cosv > 1 then cosv = 1 elseif cosv < -1 then cosv = -1 end
+                                local deg = math.deg(math.acos(cosv))
+                                if deg >= 90 then
+                                    bump('ow_vote_ge90')
+                                    out:write(string.format('F %s %s ow_vote_ge90\n',
+                                        short, u.name))
+                                end
+                                if math.floor(deg) > c.ow_vote_deg_max then
+                                    rawset(c, 'ow_vote_deg_max', math.floor(deg))
+                                end
+                            end
+                        end
+
+                        -- DRIVE PATH, under the declared creep injection.  The
+                        -- axis is then (bot -> own fountain) exactly, so the
+                        -- arithmetic side and the driven side are computable
+                        -- from the same p and must agree: two independent
+                        -- routes to one number, which is the only thing that
+                        -- catches a helper that stopped keying on its own
+                        -- census.
+                        local vF = J.GetTeamFountain()
+                        if vF ~= nil then
+                            local dx, dy = vF.x - vMe.x, vF.y - vMe.y
+                            local mag = math.max(math.sqrt(dx * dx + dy * dy), 1)
+                            local px, py = -(dy / mag), dx / mag
+                            local function side_spot(cx, cy)
+                                local qx, qy = px, py
+                                if cx ~= nil and (qx * cx + qy * cy) > 0 then
+                                    qx, qy = -qx, -qy
+                                end
+                                return vMe.x + qx * (G.OW_STEP or 550),
+                                    vMe.y + qy * (G.OW_STEP or 550)
+                            end
+                            local wx, wy = side_spot(bx, by)   -- the fixed rule
+                            local sx, sy = side_spot(ax, ay)   -- the old rule
+                            if math.abs(wx - sx) > 1 or math.abs(wy - sy) > 1 then
+                                bump('ow_side_flips')
+                                out:write(string.format('F %s %s ow_side_flips\n',
+                                    short, u.name))
+                                -- ⚠️ THE COST OF THE WIDER VOTE, measured on
+                                -- the same frames rather than argued away.
+                                -- Flipping the side to clear the band enemy can
+                                -- step TOWARD the hero being poked -- that is
+                                -- the trade this change makes, and these two
+                                -- columns are the only place a reader can see
+                                -- its size.  400 is a declared bucket edge, not
+                                -- a threshold in any shipped code.
+                                local function nearest(qx, qy)
+                                    local best = nil
+                                    for _, e in pairs(tOwS) do
+                                        if J.IsValidHero(e) then
+                                            local v = e:GetLocation()
+                                            local d = math.sqrt((qx - v.x) ^ 2 + (qy - v.y) ^ 2)
+                                            if best == nil or d < best then best = d end
+                                        end
+                                    end
+                                    return best
+                                end
+                                local dW, dS = nearest(wx, wy), nearest(sx, sy)
+                                if dW ~= nil and dW < 400 then bump('ow_flip_close400_wide') end
+                                if dS ~= nil and dS < 400 then bump('ow_flip_close400_narrow') end
+                                if dW ~= nil and dS ~= nil and dW < dS then
+                                    bump('ow_flip_nearer_someone')
+                                end
+                            else
+                                bump('ow_side_same')
+                                -- The NEGATIVE CONTROL population, named on the
+                                -- manifest: the board really did change (an
+                                -- enemy in the band got a vote) and the answer
+                                -- did not.  Without these a reader cannot tell
+                                -- "the wider census is doing something" from
+                                -- "the wider census is doing everything".
+                                if bx ~= nil and nW ~= nil and nN ~= nil and nW > nN then
+                                    out:write(string.format('F %s %s ow_band_no_flip\n',
+                                        short, u.name))
+                                end
+                            end
+                            local fReal = bot.GetNearbyLaneCreeps
+                            local fakeCreep = {
+                                IsNull = function() return false end,
+                                CanBeSeen = function() return true end,
+                                IsAlive = function() return true end,
+                                IsBuilding = function() return false end,
+                                GetLocation = function() return Vector(vMe.x, vMe.y, vMe.z or 0) end,
+                            }
+                            bot.GetNearbyLaneCreeps = function(_, _r, bEnemy)
+                                if bEnemy then return { fakeCreep } end
+                                return {}
+                            end
+                            local okS, vSpot = pcall(J.GetOffWaveHarassSpot, bot)
+                            bot.GetNearbyLaneCreeps = fReal
+                            if not okS then
+                                bump('ow_drive_raised')
+                            elseif vSpot == nil then
+                                -- FORBIDDEN DIRECTION.  Whether the helper
+                                -- fires is decided by the TARGET list, which
+                                -- this round did not touch; a frame that passes
+                                -- every conjunct and still returns nil means
+                                -- the side census leaked into the gate.
+                                bump('ow_drive_nil_on_reach')
+                            else
+                                bump('ow_drive_nonnil')
+                                if math.abs(vSpot.x - wx) < 1 and math.abs(vSpot.y - wy) < 1 then
+                                    bump('ow_drive_matches_wide')
+                                end
+                                if math.abs(vSpot.x - sx) < 1 and math.abs(vSpot.y - sy) < 1 then
+                                    bump('ow_drive_matches_narrow')
+                                end
+                                local dStep = math.floor(math.sqrt(
+                                    (vSpot.x - vMe.x) ^ 2 + (vSpot.y - vMe.y) ^ 2) + 0.5)
+                                if dStep > c.ow_step_u then rawset(c, 'ow_step_u', dStep) end
+                            end
                         end
                     end
                 end
