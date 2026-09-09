@@ -67,7 +67,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    `tests/fixtures/f_260820_043039_cm_cask_close.lua`(t=515.5,CM 267/890=0.30,场内 3 个敌人
    546/571/609u、1200u 内 0 个队友、hurt=**0**)出货 **0.75** → armed **0**,**除 835 AoE 锚外
    零注入**,地面真相 **`died_after = 0.2`**。报告 `iterations/reports/hero/20260909T020205Z.md`,
-   `state.json:cmrcrowd_20260909`,`queue.json:hero-52`,GH **#648**。
+   `state.json:cmrcrowd_20260909`,`queue.json:hero-52`,GH **#649**。
    `run_tests.lua cm` **316 例 0 失败**;新 `tests/test_cm_r_crowd_release.lua` **18 例**;
    `mutstand_cmrcrowd.sh` **10/10 CAUGHT**;`luacheck_gate.sh` **EXIT=0 CLEAN**。
 
@@ -5719,7 +5719,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   额外要求 `aoeCanHurtCount >= 1`(**一个**,不是两个),`aoeCanHurtCount >= 2` 那条**逐字不动**。
   新 `X.cm_IsFieldCrowdReleaseOk` + `X.nRCrowdHurtFloor = 1`,新
   `tests/test_cm_r_crowd_release.lua`(**18 例**)+ `tools/agent/mutstand_cmrcrowd.sh`(**10/10 CAUGHT**,
-  基线 `cm` 316 例绿)。`state.json:cmrcrowd_20260909`、`queue.json:hero-52`、GH **#648**(本轮开)。
+  基线 `cm` 316 例绿)。`state.json:cmrcrowd_20260909`、`queue.json:hero-52`、GH **#649**(本轮开)。
   **零 arm、零入集提议**(P4.2 冻结,合法裁定是 FROZEN-HOLD)。**零 AWS、零 EC2、零 S3、零 CE。**
   `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;`gate_claim` 16 例、`smoke` 3 例
   0 失败;82 个带 tag 的 fast Lua detector **1 红,与开工自检逐字同一条,不是本轮的**。

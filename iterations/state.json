@@ -7440,7 +7440,7 @@
     "left_alone": "⚠️ 顺手看到、**故意没动**的两条:(甲) 分支 1 的**队友项**(见限度 4)。(乙) `nWeakestEnemyHeroInRange` / `nWeakestEnemyHeroHealth1` 在 `X.ConsiderR` 里赋值后**一个读者都没有** —— 那是死局部量(`dead_numeric_local_census` 那一族),不是行为缺陷,删它是另一次改动。",
     "armed": "否。P4.2 冻结期内本轮**零 arm、零入集提议**;合法裁定是 FROZEN-HOLD。",
     "queue": "iterations/queue.json `hero-52`(解冻后的 armed 波次登记 + 要读的四列)",
-    "issue": "GH #648",
+    "issue": "GH #649",
     "report": "iterations/reports/hero/20260909T020205Z.md"
   }
 }
