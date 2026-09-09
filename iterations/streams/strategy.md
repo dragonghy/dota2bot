@@ -37,7 +37,7 @@
    `tests/_lanekill_domain_sweep.lua` **第四次扩列**(**没有**新建第六个 sweep)、
    `tests/test_deepnum_parity.lua`(**13/13**)、`tools/agent/mutstand_deepnum.sh`(**11 腿**,见下)、
    `tests/test_gated_helper_nesting_census.lua` 新增并注解一行、`state.json:deepnum_20260909`;
-   报告 `iterations/reports/strategy/20260909T192805Z.md`;**issue GH #674**;
+   报告 `iterations/reports/strategy/20260909T192805Z.md`;**issue GH #676**;
    **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
    ⭐ **缺陷:一次比较的两侧用了两把尺,而短的那把是从楼上借来的。** 深档(depth > 1600)问的是
    「这个点位我们人数占不占优」,它自己的注释写着 `numbers ADVANTAGE over the visible enemies
@@ -7301,7 +7301,6 @@
   `WRONG MESSAGE` 计分规则**正是为这种红设的**;改为「算完 `nWide` 然后丢掉」。
   **M10** 第一版期待「sweep 没报告这个计数器」,可本 sweep 的计数器**按 GH #171 全部零初始化**
   ⇒ 剪掉 bump 得到的是**报告出来的 0**,`want` 已改成读者真正拿到的那句。
-  报告 `iterations/reports/strategy/20260909T192805Z.md`;issue **GH #674**;下一格见 backlog 0DEEPNUM。
   变异台 `mutstand_deepnum.sh` **11 腿:10 变异体全 CAUGHT + 控制项 SURVIVED,零 SURVIVED,STAND GREEN**
   (第一遍是 **STAND RED 9/2**,红的是**量具自己的**两条 `want`,不是护栏漏掉变异体)。
   **铁律 6**:静态门 `luacheck_gate.sh` **EXIT=0**(`luacheck bots game: 0 warnings`),push 门已上膛;
@@ -7316,7 +7315,7 @@
   `UNCERTIFIABLE: none`。其中 `trunk-red(python)` = `tests/test_call_arity_census.py`
   (115 passed / 1 failed)—— **不是本轮造成的**,正是今天总监立的 **GH #673**;
   `trunk-red(lua)` = **本轮改到一半的树**(见上),已在本轮内修好并复跑 10/10 绿。
-  报告 `iterations/reports/strategy/20260909T192805Z.md`;issue **GH #674**;下一格见 backlog 0DEEPNUM。
+  报告 `iterations/reports/strategy/20260909T192805Z.md`;issue **GH #676**;下一格见 backlog 0DEEPNUM。
 
 
 - 2026-09-09T16:51Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第五轮 (i);认领依据 =
