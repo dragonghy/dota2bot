@@ -299,12 +299,17 @@ function()
     --     nothing green saying so.  That slot is the one section 6 now reads.
     --   * this round staged f_260828_002127_axe_call_bkb_ring.lua, which adds a
     --     level-19 slot (dead, like the 21).
-    -- Recorded 4: parked 26, staged 21 (dead), staged 19 (dead), staged 26 (LIVE).
-    assert(c.wk_tree_ge13 == 4, c.wk_tree_ge13 .. ' WK hero-slots above level 12 '
-        .. 'in the whole tree, recorded 4 (the parked frame at 26, and three '
-        .. 'staged in ' .. STAGED_DIR .. ' at 21, 19 and 26).  More is good news '
-        .. '-- the supply this file calls missing arrived -- and queue hero-10 '
-        .. 'should be re-read before it is executed')
+    -- 4 -> 5 on 2026-09-09 (hero, GH #659), and this one IS growth rather than a
+    -- correction: f_260908_094909_cm_cmqreach_transit.lua was generated this
+    -- round from a wave that did not exist when the 4 was written, and it adds a
+    -- LIVE level-20 slot.  Section 6 reads it, and it is the row that moves
+    -- hero-10 question (2) off n=1.
+    -- Recorded 5: parked 26, staged 21 (dead), 19 (dead), 26 (LIVE), 20 (LIVE).
+    assert(c.wk_tree_ge13 == 5, c.wk_tree_ge13 .. ' WK hero-slots above level 12 '
+        .. 'in the whole tree, recorded 5 (the parked frame at 26, and four '
+        .. 'staged in ' .. STAGED_DIR .. ' at 21, 19, 26 and 20).  More is good '
+        .. 'news -- the supply this file calls missing arrived -- and queue '
+        .. 'hero-10 should be re-read before it is executed')
     assert(c.parked_wk_level == 26, 'the parked frame\'s Wraith King is level '
         .. c.parked_wk_level .. ', recorded 26')
     -- Both levers' domains, on the one frame that can speak to them at all:
@@ -388,9 +393,9 @@ end
 -- to two of them, and in opposite directions:
 --
 --   (1) LEVEL SUPPLY -- "a zero on (1) IS decisive and retires the lever".  It
---       is not zero.  The tree holds FOUR Wraith King slots at >= 19 (parked 26,
---       staged 21, 19 and 26), all outside the glob every corpus scan
---       enumerates.  That does not answer (1) -- four slots are not a
+--       is not zero.  The tree holds FIVE Wraith King slots at >= 19 (parked 26,
+--       staged 21, 19, 26 and 20), all outside the glob every corpus scan
+--       enumerates.  That does not answer (1) -- five slots are not a
 --       distribution, and hero-10 asks for a rate over archived timelines -- but
 --       it does remove the one reading that could have retired `wkrosh` without
 --       a scan.
@@ -415,6 +420,41 @@ end
 --
 -- ⚠️ THE BOUND THAT SURVIVES: n = 1 live row.  That is not a rate, and hero-10
 -- asks for a rate.  This answers the "unreachable" half of (2) and nothing else.
+--
+-- ⭐⭐ RE-TAKEN AGAIN 2026-09-09 (hero, GH #659).  n = 1 -> n = 2, AND THE SECOND
+-- ROW SAYS SOMETHING THE FIRST ONE STRUCTURALLY COULD NOT.
+-- f_260908_094909_cm_cmqreach_transit.lua (t = 1191.5, an independent game on an
+-- independent wave) carries `npc_dota_hero_skeleton_king`, **level 20**,
+-- `alive = true`, `hp 2142 / max_hp 2575`, **`mp 556 / max_mp 735`**.
+--
+-- Two readings come off it, and only the first is a count:
+--
+--   * POOL, joining the 855: 735 is also above the shipped 600 floor.  Two live
+--     late-game rows, two pools above 600.  Still not a rate.
+--   * ⭐ CURRENT MANA, which is what hero-10 (2) actually asks for and what no
+--     row in this tree could answer before: **556 < 600**.  The first live row
+--     was at `mp == max_mp` -- a full bar -- so it could only ever show the floor
+--     CLEARED; it could not show the floor BITING.  This one is at 75.6% of its
+--     pool and the shipped absolute 600 refuses it.  So the standing surviving
+--     defect in hero-10's `question` ("a 600 absolute floor demands 99.5% of the
+--     pool for a spell that costs 95/110/125/140") now has an instance: on this
+--     frame Hellfire Blast at rank 3 costs 125 and the hero is carrying 556.
+--     The floor is not merely strict in arithmetic; it refuses a cast the mana
+--     bar can pay for, 4.5x over.
+--   ⚠️ 1 of 2 IS STILL NOT A RATE.  Two frames from two games do not give
+--     hero-10 the distribution it asks for, and `status` stays pending for that
+--     reason and no other.  What moved is that both DIRECTIONS now have a
+--     witness, so a future scan can be read; before this round a zero and a one
+--     were indistinguishable from "we only ever froze full-mana Wraith Kings".
+--
+-- ⭐ AND A PROXY RETIRED, in the same shape GH #357 row 3 named: the 2026-09-07
+-- reading asserted `hp == max_hp` on the live row as the thing separating a
+-- quotable pool from a flagged one.  It was not.  The discriminator is
+-- `alive == true` with a NONZERO capacity field; `hp == max_hp` was an accident
+-- of the one sample.  This row is live at 83.2% health with `max_hp = 2575` and
+-- `max_mp = 735`, neither zeroed -- so the equality is now asserted as a
+-- PER-ROW property that need not hold, and the load-bearing `max_hp > 0` is
+-- asserted on every live row instead.
 -- ⚠️ AND HOW IT WAS FOUND, because it is the reusable half: this section was RED
 -- ON TRUNK for a day.  The 2026-09-06 round staged that frame and settled the
 -- two enumerating scans tests/frames/README.md names by name -- but this file is
@@ -431,8 +471,8 @@ function()
     assert(c.staged_frames >= 1, 'nothing enumerable in ' .. STAGED_DIR
         .. ' -- section 2\'s "recorded 2" then has no witness and the whole tree '
         .. 'ledger is back to being one directory short without saying so')
-    assert(c.staged_wk_ge13 == 3, c.staged_wk_ge13 .. ' staged WK slot(s) at level '
-        .. '>= 13, recorded 3; section 2\'s equality is computed from this')
+    assert(c.staged_wk_ge13 == 4, c.staged_wk_ge13 .. ' staged WK slot(s) at level '
+        .. '>= 13, recorded 4; section 2\'s equality is computed from this')
     assert(c.staged_wk_max_level == 26, 'the staged Wraith King high-water is level '
         .. tostring(c.staged_wk_max_level) .. ', recorded 26.  Every statement in '
         .. 'this section names it; re-take them')
@@ -446,9 +486,9 @@ function()
             if r.alive == true then live[#live + 1] = r else dead[#dead + 1] = r end
         end
     end
-    assert(#dead == 2 and #live == 1,
+    assert(#dead == 2 and #live == 2,
         'staged WK rows >= 13 partition as ' .. #dead .. ' dead / ' .. #live
-        .. ' live, recorded 2 / 1.  The partition IS the reading below; re-take it.')
+        .. ' live, recorded 2 / 2.  The partition IS the reading below; re-take it.')
     for _, r in ipairs(dead) do
         assert(r.level >= 19, 'a dead staged Wraith King fell below 19, so it no '
             .. 'longer speaks to hero-10 question (1) at the >= 18/19 band')
@@ -463,24 +503,47 @@ function()
     -- zeroes one capacity field cannot be trusted on the other.  The 2026-09-06
     -- frame carries a LIVE one -- hp == max_hp, nonzero -- so its pool is a real
     -- reading, and it lands ABOVE the shipped 600 floor.
-    local row = live[1]
-    assert(row.level >= 19, 'the live staged Wraith King fell below 19, so it no '
-        .. 'longer speaks to hero-10 question (1) at the >= 18/19 band it asks about')
-    assert((row.max_hp or 0) > 0 and row.hp == row.max_hp,
-        'the live staged row no longer reads hp == max_hp > 0 (' .. tostring(row.hp)
-        .. '/' .. tostring(row.max_hp) .. ').  That co-occurrence is the ONLY '
-        .. 'thing separating this pool reading from the flagged ones above; '
-        .. 'without it the flag comes back and hero-10 (2) is unanswered again')
-    assert((row.max_mp or 0) > 600, 'the live staged max_mp is '
-        .. tostring(row.max_mp) .. ', recorded 855 -- above the shipped 600 floor. '
-        .. 'This is the reading that answers hero-10\'s "the LARGEST MAX POOL '
-        .. 'among those frames is 459, i.e. below 600 with a full bar": on a '
-        .. 'frame the repo owns, a live Wraith King carries 855.')
-    -- The bound that survives: one live frame is not a rate.  hero-10 asks for a
-    -- distribution over archived timelines and this does not supply one.
-    assert(#live == 1, 'more than one live staged Wraith King above 12 now (' .. #live
-        .. ').  Good news -- but the "n=1, not a distribution" bound below every '
-        .. 'quote of the 855 has moved and must be re-stated, not carried forward.')
+    -- Every live row, not live[1]: with two of them a positional selector reads
+    -- whichever the directory listing reached last, which is the exact defect
+    -- this file already paid for once above (`row = r`).
+    local pools, mp_clears_600 = {}, 0
+    for _, r in ipairs(live) do
+        assert(r.level >= 19 or r.level == 20, 'a live staged Wraith King is at '
+            .. 'level ' .. tostring(r.level) .. ', below the >= 18/19 band hero-10 '
+            .. 'question (1) asks about; it no longer speaks to that question')
+        -- The load-bearing discriminator, isolated from the accident.  A dead row
+        -- zeroes its capacity fields; that is why 711 was unquotable.  What makes
+        -- a pool quotable is `alive == true` with capacity NOT zeroed -- NOT the
+        -- full bar the 2026-09-07 sample happened to have.
+        assert((r.max_hp or 0) > 0, 'a live staged row reads max_hp = '
+            .. tostring(r.max_hp) .. '.  A live unit with a zeroed capacity field '
+            .. 'would mean the dump zeroes capacity for a reason other than death, '
+            .. 'and then NEITHER pool below is quotable in any direction')
+        assert((r.max_mp or 0) > 600, 'a live staged max_mp is '
+            .. tostring(r.max_mp) .. ', recorded 855 (level 26) and 735 (level 20) '
+            .. '-- both above the shipped 600 floor.  This is the reading that '
+            .. 'answers hero-10\'s "the LARGEST MAX POOL among those frames is '
+            .. '459, i.e. below 600 with a full bar".')
+        pools[#pools + 1] = r.max_mp
+        if (r.mp or 0) >= 600 then mp_clears_600 = mp_clears_600 + 1 end
+    end
+    -- ⭐ hero-10 question (2) is about CURRENT mana, not pool, and this is the
+    -- first round in which the tree can answer it in BOTH directions.  Asserted
+    -- as a count with its denominator (iron rule 4(ii): small-range integer
+    -- counts get the distribution, never a bare median).
+    assert(#live == 2 and mp_clears_600 == 1,
+        'live staged Wraith Kings above 12: ' .. #live .. ', of which '
+        .. mp_clears_600 .. ' carry current mana >= the shipped 600 floor; '
+        .. 'recorded 2 and 1 (level 26 at mp 855/855 CLEARS, level 20 at mp '
+        .. '556/735 is REFUSED).  Both directions have a witness for the first '
+        .. 'time -- re-state the reading, do not carry it forward.')
+    -- The bound that survives, unchanged in kind: two live frames from two games
+    -- are not a rate.  hero-10 asks for a distribution over archived timelines
+    -- and this does not supply one; `status` stays pending for that reason.
+    assert(#live < 3, 'a third live staged Wraith King above 12 (' .. #live
+        .. ').  Good news -- but the "n is not a distribution" bound below every '
+        .. 'quote of these pools has moved and must be re-stated, not carried '
+        .. 'forward.')
 end
 
 return tests

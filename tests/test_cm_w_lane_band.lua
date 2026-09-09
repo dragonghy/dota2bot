@@ -75,13 +75,20 @@
 -- §0.3  LIMITS -- load-bearing, quote these with any number above
 -- ===========================================================================
 --
--- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Over both corpus directories (115
---    frames), Crystal Maiden is present and alive on 52; on 3 of those an enemy
+-- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Over both corpus directories (116
+--    frames), Crystal Maiden is present and alive on 53; on 3 of those an enemy
 --    hero sits in the band (outside nCastRange + 50, inside nCastRange + 200),
 --    3 band members in total; on 13 an enemy sits inside the gate, where this
 --    lever is a byte-for-byte no-op.  These counts are ASSERTED, not narrated:
 --    if the corpus grows, §1 goes red and this section is re-taken rather than
 --    quoted.
+--    RE-TAKEN 2026-09-09 (hero, GH #659), 52 -> 53: the staged transit frame
+--    f_260908_094909_cm_cmqreach_transit.lua is a CM-subject frame.  ⭐ ONLY THE
+--    DENOMINATOR MOVED -- and the reason is the frame's own subject matter: it
+--    was pinned BECAUSE Crystal Maiden is in transit with her nearest live enemy
+--    2790u away, which is far outside both the band and the gate.  So 3/52
+--    becomes 3/53 and 13 stays 13.  A reader quoting "3 of 52" after this round
+--    is quoting a stale denominator, not a stale finding.
 --
 -- 2. ⚠️ THE BRANCH AS A WHOLE FIRING IS **NOT** A READING THIS ROUND BOUGHT,
 --    and both reasons are about the harness, not the game.  §4 opens three
@@ -246,7 +253,7 @@ end
 -- ---------------------------------------------------------------- section 1 --
 -- The domain, counted over the whole corpus.  §0.3 limit 1's evidence.
 
-tests['§1 the corpus puts an enemy in the band on 3 of 52 Crystal Maiden frames'] = function()
+tests['§1 the corpus puts an enemy in the band on 3 of 53 Crystal Maiden frames'] = function()
     local nFiles, nLive = 0, 0
     local nWithBand, nBandEnemies, nWithGate = 0, 0, 0
     local tBandFrames = {}
@@ -282,8 +289,8 @@ tests['§1 the corpus puts an enemy in the band on 3 of 52 Crystal Maiden frames
     assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
         .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 52, 'Crystal Maiden is alive on ' .. nLive .. ' corpus '
-        .. 'frames, was 52 -- re-take §0.3 limit 1 rather than quoting it')
+    assert(nLive == 53, 'Crystal Maiden is alive on ' .. nLive .. ' corpus '
+        .. 'frames, was 53 -- re-take §0.3 limit 1 rather than quoting it')
     assert(nWithBand == 3 and nBandEnemies == 3,
         'the band domain moved: ' .. nWithBand .. ' frames / ' .. nBandEnemies
         .. ' enemies, was 3 / 3.  Re-take §0.3 limit 1.')

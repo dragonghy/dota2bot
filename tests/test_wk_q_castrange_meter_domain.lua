@@ -385,7 +385,16 @@ tests['1. GetCastRange answers 0 on every live-WK instant, and the KV knows 525'
     -- the BODY bucket (section 4, 18 -> 19).  The KV/zero split is unchanged, so
     -- section 1's finding holds as measured; the per-bucket numbers moved by
     -- exactly that one instant and were NOT otherwise re-derived.
-    local ARCHIVED_ZERO_ON_ALL = 37
+    -- 2026-09-09 (hero, GH #659): 37 -> 38.  Same mechanism, different bucket.
+    -- f_260908_094909_cm_cmqreach_transit.lua carries a live level-20
+    -- skeleton_king whose `skeleton_king_hellfire_blast` is TRAINED (rank 3) but
+    -- reads `cd = 1.4` on the frame, so it lands in the COOLDOWN bucket
+    -- (section 4, 9 -> 10) and not in the body.  Worth naming because it is the
+    -- direction that does NOT help §5: a cooldown instant never reaches the ring
+    -- arithmetic, so the "0 of 18 body frames" archived reading gains no sample
+    -- from this frame.  The KV/zero split is again unchanged (the frame is a
+    -- current dump and carries a full `abilities` array, so it reads 525).
+    local ARCHIVED_ZERO_ON_ALL = 38
     local NO_ABILITY_ARRAY     = 3
     local nFed  = t.raw_ranges[tostring(KV_CAST_RANGE)] or 0
     local nZero = t.raw_ranges['0'] or 0
@@ -446,7 +455,11 @@ tests['4. the castable funnel over the archive, buckets exhaustive'] = function(
     assert(accounted == t.live, 'the buckets do not re-sum: ' .. accounted
         .. ' accounted for out of ' .. t.live .. ' live instants')
     assert(t.untrained == 5, 'untrained bucket moved from 5 to ' .. t.untrained)
-    assert(t.cooldown  == 9, 'cooldown bucket moved from 9 to '  .. t.cooldown)
+    -- 9 -> 10 on 2026-09-09 (hero, GH #659): the staged transit frame's level-20
+    -- Wraith King has Q trained at rank 3 with cd 1.4 remaining.  Re-taken, not
+    -- bumped: the body bucket did NOT move with it (19), which is the whole
+    -- reason this bucket is read separately -- see section 1's note.
+    assert(t.cooldown  == 10, 'cooldown bucket moved from 10 to ' .. t.cooldown)
     assert(t.savemana  == 4, 'ShouldSaveMana bucket moved from 4 to ' .. t.savemana)
     assert(t.mana      == 0, 'mana bucket moved from 0 to ' .. t.mana)
     assert(t.body      == 19, 'body bucket moved from 19 to ' .. t.body)

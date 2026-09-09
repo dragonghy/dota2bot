@@ -358,11 +358,24 @@ tests['1. the castable funnel over the whole archive, buckets exhaustive'] = fun
     -- pre-post would have moved and section 4's registry of LIVE decisions would
     -- have gained a member -- that is the assertion that would call a new bid a
     -- finding, and it stayed put.
-    assert(t.instants == 52, 'live-CM instants: expected 52, got ' .. t.instants)
-    assert(t.handles == 228, 'CM ability handles: expected 228, got ' .. t.handles)
-    assert(t.trained == 214, 'trained handles: expected 214, got ' .. t.trained)
-    assert(t.pre  == 175, 'castable before the price: expected 175, got ' .. t.pre)
-    assert(t.post == 159, 'castable after the price: expected 159, got ' .. t.post)
+    -- 2026-09-09 (hero, GH #659): a FOURTH addition, same shape a fourth time.
+    -- tests/frames/f_260908_094909_cm_cmqreach_transit.lua is a CM-SUBJECT frame
+    -- (t = 1191.5), so unlike the three above she is the subject rather than an
+    -- incidental ally: level 18, 100% HP, 98.7% mana (1060/1074), all five
+    -- handles trained.  Every count on the way IN grew by exactly one instant's
+    -- worth (52->53 instants, 228->233 handles, 214->219 trained, 175->180 pre,
+    -- 159->164 post) and NOTHING on the way OUT moved: pre-post is 16 before and
+    -- 16 after, Crystal Nova 7 and Frostbite 4 both unchanged.
+    -- ⚠️ Her 98.7% mana is the HIGHEST of the four frames added since this block
+    -- started tracking them, i.e. the opposite end from the 35.4% one above, and
+    -- it produced no revocation either -- which is what a mana price that only
+    -- ever bites the same two abilities looks like from both ends.  Section 4's
+    -- registry of LIVE decisions again gained no member.
+    assert(t.instants == 53, 'live-CM instants: expected 53, got ' .. t.instants)
+    assert(t.handles == 233, 'CM ability handles: expected 233, got ' .. t.handles)
+    assert(t.trained == 219, 'trained handles: expected 219, got ' .. t.trained)
+    assert(t.pre  == 180, 'castable before the price: expected 180, got ' .. t.pre)
+    assert(t.post == 164, 'castable after the price: expected 164, got ' .. t.post)
 
     local revoked = t.pre - t.post
     assert(revoked == 16, 'revocations: expected 16, got ' .. revoked)
@@ -506,7 +519,7 @@ tests['4. the zero desires come with the constants that cause them -- and the on
             if h ~= nil and (h:GetAOERadius() or 0) == 0 then nRadius0 = nRadius0 + 1 end
         end
     end
-    assert(nInstants == 52, 'instants moved: ' .. nInstants)
+    assert(nInstants == 53, 'instants moved: ' .. nInstants)
 
     -- The registry, both directions, each red naming its own member.
     for key, want in pairs(LIVE_BIDS) do
@@ -529,11 +542,19 @@ tests['4. the zero desires come with the constants that cause them -- and the on
         .. ' ~= ' .. (5 * nInstants))
 
     -- ... and here is why the remaining silence is still not a null result.
-    assert(nMode == 52, 'GetActiveMode is the mock default on every instant')
-    assert(nGoing == 52, 'J.IsGoingOnSomeone is false on every instant')
-    assert(nRetreat == 52, 'J.IsRetreating is false on every instant')
-    assert(nAoE == 52, 'FindAoELocation is the count=0 loader stand-in everywhere')
-    assert(nRadius0 == 52, 'GetAOERadius answers 0 on every instant (section 5)')
+    -- 52 -> 53 on 2026-09-09 (hero, GH #659).  These five are the ones worth
+    -- re-taking rather than bumping: each is "the mock/loader answers the same
+    -- default on EVERY instant", so the number is only ever the instant count --
+    -- and a new frame is a fresh chance for one of them to come apart.  None
+    -- did: the transit frame is a current dump with real coordinates and a real
+    -- ability array, and all five still read the default.  Written as the count
+    -- rather than as `nInstants` on purpose, so a scan that silently stops
+    -- enumerating cannot make these pass by shrinking both sides together.
+    assert(nMode == 53, 'GetActiveMode is the mock default on every instant')
+    assert(nGoing == 53, 'J.IsGoingOnSomeone is false on every instant')
+    assert(nRetreat == 53, 'J.IsRetreating is false on every instant')
+    assert(nAoE == 53, 'FindAoELocation is the count=0 loader stand-in everywhere')
+    assert(nRadius0 == 53, 'GetAOERadius answers 0 on every instant (section 5)')
 end
 
 -- ===========================================================================

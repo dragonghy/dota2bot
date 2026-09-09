@@ -118,6 +118,13 @@
 --     itself.  §1 is therefore an upper bound on the branch's own domain, and
 --     is honest only as what it says it is: how often the geometry that makes
 --     the shipped term uninformative is actually present.
+--     RE-TAKEN 2026-09-09 (hero, GH #659), 48 -> 49 live-Zeus frames: the staged
+--     transit frame f_260908_094909_cm_cmqreach_transit.lua carries a live
+--     level-20 Zeus.  ⭐ ONLY THE DENOMINATOR MOVED.  His nearest enemy hero is
+--     ~5.4k away, so he contributes neither a band sighting nor a
+--     direction-proof one: the geometry stays 5 / 5 over 5 frames, and the
+--     upper bound this limit reports got LOOSER as a fraction (5 of 48 -> 5 of
+--     49) without any of the three lever-domain numbers being re-derived.
 --
 --  3. REGISTERED, NOT FIXED -- the retreat firing point.  It is deliberately
 --     untouched.  Its payoff is the displacement itself, not the shockwave, and
@@ -310,7 +317,7 @@ tests['§1 5 of 10 in-ring sightings sit in the band where facing decides'] = fu
     assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
         .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 48, 'Zeus is alive on ' .. nLive .. ' corpus frames, was 48 '
+    assert(nLive == 49, 'Zeus is alive on ' .. nLive .. ' corpus frames, was 49 '
         .. '-- re-take §0.3 limit 2 rather than quoting it')
     assert(nBand == 5 and nSafe == 5, 'the geometry moved: ' .. nBand
         .. ' band / ' .. nSafe .. ' direction-proof sightings, was 5 / 5.  '

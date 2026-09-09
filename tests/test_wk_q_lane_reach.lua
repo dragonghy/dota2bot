@@ -72,13 +72,22 @@
 -- §0.3  LIMITS -- load-bearing, quote these with any number above
 -- ===========================================================================
 --
--- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Over both corpus directories (115
---    frames), Wraith King is present and alive on 37; on 6 of those an enemy
+-- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Over both corpus directories (116
+--    frames), Wraith King is present and alive on 38; on 6 of those an enemy
 --    hero sits in the band (outside nCastRange + 80, inside nCastRange + 330),
 --    6 band members in total; on 11 an enemy sits inside the gate, where this
 --    lever is a byte-for-byte no-op.  These counts are ASSERTED, not narrated:
 --    if the corpus grows, §1 goes red and this section is re-taken rather than
 --    quoted.
+--    RE-TAKEN 2026-09-09 (hero, GH #659), 37 -> 38: the staged transit frame
+--    f_260908_094909_cm_cmqreach_transit.lua carries a live level-20 Wraith
+--    King.  ⭐ ONLY THE DENOMINATOR MOVED.  Its nearest enemy hero is ~3.7k
+--    away, so it enters neither the band (6/6, unchanged) nor the gate (11,
+--    unchanged) -- the thinness this limit reports got THINNER, 6/37 -> 6/38,
+--    and none of the three numbers §1 asserts about the lever's own domain
+--    were re-derived.  That distinction is the reason this is a re-take: a
+--    reader who quotes "6 of 37" after this round is quoting a stale
+--    denominator, not a stale finding.
 -- 2. TWO INJECTIONS, named so nobody quotes §0.1 as a pure archive reading:
 --      (a) GetCastRange -> 525.  GetCastRange is on no spec in tests/mock, so
 --          the generic `^Get` default answers 0 on every archive frame (the
@@ -212,7 +221,7 @@ end
 -- ---------------------------------------------------------------- section 1 --
 -- The domain, counted over the whole corpus.  §0.3 limit 1's evidence.
 
-tests['§1 the corpus puts an enemy in the band on 6 of 37 Wraith King frames'] = function()
+tests['§1 the corpus puts an enemy in the band on 6 of 38 Wraith King frames'] = function()
     local nFiles, nLive = 0, 0
     local nWithBand, nBandEnemies, nWithGate = 0, 0, 0
     local tBandFrames = {}
@@ -248,8 +257,8 @@ tests['§1 the corpus puts an enemy in the band on 6 of 37 Wraith King frames'] 
     assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
         .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 37, 'Wraith King is alive on ' .. nLive .. ' corpus frames, '
-        .. 'was 37 -- re-take §0.3 limit 1 rather than quoting it')
+    assert(nLive == 38, 'Wraith King is alive on ' .. nLive .. ' corpus frames, '
+        .. 'was 38 -- re-take §0.3 limit 1 rather than quoting it')
     assert(nWithBand == 6 and nBandEnemies == 6,
         'the band domain moved: ' .. nWithBand .. ' frames / ' .. nBandEnemies
         .. ' enemies, was 6 / 6.  Re-take §0.3 limit 1.')

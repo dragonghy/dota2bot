@@ -22,7 +22,64 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--132. **⭐ 下一轮:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**
+-133. **⭐ 下一轮:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**
+   这条**逐字继承 `-132`**(它本轮执行了一次,是绿的,规矩因此仍然有效):红了 = 语料长出了
+   **第五个活决策**,红线里直接打印它是哪个英雄哪一帧下的什么单 —— 那就是 P4.4 (i) 的靶子,直接做。
+   没红 = **不要再从源码里找焦点五的杠杆**,理由见 `-132`(183 个活体瞬间 / 4 个决策 / 4 个都已挂 lever)。
+   - **⭐⭐ 本轮买到的一课,下一轮直接用:`-132` 的那条「没红时唯一能自己动的」不是唯一的。**
+     `-132` 写着没红时只剩 `GetEstimatedDamageToTarget` 那条管线活,而它按 P4.4 只能当附带一条 ⇒
+     读起来像「本组没有能当主体的活」。**那是把 P4.4 的两条腿只数了一条。** P4.4 (ii)
+     「一个判定完结所需的最后一块证据」**一直在**,而本轮就是靠它做成了一个满额工作单元。
+     **找法**:扫 `[hero]` open issue 里**别人已经把证据做好、只欠本组一个判读或一次付账**的那种
+     (#659 是标准形状:价目表是实测的,缺的是「这条不是计数」的那一条)。
+   - **⭐ 下一轮的第一候选,已经躺在那儿并且价钱是量过的**:把
+     `f_260908_094909_cm_cmqreach_transit.lua` **入集** `tests/fixtures/`。价 **4 文件 / 5 断言**
+     (`test_alchemist_rage_clock_staged_frame` 的 armed band `[900,1800)`、
+     `test_axe_bkb_supply_staged_frame` 的 BKB 槽 0→2、`test_axe_t15_in_domain` 的天赋面 cap 1→2、
+     `test_cm_ult_reach_meter_domain` ×2),**其中 `test_axe_t15_in_domain` 那条自己写着
+     「这个界该被重新取,而不是重新陈述」⇒ 它是判读不是计数**,和本轮的 hero-10 那条同族。
+     表在 `tests/frames/README.md` 新节的「NOT paid」小节里。
+   - **⛔⛔ 自检:管道第 17 次,并且本轮**两条禁令一起犯**(`timeout 300 … | tail -40`)。
+     下一轮第一条 Bash 命令**只准是**
+     `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?"`
+     —— **不接管道、不加 `timeout`**(本轮实测约 13 分钟)。
+   - **⛔⛔ 并且 GH #507 那条本轮断了(连续七轮有效后第一次)**:自检**跑完**再动树,
+     **`tests/` 也算树** —— `-131`/`-130` 的措辞只说了 `bots/`,本轮就是从那个缺口漏进去的,
+     两条 trunk 腿双双被我改到一半的树污染。**下一轮用 `-130` 那个阻塞写法**:
+     `until ! pgrep -f "[r]outine_selfcheck.sh" >/dev/null; do :; done`,**然后再动第一个文件**。
+     真撞上了就照本轮处理:不把重叠的腿读作任何东西,**在成品树上逐字照搬发现式自己重跑**
+     (`grep -l '\[detector\]\|\[ratchet\]' tests/test_*.lua` + 四个具名文件;python 那条是
+     `bash tests/run_py_tests.sh`)。
+   - **⭐ 仪表登记(下次量任何 `tests/frames/` 价目前必看)**:枚举该目录的文件是 **33 个**,
+     不是 README 那张「已付」表里的 3 个 —— README 自己的告诫逐字:「**这张表不是那些扫描的
+     集合,是有人记得的那个集合**」。**先 `rg -l 'tests/frames' tests/`,再挪文件跑两遍读 diff**;
+     **不许读退出码**(两边都是 0)。
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`、`cmfarcreep`(`hero-42`)、
+     `lionultcash`(`hero-43`)、`lionrreach`(`hero-44`)、`wkqlane`(`hero-45`)、
+     `axecullreach`(`hero-46`)、`cmlaneband`(`hero-47`)、`zusjumpland`(`hero-48`)、
+     `lionqkill`(`hero-49`)、`axebhreach`(`hero-50`)、`zusultstrand`(`hero-51`)、
+     `cmrcrowd`(`hero-52`)、`cmwface`(`hero-53`);`wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`(GH #570)。
+   - **⭐ 第二页上仍没排到的 `[hero]`**:#587 / #567 / #566 / #564 / #563 / #562 / #560 /
+     #554 / #549。**#562 的「拆不拆」仍是本组的**(登记动作,只能当附带一条)。
+
+-132. ~~**⭐ 下一轮:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**~~
+   ✅ **2026-09-09T10:51Z 执行完毕。§2.1 绿(11 例 0 失败)⇒ 按它自己的规矩不写 `bots/`**,
+   改走 P4.4 (ii):认领 **GH #659**,把 `cmqreach` transit 钉帧的 staging 价
+   **6 文件 / 9 断言**付掉并落地,并答掉其中那条**不是计数是判读**的 —— queue `hero-10` 的
+   **n=1 → n=2**,而第二位是**第一位结构上说不出话的那个方向**(当前蓝量 **556 < 600**,
+   上一位在满条上只能演示下界被越过)。顺带退休 `hp == max_hp` 这个代理。
+   落地件:`tests/frames/f_260908_094909_cm_cmqreach_transit.lua`(staged,**未入集**)、
+   新 `tests/test_cm_cmqreach_transit_frame.lua`(**3 例**)、`tests/frames/README.md` 新节、
+   `queue.json:hero-10` 的 `result`(**`status` 不动**)。
+   `luacheck_gate.sh` **EXIT=0 CLEAN**;`cm` 336 / `wk` 297 / `zuus` 236 / `smoke_load` 3 /
+   `gate_claim` 16,全 0 失败;33 个枚举文件 **33/33 绿**;detectors 成品树 **ran=87 red=0**;
+   python 成品树 **117 passed / 0 failed / 1 uncertifiable**(`test_selfcheck_lua_leg.py`,
+   时序证明不是我造成的,**但仍不是 PASS**)。自检 **EXIT=3**。
+   报告 `iterations/reports/hero/20260909T105153Z.md`。**未新增 `state.json` 条目,`bots/` 未改。**
+   ↓ 原文保留(下面的否定结果表仍然有效,`-133` 继承它)
+
+-132a. **⭐ `-132` 原文:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**
    红了 = 语料长出了**第五个活决策**,红线里直接打印它是哪个英雄哪一帧下的什么单
    —— 那就是 P4.4 (i) 的靶子,直接做。没红 = **不要再从源码里找焦点五的杠杆**:
    2026-09-09 已经量过,**183 个焦点英雄活体瞬间里出货树只做 4 个技能决策,
@@ -5846,6 +5903,61 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-09T10:51Z(报告 `iterations/reports/hero/20260909T105153Z.md`;**backlog:`-132` 做完、
+  新开 `-133`**;焦点英雄 **Wraith King / Crystal Maiden**;OWNER_PRIORITIES **P4.4 (ii)** ——
+  工作单元主体是一个判定完结所需的最后一块证据,**不是 (i)**,理由见下第一条)
+  **认领 GH #659(带帧证据的 `[hero]`,已连欠五轮):录像组把一枚已逐帧核验的 frame 连同
+  实测价目表交上来,并明说其中一条「不是计数是判读,直接顶到 queue `hero-10` 的立项句」。
+  本轮选它给的出口 1 —— 付掉并落地。**
+  - **⭐ 先执行 `-132` 的第一条指令,它是绿的,而绿在那条规矩里等于「不写 `bots/`」**:
+    `lua5.1 tests/run_tests.lua focus_decision_reachability` **11 例 0 失败** ⇒ §2.1 没红 ⇒
+    语料没长出第五个活决策 ⇒ 按 `-132` 逐字**不再从源码里找焦点五的杠杆**。所以本轮走 (ii)。
+    **本轮没有新 gated id,没有新 `state.json` 条目,`bots/` 一个字未改** —— 按规矩的结论。
+  - **帧是自己重造的,价目是自己重量的,不是抄读数。** 只读 S3(`s3 cp` ×3 + dumper 缓存命中,
+    **零实例、零 EC2、零 CE**)重跑 issue 的复现步骤;生成器自己打的 `died_after=17.3` 与
+    issue 的「17.3s 后被 nevermore 击杀」**逐位对上**。价目按 README 自己的告诫量:
+    先 `rg -l 'tests/frames' tests/`(**33 个**文件枚举该目录,不是表里记得的 3 个),
+    再挪进挪出各跑一遍全部 33 个、**读 diff 不读退出码**(两边都 exit 0,那正是 README 记过的坑)。
+    **33 绿 → 6 文件 9 断言红 → 付掉后 33 绿**,与 #659 的表逐文件逐断言一致 = **独立复算**。
+    (⚠️ `analysis.json` 不在 issue 写的 `dem21/` 下,在 `soak/` 同名目录下。)
+  - **⭐⭐ 那条判读(hero-10):n=1 → n=2,而第二位说了第一位结构上说不出的话。**
+    新帧带全树**第二个** 12 级以上活体 WK:**20 级**、`hp 2142/2575`、**`mp 556 / max_mp 735`**。
+    池 735 与 855 一样过 600;**但当前蓝量 556 < 600** —— 上一位在 `mp == max_mp`(满条),
+    **只能演示下界被越过,演示不了下界卡人**。这一位在池的 75.6% 上被出货那条绝对 600 拒绝,
+    而同帧地狱火爆轰 rank 3 **只要 125**,身上带着 **556**(**4.5 倍**)⇒ hero-10 `question` 里
+    「600 绝对下界 = 交叉池 603 的 99.5%」**第一次有了实例**。
+    **⚠️ 1/2 仍然不是率,`status` 不动**(申请方只改自己的 `result`,没动裁定/路由/优先级)。
+  - **⭐ 顺带退休一个代理(GH #357 row 3 同族)**:`hp == max_hp` **不是**「池可引用 vs 被标记」
+    的分界,分界是 `alive` + 容量字段**非零**;满血是 n=1 那个样本的偶然。断言改成对**每个**
+    活体行取 `max_hp > 0`,并**不再取 `live[1]`** —— 两行之后那是顺序相关选择子,
+    **正是本文件已经付过一次的那个缺陷**(它自己的注释:「Partitioned, not last-wins」)。
+  - **⭐ 九条里六条只是分母,而「只是分母」这件事本身要写出来。** CM band 3/52→3/53、
+    WK band 6/37→6/38、Zeus 5/48→5/49,三处**杠杆自己的域一个数都没重取**(最近敌人分别
+    2790u / ~3.7k / ~5.4k)。三处 §0.3 limit 散文都改成「此后引用旧分数的人引的是**过期的分母
+    不是过期的结论**」。另两处是真读数:CM 大招量具**进的动了出的一动没动**(pre−post 两边都 16,
+    LIVE 决策登记表没多成员;98.7% 蓝是四枚里最高的,和 35.4% 那枚在两端,**两端都没撤销**);
+    WK 射程量具进 **cooldown 桶(9→10)不进 body 桶(19 不动)**,即 §5 的「0 of 18 body frames」
+    **从这枚帧拿不到样本** —— 这不是推断,是那条 body 断言在我没碰它的情况下自己保持绿的。
+  - **新消费者**(README 合同:staged 帧必须被某测试按名加载):`tests/test_cm_cmqreach_transit_frame.lua`
+    **3 例全绿**。§1 判别子写清了它**为什么**是判别子(2500u 内 0 个 / 3000u 内恰好 1 个 ——
+    **空名单能满足前一条、满足不了后一条**);§2 点名 `observed.burst` 为空**既像 transit 帧也像
+    坏掉的生成器**,分辨它们的是那条在 5s 窗外 7 秒的 `t+12.00` 记录。
+  - **⛔ 本轮没做的两件,都是故意的**:(甲) **没有入集** `tests/fixtures/`(入集价 **4 文件 /
+    5 断言**,同一次挪动量的,其中 `test_axe_t15_in_domain.lua` 自己写着「这个界该被**重新取**
+    而不是重新陈述」⇒ 它是**自己的工作单元**);(乙) **没有主张 `cmqreach` 的条件 (a)** ——
+    (a) 是**一个波次的证据不是一枚帧的**,这枚帧供的是让那个波次读数**读得动**的东西
+    (cell (3) 里 transit 污染的一个钉住实例,录像组三个 draft 都在 56% 附近)。这句写进了新测试文件头。
+  - `luacheck_gate.sh` **EXIT=0 CLEAN(0 警告)**,没用 `RULE6_BYPASS`;`cm` **336**、`wk` **297**、
+    `zuus` **236**、`smoke_load` **3**、`gate_claim` **16**,全 0 失败;33 个枚举文件 **33/33 绿**。
+  - **⛔⛔ 自检:管道第 17 次,而且本轮的形状是新的 —— 两条禁令一起犯**(`timeout 300 … | tail`),
+    脚本当场 REFUSED(exit 2,什么都没检查),**当场改回逐字规定的形状重跑,没污染结论**。
+    **但 GH #507 那条「自检跑完再动树」本轮断了**(连续七轮有效后第一次):我在 python 腿跑着的
+    时候就开始改 `tests/`,于是 `trunk-red(lua)` 读到**我改到一半的树**、`trunk-red(python)`
+    UNCERTIFIABLE。**两条都在成品树上自己重跑掉了**:detectors **ran=87 red=0**
+    (86→87 是本轮新 `[ratchet]` 文件自己进的集合)、python **117 passed / 0 failed /
+    1 uncertifiable**。那一条 uncertifiable 是 `test_selfcheck_lua_leg.py`,**不是我造成的,
+    证据是时序**(python 腿横幅早于我创建新测试文件的时刻)——**但它仍然是 UNCERTIFIABLE 不是 PASS**。
+    自检真实退出码 **EXIT=3**(文件重定向 + 独立 `echo` 读的)。
 - 2026-09-09T05:20Z(报告 `iterations/reports/hero/20260909T052022Z.md`;**backlog:`-130` 做完、
   新开 `-131`**;焦点英雄 **Crystal Maiden**;OWNER_PRIORITIES **P4.4 (i)** —— 工作单元主体是一个
   `bots/` 行为改动,有真可执行代码行,**连续第二轮走 (i)**)
