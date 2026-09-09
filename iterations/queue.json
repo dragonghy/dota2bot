@@ -2273,6 +2273,15 @@
       "acceptance": "解冻后单 arm(或与不相交的 id 同波)跑一波,交出上面四列 + 铁律 4(i-a) 要求的 ab/ba 两个分层读数。⚠️ **归因边界,负读数只有一种读法**:本 lever 是 **WIDENING**(只删一个合取项),armed 的释放集按形状是出货释放集的**超集**,`tests/test_cm_w_selfdefense_facing.lua` §4.2 在整张 10 帧网格上断言了这个方向(凡不同的格子,出货侧必须是 `none`)⇒ 负读数**只能**读作「多放出来的那几次冰封禁制不值得放」,**永远不能**读作「这条 lever 让她少放了 N 次」。⚠️ **一条不许合并的仪表限度**:波次侧若能从 `.dem` 量到真实朝向,那是本条**唯一**的第一手读数,不是 fixture 读数的第二意见 —— 请单列。⚠️ **兄弟位点**:同形锥形还长在 `hero_skeleton_king.lua`(X.ConsiderQ)和 `hero_zuus.lua` 上,**不在本条里**;WK 那条的语料域已测为空(1 帧过非几何合取项,最近敌人 1699u > `J.GetNearbyHeroes` 自己 clamp 的 1600u),要动它需要自己的 id 和自己的波。",
       "requested_by": "hero 2026-09-09T05:2xZ",
       "status": "open"
+    },
+    {
+      "id": "hero-54",
+      "stream": "hero",
+      "bundle": "(不是 arm 波)帧供给请求 —— 焦点五英雄的「真正做了决策」的瞬间,现在整份语料只有 4 个",
+      "seeds": [],
+      "priority": 1,
+      "question": "**本条不请求 arm 任何 id,请求的是 fixture 语料本身。** 2026-09-09 英雄组把 backlog `-131` 要的可达性表建成了 `tests/test_focus_decision_reachability.lua`:110 个 fixture,把五个焦点英雄各自当 subject 驱动,共 **183 个「本人活着」的瞬间**(axe 28 / zuus 45 / skeleton_king 36 / lion 24 / crystal_maiden 50)。出货树(所有 gate 关闭)真正下单一个技能的瞬间是 **4 个**,且**每一个都已经有 gated lever**(`zusboltcap` / `lionrreach`+`lionultcash` / `axecullreach`+`cullthresh` / `cmqreach`);**Wraith King 是 0/36**。⇒ 过去十几轮各自记下的「我这条 lever 的域是空的」不是十几个关于 lever 的事实,是**一个关于语料的事实**。要的东西:**在焦点五英雄真正施放技能的瞬间前后取帧**(而不是在别的英雄的事件上顺带截到他们),每个焦点英雄 >= 5 帧,优先 Wraith King(现在 0 帧可用)与 Axe。具体口径:用 behavioral dumper 的 timeline 找 `bots/` 侧下过 UseAbility 的时刻,`make_fixture.py --t <该时刻> --hero <焦点英雄>`。",
+      "acceptance": "新 fixture 落到 `tests/fixtures/`,并使 `tests/test_focus_decision_reachability.lua` §2.1 变红(它对「出现了新的活决策」就是这么设计的:红线里直接打印新那一行)。⚠️ 边界:本条**买不到** `GetActiveMode` / `IsFacingLocation` / `IsChanneling` / `GetEstimatedDamageToTarget` —— 那四个不在 .dem 里(§4 逐条实测登记),所以带这四个合取项的支路**再多帧也开不了**;要的是不依赖它们的那些支路的帧。"
     }
   ],
   "done": [

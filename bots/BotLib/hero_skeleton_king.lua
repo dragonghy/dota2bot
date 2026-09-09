@@ -896,21 +896,35 @@ function X.ConsiderQ()
 	-- MORE than baseline (108 vs 97) is not evidence against the lever.
 	-- THE OBSERVABLE OF THIS LEVER IS TARGET IDENTITY, NEVER CAST COUNT.
 	--
-	-- ⚠️ AND THE FIXTURE ARCHIVE CANNOT CORROBORATE ANY OF IT, because
-	-- `nCastRange` below has been ZERO on every frame ever driven through this
-	-- function: GetCastRange is on no spec in tests/mock/, so the generic `^Get`
-	-- default answers 0 -- 36 of 36 live-WK instants.  Fifth of the meter-zero
-	-- family (GetActualIncomingDamage, GetAbilityDamage GH #175, GetManaCost,
-	-- GetAOERadius GH #386), and the only one whose answer is ALREADY IN THE
-	-- TREE: tests/mock/special_value_shapes.lua carries AbilityCastRange = 525
-	-- for this ability, three lines above the mana ladder that got wired up on
-	-- 2026-09-01.  The zero shrinks the search ring 855 -> 330, the tight ring
-	-- 568 -> 43 and the kill gate 605 -> 80, so it UNDERSTATES reach.  Measured:
-	-- of the 18 archive frames that reach this body, the loop below is entered on
-	-- 0 under the zero and on 2 with 525 fed back.  ⇒ a fixture-archive zero on
-	-- this branch is not a second opinion on the replay group's 0/97; it is a
-	-- reading that was never able to disagree.  Repairing the meter is tree-wide
-	-- (433 call sites / 150 files) and is NOT done here.
+	-- ⚠️ THE FIXTURE ARCHIVE STILL CANNOT CORROBORATE ANY OF IT -- BUT NO LONGER
+	-- FOR THE REASON THIS PARAGRAPH USED TO GIVE.  ⭐ CORRECTED 2026-09-09 (hero).
+	-- What stood here said `nCastRange` below "has been ZERO on every frame ever
+	-- driven through this function: GetCastRange is on no spec in tests/mock/".
+	-- The meter was repaired since (the KV getter batch), and the paragraph was
+	-- never re-read: driven today, `nCastRange` inside this function is the real
+	-- 525 on every frame that reaches this body.  The old text even PREDICTED
+	-- this reading -- "entered on 0 under the zero and on 2 with 525 fed back" --
+	-- so the number it forecast is now the number the corpus gives, and the
+	-- sentence explaining WHY the branch is dark is the half that went false.
+	-- That is the green-assertion / false-sentence shape
+	-- tests/test_focus_mana_cost_consumer_census.lua opens by warning about,
+	-- occurring in bots/, about a meter.
+	--
+	-- MEASURED 2026-09-09, gates all off, WK driven as SUBJECT
+	-- (tests/test_focus_decision_reachability.lua section 3):
+	--     36 live-WK instants
+	--  -> 18 reach this body (the rest refused upstream: not fully castable, or
+	--     X.ShouldSaveMana holding mana for Reincarnation -- arming `wksaveidle`
+	--     moves that 18 to 20)
+	--  -> the rings this body builds are 568 / 855, i.e. nCastRange = 525
+	--  ->  2 of the 18 have any enemy hero inside the 855 bonus ring
+	--  ->  0 have one inside the kill-confirm gate (nCastRange + 80 = 605).
+	-- ⇒ the branch is dark for a NARROWER and checkable reason than "the meter
+	-- could not disagree": with the real 525 the loop IS entered, and the two
+	-- frames that enter it hold their nearest enemy at 811u, past the gate.
+	-- The archive is still not a second opinion on the replay group's 0/97 --
+	-- 0 frames reach the decision -- but a future fixture that puts an enemy
+	-- inside 605 WOULD make it one, and section 3.1 goes red the day one does.
 	local nDamage = 40 * ( nSkillLV - 1 ) + 100
 	local nDamageType = DAMAGE_TYPE_MAGICAL
 

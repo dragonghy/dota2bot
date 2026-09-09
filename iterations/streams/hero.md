@@ -22,8 +22,78 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--131. **⭐ 下一轮:继续 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**
-   `-129`(`cmrcrowd`)与 `-130`(`cmwface`)连着两轮都是 (i)。下一轮同样走 (i)。
+-132. **⭐ 下一轮:先看 `tests/test_focus_decision_reachability.lua` §2.1 有没有红。**
+   红了 = 语料长出了**第五个活决策**,红线里直接打印它是哪个英雄哪一帧下的什么单
+   —— 那就是 P4.4 (i) 的靶子,直接做。没红 = **不要再从源码里找焦点五的杠杆**:
+   2026-09-09 已经量过,**183 个焦点英雄活体瞬间里出货树只做 4 个技能决策,
+   而这 4 个各自都已经挂着 gated lever**(`zusboltcap` / `lionrreach`+`lionultcash` /
+   `axecullreach`+`cullthresh` / `cmqreach`),**Wraith King 是 0/36**。
+   过去十几轮各自记下的「我这条 lever 的域是空的」**不是十几个关于 lever 的事实,
+   是一个关于语料的事实**。
+   - **⭐⭐ 没红时的下一步(唯一一条能自己动的)**:§4 的四个不可答谓词里,
+     **只有 `GetEstimatedDamageToTarget` 可能从 dump 里补出来** —— 当 subject 是
+     **目标**时,fixture 的 `recent_damage` 里有那个**具名敌人真的打了她多少**的地面真相
+     (向后看不是向前看,边界要写在 loader 里)。它一次解锁 **CM / WK / Lion 三个英雄的
+     团战支路**(那些支路**进得去**,见下一条,卡住它们的就是这个 0)。
+     ⚠️ 但它是**管线活**,按 P4.4 **只能当附带一条**,不能当主体。
+   - **⭐⭐ 一条被推翻的前提,别再按老的走**:`J.IsInTeamFight` **离线不是恒假**。
+     loader 的 `GetNearbyHeroes` 覆盖**根本不看 mode 参数**,于是它退化成
+     「半径内 >= 2 个队友」:CM 50 帧里真 **2** 帧、zuus **6**、lion **5**、axe **2**、
+     WK **0**。**团战支路是进得去的**;一行之后拦住它们的是
+     `GetEstimatedDamageToTarget` = 0 + 「0 起种 + 严格 `>`」的最危险敌人搜索。
+     ⛔ **那个 0 起种不许在 `bots/` 里"修"** —— 真实对局里任何能攻击的活敌人都投影 > 0,
+     改它是**穿着行为改动外衣的 fixture 专用修补**。已写进测试 §4.3。
+   - **⛔ 本轮新量掉的五条,是已查过的否定结果,不要重查**(全部实测,见
+     `iterations/reports/hero/20260909T080829Z.md` §2):
+     (a) Zeus `hero_zuus.lua:799` 的第三个朝向锥(`-131` 点名"未测"):前提是
+     `J.IsRetreating`,`GetActiveMode()`=0 ⇒ **结构性恒假**;
+     (b) CM 击杀支路"缺 `CanCastOnNonMagicImmune`":**守卫已经在了**,在
+     `X.cm_GetWeakestUnit` 里面;
+     (c) CM 击杀支路的 DoT 延时(`nCastPoint` 应为 `nCastPoint + duration`):
+     方向对、Axe 战斗饥渴同族传的确实是 `nDuration`,但它只乘在回血上而
+     `GetHealthRegen`=0 ⇒ **离线按构造 no-op**,在线量级也只有 6–24 血;
+     (d) Lion `X.ConsiderW` 保护自己的 `nLV >= 10`(CM 同名支路没有等级地板):
+     域就是 `-131` 的否定结果 (甲),空;
+     (e) Zeus 团战法定人数的**观测点**(`zusfightquorum` 头部自己点名留的第二条杠杆):
+     重新对准最密敌方集群后 **45 帧里动 2 帧,1 → 2,一次也没越过法定人数**
+     (出货 5 / armed 3)⇒ 决策效应 0。**头部那句"两个敌人各自看到四个"不能给它定价**
+     —— Zeus 的敌人看到的敌人是 Zeus 这一边。价钉在测试 §5.1,越过 3 的那天变红。
+   - **⭐ 四处伤害/射程硬编码本轮抽查,全部与 KV 对得上**(CM 冰封禁制 `100+50*lv`
+     = `damage_per_second 100 × duration`;Lion 死亡一指 `475+125*lv` 与带杖
+     `575+125*lv` = KV `600 725 850` + `special_bonus_scepter +100`)——
+     `cullthresh` 那一族在焦点五里没有第二个实例。
+   - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`、`cmfarcreep`
+     (`hero-42`)、`lionultcash`(`hero-43`)、`lionrreach`(`hero-44`)、`wkqlane`(`hero-45`)、
+     `axecullreach`(`hero-46`)、`cmlaneband`(`hero-47`)、`zusjumpland`(`hero-48`)、
+     `lionqkill`(`hero-49`)、`axebhreach`(`hero-50`)、`zusultstrand`(`hero-51`)、
+     `cmrcrowd`(`hero-52`)、`cmwface`(`hero-53`);`wkreinctr` 是协同组的(GH #582)。
+   - **⛔ 不许**碰 `X.HasSpecialModifier` 的出货名单(Axe):理由见 `-124`(GH #570)。
+   - **⭐ 自检退出码,第 16 次**:第一条命令又误接了 `| tail`,脚本当场 REFUSED(exit 2),
+     **当场改回文件重定向重跑,没污染结论**。下一轮第一条 Bash 命令**只准是**
+     `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?"`
+     —— 不接管道、不加 `timeout`(整轮实测约 **20 分钟**)。
+   - **⭐ 第二页上仍没排到的 `[hero]`**:#587 / #567 / #566 / #564 / #563 / #562 / #560 /
+     #554 / #549。**#562 的「拆不拆」仍是本组的**(登记动作,只能当附带一条)。
+
+-131. ~~**⭐ 下一轮:继续 P4.4 (i) —— 一个焦点英雄的 `bots/` 行为改动。**~~
+   ✅ **2026-09-09T08:08Z 按它自己立的规矩执行完毕,结论是「语料里没有靶子」**:
+   `-131` 的规矩是「**先测域,再写杠杆**」并要求「**那张表值得重建一次就留着**」。
+   本轮把表建成了常驻件 `tests/test_focus_decision_reachability.lua`(**11 例全绿**),
+   粒度比上一轮深一层 —— 不是技能**可用性**,是**决策**:把每个焦点英雄当 subject 驱动
+   真实 `X.SkillsComplement`(零注入),看它到底下不下单。读数见 `-132`。
+   ⇒ **本轮没有写新的 gated id,这是按规矩的结论**,五个候选逐条量掉(`-132` 的否定结果表)。
+   `bots/` 的改动是一处**改正**:`hero_skeleton_king.lua` 里
+   「`nCastRange` 在任何一帧上都是 0 / GetCastRange 在 tests/mock/ 里没有 spec」已经**变假**
+   (KV getter 落地后它跑出来是真的 **525**),而那句是**承重的** —— 它是「fixture 零不是
+   第二意见」的理由。实测漏斗:**36 活体 → 18 进函数体**(arm `wksaveidle` 抬到 **20**)
+   **→ 环是 568/855 即 nCastRange=525 → 2 帧 bonus 环非空 → 0 帧在击杀闸 605 里**
+   (那 2 帧最近敌人都在 811u)⇒ 支路仍暗,但**理由更窄、可核验**,§3.1 在第一帧把人放进
+   605 的那天变红。
+   `luacheck_gate.sh` **EXIT=0 CLEAN**;`smoke_load` **3 例 0 失败**;
+   自检 **worst exit 3**(cadence)+ `trunk-red(python)` **UNCERTIFIABLE**(不是我造成的,
+   动 `bots/` 之前自检已跑完)+ fast Lua detectors **86 个 0 红**。
+   报告 `iterations/reports/hero/20260909T080829Z.md`,`queue.json:hero-54`(**不是 arm 波,
+   是帧供给请求**),GH **#658**。`run_tests.lua wk` **297 例 0 失败**,`gate_claim` **16 例 0 失败**。**未新增 `state.json` 条目 —— 本轮没有新 id。**
    - **⛔ 仍然不许**排成主体的(各自在等一份别人手里的供给):`-119`、CM 的 `cmfarcreep` 域
      (`hero-42`)、`lionultcash`(`hero-43`)、`lionrreach`(`hero-44`)、`wkqlane`(`hero-45`)、
      `axecullreach`(`hero-46`)、`cmlaneband`(`hero-47`)、`zusjumpland`(`hero-48`)、
