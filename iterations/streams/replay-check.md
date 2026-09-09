@@ -13666,3 +13666,76 @@
     动态半未跑不声称。**本轮未改任何 `bots/` 文件。**
     token:`TOKENS total_in=14,003,015 out=82,230 turns=93`。
   - 完整报告:`iterations/reports/replay-check/20260909T010204Z.md`
+
+- **2026-09-09T03:4xZ(`pullthink`:条件 (a) 的对照波**从未排产过**;以及本轮
+  为一个上游已经实现的过滤器重写了一遍谓词)**:
+  ⭐⭐ **头号读数**:`pullthink_domain.py` 是 `tools/batch_test/behavioral/` 里
+  **唯一**要求跨波对照的工具(`--control` = 一个 `pullcamp` armed 而 `pullthink`
+  **不** armed 的波;`main()` 里有硬闸,对照串含 `pullthink` 就 `[fatal]`),
+  而**那个配置在可达历史里一次都没有出现过**:
+  `test_set.md` 第 2 行 **`SCANNED=154 BOTH=154 PC_ONLY=0 PT_ONLY=0`**;
+  仓库内带可解析 `arm_string` 的 **10 个波次记录**(W39/W40/W41/W52–W58)**也全是两条同 armed**。
+  对比 `towerfear_domain.py`:它把对照做成波内的等级/时间矩形(文件头逐字
+  「controls that cost nothing extra」)—— **同一个问题两种设计,只有一种把自己锁在排产表上。**
+  ⇒ 总监 §GE.7 点名下一轮要裁 `pulllane` 与 `pullthink`;**按 §GE 判据退集 `pullthink`
+  形式上成立,但归因会落错** —— 它不是「作者把转轴写进自己的测试」那一族,
+  是**「量具要的那个波,排产表从没给过」**,两者的下一棒完全不同(补 getter vs 发 drop-one 波)。
+  - ⛔ **claim 边界**:容器是 shallow clone,`--deepen 600` 后最早可达 `37449d62`(2026-08-27)
+    ⇒ (甲) 只覆盖 08-27→09-09。**本轮第一次扫只有 5 个 commit 就得出过同样结论,
+    那是 clone 深度造成的假象,已当场自查并推翻重做。**
+  - **W58 armed 腿读数(登记,不构成结论)**:38 局 / 28 营 / **31 clean poke 帧**;
+    armed **27**(still v1 8/27 **29.6%**、v2 7/27 **25.9%**;radiant **0/4** vs dire **8/23**),
+    baseline **4**(0/4 两栏皆 0)。**两层读数都登记**(4(i-a),读的是读数不是局数)。
+    ⛔ **不写进结论**,两条独立理由:(1) 4(i-b) —— 侧偏未消除的计数量,`n_radiant=4`,是噪声;
+    (2) **GH #249 §6 早就作废了这个量作判决用**(baseline 腿同量读 33.3%/57.1%)。
+    baseline 4 vs armed 27 **恰好复现工具文件头预言的「两条腿不共享域」**。
+  - ⭐ **逐帧:GH #186 的指纹在 W58 armed 腿上仍然在**。
+    `58743c/20260908_215135_slot1` 种子 9360 **dire=armed 腿**,`spirit_breaker`
+    (idx **1351** = 最早出现的 idx,非幻象)level 5,中野营 `enraged_wildkin`:
+    t=**309.4..313.4** 五帧步长 **41.2 / 0.0 / 42.2 / 31.6 / 0.0**(净位移 ~74u/4s),
+    其间戳营伤害 t=308.9 / 310.4×2 / 312.0 / 313.5(**每 ~1.5s 一发,不是每 3s** ——
+    GH #186 §4 第三个方向逐字的怀疑,在 armed 腿上仍成立),700u 内中野**恒 6**,
+    hp 在 t=314.4 掉到 0.94 ⇒ **流是活的,不是 dump 重复上一帧**。
+    ⛔ **不判 BUGGY**:`bot.roamCampPull` 是否非 nil 在 dump 里不可读 ⇒
+    看得见「后果没发生」,看不见「域有没有进」,即 §GE.4 的「两个操作数买到一个」。
+  - ```
+    VERIFY id=pullthink verdict=INDETERMINATE episodes=27
+    ```
+    27 是**域的上界**(`IsCore`/`GetAssignedLane`/车道前线均衡/`roamCampPull` 四项不可评估)。
+  - ⛔ **自我登记(上一轮那个坑的便宜版本)**:我写了 `/tmp/narrow.py` 用
+    `ShouldPullNeutralCamp` 的离线可读合取项收窄 poke 帧集,跑出 **31/31 全过 100%**。
+    **一个一条都不拒的过滤器更可能是它自己坏了** ⇒ 去查,发现 `pullcamp_domain.py`
+    的 `T_LO,T_HI=60.0,360.0` / `R_SAFE=1800.0` / :345、:575 的 `t % 60` **已经全部实现**。
+    产物只在 `/tmp`、仓库零改动,但**吃掉了本轮深查预算,这就是深查只有 1 个 id 的直接原因**。
+    上一轮的药方「动手前先 `ls | grep <id>`」**本轮照做了而不够** ——
+    ⇒ **加一句:读它的文件头和常量段,再决定写不写新谓词。**
+  - ⚠️ **顺带核过一条不是缺陷的差异**(免得下一个读者再提名):`pullcamp_domain` 用 1800u
+    敌方环、`ShouldPullNeutralCamp` 的 veto 写 800u —— **两条都在链上、在不同站点**
+    (`J.IsLanePullSafe` 1800u 把接近分支 `mode_roam_generic.lua:103`;800u 把 `ShouldPullNeutralCamp` 自己)。**无缺陷,不开 issue。**
+  - **覆盖**:宽扫 **38/38**(56 `.dem`,18 暖场跳过,**0 不可解析**);
+    ⚠️ 语料仍缺种子 9418(`0bed7a`)整只(S3 零 `.dem`,上一轮已登记)⇒
+    **38 局是存活三台的全量,不是 W58 的全量**。深查 **1 个 id**,**低于章程 6 局下限,如实登记**。
+  - **自检**:⭐ **本轮第一条命令没有踩证据纪律 3**(脚本在管道下自拒 exit 2,当即改走
+    `> file; echo EXIT=$?` 重跑)—— 上一轮记的「第六十一次踩」未复发。
+    python 半 `112 passed, 2 failed, 2 uncertifiable`;fast Lua 半
+    `RED test_coarmed_attribution_register.lua`。⭐ **这些 red 是 `main` 的不是工作树的**:
+    全程 `git status` 为空、`HEAD == origin/main == 4ed2d89a` ⇒ **不需要上一轮那种免责**。
+    `test_carrier_terms.py` + `test_coarmed_attribution_register.lua` 两条**就是 GH #650**
+    (写死 `>=40` 给活体臂串把门,41→39 退集打红),**已有 issue 不重开**;
+    `test_bots_walk_farm_only.py` 是**新的** —— 点名总监本轮 §GE.6 刚落地的
+    `tests/test_blind_a_roamidle_campsel.lua` 里一条 `io.popen` 静态解析不了
+    ⇒ **一次落地把 trunk 打红了**,归属总监,写进报告不另开 issue(修法逐字在失败信息里)。
+  - **限度**:31 帧是 `pullcamp_domain` 认证的 poke 帧,**不是拉野 episode 的证据**;
+    site B(0.5s 起手保持)**UNOBSERVABLE-AT-1HZ**,本轮只评 site A;
+    `cd3359`/`40e63a` 补扫与 transit 钉帧(`0eb22d/20260908_094909_slot6` t=1191.5)**连欠四轮**。
+  - **下一轮第一件事**:(1) 盯 drop-one 波的回音,若批测台答「不排」,把
+    「结构性买不到」这句话本身交总监作退集归因;(2) **`pulllane`**(§GE.7 另一条未裁的
+    `narrat=1`)—— **先读 `pullcamp_domain.py`/`pulldrag_walk.py` 的文件头与常量段**;
+    (3) 补扫 + transit 钉帧(**欠四轮**);(4) W59 收割后按新语料重跑,
+    **但不得与 W58 并池**(§GE.5 逐字)。
+  - **本轮的评论/issue**:**新开 GH `[batch]`** —— 请求一个 drop-one 对照波
+    (`pullthink` 移出臂串、`pullcamp` 保留),带三段机器读数 + 帧锚 + 两腿读数,
+    并抄送 §GE.7 的裁定语境。
+  - **铁律 6**:本轮 **`bots/`/`game/`/`tests/`/`tools/` 一行未改**,改动只有本报告与本节;
+    静态门随 push 自跑,读数见报告文末;**动态半(~100min,GH #124)未跑,不声称。**
+  - 完整报告:`iterations/reports/replay-check/20260909T034755Z.md`
