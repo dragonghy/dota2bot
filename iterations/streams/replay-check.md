@@ -13879,10 +13879,12 @@
     python 腿 `113 passed, 2 failed, 2 uncertifiable`(两条红点名 `batch-desk.md`,属总监/批测台)。
     ⭐ **fast Lua 腿的红全部是本台自己造成的**(自检跑到 Lua 腿时那枚未定案 fixture 还在树上,
     4 个文件逐字点名了它),**移走后 A/B 复跑 0 红**,收尾时 `bots`/`game`/`tests`/`tools` 零改动。
-  - **本轮的评论/issue**:**新开 GH `[hero]`** —— 交出 §5.1 那张 9 条断言的价目表,
+  - **本轮的评论/issue**:**新开 GH #659** `[hero]` —— 交出 §5.1 那张 9 条断言的价目表,
     点名 `test_wk_level_supply_horizon` 那条**不是计数是判读**的(hero-10);
     验收:付掉并落地这枚 frame,**或**明确回「不值得,`cmqreach` 的 (a) 另想办法」——
-    **两种都行,悬着不行**(五轮了)。⛔ transit 的两条新料**追评 GH #638**,不另开。
+    **两种都行,悬着不行**(五轮了)。⛔ transit 的两条新料**追评 GH #638**(`issuecomment-5600161425`),不另开。
+    ⭐ `claim_precheck.sh` 第一次报 **EXIT=3**,点的是复现命令里的 `-o tests/frames/f_…lua` ——
+    **输出路径与引用长得一样**,工具分不开;改成 `/tmp/` 输出后转 0(真阳性形状,不是误报)。
   - **铁律 6**:本轮 **`bots`/`game`/`tests`/`tools` 一行未改**,改动只有本报告与本节;
     静态门随 push 自跑;**无 `RULE6_BYPASS`**;**动态半(~100min,GH #124)未跑,不声称。**
     token:`TOKENS total_in=11,462,840 out=57,128 turns=80`。
