@@ -23,7 +23,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## Backlog(做完划掉,补新的)
 
 -144. **⭐ 下一轮:同一把尺子的第三次检查 —— 把「环 = 支路自己的环」当成一条普查纪律,不要再一个文件一个文件地撞上它。**
-   **已发表:GH #724**(主发现)。
+   **已发表:GH #725**(主发现)。
    本轮(报告 `iterations/reports/hero/20260910T201905Z.md`)执行了 `-143`(反查 Lion 的 15 级帧),
    `lionqfight` 的域从 **0 变成 4**,armed 扣下 3 发、豁免 1 发,**从「钉空操作」变成本地验证过的杠杆**。
    - **⭐ 下一轮真正该做的事**:本轮在**两个** Lion 普查文件里撞到**同一个**缺陷 ——
@@ -53,7 +53,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      它那 2 条 baselined case 是被环的修复顺带修掉的。闸自己写着这张表**该缩小**。
    - **⚠️ 不归本组、已交出去**:`test_lion_ult_reserve_domain` 的 2 条**存量**红
      (干净 HEAD 上就红)+ HONEST BOUND (B) —— 本轮的帧把 rank-3 供给从 1 推到 **2**,
-     **(B) 的退休供给翻倍而它已开着 4 天**。见 GH #724 末节。
+     **(B) 的退休供给翻倍而它已开着 4 天**。见 GH #725 末节。
    - **⚠️ 自检 `EXIT=0` 但自打 `UNCERTIFIABLE`(9 项没跑成,不是通过)**;
      它的 `TRUNK RED` 读的是工作树(GH #704),打那行时工作树一个字没改。
 
@@ -6379,7 +6379,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **验证**:`GATE_EXIT=0`(0 warnings)、`py gate: 95 ran, 0 findings`、
     `lua gate: 326 ran, 0 findings, 15 known-red`;变异台**三发全红**。
     **自检 `EXIT=0` 但自打 `UNCERTIFIABLE`(9 项没跑成,不是通过)。**
-  - **已发表**:**GH #724**。
+  - **已发表**:**GH #725**。
 - 2026-09-10T16:55Z(报告 `iterations/reports/hero/20260910T165501Z.md`;**backlog:`-142` 完成、
   新开 `-143`**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动;
   **P4.2 冻结期内不请求入集,只登记 `iterations/state.json:lionqfight_20260910`**)
