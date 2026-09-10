@@ -679,6 +679,21 @@
           "lua gate 首次别组活读数"
         ]
       }
+    },
+    {
+      "id": "lua_gate_known_red_shrink",
+      "issue": "GH #624 / GH #650",
+      "ruling": "总监 2026-09-10T16:22Z 立(全文 `iterations/reports/director/20260910T162258Z.md` §一/§二)。`lua_gate` 的 known-red 基线**从文件级收窄到用例级**,当前赦免 **16 个文件 / 26 个具名用例**。基线**只有缩短才有意义**:它不是豁免,而它买走的东西已经被量到 —— 落地 19 分钟后 hero `44a83380` 的 8 帧就把 `test_wk_q_lane_reach` 的红从 44 改成 51,闸两次都读 `known`。⛔ **修法不是继续放宽,是把 26 条取回来**:每一条的失败正文自己写着「re-take 而不是 quote」,族属 GH #650(普查计数写死 vs 语料在长)。⚠️ 其中 **2 条要先当交付物读、不要当红清掉**:`wk_q_castrange_meter_domain` 第 6 条挂着 **GH #390 要的那一帧**,`wk_level_supply_horizon` 第 2 条说 **`queue.json:hero-10` 的前提已不成立**。",
+      "ruled_at": "2026-09-10T16:22Z",
+      "executor": "hero(13 个文件)+ strategy(3 个文件)——归属见报告 §五",
+      "trigger": "各组下一次碰到自己名下那条测试时;闸每次 push 都把 16 条连用例数打印出来",
+      "delivered_to": "tools/agent/lua_gate_manifest.json:known_red_cases(机器字段,闸每轮真读的那一个)+ 普查 issue",
+      "why_registered_here": "这是一条**常驻义务**:不属于任何一波、任何一个 cand id,因此没有任何 `W<N>_wave.json:harvest_obligations` 有行可以承载它(GH #413 的形状)。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "裸读得出:`python3 -c \"import json;m=json.load(open('tools/agent/lua_gate_manifest.json'));print(len(m['known_red']), sum(len(v) for v in m['known_red_cases'].values()))\"` —— 今天是 `16 26`。**任何一个数变小 = 有人真的取回了读数**;两个都不变 = 这一行还欠着。⚠️ 执行方**不特定**(两个组、十六条各自独立),所以**它是提醒不是证明** —— 与 `gh624_lua_gate_first_live_read` 同样的弱判据,已在行内写明。",
+      "residual": "闸只能看见「用例名的集合变了」,看不见「同一个用例名下的读数被正确地重新取了一遍」。一条被 re-take 之后转绿的测试会自己掉出基线(闸打 GREEN again),但一条**被改成永远为真**的断言同样会转绿 —— 这个方向闸不管,归 code review。"
     }
   ],
   "retired": [

@@ -349,6 +349,123 @@ try:
           "10f no `known_red` key means NO amnesty, not total amnesty (got %d)"
           % r.returncode)
 
+    # ---- 11. the baseline is per-CASE, so a NEW red inside a baselined
+    #          file still refuses -----------------------------------------
+    # The gap this closes was stated in the gate's own output and measured on
+    # the real tree the day after the baseline landed: an 8-frame corpus commit
+    # moved `test_wk_q_lane_reach`'s assertion from "alive on 44 corpus frames"
+    # to "alive on 51" while the gate went on reading it as `known`.  Ordinary
+    # drift inside an already-failing case must stay amnestied (11a) -- that is
+    # what keeps the gate from becoming the blockade the baseline prevents --
+    # while a case that was NOT failing at landing must refuse (11b).
+    TWO_CASES_ONE_RED = (
+        "local t = {}\n"
+        "t['old case'] = function() error('DRIFTED PAYLOAD 51') end\n"
+        "t['fresh case'] = function() end\n"
+        "return t\n")
+    TWO_CASES_BOTH_RED = (
+        "local t = {}\n"
+        "t['old case'] = function() error('DRIFTED PAYLOAD 51') end\n"
+        "t['fresh case'] = function() error('A GENUINELY NEW BREAK') end\n"
+        "return t\n")
+
+    root, mpath = make_tree(
+        tmp,
+        {"test_cased.lua": TWO_CASES_ONE_RED},
+        {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
+        known_red=["tests/test_cased.lua"],
+        known_red_cases={"tests/test_cased.lua": ["old case"]},
+    )
+    r = run_gate(root, mpath)
+    check(r.returncode == 0,
+          "11a the SAME baselined case, with a moved payload, still does not "
+          "refuse (got %d)" % r.returncode)
+    check("amnestied for 1 case" in r.stdout,
+          "11a2 and the printout says the amnesty is case-scoped, not total")
+
+    root, mpath = make_tree(
+        tmp,
+        {"test_cased.lua": TWO_CASES_BOTH_RED},
+        {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
+        known_red=["tests/test_cased.lua"],
+        known_red_cases={"tests/test_cased.lua": ["old case"]},
+    )
+    r = run_gate(root, mpath)
+    check(r.returncode == 3,
+          "11b a case that was NOT red at landing refuses even though its FILE "
+          "is baselined (got %d)" % r.returncode)
+    check("fresh case" in r.stdout,
+          "11b2 and the new case is named, so the reader can act on it")
+    check("old case" not in r.stdout.split("lua gate:")[0]
+          or "NOT among them" in r.stdout,
+          "11b3 the finding is about the new case, not the baselined one")
+
+    # A file in `known_red` with NO case list keeps the OLD file-level amnesty.
+    # This is the backward-compatibility direction: never MORE permissive than
+    # before, and the printout must confess which entries are still blind.
+    root, mpath = make_tree(
+        tmp,
+        {"test_cased.lua": TWO_CASES_BOTH_RED},
+        {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
+        known_red=["tests/test_cased.lua"],
+    )
+    r = run_gate(root, mpath)
+    check(r.returncode == 0,
+          "11c no case list = the legacy file-level amnesty, unchanged (got %d)"
+          % r.returncode)
+    check("FILE-LEVEL amnesty" in r.stdout and "carry no case list" in r.stdout,
+          "11c2 and the gate says out loud that this entry is still blind")
+
+    # An EMPTY case list is not "everything is known" -- it is "no case here
+    # was ever matched", and the safe reading of an unrecognised red is NEW.
+    root, mpath = make_tree(
+        tmp,
+        {"test_cased.lua": TWO_CASES_ONE_RED},
+        {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
+        known_red=["tests/test_cased.lua"],
+        known_red_cases={"tests/test_cased.lua": []},
+    )
+    r = run_gate(root, mpath)
+    check(r.returncode == 3,
+          "11d an EMPTY case list refuses rather than amnesties (got %d)"
+          % r.returncode)
+
+    # The severe end: a baselined file that stops LOADING reports a bare
+    # `FAIL: <file>` with no ` :: <case>` half, so no case name matches.  That
+    # is the biggest red a file can have, and a file-level amnesty swallows it
+    # whole.  Silence must not be the permissive answer.
+    NO_CASE_RED = "local t = {}\nthis is not lua at all\nreturn t\n"
+    root, mpath = make_tree(
+        tmp,
+        {"test_cased.lua": NO_CASE_RED},
+        {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
+        known_red=["tests/test_cased.lua"],
+        known_red_cases={"tests/test_cased.lua": ["old case"]},
+    )
+    r = run_gate(root, mpath)
+    check(r.returncode == 3,
+          "11f a baselined file that no longer LOADS refuses -- its red names "
+          "no case, which is not the same as naming a known one (got %d)"
+          % r.returncode)
+    check("names no test case" in r.stdout,
+          "11f2 and the reason given is the unrecognised shape, not a case name")
+
+    # Partial shrink must be visible: still red, but red for less.  Without
+    # this line "getting better" and "not moving" look identical.
+    root, mpath = make_tree(
+        tmp,
+        {"test_cased.lua": TWO_CASES_ONE_RED},
+        {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
+        known_red=["tests/test_cased.lua"],
+        known_red_cases={"tests/test_cased.lua": ["old case", "fresh case"]},
+    )
+    r = run_gate(root, mpath)
+    check(r.returncode == 0,
+          "11e fewer failing cases than at landing does not refuse (got %d)"
+          % r.returncode)
+    check("FEWER cases" in r.stdout and "fresh case" in r.stdout,
+          "11e2 and the narrowing is printed with the case that healed")
+
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 

@@ -63,6 +63,7 @@ Usage:  python3 tools/agent/lua_gate.py [--list] [--if-touched <path>...]
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -182,6 +183,35 @@ def run_one(rel, timeout, root=ROOT):
         return None, out, time.time() - t0, True
 
 
+# `FAIL: <file> :: <case>` and its numbered twin `FAIL[3]: <file> :: <case>`.
+# The runner prints both (once at the failure, once in the trailing summary);
+# a set dedupes them.
+FAIL_CASE_RE = re.compile(r"^FAIL(?:\[\d+\])?:\s+\S+\s+::\s+(.+?)\s*$", re.M)
+
+
+def failing_cases(out):
+    """The set of test-CASE names named in a runner's FAIL lines.
+
+    WHY THE CASE NAME IS THE RIGHT GRAIN (director 2026-09-10, GH #624 follow-on).
+    The case name is a literal string in the test file, so it is STABLE while
+    the numbers inside the assertion move.  Measured, not assumed: across the
+    8-frame corpus commit `44a83380`, `test_wk_q_lane_reach`'s assertion moved
+    from "alive on 44 corpus frames" to "alive on 51" while its case name --
+    "§1 the corpus puts an enemy in the band on 6 of 38 Wraith King frames" --
+    was byte-identical on both sides.
+
+    That is what makes a case-level baseline affordable: it does NOT re-refuse
+    on ordinary corpus drift (which would turn the gate back into the blockade
+    the baseline exists to prevent), and it DOES refuse when a baselined file
+    starts failing somewhere it never failed before.
+
+    ⛔ An empty return from a red file is not "no new cases" -- it is a red
+    whose shape this parser does not recognise, and the caller treats it as
+    new.  Silence must not be the permissive answer.
+    """
+    return {m.group(1) for m in FAIL_CASE_RE.finditer(out)}
+
+
 def indent(text, pad="      "):
     return "".join(pad + line + "\n" for line in text.rstrip("\n").split("\n"))
 
@@ -266,10 +296,15 @@ def main(argv):
     # already red, so its promise is "you did not ADD a red", not "the suite is
     # green".  A missing key is an EMPTY baseline, never a permissive one.
     known_red = set(manifest.get("known_red") or ())
+    # Per-file: the set of test-CASE names that were failing when the baseline
+    # was taken.  A file listed in `known_red` but absent here keeps the old
+    # file-level amnesty (backward compatible, and never more permissive than
+    # before); a file present here is amnestied only for THOSE cases.
+    known_cases = manifest.get("known_red_cases") or {}
 
     t0 = time.time()
     findings, unrun, new_over_budget = [], [], []
-    known_hit, healed = [], []
+    known_hit, healed, healed_cases = [], [], []
     ran = 0
 
     for rel in selected:
@@ -284,8 +319,29 @@ def main(argv):
             if rel in known_red:
                 healed.append(rel)
         elif rel in known_red:
-            known_hit.append(rel)
             ran += 1
+            expected = known_cases.get(rel)
+            if expected is None:
+                # Legacy file-level baseline: no case list was recorded, so
+                # there is nothing to compare against and the old amnesty
+                # stands.  The ⛔ line below still names this case.
+                known_hit.append(rel)
+                continue
+            seen = failing_cases(out)
+            new_cases = sorted(seen - set(expected))
+            if not seen:
+                findings.append((rel, "baselined, but this red names no test "
+                                 "case at all -- a shape the baseline never "
+                                 "saw, so it is NOT covered by it", out))
+            elif new_cases:
+                findings.append((rel, "baselined for %d case(s), but these are "
+                                 "NOT among them: %s"
+                                 % (len(expected), "; ".join(new_cases)), out))
+            else:
+                known_hit.append(rel)
+                gone = sorted(set(expected) - seen)
+                if gone:
+                    healed_cases.append((rel, gone))
         else:
             findings.append((rel, "exit %d" % rc, out))
             ran += 1
@@ -324,16 +380,33 @@ def main(argv):
         print("  %d test(s) were ALREADY RED when this leg landed (GH #624) and"
               " did not refuse this push:" % len(known_hit))
         for rel in known_hit:
-            print("      %s" % rel)
-        print("  ⛔ this list is not an exemption and it is meant to SHRINK."
-              " A baselined test that goes red for a SECOND, NEW reason still"
-              " reads as known -- no channel separates them.")
+            n = len(known_cases.get(rel) or ())
+            print("      %s%s" % (rel, ("  [amnestied for %d case(s); any OTHER"
+                                        " case refuses]" % n) if n else
+                                  "  [FILE-LEVEL amnesty -- any red here reads"
+                                  " as known]"))
+        print("  ⛔ this list is not an exemption and it is meant to SHRINK.")
+        blind = [r for r in known_hit if not known_cases.get(r)]
+        if blind:
+            print("  ⛔ %d of them carry no case list, so a SECOND, NEW reason"
+                  " there still reads as known -- re-take the baseline to give"
+                  " them one: %s" % (len(blind), " ".join(blind)))
     if healed:
         print("  %d baselined test(s) are GREEN again -- take them off the"
               " baseline so they start refusing again:" % len(healed))
         for rel in healed:
             print("      %s" % rel)
         print("  python3 tools/agent/lua_gate_measure.py --set-known-red <file>")
+    if healed_cases:
+        # Partial shrink: the file is still red, but strictly less of it is.
+        # Without this line the only visible states are "red" and "green", and
+        # a baseline that is quietly getting smaller looks identical to one
+        # that is not moving at all.
+        print("  %d baselined test(s) are red for FEWER cases than at landing"
+              " -- re-take the baseline so the amnesty narrows with them:"
+              % len(healed_cases))
+        for rel, gone in healed_cases:
+            print("      %s  (no longer failing: %s)" % (rel, "; ".join(gone)))
     print(
         "  scope: %d fast Lua ratchets (selected by measured seconds < %.1fs, "
         "cumulative budget %.1fs)" % (len(selected), cap, manifest.get("budget_seconds", 0.0))

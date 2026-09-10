@@ -51,6 +51,12 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# The gate's own parser, imported rather than re-implemented: a baseline
+# written by one regex and read by another is a baseline that silently stops
+# matching the day either drifts.
+import lua_gate  # noqa: E402
+
 # this file is tools/agent/<me>.py -- three dirnames up is the repo root
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MANIFEST = os.path.join(ROOT, "tools", "agent", "lua_gate_manifest.json")
@@ -159,6 +165,27 @@ def measure_one(root, name):
         return MEASURE_TIMEOUT_SECONDS, None, True
 
 
+def _run_case_probe(rel):
+    """Run one baselined test and return (rc, output) for case extraction.
+
+    Same invocation as `measure_one` -- through the runner, never the file
+    directly.  Timing is irrelevant here, so a generous timeout is fine; what
+    matters is that the output is the same output the GATE will parse, because
+    the baseline is only worth anything if both sides read the same shape.
+    """
+    try:
+        p = subprocess.run(
+            [LUA, "tests/run_tests.lua", os.path.basename(rel)],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=MEASURE_TIMEOUT_SECONDS,
+        )
+        return p.returncode, p.stdout.decode("utf-8", "replace")
+    except subprocess.TimeoutExpired as exc:
+        return None, (exc.output or b"").decode("utf-8", "replace")
+
+
 def select(measurements, per_test_cap, budget):
     """By seconds, cheapest first, never by name.  Every file gets a `reason`."""
     tests = {}
@@ -216,17 +243,46 @@ def set_known_red(argv):
     if unknown:
         print("REFUSED -- these are not measured tests: %s" % " ".join(unknown))
         return 2
+    # Record WHICH CASES are red, not just which files.  Each named test is
+    # re-run here through the runner so the case list is measured on this tree
+    # rather than copied out of whatever produced `src`.  A file whose red
+    # names no case is recorded with an EMPTY list, which the gate reads as
+    # "no case ever matched here" and therefore refuses on -- the safe
+    # direction, and it shows up as a finding rather than as silence.
+    cases, unreadable = {}, []
+    for rel in rels:
+        rc, out = _run_case_probe(rel)
+        if rc == 0:
+            # It passes now; it does not belong in a red baseline at all.
+            unreadable.append((rel, "passes on this tree -- do not baseline it"))
+            continue
+        found = sorted(lua_gate.failing_cases(out))
+        cases[rel] = found
+        if not found:
+            unreadable.append((rel, "red, but its output names no test case"))
+    if unreadable:
+        print("⚠️  %d entr(ies) could not be given a case list:" % len(unreadable))
+        for rel, why in unreadable:
+            print("      %s  (%s)" % (rel, why))
+        print("   These are recorded as-is. An empty case list is NOT an "
+              "amnesty: the gate treats an unrecognised red shape as new.")
+
     man["known_red"] = rels
+    man["known_red_cases"] = {r: cases[r] for r in rels if r in cases}
     man["known_red_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     man["known_red_note"] = (
         "Red on trunk when this leg landed (GH #624), each confirmed by an "
         "individual unloaded re-run. The gate does not refuse a push for these; "
         "it refuses for anything NOT on this list. The list is meant to SHRINK "
-        "-- it is not an exemption, and it is printed by name on every run.")
+        "-- it is not an exemption, and it is printed by name on every run. "
+        "`known_red_cases` narrows each entry to the CASES that were failing: a "
+        "baselined file that starts failing somewhere NEW refuses the push, "
+        "while ordinary corpus drift inside an already-failing case does not.")
     with open(MANIFEST, "w") as fh:
         json.dump(man, fh, indent=2, sort_keys=True)
         fh.write("\n")
-    print("known_red: %d test(s) baselined" % len(rels))
+    print("known_red: %d test(s) baselined, %d case(s) recorded"
+          % (len(rels), sum(len(v) for v in cases.values())))
     return 0
 
 

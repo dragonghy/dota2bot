@@ -112,6 +112,26 @@ PAIRS = {
     "M10": ("    known_red = set(manifest.get(\"known_red\") or ())",
             "    known_red = set(manifest[\"known_red\"]) if manifest.get(\"known_red\")"
             " else type(\"E\", (), {\"__contains__\": lambda s, k: True})()"),
+    # M11: the case list is never consulted, so every baselined file falls back
+    #      to the file-level amnesty.  This is the mutant that SILENTLY REVERTS
+    #      the case-level baseline: the manifest still carries the case lists,
+    #      the banner still prints "amnestied for N case(s)", and a genuinely
+    #      new red inside a baselined file goes through again.  Nothing but a
+    #      probe that puts a NEW case in a baselined file can see it.
+    "M11": ("            expected = known_cases.get(rel)",
+            "            expected = None"),
+    # M12: an unrecognised red shape reads as amnesty instead of as new.  Same
+    #      sentence as M7/M10 -- absence of a match treated as permission --
+    #      in the third place it can be written.  A baselined file whose output
+    #      format drifts then stops being checked at all, quietly.
+    "M12": ("            if not seen:",
+            "            if False:"),
+    # M13: the new cases are computed, named in the printout, and then filed as
+    #      known anyway.  Every human-readable channel says a new case was
+    #      found; the exit code says the push is fine.  M2's shape, one branch
+    #      deeper, and the only channel that moves is the one the hook reads.
+    "M13": ("            elif new_cases:\n                findings.append(",
+            "            elif new_cases and False:\n                findings.append("),
 }
 old, new = PAIRS[mut]
 if old not in src:
@@ -137,6 +157,18 @@ PASS = "local t = {}\nt['ok'] = function() end\nreturn t\n"
 FAIL = "local t = {}\nt['bad'] = function() error('BOOM') end\nreturn t\n"
 HANG = ("local t = {}\nt['hang'] = function() local x = os.time()\n"
         "while os.time() - x < 30 do end end\nreturn t\n")
+# Two named cases: `old` is the one a baseline was taken from, `fresh` is the
+# one that appears later.  ONE_RED is ordinary drift inside the baselined case;
+# TWO_RED is the break the case-level baseline exists to catch.
+ONE_RED = ("local t = {}\nt['old'] = function() error('DRIFTED') end\n"
+           "t['fresh'] = function() end\nreturn t\n")
+TWO_RED = ("local t = {}\nt['old'] = function() error('DRIFTED') end\n"
+           "t['fresh'] = function() error('NEW BREAK') end\nreturn t\n")
+# A red that names NO case: the runner reports a load error as a bare
+# `FAIL: <file>` with no ` :: <case>` half.  This is the severe end of the
+# family -- a baselined file that stops LOADING is the biggest red it can
+# have, and under a file-level amnesty it is invisible.
+NO_CASE_RED = "local t = {}\nthis is not lua at all\nreturn t\n"
 
 # (files, manifest tests) -- every branch a mutant above can move.
 PROBES = {
@@ -168,6 +200,31 @@ PROBES = {
                   {"tests/test_old.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"},
                    "tests/test_new.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
                   ["tests/test_old.lua"]),
+    # A file baselined for ONE case that is now failing in a SECOND, new one.
+    # M11/M12/M13 all move only this decision; without this probe the
+    # fingerprint never reaches the case comparison and all three would score
+    # INERT -- which reads as "the tests are strong" and is the opposite of
+    # true (the M9/M10 note above is the same lesson, one field over).
+    "casednew": ({"test_cased.lua": TWO_RED, "test_plain.lua": PASS},
+                 {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"},
+                  "tests/test_plain.lua": {"seconds": 0.1, "in_gate": True, "reason": "fast"}},
+                 ["tests/test_cased.lua"],
+                 {"tests/test_cased.lua": ["old"]}),
+    # The other side of the same branch: the baselined case is the only one
+    # failing, so the gate must stay quiet.  A mutant that simply refuses
+    # everything would otherwise look identical to the fix on `casednew`.
+    "caseddrift": ({"test_cased.lua": ONE_RED},
+                   {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
+                   ["tests/test_cased.lua"],
+                   {"tests/test_cased.lua": ["old"]}),
+    # A baselined file whose red names no case AT ALL (it no longer loads).
+    # M12's branch specifically: the first draft of this probe used ONE_RED
+    # with an empty case list, which never reaches `if not seen` because
+    # `seen` is {'old'} -- M12 scored INERT and the stand said so.
+    "casednocase": ({"test_cased.lua": NO_CASE_RED},
+                    {"tests/test_cased.lua": {"seconds": 0.2, "in_gate": True, "reason": "fast"}},
+                    ["tests/test_cased.lua"],
+                    {"tests/test_cased.lua": ["old"]}),
     # an all-green tree: no mutant here may move this one.
     "green": ({"test_a.lua": PASS, "test_b.lua": PASS},
               {"tests/test_a.lua": {"seconds": 0.1, "in_gate": True, "reason": "fast"},
@@ -175,13 +232,19 @@ PROBES = {
 }
 
 TAGS = ("COULD NOT RUN", "FAIL  ", "UNCERTIFIABLE", "BOOM", "findings",
-        "new test(s) not in the manifest", "ran,", "SKIPPED BY SCOPE", "ALREADY RED", "GREEN again", "known-red")
+        "new test(s) not in the manifest", "ran,", "SKIPPED BY SCOPE",
+        "ALREADY RED", "GREEN again", "known-red",
+        # the case-level sentences; a mutant that moves only the prose here
+        # must still separate from the base fingerprint.
+        "amnestied for", "FILE-LEVEL amnesty", "carry no case list",
+        "NOT among them", "names no test case", "FEWER cases", "NEW BREAK")
 
 tmp = tempfile.mkdtemp(prefix="mutfp_")
 try:
     for name, probe in PROBES.items():
         files, mtests = probe[0], probe[1]
         kred = probe[2] if len(probe) > 2 else None
+        kcases = probe[3] if len(probe) > 3 else None
         root = os.path.join(tmp, name)
         os.makedirs(os.path.join(root, "tests"))
         os.makedirs(os.path.join(root, "tools", "agent"))
@@ -193,6 +256,8 @@ try:
                "hook_timeout_seconds": 3.0, "tests": mtests}
         if kred is not None:
             man["known_red"] = kred
+        if kcases is not None:
+            man["known_red_cases"] = kcases
         json.dump(man, open(mpath, "w"))
         env = dict(os.environ)
         env["LUA_GATE_ROOT"] = root
@@ -224,7 +289,7 @@ fingerprint > "$WORK/fp.base" 2>&1
 
 echo "== mutation stand (GH #624 lua gate): $SRC / $TEST"
 worst=0
-for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10; do
+for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12 M13; do
     purge_pyc
     if ! apply_mutant "$m"; then
         echo "$m  APPLY-FAILED -- stand aborted rather than score a no-op as caught"
