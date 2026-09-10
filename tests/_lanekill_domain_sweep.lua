@@ -249,6 +249,23 @@ for _, k in ipairs({ 'fixtures', 'live', 'lane', 'lane_core', 'lane_sup',
     -- alone, `hpb_*` is what the pair does together.
     'hp_opened_d_max_u',
     'hpb_fire', 'hpb_back', 'hpb_nil', 'hpb_raised', 'hpb_flip_ends_nil',
+    -- 'hrflee' / WHERE the 'back' branch lands (2026-09-10).  These rows read
+    -- hero POSITIONS only, so unlike the 'hrreach' buckets above they survive
+    -- the GetAttackRange stub (GH #656).  `hf_into_mob` is the defect bucket:
+    -- the shipped retreat order ends CLOSER to the harassers than standing
+    -- still does.  `hf_no_fountain` / `hf_no_mob` / `hf_on_fountain` are the
+    -- structural outs, counted rather than assumed away.
+    'hf_back', 'hf_no_fountain', 'hf_no_mob', 'hf_on_fountain',
+    'hf_into_mob', 'hf_into_lt400', 'hf_into_worst_u', 'hf_away_ok',
+    'hf_gains_any', 'hf_gains_half_step',
+    -- 'hrflee' differential (same function, fifth drive, only that id armed).
+    -- `hf_land_moved` must equal `hf_into_mob` from the arithmetic route, and
+    -- the three forbidden directions must read 0.
+    'hf5_raised', 'hf_verdict_moved', 'hf_land_moved', 'hf_missed_defect',
+    'hf_armed_no_closer', 'hf_armed_still_closes', 'hf_armed_best_u',
+    -- The co-arm reading (GH #622): does a leg carrying 'hrparity' leave this
+    -- guard any domain at all?
+    'hf_pair_keeps', 'hf_lost_to_parity', 'hf_pair_raised',
     -- 'deepnum' / J.IsLaneFrontTooDeepToHold (mechanism 3), priced at
     -- vLoc = bot:GetLocation().  Two routes to one number by design:
     -- `dn_pred_flips` is arithmetic on the raw populations, `dn_closes` is what
@@ -746,6 +763,154 @@ for _, path in ipairs(fixture_files()) do
                             -- then declines to charge: the pair leaves the bot
                             -- standing in its lane on the shipped farm body.
                             bump('hpb_flip_ends_nil')
+                        end
+
+                        -- ---- 'hrflee' (2026-09-10 column set): WHERE the
+                        -- retreat lands, as opposed to WHETHER it fires.
+                        -- The two guards above both act on the outnumbered
+                        -- VERDICT; nothing in this helper has ever looked at
+                        -- the vector the 'back' branch hands the caller. It is
+                        -- built from the fountain alone, so `tValid` -- the one
+                        -- population that caused the retreat -- has no vote in
+                        -- the direction the bot is sent.
+                        --
+                        -- POSITIONS ARE REAL FIXTURE DATA. Unlike the 'hrreach'
+                        -- columns above (which lean on a 150-unit
+                        -- GetAttackRange stub, GH #656), every number in this
+                        -- block is read off hero locations the frame actually
+                        -- witnessed, so a reading here is a statement about
+                        -- Dota and not about the loader.
+                        if okh and sResp == 'back' then
+                            local vB = bot:GetLocation()
+                            local vFo = J.GetTeamFountain()
+                            if vFo == nil then
+                                bump('hf_no_fountain')
+                            elseif #tValid == 0 then
+                                -- Structurally unreachable (the branch is
+                                -- guarded by `#tValid > nOurs >= 1`), counted
+                                -- rather than assumed away.
+                                bump('hf_no_mob')
+                            else
+                                bump('hf_back')
+                                local mx, my, mn = 0, 0, 0
+                                for _, e in pairs(tValid) do
+                                    local v = e:GetLocation()
+                                    mx, my, mn = mx + v.x, my + v.y, mn + 1
+                                end
+                                mx, my = mx / mn, my / mn
+                                local hx, hy = vFo.x - vB.x, vFo.y - vB.y
+                                local nH = math.sqrt(hx * hx + hy * hy)
+                                if nH < 1 then
+                                    bump('hf_on_fountain')
+                                else
+                                    -- The landing point the shipped branch
+                                    -- computes, verbatim, at the step length
+                                    -- parsed out of the source.
+                                    local nStep = G.HR_STEP or 420
+                                    local lx = vB.x + hx / nH * nStep
+                                    local ly = vB.y + hy / nH * nStep
+                                    local function d2(ax, ay)
+                                        local ddx, ddy = ax - mx, ay - my
+                                        return math.sqrt(ddx * ddx + ddy * ddy)
+                                    end
+                                    local dNow, dLand = d2(vB.x, vB.y), d2(lx, ly)
+                                    -- THE DEFECT BUCKET: the retreat order ends
+                                    -- CLOSER to the mob than standing still.
+                                    if dLand < dNow then
+                                        bump('hf_into_mob')
+                                        out:write(string.format(
+                                            'F %s %s hf_into_mob\n', short, u.name))
+                                        local nGain = math.floor(dNow - dLand)
+                                        if nGain > c.hf_into_worst_u then
+                                            rawset(c, 'hf_into_worst_u', nGain)
+                                        end
+                                        -- Does the step cross the mob (land on
+                                        -- the far side) or merely close on it?
+                                        if dLand < 400 then bump('hf_into_lt400') end
+                                    else
+                                        bump('hf_away_ok')
+                                        -- Named so a guard test can use one as
+                                        -- a NEGATIVE control (a 'back' frame
+                                        -- the guard must leave byte-identical)
+                                        -- without walking the corpus itself.
+                                        out:write(string.format(
+                                            'F %s %s hf_away_ok\n', short, u.name))
+                                    end
+                                    -- Distribution, not a threshold: how much
+                                    -- ground the shipped step actually buys.
+                                    if dLand - dNow > 0 then bump('hf_gains_any') end
+                                    if dLand - dNow >= nStep * 0.5 then
+                                        bump('hf_gains_half_step')
+                                    end
+
+                                    -- DIFFERENTIAL 4: the same shipped function
+                                    -- driven again with only 'hrflee' armed.
+                                    -- Two independent routes to one number, as
+                                    -- with 'deepnum': the arithmetic above says
+                                    -- which frames SHOULD move, this says what
+                                    -- the function actually did.
+                                    armed = { hrflee = true }
+                                    local ok5, s5, x5 = pcall(
+                                        J.GetLaneHarassResponse, bot)
+                                    armed = {}
+                                    if not ok5 then
+                                        bump('hf5_raised')
+                                    elseif s5 ~= 'back' then
+                                        -- FORBIDDEN: the guard sits inside the
+                                        -- 'back' branch and returns 'back'
+                                        -- either way, so it can never move a
+                                        -- frame out of this verdict.
+                                        bump('hf_verdict_moved')
+                                    else
+                                        local nMoved = math.sqrt(
+                                            (x5.x - lx) ^ 2 + (x5.y - ly) ^ 2)
+                                        if nMoved > 1 then
+                                            bump('hf_land_moved')
+                                            local dArmed = d2(x5.x, x5.y)
+                                            -- The property the guard claims,
+                                            -- measured rather than asserted:
+                                            -- the armed landing does not close
+                                            -- on the mob.
+                                            if dArmed >= dNow then
+                                                bump('hf_armed_no_closer')
+                                            else
+                                                bump('hf_armed_still_closes')
+                                            end
+                                            local nGainA = math.floor(dArmed - dNow)
+                                            if nGainA > c.hf_armed_best_u then
+                                                rawset(c, 'hf_armed_best_u', nGainA)
+                                            end
+                                        elseif dLand < dNow then
+                                            -- FORBIDDEN the other way: a frame
+                                            -- in the defect bucket that armed
+                                            -- left untouched.
+                                            bump('hf_missed_defect')
+                                        end
+                                    end
+
+                                    -- ⛔ SAID BEFORE THE WAVE, NOT AFTER
+                                    -- (GH #622). 'hrparity' next door DELETES
+                                    -- retreats, and this id only exists inside
+                                    -- one. So a leg that carries both may hand
+                                    -- this guard an empty domain -- measured
+                                    -- here on the defect frames themselves
+                                    -- rather than inferred from the two
+                                    -- witness lists happening to overlap.
+                                    if dLand < dNow then
+                                        armed = { hrflee = true, hrparity = true }
+                                        local ok6, s6 = pcall(
+                                            J.GetLaneHarassResponse, bot)
+                                        armed = {}
+                                        if not ok6 then
+                                            bump('hf_pair_raised')
+                                        elseif s6 == 'back' then
+                                            bump('hf_pair_keeps')
+                                        else
+                                            bump('hf_lost_to_parity')
+                                        end
+                                    end
+                                end
+                            end
                         end
                     end
 

@@ -7339,7 +7339,8 @@ end
 -- l1xpsoak): following the wave deep to CS is NORMAL and stays untouched --
 -- the bug is being deep WITHOUT the wave. Fires ONLY when ALL hold:
 --   * turbo + 'midguard' (inert shipped), laning phase, core,
---   * I am past the midline by > 800 (dist-to-own minus dist-to-enemy ancient),
+--   * my depth is > 800 (dist-to-own minus dist-to-enemy ancient, so ~400u
+--     past the midline -- GH #687: a depth runs at twice the midline offset),
 --   * my lane wave is NOT with me: no allied lane creeps within 900 (with the
 --     wave present this never fires -- CS freely),
 --   * a visible enemy hero within 1400 (someone can actually punish this),
@@ -8694,8 +8695,8 @@ end
 -- whole time -- no retreat action for 20 visible seconds, dead at 8:53).
 -- Complements nodive2 (no tower damage involved) and midguard (which is
 -- laning-phase cores only): this is the post-laning, any-role case.
--- TRUE when ALL of: meaningfully deep past the midline (>2500
--- ancient-distance), no allied hero within 2500, and >= 2 visible enemy
+-- TRUE when ALL of: meaningfully deep (depth > 2500 ancient-distance, i.e.
+-- ~1250u past the midline -- GH #687), no allied hero within 2500, and >= 2 visible enemy
 -- heroes within 2000 -- 2000, not tighter, because the DECISION instant is
 -- while they converge (the watched frame had them at 1774/1978, on her face
 -- 260u three seconds later; turning at melee range is too late). Callers
@@ -9161,9 +9162,21 @@ function J.ShouldPunishDive( bot )
 				-- branch. The reason is the failure this whole family exists to
 				-- avoid: the commit test reads VISIBLE bodies only, and within a
 				-- screen of the midline the other side's reinforcements are in
-				-- fog -- AGENTS.md's 2v2-becomes-2v4. 800u past the midline is the
-				-- river bank, not "CLEARLY on our half" as the comment above
-				-- claims; the constant contradicted the sentence justifying it.
+				-- fog -- AGENTS.md's 2v2-becomes-2v4. The old constant did not
+				-- mean what the sentence justifying it said, and until GH #687
+				-- neither did this note: `nInvadeDepth` is a DIFFERENCE of two
+				-- ancient distances, and on the line between them that is
+				-- exactly TWICE the distance past the midpoint (measured on
+				-- W62 364764's shrine coordinates: 400 / 800 / 1200 / 1600u past
+				-- the midline read depth 273 / 1073 / 1873 / 2673 -- slope 2).
+				-- So depth 800 is a mere ~400u past the midline, a screen INSIDE
+				-- our half, while depth 1600 is the ~800u river bank this
+				-- paragraph's fog argument is actually about. Read in the right
+				-- units the argument justifies the constant it chose; read in
+				-- the wrong ones it rejected it. THE UNIT RULE FOR THIS WHOLE
+				-- FAMILY: a depth is a difference, so any sentence saying "Nu
+				-- past the midline" about one must halve it or say
+				-- "ancient-distance" out loud.
 				--
 				-- STRICTLY NARROWING: the domain at the larger margin is a subset
 				-- of the domain at the smaller, so armed this can only DELETE a
@@ -9294,8 +9307,10 @@ function J.ShouldPunishOverchase( bot )
 			-- no structural anchor is the whole lever, and its margin is load
 			-- bearing in a way the 1200 disc's is not.
 			--
-			-- 800u past the midline is not "our territory" -- it is the river
-			-- bank, and it is exactly where the fog reinforcement problem lives:
+			-- Depth 800 is not "our territory" -- in midline units it is only
+			-- ~400u across (depth is a DIFFERENCE of ancient distances and runs
+			-- at twice the midline offset; GH #687), and depth 1600 is the ~800u
+			-- river bank where the fog reinforcement problem lives:
 			-- leg (c) reads "isolated" off VISIBLE enemies only, so near the
 			-- midline the chaser's support is one screen away and unseen. That
 			-- is the failure AGENTS.md records as costing a batch run (a visible
@@ -9315,7 +9330,8 @@ function J.ShouldPunishOverchase( bot )
 			-- assumed -- it refuses exactly 1 of the corpus's 3 firings
 			-- (f_260820_042607_zuus_reserve_cross, pinned in
 			-- tests/test_overchase_midline_margin.lua), where a 0.72-HP Zeus
-			-- turns on a FULL-HP isolated Lion 1436u past the midline with no
+			-- turns on a FULL-HP isolated Lion at depth 1436 (~718u past the
+			-- midline; GH #687) with no
 			-- allied building within 1200, counting a 0.44-HP Tidehunter as his
 			-- second body.
 			--
@@ -9795,7 +9811,8 @@ function J.ShouldInitiateLaneKill( bot )
 	-- an initiation turns into a cross-map chase (052241: sniper+lion chased
 	-- a 16% zuus from +1500 to +4400 for 20s, killed nothing, sniper died to
 	-- the arriving ogre at +3667). A lane kill happens near the lane: skip
-	-- any target meaningfully past the midline (>800 ancient-distance depth).
+	-- any target meaningfully deep (>800 ancient-distance depth, i.e. ~400u
+	-- past the midline -- GH #687).
 	local hOwnAncient = GetAncient( GetTeam() )
 	local hEnemyAncient = GetAncient( GetOpposingTeam() )
 
@@ -9839,15 +9856,17 @@ end
 -- not: their guard is `bCustomLastHit or bSupLastHit or bLaneFixSupport or
 -- bLaneFixCoreLH or bBodyBlock`, and bCustomLastHit is true with nothing armed
 -- (an override laning module, or a pos-1 paired with a human pos-5). What
--- keeps this helper inert is that BOTH of its behaviour changes carry their
--- own soak gates, which is a property of the helper and not of its callers.
--- The distinction cost a round: the sibling mechanism-3 helper carried the
--- same false claim and NO gate of its own, and the claim was what made that
+-- keeps this helper inert is that ALL THREE of its behaviour changes carry
+-- their own soak gates, which is a property of the helper and not of its
+-- callers. The distinction cost a round: the sibling mechanism-3 helper carried
+-- the same false claim and NO gate of its own, and the claim was what made that
 -- look safe (see J.IsLaneFrontTooDeepToHold's header, 'deepnum').
--- NO LONGER a gate-free helper: the 'fire' branch carries the
--- soak candidate 'hrreach' (2026-09-09), which narrows that branch's candidate
--- set to harassers actually in attack reach. Unarmed, the first conjunct is
--- false and the branch below returns the shipped answer byte for byte.
+-- NO LONGER a gate-free helper: 'hrparity' (2026-09-09) symmetrises the
+-- outnumbered test's two radii, 'hrreach' (2026-09-09) narrows the 'fire'
+-- branch's candidate set to harassers actually in attack reach, and 'hrflee'
+-- (2026-09-10) keeps the 'back' branch's step from closing on the mob it is
+-- retreating from. Unarmed, each block's first conjunct is false and the
+-- shipped answer comes back byte for byte.
 function J.GetLaneHarassResponse( bot )
 	if bot == nil or not bot:IsAlive() then return nil end
 	if not bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end
@@ -9909,6 +9928,73 @@ function J.GetLaneHarassResponse( bot )
 		local dx, dy = vF.x - vB.x, vF.y - vB.y
 		local n = math.sqrt( dx * dx + dy * dy )
 		if n < 1 then return nil end
+
+		-- Soak candidate 'hrflee' (2026-09-10). THE RETREAT DIRECTION IS BUILT
+		-- WITHOUT THE POPULATION THAT CAUSED THE RETREAT. `tValid` is the mob
+		-- this branch just counted; the step below is `bot -> fountain` and
+		-- nothing else, so when the harassers stand BETWEEN the bot and home,
+		-- the order labelled 'back' walks the bot straight into them. The two
+		-- guards already in this helper both act on WHETHER it retreats
+		-- ('hrparity') or on where a 'fire' points ('hrreach'); the vector this
+		-- branch hands the caller has never been looked at.
+		--
+		-- Witness (tests/test_hrflee_retreat.lua, real frame
+		-- f_260820_102645_cm_es_reach, bristleback t=391.5, hp 0.45): CM at
+		-- 557u and Wraith King at 593u, both directly between the bot and the
+		-- dire fountain 12,186u away. The shipped step lands 173u from their
+		-- centroid -- it spends 402 of its 420 units CLOSING on the pair, and
+		-- ends inside Wraith King's melee reach. That is the whole step.
+		--
+		-- Armed, the step is projected onto the direction perpendicular to the
+		-- mob, keeping as much homeward progress as the geometry allows while
+		-- refusing to close: walk AROUND them, not through them. On the witness
+		-- the landing goes 173u -> 711u from the mob and still ends 59u nearer
+		-- home. No new number and no new policy -- 420 and the fountain
+		-- heading are this branch's own, and `tValid` is the list it already
+		-- built. Direction is one-way by construction: the armed block runs
+		-- only on frames where the shipped landing is CLOSER to the mob than
+		-- standing still, so it can never change whether 'back' fires, never
+		-- touch the 'fire' branch, and never move a frame in or out of nil.
+		--
+		-- Measured (tests/_lanekill_domain_sweep.lua, 110 fixtures): 18 frames
+		-- return 'back' and 1 of them is this shape (`hf_into_mob`), worst case
+		-- 402u of closing out of a 420u step. Positions are real fixture data,
+		-- so unlike the 'hrreach' columns this domain does not lean on any
+		-- stubbed getter (GH #656's shape does not apply).
+		if J.IsModeTurbo() and J.IsSoakCandidate( 'hrflee' )
+		then
+			local mx, my, mn = 0, 0, 0
+			for _, e in pairs( tValid ) do
+				local vE = e:GetLocation()
+				mx, my, mn = mx + vE.x, my + vE.y, mn + 1
+			end
+			if mn > 0 then
+				mx, my = mx / mn, my / mn
+				local ax, ay = vB.x - mx, vB.y - my
+				local nA = math.sqrt( ax * ax + ay * ay )
+				if nA >= 1 then
+					ax, ay = ax / nA, ay / nA
+					local hx, hy = dx / n, dy / n
+					local nDot = hx * ax + hy * ay
+					if nDot < 0 then
+						-- Homeward closes on the mob. Strip that component;
+						-- what is left is the homeward-most heading that does
+						-- not shorten the gap.
+						local tx, ty = hx - nDot * ax, hy - nDot * ay
+						local nT = math.sqrt( tx * tx + ty * ty )
+						-- 1e-6 is a divide-by-zero guard, not a threshold: it
+						-- only catches the mob standing EXACTLY on the line
+						-- home, where no tangent exists and straight away from
+						-- them is the only heading left.
+						if nT < 1e-6 then tx, ty = ax, ay
+						else tx, ty = tx / nT, ty / nT end
+						return 'back',
+							Vector( vB.x + tx * 420, vB.y + ty * 420, vB.z )
+					end
+				end
+			end
+		end
+
 		return 'back', Vector( vB.x + dx / n * 420, vB.y + dy / n * 420, vB.z )
 	end
 
@@ -9977,7 +10063,8 @@ end
 -- walking FORWARD at 91% HP). Two tiers, same ancient-distance convention:
 --   * shallow-deep (400 < depth <= 1600): holdable with ANY allied hero
 --     within 1000 of me; alone it is a free pick -- pull back.
---   * far past the midline (depth > 1600): visible PARITY is not safety
+--   * far in (depth > 1600, i.e. ~800u past the midline -- depth is a
+--     DIFFERENCE of ancient distances, GH #687): visible PARITY is not safety
 --     (the depthnum lesson -- fog reinforcements are close); require numbers
 --     ADVANTAGE over the visible enemies within 1600 of the spot.
 -- ⚠️ NOT a purely armed-only helper, despite what this header said until
