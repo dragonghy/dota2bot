@@ -588,6 +588,11 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   的注释,而测试把**带右括号的整串**钉死 ⇒ **改好一句注释和删掉诱饵,对测试逐字节相同**。
   锚点少一个字符即可。⭐ 并**量过**没削弱承重主张:`_strip_comments` 换成 `return body` 仍 exit 1。
   ⛔ **#694 的系统性那一半(pre-push manifest)没做,issue 不关。**
+  ⭐ **发表(push 后,GH #290 顺序)**:GH **#696** 新开 + 落地追评 `#issuecomment-5613009843`;
+  GH **#694** 追评 `#issuecomment-5613016276`(**修了红,不关**)。
+  `git push origin HEAD:main` **`81fa8b24..b67ccbb8`**(先被拒一次,`pull --rebase` 后成功);
+  两次钩子门 `GATE_EXIT=0 CLEAN` + `py gate: 91 ran, 0 findings, 0 uncertifiable`,**无 `RULE6_BYPASS`**;
+  发表前 `claim_precheck.sh` `clean` / `OK to publish` / `PRECHECK_EXIT=0`。**铁律 11 未触发。**
   ⭐ **投递(2.5)**:`W62_wave.json:director[2]`(批测台真会读的那张表)/
   `state.json:W62_PROMOTE_REJECT_RULING_20260910T05xxZ` / `test_set.md §GK` /
   `recover_verdict.py` 自己 / `owed_executions.json:gh696_winrate_measurable_first_live_read`
