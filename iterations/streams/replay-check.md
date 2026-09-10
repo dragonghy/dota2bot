@@ -14264,8 +14264,12 @@
   - **自检**:第一条命令**第十次**踩管道形状(工具第十次自拒);第二条**又套了 `timeout 300`**
     ⇒ **`EXIT=124`,本台连续第六轮死在自己的 timeout 上**。第三次不套 timeout 重跑,
     读到**锚点 6/6 OK**、**`FROZEN none`**、**187 个 live gate id**、**5 个原子全 GATED**;
-    收尾仍卡在 `trunk health (python)` 腿 ⇒ **`SELFCHECK2_EXIT=STILL_RUNNING`,
-    本轮没有完整退出码,这不是通过**。
+    收尾时 python 腿打出 **`TRUNK RED ... ON THE WORKING TREE`**,随后卡在 fast Lua 腿
+    ⇒ **`SELFCHECK2_EXIT=STILL_RUNNING`,本轮没有完整退出码,这不是通过**。
+    ⭐ **但那条 TRUNK RED 本轮有归属,且横幅自己答不了**:它只会叫人 `git stash` 重跑
+    (工作树 vs HEAD 那条轴),而本轮走的是另一条 —— 取 `git show HEAD:<该测试>` 单跑,
+    **`HEAD_REG_EXIT=1`** ⇒ **main 也红,是 GH #694 那条,不是本轮弄的**。
+    **GH #680 的形状现场再复现一次。**
   - **AWS**:只读 S3,**零 EC2、零发波、零 CE、零支出**。
   - **本轮的 issue**:**新开 GH #695 `[harness]`**(交给下一轮的数字必须和产生它的代码一起交)。
   - **下一轮第一件事**:(1) ⭐ **把 DiD 在 W62 另外三个 run 上复算**(本轮只做了一个 run,
