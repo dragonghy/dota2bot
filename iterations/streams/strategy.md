@@ -39,7 +39,7 @@
    `tests/_lanekill_domain_sweep.lua` **第七次扩列**(**没有**新建第八个 sweep)、
    `tests/test_owhs_aggro_clearance.lua`(**12/12**)、`tools/agent/mutstand_owhsclear.sh`(**11 腿**)、
    `state.json:owhs_clear_20260910`;报告 `iterations/reports/strategy/20260910T042920Z.md`;
-   **issue GH #695**;**armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   **issue GH #697**;**armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
    ⭐⭐ **缺陷:让这一步成为必要的那个集合,在这一步往哪走上没有投票权。** `J.GetOffWaveHarassSpot`
    的 `tCreeps`(仇恨球里的敌方兵线,**这条分支存在的唯一理由**)只喂了车道轴;唯一的自由变量
    ——垂线的**符号**——由英雄普查独占决定。于是撤步可以朝兵线倾斜的那一侧走,落点重新掉进球里:
@@ -7453,7 +7453,7 @@
   **「集合喂了上游,却在下游的自由变量上被丢掉」** —— 粗问题「有没有用到」答案是**「用了」**。
   产出:**没有新 id**(继承 `l5trees`)、sweep **第七次扩列**、
   `tests/test_owhs_aggro_clearance.lua` **12/12**、`tools/agent/mutstand_owhsclear.sh` **11 腿**、
-  `state.json:owhs_clear_20260910`;**GH #695**。
+  `state.json:owhs_clear_20260910`;**GH #697**。
   ⛔ **量具**:`ow_creeps_zero` **1021 == ow_live** —— 语料一帧兵都没有,**频率没买到**;
   脚下注入下 `ow_drive_matches_wide` **166 == ow_drive_nonnil 166** ⇒ **改动在每一帧都是 no-op**。
   ⚠️ **代价已登记**:`ow_clear_flip_nearer_hero` **161/166**(由 M8 钉住)。
