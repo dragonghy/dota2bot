@@ -1928,9 +1928,39 @@ function ConsiderGeneralRoamingInConditions()
 				if not enemy then
 					enemy = GetTargetEnemy("npc_dota_hero_undying")
 				end
+				-- [strategy 20260910] soak candidate 'tombhp'. THE SHIPPED LINE
+				-- HANDED A LIST TO A RULER THAT MEASURES A UNIT: `nInRangeEnemy`
+				-- is bot:GetNearbyHeroes(1200, true, ...) (:67, :468) and every
+				-- other reader in this file treats it as one (#, [1], pairs) --
+				-- but it was passed WHOLE to J.GetHP, whose first statement is
+				-- `unit:GetHealth()`. On a plain array that indexes nil and
+				-- raises "attempt to call method 'GetHealth' (a nil value)", so
+				-- the shipped conjunct never returns false: it ABORTS
+				-- ConsiderGeneralRoamingInConditions, and with the engine's
+				-- error handler broken (AGENTS.md) nothing anywhere says so.
+				-- Everything below this branch in the function dies with it.
+				--
+				-- The repair is `[1]`, i.e. what the sibling branch at :1789
+				-- already writes and what the author plainly meant ("the nearest
+				-- enemy hero is not nearly dead, so leave"). That splits in two:
+				--   * removing the CRASH is unconditional and is NOT gated -- the
+				--     gate short-circuits before J.GetHP is ever called, so the
+				--     unarmed leg is crash-free too. It is deliberately not
+				--     byte-identical to shipped; a runtime error is not a
+				--     behaviour any wave could ever have attributed anything to.
+				--   * letting the branch FIRE is a behaviour change and is gated,
+				--     turbo-only, like every other new lever.
+				-- Domain, stated honestly: the conjunct this id changes has real
+				-- rows (see tests/test_tombhp_list_to_unit_ruler.lua §1-2), but
+				-- the OUTER guard -- the tombstone modifier, plus botTarget --
+				-- has none in this corpus, so no fire-rate claim is made and the
+				-- id is FROZEN-HOLD: do not request it into the armed set until a
+				-- frame carrying the modifier exists. state.json:tombhp_20260910.
 				if J.GetHP(bot) < 0.8
 				and ((J.IsValid(enemy) and GetUnitToUnitDistance(enemy, bot) < 1200) or (DotaTime() - cachedTombstoneZombieSlowState < 3))
-				and J.IsValidHero(nInRangeEnemy[1]) and J.GetHP(nInRangeEnemy) > 0.35 then
+				and J.IsValidHero(nInRangeEnemy[1])
+				and J.IsModeTurbo() and J.IsSoakCandidate('tombhp')
+				and J.GetHP(nInRangeEnemy[1]) > 0.35 then
 					return BOT_ACTION_DESIRE_VERYHIGH * 1.2
 				end
 			end

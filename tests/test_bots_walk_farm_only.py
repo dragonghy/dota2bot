@@ -127,6 +127,16 @@ UNRESOLVED_HAND_READ = {
     """tests/test_lion_ult_cash_weakest.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
         "tests/frames}",
+    # Hand-read 2026-09-10 (strategy), at :99-109: `corpus_paths()` takes no
+    # parameter and loops `for _, glob in ipairs({ 'tests/fixtures/*.lua',
+    # 'tests/frames/*.lua' })` -- both literals in the loop header itself, so the
+    # only values `glob` can take are those two.  Same corpus-walk shape as the
+    # lion sisters above, differing only in that the literal carries the `*.lua`
+    # suffix rather than being a bare directory; bots/ is not in the enumeration
+    # at all, and plain `ls` is not recursive either way.  It is the file's only
+    # io.popen.
+    """tests/test_tombhp_list_to_unit_ruler.lua  ::  'ls ' .. glob .. ' 2>/dev/null'""":
+        "corpus_paths() over {'tests/fixtures/*.lua', 'tests/frames/*.lua'}",
     # Hand-read 2026-09-08 (director), at :154-170: `corpus_paths()` takes no
     # parameter, its single caller (:232) passes none, and the loop is
     # `for _, dir in ipairs({ FIXTURE_DIR, STAGED_DIR })` over the literals at

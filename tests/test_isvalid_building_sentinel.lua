@@ -90,12 +90,16 @@ local function stripped(src)
     return (src:gsub('%-%-[^\n]*', ''))
 end
 
+-- The walk goes through lua_source_scan.bots_files(), NOT a hand-rolled `ls`
+-- glob.  The original glob here (`ls bots/*.lua bots/*/*.lua bots/*/*/*.lua`)
+-- enumerated bots/Customize/, i.e. the two gitignored farm-only switches every
+-- gate test in this suite creates and deletes -- the listing/opening window
+-- tests/test_bots_walk_farm_only.py exists to close.  It put trunk red the day
+-- this file landed (strategy, 2026-09-10).  bots_files() carries
+-- FARM_ONLY_FIND_CLAUSE and is recursive, so it is also a strict superset of
+-- the old depth-3 glob (+1 file: bots/ts_libs/utils/http_utils/http_req.lua).
 local function lua_files()
-    local out = {}
-    local p = assert(io.popen('ls bots/*.lua bots/*/*.lua bots/*/*/*.lua 2>/dev/null'),
-        'could not list bots/')
-    for line in p:lines() do out[#out + 1] = line end
-    p:close()
+    local out = require('lua_source_scan').bots_files()
     assert(#out > 100, 'expected the bots/ tree, got ' .. #out .. ' files')
     return out
 end

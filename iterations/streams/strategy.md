@@ -27,6 +27,53 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TOMBHP. **【2026-09-10T16:53Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(回到 (i))。
+   认领依据 = 工作流第 1 步扫 open issue,9 条 `[strategy]` open **全是本组自报** ⇒ 取 `0RAXDEAD`
+   「下一格」**第 (3) 项**(判据 (5) 新变种:「一个集合被算出来,然后交给了一把量错东西的尺子」);
+   ⛔ **第 (1) 项(兵营分支)按它自己写的前置条件跳过** —— 域仍然是空的。
+   ⭐ **缺陷比上一轮那个硬:尺子不答,它抛。** `bots/mode_roam_generic.lua` 墓碑分支
+   `J.IsValidHero(nInRangeEnemy[1]) and J.GetHP(nInRangeEnemy) > 0.35`:前一个合取项给名单加下标,
+   后一个把**整张名单**传进 `J.GetHP`,而它第一句是 `unit:GetHealth()`(`jmz_func.lua:4141`)⇒
+   **实测 573/573 帧抛错**,消息逐条点名 `GetHealth`。后果不是分支恒假,是
+   `ConsiderGeneralRoamingInConditions` **整个中止**、它下面所有分支跟着死,而引擎错误处理是坏的
+   ⇒ **没有任何地方会说出来**。
+   ⭐⭐ **扫描器读数**:全 `bots/` 275 个 .lua,名单变量 → 17 个单位尺,**命中 10 行,9 行是同一个
+   假阳性**(`J.GetVulnerableUnitNearLoc` 返回单个单位)⇒ **真命中 1 个**,就是取走的这个。
+   **这个变种本轮扫干净了。**
+   产出:**新 id `tombhp`**(turbo-only,**FROZEN-HOLD,不请求入集**)、
+   `tests/test_tombhp_list_to_unit_ruler.lua` **9/9**、`tools/agent/mutstand_tombhp.sh`
+   **10 腿 10/10 STAND GREEN**、`state.json:tombhp_20260910`;报告
+   `iterations/reports/strategy/20260910T165305Z.md`;**armed 串 / `queue.json` / `test_set.md`
+   一字未动**;零 AWS、零波次。
+   ⭐ **修复分成两半,只有第二半带闸**:去掉抛错**无条件**(是那个**下标**),让分支开火**带闸**。
+   ⛔ **明写:unarmed 一侧与出货不是逐字节相同** —— 出货那一侧是个运行时错误,它不是任何波次
+   归因过任何东西的行为。
+   ⚠️ **变异台产出的不是 bug,是「作者自己写错了机制」**:抬头最初写「去抛错靠的是**闸的位置**」,
+   M3(只挪闸)**红了但消息对不上** —— 下标已修,unarmed 读的是完全正常的元素,根本不抛。
+   ⇒ 机制是**下标**不是**顺序**;只有 **M10(闸下移**且**下标还原)**才让 unarmed 重新抛。
+   两处抬头都改成了正确说法。
+   ⛔ **域的分界线,和上一轮的禁令不矛盾**:外层守卫 **0/1270** 帧(那个 modifier 没有),
+   `botTarget` 结构上 nil(GH #474)⇒ **频率一个字都没买到**;但**被改的那个合取项有 573 行真实
+   几何**(上一轮的兵营候选是**谓词自己** 0 行)—— 这就是本轮允许落 gate、上一轮不允许的分界。
+   **附带(债)**:开工自检 6 条 trunk 红里 **1 条是本组上一轮的**(`test_bots_walk_farm_only.py`,
+   `test_isvalid_building_sentinel.lua:95` 的 `ls` glob 走进了 `bots/Customize/`)⇒ 改走
+   `lua_source_scan.bots_files()`(是老 glob 的**真超集**,274→275),两边都绿。
+   另两条是 `tests/frames/` 语料增长的棘轮,不属本组。
+   **门中门**新增一行 `tombhp | ConsiderGeneralRoamingInConditions | J.IsInLaningPhase | c2,c4`,
+   identity 与 `wlok`/`waitclar` 同一个 ⇒ **(P)**;GH #576 那半**目前两个方向都量不到**(外层 0 行),
+   登记而不含糊。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是 `bots/` 行为改动**;「名单喂给单位尺」这个变种**已扫干净**,
+   **下一个变种第一候选 = `J.IsValidHero` 被喂了非英雄名单的调用点**(全树 1521 个调用点,
+   `BotLib/` 126 个文件归英雄组,本组看 `mode_*.lua` / `FunLib/`;同一把扫描器换谓词);
+   (2) ⛔ **读 `botTarget` 的 consider 条目族仍然不动**(GH #474,连续第三轮有效);
+   (3) ⛔ **兵营分支(GH #713)仍然不落 gate**,接力棒是
+   `tests/test_isvalid_building_sentinel.lua §2b` 那条断言,不是 issue;
+   (4) ⭐ **交出去的棒**:`tombhp` 有一条与一般 lever 不同的出路 —— 六条兄弟分支同形状且全部无闸
+   ⇒ **可以当 bug 直接 ungate、不发波**。**请总监明确裁一次**(promote-as-bugfix 或维持
+   FROZEN-HOLD 等域),已登记 `state.json:tombhp_20260910.next` 并已开 issue;
+   (5) ⛔ **P1/P2 的球仍不在本组,P4.2 冻结未解** ⇒ 本轮没有提入集。】**
+
 0RAXDEAD. **【2026-09-10T13:50Z 新增。**P4.4 归属 = **(ii) 清本组自己欠的债**(连续十一轮 (i) 之后
    第一次不是 (i))。认领依据 = 工作流第 1 步扫 open issue,9 条 `[strategy]` open **全是本组自报**;
    而**开工自检的 6 条 trunk 红里有 2 条是本组前两轮各自留下的**,两轮都没读 ⇒ 先清债。
@@ -7587,6 +7634,24 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-10T16:53Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,回到 (i)。认领依据 = 扫 open issue,
+  9 条 `[strategy]` open 全是本组自报 ⇒ 取 `0RAXDEAD`「下一格」第 (3) 项;第 (1) 项按它自己的
+  前置条件跳过,兵营分支的域仍然是空的)。
+  ⭐ **`bots/mode_roam_generic.lua` 墓碑分支把一张名单交给了一把量单位的尺子,而那把尺子不答、它抛** ——
+  `J.GetHP(nInRangeEnemy)`,实测 **573/573 抛错**且逐条点名 `GetHealth`;后果是
+  `ConsiderGeneralRoamingInConditions` 整个中止,而引擎错误处理坏的 ⇒ 没有任何地方会说出来。
+  新 id **`tombhp`**(turbo-only,**FROZEN-HOLD**),`tests/test_tombhp_list_to_unit_ruler.lua` **9/9**,
+  `tools/agent/mutstand_tombhp.sh` **10/10 STAND GREEN**。
+  ⭐ **驱动是把出货 `if` 原文 lift 出来跑的,不复制一行逻辑**:299 帧,unarmed **299/299 不抛且不开火**,
+  armed **299/299** 等于「最近敌人 hp>0.35」(真开火 261),把出货文本还原 ⇒ **299/299 抛回来**。
+  ⚠️ **变异台把作者自己写错的机制打回来了**(以为是闸的顺序,其实是那个下标;只有 M10 才让 unarmed
+  重新抛)—— 两处抬头都改了。
+  **附带**:清掉本组上一轮的 trunk 红(`test_bots_walk_farm_only.py`)。
+  铁律 6 三条腿:`GATE_EXIT=0` / `py gate: 94 ran, 0 findings` / `LUAGATE_EXIT=0`;
+  `SELFCHECK_EXIT=3`(第一次调用被工具按管道拒绝,重跑才拿到真码)。
+  ⛔ **零 AWS、零波次、armed 串与 `queue.json` 一字未动。**
+  报告:`iterations/reports/strategy/20260910T165305Z.md`。
 
 - 2026-09-10T13:50Z(**P4.4 归属 = (ii) 清本组自己欠的债** —— 连续十一轮 (i) 之后第一次不是 (i),
   理由不是省事:**开工自检的 6 条 trunk 红里有 2 条是本组前两轮各自留下的**,而本组两轮都没读。

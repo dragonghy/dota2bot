@@ -908,6 +908,27 @@ local PINNED = {
     "campgrade,tbearly | GetDesireHelper | J.GetTeamFightLocation | tfnull | bots/mode_farm_generic.lua",                                  -- P
     "corefarm | J.ShouldCoreKeepFarming | J.GetTeamFightLocation | tfnull | bots/FunLib/jmz_func.lua",                                     -- P
     "roshgate | GetDesireHelper | J.GetTeamFightLocation | tfnull | bots/mode_roshan_generic.lua",                                         -- P
+    -- [tombhp 20260910] A third caller of J.IsInLaningPhase, and the identity
+    -- answer is the one the 'wlok' and 'waitclar' rows above already carry and
+    -- is not re-derived here: un-armed, J.IsInLaningPhase skips both its 'c2'
+    -- and 'c4' blocks and returns THE SHIPPED VALUE, not a constant that kills
+    -- the caller's branch. (P).
+    -- ⛔ THE PAIR HALF (GH #576) IS ANSWERED, and its answer here is unusually
+    -- cheap for a reason worth writing down rather than hiding: 'tombhp' guards
+    -- ONE branch of ConsiderGeneralRoamingInConditions, and that branch's own
+    -- OUTER guard -- bot:HasModifier('modifier_undying_tombstone_zombie_-
+    -- deathstrike_slow') -- has 0 rows in the whole frame corpus
+    -- (tests/test_tombhp_list_to_unit_ruler.lua §4 measures it). So the question
+    -- "can a single-arm wave read 'tombhp' through this nesting" has no
+    -- measurable answer YET in either direction, and the registered promote
+    -- threshold (state.json:tombhp_20260910.next) says exactly that. What CAN be
+    -- said now, and is the reason this is (P) and not a caveat: arming 'tombhp'
+    -- alone does not need 'c2'/'c4', because un-armed the inner helper still
+    -- answers the shipped laning window. A member string carrying 'c2' or 'c4'
+    -- alongside it moves that window, so a frame seen there cannot be attributed
+    -- to 'tombhp' alone -- the same sentence the 'waitclar' row makes about the
+    -- same helper, for the same reason.
+    "tombhp | ConsiderGeneralRoamingInConditions | J.IsInLaningPhase | c2,c4 | bots/mode_roam_generic.lua",                                -- P
 }
 
 local tests = {}
