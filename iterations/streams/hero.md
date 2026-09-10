@@ -23,6 +23,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## Backlog(做完划掉,补新的)
 
 -143. **⭐ 下一轮:反查 Lion 的 15 级帧 —— 谓词已经缩成一行可执行的合取式,不要再重新找它。**
+   **已发表:GH #720**(主发现)。
    本轮(报告 `iterations/reports/hero/20260910T165501Z.md`)执行了 `-142`(把配方用到 Lion 上),
    并落地了 `lionqfight`(Lion,gated,turbo-only)。**要反查的谓词是**:
    `bot:GetLevel() >= 15` ∧ `lion_impale:IsFullyCastable()` ∧ 射程(出货天赋下 **920**)内 ≥1 敌人。

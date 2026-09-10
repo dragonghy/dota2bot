@@ -7802,6 +7802,6 @@
     "direction": "严格收窄,且是**代码属性**不是数据属性:armed 只是在出货条件上追加一个合取项 ⇒ armed 的开火集对**任何**输入都是出货集的子集,**只能少放一发 Impale,永远加不出一发**。负向波次读数只能归因于「被扣下的那些控值得放」,不可能归因于本杠杆发明的施法。",
     "not_fixed_here": "同一条支路瞄的是 `npcEnemy:GetLocation()`(未排序列表的第一个元素)的**原始位置**,对着 0.3s 施法前摇 + 2800 速度的弹道,而六行之上的 `--攻击` 支路走 J.GetDelayCastLocation 提前量。修瞄是**改瞄不是子集**,方向论证不同、需要本语料没有的帧 ⇒ 另一个 id。已在文件头登记。",
     "tests": "tests/test_lion_q_field_engagement.lua(11 条,变异台已验:helper 恒真 ⇒ §4 红;删调用点 ⇒ §2.2 红;把 1600 改成 1500 ⇒ §1.1/§1.3/§1.4 三红)",
-    "issue": "本轮报告 iterations/reports/hero/20260910T170000Z.md §7"
+    "issue": "GH #720(主发现);报告 iterations/reports/hero/20260910T165501Z.md"
   }
 }
