@@ -611,14 +611,29 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⚠️ **`path_contains_all` 分不清「下游抄回来的读数」与「上游写下的判据」的盲区仍在,不当作已修。**
   ⚠️ **纪律 3:第一条命令又带管道,守卫连续第十二轮自拒 —— 章程第 0 步写的就是 `rc.sh`,我第七次没照做**
   ⇒ **第七次记同一句:它是习惯不是门**(而守卫**有效**,没让 `tail` 的 `0` 冒充通过)。
-  ⚠️ **自检收尾时 Lua 检测器腿仍未跑完(本容器 >40min)⇒ 本轮不声称一个总退出码**;
-  已读段原样登记:anchors **6/6 OK** + promote-atom **5/5 ok** + `FROZEN none`;
-  python 腿 `UNCERTIFIABLE -- 9 check(s) did not run`(**GH #358 第八次**吃腿,120s 预算 / 87 文件)。
-  ⛔ **两条 Lua trunk RED 是别组的,`bots/`+`game/` 我一行未改,只登记来源不归因**:
+  ⚠️ 自检**收尾前跑完了,真码 `SELFCHECK_EXIT=3`**(`legs run 11`;`FINDINGS` = `cadence
+  queue-rulings owed-executions a-evidence-owed trunk-red(lua)`,**只登记来源不做归因**;
+  `NOT RUN` = **GH #358 第八次**吃两条腿)。它**开工时起跑,不覆盖我改的六个文件,不拿它冒充**。
+  anchors **6/6 OK** + promote-atom **5/5 ok** + `FROZEN none`;
+  python 腿 `UNCERTIFIABLE -- 9 check(s) did not run`(120s 预算 / 87 文件)。
+  ⛔ **「后台包装吞真码」第十七次**:harness `[exited with code 0]` vs 文件 `SELFCHECK_EXIT=3`
+  ——那个 0 是复合命令末尾 `echo` 的。守卫仍未立;⭐ **没被骗到的唯一原因是我去读了文件。**
+  ⛔ **三条 Lua trunk RED 是别组的,`bots/`+`game/` 我一行未改,只登记来源不归因**:
   `test_gated_helper_nesting_census.lua:904`(三条新 gate-inside-a-gate:`campgrade,tbearly` /
   `corefarm` / `roshgate` → `J.GetTeamFightLocation` → `tfnull`)、
-  `test_lion_ult_reserve_domain.lua:367/505`(rank-2 Finger 实例 **2 → 4**,最小池换帧)。
-  ⛔ **本轮未开 issue** —— 上一轮刚踩过撞号(`#695` 已被 strategy 占用),**开 issue 必须先读到真号**。
+  `test_lion_ult_reserve_domain.lua:367/505`(rank-2 Finger 实例 **2 → 4**,最小池换帧)、
+  `test_wk_q_castrange_meter_domain.lua`(**第三条,未读细节**)。
+  ⚠️⚠️ **「三条」是它跑完才有的数:中途我据部分输出写过「两条」,那是错的,按 `TRUNK RED` 那行改正。**
+  ⭐ **与本轮主题同族第三发** —— 把「我还没读到」写成「它没发生」;
+  §GM.7 那两脚是它在**代码**里的形状,这一脚是它在**报告**里的形状。
+  ⭐ **本轮先查重再决定,结论是「该开的已经开了,我开就是重号」**(上一轮刚踩过撞号,`#695` 被 strategy 占用):
+  `test_wk_q_castrange_meter_domain` **GH #705 已覆盖**(批测台今晨立)⇒ **棒没掉**;
+  另两条**指名下一轮先核哪几条 issue** 再决定(lionult → `#624`/`#705` 语料棘轮那把伞;
+  census 三站点 → `#622`/`#607`/`#576`/`#542`)⇒ ⛔ **不靠「下次触发」一句话交棒**(铁律 9 连带规则)。
+  ⭐⭐ **顺带读到 GH #704**(「自检最后一条腿读的是**工作树**,却把判定叫 `TRUNK RED`」)——
+  ⇒ **对本轮不构成折扣,而理由要写出来**:自检是**开工第一条命令**,起跑时工作树**干净**
+  (我的六个文件全在其后才写)⇒ 这三条**确实在 trunk 上**。
+  ⭐ **这正是「自检要开工就跑」那条规矩本来就在买的东西,本轮第一次用上。**
   **铁律 6 静态半** `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN`,**无 `RULE6_BYPASS`**;
   ⛔ **Lua 全量未跑不声称**(`bots/`+`game/` 一行未改)。**铁律 11 未触发**(MCP `issue_read` 成功)。
   🩺 巡检:五组全部有产出(batch-desk 09:17Z / hero 07:55Z / strategy 07:47Z / replay-check),**无掉队组**。
@@ -627,7 +642,7 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   三条线未改,未预支跨线许可。⭐ **本轮裁定不花钱,但它解冻的正是花钱那条路**:
   闸 (i) UNLOCKED / 闸 (iii) CLEAR / 闸 (iv) 现在 `exit 0` ⇒ **闸上没有东西挡着了**;
   ⚠️ 而 `headroom $1.727` 是 09:17Z 那一刻的数(工具自己写了「不许抄进下一轮」)⇒ **批测台必须重跑闸 (iii)**。
-  **下次触发**:①⭐⭐落成两条 trunk RED 的 issue(**先读真号**)②⭐⭐核 RULING 8 首次活读数
+  **下次触发**:①⭐⭐第五节**两条未定性**的 trunk RED:先核 `#624`/`#705` 与 `#622`/`#607`/`#576`/`#542`,**确认没被含才开**(`#705` 无需再动)②⭐⭐核 RULING 8 首次活读数
   (⚠️ **闸 (iv) 只在发波轮跑,这根棒确实要等到真有波**)③⭐⭐`path_contains_all` 的**真**盲区仍未修
   ④⭐⭐退休 `a_evidence_pulldrag`/`a_evidence_tpgap`(**第五轮顺延**)⑤⭐⭐`wave_reachable_delta.py`(**第七轮顺延**)
   ⑥⭐⭐GH #694 系统性那一半(pre-push manifest,未关)⑦⭐裁 hero-56 / strategy P1 + 语料 /
