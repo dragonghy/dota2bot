@@ -85,7 +85,7 @@
 -- corpus are the same integer" -- this file's own version of the trap.
 --
 -- ===========================================================================
--- 5.  THE SECOND METER ZERO: GetAOERadius, and it hides TWO real decisions
+-- 5.  THE SECOND METER ZERO: GetAOERadius, and it hides THREE real decisions
 -- ===========================================================================
 --
 -- `GetAOERadius` is on no ability spec in tests/mock/replay_fixture.lua, so it
@@ -110,9 +110,22 @@
 --       fires on `aoeCanHurtCount >= 2`; 0 allies within 1200;
 --       observed.died_after = 1.0s.
 --
--- Both are a support alone in a gank, one second from death, being handed a
--- ten-second channel.  The meter zero is currently suppressing them for a
--- reason that has nothing to do with why they should be suppressed.
+--   f_260909_215412_axe_cull_cm_838.lua  t=838.9  hp 322/1400 = 23.0%
+--       ADDED 2026-09-10 (hero, queue `hero-54`).  An AXE-subject frame from the
+--       cast-instant batch on which CM is an incidental ENEMY -- so unlike the
+--       two above, nobody cut it for her.  Its `observed.died_after` belongs to
+--       Axe, not to her, and section 5 skips that clause here rather than
+--       asserting the wrong unit's fate.
+--
+-- All three are a support alone in a gank being handed a ten-second channel (the
+-- first two one second from death; the third's death has no channel on the
+-- frame).  The meter zero is currently suppressing them for a reason that has
+-- nothing to do with why they should be suppressed.
+--
+-- ⚠️ THE NUMBERS IN SECTIONS 1 AND 4 ABOVE ARE THE 2026-09-01 READING (48
+-- instants).  The live pins are in the code and read 65 as of 2026-09-10; the
+-- narrative above is kept as written because each dated block below it records
+-- what moved and what did not.  Read the asserts, not this prose, for a count.
 --
 -- ===========================================================================
 -- 6.  WHAT THAT SAYS ABOUT `cmrself`, WHICH IS PARKED
@@ -194,6 +207,8 @@ local SISTER_ANCHOR = 835
 local MARGIN0_FRAME = 'tests/fixtures/f_260819_004858_cm_centaur_far.lua'
 local FIRE_A        = 'tests/fixtures/f_260820_043039_cm_cask_close.lua'
 local FIRE_B        = 'tests/fixtures/f_260820_103216_cm_es_aftershock.lua'
+-- 2026-09-10 (hero, queue `hero-54`): the third, and the first from tests/frames/.
+local FIRE_C        = 'tests/frames/f_260909_215412_axe_cull_cm_838.lua'
 local CAST_FRAME    = 'tests/fixtures/f_260819_123012_dp_landed_dead.lua'
 
 -- ---------------------------------------------------------------- enumeration
@@ -371,11 +386,25 @@ tests['1. the castable funnel over the whole archive, buckets exhaustive'] = fun
     -- it produced no revocation either -- which is what a mana price that only
     -- ever bites the same two abilities looks like from both ends.  Section 4's
     -- registry of LIVE decisions again gained no member.
-    assert(t.instants == 53, 'live-CM instants: expected 53, got ' .. t.instants)
-    assert(t.handles == 233, 'CM ability handles: expected 233, got ' .. t.handles)
-    assert(t.trained == 219, 'trained handles: expected 219, got ' .. t.trained)
-    assert(t.pre  == 180, 'castable before the price: expected 180, got ' .. t.pre)
-    assert(t.post == 164, 'castable after the price: expected 164, got ' .. t.post)
+    -- 2026-09-10 (hero, queue `hero-54`): a FIFTH addition, and the first that is
+    -- not one frame but TWELVE -- `tests/frames/f_260909_215040_wk_*` (6) and
+    -- `tests/frames/f_260909_215412_axe_*` (6), cut AT the combat-log instants the
+    -- bots pressed a spell (see tests/test_focus_cast_instant_frames.lua).  Twelve
+    -- of the twelve carry a live Crystal Maiden, so this file's tree enumeration
+    -- picks up twelve more instants: 53->65, handles 233->285, trained 219->266,
+    -- pre 180->209, post 164->193.
+    -- ⭐ AND THE WAY OUT DID NOT MOVE, a fifth time: pre-post is 16 before and 16
+    -- after.  That is the number this section exists to watch, and twelve frames
+    -- spanning t=67.1 to t=1052.0 and levels 2 to 24 did not add a revocation --
+    -- which is the strongest version yet of "the mana price only ever bites the
+    -- same two abilities".  Section 4's registry of LIVE decisions gained no
+    -- member either; section 5's FIRE set DID gain one, and that one is a real
+    -- finding rather than a re-pin -- read it there.
+    assert(t.instants == 65, 'live-CM instants: expected 65, got ' .. t.instants)
+    assert(t.handles == 285, 'CM ability handles: expected 285, got ' .. t.handles)
+    assert(t.trained == 266, 'trained handles: expected 266, got ' .. t.trained)
+    assert(t.pre  == 209, 'castable before the price: expected 209, got ' .. t.pre)
+    assert(t.post == 193, 'castable after the price: expected 193, got ' .. t.post)
 
     local revoked = t.pre - t.post
     assert(revoked == 16, 'revocations: expected 16, got ' .. revoked)
@@ -485,9 +514,21 @@ end
 -- would be to edit the number -- the failure mode GH #465 wrote up.  Three
 -- separate reds are wanted here: a new member (some other decision reached),
 -- a lost member (this one stopped reaching), and a changed desire.
+--
+-- 2026-09-10 (hero, queue `hero-54`): the registry gained its SECOND member, and
+-- the reason it woke up is the same one that woke the first -- a real Crystal
+-- Nova target inside a cast range that is no longer 0 -- except that this time
+-- the frame was not hand-picked for Crystal Maiden at all.  It is one of twelve
+-- frames cut at the instants OTHER heroes pressed a spell (Axe's Culling Blade
+-- at t=470.9); CM is an incidental enemy on it, and the shipped tree wants her
+-- nova anyway.  That is the point of the frame batch, restated by a file that
+-- was not looking for it: the corpus's silence on this hero was about where the
+-- frames were cut.
 local LIVE_BIDS = {
     -- path :: function = the desire it returns
     ['tests/fixtures/f_260820_182906_lion_drain_survived.lua :: ConsiderQ'] = 0.75,
+    ['tests/frames/f_260909_215412_axe_cull_pudge_470.lua :: ConsiderQ'] = 0.75,
+    ['tests/frames/f_260909_215412_axe_cull_cm_838.lua :: ConsiderQ'] = 0.75,
 }
 
 tests['4. the zero desires come with the constants that cause them -- and the one that no longer does'] = function()
@@ -519,7 +560,7 @@ tests['4. the zero desires come with the constants that cause them -- and the on
             if h ~= nil and (h:GetAOERadius() or 0) == 0 then nRadius0 = nRadius0 + 1 end
         end
     end
-    assert(nInstants == 53, 'instants moved: ' .. nInstants)
+    assert(nInstants == 65, 'instants moved: ' .. nInstants)
 
     -- The registry, both directions, each red naming its own member.
     for key, want in pairs(LIVE_BIDS) do
@@ -542,23 +583,29 @@ tests['4. the zero desires come with the constants that cause them -- and the on
         .. ' ~= ' .. (5 * nInstants))
 
     -- ... and here is why the remaining silence is still not a null result.
-    -- 52 -> 53 on 2026-09-09 (hero, GH #659).  These five are the ones worth
+    -- 52 -> 53 on 2026-09-09 (hero, GH #659); 53 -> 65 on 2026-09-10 (hero, queue
+    -- `hero-54`, twelve cast-instant frames).  These five are the ones worth
     -- re-taking rather than bumping: each is "the mock/loader answers the same
     -- default on EVERY instant", so the number is only ever the instant count --
     -- and a new frame is a fresh chance for one of them to come apart.  None
-    -- did: the transit frame is a current dump with real coordinates and a real
-    -- ability array, and all five still read the default.  Written as the count
-    -- rather than as `nInstants` on purpose, so a scan that silently stops
-    -- enumerating cannot make these pass by shrinking both sides together.
-    assert(nMode == 53, 'GetActiveMode is the mock default on every instant')
-    assert(nGoing == 53, 'J.IsGoingOnSomeone is false on every instant')
-    assert(nRetreat == 53, 'J.IsRetreating is false on every instant')
-    assert(nAoE == 53, 'FindAoELocation is the count=0 loader stand-in everywhere')
-    assert(nRadius0 == 53, 'GetAOERadius answers 0 on every instant (section 5)')
+    -- did, and the 2026-09-10 batch is the strongest test they have had: twelve
+    -- frames from two games this tree had never seen, spanning t=67.1 to 1052.0
+    -- and levels 2 to 24, and all five still read the default on all twelve.
+    -- ⚠️ Read with section 5: two of those twelve DID wake a Crystal Nova bid
+    -- (LIVE_BIDS above) and one woke the ultimate's fire branch, so "the five
+    -- constants never move" is not the same statement as "nothing woke up".
+    -- Written as the count rather than as `nInstants` on purpose, so a scan that
+    -- silently stops enumerating cannot make these pass by shrinking both sides
+    -- together.
+    assert(nMode == 65, 'GetActiveMode is the mock default on every instant')
+    assert(nGoing == 65, 'J.IsGoingOnSomeone is false on every instant')
+    assert(nRetreat == 65, 'J.IsRetreating is false on every instant')
+    assert(nAoE == 65, 'FindAoELocation is the count=0 loader stand-in everywhere')
+    assert(nRadius0 == 65, 'GetAOERadius answers 0 on every instant (section 5)')
 end
 
 -- ===========================================================================
-tests['5. GetAOERadius is unspecced tree-wide, and supplying it fires 2 frames'] = function()
+tests['5. GetAOERadius is unspecced tree-wide, and supplying it fires 3 frames'] = function()
     -- The zero is a property of the loader, not of this hero: the spec builder
     -- never mentions the getter, so it lands on bot_api's generic `^Get`.
     local loader = assert(io.open('tests/mock/replay_fixture.lua')):read('*a')
@@ -606,19 +653,42 @@ tests['5. GetAOERadius is unspecced tree-wide, and supplying it fires 2 frames']
         end
     end
     table.sort(fired)
-    assert(#fired == 2, 'expected 2 frames to fire, got ' .. #fired)
-    assert(fired[1] == FIRE_A and fired[2] == FIRE_B,
+    -- 2026-09-10 (hero, queue `hero-54`): the fire set gained a THIRD member, and
+    -- unlike every count this file re-pinned in the same round that one is a
+    -- finding rather than an edit.  tests/frames/f_260909_215412_axe_cull_cm_838.lua
+    -- (t=838.9) is an AXE-subject frame on which Crystal Maiden is an enemy at
+    -- 322/1400 = 23.0% health, and with the radius supplied X.ConsiderR bids HIGH
+    -- for her too.  So the shape section 5 describes -- "a support alone, about to
+    -- die, being handed a ten-second channel" -- is not a property of two hand-cut
+    -- CM frames; it reproduced on the first twelve frames cut for an unrelated
+    -- reason, on the first try.
+    assert(#fired == 3, 'expected 3 frames to fire, got ' .. #fired)
+    assert(fired[1] == FIRE_A and fired[2] == FIRE_B and fired[3] == FIRE_C,
         'the fire set moved: ' .. table.concat(fired, ', '))
 
-    -- Both are a lone support about to die, which is the whole point.
+    -- All three are a lone support about to die, which is the whole point --
+    -- with ONE meter caveat that the third member is the first to expose.
     for _, path in ipairs(fired) do
         local u, chunk = cm_record(path)
         assert(u.hp / u.max_hp < 0.38,
             path .. ': the subject is below the cmrself floor (' ..
             string.format('%.3f', u.hp / u.max_hp) .. ')')
-        assert(chunk.observed ~= nil and chunk.observed.died_after ~= nil
-            and chunk.observed.died_after <= 1.0,
-            path .. ': ground truth says she dies within a second of the frame')
+        -- ⚠️ `observed.died_after` is the fixture SUBJECT's ground truth, not
+        -- Crystal Maiden's.  On FIRE_A and FIRE_B she IS the subject, so the
+        -- clause reads as written.  On FIRE_C the subject is Axe and the 200.5s
+        -- in that file is HIS survival, not hers -- charging it against this
+        -- clause would have quietly asserted the wrong unit's fate.  The frame
+        -- carries no channel for her death, so the clause is SKIPPED here and
+        -- says so, rather than being deleted for all three.
+        if chunk.self == 'npc_dota_hero_crystal_maiden' then
+            assert(chunk.observed ~= nil and chunk.observed.died_after ~= nil
+                and chunk.observed.died_after <= 1.0,
+                path .. ': ground truth says she dies within a second of the frame')
+        else
+            assert(path == FIRE_C,
+                path .. ': a non-CM-subject frame reached the fire set without '
+                .. 'this exemption being re-taken for it')
+        end
     end
 end
 

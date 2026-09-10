@@ -36,6 +36,8 @@ it.
 | `f_260831_061811_axe_call_tp_channel.lua` | GH #577 section 5's FIRST coordinate (`731a21 / 20260831_061811_slot1`, t=1209.9 = 20:09, Axe at level 19). Branch (i) of `axecallbkb_i`, with **zero invented state**: Berserker's Call is rank 3 at **cd 0 in the replay**, the enemy 190.2u away carries **both** `modifier_black_king_bar_immune` (a name the shipped `IsMagicImmune` override reads) **and** `modifier_teleporting`, and the replay corroborates the channel behaviourally -- Bristleback holds 190.2u across two consecutive 1.0s samples and is gone by t=1211.9. It replaces `tests/test_axe_call_immune_veto.lua` section 3's **three-flip** counterfactual with two reader repairs. Used by `tests/test_axe_call_staged_frames.lua` (by name). Also carries an ally Lion at level 18 with Finger at rank 2, which is why `tests/test_lion_ult_reserve_domain.lua` moved n from 1 to 2 -- **paid in the same round**, see below. Admission price to `tests/fixtures/` **NOT measured**. |
 | `f_260828_002127_axe_call_bkb_ring.lua` | GH #577 section 5's SECOND coordinate (`db92df / 20260828_002127_slot1`, t=982.1 = 16:22, Axe at level 22). Branch (ii)'s **value column**: a spell-immune Lina at 75.1u (inside the 225u initiation range) with Necrolyte at 165.3u and a 228-HP Shadow Shaman at 276.9u -- both non-immune, both inside the 315u Call radius -- i.e. the three-hero taunt the shipped veto throws away. It does **not** make branch (ii) reachable, and `tests/test_axe_call_staged_frames.lua` section 5 says why at the schema level. Also carries a **dead** level-19 Wraith King, which is why `tests/test_wk_level_supply_horizon.lua` moved -- **paid in the same round**, see below. Admission price to `tests/fixtures/` **NOT measured**. |
 | `f_260908_094909_cm_cmqreach_transit.lua` | GH #659's transit pin (`0eb22d / 20260908_094909_slot6`, t = 1191.5 = 19:51, CM the subject at dump idx 1534 -- globally unique, so no illusion ambiguity). The extreme case of the shape the replay group's `cmqreach` cell-(3) instrument scores: full health, 98.7% mana, ~359 u/s in a straight line, **no enemy hero within 2790u** -- and dead 17.3s later, with the first hero damage landing 12.0s after the frame. Its **staging price was measured and PAID in the round that landed it** (2026-09-09): 6 files / 9 assertions, listed below. Its **admission price to `tests/fixtures/` was published as 4 files / 5 assertions; re-measured 2026-09-09 it is 24 files / 40 assertions** and is NOT paid -- see the section below for why the first number came out of the wrong instrument. Used by `tests/test_cm_cmqreach_transit_frame.lua` (by name). It also carries the tree's **second live Wraith King above level 12** (level 20, `mp 556 / max_mp 735`), which is the row queue `hero-10` turns on -- read in `tests/test_wk_level_supply_horizon.lua` section 6. |
+| `f_260909_215040_wk_blast_lane_67.lua`, `..._lane_121.lua`, `..._mid_269.lua`, `..._lion_480.lua`, `..._sb_661.lua`, `..._sb_1052.lua` | queue `hero-54`'s Wraith King half (`5313f5 / 20260909_215040_slot1`, t = 67.1 / 121.5 / 269.1 / 480.6 / 661.3 / 1052.0). Each frame is cut AT a `skeleton_king_hellfire_blast` combat-log entry, and **three of the six drive the shipped tree to order that spell** -- against 0 of 36 for Wraith King in the whole corpus. Used by `tests/test_focus_cast_instant_frames.lua`. Staging price **1 file** (paid); admission price **17 of 19 census files** -- see the section below. |
+| `f_260909_215412_axe_call_init_224.lua`, `..._cull_viper_348.lua`, `..._cull_cm_415.lua`, `..._cull_pudge_470.lua`, `..._cull_drow_475.lua`, `..._cull_cm_838.lua` | queue `hero-54`'s Axe half (`7eb1ba / 20260909_215412_slot1`, t = 224.3 / 348.0 / 415.1 / 470.9 / 475.8 / 838.9), cut at `axe_berserkers_call` / `axe_culling_blade` entries. Four of six order Culling Blade; the same six frames also carry the live Crystal Maiden (2 novas) and Lion (1 mana drain) rows. Used by `tests/test_focus_cast_instant_frames.lua`. Same prices as the row above. |
 | `f_260828_124358_axe_cull_promise.lua` | GH #570's falsification pin (`11c470 / 20260828_124358_slot1`, t=1452.8 = 24:12, Axe at level 30). It is the only frame in the tree carrying `modifier_oracle_false_promise_timer` on any unit, and it is the frame on which the veto GH #570 asked for would have deleted the cast that killed oracle 0.1s later. It is also the tree's first frame from **t > 1400** (the corpus tops out near t=790 / level 19, and the two staged frames above at t=1266.5 / level 27), so its admission price is at least the price those two carry. **That price is NOT measured** -- this round did not move the file and run the suite, and nothing here claims a number for it; paying it is its own work unit, as this file has said since GH #357. Used by `tests/test_axe_cull_promise_premise.lua` (by name). |
 
 ## Reopen list: GH #357's three real re-decisions -- all PAID
@@ -279,3 +281,76 @@ belong to strategy, the level-gate family or harness, and two of those
 list with it. That is the general finding, and it is the one to read before
 pricing the next staged frame: **for an era frame, the admission price is the
 era's reopen list, not the frame's diff.**
+
+## The twelve cast-instant frames (hero 2026-09-10, queue `hero-54`)
+
+The first frames in this tree cut from the **event side** rather than the frame
+side. Every earlier frame in `tests/fixtures/` was sampled on a clock (or picked
+because some *other* hero did something interesting there), and that sampling is
+what produced the corpus's headline number: 4 live focus-hero decisions in 183
+alive-subject instants, **0 of them Wraith King**. Cutting on the combat log's
+own `ABILITY` entries instead gives 10 in 34, and 3 of Wraith King's 6.
+
+**The recipe, in full, because it is cheap and nobody had run it** (~4 minutes
+per game, zero EC2, S3 read-only -- so it is not batch-desk-only work):
+
+```
+bash tools/batch_test/aws/session_setup.sh          # read-only use of the creds
+bash tools/batch_test/behavioral/get_dumper.sh      # S3 cache hit: seconds
+awsx s3 cp s3://<bucket>/replays/<game>.dem .
+tools/batch_test/behavioral/.dumper_cache/behav-dump -interval 0.5 <game>.dem > tl.json
+# the cast instants are already in that file:
+#   [e for e in tl['events'] if e['type']=='ABILITY' and e['actor']=='npc_dota_hero_axe']
+python3 tools/batch_test/replayscope/make_fixture.py tl.json \
+        --t <that t> --hero <focus hero> --roles <that game's analysis.json> -o ...
+```
+
+`--t` is the cast timestamp **itself**, not a moment before it: at the ABILITY
+entry's own time the entity snapshot still reads pre-cast (Hellfire Blast cd 0,
+mp 315 at t=67.1; the next 0.5s sample reads cd 13.9, mp 220). Pinned in
+`tests/test_focus_cast_instant_frames.lua` section 1.2 so a dumper change that
+reverses that ordering is caught rather than silently mis-cutting frames.
+
+### Prices, measured the way this file requires (move in, run, move back)
+
+* **staging price: 1 file, PAID in the round that staged them.**
+  `tests/test_cm_ult_reach_meter_domain.lua` enumerates BOTH directories, so it
+  moves: section 1's five counts (53 -> 65 instants), section 4's five constants
+  and two new `LIVE_BIDS` rows, and section 5's fire set (2 -> 3).
+  `tests/test_cm_nova_surplus_poke.lua` stays green.
+
+  ⛔ **The first reading of that price was "0", and how it got there is worth
+  more than the number.** It came from `grep -l 'tests/frames/\*'`, which finds
+  the test that writes the glob as a literal and cannot find the one that builds
+  it out of a variable (`for _, dir in ipairs({ FIXTURE_DIR, STAGED_DIR })` +
+  `io.popen('ls ' .. dir)`). **Before pricing a directory, ask who reads it
+  through a variable, not only who spells it out** -- a text search over call
+  sites answers a question about text, and here the census it missed was the one
+  with teeth. Same family as GH #650 / #689 / #694 and this stream's
+  `_cm_t10_payoff_sweep` lesson.
+* **admission price to `tests/fixtures/`: 17 of 19 census files.** Sixteen of
+  the 36 corpus-glob sweepers go red, plus three more the selfcheck's Lua leg
+  names (`test_axe_bkb_supply_staged_frame`, `test_axe_t15_in_domain`,
+  `test_cm_ult_reach_meter_domain`). **NOT PAID.**
+
+⭐ **The new general finding, and it sharpens the one this file ends on.** The
+six Wraith King frames **alone** turn 17 of those same 19 red. So the price is
+not per frame and it is not the frame's diff -- **it is per new GAME admitted**,
+because a game brings a whole draft's worth of items, levels, talents and clock
+positions with it. Adding the six Axe frames on top of the six WK ones cost
+essentially nothing extra. That is the practical rule for the next round:
+**admit games, not frames, and price one game at a time.**
+
+Two of the seventeen are not number bumps and are the reason this batch is
+staged rather than admitted in the round that cut it:
+
+| file | what it says moved | why it is not a re-pin |
+|---|---|---|
+| `test_salvetarget_axis_undecidable` | "the archive now carries a NON-TIED disagreement between the two axes (1)" | **GH #242's published ruling rests on there being none.** Re-taking it is a ruling, not an edit, and it is not the hero desk's to take alone. |
+| `test_blind_a_pulllane_pullthink` | candidate-frame count 9 -> 11 (WK only) / 12 (all twelve) | `test_set.md` §GF quotes the 9 **as the size of a purchase**. Moving it re-prices a published purchase. |
+
+The other fifteen are re-derivations of the ordinary kind (counts, ceilings, a
+talent-row surface, an Aether Lens that turns a declared anchor into a real
+inventory -- `test_zeus_aether_cast_range` calls that one GOOD NEWS in its own
+red line). They are real work, not busywork, and they belong to a work unit that
+starts by deciding **which single game** to admit.

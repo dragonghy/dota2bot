@@ -22,7 +22,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--139. **⭐ 下一轮:`hero-54` 若仍未裁,不要再自查源码找 lever —— 去把它推动。**
+-140. **⭐ 下一轮:入集,按**局**,一次一局 —— 不要再按帧想这件事。**
+   本轮把 `hero-54` 做完了(报告 `iterations/reports/hero/20260910T075559Z.md`,
+   12 个施法帧在 `tests/frames/`,新测试 `tests/test_focus_cast_instant_frames.lua`)。
+   - **⭐⭐ 本轮的头号读数**:出货树在施法帧上下单 **10/34**(29.4%),语料是 **4/183**(2.2%);
+     **Wraith King 语料 0/36 → 这里 3/6**。十几轮「我这条 lever 域是空的」到此结案:
+     **那是关于帧在哪里切的事实,不是关于机器人的事实。**
+   - **配方(一局约 4 分钟,零 EC2,S3 只读 —— 本组自己能跑,不必等批测台)**:
+     `session_setup.sh` → `get_dumper.sh`(S3 cache HIT 秒级)→ `awsx s3 cp .../replays/<局>.dem`
+     → `behav-dump -interval 0.5` → **施法瞬间就是 `events[]` 里 `type=='ABILITY'` 的条目**
+     (本局 WK 46 次 / Axe 74 次)→ `make_fixture.py --t <该 t> --hero <焦点英雄> --roles <analysis.json>`。
+     **`--t` 取施法戳本身**:战斗日志条目**领先**实体快照(67.1 那帧 cd 0 / mp 315,67.4 才 cd 13.9 / mp 220)。
+   - **⛔ 入集价钱(实测,挪进去跑再挪回来):19 个普查文件里 17 个红。**
+     而**只放 6 个 WK 帧也是 17** ⇒ **价钱是「每新入一局」,不是每帧、不是帧的 diff。**
+     其中两条不是改数字:`test_salvetarget_axis_undecidable`(归档出现非平局的两轴分歧,
+     **GH #242 的裁定就建立在"一条也没有"上**)与 `test_blind_a_pulllane_pullthink`
+     (9→11/12,**§GF 把那个 9 当一次采购的规模引用**)。**这两条不是英雄组一家能改的**,
+     已随 `hero-56` 交给总监分派。
+   - **⛔ 暂存价钱不是 0(我第一次读成 0)**:`test_cm_ult_reach_meter_domain` 同时枚举两个目录,
+     本轮付清。**那个 0 来自 `grep -l 'tests/frames/\*'` —— 它找不到用变量拼 glob 的读者。**
+     **给目录定价前先问谁通过变量读它。**
+   - **⭐ 白捡的发现**:`f_260909_215412_axe_cull_cm_838`(Axe 为主语、CM 只是路过的敌人)
+     进了 `cm_ult_reach_meter_domain` §5 的开火集(2→3)⇒ 那个「孤身将死的辅助被塞 10 秒引导」
+     的形状**不是两个手挑帧的性质**。同时钉住一条量具边界:`observed.died_after` 是**主语**的,
+     不是 CM 的。
+   - **Zeus 仍 0 帧**(两局 draft 都没有他)。`364764` 那局有 `zuus`,现成的,下一轮先切它。
+   - **⚠️ trunk 本来就红一条**:`test_salveally_missing_floor`(`holder-ally pairs moved to 75`),
+     `git stash -u` 到干净 HEAD 上复现,**不是本轮造成的**,归属不在本组。
+   - **⭐ 自检**:形状照抄(`> /tmp/sc.log 2>&1`,不接管道 —— 接了管道它会自己 REFUSED,退出码 2)。
+     ⛔ **它最后一条腿 `trunk health (fast Lua detectors)` 读的是工作树**:我在它跑着的时候
+     往 `tests/fixtures/` 写了 12 个文件,于是它打的 5 条 `TRUNK RED` **全是我这轮的增量**。
+     铁律 10 那句「它仍不碰工作树」只保护了**你的工作不被它改**,没保护**它的读数不被你改**。
+     该腿本轮被主动 kill ⇒ **自检自己的退出码没观测到,那一侧这轮没人看过。**
+
+-139. ~~**⭐ 下一轮:`hero-54` 若仍未裁,不要再自查源码找 lever —— 去把它推动。**~~
+   ✅ **2026-09-10T07:55Z 执行完毕,而且是执行 `hero-54` 本身、不是再催一次:归档是 S3 只读,
+   铁律 1 管的是花钱不管只读,整条路本组自己走得通。** ↓ 原文保留
    本轮(`20260910T050325Z.md`)是 `-138` 那条选件路的**终点读数**:仪器给的三行候选
    (`hero-1`/`hero-2`/`hero-10`)读了原文之后,`hero-1` 是**裁定**不是待花读数(仪器 LIMITS
    第一条的现场,class 关于文本、marker 就在旁边),`hero-2` 是真请求但**球在批测台**
@@ -6152,6 +6187,26 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-10T07:55Z(报告 `iterations/reports/hero/20260910T075559Z.md`;**backlog:`-139` 做完、
+  新开 `-140`**;`bots/`、`game/` **零改动**,无新 gate id,无 arm,无 promote)
+  **`hero-54`(优先级 1,帧供给)执行完毕 —— 本轮没有再按铁律 9 升级它,而是自己把它做了。**
+  - **头号读数**:12 个「机器人真的按下技能的那一瞬间」的帧,出货树(全 gate 关)在
+    **10/34** 个活体瞬间下单技能;语料 110 帧是 **4/183**。
+    **Wraith King 语料 0/36 → 这里 3/6** —— 他从来不是哑的,只是从来没人在他要施法的那一帧上切过。
+    十条:WK×3(`hellfire_blast`)、Axe×4(`culling_blade`)、CM×2(`crystal_nova`)、Lion×1(`mana_drain`)。
+  - **供给是英雄组自己够得着的**(一局约 4 分钟,零 EC2,S3 只读):施法瞬间就是 dumper
+    `events[]` 里的 `ABILITY` 条目(本局 WK 46 / Axe 74 次),`main.go` 一直在收。
+    `--t` 取施法戳本身(战斗日志领先实体快照:cd 0 / mp 315 在 67.1,cd 13.9 / mp 220 在 67.4)。
+  - **帧在 `tests/frames/` 暂存,没有入 `tests/fixtures/`**,理由是**量出来的**:
+    入集 = 19 个普查里 17 个红,**只放 6 个 WK 帧也是 17**(⇒ 价钱按**局**算),
+    其中两条要动已发表的裁定(GH #242)与已发表的采购(§GF)——不是本组一家能改的。
+    暂存价钱 1 个文件(`test_cm_ult_reach_meter_domain`),**本轮付清**。
+  - **交出去的下一棒**:`hero-54` 结为 `delivered-and-consumed`;新开 **`hero-56`**
+    请总监裁「先入哪一局」并分派那两条裁定级的重取。**Zeus 仍 0 帧**,下一轮切 `364764` 那局。
+  - **验证**:luacheck gate `0 warnings / GATE_EXIT=0`;新测试 7/7;`cm_ult_reach_meter_domain` 8/8;
+    19 个测价文件复验 17 回绿 + 1 已付 + **1 是 trunk 本来就红的**
+    (`test_salveally_missing_floor`,`git stash -u` 到干净 HEAD 上复现,已开 [bug])。
+    全套(~100 分钟,GH #124)未在本进程内跑完。
 - 2026-09-10T05:03Z(报告 `iterations/reports/hero/20260910T050325Z.md`;**backlog:`-138` 做完、
   新开 `-139`**;OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;
   **P4.2 冻结期内不请求入集**)
