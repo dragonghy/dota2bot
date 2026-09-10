@@ -54,6 +54,24 @@ SIGNATURE (the action, as it looks at 1 Hz):
                reason it was added -- see the frame note in the code.  Reported
                so the next reader does not re-invent it.
   POKE      -- this hero deals damage to a NON-hero unit while AT_CAMP.
+               [2026-09-10, replay-check] READ THIS BEFORE QUOTING A POKE
+               COUNT: "NON-hero" is `dmg_creep`, which also holds LANE creeps,
+               so a support last-hitting his own lane within 400 u of a camp
+               box is counted here as a poke.  Measured on W62 (88 games, the
+               37-id string): 4 of 39 armed poke episodes carry no
+               `npc_dota_neutral_*` target at all, and all four are the SAME
+               game+hero (`53d28c/20260909_220414_slot6` pudge, four episodes
+               of standing at a camp trading with an enemy ranged creep);
+               baseline 0 of 7.  The corrected armed:baseline reading is
+               therefore 35:7, not 39:7 -- the direction survives, the
+               magnitude moves ~10%.  The stricter predicate already exists
+               and is the one to copy: campbind_poke.py requires the DAMAGE
+               event's target name to start with `npc_dota_neutral_` (its
+               docstring says "NOT dmg_creep, which lumps in lane creeps").
+               Left as-is rather than tightened in place so that this file's
+               readings stay comparable with every wave already banked under
+               it; a reader who needs the clean count takes the attribution
+               step above and says so.
   DRAG      -- after a poke, the hero is >= 700 u off the camp, moving
                fountain-ward, with >= 1 neutral creep still within 700 u:
                the neutrals actually followed.  This is the whole point of a
