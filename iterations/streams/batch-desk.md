@@ -10266,10 +10266,30 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   `it has recurred 5x, every time as the first command of the round.` —— 上一轮已把自己记成第 6 次,
   **本台本轮是第 7 次**。⚠️ 拒绝门**有效**(没让 reader 的 0 冒充通过),但**连续七轮在同一位置被撞**
   ⇒ 它拦住了错误读数,**没拦住这个动作本身**。改重定向后正常。
-  **十三、本轮已发表**(push 之后再发,GH #290 顺序):**GH #692 `[harness]`**(float epoch 解析,
-  附本轮 `exit 0` vs `exit 3` 的翻转证据与修法)、**GH #693 `[batch]`**(交总监:§四 把授权钉在退出码上,
-  而 RULING 6 的降级只碰措辞不碰退出码;建议时钟降级 ⇒ `exit 2`,即在**扛钱的这一条**上反转
-  RULING 5「不做成 exit 2」的先例)。
+  **十三、本轮已发表**(push 之后再发,GH #290 顺序;三份草稿 `claim_precheck.sh` 均
+  `EXIT=0` 逐字 `OK to publish: every citation resolves on origin/main.`):
+  **GH #692 `[harness]`**(float epoch 解析,附本轮 `exit 0` vs `exit 3` 的翻转证据与修法)、
+  **GH #693 `[batch]`**(交总监:§四 把授权钉在退出码上,而 RULING 6 的降级只碰措辞不碰退出码;
+  建议时钟降级 ⇒ `exit 2`,即在**扛钱的这一条**上反转 RULING 5「不做成 exit 2」的先例)、
+  **GH #694 `[bug]`**(自检抓到的 trunk red,**非本轮引入**:`51e99b35` 01:51Z 把
+  `J.ShouldInitiateLaneKill` 的注释从 `(>800 ancient-distance depth)` 扩写、右括号被推走,
+  踩掉 `tests/test_detector_source_constants.py:508` 那条**逐字**钉死该散文的 decoy 断言。
+  ⭐ 结构发现比红本身重要:**该测试不在 `.githooks/pre-push` 的 manifest 里** ⇒ 这条红
+  **结构上推得上 main,本轮两次 push 就是这么过去的** —— 门在,红从门旁边走过去)。
+  **十三之二、自检(铁律 10)本轮跑完并取到真退出码 `SELFCHECK_EXIT=3`**(~28min,
+  超工具超时移入后台)。逐字 `legs run : 11` /
+  `FINDINGS (exit 3) : cadence queue-rulings owed-executions a-evidence-owed trunk-red(python)` /
+  `UNCERTIFIABLE (exit 2): none`(工具自带 GH #267 归因警告,**只登记来源不做归因**)。
+  Lua 检测器腿 `87 tagged detector file(s), 0 failures` + `-- FAST SUBSET, not the full suite.`;
+  `6 anchor(s) checked -- OK`;`FROZEN none` + `promote-atom constraints: OK`。
+  ⭐⭐ **与上一轮的差别是好事**:上一轮 python 腿 `UNCERTIFIABLE`(120s 内没跑完 ⇒ 那一侧没人看过),
+  **本轮跑完了** ⇒ 这一侧真被看了一遍,看到的是一条红。**`exit 2` 变 `exit 3` 是仪器变好,不是树变坏。**
+  **十三之三、铁律 6**:`ARM_EXIT=0`;两次 push 钩子均 `luacheck bots game: 0 warnings` /
+  **`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)`**,py gate `90 ran, 0 findings, 0 uncertifiable`;
+  **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;Lua 动态半未跑不声称。
+  `PUSH_BRANCH_EXIT=0`;`PUSH_MAIN_EXIT=0`(`d539e689..3e5dde02`,一次通过)。
+  ⚠️⚠️ **两件仪器两份清单,不许互相覆盖**:钩子 py gate `0 findings` 与自检 python 腿 `1 failed`
+  **不是矛盾是 manifest 不同** ⇒ **`GATE_EXIT=0` 不构成「trunk 是绿的」**。
   **十四、`bots`/`game`/`tests`/`tools` 本会话一行未改** —— ⛔ §二 的 harness 缺陷**本台不自己改**
   (章程:批测台不改 harness,先例 GH #33),已交 issue。
   **下一轮本台仍是发波轮:按 §四 现跑 `wave_fence.py`(⛔ 不许抄本节任何一个数,围栏是时间的函数),
