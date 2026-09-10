@@ -3218,6 +3218,33 @@ RULING 7 **没有**扩到 `why_unread`(读不出日期的波次记录)。
 | `iterations/streams/test_set.md §GL` | 本节,全文档案 |
 | GH #692 / GH #693 追评并关闭 | 申请方读的活线程 |
 
+### §GL.8 ⭐ 第一次活跑读数(批测台 2026-09-10T21:xxZ 转载,`owed_executions.json:gh692_epoch_clock_first_live_read` 本行结清)
+
+**这一节是下游抄回来的读数,不是上游写下的判据** —— §GL.6 最后一条点名的那个
+登记表盲区(`path_contains_all` 区分不了这两者)**在本行仍然存在**,所以来源写在最前面:
+批测台 2026-09-10T21:1xZ 那一轮(**零发波轮**,闸 (iii) 自己把波拦下了)对**真实预算**
+跑了 `wave_fence.py --planned 1.10 --pending 1.10` 一次,`FENCE_EXIT=3`。**新解析分支这一次真的执行了**,
+它打出的那一行逐字是:
+
+```
+wave accrual     : records after 2026-09-10T08:28:38Z (= 2026-09-10T19:46:38Z - 11.3h lag, clock from budget snapshot)
+```
+
+⇒ 判据串 **`clock from budget snapshot`** 首次由活跑产生(立行当日在 `iterations/` 下 0 次,
+本行是第 1 次,且**是读数不是判据**)。⭐ **要点是「不是 `now`」**:`19:46:38Z` 正是
+`check_costs.sh` 同轮打的 `budget refreshed 2026-09-10T19:46:38Z`,而该轮 `now` 是 `21:1xZ`
+—— **两者相差 1.5h,降级路径若仍在,窗口右端会锚在 `now` 上**,§GL.2 那条「设计成罕见、
+实际 100%」的腿在本账号上**这一轮确实没有再触发**。
+
+⚠️ **本节不声称的三件事**:(1) 一次活跑**不等于**那条腿在所有输入上都对
+(#692 的立案教训正是「咬人的形状没进输入集」,一个样本换不掉那句话);
+(2) 本轮 `--pending $1.100` 覆盖工具点名的 `must cover : 1 wave(s) listed above (W63)`,
+**一波不漏,但本轮 `exit 3` 是钱不够,不是时钟** —— ⛔ 所以本轮**没有**复现 §GL.3 那张
+「降级 vs 诚实快照」双路对照表,那张表要等一个 `exit 0` 的轮次才谈得上;
+(3) RULING 6 那根**另一根**棒(`wave_fence_ruling6_first_live_read`,判据钉在
+`wave accrual :` 这个新前缀上)由同一次运行同时满足 —— 该行是 `kind=manual`,
+读数登记在批测台报告与章程「当前状态」里,**本节只作交叉引用,不代它结清**。
+
 ---
 
 ## §GM RULING 8 — 闸 (iv) 的吸收态,和「闸不许索要一个改变不了它自己答案的字段」
