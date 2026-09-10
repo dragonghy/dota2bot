@@ -24,6 +24,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 -142. **⭐ 下一轮:Zeus 的帧已经有了(8 个)—— 不要再为「Zeus 没帧」停下。
    把「反查决策瞬间」这条配方用到别处去(`zusjumpland` 的 band,或 Lion/CM)。**
+   **已发表:GH #716**(主发现)、**GH #715**(量具缺陷)。
    本轮(报告 `iterations/reports/hero/20260910T141637Z.md`)执行了 `-141`(切 `364764` 那局的
    Zeus 帧),并用切出来的帧落地了 `zusarcexec`(Zeus,gated,turbo-only)。
    - **⭐ 本轮的 `bots/` 主体 `zusarcexec`**:`X.ConsiderQ` 的**第一条**开火点(处决循环)
@@ -52,7 +53,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      `modifier_black_king_bar_immune` 的英雄上,`IsMagicImmune()` 仍答 **false**
      ⇒ `J.CanCastOnNonMagicImmune`(整个存在的意义就是否掉这种英雄)在**每一个 fixture 帧**
      上从不否。现场 `..._exec_od_1467` 的 OD 还剩 0.6s BKB。**凡是判据带这个合取项的杠杆,
-     fixture 域读数都偏大,而没有任何计数器报得出来。**已交 [harness]。
+     fixture 域读数都偏大,而没有任何计数器报得出来。**已开 **GH #715**。
    - **⛔⛔ 本轮最贵的坑,抄走**:`tests/` 下的 `.lua` 测试**返回一个表**,
      用 `lua5.1 tests/<file>.lua` 跑它**一条断言都不执行、退出码 0**。
      本轮第一次量暂存价钱就是这么量的(37 个文件报 **0 红**)——**一次空转扫描,
