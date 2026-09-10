@@ -86,7 +86,10 @@
    (4) ⛔ **兵营分支(GH #713)仍然不落 gate**,域仍空(0/1031 帧),接力棒是
    `tests/test_isvalid_building_sentinel.lua §2b`;
    (5) ⛔ **P1/P2 的球仍不在本组,P4.2 冻结未解** ⇒ 本轮没有提入集;
-   (6) **`tombhp` 的裁定请求(GH #719)仍未答**,本轮不催,`state.json:tombhp_20260910.next` 已登记。】**
+   (6) **`tombhp` 的裁定请求(GH #719)仍未答**,本轮不催,`state.json:tombhp_20260910.next` 已登记。
+   **已发表**:**GH #724**(本轮主发现;先搜后开,检索 0 命中)。发表顺序按 GH #290 走 ——
+   两条 `git push` 先落地(`ff5064d9`),再发 issue;`claim_precheck.sh` ⇒ **`PRECHECK_EXIT=0`**,
+   `local commits not on origin/main: 0`,paths cited 7 / resolved 7 / refused 0。】**
 
 0TOMBHP. **【2026-09-10T16:53Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(回到 (i))。
    认领依据 = 工作流第 1 步扫 open issue,9 条 `[strategy]` open **全是本组自报** ⇒ 取 `0RAXDEAD`
@@ -7733,6 +7736,9 @@
   `lua gate: LUA_EXIT=0`(322);`RULE6_BYPASS` 未使用;`SELFCHECK_EXIT=3`
   (第一次调用被脚本按管道拒绝 —— **那不是通过**,改走 `rc.sh` 才拿到真码)。
   ⛔ **零 AWS、零波次、armed 串 / `queue.json` / `test_set.md` 一字未动。**
+  **已发表 GH #724**(先搜后开,检索 0 命中);发表顺序按 GH #290 —— 两条 push 先落地再发,
+  `claim_precheck.sh` ⇒ `PRECHECK_EXIT=0`,`local commits not on origin/main: 0`。
+  Token:`TOKENS total_in=14,728,817 out=83,903 turns=102`。
   报告:`iterations/reports/strategy/20260910T193710Z.md`。
 
 - 2026-09-10T16:53Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,回到 (i)。认领依据 = 扫 open issue,
