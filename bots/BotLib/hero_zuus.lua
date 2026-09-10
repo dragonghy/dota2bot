@@ -747,6 +747,77 @@ function X.SkillsComplement()
 
 end
 
+--- [zusarcexec] The kill test X.ConsiderQ's EXECUTE branch states in its
+--- position and does not state in its predicate.  Turbo-only soak candidate,
+--- INERT until armed.  Written 2026-09-10 (hero stream) under OWNER_PRIORITIES
+--- P4.4, on the first Zeus real frames this repo has ever had
+--- (tests/frames/f_260909_215227_zeus_*, queue hero-54's Zeus half).
+---
+--- THE BRANCH.  The loop at the top of X.ConsiderQ is the FIRST firing point in
+--- the function, runs in EVERY mode, and returns BOT_ACTION_DESIRE_HIGH.  Six
+--- branches sit below it -- the laning last-hit, the retreat self-defence, the
+--- teamfight AoE (>= 2 targets), the push/defend AoE (>= 3), the chosen-target
+--- initiation, the farm and the Roshan branches -- and every one of them states
+--- what it is buying.  This one buys a finish: it is above all of them, it
+--- ignores mode, and its only claim on the frame is `J.GetHP( npcEnemy ) <= 0.2`.
+---
+--- THE DEFECT.  A percentage is not a kill test, and the gap it hides is not a
+--- constant -- it widens with the game, because the left side scales with max
+--- health and the right side does not:
+---
+---     rank / minute      0.2 * max_hp        arc_damage      finishes?
+---     ---------------    ----------------    ------------    ---------
+---     rank 1, t=79       0.20 * 802 = 160    105             no
+---     rank 4, t=1084     0.20 * 2762 = 552   180             no
+---
+--- Both rows are read off this repo's own Zeus frames (the OD in
+--- f_260909_215227_zeus_arc_od_79 and f_260909_215227_zeus_bolt_od_1084), and
+--- 25% magic resistance has not been applied to the right-hand column yet.  So
+--- the branch that outranks the teamfight AoE and the chosen target spends the
+--- cast on whoever it reaches FIRST under 20%, on the strength of a finish it
+--- cannot deliver.  Same family as `wkqodds` (GH #708) and `cmqpoke` (GH #698):
+--- the qualified test is not missing from the file, it is missing from THIS
+--- branch.  Six lines below, the laning branch tests exactly the thing this one
+--- asserts -- `J.WillKillTarget( creep, nDamage, DAMAGE_TYPE_MAGICAL, nCastPoint )`
+--- -- on the SAME `nDamage` local this branch computes and never reads.
+---
+--- WHAT ARMED DOES.  Appends that same call, with the same argument order and
+--- the same local, as one more conjunct.  It INVENTS NOTHING: no threshold, no
+--- constant, no new helper of its own arithmetic.  The shipped conjunction is
+--- evaluated first and unchanged, so gate-off is byte-equivalent to shipped.
+---
+--- DIRECTION, stated at two altitudes because they are not the same claim:
+---   * at the BRANCH, strictly narrowing by construction -- a conjunct appended
+---     to an `if` that returns can only delete this branch's fire, never add one;
+---   * at the FUNCTION, a suppressed frame FALLS THROUGH to the six branches
+---     below, which may return a cast of the same ability at a DIFFERENT target
+---     (the AoE branches aim at a >= 2 or >= 3 cluster; the initiation branch at
+---     J.GetProperTarget).  So the armed leg re-aims as often as it silences,
+---     and a reading of this id must report the two apart.  Section 5 of
+---     tests/test_zuus_arc_execute_kill.lua measures both columns.
+---
+--- DELIBERATELY NOT FOLDED IN: Static Field.  X.ConsiderW's own kill estimate
+--- carries `+ target:GetHealth() * abilityASBonus`, and this test does not, so
+--- armed is CONSERVATIVE by that term -- it can suppress a cast that would in
+--- fact just barely finish (shipped `abilityASBonus` is 0.09, i.e. at most
+--- 0.09 * 0.2 * max_hp = 1.8% of max health at this branch's own threshold).
+--- That is a registered cost, not an oversight.  Reading `abilityASBonus` here
+--- would make this a THIRD consumer of it, and the premise that lets
+--- `zusstatic`'s condition (a) be bought on the ConsiderR consumer alone
+--- (queue hero-15, pinned in tests/test_zuus_static_field_second_consumer.lua
+--- section 6) is that it has no live second one.  One lever does not get to
+--- spend another lever's premise.
+function X.zuus_ArcExecuteFinishes( hTarget, nDamage, nCastPoint )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusarcexec' )
+	then
+		return J.WillKillTarget( hTarget, nDamage, DAMAGE_TYPE_MAGICAL, nCastPoint )
+	end
+
+	return true
+
+end
+
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable() then	return BOT_ACTION_DESIRE_NONE, nil	end
@@ -767,6 +838,11 @@ function X.ConsiderQ()
 			and J.CanCastOnNonMagicImmune( npcEnemy )
 			and J.CanCastOnTargetAdvanced( npcEnemy )
 			and J.GetHP( npcEnemy ) <= 0.2
+			-- [zusarcexec] gate off, this call IS `true`.  See
+			-- X.zuus_ArcExecuteFinishes: the branch's position and its HIGH
+			-- desire are bought with a finish, and 0.2 of max health is not a
+			-- finish test at any rank.
+			and X.zuus_ArcExecuteFinishes( npcEnemy, nDamage, nCastPoint )
 		then
 			return BOT_ACTION_DESIRE_HIGH, npcEnemy
 		end

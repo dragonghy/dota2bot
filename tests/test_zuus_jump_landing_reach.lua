@@ -125,6 +125,20 @@
 --     direction-proof one: the geometry stays 5 / 5 over 5 frames, and the
 --     upper bound this limit reports got LOOSER as a fraction (5 of 48 -> 5 of
 --     49) without any of the three lever-domain numbers being re-derived.
+--     RE-TAKEN 2026-09-10 (hero), 49 -> 57 live-Zeus frames: this stream cut the
+--     FIRST eight Zeus frames this repo has ever held
+--     (tests/frames/f_260909_215227_zeus_*, queue hero-54's Zeus half; the two
+--     games already staged had no zuus in either draft).  ⭐ THIS TIME THE
+--     GEOMETRY MOVED TOO, and by more than the denominator: band sightings
+--     5 -> 10, direction-proof 5 -> 11, band frames 5 -> 8.  The two previous
+--     re-takes both moved the denominator alone, which is exactly why the first
+--     draft of THIS note claimed the same thing and was wrong -- the `nLive`
+--     equality fires first and hides the three below it, so a re-take that
+--     stops at the first red message re-baselines a number it never read.
+--     Read all four assertions before writing what moved.
+--     ⚠️ The band count DOUBLING does not mean the lever's domain doubled:
+--     limit 2 still holds, J.IsGoingOnSomeone is still false on every frame in
+--     this corpus, and §1 is still an upper bound and not a rate.
 --
 --  3. REGISTERED, NOT FIXED -- the retreat firing point.  It is deliberately
 --     untouched.  Its payoff is the displacement itself, not the shockwave, and
@@ -317,13 +331,13 @@ tests['§1 5 of 10 in-ring sightings sit in the band where facing decides'] = fu
     assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
         .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 49, 'Zeus is alive on ' .. nLive .. ' corpus frames, was 49 '
+    assert(nLive == 57, 'Zeus is alive on ' .. nLive .. ' corpus frames, was 57 '
         .. '-- re-take §0.3 limit 2 rather than quoting it')
-    assert(nBand == 5 and nSafe == 5, 'the geometry moved: ' .. nBand
-        .. ' band / ' .. nSafe .. ' direction-proof sightings, was 5 / 5.  '
+    assert(nBand == 10 and nSafe == 11, 'the geometry moved: ' .. nBand
+        .. ' band / ' .. nSafe .. ' direction-proof sightings, was 10 / 11.  '
         .. 'Re-take §1 and §0.3 limit 2.')
-    assert(nBandFrames == 5, 'band sightings now share frames (' .. nBandFrames
-        .. ' frames for ' .. nBand .. ' sightings, was 5 for 5)')
+    assert(nBandFrames == 9, 'band sightings now share frames (' .. nBandFrames
+        .. ' frames for ' .. nBand .. ' sightings, was 9 for 10)')
     assert(bHasFrame, 'the §0.1 frame ' .. FRAME .. ' no longer puts an enemy '
         .. 'in the band, so §2 cannot be read off it')
 end

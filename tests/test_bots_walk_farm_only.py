@@ -86,6 +86,12 @@ UNRESOLVED_HAND_READ = {
         "[1d] loops key over {'GetCurrentActionType', 'GetActiveMode'}; the "
         "path is the fixed glob tests/fixtures/*.lua, not a walk of bots/, so "
         "it cannot reach bots/Customize/ regardless of the parameter's value",
+    """tests/test_wk_q_catchall_odds.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'}; plain "
+        "`ls` is NOT recursive, so it never reaches bots/Customize/ at all",
+    """tests/test_zuus_arc_execute_kill.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'}; same "
+        "non-recursive `ls` as the line above, same reason",
     """tests/test_itemtrip_supply_gap.lua  ::  'ls "' .. dir .. '"'""":
         "ls('bots', ...) x2 and ls('tests/fixtures', ...); `ls \"bots\"` is NOT "
         "recursive, so it never reaches bots/Customize/ at all",

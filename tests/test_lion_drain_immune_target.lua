@@ -432,8 +432,18 @@ tests['supply: the whole TREE holds exactly one, and it is the staged frame'] = 
     -- settled all three.  The lesson is in tests/frames/README.md: the list of
     -- "scans that enumerate tests/frames/" in that file is the set somebody
     -- remembered, not the set that exists.  Grep for the directory instead.
-    assert(nImmune == 7, nImmune .. ' spell-immune hero-instants across BOTH '
-        .. 'directories, was 7 as of 2026-09-07: ' .. table.concat(sWhere, '; ')
+    -- 7 -> 9 ON 2026-09-10 (hero), settled in the round that caused it: the
+    -- first eight Zeus frames (tests/frames/f_260909_215227_zeus_*) carry an
+    -- Obsidian Destroyer holding a Black King Bar on two of them.
+    -- ⚠️ AND THOSE TWO ROWS ARE THE EVIDENCE FOR A HARNESS DEFECT, not just
+    -- supply: tests/mock's unit objects answer `IsMagicImmune()` FALSE on a hero
+    -- carrying BKB, so J.CanCastOnNonMagicImmune -- whose entire job is that
+    -- veto -- passes a spell-immune hero on every fixture frame in this repo.
+    -- Pinned in tests/test_zuus_arc_execute_kill.lua section 3.  This scan sees
+    -- the modifier because it reads the frame's own unit spec; a lever measured
+    -- through the helper does not.
+    assert(nImmune == 9, nImmune .. ' spell-immune hero-instants across BOTH '
+        .. 'directories, was 9 as of 2026-09-10: ' .. table.concat(sWhere, '; ')
         .. '. More is more supply for the WIDENING question section 4 leaves open.')
     local nBkb, bOwn = 0, false
     local OWN_ROW = FIXTURE .. ' / ' .. BB .. ' / ' .. BKB_MOD
@@ -451,8 +461,15 @@ tests['supply: the whole TREE holds exactly one, and it is the staged frame'] = 
     -- STILL ZERO IN tests/fixtures/: all three are staged, so no corpus glob
     -- sees any of them, and backlog -109's "the corpus itself still has none"
     -- is unchanged.  Do not merge those two sentences.
-    assert(nBkb == 3, 'the tree holds ' .. nBkb .. ' Black-King-Bar immunity '
-        .. 'instant(s), was 3 as of 2026-09-07. More supply is good news for the '
+    -- 3 -> 5 ON 2026-09-10 (hero): the two new rows are the same Obsidian
+    -- Destroyer, on two of the eight first-ever Zeus frames.  STILL ZERO IN
+    -- tests/fixtures/ -- all five are staged, so the sentence above about
+    -- corpus globs is unchanged.  What IS new is that those two rows are also
+    -- the evidence for the harness defect noted at the scan above: the helper
+    -- J.CanCastOnNonMagicImmune cannot see any of these five, because the mock
+    -- answers IsMagicImmune() false on all of them.
+    assert(nBkb == 5, 'the tree holds ' .. nBkb .. ' Black-King-Bar immunity '
+        .. 'instant(s), was 5 as of 2026-09-10. More supply is good news for the '
         .. 'WIDENING question, and it has to be re-read rather than re-baselined.')
     -- MEMBERSHIP, not "the first one".  Until 2026-09-07 there was exactly one
     -- such instant, so "first" and "the one this file reads" were the same row

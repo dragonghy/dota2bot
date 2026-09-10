@@ -7752,5 +7752,23 @@
     "limits": "(1) bot:GetActiveMode() 离线恒 0(第 13 条世界断言)⇒ 测试 §4.2 只能核验「本语料里没有一帧读作 RETREAT」这个前提,不能观测撤退时的行为;(2) 语料里 WK 的兜底支路外层只在 3 帧为真,**1 帧移动不是率**,只是「域非空且方向正确」;(3) 不主张「WK 不该消耗」—— 主张的是「outnumbered 时不该用唯一的硬控去点满血的人」,总账要一波来结。",
     "issue": "GH #708(2026-09-10 英雄组开)。另开 GH #709 记 trunk 上同一成因的三处未立案 red(暂存帧把 WK 语料 38→44;GH #705 只盖住四个文件里的一个)。报告 iterations/reports/hero/20260910T105241Z.md",
     "admission": "P4.2 入集冻结期,**不请求入集**(唯一合法裁定是 FROZEN-HOLD)。登记在案,等冻结解除后再提。"
+  },
+  "zusarcexec_20260910": {
+    "date": "2026-09-10T14:0xZ",
+    "backlog_item": "OWNER_PRIORITIES P4.4(bots/ 主体配额)+ 章程 backlog -141「下一轮先切 Zeus 的施法帧(364764 那局)」。两件事同一个工作单元:先切帧,再用切出来的帧买一条本来无法测量的杠杆。",
+    "owner": "hero",
+    "gate": "zusarcexec (NEW soak id, turbo-only, 未 armed;STANDALONE —— 不与任何 id 合取,helper 内不读任何兄弟 id,也不读 abilityASBonus)",
+    "bots_lua_changed": true,
+    "headline": "`bots/BotLib/hero_zuus.lua` X.ConsiderQ 的**第一条**开火点(处决支路)把「我能收掉他」写在**位置**上而不写在**判据**里:它排在其余六条之上、不看 mode、直接返回 BOT_ACTION_DESIRE_HIGH,而它对这一帧的全部要求只有 `J.GetHP( npcEnemy ) <= 0.2`。百分比不是击杀判据,而且它藏起来的误差**随对局变大**(左边随最大生命缩放,弧电伤害不随)。六行之下的对线支路测的正是这条支路声称的事 —— `J.WillKillTarget( creep, nDamage, DAMAGE_TYPE_MAGICAL, nCastPoint )` —— 用的还是**这条支路自己算出来却从不读**的 `nDamage`。armed 就是把那一句原样追加成一个合取项,**不发明任何阈值**。",
+    "star_main_judgement": "⭐ **这条杠杆的域在两小时前还不存在。** Zeus 在本仓一直是 **0 帧**(已入集的两局 draft 里都没有 zuus),所以任何 Zeus 支路的域读数都只能是 0。本轮先切了本仓**第一批 Zeus 真实帧**(8 个,`tests/frames/f_260909_215227_zeus_*`),支路的域立刻从空变成非空。这是 `hero-54`「那是关于**帧在哪里切**的事实,不是关于机器人的事实」(GH #702)在**第二个英雄**上的复现,而且这次连**切在哪一秒**都是判据:头 6 帧切在施法戳上,支路域 2 帧、函数域 **0**(ConsiderR/ConsiderW 先赢);另外 2 帧是拿检测条件回时间线上**反查**出来的(ult/bolt 都在 cd 上的瞬间),函数域立刻变成 2。⭐⭐ **域非空要分两个高度报**:支路域(算术)与函数域(决策)不是一个量 —— 被 armed 掐掉的那一帧会**落到下面六条支路**,可能换个目标照样出手。本轮两帧都是**沉默**、0 次改瞄,那是这份语料的性质,不是杠杆的性质。",
+    "change": "bots/BotLib/hero_zuus.lua:新 `X.zuus_ArcExecuteFinishes( hTarget, nDamage, nCastPoint )`(turbo + 'zusarcexec' 时返回 `J.WillKillTarget( hTarget, nDamage, DAMAGE_TYPE_MAGICAL, nCastPoint )`,否则 `return true`);X.ConsiderQ 顶部处决循环的 `if` 追加 `and X.zuus_ArcExecuteFinishes( npcEnemy, nDamage, nCastPoint )`,出厂四个合取项**逐字不动**且**先求值**⇒ gate off 与出厂逐字节等价。",
+    "direction": "**两个高度分别陈述,因为它们不是同一条断言**:(1) 在**支路**上由构造严格收窄 —— 往一个 `return` 的 `if` 上追加合取项只能删掉本支路的出手,加不出出手(test §4.3 在全语料上驱动了这一条,而不是从形状断言);(2) 在**函数**上,被掐掉的帧会**落到下面六条支路**,它们可能对**另一个目标**下同一个技能的单 ⇒ armed **改瞄**和**沉默**一样常见,必须分列报。今天的语料上两帧都是沉默、0 改瞄。",
+    "domain": "137 语料文件 → 57 帧有活的 Zeus → 42 帧弧电可施放 → **4 帧进到处决支路** → 去掉 §0.2 那个 BKB 瞬间后 **3 帧** → armed **留 1 / 掐 2**。函数高度:**2 帧**改变 Zeus 的下单,**全是沉默**,0 改瞄。⛔ 这四个数**没有**写成语料规模棘轮(见 validation 最后一条)。",
+    "pin_frame": "tests/frames/f_260909_215227_zeus_exec_wk_615.lua,t=615.5:Zeus 10 级、弧电 4 级(KV arc_damage 180)、cd 0;Wraith King 241/1317 = 18.3% 血、71.4u,是施法距离内**唯一**的敌方英雄;闪电吼 3 级还有 0.6s、大招还有 48.1s。**同一局录像的战斗日志给出地面真相**:613.3 / 615.2 / 617.2 三发弧电全打在这个 WK 身上(实测每发 130 点已减伤后伤害,对 241 点血),617.9 才是那记闪电吼,而 WK 在 **619.9 死在 pudge 手上**。三发「处决」,人头是别人的。",
+    "carveout_frame": "tests/frames/f_260909_215227_zeus_bolt_wk_434.lua:同一个 WK,**4 点血**,弧电真的收得掉 ⇒ armed **保留**这一发。没有这一帧,「armed 收窄」和「armed 是个关断开关」是同一个读数。",
+    "harness_finding": "⛔ **量具缺陷,顺手买到的,而且它先污染了本杠杆自己的域**:`tests/mock` 的单位对象在英雄身上挂着 `modifier_black_king_bar_immune` 时,`IsMagicImmune()` 仍然答 **false**。`J.CanCastOnNonMagicImmune` 整个存在的意义就是否掉这种英雄,而在本仓**每一个 fixture 帧**上它从不否。现场:`f_260909_215227_zeus_exec_od_1467.lua` 选中的 OD 还剩 0.6s BKB,mock 让出厂支路开火,引擎不会。⇒ 本条目的 domain 行报 4 也报 3,直接受影响的支路远不止本条。钉在 tests/test_zuus_arc_execute_kill.lua §3,并在 tests/test_lion_drain_immune_target.lua 的 BKB 扫描处交叉引用(那份扫描读帧文件自己的 unit spec,所以**它看得见**这五个瞬间,而走 helper 的杠杆看不见)。",
+    "validation": "新 tests/test_zuus_arc_execute_kill.lua **14/14 全绿**(`lua5.1 tests/run_tests.lua test_zuus_arc_execute_kill.lua`);铁律 6 静态半 `bash tools/agent/luacheck_gate.sh` **exit 0 / 0 warnings**;本轮增量打红的两条棘轮已在**造成它们的同一个工作单元内**修好(test_zuus_jump_landing_reach 49→57 live-Zeus 且 geometry 5/5/5→10/11/9;test_lion_drain_immune_target 7→9 免疫瞬间、3→5 BKB 瞬间)。⛔ **本文件刻意不写语料规模棘轮**:GH #705/#709 的教训是那类棘轮在别的 stream 加帧的当天变红,而红出来的话跟它守的杠杆无关;§5 断言的是**性质**(非空、子集、两个具名帧),精确漏斗写在文件头的散文里。",
+    "not_touched": "**刻意不折进来:Static Field。** X.ConsiderW 自己的击杀估计带 `+ target:GetHealth() * abilityASBonus`,本判据不带 ⇒ armed 在这一项上**偏保守**(出厂 b=0.09,在本支路自己的阈值上最多 0.09*0.2*max_hp = 最大生命的 1.8%)。这是**登记过的代价不是疏漏**:读 `abilityASBonus` 会让它变成该量的**第三个**消费方,而「第二个消费方空域」正是 `zusstatic` 的条件 (a) 能只在 ConsiderR 一个消费方上买的前提(queue hero-15,钉在 tests/test_zuus_static_field_second_consumer.lua §6)。**一条杠杆不能花掉另一条杠杆的前提。**",
+    "issues": "本轮已开:见报告 iterations/reports/hero/20260910T140000Z.md §8(主发现 [hero];量具缺陷 [harness])。"
   }
 }
