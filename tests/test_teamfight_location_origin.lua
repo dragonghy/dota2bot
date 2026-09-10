@@ -1,5 +1,17 @@
--- [tfnull 20260910] What J.GetTeamFightLocation hands its 25 callers when the
--- ally centroid has no contributor -- pinned on the real frames of the corpus.
+-- [tfnull 20260910] What J.GetTeamFightLocation hands its 35 call sites when
+-- the ally centroid has no contributor -- pinned on the real frames of the
+-- corpus.
+--
+-- ⭐ PRIOR ART, and it is not this file. The diagnosis below -- empty list ->
+-- Vector(0,0) -> handed to consumers that only test `~= nil`, with the
+-- 1400/1500 radius mismatch as the in-game route into it -- was already
+-- written down in tests/test_activemode_world_assertion.lua ("A SHIPPED
+-- READING THAT IS NOT A HARNESS ARTEFACT"), which recorded it as a candidate
+-- lever and deliberately did NOT change bots/. This round takes that lever up
+-- gated, and adds three things that file does not have: the consequence priced
+-- at four named call sites (including one that does NOT fire), a substitute
+-- anchor measured against the centroid it stands in for, and a mutation stand.
+-- The precondition that file set is still the promote bar -- see section 3.
 --
 -- THE DEFECT (the shape the charter is scanning for: a set feeds the UPSTREAM
 -- gate and then has no vote in the DOWNSTREAM free variable). The branch exists

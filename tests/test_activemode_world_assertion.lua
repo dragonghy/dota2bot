@@ -74,6 +74,16 @@
 -- CANNOT decide how often it is entered; it is recorded here as a candidate
 -- lever with its precondition (in-game observation or a labelled synthetic),
 -- NOT proposed as a change.  Nothing in bots/ is touched by this file.
+--
+-- ⭐ 2026-09-10: that candidate lever was TAKEN UP, gated, by the strategy desk
+-- as `tfnull` (bots/FunLib/jmz_func.lua, tests/test_teamfight_location_origin.
+-- lua, state.json:tfnull_20260910).  The diagnosis above is the PRIOR ART and
+-- the later round says so; what it adds is the consequence priced at four call
+-- sites, the substitute anchor, and a mutation stand.  **The precondition this
+-- file set still stands and is now the promote bar**: `tfnull` is inert in
+-- every shipped game, and nothing may un-gate it until the frequency of the
+-- empty list is bought by in-game observation or a labelled synthetic -- which
+-- this corpus cannot supply, for the reason the whole file exists.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -438,19 +448,43 @@ tests['[reverse] shipped: GetCenterOfUnits answers the map origin for an empty l
 end
 
 tests['[reverse] GetTeamFightLocation hands that origin back as a location'] = function()
-    -- The gap is structural, not incidental: there is no emptiness check
-    -- between GetSpecialModeAllies and the return, so "no ally is attacking
-    -- near the member" is reported to all 35 consumers as "the fight is at the
-    -- river". In game the escape is the radius mismatch below; this harness
-    -- cannot measure how often it is entered, and this file does not claim to.
+    -- The gap is structural, not incidental: "no ally is attacking near the
+    -- member" is reported to all 35 consumers as "the fight is at the river".
+    -- In game the escape is the radius mismatch below; this harness cannot
+    -- measure how often it is entered, and this file does not claim to.
+    --
+    -- 2026-09-10, strategy desk: the emptiness guard this pin was watching for
+    -- LANDED, as the gated candidate `tfnull` (tests/test_teamfight_location_
+    -- origin.lua, state.json:tfnull_20260910). The pin is NOT retired, because
+    -- the thing it asserts has not changed: `tfnull` is inert in every shipped
+    -- game, so the SHIPPED answer is still the origin. What changed is how the
+    -- pin asks. It used to forbid the TEXT `#allyList` in the body -- which the
+    -- guard's own condition contains, so a gated fix could not land without a
+    -- false red. It now asserts the BEHAVIOUR on a real frame with nothing
+    -- armed, plus the requirement that any emptiness guard in this body be
+    -- gated. Ungating `tfnull` therefore still goes red HERE, which is the
+    -- point: this file's numbers (8 non-nil team readings, 40 at the origin,
+    -- 7 qualifying core rows) are all readings of the shipped path.
+    local J = rf.load('tests/fixtures/f_260819_222052_zuus_w2_leak.lua')
+    local vShipped = J.GetTeamFightLocation(GetBot())
+    assert(vShipped ~= nil, 'this frame must still reach the branch')
+    assert(vShipped.x == 0 and vShipped.y == 0,
+        'the SHIPPED path no longer answers the map origin on this frame -- if a '
+        .. 'guard was promoted (gate removed), this pin and every count above it '
+        .. 'describe a tree that no longer exists')
     local src = read_file('bots/FunLib/jmz_func.lua')
     local body = src:match('function J%.GetTeamFightLocation.-\nend')
     assert(body, 'J.GetTeamFightLocation not found')
     assert(body:match('J%.GetCenterOfUnits%(%s*allyList%s*%)'),
         'the center-of-units call moved; re-read this pin')
-    assert(not body:match('#allyList'),
-        'GetTeamFightLocation now inspects the ally list before returning its center -- '
-        .. 'if that is the emptiness guard, this pin has been fixed and should be retired')
+    if body:match('#allyList') then
+        assert(body:match("J%.IsSoakCandidate%(%s*'tfnull'%s*%)"),
+            'GetTeamFightLocation now inspects the ally list, and that inspection '
+            .. 'is NOT gated on tfnull -- either a new lever landed ungated here, '
+            .. 'or tfnull was promoted; both mean this file must be re-read')
+        assert(body:match('J%.IsModeTurbo%(%)'),
+            'the emptiness guard is not turbo-only')
+    end
     assert(body:match('J%.IsInTeamFight%(%s*member,%s*1500%s*%)'),
         'the IsInTeamFight radius moved off 1500')
     assert(body:match('J%.GetSpecialModeAllies%(%s*member,%s*1400,%s*BOT_MODE_ATTACK%s*%)'),

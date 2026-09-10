@@ -7674,18 +7674,22 @@
     "admission": "P4.2 入集冻结期,**不请求入集**(唯一合法裁定是 FROZEN-HOLD)。登记在案,等冻结解除后再提。"
   },
   "tfnull_20260910": {
-    "date": "2026-09-10T08:1xZ",
+    "date": "2026-09-10T07:47Z",
     "owner": "strategy",
     "armed": false,
     "admission": "P4.2 入集冻结期,**不请求入集**(冻结期唯一合法裁定是 FROZEN-HOLD)。登记在案,冻结解除后再提。**新 id 而不是搭 `l5trees` 的车**:l5trees 已经载了三处互不相干的行为(章程 0OWCLEAR (4)),再把第四处、而且是团战定位这种毫不相干的行为挂上去,会让「l5trees 无效果」的裁定彻底说不清是哪一处无效。",
     "headline": "⭐ **`J.GetTeamFightLocation` 在盟友质心为空时返回 `Vector(0,0)` —— 地图原点,被当成一个测出来的地点交给它的调用方。**没有任何调用方能把这个哨兵值和一个真地点区分开(它们只查 `~= nil`)。它一直没被人看见,是因为 (0,0) 在 Dota 地图上就是中路/河道正中,**看起来不像错的**。",
+    "prior_art": "⭐ **先例不是本轮,必须点名。** 诊断本身(空名单 → `Vector(0,0)` → 交给只查 `~= nil` 的消费者;1400/1500 半径错配是真实对局里进入它的路)**已经写在 `tests/test_activemode_world_assertion.lua` 的「A SHIPPED READING THAT IS NOT A HARNESS ARTEFACT」一节**,那一轮**明确不动 bots/**,把它记为「带前置条件的候选杠杆」。本轮做的是**把这个候选杠杆 gated 地接上**,并补三样它没有的东西:**在四个点名的调用点上给后果定价**(含一个**查过之后不成立**的)、**替代锚点与它所代替的质心之间的实测差**、以及**变异台**。⛔ **那一轮设的前置条件原样成为 promote 门槛**:在「空名单的频率」被**实机观察或带标注的合成局**买到之前,不许去掉这个 gate —— 而本语料按构造买不到它。**发现权归那一轮;本轮只声称接线、定价与钉帧。**",
     "defect": "本轮扫的形状(章程 0OWCLEAR「下一格」(3)):**集合喂了上游的闸,却在下游的自由变量上被丢掉**。让这条分支存在的集合是 `J.GetEnemyCount(member,1400) >= 2`(member 身上有敌人 ⇒ 这里有团战);它只决定**答不答**,而**答什么**是 ATTACK 模式**盟友**的质心。闸与质心问的是两个不同的问题:`J.IsInTeamFight` 用**引擎**的 1500 近邻表(不含自己、含幻象),`J.GetSpecialModeAllies` 走**队伍名册**的 1400(含自己、无幻象)⇒ 两个 ATTACK 幻象、或两个盟友落在 1400–1500 的环带、而 member 自己不在 ATTACK,就能让闸为真而名单为空 ⇒ `J.GetCenterOfUnits({})` = `Vector(0,0)`。",
     "gate": "`bots/FunLib/jmz_func.lua` 的 `J.GetTeamFightLocation`:`#allyList == 0 and J.IsModeTurbo() and J.IsSoakCandidate('tfnull')` ⇒ `targetLocation = member:GetLocation()`。**质心有贡献者时逐字节不变。**写成**兜底**而不是新政策:分支自己已经证明团战在 member 的 1400 内(两个谓词都这么说),member 的位置是保守锚点(在我方这一侧)且买得到分支的全部目的;返回 nil 则是把一场真实存在的团战整个丢掉。",
     "readings": "语料 110 个 fixture / **5 个**帧上有 member 过闸(这 5 个也是本仓能驱动到 `GetTeamFightLocation` 的全部帧)。出货答案在这 5 帧上**全是 (0,0)**,距它所报告的那场团战 **844 / 5271 / 6007 / 6471 / 8017** u;armed 后答案 = member 位置(距团战 0)。**注入读数**(给整个名册注入 ATTACK,是本语料唯一能让质心非空的办法):真质心距 member **7 / 161 / 259 / 295 / 307** u —— 替代锚点比它替换掉的哨兵**近两个数量级**,而且 armed 与出货在这 5 帧上**逐字节相同**(本改动在真实语料上的风险上界)。",
     "limits": "⛔ **频率没买到,一个数字都不许当频率引用。** 没有任何 fixture 携带 mode 数据(`GetActiveMode()` 答 mock 通用 getter 默认值 **0**,而 `BOT_MODE_ATTACK = 1003`)⇒ 「5/5 走空名单路径」是 **loader 的性质**,不是真实对局的频率;§3 **测**了这一条而不是引用它(将来 make_fixture.py 若开始 dump mode,§3 当轮变红,honest-bounds 那段必须重写)。真实对局的可达性论证是**结构性的**(幻象 / 1400–1500 环带 / member 不在 ATTACK),写在源码抬头,**仍然是结构性的**。(ii) `J.GetCenterOfUnits` 还有第二条通往哨兵的路——名单非空但无一 `J.IsValid`——**故意保留出货行为**,覆盖它需要在 `GetCenterOfUnits` 自己那把尺之外再立一把「谁算数」的尺。(iii) **哪一场团战**这个自由变量(名册顺序 + `break`)原样不动,§2b 钉住,免得以后有人借这个 id 夹带那个杠杆。",
     "consequence_priced": "已读的调用点四个:`mode_farm_generic.lua:363`(哨兵 2500 内 ⇒ 辅助 / 18 级以上核心**停止打钱**);`ability_item_usage_generic.lua:5883`(TP 去哨兵最近的塔,门槛是落点距哨兵 <1800 ⇒ **可以真的飞到中路**);`hero_furion.lua:367`(先知 TP)。**反例也登记**:`mode_roshan_generic.lua:52` 的 2000u 门**不会**被 (0,0) 翻动——两个 Roshan 坑距原点 3798 / 4100,而该门要求 bot 在坑 1600 内 ⇒ 距原点恒 >2198。**查过了,没有就是没有。**",
+    "issue": "**GH #701**(2026-09-10 协同组开)。报告 iterations/reports/strategy/20260910T074737Z.md",
     "tests": "tests/test_teamfight_location_origin.lua(**8 节全绿**:1 缺陷 / 1b 哨兵不可区分 / 2 armed / 2b 不动「哪一场」/ 3 loader 界限(测出来的)/ 4 注入 no-op 上界 + 替代锚点差距 / 5 全语料不许无中生有 / 5b 未 armed 与非 turbo 两个方向)。tools/agent/mutstand_tfnull.sh **8 腿 8/8,STAND GREEN**(M3 死接线 / M4 去掉空判定的扩域 / M5 换成泉水这个「另一个像样的锚点」/ M6 pullcad 陷阱(合取已 promote 的 `fight`)/ M7、M8 两个已发表读数的对照)。",
     "process_finding": "⚠️ **变异台不能与开工自检并发跑。** 本轮 08:0xZ 的 `routine_selfcheck.sh` trunk-health 腿报了三个 RED(`test_lanekill_domain_census` 1021→1020、`test_midsupint_mirror_interrupt` 2215→2204 与 285→284、`test_lion_ult_reserve_domain` 载入失败)——**全部是污染**:变异台按设计把 mutant 写进**共享工作树**的 `bots/FunLib/jmz_func.lua`,自检的 lua 腿正好在那几秒读它。三个测试在干净树上**逐一复跑全绿**(census 6/6、midsupint 8/8、lionult 8/8),`git status` 也证明台子恢复干净。⇒ **规矩:自检的 trunk-health 腿跑完之前不要起变异台,反过来也一样。**",
-    "next": "(1) 冻结解除后与 P1(creeppull+pullcamp)、P2(野区续航一族)、`l5trees` 三处一起排队;(2) 语料请求:make_fixture.py dump `GetActiveMode()` —— 那是把本条的**频率**从结构论证变成读数的唯一办法,也会一次性解开本仓所有 mode 依赖分支的离线不可测(`cmqpoke` limits (2) 是同一堵墙)。"
+    "next": "(1) 冻结解除后与 P1(creeppull+pullcamp)、P2(野区续航一族)、`l5trees` 三处一起排队;(2) 语料请求:make_fixture.py dump `GetActiveMode()` —— 那是把本条的**频率**从结构论证变成读数的唯一办法,也会一次性解开本仓所有 mode 依赖分支的离线不可测(`cmqpoke` limits (2) 是同一堵墙)。",
+    "callsites": "**35 个**(`grep -rn GetTeamFightLocation bots/` = jmz_func 内 2 + 其余 33),与先例那一轮记的 35 一致。",
+    "broke_and_fixed": "本改动**当场打红了先例那一轮的钉子**:`test_activemode_world_assertion.lua` 的 `[reverse]` 节用**源码文本** `not body:match('#allyList')` 守着「还没有空判定」,而空判定的条件里就有这个字面串 ⇒ **gated 的修复也会让它假红**。已就地改成**行为断言**(未 armed 时该帧仍答 (0,0))**加**「本体里若有空判定,必须 gated 在 `tfnull` 且 turbo-only」——于是**去掉 gate 仍然会在那里变红**,那正是它该守的东西。该文件 14/14 全绿;它登记的 8 / 40 / 7 三个读数**未动**(gated ⇒ 出货路径逐字节不变)。"
   }
 }
