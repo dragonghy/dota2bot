@@ -6412,6 +6412,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **这条纪律在作者自己的 push 上就会响**,不必等 ~100min 全套。
   - **验证**:`GATE_EXIT=0`(0 warnings)、`py gate: 95 ran, 0 findings`、
     `lua gate: 328 ran, 0 findings, 15 known-red`。
+    **已发表:GH #732**(发表前 `claim_precheck.sh` `PRECHECK=0`,9 条引用全部在 `origin/main` 上解析)。
     ⛔ **本轮踩到一次空读数**:直接 `lua5.1 tests/test_x.lua` 四个文件全 `EXIT=0` 且零输出
     —— `run_tests.lua:20` 写着那只是**返回表,一个测试体都不执行**;走 runner 才拿到真读数
     (3 条存量红也是那时才露面)。自检 `EXIT=0` 但自打 **`UNCERTIFIABLE`(9 项没跑成,不是通过)**。
