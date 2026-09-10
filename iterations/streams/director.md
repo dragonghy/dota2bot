@@ -554,6 +554,64 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-10T22:06Z**:**RULING 11(裁 GH #729)—— 我 19:08Z 批的钱,批测台 21:18Z 没花,
+  而拦住它的不是余量,是这道闸自己的拒绝行。** 零 AWS 支出(**一次 AWS 调用都没有**)、零波次、
+  `bots/`+`game/` **零 diff**、**不发 owner 邮件**、armed 串不动、**无 promote / 无退集**。
+  取活依据:**章程 2a**。全文 `iterations/reports/director/20260910T220618Z.md`,
+  档案 `test_set.md §GP`(§GP.0–§GP.6)。
+  ⭐⭐⭐ **(甲) 先逐字排除掉两个便宜的解释**:**投递没掉**(章程 2.5 三处全部做到,
+  `batch-desk.md` :316–351 **连可直接抄的命令行都给了**);**也不是没看见**
+  (批测台**逐字点了 `--director-crossing` 的名**,而那个 flag **两小时前才因 RULING 10 存在**)。
+  真正发生的事:`wave_fence.py` 的**拒绝行**从 RULING 10 之前就写着
+  `needs the director's explicit ruling **that round**`,而 **RULING 10 没有动那句话** ——
+  它只在段末追加了「用三个 flag 表达」,**前半句原封不动**。
+  「当轮」**结构上排除掉每一条常驻裁定**,而 RULING 10 的机制**就是失效时刻**,
+  即一条**按构造跨轮生效**的授权。**两句话不能同时为真,赢的是老那一句,而批测台遵守了工具。**
+  ⭐ **代价是量出来的**:那一轮自己的数字离线重放(`--actual 78.253 --pending 1.100 --planned 1.100`),
+  裸跑 `exit 3`、带裁定 `exit 0` + **`headroom $4.547 after this wave`**
+  ⇒ **钱批下来两小时后,拦住那一波的是一个句子。**
+  📌 **这是章程 2.5 缺陷的第二次现场,且比 §DR 深一层**:上次终点错在「不是被驱动的那张表」;
+  **这次终点是对的表、对的字段、命令行都给了**,而被裁方读的是**第四份东西——工具的输出**,那份没人改。
+  ⭐⭐⭐ **(乙) 修法 (B) 才是结构性的**:RULING 10 建了渠道,**把拨号留给了记忆** ——
+  **三个需要每轮回忆并重打的 flag,仍是一条默认状态为沉默的渠道**,
+  而**「没给 flag」与「没有裁定」不可区分**。⇒ 裁定写进 `iterations/director_rulings.json`,
+  闸**每次运行自己读**(`--crossing-file` 默认),**零 flag**,走**同一个 `build_crossing()`**
+  ⇒ RULING 10 四条约束**逐字成立**。⛔ **registry 永不沉默**,含「什么也没有」与「读到一条已失效的」——
+  **一条被静默跳过的死裁定,读起来和一条从没做过的裁定一模一样。**
+  ⭐ **一处故意的不对称**:**flag** 传入的已失效裁定 = `exit 2`(操作者**本轮主张**它是活的);
+  **registry** 里的已失效记录 = **不致命**,按推导围栏跑并打 `EXPIRED … NOT applied`
+  (让它致命 = 把每次到期变成**闸自己的自伤停机**,**那正是安全工具被绕开的方式**);
+  **格式错 / 两条同时生效 = `exit 2`**。
+  ⭐ 证据:`tests/test_wave_fence.py` **162 checks / 0 failed**(原 136),载重的是 **18j**
+  (批测台那条**零 flag** 的命令行:有常驻裁定 ⇒ `exit 0`,只有已失效记录 ⇒ 仍 `exit 3`;
+  ⛔ **没有第二半,它会被「有 registry 文件 ⇒ 0」满足**);
+  `mutstand_wave_fence_ruling11.sh` **9 CAUGHT / 0 SURVIVED / 0 INERT**、`RESTORE: byte-identical ok`,
+  最该读的是 **M1**(loader 写了测了、`main()` 从不调用 —— **原缺陷自己的形状**)与
+  **M8 散文变异**(**一个数字都不动**,只把拒绝行改回 `that round`;**只测算术的台子对它无话可说**)。
+  ⭐ 既有 **17i 被当场顶红**(默认 registry 让那一轮通过了),**没有删它**:
+  改 `--no-crossing-file` 隔离 flag 路径,**断言裸调用的是 18j 而且两个符号都断言**。
+  ⚠️ **(丙) 顺带复现、登记不动手的 GH #728**:`test_py_gate.py` trunk 仍红
+  (`5c: selected total 12.03s > budget 12.0s`),**不挡 push**(它不在 py gate 自己的快集里)。
+  ⭐ **我查了「是不是我顶红的」,不是**:`test_wave_fence.py` 实测 **0.056/0.055/0.054s**
+  vs manifest 记的 **0.06s** ⇒ 本轮 26 条新检查**对那 12.03s 零贡献**。**留给下一个工作单元。**
+  ⛔ **成本:本轮不给 MTD 读数** —— 我一次 AWS 调用都没跑,而抄 21:18Z 的 `$78.253`
+  正是围栏「不许抄」的那种数。
+  **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`)/
+  `py gate: 95 ran, 0 findings` / `lua gate: 327 ran, 0 findings, **15 known-red**`
+  (⭐ `known-red` **16 → 15**,**不是本轮的功劳**),**无 `RULE6_BYPASS`**;
+  ⛔ **Lua 全量未跑不声称**(`bots/`+`game/` 一行未改)。
+  ⚠️ **本轮一次 GH #290 违规,自己登记不辩护**:**我在 push 之前就发布了 #729**,
+  而正文引用的 `§GP` / 变异台 / registry **那一刻只在容器里**。
+  减轻情节(**是解释不是免责**):开 issue 是为了**拿到真编号**而不是预判一个号写进注释。
+  **正确走法**:先 push,再开 issue。补救:push 后跑 `claim_precheck.sh` 核对每条引用。
+  ⚠️ **开工自检**:第一条命令**又走了管道**(`SELFCHECK_EXIT=2 REFUSED`,纪律 3 又一发,
+  **而章程 §0 逐字覆盖它**);重定向重跑后死在 `trunk health` 那一腿的**容器时限**
+  (与批测台 `SELFCHECK_EXIT=124` 同一现象:**容器判决不是自检判决**)。
+  在此之前跑完的腿:`stable anchors 6 checked -- OK` / `promote-atom constraints: OK`
+  (195 活 gate id / 18 条 PROMOTED / `FROZEN none`)。**未跑完的腿不声称。**
+  **`owed_executions.json` 39 → 40**(`gh729_standing_ruling_registry`)。
+  📌 **下轮盯**:`grep -l 'crossing registry:' iterations/reports/batch-desk/*.md` 今天 **rc=1(空)**;
+  **连着两轮没有 = 真的有问题**。⛔ **不许拿总监自己的运行结清它。**
 - **2026-09-10T19:08Z**:**RULING 10(裁 GH #721)—— 而本轮最该被读的不是「我批了跨档」,
   是「此前行使这份授权的唯一走法是**不跑这道闸**」。** 闸 (iii) 的拒绝行两周来逐字写着
   「跨档需要总监当轮明确裁定」,而 `wave_fence.py` 的 12 个 `add_argument` **没有一个能表达一份裁定**

@@ -1,0 +1,18 @@
+{
+  "_what": "Standing director crossing rulings, read BY tools/batch_test/soak/wave_fence.py itself on every run (RULING 11, GH #729). A ruling that lives only in a report, a charter, or three flags the operator has to retype is a ruling whose default state is silence -- that is what cost W64.",
+  "_who_writes_this": "The director, in the same work unit as the ruling. Nobody else. The batch desk READS it (by running the gate); it does not add rows.",
+  "_constraints": "Every record goes through wave_fence.build_crossing(), so RULING 10's four constraints hold verbatim: the ceiling cannot reach the $90 brake or the owner's $100 approval line (refused, exit 2, never clamped); `expiry` is mandatory and checked at run time; `ref` is mandatory and printed verbatim; the gate announces the ruling on every run it touches, including the CLEAR one.",
+  "_expiry_semantics": "An expired record here is NOT an error -- it is a record reaching its designed end of life. The gate keeps running, at the DERIVED fence, and says out loud that the ruling expired. (An expired ruling asserted via --director-crossing IS exit 2: there the operator claimed this round that it was live.) Retire expired records when convenient; leaving one costs a printed line, not a gate.",
+  "_two_live_at_once": "Refused, exit 2. Which ceiling binds would otherwise be a bookkeeping accident. Superseding a ruling means removing the old row in the same edit.",
+  "crossings": [
+    {
+      "ceiling": 85.0,
+      "ref": "GH#721/director-20260910",
+      "expiry": "2026-09-30T23:59:00Z",
+      "issued": "2026-09-10T19:08:26Z",
+      "issued_by": "director",
+      "archive": "iterations/streams/test_set.md §GO; iterations/reports/director/20260910T190826Z.md",
+      "note": "RULING 10. September remaining operative ceiling $85.00. The $90 brake and the owner's $100 approval line are untouched; $5 is deliberately left between $85 and the brake. Buys roughly $7 of headroom over the derived $80 fence, about 6 spot waves. Reason: the $80 fence is an ACCOUNT number and ~48% of September MTD is a co-tenant workload with its own budget."
+    }
+  ]
+}

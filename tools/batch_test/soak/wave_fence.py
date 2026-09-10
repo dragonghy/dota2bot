@@ -410,6 +410,158 @@ def build_crossing(ceiling, ref, expiry, brake=DEFAULT_BRAKE,
             "expiry": when.isoformat()}, None
 
 
+# ------------------------------------------------- RULING 11 (director, GH #729)
+#
+# RULING 10 BUILT THE CHANNEL AND LEFT THE DIALLING TO MEMORY.
+#
+# 2026-09-10T19:08Z the director ruled: September operative ceiling $85.00,
+# ref GH#721/director-20260910, expiry 2026-09-30T23:59:00Z.  It was delivered
+# by the book -- charter 2.5's three places, `batch-desk.md` carrying the
+# literal command line, `owed_executions.json`, `test_set.md §GO`.
+#
+# 2026-09-10T21:18Z, the very next round, the desk ran this gate and reported:
+#
+#     "**未用 `--director-crossing`** -- 跨 `$80` 需总监**当轮**明确裁定,
+#      **本台不预支**"
+#
+# It was not disobedience and it was not a missed delivery.  IT WAS THIS FILE
+# TALKING.  The refusal line has said, since long before Ruling 10, that
+# crossing needs the director's ruling THAT ROUND -- and Ruling 10 did not
+# touch that sentence.  So the desk obeyed the tool, and the tool's sentence
+# structurally excludes every ruling not issued inside the current round,
+# which is EVERY standing ruling: Ruling 10's whole mechanism is an EXPIRY,
+# i.e. an authorisation that is meant to span rounds by construction.  The
+# two sentences cannot both be true and the older one won.
+#
+# Cost, measured not asserted: replaying that round's own numbers offline
+# (`--actual 78.253 --pending 1.100 --planned 1.100`) gives exit 3 bare and
+# exit 0 with the ruling, `headroom $4.547 after this wave`.  The desk was
+# blocked by a sentence, not by money, ~2h after the money was granted.
+#
+# TWO FIXES, AND THE SECOND IS THE STRUCTURAL ONE.
+#
+# (A) The refusal line no longer says "that round".  What actually binds is
+#     "a ruling that has not expired AT THIS INSTANT", which is what the code
+#     has always checked; the prose was describing a different tool.
+#
+# (B) A ruling in force is READ BY THIS TOOL, not remembered by its operator.
+#     Ruling 10 diagnosed "the tool cannot be told about the ruling" and built
+#     three flags -- but three flags that must be RECALLED and RETYPED every
+#     round are still a channel whose default state is silence, and absence of
+#     a flag is indistinguishable from absence of a ruling.  So a director
+#     issuing a crossing now writes one record into
+#     `iterations/director_rulings.json`, and the gate reads it ITSELF, on
+#     every run, with no flag at all.  Same `build_crossing`, so all four of
+#     Ruling 10's constraints hold verbatim on this path too -- a registry
+#     ruling that reaches for the brake is refused exactly as a flagged one is.
+#
+# THE REGISTRY IS NEVER SILENT.  Every run prints what it found, including
+# "nothing".  That is the load-bearing half: a ruling that has EXPIRED and is
+# skipped silently reads exactly like a ruling that was never made, and the
+# desk would file "跨档需裁定,本台不预支" again while a director who wrote
+# the record believes the channel is open.  That is the defect this ruling
+# exists to close, one month later.
+#
+# ONE DELIBERATE ASYMMETRY, because the two paths answer different questions:
+#   * an EXPIRED ruling passed via FLAGS is exit 2 (Ruling 10, unchanged) --
+#     the operator ASSERTED this round that a ruling is live, and it is not;
+#     acting on a false assertion is the failure.
+#   * an EXPIRED record in the REGISTRY is NOT fatal -- nobody asserted it,
+#     it is an old record reaching its designed end of life.  The gate runs
+#     at the DERIVED fence and says so loudly.  Making it fatal would turn
+#     every expiry into a self-inflicted outage of the gate itself, which is
+#     how a safety tool gets routed around.
+# Registry records that are MALFORMED, or two live records disagreeing, ARE
+# fatal: then we do not know what is in force, and "did not run" is the only
+# honest answer.  It is also the restrictive direction -- nothing launches.
+
+DEFAULT_RULINGS_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))))),
+    "iterations", "director_rulings.json")
+
+
+def load_standing_crossing(path, now=None, brake=DEFAULT_BRAKE,
+                           owner_line=DEFAULT_OWNER_LINE):
+    """Read the standing crossing ruling, if any, out of the registry file.
+
+    Returns (crossing_or_None, notes, fatal_error_or_None).  `notes` is always
+    non-empty: this tool never says nothing about the registry (see above).
+    A non-None fatal error is exit 2 -- the gate did not run.
+    """
+    notes = []
+    if not os.path.exists(path):
+        notes.append("crossing registry: none at %s -- no standing ruling. "
+                     "The gate runs at the DERIVED fence." % path)
+        return None, notes, None
+    try:
+        with open(path) as fh:
+            blob = json.load(fh)
+    except Exception as exc:
+        return None, notes, (
+            "crossing registry %s could not be read (%s). A registry we "
+            "cannot parse means we do not know whether a ruling is in force, "
+            "and guessing 'none' answers a question nobody asked."
+            % (path, exc))
+    records = blob.get("crossings") if isinstance(blob, dict) else blob
+    if not isinstance(records, list):
+        return None, notes, (
+            "crossing registry %s has no `crossings` list. Expected "
+            "{\"crossings\": [{ceiling, ref, expiry}, ...]}." % path)
+
+    moment = now if now is not None else _dt.datetime.now(_dt.timezone.utc)
+    live, expired = [], []
+    for i, rec in enumerate(records):
+        if not isinstance(rec, dict):
+            return None, notes, (
+                "crossing registry %s entry %d is not an object." % (path, i))
+        for key in ("ceiling", "ref", "expiry"):
+            if key not in rec:
+                return None, notes, (
+                    "crossing registry %s entry %d has no `%s`. Ruling 10's "
+                    "three constraints are not optional on this path."
+                    % (path, i, key))
+        when = parse_snapshot_instant(rec["expiry"])
+        if when is None:
+            return None, notes, (
+                "crossing registry %s entry %d has expiry %r, which is not an "
+                "instant this tool can read. An unreadable expiry is not an "
+                "expiry." % (path, i, rec["expiry"]))
+        (expired if moment > when else live).append((rec, when))
+
+    for rec, when in expired:
+        notes.append("crossing registry: ruling %s EXPIRED at %s (now %s) -- "
+                     "NOT applied. This run uses the DERIVED fence. If a "
+                     "crossing is still wanted, the director issues a fresh "
+                     "ruling; an expired one is no ruling."
+                     % (rec["ref"], when.isoformat(), moment.isoformat()))
+    if len(live) > 1:
+        return None, notes, (
+            "crossing registry %s has %d rulings in force at once (%s). Which "
+            "ceiling binds is then a bookkeeping accident, so nothing "
+            "launches until the director retires the stale one."
+            % (path, len(live), ", ".join(r["ref"] for r, _ in live)))
+    if not live:
+        if not expired:
+            notes.append("crossing registry: %d record(s) at %s, none in "
+                         "force -- the gate runs at the DERIVED fence."
+                         % (len(records), path))
+        return None, notes, None
+
+    rec, _when = live[0]
+    crossing, err = build_crossing(rec["ceiling"], rec["ref"], rec["expiry"],
+                                   brake=brake, owner_line=owner_line,
+                                   now=moment)
+    if err is not None:
+        return None, notes, (
+            "crossing registry %s: ruling %s is not one this tool will "
+            "accept -- %s" % (path, rec["ref"], err))
+    notes.append("crossing registry: ruling %s IS IN FORCE (read from %s, not "
+                 "from a flag). It is applied below."
+                 % (crossing["ref"], path))
+    return crossing, notes, None
+
+
 # ---------------------------------------------------------------- pure core
 
 def resolve_thresholds(notifications, limit):
@@ -924,14 +1076,24 @@ def check(actual, limit, time_unit, notifications, planned=0.0, pending=0.0,
                 "wave is past the top of it."
                 % (operative, crossing["ref"]))
         else:
+            # Ruling 11(A).  This sentence used to say the ruling had to be
+            # the director's "that round", which excludes every standing
+            # ruling -- and Ruling 10's mechanism IS a standing ruling with an
+            # expiry.  What binds is unexpired AT THIS INSTANT, which is what
+            # the code checks; the prose described a different tool, and the
+            # desk obeyed the prose two hours after a live ruling was granted.
             lines.append(
                 "A launch at this instant would put MTD past $%.2f, i.e. the "
-                "owner receives a Budget alert email. Crossing needs the "
-                "director's explicit ruling that round, plus the written "
-                "explanation the charter owes for every crossed threshold. "
-                "Ruling 10: that ruling is expressed with --director-crossing "
-                "/ --crossing-ref / --crossing-expiry, so it lands in this "
-                "tool's reading instead of beside it." % fence)
+                "owner receives a Budget alert email. Crossing needs a "
+                "director crossing ruling that has NOT EXPIRED at this "
+                "instant -- it does NOT have to have been issued this round; "
+                "a standing ruling is in force until its expiry. No such "
+                "ruling was found: see the `crossing registry` line above for "
+                "what was read. If one exists, it belongs in "
+                "iterations/director_rulings.json (Ruling 11) where this tool "
+                "reads it by itself; --director-crossing / --crossing-ref / "
+                "--crossing-expiry remain for a ruling made mid-round."
+                % fence)
         lines.append("WAVE_FENCE: THROTTLED (exit 3) -- do not launch. Headroom "
                      "was $%.3f, this wave needs $%.3f."
                      % (operative - actual - pending, planned))
@@ -1181,6 +1343,17 @@ def main(argv=None):
                              "Mandatory, and checked before the gate runs: a "
                              "crossing ruling that cannot expire becomes the "
                              "permanent ceiling.")
+    parser.add_argument("--crossing-file", default=DEFAULT_RULINGS_FILE,
+                        metavar="PATH",
+                        help="RULING 11: the standing-ruling registry this "
+                             "tool reads BY ITSELF, so a live ruling does not "
+                             "depend on the operator remembering three flags. "
+                             "What it found is printed on every run, "
+                             "including when it found nothing.")
+    parser.add_argument("--no-crossing-file", action="store_true",
+                        help="RULING 11: do not consult the registry. Prints "
+                             "a line calling itself NOT CONSULTED; a standing "
+                             "ruling may exist and this run did not look.")
     parser.add_argument("--brake", type=float, default=DEFAULT_BRAKE)
     parser.add_argument("--owner-line", type=float, default=DEFAULT_OWNER_LINE)
     parser.add_argument("--budget-name", default=BUDGET_NAME)
@@ -1222,6 +1395,35 @@ def main(argv=None):
         print("gate (iii) DID NOT RUN. That is not a pass -- do not launch.")
         print("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
         return 2
+
+    # Ruling 11.  Validated in the same place and for the same reason: before
+    # anything is read.  The registry speaks on EVERY run -- "nothing in
+    # force" is a reading, and it is the one whose silence cost W64.
+    if args.no_crossing_file:
+        print("crossing registry: NOT CONSULTED (--no-crossing-file). A "
+              "standing ruling may be in force and this run did not look; "
+              "that is a SKIP, not a finding of none.")
+    else:
+        standing, notes, registry_error = load_standing_crossing(
+            args.crossing_file, brake=args.brake, owner_line=args.owner_line)
+        for note in notes:
+            print(note)
+        if registry_error is not None:
+            print("UNCERTIFIABLE: %s" % registry_error)
+            print("gate (iii) DID NOT RUN. That is not a pass -- do not "
+                  "launch.")
+            print("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
+            return 2
+        if crossing is not None and standing is not None:
+            # Both spoke.  The flag wins -- it is this round's assertion --
+            # but the override is announced, because a flag silently shadowing
+            # a standing ruling is how the registry would stop being read.
+            print("crossing registry: ruling %s is IN FORCE but is OVERRIDDEN "
+                  "by the --director-crossing flags given this round (%s). "
+                  "The flag is what binds below."
+                  % (standing["ref"], crossing["ref"]))
+        elif standing is not None:
+            crossing = standing
 
     offline = args.actual is not None
     instances = None

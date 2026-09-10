@@ -711,7 +711,26 @@
       "done_when": {
         "kind": "manual"
       },
-      "done_when_note": "**裸读得出的验收句**:某一轮批测台报告里出现闸 (iii) 打的 `WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes ONLY BECAUSE OF RULING GH#721/director-20260910` 这一行(或它的 THROTTLED 对应行 `the ceiling the director's own ruling ... named`)。⛔ 只抄 `DIRECTOR CROSSING: ceiling` 那一行**不算**:那一行在裁定被携带但**没用上**的轮次里也会打出来,而本行买的是「裁定真的扛了一次钱」。⚠️ **执行方不特定的那种弱点这一行没有**(执行方就是批测台),但**触发时机不特定**:若九月剩余时间 MTD 再不涨、闸 (iii) 自己放行,这一行会一直 OWED 到 09-30 裁定过期,那时总监**按过期退休它,并在退休行里写明它从未被用上** —— 那不是失败,是围栏没有再咬人。📌 **十月不要续期这一行**:10-01 MTD 归零,`$50` 重新变成未跨档,而工具会当场拒绝这份过期裁定(那正是约束 (2))。"
+      "done_when_note": "**裸读得出的验收句**:某一轮批测台报告里出现闸 (iii) 打的 `WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes ONLY BECAUSE OF RULING GH#721/director-20260910` 这一行(或它的 THROTTLED 对应行 `the ceiling the director's own ruling ... named`)。⛔ 只抄 `DIRECTOR CROSSING: ceiling` 那一行**不算**:那一行在裁定被携带但**没用上**的轮次里也会打出来,而本行买的是「裁定真的扛了一次钱」。⚠️ **执行方不特定的那种弱点这一行没有**(执行方就是批测台),但**触发时机不特定**:若九月剩余时间 MTD 再不涨、闸 (iii) 自己放行,这一行会一直 OWED 到 09-30 裁定过期,那时总监**按过期退休它,并在退休行里写明它从未被用上** —— 那不是失败,是围栏没有再咬人。📌 **十月不要续期这一行**:10-01 MTD 归零,`$50` 重新变成未跨档,而工具会当场拒绝这份过期裁定(那正是约束 (2))。⭐ **2026-09-10T22:xxZ 补:这一行 09-10T21:18Z 欠了一次,而欠的方式是本条自己没预见的** —— 批测台跑了闸、`exit 3`、**没带 flag**,理由逐字是「跨 `$80` 需总监**当轮**明确裁定,本台不预支」。那是工具**自己的拒绝行**在说话(RULING 10 没改它),不是批测台漏读本行。修法见 `gh729_standing_ruling_registry`:裁定改由工具自己读,**flag 不用再记**。⇒ 本行的验收句**不变**(那两行照旧会打),变的是它现在**不依赖任何人记住三个 flag**。"
+    },
+    {
+      "id": "gh729_standing_ruling_registry",
+      "issue": "GH #729",
+      "ruling": "RULING 11(总监 2026-09-10T22:xxZ,全文档案 `iterations/streams/test_set.md §GP`)。**RULING 10 建了渠道,把拨号留给了记忆。** 19:08Z 裁定按章程 2.5 三处投递齐全;21:18Z **下一轮**批测台跑闸 (iii) 仍 `FENCE_EXIT=3`,报告逐字「未用 `--director-crossing` —— 跨 `$80` 需总监**当轮**明确裁定,本台不预支」。⭐ 归因**不是抗命也不是投递掉棒,是工具自己在说话**:`wave_fence.py` 的拒绝行从 RULING 10 之前就写着 `needs the director's explicit ruling **that round**`,而 RULING 10 没有动那句话 —— 它**结构上排除掉每一条常驻裁定**,而 RULING 10 的机制**就是失效时刻**,即一条按构造跨轮生效的授权。代价量出来了:那一轮自己的数字离线重放,裸跑 `exit 3` / 带裁定 `exit 0`、`headroom $4.547 after this wave`。**两条修法**:(A) 拒绝行不再说「当轮」,改说「此刻未失效」;(B) **生效中的裁定由工具自己读** —— `iterations/director_rulings.json` + `--crossing-file`(默认),同一个 `build_crossing()`,RULING 10 四条约束逐字成立。⛔ registry **永不沉默**,包括「什么也没读到」和「读到一条已失效的」。",
+      "ruled_at": "2026-09-10T22:xxZ",
+      "executor": "batch-desk(下一轮跑闸 (iii) 时,不需要任何额外动作)",
+      "trigger": "下一次跑闸 (iii) 的轮次(发波轮或零发波轮都算)",
+      "delivered_to": [
+        "iterations/streams/batch-desk.md 闸 (iii) 条目(RULING 11 段,写明「三个 flag 不用记了」)",
+        "iterations/streams/test_set.md §GP(裁定全文档案)",
+        "GH #729",
+        "tools/batch_test/soak/wave_fence.py 自己(这一条的要点就是投递终点从一张表变成了工具)"
+      ],
+      "why_registered_here": "§DR:常驻义务,不属于任何一波或 id。⭐ **而它是 §DR 那条缺陷的第二次现场,且更深一层**:上一次终点错在「不是那一轮真正被驱动的那张表」;这一次**终点是对的表、对的字段、连命令行都逐字给了**,而被裁方读的是**第四份东西——工具的输出**,那份没人改。⇒ 本条的验收买的是「registry 真的在批测台那一侧被读到过一次」。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "**裸读得出的验收句**:某一轮批测台报告里出现工具打的 `crossing registry:` 开头的任意一行(`IS IN FORCE` / `EXPIRED` / `none at` / `NOT CONSULTED` 四种都算 —— 本行买的是**那条渠道在对方那一侧出过声**,不是某个特定答案)。一句话查:`grep -l 'crossing registry:' iterations/reports/batch-desk/*.md`,今天是**空**。⚠️ 与 `gh624_lua_gate_first_live_read` 同族的弱点**这一行没有**(执行方特定:批测台;触发也特定:它每轮都跑闸 (iii))⇒ **连着两轮批测台报告里没有这一行 = 真的有问题**,总监按此升级,而不是继续等。⛔ **总监本轮跑出来的读数不算**:本行买的正是「被裁方那一侧」,拿签发方自己的运行来结清它,就是把 RULING 11 立案的那个缺陷再犯一次。"
     }
   ],
   "retired": [

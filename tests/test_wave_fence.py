@@ -814,8 +814,14 @@ check(rc == 0 and any("carried but NOT needed" in l for l in out),
 # 17i. The wiring: main() really reaches build_crossing, and really reaches
 #      check() with the result.  Without this, every check above could pass on
 #      a function nothing calls.
+#      `--no-crossing-file` because Ruling 11 (below) made the DEFAULT
+#      non-neutral: the shipped registry holds a live $85 ruling, so a bare
+#      invocation now clears this round on purpose.  This block is about
+#      Ruling 10's FLAG path, so it opts out of the registry rather than
+#      asserting a number that the registry's contents can move.  (Test 18j
+#      is the one that asserts the bare invocation, and asserts both signs.)
 _base = ["--actual", "77.847", "--limit", "100", "--thresholds", "50,80,100",
-         "--planned", "1.10", "--pending", "1.10"]
+         "--planned", "1.10", "--pending", "1.10", "--no-crossing-file"]
 check(wf.main(_base) == 3, "17i: main() refuses the blocking round")
 check(wf.main(_base + ["--director-crossing", "85",
                        "--crossing-ref", _REF,
@@ -827,6 +833,183 @@ check(wf.main(_base + ["--director-crossing", "85",
       "17i3: ...and an expired ruling is exit 2 (so 17i2 is not 'flag => 0')")
 check(wf.main(_base + ["--director-crossing", "85"]) == 2,
       "17i4: ...and a ruling with no ref never reaches the gate")
+
+# ---- 18. RULING 11 (GH #729): the ruling is READ, not remembered ----------
+#
+# The filing story, because it is the specification.  Ruling 10 granted the
+# $85 ceiling at 19:08Z and delivered it by the book.  At 21:18Z -- the very
+# next round -- the desk ran this gate and filed "未用 --director-crossing:
+# 跨 $80 需总监当轮明确裁定,本台不预支", and the wave did not fly.  It was
+# not disobedience: the gate's OWN refusal line said the ruling had to be from
+# "that round", which structurally excludes every standing ruling, and Ruling
+# 10's mechanism is a standing ruling with an expiry.  The desk obeyed the
+# tool.  So (A) that sentence is fixed, and (B) a ruling in force is read out
+# of a registry by this tool itself, because three flags that must be recalled
+# and retyped every round are a channel whose default state is silence.
+
+import contextlib                                             # noqa: E402
+import io                                                     # noqa: E402
+import json as _json                                          # noqa: E402
+import tempfile                                               # noqa: E402
+
+_tmp = tempfile.mkdtemp(prefix="wave_fence_ruling11_")
+
+
+def _registry(records, name):
+    path = os.path.join(_tmp, name)
+    with open(path, "w") as fh:
+        _json.dump({"crossings": records}, fh)
+    return path
+
+
+def _rec(ceiling=85.0, ref=_REF, expiry=_FUTURE, **extra):
+    out = {"ceiling": ceiling, "ref": ref, "expiry": expiry}
+    out.update(extra)
+    return out
+
+
+def _run_main(argv):
+    """main() plus everything it printed."""
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = wf.main(argv)
+    return rc, buf.getvalue().splitlines()
+
+
+# 18a. No registry is not an error, and it is not silent either.
+_c, _notes, _err = wf.load_standing_crossing(os.path.join(_tmp, "absent.json"))
+check(_c is None and _err is None, "18a: a missing registry is not fatal",
+      "err=%r" % _err)
+check(any("no standing ruling" in n for n in _notes),
+      "18a2: ...and it still says so out loud")
+
+# 18b-e. Everything we cannot read is fatal, because then we do not know what
+#        is in force and 'none' would be a guess.
+_bad = os.path.join(_tmp, "bad.json")
+with open(_bad, "w") as _fh:
+    _fh.write("{not json")
+_c, _n, _err = wf.load_standing_crossing(_bad)
+check(_c is None and _err and "could not be read" in _err,
+      "18b: an unparseable registry is exit-2 material", "err=%r" % _err)
+
+_noList = os.path.join(_tmp, "nolist.json")
+with open(_noList, "w") as _fh:
+    _json.dump({"rulings": []}, _fh)
+_c, _n, _err = wf.load_standing_crossing(_noList)
+check(_c is None and _err and "no `crossings` list" in _err,
+      "18c: a registry with no crossings list is refused", "err=%r" % _err)
+
+_c, _n, _err = wf.load_standing_crossing(
+    _registry([{"ceiling": 85.0, "ref": _REF}], "noexpiry.json"))
+check(_c is None and _err and "expiry" in _err,
+      "18d: Ruling 10's mandatory expiry is mandatory on this path too",
+      "err=%r" % _err)
+
+_c, _n, _err = wf.load_standing_crossing(
+    _registry([_rec(expiry="end of september")], "badexpiry.json"))
+check(_c is None and _err and "not an instant" in _err,
+      "18e: an unreadable expiry is not an expiry", "err=%r" % _err)
+
+# ---- 18f. THE ASYMMETRY, and it is deliberate.  An expired ruling asserted
+#           by FLAG is exit 2 (17i3): the operator claimed this round that it
+#           was live.  An expired RECORD is a record reaching its designed end
+#           of life -- nobody asserted it, so the gate runs at the derived
+#           fence.  Making it fatal would turn every expiry into an outage of
+#           the gate itself, which is how a safety tool gets routed around.
+#           But it must be LOUD: a silently-skipped expired ruling reads
+#           exactly like a ruling that was never made, which is the 21:18Z
+#           failure all over again with the director on the wrong side of it.
+_expired_reg = _registry([_rec(expiry=_PAST)], "expired.json")
+_c, _notes, _err = wf.load_standing_crossing(_expired_reg)
+check(_c is None and _err is None,
+      "18f: an EXPIRED record is not fatal (unlike an expired flag)",
+      "err=%r" % _err)
+check(any("EXPIRED" in n and _REF in n for n in _notes),
+      "18f2: ...but it is announced, named, and called not-applied")
+check(any("DERIVED fence" in n for n in _notes),
+      "18f3: ...and the run says which bound it fell back to")
+
+# 18g. Two live rulings: which one binds would be a bookkeeping accident.
+_c, _n, _err = wf.load_standing_crossing(
+    _registry([_rec(), _rec(ceiling=88.0, ref="GH#999/other")], "two.json"))
+check(_c is None and _err and "in force at once" in _err,
+      "18g: two rulings in force at once refuse rather than pick",
+      "err=%r" % _err)
+
+# 18h. Ruling 10's four constraints hold verbatim on the registry path -- the
+#      registry is a delivery channel, not a second, laxer set of rules.
+_c, _n, _err = wf.load_standing_crossing(_registry([_rec(ceiling=95.0)],
+                                                   "overbrake.json"))
+check(_c is None and _err and "brake" in _err,
+      "18h: a registry ruling cannot reach the brake either", "err=%r" % _err)
+_c, _n, _err = wf.load_standing_crossing(_registry([_rec(ceiling=105.0)],
+                                                   "overowner.json"),
+                                         brake=120.0)
+check(_c is None and _err and "approval line" in _err,
+      "18h2: ...nor the owner's approval line", "err=%r" % _err)
+
+# 18i. A good record loads, and carries its own identity forward.
+_live_reg = _registry([_rec()], "live.json")
+_c, _notes, _err = wf.load_standing_crossing(_live_reg)
+check(_err is None and _c is not None and _c["ceiling"] == 85.0
+      and _c["ref"] == _REF,
+      "18i: a well-formed standing ruling loads", "c=%r err=%r" % (_c, _err))
+check(any("IN FORCE" in n and "not from a flag" in n for n in _notes),
+      "18i2: ...and the run says it came from the registry, not a flag")
+
+# ---- 18j. THE LOAD-BEARING ONE: the 21:18Z command line, verbatim.  No
+#           crossing flags at all -- exactly what the desk ran -- must now
+#           clear on a registry holding the live ruling, and must still refuse
+#           when the only record has expired.  Without the second half this
+#           test would pass on "registry file present => 0".
+_w64 = ["--actual", "78.253", "--limit", "100", "--thresholds", "50,80,100",
+        "--planned", "1.10", "--pending", "1.10", "--no-accrual-check"]
+rc, out = _run_main(_w64 + ["--crossing-file", _live_reg])
+check(rc == 0, "18j: the desk's own flagless command clears under a standing "
+      "ruling", "got rc=%d" % rc)
+check(any("ONLY BECAUSE OF RULING" in l and _REF in l for l in out),
+      "18j2: ...and still names the ruling that paid for it")
+rc, out = _run_main(_w64 + ["--crossing-file", _expired_reg])
+check(rc == 3, "18j3: ...and the same command refuses when it has expired",
+      "got rc=%d" % rc)
+
+# 18k. Fix (A) itself.  The prose is the half no arithmetic test can see, and
+#      it is the half that actually blocked the wave.
+rc, out = _run_main(_w64 + ["--crossing-file",
+                            os.path.join(_tmp, "absent.json")])
+check(rc == 3, "18k: bare refusal still refuses", "got rc=%d" % rc)
+check(not any("ruling that round" in l for l in out),
+      "18k2: the refusal no longer demands a ruling issued THIS ROUND -- that "
+      "sentence excluded every standing ruling, and the desk obeyed it")
+check(any("NOT EXPIRED at this instant" in l for l in out),
+      "18k3: ...and names what actually binds instead")
+check(any("director_rulings.json" in l for l in out),
+      "18k4: ...and says where a ruling in force belongs")
+
+# 18l. Opting out is a skip, not a finding of none.
+rc, out = _run_main(_w64 + ["--no-crossing-file"])
+check(rc == 3 and any("NOT CONSULTED" in l and "SKIP" in l for l in out),
+      "18l: --no-crossing-file says it did not look", "got rc=%d" % rc)
+
+# 18m. A flag shadowing a live registry ruling is announced, or the registry
+#      quietly stops being the thing anyone reads.
+rc, out = _run_main(_w64 + ["--crossing-file", _live_reg,
+                            "--director-crossing", "82",
+                            "--crossing-ref", "GH#999/adhoc",
+                            "--crossing-expiry", _FUTURE])
+check(rc == 0 and any("OVERRIDDEN" in l for l in out),
+      "18m: the flag wins over the registry, and says that it did",
+      "got rc=%d" % rc)
+check(any("ceiling $82.00" in l for l in out),
+      "18m2: ...and it is the flag's ceiling that binds")
+
+# ---- 18n. The SHIPPED registry, not a fixture.  Every assertion above is
+#           about the reader; this one is about the record we actually ship,
+#           so a typo in the ruling itself cannot ride to the desk unread.
+_c, _notes, _err = wf.load_standing_crossing(wf.DEFAULT_RULINGS_FILE)
+check(_err is None, "18n: the shipped registry is one this tool accepts",
+      "err=%r" % _err)
+check(_notes, "18n2: ...and it is never read silently")
 
 for line in failures:
     print(line)
