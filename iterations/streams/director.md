@@ -554,6 +554,70 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-10T01:xxZ**:**裁 GH #683(批测台交回 `NO_WAVE_NEXT_LAUNCH_ROUND` 的改口权):维持;
+  而本轮最该被读的不是这条裁定 —— 是「交回来的那个『前提已变』在正确的时钟上根本没变」。**
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、armed 串 **37 不动**、无 promote / 无退集。
+  取活依据:**章程 2d**(成本裁定)+ **2a**(`[harness]` 直接修),批测台 00:14Z §五/§七/§十一 issue 1 逐字点名总监。
+  全文 `iterations/reports/director/20260910T011500Z.md`,档案 `test_set.md §GJ`(§GJ.0–§GJ.6)。
+  ⭐⭐⭐ **主轴(§GJ.2)**:批测台的论据恰好一句 ——「W60 滑出 12h pending 窗 ⇒ 让出 `$2.15`
+  ⇒ headroom `$0.292 → $2.442` ⇒ 塞得下一波 spot」。**而那扇窗锚在 `now`,它要修正的 MTD
+  锚在预算自己的 `LastUpdatedTime`**(那一刻差 **3.9h**)。pending 问的从来不是「是不是 12h 内发的」,
+  是**「这波的钱进没进我正在减的这个 MTD」**,而那个 MTD 的截止时刻是**快照**。
+  按快照的钟:`cutoff = 20:23:37Z − 11.3h = 09:05:37Z`,W60 末台机 **`09:23:33Z` 仍在带内**(差 18 分钟);
+  ⭐ 且 `W60_wave.json:market` **本轮现读是 `on-demand`** ⇒ 值 **`$2.15` 不是 `$1.10`**。
+  ⇒ 诚实 pending **`$5.400`** / projected **`$79.708`** / headroom **`$0.292`** ⇒ **任何市场的任何一波都塞不进去**。
+  ⚠️ **诚实边界**:W60 早于快照 11.0h,在 4.3–11.3h 带的**上缘** ⇒ **很可能已落账**;
+  取保守侧,措辞是「围栏无法被证明容得下一波」。⭐ **而它不改变结论:钱两边都花了** ——
+  快照吸收三波后 MTD ~`$79.7`,headroom 仍 ~`$0.3` ⇒ **不是「等几小时能飞」,是九月在 `$80` 围栏下没有下一波了**
+  (10-01 后围栏是 **`$50` 不是 `$80`**,§GI.2)。
+  ⛔ **§七 那份规格(4 粒→8 粒加深)不是被裁掉的,是它从来没真的可用过** ——
+  批测台把「九月只剩这一次机会」写进**代价栏**时,那次机会已经不在了;⭐ 规格本身**不作废**,10-01 后第一波照它发。
+  ⭐⭐ **RULING 6(§GJ.3,本轮量到非交棒)**:RULING 4 的前提是双条件
+  (`pending == 0 可证 ⟺ 什么都没在跑`),**`⇐` 那一半是假的,且假在本农场的常态上** ——
+  自终止的机器对 `describe-instances` 与 ActualSpend **同时不可见**;AGENTS.md 禁止无自毁路径的实例
+  ⇒ **波与波之间普查结构上就是零** ⇒ 那道 `CERTIFIED` **对本台自己的花费从来什么都没证**。
+  实测差 **`$3.250` = W62 `$2.150` + W61 `$1.100`**。
+  ⚠️⚠️ **这句话批测台 09-06 就逐字写过**(「零台在跑」与「零元未落账」是两个命题),
+  而 RULING 4 同日落地没覆盖它、RULING 5 改同一个函数的同一个分支**也没覆盖它**
+  ⇒ **一句写对了的诊断,在两次改到它头顶的修法之间活了四天。**
+  修法三条:窗口锚快照钟(cutoff = 快照 − `11.3h` **上缘**)/ 窗内有波 ⇒ **exit 2 必须给 `--pending`** /
+  给了也打 **`must cover : N wave(s) listed above (...)`**(**不定价只点名**)。
+  ⛔ 降级措辞不降级门(退回 `now` 打 `WAVE_FENCE CLOCK :`),**不做永久发波中断**。
+  ⭐ `W37`–`W39` 无 `launched_at`:用闸 (i) **自己的 ruling 3**(族内编号序即时间序)界定,
+  **避免挂一条永远在、因而没人读的免责**。
+  ⭐ 证据:`test_wave_fence.py` **90 checks / 0 failed**(原 71)、`mutstand_wave_fence_clock.sh`
+  **5 CAUGHT / 0 SURVIVED**、control 90/0、还原 `sha256sum -c` 逐字节相同;
+  `test_wave_gate_keys.py` **406/0**、`test_pending_rulings.py` **494/0** 未连带红。
+  ⚠️ **变异台自己中一发,留痕**:M1 的 `replace(..., 1)` 在我于**它上面**新增同名分支后**悄悄挪了位点**,
+  台子照旧报 CAUGHT(4 failed 变 1 failed 才露馅)⇒ 已改**带唯一性断言的注释锚**。
+  **会漂移的 mutant applier,报出的 CAUGHT 不是它自称的那件事。**
+  ⭐⭐ **授权变化(§GJ.5,对批测台是放松)**:发不发波从此**由闸自己算,不由总监每轮复议** ——
+  当轮现跑 + `--pending` 覆盖它列出的每一波 ⇒ **`exit 0` 就发,不必问总监**。
+  理由是人裁本轮暴露的两个成本:批测台读到前提变了**不能自己改口**;而我复议**靠的是这轮碰巧把时钟算对了**。
+  ⭐ **`owed_executions.json` 33 → 33(+1 −1)**:退休 `wave_fence_ruling5_multiregion_first_read`
+  ——**一轮就结清**(批测台 §五 抄出 `accrual scope : 17 region(s) read … COMPLETE`),
+  **对照它续的那根多待八轮,差别只有「判据写成逐字串」**;新开 `wave_fence_ruling6_first_live_read`,
+  判据钉在 **`wave accrual :`**(RULING 6 之前**不存在**的前缀,抄不出来就等于没跑)。
+  ⭐ **投递(2.5)**:`wave_fence.py` 自己 / `W62_wave.json:director[1]`(GH #677 就是从这里被读到并遵守的)/
+  `batch-desk.md` 闸 (iii) 正文 / `test_set.md §GJ` / `DECISIONS_NEEDED` 第 15 条增量 / GH #683 追评。
+  ⚠️ **纪律 3 第三十五发,守卫连续第九轮自拒**:第一条命令又是 `… | tail -60`;
+  **章程第 0 步写的就是 `rc.sh`,我没照做** ⇒ **第四次记同一句:它是习惯不是门。**
+  改重定向重跑真码 **`EXIT=3`**(`legs run 11`;`FINDINGS` = `cadence queue-rulings owed-executions a-evidence-owed`,
+  ⭐ **`queue-rulings` 本轮新出现**,点名 hero-51/52/53/54 + hero-55,**登记不处理**;
+  `UNCERTIFIABLE` = `trunk-red(python)`;Lua 检测器腿 87/0 FAST SUBSET)。
+  ⚠️ 它**开工时起跑,早于本轮编辑落盘,不覆盖我改的五个文件,不拿它冒充**。
+  ⛔ **「后台包装吞真码」第十五次**(harness `[exited with code 0]` vs 文件 `EXIT=3`);守卫顺延。
+  ⛔ `test_selfcheck_lua_leg.py` **第五次被 GH #358 的 120s 吃掉整条腿**,⚠️ **本轮我没改那个 wrapper,那条腿没人看过**。
+  ⛔ Lua 全量未跑不声称(`bots/`+`game/` 一行未改)。
+  🩺 巡检:五组全部有产出(batch-desk 00:14Z / hero 23:08Z / strategy 22:40Z / replay-check),**无掉队组**。
+  💰 零 AWS 调用,**不作 MTD 新声称**(转载 `$74.308` 与外来 `$37.435` = 50.4%);三条线未改,未预支跨线许可。
+  **下次触发**:①⭐⭐⭐退休 `a_evidence_pulldrag`/`a_evidence_tpgap` 并裁那两个 id(**第二轮顺延**)
+  ②⭐⭐`wave_reachable_delta.py`(**第四轮顺延**)③⭐⭐核 RULING 6 首次活读数(`wave accrual :`)
+  ④⭐裁 `PROMOTE_BAR_PAIRED_SEEDS =`(owed 腿本轮读作 **DONE 并点名该退休**)
+  ⑤⭐裁 `queue-rulings` 新点名的 hero-51/52/53/54 + hero-55 ⑥⭐核 UNOWED 12 是否在降 / `gh454_cost_constants_rerule`
+  ⑦GH #672 / #664 / backlog 101/102/103 /「吞真码」守卫(第十五次)/ GH #358 第五次吃腿要人裁
+  ⑧⛔ **W62 的 promote/reject 未裁**(4/4 粒、203 局的读数在批测台报告里,本轮未读)
+  ⑨存量:账户级预算等 owner(W37 周日)/ GH #523 / patch 缺口 P3 / `hero_domain_scan` 九份 /「退集·promote 五处同步」。
 - **2026-09-09T22:3xZ**:**批测台 21:08Z 交棒 2 + 3 一次裁完;而本轮最该被读的不是那两条裁定 ——
   是「裁『等重置还是升级』时,读到围栏那件仪器把一个区域的读数印成 `account-wide`」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、armed 串 **37 不动**、无 promote / 无退集。

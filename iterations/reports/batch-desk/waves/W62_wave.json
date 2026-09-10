@@ -109,10 +109,20 @@
   "(c) The changeover constant reclaim_blind.py prints (`measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min`) is a HARD-CODED HISTORICAL CONSTANT, not a measurement of the wave being checked -- registered by the 09-08T00:12Z round as its headline finding. It will print on W62's harvest too.",
   "⭐ 总监 2026-09-09T22:xxZ(本文件 `director` 键全文):收割轮**也要跑一次 `wave_fence.py`** —— 它只读、免费,而不发波的轮次正是那条新读数(`accrual scope :`,RULING 5)悄悄不发生的形状;把那一行原样抄进报告。另:**下一个发波轮不发波**,围栏当轮现跑求值、不抄数。"
  ],
- "director": {
-  "ruling": "NO_WAVE_NEXT_LAUNCH_ROUND",
-  "at": "2026-09-09T22:xxZ",
-  "ref": "iterations/streams/test_set.md §GI.1 / §GI.2 / §GI.3",
-  "note": "交棒 2(GH #677)裁定,三条:(1) **下一个发波轮不发波** —— 围栏照旧成立,且**必须当轮现跑 `wave_fence.py` 求值,不许抄 `$0.292` 或任何数**。(2) 「等月初重置」**作为计划被否**:重置后的天花板是 **`$50` 不是 `$80`**(围栏 = 下一个尚未跨过的告警档;离线重构 `fence $50.00` / `headroom $48.900 after this wave`,⚠️ 同一次输出自打 `OFFLINE` 与 `SKIPPED, NOT CERTIFIED` 两行免责)。(3) 「现在升级给 owner」**作为一封新邮件被否**:同一问题已随 W36 邮件(09-06)在 owner 手里(`DECISIONS_NEEDED` 第 15 条),本轮以增量入档,随周日 W37 那封发;提前发信的两个触发条件见 §GI.4。⭐ **本轮同时修了闸 (iii) 自己**(RULING 5):accrual 检查此前把**一个区域**的读数印成 `account-wide`。下一轮跑闸 (iii) 时请把 `accrual scope :` 那一行**原样抄进报告**(`owed_executions.json:wave_fence_ruling5_multiregion_first_read` 的结清判据);⚠️ 别的区域真有实例在计费时,闸 (iii) 会从 CLEAR 变成 `UNCERTIFIABLE (exit 2)` —— **那是修法在生效,不是回归**。"
- }
+ "director": [
+  {
+   "ruling": "NO_WAVE_NEXT_LAUNCH_ROUND",
+   "at": "2026-09-09T22:xxZ",
+   "ref": "iterations/streams/test_set.md §GI.1 / §GI.2 / §GI.3",
+   "note": "交棒 2(GH #677)裁定,三条:(1) **下一个发波轮不发波** —— 围栏照旧成立,且**必须当轮现跑 `wave_fence.py` 求值,不许抄 `$0.292` 或任何数**。(2) 「等月初重置」**作为计划被否**:重置后的天花板是 **`$50` 不是 `$80`**(围栏 = 下一个尚未跨过的告警档;离线重构 `fence $50.00` / `headroom $48.900 after this wave`,⚠️ 同一次输出自打 `OFFLINE` 与 `SKIPPED, NOT CERTIFIED` 两行免责)。(3) 「现在升级给 owner」**作为一封新邮件被否**:同一问题已随 W36 邮件(09-06)在 owner 手里(`DECISIONS_NEEDED` 第 15 条),本轮以增量入档,随周日 W37 那封发;提前发信的两个触发条件见 §GI.4。⭐ **本轮同时修了闸 (iii) 自己**(RULING 5):accrual 检查此前把**一个区域**的读数印成 `account-wide`。下一轮跑闸 (iii) 时请把 `accrual scope :` 那一行**原样抄进报告**(`owed_executions.json:wave_fence_ruling5_multiregion_first_read` 的结清判据);⚠️ 别的区域真有实例在计费时,闸 (iii) 会从 CLEAR 变成 `UNCERTIFIABLE (exit 2)` —— **那是修法在生效,不是回归**。"
+  },
+  {
+   "ruling": "NO_WAVE_NEXT_LAUNCH_ROUND_MAINTAINED",
+   "at": "2026-09-10T01:xxZ",
+   "ref": "iterations/streams/test_set.md §GJ.1 / §GJ.2 / §GJ.3；GH #683",
+   "supersedes_question": "GH #683 (甲):「裁定的前提数已变($0.292 → $2.442),请总监裁维持还是解禁」",
+   "note": "**维持,而理由不是自由裁量:交回来的那个「前提已变」在正确的时钟上不成立。** 本台 §五 的 headroom 从 `$0.292` 涨到 `$2.442`,唯一来源是「W60 已滑出 12h pending 窗 ⇒ 让出 $2.15」。⛔ 但那扇窗**锚在 `now`,而它要修正的 MTD 锚在预算自己的 `LastUpdatedTime`(`2026-09-09T20:23:37Z`)**,两个时钟差 3.9h。按快照自己的时钟算:cutoff = `20:23:37Z − 11.3h` = **`2026-09-09T09:05:37Z`**,而 W60 的末台机是 **`09:23:33Z`** —— **still inside the lag band(早于快照 11.0h < 11.3h)**。⇒ **W60 的钱不是落账了,是滑出了一扇从来就不对的窗**。⭐ 而且它是 **on-demand,$2.15 不是 $1.10**(`W60_wave.json:market`,本轮现读)。⇒ 诚实的 pending = W62 `$2.150` + W61 `$1.100` + W60 `$2.150` = **`$5.400`**;projected = `74.308 + 5.400` = **`$79.708`**;对 `$80` 围栏的 headroom = **`$0.292`** —— **任何市场的任何一波都塞不进去**(spot `$1.10` ⇒ `$80.808`,越栏)。⚠️ **诚实边界**:W60 早于快照 11.0h,落在 4.3–11.3h 带的**上缘**,所以它**很可能已经落账**;本裁定取的是**保守侧**,措辞是「围栏无法被证明容得下一波」,不是「W60 一定没落账」。⭐⭐ **而这一条不改变结论,因为钱两边都花了**:W60/W61/W62 无论算在 pending 还是算进 MTD,**都已经花掉**;等快照刷新把三波全吸收,MTD 读作 ~`$79.7`,headroom 对 `$80` 仍是 ~`$0.3`。⇒ **不是「等几小时就能飞」,是九月在 `$80` 围栏下已经发不出下一波了**,直到 10-01(那时围栏变 **`$50`** 不是 `$80`,§GI.2)。⛔ 因此 §七 那份规格(4 粒 → 8 粒加深)**不是被本裁定否掉的,是它从来就没有真的可用过** —— 本台把「九月只剩这一次机会」写进代价栏时,那次机会已经不在了。⭐⭐⭐ **裁定从此不由我每轮复议,由闸自己算(这才是本条的重点)**:`wave_fence.py` 本轮落地 **RULING 6** —— 什么都没在跑**不再**足以证 `pending=$0`;窗口锚在预算快照的时钟上;窗内有波 ⇒ **`UNCERTIFIABLE (exit 2)`,必须给 `--pending`**;给了 `--pending` 还会打一行 **`must cover : N wave(s) listed above (W62, W61, W60)`**。⇒ **下一轮不用再问我**:当轮现跑闸 (iii),`--pending` 覆盖它列出的每一波;**工具打 CLEAR 就飞,打 exit 3 就不飞**。⛔ 不许抄本条里的 `$5.400` / `$79.708` / `$0.292` —— 与 RULING 1 同源:围栏是时间的函数。⭐ **真正能让九月重开的不是裁定,是 `dota2bot-batch` 的 `CostFilters = null`**(GH #515):外来支出 **`$37.435` = MTD 的 50.4%**(本台本轮花 `$0.01` 拿到的硬读数)。已在 `DECISIONS_NEEDED` 第 15 条,**本轮只补数字,不另发信**(遵 §GI.4),随周日 W37 那封走。",
+   "what_the_desk_should_do_next_round": "① 当轮现跑 `wave_fence.py`(免费、只读,**不发波的轮次照样跑**);② 按它列出的波次给 `--pending`,并核对 `must cover` 那一行的每一个波次 id 都在你的和里;③ 把 `wave accrual :` 那一行**原样抄进报告**(`owed_executions.json:wave_fence_ruling6_first_live_read` 的结清判据);④ 工具打 exit 0 ⇒ 按 §七 规格发那一波,**不必再问总监**;打 exit 3 ⇒ 不飞,如实登记。"
+  }
+ ]
 }

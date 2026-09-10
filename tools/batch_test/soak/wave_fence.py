@@ -171,6 +171,58 @@ Two boundaries, stated rather than assumed:
     the desk is already fence-blocked; the honest label is the fix.
   * exit 2 here means could-not-run, as everywhere else in this file.  A
     blocked launch is the safe failure; a launch on an uncertified zero is not.
+  * RULING 6 -- THAT ZERO ALSO HAD A CLOCK, AND IT WAS THE WRONG ONE.
+    Director, 2026-09-10 (GH #683's round; the finding is not GH #683 itself).
+    Ruling 4 above states its precondition as a biconditional:
+
+        pending == 0 is certifiable if and only if nothing is running.
+
+    The `=>` half is sound and is what the exit 2 below enforces: something
+    running does mean pending > 0.  The `<=` half -- the half this branch
+    PRINTS AS CERTIFIED -- is false, and it is false for the farm's normal
+    mode of operation.  `pending` is not "money accruing at this instant"; the
+    charter defines it (batch-desk.md ss2(jia)) as waves already launched whose
+    cost has not reached MTD yet, because ActualSpend lags 4.3-11.3h.  A wave
+    that launched inside that lag and SELF-TERMINATED is invisible to both
+    terms at once: gone from `describe-instances`, not yet in ActualSpend.  And
+    self-termination is not an edge case here -- AGENTS.md forbids launching
+    anything without a self-destruction path, so between waves the census is
+    structurally zero for our own spend.  The census therefore certified
+    nothing about the farm; it only ever caught FOREIGN long-lived compute,
+    which is the single incident it was generalised from.
+
+    Measured, not reasoned: on 2026-09-10T00:14Z the desk ran this gate and got
+    `CERTIFIED (0 accruing instances account-wide)` with `headroom $5.692`,
+    then did the arithmetic by hand and got `$2.442`.  The gap is $3.250 =
+    W62 ($2.150, launched 21:24Z, 61 minutes AFTER the MTD snapshot) + W61
+    ($1.100, 5.0h before it, inside the lag band).  Same family as Rulings 1,
+    4 and 5: a claim wider than its reading, silent by shape, failing toward
+    MORE spending, biting hardest when waves are frequent.
+
+    Second half of the same defect, and the reason the remedy names a clock:
+    the desk's hand window is anchored to NOW while the MTD it corrects is
+    anchored to the budget's own `LastUpdatedTime`.  When that snapshot is
+    stale -- 3.9h stale on 2026-09-10 -- every wave in the gap is dropped from
+    pending by construction.  W60 (09-09T09:23Z) is exactly such a wave: 14.9h
+    before `now` so the desk's 12h window excluded it, but only 11.0h before
+    the snapshot, i.e. still inside the 4.3-11.3h lag band and possibly not in
+    the $74.308 it was being subtracted from.
+
+    The remedy again invents no cost model and no margin constant.  It reads
+    the wave records (local JSON, free, offline) with gate (i)'s own parser and
+    establishes the same kind of PRECONDITION Ruling 4 did, on the right clock:
+
+        pending == 0 is certifiable only if no wave launched after
+        (budget LastUpdatedTime - 11.3h)
+
+    A wave inside that window does not get priced here; the zero simply stops
+    being certifiable and `--pending` becomes required, which is what the desk
+    already computes by hand every round.  Unreadable records or a missing
+    `LastUpdatedTime` DEGRADE THE CLAIM, NOT THE GATE, per Ruling 5: the tool
+    falls back to `now`, says which clock it used, and never calls the result
+    an accrual-complete zero.  Note the fallback direction is the permissive
+    one (`now` is later, so the window is narrower), which is why it is
+    labelled rather than silently taken.
 
 WHAT THIS TOOL DOES NOT RULE ON.  The $90 brake line and the $100 owner
 approval line are the OWNER's numbers, not the budget's, and this tool neither
@@ -192,9 +244,14 @@ Exit codes:  0 the fence holds and the launch is inside it
 """
 
 import argparse
+import datetime as _dt
 import json
+import os
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import wave_throttle  # noqa: E402  -- gate (i)'s wave-record parser, reused
 
 BUDGET_NAME = "dota2bot-batch"
 DEFAULT_BRAKE = 90.0          # owner's brake line; see AGENTS.md AWS policy
@@ -204,6 +261,12 @@ DEFAULT_OWNER_LINE = 100.0    # owner's approval line; reported, never applied
 # `stopping`/`shutting-down` are in: an instance dying right now still billed
 # for the hours it has already run, and those hours are what MTD is behind on.
 ACCRUING_STATES = ("pending", "running", "stopping", "shutting-down")
+
+# Ruling 6.  The upper end of the documented ActualSpend lag.  A wave launched
+# more recently than this before the budget snapshot cannot be assumed to be in
+# it.  The MAX is the load-bearing end: using the 4.3h floor would certify a
+# zero over waves that are merely PROBABLY billed.
+ACCRUAL_LAG_MAX_HOURS = 11.3
 
 
 class Uncertifiable(Exception):
@@ -299,16 +362,109 @@ def scope_line(scope):
             "elsewhere." % (len(regions), shown, why), False)
 
 
+def parse_snapshot_instant(text):
+    """Ruling 6.  The budget's own `LastUpdatedTime`, or None if unreadable.
+
+    Deliberately tolerant of the shapes botocore hands back (a datetime, or an
+    ISO string with an offset or a `Z`).  Returning None is a real answer here
+    -- it routes to the labelled `now` fallback rather than to a guess.
+    """
+    if text is None:
+        return None
+    if isinstance(text, _dt.datetime):
+        return (text if text.tzinfo
+                else text.replace(tzinfo=_dt.timezone.utc)).astimezone(
+                    _dt.timezone.utc)
+    if not isinstance(text, str):
+        return None
+    raw = text.strip().replace("Z", "+00:00")
+    try:
+        parsed = _dt.datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    return (parsed if parsed.tzinfo
+            else parsed.replace(tzinfo=_dt.timezone.utc)).astimezone(
+                _dt.timezone.utc)
+
+
+def waves_since(waves_dir, cutoff):
+    """Ruling 6.  Wave records whose LAST machine went up at or after `cutoff`.
+
+    Returns (rows, why_unread).  `rows` is [(wave_id, last_launch)] sorted
+    newest first; `why_unread` is None on a clean read and a sentence otherwise.
+    A record the parser refuses (no `launched_at`, a bare time of day) is NOT
+    silently dropped -- it comes back as an unread reason, because "we could not
+    date this wave" and "this wave is old" must not print the same.
+
+    One exception, and it is not a softening: W37-W39 predate GH #544 and carry
+    no `launched_at` at all, so a naive read attaches an unread caveat to EVERY
+    future run -- a permanent caveat is an unread one, which is how a gate stops
+    being read.  Those records can be bounded without inventing anything, using
+    gate (i)'s own ruling 3: numeric order IS a time order INSIDE a family.  So
+    an undatable record with a higher-numbered datable sibling that launched
+    before the cutoff is itself before the cutoff.  Only records that cannot be
+    bounded that way stay unread.
+    """
+    rows = []
+    try:
+        families = wave_throttle.list_wave_records(waves_dir)
+    except wave_throttle.Uncertifiable as exc:
+        return [], str(exc)
+    unread = []
+    for family, records in families:
+        # `records` is highest number first, so the running minimum is the
+        # tightest upper bound ruling 3 allows for everything still to come.
+        bound_above = None
+        for number, name in records:
+            wave_id = "%s%d" % (family, number)
+            try:
+                record = wave_throttle.load_record(waves_dir, name)
+                launches = wave_throttle.slate_launches(record, wave_id)
+            except wave_throttle.Uncertifiable as exc:
+                if bound_above is not None and bound_above < cutoff:
+                    continue          # ruling 3 dates it old; nothing to say
+                unread.append(str(exc))
+                continue
+            if not launches:
+                continue
+            last = max(launches)
+            bound_above = last if bound_above is None else min(bound_above,
+                                                               last)
+            if last >= cutoff:
+                rows.append((wave_id, last))
+    rows.sort(key=lambda pair: pair[1], reverse=True)
+    return rows, ("; ".join(unread[:3]) if unread else None)
+
+
+def wave_accrual_lines(rows, why_unread, clock, clock_source, cutoff):
+    """Ruling 6.  The report lines for the wave-record half of the zero."""
+    lines = ["wave accrual     : records after %s (= %s - %.1fh lag, clock "
+             "from %s)" % (cutoff.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                           clock.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                           ACCRUAL_LAG_MAX_HOURS, clock_source)]
+    for wave_id, last in rows:
+        lines.append("  un-accrued?    : %s last machine up %s  <- inside the "
+                     "lag window, so its cost may not be in MTD above"
+                     % (wave_id, last.strftime("%Y-%m-%dT%H:%M:%SZ")))
+    if why_unread:
+        lines.append("  records unread : %s  <- these waves were NOT checked; "
+                     "a zero below does not cover them (Ruling 6)" % why_unread)
+    return lines
+
+
 def certify_pending(instances, pending_supplied, cost_filters=None,
                     check_enabled=True, skip_reason="--no-accrual-check",
-                    scope=None):
-    """Ruling 4.  Decide what the `pending` term is allowed to be.
+                    scope=None, waves=None):
+    """Rulings 4 and 6.  Decide what the `pending` term is allowed to be.
 
     `instances` is a list of dicts (id / type / state / launched / project /
     region) or None when the enumeration itself could not be run.
     `pending_supplied` is the operator's `--pending`, or None when they did not
     pass one.  `scope` (Ruling 5) says which regions the list came from; a zero
-    is only ever called account-wide when that scope is complete.
+    is only ever called account-wide when that scope is complete.  `waves`
+    (Ruling 6) is the dict `read_wave_accrual` returns -- the SECOND
+    precondition on the zero, on the budget snapshot's clock rather than on
+    this instant.
 
     Returns (exit_code, lines, pending).  exit_code 0 means the caller may go
     on to the fence arithmetic; 2 means could-not-run and pending is None.
@@ -353,6 +509,28 @@ def certify_pending(instances, pending_supplied, cost_filters=None,
     if sline:
         lines.append(sline)
 
+    # Ruling 6: the wave-record half of the precondition.  It is printed
+    # BEFORE the verdict on the zero because it can veto that verdict.
+    wave_rows = []
+    if waves:
+        lines.extend(wave_accrual_lines(
+            waves["rows"], waves.get("why_unread"), waves["clock"],
+            waves["clock_source"], waves["cutoff"]))
+        wave_rows = waves["rows"]
+
+    # Deliberately NOT folded into Ruling 5's `complete`: that flag words its
+    # caveat in terms of REGIONS, and a clock caveat printed in region
+    # language would be exactly this file's recurring defect (a claim that
+    # does not match its reading) committed while fixing it.
+    clock_caveat = None
+    if waves and (waves.get("clock_source") != "budget snapshot"
+                  or waves.get("why_unread")):
+        clock_caveat = (
+            "  zero qualified : the wave half above ran on %s%s, so this zero "
+            "is not an accrual-complete one (Ruling 6)."
+            % (waves.get("clock_source", "an unstated clock"),
+               " and left records unread" if waves.get("why_unread") else ""))
+
     if not instances:
         where = "account-wide" if complete else "in the region(s) above"
         if pending_supplied is not None:
@@ -361,7 +539,40 @@ def certify_pending(instances, pending_supplied, cost_filters=None,
                 "but --pending $%.3f was given and is used as the larger "
                 "claim." % ("ZERO" if complete else "ZERO WITHIN SCOPE",
                             where, pending_supplied))
+            if wave_rows:
+                # Ruling 6.  The tool still does not price waves -- but it does
+                # say how many the figure has to cover, so a sum that quietly
+                # omits one is visible AT THE POINT OF THE CLAIM rather than
+                # three hours later in somebody's hand arithmetic.  That
+                # omission is the whole of GH #683: the desk's $3.250 covered
+                # W62 and W61 and dropped W60, because its window was anchored
+                # to `now` while MTD was anchored to the snapshot.
+                lines.append(
+                    "  must cover     : %d wave(s) listed above (%s). This "
+                    "tool does not price them; check your sum covers each."
+                    % (len(wave_rows), ", ".join(r[0] for r in wave_rows)))
+            if clock_caveat:
+                lines.append(clock_caveat)
             return 0, lines, pending_supplied
+        if wave_rows:
+            # The half Ruling 4 got wrong: nothing is accruing NOW, and that
+            # is not the question.  Do not price the waves -- a markup
+            # constant here is the free parameter this file exists to remove.
+            lines.append(
+                "UNCERTIFIABLE: nothing is accruing at this instant, but %d "
+                "wave(s) above launched inside the %.1fh ActualSpend lag, so "
+                "pending=$0.000 is NOT certifiable (Ruling 6)."
+                % (len(wave_rows), ACCRUAL_LAG_MAX_HOURS))
+            lines.append(
+                "A self-terminating wave is invisible to BOTH terms at once: "
+                "gone from describe-instances, not yet in MTD. That gap is "
+                "the farm's normal state between waves, not an edge case.")
+            lines.append(
+                "This tool does not price waves. Pass --pending with the "
+                "desk's own figure (sum of the waves above), or pass "
+                "--no-accrual-check and quote the SKIPPED line in your report.")
+            lines.append("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
+            return 2, lines, None
         if complete:
             lines.append(
                 "accrual check    : CERTIFIED (0 accruing instances "
@@ -380,6 +591,8 @@ def certify_pending(instances, pending_supplied, cost_filters=None,
                 "account-wide zero: the budget has no region filter, so "
                 "accrual in an unread region lands on this fence unseen "
                 "(Ruling 5).")
+        if clock_caveat:
+            lines.append(clock_caveat)
         return 0, lines, 0.0
 
     for inst in instances:
@@ -534,7 +747,10 @@ def _awsx(args):
 def read_from_aws(budget_name=BUDGET_NAME):
     """Both free reads.
 
-    Returns (actual, limit, time_unit, notifications, cost_filters).
+    Returns (actual, limit, time_unit, notifications, cost_filters,
+    last_updated).  `last_updated` is Ruling 6's clock: the instant the MTD
+    figure above was itself refreshed, which is NOT this instant and was
+    3.9h stale on the round that filed the ruling.
     """
     ident = _awsx(["sts", "get-caller-identity", "--output", "json"])
     acct = ident.get("Account")
@@ -553,7 +769,27 @@ def read_from_aws(budget_name=BUDGET_NAME):
                    "--account-id", acct, "--budget-name", budget_name,
                    "--output", "json"])
     return (actual, limit, time_unit, notes.get("Notifications", []),
-            b.get("CostFilters") or {})
+            b.get("CostFilters") or {}, b.get("LastUpdatedTime"))
+
+
+def read_wave_accrual(waves_dir, last_updated, now=None):
+    """Ruling 6.  The wave-record precondition on a certified zero.
+
+    Returns the dict `certify_pending` consumes.  When the budget's own
+    `LastUpdatedTime` cannot be read the clock falls back to `now` -- which is
+    the PERMISSIVE direction (a later clock is a narrower window), so it is
+    labelled in `clock_source` and never silently taken.
+    """
+    now = now or _dt.datetime.now(_dt.timezone.utc)
+    clock = parse_snapshot_instant(last_updated)
+    if clock is None:
+        clock, clock_source = now, "now (budget LastUpdatedTime unreadable)"
+    else:
+        clock_source = "budget snapshot"
+    cutoff = clock - _dt.timedelta(hours=ACCRUAL_LAG_MAX_HOURS)
+    rows, why_unread = waves_since(waves_dir, cutoff)
+    return {"rows": rows, "why_unread": why_unread, "clock": clock,
+            "clock_source": clock_source, "cutoff": cutoff}
 
 
 def parse_instances(payload):
@@ -656,9 +892,15 @@ def main(argv=None):
                              "longer means $0 -- see Ruling 4: the zero has "
                              "to be certifiable")
     parser.add_argument("--no-accrual-check", action="store_true",
-                        help="skip Ruling 4's running-instance read. Prints a "
-                             "line calling itself SKIPPED, not certified; "
-                             "quote that line in the round's report.")
+                        help="skip Ruling 4's running-instance read AND "
+                             "Ruling 6's wave-record read. Prints a line "
+                             "calling itself SKIPPED, not certified; quote "
+                             "that line in the round's report.")
+    parser.add_argument("--waves-dir", default=wave_throttle.DEFAULT_WAVES_DIR,
+                        help="Ruling 6: where the wave records live. A wave "
+                             "launched inside the ActualSpend lag makes "
+                             "pending=$0 uncertifiable even with nothing "
+                             "running.")
     parser.add_argument("--brake", type=float, default=DEFAULT_BRAKE)
     parser.add_argument("--owner-line", type=float, default=DEFAULT_OWNER_LINE)
     parser.add_argument("--budget-name", default=BUDGET_NAME)
@@ -677,6 +919,8 @@ def main(argv=None):
     instances = None
     cost_filters = None
     scope = None
+    waves = None
+    last_updated = None
     try:
         if offline:
             if args.limit is None or args.thresholds is None:
@@ -689,8 +933,8 @@ def main(argv=None):
             actual, limit = args.actual, args.limit
             time_unit = args.time_unit
         else:
-            (actual, limit, time_unit, notes,
-             cost_filters) = read_from_aws(args.budget_name)
+            (actual, limit, time_unit, notes, cost_filters,
+             last_updated) = read_from_aws(args.budget_name)
     except Uncertifiable as exc:
         print("UNCERTIFIABLE: %s" % exc)
         print("gate (iii) DID NOT RUN. That is not a pass -- do not launch.")
@@ -715,10 +959,12 @@ def main(argv=None):
             except Uncertifiable as exc:
                 print("accrual read     : FAILED -- %s" % exc)
                 instances, scope = None, None
+            waves = read_wave_accrual(args.waves_dir, last_updated)
 
     acc_code, acc_lines, pending = certify_pending(
         instances, args.pending, cost_filters=cost_filters,
-        check_enabled=accrual_enabled, skip_reason=skip_reason, scope=scope)
+        check_enabled=accrual_enabled, skip_reason=skip_reason, scope=scope,
+        waves=waves)
     for line in acc_lines:
         print(line)
     if acc_code != 0:
@@ -737,6 +983,12 @@ def main(argv=None):
               "NOT the account (%s). Quote this line in the round's report."
               % (len(scope.get("regions") or []),
                  scope.get("why") or "enumeration incomplete"))
+    # Ruling 6 rides after the verdict for the same reason Ruling 5 does.
+    if waves and waves.get("clock_source") != "budget snapshot":
+        print("WAVE_FENCE CLOCK : the wave-accrual window above was anchored "
+              "to %s, which is LATER than the budget snapshot and therefore a "
+              "NARROWER window. Quote this line in the round's report."
+              % waves["clock_source"])
     return code
 
 

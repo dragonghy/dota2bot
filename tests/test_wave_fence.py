@@ -405,6 +405,167 @@ try:
 finally:
     wf._awsx = saved_awsx
 
+
+# ---- 15. RULING 6: the certified zero has a clock, and it was the wrong one -
+# Director, 2026-09-10.  The defect is measured, not hypothetical: on
+# 2026-09-10T00:14Z the live gate printed `CERTIFIED (0 accruing instances
+# account-wide)` and `headroom $5.692` three hours after W62 self-terminated,
+# while the desk's hand arithmetic said $2.442.  The load-bearing assertion is
+# 15a: nothing running + a recent wave must NOT certify a zero.
+import datetime as _dt                                       # noqa: E402
+import json as _json                                         # noqa: E402
+import shutil as _shutil                                     # noqa: E402
+import tempfile as _tempfile                                 # noqa: E402
+
+_SNAP = "2026-09-09T20:23:37Z"
+_NOW = _dt.datetime(2026, 9, 10, 0, 19, 23, tzinfo=_dt.timezone.utc)
+
+
+def waves_dir_with(records):
+    """records: {"W62": ["2026-09-09T21:24:41Z", ...] or None}"""
+    path = _tempfile.mkdtemp(prefix="wf_waves_")
+    for wave_id, stamps in records.items():
+        machines = [{"seed": i, "launched_at": s}
+                    for i, s in enumerate(stamps or [None])]
+        with open(os.path.join(path, "%s_wave.json" % wave_id), "w") as fh:
+            _json.dump({"wave": wave_id, "machines": machines}, fh)
+    return path
+
+
+tmpdirs = []
+try:
+    # 15a. THE LOAD-BEARING ONE.  W62 went up 61 minutes AFTER the budget
+    #      snapshot and self-terminated before this run: invisible to
+    #      describe-instances AND to MTD at the same time.
+    d = waves_dir_with({"W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    code, lines, pending = wf.certify_pending([], None, waves=w)
+    text = "\n".join(lines)
+    check(code == 2, "15a: nothing running + a recent wave does NOT certify $0",
+          "got exit %r" % code)
+    check(pending is None, "15a2: no pending value is handed back on exit 2",
+          "got %r" % (pending,))
+    check("CERTIFIED" not in text.replace("NOT certifiable", ""),
+          "15a3: the word CERTIFIED does not reach the report", text[:200])
+
+    # 15b. The other half of the same defect: the desk's window is anchored to
+    #      NOW while MTD is anchored to the snapshot.  W60 (09-09T09:23Z) is
+    #      14.9h before now -- outside a 12h now-window -- but only 11.0h
+    #      before the snapshot, i.e. still inside the 4.3-11.3h lag band.
+    d = waves_dir_with({"W60": ["2026-09-09T09:23:33Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    check([r[0] for r in w["rows"]] == ["W60"],
+          "15b: the snapshot clock catches the wave a now-clock drops",
+          "rows %r cutoff %s" % (w["rows"], w["cutoff"]))
+    w_now = wf.read_wave_accrual(d, None, now=_NOW)
+    check(w_now["rows"] == [],
+          "15b2: and the now-clock demonstrably drops it (that IS the defect)")
+    check(w_now["clock_source"].startswith("now"),
+          "15b3: the permissive fallback names itself",
+          "got %r" % w_now["clock_source"])
+
+    # 15c. A wave older than the lag band does not block anything.  Without
+    #      this the fix would be a permanent launch outage, not a gate.
+    d = waves_dir_with({"W40": ["2026-09-02T21:31:51Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    code, lines, pending = wf.certify_pending([], None, waves=w)
+    check(code == 0 and pending == 0.0,
+          "15c: an old wave still certifies $0", "got %r/%r" % (code, pending))
+
+    # 15d. --pending is the documented way through, exactly as in Ruling 4.
+    d = waves_dir_with({"W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    code, lines, pending = wf.certify_pending([], 3.25, waves=w)
+    check(code == 0 and pending == 3.25,
+          "15d: the operator's own figure is accepted", "got %r" % (pending,))
+
+    # 15d2. GH #683 itself: the desk's $3.250 covered W62 and W61 and dropped
+    #       W60.  A supplied figure must be told what it has to cover, or the
+    #       omission is only ever found by hand, three hours later.
+    d = waves_dir_with({"W60": ["2026-09-09T09:23:33Z"],
+                        "W61": ["2026-09-09T15:24:29Z"],
+                        "W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    text = "\n".join(wf.certify_pending([], 3.25, waves=w)[1])
+    check("must cover" in text and "3 wave(s)" in text and "W60" in text,
+          "15d2: a supplied pending is told which waves it must cover",
+          text[-300:])
+
+    # 15e. The tool must not price the waves.  A markup constant here is the
+    #      free parameter this whole file exists to remove.
+    d = waves_dir_with({"W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    text = "\n".join(wf.certify_pending([], None, waves=w)[1])
+    check("does not price waves" in text,
+          "15e: the refusal says it does not price waves")
+    check("$1.10" not in text and "$2.15" not in text,
+          "15e2: no wave price is invented in the output")
+
+    # 15f. Ruling 3 bounding: W37-W39 predate GH #544 and carry no
+    #      launched_at.  A higher-numbered datable sibling before the cutoff
+    #      dates them old -- otherwise every future run carries a caveat
+    #      nobody reads.
+    d = waves_dir_with({"W39": None, "W40": ["2026-09-02T21:31:51Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    check(w["why_unread"] is None,
+          "15f: an undatable record bounded old by ruling 3 is not 'unread'",
+          "got %r" % (w["why_unread"],))
+
+    # 15g. ...and the bound is not a licence: when the datable sibling is
+    #      itself inside the window, the undatable record stays unread.
+    d = waves_dir_with({"W61": None, "W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    check(w["why_unread"] is not None and "W61" in w["why_unread"],
+          "15g: an undatable record inside the window stays unread",
+          "got %r" % (w["why_unread"],))
+
+    # 15h. --no-accrual-check still skips the whole thing, and still says so.
+    d = waves_dir_with({"W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    code, lines, pending = wf.certify_pending(
+        [], None, check_enabled=False, waves=w)
+    check(code == 0 and pending == 0.0
+          and "SKIPPED, NOT CERTIFIED" in "\n".join(lines),
+          "15h: the documented bypass still prints SKIPPED, not a pass")
+
+    # 15i. Ruling 5's caveat must not be reworded in clock language, nor the
+    #      other way round: the two qualifications stay distinguishable.
+    d = waves_dir_with({"W40": ["2026-09-02T21:31:51Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, None, now=_NOW)          # now-clock fallback
+    text = "\n".join(wf.certify_pending(
+        [], None, scope={"regions": ["us-west-2", "us-east-1"],
+                         "complete": True}, waves=w)[1])
+    check("account-wide, read this run" in text,
+          "15i: a complete region scope still reads account-wide")
+    check("zero qualified" in text and "region filter" not in text,
+          "15i2: the clock caveat is worded as a clock, not as a region",
+          text[-300:])
+
+    # 15j. parse_snapshot_instant takes what botocore actually hands back.
+    check(wf.parse_snapshot_instant("2026-09-09T20:23:37Z")
+          == _dt.datetime(2026, 9, 9, 20, 23, 37, tzinfo=_dt.timezone.utc),
+          "15j: a Z-suffixed string parses")
+    check(wf.parse_snapshot_instant(
+        _dt.datetime(2026, 9, 9, 20, 23, 37, tzinfo=_dt.timezone.utc))
+        == _dt.datetime(2026, 9, 9, 20, 23, 37, tzinfo=_dt.timezone.utc),
+        "15j2: a datetime passes through")
+    check(wf.parse_snapshot_instant("not a time") is None
+          and wf.parse_snapshot_instant(None) is None,
+          "15j3: an unreadable stamp returns None, which routes to the label")
+finally:
+    for d in tmpdirs:
+        _shutil.rmtree(d, ignore_errors=True)
+
 for line in failures:
     print(line)
 print("%d checks, %d failed" % (checks, len(failures)))
