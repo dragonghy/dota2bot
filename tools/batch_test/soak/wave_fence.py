@@ -314,6 +314,102 @@ class Uncertifiable(Exception):
     """The check could not be run.  Exit 2 -- this is not a pass."""
 
 
+# ------------------------------------------------- RULING 10 (director, GH #721)
+#
+# THE FILING STORY IS THE SPECIFICATION, AGAIN.
+#
+# Since the fence was written, its refusal line has read:
+#
+#     "Crossing needs the director's explicit ruling that round, plus the
+#      written explanation the charter owes for every crossed threshold."
+#
+# That sentence names an authority.  It gave that authority NO WAY TO SPEAK.
+# There is no flag, no file, no field -- so a director who rules "cross it"
+# hands the desk a ruling the tool cannot be told about, and the only way to
+# act on it is TO NOT RUN THE GATE.  That is an unbounded, unlogged bypass,
+# reached by the one path nothing can audit: absence.  It is the charter's own
+# 2.5 defect ("a ruling has to land in the field the ruled party reads")
+# baked into a tool -- and this file is the ruled party.
+#
+# 2026-09-10 is the round where it bit.  Headroom $1.053, wave needs $1.100:
+# the desk was blocked by $0.047 with 20 days of September left, and the
+# blocking number was an ACCOUNT number (see the note on `budget filters`
+# below), ~55% of it spent by a co-tenant workload with its own $150 budget.
+#
+# SO THE FIELD IS BUILT HERE, AND IT IS BUILT NARROW.  Four constraints, and
+# every one of them is what keeps this from being the bypass switch that
+# GM.2(a) forbade:
+#
+#   (1) IT CANNOT REACH THE BRAKE.  `min(ruling, brake)` -- and a ruling that
+#       names a number above the brake (or above the owner's approval line) is
+#       REFUSED, exit 2, not silently clamped.  Silence is not the permissive
+#       answer, and a clamp would let a wrong ruling read as an obeyed one.
+#   (2) IT MUST EXPIRE, AND THE EXPIRY IS CHECKED, NOT PROSE.  A ruling with
+#       no expiry is refused.  An expired one is refused.  The failure mode
+#       this closes is the one every crossing ruling has: it is written for a
+#       month and then quietly becomes the permanent ceiling.
+#   (3) IT MUST NAME ITSELF.  `--crossing-ref` is mandatory and is printed
+#       verbatim, so the round's report carries the ruling that authorised it
+#       and an auditor can go read that ruling.
+#   (4) IT ANNOUNCES ITSELF ON EVERY RUN IT TOUCHES, including the CLEAR one,
+#       with the derived fence printed BESIDE the ruling ceiling -- so a
+#       reader always sees which bound actually bit and that one of them is a
+#       ruling rather than a reading.
+#
+# What it deliberately does NOT do: it does not rescue the NO-FENCE case
+# (MTD already past every alert).  Past the owner's approval line the answer
+# is the owner's, and a director ruling is not a substitute for it.
+
+
+def build_crossing(ceiling, ref, expiry, brake=DEFAULT_BRAKE,
+                   owner_line=DEFAULT_OWNER_LINE, now=None):
+    """Validate a director crossing ruling.
+
+    Returns (crossing_dict_or_None, error_string_or_None).  A non-None error
+    is exit 2 -- the gate did not run.  Kept out of main() so the refusals are
+    reachable from a test without an AWS account, which is where the last four
+    rulings' bugs were found.
+    """
+    if ceiling is None:
+        if ref or expiry:
+            return None, ("--crossing-ref/--crossing-expiry were given with no "
+                          "--director-crossing. That names a ruling which "
+                          "authorises nothing; it is more likely a dropped "
+                          "flag than an intent.")
+        return None, None
+    if not ref or not str(ref).strip():
+        return None, ("--director-crossing needs --crossing-ref: the ruling has "
+                      "to be quotable in the round's report, or nobody can "
+                      "audit what authorised the crossing.")
+    if not expiry:
+        return None, ("--director-crossing needs --crossing-expiry: a crossing "
+                      "ruling that cannot expire becomes the permanent "
+                      "ceiling, which is the whole failure mode it is fenced "
+                      "against.")
+    when = parse_snapshot_instant(expiry)
+    if when is None:
+        return None, ("--crossing-expiry %r is not an instant this tool can "
+                      "read (want ISO-8601 or an epoch)." % expiry)
+    moment = now if now is not None else _dt.datetime.now(_dt.timezone.utc)
+    if moment > when:
+        return None, ("the crossing ruling %s expired at %s and it is now %s. "
+                      "Get a fresh ruling; an expired one is not a weaker "
+                      "ruling, it is no ruling."
+                      % (ref, when.isoformat(), moment.isoformat()))
+    if ceiling > brake:
+        return None, ("--director-crossing $%.2f is above the $%.2f brake. The "
+                      "brake is the owner's line, not the director's; a "
+                      "crossing ruling may raise the fence up to it and no "
+                      "further. Refused rather than clamped, so a wrong "
+                      "ruling cannot read as an obeyed one." % (ceiling, brake))
+    if ceiling > owner_line:
+        return None, ("--director-crossing $%.2f is above the owner's $%.2f "
+                      "approval line. That is the owner's decision, not a "
+                      "ruling this tool will accept." % (ceiling, owner_line))
+    return {"ceiling": float(ceiling), "ref": str(ref).strip(),
+            "expiry": when.isoformat()}, None
+
+
 # ---------------------------------------------------------------- pure core
 
 def resolve_thresholds(notifications, limit):
@@ -709,8 +805,13 @@ def certify_pending(instances, pending_supplied, cost_filters=None,
 
 
 def check(actual, limit, time_unit, notifications, planned=0.0, pending=0.0,
-          brake=DEFAULT_BRAKE, owner_line=DEFAULT_OWNER_LINE):
-    """Run the gate.  Returns (exit_code, list_of_report_lines)."""
+          brake=DEFAULT_BRAKE, owner_line=DEFAULT_OWNER_LINE, crossing=None):
+    """Run the gate.  Returns (exit_code, list_of_report_lines).
+
+    `crossing` is Ruling 10's validated director ruling (see build_crossing) or
+    None.  It can only ever move the ceiling between the derived fence and the
+    brake; it is never consulted before the brake or the no-fence refusal.
+    """
     lines = []
     try:
         if time_unit != "MONTHLY":
@@ -772,6 +873,15 @@ def check(actual, limit, time_unit, notifications, planned=0.0, pending=0.0,
             "stop in front of -- this is past the owner's $%.2f approval line "
             "and is the owner's decision, not this tool's."
             % (actual, owner_line))
+        if crossing is not None:
+            # Ruling 10's deliberate hole: past every alert there is no fence
+            # left for a director to authorise crossing, and the next line is
+            # the owner's, not this tool's.
+            lines.append(
+                "DIRECTOR CROSSING: ruling %s is NOT applied -- there is no "
+                "fence left to cross. A crossing ruling raises the fence "
+                "toward the brake; it is not a substitute for the owner's "
+                "approval line." % crossing["ref"])
         lines.append("WAVE_FENCE: THROTTLED (exit 3) -- stop and report to the "
                      "owner. Do not pick a higher number.")
         return 3, lines
@@ -784,24 +894,70 @@ def check(actual, limit, time_unit, notifications, planned=0.0, pending=0.0,
     operative = min(fence, brake)
     lines.append("operative ceiling: $%.2f   = min(fence, brake)" % operative)
 
+    if crossing is not None:
+        operative = min(crossing["ceiling"], brake)
+        lines.append(
+            "DIRECTOR CROSSING: ceiling $%.2f by ruling %s, expires %s"
+            % (crossing["ceiling"], crossing["ref"], crossing["expiry"]))
+        lines.append(
+            "                   derived fence $%.2f -> operative ceiling "
+            "$%.2f = min(ruling, brake). The brake is untouched."
+            % (fence, operative))
+        lines.append(
+            "                   This line is a RULING, not a reading. Quote it "
+            "verbatim in the round's report, and re-run the tool -- the expiry "
+            "above is checked on every run, so this ceiling cannot outlive the "
+            "ruling by being copied forward.")
+
     if projected > brake:
         lines.append("A launch at this instant would put MTD past the $%.2f "
                      "BRAKE line." % brake)
         lines.append("WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence. Stop "
                      "and report to the owner; do not wait it out.")
         return 3, lines
-    if projected > fence:
-        lines.append(
-            "A launch at this instant would put MTD past $%.2f, i.e. the owner "
-            "receives a Budget alert email. Crossing needs the director's "
-            "explicit ruling that round, plus the written explanation the "
-            "charter owes for every crossed threshold." % fence)
+    if projected > operative:
+        if crossing is not None:
+            lines.append(
+                "A launch at this instant would put MTD past $%.2f, the "
+                "ceiling the director's own ruling %s named. The ruling is "
+                "being obeyed, not overridden: it bought a band, and this "
+                "wave is past the top of it."
+                % (operative, crossing["ref"]))
+        else:
+            lines.append(
+                "A launch at this instant would put MTD past $%.2f, i.e. the "
+                "owner receives a Budget alert email. Crossing needs the "
+                "director's explicit ruling that round, plus the written "
+                "explanation the charter owes for every crossed threshold. "
+                "Ruling 10: that ruling is expressed with --director-crossing "
+                "/ --crossing-ref / --crossing-expiry, so it lands in this "
+                "tool's reading instead of beside it." % fence)
         lines.append("WAVE_FENCE: THROTTLED (exit 3) -- do not launch. Headroom "
                      "was $%.3f, this wave needs $%.3f."
-                     % (fence - actual - pending, planned))
+                     % (operative - actual - pending, planned))
         return 3, lines
 
-    lines.append("headroom         : $%.3f after this wave" % (fence - projected))
+    lines.append("headroom         : $%.3f after this wave"
+                 % (operative - projected))
+    if crossing is not None and projected > fence:
+        # Only say "the ruling is why this passed" when the ruling is in fact
+        # why it passed.  A crossing that was carried but not needed must not
+        # read as one that was spent -- that is how a ruling gets remembered as
+        # load-bearing when the derived fence would have cleared the wave alone.
+        lines.append(
+            "WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes ONLY BECAUSE OF "
+            "RULING %s. The derived fence $%.2f was NOT met; the ceiling that "
+            "was met is $%.2f, and it is a ruling with an expiry, not a "
+            "reading. Do not copy either number forward; re-run the tool."
+            % (crossing["ref"], fence, operative))
+        return 0, lines
+    if crossing is not None:
+        lines.append(
+            "WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes on the fence "
+            "DERIVED THIS RUN ($%.2f); ruling %s was carried but NOT needed "
+            "for this wave. Do not copy $%.2f forward; re-run the tool."
+            % (fence, crossing["ref"], fence))
+        return 0, lines
     lines.append("WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes with the "
                  "fence DERIVED THIS RUN. Do not copy $%.2f into a report as "
                  "next month's number; re-run the tool." % fence)
@@ -1007,6 +1163,24 @@ def main(argv=None):
                              "launched inside the ActualSpend lag makes "
                              "pending=$0 uncertifiable even with nothing "
                              "running.")
+    parser.add_argument("--director-crossing", type=float, default=None,
+                        metavar="CEILING",
+                        help="RULING 10: an expiring director ruling that "
+                             "raises the operative ceiling above the DERIVED "
+                             "fence, never above --brake. Requires "
+                             "--crossing-ref and --crossing-expiry. This is "
+                             "not a bypass: with it the gate still runs, still "
+                             "prints, and still refuses -- it just refuses "
+                             "against the number the ruling named.")
+    parser.add_argument("--crossing-ref", default=None, metavar="REF",
+                        help="the ruling being invoked (issue + report path). "
+                             "Printed verbatim so the round's report carries "
+                             "what authorised the crossing.")
+    parser.add_argument("--crossing-expiry", default=None, metavar="INSTANT",
+                        help="when the ruling dies (ISO-8601 or epoch). "
+                             "Mandatory, and checked before the gate runs: a "
+                             "crossing ruling that cannot expire becomes the "
+                             "permanent ceiling.")
     parser.add_argument("--brake", type=float, default=DEFAULT_BRAKE)
     parser.add_argument("--owner-line", type=float, default=DEFAULT_OWNER_LINE)
     parser.add_argument("--budget-name", default=BUDGET_NAME)
@@ -1034,6 +1208,18 @@ def main(argv=None):
         print("UNCERTIFIABLE: --snapshot-instant %r is not an instant this "
               "tool can read (want ISO-8601 or an epoch)."
               % args.snapshot_instant)
+        print("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
+        return 2
+
+    # Ruling 10, validated in the same place and for the same reason Ruling 7
+    # is: before anything is read, so a malformed or expired ruling cannot be
+    # discovered halfway through and cannot be reached only on the live path.
+    crossing, crossing_error = build_crossing(
+        args.director_crossing, args.crossing_ref, args.crossing_expiry,
+        brake=args.brake, owner_line=args.owner_line)
+    if crossing_error is not None:
+        print("UNCERTIFIABLE: %s" % crossing_error)
+        print("gate (iii) DID NOT RUN. That is not a pass -- do not launch.")
         print("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
         return 2
 
@@ -1095,7 +1281,8 @@ def main(argv=None):
 
     code, lines = check(actual, limit, time_unit, notes,
                         planned=args.planned, pending=pending,
-                        brake=args.brake, owner_line=args.owner_line)
+                        brake=args.brake, owner_line=args.owner_line,
+                        crossing=crossing)
     for line in lines:
         print(line)
     # Ruling 5: the caveat rides AFTER the verdict, because the verdict line is

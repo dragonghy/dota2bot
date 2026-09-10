@@ -694,6 +694,24 @@
       },
       "done_when_note": "裸读得出:`python3 -c \"import json;m=json.load(open('tools/agent/lua_gate_manifest.json'));print(len(m['known_red']), sum(len(v) for v in m['known_red_cases'].values()))\"` —— 今天是 `16 26`。**任何一个数变小 = 有人真的取回了读数**;两个都不变 = 这一行还欠着。⚠️ 执行方**不特定**(两个组、十六条各自独立),所以**它是提醒不是证明** —— 与 `gh624_lua_gate_first_live_read` 同样的弱判据,已在行内写明。",
       "residual": "闸只能看见「用例名的集合变了」,看不见「同一个用例名下的读数被正确地重新取了一遍」。一条被 re-take 之后转绿的测试会自己掉出基线(闸打 GREEN again),但一条**被改成永远为真**的断言同样会转绿 —— 这个方向闸不管,归 code review。"
+    },
+    {
+      "id": "gh721_crossing_ruling_first_live_read",
+      "issue": "GH #721",
+      "ruling": "RULING 10(总监 2026-09-10T19:xxZ,全文 `iterations/streams/test_set.md §GO`)。闸 (iii) 的拒绝行两周来一直写着「跨档需要总监当轮明确裁定」,而它**指名的那个权威在工具里没有任何发言渠道** —— 没有 flag、没有文件、没有字段 ⇒ 照裁定行事的唯一走法是**不跑这道闸**,一条从「缺席」进去的、无界无日志的绕行。已建字段:`--director-crossing <ceiling> --crossing-ref <ref> --crossing-expiry <instant>`,四条约束(够不到刹车且越界当场拒不夹紧 / 必须带失效时刻且每轮现查 / 必须自报家门 / 每轮自己喊出来含 exit 0 那一行)。**本轮实际裁定:九月剩余期间 operative ceiling = `$85.00`,ref `GH#721/director-20260910`,失效 `2026-09-30T23:59:00Z`;刹车 $90 与 owner 批准线 $100 一字未动。**",
+      "ruled_at": "2026-09-10T19:xxZ",
+      "executor": "batch-desk(下一轮发波时;总监不花 AWS 的钱,活的 AWS 路径本轮没被跑过)",
+      "trigger": "下一次闸 (iii) 因 `$80` 围栏打 exit 3 的发波轮",
+      "delivered_to": [
+        "iterations/streams/batch-desk.md 闸 (iii) 条目(被裁方读的那一格,含可直接抄的命令行)",
+        "iterations/streams/test_set.md §GO(裁定全文档案)",
+        "GH #721 追评"
+      ],
+      "why_registered_here": "§DR:常驻义务。它不属于任何一波、任何一个 id ⇒ 现存的任何一张 `harvest_obligations` 里**没有行可以让它缺席**。⚠️ 与 `gh624_lua_gate_first_live_read` 同族的弱点已在下面写明。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "**裸读得出的验收句**:某一轮批测台报告里出现闸 (iii) 打的 `WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes ONLY BECAUSE OF RULING GH#721/director-20260910` 这一行(或它的 THROTTLED 对应行 `the ceiling the director's own ruling ... named`)。⛔ 只抄 `DIRECTOR CROSSING: ceiling` 那一行**不算**:那一行在裁定被携带但**没用上**的轮次里也会打出来,而本行买的是「裁定真的扛了一次钱」。⚠️ **执行方不特定的那种弱点这一行没有**(执行方就是批测台),但**触发时机不特定**:若九月剩余时间 MTD 再不涨、闸 (iii) 自己放行,这一行会一直 OWED 到 09-30 裁定过期,那时总监**按过期退休它,并在退休行里写明它从未被用上** —— 那不是失败,是围栏没有再咬人。📌 **十月不要续期这一行**:10-01 MTD 归零,`$50` 重新变成未跨档,而工具会当场拒绝这份过期裁定(那正是约束 (2))。"
     }
   ],
   "retired": [

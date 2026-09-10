@@ -702,6 +702,132 @@ finally:
     for d in tmpdirs:
         _shutil.rmtree(d, ignore_errors=True)
 
+# ---- 17. RULING 10 (director 2026-09-10, GH #721): the tool named an
+#          authority and gave it no way to speak.  The refusal line has always
+#          said "Crossing needs the director's explicit ruling that round" --
+#          and there was no flag, no file, no field.  So the ONLY way to act on
+#          such a ruling was to not run the gate: an unbounded, unlogged bypass
+#          reached through absence.  These checks are about the four things
+#          that keep the new field from being the bypass switch GM.2(a)
+#          forbade.
+
+_FUTURE = "2099-01-01T00:00:00Z"
+_PAST = "2000-01-01T00:00:00Z"
+_REF = "GH#721/director-20260910"
+
+# 17a. The blocking round itself, reproduced from the desk's 18:14Z reading.
+#      $0.047 short, with 20 days of September left.
+rc, out = wf.check(77.847, 100.0, "MONTHLY", notes(("ALARM", "OK", "OK")),
+                   planned=1.10, pending=1.10)
+check(rc == 3, "17a: the 2026-09-10 reading is THROTTLED", "got rc=%d" % rc)
+check(any("Headroom was $1.053" in l and "needs $1.100" in l for l in out),
+      "17a2: ...by $0.047, the desk's number to the mill")
+check(any("--director-crossing" in l for l in out),
+      "17a3: ...and the refusal now says HOW a ruling reaches this tool, "
+      "instead of naming an authority with no channel")
+
+# 17b. The same wave, with the ruling supplied, clears -- and says so.
+_cross, _err = wf.build_crossing(85.0, _REF, _FUTURE)
+check(_err is None and _cross is not None,
+      "17b: a well-formed ruling validates", "err=%r" % _err)
+rc, out = wf.check(77.847, 100.0, "MONTHLY", notes(("ALARM", "OK", "OK")),
+                   planned=1.10, pending=1.10, crossing=_cross)
+check(rc == 0, "17b2: ...and the blocked wave clears under it", "got rc=%d" % rc)
+check(any("ONLY BECAUSE OF RULING" in l and _REF in l for l in out),
+      "17b3: ...and the exit-0 line says the ruling is why, and names it")
+check(any("RULING, not a reading" in l for l in out),
+      "17b4: ...and marks the ceiling as a ruling rather than a reading")
+
+# ---- 17c. THE LOAD-BEARING ONE.  A crossing ruling is a CEILING, not an
+#           unlock.  At MTD $84.50 the derived fence is already $100 (the $80
+#           alert is crossed), so min(fence, brake) = $90 and this wave would
+#           pass WITHOUT any ruling.  Carrying the $85 ruling makes it FAIL.
+#           That is the whole difference between a bounded ruling and a bypass
+#           switch: this flag can only be spent down to the number the ruling
+#           named, and it can tighten.
+rc, out = wf.check(84.50, 100.0, "MONTHLY", notes(("ALARM", "ALARM", "OK")),
+                   planned=1.10)
+check(rc == 0, "17c: without the ruling, MTD $84.50 clears (fence is $100 now)",
+      "got rc=%d" % rc)
+rc, out = wf.check(84.50, 100.0, "MONTHLY", notes(("ALARM", "ALARM", "OK")),
+                   planned=1.10, crossing=_cross)
+check(rc == 3, "17c2: ...and WITH the $85 ruling the same wave is REFUSED",
+      "got rc=%d" % rc)
+check(any("the ceiling the director's own ruling" in l and _REF in l
+          for l in out),
+      "17c3: ...and the refusal says the ruling is being obeyed, not overridden")
+
+# 17d. It cannot reach the brake, and a ruling that tries is REFUSED rather
+#      than silently clamped -- a clamp lets a wrong ruling read as an obeyed
+#      one.
+_c, _err = wf.build_crossing(95.0, _REF, _FUTURE)
+check(_c is None and _err and "brake" in _err,
+      "17d: a ruling above the $90 brake is refused, not clamped", "err=%r" % _err)
+_c, _err = wf.build_crossing(105.0, _REF, _FUTURE, brake=120.0)
+check(_c is None and _err and "approval line" in _err,
+      "17d2: ...and a raised --brake does not open the owner's $100 line either",
+      "err=%r" % _err)
+
+# 17e. It must expire, and the expiry is checked rather than written down.
+_c, _err = wf.build_crossing(85.0, _REF, None)
+check(_c is None and _err and "expire" in _err,
+      "17e: a ruling with no expiry is refused", "err=%r" % _err)
+_c, _err = wf.build_crossing(85.0, _REF, _PAST)
+check(_c is None and _err and "expired" in _err,
+      "17e2: an expired ruling is refused -- it is no ruling, not a weak one",
+      "err=%r" % _err)
+_c, _err = wf.build_crossing(85.0, _REF, "sometime in september")
+check(_c is None and _err and "not an instant" in _err,
+      "17e3: an unreadable expiry is refused, not ignored", "err=%r" % _err)
+
+# 17f. It must name itself, and a half-supplied ruling is a dropped flag.
+_c, _err = wf.build_crossing(85.0, "  ", _FUTURE)
+check(_c is None and _err and "crossing-ref" in _err,
+      "17f: a ruling that cannot be quoted is refused", "err=%r" % _err)
+_c, _err = wf.build_crossing(None, _REF, _FUTURE)
+check(_c is None and _err and "authorises nothing" in _err,
+      "17f2: a ref/expiry with no ceiling is refused, not ignored", "err=%r" % _err)
+_c, _err = wf.build_crossing(None, None, None)
+check(_c is None and _err is None,
+      "17f3: ...and no ruling at all is the ordinary case, not an error")
+
+# 17g. The two places a ruling must NOT reach.  The brake is the owner's line
+#      and the no-fence case is past the owner's approval line.
+rc, out = wf.check(89.50, 100.0, "MONTHLY", notes(("ALARM", "ALARM", "OK")),
+                   planned=1.10, crossing=wf.build_crossing(
+                       90.0, _REF, _FUTURE)[0])
+check(rc == 3 and any("BRAKE" in l for l in out),
+      "17g: a ruling at the brake still cannot carry a wave past the brake",
+      "got rc=%d" % rc)
+rc, out = wf.check(100.50, 100.0, "MONTHLY", notes(("ALARM", "ALARM", "ALARM")),
+                   planned=1.10, crossing=_cross)
+check(rc == 3 and any("NOT applied" in l for l in out),
+      "17g2: past every alert the ruling is not applied, and says so",
+      "got rc=%d" % rc)
+
+# 17h. A ruling carried but not needed must not read as one that was spent.
+rc, out = wf.check(17.773, 100.0, "MONTHLY", notes(), planned=1.10,
+                   crossing=_cross)
+check(rc == 0 and any("carried but NOT needed" in l for l in out),
+      "17h: an unneeded ruling does not claim credit for the wave", "got rc=%d" % rc)
+
+# 17i. The wiring: main() really reaches build_crossing, and really reaches
+#      check() with the result.  Without this, every check above could pass on
+#      a function nothing calls.
+_base = ["--actual", "77.847", "--limit", "100", "--thresholds", "50,80,100",
+         "--planned", "1.10", "--pending", "1.10"]
+check(wf.main(_base) == 3, "17i: main() refuses the blocking round")
+check(wf.main(_base + ["--director-crossing", "85",
+                       "--crossing-ref", _REF,
+                       "--crossing-expiry", _FUTURE]) == 0,
+      "17i2: ...and clears it under the ruling")
+check(wf.main(_base + ["--director-crossing", "85",
+                       "--crossing-ref", _REF,
+                       "--crossing-expiry", _PAST]) == 2,
+      "17i3: ...and an expired ruling is exit 2 (so 17i2 is not 'flag => 0')")
+check(wf.main(_base + ["--director-crossing", "85"]) == 2,
+      "17i4: ...and a ruling with no ref never reaches the gate")
+
 for line in failures:
     print(line)
 print("%d checks, %d failed" % (checks, len(failures)))

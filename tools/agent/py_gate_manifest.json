@@ -535,7 +535,7 @@
       "reason": "fast"
     },
     "tests/test_wave_fence.py": {
-      "seconds": 0.03,
+      "seconds": 0.06,
       "in_gate": true,
       "reason": "fast"
     },
