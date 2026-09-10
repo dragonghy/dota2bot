@@ -7613,6 +7613,24 @@
     "limits": "(甲) **域只有 1 帧**。这不是「几乎没有」的委婉说法,是这份 110-fixture 语料上的实测数,且 `hf_back` 本身只有 18 —— 批测语料上的真实频率**本轮没买到**,已随 GH #688 交出。(乙) **形心不是最近敌人**:两人以上的敌群里朝向由形心决定,「一个贴脸 + 一个很远」会被平均掉;本 witness 两人 557/593u 近似等距,该差异在这一帧上不承重,但**在别的帧上会**。(丙) **没有考虑地形**:投影方向可能撞树或撞悬崖,引擎自行寻路,本轮**不声称**落点可达。(丁) 附带项 GH #687 只改了**注释口径**(`ownhalf` / 深线固守两处把「past the midline」换成差值口径),**没有动任何常数**,#687 自己也明说不请求改值。",
     "selfcheck": "`bash tools/agent/routine_selfcheck.sh`(**非管道**:`> file; echo EXIT=$?`,铁律/evidence-discipline 3)**worst exit 3**:FINDINGS = cadence / queue-rulings / owed-executions / a-evidence-owed;UNCERTIFIABLE = trunk-red(python)(`test_luacheck_gate_soakswitch.py` 与 `test_selfcheck_lua_leg.py` 未跑 —— 当时容器还没有 luacheck)。**没有一条指向本组本轮的产物。**"
   },
+
+  "GH692_693_RULING7_20260910T0xxxZ": {
+    "ruling": "GH #692(缺陷)采纳并已修 + GH #693(政策)采纳 ⇒ wave_fence.py RULING 7:(甲) parse_snapshot_instant 认 CLI 的 float epoch;(乙) 时钟降级 ⇒ UNCERTIFIABLE (exit 2),在任何裁决分支之前,给不给 --pending 都一样。",
+    "at": "2026-09-10T0x:xxZ",
+    "by": "director",
+    "issues": "GH #692 [harness](缺陷)/ GH #693 [batch](政策),批测台 09-10T03:2xZ 同轮立",
+    "defect": "`awsx budgets describe-budget --output json` 把 LastUpdatedTime 序列化成 float epoch(实测 1788985417.716 = 2026-09-09T20:23:37Z);parse_snapshot_instant() 的容差清单是照着 **botocore** 写的,而 _read_budget() 走的是 CLI ⇒ RULING 6 被设计成「罕见」的降级,**从落地当天起在本账号上是 100%**,那扇窗一次都没有锚在预算快照上过。⭐ 数据一直在而且是对的(check_costs.sh 同轮打出同一时刻);是解析把它丢在地上。",
+    "policy": "GH #683 §四 把发波授权钉在退出码上 ⇒ 退出码就是授权本身,而降级只碰措辞。实测同一分钟两次运行:降级钟点名 1 波($2.150)⇒ exit 0 ⇒ §四 ⇒ 发波;诚实钟点名 3 波($5.400)⇒ exit 3。**批测台把工具点名的每一波都足额覆盖了**,闸照样放行一波会越栏的波($80.808 > $80.00)。立案句:一道只有在操作员不信它时才安全的闸,不是闸。",
+    "stricter_than_asked": "⛔ #693 §四 建议「处置与 RULING 4/6 的 --pending 同款」,**那一半不采纳**:决定「要覆盖哪几波」的正是那个时钟,所以覆盖它点名的每一波**不构成覆盖**(03:1xZ 那次短了 $3.250,逐条对得上账)。⇒ 降级检查放在所有裁决分支之前。",
+    "not_an_outage": "新增 --snapshot-instant(接受 ISO-8601 或 epoch):操作员把在别处读到的钟声明给它,标成 claim 不是 reading,但它是一个钟 ⇒ 闸照跑、accrual 普查不丢(比 --no-accrual-check 严格地好:后者会连 RULING 4/5 的实例普查一起扔掉)。传进读不出的值 ⇒ exit 2 当场拒,不静默回退。",
+    "ruling5_reversal_scope": "这是对 RULING 5「⛔ 故意不做成 exit 2」的反转,**范围只限扛钱的这一条路径**;RULING 5 自己的区域标签条款一字未动。反转理由不是口味变了,是 §四 把「会读免责行的那个人」从回路里拿掉了。",
+    "deliberately_not_widened": "⛔ 未扩到 why_unread(读不出日期的波次记录)—— 同样偏许可,但那是另一个读数、另一套修法,而 #693 问的是时钟。由 tests/test_wave_fence.py 断言 16f 把边界钉住:将来要扩,得先去改那条断言。",
+    "evidence": "tests/test_wave_fence.py 111 checks / 0 failed(原 90);tools/agent/mutstand_wave_fence_ruling7.sh 6 CAUGHT / 0 SURVIVED,CONTROL 绿,还原 sha256sum -c 逐字节相同,六个 mutant 各自打出具体 FAIL 行(不是靠崩溃冒充 CAUGHT);顺手修好 mutstand_wave_fence_clock.sh 漂掉的 M2 锚(RULING 7 的缩进改动使 4 空格锚失配 ⇒ 会一字不改而照旧记分),重跑 5 CAUGHT / 0 SURVIVED;邻测 test_wave_gate_keys 406/0、test_pending_rulings 501/0、test_wave_throttle 55/0、test_mutstand_restore_trap EXIT=0。",
+    "honest_limit": "⚠️ 总监不花 AWS 的钱 ⇒ 新的解析分支在**真实预算读**上一次都没被执行过;epoch 值是从批测台报告抄的。已登记 owed_executions.json:gh692_epoch_clock_first_live_read。",
+    "near_miss": "⚠️ 判据初稿钉的逐字串被我自己写进了 test_set.md,而 done_when 的 path 就是那个文件 ⇒ 这条常驻义务在写下的同一秒就被自己的档案满足。改后重量为 0 次。⛔ 登记为 path_contains_all 的已知盲区(它分不清「下游抄回来的读数」与「上游自己写下的判据」),不当作已修。",
+    "archive": "iterations/streams/test_set.md §GL(§GL.0–§GL.7)",
+    "cost": "零 AWS 调用,零波次,bots/+game/ 零 diff,armed 串 37 不动,无 promote / 无退集,不发 owner 邮件。"
+  },
   "W62_PROMOTE_REJECT_RULING_20260910T05xxZ": {
     "ruling": "HOLD — 零 id promote,零 id 退集,armed 串 37 不动。",
     "at": "2026-09-10T05:xxZ",

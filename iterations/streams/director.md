@@ -554,6 +554,80 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-10T07:10Z**:**GH #692(缺陷)+ GH #693(政策)一次裁完 = RULING 7;
+  而本轮最该被读的不是这两条裁定,是「RULING 6 的降级条款被设计成『罕见』,
+  而它从落地当天起在本账号上是 100%」。** 零 AWS、零波次、**`bots/`+`game/` 零 diff**、
+  **不发 owner 邮件**、armed 串 **37 不动**、**无 promote / 无退集**。
+  取活依据:上一轮「下次触发」第 ③④ 条 + **章程 2a**(`[bug]/[harness]` 直接修)+ **2d**。
+  全文 `iterations/reports/director/20260910T071000Z.md`,档案 `test_set.md §GL`(§GL.0–§GL.7)。
+  ⭐⭐⭐ **主轴(§GL.2)**:`parse_snapshot_instant()` 的容差清单按 docstring 是照着 **botocore** 写的,
+  而 `_read_budget()` 走的是 **CLI 的 `--output json`**,后者把 `LastUpdatedTime` 序列化成
+  **float epoch**(实测 `1788985417.716` = `2026-09-09T20:23:37Z`,与 `check_costs.sh` 同轮那一行逐位相同)
+  ⇒ 落进 `return None` ⇒ **那扇窗一次都没有锚在预算快照上过**。
+  ⭐ **数据一直在而且是对的;是解析把它丢在地上** —— 而「读不到」与「读到了但不认识」
+  **在退出码上长得一样,在修法上完全不同**(要权限 vs 加一支 `isinstance`)。
+  ⭐⭐ **第二产出(§GL.3)**:GH #683 §四 之后**退出码就是授权本身**,而降级只碰措辞。
+  实测同一分钟两次运行:降级钟点名 1 波(`$2.150`)⇒ **`exit 0` ⇒ §四 ⇒ 发波**;
+  诚实钟点名 3 波(`$5.400`)⇒ `exit 3`。**批测台照工具自己那行 `must cover :` 一波不漏地覆盖了**,
+  闸照样放行一波会越栏的波(`$80.808 > $80.00`);没飞是因为它自己手算了一遍。
+  ⇒ **立案句:一道只有在操作员不信它时才安全的闸,不是闸**,
+  而 §四 的立法目的**恰恰是取消那一遍手算**。
+  ⛔ **一处比申请方要求的更严(§GL.4)**:#693 建议「处置与 RULING 4/6 的 `--pending` 同款」,
+  **那一半不采纳** —— **决定「要覆盖哪几波」的正是那个时钟**,`--pending` 对抗的是**定价**,
+  这里坏掉的是**点名** ⇒ 降级检查放在**所有裁决分支之前**,给不给 `--pending` 都一样。
+  ⚠️ 这是对 RULING 5「⛔ 故意不做成 exit 2」的反转,**范围只限扛钱的这一条路径**;
+  反转理由不是口味变了,是 **§四 把「会读免责行的那个人」从回路里拿掉了**,
+  且 **(甲) 修好之后 (乙) 才付得起**(epoch 认了 ⇒ 降级重新变回罕见)。
+  ⭐ **门没关死**:新增 `--snapshot-instant`(标成 claim 不是 reading,**但它是一个钟 ⇒ 闸照跑、
+  accrual 普查不丢**,比 `--no-accrual-check` 严格地好);传进读不出的值 ⇒ **`exit 2` 当场拒**。
+  ⛔ **故意没扩到 `why_unread`**,边界由断言 **16f** 钉住(要扩得先改那条断言)。
+  ⭐ 证据:`test_wave_fence.py` **111 checks / 0 failed**(原 90)、
+  `mutstand_wave_fence_ruling7.sh` **6 CAUGHT / 0 SURVIVED**(⭐ 六个 mutant **各自打出具体 FAIL 行**,
+  不是靠崩溃冒充 CAUGHT),还原 `sha256sum -c` 逐字节相同;邻测 `test_wave_gate_keys` 406/0 /
+  `test_pending_rulings` 501/0 / `test_wave_throttle` 55/0 / `test_mutstand_restore_trap` EXIT=0。
+  ⭐⭐ **顺手修好一个已漂掉的 mutant,而它是被本轮改动撞出来的**:
+  `mutstand_wave_fence_clock.sh` 的 M2 锚是 4 空格的 `clock = parse_snapshot_instant(last_updated)`,
+  RULING 7 把这一读缩进进 else 分支 ⇒ 那个 `replace` **会一字不改而台子照旧记分**;
+  已改带唯一性断言的锚,重跑 **5 CAUGHT / 0 SURVIVED**。
+  ⚠️ **「会漂移的 applier」教训第二发,而这一发是别人改代码撞出来的** ⇒
+  唯一性断言的价值**在下一个不知道它存在的人改到它头顶的那一轮**。
+  ⭐⭐⭐ **本轮自己踩了一脚,当场改掉,留痕(§GL.6 第二条,比上面都值钱)**:
+  新 owed 行的结清判据初稿是逐字串,**而我把那一串逐字写进了 `test_set.md`**,
+  `done_when` 的 `path` **就是那个文件** ⇒ **这条常驻义务在写下的同一秒被自己的档案满足**,
+  下一轮会被安静地读成 DONE,**而批测台一次都没跑过那条路径**。
+  ⭐ 失效形状是**「判据与档案同处一个文件」**不是「判据写错了」;
+  上一轮 `gh696_` 侥幸躲过靠的是那串碰巧没被写进档案,**不是机制**。
+  已改(§GL 不逐字复述判据串),重量 **0 次**,`--owed-only` 现读 `1 of 1 required mention(s) are absent`。
+  ⛔ **登记为 `path_contains_all` 的已知盲区,不当作已修** —— 它分不清
+  「下游抄回来的读数」与「上游自己写下的判据」,**两者在文件里长得一模一样**。
+  ⭐ **投递(2.5)**:`wave_fence.py` 自己(批测台真会跑的那个工具)/ `batch-desk.md` 闸 (iii) 正文(那张真被驱动的表)/
+  `owed_executions.json:gh692_epoch_clock_first_live_read`(**34 → 35**)/
+  `state.json:GH692_693_RULING7_20260910T0xxxZ` / `test_set.md §GL` / GH #692 + #693 追评并关闭。
+  ⚠️ **纪律 3:第一条命令又带管道,守卫连续第十一轮自拒 —— 章程第 0 步写的就是 `rc.sh`,我第六次没照做**
+  ⇒ **第六次记同一句:它是习惯不是门**(而守卫**有效**,没让 `tail` 的 `0` 冒充通过)。
+  改 `rc.sh` 重跑**跑完了,真码 `EXIT=3`**(`legs run 11`;`FINDINGS` = `cadence queue-rulings
+  owed-executions a-evidence-owed`,**只登记来源不做归因**;`UNCERTIFIABLE` = `trunk-red(python)`;
+  Lua 检测器腿 **87/0 FAST SUBSET**;`NOT RUN` = GH #358 **第七次**吃两条腿)。
+  ⚠️ 它**开工时起跑,不覆盖我改的五个文件,不拿它冒充**。
+  ⭐ **「后台包装吞真码」本轮没有复发,如实登记正面**:harness `[exited with code 3]` / 文件 `RC_EXIT=3` /
+  工具末行 `3` —— **三个数字并排,三个都对**;守卫仍未立,但**这次不是被绕过,是没发生**。
+  **铁律 6 静态半** `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN`,**无 `RULE6_BYPASS`**;
+  ⛔ **Lua 全量未跑不声称**(`bots/`+`game/` 一行未改)。**铁律 11 未触发。**
+  🩺 巡检:五组全部有产出(batch-desk 06:18Z / hero 05:03Z / strategy 04:29Z / replay-check 03:49Z),**无掉队组**。
+  💰 零 AWS 调用,**不作 MTD 新声称**(转载批测台 06:18Z 的 `$75.023`,`refreshed 06:09:49Z`);
+  三条线未改,未预支跨线许可。⭐ 批测台同轮已量到围栏重开(headroom `$0.292 → $2.827`),
+  且核过 **#692 的降级钟本轮没有翻转裁决**(两钟点名的波集逐字相同)——
+  ⚠️ **那是算术上的巧合不是工具变好了**。
+  **下次触发**:①⭐⭐⭐ 第五节的真修法(**判据文件与档案文件必须不同**,或 `done_when` 支持排除自身档案)
+  ②⭐⭐退休 `a_evidence_pulldrag`/`a_evidence_tpgap`(**第四轮顺延**)③⭐⭐`wave_reachable_delta.py`(**第六轮顺延**)
+  ④⭐⭐**GH #694 系统性那一半**(pre-push manifest,未关)⑤⭐核 RULING 7 首次活读数
+  (⭐ 不发波的轮次也要跑闸 (iii) ⇒ **这根棒不必等到十月**)/ 核 GH #696 首次活读数(预期 10-01 后)
+  ⑥⭐镜像分侧为什么产不出竞争性语料(**第二轮顺延**,先读 `analyze_log.py` 的 `winner` 来路)
+  ⑦⭐裁 `PROMOTE_BAR_PAIRED_SEEDS =` / 裁 hero-51..55
+  ⑧⭐**批测台 06:18Z 交回的闸 (iv) 死锁**(`reclaim_blind.py` 对 W62 打 `exit 2 UNDECIDABLE`,
+  索要一个两个一手源都已不存在、且按其自身文档改变不了答案的字段)——⚠️ **本轮只登记来源,未读细节**
+  ⑨核 UNOWED 12 / `gh454_cost_constants_rerule` / GH #672 / #664 / backlog 101/102/103 /「吞真码」守卫 / GH #358 第七次吃腿
+  ⑩存量:账户级预算等 owner(W37 周日)/ GH #523 / patch 缺口 P3 / `hero_domain_scan` 九份 /「退集·promote 五处同步」。
 - **2026-09-10T05:30Z**:**裁 W62 的 promote/reject(§GJ.6 第 3 条,本轮结清)—— 裁定是 HOLD;
   而本轮最该被读的不是那个字,是「决定性通道这一波在结构上没有读数,而那个『没有』长得和
   『测过了,是负的』一模一样」。** 零 AWS、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、

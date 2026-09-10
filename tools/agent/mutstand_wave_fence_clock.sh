@@ -49,8 +49,13 @@ cp "$CP" "$SRC"
 # every wave in the gap between the snapshot and this instant.
 python3 - <<'PY'
 p="tools/batch_test/soak/wave_fence.py"; s=open(p).read()
-s=s.replace("    clock = parse_snapshot_instant(last_updated)",
-            "    clock = None")
+# Ruling 7 re-indented this read into an else-branch (the operator's asserted
+# clock is tried first).  The old 4-space anchor stopped matching and this
+# mutant would have applied NOTHING while the stand kept scoring it -- the
+# same drift M1's comment warns about, caught here by the uniqueness assert.
+old = "        clock = parse_snapshot_instant(last_updated)"
+assert s.count(old) == 1, "M2 anchor is not unique -- refusing to mutate blind"
+s = s.replace(old, "        clock = None")
 open(p,"w").write(s)
 PY
 run "M2 (window anchored to now, not to the snapshot)"

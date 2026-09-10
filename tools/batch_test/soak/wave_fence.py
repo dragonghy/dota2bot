@@ -223,6 +223,47 @@ Two boundaries, stated rather than assumed:
     an accrual-complete zero.  Note the fallback direction is the permissive
     one (`now` is later, so the window is narrower), which is why it is
     labelled rather than silently taken.
+  * RULING 7 -- THAT LABEL WAS PRINTED ON EVERY SINGLE RUN, AND IT NO LONGER
+    STOPS AT THE WORDING.  Director, 2026-09-10, from the batch desk's 03:1xZ
+    hand-off (GH #692 the defect, GH #693 the policy).  Two findings, and the
+    second one is the reason the first one had teeth.
+
+    (a) The parser.  Ruling 6's fallback was designed as a RARE labelled
+    degrade.  It was not rare: `awsx budgets describe-budget --output json`
+    hands `LastUpdatedTime` back as a float epoch, `parse_snapshot_instant`
+    only knew datetimes and ISO strings, so the degrade fired on 100% of live
+    runs from the day Ruling 6 landed.  `check_costs.sh` printed the correct
+    instant in the same round the gate called it unreadable.  Fixed by
+    accepting the epoch -- see that function.
+
+    (b) The exit code.  GH #683 ss4 moved launch authority from "the director
+    rules each round" to arithmetic: exit 0 plus a `--pending` covering every
+    wave the tool lists means launch, no ask.  From that moment THE EXIT CODE
+    IS THE AUTHORISATION, and Ruling 6's degrade -- which touches the wording
+    and not the exit code -- became a hole with money on the other side.
+    Measured on the first round ss4 was exercised: the degraded clock listed
+    one wave (W62, $2.150) where the honest clock listed three ($5.400); the
+    desk covered every wave the tool named, in full, and the gate answered
+    exit 0 on a launch that would have crossed the fence ($80.808 > $80.00).
+    The desk did not launch, because it did the arithmetic by hand.  A gate
+    that is only safe when its operator does not trust it is not a gate.
+
+    So a degraded clock now returns exit 2, before any verdict branch, with
+    or without `--pending`.  Note this REVERSES Ruling 5's "deliberately not
+    an exit 2" for this one code path, and the reversal is narrow on purpose:
+    Ruling 5's own region clause is untouched.  What changed is not the
+    appetite for outages -- it is that ss4 removed the human who used to read
+    the caveat line.  The gate does not close permanently: `--snapshot-instant`
+    lets the operator assert the clock they can read elsewhere (labelled a
+    claim, and it is the clock, so the check still runs), and
+    `--no-accrual-check` remains the written skip.  Fix (a) is also what makes
+    (b) affordable: with the epoch parsed, the degrade is rare again.
+
+    Deliberately NOT widened to `why_unread`.  An unread wave record is
+    permissive too, but it is a different reading with a different remedy and
+    GH #693 asked about the clock; widening it here would be a policy change
+    smuggled in under a bug fix.  It stays a caveat on an exit 0, pinned by
+    assertion 16f so that the narrowing stays visible.
 
 WHAT THIS TOOL DOES NOT RULE ON.  The $90 brake line and the $100 owner
 approval line are the OWNER's numbers, not the budget's, and this tool neither
@@ -365,9 +406,19 @@ def scope_line(scope):
 def parse_snapshot_instant(text):
     """Ruling 6.  The budget's own `LastUpdatedTime`, or None if unreadable.
 
-    Deliberately tolerant of the shapes botocore hands back (a datetime, or an
-    ISO string with an offset or a `Z`).  Returning None is a real answer here
-    -- it routes to the labelled `now` fallback rather than to a guess.
+    Deliberately tolerant of the shapes THIS TOOL'S OWN CALL PATH hands back.
+    Ruling 7 (GH #692) is why that sentence now names the call path: the
+    original wording said "the shapes botocore hands back", and the tolerance
+    list was written to match botocore -- while `_read_budget()` goes through
+    the CLI's `--output json`, which serialises `LastUpdatedTime` as a FLOAT
+    EPOCH (`1788985417.716`).  That shape fell through to `return None`, so on
+    this account the clock degraded to `now` on 100% of runs.  The data was
+    there and correct the whole time; the parser dropped it on the floor.
+    "Could not read it" and "read it and did not recognise it" print the same
+    exit code and are not the same defect.
+
+    Returning None is a real answer here -- it routes to Ruling 7's exit 2
+    rather than to a guess.
     """
     if text is None:
         return None
@@ -375,6 +426,13 @@ def parse_snapshot_instant(text):
         return (text if text.tzinfo
                 else text.replace(tzinfo=_dt.timezone.utc)).astimezone(
                     _dt.timezone.utc)
+    # Ruling 7.  `bool` is excluded on purpose: isinstance(True, int) is True,
+    # and a stray boolean dated 1970-01-01 is a wrong reading, not a reading.
+    if isinstance(text, (int, float)) and not isinstance(text, bool):
+        try:
+            return _dt.datetime.fromtimestamp(float(text), _dt.timezone.utc)
+        except (ValueError, OverflowError, OSError):
+            return None
     if not isinstance(text, str):
         return None
     raw = text.strip().replace("Z", "+00:00")
@@ -518,13 +576,39 @@ def certify_pending(instances, pending_supplied, cost_filters=None,
             waves["clock_source"], waves["cutoff"]))
         wave_rows = waves["rows"]
 
+    # Ruling 7.  A degraded clock is no longer a caveat on an exit 0.  Placed
+    # BEFORE every verdict branch because it invalidates all of them at once:
+    # every branch below rests on the wave list, and the wave list was cut
+    # with the wrong clock.  Note it fires whether or not `--pending` was
+    # given -- that is the whole hole GH #692 measured, where a `--pending`
+    # that covered every wave the tool NAMED still under-covered by $3.250
+    # because the naming itself was short.
+    if waves and waves.get("clock_degraded"):
+        lines.append(
+            "UNCERTIFIABLE: the wave-accrual window above was anchored to %s, "
+            "not to the budget snapshot, so the wave list is NARROWER than "
+            "the truth and pending cannot be certified from it (Ruling 7)."
+            % waves.get("clock_source", "an unstated clock"))
+        lines.append(
+            "Re-run with --snapshot-instant <the budget LastUpdatedTime that "
+            "check_costs.sh prints>, or pass --no-accrual-check and quote its "
+            "SKIPPED line in the round's report.")
+        lines.append("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
+        return 2, lines, None
+
     # Deliberately NOT folded into Ruling 5's `complete`: that flag words its
     # caveat in terms of REGIONS, and a clock caveat printed in region
     # language would be exactly this file's recurring defect (a claim that
     # does not match its reading) committed while fixing it.
+    #
+    # Ruling 7 deliberately did NOT widen to `why_unread`: an unread record is
+    # also permissive, but it is a different reading with a different remedy,
+    # and GH #693 asked about the clock.  It stays a caveat on an exit 0, and
+    # assertion 16f pins that boundary so the narrowing is visible rather than
+    # forgotten.
     clock_caveat = None
-    if waves and (waves.get("clock_source") != "budget snapshot"
-                  or waves.get("why_unread")):
+    if waves and (waves.get("why_unread")
+                  or waves.get("clock_source") != "budget snapshot"):
         clock_caveat = (
             "  zero qualified : the wave half above ran on %s%s, so this zero "
             "is not an accrual-complete one (Ruling 6)."
@@ -772,24 +856,40 @@ def read_from_aws(budget_name=BUDGET_NAME):
             b.get("CostFilters") or {}, b.get("LastUpdatedTime"))
 
 
-def read_wave_accrual(waves_dir, last_updated, now=None):
+def read_wave_accrual(waves_dir, last_updated, now=None,
+                      asserted_instant=None):
     """Ruling 6.  The wave-record precondition on a certified zero.
 
-    Returns the dict `certify_pending` consumes.  When the budget's own
-    `LastUpdatedTime` cannot be read the clock falls back to `now` -- which is
-    the PERMISSIVE direction (a later clock is a narrower window), so it is
-    labelled in `clock_source` and never silently taken.
+    Returns the dict `certify_pending` consumes.  `clock_degraded` (Ruling 7)
+    is the load-bearing field: True means the window was anchored to `now`
+    because no snapshot instant could be had, which is the PERMISSIVE
+    direction (a later clock is a narrower window, so waves drop out of
+    pending by construction).  Under Ruling 7 that flag stops the gate; it is
+    no longer a label on an exit 0.
+
+    `asserted_instant` is the operator's own `--snapshot-instant`: a clock
+    they read somewhere this tool could not (`check_costs.sh` prints the same
+    `LastUpdatedTime` this parser wants).  It is a CLAIM, so it is labelled as
+    one -- but it is a clock, so it is not degraded.
     """
     now = now or _dt.datetime.now(_dt.timezone.utc)
-    clock = parse_snapshot_instant(last_updated)
-    if clock is None:
-        clock, clock_source = now, "now (budget LastUpdatedTime unreadable)"
+    clock = parse_snapshot_instant(asserted_instant)
+    if clock is not None:
+        clock_source, degraded = (
+            "snapshot instant ASSERTED by the operator (--snapshot-instant)",
+            False)
     else:
-        clock_source = "budget snapshot"
+        clock = parse_snapshot_instant(last_updated)
+        if clock is None:
+            clock, clock_source, degraded = (
+                now, "now (budget LastUpdatedTime unreadable)", True)
+        else:
+            clock_source, degraded = "budget snapshot", False
     cutoff = clock - _dt.timedelta(hours=ACCRUAL_LAG_MAX_HOURS)
     rows, why_unread = waves_since(waves_dir, cutoff)
     return {"rows": rows, "why_unread": why_unread, "clock": clock,
-            "clock_source": clock_source, "cutoff": cutoff}
+            "clock_source": clock_source, "cutoff": cutoff,
+            "clock_degraded": degraded}
 
 
 def parse_instances(payload):
@@ -896,6 +996,12 @@ def main(argv=None):
                              "Ruling 6's wave-record read. Prints a line "
                              "calling itself SKIPPED, not certified; quote "
                              "that line in the round's report.")
+    parser.add_argument("--snapshot-instant", default=None,
+                        help="Ruling 7: the budget's own LastUpdatedTime, "
+                             "asserted by the operator when this tool cannot "
+                             "read it (check_costs.sh prints it). Accepts an "
+                             "ISO-8601 instant or an epoch. It is labelled as "
+                             "a claim, but it is a clock, so the gate runs.")
     parser.add_argument("--waves-dir", default=wave_throttle.DEFAULT_WAVES_DIR,
                         help="Ruling 6: where the wave records live. A wave "
                              "launched inside the ActualSpend lag makes "
@@ -914,6 +1020,22 @@ def main(argv=None):
     parser.add_argument("--time-unit", default="MONTHLY",
                         help="offline mode: budget TimeUnit")
     args = parser.parse_args(argv)
+
+    # Ruling 7.  An unparseable assertion is refused HERE -- before the
+    # offline/online split, and before anything is read -- rather than
+    # ignored.  Silently falling back would answer a question the operator
+    # did not ask, in the permissive direction, which is the shape of every
+    # defect this file has been fixed for.  Validating it early also puts it
+    # where a test without an AWS account can reach it; the live branch is
+    # exactly where it would otherwise never be exercised (GH #692's own
+    # lesson: the shape that bit us had never been in the input set).
+    if (args.snapshot_instant is not None
+            and parse_snapshot_instant(args.snapshot_instant) is None):
+        print("UNCERTIFIABLE: --snapshot-instant %r is not an instant this "
+              "tool can read (want ISO-8601 or an epoch)."
+              % args.snapshot_instant)
+        print("WAVE_FENCE: UNCERTIFIABLE (exit 2)")
+        return 2
 
     offline = args.actual is not None
     instances = None
@@ -959,7 +1081,8 @@ def main(argv=None):
             except Uncertifiable as exc:
                 print("accrual read     : FAILED -- %s" % exc)
                 instances, scope = None, None
-            waves = read_wave_accrual(args.waves_dir, last_updated)
+            waves = read_wave_accrual(args.waves_dir, last_updated,
+                                      asserted_instant=args.snapshot_instant)
 
     acc_code, acc_lines, pending = certify_pending(
         instances, args.pending, cost_filters=cost_filters,
@@ -984,11 +1107,13 @@ def main(argv=None):
               % (len(scope.get("regions") or []),
                  scope.get("why") or "enumeration incomplete"))
     # Ruling 6 rides after the verdict for the same reason Ruling 5 does.
+    # Ruling 7 emptied the degraded case out of here (it cannot reach a
+    # verdict any more), so what is left is the operator's asserted clock:
+    # still not a reading, still travelling with the copied sentence.
     if waves and waves.get("clock_source") != "budget snapshot":
         print("WAVE_FENCE CLOCK : the wave-accrual window above was anchored "
-              "to %s, which is LATER than the budget snapshot and therefore a "
-              "NARROWER window. Quote this line in the round's report."
-              % waves["clock_source"])
+              "to %s -- a claim, not a reading. Quote this line in the "
+              "round's report." % waves["clock_source"])
     return code
 
 

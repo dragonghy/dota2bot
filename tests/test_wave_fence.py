@@ -539,9 +539,12 @@ try:
 
     # 15i. Ruling 5's caveat must not be reworded in clock language, nor the
     #      other way round: the two qualifications stay distinguishable.
+    #      Ruling 7 moved this case off the `now` fallback (which no longer
+    #      reaches a verdict at all) and onto the operator-asserted clock --
+    #      the surviving exit-0 path that still carries a clock caveat.
     d = waves_dir_with({"W40": ["2026-09-02T21:31:51Z"]})
     tmpdirs.append(d)
-    w = wf.read_wave_accrual(d, None, now=_NOW)          # now-clock fallback
+    w = wf.read_wave_accrual(d, None, now=_NOW, asserted_instant=_SNAP)
     text = "\n".join(wf.certify_pending(
         [], None, scope={"regions": ["us-west-2", "us-east-1"],
                          "complete": True}, waves=w)[1])
@@ -562,6 +565,139 @@ try:
     check(wf.parse_snapshot_instant("not a time") is None
           and wf.parse_snapshot_instant(None) is None,
           "15j3: an unreadable stamp returns None, which routes to the label")
+
+    # ---- 16. RULING 7 (director 2026-09-10, GH #692 defect / #693 policy).
+    # Two halves.  (a) the parser did not know the shape the CLI actually
+    # returns, so Ruling 6's "rare labelled degrade" fired on 100% of live
+    # runs; (b) after GH #683 ss4 the exit code IS the launch authorisation,
+    # so a degrade that only touches the wording authorises a wave over the
+    # fence.  16a and 16d are the load-bearing pair: 16a is the shape that was
+    # dropped, 16d is the exit 0 that dropping it produced.
+
+    # 16a. THE MEASURED SHAPE.  This float is verbatim from the batch desk's
+    #      2026-09-10T03:1xZ round: `awsx budgets describe-budget --output
+    #      json` on aws-cli/1.46.1.  It is the same instant check_costs.sh
+    #      printed as 2026-09-09T20:23:37Z while this parser called it
+    #      unreadable.
+    check(wf.parse_snapshot_instant(1788985417.716)
+          == _dt.datetime(2026, 9, 9, 20, 23, 37, 716000,
+                          tzinfo=_dt.timezone.utc),
+          "16a: the CLI's float epoch parses to the instant check_costs prints",
+          "got %r" % (wf.parse_snapshot_instant(1788985417.716),))
+    check(wf.parse_snapshot_instant(1788985417)
+          == _dt.datetime(2026, 9, 9, 20, 23, 37, tzinfo=_dt.timezone.utc),
+          "16a2: an int epoch parses too")
+
+    # 16b. isinstance(True, int) is True.  A boolean dated 1970-01-01 would be
+    #      a WRONG reading, which is worse than an unreadable one: it would
+    #      certify a window nobody chose.
+    check(wf.parse_snapshot_instant(True) is None
+          and wf.parse_snapshot_instant(False) is None,
+          "16b: a bool is not an epoch",
+          "got %r/%r" % (wf.parse_snapshot_instant(True),
+                         wf.parse_snapshot_instant(False)))
+    check(wf.parse_snapshot_instant(float("nan")) is None
+          and wf.parse_snapshot_instant(1e30) is None,
+          "16b2: a non-finite or absurd epoch returns None, it does not raise")
+
+    # 16c. The degrade now reaches the exit code, on the branch that used to
+    #      print CERTIFIED.  Nothing running, no wave in the (narrow) window:
+    #      under Ruling 6 this was an exit 0 with a caveat line.
+    d = waves_dir_with({"W40": ["2026-09-02T21:31:51Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, None, now=_NOW)          # no snapshot at all
+    check(w["clock_degraded"] is True,
+          "16c: a missing LastUpdatedTime marks the clock degraded")
+    code, lines, pending = wf.certify_pending([], None, waves=w)
+    text = "\n".join(lines)
+    check(code == 2 and pending is None,
+          "16c2: a degraded clock does not certify a zero (Ruling 7)",
+          "got %r/%r" % (code, pending))
+    check("CERTIFIED" not in text,
+          "16c3: and the word CERTIFIED does not reach the report", text[:300])
+    check("--snapshot-instant" in text and "--no-accrual-check" in text,
+          "16c4: the refusal names both ways through, so it is not an outage",
+          text[-300:])
+
+    # 16d. THE OTHER LOAD-BEARING ONE -- GH #692's measured hole.  The desk
+    #      passed a --pending covering every wave the tool NAMED and got exit
+    #      0 on a launch that crossed the fence, because the naming itself
+    #      was short by two waves.  A supplied figure must NOT buy past a
+    #      degraded clock: the clock is what decided which waves to name.
+    d = waves_dir_with({"W60": ["2026-09-09T09:23:33Z"],
+                        "W61": ["2026-09-09T15:24:29Z"],
+                        "W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w_bad = wf.read_wave_accrual(d, None, now=_NOW)
+    # At this `now` the narrower window drops W60 only; on the desk's own
+    # round (a later `now`) it dropped W60 and W61.  The count is incidental,
+    # the direction is not: the degraded list is a SUBSET, always.
+    check(sorted(r[0] for r in w_bad["rows"]) == ["W61", "W62"],
+          "16d: the degraded clock drops a wave the snapshot clock keeps",
+          "rows %r" % (w_bad["rows"],))
+    code, lines, pending = wf.certify_pending([], 3.250, waves=w_bad)
+    check(code == 2 and pending is None,
+          "16d2: --pending does not buy past a degraded clock (Ruling 7)",
+          "got %r/%r" % (code, pending))
+    # ...and with the epoch parsed, the same corpus names all three.
+    w_ok = wf.read_wave_accrual(d, 1788985417.716, now=_NOW)
+    check(w_ok["clock_degraded"] is False
+          and sorted(r[0] for r in w_ok["rows"]) == ["W60", "W61", "W62"],
+          "16d3: the epoch fix restores the three waves the desk found by hand",
+          "rows %r source %r" % (w_ok["rows"], w_ok["clock_source"]))
+
+    # 16e. --snapshot-instant: the gate still runs, and still says the clock
+    #      was asserted rather than read.  Without this the fix would be a
+    #      launch outage whenever AWS changes a serialisation again.
+    w_as = wf.read_wave_accrual(d, None, now=_NOW, asserted_instant=_SNAP)
+    check(w_as["clock_degraded"] is False
+          and "ASSERTED" in w_as["clock_source"],
+          "16e: an asserted clock is a clock, and is labelled a claim",
+          "got %r" % (w_as["clock_source"],))
+    check(sorted(r[0] for r in w_as["rows"]) == ["W60", "W61", "W62"],
+          "16e2: and it cuts the same window the budget snapshot would")
+    code, lines, pending = wf.certify_pending([], 5.400, waves=w_as)
+    check(code == 0 and pending == 5.400,
+          "16e3: the operator gets through on their own clock + own figure",
+          "got %r/%r" % (code, pending))
+    check("ASSERTED" in "\n".join(lines),
+          "16e4: the claim travels into the lines, not just the dict")
+
+    # 16f. THE NARROWING, PINNED.  Ruling 7 covers the clock, NOT unread
+    #      records: an unread record is permissive too, but widening it here
+    #      would be a policy change smuggled in under a bug fix.  If a later
+    #      round decides to widen, it should have to edit this assertion.
+    d = waves_dir_with({"W61": None, "W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, _SNAP, now=_NOW)
+    check(w["why_unread"] is not None and w["clock_degraded"] is False,
+          "16f: unread records with a good clock are not a degraded clock")
+    code, lines, pending = wf.certify_pending([], 5.400, waves=w)
+    check(code == 0 and "zero qualified" in "\n".join(lines),
+          "16f2: that case stays a caveat on an exit 0 (deliberately unwidened)",
+          "got %r" % (code,))
+
+    # 16g. --no-accrual-check outranks Ruling 7, as it does every other
+    #      ruling in this file: it returns before any of them, and says so.
+    d = waves_dir_with({"W62": ["2026-09-09T21:24:41Z"]})
+    tmpdirs.append(d)
+    w = wf.read_wave_accrual(d, None, now=_NOW)
+    code, lines, pending = wf.certify_pending(
+        [], None, check_enabled=False, waves=w)
+    check(code == 0 and "SKIPPED, NOT CERTIFIED" in "\n".join(lines),
+          "16g: the written skip still works under a degraded clock")
+
+    # 16h. An unparseable assertion is refused, not ignored.  Falling back
+    #      silently would answer a question the operator did not ask, in the
+    #      permissive direction -- the exact shape of everything above.
+    _offline = ["--actual", "75.023", "--limit", "100",
+                "--thresholds", "50,80,100", "--planned", "1.10"]
+    check(wf.main(_offline + ["--snapshot-instant", "yesterday-ish"]) == 2,
+          "16h: an unreadable --snapshot-instant is refused, not ignored")
+    check(wf.parse_snapshot_instant("yesterday-ish") is None,
+          "16h2: ...and the value really is unreadable, so 16h is not vacuous")
+    check(wf.main(_offline + ["--snapshot-instant", _SNAP]) == 0,
+          "16h3: a readable one does not refuse (16h is not just 'flag => 2')")
 finally:
     for d in tmpdirs:
         _shutil.rmtree(d, ignore_errors=True)

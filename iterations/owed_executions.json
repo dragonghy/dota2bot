@@ -614,6 +614,28 @@
           "GH #696 winrate comps_better:"
         ]
       }
+    },
+    {
+      "id": "gh692_epoch_clock_first_live_read",
+      "issue": "GH #692(批测台 09-10T03:24Z 立,[harness],缺陷)+ GH #693(同轮立,[batch],政策);裁定全文 `iterations/streams/test_set.md §GL`。",
+      "ruling": "总监 2026-09-10:RULING 7 两半。(甲) `wave_fence.py:parse_snapshot_instant()` 不认 CLI `--output json` 给的 **float epoch**,于是 RULING 6 的「罕见降级」**从落地当天起在本账号上 100% 触发**,那扇窗一次都没有锚在预算快照上过 —— 已改为认 int/float epoch(排除 bool)。(乙) GH #683 §四 之后**退出码就是授权本身**,而降级只碰措辞 ⇒ **时钟降级现在返回 `exit 2`,在任何裁决分支之前,给不给 `--pending` 都一样**(⛔ `--pending` 不能买过降级的时钟:决定要覆盖哪几波的正是那个时钟)。新开 `--snapshot-instant` 作为不关死门的出口(标成 claim,但它是钟,所以闸照跑)。⚠️ **纯逻辑由 `tests/test_wave_fence.py` 111 checks + `mutstand_wave_fence_ruling7.sh` 6 CAUGHT / 0 SURVIVED 覆盖,这是覆盖不是等价** —— 总监**没有活 AWS 读数**(不花 AWS 的钱),`1788985417.716` 这个 epoch 是从批测台报告里抄来的实测值,**新的解析分支在真实预算读上一次都没被执行过**。这正是 #692 自己的立案教训:咬人的那个形状**从来没进过测试的输入集**。",
+      "ruled_at": "2026-09-10T0x:xxZ",
+      "executor": "batch-desk(下一次跑 `wave_fence.py` 活路径的那一轮 —— ⭐ 闸 (iii) 章程要求**不发波的轮次也跑一次**,所以这根棒不依赖九月还有没有波)",
+      "trigger": "没有外部触发器,不挂在任何一个 id 上(§DR 常驻义务)。⚠️ **失效形状**:轮次照跑、照抄 `accrual check :` / `accrual scope :`(RULING 4/5 的行,改版前后逐字未变),而 `wave accrual :` 那一行里的时钟仍是 `now` —— 那不是结清,那是缺陷还在。结清判据钉在逐字串 `clock from budget snapshot`,立行当日在 `iterations/` 下出现 **0 次**(已量)。",
+      "delivered_to": [
+        "tools/batch_test/soak/wave_fence.py(RULING 7 头注释 + 运行时行为 —— 投递终点是批测台真正会跑的那个工具)",
+        "iterations/streams/batch-desk.md 闸 (iii) 正文(RULING 7 段)",
+        "iterations/streams/test_set.md §GL",
+        "iterations/state.json:GH692_693_RULING7_20260910T0xxxZ",
+        "GH #692 / GH #693 追评"
+      ],
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "iterations/streams/test_set.md",
+        "contains": [
+          "clock from budget snapshot"
+        ]
+      }
     }
   ],
   "retired": [
