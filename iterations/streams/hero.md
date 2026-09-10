@@ -25,7 +25,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 -138. **⭐ 下一轮:选件先跑仪器,不要再手扫 101 行 ——
    `python3 tools/agent/queue_reading_census.py`(冷启 <1s,只读,0/2/3)。**
    `-135`/`-136`/`-137` 那条判据本轮**做成了仪器**,同时修掉它自己的两个失效方向
-   (报告 `iterations/reports/hero/20260910T014840Z.md`):
+   (报告 `iterations/reports/hero/20260910T014840Z.md`,已发 **GH #690**):
    - **(1) 缺 `status` 键 ≠ `!= done`,而它读起来是「可选」。** 全队 101 行里恰好三行完全没有
      `status`,三行全是 `hero-*`,其中 **`hero-37` 正是 `-137` 那一轮刚花掉的行** ⇒ 判据
      **每轮都会重新选中它**。已补 `delivered-and-consumed`(照 `hero-31`/`hero-35` 的词,
