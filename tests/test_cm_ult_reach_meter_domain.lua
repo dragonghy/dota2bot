@@ -418,11 +418,19 @@ tests['1. the castable funnel over the whole archive, buckets exhaustive'] = fun
     -- `lua5.1 tests/run_tests.lua test_cm_ult_reach_meter_domain.lua` (that is
     -- what routine_selfcheck.sh:566 runs).  Same family as GH #491 and the
     -- W45 `zusult` reading: the instrument manufactured the answer it reported.
-    assert(t.instants == 66, 'live-CM instants: expected 66, got ' .. t.instants)
-    assert(t.handles == 289, 'CM ability handles: expected 289, got ' .. t.handles)
-    assert(t.trained == 269, 'trained handles: expected 269, got ' .. t.trained)
-    assert(t.pre  == 212, 'castable before the price: expected 212, got ' .. t.pre)
-    assert(t.post == 196, 'castable after the price: expected 196, got ' .. t.post)
+    -- 66 -> 70 (2026-09-10, hero): the four tests/frames/f_260910_124853_lion_
+    -- spike_*.lua Lion frames each carry a live CM.  ELEVEN numbers moved, and
+    -- they were read to the end rather than one per rerun: this block's five
+    -- (66->70 / 289->309 / 269->289 / 212->231 / 196->215), section 4's
+    -- `nInstants` (66->70) and its five mock-default constants (66->70 each).
+    -- The revocation arithmetic below (pre - post) is UNCHANGED at 16, so the
+    -- four new CMs are castable-and-kept: they grew the denominator without
+    -- adding a revocation.
+    assert(t.instants == 70, 'live-CM instants: expected 70, got ' .. t.instants)
+    assert(t.handles == 309, 'CM ability handles: expected 309, got ' .. t.handles)
+    assert(t.trained == 289, 'trained handles: expected 289, got ' .. t.trained)
+    assert(t.pre  == 231, 'castable before the price: expected 231, got ' .. t.pre)
+    assert(t.post == 215, 'castable after the price: expected 215, got ' .. t.post)
 
     local revoked = t.pre - t.post
     assert(revoked == 16, 'revocations: expected 16, got ' .. revoked)
@@ -578,7 +586,7 @@ tests['4. the zero desires come with the constants that cause them -- and the on
             if h ~= nil and (h:GetAOERadius() or 0) == 0 then nRadius0 = nRadius0 + 1 end
         end
     end
-    assert(nInstants == 66, 'instants moved: ' .. nInstants)
+    assert(nInstants == 70, 'instants moved: ' .. nInstants)
 
     -- The registry, both directions, each red naming its own member.
     for key, want in pairs(LIVE_BIDS) do
@@ -615,11 +623,11 @@ tests['4. the zero desires come with the constants that cause them -- and the on
     -- Written as the count rather than as `nInstants` on purpose, so a scan that
     -- silently stops enumerating cannot make these pass by shrinking both sides
     -- together.
-    assert(nMode == 66, 'GetActiveMode is the mock default on every instant: got ' .. nMode)
-    assert(nGoing == 66, 'J.IsGoingOnSomeone is false on every instant: got ' .. nGoing)
-    assert(nRetreat == 66, 'J.IsRetreating is false on every instant: got ' .. nRetreat)
-    assert(nAoE == 66, 'FindAoELocation is the count=0 loader stand-in everywhere: got ' .. nAoE)
-    assert(nRadius0 == 66, 'GetAOERadius answers 0 on every instant (section 5): got ' .. nRadius0)
+    assert(nMode == 70, 'GetActiveMode is the mock default on every instant: got ' .. nMode)
+    assert(nGoing == 70, 'J.IsGoingOnSomeone is false on every instant: got ' .. nGoing)
+    assert(nRetreat == 70, 'J.IsRetreating is false on every instant: got ' .. nRetreat)
+    assert(nAoE == 70, 'FindAoELocation is the count=0 loader stand-in everywhere: got ' .. nAoE)
+    assert(nRadius0 == 70, 'GetAOERadius answers 0 on every instant (section 5): got ' .. nRadius0)
 end
 
 -- ===========================================================================

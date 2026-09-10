@@ -331,13 +331,20 @@ tests['§1 5 of 10 in-ring sightings sit in the band where facing decides'] = fu
     assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
         .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 57, 'Zeus is alive on ' .. nLive .. ' corpus frames, was 57 '
+    -- 57 -> 60 (2026-09-10, hero): the four tests/frames/f_260910_124853_lion_
+    -- spike_*.lua Lion frames each carry a live Zeus, and TWO of them put him
+    -- inside the ring in the facing-decided band (10 -> 12 below).  Every
+    -- assertion in this take was read to the end before the numbers were
+    -- written -- the previous two re-takes of this file each stopped at the
+    -- first red line and recorded "only the denominator moved", which was wrong
+    -- both times.
+    assert(nLive == 60, 'Zeus is alive on ' .. nLive .. ' corpus frames, was 60 '
         .. '-- re-take §0.3 limit 2 rather than quoting it')
-    assert(nBand == 10 and nSafe == 11, 'the geometry moved: ' .. nBand
-        .. ' band / ' .. nSafe .. ' direction-proof sightings, was 10 / 11.  '
+    assert(nBand == 12 and nSafe == 11, 'the geometry moved: ' .. nBand
+        .. ' band / ' .. nSafe .. ' direction-proof sightings, was 12 / 11.  '
         .. 'Re-take §1 and §0.3 limit 2.')
-    assert(nBandFrames == 9, 'band sightings now share frames (' .. nBandFrames
-        .. ' frames for ' .. nBand .. ' sightings, was 9 for 10)')
+    assert(nBandFrames == 10, 'band sightings now share frames (' .. nBandFrames
+        .. ' frames for ' .. nBand .. ' sightings, was 10 for 12)')
     assert(bHasFrame, 'the §0.1 frame ' .. FRAME .. ' no longer puts an enemy '
         .. 'in the band, so §2 cannot be read off it')
 end

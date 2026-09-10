@@ -654,16 +654,36 @@ end
 --- to "the withheld stuns were worth throwing" and never to a cast this lever
 --- added.
 ---
---- ⛔ NOT LOCALLY VALIDATED, and that is the honest word for it.  Driven over all
---- 111 + 27 corpus frames (tests/test_lion_q_field_engagement.lua §3) this branch
---- has an EMPTY domain: 38 live-Lion instants -> 4 at hero level >= 15 -> 0 with
---- Impale fully castable AND at least one enemy inside the ring.  The binding
---- clause is `nLV >= 15`, and no frame in the tree is on the other side of it with
---- the other two clauses true.  So §3 asserts a NO-OP rather than a moved
---- decision, the way tests/test_lion_q_kill_reach.lua does for `lionqkill`, and
---- the next step is to cut Lion frames AT that predicate (the reverse-lookup
---- recipe of tests/frames/f_260909_215227_zeus_exec_*.lua) rather than to hope a
---- corpus cut for other questions happens to contain one.
+--- ⭐ LOCALLY VALIDATED (2026-09-10T20:xxZ).  The round that landed this id could
+--- only assert a no-op -- the branch had an EMPTY domain (38 live-Lion instants ->
+--- 4 at hero level >= 15 -> 0 with Impale castable and an enemy inside the ring)
+--- -- and handed the next round the branch's own conjunction to cut frames AT.
+--- Four such frames now exist, reverse-looked-up out of soak game
+--- 20260910_124853_slot1 at instants where the real bot DID press Earth Spike:
+--- tests/frames/f_260910_124853_lion_spike_{slardar_1129,sb_1344,slardar_1416,
+--- sb_1357}.lua.  Armed, the first three fall SILENT (nothing below the catch-all
+--- picks the cast up) and the fourth is untouched, because at 19% HP on Spirit
+--- Breaker a branch that says what it is for -- Finger of Death -- fires first.
+--- Over the whole 42-frame live-Lion corpus armed moves exactly those three and
+--- never adds an action (test §3.2/§3.4).
+---
+--- GROUND TRUTH from that same replay, and it is mixed on purpose.  All three
+--- withheld Impales CONNECT (205 / 199 / 201 damage, `modifier_lion_impale` on the
+--- target each time) -- this branch is not throwing them into empty space.  What
+--- it is doing is spending a 14-second stun on someone who had not touched Lion in
+--- three seconds: at t=1129.8 he stuns a full-HP Slardar and is dead to that same
+--- Slardar at 1140.3, and at t=1416.0 he stuns Slardar again and is dead at
+--- 1420.7.  The third (t=1344.5) he survives.  Two-of-three is a reading, not a
+--- rate; whether withholding is BETTER is the wave's question and not this file's.
+---
+--- ⭐ THE FRAMES ALSO BOUGHT A DEFECT IN THE METER THAT WAS HUNTING THEM.  §3.1's
+--- census ring was `GetCastRange() + 20` while this branch's is
+--- `GetCastRange() + aetherRange + 20`, and X.SkillsComplement sets aetherRange to
+--- 250 for any Lion holding an item_aether_lens -- every Lion in the corpus.  The
+--- census was reading 670 for a branch that fires at 920, and three of these four
+--- frames sit in that 250-unit annulus.  It did NOT manufacture the old zero
+--- (the pre-existing level-15 frames answer the same under both rings, asserted),
+--- but a meter that happens to agree is still a broken meter.
 ---
 --- ⚠️ NOT fixed here, registered so the next reader does not re-derive it: the
 --- same branch aims at the raw `npcEnemy:GetLocation()` of an unordered list's

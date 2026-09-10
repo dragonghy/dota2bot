@@ -120,6 +120,27 @@ local SLACK      = 20           -- the file's own `+ 20`
 local RING       = CAST_RANGE + SLACK
 local BONUS      = 200          -- nInBonusEnemyList's extra radius
 
+--- ⛔ RING ABOVE IS NOT X.ConsiderQ's RING, and this file used to say it was.
+--- The branch computes `abilityQ:GetCastRange() + aetherRange + 20`, and
+--- X.SkillsComplement sets aetherRange to `J.GetAetherLensRangeBonus(aether, 250)`
+--- -- i.e. 250 -- for any Lion holding an item_aether_lens.  FRAME's Lion holds
+--- none, so every fixed-frame reading below (the 6.42u margin, the helper stand)
+--- is unaffected and keeps the bare RING.  The two CORPUS-WIDE censuses (§2, §4)
+--- are not: on 2026-09-10 the corpus grew four lens-carrying Lions whose real
+--- ring is 920, and §4 promptly called a 861.99u cast "outside 670".  That is the
+--- meter disagreeing with the branch it measures, not the lever misbehaving.
+--- Same defect, same day, as tests/test_lion_q_field_engagement.lua §3.1.
+local AETHER_BONUS = 250
+
+local function frame_ring(bot, hQ)
+    local nRing = (hQ ~= nil and hQ:GetCastRange() or CAST_RANGE) + SLACK
+    if bot.FindItemSlot ~= nil then
+        local nSlot = bot:FindItemSlot('item_aether_lens')
+        if nSlot ~= nil and nSlot >= 0 then nRing = nRing + AETHER_BONUS end
+    end
+    return nRing
+end
+
 local EPS = 0.01
 
 local tests = {}
@@ -240,7 +261,7 @@ end
 -- about the RING (limit 1): it counts enemy-hero sightings the 击杀 loop would
 -- consider, and how many of them the ability cannot reach.
 
-tests['§2 18 of 22 in-list sightings are reachable, 4 are not'] = function()
+tests['§2 26 of 32 in-list sightings are reachable, 6 are not'] = function()
     local nLive, nTrained, nInner, nBand = 0, 0, 0, 0
     local bHasFrame = false
     for _, path in ipairs(corpus_paths()) do
@@ -251,7 +272,7 @@ tests['§2 18 of 22 in-list sightings are reachable, 4 are not'] = function()
             local nLv = hQ and hQ:GetLevel() or 0
             if nLv > 0 then
                 nTrained = nTrained + 1
-                local nRing = hQ:GetCastRange() + SLACK
+                local nRing = frame_ring(bot, hQ)
                 for _, e in ipairs(bot:GetNearbyHeroes(nRing + BONUS, true, BOT_MODE_NONE)) do
                     if GetUnitToUnitDistance(bot, e) <= nRing then nInner = nInner + 1
                     else nBand = nBand + 1 end
@@ -261,10 +282,10 @@ tests['§2 18 of 22 in-list sightings are reachable, 4 are not'] = function()
         end
     end
     assert(bHasFrame, FRAME .. ' no longer holds a live ' .. UNIT)
-    assert(nLive == 27, 'live-Lion instants moved: ' .. nLive .. ' (was 27)')
-    assert(nTrained == 27, 'Impale-trained instants moved: ' .. nTrained .. ' (was 27)')
-    assert(nInner == 18, 'in-ring sightings moved: ' .. nInner .. ' (was 18)')
-    assert(nBand == 4, 'out-of-ring sightings moved: ' .. nBand .. ' (was 4)')
+    assert(nLive == 42, 'live-Lion instants moved: ' .. nLive .. ' (was 42)')
+    assert(nTrained == 42, 'Impale-trained instants moved: ' .. nTrained .. ' (was 42)')
+    assert(nInner == 26, 'in-ring sightings moved: ' .. nInner .. ' (was 26)')
+    assert(nBand == 6, 'out-of-ring sightings moved: ' .. nBand .. ' (was 6)')
 end
 
 tests['§2 the FRAME margin is 6.42u, and both halves of nCastRange are real'] = function()
@@ -371,34 +392,47 @@ tests['§4 both declared injections take, on the frame the reading is quoted fro
     assert(X ~= nil)
 end
 
-tests['§4 armed refuses exactly the 2 out-of-ring casts and keeps the other 10'] = function()
+tests['§4 armed refuses exactly the 4 out-of-ring casts and keeps the other 16'] = function()
     local nCast, nKept, nRefused = 0, 0, 0
     local tRefused = {}
     for _, path in ipairs(corpus_paths()) do
         if lion_alive(path) then
             local nOff = drive(path, { [DMGID] = true })
             local nOn  = drive(path, { [DMGID] = true, [CAND] = true })
+            local _, botR = rf.load(path, UNIT)
+            local nRing = frame_ring(botR, botR:GetAbilityByName(IMPALE))
             if nOff ~= nil then
                 nCast = nCast + 1
                 if nOn == nil then
                     nRefused = nRefused + 1
                     tRefused[#tRefused + 1] = string.format('%s@%.2f', path, nOff)
-                    assert(nOff > RING, 'armed refused an IN-ring cast on ' .. path
-                        .. ' (' .. nOff .. 'u) -- this lever may only remove out-of-ring casts')
+                    assert(nOff > nRing, 'armed refused an IN-ring cast on ' .. path
+                        .. ' (' .. nOff .. 'u, ring ' .. nRing .. ') -- this lever may only '
+                        .. 'remove out-of-ring casts')
                 else
                     nKept = nKept + 1
                     assert(math.abs(nOn - nOff) < EPS, 'armed MOVED the cast point on ' .. path
                         .. ': ' .. nOff .. ' -> ' .. nOn .. '. This lever never re-picks a target')
-                    assert(nOff <= RING, 'an in-ring-kept cast is at ' .. nOff .. 'u, outside ' .. RING)
+                    assert(nOff <= nRing, 'an in-ring-kept cast is at ' .. nOff .. 'u, outside '
+                        .. nRing .. ' on ' .. path)
                 end
             else
                 assert(nOn == nil, 'armed ADDED a cast on ' .. path .. ' -- direction is one-way')
             end
         end
     end
-    assert(nCast == 12, 'frames driving an Impale cast moved: ' .. nCast .. ' (was 12)')
-    assert(nKept == 10, 'kept casts moved: ' .. nKept .. ' (was 10)')
-    assert(nRefused == 2, 'refused casts moved: ' .. nRefused .. ' (was 2) -- '
+    -- 2026-09-10 re-take, all three read together rather than one per rerun.
+    -- 12 -> 20 / 10 -> 16 / 2 -> 4.  Only FOUR of the eight new casts come from
+    -- the four new Lion frames; the other four come from the `frame_ring` repair
+    -- above, which widened the in-list radius to 920 for every lens-carrying Lion
+    -- in the corpus and so let §4's injections reach targets the old 670 hid.
+    -- ⭐ Every one of the four refusals is a LENS-LESS Lion (ring 670): 867.43 /
+    -- 676.42 / 867.91 / 737.53 are all outside 670 and would all be INSIDE 920.
+    -- The repair therefore did not weaken this lever's direction claim -- it made
+    -- the claim be about each frame's own ring instead of about one hero's.
+    assert(nCast == 20, 'frames driving an Impale cast moved: ' .. nCast .. ' (was 20)')
+    assert(nKept == 16, 'kept casts moved: ' .. nKept .. ' (was 16)')
+    assert(nRefused == 4, 'refused casts moved: ' .. nRefused .. ' (was 4) -- '
         .. table.concat(tRefused, ', '))
 end
 
@@ -451,16 +485,26 @@ tests['§5 armed ALONE is a no-op on every frame -- the wave-order fact, driven'
     -- arms it alone buys a no-op.
     assert(nCast == nSame, 'unreachable')
 
-    -- And the sharper half: of the 12 casts §4 drives, exactly ONE survives
-    -- without `lionqdmg`.  It is not a kill-loop cast at all -- it is the 常规
-    -- branch on tests/frames/f_260905_004847_lion_drain_bkb.lua (Lion level 24,
-    -- bristleback 386.86u, inside the ring), and it is exactly why §4 asserts
-    -- the KEPT casts are unmoved rather than assuming every §4 cast is a kill
-    -- cast.  The other 11 exist only because §4 arms the damage id.
-    assert(nCast == 1, 'the shipped tree drives ' .. nCast .. ' Impale cast(s) '
-        .. 'under §4\'s injections without ' .. DMGID .. ' armed (was 1, the 常规 '
-        .. 'branch). If this rose, the "dead kill branch" premise of §0.2 has '
-        .. 'changed and iterations/queue.json hero-49 must be re-read')
+    -- And the sharper half: only a handful of the casts §4 drives survive without
+    -- `lionqdmg`, and NONE of them is a kill-loop cast.  1 -> 3 on 2026-09-10, and
+    -- the two new ones are the reason to state the premise rather than the number:
+    --   f_260905_004847_lion_drain_bkb.lua       386.86u  (常规, level 24)
+    --   f_260910_124853_lion_spike_slardar_1129  861.99u  (常规, level 19)
+    --   f_260910_124853_lion_spike_slardar_1416  879.84u  (常规, level 24)
+    -- ⭐ THE PREMISE OF §0.2 IS INTACT AND THAT IS THE POINT OF RE-READING IT: both
+    -- new casts are on a FULL-HP Slardar, so J.WillMagicKillTarget cannot have
+    -- fired either time; the 击杀 loop is still dead without `lionqdmg` and
+    -- iterations/queue.json hero-49 still asks for the PAIR.  What grew is the
+    -- corpus's supply of 常规-branch casts (see tests/test_lion_q_field_engagement
+    -- .lua, which gates exactly that branch).
+    -- ⚠️ Both new casts are at 862u/880u -- OUTSIDE the 670 this file used to call
+    -- the ring, INSIDE the 920 their lens-carrying Lion actually has.  They are
+    -- what surfaced the meter defect fixed at `frame_ring` above.
+    assert(nCast == 3, 'the shipped tree drives ' .. nCast .. ' Impale cast(s) '
+        .. 'under §4\'s injections without ' .. DMGID .. ' armed (was 3, all 常规 '
+        .. 'branch). If this rose, check whether the NEW one is a kill-loop cast: '
+        .. 'only that would change the "dead kill branch" premise of §0.2 and force '
+        .. 'iterations/queue.json hero-49 to be re-read')
 end
 
 -- ---------------------------------------------------------------- section 6 --

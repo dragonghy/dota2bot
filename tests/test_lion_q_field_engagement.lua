@@ -26,19 +26,29 @@
 -- (t25 is `{0, 10}`, which takes +250 AoE Hex and never the cast range), and §1
 -- pins both numbers so a patch that moves either one goes red here.
 --
--- ⛔ §3 ASSERTS A NO-OP, AND THAT IS THE HONEST READING.  Driven over both corpus
--- directories this branch has an EMPTY domain: 38 live-Lion instants -> 4 at hero
--- level >= 15 -> 0 with Impale fully castable AND >= 1 enemy inside the ring.
--- `nLV >= 15` is the binding clause.  So this lever is NOT locally validated in
--- the sense AGENTS.md means; §4 is gate plumbing and says so.  The next step is to
--- cut Lion frames AT the branch's own predicate -- the reverse-lookup recipe of
--- tests/frames/f_260909_215227_zeus_exec_*.lua -- not to hope a corpus cut for
--- other questions contains one.  Precedent for landing the term anyway:
--- tests/test_lion_q_kill_reach.lua drives the same no-op claim for `lionqkill`.
+-- ⭐ §3 IS NOW LOCAL VALIDATION, not a no-op claim.  The previous round could only
+-- assert that the branch was unreachable (38 live Lions -> 4 at level >= 15 -> 0
+-- in the ring) and handed the next round the branch's own conjunction to cut
+-- frames AT.  Four such frames now exist -- tests/frames/f_260910_124853_lion_
+-- spike_*.lua, from soak game 20260910_124853_slot1, each one an instant at which
+-- the real bot really did press Earth Spike -- and armed WITHHOLDS three of them
+-- (§3.2) while leaving untouched the fourth, where a branch that says what it is
+-- for (a 19%-HP Finger of Death) fires first.
 --
--- ⚠️ NOT claimed here: a frequency.  38 live-Lion instants are a DOMAIN.  Nothing
--- in this file says how often a level-15 Lion stands inside his own cast range in
--- a real Turbo game; sizing that needs a wave.
+-- ⭐ THE FRAMES' FIRST PURCHASE WAS A DEFECT IN THE METER THAT WAS HUNTING THEM.
+-- §3.1's ring was `hQ:GetCastRange() + 20`; X.ConsiderQ's is
+-- `abilityQ:GetCastRange() + aetherRange + 20`, and aetherRange is 250 for any
+-- Lion carrying an item_aether_lens -- which is every Lion in this corpus.  The
+-- census was reading a 670-unit ring for a branch that fires on 920, and THREE OF
+-- THE FOUR new frames sit in that annulus.  §3.1 pins both counts.  What this
+-- does not do is retract the old zero: on the four level-15 instants that predate
+-- this round the two rings agree (§3.1 asserts it), so that reading was correct
+-- for its corpus, for the reason it named.
+--
+-- ⚠️ NOT claimed here: a frequency.  42 live-Lion instants are a DOMAIN, and four
+-- of them come from ONE game deliberately chosen for having a level-24 Lion.
+-- Nothing in this file says how often a level-15 Lion stands inside his own cast
+-- range unhit in a real Turbo game; sizing that needs a wave.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -77,6 +87,19 @@ local function corpus_paths()
         end
     end
     return out
+end
+
+--- The cast-range term X.SkillsComplement adds and §3.1's ring used to drop:
+--- `aetherRange = J.GetAetherLensRangeBonus( aether, 250 )` when Lion holds an
+--- item_aether_lens, 0 otherwise.  Read off THIS file's own 250 in §1.3; hard-
+--- coded here only because the census has to answer it per frame.
+local AETHER_BONUS = 250
+
+local function lens_bonus(bot)
+    if bot.FindItemSlot == nil then return 0 end
+    local nSlot = bot:FindItemSlot('item_aether_lens')
+    if nSlot ~= nil and nSlot >= 0 then return AETHER_BONUS end
+    return 0
 end
 
 local function has_live_lion(path)
@@ -250,12 +273,33 @@ tests['§2.3 gate off, the helper answers true on every live-Lion frame'] = func
 end
 
 -- ---------------------------------------------------------------- section 3 --
--- The domain, driven.  This is the section that says the lever is inert on this
--- corpus -- and says WHICH clause makes it inert, so the next round knows what
--- to cut a frame at.
+-- The domain, DRIVEN -- and no longer empty.  The previous round could only
+-- assert a no-op here (38 live Lions, 4 at level >= 15, 0 inside the ring) and
+-- handed the next round a predicate to cut frames AT.  This round cut them:
+-- tests/frames/f_260910_124853_lion_spike_*.lua are four instants from soak game
+-- 20260910_124853_slot1 at which the real bot really did press Earth Spike, each
+-- reverse-looked-up from the branch's own conjunction rather than from a cast
+-- stamp chosen for some other question.
+--
+-- ⭐ AND THE FIRST THING THEY BOUGHT WAS A DEFECT IN THE METER THAT WAS LOOKING
+-- FOR THEM.  §3.1's own ring was `hQ:GetCastRange() + 20`.  X.ConsiderQ's is
+-- `abilityQ:GetCastRange() + aetherRange + 20`, and X.SkillsComplement sets
+-- aetherRange to 250 for any Lion holding an item_aether_lens -- which is EVERY
+-- Lion in this corpus (all 8 level-15 instants carry one).  So the census was
+-- measuring a 670-unit ring while the branch it censused fires on a 920-unit
+-- one, and three of these four frames sit in the 250-unit annulus between them:
+-- invisible to the meter, live to the branch.  §3.1 now pins BOTH readings so
+-- the gap cannot close silently again.
+--
+-- ⚠️ WHAT THAT DOES **NOT** RETRACT, and the distinction is the honest half:
+-- the annulus did not manufacture last round's zero.  On the four level-15
+-- instants that predate this round the two rings return the SAME count (§3.1
+-- asserts that too), so "domain empty, `nLV >= 15` binding" was a correct
+-- reading of that corpus for the reason it gave.  A broken meter that happened
+-- to agree is still a broken meter; it is not a wrong conclusion.
 
-tests['§3.1 the funnel: 38 live Lions, 4 at level >= 15, 0 in the branch'] = function()
-    local nLion, nLv15, nDomain = 0, 0, 0
+tests['§3.1 the funnel: 42 live Lions, 8 at level >= 15, 4 in the branch'] = function()
+    local nLion, nLv15, nNarrow, nWide, nOldLv15Gap = 0, 0, 0, 0, 0
     for _, path in ipairs(corpus_paths()) do
         if has_live_lion(path) then
             nLion = nLion + 1
@@ -264,69 +308,134 @@ tests['§3.1 the funnel: 38 live Lions, 4 at level >= 15, 0 in the branch'] = fu
             if bLv then nLv15 = nLv15 + 1 end
             local hQ = bot:GetAbilityByName(IMPALE)
             local bCastable = hQ ~= nil and hQ:GetLevel() > 0 and hQ:IsFullyCastable()
-            local nRing = (hQ ~= nil) and (hQ:GetCastRange() + 20) or 0
-            local tRing = J.GetNearbyHeroes(bot, nRing, true, BOT_MODE_NONE) or {}
-            if bLv and bCastable and #tRing >= 1 then nDomain = nDomain + 1 end
+            local nNarrowRing = (hQ ~= nil) and (hQ:GetCastRange() + 20) or 0
+            local nWideRing = nNarrowRing + (lens_bonus(bot))
+            local nN = #(J.GetNearbyHeroes(bot, nNarrowRing, true, BOT_MODE_NONE) or {})
+            local nW = #(J.GetNearbyHeroes(bot, nWideRing, true, BOT_MODE_NONE) or {})
+            if bLv and bCastable and nN >= 1 then nNarrow = nNarrow + 1 end
+            if bLv and bCastable and nW >= 1 then nWide = nWide + 1 end
+            -- The frames that predate this round: did the annulus ever change
+            -- their answer?  This is the claim the header refuses to retract.
+            if bLv and not path:find('124853') and nN ~= nW then
+                nOldLv15Gap = nOldLv15Gap + 1
+            end
         end
     end
-    assert(nLion == 38, ('live-Lion instants moved %d -> %d. That is a corpus change, '
-        .. 'not a bug: re-take the funnel below and the header, in this round.')
-            :format(38, nLion))
-    assert(nLv15 == 4, ('live-Lion instants at hero level >= 15 moved 4 -> %d.'):format(nLv15))
-    assert(nDomain == 0,
-        ('the 常规 branch now has %d frame(s) in domain. THIS IS GOOD NEWS and it '
-         .. 'retires §3.2: stop asserting a no-op, pin the frame, and report what the '
-         .. 'armed leg does with it.'):format(nDomain))
+    assert(nLion == 42, ('live-Lion instants moved %d -> %d. That is a corpus change, '
+        .. 'not a bug: re-take the whole funnel below and the header, in this round.')
+            :format(42, nLion))
+    assert(nLv15 == 8, ('live-Lion instants at hero level >= 15 moved 8 -> %d.'):format(nLv15))
+    assert(nWide == 4,
+        ('the branch\'s own ring now admits %d frame(s), not 4. §3.2 drives exactly '
+         .. 'those, so re-take it in the same edit.'):format(nWide))
+    assert(nNarrow == 1,
+        ('the 670-unit ring (the one this census used BEFORE the aether term was '
+         .. 'restored) now admits %d, not 1. That number exists to keep the meter '
+         .. 'defect visible; if it has moved, say which frame moved it.'):format(nNarrow))
+    assert(nWide - nNarrow == 3,
+        ('the annulus between the censused ring and the branch\'s ring holds %d '
+         .. 'frame(s), not 3.'):format(nWide - nNarrow))
+    assert(nOldLv15Gap == 0,
+        ('%d level-15 frame(s) from BEFORE this round answer differently under the two '
+         .. 'rings. The header states that none do, and uses it to refuse to retract '
+         .. 'the previous round\'s "domain empty" reading. Fix the prose in this edit.')
+            :format(nOldLv15Gap))
 end
 
-tests['§3.2 armed changes nothing this corpus can see'] = function()
-    local n = 0
+--- The four frames of §3.1's domain, and what the armed leg does with each.
+--- Ground truth beside each one is read off the SAME replay (soak game
+--- 20260910_124853_slot1), not inferred from the frame.
+local DOMAIN_FRAMES = {
+    -- path suffix,           armed withholds?, what the shipped tree orders
+    { 'slardar_1129', true,  'ActionQueue_UseAbilityOnLocation:lion_impale' },
+    { 'sb_1344',      true,  'ActionQueue_UseAbilityOnLocation:lion_impale' },
+    { 'slardar_1416', true,  'ActionQueue_UseAbilityOnLocation:lion_impale' },
+    -- The exemption.  Here a branch that SAYS WHAT IT IS FOR wins first: Spirit
+    -- Breaker is at 19% and Finger of Death is the order, so the catch-all never
+    -- runs and this lever cannot touch it.  Without this row "armed narrows" and
+    -- "armed is an off switch" would be the same reading.
+    { 'sb_1357',      false, 'ActionQueue_UseAbilityOnEntity:lion_finger_of_death' },
+}
+
+tests['§3.2 armed withholds three catch-all Earth Spikes and leaves the qualified cast alone'] = function()
+    local nSeen, nMoved = 0, 0
+    for _, row in ipairs(DOMAIN_FRAMES) do
+        local sSuffix, bWithheld, sShippedWant = row[1], row[2], row[3]
+        local path = 'tests/frames/f_260910_124853_lion_spike_' .. sSuffix .. '.lua'
+        local sShipped = drive(path, {})
+        local sArmed   = drive(path, { [CAND] = true })
+        nSeen = nSeen + 1
+
+        assert(sShipped:find(sShippedWant, 1, true) ~= nil,
+            ('%s: the SHIPPED tree no longer orders %s (it ordered "%s"). This row is a '
+             .. 'statement about the tree, not about the lever.')
+                :format(path, sShippedWant, sShipped))
+
+        if bWithheld then
+            nMoved = nMoved + 1
+            assert(sArmed == '',
+                ('%s: armed, the dispatch is "%s". It was expected to fall SILENT -- the '
+                 .. 'catch-all is the last Earth Spike branch and nothing below it picks '
+                 .. 'the cast up. A non-empty answer here is a different (and more '
+                 .. 'interesting) fact than the one this row asserts.')
+                    :format(path, sArmed))
+        else
+            assert(sArmed == sShipped,
+                ('%s: armed changed a dispatch this lever must not reach (%s -> %s). The '
+                 .. 'catch-all is not the branch that fires here.')
+                    :format(path, sShipped, sArmed))
+        end
+    end
+    assert(nSeen == 4, ('drove %d domain frames, expected 4.'):format(nSeen))
+    assert(nMoved == 3, ('armed moved %d of them, expected 3.'):format(nMoved))
+end
+
+tests['§3.3 on every withheld frame the engagement test is genuinely false'] = function()
+    -- The lever is one conjunct.  If any of the three withheld frames HAD been
+    -- hit inside 3.0s, the withholding would be a bug in the reader, not the
+    -- lever doing its job.  Ground truth: the replay's DAMAGE events show zero
+    -- hero damage to Lion in the 3.0s before each of these four casts.
+    for _, row in ipairs(DOMAIN_FRAMES) do
+        local path = 'tests/frames/f_260910_124853_lion_spike_' .. row[1] .. '.lua'
+        local _, bot, X = frame(path, { [CAND] = true })
+        assert(bot:WasRecentlyDamagedByAnyHero(3.0) == false,
+            ('%s now reports hero damage inside 3.0s. Every frame in this set was cut at '
+             .. 'an instant where the replay records none; re-read the frame.'):format(path))
+        assert(X.lion_IsFieldImpaleEngagementOk() == false,
+            ('%s: armed, the helper accepted a frame with no incoming hero damage.'):format(path))
+    end
+end
+
+tests['§3.4 direction by construction: armed never ADDS an action, on any live-Lion frame'] = function()
+    -- The armed predicate is a pure extra conjunct, so the armed release set is a
+    -- strict subset of the shipped one for every input.  Driven rather than
+    -- argued: a negative wave read on this id is attributable to withheld stuns
+    -- and never to a cast this lever invented.
+    local nDrove, nDiff = 0, 0
     for _, path in ipairs(corpus_paths()) do
         if has_live_lion(path) then
             local sShipped = drive(path, {})
             local sArmed   = drive(path, { [CAND] = true })
-            assert(sShipped == sArmed,
-                ('%s: armed changed the dispatch (%s -> %s). The domain census in §3.1 '
-                 .. 'says that is impossible, so one of the two is wrong -- read the '
-                 .. 'frame before editing either.'):format(path, sShipped, sArmed))
-            n = n + 1
+            nDrove = nDrove + 1
+            if sShipped ~= sArmed then
+                nDiff = nDiff + 1
+                assert(sArmed == '',
+                    ('%s: armed produced "%s" where shipped produced "%s". This lever can '
+                     .. 'only WITHHOLD; anything else means the conjunct is not where the '
+                     .. 'header says it is.'):format(path, sArmed, sShipped))
+            end
         end
     end
-    assert(n == 38, ('drove %d frames, expected 38.'):format(n))
-end
-
-tests['§3.3 the binding clause is nLV >= 15, not the other two'] = function()
-    -- Which clause is the marginal veto?  Count the instants each clause alone
-    -- rejects.  This is what tells the next round where to cut.
-    local nOnlyLevel, nOnlyCastable, nOnlyRing = 0, 0, 0
-    for _, path in ipairs(corpus_paths()) do
-        if has_live_lion(path) then
-            local J, bot = frame(path, {})
-            local hQ = bot:GetAbilityByName(IMPALE)
-            local bLv = bot:GetLevel() >= 15
-            local bCastable = hQ ~= nil and hQ:GetLevel() > 0 and hQ:IsFullyCastable()
-            local nRing = (hQ ~= nil) and (hQ:GetCastRange() + 20) or 0
-            local bRing = #(J.GetNearbyHeroes(bot, nRing, true, BOT_MODE_NONE) or {}) >= 1
-            if not bLv and bCastable and bRing then nOnlyLevel = nOnlyLevel + 1 end
-            if bLv and not bCastable and bRing then nOnlyCastable = nOnlyCastable + 1 end
-            if bLv and bCastable and not bRing then nOnlyRing = nOnlyRing + 1 end
-        end
-    end
-    assert(nOnlyLevel > 0,
-        'no instant is rejected by the level clause ALONE any more. The claim "nLV >= 15 '
-        .. 'is what keeps this branch out of the corpus" was measured, not assumed; '
-        .. 're-measure it.')
-    assert(nOnlyLevel >= nOnlyCastable and nOnlyLevel >= nOnlyRing,
-        ('the marginal veto moved: level %d, castable %d, ring %d. The header and the '
-         .. 'reverse-lookup instruction both name the level clause.')
-            :format(nOnlyLevel, nOnlyCastable, nOnlyRing))
+    assert(nDrove == 42, ('drove %d frames, expected 42.'):format(nDrove))
+    assert(nDiff == 3, ('armed moved %d frames over the whole corpus, expected 3 (all of '
+        .. 'them in §3.2).'):format(nDiff))
 end
 
 -- ---------------------------------------------------------------- section 4 --
--- GATE PLUMBING, and this file calls it that.  It shows the armed predicate
+-- GATE PLUMBING, and this file still calls it that.  It shows the armed predicate
 -- reads the window it claims to read, on two REAL frames that differ in the
--- answer.  It is NOT local validation: neither frame reaches the branch (§3.1),
--- so nothing here says the lever changes a decision.
+-- answer.  Neither frame reaches the branch, so nothing HERE says the lever
+-- changes a decision -- that claim now lives in §3.2, where it is driven.
 
 tests['§4 the armed predicate tracks the 3.0s damage window on real frames'] = function()
     local HIT  = 'tests/frames/f_260905_004847_lion_drain_bkb.lua'

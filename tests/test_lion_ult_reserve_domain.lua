@@ -379,25 +379,32 @@ tests['[hero] lionult: the revival condition has fired -- rank 2 exists'] = func
 end
 
 tests['[hero] lionult: rank 3 is unmeasured, and says so'] = function()
-    -- STILL UNMEASURED.  The count moved 0 -> 1 on 2026-09-06 (GH #566) and the
-    -- wire is kept live at the new number rather than deleted: HONEST BOUND (B)
-    -- is now RETIRABLE -- a frame that could measure the 600 line exists -- but
-    -- it has NOT been retired, because nothing in this file has been re-read
-    -- against that frame.  Quoting any number below as covering rank 3 is a
+    -- STILL UNMEASURED.  The count moved 0 -> 1 on 2026-09-06 (GH #566) and
+    -- 1 -> 2 on 2026-09-10 (tests/frames/f_260910_124853_lion_spike_slardar_1416
+    -- .lua, cut by the hero stream for a different lever entirely).  The wire is
+    -- kept live at the new number rather than deleted: HONEST BOUND (B) is
+    -- RETIRABLE -- two frames that could measure the 600 line now exist -- and it
+    -- has STILL NOT been retired, because nothing in this file has been re-read
+    -- against either of them.  Quoting any number below as covering rank 3 is a
     -- misuse.
+    -- ⚠️ The supply for retiring (B) has now doubled while (B) stayed open for
+    -- four days.  That is a fact about who is cutting frames, not about this
+    -- lever: whoever re-takes it should read the two frames, not this comment.
     local _, rows = funnel()
     local n, where = 0, {}
     for _, r in ipairs(rows) do
         if r.rRank >= 3 then n = n + 1; where[#where + 1] = r.path end
     end
-    assert(n == 1,
-        n .. ' rank-3 Finger instant(s) exist (cost 600), was 1 as of 2026-09-06 ('
+    assert(n == 2,
+        n .. ' rank-3 Finger instant(s) exist (cost 600), was 2 as of 2026-09-10 ('
         .. table.concat(where, '; ') .. '). HONEST BOUND (B) has been retirable '
-        .. 'since then and is still not retired: the 600 line has never been '
+        .. 'since 2026-09-06 and is still not retired: the 600 line has never been '
         .. 'measured, and the supply for measuring it just moved again.')
-    assert(where[1] == 'tests/frames/f_260905_004847_lion_drain_bkb.lua',
-        'the one rank-3 instant is no longer the 2026-09-06 staged frame, it is '
-        .. tostring(where[1]) .. ' -- re-read this section before quoting it')
+    assert(where[1] == 'tests/frames/f_260905_004847_lion_drain_bkb.lua'
+            and where[2] == 'tests/frames/f_260910_124853_lion_spike_slardar_1416.lua',
+        'the rank-3 instants are no longer the two this section was written about, '
+        .. 'they are ' .. table.concat(where, '; ')
+        .. ' -- re-read this section before quoting it')
 end
 
 -- ------------------------------------------------------------------ section 3
