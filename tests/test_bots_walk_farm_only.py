@@ -92,6 +92,17 @@ UNRESOLVED_HAND_READ = {
     """tests/test_zuus_arc_execute_kill.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'}; same "
         "non-recursive `ls` as the line above, same reason",
+    """tests/test_anyhero_first_member_quantifier.lua  ::  'ls ' .. glob .. ' 2>/dev/null'""":
+        "corpus_paths() loops glob over the two LITERAL globs "
+        "{'tests/fixtures/*.lua', 'tests/frames/*.lua'} -- the parameter is a "
+        "whole glob rather than a directory, but it is still non-recursive and "
+        "still rooted at the corpus, so it never reaches bots/Customize/. "
+        "Hand-read 2026-09-10 (director, GH #729 round) at :103-:107",
+    """tests/test_lion_q_field_engagement.lua  ::  'ls ' .. dir .. '/*.lua 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:62-:63); the '/*.lua' is appended "
+        "by the caller, and plain `ls` is NOT recursive, so it never reaches "
+        "bots/Customize/. Hand-read 2026-09-10 (director, GH #729 round) at :80-:88",
     """tests/test_itemtrip_supply_gap.lua  ::  'ls "' .. dir .. '"'""":
         "ls('bots', ...) x2 and ls('tests/fixtures', ...); `ls \"bots\"` is NOT "
         "recursive, so it never reaches bots/Customize/ at all",

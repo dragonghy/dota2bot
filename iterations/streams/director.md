@@ -605,10 +605,29 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   减轻情节(**是解释不是免责**):开 issue 是为了**拿到真编号**而不是预判一个号写进注释。
   **正确走法**:先 push,再开 issue。补救:push 后跑 `claim_precheck.sh` 核对每条引用。
   ⚠️ **开工自检**:第一条命令**又走了管道**(`SELFCHECK_EXIT=2 REFUSED`,纪律 3 又一发,
-  **而章程 §0 逐字覆盖它**);重定向重跑后死在 `trunk health` 那一腿的**容器时限**
-  (与批测台 `SELFCHECK_EXIT=124` 同一现象:**容器判决不是自检判决**)。
-  在此之前跑完的腿:`stable anchors 6 checked -- OK` / `promote-atom constraints: OK`
-  (195 活 gate id / 18 条 PROMOTED / `FROZEN none`)。**未跑完的腿不声称。**
+  **而章程 §0 逐字覆盖它**);重定向重跑,**真码 `SELFCHECK_EXIT=3`(有发现)**。
+  ⭐⭐ **一处我先写错、后自己纠正的话,留着不删**:它还在跑时我读了日志尾巴、看见停在
+  `trunk health (python)`,就**按批测台上一轮 `SELFCHECK_EXIT=124` 的形状记成了「容器超时」**。
+  **它没有超时,它跑完了。** ⇒ **「上一轮的失败形状」是本轮最省事的解释,而省事的解释不是读数** ——
+  我差点用**别人的**退出码替换掉一份**本轮真的有内容**的发现清单。
+  工具自己打的来源行(GH #267 4b,非手工归因):`FINDINGS (exit 3) : cadence queue-rulings
+  owed-executions a-evidence-owed trunk-red(python) trunk-red(lua)`。
+  ⭐ **`trunk-red(python)` 两条,其中一条是新的且推的人的闸一言不发**
+  (`py gate 95 ran, 0 findings` —— 它不在快集里):`test_py_gate.py`=#728(已知);
+  **`test_bots_walk_farm_only.py`= 本轮新出现** —— hero/strategy 本轮落的两个新 Lua 测试
+  各带一个 `io.popen`,把「`bots/` 走查只许 farm-only」那条普查顶红,**GH #624 立案形状又一例**。
+  ⇒ **本轮顺手修掉**:按失败行要求**真做了手读**(`anyhero:103-107` 的参数是**整个 glob**
+  而非目录 —— 与名单上同族条目**真的有一处不同**,但仍非递归、仍锚在语料根;
+  `lion:80-88` 的 `FIXTURE_DIR/STAGED_DIR` 在 `:62-:63`),两条各带行号与手读日期入
+  `UNRESOLVED_HAND_READ`,`WALK_EXIT=0` `8 checks, 0 failed [240 commands, 32 unresolved]`。
+  ⛔ **普查没有被放宽** —— 它要的就是「新走查必须付一次手读的代价」,本轮付的正是那个代价。
+  ⚠️ **登记未分辨**:`trunk-red(lua)` **4/87** 个检测器文件红(`focus_mana_cost_consumer_census` /
+  `lion_ult_reserve_domain` / `stayfield2_marginal_domain` / `wk_q_castrange_meter_domain`)——
+  **「域检测器报了发现」还是「测试坏了」本轮没分辨**;`FINDING: 8 armed id(s) with neither a
+  verdict nor an owed row` 亦登记未取活。跑绿的腿:`stable anchors 6 checked -- OK` /
+  `promote-atom constraints: OK`(195 活 gate id / 18 条 PROMOTED / `FROZEN none`)/
+  `UNCERTIFIABLE (exit 2): none`。⛔ `NOT RUN (inside a leg)` 的三条
+  (`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py` / `test_selfcheck_lua_leg.py`)**不声称**。
   **`owed_executions.json` 39 → 40**(`gh729_standing_ruling_registry`)。
   📌 **下轮盯**:`grep -l 'crossing registry:' iterations/reports/batch-desk/*.md` 今天 **rc=1(空)**;
   **连着两轮没有 = 真的有问题**。⛔ **不许拿总监自己的运行结清它。**
