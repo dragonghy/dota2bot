@@ -8214,12 +8214,36 @@ X.ConsiderItemDesire["item_force_boots"] = function( hItem )
 					return BOT_ACTION_DESIRE_HIGH, bot, 'unit', nil
 				end
 
+				-- [fbnoally] The ally centroid is the WHOLE point of this branch --
+				-- it force-pushes the chase target TOWARDS the group -- and when
+				-- `nInRangeAlly` is empty J.GetCenterOfUnits answers Vector(0,0),
+				-- the map ORIGIN, handed back as if it were where the group is.
+				-- Neither consumer below can tell the sentinel from a place:
+				-- `IsFacingLocation` accepts any target facing mid within 15
+				-- degrees, and `>= 750` from mid is true almost everywhere on the
+				-- map.  A solo chaser therefore spends a tier-5 neutral shoving
+				-- its target 600 units in whatever direction the target is
+				-- already fleeing -- helping it escape.
+				-- The sibling entry for the SAME decision already carries this
+				-- guard (`item_force_staff` above: `#hAllyList >= 2`).  The
+				-- constant differs because the two lists count differently:
+				-- J.GetAlliesNearLoc walks GetTeamMember and INCLUDES the bot, so
+				-- its `>= 2` means "me plus one"; J.GetNearbyHeroes excludes the
+				-- caller, so the same requirement is `>= 1` here.  Both readings
+				-- are measured on real frames in tests/test_fbnoally_ally_center_
+				-- origin.lua, not asserted from the API docs, which say neither.
+				-- The refusal only ever DELETES an answer built on the sentinel;
+				-- with one ally present it is a no-op by construction.
+				local bNoAllyRefuse = #nInRangeAlly == 0
+					and J.IsModeTurbo() and J.IsSoakCandidate('fbnoally')
+
 				local allyCenterLocation = J.GetCenterOfUnits(nInRangeAlly)
-				if botTarget:IsFacingLocation(allyCenterLocation, 15)
+				if not bNoAllyRefuse
+				and botTarget:IsFacingLocation(allyCenterLocation, 15)
 				and GetUnitToLocationDistance(bot, allyCenterLocation ) >= 750
 				then
 					return BOT_ACTION_DESIRE_HIGH, botTarget, 'unit', nil
-				end	
+				end
 			end		
 		end
 	end

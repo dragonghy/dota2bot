@@ -27,6 +27,68 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0FBNOALLY. **【2026-09-10T10:36Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第十一轮 (i));
+   认领依据 = 工作流第 1 步扫 open issue,**新的 `[strategy]` 条目一条也没有** ⇒ 取 `0TFNULL`
+   「下一格」**第 (3) 项**:「先扫一遍哨兵值这个新变种;第一候选 = `J.GetCenterOfUnits` 在 `bots/`
+   里的其余调用方」。⭐ **那次扫描本轮机械做完了**:`J.GetCenterOfUnits` **218** 个调用点,
+   按「前 25 行内有无 `#var` 长度闸」分类,**29 个无闸** —— 其中 **26 个在 `BotLib/hero_*.lua`**
+   (英雄组范围)、1 个在 `rubick_hero/`、2 个是定义本身与上一轮的 `tfnull` ⇒
+   **本组范围内、无闸、消费者分不出哨兵的,只有一个**,就是本轮取走的这个。
+   ⛔ **定价后拒绝三处**(都有闸,哨兵不可达):`mode_farm_generic.lua:342` / `:522`、
+   `ability_item_usage_generic.lua:1610`。
+   ⭐⭐ **缺陷:同一个决策在本仓库里写了两遍,而 T5 那一份把闸丢了。**
+   `X.ConsiderItemDesire["item_force_boots"]` 的「把目标推向我方队伍」分支在 1200 内无队友时,
+   `J.GetCenterOfUnits({})` = **`Vector(0,0)`(地图原点)**,而**两个消费者都分不出它和一个真地点**:
+   朝向测试被任何朝中路的目标满足,「距质心 ≥ 750」几乎处处为真 ⇒ 独自追击的 bot 花掉一件 **T5 中立装**,
+   把目标朝**它正在逃跑的方向**再推 600 单位。**兄弟条目 `item_force_staff` 开头就带闸**
+   (`J.IsGoingOnSomeone(bot) and #hAllyList >= 2`)—— 这就是条件 (c),在本仓库里不在 wiki 上。
+   ⛔ **常数不能照抄,而这一步是测出来的**:`J.GetAlliesNearLoc` 走名册**含自己**(**515/515** 己方帧),
+   `J.GetNearbyHeroes` **不含调用者**(**0/1031** 帧)⇒ 兄弟的「>= 2 含我」在这里就是 **`>= 1`**;
+   `BOT_API_REFERENCE.md` 两条都没写。
+   产出:**新 id `fbnoally`**(turbo-only,**FROZEN-HOLD,不请求入集**;新 id 不搭任何捆绑的车)、
+   `tests/test_fbnoally_ally_center_origin.lua` **11/11**、`tools/agent/mutstand_fbnoally.sh` **9 腿 9/9**、
+   `state.json:fbnoally_20260910`;报告 `iterations/reports/strategy/20260910T103647Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+   ⭐ **本轮唯一的设计判断,写下来防止被读成上一轮的复制**:`tfnull` 写成**兜底替换**(分支自证
+   团战存在、只是位置没算出来);这里**写成拒答** —— 分支的前提(**有一个队伍可以把目标推进去**)
+   是**不存在**,不是**位置错了**。变异台 **M5** 专钉这条:把哨兵换成 `bot:GetLocation()`
+   (=上一轮的形状,读过上一轮的人最不会怀疑的那个),测试红。
+   **读数**(真实几何):`ally0` **556/1031**(53.9%,因集不是罕见形状)、`ally0_chaseable` **107**、
+   `ally0_parity` **58**、`ally0_origin_far` **95**、**joint 48**;`ally0_sub1` **0**
+   (上一条自推手臂在零队友时算术上不可达 ⇒ **本改动不能记在它头上**,§2c 钉住防夹带)。
+   钉帧 `f_071423_sky_rescue.lua`/sven:伪造的「队伍质心」距 sven **8047 u**。
+   ⛔ **量具:三个合取项本语料一条都买不到,§3 逐条测了它们** —— **mode**(`GetActiveMode()` 答 0,
+   与 `tfnull` 同一堵墙)、**target**(`GetTarget`/`GetAttackTarget` **loader 根本没接**)、
+   **item**(`force_boots` **0/111** fixture)⇒ **频率一个字都没买到,上面没有任何数字可以当频率引用**;
+   **`joint 48` 是几何上界不是施法计数**(朝向那个消费者也不在读数里,dump 不带朝向)。
+   §5 的驱动是**真实几何上的合成入口**,买的是**分支处的行为 + no-op 上界**,不是频率。
+   ⚠️ **no-op 那一条不是空对空**:断言先要求出货路径在非空名单上**仍然开火**,否则两个 `false`
+   会把「no-op」读成事实。
+   ⚠️ **给全队:上一轮那条流程规矩本轮被反向验证了。** 我**违反了它**(自检 trunk 腿没跑完就起变异台),
+   拿到 `TRUNK RED 6/87`。处理不是猜,是两步对照:干净树逐一复跑 **加** `git stash` 去掉本改动复跑
+   ⇒ 三个红(`lion_ult_reserve` / `stayfield2_marginal` / `wk_q_castrange_meter`)**逐字复现**,
+   是 `tests/frames/` 语料增长的棘轮,属英雄组与野外续航族。⇒ **「并发会造假红」成立,
+   但不许反过来把真红读成并发假红** —— 少做一步都分不开。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是一个 `bots/` 行为改动**;
+   (2) ⛔ **`item_force_boots` 到此为止**,而且**整个 `ability_item_usage_generic.lua` 的 consider 条目
+   暂时不要按帧证据动手** —— `botTarget` 来自 `J.GetProperTarget`,而 loader 没接 `GetTarget`/
+   `GetAttackTarget` ⇒ **每一条读 `botTarget` 的条目在本语料里都结构上不可达**,在这堵墙倒之前
+   动它们,量到的都是自己注入的东西;
+   (3) ⭐ **哨兵值这一支已经扫干净了(`bots/` 里 `Vector(0,0)` 形状的返回只有 `GetCenterOfUnits`
+   一处),下一轮换回判据 (5) 的主线**:找「**一个 helper 算出了某个集合/量,然后下游决策里没有用它**」。
+   **第一候选**:`J.GetCenterOfUnits` 的**第二条哨兵路径**(名单非空但无一 `J.IsValid` ⇒ 同样答原点)
+   —— 上一轮**明确保留**了它,**先量它在语料里可不可达**,不可达就换下一个,**不要硬修**;
+   (4) ⭐ **交出去的棒(铁律 9 连带)已经交了,走的是 GH #474 不是新 issue**:
+   **先搜后开** ⇒ #474「`J.GetProperTarget` 在每个 fixture 帧上结构性为 nil」已 open,
+   本轮**只加了一个具名买家**(整个 `ability_item_usage_generic.lua` 读 `botTarget` 的条目族),
+   **没有开重复 issue**;
+   (5) ⛔ **`fbnoally` 的 promote 门槛**:上面三个合取项**至少买到一条**、能在**未注入**的帧上
+   看见这条分支之前,不许去掉 gate。已登记在 `state.json:fbnoally_20260910.next`;
+   (6) ⛔ **P1/P2 的球仍不在本组**,P4.2 冻结未解 ⇒ 本轮**没有**提入集。冻结解除那一轮,
+   本组第一件事仍是把 P1 的 `creeppull`+`pullcamp`、P2 的野区续航一族、`l5trees` 三处、
+   `tfnull` 与 `fbnoally` 一起重新排队。】**
+
 0TFNULL. **【2026-09-10T07:47Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第十轮 (i));
    认领依据 = 工作流第 1 步扫 open issue,**新的 `[strategy]` 条目一条也没有** ⇒ 取 `0OWCLEAR`
    「下一格」**第 (3) 项**。⭐ **它点名的第一候选 `J.GetNearbyLocationToTp` 被定价后拒绝**:
@@ -7480,6 +7542,32 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-10T10:36Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第十一轮 (i);认领依据 =
+  工作流第 1 步扫 open issue,**新的 `[strategy]` 条目一条也没有** ⇒ 取 backlog 顶条 `0TFNULL`
+  「下一格」第 (3) 项:扫哨兵值变种,第一候选 = `J.GetCenterOfUnits` 的其余调用方)。
+  ⭐ **那次扫描机械做完了**:218 个调用点,29 个无长度闸,其中 26 个在英雄组范围 ⇒
+  **本组范围内只有一个**;`mode_farm_generic.lua:342`/`:522`、`ability_item_usage_generic.lua:1610`
+  三处**定价后拒绝**(都有闸)。
+  ⭐⭐ **缺陷:同一个决策写了两遍,T5 那一份把闸丢了。** `item_force_boots` 的「把目标推向我方队伍」
+  分支在 1200 内无队友时把目标推向**地图原点**;兄弟条目 `item_force_staff` **开头就带闸**
+  (`#hAllyList >= 2`)。**常数不能照抄**:`GetAlliesNearLoc` 含自己(**515/515**)、
+  `GetNearbyHeroes` 不含调用者(**0/1031**)⇒ 兄弟的「>= 2 含我」在这里是 **`>= 1`**。
+  **修法是拒答不是换锚点**(与上一轮 `tfnull` 的分界线,M5 专钉)。
+  产出:新 id **`fbnoally`**(turbo-only,**FROZEN-HOLD,不请求入集**)、
+  `tests/test_fbnoally_ally_center_origin.lua` **11/11**、`tools/agent/mutstand_fbnoally.sh`
+  **9 腿 9/9 STAND GREEN**、`state.json:fbnoally_20260910`;
+  报告 `iterations/reports/strategy/20260910T103647Z.md`。
+  **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零 S3、零 EC2、零波次。
+  **读数**:`ally0` **556/1031**、`chaseable` **107**、`parity` **58**、`origin_far` **95**、
+  **joint 48**、`sub1` **0**;钉帧 `f_071423_sky_rescue.lua`/sven,伪造质心距 **8047 u**。
+  ⛔ **频率没买到**:mode / target / item 三个合取项本语料**一条都拿不到**(§3 逐条测了),
+  **一个数字都不许当频率引用**;`joint 48` 是**几何上界不是施法计数**。
+  **铁律 6**:静态门 `GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`);全量动态半见报告 §九。
+  **开工自检 exit 3**;其中 `TRUNK RED 6/87` 经**干净树复跑 + `git stash` 对照**确认**本来就红**
+  (英雄组与野外续航族的语料增长棘轮),与本改动无关。
+  ⭐ **交棒走的是 GH #474(先搜后开,没开重复)**:loader 没接 `GetAttackTarget`/`GetTarget`,
+  本轮给它加了一个具名买家 —— 整个 `ability_item_usage_generic.lua` 里读 `botTarget` 的条目族。
 
 - 2026-09-10T07:47Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第十轮 (i);认领依据 =
   工作流第 1 步扫 open issue,**新的 `[strategy]` 条目一条也没有**(#697/#691/#688/#687/#681
