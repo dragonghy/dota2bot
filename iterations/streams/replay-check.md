@@ -14663,3 +14663,73 @@
     改为**追评 #718**,交一份干净树、已知 commit 上的五条完整读数,并点名
     `test_wk_q_castrange_meter_domain.lua:509` **至今仍替 GH #390 扛着那一帧**(#705 今晨已提,未动)。
   - token:`TOKENS total_in=12,772,116 out=66,931 turns=85`
+- **2026-09-10T21:4x–22:0xZ(本轮)**:**仍无新波轮**(批测台 21:18Z 连续第二轮零发波,
+  闸 (iii) 逐字 `Headroom was $0.647, this wave needs $1.100`)⇒ 交棒单第 (1) 条 W64 仍未落地,
+  按工作流第 2 条转做第 (3) 条:**取 `a_evidence_*` 八条 UNOWED 里的 `tbearly`**。
+  ```
+  VERIFY id=tbearly verdict=SILENT episodes=0
+  ```
+  ⚠️ `episodes=0` **不是「没语料」**:该子句在本轮语料里被求值 **103,315 个英雄帧**
+  (radiant-armed 47,092 / dire-armed 17,670 / 暖场 38,553),**两腿分歧帧 = 0**。**构造性的零。**
+  - ⭐ **选点判据本轮先行(W62/W63 学费的兑现)**:八条**先读工具头部 LIMITS 判「离线读不读得出来」,
+    再决定买不买语料**。`blinkflee` **当场排除**(工具已自陈结构性拒绝:同一 consider 函数里三处
+    朝自家远古的 blink,敌人站在自己与远古之间时**落点逐字相同** ⇒ 几何只能认「朝家」不能认「撤退支」);
+    `tbearly` 选中,因为它声称**可以从出厂 Lua 的算术**证明,**零语料**。
+  - **算术(自己读的出厂 Lua,非转载)**:`mode_farm_generic.lua:507` 的 `and not J.IsLateGame()`
+    包住 `:554-562` 的 tbearly 子句(`n_enclosing_blocks 3`);turbo 下 `IsLateGame()` ⟺ `t > 1080`
+    ⇒ **能走到 :554 的帧必然 `t <= 1080`**;门关是 `t<1500`(恒真)、门开是 `t<1080`(**除 `t==1080.0`**)
+    ⇒ **分歧集 = 单点零测集**。`--source` 独立给 `STRUCTURAL-ZERO`;`--selfcheck` **34 PASS / 0 FAIL**
+    (含四条反向用例 ⇒ 不是硬编码的零)。⚠️ **那条外层合取项在上游 OHA 快照里就有**(`74727e4:427`)
+    ⇒ **这个门从落地第一天起就是 no-op**。
+  - **覆盖**:W63 在 `replays/` 里**只有 11 个 `.dem`**(而 `analysis.json` 有 176 个 ⇒
+    **「有 analysis 不等于有录像」**),**11/11 dump 成功、unparseable 0**;4 局暖场
+    (`script_version='cfa966e3'`,未 armed)、**7 局带 armed 戳**(radiant 5 / dire 2)。
+    **深查 11/11 局逐帧**核验 t∈[1078,1081] 邻域 —— **对这个 id 相关的帧邻域只有 t≈1080 一处**,
+    逐帧覆盖是完整的不是抽样的。**11/11 局采样格点从 1079.x 直接跨到 1080.x,`1080.0` 无一被采样。**
+    承重配对帧:`14565d/20260910_124644_slot1`(armed=dire)**t=1078.4**,
+    crystal_maiden(team3,**armed**,nw 12519/deaths 1)与 zuus(team2,baseline,nw 9368/deaths 3)
+    **同一帧上同时满足全部非时钟合取项,两腿必然同值** ⇒ **子句真的在跑,它不是死代码**。
+  - ⭐⭐ **头号发现:一条已登记的入集依据被推翻,而且是 2/2。**
+    `state.json:cap25_boundary_20260825.domains_unblocked` 逐字说 cap→25 后
+    `alchrage` 与 `tbearly`「域曾经构造性为空、**现在够得到了**」(GH #108 检查项 7;
+    `tbearly` 后来入集就引用它)。**cap 确实落地了**(逐局 `cap_min=25`;W63 全部 **176 局**
+    `duration_s>1080`,最小 1106;本语料 max t **1616.3**;**11/11 局都进了 [1080,1500)**)——
+    **域仍然是零,两个都是,而且各自被那次普查没看的机制关掉**:
+    `tbearly` 级联 **L3 36,630 → L4 22,069 → L5 12,436 → L6(外层合取项)0(−100%)**,
+    **`12,436 → 0` 这一跌就是全部发现**(带**不缺帧**,缺的是**控制流**);
+    `alchrage` 则是 **alchemist 不在抽签池**(`hero_pool.txt` 47 行 = 6 注释 + **41 英雄**,
+    `grep -i alchem` **rc=1**;本轮 25 个英雄的语料里同样没有)。
+    ⭐ **`alchrage` 这半条不另立单子** —— 与批测台今日 GH **#726**(Undying 不在池里)**同机制第二例**。
+    **可迁移的一句(立法用)**:**时间常数普查回答的是「时钟够不够得到这个常数」,
+    没有回答「控制流够不够得到读它的那一行」,也没有回答「承载它的单位在语料里存不存在」——
+    三个问题,普查只问了第一个。** 与 `pullcad` 陷阱、`campexit` 顺序事实同族。
+  - **建议动作**(§四):**`tbearly` 退集**(P4.2「armed ≤ 20」下**最便宜的一格**:域可证零测、
+    退集零信息损失、不需要任何波次);⛔ **但不要顺手删代码**——那次改写修的是真实的 Lua 惯用法缺陷,
+    `test_turbo_ternary_dominance.lua` 的全仓棘轮继续有价值,**退的是测试集那一格不是那次修复**;
+    修 `state.json` 那一行;**[strategy]** `mode_farm_generic.lua:551-553` 出厂注释逐字写着
+    「The band this moves is 18:00-25:00」——**那句话是假的,而且正是它让下一个读者相信这个 id 有域**。
+  - **树上改动**:**`bots`/`game` 一行未改;`tools/` 与 `tests/` 一行未改**(本轮只用既有工具;
+    分析脚本落在 scratchpad,**没有** `Write` 进 `tools/` —— W58 那条 `ls | grep <id>` 坑的兑现)。
+  - **条件 (a) 台账**:`tbearly` 取得判决 ⇒ **UNOWED 8 → 7**(开工 `AEV_EXIT=3`,
+    `armed 37 verdict 29 owed-row 0 UNOWED 8`)。⛔ **不补 `owed_executions.json` 登记行** ——
+    登记行是「没人认领时发生的事」,本轮认领并交付了判决。
+  - **AWS**:只读 S3(4 次 `ls` + 176 个 `analysis.json` + 11 个 `.dem`),
+    **零 EC2、零发波、零 CE、零支出**。
+  - **本轮 issue:净增 1 条**(先搜后开:两组语义搜索 **0 命中**、再逐条扫 60 条最新 open issue,
+    确认 `tbearly` 与 cap25 普查行**无同题单**;`alchrage` 那半条并进 #726 而**不另立**)。
+  - **自检**:`SELFCHECK_EXIT=124` —— ⛔ **124 是我自己那条 `timeout 900` 的判决,不是自检的判决**
+    (与批测台 21:18Z 同形)。跑完的腿:`a-evidence-owed` `FINDING: 8 armed id(s)`;
+    python 腿 `120 passed, 2 failed, 3 uncertifiable` ⇒ **TRUNK RED** 两条
+    (`test_bots_walk_farm_only.py` 的 `io.popen` 白名单没跟上两个新 Lua 测试;
+    `test_py_gate.py` 的 `5c: the selected total (12.03s) fits the recorded budget (12.0s)`)——
+    **两条都已有单子**(#728 逐字就是后者;前者属 #718/#650 族)⇒ **不开第九张单子**。
+    ⛔ **Lua 检测器腿被 124 截断没跑到 ⇒ trunk 的那一侧本轮没人看过,按 GH #171:这不是通过。**
+  - ⛔ **管道拒绝门本轮又被撞一次(第 8 次,又是本轮第一条命令)**,逐字
+    `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`
+  - **下一轮第一件事**:(1) W64 若落地,第一条命令仍是 `pullcamp_camp_gap.py`(连续三轮未执行);
+    (2) `a_evidence_*` 还剩 **7 条 UNOWED**,至少再取 1 条,**照本轮次序:先读 LIMITS 再买语料**
+    (已知结构性拒绝:`blinkflee`、TP 族 GH #647;`abilanc`/`fieldbuy` 头部都自陈了
+    NOT-observable 合取项,`lf_rescue` 要求两腿臂串不同——**先验证再下语料**);
+    (3) 盯本轮这一单 + #722/#723/#700/#726;
+    (4) ⛔ **自检单独跑,且不要用外层 `timeout` 掐它** —— 本轮 124 是自己掐的。
+  - 完整报告:`iterations/reports/replay-check/20260910T220101Z.md`
