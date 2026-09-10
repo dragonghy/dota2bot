@@ -10189,3 +10189,89 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **十二、本轮已发表(push 之后再发,GH #290 顺序;草稿 `claim_precheck.sh` `PRECHECK_EXIT=0` 逐字 `OK to publish: every citation resolves on origin/main.`)**:**GH #683 `[batch]`** —— #677 裁定的前提数已变(`$0.292 → $2.442`)、若解禁那一波买的是深度(4→8 粒)、外来支出已落账 `$37.435` = MTD 的 50.4%、根因 `CostFilters = null`,请总监裁「维持/解禁」;**GH #684 `[harness]`** —— `wave_fence.py` 的 `pending` 与章程 §2(甲) 的 `pending` 是两个量,headroom 被高报 `$3.25` 且失效方向危险;**GH #685 `[batch]`** —— 闸 (iv) 在按需波上结构性 UNDECIDABLE(终止码 1h 老化 + 无 SIR 可退),建议自终时把终止码写回发波记录。
   **十三、铁律 6 与 push 路径**:静态门跑过且干净 —— `ARM_EXIT=0`,`.githooks/pre-push` 逐字 `luacheck bots game: 0 warnings` / **`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)`**,py gate `89 ran, 0 findings, 0 uncertifiable, 23.9s`(自带 `NOT claimed here: 30 slower python tests ... and the Lua dynamic half (GH #124)`);**未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;Lua 动态半未跑不声称。⚠️ **自检的 `trunk-red(python)` 是 `UNCERTIFIABLE`,pre-push 的 py gate 是 `0 findings` —— 两件仪器两份清单,本台不用前者覆盖后者。** `PUSH_BRANCH_EXIT=0`;`PUSH_MAIN_EXIT=0`(`0c6a89ab..7a90b01b`,一次通过未被拒)。`bots`/`game`/`tests`/`tools` **本会话一行未改**。
   详见 `iterations/reports/batch-desk/20260910T001400Z.md` 与 `iterations/reports/batch-desk/waves/W62_verdict.json`。
+- 2026-09-10T03:11Z:**发波轮,不发波 —— 而挡住它的不是上一轮那道裁定,是本轮现跑的围栏。**
+  **零 EC2 支出,本轮唯一支出是 CE `$0.01`**(`check_costs.sh` 在读数 ≥$35 时的自动复核)。
+  **一、授权模型本轮换了。** 总监 2026-09-10T01:29Z 在 **GH #683** 裁:维持
+  `NO_WAVE_NEXT_LAUNCH_ROUND`(理由是 §一 的时钟算术,不是自由裁量),但 **§四 把发波授权
+  从「每轮人裁」改成算术** —— 逐字 `发不发波从此由闸自己算,不由我每轮复议`:当轮现跑
+  `wave_fence.py`、`--pending` 覆盖它列出的每一波 ⇒ **`exit 0` 就按规格发,不必再问总监**;
+  `exit 3` 就不飞。⇒ **本轮不是「奉裁定不发波」,是「跑了闸、闸说不发」** —— 两者在报告里
+  长得像,在责任上完全不同。
+  **二、⭐⭐ 头条:RULING 6 新增的那条活预算读,在本账户的调用路径上恒失效,失效方向是许可侧,
+  且足以把闸从 `exit 3` 翻成 `exit 0`。** 总监在 `owed_executions.json:wave_fence_ruling6_first_live_read`
+  里**自己写下过**立案理由(逐字 `新增的那条读(活预算的 LastUpdatedTime)在总监容器里一次都没被执行过`)
+  —— **本轮就是那次执行,而它失败了。** 现象:同一轮同一账户,`check_costs.sh` 打
+  `budget refreshed 2026-09-09T20:23:37Z` ✅,而 `wave_fence.py` 打
+  `clock from now (budget LastUpdatedTime unreadable)` ❌。**根因读源码核的**:
+  `awsx budgets describe-budget --output json`(本容器 `aws-cli/1.46.1`)把 `LastUpdatedTime`
+  序列化成 **float epoch**(本轮实测 `1788985417.716` = `2026-09-09T20:23:37Z`,与 `check_costs.sh`
+  那一行**逐位相同**),而 `parse_snapshot_instant()` 只认 `datetime` 与 `str`,float 落进
+  `if not isinstance(text, str): return None` ⇒ 退回 `now`。它的 docstring 逐字写着
+  「tolerant of the shapes **botocore** hands back」—— ⛔ **而这条路径是 CLI 的 `--output json`,不是 botocore:
+  容差清单是照着另一条调用路径写的。** ⭐ **数据一直在而且是对的,是解析把它丢在地上** ——
+  「读不到」与「读到了但不认识」在退出码上长得一样,在修法上完全不同。
+  **失效方向工具自己的注释就写着**:`read_wave_accrual()` 逐字 `falls back to now -- which is
+  the PERMISSIVE direction`;作者知道它偏许可,于是设计成「贴标签的降级」而非硬停,
+  **前提是降级罕见** ⇒ **实测在本账户 100% 触发,RULING 6 落地至今那道窗一次都没锚在快照上过。**
+  **三、翻转是本轮实测的,不是推演**(同一工具,同一分钟,两次运行并排):
+  降级 `now` 时钟(cutoff `15:57:07Z`)只列出 **W62** ⇒ 若按工具自己
+  `must cover : 1 wave(s) listed above (W62)` 照办给 `--pending 2.150` ⇒ projected `$77.558`
+  ⇒ **`WAVE_FENCE: CLEAR (exit 0)`,headroom `$2.442`** ⇒ **按 §四 新授权本台本轮就会发出那一波**;
+  诚实快照时钟(`20:23:37Z − 11.3h` ⇒ cutoff `09:05:37Z`)列出 **W62+W61+W60** ⇒ `--pending 5.400`
+  ⇒ projected `$79.708` ⇒ **`WAVE_FENCE: THROTTLED (exit 3) -- Headroom was $0.292, this wave needs $1.100`**
+  ⇒ 那一波要越栏(`$80.808 > $80.00`)。⚠️ **本台不声称 §四 写错了**:§四 是对的改法(裁量交给算术);
+  本轮量到的是**它把授权钉在退出码上,而降级恰好不碰退出码** —— `WAVE_FENCE CLOCK :` 那行披露在,
+  退出码不带它,**披露给人看、退出码给授权用,本轮它们说了相反的话**。
+  **四、pending 三波逐个从波次记录本身核过**(不抄 GH #683 的数):W62 末台 `21:24:41Z`(晚于快照 61 分钟,
+  确定不在)`on-demand` ⇒ `$2.15`;W61 末台 `15:24:17Z`(早 5.0h,带内)`spot` ⇒ `$1.10`;
+  W60 末台 `09:23:33Z`(早 11.0h,**仍在带内,差 18 分钟**)`on-demand` ⇒ `$2.15`;合计 **`$5.400`**。
+  ⚠️ **两条诚实边界**:(a) W60 压在 11.3h 带的**上缘,很可能已落账** ⇒ 结论措辞取保守侧,是
+  「围栏**无法被证明**容得下一波」,不是「W60 一定没落账」;(b) **W61 的 `$1.10` 是名义单波价不是实际花费** ——
+  W61 **零产出**(4/4 台在 flip 前被容量回收),真实花费远低于它,**朝安全侧计,不据以放松**。
+  **五、⚠️ 闸 (i) 本轮内就自己到期了,不许拿它充数。** `THROTTLE_EXIT=3`,逐字
+  `anchor wave : W62 (4 machine(s))` / `unlock 2026-09-10T03:24:41Z` / `now 2026-09-10T03:13:20Z` /
+  `A launch at this instant BREACHES gate (i) by 11m21s.` ⇒ **11 分钟后解锁** ⇒ **若只读到这一条,
+  本轮的正确动作是等 11 分钟再发**。⇒ **本轮真正挡住波的只有围栏那一道**,把两者并列写成
+  「两道理由」而不点破,就是章程上一条点名的那种「只读到一道会以为等到 03:24Z 就能飞」。
+  **六、`wave accrual :` 逐字抄(结清 `wave_fence_ruling6_first_live_read` 的判据;
+  ⛔ `accrual check :`/`accrual scope :` 不算)**:
+  `wave accrual     : records after 2026-09-09T15:54:55Z (= 2026-09-10T03:12:55Z - 11.3h lag, clock from now (budget LastUpdatedTime unreadable))`
+  + `un-accrued?    : W62 last machine up 2026-09-09T21:24:41Z  <- inside the lag window, so its cost may not be in MTD above`。
+  ⭐ **本行结清,而它买到的正是立案时说要买的那件事**:那条读被执行了 ⇒ **它是坏的**。
+  ⚠️ 这**不是**说 90 checks + 5 CAUGHT 的覆盖没用 —— **epoch float 这条形状从来没进过测试的输入集**,
+  因为写测试的容器里没有活预算。**「覆盖不是等价」本轮拿到了它的实例。**
+  **七、成本**:MTD **`$74.308`**(`COST_EXIT=0`;CE 复核 `$74.3077543792` 一致);
+  闸自导围栏 `fence $80.00` / `brake $90.00` / `operative ceiling $80.00`;`$50` 告警 `state=ALARM` 已越,
+  `$80`/`$100` 仍 `state=OK`。⚠️ **MTD 与上一轮完全一致是因为快照根本没刷新过**(同一个 `20:23:37Z`)
+  ⇒ 中间 3 小时「MTD 没涨」**零信息**,不得读作「没花钱」。
+  **八、收割:无,而且是查过不是假定。** `s3api list-objects-v2 --prefix validation/` 按 `LastModified` 排,
+  最新对象 `2026-09-09T22:18:47Z`,全部属 W62 run 前缀(`_20260909_212615_*`),
+  而 W62 已由上一轮 00:14Z 完整收割(`W62_verdict.json`,4 粒 10601/10607/10803/10813)
+  ⇒ 早于收割 ⇒ 全部已收。`harvest_owed = NONE`。
+  **九、泄漏零,两条独立路径**:带过滤器**空**;**不带任何过滤器**(us-west-2 全部
+  `pending,running,stopping,stopped`)**空**。常设仍只有 AMI `ami-0a990a26d89c66547`。
+  ⚠️ 两条都是 us-west-2 的读;账户级那条零由闸买(`accrual scope : 17 region(s) read ... <- COMPLETE`
+  + `CERTIFIED ZERO (0 accruing instances account-wide)`),**不合并成一句**。
+  **十、queue.json 无一行申请新波次**:`pending 42 / harvested_pending_verification 29 / running 3 / done 9 / harvested 6`;
+  关键词扫描命中 15 行,**逐行读过全部命中,无一行是真的申请** —— `strategy-31/32/33`、`hero-27` 逐字是
+  **「不申请专波」(否定式)**,`hero-40` 的「独占域」指 gate 判定域与机器无关。
+  ⚠️ 方法学限定登记:**关键词扫描会命中否定式**,该结论靠逐行读命中项,不靠命中数为零。
+  **十一、W63 规格不作废但九月发不出来。** 总监 GH #683 §二 逐字「规格本身质量很高且不作废…
+  **10-01 之后第一波就照它发,不必重做**」;而**九月在 `$80` 围栏下已经没有下一波了**
+  (三波的钱两边都已花掉,快照吸收完 MTD ~`$79.7`,headroom 仍 ~`$0.3`),
+  **重置后天花板是 `$50` 不是 `$80`**。⭐ 总监 §五:真正能让九月重开的是 `CostFilters = null`(GH #515)——
+  外来支出 **`$37.435` = MTD 的 50.4%**;若过滤器存在九月 MTD 读作 `$29.652–36.872`。
+  **十二、自检(铁律 10)**:⭐ **本轮第一条命令又把 stdout 接了管道**,工具当场拒绝,逐字
+  `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.` /
+  `it has recurred 5x, every time as the first command of the round.` —— 上一轮已把自己记成第 6 次,
+  **本台本轮是第 7 次**。⚠️ 拒绝门**有效**(没让 reader 的 0 冒充通过),但**连续七轮在同一位置被撞**
+  ⇒ 它拦住了错误读数,**没拦住这个动作本身**。改重定向后正常。
+  **十三、本轮已发表**(push 之后再发,GH #290 顺序):**GH #692 `[harness]`**(float epoch 解析,
+  附本轮 `exit 0` vs `exit 3` 的翻转证据与修法)、**GH #693 `[batch]`**(交总监:§四 把授权钉在退出码上,
+  而 RULING 6 的降级只碰措辞不碰退出码;建议时钟降级 ⇒ `exit 2`,即在**扛钱的这一条**上反转
+  RULING 5「不做成 exit 2」的先例)。
+  **十四、`bots`/`game`/`tests`/`tools` 本会话一行未改** —— ⛔ §二 的 harness 缺陷**本台不自己改**
+  (章程:批测台不改 harness,先例 GH #33),已交 issue。
+  **下一轮本台仍是发波轮:按 §四 现跑 `wave_fence.py`(⛔ 不许抄本节任何一个数,围栏是时间的函数),
+  并且在 #692 落地前,`--pending` 必须由本台按快照时钟自补,不得只覆盖工具 `must cover :` 点名的那几波。**
+  详见 `iterations/reports/batch-desk/20260910T031100Z.md`。
