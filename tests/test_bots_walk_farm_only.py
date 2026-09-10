@@ -94,18 +94,6 @@ UNRESOLVED_HAND_READ = {
         "keeps only names ending .lua; same non-recursive `ls` as the two lines "
         "above, same reason (hand-read 2026-09-10, strategy desk -- this walk is "
         "that round's own)",
-    """tests/test_anyhero_first_member_quantifier.lua  ::  'ls ' .. glob .. ' 2>/dev/null'""":
-        "corpus_paths() loops glob over the two LITERAL globs "
-        "{'tests/fixtures/*.lua', 'tests/frames/*.lua'}; the parameter is the "
-        "whole path, and neither value names bots/ at all (hand-read "
-        "2026-09-10, strategy desk -- its own previous round's walk, which is "
-        "why this entry is owed here)",
-    """tests/test_lion_q_field_engagement.lua  ::  'ls ' .. dir .. '/*.lua 2>/dev/null'""":
-        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} = "
-        "{'tests/fixtures', 'tests/frames'} (lines 62-63); the glob is appended "
-        "by this call site itself, so `ls` stays non-recursive and never reaches "
-        "bots/Customize/ (hand-read 2026-09-10 by the strategy desk; the walk "
-        "belongs to the hero desk)",
     """tests/test_zuus_arc_execute_kill.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'}; same "
         "non-recursive `ls` as the line above, same reason",
