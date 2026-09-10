@@ -443,9 +443,55 @@ function X.IsBeingAttackedByHero(unit)
     return false
 end
 
+-- [strategy 20260910] soak candidate 'anyhero'. THE SET IS COMPUTED, AND THEN
+-- HANDED TO A RULER THAT MEASURES ONLY ITS FIRST MEMBER.
+--
+-- The shipped body asks `tUnits[1]` and stops. Its one caller (:203) asks an
+-- EXISTENTIAL question -- `if not X.IsHeroWithinRadius(tEnemyHeroes,
+-- botAttackRange - 130) then return 0.96 end` -- and the list it is handed is
+-- `J.GetEnemiesNearLoc(bot:GetLocation(), 1600)`, which table.inserts in
+-- `GetUnitList(UNIT_LIST_ENEMY_HEROES)` iteration order and NEVER SORTS
+-- (jmz_func.lua). So `[1]` is an arbitrary member of the set, not the nearest
+-- one: on the frame corpus it is not the nearest on 142 of the 262 rows that
+-- carry two or more heroes (tests/test_anyhero_first_member_quantifier.lua §1).
+-- When the near hero is not the one at [1] the helper answers false, the caller
+-- reads that as "nobody is on me", and the bot returns desire 0.96 -- near-max --
+-- to go hit a summon (grimstroke ink creature / weaver swarm / tidehunter
+-- anchor) with an enemy hero standing inside its attack range.
+--
+-- WHY THE LOOP IS THE INTENDED READING -- condition (c) is inside this file, not
+-- on a wiki. Every other existential helper here quantifies over the whole set:
+-- X.IsBeingAttackedByHero (the function directly above), X.IsThereSentry,
+-- X.GetTotalAttackDamage, X.GetTotalUnitHealth. This one is the only `[1]`.
+-- The caller's own neighbouring line (`if #tEnemyHeroes == 0 then return 0.9 end`)
+-- shows the author already distinguishes "no heroes at all" from "no hero
+-- CLOSE", which is exactly the question this helper is supposed to answer.
+--
+-- THE WHOLE CHANGE IS GATED. Unlike 'tombhp' there is no crash to remove here:
+-- the shipped ruler answers false, it does not raise, so the unarmed leg is
+-- byte-for-byte the shipped behaviour and the loop below starts at 2 because
+-- element 1 is already decided above.
+--
+-- ⛔ WHAT THE CORPUS DOES NOT BUY, said before any number is quoted. The mock's
+-- UNIT_LIST_ENEMY_HEROES returns the querying hero's OWN side including itself
+-- (an `axe@0` row), so the counts above are the GEOMETRY of a set of heroes with
+-- real dump positions, with self excluded -- they are not enemy semantics, and
+-- no fire rate in a real game is claimed from them. GetAttackRange() is the mock
+-- default 150 on all 1270 live rows, so the caller's true radius
+-- (botAttackRange - 130) is not in this corpus either; §2 reports a radius
+-- SWEEP instead of one rate. FROZEN-HOLD per P4.2: registered in
+-- state.json:anyhero_20260910, not requested into the armed set.
 function X.IsHeroWithinRadius(tUnits, nRadius)
     if J.IsValidHero(tUnits[1]) and J.IsInRange(bot, tUnits[1], nRadius) then
         return true
+    end
+
+    if J.IsModeTurbo() and J.IsSoakCandidate('anyhero') then
+        for i = 2, #tUnits do
+            if J.IsValidHero(tUnits[i]) and J.IsInRange(bot, tUnits[i], nRadius) then
+                return true
+            end
+        end
     end
 
     return false

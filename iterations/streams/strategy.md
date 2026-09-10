@@ -27,6 +27,67 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ANYHERO. **【2026-09-10T19:37Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**。
+   认领依据 = 工作流第 1 步扫 open issue,`[strategy]` open **全是本组自报** ⇒ 取 `0TOMBHP`
+   「下一格」**第 (1) 项**(同一把扫描器换谓词)。
+   ⭐ **点名的那个变种扫出来是空的,而空本身是读数,不是零产出。** 本组范围
+   (`bots/mode_*.lua` + `bots/FunLib/`,**55 个文件**;`BotLib/` 126 个归英雄组)两轮扫描:
+   (A) `J.IsValidHero(<整张名单>)` —— 187 个 bare-arg 调用点,**候选 1 / 真命中 0**
+   (那 1 个是 `J.GetAttackableWeakestUnitFromList` 的假阳性,RHS 里含 `GetNearbyHeroes(`
+   但函数返回**单个单位**);(B) `J.IsValidHero(<非英雄名单>[i])` —— **hero-list 121,
+   non-hero-list 0,mixed 0**,75 个 unresolved **逐条看过**全是 `GetTeamMember` /
+   `J.GetProperTarget` / `GetAttackTarget` 这类单个单位来源。**两个变种本轮扫干净了。**
+   ⭐⭐ **真正坐在那里的是它的邻居,而这就是判据 (5) 的新变种:尺子被喂了正确种类的东西,
+   只是只喂了集合的一个成员。** `bots/FunLib/aba_special_units.lua` 的
+   `X.IsHeroWithinRadius(tUnits, nRadius)` 只读 `tUnits[1]` 就 `return false`;它**唯一的调用者**
+   (`:203`,grimstroke 墨兽 / weaver 虫群 / tidehunter 锚那一支)问的是**存在量化**的问题
+   (`if not X.IsHeroWithinRadius(tEnemyHeroes, botAttackRange - 130) then return 0.96 end`),
+   而 `J.GetEnemiesNearLoc` 按 `GetUnitList` 迭代序 `table.insert`、**全程没有任何 sort**
+   (§1b 从出货源码读出,不是记忆)⇒ `[1]` 是**任意**成员:**262 个「≥2 英雄」行里 142 行的
+   `[1]` 不是最近的**(严格更远 141)。**后果不是抛错也不是恒假** —— helper 答 false,
+   调用者读成「没人贴我」,bot 用 **0.96(接近满值)**去打召唤物,而敌方英雄站在攻击距离里。
+   产出:**新 id `anyhero`**(turbo-only,**FROZEN-HOLD,不请求入集**)、
+   `tests/test_anyhero_first_member_quantifier.lua` **14/14**、`tools/agent/mutstand_anyhero.sh`
+   **10 腿 10/10 STAND GREEN**、`state.json:anyhero_20260910`;报告
+   `iterations/reports/strategy/20260910T193710Z.md`;**armed 串 / `queue.json` / `test_set.md`
+   一字未动**;零 AWS、零波次。
+   ⭐ **与 `tombhp` 的分界,写进了代码抬头而不是只写在报告里**:那边出货尺**抛错** ⇒ 去掉抛错
+   必须**无条件**、unarmed 一侧**不是**逐字节相同;**这里出货尺只是答 false ⇒ 闸外一个字都不用修,
+   整个改动都在闸里,unarmed 一侧就是出货字节**。而且这一点是 §3b **在 61 行上测出来的**,
+   不是从 diff 上读出来的。循环从 2 起,因为元素 1 已在闸上面判过。
+   ⚠️ **变异台产出的不是 bug,是「作者自己写错了机制」——而且方向和上一轮相反,这是本轮最该带走的一条。**
+   M7(扫描器不再剔除自己)抬头原写「miss 人群会**清空**,驱动跑在空集上」;
+   **M7 SURVIVED(exit 0,14 节全绿)**,变异体是对的:自己在名单里 ⇒ `best = 0` ⇒ 所有计数
+   **变大**,而本文件每一个计数都是 `cs.ratchet`,**即地板** ⇒ **污染只会满足地板**。
+   测量没有大声塌掉,它**一路绿着**,只是悄悄改成了「bot 离自己很近」。抓住它的**不是棘轮,
+   而是一条零断言**(§1a 的 `best_zero == 0`:两个不同英雄句柄距离为 0 不是几何)——
+   与 `tests/corpus_scale.lua` 抬头早就写下的「内容就是一个零的主张保持等式」
+   **同一条道理,从另一头到达**。另两处:M3 第一版删掉闸那行 ⇒ 孤儿 `end` ⇒ 文件加载失败、
+   红得对不上题(改 `if true then`);M10 第一版锚点在 `jmz_func.lua` 里出现三次的两行上,
+   **变异台自己 ABORT 了而不是打一个 no-op**。
+   ⛔ **三条边界都是测出来的不是引的**:(1) 语料的「敌方英雄名单」**含提问者自己**
+   (mock 的 `UNIT_LIST_ENEMY_HEROES` 答的是提问者**自己那一侧**,一条 `axe@0`;仅 `frames/`
+   那一半就 **121** 条)⇒ 所有读数**剔除自己后**取,量的是**几何不是敌我语义**;
+   (2) `GetAttackRange()` 全 **1270** live 行都是 mock 默认 **150** ⇒ 真半径
+   (`botAttackRange - 130`)不在语料里,**只报半径扫描** 21/49/61/60/51/43/35
+   (r=150/300/470/600/800/1000/1200);(3) 外层守卫(三种召唤物之一在 1600 内)**0 行**。
+   **附带(流程债已清)**:开工自检 trunk-red 清单**先按「谁弄红的」分类再决定工作单元**
+   (上一轮 `0RAXDEAD` 第 (4) 项立的规矩,本轮照做):4 条 Lua 红全是他组的语料增长棘轮,
+   **本组本轮一条红都没留**,上一轮清掉的 `test_bots_walk_farm_only.py` 保持绿。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是 `bots/` 行为改动**;判据 (5) 的**下一个变种本轮钉出来了**:
+   「**尺子被喂了正确种类的东西,但只喂了集合的一个成员**」—— `<名单>[1]` 被当成
+   「集合里存不存在」的答案。同一把扫描器再换一次:找 `<谓词>(<名单变量>[1])` 出现在一个
+   **名字或调用者是存在量化**的位置。**本轮只清了 `aba_special_units.lua` 一处,`mode_*.lua` 没扫**;
+   (2) ⛔ **接力棒钉成断言不是 issue**(GH #13 掉棒 37 轮的形状):§4c 的 `summon_present == 0`
+   红的那天文字直接写着「这条分支现在看得见了,去重开它并重新定价入集」;§4a 的 self 断言红的那天,
+   说明 loader 接上了真正的敌方语义,**§1–3 要在敌我语义下重取**;
+   (3) ⛔ **读 `botTarget` 的 consider 条目族仍然不动**(GH #474,连续第四轮有效);
+   (4) ⛔ **兵营分支(GH #713)仍然不落 gate**,域仍空(0/1031 帧),接力棒是
+   `tests/test_isvalid_building_sentinel.lua §2b`;
+   (5) ⛔ **P1/P2 的球仍不在本组,P4.2 冻结未解** ⇒ 本轮没有提入集;
+   (6) **`tombhp` 的裁定请求(GH #719)仍未答**,本轮不催,`state.json:tombhp_20260910.next` 已登记。】**
+
 0TOMBHP. **【2026-09-10T16:53Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(回到 (i))。
    认领依据 = 工作流第 1 步扫 open issue,9 条 `[strategy]` open **全是本组自报** ⇒ 取 `0RAXDEAD`
    「下一格」**第 (3) 项**(判据 (5) 新变种:「一个集合被算出来,然后交给了一把量错东西的尺子」);
@@ -7636,6 +7697,43 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-10T19:37Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = 扫 open issue,
+  `[strategy]` open 全是本组自报 ⇒ 取 `0TOMBHP`「下一格」**第 (1) 项**)。
+  ⭐ **点名的那个变种扫出来是空的,而这本身是读数**:本组范围 55 个文件里,
+  `J.IsValidHero` 被喂**整张名单** = 187 个 bare-arg 调用点**真命中 0**(唯一候选是
+  `J.GetAttackableWeakestUnitFromList` 的假阳性);被喂**非英雄名单的成员** = **0**
+  (hero-list 121 / non-hero-list 0 / mixed 0;75 个 unresolved 逐条看过,全是单个单位来源)。
+  **两个变种本轮扫干净了。**
+  ⭐ **真正坐在那里的是它的邻居:尺子被喂了正确种类的东西,只是只喂了一个。**
+  `bots/FunLib/aba_special_units.lua` 的 `X.IsHeroWithinRadius` 只读 `tUnits[1]` 就收工,
+  而它唯一的调用者(`:203`)问的是**存在量化**的问题,交给它的名单
+  `J.GetEnemiesNearLoc(loc, 1600)` 按迭代序 `table.insert`、**全程没有 sort**
+  ⇒ `[1]` 是任意成员:**262 个「≥2 英雄」行里 142 行的 `[1]` 不是最近的**(严格更远 141)。
+  代价是 helper 答 false、调用者读成「没人贴我」,bot 用 **0.96** 的欲望去打召唤物,
+  而敌方英雄就站在攻击距离里。
+  新 id **`anyhero`**(turbo-only,**FROZEN-HOLD,不请求入集**),
+  `tests/test_anyhero_first_member_quantifier.lua` **14/14**,
+  `tools/agent/mutstand_anyhero.sh` **10 腿 10/10 STAND GREEN**,`state.json:anyhero_20260910`。
+  ⭐ **与 `tombhp` 的分界写进了代码抬头**:那边出货尺**抛错**,所以去掉抛错必须无条件、
+  unarmed 一侧**不是**逐字节相同;**这里出货尺只是答 false ⇒ 整个改动都在闸里,
+  unarmed 一侧就是出货字节**,而且这一点是 §3b **在 61 行上测出来的**,不是从 diff 上读的。
+  ⚠️ **变异台又一次把作者写错的机制打回来了,而且方向和上一轮相反**:
+  M7(不再剔除自己)抬头原写「miss 人群会清空」——**M7 SURVIVED(exit 0,14 节全绿)**,
+  变异体是对的:自己在名单里 ⇒ `best=0` ⇒ 所有计数**变大**,而本文件每个计数都是
+  `cs.ratchet`(**地板**)⇒ **污染只会满足地板**,测量一路绿着只是悄悄改成了「bot 离自己很近」。
+  抓住它的**不是棘轮而是一条零断言**(`best_zero == 0`)—— 与 `corpus_scale.lua` 抬头
+  「内容就是一个零的主张保持等式」**同一条道理,从另一头到达**。
+  ⛔ **三条边界都是测出来的**:语料的「敌方英雄名单」**含提问者自己**(仅 frames/ 就 121 条,
+  读数一律剔除自己 ⇒ 量的是几何不是敌我语义)、`GetAttackRange()` 全 1270 行是 mock 默认 150
+  (⇒ 真半径不在语料里,只报**半径扫描** 21/49/61/60/51/43/35)、外层守卫 **0 行** ⇒ FROZEN-HOLD。
+  **开工自检 trunk-red 按「谁弄红的」分类**(上一轮立的本组流程债):4 条 Lua 红全是英雄组/他组的
+  语料增长棘轮,**本组本轮一条红都没留,上一轮清掉的那条保持绿**。
+  铁律 6 三条腿:`GATE_EXIT=0`(luacheck 0 警告)/ `py gate: PY_EXIT=0`(84)/
+  `lua gate: LUA_EXIT=0`(322);`RULE6_BYPASS` 未使用;`SELFCHECK_EXIT=3`
+  (第一次调用被脚本按管道拒绝 —— **那不是通过**,改走 `rc.sh` 才拿到真码)。
+  ⛔ **零 AWS、零波次、armed 串 / `queue.json` / `test_set.md` 一字未动。**
+  报告:`iterations/reports/strategy/20260910T193710Z.md`。
 
 - 2026-09-10T16:53Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,回到 (i)。认领依据 = 扫 open issue,
   9 条 `[strategy]` open 全是本组自报 ⇒ 取 `0RAXDEAD`「下一格」第 (3) 项;第 (1) 项按它自己的
