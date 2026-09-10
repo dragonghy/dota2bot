@@ -71,7 +71,9 @@
    `tests/test_isvalid_building_sentinel.lua §2b` 那条断言,不是 issue;
    (4) ⭐ **交出去的棒**:`tombhp` 有一条与一般 lever 不同的出路 —— 六条兄弟分支同形状且全部无闸
    ⇒ **可以当 bug 直接 ungate、不发波**。**请总监明确裁一次**(promote-as-bugfix 或维持
-   FROZEN-HOLD 等域),已登记 `state.json:tombhp_20260910.next` 并已开 issue;
+   FROZEN-HOLD 等域),已登记 `state.json:tombhp_20260910.next`,**已发表 GH #719**(先搜后开,检索 0 命中);
+   维持 FROZEN-HOLD 的话接力棒已钉成断言(§4 的 `tomb_mod == 0`)而不是 issue;
+   `claim_precheck.sh` ⇒ `PRECHECK_EXIT=0`,`local commits not on origin/main: 0`;
    (5) ⛔ **P1/P2 的球仍不在本组,P4.2 冻结未解** ⇒ 本轮没有提入集。】**
 
 0RAXDEAD. **【2026-09-10T13:50Z 新增。**P4.4 归属 = **(ii) 清本组自己欠的债**(连续十一轮 (i) 之后
