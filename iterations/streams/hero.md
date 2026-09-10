@@ -6203,6 +6203,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     暂存价钱 1 个文件(`test_cm_ult_reach_meter_domain`),**本轮付清**。
   - **交出去的下一棒**:`hero-54` 结为 `delivered-and-consumed`;新开 **`hero-56`**
     请总监裁「先入哪一局」并分派那两条裁定级的重取。**Zeus 仍 0 帧**,下一轮切 `364764` 那局。
+  - **已发表**:**GH #702**(主发现 + 两个价钱)、**GH #703**(`test_salveally_missing_floor` trunk 本来就红)、
+    **GH #704**(自检最后一条腿读工作树却叫 TRUNK RED)。
   - **验证**:luacheck gate `0 warnings / GATE_EXIT=0`;新测试 7/7;`cm_ult_reach_meter_domain` 8/8;
     19 个测价文件复验 17 回绿 + 1 已付 + **1 是 trunk 本来就红的**
     (`test_salveally_missing_floor`,`git stash -u` 到干净 HEAD 上复现,已开 [bug])。
