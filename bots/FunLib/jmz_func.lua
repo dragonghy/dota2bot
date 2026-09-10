@@ -3603,6 +3603,42 @@ function J.GetTeamFightLocation( bot )
 		then
 			local allyList = J.GetSpecialModeAllies( member, 1400, BOT_MODE_ATTACK )
 			targetLocation = J.GetCenterOfUnits( allyList )
+			-- [tfnull] The set that makes this a fight at all -- the >= 2
+			-- enemies inside 1400 of `member`, the only reason this branch
+			-- exists -- feeds the GATE and then has no vote in the one thing
+			-- the branch produces. The location is the centroid of ATTACK-mode
+			-- ALLIES, and when that list comes back EMPTY J.GetCenterOfUnits
+			-- answers Vector(0,0): the map ORIGIN, handed back as if it were a
+			-- measured place. Every caller tests `~= nil` and none can tell the
+			-- two apart, so "no ally data" is delivered as "the fight is at the
+			-- middle of the map" -- and mid/river is a plausible-looking answer,
+			-- which is why nobody has ever seen it (it does not look wrong).
+			--
+			-- The list can be empty while the gate is true because the gate and
+			-- the centroid ask two different questions: J.IsInTeamFight uses the
+			-- ENGINE's nearby list at 1500 (self excluded, illusions included),
+			-- J.GetSpecialModeAllies walks the team ROSTER at 1400 (self
+			-- included, illusions absent). Two ATTACK-mode ally illusions, or
+			-- two allies in the 1400-1500 shell, with `member` itself not in
+			-- ATTACK mode, satisfy the first and leave the second empty.
+			--
+			-- Repair, deliberately NOT a new policy: when the side that owns the
+			-- answer has nothing to say, fall back on what the branch already
+			-- proved -- the fight is within 1400 of `member`, by both
+			-- predicates. `member:GetLocation()` is the conservative anchor
+			-- (our own side of the contact) and buys the branch's whole purpose;
+			-- returning nil instead would throw away a fight that is real.
+			-- Byte-identical whenever the centroid had a contributor.
+			--
+			-- Honest bound: J.GetCenterOfUnits also answers the origin when a
+			-- NON-empty list holds no J.IsValid unit. That route is left with
+			-- the shipped answer on purpose -- covering it would need a second
+			-- ruler for "who counts" beside GetCenterOfUnits' own.
+			if #allyList == 0
+				and J.IsModeTurbo() and J.IsSoakCandidate( 'tfnull' )
+			then
+				targetLocation = member:GetLocation()
+			end
 			break
 		end
 	end
