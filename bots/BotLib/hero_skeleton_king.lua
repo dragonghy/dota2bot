@@ -801,6 +801,78 @@ function X.wk_IsLaneHarassTargetInReach( npcEnemy, nCastRange )
 end
 
 
+--- The local-parity term X.ConsiderQ's CATCH-ALL branch ("通用消耗敌人或受到伤害
+--- 时保护自己", the TENTH and last firing point) does not have.  Gate off this
+--- returns `true`, byte for byte.
+---
+--- THE DEFECT, closed form.  Every one of the nine branches above the catch-all
+--- states a reason to spend a 14-second single-target disable: interrupt a
+--- channel, confirm a kill, hit the biggest threat in a teamfight, trade in lane
+--- behind one's own creeps, initiate a fight the bot already chose, defend
+--- oneself while retreating, clear a neutral camp, hit Roshan, answer damage
+--- just taken.  The catch-all states none.  It fires on "an enemy is visible
+--- (1600) and one of them is inside 568u and I am level 7", and it takes the
+--- NEAREST entry.
+---
+--- The branch DOES carry a crowd term -- `#allyList >= 2` -- but it sits on the
+--- right of an `or` whose left side is `bot:GetActiveMode() ~= BOT_MODE_RETREAT`.
+--- Every mode except retreat satisfies the left side, so the crowd term is
+--- consulted ONLY while retreating.  In every other mode the branch never looks
+--- at how many heroes are on each side.  This is the same shape as `cmqpoke`
+--- (GH #698): the qualified test exists in the branch already and is structurally
+--- unreachable, so the armed leg invents no threshold -- it re-uses the branch's
+--- OWN `>= 2` outside the retreat case.
+---
+--- WHAT THE ARMED LEG WILL NOT TOUCH.  The branch is two releases wearing one
+--- `if`: a poke (`#nEnemysHerosInView > 0`) and a self-defence (
+--- `bot:WasRecentlyDamagedByAnyHero( 3.0 )`).  Answering damage already taken is
+--- not a decision about odds -- it is the only disable a lone Wraith King has
+--- while something is hitting him -- so the recently-damaged case returns `true`
+--- unconditionally and the narrowing applies to the POKE half only.  The duel
+--- escape (`#tEnemiesInView <= 1`) is this file's own idiom, not a new number:
+--- `#nEnemysHerosInView == 1` is the cast-range-extension test at the top of
+--- X.ConsiderQ and the release test of X.ConsiderW's first branch.  (`<= 1` and
+--- `== 1` pick out the same frames here: at 0 visible enemies the branch is only
+--- reachable through the recently-damaged disjunct, which has already returned.)
+---
+--- DIRECTION is a property of the shape, not of today's arithmetic: this is a
+--- conjunct added to an `if` that returns BOT_ACTION_DESIRE_HIGH, on the LAST
+--- firing point in the function, so the armed leg can only ever DELETE a cast --
+--- it can add none, here or downstream.
+---
+--- CONDITION (c).  Standard practice for a long-cooldown single-target stun is
+--- to hold it as initiation / kill-confirm / save currency rather than spend it
+--- as chip damage; spending it on a full-health hero while outnumbered gives up
+--- the disable for the fight that is about to start and buys ~100 magical damage.
+--- Turbo sharpens this rather than softening it: Wraithfire Blast sits at rank 1
+--- (14s) from hero level 2 to 12 under the shipped build row, which is most of a
+--- turbo game.
+---
+--- THE REAL FRAME (tests/test_wk_q_catchall_odds.lua):
+--- tests/frames/f_260909_215040_wk_blast_lion_480.lua, t=480.6, Wraith King the
+--- subject at hero level 9, 63% health, 81% mana, Wraithfire Blast rank 1 and off
+--- cooldown.  One ally in 1200 (Crystal Maiden at 667u), three full-health
+--- enemies visible (lion 548u, spirit_breaker 985u, slardar 1383u), no teamfight,
+--- not going on anyone, not retreating, not recently damaged.  The shipped tree
+--- reaches the catch-all and orders the blast on a full-health Lion; the armed
+--- leg refuses and X.SkillsComplement orders nothing.
+function X.wk_IsCatchAllOddsOk( tAllies, tEnemiesInView )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkqodds' ) )
+	then
+		return true
+	end
+
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 )
+	then
+		return true
+	end
+
+	return #tAllies >= 2 or #tEnemiesInView <= 1
+
+end
+
+
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable()
@@ -1199,6 +1271,10 @@ function X.ConsiderQ()
 		and ( bot:GetActiveMode() ~= BOT_MODE_RETREAT or #allyList >= 2 )
 		and #nEnemysHerosInRange >= 1
 		and nLV >= 7
+		-- [wkqodds] gate off this is `true`, byte for byte.  See
+		-- X.wk_IsCatchAllOddsOk above: the crowd term this branch already owns is
+		-- only reachable while retreating, and this re-uses it outside that case.
+		and X.wk_IsCatchAllOddsOk( allyList, nEnemysHerosInView )
 	then
 		for _, npcEnemy in pairs( nEnemysHerosInRange )
 		do

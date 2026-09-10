@@ -22,7 +22,40 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--140. **⭐ 下一轮:入集,按**局**,一次一局 —— 不要再按帧想这件事。**
+-141. **⭐ 下一轮:先切 Zeus 的施法帧(`364764` 那局),再谈别的 —— 切帧和入集是两件事,
+   本轮已经把它们分开证明过了。**
+   本轮(报告 `iterations/reports/hero/20260910T105241Z.md`)把 `-140` 的入集**推后**,
+   先用掉了 `hero-54` 买来的杠杆域一格,落地 `wkqodds`(Wraith King,gated,turbo-only)。
+   - **⭐ 本轮的 `bots/` 主体 `wkqodds`**:`X.ConsiderQ` 的**第十条也是最后一条**开火点
+     (`--通用消耗敌人或受到伤害时保护自己`)是唯一一条**不说理由**的 —— 上面九条各自说得出
+     为什么值得花一个 14 秒单体控。⭐⭐ **而它并不是天生不看人数:它自己就带着
+     `#allyList >= 2`**,只是那一项坐在 `bot:GetActiveMode() ~= BOT_MODE_RETREAT or ...` 的
+     **右边** ⇒ **除撤退外每个 mode 下它都不会被求值**。armed 只是把这条**支路自己写下的数**
+     搬到撤退之外用,**不发明阈值**(`<= 1` 那半边是本文件自己的单挑成语 `#nEnemysHerosInView == 1`)。
+   - **域**:129 文件 → **44 活体 WK → 25 进函数体 → 3 满足外层 → 出货 3 / armed 2 →
+     移动恰好 1 帧,`added = 0`**。钉帧 `f_260909_215040_wk_blast_lion_480`(9 级,63% 血,
+     **1 队友 vs 3 个满血敌人**,出货把控丢给满血 Lion)。
+     豁免帧 `..._sb_1052`(**5 点血**、0 队友、刚挨打)armed **保留**这一发。
+   - **⭐ 顺手买到一条属于别人的读数**:`test_wk_q_aim_preflight.lua` 的 tripwire 全称命题
+     (「568u 内 ≥2 敌 + Q 可施放」在语料里不存在)**在 `tests/frames/` 里已经假了**(两帧)。
+     ⭐⭐ **但可达 ≠ 可分辨**:唯一过了 7 级门的那帧里**最近的恰好就是血最少的**(绝对与比例都是)
+     ⇒ `wkqaim` 仍然一个目标都不改。**域非空是必要不是充分**——这是 `wkqdmg` 注释里
+     「算术域 vs 决策域」换个候选重演。`hero-1` 的归档扫描仍是买它的唯一路子(球在批测台)。
+   - **⛔ `ensure_lua_toolchain.sh` 在本容器 exit 1 且日志为空** —— 别读成「装不上」,
+     直接 `apt-get install -y lua5.1 lua-check`(包名是 **`lua-check`**)。
+   - **⛔ 本轮又付了一次「谁在按源码文本读它」的钱,但这次是可预期的那种**:
+     `test_activemode_call_site_census.lua` 数的是**注释里** `GetActiveMode()` 的次数,
+     而讲清这个缺陷**必须引用那条 mode 析取式** ⇒ 5→6 / 258→259,**在造成它的同一 commit 内重取**
+     (上一次是下一个 stream 开工才红的)。
+   - **⚠️ trunk 本来就红三处**(`git worktree add --detach` 到干净 HEAD 上复现,**不是本轮造成的**):
+     `test_wk_q_castrange_meter_domain`(4 例,GH #705)、`test_wk_q_lane_reach`(1 例,`38→44`)、
+     `test_focus_decision_reachability`(2 例,axe `28→29` / CM `50→51`)。**全部同一个成因:
+     上一轮的 12 个暂存帧把语料从 38 撑到 44。** 后两个还没有 issue。
+     ⭐ **用 worktree 复现,不要用 `git stash`** —— 铁律 10 自己写着 stash 与 pop 之间死掉会扣住未提交的工作。
+
+-140. **⭐ 仍然欠着:入集,按**局**,一次一局 —— 不要再按帧想这件事。**(本轮**没做**,
+   理由见报告 §1:价钱 17/19 未付、其中两条不归本组,而 P4.4 (i) 要 `bots/` 做主体。
+   球在**总监**:`hero-56` 请裁「先入哪一局」并分派那两条裁定级的重取。)
    本轮把 `hero-54` 做完了(报告 `iterations/reports/hero/20260910T075559Z.md`,
    12 个施法帧在 `tests/frames/`,新测试 `tests/test_focus_cast_instant_frames.lua`)。
    - **⭐⭐ 本轮的头号读数**:出货树在施法帧上下单 **10/34**(29.4%),语料是 **4/183**(2.2%);
@@ -6187,6 +6220,33 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-10T10:52Z(报告 `iterations/reports/hero/20260910T105241Z.md`;**backlog:`-140` 推后、
+  新开 `-141`**;OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;
+  **P4.2 冻结期内不请求入集**)
+  **落地 `wkqodds`(Wraith King,gated,turbo-only):`X.ConsiderQ` 兜底支路的赔率项。**
+  - **缺陷**:第十条也是最后一条开火点是唯一一条**不说理由**的(上面九条各自说得出为什么值得
+    花一个 14 秒单体控)。⭐ **而它自己就带着一个人数判据 `#allyList >= 2`** —— 那一项坐在
+    `bot:GetActiveMode() ~= BOT_MODE_RETREAT or ...` 的**右边**,除撤退外每个 mode 都让左边为真
+    ⇒ **这条支路只有在撤退时才会看双方人数**。与 `cmqpoke`(GH #698)同族不同形:
+    那条的合格判据是**另一条支路**被抢先,这条的合格判据**就在本支路里**、结构性不可达。
+  - **域(全语料两目录)**:129 文件 → **44 活体 WK → 25 进函数体 → 3 满足外层合取 →
+    出货下单 3(含一次团战支路)→ armed 2 → 移动恰好 1 帧,`added = 0`**。
+    钉帧 `f_260909_215040_wk_blast_lion_480`(9 级、63% 血、**1 队友 vs 3 个满血敌人**、
+    近 3 秒没挨打;出货把控丢给**满血的 Lion**,armed 拒掉且 ConsiderW 不接手)。
+    豁免帧 `..._sb_1052`(**5 点血**、0 队友、刚挨打)armed **保留**——自保半边整条不归赔率管。
+  - **⭐ 顺手买到、但属于另一个候选的读数**:`test_wk_q_aim_preflight.lua` 的 tripwire 只扫
+    `tests/fixtures/`,而 `tests/frames/` 里**两帧**已经推翻它的全称命题。
+    ⭐⭐ **可达 ≠ 可分辨**:唯一过 7 级门的那帧里最近的恰好就是血最少的 ⇒ `wkqaim` 一个目标不改。
+    `hero-1` 的归档扫描仍是买它的唯一路子(球在**批测台**)。
+  - **⚠️ trunk 本来就红三处**(worktree 到干净 HEAD 复现,同一成因 = 上一轮 12 个暂存帧
+    把 WK 语料 38→44):`test_wk_q_castrange_meter_domain`(GH #705)、`test_wk_q_lane_reach`、
+    `test_focus_decision_reachability`。**后两个还没有 issue。**
+  - **验证**:`luacheck bots game --formatter plain` **EXIT=0 / 0 警告**;新测试
+    `test_wk_q_catchall_odds.lua` **17 例 0 失败**;`activemode_call_site_census` 2/2(重取后)、
+    `wk_q_aim_preflight` 11/11、`gate_claim_consistency` 16/16、`level_gate_census` 15/15、
+    `smoke_load` 3/3、`focus_cast_instant_frames` 7/7。全套(~100 分钟,GH #124)未在本进程内跑完。
+  - **自检**:`> /tmp/sc.log 2>&1` 不接管道;python 那一腿 **UNCERTIFIABLE(9 项没跑成,不是通过)**;
+    Lua 那一腿打的 `RED` **是本轮自己的增量**(GH #704:它读工作树)。
 - 2026-09-10T07:55Z(报告 `iterations/reports/hero/20260910T075559Z.md`;**backlog:`-139` 做完、
   新开 `-140`**;`bots/`、`game/` **零改动**,无新 gate id,无 arm,无 promote)
   **`hero-54`(优先级 1,帧供给)执行完毕 —— 本轮没有再按铁律 9 升级它,而是自己把它做了。**

@@ -169,12 +169,23 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- driven by any archive frame.  Same shape, third file.
     -- ⛔ RE-TAKEN, NOT RAISED: `get_active_mode` is still 253 (asserted green in
     -- the test above), so nothing executable moved.
-    assert(c.commented_out == 5,
-        'GetActiveMode() mentions inside comments moved from 5 to ' .. c.commented_out ..
+    -- RE-TAKEN 5 -> 6 (raw total 258 -> 259) on 2026-09-10 by hero, IN THE SAME
+    -- COMMIT that caused it.  The sixth prose mention is
+    -- bots/BotLib/hero_skeleton_king.lua, the doc block of the 'wkqodds' landing
+    -- -- and it is a DIFFERENT sentence from the four before it.  Those four all
+    -- say "GetActiveMode is bot-VM state and is in no .dem".  This one quotes the
+    -- shipped disjunct `bot:GetActiveMode() ~= BOT_MODE_RETREAT` in order to say
+    -- what that disjunct does to the term sitting to its RIGHT (`#allyList >= 2`
+    -- is consulted only while retreating).  Worth writing down because the
+    -- census cannot tell the two apart and a future reader counting "notes about
+    -- the 13th world assertion" off this number would over-count by one.
+    -- ⛔ RE-TAKEN, NOT RAISED: `get_active_mode` is still 253.
+    assert(c.commented_out == 6,
+        'GetActiveMode() mentions inside comments moved from 6 to ' .. c.commented_out ..
         ' -- that is a prose change, NOT a call-site change; re-take THIS number, ' ..
         'never fold it into get_active_mode')
-    assert(c.get_active_mode + c.commented_out == 258,
-        'executable + commented must equal the raw pattern count (258); if it does ' ..
+    assert(c.get_active_mode + c.commented_out == 259,
+        'executable + commented must equal the raw pattern count (259); if it does ' ..
         'not, strip_line_comment cut somewhere it should not have')
 
     -- Direct unit checks on the cut, including the one the naive `find("--")`
