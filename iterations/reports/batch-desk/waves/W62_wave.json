@@ -45,7 +45,19 @@
         "skeleton_king",
         "spirit_breaker",
         "zuus"
-      ]
+      ],
+      "ab": 42,
+      "ba": 16,
+      "arm_depth": 23.17,
+      "scored": true,
+      "_backfill_source": "W62_verdict.json:per_seed[] -- the 00:14Z harvest round scored 4/4 but never wrote these back into machines[]; backfilled 2026-09-10T06:2xZ",
+      "status_code": null,
+      "status_code_unrecoverable": {
+        "why": "on-demand row needs EC2 StateReason.Code; both primary sources were read this round and neither still holds it",
+        "describe_instances": "returned [] at 2026-09-10T06:2xZ (~8h after terminate; instances age out in ~1h, GH #375)",
+        "cloudtrail_lookup_events": "AccessDeniedException -- dota2bot-agent has no cloudtrail:LookupEvents",
+        "do_not_fill": "this is UNRECOVERABLE, not UNDONE.  Do not guess a code to make gate (iv) pass: reclaim_blind.py refuses invented strings by design (GH #661)"
+      }
     },
     {
       "seed": 10607,
@@ -64,7 +76,19 @@
         "obsidian_destroyer",
         "pudge",
         "spirit_breaker"
-      ]
+      ],
+      "ab": 31,
+      "ba": 14,
+      "arm_depth": 19.29,
+      "scored": true,
+      "_backfill_source": "W62_verdict.json:per_seed[] -- the 00:14Z harvest round scored 4/4 but never wrote these back into machines[]; backfilled 2026-09-10T06:2xZ",
+      "status_code": null,
+      "status_code_unrecoverable": {
+        "why": "on-demand row needs EC2 StateReason.Code; both primary sources were read this round and neither still holds it",
+        "describe_instances": "returned [] at 2026-09-10T06:2xZ (~8h after terminate; instances age out in ~1h, GH #375)",
+        "cloudtrail_lookup_events": "AccessDeniedException -- dota2bot-agent has no cloudtrail:LookupEvents",
+        "do_not_fill": "this is UNRECOVERABLE, not UNDONE.  Do not guess a code to make gate (iv) pass: reclaim_blind.py refuses invented strings by design (GH #661)"
+      }
     },
     {
       "seed": 10803,
@@ -83,7 +107,19 @@
         "obsidian_destroyer",
         "spirit_breaker",
         "zuus"
-      ]
+      ],
+      "ab": 34,
+      "ba": 24,
+      "arm_depth": 28.14,
+      "scored": true,
+      "_backfill_source": "W62_verdict.json:per_seed[] -- the 00:14Z harvest round scored 4/4 but never wrote these back into machines[]; backfilled 2026-09-10T06:2xZ",
+      "status_code": null,
+      "status_code_unrecoverable": {
+        "why": "on-demand row needs EC2 StateReason.Code; both primary sources were read this round and neither still holds it",
+        "describe_instances": "returned [] at 2026-09-10T06:2xZ (~8h after terminate; instances age out in ~1h, GH #375)",
+        "cloudtrail_lookup_events": "AccessDeniedException -- dota2bot-agent has no cloudtrail:LookupEvents",
+        "do_not_fill": "this is UNRECOVERABLE, not UNDONE.  Do not guess a code to make gate (iv) pass: reclaim_blind.py refuses invented strings by design (GH #661)"
+      }
     },
     {
       "seed": 10813,
@@ -100,7 +136,19 @@
         "obsidian_destroyer",
         "pudge",
         "skeleton_king"
-      ]
+      ],
+      "ab": 30,
+      "ba": 12,
+      "arm_depth": 17.14,
+      "scored": true,
+      "_backfill_source": "W62_verdict.json:per_seed[] -- the 00:14Z harvest round scored 4/4 but never wrote these back into machines[]; backfilled 2026-09-10T06:2xZ",
+      "status_code": null,
+      "status_code_unrecoverable": {
+        "why": "on-demand row needs EC2 StateReason.Code; both primary sources were read this round and neither still holds it",
+        "describe_instances": "returned [] at 2026-09-10T06:2xZ (~8h after terminate; instances age out in ~1h, GH #375)",
+        "cloudtrail_lookup_events": "AccessDeniedException -- dota2bot-agent has no cloudtrail:LookupEvents",
+        "do_not_fill": "this is UNRECOVERABLE, not UNDONE.  Do not guess a code to make gate (iv) pass: reclaim_blind.py refuses invented strings by design (GH #661)"
+      }
     }
   ],
   "harvest_notes": [
