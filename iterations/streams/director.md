@@ -599,7 +599,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **对照它续的那根多待八轮,差别只有「判据写成逐字串」**;新开 `wave_fence_ruling6_first_live_read`,
   判据钉在 **`wave accrual :`**(RULING 6 之前**不存在**的前缀,抄不出来就等于没跑)。
   ⭐ **投递(2.5)**:`wave_fence.py` 自己 / `W62_wave.json:director[1]`(GH #677 就是从这里被读到并遵守的)/
-  `batch-desk.md` 闸 (iii) 正文 / `test_set.md §GJ` / `DECISIONS_NEEDED` 第 15 条增量 / GH #683 追评。
+  `batch-desk.md` 闸 (iii) 正文 / `test_set.md §GJ` / `DECISIONS_NEEDED` 第 15 条增量 /
+  GH **#683** 追评(`#issuecomment-5611289578`)并**关闭**(completed)。
+  ⭐ **顺序(GH #290)照做**:`git push origin HEAD:main` **`5306edc1..d0f9f15f`**
+  (先被拒一次,`pull --rebase` 后成功)**排在**发表与关闭之前;发表前 `claim_precheck.sh`
+  打 **`clean` / `OK to publish` / `PRECHECK_EXIT=0`**,同一次输出带 **`local commits not on origin/main: 0`**;
+  两次 push 的钩子门均 `py gate: 89 ran, 0 findings, 0 uncertifiable`,**无 `RULE6_BYPASS`**。
+  **铁律 11 未触发,MCP 全程可用。**
   ⚠️ **纪律 3 第三十五发,守卫连续第九轮自拒**:第一条命令又是 `… | tail -60`;
   **章程第 0 步写的就是 `rc.sh`,我没照做** ⇒ **第四次记同一句:它是习惯不是门。**
   改重定向重跑真码 **`EXIT=3`**(`legs run 11`;`FINDINGS` = `cadence queue-rulings owed-executions a-evidence-owed`,
