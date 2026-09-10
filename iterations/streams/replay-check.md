@@ -14642,3 +14642,24 @@
     (2) `campfarm` 触发级逐帧 —— ⚠️ **§二的路过形状同样适用于它的营地 episode,先配驻留谓词再读数**;
     (3) `a_evidence_*` 还剩 **8 条 UNOWED**,至少再取 1 条;(4) 盯本轮两单 + GH #700。
   - 完整报告:`iterations/reports/replay-check/20260910T185224Z.md`
+  - **铁律 6**:`GATE_EXIT=0`(0 warnings,**未用 `RULE6_BYPASS`**)/ `py gate: 95 ran, 0 findings, 0 uncertifiable` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.` ⚠️ **末行照工具要求原样抄:
+    那是范围判定,不是通过。** 动态半(GH #124)**未跑,不声称**。
+  - **自检**:⭐ **本轮单独跑**(交棒单第 (4) 条升级为硬规则后第一次执行;开工那次与四路宽扫抢核,主动终止)。
+    `SELFCHECK_EXIT=3`、`legs run 11`、`UNCERTIFIABLE: none`、**`worst exit: 3`**,
+    `FINDINGS: cadence queue-rulings owed-executions a-evidence-owed trunk-red(python) trunk-red(lua)`。
+    ⛔ **GH #680 形状再复现**:harness 写 `[exited with code 0]`,命令自己写 **3** ⇒ **采信 3**。
+    ✅ **`a-evidence-owed` 腿自己确认了本轮交付**:`FINDING: 8 armed id(s)`(开工 9)——**9→8 是工具打的,不是自述**。
+  - ⭐⭐ **trunk 红 5 条全部不是本轮的,而这一次归因是证到的**:上一轮把同类红记成「并发假红」,
+    依据的 A/B **是空的**(`lua5.1 tests/test_X.lua` 只定义 `tests` 表就退出,**一条断言都不执行**)。
+    本轮按更正过的量具:`git status --porcelain` **0 行**、`HEAD = origin/main = a8b4b654`、
+    `lua5.1 tests/run_tests.lua test_wk_q_castrange_meter_domain` → **`RUNNER_EXIT=1, 4 failures`**
+    ⇒ **没有东西可 stash 而红在 runner 下复现 ⇒ main 是红的**,不是工作树、不是并发。
+    五条:`test_bots_walk_farm_only.py`(新 `tests/test_lion_q_field_engagement.lua` 的 `io.popen` 白名单没跟上)/
+    `test_wk_q_castrange_meter_domain.lua`(**38 → 51**;今晨 GH #705 记的是 38→44,**同一天内又长了**)/
+    `test_focus_mana_cost_consumer_census.lua`(axe 语料 26→27、对照带 173→176)/
+    `test_lion_ult_reserve_domain.lua` / `test_stayfield2_marginal_domain.lua`。
+    **五条同族**(GH #650/#718)。⛔ **不开第六张单子** —— #718 的立案句正是「issue 流已碎成六张各盖 1–3 条的单子」;
+    改为**追评 #718**,交一份干净树、已知 commit 上的五条完整读数,并点名
+    `test_wk_q_castrange_meter_domain.lua:509` **至今仍替 GH #390 扛着那一帧**(#705 今晨已提,未动)。
+  - token:`TOKENS total_in=12,772,116 out=66,931 turns=85`
