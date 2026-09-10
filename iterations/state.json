@@ -7639,5 +7639,20 @@
     "cost_registered_not_argued": "⚠️ **`ow_clear_flip_nearer_hero` 161 / 166**:翻面按构造就是把「远离敌方英雄」反过来,所以几乎每次翻面都会更靠近某个敌人。**登记,不辩解。** 使它仍然值得做的不是这个数字变小,而是那些帧上的替代方案:不翻面 = 走完 `nStep` 仍吃兵仇恨(位置付了、什么都没买到);拒绝撤步 = 在它自己的域上删掉这条分支(姊妹变异台 M8 与本台 M9 的禁止方向)。**这是本轮唯一反对本改动的数字,由 M8 钉住。**",
     "limits": "(i) **只有已经在 `nAggroR` 球内的兵有票**:落点**走进去**的、原本在球外的兵仍然没有票(那需要 `nAggroR + nStep` 的更宽名单,是另一个杠杆,本轮**没做**);(ii) 频率未买到(见 loader_honesty);(iii) 不声称落点可达(没有地形)。",
     "trunk_red_fixed": "附带:修好一条**自 2026-09-10T01:51Z(commit `51e99b35`,本组自己那一轮)起红在 trunk 上**的门。`tests/test_detector_source_constants.py` §3 用字面串 `(>800 ancient-distance depth)` 当**注释剥离的诱饵**(该文件自述:第一版把诱饵放在真实注释上是**空洞**的,删掉 `_strip_comments` 什么都不会红,所以特意留了这个真实诱饵)。那一轮的措辞整理把右括号挪走了 ⇒ 诱饵消失、测试红。已恢复并就地写下「这对括号是承重的」。同族地,`tests/test_owhs_side_ruler.lua` §2「体内不许有 soak id」那一行现在**先剥注释再匹配**——它断言的是**代码**,而本轮的注释必须提到 `IsSoakCandidate('l5trees')` 才能解释为什么**不**加 id。"
+  },
+  "cmqpoke_20260910": {
+    "owner": "hero",
+    "date": "2026-09-10T05:03Z",
+    "armed": false,
+    "backlog_item": "hero -139(P4.4 (i):工作单元主体是一个 bots/ 行为改动)。选件先跑仪器(-138 的规矩):`queue_reading_census.py` exit 0,候选表给 hero-1 / hero-2 / hero-10;按 -138 的指示**读了 hero-1 / hero-2 的原文**,结论见报告 §1(hero-1 的 result 是裁定不是待花读数,仪器的 LIMITS 第一条现场;hero-2 的球在批测台的归档扫描)。⇒ 回落到焦点英雄自查,选 Crystal Maiden 是因为 GH #658 量到全语料只有 4 个出货技能决策,而 CM 的那**唯一一个**此前只记了「哪个技能」没记「哪条支路」。",
+    "headline": "⭐ **X.ConsiderQImpl 的 `--非撤退的逻辑` 块里,相邻两条支路要的是同一个施法、同一个 subject(`nWeakestEnemyHeroInBonus`)、同一个 J.GetCastLocation,只差一项:上面那条问「我有多少蓝」(`nMP > 0.8 or bot:GetMana() > nKeepMana * 2`),下面那条问「这一发买到什么」(目标血量 < 0.4)。上面那条是下面那条把质量测试换成钱包测试,而且它坐在上面,所以永远先赢。** 外层唯一的 mode 项是**否定式**的(`~= BOT_MODE_RETREAT`,除撤退外每个 mode 都真),所以这就是上面那些具体支路不开火时兜底开火的那条路。⭐⭐ 与 `cmrcrowd`(GH #649)同族但不同形:那条是不合格析取项在同一个 `if` 里**短路**掉合格的那项;这条根本没有可短路的东西 —— 它是**更早的一条独立支路**,合格那条永远轮不到。",
+    "gate": "X.cm_ShouldSpendSurplusNova(hTarget, bShippedSurplus) -- 出货析取式**留在调用点**逐字不动(理由见函数头:tests/_cm_t10_payoff_sweep.lua 按源码文本解析本文件的蓝量闸,把表达式搬进 helper 会**静默**从那份普查的模型里删掉一个闸 —— 首跑就抓到,8 → 7)。armed 追加的判据是**下面那条姊妹支路自己的 0.4**,不是新阈值。",
+    "direction": "严格收窄,且是**代码属性**不是数据属性:出货析取式先算,为假直接原样返回 false ⇒ armed 只能把出货的 TRUE 翻成 FALSE,**永远加不出一发施法**。退化读保护:`GetMaxHealth()` 读不到(非数/<=0)时回落到出货答案 —— 反方向的静默回归(`zusboltcap` / GH #175 那一族)是这里唯一不可接受的失效方向。",
+    "domain": "⭐ **非空,而这在本仓很少见。** 全语料(tests/fixtures/ + tests/frames/,两个目录都扫,GH #236/#281)驱动 CM 当 subject:**53 个活体瞬间 → 28 个冰霜新星可施放 → 18 个满足出货钱包测试 → 出货下单 1 次 → armed 下单 0 次**,唯一那次移动的就是 GH #658 表里 CM 的那一行 `tests/fixtures/f_260820_182906_lion_drain_survived.lua`。⭐ **18 个里按哪一项拍板:绝对项单独拍板 6 个,比例项 `nMP > 0.8` 单独拍板 0 个** ⇒ 在这份语料上真正在跑的规则就是「蓝 > 440」,比例项一次都没自己说了算。(算术不是读数:两项在 550 池处交叉,1100 池上有效储备降到 40%,2200 池上 20%。)",
+    "pin_frame": "tests/fixtures/f_260820_182906_lion_drain_survived.lua -- CM 11 级,543/831 蓝(**65%,所以拍板的是那个平的 440 不是 0.8**),1200 内 1 个队友,三个敌人在 625.2u / 749.5u / 885.1u,血量 0.62 / 0.94 / 0.97,桌上没有人头。出货把冰霜新星丢给 0.62 血的 Lion;armed 拒掉,下面的支路也拒,X.SkillsComplement 一发不下。",
+    "limits": "(1) `tests/mock/replay_fixture.lua` **按构造拒绝英雄 AoE 搜索**(对每个调用方答 `{count = 0}`),而本支路正上方两条多杀支路读的就是 `nCanHurtHeroLocationAoE` ⇒ 本语料说不出真实对局里它们会不会先把这一帧拿走,§5 的漏斗因此是「钱包支路是这发新星的理由」的**上界不是率**;(2) `bot:GetActiveMode()` 离线答 0,这正是那条否定式 mode 项在离线为真的原因;(3) 不主张「CM 不该消耗」—— 冰霜新星 CD 11/10/9/8s,Turbo 里拒掉一发回得快,拒的理由是它是她唯一的 AoE 减速、而蓝是 Frostbite 后手的约束。总账要一波来结。",
+    "tests": "tests/test_cm_nova_surplus_poke.lua(6 节),tools/agent/mutstand_cmqpoke.sh(12 发,首跑 10/12 → 补 §1 turbo 断言与 §6 退化读单测后 12/12)",
+    "issue": "[hero] 见本轮报告 iterations/reports/hero/20260910T050325Z.md",
+    "admission": "P4.2 入集冻结期,**不请求入集**(唯一合法裁定是 FROZEN-HOLD)。登记在案,等冻结解除后再提。"
   }
 }

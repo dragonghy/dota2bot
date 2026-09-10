@@ -591,6 +591,90 @@ function X.cm_GetCreepAoESearchRange( nCastRange, nRadius )
 	return nCastRange + nRadius
 end
 
+
+--- Soak candidate `cmqpoke` (turbo-only, INERT until armed) -- the release test
+--- X.ConsiderQImpl's catch-all Crystal Nova path never had.  Written 2026-09-10
+--- under OWNER_PRIORITIES P4.4 (i).
+---
+--- THE DEFECT, and it is a RELEASE-CONDITION one, not a reach one.  The
+--- `--非撤退的逻辑` block is the function's LAST hero path and its widest: its
+--- only mode term is a NEGATED one (`~= BOT_MODE_RETREAT`, true in every mode
+--- but one), so it is what fires whenever the specific paths above it do not.
+--- Inside it, two neighbouring branches ask for the same cast on the same
+--- subject -- `nWeakestEnemyHeroInBonus`, resolved through the same
+--- J.GetCastLocation -- and differ in ONE term:
+---
+---     :80x   nMP > 0.8 or bot:GetMana() > nKeepMana * 2        <- what she HAS
+---     :81x   nWeakestEnemyHeroInBonus health ratio < 0.4       <- what it BUYS
+---
+--- So the upper branch is the lower one with its quality test replaced by a
+--- WALLET test.  It is the same shape as `cmrcrowd` (GH #649) one function down
+--- -- the one release path in the file that never asks what the cast is for --
+--- except that here the unqualified path does not merely short-circuit the
+--- qualified one, it sits six lines ABOVE it and therefore always wins.
+---
+--- AND THE WALLET TEST LOOSENS AS THE GAME RUNS.  `nKeepMana` is 220, so the
+--- absolute disjunct is a flat 440 while the pool is not.  Arithmetic, not a
+--- reading: the two terms cross at a 550 pool, and past it the effective
+--- reserve falls to 40% of the bar at a 1100 pool and 20% at 2200.  The reading
+--- that goes with it, over the 28 corpus instants where Nova is fully castable
+--- (tests/test_cm_nova_surplus_poke.lua section 5): 18 satisfy the shipped
+--- disjunction, 6 on the absolute term ALONE, and ZERO on the ratio term alone.
+--- On this corpus `nMP > 0.8` never once decides the question by itself; the
+--- rule that actually runs is "mana > 440", i.e. two Novas' worth.
+---
+--- WHY IT IS A GATE, and the direction is a property of the CODE, not of the
+--- data.  The shipped disjunction is evaluated FIRST and a false answer is
+--- returned unchanged, so the armed leg can only ever turn a shipped TRUE into
+--- FALSE -- it deletes casts and can never add one.  Gate off, this helper IS
+--- the shipped expression, byte for byte.
+---
+--- WHAT IT COSTS, stated so it can be argued with.  Crystal Nova's cooldown is
+--- 11/10/9/8s and in Turbo a wasted one comes back quickly, so the loss per
+--- declined poke is small; the case for declining is that the cast is her only
+--- AoE slow and her mana is the binding constraint on the Frostbite follow-up.
+--- The armed test is not a new idea -- it is the sibling branch's own 0.4, so
+--- armed this path collapses onto the qualified one instead of inventing a
+--- threshold this file does not already use.
+---
+--- ⭐ THE DOMAIN IS NOT EMPTY, AND THAT IS RARE HERE.  GH #658 measured that the
+--- whole fixture corpus drives exactly FOUR shipped skill decisions across the
+--- five focus heroes, and Crystal Maiden's single one is THIS branch:
+--- tests/fixtures/f_260820_182906_lion_drain_survived.lua -- CM level 11,
+--- 543/831 mana (65%, so it is the 440 disjunct that fires, not the 0.8 one),
+--- one ally inside 1200, three enemies at 625.2u / 749.5u / 885.1u at 0.62 /
+--- 0.94 / 0.97 health, no kill on the table.  Armed, that cast is declined.
+--- It is the first Crystal Maiden lever in this repo whose armed leg changes a
+--- decision the corpus actually reaches; see tests/test_cm_nova_surplus_poke.lua.
+---
+--- ⛔ THIS HELPER NAMES EXACTLY ONE ID.  Never conjoin it with `cmqreach` or
+--- `cmrcrowd`: a gate naming a sibling freezes FALSE the day the sibling is
+--- promoted (the `pullcad` trap) and check_armed_wiring.py still calls it WIRED.
+--- ⛔ THE SHIPPED DISJUNCTION STAYS AT THE CALL SITE, passed in as
+--- `bShippedSurplus` rather than rebuilt here from (pct, mana, keep).  It has to:
+--- tests/_cm_t10_payoff_sweep.lua reads this file's mana gates out of the SOURCE
+--- TEXT (`nMP <op> <n>` / `GetMana() <op> nKeepMana * <n>`), so moving the
+--- expression behind renamed parameters deletes a gate from that sweep's model
+--- while every assertion about THIS lever stays green -- the census reads 7
+--- where it read 8 and nothing says which one left.  Caught on the first run of
+--- tests/test_cm_t10_payoff.lua; same family as GH #650 (a census whose subject
+--- moved out from under it).
+function X.cm_ShouldSpendSurplusNova( hTarget, bShippedSurplus )
+
+	if not bShippedSurplus then return false end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'cmqpoke' ) ) then return true end
+
+	if not J.IsValid( hTarget ) then return false end
+
+	local nMaxHealth = hTarget:GetMaxHealth()
+	if type( nMaxHealth ) ~= 'number' or nMaxHealth <= 0 then return true end
+
+	return hTarget:GetHealth() / nMaxHealth < 0.4
+
+end
+
+
 function X.ConsiderQ()
 	-- [lanefix] Conserve mana in lane when no kill is on the table.
 	if J.ShouldConserveManaInLane( bot ) then return BOT_ACTION_DESIRE_NONE, 0 end
@@ -801,8 +885,13 @@ function X.ConsiderQImpl()
 
 			if J.IsValid( nWeakestEnemyHeroInBonus )
 			then
-				if nMP > 0.8
-					or bot:GetMana() > nKeepMana * 2
+				-- [cmqpoke] was `nMP > 0.8 or bot:GetMana() > nKeepMana * 2`.
+				-- Gate off the helper IS that expression.  See
+				-- X.cm_ShouldSpendSurplusNova for the fact (this is the sibling
+				-- branch six lines below with its quality test swapped for a
+				-- wallet test), the direction guarantee, and the real frame.
+				if X.cm_ShouldSpendSurplusNova( nWeakestEnemyHeroInBonus,
+						nMP > 0.8 or bot:GetMana() > nKeepMana * 2 )
 				then
 					local nTargetLocation = J.GetCastLocation( bot, nWeakestEnemyHeroInBonus, nCastRange, nRadius )
 					if nTargetLocation ~= nil
