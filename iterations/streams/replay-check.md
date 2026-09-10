@@ -14361,3 +14361,73 @@
     (4) **连续第三轮未取 `a_evidence_*` 队列,下一轮优先回到该队列**。
   - token:`TOKENS total_in=10,144,620 out=41,970 turns=83`。
   - 完整报告:`iterations/reports/replay-check/20260910T065600Z.md`
+- **2026-09-10T09:3x–09:5xZ(本轮)**:章程交棒第 (2) 条点名的 fixture 做完并落地,
+  `ownhalf` 从 `INDETERMINATE` 一步走到 **`WORKING`** —— 在真帧上跑真的
+  `J.ShouldPunishDive`,**armed 返回具体目标、un-armed 逐位 `nil`**,
+  那条**聚合永远买不到的 `SafeToCommitFight`** 第一次被求值。
+  ```
+  VERIFY id=ownhalf verdict=WORKING episodes=7
+  ```
+  ⚠️ `episodes=7` 是**逐帧跑过真函数的帧数**,不是域内 episode 数(那个数在这一局是 38)。
+  - **承重帧**:`…7eb1ba/20260909_212625_slot7` `t=235.0` lion(team 2 = **armed 腿**,
+    `script_version …:s10607:radiant`)。两个敌人距我方最近存活建筑 **1469.4u / 2054.7u**
+    ⇒ **shipped 门结构性关闭**;depth **2885.7 / 3235.7**。
+    **全部读数由 fixture 自己断言,没有一个是声明的** —— 既有
+    `test_replay_ownhalf_standoff.lua` 硬编码两个泉水又合成一座塔,本帧的
+    **38 座建筑 + 两个泉水坐标全部来自 `.dem`**。
+    **地面真相**:`t=247.1` lion 杀 pudge、`t=248.2` lina 杀 drow ⇒ **13 秒 2 杀 0 死**。
+    ⛔ **归因上界**:lion 在 `t=232.2`(本帧前 2.8 秒)就已在对 drow 施法 ⇒
+    本帧证明门**维持**了一场已开始的交战,**不证明它发起**。
+  - ⭐ **第二产出,比第一个更该被下游读到:`ohnum` 会删掉这次 punish。**
+    同帧同世界,只多 arm 一个 id ⇒ `ShouldPunishDive` 由 `drow_ranger` 变 `nil`。
+    **7 帧样本:ownhalf 开火 4 次,`ohnum` 删掉 3 次**,含 2 杀 0 死那一次。
+    机制:`ohnum` 与 `SafeToCommitFight` 都只数**目标 1200 圈内**的人 ——
+    lina 距 lion 649u、距 drow ~1300u ⇒ **真实 2v1 被读成 1v1 平局**。
+    ⚠️ 这是**反事实**(`ohnum` 本波未 armed),价值在**发波花钱之前给它定价**。
+  - ⭐ **本组第一版测试自己写错了,已改**:断言写成「两个离线不可求值的 clause 都通过」,
+    而 `ShouldRefuseUnsupportedPunish` 在 `jmz_func.lua:9134` 因 `ohnum` 未 armed
+    **返回单位元 `false`** ⇒ **结构性 inert,不是对 drow 的裁定**。
+    **对的答案配错的理由**,与 W45 `zusult`、GH #491 同族。**inert 必须被断言成 inert。**
+  - **域内转化率第一次有了量**:`ownhalf/armed` 38 个 episode 抽 7 帧,
+    **4/7 真的转成开火**,3 帧全被 `SafeToCommitFight` 的 numbers 分支拒掉;
+    **OFF 恒为 `nil`,7/7**(shipped 路径一帧未动)。⚠️ 便利抽样,不是总体估计。
+  - **更正本组自己上一轮的记法**:承重帧记作「lion vs pudge」是**检测器 episode 的 pair**,
+    而**真函数返回的是 `drow_ranger`**,pudge 恰好是被拒的那个。
+    ⇒ **「episode 的 enemy」≠「门返回的 enemy」**。
+  - **变异台**:新增 `tools/agent/mutstand_ownhalf_frame.sh`(判别子 `ls | grep -i ownhalf`
+    零命中,`git status` 打 `A`;W58 学费已付)。M1 域永不准入 **KILLED**、
+    M2 删 `SafeToCommitFight` 合取项 **KILLED**、**M3 margin 退回旧 800 SURVIVED(预期)**
+    —— 本帧两个入侵者同时越过 800 与 1600,**物理上分不开两个 margin**,
+    **本文件不许被引用成守住了那个常数**(守它的是 `test_ownhalf_margin.lua`);
+    这句**已写进测试文件头**,不靠记忆传(GH #695 的形状)。`STAND EXIT 0`,自恢复已验。
+  - **铁律 6**:`bots`/`game` **一行未改**;`GATE_EXIT=0`(0 warnings,**未用 `RULE6_BYPASS`**),
+    `PYGATE_EXIT=0`(`92 ran, 0 findings`,逐字限定 `84 fast python ratchets`)。
+    动态半(GH #124)**未跑,不声称**。
+    ⚠️ **py gate 当场逮到本轮自己的新脚本**(`leaves a restoring EXIT trap in effect`,
+    GH #418 要求 trap 够得着本文件定义的函数,第一版是 inline `cp`)——**这道 ratchet 有效**。
+  - **自检**:第一条命令**第十二次**踩管道形状(工具第十二次自拒)。
+    ✅ 收尾前拿到完整退出码:`legs run 11`、
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions a-evidence-owed trunk-red(lua)`、
+    `UNCERTIFIABLE (exit 2): trunk-red(python)`、**`selfcheck worst exit: 3`**。
+    ⛔ **GH #680 形状再复现**:harness 写 `[exited with code 0]`,命令自己写 **3** ⇒ 采信 3。
+    ⛔ **`trunk-red(lua)` 是本轮自己弄出来的,认领**:`TRUNK RED -- 7 of 87 ... ON THE
+    WORKING TREE`,**7 个在干净树上单跑全部 `EXIT=0`**。归因**已裁决**:
+    变异台与后台自检**共用一棵树且时间重叠**(自检 09:36 起,变异 ≈09:44–09:52);
+    「自检自己会弄红一个检测器」那条**已排除**——那几条腿逐字 `did NOT run`;
+    本轮新增 fixture 也已用 **A/B**(移走/放回各跑一次,都 `EXIT=0`)排除。
+    ⭐ **可迁移**:那 7 条红的内容具体到可以直接立案(「出现了新的 gate-inside-a-gate」、
+    「树上现在有 4 个 rank-2 Finger」),**而且全是编的** —— 只读日志不复跑会去追七个不存在的因。
+  - **覆盖**:⚠️ **宽扫 0/0(W62 后无新波,批测台被闸挡住);深查 7 帧(1 局),
+    低于章程「≥6 局」下限**。不辩解:本轮把预算全押在一个 id 的 (a) 上,
+    换来一个 id 结案而非六局宽度。**下一轮若仍无新波,回到多局宽度。**
+  - **AWS**:只读 S3(1 次 `ls` + 2 次 `cp`),**零 EC2、零发波、零 CE、零支出**。
+  - **本轮的 issue**:`[strategy]` `ohnum` 定价 + `[harness]` 脏树自检产假红(号见报告文末)。
+  - **下一轮第一件事**:(1) ⭐ **`ownhalf` 的 (a) 已买到,该走判定** ——
+    把 (a) 交给总监请求一个**判定完结**(P4.2 的产出指标就是这个数);**这一棒已用 issue 交出,别掉**;
+    (2) `ohnum` 的定价先于它的波次,7 帧 fixture 可直接复跑,零 AWS;
+    (3) **回到宽度**,别连着两轮只做 1 局;
+    (4) ⚠️ **连续第四轮未取 `a_evidence_*` 队列**,自检 `FINDINGS` 里的 `a-evidence-owed`
+    点的就是本组自己的义务,**下一轮优先回该队列**;
+    (5) ⛔ **别把变异台和后台自检放在同一段时间跑**(本轮就是因此产出 7 条假红)。
+  - token:`TOKENS total_in=14,979,630 out=85,123 turns=102`。
+  - 完整报告:`iterations/reports/replay-check/20260910T095406Z.md`
