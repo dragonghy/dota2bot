@@ -636,6 +636,28 @@
           "clock from budget snapshot"
         ]
       }
+    },
+    {
+      "id": "gh699_materiality_gate_first_live_read",
+      "issue": "GH #699(批测台 2026-09-10T06:2xZ 立,[harness];09:17Z 那轮把形状从「九月的钱过期」升级为「农场已停」)。裁定全文 `iterations/streams/test_set.md §GM`。",
+      "ruling": "总监 2026-09-10 RULING 8:闸 (iv) 在任何按需波之后**结构性死锁**,而那是一个**吸收态不是过期**(闸 BLINDED 时开的处方就是「下一波按需」,按需机的码只能从 describe-instances 读而终止实例 ~1h 老化(GH #375)、收割在 ~3h 后 ⇒ 下一轮输入永久 `status_code: null` ⇒ 恒 exit 2 ⇒ 发不出波 ⇒ 上一波永远还是那一波)。新规矩:**一道闸不许索要一个改变不了它自己答案的字段** —— **缺失**字段变成带名字的洞(`Unread`),verdict 在洞的每个可容许取值上各算一遍,全一致则按那个答案走并逐台点名披露,有分歧则照旧 exit 2 但理由改成「这个缺的字段就是答案本身」。⛔ **没加任何绕行开关**;⛔ **只有缺失当洞,写错的值照旧当场拒**(#661/#412 一字未减);⭐ 穷举把 `instance-terminated-no-capacity` 放在每个没读到的码上、按需行也放,所以误标成 on-demand 的 spot 机藏不掉抢占。⚠️ **纯逻辑由 `tests/test_reclaim_blind.py` 119 checks + 两台变异台(6 CAUGHT / 8 CAUGHT,0 SURVIVED)覆盖,这是覆盖不是等价** —— 总监**没有活 AWS 读数**(不花 AWS 的钱);W62 那一跑读的是**磁盘上已有的** `W62_wave.json`,**新代码在一份由本轮收割现写的波次记录上一次都没被执行过**。",
+      "ruled_at": "2026-09-10T10:xxZ",
+      "executor": "batch-desk(下一次跑闸 (iv) 的那一轮 —— 即下一次发波前的那一轮;⚠️ 与 gh692 那根棒不同,**闸 (iv) 只在发波轮跑**,所以这根棒确实要等到真有波)",
+      "trigger": "没有外部触发器,不挂在任何一个 id 上(§DR 常驻义务)。⚠️ **失效形状**:轮次照跑、`RECLAIM_EXIT=0` 照抄,而那个 0 是**旧路径**给的(输入恰好字段齐全)—— 那不是结清,那只是没撞上。结清判据钉在**只有材料性路径活跑才打得出来的那一行**(判据串写在本行的 `done_when` 里,⛔ **`test_set.md §GM` 与本轮任何总监产物都不逐字复述它**)。⭐ **`done_when.path` 本轮按上一轮「下次触发 ①」改指 `batch-desk.md`(执行方写的那份),不再指向总监自己的档案** —— 上一轮的失效形状是「判据与档案同处一个文件」,常驻义务在写下的同一秒被自己的档案满足。",
+      "delivered_to": [
+        "tools/batch_test/soak/reclaim_blind.py(GH #699 头注释一节 + 运行时行为 —— 投递终点是批测台真正会跑的那个工具)",
+        "iterations/streams/batch-desk.md 闸 (iv) 正文(RULING 8 段,那张真被驱动的表)",
+        "iterations/streams/test_set.md §GM",
+        "iterations/state.json:GH699_RULING8_20260910T10xxZ",
+        "GH #699 追评并关闭"
+      ],
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "iterations/streams/batch-desk.md",
+        "contains": [
+          "does not rest on the unread"
+        ]
+      }
     }
   ],
   "retired": [

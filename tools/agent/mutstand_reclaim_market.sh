@@ -68,9 +68,19 @@ PAIRS = {
            '                "%s: market says on-demand but status_code %r is SIR "',
            "        if False:\n            raise Undecidable(\n"
            '                "%s: market says on-demand but status_code %r is SIR "'),
-    # P3: an on-demand row may say nothing about how its machine ended.  The
-    #     record stops being complete and nothing says so.
-    "P3": ("        if code is None:\n            raise Undecidable(", "        if False:\n            raise Undecidable("),
+    # P3: RE-AIMED 2026-09-10 (GH #699).  It used to delete the refusal for an
+    #     on-demand row with no code, back when that refusal was unconditional.
+    #     That refusal is now conditional on materiality, so the old mutant's
+    #     target string is gone -- and the stand ABORTED rather than score it,
+    #     which is the discipline working.  The danger it was aimed at survives
+    #     in a sharper form: not "the hole is tolerated" but "the hole is
+    #     silently FILLED with the benign reading".  That is the exact failure
+    #     direction GH #661 closed, re-entering through the new door, and it is
+    #     invisible on the exit code of any wave whose yield is healthy.
+    "P3": ("            return Unread(\n"
+           '                "%s: market is on-demand and status_code is missing',
+           "            return EC2_USER_SHUTDOWN or Unread(\n"
+           '                "%s: market is on-demand and status_code is missing'),
     # P4: the GH #412 diagnosis is removed -- back to `unknown SIR status_code`,
     #     the sentence that pointed two rounds of reports at the market when the
     #     cause was our own harvest write.

@@ -379,10 +379,50 @@ def main():
         dict(m(2, 5.4, GONE, 0, 0), market="ondemand")]})[0] == 2,
           "23h3 ... including when the row is otherwise perfectly readable as spot, "
           "which is the case where a dropped vocabulary check goes silent")
+    # 23i: an on-demand row with no status_code at all.  Until GH #699 this was
+    # exit 2 unconditionally, from inside the parse loop, before a clause ran --
+    # and that is what closed the farm (see test 26).  It is now decided by
+    # whether the hole can reach the verdict.  Here it cannot: the machine lived
+    # 50 min, which is PAST the flip under every reading of the missing code, so
+    # it is not an early reclaim either way.  The refusal is not gone; it moved
+    # to the rows where the hole is load bearing, which 23i2/23i3 are.
+    code, ilines = rb.evaluate({"wave": "x", "machines": [
+        {"seed": 1, "market": "on-demand", "survival_min": 50.0, "ab": 20, "ba": 10}]})
+    itext = "\n".join(ilines)
+    check(code == 0,
+          "23i an on-demand row with no status_code, past the flip -> the hole cannot "
+          "reach the verdict, so it is answered (GH #699), not refused")
+    check("unread" in itext and "status_code is missing" in itext,
+          "23i1 ... with the hole disclosed by name, never silently filled in")
+    # The load-bearing direction: same missing field, on a row where it IS the
+    # answer.  Unpaired and sub-flip, so `code == RECLAIMED` gives BLINDED and
+    # a self-terminate gives not-blinded.  A fix that simply stopped refusing
+    # missing codes would answer 0 here and hide a reclaimed wave.
+    code, i2 = rb.evaluate({"wave": "x", "machines": [
+        {"seed": 1, "market": "on-demand", "survival_min": 5.4, "ab": 20, "ba": 0}]})
+    check(code == 2,
+          "23i2 ... but the SAME missing field on a sub-flip unpaired row is exit 2: "
+          "there the two readings fall on opposite sides of the verdict")
+    check("CHANGES the verdict" in "\n".join(i2),
+          "23i3 ... and it says the field changes the answer, which is the true reason "
+          "(the old sentence blamed mere absence and so refused both rows alike)")
+    # The dangerous direction named in the file's own `market` section: a SPOT
+    # machine mislabelled `on-demand`, whose reclaim would walk out of the
+    # attribution clause.  With the code present the contradiction check catches
+    # it; with the code ABSENT there is nothing to contradict, so the only thing
+    # standing between this row and a hidden BLINDED is that the exploration
+    # scores RECLAIMED on on-demand rows too.
+    check(rb.RECLAIMED in rb._CODE_EXTENSIONS,
+          "23i4 the adversarial reading is in the extension set at all")
+    # 23i5: the same unread row, now beside TWO paired machines.  `low_yield` is
+    # `paired_n <= 1`, so it takes two -- one paired machine is still a low-yield
+    # wave and the hole is still load bearing there (which is why 23i2 refuses).
     check(rb.evaluate({"wave": "x", "machines": [
-        {"seed": 1, "market": "on-demand", "survival_min": 50.0, "ab": 20, "ba": 10}]})[0] == 2,
-          "23i an on-demand row with no status_code at all -> exit 2: the record still "
-          "has to say how the machine ended")
+        m(1, 55.0, SELF, 30, 15, depth=18.0),
+        m(3, 57.0, SELF, 32, 16, depth=19.0),
+        {"seed": 2, "market": "on-demand", "survival_min": 5.4, "ab": 26, "ba": 0}]})[0] == 0,
+          "23i5 two paired machines lift the yield above 1, so the same hole stops "
+          "being load bearing -- the test is materiality, not the field's name")
     check(rb.evaluate(W21)[0] == 0 and rb.market_of(W21["machines"][0], "x") == "spot",
           "23j an absent market means spot -- every wave recorded before today is unchanged")
 
@@ -477,6 +517,98 @@ def main():
     check(code == 1, "17c CLI on W19-R exits 1")
     code, out = run_cli(W21, extra=("--changeover-min", "60"))
     check(code == 2, "17d CLI honours --changeover-min (60 makes W21 self-contradictory)")
+
+    # --- 26: GH #699.  The absorbing state, read off the wave that entered it.
+    #
+    # This is the acceptance that matters most in this file, because the bug it
+    # covers was not a wrong answer -- every refusal the tool made was locally
+    # correct -- but a CLOSED LOOP: the gate prescribes an on-demand wave when a
+    # wave is BLINDED; an on-demand row's only possible code comes from
+    # describe-instances, which ages terminated instances out in ~1h (GH #375)
+    # against a ~3h harvest; so the next round's input has status_code: null
+    # forever; so the gate refuses; so no wave launches; so the previous wave is
+    # still that one.  The gate could not survive its own prescription, and it
+    # took the farm with it.  Nothing about that reading changes when the month
+    # rolls over -- it is not an expiry, it is a fixed point.
+    #
+    # The rows below are W62's, verbatim from
+    # iterations/reports/batch-desk/waves/W62_wave.json, each carrying a
+    # `status_code_unrecoverable` block after both first-hand sources
+    # (describe-instances, cloudtrail lookup-events) were spent.  Note they are
+    # missing the SURVIVAL field too, not just the code -- a fix aimed only at
+    # status_code would have moved the refusal one line down and kept the loop.
+    W62 = {"wave": "W62", "machines": [
+        {"seed": 10601, "market": "on-demand", "status_code": None,
+         "ab": 42, "ba": 16, "arm_depth": 23.17},
+        {"seed": 10607, "market": "on-demand", "status_code": None,
+         "ab": 31, "ba": 14, "arm_depth": 19.29},
+        {"seed": 10803, "market": "on-demand", "status_code": None,
+         "ab": 34, "ba": 24, "arm_depth": 28.14},
+        {"seed": 10813, "market": "on-demand", "status_code": None,
+         "ab": 30, "ba": 12, "arm_depth": 17.14},
+    ]}
+    code, wlines = rb.evaluate(W62)
+    wtext = "\n".join(wlines)
+    check(code == 0, "26a W62 -- the wave that closed the farm -- now decides, exit 0")
+    check("VERDICT: not blinded" in wtext, "26b ... and the verdict is NOT BLINDED")
+    check("4 paired seed(s) of 4 machine(s)" in wtext,
+          "26c ... on the yield, which is fully read: clause (1) is FALSE before "
+          "attribution is ever consulted, so the holes cannot reach the answer")
+    # The verdict must come from materiality, not from the tool having gone soft
+    # on missing data.  These two assert the disclosure is present and honest.
+    check("survival was not read" in wtext and "status_code is missing" in wtext,
+          "26d ... with BOTH holes disclosed by name -- code and survival")
+    check("immaterial" in wtext and "GH #699" in wtext,
+          "26e ... and the answer states why the holes do not reach it")
+    check("attribution: 0..4 machine(s)" in wtext,
+          "26f ... the attribution count prints as a RANGE, never as a number "
+          "computed off a value this file invented")
+    check("bracket    : SKIPPED" in wtext,
+          "26g ... and the bracket gauge is skipped on unreadable rows, out loud, "
+          "rather than gauging the constant against invented survivals")
+    # 26k: the per-machine line is what a reader scans to decide whether the
+    # wave was read at all, so a hole has to render AS a hole there.  Asserting
+    # only on the `unread:` block below is not enough -- a build that printed
+    # `instance-terminated-by-user` on the machine line and disclosed the hole
+    # further down would pass every other check in this group while telling the
+    # reader, on the line they actually look at, that the field was read.
+    # Match on the RAW indent, not the stripped text: the disclosure block below
+    # also opens its lines with `seed 10601:` (at four spaces), so a `.strip()`
+    # filter here picks up three lines and every assertion under it silently
+    # becomes `len(mline) == 1` and False.  That is how this check first shipped,
+    # and the mutation stand found it by going red on its own baseline.
+    mline = [ln for ln in wlines if ln.startswith("  seed 10601")]
+    check(len(mline) == 1 and mline[0].count("(unread)") == 2,
+          "26k the per-machine line shows BOTH holes as holes")
+    check(len(mline) == 1 and SELF not in mline[0] and GONE not in mline[0],
+          "26k2 ... and never renders a hole as a termination code")
+    check(len(mline) == 1 and " min" not in mline[0],
+          "26k3 ... nor an unread survival as a number of minutes")
+
+    # 26h is the anti-regression that keeps this from becoming a bypass: strip
+    # the yield down to one paired seed and the SAME input must refuse again.
+    # If this ever passes with exit 0, the fix stopped being about materiality.
+    starved = {"wave": "W62-starved", "machines": [
+        dict(W62["machines"][0], ab=26, ba=0, arm_depth=0.0),
+        dict(W62["machines"][1], ab=22, ba=0, arm_depth=0.0),
+        dict(W62["machines"][2], ab=19, ba=0, arm_depth=0.0),
+        dict(W62["machines"][3]),
+    ]}
+    scode, slines = rb.evaluate(starved)
+    check(scode == 2,
+          "26h the same unread rows at yield <= 1 are exit 2 again -- the holes are "
+          "load bearing there, and this fix is materiality and not a bypass")
+    check("CHANGES the verdict" in "\n".join(slines),
+          "26i ... naming the reason as the hole reaching the answer")
+    # 26j: there is no flag that turns any of this off.  A bypass switch is the
+    # shape GH #661 closed and it must not come back through this door.
+    helptext = subprocess.run([sys.executable, TOOL, "--help"],
+                              capture_output=True, text=True).stdout
+    check("--wave-json" in helptext
+          and not any(w in helptext for w in ("--force", "--assume", "--ignore",
+                                              "--skip", "--no-")),
+          "26j no bypass flag was added -- the gate is unjammed by materiality, "
+          "not by an override")
 
     failed = [label for ok, label in CHECKS if not ok]
     for ok, label in CHECKS:

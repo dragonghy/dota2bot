@@ -83,13 +83,77 @@ Exit codes (the 0/1/2 vocabulary of GH #171 / #205 / #213)
 ----------------------------------------------------------
   0  NOT BLINDED   -- next wave launches spot, as always.  GH #158 unchanged.
   1  BLINDED       -- next wave launches `--on-demand`, ONE wave, then reverts.
-  2  could-not-run -- missing fields, unknown SIR status codes, or a violated
-                      bracket.  Nothing was decided; this is not a pass.
+  2  could-not-run -- a self-contradicting record, an unread field that CHANGES
+                      the answer, or a violated bracket.  Nothing was decided;
+                      this is not a pass.
 
 There is no persisted state: the answer is a function of the previous wave's
 own harvest, which the desk already computes.  One-shot by construction --
 an on-demand wave cannot satisfy clause (2), so it always hands the next wave
 back to spot.
+
+An unread field is not automatically a refusal (GH #699)
+--------------------------------------------------------
+Added 2026-09-10 by the director.  Until today every unreadable field took the
+whole wave to exit 2 from inside the per-machine parse loop, BEFORE a single
+clause was evaluated.  On W62 that closed the farm:
+
+  1. this gate's own prescription when a wave is BLINDED is "next wave
+     on-demand" (see clause (2) and the verdict lines below);
+  2. an on-demand machine has no spot request, so the only code its record can
+     carry is EC2's `StateReason.Code` -- which is read from
+     `describe-instances`, where a terminated instance ages out in ~1h
+     (GH #375) while the wave rhythm puts harvest ~3h after launch;
+  3. so an on-demand wave's rows arrive at harvest with `status_code: null`,
+     permanently: W62's four rows each carry a `status_code_unrecoverable`
+     block, both first-hand sources (`describe-instances`, `cloudtrail
+     lookup-events`) having been spent;
+  4. the gate reads only `--wave-json` and only the PREVIOUS wave, with no
+     persisted state and no bypass flag;
+  5. making the previous wave be something other than W62 requires launching a
+     wave, and launching a wave requires this gate to return 0.
+
+(1)-(5) close on themselves.  This is an ABSORBING STATE, not an expiry: the
+reading does not change when the month rolls over, because what it reads is
+neither money nor the calendar but a record that can never be completed.  The
+gate that prescribes on-demand could not survive its own prescription.
+
+The fix is NOT a bypass flag -- that would restore exactly the silent false
+pass GH #661 closed.  It is this:
+
+    A gate may not demand a datum its own answer does not depend on.
+
+So an ABSENT field is now carried as a hole with a name (`Unread`) rather than
+raised, and the verdict is computed at EVERY admissible value that hole could
+take.  If they all agree, the field was immaterial and the agreed verdict is
+returned with the hole disclosed by name.  If they disagree, it is exit 2 with
+the same force as before -- and now with the reason stated as "this field
+changes the answer", which is the true one.
+
+Two properties keep the dangerous direction closed:
+
+  * The exploration puts `instance-terminated-no-capacity` on every unread
+    code, ON-DEMAND ROWS INCLUDED.  A spot machine mislabelled `on-demand`
+    whose code was never read therefore cannot walk its reclaim out of the
+    attribution clause: the adversarial extension is scored too, and if it
+    flips the verdict the answer is exit 2.
+  * Only ABSENCE defers.  A field that is PRESENT and wrong still refuses, at
+    full force and by its old name: a SIR code on an on-demand row, spot's EC2
+    spelling on an on-demand row, an EC2 code on a spot row (GH #412), a code
+    outside the EC2 vocabulary on an on-demand row (GH #661), an unknown
+    market or survival_bound, a non-numeric survival, an update that precedes
+    its create.  Those are records that contradict themselves, and a
+    contradiction is not a hole -- exploring it would be scoring a lie.
+
+Why W62 comes out NOT BLINDED, and why that is a reading and not a shrug: its
+yield is 4 paired seeds of 4 machines, so clause (1) (`yield <= 1`) is FALSE
+before attribution is ever consulted, and `low_yield` is computed from ab/ba
+and arm_depth -- fields that are present, and that stay mandatory.  The missing
+code cannot reach the verdict from there.  The bracket gauge is a separate
+matter: a row whose code or survival was not read is EXEMPT from it, disclosed
+by name, on the same precedent that already exempts a lower-bound survival --
+an unread field is strictly less informative than a lower bound, so the check
+that a lower bound cannot support, a hole cannot support either.
 
 Usage
 -----
@@ -186,6 +250,7 @@ direction GH #412 was opened to prevent.
 """
 import argparse
 import datetime as _dt
+import itertools as _itertools
 import json
 import sys
 
@@ -250,9 +315,55 @@ EC2_SPOT_ONLY_CODES = ("Server.SpotInstanceTermination", "Server.SpotInstanceShu
 BRACKET_LO = 34.8    # longest orphan observed (W19-R)
 BRACKET_HI = 40.63   # shortest paired survivor observed (W24 seed 1633)
 
+# The concrete readings an UNREAD field is scored at (GH #699).  Two per hole is
+# exhaustive, not a sample: every clause in this file touches a code only
+# through `== RECLAIMED` and a survival only through a comparison with
+# `changeover_min`, so one representative on each side of each predicate covers
+# every reading the field could have had.
+#
+# RECLAIMED is in this tuple for on-demand rows too, and that is the whole
+# safety argument: the row asserts a market, and an unread code is exactly the
+# state in which that assertion cannot be checked.  Scoring the adversarial
+# value keeps a spot machine mislabelled `on-demand` from walking its reclaim
+# out of the attribution clause -- the direction this file's `market` section
+# calls the dangerous one.
+_CODE_EXTENSIONS = (RECLAIMED, SELF_TERMINATED)
+
+# Refuse rather than explore past this many points.  Reaching it means most of
+# the wave was never read, which is a harvest to fix and not an answer to
+# compute -- and an exploration too big to print is one nobody audits.
+MAX_EXTENSION_POINTS = 4096
+
 
 class Undecidable(Exception):
-    """Raised when the input cannot be read.  Maps to exit 2, never to 0."""
+    """Raised when the input CONTRADICTS ITSELF.  Maps to exit 2, never to 0.
+
+    Reserved for records that cannot be true as written -- a present value from
+    the wrong vocabulary, an update before its create, an unknown market.  A
+    merely ABSENT field is an `Unread`, not this: see GH #699 in the header.
+    """
+
+
+class Unread(object):
+    """A field the record does not supply: a hole that knows its own name.
+
+    Not a value and never comparable to one -- every predicate in this file is
+    evaluated against the CONCRETE extensions of the hole, never against the
+    hole itself, so a stray `row["code"] == RECLAIMED` on an unread row reads
+    False for the same reason `None == RECLAIMED` does, rather than silently
+    picking the benign side.
+    """
+    __slots__ = ("reason",)
+
+    def __init__(self, reason):
+        self.reason = reason
+
+    def __repr__(self):
+        return "<unread: %s>" % self.reason
+
+
+def is_unread(value):
+    return isinstance(value, Unread)
 
 
 def _parse_ts(value, where):
@@ -279,7 +390,12 @@ def survival_minutes(machine, where):
         if delta < 0:
             raise Undecidable("%s: update precedes create" % where)
         return delta
-    raise Undecidable("%s: needs survival_min, or both create and update" % where)
+    # ABSENT, not wrong: the record simply never said how long the machine
+    # lived.  GH #699 -- carried as a hole and explored, not raised.  A PRESENT
+    # survival that will not parse stays a refusal above, because a number that
+    # is not a number is a contradiction rather than a gap.
+    return Unread("%s: survival was not read (no survival_min, and not both "
+                  "create and update)" % where)
 
 
 def survival_bound(machine, where):
@@ -312,7 +428,14 @@ def read_status_code(machine, market, where):
 
     if market == MARKET_ON_DEMAND:
         if code is None:
-            raise Undecidable(
+            # ABSENT, and on an on-demand row absent is the STRUCTURAL case, not
+            # a slip: the code could only have come from `describe-instances`,
+            # which ages a terminated instance out in ~1h (GH #375) against a
+            # ~3h harvest.  Raising here is what closed the farm on W62 -- see
+            # GH #699 in the header.  It becomes a hole, explored at
+            # `instance-terminated-no-capacity` too, so a spot machine
+            # mislabelled on-demand still cannot hide its reclaim.
+            return Unread(
                 "%s: market is on-demand and status_code is missing -- an "
                 "on-demand row still has to say how the machine ended "
                 "(EC2 StateReason.Code, e.g. Client.UserInitiatedShutdown)"
@@ -362,6 +485,14 @@ def read_status_code(machine, market, where):
             "round, not an unclassifiable market%s.  (If this machine really "
             "was on-demand, the row is missing \"market\": \"on-demand\".)"
             % (where, code, hint))
+    if code is None:
+        # ABSENT on a spot row.  Same treatment as the on-demand hole, and the
+        # same safety: the exploration scores RECLAIMED, so a wave whose yield
+        # is low cannot come back "not blinded" on a code nobody read -- the
+        # extensions disagree there and that is exit 2.
+        return Unread("%s: status_code is missing -- a spot row still has to "
+                      "say how the machine ended (SIR Status.Code, one of: %s)"
+                      % (where, ", ".join(KNOWN_CODES)))
     raise Undecidable("%s: unknown SIR status_code %r (known: %s)"
                       % (where, code, ", ".join(KNOWN_CODES)))
 
@@ -400,14 +531,31 @@ def check_bracket(rows, changeover_min):
 
     Returns (violations, skipped).  An empty violations list = the constant
     still separates this input the way it separated the waves it was read off
-    of.  `skipped` names every check a lower-bound survival made unsound, so a
-    suppressed check is still a visible one -- a bracket check that quietly
-    declines to run is the same shape of lie as a gate that prints nothing.
+    of.  `skipped` names every check an input made unsound, so a suppressed
+    check is still a visible one -- a bracket check that quietly declines to
+    run is the same shape of lie as a gate that prints nothing.
+
+    Two things make a row unsound to gauge, and both are named out loud:
+    a lower-bound survival (the original case), and an unread code or survival
+    (GH #699).  The second follows from the first a fortiori -- a hole is
+    strictly less informative than a lower bound -- and it is why this check is
+    NOT re-run per extension point: gauging the constant against a value this
+    file invented would be reading the invention back as evidence.
     """
     bad = []
     skipped = []
     for row in rows:
         seed, survival, code = row["seed"], row["survival"], row["code"]
+        if is_unread(code) or is_unread(survival):
+            what = ("code and survival were"
+                    if is_unread(code) and is_unread(survival)
+                    else ("status_code was" if is_unread(code)
+                          else "survival was"))
+            skipped.append("seed %s: %s not read, so neither direction of "
+                           "the bracket can be gauged on this machine (a hole "
+                           "supports strictly less than the lower bound that "
+                           "already exempts a machine here)" % (seed, what))
+            continue
         paired, bound = row["paired"], row["bound"]
         # Sound on a lower bound: lb > T implies the true survival > T.
         if code == RECLAIMED and survival > changeover_min and not paired:
@@ -445,6 +593,68 @@ def check_attribution_decidable(rows, changeover_min):
             for r in rows
             if r["code"] == RECLAIMED and r["bound"] == BOUND_LOWER
             and r["survival"] < changeover_min]
+
+
+def _extensions(rows, changeover_min):
+    """Every concrete reading the unread fields could have had.
+
+    Yields lists of rows in which `code` and `survival` are always real values,
+    so the decision function below never has to know a hole exists.
+    """
+    per_row = []
+    for row in rows:
+        codes = (_CODE_EXTENSIONS if is_unread(row["code"]) else (row["code"],))
+        survivals = ((changeover_min - 1.0, changeover_min + 1.0)
+                     if is_unread(row["survival"]) else (row["survival"],))
+        per_row.append([(c, s) for c in codes for s in survivals])
+    for combo in _itertools.product(*per_row):
+        yield [dict(row, code=code, survival=survival)
+               for row, (code, survival) in zip(rows, combo)]
+
+
+def _decide(rows, changeover_min, bracket):
+    """Concrete rows -> the verdict, as data rather than prose.
+
+    THE one place the verdict is computed.  An extension point is scored by
+    running this, not by a second copy of the clauses reasoning about what this
+    would have said -- a checker that re-derives the rule it is checking drifts
+    away from it, and then agrees with itself while both are wrong.
+    """
+    violations, _ = bracket
+    attr_undecidable = check_attribution_decidable(rows, changeover_min)
+    paired_n = sum(1 for r in rows if r["paired"])
+    early = [r for r in rows
+             if r["code"] == RECLAIMED and r["survival"] < changeover_min]
+    low_yield = paired_n <= 1
+
+    if attr_undecidable:
+        return {"exit": 2, "verdict": (), "attr_undecidable": attr_undecidable,
+                "paired_n": paired_n, "early_n": len(early)}
+    if violations:
+        return {"exit": 2, "verdict": (), "attr_undecidable": [],
+                "paired_n": paired_n, "early_n": len(early)}
+    if low_yield and early:
+        return {"exit": 1, "attr_undecidable": [],
+                "paired_n": paired_n, "early_n": len(early),
+                "verdict": (
+                    "VERDICT: BLINDED -- yield <= 1 AND the loss is capacity.",
+                    "NEXT WAVE: launch --on-demand (ONE wave), then revert to spot.",
+                    "  GH #158 stands: a spot machine that cannot be KEPT past the "
+                    "flip is a spot machine we did not get.")}
+    if low_yield:
+        return {"exit": 0, "attr_undecidable": [],
+                "paired_n": paired_n, "early_n": len(early),
+                "verdict": (
+                    "VERDICT: not blinded -- yield <= 1, but NO machine was "
+                    "reclaimed before the flip.",
+                    "NEXT WAVE: spot.  On-demand does not treat this: whatever ate "
+                    "the yield, it was not capacity.  Diagnose the harness instead.")}
+    return {"exit": 0, "attr_undecidable": [],
+            "paired_n": paired_n, "early_n": len(early),
+            "verdict": (
+                "VERDICT: not blinded -- the wave delivered %d paired seed(s)."
+                % paired_n,
+                "NEXT WAVE: spot (the default; GH #158 unchanged).")}
 
 
 def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
@@ -492,8 +702,14 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
         mark = ">=" if row["bound"] == BOUND_LOWER else "  "
         if row["market"] == MARKET_ON_DEMAND:
             how = "on-demand, %s" % how
-        lines.append("  seed %-8s %s%6.1f min  %-34s ab%-3d/ba%-3d  %s  [%s]"
-                     % (row["seed"], mark, row["survival"], row["code"],
+        # A hole prints as a hole.  It must never render as a number or as a
+        # code, because the per-machine line is what a reader scans to decide
+        # whether the wave was read at all.
+        shown_survival = ("  (unread)" if is_unread(row["survival"])
+                          else "%6.1f min" % row["survival"])
+        shown_code = "(unread)" if is_unread(row["code"]) else row["code"]
+        lines.append("  seed %-8s %s%s  %-34s ab%-3d/ba%-3d  %s  [%s]"
+                     % (row["seed"], mark, shown_survival, shown_code,
                         row["ab"], row["ba"],
                         "PAIRED " if row["paired"] else "NO-PAIR", how))
     n_od = sum(1 for r in rows if r["market"] == MARKET_ON_DEMAND)
@@ -510,16 +726,59 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
                      "reading -- see `survival_bound` in this file's header"
                      % (n_lower, len(rows)))
 
-    undecidable_attr = check_attribution_decidable(rows, changeover_min)
-    if undecidable_attr:
+    unread_rows = [r for r in rows
+                   if is_unread(r["code"]) or is_unread(r["survival"])]
+
+    # The bracket is gauged ONCE, on the rows that can support it.  It is not
+    # re-run per extension point: a value this file invented is not evidence
+    # about whether the constant it was invented against has gone stale.
+    bracket = check_bracket(rows, changeover_min)
+
+    n_points = 1
+    for row in rows:
+        n_points *= ((2 if is_unread(row["code"]) else 1)
+                     * (2 if is_unread(row["survival"]) else 1))
+    if n_points > MAX_EXTENSION_POINTS:
+        lines.append("UNDECIDABLE: %d machine(s) carry an unread field, which is "
+                     "%d extension point(s) -- past the %d this file will explore. "
+                     "That much of the wave unread is a harvest to fix, not an "
+                     "answer to compute (this is exit 2, not a pass)"
+                     % (len(unread_rows), n_points, MAX_EXTENSION_POINTS))
+        return 2, lines
+
+    outcomes = [_decide(point, changeover_min, bracket)
+                for point in _extensions(rows, changeover_min)]
+    agreed = set((o["exit"], o["verdict"]) for o in outcomes)
+
+    if len(agreed) > 1:
+        # The hole is load bearing.  This is the same refusal the file always
+        # made, finally saying the true reason: not "a field is missing" but
+        # "this missing field is the answer".
+        lines.append("UNDECIDABLE: an unread field CHANGES the verdict, so it "
+                     "cannot be answered around:")
+        for row in unread_rows:
+            for key in ("code", "survival"):
+                if is_unread(row[key]):
+                    lines.append("    %s" % row[key].reason)
+        outs = sorted(set(o["exit"] for o in outcomes))
+        lines.append("    scored %d extension point(s); they do not agree "
+                     "(exit codes %s)"
+                     % (len(outcomes), ", ".join(str(o) for o in outs)))
+        lines.append("UNDECIDABLE: re-read those field(s) (this is exit 2, not a "
+                     "pass and not a BLINDED)")
+        return 2, lines
+
+    res = outcomes[0]
+
+    if res["attr_undecidable"]:
         lines.append("UNDECIDABLE: the attribution clause cannot be evaluated on this input:")
-        for u in undecidable_attr:
+        for u in res["attr_undecidable"]:
             lines.append("    %s" % u)
         lines.append("UNDECIDABLE: re-run with an exact survival for those machine(s) "
                      "(this is exit 2, not a pass and not a BLINDED)")
         return 2, lines
 
-    violations, bracket_skipped = check_bracket(rows, changeover_min)
+    violations, bracket_skipped = bracket
     for s in bracket_skipped:
         lines.append("bracket    : SKIPPED for %s" % s)
     if violations:
@@ -531,29 +790,34 @@ def evaluate(wave, changeover_min=DEFAULT_CHANGEOVER_MIN,
                      "contradicted (this is exit 2, not a pass and not a BLINDED)")
         return 2, lines
 
-    paired_n = sum(1 for r in rows if r["paired"])
-    early_reclaims = [r for r in rows
-                      if r["code"] == RECLAIMED and r["survival"] < changeover_min]
+    lines.append("yield      : %d paired seed(s) of %d machine(s)"
+                 % (res["paired_n"], len(rows)))
+    if unread_rows:
+        # Never print a count computed off an invented value.  The reader gets
+        # the span the input actually supports, and the span's own irrelevance.
+        spans = sorted(set(o["early_n"] for o in outcomes))
+        lines.append("attribution: %d..%d machine(s) reclaimed before the flip "
+                     "-- a RANGE, because %d machine(s) carry an unread field"
+                     % (spans[0], spans[-1], len(unread_rows)))
+        lines.append("unread     : %d of %d machine(s) do not supply a field this "
+                     "check reads:" % (len(unread_rows), len(rows)))
+        for row in unread_rows:
+            for key in ("code", "survival"):
+                if is_unread(row[key]):
+                    lines.append("    %s" % row[key].reason)
+        lines.append("immaterial : all %d extension point(s) agree, so the verdict "
+                     "below does not rest on the unread field(s).  A gate may not "
+                     "demand a datum its own answer does not depend on (GH #699)."
+                     % len(outcomes))
+        lines.append("             The exploration scores %r on every unread code, "
+                     "on-demand rows included, so a mislabelled spot machine "
+                     "cannot hide a reclaim here." % RECLAIMED)
+    else:
+        lines.append("attribution: %d machine(s) reclaimed before the flip"
+                     % res["early_n"])
 
-    lines.append("yield      : %d paired seed(s) of %d machine(s)" % (paired_n, len(rows)))
-    lines.append("attribution: %d machine(s) reclaimed before the flip" % len(early_reclaims))
-
-    low_yield = paired_n <= 1
-    if low_yield and early_reclaims:
-        lines.append("VERDICT: BLINDED -- yield <= 1 AND the loss is capacity.")
-        lines.append("NEXT WAVE: launch --on-demand (ONE wave), then revert to spot.")
-        lines.append("  GH #158 stands: a spot machine that cannot be KEPT past the flip "
-                     "is a spot machine we did not get.")
-        return 1, lines
-    if low_yield:
-        lines.append("VERDICT: not blinded -- yield <= 1, but NO machine was reclaimed "
-                     "before the flip.")
-        lines.append("NEXT WAVE: spot.  On-demand does not treat this: whatever ate the "
-                     "yield, it was not capacity.  Diagnose the harness instead.")
-        return 0, lines
-    lines.append("VERDICT: not blinded -- the wave delivered %d paired seed(s)." % paired_n)
-    lines.append("NEXT WAVE: spot (the default; GH #158 unchanged).")
-    return 0, lines
+    lines.extend(res["verdict"])
+    return res["exit"], lines
 
 
 def main(argv=None):

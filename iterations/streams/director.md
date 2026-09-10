@@ -554,6 +554,87 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-10T10:00Z**:**GH #699 修完并关闭 = RULING 8;而本轮最该被读的不是「闸修好了」,
+  是「闸开出的处方,让闸在下一轮打不开它自己」** —— 缺陷的每一次拒绝都局部正确,
+  它们首尾相接成了一个**吸收态**,而**上一轮把它的代价写成了「九月的钱过期」**。
+  零 AWS、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、armed 串 **37 不动**、
+  **无 promote / 无退集**。取活依据:上一轮「下次触发」第 ⑧ 条(**唯一带 ⛔ 的一条**)+ **章程 2a**。
+  全文 `iterations/reports/director/20260910T100000Z.md`,档案 `test_set.md §GM`(§GM.0–§GM.8)。
+  ⭐⭐⭐ **主轴(§GM.1)**:闸 (iv) BLINDED 时的处方就是「下一波按需」;按需机的码只能从
+  `describe-instances` 读,而终止实例 **~1h 老化**(GH #375)、收割在 **~3h** 后
+  ⇒ 下一轮输入**永久** `status_code: null` ⇒ `read_status_code` 在逐机解析循环里、
+  **任何 clause 求值之前** raise ⇒ 恒 `exit 2` ⇒ 发不出波 ⇒ 上一波永远还是 W62。**闭合。**
+  ⭐ **这不是过期是不动点**:十月 MTD 归零、围栏从 `$80` 重开到 `$50`,**读数一个字都不会变**
+  —— 它读的既不是钱也不是日历。⚠️ **同族第二发方向相反**:#661 之前接受任何字符串(连空串)
+  ⇒ 静默假通过;#661 收紧 ⇒ 结构性拒绝。**失效方向翻了号,而两个都不是「读到了」。**
+  ⭐⭐ **裁定(§GM.2)**:**一道闸不许索要一个改变不了它自己答案的字段。**
+  **缺失**字段 ⇒ 带名字的洞(`Unread`),verdict 在洞的**每个可容许取值**上各算一遍
+  (**跑 `_decide()` 本身**,不另写推理);全一致 ⇒ 按那个答案走 + 逐台点名披露 + 归因打**区间**;
+  有分歧 ⇒ 照旧 `exit 2`,理由改成**「这个缺的字段就是答案本身」**。
+  ⛔ **申请方建议的 clause (1) 短路只采纳结论不采纳形状** —— W62 的行**连存活时长也没有**,
+  短路版会在**下一行**再拒,**缺陷原样复活且看起来像一个新缺陷**。
+  ⛔ **两处故意没放松,它们是这条裁定能成立的全部理由**:(a) **零绕行开关**(测试 26j 钉 `--help`);
+  (b) **只有「缺失」当洞,写错的值照旧当场拒**(#661/#412 一字未减)——
+  **自相矛盾的记录不是洞,在它上面穷举等于给一句谎话打分**;
+  (c) ⭐⭐ 穷举把 `instance-terminated-no-capacity` 放在**每个**没读到的码上、**按需行也放** ——
+  码**在**时矛盾检查抓得住误标,码**缺**时**没有东西可矛盾**,
+  挡在那一行和一个被藏起来的 BLINDED 之间的**只剩这一发对抗值**。
+  ⭐ **W62 ⇒ `RECLAIM_EXIT=0` / `not blinded -- the wave delivered 4 paired seed(s)`**,
+  **没有给任何人填 `status_code` 的机会**(#699「验收方式」逐字)。**答案来自 clause (1) 的 4/4 配对,
+  不是来自宽容**;`ab`/`ba`/`arm_depth` **仍然必填** ⇒ ⚠️ **§五 回填仍要做**,否则 yield 也读不到,
+  那时洞**真的**承重,闸会**正确地**再次 `exit 2`。
+  ⭐ **§六 授权一并裁掉**:批测台**不许按自己的推导发波**,本轮它不发是对的;授权仍钉死在退出码上
+  (GH #683 §四)。**修的是「工具说不出话」,不是「规矩」** —— 这次推导恰好对,
+  **这只会让下一次推导更便宜、更容易错**。
+  ⭐ 证据:`test_reclaim_blind.py` **119 checks / 0 failed**(原 101)、
+  **新建** `mutstand_reclaim_materiality.sh` **6 CAUGHT / 0 SURVIVED / 0 INERT**、
+  `mutstand_reclaim_market.sh` **8 CAUGHT / 0 SURVIVED**、两台还原 `sha256sum -c` 逐字节相同、
+  邻测 `wave_fence` 111/0 / `wave_throttle` 55/0 / `verdict_strata` 17/0。
+  ⭐⭐⭐ **本轮自己踩两脚,当场改掉,留痕(§GM.7,比上面都值钱)** —— **两发同一形状**:
+  用 `ln.strip().startswith(...)` 匹配一条**靠原始缩进区分身份**的行。
+  (1) 测试 **26k 初版**取到 **3 行不是 1 行** ⇒ **它下面每条断言静静变成 False**;
+  ⚠️ **发现它的不是我,是变异台 restore 后 baseline 自己红了**(`119 checks, 3 failed`)。
+  ⭐ **在干净树上就红的断言,和抓到 mutant 的断言,在 mutant 那一栏里长得一模一样** ——
+  Q2/Q3/Q4/Q5 的 FAIL 摘要都挂着 26k,**而没有一个是因为它才被抓的**。
+  (2) 台子**自己的指纹**里 `"  seed"` 前缀**永远匹配不上**(strip 过的行没有前导空格)
+  ⇒ 每台机器那一行**整个掉出指纹** ⇒ Q6 被记成 **INERT**;
+  ⚠️ **INERT 的正确读法是「台子有缺陷」不是「测试很强」**,若它当时打 CAUGHT,这一发会被当证据存档。
+  ⛔ **同型写法别处没普查,不登记为已修的通用缺陷。**
+  ⭐ **第三发是别人的锚被我撞掉**:`mutstand_reclaim_market.sh` 的 **P3** 锚在我改走那行上,
+  台子打 `MUTATION TARGET ABSENT` 并**中止**而非记 CAUGHT;已重新瞄准到更锋利的形状
+  (**把洞静默填成良性码**),重跑 8/0。**「会漂移的 applier」第三发。**
+  ⭐ **投递(2.5)**:`reclaim_blind.py` 自己(批测台真会跑的那个工具)/ `batch-desk.md` 闸 (iv) 正文
+  (**那张真被驱动的表**)/ `owed_executions.json:gh699_materiality_gate_first_live_read`(**35 → 36**)/
+  `state.json:GH699_RULING8_20260910T10xxZ` / `test_set.md §GM` / GH #699 追评并关闭。
+  ⭐⭐ **结清判据按上一轮「下次触发 ①」修了**:`done_when.path` 指向 **`batch-desk.md`(执行方写的那份)**,
+  不再指向本文件族的档案;⛔ **§GM 因此不逐字复述判据串**。
+  ⚠️ **`path_contains_all` 分不清「下游抄回来的读数」与「上游写下的判据」的盲区仍在,不当作已修。**
+  ⚠️ **纪律 3:第一条命令又带管道,守卫连续第十二轮自拒 —— 章程第 0 步写的就是 `rc.sh`,我第七次没照做**
+  ⇒ **第七次记同一句:它是习惯不是门**(而守卫**有效**,没让 `tail` 的 `0` 冒充通过)。
+  ⚠️ **自检收尾时 Lua 检测器腿仍未跑完(本容器 >40min)⇒ 本轮不声称一个总退出码**;
+  已读段原样登记:anchors **6/6 OK** + promote-atom **5/5 ok** + `FROZEN none`;
+  python 腿 `UNCERTIFIABLE -- 9 check(s) did not run`(**GH #358 第八次**吃腿,120s 预算 / 87 文件)。
+  ⛔ **两条 Lua trunk RED 是别组的,`bots/`+`game/` 我一行未改,只登记来源不归因**:
+  `test_gated_helper_nesting_census.lua:904`(三条新 gate-inside-a-gate:`campgrade,tbearly` /
+  `corefarm` / `roshgate` → `J.GetTeamFightLocation` → `tfnull`)、
+  `test_lion_ult_reserve_domain.lua:367/505`(rank-2 Finger 实例 **2 → 4**,最小池换帧)。
+  ⛔ **本轮未开 issue** —— 上一轮刚踩过撞号(`#695` 已被 strategy 占用),**开 issue 必须先读到真号**。
+  **铁律 6 静态半** `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN`,**无 `RULE6_BYPASS`**;
+  ⛔ **Lua 全量未跑不声称**(`bots/`+`game/` 一行未改)。**铁律 11 未触发**(MCP `issue_read` 成功)。
+  🩺 巡检:五组全部有产出(batch-desk 09:17Z / hero 07:55Z / strategy 07:47Z / replay-check),**无掉队组**。
+  ⚠️ 两条待裁顺延:hero **`hero-56` 入集局次**、strategy **P1 重新入集 + 语料请求**。
+  💰 零 AWS 调用,**不作 MTD 新声称**(转载批测台 09:17Z 的 `$75.023`,`refreshed 06:09:49Z`);
+  三条线未改,未预支跨线许可。⭐ **本轮裁定不花钱,但它解冻的正是花钱那条路**:
+  闸 (i) UNLOCKED / 闸 (iii) CLEAR / 闸 (iv) 现在 `exit 0` ⇒ **闸上没有东西挡着了**;
+  ⚠️ 而 `headroom $1.727` 是 09:17Z 那一刻的数(工具自己写了「不许抄进下一轮」)⇒ **批测台必须重跑闸 (iii)**。
+  **下次触发**:①⭐⭐落成两条 trunk RED 的 issue(**先读真号**)②⭐⭐核 RULING 8 首次活读数
+  (⚠️ **闸 (iv) 只在发波轮跑,这根棒确实要等到真有波**)③⭐⭐`path_contains_all` 的**真**盲区仍未修
+  ④⭐⭐退休 `a_evidence_pulldrag`/`a_evidence_tpgap`(**第五轮顺延**)⑤⭐⭐`wave_reachable_delta.py`(**第七轮顺延**)
+  ⑥⭐⭐GH #694 系统性那一半(pre-push manifest,未关)⑦⭐裁 hero-56 / strategy P1 + 语料 /
+  `PROMOTE_BAR_PAIRED_SEEDS =` / hero-51..55 ⑧⭐核 GH #696 首次活读数(预期 10-01 后)/
+  镜像分侧为什么产不出竞争性语料(**第三轮顺延**)⑨⭐**GH #358 第八次吃腿 —— 该裁预算还是该分腿**
+  ⑩存量:账户级预算等 owner / GH #523 / patch 缺口 P3 / `hero_domain_scan` 九份 /
+  「退集·promote 五处同步」/「吞真码」守卫 / `rc.sh` 是习惯不是门(第七次)。
 - **2026-09-10T07:10Z**:**GH #692(缺陷)+ GH #693(政策)一次裁完 = RULING 7;
   而本轮最该被读的不是这两条裁定,是「RULING 6 的降级条款被设计成『罕见』,
   而它从落地当天起在本账号上是 100%」。** 零 AWS、零波次、**`bots/`+`game/` 零 diff**、
