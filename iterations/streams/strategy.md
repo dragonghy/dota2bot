@@ -27,6 +27,48 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0RAXDEAD. **【2026-09-10T13:50Z 新增。**P4.4 归属 = **(ii) 清本组自己欠的债**(连续十一轮 (i) 之后
+   第一次不是 (i))。认领依据 = 工作流第 1 步扫 open issue,9 条 `[strategy]` open **全是本组自报**;
+   而**开工自检的 6 条 trunk 红里有 2 条是本组前两轮各自留下的**,两轮都没读 ⇒ 先清债。
+   ⭐ **红 1**:`fbnoally` 的测试把语料大小钉成 `== 111`(GH #106/#127 缺陷,`test_corpus_scale.lua`
+   落地当天就红)⇒ 换 `tests/corpus_scale.lua` 的 `corpus`/`ratchet`/`universal` 共 8 处;
+   **零值断言一处未动**(模块写明的例外:零本来就免疫增长,而好几句 INERT 结论正是拿它们论证的)。
+   ⭐ **红 2**:`tfnull` 长出三个门中门 ⇒ 按登记表**手答那一个问题**再钉行 ——
+   未 armed 时 `J.GetTeamFightLocation` 返回**出货值本身** ⇒ **(P)**;并答了 GH #576 那半:
+   36 个调用点里只有 3 个在 gated 调用者里,单臂**读得到** `tfnull`,
+   但**这三个调用者里量到的零 = 「内层没跑过」,不是「没效果」**。
+   ⭐⭐ **章程点名的测量做完并裁定**:`J.GetCenterOfUnits` 的**第二条哨兵路径不可达 ⇒ 不硬修**。
+   **两半不可达的种类不同,这是发现本身不是零**:英雄半是**蕴含**(`IsValidHero ⇒ IsValid`,
+   已执行 0/1110);野怪半是**买不到**(loader 三个 creep producer 一律答 `{}`,尽管 dump 已写
+   45 行样本)—— ⛔ **后者一个字都不许当零引用**。
+   ⭐⭐⭐ **真正到得了第二哨兵的形状是建筑**(`GetNearbyTowers` **520/520** 非空名单全无
+   `J.IsValid` 单位),而质心那一族的 **211** 个调用点解析出的 **9 个 producer 没有一个返回建筑**
+   ⇒ 那里不可达。**但同一个事实在一格之外是活的**:`mode_farm_generic` runMode 深推段的
+   `if J.IsValid(runModeBarracks[1])` 对兵营**恒假**(原因在 **2525** 个真建筑句柄上隔离到只剩
+   `not IsBuilding()` 一条)⇒ 「深推时打兵营」**从来没有执行过**。条件 (c) 是量出来的:
+   同样的建筑名单交给 `J.IsValidBuilding` 的 **26 处**(全仓 **74** 个调用点),交给单位验证器的
+   **只此 1 处**;它后面六个合取项(glyph / backdoor / invulnerable / attack-immune)全是建筑专用谓词。
+   产出:`tests/test_isvalid_building_sentinel.lua` **10/10**、`tools/agent/mutstand_isvalidbld.sh`
+   **6 腿 6/6 STAND GREEN**;报告 `iterations/reports/strategy/20260910T135035Z.md`;
+   **`bots/` 一字节未改**,**armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零波次。
+   ⚠️ **变异台产出的不是 bug 是「读者会读到错误理由」**:M5(树上新长出同族死分支)第一次撞上
+   `right >= 26` 那条计数断言 ⇒ **改断言顺序,不改 want 串**;发现是主张,计数是佐证。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体回到一个 `bots/` 行为改动**,第一候选就是那条兵营分支的 gated 修复
+   (`J.IsValid` → `J.IsValidBuilding`,turbo-only + 新 id)。**前置条件不许绕过:它的域今天是空的**
+   (**0/1031** 帧在 1600 内有敌方兵营,且 `GetAttackRange()` 全是 mock 默认 **150**,不是 dump 真值)
+   ⇒ **先解决「怎么看见这条分支」**(等一个带敌方兵营的 fixture,或声明式驱动并把注入部分逐条写出来)。
+   **没有域就不要落 gate**,那会是又一个「接上了、量不到」的 id;
+   (2) ⛔ **第二哨兵路径到此为止**,除非 `tests/test_isvalid_building_sentinel.lua §2b` 自己红了
+   (= loader 接上了野怪)。**那条断言就是接力棒**:它红时的文字直接写着「这半个问题现在买得到了,
+   去重开它」—— 比一条会被关掉就消失的 issue 硬(GH #13 掉棒 37 轮的形状);
+   (3) ⭐ **判据 (5) 的新变种,本轮钉出来了**:「**一个集合被算出来,然后交给了一把量错东西的尺子**」
+   (`J.IsValid` 对建筑;`fbnoally` 那轮的两张名单含不含自己)。**下一轮第一候选**:
+   `J.IsValidHero` 被喂了非英雄名单的调用点 —— 同一把扫描器,换一个谓词;
+   (4) ⛔ **本组自己的流程债**:连续两轮把 trunk 弄红且自己没读 ⇒ **每轮开工自检的 trunk-red 清单,
+   先按「谁弄红的」分类,再决定工作单元**。本轮就是这么排的;
+   (5) ⛔ **P1/P2 的球仍不在本组,P4.2 冻结未解** ⇒ 本轮没有提入集。】**
+
 0FBNOALLY. **【2026-09-10T10:36Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**(连续第十一轮 (i));
    认领依据 = 工作流第 1 步扫 open issue,**新的 `[strategy]` 条目一条也没有** ⇒ 取 `0TFNULL`
    「下一格」**第 (3) 项**:「先扫一遍哨兵值这个新变种;第一候选 = `J.GetCenterOfUnits` 在 `bots/`
@@ -7542,6 +7584,38 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-10T13:50Z(**P4.4 归属 = (ii) 清本组自己欠的债** —— 连续十一轮 (i) 之后第一次不是 (i),
+  理由不是省事:**开工自检的 6 条 trunk 红里有 2 条是本组前两轮各自留下的**,而本组两轮都没读。
+  认领依据 = 工作流第 1 步扫 open issue,9 条 `[strategy]` open **全是本组自报**,没有派给本组的新活;
+  章程「下一格」的测量在 §四 一并做完并裁定)。
+  ⭐ **红 1 = `fbnoally` 那轮把语料大小钉成等号**(`test_corpus_scale.lua` 当天就红,不用等下一个
+  fixture)⇒ 换成 `tests/corpus_scale.lua` 的 `corpus`/`ratchet`/`universal` 共 8 处,**零值断言一处未动**
+  (模块写明的例外)。⭐ **红 2 = `tfnull` 长出三个门中门**(`campgrade,tbearly` / `corefarm` /
+  `roshgate` 三个调用者)⇒ 按登记表要求**手答那一个问题**并钉行:未 armed 时
+  `J.GetTeamFightLocation` 返回**出货值本身** ⇒ **(P)**;GH #576 那半也答了 ——
+  该 helper **36 个调用点**只有这 3 个在 gated 调用者里,`tfnull` 单臂**仍读得到**,
+  但**在这三个调用者里量到的零不许记到 `tfnull` 头上**。
+  ⭐⭐ **章程点名的测量做完了,裁定「第二条哨兵路径不可达,不硬修」,而两半不可达的种类不同**:
+  英雄那半是**蕴含**(`IsValidHero ⇒ IsValid`,并执行过:0/1110),野怪那半是**买不到**
+  (loader 对三个 creep producer 一律答 `{}`,尽管 dump 已写 45 行样本)——
+  **后者不许当成零引用**。真正到得了第二哨兵的形状是**建筑**:`GetNearbyTowers` 的
+  **520 个非空名单 520 个全无 `J.IsValid` 单位**,而 `bots/` 里 **211** 个质心调用点解析出的
+  **9 个 producer 没有一个返回建筑** ⇒ 质心那一族到不了。
+  ⭐⭐⭐ **换下一个的路上量出一条从来没执行过的分支**:`mode_farm_generic` 的 runMode 深推段
+  `if J.IsValid(runModeBarracks[1])` —— `J.IsValid` 末项是 `not IsBuilding()`,对兵营**恒假**
+  (在 **2525** 个真建筑句柄上把原因隔离到只剩这一条),底下「深推时打兵营」**从没跑过**。
+  条件 (c) 是量出来的:同样的建筑名单交给 `J.IsValidBuilding` 的有 **26 处**(全仓 74 个调用点),
+  交给单位验证器的**只此 1 处**;它后面六个合取项全是建筑专用谓词。
+  ⛔ **本轮不落地修它,`bots/` 一字节未改**:该分支的域在本语料里**空**(**0/1031** 帧在 1600 内有
+  敌方兵营),且 `GetAttackRange()` **不是 dump 真值**(全是 mock 默认 150)⇒ 后果无法在未注入的帧
+  上驱动,只能记成发现。产出:`tests/test_isvalid_building_sentinel.lua` **10/10**、
+  `tools/agent/mutstand_isvalidbld.sh` **6 腿 6/6 STAND GREEN**;报告
+  `iterations/reports/strategy/20260910T135035Z.md`。
+  ⚠️ **变异台 M5 第一次是「红了但理由不对」**(先撞上计数断言而不是发现本身)⇒
+  **改的是断言顺序不是 want 串**。**armed 串 / `queue.json` / `test_set.md` 一字未动**;
+  零 AWS、零 S3、零 EC2、零波次。**铁律 6**:静态 `GATE_EXIT=0 CLEAN`;动态全量没跑完(GH #124)。
+  ⚠️ **`routine_selfcheck.sh` 又被接在管道后面并被它自己拒绝(第 5 次)** —— 连续两轮同一个坑。
 
 - 2026-09-10T10:36Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**,连续第十一轮 (i);认领依据 =
   工作流第 1 步扫 open issue,**新的 `[strategy]` 条目一条也没有** ⇒ 取 backlog 顶条 `0TFNULL`

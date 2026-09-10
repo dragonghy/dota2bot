@@ -887,6 +887,27 @@ local PINNED = {
     -- 'stayurn', 'itemtrip' and 'staysrc' each ALONE on the pinned frame and
     -- asserts which of them move it.
     "waitclar | ConsiderWaitInBaseToHeal | J.IsInLaningPhase | c2,c4 | bots/mode_roam_generic.lua",                                        -- P
+    -- [tfnull 20260910, read by strategy's next round] Three callers, one inner
+    -- helper, one reading. 'tfnull' sits inside J.GetTeamFightLocation and its
+    -- whole body is
+    --     if #allyList == 0 and J.IsModeTurbo() and J.IsSoakCandidate('tfnull')
+    --     then targetLocation = member:GetLocation() end
+    -- so UN-ARMED the helper returns `targetLocation` exactly as the shipped
+    -- centroid computed it -- the shipped value, not a constant, and not a nil
+    -- that would kill the caller's branch. (P), the same shape as the
+    -- J.IsInLaningPhase rows above.
+    -- ⛔ AND THE PAIR PROBLEM IS ANSWERED THE OTHER WAY ROUND TOO, because that
+    -- is the half GH #576 added and the half a (P) letter does not cover: can a
+    -- single-arm wave READ 'tfnull' itself? Yes -- J.GetTeamFightLocation has 36
+    -- call sites in bots/ and only these three sit inside a gated caller, so
+    -- arming 'tfnull' alone still reaches it through the other 33. What a wave
+    -- may NOT do is attribute a change seen in one of these three callers to
+    -- 'tfnull' alone: there the lever really is `outer AND tfnull`, and a zero
+    -- measured with only 'campgrade' / 'tbearly' / 'corefarm' / 'roshgate' armed
+    -- means "the inner refusal never ran", not "the refusal has no effect".
+    "campgrade,tbearly | GetDesireHelper | J.GetTeamFightLocation | tfnull | bots/mode_farm_generic.lua",                                  -- P
+    "corefarm | J.ShouldCoreKeepFarming | J.GetTeamFightLocation | tfnull | bots/FunLib/jmz_func.lua",                                     -- P
+    "roshgate | GetDesireHelper | J.GetTeamFightLocation | tfnull | bots/mode_roshan_generic.lua",                                         -- P
 }
 
 local tests = {}

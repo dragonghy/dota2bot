@@ -50,6 +50,7 @@
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local cs = require('corpus_scale')
 
 local AIUG = 'bots/ability_item_usage_generic.lua'
 local PIN = 'tests/fixtures/f_071423_sky_rescue.lua'
@@ -152,15 +153,24 @@ end)()
 
 local function C(k) return SWEEP[k] end
 
+-- [strategy 20260910, second unit] THE PINS BELOW WERE EQUALITIES AND THAT WAS
+-- THE GH #106 / #127 DEFECT, LANDED BY THIS STREAM'S OWN PREVIOUS ROUND.
+-- `C('fixtures') == 111` re-stated the corpus size inside a test about the
+-- force-boots centroid, so the next fixture anybody appends turns this file red
+-- without one thing it measures having moved -- and it did not wait for that
+-- fixture: tests/test_corpus_scale.lua is the detector for exactly this shape
+-- and it went red on trunk the moment the pin landed. The counters here are all
+-- SUMS OVER FIXTURES (the sweep visits each fixture once and adds), so append
+-- can only raise them: `ratchet` still catches the fall that would mean
+-- behaviour moved, and stops charging for growth. The ZERO claims below
+-- (nearby_has_self, ally0_sub1, and all of section 3) stay equalities on
+-- purpose -- they are already growth-immune, and several of this file's
+-- INERT/bounds sentences are argued from them.
 tests['[fbnoally] 0. the sweep covered the corpus'] = function()
     assert(C('load_fail') == 0, C('load_fail') .. ' fixtures failed to load')
-    assert(C('fixtures') == 111, 'the loadable corpus is now ' .. C('fixtures')
-        .. ' fixtures, recorded 111 -- every count below is against a different '
-        .. 'denominator and must be re-read')
-    assert(C('live') == 1031, 'live hero frames now ' .. C('live') .. ', recorded 1031')
-    assert(C('turbo_fx') == C('fixtures'), 'the corpus is no longer all-Turbo ('
-        .. C('turbo_fx') .. ' of ' .. C('fixtures') .. '), so a turbo-only gate '
-        .. 'no longer covers every frame counted here')
+    cs.corpus(C('fixtures'), 'fbnoally sweep')
+    cs.ratchet(C('live'), 1031, 'live hero frames')
+    cs.universal(C('turbo_fx'), C('fixtures'), 'the corpus is all-Turbo', cs.FLOOR)
 end
 
 -- ------------------------------- 1. the two ally lists count differently ----
@@ -171,12 +181,10 @@ tests['[fbnoally] 1. MEASURED: GetAlliesNearLoc includes self, GetNearbyHeroes d
     -- is a fact about the shipped helpers, not about the docs -- which state
     -- neither. If a future engine/loader change flips either reading, the
     -- constant in bots/ is wrong and this goes red first.
-    assert(C('own_team') == 515, 'own-team frames now ' .. C('own_team') .. ', recorded 515')
-    assert(C('alloc_has_self') == C('own_team'),
-        'J.GetAlliesNearLoc returned a list without the bot itself on '
-        .. (C('own_team') - C('alloc_has_self')) .. ' of ' .. C('own_team')
-        .. ' own-team frames -- the sibling entry\'s `#hAllyList >= 2` no longer '
-        .. 'means "me plus one"')
+    cs.ratchet(C('own_team'), 515, 'own-team frames')
+    cs.universal(C('alloc_has_self'), C('own_team'),
+        'J.GetAlliesNearLoc includes the bot itself (the sibling entry\'s '
+        .. '`#hAllyList >= 2` means "me plus one")', 500)
     assert(C('nearby_has_self') == 0,
         'J.GetNearbyHeroes handed the caller back to itself on '
         .. C('nearby_has_self') .. ' frames -- then `#nInRangeAlly == 0` is not '
@@ -188,7 +196,7 @@ end
 tests['[fbnoally] 2. MEASURED: the empty ally list is the common case'] = function()
     -- The set that makes the sentinel: a live hero with no VISIBLE ally inside
     -- the branch's own 1200. Real geometry, no mode/target/item needed.
-    assert(C('ally0') == 556, 'zero-ally frames now ' .. C('ally0') .. ', recorded 556')
+    cs.ratchet(C('ally0'), 556, 'zero-ally frames')
     assert(C('ally0') * 2 > C('live'), 'the zero-ally case is now a minority of '
         .. 'frames (' .. C('ally0') .. ' of ' .. C('live') .. ') -- the "it never '
         .. 'happens" reading this lever rejects would need re-examining')
@@ -199,10 +207,10 @@ tests['[fbnoally] 2b. MEASURED: the sentinel clears the branch\'s own gates'] = 
     -- the branch's 900. Then: does the branch's OWN parity gate pass (it does
     -- exactly when the target is also alone), and does the surviving consumer
     -- -- ">= 750 from the ally centroid" -- accept the origin?
-    assert(C('ally0_chaseable') == 107, 'now ' .. C('ally0_chaseable') .. ', recorded 107')
-    assert(C('ally0_parity') == 58, 'now ' .. C('ally0_parity') .. ', recorded 58')
-    assert(C('ally0_origin_far') == 95, 'now ' .. C('ally0_origin_far') .. ', recorded 95')
-    assert(C('ally0_joint') == 48, 'now ' .. C('ally0_joint') .. ', recorded 48')
+    cs.ratchet(C('ally0_chaseable'), 107, 'zero-ally frames with a chaseable enemy')
+    cs.ratchet(C('ally0_parity'), 58, 'zero-ally frames clearing the parity gate')
+    cs.ratchet(C('ally0_origin_far'), 95, 'zero-ally frames >= 750 from the origin')
+    cs.ratchet(C('ally0_joint'), 48, 'zero-ally frames clearing both')
     assert(C('ally0_joint') > 0, 'no frame in the corpus clears both the parity '
         .. 'gate and the distance consumer on the sentinel -- the consequence '
         .. 'this lever prices would be unwitnessed')
