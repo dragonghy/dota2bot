@@ -668,6 +668,73 @@ function Think()
     end
 end
 
+-- [lvlany 20260910] "IS ANY NEARBY ENEMY AT LEAST LEVEL N" ANSWERED BY ONE
+-- ARBITRARY MEMBER OF THE LIST.
+--
+-- Shipped, X.SupportFindTarget's laning last-hit guard reads
+--     (nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10)
+-- from J.GetNearbyHeroes(bot, 750, true, BOT_MODE_NONE).  The question the
+-- conjunction is asking is existential -- "is there a dangerous (level >= 10)
+-- enemy standing on me?" -- and the empty-list leg written right beside it
+-- (`[1] == nil`) is what says so: the author already spent a term separating
+-- "nobody here" from "somebody here who is weak".
+--
+-- ⭐ WHY THIS IS A STRICTLY HARDER CASE THAN 'anyhero' (2026-09-10T19:37Z), NOT
+-- A COPY OF IT, AND THE DIFFERENCE IS THE WHOLE POINT.  There the repair leaned
+-- on a measured fact about ORDER -- J.GetEnemiesNearLoc table.inserts in
+-- GetUnitList order and never sorts, so `[1]` is an arbitrary member rather than
+-- the nearest.  Here the list IS ordered and correctly so: the engine promises
+-- it (docs/BOT_API_REFERENCE.md:1229, "All return tables sorted by distance
+-- (closest first)") and J.GetNearbyHeroes only filters, never reorders
+-- (jmz_func.lua:2856).  `[1]` really is the nearest visible enemy hero -- and
+-- the guard is still wrong, because the quantified predicate is LEVEL and the
+-- nearest enemy is not the highest-level one.  So 'anyhero' would be repaired by
+-- an engine that started sorting; this one would not be touched by it.  Section
+-- 1b pins the order rather than assuming it, precisely so that the argument here
+-- does not quietly become the argument there.
+--
+-- WHAT IT COSTS.  The guard is the safety half of a branch that returns
+-- BOT_MODE_DESIRE_ABSOLUTE * 0.97 to walk up and last-hit/deny creeps in lane.
+-- When `[1]` happens to be the level-5 support and the level-12 offlaner is the
+-- other name in the same 750 radius, the guard reads "clear" and a bot capped
+-- at level 8 (bot:GetLevel() <= 8, the term above it) commits to the creep
+-- wave with a hero four levels up inside kill range.
+--
+-- DOMAIN, measured on the frame corpus by
+-- tests/test_lvlany_first_member_level_quantifier.lua, not asserted here.
+-- ⛔ Its limits are stated in that file BEFORE any count is read: the mock's
+-- enemy list contains the querying hero itself, so every count is taken with
+-- self removed and measures the GEOMETRY of a set of heroes carrying real dump
+-- levels -- not enemy semantics, and no in-game fire rate is claimed from it.
+--
+-- ⭐ THE WHOLE CHANGE IS INSIDE THE GATE, and the unarmed leg is the shipped
+-- expression term for term -- including its position in the conjunction, so the
+-- short-circuit order is unchanged.  That is why the repair is a helper called
+-- from the same slot rather than a hoisted local: a hoisted read would evaluate
+-- GetLevel() on calls where the shipped code never reaches the term.  Section 3b
+-- of the test measures that equality on every driven row instead of reading it
+-- off the diff.
+--
+-- ⛔ FROZEN-HOLD per OWNER_PRIORITIES P4.2 (new ids do not enter the armed set
+-- while it is above 20).  Registered in state.json:lvlany_20260910; the armed
+-- string, queue.json and test_set.md are untouched.
+--
+-- ⛔ SCOPE IS ONE CALL SITE ON PURPOSE.  The identical expression sits at three
+-- more places in this file (:884 and :919 at level 12, :1432 inside
+-- X.CanAttackTogether at level 10).  They are NOT changed here -- one lever at a
+-- time is what the lanefix bundle cost us -- and they are named in the report
+-- and in the GitHub issue so the baton is a written line, not a memory.
+function X.NoNearbyEnemyAtLevel(tHeroes, nLevel)
+	if tHeroes == nil or tHeroes[1] == nil then return true end
+	if J.IsModeTurbo() and J.IsSoakCandidate('lvlany') then
+		for i = 1, #tHeroes do
+			if tHeroes[i]:GetLevel() >= nLevel then return false end
+		end
+		return true
+	end
+	return tHeroes[1]:GetLevel() < nLevel
+end
+
 -- ==============================
 -- Support / Carry target selection
 -- (guarded by emergency retreat)
@@ -752,7 +819,10 @@ function X.SupportFindTarget()
     if IsModeSuitHit and bot:GetLevel() <= 8
     and bot:GetNetWorth() < 13998
     and (J.GetHP(bot) > 0.38 or not bot:WasRecentlyDamagedByAnyHero(3.0))
-    and (nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10)
+    -- [lvlany 20260910] see the block above X.NoNearbyEnemyAtLevel. Unarmed
+    -- this is `nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel()
+    -- < 10`, in this slot, with the same short-circuit order.
+    and X.NoNearbyEnemyAtLevel(nNearbyEnemyHeroes, 10)
     and bot:DistanceFromFountain() > 3800
     and J.GetDistanceFromEnemyFountain(bot) > 5000 then
 

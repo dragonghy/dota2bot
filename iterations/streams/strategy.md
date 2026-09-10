@@ -27,6 +27,65 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0LVLANY. **【2026-09-10T22:39Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**。
+   认领依据 = 工作流第 1 步扫 open issue,`[strategy]` open(#724/#719/#713/#706/#701/#697/#676)
+   **全是本组自报、无外部来件** ⇒ 取 `0ANYHERO`「下一格」**第 (1) 项**
+   (「同一把扫描器再换一次谓词……**本轮只清了 `aba_special_units.lua` 一处,`mode_*.lua` 没扫**」)。
+   ⭐ **本轮把 `mode_*.lua` 那一半扫完了**:范围内(`mode_*.lua` 22 + `FunLib/*.lua` 33)`[1]` 下标
+   **445** 处 → 筛「被否定 / 参与 `>`/`>=` / 与 `nil` 比较」**52** 处逐条读过 → 真把 `[1]` 当
+   **存在量化**答案的:取走的 1 处 + **三个同形兄弟**(`:954`/`:989` 阈值 12、`:1432` 在
+   `X.CanAttackTogether` 里阈值 10)。⛔ `mode_roam_generic.lua:2447/2474`(razor/nevermore)形状同族但
+   **按第 (3) 项跳过** —— 坐在 `J.GetProperTarget(bot)` 后面(GH #474 结构性 nil)。
+   ⭐⭐ **本轮的发现,和它为什么不是 `anyhero` 的第二个副本 —— 这是最该带走的一条。**
+   `bots/mode_team_roam_generic.lua` 的 `X.SupportFindTarget` 对线补刀/反补支路读
+   `(nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10)`,名单是
+   `J.GetNearbyHeroes(bot, 750, true, BOT_MODE_NONE)`;写在旁边的**空表腿**证明问句是**存在量化**的。
+   `anyhero` 的 argument 落在**顺序**上(producer 无 sort ⇒ `[1]` 任意);**这里名单是有序的,而且
+   有序是对的** —— 引擎明文承诺(`docs/BOT_API_REFERENCE.md:1229`),`J.GetNearbyHeroes`
+   (`jmz_func.lua:2856`)只过滤不重排 ⇒ `[1]` **确实**是最近的可见敌方英雄,**守卫仍然是错的**,
+   因为被量化的谓词是**等级**,最近的不是等级最高的(**135 个「≥2」行里 43 行**)。
+   ⇒ **一次让引擎开始排序的改动会修好 `anyhero`,碰不到这一条。** 前提本身钉成 §1b,M11 是它的
+   变异证明(换成按名字排序 ⇒ 64 行,红并写「**Re-argue, do not re-baseline**」)。
+   产出:**新 id `lvlany`**(turbo-only,**FROZEN-HOLD,不请求入集**)、
+   `tests/test_lvlany_first_member_level_quantifier.lua` **15/15**、
+   `tools/agent/mutstand_lvlany.sh` **11 腿 11/11 STAND GREEN**、`state.json:lvlany_20260910`;
+   报告 `iterations/reports/strategy/20260910T223922Z.md`;**armed 串 / `queue.json` / `test_set.md`
+   一字未动**;零 AWS、零波次。
+   ⭐ **改动形状**:新 helper `X.NoNearbyEnemyAtLevel(tHeroes, nLevel)`,闸在里面;调用点换成
+   `and X.NoNearbyEnemyAtLevel(nNearbyEnemyHeroes, 10)`,**位置不变 ⇒ 短路顺序不变**。
+   **写成 helper 而不是提前算一个 local,理由是可测的不是风格**:提前算会在出货代码根本到不了
+   这一项的调用上求值 `GetLevel()`。**unarmed 一侧逐项就是出货表达式**,§3b 在每一行被驱动的帧上
+   **测出来**,不从 diff 上读。
+   ⭐ **语料这一次买到了真的敌我语义**(和前两轮不同):producer 是 `bot:GetNearbyHeroes`,loader 按
+   dump ground truth 复原(比队伍、判可见性、剔除自己、按距离排序,`replay_fixture.lua:1372`)⇒
+   §4a 把「自己不在名单里」「同队不在名单里」**都写成等式**(各 0)。这正是上一轮 M7 幸存教会的事
+   (**所有 ratchet 都是地板,污染只会满足地板;抓住它的必须是零断言**),本轮**从设计阶段就落上去**。
+   §4b 另测**离散度**(66 行带两个不同等级),否则等级全同的语料会让 §1–3 **绿着且空洞**。
+   ⛔ **买不到频率**:同一个 `if` 的其余项没被驱动,唯一读得出的 `bot:GetLevel() <= 8` = **806/1306**,
+   §4c 只当**上界**报 ⇒ 全文无一句真实对局命中率主张。
+   **读数**(计量三条 (iii),出货那格只是扫描里的一格):`miss` 在 r=600/650/750/1600 × 阈值 10/12 =
+   **4/5/7/15** 与 **2/2/2/3**;出货格 r750_th10 = **7**,§3a 断言驱动人群恰好等于它;
+   §3b unarmed **7/7 答 true**、§3c armed **7/7 答 false**、§3d 塌回 `[1]` ⇒ **7/7 又答回 true**。
+   ⛔ **接力棒钉成断言不是 issue**(GH #13 掉棒 37 轮的形状):三个未修兄弟写进 **§7**,数的是
+   **未修**站点条数(合计 3);任一被修好或删掉,§7 立刻红并要求**把它移出表并在报告里说清楚,
+   而不是把数字调小**。M10 就是这条断言的变异证明。
+   **附带(一条,流程债)**:trunk-red 先按「谁弄红的」分类 ⇒ `test_bots_walk_farm_only.py`
+   **是本组的**(上一轮新建的 `test_anyhero_*.lua` 自己的 `io.popen` 没进 hand-read 名单)
+   ⚠️ **一个新建的语料遍历测试,它自己就是那份普查的新成员** —— 上一轮报告写的「保持绿」在本轮
+   触发时已不成立。本轮把三条(本组两条 + 英雄组 `test_lion_q_field_engagement.lua` 一条)一起手读
+   登记,`EXIT=0`;`test_py_gate.py`(GH #728)与 `test_focus_mana_cost_consumer_census.lua`(英雄组
+   语料增长)不动。**本组本轮一条红都没留。**
+   ⛔ **下一格(本组下一轮第一项)**:
+   (1) ⭐ **主体继续是 `bots/` 行为改动**:三个同形兄弟 —— **一次一个,不要打包**(lanefix 两次被拒
+   gpm −74.5/−88.7);§7 的断言就是这一格的进度条;
+   (2) 判据 (5) 的**下一个变种本轮钉出来了**:445 处 `[1]` 中**被当成「最近的那个」用于动作选择**
+   (而不是存在量化)的那一族 —— 配合 §1b 已钉住的**排序承诺**重估哪些对、哪些在承诺之外;
+   (3) ⛔ **读 `botTarget` 的 consider 条目族仍不动**(GH #474,连续第五轮有效);
+   (4) ⛔ **兵营分支(GH #713)仍不落 gate**,域仍空,接力棒是
+   `tests/test_isvalid_building_sentinel.lua §2b`;
+   (5) ⛔ **P1/P2 的球仍不在本组,P4.2 冻结未解** ⇒ 本轮没有提入集;
+   (6) `tombhp`(GH #719)/ `anyhero`(GH #724)的裁定请求**仍未答**,本轮不催。】**
+
 0ANYHERO. **【2026-09-10T19:37Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**。
    认领依据 = 工作流第 1 步扫 open issue,`[strategy]` open **全是本组自报** ⇒ 取 `0TOMBHP`
    「下一格」**第 (1) 项**(同一把扫描器换谓词)。
@@ -7700,6 +7759,48 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-10T22:39Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = 扫 open issue,
+  `[strategy]` open 全是本组自报、无外部来件 ⇒ 取 `0ANYHERO`「下一格」**第 (1) 项**:
+  上一轮点名但没扫的 `mode_*.lua` 那一半)。
+  ⭐ **本轮的发现,以及它为什么不是 `anyhero` 的第二个副本 —— 这是最该带走的一条。**
+  `bots/mode_team_roam_generic.lua` 的 `X.SupportFindTarget` 对线补刀/反补支路,把一个关于**等级**的
+  **存在量化**问题交给了最近的那个英雄:`(nNearbyEnemyHeroes[1] == nil or
+  nNearbyEnemyHeroes[1]:GetLevel() < 10)`(写在旁边的空表腿本身就证明问句是存在量化的)。
+  `anyhero` 的 argument 落在**顺序**上;**这里名单是有序的,而且有序是对的** —— 引擎明文承诺
+  (`docs/BOT_API_REFERENCE.md:1229`),`J.GetNearbyHeroes`(`jmz_func.lua:2856`)只过滤不重排
+  ⇒ `[1]` **确实**是最近的可见敌方英雄,**守卫仍然是错的**,因为被量化的谓词是**等级**,
+  最近的不是等级最高的(**135 个「≥2」行里 43 行**,43 行严格更低)。
+  ⇒ **一次让引擎开始排序的改动会修好 `anyhero`,碰不到这一条**;两个 id 不同池不同波。
+  代价:该项是一条返回 `DESIRE_ABSOLUTE * 0.97`(上前补刀/反补)支路的安全半边 —— 最近的是 5 级辅助、
+  12 级劣单站在同一个 750 里时,守卫读成「安全」,而 bot 被上一项限在 `GetLevel() <= 8`。
+  新 id **`lvlany`**(turbo-only,**FROZEN-HOLD,不请求入集**),
+  `tests/test_lvlany_first_member_level_quantifier.lua` **15/15**,
+  `tools/agent/mutstand_lvlany.sh` **11 腿 11/11 STAND GREEN**,`state.json:lvlany_20260910`。
+  ⭐ **改动写成 helper 而不是提前算一个 local,理由是可测的不是风格**:提前算会在出货代码根本到不了
+  这一项的调用上求值 `GetLevel()`;调用点位置不变 ⇒ **短路顺序不变**,**unarmed 一侧逐项就是出货
+  表达式**,§3b 在每一行被驱动的帧上测出来。
+  ⭐ **语料这一次买到了真的敌我语义**:producer 是 `bot:GetNearbyHeroes`,loader 按 dump ground truth
+  复原(比队伍、判可见性、剔除自己、按距离排序)⇒ §4a 把「自己不在名单里」「同队不在名单里」
+  **都写成等式**(各 0)。这正是上一轮 M7 幸存教会的事(**所有 ratchet 都是地板,污染只会满足地板;
+  抓住它的必须是零断言**)—— 本轮**从设计阶段就落上去**,而不是被变异台打回来。
+  §4b 另测离散度(66 行带两个不同等级),否则等级全同的语料会让 §1–3 绿着且空洞。
+  ⛔ **买不到频率**:同一个 `if` 其余项未被驱动,`bot:GetLevel() <= 8` = **806/1306** 只当上界报。
+  **读数**(出货格只是扫描里的一格):`miss` r=600/650/750/1600 × 阈值 10/12 = **4/5/7/15** 与
+  **2/2/2/3**;出货格 **7**,§3b unarmed 7/7 true、§3c armed 7/7 false、§3d 塌回 `[1]` ⇒ 7/7 true。
+  ⛔ **接力棒钉成断言不是 issue**:三个未修的同形兄弟写进 **§7**(`< 12` 两处、`< 10` 一处),
+  任一被修好或删掉 §7 立刻红并要求**移出表并在报告里说清楚,而不是把数字调小**;M10 是它的变异证明。
+  **开工自检 trunk-red 按「谁弄红的」分类**:`test_bots_walk_farm_only.py` **是本组的** ——
+  ⚠️ **一个新建的语料遍历测试,它自己就是那份普查的新成员**,上一轮报告写的「保持绿」在本轮触发时
+  已不成立。本轮三条一起手读登记(本组两条 + 英雄组一条),`EXIT=0`;
+  `test_py_gate.py`(GH #728)、`test_focus_mana_cost_consumer_census.lua`(英雄组)不动。
+  **本组本轮一条红都没留。**
+  铁律 6 三条腿:`GATE_EXIT=0`(luacheck 0 警告)/ `py gate: PY_EXIT=0`(95 ran, 0 findings, 34.8s)/
+  `lua gate: LUA_EXIT=0`(322);`RULE6_BYPASS` 未使用;**`SELFCHECK_EXIT=124`
+  (`timeout 900` 掐的 —— 那是容器判决不是自检判决)**;⛔ 第一次调用还被脚本按**管道**拒绝
+  (`stdout is a pipe; exit 2, nothing checked`),**那不是通过**,改走重定向才拿到真码。
+  ⛔ **零 AWS、零波次、armed 串 / `queue.json` / `test_set.md` 一字未动。**
+  报告:`iterations/reports/strategy/20260910T223922Z.md`。
 
 - 2026-09-10T19:37Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = 扫 open issue,
   `[strategy]` open 全是本组自报 ⇒ 取 `0TOMBHP`「下一格」**第 (1) 项**)。
