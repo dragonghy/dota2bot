@@ -22,7 +22,30 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--144. **⭐ 下一轮:同一把尺子的第三次检查 —— 把「环 = 支路自己的环」当成一条普查纪律,不要再一个文件一个文件地撞上它。**
+-145. **⭐ 下一轮:把「语料涨了帧就红」的普查改成方向安全的界 —— 样板已经在仓库里了。**
+   本轮(报告 `iterations/reports/hero/20260910T230636Z.md`)执行完 `-144`:扫完 8 个实例、
+   修完 6 处(+ 第 7 处)、并把纪律写成会跑的属性
+   `tests/test_cast_ring_mirror_discipline.lua`(3/0,4.17s,已被 `lua_gate.py` 当新文件照跑)。
+   - **⭐ 该做的事**:闸上 **15 条 known-red 里有 3 条**是 GH #624 那个形状 ——
+     断言「语料里 X 的集合恰好等于已被读过的集合」,于是**任何组加一帧就顶红**。
+     **其中 2 条是本组的**:`test_axe_battle_hunger_fight_reach.lua`(3 条案例,
+     红消息「40 corpus frames, was 33」/「drove 9 premise-real frames, was 6」/
+     「checked 7 elections, was 4」)和 `test_focus_mana_cost_consumer_census.lua`
+     (173→176、n 26→27)。**顶红它们的那几帧正是本组上一轮加的。**
+   - ⛔ **不要只是把数字重取一遍** —— 那是把同一颗地雷重新埋一次,下一轮加帧的人再踩。
+     照 `test_cast_ring_mirror_discipline.lua` 的写法改:**每条断言要么是对它找到的每个
+     站点的性质,要么是方向安全的界(`>=`,永不 `==`)**;真正想钉的不变量(比如
+     「band 与前提永不共现」)本来就可以写成对每一帧的全称命题,不需要那个 `== 33`。
+     重取数字**只**留给「这个数本身就是结论」的那种(例如占比、刀口)。
+   - **⭐ 顺手可拿的一条**:`test_cast_ring_mirror_discipline.lua` §1 已经钉住
+     「`zusaether` 若 promote,Zeus 的两个镜像立刻变成实例」——**那天它会自己顶红并点名**。
+     这是把 `pullcad` 那条散文规矩写成代码的第二个实例,值得在别处复用。
+
+-144. ~~**⭐ 下一轮:同一把尺子的第三次检查 —— 把「环 = 支路自己的环」当成一条普查纪律,不要再一个文件一个文件地撞上它。**
+   ✅ **2026-09-10T23:06Z 执行完毕:扫出 6 个新实例(共 8 个),4 个文件全部修完;
+   读它们的时候又买到第 7 个(背包槽 6–8 的透镜被算进了环);纪律写成
+   `tests/test_cast_ring_mirror_discipline.lua`,变异台三发全红(第二发靠它才发现
+   「检测器只在缺陷不存在时才看得见缺陷」)。** ↓ 原文保留
    **已发表:GH #725**(主发现)。
    本轮(报告 `iterations/reports/hero/20260910T201905Z.md`)执行了 `-143`(反查 Lion 的 15 级帧),
    `lionqfight` 的域从 **0 变成 4**,armed 扣下 3 发、豁免 1 发,**从「钉空操作」变成本地验证过的杠杆**。
@@ -6356,6 +6379,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-10T23:06Z(报告 `iterations/reports/hero/20260910T230636Z.md`;**backlog:`-144` 完成、
+  新开 `-145`**;**本轮没有动 `bots/`** —— 全是 `tests/`(量具修复),
+  因此无新 gate / 无新 cand id / 无入集申请,P4.2 冻结期无关)
+  **把「环 = 支路自己的环」从两个巧合变成一条会跑的纪律:扫出 8 个实例、修完 7 个、
+  写成 `tests/test_cast_ring_mirror_discipline.lua`。**
+  - **扫的结果**:上一轮的 2 个 Lion 实例之外,还有 **6 个**,在 **4 个文件、2 个英雄**上 ——
+    CM 两处(`X.ConsiderQ` `+aetherRange+32`、`X.ConsiderW` `+30+aetherRange` 被写成 `+32`/`+30`)、
+    Axe 四处(`X.ConsiderW` `+aetherRange` 被写成**裸** `GetCastRange()`)。
+  - **⭐ 排除的那半同样是结论**:Zeus 三个消费点走**被 gate 住的** `AetherReach()`
+    (gate off 返回 0)⇒ 裸环就是出厂环,**不是实例**,但这是**有期限的正确**,
+    已把「`zusaether` promote 那天自己顶红」钉进新文件 §1;
+    `axe_culling_blade` 的环**本来就没有 aether 项** ⇒ 证明**按文件归属会误伤**,
+    新检查因此**按技能解析**(slot→KV 名在运行时用 `J.Skill.GetAbilityList` 从真实帧取)。
+  - **地面真相,照实报:本轮 6 处今天一个读数都没动** —— CM **0/70**、Axe **0/40** 带透镜
+    (Lion 是 **9/42**,那 9 帧正是上一轮读数会动的全部理由)。**但两个英雄的两条出装路线都买透镜**
+    ⇒ 这是**今天沉默、明天开口**那一类。先证明语料能回答:152 个活体 instance 全部读得到物品,
+    57 种物品名,两个读法 **9 = 9** 对上 ⇒ 那个 0 是**关于机器人的事实**,不是 harness 的事实。
+  - **⭐⭐ 变异台救了这个检查一次**:M2(Axe 镜像退回裸读)**第一次是活的** ——
+    检测器要求 `GetCastRange()` 后跟 `+`,而**丢掉 aether 项之后表达式一个加号都不剩**,
+    **站点在它变成缺陷的那一刻从视野里消失**;而**本轮 6 个实例里 4 个原本就是裸读**。
+    改判据为「**有没有被绑给局部变量**」后三发全红,顺带把 `assert(...GetCastRange()==600)`
+    这类**读 KV 的断言**正确地排除在外。
+  - **⭐ 改敏感后当场抓到第 7 个**(在上一轮宣布已修的 `test_lion_q_kill_reach.lua` 里):
+    误报是真的(项加在 helper 体里),但读它时买到真缺陷 —— 尺子用 `nSlot >= 0`,
+    而生产者 `J.IsItemAvailable` 的界是 **`0..5`(装备槽)**,**背包透镜不给施法距离**
+    ⇒ 支路答 670 处尺子答 920。已修。⛔ **域是空的(今天无人把透镜放背包),照实说:
+    依据是算术 + 生产者自己的界,不是真实帧。**
+  - **暂存价钱:净增红 0**,`known_red` **仍是 15**;`test_axe_battle_hunger_fight_reach` 的
+    3 条红经 `git worktree` 干净 HEAD 对拍**逐字相同**(只有行号被注释顶下去)。
+    新文件 **4.17s**,`lua_gate.py` 把不在 manifest 里的新测试**照跑不误** ⇒
+    **这条纪律在作者自己的 push 上就会响**,不必等 ~100min 全套。
+  - **验证**:`GATE_EXIT=0`(0 warnings)、`py gate: 95 ran, 0 findings`、
+    `lua gate: 328 ran, 0 findings, 15 known-red`。
+    ⛔ **本轮踩到一次空读数**:直接 `lua5.1 tests/test_x.lua` 四个文件全 `EXIT=0` 且零输出
+    —— `run_tests.lua:20` 写着那只是**返回表,一个测试体都不执行**;走 runner 才拿到真读数
+    (3 条存量红也是那时才露面)。自检 `EXIT=0` 但自打 **`UNCERTIFIABLE`(9 项没跑成,不是通过)**。
 - 2026-09-10T20:19Z(报告 `iterations/reports/hero/20260910T201905Z.md`;**backlog:`-143` 完成、
   新开 `-144`**;OWNER_PRIORITIES **P4.4 (i)** 主体是 `bots/BotLib/hero_lion.lua`;
   **P4.2 冻结期内不请求入集**,只更新 `iterations/state.json:lionqfight_20260910`)

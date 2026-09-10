@@ -78,6 +78,19 @@ local function code_only(path)
     return table.concat(out, '\n')
 end
 
+--- The aether-lens term of this hero's cast rings, computed the way
+--- X.SkillsComplement computes it (hero_crystal_maiden.lua :327) rather than
+--- assumed: `J.IsItemAvailable` then `J.GetAetherLensRangeBonus(item, 250)`.
+--- With only this file's own candidate armed the bonus helper is ungated and
+--- answers the shipped 250, which is exactly what the branch sees.
+--- Must be called with the J of an already-loaded frame -- J.IsItemAvailable
+--- reads GetBot(), so it is a fact about the SUBJECT, not about the file.
+local function aether_bonus(J)
+    local aether = J.IsItemAvailable('item_aether_lens')
+    if aether == nil then return 0 end
+    return J.GetAetherLensRangeBonus(aether, 250)
+end
+
 local function count(hay, needle)
     local n, i = 0, 1
     while true do
@@ -240,7 +253,16 @@ tests['[4] the pin frame: shipped pokes a 0.62-health Lion, armed declines'] = f
     assert(ab ~= nil and ab:IsFullyCastable(), 'Crystal Nova is not castable on the pin frame')
 
     -- The subject the branch aims at, and the fact that it is NOT a kill.
-    local nCastRange = ab:GetCastRange() + 32
+    -- The ring is the BRANCH's ring, term for term (hero_crystal_maiden.lua
+    -- X.ConsiderQ: `abilityQ:GetCastRange() + aetherRange + 32`).  The aether
+    -- term is read per-frame rather than assumed away: it is 0 on every one of
+    -- the 70 live-CM frames this corpus holds today (none carries the item),
+    -- but BOTH of this hero's buy lists buy item_aether_lens, so a census that
+    -- spells the ring `GetCastRange() + 32` is a reading that silently
+    -- under-states itself the day a late-game CM frame lands.  That is not
+    -- hypothetical: the same drop on hero_lion.lua read a legal 861.99u cast as
+    -- "outside 670" (GH #725), because 9 of 42 live Lions DO carry one.
+    local nCastRange = ab:GetCastRange() + aether_bonus(J) + 32
     local nRadius = ab:GetSpecialValueInt('radius')
     local bonus = J.GetNearbyHeroes(bot, nCastRange + nRadius + 150, true, BOT_MODE_NONE)
     assert(#bonus == 3, string.format('the pin frame should hold 3 enemies in the bonus ring, holds %d', #bonus))

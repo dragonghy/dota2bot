@@ -132,11 +132,21 @@ local BONUS      = 200          -- nInBonusEnemyList's extra radius
 --- Same defect, same day, as tests/test_lion_q_field_engagement.lua §3.1.
 local AETHER_BONUS = 250
 
+--- ⛔ THE SLOT BOUND IS THE BRANCH'S BOUND, and this helper used to be one
+--- inequality wider than it.  X.SkillsComplement reaches the item through
+--- J.IsItemAvailable, which returns the handle only for `slot >= 0 and slot <= 5`
+--- -- the six EQUIPPED slots.  A lens in the BACKPACK (6-8) grants no cast range
+--- and the branch correctly ignores it; a meter that asked only `nSlot >= 0`
+--- answered 920 where the branch answers 670, i.e. it over-stated the ring on
+--- exactly the frames it was added to measure.  No Lion in today's corpus carries
+--- a backpacked lens, so this moved no reading (the two readers agree 9/9, pinned
+--- in tests/test_cast_ring_mirror_discipline.lua §3) -- which is the same shape as
+--- every other defect in this family: quiet until the frame that isn't.
 local function frame_ring(bot, hQ)
     local nRing = (hQ ~= nil and hQ:GetCastRange() or CAST_RANGE) + SLACK
     if bot.FindItemSlot ~= nil then
         local nSlot = bot:FindItemSlot('item_aether_lens')
-        if nSlot ~= nil and nSlot >= 0 then nRing = nRing + AETHER_BONUS end
+        if nSlot ~= nil and nSlot >= 0 and nSlot <= 5 then nRing = nRing + AETHER_BONUS end
     end
     return nRing
 end

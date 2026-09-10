@@ -57,6 +57,26 @@ local SRC  = 'bots/BotLib/hero_crystal_maiden.lua'
 local CAND = 'cmwface'
 local HELPER = 'cm_IsSelfDefenseFacingOk'
 
+--- The aether-lens term of this hero's cast rings, computed the way
+--- X.SkillsComplement computes it (hero_crystal_maiden.lua :327) rather than
+--- assumed: `J.IsItemAvailable` then `J.GetAetherLensRangeBonus(item, 250)`.
+--- With only this file's own candidate armed the bonus helper is ungated and
+--- answers the shipped 250, which is what the branch sees.
+---
+--- WHY A CENSUS MUST NOT SPELL THE RING WITHOUT THIS.  It is 0 on all 70 live
+--- Crystal Maiden frames the corpus holds today, so restoring it moves no
+--- reading here -- but both of this hero's buy lists buy item_aether_lens, and
+--- the identical drop on hero_lion.lua (where 9 of 42 live Lions DO carry one)
+--- read a legal 861.99u cast as "outside 670" for as long as nobody looked
+--- (GH #725).  A ring is the branch's own arithmetic or it is a different ring.
+--- Must be called with the J of an already-loaded frame -- J.IsItemAvailable
+--- reads GetBot(), so it is a fact about the SUBJECT, not about the file.
+local function aether_bonus(J)
+    local aether = J.IsItemAvailable('item_aether_lens')
+    if aether == nil then return 0 end
+    return J.GetAetherLensRangeBonus(aether, 250)
+end
+
 local PIN = 'tests/fixtures/f_260820_103216_cm_es_aftershock.lua'
 local UNIT = 'npc_dota_hero_crystal_maiden'
 
@@ -294,7 +314,15 @@ tests['3.1: the pin frame carries the premise, measured not asserted'] = functio
     assert(bot:WasRecentlyDamagedByAnyHero(3.0),
         'the branch premise: a hero hit her inside 3s -- real DAMAGE rows')
 
-    local nCastRange = abilityW:GetCastRange() + 30
+    -- The BRANCH's ring, term for term (X.ConsiderW :1327 is
+    -- `abilityW:GetCastRange() + 30 + aetherRange`).  The aether term is read
+    -- per-frame, not assumed away -- see the aether_bonus() header.  On THIS
+    -- frame it is 0, and the assert below pins that rather than leaving it to
+    -- the reader, so the day a lens-carrying CM frame lands the number in the
+    -- message moves with the ring instead of drifting off it.
+    local nAether = aether_bonus(J)
+    assert(nAether == 0, ('the pin frame carries no aether lens; got a %du bonus'):format(nAether))
+    local nCastRange = abilityW:GetCastRange() + 30 + nAether
     local inRange = J.GetNearbyHeroes(bot, nCastRange, true, BOT_MODE_NONE)
     assert(#inRange == 2, ('two enemies inside %du, got %d'):format(nCastRange, #inRange))
     local seen = {}

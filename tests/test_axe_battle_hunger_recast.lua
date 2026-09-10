@@ -100,6 +100,25 @@ local AXE = 'npc_dota_hero_axe'
 local WK = 'npc_dota_hero_skeleton_king'
 local BH = 'axe_battle_hunger'
 
+--- The aether-lens term of X.ConsiderW's ring, computed the way this hero
+--- computes it (hero_axe.lua :415 -- `J.IsItemAvailable` then a FLAT 225, not
+--- the 250 the other 29 sites write).  Not routed through
+--- J.GetAetherLensRangeBonus BECAUSE the branch is not: mirroring the branch
+--- means mirroring which number it uses.
+---
+--- WHY A CENSUS MUST NOT SPELL THE RING WITHOUT THIS.  X.ConsiderW's ring is
+--- `abilityW:GetCastRange() + aetherRange`, and this file recomputed it as a
+--- bare `GetCastRange()` in two places.  The term is 0 on all 40 live Axe
+--- frames the corpus holds today, so restoring it moves no reading here -- but
+--- both of this file's buy lists carry item_aether_lens, and the identical drop
+--- on hero_lion.lua (9 of 42 live Lions DO carry one) read a legal 861.99u cast
+--- as "outside 670" for as long as nobody looked (GH #725).
+--- Must be called with the J of an already-loaded frame -- J.IsItemAvailable
+--- reads GetBot(), so it is a fact about the SUBJECT, not about the file.
+local function aether_bonus(J)
+    return (J.IsItemAvailable('item_aether_lens') ~= nil) and 225 or 0
+end
+
 local MOD_TARGET = 'modifier_axe_battle_hunger'
 local MOD_SELF_TESTED = 'modifier_axe_battle_hunger_self'
 local MOD_SELF_REAL = 'modifier_axe_battle_hunger_self_movespeed'
@@ -234,9 +253,14 @@ end
 tests['ground truth: the hungered Wraith King is the ONLY enemy in cast range'] = function()
     -- This is why section 3 reads as a DECLINE and not as a spread.  It is the
     -- cost side of the lever, measured rather than argued away.
-    local _, _, _, bot, heroes = run()
+    local _, _, J, bot, heroes = run()
     local w = bot:GetAbilityByName(BH)
-    local nRange = w:GetCastRange()
+    -- X.ConsiderW's ring is GetCastRange() + aetherRange.  Both terms are
+    -- pinned separately so a lens-carrying frame moves the ring instead of
+    -- silently contradicting the 800 below; see the aether_bonus() header.
+    local nAether = aether_bonus(J)
+    assert(nAether == 0, ('this frame carries no aether lens; got a %du bonus'):format(nAether))
+    local nRange = w:GetCastRange() + nAether
     assert(nRange == 800, 'rank-3 cast range, got ' .. tostring(nRange))
     local nIn, sIn = 0, nil
     for name, h in pairs(heroes) do
@@ -586,7 +610,9 @@ tests['premise: on the flee frame the carrier is alone, so the veto stands down'
     local J, bot, heroes = rf.load(FIXTURE)
     J.IsSoakCandidate = function(id) return id == CAND end
     local X = rf.load_hero('axe')
-    local nRange = bot:GetAbilityByName(BH):GetCastRange()
+    -- The ring the retreat and lane sites iterate is X.ConsiderW's
+    -- `GetCastRange() + aetherRange`; see the aether_bonus() header.
+    local nRange = bot:GetAbilityByName(BH):GetCastRange() + aether_bonus(J)
     local inRange = {}
     for _, h in pairs(heroes) do
         if h:GetTeam() ~= bot:GetTeam() and h:IsAlive()

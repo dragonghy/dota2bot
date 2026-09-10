@@ -128,6 +128,27 @@ local FRAME = 'tests/fixtures/f_260819_123546_axe_rescue_ok.lua'
 local FIXTURE_DIR = 'tests/fixtures'
 local STAGED_DIR  = 'tests/frames'
 
+--- The aether-lens term of X.ConsiderW's ring, computed the way this hero
+--- computes it (hero_axe.lua :415 -- `J.IsItemAvailable` then a FLAT 225, not
+--- the 250 the other 29 sites write; hero_axe.lua and hero_dazzle.lua are the
+--- two files that already say what the live KV says).  Not routed through
+--- J.GetAetherLensRangeBonus BECAUSE the branch is not: mirroring the branch
+--- means mirroring which number it uses.
+---
+--- WHY A CENSUS MUST NOT SPELL THE RING WITHOUT THIS.  X.ConsiderW's ring is
+--- `abilityW:GetCastRange() + aetherRange`, and this file recomputed it as a
+--- bare `GetCastRange()` in two places.  The term is 0 on all 40 live Axe
+--- frames the corpus holds today, so restoring it moves no reading here -- but
+--- BOTH of this file's buy lists carry item_aether_lens (hero_axe.lua :1077
+--- says so in prose already), and the identical drop on hero_lion.lua, where 9
+--- of 42 live Lions DO carry one, read a legal 861.99u cast as "outside 670"
+--- for as long as nobody looked (GH #725).
+--- Must be called with the J of an already-loaded frame -- J.IsItemAvailable
+--- reads GetBot(), so it is a fact about the SUBJECT, not about the file.
+local function aether_bonus(J)
+    return (J.IsItemAvailable('item_aether_lens') ~= nil) and 225 or 0
+end
+
 local CK = 'npc_dota_hero_chaos_knight'
 local CM = 'npc_dota_hero_crystal_maiden'
 
@@ -260,9 +281,12 @@ tests['§1 the band and the branch premise never co-occur in the corpus'] = func
             end
             if present and rank >= 1 then
                 nLive = nLive + 1
-                local _, bot = rf.load(path, UNIT)
+                local J, bot = rf.load(path, UNIT)
                 local hW = bot:GetAbilityByName(HUNGER)
-                local nCast = hW:GetCastRange()
+                -- X.ConsiderW's ring is GetCastRange() + aetherRange; see the
+                -- aether_bonus() header for why the term is spelled out even
+                -- though it is 0 on every frame this census reaches today.
+                local nCast = hW:GetCastRange() + aether_bonus(J)
                 local nBand, nIn = 0, 0
                 for _, e in ipairs(bot:GetNearbyHeroes(nCast + BONUS, true, BOT_MODE_NONE)) do
                     if GetUnitToUnitDistance(bot, e) <= nCast then nIn = nIn + 1
@@ -474,13 +498,16 @@ tests['§4.2 the no-op has the reason §0 gives: every elected target is in rang
             if present and rank >= 1 then
                 local _, probe = rf.load(path, UNIT)
                 if #probe:GetNearbyHeroes(FIGHT_R, false, BOT_MODE_NONE) >= 2 then
-                    local log, _, bot = drive(path, false, false, true)
+                    local log, J, bot = drive(path, false, false, true)
                     local sTarget = hungered(log)
                     if sTarget ~= nil then
                         nChecked = nChecked + 1
                         local h = enemy_handle(bot, sTarget)
                         local d = GetUnitToUnitDistance(bot, h)
+                        -- The branch's ring, aether term included (0 here on
+                        -- every frame today; see the aether_bonus() header).
                         local nCast = bot:GetAbilityByName(HUNGER):GetCastRange()
+                                      + aether_bonus(J)
                         assert(d <= nCast, string.format(
                             '%s: the shipped 团战 min-search elected %s at %.1fu '
                             .. 'with a cast range of %d -- that is a BAND election '
