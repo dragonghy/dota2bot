@@ -1,128 +1,134 @@
 {
- "wave": "W62",
- "_note": "Launch record written by the batch desk in the SAME round as the launch. Everything a harvest round needs is registered here at launch time so the harvest round never has to reconstruct it.",
- "market": "on-demand",
- "market_source": "gate (iv) reclaim_blind.py RE-RUN THIS ROUND on W61's own record (named --wave-json flag): RECLAIM_BLIND_EXIT=1, verbatim `yield: 0 paired seed(s) of 4 machine(s)` / `attribution: 4 machine(s) reclaimed before the flip` / `VERDICT: BLINDED -- yield <= 1 AND the loss is capacity.` / `NEXT WAVE: launch --on-demand (ONE wave), then revert to spot.` THIS IS A GATE RULING, NOT A CONSERVATIVE DEFAULT -- the contrast with W61 is the point: W61's market line was the owner's standing spot default written down because the tool returned exit 2 (UNDECIDABLE, nothing checked); this round the tool returned exit 1, which reclaim_blind.py's own source defines as BLINDED (2 is UNDECIDABLE, 0 is not-blinded). ONE wave on-demand, then revert to spot: W63 is a spot wave unless its own gate (iv) run says otherwise.",
- "ref_pin": "a91efb699a63726f775b4e20ad7d4df274f17981",
- "tree_verified": "git ls-remote origin main was re-read as the FIRST STATEMENT of the launch script and compared to the pin, with `exit 9` on mismatch -- this closes the regression W61 registered against itself (`this round's launch script did NOT re-read the remote as its first statement and has no exit-9 mismatch guard`). The script printed REMOTE_MAIN=a91efb699a63726f775b4e20ad7d4df274f17981 and PIN=a91efb699a63726f775b4e20ad7d4df274f17981 before any spend. The full 40-char SHA (not the moving `main`) was passed as --ref, so this round's own closing commits cannot move what the instances cloned.",
- "pooling_claim": "NOT POOLABLE with W60/W61, and this is the ordinary answer rather than a hard case. Director's §GH.5.4 verbatim: `树差一旦碰到未 gate(已 promote)的代码,哪怕臂串逐字相同,两波在两条腿上都不同 ⇒ 不可并池`. The tree delta W61-pin -> W62-pin does not merely touch ungated code, it changes the behaviour of an ARMED leg (see gate_ii_new_to_test). So W62 opens a new family at depth 1 and the W60 pool stays at 4 paired seeds. The desk does NOT ask the director to revisit this: unlike the question it was preparing to hand up (an ungated but provably no-op alias extraction in hero_axe.lua), the jmz_func change is a real behaviour change on an armed id and pooling would be wrong.",
- "family_depth_at_launch": "0 paired seeds. W62 is the first wave of a new family: the 37-id arm string is byte-identical to W60/W61 but `ownhalf`'s domain moved underneath it, so no earlier wave measured this program. NOTE FOR THE HARVEST ROUND: this is NOT another instance of `家族深度被退集节奏封死` (the depth-1 treadmill the desk reported on 09-09T12:13Z). That complaint was about waves that opened new families while buying nothing new. This family is opened by a real narrowing of an armed leg, which is the thing waves exist to measure.",
- "harvest_owed_at_launch": "NONE, checked not assumed. W61 yielded zero (4/4 machines reclaimed by capacity before the flip; fully registered in W61_wave.json last round). An S3 scan this round (s3api list-objects-v2 under validation/, sorted by LastModified) shows the newest object is still W60's `tpcommit+37ids-be522d4e0137_20260909_1022_run.log` at 2026-09-09T10:22:37Z -- nothing has landed since, which is exactly what a zero-yield W61 predicts. seed_roster_index.py --build independently agrees: `401 run prefixes in S3, 401 already indexed, 0 to scan / nothing new; index unchanged`.",
- "slate_anchor": "last machine up 2026-09-09T21:24:41.000Z (max, GH #469 ruling 1) => gate (i) unlocks 2026-09-10T03:24:41Z. The first-machine reading would be 03:24:34Z. Slate spread 7s (the tightest of any recent wave -- no machine walked the AZ ring). DO NOT copy this timestamp into the next round as the unlock: run wave_throttle.py and read the line IT prints.",
- "az_spread": "FOUR distinct AZs over 4 machines -- requested 2a/2b/2c/2d, ACTUAL 2a/2b/2c/2d, every one granted directly. ZERO `re-aiming inside the ring` lines and ZERO `AZ RING EXHAUSTED` lines in the launch log. This is the 4+0 shape the desk's classification (丙) and GH #252's acceptance test were both built for, and it is the maximum spread the ring can produce -- so the GH #664 exposure (a 3+1 slate that both criteria pass while one AZ event takes three of four seeds) DOES NOT APPLY to this wave. ⚠️ That is a fact about this slate, not a fix: GH #664 stays open, because the ring still does not look at which AZs the wave already holds, and the next capacity-tight wave will re-aim into an occupied AZ exactly as W61 did. Registering the clean slate here so no harvest round reads W62's survival as evidence the ring was fixed.",
- "gates": {
-  "gate_i_throttle": "THROTTLE_EXIT=0 at the launch instant, verbatim `margin           : +3s past unlock` against W61's anchor 2026-09-09T15:24:29Z. The gate ran INSIDE the same script that then ran the four spot_run.sh calls (GH #469: the gate binds the action, not the decision) -- the script polled wave_throttle.py at 20s intervals and launched on the first exit 0 the TOOL itself printed, at 21:24:32Z; the first machine's LaunchTime is 21:24:34Z, 2s later. The five earlier polls printed their own THROTTLED (exit 3) lines with shrinking margins (97s / 77s / 57s / 37s / 17s SHORT) and those refusals are registered here rather than discarded. Two further refusals from before the script started (21:09:15Z margin 914s, 21:13:00Z margin 689s) are in the round's report.",
-  "gate_ii_new_to_test": "PASSES, and passes on the SUBSTANTIVE reading rather than the literal one -- this is the difference from W61, which the director declined to ratify (§GH.4: `W61 的起飞没有任何一条腿授权`). Applying §GH.4's three limbs in order: LIMB 1 (arm string differs from the previous wave) = NO. The string is byte-identical to W60/W61: 37 ids / 335 bytes / md5 b525d51d4b4957e0e40f22f203aea641, computed live this round from test_set.md line 2 (NOT line 3, GH #631) and re-derived a second time INSIDE the launch script, which printed ARM_IDS=37 ARM_BYTES=335 ARM_MD5=b525d51d4b4957e0e40f22f203aea641. LIMB 3 (family depth below the promote bar) = NOT AVAILABLE, suspended by the director for want of a number (§GH.4). LIMB 2 (reachable code under this arm string differs from the previous wave) = YES, and not on a technicality. The bots/+game/ delta from W61's pin 252a5781 to a91efb69 is two files, +215/-20. Read line by line, the NON-COMMENT changes are exactly three: (a) bots/FunLib/jmz_func.lua, inside J.ShouldPunishDive, `if nInvadeDepth >= 800 then bInDomain = true end` -> `>= 1600` (line 9177); (b) the same file gains a new block behind `J.IsModeTurbo() and J.IsSoakCandidate( 'deepnum' )`; (c) bots/BotLib/hero_axe.lua gains X.axe_HasHungerAlternative and X.axe_IsHungerHarassIdle and rewires X.axe_IsBattleHungerFresh's three call sites. (b) is unreachable: `deepnum` is not one of the 37 armed ids. (c) is reachable but provably a no-op with `axebhrecast` unarmed: the new conjunct sits behind `J.IsSoakCandidate('axebhrecast')` (also not armed) and short-circuits, and the one ungated change, `npcEnemy:GetAttackTarget() == nil` -> `X.axe_IsHungerHarassIdle( npcEnemy )`, is an alias extraction with the same read, the same operator and the same answer (checked against §GH.2's side-effect limb: one GetAttackTarget() call either way, no new engine call, no RNG, no I/O; the third argument is passed as a function VALUE, not called, at the site). ⭐ (a) IS THE WAVE. `ownhalf` IS armed -- position 3 of the 37-id string, and carrier_terms.py resolves it independently to jmz_func.lua:9092, the `local bOwnHalf = J.IsSoakCandidate( 'ownhalf' )` that guards the changed line. So the armed leg's own domain narrowed (800u -> 1600u past the midline, strictly narrowing per the strategy stream's in-code note) and NO EARLIER WAVE HAS MEASURED IT. That is new information, not new code, which is the distinction §GH.3 says the old gate wording got wrong in the other direction. HONEST LIMIT: the desk read (a) off the diff and the guard off carrier_terms.py's own resolution; it did not run the full Lua dynamic half (~100min, GH #124) and does not claim the narrowing is correct -- only that it is reachable, armed, and unmeasured.",
-  "gate_ii_wiring": "ARM_WIRING_EXIT not obtained: tools/batch_test/check_armed_wiring.py requires --cand and refuses a whole-string invocation (`error: the following arguments are required: --cand`, exit 2). REGISTERED AS NOT RUN, NOT AS A PASS. What was run instead, BEFORE the launch, is carrier_terms.py over the same 37 ids: CARRIER_TERMS_EXIT=0, verbatim `CARRIER_TERMS derived from 37 armed ids: 9 hero-scoped, 28 generic, 0 unresolved => 7 term(s)`. `0 unresolved` means every one of the 37 ids was located at a real call site on HEAD, which covers the same failure (an armed id with nothing behind it) by a different route -- but it is a DIFFERENT INSTRUMENT and the desk does not claim it as check_armed_wiring.py's reading.",
-  "gate_iii_fence": "FENCE_EXIT=0 CLEAR, fence DERIVED this run (not copied), run BEFORE the launch. --planned 2.150 (the on-demand single-wave constant; correct because gate (iv) made this an on-demand wave) --pending 3.250 (W60 on-demand ~$2.15 + W61 spot ~$1.10 per GH #454's 2026-09-06 constant, both launched inside the 12h window). Readings: actual (MTD) $74.308, projected total $79.708, fence $80.00, brake $90.00, operative ceiling $80.00, headroom $0.292 after this wave. Alerts: $50.00 crossed (AWS state=ALARM), $80.00 and $100.00 NOT yet crossed. --no-accrual-check was NOT used; the accrual line read `CERTIFIED ZERO (0 accruing instances account-wide)` and the LARGER claim ($3.250) was used. ⛔ THE NUMBER THE NEXT ROUND NEEDS: $0.292 of headroom means W62 IS THE LAST WAVE THIS MONTH UNDER THE $80 FENCE. Even a spot wave (~$1.10) breaches it. The next launch round must either find the fence moved (MTD resets on the 1st) or stop and ask the owner. ⚠️ --pending may be conservative in W60's direction: the budget snapshot refreshed 2026-09-09T20:23:37Z, 11.0h after W60's 09:23Z launch, which is at the far edge of the charter's 4.3-11.3h lag window, so W60 may already be inside the $74.308. Over-claiming pending fails toward safety and was left in.",
-  "gate_iv_reclaim_blind": "RECLAIM_BLIND_EXIT=1 on W61's record, run BEFORE the launch. 1 = BLINDED in reclaim_blind.py's own source (2 = UNDECIDABLE, 0 = not blinded), so this is a ruling and not a default. Per-machine lines all read `instance-terminated-no-capacity ... NO-PAIR`. ⚠️ Carried forward from W61's round and NOT re-litigated here: the tool prints `[ab/ba only (no arm_depth given)]` on all four rows even though the record DOES give arm_depth: 0.0 -- the verdict is right (unpaired rows are excluded before the depth check) but the printed reason is false. That is GH #672, a harness bug the desk does not fix itself.",
-  "gate_iv_inputs_no_harvest_owed": "SATISFIED and established this round, not inherited: see harvest_owed_at_launch. queue.json was scanned row by row -- the only `running` rows are strategy-31 (tormself), strategy-32 (immguard) and hero-27 (savemana), and all three declare themselves zero-EC2 / no dedicated wave in their own axis text. No row requests a new wave, a dedicated machine or new machine-hours."
- },
- "arm_ids": 37,
- "arm_bytes": 335,
- "arm_md5": "b525d51d4b4957e0e40f22f203aea641",
- "arm_source": "iterations/streams/test_set.md line 2 (NOT line 3 -- GH #631), computed live this round with split(',') + md5 over the stripped line, and re-derived a SECOND time inside the launch script itself so the string handed to the instances is the string that was gated, not a remembered one. Byte-identical to W60's and W61's.",
- "seed_index_note": "seed_roster_index.py --build ran to completion (ROSTER_EXIT=0) BEFORE the disjointness claim below was written: `401 run prefixes in S3, 401 already indexed, 0 to scan` / `nothing new; index unchanged`; 261 seeds indexed. The zero delta is itself the second independent confirmation that W61 banked nothing.",
- "seed_selection_note": "Window right-shifted to [10601,11000]. Intersection with the freshly built roster index is the EMPTY SET (checked, printed, not assumed). ⭐ WHY THE WINDOW MOVED PAST W61's SEEDS RATHER THAN REUSING THEM: 10208/10212/10390/10526 banked zero games, so they are absent from the roster index and seed_draft would happily offer them back as never-used. Whether they return to the usable window is an OPEN QUESTION THE DESK HANDED THE DIRECTOR LAST ROUND AND THAT HAS NOT BEEN RULED. Shifting the window costs nothing and refuses to settle an unruled question by spending money on it; the question stays open and is re-handed in this round's report. Term-popcount distribution over the 400: {\"0\": 40, \"1\": 115, \"2\": 152, \"3\": 74, \"4\": 16, \"5\": 3}. Selection maximised the MINIMUM per-term carrier count first, then total carrier slots, giving 10601/10607/10803/10813 at (min 2, total 19). (2,19) is PROVABLY optimal for this window, not a heuristic's best guess: min>=3 would need all 7 terms covered by >=3 of the 4 seeds, i.e. >=21 slots, while the window holds only three seeds at popcount 5, so four seeds total at most 5+5+5+4 = 19 -- arithmetically impossible; and 19 is attained, so no (2,>19) exists either.",
- "carrier_gate": "CARRIER_GATE ids=9 seeds=4 exit=0. Terms DERIVED from the arm string (--assert-carrier-from-arm, GH #276), never hand-typed: `9 hero-scoped, 28 generic, 0 unresolved => 7 term(s)`, TERMS crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus -- byte-identical to W53-W61 because the arm string did not move. Per-term carrier counts on this slate: obsidian_destroyer 4 / crystal_maiden 3 / pudge 3 / spirit_breaker 3 / lion 2 / skeleton_king 2 / zuus 2. Every per-id verdict is at least PARTIAL; `grep -c EMPTY` on the gate log is 0.",
- "acquisition_config_note": "`--slots 16 --hours 2 --rec-slots 8 --games 12`, byte-identical to W39-W61. `--rec-slots 8` passed EXPLICITLY (spot_run.sh's default is 1; W51 is the wave that was killed 70s after launch for taking that default). A --dry-run was executed first (DRYRUN_EXIT=0, read bare, not through a pipe) and its plan line read before any live launch; it printed `plan: 1 x on-demand c6i.4xlarge`, the first independent confirmation that --on-demand took effect -- the mirror image of W61's `plan: 1 x SPOT` check. The wave-budget guard did not refuse: 12 games / 16 slots fits inside the 2h watchdog.",
- "expected_games": "~96 scored (4 seeds x 12 games x 2 legs) registered for comparability ONLY. This pre-registered quantity has run far off actual yield in every recent wave (W49 168, W51 214, W52 214, W55 110, W56 204, W57 92-on-two-seeds, W58 85-on-two-seeds, W59 42-on-one-seed, W60 4/4 seeds scored, W61 0) and must NOT be used as the denominator for an under- or over-delivery claim at harvest.",
- "machines": [
-  {
-   "seed": 10601,
-   "instance_id": "i-046fe13456914381a",
-   "run_id": "spot_20260909_212432_1_a91efb699a63726f775b4e20ad7d4df274f17981_364764",
-   "az_requested": "us-west-2a",
-   "az": "us-west-2a",
-   "re_aimed": false,
-   "launched_at": "2026-09-09T21:24:34.000Z",
-   "launch_time": "2026-09-09T21:24:34.000Z",
-   "lifecycle": "on-demand (verified per-machine by describe-instances: InstanceLifecycle is absent/None, which is the on-demand marker; a spot machine prints `spot`). ⚠️ The run_id's `spot_` prefix is a HARD-CODED STRING in spot_run.sh and is NOT evidence of market -- it reads `spot_` on all four of these on-demand machines.",
-   "market": "on-demand",
-   "carries": [
-    "crystal_maiden",
-    "pudge",
-    "skeleton_king",
-    "spirit_breaker",
-    "zuus"
-   ]
+  "wave": "W62",
+  "_note": "Launch record written by the batch desk in the SAME round as the launch. Everything a harvest round needs is registered here at launch time so the harvest round never has to reconstruct it.",
+  "market": "on-demand",
+  "market_source": "gate (iv) reclaim_blind.py RE-RUN THIS ROUND on W61's own record (named --wave-json flag): RECLAIM_BLIND_EXIT=1, verbatim `yield: 0 paired seed(s) of 4 machine(s)` / `attribution: 4 machine(s) reclaimed before the flip` / `VERDICT: BLINDED -- yield <= 1 AND the loss is capacity.` / `NEXT WAVE: launch --on-demand (ONE wave), then revert to spot.` THIS IS A GATE RULING, NOT A CONSERVATIVE DEFAULT -- the contrast with W61 is the point: W61's market line was the owner's standing spot default written down because the tool returned exit 2 (UNDECIDABLE, nothing checked); this round the tool returned exit 1, which reclaim_blind.py's own source defines as BLINDED (2 is UNDECIDABLE, 0 is not-blinded). ONE wave on-demand, then revert to spot: W63 is a spot wave unless its own gate (iv) run says otherwise.",
+  "ref_pin": "a91efb699a63726f775b4e20ad7d4df274f17981",
+  "tree_verified": "git ls-remote origin main was re-read as the FIRST STATEMENT of the launch script and compared to the pin, with `exit 9` on mismatch -- this closes the regression W61 registered against itself (`this round's launch script did NOT re-read the remote as its first statement and has no exit-9 mismatch guard`). The script printed REMOTE_MAIN=a91efb699a63726f775b4e20ad7d4df274f17981 and PIN=a91efb699a63726f775b4e20ad7d4df274f17981 before any spend. The full 40-char SHA (not the moving `main`) was passed as --ref, so this round's own closing commits cannot move what the instances cloned.",
+  "pooling_claim": "NOT POOLABLE with W60/W61, and this is the ordinary answer rather than a hard case. Director's §GH.5.4 verbatim: `树差一旦碰到未 gate(已 promote)的代码,哪怕臂串逐字相同,两波在两条腿上都不同 ⇒ 不可并池`. The tree delta W61-pin -> W62-pin does not merely touch ungated code, it changes the behaviour of an ARMED leg (see gate_ii_new_to_test). So W62 opens a new family at depth 1 and the W60 pool stays at 4 paired seeds. The desk does NOT ask the director to revisit this: unlike the question it was preparing to hand up (an ungated but provably no-op alias extraction in hero_axe.lua), the jmz_func change is a real behaviour change on an armed id and pooling would be wrong.",
+  "family_depth_at_launch": "0 paired seeds. W62 is the first wave of a new family: the 37-id arm string is byte-identical to W60/W61 but `ownhalf`'s domain moved underneath it, so no earlier wave measured this program. NOTE FOR THE HARVEST ROUND: this is NOT another instance of `家族深度被退集节奏封死` (the depth-1 treadmill the desk reported on 09-09T12:13Z). That complaint was about waves that opened new families while buying nothing new. This family is opened by a real narrowing of an armed leg, which is the thing waves exist to measure.",
+  "harvest_owed_at_launch": "NONE, checked not assumed. W61 yielded zero (4/4 machines reclaimed by capacity before the flip; fully registered in W61_wave.json last round). An S3 scan this round (s3api list-objects-v2 under validation/, sorted by LastModified) shows the newest object is still W60's `tpcommit+37ids-be522d4e0137_20260909_1022_run.log` at 2026-09-09T10:22:37Z -- nothing has landed since, which is exactly what a zero-yield W61 predicts. seed_roster_index.py --build independently agrees: `401 run prefixes in S3, 401 already indexed, 0 to scan / nothing new; index unchanged`.",
+  "slate_anchor": "last machine up 2026-09-09T21:24:41.000Z (max, GH #469 ruling 1) => gate (i) unlocks 2026-09-10T03:24:41Z. The first-machine reading would be 03:24:34Z. Slate spread 7s (the tightest of any recent wave -- no machine walked the AZ ring). DO NOT copy this timestamp into the next round as the unlock: run wave_throttle.py and read the line IT prints.",
+  "az_spread": "FOUR distinct AZs over 4 machines -- requested 2a/2b/2c/2d, ACTUAL 2a/2b/2c/2d, every one granted directly. ZERO `re-aiming inside the ring` lines and ZERO `AZ RING EXHAUSTED` lines in the launch log. This is the 4+0 shape the desk's classification (丙) and GH #252's acceptance test were both built for, and it is the maximum spread the ring can produce -- so the GH #664 exposure (a 3+1 slate that both criteria pass while one AZ event takes three of four seeds) DOES NOT APPLY to this wave. ⚠️ That is a fact about this slate, not a fix: GH #664 stays open, because the ring still does not look at which AZs the wave already holds, and the next capacity-tight wave will re-aim into an occupied AZ exactly as W61 did. Registering the clean slate here so no harvest round reads W62's survival as evidence the ring was fixed.",
+  "gates": {
+    "gate_i_throttle": "THROTTLE_EXIT=0 at the launch instant, verbatim `margin           : +3s past unlock` against W61's anchor 2026-09-09T15:24:29Z. The gate ran INSIDE the same script that then ran the four spot_run.sh calls (GH #469: the gate binds the action, not the decision) -- the script polled wave_throttle.py at 20s intervals and launched on the first exit 0 the TOOL itself printed, at 21:24:32Z; the first machine's LaunchTime is 21:24:34Z, 2s later. The five earlier polls printed their own THROTTLED (exit 3) lines with shrinking margins (97s / 77s / 57s / 37s / 17s SHORT) and those refusals are registered here rather than discarded. Two further refusals from before the script started (21:09:15Z margin 914s, 21:13:00Z margin 689s) are in the round's report.",
+    "gate_ii_new_to_test": "PASSES, and passes on the SUBSTANTIVE reading rather than the literal one -- this is the difference from W61, which the director declined to ratify (§GH.4: `W61 的起飞没有任何一条腿授权`). Applying §GH.4's three limbs in order: LIMB 1 (arm string differs from the previous wave) = NO. The string is byte-identical to W60/W61: 37 ids / 335 bytes / md5 b525d51d4b4957e0e40f22f203aea641, computed live this round from test_set.md line 2 (NOT line 3, GH #631) and re-derived a second time INSIDE the launch script, which printed ARM_IDS=37 ARM_BYTES=335 ARM_MD5=b525d51d4b4957e0e40f22f203aea641. LIMB 3 (family depth below the promote bar) = NOT AVAILABLE, suspended by the director for want of a number (§GH.4). LIMB 2 (reachable code under this arm string differs from the previous wave) = YES, and not on a technicality. The bots/+game/ delta from W61's pin 252a5781 to a91efb69 is two files, +215/-20. Read line by line, the NON-COMMENT changes are exactly three: (a) bots/FunLib/jmz_func.lua, inside J.ShouldPunishDive, `if nInvadeDepth >= 800 then bInDomain = true end` -> `>= 1600` (line 9177); (b) the same file gains a new block behind `J.IsModeTurbo() and J.IsSoakCandidate( 'deepnum' )`; (c) bots/BotLib/hero_axe.lua gains X.axe_HasHungerAlternative and X.axe_IsHungerHarassIdle and rewires X.axe_IsBattleHungerFresh's three call sites. (b) is unreachable: `deepnum` is not one of the 37 armed ids. (c) is reachable but provably a no-op with `axebhrecast` unarmed: the new conjunct sits behind `J.IsSoakCandidate('axebhrecast')` (also not armed) and short-circuits, and the one ungated change, `npcEnemy:GetAttackTarget() == nil` -> `X.axe_IsHungerHarassIdle( npcEnemy )`, is an alias extraction with the same read, the same operator and the same answer (checked against §GH.2's side-effect limb: one GetAttackTarget() call either way, no new engine call, no RNG, no I/O; the third argument is passed as a function VALUE, not called, at the site). ⭐ (a) IS THE WAVE. `ownhalf` IS armed -- position 3 of the 37-id string, and carrier_terms.py resolves it independently to jmz_func.lua:9092, the `local bOwnHalf = J.IsSoakCandidate( 'ownhalf' )` that guards the changed line. So the armed leg's own domain narrowed (800u -> 1600u past the midline, strictly narrowing per the strategy stream's in-code note) and NO EARLIER WAVE HAS MEASURED IT. That is new information, not new code, which is the distinction §GH.3 says the old gate wording got wrong in the other direction. HONEST LIMIT: the desk read (a) off the diff and the guard off carrier_terms.py's own resolution; it did not run the full Lua dynamic half (~100min, GH #124) and does not claim the narrowing is correct -- only that it is reachable, armed, and unmeasured.",
+    "gate_ii_wiring": "ARM_WIRING_EXIT not obtained: tools/batch_test/check_armed_wiring.py requires --cand and refuses a whole-string invocation (`error: the following arguments are required: --cand`, exit 2). REGISTERED AS NOT RUN, NOT AS A PASS. What was run instead, BEFORE the launch, is carrier_terms.py over the same 37 ids: CARRIER_TERMS_EXIT=0, verbatim `CARRIER_TERMS derived from 37 armed ids: 9 hero-scoped, 28 generic, 0 unresolved => 7 term(s)`. `0 unresolved` means every one of the 37 ids was located at a real call site on HEAD, which covers the same failure (an armed id with nothing behind it) by a different route -- but it is a DIFFERENT INSTRUMENT and the desk does not claim it as check_armed_wiring.py's reading.",
+    "gate_iii_fence": "FENCE_EXIT=0 CLEAR, fence DERIVED this run (not copied), run BEFORE the launch. --planned 2.150 (the on-demand single-wave constant; correct because gate (iv) made this an on-demand wave) --pending 3.250 (W60 on-demand ~$2.15 + W61 spot ~$1.10 per GH #454's 2026-09-06 constant, both launched inside the 12h window). Readings: actual (MTD) $74.308, projected total $79.708, fence $80.00, brake $90.00, operative ceiling $80.00, headroom $0.292 after this wave. Alerts: $50.00 crossed (AWS state=ALARM), $80.00 and $100.00 NOT yet crossed. --no-accrual-check was NOT used; the accrual line read `CERTIFIED ZERO (0 accruing instances account-wide)` and the LARGER claim ($3.250) was used. ⛔ THE NUMBER THE NEXT ROUND NEEDS: $0.292 of headroom means W62 IS THE LAST WAVE THIS MONTH UNDER THE $80 FENCE. Even a spot wave (~$1.10) breaches it. The next launch round must either find the fence moved (MTD resets on the 1st) or stop and ask the owner. ⚠️ --pending may be conservative in W60's direction: the budget snapshot refreshed 2026-09-09T20:23:37Z, 11.0h after W60's 09:23Z launch, which is at the far edge of the charter's 4.3-11.3h lag window, so W60 may already be inside the $74.308. Over-claiming pending fails toward safety and was left in.",
+    "gate_iv_reclaim_blind": "RECLAIM_BLIND_EXIT=1 on W61's record, run BEFORE the launch. 1 = BLINDED in reclaim_blind.py's own source (2 = UNDECIDABLE, 0 = not blinded), so this is a ruling and not a default. Per-machine lines all read `instance-terminated-no-capacity ... NO-PAIR`. ⚠️ Carried forward from W61's round and NOT re-litigated here: the tool prints `[ab/ba only (no arm_depth given)]` on all four rows even though the record DOES give arm_depth: 0.0 -- the verdict is right (unpaired rows are excluded before the depth check) but the printed reason is false. That is GH #672, a harness bug the desk does not fix itself.",
+    "gate_iv_inputs_no_harvest_owed": "SATISFIED and established this round, not inherited: see harvest_owed_at_launch. queue.json was scanned row by row -- the only `running` rows are strategy-31 (tormself), strategy-32 (immguard) and hero-27 (savemana), and all three declare themselves zero-EC2 / no dedicated wave in their own axis text. No row requests a new wave, a dedicated machine or new machine-hours."
   },
-  {
-   "seed": 10607,
-   "instance_id": "i-08fd4fef0e94a0993",
-   "run_id": "spot_20260909_212434_1_a91efb699a63726f775b4e20ad7d4df274f17981_7eb1ba",
-   "az_requested": "us-west-2b",
-   "az": "us-west-2b",
-   "re_aimed": false,
-   "launched_at": "2026-09-09T21:24:36.000Z",
-   "launch_time": "2026-09-09T21:24:36.000Z",
-   "lifecycle": "on-demand (InstanceLifecycle absent/None per describe-instances)",
-   "market": "on-demand",
-   "carries": [
-    "crystal_maiden",
-    "lion",
-    "obsidian_destroyer",
-    "pudge",
-    "spirit_breaker"
-   ]
-  },
-  {
-   "seed": 10803,
-   "instance_id": "i-0dd115a91af3cf747",
-   "run_id": "spot_20260909_212436_1_a91efb699a63726f775b4e20ad7d4df274f17981_53d28c",
-   "az_requested": "us-west-2c",
-   "az": "us-west-2c",
-   "re_aimed": false,
-   "launched_at": "2026-09-09T21:24:39.000Z",
-   "launch_time": "2026-09-09T21:24:39.000Z",
-   "lifecycle": "on-demand (InstanceLifecycle absent/None per describe-instances)",
-   "market": "on-demand",
-   "carries": [
-    "crystal_maiden",
-    "lion",
-    "obsidian_destroyer",
-    "spirit_breaker",
-    "zuus"
-   ]
-  },
-  {
-   "seed": 10813,
-   "instance_id": "i-0a951b0024605351d",
-   "run_id": "spot_20260909_212439_1_a91efb699a63726f775b4e20ad7d4df274f17981_5313f5",
-   "az_requested": "us-west-2d",
-   "az": "us-west-2d",
-   "re_aimed": false,
-   "launched_at": "2026-09-09T21:24:41.000Z",
-   "launch_time": "2026-09-09T21:24:41.000Z",
-   "lifecycle": "on-demand (InstanceLifecycle absent/None per describe-instances)",
-   "market": "on-demand",
-   "carries": [
-    "obsidian_destroyer",
-    "pudge",
-    "skeleton_king"
-   ]
-  }
- ],
- "harvest_notes": [
-  "(a) ON-DEMAND TERMINATION CODES AGE OUT. W60's harvest round could not read StateReason.Code because EC2 drops it from describe-instances ~1h after termination (GH #375) and the harvest round fired ~3h after launch. These four are on-demand, so the same window applies: if a harvest round wants per-machine termination codes it must read them EARLY. There are no SIRs to fall back on -- describe-spot-instance-requests returns nothing for on-demand machines (confirmed this round: SIR count is already 0, W61's four having aged out).",
-  "(b) DO NOT read W62's survival as evidence that the AZ ring (GH #664) was fixed. It was not touched; this slate simply got all four AZs it asked for.",
-  "(c) The changeover constant reclaim_blind.py prints (`measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min`) is a HARD-CODED HISTORICAL CONSTANT, not a measurement of the wave being checked -- registered by the 09-08T00:12Z round as its headline finding. It will print on W62's harvest too.",
-  "⭐ 总监 2026-09-09T22:xxZ(本文件 `director` 键全文):收割轮**也要跑一次 `wave_fence.py`** —— 它只读、免费,而不发波的轮次正是那条新读数(`accrual scope :`,RULING 5)悄悄不发生的形状;把那一行原样抄进报告。另:**下一个发波轮不发波**,围栏当轮现跑求值、不抄数。"
- ],
- "director": [
-  {
-   "ruling": "NO_WAVE_NEXT_LAUNCH_ROUND",
-   "at": "2026-09-09T22:xxZ",
-   "ref": "iterations/streams/test_set.md §GI.1 / §GI.2 / §GI.3",
-   "note": "交棒 2(GH #677)裁定,三条:(1) **下一个发波轮不发波** —— 围栏照旧成立,且**必须当轮现跑 `wave_fence.py` 求值,不许抄 `$0.292` 或任何数**。(2) 「等月初重置」**作为计划被否**:重置后的天花板是 **`$50` 不是 `$80`**(围栏 = 下一个尚未跨过的告警档;离线重构 `fence $50.00` / `headroom $48.900 after this wave`,⚠️ 同一次输出自打 `OFFLINE` 与 `SKIPPED, NOT CERTIFIED` 两行免责)。(3) 「现在升级给 owner」**作为一封新邮件被否**:同一问题已随 W36 邮件(09-06)在 owner 手里(`DECISIONS_NEEDED` 第 15 条),本轮以增量入档,随周日 W37 那封发;提前发信的两个触发条件见 §GI.4。⭐ **本轮同时修了闸 (iii) 自己**(RULING 5):accrual 检查此前把**一个区域**的读数印成 `account-wide`。下一轮跑闸 (iii) 时请把 `accrual scope :` 那一行**原样抄进报告**(`owed_executions.json:wave_fence_ruling5_multiregion_first_read` 的结清判据);⚠️ 别的区域真有实例在计费时,闸 (iii) 会从 CLEAR 变成 `UNCERTIFIABLE (exit 2)` —— **那是修法在生效,不是回归**。"
-  },
-  {
-   "ruling": "NO_WAVE_NEXT_LAUNCH_ROUND_MAINTAINED",
-   "at": "2026-09-10T01:xxZ",
-   "ref": "iterations/streams/test_set.md §GJ.1 / §GJ.2 / §GJ.3；GH #683",
-   "supersedes_question": "GH #683 (甲):「裁定的前提数已变($0.292 → $2.442),请总监裁维持还是解禁」",
-   "note": "**维持,而理由不是自由裁量:交回来的那个「前提已变」在正确的时钟上不成立。** 本台 §五 的 headroom 从 `$0.292` 涨到 `$2.442`,唯一来源是「W60 已滑出 12h pending 窗 ⇒ 让出 $2.15」。⛔ 但那扇窗**锚在 `now`,而它要修正的 MTD 锚在预算自己的 `LastUpdatedTime`(`2026-09-09T20:23:37Z`)**,两个时钟差 3.9h。按快照自己的时钟算:cutoff = `20:23:37Z − 11.3h` = **`2026-09-09T09:05:37Z`**,而 W60 的末台机是 **`09:23:33Z`** —— **still inside the lag band(早于快照 11.0h < 11.3h)**。⇒ **W60 的钱不是落账了,是滑出了一扇从来就不对的窗**。⭐ 而且它是 **on-demand,$2.15 不是 $1.10**(`W60_wave.json:market`,本轮现读)。⇒ 诚实的 pending = W62 `$2.150` + W61 `$1.100` + W60 `$2.150` = **`$5.400`**;projected = `74.308 + 5.400` = **`$79.708`**;对 `$80` 围栏的 headroom = **`$0.292`** —— **任何市场的任何一波都塞不进去**(spot `$1.10` ⇒ `$80.808`,越栏)。⚠️ **诚实边界**:W60 早于快照 11.0h,落在 4.3–11.3h 带的**上缘**,所以它**很可能已经落账**;本裁定取的是**保守侧**,措辞是「围栏无法被证明容得下一波」,不是「W60 一定没落账」。⭐⭐ **而这一条不改变结论,因为钱两边都花了**:W60/W61/W62 无论算在 pending 还是算进 MTD,**都已经花掉**;等快照刷新把三波全吸收,MTD 读作 ~`$79.7`,headroom 对 `$80` 仍是 ~`$0.3`。⇒ **不是「等几小时就能飞」,是九月在 `$80` 围栏下已经发不出下一波了**,直到 10-01(那时围栏变 **`$50`** 不是 `$80`,§GI.2)。⛔ 因此 §七 那份规格(4 粒 → 8 粒加深)**不是被本裁定否掉的,是它从来就没有真的可用过** —— 本台把「九月只剩这一次机会」写进代价栏时,那次机会已经不在了。⭐⭐⭐ **裁定从此不由我每轮复议,由闸自己算(这才是本条的重点)**:`wave_fence.py` 本轮落地 **RULING 6** —— 什么都没在跑**不再**足以证 `pending=$0`;窗口锚在预算快照的时钟上;窗内有波 ⇒ **`UNCERTIFIABLE (exit 2)`,必须给 `--pending`**;给了 `--pending` 还会打一行 **`must cover : N wave(s) listed above (W62, W61, W60)`**。⇒ **下一轮不用再问我**:当轮现跑闸 (iii),`--pending` 覆盖它列出的每一波;**工具打 CLEAR 就飞,打 exit 3 就不飞**。⛔ 不许抄本条里的 `$5.400` / `$79.708` / `$0.292` —— 与 RULING 1 同源:围栏是时间的函数。⭐ **真正能让九月重开的不是裁定,是 `dota2bot-batch` 的 `CostFilters = null`**(GH #515):外来支出 **`$37.435` = MTD 的 50.4%**(本台本轮花 `$0.01` 拿到的硬读数)。已在 `DECISIONS_NEEDED` 第 15 条,**本轮只补数字,不另发信**(遵 §GI.4),随周日 W37 那封走。",
-   "what_the_desk_should_do_next_round": "① 当轮现跑 `wave_fence.py`(免费、只读,**不发波的轮次照样跑**);② 按它列出的波次给 `--pending`,并核对 `must cover` 那一行的每一个波次 id 都在你的和里;③ 把 `wave accrual :` 那一行**原样抄进报告**(`owed_executions.json:wave_fence_ruling6_first_live_read` 的结清判据);④ 工具打 exit 0 ⇒ 按 §七 规格发那一波,**不必再问总监**;打 exit 3 ⇒ 不飞,如实登记。"
-  }
- ]
+  "arm_ids": 37,
+  "arm_bytes": 335,
+  "arm_md5": "b525d51d4b4957e0e40f22f203aea641",
+  "arm_source": "iterations/streams/test_set.md line 2 (NOT line 3 -- GH #631), computed live this round with split(',') + md5 over the stripped line, and re-derived a SECOND time inside the launch script itself so the string handed to the instances is the string that was gated, not a remembered one. Byte-identical to W60's and W61's.",
+  "seed_index_note": "seed_roster_index.py --build ran to completion (ROSTER_EXIT=0) BEFORE the disjointness claim below was written: `401 run prefixes in S3, 401 already indexed, 0 to scan` / `nothing new; index unchanged`; 261 seeds indexed. The zero delta is itself the second independent confirmation that W61 banked nothing.",
+  "seed_selection_note": "Window right-shifted to [10601,11000]. Intersection with the freshly built roster index is the EMPTY SET (checked, printed, not assumed). ⭐ WHY THE WINDOW MOVED PAST W61's SEEDS RATHER THAN REUSING THEM: 10208/10212/10390/10526 banked zero games, so they are absent from the roster index and seed_draft would happily offer them back as never-used. Whether they return to the usable window is an OPEN QUESTION THE DESK HANDED THE DIRECTOR LAST ROUND AND THAT HAS NOT BEEN RULED. Shifting the window costs nothing and refuses to settle an unruled question by spending money on it; the question stays open and is re-handed in this round's report. Term-popcount distribution over the 400: {\"0\": 40, \"1\": 115, \"2\": 152, \"3\": 74, \"4\": 16, \"5\": 3}. Selection maximised the MINIMUM per-term carrier count first, then total carrier slots, giving 10601/10607/10803/10813 at (min 2, total 19). (2,19) is PROVABLY optimal for this window, not a heuristic's best guess: min>=3 would need all 7 terms covered by >=3 of the 4 seeds, i.e. >=21 slots, while the window holds only three seeds at popcount 5, so four seeds total at most 5+5+5+4 = 19 -- arithmetically impossible; and 19 is attained, so no (2,>19) exists either.",
+  "carrier_gate": "CARRIER_GATE ids=9 seeds=4 exit=0. Terms DERIVED from the arm string (--assert-carrier-from-arm, GH #276), never hand-typed: `9 hero-scoped, 28 generic, 0 unresolved => 7 term(s)`, TERMS crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus -- byte-identical to W53-W61 because the arm string did not move. Per-term carrier counts on this slate: obsidian_destroyer 4 / crystal_maiden 3 / pudge 3 / spirit_breaker 3 / lion 2 / skeleton_king 2 / zuus 2. Every per-id verdict is at least PARTIAL; `grep -c EMPTY` on the gate log is 0.",
+  "acquisition_config_note": "`--slots 16 --hours 2 --rec-slots 8 --games 12`, byte-identical to W39-W61. `--rec-slots 8` passed EXPLICITLY (spot_run.sh's default is 1; W51 is the wave that was killed 70s after launch for taking that default). A --dry-run was executed first (DRYRUN_EXIT=0, read bare, not through a pipe) and its plan line read before any live launch; it printed `plan: 1 x on-demand c6i.4xlarge`, the first independent confirmation that --on-demand took effect -- the mirror image of W61's `plan: 1 x SPOT` check. The wave-budget guard did not refuse: 12 games / 16 slots fits inside the 2h watchdog.",
+  "expected_games": "~96 scored (4 seeds x 12 games x 2 legs) registered for comparability ONLY. This pre-registered quantity has run far off actual yield in every recent wave (W49 168, W51 214, W52 214, W55 110, W56 204, W57 92-on-two-seeds, W58 85-on-two-seeds, W59 42-on-one-seed, W60 4/4 seeds scored, W61 0) and must NOT be used as the denominator for an under- or over-delivery claim at harvest.",
+  "machines": [
+    {
+      "seed": 10601,
+      "instance_id": "i-046fe13456914381a",
+      "run_id": "spot_20260909_212432_1_a91efb699a63726f775b4e20ad7d4df274f17981_364764",
+      "az_requested": "us-west-2a",
+      "az": "us-west-2a",
+      "re_aimed": false,
+      "launched_at": "2026-09-09T21:24:34.000Z",
+      "launch_time": "2026-09-09T21:24:34.000Z",
+      "lifecycle": "on-demand (verified per-machine by describe-instances: InstanceLifecycle is absent/None, which is the on-demand marker; a spot machine prints `spot`). ⚠️ The run_id's `spot_` prefix is a HARD-CODED STRING in spot_run.sh and is NOT evidence of market -- it reads `spot_` on all four of these on-demand machines.",
+      "market": "on-demand",
+      "carries": [
+        "crystal_maiden",
+        "pudge",
+        "skeleton_king",
+        "spirit_breaker",
+        "zuus"
+      ]
+    },
+    {
+      "seed": 10607,
+      "instance_id": "i-08fd4fef0e94a0993",
+      "run_id": "spot_20260909_212434_1_a91efb699a63726f775b4e20ad7d4df274f17981_7eb1ba",
+      "az_requested": "us-west-2b",
+      "az": "us-west-2b",
+      "re_aimed": false,
+      "launched_at": "2026-09-09T21:24:36.000Z",
+      "launch_time": "2026-09-09T21:24:36.000Z",
+      "lifecycle": "on-demand (InstanceLifecycle absent/None per describe-instances)",
+      "market": "on-demand",
+      "carries": [
+        "crystal_maiden",
+        "lion",
+        "obsidian_destroyer",
+        "pudge",
+        "spirit_breaker"
+      ]
+    },
+    {
+      "seed": 10803,
+      "instance_id": "i-0dd115a91af3cf747",
+      "run_id": "spot_20260909_212436_1_a91efb699a63726f775b4e20ad7d4df274f17981_53d28c",
+      "az_requested": "us-west-2c",
+      "az": "us-west-2c",
+      "re_aimed": false,
+      "launched_at": "2026-09-09T21:24:39.000Z",
+      "launch_time": "2026-09-09T21:24:39.000Z",
+      "lifecycle": "on-demand (InstanceLifecycle absent/None per describe-instances)",
+      "market": "on-demand",
+      "carries": [
+        "crystal_maiden",
+        "lion",
+        "obsidian_destroyer",
+        "spirit_breaker",
+        "zuus"
+      ]
+    },
+    {
+      "seed": 10813,
+      "instance_id": "i-0a951b0024605351d",
+      "run_id": "spot_20260909_212439_1_a91efb699a63726f775b4e20ad7d4df274f17981_5313f5",
+      "az_requested": "us-west-2d",
+      "az": "us-west-2d",
+      "re_aimed": false,
+      "launched_at": "2026-09-09T21:24:41.000Z",
+      "launch_time": "2026-09-09T21:24:41.000Z",
+      "lifecycle": "on-demand (InstanceLifecycle absent/None per describe-instances)",
+      "market": "on-demand",
+      "carries": [
+        "obsidian_destroyer",
+        "pudge",
+        "skeleton_king"
+      ]
+    }
+  ],
+  "harvest_notes": [
+    "(a) ON-DEMAND TERMINATION CODES AGE OUT. W60's harvest round could not read StateReason.Code because EC2 drops it from describe-instances ~1h after termination (GH #375) and the harvest round fired ~3h after launch. These four are on-demand, so the same window applies: if a harvest round wants per-machine termination codes it must read them EARLY. There are no SIRs to fall back on -- describe-spot-instance-requests returns nothing for on-demand machines (confirmed this round: SIR count is already 0, W61's four having aged out).",
+    "(b) DO NOT read W62's survival as evidence that the AZ ring (GH #664) was fixed. It was not touched; this slate simply got all four AZs it asked for.",
+    "(c) The changeover constant reclaim_blind.py prints (`measured bracket 34.80 < x <= 40.63, margin above the constant 0.63 min`) is a HARD-CODED HISTORICAL CONSTANT, not a measurement of the wave being checked -- registered by the 09-08T00:12Z round as its headline finding. It will print on W62's harvest too.",
+    "⭐ 总监 2026-09-09T22:xxZ(本文件 `director` 键全文):收割轮**也要跑一次 `wave_fence.py`** —— 它只读、免费,而不发波的轮次正是那条新读数(`accrual scope :`,RULING 5)悄悄不发生的形状;把那一行原样抄进报告。另:**下一个发波轮不发波**,围栏当轮现跑求值、不抄数。"
+  ],
+  "director": [
+    {
+      "ruling": "NO_WAVE_NEXT_LAUNCH_ROUND",
+      "at": "2026-09-09T22:xxZ",
+      "ref": "iterations/streams/test_set.md §GI.1 / §GI.2 / §GI.3",
+      "note": "交棒 2(GH #677)裁定,三条:(1) **下一个发波轮不发波** —— 围栏照旧成立,且**必须当轮现跑 `wave_fence.py` 求值,不许抄 `$0.292` 或任何数**。(2) 「等月初重置」**作为计划被否**:重置后的天花板是 **`$50` 不是 `$80`**(围栏 = 下一个尚未跨过的告警档;离线重构 `fence $50.00` / `headroom $48.900 after this wave`,⚠️ 同一次输出自打 `OFFLINE` 与 `SKIPPED, NOT CERTIFIED` 两行免责)。(3) 「现在升级给 owner」**作为一封新邮件被否**:同一问题已随 W36 邮件(09-06)在 owner 手里(`DECISIONS_NEEDED` 第 15 条),本轮以增量入档,随周日 W37 那封发;提前发信的两个触发条件见 §GI.4。⭐ **本轮同时修了闸 (iii) 自己**(RULING 5):accrual 检查此前把**一个区域**的读数印成 `account-wide`。下一轮跑闸 (iii) 时请把 `accrual scope :` 那一行**原样抄进报告**(`owed_executions.json:wave_fence_ruling5_multiregion_first_read` 的结清判据);⚠️ 别的区域真有实例在计费时,闸 (iii) 会从 CLEAR 变成 `UNCERTIFIABLE (exit 2)` —— **那是修法在生效,不是回归**。"
+    },
+    {
+      "ruling": "NO_WAVE_NEXT_LAUNCH_ROUND_MAINTAINED",
+      "at": "2026-09-10T01:xxZ",
+      "ref": "iterations/streams/test_set.md §GJ.1 / §GJ.2 / §GJ.3；GH #683",
+      "supersedes_question": "GH #683 (甲):「裁定的前提数已变($0.292 → $2.442),请总监裁维持还是解禁」",
+      "note": "**维持,而理由不是自由裁量:交回来的那个「前提已变」在正确的时钟上不成立。** 本台 §五 的 headroom 从 `$0.292` 涨到 `$2.442`,唯一来源是「W60 已滑出 12h pending 窗 ⇒ 让出 $2.15」。⛔ 但那扇窗**锚在 `now`,而它要修正的 MTD 锚在预算自己的 `LastUpdatedTime`(`2026-09-09T20:23:37Z`)**,两个时钟差 3.9h。按快照自己的时钟算:cutoff = `20:23:37Z − 11.3h` = **`2026-09-09T09:05:37Z`**,而 W60 的末台机是 **`09:23:33Z`** —— **still inside the lag band(早于快照 11.0h < 11.3h)**。⇒ **W60 的钱不是落账了,是滑出了一扇从来就不对的窗**。⭐ 而且它是 **on-demand,$2.15 不是 $1.10**(`W60_wave.json:market`,本轮现读)。⇒ 诚实的 pending = W62 `$2.150` + W61 `$1.100` + W60 `$2.150` = **`$5.400`**;projected = `74.308 + 5.400` = **`$79.708`**;对 `$80` 围栏的 headroom = **`$0.292`** —— **任何市场的任何一波都塞不进去**(spot `$1.10` ⇒ `$80.808`,越栏)。⚠️ **诚实边界**:W60 早于快照 11.0h,落在 4.3–11.3h 带的**上缘**,所以它**很可能已经落账**;本裁定取的是**保守侧**,措辞是「围栏无法被证明容得下一波」,不是「W60 一定没落账」。⭐⭐ **而这一条不改变结论,因为钱两边都花了**:W60/W61/W62 无论算在 pending 还是算进 MTD,**都已经花掉**;等快照刷新把三波全吸收,MTD 读作 ~`$79.7`,headroom 对 `$80` 仍是 ~`$0.3`。⇒ **不是「等几小时就能飞」,是九月在 `$80` 围栏下已经发不出下一波了**,直到 10-01(那时围栏变 **`$50`** 不是 `$80`,§GI.2)。⛔ 因此 §七 那份规格(4 粒 → 8 粒加深)**不是被本裁定否掉的,是它从来就没有真的可用过** —— 本台把「九月只剩这一次机会」写进代价栏时,那次机会已经不在了。⭐⭐⭐ **裁定从此不由我每轮复议,由闸自己算(这才是本条的重点)**:`wave_fence.py` 本轮落地 **RULING 6** —— 什么都没在跑**不再**足以证 `pending=$0`;窗口锚在预算快照的时钟上;窗内有波 ⇒ **`UNCERTIFIABLE (exit 2)`,必须给 `--pending`**;给了 `--pending` 还会打一行 **`must cover : N wave(s) listed above (W62, W61, W60)`**。⇒ **下一轮不用再问我**:当轮现跑闸 (iii),`--pending` 覆盖它列出的每一波;**工具打 CLEAR 就飞,打 exit 3 就不飞**。⛔ 不许抄本条里的 `$5.400` / `$79.708` / `$0.292` —— 与 RULING 1 同源:围栏是时间的函数。⭐ **真正能让九月重开的不是裁定,是 `dota2bot-batch` 的 `CostFilters = null`**(GH #515):外来支出 **`$37.435` = MTD 的 50.4%**(本台本轮花 `$0.01` 拿到的硬读数)。已在 `DECISIONS_NEEDED` 第 15 条,**本轮只补数字,不另发信**(遵 §GI.4),随周日 W37 那封走。",
+      "what_the_desk_should_do_next_round": "① 当轮现跑 `wave_fence.py`(免费、只读,**不发波的轮次照样跑**);② 按它列出的波次给 `--pending`,并核对 `must cover` 那一行的每一个波次 id 都在你的和里;③ 把 `wave accrual :` 那一行**原样抄进报告**(`owed_executions.json:wave_fence_ruling6_first_live_read` 的结清判据);④ 工具打 exit 0 ⇒ 按 §七 规格发那一波,**不必再问总监**;打 exit 3 ⇒ 不飞,如实登记。"
+    },
+    {
+      "ruling": "HOLD_NO_PROMOTE_NO_REJECT",
+      "at": "2026-09-10T05:xxZ",
+      "ref": "iterations/streams/test_set.md §GK.0 / §GK.2 / §GK.3;iterations/state.json:W62_PROMOTE_REJECT_RULING_20260910T05xxZ",
+      "note": "W62 的 promote/reject 已裁(§GJ.6 第 3 条结清):**HOLD —— 零 id promote,零 id 退集,armed 串 37 不动**。⛔ **HOLD 不是 reject 的委婉说法**:铁律 2(b) 问的是**胜负**,而本波胜负这一栏在结构上是空的,不是负的 —— `winrate_channel: DEGENERATE`(minority side share **0.0529 < 0.20**,215/227 局归 dire),工具自己的 stderr 逐字写着 `MUST NOT be cited as rule 2(b) support until the channel recovers`。10601 与 10803 的 `winrate_headroom` 是 **0.0** ⇒ 它们的 0.500 是**恒等式不是读数**,于是 `mean.winrate 0.531` 四项里两项是常数。⛔ **经济那一栏不能替 (b) 作证**,理由不是 gpm 负:四量 `side_gt_arm 4/4` 之下按 §CL(i-c)**反号不是否决理由**,而 (b) 的主语本来就不是 gpm。⭐ **本裁定没有声称这 37 个 id 是好的** —— 声称的只有:**W62 这份语料无权说它们好,也无权说它们坏。** ⭐⭐ **本轮同时修了读数工具自己(GH #696)**:`comps_better.winrate` 一直把**投不出赞成票的粒**算在自己的分母里(本波 2/4,两张反对票 10601/10803 的 `x > 0.5` 恒为假)⇒ 形如 `comps_better winrate ≥ 3/4` 的门在这种语料上**算术上够不着**,而报出这件事的分数**和「臂输了两粒」长得一模一样**;能说话的粒里本波战绩是 **2/2**。`recover_verdict.py` 现在在池化分数**旁边**加打 `winrate_forced_seeds` / `comps_better.winrate_measurable` / 一行**两个分数都带**的 stderr。**下一次收割请把 `GH #696 winrate comps_better:` 那一行原样抄进报告**(`owed_executions.json:gh696_winrate_measurable_first_live_read` 的结清判据;它在本次改动前**不存在**,抄不出来就等于没跑)。⚠️ 若下一波语料的 `winrate_channel` 仍是 `DEGENERATE`,**(b) 依旧读不到**,那时要裁的就不是某个 id,是**镜像分侧本身为什么产不出竞争性语料** —— 这是本裁定给下一轮留的问题,不是本轮的结论。"
+    }
+  ]
 }

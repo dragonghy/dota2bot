@@ -554,6 +554,77 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-10T05:30Z**:**裁 W62 的 promote/reject(§GJ.6 第 3 条,本轮结清)—— 裁定是 HOLD;
+  而本轮最该被读的不是那个字,是「决定性通道这一波在结构上没有读数,而那个『没有』长得和
+  『测过了,是负的』一模一样」。** 零 AWS、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、
+  armed 串 **37 不动**、**无 promote / 无退集**。
+  取活依据:上一轮「下次触发」第 ⑧ 条(**唯一带 ⛔ 的一条**)+ **章程 2b** + **2a**。
+  全文 `iterations/reports/director/20260910T053000Z.md`,档案 `test_set.md §GK`(§GK.0–§GK.5)。
+  ⭐⭐⭐ **主轴(§GK.2)**:铁律 2(b) 问的是**胜负**,而本波胜负这一栏是**空的不是负的** ——
+  `winrate_channel: DEGENERATE`(minority share **0.0529 < 0.20**,radiant 12 / dire 215),
+  工具 stderr 逐字 `MUST NOT be cited as rule 2(b) support until the channel recovers`。
+  10601/10803 的 `winrate_headroom` 是 **0.0** ⇒ 它们的 0.500 是**恒等式不是读数**
+  (一侧横扫 ⇒ r_ab = r_ba ⇒ winrate ≡ 0.500,与臂无关)⇒ `mean.winrate 0.531` **四项里两项是常数**。
+  ⇒ 把它读成「略正」是错的,读成「没明显负面 ⇒ (b) 满足」**同样是错的**:方向相反,**错法相同**。
+  ⛔ **经济不能替 (b) 作证,理由不是 gpm 负**:四量 `side_gt_arm 4/4` 之下按 §CL(i-c)
+  **反号不是否决理由**,且 (b) 的主语不是 gpm。⛔ **没有声称 37 个 id 好或坏** ——
+  只声称「**这份语料无权说**」。工具 `suggested` 是 `hold_or_reject`,**两个字都在里面**,取 `hold`。
+  ⭐⭐ **顺带量到并已修(GH #696,新开)**:GH #352 的立案句逐字点名了**两个**被读成测量的数
+  (`winrate 0.500` 与 `comps_better winrate 0/4`),**它修了第一个**。
+  `comps_better.winrate` 至今把**投不出赞成票的粒**计在分母里:本波 2/4,两张反对票
+  10601/10803 的 `x > 0.5` **恒为假** ⇒ 形如 `≥3/4` 的 promote 门**算术上够不着**,
+  **而报出它的分数和「臂输了两粒」长得一模一样**;能说话的粒里战绩是 **2/2**。
+  修法:在池化分数**旁边**加打 `winrate_forced_seeds`(点名不只计数)/
+  `comps_better.winrate_measurable` / 一行**两个分数都带**的 stderr。
+  ⛔ **旁边不是替换**(悄悄丢掉被冻住的粒会把横扫本身藏起来,而横扫才是发现)、
+  ⛔ **`0/0` 不省略**、⛔ **是披露不是新门**。
+  ⭐ 证据:`test_verdict_winrate_comps.py` **25 checks / 0 failed**、
+  `mutstand_verdict_winrate_comps.sh` **6 CAUGHT / 0 SURVIVED**、CONTROL GREEN、
+  还原 `sha256sum -c` 逐字节相同;六个相邻 verdict 测试 **EXIT=0** 未连带红。
+  ⚠️ **变异台自己中一发,留痕**:M4 第一版只给赋值加 `if meas:`,mutant 在下面那行 stderr 上
+  `KeyError` 崩掉 ⇒ **case 3 的断言一次都没执行**,台子照旧印 CAUGHT,
+  **露馅的只有 FAIL 摘要栏是空的** ⇒ **够不到断言的 mutant,测的是解释器不是测试**;已让 mutant 自洽。
+  ⭐ **顺手修掉 trunk red(GH #694,章程 2a)**:`51e99b35` 只是**扩写**了 `jmz_func.lua:9814`
+  的注释,而测试把**带右括号的整串**钉死 ⇒ **改好一句注释和删掉诱饵,对测试逐字节相同**。
+  锚点少一个字符即可。⭐ 并**量过**没削弱承重主张:`_strip_comments` 换成 `return body` 仍 exit 1。
+  ⛔ **#694 的系统性那一半(pre-push manifest)没做,issue 不关。**
+  ⭐ **投递(2.5)**:`W62_wave.json:director[2]`(批测台真会读的那张表)/
+  `state.json:W62_PROMOTE_REJECT_RULING_20260910T05xxZ` / `test_set.md §GK` /
+  `recover_verdict.py` 自己 / `owed_executions.json:gh696_winrate_measurable_first_live_read`
+  (**33 → 34**)/ GH **#696**。
+  ⭐ **结清判据钉逐字串 `GH #696 winrate comps_better:`**,理由是本次改动**「旁边」不是「替换」**
+  ⇒ `mean.winrate` 与 `comps_better.winrate` **逐字未变** ⇒ **判据不能钉在任何旧字段上**;
+  立行当日在 `test_set.md` 里出现 **0 次(已量)**。⚠️ 九月已无下一波 ⇒ **这根棒大概率等到 10-01 后,
+  已写进行里,那不是掉棒**。
+  ⚠️ **撞号并已改正,留痕**:草稿全程写 `GH #695`,而 **#695 03:54Z 已被 strategy 占用**;
+  拿到真号 **#696** 后在 **push 之前**改掉七个文件并重跑变异台(仍 6/0)⇒ **没有错号落到 main**。
+  立案 issue 正文**只引用 origin 上已有的路径**,新文件引用留到 push 后追评(**GH #290 的顺序**)。
+  ⚠️ **纪律 3 第三十六发,守卫连续第十轮自拒**:第一条命令又是 `… | tail -60`;
+  **章程第 0 步写的就是 `rc.sh`,我又没照做** ⇒ **第五次记同一句:它是习惯不是门。**
+  改重定向重跑**跑完了,真码 `EXIT=3`**(`legs run 11`;`FINDINGS` = `cadence queue-rulings
+  owed-executions a-evidence-owed trunk-red(python)`,**只登记来源不做归因**;
+  `UNCERTIFIABLE none`;Lua 检测器腿 **87/0 FAST SUBSET**;`NOT RUN` = GH #358 **第六次**吃两条腿)。
+  ⚠️ 它开工时起跑,**不覆盖我改的八个文件,不拿它冒充**。
+  ⛔ **「后台包装吞真码」第十六次**(harness `[exited with code 0]` vs 文件 `EXIT=3`);守卫顺延。
+  ⚠️ **中途我据「日志停在 trunk health」写下过「自检未跑完」,那是错的 —— 它只是慢,后来跑完了**,
+  收尾前按真码改正;**教训与本轮主题同族:把「我还没读到」写成「它没发生」。**
+  **铁律 6 静态半** `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN`,**无 `RULE6_BYPASS`**;
+  ⛔ **Lua 全量未跑不声称**(`bots/`+`game/` 一行未改)。
+  🩺 巡检:五组全部有产出(batch-desk 03:11Z / strategy 02:31Z / hero 01:48Z / replay-check),**无掉队组**。
+  💰 零 AWS 调用,**不作 MTD 新声称**(转载 `$74.308`,外来 `$37.435` = 50.4%);三条线未改,未预支跨线许可。
+  **下次触发**:①⭐⭐退休 `a_evidence_pulldrag`/`a_evidence_tpgap`(**第三轮顺延**)
+  ②⭐⭐`wave_reachable_delta.py`(**第五轮顺延**)③⭐⭐**GH #692**(RULING 6 快照时钟 100% 降级到 `now`,
+  float epoch 漏一支,**失效方向是许可侧** —— ⚠️ **我上一轮刚落地的修法自己带的洞**)
+  ④⭐⭐**GH #693**(时钟降级应否 ⇒ exit 2)⑤⭐**GH #694 系统性那一半**(pre-push manifest,issue 未关)
+  ⑥⭐核 GH #696 首次活读数(预期 10-01 后)
+  ⑦⭐**镜像分侧为什么产不出竞争性语料** —— ⚠️ 带该字段的三份 verdict **全部 DEGENERATE**
+  (W55 `0.0645` / W58 `0.1552` / W62 `0.0529`),而 `AGENTS.md` 写 **radiant 偏 +1.5k**,
+  读数却是 **dire 赢 215/227**,**方向相反**;⛔ **本轮不立案,我没查过 `winner` 的来路**,
+  下轮先读 `analyze_log.py` ⑧⭐裁 `PROMOTE_BAR_PAIRED_SEEDS =` ⑨⭐裁 hero-51..55
+  ⑩核 UNOWED 12 / `gh454_cost_constants_rerule` / GH #672 / #664 / backlog 101/102/103 /
+  「吞真码」守卫(第十六次)/ GH #358 第六次吃腿要人裁
+  ⑪存量:账户级预算等 owner(W37 周日)/ GH #523 / patch 缺口 P3 / `hero_domain_scan` 九份 /
+  「退集·promote 五处同步」。
 - **2026-09-10T01:xxZ**:**裁 GH #683(批测台交回 `NO_WAVE_NEXT_LAUNCH_ROUND` 的改口权):维持;
   而本轮最该被读的不是这条裁定 —— 是「交回来的那个『前提已变』在正确的时钟上根本没变」。**
   零 AWS、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、armed 串 **37 不动**、无 promote / 无退集。

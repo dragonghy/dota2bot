@@ -435,6 +435,57 @@ if wrs:
            if "winrate" in r and "winrate_headroom" in r]
     if hrs:
         v["mean"]["winrate_headroom"] = round(statistics.mean(hrs), 4)
+    # [GH #696] The OTHER number #352's own case statement named.  That ruling
+    # wrote "the tool printed `winrate 0.500` and `comps_better winrate 0/4`,
+    # six waves running, and BOTH were read as measurements" -- then fixed the
+    # first one only.  `winrate_headroom` made a forced 0.500 legible; the
+    # fraction above still counts the seed that produced it in its DENOMINATOR.
+    #
+    # A seed with headroom == 0 could not have voted yes.  Its winrate is
+    # 0.500 by the identity in the wr() header, so `x > 0.5` is false for it
+    # whatever the arm did.  Two such seeds in a four-seed wave make a bar of
+    # the form "comps_better winrate >= 3/4" UNREACHABLE -- not failed, not
+    # close, arithmetically out of range -- and the fraction that says so is
+    # shaped exactly like one that means "the arm lost two of four".
+    #
+    # This is live, not hypothetical: W62 published `comps_better winrate 2/4`
+    # off seeds 10601 (headroom 0), 10607 (0.0357), 10803 (headroom 0) and
+    # 10813 (0.4167).  Both "no" votes were identities; among the seeds that
+    # could speak, the record was 2/2.
+    #
+    # Published BESIDE the pooled fraction, never replacing it -- the same
+    # rule the headroom field follows twenty lines up.  Dropping the forced
+    # seeds silently would hide the sweep that is itself the finding, and a
+    # reader comparing the two denominators sees the corpus, not just the arm.
+    forced, undisclosed, meas = [], [], []
+    for r in rows:
+        if "winrate" not in r:
+            continue
+        if "winrate_headroom" not in r:
+            # Cannot be certified either way; it gets its own list rather than
+            # being folded into whichever bucket happens to flatter the read.
+            undisclosed.append(r["seed"])
+        elif r["winrate_headroom"] == 0.0:
+            forced.append(r["seed"])
+        else:
+            meas.append(r["winrate"])
+    v["winrate_forced_seeds"] = forced
+    if undisclosed:
+        v["winrate_undisclosed_headroom_seeds"] = undisclosed
+    # "0/0" on purpose: an absent key reads as "nothing to report", which is
+    # the one thing a wave with no measurable seed does not mean.
+    v["comps_better"]["winrate_measurable"] = "%d/%d" % (
+        sum(1 for x in meas if x > 0.5), len(meas))
+    if forced:
+        sys.stderr.write(
+            "GH #696 winrate comps_better: %d of %d seed(s) had headroom 0 "
+            "and could not vote yes (seeds %s). The pooled fraction %s counts "
+            "them; `comps_better.winrate_measurable` %s does not. A promote "
+            "bar above %d/%d is unreachable on this corpus.\n"
+            % (len(forced), len(wrs), ",".join(str(s) for s in forced),
+               v["comps_better"]["winrate"],
+               v["comps_better"]["winrate_measurable"],
+               len(wrs) - len(forced), len(wrs)))
 # [GH #269] The census hangs off "a wave was counted", NOT off "a winrate
 # survived the gate".  Left coupled to `wrs`, a wave of nothing but thin seeds
 # -- the exact shape this gate exists to expose -- would print no game counts

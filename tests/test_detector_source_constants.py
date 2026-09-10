@@ -505,8 +505,16 @@ raises('assignment to a non-number raises rather than coercing',
 # (test_set.md AD.3).  A synthetic body makes the decoy REACHABLE, so removing
 # comment stripping now goes red here.
 body = function_body('J.ShouldInitiateLaneKill')
+# [GH #694] The anchor stops one character short of the closing paren, and
+# that is the whole fix.  It used to read `(>800 ancient-distance depth)`, so
+# 51e99b35 -- which only EXPANDED the prose, to `(>800 ancient-distance depth,
+# i.e. ~400u past the midline -- GH #687)` -- turned trunk red by improving a
+# comment.  What this line needs to be true is that a decoy carrying the
+# number 800 is REACHABLE inside the body; the punctuation that happens to
+# follow "depth" was never part of that claim, and pinning it made a
+# documentation edit indistinguishable from deleting the decoy.
 check('real prose decoy still present (why the stripping exists at all)',
-      '(>800 ancient-distance depth)' in body)
+      '>800 ancient-distance depth' in body)
 eq('depth read is the code value, not the prose one', L1_DEPTH, 800.0)
 
 # The two promoted TP guards (GH #159).  `tp_channel_death.py` mirrors BOTH

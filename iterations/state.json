@@ -7612,5 +7612,19 @@
     "criterion_5": "**判据 (5)(改动落在哪个 helper 里,就读它调用点闸表达式的每一个析取项)第三次执行,结论:必须自带 id。** 调用点 `bots/mode_laning_generic.lua:453` 是 `bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bBodyBlock`,而 `bCustomLastHit = local_mode_laning_generic or (pos1 and IsPosxHuman(5)) or (IsSoakCandidate('c3') and pos<=3)` —— **前两个析取项不需要任何 armed id** ⇒ **这个 helper 在真实对局里是活的**(与 `deepnum` 那轮同一发现)。所以按 `0OVERCHASE` 继承宿主**不适用**(那条规则要求宿主真被闸锁住);M7(把闸改挂 `hrparity` 的 id)就是专门守这一条的腿。",
     "limits": "(甲) **域只有 1 帧**。这不是「几乎没有」的委婉说法,是这份 110-fixture 语料上的实测数,且 `hf_back` 本身只有 18 —— 批测语料上的真实频率**本轮没买到**,已随 GH #688 交出。(乙) **形心不是最近敌人**:两人以上的敌群里朝向由形心决定,「一个贴脸 + 一个很远」会被平均掉;本 witness 两人 557/593u 近似等距,该差异在这一帧上不承重,但**在别的帧上会**。(丙) **没有考虑地形**:投影方向可能撞树或撞悬崖,引擎自行寻路,本轮**不声称**落点可达。(丁) 附带项 GH #687 只改了**注释口径**(`ownhalf` / 深线固守两处把「past the midline」换成差值口径),**没有动任何常数**,#687 自己也明说不请求改值。",
     "selfcheck": "`bash tools/agent/routine_selfcheck.sh`(**非管道**:`> file; echo EXIT=$?`,铁律/evidence-discipline 3)**worst exit 3**:FINDINGS = cadence / queue-rulings / owed-executions / a-evidence-owed;UNCERTIFIABLE = trunk-red(python)(`test_luacheck_gate_soakswitch.py` 与 `test_selfcheck_lua_leg.py` 未跑 —— 当时容器还没有 luacheck)。**没有一条指向本组本轮的产物。**"
+  },
+  "W62_PROMOTE_REJECT_RULING_20260910T05xxZ": {
+    "ruling": "HOLD — 零 id promote,零 id 退集,armed 串 37 不动。",
+    "at": "2026-09-10T05:xxZ",
+    "by": "director",
+    "wave": "W62(4 粒 10601/10607/10803/10813,scored_games 203,unfinished 0,contrast vs_stable,37-id 全臂串)",
+    "condition_b": "**UNCERTIFIABLE,不是 FAILED。** `winrate_channel: DEGENERATE`(`winrate_minority_side_share 0.0529 < 0.20`;侧别普查 radiant 12 / dire 215)。`recover_verdict.py` 的 stderr 逐字:`MUST NOT be cited as rule 2(b) support until the channel recovers`。per-seed `winrate_headroom`:10601 **0.0** / 10607 0.0357 / 10803 **0.0** / 10813 0.4167 ⇒ `mean.winrate 0.531` 的四项里**两项是恒等式**(一侧横扫 ⇒ r_ab = r_ba ⇒ winrate ≡ 0.500,与臂无关)。",
+    "why_not_reject": "reject 的判据是「明显有害」,那是一个**读数**;本波在鉴别 promote/reject 的通道上**没有读数**。工具的 `suggested` 字段是 `hold_or_reject`,**两个字都在里面**,本裁定取 `hold` 那一半。",
+    "economy_not_a_substitute": "`gpm −7.20`(2/4)/ `xpm +10.17`(4/4)/ `deaths −0.14`(3/4)/ `last_hits +0.60`(2/4);`strata` 四量**全部** `sign_flip: true` 且 `side_gt_arm: 4/4`。按 §CL(i-c)**反号不是否决理由**(那是恒等式 |side| > |arm|,对 arm 测得多准零信息);且铁律 2(b) 的主语是**胜负**不是 gpm ⇒ 用一个侧偏未消的经济量补一个读不到的胜负量,是把两个缺陷叠起来。",
+    "not_claimed": "**没有声称 37 个 id 里任何一个是好的或坏的。** 声称的只有:W62 这份语料无权说它们好,也无权说它们坏。",
+    "harness_fix": "GH #696:`comps_better.winrate` 把**投不出赞成票的粒**计在分母里(本波 2/4,两张反对票 10601/10803 恒为假)⇒ `≥3/4` 形态的 promote 门在这种语料上**算术上够不着**,而报出它的分数和「臂输了两粒」同形。修法:在池化分数**旁边**加打 `winrate_forced_seeds` / `comps_better.winrate_measurable` / 一行两个分数都带的 stderr(**旁边不是替换**;**`0/0` 不省略**;**是披露不是新门**)。W62 离线导出读数:`winrate_forced_seeds = [10601, 10803]`,`comps_better.winrate_measurable = 2/2`,池化仍 `2/4`。",
+    "evidence": "`tests/test_verdict_winrate_comps.py` **25 checks / 0 failed**(驱动真脚本读真 stdout/stderr);`tools/agent/mutstand_verdict_winrate_comps.sh` **6 CAUGHT / 0 SURVIVED**,CONTROL GREEN,还原 `sha256sum -c` 逐字节相同;未连带红:`test_verdict_winrate` / `_channel` / `_arm_depth` / `_strata` / `_pool_lossless` / `test_queue_reading_census` 六个 EXIT=0。⚠️ 变异台 M4 第一版是**对的结论、错的理由**(mutant 在断言之前 KeyError 崩掉,case 3 那条断言一次都没执行,露馅的只有 FAIL 摘要栏是空的),已让 mutant 自洽后重跑,留痕在 §GK.4。",
+    "open_question_for_next_round": "若下一波语料的 `winrate_channel` 仍是 DEGENERATE,(b) 依旧读不到;那时要裁的不是某个 id,是**镜像分侧为什么产不出竞争性语料**。⚠️ 已知的三个数据点(W55 0.0645 / W58 0.1552 / W62 0.0529)**全部** DEGENERATE。",
+    "archive": "iterations/streams/test_set.md §GK.0–§GK.5"
   }
 }

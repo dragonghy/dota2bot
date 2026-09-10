@@ -2962,3 +2962,111 @@ W60/W61/W62 无论算在 `pending` 还是算进 MTD,**都已经花掉**。等快
 6. **没有给闸 (ii) 写可执行体**(`wave_reachable_delta.py` 仍不存在),**第四轮顺延**。
 7. **没有裁 `PROMOTE_BAR_PAIRED_SEEDS =`**(`owed` 腿本轮读作 DONE 并点名该退休),**顺延**。
 8. **没有处理自检 `queue-rulings` 腿新点名的 hero-51..55 路由/槽位裁定**(4 条 OTHER + 1 条 RIDESHARE),**本轮登记不处理**。
+
+---
+
+## §GK 2026-09-10T05:xxZ 总监:**裁 W62 的 promote/reject(§GJ.6 第 3 条,本轮结清)—— 裁定是 HOLD,而本节最该被读的不是那个字,是 §GK.2:决定性通道这一波在结构上没有读数,而它给出的那个「没有」长得和「测过了,是负的」一模一样**;以及 **§GK.3:GH #352 自己的立案句点名了两个被误读的数,它修了第一个**
+
+### §GK.0 裁定摘要
+
+- **W62 = HOLD。零 id promote,零 id 退集,armed 串 37 不动。**
+- ⛔ **HOLD 不是 reject 的委婉说法**:reject 要的是「明显有害」的读数,而本波在鉴别 promote/reject 的那个通道上**读数不存在**,不是不好看。
+- 依据:铁律 2 的三条件里,**(b)「批测显示对胜负没有明显负面影响」在本波无法被满足也无法被否证**。
+  `recover_verdict.py` 自己打的 `winrate_channel: DEGENERATE`(minority side share **0.0529 < 0.20**,
+  215/227 局归 dire),而工具的 stderr 逐字写着这句读数
+  **`MUST NOT be cited as rule 2(b) support until the channel recovers`**。
+- ⭐ 工具自己的 `suggested` 字段是 **`hold_or_reject`**,**两个字都在里面**;本裁定取 `hold` 那一半,理由在 §GK.2。
+
+### §GK.1 本轮零 AWS 调用,读数全部转载
+
+全部四个数字来自 `iterations/reports/batch-desk/waves/W62_verdict.json`(批测台 09-10T00:14Z 收割)。
+本轮**没有**跑 `awsx`、没有发波、`bots/`+`game/` **零 diff**。
+
+| 粒 | ab/ba 局 | `winrate` | `winrate_headroom` | 能不能投票 |
+|---|---|---|---|---|
+| 10601 | 42/16 | **0.500** | **0.0** | ⛔ 不能(恒等式) |
+| 10607 | 31/14 | 0.516 | 0.0357 | ✅ 能 |
+| 10803 | 34/24 | **0.500** | **0.0** | ⛔ 不能(恒等式) |
+| 10813 | 30/12 | 0.608 | 0.4167 | ✅ 能 |
+
+池化:`mean.winrate 0.531` / `comps_better.winrate` **2/4** / `scored_games 203` / `unfinished 0`。
+经济四量:`gpm −7.20`(2/4)、`xpm +10.17`(4/4)、`deaths −0.14`(3/4)、`last_hits +0.60`(2/4);
+`strata` 四量**全部** `sign_flip: true` 且 `side_gt_arm: 4/4`。
+
+### §GK.2 ⭐⭐⭐ 为什么这是 HOLD 而不是 REJECT
+
+**(b) 问的是胜负,而胜负这一栏这一波是空的,不是负的。**
+
+`winrate = (r_ab + (1 − r_ba)) / 2`,r_x 是**同一个物理侧**在 x 波的胜率。
+一侧横扫 ⇒ `r_ab = r_ba` ⇒ `winrate ≡ 0.500`,**与臂做了什么无关**。
+10601 与 10803 的 `headroom` 是 **0.0**,意思是「0.500 是这份语料唯一能取的值」——
+**那不是一次读数,是一个恒等式**。
+
+于是本波的 `mean.winrate 0.531` 是 **三个数里两个是常数**:
+`(0.500 + 0.516 + 0.500 + 0.608)/4`,而**第一和第三项无论臂正负都会是 0.500**。
+⇒ 把 0.531 读成「胜率略正」是错的;把它读成「胜率没明显负面 ⇒ (b) 满足」**同样是错的**,
+方向相反、错法相同 —— 两次都是拿恒等式当测量。
+
+**经济那一栏也不能替 (b) 作证**,而且理由不是「gpm 是负的」:
+`gpm −7.20` 在四量 `side_gt_arm 4/4` 之下,按 §CL 的 (i-c) **反号不是否决理由**;
+`side_gt_arm 4/4` 说的是这一波抽到的阵容侧偏比效应大,**对 arm 测得多准零信息**。
+⭐ 而铁律 2(b) 的主语本来就是**胜负**,不是 gpm —— 用一个侧偏没消掉的经济量去补一个
+读不到的胜负量,是把两个 §CL 都管不住的缺陷叠在一起。
+
+⛔ **本节没有声称 37 个 id 是好的。** 声称的只有一句:**W62 这份语料无权说它们是坏的,也无权说它们是好的。**
+
+### §GK.3 ⭐⭐ GH #352 自己的立案句点名了两个数,它修了一个(已修,GH #696)
+
+`tests/test_verdict_winrate_channel.py` 的头注释逐字:
+
+> the tool printed `winrate 0.500` and **`comps_better winrate 0/4`**, six waves running,
+> and **BOTH** were read as measurements
+
+#352 落地的是 `winrate_headroom` —— 它让**被冻住的那个 0.500** 在同一行里读得出来。
+**而 `comps_better.winrate` 照旧把生出那个 0.500 的粒计在自己的分母里。**
+
+后果不是「数字略偏”,是**分母里坐着常数**:
+本波 `comps_better.winrate 2/4`,两张反对票 **10601 与 10803 都投不出赞成票**
+—— 它们的 `x > 0.5` 恒为假。⇒ 形如「`comps_better winrate ≥ 3/4`」的 promote 门在这份语料上
+**不是没达到,是算术上够不着**;而**报出这件事的那个分数,和「臂输了两粒」长得一模一样**。
+⭐ 在**能说话的粒**里,本波的战绩是 **2/2**。
+
+**修法(GH #696,本轮落地)**:`recover_verdict.py` 在池化分数**旁边**再打三样 ——
+`winrate_forced_seeds`(点名,不只计数)、`comps_better.winrate_measurable`、
+以及一行 stderr(**两个分数都带**,给从不打开 JSON 的读者)。
+⛔ **旁边,不是替换** —— 与 `winrate_headroom` 二十行之上遵的是同一条规矩:
+静悄悄把被冻住的粒丢掉,会**把横扫本身藏起来**,而横扫才是发现;
+两个分母之间的差,读出来的是**语料**,不只是臂。
+⛔ **`0/0` 照打不省略**:缺键读作「没什么可报的」,而一波没有任何可测粒时,那**恰好**是它唯一不表示的意思。
+
+W62 按新字段的读数(离线由 verdict 的 per-seed headroom 直接导出,**非重跑**):
+`winrate_forced_seeds = [10601, 10803]` / `comps_better.winrate_measurable = 2/2` / 池化仍 `2/4`。
+
+### §GK.4 证据
+
+- `tests/test_verdict_winrate_comps.py`(新):**25 checks / 0 failed**,驱动真脚本读真 stdout/stderr,
+  每个 case 前跑 `check_parsed()` 反空匹配守卫。
+  ⭐ **承重的是 case 1(一个臂两个分数)与 case 2(什么都没冻住时两个分数必须一致)**;
+  case 2 里那粒 **007 读 0.500 而 headroom 0.5** —— 它就是分「按 headroom 锚」与「按 0.500 这个值锚」的那把刀。
+- `tools/agent/mutstand_verdict_winrate_comps.sh`(新):**6 CAUGHT / 0 SURVIVED**,CONTROL GREEN,
+  还原 `sha256sum -c` 逐字节相同;每个 anchor 先断言**唯一**(照 §GJ 的 M1 漂移教训)。
+- ⚠️ **变异台第一版的 M4 是「对的结论、错的理由」,已修并留痕**:
+  它只给赋值加了 `if meas:`,于是 mutant 在**下面那行 stderr** 上 `KeyError` 当场崩,
+  测试确实红了 —— 但 **case 3 的那条断言一次都没执行**。
+  台子照旧印 CAUGHT,**露馅的只有 FAIL 摘要那一栏是空的**。
+  ⇒ **够不到断言的 mutant,测的是解释器不是测试**;已让 mutant 自洽(stderr 改 `.get`),
+  重跑后 M4 的 FAIL 行逐字是 `an all-forced wave prints 0/0 rather than omitting the key, got None`。
+- 未连带红:`test_verdict_winrate` / `test_verdict_winrate_channel` / `test_verdict_arm_depth` /
+  `test_verdict_strata` / `test_verdict_pool_lossless` / `test_queue_reading_census` 六个 **EXIT=0**。
+
+### §GK.5 本节没有声称的东西
+
+1. **没有声称 37 个 id 里任何一个是好的或坏的** —— 见 §GK.2 末。
+2. **没有重跑 W62 的语料** —— 新字段对 W62 的读数是**从 verdict 里已有的 per-seed headroom 离线导出的**,
+   不是 `recover_verdict.py` 在 W62 原始 `analysis.json` 上再跑一次的产物。原始语料在 S3,本轮零 AWS。
+3. **没有覆盖 `winrate_undisclosed_headroom_seeds` 分支** —— 变异台的 LIMITS 里逐字写着:
+   脚本在同一个 `ab_n and ba_n` 卫兵下同时写 winrate 与 headroom,**本台造不出那种语料**,
+   该分支只由 case 1 的「不存在」断言反向管着。**说出来比一个悄悄少一分的 CAUGHT 数好。**
+4. **没有改任何 promote 门的阈值** —— `winrate_measurable` 是**披露**,不是新门;
+   谁也没被授权拿它去过一个池化分数过不了的门。
+5. **没有跑 Lua 全量**(`bots/`+`game/` 一行未改),**不声称**。
