@@ -14,7 +14,12 @@
   "pooling_claim": "POOLABLE WITH W62 => family depth 4 paired seeds -> 8. Verified THIS ROUND against the real delta, not inherited from the 00:14Z analysis (that one was computed against pin 0c6a89ab and is STALE: main has since moved to cfa966e3 and the delta grew from 3 files/+162-17 to 5 files/+566-46). Method: `git diff a91efb69..cfa966e3 -- bots/ game/` = 24 hunks; every added/removed line that is not blank and not a `--` comment was extracted (0 occurrences of `--[[` in the delta, so the line filter is sound) => 11 real-code hunks, 114 lines. Every one of them is gate-inert under the 37-id arm string, and all 8 soak ids appearing in the delta (cmqpoke, hrflee, tfnull, wkqodds, fbnoally, l5trees, zusultstrand, wkbonefight) were checked programmatically against the arm string: NONE armed. Per-hunk, read off the CURRENT tree's source (not guessed from the diff): (1) cm_ShouldSpendSurplusNova -- unarmed it returns bShippedSurplus verbatim, and the call site passes the OLD condition as that argument => identical; (2) wk_IsCatchAllOddsOk -- unarmed returns true, call site is `and true`; (3) IsBoneGuardEnemyCountOk -- signature grew but the unarmed return is `nEnemies == 1`, byte-identical to the old body, and the call site's new `nEngageRange` is literally 650, the constant it replaced; (4) hero_zuus X.nUltCashChaseRadius 1600->700 -- the constant is ungated, but `git grep` finds its ONLY reader at hero_zuus.lua:1464, which sits BELOW `if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'zusultstrand' ) ) then return false end` in X.zuus_ShouldCashUltBeforeDeath; (5) tfnull block is wholly inside its own gate; (6) J.GetOffWaveHarassSpot changed its RETURN VALUE and is ungated, but `git grep` over bots/+game/ finds exactly ONE call site, mode_laning_generic.lua:406, whose `if` is a pure conjunction beginning with J.IsSoakCandidate('l5trees'); (7) the hrflee block is wholly enclosed and the ungated fallthrough after it (`return 'back', Vector( vB.x + dx/n*420, ... )`) is unchanged; (8) fbnoally -- bNoAllyRefuse is false when unarmed, so `if not bNoAllyRefuse and botTarget:IsFacingLocation(...)` reduces to the original condition. => Same reachable program on both legs => poolable per director §GH.5.4. ⭐ THIS IS THE POINT OF THIS WAVE: it buys DEPTH, not another depth-1 family -- the treadmill the desk has complained about for several rounds.",
   "family_depth_at_launch": "4 paired seeds (W62's 10601/10607/10803/10813, scored 4/4). If W63 pairs its four, the family reaches 8.",
   "harvest_owed_at_launch": "NONE, checked not assumed. s3api list-objects-v2 under validation/ sorted by LastModified: newest object is 2026-09-09T22:18:47Z, all under W62's run prefixes (_20260909_2126*), and W62 was fully harvested by the 00:14Z round into W62_verdict.json (4 paired seeds, scored 203). A SECOND independent confirmation this round: seed_roster_index.py --build reported `405 run prefixes in S3, 401 already indexed, 4 to scan` and the index grew 261 -> 265 seeds -- the four new ones are exactly W62's, i.e. W62's games are banked.",
-  "seeds": [10614, 10714, 10842, 10889],
+  "seeds": [
+    10614,
+    10714,
+    10842,
+    10889
+  ],
   "seed_index_note": "seed_roster_index.py --build ran to COMPLETION (ROSTER_EXIT=0) BEFORE the disjointness claim below was written: `405 run prefixes in S3, 401 already indexed, 4 to scan`, 265 seeds indexed.",
   "seed_selection_note": "Window kept at [10601,11000] (NOT right-shifted: the intersection with the freshly built roster index is EXACTLY AND ONLY W62's four seeds {10601,10607,10803,10813}, printed not assumed, so 396 seeds in the window are provably untouched). Selection maximises carrier coverage over the 7 derived terms: chosen 10614/10714/10842/10889 with per-term coverage {crystal_maiden 2, lion 2, obsidian_destroyer 2, pudge 2, skeleton_king 3, spirit_breaker 3, zuus 2} => min 2, total 16. ⭐ GLOBALLY OPTIMAL AND PROVABLY SO: after removing W62's seeds the window's popcount distribution is {0:40, 1:115, 2:152, 3:74, 4:15} -- max popcount is 4, so ANY four seeds total at most 16, which this slate attains; and min>=3 would need total >=21 > 16, so min 2 is the ceiling. (W62's total of 19 is not comparable: the window then still held the three popcount-5 seeds, which W62 itself consumed.) Disjoint from W62's four by construction.",
   "carrier_gate": "CARRIER_GATE ids=9 seeds=4 exit=0, `grep -c EMPTY` = 0. Terms DERIVED from the arm string (--assert-carrier-from-arm, GH #276), never hand-typed: carrier_terms.py printed `CARRIER_TERMS derived from 37 armed ids: 9 hero-scoped, 28 generic, 0 unresolved => 7 term(s)` / `TERMS crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus` -- byte-identical to W53-W62 because the arm string did not move. Every one of the 9 hero-scoped ids resolves to a real call site on this HEAD (0 unresolved), which is the separate failure `armed but nothing downstream` that this instrument covers.",
@@ -29,7 +34,7 @@
     "gate_ii_wiring": "NOT RUN as a whole-arm check -- check_armed_wiring.py still only accepts --cand <single id> (GH #678, open). What ran in its place, and ran BEFORE the launch, is carrier_terms.py's `0 unresolved` over all 37 ids (see carrier_gate), which covers the same class of failure by another route. NOT CLAIMED as gate (ii)."
   },
   "cost": {
-    "single_wave_constant_used": 1.10,
+    "single_wave_constant_used": 1.1,
     "constant_authority": "GH #454 director re-ruling 2026-09-06T07:xxZ, charter step 2 (甲). $0.90 is superseded; ~$1.02 is W46's measured supremum, NOT a constant.",
     "gh454_recheck_legs": "To be evaluated by the HARVEST round, which is the round that sees the bill and the machine-hours. (乙1) billing-side single-wave cost > $1.10; (乙2) mean machine-hours of self-terminated machines (SIR Status.Code=instance-terminated-by-user) > 1.00 h/machine, capacity-reclaimed machines EXCLUDED from that mean. The desk has now gone two rounds with no measurement point; this wave supplies one."
   },
@@ -57,12 +62,21 @@
       "launch_time": "2026-09-10T12:18:38.000Z",
       "lifecycle": "spot (verified per-machine by describe-instances: InstanceLifecycle reads `spot`; an on-demand machine prints absent/None). The run_id's `spot_` prefix is a hard-coded string and is NOT the evidence.",
       "market": "spot",
-      "carries": ["crystal_maiden", "lion", "skeleton_king", "spirit_breaker"],
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "scored": null,
-      "status_code": null
+      "carries": [
+        "crystal_maiden",
+        "lion",
+        "skeleton_king",
+        "spirit_breaker"
+      ],
+      "ab": 28,
+      "ba": 14,
+      "arm_depth": 18.67,
+      "scored": true,
+      "status_code": "instance-terminated-by-user",
+      "status_update_time": "2026-09-10T13:04:30.000Z",
+      "terminated_at": "2026-09-10T13:04:30.000Z",
+      "machine_hours": 0.7644,
+      "status_code_source": "describe-spot-instance-requests Status.Code, read at 2026-09-10T15:2xZ (~2.2h after termination). SPOT requests retain Status.Code -- this is the ordinary case the wave record's harvest_notes (a) predicted, and it is the datum W62 could not supply."
     },
     {
       "seed": 10714,
@@ -75,12 +89,21 @@
       "launch_time": "2026-09-10T12:18:40.000Z",
       "lifecycle": "spot (verified per-machine by describe-instances: InstanceLifecycle reads `spot`).",
       "market": "spot",
-      "carries": ["obsidian_destroyer", "pudge", "skeleton_king"],
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "scored": null,
-      "status_code": null
+      "carries": [
+        "obsidian_destroyer",
+        "pudge",
+        "skeleton_king"
+      ],
+      "ab": 26,
+      "ba": 0,
+      "arm_depth": 0.0,
+      "scored": false,
+      "status_code": "instance-terminated-no-capacity",
+      "excluded": "NO-PAIR",
+      "status_update_time": "2026-09-10T12:47:03.000Z",
+      "terminated_at": "2026-09-10T12:47:03.000Z",
+      "machine_hours": 0.4731,
+      "status_code_source": "describe-spot-instance-requests Status.Code, read at 2026-09-10T15:2xZ (~2.2h after termination). SPOT requests retain Status.Code -- this is the ordinary case the wave record's harvest_notes (a) predicted, and it is the datum W62 could not supply."
     },
     {
       "seed": 10842,
@@ -93,12 +116,22 @@
       "launch_time": "2026-09-10T12:18:43.000Z",
       "lifecycle": "spot (verified per-machine by describe-instances: InstanceLifecycle reads `spot`).",
       "market": "spot",
-      "carries": ["lion", "pudge", "skeleton_king", "spirit_breaker", "zuus"],
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "scored": null,
-      "status_code": null
+      "carries": [
+        "lion",
+        "pudge",
+        "skeleton_king",
+        "spirit_breaker",
+        "zuus"
+      ],
+      "ab": 28,
+      "ba": 14,
+      "arm_depth": 18.67,
+      "scored": true,
+      "status_code": "instance-terminated-by-user",
+      "status_update_time": "2026-09-10T13:03:18.000Z",
+      "terminated_at": "2026-09-10T13:03:18.000Z",
+      "machine_hours": 0.7431,
+      "status_code_source": "describe-spot-instance-requests Status.Code, read at 2026-09-10T15:2xZ (~2.2h after termination). SPOT requests retain Status.Code -- this is the ordinary case the wave record's harvest_notes (a) predicted, and it is the datum W62 could not supply."
     },
     {
       "seed": 10889,
@@ -111,12 +144,20 @@
       "launch_time": "2026-09-10T12:18:45.000Z",
       "lifecycle": "spot (verified per-machine by describe-instances: InstanceLifecycle reads `spot`).",
       "market": "spot",
-      "carries": ["crystal_maiden", "obsidian_destroyer", "zuus"],
-      "ab": null,
-      "ba": null,
-      "arm_depth": null,
-      "scored": null,
-      "status_code": null
+      "carries": [
+        "crystal_maiden",
+        "obsidian_destroyer",
+        "zuus"
+      ],
+      "ab": 29,
+      "ba": 13,
+      "arm_depth": 17.95,
+      "scored": true,
+      "status_code": "instance-terminated-by-user",
+      "status_update_time": "2026-09-10T13:05:36.000Z",
+      "terminated_at": "2026-09-10T13:05:36.000Z",
+      "machine_hours": 0.7808,
+      "status_code_source": "describe-spot-instance-requests Status.Code, read at 2026-09-10T15:2xZ (~2.2h after termination). SPOT requests retain Status.Code -- this is the ordinary case the wave record's harvest_notes (a) predicted, and it is the datum W62 could not supply."
     }
   ],
   "_machines_carries_note": "carries[] lists which of the 7 derived carrier terms that seed's draft contains, read from seed_draft.py's expansion at selection time. Per-term totals over the slate: skeleton_king 3, spirit_breaker 3, crystal_maiden 2, lion 2, obsidian_destroyer 2, pudge 2, zuus 2."
