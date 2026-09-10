@@ -7652,7 +7652,7 @@
     "pin_frame": "tests/fixtures/f_260820_182906_lion_drain_survived.lua -- CM 11 级,543/831 蓝(**65%,所以拍板的是那个平的 440 不是 0.8**),1200 内 1 个队友,三个敌人在 625.2u / 749.5u / 885.1u,血量 0.62 / 0.94 / 0.97,桌上没有人头。出货把冰霜新星丢给 0.62 血的 Lion;armed 拒掉,下面的支路也拒,X.SkillsComplement 一发不下。",
     "limits": "(1) `tests/mock/replay_fixture.lua` **按构造拒绝英雄 AoE 搜索**(对每个调用方答 `{count = 0}`),而本支路正上方两条多杀支路读的就是 `nCanHurtHeroLocationAoE` ⇒ 本语料说不出真实对局里它们会不会先把这一帧拿走,§5 的漏斗因此是「钱包支路是这发新星的理由」的**上界不是率**;(2) `bot:GetActiveMode()` 离线答 0,这正是那条否定式 mode 项在离线为真的原因;(3) 不主张「CM 不该消耗」—— 冰霜新星 CD 11/10/9/8s,Turbo 里拒掉一发回得快,拒的理由是它是她唯一的 AoE 减速、而蓝是 Frostbite 后手的约束。总账要一波来结。",
     "tests": "tests/test_cm_nova_surplus_poke.lua(6 节),tools/agent/mutstand_cmqpoke.sh(12 发,首跑 10/12 → 补 §1 turbo 断言与 §6 退化读单测后 12/12)",
-    "issue": "[hero] 见本轮报告 iterations/reports/hero/20260910T050325Z.md",
+    "issue": "GH #698(2026-09-10 英雄组开)。报告 iterations/reports/hero/20260910T050325Z.md",
     "admission": "P4.2 入集冻结期,**不请求入集**(唯一合法裁定是 FROZEN-HOLD)。登记在案,等冻结解除后再提。"
   }
 }
