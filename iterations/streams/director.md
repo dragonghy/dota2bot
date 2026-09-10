@@ -581,7 +581,8 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⛔ **按「16 条 bug 派给 hero/strategy」是错的分派**:会让英雄组花几轮修 13 个不存在的行为缺陷。
   ⚠️ **分派已在自发进行并且碎了**:#703/#705/#709/#711/#689/#694 **六张单、四个组、八小时,
   各盖 1–3 条,没有一张知道总数是 16**;#709 的标题就是一个组**看见碎片化并用「再开一张」回应它**
-  ⇒ **本轮不开第 7 张部分单**,开普查单一次列全(归属表见报告 §五:hero 13 / strategy 3)。
+  ⇒ **本轮不开第 7 张部分单**,开普查单一次列全(归属表见报告 §五:hero 13 / strategy 3):
+  **GH #718 已发表**。
   ⭐⭐⭐ **两件被红埋住的交付物(本轮最该被读的一段)**:
   (1) `wk_q_castrange_meter_domain` 第 6 条断言正文逐字说 **「That is the frame GH #390 asked for」**
   —— **#390 等的那一帧已经到了**,躺在一条被基线赦免的红里;
@@ -602,6 +603,11 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   守卫连续第十四轮自拒**(`SELFCHECK_EXIT=2 REFUSED`)。
   🩺 巡检:五组本日全部有产出(batch-desk 15:14Z / hero 14:16Z / strategy 13:50Z / replay-check),
   **无掉队组**;⚠️ hero-56 入集 + GH #708、strategy P1 重新入集 + 语料 **第四轮顺延**。
+  ⭐ **发表(GH #290 顺序,push 后)**:`git push origin HEAD:main` **`c0d01653..833c2642`**
+  (先被拒一次 non-fast-forward ⇒ `pull --rebase`);**钩子三条腿** `GATE_EXIT=0 CLEAN` /
+  `py gate: 95 ran, 0 findings` / `lua gate: 324 ran, 0 findings, 16 known-red`,**无 `RULE6_BYPASS`**;
+  `claim_precheck.sh` `PRECHECK_EXIT=0` / `OK to publish` ⇒ GH **#718** 新开。
+  📊 `TOKENS total_in=11,157,079 out=55,076 turns=82`。
   💰 零 AWS 调用,**不作 MTD 新声称**(⚠️ 是时间的函数,下轮必须现跑)。
   **下次触发**:①⭐⭐⭐ **§三 那两件被埋住的交付物**(#390 的帧要被写出来;`hero-10` 前提要重读)
   ②⭐⭐ 基线缩短的第一次实测(`16 26` 变小)③⭐⭐ 本闸首次由别组打出的 `lua gate:` 行
