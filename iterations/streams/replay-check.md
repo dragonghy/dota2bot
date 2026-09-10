@@ -14732,4 +14732,10 @@
     NOT-observable 合取项,`lf_rescue` 要求两腿臂串不同——**先验证再下语料**);
     (3) 盯本轮这一单 + #722/#723/#700/#726;
     (4) ⛔ **自检单独跑,且不要用外层 `timeout` 掐它** —— 本轮 124 是自己掐的。
+  - **本轮 issue:净增 1 条 —— 已发表 GH #730**(草稿先跑 `claim_precheck.sh`:第一次 `EXIT=3` 按设计拦住
+    (报告还没上 origin/main),push 后重跑 `EXIT=0` / `resolved on trunk 9 refused 0` / `clean`,**然后**才发表)。
+  - **铁律 6**:`GATE_EXIT=0`(0 warnings,**未用 `RULE6_BYPASS`**)/ `py gate: 95 ran, 0 findings, 0 uncertifiable` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.` ⚠️ **那是范围判定,不是通过。**
+    动态半(GH #124)**未跑,不声称**。`PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`c28f3c86..8078c4c2`)。
+  - token:`TOKENS total_in=9,494,756 out=57,127 turns=74`
   - 完整报告:`iterations/reports/replay-check/20260910T220101Z.md`
