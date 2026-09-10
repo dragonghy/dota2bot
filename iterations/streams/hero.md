@@ -22,7 +22,48 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--142. **⭐ 下一轮:Zeus 的帧已经有了(8 个)—— 不要再为「Zeus 没帧」停下。
+-143. **⭐ 下一轮:反查 Lion 的 15 级帧 —— 谓词已经缩成一行可执行的合取式,不要再重新找它。**
+   本轮(报告 `iterations/reports/hero/20260910T165501Z.md`)执行了 `-142`(把配方用到 Lion 上),
+   并落地了 `lionqfight`(Lion,gated,turbo-only)。**要反查的谓词是**:
+   `bot:GetLevel() >= 15` ∧ `lion_impale:IsFullyCastable()` ∧ 射程(出货天赋下 **920**)内 ≥1 敌人。
+   `nLV >= 15` 意味着要去**后期**时间线上找,和 `f_260905_004847`(t=1266.5)同一个年代。
+   - **⭐ 本轮的 `bots/` 主体 `lionqfight`**:`X.ConsiderQ` 的 `--常规` 兜底支路第一行
+     `( #hEnemyList > 0 or bot:WasRecentlyDamagedByAnyHero( 3.0 ) )`,**左边那半被同一个 `if`
+     的第三条合取项蕴含** —— `hEnemyList` 是 `J.GetNearbyHeroes(bot, 1600, ...)`,
+     `nInRangeEnemyList` 是**同一个 helper、同一套过滤器**、半径 `nCastRange`;
+     `#nInRangeEnemyList >= 1` ⇒ `#hEnemyList > 0`,而 `or` 左短路 ⇒
+     **那条交战判据对任何输入都不会被求值一次**。armed 把它原样追加成合取项,**不发明阈值**。
+   - **⭐⭐ 同族第三形,分界线是「问不到的方式」**:`cmqpoke`(GH #698)合格判据在**另一条支路**;
+     `wkqodds`(GH #708)在本支路里但停在 mode 析取式右边(只有撤退时问);
+     本条**就在同一个 `if` 里**,被本 `if` 自己的另一条合取项**结构性短路** ——
+     前两条是「很少问」,这条是「**一次都不问,对每一个输入**」。
+   - **⭐ 蕴含关系是算术,余量比看上去小**:`650(基值)+ 600(special_bonus_unique_lion_2)
+     + 250(本文件给 GetAetherLensRangeBonus 的数,比物品 KV 的 225 多 25)+ 20 = 1520`,
+     **距 1600 只有 80**。按出货天赋树 `t25 = {0, 10}`(取 +250 AoE 变羊,**永不取那个 +600**)
+     则上限 920、余量 680。两个数钉在 `tests/test_lion_q_field_engagement.lua` §1.3/§1.4。
+   - **⛔ 本条没有本地验证,照实说**:全语料域为**空** —— 38 活体 Lion → 4 个到 15 级 →
+     **0 个同时满足可施放 + 射程内有人**;§3.3 用**边际否决法**量出卡口是 `nLV >= 15`。
+     §3.2 钉的是**空操作**(先例 `lionqkill`),§4 是**闸门管道不是本地验证**。
+   - **⭐ 那 16 条 known-red 一条都没被碰到,而这是量出来的**:`lua_gate.py` 自己写着
+     「baselined 的测试因为**第二个新理由**再红一次,读起来还是 known」⇒ 本轮用
+     `git worktree add --detach` 到干净 HEAD **逐条对拍 FAIL 消息,16/16 逐字相同**。
+     **本轮净增暂存红 0 条。** 这一步以后每轮都该做,它比「闸绿了」多说了一整句话。
+   - **⚠️ 自检 `SELFCHECK_EXIT=124`(600s 超时掐掉,不是通过)**;被掐之前打出的
+     trunk python red(`test_bots_walk_farm_only.py`,现场 `test_isvalid_building_sentinel.lua:95`)
+     **不是本轮造成的**(打那行时工作树一个字没改),球在协同组。
+   - **⚠️ 选件前先做域普查,它会改变「往哪切」的答案**:本轮本来打算直接切 Lion 帧,
+     先跑的探针量出「4/38 到 15 级、0 个进域」,于是切帧变成了**带着一个具体谓词**的下一棒,
+     而不是「再切几个 Lion 帧看看」。**先量后切比先切后量便宜一个工作单元。**
+   - **⚠️ 离线可达性是选杠杆的硬约束,而它有个简单形状**:mock 的 `GetActiveMode()` 答 0,
+     ⇒ 一切**正向 mode** 支路(`IsRetreating` / `IsGoingOnSomeone` / `IsFarming` / `IsPushing`)
+     在 fixture 里**全是暗的**,只有**否定式 mode 项**或不看 mode 的支路才可能有域。
+     CM 的 `X.ConsiderR` 三条支路本轮先被这条筛掉(branch 1 乘 `GetAOERadius()`=0,
+     branch 2 要 `J.GetProperTarget`=nil,branch 3 要 `IsRetreating`)—— **CM 大招整条函数
+     在本语料上无法验证**,别再花一轮重新发现这件事。
+
+-142. ~~**⭐ 下一轮:Zeus 的帧已经有了(8 个)—— 把配方用到别处去(Lion/CM)。**~~
+   ✅ **2026-09-10T16:55Z 执行完毕:配方用在了 Lion 上,落地 `lionqfight`。** ↓ 原文保留
+   **⭐ 下一轮:Zeus 的帧已经有了(8 个)—— 不要再为「Zeus 没帧」停下。
    把「反查决策瞬间」这条配方用到别处去(`zusjumpland` 的 band,或 Lion/CM)。**
    **已发表:GH #716**(主发现)、**GH #715**(量具缺陷)。
    本轮(报告 `iterations/reports/hero/20260910T141637Z.md`)执行了 `-141`(切 `364764` 那局的
@@ -6277,6 +6318,29 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-10T16:55Z(报告 `iterations/reports/hero/20260910T165501Z.md`;**backlog:`-142` 完成、
+  新开 `-143`**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动;
+  **P4.2 冻结期内不请求入集,只登记 `iterations/state.json:lionqfight_20260910`**)
+  **落地 `lionqfight`(Lion,gated,turbo-only):`X.ConsiderQ` `--常规` 兜底支路的交战判据,
+  被同一个 `if` 自己的另一条合取项永远短路。**
+  - **缺陷**:第一行 `( #hEnemyList > 0 or bot:WasRecentlyDamagedByAnyHero( 3.0 ) )`,
+    左半被本 `if` 第三条合取项 `#nInRangeEnemyList >= 1` **蕴含**(两个名单同一个 helper、
+    同一套过滤器,半径 1600 vs `nCastRange`)⇒ `or` 左短路 ⇒ **右边那条交战判据一次都不被求值**。
+    开火的理由只剩「附近有人」。armed 把它**原样**追加成合取项,**不发明阈值**,严格收窄。
+  - **⭐ 同族第三形**:`cmqpoke` 合格判据在**另一条支路**;`wkqodds` 在本支路但停在 mode
+    析取式右边(只有撤退时问);本条**就在同一个 `if` 里**却被结构性短路 ——
+    前两条是「很少问」,这条是「**一次都不问,对每一个输入**」。
+  - **⭐ 余量是算术**:全阶梯最坏 `650+600+250+20 = 1520`,**距 1600 只有 80**;
+    出货天赋树 `t25={0,10}` 永不取那个 +600 ⇒ 真实上限 920、余量 680。两个数都钉在测试里。
+  - **⛔ 没有本地验证,照实说**:域**空** —— 38 活体 Lion → 4 到 15 级 → **0 进域**;
+    边际否决法量出卡口是 `nLV >= 15`。§3.2 钉空操作(先例 `lionqkill`),§4 是闸门管道。
+  - **⭐ known-red 逐条对拍**:`lua_gate.py` 自己写着「baselined 因**第二个新理由**再红还是读作
+    known」⇒ 本轮 `git worktree add --detach` 到干净 HEAD,**16/16 FAIL 消息逐字相同**,
+    **本轮净增暂存红 0 条**。这一步以后每轮都做。
+  - **验证**:`GATE_EXIT=0`(0 warnings)、`lua gate: 325 ran, 0 findings, 16 known-red`、
+    `py gate: 95 ran, 0 findings`;新测试 `test_lion_q_field_engagement.lua` **11/0**,
+    变异台三发全红。**`SELFCHECK_EXIT=124`(超时掐掉,不是通过)**;它报的 trunk python red
+    不是本轮造成的(球在协同组)。
 - 2026-09-10T14:16Z(报告 `iterations/reports/hero/20260910T141637Z.md`;**backlog:`-141` 完成、
   新开 `-142`**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动;
   **P4.2 冻结期内不请求入集,只请求登记**)

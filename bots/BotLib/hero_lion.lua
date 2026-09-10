@@ -585,6 +585,106 @@ function X.GetImpaleKillDamage( hAbility )
 end
 
 
+--- The engagement test X.ConsiderQ's `--常规` branch was written WITH and can
+--- never use -- soak candidate `lionqfight` (turbo-only, INERT until armed).
+---
+--- THE DEFECT, in the branch's own first line:
+---
+---     if ( #hEnemyList > 0 or bot:WasRecentlyDamagedByAnyHero( 3.0 ) )
+---         and ( ... ~= BOT_MODE_RETREAT or #hAllyList >= 2 )
+---         and #nInRangeEnemyList >= 1
+---         and nLV >= 15
+---
+--- The two halves of that first parenthesis are not two readings of one idea.
+--- The right one is an ENGAGEMENT test: somebody has actually hit Lion inside the
+--- last three seconds.  The left one is a bare PROXIMITY count.  And the left one
+--- is IMPLIED BY THE BRANCH'S OWN THIRD CONJUNCT: `hEnemyList` is
+--- `J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE)` (X.SkillsComplement) and
+--- `nInRangeEnemyList` is the SAME helper with the SAME filters at radius
+--- `nCastRange`, so `#nInRangeEnemyList >= 1` forces `#hEnemyList > 0` for every
+--- input where nCastRange <= 1600.  `or` short-circuits on its left, so the
+--- engagement test is never even evaluated: the whole parenthesis is identically
+--- true, and what fires this branch is proximity alone.
+---
+--- ⭐ AND THE SUBSUMPTION IS ARITHMETIC, NOT AN ASSUMPTION -- it is checked in
+--- tests/test_lion_q_field_engagement.lua §1 against the ability's own KV ladder,
+--- because the margin is smaller than it looks.  `nCastRange` is
+--- `abilityQ:GetCastRange() + aetherRange + 20`; lion_impale's AbilityCastRange is
+--- 650 with a `special_bonus_unique_lion_2` bonus of **+600**, and `aetherRange` is
+--- the 250 X.SkillsComplement hands J.GetAetherLensRangeBonus (25 more than the
+--- item's own KV 225).  Worst case over the whole ladder is therefore
+--- 650 + 600 + 250 + 20 = 1520 -- inside 1600 by **80 units**.  Under the shipped
+--- talent build it is not close: tTalentTreeList takes t25 `{0, 10}`, i.e. the
+--- +250 AoE Hex and never the +600 cast range, so the real ceiling is 920 and the
+--- slack is 680.  Either way the left disjunct cannot be false here; a patch that
+--- moves Impale's cast range or the Aether bonus past that margin reopens this and
+--- §1 goes red.
+---
+--- SAME FAMILY, THIRD SHAPE.  `cmqpoke` (GH #698): the qualified branch is a
+--- DIFFERENT branch and sits below the unqualified one.  `wkqodds` (GH #708): the
+--- qualified term is IN this branch but parked to the right of a mode disjunct, so
+--- it is asked only while retreating.  Here the qualified term is in this branch,
+--- in this very `if`, on the right of an `or` whose left side another conjunct of
+--- the same `if` guarantees -- so it is not merely rarely asked, it is asked
+--- NEVER, for every input.  A qualifying criterion is not missing from the file;
+--- it is missing from the branch that needed it.
+---
+--- CONDITION (c), argued rather than assumed.  lion_impale is a 14/13/12/11s
+--- cooldown line stun (duration 1.3/1.6/1.9/2.2) costing 90-150 mana, and it is
+--- Lion's only reliable setup for the Hex -> Finger chain this hero exists to
+--- land.  Every other hero-targeted branch in X.ConsiderQ says what its cast is
+--- FOR -- a kill (`X.GetImpaleKillDamage` / `J.WillMagicKillTarget`), three heads
+--- in an AoE, a team fight, the bot's own declared target, an enemy that just hit
+--- it while retreating.  This one says "I am level 15 and somebody is inside cast
+--- range", and it does not lead the target: it fires at `npcEnemy:GetLocation()`,
+--- the first element of a list `J.GetNearbyHeroes` does not order.  Standard
+--- practice with a long-cooldown positional stun on a support is to hold it for an
+--- engagement; the branch's author wrote exactly that test down.
+---
+--- ARMED (`lionqfight`, turbo only): the branch additionally requires the term its
+--- own first line already carries -- the same predicate, the same 3.0 window,
+--- promoted from a disjunct that cannot bind into a conjunct that can.  NO
+--- threshold is invented and no other id is named (the pullcad trap: a gate that
+--- names a second id freezes FALSE the day that id is promoted).
+---
+--- DIRECTION BY CONSTRUCTION, not by today's data.  The armed predicate is a pure
+--- extra conjunct on the shipped condition, so the armed release set is a strict
+--- SUBSET of the shipped one for every input.  Arming this id can only WITHHOLD an
+--- Earth Spike; it can never invent one, and a negative wave read is attributable
+--- to "the withheld stuns were worth throwing" and never to a cast this lever
+--- added.
+---
+--- ⛔ NOT LOCALLY VALIDATED, and that is the honest word for it.  Driven over all
+--- 111 + 27 corpus frames (tests/test_lion_q_field_engagement.lua §3) this branch
+--- has an EMPTY domain: 38 live-Lion instants -> 4 at hero level >= 15 -> 0 with
+--- Impale fully castable AND at least one enemy inside the ring.  The binding
+--- clause is `nLV >= 15`, and no frame in the tree is on the other side of it with
+--- the other two clauses true.  So §3 asserts a NO-OP rather than a moved
+--- decision, the way tests/test_lion_q_kill_reach.lua does for `lionqkill`, and
+--- the next step is to cut Lion frames AT that predicate (the reverse-lookup
+--- recipe of tests/frames/f_260909_215227_zeus_exec_*.lua) rather than to hope a
+--- corpus cut for other questions happens to contain one.
+---
+--- ⚠️ NOT fixed here, registered so the next reader does not re-derive it: the
+--- same branch aims at the raw `npcEnemy:GetLocation()` of an unordered list's
+--- first element, against a 0.3s cast point and a 2800-speed projectile, while the
+--- 攻击 branch six lines above leads its target through J.GetDelayCastLocation.
+--- Repairing the aim is a `改瞄`, not a subset, so it is a different id with a
+--- different direction argument and it needs a frame this corpus does not have.
+X.nQFieldDamageWindow = 3.0
+
+function X.lion_IsFieldImpaleEngagementOk()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'lionqfight' )
+	then
+		return bot:WasRecentlyDamagedByAnyHero( X.nQFieldDamageWindow )
+	end
+
+	return true
+
+end
+
+
 function X.ConsiderQ()
 
 
@@ -747,6 +847,7 @@ function X.ConsiderQ()
 
 	--常规
 	if ( #hEnemyList > 0 or bot:WasRecentlyDamagedByAnyHero( 3.0 ) )
+		and X.lion_IsFieldImpaleEngagementOk()
 		and ( bot:GetActiveMode() ~= BOT_MODE_RETREAT or #hAllyList >= 2 )
 		and #nInRangeEnemyList >= 1
 		and nLV >= 15

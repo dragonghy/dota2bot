@@ -7787,5 +7787,21 @@
     "process_finding": "⚠️ **变异台产出的不是 bug,是「作者自己写错了机制」。** 测试文件抬头最初写的是「去抛错靠的是**闸的位置**(短路在 `J.GetHP` 之前)」,M3(只把闸挪到下面)**红了但消息对不上** —— 因为下标已经修好,unarmed 读的是一个**完全正常**的元素,根本不抛。⇒ 机制是**下标**不是**顺序**;顺序是第二层保险,只有 **M10(闸下移 **且** 下标还原)**才让 unarmed 重新抛。**测试抬头与变异台抬头都改成了正确的说法**,因为一个信了第一版说法的读者,下一次会给错的东西上闸。",
     "debt_cleared": "本轮开工自检 6 条 trunk 红里,`tests/test_bots_walk_farm_only.py` 那条是**本组上一轮**留下的(`test_isvalid_building_sentinel.lua:95` 用 `ls bots/*.lua bots/*/*.lua bots/*/*/*.lua` 走到了 `bots/Customize/` 的农场开关)⇒ 本轮改走 `lua_source_scan.bots_files()`(带 `FARM_ONLY_FIND_CLAUSE`,且是老 glob 的真超集,+1 文件 `bots/ts_libs/utils/http_utils/http_req.lua`),该 py 闸与 `test_isvalid_building_sentinel.lua` **10/10** 都已绿。另两条(`test_focus_mana_cost_consumer_census` / `test_lion_ult_reserve_domain`)是 `tests/frames/` 语料增长的棘轮,**不属本组**。",
     "next": "⛔ **promote 门槛(登记在案)**:在**未注入**的帧上看得见这条分支之前,不许去掉 gate —— 具体就是 §4 那条断言变红(有帧带 `modifier_undying_tombstone_zombie_deathstrike_slow`),**加上** GH #474 那堵墙倒掉(loader 接上 `GetTarget`/`GetAttackTarget`)。⭐ **另一条路是把它当 bug 而不是 lever 直接 ungate**:六条兄弟分支同形状且全部无闸(见 condition_c),总监若认这个论证,`tombhp` 可以在**不发波**的情况下 promote —— 这是本 id 与一般 lever 不同的地方,**请总监明确裁一次**,不要让它像 GH #13 那样挂在队列里。"
+  },
+  "lionqfight_20260910": {
+    "owner": "hero",
+    "date": "2026-09-10T17:0xZ",
+    "armed": false,
+    "backlog_item": "hero -142(把「反查决策瞬间」配方用到 Lion/CM)+ OWNER_PRIORITIES P4.4 (i)(工作单元主体是一个 bots/ 行为改动)。本轮**没有**去切新帧(见 star_limit),而是先把 Lion 的兜底支路读完,买到一条**不需要帧就能证明**的缺陷。",
+    "bots_lua_changed": true,
+    "gate": "X.lion_IsFieldImpaleEngagementOk() -- gate off 逐字 `true`;只**追加一条合取项**,出货那一行(含 `#hEnemyList > 0 or bot:WasRecentlyDamagedByAnyHero( 3.0 )`)一字未动。armed 的判据是**这条支路自己第一行就写着的那一项**,窗口 3.0 也是它自己的数,**不发明阈值**,helper 内不读任何兄弟 id(pullcad 陷阱)。",
+    "headline": "⭐ **X.ConsiderQ 的 `--常规` 兜底支路第一行 `( #hEnemyList > 0 or bot:WasRecentlyDamagedByAnyHero( 3.0 ) )`,左边那半被同一个 `if` 的第三条合取项蕴含** —— `hEnemyList` 是 `J.GetNearbyHeroes(bot, 1600, ...)`,`nInRangeEnemyList` 是**同一个 helper、同一套过滤器**、半径 `nCastRange`;`#nInRangeEnemyList >= 1` ⇒ `#hEnemyList > 0`,而 `or` 左短路 ⇒ **那条交战判据对任何输入都不会被求值**。开火的理由只剩「附近有人」。",
+    "star_family": "与 cmqpoke(GH #698)、wkqodds(GH #708)同族的**第三种形状**:cmqpoke 的合格判据在**另一条支路**且排在下面;wkqodds 的合格判据**在本支路里**但停在 mode 析取式右边,只有撤退时被问;本条的合格判据**就在同一个 `if` 里**,却被本 `if` 自己的另一条合取项**结构性地永远短路** —— 不是很少问,是**一次都不问**。",
+    "star_margin": "⭐ **蕴含关系是算术,余量比看上去小**:`nCastRange = GetCastRange() + aetherRange + 20`,`lion_impale` 的 AbilityCastRange 基值 650、带 `special_bonus_unique_lion_2` **+600**,`aetherRange` 是本文件交给 J.GetAetherLensRangeBonus 的 **250**(比物品 KV 的 225 多 25)⇒ 全阶梯最坏 650+600+250+20 = **1520,距 1600 只有 80**。按出货天赋树则不接近:`t25 = {0, 10}` 取奇数项(+250 AoE 变羊),**永远不取那个 +600** ⇒ 真实上限 920、余量 680。两个数都钉在 tests/test_lion_q_field_engagement.lua §1.3/§1.4。",
+    "star_limit": "⛔ **没有本地验证,照实说**:全语料(111 fixtures + 27 frames)驱动下这条支路的域是**空的** —— 38 个活体 Lion 瞬间 → 4 个到 15 级 → **0 个同时满足 Impale 可施放 + 射程内有敌人**。卡住的是 `nLV >= 15`(§3.3 用边际否决法量出来:只被等级否掉的瞬间数 ≥ 只被可施放/射程否掉的)。所以 §3.2 钉的是**空操作**(照 lionqkill 的先例),§4 是**闸门管道不是本地验证**,文件里逐字这么写。下一步:拿这条支路自己的谓词去时间线**反查**(Zeus `_exec_*` 的配方)切 Lion 帧,而不是指望为别的问题切的语料里正好有一个。",
+    "direction": "严格收窄,且是**代码属性**不是数据属性:armed 只是在出货条件上追加一个合取项 ⇒ armed 的开火集对**任何**输入都是出货集的子集,**只能少放一发 Impale,永远加不出一发**。负向波次读数只能归因于「被扣下的那些控值得放」,不可能归因于本杠杆发明的施法。",
+    "not_fixed_here": "同一条支路瞄的是 `npcEnemy:GetLocation()`(未排序列表的第一个元素)的**原始位置**,对着 0.3s 施法前摇 + 2800 速度的弹道,而六行之上的 `--攻击` 支路走 J.GetDelayCastLocation 提前量。修瞄是**改瞄不是子集**,方向论证不同、需要本语料没有的帧 ⇒ 另一个 id。已在文件头登记。",
+    "tests": "tests/test_lion_q_field_engagement.lua(11 条,变异台已验:helper 恒真 ⇒ §4 红;删调用点 ⇒ §2.2 红;把 1600 改成 1500 ⇒ §1.1/§1.3/§1.4 三红)",
+    "issue": "本轮报告 iterations/reports/hero/20260910T170000Z.md §7"
   }
 }
