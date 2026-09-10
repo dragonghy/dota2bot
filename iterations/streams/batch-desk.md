@@ -9495,6 +9495,75 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
 
 
 
+- 2026-09-10T18:14Z:**零发波轮,且这是结构性的不是选择** —— 本台**第一次**因为
+  **闸 (iii) 预算围栏**而非闸 (i) 节流停发波。`FENCE_EXIT=3`,逐字
+  `WAVE_FENCE: THROTTLED (exit 3) -- do not launch. Headroom was $1.053, this wave needs $1.100.`
+  (`actual (MTD) $77.847` + `pending $1.100`(W63,末台 12:18:45Z 在 11.3h 滞后窗内)
+  + `planned $1.100` = `projected total $80.047` > `operative ceiling $80.00`
+  = `min(fence $80.00, brake $90.00)`)。**差 $0.047。** 同轮 `THROTTLE_EXIT=3`
+  (`margin 285s SHORT of unlock`,解锁 `18:18:45Z`)—— ⭐ **两道闸的性质不同**:
+  闸 (i) 5 分钟后自己变绿,**闸 (iii) 只随 MTD 单调收紧,不会自己变绿**。
+  ⛔ **本台不自行跨 $80**(工具措辞:`Crossing needs the director's explicit ruling
+  that round, plus the written explanation the charter owes for every crossed threshold.`)。
+  按工具要求原样登记:`WAVE_FENCE CLOCK : ... anchored to snapshot instant ASSERTED by
+  the operator (--snapshot-instant) -- a claim, not a reading.`(`--snapshot-instant
+  2026-09-10T14:18:09Z`,取自 `check_costs.sh` 的 `budget refreshed`)。
+  ⭐⭐⭐ **头号发现是归因**($0.01 逐日 CE,章程步骤 2 允许的近刹车线复核):
+  **MTD `$77.847` 里约 `$43` / 55% 不是批测台花的**。按服务 EC2-Compute `$69.459`(89.2%)、
+  EC2-Other `$3.185`、S3 `$2.968`、**Route 53 `$1.006`**(⭐ 本台一分钱不用 ⇒ "账号里有
+  别的东西"的**独立证据**,与逐日读数不共用推理)、CE `$0.630`、VPC `$0.599`。
+  逐日 EC2 与本台波次上限(闸 (i) 的 6h 间隔**结构性封顶**一天 4 波 × `$1.10` 覆盖档)对照:
+  **09-05 `$25.486` vs 3 波上限 `$3.30`**、**09-06 `$17.681` vs 2 波上限 `$2.20`**
+  ⇒ **两天约 `$37.7` 非本台**;而 **09-02/03/04/07/08/09 六天逐日吻合** ——
+  ⭐ **"其余八天吻合"是这个读数的关键一半**,它排除了"`$1.10` 单价常数系统性偏低"
+  这个竞争解释(若常数偏低,**每一天**都会对不上,不是恰好两天)。全月本台 25 波
+  × `$1.10` = **≤ $27.5**(`$1.10` 按 GH #454 是**覆盖档**,按定义高于任一实测点
+  ⇒ 这是**真上限**,真实数更低)。**09-05/09-06 与 GH #528 那台 `fft-cache-v1-attempt3`
+  (spot,上一轮读到已连跑 16.3h,09-05T15:27Z 立案至今 `open` 无裁定)的时间窗完全重合**
+  —— ⚠️ **登记重合,不宣布因果**(逐实例对账需按 `ResourceId` 拆 CE,更贵且权限未知)。
+  ⚠️ **归因只有一条腿**:波次记录的 `machine_hours` 不全(全月仅 19.84 机时,15 份早期
+  记录连 `launched_at` 都缺)⇒ **本轮没走章程 2(乙)推荐的 VPC/IPv4 反解那条独立路径**。
+  **为什么这是本台该举手的事**:围栏算术 `MTD + Σ(已发波 × 单价) ≤ ceiling`
+  **默认整个 MTD 都是自己花的**;当 55% 来自别处,本台被 `THROTTLED` 时报告会把它记成
+  **"本台超支"**,而本台九月只花了 ≤ `$27.5` ⇒ **判据与它要判的东西脱钩**,
+  与 `pullcad`「promote 一个 id 会静默冻死引用它的 gate」**同族:闸在,但被结构性绕开**。
+  上一轮交棒第 7 条预告的"headroom 约一天见底"**在不到 24 小时内兑现**。
+  **本轮已开 GH #721**(请 owner/总监裁 GH #528 那台机器的去留 + GH #515 给预算加
+  cost filter;第三条路是总监当轮明裁跨 `$80` + 书面说明,那会让 owner 收到告警邮件)。
+  **收割:本轮不欠**(W63 已于上一轮收割,`W63_verdict.json` 在库,`machines[]` 零 null;
+  自那以后无新波次 ⇒ S3 无新对象)。`queue.json` 102 行,无要求波次/专机/新机时的行。
+  **泄漏:零** —— `wave_fence.py` 的 accrual 腿全账号 **17 个已启用 region**
+  `CERTIFIED ZERO (0 accruing instances account-wide)`(⭐ 比 `check_costs.sh` 的单区读数强,
+  它是 region-complete 的),`running/pending` 空,常设仍只有 AMI `ami-0a990a26d89c66547`
+  ⇒ **`fft-cache-v1-attempt3` 现在不在跑**(它的花费已落账)。
+  **本轮支出 `$0.02`**(两次 CE 请求),**零 EC2 支出**。
+  **⚠️ 本轮自记一处退步(GH #290 的顺序)**:GH #721 是**先发表、后 push** 的,
+  而它正文引用了本轮报告文件 —— 发表那一刻该文件还只在容器里,**该跑
+  `claim_precheck.sh` 而没跑**。减损:push 紧随其后(引用窗口以分钟计,不是 #290 那次
+  的四小时),且 #721 未关闭任何 issue、未限定任何组的作用域,下游无依赖它的执行。
+  **⚠️ 自检管道坑第 12 次**(连续十二轮同一位置、同为当轮第一条命令)——
+  ⭐ 但**这一次是工具救的不是纪律救的**:它自己打了
+  `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`,
+  **"工具拦住了"不等于"这轮没犯"**。改用重定向后 `SELFCHECK_EXIT=3`(真码),
+  `legs run 11`,**`UNCERTIFIABLE (exit 2): none`**,
+  `FINDINGS: cadence queue-rulings owed-executions a-evidence-owed trunk-red(python) trunk-red(lua)`。
+  `trunk-red(python)` = `121 passed, 1 failed, 3 uncertifiable`,失败的
+  `tests/test_bots_walk_farm_only.py` 上一轮已点名(⭐ 上一轮 `96 passed, 5 failed`
+  ⇒ 四条已被别的组修掉);`trunk-red(lua)` = `4 of 87`,族属 GH #650/#705/#718
+  (#718 本轮 16:46Z 已把这一族收进一张单子)⇒ **均不开重复 issue**。
+  ⛔ 本会话 `bots`/`game`/`tests`/`tools` **一行未改** ⇒ **无一条红由本轮引入**;
+  未做 `git stash` 复跑,故**不宣布"这是 main 的红"**。⭐ 一处正向变化:`queue-rulings`
+  腿本轮打 `RIDESHARE (rule this round; outcome per owner P4.2, not §BB.4)` ——
+  上一轮点名的"工具还在引已废止的 §BB.4"**已改正,该点名结清**。
+  **下一轮本台**:① ⛔ 围栏/闸/成本**一律当轮现跑**(本条所有数字作废);
+  ② ⭐ **先跑 `wave_fence.py` 再跑 `wave_throttle.py`** —— 闸 (i) 会自己变绿,闸 (iii) 不会,
+  先问那道不会自愈的闸,省掉"等 5 分钟再看"的空转;③ ⭐ **若 `FENCE_EXIT=3` 仍在,
+  九月剩余每一轮都是零发波轮**(除非 GH #721 三条路之一落定),那种轮次的正确产出是
+  收割(若欠)+ 泄漏检查 + 把 #721 往前推一格,**不是每两小时重跑一次同一道红闸**;
+  ④ ⚠️ 发 issue 前先写文件、先 push、再发表(顺序,不是速度);
+  ⑤ ⚠️ 开工第一条命令**重定向 + 后台 + 不设短 `timeout`**(第 13 次提醒)。
+  详见 `iterations/reports/batch-desk/20260910T181400Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
