@@ -642,12 +642,29 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   三条线未改,未预支跨线许可。⭐ **本轮裁定不花钱,但它解冻的正是花钱那条路**:
   闸 (i) UNLOCKED / 闸 (iii) CLEAR / 闸 (iv) 现在 `exit 0` ⇒ **闸上没有东西挡着了**;
   ⚠️ 而 `headroom $1.727` 是 09:17Z 那一刻的数(工具自己写了「不许抄进下一轮」)⇒ **批测台必须重跑闸 (iii)**。
+  ⭐⭐ **收尾追记:push 闸拒了一次,理由与本轮 diff 无关 ⇒ 已立 GH #707。**
+  `FAIL tests/test_tpreach_domain.py (exit 1)` / `py gate: 92 ran, 1 findings`,而本轮改动与 TP reach
+  一个字不沾;三处裸退出码:干净 `origin/main` worktree **0**、我的工作树 **0**、原样重跑 push **0 findings**。
+  ⭐ 可疑机制:该测试自起 selfcheck **子进程**(根因 `selfcheck exits clean: exit 1`),
+  13 条 `battery still runs …` 全是从属失败;闸 92 个测试并发 32s 跑完。⛔ **机制未证。**
+  ⭐⭐ **立案理由是失效方向**:闸给的唯一出路是 `RULE6_BYPASS=1`,而铁律 6 给它的范围是
+  **「真跑不动」(exit 2)不是「跑了并报红」(exit 3)** ⇒ **一道会因不相干理由拒绝你、
+  并顺手教你绕过它的闸,是在训练操作员绕过它** —— 与 GH #213 想买的正好相反,
+  **而代价不出现在任何读数上**(下次真红被 bypass 时,那行「SKIPPED, not passed」长得一模一样)。
+  建议:从属失败报 **UNCERTIFIABLE/exit 2** 而非 FAIL/exit 3。⚠️ 与 **GH #358 第八次吃腿**同族
+  (两处都是「子进程在预算内没跑完」),已并案。
+  ⭐ **发表(GH #290 顺序,push 后)**:`git push origin HEAD:main` **`96354211..b14ef3ca`**
+  (先被拒两次:非快进 ⇒ `pull --rebase`;上面那条 flake ⇒ 原样重跑);
+  **三次钩子门 `GATE_EXIT=0 CLEAN`,无 `RULE6_BYPASS`**;
+  `claim_precheck.sh` `PRECHECK_EXIT=0` / `OK to publish`(`paths cited 7` / `resolved on trunk 8`);
+  GH **#699** 追评 `#issuecomment-5617106802` **并关闭**,GH **#707** 新开。
+  📊 `TOKENS total_in=15,107,083 out=102,223 turns=91`。
   **下次触发**:①⭐⭐第五节**两条未定性**的 trunk RED:先核 `#624`/`#705` 与 `#622`/`#607`/`#576`/`#542`,**确认没被含才开**(`#705` 无需再动)②⭐⭐核 RULING 8 首次活读数
   (⚠️ **闸 (iv) 只在发波轮跑,这根棒确实要等到真有波**)③⭐⭐`path_contains_all` 的**真**盲区仍未修
   ④⭐⭐退休 `a_evidence_pulldrag`/`a_evidence_tpgap`(**第五轮顺延**)⑤⭐⭐`wave_reachable_delta.py`(**第七轮顺延**)
   ⑥⭐⭐GH #694 系统性那一半(pre-push manifest,未关)⑦⭐裁 hero-56 / strategy P1 + 语料 /
   `PROMOTE_BAR_PAIRED_SEEDS =` / hero-51..55 ⑧⭐核 GH #696 首次活读数(预期 10-01 后)/
-  镜像分侧为什么产不出竞争性语料(**第三轮顺延**)⑨⭐**GH #358 第八次吃腿 —— 该裁预算还是该分腿**
+  镜像分侧为什么产不出竞争性语料(**第三轮顺延**)⑨⭐**GH #707 + GH #358 第八次吃腿并案 —— 该裁预算、该分腿,还是该把从属失败降成 exit 2**
   ⑩存量:账户级预算等 owner / GH #523 / patch 缺口 P3 / `hero_domain_scan` 九份 /
   「退集·promote 五处同步」/「吞真码」守卫 / `rc.sh` 是习惯不是门(第七次)。
 - **2026-09-10T07:10Z**:**GH #692(缺陷)+ GH #693(政策)一次裁完 = RULING 7;
