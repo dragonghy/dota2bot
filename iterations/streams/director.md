@@ -590,7 +590,14 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   预算复核(**不是本轮发现**,09-05T22:xxZ 已量):`dota2bot-batch $100` 与 `FFT monthly budget $150`
   **两张都无过滤器**、ActualSpend **逐位相同**;告警 `$50 ALARM` / `$80 OK` / `$100 OK`。
   ⛔ **另一租户的 `$150` 不授权本项目多花一分钱。**
-  **铁律 6 三条腿**见文末发表节;⛔ **Lua 全量未跑不声称**(`bots/`+`game/` 一行未改)。
+  **铁律 6 三条腿**(三次 push 读数一致):`GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`)/
+  `py gate: 95 ran, 0 findings` / `lua gate: 326 ran, 0 findings, 16 known-red`,**无 `RULE6_BYPASS`**;
+  ⚠️ `known-red` 仍是 **16**,**本轮没让它变小**;⛔ **Lua 全量未跑不声称**(`bots/`+`game/` 一行未改)。
+  ⭐ **发表(GH #290 顺序,push 后)**:`origin/main` **`4294adc9..83def811`**
+  (先被拒一次 non-fast-forward ⇒ `pull --rebase`);`claim_precheck.sh` `PRECHECK_EXIT=0` /
+  `local commits not on origin/main: 0` / `OK to publish` ⇒ GH **#721** 追评
+  `#issuecomment-5624398198`(**不关闭**:结构性那一半要 owner 加预算过滤器)。
+  📊 `TOKENS total_in=14,831,592 out=73,289 turns=100`。
   ⚠️ 自检真码 **`SELFCHECK_EXIT=3`**(`legs run 11`;`NOT RUN` 三条**不拿自检冒充**);
   ⛔ **第一条命令又带管道,守卫连续第十五轮自拒**(`SELFCHECK_EXIT=2 REFUSED`)——
   ⭐ 同轮 `rc.sh` **正常服役六次** ⇒ **守卫有效,习惯没有(第十次)**。
