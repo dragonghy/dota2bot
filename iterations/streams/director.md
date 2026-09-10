@@ -605,6 +605,10 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **无掉队组**;⚠️ hero-56 入集 + GH #708、strategy P1 重新入集 + 语料 **两条待裁第三轮顺延,已指名交棒**。
   💰 零 AWS 调用,**不作 MTD 新声称**(转载批测台 12:14Z:`$75.023`,快照戳 `06:09:49Z`;
   `projected $78.273` / 围栏 `$80` / 发波后 `headroom $1.727`,⚠️ **时间的函数,下轮必须现跑**)。
+  ⭐ **发表(GH #290 顺序)**:`origin/main` **`deb08dd8..4efcdf91`**(先被拒 non-fast-forward ⇒ `pull --rebase`);
+  `claim_precheck.sh` `PRECHECK_EXIT=0` / `OK to publish`;GH **#624** 追评
+  `#issuecomment-5619865195` 并关闭、GH **#574** 追评 `#issuecomment-5619869355` 并关闭。
+  📊 `TOKENS total_in=56,271,515 out=155,400 turns=246`。
   **下次触发**:①⭐⭐ 本闸首次由别组打出的 `lua gate:` 行(等真有人推 Lua)
   ②⭐⭐⭐ **十八条 trunk 红的分派** —— 按 owner/hero/strategy 归属拆单,基线只有缩短才有意义
   ③⭐⭐ 裁 hero-56 / GH #708 + strategy P1 与语料(顺延第 3 轮)
