@@ -14338,11 +14338,19 @@
     ⛔ **GH #680 形状现场再复现一次**:harness 完成通知写 `[exited with code 0]`,
     而命令自己与工具都写 **3** ⇒ **采信 3**。
   - **AWS**:只读 S3,**零 EC2、零发波、零 CE、零支出**。
-  - **本轮的 issue**:新开 `[bug]`(`engaged` 列的 ±22pp 侧锁伪信号 + 请求把
+  - **本轮的 issue**:新开 **GH #700** `[bug]`(`engaged` 列的 ±22pp 侧锁伪信号 + 请求把
     「带对照必须配一条 placebo 带」写进计量条款);评论 **GH #695**(结清)与
     **GH #686**(失衡**不均匀**:四个 run 分别 **2.25 / 1.57 / 1.00 / 1.57**,
     `…53d28c` **恰好 13:13**,全波 53:35 = **1.51** ⇒「ba 腿恒定是最小的一半」**过强**,
-    它是**每实例截断效应**不是波次级结构)。
+    它是**每实例截断效应**不是波次级结构;并建议验收条件从「下一波 ratio 落进 [0.8,1.25]」
+    改成**逐 run 都落进**,否则并池会把 2.25 和 1.00 平均成一个看着没那么糟的数)。
+    ✅ **GH #290 顺序合规**:三处**全部在 push 之后**发表;`claim_precheck.sh` 读作
+    `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `OK to publish`。
+    ⭐ **草稿上抓到一处「对的答案配错的理由」(已写进 #700 附节)**:
+    `claim_precheck.sh` 的 **`paths cited N` 数出现次数、`resolved on trunk M` 数去重路径数**,
+    **量纲不同** ⇒ **`N > M` 不是「有路径没解析」的信号**(实测最小对照:同一路径引两次 ⇒
+    `cited 2 / resolved 1 / refused 0`,判定 clean)。真正的信号是 `refused` 与 `OK to publish`。
+    与 GH #679 / #687 同族。
   - **下一轮第一件事**:(1) ⭐ **fixture,帧已备齐** ——
     `make_fixture.py <…7eb1ba/…/20260909_212625_slot7.timeline.json> --t 235.0 --hero lion`,
     用 `tests/mock/replay_fixture.lua` 读真的 `J.ShouldPunishDive` 返回值,
