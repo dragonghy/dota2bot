@@ -373,17 +373,12 @@ def report(c, games):
                             - b['engaged'] / b['episodes'])
             row.append('%s closed %+5.1f engaged %+5.1f' % (band, d_cl, d_en))
         print('  %s: %s' % (stratum, '\n      '.join(row)))
-    print('')
-    print('DISCONTINUITY AT THE CONSTANT (difference in differences):')
-    print('  [(armed-baseline) on ownhalf] - [(armed-baseline) on nearmiss]')
-    print('  The nearmiss band holds the lever OUT while holding the map,')
-    print('  the legs and the pairing geometry IN, so this is the estimate')
-    print('  that does not credit the lever with ordinary leg asymmetry.')
-    for stratum in ('ab', 'ba'):
+    def did(stratum, treated, control):
+        """[(armed-baseline) on `treated`] - [(armed-baseline) on `control`]."""
         parts = []
         for metric in ('closed', 'engaged'):
             vals = {}
-            for band in ('ownhalf', 'nearmiss'):
+            for band in (treated, control):
                 a = c.get((stratum, 'armed', band), collections.Counter())
                 b = c.get((stratum, 'baseline', band), collections.Counter())
                 if not a['episodes'] or not b['episodes']:
@@ -395,8 +390,32 @@ def report(c, games):
                 parts.append('%s=n/a' % metric)
             else:
                 parts.append('%s %+5.1f pp' % (metric,
-                                               vals['ownhalf'] - vals['nearmiss']))
-        print('  %s: %s' % (stratum, '   '.join(parts)))
+                                               vals[treated] - vals[control]))
+        return '   '.join(parts)
+
+    print('')
+    print('DISCONTINUITY AT THE CONSTANT (difference in differences):')
+    print('  [(armed-baseline) on ownhalf] - [(armed-baseline) on nearmiss]')
+    print('  The nearmiss band holds the lever OUT while holding the map,')
+    print('  the legs and the pairing geometry IN, so this is the estimate')
+    print('  that does not credit the lever with ordinary leg asymmetry.')
+    for stratum in ('ab', 'ba'):
+        print('  %s: %s' % (stratum, did(stratum, 'ownhalf', 'nearmiss')))
+    print('')
+    print('PLACEBO (same statistic, lever known ABSENT -- internal null):')
+    print('  [(armed-baseline) on shipped] - [(armed-baseline) on nearmiss]')
+    print('  `shipped` is the SAME code on both legs, so this DiD has every')
+    print('  ingredient of the line above EXCEPT the lever. Whatever it')
+    print('  returns is what this estimator returns on nothing -- read the')
+    print('  real DiD against THIS, not against zero.')
+    for stratum in ('ab', 'ba'):
+        print('  %s: %s' % (stratum, did(stratum, 'shipped', 'nearmiss')))
+    print('')
+    print('BAND SIZE (pair-frames, ownhalf : shipped -- GH #695 invariant):')
+    of = sum(v['frames'] for (s, l, b), v in c.items() if b == 'ownhalf')
+    sf = sum(v['frames'] for (s, l, b), v in c.items() if b == 'shipped')
+    print('  ownhalf %d : shipped %d  = %s' %
+          (of, sf, ('%.2fx' % (of / sf)) if sf else 'n/a'))
     print('')
     print('READ THIS BEFORE QUOTING A NUMBER:')
     print('  * band counts are UPPER BOUNDS on fires -- SafeToCommitFight and')

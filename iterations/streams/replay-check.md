@@ -14280,3 +14280,69 @@
     (3) 盯 GH #686 / #687 / #694 / #695;(4) 本轮未取 `a_evidence_*` 队列(连续第二轮)。
   - token:`TOKENS total_in=8,989,560 out=50,265 turns=67`。
   - 完整报告:`iterations/reports/replay-check/20260910T034916Z.md`
+- **2026-09-10T05:0x–06:5xZ(本轮)**:章程交棒点名的「把 DiD 在 W62 另外三个 run 上复算」
+  做完(**88/88 局,四个 run 全覆盖,unparseable 0**),⭐ **但头号产出不是那三个复算值,
+  是一个内生零假设** —— 把同一个 DiD 套在 `shipped` 带上(那条带的 Lua **两腿逐字相同**,
+  杠杆**结构上进不去**)得到 **placebo**,而它**不小**。
+  ```
+  VERIFY id=ownhalf verdict=INDETERMINATE episodes=15163
+  ```
+  - ⛔ **`engaged` 这一列本轮撤回**:placebo 在 **ba 层三个独立 run** 上读
+    **+22.7 / +23.2 / +22.3 pp**(ab 层 −5.6 / −20.8 / −21.5)——
+    **一个 ±22pp、锁在物理侧上的伪信号,长在一条杠杆进不去的带上**。
+    而上一轮登记为头号读数之一的 `engaged/ba` 真值是 **+17.2**,
+    **比它自己的零假设还低**;`real > placebo` 在 ba 层只有 **1/4** 粒,均值 **−2.05**。
+    ⚠️ 上一轮**自己就写过**「+17.2 不要单独引用」并给了理由(那一格只有 660 ep);
+    **本轮把那句警告从「这一格小」升级成「整列是伪信号」,并给出了量级。**
+    ⇒ **请勿再引用那个 +17.2。**
+  - ✅ **`closed` 站住了,但比朴素读法小一半**:`real` 均值 ab **+6.20** / ba **+3.15**,
+    而 **placebo 的 ab 均值就是 +3.17** ⇒ 真正剩下的是 `real−placebo`
+    **ab +3.03 / ba +5.92**,两层同号,**6/8 粒为正**。
+    ⛔ **只登记方向不登记量级**:placebo 自己的离散度约 ±5pp(`53d28c/ab` 那粒 **+7.3**
+    比多数 real 读数还大),与 `real−placebo` **同量级**。
+  - ✅ **GH #695 悬案结清**:`ownhalf : shipped` 的 pair-frame 比值四个 run 独立复算
+    **1.14 / 0.99 / 1.12 / 1.15,均值 1.10×** ⇒ **`1.14×` 复现,`9.46×` 不复现**。
+    该比值现在**由工具自己打印**(`BAND SIZE` 行),不再是手算数字 —— #695 §建议 1 的形状。
+  - **树上改动**:`ownhalf_domain.py` +29/−10(DiD 抽成 `did(stratum, treated, control)`,
+    加 `PLACEBO` 与 `BAND SIZE`);**新增** `ownhalf_across_runs.py`(跨 run **算术平均、
+    绝不按局加权**,铁律 4(i-d));**新增** `tests/test_ownhalf_placebo.py`。
+    `bots`/`game` **一行未改**。
+  - ⭐ **变异台上一发第一次没打死,而它比打死的那发更有用**:
+    把 `vals[treated] - vals[control]` 换成 `vals[treated]`(**整个 DiD 的减法删掉**)
+    **活了下来**。原因不是变异无害,是**我写的语料让它无害** —— 四个合成语料里
+    `nearmiss` 对照带**两腿始终同率**,被减掉的项**恒为 0**。
+    **可迁移的那一句:一个从不动的对照,证明不了它被用过。**
+    补了「对照带单独有效应」的用例后 `MUTANT2_EXIT=1`(4 处 FAIL),恢复后 `RESTORED_EXIT=0`。
+    与 `zusult`/W45、GH #491 **同族**:这次是**测试**自己制造了它随后报出的那个「通过」。
+  - **逐帧 6 局**(四个 run 里的三个),全部 `--trace` 可复跑:承重帧
+    `…7eb1ba/20260909_212625_slot7` lion vs pudge `t=235.0`(深度 3236 / 建筑 **2055u**
+    ⇒ shipped 门**结构性关闭**,3 秒 1556u→90u);阴性对照 `…7eb1ba/20260909_214042_slot5`
+    **baseline** 腿 drow vs lina `t=1509.5`(深度 7298,**13 秒在 1120–1600u 摆着不合围**);
+    另有**三次「一次连续接近中横穿常数」**(`-`→`nearmiss`→`ownhalf`),分布在
+    `…53d28c`(CM vs zuus)与 `…5313f5`(SK vs lion、lich vs VS)—— `nearmiss` 当对照的经验依据。
+  - **铁律 6**:`GATE_EXIT=0`(`luacheck bots game: 0 warnings`),**未用 `RULE6_BYPASS`**;
+    `PYGATE_EXIT=0`(`92 ran, 0 findings`,逐字限定 `84 fast python ratchets`,
+    另 30 慢测与 Lua 动态半 **不由它声称**)。动态半(GH #124)**未跑,不声称**。
+    ✅ **GH #694 的 trunk 红本轮不复现**(`DSC_EXIT=0`),**已有主,只登记不认领**。
+  - **自检**:第一条命令**第十一次**踩管道形状(工具第十一次自拒;**以「本轮第一条命令」
+    这个形状复发第 6 次**)。锚点 **6/6 OK**、**`FROZEN none`**、**188 个 live gate id**、
+    **5 个原子全 GATED**;**python 腿 `UNCERTIFIABLE`**(逐字 `9 check(s) did not run;
+    this is NOT a pass`),⚠️ **归因确定是本台自己的负载**(4 核上四个并行 sweep),
+    不是环境;收尾时仍卡在 fast Lua 腿 ⇒ **无完整 `worst exit`,这不是通过**;
+    **本轮既不主张 trunk 红也不主张绿**。
+  - **AWS**:只读 S3,**零 EC2、零发波、零 CE、零支出**。
+  - **本轮的 issue**:新开 `[bug]`(`engaged` 列的 ±22pp 侧锁伪信号 + 请求把
+    「带对照必须配一条 placebo 带」写进计量条款);评论 **GH #695**(结清)与
+    **GH #686**(失衡**不均匀**:四个 run 分别 **2.25 / 1.57 / 1.00 / 1.57**,
+    `…53d28c` **恰好 13:13**,全波 53:35 = **1.51** ⇒「ba 腿恒定是最小的一半」**过强**,
+    它是**每实例截断效应**不是波次级结构)。
+  - **下一轮第一件事**:(1) ⭐ **fixture,帧已备齐** ——
+    `make_fixture.py <…7eb1ba/…/20260909_212625_slot7.timeline.json> --t 235.0 --hero lion`,
+    用 `tests/mock/replay_fixture.lua` 读真的 `J.ShouldPunishDive` 返回值,
+    **那买的是聚合永远买不到的 `SafeToCommitFight` 那一半**;
+    (2) ⭐ **把 placebo 这一步推广到同族检测器**(`stayattr_domain` / `slotwait_domain` /
+    `tower_band_domain` / `zusult_gate` …):**有没有一条杠杆结构上进不去的带可以当零假设?**
+    §4.2 的 ±22pp 就是不问这个问题的代价;(3) 盯 GH #686 / #687(#695 已结清);
+    (4) **连续第三轮未取 `a_evidence_*` 队列,下一轮优先回到该队列**。
+  - token:`TOKENS total_in=10,144,620 out=41,970 turns=83`。
+  - 完整报告:`iterations/reports/replay-check/20260910T065600Z.md`
