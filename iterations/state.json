@@ -7750,7 +7750,7 @@
     "falsification_bought": "⭐ 顺手买到、记在测试 §6:tests/test_wk_q_aim_preflight.lua §1 的 tripwire 断言一条全称命题(「语料里凡是活体 WK + 568u 内 ≥2 个活体敌人的帧,Wraithfire Blast 必定未学或在 CD」),而它只扫 tests/fixtures/。**tests/frames/ 里有两帧推翻它**(lane_121、sb_1052:Q 可施放且 568u 内 ≥2 敌)。⭐⭐ **但可达 ≠ 可分辨**:唯一同时过了 7 级门的那帧(sb_1052)里,**最近的敌人恰好就是血最少的那个**(按绝对值和按比例都是 slardar)⇒ wkqaim(queue hero-1)在这帧上仍然一个目标都不改。这正是 bots/ 里 wkqdmg 那条注释区分的「算术域 vs 决策域」,换了个候选重演一次。",
     "tests": "tests/test_wk_q_catchall_odds.lua(6 节 17 例全绿)。同一 commit 内重取 tests/test_activemode_call_site_census.lua 的散文计数 5→6 / 258→259(本次改动的注释引用了那条 mode 析取式;get_active_mode 仍 253,未动可执行项)。",
     "limits": "(1) bot:GetActiveMode() 离线恒 0(第 13 条世界断言)⇒ 测试 §4.2 只能核验「本语料里没有一帧读作 RETREAT」这个前提,不能观测撤退时的行为;(2) 语料里 WK 的兜底支路外层只在 3 帧为真,**1 帧移动不是率**,只是「域非空且方向正确」;(3) 不主张「WK 不该消耗」—— 主张的是「outnumbered 时不该用唯一的硬控去点满血的人」,总账要一波来结。",
-    "issue": "GH 待开 —— 按铁律 6 / GH #290 的顺序,先 push 再发带引用的评论;开出来的号补记在报告 §8。报告 iterations/reports/hero/20260910T105241Z.md",
+    "issue": "GH #708(2026-09-10 英雄组开)。另开 GH #709 记 trunk 上同一成因的三处未立案 red(暂存帧把 WK 语料 38→44;GH #705 只盖住四个文件里的一个)。报告 iterations/reports/hero/20260910T105241Z.md",
     "admission": "P4.2 入集冻结期,**不请求入集**(唯一合法裁定是 FROZEN-HOLD)。登记在案,等冻结解除后再提。"
   }
 }
