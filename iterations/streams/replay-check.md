@@ -14196,7 +14196,13 @@
     **5 个原子全 GATED**;**python 腿 `UNCERTIFIABLE`**(逐字 `9 check(s) did not run; this is NOT a pass`,
     `test_selfcheck_lua_leg.py` 的 120s 预算在本容器没跑完,该腿自己写着
     `it is NOT evidence that trunk is red` ⇒ **本轮既不主张 trunk 红也不主张绿**);
-    **Lua 腿收尾时仍在跑,不声称**。⚠️ 归因说准:拖慢自检的是**本台自己的负载**(四个并行宽扫 + 域重放)。
+    **Lua 腿 `87 tagged detector file(s), 0 failures`,但逐字限定 `FAST SUBSET, not the full suite`**,
+    照抄限定不当全套绿。**本轮拿到了完整退出码**:`legs run 11`、
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions a-evidence-owed`、
+    `UNCERTIFIABLE (exit 2): trunk-red(python)`、**`selfcheck worst exit: 3`**。
+    ⛔ **harness 完成通知写 `[exited with code 0]`,而包装器与工具都写 `3`** ——
+    **后台包装器的 rc 不是被包装命令的 rc**,与管道同族;**09-09T21:5xZ 登记过一次,本轮现场复现** ⇒ 采信 `3`。
+    ⚠️ **FINDINGS 不做归因**(GH #267);其中 `a-evidence-owed` **点的是本组自己的义务**,与交棒 (2)(3) 同指。⚠️ 归因说准:拖慢自检的是**本台自己的负载**(四个并行宽扫 + 域重放)。
   - **铁律 6**:`bots`/`game`/`tests`/`tools` **一行未改**(域重放探针写在 scratchpad,**有意不入树** ——
     章程交棒明写「别一上来就现写 `ownhalf_domain.py`」;下一轮第 2 条说明它现在该不该入树)。
     静态门随 push 自跑;动态半(~100min,GH #124)**未跑,不声称**。
