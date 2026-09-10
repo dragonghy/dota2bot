@@ -1,0 +1,189 @@
+{
+ "cand": "tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulldrag,tpgap,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom",
+ "cand_ref": null,
+ "contrast": "vs_stable",
+ "recovered_locally": true,
+ "per_seed": [
+  {
+   "seed": "10601",
+   "ab_games": 42,
+   "ba_games": 16,
+   "arm_depth": 23.17,
+   "scored": true,
+   "gpm": 12.47,
+   "gpm_ab": -84.37,
+   "gpm_ba": 109.3,
+   "xpm": 16.96,
+   "xpm_ab": -4.32,
+   "xpm_ba": 38.24,
+   "deaths": -0.19,
+   "deaths_ab": -0.4,
+   "deaths_ba": 0.03,
+   "last_hits": -1.34,
+   "last_hits_ab": 15.58,
+   "last_hits_ba": -18.26,
+   "scored_games": 58,
+   "unfinished": 0,
+   "winrate_arm_depth": 23.17,
+   "winrate_side_census": {
+    "radiant": 0,
+    "dire": 58
+   },
+   "winrate_headroom": 0.0,
+   "winrate": 0.5
+  },
+  {
+   "seed": "10607",
+   "ab_games": 31,
+   "ba_games": 14,
+   "arm_depth": 19.29,
+   "scored": true,
+   "gpm": -21.02,
+   "gpm_ab": -94.72,
+   "gpm_ba": 52.69,
+   "xpm": 0.91,
+   "xpm_ab": -44.88,
+   "xpm_ba": 46.7,
+   "deaths": 0.06,
+   "deaths_ab": 0.94,
+   "deaths_ba": -0.83,
+   "last_hits": 1.5,
+   "last_hits_ab": -6.59,
+   "last_hits_ba": 9.6,
+   "scored_games": 45,
+   "unfinished": 0,
+   "winrate_arm_depth": 19.29,
+   "winrate_side_census": {
+    "radiant": 1,
+    "dire": 44
+   },
+   "winrate_headroom": 0.0357,
+   "winrate": 0.516
+  },
+  {
+   "seed": "10803",
+   "ab_games": 34,
+   "ba_games": 24,
+   "arm_depth": 28.14,
+   "scored": true,
+   "gpm": 4.06,
+   "gpm_ab": -32.75,
+   "gpm_ba": 40.86,
+   "xpm": 10.22,
+   "xpm_ab": -9.12,
+   "xpm_ba": 29.55,
+   "deaths": -0.11,
+   "deaths_ab": 0.04,
+   "deaths_ba": -0.25,
+   "last_hits": 2.4,
+   "last_hits_ab": -6.75,
+   "last_hits_ba": 11.55,
+   "scored_games": 58,
+   "unfinished": 0,
+   "winrate_arm_depth": 28.14,
+   "winrate_side_census": {
+    "radiant": 0,
+    "dire": 58
+   },
+   "winrate_headroom": 0.0,
+   "winrate": 0.5
+  },
+  {
+   "seed": "10813",
+   "ab_games": 30,
+   "ba_games": 12,
+   "arm_depth": 17.14,
+   "scored": true,
+   "gpm": -24.32,
+   "gpm_ab": 297.83,
+   "gpm_ba": -346.47,
+   "xpm": 12.6,
+   "xpm_ab": 220.05,
+   "xpm_ba": -194.85,
+   "deaths": -0.31,
+   "deaths_ab": -3.21,
+   "deaths_ba": 2.58,
+   "last_hits": -0.17,
+   "last_hits_ab": 19.75,
+   "last_hits_ba": -20.1,
+   "scored_games": 42,
+   "unfinished": 0,
+   "winrate_arm_depth": 17.14,
+   "winrate_side_census": {
+    "radiant": 10,
+    "dire": 32
+   },
+   "winrate_headroom": 0.4167,
+   "winrate": 0.608
+  }
+ ],
+ "mean": {
+  "gpm": -7.2,
+  "xpm": 10.17,
+  "deaths": -0.14,
+  "last_hits": 0.6,
+  "winrate": 0.531,
+  "winrate_headroom": 0.1131
+ },
+ "comps_better": {
+  "gpm": "2/4",
+  "xpm": "4/4",
+  "deaths": "3/4",
+  "last_hits": "2/4",
+  "winrate": "2/4"
+ },
+ "input": {
+  "files_seen": 227,
+  "games_loaded": 227,
+  "source_dirs": 4,
+  "unparseable": 0,
+  "pooled_basename_dirs_overridden": 0
+ },
+ "strata": {
+  "gpm": {
+   "ab": 21.5,
+   "ba": -35.91,
+   "side": 28.7,
+   "sign_flip": true,
+   "side_gt_arm": "4/4"
+  },
+  "xpm": {
+   "ab": 40.43,
+   "ba": -20.09,
+   "side": 30.26,
+   "sign_flip": true,
+   "side_gt_arm": "4/4"
+  },
+  "deaths": {
+   "ab": -0.66,
+   "ba": 0.38,
+   "side": -0.52,
+   "sign_flip": true,
+   "side_gt_arm": "4/4"
+  },
+  "last_hits": {
+   "ab": 5.5,
+   "ba": -4.3,
+   "side": 4.9,
+   "sign_flip": true,
+   "side_gt_arm": "4/4"
+  }
+ },
+ "winrate_neutral": 0.5,
+ "scored_games": 203,
+ "unfinished_games": 0,
+ "winner_by": {
+  "engine_natural": 227
+ },
+ "winrate_independent_of_gold": "227/227 games",
+ "winrate_side_census": {
+  "radiant": 12,
+  "dire": 215
+ },
+ "winrate_minority_side_share": 0.0529,
+ "winrate_channel": "DEGENERATE",
+ "min_arm_depth": 8,
+ "thin_arm_seeds": [],
+ "thin_arm_winrate_seeds": [],
+ "suggested": "hold_or_reject"
+}
