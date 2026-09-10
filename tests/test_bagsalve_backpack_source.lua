@@ -395,10 +395,26 @@ tests['[reverse] turbo is structural: both callers ask the situation first'] = f
     -- It copies the three surroundings clauses unchanged, inverts only the floor,
     -- and asks IsModeTurbo on its second line. The loop below is what holds the
     -- property; the count is the anti-vacuum floor.
+    -- [tpquiet 20260908, listed 20260910] The tenth caller joins the same list
+    -- for the same reason as the eighth, whose five constants it copies by
+    -- name: J.ShouldSipNotTpQuietHome works inside the 0.10-0.18 band that
+    -- J.IsFieldRegenSituation's floor cuts off, so routing through the
+    -- situation predicate would make it identically FALSE on its whole band.
+    -- It asks IsModeTurbo on its second line (its first is its own soak gate),
+    -- so the loop below is what holds the property for it.
+    -- ⚠️ THIS LINE IS A LATE ENTRY, AND THAT IS THE FINDING. 'tpquiet' landed
+    -- on 2026-09-08 and this ratchet has been RED ON TRUNK from that moment --
+    -- through at least six subsequent stream rounds, and found on 2026-09-10 by
+    -- a round that was reading a different helper entirely, i.e. by accident.
+    -- The count is the anti-vacuum floor and it did its job; what did not
+    -- happen is anyone reading the message it printed. Same family as
+    -- GH #650/#584: a hardcoded census that a legitimate change reddens, where
+    -- the fix is one list entry and the cost is a red trunk for every other
+    -- stream in between.
     for _, name in ipairs({ 'ShouldStayAndRegen', 'ShouldFieldBuyRegenHurt',
         'ShouldFieldBuyRegenTower', 'ShouldFieldBuyRegenRing',
         'ShouldSipNotTpRecover', 'ShouldDeepSipNotTpRecover',
-        'ShouldFieldBuyRegenDeep' }) do
+        'ShouldFieldBuyRegenDeep', 'ShouldSipNotTpQuietHome' }) do
         local body = code:match('function J%.' .. name .. '%( bot %)(.-)\nend\n')
         assert(body, 'could not slice J.' .. name
             .. ', which calls J.HasFieldRegenSource without going through the '
@@ -410,8 +426,8 @@ tests['[reverse] turbo is structural: both callers ask the situation first'] = f
             .. 'helper has no turbo clause of its own, so this ships the '
             .. 'behaviour into normal mode')
     end
-    assert(nCalls == 9,
-        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not 9. Every '
+    assert(nCalls == 10,
+        'J.HasFieldRegenSource has ' .. nCalls .. ' call sites, not 10. Every '
         .. 'caller must reach turbo before calling it, either by asking '
         .. 'J.IsFieldRegenSituation first or by its own IsModeTurbo; add the new '
         .. 'one to one of the two lists above rather than only raising this number')
