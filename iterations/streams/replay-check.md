@@ -14559,11 +14559,27 @@
     ⚠️ **py gate 第一次读到 `EXIT=2`**(`tests/test_soak_cand_ref.py timed out after 15s
     (manifest says 0.31s)`);单跑 `EXIT=0` 但 **`real 5.27s`** ⇒ **manifest 与实测差 17 倍**,
     是 GH #616「成员资格只看实测秒数」的漂移,不是一次红。两次读数都登记。
-  - **自检**:第一条命令**第十四次**踩管道形状(工具第十四次自拒)。
-    ⛔ **本轮自检没跑完,认领**:它与四路宽扫抢同 4 个核,35 分钟卡在
-    `trunk health (python test suite)`,**本轮主动 `pkill` 让出 CPU**(交棒单第 (5) 条的字面执行)。
-    **读到的是 UNCERTIFIABLE,不是通过。**
+  - **自检**:第一条命令**第十四次**踩管道形状(工具第十四次自拒)。第一次与四路宽扫抢核、
+    35 分钟卡在 python 腿,被主动 `pkill` 让出 CPU;✅ **收尾单独重跑拿到完整读数**:
+    `SELFCHECK_EXIT=3`、`legs run 11`、`UNCERTIFIABLE: none`、**`worst exit: 3`**,
+    `FINDINGS: cadence queue-rulings owed-executions a-evidence-owed trunk-red(python) trunk-red(lua)`。
+    ⭐ `trunk-red(lua)` **4/87,四条都不是本轮的**,而**闸同时读 `0 findings, 16 known-red`** ——
+    三条在 known-red 基线里、第四条 `test_stayfield2_marginal_domain.lua`
+    是 `{"in_gate": false, "reason": "timed_out"}` **结构上不在闸里**。
+    ⇒ **census 型的红有两条互不重叠的逃逸路径,今天四条红 4/4 走了这两条。**
+    已追评 GH #711(comment 5622737149),建议自检的 lua 腿逐条打出该文件在 manifest 里的身份。
+    ⚠️ 树是 `c0d01653`,收尾时 main 已推过三个提交,**新 main 未复验**。
   - **AWS**:只读 S3(4 次 `ls` + 88 局下载),**零 EC2、零发波、零 CE、零支出**。
+  - **本轮的 issue:净增 0 条 —— 两条都写成了评论**(两份草稿各跑一次 `claim_precheck.sh`,
+    都是 `EXIT=0` / `local commits not on origin/main: 0` / `clean`,顺序按 GH #290 先 push 再发表)。
+    - **追评 GH #712**(comment 5622258936):W63 复现读数 + 空带与 ~1350 提案 + 三条限制,
+      末尾把**判定完结请求**交给总监(P1 第 3 棒)。
+    - ⛔ **`[harness]` 未开新 issue,改追评 GH #707**(comment 5622277502)——
+      发前先搜,发现总监今早 10:25Z 已立同一形状,而它自己写着「没有证到那个机制」;
+      本轮是**第二例且把那半个机制量出来了**(manifest `0.311s` / `measured_at 09-08` vs
+      空载实测 **5.27s**,17×,cap 15s ⇒ **先有秒数漂移,负载才咬得动**),
+      并提了一条更便宜的**前置**验收(把 manifest 秒数当会过期的量来审)。
+      ⭐ 拦住重复立案的又是那一次 issue 搜索(GH #675 的学费,连续第二轮省下)。
   - **下一轮第一件事**:(1) ⭐ **W64 落地后第一条命令就是 `pullcamp_camp_gap.py`** ——
     §4 的空带与 1350 提案唯一的软肋是 n,工具在树上,零 AWS;顺带复核「1266 营地是不是分子」
     (W62 说是、W63 说不是);(2) `pullcamp` 的 (a) 已在两份独立语料上买到,**该走判定**,
