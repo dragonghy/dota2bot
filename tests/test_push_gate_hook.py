@@ -143,8 +143,8 @@ check(sc.count("core.hooksPath") == 0,
 # ---------------------------------------------------------------------------
 tmp = tempfile.mkdtemp(prefix="pushgate-")
 try:
-    def fake_repo(gate_exit, py_exit=0):
-        """A throwaway tree with the real hook and stubs for BOTH halves.
+    def fake_repo(gate_exit, py_exit=0, lua_exit=0):
+        """A throwaway tree with the real hook and stubs for ALL THREE legs.
 
         The python half (GH #616) was added to this hook on 2026-09-08, and it
         is stubbed here for the same reason the Lua half always was: case 6
@@ -156,6 +156,15 @@ try:
 
         `py_exit` defaults to 0 so every existing case still reads as "the LUA
         half decided this".
+
+        The fast LUA TEST leg (GH #624) was added on 2026-09-10 and is stubbed
+        for the same reason, plus one specific to it: unstubbed it runs 322
+        real Lua tests (238.7s measured) against whatever tree it is pointed
+        at, and in a fake repo it has no manifest at all -- so it answered
+        "could not run" and refused every case here, including 6a. That is the
+        gate behaving CORRECTLY on a tree that is not a repo; stubbing keeps
+        case 6 about the mapping, which is what it is for. `lua_exit` defaults
+        to 0 for the same reason `py_exit` does.
         """
         d = tempfile.mkdtemp(dir=tmp)
         os.makedirs(os.path.join(d, "tools", "agent"))
@@ -168,6 +177,9 @@ try:
         pystub = os.path.join(d, "tools", "agent", "py_gate.py")
         with open(pystub, "w") as fh:
             fh.write("import sys\nprint('STUBPY')\nsys.exit(%d)\n" % py_exit)
+        luastub = os.path.join(d, "tools", "agent", "lua_gate.py")
+        with open(luastub, "w") as fh:
+            fh.write("import sys\nprint('STUBLUA')\nsys.exit(%d)\n" % lua_exit)
         return d
 
     def run_hook(d, env_extra=None):
@@ -186,6 +198,9 @@ try:
     check("STUBGATE" in r0.stdout + r0.stderr,
           "6a2: and the gate actually ran (its output is on the pusher's screen, "
           "not swallowed)")
+    check("STUBLUA" in r0.stdout + r0.stderr,
+          "6a3: and so did the fast LUA TEST leg (GH #624) -- a third leg that "
+          "is wired but never reached would pass every case here silently")
 
     d3 = fake_repo(3)
     r3 = run_hook(d3)
@@ -199,6 +214,18 @@ try:
           "point; 'uncertifiable' silently allowing is GH #171 and #205 verbatim")
     check("REFUSED" in r2.stdout + r2.stderr, "6c2: and says so")
 
+    # The LUA TEST leg's own 0/2/3 mapping, same two cases as the halves above.
+    dl3 = fake_repo(0, lua_exit=3)
+    rl3 = run_hook(dl3)
+    check(rl3.returncode != 0, "6e: lua leg exit 3 (RED) => push REFUSED")
+    check("LUA TEST leg is RED" in rl3.stdout + rl3.stderr,
+          "6e2: and says LUA TEST, distinguishably from the other two refusals")
+    dl2 = fake_repo(0, lua_exit=2)
+    rl2 = run_hook(dl2)
+    check(rl2.returncode != 0,
+          "6f: lua leg exit 2 (COULD NOT RUN) => push REFUSED too -- the same "
+          "sentence GH #171 and #205 each got wrong, on the newest leg")
+
     rb = run_hook(d3, {"RULE6_BYPASS": "1"})
     check(rb.returncode == 0, "6d: RULE6_BYPASS=1 lets a red tree through")
     check("SKIPPED, not passed" in rb.stdout + rb.stderr,
@@ -211,6 +238,10 @@ try:
           "6d4: before the PYTHON half too (GH #616) -- a bypass that skips "
           "one half and runs the other is neither of the two things its "
           "banner claims")
+    check("STUBLUA" not in rb.stdout + rb.stderr,
+          "6d4b: and before the LUA TEST leg (GH #624) -- it is the most "
+          "expensive of the three, so a bypass that still paid for it would "
+          "be the escape hatch costing more than what it escapes")
     check("python" in rb.stdout + rb.stderr,
           "6d5: and the bypass banner NAMES the python half among what went "
           "unchecked.  A banner listing only luacheck would be copied into a "

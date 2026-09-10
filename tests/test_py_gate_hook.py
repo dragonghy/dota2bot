@@ -71,13 +71,36 @@ def make_tree(tmp, tag, body):
             "tests": {"tests/test_a.py": {"seconds": 0.1, "in_gate": True,
                                           "reason": "fast"}},
         }, fh)
-    return root, mpath
+    # ⭐ THE LUA TEST LEG (GH #624) IS REDIRECTED HERE TOO, and that is a cost
+    # control, not a convenience.  The hook's third leg runs every sub-cap Lua
+    # test -- 322 of them, 238.7s measured -- and this file drives the hook
+    # FOUR times.  Left pointing at the real repo it turned a ~26s file into a
+    # ~16-minute one and stalled 开工自检's whole python leg behind it (seen
+    # live 2026-09-10, the round that added the leg).  Redirecting keeps this
+    # file about the PYTHON half, which is the half it is named for; the Lua
+    # leg's own behaviour is asserted in tests/test_lua_gate.py.
+    shutil.copy(os.path.join(REPO, "tests", "run_tests.lua"),
+                os.path.join(root, "tests", "run_tests.lua"))
+    with open(os.path.join(root, "tests", "test_l.lua"), "w") as fh:
+        fh.write("local t = {}\nt['ok'] = function() end\nreturn t\n")
+    lpath = os.path.join(root, "tools", "agent", "lua_gate_manifest.json")
+    with open(lpath, "w") as fh:
+        json.dump({
+            "per_test_cap_seconds": 5.5,
+            "budget_seconds": 300.0,
+            "hook_timeout_seconds": 20.0,
+            "tests": {"tests/test_l.lua": {"seconds": 0.1, "in_gate": True,
+                                           "reason": "fast"}},
+        }, fh)
+    return root, mpath, lpath
 
 
-def run_hook(root, mpath, **extra_env):
+def run_hook(root, mpath, lpath, **extra_env):
     env = dict(os.environ)
     env["PY_GATE_ROOT"] = root
     env["PY_GATE_MANIFEST"] = mpath
+    env["LUA_GATE_ROOT"] = root
+    env["LUA_GATE_MANIFEST"] = lpath
     env.update(extra_env)
     return subprocess.run(["bash", HOOK], cwd=REPO, env=env,
                           capture_output=True, text=True, timeout=900)
@@ -88,16 +111,16 @@ try:
     # ---- 3 first: the control.  If a clean tree does not pass, checks 1 and
     # 2 below are satisfied by a hook that simply refuses everything, and the
     # whole file would be green while the repo could not push at all.
-    root, mpath = make_tree(tmp, "clean", PASSING)
-    r = run_hook(root, mpath)
+    root, mpath, lpath = make_tree(tmp, "clean", PASSING)
+    r = run_hook(root, mpath, lpath)
     check(r.returncode == 0,
           "3: (control) a CLEAN python half lets the push through -- without "
           "this, 1 and 2 pass vacuously for a hook that always refuses "
           "(got %d: %r)" % (r.returncode, (r.stdout + r.stderr)[-500:]))
 
     # ---- 1. red refuses, and names the test
-    root, mpath = make_tree(tmp, "red", FAILING)
-    r = run_hook(root, mpath)
+    root, mpath, lpath = make_tree(tmp, "red", FAILING)
+    r = run_hook(root, mpath, lpath)
     check(r.returncode == 1,
           "1a: a RED python ratchet REFUSES the push (got %d)" % r.returncode)
     check("test_a.py" in r.stdout,
@@ -111,8 +134,8 @@ try:
           "two gates with one error message is a gate you cannot act on")
 
     # ---- 2. could-not-run refuses too
-    root, mpath = make_tree(tmp, "unrun", UNRUN)
-    r = run_hook(root, mpath)
+    root, mpath, lpath = make_tree(tmp, "unrun", UNRUN)
+    r = run_hook(root, mpath, lpath)
     check(r.returncode == 1,
           "2a: COULD-NOT-RUN refuses as well -- 'it did not run' must not read "
           "as 'it passed' (GH #171, GH #205) (got %d)" % r.returncode)
@@ -121,8 +144,8 @@ try:
           "different actions (buy the tool vs fix the code)")
 
     # ---- 4. the bypass still works, and its text names BOTH halves
-    root, mpath = make_tree(tmp, "bypass", FAILING)
-    r = run_hook(root, mpath, RULE6_BYPASS="1")
+    root, mpath, lpath = make_tree(tmp, "bypass", FAILING)
+    r = run_hook(root, mpath, lpath, RULE6_BYPASS="1")
     check(r.returncode == 0,
           "4a: RULE6_BYPASS=1 still gets a dead container through even over a "
           "RED python half (got %d)" % r.returncode)

@@ -39,8 +39,9 @@ cd "$(dirname "$0")/.." 2>/dev/null || true
 
 if [ "${RULE6_BYPASS:-}" = "1" ]; then
     printf 'RULE6_BYPASS=1 -- the static gate was SKIPPED, not passed.\n'
-    printf '  This push carries an UNCHECKED iron rule 6 static half (Lua luacheck\n'
-    printf '  AND the fast python ratchets, GH #616). Say so in your report.\n'
+    printf '  This push carries an UNCHECKED iron rule 6 static half (Lua luacheck,\n'
+    printf '  the fast python ratchets GH #616, AND the fast Lua test ratchets\n'
+    printf '  GH #624). Say so in your report.\n'
     exit 0
 fi
 
@@ -93,7 +94,7 @@ python3 tools/agent/py_gate.py
 prc=$?
 
 case "$prc" in
-    0) exit 0 ;;
+    0) : ;;
     3)
         printf 'PUSH REFUSED -- iron rule 6 python half is RED (see the FAIL lines above).\n'
         printf '  If the named test is not about your change, the red was ALREADY on trunk:\n'
@@ -104,6 +105,63 @@ case "$prc" in
         ;;
     *)
         printf 'PUSH REFUSED -- iron rule 6 python half could NOT RUN (gate exit %d).\n' "$prc"
+        printf '  That is not a pass. See the lines above, or push with:\n'
+        printf '    RULE6_BYPASS=1 git push ...   (and record the bypass in your report)\n'
+        exit 1
+        ;;
+esac
+
+# ---------------------------------------------------------------------------
+# The fast LUA TEST ratchets (GH #624, director ruling 2026-09-10, option 1).
+#
+# Everything above this line either LINTS Lua (luacheck never executes a test
+# body) or runs PYTHON.  The Lua censuses were in no push gate at all, and
+# their failure mode is structural rather than accidental: a census asserts
+# "the set of X in the corpus is exactly the set that has been read", so ANY
+# stream landing a new gate, call site or ability instance turns one red.  The
+# pusher's gate was silent; the NEXT stream to start work found it, hours
+# later, with the author gone.  GH #624 counted four instances, and on the
+# morning this landed THREE were red on `main` at once.
+#
+# Membership is decided by MEASURED SECONDS in tools/agent/lua_gate_manifest
+# .json, never by filename -- GH #616 constraint 1, and the reason it matters
+# more here: the tests this leg exists for are the EXPENSIVE ones (1.88s /
+# 2.60s / 4.72s measured 2026-09-10), so a verbatim copy of the python half's
+# 12s cheapest-first budget would have filled the gate with cheap tests, left
+# out every test the issue was opened about, and still reported a healthy
+# selected_count.  Regenerate with:  python3 tools/agent/lua_gate_measure.py
+#
+# ⚠️ SCOPE, stated rather than implied: this is NOT the Lua dynamic half.  The
+# full suite is ~100 min in one process (GH #124) and stays where it is; the
+# manifest names every test left out and why.
+#
+# Same 0/2/3 vocabulary, same refusal on BOTH 2 and 3, as the two legs above.
+# ---------------------------------------------------------------------------
+# SCOPE, computed here because only the hook knows what is being pushed.
+# `git diff --name-only <base>..HEAD` against the remote's main; ANY failure or
+# empty answer leaves `changed` empty, and lua_gate.py's --if-touched treats an
+# empty list as RUN EVERYTHING.  The fail-open direction is the one that has
+# cost this repo real reds, so it is not available here: skipping needs a
+# positive answer, never the absence of one.
+changed=$(git diff --name-only origin/main...HEAD 2>/dev/null) || changed=""
+
+# shellcheck disable=SC2086 -- word splitting on the path list is intended
+python3 tools/agent/lua_gate.py --if-touched $changed
+lrc=$?
+
+case "$lrc" in
+    0) exit 0 ;;
+    3)
+        printf 'PUSH REFUSED -- iron rule 6 fast LUA TEST leg is RED (see the FAIL lines above).\n'
+        printf '  If the named test is a CENSUS and your change added a gate, call site or\n'
+        printf '  ability instance, the census is asking you to register it -- that is the\n'
+        printf '  test working, not breaking. If it is not about your change, the red was\n'
+        printf '  ALREADY on trunk: say so in your report and tell the owning stream.\n'
+        printf '  Fix them, or push anyway with:  RULE6_BYPASS=1 git push ...\n'
+        exit 1
+        ;;
+    *)
+        printf 'PUSH REFUSED -- iron rule 6 fast LUA TEST leg could NOT RUN (gate exit %d).\n' "$lrc"
         printf '  That is not a pass. See the lines above, or push with:\n'
         printf '    RULE6_BYPASS=1 git push ...   (and record the bypass in your report)\n'
         exit 1

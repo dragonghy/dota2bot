@@ -70,6 +70,17 @@ issue / `iterations/queue.json` / 章程文件;Cursor 读你们的报告,不替�
    `core.hooksPath`,本地配置不随 clone 走)。真跑不动的容器用
    `RULE6_BYPASS=1 git push …`,它会打一行**「这是跳过不是通过」**,
    **那一行要抄进你的报告**。动态那半(~100min,GH #124)**不在钩子里也不被它声称**。
+   **⭐ 2026-09-10 再补(GH #624,总监 RULING 9):钩子现在是三条腿**,顺序是
+   `luacheck_gate.sh`(Lua 静态)→ `py_gate.py`(快 python 棘轮,GH #616)→
+   **`lua_gate.py`(快 Lua 测试棘轮,新)**,三条**红(3)与没跑成(2)一律拒绝 push**。
+   **报告里要抄的读数因此是三行不是两行**(`GATE_EXIT=` / `py gate:` / `lua gate:`)。
+   立这条腿的现场:Lua census 的失效方式是**结构性**的 —— 一条 census 断言
+   「语料里 X 的集合恰好等于已被读过的那个集合」,于是**任何组**落一个新 gate /
+   调用点 / 技能实例都会把它顶红,而**推的人的闸里没有任何 Lua 测试**
+   (`luacheck` 是 linter,它一个测试体都不执行)⇒ 红由**下一个开工的组**发现,
+   几小时后,作者已经走了。#624 数到第四例;**立案那天早上 main 上同时红着三条**。
+   ⛔ **成员资格只看实测秒数,永远不看文件名**(GH #616 约束 1);⚠️ **它不是 Lua 动态半**,
+   超过 per-test cap 的测试留在闸外,`tools/agent/lua_gate_manifest.json` 里**逐条带 `reason`**。
    **2026-08-26 补(GH #205):静态那半跑 `bash tools/agent/luacheck_gate.sh`** ——
    它先**自己把 luacheck 装上**再跑(冷启实测 **18s** = 装 5.5s + 跑 13s,trunk 0 警告),
    退出码 **0 干净 / 2 没跑成 / 3 有警告**。**「容器里没有 luacheck」从来不是跳过的理由**:

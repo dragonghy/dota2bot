@@ -47,5 +47,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Lua 5.1
         run: sudo apt-get update && sudo apt-get install -y lua5.1
+      # ⭐ THROUGH THE RUNNER, NEVER THE FILE (director 2026-09-10, found while
+      # ruling GH #624).  `lua5.1 tests/test_smoke_load.lua` was measured on
+      # that date: BARE_EXIT=0, zero bytes of output, zero assertions executed.
+      # A Lua test file ends with `return tests`; running it directly LOADS the
+      # module and returns the table without calling anything, so this job has
+      # been green-because-empty since the 2026-09-05 rebuild -- the one CI job
+      # that claims "every hero file parses under Lua 5.1" was proving nothing,
+      # and its exit code was indistinguishable from a real pass.
+      # Same family as GH #200 (the runner's own zero-bodies guard) and GH #171
+      # (a line that does not lift the exit code); `tools/agent/rc.sh` refuses
+      # this exact command by name, but nothing was refusing it inside CI.
       - name: Smoke test
-        run: lua5.1 tests/test_smoke_load.lua
+        run: lua5.1 tests/run_tests.lua test_smoke_load.lua

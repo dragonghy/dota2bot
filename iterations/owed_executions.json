@@ -658,6 +658,27 @@
           "does not rest on the unread"
         ]
       }
+    },
+    {
+      "id": "gh624_lua_gate_first_live_read",
+      "issue": "GH #624(协同组 2026-09-08T08:0xZ 立,[bug]:三条 trunk 红同时红着进了 main,根因是 census/freshness 棘轮不在推送者的闸里)。裁定全文 `iterations/streams/test_set.md §GN`。",
+      "ruling": "总监 2026-09-10 RULING 9:采纳**选项 1**,把快 Lua 测试棘轮做成 `.githooks/pre-push` 的**第三条腿**(`tools/agent/lua_gate.py`),红(3)与没跑成(2)一律拒绝 push。⛔ **选项 2 不采纳**,理由是它的失效方向:它把一件没人做的事改写成一条要求别人做的规矩,而现场里那条规矩已经存在(铁律 10 的自检确实报了 exit 3),#624 第 (3) 条正是「被报出来之后没人付」的那一段。⛔ **成员资格只看实测秒数,永远不看文件名**(GH #616 约束 1),旋钮**没有照抄** python 那半的 12s 最便宜先进 —— 本 issue 点名的那几条恰好是最贵的一档(1.88s / 2.60s / 4.72s 实测),照抄会造出一个 `selected_count` 很健康、而对本 issue 一无所用的闸。⚠️ **覆盖不等于活读**:纯逻辑由 `tests/test_lua_gate.py` + `tools/agent/mutstand_lua_gate.sh` 覆盖,而**这条腿在一次真实的 `git push` 上一次都没跑过** —— 落地那一轮的 push 是它自己的第一次,读数写在 §GN。",
+      "ruled_at": "2026-09-10T12:5xZ",
+      "executor": "下一个推 Lua 改动的组(不特定;闸只在 `git push` 时跑)。核验方 = 总监。",
+      "trigger": "没有外部触发器,不挂在任何一个 id 上(§DR 常驻义务)。⚠️ **失效形状**:轮次照跑、`lua gate: N ran, 0 findings` 照抄,而那个 0 来自**闸没选中任何相关测试**(manifest 漂了 / 新测试全在闸外)—— 那不是结清,那只是没撞上。⛔⛔ **本行的 `done_when` 比 gh699 那行弱,写出来而不是让读者推断**:它锚在**总监自己写的文件**上,所以它是**提醒不是证明** —— 正是章程记着的那个盲区(`path_contains_all` 分不清「下游抄回来的读数」与「上游写下的判据」)。选它的理由是这条义务的执行方**不特定**(任何组的下一次 push),没有一份「执行方写的那份表」可以锚。⇒ 结清时**必须逐字抄进一份别组报告里的 `lua gate:` 行**,而不是只写一句「已核」。",
+      "delivered_to": [
+        "`.githooks/pre-push`(第三条腿正文 —— 投递终点是所有组真正会跑到的那个文件)",
+        "`iterations/streams/README.md` 铁律 6(那张真被驱动的表:报告里要抄的读数从两行变三行)",
+        "`iterations/streams/test_set.md §GN`",
+        "GH #624 追评并关闭"
+      ],
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "iterations/streams/director.md",
+        "contains": [
+          "lua gate 首次别组活读数"
+        ]
+      }
     }
   ],
   "retired": [
