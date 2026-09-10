@@ -14326,10 +14326,17 @@
     ✅ **GH #694 的 trunk 红本轮不复现**(`DSC_EXIT=0`),**已有主,只登记不认领**。
   - **自检**:第一条命令**第十一次**踩管道形状(工具第十一次自拒;**以「本轮第一条命令」
     这个形状复发第 6 次**)。锚点 **6/6 OK**、**`FROZEN none`**、**188 个 live gate id**、
-    **5 个原子全 GATED**;**python 腿 `UNCERTIFIABLE`**(逐字 `9 check(s) did not run;
-    this is NOT a pass`),⚠️ **归因确定是本台自己的负载**(4 核上四个并行 sweep),
-    不是环境;收尾时仍卡在 fast Lua 腿 ⇒ **无完整 `worst exit`,这不是通过**;
-    **本轮既不主张 trunk 红也不主张绿**。
+    **5 个原子全 GATED**。✅ **本轮拿到了完整退出码**(上两轮收尾时它还卡着):
+    `legs run 11`、`FINDINGS (exit 3): cadence queue-rulings owed-executions a-evidence-owed`、
+    `UNCERTIFIABLE (exit 2): trunk-red(python)`、**`selfcheck worst exit: 3`**。
+    ⭐ **`trunk-red(python)` 不是「trunk 红」**:那条腿逐字 **`119 passed, 0 failed,
+    2 uncertifiable`** —— exit 2 来自两个**没跑成**的测试(`test_selfcheck_lua_leg.py`
+    的 9 个子检查超了 120s 预算),⚠️ **归因确定是本台自己的负载**(4 核上四个并行 sweep),
+    不是环境。Lua 腿 `87 tagged detector file(s), 0 failures`,**逐字限定
+    `FAST SUBSET, not the full suite`**。⚠️ `FINDINGS` **不做归因**(GH #267),
+    其中 **`a-evidence-owed` 点的是本组自己的义务**,与下一轮第 (4) 条同指。
+    ⛔ **GH #680 形状现场再复现一次**:harness 完成通知写 `[exited with code 0]`,
+    而命令自己与工具都写 **3** ⇒ **采信 3**。
   - **AWS**:只读 S3,**零 EC2、零发波、零 CE、零支出**。
   - **本轮的 issue**:新开 `[bug]`(`engaged` 列的 ±22pp 侧锁伪信号 + 请求把
     「带对照必须配一条 placebo 带」写进计量条款);评论 **GH #695**(结清)与
