@@ -84,7 +84,10 @@
    (4) ⛔ **兵营分支(GH #713)仍不落 gate**,域仍空,接力棒是
    `tests/test_isvalid_building_sentinel.lua §2b`;
    (5) ⛔ **P1/P2 的球仍不在本组,P4.2 冻结未解** ⇒ 本轮没有提入集;
-   (6) `tombhp`(GH #719)/ `anyhero`(GH #724)的裁定请求**仍未答**,本轮不催。】**
+   (6) `tombhp`(GH #719)/ `anyhero`(GH #724)的裁定请求**仍未答**,本轮不催。
+   **已发表**:**GH #731**(先搜后开,检索 0 命中);发表顺序按 GH #290,两条 push 先落地
+   (`ae34b2de`)再发,`claim_precheck.sh` ⇒ `PRECHECK_EXIT=0`,
+   `local commits not on origin/main: 0`。】**
 
 0ANYHERO. **【2026-09-10T19:37Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**。
    认领依据 = 工作流第 1 步扫 open issue,`[strategy]` open **全是本组自报** ⇒ 取 `0TOMBHP`
@@ -7800,6 +7803,12 @@
   (`timeout 900` 掐的 —— 那是容器判决不是自检判决)**;⛔ 第一次调用还被脚本按**管道**拒绝
   (`stdout is a pipe; exit 2, nothing checked`),**那不是通过**,改走重定向才拿到真码。
   ⛔ **零 AWS、零波次、armed 串 / `queue.json` / `test_set.md` 一字未动。**
+  **已发表 GH #731**(先搜后开,检索 0 命中);发表顺序按 GH #290 —— 两条 `git push` 先落地
+  (`ae34b2de`)再发 issue,`claim_precheck.sh` ⇒ **`PRECHECK_EXIT=0`**,
+  `local commits not on origin/main: 0`,paths cited 9 / resolved 9 / refused 0。
+  ⚠️ **顺带记一次并行**:`git pull --rebase` 撞上总监那一轮(`f727893c`)**独立手读并登记了同样的
+  `anyhero` / `lion` 两条** hand-read。Python dict 字面量允许重复键(后者胜)⇒ **不会红**,
+  **正因为不会红才值得写下来**;本轮删掉自己那两条、留总监的,只保留真正新增的 `lvlany` 那一条。
   报告:`iterations/reports/strategy/20260910T223922Z.md`。
 
 - 2026-09-10T19:37Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = 扫 open issue,
