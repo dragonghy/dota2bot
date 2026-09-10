@@ -14219,3 +14219,60 @@
     (4) 本轮未取 `a_evidence_*` 队列任何条目,下一轮可回到该队列。
   - token:`TOKENS total_in=7,913,569 out=50,924 turns=67`。
   - 完整报告:`iterations/reports/replay-check/20260910T005300Z.md`
+- **2026-09-10T03:0x–03:4xZ(本轮)**:章程交棒点名的「现在可以写 `ownhalf` 专用检测器了」
+  **做完并落地**,`ownhalf` 从 `episodes=0` 一步到 **`episodes=2421`**;
+  ⭐ **头号产出不是那个计数,是一个内生对照** —— 在深度常数 **1600 的正下方**开一条
+  **800 宽的 `nearmiss` 带**(两条腿都**不**准入)做双重差分。
+  ```
+  VERIFY id=ownhalf verdict=INDETERMINATE episodes=2421
+  ```
+  - **仪器**:`tools/batch_test/behavioral/ownhalf_domain.py`(**新增**;先跑判别子
+    `ls | grep -i ownhalf` ⇒ 零命中,`git status` 打 **`A`** 不是 `M`,W58 那笔学费已付)。
+    三带**由 Lua 控制流保证互斥**(深度分支只在 `if not bInDomain` 里求值):
+    `shipped`(建筑 ≤1200,**两腿逐位相同 ⇒ 噪声地板**)/ `ownhalf`(深度 ≥1600,**只有 armed 腿**)
+    / `nearmiss`(深度 ∈[800,1600),**两腿都不准入 ⇒ 常数处的对照**)。
+    三个阈值**全部经 `source_constants` 从 Lua 现读**(GH #90 合同;这条边距 09-09 刚从 800 动到 1600),
+    四条断言已进 `tests/test_detector_source_constants.py`,**全 ok**。
+  - ⭐ **双重差分四个读数全部同号为正**:closed **ab +2.5pp / ba +5.5pp**,
+    engaged **ab +3.4pp / ba +17.2pp**。**朴素签名不够**:`ownhalf` 带 closed
+    ab **+2.8** 而**噪声地板**(shipped 带)是 **+2.3** ⇒ ab 层只高 0.5pp,几乎全是地板。
+    ⚠️ `engaged/ba +17.2` **不要单独引用**(一多半来自 `ba/baseline/nearmiss` 那格的 58.8%,
+    仅 660 ep,四格里唯一 baseline>armed 的一格);**`closed` 是更稳的那一列**。
+  - **为什么仍不裁 WORKING**:`J.SafeToCommitFight` 与 `J.ShouldRefuseUnsupportedPunish`
+    **在 dump 上不可求值** ⇒ 一切带计数是**开火上界**;工具每次打印都把这句打出来。
+  - **逐帧承重帧**(armed 腿,shipped 门**结构性关闭**):`…364764/20260909_214037_slot3`
+    chaos_knight vs OD,`t=1278.5` 深度 **7039**、我方最近存活建筑 **2550u**(门要 ≤1200),
+    CK **8 秒从 2486u 压到 94u**。阴性对照(baseline 腿)`…213951_slot1` WK vs zuus
+    `t=1491.5` 深度 3673 / 建筑 1873u / 距离 1036u,**摆了 10 秒没交手**。
+    另有两局拍到敌人在**一次连续接近中横穿常数**(`-`→`nearmiss`→`ownhalf`)——
+    那是 `nearmiss` 作为对照的经验依据。
+  - ⛔ **推翻本组上一轮自己交棒的 `9.46×` 不变量:源码忠实读法测得 `1.14×`**
+    (`ownhalf` 30,743 vs `shipped` 27,000 pair-frames)。**分歧全在 shipped 那一半**
+    (27,000 : 3,055,差 8.8 倍;armed 那一半 30,743 : 28,912 只差 6%)。
+    ⭐ **本轮不主张上一轮那个数错,主张它今天无法被裁决** —— 产生它的探针**有意不落地**,
+    没有任何东西可以对账。**一个交给下一轮当"不变量"的数字,必须和产生它的代码一起交。**
+  - **覆盖**:宽扫 **26/26 局**(run `…364764`,`SWEEP_EXIT=0`,unparseable 0,恰好跳 6 局暖场);
+    **深查 6 局**(达下限,帧证据全部由落地工具的 `--trace` 打出,可复跑)。
+    分层 **ab 18 / ba 8 = 2.25:1** ⇒ **GH #686 的失衡在本 run 上独立复现**。
+  - **铁律 6**:`bots`/`game` **一行未改**;`PYGATE_EXIT=0`(`90 ran, 0 findings`,
+    逐字限定 `84 fast python ratchets`,另 30 慢测不由它声称)。
+    ⚠️ **`tests/test_detector_source_constants.py` 在 trunk 上本来就红,已有主**:
+    取 **`HEAD` 版本**(未含本轮改动)单跑 ⇒ 同一条 `FAIL real prose decoy still present`,
+    **`HEAD_REG_EXIT=1`**;根因是 GH #687 的单位更正扩写了注释而测试钉死旧串。
+    **GH #694(03:25Z,批测台)已在管,本轮不开重复、也不抢修**(#675 那笔学费:先搜后写,搜到了)。
+    动态半(~100min,GH #124)**未跑,不声称**。
+  - **自检**:第一条命令**第十次**踩管道形状(工具第十次自拒);第二条**又套了 `timeout 300`**
+    ⇒ **`EXIT=124`,本台连续第六轮死在自己的 timeout 上**。第三次不套 timeout 重跑,
+    读到**锚点 6/6 OK**、**`FROZEN none`**、**187 个 live gate id**、**5 个原子全 GATED**;
+    收尾仍卡在 `trunk health (python)` 腿 ⇒ **`SELFCHECK2_EXIT=STILL_RUNNING`,
+    本轮没有完整退出码,这不是通过**。
+  - **AWS**:只读 S3,**零 EC2、零发波、零 CE、零支出**。
+  - **本轮的 issue**:**新开 GH #695 `[harness]`**(交给下一轮的数字必须和产生它的代码一起交)。
+  - **下一轮第一件事**:(1) ⭐ **把 DiD 在 W62 另外三个 run 上复算**(本轮只做了一个 run,
+    ba 只有 8 局,格子太小)—— `ownhalf_domain.py --sweep <run 的 sweep_out>`,**不需要再写工具**;
+    (2) ⭐ **裁 WORKING 差的那一块是提交测**,路径是 **fixture**:
+    `make_fixture.py <timeline> --t 1278.5 --hero chaos_knight` + `tests/mock/replay_fixture.lua`,
+    让真的 `J.ShouldPunishDive` 跑在真帧上直接读返回值 —— **这是本 id 到 WORKING 的最短路**;
+    (3) 盯 GH #686 / #687 / #694 / #695;(4) 本轮未取 `a_evidence_*` 队列(连续第二轮)。
+  - token:`TOKENS total_in=8,989,560 out=50,265 turns=67`。
+  - 完整报告:`iterations/reports/replay-check/20260910T034916Z.md`

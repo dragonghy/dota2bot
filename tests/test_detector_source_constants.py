@@ -1404,6 +1404,33 @@ import pulldrag_walk as PW                              # noqa: E402
 eq("GH #186's 50 u threshold is the same number in both tools that read it",
    float(PW.STILL_U), float(PT.STILL_U))
 
+# ---- `ownhalf`, the second admission door (replay-check 2026-09-10) --------
+# `ownhalf_domain.py` reads all three of its thresholds through this module
+# rather than copying them, so the registry is not catching a stale literal
+# here -- it is catching the OTHER half of GH #90: that each of the three
+# still resolves to EXACTLY ONE call site.  This branch has already moved
+# once (the depth margin went 800 -> 1600 on 2026-09-09) and its own note
+# says the margin is "only today's value", so the day someone adds a second
+# `GetNearbyHeroes` or a second depth comparison to J.ShouldPunishDive, the
+# right outcome is a red test naming the site -- not a sweep that quietly
+# reads whichever one sorted first.
+import ownhalf_domain as ohd                             # noqa: E402
+
+eq('ownhalf_domain.COLLAPSE_RING', float(ohd.COLLAPSE_RING),
+   float(call_arg('J.ShouldPunishDive', 'J.GetNearbyHeroes', 1, {2: 'true'})))
+eq('ownhalf_domain.BUILDING_RING', float(ohd.BUILDING_RING),
+   float(literal('J.ShouldPunishDive',
+                 r'GetUnitToUnitDistance\(\s*enemy,\s*building\s*\)'
+                 r'\s*<=\s*(?P<n>\d+)')))
+eq('ownhalf_domain.DEPTH_MARGIN', float(ohd.DEPTH_MARGIN),
+   float(literal('J.ShouldPunishDive', r'nInvadeDepth\s*>=\s*(?P<n>\d+)')))
+# The nearmiss control is only a control while it sits BELOW the margin and
+# is not empty: a width of 0 would silently turn the difference-in-differences
+# into the plain leg difference it exists to subtract.
+check('ownhalf_domain nearmiss band is below the margin and non-empty',
+      0 < ohd.NEARMISS_WIDTH <= ohd.DEPTH_MARGIN,
+      '(width %r, margin %r)' % (ohd.NEARMISS_WIDTH, ohd.DEPTH_MARGIN))
+
 print()
 if FAIL:
     print('%d FAILED: %s' % (len(FAIL), ', '.join(FAIL)))
