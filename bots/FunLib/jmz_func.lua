@@ -7213,10 +7213,15 @@ end
 -- be poking at all).
 --
 -- Geometry: lane axis is approximated by (enemy wave centroid -> my fountain);
--- the spot is perpendicular to that axis, 550 out from MY position (so the step
--- clears the 500 aggro radius), on the side AWAY from the average enemy-hero
--- position (owner's target-selection rule reduced: harass from the side away
--- from their other laner). Pure positional helper -- the caller gates it
+-- the spot is perpendicular to that axis, nStep out from MY position, on the
+-- side AWAY from the average enemy-hero position (owner's target-selection rule
+-- reduced: harass from the side away from their other laner), and -- since
+-- [CLEARANCE 20260910] -- flipped back when that side does NOT clear the aggro
+-- radius and the mirror does. That last clause is what makes "the step clears
+-- the aggro radius" a property of the spot rather than a hope: it is exactly
+-- true only for a creep standing on the bot, and the wave is not (the body
+-- comment carries the arithmetic and the registered limit). Pure positional
+-- helper -- the caller gates it
 -- (turbo + 'l5trees') and issues the move. That gate claim is CHECKED, not
 -- inherited prose: the one call site (mode_laning_generic, the cut-2 branch) is
 -- a pure conjunction opening `J.IsModeTurbo() and J.IsSoakCandidate('l5trees')`,
@@ -7254,7 +7259,12 @@ function J.GetOffWaveHarassSpot( bot )
 	if bot:WasRecentlyDamagedByAnyHero( 2.0 ) then return nil end
 
 	-- Only applies when I'm ON the wave (aggro-unsafe) with a harass target.
-	local tCreeps = bot:GetNearbyLaneCreeps( 500, true )
+	-- ONE binding per number, read by every site that means it (the deepnum
+	-- reading of 2026-09-10: two literals that agree today are not the same
+	-- number). nAggroR is the creep-aggro radius the whole branch is about --
+	-- the list below, and the clearance test near the bottom.
+	local nAggroR = 500
+	local tCreeps = bot:GetNearbyLaneCreeps( nAggroR, true )
 	if tCreeps == nil or #tCreeps == 0 then return nil end
 	local tEnemies = J.GetNearbyHeroes( bot, 800, true, BOT_MODE_NONE )
 	local bTarget = false
@@ -7308,7 +7318,54 @@ function J.GetOffWaveHarassSpot( bot )
 		end
 	end
 
-	return Vector( vBot.x + px * 550, vBot.y + py * 550, 0 )
+	-- [CLEARANCE 20260910] THE SET THAT MADE THE STEP NECESSARY HAD NO VOTE IN
+	-- WHERE THE STEP GOES. tCreeps -- the enemy lane creeps inside nAggroR, the
+	-- only reason this branch exists -- fed the lane axis and nothing else. The
+	-- sign of the perpendicular, the one free variable, was decided by the hero
+	-- census alone, so the step could be aimed at the side the wave leans to and
+	-- land back inside nAggroR of a creep. The header's promise ("nStep out ...
+	-- so the step clears the aggro radius") only holds for a creep standing
+	-- exactly on me: a creep at distance d whose component along the chosen
+	-- perpendicular is q is STILL inside nAggroR of the spot whenever
+	-- q > ( d^2 + nStep^2 - nAggroR^2 ) / ( 2*nStep ) -- q > 275 at d = 500 with
+	-- the numbers below -- and that region is a third of the aggro ball (the
+	-- lens of two 500 discs 550 apart; tests/test_owhs_aggro_clearance.lua
+	-- measures it two ways). Nothing kept the step out of it.
+	--
+	-- The repair is a TIE-BREAK, not a new policy: the hero vote still owns the
+	-- choice and is overridden only when the side it picked fails the aggro test
+	-- AND the mirror passes it -- i.e. only when the step as aimed buys nothing
+	-- (position given up, aggro kept) and the other side buys the branch's whole
+	-- purpose. No new radius and no new number: nAggroR and nStep are this
+	-- helper's own, and the aggro test is the same comparison
+	-- J.IsHarassCreepAggroSafe makes, evaluated at the spot instead of at the
+	-- foot. REGISTERED LIMIT: only creeps already inside nAggroR of me vote --
+	-- a creep further out that the spot walks INTO still has none (that needs a
+	-- census at nAggroR + nStep, i.e. a wider list, which is a different lever).
+	-- No new soak id either: the single call site is a pure conjunction with
+	-- IsSoakCandidate('l5trees') (checked, not inherited -- see above), and this
+	-- change can only move the sign, never whether the helper fires.
+	local nStep = 550
+	local function nCreepsAggroedAt( qx, qy )
+		local nHit = 0
+		for _, hCreep in pairs( tCreeps ) do
+			if J.IsValid( hCreep ) then
+				local v = hCreep:GetLocation()
+				local ex = vBot.x + qx * nStep - v.x
+				local ey = vBot.y + qy * nStep - v.y
+				if math.sqrt( ex * ex + ey * ey ) < nAggroR then
+					nHit = nHit + 1
+				end
+			end
+		end
+		return nHit
+	end
+	if nCreepsAggroedAt( px, py ) > 0
+	and nCreepsAggroedAt( -px, -py ) == 0 then
+		px, py = -px, -py
+	end
+
+	return Vector( vBot.x + px * nStep, vBot.y + py * nStep, 0 )
 end
 
 -- [L1-XPSOAK RETIRED 2026-08-19, GH #28] J.ShouldXpSoakLane is GONE. The
@@ -9811,8 +9868,14 @@ function J.ShouldInitiateLaneKill( bot )
 	-- an initiation turns into a cross-map chase (052241: sniper+lion chased
 	-- a 16% zuus from +1500 to +4400 for 20s, killed nothing, sniper died to
 	-- the arriving ogre at +3667). A lane kill happens near the lane: skip
-	-- any target meaningfully deep (>800 ancient-distance depth, i.e. ~400u
-	-- past the midline -- GH #687).
+	-- any target meaningfully deep (>800 ancient-distance depth) -- i.e. ~400u
+	-- past the midline (GH #687).
+	-- ⛔ THE PARENTHESES ABOVE ARE LOAD-BEARING, and not for a reader:
+	-- tests/test_detector_source_constants.py §3 uses the literal string
+	-- `(>800 ancient-distance depth)` as its comment-stripping DECOY -- the one
+	-- synthetic-free place that proves `_strip_comments` is doing anything at
+	-- all. The 20260910 wording pass moved the `)` and left that test red on
+	-- trunk; keep the number and its closing paren adjacent.
 	local hOwnAncient = GetAncient( GetTeam() )
 	local hEnemyAncient = GetAncient( GetOpposingTeam() )
 

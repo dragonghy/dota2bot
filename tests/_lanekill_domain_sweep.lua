@@ -142,8 +142,13 @@ G.OW = ow and 1 or 0
 G.OW_TGT_R = ow and tonumber(ow:match('tEnemies = J%.GetNearbyHeroes%( bot, (%d+), true'))
 G.OW_SIDE_R = ow and tonumber(ow:match('tSideEnemies = J%.GetNearbyHeroes%( bot, (%d+), true'))
 G.OW_ALLY_R = ow and tonumber(ow:match('tAllies = J%.GetNearbyHeroes%( bot, (%d+), false'))
-G.OW_AGGRO_R = ow and tonumber(ow:match('GetNearbyLaneCreeps%( (%d+), true %)'))
-G.OW_STEP = ow and tonumber(ow:match('px %* (%d+)'))
+-- Both of these are parsed off the LOCAL THE HELPER BINDS THEM TO, not off the
+-- call that consumes them: after the 20260910 clearance cut each number is read
+-- by two sites (the creep list and the clearance test; the clearance test and
+-- the returned spot), and a parser that read one call site would keep agreeing
+-- with a helper whose two sites had drifted apart.
+G.OW_AGGRO_R = ow and tonumber(ow:match('local nAggroR = (%d+)'))
+G.OW_STEP = ow and tonumber(ow:match('local nStep = (%d+)'))
 G.OW_HP = ow and tonumber(ow:match('GetHP%( bot %) < (0%.%d+)'))
 G.OW_LOOKBACK = ow and tonumber(ow:match('WasRecentlyDamagedByAnyHero%( (%d+%.%d+) %)'))
 -- The one call site, parsed out of the caller rather than described here: the
@@ -282,6 +287,14 @@ for _, k in ipairs({ 'fixtures', 'live', 'lane', 'lane_core', 'lane_sup',
     'ow_drive_nonnil', 'ow_drive_nil_on_reach', 'ow_drive_raised',
     'ow_drive_matches_wide', 'ow_drive_matches_narrow', 'ow_step_u',
     'ow_flip_close400_wide', 'ow_flip_close400_narrow', 'ow_flip_nearer_someone',
+    -- The 20260910 clearance cut.  `ow_clear_probe` is the INSTRUMENT column
+    -- for this family exactly as `ow_creeps_zero` is for the family above: the
+    -- rows are taken under a SECOND declared position for the same single
+    -- injected creep (see the probe itself), so they measure the geometry the
+    -- shipped rule walks into, never how often a wave stands there.
+    'ow_clear_probe', 'ow_clear_old_hits', 'ow_clear_mirror_clean',
+    'ow_clear_flips', 'ow_clear_spot_clean', 'ow_clear_flip_no_cause',
+    'ow_clear_flip_nearer_hero', 'ow_clear_raised', 'ow_clear_nil_on_reach',
     'dn_live', 'dn_lane', 'dn_noancient', 'dn_underfloor', 'dn_tier1',
     'dn_tier2', 'dn_tier2_enemies', 'dn_disc_differs', 'dn_pred_flips',
     'dn_shipped_true', 'dn_armed_true', 'dn_closes', 'dn_opens', 'dn_raised' }) do
@@ -1219,6 +1232,111 @@ for _, path in ipairs(fixture_files()) do
                                 local dStep = math.floor(math.sqrt(
                                     (vSpot.x - vMe.x) ^ 2 + (vSpot.y - vMe.y) ^ 2) + 0.5)
                                 if dStep > c.ow_step_u then rawset(c, 'ow_step_u', dStep) end
+                            end
+
+                            -- ---- the CLEARANCE probe (20260910), and it is a
+                            -- GEOMETRIC probe, not a frequency.  The injection
+                            -- above puts the single creep AT the bot, where
+                            -- both candidate spots clear the aggro radius by
+                            -- construction -- so the clearance cut is a
+                            -- byte-for-byte no-op on every frame of this
+                            -- corpus, which is what `ow_drive_matches_wide ==
+                            -- ow_drive_nonnil` above now also certifies.  That
+                            -- is worth having (it bounds the change's risk on
+                            -- real frames) and it prices nothing.
+                            --
+                            -- ⛔ SO THE ROWS BELOW ARE NOT DOTA EITHER.  They
+                            -- move the SAME single creep to a second declared
+                            -- position inside the same ball -- OW_CLEAR_OFF
+                            -- along the side the hero vote just picked -- and
+                            -- ask whether the shipped rule then aims the step
+                            -- into it.  The offset is a FRACTION of the
+                            -- helper's own radius, not a number of this
+                            -- round's: any creep that satisfies the helper's
+                            -- own third conjunct lies inside nAggroR of the
+                            -- bot, and this one does too.  What no corpus row
+                            -- here can say is how often a real wave stands
+                            -- there; `ow_creeps_zero == ow_live` is why, and
+                            -- the frequency is the open corpus request.
+                            local nStepU = G.OW_STEP or 550
+                            local nAggU = G.OW_AGGRO_R or 500
+                            local nOff = math.floor(nAggU * 0.8)
+                            local qx, qy = (wx - vMe.x) / nStepU, (wy - vMe.y) / nStepU
+                            local cxp, cyp = vMe.x + qx * nOff, vMe.y + qy * nOff
+                            -- The helper's own arithmetic, restated for the
+                            -- probe geometry: the axis now runs from THIS
+                            -- centroid, so the perpendicular rotates a little
+                            -- and the hero vote re-picks the sign on it.
+                            local ex2, ey2 = vF.x - cxp, vF.y - cyp
+                            local m2 = math.max(math.sqrt(ex2 * ex2 + ey2 * ey2), 1)
+                            local p2x, p2y = -(ey2 / m2), ex2 / m2
+                            if bx ~= nil and (p2x * bx + p2y * by) > 0 then
+                                p2x, p2y = -p2x, -p2y
+                            end
+                            local oldx, oldy = vMe.x + p2x * nStepU, vMe.y + p2y * nStepU
+                            local mirx, miry = vMe.x - p2x * nStepU, vMe.y - p2y * nStepU
+                            local function dTo(ax2, ay2)
+                                return math.sqrt((ax2 - cxp) ^ 2 + (ay2 - cyp) ^ 2)
+                            end
+                            bump('ow_clear_probe')
+                            local bOldHits = dTo(oldx, oldy) < nAggU
+                            if bOldHits then bump('ow_clear_old_hits') end
+                            if dTo(mirx, miry) >= nAggU then bump('ow_clear_mirror_clean') end
+                            local probeCreep = {
+                                IsNull = function() return false end,
+                                CanBeSeen = function() return true end,
+                                IsAlive = function() return true end,
+                                IsBuilding = function() return false end,
+                                GetLocation = function() return Vector(cxp, cyp, vMe.z or 0) end,
+                            }
+                            bot.GetNearbyLaneCreeps = function(_, _r, bEnemy)
+                                if bEnemy then return { probeCreep } end
+                                return {}
+                            end
+                            local okP, vProbe = pcall(J.GetOffWaveHarassSpot, bot)
+                            bot.GetNearbyLaneCreeps = fReal
+                            if not okP then
+                                bump('ow_clear_raised')
+                            elseif vProbe == nil then
+                                -- FORBIDDEN DIRECTION, same one as above: the
+                                -- clearance test must not be able to decide
+                                -- WHETHER the sidestep happens.
+                                bump('ow_clear_nil_on_reach')
+                            else
+                                if dTo(vProbe.x, vProbe.y) >= nAggU then
+                                    bump('ow_clear_spot_clean')
+                                end
+                                local bFlipped = math.abs(vProbe.x - oldx) > 1
+                                    or math.abs(vProbe.y - oldy) > 1
+                                if bFlipped then
+                                    bump('ow_clear_flips')
+                                    -- ⚠️ THE COST, on the same frames rather
+                                    -- than argued away: clearing the wave can
+                                    -- overrule the hero vote and step nearer
+                                    -- the enemy heroes.  This is the column
+                                    -- that argues AGAINST the change.
+                                    local function nearestHero(hx, hy)
+                                        local best = nil
+                                        for _, e in pairs(tOwS) do
+                                            if J.IsValidHero(e) then
+                                                local v = e:GetLocation()
+                                                local d = math.sqrt((hx - v.x) ^ 2 + (hy - v.y) ^ 2)
+                                                if best == nil or d < best then best = d end
+                                            end
+                                        end
+                                        return best
+                                    end
+                                    local dN, dO = nearestHero(vProbe.x, vProbe.y),
+                                        nearestHero(oldx, oldy)
+                                    if dN ~= nil and dO ~= nil and dN < dO then
+                                        bump('ow_clear_flip_nearer_hero')
+                                    end
+                                    if not bOldHits then
+                                        -- FORBIDDEN: a flip with no cause --
+                                        -- the shipped side already cleared.
+                                        bump('ow_clear_flip_no_cause')
+                                    end
+                                end
                             end
                         end
                     end

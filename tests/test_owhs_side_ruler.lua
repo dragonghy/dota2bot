@@ -205,7 +205,19 @@ tests['[owhs] the helper still carries no soak id of its own'] = function()
     local at = assert(src:find('function J.GetOffWaveHarassSpot( bot )', 1, true),
         'J.GetOffWaveHarassSpot moved')
     local fin = assert(src:find('\nend\n', at, true), 'helper has no end')
-    local body = src:sub(at, fin)
+    -- COMMENTS OUT FIRST (2026-09-10). The claim is about the CODE: this helper
+    -- must not grow a gate. The first draft matched the raw body, so the
+    -- clearance cut's own comment -- which has to name `IsSoakCandidate`
+    -- ('l5trees') to explain why it does NOT add one -- turned this row red for
+    -- saying the right thing. Stripping comments makes the assertion narrower
+    -- and strictly sharper: a real gate is still caught (the sister stand
+    -- mutates one in and scores this exact message), prose no longer is. Same
+    -- shape as tests/test_detector_source_constants.py's `_strip_comments`.
+    local body = {}
+    for line in (src:sub(at, fin) .. '\n'):gmatch('([^\n]*)\n') do
+        body[#body + 1] = line:match('^(.-)%s*%-%-') or line
+    end
+    body = table.concat(body, '\n')
     assert(body:find('IsSoakCandidate', 1, true) == nil,
         'a second id inside a body already gated by the unpromoted \'l5trees\' '
         .. 'can never be armed alone -- the arm would be a conjunction, its '
