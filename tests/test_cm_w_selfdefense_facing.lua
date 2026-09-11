@@ -178,8 +178,25 @@ tests['1.1: the cone left the branch and lives behind the named helper'] = funct
     assert(count(w, 'IsFacingLocation') == 0,
         'X.ConsiderW still calls IsFacingLocation directly -- the whole lever is '
         .. 'that the self-defence branch reads the cone through X.' .. HELPER)
-    assert(count(w, 'X.' .. HELPER .. '( bot, npcEnemy )') == 1,
-        'the self-defence branch must consume X.' .. HELPER .. ' exactly once')
+    -- ⭐ RE-ANCHORED 2026-09-11, and the re-anchor states the CAUSE rather than
+    -- moving a number: the cone is now one level further down.  `cmwhit` moved
+    -- the self-defence branch's whole per-candidate chain -- this cone its last
+    -- conjunct -- into X.cm_IsSelfDefenseCastable, which X.ConsiderW reaches
+    -- through X.cm_FindSelfDefenseTarget.  So the property this case is about
+    -- ("the branch reads the cone through the named helper, never inline") is
+    -- unchanged; what moved is WHICH function does the reading.  The chain of
+    -- custody is asserted end to end below, so a cone that drifted back into
+    -- the branch, or a chain that stopped consuming the helper, still fails.
+    assert(count(w, 'X.cm_FindSelfDefenseTarget( bot, nEnemysHeroesInRange )') == 1,
+        'X.ConsiderW must reach the self-defence chain through '
+        .. 'X.cm_FindSelfDefenseTarget exactly once')
+    local chain = fn_body(src, 'cm_IsSelfDefenseCastable')
+    assert(count(chain, 'X.' .. HELPER .. '( hBot, hEnemy )') == 1,
+        'the self-defence chain must consume X.' .. HELPER .. ' exactly once')
+    local finder = fn_body(src, 'cm_FindSelfDefenseTarget')
+    assert(count(finder, 'X.cm_IsSelfDefenseCastable( hBot, hEnemy )') >= 1,
+        'X.cm_FindSelfDefenseTarget no longer consumes the chain -- the cone is '
+        .. 'orphaned and this branch reads no heading at all')
 end
 
 tests['1.2: the gate is turbo-only, names cmwface, and names NOTHING else'] = function()

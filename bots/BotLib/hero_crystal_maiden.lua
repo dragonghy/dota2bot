@@ -1334,8 +1334,12 @@ X.nWSelfDefenseDamageWindow = 3.0
 ---
 --- ⚠️ Its last conjunct is X.cm_IsSelfDefenseFacingOk, which carries 'cmwface'.
 --- That is a CALL, not a conjunction of two soak ids (the `pullcad` trap is a
---- gate written as `IsSoakCandidate('a') and IsSoakCandidate('b')`, which
---- freezes FALSE the day either is promoted).  'cmwhit' and 'cmwface' are
+--- gate whose own condition names a SECOND id, which freezes FALSE the day
+--- either is promoted -- see the statement of it in bots/FunLib/jmz_func.lua;
+--- ⚠️ it is not restated with quoted id literals HERE because
+--- tests/test_gate_claim_consistency.lua reads a quoted id in this file as a
+--- WIRED id, and a made-up one enrols this file in a register that means
+--- something else entirely).  'cmwhit' and 'cmwface' are
 --- orthogonal and independently armable: 'cmwface' decides how many candidates
 --- clear the chain, 'cmwhit' decides which of the ones that clear it is taken.
 function X.cm_IsSelfDefenseCastable( hBot, hEnemy )

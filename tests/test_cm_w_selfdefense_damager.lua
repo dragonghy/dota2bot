@@ -190,10 +190,36 @@ local function world(path, opt)
     return J, bot, X
 end
 
---- Frostbite's real ring on this frame, the way X.ConsiderW builds it.
+--- The aether-lens term X.SkillsComplement folds into every CM cast ring:
+--- `aetherRange = J.GetAetherLensRangeBonus( aether, 250 )` when she holds an
+--- item_aether_lens, 0 otherwise.  The 250 is read off the hero file rather
+--- than hardcoded a second time -- the shipped call hands the helper 250, which
+--- is 25 MORE than item_aether_lens' own `cast_range_bonus` KV (that gap is
+--- what soak candidate 'aetherlens' is about), so a mirror that took the KV
+--- would quietly measure a different ring than the branch does.
+local AETHER_BONUS = tonumber(
+    read_file(SRC):match('aetherRange = J%.GetAetherLensRangeBonus%( aether, (%d+) %)'))
+assert(AETHER_BONUS ~= nil,
+    'X.SkillsComplement no longer computes aetherRange as '
+    .. 'J.GetAetherLensRangeBonus( aether, <n> ) -- this file\'s ring mirror is stale')
+
+local function aether_bonus(bot)
+    if bot.FindItemSlot == nil then return 0 end
+    local nSlot = bot:FindItemSlot('item_aether_lens')
+    if nSlot ~= nil and nSlot >= 0 then return AETHER_BONUS end
+    return 0
+end
+
+--- Frostbite's real ring on this frame, the way X.ConsiderW builds it:
+--- `abilityW:GetCastRange() + 30 + aetherRange`.  ⚠️ THE AETHER TERM IS NOT
+--- OPTIONAL IN A MIRROR.  Dropping it under-states the ring by 225-250 units
+--- and reads legal casts as out of range -- GH #725 read an 861.99u cast as
+--- "outside 670" for exactly this reason, and
+--- tests/test_cast_ring_mirror_discipline.lua is the census that caught this
+--- file's first draft doing it again.
 local function ring(J, bot)
     local hAb = bot:GetAbilityByName('crystal_maiden_frostbite')
-    local nCastRange = (hAb and hAb:GetCastRange() or 0) + 30
+    local nCastRange = (hAb and hAb:GetCastRange() or 0) + 30 + aether_bonus(bot)
     return J.GetNearbyHeroes(bot, nCastRange, true, BOT_MODE_NONE)
 end
 
