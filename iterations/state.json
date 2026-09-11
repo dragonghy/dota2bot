@@ -7888,6 +7888,7 @@
     "house_rule_added": "**动一个 id 的 armed 状态前,两个方向都查**:(正像)谁的门行点了它的名(`promote_atoms.json` + 门行 grep);(倒像)谁的代码**只能经过它的门**到达(被门的那个函数的调用图)。",
     "campbind_note": "`campbind` 同样挂在 `pullcamp` 下面(`GetCampPullPokeTarget` 只在 `roamCampPull` 非 nil 时被调用),但它 §FX 已退集、本来就不在串里 ⇒ 本次没有额外冻死 armed 杠杆;将来它提入集必须**先**让 `pullcamp` 回来。",
     "readmission": "**两条绑成一条路**:`[strategy]` 给营地选择器补一条兵线垂距上限(录像组 §4 的 1350 提案,⚠️ 软肋是 n:连接分子 n=4、空带只被两波看过)+ 一份不再命中 2912/2372 那种营地的读数 ⇒ `pullcamp` 与 `pulldrag` **同批**重新入集。⛔ `pulldrag` 不许单独提入集(单独 armed 在结构上恒 no-op)。登记在 `owed_executions.json:pullcamp_atom_readmission`。",
-    "ref": "iterations/streams/test_set.md §GS; iterations/reports/replay-check/20260910T160103Z.md; iterations/OWNER_PRIORITIES.md P1"
+    "ref": "iterations/streams/test_set.md §GS; iterations/reports/replay-check/20260910T160103Z.md; iterations/OWNER_PRIORITIES.md P1",
+    "third_corpus_and_prescription_correction": "⭐ **W64 是第三份独立语料,裁定更硬**:`VERIFY id=pullcamp verdict=BUGGY episodes=20`(录像组 `iterations/reports/replay-check/20260911T035254Z.md`,本裁定 rebase 时才拉进树);`>1200u` 占比 38.5% → 73.7%;`pullcamp_domain.py --selfcheck` 11/11 PASS / EXIT=0。⛔ **而处方被同一份语料推翻**:两波合计 5 次连上、4 次垂距在 1200 之上(W64 两次都是 1271),≤1200 的 5 次连上 0 次 ⇒ **1200/1350 量级的上限留错了边**。现有读数只证成拒掉 2336/2907 那一档(缰绳实测 max 1272),**没有证成任何 ≤1500 的常数**;⛔ `pulllane` 不得原样重新入集。全文 `iterations/streams/test_set.md §GS.8`。"
   }
 }
