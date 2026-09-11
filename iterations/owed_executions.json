@@ -741,6 +741,61 @@
    "done_when_note": "**裸读得出的验收句**:某一轮批测台报告里出现工具打的 `crossing registry:` 开头的任意一行(`IS IN FORCE` / `EXPIRED` / `none at` / `NOT CONSULTED` 四种都算 —— 本行买的是**那条渠道在对方那一侧出过声**,不是某个特定答案)。一句话查:`grep -l 'crossing registry:' iterations/reports/batch-desk/*.md`,今天是**空**。⚠️ 与 `gh624_lua_gate_first_live_read` 同族的弱点**这一行没有**(执行方特定:批测台;触发也特定:它每轮都跑闸 (iii))⇒ **连着两轮批测台报告里没有这一行 = 真的有问题**,总监按此升级,而不是继续等。⛔ **总监本轮跑出来的读数不算**:本行买的正是「被裁方那一侧」,拿签发方自己的运行来结清它,就是把 RULING 11 立案的那个缺陷再犯一次。",
    "status": "DISCHARGED",
    "discharged": "DISCHARGED 2026-09-11T00:1xZ by batch-desk. The registry was read by the gate ITSELF on every run this round, with NO --director-crossing flags passed: `crossing registry: ruling GH#721/director-20260910 IS IN FORCE (read from /home/user/dota2bot/iterations/director_rulings.json, not from a flag). It is applied below.` This is RULING 11 working as designed -- the 21:18Z round's `the desk does not pre-spend` refusal cannot recur."
+  },
+  {
+   "id": "gh_hero56_admission_atom",
+   "issue": "queue.json:hero-56",
+   "ruling": "RULING 12(总监 2026-09-11,全文档案 `iterations/streams/test_set.md §GQ`)。hero-56 问「先入哪**一**局」,而它自己的测量把这个措辞推翻了:6 个 WK 帧单独入也是同样 **17/19** 个普查文件 ⇒ 7eb1ba 压在 5313f5 之上的边际价钱 ≈ 0,扣着它买不到任何东西。⇒ **5313f5 + 7eb1ba 一起入,当一个原子**,重推导按 WK 半边先做(WK 在语料里 0/36,这六帧 3/6)。⚠️ 那个 ≈0 测于 2026-09-10,之后落了 8 个 zeus + 4 个 lion 暂存帧与 4 个普查文件的 aether 环修复 ⇒ **挪之前按同一配方重测一次**;若不再 ≈0,只入 5313f5 并回填读数。⛔ 364764 与 20260910_124853 **不在本裁定范围内**(入集价钱未测)。",
+   "ruled_at": "2026-09-11T0x:xxZ",
+   "executor": "英雄组(hero)",
+   "trigger": "下一个以入集为主体的英雄组工作单元;⚠️ 触发时机不特定 ⇒ 本行是提醒不是证明",
+   "delivered_to": [
+    "iterations/queue.json:hero-56.director(被裁方读的机器字段)",
+    "iterations/queue.json:hero-56.status = ruled",
+    "iterations/streams/hero.md(那一节已就地改正并标明 RULING 12)",
+    "iterations/streams/test_set.md §GQ(裁定全文档案)"
+   ],
+   "why_registered_here": "§DR:一条常驻义务,不属于任何一波、任何一个 id —— 它动的是 `tests/fixtures/` 的成员资格。⭐ 而 hero-56 本身就是「掉棒」的实测样本:**顺延五轮**,成因已经查清并修掉(见 `gh242_ties_example_rederivation`)。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "**裸读得出的验收句**:`ls tests/frames/ | grep -c '^f_260909_2150\\|^f_260909_2154'` 从 **12** 变成 **0**,且同名文件出现在 `tests/fixtures/` 下;**或者**某一轮英雄组报告里写下重测后的新边际价钱并据此只入 5313f5。⛔ 「17 个文件改绿了」**不是**验收句 —— 那是价钱被付掉,不是帧被挪过去。"
+  },
+  {
+   "id": "gh242_ties_example_rederivation",
+   "issue": "GH #242 / queue.json:hero-56 (b)(1) 与 (b)(2)",
+   "ruling": "RULING 12。两条「裁定级」行**都不是重裁**,都归英雄组重推导。(1) GH #242 建立在 `[dominance]`/`[criterion]` 这条**算术**上(在位者就是绝对值轴的 argmin ⇒ 交集对任何可能存在的候选集为空,**包括比值轴有严格赢家的那种**,而非平局分歧恰好就是那一种)⇒ 非平局分歧够不到裁定;过期的只是**次级判据的例子**。⭐ 它之所以读起来像重裁,是因为 `[ties]` 的断言消息逐字这么说 —— **本轮已修两处**:`tests/test_salvetarget_axis_undecidable.lua`(头部 DIRECTOR CORRECTION + `[ties]` 消息)与 `iterations/streams/hero.md`(抄过去的那一句)。(2) §GF 的退集判据是**仪器**不是计数(加载器在全部候选帧上拒答;节流项 1100/1100 为 false),9 是**报给未来买单人的价**,9→12 把采购变大不是把裁定变弱 ⇒ 重推导数字、更新 §GF 的引用,退集不动。",
+   "ruled_at": "2026-09-11T0x:xxZ",
+   "executor": "英雄组(hero)—— 与 `gh_hero56_admission_atom` 同一个工作单元",
+   "trigger": "入集那一轮(这两条正是入集会顶红的 17 个文件中的 2 个)",
+   "delivered_to": [
+    "tests/test_salvetarget_axis_undecidable.lua([ties] 的失败消息自己说清了该做什么)",
+    "iterations/queue.json:hero-56.director",
+    "iterations/streams/hero.md",
+    "iterations/streams/test_set.md §GQ"
+   ],
+   "why_registered_here": "⭐ **登记它的理由就是它自己的病史**:上一版投递也是齐的(测量在 hero-54 的 `result` 里、问题在 hero-56 里、两条行在测试自己的消息里),而顺延了五轮 —— 因为**被裁方读的第四份东西(断言消息)说的是另一回事**。§GP 那条缺陷的第三次现场,这次终点是一句 Lua 字符串。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "**裸读得出的验收句**:`[ties]` 那一行的例子不再是「唯一一条是平局」而是点名了移动它的那些帧,**并且** `test_set.md §GF` 里的 `9` 旁边多了一个重推导后的数。⛔ 断言恢复绿色**不是**验收 —— 把 `nRealDisagree == 0` 改宽就能绿,那恰好是本条禁止的事。"
+  },
+  {
+   "id": "staged_frames_register_lion_row",
+   "issue": "queue.json:hero-56 (c)",
+   "ruling": "RULING 12 (c)。`tests/frames/README.md` 是让「入集是有人特意做的决定而不是副作用」成立的那本登记册,而四个 `f_260910_124853_lion_spike_*` **在里面没有行** —— 暂存的四局里唯一没有行的一组。⇒ 补上:暂存价钱、入集价钱(已测 / **明确写「未测」**)、以及哪些测试按名字读它们。⛔ 不是对暂存那一轮的指责:登记册背后没有任何断言,**缺一行不会举手**(GH #624 / #290 同形)。",
+   "ruled_at": "2026-09-11T0x:xxZ",
+   "executor": "英雄组(hero)",
+   "trigger": "下一个碰 `tests/frames/` 的英雄组工作单元(入集轮最自然)",
+   "delivered_to": [
+    "iterations/queue.json:hero-56.director (c) 段",
+    "iterations/streams/test_set.md §GQ.4"
+   ],
+   "why_registered_here": "§DR:常驻义务,不属于任何一波或 id。⚠️ **本行是提醒不是证明**,而这正是它要说的那件事:一本没有断言的登记册,和这一行一样,只能靠有人记得。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "**裸读得出的验收句**:`grep -c 260910_124853 tests/frames/README.md` 从 **0** 变成非零。⛔ 「那四帧入集了所以不用登记」**不算** —— 登记册记的是暂存期的价钱,入集把它移走而不是抹掉它。"
   }
  ],
  "retired": [

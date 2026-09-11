@@ -2261,7 +2261,14 @@
       "acceptance": "解冻后单 arm(或与不相交的 id 同波)跑一波,交出上面四列 + 铁律 4(i-a) 要求的 ab/ba 两个分层读数。⚠️ **归因边界,负读数只有一种读法**:本 lever 是 **WIDENING**(出货合取项恒假 ⇒ arm 只能**增加**大招施放,永远不可能**减少**一次),所以负读数**只能**读作「多放的那几次放亏了」,**永远不能**读作「少放了 N 次大招 / 丢了 N 次重生」 —— 后者是这台仪器买不到的量(offline 无法给一次没发生的死亡定价)。⚠️ **一句不许合并的限度**:创建帧买到的是**助手函数三个合取项在真实帧上同时成立**,不是「分支在真实对局里放过大招」 —— `X.ConsiderR` 外层的 `J.IsRetreating` 是 bot VM 的 mode,任何 `.dem` 都不带,端到端的 0 → 0.75 是带**一处具名注入**买到的,不注入时 armed 侧同样是 0(已写成断言,见 `tests/test_replay_260827_zuus_ultstrand_creation.lua` §3/§5)。",
       "requested_by": "hero 2026-09-08T23:xxZ",
       "status": "ruled",
-      "result": "总监 2026-09-09T0x:xxZ **APPROVED-SCAN**(与 hero-41..50 同档)。本条**不请求入集**,登记的是 P4.2 解冻后的 arm 顺序与分母 —— 冻结期内唯一合法裁定是 FROZEN-HOLD,而登记正是为了不让接力棒再掉一次(铁律 9)。⭐ **理由逐条核过源码,不是照抄请求**:(i) `zusultstrand` 不在 39-id armed 串内(确未 armed);(ii) `X.nUltCashChaseRadius = 1600` 实在 `bots/BotLib/hero_zuus.lua:1293`;(iii) `ultcash` / `J.IsDyingUnderAttack` 确在同一文件(:1338 / :1551),故第 (4) 列的分层做得出来;(iv) 创建帧 `f_20260827_091703_slot12_zuus_473_1.lua` 确已进 `tests/test_zuus_ult_strand.lua:85` 的 `ZUUS_FRAMES`;(v) ⭐ **widening 方向由源码结构直接成立,不依赖请求方自述** —— `X.zuus_ShouldUltWhenRetreating` 里 `if bShipped then return true end` 排在 `IsSoakCandidate('zusultstrand')` 门**之前**,所以 armed 只能在 shipped 的 TRUE 集上**增加**,永不可能把一个 shipped 的 true 变成 false ⇒ 请求方那条「负读数只能读作『多放的那几次放亏了』」的归因边界**成立**。⛔ 本裁定**不**把 hero-51 计入 `hero_domain_scan_2_30_31` 的针脚:它按自述**不是一次扫描请求**,而 `tests/test_domain_scan_pass_pins.py` 两个方向都判相等,错挂会把那条腿钉红。下一棒登记为 owed 行 `zusultstrand_postthaw_arm_order`。"
+      "result": "总监 2026-09-09T0x:xxZ **APPROVED-SCAN**(与 hero-41..50 同档)。本条**不请求入集**,登记的是 P4.2 解冻后的 arm 顺序与分母 —— 冻结期内唯一合法裁定是 FROZEN-HOLD,而登记正是为了不让接力棒再掉一次(铁律 9)。⭐ **理由逐条核过源码,不是照抄请求**:(i) `zusultstrand` 不在 39-id armed 串内(确未 armed);(ii) `X.nUltCashChaseRadius = 1600` 实在 `bots/BotLib/hero_zuus.lua:1293`;(iii) `ultcash` / `J.IsDyingUnderAttack` 确在同一文件(:1338 / :1551),故第 (4) 列的分层做得出来;(iv) 创建帧 `f_20260827_091703_slot12_zuus_473_1.lua` 确已进 `tests/test_zuus_ult_strand.lua:85` 的 `ZUUS_FRAMES`;(v) ⭐ **widening 方向由源码结构直接成立,不依赖请求方自述** —— `X.zuus_ShouldUltWhenRetreating` 里 `if bShipped then return true end` 排在 `IsSoakCandidate('zusultstrand')` 门**之前**,所以 armed 只能在 shipped 的 TRUE 集上**增加**,永不可能把一个 shipped 的 true 变成 false ⇒ 请求方那条「负读数只能读作『多放的那几次放亏了』」的归因边界**成立**。⛔ 本裁定**不**把 hero-51 计入 `hero_domain_scan_2_30_31` 的针脚:它按自述**不是一次扫描请求**,而 `tests/test_domain_scan_pass_pins.py` 两个方向都判相等,错挂会把那条腿钉红。下一棒登记为 owed 行 `zusultstrand_postthaw_arm_order`。",
+      "director": {
+        "ruling": "APPROVED-SCAN(与 hero-41..50 同档;不请求入集 ⇒ 登记 P4.2 解冻后的 arm 顺序与分母)",
+        "wave": "none —— 零 EC2、零新波次",
+        "at": "2026-09-09T0x:xxZ(裁定原文);2026-09-11T0x:xxZ 由 RULING 12 **镜像进本字段**",
+        "ref": "iterations/streams/test_set.md §GQ.7(本次镜像);裁定原文见本行 result",
+        "note": "⚠️ **本行是 §AW.1 那条缺陷的又一个活样本,登记不辩护**:2026-09-09 的裁定**只写进了 `result`**,而 `result` 是**批测台填的字段**,`director` 才是裁定轴。后果不是假设:开工自检的 un-ruled 腿从那天起**每轮都把 hero-51 报成「裁定仍欠」**,而它**早就裁过了** —— 一条已完成的裁定长期读起来像一条掉了的棒,**正好是 §AW.1/§DR 的反方向**(那两次是裁了而下游按未裁走;这次是裁了而**审计**按未裁读)。⇒ RULING 12 把裁定镜像进本字段,**`result` 原文一字未动**(它是证据,不是错误)。裁定实质不变,理由与源码核对见本行 `result`。"
+      }
     },
     {
       "id": "hero-52",
@@ -2272,7 +2279,14 @@
       "question": "**登记一波解冻后的 armed 取证,外加一列离线买不到的分母。** 杠杆:`X.ConsiderR` 分支 1 的人头析取项 `#nEnemysHeroesInRange >= 3` 短路掉了它自己隔六行算出来的质量测试 `aoeCanHurtCount`;armed 时要求这群人里**至少一个走不掉**。钉帧 `tests/fixtures/f_260820_043039_cm_cask_close.lua`(t=515.5,CM 0.30 血,场内 3 个敌人、1200u 内 0 个队友,hurt=0,出货 0.75 → armed 0,地面真相 `died_after = 0.2`)已经把**决策正确性**买到了;买不到的是**频率**。解冻后一波 armed 要读的四列:(1) 分支 1 因为**人头**而非 hurt 而释放的瞬间数(分母:CM 局数 / CM 帧数)—— 这是这条 lever 的**整个域**;(2) 其中 armed 侧被扣下的那些瞬间,CM 在随后 10s 内**是否死了** —— 出货腿的同一列是收益的直接对照(钉帧上是 0.2s);(3) armed 侧**多出来的**大招施放时刻(冷却省下来之后大招在哪儿被花掉了)—— 一条 100/95/90s 冷却的技能被扣下一次,下一次在别处放出来才算收回;(4) **分层**:被扣下的瞬间里有多少同时被同文件前置闸 `cmrguard`/`cmrself` 覆盖 —— 那部分不归本杠杆,必须能分开。⚠️ **本条不请求入集**:P4.2 冻结期内合法裁定是 FROZEN-HOLD;这里登记的是解冻后的顺序,免得接力棒再掉一次(铁律 9)。",
       "acceptance": "解冻后单 arm(或与不相交的 id 同波)跑一波,交出上面四列 + 铁律 4(i-a) 要求的 ab/ba 两个分层读数。⚠️ **归因边界,负读数只有一种读法**:本 lever 是 **NARROWING**,armed 释放集按形状是出货释放集的**严格子集**(§3.1/§3.2 在整张网格上扫过),所以负读数**只能**读作「被扣下的那几次开大是值得开的」,**永远不能**读作「这条 lever 让她多开了 N 次」。⚠️ **两条不许合并的仪表限度**:(a) `GetAOERadius` 离线答 0,所有距离读数骑在 835 Liquipedia 锚上(GH #502);波次侧若能从 `.dem` 量到真实场半径,那是**独立的第二意见**,请单列。(b) `GetCurrentMovementSpeed` 不在 dump 里,mock 答固定 300 —— 波次侧的 `aoeCanHurtCount` 若用真实移速算,读数与本 fixture 的**不可直接并池**。",
       "requested_by": "hero 2026-09-09T02:0xZ",
-      "status": "open"
+      "status": "frozen_hold",
+      "director": {
+        "ruling": "FROZEN-HOLD(登记,不入集,不视为掉棒)",
+        "wave": "none —— 本条按自述不请求入集;P4.2 冻结期内(armed 37 > 20)唯一合法裁定就是这一条",
+        "at": "2026-09-11T0x:xxZ",
+        "ref": "iterations/streams/test_set.md §GQ (RULING 12)",
+        "note": "总监 RULING 12 一并清掉三条无 `director` 字段的存量行(hero-52/53/55),本条是其中之一。⭐ **理由核过源码,不是照抄请求**:`cmrcrowd` 的门确在 `bots/BotLib/hero_crystal_maiden.lua:1890`(`J.IsModeTurbo() and J.IsSoakCandidate( 'cmrcrowd' )`),人头析取项与 `aoeCanHurtCount` 同在 `X.ConsiderR`;钉帧 `tests/fixtures/f_260820_043039_cm_cask_close.lua` 在树上。⛔ **FROZEN-HOLD 不是退集也不是 reject**:gate / helper / 常数 / 调用点逐字保留,`bots/` 零 diff。解冻(armed ≤ 20)后本行自动回到普通入集队列,四列口径与归因边界(NARROWING ⇒ 负读数只能读作「被扣下的那几次开大是值得开的」)按请求原文成立,已核 §3.1/§3.2 的方向断言存在。"
+      }
     },
     {
       "id": "hero-53",
@@ -2283,7 +2297,14 @@
       "question": "**这一条要买的是「频率」,而且比平常更要紧,因为离线**根本**买不到方向。** 杠杆:`X.ConsiderW` 的 `保护自己` 支路是五条 Frostbite 支路里唯一一条要求 `bot:IsFacingLocation( target, 45 )` 的,而冰封禁制是单位指向技能(引擎在读条里自转),朝向不是施法前提;armed 时这条锥形不再能否决该支路。钉帧 `tests/fixtures/f_260820_103216_cm_es_aftershock.lua`(t=473.5,CM 0.26 血,ES 195.94u / Zeus 268.02u **两个都刚打过她**,七个非朝向守卫全过,出货零下单 → armed 下单 Frostbite 打 ES,零注入,`died_after = 1`)买到的是**可达性与选靶**;⛔ **买不到的是锥形本身** —— `IsFacingLocation` 不在 dump 里,mock 对 bots/ 下 **317** 个调用点一律答 false(§6.1 用 360° 锥形证明那是默认值不是计算)。一波 armed 要读的四列:(1) `保护自己` 支路**因为锥形而被挡下**的瞬间数,分母 = 该支路其余合取项全部成立的瞬间数 —— **这一列就是整条 lever 的域,而且是离线永远读不到的那一列**;(2) 被挡下的那些瞬间,CM 在随后 10s 内**是否死了**(钉帧上是 1.0s);(3) armed 侧**多出来的** Frostbite 施放,以及它落在谁身上 —— 是不是「刚打过她的那个人」(钉帧上是,但一帧不是分布);(4) **分层**:多出来的施放里有多少本来就会被上面四条兄弟支路之一接住(那部分不归本杠杆,必须能分开)。",
       "acceptance": "解冻后单 arm(或与不相交的 id 同波)跑一波,交出上面四列 + 铁律 4(i-a) 要求的 ab/ba 两个分层读数。⚠️ **归因边界,负读数只有一种读法**:本 lever 是 **WIDENING**(只删一个合取项),armed 的释放集按形状是出货释放集的**超集**,`tests/test_cm_w_selfdefense_facing.lua` §4.2 在整张 10 帧网格上断言了这个方向(凡不同的格子,出货侧必须是 `none`)⇒ 负读数**只能**读作「多放出来的那几次冰封禁制不值得放」,**永远不能**读作「这条 lever 让她少放了 N 次」。⚠️ **一条不许合并的仪表限度**:波次侧若能从 `.dem` 量到真实朝向,那是本条**唯一**的第一手读数,不是 fixture 读数的第二意见 —— 请单列。⚠️ **兄弟位点**:同形锥形还长在 `hero_skeleton_king.lua`(X.ConsiderQ)和 `hero_zuus.lua` 上,**不在本条里**;WK 那条的语料域已测为空(1 帧过非几何合取项,最近敌人 1699u > `J.GetNearbyHeroes` 自己 clamp 的 1600u),要动它需要自己的 id 和自己的波。",
       "requested_by": "hero 2026-09-09T05:2xZ",
-      "status": "open"
+      "status": "frozen_hold",
+      "director": {
+        "ruling": "FROZEN-HOLD(登记,不入集,不视为掉棒)",
+        "wave": "none —— 同 hero-52",
+        "at": "2026-09-11T0x:xxZ",
+        "ref": "iterations/streams/test_set.md §GQ (RULING 12)",
+        "note": "总监 RULING 12。⭐ **核过源码**:`cmwface` 的门在 `bots/BotLib/hero_crystal_maiden.lua:1314`,锥形常数 `X.nWSelfDefenseFacingCone = 45` 在 `:1253`、消费点 `:1316`。⭐ **本条的仪器限度是它最要紧的部分,裁定照抄进来以免解冻时被弄丢**:`IsFacingLocation` 不在 dump 里,mock 对 `bots/` 下全部调用点一律答 false ⇒ **离线买不到方向**,第 (1) 列(因锥形被挡下的瞬间数)是**只有一波 armed 才读得到**的那一列。⇒ 解冻后本行应排在 CM 族的前面,因为它是 CM 三条里唯一一条 offline 完全无解的。⛔ 兄弟位点(WK `X.ConsiderQ` / Zeus)**不在本条内**,要动各自开 id、各自一波。"
+      }
     },
     {
       "id": "hero-54",
@@ -2295,7 +2316,13 @@
       "question": "**本条不请求 arm 任何 id,请求的是 fixture 语料本身。** 2026-09-09 英雄组把 backlog `-131` 要的可达性表建成了 `tests/test_focus_decision_reachability.lua`:110 个 fixture,把五个焦点英雄各自当 subject 驱动,共 **183 个「本人活着」的瞬间**(axe 28 / zuus 45 / skeleton_king 36 / lion 24 / crystal_maiden 50)。出货树(所有 gate 关闭)真正下单一个技能的瞬间是 **4 个**,且**每一个都已经有 gated lever**(`zusboltcap` / `lionrreach`+`lionultcash` / `axecullreach`+`cullthresh` / `cmqreach`);**Wraith King 是 0/36**。⇒ 过去十几轮各自记下的「我这条 lever 的域是空的」不是十几个关于 lever 的事实,是**一个关于语料的事实**。要的东西:**在焦点五英雄真正施放技能的瞬间前后取帧**(而不是在别的英雄的事件上顺带截到他们),每个焦点英雄 >= 5 帧,优先 Wraith King(现在 0 帧可用)与 Axe。具体口径:用 behavioral dumper 的 timeline 找 `bots/` 侧下过 UseAbility 的时刻,`make_fixture.py --t <该时刻> --hero <焦点英雄>`。",
       "acceptance": "新 fixture 落到 `tests/fixtures/`,并使 `tests/test_focus_decision_reachability.lua` §2.1 变红(它对「出现了新的活决策」就是这么设计的:红线里直接打印新那一行)。⚠️ 边界:本条**买不到** `GetActiveMode` / `IsFacingLocation` / `IsChanneling` / `GetEstimatedDamageToTarget` —— 那四个不在 .dem 里(§4 逐条实测登记),所以带这四个合取项的支路**再多帧也开不了**;要的是不依赖它们的那些支路的帧。",
       "result": "EXECUTED BY THE HERO STREAM ITSELF 2026-09-10T07:55Z (report iterations/reports/hero/20260910T075559Z.md) -- no batch-desk work was needed and none was spent: the archive is S3 READ-ONLY, and iron rule 1 governs SPENDING, not reading. Recipe, ~4 minutes per game, zero EC2: session_setup.sh -> get_dumper.sh (S3 cache HIT, seconds) -> awsx s3 cp .../replays/<game>.dem -> behav-dump -interval 0.5 -> the cast instants ARE the combat-log entries already in that output (events[] type==ABILITY; 46 Wraith King casts and 74 Axe casts in the two games used) -> make_fixture.py --t <that t> --hero <focus hero> --roles <that game analysis.json>. ** --t is the cast timestamp ITSELF**: the combat-log entry leads the entity snapshot, so at t=67.1 Hellfire Blast still reads cd 0 / mp 315 and only the 67.4 sample reads cd 13.9 / mp 220 (pinned, tests/test_focus_cast_instant_frames.lua section 1.2). DELIVERED: 12 frames in tests/frames/ (6 skeleton_king from 5313f5/20260909_215040_slot1, 6 axe from 7eb1ba/20260909_215412_slot1) + tests/test_focus_cast_instant_frames.lua (7 cases, green). THE READING: the shipped tree (all gates off) orders an ability on 10 of 34 alive focus-hero instants = 29.4%, against the corpus 4 of 183 = 2.2%. **Wraith King is 3 of 6 here against 0 of 36 in the corpus.** The fifteen-odd rounds of \"my lever domain is empty\" were one fact about WHERE FRAMES WERE CUT, not fifteen facts about levers. ACCEPTANCE, HONESTLY: the frames are STAGED, not admitted to tests/fixtures/, so the literal clause \"make test_focus_decision_reachability section 2.1 red\" is not left standing in the tree -- it DID go red when measured (it printed NEW LIVE DECISION: skeleton_king ... orders skeleton_king_hellfire_blast), and the admission price was measured instead of assumed: 17 of 19 census files, and SIX WK FRAMES ALONE turn the same 17, so the price is per NEW GAME, not per frame. Two of the 17 are not re-pins (test_salvetarget_axis_undecidable reopens GH #242s published ruling; test_blind_a_pulllane_pullthink re-prices the 9 that test_set.md section GF quotes as the size of a purchase). Handed on as hero-55.",
-      "director": ""
+      "director": {
+        "ruling": "NOTED-EXECUTED(不需要裁定;登记它已被执行方自己做掉了)",
+        "wave": "none —— 零 EC2、S3 只读。⭐ 铁律 1 管的是**花钱**不是**读**,归档是只读的,所以这条从来不需要批测台",
+        "at": "2026-09-11T0x:xxZ",
+        "ref": "iterations/streams/test_set.md §GQ (RULING 12)",
+        "note": "总监 RULING 12 顺手补上这个空字段 —— 开工自检的 un-ruled 腿点了它的名,而它空着的原因是「已经做完了」,不是「没人裁」。⛔ 但空字段和没裁过一模一样,所以补这一行本身就是被要求的动作(§DR 同理)。执行方:英雄组自己(2026-09-10T07:55Z,报告 iterations/reports/hero/20260910T075559Z.md);交付 12 帧进 tests/frames/ + tests/test_focus_cast_instant_frames.lua(7 cases, green)。⭐ 它的读数是本季最值钱的一条之一:出货树在 34 个焦点英雄活体瞬间里下单 10 次(29.4%),而语料是 183 里 4 次(2.2%),WK 在这里 3/6、在语料里 0/36 ⇒ **十几轮「我这条 lever 的域是空的」是一个关于帧在哪里切的事实,不是十几个关于 lever 的事实。**下一棒 = hero-56(入集),本轮已裁。"
+      }
     },
     {
       "id": "hero-55",
@@ -2305,8 +2332,15 @@
       "priority": 3,
       "question": "**零 EC2 归档只读扫描,不发波,仪器已经就位 —— 这是 `hero-37` 的第 (3′) 列,不是一条新调查。** 本轮(hero 2026-09-09)把 `zusultstrand` 的收窄环 `X.nUltCashChaseRadius` 从 **1600 收窄到 700**,**理由正是 `hero-37` 自己交付的第 (3) 列**:1600 在这条分支自己的域上吃进 **1,645/1,843 帧(89.3%)**、**252/257 episode(98.1%)** ⇒ 那不是收窄,helper 抬头写的「NARROWED so the widening is not a blank cheque」在它被写下的那个值上**是假的**。收窄的成因是**共线**,不是数字选坏了:分支的外层合取项是 `bot:WasRecentlyDamagedByAnyHero( 2.0 )`,而 2 秒内打过 Zeus 的英雄在那 2 秒里必然进过自己的攻击距离,所以「1600 内有敌方英雄」几乎被上一行蕴含 —— 帧/episode 的裂口(切掉 10.7% 的帧、只切掉 1.9% 的 episode)就是共线的指纹:它删的是**同一个 episode 里还有别的帧被放行**的那些帧,而这条分支**只开火一次**(HIGH desire ⇒ 大招出手),按 episode 不动 = 一个决策都没改。700 是**本仓自己的环**不是新数:`J.CanEnemyInterruptTpChannel` 未 armed 时搜 R=700,`tools/batch_test/behavioral/tpreach_domain.py` 从语料里**量**出同一条界(`reach(enemy) > 700` 需要 `GetAttackRange() > 550`,即远程英雄)。\n\n**⭐ 要的就一件事:把同一把仪器按新常数再跑一遍同一份语料。** `tools/batch_test/behavioral/zusultstrand_domain.py` 的 `CHASE_RADIUS` 已随源码改成 700 (`tests/test_detector_source_constants.py` 的镜像断言强制两者同 commit 移动),`--selfcheck` **76 PASS / 0 FAIL**。语料即 `hero-37` 用的那 152 局(每 run 抽 1 局,`domain_scan_hero_2_30_31.md` §10 的同一批)。\n\n**四列(前两列与 hero-37 逐字可比,不要换口径)**:(1) **700 环在域内的占比,帧与 episode 两个尺度都要**,分母沿用 1,843 帧 / 257 episode / 103 局 —— 这一列就是「700 到底收窄了没有」,而它**目前谁也没有**;(2) **被 700 挡下、而 1600 会放行的那些 episode**(即 `1600 admit ∧ 700 refuse`)里,Zeus 在其后 6s 内**死了几次**、死时大招放没放 —— 直接对照 hero-37 的全域基线 **198/257 = 77.0%** 与 **192 次揣着没放**。⭐ **这一列是判据不是描述**:若被挡下的那批死亡率**明显低于** 77.0%,收窄挡掉的正是「后来没死」的那些,收窄成立;若持平或更高,700 挡掉的是真该兑现的大招,**本轮的收窄要退回 1600 并把 (3) 列的结论改写成「环不是那个杠杆」**;(3) **最近敌方英雄距离在 (700, 1600] 这一带的分布**,按 100u 分箱 —— 整数小值域的计数**不报中位数**(铁律 4(ii)),报均值 + 分箱占比;这一带就是收窄的全部作用域;(4) **重叠层的方向变了,必须重读**:1600 时 chase 环**包含** `ultcash` 的 1200 环,700 时它**严格落在 1200 内** ⇒ 几何那一半的重叠**按构造变成全覆盖**。hero-37 第 (4) 列的 PARTIAL 结论(1200 环覆盖 80.5% 域帧 / 96.1% episode)是在旧嵌套下写的,**不许原样搬过来**;要的是新嵌套下「chase ⊂ ultcash」之外还剩什么把两条杠杆分得开(`ultcash` 另有 HP≤45% 与 `GetEstimatedDamageToTarget`,后者录像里没有 ⇒ 那一半仍然 BLIND,照实登记)。\n\n**⚠️ 预登记的判读边界,免得读回来被自套**:本 lever 是 **WIDENING**,收窄它只是让这张空头支票小一点,**任何读数都不能读作「少放了 N 次大招」**(出货腿从来没开过火,那个减法没有被减数)。另:本条**不请求入集**,P4.2 冻结期内合法裁定是 FROZEN-HOLD;`zusultstrand` 解冻后的 arm 顺序仍在 `hero-51` 与 owed registry 的 `zusultstrand_postthaw_arm_order` 里,**那一条要的第 (3) 列现在指的是 700 不是 1600**。",
       "acceptance": "四列都带分母(域帧 / episode / 局),第 (1) 列**帧与 episode 两个尺度分开报**(这一次的裂口就是上一次的诊断,并池成一个数会把它藏回去)。第 (2) 列给出一个可与 77.0% 直接相减的死亡率,以及被挡下 episode 的绝对数 —— **绝对数小于 ~10 时不下结论**,登记为 UNDERPOWERED 而不是「收窄无效」。⛔ **不许按局数加权并池**(铁律 4(i-d));⛔ **不许把新读数与 `domain_scan_hero_2_30_31.md` §10 的 1600 读数混在一张表里**,两者是两个谓词切出来的两份量。若第 (2) 列判死这次收窄,**下一棒回英雄组**:退回 1600 并在 `X.nUltCashChaseRadius` 抬头改写那段论证(它现在逐字写着 700 是待证的,不是已证的)。零 EC2、零 CE;仪器与钉帧见 `bots/BotLib/hero_zuus.lua` `X.nUltCashChaseRadius` 抬头与 `tests/test_zuus_ult_strand.lua` §7(9 帧上 1600 放行 7、700 放行 6,唯一移动的是 `f_073148_zuus_lina`,最近敌人 979.8u;创建帧 Slardar 304.9u **未被挡下**)。",
-      "status": "pending",
-      "result": ""
+      "status": "ruled_approved_scan",
+      "result": "",
+      "director": {
+        "ruling": "APPROVED-SCAN(零 EC2、只读归档遍历;不排波、不入集)",
+        "wave": "none —— 与 hero-2/30..50 同一档;仪器与语料都已就位,本条只是把同一把尺按新常数再跑一遍",
+        "at": "2026-09-11T0x:xxZ",
+        "ref": "iterations/streams/test_set.md §GQ (RULING 12)",
+        "note": "总监 RULING 12。⭐ **核过源码**:`X.nUltCashChaseRadius = 700` 确在 `bots/BotLib/hero_zuus.lua:1427`,检测器 `CHASE_RADIUS = 700.0` 确在 `tools/batch_test/behavioral/zusultstrand_domain.py:126` ⇒ 请求方所说的「镜像断言强制两者同 commit 移动」有东西可断言。⭐ **本条批的是一次重读,不是一次调查** —— 1600 在自己的域上吃进 98.1% 的 episode,那不是收窄;700 是本仓自己量出来的环。⚠️ **验收里那条 UNDERPOWERED 条款是裁定的一部分,不是建议**:第 (2) 列被挡下的 episode 绝对数 < ~10 时登记 UNDERPOWERED,⛔ **不许读成「收窄无效」**,也不许读成「收窄成立」。⛔ 不与 `domain_scan_hero_2_30_31.md §10` 的 1600 读数混表(两个谓词两份量);⛔ 不按局数加权并池(铁律 4(i-d))。下一棒已在 owed registry 的 `zusultstrand_postthaw_arm_order`(那一条要的第 (3) 列现在指 700 不是 1600,本裁定确认这一点)。"
+      }
     },
     {
       "id": "hero-56",
@@ -2314,10 +2348,17 @@
       "bundle": "(not an arm wave) ADMISSION RULING -- which ONE game of cast-instant frames enters tests/fixtures/, and who re-takes the two rulings that move with it",
       "seeds": [],
       "priority": 1,
-      "status": "pending",
+      "status": "ruled",
       "question": "hero-54 delivered 12 cast-instant frames (tests/frames/f_260909_215040_wk_* and f_260909_215412_axe_*) and they are STAGED. This row asks the director for the admission ruling, because two of its line items are not the hero desk's to take. **The price is measured, not estimated** (moved in, ran, moved back, 2026-09-10): admitting them turns 17 of 19 census files red -- and the SIX Wraith King frames ALONE turn the same 17, so **the unit of price is one NEW GAME, not one frame**; adding the six Axe frames on top cost essentially nothing. Fifteen of the 17 are ordinary re-derivations (counts, the archive level ceiling 19->24, the talent-row surface 1->2, and test_zeus_aether_cast_range which calls its own red GOOD NEWS: the corpus finally has an Aether Lens, so its declared anchor can become a real inventory). The other two are rulings: (1) test_salvetarget_axis_undecidable reports the archive now carries a NON-TIED disagreement between its two axes, and **GH #242's published ruling rests on there being none**; (2) test_blind_a_pulllane_pullthink moves a candidate-frame count 9 -> 11 (WK only) / 12 (all twelve), and **test_set.md section GF quotes that 9 as the size of a purchase**. ALSO NOTE, for whoever writes the admission work unit: the STAGING price was NOT zero either. test_cm_ult_reach_meter_domain enumerates BOTH directories through a variable (for _, dir in ipairs({FIXTURE_DIR, STAGED_DIR})), which is invisible to grep -l \"tests/frames/\\*\" -- that is how the first reading came out 0. It was paid in the round that staged the frames (section 1 counts 53->65, section 4 constants + two new LIVE_BIDS rows, section 5 fire set 2->3).",
       "acceptance": "A ruling naming (a) WHICH SINGLE GAME is admitted first -- 5313f5 (Wraith King, the one that carries the payoff: 3 live WK decisions where the corpus has 0 of 36) or 7eb1ba (Axe + the incidental CM/Lion rows) -- and (b) who re-takes the two ruling-level rows above. The hero desk executes the 15 ordinary re-derivations for whichever game is named; it should NOT re-decide GH #242 or re-price section GF alone, and this row exists so that nobody reads the delay as the hero desk sitting on it. **Nothing is blocked meanwhile**: the frames are usable from tests/frames/ by name today, and tests/test_focus_cast_instant_frames.lua already drives all twelve (7 cases, green).",
-      "result": ""
+      "result": "",
+      "director": {
+        "ruling": "ADMISSION RULING —— (a) 两局一起入,不是「先哪一局」;(b) 两条「裁定级」行**都不是重裁**,都归英雄组重推导;(c) 加一条谁也没提的第三行",
+        "wave": "none —— 零 EC2、零波次、零 AWS。本条动的是 `tests/fixtures/` 的成员资格,不是 armed 串",
+        "at": "2026-09-11T0x:xxZ",
+        "ref": "iterations/streams/test_set.md §GQ (RULING 12)",
+        "note": "总监 RULING 12,全文 `test_set.md §GQ`。**(a) 问题自己的措辞被它自己的测量推翻了**:「6 个 WK 帧单独入也是同样 17 个文件」⇒ 7eb1ba 压在 5313f5 之上的**边际价钱实测 ≈ 0**,扣着它**买不到任何东西**,却要丢掉那六帧携带的 CM(2 nova)/ Lion(1 mana drain)活行。⇒ **5313f5 + 7eb1ba 作为一个原子一起入**,重推导按 WK 半边先做(它才是载着收益的那半:语料里 WK 是 0/36,这六帧是 3/6)。⚠️ **但那个 ≈0 是对一棵已经不存在的树的读数**:它测于 2026-09-10,之后树上落了 8 个 zeus 暂存帧(364764)、4 个 lion 暂存帧(20260910_124853),以及 09-10T23:06Z 那轮跨 4 个普查文件的 aether 环修复。暂存帧在 `tests/fixtures/*` 的 glob 之外、自己不动普查,**但普查文件本身动了** ⇒ **挪之前按同一配方(挪进去、跑、挪回来)重测一次**;若 7eb1ba 的边际价钱不再 ≈0,**只入 5313f5** 并把新读数回填本行。⛔ 364764(zeus)与 20260910_124853(lion)**不在本裁定的入集范围内**,两者的入集价钱都**未测**。**(b) 两条都不是重裁,英雄组自己做**:(1) GH #242 的裁定建立在 `[dominance]`/`[criterion]` 这条**算术**上(在位者就是绝对值轴的 argmin ⇒ 交集对任何可能存在的候选集为空,**包括比值轴有严格赢家的那种**,而非平局分歧恰好就是那一种)⇒ **非平局分歧够不到裁定**;过期的是**次级判据的例子**。⭐ 它之所以读起来像重裁,是因为 `[ties]` 的断言消息逐字这么说 —— **本轮已修**(`tests/test_salvetarget_axis_undecidable.lua` 头部 DIRECTOR CORRECTION + `[ties]` 消息改成「RE-TAKE THIS ROW, NOT THE VERDICT」),`hero.md` 抄过去的那句也已划掉改正。**五轮顺延的实际成因就是那句话**:它点了一条已发表裁定的名,于是每个读到它的人都正确地拒绝独自动手。(2) §GF 的退集判据是**仪器**不是计数(`GetLaneFrontLocation` 在全部候选帧上拒答;`IsBotThinkingMeaningfulAction` 在 1100/1100 句柄上 false)。那个 9 是**报给未来买单人的价**,9→12 把采购**变大**不是把裁定变弱 ⇒ 重推导数字、更新 §GF 的引用,**退集不动**。**(c) 第三行(谁也没填,而登记册的全部意义就是让它不必被想起来)**:`tests/frames/README.md` 是那本登记册(它自己写着「让入集是有人特意做的决定而不是副作用」),而四个 `f_260910_124853_lion_spike_*` **在里面没有行** —— 暂存的四局里唯一没有行的一组。⇒ 同一个工作单元里补上(暂存价钱、入集价钱「已测/明确未测」、以及哪些测试按名字读它们)。⛔ **这不是对暂存那一轮的指责**:登记册背后没有任何断言,**缺一行不会举手**(与 GH #624 / #290 同形)。给它长一条检查是**以后**某一轮的活,不是这一轮的。"
+      }
     }
   ],
   "done": [

@@ -46,6 +46,22 @@
 -- raw it would have read "the archive does show the axes disagreeing", which is
 -- the opposite of the truth. [ties] asserts both readings.
 --
+-- ⚠ DIRECTOR CORRECTION 2026-09-11 (RULING 12, test_set.md §GQ; queue hero-56).
+-- [ties] used to fail with "the ruling in GH #242 rests on there being none --
+-- re-read it", and that sentence was WRONG in a way that cost five rounds. The
+-- verdict rests on [dominance]/[criterion], which are ARITHMETIC: the incumbent
+-- IS the argmin of the absolute axis, so no candidate can be strictly lower on
+-- it and the intersection is empty for every candidate set that could exist --
+-- INCLUDING one in which the ratio axis has a strict winner, which is exactly
+-- what a non-tied disagreement is. So a non-tied disagreement cannot reach the
+-- verdict. What it reaches is the SECONDARY criterion above, whose example
+-- ("the archive's only one is a tie") is a property of THIS ROW's corpus and
+-- expires the moment the corpus grows. The old message promoted an example
+-- into a premise, and because it named a published ruling, every reader who
+-- hit it correctly refused to take it alone -- and deferred instead. A correct
+-- answer riding on a dead reason (evidence discipline 4), one layer up: the
+-- ASSERTION MESSAGE is the reason, and nothing type-checks a reason.
+--
 -- WHAT IS PINNED RATHER THAN ASSUMED:
 --   [W1] Same modelling convention as GH #237 after its correction: the heal
 --        modifiers and WasRecentlyDamagedByAnyHero ARE modelled where the dump
@@ -685,10 +701,19 @@ tests['[ties] the archive\'s only axis disagreement is a tie, not a disagreement
     -- Both readings are asserted, which is the whole point of this row: the raw
     -- count is what a careless sweep reports, and it says the opposite thing.
     cs.ratchet(nRawDisagree, 1, 'holder frames where the two argmins differ (raw)')
+    -- ⚠ RE-TAKE THIS ROW, NOT THE VERDICT.  See the DIRECTOR CORRECTION at the
+    -- head of this file: GH #242 rests on [dominance]/[criterion], which stay
+    -- true however the ratio axis falls.  This row's own EXAMPLE is what just
+    -- expired, and re-wording an example is an ordinary re-derivation.
     assert(nRealDisagree == 0,
         'the archive now carries a NON-TIED disagreement between the two axes ('
-        .. nRealDisagree .. ') -- the ruling in GH #242 rests on there being none, '
-        .. 're-read it')
+        .. nRealDisagree .. ').  RE-TAKE THIS ROW, NOT THE VERDICT: GH #242 rests '
+        .. 'on [dominance]/[criterion] (arithmetic -- the incumbent IS the argmin '
+        .. 'of the absolute axis, so the intersection is empty however the ratio '
+        .. 'axis falls, a non-tied disagreement included).  What expired is the '
+        .. 'SECONDARY criterion\'s example, "the archive\'s only disagreement is '
+        .. 'a tie".  Re-word the example from the frames that moved it and say '
+        .. 'which ones; leave the verdict alone.  (Director RULING 12, §GQ.)')
 end
 
 ----------------------------------------------------------------------
