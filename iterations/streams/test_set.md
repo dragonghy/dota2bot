@@ -3864,3 +3864,55 @@ RULING 11(22:06Z)、本轮 —— **连续四轮 0**,armed 串自 §GF(09-09T04:
 `gh_hero56_admission_atom` / `gh242_ties_example_rederivation` / `staged_frames_register_lion_row`,
 每行带裸读得出的 `done_when_note`,且**三行都显式写明「断言变绿不是验收」**。
 ⚠️ 三行的**执行方特定**(英雄组)而**触发时机不特定** ⇒ **它们是提醒不是证明**,行内已写。
+
+---
+
+## §GR 2026-09-11T03:1xZ 批测台:**W64 收割的三条登记**(⛔ 不是裁定,是读数落地 —— 三根棒的结清判据都钉在本文件上)
+
+### §GR.1 ⭐ `gh696_winrate_measurable_first_live_read` —— 第一份活路径读数
+
+W64 收割(`recover_verdict.py`,2 粒配对种子 / 111 局)打出的 **stderr 新前缀**,**逐字**:
+
+```
+GH #696 winrate comps_better: 2 of 2 seed(s) had headroom 0 and could not vote yes (seeds 10890,10900). The pooled fraction 0/2 counts them; `comps_better.winrate_measurable` 0/0 does not. A promote bar above 0/2 is unreachable on this corpus.
+```
+
+⭐ **它打出来的正是它被写来防的那件事**:`comps_better.winrate` 的 `0/2`,
+分母里**两粒都是在算术上不可能投赞成票的**;`winrate_measurable` 的 `0/0` 才是诚实的那个分数。
+按 §GK.3 的结清判据(钉在这个前缀上,**不钉在任何旧字段上**,因为本次改动是「旁边」不是「替换」),
+本行**到此结清**。
+
+⚠️ **该棒的 executor 注记里那句「九月在 $80 围栏下已无下一波,所以这根棒大概率要等到 10-01 之后」
+没有兑现,而原因不是围栏松了**:GH #721 的 `$85` operative ceiling(`expires
+2026-09-30T23:59:00+00:00`)让 W64 在 09-11 起飞,于是收割轮提前到了九月里。
+**登记这一句是因为那条注记本身是一条预测,而预测被事实顶掉时,写进档案的是事实。**
+
+### §GR.2 `overchase_new_body_first_reading` —— 登记为已读,⛔ 不是归因
+
+`overchase` 在 W64 的 37-id 臂串内 ⇒ **W64 是 §FY 换体之后的第一份波次读数**
+(机器键 `state.json:overchase_KEPT_20260908`)。读数即 W64 的波级读数:
+`gpm −10.75`(`comps_better 1/2`)、`xpm −6.29`、`deaths +0.36`(更差)、`last_hits −0.74`,
+`min_arm_depth 8`、`thin_arm_seeds []`、`suggested hold_or_reject`。
+
+⛔ **本波无法把它归因到单个 id**(37 个 id 一条臂),
+⛔ 且**两粒种子的波不写定量主张**(§CO.4) ⇒ **本行是「已读」的登记,不是对 `overchase` 的判定**。
+后续判定归总监。
+
+### §GR.3 GH #352 的桶名 bug:**活路径确认已修**
+
+W64 的 verdict 打 **`winrate_independent_of_gold: "111/111 games"`**
+—— 即真桶 `engine_natural` 被读对了。W31 在同一形状上打的是 `0/222` 而真值 `222/222`。
+⇒ 批测台 2026-08-29T09:13Z 立的**逐波复发登记到此停止**。
+
+⚠️ 同一波的 `winrate` 本身**仍不可引用**:`winrate_channel DEGENERATE`、
+`mean.winrate_headroom 0.0`(`minority side won 0 of 111 finished games`)
+⇒ `winrate 0.5` 与 `comps_better.winrate 0/2` 是**占位符不是读数**。
+**桶名修好了,通道没恢复 —— 这是两件事。**
+
+### §GR.4 投递
+
+(i) **机器字段**:`W64_wave.json` 的 `harvest.*`(含 `gh696_…` / `overchase_…` /
+`winrate_independent_of_gold` 三个键)+ `machines[]` 回填 `launched_at` / `status_code` /
+`create` / `update` / `machine_hours` / `ab` / `ba` / `arm_depth`。
+(ii) **档案**:本节(§GR.1 的逐字串就是 `owed_executions.json` 那条 `done_when` 要的东西)。
+(iii) **报告**:`iterations/reports/batch-desk/20260911T031300Z.md` §三。

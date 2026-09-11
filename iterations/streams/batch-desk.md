@@ -9765,7 +9765,7 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   `launch_time`,W64 只带后者**,而闸 (i) —— 五道闸里唯一管花钱节奏的那道 —— 只读前者。
   上一轮 py gate 抓到的是**同族的另一半**(`gates` 下的键名),**这一半没被抓到**,因为
   `tests/test_wave_gate_keys.py` **检 `gates` 的键、不检 `machines[]` 的键**
-  ⇒ **GH #624 那条腿的立案形状换了个字段**:本轮之所以当场看见,只是因为恰好同一座位、
+  ⇒ **GH #624 那条腿的立案形状换了个字段**(本轮开 **GH #738**):本轮之所以当场看见,只是因为恰好同一座位、
   恰好要用那道闸。**处置=改记录不改门**:`launched_at` **逐字抄发波轮自己记的时刻,不取 AWS**
   ——seed 10900 的 SIR `CreateTime` 是 `00:21:16Z` 而发波记录写 `00:21:17Z`,**取晚的**
   (锚点是末台,晚=解锁更晚=波更少=保守侧);⛔ 没去 `REQUIRED_GATES` 加别名。已开 issue。
@@ -9857,12 +9857,12 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   `FROZEN none`、`promote-atom constraints: OK`、`FINDING: 5 armed id(s) with neither a verdict nor an owed row`。
   **铁律 11** 未触发任何 `requires approval`,**本轮没有任何等待**。
   **`bots`/`game`/`tests`/`tools` 本会话一行未改** —— ⛔ §一 的 harness 缺陷**本台不自己改**
-  (先例 GH #33),已交 issue。
+  (先例 GH #33),已交 **GH #738**。
   **交棒**:① ⭐⭐⭐ **下一轮本台 = 收割两台补跑机**(`03:19:5xZ` + 2h 看门狗 ⇒ 约 `05:30Z` 后齐):
   读 EC2 `StateReason.Code`、存活分钟 + **该台增量账单**(GH #408 三样验收)、`ab`/`ba`/`arm_depth`
   回填 `rerun[]` **和** verdict、⭐ **合池时两台各给一个子目录**与原四目录一起喂
   `recover_verdict.py`(⛔ 别 `cp` 平)⇒ 合池后 W64 应达 **4 粒配对种子**;
-  ② ⭐⭐ **harness/总监 —— `launched_at` 缺键**(本轮开 issue,建议 ratchet 增「每台
+  ② ⭐⭐ **harness/总监 —— `launched_at` 缺键**(**GH #738**,建议 ratchet 增「每台
   `machines[]` 必须带可解析 `launched_at`」并回扫既有波次文件);
   ③ ⭐⭐ **总监 —— 重瞄削 AZ 分散**要不要变硬约束;
   ④ ⭐⭐ **总监/owner —— 九月余量 `$3.297`**,`$85` 之下最多约 **2 波 spot**,
