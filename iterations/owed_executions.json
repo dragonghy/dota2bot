@@ -284,24 +284,6 @@
    "done_when_note": "⚠️ `kind: manual` 是查过之后的选择:验收句是**「重新入集申请里带了一个跑在波次录像上的 (a) 取证方案」**,这是一句关于**文档内容**的判断,`pending_rulings.py` 支持的四种 kind(`json_value`/`path_exists`/`path_absent`/`path_contains_all`)没有一种表达得了它 —— `path_contains_all` 只做子串,硬套会被一句提到 `.dem` 的散文平凡满足(**假 DONE**)。⇒ 记成 manual,每轮报 OWED。**它也可以由「无人再提出入集」自然退休**:若 30 天内无人申请,总监可读一遍 `test_set.md:2` 确认 `fieldregen` 不在串里后退休本行。"
   },
   {
-   "id": "ownhalf_condition_a_or_return",
-   "issue": "P4.2 最老一档;裁定全文 iterations/streams/test_set.md §FZ.5;机器键 state.json:ownhalf_KEPT_20260908",
-   "ruling": "总监 2026-09-08T07:19Z:`ownhalf` **留集**,理由具名 —— 它是 `ohnum` 域的**唯一使能者**(shipped 路径上 `J.ShouldPunishDive` 只有在「敌人 1200 内有我方建筑」时才到达 `J.ShouldRefuseUnsupportedPunish`,而那恰是后者首个循环的**补集**:同半径、同目标、同 unit list)。实测 `ohnum` 单臂 **28 → 28**,`ownhalf`+`ohnum` **79 → 48**。退 `ownhalf` 会把一条 2 天大的 id 冻在读不出的零上。⚠️ 这组读数**已在树里**(`tests/test_ohnum_refusal.lua` 头 + `tests/_ohnum_sweep.lua`,逐位相同),本轮是**重新推导**不是新发现。",
-   "ruled_at": "2026-09-08T07:19Z",
-   "executor": "录像组(条件 (a) 的取证方);总监做退集/promote 判定",
-   "trigger": "**armed 满 60 天(2026-09-23)**,或 `ohnum` 先行退集/promote 之时 —— 以先到者为准。理由:本行的留集理由是**依赖关系**,依赖的一头一旦消失,留集就失去它唯一的具名依据。",
-   "delivered_to": [
-    "iterations/streams/test_set.md §FZ.5(全文档案)",
-    "iterations/state.json:ownhalf_KEPT_20260908(机器字段)",
-    "iterations/owed_executions.json(本行)"
-   ],
-   "why_registered_here": "⭐ **这一行存在的理由就是 §FX.2 立的那条**:「再等等是唯一一格不必付代价的」。`ownhalf` 本轮被判**留集**,若不登记,它会**安静地再骑 45 天**而没有任何腿替它举手 —— 那正是本轮之所以要判它的原因(顺延 3 轮)。登记之后,留集**每轮都要报 OWED**。",
-   "done_when": {
-    "kind": "manual"
-   },
-   "done_when_note": "验收句二选一,两条都裸读得出:(1) `python3 tools/agent/verify_coverage.py` 里 `ownhalf` 那一行的 verify 列 **> 0**(条件 (a) 买到了);或 (2) `ownhalf` 不再出现在 `iterations/streams/test_set.md` 第 2 行的成员串里(退集了)。⚠️ 两条都**不是**四种 kind 表达得了的:(1) 要读一张表的某一列,(2) 要判一个**子串的缺席**而 `path_absent` 判的是**文件**不是子串。硬套 `path_contains_all` 会把「串里有 ownhalf」读成完成,方向**恰好反了**。⇒ manual。"
-  },
-  {
    "id": "overchase_new_body_first_reading",
    "issue": "裁定全文 iterations/streams/test_set.md §FZ.5;机器键 state.json:overchase_KEPT_20260908;上游 §FY(协同组 2026-09-07T23:xxZ 换体)",
    "ruling": "总监 2026-09-08T07:19Z:`overchase` **留集**,理由具名 —— 协同组在 2026-09-07T23:xxZ 换掉了 `J.ShouldPunishOverchase` 的**函数体**(§FY,midline 收窄,因宿主自身是未 promote 候选而**继承宿主 id**)。⇒ 它的 45 天 `arm_since` 是**这个名字**的年龄,不是**当前这条杠杆**的;P4.2 的排序键(最老 + verify=0)若照搬,会退掉一条**一天大**的杠杆。⛔ **不改 `armed_since.json` 的日期** —— 改了会让登记表与每一份在旧函数体下 arm 过它的波次记录互相矛盾;登记 caveat 而不是重写历史。",
@@ -974,6 +956,42 @@
     "kind": "manual"
    },
    "done_when_note": "**裸读得出的验收句**:`iterations/queue.json:hero-58.director.ruling` 不再是 `ROUTED-BUT-NOT-AS-AN-ARCHIVE-SCAN`(即这条腿被**重新路由**并真的派了出去),**或**本行随这一对 id 的最终裁定(入集 / promote / 退集)一并退休。⛔ 单独修好 KV key **不结清本行** —— 那只满足两个信号里的 (乙),域仍然是空的。"
+  },
+  {
+   "id": "ownhalf_promote_bar_thickness",
+   "issue": "总监 2026-09-11T16:xxZ 立(RULING 14 的连带);裁定全文 `iterations/streams/test_set.md §GX.5`;机器键 `state.json:ohnum_RETURNED_20260911` 的 `consequence_for_ownhalf` 字段",
+   "ruling": "`ownhalf` **阻断解除,但本轮不促进**。09-11T14:00Z 那条挡它的理由是「一条未裁定的姊妹候选会改写它 75% 的域」,**今天这句话的两半都动了**:姊妹已裁(`ohnum` 不入集),而那个 75% 量在**收窄前**的语料上 —— 本树是 **20/32 = 62.5%**,其中 **6 条是居中伪影**。⇒ 此后挡它的**不再是姊妹,是它自己的分母**:条件 (a) 只有 **1 局 7 帧**,而录像组自己的报告逐字写着这**低于章程 ≥6 局下限**。⛔ **不许拿 `verify > 0` 当促进依据** —— 那是上一行(`ownhalf_condition_a_or_return`)已经结清的问题,**两行问的不是同一件事**。",
+   "ruled_at": "2026-09-11T16:xxZ",
+   "executor": "录像组(取证方);总监做 promote/退集判定",
+   "trigger": "无外部触发器。⚠️ **顺带一条必须同时处理的**:09-09 的 `ownhalf_margin`(入侵深度 800 → 1600)**骑在同一道闸上** ⇒ 促进 `ownhalf` 就是同时促进那个门限。⭐ 好消息是它**已经被覆盖**:录像组 09-10 的那 7 帧跑在 **1600 已落地之后**的树上(承重帧两个敌人的 invade depth 读 2885.7 / 3235.7,都远过 1600)⇒ (a) 的取证对象**就是带门限的那棵树**,不需要再单独为门限买一次证。这一条写下来,是因为它**上一轮被记成一个未解决的顾虑**,而它其实已经解决了。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §GX.5(裁定全文档案)",
+    "iterations/state.json:ohnum_RETURNED_20260911(`consequence_for_ownhalf` 字段)",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "why_registered_here": "§DR 常驻义务:它不属于任何一波、任何一次收割 —— **它挂在一份还没被采集的录像证据上**,没有任何 `harvest_obligations` 有行给它缺席。⭐ 更直接的理由是本轮刚亲手示范过的那个形状:上一行的留集理由(「它是 `ohnum` 的使能者」)**今天随着 `ohnum` 出局而作废**,而作废**不会自己举手** —— 写下继任行就是让它会。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "**裸读得出的验收句,二选一**:(1) 任一份 `iterations/reports/replay-check/` 报告为 `ownhalf` 打出 `VERIFY id=ownhalf verdict=WORKING`,且**同一行/同一节写明 episodes 来自 ≥6 局**(⛔ 不是 ≥6 帧 —— 09-10 那次是 7 帧 1 局,正是本行要区分开的那个数);或 (2) `ownhalf` 不再出现在 `iterations/streams/test_set.md` 第 2 行的成员串里(退集了)。⚠️ 与上一行同理,两条都**不是**四种 kind 表达得了的:(1) 要读一份报告里两个量的**合取**,(2) 要判一个**子串的缺席**而 `path_absent` 判的是文件。⇒ `manual`,每轮报 OWED。"
+  },
+  {
+   "id": "ohnum_recentred_readmission",
+   "issue": "总监 2026-09-11T16:xxZ 立(RULING 14);GH #706;裁定全文 `iterations/streams/test_set.md §GX`;机器键 `state.json:ohnum_RETURNED_20260911`",
+   "ruling": "`ohnum` **退回协同组**(BUGGY 估计量,论点本身成立)。缺陷具名且量过:两边的人头都数在**以目标为圆心**的 1200 圈里(`jmz_func.lua:9299/9315/9322`);出厂域里这个圆心是免费的(目标按构造贴着我方建筑,我方集群自然也在附近),而 `ownhalf` 的**全部意义**就是那个不再成立的域。⭐ **判它是缺陷而不是调参的,是单边性**:把圆扩成「目标圈 ∪ 本体圈」后,**20 次拒绝里 6 次多数出队友,0 次多数出敌人**(`recenter_ally_gain 6` / `recenter_enemy_gain 0` / `recenter_flip 6` / `recenter_held 14`)⇒ 它不是在正确答案周围抖,是**只朝一个方向少数我方**。⚠️ **诚实的另一半**:14/20 的拒绝**扛过了**重新居中 ⇒ `ohnum` **不是全盘伪影**,缺陷占它域的约三分之一。",
+   "ruled_at": "2026-09-11T16:xxZ",
+   "executor": "协同组(strategy,该 id 的 owner)",
+   "trigger": "无外部触发器 —— `ohnum` 现在不在集里也不在臂上,**没有任何波次会替它举手**,这正是本行存在的理由。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §GX(裁定全文档案)",
+    "iterations/state.json:ohnum_RETURNED_20260911(机器键)",
+    "GH #706(提出这个问题的那条线程;按 GH #290 留到 push 之后追评)"
+   ],
+   "why_registered_here": "§DR 常驻义务 + 拉野死分支那个形状:被退回的 id **从所有待办表上消失** —— 它不在 armed 串里(所以 `carrier_terms` / `a_evidence_route` 看不见它)、不在 `queue.json` 里(没有行)、也不属于任何一波。**GH #706 是开着的,但一条 issue 不会每轮举手。**",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "**裸读得出的验收句**:`ohnum`(或其继任 id)的重新提议里,`J.ShouldRefuseUnsupportedPunish` 的我方人头**不再只数以目标为圆心的那个圈**,**且**该提议附带一次 `tests/_ohnum_sweep.lua` 的重跑,报出**新估计量下的 `recenter_flip`**。⛔ **明确不接受的修法**:把半径从 1200 放大(如 2000)。它动的是同一个圆的**边**而不是**圆心**,会对称地把敌人也数进来(而实测的单边性说问题不在那里),而且 `tools/agent/mutstand_ohnum.sh` **分辨不出它和真修法** —— M8 打的是圆心,不是半径。⚠️ 本行**没有机器键,而这是诚实的**:验收对象是一份**还不存在的提议**,没有可以事先钉死的 `path`;伪造一个会在提议换名时静默变成 UNCERTIFIABLE。"
   }
  ],
  "retired": [
@@ -1250,6 +1268,27 @@
    "retired_at": "2026-09-11T12:1xZ",
    "retired_by": "batch-desk",
    "outcome": "**EXECUTED by batch-desk in its 2026-09-11T12:1xZ round, on the W65 harvest.** The settlement criterion was pinned to the stderr prefix `GH #696 winrate comps_better:` precisely because the change was an ADD-BESIDE, not a replace, so no old field could witness it. It printed, verbatim, on a REAL harvest: `GH #696 winrate comps_better: 2 of 4 seed(s) had headroom 0 and could not vote yes (seeds 10926,10927). The pooled fraction 2/4 counts them; `comps_better.winrate_measurable` 2/2 does not. A promote bar above 2/4 is unreachable on this corpus.` Both new keys landed on disk too: `winrate_forced_seeds [\"10926\",\"10927\"]` (names, not just a count) and `comps_better.winrate_measurable \"2/2\"`. ⭐ This is exactly what the row bought: at ruling time the director stated the new code path **had never once been executed on a real harvest** (W62's new fields were derived OFFLINE from existing per-seed headroom). This is the first live execution. ⚠️ The row's ⛔ clauses were honoured: `winrate_measurable 2/2` was NOT used as a gate, the pooled fraction stayed 2/4, and the desk recorded that a promote bar above 2/4 is unreachable on this corpus rather than reaching for the measurable-only fraction. Reading archived at `test_set.md` §GV.4(甲)."
+  },
+  {
+   "id": "ownhalf_condition_a_or_return",
+   "issue": "P4.2 最老一档;裁定全文 iterations/streams/test_set.md §FZ.5;机器键 state.json:ownhalf_KEPT_20260908",
+   "ruling": "总监 2026-09-08T07:19Z:`ownhalf` **留集**,理由具名 —— 它是 `ohnum` 域的**唯一使能者**(shipped 路径上 `J.ShouldPunishDive` 只有在「敌人 1200 内有我方建筑」时才到达 `J.ShouldRefuseUnsupportedPunish`,而那恰是后者首个循环的**补集**:同半径、同目标、同 unit list)。实测 `ohnum` 单臂 **28 → 28**,`ownhalf`+`ohnum` **79 → 48**。退 `ownhalf` 会把一条 2 天大的 id 冻在读不出的零上。⚠️ 这组读数**已在树里**(`tests/test_ohnum_refusal.lua` 头 + `tests/_ohnum_sweep.lua`,逐位相同),本轮是**重新推导**不是新发现。",
+   "ruled_at": "2026-09-08T07:19Z",
+   "executor": "录像组(条件 (a) 的取证方);总监做退集/promote 判定",
+   "trigger": "**armed 满 60 天(2026-09-23)**,或 `ohnum` 先行退集/promote 之时 —— 以先到者为准。理由:本行的留集理由是**依赖关系**,依赖的一头一旦消失,留集就失去它唯一的具名依据。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §FZ.5(全文档案)",
+    "iterations/state.json:ownhalf_KEPT_20260908(机器字段)",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "why_registered_here": "⭐ **这一行存在的理由就是 §FX.2 立的那条**:「再等等是唯一一格不必付代价的」。`ownhalf` 本轮被判**留集**,若不登记,它会**安静地再骑 45 天**而没有任何腿替它举手 —— 那正是本轮之所以要判它的原因(顺延 3 轮)。登记之后,留集**每轮都要报 OWED**。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "验收句二选一,两条都裸读得出:(1) `python3 tools/agent/verify_coverage.py` 里 `ownhalf` 那一行的 verify 列 **> 0**(条件 (a) 买到了);或 (2) `ownhalf` 不再出现在 `iterations/streams/test_set.md` 第 2 行的成员串里(退集了)。⚠️ 两条都**不是**四种 kind 表达得了的:(1) 要读一张表的某一列,(2) 要判一个**子串的缺席**而 `path_absent` 判的是**文件**不是子串。硬套 `path_contains_all` 会把「串里有 ownhalf」读成完成,方向**恰好反了**。⇒ manual。",
+   "retired_at": "2026-09-11T16:xxZ",
+   "retired_by": "director",
+   "retired_because": "本行的验收句二选一,**第 (1) 条已被树满足,并由它自己点名的那把尺子读出**:`python3 tools/agent/verify_coverage.py` 本轮读 `armed ids: 30 / ids with >=1 machine-readable VERIFY line: 26`,verify=0 的表里**只有 4 条**(`overchase` / `tpcommit` / `blinkflee` / `lf_rescue`),**`ownhalf` 不在其中** ⇒ 它的 verify 列 > 0。取证现场是录像组 2026-09-10 的 `VERIFY id=ownhalf verdict=WORKING episodes=7`。⭐ **并且本行的 `trigger` 今天也独立地响了**:它写着「或 `ohnum` 先行退集/promote 之时,以先到者为准」,而 `ohnum` 今天被退回协同组(`state.json:ohnum_RETURNED_20260911`)。⚠️⚠️ **退休这一行不等于 `ownhalf` 可以促进,而这一点必须写在同一句里** —— 本行问的是「(a) 到底买到了没有」,答案是买到了;**下一个问题是「买到的那份够不够厚到可以促进」,那是另一道门、另一个分母**(1 局 7 帧,低于章程 ≥6 局下限)。⇒ 继任行 `ownhalf_promote_bar_thickness`,**验收句与本行不同**,不是本行的续期。⛔ 留集的**旧理由**(§FZ.5:它是 `ohnum` 域的唯一使能者)**今天作废了** —— 依赖的那一头已经不在集里;`ownhalf` 此后留集靠的是**它自己的候选身份**,不是使能者身份。"
   }
  ],
  "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。"

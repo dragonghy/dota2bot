@@ -26,6 +26,19 @@
 --     can hand the frame to a DIFFERENT enemy rather than to nil. Both
 --     outcomes are behaviour changes and neither is the other.
 --   * `parity` / `advantage` price the argument itself over the domain.
+--   * `recenter_*` prices ONE named property of the argument: the helper counts
+--     both sides inside a circle centred on the TARGET (`vLoc`), so an ally who
+--     is beside the punisher but outside 1200 of the target is invisible to it.
+--     In the shipped domain that centring is harmless -- the target is within
+--     1200 of one of our buildings by construction, so our cluster sits near it
+--     anyway -- but the 'ownhalf' branch is exactly the domain where that is no
+--     longer true. The probe recounts BOTH sides over the UNION of the
+--     target-centred and bot-centred circles (symmetric on purpose: a wider
+--     circle also finds more enemies) and reports how many refusals survive it.
+--     ⚠ This is a MEASUREMENT OF THE CENTRING CHOICE, not a proposed rule. A
+--     `recenter_flip` frame is one whose refusal is produced by where the
+--     circle is drawn rather than by the numbers being against us; it is NOT a
+--     claim that the union circle is the correct estimator.
 --   * `lethal_release` is expected to be 0 and is printed anyway: the mock's
 --     GetEstimatedDamageToTarget answers 0 on every frame, so the lethal
 --     release cannot be witnessed here. Printing the zero keeps that LIMIT in
@@ -98,8 +111,25 @@ for _, k in ipairs({ 'fixtures', 'live', 'raised',
     'pd_shipped', 'pd_ownhalf', 'pd_ownhalf_only',
     'ohnum_alone_fires', 'ohnum_alone_changed',
     'both_fires', 'both_changed', 'both_to_nil', 'both_switched',
-    'domain_parity', 'domain_advantage', 'lethal_release' }) do
+    'domain_parity', 'domain_advantage', 'lethal_release',
+    'recenter_ally_gain', 'recenter_enemy_gain', 'recenter_flip',
+    'recenter_held' }) do
     rawset(c, k, 0)
+end
+
+-- Size of the union of two unit lists, keyed by handle identity. Two circles
+-- over the same team overlap heavily, so `#a + #b` is never the answer.
+local function union_count(a, b)
+    local seen, n = {}, 0
+    for _, list in ipairs({ a, b }) do
+        for _, u in ipairs(list) do
+            if seen[u] == nil then
+                seen[u] = true
+                n = n + 1
+            end
+        end
+    end
+    return n
 end
 
 local function name_of(h)
@@ -170,6 +200,24 @@ for _, path in ipairs(fixture_files()) do
                                 bump('domain_parity')
                                 out:write(string.format('F %s %s parity %d-v-%d\n',
                                     short, u.name, #tA, #tE))
+
+                                -- CENTRING PROBE (see header). Recount both
+                                -- sides over the union of the target-centred
+                                -- and the bot-centred circle, same radius.
+                                local r = G.REFUSE_ALLY_R or 1200
+                                local bLoc = bot:GetLocation()
+                                local uA = union_count(tA, J.GetAlliesNearLoc(bLoc, r))
+                                local uE = union_count(tE, J.GetEnemiesNearLoc(bLoc, r))
+                                if uA > #tA then bump('recenter_ally_gain') end
+                                if uE > #tE then bump('recenter_enemy_gain') end
+                                if uA < uE + 1 then
+                                    bump('recenter_held')
+                                else
+                                    bump('recenter_flip')
+                                    out:write(string.format(
+                                        'F %s %s recenter %d-v-%d->%d-v-%d\n',
+                                        short, u.name, #tA, #tE, uA, uE))
+                                end
                             else
                                 bump('domain_advantage')
                             end

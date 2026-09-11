@@ -13,14 +13,24 @@
 -- below comes from driving the SHIPPED J.ShouldPunishDive on a real dumped
 -- frame, in named arms, and comparing the hero it returns.
 --
--- CORPUS (tests/_ohnum_sweep.lua, 110 fixtures / 1021 live hero frames).
+-- CORPUS (tests/_ohnum_sweep.lua, 111 fixtures / 1031 live hero frames).
 -- Re-read 2026-09-09 after the 'ownhalf' invade-depth margin was put on the
--- tree's own 1600u convention; the pre-narrowing column is kept beside each so
--- an older quotation of these numbers can be recognised for what it is:
---   pd_shipped 28 (28) | pd_ownhalf 56 (79) | pd_ownhalf_only 28 (51)
---   domain_parity 16 (31) / domain_advantage 12 (20)   (of the 28)
---   both_changed 16 (31), and all 16 are both_to_nil -- both_switched is 0
+-- tree's own 1600u convention, and re-run 2026-09-11 by the director; the
+-- pre-narrowing column is kept beside each so an older quotation of these
+-- numbers can be recognised for what it is:
+--   pd_shipped 28 (28) | pd_ownhalf 60 (79) | pd_ownhalf_only 32 (51)
+--   domain_parity 20 (31) / domain_advantage 12 (20)   (of the 32)
+--   both_changed 20 (31), and all 20 are both_to_nil -- both_switched is 0
 --   ohnum_alone_changed 0 (0) over the 28 (28) shipped fires
+--   recenter_flip 6 / recenter_held 14, recenter_enemy_gain 0  (of the 20)
+-- ⚠️ THE 2026-09-09 COLUMN WAS ALREADY STALE WHEN IT WAS WRITTEN DOWN, and the
+-- delta is not a mystery: the corpus grew by ONE fixture on 2026-09-10
+-- (f_20260909_212625_lion_235, replay-check's own bearing frame), and that one
+-- fixture contributes FOUR domain frames -- all four parity-refused, all four
+-- both_to_nil. 28 -> 32, 16 -> 20, 16 -> 20, digit for digit. The shipped-path
+-- columns did not move. The lesson is the narrow one: this file parses every
+-- THRESHOLD out of the shipped source and hardcodes every derived COUNT in
+-- prose, so the half that rots is the half a reader quotes.
 -- The shipped-path columns are digit-for-digit unchanged, which is the point:
 -- the narrowing moved this lever's domain, not the promoted path it sits on.
 --
@@ -177,11 +187,90 @@ tests['[frame] armed, the unsupported parity punish is refused'] = function()
         .. hero_name(got.both) .. '; the refusal did not fire')
 end
 
+-- ⭐ THE CENTRING FRAME (director ruling 2026-09-11, GH #706). This is the
+-- refusal replay-check brought a GROUND TRUTH for -- the punisher's side went
+-- on to take 2 kills for 0 deaths inside 13 seconds -- and the reason it is
+-- pinned here is that the refusal is produced by WHERE THE CIRCLE IS DRAWN
+-- rather than by the numbers being against us.
+--
+-- The helper counts BOTH sides inside a circle centred on the TARGET. In the
+-- shipped domain that is harmless: the target is within 1200 of one of our live
+-- buildings by construction, so our cluster is near it anyway. The 'ownhalf'
+-- branch is the domain where that stops being true, and here it costs a real
+-- ally: Lina is 649.4u from the punisher and 1,472.5u from the target, so she
+-- is a full member of the fight that would happen and invisible to the count.
+--
+-- CORPUS SIZE OF THE SAME EFFECT (tests/_ohnum_sweep.lua, this tree):
+--   domain_parity 20 -> recenter_flip 6 / recenter_held 14
+--   recenter_ally_gain 6, recenter_enemy_gain 0
+-- i.e. 6 of the 20 refusals in this lever's own domain are produced by the
+-- centring, and widening the circle never once found an extra ENEMY. That
+-- one-sidedness is the finding: in this domain the estimator is biased against
+-- committing, not merely noisy.
+--
+-- ⚠️ The union recount below is a PROBE OF THE CENTRING, not a proposed rule.
+-- Nothing here asserts that the union circle is the right estimator; it asserts
+-- that the answer changes when the circle moves, which is what makes the
+-- refusal an artefact of the estimator rather than a reading of the fight.
+local CENTRING = { 'tests/fixtures/f_20260909_212625_lion_235.lua',
+    'npc_dota_hero_lion' }
+
+tests['[frame] the 2-kill refusal is produced by where the circle is drawn'] = function()
+    local got, J, bot = drive(CENTRING[1], CENTRING[2])
+    assert(hero_name(got.ownhalf) == 'drow_ranger', 'the ownhalf arm now '
+        .. 'punishes ' .. hero_name(got.ownhalf) .. ' on the centring frame, '
+        .. 'not the Drow Ranger this case was cut around')
+    assert(got.both == nil, 'the refusal no longer deletes this punish; the '
+        .. 'whole case is that it does')
+
+    local tgt = got.ownhalf
+    local vLoc, bLoc = tgt:GetLocation(), bot:GetLocation()
+    local tA, tE = J.GetAlliesNearLoc(vLoc, 1200), J.GetEnemiesNearLoc(vLoc, 1200)
+    assert(#tA == 1 and #tE == 1, 'the TARGET-centred count now reads ' .. #tA
+        .. ' allies v ' .. #tE .. ' enemies, not the 1-v-1 this case pins')
+
+    -- The ally the centring loses, named and measured on both legs.
+    local lost = nil
+    for _, a in ipairs(J.GetAlliesNearLoc(bLoc, 1200)) do
+        if a ~= bot then lost = a end
+    end
+    assert(lost ~= nil, 'no ally besides the punisher is within 1200 of the '
+        .. 'punisher any more; there is nothing for the centring to lose')
+    assert(hero_name(lost) == 'lina', 'the uncounted ally is now '
+        .. hero_name(lost) .. ', not the Lina this case was cut around')
+    local dBot = GetUnitToUnitDistance(lost, bot)
+    local dTgt = GetUnitToUnitDistance(lost, tgt)
+    assert(dBot <= 1200 and dTgt > 1200, 'the uncounted ally now sits at '
+        .. string.format('%.1fu from the punisher and %.1fu from the target', dBot, dTgt)
+        .. '; this case needs her inside one circle and outside the other')
+
+    -- Recount both sides over the union of the two circles. Symmetric on
+    -- purpose: a wider circle is also allowed to find more enemies.
+    local function union_count(a, b)
+        local seen, n = {}, 0
+        for _, list in ipairs({ a, b }) do
+            for _, u in ipairs(list) do
+                if seen[u] == nil then seen[u] = true; n = n + 1 end
+            end
+        end
+        return n
+    end
+    local uA = union_count(tA, J.GetAlliesNearLoc(bLoc, 1200))
+    local uE = union_count(tE, J.GetEnemiesNearLoc(bLoc, 1200))
+    assert(uE == #tE, 'the wider circle now finds ' .. uE .. ' enemies against '
+        .. 'the target-centred ' .. #tE .. '; on this frame the centring is '
+        .. 'supposed to be one-sided, and that is the whole finding')
+    assert(uA >= uE + 1, 'recounted over both circles the frame reads ' .. uA
+        .. ' allies v ' .. uE .. ' enemies, which still fails the helper own '
+        .. 'floor; the refusal would then stand on its own numbers and this '
+        .. 'frame would no longer be a centring artefact')
+end
+
 tests['[frame] direction: armed can only REMOVE a target, never add one'] = function()
     -- The conjunct joins as `and not <this>`, so this is true by construction --
     -- pinned anyway, because "by construction" is what the lanefix bundle also
     -- said. Checked on every named frame in this file, in every arm pair.
-    for _, cse in ipairs({ POS, NEG_ADV, NEG_SHIPPED }) do
+    for _, cse in ipairs({ POS, NEG_ADV, NEG_SHIPPED, CENTRING }) do
         local got = drive(cse[1], cse[2])
         assert(not (got.shipped == nil and got.ohnum ~= nil), cse[1]
             .. ': arming ohnum ADDED a punish target (' .. hero_name(got.ohnum)

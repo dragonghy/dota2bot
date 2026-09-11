@@ -98,6 +98,10 @@ HEAD=$'function J.ShouldRefuseUnsupportedPunish( bot, target )\n\tif not J.IsMod
 BLDG=$'\tfor _, building in pairs( GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) or {} )\n\tdo\n\t\tif J.IsValidBuilding( building )\n\t\tand GetUnitToUnitDistance( target, building ) <= 1200\n\t\tthen\n\t\t\treturn false\n\t\tend\n\tend\n'
 LETHAL=$'\tif J.GetTotalEstimatedDamageToTarget( tAllies, target )\n\t\t>= target:GetHealth() + target:GetHealthRegen() * 5.0\n\tthen\n\t\treturn false\n\tend\n'
 VERDICT=$'\treturn #tAllies < #J.GetEnemiesNearLoc( vLoc, 1200 ) + 1\n'
+# The ally half of the count, carried together with the line after it so the
+# anchor is unambiguous without a regex (the GH #550 guard would abort on the
+# bare GetAlliesNearLoc call, which this file is not the only user of).
+ALLIES=$'\tlocal tAllies = J.GetAlliesNearLoc( vLoc, 1200 )\n\tif J.GetTotalEstimatedDamageToTarget( tAllies, target )\n'
 CALL=$'\t\t\tif bInDomain\n\t\t\tand J.SafeToCommitFight( bot, enemy )\n\t\t\tand not J.ShouldRefuseUnsupportedPunish( bot, enemy )\n\t\t\tthen\n\t\t\t\treturn enemy\n\t\t\tend'
 # The invade-depth line, WITH its margin, because a literal substitution needs
 # the exact bytes. It moved 800 -> 1600 on 2026-09-09 (the tree's own
@@ -199,6 +203,21 @@ echo
 echo "=== M7: the +1 advantage margin is dropped back to parity ==="
 sub "$JMZ" "$VERDICT" $'\treturn #tAllies < #J.GetEnemiesNearLoc( vLoc, 1200 )\n'
 score "M7" "the refusal did not fire"
+
+# ---------------------------------------------------------------------------
+# M8: THE CENTRING MUTANT (director 2026-09-11, GH #706).  Both sides are
+#     counted inside a circle centred on the TARGET; this moves the ALLY half of
+#     that count onto the punisher instead.  It is not a proposed fix -- it is
+#     the control that says whether this suite can tell the two centrings apart
+#     at all.  If it SURVIVES, then "the refusal on the bearing frame is
+#     produced by where the circle is drawn" is prose: the corpus reading
+#     (recenter_flip 6 of 20, recenter_enemy_gain 0) would have nothing in the
+#     tests standing behind it, and the ruling that rests on it would be resting
+#     on a number no test can defend.
+echo
+echo "=== M8: the ally half of the count is re-centred on the punisher ==="
+sub "$JMZ" "$ALLIES" $'\tlocal tAllies = J.GetAlliesNearLoc( bot:GetLocation(), 1200 )\n\tif J.GetTotalEstimatedDamageToTarget( tAllies, target )\n'
+score "M8" "the refusal no longer deletes this punish"
 
 # ---------------------------------------------------------------------------
 echo
