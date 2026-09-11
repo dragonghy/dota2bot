@@ -1,0 +1,109 @@
+{
+ "cand": "tpcommit,lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart",
+ "cand_ref": null,
+ "contrast": "vs_stable",
+ "recovered_locally": true,
+ "per_seed": [
+  {
+   "seed": "11395",
+   "ab_games": 31,
+   "ba_games": 15,
+   "arm_depth": 20.22,
+   "scored": true,
+   "gpm": -13.28,
+   "gpm_ab": -114.3,
+   "gpm_ba": 87.75,
+   "xpm": 22.1,
+   "xpm_ab": -37.15,
+   "xpm_ba": 81.36,
+   "deaths": -0.82,
+   "deaths_ab": 0.97,
+   "deaths_ba": -2.61,
+   "last_hits": 4.68,
+   "last_hits_ab": -1.17,
+   "last_hits_ba": 10.53,
+   "scored_games": 46,
+   "unfinished": 0,
+   "winrate_arm_depth": 20.22,
+   "winrate_side_census": {
+    "radiant": 0,
+    "dire": 46
+   },
+   "winrate_headroom": 0.0,
+   "winrate": 0.5
+  }
+ ],
+ "mean": {
+  "gpm": -13.28,
+  "xpm": 22.1,
+  "deaths": -0.82,
+  "last_hits": 4.68,
+  "winrate": 0.5,
+  "winrate_headroom": 0.0
+ },
+ "comps_better": {
+  "gpm": "0/1",
+  "xpm": "1/1",
+  "deaths": "1/1",
+  "last_hits": "1/1",
+  "winrate": "0/1",
+  "winrate_measurable": "0/0"
+ },
+ "input": {
+  "files_seen": 52,
+  "games_loaded": 52,
+  "source_dirs": 1,
+  "unparseable": 0,
+  "pooled_basename_dirs_overridden": 0
+ },
+ "strata": {
+  "gpm": {
+   "ab": -114.3,
+   "ba": 87.75,
+   "side": -101.03,
+   "sign_flip": true,
+   "side_gt_arm": "1/1"
+  },
+  "xpm": {
+   "ab": -37.15,
+   "ba": 81.36,
+   "side": -59.25,
+   "sign_flip": true,
+   "side_gt_arm": "1/1"
+  },
+  "deaths": {
+   "ab": 0.97,
+   "ba": -2.61,
+   "side": 1.79,
+   "sign_flip": true,
+   "side_gt_arm": "1/1"
+  },
+  "last_hits": {
+   "ab": -1.17,
+   "ba": 10.53,
+   "side": -5.85,
+   "sign_flip": true,
+   "side_gt_arm": "1/1"
+  }
+ },
+ "winrate_neutral": 0.5,
+ "winrate_forced_seeds": [
+  "11395"
+ ],
+ "scored_games": 46,
+ "unfinished_games": 0,
+ "winner_by": {
+  "engine_natural": 52
+ },
+ "winrate_independent_of_gold": "52/52 games",
+ "winrate_side_census": {
+  "radiant": 0,
+  "dire": 52
+ },
+ "winrate_minority_side_share": 0.0,
+ "winrate_channel": "DEGENERATE",
+ "min_arm_depth": 8,
+ "thin_arm_seeds": [],
+ "thin_arm_winrate_seeds": [],
+ "suggested": "hold_or_reject"
+}
