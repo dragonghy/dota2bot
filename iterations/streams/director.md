@@ -554,6 +554,55 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-11T04:19Z**:**RULING 13 —— `pullcad` 陷阱的倒像。判定完结 2(连续四轮 0 之后第一轮达标)**,
+  armed **37 → 34**。零 AWS(**一次调用都没有**)、零波次、`bots/`+`game/` **零 diff**、**不发 owner 邮件**、
+  **无 promote / 无 reject / 无入集**。取活依据:上一轮「下次触发 ①」逐字「判定完结,主体,不许再让位」+ owner **P4.2**。
+  全文 `iterations/reports/director/20260911T041925Z.md`,档案 `test_set.md §GS`(§GS.0–§GS.7)。
+  ⭐⭐⭐ **(甲) 主轴:树里替 `pullcad` 陷阱写的两条注释,逐字只防住了正像。**
+  `jmz_func.lua:10936`/`:11085` 记住了「promote `pullcamp` 会把合取门冻死」,于是 `pulldrag`/`campbind`
+  都写成 STANDALONE,理由是「反正 turbo 与 pullcamp 门在这里是**结构性**的」。**那句理由为真,而它就是载体**:
+  `J.GetLanePullDragTarget` 全仓**一个**调用点(`mode_roam_generic.lua:454`)→ `bot.roamCampPull ~= nil`(:383)
+  → 只由 `J.ShouldPullNeutralCamp` 赋值(:104)→ 首两行 turbo + `IsSoakCandidate('pullcamp')`(:10642-10643)
+  ⇒ **退集 `pullcamp` 则 `pulldrag` 的域结构上归零**,而 `check_armed_wiring.py` 仍读 WIRED、
+  `verify_coverage.py` 仍列 armed INDETERMINATE、下一波 verdict 仍回来「没效果」,**没有东西举手**。
+  ⇒ **房规补一条:动 armed 状态前两个方向都查 —— (正像)谁的门行点它的名;(倒像)谁的代码只能经过它的门到达。**
+  ⛔ 处置**不是**「所以不退集」:`pullcamp` 是量到的错决策,留着等于给每一波所有 id 的 (b) 掺沙子。
+  ⭐⭐ **(乙) 两条裁定,(a) 都是录像组用机器可读判决交回来的,总监只复核判据**:
+  `tbearly` `VERIFY … SILENT episodes=0` ⇒ 退集;`pullcamp` `VERIFY … BUGGY episodes=28`(W62/W63 两份独立语料,
+  连接率 6.7%、每次要价 19pp 血 + 13s 对线时间、营地垂距 2912/2372 vs 缰绳 max 1272)⇒ 带 `pulldrag` 一个原子退集。
+  ⭐ **`tbearly` 的复核把结论收紧了一格**:域**不是空集,是零测单点** —— 外层合取项 `not J.IsLateGame()` 在 turbo 下
+  等于 `DotaTime() <= 1080`,armed 判据是 `< 1080` ⇒ 两腿只在 `DotaTime() == 1080.0` 那一个瞬间分歧。
+  **说「空」可被一帧反驳,说「单点」反例已写进结论**(§FW.2 / §GF.4 同族第三发)。
+  ⛔ **判定完结按原子记 2 不按 id 记 3**:`pulldrag` 没被判有罪,**在自己的指标上放宽定义是最没意义的一种放宽**。
+  ⭐⭐ **(丙) 登记册当场抓到我自己做了一半的退集**:py gate 第一次跑就红 ——
+  `tests/test_arm_since.py` `STALE ROW: pullcamp/pulldrag/tbearly has a row but is not in the armed string`。
+  补 `armed_since.json` 三行 `retired_at` 后 `18 checks, 0 failed`。
+  **这是 GH #624 那条腿第一次替总监自己工作:红由推的人当场看见,不是下一个开工的组几小时后发现。**
+  ⭐ **(丁) 顺手清一条自检腿**:`a_evidence_owed.py` UNOWED 5 → **0**(`RC_EXIT` 3 → 0),
+  按 §GG 先例开五行(四条 DELIVER 跑现成仪器;`overchase` 是 **MENTION**,采购是**建仪器**,
+  **单列就是它的内容**);`owed_executions.json` **44 → 49**,并退休 `gh736_…`
+  (批测台 03:13Z 已执行 (A),⛔ 而**那一行自己的验收句写窄了** —— 要 `exit 0` 等于额外要求节流窗已开,
+  批测台交的 `exit 3 THROTTLED` + `anchor wave : W64` 才是本行买的东西,按实质结清并留更正)。
+  ⛔⛔ **(戊) 查重第二次连续救下撞号**:草稿里预填过 `GH #739`,而 `#739` 今天 04:04Z 已被协同组占用 ⇒ 改为不预填。
+  **该开的两个号本来就开着且都点名请裁**:GH **#712**(pullcamp,请裁 P1 DoD 4)/ GH **#730**(tbearly),
+  两条**追评并关闭**;另**新开一个 `[strategy]`**(几何过滤 1350 提案 + `mode_farm_generic` 那句假注释)。
+  ⭐ 并修掉 `state.json:cap25_boundary_20260825.domains_unblocked` 那句**会被继续引用的错话**
+  (`tbearly` 入集当年引的就是它),⛔ 原文一字不删,追加 `correction_20260911`。
+  **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN` / `py gate: 95 ran, 0 findings` /
+  `lua gate: 331 ran, 0 findings, **15 known-red**`,**无 `RULE6_BYPASS`**;`known-red` 与上轮持平,本轮没让它变小。
+  ⚠️ 自检真码 **`SELFCHECK_EXIT=3`**(`legs run 11`);`FINDINGS: cadence owed-executions a-evidence-owed
+  trunk-red(python) trunk-red(lua)`;`UNCERTIFIABLE: none`;⭐ **`queue-rulings` 不在里面**(上轮清干净的保持住了)。
+  ⛔ 「后台包装吞真码」**第十八次**(harness 报 0,落盘 3);⛔ `rc.sh` 是习惯不是门(**第十二次**)。
+  🩺 巡检:五组 24h 内全部有产出(batch-desk 03:13Z / hero 01:46Z / strategy 01:31Z / replay-check 01:08Z),**无掉队组**。
+  ⚠️ **P4.1 标尺波按上一轮的承诺写进 `DECISIONS_NEEDED` 第 16 条**(⛔ 不另发信;三条未发理由**都不是拒绝**,
+  其中一条是第 15 条那份账号级预算 —— **owner 加过滤器它就消失**)。
+  ⭐ **P1 推进一格**:DoD 1(pullcamp 根因)**有结论了**;DoD 2/3/4 的棒交在新 issue + `pullcamp_atom_readmission`。
+  💰 **本轮 AWS 调用 0 次,不作 MTD 新声称**;三条线未改($60/$90/$100)。批测台本轮闸 (i) `THROTTLED` 未发波。
+  **下次触发**:①⭐⭐⭐ **判定完结继续做主体(≥2),而最便宜的一档不再是 `verify=0`,是 `WORKING` 那十条**
+  —— (a) 已买到,卡住 promote 的是 (b)(c);从 `fieldbuy`(785 episodes)起,⚠️ promote 红线 §DU.6 +
+  **先查倒像** ②⭐⭐ **倒像的全仓普查**(哪些 armed id 挂在另一个 armed id 的门下)——**做成腿比再记一发便宜**
+  ③⭐ 核 `pullcamp_atom_readmission` 与五条 `a_evidence_*` 的首次活读数
+
 - **2026-09-11T01:08Z**:**RULING 12(裁 `queue.json:hero-56`)—— 一条顺延了**五轮**的裁定,
   而拦住它的是**一句 Lua 断言消息**。** 零 AWS 支出(**一次 AWS 调用都没有**)、零波次、
   `bots/`+`game/` **零 diff**、**不发 owner 邮件**、armed 串 **37 不动**、**无 promote / 无退集**。

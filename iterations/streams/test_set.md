@@ -1,6 +1,14 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulldrag,tpgap,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
-**成员串 37**(上一行,**335 字节**,md5 `b525d51d4b4957e0e40f22f203aea641`)。本行 **2026-09-09T04:xxZ 的变动:两条 `退回出集`(39 → 37)**,总监裁定全文 **§GF**。⛔ **不是 reject**,两条的 gate、helper、常数与调用点**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(达 owner P4.2 的 ≥2)。**这两条是 `verify_coverage.py` 的 `narrat=1` 最后两条,该档就此清空。**
+tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
+**成员串 34**(上一行,**309 字节**,md5 `7be691dcd2c2fd1ee73a630274007044`)。本行 **2026-09-11T0x:xxZ 的变动:两个原子、三条 `退回出集`(37 → 34)**,总监裁定全文 **§GS**。⛔ **三条都不是 reject**,gate、helper、常数与调用点**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(达 owner P4.2 的 ≥2;⛔ **按原子记 2,不按 id 记 3** —— `pulldrag` 没有独立裁定,它是被 `pullcamp` 那条**结构性带走**的,把它算成第三个完结是虚报)。**两条都是录像组交回来的机器可读判决,不是总监自己定的价**(`VERIFY id=tbearly verdict=SILENT episodes=0` / `VERIFY id=pullcamp verdict=BUGGY episodes=28`)。
+1. **`tbearly` 退集**(37 → 36)—— 录像组 2026-09-10T22:01Z 判 **SILENT**,`episodes=0`,并**逐字建议退集**(「P4.2 下最便宜的一格」)。⭐ **本轮独立复核把「域为空」收紧成一句更准的话:域是一个单点,不是空集。** 出厂外层合取项 `mode_farm_generic.lua:506` 是 `not J.IsLateGame()`,而 `jmz_func.lua:4757-4762` 在 turbo 下是 `DotaTime() > 18*60` ⇒ 进到 :555 那一行时必有 `DotaTime() <= 1080`;armed 把 `nEarlyClock` 由 `25*60` 选成 `18*60`,于是两条腿的读数**只在 `DotaTime() == 1080.0` 这一个瞬间不同**(armed `1080 < 1080` 假、baseline `1080 < 1500` 真),其余每一帧**逐字节相同**。⛔ **这个区别要写出来**:说「域是空的」邀请下一个读者拿那一帧当反例并以为裁定塌了;说「域是帧网格上的一个零测单点」既是真的,也**照样**支持退集。⚠️ **它写下的 18:00-25:00 那个band 整条在外层合取项之外** —— 源码注释「The band this moves is 18:00-25:00」**是假的**,交回协同组改(见 §GS.4)。⛔ **不要顺手删代码**:那次改写修掉的 `a and b or c` 惯用法缺陷是真的,`tests/test_turbo_ternary_dominance.lua` 的全仓棘轮继续有价值;退的是测试集里那一格。
+2. **`pullcamp` + `pulldrag` 一个原子退集**(36 → 34)—— `pullcamp` 条件 (a) **在两份独立语料上买到,判决 BUGGY**(W62 与 W63;录像组 2026-09-10T16:01Z,`episodes=28`)。营地选择器挑的营地到**任何**一条兵线的最小垂距 **2912 / 2372**,而实测缰绳 max **1272**(EDGE CONTROL 两波逐位同型:中位 833/826)⇒ **开戳那一瞬间就不可能连上**;连接率 **1/15 = 6.7%**(W62 4/16),开戳后 15s 掉血中位 **17pp**、3/29 掉到 35% 以下、1/29 20s 内死亡。**帧证据**:`…715cc0/20260910_124850_slot4` crystal_maiden t=345.4–356.4(垂距 2912,要价 19pp 血 + 13 秒对线时间)、`…16a195/20260910_123421_slot4` pudge t=99.4(戳完就走,连拖都没拖)。⇒ 这不是「没测出效果」,是**量到的、带价钱的错决策**,让它继续骑在每一波的臂串里是在给所有人的 (b) 读数掺沙子。
+⭐⭐⭐ **本节最该被读的一条(§GS.2):`pullcad` 陷阱有一个倒像,而树里替它写的那两条注释**只防住了正像**。** `jmz_func.lua:10936` 与 `:11085` 两处注释**逐字**写着:不要把门写成 `IsSoakCandidate('pulldrag') and IsSoakCandidate('pullcamp')`,因为 **promote** `pullcamp` 会让那个合取**永久为假**;于是两条都写成了 STANDALONE 门,并给出理由「反正 turbo 与 pullcamp 门在这里是结构性的」。**那句理由为真,而它恰恰是倒像的载体**:`J.GetLanePullDragTarget` 在 `bots/` 里**只有一个调用点**(`mode_roam_generic.lua:454`),坐在 `if bot.roamCampPull ~= nil` 里,而 `roamCampPull` **只**由 `J.ShouldPullNeutralCamp` 赋值(:104),后者首两行就是 turbo + `pullcamp` 门 ⇒ **把 `pullcamp` 退集,`pulldrag` 的域结构上归零**。⛔ **而没有任何东西会举手**:`check_armed_wiring.py` 仍读 WIRED(调用点在),`verify_coverage` 仍把它列成 armed 的 `INDETERMINATE`,下一波的 verdict 仍会回来「测过了,没效果」。⇒ **促进(promote)杀掉点它名的门;退集杀掉挂在它下面的域。两个方向都要查,而房规此前只写了一个方向。**
+⚠️ **`pulldrag` 这一条是「随原子走」不是「被判有罪」**:它自己的 (a) 读数是 `verify=2 / INDETERMINATE / 159 episodes`,仪器 `pulldrag_walk.py` 活着;**重新入集的条件就是 `pullcamp` 重新入集**(见 §GS.5 的 owed 行),⛔ 不许单独提入集 —— 单独 armed 的 `pulldrag` 在结构上是一个恒 no-op 的位置。
+⚠️ **不掉进 `pullcad` 陷阱(正像),查过了**:三条各自**恰好一个** gate 点(`mode_farm_generic.lua:555` / `jmz_func.lua:10643` / `:10943`,`pullcamp` 另有的两处是**注释**不是门行),门行上没有第二个 id;`iterations/promote_atoms.json` **一行都没点名**这三条。⚠️ **`campbind` 也挂在 `pullcamp` 下面**(`GetCampPullPokeTarget` 只在 `roamCampPull` 非 nil 时被调用),但它 **§FX 已经退集、本来就不在串里** ⇒ 本次退集**没有额外冻死任何 armed 杠杆**;将来 `campbind` 提入集必须**先**让 `pullcamp` 回来。
+⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py --arm` 对 37-id 与 34-id 两串各跑一次,`TERMS` 行**逐字节相同**(`crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`),`0 unresolved` 两次;计数 `9 hero / 28 generic` → `9 / 25`(三条都是 generic)⇒ **选种解空间不受影响**。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— **W64 及更早不与 34-id 家族并池**。
+〔沿革,上一条变动〕**成员串 37**(**335 字节**,md5 `b525d51d4b4957e0e40f22f203aea641`)。**2026-09-09T04:xxZ 的变动:两条 `退回出集`(39 → 37)**,总监裁定全文 **§GF**。⛔ **不是 reject**,两条的 gate、helper、常数与调用点**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(达 owner P4.2 的 ≥2)。**这两条是 `verify_coverage.py` 的 `narrat=1` 最后两条,该档就此清空。**
 1. **`pulllane` 退集**(39 → 38)—— `verify=0`,转轴 `J.IsCampBesideLane( camp.location, tLanePath )` 在语料上**一次也没被调用过**。⚠️ **而第一个假设是错的,是阳性对照说的**:`GetNeutralSpawners()` 在 **110/110 帧为 `{}`**(0 个营地句柄),于是「营地名册就是那堵墙」是自己送上门的读法 —— 也正是 §GE 判 `campsel` 的那堵墙。**它不是这里的约束墙**:上门、强制 turbo、**再喂一个距 bot 600u 的合成己方营地**,读数**纹丝不动**(non-nil **0/1100**,`J.IsCampBesideLane` 被调用 **0 次**)。真正的墙在更前面。
 2. **`pullthink` 退集**(38 → 37)—— `verify=0`,**两个操作数各自独立地死**:作用域项 `bot.roamCampPull ~= nil` 要 `J.ShouldPullNeutralCamp` 非 nil,而它**全上门、全 turbo 之下仍在 1100/1100 句柄上返回 nil**(与 `pulllane` 同因);节流项 `J.Utils.IsBotThinkingMeaningfulAction` 在 **1100/1100 上为 false** —— 而它为 false 时 **baseline 腿也不提前 return**,于是两条腿在语料**每一帧逐字节相同**。
 ⭐⭐⭐ **本轮最该被读的一条(§GF.3):同一个加载器里同时住着两种失败模式,而只有一种会举手。** 两个输入都不在语料里,加载器对它们的处理**方向相反**:`GetLaneFrontLocation` **大声拒答并自报家门**(`LOADER REFUSES: … is unresolved (GH #61). The dump does not carry lane fronts; do not compare against (0,0,0). Declare your assumption …`);`GetAnimActivity` **静静地答 0**(`bot_api.lua` 的 `^Get -> 0` 兜底,1100/1100)。**同一个加载器、同一类缺失数据、相反的失败方向** —— 而**拒答那一种就是解药,并且已经实现好了**。⇒ 连续三轮的主轴都是「一次没有推广的修复」(§GD.5 `AbilityDamage` 修了紧邻的 `AbilityCastRange` 没修;§GE.3 `GetItemSlotType` 修了 `GetCurrentActionType` 没修),**而本轮漏掉的不再是一个姊妹 getter,是一条加载器只对一个 getter 执行、对其余一概不执行的策略**。
@@ -3916,3 +3924,96 @@ W64 的 verdict 打 **`winrate_independent_of_gold: "111/111 games"`**
 `create` / `update` / `machine_hours` / `ab` / `ba` / `arm_depth`。
 (ii) **档案**:本节(§GR.1 的逐字串就是 `owed_executions.json` 那条 `done_when` 要的东西)。
 (iii) **报告**:`iterations/reports/batch-desk/20260911T031300Z.md` §三。
+
+---
+
+## §GS RULING 13 — `pullcad` 陷阱的**倒像**:促进杀掉点它名的门,**退集杀掉挂在它下面的域**;而树里替它写的两条注释,逐字只防住了正像
+
+### §GS.0 一句话
+
+**两个原子、三条退集(37 → 34),判定完结 2**(owner P4.2 的产出指标,**连续四轮 0 之后的第一轮达标**)。
+`tbearly` **SILENT**、`pullcamp`(带走 `pulldrag`)**BUGGY** —— **两条的 (a) 都是录像组用机器可读判决交回来的**,
+总监本轮只做三件事:**独立复核那两个判决的判据**、**查倒像**、**裁**。
+零 AWS(**一次调用都没有**)、零波次、`bots/`+`game/` **零 diff**、**不发 owner 邮件**、无 promote、无 reject。
+取活依据:上一轮「下次触发 ①」逐字「**判定完结,主体,不许再让位**」+ owner **P4.2**。
+
+### §GS.1 两条判决的独立复核(⛔ 不是转载)
+
+| id | 录像组判决 | 总监本轮独立复核的判据 | 结论 |
+|---|---|---|---|
+| `tbearly` | `VERIFY id=tbearly verdict=SILENT episodes=0`(20260910T220101Z) | **算术,不取样**:`mode_farm_generic.lua:506` 的 `not J.IsLateGame()` × `jmz_func.lua:4758` 的 turbo 分支 `18*60` ⇒ 到达 :555 必有 `DotaTime() <= 1080`;armed 选 `1080`、baseline 选 `1500` | **成立,且比原话更准**:域不是空集,是单点 `DotaTime() == 1080.0`(见 §GS.3) |
+| `pullcamp` | `VERIFY id=pullcamp verdict=BUGGY episodes=28`(20260910T160103Z,W63,W62 独立复现) | 垂距 2912/2372 vs 实测缰绳 max 1272;EDGE CONTROL 两波逐位同型(833/826)⇒ **低连接率是拖拽的物理上限,不是估计量看漏** | **成立**:带价钱的错决策(19pp 血 + 13s 对线时间/次,连接率 6.7%) |
+
+⚠️ **复核不是重做**:两条的语料都不在本容器上,本节**不声称**自己重算过 episodes;
+复核的是**判据能不能独立站住**(一条靠源码算术、一条靠两份语料的同型读数),这正是 (a) 之外总监该出的那一份力。
+
+### §GS.2 ⭐⭐⭐ 主轴:倒像
+
+`jmz_func.lua:10936` / `:11085` 两处注释是本仓库**做对了一件事**的证据 —— 它们记住了 `pullcad` 陷阱,
+于是 `pulldrag` 与 `campbind` 的门都写成 STANDALONE,**不与 `pullcamp` 合取**。理由逐字:
+
+> Gated STANDALONE, not conjoined with 'pullcamp': a gate written as
+> `IsSoakCandidate('pulldrag') and IsSoakCandidate('pullcamp')` would freeze
+> FALSE the day 'pullcamp' is promoted … Turbo and the pullcamp gate are already
+> structural here anyway -- this code is only reached through J.ShouldPullNeutralCamp.
+
+**最后那半句是真的,而它就是倒像**:防住合取冻结,防不住**结构性可达性**。
+`J.GetLanePullDragTarget` 全仓**一个**调用点(`mode_roam_generic.lua:454`)→ `bot.roamCampPull ~= nil`(:383)
+→ 只由 `J.ShouldPullNeutralCamp` 赋值(:104)→ 首两行 turbo + `IsSoakCandidate('pullcamp')`(:10642-10643)。
+⇒ **`pullcamp` 一退集,`pulldrag` 的域结构上归零**,而:
+
+* `check_armed_wiring.py` 仍报 **WIRED**(它检查调用点存在,不检查谓词能不能为真 —— `pullcad` 陷阱的原始立案句,**逐字适用**);
+* `verify_coverage.py` 仍把它列作 armed 的 `INDETERMINATE`;
+* 下一波 verdict 仍回来「测过了,没效果」,**没有任何东西举手**。
+
+⇒ **房规补一条(本节立)**:**动一个 id 的 armed 状态之前,两个方向都要查** ——
+(正像)**谁的门行点了它的名**;(倒像)**谁的代码只能经过它的门到达**。
+前者查 `promote_atoms.json` + 门行 grep,后者查**被门的那个函数的调用图**。
+⛔ **本轮的处置不是「所以不退集」**:`pullcamp` 是量到的错决策,把它留在串里的代价是**每一波所有人的 (b) 都掺沙子**;
+正确的处置是**把带走的那条一起退、并把重新入集绑成一条**(§GS.5)。
+
+### §GS.3 ⭐ `tbearly`:「域为空」与「域是一个零测单点」不是一回事,而差别有实际后果
+
+外层合取项到达条件是 `DotaTime() <= 1080`(`not (DotaTime() > 1080)`),armed 的判据是 `DotaTime() < 1080`。
+两者**只在 `DotaTime() == 1080.0` 那一个瞬间分歧**。所以:
+
+* **说「域是空的」** —— 干净、好引、**可被一帧反驳**;下一个读者拿那一帧当反例,会以为整条裁定塌了。
+* **说「域是帧网格上的一个零测单点」** —— 同样支持退集,而且**反例已经被写进结论里**。
+
+⭐ 同族第三发(§FW.2「子句为假 vs 仪器看不见」、§GF.4「结论活着理由死了」):
+**一个对的结论骑在一句稍微过强的话上,过强的那一句才是下一轮的坑。**
+
+### §GS.4 交回协同组的两条(⛔ 不是本节自己动手)
+
+1. **`pullcamp` 营地选择器缺一条兵线垂距上限**。录像组 §4 已把空带量出来并提了 **1350** 的阈值提案;
+   ⚠️ **提案的软肋是 n**(连接分子 n=4,空带只被两波看过),录像组下一轮用 `pullcamp_camp_gap.py` 在 W64 上复读。
+   **重新入集的前提 = 这条几何过滤落地 + 一份不再命中 2912/2372 那种营地的读数**,`pulldrag` 与它同批回来。
+2. **`mode_farm_generic.lua` 的一句出厂注释是假的**:「The band this moves is 18:00-25:00」——
+   那个 band 整条在 :506 的 `not J.IsLateGame()` 之外。**它正是让下一个读者相信这个 id 有域的那句话**
+   (`tbearly` 当初入集就引用了同族的那句话,见 §GS.6)。
+
+两条合并为**一个** `[strategy]` issue(频率纪律:不为一轮开两个号)。
+
+### §GS.5 投递(章程 2.5:裁定要落到被裁方读的那个字段上)
+
+* **机器字段**:`iterations/state.json` 新增 `tbearly_RETIRED_20260911` / `pullcamp_atom_RETIRED_20260911`;
+  `iterations/owed_executions.json` 新增 `pullcamp_atom_readmission`(常驻义务,`pulldrag` 绑在同一行)。
+* **档案**:本节。
+* **通知**:`[strategy]` issue(§GS.4)+ 本轮报告。
+* ⚠️ `queue.json` **本轮无对应请求**(这两条不是谁提的申请,是录像组判决触发的总监主动裁定)⇒ 无 `director` 字段可写,**登记这一句免得下一轮把它读成掉棒**。
+
+### §GS.6 顺手修掉的一句会被继续引用的错话
+
+`state.json:cap25_boundary_20260825.domains_unblocked` 逐字写着 `tbearly` 的域
+「constructively empty and **is now reachable**」(cap 10→25 之后)。**那半句是假的**:
+挡住它的从来不是 25 分钟的 cap,是 `not J.IsLateGame()` 这条**外层合取项**,cap 改成多少都不动它。
+⭐ 而这句话**不是死档案**:`tbearly` 入集(§BF / GH #157 / #165)就是引用它成立的。
+本轮在同一个 key 上追加 `correction_20260911`,⛔ **原文一字不删**(删掉就看不出入集依据当年长什么样)。
+
+### §GS.7 本节没有做的事(边界)
+
+1. **没有 promote、没有 reject、没有入集**(P4.2 冻结期,合法裁定只有 FROZEN-HOLD);`bots/`+`game/` **零 diff**。
+2. **没有跑任何检测器,也没有碰任何语料**:两条 (a) 都是录像组交回来的,本节买的是裁定不是读数。
+3. **没有对 `pulldrag` 自己的杠杆下判断** —— 它的 (a) 仍是 `INDETERMINATE`,退集只是跟着原子走。
+4. **倒像那条房规只在本节立,没有做全仓普查**:还有哪些 armed id 挂在别的 armed id 的门下面,**本轮没数**(下一轮的活,见报告)。
+5. **没有跑 Lua 动态半全量**(~100min,GH #124);`bots/` 零 diff。

@@ -107,7 +107,9 @@
     "pullcamp": {
       "armed_since": "2026-08-22",
       "precision": "exact",
-      "source": "reports/director/20260822T090649Z.md"
+      "source": "reports/director/20260822T090649Z.md",
+      "retired_at": "2026-09-11",
+      "retired_note": "退回出集(test_set.md §GS;state.json:pullcamp_atom_RETIRED_20260911)。条件 (a) 在 W62/W63 两份独立语料上买到,判决 **BUGGY**(`VERIFY id=pullcamp verdict=BUGGY episodes=28`,录像组 20260910T160103Z):营地到任一兵线最小垂距 2912/2372 vs 实测缰绳 max 1272,连接率 1/15=6.7%,每次要价约 19pp 血 + 13s 对线时间。⛔ 不是 reject,gate/helper/调用点逐字保留;重新入集绑在 owed 行 `pullcamp_atom_readmission`(与 `pulldrag` 同批)。"
     },
     "stayfield": {
       "armed_since": "2026-08-22",
@@ -139,7 +141,9 @@
     "pulldrag": {
       "armed_since": "2026-08-25",
       "precision": "exact",
-      "source": "state.json:pulldrag_20260825"
+      "source": "state.json:pulldrag_20260825",
+      "retired_at": "2026-09-11",
+      "retired_note": "退回出集(test_set.md §GS;state.json:pullcamp_atom_RETIRED_20260911)。⚠️ **它自己没有被判有罪**(`verify=2 / INDETERMINATE / 159 episodes`,仪器 `pulldrag_walk.py` 活着),是**随 `pullcamp` 原子结构性带走**的:`J.GetLanePullDragTarget` 全仓一个调用点(`mode_roam_generic.lua:454`),只经 `J.ShouldPullNeutralCamp` 到达,而后者首两行是 turbo + `IsSoakCandidate('pullcamp')` ⇒ `pullcamp` 一退,它的域结构上归零。⛔ 不许单独重新入集。"
     },
     "tpgap": {
       "armed_since": "2026-08-24",
@@ -156,7 +160,9 @@
     "tbearly": {
       "armed_since": "2026-08-24",
       "precision": "exact",
-      "source": "state.json:tbearly_20260824"
+      "source": "state.json:tbearly_20260824",
+      "retired_at": "2026-09-11",
+      "retired_note": "退回出集(test_set.md §GS;state.json:tbearly_RETIRED_20260911)。条件 (a) 买到了,判决 **SILENT**(`VERIFY id=tbearly verdict=SILENT episodes=0`,录像组 20260910T220101Z)。⛔ 不是 reject:gate 与那次 `a and b or c` 惯用法改写逐字保留。⭐ 域不是空集是**零测单点** —— 外层合取项 `mode_farm_generic.lua:506` 的 `not J.IsLateGame()` 在 turbo 下等于 `DotaTime() <= 1080`,armed 的判据是 `DotaTime() < 1080`,两条腿只在 `DotaTime() == 1080.0` 那一个瞬间分歧。"
     },
     "tpdeathbuy": {
       "armed_since": "2026-08-25",
