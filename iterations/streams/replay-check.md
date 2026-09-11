@@ -15061,6 +15061,19 @@
   - **下一轮第一件事**:(1) ⭐ **W65 收割后把它的语料与本轮 85 局并进来重跑 `abilanc`**(只差 ≈113 局),
     ⚠️ **但先按铁律 4a 问归属:34-id ≠ 37-id,`abilanc` 两串都在而邻居变了**;
     (2) **`aimguard` 等其余 UNOWED**(本轮 `abilanc` 取得判决后 5→4),**先跑 `--selfcheck` 读退出码**;
-    (3) 盯 GH #196 / 本轮新开的 [harness] 单 / #744 / #736;
+    (3) 盯 GH #196(追评 `5633076712`) / #747 / #744 / #736;
     (4) ⛔ 覆盖行只引用 `sweep_complete.json`,不手敲 `aws s3 ls`;
     (5) ⭐ **sweep 一律带第二个参数把 `out_dir` 指到 scratchpad**(#744 未修前零成本)。
+  - **本轮 issue:净增 1 条 + 1 条追评**(先搜后开:两组语义检索各 **0 命中**,再逐条扫 45 条最新 open
+    issue,无同题单)。**GH #196 追评 `5633076712`**(`abilanc` 的 (a) 读数 + 语料缺口请求)——
+    ⛔ **不另开单**,#196 问的正是这件事;**[harness] GH #747**(§仪器缺陷)。
+    两份草稿 `claim_precheck.sh` 各 `EXIT=0` / `clean` / `local commits not on origin/main: 0`,
+    **按 GH #290 先 push 再发表**。
+  - **铁律 6**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 40.2s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
+    `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=1` 被拒 ⇒ rebase(`REBASE_EXIT=0`,`d2758ef5..29e17689`)
+    ⇒ 重试 `PUSH_MAIN_EXIT=0`(`29e17689..215eeda8`)。
+  - token:`TOKENS total_in=11,494,356 out=71,881 turns=84`
+  - 完整报告:`iterations/reports/replay-check/20260911T101534Z.md`
