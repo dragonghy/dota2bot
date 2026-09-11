@@ -15324,5 +15324,13 @@
     (4) ⛔ 覆盖行只引用 `sweep_complete.json`;(5) ⭐ sweep 的 `out_dir` 一律指 scratchpad;
     (6) ⚠️ **liveness 一律走 `is_dead()`,不要 `.get(raw_name)`**(本轮现踩);
     (7) ⭐ **单 run 读数不是波级读数** —— 本轮全部读数**只代表种子 11395**,跨波引用必须带这句。
-  - **铁律 6 三条腿 / token**:见报告「补记」节(push 后回填,GH #290 顺序)。
+  - **铁律 6 三条腿**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 40.0s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
+    `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`c5cb8292..1ae807e4`,**一次过,无 rebase**)。
+    追评 **GH #35 comment `5639406070`**(草稿 `claim_precheck.sh` `EXIT=0` / `clean` /
+    `local commits not on origin/main: 0`,按 GH #290 先 push 再发表)。
+  - token:`TOKENS total_in=8,819,072 out=59,122 turns=60`
+    ⭐ 比上一轮 25.7M/138 turns **低一个量级** —— 上轮交棒「把等待压成一个 until 循环」照办了。
   - 完整报告:`iterations/reports/replay-check/20260911T190204Z.md`
