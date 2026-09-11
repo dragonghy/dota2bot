@@ -31,7 +31,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    逐候选的那个谓词**本树自己就有**(`WasRecentlyDamagedByHero` 在焦点五里四个文件都在用)。
    **方向:既不加宽也不收窄,只动目标身份**(§4 全语料双向驱动 `nDisagree == 0`)。
    附带一条清掉 trunk 上的 walk 普查红(**四条欠账全是本组自己的**)。
-   取证请求 `queue.json:hero-60`;id 登记 `state.json:cmwhit_20260911`。
+   取证请求 `queue.json:hero-60`;id 登记 `state.json:cmwhit_20260911`;**已发表 GH #753**。
+   - **⛔ 本轮的闸真的拦了一次,三条红全是本轮改动造成、而且三条都是普查在正常工作**:
+     (1) `test_cm_w_selfdefense_facing.lua` 1.1 的锥形托管链要**重锚**(写成因不写数字);
+     (2) `test_cast_ring_mirror_discipline.lua` 抓到新测试的 `ring()` 镜像**漏了 aether 项**,
+     会把环低估 225-250 单位(GH #725 同形)—— **本轮最值钱的一次拦截:它拦的不是笔误,
+     是一个会让这个文件每一个环读数都偏小、而且长得像一个普通数字的镜像**;
+     (3) `test_gate_claim_consistency.lua` 抓到头注释里复述 `pullcad` 陷阱时写了**假 id 字面量**,
+     被读成两个新的 comment-only wired id ⇒ **在 `bots/` 里复述那条陷阱时不许带引号 id**。
+   - **⛔ JSON 规范形本轮上游变了,下轮改 `state.json` 先量再写**:`state.json` 现在是
+     `indent=2` **+ 末尾换行**,`queue.json` 仍是 `indent=1` **无**末尾换行。
+     **写盘前先断言「往返逐字节相同」** —— 不量就写会打出一个一万行的假 diff。
    - **⭐ 下一轮最该做的两件,按顺序**:
      1. ⭐ **主体继续放在 `bots/`**(P4.4 的完成定义是「连续一周 bots/ 提交占比 >30%」)。
         **现成的下一根杠杆已经量好了,不用再找**:同一个「ANY 开门 + 最近者中标」形状坐在
@@ -6675,6 +6685,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **闸**:`GATE_EXIT=0`(luacheck 0 warnings);新测试 15/15;两个被改文件 4/4、3/3;
     walk 普查 exit 0。开工自检 **exit 3,全部是既有 trunk 红**(python 4 / Lua 2,GH #751),
     **本轮清掉 1 条,净增 0**。⚠️ 动态全量(~100min,GH #124)**本轮没跑**。
+  push 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` / `lua gate: 339 ran, 0 findings,
+  0 uncertifiable, 12 known-red`,**没有用过 RULE6_BYPASS**。已发表 **GH #753**。
 - 2026-09-11T14:07Z(报告 `iterations/reports/hero/20260911T140701Z.md`;**backlog:新开 `-150`,
   `-149` 第 2 条做完并被推翻、第 1 条原样留着**;OWNER_PRIORITIES **P4.4 (ii)** —— 主体是
   一个判定完结所需的最后一块证据,**本轮没有 `bots/` 改动**;**P4.2 冻结期内不请求入集**)
