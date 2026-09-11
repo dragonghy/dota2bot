@@ -796,6 +796,24 @@
     "kind": "manual"
    },
    "done_when_note": "**裸读得出的验收句**:`grep -c 260910_124853 tests/frames/README.md` 从 **0** 变成非零。⛔ 「那四帧入集了所以不用登记」**不算** —— 登记册记的是暂存期的价钱,入集把它移走而不是抹掉它。"
+  },
+  {
+   "id": "gh736_throttle_anchor_unreadable",
+   "issue": "GH #736",
+   "ruling": "总监 RULING 12 §五(2026-09-11,档案 `iterations/streams/test_set.md §GQ`)——**登记,不动手,这是有意的保守默认。** 开工自检 python 腿:`gate (i) cannot read its own anchor on trunk` / `W64 machine 0 (seed 10890) has no launched_at` / `gate (i) DID NOT RUN. That is not a pass -- do not launch on it.`。逐条核过:`W64_wave.json` 四台机器全带 `launch_time` 而不带 `launched_at`;`W63_wave.json` 两个键都带;`tools/batch_test/soak/wave_throttle.py:160` 读的是后者。⭐ `launched_at` 在 `tools/` 里**没有任何写入者** —— 它是**手写字段,写的那一刻没有任何东西要求它**。⭐⭐ 已是一对互相矛盾的活指令:批测台 00:15Z 报告 ② 手算出「解锁 `06:21:17Z`」,而闸读不到那个锚点 ⇒ 下一轮它拿 `exit 2`,自己的报告却在叫它发波。⛔ 总监不动手的理由:(A) 补 W64 的记录 = 替别的台子重构它自己的发波证据;(B) 让闸读 `launch_time` 作后备 = 动一条**钱路径上**的安全闸,而总监没有那一侧的上下文。**会拒答的闸是安全的;被外人放宽的闸不是**(RULING 10 的 M8)。",
+   "ruled_at": "2026-09-11T01:xxZ",
+   "executor": "batch-desk(裁定并落地 (A) 或 (B),并回答 (C)「谁让它下次自己举手」)",
+   "trigger": "下一次跑闸 (i) 的轮次 —— ⚠️ **执行方与触发时机这次都特定**,因为批测台每轮都跑闸 (i);连着两轮没有读数 = 真的有问题",
+   "delivered_to": [
+    "GH #736(立案全文 + 建议的验收方式)",
+    "iterations/streams/test_set.md §GQ(RULING 12 §五)",
+    "iterations/reports/director/20260911T010856Z.md §五"
+   ],
+   "why_registered_here": "§DR:常驻义务,不属于任何一波、任何一个 id —— 它动的是**闸自己**。⭐ 而它与 GH #729(RULING 11)同族:那一次被裁方读的第四份东西是**工具的输出**,这一次是**工具读不到的一个字段**。两次的共同点是**写的那一侧一言不发,红由下一个开工的台子发现**(GH #624 的立案形状)。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "**裸读得出的验收句**:某一轮批测台报告里出现 `THROTTLE_EXIT=0` **且** `anchor wave : W64`(或之后的波),而不是 `UNCERTIFIABLE`;并写明选了 (A) 还是 (B)。⛔ **「这一轮没发波所以没跑闸」不算结清** —— 闸 (i) 每轮都跑,不发波也跑。⛔ **总监自己跑出来的读数不算结清**:本行买的正是「被裁方那一侧」(RULING 11 立案的那个缺陷,不要再犯一次)。"
   }
  ],
  "retired": [
