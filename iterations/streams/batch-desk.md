@@ -9640,6 +9640,107 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   ⑤ ⚠️ 开工第一条命令**重定向 + 后台 + 不设短 `timeout`**(第 13 次提醒)。
   详见 `iterations/reports/batch-desk/20260910T181400Z.md`。
 
+- 2026-09-11T00:15Z:**发波轮 W64 —— 九月第一次靠一条裁定过闸 (iii),四台 spot 全部起飞,泄漏零。**
+  **闸 (iii) 变绿不是因为 MTD 降了(它反而涨了 `$0.406`),是因为总监按 GH #721 裁了
+  `$85` 的 operative ceiling,而且这条裁定是闸自己从 `iterations/director_rulings.json`
+  读出来的(RULING 11)—— 本台一个 flag 都没传。** 逐字:`crossing registry: ruling
+  GH#721/director-20260910 IS IN FORCE (read from …, not from a flag). It is applied below.`
+  与 `WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes ONLY BECAUSE OF RULING
+  GH#721/director-20260910. The derived fence $80.00 was NOT met; the ceiling that was met is
+  $85.00, and it is a ruling with an expiry, not a reading.`
+  读数:`actual (MTD) $78.253` + `pending $1.100`(W63 末台 `12:18:45Z` 在 11.3h 滞后窗内)
+  + `planned $1.100` = `projected total $80.453` ≤ `operative ceiling $85.00`,
+  **`headroom $4.547 after this wave`**。**不跨任何新告警档**(`$80` 仍 `NOT yet crossed`;
+  `projected` 是投影不是 ActualSpend)⇒ **owner 本轮不会因这一波收到新告警邮件**。
+  时钟披露照抄:`WAVE_FENCE CLOCK : … anchored to snapshot instant ASSERTED by the operator
+  (--snapshot-instant) -- a claim, not a reading.`(`2026-09-10T19:46:38Z`,取自
+  `check_costs.sh` 的 `budget refreshed`)。
+  ⭐ **闸 (iii) 第一次运行按 RULING 6 打 `UNCERTIFIABLE (exit 2)`**(「什么都没在跑」≠ `pending=$0`,
+  因为 W63 落在滞后窗内),传 `--pending 1.10` 后才 `exit 0` ⇒ **一次跑清四根棒**:
+  `wave_fence_ruling6_first_live_read`、`gh721_crossing_ruling_first_live_read`、
+  `gh729_standing_ruling_registry`、`gh692_epoch_clock_first_live_read`。
+  **闸 (i)** `THROTTLE_EXIT=0`(锚点 W63 末台,`margin +21450s`),**并在发波脚本内部紧挨四条
+  `spot_run.sh` 之前重跑**(GH #469,绑动作不绑决定)`THROTTLE_AT_LAUNCH_EXIT=0` `margin +21728s`。
+  **闸 (iv)** `RECLAIM_EXIT=0` / `NEXT WAVE: spot`,发波前亲手跑在 W63 自己的记录上;
+  ⭐⭐ **GH #699 的物质性机制本轮第一次在活路径上救场**:W63 **四台全部**
+  `survival was not read`,旧条文下就是 `exit 2`,新条文把缺失字段当带名字的洞、16 个延拓点
+  一致 ⇒ 给出裁定并把归因打成**区间 `0..1`** 而非一个数 ⇒ 结清
+  `gh699_materiality_gate_first_live_read`。**区间就是代价**:W64 收割必须把 SIR
+  `CreateTime`/`UpdateTime` 写回 `machines[]`,否则 W65 的归因还是区间。
+  ⭐⭐⭐ **闸 (ii) 满足,但走的是第二肢,这一条要分开写**:`bots/` 自 W63 的钉 `cfa966e3`
+  以来有 **6 commit / 5 文件 / +345-2**,字面上第一肢成立,**但本台不拿它当理由** ——
+  新落的 5 个 id(`lionqfight`/`zusarcexec`/`anyhero`/`lvlany`/`tombhp`)与 37-id 臂串
+  **交集为空**,两条腿上都不 armed ⇒ 「树漂移 = 有新东西可测」在这里**是空的**。
+  实际成立的是**累计配对种子 7 < 8**(W62 四粒 + W63 三粒)。
+  ⭐⭐⭐ **并池可并,而 `tombhp` 那一半的理由在抽签池里不在 gate 里**:前四个 id 未 armed 时
+  helper 逐字返回原表达式(干净 no-op);**`tombhp` 不是 no-op** —— 它把
+  `IsSoakCandidate` 排在合取链中间,未 armed 时整个分支变死代码,而此前可达。
+  **它仍不断池**,因为外层守卫是 Undying 墓碑 modifier 而 **`undying` 不在
+  `hero_pool.txt`(41 英雄,`grep` rc=1,本轮重读未继承上一轮结论)** ⇒ 该分支两条腿都不可达。
+  **可达性可以由抽签池关闭,不是只能由 gate 关闭。** ⚠️ 这一半**完全依赖**那个未加断言的前提
+  (**GH #726**,连续第二轮当承重墙);Undying 进池的那天,该分支会同时变可达**并且**静默断池。
+  **两道门**:载体门 `CARRIER_EXIT=0`(**derived 不是手写**,`CARRIER_TERMS derived from 37
+  armed ids: 9 hero-scoped, 28 generic, 0 unresolved => 7 term(s)`)—— ⭐ **它本轮真的拦了一次**,
+  第一组候选 `10900-10903` **`exit 1`**(`odaoe term=obsidian_destroyer verdict=ABSENT`)才换的选种;
+  接线门 `WIRING_EXIT=0` `all 37 armed ids wired on HEAD`。
+  ⚠️ **预登记诚实边界**:四个 id 只吊在**一粒**种子上(`aimguard`←10892、`rotscope`←10900、
+  `zusboltdom`/`zusult`←10891)⇒ **那台被回收则这几个 id 本波读数归零而非变薄**。
+  **W64**:种子 `10890/10891/10892/10900`(程序化扫遍所有 `*_wave.json` 的 154 个互异用种,
+  最大 10889 ⇒ 四粒可证未用过),树钉 `34ea0edd`,`--slots 16 --rec-slots 8 --hours 2 --games 12`
+  (与 W39–W63 逐字节同;`--rec-slots 8` 显式传,W51 就是吃默认被杀的那波),
+  `--dry-run` 先行 `DRYRUN_EXIT=0` 且 **spot_run.sh 的波次预算闸没打 `REFUSED`**
+  ⇒ 未传也不需要 `--allow-short-watchdog`。**树核对是发波脚本第一条语句**
+  (`REMOTE_MAIN` == `PIN` == `34ea0edd…`,不等则 `exit 9`)。
+  ⚠️ **本轮有一次降级可报,不是四台直给**:us-west-2b `InsufficientInstanceCapacity
+  (reached max retries: 4)`,环内重瞄到 2c(`PLACEMENT MISMATCH requested=us-west-2b
+  actual=us-west-2c re-aimed=yes`),**阶梯第 1 级成功、无 `AZ RING EXHAUSTED`**
+  ⇒ 实际 **3 个互异 AZ 跑 4 台**(2c 两台)。⚠️ 按本台 W59 自己的发现,**AZ 分散不是种子间
+  对容量事件独立的证据**,这一行**不得用来关 GH #403**。市场证据是四台
+  `InstanceLifecycle=spot` 实读,**不是 run_id 的 `spot_` 前缀**(硬写字符串)。
+  **收割:本轮不欠**(W63 已由上一轮收割;S3 `validation/` 最新对象 `09-10T13:02:15Z` 即 W63 自己的。
+  ⚠️ `awsx s3 ls --recursive` **按 key 名排序不按时间**,要 `sort -k1,2` 才看得到真的最新)。
+  **queue.json 102 行,`pending` 42 条无一要求波次**;两条无 `director` 字段的
+  (`hero-55`/`hero-56`)逐条读过,**都自述零 EC2、不请求发波** ⇒ **§4a 无适用对象**,走 §4b。
+  **泄漏零**:`wave_fence.py` 的 accrual 腿(**全账号 17 region,region-complete**)发波后读到
+  **恰好 4 台**全是本波的 ⇒ **无第五台**;外来 `r7a`/`c7a` region 内 0 条;常驻仍只有 AMI
+  `ami-0a990a26d89c66547`。⛔ **GH #515/#528 立案理由一字未变**:仍是
+  `budget filters : none <- so every instance in the account does land in this budget, whoever owns it`,
+  四台也照旧 `project=(untagged)`。
+  **本轮支出**:一波(覆盖档 `$1.10`)+ CE `$0.01`(读数 `$78.253` ≥ `$35`,`check_costs.sh`
+  按章程自动复核,得 `78.2534452025` 吻合)。
+  ⚠️ **MTD 从上一轮 `$77.847` 涨到 `$78.253`(+`$0.406`),而本台上一轮零 EC2 支出**
+  —— 与 GH #721 立案的「MTD 里约 55% 不是本台花的」同向;本轮只登记增量,不重做归因。
+  ⚠️ **自检管道坑第 13 次**(连续十三轮同一位置、同为当轮第一条命令)——**又是工具拦的不是纪律拦的**
+  (`REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`);
+  改重定向+后台重跑拿到真码:**`SELFCHECK_EXIT=3`**、`legs run 11`、
+  **`UNCERTIFIABLE (exit 2): none`**、`FINDINGS (exit 3) : cadence queue-rulings
+  owed-executions a-evidence-owed trunk-red(python) trunk-red(lua)`。
+  **trunk 两条红**:python `120 passed, 2 failed, 3 uncertifiable`;lua `4 of 87`
+  (`test_focus_mana_cost_consumer_census.lua` `expected n=26 … got n=27`、
+  `test_lion_ult_reserve_domain.lua` `the tree now holds 7 rank-2 Finger instants … not 2`)。
+  ⭐ **两条都是「登记表形状」族**(GH #650/#705/#718/#585 同族:**语料多一份 fixture 就把写死
+  计数的断言顶红**,不是数据变了);⛔ 本会话 `bots/`/`game/`/`tests/` **一行未改** ⇒
+  **无一条红由本轮引入**;未做 `git stash` 复跑,故**不宣布「这是 main 的红」**;
+  #718 已收进一张单子 ⇒ **不开重复 issue**。
+  **铁律 11** 未触发任何 `requires approval`,**本轮没有任何等待**。
+  **交棒**:① ⭐⭐⭐ **下一轮本台 = 收割 W64**,四条必做已写进 `W64_wave.json:harvest_notes`
+  (趁 SIR 在读 `Status.Code`;⭐ **`CreateTime`/`UpdateTime` 也要写回**,否则闸 (iv) 还是区间;
+  `ab`/`ba`/`arm_depth` 回填**本文件**不只 verdict;走 `recover_verdict.py` 全量重算并照抄
+  `min_arm_depth`/`thin_arm_seeds`、被排除种子**仍点名**);② ⭐⭐ **三根棒在 W64 收割那轮到期**
+  (`gh696_winrate_measurable_first_live_read`、`overchase_new_body_first_reading`
+  ——`overchase` 本波 armed,**这是新函数体第一份波次读数**——、`gh454` 两条腿**不触发也要报**);
+  ③ ⭐⭐ **总监/owner —— 九月余量进个位数**,`$85` 之下最多约 4 波,而 GH #721 另两条路
+  (#528 那台机器去留、#515 给预算加 cost filter)**仍 open**;④ ⭐ **harness/总监 —— GH #726 仍 open**,
+  并池结论连续第二轮把「`undying` 不在池里」当承重墙;⑤ ⭐ **总监 —— 管道坑第 13 次**,
+  工具拦得住纪律拦不住,**这已不是提醒能解决的形状**;⑥ ⭐ 总监 —— trunk 两条红仍在,来源都不是本台。
+  **下一轮本台**:① **收割轮**(W64 起飞 `00:21Z` + 2h 看门狗 ⇒ 约 `02:30Z` 后数据齐);
+  ② 闸 (i) 锚点 = W64 末台 `2026-09-11T00:21:17Z` ⇒ **解锁 `06:21:17Z`**
+  (**读工具打的那一行不要自己算**);③ ⚠️ **开工第一条命令重定向+后台+不设短 `timeout`**(第 14 次);
+  ④ 围栏/闸/成本**一律当轮现跑**,本条所有数字作废。
+  详见 `iterations/reports/batch-desk/20260911T001500Z.md` 与
+  `iterations/reports/batch-desk/waves/W64_wave.json`。
+
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
