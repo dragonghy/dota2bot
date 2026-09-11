@@ -8212,7 +8212,7 @@
     "tests": "tests/test_cm_w_teamfight_clock.lua(12 例全绿):§1 语料供给(下界 + 结论单列)、§2 量具先于读数(pin 帧真的带时钟与团战、环里真有合法目标)、§2.1 两个阈值从源码读不重打、§3.1 两腿、§3.2 turbo-only、§3.3/§3.4 两个域各自成断言、§4 全语料方向(真超集)、§5.1/§5.2 对出货函数的两句主张(普查口径 + 无蓝量储备)、§6.1/§6.2 闸纪律与调用点唯一。",
     "also_this_round": "(1) **清一条 trunk 红**:tests/test_cm_w_lane_band.lua 的三个 `== N` 语料规模钉改**下界**(nLive 53→**70**、band 3→**5**、in-gate 13→**20**)—— ⛔ **它红了三轮,红的内容是它自己的域正在变大**,`== N` 让好消息和坏消息长得一模一样;结论另起 `nWithBand >= 1`,计数从测试名里删掉(-152 第四条)。连带 **amnesty 退场**:tools/agent/lua_gate_manifest.json 的 known_red + known_red_cases 各退一条(**4 行删除**),⚠️ **没跑全量 lua_gate_measure.py**,理由是范围 —— 全量会用本容器秒数重写另外 415 条、按本容器红绿重算**别组**基线。(2) **本轮改动自己造成的一条红,已重锚**:tests/test_ckpush_minute_unit.lua 的 `N*60` 普查 127→**126** —— ⭐ **站点不是被删了,是被具名了**(`DotaTime() > 6 * 60` → `DotaTime() > X.nWTeamfightClockShipped`,常数仍是 6*60,只是不在这个 pattern 看得见的一行上)。已把「掉数在构造上是歧义的:要么少了一道闸,要么多了一个名字」写进断言旁,和该文件 `* 30` 那半已有的同类记录并列。",
     "verification": "未核验(未 armed,turbo-only,出货默认不变)。执行核验要靠 queue.json hero-61 的波次。",
-    "published": "GH issue 待发(本轮 MCP 若被权限挡住则按铁律 11 写进报告,下轮补)。",
+    "published": "GH #758(claim_precheck.sh 先跑过:6 条路径引用 + 1 个 state.json 键全部在 origin/main 上解析得到,本地领先 0 个 commit)。",
     "iron_rule_6": "GATE_EXIT=0(luacheck bots game 0 warnings)/ py gate: EXIT=0 84 ran, 0 findings, 0 uncertifiable / lua gate: EXIT=0 341 ran, 0 findings, 0 uncertifiable, 10 known-red, 369.8s。未用过 RULE6_BYPASS。动态全量(~100min,GH #124)本轮未跑。",
     "tokens": "见报告末节。"
   }
