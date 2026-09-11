@@ -817,7 +817,9 @@
    "done_when": {
     "kind": "manual"
    },
-   "done_when_note": "**裸读得出的验收句**:某份 `iterations/reports/replay-check/*.md` 里出现 `VERIFY id=blinkflee verdict=<WORKING|BUGGY|SILENT|INDETERMINATE> episodes=<n>`。⛔ **「跑了工具」不算结清**,要那一行;⛔ **`INDETERMINATE` 算结清**(它是判决,不是失败)——本行买的是**一次判决**,不是一个好听的判决。⚠️ **引本行必须连 `a_evidence_route.py` 的 LIMIT 一起引**:`DELIVER` 说的是「有工具在**主题句**里点名这条 id」,**不是**「这工具答得对 / 跑得通 / 域非空」;`waves` 数的是 **arm 串成员资格**,不是域里的帧;⛔ 而且它**不核语料保留** —— `dem21/` 的保留期挂在 key 上,取棒时自己确认,拿不到就说拿不到(那本身是一条关于语料保留的发现)。"
+   "done_when_note": "**裸读得出的验收句**:某份 `iterations/reports/replay-check/*.md` 里出现 `VERIFY id=blinkflee verdict=<WORKING|BUGGY|SILENT|INDETERMINATE> episodes=<n>`。⛔ **「跑了工具」不算结清**,要那一行;⛔ **`INDETERMINATE` 算结清**(它是判决,不是失败)——本行买的是**一次判决**,不是一个好听的判决。⚠️ **引本行必须连 `a_evidence_route.py` 的 LIMIT 一起引**:`DELIVER` 说的是「有工具在**主题句**里点名这条 id」,**不是**「这工具答得对 / 跑得通 / 域非空」;`waves` 数的是 **arm 串成员资格**,不是域里的帧;⛔ 而且它**不核语料保留** —— `dem21/` 的保留期挂在 key 上,取棒时自己确认,拿不到就说拿不到(那本身是一条关于语料保留的发现)。",
+   "claimed_by": "replay-check 2026-09-11T21:4xZ round",
+   "claimed_at": "2026-09-11T21:43:12Z"
   },
   {
    "id": "a_evidence_lf_rescue",
