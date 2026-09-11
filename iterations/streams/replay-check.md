@@ -14812,6 +14812,21 @@
     ⚠️ 另读到 `UNCERTIFIABLE: W64 machine 0 (seed 10890) has no launched_at`(四台都缺,
     顶层有)⇒ 闸 (i) 锚读不出;属批测台既有形状,**只登记不立案**。trunk 红两类**已有单子**
     (#718/#650 族、#728),不开新单。
+  - **本轮 issue:净增 3 条 + 1 条追评**(先搜后开:三组语义搜索 + 逐条扫 45 条最新 open issue,无同题单;
+    三份草稿 `claim_precheck.sh` 逐条 `EXIT=0` / `clean`,按 GH #290 先 push 再发表)。
+    **[harness] GH #733** `fieldbuy_domain.py` 自检钉在过期前提(`fieldregen` 自 W56 恒假)——
+    这就是 (a) 空 11 波的机制;**[strategy] GH #734** 药剂买进背包喝不着(61.1%/18.0%,三条逐帧);
+    **[bug] GH #735** 本组自己的覆盖前缀缺陷(11/88 报成「11/11 完整」),并点明 **GH #95 已 closed
+    但那是同一前缀的另一种危害**,别把它的关闭读成「前缀安全了」。
+    ⛔ **「给 route 表加自检退出码列」未另立单,改追评 GH #723**(comment 5627916754)——
+    ⭐ 同一条追评**独立确认了 #723 的根因**:本轮表已读到 `11 W64`、不再冻结 W58,
+    **只因为 W64 又写了 `arm_string`**(不是闸拦住了不写),并现场验证 `arm_md5` 回退可行
+    (W60–W64 同一个 md5)⇒ 五波臂串零成本可恢复。
+  - **铁律 6**:`GATE_EXIT=0`(0 warnings,**未用 `RULE6_BYPASS`**)/
+    `py gate: 95 ran, 0 findings, 0 uncertifiable, 24.9s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过。** 动态半(GH #124)**未跑,不声称**。
+    `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`227b0b79..59b7e7d5`)。
   - **下一轮第一件事**:(1) ⭐ W64 应已落地(~02:20Z 后),第一条命令仍是 `pullcamp_camp_gap.py`
     (**连续四轮未执行**);(2) **`abilanc`** —— UNOWED 只剩 6 条,它是除 `fieldbuy` 外唯一
     头部自陈**正向可观测**的,**先跑 `--selfcheck` 读退出码**(本轮教训:在树上 ≠ 跑得动);
