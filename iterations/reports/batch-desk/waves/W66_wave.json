@@ -1,0 +1,226 @@
+{
+ "wave": "W66",
+ "_note": "Third consecutive NEW FAMILY at depth 0. W65 flew the 34-id string; the director promoted `liondrainstop`+`tpdeathbuy` (10:37Z, 34->32) and then `zusult`+`zusboltdom` as one atom (32->30). W66 flies the 30-id string, so it pools with NOTHING: not with W65 (34), not with W62+W63+W64 (37). The harvest round must not write it up as added depth on any existing family.",
+ "market": "spot",
+ "market_source": "gate (iv) `reclaim_blind.py --wave-json .../W65_wave.json` => RECLAIM_BLIND_EXIT=0, verbatim `VERDICT: not blinded -- the wave delivered 4 paired seed(s).` and `NEXT WAVE: spot (the default; GH #158 unchanged).`",
+ "gate_iv_input_repair": "Gate (iv) first ran UNDECIDABLE (exit 2): `seed 10926: missing leg count 'ab'`. W65_wave.json carried no `status_code`/`ab`/`ba`. This round backfilled those four rows (see W65_wave.json:gate_iv_backfill_20260911T15xxZ) and re-ran: exit 0. NOTE THE SOURCE SPLIT: ab/ba/arm_depth were machine-read from W65_verdict.json; status_code/survival_min were TRANSCRIBED from the 12:07Z report because `describe-spot-instance-requests` account-wide now returns ZERO rows -- W65's SIRs have aged out of the API ~5h after they closed.",
+ "ref_pin": "f663570a2e987f7d202886ccf180a36477a9c8c8",
+ "tree_invariants_pinned": {
+  "bots_tree": "49d1703d2a61a935498f47e7cbd80f612c1bc290",
+  "game_tree": "f13b532c00e48f76ee4cabef97f85149bdc06ac8",
+  "arm_md5": "7d4c638dab526c68d9404526a3195663",
+  "why": "same widening W65 registered: main moves every few minutes under six streams and an iterations/-only commit must not abort a fully-gated wave; a bots/ change between launches still would."
+ },
+ "arm_ids": 30,
+ "arm_bytes": 266,
+ "arm_md5": "7d4c638dab526c68d9404526a3195663",
+ "arm_source": "`git show origin/main:iterations/streams/test_set.md | sed -n '2p'`, recomputed this round.",
+ "seeds": [
+  11106,
+  11190,
+  11240,
+  11395
+ ],
+ "seed_selection_note": "Window [11090,11490). Used set = the 277 seeds with banked S3 corpus in `iterations/data/seed_roster_index.json` (rebuilt this round, ROSTER_BUILD_EXIT=0) UNION every seed named in any *_wave.json = 291; 400 of the 400 window seeds were free. Rosters for all 400 were expanded with seed_draft.draft() and the slate chosen to MAXIMISE the minimum carriers per term (same objective W65 used), not by walking to the first block that passes.",
+ "carrier_redundancy": {
+  "spirit_breaker": 3,
+  "crystal_maiden": 3,
+  "lion": 3,
+  "obsidian_destroyer": 2,
+  "pudge": 2,
+  "skeleton_king": 3,
+  "min_carriers_per_term": 2,
+  "what_it_does_NOT_buy": "It does not make the four seeds independent against capacity events (desk's own W59 finding); it only means one reclaim degrades a hero-scoped term to a thin reading instead of to nothing."
+ },
+ "arm_string": "tpcommit,lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart",
+ "gate_ii_reading": "LEG 1 HOLDS -- the arm string changed. W65 flew 34 ids / 309 bytes / md5 7be691dcd2c2fd1ee73a630274007044; origin/main now reads 30 ids / 266 bytes / md5 7d4c638dab526c68d9404526a3195663, recomputed this round. Two director promote atoms did it: `liondrainstop`+`tpdeathbuy` (10:37:01Z, 34->32) and `zusult`+`zusboltdom` as ONE atom (commit 2a82d6b, 32->30). Leg 2 (tree drift) was not needed and is not claimed.",
+ "pooling_claim": "NONE. W66 is the first and so far only wave of the 30-id string => family depth 0 (4 seeds if all pair). It does NOT pool with W65 (34-id, depth 4) nor with W62+W63+W64 (37-id, depth 7/329 games). THIS IS THE THIRD CONSECUTIVE NEW FAMILY: the string has moved on every wave since W62, so the desk has been buying depth-0 readings three waves running. Registered for the director, not adjudicated here.",
+ "seed_rosters": {
+  "11106": [
+   "axe",
+   "crystal_maiden",
+   "dragon_knight",
+   "lion",
+   "nevermore",
+   "silencer",
+   "skeleton_king",
+   "slardar",
+   "spirit_breaker",
+   "vengefulspirit"
+  ],
+  "11190": [
+   "crystal_maiden",
+   "lina",
+   "luna",
+   "medusa",
+   "necrolyte",
+   "pudge",
+   "shadow_shaman",
+   "skeleton_king",
+   "spirit_breaker",
+   "viper"
+  ],
+  "11240": [
+   "crystal_maiden",
+   "dragon_knight",
+   "drow_ranger",
+   "lich",
+   "lion",
+   "obsidian_destroyer",
+   "ogre_magi",
+   "skeleton_king",
+   "tidehunter",
+   "viper"
+  ],
+  "11395": [
+   "bristleback",
+   "centaur",
+   "dragon_knight",
+   "ember_spirit",
+   "jakiro",
+   "lion",
+   "obsidian_destroyer",
+   "pudge",
+   "sniper",
+   "spirit_breaker"
+  ]
+ },
+ "carrier_gate": "python3 tools/batch_test/soak/seed_draft.py 11106 11190 11240 11395 --assert-carrier-from-arm \"$ARM\" => CARRIER_EXIT=0 (read bare, not through a pipe), verbatim `CARRIER_TERMS derived from 30 armed ids: 6 hero-scoped, 24 generic, 0 unresolved => 6 term(s)` and `CARRIER_GATE ids=6 seeds=4 exit=0`. All six terms PARTIAL (2 or 3 carriers of 4), none ABSENT. Terms derived from the arm string, not hand-typed (GH #276).",
+ "wiring_gate": "python3 tools/batch_test/check_armed_wiring.py --cand \"$ARM\" => WIRING_EXIT=0, verbatim `all 30 armed ids wired on HEAD`. Read bare.",
+ "acquisition_config_note": "`--count 1 --az <az> --slots 16 --rec-slots 8 --hours 2 --validate \"<ARM> <seed> --games 12\"`, one spot_run.sh call per seed -- byte-identical config to W39-W65. `--rec-slots 8` passed EXPLICITLY (the default is 1; W51 died on that default). A --dry-run ran first, DRYRUN_EXIT=0, plan line `plan: 1 x SPOT c6i.4xlarge`. No in-script wave-budget REFUSED line => --allow-short-watchdog NOT needed and NOT passed.",
+ "gates": {
+  "i_throttle": {
+   "exit_at_decision": 3,
+   "exit_at_launch": 0,
+   "verbatim_at_launch": "anchor wave : W65 (4 machine(s)) / unlock : 2026-09-11T15:23:44Z / margin : +22s past unlock / WAVE_THROTTLE: UNLOCKED (exit 0)",
+   "note": "The round's FIRST throttle read (15:15:16Z) was THROTTLED by 8m28s. The gate was re-run as the last command before the first spot_run.sh call, inside the launch script, and only then did the loop proceed -- the gate binds the action, not the decision."
+  },
+  "ii_new_thing": {
+   "verdict": "NEW (leg 1: arm string 34 -> 30)"
+  },
+  "iii_fence": {
+   "exit": 0,
+   "verbatim": "WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes on the fence DERIVED THIS RUN ($100.00); ruling GH#721/director-20260910 was carried but NOT needed for this wave. Do not copy $100.00 forward; re-run the tool.",
+   "actual_mtd": 80.413,
+   "pending": 2.35,
+   "planned": 1.1,
+   "projected": 83.863,
+   "fence": 100.0,
+   "brake": 90.0,
+   "operative_ceiling": 85.0,
+   "headroom_after_this_wave": 1.137,
+   "director_crossing_verbatim": "DIRECTOR CROSSING: ceiling $85.00 by ruling GH#721/director-20260910, expires 2026-09-30T23:59:00+00:00",
+   "accrual_scope": "17 region(s) read [ap-northeast-1, ap-northeast-2, ap-northeast-3, ap-south-1, ap-southeast-1, ap-southeast-2 +11 more]  <- COMPLETE: every region this account has enabled",
+   "accrual_check": "CERTIFIED ZERO (0 accruing instances account-wide), but --pending $2.350 was given and is used as the larger claim.",
+   "budget_filters": "none",
+   "no_skips": "--no-accrual-check NOT used (no SKIPPED line); --director-crossing NOT passed (the registry ruling was read from iterations/director_rulings.json by the tool itself)."
+  },
+  "iv_reclaim_blind": {
+   "exit": 0,
+   "verbatim": "VERDICT: not blinded -- the wave delivered 4 paired seed(s). / NEXT WAVE: spot (the default; GH #158 unchanged).",
+   "input_repair": "see gate_iv_input_repair above -- the gate was UNDECIDABLE until W65_wave.json was backfilled this round."
+  }
+ },
+ "pending_arithmetic": {
+  "value_passed": 2.35,
+  "W65": 1.1,
+  "W64_rerun": 1.25,
+  "cutoff": "2026-09-11T02:31:53Z (= budget snapshot 2026-09-11T13:49:53Z - 11.3h lag)",
+  "why_the_rerun_term_is_hand_added": "The tool printed `must cover : 1 wave(s) listed above (W65).` and named ONLY W65. The two on-demand rerun machines of W64 launched 2026-09-11T03:19:5xZ, i.e. after the cutoff, and cost real money, but the census reads `machines[]` and not `rerun[]` so it structurally cannot name them (GH #742). Covered anyway at the larger self-reported $1.25, per GH #498. FAILURE DIRECTION: an operator who covers exactly the waves the tool names under-reports by $1.25 here.",
+  "W64_main_wave_excluded_and_why": "W64's four spot machines went up 2026-09-11T00:2xZ, BEFORE the cutoff => already in MTD => not double-counted."
+ },
+ "cost": {
+  "single_wave_constant_used": 1.1,
+  "constant_authority": "GH #454 director re-ruling 2026-09-06T07:xxZ, charter step 2 (甲). $0.90 superseded; ~$1.02 is W46's measured supremum and is NOT a constant.",
+  "this_round_other_spend": "$0.01 -- one Cost Explorer request, spent automatically by check_costs.sh because the budgets reading ($80.413) is >= COST_CONFIRM_AT ($35). CE confirmed 80.4127597815, digit-for-digit.",
+  "gh454_recheck_legs": "For the HARVEST round: (乙1) billing-side single-wave cost > $1.10; (乙2) mean machine-hours of SELF-TERMINATING machines (SIR Status.Code=instance-terminated-by-user) > 1.00 h/machine, capacity-reclaimed machines excluded.",
+  "gh454_sir_readability_warning": "The harvest round may not be able to compute either leg from SIRs: `describe-spot-instance-requests` account-wide returned ZERO rows this round (SIR_EXIT=0, empty), i.e. W65's requests aged out ~5h after closing. Read the SIRs for THIS wave EARLY."
+ },
+ "az_spread": "THREE distinct AZs over four machines -- 2a / 2c / 2c / 2d. Requested 2a/2b/2c/2d; the 2b request hit `InsufficientInstanceCapacity` (max retries 4) and the script RE-AIMED INSIDE THE RING to us-west-2c, verbatim `! dota2bot-soak-spot-1: re-aiming inside the ring -> us-west-2c` plus `! PLACEMENT MISMATCH requested=us-west-2b actual=us-west-2c re-aimed=yes`. This is GH #256's re-aim line, NOT `AZ RING EXHAUSTED`, so it is not a market downgrade -- the wave is 4/4 spot. ⚠️ WAVE-LEVEL EXPOSURE, and it is the exact shape the desk registered on W64: re-aiming silently removes one level of AZ spread, and on W64 the two machines that ended up sharing us-west-2c were taken by the SAME capacity event in the SAME second. Seeds 11190 and 11240 are now that pair.",
+ "launch_window": "EC2-side LaunchTime 2026-09-11T15:24:30Z .. 15:24:58Z = 28s spread (the 2b capacity retries widened it; W65 was 9s).",
+ "market_verified": "`describe-instances` read back InstanceLifecycle = `spot` on all four (the run_id `spot_` prefix is not evidence; the lifecycle field is). Four distinct `soak-run` tag values, checked pairwise.",
+ "machines": [
+  {
+   "seed": 11106,
+   "instance_id": "i-05332647bf9030117",
+   "run_id": "spot_20260911_152427_1_main_c04406",
+   "az_requested": "us-west-2a",
+   "az_actual": "us-west-2a",
+   "re_aimed": false,
+   "lifecycle": "spot",
+   "market": "spot",
+   "launch_time": "2026-09-11T15:24:30.000Z",
+   "launched_at": "2026-09-11T15:24:30.000Z",
+   "carries_terms": [
+    "crystal_maiden",
+    "lion",
+    "skeleton_king",
+    "spirit_breaker"
+   ]
+  },
+  {
+   "seed": 11190,
+   "instance_id": "i-07182e2c2d41cd5a5",
+   "run_id": "spot_20260911_152433_1_main_1cda68",
+   "az_requested": "us-west-2b",
+   "az_actual": "us-west-2c",
+   "re_aimed": true,
+   "lifecycle": "spot",
+   "market": "spot",
+   "launch_time": "2026-09-11T15:24:47.000Z",
+   "launched_at": "2026-09-11T15:24:47.000Z",
+   "carries_terms": [
+    "crystal_maiden",
+    "pudge",
+    "skeleton_king",
+    "spirit_breaker"
+   ]
+  },
+  {
+   "seed": 11240,
+   "instance_id": "i-05b2b7621902b16b0",
+   "run_id": "spot_20260911_152451_1_main_e827de",
+   "az_requested": "us-west-2c",
+   "az_actual": "us-west-2c",
+   "re_aimed": false,
+   "lifecycle": "spot",
+   "market": "spot",
+   "launch_time": "2026-09-11T15:24:53.000Z",
+   "launched_at": "2026-09-11T15:24:53.000Z",
+   "carries_terms": [
+    "crystal_maiden",
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king"
+   ]
+  },
+  {
+   "seed": 11395,
+   "instance_id": "i-0fa41a7e767d61299",
+   "run_id": "spot_20260911_152456_1_main_8d8c4b",
+   "az_requested": "us-west-2d",
+   "az_actual": "us-west-2d",
+   "re_aimed": false,
+   "lifecycle": "spot",
+   "market": "spot",
+   "launch_time": "2026-09-11T15:24:58.000Z",
+   "launched_at": "2026-09-11T15:24:58.000Z",
+   "carries_terms": [
+    "lion",
+    "obsidian_destroyer",
+    "pudge",
+    "spirit_breaker"
+   ]
+  }
+ ],
+ "expected_games": "~96 scored (4 seeds x 12 games x 2 legs), REGISTERED FOR COMPARABILITY ONLY -- actual yield has run far off this number on every recent wave (W62 203, W63 126, W64 198, W65 198) and must NOT be the denominator of an under-delivery claim at harvest.",
+ "leak_check_at_launch": "Pre-launch: `check_costs.sh --leak-only` => zero running/pending, and a second path with NO state filter (everything but `terminated`) => also empty. Post-launch: exactly these four and no fifth, on both paths. Standing cost remains only AMI ami-0a990a26d89c66547. Account-wide zero for the pre-launch instant is additionally bought by gate (iii): `accrual scope : 17 region(s) read <- COMPLETE` + `CERTIFIED ZERO (0 accruing instances account-wide)`.",
+ "next_gate_i_anchor": "last machine up 2026-09-11T15:24:58Z => nominal unlock 2026-09-11T21:24:58Z. DO NOT COPY: run wave_throttle.py.",
+ "harvest_obligations": [
+  "Harvest with recover_verdict.py from S3, downloading each of the four run prefixes into ITS OWN directory (GH #225) -- never `cp` flat.",
+  "Feed the arm string from THIS record (`arm_string`, 30 ids / md5 7d4c638dab526c68d9404526a3195663), not from the live tree: the director promotes twice in a day now.",
+  "Read this wave's SIRs EARLY -- see cost.gh454_sir_readability_warning.",
+  "Do not pool with W65 or with W62+W63+W64.",
+  "Report `winrate_channel` and `mean.winrate_headroom` verbatim (GH #352 / §CT); the channel has read DEGENERATE for six waves running."
+ ]
+}
