@@ -15077,3 +15077,94 @@
     ⇒ 重试 `PUSH_MAIN_EXIT=0`(`29e17689..215eeda8`)。
   - token:`TOKENS total_in=11,494,356 out=71,881 turns=84`
   - 完整报告:`iterations/reports/replay-check/20260911T101534Z.md`
+- **2026-09-11T12:1x–12:5xZ(本轮):`abilanc` 第二份 (a) 读数 = **SILENT**;
+  而本轮真正的产出是「同一份语料,三种读法给出三个判决,只有第三个对」。**
+  交棒单第 (1) 条(W65 收割后并进来)**本轮兑现**,但**归属问题的答案让「并池」变成不必要的** ——
+  W65 自己 85 局就把判决买下来了。
+  **宽扫 85/85 局**(W65 四个 run:18+26+23+18,`sweep_complete.json` 逐个 `unparseable 0`,
+  暖场 skipped 24,四个 `SWEEP_EXIT=0`);**深查逐帧 6 局**(章程下限达标)。
+  ```
+  VERIFY id=abilanc verdict=SILENT episodes=122
+  ```
+  - **仪器先自检**:`abilanc_domain.py --selfcheck` **ALL PASS / `ABILANC_SELFCHECK_EXIT=0`**,
+    `--source` `SRC_EXIT=0`(门逐字 `GetLevel() < ANCIENT_MIN_LEVEL(=12)`、**无下界**、16 个 guarded 文件、1 个 opt-out)。
+  - ⭐ **铁律 4a(归属)本轮从源码买到了答案,而且是「不相交」不是「可比」**:
+    37→34 的差集**只有** `pullcamp` / `pulldrag` / `tbearly`(单向,W65 ⊂ W64)。
+    `pullcamp` 有硬时间窗 `jmz_func.lua:10817` 逐字 `if nNow < 60 or nNow > 6*60 then return nil end`
+    且 `:10809` 只对辅助生效;`pulldrag` **只能经 `ShouldPullNeutralCamp` 到达**(`:11195-11196` 逐字)
+    ⇒ **结构性继承同一时间窗**;`tbearly` 的 armed 域是**测度零**(GH #740/RULING 13 已钉在 trunk 注释里)。
+    **而 `abilanc` 的域在本语料里最早出现在 t=680.9s** ⇒ **360s 关窗、680.9s 开局,空 320 秒。**
+    ⚠️ **只排除了直接路由,不排除「间接经由早期经济改变升级时间线」**;本轮用不上这条豁免,**不写成一般裁定**。
+  - ⭐⭐⭐ **头号:GH #747 预言的凭空指控,一轮之后实测发生了 —— 而 #747 §5 的「最省修法」照字面实现会修反。**
+    仪器机器可读行打 **`BUGGY-SUSPECT`(armed 4 / baseline 2)**。
+    **六发 under-tier 施法一发都够不到被门的选择器,两条腿都是**:
+    armed = skywrath×2 + zuus×2,**baseline = spirit_breaker×1 + skywrath×1**;
+    `grep -c GetMostHpUnit bots/BotLib/hero_{skywrath_mage,zuus,spirit_breaker}.lua` **三个各 0**
+    (文件都存在,已 `ls` 确认),共享文件唯一站点 `ability_item_usage_generic.lua:7840` 在
+    `ConsiderItemDesire["item_iron_talon"]` 里(**ITEM 不是 ABILITY**)。
+    | 读法 | a/b | 判决 | |
+    |---|---|---|---|
+    | 原始计数(仪器当前) | 4/2 | `BUGGY-SUSPECT` | ❌ 凭空指控 |
+    | **只扣 armed**(#747 §2 只展示了这一列) | 0/2 | `WORKING` | ❌ **凭空无罪** |
+    | 两腿都扣 + episode 分母 | **0/0** | **`SILENT`** | ✅ |
+    ⇒ **本轮对 #747 的实质加强**:#747 §5 第 2 条字面是对的,但它的**实测证据只有 armed 一列**
+    (仪器的 `residual` 节**只为 armed 腿打印**),照那一节实现就会只扣 armed。**已追评,不另开单。**
+    ⭐ **第二条独立否决**:原始域**六发全在 radiant 一层**(dire 0/0),仪器自己打了
+    `one layer flat`,**却仍从单层池化计数发判决** ⇒ 即便可达性那半不存在,这行也过不了铁律 4(i-b)。
+  - ⭐ **承重帧(四个替代解释全出局):`399269/20260911_094826_slot5` armed luna**,
+    `luna_lucent_beam` 技能等级 4:t=682.4→686.4 **五帧 lvl 11、钉在离营地 127u、`cd` 逐帧全 0、
+    `mp_pct` 0.862–0.873 而实测一发耗蓝 0.151(够放五次)、`hp_pct` 0.96→0.83 一路在掉**
+    ⇒ 冷却/蓝量/技能等级/没在打这个营地**全部出局**;**t=687.4 升 12、人没动,t=689.4 就放了**。
+    而 `hero_luna.lua:306` 的 `J.GetMostHpUnit` 在 `X.ConsiderLucentBeam()` 打野分支里,
+    **该分支唯一的 level 引用是 `nAbilityLevel = LucentBeam:GetLevel()`(技能等级,不是英雄等级)**
+    ⇒ 这条通路上随英雄等级改变行为的只有 `abilanc` 的门。
+  - ⛔⭐ **但它判不了 WORKING,拦住这一步的是本轮补的分母** —— 帧塌成 episode 后
+    **armed 67 个 / baseline 55 个** fed-hero under-tier 营地 episode,**两条腿各 0 发施法**
+    ⇒ 那一次「不放」**完整落在对照腿自己的 55/55 不放率里**。
+    全语料**只有这一个** episode 在结束后 30s 内跟上远古施法(**+3.0s**,armed)—— **n=1,不写成结论**。
+    **这是 `zusult` / #739「4/20 是域大小不是缺陷计数」族的第四次复发,这次踩在「触发级证据」侧:
+    铁律 4a 说 (a) 按触发级逐帧买,但「逐帧买」≠「一帧就够」,对照腿基率仍是必须先付的账。
+    本轮它是在写进报告之前被拦下的,不是事后更正的。**
+  - ⭐ **为什么买不到差分(给 #196 的数)**:被门的 13 个英雄里 W65 出场 luna/sven/skeleton_king/ogre_magi
+    (**axe 不在本波任何一局**),它们在远古上 **72 发施法、under-tier 恰好 0 发**,
+    且**每英雄每腿最低等级的那一发**最小值恰好是 **12**(luna,两条腿)—— 门槛 `<12`,**12 是第一个被放行的等级**。
+    ⇒ **GH #196 §4 预登记的「10-11 是滑过去的窗口」第二次变成数,这次是位置+等级同时。已追评。**
+    ⚠️ **上一轮「再要 4 个 armed episode ≈ 113 局 ≈ 一波」被本轮语料证伪前提**:它算的是 armed **cast** 产出率,
+    本轮 85 局的 armed 可达 under-tier cast 是 **0** 不是外推的 ~3
+    ⇒ **`abilanc` 不是「差一波语料」,是它的可观测量在当前阵容分布下接近不出现。**
+  - ⚠️ **本轮自造并当场抓住的量具缺陷(§4.1)**:自写的 `deep_frames.py` 第一版按名字过滤
+    `tl['snapshots']`,**把幻象一起收了**;**露馅的是一个不可能的读数** —— baseline luna
+    `lvl[12,10]` / `lvl[18,10]`(**等级在相邻样本间下降**)。换成 `entities.frames_by_hero`
+    的 CLEAN 表后每局帧数从 5503/8949 回到 **1632/1639**,那两发假 UNDER 消失。
+    ⭐ **`illureal` 正 armed 在这一波,幻象不是边角情况。**
+    ⛔ **仪器本身没有这个问题**(它的曝光循环走 `clean`)⇒ §三的计数不受影响。
+    **教训写进下一轮第一件事第 6 条:自写帧读件第一件事拿 CLEAN 表,并主动去找不可能的读数。**
+  - **铁律 4(i)**:(i-a) 两层读数都登记(原始 `rad 4/2`、`dire 0/0`;可达两层 `0/0`;episode 67/55);
+    (i-b) 域计数未消侧偏且**六发全在单层** ⇒ 只支持「门在执行路径上」,不支持好坏判读;
+    (i-c)/(i-d) **本轮没有任何并池加权**。
+    ⛔ 反向护栏 (甲)(#196 §4 明令不许省)**连续两波读不出来**:`rad +0.426 / dire −1.579` ⇒ OPPOSED,
+    按 (i-b) 是噪声;**「连续两波不可满足」本身已交回 #196**。护栏 (乙) 完好:
+    hero→ancient DAMAGE `armed 8850 / baseline 8572`(**1.032,没塌**)。
+  - **树上改动**:**`bots`/`game`/`tools`/`tests` 一行未改**(两个探针全落 scratchpad)。
+  - **AWS**:只读 S3(4 次 `sweep_run.sh` 列举 + 109 `.dem` + dumper 缓存命中),**零支出**。
+  - **本轮 issue:净增 0 条 + 2 条追评**(先搜后开,两组语义检索 0 命中新题;
+    #747 与 #196 问的正是本轮两件事 ⇒ **一张新单都不开**)。
+  - **自检**:`selfcheck worst exit: 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` /
+    `UNCERTIFIABLE (exit 2): none` / `NOT RUN (inside a leg): tests/test_selfcheck_lua_leg.py`
+    —— **这一条本轮没人看过,不是通过。**
+    ⚠️ **开工第一条命令第 19 次撞管道拒绝门**,当场改重定向;⚠️ 第一次重定向**又套了外层
+    `timeout 400` 被砍(`EXIT=124`)**,去掉外层 timeout 才跑完 —— **124 同样不是通过**。
+    trunk 红 7 个(python 4 / Lua 3),`git status --porcelain` 只有本报告 ⇒ **不是本轮增量**;
+    `test_detector_source_constants.py`=**GH #694**、`test_carrier_terms.py`=**GH #636**(本轮现查),
+    另两条 python **如实记为「未核对到单号」而不是猜成 #650 族**(GH #267 那次 22 小时手工归属的教训);
+    Lua 三条**都是 census 形状 ⇒ GH #624 族,不另开单**。
+  - **下一轮第一件事**:(1) ⭐ **`abilanc` 不要再买到阵容里没有 axe 的波上** —— 先读下一波 draft,
+    13 个 guarded 英雄里有没有 core 在;没有就**不重跑它**,把轮次让给别的 UNOWED id;
+    (2) **`aimguard` 等其余 UNOWED**(`abilanc` 读 SILENT,**UNOWED 计数不减**),**先跑 `--selfcheck` 读退出码**;
+    (3) 盯 GH #747 / #196(均本轮追评)/ #744 / #736;
+    (4) ⛔ 覆盖行只引用 `sweep_complete.json`;(5) ⭐ sweep 一律把 `out_dir` 指到 scratchpad;
+    (6) ⚠️ **自写帧读件第一件事拿 CLEAN 表**,并主动去找不可能的读数(等级下降、hp 反弹)。
+  - **铁律 6**:(见报告 §九)
+  - token:`TOKENS total_in=11,586,361 out=62,469 turns=84`
+  - 完整报告:`iterations/reports/replay-check/20260911T125909Z.md`
