@@ -403,7 +403,8 @@ end
 --- `observed` block (burst damage, died_after) is ground truth about fx.self
 --- only, so under an override every unit's GetEstimatedDamageToTarget is 0
 --- rather than a number that would silently mean "damage dealt to someone else".
-function M.load(path, sSubject)
+function M.load(path, sSubject, tOpts)
+    tOpts = tOpts or {}
     api.reset_modules()
     local fx = dofile(path)
 
@@ -1344,6 +1345,81 @@ function M.load(path, sSubject)
             spec.GetNearbyTowers = nearby_structures('tower')
             spec.GetNearbyBarracks = nearby_structures('barracks')
         end
+    end
+
+    -- UNIT-LOCAL NEUTRAL QUERY (GH #739 / 'tpchew') -- OPT-IN.
+    --
+    -- ⚠️ THIS ONE IS A MODEL, NOT A RESTORATION -- the opposite of the block
+    -- above, and it says so first because the two sit side by side. A fixture
+    -- carries NO neutral units: `make_fixture.py` dumps heroes and structures
+    -- only, on all 116 fixtures. So unlike GetNearbyTowers there is no ground
+    -- truth here to hand back.
+    --
+    -- ⭐ AND THAT IS WHY IT IS OPT-IN (`rf.load(fix, hero, { neutrals = true })`)
+    -- rather than installed for everyone the way GetNearbyTowers is. Four files
+    -- in tests/ assert, as a DECLARED world assumption, that this reader answers
+    -- {} on every fixture -- test_abil1st_first_unit_reader.lua [W1],
+    -- test_campvoid_domain_geometry.lua [world W1],
+    -- test_replay_004757_veno_ancient.lua, test_abilanc_ancient_selector.lua --
+    -- and each of them builds real claims on top of it. Installing this
+    -- globally turned all four red, and their messages name the cause they
+    -- anticipated: "if the DUMPER started carrying creeps". The dumper did not.
+    -- A synthesized list is a different world from a dumped one, so it must not
+    -- arrive under their feet wearing the dumper's clothes: a restoration may
+    -- be global, a model has to be asked for.
+    --
+    -- What the dump DOES carry is attribution: a v2 `recent_damage` row names
+    -- its source (`src = 'npc_dota_neutral_granite_golem'`). The derivation is
+    -- the same one the shipped 'fieldcreep' clause already argues from, in
+    -- jmz_func.lua: a creep's attack range is a few hundred units, so "this
+    -- neutral hit me inside the lookback" already carries the proximity a
+    -- position would have told us. That is the ONLY thing synthesized here.
+    --
+    -- THE WORLD ASSUMPTION, DECLARED:
+    --   * DISTANCE IS NOT MODELLED. Each synthesized neutral stands at the
+    --     subject's own location, so EVERY radius includes it. Any domain
+    --     count taken through this reader is therefore an UPPER bound on the
+    --     guard firing, never a lower one -- it errs toward "a camp is on me",
+    --     which is the direction that invents work for the guard rather than
+    --     hiding it. A test that wants the other direction must say so.
+    --   * v1 FIXTURES ANSWER EMPTY. No `src` on the row means the frame cannot
+    --     attribute the hit at all, and an empty list there is UNASKABLE, not
+    --     false-for-a-good-reason. 175 of the 187 creep hits inside a 3s
+    --     lookback in this corpus are unattributed, so that is most of it.
+    --   * LANE CREEPS ARE NOT NEUTRALS. `npc_dota_creep_goodguys_*` /
+    --     `npc_dota_creep_badguys_*` rows are excluded by the name test, which
+    --     is the whole point of the reader: on the 12 frames that CAN be
+    --     attributed the creep damage splits 6 neutral / 6 lane, so a guard
+    --     that reads only "a creep hit me" fires on lane creeps half the time.
+    --   * ONE HANDLE PER DISTINCT SOURCE NAME, alive, correctly named, team
+    --     TEAM_NEUTRAL. Two golem hits from the same box are one golem here;
+    --     the count is a lower bound on camp size and no consumer reads it as
+    --     a census.
+    -- tests/test_tpchew_channel_creep.lua pins all four halves, so the day a
+    -- fixture carries real neutral units this comment goes red rather than
+    -- quietly becoming false.
+    local NEUTRAL_LOOKBACK = 6.0 -- the widest window make_fixture.py records
+    for _, u in ipairs(fx.units) do
+      if tOpts.neutrals then
+        local seen, synth = {}, {}
+        for _, d in ipairs(u.recent_damage or {}) do
+            local src = d.src
+            if d.kind == 'creep' and src ~= nil and d.dt <= NEUTRAL_LOOKBACK
+                and src:find('^npc_dota_neutral') and not seen[src]
+            then
+                seen[src] = true
+                synth[#synth + 1] = api.MakeUnit({
+                    GetUnitName = src,
+                    GetTeam = TEAM_NEUTRAL,
+                    IsAlive = true,
+                    GetLocation = Vector(u.x, u.y, 0),
+                })
+            end
+        end
+        rawget(heroes[u.name], '__spec').GetNearbyNeutralCreeps = function()
+            return synth
+        end
+      end
     end
 
     -- Roster-backed unit-local queries, so full hero scripts (which use

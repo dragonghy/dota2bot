@@ -250,11 +250,33 @@ end
 local tests = {}
 
 tests['[source] the engine gives a boolean with a lookback, and nothing else'] = function()
-    -- One call site, one literal interval: the clause's only tunable.
+    -- TWO call sites, ONE literal interval -- and the second is the point, not
+    -- an erosion of this file. 2026-09-11 (strategy, GH #739): the 'tpchew'
+    -- guard asks the same engine probe at the same 3.0 before a TP channel,
+    -- BECAUSE the operand argument below is what says this probe is a boolean
+    -- with a lookback and nothing else. If it ever became two different
+    -- lookbacks, the shared-constant argument in BOTH comments would be false,
+    -- so what this file pins is no longer "one site" but "every site, the same
+    -- literal" -- a strictly stronger claim than the one it replaced, and the
+    -- one the second site actually depends on.
+    -- tests/test_tpchew_channel_creep.lua asserts the same equality from the
+    -- other end, on purpose: neither file can drift alone.
     local n = 0
     for _ in JMZ_CODE:gmatch('WasRecentlyDamagedByCreep') do n = n + 1 end
-    assert(n == 1, 'jmz_func now has ' .. n .. ' creep-damage reads; the operand '
-        .. 'argument below was taken over exactly one')
+    assert(n == 2, 'jmz_func now has ' .. n .. ' creep-damage reads, not the 2 '
+        .. "this file was re-taken over ('fieldcreep' and 'tpchew'); the "
+        .. 'operand argument below is taken over all of them')
+    local lookbacks = {}
+    for lit in JMZ_CODE:gmatch('bot:WasRecentlyDamagedByCreep%(%s*([%d%.]+)%s*%)') do
+        lookbacks[#lookbacks + 1] = lit
+    end
+    assert(#lookbacks == n, 'every creep read must pass a LITERAL interval; got '
+        .. #lookbacks .. ' literals for ' .. n .. ' reads')
+    for _, lit in ipairs(lookbacks) do
+        assert(tonumber(lit) == LOOKBACK, 'creep reads have drifted apart: '
+            .. lit .. ' vs ' .. tostring(LOOKBACK) .. ' -- the "same constant, '
+            .. 'same reason" argument in both comments is no longer true')
+    end
     assert(LOOKBACK == 3.0, 'the lookback moved to ' .. tostring(LOOKBACK)
         .. ' -- the census populations were taken at 3.0, re-read them')
 
@@ -446,19 +468,33 @@ tests['[control] the comment stripper works, and today it is not load-bearing'] 
         :find('WasRecentlyDamagedByCreep', 1, true),
         'code_only no longer strips a line comment')
 
-    -- ... and the honest half, registered rather than papered over: on TODAY's
-    -- jmz_func the stripper changes nothing for the count above, because the
-    -- prose around the clause describes the read in words ("a creep damaged me
-    -- in the last 3 seconds") instead of quoting the call. A mutation that
-    -- swaps JMZ_CODE for JMZ_SRC therefore SURVIVES, and that is recorded, not
-    -- hidden. The day a comment starts quoting the call, this equality breaks
-    -- and says the guard has become load-bearing.
+    -- ... and the half this file REGISTERED as a self-injury rather than
+    -- papering over it: it said the stripper changed nothing for the count
+    -- above, because the prose around the clause described the read in words
+    -- instead of quoting the call -- so a mutation swapping JMZ_CODE for
+    -- JMZ_SRC would SURVIVE. It then said, in as many words: "the day a
+    -- comment starts quoting the call, this equality breaks and says the guard
+    -- has become load-bearing."
+    --
+    -- ⭐ THAT DAY WAS 2026-09-11 (strategy, GH #739). The 'tpchew' comment
+    -- quotes `WasRecentlyDamagedByCreep` by name while arguing that it reuses
+    -- this clause's probe and lookback. So the registered self-injury is CLOSED
+    -- -- code_only is now load-bearing for the [source] count -- and the
+    -- assertion is re-taken to say that, instead of being deleted or bumped.
+    -- The prediction firing exactly as written is the evidence that this guard
+    -- was worth registering; what would waste it is quietly relaxing it now.
     local raw, code = 0, 0
     for _ in JMZ_SRC:gmatch('WasRecentlyDamagedByCreep') do raw = raw + 1 end
     for _ in JMZ_CODE:gmatch('WasRecentlyDamagedByCreep') do code = code + 1 end
-    assert(raw == code, 'the prose now quotes the creep read (' .. raw
-        .. ' raw vs ' .. code .. ' in code) -- code_only just became load-bearing '
-        .. 'for the [source] count, and the registered self-injury is closed')
+    assert(raw > code, 'the prose no longer quotes the creep read (' .. raw
+        .. ' raw vs ' .. code .. ' in code) -- the self-injury this file '
+        .. 'registered has re-opened: a JMZ_CODE -> JMZ_SRC mutation would '
+        .. 'survive the [source] count again, and that has to be said out loud '
+        .. 'rather than left as a silently toothless guard')
+    assert(raw - code == 1, 'expected exactly one prose mention of the call (the '
+        .. "'tpchew' comment's shared-probe argument), got " .. (raw - code)
+        .. ' -- re-read them: a NEW quoting comment is fine, a new uncommented '
+        .. 'call site is a third creep read and [source] must move with it')
 end
 
 tests['[limit] what this file does not buy'] = function()

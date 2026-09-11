@@ -360,11 +360,20 @@ tests['[limit] the [1] and centre-of-mass readers are untouched, and counted'] =
         p:close()
         return n
     end
-    -- 143 method-call sweeps. The two remaining textual hits are the engine
+    -- 144 method-call sweeps. The two remaining textual hits are the engine
     -- override in aba_global_overrides.lua that caps every one of them at
     -- 1600 u, not sweeps of their own.
+    -- 2026-09-11 (strategy, GH #739): 143 -> 144. The one added site is
+    -- jmz_func.lua's `J.ShouldStepOutBeforeTpChannel` (soak candidate
+    -- 'tpchew'), which asks whether a neutral camp is on the bot before it
+    -- starts a travel-TP channel. HAND-RE-TAKEN in the same commit that landed
+    -- it, and hand-read rather than bumped: the delta was checked by counting
+    -- with that one line stashed out (143) and back in (144), so the number
+    -- below is a reading and not an accommodation. This is the GH #624 shape
+    -- -- a structural census that only the NEXT desk's session would otherwise
+    -- have found red, hours later, with its author gone.
     local nSweeps = count(':GetNearbyNeutralCreeps(')
-    assert(nSweeps == 143, 'neutral sweeps in bots/; got ' .. tostring(nSweeps))
+    assert(nSweeps == 144, 'neutral sweeps in bots/; got ' .. tostring(nSweeps))
     local nCentre = count('J\\.GetCenterOfUnits')
     assert(nCentre >= 13, 'the AoE centre readers are still there; got ' .. tostring(nCentre))
 end

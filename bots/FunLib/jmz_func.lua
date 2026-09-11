@@ -7812,7 +7812,83 @@ end
 function J.ShouldNotStartInterruptibleTp( bot )
 	if not J.IsModeTurbo() then return false end
 	if bot == nil or not bot:IsAlive() then return false end
-	return J.CanEnemyInterruptTpChannel( bot )
+	-- APPENDED, never inserted (GH #739 / 'tpchew'). Unarmed the second line
+	-- is the literal `false`, so the shipped answer and the order of the reads
+	-- above are byte-for-byte the old one-liner. Same edit shape, and for the
+	-- same reason, as the 'fieldcreep' append in J.IsFieldRegenSituation.
+	if J.CanEnemyInterruptTpChannel( bot ) then return true end
+	return J.ShouldStepOutBeforeTpChannel( bot )
+end
+
+-- [tpchew, GH #739] THE CREEP HALF of the channel question. Everything above
+-- asks it about enemy HEROES: J.CanEnemyInterruptTpChannel's first line is
+-- `J.GetNearbyHeroes( bot, ... )`, so a neutral creep is not merely missed,
+-- it is structurally outside the predicate's domain. The replay desk proved
+-- that from source rather than from corpus (GH #739 comment §3), which is why
+-- this lever does not depend on the incident rate it was filed with.
+--
+-- WHAT THE FRAMES SHOW (replay-check, W64, two frames read tick by tick): a
+-- support finishes poking a friendly camp and starts the scroll STANDING IN
+-- the camp it just aggroed. Channeling requires standing still, and neutral
+-- aggro does not lapse because you started channeling -- so the retreat
+-- action itself pins the hero next to the damage source for the whole 3-5s:
+-- skywrath 0.61 -> 0.41 HP (20pp), lich 0.62 -> 0.45 (17pp). Neither had
+-- walked out of aggro range first.
+--
+-- ⛔ THIS IS NOT "SHOULD I TP". The decision to leave at half health is fine,
+-- and GH #739 explicitly declines to blame it (the W64 arm string had four TP
+-- ids armed at once, so nothing there is attributable to one id anyway). The
+-- claim is narrower and is about ORDER: step out of aggro, THEN channel.
+-- Refusing the bid for this frame is exactly that -- the caller's mode keeps
+-- walking the bot, and the scroll goes up a second or two later from outside
+-- the camp. It buys ~1-2s of travel with ~17-20pp of health.
+--
+-- CLAUSE 1 -- `WasRecentlyDamagedByCreep` is the same cheap probe, at the
+-- same 3.0 lookback, that the 'fieldcreep' clause already uses ~2000 lines
+-- below, and for the reason written out there: a creep's attack range is a
+-- few hundred units, so "a creep hit me in the last 3s" already carries the
+-- proximity the hero clause has to reconstruct with a sweep. Not a new tuned
+-- constant -- tests/test_tpchew_channel_creep.lua fails if the two ever
+-- drift apart.
+--
+-- CLAUSE 2, AND WHY IT IS NOT OPTIONAL -- the engine probe above does NOT
+-- separate a neutral from a lane creep, and on this repository's own corpus
+-- that blindness is not a corner, it is half the domain: of the 12 fixture
+-- frames whose creep damage carries attribution, the split is 6 neutral /
+-- 6 lane (measured, tests/test_tpchew_channel_creep.lua re-derives it). The
+-- one-clause version of this guard answers TRUE on 74 of the 192 askable
+-- hero frames in the corpus -- a guard that delays a travel TP whenever
+-- ANY creep grazed the bot is the `lanefix` shape, and the 'fieldcreep'
+-- precedent for shipping the bare probe does not carry over: THAT clause
+-- guards "stay in the field vs walk home", where breadth is cheap, while
+-- this one refuses a bid. So the neutral unit list is asked for, at the
+-- SAME 700 the sibling J.CanEnemyInterruptTpChannel scans -- a borrowed
+-- constant, not a tuned one.
+-- ⚠️ What stays outside: a bot pinned in LANE creep damage while it starts a
+-- travel TP is the same mechanism and is deliberately NOT covered here. Lane
+-- aggro follows the bot, so "step out first" is not obviously the repair, and
+-- this round has no frame to check it on. Recorded as the next lever.
+--
+-- ROOTED FALLS THROUGH, deliberately: a bot that cannot walk out has no
+-- cheaper option than the channel, so the scroll stays its last resort --
+-- the same conservatism J.ShouldWalkNotTp uses on the retreat branch.
+-- ⚠️ On the fixture corpus this conjunct is VACUOUS, not verified: the mock's
+-- `^Is -> false` catch-all answers every IsRooted, so no fixture can exercise
+-- it. Declared, because an untested conjunct that reads as tested is how a
+-- clause stops being read at all.
+--
+-- ⚠️ TURBO IS ASKED HERE TOO, not inherited. Today the only call site is the
+-- wrapper above, whose first line is already the turbo test -- but this is a
+-- standalone predicate with no structural turbo ancestor (unlike
+-- J.IsFieldRegenSituation), and the next caller would inherit nothing.
+function J.ShouldStepOutBeforeTpChannel( bot )
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'tpchew' ) then return false end
+	if bot == nil or not bot:IsAlive() then return false end
+	if bot:IsRooted() then return false end
+	if not bot:WasRecentlyDamagedByCreep( 3.0 ) then return false end
+	local tNeutrals = bot:GetNearbyNeutralCreeps( 700 )
+	return tNeutrals ~= nil and #tNeutrals > 0
 end
 
 -- Ungated CORE of the interrupt test above: "is an enemy positioned to break a
