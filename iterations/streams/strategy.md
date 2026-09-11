@@ -27,6 +27,57 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0LVLGROUP. **【2026-09-11T16:30Z 新增。**取上一轮 `0PULLCHEW`「下一格」第 (1) 项
+   (`lvlany` 留下的第三根兄弟,`X.CarryFindTarget` 第二处 12 级站点);第 (0) 项(GH #250 §4 的
+   「数量」那一半)**今天仍落不了地**——它要一个带真实中立实体的 dumper 读数,**是录像组/总监的棒**。
+   落地 gated id **`lvlgroup`**:`X.NoNearbyEnemyAtLevelGroup`,接在**群推支路**
+   (`X.CanAttackTogether(bot)` 之后)的 12 级守卫位上,**合取式位置不变 ⇒ 短路顺序不变**。
+   ⭐⭐ **本条最该被下一轮读到的四句**:
+   (甲) ⛔⛔ **本轮显式换了一把杆,而换杆比落地那个 id 重要 —— 所以三个文件在同一 commit 里一起改。**
+   上一轮 `lvlcarry` §7b 用**更严的杆**(「整条谓词会不会翻转」)判剩下那根兄弟买不到。本轮在
+   **自己的站点上量到一模一样的零**(两个 miss 行**都栽在同一个 `#allies >= 2` 合取项**上 ⇒
+   `X.CanAttackTogether(bot)` 两行皆 false ⇒ **arm 改变支路结果的行数 = 0**),**仍然拿了**,用的杆是
+   「**杠杆自己的谓词改动是否在真实行上被驱动**」(这里 **2** 行),支路可达性**另账登记为更弱的界**。
+   ⭐ 关键不是哪把杆对,而是**同一族两根兄弟不许用两把杆** —— 那是标准自己烂掉的形状。
+   ⇒ `lvlcarry` §7b 与 `lvlany` §7 的注释**都在本 commit 里改了**,写明现行哪把杆、
+   以及**在这把杆下剩下那根同样买得到**(它自己那格 r=600/10 级有 **4** 个 miss 行)。
+   (乙) ⭐ **零还立着时扛住杠杆的是「方向」,而方向是量的不是从 diff 读的。**
+   armed 答 `not any(level >= nLevel)`、出货答 `[1] < nLevel`,`[1]` 存在时**前者蕴含后者** ⇒ armed 是
+   **纯收紧**:只能**撤回**支路需要的那个「安全」答案,**永不发一个 baseline 没发的**。§3e 在**全部 1306 行**
+   上钉 `dir_violation == 0`(等式)+ `armed_true > 0` + `dir_narrows == site_miss` 双向防空转。
+   与 `glyphany`/`wkqdmg` 同一条安全形状,**这就是「支路在语料上打不开的 gated 杠杆可以安心留在树上」的全部理由**。
+   (丙) ⭐ **那个零不是结构性的,于是它直接写出了一条 fixture 规格。** **13 行**同时满足
+   「1200 内 ≥2 友军」且「650 内 ≥2 敌人」,**13 行里没有一行恰好是 miss** ⇒ **小样本零**。
+   §5 把 `miss_cat == 0` 钉成**等式**并逐字写着「它红了是好消息,拿那个驱动替换这条断言,**不许重新基线化**」。
+   (丁) ⭐ **本文件自己的发现:这条支路把同一个问题问了两遍** —— 这里 r=650/**12 级**,
+   `X.CanAttackTogether` 里另有 r=600/**10 级**(阈值更严、半径更小)⇒ 只修一格,复合守卫在另一格上
+   **仍然**是「拿最近的那个回答」。§1 量代价:环带故事**是空的**(`miss_high_in_annulus == 0`,等式),
+   内层守卫**两行里的一行**上本来就已读「不安全」(`1 < site_miss = 2`,**严格小于**被断言 —— 等于 2
+   就说明本杠杆没从复合守卫里拿掉任何东西,**该重新论证 id 不是重新基线化**)。
+   产出:`tests/test_lvlgroup_group_push_level_quantifier.lua` **20/20**、
+   `tools/agent/mutstand_lvlgroup.sh` **17/17 STAND GREEN**、`state.json:lvlgroup_20260911`;
+   报告 `iterations/reports/strategy/20260911T163034Z.md`。
+   **附带(接力棒三处同时记账)**:`lvlgroup` §7 + `lvlcarry` §7(total 2→1)+ `lvlany` §7
+   (12 级 key **整条移出**不是清零,并**新增**「两个 12 级站点必须**因挂了 id 而消失**、不是因守卫被删」)。
+   ⭐ `lvlany` §7 是**改动时被它自己顶红的**,报错原文就是「move it out — do not just lower the number」,
+   **照它说的做了**。
+   ⚠️ **诚实标注**:M16/M17(复制品常数漂移)那个洞是**跑变异台之前就预判并先补好 §5b 的**
+   (钉用字符串改成**从常数拼**而非打字面量)⇒ 变异台**确认了预判,不是发现了它**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **最后一根兄弟**:`X.CanAttackTogether` 里 r=600/**10 级**那个站点,在本轮确立的杆下
+   **是买得到的**(自己那格 **4** 个 miss 行);它的 §5 等价物同样要把「函数返回值可达性」另账登记为更弱的界;
+   (1) ⭐ **交出去的棒(已写进 `state.json:lvlgroup_20260911.next` 第 (2) 项)**:给录像组/总监一条
+   **精确 fixture 请求** —— 冻一帧「1200 内 ≥2 友军、650 内 ≥2 敌人,且**最近**那个敌人**低于 12 级**
+   而另有一个 **≥12 级**」,它**同时**解锁 `lvlgroup` §5 转红与 `lvlcarry` §7b 那根。
+   ⚠️ MCP GitHub 本容器未验证可用,按**铁律 11 不空转**,本轮写在报告里;下轮若可用则补开 `[strategy]` issue;
+   (2) ⛔ GH #250 §4 的「数量」那一半仍要 dumper 读数,**不是本组的棒**;
+   (3) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第十轮有效**);
+   (4) ⛔ 兵营分支(GH #713)仍不落 gate,接力棒是 `tests/test_isvalid_building_sentinel.lua §2b`;
+   (5) ⛔ P4.2 冻结未解 ⇒ 本轮**未提入集**;`tombhp`/`anyhero`/`lvlany`/`lvlcarry`/`bagtango`/`tpchew`/
+   `pullreach`/`pullchew` 的裁定请求仍未答,本轮**不催**;
+   (6) ⛔ `pulldrag` 永远不许单独提;`pullcamp`+`pulldrag` 的重新入集仍挂在
+   `owed_executions.json:pullcamp_atom_readmission`,**`lvlgroup` 不代它提**。】**
+
 0PULLCHEW. **【2026-09-11T14:18Z 新增。**认领 **GH #250 §4**(上一轮 `0PULLREACH`「下一格」
    第 (0) 项逐字点名)。落地 gated id **`pullchew`**:`J.IsPullCampChewing` +
    `PULL_CHEW_LOOKBACK = 6.0` + `PULL_CHEW_NEUTRAL_RADIUS = 1400`,以
@@ -8032,6 +8083,51 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-11T16:30Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open issue:
+  `[strategy]` 未见新件 ⇒ 取 backlog `0PULLCHEW`「下一格」第 (1) 项;第 (0) 项(GH #250 §4 的
+  「数量」那一半)**今天仍落不了地**,要 dumper 读数,**是录像组/总监的棒**。)
+  ⭐⭐ **本轮真正的产物是换了一把杆,不是那个 id。** 上一轮 `lvlcarry` §7b 用**更严的杆**
+  (「整条谓词会不会翻转」)判剩下的兄弟买不到;本轮在**自己的站点上量到一模一样的零** ——
+  两个 miss 行**都栽在同一个 `#allies >= 2` 合取项**上 ⇒ **arm 改变支路结果的行数 = 0** ——
+  **仍然拿了**,用的杆是「**杠杆自己的谓词改动是否在真实行上被驱动**」(**2** 行),
+  支路可达性**另账登记为更弱的界**。⭐ **关键不是哪把杆对,是同一族两根兄弟不许用两把杆**
+  (那是标准在没人决定改它的情况下自己烂掉的形状)⇒ `lvlcarry` §7b 与 `lvlany` §7 的注释
+  **都在同一个 commit 里改了**,写明现行哪把杆、以及**在这把杆下剩下那根同样买得到**
+  (它自己那格 r=600/10 级 **4** 个 miss 行)。
+  ⭐⭐ **零还立着时扛住杠杆的是「方向」,而方向是量的**:armed `not any(lv >= N)` **蕴含**
+  出货 `[1] < N` ⇒ armed 是**纯收紧**,只能**撤回**支路要的那个「安全」答案、**永不发一个 baseline 没发的**。
+  §3e 在**全部 1306 行**上钉 `dir_violation == 0`(等式)+ `armed_true > 0` + `dir_narrows == site_miss`。
+  与 `glyphany`/`wkqdmg` 同形 —— **这就是「支路在语料上打不开的 gated 杠杆可以安心留在树上」的全部理由**。
+  ⭐ **那个零不是结构性的,于是它直接写出一条 fixture 规格**:**13 行**满足「1200 内 ≥2 友军 + 650 内
+  ≥2 敌人」,**13 行里没有一行是 miss** ⇒ 小样本零。§5 钉成**等式**并写着「红了是好消息,
+  拿驱动替换它,**不许重新基线化**」。⇒ **交给录像组/总监的精确请求**:冻一帧「1200 内 ≥2 友军、
+  650 内 ≥2 敌人,**最近**那个敌人**低于 12 级**而另有一个 **≥12 级**」——**同时**解锁
+  `lvlgroup` §5 转红与 `lvlcarry` §7b 那根。⚠️ MCP GitHub 本容器未验证可用,**按铁律 11 不空转**,
+  写进报告 + `state.json.next`,下轮可用再补 issue。
+  ⭐ **本文件自己的发现**:这条支路把同一个问题**问了两遍**(这里 r=650/12,`X.CanAttackTogether`
+  里另有 r=600/10,**阈值更严半径更小**)⇒ §1 量「修一格能修掉多少」:环带故事**是空的**
+  (`miss_high_in_annulus == 0`),内层守卫**两行里的一行**本来就已读「不安全」(**严格小于**被断言)。
+  ⭐ **接力棒三处同时记账,三根 → 剩一根**;`lvlany` §7 是**改动时被它自己顶红的**
+  (报错原文「move it out — do not just lower the number」),**照它说的做了:移出,不是降数**。
+  ⚠️ **诚实标注**:M16/M17 那个洞是**跑变异台之前预判并先补好 §5b 的**(钉用字符串改成**从常数拼**)
+  ⇒ 变异台**确认了预判,不是发现了它**。
+  产出:`lvlgroup`(turbo-only,**FROZEN-HOLD,不请求入集**)、
+  `tests/test_lvlgroup_group_push_level_quantifier.lua` **20/20**、
+  `tools/agent/mutstand_lvlgroup.sh` **17/17 STAND GREEN**(第一轮即满分)、
+  `state.json:lvlgroup_20260911`;报告 `iterations/reports/strategy/20260911T163034Z.md`。
+  **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零波次。
+  **铁律 6 三条腿**:`GATE_EXIT=0`(0 warnings)/ `py gate: EXIT=0`(96 ran / 0 findings)/
+  `lua gate: EXIT=0`(338 ran / 0 findings / 0 uncertifiable / 12 known-red,315.7s),**未用 BYPASS**。
+  `lua5.1 tests/run_tests.lua lvl` **52/52**。⚠️ 338 里**含本轮新文件**(闸把它列在
+  「run anyway, not in the manifest」里)—— 要登记跑 `lua_gate_measure.py`,**本轮不改别人的 manifest**。
+  ⚠️ **自检 `SELFCHECK_EXIT=124`,而 124 是我自己的 `timeout` 砍的,不是自检的判决** ——
+  它死在 `=== trunk health (python test suite) ===` 的**开头** ⇒ **那条腿这轮没人看过,记 UNCERTIFIABLE**;
+  之前各段读到的都是 OK(stable 锚点 7/7、promote-atom OK、inverse gate census
+  「no armed id hangs under an unarmed gate」)。
+  ⚠️ 另记:**本轮第一条命令就踩到** `routine_selfcheck.sh` 拒绝管道调用
+  (「stdout is a PIPE ⇒ 退出码是 tail 的」),它自陈**已复发 5 次、每次都是当轮第一条命令** ——
+  **本轮是第 6 次**。
 
 - 2026-09-11T14:18Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步先扫 open issue:
   `[strategy]` open 四件 **全部是前三轮已认领的**(#740/#739/#734 本组落地过,#196 的 `abilanc`

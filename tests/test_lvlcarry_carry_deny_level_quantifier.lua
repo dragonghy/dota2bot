@@ -627,15 +627,19 @@ end
 
 -- ----------------------------------------------------- 7. THE BATON ---------
 
-tests['[lvlcarry] 7. two siblings left, and one of them is not buyable here']
+tests['[lvlcarry] 7. one sibling left']
 = function()
     -- 'lvlany' handed over three. This lever takes the first. Counted here so
     -- that "two remain" cannot decay into a sentence nobody re-reads -- the GH
     -- #13 shape, which went missing for 37 rounds as a closeable issue.
+    --
+    -- 2026-09-11: the second was taken by 'lvlgroup' (the group-push branch's
+    -- level-12 site, its own id and its own helper -- see the block above
+    -- X.NoNearbyEnemyAtLevelGroup). It is MOVED OUT of the table below rather
+    -- than having its number lowered, which is what the assertion text asked
+    -- for. ONE remains: the level-10 site inside X.CanAttackTogether.
     local src = stripped(read_file(TRG))
     local siblings = {
-        -- the second level-12 site in X.CarryFindTarget (the group-push branch)
-        ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12'] = 1,
         -- the level-10 site inside X.CanAttackTogether
         ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10'] = 1,
     }
@@ -656,22 +660,38 @@ tests['[lvlcarry] 7. two siblings left, and one of them is not buyable here']
             .. 'number.')
         total = total + n
     end
-    assert(total == 2,
-        'the baton is ' .. total .. ' sites, not 2 -- the report says two remain')
+    assert(total == 1,
+        'the baton is ' .. total .. ' sites, not 1 -- the report says one remains')
 end
 
-tests['[lvlcarry] 7b. MEASURED: the CanAttackTogether sibling cannot be driven '
-    .. 'on this corpus yet'] = function()
+tests['[lvlcarry] 7b. MEASURED: the CanAttackTogether sibling\'s BRANCH never '
+    .. 'flips on this corpus'] = function()
     -- Cheap to measure while the sweep was already loaded, and it is the thing
     -- the next round most needs to know: that sibling's full predicate
     -- (alive, not illusion, GetProperTarget == nil, #allies >= 2, the level
     -- guard) never flips here. Its 4 miss rows at r=600/level 10 all fail
-    -- `#allies >= 2`, so a round that took it on these fixtures would be
-    -- asserting over an empty drive -- green and vacuous, which is the failure
-    -- mode 4b exists to prevent elsewhere in this file.
+    -- `#allies >= 2`.
     --
-    -- ⭐ WHEN THIS GOES RED IT IS GOOD NEWS: a fixture has arrived that can buy
-    -- the sibling. Take it then -- do not lower the number.
+    -- ⛔ AMENDED 2026-09-11 BY 'lvlgroup', AND THE AMENDMENT IS THE POINT. As
+    -- first written this comment concluded "a round that took it on these
+    -- fixtures would be asserting over an empty drive -- green and vacuous", and
+    -- that conclusion rested on a STRICTER BAR than the family actually uses:
+    -- "the full predicate flips". 'lvlgroup' measured the identical zero at its
+    -- own site (both its miss rows fail the same `#allies >= 2` conjunct, so
+    -- arming changes its BRANCH on 0 rows) and was taken anyway, on the bar
+    -- "the lever's own predicate change is driven on real rows" with branch
+    -- reachability registered separately as the weaker bound. Under that bar
+    -- this sibling is buyable too -- 4 miss rows at its own cell. Two bars
+    -- applied to two siblings of one family is how a standard erodes without
+    -- anyone deciding to change it, so the bar in force is written here rather
+    -- than left implied.
+    --   ⇒ WHAT THE ZERO BELOW STILL MEANS: not "do not take this sibling", but
+    --     "taking it buys a correct predicate whose branch this corpus cannot
+    --     exercise". Say that in the lever's own file, as
+    --     tests/test_lvlgroup_group_push_level_quantifier.lua section 5 does.
+    --
+    -- ⭐ WHEN THIS GOES RED IT IS GOOD NEWS: a fixture has arrived that can drive
+    -- the sibling end to end. Take it then -- do not lower the number.
     assert(C('cat_flip') == 0,
         C('cat_flip') .. ' row(s) now flip X.CanAttackTogether\'s full predicate. '
         .. 'The corpus can finally buy that sibling -- go take it (one lever at a '

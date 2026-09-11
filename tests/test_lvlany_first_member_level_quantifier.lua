@@ -528,9 +528,24 @@ tests['[lvlany] 7. the untouched siblings are still there, still `[1]`']
     -- tests/test_lvlcarry_carry_deny_level_quantifier.lua now carries the
     -- measured reason the CanAttackTogether one is not takeable on this corpus
     -- yet (its full predicate never flips here).
+    --
+    -- ⭐ 2026-09-11, LATER THE SAME DAY: IT MOVED AGAIN, TWICE THE SAME WAY. The
+    -- second of the three -- the group-push branch's level-12 site -- was taken
+    -- as 'lvlgroup', again with its own id and its own helper
+    -- (X.NoNearbyEnemyAtLevelGroup). The level-12 entry is therefore MOVED OUT
+    -- of the table below entirely (1 -> 0 sites, so the key is gone rather than
+    -- zeroed), and the total drops 2 -> 1. ONE remains: the level-10 site inside
+    -- X.CanAttackTogether.
+    --   ⛔ AND THE BAR CHANGED, WHICH MATTERS MORE THAN THE COUNT. 'lvlgroup'
+    -- measured the SAME zero at its own site that 7b reports for the
+    -- CanAttackTogether one (both its miss rows fail the same `#allies >= 2`
+    -- conjunct) and was taken anyway, on the bar "the lever's own predicate
+    -- change is driven on real rows", with branch reachability registered
+    -- separately as a weaker bound. Under that bar the remaining sibling is
+    -- buyable too. 7b's comment was amended in the same commit so the two
+    -- siblings are not judged on two different standards.
     local src = stripped(read_file(TRG))
     local siblings = {
-        ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12'] = 1,
         ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10'] = 1,
     }
     local total = 0
@@ -550,10 +565,22 @@ tests['[lvlany] 7. the untouched siblings are still there, still `[1]`']
             .. 'number.')
         total = total + n
     end
-    assert(total == 2,
-        'the baton is ' .. total .. ' sites, not 2 -- one of the original three '
-        .. 'was taken by \'lvlcarry\' on 2026-09-11 and the report says two '
-        .. 'remain')
+    assert(total == 1,
+        'the baton is ' .. total .. ' sites, not 1 -- two of the original three '
+        .. 'were taken on 2026-09-11 (\'lvlcarry\', then \'lvlgroup\') and the '
+        .. 'report says one remains')
+    -- The two repaired sites are gone from the source in the shape this table
+    -- counts; pin that they are gone because they are BEHIND IDS, not because
+    -- somebody deleted the guard.
+    for _, call in ipairs({
+        'X.NoNearbyEnemyAtLevelCarry(nNearbyEnemyHeroes, 12)',
+        'X.NoNearbyEnemyAtLevelGroup(nNearbyEnemyHeroes, 12)',
+    }) do
+        assert(src:find(call, 1, true) ~= nil,
+            'the level-12 site repaired as `' .. call .. '` is gone from ' .. TRG
+            .. ' -- it left this table because it was taken behind an id, not '
+            .. 'because the guard was deleted')
+    end
 end
 
 return tests

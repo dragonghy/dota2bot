@@ -806,6 +806,71 @@ function X.NoNearbyEnemyAtLevelCarry(tHeroes, nLevel)
 	return tHeroes[1]:GetLevel() < nLevel
 end
 
+-- [lvlgroup 20260911] THE SECOND SIBLING OFF 'lvlany'S BATON: X.CarryFindTarget's
+-- GROUP-PUSH BRANCH ASKS THE SAME EXISTENTIAL LEVEL QUESTION OF THE NEAREST HERO.
+--     if IsModeSuitHit and bot:GetLevel() <= 8
+--        and X.CanAttackTogether(bot)
+--        and (nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12)
+-- Same list (the raw bot:GetNearbyHeroes(650,...) local declared above the deny
+-- branch), same threshold, same empty-list leg proving the question is
+-- existential.  The branch it guards ganks a creep our own tower is about to
+-- kill, at BOT_MODE_DESIRE_ABSOLUTE, with the bot capped at level 8.
+--
+-- ⛔⛔ READ THIS BEFORE ANY NUMBER: THIS LEVER IS WEAKER THAN 'lvlcarry', AND THE
+-- WEAKNESS IS MEASURED, NOT SUSPECTED.  Its own predicate change is driven on 2
+-- real rows (the same r650/th12 miss population 'lvlcarry' reports).  But the
+-- BRANCH those rows sit in never opens on this corpus: both miss rows carry ZERO
+-- allies within 1200, so `X.CanAttackTogether(bot)` -- a conjunct standing beside
+-- this guard -- is false on both, and arming changes the branch's outcome on
+-- 0 rows.  That zero is NOT structural: 13 rows do carry >=2 allies within 1200
+-- AND >=2 enemies within 650 (the shape a miss needs), and none of the 13 is a
+-- miss.  tests/test_lvlgroup_group_push_level_quantifier.lua section 5 asserts
+-- the 0 as an EQUALITY over that 13-row candidate population, so the day a
+-- fixture lands in the shape, this file goes red and the lever can finally be
+-- driven end to end.
+--
+-- ⭐ WHAT CARRIES THE LEVER WHILE THAT ZERO STANDS IS THE DIRECTION, AND IT IS
+-- MEASURED OVER ALL 1306 LIVE ROWS (section 3e), NOT ARGUED FROM THE DIFF.
+-- Armed answers `not any(level >= nLevel)`; shipped answers `[1] < nLevel`; the
+-- first IMPLIES the second whenever `[1]` exists.  So armed is a pure NARROWING:
+-- it can only ever WITHDRAW the "clear" answer this branch needs, never grant one
+-- baseline withheld.  The branch can therefore open strictly less often armed
+-- than unarmed and never more -- the same safety shape 'glyphany' and 'wkqdmg'
+-- ship on.  ⛔ That is a bound on the DIRECTION of the change, not a fire rate,
+-- and no fire rate is claimed anywhere in this lever's file.
+--
+-- ⛔ SAME BAR AS 'lvlcarry', STATED ONCE SO THE FAMILY STOPS DRIFTING.  The bar
+-- this lever is taken on is "the lever's own predicate change is driven on real
+-- rows", with branch reachability registered separately as the weaker bound
+-- above.  'lvlcarry' section 7b had judged the REMAINING sibling (the level-10
+-- site inside X.CanAttackTogether) unbuyable on the stricter "full predicate
+-- flips" bar.  Under the bar used here that sibling is buyable too (4 miss rows
+-- at its own r=600/level 10) -- see the amended comment on 7b, changed in the
+-- same commit rather than left claiming a criterion nobody is applying.  It is
+-- NOT taken here: one lever at a time is what the lanefix bundle cost us.
+--
+-- ⛔ WHY A THIRD HELPER AND NOT A SECOND CALLER OF X.NoNearbyEnemyAtLevelCarry.
+-- Sharing would put both call sites behind the single id 'lvlcarry' -- the
+-- lanefix bundling (gpm -74.5, then -88.7, 0/4 comps) rebuilt by hand -- and a
+-- shared helper reading two ids is the pullcad trap, frozen FALSE the day either
+-- is promoted.  'lvlcarry' section 5b pins its caller count at exactly 1 for
+-- this reason, so sharing would also turn that file red.  One lever, one id, one
+-- call site; nine duplicated lines is the cheap side of the trade.
+--
+-- ⛔ FROZEN-HOLD per OWNER_PRIORITIES P4.2 (new ids do not enter the armed set
+-- while it is above 20).  Registered in state.json:lvlgroup_20260911; the armed
+-- string, queue.json and test_set.md are untouched.
+function X.NoNearbyEnemyAtLevelGroup(tHeroes, nLevel)
+	if tHeroes == nil or tHeroes[1] == nil then return true end
+	if J.IsModeTurbo() and J.IsSoakCandidate('lvlgroup') then
+		for i = 1, #tHeroes do
+			if tHeroes[i]:GetLevel() >= nLevel then return false end
+		end
+		return true
+	end
+	return tHeroes[1]:GetLevel() < nLevel
+end
+
 -- ==============================
 -- Support / Carry target selection
 -- (guarded by emergency retreat)
@@ -1060,7 +1125,11 @@ function X.CarryFindTarget()
 	if  IsModeSuitHit
 		and bot:GetLevel() <= 8
 		and X.CanAttackTogether(bot)
-		and (nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12)
+		-- [lvlgroup 20260911] see the block above X.NoNearbyEnemyAtLevelGroup.
+		-- Unarmed this is `nNearbyEnemyHeroes[1] == nil or
+		-- nNearbyEnemyHeroes[1]:GetLevel() < 12` term for term, in this slot, so
+		-- the short-circuit order is unchanged.
+		and X.NoNearbyEnemyAtLevelGroup(nNearbyEnemyHeroes, 12)
 		and bot:DistanceFromFountain() > 3800
 		and J.GetDistanceFromEnemyFountain(bot) > 5000
 	 then
