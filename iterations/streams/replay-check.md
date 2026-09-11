@@ -77,6 +77,18 @@
    从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
+- **[2026-09-11 新踩,W66] `roam_conversion` 的死亡区间是按 `canon_hero()` 建键的,
+  `g['dead'].get('npc_dota_hero_x')` 永远返回空元组 ⇒ 每一帧都读成存活。**
+  它**不报错、不为空、不缺字段**,只是把 liveness 这一整道网静默拆掉;
+  而污染方向**恰好朝着结论**:一具冻在触发点上的尸体同时充当「还钉在原地的落地人」
+  **和**「把触发点烧热的那个敌人」(与 GH #176 ②③ 同族,但判别子是第四个:**键的拼写**)。
+  **模块自己有正解**:`roam_conversion.is_dead(spans, hero, t)`(`:281`,内部 canon 化,
+  docstring 逐字写了「hero may be spelled either way」)。⇒ **自写帧读件取 liveness
+  一律调 `is_dead()`,不要 `.get(raw_name)`**;再加 `hp_pct > 0` 当第二张独立的网。
+  本轮改正后结论方向不变、分母缩小(HOT delta `+5.3/+11.7` → `+5.5/+14.8`)——
+  **方向没翻不是「没关系」,是这次运气好**。
+  ⛔ 仓库里没有第二个消费方中这条(`axe_jump_pick_audit.py` / `bbfloor_domain.py`
+  各有自己的 `death_spans`,不走这个键)⇒ 当时没开 issue。
 - **[2026-09-04 新踩,W45] 一个「域内计数」在没有归属的时候,默认被读成「门漏了」——
   而这个默认在本轮语料上 7/7 全错。** `zusult` armed 腿测得 **8.0 每百机会帧**、
   baseline **8.6**,逐种子同号均值 **+1.86**,一张写着「门什么也没干」的干净表;
@@ -15254,3 +15266,63 @@
     ⚠️ **偏高的成因是等**:四个 sweep + 170 次 `scan()` 串行约 40 分钟,期间轮询十余次。
     **下一轮把等待压成一个 until 循环。**
   - 完整报告:`iterations/reports/replay-check/20260911T161153Z.md`
+- **2026-09-11T19:0xZ(本轮):`tpcommit` 执行侧 = **WORKING**;买法是「拿门自己的一条子句当零通道」。**
+  ```
+  VERIFY id=tpcommit verdict=WORKING episodes=1360
+  ```
+  **宽扫 18/18 局**(W66 唯一活下来的 `spot_20260911_152456_1_main_8d8c4b`,种子 11395;
+  `sweep_complete.json` 逐字 `dem_found 24 / swept 18 / skipped 6 / unparseable 0 / exit_code 0`),
+  **深查逐帧 8 局**(下限 6 达标)。分层 **ab 11 / ba 7**,⚠️ ba 薄,**全程未并池**。
+  W66 另外三台一局未存(批测台 18:15Z:48 秒内跨两 AZ 三台同收)⇒ 无遗留未检对局。
+  - ⭐⭐ **翻了上一轮自己那句交棒**:「`tpcommit` 无独立施法可观测量」——**前半对,结论下早了**。
+    它没有自己的施法,但有**一条离线可观测的子句**(`jmz_func.lua:10726`
+    `#J.GetEnemiesNearLoc(bot.tpRespondLoc,1600)==0 ⇒ return nil`),于是**同一批落地、
+    同一个 12s 窗口内部**天然劈成「门能出价(HOT)」与「门结构上闭嘴(COLD)」两半。
+    **这是可迁移的买法**:没有自己施法的门,只要有一条可观测子句,零通道就是免费的。
+  - **读数(4(i-a) 两层都登记,`hp>=0.40`,pin = 距落点 <500u)**:
+    窗口内 [4,12) **HOT** cand−base **`+5.5pp`**(54.2%/952 vs 48.7%/1154,ab)/
+    **`+14.8pp`**(63.2%/666 vs 48.4%/676,ba);同窗口 **COLD** **`+0.2pp`** / **`+1.8pp`**。
+    窗口外 [12,24) HOT `+0.1` / `+3.9`,COLD `+1.2` / `+3.4`。
+    episode 级(不吃驻留加权)cand 55.4%(n=163)vs base 49.9%(n=184)【ab】,
+    63.4%(n=109)vs 47.6%(n=109)【ba】。**帧级与 episode 级、两层,全部同号。**
+  - **归属**:`tpdying` / `tpdead` 是这个门**内部**的两条释放,**本波都不在 arm 串** ⇒ 差值是
+    `tpcommit` 自己;共同 armed 的 `stayfield`/`stayfield2` **不看触发点上站着谁**,
+    造不出只在 HOT 一侧的差(COLD 的 `+0.2/+1.8` 就是这句话的读数)。
+    盖戳点 `ability_item_usage_generic.lua:5205/5229/5409` **不设门** ⇒ 两腿同形状盖戳。
+  - **供给两层反号**(每局落地 cand/ab 35.9 vs base/ab 41.3;cand/ba 38.4 vs base/ba 34.6)
+    ⇒ 按 4(i-b) 读不出腿级供给差,**不拿它解释也不拿它说 `tpgap`**。
+  - ⛔ **12.0s 边界本轮读不出来**:熬过 rel 11 且 12s 时门仍在出价的 episode 里,[12,14) 离开
+    cand 8/12(ab)、2/12(ba)vs base 2/7、1/5 —— **两层反号 = 噪声**(1Hz 下 ±1 帧)。
+    **归属不靠它。**
+  - **承重帧**:`154027_slot6` dragon_knight cast=388.5 —— `4.0..11.0` 钉在 209–475u、`foe` 2–3、
+    **`hp=1.00` 全程**(两条释放逐帧为假),`12.0:d=501 → 13.0:d=903`;
+    `152654_slot8` bristleback、`155255_slot5` OD(`12.3:d=721` 而触发点 13.3 才转冷)同形状;
+    `154021_slot7` ember_spirit 是**释放侧正例**(血一掉 1.00→0.78 就走,没等到期)。
+  - **效果侧(条件 (b) 地界,只登记不判决)**:窗口内血量首次跌破 40% 时**仍钉在热触发点 500u 内**
+    的占比 cand **57.1%**(16/28,ab)/ **66.7%**(12/18,ba)vs base **33.3%**(6/18)/ **35.3%**(6/17),
+    **两层同号,n 小不写结论** —— 这是 wave12 卷宗那个形状在 `tpdying` **未 armed** 的腿上复现。
+    机制帧 `154034_slot2` dragon_knight cast=616.6:`4.8..11.8` 恒在 440–469u、`foe=3`,
+    血 0.997→0.767→0.685→0.529→0.319,`12.8:hp=0.002` 死。→ GH #35 追评。
+  - ⚠️ **本轮一处当场自我更正**(已进工具坑首条):`g['dead'].get(raw_name)` 静默读成全员存活
+    (`death_spans` 按 `canon_hero()` 建键),污染方向朝结论;改用模块自己的 `is_dead()` 重跑,
+    方向不变分母缩小。**方向没翻是运气,不是没关系。**
+  - **AWS**:只读 S3(1 次 `sweep_run.sh` 列举 + 24 个 `.dem` + dumper 缓存命中),**零支出**。
+  - **树上改动**:仅报告 + 本文件;两个探针全落 scratchpad。
+  - **本轮 issue:净增 0 条 + 1 条追评**(先搜后开,语义检索只命中 GH #35 这一条既有单)。
+  - **自检**:`selfcheck worst exit: 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence owed-executions trunk-red(python) trunk-red(lua)` /
+    `UNCERTIFIABLE (exit 2): none` /
+    `NOT RUN (inside a leg): tests/test_lua_gate.py tests/test_luacheck_gate_soakswitch.py tests/test_selfcheck_lua_leg.py`
+    —— **腿内这三条这轮没人看过,不是通过**。trunk 红与批测台 18:15Z 同一批,GH #751 已登记,
+    `bots/` `tests/` 本轮一行未改 ⇒ **不是本轮增量**。
+    ⚠️ **开工第一条命令第 20 次撞管道拒绝门**;✅ 这次**没有**套外层 `timeout`(上轮交棒 (7) 照办)。
+  - **下一轮第一件事**:(1) ⭐ **`overchase` / `blinkflee` 是仅剩两个「有 owed row 无 VERIFY」的
+    armed id** —— 先读它们那两条「不可归因 / 结构性拒绝」的登记还成不成立,再决定买语料还是
+    改登记成「按设计不可买」,⛔ 别第三次花一轮重新发现同一句话;
+    (2) ⭐ **本轮买法可迁移**:遇到「无独立可观测量」先问「它有没有一条可观测的子句」;
+    (3) 盯 **GH #35(本轮追评)** / #752 / #96 / #747 / #744 / #736;
+    (4) ⛔ 覆盖行只引用 `sweep_complete.json`;(5) ⭐ sweep 的 `out_dir` 一律指 scratchpad;
+    (6) ⚠️ **liveness 一律走 `is_dead()`,不要 `.get(raw_name)`**(本轮现踩);
+    (7) ⭐ **单 run 读数不是波级读数** —— 本轮全部读数**只代表种子 11395**,跨波引用必须带这句。
+  - **铁律 6 三条腿 / token**:见报告「补记」节(push 后回填,GH #290 顺序)。
+  - 完整报告:`iterations/reports/replay-check/20260911T190204Z.md`
