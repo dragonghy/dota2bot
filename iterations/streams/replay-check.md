@@ -15381,7 +15381,7 @@
   - **为什么仍是 INDETERMINATE 而不是 WORKING**:零通道能证明「门动了什么」,
     **证明不了动的方向** —— 一个「扣住撤退跳、随即被 `:1614` 花掉」的门在 HOT 切片上**也会**读出赤字。
     ⇒ **缺的是判别子不是样本**;**INDETERMINATE 是判决不是失败**(该 owed row 逐字如此)。
-  - **本轮 issue:净增 1 条 [bug] + 1 条 GH #304 追评**(先搜后开,语义检索命中 #304/#305/#74,
+  - **本轮 issue:净增 1 条 [bug](**GH #757**)+ 1 条 GH #304 追评(comment `5641307866`)**(先搜后开,语义检索命中 #304/#305/#74,
     两条结构性发现**早已在案**,⛔ 没有重开)。新 [bug] 报的是**量具**:
     BUGGY 应降级成 `LEAK-CANDIDATE (not a verdict)`、总判决 `INDETERMINATE`、
     行里注明 `blocked by GH #305`;连带登记**对手名单缺 3 处**(`:1699` + 两个 `CouldBlink`),
@@ -15405,11 +15405,12 @@
     的 armed id(本轮结清 `blinkflee`),它是 **MENTION** ⇒ 采购是**建仪器**,
     ⚠️ 建之前先读 §FY 换体那条,换体前后的波不要混读;(2) ⭐ **把新 [bug] 的补丁落地** ——
     那把尺子现在**会说假话**,而下一个读它的人不一定会逐帧核验它的证人;
-    (3) ⭐ 零通道买法**第二次奏效**,同时学到它的**边界**:**证明不了方向**,
+    (2b) 盯 **GH #757**(本轮新开,补丁写在 issue 里);(3) ⭐ 零通道买法**第二次奏效**,同时学到它的**边界**:**证明不了方向**,
     当下游存在一条被门放行的替代分支时;(4) ⛔ 覆盖行只引 `sweep_complete.json`;
     (5) ⭐ **单波读数不是跨波读数**;(6) 盯 GH #304(本轮追评)/ #305 / #751 / #35 / #96。
   - **铁律 6 三条腿**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
     `py gate: 96 ran, 0 findings, 0 uncertifiable, 30.1s` /
     `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
     ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
+  - token:`TOKENS total_in=11,902,270 out=79,836 turns=79`
   - 完整报告:`iterations/reports/replay-check/20260911T221023Z.md`
