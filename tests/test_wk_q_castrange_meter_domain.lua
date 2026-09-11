@@ -100,6 +100,13 @@
 -- The third conjunct is new and it is what makes the domain a MARGINAL one.
 -- The observable is TARGET IDENTITY, never cast count.
 --
+-- ⚠️ [hero 2026-09-11] AND FOR TEN DAYS THIS FILE COULD NOT MEASURE THAT
+-- OBSERVABLE.  Section 6 compared the two legs' targets across two separate
+-- `rf.load` calls, so the comparison answered "is there a target" rather than
+-- "is it the same target" -- see the note above section 6.  A file may declare
+-- an observable in its header and still have no instrument for it; the header
+-- sentence above is what made the gap findable, so it stays exactly as written.
+--
 -- ===========================================================================
 -- 5.  THE TRAP FOR WHOEVER WIRES THE METER: ABSENT IS NOT ZERO
 -- ===========================================================================
@@ -253,6 +260,71 @@ local function drive(path, armed, nRange)
              raw_range = nRaw, bot = bot, ability = h }
 end
 
+--- Drive X.ConsiderQ SEVERAL TIMES ON ONE LOADED WORLD, once per leg, and hand
+--- back the readings side by side.
+---
+--- [hero 2026-09-11, GH #390] THIS EXISTS BECAUSE `drive()` CANNOT COMPARE
+--- TARGETS, AND SECTION 4 OF THE HEADER SAYS TARGET IDENTITY IS THE OBSERVABLE.
+--- Every `drive()` call does its own `rf.load`, which builds its own unit
+--- handles; two loads of the SAME frame on the SAME leg therefore hand back
+--- two different tables for the same hero.  `f.target ~= a.target` was thus
+--- TRUE on every frame where ConsiderQ returns any target at all, and FALSE
+--- only where both legs returned nil -- it measured "is there a target", never
+--- "did the legs pick different ones".  The direction is the dangerous one: it
+--- reads positive for a lever that does nothing, so section 6 stood red
+--- claiming it had found the frame GH #390 asked for, and named three.  The
+--- control below is the whole repair: on one load, the same leg driven twice
+--- returns the SAME table, so an inequality is now a decision.
+local function drive_legs(path)
+    local J, bot = rf.load(path, UNIT)
+    J.IsModeTurbo = function() return true end
+
+    local h = bot:GetAbilityByName(Q)
+    local nRaw = h and h:GetCastRange() or nil
+
+    local X = rf.load_hero('skeleton_king')
+    pcall(function() X.SkillsComplement() end)
+
+    local function run(armed)
+        J.IsSoakCandidate = function(id) return armed and id == 'wkqdmg' end
+        local seen, last = {}, nil
+        debug.sethook(function(_, line)
+            local info = debug.getinfo(2, 'S')
+            if info and info.short_src and info.short_src:find(SRC, 1, true) then
+                seen[line] = true
+                last = line
+            end
+        end, 'l')
+        local ok, nDesire, hTarget = pcall(function() return X.ConsiderQ() end)
+        debug.sethook()
+        assert(ok, 'X.ConsiderQ raised on ' .. path .. ': ' .. tostring(nDesire))
+        return { desire = nDesire, target = hTarget, last = last, seen = seen }
+    end
+
+    -- The meter's own answer first, then the same world with the KV fed back.
+    --
+    -- ⚠️ THE FEED IS VESTIGIAL AND IS KEPT ON PURPOSE.  This round's mutation
+    -- stand deleted the assignment below and the file stayed GREEN -- because
+    -- the loader already serves GetCastRange out of the KV snapshot, so on all
+    -- 48 instants carrying an `abilities` array it writes 525 over 525, and the
+    -- other 3 have no handle to write to.  That is not an unpinned assertion:
+    -- section 1 asserts exactly that split (`nFed == t.live - 3`), so the
+    -- no-op-ness is measured there rather than here.  Kept because it is what
+    -- makes `zero` and `ship` two NAMED worlds; if the loader ever stops
+    -- serving the KV, section 1 goes red first and this line starts mattering
+    -- again.
+    local zero = run(false)
+    if h ~= nil then rawget(h, '__spec').GetCastRange = KV_CAST_RANGE end
+    local ship  = run(false)
+    local armed = run(true)
+    -- The control: a second shipped run must be byte-identical to the first.
+    -- If this ever fails, `ship` vs `armed` is measuring the harness again.
+    local ctrl  = run(false)
+
+    return { zero = zero, ship = ship, armed = armed, ctrl = ctrl,
+             raw_range = nRaw }
+end
+
 --- The whole sweep, computed once and shared by the sections below.
 local sweep_cache = nil
 local function sweep()
@@ -261,7 +333,7 @@ local function sweep()
         files = 0, live = 0, raw_ranges = {},
         untrained = 0, cooldown = 0, mana = 0, savemana = 0, body = 0,
         loop_zero = 0, loop_fed = 0, gate_fed = 0, fire_fed = 0,
-        flips = {}, body_paths = {},
+        flips = {}, body_paths = {}, ctrl_breaks = {},
     }
     for _, path in ipairs(corpus_paths()) do
         t.files = t.files + 1
@@ -286,12 +358,23 @@ local function sweep()
                 t.body_paths[#t.body_paths + 1] = path
                 if z.seen[L_LOOPBODY] then t.loop_zero = t.loop_zero + 1 end
 
-                local f = drive(path, false, KV_CAST_RANGE)
-                local a = drive(path, true,  KV_CAST_RANGE)
+                -- Both legs off ONE load, so `target` is comparable at all.
+                local w = drive_legs(path)
+                local f, a = w.ship, w.armed
                 if f.seen[L_LOOPBODY] then t.loop_fed = t.loop_fed + 1 end
                 if f.seen[L_DISTGATE] then t.gate_fed = t.gate_fed + 1 end
                 if f.seen[L_KILLFIRE] then t.fire_fed = t.fire_fed + 1 end
-                if z.last ~= f.last or f.last ~= a.last
+
+                -- The control before the reading (see `drive_legs`): a repeat
+                -- of the SHIPPED leg on this same world must be identical.  A
+                -- break here means the flip line below is measuring the
+                -- harness, and no flip it reports can be believed.
+                if f.last ~= w.ctrl.last or f.desire ~= w.ctrl.desire
+                    or f.target ~= w.ctrl.target then
+                    t.ctrl_breaks[#t.ctrl_breaks + 1] = path
+                end
+
+                if w.zero.last ~= f.last or f.last ~= a.last
                     or f.desire ~= a.desire or f.target ~= a.target then
                     t.flips[#t.flips + 1] = path
                 end
@@ -394,7 +477,20 @@ tests['1. GetCastRange answers 0 on every live-WK instant, and the KV knows 525'
     -- arithmetic, so the "0 of 18 body frames" archived reading gains no sample
     -- from this frame.  The KV/zero split is again unchanged (the frame is a
     -- current dump and carries a full `abilities` array, so it reads 525).
-    local ARCHIVED_ZERO_ON_ALL = 38
+    -- 2026-09-11 (hero, GH #390): 38 -> 51.  Thirteen instants, all from the
+    -- two frame batches staged under tests/frames/ since the last anchor, and
+    -- the split across buckets is the load-bearing half (section 4 moved with
+    -- it, section 5 did not move the way the count suggests):
+    --     +4 COOLDOWN  f_260909_215227_zeus_{bolt_wk_434,exec_wk_615,
+    --                  ult_1008,ult_396} -- Q trained, cd > 0 on the frame
+    --     +1 SAVEMANA  f_260909_215227_zeus_jump_283
+    --     +8 BODY      f_260909_215040_wk_blast_* (six) plus
+    --                  f_260909_215227_zeus_{arc_od_79,exec_od_1467}
+    -- The six wk_blast frames are the first in this archive dumped AT a
+    -- Wraithfire Blast instant, which is why they are also the frames that
+    -- moved section 5's loop count.  The KV/zero split is unchanged: all
+    -- thirteen are current dumps carrying a full `abilities` array.
+    local ARCHIVED_ZERO_ON_ALL = 51
     local NO_ABILITY_ARRAY     = 3
     local nFed  = t.raw_ranges[tostring(KV_CAST_RANGE)] or 0
     local nZero = t.raw_ranges['0'] or 0
@@ -459,10 +555,13 @@ tests['4. the castable funnel over the archive, buckets exhaustive'] = function(
     -- Wraith King has Q trained at rank 3 with cd 1.4 remaining.  Re-taken, not
     -- bumped: the body bucket did NOT move with it (19), which is the whole
     -- reason this bucket is read separately -- see section 1's note.
-    assert(t.cooldown  == 10, 'cooldown bucket moved from 10 to ' .. t.cooldown)
-    assert(t.savemana  == 4, 'ShouldSaveMana bucket moved from 4 to ' .. t.savemana)
+    -- 10 -> 14 on 2026-09-11 (hero, GH #390): the four f_260909_215227_zeus_*
+    -- frames whose Wraith King is trained but on cooldown.  Same mechanism as
+    -- the #659 note above, four instants at once; section 1 carries the split.
+    assert(t.cooldown  == 14, 'cooldown bucket moved from 14 to ' .. t.cooldown)
+    assert(t.savemana  == 5, 'ShouldSaveMana bucket moved from 5 to ' .. t.savemana)
     assert(t.mana      == 0, 'mana bucket moved from 0 to ' .. t.mana)
-    assert(t.body      == 19, 'body bucket moved from 19 to ' .. t.body)
+    assert(t.body      == 27, 'body bucket moved from 27 to ' .. t.body)
 end
 
 -- ===========================================================================
@@ -485,10 +584,16 @@ local ARCHIVED_LOOP_UNDER_ZERO = 0
 
 tests['5. the corpus zero was vacuous on 16 of 18 frames (archived; the worlds have converged)'] = function()
     local t = sweep()
-    assert(t.loop_fed == 2, 'with ' .. KV_CAST_RANGE .. ' fed back the loop is '
-        .. 'entered on ' .. t.loop_fed .. ' body frames; the header says 2')
-    assert(t.gate_fed == 2, 'the distance gate was evaluated on ' .. t.gate_fed
-        .. ' frames; the header says 2')
+    -- 2 -> 9 on 2026-09-11 (hero, GH #390).  Seven of the eight body frames
+    -- added this round enter the loop: the six f_260909_215040_wk_blast_*
+    -- frames plus f_260909_215227_zeus_arc_od_79.  That is not a coincidence of
+    -- corpus growth -- the wk_blast batch was dumped AT blast instants, so an
+    -- enemy inside the 855 search ring is the precondition the batch selects
+    -- for.  What it does NOT move is `fire_fed`, still 0; see section 6.
+    assert(t.loop_fed == 9, 'with ' .. KV_CAST_RANGE .. ' fed back the loop is '
+        .. 'entered on ' .. t.loop_fed .. ' body frames; the header says 9')
+    assert(t.gate_fed == 9, 'the distance gate was evaluated on ' .. t.gate_fed
+        .. ' frames; the header says 9')
     -- The honest half: reaching the check is not firing it.
     assert(t.fire_fed == 0, 'the kill-confirm branch FIRED on ' .. t.fire_fed
         .. ' frames with the range fed back. The header says 0 and rests on it; '
@@ -504,11 +609,36 @@ tests['5. the corpus zero was vacuous on 16 of 18 frames (archived; the worlds h
 end
 
 -- ===========================================================================
+-- [hero 2026-09-11, GH #390] WHAT THIS SECTION CLAIMED BEFORE, AND WHY IT WAS
+-- NOT A FINDING.  From 2026-09-09 to 2026-09-11 this assertion stood RED naming
+-- three frames -- f_260909_215040_wk_blast_{lion_480,sb_1052,sb_661} -- and its
+-- own text said they were "the frame GH #390 asked for".  They were not.  Each
+-- leg was driven through its own `rf.load`, so `f.target ~= a.target` compared
+-- two tables built by two different loads and was true whenever a target
+-- existed at all.  The three named frames are exactly the three body frames on
+-- which ConsiderQ returns a non-nil target (all three at desire 0.75 from the
+-- teamfight branch at a line the `wkqdmg` lever cannot reach); the other 24 body
+-- frames "agreed" only because nil == nil.
+--
+-- The lesson is not "compare by name instead".  It is that a detector whose
+-- positive reading is produced by the harness cannot be believed in EITHER
+-- direction -- had the lever really moved a target, this line would have
+-- reported the same red for the wrong reason, and the write-up would have been
+-- wrong in the expensive direction.  The control assertion below is therefore
+-- the load-bearing one, and it runs FIRST.
 tests['6. no decision flips: the archive cannot separate the two legs'] = function()
     local t = sweep()
+    -- CONTROL FIRST.  The shipped leg driven twice on one world must land on
+    -- the same line, desire and target table.  If this is red, nothing about
+    -- the flip count below means anything.
+    assert(#t.ctrl_breaks == 0, 'the SHIPPED leg driven twice on the same loaded '
+        .. 'world disagreed with itself on: ' .. table.concat(t.ctrl_breaks, ', ')
+        .. '. Until that is explained, the flip reading is measuring the harness, '
+        .. 'which is the defect this control was added for.')
     assert(#t.flips == 0, 'a frame separated {meter zero, fed shipped, fed armed}: '
-        .. table.concat(t.flips, ', ') .. '. That is the frame GH #390 asked for -- '
-        .. 'write it up rather than letting this assertion carry it.')
+        .. table.concat(t.flips, ', ') .. '. The control above passed, so this is '
+        .. 'a decision and not a load -- that is the frame GH #390 asked for, and '
+        .. 'it must be written up rather than left in this message.')
     assert(t.body == #t.body_paths and t.body > 0,
         'the flip check ran over an empty set, which is not the same reading as '
         .. '"no flip"')
@@ -551,6 +681,119 @@ tests['7. ten firing points, one desire constant -- read off the source'] = func
     end
     assert(n_before == 1, 'the wkqdmg firing point is no longer the 2nd of the ten '
         .. '(' .. n_before .. ' HIGH returns precede it); §4 is stated for the 2nd')
+end
+
+-- ===========================================================================
+-- 9.  GH #390 RECOMMENDATION 2, ASKED OFF THE ARCHIVE: WHERE DOES THE BRANCH
+--     ACTUALLY STOP?
+-- ===========================================================================
+--
+-- The issue's recommendation 2 was "stop waiting for a band_pair and ask a
+-- branch-REACH question instead -- a low count is not evidence that the domain
+-- is small".  Sections 5 and 6 answer the coarse half (the loop is entered on
+-- 9 body frames, the branch fires on 0), but "reached the line" is not
+-- "passed the range test": the gate is
+--
+--     GetUnitToUnitDistance(...) <= nCastRange + 80
+--         and J.CanKillTarget( npcEnemy, X.wk_GetBlastKillDamage( abilityQ ), ... )
+--
+-- and Lua short-circuits, so wk_GetBlastKillDamage is called ONLY on the pairs
+-- that already passed the range test.  Counting its calls therefore splits the
+-- two ways the branch can decline, which is the split the issue asked for.
+--
+-- READING (2026-09-11, both legs, per (frame, enemy) pair):
+--     reached the range test .......... 9 body frames
+--     PASSED it, claim computed ....... 12 pairs
+--     claim cleared, branch fires ..... 0 pairs, on EITHER leg
+--
+-- So the branch is not starved of range -- it is starved of CLAIM.  Twelve
+-- times the enemy was inside 605 units and the kill claim still lost, which is
+-- the opposite of what "the ring has been 330 wide" (section 3) would predict
+-- and is why that section's "understates reach" wording is about the ring, not
+-- about this gate.
+--
+-- AND THE MARGIN IS NOT WIDE.  The tightest pair in the archive is Spirit
+-- Breaker at 172 raw hp on f_260909_215040_wk_blast_sb_661 against a SHIPPED
+-- claim of 168.0 -- a miss by 4 raw hp, before magic resistance is applied.
+-- ⚠️ That number is NOT comparable to the issue's "nearest baseline cast missed
+-- the band by 63.6 ehp": the issue measured casts that really happened in 12
+-- games, this measures every (frame, enemy) pair the branch evaluates in a
+-- 51-instant archive, and it is raw hp rather than ehp.  Two different
+-- populations; what they agree on is the only thing quoted as a conclusion --
+-- the separation is 0, on every pair either of them has seen.
+local function reach_census()
+    local n_pairs, n_fire, tightest, tight_at = 0, 0, nil, nil
+    for _, path in ipairs(corpus_paths()) do
+        if wk_alive(path) then
+            for _, armed in ipairs({ false, true }) do
+                local J, bot = rf.load(path, UNIT)
+                J.IsSoakCandidate = function(id) return armed and id == 'wkqdmg' end
+                J.IsModeTurbo     = function() return true end
+                local h = bot:GetAbilityByName(Q)
+                if h ~= nil then rawget(h, '__spec').GetCastRange = KV_CAST_RANGE end
+
+                local X = rf.load_hero('skeleton_king')
+                pcall(function() X.SkillsComplement() end)
+
+                local real_kill = J.CanKillTarget
+                J.CanKillTarget = function(hTarget, nDamage, nType)
+                    local bKill = real_kill(hTarget, nDamage, nType)
+                    if not armed then n_pairs = n_pairs + 1 end
+                    if bKill then n_fire = n_fire + 1 end
+                    local nHp = 0
+                    pcall(function() nHp = hTarget:GetHealth() end)
+                    -- Margin on the SHIPPED leg only: it is the wider claim, so
+                    -- it is the leg that gets closest to firing.
+                    if not armed and nDamage ~= nil and nHp > 0 then
+                        local nMiss = nHp - nDamage
+                        if tightest == nil or nMiss < tightest then
+                            tightest, tight_at = nMiss, path
+                        end
+                    end
+                    return bKill
+                end
+
+                pcall(function() X.ConsiderQ() end)
+            end
+        end
+    end
+    return n_pairs, n_fire, tightest, tight_at
+end
+
+tests['9. the branch reaches and loses on the CLAIM, not on the range (GH #390 rec 2)'] = function()
+    local n_pairs, n_fire, tightest, tight_at = reach_census()
+
+    -- THE FIRING CHECK RUNS FIRST, AND THE ORDER IS NOT COSMETIC.  Found by the
+    -- mutation stand for this round (M2: widen the shipped claim 1.68 -> 16.8).
+    -- The branch RETURNS on the pair that clears, so a firing world evaluates
+    -- FEWER pairs, not more -- the count fell 12 -> 7.  With the reach bound
+    -- first, the one event this file exists to catch reported itself as "the
+    -- branch stopped being reached", which is the opposite diagnosis and would
+    -- have sent the next reader to section 5.  Same shape as section 6's
+    -- control-before-reading: whichever assertion can MISNAME the finding has
+    -- to speak after the one that names it correctly.
+    --
+    -- A firing pair is the (a) evidence GH #390 has been waiting for since
+    -- 2026-09-01 -- it must leave this file as a write-up, never as a relaxed
+    -- assertion.
+    assert(n_fire == 0, 'the kill-confirm claim CLEARED on ' .. n_fire
+        .. ' (frame, enemy) pairs. That is a separating frame for wkqdmg and the '
+        .. 'thing GH #390 asked for: write it up, do not adjust this line.')
+
+    -- Direction-safe: the reading is "the branch is reached", so a corpus that
+    -- grows may only add pairs.  A drop to 0 is the vacuous world in which
+    -- every number in this section is the same integer as "never measured".
+    assert(n_pairs >= 12, 'the kill claim was computed on ' .. n_pairs
+        .. ' (frame, enemy) pairs on the shipped leg; it was 12 on 2026-09-11 and '
+        .. 'this section reads as a REACH claim, so fewer means the branch stopped '
+        .. 'being reached and section 5 must be re-derived, not this bound lowered')
+
+    -- The margin, pinned loosely and in the safe direction: it is quoted in the
+    -- header and on the issue, so a corpus that brings it much closer is news.
+    assert(tightest ~= nil, 'no margin was recorded, which means CanKillTarget was '
+        .. 'never reached -- see the pair count above')
+    assert(tightest <= 4, 'the tightest shipped-leg miss widened from 4 raw hp to '
+        .. tightest .. ' (' .. tostring(tight_at) .. '); the header quotes 4')
 end
 
 -- ===========================================================================

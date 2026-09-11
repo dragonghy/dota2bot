@@ -14,7 +14,6 @@
     "tests/test_roshdist_pit_truth_operand.lua",
     "tests/test_salveally_missing_floor.lua",
     "tests/test_wk_level_supply_horizon.lua",
-    "tests/test_wk_q_castrange_meter_domain.lua",
     "tests/test_wk_q_lane_reach.lua"
   ],
   "known_red_at": "2026-09-10T16:18:18Z",
@@ -54,12 +53,6 @@
     "tests/test_wk_level_supply_horizon.lua": [
       "2. the tree holds TWO WK slots above 12 and the glob can see neither",
       "6. the staged slot is level 21 -- and its pool reading is flagged, not usable"
-    ],
-    "tests/test_wk_q_castrange_meter_domain.lua": [
-      "1. GetCastRange answers 0 on every live-WK instant, and the KV knows 525",
-      "4. the castable funnel over the archive, buckets exhaustive",
-      "5. the corpus zero was vacuous on 16 of 18 frames (archived; the worlds have converged)",
-      "6. no decision flips: the archive cannot separate the two legs"
     ],
     "tests/test_wk_q_lane_reach.lua": [
       "\u00a71 the corpus puts an enemy in the band on 6 of 38 Wraith King frames"
