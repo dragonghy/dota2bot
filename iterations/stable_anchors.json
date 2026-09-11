@@ -151,6 +151,31 @@
         "⛔ **这条 promote 的守卫是一个字符串钉,不是行为断言,而这是量出来的**:标准的 promote 行为用例在「有人把闸偷偷加回去」这个变异体下 **SURVIVED**,因为本仓库 fixture 语料 94 个 subject-load 上出厂扫描与按槽位扫描 **nFlip == 0,从不分歧**(`[domain price]` 前提)。全文 test_set.md §FT.4;哪天 `[domain price]` 变红,那条行为用例才开始承重。",
         "同一个 commit 里还有测试与变异台的维护(census 掉三行、mutstand 重锚 M6/M7/M8/M11、新增 M13/M14、FILES 补一个文件)—— 它们**不改变稳定版**(`bots/` 只有上面那一处 diff),所以锚点语义不受影响。"
       ]
+    },
+    {
+      "name": "stable-v7",
+      "ref": "refs/heads/stable-v7",
+      "ref_kind": "branch",
+      "ref_sha": "9aeda130a24fdbac46daf813e9dfbf584356014e",
+      "promote_commit": "9aeda130a24fdbac46daf813e9dfbf584356014e",
+      "promote_commit_subject": "director: PROMOTE tpdeathbuy + liondrainstop to turbo defaults (stable-v7), armed 34 -> 32",
+      "promoted_ids": [
+        "tpdeathbuy",
+        "liondrainstop"
+      ],
+      "promoted_at": "2026-09-11T1x:xxZ",
+      "state_json_key": "tpdeathbuy_PROMOTE_20260911",
+      "on_main_first_parent": true,
+      "note": [
+        "第八与第九次 promote,**本仓库第一个带两个 id 的锚点**。ref 指着 promote commit 本身 ⇒ 不变量 3 平凡成立。",
+        "⭐ **为什么一个锚点两条 id**:两条在最近五波(W55/W58/W62/W63/W64)里**每一波都同时 armed**,家族级 (b) 结构上分不开它们 ⇒ **分开 promote 会把一个没有任何一波跑过的配置发出去**(先促其一,则稳定版含前者而后者仍在臂上)。同轮交付的恰好是被测过的那个配置。⛔ 这**不是** `lanefix` 那个形状:两条落在互不相交的子系统(`item_purchase_generic.lua` 的采购块 / `hero_lion.lua` 的引导释放),代码上不共享一行,域各自是个位数百分比。",
+        "稳定版的变化只有两处:(1) `bots/item_purchase_generic.lua` 的 `bDyingWithDoomedGold` 选择由 `J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy')` 换成 `J.IsModeTurbo()` ⇒ turbo 下那个**不可满足**的下界被丢掉,一段从上游快照带来后一次都没跑过的代码开始工作;(2) `bots/BotLib/hero_lion.lua:2008` 的 `X.lion_ShouldStopDrain` 首句由闸合取换成 `if not J.IsModeTurbo() then return false end` ⇒ turbo 下 Lion 在挨英雄伤害且 500u 内有敌人时会主动放掉 Mana Drain 引导。**两处的非 turbo 腿都逐字未动**,`game/` 零 diff ⇒ 锚点语义只由这两处决定。",
+        "⭐ **引用本锚点时连引这一句**:两条共用同一份 (b) —— 五波家族级、**均值 −2.66 gpm、722 计分局**,而**五波的 winrate 通道全部 DEGENERATE ⇒ 没有任何胜负读数可引**。它过的是铁律 2(b) 的**粗粒度**门(家族级不可归因的漂移),**不是正面证据**。两条的裁定都压在条件 (c) 上:`tpdeathbuy` 是**算术**(合取不可满足),`liondrainstop` 是**结构**(生根的引导不在回家路上,出厂释放路径对它永不触发)。",
+        "⚠️ **`tpdeathbuy` 是本仓库 promote 过的唯一一条加宽**(死 → 活)。它**不可能被一份「无变化」的读数确认**:读到无变化 = 没到域。任何将来给它定价的波,反向哨兵是「TP 花费不许暴涨」,不是「TP 采购数不许塌」。",
+        "⚠️ **`liondrainstop` 带着一个开着的 issue 落地(GH #314),而这是刻意的**:4/36 域内引导被保持而不是被切断 —— **覆盖不足,不是有害**(那些帧上 promoted 腿与出厂树逐字同为不切)。⛔ 与同日**没有** promote 的 `fieldbuy` 逐字对照:GH #734 给那一条量到了**价钱**(买回的药剂 61.1% 先落背包、18.0% 卡死喝不着),这一条没有人量到价钱。**「有开着的 issue」不是判据,「有没有量到价钱」才是。**",
+        "⛔ **变异台读 12 CAUGHT / 1 SURVIVED / 0 ABORTED,而那一发存活是登记在案的**(`tools/agent/mutstand_promote_20260911.sh` M10:把 `[promote]` 用例里的 id 禁令松成恒真,没有邻居重新推导它 —— 一个文件抓不住自己的断言被放松)。它**不是**「promote 被悄悄撤销没人发现」:那是 M1,M1 被抓住。全文 test_set.md §GU.5。",
+        "同一个 commit 里还有测试翻面、变异台新建、census 重钉、W65 记录修补与几个 registry 文件 —— 它们**不改变稳定版**(`bots/` 只有上面两处 diff),所以锚点语义不受影响。"
+      ]
     }
   ]
 }

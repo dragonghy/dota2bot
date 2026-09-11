@@ -563,6 +563,82 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-11T11:25Z**:**第八、九次 promote 同轮落地(`tpdeathbuy` + `liondrainstop`),armed 34 → 32,锚点 `stable-v7`。
+  判定完结 2 —— owner P4.2 的产出指标达标**(上一轮 0,且上一轮「下次触发 ①」逐字禁止再让位给仪器工作;本轮照做,
+  §5 那件仪器活**被登记而不是被执行**)。零 AWS(**一次调用都没有**)、零波次、**不发 owner 邮件**、无 reject、无入集。
+  全文 `iterations/reports/director/20260911T112500Z.md`,档案 `test_set.md §GU`(§GU.0–§GU.7),
+  机器键 `state.json:tpdeathbuy_PROMOTE_20260911` / `liondrainstop_PROMOTE_20260911`。
+  ⭐⭐⭐ **(甲) 主轴:一个变异体连活两轮,而第二次存活不是第一次的弱化版。**
+  `mutstand_promote_20260911.sh` 的 **M9**(把 `X.nEDrainDangerRadius` 换成字面量 2000):
+  (1) **第一轮存活 ⇒ 根本没有使用点断言** —— 已有的 `radius:` 用例钉的是**声明**(常量落在 [484,781)),
+  而 §GU.2 条件 (c) 那句「共用常量 ⇒ 重调会在**两侧**自报」当时**没有任何东西守着**(charter 0ASYM (iii) 又一发);
+  (2) ⭐ **第二轮存活 ⇒ 我修的是另一个函数** —— 那一行
+  `J.GetNearbyHeroes( hBot, X.nEDrainDangerRadius, true, BOT_MODE_NONE )` **在两个守卫里逐字节相同**
+  (`hero_lion.lua:1886` 起始 / `:2031` 停止),`replace(old,new,1)` **落在第一个**
+  ⇒ **第二次存活是一个独立的发现:第二个没被钉住的使用点**,而唯一让人去看它的原因是**变异体拒绝去死**。
+  处置:断言改成**两个函数体都查**,新增 **M13** 用唯一锚串专打停止侧。终读 **12 CAUGHT / 1 SURVIVED / 0 ABORTED**。
+  📌 **可迁移的一句**:*一个「已经修好」的变异体再次存活时,先问它打的是不是你修的那个地方 ——
+  在一个有孪生代码行的文件里,「同一个缺陷」和「同一处缺陷」是两回事。*
+  ⛔ **M10 是登记在案的存活,留在台上说这句话**([promote] 用例的 id 禁令被松成恒真,无邻居重新推导它 ——
+  一个文件抓不住自己的断言被放松;⚠️ **它不是「promote 被悄悄撤销没人发现」,那是 M1,M1 被抓住**)。
+  ⭐⭐ **(乙) 为什么两条同轮 —— 不是「攒够了」,是它们的 (b) 分不开。** 两条在 W55/W58/W62/W63/W64
+  **每一波都同时 armed**,家族级读数结构上无法归因到其中之一 ⇒ **分开 promote 反而是把一个没有任何一波跑过的
+  配置发出去**(先促其一,稳定版含前者而后者仍在臂上)。⛔ **不是 `lanefix` 那个形状**:两条落在互不相交的
+  子系统(采购块 / Lion 引导释放),不共享一行代码,域各自个位数百分比。
+  ⭐ **(丙) 三条件**:`tpdeathbuy` (a) WORKING **14**、(c) **算术** —— `botHP < 0.08 and botHP >= 1` 对任何实数为假,
+  那约 12 行**从上游 `74727e4:957-958` 带来那天起一次都没跑过**;`liondrainstop` (a) WORKING **36**,
+  ⭐ **承重的是域外阴性对照**(域外 3.178/3.375 vs 3.119/3.125,**两腿无方向**;域内 1.653/0.995 vs 2.434/2.940)
+  ⇒ **缩短只发生在域内**,同臂 `lionqdmg` 由「29/32 切断点上 Lion 一个技能都没放」单独排除;(c) **结构** ——
+  生根的引导不在回家路上,出厂 `IsRetreating` 释放对它永不触发。
+  **(b) 两条共用**:5 波 gpm −22.72/+40.58/−7.20/−15.00/−8.96,**均值 −2.66,722 计分局**,
+  ⛔ **五波 winrate 全 DEGENERATE ⇒ 没有任何胜负读数可引**;粗粒度过门,**不是正面证据**(§FT.2 措辞照搬)。
+  ⭐⭐ **(丁) 一条容易被读反的分界线:两条都带着开着的 issue,只有一条被挡在门外。**
+  `liondrainstop` 带 **GH #314** 落地(4/36 域内引导被保持)—— **覆盖不足不是有害**:那些帧上 promoted 腿与
+  出厂树**逐字同为不切**;而 `fieldbuy`(a 最厚,785)**今天仍不 promote**,因为 **GH #734 给它量到了价钱**
+  (药剂 61.1% 先落背包、18.0% 卡死喝不着)。⇒ **判据不是「有没有开着的 issue」,是「有没有量到价钱」。**
+  ⚠️⚠️ **(戊) [harness] 现场:管钱的闸今天在 trunk 上读不出自己的锚。** `W65_wave.json` 09:15Z 落地,
+  带 `launch_time` 而缺 `launched_at`(**25 波以来第一次**),`wave_throttle.py` 只读后者且拒绝猜
+  ⇒ gate (i) `UNCERTIFIABLE`。**本轮按该记录自己的 `launch_time` 补回四条**(另有 run_id 时间戳佐证,
+  **没有发明任何瞬间**),修后读 `THROTTLED (exit 3) / unlock 15:23:44Z`,`test_wave_throttle.py` 55/0。
+  ⭐⭐ **而真正该读的是下一层**:那条棘轮**只跑 0.671s**,却因 `over_cumulative_budget` **不在推送闸里**
+  (同类 19 条 / 24.3s)⇒ **本该当场拦住那次 push 的东西被预算挤出去了**,红由下一个开工的组几小时后发现,
+  **逐字是 GH #624 的立案形状,发生在本该关掉它的那条腿内部**。⛔ **前提已过期,是事实不是偏好**:
+  `py_gate_measure.py` 自述 12s 预算的理由是「Lua 静态半 18s,不该让它翻倍」(09-08),
+  而 **GH #624 于 09-10 加了一条实测 329.9s 的腿** ⇒ 旋钮大 17 倍地失配。
+  ⚠️ **本轮不改,因为重测要安静容器**(该文件头自己记着 09-08 并发翻红过一条测试)⇒ 登记
+  `owed_executions:py_gate_budget_premise`,验收句裸读得出且**必须由工具重跑生成**(手捞一条 = 按名字选,GH #616 禁)。
+  ⭐ **(己) 推送闸抓到的两件事都是本轮自己的**:(1) `test_gated_helper_nesting_census.lua` 当场变红 ——
+  六行外层 id 集合 `fieldregen,tpdeathbuy` → `fieldregen`;**这是 GH #624 那条腿在工作不是误报**,
+  红**由推的人在同一轮当场看见**;重钉而非赦免,六行 (W) 判词一字未改(它们**从来没有一条靠 `tpdeathbuy`**);
+  (2) `carrier_terms.py` 的半个状态自己变红(旧 34 串 **2 unresolved/exit 2**,新 32 串 **0/exit 0**),
+  载体项 **7 → 7 逐字不变**(`lion` 由 `lionqdmg` 接住)。
+  ⚠️ **(庚) 我自己的读法错误,记下来**:三个 lion 测试一起跑读到「24 tests, 0 failures」就当三个文件全绿,
+  **并没有** —— `test_replay_260820_lion_drain_stop_pair.lua` 是红的,由变异台的 **BASELINE RED** 逼出来。
+  **一个聚合的绿数字,不等于名单上每一项都绿。**
+  ⭐ **(辛) 两个方向都查过**:倒像 `FROZEN 0 / COUPLED 1(仅 fieldsip)/ UNRESOLVED 0` ⇒ 两条 CLEAR;
+  正像各自**恰好一个**闸点、门行无第二个 id、`promote_atoms.json` **零次**点名。
+  该腿本轮**第一次在真实自检里出读数**(`legs run 12`,上一轮「下次触发 ②」的前半)。
+  ⭐ **(壬) 同轮 queue 裁定 `hero-57` = FROZEN-HOLD**(P4.2;落在 `director` 机器字段),
+  并开 `owed_executions:glyphany_readmission_on_thaw` —— 被 FROZEN-HOLD 的请求此后读 `ruled=True`,
+  **会从所有待办表上消失**(拉野死分支 37 轮那个形状)。`queue-rulings` 腿 **exit 3 → 0**。
+  **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings` /
+  `lua gate: 334 ran, 0 findings, **14 known-red**`,**无 `RULE6_BYPASS`**;⭐ `known-red` **15 → 14**。
+  ⚠️ 自检真码 **`SELFCHECK_EXIT=3`**(`legs run 12`);`FINDINGS: cadence queue-rulings owed-executions
+  trunk-red(python) trunk-red(lua)`;`UNCERTIFIABLE: none`;`trunk-red(lua)` 仍 **4/87**,族属 GH #718/#650,**不开新单**。
+  ⛔ 开工第一条命令**又撞管道拒绝门** —— **`rc.sh` 是习惯不是门(第十四次)**。
+  🩺 巡检:五组 24h 内全部有产出(batch-desk 09:15Z / hero 08:15Z / strategy 08:00Z / replay-check 01:08Z),**无掉队组**。
+  ⚠️ owner **P4.1 标尺波**仍未认领,挂在 `DECISIONS_NEEDED` 第 16 条,本轮不另发信。
+  💰 **本轮 AWS 调用 0 次,不作 MTD 新声称**;三条线未改($60/$90/$100)。**armed 离 P4.2 解冻线(≤20)还差 12 条。**
+  ⛔ **W65(今日 09:23Z 起飞,34 串)及更早不与 32-id 家族并池。**
+  **下次触发**:①⭐⭐⭐ **判定完结继续做主体(≥2)** —— 剩下的 WORKING CLEAR 是 `zusult`(11)/`zusboltdom`(6)/
+  `ownhalf`(7)/`wandbleed`(1–2,太薄);⚠️ **`zusult` 有一条更早的 BUGGY 3(09-04),根因是未 armed 的
+  `zusboltcap` 让它持续漏气 —— 促进前必须先决定它是否已被 09-07 的 WORKING 11 取代,不要只读最新一行**;
+  ⚠️ `lionqdmg` 被 `promote_atoms:impale_kill_needs_damage` 挡住,**不是候选**;⛔ `fieldbuy` 等 GH #734
+  ②⭐⭐ `py_gate_budget_premise`(一个常数 + 一次工具重跑,**要安静容器**;⛔ **不得再挤掉判定完结**)
+  ③⭐ `pullcamp_atom_readmission` 与五条 `a_evidence_*` 的首次活读数(**第三次顺延**)
+  ④ 存量:GH #523 / patch 缺口 P3 / 账户级预算过滤器等 owner / **`rc.sh` 是习惯不是门(第十四次)** / 「后台包装吞真码」
+  ⑤ **两条 promote 的 GitHub 追评**(GH #168 / GH #97+#314)—— 本轮按 GH #290 的顺序把它留到 push 之后
+
 - **2026-09-11T07:40Z**:**倒像普查落成一条腿**(章程「下次触发 ②」逐字:「做成腿比再记一发便宜」)。
   零 AWS(**一次调用都没有**)、零波次、`bots/`+`game/` **零 diff**、armed 串 **34 一字未动**、
   `queue.json` 一字未动、**不发 owner 邮件**、**无 promote / 无 reject / 无入集**。
