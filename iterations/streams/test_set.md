@@ -4060,3 +4060,100 @@ VERIFY id=pullcamp verdict=BUGGY episodes=20
 n 从 4 加到 5 之后,**多出来的那一条不是把提案变强,是把它的方向掀翻**。
 ⇒ **「n 太小」不是一句可以写完就继续引用那个数的话**;同族:§GS.3(过强的那一句才是下一轮的坑)、
 §GQ(甲)(一个例子被说成裁定的前提)。
+
+## §GT 2026-09-11T07:4xZ 总监:**倒像普查落成一条腿**(章程「下次触发 ②」)——本节最该被读的不是那条腿,是 **§GT.1:它两次打出字面的结论行,两次都是把一条活着的杠杆宣布成死的**;以及 **§GT.3:这条腿有一个先到的姊妹,而新的到底是哪三样**
+
+### §GT.0 一句话
+
+`tools/agent/inverse_gate_census.py`(**2.1s**)+ `tests/test_inverse_gate_census.py`(**23 checks**)
++ `routine_selfcheck.sh` 第 **12** 条腿 `inverse-gates`。
+**今天的读数:FROZEN 0 / COUPLED 1 / UNRESOLVED(armed) 0。**
+`bots/`+`game/` **零 diff**、armed 串 **34 一字未动**、`queue.json` 一字未动、零 AWS、零波次、不发 owner 邮件。
+⛔ **判定完结 0**(owner P4.2 的产出指标,**本轮不达标**,理由与不抵账的声明见 §GT.5)。
+
+### §GT.1 ⭐⭐⭐ 两次假阳性,而危险方向不是漏报
+
+漏报只是回到今天的状态(没人举手);**误报是把一条活着的杠杆宣布成死的**。两次都在 trunk 上跑出了结论行:
+
+| # | 规则 | 打出来的话 | 为什么是假的 |
+|---|---|---|---|
+| 1 | 「调用点之前、缩进不更深的任何一个门」 | `fieldbuy needs 'fieldregen' <- NOT ARMED` | `item_purchase_generic.lua:776` 是 **fieldregen 自己的采购块**,一个在 `fieldbuy` 块开始前就结束的**兄弟 `if`** ⇒ 一条 **785 episodes、昨天刚判 WORKING** 的杠杆被宣布成死的 |
+| 2 | 「行里有 `not` + 门 + `return` 即守卫」 | `rotscope` / `pulldrag` 挂在 `creepthink` 下 | `mode_roam_generic.lua:264-266` 是 `if not (A and pullthink) and not (B and creepthink) and Z then return end` —— **arm `creepthink` 只让那个 return 更不容易发生**,它**加宽**后面的东西 |
+
+⇒ **修法不是把模式写细,是把「支配」从匹配改成判定**:门原子钉 false、其余原子全自由,问结果是否被强制。
+守卫要 `forced_outcome(cond, id, True)`,进块条件要 `forced_outcome(cond, id, False)`;
+**答不出就 `None` ⇒ UNRESOLVED,永不静默 `False`**。
+📌 **可迁移的一句**:「这一行看起来像一道门」与「不 arm 它就过不去」是**两个问题**,而在 `bots/` 里它们**经常**答得相反。
+
+### §GT.2 对已知真值(RULING 13 **在本工具存在之前**手读出来的)
+
+| 问题 | 手读(§GS.2) | 本腿 |
+|---|---|---|
+| `pulldrag` 的域挂在谁下 | `pullcamp`(经 `bot.roamCampPull`) | **`pullcamp`,且只有它** ✅ |
+| `campbind` | `pullcamp` | `pullcamp` ✅ |
+| `fieldbuy` 挂在 `fieldregen` 下吗 | 否 | 否 ✅ |
+| `rotscope` 挂在 `creepthink` 下吗 | 否 | 否 ✅ |
+
+⭐ **第三版自己的一个过报也修掉了**:producer 的门此前收「函数体里出现的每一个门」,于是
+`pulldrag` 还挂上 `creepthink`/`pulllane`/`pullnolane` —— 那三个住在 `J.ShouldPullNeutralCamp` 的
+**内层分支**,只收窄回哪个营地。⚠️ **这不是锦上添花**:按旧读法,§GF 已经做过的「退集 `pulllane`」
+会把 `pulldrag` 报成 FROZEN。
+
+### §GT.3 ⚠️ 姊妹先到 —— 新的是哪三样
+
+`tests/test_gated_helper_nesting_census.lua`(协同组 2026-08-29,GH #304)已钉「门套门」的合取集合,
+**故意过包含**,作为棘轮。**本腿不替代它,不得拿它当理由删那里任何一行。** 它结构上做不到的三件:
+
+1. **它是对一个集合的棘轮** ⇒ 退集 `pullcamp` **不改变任何一条合取行**,棘轮在 `pulldrag` 的域被清空
+   那一刻**保持绿色**。**FROZEN 是关于 armed 串的问题**,钉固定集合的棘轮问不出来。
+2. 它的「嵌套」= 调用落在调用者体内**任何**位置(对棘轮是安全方向,对裁定是错方向)。
+3. **它完全不追字段中介**;里面 `pulldrag` 那一行是**手写钉**(`dragnolane,pulldrag`)。
+
+⭐ 那份文件**预先写下了本腿必须回答的反对意见**:更窄的规则「would decide by indentation what the
+wave decides by arithmetic」。**反对成立**,答复是:缩进只用来恢复**哪些条件包住了调用点**;
+那个条件**是不是门**由布尔判定回答。已抄进工具头部。
+
+### §GT.4 今天的读数,以及本轮真正买到的那样东西
+
+- **FROZEN 0** —— 没有 armed id 挂在未 armed 的门下。**§GS.2 之后该问题的第一份全仓答案。**
+- **COUPLED 1 = `fieldsip`**,在 `fieldbuy`/`stayfield`/`stayfield2`(**均 armed**)+
+  `buyband`/`buytower`/`buyring`/`buydeep`(**均未 armed**)之下。⚠️ **不是缺陷**:未 armed 时
+  `J.IsFieldSipEnough` 是字面 `true`,即所在合取的**单位元**(姊妹棘轮的 (I) 档)。
+  **它是给裁定台的一行**:promote 或退集那三条 armed 中任一条的当天,这一行会在**别的什么都没变**
+  的情况下变成 FROZEN。
+- **WORKING 十条的倒像半边全部有读数**(promote 房规「两个方向都查」的倒像那一半):
+  **CLEAR 9** = `liondrainstop` `tpdeathbuy` `fieldbuy` `wandbleed` `wandbleed2` `zusboltdom`
+  `zusult` `lionqdmg` `ownhalf`;**COUPLED 1** = `fieldsip`。
+  ⛔ **CLEAR 不是「可以 promote」**,它只说倒像方向没有障碍;(b)(c) 与 §DU.6 红线照旧。
+
+### §GT.5 ⚠️⚠️ 本轮自己举的手:判定完结 0
+
+owner **P4.2** 逐字:总监的产出指标 = **判定完结数**,每轮 **≥2**。上一轮交 2,**本轮 0**。
+成因照实:本轮取的是上一轮清单的 **②**,而 **①** 才是「判定完结,主体」——
+取 ② 有理由(① 逐字写着「**先查倒像**」),**但理由不改变计数**。
+⛔ **不拿「十条的倒像半边已买到」抵账**:那是**证据**不是**完结**。
+⛔ `fieldbuy` 是最便宜的一条而**今天 promote 不了**:录像组同日 01:08Z §五 量到买回的药剂
+**61.1% 先落背包、18.0% 卡死喝不着**(`201fec/…123446_slot5` spirit_breaker t=1362.5
+拿到 slot 7 的药剂,**hp 0.536→0.000 死了,全程没喝上**),已开 **GH #734**。
+**(a) = WORKING 不受影响**(购买确实执行了),**但带着一个量到价钱的缺陷 promote 是把缺陷变成默认**。
+
+### §GT.6 变异台账:9 变异 9 CAUGHT / 0 SURVIVED,而头两轮的两个 SURVIVED 各教了一件事
+
+- **M4 存活 ⇒ 树里有死代码**:`tokenize_cond` 的 `return None` **不可达**(扫描器已跳过空白,
+  原子扫描必吃掉至少一个字符)⇒ 把调用侧对它的处理改成静默 `False`,**整台变异台不响**。
+  **「答案对」不等于「理由对」**(纪律 4);死分支已删,拒绝归 `parse_cond`。
+- **M7 存活 ⇒ 变异体本身是空操作**(`clear = None and False`,而 `clear` 本来就是 `False`)。
+  ⛔ **一个不改变行为的变异体存活不是测试的发现,是记账错误**;重写成「被挡的路径压过通路」后当场被抓。
+- ⭐ 另外两条是**测试的真缺口**,补了断言才抓住:(A1) 的判定在**活树上抓不出来**
+  (树里出现在包围条件里的门**恰好都支配**,硬接 `True` 答案不变)⇒ 用**合成树**的析取条件分开;
+  跨行 `if` 的支持**不会以错答案出现**,它表现为**机制 (A1) 一次都不响**。
+
+### §GT.7 `dragnolane` —— 第三条挂在 `pullcamp` 下的 id,而清单只写了两条
+
+普查顺带打出 `dragnolane (dep: pullcamp)`。核过:它住在 `pulldrag` 门内(`jmz_func.lua:11000`),
+协同组在 `state.json:dragnolane_20260909` 里**已写明**「与 `pulldrag` 同进同退,不单独发波……`pullcad` 形状」
+⇒ **不是新发现,是独立复现**。⚠️ 但 `owed_executions.json:pullcamp_atom_readmission` 的验收句只点了
+`pullcamp` 与 `pulldrag`;`dragnolane` 今天**不在 armed 串里**,**不是 FROZEN、不构成掉棒**
+⇒ 本轮只在该行补 `census_note_20260911`(**不改裁定、不改验收句**)。
+📌 **这就是「做成腿比再记一发便宜」的现金价值**:同一句约束,上一轮要写进散文,这一轮由工具持有 ——
+它会在 `dragnolane` 被 arm 的**那一刻**直接报 FROZEN。

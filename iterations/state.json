@@ -7925,5 +7925,22 @@
     "issue": "GH #741",
     "queue": "hero-57",
     "status": "landed on main, GATED and NOT ARMED (P4.2 冻结期内不请求入集;合法裁定是 FROZEN-HOLD)"
+  },
+  "inverse_gate_census_20260911": {
+    "date": "2026-09-11T07:4xZ",
+    "owner": "director",
+    "issue": "章程「下次触发 ②」(上一轮 RULING 13 逐字:「**倒像的全仓普查** —— 做成腿比再记一发便宜」);缺陷现场 `iterations/streams/test_set.md §GS.2`;裁定档案 §GT。",
+    "change": "新 `tools/agent/inverse_gate_census.py`(2.1s)+ `tests/test_inverse_gate_census.py`(23 checks)+ `routine_selfcheck.sh` 第 12 条腿 `inverse-gates`。`bots/` + `game/` 零 diff;armed 串 34 一字未动;`queue.json` 一字未动;零 AWS、零波次。",
+    "what_it_answers": "对每一个活 gate id:能到达该门的**所有**调用路径,是否都穿过**另一个** id 的门。三态:FROZEN(armed,且挂在**未 armed** 的门下 ⇒ 域结构上为空,exit 3)/ COUPLED(armed,挂在另一条 **armed** 的门下 ⇒ 读数是合力,不置退出码)/ UNRESOLVED(答不出,**永不折进 CLEAR**)。",
+    "mechanisms": "(A) 嵌套门:支配式 `if` 条件或顶层早返回守卫;(B) 字段中介:调用点被 `bot.<field>` 守着,而该字段一切**非 nil** 赋值都来自带门的函数 —— **这正是 `pulldrag` 的形状**,也是 `check_armed_wiring.py` 这类「有没有调用点」的检查结构上看不见的那一种。",
+    "reading_20260911": "armed 34 / live gate ids 195:**FROZEN 0、COUPLED 1、UNRESOLVED(armed) 0**。COUPLED 唯一一条是 `fieldsip`(在 `fieldbuy`/`stayfield`/`stayfield2` 三条 armed + `buyband`/`buytower`/`buyring`/`buydeep` 四条未 armed 之下;未 armed 时它是字面 `true`,即合取的单位元 ⇒ 不是缺陷)。**WORKING 十条的倒像半边:CLEAR 9 + COUPLED 1**。",
+    "validated_against": "RULING 13 **在本工具存在之前**手读出的真值:`pulldrag → pullcamp`(经 `bot.roamCampPull`)、`campbind → pullcamp`,两条都命中且**只剩** `pullcamp`;两条已知假阳性(`fieldbuy → fieldregen`、`rotscope → creepthink`)都不再出现。四条都钉在测试里。",
+    "false_positives_paid_for": "⭐ 本条最该被读的一句:这条腿的危险方向**不是漏报,是误报** —— 漏报只是回到今天(没人举手),**误报是把一条活着的杠杆宣布成死的**。两次都真的发生:(1) 兄弟 `if` 被当成支配者 ⇒ 打出 `fieldbuy needs 'fieldregen' <- NOT ARMED`,而 `fieldbuy` 昨天刚以 785 episodes 判 WORKING;(2) 负向节流被当成守卫 ⇒ `rotscope`/`pulldrag` 报成挂在 `creepthink` 下,而 arm `creepthink` 只会**加宽**后面的东西。⇒ 修法是把「支配」**从匹配改成判定**(门原子钉 false、其余自由,问结果是否被强制),答不出即 UNRESOLVED。",
+    "relation_to_sibling": "`tests/test_gated_helper_nesting_census.lua`(GH #304)先到,**不被替代、不得据此删行**。它结构上做不到三件:(1) 它是对一个**集合**的棘轮 ⇒ 退集 `pullcamp` 不改变任何一条合取行,棘轮在 `pulldrag` 的域被清空那一刻**保持绿色**;(2) 它的「嵌套」= 调用落在调用者体内任何位置(`fieldbuy` 与 `fieldregen` 只共享一个函数体);(3) 它完全不追机制 (B),其 `pulldrag` 行是**手写钉**。它预写的反对意见(「would decide by indentation what the wave decides by arithmetic」)**成立**,答复已抄进工具头部:缩进只恢复**哪些条件包住调用点**,**是不是门**由布尔判定回答。",
+    "mutation_stand": "**9 变异 9 CAUGHT / 0 SURVIVED**(手工台,无 mutstand 脚本)。头两轮有 2 个 SURVIVED,各教一件事:**M4 存活 ⇒ 树里有死代码**(`tokenize_cond` 的 `return None` 不可达 ⇒ 把调用侧对它的处理改成静默 `False` 整台不响;死分支已删);**M7 存活 ⇒ 变异体本身是空操作**(`clear = None and False`,而 `clear` 本来就是 `False`)—— ⛔ 后者**不是测试的发现,是记账错误**。",
+    "limits": "语法分析,只读 `bots/`,不执行 Lua。机制 (B) 只跟 `bot.<field>` 且只跟**一跳**。无调用点的函数按引擎入口处理(dead code 与入口**不区分**,已在 notes 里说)。**CLEAR 不是「杠杆会开火」的证明**,只是「存在一条本工具跟得动、且没穿过别的门的路」。",
+    "iron_rule_6": "`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings` / `lua gate: 333 ran, 0 findings, 15 known-red`;**无 `RULE6_BYPASS`**。⚠️ 过程中踩到本仓自己的老教训:**两台 Lua 电池并发跑**(我先后起了两次 `lua_gate.py`)在 `bots/Customize/soak_side.lua` 上互相踩,`test_soakside_shared_switch.lua` 8 例红 —— **那份读数作废,已单独重跑一次取干净读数**。",
+    "ruling_completions": 0,
+    "ruling_completions_note": "⛔ **本轮 0,owner P4.2 的产出指标不达标,不粉饰、不抵账。** 取活取的是上一轮清单的 ②(仪器),而 ① 才是「判定完结,主体」。**不拿「十条的倒像半边已买到」抵账** —— 那是证据不是完结。最便宜的 `fieldbuy` **今天 promote 不了**:GH #734 量到买回的药剂 61.1% 先落背包、18.0% 卡死喝不着(一帧里 spirit_breaker 抱着喝不着的药剂从 hp 0.536 死到 0.000)。下一轮主体**必须**是判定完结,且不得再让位给仪器工作。"
   }
 }

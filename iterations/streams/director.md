@@ -553,7 +553,87 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
     解析器把它单列成一类(既不 resolve 也不算 finding),并**要求它在某条 owed 行的
     `done_when` 里出现** —— 那样「处方」就有了一个机器可核的定义,而不是靠措辞躲开。
 
+- ~~**倒像普查(哪些 id 的域挂在另一个 id 的门下)**~~ **2026-09-11T07:4xZ 完成** ——
+  `tools/agent/inverse_gate_census.py` + `tests/test_inverse_gate_census.py` +
+  自检第 12 条腿 `inverse-gates`;档案 `test_set.md §GT`,机器键
+  `state.json:inverse_gate_census_20260911`。⭐ 立项句是 RULING 13 的
+  「**促进杀掉点它名的门;退集杀掉挂在它下面的域。两个方向都要查,而房规此前只写了一个方向**」。
+  ⚠️ **留在 backlog 里的下一格**(做完不等于做尽):机制 (B) 目前只跟 `bot.<field>` 且只跟**一跳**,
+  两跳洗过的字段、非 `bot` 宿主的字段都读 UNRESOLVED;今天 armed 集上**这类为 0**,
+  所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
+
 ## 当前状态(每次触发后更新)
+- **2026-09-11T07:40Z**:**倒像普查落成一条腿**(章程「下次触发 ②」逐字:「做成腿比再记一发便宜」)。
+  零 AWS(**一次调用都没有**)、零波次、`bots/`+`game/` **零 diff**、armed 串 **34 一字未动**、
+  `queue.json` 一字未动、**不发 owner 邮件**、**无 promote / 无 reject / 无入集**。
+  ⛔⛔ **判定完结 0 —— owner P4.2 的产出指标本轮不达标,见下面 (戊),不粉饰不抵账。**
+  全文 `iterations/reports/director/20260911T074005Z.md`,档案 `test_set.md §GT`(§GT.0–§GT.7),
+  机器键 `state.json:inverse_gate_census_20260911`。
+  ⭐⭐⭐ **(甲) 主轴:这条腿两次打出字面的结论行,两次都是把一条活着的杠杆宣布成死的。**
+  它的危险方向**不是漏报**(漏报只是回到今天:没人举手),**是误报**。两次都在 trunk 上:
+  (1) **兄弟 `if` 被当成支配者** ⇒ `fieldbuy needs 'fieldregen' <- NOT ARMED`,而
+  `item_purchase_generic.lua:776` 是 fieldregen 自己的采购块、在 `fieldbuy` 块开始前就结束,
+  且 `fieldbuy` **昨天刚以 785 episodes 判 WORKING**;
+  (2) **负向节流被当成守卫** ⇒ `rotscope`/`pulldrag` 报成挂在 `creepthink` 下,而
+  `mode_roam_generic.lua:264-266` 的 `if not (A and pullthink) and not (B and creepthink) and Z then return end`
+  里 **arm `creepthink` 只会让那个 return 更不容易发生**,它**加宽**后面的东西。
+  ⇒ **修法不是把模式写细,是把「支配」从匹配改成判定**:门原子钉 false、其余原子全自由,
+  问结果是否被强制(守卫要「必然 return」,进块条件要「必然进不去」);**答不出即 UNRESOLVED,永不静默 False**。
+  📌 **可迁移的一句**:「这一行看起来像一道门」与「不 arm 它就过不去」是**两个问题**,而在 `bots/` 里它们**经常**答得相反。
+  ⭐⭐ **(乙) 对已知真值全中**:`pulldrag → pullcamp`(经 `bot.roamCampPull`)、`campbind → pullcamp`
+  —— 两条都是 RULING 13 **在本工具存在之前**手读出来的;两条已知假阳性都不再出现。四条都钉进测试。
+  ⭐ 并修掉第三版自己的一个过报:producer 的门此前收「函数体里的每一个门」,于是 `pulldrag` 还挂上
+  `creepthink`/`pulllane`/`pullnolane`(内层分支,只收窄回哪个营地)——
+  ⚠️ **不是锦上添花**:按旧读法,§GF 已经做过的「退集 `pulllane`」会把 `pulldrag` 报成 FROZEN。
+  ⭐⭐ **(丙) 姊妹先到,说清新的是哪三样**:`tests/test_gated_helper_nesting_census.lua`(GH #304)
+  已钉「门套门」的合取集合,**不被替代、不得据此删行**。它做不到的三件:
+  (1) 它是对一个**集合**的棘轮 ⇒ **退集 `pullcamp` 不改变任何一条合取行**,棘轮在 `pulldrag` 的域
+  被清空那一刻**保持绿色** —— **FROZEN 是关于 armed 串的问题**;(2) 它的「嵌套」= 调用落在体内任何位置;
+  (3) 它完全不追字段中介,其 `pulldrag` 行是**手写钉**。它**预写**的反对意见
+  (「would decide by indentation what the wave decides by arithmetic」)**成立**,答复已抄进工具头部。
+  ⭐ **(丁) 今天的读数**:`live gate ids 195 / armed 34 → FROZEN 0、COUPLED 1、UNRESOLVED(armed) 0`。
+  唯一 COUPLED 是 `fieldsip`(在 `fieldbuy`/`stayfield`/`stayfield2` 三条 armed 之下;未 armed 时它是
+  字面 `true` = 合取的单位元 ⇒ 不是缺陷,但**那三条里任何一条 promote/退集的当天,它会在别的什么都没变
+  的情况下变成 FROZEN**)。**本轮真正买到的东西:WORKING 十条的倒像半边全部有读数 —— CLEAR 9 + COUPLED 1**,
+  ⛔ **CLEAR 不是「可以 promote」**,(b)(c) 与 §DU.6 红线照旧。
+  ⚠️⚠️ **(戊) 本轮自己举的手:判定完结 0。** 取活取的是上一轮清单的 **②**,而 **①** 才是「判定完结,主体」;
+  取 ② 有理由(① 逐字写着「**先查倒像**」),**但理由不改变计数**。
+  ⛔ **不拿「十条的倒像半边已买到」抵账** —— 那是**证据**不是**完结**(P4.4 的口径里它是
+  「一个判定完结所需的最后一块证据」,**而那个完结本轮没做**)。
+  ⛔ 最便宜的 `fieldbuy` **今天 promote 不了**:录像组同日 01:08Z §五 量到买回的药剂
+  **61.1% 先落背包、18.0% 卡死喝不着**(`201fec/…123446_slot5` spirit_breaker t=1362.5 拿到 slot 7 的药剂,
+  **hp 0.536→0.000 死了,全程没喝上**),已开 **GH #734**。(a)=WORKING 不受影响,
+  **但带着一个量到价钱的缺陷 promote 是把缺陷变成默认**。
+  ⭐ **(己) 变异台 9 变异 9 CAUGHT / 0 SURVIVED**,而头两轮的两个 SURVIVED 各教一件事:
+  **M4 存活 ⇒ 树里有死代码**(`tokenize_cond` 的 `return None` 不可达 ⇒ 把调用侧改成静默 `False` 整台不响;
+  「答案对」不等于「理由对」,死分支已删);**M7 存活 ⇒ 变异体本身是空操作** ——
+  ⛔ **那不是测试的发现,是我的记账错误**,重写后当场被抓。
+  ⭐ **(庚) 顺手登记 `dragnolane`**:普查打出 `dragnolane (dep: pullcamp)`,与协同组
+  `state.json:dragnolane_20260909` 的判断一致 ⇒ **独立复现不是新发现**;它不在 armed 串里
+  ⇒ **不是 FROZEN 也不是掉棒**。只在 `owed_executions.json:pullcamp_atom_readmission` 补
+  `census_note_20260911`,**裁定与验收句一字不动**。📌 **现金价值**:同一句约束上一轮要写进散文,
+  这一轮由工具持有 —— `dragnolane` 被 arm 的**那一刻**自检直接报 FROZEN。
+  **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings` /
+  `lua gate: 333 ran, 0 findings, **15 known-red**`,**无 `RULE6_BYPASS`**;`known-red` 与上轮持平。
+  ⚠️ **并发踩到本仓自己的老教训**:我先后起了**两台** `lua_gate.py`,两个 lua5.1 进程在
+  `bots/Customize/soak_side.lua` 上互相踩 ⇒ `test_soakside_shared_switch.lua` 8 例红。
+  **那份读数作废,已等干净后单独重跑取读数**;上面那一行是重跑的。
+  ⚠️ 自检真码 **`SELFCHECK_EXIT=3`**(`legs run 11`;**第 12 条腿是自检跑完之后才加的,下一轮起才计入**);
+  `FINDINGS: cadence owed-executions trunk-red(python) trunk-red(lua)`;`UNCERTIFIABLE: none`;
+  ⭐ `a-evidence-owed` 与 `queue-rulings` **本轮都不在 findings 里**(上一轮清干净的保持住了)。
+  `trunk-red(lua)` 仍 **4/87**,逐条都是「钉住的数过期了」⇒ 族属 GH #718/#650,**不开新单**。
+  ⛔ 开工第一条命令**又撞管道拒绝门** —— **`rc.sh` 是习惯不是门(第十三次)**。
+  🩺 巡检:五组 24h 内全部有产出(batch-desk 03:13Z / replay-check 01:08Z / hero 01:46Z / strategy 01:31Z),
+  **无掉队组**。⚠️ owner **P4.1 标尺波**仍未认领,已挂在 `DECISIONS_NEEDED` 第 16 条,本轮不另发信。
+  💰 **本轮 AWS 调用 0 次,不作 MTD 新声称**;三条线未改($60/$90/$100)。
+  **下次触发**:①⭐⭐⭐ **判定完结,主体,≥2,不许再让位给仪器工作**(本轮就是让了位的那一轮)——
+  倒像半边**已买好**,最便宜的一档是 **WORKING 九条 CLEAR**,先读 §DU.6 红线再补 (b)(c);
+  ⛔ `fieldbuy` 在 **GH #734** 落地前不 promote ②⭐⭐ 让第 12 条腿在**真实自检里**跑出第一份读数,
+  并把 `tests/test_inverse_gate_census.py`(实测 **4.3s** > py gate 的 3.0s 单测上限)交给
+  `py_gate_measure.py` **正式定档,不要手改 manifest** ③⭐ `pullcamp_atom_readmission` 与五条
+  `a_evidence_*` 的首次活读数(**顺延**)④ 存量:GH #523 / patch 缺口 P3 / 账户级预算过滤器等 owner /
+  **`rc.sh` 是习惯不是门(第十三次)** / 「后台包装吞真码」
+
 - **2026-09-11T04:19Z**:**RULING 13 —— `pullcad` 陷阱的倒像。判定完结 2(连续四轮 0 之后第一轮达标)**,
   armed **37 → 34**。零 AWS(**一次调用都没有**)、零波次、`bots/`+`game/` **零 diff**、**不发 owner 邮件**、
   **无 promote / 无 reject / 无入集**。取活依据:上一轮「下次触发 ①」逐字「判定完结,主体,不许再让位」+ owner **P4.2**。

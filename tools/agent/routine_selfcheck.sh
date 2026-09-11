@@ -380,6 +380,35 @@ else
     unchecked 'the promote-time constraints'
 fi
 
+# [director 20260911, test_set.md §GS.2 / §GT] The OTHER direction of the leg
+# above, and it needed its own because the two watch opposite events.
+#
+# `promote-atoms` watches PROMOTE: a gate that names an id which has since
+# been promoted is frozen FALSE.  RULING 13 measured RETIRE: `pulldrag`'s only
+# call site sits inside `if bot.roamCampPull ~= nil`, and that field is filled
+# from one function whose second line is the `pullcamp` gate -- so retiring
+# `pullcamp` empties `pulldrag`'s domain structurally, while
+# `check_armed_wiring.py` still reads WIRED (a call site exists),
+# `verify_coverage.py` still lists it armed INDETERMINATE, and the next wave's
+# verdict comes back "tested, no effect".  Nothing raised a hand.
+#
+# The house rule RULING 13 wrote -- "check both directions before touching
+# armed state" -- is an instruction to a human, which is the same remedy that
+# had already failed once for the `pullcad` trap.  This is the gate.
+#
+# Quiet by design: FROZEN (armed, hanging under an id that is NOT armed) is
+# the only thing that sets the exit code.  COUPLED is printed for the ruling
+# desk and does not turn anything red, because a standing red on a healthy
+# configuration is how a leg teaches people to skip it.
+sc_leg 'inverse-gates'
+printf '\n=== inverse gate census (whose domain hangs under another id) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/inverse_gate_census.py
+    note $?
+else
+    unchecked 'the inverse-gate census'
+fi
+
 # [director 20260826, GH #198 §3] Both TRUNK RED banners below used to end
 # "failing before you changed anything".  That was a canned string, not a
 # finding: BOTH legs run the WORKING TREE, so the clause asserted something the
