@@ -179,10 +179,23 @@ end
 
 -- ------------------------------------------------------------------- gate off
 
-tests['gate OFF: unarmed leaves the frame byte-identical to shipped'] = function()
-    local X, _, bot, heroes = load_zeus(false)
+-- PROMOTE 2026-09-11 (test_set.md §GV): 'zusult' is a turbo default now, so
+-- "unarmed" no longer selects the shipped decision -- NON-TURBO does. The
+-- assertion is unchanged; only the switch moved, and at the HELPER level that
+-- substitution is exact (`if not J.IsModeTurbo() then return false end` is its
+-- first line). ⚠️ It is NOT exact at frame level -- see the note on the
+-- end-to-end case below, which was measured, not assumed.
+tests['gate OFF: outside turbo the helper is byte-identical to shipped'] = function()
+    local X, _, bot, heroes = load_zeus(false, false)
     assert(X.zuus_ShouldSaveManaForUlt(bot, shaman(heroes)) == false,
-        'unarmed, the helper must be inert')
+        'off the turbo leg, the helper must be inert')
+    -- The half the old case could not state, and the promote makes necessary:
+    -- with NOTHING armed, in turbo, the helper must now HOLD. Without this the
+    -- file would pass just as well against a silently reverted promote.
+    local Y, _, bot2, heroes2 = load_zeus(false, true)
+    assert(Y.zuus_ShouldSaveManaForUlt(bot2, shaman(heroes2),
+            bot2:GetAbilityByName(BOLT_NAME)) == true,
+        'promoted: in turbo the reserve is defended with no candidate id armed')
 end
 
 tests['gate OFF: armed but NOT turbo is still inert'] = function()
@@ -250,8 +263,16 @@ end
 -- fires reaches its target through J.GetVulnerableWeakestUnit, i.e. through real
 -- positions and real HP only.
 
-tests['end to end: shipped fires Lightning Bolt into the full-HP shadow_shaman'] = function()
-    local log, _, _, bot, heroes, abilityR = run_skills(false)
+-- PROMOTE 2026-09-11 (§GV) -- the frame-level "off" moved, and running this
+-- case non-turbo is the repair that LOOKS right and is not: the mode switch
+-- moves every turbo-gated branch in the path at once, so the frame can be taken
+-- by an unrelated branch before the bid under test is reached (measured on the
+-- sibling file test_replay_260819_zuus_ult_manalock.lua, which came back
+-- `got {zuus_heavenly_jump}`). Here the non-turbo leg does still reach the
+-- Lightning Bolt bid, and this case asserts that -- but the reason it is sound
+-- is the assertion below, not the mode flag.
+tests['end to end: outside turbo Zeus fires Lightning Bolt into the full-HP shadow_shaman'] = function()
+    local log, _, _, bot, heroes, abilityR = run_skills(false, false)
     local names = ability_names(log)
     assert(contains(names, BOLT_NAME),
         'shipped Zeus spends the reserve, got {' .. table.concat(names, ',') .. '}')
@@ -323,8 +344,15 @@ tests['wiring: SkillsComplement gates all THREE bids through one gate, one id'] 
         'GH #47: the GROUND Lightning Bolt bid must pass through it too')
     assert(src:find('castW2Desire, castWLocation, castW2Target = X.ConsiderW2()', 1, true),
         'and it must receive the target ConsiderW2 reports')
-    local _, nIds = src:gsub("J%.IsSoakCandidate%( 'zusult' %)", '')
-    assert(nIds == 1, 'still exactly ONE gate call behind ONE id, found ' .. nIds)
+    -- PROMOTE 2026-09-11 (§GV): this used to require exactly ONE `zusult` gate
+    -- call. The promote removed it, so the claim is INVERTED rather than
+    -- deleted -- a silently reinstated gate is exactly what would make the
+    -- cases above pass for the wrong reason.
+    local _, nIds = src:gsub("IsSoakCandidate%( 'zusult' %)", '')
+    assert(nIds == 0, 'zusult was PROMOTED (test_set.md §GV) -- no gate on it '
+        .. 'may come back without a ruling, found ' .. nIds)
+    assert(src:find('if not J.IsModeTurbo() then return false end', 1, true),
+        'and the turbo-only conjunct the promote left standing is still there')
     -- GH #59's widened domain is a SEPARATE id, so the count above stays 1.
     local _, nX = src:gsub("J%.IsSoakCandidate%( 'zusultx' %)", '')
     assert(nX == 1, '`zusultx` is read in exactly one place, found ' .. nX)

@@ -210,18 +210,25 @@ end
 
 -- --------------------------------------------- 2. the defect, on the real frame
 
+-- PROMOTE 2026-09-11 (test_set.md §GV): 'zusult' and 'zusboltdom' are turbo
+-- defaults now, so "unarmed" is no longer the way to reach the shipped decision
+-- -- NON-TURBO is. Both cases below keep their original assertion verbatim and
+-- only change which switch turns the fix off. That substitution is exact
+-- BECAUSE of how the promote was performed: the surviving condition on the
+-- helper is `J.IsModeTurbo() and type(nHealthCap) == 'number' and nHealthCap <= 0`,
+-- so non-turbo is byte-for-byte the leg the unarmed id used to select.
 tests['defect: with the shipped zero filter the kill-AoE branch fires on FULL-HP heroes'] = function()
-    local _, X = run_skills({ 'zusult' })
+    local _, X = run_skills({}, false)
     local nDesire, _, hTarget = X.ConsiderW2()
     assert(nDesire > 0, 'the branch bids, got ' .. tostring(nDesire))
     -- The kill exemption is what makes this a leak: the branch that fired is
     -- the one that reports nothing, so the gate above never sees the target.
     assert(hTarget == nil,
-        'unarmed, the kill-AoE branch still claims the kill exemption')
+        'off the turbo leg, the kill-AoE branch still claims the kill exemption')
 end
 
 tests['defect: shipped spends the reserve into a 1.00-HP target'] = function()
-    local log, _, _, bot, _, abilityR = run_skills({ 'zusult' })
+    local log, _, _, bot, _, abilityR = run_skills({}, false)
     local names = ability_names(log)
     assert(contains(names, BOLT_NAME),
         'the leak GH #477 measured, reproduced on a real frame; got {'
@@ -294,28 +301,41 @@ end
 
 -- ------------------------------------------------------------------ 5. gate off
 
-tests['gate OFF: unarmed zusboltdom is byte-equivalent to shipped'] = function()
-    local shipped = ability_names((run_skills({ 'zusult' })))
-    local X = load_zeus({ 'zusult' })
-    assert(X.BoltAoEKillTarget(0, shaman(select(4, load_zeus({ 'zusult' })))) == nil,
-        'unarmed, the helper reports nothing whatever the cap says')
+tests['gate OFF: non-turbo is byte-equivalent to shipped'] = function()
+    local shipped = ability_names((run_skills({}, false)))
+    assert(select(1, load_zeus({}, false))
+            .BoltAoEKillTarget(0, shaman(select(4, load_zeus({}, false)))) == nil,
+        'off the turbo leg, the helper reports nothing whatever the cap says')
     assert(contains(shipped, BOLT_NAME), 'and the shipped decision is unchanged')
 end
 
-tests['gate OFF: armed but NOT turbo is inert'] = function()
-    local X, _, _, heroes = load_zeus({ 'zusult', 'zusboltdom' }, false)
-    assert(X.BoltAoEKillTarget(0, shaman(heroes)) == nil, 'the gate is turbo-only')
+tests['gate OFF: promoted but NOT turbo is still inert'] = function()
+    local X, _, _, heroes = load_zeus({}, false)
+    assert(X.BoltAoEKillTarget(0, shaman(heroes)) == nil,
+        'the promote left the turbo-only conjunct standing')
 end
 
-tests['gate OFF: a different armed candidate does not move it'] = function()
-    local X, _, _, heroes = load_zeus({ 'zusult', 'zusaether' })
-    assert(X.BoltAoEKillTarget(0, shaman(heroes)) == nil,
-        'only zusboltdom arms zusboltdom')
-    -- Positive control inside the same case: the id really is the only thing
-    -- standing between this call and a non-nil answer.
-    local Y, _, _, tHeroes = load_zeus({ 'zusult', 'zusaether', 'zusboltdom' })
-    assert(Y.BoltAoEKillTarget(0, shaman(tHeroes)) ~= nil,
-        'positive control: arming it does change the answer')
+-- PROMOTE 2026-09-11: the case that used to live here read "a different armed
+-- candidate does not move it", and its whole point was that ONE id stood
+-- between this call and a non-nil answer. That id is gone, so the question it
+-- asked would now be vacuous -- but the question BEHIND it is the one §GV.4
+-- says is load-bearing, and it survives the promote intact: the switch is the
+-- CAP'S VALUE, never a candidate id. Pin that instead, with both directions and
+-- with NOTHING armed, which is exactly the configuration that ships.
+tests['the switch is the cap value, not any candidate id'] = function()
+    local X, _, _, heroes = load_zeus({})
+    assert(X.BoltAoEKillTarget(0, shaman(heroes)) ~= nil,
+        'a degenerate cap (the KV field zuus_lightning_bolt does not declare, '
+        .. 'read back as 0 = "no HP filter") must drop the kill exemption with '
+        .. 'no id armed at all -- this is the promoted default')
+    assert(X.BoltAoEKillTarget(380, shaman(heroes)) == nil,
+        'and a real cap must hand GH #47 its exemption back, untouched')
+    -- The negative control that used to be carried by an unrelated id: arming
+    -- candidates must now make no difference in either direction.
+    local Y, _, _, tHeroes = load_zeus({ 'zusaether', 'zusboltcap', 'zusult' })
+    assert(Y.BoltAoEKillTarget(0, shaman(tHeroes)) ~= nil
+            and Y.BoltAoEKillTarget(380, shaman(tHeroes)) == nil,
+        'no armed id may move a promoted helper in either direction')
 end
 
 -- --------------------------------------------------------- 6. the helper itself

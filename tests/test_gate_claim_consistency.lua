@@ -508,7 +508,7 @@ end
 --
 -- Anchored by ID, not by line number: 0B3FRAME's rule after one commit moved
 -- two separate censuses' line anchors in the same afternoon.
-tests['the comment strip removes exactly the two known comment-only ids'] = function()
+tests['the comment strip removes exactly the four known comment-only ids'] = function()
     local code, _, raw = census()
     local only, n = {}, 0
     for id in pairs(raw) do
@@ -516,16 +516,29 @@ tests['the comment strip removes exactly the two known comment-only ids'] = func
     end
     table.sort(only)
     local got = table.concat(only, ',')
-    assert(got == 'X,pullbeat', string.format(
-        "comment-only wired ids are now {%s}; expected {X,pullbeat}.\n"
+    assert(got == 'X,pullbeat,zusboltdom,zusult', string.format(
+        "comment-only wired ids are now {%s}; expected "
+        .. '{X,pullbeat,zusboltdom,zusult}.\n'
         .. "  'pullbeat' was PROMOTED 2026-08-23 and is wired by nothing -- it "
         .. 'sat in the wired set because mode_roam_generic.lua teaches the '
         .. "`pullcad` trap by quoting the frozen conjunction.\n"
         .. "  'X' is the METAVARIABLE in jmz_func.lua's statement of that same "
         .. 'trap.\n'
-        .. '  Both are the register being built out of the text it audits. If '
-        .. 'you meant to change this, change this list too.', got))
-    assert(n == 2, 'count and set disagree: ' .. n)
+        .. '  The two zuus ids were PROMOTED 2026-09-11 as ONE ATOM '
+        .. '(test_set.md §GV). They joined this list in the same commit, and '
+        .. 'for the same reason as pullbeat: hero_zuus.lua quotes the two gate '
+        .. 'lines it DELETED, because the four-combination table that forced '
+        .. 'them to move together is unreadable without them -- in particular '
+        .. 'the reserve id ALONE was the MEASURED BUGGY configuration '
+        .. '(GH #477).\n'
+        .. '  NOTE, deliberately not spelled with quoted id literals: '
+        .. 'tests/test_zusult_pre_ladder_claim_retake.lua detects "this file '
+        .. 'arms the id" as `IsSoakCandidate` + the quoted id, so writing them '
+        .. 'out here would enrol THIS file in a register that means something '
+        .. 'else entirely.\n'
+        .. '  All four are the register being built out of the text it audits. '
+        .. 'If you meant to change this, change this list too.', got))
+    assert(n == 4, 'count and set disagree: ' .. n)
     -- And the half that matters: without the strip, a claim on either of these
     -- is invisible. With it, it is a violation.
     assert(not code['pullbeat'] and raw['pullbeat'],

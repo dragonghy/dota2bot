@@ -392,6 +392,36 @@ end
 
 local abilityASBonus = 0
 
+-- PROMOTED 2026-09-11 (was soak-candidate 'zusult'), turbo default-on, as ONE
+-- ATOM with X.BoltAoEKillTarget's 'zusboltdom' below. Ruling: test_set.md §GV;
+-- machine key state.json:zusult_zusboltdom_PROMOTE_20260911.
+--
+-- WHY THE TWO IDS COULD NOT BE PROMOTED SEPARATELY -- this is the load-bearing
+-- sentence of that ruling, and it is arithmetic on the four combinations, not a
+-- preference:
+--   neither armed  = the shipped tree.
+--   'zusult' alone = MEASURED BUGGY. GH #477 read 3 frame-by-frame confirmed
+--                    Lightning Bolts inside this gate's own domain on W44, and
+--                    W45 read 8.0 leaks / 100 in-domain frames, because
+--                    X.ConsiderW2's kill-AoE branch carried GH #47's kill
+--                    exemption while its HP filter had degenerated to "any HP".
+--                    Promoting 'zusult' on its own would have made exactly that
+--                    configuration the shipped default.
+--   'zusboltdom' alone = a STRUCTURAL no-op, and provably so rather than
+--                    probably so: X.BoltAoEKillTarget's return value reaches
+--                    exactly one consumer in the whole file (castW2Target, the
+--                    third value of X.ConsiderW2, read only at the
+--                    X.zuus_ShouldSaveManaForUlt call below), and that function
+--                    used to return false on its own first lines unless
+--                    'zusult'/'zusultx' was armed.
+--   both armed     = the configuration every wave from W46 on actually ran, and
+--                    the one condition (a) was bought on (replay-check
+--                    2026-09-07T15:53Z, W52, 47 games: VERIFY id=zusult
+--                    verdict=WORKING episodes=11 / VERIFY id=zusboltdom
+--                    verdict=WORKING episodes=6, with the considerW2 leaks the
+--                    second id was written for reading 0).
+-- So the promote had to move both or neither. It moved both.
+--
 -- [zusult] A healthy enemy is worth less than a ready global execute.
 --
 -- Thundergod's Wrath is a ~130s cooldown, map-wide finisher: it is the ONLY
@@ -460,8 +490,11 @@ X.nUltSaveHealthFloor = 0.6
 function X.zuus_ShouldSaveManaForUlt( hBot, hTarget, hSpell )
 
 	if not J.IsModeTurbo() then return false end
+	-- PROMOTED: the `not bPostSpend and not IsSoakCandidate('zusult')` early
+	-- return that stood here is gone, so turbo runs the reserve unconditionally.
+	-- `bPostSpend` stays: it is 'zusultx''s widening (subtract the pending spend
+	-- before asking), which is a SEPARATE, still-gated candidate.
 	local bPostSpend = J.IsSoakCandidate( 'zusultx' )
-	if not bPostSpend and not J.IsSoakCandidate( 'zusult' ) then return false end
 
 	if hBot == nil or abilityR == nil then return false end
 	if not abilityR:IsTrained() then return false end
@@ -1181,13 +1214,25 @@ end
 --- promoted, rejected, or replaced by a KV fix, which is the whole of GH #477's
 --- option 2: write the dependency as code instead of prose.
 ---
---- DIRECTION.  Strictly TIGHTENING, and only on top of an already-armed
---- `zusult`/`zusultx`: gate off, and on every frame the reserve gate would pass
---- anyway, this is byte-equivalent to shipped.  It can hold a bid, never issue
---- one.
+--- DIRECTION.  Strictly TIGHTENING, and it can hold a bid, never issue one.
+--- Until 2026-09-11 the sentence here read "only on top of an already-armed
+--- `zusult`/`zusultx`", and that dependency is why the two ids were PROMOTED as
+--- one atom rather than one at a time: while the reserve gate was itself gated,
+--- this helper's only consumer bailed before reading it, so an arming of this id
+--- alone changed nothing anywhere.  Both are turbo defaults now, so the
+--- qualifier is spent -- but the shape it names is not, and the note it earned
+--- is in AGENTS.md: a gated helper can have a live call site, a non-empty
+--- domain, and still be a no-op, because what another id gates is not this
+--- helper's reachability but its CONSEQUENCE.
 function X.BoltAoEKillTarget( nHealthCap, hWeakest )
 
-	if J.IsModeTurbo() and J.IsSoakCandidate( 'zusboltdom' )
+	-- PROMOTED 2026-09-11 (was soak-candidate 'zusboltdom'), as one atom with
+	-- 'zusult' above -- see the four-combination table at X.zuus_ShouldSaveManaForUlt.
+	-- The `and J.IsSoakCandidate( 'zusboltdom' )` conjunct that stood here is gone.
+	-- The VALUE test is the whole switch now, exactly as the id-vs-value note
+	-- below always intended: a real cap answers nil and GH #47's exemption
+	-- returns untouched.
+	if J.IsModeTurbo()
 		and type( nHealthCap ) == 'number' and nHealthCap <= 0
 	then
 		return hWeakest

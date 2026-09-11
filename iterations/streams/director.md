@@ -563,6 +563,85 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-11T14:00Z**:**第十、十一条 promote 作为**一个原子**落地(`zusult` + `zusboltdom`),armed 32 → 30。
+  判定完结 1(⛔ **按原子记 1,不按 id 记 2**;owner P4.2 的 ≥2 **本轮不达标,不粉饰不抵账**,见下面 (戊))。**
+  零 AWS(**一次调用都没有**)、零波次、**不发 owner 邮件**、无 reject、无入集。
+  全文 `iterations/reports/director/20260911T140000Z.md`,档案 `test_set.md §GV`(§GV.0–§GV.7),
+  机器键 `state.json:zusult_zusboltdom_PROMOTE_20260911`。
+  ⭐⭐⭐ **(甲) 主轴:一次 promote 只有一种合法的切法,而那是四种组合上的算术,不是偏好。**
+  上一轮(§GU)两条同轮的理由是「近五波每一波都同时 armed,家族级 (b) 分不开」——**那是一条关于读数的理由**;
+  本轮的理由**关于树本身**:**都不 armed** = 出厂;**只 `zusult`** = **量到 BUGGY**(GH #477/W44 逐帧 3 发域内
+  Lightning Bolt,W45 读 8.0 泄漏/100 域内帧)⇒ **单独促进它就是把这个配置设成出厂默认**;
+  **只 `zusboltdom`** = **结构性空操作,证得不是猜**(`X.BoltAoEKillTarget` 的返回值全文件**唯一消费者**是
+  `castW2Target`,`hero_zuus.lua:332` 声明 / `:693` 赋值 / `:700` **唯一读点**,而 `:700` 传进的
+  `X.zuus_ShouldSaveManaForUlt` 当时因两条 id 都未 armed 而前几行 `return false`);**两条都 armed** =
+  **W46 起每一波真正跑的那个配置**,也是 (a) 买到的那个(W52:`zusult` WORKING 11 / `zusboltdom` WORKING 6)。
+  ⛔ **不是 `lanefix` 那个形状**:不是十条互相耦合的守卫,是**一条修正 + 它所修正的那条规则**。
+  ⚠️⚠️ **(乙) 本轮真正的新东西:倒像普查看不见的第三种极性 —— 被掐住的是后果,不是可达性。**
+  §GT 那条腿的轴是**调用点可不可达**(FROZEN / COUPLED);而 `zusboltdom` 的调用点**一直可达、一直执行、
+  域一直非空**,被 `zusult` 掐住的是它算出来那个值的**去处** ⇒ 自检照旧打 `FROZEN 0 / COUPLED 1(仅 fieldsip)/
+  UNRESOLVED(armed) 0`,**两条都读 CLEAR**,而单独促进任一条的后果**完全不同**。
+  📌 **可迁移的一句**:*一个带门的 helper 可以同时拥有活的调用点、非空的域、和零效果 —— 因为别的 id 掐住的是
+  它的**后果**而不是它的**可达性**;而一个按「这个 helper 响了几次」计数的检测器会把它读成 WORKING。*
+  ⛔ 今天**不是缺陷**(同轮促进,落地的组合正是被测过的那个);登记 `owed_executions:consequence_polarity_census`,
+  ⛔ **本轮不顺手改普查工具** —— 改判定器要安静容器与自己的变异台,**让仪器工作挤掉判定完结**正是上一轮举过手的失效形状。
+  ⭐ **(丙) 条件 (a):`zusult` 更早那条 BUGGY 3 判为「被取代」,而取代它的是一次代码改动不是一次重测。**
+  BUGGY 3 量在 **W44**(`zusboltdom` 尚未入集)= 组合二;WORKING 11 量在 **W52** = 组合四。
+  **两份读数不矛盾,它们量的是两棵不同的树。** ⛔ 章程逐字警告过「不要只读最新一行」——
+  最新一行确实成立,**成立的理由是可命名的代码改动,不是时间顺序**。
+  **(丁) (c) 两条各自站得住**:`zusult` 是标准打法(为全图处决留蓝,只防 chip);`zusboltdom` 是**算术**
+  (`GetAbilityDamage()` 读一个 `zuus_lightning_bolt` 不声明的 KV 字段 ⇒ 每级读 0;引擎规则「Pass 0 for no HP
+  filter」⇒ 那个叫 `nCanKillHeroLocationAoE` 的分支**不是 kill 分支**)。⭐ **依赖写成 VALUE 不写成 id 今天得到回报**:
+  判据促进后**逐字保留**;**若当初写成 `IsSoakCandidate('zusboltcap')`,今天这一促进会把它冻死** ——
+  `pullcad` 陷阱**预防成功**的现场。**(b) 两条共用**:6 波 gpm `−22.72/+40.58/−7.20/−15.00/−8.96/−9.84`,
+  **均值 −3.86,920 计分局**;六波 `ab/ba` 全 `sign_flip`(按 4(i-c) 不是否决理由,**照样登记**);
+  `winrate_neutral` 六波全 0.5,**22 粒里 13 粒 headroom 为 0** ⇒ **粗粒度过门,⛔ 不是正面证据**(§FT.2 措辞照搬)。
+  ⚠️ **(戊) 连带后果,量出来的**:载体项 **7 → 6**,掉的是 **`zuus`**(32 串中间态读 2 unresolved/exit 2,30 串读 0/exit 0)
+  ⇒ 此后波次**不再被要求必须带 Zeus**;**约束变少且自动可逆**(任一 zuus-scoped id 入集,该项自己回来)。
+  ⚠️⚠️ **判定完结 1,不达 ≥2,不抵账。第二格没做的理由是具体的**:最便宜的 `ownhalf`(WORKING 7)**今天不促进** ——
+  同日录像组 §2 量到 **`ohnum`(同族、未 armed)在同样 7 帧上删掉 `ownhalf` 开火的 4 次里的 3 次**,
+  而那一帧的地面真相是 **13 秒 2 杀 0 死** ⇒ `ohnum` 会**错误地**拒绝一次好 punish。促进 `ownhalf` 等于把
+  「不被 `ohnum` 拒绝」的版本设成默认,**而 `ohnum` 的裁定还没做**。⛔ **不是 `fieldbuy`/GH #734 那个形状**
+  (那条是「缺陷被量到了价钱」),这条是「**一条未裁定的姊妹候选会改写它 75% 的域**」。
+  ⚠️ 另注 `ownhalf` 的 (a) 只有 **1 局 7 帧**,且 09-09 的 `ownhalf_margin`(800→1600)**骑在同一道门上**。
+  ⭐ **(己) 推送闸抓到的四条红全是本轮自己的,一条没删,每条都补上了促进后才成立的那一半**
+  (没有那一半,文件对一次被偷偷回滚的 promote 同样会绿)。⚠️ **中间踩到两件,都记下来**:
+  (1) **「非 turbo」在 helper 层等价于「id 未 armed」,在整帧层不等价** —— manalock 端到端用例改成非 turbo 后
+  红成 `got {zuus_heavenly_jump}`(模式开关一次移动路径上**所有** turbo 门下的分支)⇒ 该用例**降到 bid 层**,
+  **理由写进文件**,免得下一个人重做同一个错修法;(2) **`test_zusult_pre_ladder_claim_retake.lua` 的普查对散文敏感**
+  —— 它把「本文件 arm 了这个 id」判为 `IsSoakCandidate` + 带引号的 id 字面量,于是我写在**断言消息里**的 id 名
+  把另一个文件拉进了那张表;⛔ **修法是改我的散文,不是把一个不 arm 它的文件加进登记册**(后者让登记册本身变假)。
+  ⭐ **py 闸又替总监自己工作了一次**:新 owed 行的 `done_when` 我写成了字符串而非 `{"kind":…}`,
+  `pending_rulings.py` 当场崩,**红由推的人在同一轮看见**(GH #624 立案句)。
+  ⭐ **(庚) 同轮 queue 裁定 `hero-58` = `ROUTED-BUT-NOT-AS-AN-ARCHIVE-SCAN`**(`queue-rulings` 腿 exit 3 → 0)。
+  ⛔ **不是 FROZEN-HOLD** —— 本行**自己逐字写着「P4.2 冻结期内本条不请求入集」**,**拿一条不适用的规则挡它
+  是制造一次看起来合规的驳回**。不派的理由是**提议方自己量过**并写成会红的断言:持 A 杖 Lion 帧 **0/42**、
+  两个 splash key 读 **0**、最密敌人团 **2**(下限 3)⇒ 派了只买回**闸的零而不是游戏的零**(§CJ)。
+  ⚠️⚠️ **也不给 `HOLD-DOMAIN-EMPTY`,与 (乙) 同族**:那套自动解封按**英雄在不在语料里**判定,而 **Lion 到处都是**
+  ⇒ 会**每轮误报 UNBLOCKED**;本行的空域是「**没带 A 杖**出现」,那台机器量不到这个区别。
+  📌 *一个机制报的「通了」,可能只是它量的那个量通了。* ⭐ **棒分两半**:促进期那一半**现在生效**
+  (`promote_atoms.json:lion_scepter_aoe_exit_is_one_atom`,**对称行**,任一条单独 promote 当场红,实测 exit 0)——
+  ⛔ **它此前只活在 queue 行散文里,而被裁过的 queue 行会从所有待办表上消失**(拉野死分支 37 轮那个形状);
+  上臂期那一半 promote_atoms **表达不了也不冒称表达得了**,进 `owed_executions:lion_aoe_atom_readmission_on_thaw`。
+  **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings` /
+  `lua gate: 336 ran, 0 findings, **13 known-red**`,**无 `RULE6_BYPASS`**。
+  ⚠️ 自检真码 **`SELFCHECK_EXIT=3`**(`legs run 12`);`FINDINGS: cadence queue-rulings owed-executions
+  trunk-red(python) trunk-red(lua)`;`UNCERTIFIABLE: none`;⭐ 其中 **`queue-rulings` 本轮已清掉**;
+  `trunk-red(lua)` 族属 GH #718/#650,**不开新单**。
+  ⛔ 开工第一条命令**又撞管道拒绝门** —— **`rc.sh` 是习惯不是门(第十五次)**;
+  ⛔ 「后台包装吞真码」**第十九次**(harness 报 0,落盘 `EXIT=3`)。
+  🩺 巡检:五组 24h 内全部有产出(batch-desk 12:15Z / hero 11:10Z / strategy 10:49Z / replay-check 10:15Z),**无掉队组**。
+  ⚠️ owner **P4.1 标尺波**仍未认领,挂在 `DECISIONS_NEEDED` 第 16 条,本轮不另发信。
+  💰 **本轮 AWS 调用 0 次,不作 MTD 新声称**;三条线未改($60/$90/$100)。**armed 30,离 P4.2 解冻线(≤20)还差 10 条。**
+  ⛔ **W65(09-11T09:23Z 起飞,34 串)及更早不与 30-id 家族并池**;§GU 落地的 32 串**没有任何一波跑过**。
+  **下次触发**:①⭐⭐⭐ **判定完结,主体,≥2 —— 第一格先裁 `ohnum`**,`ownhalf` 跟着它走(判据见上面 (戊));
+  ⚠️ `lionqdmg` 被 `promote_atoms:impale_kill_needs_damage` 挡住**不是候选**;⛔ `fieldbuy` 等 GH #734
+  ②⭐⭐ `py_gate_budget_premise`(**要安静容器**;⛔ **不得再挤掉判定完结**)
+  ③⭐ `consequence_polarity_census`(本轮新登记)+ `pullcamp_atom_readmission` 与五条 `a_evidence_*`(**第四次顺延**)
+  ④ 存量:GH #523 / patch 缺口 P3 / 账户级预算过滤器等 owner / **`rc.sh` 是习惯不是门(第十五次)** /
+  「后台包装吞真码(第十九次)」 ⑤ **本轮 promote 的 GitHub 追评**(GH #47 / #59 / #477)——
+  按 GH #290 留到 push 之后;⛔ 若 MCP 要审批,按铁律 11 **立刻放弃**并留到下轮
+
 - **2026-09-11T11:25Z**:**第八、九次 promote 同轮落地(`tpdeathbuy` + `liondrainstop`),armed 34 → 32,锚点 `stable-v7`。
   判定完结 2 —— owner P4.2 的产出指标达标**(上一轮 0,且上一轮「下次触发 ①」逐字禁止再让位给仪器工作;本轮照做,
   §5 那件仪器活**被登记而不是被执行**)。零 AWS(**一次调用都没有**)、零波次、**不发 owner 邮件**、无 reject、无入集。

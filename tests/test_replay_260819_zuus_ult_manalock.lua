@@ -115,10 +115,23 @@ end
 
 -- ------------------------------------------------------------------- gate off
 
-tests['gate OFF: nothing armed leaves the frame byte-identical to shipped'] = function()
-    local X, _, bot, heroes = load_zeus(LOCK, false)
+-- PROMOTE 2026-09-11 (test_set.md §GV): 'zusult' is a turbo default now, so
+-- "nothing armed" no longer selects the shipped decision -- NON-TURBO does.
+-- The assertion is unchanged; only the switch that turns the fix off moved,
+-- and that substitution is exact because the promote deleted the candidate
+-- conjunct and left `if not J.IsModeTurbo() then return false end` standing as
+-- the helper's first line.
+tests['gate OFF: outside turbo the frame is byte-identical to shipped'] = function()
+    local X, _, bot, heroes = load_zeus(LOCK, false, false)
     assert(X.zuus_ShouldSaveManaForUlt(bot, heroes['npc_dota_hero_dragon_knight']) == false,
-        'unarmed, the helper must be inert')
+        'off the turbo leg, the helper must be inert')
+    -- The half that the old case could not state, and the promote makes
+    -- necessary: with NOTHING armed, in turbo, the helper must now HOLD. Without
+    -- this line the file would pass just as well against a reverted promote.
+    local Y, _, bot2, heroes2 = load_zeus(LOCK, false, true)
+    assert(Y.zuus_ShouldSaveManaForUlt(bot2, heroes2['npc_dota_hero_dragon_knight'],
+            bot2:GetAbilityByName('zuus_arc_lightning')) == true,
+        'promoted: in turbo the reserve is defended with no candidate id armed')
 end
 
 tests['gate OFF: armed but NOT turbo is still inert'] = function()
@@ -278,29 +291,52 @@ end
 -- still leaks the ult reserve into a 90.6%-HP target, and it leaks 95 of the 99
 -- mana he is holding.  Lightning Bolt is asserted UNAFFORDABLE rather than
 -- merely unchosen, so this case cannot go green again on a free-mana world.
-tests['end to end: shipped spends the reserve on the healthy target'] = function()
-    local log, _, _, bot, _, abilityR = run_skills(LOCK, false)
-    local names = ability_names(log)
-
+-- PROMOTE 2026-09-11 (test_set.md §GV) -- READ THIS BEFORE "FIXING" THIS CASE.
+--
+-- This case used to run the whole frame with nothing armed and assert that
+-- shipped Zeus fires Arc Lightning into the 90.6%-HP dragon_knight. The promote
+-- made 'zusult' a turbo default, so "nothing armed" no longer selects the
+-- shipped decision, and the obvious repair -- run the frame non-turbo instead --
+-- WAS TRIED AND IS WRONG. It goes red with `got {zuus_heavenly_jump}`:
+--
+--   ⚠️ AT FRAME LEVEL, "off via the MODE" IS NOT "off via the ID".  The mode
+--   switch moves EVERY turbo-gated branch in the decision path at once, not
+--   just this one. Here the Heavenly Jump branch takes the frame before the Arc
+--   Lightning bid is ever reached, so the case would have gone green or red for
+--   reasons having nothing to do with the reserve.
+--
+-- The substitution IS exact one level down -- `X.zuus_ShouldSaveManaForUlt`
+-- opens with `if not J.IsModeTurbo() then return false end`, so for the HELPER
+-- the two offs agree byte for byte. So the defect is pinned at the bid level,
+-- where the claim is true, and the frame-level assertion it used to carry is
+-- now carried by its sibling below ('end to end: armed holds it'), which tests
+-- the configuration that actually ships.
+tests['the reserve gate is what withholds the chip spend, and only in turbo'] = function()
+    local X, _, bot, heroes = load_zeus(LOCK, false, true)
     local arc  = bot:GetAbilityByName('zuus_arc_lightning')
     local bolt = bot:GetAbilityByName('zuus_lightning_bolt')
+    local dk   = heroes['npc_dota_hero_dragon_knight']
     assert(arc:GetManaCost() == 95, 'Arc Lightning rank 3 costs 95, got ' .. arc:GetManaCost())
     assert(bolt:GetManaCost() == 120, 'Lightning Bolt rank 1 costs 120, got ' .. bolt:GetManaCost())
     assert(not bolt:IsFullyCastable(),
         'Lightning Bolt is UNAFFORDABLE at 99 mana -- the free-mana world is what '
         .. 'used to let this case name it')
 
-    assert(contains(names, 'zuus_arc_lightning'),
-        'shipped Zeus fires Arc Lightning into the 90.6%-HP dragon_knight, as the '
-        .. 'replay itself did at t=225.5, got {' .. table.concat(names, ',') .. '}')
-    assert(not contains(names, ULT_NAME),
-        'and it is NOT the ult: ' .. bot:GetMana() .. ' mana cannot pay '
-        .. abilityR:GetManaCost())
-
-    -- The leak, stated as the number the reserve loses.
+    -- The spend this frame is about, and the number the reserve used to lose:
+    -- the replay itself made this cast at t=225.5.
     assert(bot:GetMana() - arc:GetManaCost() == 4,
         'the chip cast leaves 4 of 99 mana against a 246 ult, got '
         .. (bot:GetMana() - arc:GetManaCost()))
+
+    -- PROMOTED: in turbo, with NOTHING armed, the bid is now held.
+    assert(X.zuus_ShouldSaveManaForUlt(bot, dk, arc) == true,
+        'promoted: the reserve is defended on this frame with no id armed')
+
+    -- And the same helper, same frame, off the turbo leg: the shipped answer.
+    local Y, _, bot2, heroes2 = load_zeus(LOCK, false, false)
+    assert(Y.zuus_ShouldSaveManaForUlt(bot2, heroes2['npc_dota_hero_dragon_knight'],
+            bot2:GetAbilityByName('zuus_arc_lightning')) == false,
+        'outside turbo the chip spend is let through, exactly as it shipped')
 end
 
 tests['end to end: armed holds it -- the final decision changes, not just the helper'] = function()
@@ -339,8 +375,16 @@ tests['wiring: SkillsComplement gates both the Q and the W bid'] = function()
         'the Arc Lightning bid must pass through the reserve gate')
     assert(src:find('castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget, abilityW )', 1, true),
         'the Lightning Bolt bid must pass through the reserve gate')
-    assert(src:find("J.IsSoakCandidate( 'zusult' )", 1, true),
-        'the helper must stay gated behind the zusult candidate id')
+    -- PROMOTE 2026-09-11 (§GV): this used to assert the helper stayed gated
+    -- behind the `zusult` candidate id. It is a turbo default now, so the
+    -- claim is inverted -- and inverted rather than deleted on purpose: a
+    -- silently reinstated gate is exactly what would make the two cases above
+    -- pass for the wrong reason.
+    assert(not src:find("IsSoakCandidate( 'zusult' )", 1, true),
+        'zusult was PROMOTED (test_set.md §GV) -- no gate on it may come back '
+        .. 'without a ruling; the reserve is a turbo default')
+    assert(src:find('if not J.IsModeTurbo() then return false end', 1, true),
+        'and the turbo-only conjunct the promote left standing is still there')
 end
 
 return tests

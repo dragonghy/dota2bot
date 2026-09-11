@@ -1,293 +1,297 @@
 {
-  "_note": "每个 armed id 的入集时刻,机器可读。总监 2026-09-07T1x:xxZ 立,执行 2026-09-07T13:31Z 那一轮掉在报告散文里的交棒(全文 test_set.md §FU.1)。读它的工具:tools/agent/arm_since.py。⛔ 立这一行的理由不是「查起来麻烦」,是**上一轮的答案是容器的性质不是实验室的性质**:那一轮用 `git log iterations/streams/test_set.md` 问「armed 了多久」,而 Routine 容器是 shallow clone —— `--deepen=400` 之后该文件的历史仍然只到 2026-08-30,于是 51 个 id 里 40 个答「不知道」。同一个形状在 §FQ.2 的 arm_md5 反查上出现过一次(不 deepen 只解得出 6 个 md5)。⇒ 答案改从**仓库里全长发行的散文**里取:test_set.md 的入集章节(权威)、`iterations/reports/director/<UTC>.md` 的文件名(时刻在文件名上,散文被重写也不会漂)、以及 `state.json` 的 `<id>_<YYYYMMDD>` 键(最弱,只给前两者看不见的 id 用)。",
-  "_precision_note": "`exact` = 有一条点名该 id 的入集事件(裁定当天);`lower_bound` = **下界不是等式**(GH #106 的家规):这些 id 早于 director 报告存档的起点(2026-08-19T00:53Z),它们的界来自一条**逐字引用了当天 arm 串**的 state.json 波次记录。下界仍然是真读数,而且 P4.2 按它排序时这些行无论如何都排在最老那一端。",
-  "_maintenance": "入集裁定落地时**同一个 commit 里**加一行(`armed_since` / `precision` / `source`);退集或 promote 时给该行盖 `retired_at`(**不要删行** —— 删掉之后重新入集就再也说不出上一段 armed 了多久)。`arm_since.py` 对「armed 但没有行」和「有行但不在串里且没盖 `retired_at`」都 exit 3。⚠️ 它**判登记不判真相**:一行写错的日期它看不出来,只有当散文里能解析出的日期与 `exact` 行不一致时它才报 CONTRADICTION,而且**不自动改**。",
-  "ids": {
-    "l1trade": {
-      "armed_since": "2026-07-25",
-      "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch",
-      "retired_at": "2026-09-07",
-      "retired_note": "退回出集(test_set.md §FW;state.json:l1trade_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
-    },
-    "l5combo": {
-      "armed_since": "2026-07-25",
-      "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch",
-      "retired_at": "2026-09-07",
-      "retired_note": "退回出集(test_set.md §FW;state.json:l5combo_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
-    },
-    "tpcommit": {
-      "armed_since": "2026-07-25",
-      "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch"
-    },
-    "lf_rescue": {
-      "armed_since": "2026-07-25",
-      "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch"
-    },
-    "teambrain": {
-      "armed_since": "2026-07-25",
-      "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch",
-      "retired_at": "2026-09-07",
-      "retired_note": "退回出集(test_set.md §FV;state.json:teambrain_RETURNED_20260907)。条件 (a) 结构上买不到。"
-    },
-    "ownhalf": {
-      "armed_since": "2026-07-25",
-      "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch"
-    },
-    "overchase": {
-      "armed_since": "2026-07-25",
-      "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch"
-    },
-    "fieldregen": {
-      "armed_since": "2026-07-25",
-      "precision": "lower_bound",
-      "source": "state.json:family_bisect_launch",
-      "retired_at": "2026-09-08",
-      "retired_note": "退回出集(test_set.md §FZ;state.json:fieldregen_RETURNED_20260908)。P4.2 最老一档(armed 45 天,verify=0),七个波次(W39/40/41/52/53/54/55)只在全量成员串里、一次未被单臂 arm。条件 (a) **从 fixture 那条路结构上买不到**:该块自带 `not J.IsInLaningPhase()`,而语料 1021 帧里 842(82.5%)是对线期 ⇒ 其可读谓词只在 **6** 帧成立(tests/_fieldregen_overlap_sweep.lua)。⛔ 同一份 sweep 的 `overlap_any 0` 是**仪器的零**,不许当作「与 fieldbuy 族不重叠」的证据。gate 与整块逐字保留,bots/ 零 diff。重新入集须走**波次录像**的 (a),见 owed_executions.json:fieldregen_condition_a_from_waves。"
-    },
-    "wandbleed": {
-      "armed_since": "2026-08-19",
-      "precision": "lower_bound",
-      "source": "state.json:bundle14_VERDICT_20260819"
-    },
-    "capmono": {
-      "armed_since": "2026-08-19",
-      "precision": "exact",
-      "source": "reports/director/20260819T111000Z.md",
-      "retired_at": "2026-09-07",
-      "retired_note": "退回出集(test_set.md §FV;state.json:capmono_RETURNED_20260907)。(a) FAILED under isolation,留集的理由已过期。"
-    },
-    "cmrguard": {
-      "armed_since": "2026-08-19",
-      "precision": "exact",
-      "source": "reports/director/20260819T045448Z.md",
-      "retired_at": "2026-09-08",
-      "retired_note": "退回出集(test_set.md §GD;state.json:cmrguard_RETURNED_20260908)。armed 42 → 41。条件 (a) 在 fixture 路径上买不到:veto 环是 `hCc:GetCastRange() + 400`,而那个 cast range 读的是**敌方**英雄的技能句柄,本仓库的 fixture 加载器从不读它 —— 落 `tests/mock/bot_api.lua:184` 的 `^Get -> 0` 兜底。实测(tests/_blind_a_cmrguard_sweep.lua,110 份 fixture / 487 个 curated hard-CC 句柄):读得出 cast range 的 137 个**恰好等于** KV 服务的 137 个,350 个 0 **全部**来自兜底,其中只有 100 个碰巧是引擎的真答案(自身半径 CC)。⭐ 立案帧本身就在盲区里:armed 且不由测试作者写入 cast range 时,`cm_IsRSafeToOpen` 在 20260819_003005(Jakiro ice_path 1138.6u)**放行**该通道 —— 1138.6 > 0 + 400。绿的 `tests/test_replay_260819_cm_r_range.lua` 先写 `GetCastRange = 1000` 再断言,是正确的子句测试但不是 (a)(§GC.2 形状第三例)。另:W39–W58 九个波次里 `cmrguard` 只以全量成员串(380–501 字节)的一员出现,**一次都没有被单臂 arm 过** ⇒ 条件 (b) 也从来没有过读数;且 2026-08-20 的 not-promoted 裁定把 promote 条件挂在「#63 + #66 的修订落地之后」,而那两条修订就是 `cmrcap` 与 `esaftershock`,**两条都从未 armed 过**(本文件无行),`cmrcap` 还要求与 `cmrguard` 同臂。⛔ 退集不是 reject:gate、helper、`X.nRGuardCloseBuffer=400`、`X.nRGuardRangeCap=200` 逐字保留,`bots/`+`game/` 零 diff。买 (a) 见 owed 行 `cmrguard_castrange_instrument`。"
-    },
-    "tpdead": {
-      "armed_since": "2026-08-19",
-      "precision": "exact",
-      "source": "reports/director/20260819T190000Z.md",
-      "retired_at": "2026-09-08",
-      "retired_note": "退回出集(test_set.md §GC;state.json:tpdead_RETURNED_20260908)。条件 (a) 结构上买不到,且**两条路径两个原因**:语料路径上 J.GetTpCommitDefendDesire 不可达(td_state_present 0/1021),波次路径上读数不可分解(§GA.1)。它是 §GA.1 逐字点名的「两个释放」之一而那一轮只裁了 tpdying;买 (a) 见 owed 行 tpdying_isolation_leg(本轮补点名 tpdead)。"
-    },
-    "zusult": {
-      "armed_since": "2026-08-19",
-      "precision": "exact",
-      "source": "reports/director/20260819T210000Z.md"
-    },
-    "wandlimbo": {
-      "armed_since": "2026-08-19",
-      "precision": "exact",
-      "source": "reports/director/20260819T210000Z.md",
-      "retired_at": "2026-09-08",
-      "retired_note": "退回出集(test_set.md §GC;state.json:wandlimbo_RETURNED_20260908)。条件 (a) 在**两条仪器路径上都买不到**:helper 第一条合取是 `GetCurrentCharges() < 6`,fixture 侧 953 个句柄全读 0(bot_api.lua:184 的 `^Get -> 0` 兜底),replay 侧 dumper/main.go 里 `charge` 零次出现。买 (a) 的前置是仪器采购,见 owed 行 wandlimbo_charge_instrument。"
-    },
-    "blinkflee": {
-      "armed_since": "2026-08-20",
-      "precision": "exact",
-      "source": "reports/director/20260820T190000Z.md"
-    },
-    "liondrainstop": {
-      "armed_since": "2026-08-20",
-      "precision": "exact",
-      "source": "reports/director/20260820T190000Z.md",
-      "retired_at": "2026-09-11",
-      "retired_note": "PROMOTE(test_set.md §GU.2;state.json:liondrainstop_PROMOTE_20260911)。armed 33 → 32,armed 22 天。动作是把 bots/BotLib/hero_lion.lua:2008 的 `if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end` 改成 `if not J.IsModeTurbo() then return false end`,非 turbo 仍逐字返回 false。(a) 录像组 2026-09-09T18:40Z W60 语料 WORKING episodes=36;32/36 域内引导在谓词成立的那一帧结束,而域外阴性对照两腿无方向(3.178/3.375 vs 3.119/3.125)⇒ 缩短只发生在域内;(b) 同 tpdeathbuy 的五波家族读数;(c) 生根的引导按构造不在回家路上,出厂的 J.IsRetreating 释放对它永不触发。⚠ GH #314 仍开着:4/36 域内引导没被切断 —— 那是**覆盖不足不是有害**(那些帧上 promoted 腿与出厂树逐字同为不切),根因候选(雾)在 dumper 携带分队视野之前离线不可判(state.json:liondrainstop_VISION_DOMAIN_20260829)。"
-    },
-    "odaoe": {
-      "armed_since": "2026-08-21",
-      "precision": "exact",
-      "source": "reports/director/20260821T070000Z.md"
-    },
-    "pullcamp": {
-      "armed_since": "2026-08-22",
-      "precision": "exact",
-      "source": "reports/director/20260822T090649Z.md",
-      "retired_at": "2026-09-11",
-      "retired_note": "退回出集(test_set.md §GS;state.json:pullcamp_atom_RETIRED_20260911)。条件 (a) 在 W62/W63 两份独立语料上买到,判决 **BUGGY**(`VERIFY id=pullcamp verdict=BUGGY episodes=28`,录像组 20260910T160103Z):营地到任一兵线最小垂距 2912/2372 vs 实测缰绳 max 1272,连接率 1/15=6.7%,每次要价约 19pp 血 + 13s 对线时间。⛔ 不是 reject,gate/helper/调用点逐字保留;重新入集绑在 owed 行 `pullcamp_atom_readmission`(与 `pulldrag` 同批)。"
-    },
-    "stayfield": {
-      "armed_since": "2026-08-22",
-      "precision": "exact",
-      "source": "reports/director/20260822T110000Z.md"
-    },
-    "stayfield2": {
-      "armed_since": "2026-08-22",
-      "precision": "exact",
-      "source": "state.json:stayfield2_20260822"
-    },
-    "fieldbuy": {
-      "armed_since": "2026-08-22",
-      "precision": "exact",
-      "source": "state.json:fieldbuy_20260822"
-    },
-    "pullcad": {
-      "armed_since": "2026-08-23",
-      "precision": "exact",
-      "source": "test_set.md:306"
-    },
-    "pulllane": {
-      "armed_since": "2026-08-24",
-      "precision": "exact",
-      "source": "test_set.md:295",
-      "retired_at": "2026-09-09",
-      "retired_note": "退回出集(test_set.md §GF;state.json:pulllane_RETURNED_20260909)。转轴子句 `J.IsCampBesideLane( camp.location, tLanePath )` 在语料上一次也没被调用过。⚠️ 约束墙**不是**空营地名册(`GetNeutralSpawners()` 确实 110/110 为 `{}`,但**阳性对照否掉了它** —— 喂一个距 bot 600u 的合成己方营地,读数纹丝不动,子句仍被调用 0 次);真正的墙是 `GetLaneFrontLocation`,加载器**拒答**(`LOADER REFUSES … unresolved (GH #61). The dump does not carry lane fronts`)。全 1100 句柄归属:dead 79 / IsCore 929 / 时间窗 67 / :12:42 刻 14 / 800内有敌 2 / `nLane==nil` 0(GH #648 论点实测成立)/ **够到 lane front 恰好 9,而这 9 条上加载器全部拒答** ⇒ 能把问题问出口的只有 9 帧。⛔ 不是 reject:gate(`jmz_func.lua:10386`,**括号内带空格**)、`tLanePath` 搭建、子句与 `PULL_CAMP_LANE_GAP = 1200` 逐字保留,`bots/`+`game/` 零 diff。买 (a) 见 owed 行 `pulllane_lanefront_instrument`。⚠️ `pullcamp` 仍在集内,其历史读数与 `pulllane` 同 armed 取的;退掉后 `tLanePath=nil` ⇒ 首行 `return true` ⇒ 逐字节 no-op。⛔ W58 及更早不与 37-id 家族并池。"
-    },
-    "pulldrag": {
-      "armed_since": "2026-08-25",
-      "precision": "exact",
-      "source": "state.json:pulldrag_20260825",
-      "retired_at": "2026-09-11",
-      "retired_note": "退回出集(test_set.md §GS;state.json:pullcamp_atom_RETIRED_20260911)。⚠️ **它自己没有被判有罪**(`verify=2 / INDETERMINATE / 159 episodes`,仪器 `pulldrag_walk.py` 活着),是**随 `pullcamp` 原子结构性带走**的:`J.GetLanePullDragTarget` 全仓一个调用点(`mode_roam_generic.lua:454`),只经 `J.ShouldPullNeutralCamp` 到达,而后者首两行是 turbo + `IsSoakCandidate('pullcamp')` ⇒ `pullcamp` 一退,它的域结构上归零。⛔ 不许单独重新入集。"
-    },
-    "tpgap": {
-      "armed_since": "2026-08-24",
-      "precision": "exact",
-      "source": "state.json:tpgap_20260824"
-    },
-    "campsel": {
-      "armed_since": "2026-08-24",
-      "precision": "exact",
-      "source": "state.json:campsel_20260824",
-      "retired_at": "2026-09-09",
-      "retired_note": "退回出集(test_set.md §GE;state.json:campsel_RETURNED_20260909)。转轴 `camp.cattr.{team,type}` 不在任何一条仪器里:fixture 语料 `cattr` 0 命中(其绿测试头部自称 'a DECLARED STAND-IN'),dumper 的 creepSnap 恰好 `{t,team,x,y}`(无 name 无 type)⇒ `.type` 从 .dem 也重建不出。与 GH #581 同一堵墙,买 (a) 应与 #581 一并做(owed 行 campsel_camp_record_instrument)。"
-    },
-    "tbearly": {
-      "armed_since": "2026-08-24",
-      "precision": "exact",
-      "source": "state.json:tbearly_20260824",
-      "retired_at": "2026-09-11",
-      "retired_note": "退回出集(test_set.md §GS;state.json:tbearly_RETIRED_20260911)。条件 (a) 买到了,判决 **SILENT**(`VERIFY id=tbearly verdict=SILENT episodes=0`,录像组 20260910T220101Z)。⛔ 不是 reject:gate 与那次 `a and b or c` 惯用法改写逐字保留。⭐ 域不是空集是**零测单点** —— 外层合取项 `mode_farm_generic.lua:506` 的 `not J.IsLateGame()` 在 turbo 下等于 `DotaTime() <= 1080`,armed 的判据是 `DotaTime() < 1080`,两条腿只在 `DotaTime() == 1080.0` 那一个瞬间分歧。"
-    },
-    "tpdeathbuy": {
-      "armed_since": "2026-08-25",
-      "precision": "exact",
-      "source": "state.json:tpdeathbuy_20260825",
-      "retired_at": "2026-09-11",
-      "retired_note": "PROMOTE(test_set.md §GU.1;state.json:tpdeathbuy_PROMOTE_20260911)。armed 34 → 33,armed 17 天。动作是把 bots/item_purchase_generic.lua 的 `if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then` 改成 `if J.IsModeTurbo() then`(§DU.6 红线:代码先改、串后改、同一个 commit),非 turbo 逐字未动。(a) 录像组 2026-09-09T01:02Z W62/W63 语料 WORKING episodes=14,两台独立写成的量具一致;(b) 家族级 5 波(W55/W58/W62/W63/W64)均值 −2.66 gpm / 722 计分局,winrate 通道全 DEGENERATE;(c) 出厂合取 `botHP < 0.08 and botHP >= 1` 不可满足 —— 是算术不是调参,上游 OHA 快照 74727e4:957-958 带来,本仓历史上一次都没跑过。"
-    },
-    "campfarm": {
-      "armed_since": "2026-08-25",
-      "precision": "exact",
-      "source": "test_set.md:159"
-    },
-    "abilanc": {
-      "armed_since": "2026-08-26",
-      "precision": "exact",
-      "source": "reports/director/20260826T095500Z.md"
-    },
-    "bbfight": {
-      "armed_since": "2026-08-26",
-      "precision": "exact",
-      "source": "test_set.md:137"
-    },
-    "bbshort": {
-      "armed_since": "2026-08-26",
-      "precision": "exact",
-      "source": "test_set.md:137"
-    },
-    "pullthink": {
-      "armed_since": "2026-08-26",
-      "precision": "exact",
-      "source": "test_set.md:138",
-      "retired_at": "2026-09-09",
-      "retired_note": "退回出集(test_set.md §GF;state.json:pullthink_RETURNED_20260909)。**两个操作数各自独立地死**:作用域项 `bot.roamCampPull ~= nil` 要 `J.ShouldPullNeutralCamp` 非 nil,而它在**全上门 + 强制 turbo** 之下仍 1100/1100 返回 nil(与 `pulllane` 同一堵 lane-front 墙);节流项 `J.Utils.IsBotThinkingMeaningfulAction` **1100/1100 为 false**,⭐ 而它 false 时 **baseline 腿也不提前 return** ⇒ 两条腿在语料每一帧逐字节相同。机制:`bot:GetAnimActivity()` 未被加载器 spec,落 `bot_api.lua` 的 `^Get -> 0` 兜底,1100/1100 读 0。⭐⭐ 其源码注释(`mode_roam_generic.lua:210-211`)称 meaningfulActivities 是 **EMPTY table** 并当作两条独立理由之一 —— **实测为假**(`ACTIVITY_RUN` 1153 / `ACTIVITY_ATTACK` 1154,表是满的;注入真哨兵节流项当场翻 true)⇒ 结论活着、两条理由死了一条(纪律 4)。⭐ 后果:`GetAnimActivity` 是加载器**够得着**的 getter ⇒ 这是四轮四个仪器缺口里**最便宜的一个,dumper 一行不用动**。⛔ 不是 reject:两处 gate 点与两个半边(节流跳过 + wind-up hold)逐字保留,`bots/`+`game/` 零 diff。买 (a) 见 owed 行 `pullthink_animactivity_instrument`(⛔ 两端都要买,只买节流项仍买不到 (a))。"
-    },
-    "aimguard": {
-      "armed_since": "2026-08-28",
-      "precision": "exact",
-      "source": "test_set.md:116"
-    },
-    "campvoid": {
-      "armed_since": "2026-08-28",
-      "precision": "exact",
-      "source": "test_set.md:102"
-    },
-    "wkqdmg": {
-      "armed_since": "2026-08-29",
-      "precision": "exact",
-      "source": "test_set.md:97"
-    },
-    "fieldsip": {
-      "armed_since": "2026-08-29",
-      "precision": "exact",
-      "source": "test_set.md:95"
-    },
-    "creepthink": {
-      "armed_since": "2026-08-30",
-      "precision": "exact",
-      "source": "test_set.md:90"
-    },
-    "lionqdmg": {
-      "armed_since": "2026-08-30",
-      "precision": "exact",
-      "source": "test_set.md:90"
-    },
-    "cmqreach": {
-      "armed_since": "2026-08-30",
-      "precision": "exact",
-      "source": "test_set.md:90"
-    },
-    "rotscope": {
-      "armed_since": "2026-08-31",
-      "precision": "exact",
-      "source": "test_set.md:87"
-    },
-    "roamidle": {
-      "armed_since": "2026-09-01",
-      "precision": "exact",
-      "source": "test_set.md:84",
-      "retired_at": "2026-09-09",
-      "retired_note": "退回出集(test_set.md §GE;state.json:roamidle_RETURNED_20260909)。条件 (a) 在**两条仪器路径上都买不到**:gate 只在 `bRelocated` 上开火,而写它的那条析取的三个操作数都是 `0 == 非零哨兵`(未 spec 的 `^Get` 兜底 0 vs IDLE 1174 / ITEM 1021 / FARM 1017)⇒ 在语料每一帧全假,构造性不可达;`GetCurrentActionType` 与 `GetActiveMode` 各 0/110 份 fixture,dumper 也不发 action type。⭐ 方向与 cmrguard 相反:**失败向关**,读数回来是「测了没效果」。买 (a) = 给加载器补 getter(owed 行 roamidle_actiontype_instrument;§GE.3:同一机制的修复 2026-09-02 已为隔壁的 GetItemSlotType 做过)。"
-    },
-    "outlatch": {
-      "armed_since": "2026-09-01",
-      "precision": "exact",
-      "source": "test_set.md:84"
-    },
-    "illureal": {
-      "armed_since": "2026-09-01",
-      "precision": "exact",
-      "source": "test_set.md:81"
-    },
-    "slotarb": {
-      "armed_since": "2026-09-01",
-      "precision": "exact",
-      "source": "state.json:slotarb_20260901"
-    },
-    "slotdust": {
-      "armed_since": "2026-09-02",
-      "precision": "exact",
-      "source": "state.json:slotdust_20260902"
-    },
-    "wandbleed2": {
-      "armed_since": "2026-09-02",
-      "precision": "exact",
-      "source": "state.json:wandbleed2_20260902"
-    },
-    "arbheart": {
-      "armed_since": "2026-09-04",
-      "precision": "exact",
-      "source": "test_set.md:59"
-    },
-    "campbind": {
-      "armed_since": "2026-09-05",
-      "precision": "exact",
-      "source": "test_set.md:53",
-      "retired_at": "2026-09-07",
-      "retired_note": "退回出集(test_set.md §FX;state.json:campbind_RETURNED_20260907)。条件 (a) 在例行波里结构上买不到 —— 两份独立语料 97 局,可判读面(计划营 ≠ 最近营)为 0,密度约 0.19 次/局且后半条一次没出现;仪器非瞎(同批帧上归属腿两个方向都有非零读数)。改走 fixture 路径(owed 行 campbind_condition_a_fixture)。⛔ 不是 reject,gate 逐字保留。"
-    },
-    "zusboltdom": {
-      "armed_since": "2026-09-05",
-      "precision": "exact",
-      "source": "test_set.md:53"
-    }
+ "_note": "每个 armed id 的入集时刻,机器可读。总监 2026-09-07T1x:xxZ 立,执行 2026-09-07T13:31Z 那一轮掉在报告散文里的交棒(全文 test_set.md §FU.1)。读它的工具:tools/agent/arm_since.py。⛔ 立这一行的理由不是「查起来麻烦」,是**上一轮的答案是容器的性质不是实验室的性质**:那一轮用 `git log iterations/streams/test_set.md` 问「armed 了多久」,而 Routine 容器是 shallow clone —— `--deepen=400` 之后该文件的历史仍然只到 2026-08-30,于是 51 个 id 里 40 个答「不知道」。同一个形状在 §FQ.2 的 arm_md5 反查上出现过一次(不 deepen 只解得出 6 个 md5)。⇒ 答案改从**仓库里全长发行的散文**里取:test_set.md 的入集章节(权威)、`iterations/reports/director/<UTC>.md` 的文件名(时刻在文件名上,散文被重写也不会漂)、以及 `state.json` 的 `<id>_<YYYYMMDD>` 键(最弱,只给前两者看不见的 id 用)。",
+ "_precision_note": "`exact` = 有一条点名该 id 的入集事件(裁定当天);`lower_bound` = **下界不是等式**(GH #106 的家规):这些 id 早于 director 报告存档的起点(2026-08-19T00:53Z),它们的界来自一条**逐字引用了当天 arm 串**的 state.json 波次记录。下界仍然是真读数,而且 P4.2 按它排序时这些行无论如何都排在最老那一端。",
+ "_maintenance": "入集裁定落地时**同一个 commit 里**加一行(`armed_since` / `precision` / `source`);退集或 promote 时给该行盖 `retired_at`(**不要删行** —— 删掉之后重新入集就再也说不出上一段 armed 了多久)。`arm_since.py` 对「armed 但没有行」和「有行但不在串里且没盖 `retired_at`」都 exit 3。⚠️ 它**判登记不判真相**:一行写错的日期它看不出来,只有当散文里能解析出的日期与 `exact` 行不一致时它才报 CONTRADICTION,而且**不自动改**。",
+ "ids": {
+  "l1trade": {
+   "armed_since": "2026-07-25",
+   "precision": "lower_bound",
+   "source": "state.json:family_bisect_launch",
+   "retired_at": "2026-09-07",
+   "retired_note": "退回出集(test_set.md §FW;state.json:l1trade_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
+  },
+  "l5combo": {
+   "armed_since": "2026-07-25",
+   "precision": "lower_bound",
+   "source": "state.json:family_bisect_launch",
+   "retired_at": "2026-09-07",
+   "retired_note": "退回出集(test_set.md §FW;state.json:l5combo_RETURNED_20260907)。条件 (a) 从 fixture 这条路结构上买不到 —— 最后一条合取是出向爆发估计,而该语料只携带「对 subject 造成的伤害」这一个方向;买 (a) 改走波次录像检测器(owed 行 lanekill_condition_a_detector)。"
+  },
+  "tpcommit": {
+   "armed_since": "2026-07-25",
+   "precision": "lower_bound",
+   "source": "state.json:family_bisect_launch"
+  },
+  "lf_rescue": {
+   "armed_since": "2026-07-25",
+   "precision": "lower_bound",
+   "source": "state.json:family_bisect_launch"
+  },
+  "teambrain": {
+   "armed_since": "2026-07-25",
+   "precision": "lower_bound",
+   "source": "state.json:family_bisect_launch",
+   "retired_at": "2026-09-07",
+   "retired_note": "退回出集(test_set.md §FV;state.json:teambrain_RETURNED_20260907)。条件 (a) 结构上买不到。"
+  },
+  "ownhalf": {
+   "armed_since": "2026-07-25",
+   "precision": "lower_bound",
+   "source": "state.json:family_bisect_launch"
+  },
+  "overchase": {
+   "armed_since": "2026-07-25",
+   "precision": "lower_bound",
+   "source": "state.json:family_bisect_launch"
+  },
+  "fieldregen": {
+   "armed_since": "2026-07-25",
+   "precision": "lower_bound",
+   "source": "state.json:family_bisect_launch",
+   "retired_at": "2026-09-08",
+   "retired_note": "退回出集(test_set.md §FZ;state.json:fieldregen_RETURNED_20260908)。P4.2 最老一档(armed 45 天,verify=0),七个波次(W39/40/41/52/53/54/55)只在全量成员串里、一次未被单臂 arm。条件 (a) **从 fixture 那条路结构上买不到**:该块自带 `not J.IsInLaningPhase()`,而语料 1021 帧里 842(82.5%)是对线期 ⇒ 其可读谓词只在 **6** 帧成立(tests/_fieldregen_overlap_sweep.lua)。⛔ 同一份 sweep 的 `overlap_any 0` 是**仪器的零**,不许当作「与 fieldbuy 族不重叠」的证据。gate 与整块逐字保留,bots/ 零 diff。重新入集须走**波次录像**的 (a),见 owed_executions.json:fieldregen_condition_a_from_waves。"
+  },
+  "wandbleed": {
+   "armed_since": "2026-08-19",
+   "precision": "lower_bound",
+   "source": "state.json:bundle14_VERDICT_20260819"
+  },
+  "capmono": {
+   "armed_since": "2026-08-19",
+   "precision": "exact",
+   "source": "reports/director/20260819T111000Z.md",
+   "retired_at": "2026-09-07",
+   "retired_note": "退回出集(test_set.md §FV;state.json:capmono_RETURNED_20260907)。(a) FAILED under isolation,留集的理由已过期。"
+  },
+  "cmrguard": {
+   "armed_since": "2026-08-19",
+   "precision": "exact",
+   "source": "reports/director/20260819T045448Z.md",
+   "retired_at": "2026-09-08",
+   "retired_note": "退回出集(test_set.md §GD;state.json:cmrguard_RETURNED_20260908)。armed 42 → 41。条件 (a) 在 fixture 路径上买不到:veto 环是 `hCc:GetCastRange() + 400`,而那个 cast range 读的是**敌方**英雄的技能句柄,本仓库的 fixture 加载器从不读它 —— 落 `tests/mock/bot_api.lua:184` 的 `^Get -> 0` 兜底。实测(tests/_blind_a_cmrguard_sweep.lua,110 份 fixture / 487 个 curated hard-CC 句柄):读得出 cast range 的 137 个**恰好等于** KV 服务的 137 个,350 个 0 **全部**来自兜底,其中只有 100 个碰巧是引擎的真答案(自身半径 CC)。⭐ 立案帧本身就在盲区里:armed 且不由测试作者写入 cast range 时,`cm_IsRSafeToOpen` 在 20260819_003005(Jakiro ice_path 1138.6u)**放行**该通道 —— 1138.6 > 0 + 400。绿的 `tests/test_replay_260819_cm_r_range.lua` 先写 `GetCastRange = 1000` 再断言,是正确的子句测试但不是 (a)(§GC.2 形状第三例)。另:W39–W58 九个波次里 `cmrguard` 只以全量成员串(380–501 字节)的一员出现,**一次都没有被单臂 arm 过** ⇒ 条件 (b) 也从来没有过读数;且 2026-08-20 的 not-promoted 裁定把 promote 条件挂在「#63 + #66 的修订落地之后」,而那两条修订就是 `cmrcap` 与 `esaftershock`,**两条都从未 armed 过**(本文件无行),`cmrcap` 还要求与 `cmrguard` 同臂。⛔ 退集不是 reject:gate、helper、`X.nRGuardCloseBuffer=400`、`X.nRGuardRangeCap=200` 逐字保留,`bots/`+`game/` 零 diff。买 (a) 见 owed 行 `cmrguard_castrange_instrument`。"
+  },
+  "tpdead": {
+   "armed_since": "2026-08-19",
+   "precision": "exact",
+   "source": "reports/director/20260819T190000Z.md",
+   "retired_at": "2026-09-08",
+   "retired_note": "退回出集(test_set.md §GC;state.json:tpdead_RETURNED_20260908)。条件 (a) 结构上买不到,且**两条路径两个原因**:语料路径上 J.GetTpCommitDefendDesire 不可达(td_state_present 0/1021),波次路径上读数不可分解(§GA.1)。它是 §GA.1 逐字点名的「两个释放」之一而那一轮只裁了 tpdying;买 (a) 见 owed 行 tpdying_isolation_leg(本轮补点名 tpdead)。"
+  },
+  "zusult": {
+   "armed_since": "2026-08-19",
+   "precision": "exact",
+   "source": "reports/director/20260819T210000Z.md",
+   "retired_at": "2026-09-11",
+   "retired_note": "PROMOTE 作为**一个原子**(test_set.md §GV;state.json:zusult_zusboltdom_PROMOTE_20260911)。armed 32 → 30。⛔ 两条没有各自的裁定 —— 单独促进 `zusult` 会把 GH #477 量到的 BUGGY 配置设成默认,单独促进 `zusboltdom` 是一个结构性空操作(它的返回值全文件唯一消费者在 `zusult` 的门后面)⇒ 只有一种合法切法。 动作是删掉 hero_zuus.lua X.zuus_ShouldSaveManaForUlt 里那句 `if not bPostSpend and not J.IsSoakCandidate('zusult') then return false end`;`bPostSpend`(`zusultx` 的加宽)逐字保留。armed 23 天。"
+  },
+  "wandlimbo": {
+   "armed_since": "2026-08-19",
+   "precision": "exact",
+   "source": "reports/director/20260819T210000Z.md",
+   "retired_at": "2026-09-08",
+   "retired_note": "退回出集(test_set.md §GC;state.json:wandlimbo_RETURNED_20260908)。条件 (a) 在**两条仪器路径上都买不到**:helper 第一条合取是 `GetCurrentCharges() < 6`,fixture 侧 953 个句柄全读 0(bot_api.lua:184 的 `^Get -> 0` 兜底),replay 侧 dumper/main.go 里 `charge` 零次出现。买 (a) 的前置是仪器采购,见 owed 行 wandlimbo_charge_instrument。"
+  },
+  "blinkflee": {
+   "armed_since": "2026-08-20",
+   "precision": "exact",
+   "source": "reports/director/20260820T190000Z.md"
+  },
+  "liondrainstop": {
+   "armed_since": "2026-08-20",
+   "precision": "exact",
+   "source": "reports/director/20260820T190000Z.md",
+   "retired_at": "2026-09-11",
+   "retired_note": "PROMOTE(test_set.md §GU.2;state.json:liondrainstop_PROMOTE_20260911)。armed 33 → 32,armed 22 天。动作是把 bots/BotLib/hero_lion.lua:2008 的 `if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end` 改成 `if not J.IsModeTurbo() then return false end`,非 turbo 仍逐字返回 false。(a) 录像组 2026-09-09T18:40Z W60 语料 WORKING episodes=36;32/36 域内引导在谓词成立的那一帧结束,而域外阴性对照两腿无方向(3.178/3.375 vs 3.119/3.125)⇒ 缩短只发生在域内;(b) 同 tpdeathbuy 的五波家族读数;(c) 生根的引导按构造不在回家路上,出厂的 J.IsRetreating 释放对它永不触发。⚠ GH #314 仍开着:4/36 域内引导没被切断 —— 那是**覆盖不足不是有害**(那些帧上 promoted 腿与出厂树逐字同为不切),根因候选(雾)在 dumper 携带分队视野之前离线不可判(state.json:liondrainstop_VISION_DOMAIN_20260829)。"
+  },
+  "odaoe": {
+   "armed_since": "2026-08-21",
+   "precision": "exact",
+   "source": "reports/director/20260821T070000Z.md"
+  },
+  "pullcamp": {
+   "armed_since": "2026-08-22",
+   "precision": "exact",
+   "source": "reports/director/20260822T090649Z.md",
+   "retired_at": "2026-09-11",
+   "retired_note": "退回出集(test_set.md §GS;state.json:pullcamp_atom_RETIRED_20260911)。条件 (a) 在 W62/W63 两份独立语料上买到,判决 **BUGGY**(`VERIFY id=pullcamp verdict=BUGGY episodes=28`,录像组 20260910T160103Z):营地到任一兵线最小垂距 2912/2372 vs 实测缰绳 max 1272,连接率 1/15=6.7%,每次要价约 19pp 血 + 13s 对线时间。⛔ 不是 reject,gate/helper/调用点逐字保留;重新入集绑在 owed 行 `pullcamp_atom_readmission`(与 `pulldrag` 同批)。"
+  },
+  "stayfield": {
+   "armed_since": "2026-08-22",
+   "precision": "exact",
+   "source": "reports/director/20260822T110000Z.md"
+  },
+  "stayfield2": {
+   "armed_since": "2026-08-22",
+   "precision": "exact",
+   "source": "state.json:stayfield2_20260822"
+  },
+  "fieldbuy": {
+   "armed_since": "2026-08-22",
+   "precision": "exact",
+   "source": "state.json:fieldbuy_20260822"
+  },
+  "pullcad": {
+   "armed_since": "2026-08-23",
+   "precision": "exact",
+   "source": "test_set.md:306"
+  },
+  "pulllane": {
+   "armed_since": "2026-08-24",
+   "precision": "exact",
+   "source": "test_set.md:295",
+   "retired_at": "2026-09-09",
+   "retired_note": "退回出集(test_set.md §GF;state.json:pulllane_RETURNED_20260909)。转轴子句 `J.IsCampBesideLane( camp.location, tLanePath )` 在语料上一次也没被调用过。⚠️ 约束墙**不是**空营地名册(`GetNeutralSpawners()` 确实 110/110 为 `{}`,但**阳性对照否掉了它** —— 喂一个距 bot 600u 的合成己方营地,读数纹丝不动,子句仍被调用 0 次);真正的墙是 `GetLaneFrontLocation`,加载器**拒答**(`LOADER REFUSES … unresolved (GH #61). The dump does not carry lane fronts`)。全 1100 句柄归属:dead 79 / IsCore 929 / 时间窗 67 / :12:42 刻 14 / 800内有敌 2 / `nLane==nil` 0(GH #648 论点实测成立)/ **够到 lane front 恰好 9,而这 9 条上加载器全部拒答** ⇒ 能把问题问出口的只有 9 帧。⛔ 不是 reject:gate(`jmz_func.lua:10386`,**括号内带空格**)、`tLanePath` 搭建、子句与 `PULL_CAMP_LANE_GAP = 1200` 逐字保留,`bots/`+`game/` 零 diff。买 (a) 见 owed 行 `pulllane_lanefront_instrument`。⚠️ `pullcamp` 仍在集内,其历史读数与 `pulllane` 同 armed 取的;退掉后 `tLanePath=nil` ⇒ 首行 `return true` ⇒ 逐字节 no-op。⛔ W58 及更早不与 37-id 家族并池。"
+  },
+  "pulldrag": {
+   "armed_since": "2026-08-25",
+   "precision": "exact",
+   "source": "state.json:pulldrag_20260825",
+   "retired_at": "2026-09-11",
+   "retired_note": "退回出集(test_set.md §GS;state.json:pullcamp_atom_RETIRED_20260911)。⚠️ **它自己没有被判有罪**(`verify=2 / INDETERMINATE / 159 episodes`,仪器 `pulldrag_walk.py` 活着),是**随 `pullcamp` 原子结构性带走**的:`J.GetLanePullDragTarget` 全仓一个调用点(`mode_roam_generic.lua:454`),只经 `J.ShouldPullNeutralCamp` 到达,而后者首两行是 turbo + `IsSoakCandidate('pullcamp')` ⇒ `pullcamp` 一退,它的域结构上归零。⛔ 不许单独重新入集。"
+  },
+  "tpgap": {
+   "armed_since": "2026-08-24",
+   "precision": "exact",
+   "source": "state.json:tpgap_20260824"
+  },
+  "campsel": {
+   "armed_since": "2026-08-24",
+   "precision": "exact",
+   "source": "state.json:campsel_20260824",
+   "retired_at": "2026-09-09",
+   "retired_note": "退回出集(test_set.md §GE;state.json:campsel_RETURNED_20260909)。转轴 `camp.cattr.{team,type}` 不在任何一条仪器里:fixture 语料 `cattr` 0 命中(其绿测试头部自称 'a DECLARED STAND-IN'),dumper 的 creepSnap 恰好 `{t,team,x,y}`(无 name 无 type)⇒ `.type` 从 .dem 也重建不出。与 GH #581 同一堵墙,买 (a) 应与 #581 一并做(owed 行 campsel_camp_record_instrument)。"
+  },
+  "tbearly": {
+   "armed_since": "2026-08-24",
+   "precision": "exact",
+   "source": "state.json:tbearly_20260824",
+   "retired_at": "2026-09-11",
+   "retired_note": "退回出集(test_set.md §GS;state.json:tbearly_RETIRED_20260911)。条件 (a) 买到了,判决 **SILENT**(`VERIFY id=tbearly verdict=SILENT episodes=0`,录像组 20260910T220101Z)。⛔ 不是 reject:gate 与那次 `a and b or c` 惯用法改写逐字保留。⭐ 域不是空集是**零测单点** —— 外层合取项 `mode_farm_generic.lua:506` 的 `not J.IsLateGame()` 在 turbo 下等于 `DotaTime() <= 1080`,armed 的判据是 `DotaTime() < 1080`,两条腿只在 `DotaTime() == 1080.0` 那一个瞬间分歧。"
+  },
+  "tpdeathbuy": {
+   "armed_since": "2026-08-25",
+   "precision": "exact",
+   "source": "state.json:tpdeathbuy_20260825",
+   "retired_at": "2026-09-11",
+   "retired_note": "PROMOTE(test_set.md §GU.1;state.json:tpdeathbuy_PROMOTE_20260911)。armed 34 → 33,armed 17 天。动作是把 bots/item_purchase_generic.lua 的 `if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then` 改成 `if J.IsModeTurbo() then`(§DU.6 红线:代码先改、串后改、同一个 commit),非 turbo 逐字未动。(a) 录像组 2026-09-09T01:02Z W62/W63 语料 WORKING episodes=14,两台独立写成的量具一致;(b) 家族级 5 波(W55/W58/W62/W63/W64)均值 −2.66 gpm / 722 计分局,winrate 通道全 DEGENERATE;(c) 出厂合取 `botHP < 0.08 and botHP >= 1` 不可满足 —— 是算术不是调参,上游 OHA 快照 74727e4:957-958 带来,本仓历史上一次都没跑过。"
+  },
+  "campfarm": {
+   "armed_since": "2026-08-25",
+   "precision": "exact",
+   "source": "test_set.md:159"
+  },
+  "abilanc": {
+   "armed_since": "2026-08-26",
+   "precision": "exact",
+   "source": "reports/director/20260826T095500Z.md"
+  },
+  "bbfight": {
+   "armed_since": "2026-08-26",
+   "precision": "exact",
+   "source": "test_set.md:137"
+  },
+  "bbshort": {
+   "armed_since": "2026-08-26",
+   "precision": "exact",
+   "source": "test_set.md:137"
+  },
+  "pullthink": {
+   "armed_since": "2026-08-26",
+   "precision": "exact",
+   "source": "test_set.md:138",
+   "retired_at": "2026-09-09",
+   "retired_note": "退回出集(test_set.md §GF;state.json:pullthink_RETURNED_20260909)。**两个操作数各自独立地死**:作用域项 `bot.roamCampPull ~= nil` 要 `J.ShouldPullNeutralCamp` 非 nil,而它在**全上门 + 强制 turbo** 之下仍 1100/1100 返回 nil(与 `pulllane` 同一堵 lane-front 墙);节流项 `J.Utils.IsBotThinkingMeaningfulAction` **1100/1100 为 false**,⭐ 而它 false 时 **baseline 腿也不提前 return** ⇒ 两条腿在语料每一帧逐字节相同。机制:`bot:GetAnimActivity()` 未被加载器 spec,落 `bot_api.lua` 的 `^Get -> 0` 兜底,1100/1100 读 0。⭐⭐ 其源码注释(`mode_roam_generic.lua:210-211`)称 meaningfulActivities 是 **EMPTY table** 并当作两条独立理由之一 —— **实测为假**(`ACTIVITY_RUN` 1153 / `ACTIVITY_ATTACK` 1154,表是满的;注入真哨兵节流项当场翻 true)⇒ 结论活着、两条理由死了一条(纪律 4)。⭐ 后果:`GetAnimActivity` 是加载器**够得着**的 getter ⇒ 这是四轮四个仪器缺口里**最便宜的一个,dumper 一行不用动**。⛔ 不是 reject:两处 gate 点与两个半边(节流跳过 + wind-up hold)逐字保留,`bots/`+`game/` 零 diff。买 (a) 见 owed 行 `pullthink_animactivity_instrument`(⛔ 两端都要买,只买节流项仍买不到 (a))。"
+  },
+  "aimguard": {
+   "armed_since": "2026-08-28",
+   "precision": "exact",
+   "source": "test_set.md:116"
+  },
+  "campvoid": {
+   "armed_since": "2026-08-28",
+   "precision": "exact",
+   "source": "test_set.md:102"
+  },
+  "wkqdmg": {
+   "armed_since": "2026-08-29",
+   "precision": "exact",
+   "source": "test_set.md:97"
+  },
+  "fieldsip": {
+   "armed_since": "2026-08-29",
+   "precision": "exact",
+   "source": "test_set.md:95"
+  },
+  "creepthink": {
+   "armed_since": "2026-08-30",
+   "precision": "exact",
+   "source": "test_set.md:90"
+  },
+  "lionqdmg": {
+   "armed_since": "2026-08-30",
+   "precision": "exact",
+   "source": "test_set.md:90"
+  },
+  "cmqreach": {
+   "armed_since": "2026-08-30",
+   "precision": "exact",
+   "source": "test_set.md:90"
+  },
+  "rotscope": {
+   "armed_since": "2026-08-31",
+   "precision": "exact",
+   "source": "test_set.md:87"
+  },
+  "roamidle": {
+   "armed_since": "2026-09-01",
+   "precision": "exact",
+   "source": "test_set.md:84",
+   "retired_at": "2026-09-09",
+   "retired_note": "退回出集(test_set.md §GE;state.json:roamidle_RETURNED_20260909)。条件 (a) 在**两条仪器路径上都买不到**:gate 只在 `bRelocated` 上开火,而写它的那条析取的三个操作数都是 `0 == 非零哨兵`(未 spec 的 `^Get` 兜底 0 vs IDLE 1174 / ITEM 1021 / FARM 1017)⇒ 在语料每一帧全假,构造性不可达;`GetCurrentActionType` 与 `GetActiveMode` 各 0/110 份 fixture,dumper 也不发 action type。⭐ 方向与 cmrguard 相反:**失败向关**,读数回来是「测了没效果」。买 (a) = 给加载器补 getter(owed 行 roamidle_actiontype_instrument;§GE.3:同一机制的修复 2026-09-02 已为隔壁的 GetItemSlotType 做过)。"
+  },
+  "outlatch": {
+   "armed_since": "2026-09-01",
+   "precision": "exact",
+   "source": "test_set.md:84"
+  },
+  "illureal": {
+   "armed_since": "2026-09-01",
+   "precision": "exact",
+   "source": "test_set.md:81"
+  },
+  "slotarb": {
+   "armed_since": "2026-09-01",
+   "precision": "exact",
+   "source": "state.json:slotarb_20260901"
+  },
+  "slotdust": {
+   "armed_since": "2026-09-02",
+   "precision": "exact",
+   "source": "state.json:slotdust_20260902"
+  },
+  "wandbleed2": {
+   "armed_since": "2026-09-02",
+   "precision": "exact",
+   "source": "state.json:wandbleed2_20260902"
+  },
+  "arbheart": {
+   "armed_since": "2026-09-04",
+   "precision": "exact",
+   "source": "test_set.md:59"
+  },
+  "campbind": {
+   "armed_since": "2026-09-05",
+   "precision": "exact",
+   "source": "test_set.md:53",
+   "retired_at": "2026-09-07",
+   "retired_note": "退回出集(test_set.md §FX;state.json:campbind_RETURNED_20260907)。条件 (a) 在例行波里结构上买不到 —— 两份独立语料 97 局,可判读面(计划营 ≠ 最近营)为 0,密度约 0.19 次/局且后半条一次没出现;仪器非瞎(同批帧上归属腿两个方向都有非零读数)。改走 fixture 路径(owed 行 campbind_condition_a_fixture)。⛔ 不是 reject,gate 逐字保留。"
+  },
+  "zusboltdom": {
+   "armed_since": "2026-09-05",
+   "precision": "exact",
+   "source": "test_set.md:53",
+   "retired_at": "2026-09-11",
+   "retired_note": "PROMOTE 作为**一个原子**(test_set.md §GV;state.json:zusult_zusboltdom_PROMOTE_20260911)。armed 32 → 30。⛔ 两条没有各自的裁定 —— 单独促进 `zusult` 会把 GH #477 量到的 BUGGY 配置设成默认,单独促进 `zusboltdom` 是一个结构性空操作(它的返回值全文件唯一消费者在 `zusult` 的门后面)⇒ 只有一种合法切法。 动作是删掉 hero_zuus.lua X.BoltAoEKillTarget 门里那个 `and J.IsSoakCandidate('zusboltdom')` 合取项;VALUE 判据 `type(nHealthCap)=='number' and nHealthCap <= 0` 逐字保留(§GV.4:写成 VALUE 而不是 id,正是它今天没被这一促进冻死的原因)。armed 6 天。"
   }
+ }
 }

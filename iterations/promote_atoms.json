@@ -1,196 +1,236 @@
 {
-  "_readme": [
-    "Promote-time constraints that must bite ON THE DAY SOMEBODY PROMOTES, not in prose.",
-    "Checked by tools/agent/promote_atoms.py (selfcheck leg 'promote-atoms'); exit 3 on violation.",
-    "rule 'no_promote_without': if any `subject` id is PROMOTED (no live gate site left) while any",
-    "`prereq` id is still GATED, the tree ships a configuration no wave has run -> RED.",
-    "An id named here that is neither gated nor marked promoted anywhere in the tree is also RED:",
-    "a typo in this file must never make a constraint quietly vacuous.",
-    "ADD A ROW the moment a constraint is ruled, not when it is about to be violated."
-  ],
-  "atoms": [
-    {
-      "name": "field_hold_needs_magnitude",
-      "rule": "no_promote_without",
-      "subject": [
-        "stayfield",
-        "stayfield2"
-      ],
-      "prereq": [
-        "fieldsip"
-      ],
-      "ruled_at": "2026-09-04T19:xxZ",
-      "ruled_by": "director",
-      "ref": "iterations/streams/test_set.md §ED.5 (proposed) / §EI.1 (ruled); GH #485",
-      "direction": "one-way: promoting fieldsip while the holding side stays gated is NOT constrained by this row.",
-      "note": [
-        "ACCEPTED, with the premise re-founded on a bare reading rather than on the proposing",
-        "section's sentence. §ED.5 wrote '至今每一波给 stayfield/stayfield2 买 (a) 的波都同时 armed 了",
-        "fieldsip'. Measured this round by replaying each wave's own pinned tree",
-        "(`git show <W*_wave.json:tree>:iterations/streams/test_set.md` line 2, W24..W47):",
-        "W27..W47 co-arm all three, as claimed -- but W24, W25 and W26 armed stayfield+stayfield2",
-        "with fieldsip ABSENT from the armed string, and at W24's tree (2d1024ee) the",
-        "`IsSoakCandidate('fieldsip')` gate did not exist in bots/ at all (0 sites; 1 site from",
-        "b51bac77 on). An unarmed fieldsip makes J.IsFieldSipEnough return true early, which is",
-        "byte-identically the behaviour a REJECTED fieldsip would ship -> those three waves did run",
-        "the configuration §ED.5 calls untested. So the constraint stands on the narrower, true",
-        "footing: 21 of the last 24 waves co-armed them, and the only three that did not are old,",
-        "bundle-wide (42-44 armed ids), and not known to carry a per-id condition-(a) reading for",
-        "the holding side.",
-        "RELEASE CONDITION (what would retire this row): a condition-(a) reading for stayfield /",
-        "stayfield2 taken on W24, W25 or W26 -- or on any future leg where fieldsip is unarmed.",
-        "If such a reading exists and is usable, this row is over-strict and should be dropped;",
-        "until someone looks, promoting the holding side alone ships an unmeasured configuration."
-      ]
-    },
-    {
-      "name": "tp_response_releases_need_commit",
-      "rule": "no_promote_without",
-      "subject": [
-        "tpdying",
-        "tpdead"
-      ],
-      "prereq": [
-        "tpcommit"
-      ],
-      "ruled_at": "2026-09-05T19:xxZ",
-      "ruled_by": "director",
-      "ref": "iterations/streams/test_set.md §EZ.5; GH #35 (tpdying) / GH #37 (tpdead) / GH #531 (the shape)",
-      "direction": "one-way: promoting tpcommit while either release stays gated is NOT constrained by this row.",
-      "note": [
-        "REGISTERED BEFORE A VIOLATION, per this file's own README ('ADD A ROW the moment a",
-        "constraint is ruled'). Nothing is wrong with these two ids today: tpcommit is armed",
-        "alongside them, so both releases are reachable in every wave that carries them.",
-        "WHAT THE ROW STOPS is the promote-day configuration. Both gate sites live INSIDE",
-        "J.GetTpCommitDefendDesire (bots/FunLib/jmz_func.lua:8655), whose first statement is",
-        "`if not J.IsSoakCandidate('tpcommit') then return nil end` (:8657). Promote tpdying or",
-        "tpdead alone and the promoted code ships behind a gate that is OFF in every real game:",
-        "a promote that changes nothing, recorded as a shipped improvement. That is the same",
-        "family as GH #531 -- a lever whose reachability is decided by a DIFFERENT id -- and the",
-        "same family as the pullcad trap, one level up: pullcad freezes a predicate FALSE at",
-        "promote time, this ships a live predicate nobody can reach.",
-        "WHY IT WAS INVISIBLE UNTIL NOW: the dependency is structural NESTING, not a conjunction,",
-        "so no gate-reading tool sees it, and it was written down twice in prose -- the function's",
-        "own comments ('reachable only inside the tpcommit gate') and test_set.md:3625 ('挂在已",
-        "armed 的 tpcommit 下,可接受'). Prose is exactly what zusstatic was carrying when it sat",
-        "armed for a fortnight measuring nothing (§EX.3).",
-        "RELEASE CONDITION (what would retire this row): tpcommit promoted, or either release",
-        "lifted out of J.GetTpCommitDefendDesire so that it stands on its own gate."
-      ]
-    },
-    {
-      "name": "static_field_needs_binding",
-      "rule": "no_promote_without",
-      "subject": [
-        "zusstatic"
-      ],
-      "prereq": [
-        "zusbind"
-      ],
-      "ruled_at": "2026-09-05T15:5xZ",
-      "ruled_by": "director",
-      "ref": "iterations/streams/test_set.md §EX.3 / §EX.4 / §EX.5; GH #173 (the fact) / GH #531 (the SHAPE: a gate whose predicate is always TRUE while its answer is always 0, because the handle arrives through a parameter from a DIFFERENT id's gate)",
-      "direction": "one-way: promoting zusbind while zusstatic stays gated is NOT constrained by this row.",
-      "note": [
-        "REGISTERED IN THE SAME BREATH AS A RETURN-TO-SENDER, not before a violation.",
-        "zusstatic was armed 62/63-wide with zusbind absent from the armed string the whole time.",
-        "The dependency is REAL but it is not a conjunction, so no machine could see it: the gate at",
-        "bots/BotLib/hero_zuus.lua:619 sits in X.GetStaticFieldBonus(hAbility), and hAbility is a",
-        "PARAMETER handed in by the single call site at :652 through X.GetBoundAbility(...), which is",
-        "itself gated on zusbind. Unarmed, that layer short-circuits to `return hShipped` = the",
-        "file-local abilityAS = bot:GetAbilityByName(sAbilityList[5]).",
-        "tests/test_zuus_ability_index_binding.lua drives the SHIPPED J.Skill.GetAbilityList through",
-        "all 2^3 = 8 drop-worlds and asserts index 5 is Static Field in NONE of them (lightning_hands",
-        "in 2, nil in 4, generic_hidden in 2). So the armed leg reads damage_health_pct off an ability",
-        "that has no such key -> silent 0 (the GH #162 house rule) -> return 0, in every world.",
-        "=> zusstatic armed WITHOUT zusbind never measures the registered lever (0.09 -> ~3.45%); its",
-        "only observable effect is deleting the Static Field term (0.09 -> 0), which nobody registered.",
-        "PROMOTING zusstatic alone would ship exactly that unmeasured deletion by default -> RED.",
-        "WHY THIS IS NASTIER THAN THE pullcad TRAP: pullcad freezes a predicate FALSE, and",
-        "check_armed_wiring.py at least keeps calling it WIRED while it no-ops. Here the predicate is",
-        "TRUE on every frame -- it fires, it just answers 0 off the wrong handle. A firing gate with a",
-        "constant wrong answer looks identical to a tested-and-neutral id in every aggregate.",
-        "RELEASE CONDITION (what would retire this row): zusbind promoted, or the call site at :652",
-        "rewritten to bind Static Field by name unconditionally -- either makes the handle right",
-        "without an arm-string precondition, and then zusstatic can be judged on its own merits."
-      ]
-    },
-    {
-      "name": "tower_fear_ring_disjunction",
-      "rule": "no_promote_without",
-      "subject": [
-        "towerfear"
-      ],
-      "prereq": [
-        "towerring"
-      ],
-      "ruled_at": "2026-09-06T22:xxZ",
-      "ruled_by": "director",
-      "ref": "iterations/streams/test_set.md §FO.3 (the trap) / §FO.4 (the withdrawal); GH #558",
-      "direction": "one-way: promoting towerring while towerfear stays gated is NOT constrained by this row (towerring carries its own second gate at bots/mode_retreat_generic.lua:969 and stays readable).",
-      "note": [
-        "THE PULLCAD TRAP IN ITS DISJUNCTIVE FORM. The halving gate is a DISJUNCTION --",
-        "`(J.IsSoakCandidate('towerfear') or J.IsSoakCandidate('towerring')) and J.IsModeTurbo()`",
-        "at bots/mode_retreat_generic.lua:964. Promoting towerfear means deleting that line, after",
-        "which the branch is turbo-default-on and arming `towerring` moves NOTHING on it -- while",
-        "check_armed_wiring.py still calls towerring WIRED, because it checks that a call site exists,",
-        "not that the predicate can still change an answer. The verdict would then read back",
-        "'tested, no effect' with nothing raising a hand: verbatim the shape AGENTS.md records for",
-        "`pullcad`, one boolean operator over.",
-        "REGISTERED THE DAY THE CONSTRAINT WAS RULED, not the day it was about to be violated --",
-        "and deliberately registered even though towerfear was WITHDRAWN from the armed set in the",
-        "same round (§FO.4): withdrawal removes the id from the string, it does not remove the gate",
-        "from bots/, so a future re-admission and promote would meet exactly this trap.",
-        "RELEASE CONDITION: promote the PAIR together (that is the configuration GH #558 proposes and",
-        "the one a wave would have to measure), or rewrite :964 so the promoted half no longer",
-        "swallows towerring's arm. Either retires this row; deleting it to get green does not."
-      ]
-    },
-    {
-      "name": "impale_kill_needs_damage",
-      "rule": "no_promote_without",
-      "subject": [
-        "lionqdmg"
-      ],
-      "prereq": [
-        "lionqkill"
-      ],
-      "ruled_at": "2026-09-08T1x:xxZ",
-      "ruled_by": "director",
-      "ref": "iterations/streams/test_set.md §GC.7; GH #640 / queue.json:hero-49(英雄组请裁,接力棒明写「总监」); 归档扫描裁定 APPROVED-SCAN 同轮",
-      "direction": "one-way: promoting lionqkill while lionqdmg stays gated is NOT constrained by this row.",
-      "note": [
-        "REGISTERED BEFORE A VIOLATION, per this file's own README. Nothing is wrong today:",
-        "both ids are gated, and the kill loop is DEAD in every shipped game.",
-        "WHAT THE ROW STOPS is the promote-day configuration, and the mechanism is that the two",
-        "ids sit on OPPOSITE SIDES of the same branch. hero_lion.lua X.ConsiderQ's kill loop walks",
-        "nInBonusEnemyList = J.GetNearbyHeroes(bot, nCastRange + 200, ...) and returns",
-        "npcEnemy:GetLocation() with NO distance test of its own -- the twelfth of twelve exit",
-        "points, and the only one that can hand ActionQueue_UseAbilityOnLocation a point outside",
-        "nCastRange. It is inert only because its lethality test is fed nDamage = 0:",
-        "X.GetImpaleKillDamage returns hAbility:GetAbilityDamage(), and lion_impale declares no",
-        "top-level AbilityDamage (105/170/235/300 live in AbilityValues/damage), so",
-        "J.WillMagicKillTarget is false for every living target (GH #175).",
-        "VERIFIED INDEPENDENTLY, not taken from the request: tests/mock/replay_fixture.lua's own",
-        "AbilityDamage note reaches the same 0 from the other side -- it names",
-        "hero_lion.lua X.GetImpaleKillDamage among the focus callers whose abilities declare no",
-        "such field, and calls that landing 'provably inert'.",
-        "SO PROMOTING lionqdmg ALONE un-deadens a reach-less branch: one promote buys BOTH a",
-        "widening (the loop starts firing) AND a suicide path (it fires at targets outside cast",
-        "range, and X.SkillsComplement stamps lastCastQTime on the BID, so X.ConsiderW's first",
-        "guard re-locks Hex every frame the out-of-range bid repeats). Two changes in one reading,",
-        "inseparable -- the lanefix lesson, one promote early.",
-        "WHY ONE-WAY: X.lion_IsImpaleKillTargetInReach returns its bShippedLethal argument",
-        "unchanged unless (turbo AND lionqkill), i.e. it is a pure narrowing guard on a branch that",
-        "is already dead. Promoting it alone changes nothing and is not constrained.",
-        "⛔ WHY THIS IS A ROW AND NOT A CONJUNCTION IN THE LUA: writing",
-        "`IsSoakCandidate('lionqkill') and IsSoakCandidate('lionqdmg')` into the guard is the",
-        "pullcad trap verbatim (AGENTS.md: promoting an id silently kills any gate that names it) --",
-        "the predicate would freeze FALSE the day either id is promoted. The hero group's own",
-        "mutation stand M10 is that mutant, 10/10 CAUGHT.",
-        "RELEASE CONDITION (what would retire this row): lionqkill promoted, or the kill loop given",
-        "a reach test that does not depend on a candidate id, or lionqdmg rejected."
-      ]
-    }
-  ]
+ "_readme": [
+  "Promote-time constraints that must bite ON THE DAY SOMEBODY PROMOTES, not in prose.",
+  "Checked by tools/agent/promote_atoms.py (selfcheck leg 'promote-atoms'); exit 3 on violation.",
+  "rule 'no_promote_without': if any `subject` id is PROMOTED (no live gate site left) while any",
+  "`prereq` id is still GATED, the tree ships a configuration no wave has run -> RED.",
+  "An id named here that is neither gated nor marked promoted anywhere in the tree is also RED:",
+  "a typo in this file must never make a constraint quietly vacuous.",
+  "ADD A ROW the moment a constraint is ruled, not when it is about to be violated."
+ ],
+ "atoms": [
+  {
+   "name": "field_hold_needs_magnitude",
+   "rule": "no_promote_without",
+   "subject": [
+    "stayfield",
+    "stayfield2"
+   ],
+   "prereq": [
+    "fieldsip"
+   ],
+   "ruled_at": "2026-09-04T19:xxZ",
+   "ruled_by": "director",
+   "ref": "iterations/streams/test_set.md §ED.5 (proposed) / §EI.1 (ruled); GH #485",
+   "direction": "one-way: promoting fieldsip while the holding side stays gated is NOT constrained by this row.",
+   "note": [
+    "ACCEPTED, with the premise re-founded on a bare reading rather than on the proposing",
+    "section's sentence. §ED.5 wrote '至今每一波给 stayfield/stayfield2 买 (a) 的波都同时 armed 了",
+    "fieldsip'. Measured this round by replaying each wave's own pinned tree",
+    "(`git show <W*_wave.json:tree>:iterations/streams/test_set.md` line 2, W24..W47):",
+    "W27..W47 co-arm all three, as claimed -- but W24, W25 and W26 armed stayfield+stayfield2",
+    "with fieldsip ABSENT from the armed string, and at W24's tree (2d1024ee) the",
+    "`IsSoakCandidate('fieldsip')` gate did not exist in bots/ at all (0 sites; 1 site from",
+    "b51bac77 on). An unarmed fieldsip makes J.IsFieldSipEnough return true early, which is",
+    "byte-identically the behaviour a REJECTED fieldsip would ship -> those three waves did run",
+    "the configuration §ED.5 calls untested. So the constraint stands on the narrower, true",
+    "footing: 21 of the last 24 waves co-armed them, and the only three that did not are old,",
+    "bundle-wide (42-44 armed ids), and not known to carry a per-id condition-(a) reading for",
+    "the holding side.",
+    "RELEASE CONDITION (what would retire this row): a condition-(a) reading for stayfield /",
+    "stayfield2 taken on W24, W25 or W26 -- or on any future leg where fieldsip is unarmed.",
+    "If such a reading exists and is usable, this row is over-strict and should be dropped;",
+    "until someone looks, promoting the holding side alone ships an unmeasured configuration."
+   ]
+  },
+  {
+   "name": "tp_response_releases_need_commit",
+   "rule": "no_promote_without",
+   "subject": [
+    "tpdying",
+    "tpdead"
+   ],
+   "prereq": [
+    "tpcommit"
+   ],
+   "ruled_at": "2026-09-05T19:xxZ",
+   "ruled_by": "director",
+   "ref": "iterations/streams/test_set.md §EZ.5; GH #35 (tpdying) / GH #37 (tpdead) / GH #531 (the shape)",
+   "direction": "one-way: promoting tpcommit while either release stays gated is NOT constrained by this row.",
+   "note": [
+    "REGISTERED BEFORE A VIOLATION, per this file's own README ('ADD A ROW the moment a",
+    "constraint is ruled'). Nothing is wrong with these two ids today: tpcommit is armed",
+    "alongside them, so both releases are reachable in every wave that carries them.",
+    "WHAT THE ROW STOPS is the promote-day configuration. Both gate sites live INSIDE",
+    "J.GetTpCommitDefendDesire (bots/FunLib/jmz_func.lua:8655), whose first statement is",
+    "`if not J.IsSoakCandidate('tpcommit') then return nil end` (:8657). Promote tpdying or",
+    "tpdead alone and the promoted code ships behind a gate that is OFF in every real game:",
+    "a promote that changes nothing, recorded as a shipped improvement. That is the same",
+    "family as GH #531 -- a lever whose reachability is decided by a DIFFERENT id -- and the",
+    "same family as the pullcad trap, one level up: pullcad freezes a predicate FALSE at",
+    "promote time, this ships a live predicate nobody can reach.",
+    "WHY IT WAS INVISIBLE UNTIL NOW: the dependency is structural NESTING, not a conjunction,",
+    "so no gate-reading tool sees it, and it was written down twice in prose -- the function's",
+    "own comments ('reachable only inside the tpcommit gate') and test_set.md:3625 ('挂在已",
+    "armed 的 tpcommit 下,可接受'). Prose is exactly what zusstatic was carrying when it sat",
+    "armed for a fortnight measuring nothing (§EX.3).",
+    "RELEASE CONDITION (what would retire this row): tpcommit promoted, or either release",
+    "lifted out of J.GetTpCommitDefendDesire so that it stands on its own gate."
+   ]
+  },
+  {
+   "name": "static_field_needs_binding",
+   "rule": "no_promote_without",
+   "subject": [
+    "zusstatic"
+   ],
+   "prereq": [
+    "zusbind"
+   ],
+   "ruled_at": "2026-09-05T15:5xZ",
+   "ruled_by": "director",
+   "ref": "iterations/streams/test_set.md §EX.3 / §EX.4 / §EX.5; GH #173 (the fact) / GH #531 (the SHAPE: a gate whose predicate is always TRUE while its answer is always 0, because the handle arrives through a parameter from a DIFFERENT id's gate)",
+   "direction": "one-way: promoting zusbind while zusstatic stays gated is NOT constrained by this row.",
+   "note": [
+    "REGISTERED IN THE SAME BREATH AS A RETURN-TO-SENDER, not before a violation.",
+    "zusstatic was armed 62/63-wide with zusbind absent from the armed string the whole time.",
+    "The dependency is REAL but it is not a conjunction, so no machine could see it: the gate at",
+    "bots/BotLib/hero_zuus.lua:619 sits in X.GetStaticFieldBonus(hAbility), and hAbility is a",
+    "PARAMETER handed in by the single call site at :652 through X.GetBoundAbility(...), which is",
+    "itself gated on zusbind. Unarmed, that layer short-circuits to `return hShipped` = the",
+    "file-local abilityAS = bot:GetAbilityByName(sAbilityList[5]).",
+    "tests/test_zuus_ability_index_binding.lua drives the SHIPPED J.Skill.GetAbilityList through",
+    "all 2^3 = 8 drop-worlds and asserts index 5 is Static Field in NONE of them (lightning_hands",
+    "in 2, nil in 4, generic_hidden in 2). So the armed leg reads damage_health_pct off an ability",
+    "that has no such key -> silent 0 (the GH #162 house rule) -> return 0, in every world.",
+    "=> zusstatic armed WITHOUT zusbind never measures the registered lever (0.09 -> ~3.45%); its",
+    "only observable effect is deleting the Static Field term (0.09 -> 0), which nobody registered.",
+    "PROMOTING zusstatic alone would ship exactly that unmeasured deletion by default -> RED.",
+    "WHY THIS IS NASTIER THAN THE pullcad TRAP: pullcad freezes a predicate FALSE, and",
+    "check_armed_wiring.py at least keeps calling it WIRED while it no-ops. Here the predicate is",
+    "TRUE on every frame -- it fires, it just answers 0 off the wrong handle. A firing gate with a",
+    "constant wrong answer looks identical to a tested-and-neutral id in every aggregate.",
+    "RELEASE CONDITION (what would retire this row): zusbind promoted, or the call site at :652",
+    "rewritten to bind Static Field by name unconditionally -- either makes the handle right",
+    "without an arm-string precondition, and then zusstatic can be judged on its own merits."
+   ]
+  },
+  {
+   "name": "tower_fear_ring_disjunction",
+   "rule": "no_promote_without",
+   "subject": [
+    "towerfear"
+   ],
+   "prereq": [
+    "towerring"
+   ],
+   "ruled_at": "2026-09-06T22:xxZ",
+   "ruled_by": "director",
+   "ref": "iterations/streams/test_set.md §FO.3 (the trap) / §FO.4 (the withdrawal); GH #558",
+   "direction": "one-way: promoting towerring while towerfear stays gated is NOT constrained by this row (towerring carries its own second gate at bots/mode_retreat_generic.lua:969 and stays readable).",
+   "note": [
+    "THE PULLCAD TRAP IN ITS DISJUNCTIVE FORM. The halving gate is a DISJUNCTION --",
+    "`(J.IsSoakCandidate('towerfear') or J.IsSoakCandidate('towerring')) and J.IsModeTurbo()`",
+    "at bots/mode_retreat_generic.lua:964. Promoting towerfear means deleting that line, after",
+    "which the branch is turbo-default-on and arming `towerring` moves NOTHING on it -- while",
+    "check_armed_wiring.py still calls towerring WIRED, because it checks that a call site exists,",
+    "not that the predicate can still change an answer. The verdict would then read back",
+    "'tested, no effect' with nothing raising a hand: verbatim the shape AGENTS.md records for",
+    "`pullcad`, one boolean operator over.",
+    "REGISTERED THE DAY THE CONSTRAINT WAS RULED, not the day it was about to be violated --",
+    "and deliberately registered even though towerfear was WITHDRAWN from the armed set in the",
+    "same round (§FO.4): withdrawal removes the id from the string, it does not remove the gate",
+    "from bots/, so a future re-admission and promote would meet exactly this trap.",
+    "RELEASE CONDITION: promote the PAIR together (that is the configuration GH #558 proposes and",
+    "the one a wave would have to measure), or rewrite :964 so the promoted half no longer",
+    "swallows towerring's arm. Either retires this row; deleting it to get green does not."
+   ]
+  },
+  {
+   "name": "impale_kill_needs_damage",
+   "rule": "no_promote_without",
+   "subject": [
+    "lionqdmg"
+   ],
+   "prereq": [
+    "lionqkill"
+   ],
+   "ruled_at": "2026-09-08T1x:xxZ",
+   "ruled_by": "director",
+   "ref": "iterations/streams/test_set.md §GC.7; GH #640 / queue.json:hero-49(英雄组请裁,接力棒明写「总监」); 归档扫描裁定 APPROVED-SCAN 同轮",
+   "direction": "one-way: promoting lionqkill while lionqdmg stays gated is NOT constrained by this row.",
+   "note": [
+    "REGISTERED BEFORE A VIOLATION, per this file's own README. Nothing is wrong today:",
+    "both ids are gated, and the kill loop is DEAD in every shipped game.",
+    "WHAT THE ROW STOPS is the promote-day configuration, and the mechanism is that the two",
+    "ids sit on OPPOSITE SIDES of the same branch. hero_lion.lua X.ConsiderQ's kill loop walks",
+    "nInBonusEnemyList = J.GetNearbyHeroes(bot, nCastRange + 200, ...) and returns",
+    "npcEnemy:GetLocation() with NO distance test of its own -- the twelfth of twelve exit",
+    "points, and the only one that can hand ActionQueue_UseAbilityOnLocation a point outside",
+    "nCastRange. It is inert only because its lethality test is fed nDamage = 0:",
+    "X.GetImpaleKillDamage returns hAbility:GetAbilityDamage(), and lion_impale declares no",
+    "top-level AbilityDamage (105/170/235/300 live in AbilityValues/damage), so",
+    "J.WillMagicKillTarget is false for every living target (GH #175).",
+    "VERIFIED INDEPENDENTLY, not taken from the request: tests/mock/replay_fixture.lua's own",
+    "AbilityDamage note reaches the same 0 from the other side -- it names",
+    "hero_lion.lua X.GetImpaleKillDamage among the focus callers whose abilities declare no",
+    "such field, and calls that landing 'provably inert'.",
+    "SO PROMOTING lionqdmg ALONE un-deadens a reach-less branch: one promote buys BOTH a",
+    "widening (the loop starts firing) AND a suicide path (it fires at targets outside cast",
+    "range, and X.SkillsComplement stamps lastCastQTime on the BID, so X.ConsiderW's first",
+    "guard re-locks Hex every frame the out-of-range bid repeats). Two changes in one reading,",
+    "inseparable -- the lanefix lesson, one promote early.",
+    "WHY ONE-WAY: X.lion_IsImpaleKillTargetInReach returns its bShippedLethal argument",
+    "unchanged unless (turbo AND lionqkill), i.e. it is a pure narrowing guard on a branch that",
+    "is already dead. Promoting it alone changes nothing and is not constrained.",
+    "⛔ WHY THIS IS A ROW AND NOT A CONJUNCTION IN THE LUA: writing",
+    "`IsSoakCandidate('lionqkill') and IsSoakCandidate('lionqdmg')` into the guard is the",
+    "pullcad trap verbatim (AGENTS.md: promoting an id silently kills any gate that names it) --",
+    "the predicate would freeze FALSE the day either id is promoted. The hero group's own",
+    "mutation stand M10 is that mutant, 10/10 CAUGHT.",
+    "RELEASE CONDITION (what would retire this row): lionqkill promoted, or the kill loop given",
+    "a reach test that does not depend on a candidate id, or lionqdmg rejected."
+   ]
+  },
+  {
+   "name": "lion_scepter_aoe_exit_is_one_atom",
+   "rule": "no_promote_without",
+   "subject": [
+    "lionraoe",
+    "lionsplash"
+   ],
+   "prereq": [
+    "lionraoe",
+    "lionsplash"
+   ],
+   "ruled_at": "2026-09-11T1x:xxZ",
+   "ruled_by": "director",
+   "ref": "iterations/queue.json:hero-58 (acceptance, final paragraph); ruling iterations/streams/test_set.md §GV.7",
+   "direction": "SYMMETRIC on purpose, unlike field_hold_needs_magnitude. Each id is both subject and prereq, so promoting either one while the other is still gated is RED, and promoting both together is clean.",
+   "note": [
+    "WHY THIS ROW EXISTS AT ALL, given neither id is armed and hero-58 was ruled FROZEN-HOLD:",
+    "because a FROZEN-HOLD makes the queue row read ruled=True, and a ruled row drops off every",
+    "todo list this lab drives. The atom rule was stated ONLY in that row's prose. That is the",
+    "dropped-baton shape the house already paid for once (the creep-pull dead branch, invisible for",
+    "37 rounds after its issue closed), so the constraint is moved somewhere that bites on the day",
+    "it matters rather than on the day somebody remembers.",
+    "WHAT THE PROPOSER MEASURED, kept verbatim because it is the reason the pair is inseparable:",
+    "arming 'lionsplash' alone revives a branch that has NO reach predicate, so one reading would buy",
+    "a widening and a suicide at the same time and could not separate them. Same shape as hero-49's",
+    "lionqkill+lionqdmg, same reason.",
+    "AND THE REASON IT IS NOT WRITTEN AS CODE: `IsSoakCandidate('lionraoe') and",
+    "IsSoakCandidate('lionsplash')` freezes FALSE the day either id is promoted, while",
+    "check_armed_wiring.py still reads WIRED -- the pullcad trap. A constraint that must survive a",
+    "promote cannot be spelled as a conjunction of candidate ids INSIDE the gate; this file is where",
+    "it goes instead.",
+    "⛔ WHAT THIS ROW DOES NOT COVER: promote_atoms.py is a PROMOTE-time check. The other half of",
+    "hero-58's rule -- never ARM one without the other -- is not expressible here and is NOT claimed",
+    "to be. It stays in the queue row and in owed_executions:lion_aoe_atom_readmission_on_thaw.",
+    "RELEASE CONDITION: a condition-(a) reading for either id taken on a leg where the other is",
+    "unarmed. Today the corpus cannot even produce the frame (tests/test_lion_ult_aoe_reach.lua §2:",
+    "0/42 scepter-carrying Lion frames, both splash keys read 0, densest enemy clump is 2 against a",
+    "floor of 3), so no such reading exists and the row is not over-strict."
+   ]
+  }
+ ]
 }

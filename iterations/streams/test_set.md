@@ -1,6 +1,19 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
-**成员串 32**(上一行,**284 字节**,md5 `3d41ae217739b7727af65348f2565fa7`)。本行 **2026-09-11T1x:xxZ 的变动:两条 `PROMOTE`(34 → 32)**,总监裁定全文 **§GU**;判定完结 **2**(达 owner P4.2 的 ≥2)。⭐ **这是本仓库第一次同轮 promote 两条** —— 理由不是「攒够了」,是**这两条在近五波里每一波都同时 armed**,家族级 (b) 结构上分不开它们;**分开 promote 反而是把一个没有任何一波跑过的配置发出去**(先促其一,则另一条留在臂上,而稳定版从此含前者——那个组合从未被测过)。⛔ 两条落在**互不相交的子系统**(`item_purchase_generic.lua` 的采购块 / `hero_lion.lua` 的引导释放),各自的域都是个位数百分比,**不是一个 bundle**;`lanefix` 的教训针对的是一次上十条**互相耦合**的守卫,不是这个形状。
+tpcommit,lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart
+**成员串 30**(上一行,**266 字节**,md5 `7d4c638dab526c68d9404526a3195663`)。本行 **2026-09-11T1x:xxZ 的变动:一个原子、两条 `PROMOTE`(32 → 30)**,总监裁定全文 **§GV**;判定完结 **1**(⛔ **按原子记 1,不按 id 记 2** —— `zusult` 与 `zusboltdom` 没有两份独立裁定,它们是**同一个判断的两半**,把它记成 2 是虚报;owner P4.2 的 ≥2 **本轮不达标,不粉饰不抵账**,理由与下一步写在报告 §6)。
+⭐⭐⭐ **本节最该被读的一条(§GV.1):这两条不是「又一次同轮 promote」,是一次 promote 只有一种合法的切法,而那件事是四种组合上的算术,不是偏好。** 上一轮(§GU)两条同轮的理由是「近五波每一波都同时 armed,家族级 (b) 分不开」——**那是一条关于读数的理由**。本轮的理由更硬,**它关于树本身**:四种组合里有一种**已经被量到是坏的**,而**它恰好就是单独促进 `zusult` 会发出去的那一种**。
+- **都不 armed** = 出厂树。
+- **只 `zusult`** = **量到 BUGGY**。GH #477 在 W44 上逐帧确认 **3** 发 Lightning Bolt 落在该门自己的域内(`20260904_003453_slot8`,三发目标 1.00/1.00/0.82 血,大招 1 级、冷却 0,mana −131/−131 花费确认),W45 读 **8.0 泄漏/100 域内帧**。⇒ **单独促进 `zusult`,就是把这个配置设成出厂默认。**
+- **只 `zusboltdom`** = **结构性空操作,而且是「证得」不是「大概」**:`X.BoltAoEKillTarget` 的返回值在全文件**只有一个消费者** —— 它是 `X.ConsiderW2` 的第三个返回值,存进文件局部 `castW2Target`(`hero_zuus.lua:332` 声明 / `:693` 赋值),而**读它的地方只有一处**(`:700` 传给 `X.zuus_ShouldSaveManaForUlt`),该函数当时在自己的前几行就因 `zusult`/`zusultx` 未 armed 而 `return false`。
+- **两条都 armed** = **W46 起每一波真正跑的那个配置**,也是条件 (a) 被买到的那个配置(录像组 2026-09-07T15:53Z,W52,47 局两粒种子:`VERIFY id=zusult verdict=WORKING episodes=11` / `VERIFY id=zusboltdom verdict=WORKING episodes=6`,`zusboltdom` 专为之而写的 considerW2 那 6 次泄漏读 **0**)。
+⇒ **只有「两条一起」既非空操作、又非已知坏的配置。** 促进必须移动两条或一条不动;本轮移动两条。
+⚠️⚠️ **§GV.2 —— 这次耦合是倒像普查(§GT 那条腿)今天看不见的第三种极性,这是本轮真正的新东西。** §GT 的腿问的是**调用点可不可达**:`FROZEN` = armed id 挂在未 armed 的门下,`COUPLED` = 挂在另一条 armed 的门下。**而这里 `zusboltdom` 的调用点一直可达、一直执行、域一直非空** —— 被另一条 id 掐住的不是它的**可达性**,是它的**后果**:它算出来的那个值,唯一的消费者在另一条 id 的门后面。所以本轮自检照旧打 `FROZEN 0 / COUPLED 1(仅 fieldsip)/ UNRESOLVED(armed) 0`,**两条都读 CLEAR**,而**单独促进其中一条的后果完全不同**。📌 **可迁移的一句**:*一个带门的 helper 可以同时拥有活的调用点、非空的域、和零效果 —— 因为别的 id 掐住的是它的后果而不是它的可达性;而一个按「这个 helper 响了几次」计数的检测器会把这种情况读成 WORKING。* ⛔ **今天这不是缺陷**(两条同时促进,组合就是被测过的那个),**但它是 RULING 13 那一族的第三发**,登记在 `owed_executions:consequence_polarity_census` 与 GH(见报告 §5)。
+⭐ **§GV.3 —— 条件 (a):`zusult` 有一条更早的 BUGGY 3,本轮判它被取代,而取代它的是一次代码改动不是一次重测。** BUGGY 3 量在 **W44**,那时 `zusboltdom` **还不存在于 armed 串里**(它 09-04 才入集,首波 W46)⇒ BUGGY 3 是**组合二**的读数;WORKING 11 量在 **W52**,是**组合四**的读数。**两份读数不矛盾,它们量的是两棵不同的树。** ⛔ **这一条必须写出来**:章程「下次触发」逐字警告过「不要只读最新一行」,而这里最新一行确实成立 —— 成立的理由是可命名的,不是时间顺序。
+⭐ **§GV.4 —— 条件 (c) 两条各自站得住,而且都不是「策略品味」。** `zusult`:一个 ~130s 冷却的全图处决是 Zeus 唯一够得到走不到的目标的工具,为它留蓝是标准打法(可检索佐证);**它防的那笔开销是 chip,而 kill 窗口与撤退自保出厂就被放行**。`zusboltdom`:**算术** —— `X.GetBoltKillHealthCap` 在 `zusboltcap` 未 armed 时是 `GetAbilityDamage()`,而 `zuus_lightning_bolt` **没有声明顶层 `AbilityDamage` KV 字段**,于是该读数每级都是 **0**;`docs/BOT_API_REFERENCE.md § FindAoELocation` 记着引擎规则「Pass 0 for no HP filter (target any HP)」⇒ 那个局部变量叫 `nCanKillHeroLocationAoE` 的分支问的其实是「施法距离内有没有敌方英雄」,**它根本不是 kill 分支,也就没有 kill 豁免可拿**。⭐ **依赖写成 VALUE 不写成 id 这件事本轮得到回报**:`type(nHealthCap)=='number' and nHealthCap <= 0` 在促进后**逐字保留**,`zusboltcap` 将来 armed / promote / 被一个 KV 修复取代,这句都自动答 nil 并把 GH #47 的豁免原样交还 —— 若当初写成 `IsSoakCandidate('zusboltcap')`,**今天这一促进会把它冻死**(`pullcad` 陷阱)。
+⭐ **§GV.5 —— 条件 (b):家族级,六波,粗粒度过门,⛔ 不是正面证据。** 两条同时 armed 的每一波:`W55 −22.72 / W58 +40.58 / W62 −7.20 / W63 −15.00 / W64 −8.96 / W65 −9.84` gpm,**均值 −3.86,920 计分局**。⛔ **家族读数不许记到这两条头上**(同波 armed 的还有 30 条)。**铁律 4(i-a) 披露**:六波 gpm 分层读数 `ab/ba` = `91.13/−136.57`、`249.64/−168.50`、`21.50/−35.91`、`−114.60/84.60`、`−88.67/70.75`、`−21.47/1.79`,**六波全部 `sign_flip`**;按 4(i-c),gpm 是每粒种子 50/50 swap-average 过的估计量 ⇒ **反号不是否决理由**(它等价于 `|side| > |arm|`,是恒等式不是诊断),**但照样登记**。胜负:六波 `winrate_neutral` 全 **0.5**;逐粒 `winrate_headroom` **22 粒里 13 粒为 0**(整波一边通吃,`winrate` 被迫读 0.5,**零信息**),有 headroom 的 9 粒读 0.424/0.524/0.446/0.331/0.516/0.608/0.512/0.515/0.518 ⇒ **既没有明显负面也没有正面**,粗粒度过门。⛔ **照搬 §FT.2 与 §GU 的措辞:过门不等于正面证据。**
+⚠️ **§GV.6 —— 一个量到的连带后果,登记而不是断言**:`carrier_terms.py --arm` 对 32 串与 30 串各跑一次,载体项 **7 → 6**,掉的那一项是 **`zuus`**(32 串在代码已改、串未改的中间态上读 **2 unresolved / 退出码 2**,30 串读 **0 / 退出码 0**)。⇒ **此后的波次不再被要求必须带 Zeus**,因为 armed 串里**没有任何一条 zuus-scoped 的 id 了**。这是**约束变少**(选种解空间变宽),不是损失;且它自动可逆 —— 将来任何一条 zuus-scoped 的 id 入集,该项自己回来。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— **W65(2026-09-11T09:23Z 起飞,34 串)及更早不与 30-id 家族并池**;§GU 落地的 32 串**没有任何一波跑过**,30 串从下一波起。
+〔沿革,上一条变动〕**成员串 32**(上一行,**284 字节**,md5 `3d41ae217739b7727af65348f2565fa7`)。本行 **2026-09-11T1x:xxZ 的变动:两条 `PROMOTE`(34 → 32)**,总监裁定全文 **§GU**;判定完结 **2**(达 owner P4.2 的 ≥2)。⭐ **这是本仓库第一次同轮 promote 两条** —— 理由不是「攒够了」,是**这两条在近五波里每一波都同时 armed**,家族级 (b) 结构上分不开它们;**分开 promote 反而是把一个没有任何一波跑过的配置发出去**(先促其一,则另一条留在臂上,而稳定版从此含前者——那个组合从未被测过)。⛔ 两条落在**互不相交的子系统**(`item_purchase_generic.lua` 的采购块 / `hero_lion.lua` 的引导释放),各自的域都是个位数百分比,**不是一个 bundle**;`lanefix` 的教训针对的是一次上十条**互相耦合**的守卫,不是这个形状。
 1. ⭐ **`tpdeathbuy` PROMOTE**(34 → 33)—— 动作是**把 `bots/item_purchase_generic.lua` 那句 `if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then` 改成 `if J.IsModeTurbo() then`**(§DU.6 红线:代码先改、串后改、**同一个 commit**),turbo 默认丢掉那条不可满足的下界,**非 turbo 逐字未动**(它写成**选择**而不是析取,正是为了让这句同一性是**算术**不是承诺)。三条件与边界写在 §GU.1 与源码注释里;机器键 `state.json:tpdeathbuy_PROMOTE_20260911`。
 2. ⭐ **`liondrainstop` PROMOTE**(33 → 32)—— 动作是**把 `bots/BotLib/hero_lion.lua:2008` 的 `if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end` 改成 `if not J.IsModeTurbo() then return false end`**(同一条红线),**非 turbo 仍逐字返回 false**。三条件与边界写在 §GU.2 与源码注释里;机器键 `state.json:liondrainstop_PROMOTE_20260911`。
 ⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py --arm` 对 34-id 与 32-id 两串各跑一次,`TERMS` 行**逐字节相同**(`crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`)。`lion` 这一项由 `lionqdmg` 接住 ⇒ **选种解空间不受影响**。⭐ **半个状态会自己变红**:在代码已改、串未改的中间态上,旧 34 串读 **2 unresolved / 退出码 2**,新 32 串读 **0 unresolved / 退出码 0**。
@@ -4448,3 +4461,53 @@ W65 的 34-id 串**含 `overchase`**,收割于 2026-09-11 ⇒ 机器判据满足
 (六条流并发,任何一条都可能先开),**猜一个号写进档案就是制造一条解析不了的引用**。
 ⭐ **事后看,克制是对的**:真号确实是 **#749**,但那是**开出来才知道的**,不是预判对了 ——
 `#748` 与 `#749` 之间没有任何东西保证没有别的流插队,**猜中过一次不构成下次可以猜**。
+
+---
+
+## §GV 2026-09-11T1x:xxZ 总监:**第十、十一条 promote 作为**一个原子**落地(`zusult` + `zusboltdom`),armed 32 → 30** —— 本节最该被读的是 **§GV.2:这次耦合是倒像普查今天看不见的第三种极性 —— 被掐住的不是调用点的可达性,是它的后果**;以及 **§GV.1:这一次「两条同轮」跟上一次不是同一个理由,四种组合里有一种已经被量到是坏的,而它恰好就是单独促进 `zusult` 会发出去的那一种**
+
+### §GV.0 一句话
+`zusult`(储备蓝量给全图大招)与 `zusboltdom`(退化的 HP 过滤器不得冒领 kill 豁免)**作为一个原子 PROMOTE**,armed 串 **32 → 30**(266 字节,md5 `7d4c638dab526c68d9404526a3195663`)。**判定完结 1**(按原子记;⛔ owner P4.2 的 ≥2 本轮不达标,见 §GV.6)。零 AWS 调用、零波次、**不发 owner 邮件**、无 reject、无入集。
+
+### §GV.1 ⭐⭐⭐ 为什么必须一起促进 —— 四种组合上的算术
+| 组合 | 是什么 | 证据 |
+|---|---|---|
+| 都不 armed | 出厂树 | — |
+| 只 `zusult` | **量到 BUGGY** | GH #477 / W44 逐帧确认 3 发域内 Lightning Bolt(`20260904_003453_slot8`,目标 1.00/1.00/0.82 血,大招 1 级冷却 0,mana −131/−131);W45 读 8.0 泄漏/100 域内帧 |
+| 只 `zusboltdom` | **结构性空操作(证得)** | `X.BoltAoEKillTarget` 的返回值全文件**唯一消费者**是 `castW2Target`(`hero_zuus.lua:332` 声明 / `:693` 赋值 / `:700` 唯一读点),而 `:700` 传进的 `X.zuus_ShouldSaveManaForUlt` 当时在前几行就因两条 id 都未 armed 而 `return false` |
+| 两条都 armed | **W46 起每一波真正跑的配置**,也是 (a) 买到的那个 | 录像组 2026-09-07T15:53Z,W52,47 局 2 粒种子:`VERIFY id=zusult verdict=WORKING episodes=11` / `VERIFY id=zusboltdom verdict=WORKING episodes=6` |
+
+⇒ **只有「两条一起」既非空操作、又非已知坏的配置。** ⛔ 与 §GU 的区别要写清楚:§GU 两条同轮的理由是**关于读数**的(家族级 (b) 分不开);本轮的理由**关于树本身**,更硬。⛔ 也**不是 `lanefix` 那个形状**:这里不是一次上十条互相耦合的守卫,是**一条修正 + 它所修正的那条规则**。
+
+### §GV.2 ⚠️⚠️ 第三种极性:被掐住的是后果,不是可达性
+§GT 那条倒像普查腿问的是**调用点可不可达** —— `FROZEN` = armed id 挂在未 armed 的门下;`COUPLED` = 挂在另一条 armed 的门下。**而 `zusboltdom` 的调用点一直可达、一直执行、域一直非空**:被 `zusult` 掐住的是它算出来的那个值的**去处**。所以本轮自检照旧打 `FROZEN 0 / COUPLED 1(仅 fieldsip)/ UNRESOLVED(armed) 0`,**两条都读 CLEAR**,而单独促进其中任一条的后果**完全不同**。
+📌 **可迁移的一句**:*一个带门的 helper 可以同时拥有活的调用点、非空的域、和零效果 —— 因为别的 id 掐住的是它的**后果**而不是它的**可达性**;而一个按「这个 helper 响了几次」计数的检测器会把这种情况读成 WORKING。*
+⛔ **今天这不是缺陷**(两条同时促进,落地的组合正是被测过的那个);**它是 RULING 13 那一族的第三发**,登记为 `owed_executions:consequence_polarity_census`,⛔ **本轮不顺手改普查工具** —— 改判定器要安静容器与自己的变异台,挤掉判定完结正是上一轮举过手的那个失效形状。
+
+### §GV.3 ⭐ 条件 (a):更早那条 BUGGY 3 被判取代,而取代它的是一次代码改动
+`zusult` 档案里有一条 **BUGGY episodes=3**(2026-09-04)。本轮判它**被取代**,理由可命名:BUGGY 3 量在 **W44**,那时 `zusboltdom` 尚未入集(09-04 入集,首波 W46)⇒ 它是**组合二**的读数;WORKING 11 量在 **W52**,是**组合四**的读数。**两份读数不矛盾 —— 它们量的是两棵不同的树**,而第二棵比第一棵多了一条专为这 3 发泄漏写的修正。⛔ 章程逐字警告过「不要只读最新一行」:最新一行在这里确实成立,**成立的理由是可命名的代码改动,不是时间顺序**。
+
+### §GV.4 ⭐ 条件 (c):两条各自站得住,且都不是策略品味
+- `zusult`:~130s 冷却的全图处决是 Zeus 唯一够得到走不到的目标的工具,为它留蓝是标准打法(可上网检索佐证)。**它防的只是 chip**:kill 窗口(目标低于 `X.nUltSaveHealthFloor`)与撤退自保出厂就被放行,促进后逐字不变。
+- `zusboltdom`:**算术**。`X.GetBoltKillHealthCap` 在 `zusboltcap` 未 armed 时是 `GetAbilityDamage()`,而 `zuus_lightning_bolt` **不声明顶层 `AbilityDamage` KV 字段** ⇒ 每级都读 **0**;`docs/BOT_API_REFERENCE.md § FindAoELocation` 记着引擎规则「Pass 0 for no HP filter (target any HP)」⇒ 那个局部叫 `nCanKillHeroLocationAoE` 的分支问的其实是「施法距离内有没有敌方英雄」,**它不是 kill 分支,也就没有 kill 豁免可拿**。
+⭐ **把依赖写成 VALUE 而不是 id,本轮得到回报**:`type(nHealthCap)=='number' and nHealthCap <= 0` 促进后**逐字保留**;`zusboltcap` 将来 armed / promote / 被 KV 修复取代,这句自动答 nil 并把 GH #47 的豁免原样交还。**若当初写成 `IsSoakCandidate('zusboltcap')`,今天这一促进会把它冻死** —— `pullcad` 陷阱的又一次现场,这一次是**预防成功**的现场。
+
+### §GV.5 条件 (b):家族级,六波,粗粒度过门,⛔ 不是正面证据
+两条同时 armed 的每一波 gpm:`W55 −22.72 / W58 +40.58 / W62 −7.20 / W63 −15.00 / W64 −8.96 / W65 −9.84`,**算术均值 −3.86,920 计分局**。⛔ **家族读数不许记到这两条头上**(同波还有 30 条 armed)。
+**铁律 4(i-a) 披露(读数不是局数)**:六波 gpm `ab/ba` = `91.13/−136.57`、`249.64/−168.50`、`21.50/−35.91`、`−114.60/84.60`、`−88.67/70.75`、`−21.47/1.79`,**六波全部 `sign_flip`**。按 **4(i-c)**:gpm 是每粒种子 50/50 swap-average 过的估计量 ⇒ **反号不是否决理由**(`反号 ⟺ |side| > |arm|`,恒等式不是诊断),**但照样登记**。
+**胜负**:六波 `winrate_neutral` 全 **0.5**;逐粒 `winrate_headroom` **22 粒里 13 粒为 0**(整波一边通吃,`winrate` 被迫读 0.5,**零信息**)。有 headroom 的 9 粒读 `0.424 / 0.524 / 0.446 / 0.331 / 0.516 / 0.608 / 0.512 / 0.515 / 0.518` —— **既无明显负面也无正面**。⇒ 粗粒度过门。⛔ **措辞照搬 §FT.2 / §GU:过门不等于正面证据。**
+
+### §GV.6 ⚠️ 连带后果与本轮自己举的手
+**(甲) 载体项 7 → 6,量出来的**:`carrier_terms.py --arm` 对 32 串与 30 串各跑一次,掉的那一项是 **`zuus`**(32 串在「代码已改、串未改」的中间态上读 **2 unresolved / 退出码 2**,30 串读 **0 / 退出码 0**)。⇒ 此后波次**不再被要求必须带 Zeus**,因为 armed 串里已无任何 zuus-scoped 的 id。这是**约束变少**(选种解空间变宽)且**自动可逆** —— 任何一条 zuus-scoped 的 id 入集,该项自己回来。⚠️ 连带提醒:`zusultx` / `zusultstrand` / `zusboltcap` / `zusjumpany` 仍是未入集的 Zeus 候选,**它们入集的那一天载体项会自己回到 7**,不需要有人记得。
+**(乙) 判定完结 1,不达 owner P4.2 的 ≥2,不粉饰不抵账。** ⛔ **按原子记 1,不按 id 记 2**:`zusult` 与 `zusboltdom` 没有两份独立裁定,它们是**同一个判断的两半**(§GV.1 那张表就是那一个判断)。§GS 立过的规矩逐字适用 ——「在自己的指标上放宽定义是最没意义的一种放宽」。
+**(丙) 第二格为什么没做,说清是哪一格**:剩下的 WORKING CLEAR 里最便宜的一档是 `ownhalf`(WORKING 7,2026-09-10),**本轮没促进它,而理由是具体的**:同一份报告 §2 量到 `ohnum`(同族、未 armed 的候选)在同样 7 帧上**删掉 `ownhalf` 开火的 4 次里的 3 次**,而那一帧的地面真相是 **13 秒内 2 杀 0 死** —— 即 `ohnum` 在该帧会**错误地**拒绝一次好 punish。⇒ 促进 `ownhalf` 会把「不被 `ohnum` 拒绝」的那个版本设成默认,**而 `ohnum` 的裁定还没做**。⛔ 这**不是** `fieldbuy`/GH #734 那个形状(那条是「缺陷被量到了价钱」),这条是「**一条未裁定的姊妹候选会改写它 75% 的域**」。⇒ 下一轮的第一格是**先裁 `ohnum`**,`ownhalf` 跟着它走;⚠️ 另注 `ownhalf` 的 (a) 只有 **1 局 7 帧**,而 09-09 的 `ownhalf_margin`(800 → 1600)骑在同一道门上,**促进它就是同时促进那个门限**。
+
+### §GV.7 同轮 queue 裁定:`hero-58` —— 一条**不是**入集请求的请求,和一个只活在散文里的原子
+自检 `queue-rulings` 腿本轮变红,唯一一条是 **`hero-58`**(`lionraoe` + `lionsplash`)。
+⛔ **裁定不是 FROZEN-HOLD**:本行**自己逐字写着「P4.2 冻结期内本条不请求入集」** —— 它请求的是一次**零 EC2 的归档只读扫描**。**拿一条不适用的规则去挡它,是制造一次看起来合规的驳回。**
+⭐ **裁定 = `ROUTED-BUT-NOT-AS-AN-ARCHIVE-SCAN`**:这条腿该有,但**不要在今天的语料上派它**,而理由是**提议方自己量过并写成了会红的断言**(`tests/test_lion_ult_aoe_reach.lua` §2):持 A 杖的 Lion 帧 **0/42**;两个 splash key 读数都是 **0**(活 key 是 `splash_radius`,`splash_radius_scepter` 在本 patch 的 `lion_finger_of_death` KV 里**不存在**);语料里 325 内最密的敌人团是 **2**,下限是 **3**。⇒ 现在派,买回来的是**闸的零而不是游戏的零**,而 §CJ 禁止把那种零读成「没效果」—— 那正是杠杆悄悄死掉的方式(与 §GU.4 给 hero-57 的那句同理)。
+⚠️⚠️ **也不给 `HOLD-DOMAIN-EMPTY`,而这一条与 §GV.2 是同一族**:`strategy-33` 用的那套自动解封(`pending_rulings.py` 的 domain watch)按**英雄有没有出现在语料里**判定,而 **Lion 在语料里到处都是** ⇒ 挂上去会**每轮误报 UNBLOCKED 并索要重裁**,而阻塞一点没解除。**本行的空域不是「这个英雄没出现」,是「这个英雄没带着 A 杖出现」外加两个 KV key 读 0** —— 那台机器量不到这个区别。📌 **可迁移的一句**:*一个机制报的「通了」,可能只是它量的那个量通了。*
+⭐ **接力棒分两半交出去,因为两半的到期条件不同**:
+1. **促进期那一半现在就生效** —— `iterations/promote_atoms.json:lion_scepter_aoe_exit_is_one_atom`,**对称行**(两条 id 互为 subject 与 prereq),任一条单独 promote 当场红;实测 `promote_atoms.py` **exit 0**,打印 `lionraoe=GATED lionsplash=GATED`。⛔ **这一半此前只活在 queue 行的散文里**,而**一条被裁过的 queue 行会从所有待办表上消失**(`ruled=True`)—— 拉野死分支 37 轮那个形状,本轮不让它再发生一次。
+2. **上臂期那一半**(「永不单独 arm 任何一个」)**`promote_atoms` 表达不了,也不冒称表达得了**(它是 promote-time 检查),留在 queue 行 + `owed_executions:lion_aoe_atom_readmission_on_thaw`。
+**重新路由条件,裸读得出,任一即可**:(甲) `tests/test_lion_ult_aoe_reach.lua` §2 的 `0/42` 持杖帧断言**变红**(语料里终于有持 A 杖的 Lion);(乙) 有人修掉读错的 KV key —— 那是一条**独立的出货缺陷**,修它不必等这条请求。⛔ **只满足 (乙) 不解封**:没有持杖帧,域仍然是空的。
