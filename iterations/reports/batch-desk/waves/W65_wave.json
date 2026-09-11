@@ -167,5 +167,41 @@
   ],
   "leak_check_at_launch": "Account-level, us-west-2, NO tag filter, states pending/running/stopping/stopped => exactly these four instances and nothing else. Standing cost remains only AMI ami-0a990a26d89c66547. Gate (iii) independently certified `CERTIFIED ZERO (0 accruing instances account-wide)` across 17 regions immediately before launch.",
   "september_headroom_after_this_wave": "$2.003 to the $85.00 ruling ceiling => at the $1.10 spot constant, ONE more wave fits in September and the second does not. The ruling expires 2026-09-30T23:59Z and must not be copied into October.",
-  "launched_at_repair_20260911": "DIRECTOR REPAIR, not new data. This record shipped with `launch_time` and WITHOUT `launched_at`; W41..W64 all carry `launched_at` (W48..W64 carry both, byte-identical instants). tools/batch_test/soak/wave_throttle.py reads `launched_at` ONLY and refuses to guess, so gate (i) went UNCERTIFIABLE (exit 2) on trunk the moment this file landed: `W65 machine 0 (seed 10926) has no launched_at`. The four values restored here are copied verbatim from this record's own `launch_time`, and each is corroborated by its machine's run_id stamp (spot_20260911_0923xx). No instant was invented."
+  "launched_at_repair_20260911": "DIRECTOR REPAIR, not new data. This record shipped with `launch_time` and WITHOUT `launched_at`; W41..W64 all carry `launched_at` (W48..W64 carry both, byte-identical instants). tools/batch_test/soak/wave_throttle.py reads `launched_at` ONLY and refuses to guess, so gate (i) went UNCERTIFIABLE (exit 2) on trunk the moment this file landed: `W65 machine 0 (seed 10926) has no launched_at`. The four values restored here are copied verbatim from this record's own `launch_time`, and each is corroborated by its machine's run_id stamp (spot_20260911_0923xx). No instant was invented.",
+  "harvest": {
+    "harvested_at": "2026-09-11T12:1xZ",
+    "harvested_by": "batch-desk",
+    "method": "tools/batch_test/soak/recover_verdict.py, full recompute from S3. The instance's self-produced verdict was NOT used (charter step 3).",
+    "corpus_identity": "Fed the LAUNCH arm string (34 ids / 309 bytes / md5 7be691dcd2c2fd1ee73a630274007044), NOT the current tree's string. origin/main had already moved to 32 / 284 / 3d41ae21 by harvest time: the director promoted `liondrainstop` + `tpdeathbuy` at 10:37:01Z (§GU). W65's last machine self-terminated at 10:22:22Z, 15 min BEFORE that commit, so the instances cloned a tree where both were still gated and armed -- the corpus is uncontaminated. The string was recomputed from this record's own `arm_string` field and reproduced all three stored fields digit-for-digit.",
+    "download": "Four runs into four separate subdirectories (GH #225, never `cp` flat). Per-run local file count equals the S3-side count exactly: 120 / 160 / 154 / 120 = 554 objects, zero [Errno 36].",
+    "RECOVER_EXIT": 0,
+    "yield": "4 of 4 seeds paired and scored -- the desk's first wave with zero capacity reclaim, zero rerun machines and zero thin-arm seeds. files_seen 222 = games_loaded 222, source_dirs 4, unparseable 0, pooled_basename_dirs_overridden 0, min_arm_depth 8, thin_arm_seeds [], unfinished_games 0, scored_games 198.",
+    "mean": {
+      "gpm": -9.84,
+      "xpm": -3.67,
+      "deaths": 0.23,
+      "last_hits": -2.38,
+      "winrate": 0.508,
+      "winrate_headroom": 0.0144
+    },
+    "comps_better": {
+      "gpm": "2/4",
+      "xpm": "1/4",
+      "deaths": "1/4",
+      "last_hits": "0/4",
+      "winrate": "2/4",
+      "winrate_measurable": "2/2"
+    },
+    "suggested": "hold_or_reject",
+    "precision_limit": "THE WAVE MEAN IS NOT DISTINGUISHABLE FROM ZERO AND THIS RECORD MAKES NO CLAIM FROM IT. Per-seed gpm -68.40 / +3.68 / -8.42 / +33.78 => sample SD ~43.6, n=4 => SE of the mean ~21.8, against a mean of -9.84. |mean| is under half its own standard error. Rule 4(i-c): precision is governed by the arm's own cross-seed dispersion, and here that dispersion swamps the effect. The only metric with all four seeds on one sign is last_hits (0/4, mean -2.38) -- registered, and per AGENTS.md's hard-won learning (Turbo economy is kill/push-driven, low CS is a SYMPTOM not a lever) it must NOT be turned into a fix proposal.",
+    "strata_4ia": "Taken verbatim from the tool's own `strata` block, NOT hand-computed (rule 4(i-d)). gpm ab=-21.47 ba=+1.79 side=-11.63 sign_flip=true side_gt_arm 3/4; xpm ab=-4.52 ba=-2.82 side=-0.85 sign_flip=false side_gt_arm 3/4; deaths ab=+0.59 ba=-0.12 side=+0.36 sign_flip=true side_gt_arm 4/4; last_hits ab=-7.12 ba=+2.35 side=-4.74 sign_flip=true side_gt_arm 4/4. All four are per-seed 50/50 swap-averaged => side bias removed => rule 4(i-c): a sign flip is DISCLOSURE, not a veto.",
+    "pooling_outcome": "Family depth 4 seeds, and it stays there. W65 is the ONLY wave that ever flew the 34-id string: it does not pool backward with W62+W63+W64 (37-id, as pre-registered at launch) and it will not pool forward either, because the string has already moved to 32. Any future wave is a THIRD family.",
+    "winrate_channel": "DEGENERATE for the 6th consecutive wave (GH #352). Minority side won 2 of 222 finished games, share 0.0090, against #352's own recovery bar of 0.20. MUST NOT be cited as rule 2(b) support. Longitudinal census registered in test_set.md §GV.3 and filed as GH #755.",
+    "gh454_legs": {
+      "leg_b2_machine_hours": "DOES NOT TRIGGER, and this time it is measured rather than assumed. All four machines carry SIR Status.Code = instance-terminated-by-user (zero capacity reclaim). Hours from SIR CreateTime -> Status.UpdateTime: 10926 0.7158, 10927 0.9133, 10998 0.9781, 11034 0.7492 => mean 0.8391 h/machine, total 3.3564 machine-hours. Bar is > 1.00 h/machine. LIMIT: Status.UpdateTime is the request-state flip, not the billing stop; the two can differ by tens of seconds. The 19% margin to 1.00 means that limit does not change the conclusion.",
+      "leg_b1_billing": "NO MEASUREMENT POINT, and this record does not claim it fails to trigger. The budget snapshot is byte-identical to the launch round's (2026-09-11T08:15:19Z), honest cutoff 2026-09-10T20:57:19Z, and W65's first machine is 09:23:35Z => not a cent of W65 has accrued. Deferred to the next round."
+    },
+    "leak_check": "THREE channels, all zero. (1) check_costs.sh running/pending block: empty. (2) us-west-2 account-level describe-instances, NO tag filter, states pending/running/stopping/stopped: empty -- all four W65 machines gone, no orphan, no fifth machine, no foreign load. (3) describe-volumes: empty. Standing cost remains only AMI ami-0a990a26d89c66547.",
+    "cost_this_round": "$0.01 -- one Cost Explorer confirmation, spent automatically by check_costs.sh because the budgets reading ($79.547) is >= COST_CONFIRM_AT ($35). CE returned 79.5474105249, digit-for-digit. NO WAVE LAUNCHED this round: gate (i) anchor = W65's last machine 2026-09-11T09:23:44Z => unlock 2026-09-11T15:23:44Z, and this round fired at ~12:1xZ, about 3h10m short."
+  }
 }
