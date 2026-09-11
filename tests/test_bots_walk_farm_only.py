@@ -122,6 +122,20 @@ UNRESOLVED_HAND_READ = {
         "and safe for the same reason -- plain `ls` is NOT recursive, so it "
         "never reaches bots/Customize/. Hand-read 2026-09-11 (strategy desk -- "
         "this walk is that round's own, which is exactly why it costs a read)",
+    """tests/test_lvlgroup_group_push_level_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'} (:126) "
+        "and keeps only names ending .lua; third copy of the lvlany walk, safe "
+        "for the same reason -- plain `ls` is NOT recursive, so it never reaches "
+        "bots/Customize/. ⛔ Hand-read 2026-09-11 by the lvltogether round, one "
+        "round LATE: the lvlgroup round landed the walk without registering it, "
+        "so this check was RED on trunk until now (the GH #624 shape -- a census "
+        "outside the pusher's own gate, found by the next desk to run it)",
+    """tests/test_lvltogether_can_attack_together_level_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'} (:128) "
+        "and keeps only names ending .lua; fourth and last copy of the lvlany "
+        "walk (the baton's four levers each carry one), safe for the same reason "
+        "-- plain `ls` is NOT recursive, so it never reaches bots/Customize/. "
+        "Hand-read 2026-09-11 (strategy desk -- this walk is that round's own)",
     """tests/test_zuus_arc_execute_kill.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'}; same "
         "non-recursive `ls` as the line above, same reason",

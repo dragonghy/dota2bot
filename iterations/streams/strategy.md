@@ -27,6 +27,67 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0LVLTOGETHER. **【2026-09-11T19:32Z 新增。**取上一轮 `0LVLGROUP`「下一格」第 (0) 项:
+   `lvlany` 留下的**最后一根兄弟**(`X.CanAttackTogether` 里 r=600/**10 级**那个站点)。
+   落地 gated id **`lvltogether`**:`X.NoNearbyEnemyAtLevelTogether`,**合取式位置不变
+   ⇒ 短路顺序不变**(`#allies >= 2` 仍排在它前面,§5b 连**这个顺序**一起钉)。
+   ⭐⭐ **本条最该被下一轮读到的五句**:
+   (甲) ⭐ **这根兄弟的形状与前三根不同,而不同处是本文件自己的发现。**
+   **主语不是发问的那个 bot** —— `X.CanAttackTogether` 收英雄参数,**四个调用点里三个传友军**
+   (`X.GetCanTogetherCount` 走整条友军表),答案被**计进「我们能一起上几个」**;前三根
+   **没有一根**会对发问者以外的人求值。§1 单独量了这个人群:**868** 次非发问者求值、
+   miss **1** 次、协同人数变化 **0** 行。第二处:**一个谓词、一个源码站点、四条支路读它**
+   ⚠️ **不是 lanefix 捆绑**(捆绑 = 一个 id 挂若干**不同**杠杆;这里是一个杠杆长在共享 helper 里,
+   「在调用点修」= 把同一个修复写四遍),**但这个 id 动的行为确实比三根兄弟都多**
+   ⇒ 结论是「继续单独、继续 gated」。§5c 把 **4** 和「四个里三个传 ally」都钉成**数字**。
+   (乙) ⭐⭐ **这里能说出 `lvlgroup` 说不出的那一句,而且是个等式。** `cat_flip == 0` 照旧
+   (4 个 miss 行全栽在 `#allies >= 2`),但本轮多量一步:那 4 行**全部满足函数其余每一个合取项**
+   ⇒ **`miss_preterms == site_miss == 4`(等式)** ⇒ **横在这些行和一次 flip 之间只有
+   「两个友军」一个词项,没有第二个成因**。⛔ 等式一破,零就有了第二个成因,**必须重取
+   而不是重新基线化**(断言正文逐字写着)。候选形状 **11 行** ⇒ 小样本零,不是结构性的。
+   (丙) ⭐ **方向这次伸得更远。** 三个调用点在**数**这个答案 ⇒「armed 永不发一个 baseline 没发的」
+   = **协同人数只会往下走**,bot 只会对「一起上」更谨慎。三层各自防空转:helper 层
+   `dir_violation==0` + `armed_true>0` + `dir_narrows==site_miss==4`;函数层 `cat_dir_violation==0`
+   + `cat_armed_true<=cat_true`;友军层 `together_count_rose==0`。
+   (丁) ⭐⭐ **变异台当场改了测试自己的一处缺陷,这是它挣来的、不是事后补记。**
+   M18(让友军侧 oracle **变宽**)第一次是被 §1b 的**零**断言接住的,而那条的失败文案写着
+   「⭐ 这是好消息,有 fixture 落进形状了」—— **对一个变宽的 oracle,那是把祝贺递给了 bug**。
+   修法不是改文案是**改顺序**:§1b 与 §5 里**方向断言一律排在零断言前面**,零断言的文案也补上
+   「上一行已排除另一个方向」;M18 的 `want` 随之改成方向那句,复跑 **19/19**。
+   ⚠️ 改前改后 M18 都是红 ⇒ 变异台**换掉的不是通过与否,是红出来的那句话对不对**。
+   (戊) ⭐ **棒空了,而「空」也正是「守卫被删掉」的样子 ⇒ 空只是半个 claim。**
+   `lvlany` §7 / `lvlcarry` §7 / `lvlgroup` §7 的 10 级 key **整条移出**(不是降成 0 ——
+   那是它们**自己的失败文案**逐字要求的),三处 `total` 各降到 **0**;另一半由**新增的正向钉**
+   承担:四个站点必须**各自作为对具名 helper 的调用**仍在树上,且 `[1]` 形状在 **10 与 12
+   两个阈值上都绝迹** ⇒ 第五个用老形状写的站点会被 §7 顶红(**M10** 已实测接住)。
+   `lvlgroup` §5b 原本钉的是那条**裸 `[1]` 文本**,同 commit 改成钉 helper 调用,并写明
+   **复制品继续读 `[1]` 是对的**(本 id gated + FROZEN-HOLD ⇒ 未 arm 的答案逐字仍是 `[1] < 10`),
+   **若本 id 被 promote,§5 必须重取**;`lvlcarry` §7b 的「去把它拿了」改写成指回本文件 §5。
+   产出:`tests/test_lvltogether_can_attack_together_level_quantifier.lua` **21/21**、
+   `tools/agent/mutstand_lvltogether.sh` **19/19 STAND GREEN**、`state.json:lvltogether_20260911`;
+   报告 `iterations/reports/strategy/20260911T193239Z.md`。
+   **附带(GH #624 形状,别人的红)**:自检点名**上一轮 `lvlgroup` 落了 walk 没登记**,红留在
+   trunk 上由下一个开工的组发现。本轮**手读两条**(lvlgroup 的 + 本轮自己的)写进
+   `tests/test_bots_walk_farm_only.py:UNRESOLVED_HAND_READ`,复跑 **8 checks, 0 failed**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐⭐ **本族到此为止,下一轮不要去找第四根兄弟** —— `lvlany` 点名的三根全部落地,
+   `[1]` 那个形状**在 `mode_team_roam_generic.lua` 里绝迹**(§7 按等式钉死)。
+   要找的是**别的函数**里同形状的存在量化缺陷,一次一个;
+   (1) ⭐ **已交出去的棒(本轮 MCP GitHub 可用,已开 issue)**:给录像组/总监的 fixture 请求 ——
+   冻一帧「某英雄 **1200 内 ≥2 友军**、**600 内 ≥2 敌人**,且**最近**那个敌人**低于 10 级**
+   而另有一个 **≥10 级**」,它让本文件 §5 转红、`lvltogether` 才能端到端驱动;
+   ⚠️ 同类的 **12 级**版本(`lvlgroup` §5 要的那一帧)**仍然欠着**,写在同一个 issue 里;
+   (2) ⛔ GH #250 §4 的「数量」那一半仍要带真实中立实体的 dumper 读数,**不是本组的棒**;
+   (3) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第十一轮有效**);
+   (4) ⛔ 兵营分支(GH #713)仍不落 gate,接力棒是 `tests/test_isvalid_building_sentinel.lua §2b`;
+   (5) ⛔ P4.2 冻结未解 ⇒ 本轮**未提入集**;`tombhp`/`anyhero`/`lvlany`/`lvlcarry`/`lvlgroup`/
+   `bagtango`/`tpchew`/`pullreach`/`pullchew` 的裁定请求仍未答,本轮**不催**;
+   (6) ⛔ `pulldrag` 永远不许单独提;`pullcamp`+`pulldrag` 的重新入集仍挂在
+   `owed_executions.json:pullcamp_atom_readmission`,**`lvltogether` 不代它提**;
+   (7) ⚠️ Lua gate 提示「19 个不在 manifest 的新测试照跑了」(含本轮的)——
+   `tools/agent/lua_gate_measure.py` 会重测全量并改动整张 manifest,**超出一个工作单元**,
+   本轮没跑;**闸已经把本文件跑了并且是绿的**,登记留给下一轮或总监。】**
+
 0LVLGROUP. **【2026-09-11T16:30Z 新增。**取上一轮 `0PULLCHEW`「下一格」第 (1) 项
    (`lvlany` 留下的第三根兄弟,`X.CarryFindTarget` 第二处 12 级站点);第 (0) 项(GH #250 §4 的
    「数量」那一半)**今天仍落不了地**——它要一个带真实中立实体的 dumper 读数,**是录像组/总监的棒**。
@@ -8083,6 +8144,50 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-11T19:32Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open issue:
+  `[strategy]` 无带帧证据的新件 ⇒ 取 backlog `0LVLGROUP`「下一格」第 (0) 项。)
+  ⭐⭐ **`lvlany` 的接力棒接完了 —— 最后一根兄弟落地为 `lvltogether`,棒是空的。**
+  `X.CanAttackTogether` 自己那条 r=600/10 级的 `[1]` 守卫换成
+  `X.NoNearbyEnemyAtLevelTogether(nNearbyEnemyHeroes, 10)`,**合取式位置不变 ⇒ 短路顺序不变**。
+  产出:`tests/test_lvltogether_can_attack_together_level_quantifier.lua` **21/21**、
+  `tools/agent/mutstand_lvltogether.sh` **19/19 STAND GREEN**、`state.json:lvltogether_20260911`;
+  报告 `iterations/reports/strategy/20260911T193239Z.md`。
+  ⭐ **本轮不改判据,是执行一条已经写在树上的判据**:`lvlgroup` 把杆定在「杠杆自己的谓词改动
+  是否在真实行上被驱动」并把 `lvlcarry` §7b 改成「在这把杆下这根兄弟同样买得到(4 个 miss 行)」
+  —— 本轮就按那把杆、按那个数拿的,**没有给同族第四根换第三把杆**。
+  ⭐⭐ **这根兄弟的形状与前三根不同,而且不同处是本文件自己的发现**:(1) **主语不是发问的 bot**
+  —— 四个调用点里**三个传友军**,答案被**计进「我们能一起上几个」**(§1:非发问者求值 **868** 次、
+  miss **1** 次、协同人数变化 **0** 行);(2) **一个谓词、一个源码站点、四条支路读它** ——
+  ⚠️ 不是 lanefix 捆绑(捆绑=一个 id 挂若干**不同**杠杆),但**这个 id 动的行为确实比三根兄弟都多**
+  ⇒ 结论是「继续单独、继续 gated」。§5c 把 **4** 与「四个里三个传 ally」都钉成**数字**。
+  ⭐⭐ **这里能说出 `lvlgroup` 说不出的那一句,而且是等式**:`cat_flip == 0` 照旧,但 4 个 miss 行
+  **全部满足函数其余每一个合取项** ⇒ `miss_preterms == site_miss == 4` ⇒ **只差「两个友军」
+  一个词项,没有第二个成因**;等式一破,那个零就有了第二个成因,**必须重取而不是重新基线化**。
+  候选形状 **11 行** ⇒ 小样本零。
+  ⭐ **方向这次伸得更远**:三个调用点在**数**这个答案 ⇒「永不发 baseline 没发的」=**协同人数只会往下走**。
+  三层各自防空转:`dir_violation==0` / `cat_dir_violation==0` + `cat_armed_true<=cat_true` /
+  `together_count_rose==0`。
+  ⭐⭐ **变异台当场改了测试自己的一处缺陷,这是它挣来的**:M18(友军侧 oracle **变宽**)第一次
+  是被 §1b 的**零**断言接住的,而那条的失败文案写着「⭐ 好消息,有 fixture 落进形状了」——
+  **对一个变宽的 oracle 那是把祝贺递给了 bug**。修法不是改文案是**改顺序**:§1b 与 §5 里
+  **方向断言一律排在零断言前面**;M18 的 `want` 随之改成方向那句,复跑 **19/19**。
+  ⚠️ 改前改后 M18 都是红 ⇒ 变异台**换掉的不是通过与否,是红出来的那句话对不对**
+  (evidence-discipline 第 4 条)。
+  ⭐ **棒空了,而「空」也是「守卫被删掉」的样子 ⇒ 空只是半个 claim**:`lvlany`/`lvlcarry`/`lvlgroup`
+  三处 §7 的 10 级 key **整条移出**(不是降成 0 —— 那是它们**自己的失败文案**逐字要求的),
+  另一半由**新增的正向钉**承担(四个站点必须各自作为**对具名 helper 的调用**仍在树上,
+  且 `[1]` 形状在 **10 与 12 两个阈值上都绝迹**)⇒ 第五个用老形状写的站点会被顶红(**M10** 已实测接住)。
+  `lvlgroup` §5b 原本钉的是那条**裸 `[1]` 文本**,同 commit 改成钉 helper 调用并写明
+  「复制品继续读 `[1]` 是对的(本 id gated + FROZEN-HOLD);**若被 promote 则 §5 必须重取**」。
+  ⭐ **顺手修掉一条别人的红(GH #624 形状)**:自检点名**上一轮 `lvlgroup` 落了 walk 没登记**,
+  红留在 trunk 上由下一个开工的组发现。本轮**手读两条**(lvlgroup 的 + 本轮自己的)写进
+  `tests/test_bots_walk_farm_only.py:UNRESOLVED_HAND_READ`,复跑 **8 checks, 0 failed**。
+  ⚠️ **自检不要接管道**:第一次 `| tail` 被脚本自己拒绝(「stdout is a PIPE ⇒ 你读到的是 reader 的
+  退出码」,它自陈第 5 次复发),改成重定向 + 裸读 `$?` 才拿到真实的 **3**;3 的发现**全部先于
+  本轮存在且与本轮无关**,已在改完的树上逐条复跑核过(0 处提到 `lvltogether`/`CanAttackTogether`)。
+  铁律 6 三行:`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings, 0 uncertifiable, 32.2s` /
+  `lua gate: exit 0 — 322 fast Lua ratchets, 0 findings`(**没有用 `RULE6_BYPASS`**)。
 
 - 2026-09-11T16:30Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open issue:
   `[strategy]` 未见新件 ⇒ 取 backlog `0PULLCHEW`「下一格」第 (1) 项;第 (0) 项(GH #250 §4 的

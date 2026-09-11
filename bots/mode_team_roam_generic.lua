@@ -871,6 +871,86 @@ function X.NoNearbyEnemyAtLevelGroup(tHeroes, nLevel)
 	return tHeroes[1]:GetLevel() < nLevel
 end
 
+-- [lvltogether 20260911] THE LAST SIBLING OFF 'lvlany'S BATON, AND THE ONE THAT
+-- IS SHAPED DIFFERENTLY FROM THE OTHER THREE: X.CanAttackTogether's own level
+-- guard.
+--     local nNearbyEnemyHeroes = bot:GetNearbyHeroes(600,true,BOT_MODE_NONE)
+--     return ... and #allies >= 2
+--            and (nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10)
+-- Same defect as its three siblings -- an EXISTENTIAL question ("is anybody
+-- dangerous standing here") answered by `[1]` -- and the empty-list leg beside
+-- it is again the author's own proof that the question is existential.
+--
+-- ⭐⭐ TWO THINGS ARE NEW HERE, AND THEY ARE WHY THIS IS ITS OWN LEVER RATHER
+-- THAN THE THIRD COPY OF ONE.
+--   (1) ⛔ THE SUBJECT IS NOT THE ASKING BOT. X.CanAttackTogether takes a HERO
+--       PARAMETER, and three of its four call sites pass an ALLY, not the
+--       querying bot (X.GetCanTogetherCount walks the ally list; two branches in
+--       X.SupportFindTarget/X.CarryFindTarget call it on a specific ally). So
+--       this guard is also answering "does MY ALLY have a dangerous enemy next
+--       to them", and that answer is what gets COUNTED into "how many of us can
+--       go in". None of the other three siblings is ever evaluated about anyone
+--       but the bot doing the asking. Section 1 of
+--       tests/test_lvltogether_can_attack_together_level_quantifier.lua measures
+--       that population separately (868 ally evaluations, 1 of them a miss).
+--   (2) ⛔ ONE PREDICATE, ONE SOURCE SITE, BUT FOUR BRANCHES. The three siblings
+--       each gate one call site; this one gates a predicate that four branches
+--       read. That is NOT the lanefix bundling -- bundling is several DIFFERENT
+--       levers armed by one id, and this is one lever whose defect happens to
+--       live in a shared helper, where "fix it at the call site" would mean
+--       writing the same repair four times. But it does mean this id moves more
+--       behaviour than any of its siblings, which is a reason to keep it alone
+--       and gated, not a reason to widen it. Section 5c pins the caller count.
+--
+-- ⛔ THE ZERO, SHARPER THAN 'lvlgroup'S AND ASSERTED THE SAME WAY. Arming changes
+-- this helper's answer on 4 real rows (its own cell, r = 600 / level 10 -- the
+-- population 'lvlcarry' section 7b registered) but changes X.CanAttackTogether's
+-- RETURN on 0, because all 4 carry fewer than 2 allies within 1200. What is new
+-- is that the test can say exactly what is missing: all 4 satisfy EVERY OTHER
+-- conjunct (alive, not illusion, GetProperTarget == nil) -- an equality, not a
+-- floor -- so `#allies >= 2` is the single term between them and a flip. The
+-- candidate shape (>= 2 allies within 1200 AND >= 2 enemies within 600) exists on
+-- 11 live rows, so the zero is small-sample, not structural, and section 5 keeps
+-- it as an EQUALITY: the day a fixture lands in the shape, this goes red and the
+-- lever can be driven end to end. ⭐ That red is good news; take it as the drive.
+--
+-- ⭐ WHAT CARRIES THE LEVER WHILE THAT ZERO STANDS IS THE DIRECTION, MEASURED
+-- OVER ALL 1306 LIVE ROWS (sections 3e and 5) RATHER THAN ARGUED FROM THE DIFF.
+-- Armed answers `not any(level >= nLevel)`; shipped answers `[1] < nLevel`; the
+-- first implies the second whenever `[1]` exists, so armed is a pure NARROWING.
+-- Here that bound reaches further than it did for the siblings: because three
+-- call sites COUNT the answer, "never grants a true baseline withheld" means the
+-- co-attacker count can only ever go DOWN armed -- the bots can become more
+-- cautious about grouping onto a target, never more reckless. Same safety shape
+-- 'glyphany' and 'wkqdmg' ship on.
+--
+-- ⛔ THE BAR IS THE ONE 'lvlgroup' PUT IN FORCE and 'lvlcarry' section 7b was
+-- amended to: "the lever's OWN predicate change is driven on real rows", with
+-- reachability of what reads it registered separately as the weaker bound. This
+-- sibling was already judged buyable under that bar, in writing, by both of those
+-- files -- taking it now is executing that judgement, not re-opening it.
+--
+-- ⛔ WHY A FOURTH HELPER AND NOT A FOURTH CALLER OF ONE ABOVE. Sharing would arm
+-- two or more sites together (the lanefix bundling, gpm -74.5 then -88.7, 0/4
+-- comps, rebuilt by hand), and a shared helper reading two ids is the pullcad
+-- trap -- frozen FALSE the day either is promoted. 'lvlcarry' section 5b and
+-- 'lvlgroup' section 5c each pin their caller count at exactly 1, so sharing
+-- would also turn those files red. One lever, one id, one definition site.
+--
+-- ⛔ FROZEN-HOLD per OWNER_PRIORITIES P4.2 (new ids do not enter the armed set
+-- while it is above 20). Registered in state.json:lvltogether_20260911; the armed
+-- string, queue.json and test_set.md are untouched.
+function X.NoNearbyEnemyAtLevelTogether(tHeroes, nLevel)
+	if tHeroes == nil or tHeroes[1] == nil then return true end
+	if J.IsModeTurbo() and J.IsSoakCandidate('lvltogether') then
+		for i = 1, #tHeroes do
+			if tHeroes[i]:GetLevel() >= nLevel then return false end
+		end
+		return true
+	end
+	return tHeroes[1]:GetLevel() < nLevel
+end
+
 -- ==============================
 -- Support / Carry target selection
 -- (guarded by emergency retreat)
@@ -1642,7 +1722,8 @@ function X.CanAttackTogether(bot)
 		  and not bot:IsIllusion()
 		  and J.GetProperTarget(bot) == nil
 	      and #allies >= 2
-		  and (nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10)
+		  -- [lvltogether 20260911] see X.NoNearbyEnemyAtLevelTogether above.
+		  and X.NoNearbyEnemyAtLevelTogether(nNearbyEnemyHeroes, 10)
    
 end
 

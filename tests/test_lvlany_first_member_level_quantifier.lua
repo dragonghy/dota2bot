@@ -544,10 +544,22 @@ tests['[lvlany] 7. the untouched siblings are still there, still `[1]`']
     -- separately as a weaker bound. Under that bar the remaining sibling is
     -- buyable too. 7b's comment was amended in the same commit so the two
     -- siblings are not judged on two different standards.
+    --
+    -- ⭐ 2026-09-11, THIRD MOVE THE SAME DAY -- AND THE TABLE IS NOW EMPTY. The
+    -- last of the three, the level-10 site inside X.CanAttackTogether, was taken
+    -- as 'lvltogether' (its own id, its own helper
+    -- X.NoNearbyEnemyAtLevelTogether), on exactly the bar 'lvlgroup' put in force
+    -- and at exactly the number 'lvlcarry' section 7b registered for it (4 miss
+    -- rows at r = 600 / level 10). The level-10 entry is therefore MOVED OUT of
+    -- the table below rather than lowered to 0 -- the same thing the failure text
+    -- of this very assertion asks for -- and `total` drops 1 -> 0.
+    --   ⛔ AN EMPTY TABLE IS ALSO WHAT A DELETED GUARD LOOKS LIKE, so the loop
+    -- below can no longer carry the claim on its own. The pin that does is the
+    -- one after it: all THREE handed-over sites, plus this lever's own, must
+    -- still be there AS CALLS TO IDENTIFIED HELPERS. That is what says the baton
+    -- emptied by repair rather than by somebody removing the question.
     local src = stripped(read_file(TRG))
-    local siblings = {
-        ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10'] = 1,
-    }
+    local siblings = {}
     local total = 0
     for text, want in pairs(siblings) do
         local n = 0
@@ -565,21 +577,34 @@ tests['[lvlany] 7. the untouched siblings are still there, still `[1]`']
             .. 'number.')
         total = total + n
     end
-    assert(total == 1,
-        'the baton is ' .. total .. ' sites, not 1 -- two of the original three '
-        .. 'were taken on 2026-09-11 (\'lvlcarry\', then \'lvlgroup\') and the '
-        .. 'report says one remains')
-    -- The two repaired sites are gone from the source in the shape this table
-    -- counts; pin that they are gone because they are BEHIND IDS, not because
-    -- somebody deleted the guard.
+    assert(total == 0,
+        'the baton is ' .. total .. ' sites, not 0 -- all three of the original '
+        .. 'siblings were taken on 2026-09-11 (\'lvlcarry\', \'lvlgroup\', '
+        .. '\'lvltogether\') and the report says none remains')
+    -- The three repaired siblings, and this lever's own site, are all gone from
+    -- the source in the `[1]` shape; pin that they are gone because they are
+    -- BEHIND IDS, not because somebody deleted the guard.
     for _, call in ipairs({
+        'X.NoNearbyEnemyAtLevel(nNearbyEnemyHeroes, 10)',
         'X.NoNearbyEnemyAtLevelCarry(nNearbyEnemyHeroes, 12)',
         'X.NoNearbyEnemyAtLevelGroup(nNearbyEnemyHeroes, 12)',
+        'X.NoNearbyEnemyAtLevelTogether(nNearbyEnemyHeroes, 10)',
     }) do
         assert(src:find(call, 1, true) ~= nil,
-            'the level-12 site repaired as `' .. call .. '` is gone from ' .. TRG
+            'the site repaired as `' .. call .. '` is gone from ' .. TRG
             .. ' -- it left this table because it was taken behind an id, not '
             .. 'because the guard was deleted')
+    end
+    -- And the shape itself must be extinct in the file, at BOTH thresholds this
+    -- family ever used. A fifth site written in the old shape is a NEW finding,
+    -- not a number to raise.
+    for _, th in ipairs({ 10, 12 }) do
+        local shape = 'nNearbyEnemyHeroes[1] == nil or '
+            .. 'nNearbyEnemyHeroes[1]:GetLevel() < ' .. th
+        assert(src:find(shape, 1, true) == nil,
+            'a level-' .. th .. ' `[1]` site is back in ' .. TRG .. '. All four '
+            .. 'originals are behind ids, so this is a NEW site written in the '
+            .. 'old shape -- go read it.')
     end
 end
 

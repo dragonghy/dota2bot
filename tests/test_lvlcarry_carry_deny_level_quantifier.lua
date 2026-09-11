@@ -638,11 +638,17 @@ tests['[lvlcarry] 7. one sibling left']
     -- X.NoNearbyEnemyAtLevelGroup). It is MOVED OUT of the table below rather
     -- than having its number lowered, which is what the assertion text asked
     -- for. ONE remains: the level-10 site inside X.CanAttackTogether.
+    --
+    -- ⭐ 2026-09-11, LATER: THE LAST ONE WAS TAKEN TOO, as 'lvltogether' (its own
+    -- id, its own helper X.NoNearbyEnemyAtLevelTogether), on the bar 'lvlgroup'
+    -- put in force and at exactly the number section 7b below registered for it.
+    -- Its key is MOVED OUT of the table rather than lowered to 0 -- what the
+    -- failure text of this assertion asks for -- and `total` drops 1 -> 0.
+    --   ⛔ An empty table is also what a DELETED guard looks like, so the loop no
+    -- longer carries the claim alone: the pin after it requires all four repaired
+    -- sites to still be there as calls to identified helpers.
     local src = stripped(read_file(TRG))
-    local siblings = {
-        -- the level-10 site inside X.CanAttackTogether
-        ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10'] = 1,
-    }
+    local siblings = {}
     local total = 0
     for text, want in pairs(siblings) do
         local n = 0
@@ -660,8 +666,19 @@ tests['[lvlcarry] 7. one sibling left']
             .. 'number.')
         total = total + n
     end
-    assert(total == 1,
-        'the baton is ' .. total .. ' sites, not 1 -- the report says one remains')
+    assert(total == 0,
+        'the baton is ' .. total .. ' sites, not 0 -- the report says none remains')
+    for _, call in ipairs({
+        'X.NoNearbyEnemyAtLevel(nNearbyEnemyHeroes, 10)',
+        'X.NoNearbyEnemyAtLevelCarry(nNearbyEnemyHeroes, 12)',
+        'X.NoNearbyEnemyAtLevelGroup(nNearbyEnemyHeroes, 12)',
+        'X.NoNearbyEnemyAtLevelTogether(nNearbyEnemyHeroes, 10)',
+    }) do
+        assert(src:find(call, 1, true) ~= nil,
+            'the site repaired as `' .. call .. '` is gone from ' .. TRG
+            .. ' -- the baton emptied because a guard was DELETED, not because '
+            .. 'it was taken behind an id. Re-read it.')
+    end
 end
 
 tests['[lvlcarry] 7b. MEASURED: the CanAttackTogether sibling\'s BRANCH never '
@@ -690,13 +707,29 @@ tests['[lvlcarry] 7b. MEASURED: the CanAttackTogether sibling\'s BRANCH never '
     --     exercise". Say that in the lever's own file, as
     --     tests/test_lvlgroup_group_push_level_quantifier.lua section 5 does.
     --
-    -- ⭐ WHEN THIS GOES RED IT IS GOOD NEWS: a fixture has arrived that can drive
-    -- the sibling end to end. Take it then -- do not lower the number.
+    -- ⭐ 2026-09-11, AND THIS IS THE LINE THAT CHANGED WHAT THIS SECTION IS FOR:
+    -- THE SIBLING WAS TAKEN, as 'lvltogether'. So the sentence "go take it" below
+    -- is spent, and what this section now IS is a second, independent read of
+    -- that lever's cell from outside its own file -- 'lvltogether' section 7b
+    -- points back here and asserts this file says so, precisely so that a file
+    -- still telling the next round to take an already-taken sibling cannot sit in
+    -- the tree. The zero itself is UNCHANGED in meaning: the shipped (unarmed)
+    -- predicate still never flips here, because 'lvltogether' ships gated and
+    -- FROZEN-HOLD, and the reading is a hand replication in this file rather than
+    -- a call into the source.
+    --   ⇒ 'lvltogether' section 5 carries the same zero measured against the real
+    --     helper, plus the equality this section could not state: all 4 miss rows
+    --     satisfy every OTHER conjunct, so `#allies >= 2` is the single term
+    --     between them and a flip.
+    --
+    -- ⭐ WHEN THIS GOES RED IT IS STILL GOOD NEWS: a fixture has arrived that can
+    -- drive that lever end to end. Go drive it there -- do not lower the number.
     assert(C('cat_flip') == 0,
         C('cat_flip') .. ' row(s) now flip X.CanAttackTogether\'s full predicate. '
-        .. 'The corpus can finally buy that sibling -- go take it (one lever at a '
-        .. 'time, its own id), and replace this assertion with that lever\'s '
-        .. 'drive rather than re-baselining it.')
+        .. 'The corpus can finally drive \'lvltogether\' end to end -- go do that '
+        .. 'in tests/test_lvltogether_can_attack_together_level_quantifier.lua '
+        .. 'section 5, and replace this assertion with that drive rather than '
+        .. 're-baselining it.')
     cs.ratchet(C('miss_r600_th10'), 4,
         'miss rows at the CanAttackTogether sibling\'s own constants')
 end

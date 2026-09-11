@@ -680,8 +680,15 @@ tests['[lvlgroup] 5b. the replication of X.CanAttackTogether still matches the '
         'not bot:IsIllusion()',
         'J.GetProperTarget(bot) == nil',
         '#allies >= 2',
-        'nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < '
-            .. INNER_LEVEL,
+        -- ⭐ 2026-09-11: this term used to be the raw `[1]` comparison. The site
+        -- was taken as 'lvltogether', so the shipped text is now a call to that
+        -- lever's helper -- and the replication above still reads `[1]` on
+        -- purpose, because 'lvltogether' ships GATED and FROZEN-HOLD: the
+        -- UNARMED answer, which is what section 5's zero is taken against, is
+        -- still exactly `[1] < INNER_LEVEL`. If that gate is ever promoted, this
+        -- replication stops matching shipped behaviour and section 5 must be
+        -- re-taken rather than re-baselined.
+        'X.NoNearbyEnemyAtLevelTogether(nNearbyEnemyHeroes, ' .. INNER_LEVEL .. ')',
     }) do
         assert(body:find(term, 1, true) ~= nil,
             'X.CanAttackTogether no longer contains `' .. term .. '` -- the '
@@ -764,17 +771,23 @@ end
 
 -- ----------------------------------------------------- 7. THE BATON ---------
 
-tests['[lvlgroup] 7. one sibling left, and it is buyable on the bar in force']
+tests['[lvlgroup] 7. the baton is empty, and it emptied by ids not deletions']
 = function()
-    -- 'lvlany' handed over three. 'lvlcarry' took the first, this lever takes
-    -- the second, so ONE remains and it is counted here -- the GH #13 shape
-    -- (a baton that decays into a sentence nobody re-reads) written as an
-    -- assertion.
+    -- 'lvlany' handed over three. 'lvlcarry' took the first, this lever the
+    -- second -- the GH #13 shape (a baton that decays into a sentence nobody
+    -- re-reads) written as an assertion.
+    --
+    -- ⭐ 2026-09-11, LATER THE SAME DAY: THE THIRD WAS TAKEN, as 'lvltogether'
+    -- (its own id, its own helper X.NoNearbyEnemyAtLevelTogether) -- on exactly
+    -- the bar THIS file put in force and at exactly the number the amended
+    -- 'lvlcarry' section 7b registered for it. ⛔ The level-10 line is MOVED OUT
+    -- of this assertion rather than lowered from 1 to 0, which is literally what
+    -- its own failure text asked for; the loop below now spans BOTH thresholds
+    -- and requires the shape to be extinct.
+    --   ⛔ Extinct is also what a DELETED guard looks like, so extinction is only
+    -- half the claim. The pin after it is the other half: all four repaired sites
+    -- must still be there as calls to identified helpers.
     local src = stripped(read_file(TRG))
-    -- The level-12 sites are both repaired now; only the level-10 one inside
-    -- X.CanAttackTogether is left.
-    local gone = 'nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12'
-    local left = 'nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10'
     local function count(text)
         local n, at = 0, 1
         while true do
@@ -785,16 +798,27 @@ tests['[lvlgroup] 7. one sibling left, and it is buyable on the bar in force']
         end
         return n
     end
-    assert(count(gone) == 0,
-        'found ' .. count(gone) .. ' un-repaired level-12 `[1]` site(s) in ' .. TRG
-        .. '. Both were on this baton and both are now behind ids (lvlcarry, '
-        .. 'lvlgroup); a third one appearing means a NEW site was written in the '
-        .. 'old shape -- go read it, do not raise this number.')
-    assert(count(left) == 1,
-        'expected exactly 1 un-repaired level-10 `[1]` site (inside '
-        .. 'X.CanAttackTogether), found ' .. count(left) .. '. If it was '
-        .. 'repaired, move it out of this assertion and say so in the report -- '
-        .. 'do not just lower the number.')
+    for _, th in ipairs({ 10, 12 }) do
+        local shape = 'nNearbyEnemyHeroes[1] == nil or '
+            .. 'nNearbyEnemyHeroes[1]:GetLevel() < ' .. th
+        assert(count(shape) == 0,
+            'found ' .. count(shape) .. ' un-repaired level-' .. th .. ' `[1]` '
+            .. 'site(s) in ' .. TRG .. '. All four originals are behind ids '
+            .. '(lvlany, lvlcarry, lvlgroup, lvltogether); another one appearing '
+            .. 'means a NEW site was written in the old shape -- go read it, do '
+            .. 'not raise this number.')
+    end
+    for _, call in ipairs({
+        'X.NoNearbyEnemyAtLevel(nNearbyEnemyHeroes, 10)',
+        'X.NoNearbyEnemyAtLevelCarry(nNearbyEnemyHeroes, 12)',
+        'X.NoNearbyEnemyAtLevelGroup(nNearbyEnemyHeroes, 12)',
+        'X.NoNearbyEnemyAtLevelTogether(nNearbyEnemyHeroes, 10)',
+    }) do
+        assert(src:find(call, 1, true) ~= nil,
+            'the site repaired as `' .. call .. '` is gone from ' .. TRG
+            .. ' -- the baton emptied because a guard was DELETED, not because '
+            .. 'it was taken behind an id. Re-read it.')
+    end
 end
 
 tests['[lvlgroup] 7b. REGISTERED: this lever shares its miss cell with lvlcarry']
