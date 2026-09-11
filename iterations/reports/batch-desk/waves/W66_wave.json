@@ -89,37 +89,11 @@
  "wiring_gate": "python3 tools/batch_test/check_armed_wiring.py --cand \"$ARM\" => WIRING_EXIT=0, verbatim `all 30 armed ids wired on HEAD`. Read bare.",
  "acquisition_config_note": "`--count 1 --az <az> --slots 16 --rec-slots 8 --hours 2 --validate \"<ARM> <seed> --games 12\"`, one spot_run.sh call per seed -- byte-identical config to W39-W65. `--rec-slots 8` passed EXPLICITLY (the default is 1; W51 died on that default). A --dry-run ran first, DRYRUN_EXIT=0, plan line `plan: 1 x SPOT c6i.4xlarge`. No in-script wave-budget REFUSED line => --allow-short-watchdog NOT needed and NOT passed.",
  "gates": {
-  "i_throttle": {
-   "exit_at_decision": 3,
-   "exit_at_launch": 0,
-   "verbatim_at_launch": "anchor wave : W65 (4 machine(s)) / unlock : 2026-09-11T15:23:44Z / margin : +22s past unlock / WAVE_THROTTLE: UNLOCKED (exit 0)",
-   "note": "The round's FIRST throttle read (15:15:16Z) was THROTTLED by 8m28s. The gate was re-run as the last command before the first spot_run.sh call, inside the launch script, and only then did the loop proceed -- the gate binds the action, not the decision."
-  },
-  "ii_new_thing": {
-   "verdict": "NEW (leg 1: arm string 34 -> 30)"
-  },
-  "iii_fence": {
-   "exit": 0,
-   "verbatim": "WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes on the fence DERIVED THIS RUN ($100.00); ruling GH#721/director-20260910 was carried but NOT needed for this wave. Do not copy $100.00 forward; re-run the tool.",
-   "actual_mtd": 80.413,
-   "pending": 2.35,
-   "planned": 1.1,
-   "projected": 83.863,
-   "fence": 100.0,
-   "brake": 90.0,
-   "operative_ceiling": 85.0,
-   "headroom_after_this_wave": 1.137,
-   "director_crossing_verbatim": "DIRECTOR CROSSING: ceiling $85.00 by ruling GH#721/director-20260910, expires 2026-09-30T23:59:00+00:00",
-   "accrual_scope": "17 region(s) read [ap-northeast-1, ap-northeast-2, ap-northeast-3, ap-south-1, ap-southeast-1, ap-southeast-2 +11 more]  <- COMPLETE: every region this account has enabled",
-   "accrual_check": "CERTIFIED ZERO (0 accruing instances account-wide), but --pending $2.350 was given and is used as the larger claim.",
-   "budget_filters": "none",
-   "no_skips": "--no-accrual-check NOT used (no SKIPPED line); --director-crossing NOT passed (the registry ruling was read from iterations/director_rulings.json by the tool itself)."
-  },
-  "iv_reclaim_blind": {
-   "exit": 0,
-   "verbatim": "VERDICT: not blinded -- the wave delivered 4 paired seed(s). / NEXT WAVE: spot (the default; GH #158 unchanged).",
-   "input_repair": "see gate_iv_input_repair above -- the gate was UNDECIDABLE until W65_wave.json was backfilled this round."
-  }
+  "i_throttle": "THROTTLE_AT_LAUNCH_EXIT=0, run as the last command before the first spot_run.sh call (inside the launch script, which exits 9 on non-zero). Verbatim: `anchor wave : W65 (4 machine(s))` / `unlock : 2026-09-11T15:23:44Z` / `now : 2026-09-11T15:24:06Z` / `margin : +22s past unlock` / `WAVE_THROTTLE: UNLOCKED (exit 0)`. The round's first read at 15:15:16Z was THROTTLE_EXIT=3, `BREACHES gate (i) by 8m28s`.",
+  "ii_new_to_test": "NEW -- leg 1 holds, the arm string changed. W65 flew 34 ids / 309 bytes / md5 7be691dcd2c2fd1ee73a630274007044; origin/main now reads 30 ids / 266 bytes / md5 7d4c638dab526c68d9404526a3195663, recomputed this round. Two director promote atoms did it: liondrainstop+tpdeathbuy (10:37:01Z, 34->32) and zusult+zusboltdom as ONE atom (commit 2a82d6b, 32->30). Leg 2 (tree drift) was not needed and is not claimed.",
+  "iii_fence": "FENCE_EXIT=0. Verbatim: `WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes on the fence DERIVED THIS RUN ($100.00); ruling GH#721/director-20260910 was carried but NOT needed for this wave. Do not copy $100.00 forward; re-run the tool.` actual $80.413 / pending $2.350 / planned $1.100 / projected $83.863 / fence $100.00 / brake $90.00 / operative ceiling $85.00 (DIRECTOR CROSSING, expires 2026-09-30T23:59:00+00:00) / headroom $1.137. `budget filters : none`; `accrual scope : 17 region(s) read <- COMPLETE`; `accrual check : CERTIFIED ZERO (0 accruing instances account-wide), but --pending $2.350 was given and is used as the larger claim.` --no-accrual-check NOT used (no SKIPPED line); --director-crossing NOT passed.",
+  "iv_inputs_harvest": "NO HARVEST OWED, checked not assumed: s3api list-objects-v2 --prefix validation/ sorted by LastModified gives a newest object of 2026-09-11T10:19:33Z, all four W65 run prefixes (…_20260911_0925*), and W65 was fully harvested by the 12:07Z round (W65_verdict.json, 4 seeds / 222 games) => every object predates its own harvest. harvest_owed = NONE.",
+  "iv_reclaim_blind": "RECLAIM_BLIND_EXIT=0 on W65_wave.json, but ONLY AFTER this round backfilled that record's status_code/ab/ba/arm_depth -- the first run was exit 2, verbatim `UNDECIDABLE: seed 10926: missing leg count 'ab'`. After the backfill, verbatim: `yield : 4 paired seed(s) of 4 machine(s)` / `attribution: 0 machine(s) reclaimed before the flip` / `VERDICT: not blinded -- the wave delivered 4 paired seed(s).` / `NEXT WAVE: spot (the default; GH #158 unchanged).` See gate_iv_input_repair for the source split: ab/ba machine-read from W65_verdict.json, status_code TRANSCRIBED from the 12:07Z report because the SIRs have aged out of the AWS API."
  },
  "pending_arithmetic": {
   "value_passed": 2.35,
@@ -222,5 +196,38 @@
   "Read this wave's SIRs EARLY -- see cost.gh454_sir_readability_warning.",
   "Do not pool with W65 or with W62+W63+W64.",
   "Report `winrate_channel` and `mean.winrate_headroom` verbatim (GH #352 / §CT); the channel has read DEGENERATE for six waves running."
- ]
+ ],
+ "gates_detail": {
+  "i_throttle": {
+   "exit_at_decision": 3,
+   "exit_at_launch": 0,
+   "verbatim_at_launch": "anchor wave : W65 (4 machine(s)) / unlock : 2026-09-11T15:23:44Z / margin : +22s past unlock / WAVE_THROTTLE: UNLOCKED (exit 0)",
+   "note": "The round's FIRST throttle read (15:15:16Z) was THROTTLED by 8m28s. The gate was re-run as the last command before the first spot_run.sh call, inside the launch script, and only then did the loop proceed -- the gate binds the action, not the decision."
+  },
+  "ii_new_thing": {
+   "verdict": "NEW (leg 1: arm string 34 -> 30)"
+  },
+  "iii_fence": {
+   "exit": 0,
+   "verbatim": "WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes on the fence DERIVED THIS RUN ($100.00); ruling GH#721/director-20260910 was carried but NOT needed for this wave. Do not copy $100.00 forward; re-run the tool.",
+   "actual_mtd": 80.413,
+   "pending": 2.35,
+   "planned": 1.1,
+   "projected": 83.863,
+   "fence": 100.0,
+   "brake": 90.0,
+   "operative_ceiling": 85.0,
+   "headroom_after_this_wave": 1.137,
+   "director_crossing_verbatim": "DIRECTOR CROSSING: ceiling $85.00 by ruling GH#721/director-20260910, expires 2026-09-30T23:59:00+00:00",
+   "accrual_scope": "17 region(s) read [ap-northeast-1, ap-northeast-2, ap-northeast-3, ap-south-1, ap-southeast-1, ap-southeast-2 +11 more]  <- COMPLETE: every region this account has enabled",
+   "accrual_check": "CERTIFIED ZERO (0 accruing instances account-wide), but --pending $2.350 was given and is used as the larger claim.",
+   "budget_filters": "none",
+   "no_skips": "--no-accrual-check NOT used (no SKIPPED line); --director-crossing NOT passed (the registry ruling was read from iterations/director_rulings.json by the tool itself)."
+  },
+  "iv_reclaim_blind": {
+   "exit": 0,
+   "verbatim": "VERDICT: not blinded -- the wave delivered 4 paired seed(s). / NEXT WAVE: spot (the default; GH #158 unchanged).",
+   "input_repair": "see gate_iv_input_repair above -- the gate was UNDECIDABLE until W65_wave.json was backfilled this round."
+  }
+ }
 }
