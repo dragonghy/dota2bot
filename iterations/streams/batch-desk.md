@@ -9723,6 +9723,24 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **无一条红由本轮引入**;未做 `git stash` 复跑,故**不宣布「这是 main 的红」**;
   #718 已收进一张单子 ⇒ **不开重复 issue**。
   **铁律 11** 未触发任何 `requires approval`,**本轮没有任何等待**。
+  **铁律 6 读数(三条腿)**:`ARM_HOOK_EXIT=0`;`GATE_EXIT=0 CLEAN`
+  (`luacheck bots game: 0 warnings`);`py gate: 95 ran, 0 findings, 0 uncertifiable, 28.5s`;
+  `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+  (⚠️ **SKIPPED BY SCOPE 不是 pass**:本会话确实没动那三棵树,但 trunk 上那 `4 of 87` 条红仍在);
+  **未用 `RULE6_BYPASS` ⇒ 无「SKIPPED, not passed」行**;动态半(#124)**未跑不声称**。
+  `PUSH1_EXIT=0` / `PUSH2_EXIT=0`(`34ea0edd..cc9cb4a4 HEAD -> main`,未被拒)。
+  ⭐⭐⭐ **但第一次 push 被拒了,而红的是本轮自己写的产物** —— `py gate: 95 ran, 1 findings`,
+  `W64 records gate (iv) first half … under a gates key matching one of ['inputs','harvest']` FAIL
+  + `… second half … ['reclaim_blind']` FAIL。**两道闸都真的跑了**,是我把它们写在了棘轮点不到的
+  名字上(`gate_iv_reclaim` 少了 `_blind`;「不欠收割」留在顶层没进 `gates`)。
+  ⇒ **改记录不改门**,也没去 `REQUIRED_GATES` 加别名(工具逐字:`Do NOT invent a value to turn
+  this green; that is the exact failure this file was written against`),
+  `tests/test_wave_gate_keys.py` 复跑 `428 checks, 0 failed` 后重推。
+  **这正是 GH #616 那条腿的立案形状:红由推的人当场看见,而不是几小时后由下一个开工的组发现。**
+  ⭐ 顺带一条方法教训(已写进 `W64_wave.json:gates.gate_iv_inputs_harvest`):
+  **`awsx s3 ls --recursive` 按 key 名排序不按时间** —— 本轮第一次读 `tail` 看起来最新只到 `09-08`,
+  真正的最新是 W63 自己的 `09-10T13:02:15Z`。**读没排序的清单的尾巴,正是「一波没被收割而当轮
+  报告说干净」的做法。**
   **交棒**:① ⭐⭐⭐ **下一轮本台 = 收割 W64**,四条必做已写进 `W64_wave.json:harvest_notes`
   (趁 SIR 在读 `Status.Code`;⭐ **`CreateTime`/`UpdateTime` 也要写回**,否则闸 (iv) 还是区间;
   `ab`/`ba`/`arm_depth` 回填**本文件**不只 verdict;走 `recover_verdict.py` 全量重算并照抄
