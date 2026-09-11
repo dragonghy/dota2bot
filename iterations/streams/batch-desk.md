@@ -9887,6 +9887,101 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   `iterations/reports/batch-desk/waves/W64_wave.json`。
 
 
+- 2026-09-11T06:15Z:**W64 补跑机收割轮。零发波。本轮新增支出 $0.00。**
+  **一、补跑成功 —— W64 从 2 粒配对种子变成 4/4 全配对。** 两台按需补跑机把被容量回收的
+  10891/10892 买了回来:`10891 ab42/ba15 arm_depth 22.11`、`10892 ab28/ba14 arm_depth 18.67`
+  (另两粒 `10890 ab40/ba17 23.86`、`10900 ab28/ba14 18.67`)。`RECOVER_EXIT=0`(**裸读**),
+  `min_arm_depth 8`、`thin_arm_seeds []`、**被门排除的种子:无**;`games_loaded 222` / `scored_games 198`
+  / `unparseable 0` / `source_dirs 4`。四个 run 目录**各自一个子目录**,未 `cp` 平(GH #225),
+  本地文件数与 S3 侧逐一相等(157/120/157/120)。臂串收割时重算 **37 ids / 335 bytes /
+  md5 `b525d51d4b4957e0e40f22f203aea641`,与发波逐字节相同**;⚠️ 而 `test_set.md` 现行第 2 行
+  已 hash 成 `7be691dc…` —— **测试集自发波以来已经动了**,本波按飞的那一串计分。
+  未用 `--min-arm-depth` / `--allow-pooled-basenames` / `--allow-unparseable`
+  ⇒ **无任何「这是 SKIP 不是 pass」行**。
+  **二、读数(铁律 4(i-a) 两层都登记)**:`mean gpm -8.96 / xpm -2.30 / deaths +0.22 / last_hits -0.48`;
+  `comps_better gpm 2/4 xpm 2/4 deaths 1/4 last_hits 2/4`;分层 `gpm ab -88.67 / ba +70.75 / side -79.71`、
+  `xpm -44.10 / +39.50 / -41.80`、`deaths +0.50 / -0.07 / +0.28`、`last_hits +3.80 / -4.76 / +4.28`,
+  **四量全部反号、side_gt_arm 4/4(xpm 3/4)**。按 **4(i-c)** 读:这些是每粒 50/50 swap-average 的
+  估计量,**反号是恒等式 `|side|>|arm|` 不是否决理由**,登记它是因为 4(i-a) 要求登记。
+  ⛔ 未按局数并池(4(i-d)),四量取自工具自己的 `per_seed[].<m>_ab/_ba` + `strata`,**未手算**。
+  `suggested hold_or_reject` **是提示不是裁定**;37 个 id 一条臂,**本波不构成任何单 id 的裁定**。
+  **三、winrate 仍 DEGENERATE**:`winrate_channel=DEGENERATE`、`mean.winrate_headroom=0.0083`
+  (少数侧 `1 of 222`,share 0.0045)⇒ **`winrate 0.503` 与 `comps_better.winrate 1/4` 是占位符不是读数**,
+  不得引为条件 (b) 支持。**补跑没有修复通道**(`0 of 111` → `1 of 222` **不是恢复**)。
+  **GH #696 首次实读已结清**:4 粒里 3 粒 headroom=0 不能投赞成(10890/10892/10900),
+  `comps_better.winrate_measurable 1/1` ⇒ **本语料上高于 `1/4` 的 promote 门槛不可达**。
+  `winrate_independent_of_gold 222/222` ⇒ #108/#352 桶名修复仍在活路径生效。
+  **`overchase` 新函数体首次波读数登记为 READ**(读数即波级读数,无法归因到单 id)。
+  **四、⭐ 结构性发现之一(#685 第二例,已评论)**:两台按需补跑机的**终止码读不到** ——
+  `describe-instances` 对两个 id 返回 `Reservations: []`,而**故意写错的对照 id 报
+  `InvalidInstanceID.Malformed`** ⇒ 是**老化**不是 not-found;按需机无 SIR 可退。
+  ⭐ 比 #685 立案时多出的信息:**可读窗(~1h)短于 Routine 排班周期(2h),撞上是运气不是流程**
+  (补跑机 `03:19:5xZ` 起飞、约 `04:03`/`04:14Z` 结束 ⇒ 窗 ≈ `04:03–05:14Z`,本轮 `06:0xZ`)。
+  而发波轮 `harvest_notes (a)` 给的退路是「spot 机 SIR 不老化」——**那条退路对 `rerun[]` 按构造不成立**
+  (GH #408 把容量回收的补跑直接送按需):**缓解措施在它最需要生效的那类机器上失效**。
+  替代读数 = **存活下界** 0.9100h / 0.7269h(由 `launched_at → 最后一个 S3 对象写入`推得),
+  已写进 `rerun[].survival_hours_LOWER_BOUND`,**刻意与 `machines[].machine_hours` 用不同键名**,
+  免得两个强度不同的量被并池或互相校对。
+  **五、⭐⭐ 结构性发现之二(新开 GH #742)—— 闸 (iii) 的 accrual 普查看不见补跑机的钱。**
+  `must cover : 2 wave(s) listed above (W64, W63).` 而**窗内实有三笔花费**:两台按需补跑机
+  (`03:19:5xZ`,深在窗内,约 $1.10)**一个字都没被点名**。形状:闸 (i) RULING ② 把
+  「补跑机不开新窗口」写成结构性成立,理由逐字是「工具只读 `machines[]`,不读 `rerun`」——
+  那对闸 (i) 是优点,被闸 (iii) 普查继承后就变成**补跑机的真金白银对一道管钱的闸不可见**,
+  而 GH #498 同时写死「闸 (iii) 照常适用(补跑的钱进围栏算术)」⇒ **章程要求它进围栏,
+  工具结构上说不出它的名字**。失效方向是**危险的那一侧**:照它办事的操作员覆盖它点名的每一波,
+  **仍少报 ~$1.10**,而九月余量只有 `$3.297`。本轮未被咬到**只因为本台不按它的清单报** ——
+  而「只有在操作员不信它时才安全」正是 **RULING 7 判定「不是闸」的形状**。
+  **六、GH #454 两条腿**:**(乙1)** 波本体 2.1742 机时 ⇒ $0.51–0.60,**不触发**;含两台按需补跑
+  (≥1.637h × $0.673/h ≈ $1.10)则 ~$1.6–1.7,**高于 $1.10** ⇒ ⚠️ **口径未定,本台不自行裁定,
+  已交 GH #743**($1.10 是按**四台 spot 波**标定的覆盖档,拿「波+补跑」总额去比是两个量)。
+  **(乙2)** **在补跑机上不可评,这本身是发现**:决定能否进该均值的谓词正是读不到的那个终止码
+  ⇒ 最贵的那类机器(按需 $0.673/h ≈ spot 的 2.7 倍)对该判据**系统性不可见**。
+  按存活下界(均值 ≥0.8185h)与 2h 看门狗上界,**在本轮任何拿得到的读数上都不触发 1.00 h/台**,
+  **登记为下界不是读数**;四台 spot 自己的 (乙2) 均值 0.9001h 上一轮已报不触发。
+  **七、⭐⭐⭐ 本轮实锤一次铁律级读法错误,必须传下去**:闸 (i) 第一次经由 `| tail -15` 取 `$?`,
+  读回 **`THROTTLE_EXIT=0`** —— **那是 `tail` 的退出码**;裸跑复读得 **`THROTTLE_EXIT=3`**。
+  `evidence-discipline` 的「永远不要隔着管道读退出码」**本轮是活的不是纪念性的**:
+  照第一个读数走,就是**在 THROTTLED 的闸上发了一波**。
+  **八、四道闸**:(i) **`THROTTLE_EXIT=3` 裸** —— `anchor wave : W64 (4 machine(s))`、
+  `last machine up : 2026-09-11T00:21:17Z <- the anchor`、`slate spread : 22s`、
+  `unlock : 2026-09-11T06:21:17Z`、`margin : 619s SHORT`、`BREACHES gate (i) by 10m19s` ⇒ **不发波**;
+  (ii) **不满足** —— 家族深度现 **11 粒配对种子**(W62 4 + W63 3 + W64 4)⇒ **第二肢(<8)已死**,
+  第一肢需「树漂移**且与臂串有交集**」,本轮未做该论证;
+  (iii) **`FENCE_EXIT=0` 裸**(`--planned 0 --pending 3.45`):`actual (MTD) : $78.253`、
+  `pending waves : $3.450`、`projected total : $81.703`、`fence $80.00` / `brake $90.00` /
+  `operative ceiling: $85.00`、`headroom : $3.297 after this wave`;
+  `crossing registry: ruling GH#721/director-20260910 IS IN FORCE`、
+  `DIRECTOR CROSSING: ceiling $85.00 ... expires 2026-09-30T23:59:00+00:00`、
+  **`wave accrual : ... clock from budget snapshot`**(⇒ **GH #692 epoch 修复仍在生效**,
+  未用 `--snapshot-instant`)、`accrual scope : 17 region(s) read ... COMPLETE`(**RULING 5 仍生效**)。
+  `--pending 3.45` = W63 $1.10 + W64 $1.10 + **补跑 $1.25**(发波轮自报的较大值,安全侧),
+  **第三项是本台自补的,工具没点名**(见 §五)。未用 `--no-accrual-check` / `--no-crossing-file`
+  ⇒ **无 SKIPPED / NOT CONSULTED 行**。⚠️ **`$80` 档本轮仍未跨**(`AWS state=OK`)⇒
+  owner **不会**收到 `$80` 告警邮件;(iv) 本轮不发波,未运行。
+  **九、成本与泄漏**:`check_costs.sh` 在跑实例**零**,MTD **$78.253**
+  (CE 自动复核 78.2534452025,$0.01,`>= $35` 自动触发);⚠️ **快照戳 `2026-09-10T19:46:38Z`
+  与上一轮逐位相同 ⇒ 预算侧 ~10.4h 未刷新**,该数不含 W64 也不含补跑。
+  闸 (iii) 普查独立复核 `CERTIFIED ZERO (0 accruing instances account-wide)` ⇒ **无泄漏**。
+  **十、`bots`/`game`/`tests`/`tools` 本会话一行未改** —— §四/§五 的 harness 缺陷**本台不自己改**
+  (先例 GH #33),已交 **GH #742 / #743** + **#685 评论**。**铁律 11 未触发任何 `requires approval`,
+  本轮无等待。**
+  **交棒**:① ⭐⭐⭐ **总监 —— #743 三选一**,裁定请落到 §2(甲) 的 (乙1) 条文本身,
+  不要只写进 `test_set.md` 档案节(章程 2.5 / RULING 10 的立案形状);
+  ② ⭐⭐⭐ **harness —— #742**,普查一并枚举 `rerun[]`,`must cover :` 应从 2 变 3,
+  ⛔ 仍不要让工具给波定价;③ ⭐⭐ **harness —— #685 收窄建议**:让**看门狗在自终前把死因与存活
+  写进该 run 的 S3 目录**(那份数据不老化),比把收割往前赶可靠 —— 本轮证明排班挡不住;
+  ④ ⭐⭐ **总监/owner —— 九月余量 `$3.297`**,天花板 `$85.00` 且 **09-30T23:59Z 到期**
+  ⇒ 最多约 **2 波 spot**;#528/#515 仍 open;📌 **十月不要照抄该裁定**;
+  ⑤ ⭐ 两个家族的瓶颈**仍是条件 (a)**,promote 排队顺序不变。
+  **下一轮本台 = 可发波轮**(闸 (i) 已于 `06:21:17Z` 解锁),**但闸 (ii) 必须先过第一肢** ——
+  家族深度 11 ⇒ 要发得**先证树漂移与臂串有交集**(`test_set.md` 第 2 行 md5 已变,
+  **那是线索不是论证**);② ⚠️ **开工第一条命令重定向+后台+不设短 `timeout`**(第 16 次);
+  ③ **裸读退出码,不要隔着管道**(§七);④ 围栏/闸/成本**一律当轮现跑,本条所有数字作废**。
+  详见 `iterations/reports/batch-desk/20260911T061500Z.md` 与
+  `iterations/reports/batch-desk/waves/W64_wave.json`(`harvest_after_rerun` 节)
+  与 `iterations/reports/batch-desk/waves/W64_verdict.json`。
+
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
