@@ -386,7 +386,13 @@ local function source(fn, n)
     local fh = assert(io.open('bots/FunLib/jmz_func.lua', 'r'))
     local src = fh:read('*a'); fh:close()
     local at = assert(src:find('function ' .. fn, 1, true), fn .. ' moved')
-    return src:sub(at, at + (n or 12000)), src
+    -- [GH #740, 20260911] 12000 -> 16000. The window is a READING APERTURE, not
+    -- an assertion: the selector grew a comment block when 'pullreach' landed
+    -- beside the 'pulllane' clause, and at 12000 the aperture stopped ~700 chars
+    -- short of `return vBest`. Nothing this file asserts changed -- the first
+    -- [reverse] case below still fails loudly if the window misses the end of
+    -- the selector, which is the guard that makes widening it safe.
+    return src:sub(at, at + (n or 16000)), src
 end
 
 tests['[reverse] the selector filters on the lane path AND on the ancient'] = function()

@@ -548,9 +548,35 @@ function GetDesireHelper()
 			-- the intended 18-minute bound is restored by SELECTING it instead
 			-- of OR-ing it, so the armed predicate is a subset of the shipped
 			-- one: lane-front farming can be preferred LESS often, never more.
-			-- The band this moves is 18:00-25:00, i.e. the tail of a ~20-minute
-			-- turbo game; no fixture in the corpus reaches it (max t = 690.5s),
-			-- which is itself pinned so the day one does, the pin says so.
+			-- ⛔ [GH #740, RULING 13, 20260911] THE SENTENCE THAT USED TO STAND
+			-- HERE WAS FALSE, AND IT IS THE REASON `tbearly` WAS ADMITTED.  It
+			-- read "The band this moves is 18:00-25:00, i.e. the tail of a
+			-- ~20-minute turbo game".  There is no such band under this line.
+			-- The claim is DECIDABLE, not a judgement call: the outer conjunct of
+			-- this same function (`not J.IsLateGame()`, ~50 lines up) is in turbo
+			-- exactly `DotaTime() <= 18 * 60` (J.IsLateGame, bots/FunLib/jmz_func.lua
+			-- -- turbo threshold 18 * 60), so control reaches this line ONLY with
+			-- `DotaTime() <= 1080`.  The armed selection changes `nEarlyClock` from
+			-- 25 * 60 to 18 * 60, and on `t <= 1080` both `t < 1500` and `t < 1080`
+			-- are true except at the single instant `t == 1080` -- a measure-zero
+			-- domain, i.e. no band at all.  `tbearly` accordingly read SILENT
+			-- (`episodes=0`) and left the test set (GH #730).
+			--
+			-- ⛔ The lesson is about the COMMENT, not the id: this sentence is what
+			-- made the next reader believe the id had a domain, and
+			-- `state.json:cap25_boundary_20260825.domains_unblocked` was written the
+			-- same way (the director has appended `correction_20260911` there;
+			-- the original text is deliberately untouched).
+			--
+			-- The code below STAYS.  What it fixed -- `a and b or c` used as a
+			-- ternary over a boolean `b` -- is a real Lua precedence defect, and
+			-- tests/test_turbo_ternary_dominance.lua ratchets that shape across the
+			-- whole repo.  What was retired is the test-set slot, not the repair.
+			-- Redesigning the `:507` outer conjunct so that an 18-minute turbo
+			-- bound could bind at all would be a NEW behaviour change under a NEW
+			-- id, and is not attempted here.
+			-- No fixture in the corpus reaches even 1080s (max t = 690.5s), which
+			-- is itself pinned so the day one does, the pin says so.
 			local nEarlyClock = 25 * 60
 			if J.IsSoakCandidate('tbearly') and J.IsModeTurbo() then
 				nEarlyClock = 18 * 60

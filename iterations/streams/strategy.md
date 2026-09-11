@@ -27,6 +27,62 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0PULLREACH. **【2026-09-11T10:49Z 新增。**认领 **GH #740**(总监 RULING 13 交棒;上一轮
+   `0TPCHEW`「下一格」第 (0) 项逐字点名)。落地 gated id **`pullreach`**:
+   `J.IsCampWithinPullReach` + `local PULL_CAMP_LANE_REACH = 1800`,以 `and` **追加**在
+   营地循环里 `J.IsCampBesideLane` 之后。
+   ⭐⭐ **本条最该被下一轮读到的三句**:
+   (甲) **落地的是判据,而定数的规则是「最大间隔」——算术不是口味。** 语料把营地垂距切成两个
+   **不重叠**的类:观测到连上的五次 `1200/1268/1268/1271/1271`(**max 1271**),RULING 13 点名的
+   不可能档 `2336/2372/2907/2912`(**min 2336**);`(1271, 2336)` 这条带子**是空的**,1800 是它的
+   中点。**中点是规则的理由是:本族已知的误差是「标定偏移」不是「散布」** —— 几何重建在判决线上
+   读得比引擎宽 **20–82u**(`pullcamp_lane_geometry.py` 标定段自陈),1800 两侧各留 **529u**
+   = 82u 的 **6.4 倍**;贴着任何一类的阈值都**坐在自己的误差条里面**。**1200 出事就是这个形状**:
+   那两个分子营地骑在从 W7→W8 行为切分反推的标定括号 **[1220, 1282)** 上。
+   (乙) ⭐ **「1200 和 1350 都不能抄」是两条不同的理由,合起来说会说出一句假话。**
+   issue 正文那句「1200/1350 量级的上限会拒掉 5 次里的 4 次」是口语化的:**1350 一条都没切到**
+   (1271 < 1350),它的毛病是余量只有 **79u**、落在 20–82u 标定宽度**里面**。照抄会把一个假命题
+   钉进棘轮 —— 本轮第一版测试**当场被自己的数据顶红**。另:1200 那条要**连口径一起登记**
+   (铁律 4 (iii)):`>1200` 分箱是 **4/5**,出货谓词真正用的严格 `<` 是 **5/5**。
+   (丙) ⭐⭐ **变异台第一版红得对、但不是因为我说的那个理由。** M4「合并两条采样」在行为上
+   **逐字节等价**(每条路径仍各自挂闸),它红的是**源码钉**,而那是**对的**捕手 —— 真实缺陷是
+   纪律性的(重写**已退集** id 的 lever body;一行两个 soak id = pullcad 形状)。⇒ 拆成 **M4**
+   (纪律版)与 **M12**(真耦合版:`tReachPath` 也喂给 1200 那个过滤器,**只有 1450u 行为证人
+   看得见**),两个都手读复现过红在哪。
+   ⭐ **两条采样块分开、各挂一个 id,是被两个测试逼出来的**:`test_blind_a_pulllane_pullthink.lua`
+   要求**退集不是 reject**(`pulllane` lever body 逐字节不变)、`test_pullnolane_guard.lua` 禁止
+   一行两个 soak id;第一版合并采样**当场被这两个文件顶红**。
+   产出:`tests/test_pullreach_camp_lane_reach.lua` **18/18**(§1 是「量具先自证」:用**这一帧
+   自己的 18 座塔**重建折线并复现几何模块发表过的 W7→W8 切分顺序;§1 第一版红得对 —— radiant 行
+   t3→t1 而 dire 行 t1→t3,**修的是下标反转不是放宽容差**)、
+   `tools/agent/mutstand_pullreach.sh` **13 腿 13/13 STAND GREEN**(12 变异体全 CAUGHT,
+   M10/M11 打的是量具自己)、`state.json:pullreach_20260911`;
+   报告 `iterations/reports/strategy/20260911T104906Z.md`。
+   同轮做掉 #740 第二节:`bots/mode_farm_generic.lua` 那句**可判定地假**的注释
+   (「The band this moves is 18:00-25:00」;外层 `not J.IsLateGame()` 在 turbo 下已钉 `t<=1080`
+   ⇒ armed 与 unarmed 只在 `t==1080` 那一瞬不同,**测度零**)。⛔ **退的是测试集里那一格,
+   不是那次 `a and b or c` 优先级修复。**
+   **附带(三条,都是本轮自己弄的、同 commit 修)**:(i) `test_turbo_ternary_dominance.lua` 的
+   `[tbearly]` 窗口 2400→**4800**(被我那段注释推到 3420 字节外;**它的自证断言逐字写着
+   「widen it」**);(ii) `test_pullcamp_lane_gap.lua` 的 `source()` 窗口 12000→**16000**;
+   **两处都只动孔径不动断言**,而各自「窗口没够到就报错」那条腿仍在守 —— GH #624 那族的第三、
+   第四例,**这次作者在同一轮里自己撞上并修了**;(iii) `state.json` 新键。
+   ⚠️ **trunk 红先分「谁弄红的」**:`test_pullcamp_trigger_census.lua` 那条**用 `git stash`
+   实测过、干净树上同样红**,是上一轮 `tpchew` loader opt-in 的语料侧连带,而那条断言的措辞
+   本身就是交棒(「go land it」)。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **GH #250 §4** —— `pullcamp` 的中立计数子句,它的离线域**今天第一次在 fixture 上非空**
+   (1 帧),`test_pullcamp_trigger_census.lua` 的断言自己在喊「the lever GH #250 §4 proposes has
+   become fixture-validatable; go land it」;
+   (1) `lvlany` 留下的**第三根兄弟**(`X.CarryFindTarget` 第二处 12 级站点)仍未接;
+   (2) ⛔ **H1/H2 不由本组变成 bots 改动**(两条都要语料读数,H1 已交回录像组);
+   (3) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第八轮有效**);
+   (4) ⛔ 兵营分支(GH #713)仍不落 gate,接力棒是 `tests/test_isvalid_building_sentinel.lua §2b`;
+   (5) ⛔ P4.2 冻结未解 ⇒ 本轮**未提入集**;`tombhp`(#719)/`anyhero`(#724)/`lvlany`(#731)/
+   `lvlcarry`(#737)/`bagtango`/`tpchew` 的裁定请求仍未答,本轮**不催**;
+   (6) ⛔ `pulldrag` 永远不许单独提;`pullcamp`+`pulldrag` 的重新入集仍挂在
+   `owed_executions.json:pullcamp_atom_readmission`,**`pullreach` 不代它提**。】**
+
 0TPCHEW. **【2026-09-11T08:00Z 新增。**认领 **GH #739**(外部来件 + owner P2 族,上一轮
    「下一格」第 (0) 项逐字点名)。落地 gated id **`tpchew`**:`J.ShouldStepOutBeforeTpChannel`
    —— **开始读传送条之前问一句「我现在是不是正站在一个中立营里被啃」**,以 **append**
@@ -7930,6 +7986,31 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-11T10:49Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领 **GH #740**,依据是工作流
+  第 1 步先扫 open issue:`[strategy]` open 里最新的一件就是 #740(04:34:54Z),且上一轮
+  「下一格」第 (0) 项**逐字点名**它 —— 两条理由一致,写下来不靠记忆。)
+  ⭐⭐ **落地的是判据,而定数的规则是「最大间隔」。** `(1271, 2336)` 这条带子是**空的**
+  ——连上的五次全部 ≤1271、RULING 13 点名的不可能档全部 ≥2336 —— `PULL_CAMP_LANE_REACH = 1800`
+  是它的中点,两侧各 **529u**,是标定宽度 **82u** 的 6.4 倍。**中点是规则不是偏好的理由**:
+  本族已知的误差是**标定偏移**不是散布,贴着任何一类的阈值都坐在自己的误差条里 —— **1200
+  出事正是这个形状**(两个分子营地骑在标定括号 `[1220, 1282)` 上)。
+  ⭐ **「1200/1350 都不能抄」是两条不同理由,合起来说会说出一句假话**:1350 **一条都没切到**
+  (1271<1350),毛病是余量 79u 落在 20–82u 标定宽度**里面**;1200 那条要**连口径登记**
+  (`>1200` 分箱 4/5、出货用的严格 `<` 是 5/5)。本轮第一版测试照抄 issue 的合并说法,
+  **当场被自己的数据顶红**。
+  ⭐⭐ **变异台第一版红得对、但不是因为我说的那个理由**:M4(合并两条采样)在行为上**逐字节
+  等价**,红的是源码钉,而那是**对的**捕手 —— 真实缺陷是纪律性的。⇒ 拆成 M4(纪律版)与
+  **M12**(真耦合版,只有 1450u 行为证人看得见),两个都手读过红在哪。
+  产出:`pullreach`(turbo-only,**FROZEN-HOLD,不请求入集**)、
+  `tests/test_pullreach_camp_lane_reach.lua` **18/18**、`tools/agent/mutstand_pullreach.sh`
+  **13/13 STAND GREEN**、`state.json:pullreach_20260911`;同轮做掉 #740 第二节那句**可判定地
+  假**的注释;报告 `iterations/reports/strategy/20260911T104906Z.md`。
+  **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零波次。
+  **铁律 6 三条腿**:`GATE_EXIT=0` / `py gate: EXIT=0` / `lua gate: EXIT=0`,**未用 BYPASS**。
+  开工自检 `SELFCHECK_EXIT=3`(`UNCERTIFIABLE (exit 2): none`);⚠️ 自检里「lua5.1 is absent /
+  luacheck is not installed」那批行是**它自己在同一次运行里装上**造成的先后差(GH #171 现场),
+  **登记,不当通过**。
 
 - 2026-09-11T08:00Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = 工作流第 1 步
   **先扫 open issue**,本轮照做:`[strategy]` open 里最新两件是 **GH #740**(04:34:54Z)与

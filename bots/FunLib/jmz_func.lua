@@ -10966,12 +10966,47 @@ function J.ShouldPullNeutralCamp( bot )
 	-- costs 21 engine calls inside a window that is already ~10s of a 6-minute
 	-- laning phase, and no new failure mode (an unreadable sample is skipped, and
 	-- a path too short to have a segment answers TRUE rather than muting a pull).
+	--
+	-- [GH #740, 20260911] SAME AXIS, DIFFERENT CONSTANT -- soak candidate
+	-- 'pullreach'. RULING 13 pulled `pullcamp`+`pulldrag` out of the test set as
+	-- one atom (NOT a reject) because the selector picked camps a minimum
+	-- perpendicular 2912 / 2372 / 2907 from ANY lane while the drag leash
+	-- measures max 1272: those pulls cannot connect, and each still charges ~19pp
+	-- HP and ~13s of lane time. ⛔ This is NOT `pulllane` re-armed and its 1200
+	-- must NOT be copied -- 1200 refuses four of the five connects ever measured.
+	-- The derivation of 1800 lives with PULL_CAMP_LANE_REACH below; read it
+	-- before touching the number.
+	--
+	-- Gated STANDALONE, not conjoined with 'pullcamp'/'pulllane' (the `pullcad`
+	-- trap: a conjunction freezes FALSE the day the other id is promoted).
+	--
+	-- ⛔ THE DUPLICATED LOOP BELOW IS DELIBERATE, AND TWO TESTS ENFORCE IT.
+	-- The obvious shape -- sample once under `pulllane or pullreach`, then hand
+	-- the one path to whichever gate is armed -- was written first and is wrong
+	-- twice over. tests/test_blind_a_pulllane_pullthink.lua: `pulllane` was
+	-- RETIRED from the armed set, and a retirement is not a reject, so its lever
+	-- body must stay byte-identical or the readings banked against it stop
+	-- meaning anything. tests/test_pullnolane_guard.lua: two soak ids on one
+	-- line is the `pullcad` shape, because nothing then arms one without
+	-- touching the other's code path. The cost of obeying both is 21 engine
+	-- calls on the frames where BOTH ids are armed -- a case that exists only in
+	-- an isolation wave -- inside a window that is already ~10s of a 6-minute
+	-- laning phase. Attributability is worth more than the loop.
 	local tLanePath = nil
 	if J.IsSoakCandidate( 'pulllane' ) then
 		tLanePath = {}
 		for k = 0, 20 do
 			local v = GetLocationAlongLane( nLane, k / 20 )
 			if v ~= nil then tLanePath[#tLanePath + 1] = v end
+		end
+	end
+
+	local tReachPath = nil
+	if J.IsSoakCandidate( 'pullreach' ) then
+		tReachPath = {}
+		for k = 0, 20 do
+			local v = GetLocationAlongLane( nLane, k / 20 )
+			if v ~= nil then tReachPath[#tReachPath + 1] = v end
 		end
 	end
 
@@ -10983,6 +11018,7 @@ function J.ShouldPullNeutralCamp( bot )
 		if camp ~= nil and camp.location ~= nil and camp.team == GetTeam()
 			and J.GetLocationToLocationDistance( camp.location, vOwn ) < nMidToOwn
 			and J.IsCampBesideLane( camp.location, tLanePath )
+			and J.IsCampWithinPullReach( camp.location, tReachPath )
 		then
 			local d = GetUnitToLocationDistance( bot, camp.location )
 			if d < nBestDist then
@@ -11033,6 +11069,65 @@ function J.IsCampBesideLane( vCamp, tLanePath )
 	for i = 1, #tLanePath - 1 do
 		if DistanceToSegment( vCamp, tLanePath[i], tLanePath[i + 1] )
 			< PULL_CAMP_LANE_GAP
+		then
+			return true
+		end
+	end
+	return false
+end
+
+-- [GH #740, 20260911] How far a candidate pull camp may sit off the lane path
+-- under soak candidate 'pullreach', in units. This is NOT a retune of
+-- PULL_CAMP_LANE_GAP above -- that constant belongs to 'pulllane', is out of the
+-- test set, and stays byte-for-byte where it is.
+--
+-- THE TWO CLASSES THE CORPUS ACTUALLY SEPARATES (this is the whole derivation):
+--
+--   observed CONNECTS, camp gap    1200, 1268, 1268, 1271, 1271    max 1271
+--     (five in total: W63's three and W64's two, measured by
+--      tools/batch_test/behavioral/pullcamp_camp_gap.py as the MINIMUM
+--      perpendicular over the three lanes, which makes "> x" a LOWER bound on
+--      what a cutoff at x refuses -- the bound is therefore one-directional)
+--   camps RULING 13 names structurally impossible  2336, 2372, 2907, 2912
+--                                                                  min 2336
+--     (the selected camp in the BUGGY episodes; the longest drag leash ever
+--      measured is 1272, so the neutrals cannot be delivered to any lane from
+--      there -- the pull is not worse, it is not a pull)
+--
+-- The band (1271, 2336) is empty, and 1800 is its midpoint. The RULE is
+-- max-margin, and the reason it is the right rule here rather than a preference
+-- is that the known error in this family is a CALIBRATION offset, not scatter:
+-- the reconstruction reads 20-82u wide of the engine at the decision line
+-- (tools/agent/pullcamp_lane_geometry.py). 1800 keeps 529u of margin on each
+-- side, which dominates that offset by 6x; 1271+epsilon or 2336-epsilon do not.
+--
+-- ⛔ THE ANTI-SILENT SIDE, checked rather than hoped. Tightening a distance
+-- threshold removes camps widest-first, so the question RULING 13's predecessor
+-- (GH #117) says must be answered BEFORE the constant lands is whether the
+-- connect-producing camps survive it. They do, with room: on the corpus' own
+-- measured map the two camps that produce every observed connect read 1220
+-- (radiant, near 3994,-5137) and 1084 (dire, near -4007,4947), i.e. 580u and
+-- 716u inside this line, while the three camps that have never produced one and
+-- sit in the impossible tier read 2226 / 2383 / 2907 and are refused by >= 536u.
+-- That is the reading `pulllane`'s 1200 could not produce: at 1200 the numerator
+-- camps sit ON the calibration bracket [1220, 1282).
+local PULL_CAMP_LANE_REACH = 1800
+
+-- True when `vCamp` is within PULL_CAMP_LANE_REACH of the lane polyline
+-- `tLanePath`, i.e. when the neutrals dragged out of that box could reach the
+-- creep wave at all. A nil/empty path means "not armed, or the lane is
+-- unreadable" and answers TRUE, so the caller is byte-for-byte unchanged in that
+-- case -- an engine that cannot say where the lane is must never mute a mechanic.
+--
+-- Deliberately a SEPARATE function from J.IsCampBesideLane rather than that one
+-- parameterised by a constant: one helper carrying two soak ids is the
+-- `pullcad` shape (two ids forced to arm together, neither attributable), and
+-- the sister comment 20 lines up refuses the same refactor for the same reason.
+function J.IsCampWithinPullReach( vCamp, tLanePath )
+	if vCamp == nil or tLanePath == nil or #tLanePath < 2 then return true end
+	for i = 1, #tLanePath - 1 do
+		if DistanceToSegment( vCamp, tLanePath[i], tLanePath[i + 1] )
+			< PULL_CAMP_LANE_REACH
 		then
 			return true
 		end

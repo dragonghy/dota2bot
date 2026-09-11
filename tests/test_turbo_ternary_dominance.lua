@@ -209,7 +209,15 @@ local WINDOW = (function()
     local src = read_file(FARM)
     local at = assert(src:find('%[tbearly%]'),
         'the [tbearly] anchor is gone from ' .. FARM)
-    local w = src:sub(at, at + 2400)
+    -- [GH #740, 20260911] 2400 -> 4800 bytes. The aperture is not an assertion:
+    -- the [tbearly] block grew a correction note (RULING 13 found the "the band
+    -- this moves is 18:00-25:00" sentence to be decidably FALSE -- the outer
+    -- `not J.IsLateGame()` conjunct already pins t <= 1080 in turbo), and at
+    -- 2400 the window stopped 1,020 bytes short of `bEarlyGame`. The
+    -- self-witnessing assert below is what makes widening safe: it fails loudly
+    -- when the aperture misses the clause instead of reporting "the clause
+    -- disappeared".
+    local w = src:sub(at, at + 4800)
     -- Self-witnessing window (charter 0LN2): fail with the truth, not with
     -- "the clause disappeared" when it is merely past the window.
     assert(w:find('bEarlyGame'), 'the source window from [tbearly] no longer '
