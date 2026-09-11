@@ -156,8 +156,8 @@
       "name": "stable-v7",
       "ref": "refs/heads/stable-v7",
       "ref_kind": "branch",
-      "ref_sha": "9aeda130a24fdbac46daf813e9dfbf584356014e",
-      "promote_commit": "9aeda130a24fdbac46daf813e9dfbf584356014e",
+      "ref_sha": "92648c8161170c93f00967730bc41e050c8d339d",
+      "promote_commit": "92648c8161170c93f00967730bc41e050c8d339d",
       "promote_commit_subject": "director: PROMOTE tpdeathbuy + liondrainstop to turbo defaults (stable-v7), armed 34 -> 32",
       "promoted_ids": [
         "tpdeathbuy",
@@ -174,7 +174,8 @@
         "⚠️ **`tpdeathbuy` 是本仓库 promote 过的唯一一条加宽**(死 → 活)。它**不可能被一份「无变化」的读数确认**:读到无变化 = 没到域。任何将来给它定价的波,反向哨兵是「TP 花费不许暴涨」,不是「TP 采购数不许塌」。",
         "⚠️ **`liondrainstop` 带着一个开着的 issue 落地(GH #314),而这是刻意的**:4/36 域内引导被保持而不是被切断 —— **覆盖不足,不是有害**(那些帧上 promoted 腿与出厂树逐字同为不切)。⛔ 与同日**没有** promote 的 `fieldbuy` 逐字对照:GH #734 给那一条量到了**价钱**(买回的药剂 61.1% 先落背包、18.0% 卡死喝不着),这一条没有人量到价钱。**「有开着的 issue」不是判据,「有没有量到价钱」才是。**",
         "⛔ **变异台读 12 CAUGHT / 1 SURVIVED / 0 ABORTED,而那一发存活是登记在案的**(`tools/agent/mutstand_promote_20260911.sh` M10:把 `[promote]` 用例里的 id 禁令松成恒真,没有邻居重新推导它 —— 一个文件抓不住自己的断言被放松)。它**不是**「promote 被悄悄撤销没人发现」:那是 M1,M1 被抓住。全文 test_set.md §GU.5。",
-        "同一个 commit 里还有测试翻面、变异台新建、census 重钉、W65 记录修补与几个 registry 文件 —— 它们**不改变稳定版**(`bots/` 只有上面两处 diff),所以锚点语义不受影响。"
+        "同一个 commit 里还有测试翻面、变异台新建、census 重钉、W65 记录修补与几个 registry 文件 —— 它们**不改变稳定版**(`bots/` 只有上面两处 diff),所以锚点语义不受影响。",
+        "⚠️ **SHA 在落地当轮被 rebase 挪过一次,这一行是那次挪动的记录**:首次写入时 promote commit 是 `9aeda130a24fdbac46daf813e9dfbf584356014e`,`git push origin HEAD:main` 被拒 non-fast-forward(录像组 10:15Z 的两条先到)⇒ `git pull --rebase origin main` 后变成 `92648c8161170c93f00967730bc41e050c8d339d`。**两个不变量都重新量过**,不是承诺:rebase 后重跑 armed 串 md5、`carrier_terms.py`、倒像普查与三条腿的推送闸,读数逐字未变;新进来的两条 commit 只碰 `iterations/`。⛔ **登记这一行的理由**:`stable_anchors.py` 的不变量 2 (ref 仍指着 `ref_sha`)会在 SHA 漂了而本文件没跟着改的那一刻变红,而那时读者会以为**锚点被人移动过** —— 实际是登记那一步排在 rebase 之前。**下一次 promote:先 push 成功、再写 ref_sha。**"
       ]
     }
   ]
