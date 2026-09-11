@@ -1011,7 +1011,9 @@
    "done_when": {
     "kind": "manual"
    },
-   "done_when_note": "批测台任一轮报告里**逐字抄回**当轮现跑的两行:(1) `crossing registry:` 那一行读到 **none in force / 没有 ruling 在力**(⛔ 不是 `IS IN FORCE`,也不是 `NOT CONSULTED` —— 后者是 SKIP 不是读数);(2) `operative ceiling:` 那一行读到 **`$90.00 = min(fence, brake)`** 且其下**没有** `DIRECTOR CROSSING:` 行。⛔ **两行都要当轮现跑,不得抄本裁定里的离线数字** —— 那些是我喂进去的 `--actual/--pending`,不是账单。"
+   "done_when_note": "批测台任一轮报告里**逐字抄回**当轮现跑的两行:(1) `crossing registry:` 那一行读到 **none in force / 没有 ruling 在力**(⛔ 不是 `IS IN FORCE`,也不是 `NOT CONSULTED` —— 后者是 SKIP 不是读数);(2) `operative ceiling:` 那一行读到 **`$90.00 = min(fence, brake)`** 且其下**没有** `DIRECTOR CROSSING:` 行。⛔ **两行都要当轮现跑,不得抄本裁定里的离线数字** —— 那些是我喂进去的 `--actual/--pending`,不是账单。",
+   "status": "DISCHARGED",
+   "discharged": "DISCHARGED 2026-09-11T21:2xZ by batch-desk (W67 launch round). Both required lines were read from a LIVE `wave_fence.py --pending 3.45 --planned 0` run this round (FENCE_READ_EXIT=0), not copied from the ruling's offline replay: (1) `crossing registry: 0 record(s) at /home/user/dota2bot/iterations/director_rulings.json, none in force -- the gate runs at the DERIVED fence.` -- reads `none in force`, not `IS IN FORCE` and not `NOT CONSULTED`; (2) `operative ceiling: $90.00   = min(fence, brake)` with NO `DIRECTOR CROSSING:` line beneath it. The failure shape the ruling named (the retirement only changed the director's own file while the desk's gate still read the old ceiling) is therefore FALSIFIED. Separately the ruling's offline replay is confirmed digit for digit: `--planned 2.15` returned exit 0 with `headroom $3.987 after this wave`. Report: iterations/reports/batch-desk/20260911T212500Z.md section 1."
   }
  ],
  "retired": [

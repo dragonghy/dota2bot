@@ -118,6 +118,7 @@
    10891,
    10900,
    10927,
+   11395,
    333333
   ],
   "centaur": [
@@ -156,7 +157,8 @@
    5404,
    6619,
    7154,
-   10926
+   10926,
+   11395
   ],
   "chaos_knight": [
    101,
@@ -581,6 +583,7 @@
    10900,
    10998,
    11034,
+   11395,
    111111,
    131313,
    222222,
@@ -722,7 +725,8 @@
    7529,
    7964,
    9145,
-   10889
+   10889,
+   11395
   ],
   "jakiro": [
    101,
@@ -786,6 +790,7 @@
    9373,
    10614,
    10889,
+   11395,
    246802,
    444444,
    778899
@@ -1094,6 +1099,7 @@
    10892,
    10927,
    10998,
+   11395,
    131313,
    333333,
    778899
@@ -1435,6 +1441,7 @@
    10892,
    10926,
    10998,
+   11395,
    111111,
    222222,
    424242
@@ -1639,6 +1646,7 @@
    10900,
    10927,
    11034,
+   11395,
    444444
   ],
   "queenofpain": [
@@ -2163,6 +2171,7 @@
    10891,
    10892,
    10927,
+   11395,
    131313,
    222222,
    333333,
@@ -2268,6 +2277,7 @@
    10892,
    10926,
    10927,
+   11395,
    555001
   ],
   "storm_spirit": [
@@ -3290,7 +3300,8 @@
   "spot_20260911_092333_1_main_dae390",
   "spot_20260911_092336_1_main_551784",
   "spot_20260911_092339_1_main_74aefd",
-  "spot_20260911_092342_1_main_399269"
+  "spot_20260911_092342_1_main_399269",
+  "spot_20260911_152456_1_main_8d8c4b"
  ],
  "seeds": {
   "10079": {
@@ -4964,6 +4975,73 @@
      ],
      "runs": [
       "spot_20260828_121646_1_4b2ee33416df1f41617387c93838052296c2aab7_add5f8"
+     ]
+    }
+   ]
+  },
+  "11395": {
+   "cands": [
+    "tpcommit,lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart"
+   ],
+   "dire": [
+    "centaur",
+    "jakiro",
+    "lion",
+    "obsidian_destroyer",
+    "sniper"
+   ],
+   "games": 46,
+   "games_by_cand_side": {
+    "dire": 15,
+    "radiant": 31
+   },
+   "off_roster_games": 0,
+   "positions": {
+    "bristleback": 3,
+    "centaur": 3,
+    "dragon_knight": 1,
+    "ember_spirit": 2,
+    "jakiro": 4,
+    "lion": 5,
+    "obsidian_destroyer": 2,
+    "pudge": 5,
+    "sniper": 1,
+    "spirit_breaker": 4
+   },
+   "positions_verified": true,
+   "radiant": [
+    "bristleback",
+    "dragon_knight",
+    "ember_spirit",
+    "pudge",
+    "spirit_breaker"
+   ],
+   "runs": [
+    "spot_20260911_152456_1_main_8d8c4b"
+   ],
+   "variants": [
+    {
+     "dire": [
+      "centaur",
+      "jakiro",
+      "lion",
+      "obsidian_destroyer",
+      "sniper"
+     ],
+     "games": 46,
+     "games_by_cand_side": {
+      "dire": 15,
+      "radiant": 31
+     },
+     "radiant": [
+      "bristleback",
+      "dragon_knight",
+      "ember_spirit",
+      "pudge",
+      "spirit_breaker"
+     ],
+     "runs": [
+      "spot_20260911_152456_1_main_8d8c4b"
      ]
     }
    ]
