@@ -7942,5 +7942,18 @@
     "iron_rule_6": "`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings` / `lua gate: 333 ran, 0 findings, 15 known-red`;**无 `RULE6_BYPASS`**。⚠️ 过程中踩到本仓自己的老教训:**两台 Lua 电池并发跑**(我先后起了两次 `lua_gate.py`)在 `bots/Customize/soak_side.lua` 上互相踩,`test_soakside_shared_switch.lua` 8 例红 —— **那份读数作废,已单独重跑一次取干净读数**。",
     "ruling_completions": 0,
     "ruling_completions_note": "⛔ **本轮 0,owner P4.2 的产出指标不达标,不粉饰、不抵账。** 取活取的是上一轮清单的 ②(仪器),而 ① 才是「判定完结,主体」。**不拿「十条的倒像半边已买到」抵账** —— 那是证据不是完结。最便宜的 `fieldbuy` **今天 promote 不了**:GH #734 量到买回的药剂 61.1% 先落背包、18.0% 卡死喝不着(一帧里 spirit_breaker 抱着喝不着的药剂从 hp 0.536 死到 0.000)。下一轮主体**必须**是判定完结,且不得再让位给仪器工作。"
+  },
+  "glyphany_20260911": {
+    "owner": "hero",
+    "date": "2026-09-11T08:xxZ",
+    "armed": false,
+    "backlog_item": "hero -147 的下一格。工作单元主体 = 一个 bots/ 行为改动(OWNER_PRIORITIES P4.4 (i));附带一条量具工作 = 清掉本组两条 known-red 普查里的第一条(backlog -145/-146 的欠账)。[hero] open issue 逐条看过:#741/#732/#725/#720/#716/#714/#708 全是已交付、等裁定或等波次的发现,没有可认领的。",
+    "headline": "⭐ **一个全称问题被交给了名单的第一个成员 —— 而这一次被问的那个成员,恰恰是最可能和其余成员答得不一样的那个。** 三条焦点英雄支路在做 AoE 之前问「有没有东西被圣坛保护住了」,问的都只有 `<名单>[1]`:`hero_axe.lua X.ConsiderQ`(狂战士之吼是**无目标**嘲讽,整个环都吃,支路 `#laneCreepList >= 4` 才进)、`hero_lion.lua X.ConsiderQ`(作用点是**否决之后**才算的 `FindAoELocation`)、`hero_lion.lua X.ConsiderR`(最狠的一条:否决完 `[1]`,**再把整张名单重扫一遍**选 `nBestCreep` —— 被审问的那只**可证明地不是**被作用的那只)。",
+    "defect": "归 GH #724 `anyhero` / GH #731 `lvlany` / GH #741 `zusjumpany` 族的**全称方向**:那三条是「存在量化被交给最近的那个」,这一条是「全称量化被交给最近的那个」。与 GH #731 同款,**名单是正确排序的**(`GetNearbyLaneCreeps` 按距离升序),所以**排序修不好它**。⭐ **而距离序在这里是对抗性的**:圣坛只保护施法瞬间在场的兵、持续 5s,所以一个环里**混着两拨兵**恰恰发生在有一只**新来的**贴到 bot 身上的时候 —— 而 `[1]` 点名的就是那只新来的。",
+    "gate": "`J.IsGlyphVetoClear( tUnits )`(`bots/FunLib/jmz_func.lua`),turbo-only,`J.IsSoakCandidate('glyphany')`,**只命名这一个 id**(pullcad 陷阱)。gate off **逐字节**是出厂的 `not tUnits[1]:HasModifier('modifier_fountain_glyph')`(同一次调用、同一个实参)。**方向有保证,这是全部安全论证**:`not any(P)` 蕴含 `not P([1])` ⇒ armed **只能撤回**一次出厂会做的施法,永远不会新增一次(与 `wkqdmg` 同形,纯收窄)。",
+    "scope": "⛔ **只接了三个焦点英雄站点**。`[1]` 这个子类全树约 22 个活站点(普查在 `tests/test_glyph_veto_subject.lua` §1,方向安全的下界),其余是别组的文件,**故意不动** —— 一个杠杆,本组作用域。第四个调用方会**悄悄扩大这个 gate**,所以 §4 把调用方集合钉死;⭐ **变异台 M5 第一版是活的**:调用方计数按**行**数而不是按**出现次数**,同一行写两次调用读作一个。改成逐次出现计数后 M5/M8 双红。",
+    "local_validation": "⛔ **域离线量不出来,而且是两个独立的量具原因,两个都被钉住了**(全 141 帧,每文件驱动一个活体英雄主体,2026-09-11 实测):(1) `GetNearbyLaneCreeps` **不在 `tests/mock/replay_fixture.lua` 的任何 spec 上** ⇒ 落进默认兜底,**141/141** 个主体答空表,**包括那 32 个确实带 `creeps` 采样的文件**;(2) 就算修好 (1) 也还是问不出来 —— 一条兵采样是 `{ team, x, y, dt }`,**没有名字、没有血量、没有 modifier 列表** ⇒ 圣坛谓词无处可读。**只修 (1) 会把一句诚实的『看不见』变成一句自信的、错的『没有兵被保护过』。** §3 把两个读数都写成会红的断言(承 GH #741『假 0 也要写成会红的断言』那一条),哪天量具长出来它自己红并点名。",
+    "tests": "`tests/test_glyph_veto_subject.lua`(4/0,3.7s)。变异台 **8 发**:M1 站点退回 `[1]`、M2 判别子致盲、M3 armed 腿重新下标、M4 gate 丢掉 turbo、M5 第四个调用方(**首发存活**,已修判别子后复发即红)、M6 gate-off 腿漂移、M7 兵采样长出 modifiers、M8 非焦点文件出现调用方 —— **8/8 红,基线绿**。",
+    "admission": "P4.2 入集冻结期,**不请求入集**(唯一合法裁定 FROZEN-HOLD)。新 id,不搭任何捆绑的车。**而且就算冻结解除也先别提**:三条支路全部坐在正向 mode 闸后面(`J.IsPushing`/`IsFarming`/`IsDefending`),而 mock 的 `GetActiveMode()` 答 0 ⇒ 离线一帧都跑不到;(a) 只能靠真实对局买。"
   }
 }

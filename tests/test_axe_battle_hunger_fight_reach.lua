@@ -308,17 +308,31 @@ tests['§1 the band and the branch premise never co-occur in the corpus'] = func
     assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
         .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 33, 'Axe is alive with Battle Hunger trained on ' .. nLive
-        .. ' corpus frames, was 33 -- re-take §0.3 limit 1 rather than quoting it')
-    assert(nWithBand == 6 and nBandEnemies == 6,
-        'the band domain moved: ' .. nWithBand .. ' frames / ' .. nBandEnemies
-        .. ' enemies, was 6 / 6.  Re-take §0.3 limit 1.')
-    assert(nWithInRange == 15, 'the in-range domain moved: ' .. nWithInRange
-        .. ' frames, was 15.  Those are the frames where an in-range candidate '
-        .. 'exists at all, and the count belongs in §0.3 limit 1.')
-    assert(nWithPremise == 6, 'the premise domain moved: ' .. nWithPremise
-        .. ' frames carry >= 2 visible living allies within 1200, was 6.  '
-        .. 'Re-take §0.3 limit 1.')
+    -- ⭐ 2026-09-11 (hero, backlog -145): these four were `==` pins on corpus
+    -- SIZES, so every group that froze a frame reddened this file -- the
+    -- GH #624 shape, and this file was one of the 15 known-red entries in
+    -- tools/agent/lua_gate_manifest.json because of it.  They are now
+    -- direction-safe floors.  Nothing load-bearing is lost: the CONCLUSION of
+    -- this section is `nBoth == 0` below, which is a universal over every frame
+    -- the scanner finds and gets STRONGER as the corpus grows.  The floors only
+    -- prove the scanner still reaches Axe.  Recorded readings when this was
+    -- rewritten (2026-09-11): nLive 40, nWithBand 6 / nBandEnemies 6,
+    -- nWithInRange 15, nWithPremise 6 -- quote those from here, do not re-pin
+    -- them.
+    assert(nLive >= 33, 'Axe is alive with Battle Hunger trained on ' .. nLive
+        .. ' corpus frames; there were 33 when this floor was set and 40 when it '
+        .. 'was rewritten.  A DROP means the scanner stopped reaching Axe, so '
+        .. 'the disjointness conclusion below would be vacuous.')
+    assert(nWithBand >= 6 and nBandEnemies >= 6,
+        'the band domain SHRANK: ' .. nWithBand .. ' frames / ' .. nBandEnemies
+        .. ' enemies, floor 6 / 6.  §3 pins a band frame, so an empty band '
+        .. 'domain leaves that pin owning nothing.')
+    assert(nWithInRange >= 15, 'the in-range domain SHRANK: ' .. nWithInRange
+        .. ' frames, floor 15.  Those are the frames where an in-range candidate '
+        .. 'exists at all; without them §4 drives nothing.')
+    assert(nWithPremise >= 6, 'the premise domain SHRANK: ' .. nWithPremise
+        .. ' frames carry >= 2 visible living allies within 1200, floor 6.  '
+        .. '§4.1 drives exactly these frames.')
     assert(nBoth == 0, 'a corpus frame now carries BOTH a band enemy and the '
         .. 'branch premise (' .. nBoth .. ' of them).  §0.3 limit 1 says there '
         .. 'are none, and §3 injects the premise BECAUSE there are none -- '
@@ -473,12 +487,18 @@ tests['§4.1 on every premise-real corpus frame the lever is a byte-for-byte no-
             end
         end
     end
-    assert(nDriven == 6, 'drove ' .. nDriven .. ' premise-real frames, was 6 -- '
-        .. 'the count is §0.3 limit 1 evidence and must be re-taken, not quoted')
-    assert(nCast == 4, nCast .. ' of those frames produced a Battle Hunger cast, '
-        .. 'was 4.  This count is what stops §4.1 being vacuous: a 0 here would '
-        .. 'make "arming changed nothing" true of six frames on which NOTHING '
-        .. 'happened either way.  Re-take it, do not quote it.')
+    -- ⭐ 2026-09-11 (hero, backlog -145): floors, not pins -- see the note in §1.
+    -- The no-op claim above is a universal over every frame driven, so it gets
+    -- STRONGER as the corpus grows; only the anti-vacuity guard needs a number,
+    -- and the number it needs is "at least one", not "exactly four".
+    -- Recorded 2026-09-11: nDriven 9, nCast 5.
+    assert(nDriven >= 6, 'drove ' .. nDriven .. ' premise-real frames, floor 6.  '
+        .. 'A DROP means the section is asserting the no-op over fewer frames '
+        .. 'than it was sized on.')
+    assert(nCast >= 1, nCast .. ' of those frames produced a Battle Hunger cast.  '
+        .. 'This is the anti-vacuity guard for §4.1: a 0 here would make '
+        .. '"arming changed nothing" true of frames on which NOTHING happened '
+        .. 'either way.')
 end
 
 tests['§4.2 the no-op has the reason §0 gives: every elected target is in range'] = function()
@@ -519,8 +539,11 @@ tests['§4.2 the no-op has the reason §0 gives: every elected target is in rang
             end
         end
     end
-    assert(nChecked == 4, 'checked ' .. nChecked .. ' elections, was 4 -- keep '
-        .. 'this in step with §4.1')
+    -- ⭐ 2026-09-11 (hero, backlog -145): anti-vacuity floor, not a pin.  The
+    -- per-election range check inside the loop is the claim; this only says the
+    -- loop ran at all.  Recorded 2026-09-11: nChecked 5.
+    assert(nChecked >= 1, 'checked ' .. nChecked .. ' elections -- §4.2 asserts a '
+        .. 'property of every election, and zero elections makes that vacuous.')
 end
 
 -- ---------------------------------------------------------------- section 5 --

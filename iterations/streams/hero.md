@@ -22,7 +22,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--147. **⭐ 下一轮:`-146` 与 `-145` 都还欠着 —— 而且照抄的样板现在有三个了。**
+-148. **⭐ 下一轮:`-145` 只剩最后一条了 —— 清 `test_focus_mana_cost_consumer_census.lua`,
+   照抄的样板现在有四个。**
+   本轮(报告 `iterations/reports/hero/20260911T081500Z.md`)按 P4.4 把主体放在一个
+   `bots/` 行为改动上:`glyphany`(Axe + Lion,gated,turbo-only),
+   附带**执行了 `-145` 的一半** —— `test_axe_battle_hunger_fight_reach.lua` 的 6 个
+   `==` 普查钉改成方向安全的界,**它已从 `lua_gate.py` 的 known-red 名单退出(15 → 14)**。
+   - ⛔ **`-145` 剩下的那条**:`tests/test_focus_mana_cost_consumer_census.lua`
+     (2 条 case:`173→176`、`n 26→27`)**今天仍在 known-red 的 14 条里**,仍然是
+     「语料一涨就红」的形状。P4.4 只许量具占**一条附带**,所以本轮只清了一条。
+     ⇒ **下一轮清它**,可照抄的写法现在是**四个**:
+     `test_cast_ring_mirror_discipline.lua`、`test_local_assign_discipline.lua`、
+     `test_zuus_jump_escape_any.lua` §1,以及本轮的
+     **`test_axe_battle_hunger_fight_reach.lua`(最贴的一个 —— 同族、同成因、
+     同一批红消息形状)**。**不要只是把数字重取一遍。**
+   - **⭐ 本轮买到的、值得复用的一条 —— 枚举的粒度必须和缺陷的粒度一样细。**
+     变异台 **M5 首发是活的**:`§4` 断言「`J.IsGlyphVetoClear` 的调用方恰好是这三个」,
+     而计数是按**行**做的 ⇒ `f(x) and f(x)` 写在同一行读作**一个**调用方,
+     第四个调用方**混过去了**。缺陷的粒度是「**一次调用**」,行不是。
+     改成逐次出现计数后 M5/M8 双红,**8/8 全红**。
+     ⇒ 以后写「集合恰好是这几个」的断言,先问一句:**我在数什么单位?**
+   - **⭐ 第二条:一个不可测的量,要两条腿都钉住,钉一条会更糟。**
+     `glyphany` 的域离线为 0,成因有**两个独立的量具**:(1) `GetNearbyLaneCreeps`
+     不在 mock 任何 spec 上 ⇒ 141/141 主体答空表(**包括那 32 个带 `creeps` 采样的
+     文件**);(2) 兵采样是 `{team,x,y,dt}`,**没有 modifier 列表**。
+     **只修 (1),会把一句诚实的「看不见」变成一句自信的、错的「没有兵被保护过」。**
+     §3 把两个都断言住了。这是 GH #741「假 0 要写成会红的断言」的第二个实例。
+   - **⛔ 选杠杆前先查 mode 闸,它和「先查池子」同一层**:`glyphany` 三条支路全部坐在
+     **正向 mode** 后面(`IsPushing`/`IsFarming`/`IsDefending`),mock 的
+     `GetActiveMode()` 答 0 ⇒ **离线一帧都跑不到**。本轮**是先量后写**才知道的,
+     但本可以在选站点的第一分钟就知道。⇒ **候选清单先按「正向 mode / 未 spec 的谓词 /
+     语料里有没有这类实体」筛一遍,再读代码。** 本轮为此丢掉了三个候选
+     (Axe Q 打断支路、CM ConsiderW 对线支路、WK `IsFacingLocation` 报复支路)。
+   - **⚠️ 开工自检:第一次调用被它自己 REFUSED(stdout 是管道,exit 2,
+     它自己记着这是第 6 次复发)**;改重定向后仍卡在
+     `=== trunk health (python test suite) ===`,**被主动 kill**。
+     ⭐ **但 `-147` 那条欠账本轮讨回来了,而且点到了名**:逐条计时跑完 125 个
+     `tests/test_*.py`(437s),**肇事者是 `test_selfcheck_lua_leg.py` ——
+     单独跑 241s、rc=2(9 个 check 没跑成)**,它 `:479` 的 `copytree` 端到端跑
+     真实自检腿,两个 120s 子超时吃满,而它排在自检**最后一节**。
+     与今早 **GH #744** 是**同一行 `copytree`、不同症状**,已作为读数追评过去。
+     另:trunk 上 `test_py_gate.py`(GH #728)与 `test_bots_walk_farm_only.py`
+     两条 rc=1,`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py` 两条 rc=2,
+     **均非本轮造成**。
+
+-147. ~~**⭐ 下一轮:`-146` 与 `-145` 都还欠着 —— 而且照抄的样板现在有三个了。**
+   ✅ **2026-09-11T08:15Z:`-145` 执行了一半**(`test_axe_battle_hunger_fight_reach.lua`
+   已清、已退出 known-red;`test_focus_mana_cost_consumer_census.lua` 仍欠着),
+   **`-147` 点名的自检 python 空洞已取到读数并点名肇事者**。↓ 原文保留
    本轮(报告 `iterations/reports/hero/20260911T050500Z.md`)按**铁律 9 / OWNER_PRIORITIES P4.4**
    把 `-146` 压到附带位:`-146` 要的是**清两条 known-red 普查文件**,那是**量具工作**,
    P4.4 明文说它**不得成为工作单元主体**。主体因此是一个 `bots/` 行为改动:
@@ -6449,6 +6496,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-11T08:15Z(报告 `iterations/reports/hero/20260911T081500Z.md`;**backlog:新开 `-148`,
+  `-147` 划掉,`-145` 执行了一半**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动
+  + **一条**量具附带;**P4.2 冻结期内不请求入集**,只登记
+  `iterations/state.json:glyphany_20260911`)
+  **`glyphany`:三条焦点英雄支路在做 AoE 之前问「有没有东西被圣坛保护住了」,
+  问的都只有 `<名单>[1]` —— 而三条都不作用于 `[1]`。**
+  - **缺陷**:`hero_axe.lua X.ConsiderQ`(狂战士之吼**无目标**,整个环都吃,`>= 4` 才进)、
+    `hero_lion.lua X.ConsiderQ`(作用点是**否决之后**才算的 `FindAoELocation`,`>= 5` 才进)、
+    `hero_lion.lua X.ConsiderR`(**最狠**:否决完 `[1]` 再把整张名单重扫一遍选 `nBestCreep`
+    ⇒ 被审问的那只**可证明地不是**被作用的那只)。
+    ⇒ GH #724/#731/#741 族的**全称方向**;与 #731 同款**名单排序正确**,排序修不好它。
+    ⭐ **距离序在这里是对抗性的**:圣坛只保护施法瞬间在场的兵、持续 5s ⇒ 环里混两拨兵
+    恰恰发生在有一只**新来的**贴上来的时候,而 `[1]` 点名的就是那只。
+  - **改动**:`J.IsGlyphVetoClear( tUnits )`(`bots/FunLib/jmz_func.lua`),turbo-only,
+    只命名 `glyphany` 一个 id。gate off **逐字节**是出厂的 `not tUnits[1]:HasModifier(...)`。
+    **方向 = 纯收窄,由蕴含关系保证**(`not any(P)` ⇒ `not P([1])`)⇒ 只能撤回施法。
+    ⛔ 只接**三个焦点站点**;`[1]` 子类全树约 22 个活站点,别组的 19 个**不代改**。
+  - **本地验证 ⛔ 域为空,两个独立量具原因,两个都钉住了**:(1) `GetNearbyLaneCreeps`
+    不在 mock 任何 spec 上 ⇒ **141/141** 主体答空表(**含那 32 个带 `creeps` 采样的文件**);
+    (2) 兵采样是 `{team,x,y,dt}`,**无 modifier 列表**。**只修 (1) 会把「看不见」
+    变成自信的、错的「没有兵被保护过」。** 另:三条支路全在**正向 mode** 闸后,
+    mock `GetActiveMode()` 答 0 ⇒ 离线一帧都跑不到,(a) 只能靠真实对局买。
+  - **判别子** `tests/test_glyph_veto_subject.lua`(**4/0,3.66s**),变异台 **8/8 红**,
+    ⭐ **M5 首发存活**:调用方按**行**计数,`f(x) and f(x)` 同一行读作一个 ⇒
+    第四个调用方混过去。**枚举的粒度必须和缺陷的粒度一样细。**
+  - **附带(量具,一条)**:`tests/test_axe_battle_hunger_fight_reach.lua` 的 6 个 `==`
+    普查钉改成方向安全的界(§1 的结论 `nBoth == 0` 是全称命题,语料越大越强;
+    反空转的两个改成 `>= 1`,**比 `== 4` 更贴它自己写的用途**)⇒ **14/0**,
+    **已从 `lua_gate.py` 的 known-red 移除:15 → 14**。
+  - **铁律 6 三行**:`GATE_EXIT=0`(luacheck 0 警告)/ `py gate: 95 ran, 0 findings, 29.1s`
+    / `lua gate: 334 ran, 0 findings, 14 known-red, 306.1s`。**未用 `RULE6_BYPASS`。**
+  - **⚠️ 自检**:第一次调用被它自己 REFUSED(管道,**第 6 次复发**);重定向后仍卡在
+    `=== trunk health (python test suite) ===`,主动 kill。⭐ **但 `-147` 那条欠账讨回来了**:
+    手工逐条计时 125 个 py 测试(437s),**肇事者 `test_selfcheck_lua_leg.py` 单独 241s /
+    rc=2(9 check 没跑成)**,已作为读数追评 **GH #744**(同一行 `copytree`,不同症状)。
 - 2026-09-11T05:05Z(报告 `iterations/reports/hero/20260911T050500Z.md`;**backlog:新开 `-147`,
   `-146` / `-145` 未执行、原样留着**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动;
   **P4.2 冻结期内不请求入集**,只登记 `iterations/state.json:zusjumpany_20260911`)

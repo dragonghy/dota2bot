@@ -690,8 +690,12 @@ function X.ConsiderQ()
 		and #hEnemyList == 0
 	then
 		local laneCreepList = bot:GetNearbyLaneCreeps( nRadius - 50, true )
+		-- [glyphany] gate off this is `not laneCreepList[1]:HasModifier(
+		-- "modifier_fountain_glyph" )`, byte for byte.  Berserker's Call taunts
+		-- the WHOLE ring (>= 4 creeps here) and the veto was interrogating one
+		-- of them.  See J.IsGlyphVetoClear in bots/FunLib/jmz_func.lua.
 		if #laneCreepList >= 4
-			and not laneCreepList[1]:HasModifier( "modifier_fountain_glyph" )
+			and J.IsGlyphVetoClear( laneCreepList )
 		then
 			hCastTarget = laneCreepList[1]
 			sCastMotive = 'Q-带线'..(#laneCreepList)

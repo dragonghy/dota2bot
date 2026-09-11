@@ -4070,6 +4070,92 @@ function J.GetBestTeamTarget(bot, enemyHeroes, allyHeroes)
 	return bestTarget
 end
 
+--- SOAK CANDIDATE 'glyphany' (turbo-only, unarmed).  Gate OFF this helper is the
+--- shipped predicate BYTE FOR BYTE: `not tUnits[1]:HasModifier(...)`, same call,
+--- same argument, same order.
+---
+--- THE DEFECT.  Three focus-hero branches veto an AREA action when a creep is
+--- fortified by Glyph, and all three ask that question of `tUnits[1]` ALONE:
+---   bots/BotLib/hero_axe.lua  X.ConsiderQ   (Berserker's Call, the push branch)
+---   bots/BotLib/hero_lion.lua X.ConsiderQ   (Impale, the push branch)
+---   bots/BotLib/hero_lion.lua X.ConsiderR   (scepter Finger, the push branch)
+--- The question those branches are asking is UNIVERSAL -- "is anything I am
+--- about to hit invulnerable" -- because none of them acts on `tUnits[1]`:
+---   * Berserker's Call is a NO-TARGET taunt over `radius`; every unit in the
+---     ring is affected, and the branch only enters with `#laneCreepList >= 4`.
+---   * Lion's Impale branch acts on a `bot:FindAoELocation(...)` POINT, chosen
+---     after the veto, and only enters with `#laneCreepList >= 5`.
+---   * Lion's scepter-Finger branch is the sharpest of the three: it vetoes on
+---     `[1]` and then RESCANS the whole list to pick `nBestCreep` by AoE count.
+---     The unit the veto interrogated is provably not the unit it acts on.
+--- So this is the `anyhero` / `lvlany` / `zusjumpany` family (GH #724 / #731 /
+--- #741) in its UNIVERSAL direction: there the code asked "is the nearest one
+--- X?" of an existential question; here it asks it of a universal one.  As in
+--- GH #731 the list is not disordered -- `GetNearbyLaneCreeps` is distance
+--- sorted (docs/BOT_API_REFERENCE.md) -- so SORTING THE LIST CANNOT FIX IT.
+---
+--- WHY A MIXED LIST EXISTS AT ALL, which is the load-bearing half.  Glyph of
+--- Fortification fortifies a team's lane creeps together, so in the common case
+--- `[1]` and the rest agree and armed is a no-op.  They disagree exactly when
+--- the ring spans two waves: the modifier is applied to the units alive AT CAST
+--- TIME and lasts 5s, so a creep that walks into the ring after the cast (or a
+--- summon, or a neutral pulled into the lane) carries no modifier while its
+--- neighbours do.  `[1]` is the NEAREST unit, i.e. the one most likely to be the
+--- newcomer that closed on the bot -- the veto is being asked of the single
+--- member of the ring most likely to disagree with the rest of it.
+---
+--- DIRECTION IS GUARANTEED, AND THAT IS THE WHOLE SAFETY ARGUMENT.  Armed is a
+--- pure NARROWING: `not any(...)` implies `not tUnits[1]:HasModifier(...)`
+--- whenever `tUnits[1]` is present, so armed can only ever WITHDRAW a cast that
+--- baseline made, never add one.  Same shape as `wkqdmg`.
+---
+--- ⛔ WHAT THIS HELPER DOES NOT DO.  The `[1]` subclass of the glyph idiom is
+--- ~22 live sites tree-wide (census in tests/test_glyph_veto_subject.lua §1).
+--- Only the three focus-hero sites above are routed through here; the rest are
+--- other groups' files and are left ALONE on purpose -- one lever, this stream's
+--- scope.  Adding a caller silently widens the gate, so §2 pins the caller set.
+---
+--- ⛔ THE DOMAIN IS UNMEASURABLE OFFLINE FOR TWO SEPARATE METER REASONS, AND
+--- BOTH ARE PINNED RATHER THAN FOOTNOTED.  Measured 2026-09-11 over all 141
+--- frozen frames (tests/frames/ + tests/fixtures/), one living hero subject
+--- driven per file:
+---   (1) `GetNearbyLaneCreeps` is on NO spec in tests/mock/replay_fixture.lua,
+---       so it falls through to the loader's default and answers the EMPTY
+---       TABLE on 141 of 141 subjects -- including the 32 files that do carry a
+---       `creeps` sample.  Both legs of this helper are therefore silent on
+---       every archived frame, and they are silent IDENTICALLY.
+---   (2) Even with (1) repaired the predicate would still be unanswerable: a
+---       creep sample entry is `{ team, x, y, dt }` -- no unit name, no health,
+---       and NO MODIFIER LIST -- so `HasModifier('modifier_fountain_glyph')`
+---       has nothing to read.  Repairing the getter alone would turn an honest
+---       "cannot see" into a confident, wrong "no creep is ever fortified".
+--- A fixture-driven zero here is a fact about the meter, not a frequency
+--- (GH #715 family; same shape as the `IsFacingLocation` false-0 this stream
+--- bought in GH #741).  tests/test_glyph_veto_subject.lua section 3 ASSERTS
+--- both readings, so the day either meter grows the assertion goes red and
+--- names itself instead of letting the 0 read as a measured domain.
+function J.IsGlyphVetoClear( tUnits )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'glyphany' )
+	then
+		for _, unit in pairs( tUnits )
+		do
+			if unit ~= nil
+				and not unit:IsNull()
+				and unit:HasModifier( 'modifier_fountain_glyph' )
+			then
+				return false
+			end
+		end
+
+		return true
+	end
+
+	return not tUnits[1]:HasModifier( 'modifier_fountain_glyph' )
+
+end
+
+
 function J.CanBeAttacked( unit )
 	return  unit ~= nil
 			and not J.HasForbiddenModifier( unit )

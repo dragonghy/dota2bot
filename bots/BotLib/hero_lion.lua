@@ -829,9 +829,13 @@ function X.ConsiderQ()
 		and not bot:HasScepter()
 	then
 		local laneCreepList = bot:GetNearbyLaneCreeps( 1300, true )
+		-- [glyphany] gate off this is `not laneCreepList[1]:HasModifier(
+		-- "modifier_fountain_glyph" )`, byte for byte.  The branch acts on a
+		-- FindAoELocation point picked after the veto, not on [1].  The
+		-- J.IsValid conjunct above is a separate term and is left alone.
 		if #laneCreepList >= 5
 			and J.IsValid( laneCreepList[1] )
-			and not laneCreepList[1]:HasModifier( "modifier_fountain_glyph" )
+			and J.IsGlyphVetoClear( laneCreepList )
 		then
 			local locationAoEHurt = bot:FindAoELocation( true, false, bot:GetLocation(), nCastRange, nRadius + 90, 0, 0 )
 			if locationAoEHurt.count >= 3
@@ -1423,8 +1427,12 @@ function X.ConsiderR()
 		and #hAllyList <= 2
 	then
 		local nEnemyCreepList = bot:GetNearbyLaneCreeps( 1200, true )
+		-- [glyphany] gate off this is `not nEnemyCreepList[1]:HasModifier(
+		-- "modifier_fountain_glyph" )`, byte for byte.  This is the sharpest of
+		-- the three sites: the loop below RESCANS the whole list for nBestCreep,
+		-- so the unit the veto interrogated is provably not the one acted on.
 		if #nEnemyCreepList >= 5
-			and not nEnemyCreepList[1]:HasModifier( "modifier_fountain_glyph" )
+			and J.IsGlyphVetoClear( nEnemyCreepList )
 		then
 			local nMaxAoeCount = 4
 			local nBestCreep = nil

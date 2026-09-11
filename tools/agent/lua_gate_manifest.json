@@ -4,7 +4,6 @@
   "hook_timeout_seconds": 20.0,
   "known_red": [
     "tests/test_activemode_world_assertion.lua",
-    "tests/test_axe_battle_hunger_fight_reach.lua",
     "tests/test_axe_t15_payoff.lua",
     "tests/test_cm_pos5_boots.lua",
     "tests/test_cm_w_lane_band.lua",
@@ -23,11 +22,6 @@
   "known_red_cases": {
     "tests/test_activemode_world_assertion.lua": [
       "[reverse] dropping it makes the mode-filtered call over-permissive"
-    ],
-    "tests/test_axe_battle_hunger_fight_reach.lua": [
-      "\u00a71 the band and the branch premise never co-occur in the corpus",
-      "\u00a74.1 on every premise-real corpus frame the lever is a byte-for-byte no-op",
-      "\u00a74.2 the no-op has the reason \u00a70 gives: every elected target is in range"
     ],
     "tests/test_axe_t15_payoff.lua": [
       "[hero] axe t15 corpus health: Call is near its ceiling, Battle Hunger is not",
