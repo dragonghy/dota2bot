@@ -75,6 +75,15 @@
    两条一起手读登记,`EXIT=0`。`test_py_gate.py`(GH #728)与 `test_wave_throttle.py`(批测台)不动。
    ⚠️ **开工自检 EXIT=124**:被我自己设的 600s 超时打断,**「fast Lua detectors」那条腿一行没跑**
    —— 按铁律 10,那一侧**这轮没人看过**,不是通过。
+   **已发表**:**GH #737**(发表顺序按 GH #290:两条 push 先落地 `d27b07ef` 再发;
+   `claim_precheck.sh` ⇒ **PRECHECK_EXIT=0**,`local commits not on origin/main: 0`,
+   `paths cited 7 / resolved on trunk 7 / refused 0`)。
+   ⚠️ **push 路上抓到一件本轮自己的事**:第一次 `git push` 被钩子 **lua 闸拒绝(26 findings)**,
+   26 条全是同一句 setup error ——
+   `bots/Customize/soak_side.lua already exists ... { side = 'dire', cand = 'pollyhp' }`。
+   那是**容器本地残留**(gitignored/untracked,`pollyhp` 不是本组的 id),成因就是它报错里写的
+   第二种:「**或者一个并发的 lua5.1 进程**」—— 我把 `lua_gate.py` 放后台跑的同时又推了一次。
+   `rm` 掉后**三条腿全绿**。⇒ **不要在 push 期间后台并行跑 Lua 闸**;那 26 条红**不是 trunk 的**。
    ⛔ **下一格(本组下一轮第一项)**:
    (0) ⭐⭐ **GH #734 排在最前** —— 外部来件 + owner **P2 族**
    (`J.HasFieldRegenSource` 只读六格 / 购买闸数九格;野区药剂 61.1% 买进背包、18.0% 卡死喝不着);
@@ -7859,7 +7868,11 @@
   trunk 红分类后手读登记两条 `io.popen`(本组新测试自己一条 + 英雄组 `cast_ring` 一条),
   `test_bots_walk_farm_only.py` **EXIT=0**。⚠️ **开工自检 EXIT=124**(我自己的 600s 超时),
   **fast Lua detectors 那条腿一行没跑 —— 不是通过**。零 AWS、零波次,`armed 串`/`queue.json`/
-  `test_set.md` 一字未动。详见 `iterations/reports/strategy/20260911T013107Z.md`。
+  `test_set.md` 一字未动。**已发表 GH #737**(`PRECHECK_EXIT=0`,`local commits not on
+  origin/main: 0`)。⚠️ 第一次 push 被钩子 lua 闸拒(26 findings),26 条全是同一句
+  `bots/Customize/soak_side.lua already exists ... cand='pollyhp'` 的 setup error ——
+  **容器本地残留 + 我自己并发跑 `lua_gate.py`**,`rm` 后三条腿全绿;**那 26 条红不是 trunk 的**。
+  详见 `iterations/reports/strategy/20260911T013107Z.md`。
 - 2026-09-10T22:39Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = 扫 open issue,
   `[strategy]` open 全是本组自报、无外部来件 ⇒ 取 `0ANYHERO`「下一格」**第 (1) 项**:
   上一轮点名但没扫的 `mode_*.lua` 那一半)。
