@@ -27,6 +27,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    `bots/` 行为改动上:**`lionraoe`**(Lion,gated,turbo-only,**NARROWING**)—— `X.ConsiderR` 的
    **第三条 reach 约定**(A 杖 AoE 出口的 `nCastRange + 150`),`lionrreach` 点了名却留给了别的 id。
    附带改正了 `X.lion_ShouldCashUltAtWeakest` header 里**一句在写下时就已被同一棵树证伪的话**。
+   **已发表:GH #748**;取证请求 `queue.json:hero-58`。
    - **⭐ 下一轮最该做的两件,按顺序**:
      1. **`-145` 换了文件又回来了,而且这回是三条 Lion 大招文件一起**:
         `test_lion_ult_reach.lua` / `test_lion_ult_cash_weakest.lua` / `test_lion_ult_reserve_domain.lua`
@@ -6573,6 +6574,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **铁律 6 三行**:`GATE_EXIT=0`(luacheck 0 警告)/ `py gate: 96 ran, 0 findings, 34.6s`
     / `lua gate: exit 0`(322 条快 ratchet;76 条慢的与全量套件**不被声称**)。**未用 `RULE6_BYPASS`。**
     ⚠️ **py gate 第一次 exit 3,抓的是本轮自己的产物**(`hero-58` 缺 `status` key),已补、复跑 0。
+  - **已发表:GH #748**(主发现 + 更正 + 「断言在数代码还是在数散文」那条纪律 + 按 ATOM 促成的请裁);
+    **`queue.json:hero-58`**(条件 (a) 取证请求,`status: pending`)。GH #290 顺序:先 push
+    (`main = 57692e1c`)→ `claim_precheck.sh` **PRECHECK_EXIT=0** → 发表。
   - **⚠️ 自检**:第一次调用又被它自己 REFUSED(管道,**第 6 次复发**);重定向后**跑完**,
     worst exit **3**。✅ **`-147` 那条「python 那侧没人看过」本轮不再成立**(python 腿跑完并报红)。
     Lua 那侧 4 条红**全非本轮造成**,且**四条里三条同一个成因**(存活 Lion 帧 27→42、

@@ -8044,7 +8044,7 @@
     "local_validation": "`tests/test_lion_ult_aoe_reach.lua`,**8 tests / 0 failures**。变异台 **7/7 全红**:M1 拆掉 gate(§3 §5 红)、M2 armed 腿不收窄(§4 红)、M3 出口不再路由过 helper(§5 红)、M4 把 `lionsplash` 合取进谓词(§4 §5 红)、M5 改正块不再称那句为假(§1.4 红)、M6 出货 splash 读数变非 0(§1.1 红)、M7 AoE 下限降到 1(§1.3 红)。⭐ **头两次跑是自己的断言抓自己的文档**:§1.4 把改正块里**引用**的那句假命题当成假命题复活了,§5 把 header 里那句「不要写成 `IsSoakCandidate('lionraoe') and IsSoakCandidate('lionsplash')`」的警告读成了**第二个 gate site**。⇒ 修法不是改措辞:**gate site 普查必须先剥注释再数**(`code_only`),而「这句话没了」这种断言在**引用它的改正块存在时**是错的断言,应改成「它只剩一处出现,且那一处在称它为假的那段里」。",
     "tests": "tests/test_lion_ult_aoe_reach.lua(新,8/0)",
     "admission": "**不提入集**(P4.2 冻结期,armed 集仍 >20)。促成时按 **ATOM** 处理:`lionraoe` + `lionsplash` 一起,永不单独 arm 任何一个 —— 见 iterations/queue.json。",
-    "issue": "见本轮报告;MCP 可用则开 [hero] issue,不可用则留在报告里下轮补。",
-    "iron_rule_6": "见本轮报告的闸读数三行。"
+    "issue": "**已发表:GH #748** https://github.com/dragonghy/dota2bot/issues/748(主发现 + 第二节的更正 + 第五节那条通用纪律)。发布顺序按 GH #290:先 push(`main = 57692e1c`),再 `claim_precheck.sh`(**PRECHECK_EXIT=0**,`local commits not on origin/main: 0`,paths cited 4 / resolved 5 / refused 0),最后发表。",
+    "iron_rule_6": "推送时 `.githooks/pre-push` 实跑的三行(rebase 之后、`HEAD -> main` 那一次):`GATE_EXIT=0 CLEAN`(luacheck bots game: 0 警告)/ `py gate: 96 ran, 0 findings, 0 uncertifiable, 32.9s` / `lua gate: 336 ran, 0 findings, 0 uncertifiable, **13 known-red**, 352.7s`。**未用 `RULE6_BYPASS`。** ⭐ `13 known-red` —— 本轮附带在闸自己的读数里落地了(14 → 13)。⚠️ **py gate 第一次是 exit 3,抓到的是本轮自己的产物**(新加的 `queue.json` hero-58 缺 `status` key),已补、复跑 0 —— 作者还没走红就出现了,这正是 GH #616/#624 那条闸该有的样子。⚠️ 动态那半(全量 `run_tests.lua`,~100min,GH #124)**没跑**,也不被上面三行声称;手工跑了受影响面:`test_lion_q_kill_reach` 12/0、`test_gate_claim_consistency` 16/0、`test_special_value_shape` 10/0、`test_lion_r_splash_radius_key` 14/0。"
   }
 }
