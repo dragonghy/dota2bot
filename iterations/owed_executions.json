@@ -799,17 +799,17 @@
     },
     {
       "id": "pullcamp_atom_readmission",
-      "issue": "GH #712(录像组 09-10T13:20Z 的「请裁 DoD 4」;本裁定即它的答复) + 一条本轮新开的 `[strategy]` issue(几何过滤 + 假注释;号码在裁定 push 之后回填,⛔ **本行不预填号码** —— 上一轮刚踩过撞号,而 `#739` 今天 04:04Z 已被协同组自己的一条 issue 占用)",
+      "issue": "GH #712(录像组的「请裁 DoD 4」,本裁定即它的答复,**已追评并关闭**) + **GH #740**(`[strategy]`,几何判据 + `mode_farm_generic` 那句假注释;⛔ 号码是 push 之后回填的,**不预填** —— `#739` 今天 04:04Z 已被协同组自己的一条 issue 占用)",
       "ruling": "总监 **RULING 13**(2026-09-11,档案 `iterations/streams/test_set.md §GS`)—— `pullcamp` 与 `pulldrag` 作为**一个原子**退回出集(armed 37 → 34)。`pullcamp` 的 (a) 在 W62/W63 两份独立语料上判 **BUGGY**(营地到任一兵线最小垂距 2912/2372 vs 实测缰绳 max 1272,连接率 6.7%,每次要价约 19pp 血 + 13s 对线时间);`pulldrag` **没有独立裁定**,它是被结构性带走的(`J.GetLanePullDragTarget` 全仓一个调用点,只经 `J.ShouldPullNeutralCamp` 到达,而后者首两行就是 turbo + `pullcamp` 门)。**重新入集的路只有一条,而且两条 id 必须同批**:`[strategy]` 给营地选择器补一条兵线垂距上限(录像组 §4 的 1350 提案,⚠️ 软肋是 n —— 连接分子 n=4、空带只被两波看过,下一轮用 `pullcamp_camp_gap.py` 在 W64 上复读)+ 一份不再命中 2912/2372 那种营地的读数。⛔ `pulldrag` **不许单独提入集**:单独 armed 在结构上恒 no-op。",
       "ruled_at": "2026-09-11T0x:xxZ",
       "executor": "strategy(几何过滤落地 + fixture)→ replay-check(复读空带)→ director(重新入集裁定)",
       "trigger": "⚠️ **执行方特定、触发时机不特定** ⇒ 本行是提醒不是证明。P4.2 冻结期内**合法裁定只有 FROZEN-HOLD**,所以即使修好了也可能拿不到入集 —— 那**不是掉棒**,登记这一句免得下一轮把它读成掉棒。",
       "delivered_to": [
-        "GH #712 追评并关闭(总监裁定全文)",
-        "iterations/streams/test_set.md §GS.4 / §GS.5",
+        "GH #712 追评并关闭(裁定全文,comment 5629540997)",
+        "GH #740 新开([strategy] 交棒,含两条的验收方式)",
+        "iterations/streams/test_set.md §GS.4 / §GS.5 / §GS.8",
         "iterations/state.json:pullcamp_atom_RETIRED_20260911.readmission",
-        "iterations/reports/director/20260911T0xxxxxZ.md",
-        "一条新开的 [strategy] issue(几何过滤落地 + fixture)"
+        "iterations/reports/director/20260911T041925Z.md"
       ],
       "why_registered_here": "§DR:常驻义务,不属于任何一波 —— 而它**同时是 owner 优先项 P1 的那一棒**(P1 完成定义 2 逐字要求「creeppull(+修好的 pullcamp)经总监批准重新入 armed 集」)。⭐ 立行的直接理由是 P1 自己的历史:2026-08-19 拉野死分支修好之后,因 issue #13 关闭而**从所有队列消失 37 轮**(铁律 9 连带规则的立案现场)。",
       "done_when": {
