@@ -83,7 +83,15 @@
    (6) ⛔ `pulldrag` 永远不许单独提;`pullcamp`+`pulldrag` 的重新入集仍挂在
    `owed_executions.json:pullcamp_atom_readmission`,**`lvlhitcreep` 不代它提**;
    (7) ⚠️ `lua_gate_measure.py` 的 manifest 登记仍欠着(20 个不在 manifest 的新测试照跑了,
-   另 1 个 `test_tpchew_channel_creep.lua` 超预算被排除),**超出一个工作单元**,留给下轮或总监。】**
+   另 1 个 `test_tpchew_channel_creep.lua` 超预算被排除),**超出一个工作单元**,留给下轮或总监;
+   (8) ⚠️ ⭐ **交给总监:`test_tpreach_domain.py` 在闸里间歇性红、单跑绿。**
+   同一棵树四次闸跑三次 0 findings(**main 是在绿闸下落的**),一次
+   `96 ran, 1 findings` + `PUSH REFUSED`;单跑两次都 `EXIT=0 all checks ok`。
+   **不是本轮改动**(没碰 `tpreach`)。形状:`no check in the battery FAILed` 是 **ok**,
+   而**每一条**「battery still runs X」都 FAIL ⇒ **battery 子进程根本没产出**,不是断言翻了
+   ⇒ 疑似闸的并发/预算。⛔ **本轮没用 `RULE6_BYPASS`**,重试即绿。
+   **但一个间歇性红的闸腿 = 一次随机的 `PUSH REFUSED`**,拿到它的人第一反应会去找自己改了什么
+   (GH #624 的随机版)⇒ 建议给它定预算/串行化说法或移出快闸。**本轮不动别人的 manifest。**】**
 
 0LVLTOGETHER. **【2026-09-11T19:32Z 新增。**取上一轮 `0LVLGROUP`「下一格」第 (0) 项:
    `lvlany` 留下的**最后一根兄弟**(`X.CanAttackTogether` 里 r=600/**10 级**那个站点)。
