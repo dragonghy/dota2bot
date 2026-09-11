@@ -525,7 +525,7 @@ tests['the comment strip removes exactly the four known comment-only ids'] = fun
         .. "  'X' is the METAVARIABLE in jmz_func.lua's statement of that same "
         .. 'trap.\n'
         .. '  The two zuus ids were PROMOTED 2026-09-11 as ONE ATOM '
-        .. '(test_set.md §GV). They joined this list in the same commit, and '
+        .. '(test_set.md §GW). They joined this list in the same commit, and '
         .. 'for the same reason as pullbeat: hero_zuus.lua quotes the two gate '
         .. 'lines it DELETED, because the four-combination table that forced '
         .. 'them to move together is unreadable without them -- in particular '

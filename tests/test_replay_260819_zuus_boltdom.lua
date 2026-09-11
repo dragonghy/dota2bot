@@ -210,7 +210,7 @@ end
 
 -- --------------------------------------------- 2. the defect, on the real frame
 
--- PROMOTE 2026-09-11 (test_set.md §GV): 'zusult' and 'zusboltdom' are turbo
+-- PROMOTE 2026-09-11 (test_set.md §GW): 'zusult' and 'zusboltdom' are turbo
 -- defaults now, so "unarmed" is no longer the way to reach the shipped decision
 -- -- NON-TURBO is. Both cases below keep their original assertion verbatim and
 -- only change which switch turns the fix off. That substitution is exact
@@ -318,7 +318,7 @@ end
 -- PROMOTE 2026-09-11: the case that used to live here read "a different armed
 -- candidate does not move it", and its whole point was that ONE id stood
 -- between this call and a non-nil answer. That id is gone, so the question it
--- asked would now be vacuous -- but the question BEHIND it is the one §GV.4
+-- asked would now be vacuous -- but the question BEHIND it is the one §GW.4
 -- says is load-bearing, and it survives the promote intact: the switch is the
 -- CAP'S VALUE, never a candidate id. Pin that instead, with both directions and
 -- with NOTHING armed, which is exactly the configuration that ships.

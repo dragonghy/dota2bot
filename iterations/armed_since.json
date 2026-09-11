@@ -82,7 +82,7 @@
    "precision": "exact",
    "source": "reports/director/20260819T210000Z.md",
    "retired_at": "2026-09-11",
-   "retired_note": "PROMOTE 作为**一个原子**(test_set.md §GV;state.json:zusult_zusboltdom_PROMOTE_20260911)。armed 32 → 30。⛔ 两条没有各自的裁定 —— 单独促进 `zusult` 会把 GH #477 量到的 BUGGY 配置设成默认,单独促进 `zusboltdom` 是一个结构性空操作(它的返回值全文件唯一消费者在 `zusult` 的门后面)⇒ 只有一种合法切法。 动作是删掉 hero_zuus.lua X.zuus_ShouldSaveManaForUlt 里那句 `if not bPostSpend and not J.IsSoakCandidate('zusult') then return false end`;`bPostSpend`(`zusultx` 的加宽)逐字保留。armed 23 天。"
+   "retired_note": "PROMOTE 作为**一个原子**(test_set.md §GW;state.json:zusult_zusboltdom_PROMOTE_20260911)。armed 32 → 30。⛔ 两条没有各自的裁定 —— 单独促进 `zusult` 会把 GH #477 量到的 BUGGY 配置设成默认,单独促进 `zusboltdom` 是一个结构性空操作(它的返回值全文件唯一消费者在 `zusult` 的门后面)⇒ 只有一种合法切法。 动作是删掉 hero_zuus.lua X.zuus_ShouldSaveManaForUlt 里那句 `if not bPostSpend and not J.IsSoakCandidate('zusult') then return false end`;`bPostSpend`(`zusultx` 的加宽)逐字保留。armed 23 天。"
   },
   "wandlimbo": {
    "armed_since": "2026-08-19",
@@ -291,7 +291,7 @@
    "precision": "exact",
    "source": "test_set.md:53",
    "retired_at": "2026-09-11",
-   "retired_note": "PROMOTE 作为**一个原子**(test_set.md §GV;state.json:zusult_zusboltdom_PROMOTE_20260911)。armed 32 → 30。⛔ 两条没有各自的裁定 —— 单独促进 `zusult` 会把 GH #477 量到的 BUGGY 配置设成默认,单独促进 `zusboltdom` 是一个结构性空操作(它的返回值全文件唯一消费者在 `zusult` 的门后面)⇒ 只有一种合法切法。 动作是删掉 hero_zuus.lua X.BoltAoEKillTarget 门里那个 `and J.IsSoakCandidate('zusboltdom')` 合取项;VALUE 判据 `type(nHealthCap)=='number' and nHealthCap <= 0` 逐字保留(§GV.4:写成 VALUE 而不是 id,正是它今天没被这一促进冻死的原因)。armed 6 天。"
+   "retired_note": "PROMOTE 作为**一个原子**(test_set.md §GW;state.json:zusult_zusboltdom_PROMOTE_20260911)。armed 32 → 30。⛔ 两条没有各自的裁定 —— 单独促进 `zusult` 会把 GH #477 量到的 BUGGY 配置设成默认,单独促进 `zusboltdom` 是一个结构性空操作(它的返回值全文件唯一消费者在 `zusult` 的门后面)⇒ 只有一种合法切法。 动作是删掉 hero_zuus.lua X.BoltAoEKillTarget 门里那个 `and J.IsSoakCandidate('zusboltdom')` 合取项;VALUE 判据 `type(nHealthCap)=='number' and nHealthCap <= 0` 逐字保留(§GV.4:写成 VALUE 而不是 id,正是它今天没被这一促进冻死的原因)。armed 6 天。"
   }
  }
 }

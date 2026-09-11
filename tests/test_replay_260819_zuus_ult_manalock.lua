@@ -115,7 +115,7 @@ end
 
 -- ------------------------------------------------------------------- gate off
 
--- PROMOTE 2026-09-11 (test_set.md §GV): 'zusult' is a turbo default now, so
+-- PROMOTE 2026-09-11 (test_set.md §GW): 'zusult' is a turbo default now, so
 -- "nothing armed" no longer selects the shipped decision -- NON-TURBO does.
 -- The assertion is unchanged; only the switch that turns the fix off moved,
 -- and that substitution is exact because the promote deleted the candidate
@@ -291,7 +291,7 @@ end
 -- still leaks the ult reserve into a 90.6%-HP target, and it leaks 95 of the 99
 -- mana he is holding.  Lightning Bolt is asserted UNAFFORDABLE rather than
 -- merely unchosen, so this case cannot go green again on a free-mana world.
--- PROMOTE 2026-09-11 (test_set.md §GV) -- READ THIS BEFORE "FIXING" THIS CASE.
+-- PROMOTE 2026-09-11 (test_set.md §GW) -- READ THIS BEFORE "FIXING" THIS CASE.
 --
 -- This case used to run the whole frame with nothing armed and assert that
 -- shipped Zeus fires Arc Lightning into the 90.6%-HP dragon_knight. The promote
@@ -375,13 +375,13 @@ tests['wiring: SkillsComplement gates both the Q and the W bid'] = function()
         'the Arc Lightning bid must pass through the reserve gate')
     assert(src:find('castWDesire > 0 and X.zuus_ShouldSaveManaForUlt( bot, castWTarget, abilityW )', 1, true),
         'the Lightning Bolt bid must pass through the reserve gate')
-    -- PROMOTE 2026-09-11 (§GV): this used to assert the helper stayed gated
+    -- PROMOTE 2026-09-11 (§GW): this used to assert the helper stayed gated
     -- behind the `zusult` candidate id. It is a turbo default now, so the
     -- claim is inverted -- and inverted rather than deleted on purpose: a
     -- silently reinstated gate is exactly what would make the two cases above
     -- pass for the wrong reason.
     assert(not src:find("IsSoakCandidate( 'zusult' )", 1, true),
-        'zusult was PROMOTED (test_set.md §GV) -- no gate on it may come back '
+        'zusult was PROMOTED (test_set.md §GW) -- no gate on it may come back '
         .. 'without a ruling; the reserve is a turbo default')
     assert(src:find('if not J.IsModeTurbo() then return false end', 1, true),
         'and the turbo-only conjunct the promote left standing is still there')

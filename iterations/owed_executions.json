@@ -945,7 +945,7 @@
    "trigger": "⚠️ 需要**安静容器**与它自己的变异台:这是改一个**判定器**(§GT.1 那条腿两次假阳都出在判定上,危险方向是误报而不是漏报),不是加一行数据。⛔ **本轮不做是有意的** —— 上一轮(07:40Z)自己举过手:让仪器工作挤掉判定完结正是那一轮判定完结 0 的原因,而本轮的清单 ① 逐字是「判定完结继续做主体」。",
    "delivered_to": [
     "iterations/state.json:zusult_zusboltdom_PROMOTE_20260911",
-    "iterations/streams/test_set.md §GV.2"
+    "iterations/streams/test_set.md §GW.2"
    ],
    "why_registered_here": "因为它**跨轮**且**不挂在任何一条还活着的 id 上** —— 今天促进的这两条明天就不在 armed 串里了,而这条发现是关于**普查工具**的,不是关于它们的。写进散文会随报告沉底;写在这里,每一轮自检都会把它读出来。",
    "done_when_note": "倒像普查腿(`tools/agent/` 下 §GT 那条)在**后果极性**上打出第一份读数:对每一条 armed id,若它的产物(返回值 / 被赋值的字段 / 出参)的**全部**消费点都被另一条 id 的门支配,报一条新类别;并在**已知真值**上复现今天这一对(`zusboltdom` 的产物 → `castW2Target` → `X.zuus_ShouldSaveManaForUlt`,⚠️ 这需要用**促进前的那棵树**当夹具,今天的 trunk 上这条门已经不在了)。⛔ **验收句必须由工具自己打出来,裸读得出** —— 手数一条使用点等于按名字选(GH #616 禁)。⛔ 答不出即 UNRESOLVED,**永不静默 False**(§GT.1 逐字)。",
@@ -967,7 +967,7 @@
    "delivered_to": [
     "iterations/queue.json:hero-58.director",
     "iterations/promote_atoms.json:lion_scepter_aoe_exit_is_one_atom",
-    "iterations/streams/test_set.md §GV.7"
+    "iterations/streams/test_set.md §GW.7"
    ],
    "why_registered_here": "因为裁定本身把这条请求**变成了一条不会再被任何一张表读到的行**(`ruled=True`),而它的内容**没有完成**。这是拉野死分支「issue 一关就消失 37 轮」那个形状;本轮的 §GV 恰好又量到同一族的一发(一个机制报的「通了」只是它量的那个量通了),所以这一次把棒显式交出来。",
    "done_when": {

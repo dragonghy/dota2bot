@@ -393,7 +393,7 @@ end
 local abilityASBonus = 0
 
 -- PROMOTED 2026-09-11 (was soak-candidate 'zusult'), turbo default-on, as ONE
--- ATOM with X.BoltAoEKillTarget's 'zusboltdom' below. Ruling: test_set.md §GV;
+-- ATOM with X.BoltAoEKillTarget's 'zusboltdom' below. Ruling: test_set.md §GW;
 -- machine key state.json:zusult_zusboltdom_PROMOTE_20260911.
 --
 -- WHY THE TWO IDS COULD NOT BE PROMOTED SEPARATELY -- this is the load-bearing

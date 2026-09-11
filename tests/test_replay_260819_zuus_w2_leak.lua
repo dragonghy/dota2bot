@@ -179,7 +179,7 @@ end
 
 -- ------------------------------------------------------------------- gate off
 
--- PROMOTE 2026-09-11 (test_set.md §GV): 'zusult' is a turbo default now, so
+-- PROMOTE 2026-09-11 (test_set.md §GW): 'zusult' is a turbo default now, so
 -- "unarmed" no longer selects the shipped decision -- NON-TURBO does. The
 -- assertion is unchanged; only the switch moved, and at the HELPER level that
 -- substitution is exact (`if not J.IsModeTurbo() then return false end` is its
@@ -263,7 +263,7 @@ end
 -- fires reaches its target through J.GetVulnerableWeakestUnit, i.e. through real
 -- positions and real HP only.
 
--- PROMOTE 2026-09-11 (§GV) -- the frame-level "off" moved, and running this
+-- PROMOTE 2026-09-11 (§GW) -- the frame-level "off" moved, and running this
 -- case non-turbo is the repair that LOOKS right and is not: the mode switch
 -- moves every turbo-gated branch in the path at once, so the frame can be taken
 -- by an unrelated branch before the bid under test is reached (measured on the
@@ -344,12 +344,12 @@ tests['wiring: SkillsComplement gates all THREE bids through one gate, one id'] 
         'GH #47: the GROUND Lightning Bolt bid must pass through it too')
     assert(src:find('castW2Desire, castWLocation, castW2Target = X.ConsiderW2()', 1, true),
         'and it must receive the target ConsiderW2 reports')
-    -- PROMOTE 2026-09-11 (§GV): this used to require exactly ONE `zusult` gate
+    -- PROMOTE 2026-09-11 (§GW): this used to require exactly ONE `zusult` gate
     -- call. The promote removed it, so the claim is INVERTED rather than
     -- deleted -- a silently reinstated gate is exactly what would make the
     -- cases above pass for the wrong reason.
     local _, nIds = src:gsub("IsSoakCandidate%( 'zusult' %)", '')
-    assert(nIds == 0, 'zusult was PROMOTED (test_set.md §GV) -- no gate on it '
+    assert(nIds == 0, 'zusult was PROMOTED (test_set.md §GW) -- no gate on it '
         .. 'may come back without a ruling, found ' .. nIds)
     assert(src:find('if not J.IsModeTurbo() then return false end', 1, true),
         'and the turbo-only conjunct the promote left standing is still there')

@@ -205,7 +205,7 @@
    ],
    "ruled_at": "2026-09-11T1x:xxZ",
    "ruled_by": "director",
-   "ref": "iterations/queue.json:hero-58 (acceptance, final paragraph); ruling iterations/streams/test_set.md §GV.7",
+   "ref": "iterations/queue.json:hero-58 (acceptance, final paragraph); ruling iterations/streams/test_set.md §GW.7",
    "direction": "SYMMETRIC on purpose, unlike field_hold_needs_magnitude. Each id is both subject and prereq, so promoting either one while the other is still gated is RED, and promoting both together is clean.",
    "note": [
     "WHY THIS ROW EXISTS AT ALL, given neither id is armed and hero-58 was ruled FROZEN-HOLD:",
