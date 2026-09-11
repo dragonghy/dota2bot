@@ -27,6 +27,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0PULLCHEW. **【2026-09-11T14:18Z 新增。**认领 **GH #250 §4**(上一轮 `0PULLREACH`「下一格」
+   第 (0) 项逐字点名)。落地 gated id **`pullchew`**:`J.IsPullCampChewing` +
+   `PULL_CHEW_LOOKBACK = 6.0` + `PULL_CHEW_NEUTRAL_RADIUS = 1400`,以
+   `J.IsSoakCandidate('pullchew') and bot.roamCampPull == nil and J.IsPullCampChewing(bot)`
+   接在 `J.ShouldPullNeutralCamp` 的**敌方英雄威胁子句之后、营地循环之前**。
+   ⭐⭐ **本条最该被下一轮读到的四句**:
+   (甲) ⭐ **证人是读数不是插图,而那正是本轮唯一那一帧值钱的地方。** 出货的
+   `J.IsLanePullSafe` 在 `f_20260909_212625_lion_235`(silencer **pos 5**,t=**235**)上
+   **答 TRUE** —— 同一帧一个营刚啃掉 **64 血(满血 9.2%)**,**英雄伤害行 0**、1800 内敌方
+   英雄 **0**、HP **0.767 在 0.5 闸之上**。**它答 safe 是因为它拥有的每一条子句问的都是英雄。**
+   (乙) ⭐⭐ **照抄那个常数会让闸一次都开不了火,而这是实测的。**
+   `WasRecentlyDamagedByCreep` 在 1.0/2.0/**3.0** 读 **false**、从 **3.5** 起 true
+   (命中 dt = 3.2/4.2/4.2/5.8/5.9)⇒ **`fieldcreep`/`tpchew` 共用的 3.0 在唯一存在的帧上
+   域是空的**(本族第四例,前三例 GH #13/#277/#648)。推导是**守的是哪个决定**:抄 3.0 的
+   子句否决**瞬时状态**,本条守**承诺**,而承诺是在**脱离之后**做的。
+   ⚠️ **6.0 是仪器能看见的最宽值,不是两个已测类别的分界 —— 一帧一个间隔,分不开 3.5 和 6.0。**
+   (丙) ⭐ **承诺豁免 `bot.roamCampPull == nil` 是强制的不是谨慎。** 戳营**就是**拉野的开始
+   方式 ⇒ 没有它的版本在 aggro 之后每帧都答「有营在打我」,**掐掉它本该保护的每一次拉野**,
+   而**没有任何计数器会报告一次从未发生的拉野**。变异体 **M3** 专打它,**它读起来像一次化简**。
+   (丁) ⭐⭐ **M6 的存活是结构性的,处理方式写进了测试正文。** loader 的中立表是从 `src`
+   伤害行**合成**的 ⇒「中立表非空 ⇒ 创伤为真」在这台仪器上是**恒等式**,**没有任何语料帧
+   能分开两个合取项**(真引擎里视野≠伤害,这恰是该合取项必须留着的理由)⇒ 测试**先在三个
+   英雄上验证恒等式仍成立**(它一破就该换行为测试)、**再**用源码钉,并**逐字标注
+   「这是源码钉代替行为钉,它更弱」**。⛔ **这是本轮唯一一条本地不可证伪的守卫,登记在案。**
+   产出:`tests/test_pullchew_camp_commit.lua` **16/16**、
+   `tools/agent/mutstand_pullchew.sh` **12/12 STAND GREEN**、`state.json:pullchew_20260911`;
+   报告 `iterations/reports/strategy/20260911T141828Z.md`。
+   **附带(三条别人的普查,都是 GH #624 形状,都在同一 commit 手读修掉)**:
+   (i) `test_creepthink_pulldrag_vacuous` 跨文件 grep `\s*=` **把读叫成写** ⇒ `=[^=]`,
+   **声明未动**;(ii) `test_fieldcreep_magnitude_operand`「每站点同一字面量」**第二次重取** ⇒
+   钉「声称共享理由的那两个共享常数 + 第三个保持具名」;(iii) `test_abilanc_ancient_selector`
+   中立 sweep **144→145**,**手读**(committed 5 / 工作树 6)。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **GH #250 §4 的「数量」那一半仍未落地,且今天**依然**落不了地** —— loader 每个不同
+   `src` 名只发**一个**句柄并自陈「不许当普查」⇒ 立案的「12 只叠营」在这台仪器上是**下界 2**。
+   要落地它,**先要一个带真实中立实体的 dumper 读数**,那是**录像组/总监**的棒,不是本组能
+   自己变出来的;`test_pullcamp_trigger_census.lua` 现在把「不许偷偷变成计数阈值」钉成断言。
+   (1) `lvlany` 留下的**第三根兄弟**(`X.CarryFindTarget` 第二处 12 级站点)仍未接;
+   (2) ⛔ **H1/H2 不由本组变成 bots 改动**(两条都要语料读数,H1 已交回录像组);
+   (3) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第九轮有效**);
+   (4) ⛔ 兵营分支(GH #713)仍不落 gate,接力棒是 `tests/test_isvalid_building_sentinel.lua §2b`;
+   (5) ⛔ P4.2 冻结未解 ⇒ 本轮**未提入集**;`tombhp`/`anyhero`/`lvlany`/`lvlcarry`/`bagtango`/
+   `tpchew`/`pullreach` 的裁定请求仍未答,本轮**不催**;
+   (6) ⛔ `pulldrag` 永远不许单独提;`pullcamp`+`pulldrag` 的重新入集仍挂在
+   `owed_executions.json:pullcamp_atom_readmission`,**`pullchew` 不代它提**。】**
+
 0PULLREACH. **【2026-09-11T10:49Z 新增。**认领 **GH #740**(总监 RULING 13 交棒;上一轮
    `0TPCHEW`「下一格」第 (0) 项逐字点名)。落地 gated id **`pullreach`**:
    `J.IsCampWithinPullReach` + `local PULL_CAMP_LANE_REACH = 1800`,以 `and` **追加**在
@@ -7986,6 +8032,52 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-11T14:18Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步先扫 open issue:
+  `[strategy]` open 四件 **全部是前三轮已认领的**(#740/#739/#734 本组落地过,#196 的 `abilanc`
+  在 armed 集等 (a))⇒ 取 backlog `0PULLREACH`「下一格」第 (0) 项逐字点名的 **GH #250 §4**。)
+  ⭐⭐ **接力棒是一条自己会喊的断言,本轮把它花掉了。** `test_pullcamp_trigger_census.lua`
+  的失败信息逐字写着「go land it」,语料涨到**恰好 1 帧**时它红了 ⇒ 本轮把这一帧花在它买的
+  杠杆上,断言从 `== 0` 改成 `== 1` + 一条新的「**计数那一半仍不可落地**」钉子。**棒是花掉的
+  不是掉的。**
+  ⭐⭐ **证人是读数不是插图**:唯一那一帧上**出货的 `J.IsLanePullSafe` 答 TRUE** —— 而同一帧
+  一个营刚从这个 **pos 5** 身上啃掉 **64 血(满血 9.2%,5 次命中,2 个营地成员)**,英雄伤害行
+  **0**、1800 内敌方英雄 **0**、HP **0.767 在出货的 0.5 闸之上**。它答 safe 是因为**它拥有的
+  每一条子句问的都是英雄**。
+  ⭐⭐ **常数是被实测逼出来的**:`WasRecentlyDamagedByCreep` 在 1.0/2.0/**3.0** 读 false、
+  从 **3.5** 起 true(命中 dt = 3.2/4.2/4.2/5.8/5.9)⇒ **`fieldcreep`/`tpchew` 都在用、
+  也就是会被照抄的那个 3.0,在唯一存在的那一帧上域是空的**(本族第四例「闸开不了火」)。
+  推导是关于**守的是哪个决定**:承诺是在**脱离之后**做的,短窗口于是在提问那一刻系统性为假。
+  ⚠️ **6.0 不是两类之间的分界而是仪器能看见的最宽值,一帧一个间隔分不开 3.5 和 6.0** ——
+  登记在案。
+  ⭐ **承诺豁免 `bot.roamCampPull == nil` 是强制的**:戳营**就是**拉野的开始方式,没有它的
+  版本会**掐掉它本该保护的每一次拉野**(而没有任何计数器会报告一次从未发生的拉野)——
+  变异体 **M3** 专打这一条,它读起来像一次化简。
+  ⭐ **变异台第一轮 9/12,三个漏网各指一件真事**:**M6 结构性存活** —— loader 的中立表是从
+  伤害行**合成**的 ⇒「中立表非空 ⇒ 创伤为真」是**恒等式**,**没有语料帧能分开两个合取项**
+  ⇒ 新增一条测试**先验证恒等式仍成立、再用源码钉**,并**逐字标注「源码钉代替行为钉,更弱」**;
+  **M7 ANCHOR AMBIGUOUS(3 处)是闸在正常工作**,修锚点不放松匹配;**M9 第一版是无操作注释,
+  survive 是对的**,而杠杆侧任何变异都动不了那条半径钉(loader 的读数**不接半径参数**)⇒ M9
+  改打 loader。修完 **12/12 STAND GREEN**。
+  ⭐ **本轮顶红三个别人的普查,三条都是 GH #624 形状,三条都在同一 commit 里手读修掉**:
+  (i) `test_creepthink_pulldrag_vacuous` 的跨文件 grep `\s*=` **把每一次读都叫成写**
+  (它自己的注释写着要排除读),要等到有人在 `mode_roam_generic` 之外**读**这两个字段才显形,
+  **`pullchew` 是第一个** ⇒ 修成 `=[^=]`,**声明一字未动也没变弱**;
+  (ii) `test_fieldcreep_magnitude_operand` 的「每个站点同一个字面量」**第二次被重取** ——
+  第三个读**故意不共享 3.0**,于是旧形式会断言一句**假话**、而把数字撞上去会断言一句**空话**
+  ⇒ 改成钉「**声称共享理由的那两个**必须共享常数 + 第三个必须**保持具名**」(具名一旦被写回
+  `3.0` 就是它自己的 M4);
+  (iii) `test_abilanc_ancient_selector` 的中立 sweep **144→145**,**手读**(committed 树
+  jmz_func 5、工作树 6)⇒ 是**读数不是迁就**。
+  产出:`pullchew`(turbo-only,**FROZEN-HOLD,不请求入集**)、
+  `tests/test_pullchew_camp_commit.lua` **16/16**、`tools/agent/mutstand_pullchew.sh`
+  **12/12 STAND GREEN**、`state.json:pullchew_20260911`;
+  报告 `iterations/reports/strategy/20260911T141828Z.md`。
+  **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零波次。
+  **铁律 6 三条腿**:`GATE_EXIT=0` / `py gate: EXIT=0`(96 ran / 0 findings)/
+  `lua gate: EXIT=0`(337 ran / 0 findings / 13 known-red),**未用 BYPASS**。
+  自检 `EXIT=3`,trunk 红 3 个 Lua 文件(`test_lion_ult_reserve_domain` /
+  `test_stayfield2_marginal_domain` / `test_wk_q_castrange_meter_domain`)—— **都不是本组的**。
 
 - 2026-09-11T10:49Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领 **GH #740**,依据是工作流
   第 1 步先扫 open issue:`[strategy]` open 里最新的一件就是 #740(04:34:54Z),且上一轮

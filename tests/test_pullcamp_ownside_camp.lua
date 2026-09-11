@@ -281,7 +281,12 @@ local function source()
     local src = fh:read('*a'); fh:close()
     local at = assert(src:find('function J.ShouldPullNeutralCamp', 1, true),
         'J.ShouldPullNeutralCamp moved')
-    local body = src:sub(at, at + 14000)
+    -- [20260911] 14000 -> 18000: 'pullchew' (GH #250 §4) added ~1,900 chars of
+    -- clause and header above `return vBest`. Same treatment as the GH #117 §4
+    -- widening the header describes -- the APERTURE moves, the pins below do
+    -- not, and the self-check assertion that follows still fails loudly on the
+    -- next insertion.
+    local body = src:sub(at, at + 18000)
     assert(body:find('return vBest', 1, true),
         'the source window no longer reaches the end of J.ShouldPullNeutralCamp '
         .. '-- widen it; the pins below are about the clauses, not about length')

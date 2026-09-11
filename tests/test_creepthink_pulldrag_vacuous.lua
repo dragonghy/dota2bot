@@ -333,8 +333,20 @@ tests['[source S2] the two pull plans are never non-nil together'] = function()
     assert(code:find('bot%.roamCreepPull, bot%.roamCampPull = nil, nil'),
         'the no-plan path no longer clears both fields')
     -- and nothing outside this file writes them at all
+    --
+    -- [20260911] THE PATTERN, NOT THE CLAIM, WAS WRONG. `\s*=` also matches the
+    -- `==` of a COMPARISON, so this grep called every read a write -- the same
+    -- write/read distinction this test's own header says it excludes ("that
+    -- shape excludes the reads"). It could not show until something outside
+    -- mode_roam_generic read one of these fields, and `pullchew` (GH #250 §4)
+    -- is the first: J.ShouldPullNeutralCamp asks `bot.roamCampPull == nil` to
+    -- tell a pull being STARTED from one already under way. `=[^=]` keeps every
+    -- real assignment (`= nil`, `= vCamp`, `= pull`) and drops `==`; `~=`, `>=`
+    -- and `<=` never matched, since \s* cannot span the leading character.
+    -- The claim below is unchanged and no weaker: an actual outside write is
+    -- still a failure.
     local p = assert(io.popen(
-        'grep -rl "roam\\(Creep\\|Camp\\)Pull\\s*=" bots/ | sort'))
+        'grep -rl "roam\\(Creep\\|Camp\\)Pull\\s*=[^=]" bots/ | sort'))
     local files = p:read('*a')
     p:close()
     assert(files == MODE_SRC .. '\n', 'the pull plan fields are now written '

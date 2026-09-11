@@ -372,8 +372,17 @@ tests['[limit] the [1] and centre-of-mass readers are untouched, and counted'] =
     -- below is a reading and not an accommodation. This is the GH #624 shape
     -- -- a structural census that only the NEXT desk's session would otherwise
     -- have found red, hours later, with its author gone.
+    -- 2026-09-11 (strategy, GH #250 §4): 144 -> 145, the SECOND consecutive
+    -- +1 from this stream and read the same way. The one added site is
+    -- jmz_func.lua's `J.IsPullCampChewing` (soak candidate 'pullchew'), the
+    -- narrowing conjunct that stops a recent-creep-damage read from firing on
+    -- LANE creeps. HAND-RE-TAKEN in the same commit that landed it: counted on
+    -- the committed file (jmz_func 5) and on the working one (6), so the +1 is
+    -- attributable to a single line (the `return #bot:GetNearbyNeutralCreeps(
+    -- PULL_CHEW_NEUTRAL_RADIUS ) > 0` above) and this number is a reading, not
+    -- an accommodation.
     local nSweeps = count(':GetNearbyNeutralCreeps(')
-    assert(nSweeps == 144, 'neutral sweeps in bots/; got ' .. tostring(nSweeps))
+    assert(nSweeps == 145, 'neutral sweeps in bots/; got ' .. tostring(nSweeps))
     local nCentre = count('J\\.GetCenterOfUnits')
     assert(nCentre >= 13, 'the AoE centre readers are still there; got ' .. tostring(nCentre))
 end

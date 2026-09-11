@@ -10844,6 +10844,36 @@ function J.ShouldPullNeutralCamp( bot )
 	-- Never pull under threat -- being caught mid-pull just feeds a death.
 	if #J.GetEnemiesNearLoc( bot:GetLocation(), 800 ) > 0 then return nil end
 
+	-- [GH #250 §4, 20260911] THE SAME CLAUSE, ASKED ABOUT THE OTHER HALF OF THE
+	-- MAP'S UNITS -- soak candidate 'pullchew'. The line above is this helper's
+	-- whole notion of "threat", and it counts ENEMY HEROES. The replay desk's
+	-- W16 episode cost 42pp of HP without a single enemy hero on screen: a pos 5
+	-- walked into a stacked camp, stood in it for 8 seconds (coordinates
+	-- byte-identical 343.5 -> 350.5), went 1.00 -> 0.58 HP and burned a TP to
+	-- leave. Neutrals are not in the predicate's domain at all, so that is not a
+	-- threat this trigger can decline.
+	--
+	-- WHAT IS GUARDED IS THE COMMITMENT, NOT THE DRAG. `bot.roamCampPull == nil`
+	-- restricts this to the frame a NEW pull is decided on; once a plan exists
+	-- every line here is byte-for-byte the shipped path. That exemption is
+	-- mandatory rather than cautious: aggroing the camp is how a pull STARTS, so
+	-- a version without it answers "a camp is hitting me" on every frame after
+	-- aggro and would abort every legitimate pull it has -- muting the mechanic
+	-- the owner has named twice, which is the `lanefix` trade this stream has
+	-- already paid for. The field is read, not passed, because
+	-- J.ShouldPullNeutralCamp has exactly ONE call site (mode_roam_generic's
+	-- GetDesire, which assigns that same field on the next line) and widening
+	-- the arity would hand GH #188's ratchet the 16-call-point shape 'abilanc'
+	-- was refused for.
+	--
+	-- Gated STANDALONE. One soak id on the line -- the `pullcad` trap is that a
+	-- conjunction of two ids freezes FALSE the day either is promoted.
+	if J.IsSoakCandidate( 'pullchew' ) and bot.roamCampPull == nil
+		and J.IsPullCampChewing( bot )
+	then
+		return nil
+	end
+
 	-- Unfavorable equilibrium: our lane front is pushed PAST the lane midpoint
 	-- toward the enemy (our creeps are dying forward). If the lane is even or in
 	-- our favor there is nothing to reset -- fall through and keep laning.
@@ -11133,6 +11163,72 @@ function J.IsCampWithinPullReach( vCamp, tLanePath )
 		end
 	end
 	return false
+end
+
+-- [GH #250 §4, 20260911] How far back 'pullchew' looks for the camp's teeth,
+-- in seconds.
+--
+-- ⛔ 3.0 -- the constant `fieldcreep` and `tpchew` both use for the same engine
+-- probe, and therefore the one that would be copied -- IS EMPTY ON THE ONLY
+-- FRAME THIS CORPUS HAS. Measured, not feared: on the witness frame
+-- (f_20260909_212625_lion_235, silencer pos 5, t=235)
+-- bot:WasRecentlyDamagedByCreep reads FALSE at 1.0/2.0/3.0 and TRUE from 3.5 up,
+-- because the five neutral hits sit at dt 3.2/4.2/4.2/5.8/5.9. A 3.0 lookback
+-- here is a guard that cannot fire, which is this family's own recurring defect
+-- (GH #13's vision clause, GH #277's 800 veto, GH #648's nLane) found a fourth
+-- time by pricing the constant instead of inheriting it.
+--
+-- THE DERIVATION, which is about WHICH DECISION is being guarded rather than
+-- about the number. The clauses that copy 3.0 veto an INSTANTANEOUS state ("am
+-- I being hit right now"). This one gates a COMMITMENT -- leave the lane, walk
+-- to a box, aggro what is in it -- and that decision is taken AFTER the bot has
+-- broken away from whatever was chewing it. A short lookback is therefore
+-- systematically false at the moment the question is asked: it would demand the
+-- very state disengaging removes, which is verbatim the GH #13 shape ("the
+-- trigger demanded the very state the pull is supposed to produce"). The
+-- witness frame is that argument's evidence, not an illustration of it -- the
+-- last tooth is 3.2s old at the decision instant.
+--
+-- ⚠️ THE HONEST BOUNDARY, declared because the anti-SILENT side is the only one
+-- this corpus can see. 6.0 is the WIDEST the instrument can witness at all (it
+-- is make_fixture.py's recorded `recent_window` and the loader's own
+-- NEUTRAL_LOOKBACK), so it is chosen as the widest value that is measurable,
+-- not as a separation between two measured classes -- there is one frame and
+-- one gap, and nothing here distinguishes 3.5 from 6.0. The too-wide direction
+-- is bounded by the SECOND conjunct below, not by this number.
+local PULL_CHEW_LOOKBACK = 6.0
+
+-- [GH #250 §4, 20260911] How near a neutral must still be for 'pullchew' to
+-- read the recent creep damage as a CAMP's, in units.
+--
+-- The narrowing is mandatory and its size is the reason: the engine probe
+-- cannot tell a neutral from a lane creep (tpchew measured the split at 6/6 on
+-- the twelve attributable frames), and a support in lane is hit by lane creeps
+-- constantly -- an un-narrowed version would veto pulls on lane-creep damage
+-- half the time. This corpus carries that control naturally rather than
+-- modelled: on the witness frame itself the enemy carry reads
+-- WasRecentlyDamagedByCreep(6.0) == true with an empty neutral list, from two
+-- `npc_dota_creep_goodguys_ranged` rows.
+--
+-- 1400 is the radius this same family already uses for "is the camp here"
+-- (mode_roam_generic's bCampHere), chosen over a tighter ring for the same
+-- reason the lookback is wide: the bot asks this after stepping away from the
+-- box, and a camp it just disengaged from is still within a stride of it.
+--
+-- ⚠️ NOT LOCALLY VALIDATABLE, and it must not be reported as if it were: the
+-- loader stands each synthesized neutral ON the subject, so EVERY radius
+-- answers the same list (measured: 2 handles at 400/700/1000/1400 alike). Any
+-- domain read through this constant is an UPPER bound on the guard firing.
+local PULL_CHEW_NEUTRAL_RADIUS = 1400
+
+-- TRUE when a neutral camp has taken a bite out of `bot` recently enough, and
+-- is still near enough, to count as the threat the pull trigger's enemy-hero
+-- clause cannot see. Pure predicate, no gate inside: the caller owns the
+-- 'pullchew' gate so that an unarmed game never reaches either engine call.
+function J.IsPullCampChewing( bot )
+	if bot == nil then return false end
+	if not bot:WasRecentlyDamagedByCreep( PULL_CHEW_LOOKBACK ) then return false end
+	return #bot:GetNearbyNeutralCreeps( PULL_CHEW_NEUTRAL_RADIUS ) > 0
 end
 
 -- Closest point on the SEGMENT ab. Deliberately NOT a refactor of

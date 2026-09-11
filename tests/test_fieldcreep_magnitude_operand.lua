@@ -261,22 +261,56 @@ tests['[source] the engine gives a boolean with a lookback, and nothing else'] =
     -- one the second site actually depends on.
     -- tests/test_tpchew_channel_creep.lua asserts the same equality from the
     -- other end, on purpose: neither file can drift alone.
+    -- ⭐ [20260911, strategy, GH #250 §4] RE-TAKEN A SECOND TIME, and the shape
+    -- of the claim changes rather than its strength. A THIRD read landed
+    -- ('pullchew'), and it deliberately does NOT share the 3.0 -- so the
+    -- previous form ("every site, the same literal") would now be asserting
+    -- something false, and bumping its number would assert something vacuous.
+    --
+    -- WHAT IS ACTUALLY TRUE, and what both comments actually depend on: the two
+    -- sites that CLAIM to share a reason must share the constant. 'pullchew'
+    -- claims the opposite in as many words -- its header prices 3.0 and rejects
+    -- it, because that clause guards a COMMITMENT taken after disengaging
+    -- rather than an instantaneous state, and 3.0 is measured FALSE on the only
+    -- frame in the corpus that can witness it (dt 3.2). A divergence that is
+    -- derived and written down is not the drift this guard was built to catch;
+    -- an UNDECLARED one still is, which is why the third site is pinned to be
+    -- different rather than merely tolerated.
+    -- tests/test_tpchew_channel_creep.lua counts the 3.0 sites from the other
+    -- end and is UNAFFECTED by the third read, because it matches the literal.
     local n = 0
     for _ in JMZ_CODE:gmatch('WasRecentlyDamagedByCreep') do n = n + 1 end
-    assert(n == 2, 'jmz_func now has ' .. n .. ' creep-damage reads, not the 2 '
-        .. "this file was re-taken over ('fieldcreep' and 'tpchew'); the "
-        .. 'operand argument below is taken over all of them')
+    assert(n == 3, 'jmz_func now has ' .. n .. ' creep-damage reads, not the 3 '
+        .. "this file was re-taken over ('fieldcreep', 'tpchew', 'pullchew'); "
+        .. 'the operand argument below is taken over all of them')
     local lookbacks = {}
-    for lit in JMZ_CODE:gmatch('bot:WasRecentlyDamagedByCreep%(%s*([%d%.]+)%s*%)') do
+    for lit in JMZ_CODE:gmatch('bot:WasRecentlyDamagedByCreep%(%s*([%w_%.]+)%s*%)') do
         lookbacks[#lookbacks + 1] = lit
     end
-    assert(#lookbacks == n, 'every creep read must pass a LITERAL interval; got '
-        .. #lookbacks .. ' literals for ' .. n .. ' reads')
+    assert(#lookbacks == n, 'every creep read must pass a literal interval or a '
+        .. 'NAMED constant -- nothing computed inline; got ' .. #lookbacks
+        .. ' operands for ' .. n .. ' reads')
+    local shared, named = 0, 0
     for _, lit in ipairs(lookbacks) do
-        assert(tonumber(lit) == LOOKBACK, 'creep reads have drifted apart: '
-            .. lit .. ' vs ' .. tostring(LOOKBACK) .. ' -- the "same constant, '
-            .. 'same reason" argument in both comments is no longer true')
+        if tonumber(lit) ~= nil then
+            assert(tonumber(lit) == LOOKBACK, 'a LITERAL creep read has drifted: '
+                .. lit .. ' vs ' .. tostring(LOOKBACK) .. ' -- the "same '
+                .. 'constant, same reason" argument shared by the \'fieldcreep\' '
+                .. 'and \'tpchew\' comments is no longer true')
+            shared = shared + 1
+        else
+            -- The declared divergence. It must stay NAMED: the day it is spelt
+            -- `3.0` inline it has silently rejoined the shared-reason pair,
+            -- which is exactly the mutation its own stand calls M4 (the lever
+            -- then cannot fire on the only frame that witnesses it).
+            assert(lit == 'PULL_CHEW_LOOKBACK', 'an unrecognised named lookback '
+                .. '(' .. lit .. ') joined the creep reads -- a third reason '
+                .. 'needs its derivation read before this guard admits it')
+            named = named + 1
+        end
     end
+    assert(shared == 2 and named == 1, 'expected 2 shared-reason reads at the '
+        .. 'literal and 1 declared divergence, got ' .. shared .. ' and ' .. named)
     assert(LOOKBACK == 3.0, 'the lookback moved to ' .. tostring(LOOKBACK)
         .. ' -- the census populations were taken at 3.0, re-read them')
 
@@ -491,10 +525,22 @@ tests['[control] the comment stripper works, and today it is not load-bearing'] 
         .. 'registered has re-opened: a JMZ_CODE -> JMZ_SRC mutation would '
         .. 'survive the [source] count again, and that has to be said out loud '
         .. 'rather than left as a silently toothless guard')
-    assert(raw - code == 1, 'expected exactly one prose mention of the call (the '
-        .. "'tpchew' comment's shared-probe argument), got " .. (raw - code)
+    -- [20260911, GH #250 §4] 1 -> 3, and the difference was RE-READ BY HAND
+    -- rather than bumped to whatever made it green (the message above demands
+    -- exactly that). The three prose mentions, each located and attributed:
+    --   * the 'tpchew' comment's shared-probe argument (CLAUSE 1 header);
+    --   * PULL_CHEW_LOOKBACK's header, quoting the probe to report that it
+    --     reads FALSE at 3.0 and TRUE from 3.5 on the witness frame;
+    --   * PULL_CHEW_NEUTRAL_RADIUS's header, quoting it again for the lane-creep
+    --     control (the enemy carry reads true with an empty neutral list).
+    -- Both new ones are QUOTING comments, which this assertion's own message
+    -- calls fine; the thing it is guarding against -- an uncommented new call
+    -- site slipping past [source] -- is separately pinned there at 3 reads.
+    assert(raw - code == 3, 'expected three prose mentions of the call (the '
+        .. "'tpchew' shared-probe argument and the two 'pullchew' constant "
+        .. 'headers), got ' .. (raw - code)
         .. ' -- re-read them: a NEW quoting comment is fine, a new uncommented '
-        .. 'call site is a third creep read and [source] must move with it')
+        .. 'call site is a fourth creep read and [source] must move with it')
 end
 
 tests['[limit] what this file does not buy'] = function()

@@ -750,21 +750,42 @@ tests['[GH #250] the camp loop is never reached -- the refusal comes first'] = f
         .. 'before trusting the count')
 end
 
-tests['[GH #250 §4] the neutral-count clause has an empty offline domain'] = function()
-    -- The issue's second suggestion, ruled on the same way: the safety clause
-    -- only counts ENEMY HEROES, and a pos 5 walking into a 12-stack camp is a
-    -- loss the clause cannot see. That is a defensible lever -- and it cannot
-    -- be landed under this stream's discipline today, because the corpus has no
-    -- frame to pin it on. Fixtures carry no neutral ENTITIES at all (STOPPER 1,
-    -- camp_up == 0 everywhere); the only trace of a neutral is a recent-damage
-    -- row with a `src` name, and there are 3 of those in the whole corpus, 1 on
-    -- a non-core, and 0 inside the laning window the pull lives in.
+tests['[GH #250 §4] the damage half is landed; the COUNT half still has no frame'] = function()
+    -- The issue's second suggestion, in two halves -- "中野的数量或伤害", the
+    -- COUNT or the DAMAGE -- which this section used to rule on as one.
+    --
+    -- THE DAMAGE HALF IS LANDED (20260911, soak candidate 'pullchew'). This
+    -- assertion held `== 0` with the message "go land it" until the corpus
+    -- gained its first non-core frame damaged by a named neutral inside the
+    -- pull window. It gained exactly one, that one is now the witness in
+    -- tests/test_pullchew_camp_commit.lua, and the baton is therefore SPENT
+    -- rather than dropped. What the census keeps doing is guarding the DENSITY:
+    -- the witness is the whole domain, so if this number moves the lever's file
+    -- is reading a corpus it was not derived on.
     cs.ratchet(C('neut_dmg'), 3, 'frames damaged by a named neutral')
     cs.ratchet(C('neut_dmg_support'), 1, 'non-core frames damaged by a neutral')
-    assert(C('neut_dmg_support_window') == 0,
-        'a non-core frame damaged by neutrals now exists inside the 60-360s '
-        .. 'pull window (' .. C('neut_dmg_support_window') .. ') -- the lever '
-        .. 'GH #250 §4 proposes has become fixture-validatable; go land it')
+    assert(C('neut_dmg_support_window') == 1,
+        'the in-window non-core neutral-damage corpus is no longer the single '
+        .. 'frame `pullchew` was derived on (' .. C('neut_dmg_support_window')
+        .. ') -- re-read tests/test_pullchew_camp_commit.lua section 1 before '
+        .. 'quoting its readings; more frames is GOOD NEWS and means the '
+        .. 'lookback constant can finally be separated from 3.5')
+    -- THE COUNT HALF IS STILL UNLANDABLE, and it is stated separately now so
+    -- that landing the damage half cannot be mistaken for answering it. A camp
+    -- SIZE cannot be read on this instrument at all: the loader hands out one
+    -- handle per distinct source NAME and says in its own comment that no
+    -- consumer may read it as a census, so GH #250's 12-stack is a lower bound
+    -- of 2 here. 'pullchew' deliberately does not count anything.
+    local src = assert(io.open('bots/FunLib/jmz_func.lua', 'r'))
+    local lib = src:read('*a'); src:close()
+    local at = assert(lib:find('function J.IsPullCampChewing', 1, true),
+        "the 'pullchew' predicate is gone -- this section's baton was spent on "
+        .. 'it; re-read GH #250 §4')
+    local body = lib:sub(at, assert(lib:find('\nend\n', at, true)))
+    assert(body:find('> 0', 1, true) and not body:find('> 1', 1, true),
+        'the predicate now thresholds on a neutral COUNT -- that half of GH '
+        .. '#250 §4 is not measurable on this instrument (one handle per '
+        .. 'distinct source name); see the loader comment before trusting it')
 end
 
 tests['[reverse][GH #250] the camp loop is still the terminal clause'] = function()
