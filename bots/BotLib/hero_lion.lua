@@ -1994,18 +1994,37 @@ function X.lion_IsDrainCombatTargetCastable( hTarget )
 end
 
 
---- [liondrainstop] gated (turbo + soak candidate): should Lion RELEASE an
---- already-running Mana Drain channel right now? True only when the same
---- pressure test that refuses to start one (a hero currently killing him AND
---- inside X.nEDrainDangerRadius) is met -- the second lever, one at a time.
+--- PROMOTED 2026-09-11 (was soak-candidate 'liondrainstop'); test_set.md §GU.2.
+--- Turbo default: should Lion RELEASE an already-running Mana Drain channel
+--- right now? True only when the same pressure test that refuses to start one
+--- (a hero currently killing him AND inside X.nEDrainDangerRadius) is met.
 --- Deliberately uses the SAME predicate as lion_IsDrainSafeToStart (with the
 --- polarity flipped): start-refusal cannot save a channel that starts clean
 --- and turns unsafe (an enemy walks in / begins hitting Lion during it), so
---- this catches the residual class the start guard cannot see. Gate off (or
---- non-turbo) => false, and X.ConsiderStopDrain keeps its shipped shape.
+--- this catches the residual class the start guard cannot see. Non-turbo =>
+--- false byte for byte, and X.ConsiderStopDrain keeps its shipped shape there.
+--- (a) replay-check 2026-09-09T18:40Z, W60 corpus: WORKING, episodes=36.
+---     32/36 in-domain channels end on the very frame the predicate holds;
+---     the out-of-domain negative control shows NO leg difference (3.178 /
+---     3.375 vs 3.119 / 3.125 mean length across both strata), so the
+---     shortening happens only inside the predicate's domain -- which rules
+---     out every "Lion just drains less overall" alternative, `lionqdmg`
+---     included (29/32 cut points carry no Lion cast at all).
+--- (b) family-level, 5 waves that all carried it (W55/W58/W62/W63/W64):
+---     mean -2.66 gpm over 722 scored games, winrate channel DEGENERATE.
+---     Coarse "no clear negative" (iron rule 2b) -- NOT positive evidence.
+--- (c) a rooted channel is by construction not walking home, so the shipped
+---     J.IsRetreating release can never fire for it; standing still under
+---     hero fire to finish a drain is the decision no human makes.
+--- ⚠ GH #314 stays OPEN: 4/36 in-domain channels were held rather than cut.
+---     That is a COVERAGE shortfall, not harm -- on those frames the promoted
+---     leg does exactly what the shipped tree already did.  Candidate root
+---     cause (fog: the gate's enemy list is vision-limited, the census is
+---     omniscient) is undecidable offline until the dumper carries per-team
+---     vision (state.json:liondrainstop_VISION_DOMAIN_20260829).
 function X.lion_ShouldStopDrain( hBot )
 
-	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end
+	if not J.IsModeTurbo() then return false end
 
 	if not hBot:WasRecentlyDamagedByAnyHero( 2.0 ) then return false end
 

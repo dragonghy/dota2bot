@@ -108,7 +108,11 @@ end)()
 local BLOCK = (function()
     local at = assert(SRC:find('死前如果会损失金钱则购买额外TP', 1, true),
         'the 死前如果会损失金钱则购买额外TP block lost its comment anchor')
-    local block = SRC:sub(at, at + 2200)
+    -- 3400, not 2200: the PROMOTE of 2026-09-11 (test_set.md §GU.1) moved the
+    -- three-condition ruling into the block's own comment, which is where a
+    -- promoted lever's rationale has to live -- after the gate is gone, the
+    -- source comment is the only place a reader still meets it.
+    local block = SRC:sub(at, at + 3400)
     -- Self-witnessing window (charter 0LN2): it must reach the purchase call,
     -- or every extraction below silently measures a truncated block.
     assert(block:find("ActionImmediate_PurchaseItem( \"item_tpscroll\" )", 1, true),
@@ -160,15 +164,20 @@ LO = num(LO, 'the gate-off HP predicate is no longer `botHP < A and botHP >= B` 
     .. 'file is about a defect that no longer exists; delete it deliberately')
 HI = num(HI, 'the gate-off HP predicate lost its upper bound')
 
--- The armed reassignment, read out of ITS OWN gate body (not the block at
+-- The turbo reassignment, read out of ITS OWN branch body (not the block at
 -- large): a block-wide match would happily return the default line again.
+--
+-- PROMOTED 2026-09-11 (test_set.md §GU.1). This used to demand the branch be
+-- guarded by `J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy')`. Leaving it
+-- that way after the promote would be a test ASKING FOR THE DEFECT BACK, so it
+-- is flipped rather than deleted: the branch must now be turbo-and-nothing-else,
+-- and the [promote] case below asserts the id is gone from the file entirely.
 local ARMED_BODY = (function()
-    local body = BLOCK_CODE:match(
-        "if J%.IsModeTurbo%(%) and J%.IsSoakCandidate%('tpdeathbuy'%) then(.-)\n%s*end")
+    local body = BLOCK_CODE:match("if J%.IsModeTurbo%(%) then(.-)\n%s*end")
     assert(body ~= nil,
-        'the armed branch is gone, or its gate is no longer '
-        .. "`J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy')` -- the fix may "
-        .. 'have become ungated or non-turbo')
+        'the turbo branch is gone, or its condition is no longer exactly '
+        .. '`J.IsModeTurbo()` -- a promoted lever that grew a second conjunct '
+        .. 'is a lever nobody measured')
     return body
 end)()
 
@@ -268,6 +277,39 @@ tests['[arithmetic] armed fires exactly on botHP < LO, and is a WIDENING'] = fun
         .. '%s). This lever drops the stray bound and NOTHING ELSE; a moved '
         .. 'threshold is a second lever and needs its own evidence')
         :format(tostring(ARMED_LO), tostring(LO)))
+end
+
+-- ------------------------------------------------------------- the promote ---
+
+tests['[promote] the id is gone from the file, and turbo is the whole gate'] = function()
+    -- PROMOTED 2026-09-11 (test_set.md §GU.1). §DU.6's red line says the promote
+    -- ACTION is the source edit, not the arm-string deletion: a promote that only
+    -- drops the id from test_set.md leaves a gate that is FALSE in every real game
+    -- and records the no-op as a shipped improvement. This case is what makes that
+    -- unavailable -- it fails if the id ever comes back into this file.
+    -- Narrowed to THIS id on purpose: other soak candidates legitimately live in
+    -- this file (the fieldbuy family), so a file-wide ban would be a false claim
+    -- about them. The id-scoped ban is the one that means what it says.
+    for line in (SRC .. '\n'):gmatch('(.-)\n') do
+        if not line:match('^%s*%-%-') then
+            assert(line:find('tpdeathbuy', 1, true) == nil,
+                'an EXECUTABLE line names tpdeathbuy again: ' .. line
+                .. ' -- this id is promoted; a gate on it would be FALSE in '
+                .. 'every real game and the no-op would read as shipped')
+        end
+    end
+    assert(SRC:find('tpdeathbuy', 1, true) ~= nil,
+        'the tpdeathbuy provenance comment is gone -- after the gate is removed '
+        .. 'that comment is the ONLY place a reader meets why this block changed')
+    -- The gate-off half of the identity is the non-turbo path, and it is what
+    -- keeps this promote turbo-only. Asserted from source because there is no
+    -- non-turbo frame in this corpus to drive it on.
+    assert(BLOCK_CODE:find('if J.IsModeTurbo() then', 1, true) ~= nil,
+        'the turbo branch is no longer spelled `if J.IsModeTurbo() then`')
+    local _, nTurbo = BLOCK_CODE:gsub('IsModeTurbo', '')
+    assert(nTurbo == 1, ('the block calls IsModeTurbo %d times, expected 1 -- a '
+        .. 'second one means the promoted path grew a condition no wave ran')
+        :format(nTurbo))
 end
 
 -- --------------------------------------------------------------- the world ---

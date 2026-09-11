@@ -204,20 +204,30 @@ end
 
 -- ------------------------------------------------------------------- gate off
 
-tests['gate OFF: nothing armed leaves ConsiderStopDrain byte-identical to shipped'] = function()
-    local X, _, bot = load_lion(FOCUSED, false, true, true)
-    -- Not retreating (no mutation), unarmed -> shipped path returns NONE and
-    -- new path is inert.
-    assert(X.lion_ShouldStopDrain(bot) == false,
-        'unarmed, the helper must be inert (false = do not release)')
-    assert(X.ConsiderStopDrain() == BOT_ACTION_DESIRE_NONE,
-        'unarmed + not retreating: shipped code returns NONE, our path adds nothing')
+tests['PROMOTED: the arm string no longer decides anything, in either direction'] = function()
+    -- This case replaces 'gate OFF: nothing armed ... byte-identical to shipped'.
+    -- That assertion was TRUE of a gated lever and is FALSE of a promoted one;
+    -- leaving it in place would have been a test asking for the gate back
+    -- (§DU.6's red line, in test form). What survives the promote is the real
+    -- invariant: the two legs must now be INDISTINGUISHABLE.
+    local Xoff, _, botOff = load_lion(FOCUSED, false, true, true, true)
+    local Xon,  _, botOn  = load_lion(FOCUSED, true,  true, true, true)
+    assert(Xoff.lion_ShouldStopDrain(botOff) == true,
+        'turbo with NOTHING armed must now release -- this is the promote')
+    assert(Xon.lion_ShouldStopDrain(botOn) == true,
+        'turbo with the old id armed must answer the same')
+    assert(Xoff.ConsiderStopDrain() == Xon.ConsiderStopDrain(),
+        'the two legs disagree, so something still reads the arm string')
 end
 
-tests['gate OFF: armed but NOT turbo is still inert'] = function()
-    local X, _, bot = load_lion(FOCUSED, true, true, true, false)
-    assert(X.lion_ShouldStopDrain(bot) == false, 'the gate is turbo-only')
-    assert(X.ConsiderStopDrain() == BOT_ACTION_DESIRE_NONE, 'non-turbo, still NONE')
+tests['gate OFF: NOT turbo is the only inert path, armed or not'] = function()
+    for _, bArmed in ipairs({ true, false }) do
+        local X, _, bot = load_lion(FOCUSED, bArmed, true, true, false)
+        assert(X.lion_ShouldStopDrain(bot) == false,
+            'the promoted default is turbo-only (bArmed=' .. tostring(bArmed) .. ')')
+        assert(X.ConsiderStopDrain() == BOT_ACTION_DESIRE_NONE,
+            'non-turbo, still NONE (bArmed=' .. tostring(bArmed) .. ')')
+    end
 end
 
 -- ---------------------------------------------------------------- gate armed
@@ -354,6 +364,39 @@ tests['radius: the danger radius stays inside the interval the frames support'] 
         'observed channels bound this to [484, 781), got ' .. X.nEDrainDangerRadius)
 end
 
+tests['radius: BOTH guards read the CONSTANT, not a literal of their own'] = function()
+    -- Charter 0ASYM (iii): pin the fact at the USE site, not at the declaration.
+    -- The case above pins the DECLARATION, and that is a different claim. The
+    -- promote ruling (§GU.2 condition (c)) leans on "the STOP guard reuses
+    -- lion_IsDrainSafeToStart's constant, so a retune self-reports on BOTH
+    -- sides" -- which is false the moment either side inlines a number.
+    --
+    -- ⭐⭐ MEASURED, AND THE MEASUREMENT CORRECTED THE FIRST FIX.
+    -- mutstand_promote_20260911.sh M9 replaces `X.nEDrainDangerRadius` with a
+    -- literal 2000 in that GetNearbyHeroes call, and it SURVIVED twice:
+    --   1st: no use-site assertion existed at all;
+    --   2nd: an assertion existed but covered only lion_ShouldStopDrain -- and
+    --        M9 was not hitting that function. The SAME LINE, byte for byte,
+    --        appears in both guards (hero_lion.lua:1886 start / :2031 stop) and
+    --        a first-occurrence replace lands on the START one. So the second
+    --        survival was not a weaker version of the first finding: it was a
+    --        SECOND unpinned use site, and the only reason anybody looked at it
+    --        is that the mutant refused to die.
+    -- ⇒ Both bodies are asserted here. Neither is the "extra" one.
+    local f = assert(io.open('bots/BotLib/hero_lion.lua'))
+    local src = f:read('*a')
+    f:close()
+    for _, fn in ipairs({ 'lion_IsDrainSafeToStart', 'lion_ShouldStopDrain' }) do
+        local body = src:match('function X%.' .. fn .. '%b()(.-)\nend')
+        assert(body ~= nil, 'X.' .. fn .. ' is gone or no longer parses')
+        assert(body:match('J%.GetNearbyHeroes%(%s*hBot,%s*X%.nEDrainDangerRadius') ~= nil,
+            'X.' .. fn .. ' no longer passes X.nEDrainDangerRadius as the radius '
+            .. 'of its GetNearbyHeroes call -- the "one constant, both sides" '
+            .. 'argument in test_set.md §GU.2 is void, and a retune of that '
+            .. 'constant would now be silent on this side')
+    end
+end
+
 -- ---------------------------------------------------- end to end (SkillsComplement)
 -- Drive the real X.SkillsComplement and assert what reaches the action log.
 -- Shipped code on the mid-channel FOCUSED frame does NOT clear actions -- the
@@ -361,8 +404,8 @@ end
 -- SkillsComplement falls through to its second early-out (CanNotUseAbility is
 -- true because IsChanneling). That is the bug repro. Armed code MUST clear.
 
-local function run_skills(path, bArmed, bChanneling, bTargetHasMod)
-    local X, J, bot, heroes, fx = load_lion(path, bArmed, bChanneling, bTargetHasMod)
+local function run_skills(path, bArmed, bChanneling, bTargetHasMod, bTurbo)
+    local X, J, bot, heroes, fx = load_lion(path, bArmed, bChanneling, bTargetHasMod, bTurbo)
     -- MUTATIONS: dump carries neither active mode nor attack target; without
     -- them J.IsGoingOnSomeone / J.GetProperTarget cannot resolve. The STOP
     -- guard fires BEFORE the combat branches, so these mutations don't affect
@@ -380,13 +423,33 @@ local function has_call(log, fn)
     return false
 end
 
-tests['end to end: shipped SkillsComplement on the mid-channel frame does NOT clear actions'] = function()
-    local log = run_skills(FOCUSED, false, true, true)
-    -- The bug repro: shipped path's ConsiderStopDrain returns NONE (Lion not
-    -- retreating), so the ClearActions call inside SkillsComplement is NOT
-    -- issued. Lion continues to channel, taking damage each tick.
+tests['end to end: the ORIGINAL defect still reproduces, on the non-turbo leg'] = function()
+    -- PROMOTED 2026-09-11 (test_set.md §GU.2): this case used to run the
+    -- unarmed leg, because unarmed WAS the shipped tree. It is not any more --
+    -- in turbo the fix is the default, so the unarmed leg now clears actions
+    -- and this case would have been "flipped green" by the promote while
+    -- claiming to still witness the defect.
+    -- The defect is preserved where it still lives: non-turbo. Keeping a live
+    -- witness matters -- it is the only thing that can still show WHAT the
+    -- promote bought, and it fails loudly if someone later widens the fix to
+    -- all game modes without measuring one.
+    local log = run_skills(FOCUSED, false, true, true, false)
+    -- Non-turbo path's ConsiderStopDrain returns NONE (Lion not retreating), so
+    -- the ClearActions call inside SkillsComplement is NOT issued. Lion
+    -- continues to channel, taking damage each tick.
     assert(not has_call(log, 'Action_ClearActions'),
-        'shipped Lion does not break the channel on this frame -- that is the bug')
+        'non-turbo Lion does not break the channel on this frame -- that is the '
+        .. 'defect this lever fixes, and it is still reachable outside turbo')
+end
+
+tests['end to end: PROMOTED -- turbo clears the channel with NOTHING armed'] = function()
+    -- The promote itself, end to end. Before 2026-09-11 this exact call
+    -- (turbo, empty arm string) fell through to NONE.
+    local log = run_skills(FOCUSED, false, true, true, true)
+    assert(has_call(log, 'Action_ClearActions'),
+        'turbo default must now drive ClearActions(true) via ConsiderStopDrain '
+        .. '-> HIGH with no candidate armed -- if this is red the promote did '
+        .. 'not actually reach the shipped path')
 end
 
 tests['end to end: armed SkillsComplement clears the channel on the same frame'] = function()
@@ -426,8 +489,25 @@ tests['wiring: the STOP helper is gated, consumed in ConsiderStopDrain, and ride
     local f = assert(io.open('bots/BotLib/hero_lion.lua'))
     local src = f:read('*a')
     f:close()
-    assert(src:find("J.IsSoakCandidate( 'liondrainstop' )", 1, true),
-        'the helper must stay gated behind the liondrainstop candidate id')
+    -- PROMOTED 2026-09-11 (test_set.md §GU.2). Flipped, not deleted: this line
+    -- used to REQUIRE the gate, and after the promote that requirement is a
+    -- request to put the defect back. What it requires now is the opposite --
+    -- the id must not appear on any executable line of the file, and the
+    -- helper's first statement must be exactly the turbo test.
+    for line in (src .. '\n'):gmatch('(.-)\n') do
+        if not line:match('^%s*%-%-') then
+            assert(line:find('liondrainstop', 1, true) == nil,
+                'an EXECUTABLE line names liondrainstop again: ' .. line
+                .. ' -- the id is promoted, so a gate on it is FALSE in every '
+                .. 'real game and the no-op would read back as shipped')
+        end
+    end
+    assert(src:find('if not J.IsModeTurbo() then return false end', 1, true),
+        'the promoted helper must open with exactly the turbo test -- a second '
+        .. 'conjunct here is a configuration no wave ran')
+    assert(src:find('liondrainstop', 1, true),
+        'the provenance comment is gone; after the gate is removed it is the '
+        .. 'only place a reader meets why this helper exists')
     assert(src:find('X.lion_ShouldStopDrain( bot )', 1, true),
         'ConsiderStopDrain must consume the helper')
     -- The new branch sits BELOW the shipped IsRetreating branch (so the shipped

@@ -1,6 +1,11 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
-**成员串 34**(上一行,**309 字节**,md5 `7be691dcd2c2fd1ee73a630274007044`)。本行 **2026-09-11T0x:xxZ 的变动:两个原子、三条 `退回出集`(37 → 34)**,总监裁定全文 **§GS**。⛔ **三条都不是 reject**,gate、helper、常数与调用点**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(达 owner P4.2 的 ≥2;⛔ **按原子记 2,不按 id 记 3** —— `pulldrag` 没有独立裁定,它是被 `pullcamp` 那条**结构性带走**的,把它算成第三个完结是虚报)。**两条都是录像组交回来的机器可读判决,不是总监自己定的价**(`VERIFY id=tbearly verdict=SILENT episodes=0` / `VERIFY id=pullcamp verdict=BUGGY episodes=28`)。
+tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom
+**成员串 32**(上一行,**284 字节**,md5 `3d41ae217739b7727af65348f2565fa7`)。本行 **2026-09-11T1x:xxZ 的变动:两条 `PROMOTE`(34 → 32)**,总监裁定全文 **§GU**;判定完结 **2**(达 owner P4.2 的 ≥2)。⭐ **这是本仓库第一次同轮 promote 两条** —— 理由不是「攒够了」,是**这两条在近五波里每一波都同时 armed**,家族级 (b) 结构上分不开它们;**分开 promote 反而是把一个没有任何一波跑过的配置发出去**(先促其一,则另一条留在臂上,而稳定版从此含前者——那个组合从未被测过)。⛔ 两条落在**互不相交的子系统**(`item_purchase_generic.lua` 的采购块 / `hero_lion.lua` 的引导释放),各自的域都是个位数百分比,**不是一个 bundle**;`lanefix` 的教训针对的是一次上十条**互相耦合**的守卫,不是这个形状。
+1. ⭐ **`tpdeathbuy` PROMOTE**(34 → 33)—— 动作是**把 `bots/item_purchase_generic.lua` 那句 `if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then` 改成 `if J.IsModeTurbo() then`**(§DU.6 红线:代码先改、串后改、**同一个 commit**),turbo 默认丢掉那条不可满足的下界,**非 turbo 逐字未动**(它写成**选择**而不是析取,正是为了让这句同一性是**算术**不是承诺)。三条件与边界写在 §GU.1 与源码注释里;机器键 `state.json:tpdeathbuy_PROMOTE_20260911`。
+2. ⭐ **`liondrainstop` PROMOTE**(33 → 32)—— 动作是**把 `bots/BotLib/hero_lion.lua:2008` 的 `if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end` 改成 `if not J.IsModeTurbo() then return false end`**(同一条红线),**非 turbo 仍逐字返回 false**。三条件与边界写在 §GU.2 与源码注释里;机器键 `state.json:liondrainstop_PROMOTE_20260911`。
+⚠️ **载体项 7 → 7 逐字不变,量出来的**:`carrier_terms.py --arm` 对 34-id 与 32-id 两串各跑一次,`TERMS` 行**逐字节相同**(`crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker,zuus`)。`lion` 这一项由 `lionqdmg` 接住 ⇒ **选种解空间不受影响**。⭐ **半个状态会自己变红**:在代码已改、串未改的中间态上,旧 34 串读 **2 unresolved / 退出码 2**,新 32 串读 **0 unresolved / 退出码 0**。
+⛔ **在此之前起飞的任何一波都不含本次变动** —— **W65(今日 09:23Z 起飞,34 串)及更早不与 32-id 家族并池**;W65 的收割**不得**写成 32 串家族的深度。
+〔沿革,上一条变动〕**成员串 34**(**309 字节**,md5 `7be691dcd2c2fd1ee73a630274007044`)。**2026-09-11T0x:xxZ 的变动:两个原子、三条 `退回出集`(37 → 34)**,总监裁定全文 **§GS**。⛔ **三条都不是 reject**,gate、helper、常数与调用点**逐字保留**(`bots/`+`game/` 零 diff);判定完结 **2**(达 owner P4.2 的 ≥2;⛔ **按原子记 2,不按 id 记 3** —— `pulldrag` 没有独立裁定,它是被 `pullcamp` 那条**结构性带走**的,把它算成第三个完结是虚报)。**两条都是录像组交回来的机器可读判决,不是总监自己定的价**(`VERIFY id=tbearly verdict=SILENT episodes=0` / `VERIFY id=pullcamp verdict=BUGGY episodes=28`)。
 1. **`tbearly` 退集**(37 → 36)—— 录像组 2026-09-10T22:01Z 判 **SILENT**,`episodes=0`,并**逐字建议退集**(「P4.2 下最便宜的一格」)。⭐ **本轮独立复核把「域为空」收紧成一句更准的话:域是一个单点,不是空集。** 出厂外层合取项 `mode_farm_generic.lua:506` 是 `not J.IsLateGame()`,而 `jmz_func.lua:4757-4762` 在 turbo 下是 `DotaTime() > 18*60` ⇒ 进到 :555 那一行时必有 `DotaTime() <= 1080`;armed 把 `nEarlyClock` 由 `25*60` 选成 `18*60`,于是两条腿的读数**只在 `DotaTime() == 1080.0` 这一个瞬间不同**(armed `1080 < 1080` 假、baseline `1080 < 1500` 真),其余每一帧**逐字节相同**。⛔ **这个区别要写出来**:说「域是空的」邀请下一个读者拿那一帧当反例并以为裁定塌了;说「域是帧网格上的一个零测单点」既是真的,也**照样**支持退集。⚠️ **它写下的 18:00-25:00 那个band 整条在外层合取项之外** —— 源码注释「The band this moves is 18:00-25:00」**是假的**,交回协同组改(见 §GS.4)。⛔ **不要顺手删代码**:那次改写修掉的 `a and b or c` 惯用法缺陷是真的,`tests/test_turbo_ternary_dominance.lua` 的全仓棘轮继续有价值;退的是测试集里那一格。
 2. **`pullcamp` + `pulldrag` 一个原子退集**(36 → 34)—— `pullcamp` 条件 (a) **在两份独立语料上买到,判决 BUGGY**(W62 与 W63;录像组 2026-09-10T16:01Z,`episodes=28`)。营地选择器挑的营地到**任何**一条兵线的最小垂距 **2912 / 2372**,而实测缰绳 max **1272**(EDGE CONTROL 两波逐位同型:中位 833/826)⇒ **开戳那一瞬间就不可能连上**;连接率 **1/15 = 6.7%**(W62 4/16),开戳后 15s 掉血中位 **17pp**、3/29 掉到 35% 以下、1/29 20s 内死亡。**帧证据**:`…715cc0/20260910_124850_slot4` crystal_maiden t=345.4–356.4(垂距 2912,要价 19pp 血 + 13 秒对线时间)、`…16a195/20260910_123421_slot4` pudge t=99.4(戳完就走,连拖都没拖)。⇒ 这不是「没测出效果」,是**量到的、带价钱的错决策**,让它继续骑在每一波的臂串里是在给所有人的 (b) 读数掺沙子。
 ⭐⭐⭐ **本节最该被读的一条(§GS.2):`pullcad` 陷阱有一个倒像,而树里替它写的那两条注释**只防住了正像**。** `jmz_func.lua:10936` 与 `:11085` 两处注释**逐字**写着:不要把门写成 `IsSoakCandidate('pulldrag') and IsSoakCandidate('pullcamp')`,因为 **promote** `pullcamp` 会让那个合取**永久为假**;于是两条都写成了 STANDALONE 门,并给出理由「反正 turbo 与 pullcamp 门在这里是结构性的」。**那句理由为真,而它恰恰是倒像的载体**:`J.GetLanePullDragTarget` 在 `bots/` 里**只有一个调用点**(`mode_roam_generic.lua:454`),坐在 `if bot.roamCampPull ~= nil` 里,而 `roamCampPull` **只**由 `J.ShouldPullNeutralCamp` 赋值(:104),后者首两行就是 turbo + `pullcamp` 门 ⇒ **把 `pullcamp` 退集,`pulldrag` 的域结构上归零**。⛔ **而没有任何东西会举手**:`check_armed_wiring.py` 仍读 WIRED(调用点在),`verify_coverage` 仍把它列成 armed 的 `INDETERMINATE`,下一波的 verdict 仍会回来「测过了,没效果」。⇒ **促进(promote)杀掉点它名的门;退集杀掉挂在它下面的域。两个方向都要查,而房规此前只写了一个方向。**
@@ -4157,3 +4162,148 @@ owner **P4.2** 逐字:总监的产出指标 = **判定完结数**,每轮 **≥2*
 ⇒ 本轮只在该行补 `census_note_20260911`(**不改裁定、不改验收句**)。
 📌 **这就是「做成腿比再记一发便宜」的现金价值**:同一句约束,上一轮要写进散文,这一轮由工具持有 ——
 它会在 `dragnolane` 被 arm 的**那一刻**直接报 FROZEN。
+
+---
+
+## §GU 2026-09-11T1x:xxZ 总监:**第八、九次 promote 同轮落地(`tpdeathbuy` + `liondrainstop`,锚点 `stable-v7`),armed 34 → 32** —— 本节最该被读的是 **§GU.5:一个变异体连活两轮,而第二次存活不是第一次的弱化版,是第二个没被钉住的使用点**;以及 **§GU.3:管钱的那道闸今天在 trunk 上读不出自己的锚,而本该当场拦住那次 push 的棘轮,因为「预算排到它就满了」不在推送闸里**
+
+判定完结 **2**(owner P4.2 的产出指标,达标)。零 AWS(**一次调用都没有**)、零波次、**不发 owner 邮件**。
+
+### §GU.0 为什么两条同轮 —— 这不是「攒够了」
+
+⛔ 先说清楚它**不是** `lanefix` 那个形状:那次是一次上十条**互相耦合**的守卫,合起来把胜负打负了两回。
+这两条落在**互不相交的子系统**(采购块 / Lion 引导释放),域各自是个位数百分比,代码上不共享一行。
+
+⭐ 真正的理由是**它们的 (b) 分不开**:两条在最近五波(W55/W58/W62/W63/W64)里**每一波都同时 armed**,
+家族级读数**结构上**无法把经济归给其中之一。⇒ **分开 promote 反而更糟** —— 先促其一,则稳定版从此含前者、
+而后者还留在臂上,**那个组合从来没有任何一波跑过**。同轮 promote 交付的恰好是被测过的那个配置。
+
+### §GU.1 `tpdeathbuy` PROMOTE(34 → 33)
+
+- **(a) WORKING episodes=14**(录像组 2026-09-09T01:02Z,W62/W63 语料,两台独立写成的量具在同一批帧上一致)。
+  **边界照抄不改**:证据是「armed 腿在唯一可归因窗口内买了 TP,而出厂即死代码的 baseline 腿一次没有」,
+  **不是**逐帧看见 `PurchaseItem` 执行(dump 里购买只有 `PURCHASE` 这一个投影);每个计数都是真实域的**上界**。
+- **(b)** 五波家族级:gpm **−22.72 / +40.58 / −7.20 / −15.00 / −8.96**,均值 **−2.66**,**722 计分局**。
+  ⛔ 家族级不是 id 级;全开波无法归因到单个成员;**winrate 通道五波全 DEGENERATE ⇒ 没有任何胜负读数可引**。
+  这过的是铁律 2(b) 的**粗粒度**门,**不是正面证据,不许当正面证据引**(§FT.2 的措辞,故意照搬)。
+- **(c) 承重的那一条,而且是算术不是判断**:`botHP` 是 `J.GetHP` 的 0..1 分数,出厂合取
+  `botHP < 0.08 and botHP >= 1` 对**任何实数**为假 ⇒ 约 12 行**从上游快照带来那天起一次都没跑过**
+  (`74727e4:957-958`)。姊妹的死前买粉块写的是 `botHP < 0.06` 且**没有配对下界** —— 这是「杂散合取项而非惯例」的判据。
+  外部依据:死亡烧掉的是不可靠金,而**已在物品栏里的卷轴不会被死亡拿走** ⇒ 把注定要烧的金换成 TP 是标准打法。
+- **动作**:`bots/item_purchase_generic.lua` 的 `if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then`
+  → `if J.IsModeTurbo() then`。**非 turbo 逐字节是出厂表达式**,而这句同一性是**算术**不是承诺 ——
+  它写成对前一行默认赋值的**选择**(charter 0TERN),turbo 分支不走时那行字面就是出厂那行。
+- ⚠️ **方向警告随 promote 一起搬进源码注释**:这是本流水线**唯一的加宽**(死 → 活)。
+  将来任何人读它,**「没变化」不等于「无效应」,而是「没到域」**。
+
+### §GU.2 `liondrainstop` PROMOTE(33 → 32)
+
+- **(a) WORKING episodes=36**(录像组 2026-09-09T18:40Z,W60 语料)。32/36 域内引导**在谓词成立的那一帧**结束。
+  ⭐ **承重的半边是域外阴性对照**:域外引导平均长度 **3.178 / 3.375**(armed ab/ba)vs **3.119 / 3.125**(baseline ab/ba),
+  **两腿之间没有方向**;而域内是 1.653 / 0.995 vs 2.434 / 2.940 ⇒ **缩短只发生在谓词域内**,
+  任何「Lion 整体少拉一会儿」的通用解释都会同时压低域外那一列,而没有。
+  同臂的 `lionqdmg` 单独排除:**29/32 个切断点上 Lion 一个技能都没放**,「自己打断自己」最多解释 3 条。
+- **(b)** 与 §GU.1 同一份五波读数(两条在五波里都 armed),同一条边界。
+- **(c)** 生根的引导**按构造不在回家路上**:Mana Drain 约 600u 的缰绳让「看起来能安全跑了」的撤退模式永远起不来,
+  于是出厂的 `J.IsRetreating` 释放路径**对恰好最需要它的那一类永不触发**。顶着英雄伤害站着拉完,是没有人类会做的决定。
+  谓词与**拒绝开始**引导的 `lion_IsDrainSafeToStart` 是同一条、极性翻转,并共用 `X.nEDrainDangerRadius`。
+- **动作**:`hero_lion.lua:2008` 的 `if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end`
+  → `if not J.IsModeTurbo() then return false end`。非 turbo 仍在第一句逐字返回 false。
+- ⚠️ **GH #314 仍然开着,而本裁定写成不依赖它关闭**:4/36 域内引导**被保持而不是被切断**。
+  那是**覆盖不足,不是有害** —— 在那些帧上 promoted 腿与出厂树**逐字同为不切**,promote 不可能让它们更糟。
+  ⛔ **这正是同一天把 `fieldbuy` 挡在门外的那条分界线**:GH #734 量到了**价钱**(买回的药剂 61.1% 先落背包、18.0% 卡死喝不着),
+  而这里**没有人量到价钱**。根因候选是雾(门的敌人名单走 `J.IsValidHero -> CanBeSeen`,普查是全知的),
+  在 dumper 携带分队视野之前**离线不可判**(`state.json:liondrainstop_VISION_DOMAIN_20260829`,
+  该键同时写明 2/30 与 33/67 都是**上界**、而膨胀**对两腿都成立** ⇒ armed-vs-baseline 的劈分不受影响)。
+
+### §GU.3 ⚠️⚠️ 本轮的 [harness] 现场:管钱的闸读不出自己的锚,而该拦住它的棘轮不在推送闸里
+
+`W65_wave.json` 今晨 09:15Z 落到 main,带 `launch_time` 而**没有** `launched_at`——**25 波以来第一次**
+(W41..W47 只有 `launched_at`;W48..W64 两个都有,逐字同一瞬)。`wave_throttle.py` **只读 `launched_at` 且拒绝猜**
+⇒ 开工自检读到 `UNCERTIFIABLE: W65 machine 0 (seed 10926) has no launched_at` / `gate (i) DID NOT RUN`。
+**本轮修复**:按该记录**自己的 `launch_time`** 补回四条(每条另有 `run_id` 的 `spot_20260911_0923xx` 时间戳佐证,
+**没有发明任何一个瞬间**),并在文件里留 `launched_at_repair_20260911` 说明来源。修后 gate (i) 读
+`THROTTLED (exit 3) … unlock 2026-09-11T15:23:44Z` —— **正确答案,而它此前是取不到的**;`test_wave_throttle.py` **55 checks 0 failed**。
+
+⭐⭐ **而真正该被读的是下面这一层**:`tests/test_wave_throttle.py` 实测 **0.671s**,远在 py 闸 3.0s 单测上限之下,
+却**不在推送闸里**,原因是 `over_cumulative_budget` —— 同样出局的还有 18 条,合计 **24.3s**。
+⇒ **本该当场拦住那次 push 的棘轮,是被预算挤出去的**;红于是由**下一个开工的组**几小时后发现,
+**逐字是 GH #624 的立案形状,发生在本该关掉它的那条腿内部。**
+⛔ **前提已经过期,这是事实不是偏好**:`py_gate_measure.py` 文件头自述 `BUDGET_SECONDS=12.0` 的理由是
+「Lua 静态半冷启 18s,这一半不该让它翻倍」(GH #616 的验收句,09-08 写下);**GH #624 于 09-10 加了第三条腿
+`lua_gate.py`,实测 301.0s** ⇒ 旋钮仍对着一个 18s 的钩子标定,而定它的那条约束已被一条大 **17 倍**的腿盖过。
+⚠️ **本轮不改,理由是容器不是时间**:重跑 `py_gate_measure.py` 需要**安静容器**(它自己的文件头记着 09-08 并发把
+`test_carrier_hero_guard.py` 翻成 rc=1;上一轮总监刚因并发作废过一份 lua gate 读数),而本轮容器被两条 promote
+与三条腿的推送闸占满。⇒ 登记为 `owed_executions.json:py_gate_budget_premise` +
+`state.json:py_gate_budget_premise_20260911`,验收句是**裸读得出的**:manifest 里 `over_cumulative_budget` 的条目数为 0
+**且** `test_wave_throttle.py` 的 `in_gate` 为 true,**且必须由工具重跑生成** ——
+⛔ 手把那一条捞进 manifest 就是**按名字选**,正是 GH #616 约束 1 禁的那件事。
+
+### §GU.4 同轮一条 queue 裁定:`hero-57` = **FROZEN-HOLD**
+
+投递纪律 §2.5:裁定写进 `queue.json:hero-57.director` 机器字段(**不是 `question` 散文**),本节留全文档案。
+P4.2 逐字:入集冻结,新 id 一律不入集(**搭车也不行**),直到 armed ≤ 20;冻结期唯一合法裁定是 FROZEN-HOLD。
+本行虽写作「条件 (a) 执行核验、搭车、零 AWS 增量」,**实质仍是入集** —— armed/baseline 差要出现,`glyphany` 必须进臂串。
+⭐ **请求本身没有问题,而且它把最难的一半预先做完了**:它逐条量出归档扫描买不到 (a) 的三重阻断
+(`GetNearbyLaneCreeps` 不在任何 fixture spec 上 ⇒ 141/141 主体答空表;兵采样条目 `{team,x,y,dt}` 没有名字/血量/modifier
+⇒ 圣坛谓词无处可读,**只修第一条会把一句诚实的「看不见」变成一句自信的、错的「没有兵被保护过」**;
+三条支路都坐在正向 mode 闸后而 mock 的 `GetActiveMode()` 答 0)。
+⇒ **本裁定明确背书「不要按 ROUTED_ARCHIVE_SCAN 路由」**。
+⚠️ **接力棒**:被 FROZEN-HOLD 的请求在 `pending_rulings.py` 里从此读 `ruled=True`,于是**不再出现在任何一张待办表上**
+—— 拉野死分支 2026-08-19 那次(修好后因 issue 关闭而从所有队列消失 37 轮)就是这个形状。
+已开 `owed_executions.json:glyphany_readmission_on_thaw`,解冻条件是**一个数**而不是一个事件,所以必须有东西替它举手。
+
+### §GU.5 ⭐⭐⭐ 本节最该被读的一条:一个变异体连活两轮,而第二次存活不是第一次的弱化版
+
+`tools/agent/mutstand_promote_20260911.sh`(新建,13 发)最终读 **12 CAUGHT / 1 SURVIVED / 0 ABORTED**。
+过程里 **M9 连续存活两轮**,两次教的不是同一件事:
+
+1. **第一轮存活 ⇒ 没有任何使用点断言。** 本文件的 `radius:` 用例钉的是**声明**
+   (`X.nEDrainDangerRadius ∈ [484, 781)`),而 M9 改的是**使用点**(把常量换成字面量 2000)。
+   §GU.2 的 (c) 里那句「共用常量 ⇒ 一次重调会在**两侧**自报」,在那一刻**是一句没有任何东西守着的话**。
+   ⇒ charter 0ASYM (iii) 第 N 发:**把事实钉在使用点,不是钉在声明上**。
+2. ⭐ **第二轮存活 ⇒ 我修的是另一个函数。** 补上使用点断言之后 M9 **照样活着**。
+   原因:那一行 `local nCloseEnemyList = J.GetNearbyHeroes( hBot, X.nEDrainDangerRadius, true, BOT_MODE_NONE )`
+   **在两个守卫里逐字节相同**(`hero_lion.lua:1886` 起始守卫 / `:2031` 停止守卫),而 `replace(old, new, 1)`
+   **落在第一个** ⇒ 我的断言覆盖 `lion_ShouldStopDrain`,M9 打的却是 `lion_IsDrainSafeToStart`。
+   **⇒ 第二次存活是一个独立的发现:第二个没被钉住的使用点。** 而唯一让人去看它的原因,是**变异体拒绝去死**。
+   处置:断言改成**两个函数体都查**(哪个都不是「附带的那个」),并新增 **M13** 用一段唯一锚串专打停止侧
+   —— 于是这一对**量的是两个使用点,而不是把一个量两遍**。
+   📌 **可迁移的一句**:*一个「已经修好」的变异体再次存活时,先问它打的是不是你修的那个地方 ——
+   在一个有孪生代码行的文件里,「同一个缺陷」和「同一处缺陷」是两回事。*
+
+⛔ **M10 是登记在案的存活,留在台上说这句话**:它把 `[promote]` 用例里「这个 id 不许出现在任何可执行行上」
+那条断言松成恒真,而 TESTS[] 里没有任何邻居重新推导这条禁令 —— **一个文件抓不住自己的断言被放松**
+(`mutstand_ckpush` M9/M10、`mutstand_slotpush` M7/M8 同族)。
+⚠️ **它不是「promote 被悄悄撤销没人发现」** —— 那是 **M1,而 M1 被抓住**。M10 严格是二阶的:
+要有人**同时**把闸加回去**并且**松掉禁止它的那条守卫。**照实登记而不是粉饰**(§FT.4 措辞);
+把这一发删掉换一个 13/13 的读数,等于删掉「这个缺口存在」的唯一记录。
+
+### §GU.6 落地物
+
+- `bots/item_purchase_generic.lua` / `bots/BotLib/hero_lion.lua`:各**一处** diff(那句 gate),三条件与边界抄进函数注释
+  —— **promote 之后唯一还会被读到的地方**。`bots/`+`game/` 本轮**只有这两处**。
+- `tests/test_tpdeathbuy_dead_conjunct.lua`:`ARMED_BODY` 的锚由闸合取翻成 `if J.IsModeTurbo() then`;
+  新增 `[promote]` 用例(id 不许出现在任何**可执行行**上 —— ⚠️ **按 id 收窄而不是全文件禁 `IsSoakCandidate`**,
+  因为 `fieldbuy` 一族合法地住在同一个文件里,全文件禁是一句关于它们的假话);窗口 2200 → 3400。**8 → 9 用例,9/0**。
+- `tests/test_replay_260819_lion_drain_stop.lua`:三条「要求它是 gated」的断言翻面;
+  bug 复现用例**搬到非 turbo 腿**(留一个活着的见证,而不是让 promote 把它「刷绿」);
+  新增 `[promote]` 端到端(turbo + 空臂串必须 ClearActions)与 §GU.5 那条双使用点断言。**19 → 25 用例,25/0**。
+- `tests/test_replay_260820_lion_drain_stop_pair.lua`:同型翻面(两腿必须**不可区分**)。**13/0**。
+- `tools/agent/mutstand_promote_20260911.sh`:新建,13 发。
+- `iterations/reports/batch-desk/waves/W65_wave.json`:补回四条 `launched_at`(§GU.3)。
+- `queue.json:hero-57.director` / `armed_since.json` 两行 `retired_at` / `owed_executions.json` 两行新登记 /
+  `state.json` 三个新键(`tpdeathbuy_PROMOTE_20260911`、`liondrainstop_PROMOTE_20260911`、`py_gate_budget_premise_20260911`)/
+  `stable_anchors.json`:`stable-v7`。
+- **载体项 7 → 7 逐字不变,量出来的**;⭐ **半个状态自己变红**:代码已改、串未改的中间态上,
+  旧 34 串读 **2 unresolved / 退出码 2**,新 32 串读 **0 unresolved / 退出码 0**。
+- **倒像与正像两个方向都查过**(RULING 13 的房规):`inverse_gate_census.py` 本轮 `FROZEN 0 / COUPLED 1(仅 fieldsip)/ UNRESOLVED 0`
+  ⇒ 两条都是 CLEAR,**promote 不冻死任何域**;正像上两条**各自恰好一个** gate 点、门行上没有第二个 id、
+  `promote_atoms.json` **零次**点名它们。
+
+### §GU.7 交棒
+
+- **`fieldbuy` 仍不 promote**,直到 GH #734 落地 —— 与 §GU.2 的分界线逐字对照:那边量到了价钱,这边没有。
+- **armed 34 → 32**,离 P4.2 的解冻线(≤20)还差 12 条。`hero-57` 与所有被 FROZEN-HOLD 的入集提议
+  沿着**这同一个数字**解冻。
+- **`py_gate_budget_premise`** 是下一轮最便宜的一格仪器活(一个常数 + 一次工具重跑),**但它不得再挤掉判定完结**。

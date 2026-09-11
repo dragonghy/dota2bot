@@ -306,20 +306,37 @@ end
 
 -- ------------------------------------------------------------------- gate off
 
-tests['gate OFF: both frames are byte-identical to shipped'] = function()
+tests['PROMOTED: the arm string decides nothing on either frame'] = function()
+    -- PROMOTED 2026-09-11 (test_set.md §GU.2). This case used to assert that
+    -- the UNARMED helper is inert -- true of a gated lever, false of a promoted
+    -- one. Left as it was it would have been a test asking for the gate back
+    -- (§DU.6's red line in test form), so it is flipped rather than deleted.
+    -- What survives the promote is the real invariant: the two legs must be
+    -- indistinguishable, on BOTH frames of the pair.
     for _, path in ipairs({ LETHAL, SURVIVED }) do
-        local X, _, bot = load_lion(path, false)
-        assert(X.lion_ShouldStopDrain(bot) == false, 'unarmed the helper is inert on ' .. path)
-        assert(X.ConsiderStopDrain() == BOT_ACTION_DESIRE_NONE,
-            'unarmed + not retreating: shipped returns NONE on ' .. path)
+        local Xoff, _, botOff = load_lion(path, false)
+        local off = Xoff.lion_ShouldStopDrain(botOff)
+        local offDesire = Xoff.ConsiderStopDrain()
+        local Xon, _, botOn = load_lion(path, true)
+        assert(off == Xon.lion_ShouldStopDrain(botOn),
+            'the two legs disagree on ' .. path .. ' -- something still reads '
+            .. 'the arm string')
+        assert(offDesire == Xon.ConsiderStopDrain(),
+            'ConsiderStopDrain still depends on the arm string on ' .. path)
     end
 end
 
-tests['gate OFF: armed but not turbo is inert on both frames'] = function()
+tests['gate OFF: NOT turbo is the only inert path, on both frames'] = function()
     for _, path in ipairs({ LETHAL, SURVIVED }) do
-        local X, _, bot = load_lion(path, true, false)
-        assert(X.lion_ShouldStopDrain(bot) == false, 'the gate is turbo-only, on ' .. path)
-        assert(X.ConsiderStopDrain() == BOT_ACTION_DESIRE_NONE, 'non-turbo: NONE on ' .. path)
+        for _, bArmed in ipairs({ true, false }) do
+            local X, _, bot = load_lion(path, bArmed, false)
+            assert(X.lion_ShouldStopDrain(bot) == false,
+                'the promoted default is turbo-only, on ' .. path
+                .. ' (bArmed=' .. tostring(bArmed) .. ')')
+            assert(X.ConsiderStopDrain() == BOT_ACTION_DESIRE_NONE,
+                'non-turbo: NONE on ' .. path
+                .. ' (bArmed=' .. tostring(bArmed) .. ')')
+        end
     end
 end
 

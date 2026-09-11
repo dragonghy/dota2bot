@@ -613,36 +613,48 @@ local PINNED = {
     "fieldbuy | J.ShouldFieldBuyRegen | J.HasFieldRegenSource | bagsalve | bots/FunLib/jmz_func.lua",                                     -- A
     "fieldbuy | J.ShouldFieldBuyRegen | J.IsFieldRegenSituation | fieldcreep | bots/FunLib/jmz_func.lua",                                 -- P
     "fieldbuy | J.ShouldFieldBuyRegen | J.IsFieldSipEnough | fieldsip | bots/FunLib/jmz_func.lua",                                        -- I
-    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.IsInLaningPhase | c2,c4 | bots/item_purchase_generic.lua",                             -- W
-    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegen | fieldbuy | bots/item_purchase_generic.lua",                      -- W
+    -- [tpdeathbuy PROMOTE 20260911, test_set.md §GU.1] All six ItemPurchaseThink
+    -- rows below read `fieldregen,tpdeathbuy` until this date. The outer-id set
+    -- is "every candidate gating ANY block of the enclosing Think", so promoting
+    -- 'tpdeathbuy' (its gate line deleted from this file) removes it from all six
+    -- -- and this census, which asserts the corpus set is EXACTLY the set already
+    -- read, went red on the promoting round's own push gate.
+    -- ⭐ That is the leg working, not misfiring (GH #624): the red reached the
+    -- person who caused it, in the same round, instead of the next stream hours
+    -- later. Re-pinned rather than amnestied, and the (W) verdicts are unchanged
+    -- because none of them ever rested on 'tpdeathbuy' -- the comments below say
+    -- so in their own words: these predicates are OR arms on the 'fieldbuy'
+    -- block, and the outer ids guard OTHER blocks of the same function.
+    "fieldregen | ItemPurchaseThink | J.IsInLaningPhase | c2,c4 | bots/item_purchase_generic.lua",                             -- W
+    "fieldregen | ItemPurchaseThink | J.ShouldFieldBuyRegen | fieldbuy | bots/item_purchase_generic.lua",                      -- W
     -- [buyband 20260906] The third row, and it is the (W) twin of the one above:
-    -- the census's wide net, since 'fieldregen'/'tpdeathbuy' guard OTHER blocks of
+    -- the census's wide net, since 'fieldregen' guards OTHER blocks of
     -- the same Think and this predicate is a new OR arm on the 'fieldbuy' block.
     -- Un-armed J.ShouldFieldBuyRegenHurt returns false on its first line -- the
     -- identity element of the `or` it joined -- so the shipped purchase order is
-    -- byte-identical and arming either outer id alone still measures that id.
-    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenHurt | buyband | bots/item_purchase_generic.lua",                   -- W
+    -- byte-identical and arming the outer id alone still measures that id.
+    "fieldregen | ItemPurchaseThink | J.ShouldFieldBuyRegenHurt | buyband | bots/item_purchase_generic.lua",                   -- W
     -- [buytower 20260906] The fourth row on the same Think, (W) for the same
-    -- reason as the two above it: 'fieldregen'/'tpdeathbuy' guard OTHER blocks of
+    -- reason as the two above it: 'fieldregen' guards OTHER blocks of
     -- this function, and this predicate is a new OR arm on the 'fieldbuy' block.
     -- Un-armed J.ShouldFieldBuyRegenTower returns false on its first line -- the
     -- identity element of the `or` it joined -- so the shipped purchase order is
-    -- byte-identical and arming either outer id alone still measures that id.
-    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenTower | buytower | bots/item_purchase_generic.lua",                 -- W
+    -- byte-identical and arming the outer id alone still measures that id.
+    "fieldregen | ItemPurchaseThink | J.ShouldFieldBuyRegenTower | buytower | bots/item_purchase_generic.lua",                 -- W
     -- [buyring 20260906] The fifth row on the same Think, (W) for the same reason
-    -- as the three above it: 'fieldregen'/'tpdeathbuy' guard OTHER blocks of this
+    -- as the three above it: 'fieldregen' guards OTHER blocks of this
     -- function, and this predicate is a new OR arm on the 'fieldbuy' block.
     -- Un-armed J.ShouldFieldBuyRegenRing returns false on its first line -- the
     -- identity element of the `or` it joined -- so the shipped purchase order is
-    -- byte-identical and arming either outer id alone still measures that id.
-    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenRing | buyring | bots/item_purchase_generic.lua",                   -- W
+    -- byte-identical and arming the outer id alone still measures that id.
+    "fieldregen | ItemPurchaseThink | J.ShouldFieldBuyRegenRing | buyring | bots/item_purchase_generic.lua",                   -- W
     -- [buydeep 20260908] The sixth row on the same Think, (W) for the same reason
-    -- as the four above it: 'fieldregen'/'tpdeathbuy' guard OTHER blocks of this
+    -- as the four above it: 'fieldregen' guards OTHER blocks of this
     -- function, and this predicate is a new OR arm on the 'fieldbuy' block.
     -- Un-armed J.ShouldFieldBuyRegenDeep returns false on its first line -- the
     -- identity element of the `or` it joined -- so the shipped purchase order is
-    -- byte-identical and arming either outer id alone still measures that id.
-    "fieldregen,tpdeathbuy | ItemPurchaseThink | J.ShouldFieldBuyRegenDeep | buydeep | bots/item_purchase_generic.lua",                   -- W
+    -- byte-identical and arming the outer id alone still measures that id.
+    "fieldregen | ItemPurchaseThink | J.ShouldFieldBuyRegenDeep | buydeep | bots/item_purchase_generic.lua",                   -- W
     "fieldsip | J.IsFieldSipEnough | J.FieldRegenSipValue | bagsalve | bots/FunLib/jmz_func.lua",                                         -- A
     "l1kite | J.ShouldCounterTradeKite | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                           -- P
     "l1trade | J.ShouldInitiateLaneKill | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                          -- P
@@ -809,7 +821,7 @@ local PINNED = {
     -- helper, on a DIFFERENT outer function, and the identity answer is the one
     -- the row above already carries: un-armed, J.HasFieldRegenSource skips its
     -- 'bagsalve' backpack loop and returns the SHIPPED main-slot answer, so it
-    -- is additive-only and arming either outer id alone still measures that id.
+    -- is additive-only and arming the outer id alone still measures that id.
     -- (A). Both sweeps drive 'bagsalve' through a one-id-wide stub over all 1021
     -- live frames and read `arm_leak` 0 (tests/_tprecov_sweep.lua,
     -- tests/_tpdeep_sweep.lua).

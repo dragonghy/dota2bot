@@ -1042,6 +1042,7 @@ function ItemPurchaseThink()
 	end
 
 	--死前如果会损失金钱则购买额外TP
+	-- PROMOTED 2026-09-11 (was soak-candidate 'tpdeathbuy'); test_set.md §GU.1.
 	-- [tpdeathbuy, 20260825] The shipped HP clause is `botHP < 0.08 and botHP >= 1`.
 	-- botHP is J.GetHP's 0..1 FRACTION (assigned ~350 lines above in this file), so
 	-- the two bounds are mutually exclusive: NO value satisfies both and this whole
@@ -1050,15 +1051,26 @@ function ItemPurchaseThink()
 	-- What makes it a stray conjunct rather than a convention is the sibling dust
 	-- block ~35 lines below: same "spend the gold you are about to lose" idea,
 	-- written with `botHP < 0.06` and NO companion lower bound.
-	-- Armed (turbo + 'tpdeathbuy') the stray bound is dropped so the block can fire.
-	-- Written as a SELECTION, not as a disjunction, so that gate-off is the shipped
-	-- expression byte for byte (charter 0TERN).
+	-- In TURBO the stray bound is dropped so the block can fire.  Non-turbo keeps
+	-- the shipped expression byte for byte -- written as a SELECTION rather than a
+	-- disjunction precisely so that identity is arithmetic, not a promise
+	-- (charter 0TERN), and it survives the promote unchanged.
 	-- ⚠ DIRECTION: this is a WIDENING.  Every other lever this stream ships is a
 	-- subset of the factory predicate; this one strictly ADDS purchases the shipped
-	-- tree never makes (dead -> live).  Read the acceptance that way.
+	-- tree never makes (dead -> live).  Read any future acceptance that way.
+	-- (a) replay-check 2026-09-09T01:02Z, W62/W63 corpus: WORKING, episodes=14 --
+	--     the armed leg bought a TP inside the only attributable window and the
+	--     dead-code baseline leg never did, on two independently written meters.
+	-- (b) family-level, 5 waves that all carried it (W55/W58/W62/W63/W64):
+	--     gpm -22.72 / +40.58 / -7.20 / -15.00 / -8.96, mean -2.66 over 722 scored
+	--     games; winrate channel DEGENERATE throughout, so no win/loss reading is
+	--     cited.  Coarse "no clear negative" (iron rule 2b) -- NOT positive evidence.
+	-- (c) the conjunct is unsatisfiable arithmetic, not a tuning choice; and
+	--     converting gold that death is about to burn into a TP scroll (which death
+	--     does NOT take) is standard play.
 	local tpCost = GetItemCost( "item_tpscroll" )
 	local bDyingWithDoomedGold = botHP < 0.08 and botHP >= 1
-	if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then
+	if J.IsModeTurbo() then
 		bDyingWithDoomedGold = botHP < 0.08
 	end
 	if botGold >= tpCost

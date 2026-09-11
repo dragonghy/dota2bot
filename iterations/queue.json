@@ -2368,7 +2368,14 @@
       "priority": 3,
       "axis": "soak candidate 'glyphany' 的条件 (a)(执行核验)。搭车、零 AWS 增量、不申请专波 —— 任一带 axe 或 lion 载体的波次即可。",
       "question": "已落地(2026-09-11 英雄组,`state.json:glyphany_20260911`,GH 立案见报告 `iterations/reports/hero/20260911T081500Z.md`):`bots/FunLib/jmz_func.lua` 新增 `J.IsGlyphVetoClear( tUnits )`,turbo-only、`J.IsSoakCandidate('glyphany')`,**只被三个焦点站点消费**(`hero_axe.lua X.ConsiderQ` 带线、`hero_lion.lua X.ConsiderQ` 推线、`hero_lion.lua X.ConsiderR` A 杖带线)。gate off 逐字节复现出厂的 `not tUnits[1]:HasModifier('modifier_fountain_glyph')`;armed 对整张名单量化。\n\n**这是纯收窄**:`not any(P)` 蕴含 `not P([1])` ⇒ armed 只能**撤回**一次出厂会做的 AoE,永远不会新增一次(与 `wkqdmg` 同形)。所以 (b) 只需要粗粒度胜负旁证,**真正要买的只有 (a):这三条支路在真实 turbo 对局里到底开不开火,以及开火时环里是否真的出现过『一部分兵带 modifier_fountain_glyph、另一部分不带』的混合状态。**\n\n⛔ **归档扫描买不到,这一条已经量过,请不要按 ROUTED_ARCHIVE_SCAN 路由**,有三重阻断:(1) `GetNearbyLaneCreeps` 不在 `tests/mock/replay_fixture.lua` 任何 spec 上 ⇒ 全 141 个冻结帧、141/141 个主体答空表,**包括那 32 个确实带 `creeps` 采样的文件**;(2) 兵采样条目是 `{ team, x, y, dt }`,**没有名字、没有血量、没有 modifier 列表** ⇒ 圣坛谓词无处可读,**只修 (1) 会把一句诚实的『看不见』变成一句自信的、错的『没有兵被保护过』**;(3) 三条支路全部坐在**正向 mode** 闸后面(`J.IsPushing`/`IsFarming`/`IsDefending`),而 mock 的 `GetActiveMode()` 答 0 ⇒ 离线一帧都跑不到(GH #104 §5 / hero -143 同族)。以上三条都写成了会红的断言,在 `tests/test_glyph_veto_subject.lua` §3。\n\n**读数口径事先登记**:armed 腿与 baseline 腿各自的『三条支路的施法计数』差,以及(若 dumper 能给)施法瞬间环内带 `modifier_fountain_glyph` 的单位占比。**方向预期:armed <= baseline,严格小于才说明缺陷在真实对局里有域。** 读到逐位相同 ⇒ 域为 0,按空操作归档(先例 `lionqkill`),**不要读成『改动无效』**。\n\n**⚠️ 与本组另一条量具请求相邻但不同**:让 dumper 给兵的 modifier 列表是 (2) 的修法,属于 [harness],本行不申请它;没有它这一波仍能回答 (a) 的第一半(支路开不开火)。",
-      "status": "pending"
+      "status": "pending",
+      "director": {
+        "ruling": "FROZEN-HOLD",
+        "wave": null,
+        "at": "2026-09-11T1x:xxZ",
+        "ref": "iterations/streams/test_set.md §GU.4; iterations/OWNER_PRIORITIES.md P4.2",
+        "note": "⛔ 不是对这条杠杆的否定,也不算掉棒。P4.2 逐字:入集冻结,新 id 一律不入集(**搭车也不行**),直到 armed 集 ≤ 20;冻结期收到入集提议的唯一合法裁定是 FROZEN-HOLD。本行虽然写作「条件 (a) 执行核验、搭车、零 AWS 增量」,**实质仍是入集** —— 三条支路的 armed/baseline 差要出现,`glyphany` 必须进臂串,而那正是 P4.2 冻的那一步。⭐ 请求本身没有问题,而且它把最难的一半**预先做完了**:它逐条量出了归档扫描买不到 (a) 的三重阻断(`GetNearbyLaneCreeps` 不在任何 fixture spec 上 ⇒ 141/141 主体答空表;兵采样条目 `{team,x,y,dt}` 没有名字/血量/modifier ⇒ 圣坛谓词无处可读,**只修第一条会把一句诚实的『看不见』变成一句自信的、错的『没有兵被保护过』**;三条支路都坐在正向 mode 闸后而 mock 的 `GetActiveMode()` 答 0)。⇒ **本裁定明确背书『不要按 ROUTED_ARCHIVE_SCAN 路由』**:那条路已经量过是死的,把它当便宜替代品会重新导出一个错的零。解冻条件 = armed ≤ 20。**本轮 34 → 32**(两条 promote,§GU),这条请求的解冻沿着同一个数字前进。接力棒不掉:已登记 `iterations/owed_executions.json:glyphany_readmission_on_thaw`。"
+      }
     }
   ],
   "done": [

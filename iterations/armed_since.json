@@ -97,7 +97,9 @@
     "liondrainstop": {
       "armed_since": "2026-08-20",
       "precision": "exact",
-      "source": "reports/director/20260820T190000Z.md"
+      "source": "reports/director/20260820T190000Z.md",
+      "retired_at": "2026-09-11",
+      "retired_note": "PROMOTE(test_set.md §GU.2;state.json:liondrainstop_PROMOTE_20260911)。armed 33 → 32,armed 22 天。动作是把 bots/BotLib/hero_lion.lua:2008 的 `if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end` 改成 `if not J.IsModeTurbo() then return false end`,非 turbo 仍逐字返回 false。(a) 录像组 2026-09-09T18:40Z W60 语料 WORKING episodes=36;32/36 域内引导在谓词成立的那一帧结束,而域外阴性对照两腿无方向(3.178/3.375 vs 3.119/3.125)⇒ 缩短只发生在域内;(b) 同 tpdeathbuy 的五波家族读数;(c) 生根的引导按构造不在回家路上,出厂的 J.IsRetreating 释放对它永不触发。⚠ GH #314 仍开着:4/36 域内引导没被切断 —— 那是**覆盖不足不是有害**(那些帧上 promoted 腿与出厂树逐字同为不切),根因候选(雾)在 dumper 携带分队视野之前离线不可判(state.json:liondrainstop_VISION_DOMAIN_20260829)。"
     },
     "odaoe": {
       "armed_since": "2026-08-21",
@@ -167,7 +169,9 @@
     "tpdeathbuy": {
       "armed_since": "2026-08-25",
       "precision": "exact",
-      "source": "state.json:tpdeathbuy_20260825"
+      "source": "state.json:tpdeathbuy_20260825",
+      "retired_at": "2026-09-11",
+      "retired_note": "PROMOTE(test_set.md §GU.1;state.json:tpdeathbuy_PROMOTE_20260911)。armed 34 → 33,armed 17 天。动作是把 bots/item_purchase_generic.lua 的 `if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then` 改成 `if J.IsModeTurbo() then`(§DU.6 红线:代码先改、串后改、同一个 commit),非 turbo 逐字未动。(a) 录像组 2026-09-09T01:02Z W62/W63 语料 WORKING episodes=14,两台独立写成的量具一致;(b) 家族级 5 波(W55/W58/W62/W63/W64)均值 −2.66 gpm / 722 计分局,winrate 通道全 DEGENERATE;(c) 出厂合取 `botHP < 0.08 and botHP >= 1` 不可满足 —— 是算术不是调参,上游 OHA 快照 74727e4:957-958 带来,本仓历史上一次都没跑过。"
     },
     "campfarm": {
       "armed_since": "2026-08-25",
