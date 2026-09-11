@@ -994,28 +994,6 @@
     "kind": "manual"
    },
    "done_when_note": "**裸读得出的验收句**:`ohnum`(或其继任 id)的重新提议里,`J.ShouldRefuseUnsupportedPunish` 的我方人头**不再只数以目标为圆心的那个圈**,**且**该提议附带一次 `tests/_ohnum_sweep.lua` 的重跑,报出**新估计量下的 `recenter_flip`**。⛔ **明确不接受的修法**:把半径从 1200 放大(如 2000)。它动的是同一个圆的**边**而不是**圆心**,会对称地把敌人也数进来(而实测的单边性说问题不在那里),而且 `tools/agent/mutstand_ohnum.sh` **分辨不出它和真修法** —— M8 打的是圆心,不是半径。⚠️ 本行**没有机器键,而这是诚实的**:验收对象是一份**还不存在的提议**,没有可以事先钉死的 `path`;伪造一个会在提议换名时静默变成 UNCERTIFIABLE。"
-  },
-  {
-   "id": "fence_ceiling_restored_to_brake",
-   "issue": "总监 2026-09-11T19:00Z 立(RULING 15);GH #754;裁定全文 `iterations/streams/test_set.md §GY`;机器键 `state.json:fence_crossing_RETIRED_20260911`",
-   "ruling": "**退休 RULING 10 的 `$85.00` crossing 记录,不是抬高它。** GH #754 的「剪刀」(闸 (iv) 裁按需 / 闸 (iii) 拒按需)**整条是这条记录自己造的**:crossing 按 `min(ruling, brake)` 施加,而**这个 min 没有下界** —— 记录写于 09-10、当时 derived fence 是 `$80`,它买了 `$5`;09-11 MTD 到 `$80.413` 越过 `$80` 告警,derived fence 跳到 `$100`、`min(fence,brake)` 变成 `$90` 刹车,**同一条记录从此不是买 `$5` 而是卖 `$5`**。⭐ 离线重放批测台自己 18:15Z 的数字(`--actual 80.413 --limit 100 --thresholds 50,80,100 --pending 3.45 --no-accrual-check`):按需波 `--planned 2.15` 带记录 **exit 3**(`Headroom was $1.137, this wave needs $2.150`),`--no-crossing-file` **exit 0**(`operative ceiling: $90.00`,`headroom $3.987 after this wave`)。⛔ **本裁定不批任何新钱**:天花板只是回到工具自己 derive 的 `$90` 刹车线;`$90` 刹车与 owner 的 `$100` 批准线**一字未动**。",
-   "ruled_at": "2026-09-11T19:00Z",
-   "executor": "批测台(batch-desk)—— 但执行不靠记忆:闸自己每轮读 registry(RULING 11)",
-   "trigger": "下一次任何 `wave_fence.py` 活跑(闸 (i) 解锁 `2026-09-11T21:24:58Z` 之后的那一轮)。",
-   "delivered_to": [
-    "iterations/director_rulings.json(**主投递**:`crossings: []`,退休记录连理由留在 `_retired` —— 闸自己读,不靠操作员重打三个 flag)",
-    "iterations/streams/test_set.md §GY(裁定全文档案)",
-    "iterations/streams/batch-desk.md(执行方每轮读的那份)",
-    "iterations/state.json:fence_crossing_RETIRED_20260911(机器键)",
-    "GH #754(批测台的活线程,push 后追评)"
-   ],
-   "why_registered_here": "**常驻义务,不属于任何一波、任何一个 id** —— 它问的是「那条被卖掉的 `$5` 有没有真的回到批测台的闸上」,而没有任何波次会替它举手(§DR)。⚠️ 失效形状很具体:退休记录**只改了总监这边的文件**,而下游读到的仍是旧天花板 —— 或者我的离线重放算错了,`--pending` 的构成在活跑里与我喂的 `3.45` 不同。两者都只有**活跑那一行**能证否。",
-   "done_when": {
-    "kind": "manual"
-   },
-   "done_when_note": "批测台任一轮报告里**逐字抄回**当轮现跑的两行:(1) `crossing registry:` 那一行读到 **none in force / 没有 ruling 在力**(⛔ 不是 `IS IN FORCE`,也不是 `NOT CONSULTED` —— 后者是 SKIP 不是读数);(2) `operative ceiling:` 那一行读到 **`$90.00 = min(fence, brake)`** 且其下**没有** `DIRECTOR CROSSING:` 行。⛔ **两行都要当轮现跑,不得抄本裁定里的离线数字** —— 那些是我喂进去的 `--actual/--pending`,不是账单。",
-   "status": "DISCHARGED",
-   "discharged": "DISCHARGED 2026-09-11T21:2xZ by batch-desk (W67 launch round). Both required lines were read from a LIVE `wave_fence.py --pending 3.45 --planned 0` run this round (FENCE_READ_EXIT=0), not copied from the ruling's offline replay: (1) `crossing registry: 0 record(s) at /home/user/dota2bot/iterations/director_rulings.json, none in force -- the gate runs at the DERIVED fence.` -- reads `none in force`, not `IS IN FORCE` and not `NOT CONSULTED`; (2) `operative ceiling: $90.00   = min(fence, brake)` with NO `DIRECTOR CROSSING:` line beneath it. The failure shape the ruling named (the retirement only changed the director's own file while the desk's gate still read the old ceiling) is therefore FALSIFIED. Separately the ruling's offline replay is confirmed digit for digit: `--planned 2.15` returned exit 0 with `headroom $3.987 after this wave`. Report: iterations/reports/batch-desk/20260911T212500Z.md section 1."
   }
  ],
  "retired": [
@@ -1313,6 +1291,30 @@
    "retired_at": "2026-09-11T16:xxZ",
    "retired_by": "director",
    "retired_because": "本行的验收句二选一,**第 (1) 条已被树满足,并由它自己点名的那把尺子读出**:`python3 tools/agent/verify_coverage.py` 本轮读 `armed ids: 30 / ids with >=1 machine-readable VERIFY line: 26`,verify=0 的表里**只有 4 条**(`overchase` / `tpcommit` / `blinkflee` / `lf_rescue`),**`ownhalf` 不在其中** ⇒ 它的 verify 列 > 0。取证现场是录像组 2026-09-10 的 `VERIFY id=ownhalf verdict=WORKING episodes=7`。⭐ **并且本行的 `trigger` 今天也独立地响了**:它写着「或 `ohnum` 先行退集/promote 之时,以先到者为准」,而 `ohnum` 今天被退回协同组(`state.json:ohnum_RETURNED_20260911`)。⚠️⚠️ **退休这一行不等于 `ownhalf` 可以促进,而这一点必须写在同一句里** —— 本行问的是「(a) 到底买到了没有」,答案是买到了;**下一个问题是「买到的那份够不够厚到可以促进」,那是另一道门、另一个分母**(1 局 7 帧,低于章程 ≥6 局下限)。⇒ 继任行 `ownhalf_promote_bar_thickness`,**验收句与本行不同**,不是本行的续期。⛔ 留集的**旧理由**(§FZ.5:它是 `ohnum` 域的唯一使能者)**今天作废了** —— 依赖的那一头已经不在集里;`ownhalf` 此后留集靠的是**它自己的候选身份**,不是使能者身份。"
+  },
+  {
+   "id": "fence_ceiling_restored_to_brake",
+   "issue": "总监 2026-09-11T19:00Z 立(RULING 15);GH #754;裁定全文 `iterations/streams/test_set.md §GY`;机器键 `state.json:fence_crossing_RETIRED_20260911`",
+   "ruling": "**退休 RULING 10 的 `$85.00` crossing 记录,不是抬高它。** GH #754 的「剪刀」(闸 (iv) 裁按需 / 闸 (iii) 拒按需)**整条是这条记录自己造的**:crossing 按 `min(ruling, brake)` 施加,而**这个 min 没有下界** —— 记录写于 09-10、当时 derived fence 是 `$80`,它买了 `$5`;09-11 MTD 到 `$80.413` 越过 `$80` 告警,derived fence 跳到 `$100`、`min(fence,brake)` 变成 `$90` 刹车,**同一条记录从此不是买 `$5` 而是卖 `$5`**。⭐ 离线重放批测台自己 18:15Z 的数字(`--actual 80.413 --limit 100 --thresholds 50,80,100 --pending 3.45 --no-accrual-check`):按需波 `--planned 2.15` 带记录 **exit 3**(`Headroom was $1.137, this wave needs $2.150`),`--no-crossing-file` **exit 0**(`operative ceiling: $90.00`,`headroom $3.987 after this wave`)。⛔ **本裁定不批任何新钱**:天花板只是回到工具自己 derive 的 `$90` 刹车线;`$90` 刹车与 owner 的 `$100` 批准线**一字未动**。",
+   "ruled_at": "2026-09-11T19:00Z",
+   "executor": "批测台(batch-desk)—— 但执行不靠记忆:闸自己每轮读 registry(RULING 11)",
+   "trigger": "下一次任何 `wave_fence.py` 活跑(闸 (i) 解锁 `2026-09-11T21:24:58Z` 之后的那一轮)。",
+   "delivered_to": [
+    "iterations/director_rulings.json(**主投递**:`crossings: []`,退休记录连理由留在 `_retired` —— 闸自己读,不靠操作员重打三个 flag)",
+    "iterations/streams/test_set.md §GY(裁定全文档案)",
+    "iterations/streams/batch-desk.md(执行方每轮读的那份)",
+    "iterations/state.json:fence_crossing_RETIRED_20260911(机器键)",
+    "GH #754(批测台的活线程,push 后追评)"
+   ],
+   "why_registered_here": "**常驻义务,不属于任何一波、任何一个 id** —— 它问的是「那条被卖掉的 `$5` 有没有真的回到批测台的闸上」,而没有任何波次会替它举手(§DR)。⚠️ 失效形状很具体:退休记录**只改了总监这边的文件**,而下游读到的仍是旧天花板 —— 或者我的离线重放算错了,`--pending` 的构成在活跑里与我喂的 `3.45` 不同。两者都只有**活跑那一行**能证否。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "批测台任一轮报告里**逐字抄回**当轮现跑的两行:(1) `crossing registry:` 那一行读到 **none in force / 没有 ruling 在力**(⛔ 不是 `IS IN FORCE`,也不是 `NOT CONSULTED` —— 后者是 SKIP 不是读数);(2) `operative ceiling:` 那一行读到 **`$90.00 = min(fence, brake)`** 且其下**没有** `DIRECTOR CROSSING:` 行。⛔ **两行都要当轮现跑,不得抄本裁定里的离线数字** —— 那些是我喂进去的 `--actual/--pending`,不是账单。",
+   "status": "DISCHARGED",
+   "discharged": "DISCHARGED 2026-09-11T21:2xZ by batch-desk (W67 launch round). Both required lines were read from a LIVE `wave_fence.py --pending 3.45 --planned 0` run this round (FENCE_READ_EXIT=0), not copied from the ruling's offline replay: (1) `crossing registry: 0 record(s) at /home/user/dota2bot/iterations/director_rulings.json, none in force -- the gate runs at the DERIVED fence.` -- reads `none in force`, not `IS IN FORCE` and not `NOT CONSULTED`; (2) `operative ceiling: $90.00   = min(fence, brake)` with NO `DIRECTOR CROSSING:` line beneath it. The failure shape the ruling named (the retirement only changed the director's own file while the desk's gate still read the old ceiling) is therefore FALSIFIED. Separately the ruling's offline replay is confirmed digit for digit: `--planned 2.15` returned exit 0 with `headroom $3.987 after this wave`. Report: iterations/reports/batch-desk/20260911T212500Z.md section 1.",
+   "retired_at": "2026-09-11T22:4xZ",
+   "retired_by": "director (RULING 16 round) -- batch-desk W67 21:25Z discharged it with two LIVE lines; the failure shape the ruling named is falsified, so the row has nothing left to watch."
   }
  ],
  "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。"

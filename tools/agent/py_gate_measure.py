@@ -94,23 +94,32 @@ def select(measurements, per_test_cap, budget):
     running = 0.0
     for m in ordered:
         rel = m["path"]
-        if m["timed_out"] or m["seconds"] > per_test_cap:
+        # ⚠️ 2026-09-11 (director): ROUND ONCE, BEFORE SELECTING, and select on
+        # the number that actually gets written down.  This used to select on
+        # the raw float while storing `round(x, 3)`, so the manifest's ROWS and
+        # its own `selected_total_seconds` disagreed by up to n * 5e-4 -- 0.033s
+        # over 84 rows on the 2026-09-08 manifest, enough to put the row sum
+        # (12.029) over a budget (12.0) the selection never crossed.  The red
+        # that produces reads exactly like "the hook got too slow" and is
+        # instead an artefact of rounding a number after deciding with it.
+        secs = round(m["seconds"], 3)
+        if m["timed_out"] or secs > per_test_cap:
             out[rel] = {
-                "seconds": round(m["seconds"], 3),
+                "seconds": secs,
                 "in_gate": False,
                 "reason": "over_per_test_cap",
             }
             continue
-        if running + m["seconds"] > budget:
+        if running + secs > budget:
             out[rel] = {
-                "seconds": round(m["seconds"], 3),
+                "seconds": secs,
                 "in_gate": False,
                 "reason": "over_cumulative_budget",
             }
             continue
-        running += m["seconds"]
+        running += secs
         out[rel] = {
-            "seconds": round(m["seconds"], 3),
+            "seconds": secs,
             "in_gate": True,
             "reason": "fast",
         }

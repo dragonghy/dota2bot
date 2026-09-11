@@ -273,13 +273,39 @@ try:
           "(seconds <= %.1f) -- the manifest must not merely CLAIM the rule; "
           "offenders: %s" % (cap, over_cap))
 
-    total = sum(v["seconds"] for v in rt.values() if v["in_gate"])
-    check(total <= budget + 1e-6,
-          "5c: the selected total (%.2fs) fits the recorded budget (%.1fs)"
-          % (total, budget))
-    check(total < 18.0,
+    # ⚠️ 2026-09-11 (director): 5c USED TO BE `row_sum <= budget`, and it was
+    # RED on trunk for reasons that had nothing to do with the hook's speed.
+    # The generator selected on the raw measured float and wrote each row
+    # `round(x, 3)`, so the row sum drifts from the number the selection
+    # actually used by up to n * 5e-4 -- row sum 12.029 against a recorded
+    # 11.996 over 84 rows, i.e. 0.033s, which is enough to cross a 12.0s budget
+    # the selection never crossed.  So the two questions are asked separately:
+    #   5c  -- did the SELECTION stay inside the budget?  (its own number)
+    #   5c2 -- do the ROWS still agree with that number?  (catches hand-edits)
+    # Splitting them is strictly stronger than the old single check: a row
+    # hand-edited upward by 0.5s used to be indistinguishable from rounding
+    # noise, and now it is not.  The generator was fixed in the same change to
+    # round before selecting, so `allowance` collapses to ~0 on the next
+    # re-measure; it is kept because the CURRENT manifest predates that fix.
+    row_sum = sum(v["seconds"] for v in rt.values() if v["in_gate"])
+    recorded = float(real["selected_total_seconds"])
+    n_sel = sum(1 for v in rt.values() if v["in_gate"])
+    check(recorded <= budget + 1e-6,
+          "5c: the selection's own total (%.3fs) fits the recorded budget "
+          "(%.1fs)" % (recorded, budget))
+    allowance = n_sel * 5e-4 + 1e-6
+    check(abs(row_sum - recorded) <= allowance,
+          "5c2: the rows (%.3fs over %d selected) disagree with the manifest's "
+          "own selected_total_seconds (%.3fs) by %.3fs, more than the %.3fs "
+          "that rounding each row to 3 decimals can explain. Either a row was "
+          "hand-edited or the summary is stale -- re-measure, do not adjust"
+          % (row_sum, n_sel, recorded, abs(row_sum - recorded), allowance))
+    # 5d reads the ROWS, deliberately: it is the wall-clock claim, so the
+    # quantity that matters is what will actually be run, and the 6s of
+    # headroom is far wider than any rounding drift.
+    check(row_sum < 18.0,
           "5d: and does not double the Lua static half's measured 18s cold "
-          "(GH #616 acceptance) -- got %.2fs" % total)
+          "(GH #616 acceptance) -- got %.2fs" % row_sum)
     check(real.get("selected_count") == sum(1 for v in rt.values() if v["in_gate"]),
           "5e: the manifest's own selected_count agrees with its rows -- a "
           "summary that drifts from the data it summarises is how a stale "
@@ -343,6 +369,28 @@ try:
           "the measurement (got %r)" % sel["t/mid.py"]["reason"])
     check(abs(tot - 0.5) < 1e-6,
           "7e: the reported total counts only what is in (got %.3f)" % tot)
+
+    # 7f/7g: the generator must DECIDE with the number it WRITES DOWN.  It used
+    # to select on the raw float and store round(x, 3), which is how the real
+    # manifest ended up with a row sum 0.033s above its own recorded total and
+    # 0.029s above a budget the selection never crossed (see section 5).  Rows
+    # whose third decimal is not the last one are the whole test: with the old
+    # code `tot` is the raw sum and the rows are rounded, so 7f fails.
+    rows2 = [
+        {"path": "t/a.py", "seconds": 0.10049, "timed_out": False},
+        {"path": "t/b.py", "seconds": 0.20051, "timed_out": False},
+        {"path": "t/c.py", "seconds": 0.30049, "timed_out": False},
+    ]
+    sel2, tot2 = pgm.select(rows2, per_test_cap=3.0, budget=10.0)
+    row_sum2 = sum(v["seconds"] for v in sel2.values() if v["in_gate"])
+    check(abs(row_sum2 - tot2) < 1e-9,
+          "7f: the rows sum EXACTLY to the reported total (rows %.6f vs total "
+          "%.6f) -- a generator that decides with one number and records "
+          "another hands every downstream check a quantity it cannot verify"
+          % (row_sum2, tot2))
+    check(all(v["seconds"] == round(v["seconds"], 3) for v in sel2.values()),
+          "7g: and every recorded second really is the 3-decimal value, so the "
+          "budget comparison and the stored row are the same number")
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 

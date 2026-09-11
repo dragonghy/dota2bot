@@ -33,17 +33,24 @@
 -- Every live-Lion instant in the archive, driven through the real loader with
 -- the repaired meter.  Each stage is the previous stage's subset:
 --
---     live-Lion instants ................................ 24
---     ... Finger trained (rank >= 1) .................... 13
---     ... and off cooldown .............................. 3
---     ... and mp >= Finger's cost ....................... 3
+--     live-Lion instants ................................ 42
+--     ... Finger trained (rank >= 1) .................... 26
+--     ... and off cooldown .............................. 9
+--     ... and mp >= Finger's cost ....................... 9
 --     ... and mp <  cost + cheapest castable basic ...... 0   <- the domain
 --
--- The binding constraint is NOT mana.  It is COOLDOWN: 10 of the 13 trained
+-- ⚠️ RE-TAKEN 2026-09-11 (director) at a corpus 1.75x the one this block was
+-- first written on (24 -> 42 live-Lion instants).  Every stage grew; the last
+-- one did not.  The shape of the funnel is unchanged, so the numbers below are
+-- restated, not re-argued.
+--
+-- The binding constraint is NOT mana.  It is COOLDOWN: 17 of the 26 trained
 -- instants have Finger down (observed remaining 1.2s .. 108.6s against a
 -- level-1 cooldown of 110s), so the archive is dominated by post-cast frames.
--- Of the three that survive, one has no castable basic at all (both Impale and
--- Hex on cooldown) and two are far above the band.
+-- Of the nine that survive, two have no castable basic at all (both Impale and
+-- Hex on cooldown) and seven are far above the band.  `tooPoor` is still 0:
+-- across 42 instants, no Lion has ever held Finger ready and been unable to
+-- pay for it.
 --
 -- ===========================================================================
 -- WHY THE REVIVAL CONDITION DOES NOT REVIVE THE LEVER -- CLOSED FORM
@@ -57,8 +64,9 @@
 --     cheapest basic is Impale, and Impale's cost is FROZEN at 150 from rank 4
 --     onward -- reached around hero level 7.  The band can never be wider than
 --     150 mana, at any hero level, at any Finger rank.
---   * The pool keeps growing.  Observed max_mp runs 387 (level 1) -> 708
---     (level 8) -> 1158 (level 11) -> 1551 (level 20).
+--   * The pool keeps growing.  Observed max_mp runs 387 (level 1) -> 776
+--     (level 8) -> 1158 (level 11) -> 1244 (level 12) -> 1551 (level 20) ->
+--     1867 (level 24).
 --
 -- So the band's share of the pool is 150/max_mp, STRICTLY DECREASING in the
 -- pool, and the target the reserve has to hit shrinks as Lion levels:
@@ -71,38 +79,62 @@
 -- follows from Impale's ladder ending at 150 while the pool does not end.
 --
 -- The ruling's own quantity is the sharpest way to see it.  It reasoned that
--- 400 would bite because the pool bottom was 380.  On the frame where the cost
--- is actually 400, the pool is 1551 -- 4.08x the assumed bottom.
+-- 400 would bite because the pool bottom was 380.  On the POOREST frame where
+-- the cost is actually 400, the pool is 1244 -- 3.27x the assumed bottom.
+--
+-- ⚠️ That multiple was 4.08x at n=2 and is 3.27x at n=7.  It did not move
+-- because Lion changed; it moved because the estimator is a MINIMUM OVER n,
+-- which is monotonically non-increasing in n BY CONSTRUCTION.  A threshold on
+-- it is therefore guaranteed to fire eventually for a reason that carries no
+-- information about the lever, which is why section 5 no longer thresholds it
+-- (see the note there).  Quote the multiple as a description, never as the
+-- margin the ruling survives on.
 --
 -- ===========================================================================
 -- HONEST BOUNDS -- load-bearing, quote these with any number above
 -- ===========================================================================
 --
--- (A) n = 2 AT FINGER RANK 2 (was 1; widened 2026-09-07, hero, backlog -112).
---     The ratchet section 5 installed for exactly this purpose fired, and the
---     re-take it demanded is done rather than re-baselined:
+-- (A) n = 7 AT FINGER RANK 2 (1 -> 2 on 2026-09-07; 2 -> 7 on 2026-09-11).
+--     The ratchet fired again and the re-take it demanded is done rather than
+--     re-baselined.  ⭐ THIS TIME THE MINIMUM DID MOVE:
 --
+--         tests/frames/f_260909_215412_axe_cull_cm_838.lua      Lion lvl 12, max_mp 1244  <- the bottom
+--         tests/frames/f_260909_215040_wk_blast_sb_1052.lua     Lion lvl 18, max_mp 1419
+--         tests/frames/f_260910_124853_lion_spike_slardar_1129  Lion lvl 19, max_mp 1491
 --         tests/frames/f_20260831_004433_cm_creepreach.lua      Lion lvl 20, max_mp 1551
 --         tests/frames/f_260831_061811_axe_call_tp_channel.lua  Lion lvl 18, max_mp 1579
+--         tests/frames/f_260910_124853_lion_spike_sb_1344.lua   Lion lvl 23, max_mp 1831
+--         tests/frames/f_260910_124853_lion_spike_sb_1357.lua   Lion lvl 23, max_mp 1831
 --
---     Both price Finger at 400.  THE MINIMUM DID NOT MOVE: it is still 1551,
---     and the frame that supplies it is still the 2026-08-31 one -- so every
---     number below stands at the wider sample.  The second instant sits TWO
---     HERO LEVELS LOWER and carries a LARGER pool, which is the direction the
---     closed-form band-width argument predicts and the reverse of what the
---     revival condition needs.
+--     All seven price Finger at 400, so the ladder claim survives the widening
+--     untouched.  The MINIMUM fell 1551 -> 1244 (-19.8%), onto a frame eight
+--     hero levels below the old bottom, and the 2026-08-31 frame that supplied
+--     the bottom for eleven days is now only the FOURTH poorest.
+--     ⭐ THE WARNING THIS BOUND CARRIED IS NOW A MEASUREMENT.  The n=2 text
+--     said "1551 must never be quoted as the rank-2 pool bottom" because both
+--     instants were full-mana ones; going to n=7 moved it by a fifth, and the
+--     new bottom is NOT a full-mana instant (614/1244).  The direction is the
+--     one a minimum-over-n must take, so the honest reading is that the n=2
+--     number was an over-estimate of the bottom, not that Lion got poorer.
 --     STILL NOT A POOL BOTTOM.  The 380 in the ruling was a MINIMUM OVER ~500
---     FRAMES per game across 1216; 1551 is now a minimum over TWO instants,
---     and BOTH are full-mana ones (1551/1551 and 1579/1579).  n=2 of the same
---     kind is not the ruling's estimator either, so 1551 must never be quoted
---     as "the rank-2 pool bottom".  What IS robust at any n is the closed-form
+--     FRAMES per game across 1216; 1244 is a minimum over SEVEN instants from
+--     four recording sessions.  What IS robust at any n is the closed-form
 --     band-width argument above, which reads no frame's mana at all -- only the
 --     two ability ladders and the pool, both of which are KV facts.  The DOMAIN
---     question at rank 2 is supply-starved, not answered; section 5 remains the
+--     question at rank 2 is supply-starved, not answered; section 2 remains the
 --     ratchet that forces a re-read when the archive gains more rank-2 Lions.
--- (B) FINGER RANK 3 (cost 600) IS ENTIRELY UNMEASURED -- zero instants.
--- (C) "稳定到 hero level 12+" IS NOT ESTABLISHED.  One frame exists above
---     level 11.  The revival condition has begun to fire, not finished.
+-- (B) FINGER RANK 3 (cost 600) IS ENTIRELY UNMEASURED -- two instants exist
+--     (section 2 names them) and neither has been read against any claim here.
+-- (C) "稳定到 hero level 12+" IS NO LONGER UNSUPPORTED -- ⚠️ AMENDED
+--     2026-09-11.  This bound used to read "one frame exists above level 11".
+--     Nine of the 42 live-Lion instants (21%) now sit above level 11, spanning
+--     levels 12, 18, 19, 20, 23 and 24.  Together with (A)'s falling bottom,
+--     BOTH of the revival condition's premises have moved toward it since it
+--     was written -- and the domain is STILL empty (section 1 asserts that at
+--     zero, hard).  The premises moving without the domain moving is the
+--     closed-form argument being right, not the ratchet being lenient; but the
+--     next stream to widen this corpus should read this bound, not this
+--     sentence's conclusion.
 -- (D) The mana prices come from tests/mock/special_value_shapes.lua, a KV
 --     snapshot of the FIVE FOCUS HEROES only.  Lion is in it.  They agree with
 --     the independent datafeed read recorded in GH #73's body
@@ -136,7 +168,12 @@ local IMPALE     = 'lion_impale'
 local HEX        = 'lion_voodoo'
 local FIXTURE_DIR = 'tests/fixtures'
 local STAGED_DIR  = 'tests/frames'
-local RANK2_FRAME = 'tests/frames/f_20260831_004433_cm_creepreach.lua'
+-- The MINIMUM-POOL rank-2 instant -- the estimator the ruling's own reasoning
+-- asks for (it argued about a pool BOTTOM).  This is a reading, not an
+-- identity: it moved from the 2026-08-31 frame to this one when n went 2 -> 7
+-- on 2026-09-11.  Section 2 pins it, so it cannot move again in silence.
+local RANK2_FRAME = 'tests/frames/f_260909_215412_axe_cull_cm_838.lua'
+local RANK2_MIN_POOL = 1244
 
 -- The ruling's assumed pool bottom at the moment cost reaches 400.
 local RULING_ASSUMED_POOL_BOTTOM = 380
@@ -334,6 +371,24 @@ end
 -- 1551, from the same 2026-08-31 frame.  The added instant is two hero levels
 -- LOWER with a LARGER pool (1579), which strengthens the closed-form argument
 -- rather than qualifying it.
+--
+-- ⚠️ 2026-09-11 (director): FIVE more rank-2 instants landed across two days
+-- (f_260909_215040_wk_blast_sb_1052, f_260909_215412_axe_cull_cm_838,
+-- f_260910_124853_lion_spike_sb_1344 / _1357 / _slardar_1129), cut by other
+-- streams for other levers.  n at rank 2 goes 2 -> 7 and this time THE MINIMUM
+-- MOVED: 1551 -> 1244, onto the level-12 Axe-subject frame.  The re-take is
+-- done here rather than re-baselined -- see HONEST BOUND (A).
+--
+-- ⭐ WHY THIS RATCHET IS WORTH ITS COST, STATED ONCE.  A hard equality on n is
+-- a re-read REQUEST, and its designed price was "an edit in this file".  Since
+-- GH #624 put this file inside the Lua push gate, the price is also "every
+-- other stream's push is refused until the re-read happens" -- and the stream
+-- that pays it is whoever next touches bots/game/tests, not whoever widened
+-- the corpus.  That is the right bill going to the wrong desk, but the answer
+-- is to re-take promptly (this took one work unit and produced two real
+-- findings), NOT to soften the equality into a >= ratchet: a ratchet that only
+-- notices the corpus SHRINKING would have stayed green through the exact
+-- widening that moved the bottom by a fifth.
 tests['[hero] lionult: the revival condition has fired -- rank 2 exists'] = function()
     local _, rows = funnel()
     local nRank2, nAboveEleven = 0, 0
@@ -364,17 +419,18 @@ tests['[hero] lionult: the revival condition has fired -- rank 2 exists'] = func
     -- A hard equality, not a ratchet, for the reason section 5 gives: the count
     -- IS the honest bound, so a third instant costs an edit here and a re-read
     -- of (A), exactly as the second one did.
-    assert(nRank2 == 2,
-        'the tree now holds ' .. nRank2 .. ' rank-2 Finger instants (EXACT rank), not 2. '
+    assert(nRank2 == 7,
+        'the tree now holds ' .. nRank2 .. ' rank-2 Finger instants (EXACT rank), not 7. '
         .. 'HONEST BOUND (A) -- the minimum-over-n estimator and its n -- is the '
         .. 'single largest limit on this reading, and it has moved. Re-take the '
         .. 'rank-2 domain question with the wider sample instead of quoting the '
-        .. 'n=2 numbers below.')
-    -- The re-take itself: widening the sample did NOT move the number every
-    -- reading below is built on.
-    assert(minPool == 1551 and minPath == RANK2_FRAME,
+        .. 'n=7 numbers below.')
+    -- The re-take itself.  At n=2 this line recorded that widening did NOT move
+    -- the number; at n=7 it DID (1551 -> 1244, -19.8%), which is why the pair
+    -- is pinned here rather than described in a comment.
+    assert(minPool == RANK2_MIN_POOL and minPath == RANK2_FRAME,
         'the minimum rank-2 pool is now ' .. tostring(minPool) .. ' on '
-        .. tostring(minPath) .. ', recorded 1551 on ' .. RANK2_FRAME
+        .. tostring(minPath) .. ', recorded ' .. RANK2_MIN_POOL .. ' on ' .. RANK2_FRAME
         .. '. Section 5 and HONEST BOUND (A) are both computed from this pair.')
 end
 
@@ -494,16 +550,25 @@ end
 
 -- ------------------------------------------------------------------ section 5
 
-tests['[hero] lionult: the ruling\'s assumed pool bottom is off by 4x'] = function()
+-- ⚠️ RENAMED 2026-09-11 (director).  This case was called "... is off by 4x"
+-- until the widening below made 4x false (it is 3.27x at n=7).  A case NAME
+-- that states a measured number goes stale silently: the gate's known-red
+-- baseline quoted this one verbatim, so the stale number was being carried in
+-- a second file too.  The new name states the claim, which is n-robust, rather
+-- than the multiple, which is not.
+tests['[hero] lionult: the assumed pool bottom is far below every rank-2 pool'] = function()
     local _, rows = funnel()
     -- EXACT rank, for the reason section 2 gives: since 2026-09-06 the tree also
     -- holds a rank-3 instant, and `>= 2` would silently re-aim every reading
     -- below (all of which are about the cost-400 line) at the rank-3 frame.
-    -- MINIMUM pool, not "whichever the enumeration reached last".  Since
-    -- 2026-09-07 there are two rank-2 instants, so the old last-wins selector
+    -- MINIMUM pool, not "whichever the enumeration reached last".  There are
+    -- seven rank-2 instants as of 2026-09-11, so the old last-wins selector
     -- made this reading depend on directory order; and the argument it feeds is
     -- about a pool BOTTOM, so the minimum is the estimator the ruling's own
-    -- reasoning asks for.  See HONEST BOUND (E).
+    -- reasoning asks for.  See HONEST BOUND (E).  ⭐ The selector change made
+    -- on 2026-09-07 is what let the 2026-09-11 widening be NOTICED: last-wins
+    -- would have re-aimed this section at whatever frame `ls` returned last and
+    -- gone green on it.
     local rank2
     for _, r in ipairs(rows) do
         if r.rRank == 2 and (rank2 == nil or r.maxMp < rank2.maxMp) then rank2 = r end
@@ -519,16 +584,35 @@ tests['[hero] lionult: the ruling\'s assumed pool bottom is off by 4x'] = functi
         'the rank-2 pool (' .. rank2.maxMp .. ') no longer exceeds the '
         .. RULING_ASSUMED_POOL_BOTTOM .. ' the ruling assumed, so the '
         .. '"400 against 380" arithmetic may hold after all -- re-read it.')
-    assert(rank2.maxMp / RULING_ASSUMED_POOL_BOTTOM > 4.0,
-        'the rank-2 pool is now only '
+    -- ⚠️ 2026-09-11 (director): THIS IS NO LONGER A THRESHOLD ON THE MULTIPLE.
+    -- It used to assert `maxMp / 380 > 4.0`, and it broke at 3.27x when n went
+    -- 2 -> 7 -- not because the lever moved, but because a MINIMUM OVER n can
+    -- only fall as n grows.  A threshold on such an estimator is a clock, not
+    -- a test: it is guaranteed to fire eventually for a reason that says
+    -- nothing about Lion, and the day it fires it looks exactly like a finding.
+    -- The n-robust statement is the one the band-width argument actually
+    -- licenses: the poorest rank-2 Lion ever recorded holds a CAPACITY above
+    -- the top of the widest band that can ever exist (cost + Impale's frozen
+    -- 150).  Below that line the hero is inside the band whenever it can pay at
+    -- all, and the domain is non-empty by construction rather than by luck.
+    -- The multiple is still reported in the message, and the exact (n, pool,
+    -- frame) triple is still pinned hard in section 2, so nothing here can move
+    -- in silence -- only the arbitrary 4x line is gone.
+    local bandTop = rank2.rCost + ladder(IMPALE)[#ladder(IMPALE)]
+    assert(rank2.maxMp > bandTop,
+        'the poorest rank-2 Lion capacity (' .. rank2.maxMp .. ') no longer '
+        .. 'clears the top of the widest possible band (' .. bandTop
+        .. ' = cost ' .. rank2.rCost .. ' + Impale\'s frozen 150) -- it is '
         .. string.format('%.2f', rank2.maxMp / RULING_ASSUMED_POOL_BOTTOM)
-        .. 'x the assumed bottom, no longer over 4x. The size of the gap is '
-        .. 'the reading; if it closed, the revival condition is back in play.')
+        .. 'x the ruling\'s assumed 380 bottom. Below that line a Lion is INSIDE '
+        .. 'the band whenever it can afford Finger at all, so the revival '
+        .. 'condition is back in play structurally. Stop quoting this file and '
+        .. 'go build the fixture.')
     assert(rank2.mp >= rank2.rCost + (rank2.spend or 0),
-        'the one rank-2 instant has fallen INTO the band. That is a domain '
-        .. 'frame for `lionult` at cost 400 -- the exact thing the revival '
-        .. 'condition was written to catch. Stop quoting this file and go '
-        .. 'build the fixture.')
+        'the minimum-pool rank-2 instant has fallen INTO the band. That is a '
+        .. 'domain frame for `lionult` at cost 400 -- the exact thing the '
+        .. 'revival condition was written to catch. Stop quoting this file and '
+        .. 'go build the fixture.')
 end
 
 return tests

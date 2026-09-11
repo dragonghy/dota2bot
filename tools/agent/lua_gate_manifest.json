@@ -9,7 +9,6 @@
     "tests/test_cm_w_lane_band.lua",
     "tests/test_focus_level_claims.lua",
     "tests/test_lion_ult_cash_weakest.lua",
-    "tests/test_lion_ult_reserve_domain.lua",
     "tests/test_roshdist_pit_truth_operand.lua",
     "tests/test_salveally_missing_floor.lua",
     "tests/test_wk_level_supply_horizon.lua",
@@ -35,10 +34,6 @@
     ],
     "tests/test_lion_ult_cash_weakest.lua": [
       "\u00a71 the archive reaches the body 5 times and the domain 0 times"
-    ],
-    "tests/test_lion_ult_reserve_domain.lua": [
-      "[hero] lionult: the revival condition has fired -- rank 2 exists",
-      "[hero] lionult: the ruling's assumed pool bottom is off by 4x"
     ],
     "tests/test_roshdist_pit_truth_operand.lua": [
       "[census] exactly one bare-truth distance operand is left in bots/"
