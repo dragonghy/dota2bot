@@ -6419,6 +6419,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-11T01:46Z(报告 `iterations/reports/hero/20260911T014635Z.md`;**backlog:新开 `-146`,
+  `-145` 未执行、原样留着**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动;
+  **P4.2 冻结期内不请求入集**,只登记 `iterations/state.json:awraxfield_20260911`)
+  **认领 GH #714 并把这个缺陷类关掉:两个字符的笔误,在推送路径的每一个工具里都是静音的。**
+  - **缺陷**:`hero_arc_warden.lua` `X.ConsiderMagneticField` 两行 `local` **少了 `=`**
+    (`local nEnemyBarracks bot:GetNearbyBarracks(888, true)` / `sEnemyTowers ... GetNearbyFillers`)。
+    Lua 读成「声明(值 nil)」+「一次独立的调用,返回值丢掉」⇒ 两个引擎查询**每帧照跑照扔**,
+    读它们的两个析取项是 `nil ~= nil`,**自打字那天起每帧都是 false**。
+    ⇒ 磁场只为 `creeps>=3` 或**活着的塔**开火,**T3 一倒、攻城开始的那一刻它正好闭嘴**。
+  - **⭐⭐ 为什么它能活这么久,四个工具四句话**:加载得动(smoke **绿**);`luacheck` **绿**
+    —— 名字确实在下面被用到,既不是 unused 也不是 undefined;引擎**照常收费**;
+    唯一的签名是「一条支路比它的源码读起来更安静」。**没有任何工具会提一个字。**
+    这正是本组花了好几轮买真实帧才看得见的那个形状(`cmqpoke`/`wkqodds`/`lionqfight` 同族),
+    区别是前三条**判据问不到**,这一条**赋值根本没发生**。
+  - **⭐ 本轮的产出是类关闭不是修这一处**:`bots/`+`game/` 全树 **17,548 条 `local` 声明**
+    全称扫描 ⇒ 掉 `=` 的**恰好 2 条,就是 #714 已经点名的那一对**,别处一条都没有。
+  - **改动**:两个 `=` **无条件**补回(闸坐不到声明上);**加宽**那半 gated 到
+    `awraxfield`(turbo-only)。**gate-off 等价是算术**:出厂 `nil ~= nil` ⇒ false,
+    gate off `false and ...` ⇒ false —— 同值、同短路、同样的调用次数与顺序。
+  - **⛔ 没有真实帧本地验证,照实说**:语料 **43 个英雄、0 个 arc_warden**。
+    替代证据是全树扫描 + **变异台三发全红**(M1 摘回 `=` / M2 拆闸 / M3 致盲判别子)。
+    ⭐ **M3 最值钱:判别子瞎掉时 §1 会假绿,而假绿长得和「类关闭了」一模一样** ——
+    所以全称属性文件**必须自带一节「判别子还看得见缺陷吗」**。
+  - **⛔ 不利读数,跟着候选一起走**:`tools/batch_test/soak/hero_pool.txt` **41 个英雄里没有
+    arc_warden** ⇒ 这条候选**按当前农场配置永远买不到 (a)**。**不要给它上膛**;
+    已在 GH #714 交出 **promote-as-bugfix** 裁定请求(先例 GH #719 `tombhp`)。
+    ⭐ 一般化:**选杠杆时先查池子,再查语料** —— 池子里没有,语料永远也不会有。
+  - **新测试** `tests/test_local_assign_discipline.lua`(**3/0**),照 `-145` / GH #624 的要求写:
+    **没有一条 `== N`**,只有全称属性 + 方向安全的下界 ⇒ 代码树长大**不会**顶红它。
+  - **验证**(三条腿全部由 `.githooks/pre-push` 实跑):`GATE_EXIT=0`(0 warnings)、
+    `py gate: 95 ran, 0 findings`、`lua gate: 331 ran, 0 findings, **15 known-red**`
+    ⇒ **known-red 与上一轮逐位相同,本轮净增暂存红 0 条**。
+    **已发表:GH #714 回帖**(发表前 `claim_precheck.sh` **`PRECHECK=0`**,
+    `local commits not on origin/main: 0`)。
+  - **⚠️ 开工自检 `EXIT=124`(600s 被 `timeout` 掐掉,不是通过)** ——
+    死在 `=== trunk health (python test suite) ===` ⇒ **trunk 的 python 那侧本轮没人看过**。
+    另:第一次调用被它**自己** REFUSED(stdout 是管道,exit 2,什么都没检查),
+    它自己记着这是**第 5 次复发,每次都是当轮第一条命令**。
+  - **⚠️ 本轮自己造了一次返工,记下来**:`iterations/state.json` 第一次是用
+    `json.dump(..., indent=1)` 写的,**把整个文件重新缩进了** ⇒ rebase 撞出一个
+    横跨 5,500 行的假冲突。**那个文件的配方是 `json.dumps(d, ensure_ascii=False, indent=2)`
+    + 结尾换行,且键序是插入序不是排序**(实测 round-trip 逐字节相等)。改成追加式之后
+    diff 只有 **15 行**。**改共享 JSON 前先做一次 round-trip 对拍。**
 - 2026-09-10T23:06Z(报告 `iterations/reports/hero/20260910T230636Z.md`;**backlog:`-144` 完成、
   新开 `-145`**;**本轮没有动 `bots/`** —— 全是 `tests/`(量具修复),
   因此无新 gate / 无新 cand id / 无入集申请,P4.2 冻结期无关)
