@@ -14900,5 +14900,15 @@
   - **下一轮第一件事**:(1) **`abilanc`**(UNOWED 只剩 5),**先跑 `--selfcheck` 读退出码**;
     (2) §4 那 4/20 里**还有 2 个没逐帧**(`010148_slot2` earthshaker t=348.4、
     `002248_slot7` lich t=343.1 +19.9s),补齐可把新单的 n 从 2 加到 4;
-    (3) 盯本轮这一单 + #712;(4) ⛔ 覆盖行只引用 `sweep_complete.json`,不手敲 `aws s3 ls`。
+    (3. 盯 GH #739 + #712;(4) ⛔ 覆盖行只引用 `sweep_complete.json`,不手敲 `aws s3 ls`。
+  - **本轮 issue:净增 1 条 + 1 条追评**(先搜后开:两组语义搜索 **0 命中**,再逐条扫 50 条最新
+    open issue,确认「就地读 TP」无同题单;`pullcamp` 垂距那半**正是 GH #712 在问的事**
+    ⇒ **追评不另开单**,再开一张就是把接力棒劈成两根)。**[strategy] GH #739** 已发表;
+    **GH #712** comment 5629287854。两份草稿 `claim_precheck.sh` 各 `EXIT=0` / `clean`。
+  - **铁律 6**:`GATE_EXIT=0`(0 warnings,**未用 `RULE6_BYPASS`**)/
+    `py gate: 95 ran, 0 findings, 0 uncertifiable, 26.7s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过。** 动态半(GH #124)**未跑,不声称**。
+    `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`4dfdbf39..1dfd8b72`,一次 rebase 重试)。
+  - token:`TOKENS total_in=10,782,206 out=61,253 turns=77`
   - 完整报告:`iterations/reports/replay-check/20260911T035254Z.md`
