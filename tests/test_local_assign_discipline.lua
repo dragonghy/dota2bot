@@ -122,7 +122,12 @@ end
 local function lua_files()
     local t = {}
     for _, root in ipairs(ROOTS) do
-        local p = assert(io.popen("find " .. root .. " -name '*.lua' -type f 2>/dev/null"))
+        -- The farm-only clause: `bots/Customize/soak_*.lua` is gitignored and
+        -- exists only on a batch instance, so it is not shipped source and a
+        -- declaration census must not count it.  The literal lives in
+        -- tests/lua_source_scan.lua (tests/test_bots_walk_farm_only.py).
+        local p = assert(io.popen("find " .. root .. " -name '*.lua' -type f "
+            .. require('lua_source_scan').FARM_ONLY_FIND_CLAUSE .. " 2>/dev/null"))
         for l in p:lines() do t[#t + 1] = l end
         p:close()
     end

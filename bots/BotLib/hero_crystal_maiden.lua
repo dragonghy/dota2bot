@@ -1318,6 +1318,148 @@ function X.cm_IsSelfDefenseFacingOk( hBot, hTarget )
 end
 
 
+--- The lookback X.ConsiderW's SELF-DEFENCE branch already uses to decide that it
+--- is under attack at all (`bot:WasRecentlyDamagedByAnyHero( 3.0 )`).  Named so
+--- the branch's TRIGGER and the per-candidate question below cannot drift apart:
+--- the whole point of 'cmwhit' is that they are the SAME window asked once
+--- existentially and once per candidate.
+X.nWSelfDefenseDamageWindow = 3.0
+
+
+--- Every per-candidate guard X.ConsiderW's SELF-DEFENCE branch puts on a
+--- Frostbite target, in the shipped order and with the shipped short-circuit.
+--- No soak gate of its own -- it is the shipped chain, moved so that both legs
+--- of X.cm_FindSelfDefenseTarget are demonstrably about the same predicate
+--- rather than about two copies of it.
+---
+--- ⚠️ Its last conjunct is X.cm_IsSelfDefenseFacingOk, which carries 'cmwface'.
+--- That is a CALL, not a conjunction of two soak ids (the `pullcad` trap is a
+--- gate written as `IsSoakCandidate('a') and IsSoakCandidate('b')`, which
+--- freezes FALSE the day either is promoted).  'cmwhit' and 'cmwface' are
+--- orthogonal and independently armable: 'cmwface' decides how many candidates
+--- clear the chain, 'cmwhit' decides which of the ones that clear it is taken.
+function X.cm_IsSelfDefenseCastable( hBot, hEnemy )
+
+	return J.IsValid( hEnemy )
+		and J.CanCastOnNonMagicImmune( hEnemy )
+		and J.CanCastOnTargetAdvanced( hEnemy )
+		and not J.IsDisabled( hEnemy )
+		and not hEnemy:IsDisarmed()
+		and X.cm_IsSelfDefenseFacingOk( hBot, hEnemy )
+
+end
+
+
+--- SOAK CANDIDATE 'cmwhit' (turbo-only).  Not armed.  STANDALONE: this function
+--- holds exactly one J.IsSoakCandidate call and it names only 'cmwhit'.
+---
+--- THE DEFECT, in the shipped source of X.ConsiderW's 保护自己 branch:
+---
+---     if bot:WasRecentlyDamagedByAnyHero( 3.0 )          <- the TRIGGER
+---         and #nEnemysHeroesInRange >= 1
+---     then
+---         for _, npcEnemy in pairs( nEnemysHeroesInRange ) do
+---             if <the chain above> then return HIGH, npcEnemy end   <- the TARGET
+---
+--- The branch OPENS on an existential fact about damage -- "some hero has been
+--- hitting me" -- and then hands the target question to the ordering of a list
+--- whose sort key is DISTANCE.  `J.GetNearbyHeroes` filters the engine's
+--- `GetNearbyHeroes`, which docs/BOT_API_REFERENCE.md makes sorted-by-distance
+--- for the whole family, and it never reorders; so the loop returns the NEAREST
+--- hero who can legally be frozen.  Whether that hero is the one doing the
+--- damage is never asked.
+---
+--- ⭐ WHY SORTING THE LIST IS NOT THE FIX (the GH #731 shape, not GH #724's).
+--- The list is ordered CORRECTLY.  The predicate the branch is about is
+--- AUTHORSHIP OF THE DAMAGE, and the sort key is distance; they are different
+--- questions, and the shipped term answers the first with the second's handle.
+--- Frostbite is a single-target root that also disarms for its duration, so the
+--- defensive value it buys is entirely "the source of the incoming damage stops
+--- being able to apply it".  Spent on a bystander who happens to stand 21 units
+--- closer, it stops nothing: the hero actually beating on her keeps attacking,
+--- and the cooldown that could have answered him is gone.
+---
+--- ⭐ THE BINDING ALREADY EXISTS IN THIS TREE, AND THIS IS THE SITE THAT LEFT IT
+--- UNBOUND.  `bot:WasRecentlyDamagedByHero( npcEnemy, t )` is the per-candidate
+--- form of the very call this branch's trigger makes, and it is the live idiom
+--- here: 19 call sites under bots/, including this file's own X.ConsiderQ
+--- (:1566), hero_skeleton_king.lua (:1118), hero_lion.lua (:786, :1085) and
+--- hero_zuus.lua (:1399).  So this is not a new judgement -- it is the tree's
+--- own per-candidate predicate, applied at the one self-defence firing point in
+--- the focus five that opens on the ANY form and then never narrows to it.
+---
+--- DIRECTION: NEITHER A WIDENING NOR A NARROWING.  Pass 1 requires the shipped
+--- chain AND authorship; pass 2 IS the shipped scan.  So the armed leg returns
+--- non-nil on exactly the frames the shipped leg does -- the branch fires the
+--- same number of times, on the same frames, with the same desire -- and the
+--- only thing that can differ is WHICH qualifying enemy is handed back.  That
+--- is asserted over the corpus rather than argued
+--- (tests/test_cm_w_selfdefense_damager.lua §4).
+---
+--- THE READING (one real frame, real positions, real recorded damage).
+--- tests/fixtures/f_260820_102645_cm_es_reach.lua -- Crystal Maiden with two
+--- enemies inside Frostbite's cast ring:
+---
+---     earthshaker   536.0u   did NOT damage her in the last 3s
+---     bristleback   556.9u   DID damage her in the last 3s
+---
+--- 20.9 units of distance decide the shipped target, and they decide it against
+--- the only hero in the ring who was actually hitting her.  The damage history
+--- is the .dem's own `recent_damage` rows, not a stub
+--- (tests/mock/replay_fixture.lua:550).
+---
+--- ⛔ WHAT THIS DOES NOT CLAIM, AND THE FIRST ONE IS THE IMPORTANT ONE.
+--- (1) THE PIN IS A READING AT THE FINDER, NOT A RECORDED FAILURE TO CAST.
+--- Frostbite is 1.5s into its cooldown on that frame, so X.ConsiderW returns
+--- NONE at its first line and the 保护自己 branch is never evaluated there.
+--- The flip is measured on the ring the branch WOULD have built.  The corpus
+--- does supply frames where the whole branch is reachable (>= 3 of them) -- it
+--- simply supplies no single frame that is reachable AND flips.  Both halves
+--- are asserted, in that direction (tests §3.3 / §3.4).
+--- (2) That the added root lands a kill or saves the life -- it claims only
+--- that the disable is spent on the damage source.
+--- (3) A FREQUENCY.  Over the whole 70-instant CM corpus, 13 instants have her
+--- recently damaged and exactly ONE of them has a ring where the nearest legal
+--- target is not a damager; how often that holds in a real Turbo game is a wave
+--- question, filed as iterations/queue.json hero-60.
+--- (4) That the siblings are covered: the same ANY-trigger-then-nearest-target
+--- shape sits in hero_skeleton_king.lua X.ConsiderQ (Hellfire Blast) and
+--- hero_zuus.lua X.ConsiderW (Lightning Bolt).  One lever at a time, and their
+--- corpus flip count is 0 today (tests §1.1 counts it).  ⚠️ Axe is NOT in this
+--- family however much the trigger looks alike -- Berserker's Call is a
+--- no-target taunt, so there is no per-target choice for authorship to move.
+function X.cm_FindSelfDefenseTarget( hBot, tEnemies )
+
+	if tEnemies == nil then return nil end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'cmwhit' ) )
+	then
+		for _, hEnemy in ipairs( tEnemies )
+		do
+			if X.cm_IsSelfDefenseCastable( hBot, hEnemy ) then return hEnemy end
+		end
+		return nil
+	end
+
+	for _, hEnemy in ipairs( tEnemies )
+	do
+		if X.cm_IsSelfDefenseCastable( hBot, hEnemy )
+			and hBot:WasRecentlyDamagedByHero( hEnemy, X.nWSelfDefenseDamageWindow )
+		then
+			return hEnemy
+		end
+	end
+
+	for _, hEnemy in ipairs( tEnemies )
+	do
+		if X.cm_IsSelfDefenseCastable( hBot, hEnemy ) then return hEnemy end
+	end
+
+	return nil
+
+end
+
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then
@@ -1405,23 +1547,27 @@ function X.ConsiderW()
 	end
 
 	--保护自己
-	if bot:WasRecentlyDamagedByAnyHero( 3.0 )
+	if bot:WasRecentlyDamagedByAnyHero( X.nWSelfDefenseDamageWindow )
 		and #nEnemysHeroesInRange >= 1
 	then
-		for _, npcEnemy in pairs( nEnemysHeroesInRange )
-		do
-			if J.IsValid( npcEnemy )
-				and J.CanCastOnNonMagicImmune( npcEnemy )
-				and J.CanCastOnTargetAdvanced( npcEnemy )
-				and not J.IsDisabled( npcEnemy )
-				and not npcEnemy:IsDisarmed()
-				-- [cmwface] the heading cone this branch alone carries; see
-				-- X.cm_IsSelfDefenseFacingOk for why it is the DEFENSIVE branch
-				-- that cannot afford it.
-				and X.cm_IsSelfDefenseFacingOk( bot, npcEnemy )
-			then
-				return BOT_ACTION_DESIRE_HIGH, npcEnemy
-			end
+		-- [cmwhit] gate off this is the shipped scan: the first member of
+		-- nEnemysHeroesInRange clearing the shipped chain (validity,
+		-- non-magic-immune, CanCastOnTargetAdvanced, not disabled, not
+		-- disarmed, and the [cmwface] heading cone), i.e. the NEAREST legal
+		-- target.  Armed, a member who actually damaged her inside the same
+		-- window this branch's own trigger reads is preferred, and the shipped
+		-- scan is the fallback -- so the branch fires on exactly the same
+		-- frames either way.  Read X.cm_FindSelfDefenseTarget's header for the
+		-- quantifier, the direction, and the one real frame that separates the
+		-- two legs.  ⚠️ the loop is `ipairs` where the shipped source wrote
+		-- `pairs`; nEnemysHeroesInRange is built by table.insert with no holes,
+		-- so the two visit the same members in the same order, and
+		-- tests/test_cm_w_selfdefense_damager.lua §2 asserts that over the
+		-- corpus rather than asserting it here in prose.
+		local npcEnemy = X.cm_FindSelfDefenseTarget( bot, nEnemysHeroesInRange )
+		if npcEnemy ~= nil
+		then
+			return BOT_ACTION_DESIRE_HIGH, npcEnemy
 		end
 	end
 

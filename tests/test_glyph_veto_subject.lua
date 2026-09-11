@@ -61,9 +61,15 @@ local function read_file(path)
     return b
 end
 
+--- The farm-only clause is NOT decoration: `bots/Customize/soak_*.lua` is
+--- gitignored, exists only on a batch instance, and is not shipped source, so a
+--- census that reads it counts a file its own conclusion is not about.  The
+--- literal lives in tests/lua_source_scan.lua and is referenced, never copied
+--- (tests/test_bots_walk_farm_only.py).
 local function lua_files(root)
     local t = {}
-    local p = assert(io.popen("find " .. root .. " -name '*.lua' -type f 2>/dev/null"))
+    local p = assert(io.popen("find " .. root .. " -name '*.lua' -type f "
+        .. require('lua_source_scan').FARM_ONLY_FIND_CLAUSE .. " 2>/dev/null"))
     for l in p:lines() do t[#t + 1] = l end
     p:close()
     table.sort(t)

@@ -22,6 +22,53 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-151. ✅ **`-150` 第 1 条做了 —— 主体回到 `bots/` 行为改动(P4.4 (i))**。本轮(报告
+   `iterations/reports/hero/20260911T170001Z.md`)落地 **`cmwhit`**(Crystal Maiden,gated,
+   turbo-only,**纯换目标**):`X.ConsiderW` 的 `保护自己` 支路**用一个存在量化的伤害事实开门**
+   (`WasRecentlyDamagedByAnyHero( 3.0 )`),**然后把目标交给一把量距离的尺子** ——
+   「被冻的那个是不是正在打我的那个」从头到尾没人问过。归 GH #731 / `zusjumpany` 一族
+   (**名单排序是对的,所以排序修不好它**:谓词是伤害的作者,排序键是距离)。
+   逐候选的那个谓词**本树自己就有**(`WasRecentlyDamagedByHero` 在焦点五里四个文件都在用)。
+   **方向:既不加宽也不收窄,只动目标身份**(§4 全语料双向驱动 `nDisagree == 0`)。
+   附带一条清掉 trunk 上的 walk 普查红(**四条欠账全是本组自己的**)。
+   取证请求 `queue.json:hero-60`;id 登记 `state.json:cmwhit_20260911`。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体继续放在 `bots/`**(P4.4 的完成定义是「连续一周 bots/ 提交占比 >30%」)。
+        **现成的下一根杠杆已经量好了,不用再找**:同一个「ANY 开门 + 最近者中标」形状坐在
+        `hero_skeleton_king.lua` X.ConsiderQ(Hellfire Blast)和 `hero_zuus.lua` X.ConsiderW
+        (Lightning Bolt)。⚠️ **今天不能钉**:两者的语料翻转数都是 **0**
+        (`tests/test_cm_w_selfdefense_damager.lua` §1.1 把这个 0 写成了**上界**断言 ——
+        它红了不是缺陷,是「可以钉了」的信号)。⇒ **先看 §1.1 红没红**,红了就开它自己的 lever;
+        没红就换一根,**别硬钉**。⚠️ Axe 不在这一族(Berserker's Call 无目标,没有目标可换)。
+     2. **`-150`/`-149` 第 1 条**原样留着,**仍然只能占附带那一条**:三条 Lion 大招文件
+        `test_lion_ult_reach.lua` / `test_lion_ult_cash_weakest.lua` /
+        `test_lion_ult_reserve_domain.lua` 同源红(语料规模的 `==` 钉;本轮自检里
+        `test_lion_ult_reserve_domain` 仍红)。**三条同源 ⇒ 一次清掉,别一轮清一条。**
+   - **⭐ 本轮买到的第一条 —— 选杠杆之前先问语料能量什么;这是比「有没有这个英雄的帧」
+     更早的一道闸。** GH #714 那轮买的是「先查 `hero_pool.txt` 再查语料」;本轮是它的下一格:
+     **池子里有、语料里也有,仍然可能一个读数都拿不到,因为缺的是字段**。实测全语料:
+     **每帧恰好 10 个单位、全是英雄** ⇒ `GetNearbyCreeps` 恒 0;
+     `GetMagicResist()` / `GetHealthRegen()` **对每个英雄都是 0**。于是:
+     (a) 上面那条 `GetAllyUnitCountAroundEnemyTarget(...) >= 5` 的支路,语料里那个计数**最大只到 2**;
+     (b) 击杀支路「把 ∃ 谁会被打死交给 argmin-by-hp」这个**真缺陷**,在语料上
+     `J.WillMagicKillTarget` 退化成关于 hp 单调 ⇒ **argmin 恰好就是对的**,
+     **语料把产生缺陷的机制抹平了**。⇒ **可用的轴只有:坐标 / hp / mp / 等级 / 物品 /
+     技能等级与冷却 / modifier / recent_damage。先对着这张表选杠杆,再去读源码。**
+     两次「量完就丢」各花约一次探针的钱,比写完一个域为零的 lever 便宜一个数量级。
+   - **⭐ 第二条 —— 一个 lever 可以有两个不同的「域」,必须分开登记。**
+     本 lever 的 **finder 层域 = 1 帧**(翻转),**端到端域 = 0 帧**(可达 ∩ 翻转:钉帧上
+     Frostbite 正在 1.5s 冷却里,`X.ConsiderW` 第一行就返回 NONE)。把前者说成后者
+     就是一次凭空的执行核验。§3.3 / §3.4 把两个数**各自写成断言**,所以它们不可能在下一次
+     引用里合并成一个。(同形:`-150` 给 `wkqdmg` 留的「落进 band」与「当帧 Q 可用」要分两列。)
+   - **⛔ 第三条 —— 登记一条未解析的命令之前,先读它到底走到哪儿。**
+     walk 普查的四条欠账里**两条不是「登记就完事」**:`test_glyph_veto_subject.lua` 与
+     `test_local_assign_discipline.lua` **真的在无 clause 地 `find bots/`**,会读到 gitignored 的
+     `bots/Customize/soak_*.lua`。**先补 `FARM_ONLY_FIND_CLAUSE` 再登记。**
+     按「反正是本组的,登记掉算了」处理,普查会变绿而**它要防的事仍在发生**。
+   - **⛔ 第四条 —— 开工自检第一条命令别接管道。** 本轮第一次调用被它自己拒绝
+     (`REFUSED: stdout is a PIPE ... exit 2, nothing checked`,证据纪律第 3 条,**它说这是第 5 次
+     复发,每次都是当轮的第一条命令**)。写法:`> /tmp/sc.log 2>&1; echo EXIT=$?`。
+
 -150. ✅ **`-149` 的第 2 条做了,而且结论是把它自己推翻** —— 本轮(报告
    `iterations/reports/hero/20260911T140701Z.md`)按 P4.4 **(ii)** 做主体:GH #390 的 `wkqdmg`
    条件 (a)。`-149` 说「要的帧已经在树里,躺在一条红断言的消息体里」——**那三帧不是发现,是量具缺陷**。
@@ -6590,6 +6637,44 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-11T17:00Z(报告 `iterations/reports/hero/20260911T170001Z.md`;**backlog:新开 `-151`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`cmwhit`(Crystal Maiden,gated,turbo-only,未 armed):支路用一个存在量化的伤害事实开门,
+  然后把目标交给了一把量距离的尺子。**
+  - **缺陷**:`X.ConsiderW` 的 `保护自己` 支路,触发是 `bot:WasRecentlyDamagedByAnyHero( 3.0 )`
+    (「**有人**在打我」),目标是 `for ... in pairs( nEnemysHeroesInRange )` 里**第一个**
+    通过出货链的成员。`J.GetNearbyHeroes` 只过滤不重排 + `GetNearby*` 按距离升序是承诺
+    ⇒ 拿到的是**最近的合法目标**。⭐⭐ **名单排序是对的,所以把名单排好修不了它**
+    (GH #731 / `zusjumpany` 一族,**不是** GH #724 `anyhero` 的无序名单):
+    **谓词是伤害的作者,排序键是距离。** 逐候选的那个谓词**本树自己就有**
+    (`WasRecentlyDamagedByHero`:本文件 :1566、WK :1118、Lion :786/:1085、Zeus :1399)。
+  - **改动**:`X.nWSelfDefenseDamageWindow = 3.0`(与触发同源)+ 无闸的
+    `X.cm_IsSelfDefenseCastable`(出货链,原序原短路)+ `X.cm_FindSelfDefenseTarget`
+    (闸关=出货扫描;闸开=第一遍「出货链 AND 作者」,**第二遍就是出货扫描作兜底**)。
+    **STANDALONE**,⛔ 不与同支路的 `cmwface` 合取(cmwface 是被**调用**的合取项,不是被合取的
+    soak id;两个 id 正交、可独立上膛,§6.2 双向驱动)。
+  - **方向:既不加宽也不收窄 —— 只动目标身份。** §4 全语料双向驱动 `nDisagree == 0`,
+    §4.1 再钉「armed 的目标永远是出货链接受的目标」。⛔ **(a) 取证不许用施法次数**:
+    域不变 ⇒ 次数逐位相同,用它看等于看一个恒等式。
+  - **读数(真实帧)**:`tests/fixtures/f_260820_102645_cm_es_reach.lua` ——
+    earthshaker **536.0u,近 3 秒没打过她** / bristleback **556.9u,打过她**。
+    **20.9 个单位决定了出货的目标,而且决定成了环里唯一没在打她的那个。**
+    ⭐ 判别事实**不是 mock 兜底**:是 .dem 自己的 `recent_damage` 行(replay_fixture.lua:550)。
+    §3.0 先立正向对照(reader 必须两边答得不一样)、§3.2 再立复现对照,**都排在读数之前**。
+  - ⛔ **诚实的那一半,写成了断言**:该帧 Frostbite 正在 **1.5s 冷却**里 ⇒ `X.ConsiderW` 第一行
+    就返回 NONE,支路**根本没被求值**。**翻转是 finder 层的读数,不是一次录到的没放技能**
+    (§3.3 断言不可达并断言冷却就是原因;§3.4:支路整体可达的帧 >= 3 个,
+    **但没有一帧同时可达且翻转**)。⇒ 缺口交给 `queue.json:hero-60`。
+  - **变异台四发全红**:M1 删作者合取项 → §3.1/§4/§5;M2 闸去 turbo-only → §6.1;
+    M3 删第二遍兜底(armed 变收窄)→ §4(**这一发是「方向」那句话的守卫**);
+    M4 调用点退回 `[1]` → §6.4。
+  - **附带一条(量具,P4.4 上限)**:清掉 `tests/test_bots_walk_farm_only.py` 的红 ——
+    四条未解析 io.popen **全是本组前几轮自己留下的**;其中**两条不是「登记就完事」**
+    (真的在无 clause 地 `find bots/`,会读 gitignored 的 `soak_*.lua`),**先补 clause 再登记**。
+    该腿 **8 checks 0 failed**(此前 1 failed)。
+  - **闸**:`GATE_EXIT=0`(luacheck 0 warnings);新测试 15/15;两个被改文件 4/4、3/3;
+    walk 普查 exit 0。开工自检 **exit 3,全部是既有 trunk 红**(python 4 / Lua 2,GH #751),
+    **本轮清掉 1 条,净增 0**。⚠️ 动态全量(~100min,GH #124)**本轮没跑**。
 - 2026-09-11T14:07Z(报告 `iterations/reports/hero/20260911T140701Z.md`;**backlog:新开 `-150`,
   `-149` 第 2 条做完并被推翻、第 1 条原样留着**;OWNER_PRIORITIES **P4.4 (ii)** —— 主体是
   一个判定完结所需的最后一块证据,**本轮没有 `bots/` 改动**;**P4.2 冻结期内不请求入集**)

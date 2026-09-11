@@ -82,6 +82,28 @@ UNRESOLVED_HAND_READ = {
         "luaFiles('bots') x2 and luaFiles('tests/fixtures'); carries the clause",
     """tests/test_tpclaim_stamp_on_commit.lua  ::  'find ' .. dir .. ' -name "*.lua" ' .. require('lua_source_scan').FARM_ONLY_FIND_CLAUSE .. ' | sort'""":
         "lua_files_under('bots'); carries the clause",
+    """tests/test_glyph_veto_subject.lua  ::  "find " .. root .. " -name '*.lua' -type f " .. require('lua_source_scan').FARM_ONLY_FIND_CLAUSE .. " 2>/dev/null\"""":
+        "lua_files('bots') (:115 via scan) and lua_files(dir) over the corpus "
+        "dirs (:193, :305); carries the clause. Hand-read 2026-09-11 (hero desk "
+        "-- this walk is this desk's own, from the glyphany round, and it was "
+        "walking bots/ WITHOUT the clause until now: registering it was not "
+        "enough, the clause had to be added first",
+    """tests/test_local_assign_discipline.lua  ::  "find " .. root .. " -name '*.lua' -type f " .. require('lua_source_scan').FARM_ONLY_FIND_CLAUSE .. " 2>/dev/null\"""":
+        "lua_files() loops root over ROOTS == {'bots', 'game'} (:52); carries "
+        "the clause. Hand-read 2026-09-11 (hero desk -- this desk's own walk, "
+        "from the awraxfield/GH #714 round; same missing-clause fix as the line "
+        "above. A gitignored farm-only file is not shipped source, so a "
+        "dropped-`=` census must not count its declarations)",
+    """tests/test_lion_ult_aoe_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:127-:131); plain `ls` is NOT "
+        "recursive, so it never reaches bots/Customize/. Hand-read 2026-09-11 "
+        "(hero desk -- this desk's own walk, from the lionraoe round)",
+    """tests/test_zuus_jump_escape_any.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:124-:128); same non-recursive `ls` "
+        "as the line above, same reason. Hand-read 2026-09-11 (hero desk -- this "
+        "desk's own walk, from the zusjumpany round)",
     """tests/test_blind_a_roamidle_campsel.lua  ::  'grep -l ' .. key .. ' tests/fixtures/*.lua 2>/dev/null | wc -l'""":
         "[1d] loops key over {'GetCurrentActionType', 'GetActiveMode'}; the "
         "path is the fixed glob tests/fixtures/*.lua, not a walk of bots/, so "
@@ -132,6 +154,14 @@ UNRESOLVED_HAND_READ = {
         "glob_files(GLOB), GLOB == 'ls tests/fixtures/f_*.lua'",
 
     # -- corpus walks that never enter bots/ at all --------------------------
+    """tests/test_cm_w_selfdefense_damager.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'}; plain `ls` is NOT recursive, so it "
+        "never reaches bots/Customize/. Hand-read 2026-09-11 (hero desk -- this "
+        "walk is that round's own, which is exactly why it costs a read). The "
+        "same file's only other popen was REMOVED rather than registered: a "
+        "`grep -r ... bots/` would have reached Customize legitimately, so §5 "
+        "reads the five focus hero files by literal path instead",
     """tests/test_cm_ult_reach_meter_domain.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "dir in {tests/fixtures, tests/frames}",
     """tests/test_lion_ult_reserve_domain.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
