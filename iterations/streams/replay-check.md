@@ -14833,3 +14833,72 @@
     (3) 盯本轮三张单 + #700/#718/#728;(4) ⛔ **覆盖行只引用 `sweep_complete.json`,不手敲 `ls`**。
   - token:`TOKENS total_in=7,433,726 out=52,184 turns=57`
   - 完整报告:`iterations/reports/replay-check/20260911T010816Z.md`
+- **2026-09-11T03:4x–04:0xZ(本轮)**:**W64 首检**。交棒单第 (1) 条 `pullcamp_camp_gap.py`
+  **欠了四轮,本轮跑成**(W64 已收割 ⇒ 语料到位)。**宽扫 43/43 局**(两个出局的 run,
+  `sweep_complete.json` 逐个:31→25 / 24→18,`skipped` 各 6 暖场,`unparseable 0`;
+  ⚠️ 诚实边界:W64 收割 111 局而 `.dem` 只有 55 个,**43 是可用录像的全部,不是 111 局的全覆盖**);
+  **深查 8 局逐帧**(8 个不同对局,两个 run 都覆盖)。
+  ```
+  VERIFY id=pullcamp verdict=BUGGY episodes=20
+  VERIFY id=pulllane verdict=INDETERMINATE episodes=0
+  ```
+  - **仪器先自检**:`pullcamp_domain.py --selfcheck` **11/11 PASS / `PC_DOMAIN_EXIT=0`**
+    —— 与上一轮 `fieldbuy` 的死自检(`EXIT=1`,钉在过期前提)相反。**这个分岔只能实测不能推断**,
+    已写进下一轮第一件事。
+  - ⭐⭐⭐ **头号发现:`PULL_CAMP_LANE_GAP = 1200` 这个常数留错了边。**
+    W64 独立语料 `>1200u = 14/19 = 73.7%`(W63 是 15/39 = 38.5%,**复现且更高**);
+    但真正承重的是**连上的那几次落在哪一侧**:本波**两次 CONNECT 的营地垂距都是 1271u**,
+    **都在常数之上**;而垂距 **≤1200 的 5 条连上 0 次**。两波合计 **5 次连上、4 次在常数之上**
+    ⇒ `J.IsCampBesideLane` 按 1200 会**拒掉迄今观测到的 5 次连上里的 4 次**。
+    垂距取三条线的**最小值** ⇒ `>1200` 是「会被拒」的**下界**,结论单向。
+    ⛔ **不主张常数该改成多少**,只主张**它没有被两波语料证成** —— 这正是 GH #712 请总监
+    「勿原样重新入集 `pulllane`」的那条理由,n 从 3 加到 5。已**追评 #712,不另开单**。
+  - **血账并表**(§2.1):`<=1200` n=5 中位 **33pp** max **60pp** 连上 0 次;
+    `>1200` n=14 中位 **15pp** max 27pp 连上 2 次。⚠️ **混杂项同时登记**:
+    `<=1200` 那 5 条里 3 条是**同一英雄同一营地**(lich @ (-853,4941))⇒ 贵/便宜这一半
+    **分不开营地档次与英雄,只登记不当结论**;**CONNECT 那一半不吃这个混杂**(几何,
+    两波四英雄六营地同向,且 W63 已独立测得拖拽墙 1120u)。
+  - **承重帧**:CONNECT 之一 `452004/20260911_003912_slot6` pudge,t=254.5 (3976,-5190)
+    hp 0.92 `connect_own=True`,戳的是 `npc_dota_neutral_forest_troll_berserker` /
+    `kobold_taskmaster`(**逐帧排除上一轮 §5.1 那条「`dmg_creep` 把线兵混进 POKE」**);
+    最远那次 `452004/20260911_005343_slot5` lich 营地垂距 **2907u**,而拖拽上限 1120u
+    ⇒ **从第一帧起就没有出口**,账单 23pp。
+  - ⭐ **第二发现(新缺陷,已开单):在被仇恨的野营里原地读 TP,读条那 3–5 秒用血付。**
+    armed 20 个 poke episode 里 **4 个**在首戳后 20s 内本人用掉 `item_tpscroll`;
+    逐帧两例形状一致:`53db33/010148_slot2` skywrath **读条期间 0.61→0.41 = 20pp**(全程 27pp)、
+    `452004/005347_slot4` lich **0.62→0.45 = 17pp**(全程 55pp),**两人都没走出营地就开始读条**。
+    ⛔ **归属边界**:W64 臂串里同时 armed 着 `tpcommit`/`tpgap`/`tpdeathbuy`/`lf_rescue`
+    ⇒ **「为什么要 TP」是合力,本轮不归因给任何单个 id**;`pullcamp` 只负责把人放在营地里。
+    **本单主张的缺陷与 id 无关:全树没有任何一处在开始读条前问「我现在有没有被小野打」。**
+    ⚠️ baseline **0/3,n=3 不构成对照**,所以「armed 更爱这么做」这句**不写**。
+  - ⭐ **附带复现 GH #117 的第二条**:`452004/20260911_005348_slot1` lich
+    **hp 0.99→0.21(20s 窗口 60pp),而 mp 0.88→0.93 一路在涨 —— 一个技能都没放,全是右键**。
+    `J.IsLanePullSafe` 的 `>= 0.50` 只在进域那一刻问一次,戳的过程中无任何子句重问。
+    W63 max 61pp / 本轮 60pp,**逐位同量级**。
+  - **铁律 4 (i-a) 两层读数**(`domain_rows_strata.py`,**非手算**):
+    `at_camp` arm **+0.982**/局(sd 0.485,2/2)、`poke` arm **+0.480**(sd 0.329,2/2)、
+    `connect_own` +0.050(1/2)。`poke` 在 seed 10890 上**两层反号**(−0.062 / +0.556)——
+    按 **(i-c)**:swap-average 后的估计量,反号是恒等式 **登记但不当否决理由**。
+    ⇒ **执行层面两个分层都在开火,BUGGY 落在选点不落在「有没有执行」**,与 W63 逐字一致。
+  - **树上改动**:**`bots`/`game` 一行未改;`tools/` 与 `tests/` 一行未改**(分析脚本落 scratchpad)。
+  - **⚠️ 本轮自己的一次仪器缺陷,当场抓住并登记**:scratchpad 里那条「TP-out」探针第一版读
+    `ev.get('item')/('name')/('ability')`,而 dumper 的字段是 **`inflictor`** ⇒ 首次运行
+    打出 **`TP-out 0/20`**,**而我刚在两帧里亲眼看见 `ITEM item_tpscroll`**。
+    ⇒ 补了**正向对照**(断言探针必须在那两帧上响),`POSITIVE_CONTROL: PASS` 之后才采信 4/20。
+    可迁移:**一个刚写出来的探针打的零,在正向对照通过之前不是读数。**
+  - **AWS**:只读 S3(2 次 `sweep_run.sh` 列举 + 55 `.dem` + dumper 缓存命中),
+    **零 EC2、零发波、零 CE、零支出**。
+  - **自检**:单独跑、**不加外层 `timeout`**。`selfcheck worst exit: 3`、`legs run 11`、
+    `FINDINGS (exit 3): cadence owed-executions a-evidence-owed trunk-red(python) trunk-red(lua)`;
+    `a-evidence-owed` 逐字 `FINDING: 5 armed id(s) with neither a verdict nor an owed row.`
+    ⚠️ **开工第一条命令第 16 次撞管道拒绝门**(`REFUSED: ... stdout is a pipe; exit 2, nothing checked.`)。
+    ⚠️ `NOT RUN (inside a leg): tests/test_lua_gate.py test_luacheck_gate_soakswitch.py
+    test_selfcheck_lua_leg.py` —— **这三条本轮没人看过,不是通过。**
+    **trunk red 6 条全部已有单子,不开第七张**:python 2 条(#728 / #718+#650 族)、
+    Lua 4 条(`test_wk_q_castrange_meter_domain` 逐字 #705/#709,其余族属 #650/#718);
+    **已确认 `git status --porcelain` 空 ⇒ 红在 trunk 上不是本轮增量**(GH #704 的对侧)。
+  - **下一轮第一件事**:(1) **`abilanc`**(UNOWED 只剩 5),**先跑 `--selfcheck` 读退出码**;
+    (2) §4 那 4/20 里**还有 2 个没逐帧**(`010148_slot2` earthshaker t=348.4、
+    `002248_slot7` lich t=343.1 +19.9s),补齐可把新单的 n 从 2 加到 4;
+    (3) 盯本轮这一单 + #712;(4) ⛔ 覆盖行只引用 `sweep_complete.json`,不手敲 `aws s3 ls`。
+  - 完整报告:`iterations/reports/replay-check/20260911T035254Z.md`
