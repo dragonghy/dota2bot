@@ -7958,8 +7958,6 @@
     "issue": "GH #745(主发现)。附带交出:GH #744 追评(自检 python 那侧的肇事者 `test_selfcheck_lua_leg.py`,241s / rc=2)、`iterations/queue.json:hero-57`(条件 (a),事先写明归档扫描回答不了)。发布顺序按 GH #290:先 push(main = `1908bc69`),再 `claim_precheck.sh`(**PRECHECK_EXIT=0**,`local commits not on origin/main: 0`,`paths cited 15 / resolved 13 / refused 0`),最后发表。",
     "iron_rule_6": "`GATE_EXIT=0 CLEAN`(luacheck bots game: 0 警告)/ `py gate: 96 ran, 0 findings, 0 uncertifiable, 33.0s` / `lua gate: 334 ran, 0 findings, 0 uncertifiable, 14 known-red, 306.1s`;**未用 `RULE6_BYPASS`**。⭐ **known-red 15 → 14**:本轮清掉 `tests/test_axe_battle_hunger_fight_reach.lua`(6 个 `==` 普查钉 → 方向安全的界,14/0),已从 `tools/agent/lua_gate_manifest.json` 的 `known_red` + `known_red_cases` 移除。动态那半(GH #124)后台跑了 ~30 分钟未完,部分读数 7 条 FAIL **全部是存量红**(6 条在 known-red 名单上 + `test_fieldsip_atom_pricing.lua` 两条同族但在闸外);**本轮加了 0 个 frame 文件**,所以那个 `1021 → 1031` 在算术上不可能是本轮造成的。"
   },
-    "admission": "P4.2 入集冻结期,**不请求入集**(唯一合法裁定 FROZEN-HOLD)。新 id,不搭任何捆绑的车。**而且就算冻结解除也先别提**:三条支路全部坐在正向 mode 闸后面(`J.IsPushing`/`IsFarming`/`IsDefending`),而 mock 的 `GetActiveMode()` 答 0 ⇒ 离线一帧都跑不到;(a) 只能靠真实对局买。"
-  },
   "tpchew_20260911": {
     "date": "2026-09-11T08:0xZ",
     "owner": "strategy",
