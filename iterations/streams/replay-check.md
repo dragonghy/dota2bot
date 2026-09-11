@@ -15334,3 +15334,82 @@
   - token:`TOKENS total_in=8,819,072 out=59,122 turns=60`
     ⭐ 比上一轮 25.7M/138 turns **低一个量级** —— 上轮交棒「把等待压成一个 until 循环」照办了。
   - 完整报告:`iterations/reports/replay-check/20260911T190204Z.md`
+- **2026-09-11T21:4x–22:1xZ(本轮):`blinkflee` 的 (a) 首次读数 = **INDETERMINATE**;
+  ⛔ 量具打出的 `BUGGY` 逐帧核验后不成立 —— 它把一个代理的阴性花成了排除。**
+  ```
+  VERIFY id=blinkflee verdict=INDETERMINATE episodes=36
+  ```
+  **宽扫 103/103 局**(五个 run:W65 四台 `dae390`/`551784`/`74aefd`/`399269` + W66 唯一活台
+  `8d8c4b`;五份 `sweep_complete.json` 全部 `unparseable 0 / exit_code 0`),
+  **深查逐帧 6 局**(3 个 armed 证人 + 3 个 baseline 对照,六局互不相同)。
+  分层 W65 **ab 47 / ba 38**、W66 **ab 11 / ba 7**,⛔ **两波从不并池**(arm 串 34-id vs 30-id)。
+  取棒:`a_evidence_blinkflee`(总监 RULING 13 §GS.5),认领**在开工前 push**(`02775dbb`)。
+  - ⭐⭐ **本轮最该被读的一句**:`blinkflee_domain.py` 落地(08-29,W24)以来
+    **BUGGY 那条分支第一次真的被打出来**(W65 两层 + W66 ba,退出码 3),
+    而三个 armed 证人**逐帧一个都不承重**。`attributable` 的四项里前两项是算术排除,
+    第四项 `recent_cast is None` **是代理的阴性** —— 文件头逐字写着「it is a proxy, not a test」,
+    **下一屏就把它当 test 用了**;`verdict()` 再把它升格成 BUGGY。
+    ⚠️ W24 那次因为每条证人都被代理的**阳性**挡住,这条分支**从没被走到过**
+    ⇒ 缺陷**在它第一次开口的那天才可见**(与 GH #624 census 同族)。
+  - **三个 armed 证人**(残差法归属,比 cos 门 0.9≈26° 紧两个数量级):
+    ① W66/ba `…_8d8c4b/20260911_155303_slot6` centaur t=**1386.2**(jump 1228,
+    **残差 10.9u** 贴自家远古射线,drift 625u,hp 0.939,距**英雄**伤害 **72.4s** —— 打它的是 tower4);
+    ② W65/ab `…_551784/20260911_092539_slot8` lion t=**1479.3**(1187,**11.7u**,drift 1421u,
+    hp **1.000**,**201.5s** 无英雄伤害);③ W65/ba `…_551784/20260911_095150_slot6`
+    skeleton_king t=**1504.8**(1171,187u,7.3s —— 那串 `actor_hero=True` 是**它自己的 armlet 自伤**)。
+    **三帧上门的两条子句都为真 ⇒ 撤退分支不该出价。**
+  - **排除链**:`:1557 IsStuck`(drift 远超 25u)/ `:1699 Tormentor`(残差 1119–1520u)/
+    `:1647 击杀跳`(落点 1600 内零敌)/ `mode_farm_generic:980` + `mode_rune_generic:678`
+    两个 `X.CouldBlink`(①②落点在远古方向 **±0.5°** 内,农场点/神符点解释不了)/
+    英雄自带跳刀逻辑(**centaur/lion/SK 三个证人都不在那 10+2 个文件的名单里**)。
+  - ⛔ **唯一排不掉的是 `:1614 J.IsProjectileIncoming`,而它排在撤退分支下游 40 行、
+    条件是撤退分支的严格弱化** ⇒ **armed 的 `blinkflee` 扣住撤退分支,恰恰把控制流交给它**。
+    **同一个观测既是失败的签名也是成功的签名。** 本轮把代理窗口从 3s 拉宽到 **12s** 自己重扫:
+    ① 只有 quill_spray @−4.5s(瞬发 AoE)② slardar 两发 @−8/−9.2s ③ **12s 内敌方零施法** ——
+    **仍然是代理的阴性,不是排除**(GH #305 的弹道字段落地前买不到符号)。
+  - **(a) 的正经读数 = 零通道**(承上一轮 `tpcommit` 的买法):门只在
+    **hp≥0.70 且 2s 内无英雄伤害**时说话 ⇒ HOT(门能说话)/ COLD(门结构上闭嘴)。
+    分母取该腿全部跳刀施法数(压掉携带者供给)。**W65(85 局 / 4 粒,两层同号)**:
+    **HOT delta ab `−12.19pp`(3.25% vs 15.44%)/ ba `−3.77pp`(7.69% vs 11.46%)**,
+    而 **COLD delta ab `+0.81` / ba `+1.89`(反方向)** ⇒ **效应只长在门自己那一半上**。
+    逐种子 8 格里 **6 格为负**(两格为正:`399269/ab` 的 baseline 腿只有 **2** 次施法,退化;
+    `74aefd/ba` +2.01)。⚠️ 「扣住的跳把后来的 HOT 帧变成 COLD 帧」这条反驳**被算术答掉**:
+    ab 赤字 **31** 次而 COLD 只多 **3** 次,ba 赤字 16 次而 COLD **18 vs 18 持平**。
+    **W66 两层反号(ab `+6.04` / ba `+2.39`),按 4(i-b) 只登记不解释** ——
+    且它的**供给本身退化**(ab armed 22 次 vs baseline **158** 次;ba 81 vs 16),
+    ⛔ **不拿它否定 W65,也不拿 W65 否定它**。
+  - **为什么仍是 INDETERMINATE 而不是 WORKING**:零通道能证明「门动了什么」,
+    **证明不了动的方向** —— 一个「扣住撤退跳、随即被 `:1614` 花掉」的门在 HOT 切片上**也会**读出赤字。
+    ⇒ **缺的是判别子不是样本**;**INDETERMINATE 是判决不是失败**(该 owed row 逐字如此)。
+  - **本轮 issue:净增 1 条 [bug] + 1 条 GH #304 追评**(先搜后开,语义检索命中 #304/#305/#74,
+    两条结构性发现**早已在案**,⛔ 没有重开)。新 [bug] 报的是**量具**:
+    BUGGY 应降级成 `LEAK-CANDIDATE (not a verdict)`、总判决 `INDETERMINATE`、
+    行里注明 `blocked by GH #305`;连带登记**对手名单缺 3 处**(`:1699` + 两个 `CouldBlink`),
+    ⚠️ 而它的 `--selfcheck` 只断言**它自己点名的那三条仍在树上** ⇒ **第四条对手对它结构上不可见**。
+  - ⭐ **闸自己抓到本轮一处**:认领行第一版 `claimed_at` 写成了 **未来 2 分钟**
+    (`21:45:00Z`,当时 21:43),`tests/test_pending_rulings.py` 逐字
+    `is in the future -- reading this as OWED`,**push 被拒**;用 `date -u` 重写后过闸。
+    **这是 GH #518 那三句里第二句的机器实现。**
+  - **AWS**:只读 S3(5 次 `sweep_run.sh` 列举 + 128 个 `.dem` + dumper 缓存命中),**零支出**。
+  - **树上改动**:仅报告 + 本文件 + `owed_executions.json` 的认领两格;
+    **探针全落 scratchpad,零新增工具文件**(⭐ 照办 W58 那条坑:先 `ls | grep blinkflee`,
+    命中既有的 `blinkflee_domain.py`,**没有重写**)。
+  - **自检**:`selfcheck worst exit: 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence owed-executions trunk-red(python) trunk-red(lua)` /
+    `UNCERTIFIABLE (exit 2): none` /
+    `NOT RUN (inside a leg): tests/test_lua_gate.py tests/test_luacheck_gate_soakswitch.py tests/test_selfcheck_lua_leg.py`
+    —— **腿内这三条这轮没人看过,不是通过**。trunk 红与上一轮**逐条同名**(GH #751 已登记),
+    `bots/` `tests/` 本轮一行未改 ⇒ **不是本轮增量**。
+    ⚠️ **开工第一条命令第 21 次撞管道拒绝门**。
+  - **下一轮第一件事**:(1) ⭐ `a_evidence_overchase_instrument` 是**仅剩**的「有 owed row 无 VERIFY」
+    的 armed id(本轮结清 `blinkflee`),它是 **MENTION** ⇒ 采购是**建仪器**,
+    ⚠️ 建之前先读 §FY 换体那条,换体前后的波不要混读;(2) ⭐ **把新 [bug] 的补丁落地** ——
+    那把尺子现在**会说假话**,而下一个读它的人不一定会逐帧核验它的证人;
+    (3) ⭐ 零通道买法**第二次奏效**,同时学到它的**边界**:**证明不了方向**,
+    当下游存在一条被门放行的替代分支时;(4) ⛔ 覆盖行只引 `sweep_complete.json`;
+    (5) ⭐ **单波读数不是跨波读数**;(6) 盯 GH #304(本轮追评)/ #305 / #751 / #35 / #96。
+  - **铁律 6 三条腿**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 30.1s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
+  - 完整报告:`iterations/reports/replay-check/20260911T221023Z.md`
