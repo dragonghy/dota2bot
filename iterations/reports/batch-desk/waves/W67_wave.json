@@ -36,6 +36,7 @@
    "instance": "i-0c4a3a64739dc7b84",
    "az": "us-west-2a",
    "launch_time": "2026-09-11T21:25:14.000Z",
+   "launched_at": "2026-09-11T21:25:14.000Z",
    "lifecycle": "None (on-demand)",
    "run_id": "spot_20260911_212512_1_6b933bacf447197782a8b6200eb74546c81e5cf8_65af1b",
    "carriers": "crystal_maiden,obsidian_destroyer,pudge,skeleton_king"
@@ -45,6 +46,7 @@
    "instance": "i-0d9f92bd20f5f9c11",
    "az": "us-west-2b",
    "launch_time": "2026-09-11T21:25:17.000Z",
+   "launched_at": "2026-09-11T21:25:17.000Z",
    "lifecycle": "None (on-demand)",
    "run_id": "spot_20260911_212514_1_6b933bacf447197782a8b6200eb74546c81e5cf8_2a2de3",
    "carriers": "obsidian_destroyer,pudge,skeleton_king,spirit_breaker"
@@ -54,6 +56,7 @@
    "instance": "i-06737fec7ef9cd627",
    "az": "us-west-2c",
    "launch_time": "2026-09-11T21:25:19.000Z",
+   "launched_at": "2026-09-11T21:25:19.000Z",
    "lifecycle": "None (on-demand)",
    "run_id": "spot_20260911_212517_1_6b933bacf447197782a8b6200eb74546c81e5cf8_d2a2fd",
    "carriers": "obsidian_destroyer,pudge,skeleton_king,spirit_breaker"
@@ -63,6 +66,7 @@
    "instance": "i-010ac88e29c597668",
    "az": "us-west-2d",
    "launch_time": "2026-09-11T21:25:21.000Z",
+   "launched_at": "2026-09-11T21:25:21.000Z",
    "lifecycle": "None (on-demand)",
    "run_id": "spot_20260911_212519_1_6b933bacf447197782a8b6200eb74546c81e5cf8_71f624",
    "carriers": "crystal_maiden,lion,pudge,skeleton_king"
@@ -88,5 +92,6 @@
   "Iron rule 4(i-a): register BOTH strata readings (ab and ba) for every economy metric, and take them from `recover_verdict.py`'s own `per_seed[].<m>_ab`/`_ba` + `strata.<m>` fields -- do NOT hand-compute, and NEVER pool by game count (4(i-d)).",
   "GH #454 (yi2): the on-demand machines here are NOT subject to spot reclaim, so every machine that reaches `instance-terminated-by-user` counts toward the `> 1.00 h/machine` trigger. This wave is the cleanest measurement point the desk has had in several rounds -- four machines, none reclaimable. Compute the mean and name it in the harvest report.",
   "GH #454 (yi1): billing-side single-wave cost. The budget snapshot was 7.3h stale at launch (13:49:53Z); a harvest round that finally sees a refreshed snapshot whose cutoff clears 21:25:21Z can settle the 12th-round-owed reading."
- ]
+ ],
+ "_launched_at_repair_20260911": "director RULING 18, 2026-09-11T23:xxZ. This record shipped `launch_time` on all four machines and `launched_at` on none. gate (i) (`wave_throttle.py`) reads `launched_at` ONLY and refuses to guess, so it answered `UNCERTIFIABLE: W67 machine 0 (seed 11574) has no launched_at / gate (i) DID NOT RUN` -- i.e. the anchor the NEXT wave throttles against was missing while this record looked complete. The four values here are COPIED from this record's own `launch_time`, not reconstructed: W48..W66 carry both fields with byte-identical values on every machine (19 consecutive waves), and these four instants (21:25:14/17/19/21Z) match the LaunchTimes the desk read from `describe-instances` in its own W67 report section 5. NOT a new measurement and NOT a guess. The recurrence guard is a needle in `tests/test_wave_gate_keys.py` (0.032s, already inside the push gate), so the NEXT omission is refused at its author's own push instead of being found by the next stream to start work."
 }

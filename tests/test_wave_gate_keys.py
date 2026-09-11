@@ -62,6 +62,38 @@ from birth for historical reasons is a check people stop reading.  Note what
 `first_wave` does and does not say: it is a statement about when the DESK
 started recording the gate, never a finding that the gate did not apply.
 
+EXTENSION 2 (2026-09-11, director RULING 18) -- the same filing story, one
+level down: from "the gate's own key is missing" to "the INPUT the next wave's
+gate reads is missing".
+
+W67's record carries `launch_time` on all four machines and `launched_at` on
+none.  `wave_throttle.py` -- gate (i), one of the four money gates -- reads
+`launched_at` only, and refuses to guess, so it answers:
+
+    UNCERTIFIABLE: W67 machine 0 (seed 11574) has no launched_at
+    gate (i) DID NOT RUN. That is not a pass -- do not launch on it.
+
+⭐ This is WORSE than the W27/W28 shape this file was filed on, in one specific
+way: the missing field does not blind the wave that omitted it.  It blinds the
+NEXT one.  So the round that drops it sees a complete-looking record and a
+green desk, and the cost lands on a different session -- which is GH #624's
+filing shape (the pusher's gate says nothing; the next stream to start work
+finds the red, hours later, with the author gone).  It has now happened twice
+in three days: GH #616's `py_gate_budget_premise` row recorded the same defect
+on W65, and the ratchet that catches it -- `tests/test_wave_throttle.py`,
+measured at 0.671s -- is OUTSIDE the push gate for a cumulative-budget reason,
+while THIS file is inside it at 0.032s and did not know the field existed.
+
+⛔ The repair is therefore a needle here, not a re-ruling of the budget knob:
+a 0.032s test already in the gate should not be silent about the one key whose
+absence blinds a money gate.  (The budget knob is still owed separately; this
+does not discharge it.)
+
+Scope: `LAUNCHED_AT_FIRST_WAVE`, set from the corpus rather than from taste --
+W40..W66 carry it 4/4 for **27 consecutive waves** and W67 is the first break
+since W39.  Same `first_wave` precedent as above: enforce from where the desk
+actually started recording it, never back-dated onto records written before.
+
 LIMITS (quote these when citing this file):
   - It grades the PRESENCE and NON-EMPTINESS of a key, never the answer.
     W33/W34/W35 all record `reclaim_blind` values that say in as many words
@@ -83,6 +115,13 @@ WAVES = os.path.join(ROOT, "iterations", "reports", "batch-desk", "waves")
 
 # The wave this requirement starts at.  See the scope note in the docstring.
 FIRST_ENFORCED_WAVE = 28
+
+# `machines[].launched_at` -- gate (i)'s anchor for the NEXT wave.  See
+# EXTENSION 2.  W40..W66 carry it 4/4 (27 consecutive waves); W26/W27 carried
+# it and W28..W39 did not, so 40 is where it became continuous and 40 is what
+# can be enforced without opening a permanent red account on records nobody
+# can re-fly.
+LAUNCHED_AT_FIRST_WAVE = 40
 
 # The four launch gates, as the batch-desk charter states them:
 #   (i) >=6h since the last routine wave, (ii) something new to test,
@@ -176,6 +215,36 @@ def grade_gates(number, gates, record):
                   "%s's `%s` is a non-empty string (a blank value is the "
                   "absence this file exists to catch, wearing the key)"
                   % (record, key))
+
+
+def grade_machines(number, machines, record):
+    """Require gate (i)'s anchor on every machine of an in-scope record.
+
+    Pure, for the same reason `grade_gates` is: the synthetic stand drives
+    THIS function, not a copy of its logic.
+
+    Structural only, exactly like `grade_gates`: this asserts the field is
+    present and non-empty, never that the instant is correct.  "The anchor was
+    recorded" and "the anchor is right" are two readings and only the first is
+    bought here -- the same LIMIT the docstring states for gate values.
+    """
+    if number < LAUNCHED_AT_FIRST_WAVE:
+        return
+    if not check(isinstance(machines, list) and machines,
+                 "%s has a non-empty `machines` list (absent/empty is not a "
+                 "pass -- gate (i) anchors on it)" % record):
+        return
+    for index, machine in enumerate(machines):
+        if not check(isinstance(machine, dict),
+                     "%s machine %d is an object" % (record, index)):
+            continue
+        value = machine.get("launched_at")
+        check(isinstance(value, str) and value.strip(),
+              "%s machine %d (seed %s) carries a non-empty `launched_at` -- "
+              "gate (i) reads THIS field and refuses to guess, so its absence "
+              "makes the NEXT wave's throttle UNCERTIFIABLE while this record "
+              "still looks complete"
+              % (record, index, machine.get("seed", "?")))
 
 
 def synthetic_stand():
@@ -279,6 +348,54 @@ def synthetic_stand():
               % ("a FINDING" if want_failure else "in scope-free silence",
                  number))
 
+    # (f) EXTENSION 2's needle, driven the same way.  The real corpus cannot
+    # tell a working `launched_at` needle from a vacuous one once W67 is
+    # repaired -- every remaining record satisfies it -- so these synthetics
+    # are the only thing that keeps it load-bearing.
+    good = [{"seed": 1, "launched_at": "2026-09-11T21:25:14.000Z"},
+            {"seed": 2, "launched_at": "2026-09-11T21:25:17.000Z"}]
+    before = len(CHECKS)
+    grade_machines(40, good, "SYNTH[anchors present]")
+    failed = [lab for ok, lab in CHECKS[before:] if not ok]
+    del CHECKS[before:]
+    check(not failed,
+          "synthetic: a record whose machines all carry `launched_at` is "
+          "silent (got %r)" % failed)
+
+    # W67's exact shape: `launch_time` present, `launched_at` absent.  This is
+    # the one the corpus produced, so it is the one pinned by name.
+    w67_shape = [{"seed": 11574, "launch_time": "2026-09-11T21:25:14.000Z"},
+                 {"seed": 11646, "launch_time": "2026-09-11T21:25:17.000Z"}]
+    before = len(CHECKS)
+    grade_machines(40, w67_shape, "SYNTH[W67 shape]")
+    failed = [lab for ok, lab in CHECKS[before:] if not ok]
+    del CHECKS[before:]
+    check(len(failed) == 2,
+          "synthetic: `launch_time` does NOT satisfy the `launched_at` needle "
+          "-- the sibling name is the exact shape W67 shipped, and gate (i) "
+          "reads only one of the two (got %d finding(s))" % len(failed))
+
+    # A blank anchor is the absence wearing the field, same as gate values.
+    before = len(CHECKS)
+    grade_machines(40, [{"seed": 3, "launched_at": "  "}], "SYNTH[blank anchor]")
+    failed = [lab for ok, lab in CHECKS[before:] if not ok]
+    del CHECKS[before:]
+    check(len(failed) == 1,
+          "synthetic: a blank `launched_at` is a FINDING, not a pass "
+          "(got %d)" % len(failed))
+
+    # And the scoping asserted BOTH ways, so it cannot quietly become
+    # "never required" -- the failure mode that retires a needle by accident.
+    for number, want_failure in ((39, False), (40, True)):
+        before = len(CHECKS)
+        grade_machines(number, w67_shape, "SYNTH[W67 shape @W%d]" % number)
+        failed = [lab for ok, lab in CHECKS[before:] if not ok]
+        del CHECKS[before:]
+        check(bool(failed) == want_failure,
+              "synthetic: a record with no `launched_at` is %s at W%d"
+              % ("a FINDING" if want_failure else "out of scope and silent",
+                 number))
+
 
 def main():
     if not os.path.isdir(WAVES):
@@ -318,6 +435,13 @@ def main():
         except (OSError, ValueError) as exc:
             check(False, "W%d %s: unreadable (%s)" % (number, name, exc))
             continue
+
+        # EXTENSION 2: gate (i)'s anchor for the NEXT wave.  Graded BEFORE the
+        # `gates` guard below, and not under its `continue`: a record can carry
+        # honest gate keys and still omit the anchor (W67 did exactly that), and
+        # a record with a broken `gates` object should not also buy silence
+        # about its anchors.
+        grade_machines(number, wave.get("machines"), "W%d" % number)
 
         gates = wave.get("gates")
         if not check(isinstance(gates, dict),

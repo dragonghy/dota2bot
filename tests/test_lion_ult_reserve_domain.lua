@@ -141,18 +141,24 @@
 --     (`lion_finger_of_death` AbilityManaCost = [200, 400, 600]) -- two
 --     sources, eleven days apart, same ladder.  Section 4 asserts that
 --     agreement rather than asserting either source alone.
--- (E) THE FRAMES ARE STAGED, NOT ADMITTED.  f_20260831_004433_cm_creepreach.lua
---     lives in tests/frames/, and this file reads it BY NAME.  Admitting it to
---     tests/fixtures/ moves census readings belonging to other levers (GH
---     #357); nothing here does that.
+-- (E) THE FRAMES ARE STAGED, NOT ADMITTED.  The rank-2 instants live in
+--     tests/frames/, and this file reads the minimum-pool one BY NAME
+--     (RANK2_FRAME).  Admitting any of them to tests/fixtures/ moves census
+--     readings belonging to other levers (GH #357); nothing here does that.
 --     ⚠️ AMENDED 2026-09-07: this bound used to say "exactly one named frame
 --     supplies the rank-2 instant", and section 5 asserted it that way.  It no
---     longer does -- there are two, and the selector below now takes the
---     MINIMUM-POOL one rather than whichever the enumeration happened to reach
---     last.  That is not cosmetic: with n=2 the old `for ... do rank2 = r end`
---     made the reading depend on directory order, and the argument it feeds is
---     about a pool BOTTOM, so the minimum is also the estimator the ruling's
---     own reasoning asks for.
+--     longer does -- and the selector takes the MINIMUM-POOL one rather than
+--     whichever the enumeration happened to reach last.  That is not cosmetic:
+--     the old `for ... do rank2 = r end` made the reading depend on directory
+--     order, and the argument it feeds is about a pool BOTTOM, so the minimum
+--     is also the estimator the ruling's own reasoning asks for.
+--     ⚠️ AMENDED AGAIN 2026-09-11 (director): there are now SEVEN, and
+--     ⭐ the frame this bound is written around CHANGED -- RANK2_FRAME is
+--     f_260909_215412_axe_cull_cm_838.lua, not the 2026-08-31 frame it named
+--     for eleven days.  ⭐ The 09-07 selector change is what made that
+--     visible: last-wins would have re-aimed section 5 at whatever `ls`
+--     returned last and gone GREEN on it, and the -19.8% move in the pool
+--     bottom would have been absorbed in silence.
 --
 -- Zero behaviour change: no gate, no new candidate id, no bots/ edit beyond a
 -- comment correction in hero_lion.lua's SkillsComplement, whose text asserted
