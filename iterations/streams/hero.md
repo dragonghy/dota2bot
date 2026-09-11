@@ -22,7 +22,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--148. **⭐ 下一轮:`-145` 只剩最后一条了 —— 清 `test_focus_mana_cost_consumer_census.lua`,
+-148. **已发表:GH #745**(主发现);**GH #744 追评**(自检 python 那侧的肇事者)。
+   **⭐ 下一轮:`-145` 只剩最后一条了 —— 清 `test_focus_mana_cost_consumer_census.lua`,
    照抄的样板现在有四个。**
    本轮(报告 `iterations/reports/hero/20260911T081500Z.md`)按 P4.4 把主体放在一个
    `bots/` 行为改动上:`glyphany`(Axe + Lion,gated,turbo-only),
@@ -6527,6 +6528,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **已从 `lua_gate.py` 的 known-red 移除:15 → 14**。
   - **铁律 6 三行**:`GATE_EXIT=0`(luacheck 0 警告)/ `py gate: 95 ran, 0 findings, 29.1s`
     / `lua gate: 334 ran, 0 findings, 14 known-red, 306.1s`。**未用 `RULE6_BYPASS`。**
+  - **已发表:GH #745**(`glyphany` 主发现 + 22 站点子类普查)、**GH #744 追评**
+    (`test_selfcheck_lua_leg.py` 241s / rc=2,自检最后一节连续三轮空洞的肇事者)、
+    **`queue.json:hero-57`**(条件 (a),事先写明归档扫描回答不了)。
+    发布顺序按 GH #290:先 push(main = `1908bc69`),再 `claim_precheck.sh`
+    (**`PRECHECK_EXIT=0`**,`local commits not on origin/main: 0`),最后发表。
   - **⚠️ 自检**:第一次调用被它自己 REFUSED(管道,**第 6 次复发**);重定向后仍卡在
     `=== trunk health (python test suite) ===`,主动 kill。⭐ **但 `-147` 那条欠账讨回来了**:
     手工逐条计时 125 个 py 测试(437s),**肇事者 `test_selfcheck_lua_leg.py` 单独 241s /
