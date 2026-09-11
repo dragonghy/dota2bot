@@ -1857,6 +1857,108 @@ function X.zuus_IsJumpTargetInShockwaveReach( hBot, hTarget, hAbility, nSearchRa
 
 end
 
+
+--- [zusjumpany] X.ConsiderE's RETREAT firing point asks an EXISTENTIAL question
+--- -- "is there an enemy I am running away from?" -- of exactly ONE member of
+--- the ring it just built: `tableNearbyEnemyHeroes[1]`.
+---
+--- THE LIST IS NOT UNSORTED, AND THAT IS THE POINT.  docs/BOT_API_REFERENCE.md
+--- :1229 makes GetNearby* sorted-by-distance a promise, so [1] is the NEAREST
+--- enemy, and J.GetNearbyHeroes only filters -- it never reorders.  So this is
+--- NOT the `anyhero` (GH #724) shape, where a correct answer was lost to an
+--- arbitrary order.  It is the GH #731 shape, and it is the harder one: the
+--- list is sorted CORRECTLY, and sorting it correctly is exactly what does not
+--- help, because the predicate the branch is about is not distance.  It is
+--- DIRECTION -- `not bot:IsFacingLocation( ..., 120 )`, i.e. "this one is behind
+--- me".  The nearest enemy and the one you are fleeing from are different
+--- questions, and on any frame where the nearest enemy is the one you are
+--- walking INTO, the shipped term answers about him and the escape hop is
+--- declined while a chaser stands at your back.
+---
+--- ARMED THIS IS A WIDENING, and the direction is a property of the shape rather
+--- than of today's data: the armed leg scans the same ring with the same
+--- per-candidate predicate and index 1 is in that scan, so every frame the
+--- shipped leg fires on, the armed leg fires on too.  It can only ever ADD a
+--- Heavenly Jump.  Gate OFF, X.zuus_FindRetreatJumpThreat evaluates
+--- X.zuus_IsRetreatJumpThreat on `tEnemies[1]` and nothing else -- the shipped
+--- three conjuncts, in the shipped order, with the shipped short-circuit.
+---
+--- THE COST SIDE, stated so it can be argued with.  The hop travels along the
+--- bot's OWN facing.  Armed, the enemy that authorises the hop may be the one at
+--- your back while a NEARER enemy sits within 120 degrees of the direction you
+--- are about to leap -- so the hop can close distance on him.  That is the real
+--- price of the widening, it is not hypothetical on the one frame below (the
+--- nearest enemy is 237.6u away and the authorising one 306.3u), and it is why
+--- this ships dark.  What is bought against it: Heavenly Jump is an ESCAPE --
+--- the landing shockwave slows for 1.4s at 80% and the hop itself is 375-600u of
+--- free displacement -- and the shipped term throws that escape away on a
+--- one-member sample of its own ring.
+---
+--- ⛔ THIS HELPER NAMES EXACTLY ONE ID.  It must never be conjoined with
+--- `zusjumpland` or `zusbind`: a gate naming a sibling freezes FALSE the day the
+--- sibling is promoted (the `pullcad` trap) and check_armed_wiring.py still
+--- calls it WIRED.  The two jump levers are orthogonal -- `zusjumpland`
+--- NARROWS the 进攻 point on geometry, this one WIDENS the retreat point on
+--- membership -- and they sit in different branches of the same function.
+---
+--- WHAT IS KNOWN, and it is a supply reading plus a geometry reading.
+--- Over the whole frame corpus (tests/fixtures + tests/frames), driven with
+--- Zeus as the subject: 60 live-Zeus instants, 38 of them reach this body
+--- (Heavenly Jump fully castable and the bot not rooted), and the ring
+--- `600 + nSkillLV * 100` holds >= 2 enemy heroes on 4 of the 60 -- of which
+--- exactly ONE also reaches the body.  That one frame is
+--- tests/frames/f_260909_215227_zeus_jump_283.lua (t=283.4): Wraith King at
+--- 237.58u on bearing 33.46 deg and Lich at 306.28u on bearing 60.74 deg.  The
+--- two bearings are 27.28 deg apart.  Swept through this helper at 1-deg steps
+--- (tests/test_zuus_jump_escape_any.lua §3): the shipped leg fires on 120 of the
+--- 360 facings, the armed leg on 147, and the armed leg fires where the shipped
+--- one does not on exactly 27 -- the contiguous block 274..300 deg, i.e. 7.5% of
+--- facings on which the shipped tree declines an escape the armed tree takes.
+--- The reverse count is 0: no facing fires the shipped leg and not the armed
+--- one, which is the widening direction as a measurement rather than a claim.
+---
+--- ⚠️ WHAT IS NOT KNOWN, and the corpus CANNOT be made to answer it.
+--- `IsFacingLocation` is on no spec in tests/mock/, so it falls through
+--- bot_api.lua's `^Is -> false` catch-all: `not bot:IsFacingLocation(...)` is
+--- VACUOUSLY TRUE on every fixture frame, for every candidate.  Driven with the
+--- mock's own answer the two legs are therefore identical everywhere and this
+--- lever's measured domain is ZERO -- a number that is entirely the harness's
+--- and says nothing about the game.  Same family as GH #715 (mock
+--- IsMagicImmune) and the GetFacing = 0 note above.  The 27.28 deg above is a
+--- SWEPT reading: tests/test_zuus_jump_escape_any.lua injects the facing the
+--- .dem does not carry and says so at every number.
+function X.zuus_IsRetreatJumpThreat( hBot, hEnemy )
+
+	return J.IsValidHero( hEnemy )
+		and J.CanCastOnNonMagicImmune( hEnemy )
+		and not hBot:IsFacingLocation( hEnemy:GetLocation(), 120 )
+
+end
+
+
+--- The enemy X.ConsiderE's retreat firing point escapes FROM, or nil.  Armed:
+--- any member of the ring that answers the shipped per-candidate predicate.
+--- Unarmed: the nearest one, and only the nearest one.
+function X.zuus_FindRetreatJumpThreat( hBot, tEnemies )
+
+	if tEnemies == nil then return nil end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'zusjumpany' ) )
+	then
+		local hNearest = tEnemies[1]
+		if X.zuus_IsRetreatJumpThreat( hBot, hNearest ) then return hNearest end
+		return nil
+	end
+
+	for _, hEnemy in ipairs( tEnemies )
+	do
+		if X.zuus_IsRetreatJumpThreat( hBot, hEnemy ) then return hEnemy end
+	end
+
+	return nil
+
+end
+
 function X.ConsiderE()
 
 	if not abilityE:IsFullyCastable()
@@ -1895,10 +1997,13 @@ function X.ConsiderE()
 	then
 		if J.IsRunning( bot )
 		then
-			local targetHero = tableNearbyEnemyHeroes[1]
-			if J.IsValidHero( targetHero )
-				and J.CanCastOnNonMagicImmune( targetHero )
-				and not bot:IsFacingLocation( targetHero:GetLocation(), 120 )
+			-- [zusjumpany] was `tableNearbyEnemyHeroes[1]` plus the three
+			-- conjuncts now inside X.zuus_IsRetreatJumpThreat.  Gate off, the
+			-- helper IS that -- the nearest enemy and nobody else.  Read its
+			-- header for the existential, the widening direction, the cost of
+			-- the widening, and why the fixture corpus reads this lever's
+			-- domain as a harness zero.
+			if X.zuus_FindRetreatJumpThreat( bot, tableNearbyEnemyHeroes ) ~= nil
 			then
 				return BOT_ACTION_DESIRE_HIGH
 			end

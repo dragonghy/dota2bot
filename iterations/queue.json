@@ -2377,6 +2377,18 @@
       "acceptance": "主判据是录像组的域内击杀转化(#41 口径):arm A 应回到 >=45%,域外两臂不变;次判据是各臂自己的 gpm delta,arm A 应明显不如 arm B 负。事前登记的预测表在 test_set.md §G.3,落地后不许改口。tpdying/cmrguard 两臂相同,只随波取条件 (a) 证据。",
       "status": "done",
       "result": "2026-08-19T22:12Z **完成**。两臂各 4 种子全齐,合计 555 局有效局。**臂 A(16 id,含 roamstale)** gpm -33.17 / xpm -34.90 / deaths +0.32 / last_hits -2.16,四指标 0/4,287 局。**臂 B(15 id,无 roamstale,树 b48d655 暖场 stamp 已核对通过)** gpm -38.66 / xpm -40.50 / deaths +0.40 / last_hits -2.11,四指标 0/4,268 局;逐种子 gpm 863=-56.24 / 864=-16.13 / 865=-40.33 / 866=-41.93。**A-B 逐种子配对差(本请求的交付物):gpm +5.48(sd 35.62, SE 17.81, z=+0.31, 同号 2/4)= null**;xpm +5.60(z=0.35)、deaths -0.08(z=-0.44)、last_hits -0.05(z=-0.08),四个指标全 null。**事前登记裁定(§H,批测台只做字面比对,判定归总监)**:(1) §G.3 第 3 行**按证伪列命中** —— 证伪列写「arm A ≈ arm B ≈ -30 → 残差真在规则里,那时才轮到路 B」,实测 -33.17 vs -38.66,字面成立。另注:预测列措辞「arm A 明显不如 arm B 负」方向与混杂因子假说本身相反(疑笔误),但两种读法都不构成通过(+5.48 达不到「明显」)。(2) §J.4⑤ `last_hits` 预测**被证伪** —— 登记要求臂 B ≥ -1.0 才算 roamstale 背锅,实测 **-2.11**,正是登记里写的「同样是 -2.x」;DiD -0.05 远达不到 ≤ -1.0 ⇒ 对线期 last_hits 代价不出自 roamstale,另有出处。(3) roamstale 条件 (b):经济 A-B = null。roamstale 是 §A0 通例的已批准例外(gpm 可作次判据),但与 16:10Z 收 lf_rescue 时「null 不构成无害、只是上界」的先例有张力,**判定归总监**。**必读的功效限制**:本轮实测 A-B 配对差 sd=35.62 ⇒ 4 种子 MDE ≈ **35.6 gpm**,且配对差噪声是单臂(sd 16.6-19.6)的约 2 倍(每臂本身已是镜像差,跨臂配对拿不到相关性红利)。⇒ 这个 null 的上界很宽;且**路 B 逐 id 经济二分结构上不可行**(12 个 id 均摊 -30 gpm ⇒ 单 id -2.5 gpm ⇒ 需约 800 种子)。详见 iterations/reports/batch-desk/20260819T221200Z.md 第 5 节。"
+    },
+    {
+      "id": "hero-57",
+      "stream": "hero",
+      "bundle": "zusjumpany",
+      "seeds": [],
+      "priority": 2,
+      "status": "pending",
+      "question": "zusjumpany (Zeus, gated, turbo-only, landed 2026-09-11) 是 X.ConsiderE **撤退**落单点的一个 WIDENING:出货只问 `tableNearbyEnemyHeroes[1]`(**排序是对的** —— docs/BOT_API_REFERENCE.md:1229 保证 GetNearby* 按距离升序,J.GetNearbyHeroes 只过滤不重排 ⇒ [1] 就是最近那个),而分支要问的是**方向**(`not bot:IsFacingLocation(..., 120)` = 「他在我背后」)。最近的敌人和我正在逃离的敌人是两个问题;⇒ GH #731 那一族(名单排序正确,所以排序修不好它),**不是** GH #724 的 anyhero(名单无序)。armed 遍历同一个环。**本地能买到的已经买完了**:语料 60 个存活 Zeus 帧、38 帧到得了函数体、环内 >=2 敌人的只有 4 帧、两者都满足的**恰好 1 帧**(tests/frames/f_260909_215227_zeus_jump_283.lua);在那一帧上把朝向**扫**一圈(1 度一步,穿过真 helper):出货腿 120/360 开火、armed 腿 147/360、**只有 armed 开火的 27 度(274-300 度,7.5%)、只有出货开火的 0 度**。⛔ **本地买不到的那一半是结构性的**:`IsFacingLocation` 不在 tests/mock/ 任何 spec 上,落进 bot_api.lua 的 `^Is -> false` 兜底 ⇒ 第三条合取项在每一帧上**恒真**,两条腿在语料上处处相同,**本 lever 的 driven 域读作 0,而那个 0 是闸的不是游戏的**(同族 GH #715)。.dem 不带朝向(replay_fixture.lua:613),**没有任何 fixture 能抬起这一条**。⇒ 只有真实对局能回答:撤退中的 Zeus 有多大比例的帧,环里有 >=2 个敌人且**最近的那个在身前**。",
+      "acceptance": "(a) 录像组在 armed 腿的对局里核验到:至少一次 Heavenly Jump 由**非最近**的那个敌人授权释放(帧证据:两个敌人的方位角 + Zeus 朝向 + 谁在 120 度锥外),且跳跃方向确实背离授权者;并给出**代价那一半**的读数 —— 这些新增的跳里有多少把 Zeus 送向了更近的那个敌人。(b) 粗粒度胜负无明显负面。(c) 理论依据已在源码头注释里写清(Heavenly Jump 是逃生位移 + 落地 1.4s / 80% 减速;出货把它扔在自己环的一个单成员抽样上)。⛔ **不要用施放次数作为唯一观测量**:本 lever 是 WIDENING,次数必然不减,而**多出来的那几次好不好**才是问题。",
+      "result": null,
+      "director": null
     }
   ]
 }

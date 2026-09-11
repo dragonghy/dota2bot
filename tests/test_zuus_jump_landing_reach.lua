@@ -606,9 +606,39 @@ tests['§6 X.ConsiderE has exactly two firing points and the helper is in one'] 
         'the helper is called at ' .. select(2, body:gsub('X%.' .. HELPER, ''))
         .. ' firing points, was 1.  §0.3 limit 3 assumes the retreat branch is '
         .. 'NOT routed through it.')
-    assert(body:find('IsFacingLocation', 1, true),
-        'the retreat firing point lost its facing term -- §0 leans on it being '
-        .. 'the one place in this file that reasons about hop direction')
+    -- ⭐ ONE-HOP CLOSURE, not a text pin on this one function body.  §0 leans on
+    -- the retreat firing point being the one place in this file that reasons
+    -- about hop direction -- it does NOT lean on the facing term being spelled
+    -- inline.  The first draft asserted the spelling, and went red the day
+    -- `zusjumpany` (2026-09-11) moved the same three conjuncts into
+    -- X.zuus_IsRetreatJumpThreat without changing a single decision: the GH #624
+    -- shape, where an assertion pinned to today's source layout is toppled by
+    -- the next group's legitimate edit and the author is long gone.  So take the
+    -- closure of X.ConsiderE over the X.* helpers it CALLS, and ask the
+    -- invariant of that.
+    local reach, seen, queue = body, {}, { body }
+    while #queue > 0 do
+        local chunk = table.remove(queue)
+        for sCallee in chunk:gmatch('X%.([%w_]+)%s*%(') do
+            if not seen[sCallee] then
+                seen[sCallee] = true
+                local iDef = src:find('\nfunction%s+X%.' .. sCallee .. '%s*%(')
+                if iDef ~= nil then
+                    local after = src:sub(iDef + 1)
+                    local iEnd = after:find('\nend\n')
+                    if iEnd ~= nil then
+                        local sBody = after:sub(1, iEnd):gsub('%-%-[^\n]*', '')
+                        reach = reach .. sBody
+                        queue[#queue + 1] = sBody
+                    end
+                end
+            end
+        end
+    end
+    assert(reach:find('IsFacingLocation', 1, true),
+        'the retreat firing point lost its facing term -- neither X.ConsiderE '
+        .. 'nor any X.* helper it calls reasons about hop direction any more, '
+        .. 'and §0 leans on it being the one place in this file that does')
     assert(not body:find('J%.IsInRange%(%s*bot,%s*targetHero,%s*nCastRange%s*%)'),
         'the shipped take-off measurement is still in X.ConsiderE alongside the '
         .. 'helper -- the lever would be dead')

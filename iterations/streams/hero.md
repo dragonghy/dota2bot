@@ -22,6 +22,36 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-147. **⭐ 下一轮:`-146` 与 `-145` 都还欠着 —— 而且照抄的样板现在有三个了。**
+   本轮(报告 `iterations/reports/hero/20260911T050500Z.md`)按**铁律 9 / OWNER_PRIORITIES P4.4**
+   把 `-146` 压到附带位:`-146` 要的是**清两条 known-red 普查文件**,那是**量具工作**,
+   P4.4 明文说它**不得成为工作单元主体**。主体因此是一个 `bots/` 行为改动:
+   `zusjumpany`(Zeus,gated,turbo-only)。**已发表:GH #741**。
+   - ⛔ **`-146` / `-145` 本轮都没有执行**,原样留在下面。
+     `test_axe_battle_hunger_fight_reach.lua` / `test_focus_mana_cost_consumer_census.lua`
+     **今天仍在 `lua_gate.py` 的 15 条 known-red 里**。
+     ⇒ 可照抄的写法现在是**三个**:`test_cast_ring_mirror_discipline.lua`、
+     `test_local_assign_discipline.lua`,以及本轮 `test_zuus_jump_escape_any.lua` §1
+     (四个普查数里三个写成方向安全的下界 `>=`,只有「域 ≥1」那个**本身就是结论**的留了实义)。
+     **不要只是把数字重取一遍。**
+   - **⭐ 本轮买到的、值得复用的一条 —— 「假 0」也要写成会红的断言,不能写成脚注。**
+     `IsFacingLocation` 不在 `tests/mock/` 任何 spec 上 ⇒ 落进 `^Is -> false` 兜底 ⇒
+     本 lever 的第三条合取项在**每一帧**恒真,两条腿处处相同,**driven 域读作 0**。
+     那个 0 **是闸的不是游戏的**(同族 GH #715),而它长得和「这个 lever 没用」一模一样。
+     ⇒ §2 把它**断言**成「全语料分歧数 == 0,且 `IsFacingLocation` 仍然答 false」,
+     于是哪天 mock 长出朝向,这条会**自己红并点名**。**一个不可测的量,要么钉住它的不可测,
+     要么它会被当成一个测出来的 0。**
+   - **⭐ 顺手修掉的一条 GH #624 形状**:`test_zuus_jump_landing_reach.lua` §6 那条
+     `assert(body:find('IsFacingLocation'))` 钉的是**字符串在 `X.ConsiderE` 函数体里**,
+     本轮把同样三条合取项搬进 helper(**一个决策都没变**)当场把它顶红。
+     改成 **`X.ConsiderE` 对它调用的 `X.*` helper 的不动点闭包**,对闭包问那个不变量。
+     ⚠️ **第一版只写了一跳闭包,还是红** —— 链是两跳。
+     「在第一条红消息处停手」**在同一轮里又复发了一次**。
+   - **⚠️ 开工自检最后一节 `=== trunk health (python test suite) ===` 打出标题后零输出**
+     ⇒ **trunk 的 python 那侧本轮没人看过**。上一轮是 `EXIT=124` 死在**同一节**,
+     这是**连续第二轮**。⇒ 下一轮要么单独跑 `bash tests/run_py_tests.sh` 取那侧读数,
+     要么把这条开成 [harness] issue —— **不要再连续第三轮把它当脚注**。
+
 -146. **⭐ 下一轮:`-145` 仍然欠着,而且现在它只剩「照抄」——两个样板都在仓库里了。**
    本轮(报告 `iterations/reports/hero/20260911T014635Z.md`)认领了 **GH #714**:
    `hero_arc_warden.lua` 两行 `local` 掉了 `=`。修它是两个字符;本轮的产出是
@@ -6419,6 +6449,34 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-11T05:05Z(报告 `iterations/reports/hero/20260911T050500Z.md`;**backlog:新开 `-147`,
+  `-146` / `-145` 未执行、原样留着**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动;
+  **P4.2 冻结期内不请求入集**,只登记 `iterations/state.json:zusjumpany_20260911`)
+  **`zusjumpany`:`X.ConsiderE` 撤退落单点把一个存在量化问题交给了**最近**的那个敌人 ——
+  而这一次名单是**正确排序**的,所以排序修不好它。**
+  - **缺陷**:分支买的是「**有没有**一个敌人在我背后」(Heavenly Jump 沿自己朝向跳,
+    `not bot:IsFacingLocation( ..., 120 )` 就是「他在我背后」),问的却只是
+    `tableNearbyEnemyHeroes[1]`。`docs/BOT_API_REFERENCE.md:1229` 保证 `GetNearby*` 按距离升序、
+    `J.GetNearbyHeroes` 只过滤不重排 ⇒ `[1]` **可靠地就是最近那个**。
+    ⇒ **GH #731 族**(排序正确、排序帮不上忙),**不是** GH #724 的 `anyhero`(名单无序)。
+    最近的敌人在身前、追我的那个稍远在身后 ⇒ **逃生跳被一个关于别人的读数否掉**。
+  - **改动**:`X.zuus_IsRetreatJumpThreat`(出货三条合取项逐字原序)+
+    `X.zuus_FindRetreatJumpThreat`(闸关只看 `[1]`,闸开遍历同一个环)。
+    **方向 = WIDENING,由循环形状保证**(index 1 在扫描里)⇒ 只能多加跳。
+  - **本地验证**:语料 60 个存活 Zeus 帧 / 38 帧到得了函数体 / 环内 ≥2 敌人 4 帧 /
+    **两者都满足恰好 1 帧**(`f_260909_215227_zeus_jump_283.lua`,SK 237.58u@33.46°、
+    lich 306.28u@60.74°)。在那一帧上**扫朝向 360 步穿过真 helper**:
+    出货腿 **120/360** 开火、armed 腿 **147/360**、**只有 armed 的 27°(274–300°)**、
+    **只有出货的 0°** ← WIDENING 是测出来的不是声称的。27° 与方位角差 **27.28°** 逐度吻合。
+  - **⛔ 买不到的那一半是结构性的**:`IsFacingLocation` 不在 mock 任何 spec 上 ⇒
+    `^Is -> false` ⇒ 第三条合取项恒真 ⇒ **driven 域读作 0,那个 0 是闸的不是游戏的**
+    (GH #715 同族);.dem 不带朝向 ⇒ **没有 fixture 能抬起它**。已写成会红的断言(§2)。
+  - **豁免帧**:最近敌人已在背后的朝向上,**两条腿都开火且 armed 仍选中最近那个** ——
+    armed 一字不改。没有它,「放宽」和「开关」是同一个读数。
+  - `tests/test_zuus_jump_escape_any.lua` **7 例 0 失败 / 7.8s**;
+    变异台 `tools/agent/mutstand_zusjumpany.sh` **MUTSTAND_SHORT**。
+  - `queue.json` 新增 **hero-57**((a) 取证申请;判据点名要买**代价那一半**,
+    并**禁止用施放次数当唯一观测量**)。
 - 2026-09-11T01:46Z(报告 `iterations/reports/hero/20260911T014635Z.md`;**backlog:新开 `-146`,
   `-145` 未执行、原样留着**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动;
   **P4.2 冻结期内不请求入集**,只登记 `iterations/state.json:awraxfield_20260911`)
