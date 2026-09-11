@@ -40,6 +40,10 @@ local SwappedFlaskTime    = -90
 local SwappedSmokeTime    = -90
 local SwappedRefresherShardTime = -90
 local SwappedMoonshardTime = -90
+-- [bagtango] Own throttle, never shared with SwappedFlaskTime: a shared stamp
+-- would make the shipped flask rescuer's cadence depend on whether this id is
+-- armed, i.e. the un-armed tree would stop being byte-identical.
+local SwappedFieldRegenTime = -90
 local lastCheckBotToDropTime = 0
 
 local IsAvoidingAbilityZone = false
@@ -1948,6 +1952,9 @@ function ItemOpsDesire()
     TrySwapInvItemForRefresherShard()
     TrySwapInvItemForClarity()
     TrySwapInvItemForFlask()
+    -- [bagtango] Appended AFTER the shipped flask rescuer, never inserted into
+    -- it, so with this id un-armed every call above evaluates byte-identically.
+    TrySwapInvItemForFieldRegen()
     TrySwapInvItemForSmoke()
     TrySwapInvItemForMoonshard()
 end
@@ -2042,6 +2049,101 @@ function TrySwapInvItemForFlask()
 		end
 
 		SwappedFlaskTime = DotaTime()
+	end
+end
+
+-- [bagtango / owner priority P2, GH #734, 2026-09-11] The OTHER FOUR members of
+-- the supply set this tree recognises, and the reason the flask rescuer above
+-- does not already cover them.
+--
+-- The defect, stated as a set difference. J.HasFieldRegenSource (jmz_func ~5571)
+-- accepts FIVE things as "something to drink in the field": item_flask,
+-- item_tango, item_tango_single, item_faerie_fire, and a charged item_bottle.
+-- The shipped backpack rescuers in this file cover item_clarity, item_flask,
+-- item_smoke_of_deceit, item_moon_shard, item_cheese and item_refresher_shard.
+-- Intersect those two lists and exactly ONE regen source has a rescuer: the
+-- flask. A tango or a faerie fire that is delivered into slots 6-8 is therefore
+-- stuck there for the rest of the game -- not for 6.2 seconds, not until a main
+-- slot frees, permanently -- because nothing in the tree ever swaps it out and a
+-- backpacked item cannot be activated.
+--
+-- ⭐ THIS IS NOT GH #734's PROPOSED FIX, and the distinction is load-bearing.
+-- #734 proposes narrowing the fieldbuy purchase gate from
+-- Item.GetEmptyInventoryAmount (slots 0..8) to GetEmptyNonBackpackInventoryAmount
+-- (slots 0..5). That proposal is the same one GH #123 made and it was MEASURED
+-- AND REFUTED on this corpus -- see tests/test_fieldbuy_backpack_rescuer.lua:
+-- it would silence the id on 13 of 28 dry domain frames (46.4%) while the
+-- shipped rescuer would have worked on 13 of those 13. That file's closing
+-- bound is the pointer this block picks up, verbatim: "this file does not claim
+-- the residual is not real. It claims the purchase gate is not its cause.
+-- Finding the cause is a separate unit." This is that unit, and it lands on the
+-- OTHER side of the trade -- it makes MORE backpacked supply drinkable rather
+-- than buying less of it, so it cannot reproduce the 46.4% loss the refutation
+-- priced.
+--
+-- ⚠️ WHAT THIS DOES AND DOES NOT CLAIM ABOUT #734's 18.0% STUCK. It does not
+-- claim to be the whole of it. #734's own three frame examples are all flasks,
+-- which already have a rescuer, so some of that population has a different
+-- cause still unfound (two open hypotheses are registered in this round's
+-- report; both need a corpus read this site cannot do). What is claimed here is
+-- narrower and is provable off the source alone, which is why it is the piece
+-- taken first: for tango / tango_single / faerie_fire the stuck rate is not a
+-- measured residual at all, it is 100% BY CONSTRUCTION.
+--
+-- Direction is fixed by CONSTRUCTION: arming can only move a consumable from a
+-- slot where it cannot be used into one where it can, and the displaced item is
+-- chosen by the same GetMainInvLessValItemSlot the five shipped rescuers use --
+-- which already refuses every item on Item['sCanNotSwitchItems'] (aegis, cheese,
+-- bloodstone, gem, moon shard, BKB, the lotuses). It can add no purchase, no
+-- cast and no movement.
+--
+-- No thrash by construction: after one swap the item IS in a main slot, so
+-- GetItemSlotType(cSlot) == ITEM_SLOT_TYPE_BACKPACK is false on the next poll
+-- and the block is a no-op until another one lands in the bag.
+--
+-- Turbo is NOT structural here and so is asked EXPLICITLY. Unlike the
+-- J.ShouldFieldBuyRegen family in jmz_func -- whose callers all pass through
+-- J.IsFieldRegenSituation, whose first line is IsModeTurbo -- this function is
+-- reached from ItemOpsDesire on every frame in every mode, so there is no turbo
+-- ancestor to inherit. Omitting the check would ship a normal-mode behaviour
+-- change behind a turbo-only charter.
+--
+-- Gated STANDALONE -- exactly one id in this condition and exactly one call
+-- site, never a conjunction of two and never a second caller of a shared helper
+-- (the 'pullcad' trap, and the 'lvlany' §5b nail). In particular it does NOT
+-- read J.HasFieldRegenSource and does not depend on 'bagsalve' or 'staybag':
+-- those two widen what the tree BELIEVES it is carrying, this widens what it can
+-- actually reach. A single-arm wave can therefore see this id on its own.
+--
+-- The bottle is deliberately NOT in the list. It is the one member whose backpack
+-- problem this mechanism cannot fix: bottle refills at the fountain and its
+-- charge state, not its slot, is what the supply read turns on -- and swapping a
+-- full bottle into main displaces a real item for a source 'staybottle' already
+-- reads in flight. One lever, three items.
+function TrySwapInvItemForFieldRegen()
+	if not J.IsSoakCandidate('bagtango') then return end
+	if not J.IsModeTurbo() then return end
+
+	if 	DotaTime() >= SwappedFieldRegenTime + 6.4
+	and bot:GetActiveMode() ~= BOT_MODE_WARD
+	then
+		for _, sName in ipairs({ 'item_tango', 'item_tango_single', 'item_faerie_fire' })
+		do
+			local cSlot = bot:FindItemSlot(sName)
+			if cSlot ~= nil and cSlot >= 0
+			and bot:GetItemSlotType(cSlot) == ITEM_SLOT_TYPE_BACKPACK
+			then
+				local lessValItem = J.Item.GetMainInvLessValItemSlot(bot)
+
+				if lessValItem ~= -1
+				then
+					bot:ActionImmediate_SwapItems(cSlot, lessValItem)
+					break
+				end
+			end
+		end
+
+		SwappedFieldRegenTime = DotaTime()
 	end
 end
 

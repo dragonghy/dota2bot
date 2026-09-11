@@ -769,6 +769,7 @@ globals = {
     "TrySellOrDropItem",
     "TrySwapInvItemForCheese",
     "TrySwapInvItemForClarity",
+    "TrySwapInvItemForFieldRegen",
     "TrySwapInvItemForFlask",
     "TrySwapInvItemForMoonshard",
     "TrySwapInvItemForRefresherShard",

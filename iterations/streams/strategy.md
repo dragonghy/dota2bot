@@ -27,6 +27,82 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0BAGTANGO. **【2026-09-11T04:38Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**。
+   认领依据 = 工作流第 1 步**先扫 open issue**(上一轮把顺序做反了并自记在案,本轮按顺序做):
+   `[strategy]` open 里有**两件外部来件** —— **GH #734**(01:15:52Z,owner P2 族)与
+   **GH #739**(04:04:31Z,比本会话早三分钟)。取 **#734**,因为它正是 `0LVLCARRY`
+   「下一格」**第 (0) 项**逐字点名的那一格;**#739 放进本条「下一格」第 (0) 项**。
+   ⭐⭐ **本轮最该带走的一条:#734 提的修法上个月刚被实测否决过,而 issue 流里没有任何东西会举手。**
+   #734 建议把 fieldbuy 购买闸从 `Item.GetEmptyInventoryAmount`(0..8)收窄到
+   `GetEmptyNonBackpackInventoryAmount`(0..5)。**那就是 GH #123 的提案**,否决证据就在仓库里:
+   `tests/test_fieldbuy_backpack_rescuer.lua` 头注第 7 行逐字写着
+   「⭐ THE FIX MUST NOT SHIP AS PROPOSED, and this file is the reason」——
+   它会**静音 28 个干燥域帧里的 13 个(46.4%)**,而出货的 `TrySwapInvItemForFlask()`
+   在这 13 个里 **13/13 本来都能成**,0 个卡死 ⇒ 交易是「为止住一笔 12.9% 的浪费,
+   放弃 46.4% 的 owner P2 要的行为」,该文件把它叫作 **lanefix 形状**。
+   ⇒ **本轮没有按 #734 改购买闸**,并在追评里把否决交回去。**否决只活在一个测试文件的头注里,
+   这就是接力棒差点被反向拾起的机制。**
+   ⭐ **本轮做的是那条否决自己留下的接力棒**(它的收尾句逐字:「购买闸不是它的成因;
+   **找成因是另一个工作单元**」)。成因是一条**纯源码可证**的集合差:`J.HasFieldRegenSource`
+   认 **5** 样补给(flask / tango / tango_single / faerie_fire / 带电 bottle),
+   `mode_team_roam_generic.lua` 出货 **6** 个背包救援器(clarity/flask/smoke/moonshard/
+   cheese/refresher_shard),**交集恰好 1 个:flask** ⇒ tango 与仙灵之火落进 6-8 格就**永久**
+   留在那儿(不是 6.4 秒,是这局剩下的时间),而背包物品**无法激活**。
+   **对这三样,卡死率不是实测残差而是 100%、构造性的** —— 这正是它被优先取走的理由:
+   它不需要语料,而 #734 那 18.0% 需要。⭐ **本仓库自己早写过这句话**:`staybag` 头注逐字
+   「those four **really are stuck where they land**」;本轮只是把那句自陈结论**变成代码**。
+   ⭐ **最强读数是白捡的而且不是模型**:锚定帧 `f_260820_043637_axe_ring_alone.lua`(viper,
+   六主格全满)是为**别的 id** 钉的,而它**真的**在**真实背包 6 格**带着一个 `item_faerie_fire`
+   —— 语料里**自然发生、非构造**的本缺陷实例。头条用例因此**零建模**,只截获
+   `ActionImmediate_SwapItems`;配对的 `[non-empty]` 腿断言出货树在同一帧**一次也不动它**。
+   ⚠️ **诚实边界(写在最前,本 id 不认领)**:本条**不声称**是那 18.0% 的全部 ——
+   **#734 自己的三个帧例全是 flask,而 flask 已经有救援器**。两条**未验证**假设交下一棒:
+   **(H1)** `FindItemSlot` 用**第一个命中**回答**存在**问句 ⇒ 主格有可用药、背包另有一瓶的 bot
+   在按格扫描的检测器眼里读作 STUCK 而**其实完全正常** ⇒ **那 18.0% 可能有一部分是检测器伪影**,
+   需按「主格是否已有可用补给」重新分层(已在追评里交回录像组);
+   **(H2)** `ItemOpsDesire` 在掉落物竞价上**早退**,而那个 `return` 排在**全部六个**救援器调用
+   **之上** ⇒ 地上有值钱掉落的帧跳过**每一个**救援。
+   ⛔ **不共用 id 的理由**:`bagsalve`/`staybag` 拓宽的是树**以为**自己带了什么(读),
+   本条拓宽的是它**够得着**什么(行动);共用 = 三者绑成一波 = `staybag` 自己头注记载的
+   「摊在调用路径上的 pullcad」(**M5**)。⛔ **瓶子故意不在名单里**(问题是充能不是格位,
+   `staybottle` 已在读它的 in-flight 修饰符,**M7**)。⚠️ **turbo 显式问,因为这里不是结构性的**:
+   本函数经 `ItemOpsDesire` 在**所有模式的每一帧**被调用,没有 `IsFieldRegenSituation`
+   那样的 turbo 祖先可继承(**M2**)。
+   ⭐⭐ **变异台再次改了测试,而这次它杀的是量具自己**:集合差那条 premise 第一轮**红得对不上题**
+   —— 报「flask 救援器消失了」,因为 `body_of` 跑到**下一个 `function` 关键字**为止,
+   把本 id 那段 60 行头注**吞进了 flask 救援器的函数体**。**断言红得对,但它称错了字节。**
+   ⇒ 新加 `fn_body`(切到列 0 的 `end`),并把「改回 `body_of`」钉成 **M10**。
+   按「红了=抓到了」记账就是变异台替自己撒谎(evidence-discipline 第 4 条)。
+   产出:**新 id `bagtango`**(turbo-only,**FROZEN-HOLD,不请求入集**)、
+   `tests/test_bagtango_field_regen_rescuer.lua` **16/16**、
+   `tools/agent/mutstand_bagtango.sh` **12 腿 12/12 STAND GREEN**(11 变异体全 CAUGHT)、
+   `state.json:bagtango_20260911`;报告 `iterations/reports/strategy/20260911T043828Z.md`;
+   **armed 串 / `queue.json` / `test_set.md` 一字未动**;零 AWS、零波次。
+   **附带(三条)**:(i) **本轮自己弄红、并在同一 commit 里手读重取**
+   `test_activemode_call_site_census.lua` —— 新救援器的节流闸带
+   `bot:GetActiveMode() ~= BOT_MODE_WARD`(**逐字节抄自旁边五个出货救援器**)⇒
+   `get_active_mode` **253→254**(**可执行**,不是 prose)、`compare_lines` **209→210**、
+   原始总数 **259→260**、`commented_out` **仍是 6 不动**;该文件 LIMIT 块写着这类落地会在
+   **下一个组开工时**变红而不是在**推的人的闸**上,十一天两次,**本轮是在同一 commit 里重取的**;
+   (ii) `.luacheckrc` 加一行 `TrySwapInvItemForFieldRegen` —— ⚠️ **不是新引擎 API**,
+   与名单里六个同名兄弟是同一类符号(mode 文件的文件级全局);
+   (iii) trunk 红 4 个 Lua detector **都不是本轮的**(lion_ult / wk_q_castrange / stayfield2,
+   前两个在 lua gate 的 15 个 known-red 特赦名单里),全是**语料增长**族(GH #650)。
+   ⚠️ **开工自检第一次调用被工具自己拒绝、而且拒绝得对**:`| tail` ⇒
+   「stdout is a PIPE,这是 evidence-discipline 第 3 条,**已第 5 次复发,每次都是本轮第一条命令**」;
+   改走 `> /tmp/sc.log; echo $?` 后 **EXIT=3,11 腿,UNCERTIFIABLE 0**(上一轮是 EXIT=124)。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐⭐ **GH #739 排在最前** —— 外部来件 + owner **P2 族**(撤退 TP 在**被仇恨的野营里**
+   就地读条,3–5 秒要价 17–20pp 血,两例逐帧);本轮开工时它比会话只早三分钟,
+   **按顺序本该先看它**,取 #734 是因为上一轮章程逐字点名 —— **理由写下来,不靠记忆**(GH #13);
+   (1) 主体仍是 `bots/` 行为改动:`lvlany` 留下的**第三根兄弟**
+   (`X.CarryFindTarget` 第二处 12 级站点)仍未接;
+   (2) ⛔ **H1/H2 不由本组变成 bots 改动** —— 两条都要语料读数,H1 已交回录像组;
+   (3) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第七轮有效**);
+   (4) ⛔ 兵营分支(GH #713)仍不落 gate,接力棒是 `tests/test_isvalid_building_sentinel.lua §2b`;
+   (5) ⛔ P4.2 冻结未解 ⇒ 本轮**未提入集**;`tombhp`(#719)/`anyhero`(#724)/`lvlany`(#731)/
+   `lvlcarry`(#737) 的裁定请求仍未答,本轮**不催**。】**
+
 0LVLCARRY. **【2026-09-11T01:31Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**。
    认领依据 = `0LVLANY`「下一格」**第 (1) 项**逐字点名的那一格(三个同形兄弟,一次一个)。
    ⚠️ **先写本轮自己的程序瑕疵**:工作流第 1 步是**先扫 open issue**,本轮是**先取 backlog、
@@ -7833,6 +7909,59 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-11T04:38Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = 工作流第 1 步
+  **先扫 open issue**(上一轮顺序做反并自记在案,本轮按顺序做):`[strategy]` open 里有
+  **两件外部来件** —— **GH #734**(01:15:52Z,owner P2 族)与 **GH #739**(04:04:31Z,
+  比本会话早三分钟)。取 **#734**,因为它正是上一轮「下一格」第 (0) 项逐字点名的那一格;
+  **#739 已放进本轮「下一格」第 (0) 项**,理由写下来不靠记忆)。
+  ⭐⭐ **本轮最该带走的一条:#734 提的修法上个月刚被实测否决过,而 issue 流里没有东西会举手。**
+  #734 建议把 fieldbuy 购买闸从 `GetEmptyInventoryAmount`(0..8)收窄到
+  `GetEmptyNonBackpackInventoryAmount`(0..5) —— **那就是 GH #123 的提案**,否决就在仓库里:
+  `tests/test_fieldbuy_backpack_rescuer.lua` 头注第 7 行「**THE FIX MUST NOT SHIP AS PROPOSED**」,
+  它**静音 28 个干燥域帧里的 13 个(46.4%)**,而出货救援器在这 13 个里 **13/13 本来都能成**
+  ⇒ 「为止住 12.9% 的浪费放弃 46.4% 的 owner P2 行为」,该文件称之为 **lanefix 形状**。
+  ⇒ **本轮没按 #734 改购买闸**,追评把否决交回去。**否决只活在一个测试头注里,这就是
+  接力棒差点被反向拾起的机制。**
+  ⭐ **本轮做的是那条否决留下的接力棒**(收尾句:「购买闸不是成因;**找成因是另一个工作单元**」)。
+  成因是**纯源码可证**的集合差:`J.HasFieldRegenSource` 认 **5** 样补给,
+  `mode_team_roam_generic.lua` 出货 **6** 个背包救援器,**交集恰好 1 个:flask**
+  ⇒ tango / tango_single / faerie_fire 落进 6-8 格就**永久**留在那儿,而背包物品**无法激活**。
+  **对这三样,卡死率不是残差而是 100%、构造性的** —— 这正是它先被取走的理由(不需要语料)。
+  ⭐ `staybag` 头注早已逐字写过「those four **really are stuck where they land**」;
+  本轮把那句**自陈结论变成代码**。
+  ⭐ **最强读数白捡且不是模型**:锚定帧 `f_260820_043637_axe_ring_alone.lua` 是为**别的 id** 钉的,
+  而它**真的**在**真实背包 6 格**带着 `item_faerie_fire` —— 语料里**自然发生、非构造**的实例
+  ⇒ 头条用例**零建模**,只截获 `SwapItems`;配对 `[non-empty]` 腿断言出货树同帧**一次不动它**。
+  ⚠️ **诚实边界(本 id 不认领)**:**不声称**是 #734 那 18.0% 的全部 —— **#734 自己三个帧例全是
+  flask,而 flask 已经有救援器**。两条未验证假设交下一棒:**(H1)** `FindItemSlot` 用**第一个命中**
+  答**存在**问句 ⇒ 主格有药、背包另有一瓶的 bot 被按格扫描的检测器读作 STUCK 而**其实正常**
+  ⇒ **那 18.0% 可能有一部分是检测器伪影**,需按「主格是否已有可用补给」重新分层(已交回录像组);
+  **(H2)** `ItemOpsDesire` 的掉落物**早退** `return` 排在**全部六个**救援器调用**之上**。
+  ⛔ **不共用 id**:`bagsalve`/`staybag` 拓宽的是树**以为**带了什么(读),本条拓宽**够得着**什么
+  (行动);共用 = `staybag` 头注记载的「摊在调用路径上的 pullcad」(M5)。⛔ 瓶子故意不在名单
+  (问题是充能不是格位,M7)。⚠️ **turbo 显式问**:本函数经 `ItemOpsDesire` 在**所有模式每一帧**
+  被调用,**没有 turbo 祖先可继承**(M2)。
+  ⭐⭐ **变异台这次杀的是量具自己**:集合差 premise 第一轮**红得对不上题**(报「flask 救援器消失了」)
+  —— `body_of` 跑到**下一个 `function`** 为止,把本 id 的 60 行头注**吞进 flask 救援器的函数体**。
+  **断言红得对,但称错了字节** ⇒ 新加 `fn_body`,并把「改回 `body_of`」钉成 **M10**;
+  按「红了=抓到了」记账就是变异台替自己撒谎(evidence-discipline 第 4 条)。
+  产出:新 id **`bagtango`**(turbo-only,**FROZEN-HOLD**)、
+  `tests/test_bagtango_field_regen_rescuer.lua` **16/16**、
+  `tools/agent/mutstand_bagtango.sh` **12 腿 12/12 STAND GREEN**、`state.json:bagtango_20260911`。
+  **附带三条**:(i) **本轮自己弄红并在同一 commit 里手读重取** `test_activemode_call_site_census.lua`
+  —— 新救援器节流闸带 `GetActiveMode() ~= BOT_MODE_WARD`(**抄自旁边五个出货救援器**)⇒
+  `get_active_mode` **253→254**(可执行不是 prose)、`compare_lines` **209→210**、总数 **259→260**、
+  `commented_out` **仍是 6**;该文件 LIMIT 块说这类红会在**下一组开工时**才发现而不是在**推的人的闸**上
+  (十一天两次),**本轮在同一 commit 里重取**;(ii) `.luacheckrc` 加一行,⚠️ **不是新引擎 API**,
+  与六个同名兄弟同类(mode 文件的文件级全局);(iii) trunk 红 4 个 detector **都不是本轮的**
+  (lion_ult / wk_q_castrange / stayfield2,前两个在 lua gate 的 known-red 名单里),**语料增长**族(GH #650)。
+  铁律 6 三行:`GATE_EXIT=0` / `py gate: 95 ran, 0 findings` / `lua gate: 332 ran, 0 findings`。
+  ⚠️ **开工自检第一次调用被工具自己拒绝、且拒绝得对**(`| tail` ⇒ 「stdout is a PIPE,
+  evidence-discipline 第 3 条,**已第 5 次复发,每次都是本轮第一条命令**」);改走重定向后
+  **EXIT=3,11 腿,UNCERTIFIABLE 0**(上一轮 EXIT=124)。零 AWS、零波次,
+  `armed 串`/`queue.json`/`test_set.md` 一字未动,**未提入集**(P4.2 冻结未解)。
+  已发表:**GH #734 追评**。详见 `iterations/reports/strategy/20260911T043828Z.md`。
 
 - 2026-09-11T01:31Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = `0LVLANY`
   「下一格」第 (1) 项逐字点名的那一格:三个同形兄弟,一次一个)。

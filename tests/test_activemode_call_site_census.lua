@@ -133,10 +133,21 @@ tests['[ratchet] call-site census: how much rides on the missing datum'] = funct
     local c = scan_call_sites()
     -- GH #267: EXECUTABLE sites only.  Re-taken 2026-08-28 (was 255/210 while the
     -- pattern still read comments); the claim did not move, the instrument did.
-    assert(c.get_active_mode == 253,
-        'GetActiveMode() call sites moved from 253 to ' .. c.get_active_mode)
-    assert(c.compare_lines == 209,
-        'lines comparing GetActiveMode() to a BOT_MODE_* moved from 209 to ' .. c.compare_lines)
+    -- RE-TAKEN 253 -> 254 and 209 -> 210 on 2026-09-11 by strategy, IN THE SAME
+    -- COMMIT that caused it. Unlike the six prose re-takings below, this one IS
+    -- executable: the 'bagtango' landing (GH #734) adds
+    -- TrySwapInvItemForFieldRegen to bots/mode_team_roam_generic.lua, and its
+    -- throttle guard carries `bot:GetActiveMode() ~= BOT_MODE_WARD` -- copied
+    -- deliberately, byte for byte, from the five shipped rescuers beside it,
+    -- because a rescuer that swaps the main inventory around while the bot is
+    -- placing a ward is the behaviour that guard exists to prevent. So both
+    -- counts move by exactly one, and they move TOGETHER: the new site is also a
+    -- BOT_MODE_* comparison. If ever only one of the two moves, the new site is
+    -- NOT of this shape and deserves its own reading rather than a bumped number.
+    assert(c.get_active_mode == 254,
+        'GetActiveMode() call sites moved from 254 to ' .. c.get_active_mode)
+    assert(c.compare_lines == 210,
+        'lines comparing GetActiveMode() to a BOT_MODE_* moved from 210 to ' .. c.compare_lines)
     assert(c.teamfight_consumers == 35,
         'J.GetTeamFightLocation consumers moved from 35 to ' .. c.teamfight_consumers)
 end
@@ -184,8 +195,13 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
         'GetActiveMode() mentions inside comments moved from 6 to ' .. c.commented_out ..
         ' -- that is a prose change, NOT a call-site change; re-take THIS number, ' ..
         'never fold it into get_active_mode')
-    assert(c.get_active_mode + c.commented_out == 259,
-        'executable + commented must equal the raw pattern count (259); if it does ' ..
+    -- 259 -> 260 on 2026-09-11 (strategy), and note WHICH half moved: the
+    -- executable one, 253 -> 254, asserted above. `commented_out` is still 6 --
+    -- the 'bagtango' doc block does not mention GetActiveMode in prose -- so this
+    -- total moving while the prose count holds is exactly the arithmetic this
+    -- pair exists to keep visible.
+    assert(c.get_active_mode + c.commented_out == 260,
+        'executable + commented must equal the raw pattern count (260); if it does ' ..
         'not, strip_line_comment cut somewhere it should not have')
 
     -- Direct unit checks on the cut, including the one the naive `find("--")`
