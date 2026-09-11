@@ -1352,7 +1352,7 @@ function M.load(path, sSubject, tOpts)
     -- ⚠️ THIS ONE IS A MODEL, NOT A RESTORATION -- the opposite of the block
     -- above, and it says so first because the two sit side by side. A fixture
     -- carries NO neutral units: `make_fixture.py` dumps heroes and structures
-    -- only, on all 116 fixtures. So unlike GetNearbyTowers there is no ground
+    -- only, on all 111 of them. So unlike GetNearbyTowers there is no ground
     -- truth here to hand back.
     --
     -- ⭐ AND THAT IS WHY IT IS OPT-IN (`rf.load(fix, hero, { neutrals = true })`)
