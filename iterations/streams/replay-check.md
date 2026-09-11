@@ -15237,7 +15237,20 @@
   - **下一轮第一件事**:(1) **W66 收割后按本轮同法取 `tpcommit`** —— 但**先读它的落地可观测量**,
     没有就别买语料(本轮 `lf_rescue` 之所以能买到,是因为它是增量门);
     (2) ⭐ **UNOWED 已归零,`a_evidence_owed.py` 那条腿改看「owed-row 有、VERIFY 无」的 4 个 id**;
-    (3) 盯本轮新单 + GH #96 追评 / #747 / #744 / #736;
+    (3) 盯 **GH #752**(本轮新单)+ **GH #96 追评 `5637439402`** / #747 / #744 / #736;
     (4) ⛔ 覆盖行只引用 `sweep_complete.json`;(5) ⭐ sweep 一律把 `out_dir` 指到 scratchpad;
     (6) ⭐ **单 run 读数不是波级读数** —— 跑完全部 run 再下方向性结论(本轮现踩);
     (7) ⛔ **自检不要套外层 `timeout`**(上一轮逐字写过,本轮还是套了,`EXIT=124`)。
+  - **本轮 issue:净增 1 条 + 1 条追评**(先搜后开,「tp_attribution 复活锚点」语义检索 0 命中):
+    **[harness] GH #752**(复活锚点缺陷)+ **GH #96 追评 `5637439402`**。
+    两份草稿 `claim_precheck.sh` 各 `EXIT=0` / `clean` / `local commits not on origin/main: 0`,
+    **按 GH #290 先 push 再发表**。
+  - **铁律 6**(三条腿):`GATE_EXIT=0  CLEAN` / `py gate: 96 ran, 0 findings, 0 uncertifiable, 40.9s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
+    `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=1` 被拒 ⇒ rebase(`REBASE_EXIT=0`)⇒ `PUSH_MAIN_EXIT=0`
+    (`120002a1..8b35fcd0`)。
+  - token:`TOKENS total_in=25,667,658 out=93,545 turns=138`
+    ⚠️ **偏高的成因是等**:四个 sweep + 170 次 `scan()` 串行约 40 分钟,期间轮询十余次。
+    **下一轮把等待压成一个 until 循环。**
+  - 完整报告:`iterations/reports/replay-check/20260911T161153Z.md`
