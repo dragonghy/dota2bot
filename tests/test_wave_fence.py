@@ -1011,6 +1011,86 @@ check(_err is None, "18n: the shipped registry is one this tool accepts",
       "err=%r" % _err)
 check(_notes, "18n2: ...and it is never read silently")
 
+# ---- 19. RULING 15 (GH #754): a crossing can change SIGN without changing.
+#
+# `min(ruling, brake)` has no floor.  While the derived fence sits BELOW the
+# ruling the record raises the ceiling; the instant MTD crosses a budget alert
+# the derived fence jumps ABOVE the ruling and the same record CAPS it.  The
+# record is untouched throughout -- the tree moves under it -- and every line
+# the tool printed stayed true, which is why three rounds of the batch desk
+# read the shortfall as a money problem.
+#
+# The numbers below are the desk's own 2026-09-11T18:15Z first-hand figures.
+_s15 = ["--actual", "80.413", "--limit", "100", "--thresholds", "50,80,100",
+        "--pending", "3.45", "--no-accrual-check",
+        "--snapshot-instant", "2026-09-11T13:49:53Z"]
+_reg85 = _registry([_rec(ceiling=85.0)], "ruling15_85.json")
+
+# 19a. The scissors itself, reproduced: the gate-(iv)-mandated on-demand wave
+#      is refused WITH the record and clears WITHOUT it. Same instant, same
+#      money, same tool -- the only difference is the ruling.
+rc_with, out_with = _run_main(_s15 + ["--planned", "2.15",
+                                      "--crossing-file", _reg85])
+check(rc_with == 3, "19a: the $85 record refuses the on-demand wave",
+      "got rc=%d" % rc_with)
+rc_without, out_without = _run_main(_s15 + ["--planned", "2.15",
+                                            "--no-crossing-file"])
+check(rc_without == 0,
+      "19a2: ...and the same wave clears with no ruling in force -- the "
+      "shortfall was the ruling, not the money", "got rc=%d" % rc_without)
+check(any("operative ceiling: $90.00" in l for l in out_without),
+      "19a3: ...because the underived ceiling is the $90 brake, the $80 alert "
+      "having already been crossed at $80.413")
+
+# 19b. The banner. This is the whole fix: the arithmetic above was always
+#      right and always silent.
+check(any("RESTRICTIVE RIGHT NOW" in l for l in out_with),
+      "19b: a restrictive ruling says so")
+check(any("COSTING $5.00 of headroom" in l for l in out_with),
+      "19b2: ...and names the delta, so it cannot read as a grant")
+check(any("min has no floor" in l for l in out_with),
+      "19b3: ...and names the mechanism, not just the number")
+
+# 19c. The false sentence. On this path the old prose said the ruling "bought
+#      a band" -- every clause of which is false when the ruling is a cap, and
+#      it is the sentence that got quoted into GH #754 as a shortfall.
+check(not any("it bought a band" in l for l in out_with),
+      "19c: a cap is not described as having bought a band")
+check(any("THE MONEY IS THERE" in l for l in out_with),
+      "19c2: ...the refusal says the money is there and a ruling is refusing")
+check(any("cheaper market" in l for l in out_with),
+      "19c3: ...and forbids the move the desk was being pushed toward -- "
+      "buying the market gate (iv) had just banned, because it fit")
+
+# 19d. The other sign still reads as a grant. A ruling that IS raising the
+#      ceiling must not pick up the restrictive banner, or the banner becomes
+#      noise and stops being read -- which is how the first one was missed.
+rc, out = _run_main(["--actual", "78.253", "--limit", "100",
+                     "--thresholds", "50,80,100", "--pending", "1.10",
+                     "--planned", "1.10", "--no-accrual-check",
+                     "--snapshot-instant", "2026-09-10T13:49:53Z",
+                     "--crossing-file", _reg85])
+check(rc == 0, "19d: the same record at MTD $78.253 clears a wave",
+      "got rc=%d" % rc)
+check(not any("RESTRICTIVE" in l for l in out),
+      "19d2: ...and is NOT called restrictive there -- below the $80 alert the "
+      "derived fence is $80 and the record is doing what it was written to do")
+check(any("ONLY BECAUSE OF RULING" in l for l in out),
+      "19d3: ...it is load-bearing, and the tool still says so")
+
+# 19e. The shipped registry answers GH #754 by being empty, not by being
+#      bigger. Retiring the record authorises no new money: the ceiling
+#      returns to the brake the tool derives on its own.
+with open(wf.DEFAULT_RULINGS_FILE) as _fh:
+    _shipped = _json.load(_fh)
+check(_shipped.get("crossings") == [],
+      "19e: the shipped registry has no crossing in force",
+      "got %r" % (_shipped.get("crossings"),))
+check(any(r.get("ref") == "GH#721/director-20260910"
+          for r in _shipped.get("_retired", [])),
+      "19e2: ...and the retired record is kept with its reason, not deleted -- "
+      "a ruling that vanishes cannot be audited for why it was in force")
+
 for line in failures:
     print(line)
 print("%d checks, %d failed" % (checks, len(failures)))

@@ -1044,6 +1044,7 @@ def check(actual, limit, time_unit, notifications, planned=0.0, pending=0.0,
     lines.append("brake            : $%.2f   (owner's line, not derived here)"
                  % brake)
     operative = min(fence, brake)
+    underived = operative          # what the ceiling would be with no ruling
     lines.append("operative ceiling: $%.2f   = min(fence, brake)" % operative)
 
     if crossing is not None:
@@ -1055,6 +1056,28 @@ def check(actual, limit, time_unit, notifications, planned=0.0, pending=0.0,
             "                   derived fence $%.2f -> operative ceiling "
             "$%.2f = min(ruling, brake). The brake is untouched."
             % (fence, operative))
+        if operative < underived:
+            # RULING 15 (GH #754).  `min(ruling, brake)` HAS NO FLOOR, so the
+            # same record raises the ceiling while the derived fence sits below
+            # it and LOWERS the ceiling once the derived fence rises above it.
+            # Nothing about the record changes -- MTD crosses a budget alert,
+            # the next uncrossed alert becomes the fence, and a grant silently
+            # becomes a cap.  Every line above still reads like a grant ("IS IN
+            # FORCE ... It is applied below", "The brake is untouched"), and
+            # all of them stay true, which is exactly why nobody looked: the
+            # desk read `headroom $1.137` for three rounds and filed the
+            # shortfall as a money problem.  It was a $5.00 self-inflicted one.
+            lines.append(
+                "                   *** RESTRICTIVE RIGHT NOW: this ruling is "
+                "COSTING $%.2f of headroom, not buying any. Without it the "
+                "operative ceiling would be $%.2f = min(derived fence $%.2f, "
+                "brake $%.2f). A crossing is applied as min(ruling, brake) and "
+                "that min has no floor, so a ruling written to RAISE a low "
+                "derived fence becomes a CAP the moment MTD crosses an alert "
+                "and the fence jumps above it. If the director meant a cap, "
+                "this line is the cap working. If the director meant a "
+                "crossing, THE RULING HAS FINISHED and belongs in `_retired`."
+                % (underived - operative, underived, fence, brake))
         lines.append(
             "                   This line is a RULING, not a reading. Quote it "
             "verbatim in the round's report, and re-run the tool -- the expiry "
@@ -1068,7 +1091,26 @@ def check(actual, limit, time_unit, notifications, planned=0.0, pending=0.0,
                      "and report to the owner; do not wait it out.")
         return 3, lines
     if projected > operative:
-        if crossing is not None:
+        if crossing is not None and operative < underived:
+            # RULING 15.  The sentence below used to be the only one on this
+            # path, and on a RESTRICTIVE ruling every clause of it is false:
+            # the ruling bought no band, and the wave is NOT past anything the
+            # fence or the brake would have stopped.  This is the sentence the
+            # desk quoted into GH #754 as a money shortfall.
+            lines.append(
+                "A launch at this instant would put MTD past $%.2f, the "
+                "ceiling the director's own ruling %s named -- BUT THAT "
+                "CEILING IS $%.2f BELOW WHAT THE FENCE AND THE BRAKE ALLOW ON "
+                "THEIR OWN ($%.2f). This wave needs $%.3f and the UNDERIVED "
+                "headroom is $%.3f, so THE MONEY IS THERE and a ruling is what "
+                "is refusing. The ruling is still being obeyed, not "
+                "overridden. Do NOT re-plan the wave around this number and do "
+                "NOT pick a cheaper market to fit under it: take it back to "
+                "the director, who either meant this cap or has a ruling to "
+                "retire."
+                % (operative, crossing["ref"], underived - operative,
+                   underived, planned, underived - actual - pending))
+        elif crossing is not None:
             lines.append(
                 "A launch at this instant would put MTD past $%.2f, the "
                 "ceiling the director's own ruling %s named. The ruling is "

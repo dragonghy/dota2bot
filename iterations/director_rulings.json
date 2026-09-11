@@ -4,15 +4,21 @@
   "_constraints": "Every record goes through wave_fence.build_crossing(), so RULING 10's four constraints hold verbatim: the ceiling cannot reach the $90 brake or the owner's $100 approval line (refused, exit 2, never clamped); `expiry` is mandatory and checked at run time; `ref` is mandatory and printed verbatim; the gate announces the ruling on every run it touches, including the CLEAR one.",
   "_expiry_semantics": "An expired record here is NOT an error -- it is a record reaching its designed end of life. The gate keeps running, at the DERIVED fence, and says out loud that the ruling expired. (An expired ruling asserted via --director-crossing IS exit 2: there the operator claimed this round that it was live.) Retire expired records when convenient; leaving one costs a printed line, not a gate.",
   "_two_live_at_once": "Refused, exit 2. Which ceiling binds would otherwise be a bookkeeping accident. Superseding a ruling means removing the old row in the same edit.",
-  "crossings": [
+  "_a_crossing_can_change_sign": "RULING 15 (GH #754, 2026-09-11). A crossing is applied as `min(ruling, brake)`, and that min has no floor -- so the SAME record raises the ceiling while the derived fence sits below it and LOWERS the ceiling the moment the derived fence rises above it. Nothing about the record changes; the tree moves under it. A crossing ruling therefore has to be re-read whenever MTD crosses a budget alert, because that is exactly when the derived fence jumps and the sign can flip. Measured, not asserted: see `_retired[0]`.",
+  "crossings": [],
+  "_retired": [
     {
       "ceiling": 85.0,
       "ref": "GH#721/director-20260910",
       "expiry": "2026-09-30T23:59:00Z",
       "issued": "2026-09-10T19:08:26Z",
+      "retired": "2026-09-11T19:00:00Z",
+      "retired_by": "director",
+      "retired_ref": "GH#754/director-20260911 (RULING 15)",
       "issued_by": "director",
-      "archive": "iterations/streams/test_set.md §GO; iterations/reports/director/20260910T190826Z.md",
-      "note": "RULING 10. September remaining operative ceiling $85.00. The $90 brake and the owner's $100 approval line are untouched; $5 is deliberately left between $85 and the brake. Buys roughly $7 of headroom over the derived $80 fence, about 6 spot waves. Reason: the $80 fence is an ACCOUNT number and ~48% of September MTD is a co-tenant workload with its own budget."
+      "archive": "iterations/streams/test_set.md §GO (issue); §GY (retirement); iterations/reports/director/20260911T190000Z.md",
+      "note": "RULING 10. September remaining operative ceiling $85.00. The $90 brake and the owner's $100 approval line are untouched; $5 is deliberately left between $85 and the brake. Buys roughly $7 of headroom over the derived $80 fence, about 6 spot waves. Reason: the $80 fence is an ACCOUNT number and ~48% of September MTD is a co-tenant workload with its own budget.",
+      "retirement_reason": "ITS SIGN FLIPPED, AND ITS OWN NOTE SAYS WHEN. The note prices the record against a DERIVED FENCE OF $80. On 2026-09-11 MTD reached $80.413, i.e. the $80 ACTUAL alert was crossed, so the lowest uncrossed alert -- the derived fence -- became $100.00 and min(fence, brake) became the $90.00 brake. From that instant `min(ruling=85, brake=90)` no longer bought $5; it SOLD $5. Offline replay of the batch desk's own 18:15Z figures (--actual 80.413 --limit 100 --thresholds 50,80,100 --pending 3.45 --no-accrual-check): the gate-(iv)-mandated on-demand wave (--planned 2.15) is exit 3 with the record in force (`Headroom was $1.137, this wave needs $2.150`) and exit 0 with --no-crossing-file (`operative ceiling $90.00`, `headroom $3.987 after this wave`). The whole of GH #754's scissors was this record. Retiring it authorises NO new money: the ceiling simply returns to the $90 brake the tool derives on its own."
     }
   ]
 }

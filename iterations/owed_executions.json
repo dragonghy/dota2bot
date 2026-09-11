@@ -992,6 +992,26 @@
     "kind": "manual"
    },
    "done_when_note": "**裸读得出的验收句**:`ohnum`(或其继任 id)的重新提议里,`J.ShouldRefuseUnsupportedPunish` 的我方人头**不再只数以目标为圆心的那个圈**,**且**该提议附带一次 `tests/_ohnum_sweep.lua` 的重跑,报出**新估计量下的 `recenter_flip`**。⛔ **明确不接受的修法**:把半径从 1200 放大(如 2000)。它动的是同一个圆的**边**而不是**圆心**,会对称地把敌人也数进来(而实测的单边性说问题不在那里),而且 `tools/agent/mutstand_ohnum.sh` **分辨不出它和真修法** —— M8 打的是圆心,不是半径。⚠️ 本行**没有机器键,而这是诚实的**:验收对象是一份**还不存在的提议**,没有可以事先钉死的 `path`;伪造一个会在提议换名时静默变成 UNCERTIFIABLE。"
+  },
+  {
+   "id": "fence_ceiling_restored_to_brake",
+   "issue": "总监 2026-09-11T19:00Z 立(RULING 15);GH #754;裁定全文 `iterations/streams/test_set.md §GY`;机器键 `state.json:fence_crossing_RETIRED_20260911`",
+   "ruling": "**退休 RULING 10 的 `$85.00` crossing 记录,不是抬高它。** GH #754 的「剪刀」(闸 (iv) 裁按需 / 闸 (iii) 拒按需)**整条是这条记录自己造的**:crossing 按 `min(ruling, brake)` 施加,而**这个 min 没有下界** —— 记录写于 09-10、当时 derived fence 是 `$80`,它买了 `$5`;09-11 MTD 到 `$80.413` 越过 `$80` 告警,derived fence 跳到 `$100`、`min(fence,brake)` 变成 `$90` 刹车,**同一条记录从此不是买 `$5` 而是卖 `$5`**。⭐ 离线重放批测台自己 18:15Z 的数字(`--actual 80.413 --limit 100 --thresholds 50,80,100 --pending 3.45 --no-accrual-check`):按需波 `--planned 2.15` 带记录 **exit 3**(`Headroom was $1.137, this wave needs $2.150`),`--no-crossing-file` **exit 0**(`operative ceiling: $90.00`,`headroom $3.987 after this wave`)。⛔ **本裁定不批任何新钱**:天花板只是回到工具自己 derive 的 `$90` 刹车线;`$90` 刹车与 owner 的 `$100` 批准线**一字未动**。",
+   "ruled_at": "2026-09-11T19:00Z",
+   "executor": "批测台(batch-desk)—— 但执行不靠记忆:闸自己每轮读 registry(RULING 11)",
+   "trigger": "下一次任何 `wave_fence.py` 活跑(闸 (i) 解锁 `2026-09-11T21:24:58Z` 之后的那一轮)。",
+   "delivered_to": [
+    "iterations/director_rulings.json(**主投递**:`crossings: []`,退休记录连理由留在 `_retired` —— 闸自己读,不靠操作员重打三个 flag)",
+    "iterations/streams/test_set.md §GY(裁定全文档案)",
+    "iterations/streams/batch-desk.md(执行方每轮读的那份)",
+    "iterations/state.json:fence_crossing_RETIRED_20260911(机器键)",
+    "GH #754(批测台的活线程,push 后追评)"
+   ],
+   "why_registered_here": "**常驻义务,不属于任何一波、任何一个 id** —— 它问的是「那条被卖掉的 `$5` 有没有真的回到批测台的闸上」,而没有任何波次会替它举手(§DR)。⚠️ 失效形状很具体:退休记录**只改了总监这边的文件**,而下游读到的仍是旧天花板 —— 或者我的离线重放算错了,`--pending` 的构成在活跑里与我喂的 `3.45` 不同。两者都只有**活跑那一行**能证否。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "批测台任一轮报告里**逐字抄回**当轮现跑的两行:(1) `crossing registry:` 那一行读到 **none in force / 没有 ruling 在力**(⛔ 不是 `IS IN FORCE`,也不是 `NOT CONSULTED` —— 后者是 SKIP 不是读数);(2) `operative ceiling:` 那一行读到 **`$90.00 = min(fence, brake)`** 且其下**没有** `DIRECTOR CROSSING:` 行。⛔ **两行都要当轮现跑,不得抄本裁定里的离线数字** —— 那些是我喂进去的 `--actual/--pending`,不是账单。"
   }
  ],
  "retired": [

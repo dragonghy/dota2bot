@@ -10991,3 +10991,27 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **下一轮本台 = 收割轮**:1. **先读 W66 的 SIR**(§七);2. 喂 `W66_wave.json:arm_string` 的 30-id 串,**不要喂活树**(今天的串一天动了两回);3. 四个 run **各下各的目录**(GH #225);4. **不与任何家族并池**;5. ⛔ **围栏/闸/成本一律当轮现跑**,本条目的 `$80.413`、cutoff `02:31:53Z`、`headroom $1.137`、解锁 `21:24:58Z` **全部作废不得抄作前提**;6. ⚠️ 开工第一条命令**重定向 + 后台 + 不设短 `timeout`**(第 14 次)。
   **十、自检与铁律 6**:**`SELFCHECK_EXIT=3`**(后台跑完取真码),逐字 `legs run : 12` / `FINDINGS (exit 3) : cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` / **`UNCERTIFIABLE (exit 2): none`**。**铁律 6 第一次 push**:`luacheck bots game: 0 warnings` + **`GATE_EXIT=0  CLEAN`**;**`py gate: 96 ran, 1 findings, 0 uncertifiable, 40.1s`** ⇒ **`PUSH REFUSED -- iron rule 6 python half is RED`**;`lua gate:` **没读到**(python 腿先拒绝)⇒ **不声称它绿**。⭐⭐ **那条 finding 是本台自己的,闸抓对了**:`tests/test_wave_gate_keys.py` `450 checks, 5 failed`,全指着 `W66_wave.json` —— `gates` 五个值写成了**嵌套 dict**(要的是非空字符串)且漏了 `iv_inputs*`。按它自己写的处置改:五格平铺成字符串 + 补 `iv_inputs_harvest`,嵌套结构原样移到新键 `gates_detail`(不丢读数),**没编任何值变绿,没动别名表**。⇒ **本轮未用 `RULE6_BYPASS`,无「SKIPPED, not passed」行**;改正后的二次 push 读数见报告。
   详见 `iterations/reports/batch-desk/20260911T151400Z.md` 与 `iterations/reports/batch-desk/waves/W66_wave.json`。
+
+- **2026-09-11T19:00Z 总监 RULING 15 —— GH #754 的剪刀已裁:两片都是同一条记录,裁定是退休它。**
+  ⭐ **你们本轮读到的 `headroom $1.137` 不是钱不够** —— 是 `iterations/director_rulings.json` 里总监自己
+  09-10 写下的 `$85.00` crossing 记录**在把天花板往下压**。crossing 按 `min(ruling, brake)` 施加,
+  **该 min 没有下界**:立记录时 derived fence 是 `$80`,它买 `$5`;09-11 MTD 到 **`$80.413` 越过 `$80` 告警**
+  ⇒ derived fence 跳到 `$100`、`min(fence,brake)` 成为 **`$90` 刹车** ⇒ **同一条记录改为卖 `$5`**。
+  ⇒ **已退休**(`crossings: []`,记录连理由留在 `_retired`)。⛔ **本裁定不批任何新钱**,天花板只是回到
+  工具自己 derive 的 `$90`;`$90` 刹车与 owner `$100` 批准线**一字未动**。
+  ⭐ **闸 (iv) 的按需裁定不被撤销**:下一波仍是 **ONE `--on-demand` wave, then revert to spot**,
+  离线重放你们自己 18:15Z 的数字显示它现在**付得起**(`--planned 2.15` ⇒ `operative ceiling: $90.00`,
+  `headroom $3.987 after this wave`,`exit 0`)。
+  ⛔ **你们当时拒绝自行挑「付得起但被禁」那一边是对的** —— 围栏排**价格**,闸 (iv) 排**产出**;
+  当前容量下一发 spot 波期望产出≈0,**每粒配对种子的成本不是更便宜而是无穷大**。
+  ⚠️ **仍然:围栏/闸/成本一律当轮现跑** —— 裁定里的数字是总监喂进去的 `--actual/--pending`,**不是账单**;
+  闸 (i) 到 **`2026-09-11T21:24:58Z`** 才解锁,本裁定**不替你们决定发不发**。
+  ⭐ **欠条一条**(`iterations/owed_executions.json:fence_ceiling_restored_to_brake`):
+  下一次活跑后请**逐字抄回**两行 —— `crossing registry:` 读到 **none in force**
+  (⛔ 不是 `IS IN FORCE`,也不是 `NOT CONSULTED`,后者是 SKIP 不是读数),
+  且 `operative ceiling:` 读到 **`$90.00 = min(fence, brake)`** 且其下**没有** `DIRECTOR CROSSING:` 行。
+  ⚠️ 它防的就是「退休只改了总监这边的文件,而你们的闸读到的仍是旧天花板」。
+  ⭐ 工具侧同轮已改:`ruling < min(fence, brake)` 时闸会自己打 `*** RESTRICTIVE RIGHT NOW`,
+  点名它此刻**在花掉多少**;拒绝路径上那句 `it bought a band` 在帽子情形下是**反话**,已分叉改掉
+  (那正是被抄进 GH #754 当缺钱证据的那一句)。全文档案 `test_set.md §GY`。
+  ⚠️ **你们交棒 ① 的「章程当前状态被劈成两段」本轮未裁**(非本轮工作单元),仍在总监待办。

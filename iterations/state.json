@@ -8134,5 +8134,14 @@
     "published": "GH #753 <https://github.com/dragonghy/dota2bot/issues/753>(发表前 `claim_precheck.sh` exit 0:本地领先 origin/main 0 个 commit,16 条路径引用 15 条在 trunk 上解析、0 条 refused)。",
     "iron_rule_6": "最终 push 的三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` / `lua gate: 339 ran, 0 findings, 0 uncertifiable, 12 known-red`。**没有用过 RULE6_BYPASS。** ⭐ **闸真的拦了一次**:第一次推被 Lua 腿拒(三条红全由本轮改动造成,三条都是**普查在正常工作**)—— (1) `test_cm_w_selfdefense_facing.lua` 1.1 的锥形托管链要**重锚**(写成因不写数字:性质没变,变的是哪个函数在读);(2) `test_cast_ring_mirror_discipline.lua` 抓到新测试的 `ring()` 镜像**漏了 aether 项**,会把环低估 225-250 单位(GH #725 同形)—— **本轮最值钱的一次拦截,它拦的不是笔误,是一个会让这个文件每一个环读数都偏小、而且长得像普通数字的镜像**;(3) `test_gate_claim_consistency.lua` 抓到头注释里复述 pullcad 陷阱时写了**假 id 字面量**,被读成两个新的 comment-only wired id。⚠️ rebase 时 `state.json`/`queue.json` 各一处「两边都在末尾追加」的冲突:取 `--ours` 后用脚本重新 append,**先断言往返逐字节相同才写盘** —— `state.json` 的规范形本轮上游已变成 `indent=2` **+ 末尾换行**,`queue.json` 仍是 `indent=1` **无**末尾换行;不先量就写会打出一个一万行的假 diff。",
     "tokens": "TOKENS total_in=24,167,191 out=107,581 turns=117"
+  },
+  "fence_crossing_RETIRED_20260911": {
+    "rule": "RULING 15(总监 2026-09-11T19:00Z,GH #754)。**退休** RULING 10 的 `$85.00` crossing 记录(`iterations/director_rulings.json`:`crossings: []`,记录连理由移入 `_retired`)。⛔ **不是抬高天花板,不批任何新钱**:operative ceiling 回到工具自己 derive 的 `$90` 刹车线;`$90` 刹车与 owner `$100` 批准线一字未动。",
+    "why": "GH #754 的『剪刀』(闸 (iv) 判 BLINDED ⇒ 必须按需 / 闸 (iii) 拒按需 `headroom $1.137` < `$2.150`)**整条是这条记录造的**。crossing 按 `min(ruling, brake)` 施加而**该 min 无下界**:记录写于 09-10(derived fence `$80`,买 `$5`);09-11 MTD 到 `$80.413` 越过 `$80` 告警 ⇒ derived fence 跳到 `$100`、`min(fence,brake)` 成为 `$90` ⇒ **同一条记录改为卖 `$5`**。记录一字未动,**树在它底下移动**。",
+    "measured": "离线重放批测台 18:15Z 第一手数字(`--actual 80.413 --limit 100 --thresholds 50,80,100 --pending 3.45 --no-accrual-check`):`--planned 2.15` 带记录 **exit 3**(`Headroom was $1.137, this wave needs $2.150.`);`--no-crossing-file` **exit 0**(`operative ceiling: $90.00`,`headroom $3.987 after this wave`)。唯一差别是那条记录。",
+    "harness": "`wave_fence.py` 新增 `*** RESTRICTIVE RIGHT NOW` 横幅(点名 `COSTING $5.00 of headroom, not buying any` + `min has no floor`)+ 拒绝路径分叉(帽子那一支不再说 `it bought a band`,改说 `THE MONEY IS THERE and a ruling is what is refusing`,并禁止 `pick a cheaper market to fit under it`)。`tests/test_wave_fence.py` §19a–§19e,终读 **176 checks / 0 failed**;变异 M1(删横幅)/M2(退回旧台词)/M3(记录放回在力)**三发全红**。⛔ 既有断言 `17c3` 一字未改仍绿 —— `a ruling can tighten` 是 §17c 写明的设计意图,横幅只让它不再沉默。",
+    "not_this": "⛔ 不撤销闸 (iv) 的按需裁定(仍是 ONE on-demand wave, then revert to spot,现在付得起)。⛔ 不动三条线。⛔ 不替批测台决定发不发(闸 (i) 到 `2026-09-11T21:24:58Z` 解锁;围栏/闸/成本一律当轮现跑)。⛔ 不声称 MTD:本轮 AWS 调用 0 次。",
+    "archive": "iterations/streams/test_set.md §GY(§GY.0–§GY.7);iterations/reports/director/20260911T190000Z.md;iterations/owed_executions.json:fence_ceiling_restored_to_brake",
+    "at": "2026-09-11T19:00Z"
   }
 }
