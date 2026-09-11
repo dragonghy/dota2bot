@@ -22,6 +22,53 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-152. ✅ **`-151` 第 1 条执行了,而且它的前置条件不成立** —— 本轮(报告
+   `iterations/reports/hero/20260911T200300Z.md`)先看 `test_cm_w_selfdefense_damager.lua` §1.1:
+   **绿**(15 例 0 失败)⇒ SK / Zeus 兄弟分支仍然 0 翻转,按指令「换一根,别硬钉」。
+   **换了五根,五根全是死域,`bots/` 一个字节都没改。** 落地的是清 trunk 红
+   (`tests/test_lion_ult_reach.lua` §1 重锚)+ 重取 `lionrreach` 的域,
+   读数是**域几乎翻倍**(Lion 存活 27→**42**、band 5/5→**10/11**、团战-泄漏 2→**4**);
+   下一棒 `queue.json:hero-44` 就地更新(diff 1 行)。
+   - ⭐ **本轮买到的第一条 —— 把 `-151` 的「语料能量什么」那张表补上最贵的一格:运动是一整个死轴。**
+     `tests/mock/replay_fixture.lua` 的 `GetExtrapolatedLocation -> GetLocation` 与
+     `GetVelocity -> Vector(0,0,0)` **故意钉在一起**(同一个「每个单位都站着不动」的世界假设,
+     由 `tests/test_fixture_extrapolation_mock.lua` 的 ONE [model] 腿守着)。⇒
+     **任何「引导 / 提前量 / 预判」形状的 lever,域由构造保证为 0。** 不是没抽到帧,是量不了。
+     同族的第三个已知恒 0 读数:`GetActiveModeDesire`(`tests/test_activemode_world_assertion.lua`,
+     第 13 条世界断言)。**下一轮选杠杆前先对这张表**:
+     ⛔ 死轴 = 运动 / 速度 / 提前量、`GetActiveMode*`、`GetNearbyCreeps`、
+     `GetMagicResist`、`GetHealthRegen`;
+     ✅ 活轴 = 坐标(最富,`lionrreach` 的 band 就住在这里)/ hp / mp / 等级 / 物品 /
+     技能等级与冷却 / modifier / recent_damage。
+   - ⛔ **第二条 —— 死轴上硬钉会钉出一个「反号但看着正常」的域。** 静态世界下
+     `J.GetDelayCastLocation` **不是**恒等式:`d > nCastRange - 98.8` 时它走
+     `J.GetLocationTowardDistanceLocation(..., nCastRange + 8)`,而那个 helper
+     **按方向取定长、不取 min** ⇒ 瞄点落到敌人**身后 8–107 单位**。
+     于是它在静态语料上测得出来的那个非零「域」,量的是**钳位**不是**引导** ——
+     而钳位是给**追击**写的启发式,撤退时敌人朝你走、提前量应该更短。
+     **把这个域写成 lever 的域,就是一次凭空的执行核验**(`-151` 第二条的同族,换到了「域的身份」这一侧)。
+   - ⛔ **第三条 —— 「三条 Lion 大招同源红」这句话从 `-149` 起就不准确,本轮改掉。**
+     实测只有 `test_lion_ult_reach.lua` 是**真红**(已清);
+     `test_lion_ult_cash_weakest.lua`(1 例)与 `test_lion_ult_reserve_domain.lua`(2 例)
+     坐在 `lua_gate.py` 的 **`known_red_cases` amnesty 名单**里 —— **被基线赦免着,不是绿,
+     也不会拒 push**。⇒ 清它们是一次**退场**(读 `lua_gate.py:288-345` 的 `healed` / `known_hit`
+     分支),和「修一条红」不是同一件事,**别再写成同源**。
+   - ⭐ **第四条 —— 语料规模量上的 `==` 会让好消息和坏消息长得一模一样。**
+     被推了三轮的那条红,红的内容是**它自己的域正在变大**(5→10 帧)。
+     ⇒ 域计数一律写**下界**(增长只能变大 = 方向安全的那一侧),
+     **结论**另起一条只说结论的断言(`nWithBand >= 1`),
+     **按下标钉语料排序里的成员**改成**按成员资格**(下标是一个关于其它每一帧叫什么名字的断言),
+     并且**计数不许住在测试名里**(原来活在测试名 / §0.3 / 断言三处,只有一处会红)。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体仍然是 `bots/`(P4.4 (i)),但换的是「怎么找杠杆」而不是「再试一根」。**
+        本轮那张五行的死因表已经把好找的都划掉了。**先对上面的活轴表,再去读源码** ——
+        最富的一根是**坐标**,而坐标上最现成的富矿是 `lionrreach` 自己刚翻倍的 band
+        (10 帧 / 11 个 band 成员):**这 11 个成员里有没有一个是别的焦点英雄的同形到达缺陷**?
+        ⚠️ 已有 lever 的到达点不要重复开:`axecullreach` / `cullthresh` / SK `+80` / CM `+200` 环。
+     2. **`-151` 第 2 条的残余**:`test_lion_ult_reserve_domain` / `test_lion_ult_cash_weakest`
+        的 amnesty 退场(见上面第三条)。**这条现在有正确的成因了,可以当一次主体做,
+        不必再占「附带」。**
+
 -151. ✅ **`-150` 第 1 条做了 —— 主体回到 `bots/` 行为改动(P4.4 (i))**。本轮(报告
    `iterations/reports/hero/20260911T170001Z.md`)落地 **`cmwhit`**(Crystal Maiden,gated,
    turbo-only,**纯换目标**):`X.ConsiderW` 的 `保护自己` 支路**用一个存在量化的伤害事实开门**
@@ -6647,6 +6694,63 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-11T20:03Z(报告 `iterations/reports/hero/20260911T200300Z.md`;**backlog:新开 `-152`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— ⚠️ **本轮没有推进 (i):`bots/` 一个字节都没改,而且这是量出来的判断**)
+  **按 `-151` 的前置条件换杠杆,换了五根,五根全是死域 —— 落地的是清 trunk 红 + 重取
+  `lionrreach` 的域,读数是域几乎翻倍。**
+  - **`-151` 第 1 条的前置条件不成立**:`test_cm_w_selfdefense_damager.lua` §1.1 **绿**
+    (15 例 0 失败)⇒ SK ConsiderQ / Zeus ConsiderW 仍然 **0 翻转**,按指令「没红就换一根,别硬钉」。
+  - **五个候选逐个先量后读,全部不落**(报告 §2 有表):(1) SK/Zeus authorship = 0 翻转;
+    (2) Lion ConsiderQ 撤退支路的引导目标 = **语料里没有运动**;(3) 同支路的
+    `or GetActiveModeDesire() > 0.7` 析取项 = 该读数在语料上**恒 0**(已由
+    `tests/test_activemode_world_assertion.lua` 钉着);(4) Axe 斩杀补死亡免疫族 =
+    **前提已被证伪**(`tests/test_axe_cull_promise_premise.lua`,GH #570:装上会掐掉一次真击杀);
+    (5) `nCastRange + N` 到达族 = 焦点四个英雄**各自已有 lever**。
+  - ⭐ **本轮买到的第一条 —— 运动是一整个死轴,补进 `-151` 的「语料能量什么」那张表。**
+    `tests/mock/replay_fixture.lua`:`GetExtrapolatedLocation -> GetLocation`、
+    `GetVelocity -> Vector(0,0,0)`,**两者故意钉在一起**(同一个「每个单位都站着不动」的世界假设)。
+    ⇒ `J.GetCorrectLoc` 的四个插值点逐位相同,`J.GetDelayCastLocation` **退化成当前位置**。
+    **任何「引导 / 提前量 / 预判」形状的 lever,域由构造保证为 0** —— 不是没抽到帧,是量不了。
+  - ⛔ **而且硬钉会钉出反号读数**:静态世界下 `GetDelayCastLocation` 并非恒等式,
+    `d > nCastRange - 98.8` 时走 `J.GetLocationTowardDistanceLocation(..., nCastRange + 8)`,
+    那个 helper **按方向取定长不取 min** ⇒ 瞄点落到敌人**身后 8–107 单位**。
+    它测得出来的那个域量的是**钳位**不是**引导**,而钳位是为追击写的;撤退时提前量应更短。
+    **把它写成 lever 的域就是一次凭空的执行核验。**
+  - **落地:`tests/test_lion_ult_reach.lua` §1 重锚(写成因不改数字)** ——
+    三个语料规模 `==` 全改**下界**;另起一条只说结论的 `nWithBand >= 1`;
+    `tLeakFrames[1]/[2]` 的**下标钉**改成**成员资格**(下标是一个关于其它每一帧叫什么名字的断言,
+    而这个文件不做那个断言);**测试名里的 `5 of 27` 删掉**(计数原来活在测试名 / §0.3 / 断言
+    **三处**,语料一长三处同时过时而**只有一处会红**);§0.3 限度 1 同轮重取。
+  - **重取读数 —— 域几乎翻倍**:语料 115→**141**,Lion 存活 27→**42**,
+    band 5/5→**10/11**,团战-泄漏 2→**4**。两个新泄漏帧(09-09 staged):
+    `tests/frames/f_260909_215040_wk_blast_lane_67.lua`(lich)、
+    `f_260909_215040_wk_blast_lion_480.lua`(crystal_maiden)。
+    ⚠️ **三轮把这条当「附带」推掉,推掉的是一条在报告自己的域正在变大的断言 ——
+    `==` 钉让好消息和坏消息长得一模一样。**
+  - **下一棒(铁律 9)**:`queue.json:hero-44`(`lionrreach` 取证,status 仍 `pending`)
+    就地更新为重取读数 + 两个新泄漏帧路径,并写明**不改变该请求的预登记判读方向**。diff **1 行**。
+  - **⛔ 「三条 Lion 大招同源红」这句话本轮要改**:实测只有 **reach 一条是真红**(已清),
+    `cash_weakest`(1 例)与 `reserve_domain`(2 例)在 `lua_gate.py` 的
+    **`known_red_cases` amnesty 名单里**——被基线赦免着,不是绿。清它们是**退场**,另一件事。
+  - **顺手**:`tools/agent/lua_gate_manifest.json` 退掉已治好的
+    `tests/test_lion_ult_reach.lua`(`known_red` + `known_red_cases`,**4 行删除**)。
+    ⚠️ **没跑全量 `lua_gate_measure.py`**(头注写着「不要手改,重测」):理由是**范围** ——
+    全量会用本容器的秒数重写另外 415 条、按本容器红绿重算**别组**基线,**会悄悄检疫别组当下的红**。
+    ⭐ **写盘前先量规范形那条 ⛔ 本轮真的挡了一次**:manifest 实测是
+    `ensure_ascii=True / indent=2 / sort_keys=True / 有末尾换行`,
+    第一次用 `ensure_ascii=False` 被「往返逐字节相同」当场拦下,没打出上万行假 diff。
+    (`queue.json` 仍是 `indent=1 / ensure_ascii=False / 无末尾换行`。)
+  - **闸**:`GATE_EXIT=0`(luacheck 0 warnings)/ `py gate: EXIT=0 96 ran, 0 findings, 0 uncertifiable`
+    / `lua gate: EXIT=0 322 ran, 0 findings`,**没有用过 RULE6_BYPASS**。
+    定向:`test_lion_ult_reach` 10/10、`test_cm_w_selfdefense_damager` 15/15。
+    ⚠️ 动态全量(~100min,GH #124)**本轮没跑**。
+  - ⛔ **开工自检:第一次调用 exit 143(SIGTERM,600s 墙)= 没跑成,不是通过**;
+    detached 重跑到报告写成时**仍未跑完**,所以本轮只有**部分读数**
+    (`promote-atom OK`、`no armed id hangs under an unarmed gate OK`、
+    inverse-gate 198 live / 30 armed / FROZEN 0)。
+    trunk 先行红均非本轮引入:walk 普查点名
+    `tests/test_lvlgroup_group_push_level_quantifier.lua` 的 io.popen 未登记;
+    `carrier_terms` 5 条(`zusult` / `liondrainstop` 仍 hero-scoped off the tree,W20 1/4)。
 - 2026-09-11T17:00Z(报告 `iterations/reports/hero/20260911T170001Z.md`;**backlog:新开 `-151`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`cmwhit`(Crystal Maiden,gated,turbo-only,未 armed):支路用一个存在量化的伤害事实开门,

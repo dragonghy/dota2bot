@@ -9,7 +9,6 @@
     "tests/test_cm_w_lane_band.lua",
     "tests/test_focus_level_claims.lua",
     "tests/test_lion_ult_cash_weakest.lua",
-    "tests/test_lion_ult_reach.lua",
     "tests/test_lion_ult_reserve_domain.lua",
     "tests/test_roshdist_pit_truth_operand.lua",
     "tests/test_salveally_missing_floor.lua",
@@ -36,9 +35,6 @@
     ],
     "tests/test_lion_ult_cash_weakest.lua": [
       "\u00a71 the archive reaches the body 5 times and the domain 0 times"
-    ],
-    "tests/test_lion_ult_reach.lua": [
-      "\u00a71 the corpus puts a castable enemy in the band on 5 of 27 Lion frames"
     ],
     "tests/test_lion_ult_reserve_domain.lua": [
       "[hero] lionult: the revival condition has fired -- rank 2 exists",

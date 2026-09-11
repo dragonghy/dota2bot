@@ -86,17 +86,24 @@
 -- §0.3  LIMITS -- load-bearing, quote these with any number above
 -- ===========================================================================
 --
--- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Over both corpus directories (115
---    frames), Lion is present and alive on 27; on 5 of those a castable enemy
---    sits in the band (outside nCastRange, inside nCastRange + 400).  On 2 of
---    those 5 the band member is also the WEAKEST castable member of the bonus
---    list -- frame B (silencer) and f_megabundle_051728_slardar_idle (zuus) --
---    and those two are the only archive frames that can show the 团战 leak at
---    all.  §3 drives the first.  These counts are asserted, not narrated: if
---    the corpus grows, §1 goes red and this section is re-taken rather than
---    quoted.  ⚠️ A first draft of this limit said 24 live frames and 1 leak
---    frame: that scan read tests/fixtures only, and the assert in §1 -- not a
---    re-read -- is what caught the missing tests/frames directory.
+-- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Re-taken 2026-09-11 over both
+--    corpus directories (141 frames): Lion is present and alive on 42; on 10 of
+--    those a castable enemy sits in the band (outside nCastRange, inside
+--    nCastRange + 400), 11 such enemies in all.  On 4 of those 10 the band
+--    member is also the WEAKEST castable member of the bonus list, and those 4
+--    are the archive frames that can show the 团战 leak at all:
+--        f_260820_043120_viper_defend_poked      (silencer)  <- frame B, §3 drives it
+--        f_megabundle_051728_slardar_idle        (zuus)
+--        f_260909_215040_wk_blast_lane_67        (lich)      <- new 2026-09-11
+--        f_260909_215040_wk_blast_lion_480       (crystal_maiden) <- new 2026-09-11
+--    ⚠️ QUOTE THESE AS FLOORS, NOT AS THE CORPUS.  §1 asserts them as floors
+--    (`>=`), because corpus growth may only make a domain count larger and an
+--    `==` on a corpus-size quantity turns every other group's staged frame into
+--    a red in this file.  The previous take (27 / 5 / 5 / 2, 2026-08-30) was
+--    written as `==` and did exactly that; §1 carries the full note.
+--    ⚠️ A first draft of this limit said 24 live frames and 1 leak frame: that
+--    scan read tests/fixtures only, and the assert in §1 -- not a re-read -- is
+--    what caught the missing tests/frames directory.
 -- 2. WHAT §2/§3 INJECT, named so nobody quotes §0.1 as an archive reading:
 --    Finger cooldown 0 + IsFullyCastable true on both frames (the corpus
 --    answers false, which is the `X.ConsiderR` first line and would make every
@@ -225,7 +232,11 @@ end
 -- ---------------------------------------------------------------- section 1 --
 -- The domain, counted over the whole corpus.  §0.3 limit 1's evidence.
 
-tests['§1 the corpus puts a castable enemy in the band on 5 of 27 Lion frames'] = function()
+--- ⚠️ THE NAME CARRIES NO CORPUS-SIZE NUMBER, DELIBERATELY.  It read "on 5 of
+--- 27 Lion frames" until 2026-09-11, so the counts lived in three places (name,
+--- §0.3, asserts) and the corpus growing put all three out of date at once
+--- while only one of them could go red.  The counts live in the asserts.
+tests['§1 the corpus puts a castable enemy in the band, and §3\'s frame is still in it'] = function()
     local nFiles, nLive = 0, 0
     local nWithBand, nBandEnemies, nWeakestOutOfRange = 0, 0, 0
     local tLeakFrames = {}
@@ -263,20 +274,53 @@ tests['§1 the corpus puts a castable enemy in the band on 5 of 27 Lion frames']
     assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
         .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 27, 'Lion is alive on ' .. nLive .. ' corpus frames, was 27 '
-        .. '-- re-take §0.3 limit 1 rather than quoting it')
-    assert(nWithBand == 5 and nBandEnemies == 5,
-        'the band domain moved: ' .. nWithBand .. ' frames / ' .. nBandEnemies
-        .. ' enemies, was 5 / 5.  Re-take §0.3 limit 1.')
-    assert(nWeakestOutOfRange == 2, 'the 团战-leak domain moved: '
-        .. nWeakestOutOfRange .. ' frames, was 2 (' .. table.concat(tLeakFrames, ', ')
-        .. ').  Those are the only archive frames that can show that leak.')
-    assert(tLeakFrames[1] == FRAME_B .. ' (' .. SILENCER .. ')',
-        'the first leak frame is now ' .. tostring(tLeakFrames[1]) .. ', was ' .. FRAME_B)
-    assert(tLeakFrames[2] == LEAK_FRAME_2 .. ' (npc_dota_hero_zuus)',
-        'the second leak frame is now ' .. tostring(tLeakFrames[2]) .. ', was '
-        .. LEAK_FRAME_2 .. ' -- §3 drives the first one; this assert is what keeps '
-        .. 'the count honest about the other')
+    -- ⭐ RE-ANCHORED 2026-09-11 (was `== 27` / `== 5 and == 5` / `== 2`, taken
+    -- 2026-08-30).  The corpus grew and all three equalities went red at once
+    -- -- which is the point worth writing down rather than the numbers: an `==`
+    -- on a CORPUS-SIZE quantity makes every frame anyone else stages into a red
+    -- in THIS file, hours later, for a reason that has nothing to do with the
+    -- lever.  None of these three counts is this file's conclusion; the
+    -- conclusion is "the band domain is not empty and §3's frame is still in
+    -- it".  So each becomes a FLOOR at its freshly-measured value, and growth
+    -- may only make them larger.  (Same cause and same repair as
+    -- tests/test_wk_q_castrange_meter_domain.lua: re-anchor by writing the
+    -- CAUSE, not by bumping the integer.)
+    --
+    -- What the re-take actually found, and it is the opposite of a regression:
+    -- the lever's whole locally-checkable domain roughly DOUBLED.
+    --     live Lion frames    27 -> 42
+    --     band frames / band enemies   5 / 5  ->  10 / 11
+    --     团战-leak frames     2 -> 4   (two NEW ones, both staged 2026-09-09:
+    --         f_260909_215040_wk_blast_lane_67.lua   (npc_dota_hero_lich)
+    --         f_260909_215040_wk_blast_lion_480.lua  (npc_dota_hero_crystal_maiden))
+    -- queue.json:hero-44 carries that reading to the wave stage.
+    assert(nLive >= 42, 'Lion is alive on only ' .. nLive .. ' corpus frames '
+        .. '(floor 42) -- frames were REMOVED; re-take §0.3 limit 1 rather than '
+        .. 'quoting it')
+    assert(nWithBand >= 10 and nBandEnemies >= 11,
+        'the band domain SHRANK: ' .. nWithBand .. ' frames / ' .. nBandEnemies
+        .. ' enemies, floor 10 / 11.  Re-take §0.3 limit 1.')
+    -- This one IS the conclusion: without a band frame the lever has no local
+    -- domain at all, so it gets its own assert and its own sentence.
+    assert(nWithBand >= 1, 'no corpus frame puts a castable enemy in the '
+        .. '(nCastRange, nCastRange + BAND] band -- the lever has no local '
+        .. 'domain left and §2/§3 are reading a shape the archive no longer has')
+    assert(nWeakestOutOfRange >= 4, 'the 团战-leak domain SHRANK to '
+        .. nWeakestOutOfRange .. ' frames (floor 4): '
+        .. table.concat(tLeakFrames, ', ')
+        .. '.  Those are the archive frames that can show that leak.')
+    -- MEMBERSHIP, not position.  The old form pinned tLeakFrames[1]/[2], and an
+    -- index into a corpus-sorted list is a claim about every OTHER frame's
+    -- name, which is not a claim this file makes.  §3 drives FRAME_B; the
+    -- second named frame is what keeps the count honest about the rest.
+    local tLeakSet = {}
+    for _, s in ipairs(tLeakFrames) do tLeakSet[s] = true end
+    assert(tLeakSet[FRAME_B .. ' (' .. SILENCER .. ')'],
+        'the frame §3 drives left the leak set: expected ' .. FRAME_B .. ' ('
+        .. SILENCER .. '), set is ' .. table.concat(tLeakFrames, ', '))
+    assert(tLeakSet[LEAK_FRAME_2 .. ' (npc_dota_hero_zuus)'],
+        'the second named leak frame left the set: expected ' .. LEAK_FRAME_2
+        .. ' (npc_dota_hero_zuus), set is ' .. table.concat(tLeakFrames, ', '))
 end
 
 -- ---------------------------------------------------------------- section 2 --
