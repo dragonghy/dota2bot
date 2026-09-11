@@ -136,6 +136,14 @@ UNRESOLVED_HAND_READ = {
         "walk (the baton's four levers each carry one), safe for the same reason "
         "-- plain `ls` is NOT recursive, so it never reaches bots/Customize/. "
         "Hand-read 2026-09-11 (strategy desk -- this walk is that round's own)",
+    """tests/test_lvlhitcreep_suit_to_hit_creep_level_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'} (:103) "
+        "and keeps only names ending .lua; same walk as the four lvlany-family "
+        "lines above, safe for the same reason -- plain `ls` is NOT recursive, so "
+        "it never reaches bots/Customize/. Hand-read 2026-09-11 (strategy desk -- "
+        "this walk is that round's own, registered in the SAME commit that lands "
+        "it: the lvlgroup round's one-round-late registration two entries up is "
+        "the GH #624 shape this is avoiding)",
     """tests/test_zuus_arc_execute_kill.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'}; same "
         "non-recursive `ls` as the line above, same reason",

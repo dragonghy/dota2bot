@@ -8161,5 +8161,22 @@
     "not_this": "⛔ 不撤销闸 (iv) 的按需裁定(仍是 ONE on-demand wave, then revert to spot,现在付得起)。⛔ 不动三条线。⛔ 不替批测台决定发不发(闸 (i) 到 `2026-09-11T21:24:58Z` 解锁;围栏/闸/成本一律当轮现跑)。⛔ 不声称 MTD:本轮 AWS 调用 0 次。",
     "archive": "iterations/streams/test_set.md §GY(§GY.0–§GY.7);iterations/reports/director/20260911T190000Z.md;iterations/owed_executions.json:fence_ceiling_restored_to_brake",
     "at": "2026-09-11T19:00Z"
+  },
+  "lvlhitcreep_20260911": {
+    "date": "2026-09-11T22:xxZ",
+    "owner": "strategy",
+    "armed": false,
+    "admission": "P4.2 入集冻结期,**不请求入集**(唯一合法裁定 FROZEN-HOLD)。新 id,不搭任何捆绑的车;⚠️ **尤其不与 `lvlany`/`lvlcarry`/`lvlgroup`/`lvltogether` 并池、不同波、不共用 id** —— 那正是本族一路花钱避免的事(变异台 M7 专打这条)。上述四个 id 的裁定请求仍未答,本轮不催。",
+    "headline": "⭐⭐ **`lvlany` 族的形状搬到了一个新函数上,而且这一根是全族第一个「端到端被真实帧驱动」的。** `bots/mode_team_roam_generic.lua` 的 `X.IsModeSuitToHitCreep` 里 `(nEnemyHeroes[1] ~= nil and nEnemyHeroes[1]:GetLevel() >= 8)`(`J.GetEnemyList(b, 750)`,r=750/8 级)落地为 gated id **`lvlhitcreep`** + 新 helper `X.AnyEnemyAtLevelHitCreep`。⛔ **注意极性与四根兄弟相反**:兄弟们是 `[1] < N`(许可),这里是 `[1] >= N`(危险),所以 armed 是**把危险谓词放宽** = **把它守的那个许可收紧**,方向仍然是纯收紧。",
+    "defect": "旁边那条 `#nEnemyHeroes >= 3` 腿**是作者自己的证据**:已经花了一整个词项去问**这群人**,而紧挨着的等级词项却只问**最近的那一个** ⇒ 一个 5 级辅助挡在 700u 外的 12 级核心前面,读数是「**可以继续站着补刀**」。`J.GetEnemyList` 只过滤不重排(jmz_func.lua:4345),所以 `[1]` 确实仍是**最近**的那个 —— §4c 把这一条**实测**而不是相信(`SORT_VIOLATION == 0`,变异台 M11 专打它)。",
+    "gate": "新 helper `X.AnyEnemyAtLevelHitCreep(tHeroes, nLevel)`,闸在函数体里(`J.IsModeTurbo() and J.IsSoakCandidate('lvlhitcreep')`);调用点换成 `#nEnemyHeroes >= 3 or X.AnyEnemyAtLevelHitCreep(nEnemyHeroes, 8)`,**在析取式里的位置不变 ⇒ 短路顺序不变**(`#nEnemyHeroes >= 3` 仍排在它前面)。⛔ 单独 helper、单独 id、单调用点(§6a 把定义数=1、调用数=1、`IsSoakCandidate` 出现数=1 三个都钉成数字)。",
+    "readings": "⛔ **先读弱点再读数(铁律 4 (iii),口径一起登记)。** 语料 `live` **1306** 行(全 Turbo)、`frames_loaded` **141**。(1) **谓词改动被驱动**:`site_miss` = **10** 行(r750/th8,§2 sweep 的一格)。(2) ⭐⭐ **函数返回值也真的动** —— `miss_flips` = **9** 行(另 **1** 行早被 `>= 3` 腿短路,`miss_masked_by_ge3 = 1`;三者按**等式**配平)。**这是全族第一次**:`lvlany`/`lvlcarry`/`lvlgroup`/`lvltogether` 四个文件各自钉着 `cat_flip == 0`。(3) 方向:`shipped_true` **155** / `armed_true` **165**,差 **10 == site_miss**(等式)。(4) 形状证据:`nonempty` **396**、`e1_not_highest` **43**、`spread_nonzero` **66**、`ge3` **24**。sweep(th8)r600/750/900/1200 = 9 / **10** / 15 / 18;sweep(r750)th6/8/10 = 8 / **10** / 7。",
+    "direction": "armed 答 `any(level >= nLevel)`、出货答 `[1] >= nLevel`,而 `[1]` 是表里的**成员** ⇒ 出货 TRUE **蕴含** armed TRUE ⇒ armed 是**危险谓词的纯放宽** = **许可的纯收紧**:只能**撤回**一个「可以继续打小兵」,**永不发一个 baseline 没发的**。§3c 在**全部 1306 行**上钉 `DIR_VIOLATION == 0`(等式),并**紧接着**钉 `armed_true - shipped_true == site_miss`(等式)——后者防的是「用一个常数谓词把前者轻易满足」。⛔ 这是对**方向**的界,**不是命中率**;全文件不声称命中率。",
+    "bar": "`lvlgroup` 立、`lvlcarry` §7b 改写确认的那把杆是「**杠杆自己的谓词改动是否在真实行上被驱动**」,支路可达性另账登记为更弱的界。**本根兄弟两把杆都过了**:谓词 10 行、函数返回值 9 行 ⇒ **不欠 fixture**(GH #756 欠的是四根兄弟的,不是这根的)。",
+    "limits": "⛔ **买不到的**:读 `X.IsModeSuitToHitCreep` 的两个调用者(`X.SupportFindTarget`、`X.ShouldAttackTowerCreep`)的命中率 —— 它们其余的词项(active mode、anim activity、HP、近期受伤)本语料一条都没驱动。§4c 把调用者总数钉成 **4**(1 定义 + 3 读)并逐字写明这是**界不是行为断言**。⚠️ 另:域是**自限**的 —— 两个答案只在「最近的那个低于 8 而后面有人不低于 8」这个混合等级窗口里能不同,双方都过 8 之后出货本来就触发 ⇒ 不会变成「近处有人就不补刀」。",
+    "condition_c": "(c) 的逻辑依据:标准对线原则是**看整队而不是看最近的那一个**——补刀站位要按**在场最强的那个**的威胁半径退,而不是按挡在前面的那个。旁边的 `#>= 3` 腿证明作者本来就是这么想的,只是等级词项写漏了量词。Turbo 里等级差出现得更早更陡,窗口更值钱。",
+    "tests": "`tests/test_lvlhitcreep_suit_to_hit_creep_level_quantifier.lua` **12/12**;变异台 `tools/agent/mutstand_lvlhitcreep.sh` **19/19 STAND GREEN**。⭐ **变异台买到一个真洞**:M15(把 §5 复制品里的 `>= 3` 腿删掉)第一版**存活** —— 被遮的那行被改记成 flip,flips 9→10 满足 floor、masked 1→0、配平等式照样成立 ⇒ 修法是给 **masked 单独加一条 floor**(`cs.ratchet(miss_masked_by_ge3, 1)`),注释里点名 M15。⚠️ **另一处是反向的诚实**:M12 第一版(只删 `other ~= self`)**是真无操作** —— 团队分流本来就把自己排除在 `enemies=true` 之外,**实测全部 11 个计数器逐位相同**;把它记成 SURVIVED 会是「给一个什么都没改的变异记一个洞」,于是 M12 改成**两处替换**(同时让自己算敌人),才真正把自己塞进表里成为 `[1]`。",
+    "next": "(0) ⛔ **本族的 `[1] < N` 那一支已绝迹**(四根兄弟都落地);本轮证明**同形状缺陷在别的函数里还有**,下一轮继续「一次一个、换函数」,优先找**旁边就带着群体词项**的那种(那是作者自己的证据)。(1) ⭐ GH #756 欠的 fixture 是**四根兄弟的**,与本 id 无关,不要拿本 id 的 9 行去销它。(2) ⛔ `pulldrag` 永远不许单独提;`pullcamp`+`pulldrag` 重新入集仍挂在 `owed_executions.json:pullcamp_atom_readmission`,**`lvlhitcreep` 不代它提**。",
+    "published": "报告 `iterations/reports/strategy/20260911T22xxxxZ.md`;章程 `iterations/streams/strategy.md` 当前状态 + backlog `0LVLHITCREEP`。armed 串 / `queue.json` / `test_set.md` 一字未动;零 AWS、零波次。"
   }
 }

@@ -27,6 +27,64 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0LVLHITCREEP. **【2026-09-11T22:37Z 新增。**取上一轮 `0LVLTOGETHER`「下一格」第 (0) 项
+   逐字要求的那件事:**本族到此为止,去别的函数里找同形状的存在量化缺陷,一次一个**。
+   找到 `X.IsModeSuitToHitCreep`(`bots/mode_team_roam_generic.lua`),落地 gated id
+   **`lvlhitcreep`**:`X.AnyEnemyAtLevelHitCreep(nEnemyHeroes, 8)`,**析取式里位置不变
+   ⇒ 短路顺序不变**(`#nEnemyHeroes >= 3` 仍排在它前面)。
+   ⭐⭐ **本条最该被下一轮读到的五句**:
+   (甲) ⭐⭐ **全族第一次,函数返回值真的动了 —— 这就是换函数的回报。**
+   四根兄弟(`lvlany`/`lvlcarry`/`lvlgroup`/`lvltogether`)**各自钉着 `cat_flip == 0`**,
+   都是按 `lvlgroup` 立的**较弱的杆**拿的,并各自欠着一帧 fixture(GH #756)。本根**两把杆都过**:
+   谓词层 `site_miss` = **10** 行,**函数层 `miss_flips` = 9 行**(`X.IsModeSuitToHitCreep`
+   自己那条早退真的翻转)⇒ **`lvlhitcreep` 不欠 fixture**。
+   ⚠️ **连带纪律:GH #756 欠的那帧是四根兄弟的,不要拿本 id 的 9 行去销它** —— 两个不同的谓词。
+   (乙) ⭐ **极性与四根兄弟相反,方向仍是纯收紧,但这需要多说一句不能照抄。**
+   兄弟守**许可**(`[1] < N`),本根守**危险**(`[1] >= N`)⇒ armed 是把**危险谓词放宽**
+   = **它守的那个许可纯收紧**:`[1]` 是表里的**成员** ⇒ 出货 TRUE **蕴含** armed TRUE
+   ⇒ 只会**更不愿意**站着补刀,**永不发一个 baseline 没发的许可**。§3c 在全部 **1306** 行上钉
+   `DIR_VIOLATION == 0`(等式),**紧接着**钉 `armed_true - shipped_true == site_miss`(等式)
+   —— 后者防「拿常数谓词把前一条轻易满足」。⛔ 是**方向**的界,**不是命中率**。
+   (丙) ⭐⭐ **旁边那条 `#>= 3` 腿既是缺陷论证、也是变异台买到的真洞。**
+   作者已花一整个词项问**这群人**,紧挨着的等级词项却只问**最近那一个** ⇒ 5 级辅助挡在 700u 外的
+   12 级核心前面,读数是「可以继续站着补刀」。**问句是存在量化的,作者自己写出来了。**
+   而 §5 的 9 由一段**复制**那条 `if` 的代码数出 —— **M15 删掉复制品里的 `#>= 3` 腿后存活了**:
+   被遮的 1 行改记成 flip ⇒ flips **9→10**(floor 满足)、masked **1→0**、配平等式 `10+0==10`
+   **照样成立** ⇒ 修法是给 **masked 单独加一条 floor**(`cs.ratchet(miss_masked_by_ge3, 1)`),
+   注释点名 M15。**洞是台子挣来的。**
+   (丁) ⚠️ **反向的诚实:M12 第一版是真无操作,记成 SURVIVED 会是台子在另一个方向撒谎。**
+   只删 `other ~= self` 存活了,**不是测试看不见,是根本没东西可看** —— 两行之下的团队分流
+   本来就把自己排除在 `enemies=true` 之外。**实测了不是推理**:带该变异跑完整普查,
+   **全部 11 个计数器与基线逐位相同**。⇒ M12 改成**两处替换**(同时让自己算敌人),
+   才真把自己塞进表里、且塞在 **`[1]` 的位置**上,改后 caught(35 行)。
+   (戊) ⭐ **前提是实测的不是相信的**:`J.GetEnemyList`(jmz_func.lua:4345)**只过滤不重排**
+   ⇒ 继承距离序;§4c 在语料上钉 `SORT_VIOLATION == 0`,M11 专打它(接住 **168** 行)。
+   ⛔ **域是自限的**:两个答案只在「最近的低于 8 而后面有人不低于 8」这个**混合等级窗口**里能不同,
+   双方都过 8 之后出货本来就触发 ⇒ **不会变成「近处有人就不补刀」**;sweep(r750)th6/8/10 =
+   8/**10**/7 把这句话变成读数。
+   产出:`tests/test_lvlhitcreep_suit_to_hit_creep_level_quantifier.lua` **12/12**、
+   `tools/agent/mutstand_lvlhitcreep.sh` **19/19 STAND GREEN**、`state.json:lvlhitcreep_20260911`;
+   报告 `iterations/reports/strategy/20260911T223720Z.md`。
+   **附带(GH #624 形状,这次是本轮自己的红)**:新测试带的 `ls` 语料遍历被
+   `test_bots_walk_farm_only.py` 当场顶红,**手读后在同一个 commit 里**写进
+   `UNRESOLVED_HAND_READ`,复跑 **8 checks, 0 failed**(`lvlgroup` 那轮晚了一轮,
+   红留给了下一个开工的组 —— 那正是 #624 立案的形状)。
+   ⚠️ **并且:`py_gate.py` 绿(96 ran / 0 findings)时这条仍是红的** —— 它属于闸
+   **没有声称**的那 30 个较慢 python 测试。**闸绿不等于 trunk 绿**,下轮照抄这一条。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **继续「换函数、一次一个」**找同形状存在量化缺陷,**优先找旁边就带着群体词项的那种**
+   (`#list >= N` 挨着 `list[1]:...`)—— 那是**作者自己的证据**,本轮的缺陷论证与配平等式都是它给的;
+   (1) ⛔ GH #756 欠的 fixture 是**四根兄弟的**,与本 id 无关,**不要拿本 id 的 9 行去销它**;
+   (2) ⛔ GH #250 §4 的「数量」那一半仍要 dumper 读数,**不是本组的棒**;
+   (3) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第十二轮有效**);
+   (4) ⛔ 兵营分支(GH #713)仍不落 gate,接力棒是 `tests/test_isvalid_building_sentinel.lua §2b`;
+   (5) ⛔ P4.2 冻结未解 ⇒ 本轮**未提入集**;`tombhp`/`anyhero`/`lvlany`/`lvlcarry`/`lvlgroup`/
+   `lvltogether`/`bagtango`/`tpchew`/`pullreach`/`pullchew` 的裁定请求仍未答,本轮**不催**;
+   (6) ⛔ `pulldrag` 永远不许单独提;`pullcamp`+`pulldrag` 的重新入集仍挂在
+   `owed_executions.json:pullcamp_atom_readmission`,**`lvlhitcreep` 不代它提**;
+   (7) ⚠️ `lua_gate_measure.py` 的 manifest 登记仍欠着(20 个不在 manifest 的新测试照跑了,
+   另 1 个 `test_tpchew_channel_creep.lua` 超预算被排除),**超出一个工作单元**,留给下轮或总监。】**
+
 0LVLTOGETHER. **【2026-09-11T19:32Z 新增。**取上一轮 `0LVLGROUP`「下一格」第 (0) 项:
    `lvlany` 留下的**最后一根兄弟**(`X.CanAttackTogether` 里 r=600/**10 级**那个站点)。
    落地 gated id **`lvltogether`**:`X.NoNearbyEnemyAtLevelTogether`,**合取式位置不变
@@ -8144,6 +8202,43 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-11T22:37Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open issue:
+  MCP GitHub 本轮**未验证可用**,按**铁律 11 不空转**,取 backlog `0LVLTOGETHER`「下一格」
+  第 (0) 项逐字要求的那件事 ——「**本族到此为止,去别的函数里找同形状的存在量化缺陷**」。)
+  ⭐⭐ **换了函数,回报当场兑现:这一根是全族第一个「函数返回值也真的动」的。**
+  `X.IsModeSuitToHitCreep` 里 `(nEnemyHeroes[1] ~= nil and nEnemyHeroes[1]:GetLevel() >= 8)`
+  (`J.GetEnemyList(b, 750)`)落地 gated id **`lvlhitcreep`** + helper `X.AnyEnemyAtLevelHitCreep`。
+  四根兄弟各自钉着 `cat_flip == 0`、都按较弱的杆拿、各欠一帧 fixture(GH #756);
+  本根谓词层 **10** 行、**函数层 `miss_flips` = 9 行** ⇒ **两把杆都过,不欠 fixture**。
+  ⚠️ **GH #756 欠的是四根兄弟的那帧,不要拿本 id 的 9 行去销它。**
+  产出:`tests/test_lvlhitcreep_suit_to_hit_creep_level_quantifier.lua` **12/12**、
+  `tools/agent/mutstand_lvlhitcreep.sh` **19/19 STAND GREEN**、`state.json:lvlhitcreep_20260911`;
+  报告 `iterations/reports/strategy/20260911T223720Z.md`。
+  ⭐ **极性与四根兄弟相反,所以方向那句不能照抄**:兄弟守**许可**(`[1] < N`),本根守**危险**
+  (`[1] >= N`)⇒ armed 是**危险谓词纯放宽** = **许可纯收紧**(`[1]` 是成员 ⇒ 出货 TRUE 蕴含
+  armed TRUE)⇒ 只会**更不愿意**站着补刀。§3c 钉 `DIR_VIOLATION == 0` 并**紧接着**钉
+  `armed_true - shipped_true == site_miss`(等式)—— 防「常数谓词轻易满足前一条」。
+  ⭐⭐ **旁边那条 `#>= 3` 腿既是缺陷论证也是变异台买到的真洞**:作者已花一整个词项问**这群人**,
+  等级词项却只问**最近那一个**(5 级辅助挡在 700u 外的 12 级核心前面 ⇒「可以继续补刀」);
+  而 **M15 删掉 §5 复制品里的那条腿后存活了** —— flips 9→10(floor 满足)、masked 1→0、
+  配平等式照样成立 ⇒ 给 **masked 单独加 floor**,注释点名 M15。
+  ⚠️ **反向的诚实(M12)**:只删 `other ~= self` 存活,**不是测试看不见是根本没东西可看**
+  (团队分流本来就排除自己);**实测全部 11 个计数器与基线逐位相同**,于是 M12 改成**两处替换**
+  才真把自己塞成 `[1]`。**把无操作记成 SURVIVED = 台子在另一个方向撒谎。**
+  ⭐ **顺手:本轮自己的 walk 在同一个 commit 里登记了**(`test_bots_walk_farm_only.py` 当场顶红,
+  手读后写进 `UNRESOLVED_HAND_READ`,复跑 8 checks / 0 failed)——
+  ⚠️ **而 `py_gate.py` 绿(96 ran / 0 findings)时它仍是红的**:属闸**没有声称**的那 30 个较慢
+  python 测试。**闸绿不等于 trunk 绿。**
+  铁律 6 三行:`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings, 0 uncertifiable, 31.8s` /
+  `lua gate: exit 0 — 322 fast Lua ratchets, 0 findings`(**没有用 `RULE6_BYPASS`**);
+  另跑 `lua5.1 tests/run_tests.lua lvl` **85/85**。
+  ⚠️ **自检 `SELFCHECK_EXIT=124` 是我自己的 `timeout 900` 砍的,不是自检的判决** ——
+  死在 `=== trunk health (fast Lua detectors) ===` 段里 ⇒ 其后的腿**这轮没人看过,记
+  UNCERTIFIABLE**(**连续第二轮**同一形状,下轮给更长 timeout)。砍前读到的发现全部**先于本轮、
+  与本文件无交集**(python 四条属 GH #751/#584 族;Lua 那条是英雄组 `lion_ult_reserve`)。
+  ⚠️ **管道拒绝复发:本轮是第 7 次**(脚本自陈已 5 次、上一轮第 6 次)——
+  **自检不要接管道**,重定向 + 裸读 `$?`。
 
 - 2026-09-11T19:32Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open issue:
   `[strategy]` 无带帧证据的新件 ⇒ 取 backlog `0LVLGROUP`「下一格」第 (0) 项。)

@@ -1890,10 +1890,61 @@ function X.ConsiderHelpWhenCoreIsTargeted()
     return nil, false
 end
 
+-- [lvlhitcreep 20260911] SOAK CANDIDATE -- NOT PROMOTED, gate is live below.
+--
+-- THE DEFECT, and it is the 'lvlany' family's shape in a NEW function. Shipped:
+--     if #nEnemyHeroes >= 3 or (nEnemyHeroes[1] ~= nil and nEnemyHeroes[1]:GetLevel() >= 8)
+-- J.GetEnemyList keeps GetNearbyHeroes' distance sort, so `[1]` is the NEAREST
+-- live enemy. The question the line asks is existential -- "is a dangerous enemy
+-- standing here" -- and the `#nEnemyHeroes >= 3` leg beside it is the author's
+-- own proof of that: a term was already spent asking about the GROUP. What the
+-- level term actually answers is "is the NEAREST one dangerous", so a level-5
+-- support screening a level-12 core at 700 units reads SAFE TO KEEP LAST-HITTING.
+--
+-- ⭐⭐ WHAT IS DIFFERENT FROM ALL THREE SIBLINGS, and it is the reason this one
+-- was worth taking: 'lvlany', 'lvlcarry', 'lvlgroup' and 'lvltogether' each
+-- carried `cat_flip == 0` -- arming changed the helper's answer but never the
+-- enclosing function's RETURN on any real row. Here arming flips
+-- X.IsModeSuitToHitCreep's own early return on 9 live rows of the frame corpus
+-- (10 rows change the predicate; 1 of those already had >= 3 enemies, so the
+-- first leg had short-circuited it). This lever is driven END TO END on frames
+-- that exist, which is the bar 'lvlgroup' put in force, met without an owed
+-- fixture. tests/test_lvlhitcreep_suit_to_hit_creep_level_quantifier.lua §5.
+--
+-- ⛔ DIRECTION, measured over all 1306 live rows (§3): armed answers
+-- `any(level >= nLevel)`, shipped answers `[1] >= nLevel`, and `[1]` is a MEMBER
+-- of the list, so shipped TRUE implies armed TRUE -- armed is a pure WIDENING of
+-- the DANGER predicate, i.e. a pure NARROWING of the permission it guards. It
+-- can only ever WITHDRAW a "suitable to hit creeps", never grant one baseline
+-- withheld: the bot gets more cautious about standing there auto-attacking
+-- creeps, never more reckless. 0 direction violations on the corpus, asserted as
+-- an equality. ⛔ That is a bound on the DIRECTION, not a fire rate; no fire
+-- rate is claimed here or in the test.
+--
+-- ⛔ THE DOMAIN IS SELF-LIMITING AND THAT IS NOT AN ACCIDENT. The two answers
+-- can only differ while the nearest enemy is below 8 and someone behind them is
+-- not, i.e. during the mixed-level window; once both sides are past 8 the
+-- nearest is dangerous too and shipped already fires. So this does not become
+-- "any enemy within 750 stops farming" in the late game.
+--
+-- ⛔ FROZEN-HOLD per OWNER_PRIORITIES P4.2 (new ids do not enter the armed set
+-- while it is above 20). Registered in state.json:lvlhitcreep_20260911; the
+-- armed string, queue.json and test_set.md are untouched.
+function X.AnyEnemyAtLevelHitCreep(tHeroes, nLevel)
+	if tHeroes == nil or tHeroes[1] == nil then return false end
+	if J.IsModeTurbo() and J.IsSoakCandidate('lvlhitcreep') then
+		for i = 1, #tHeroes do
+			if tHeroes[i]:GetLevel() >= nLevel then return true end
+		end
+		return false
+	end
+	return tHeroes[1]:GetLevel() >= nLevel
+end
+
 function X.IsModeSuitToHitCreep(b)
     local botMode = b:GetActiveMode()
     local nEnemyHeroes = J.GetEnemyList(b, 750)
-    if #nEnemyHeroes >= 3 or (nEnemyHeroes[1] ~= nil and nEnemyHeroes[1]:GetLevel() >= 8) then
+    if #nEnemyHeroes >= 3 or X.AnyEnemyAtLevelHitCreep(nEnemyHeroes, 8) then
         return false
     end
     if b:HasModifier("modifier_axe_battle_hunger") then
