@@ -409,15 +409,34 @@ function X.ConsiderMagneticField()
 	then
 		local nEnemyLaneCreeps = bot:GetNearbyLaneCreeps(888, true)
 		local nEnemyTowers = bot:GetNearbyTowers(888, true)
-		local nEnemyBarracks bot:GetNearbyBarracks(888, true)
-		local sEnemyTowers bot:GetNearbyFillers(888, true)
+		-- [hero, GH #714] soak candidate 'awraxfield'.  The two lines below
+		-- shipped WITHOUT their `=`: `local nEnemyBarracks bot:GetNearby...`.
+		-- That is not a syntax error -- Lua reads it as a declaration (value
+		-- nil) plus a separate call statement whose result is thrown away --
+		-- so it loads, luacheck passes it (the names ARE used below), and the
+		-- smoke test is green.  The two engine queries ran every frame in this
+		-- branch and their answers were discarded; the two disjuncts that read
+		-- them were `nil ~= nil` = FALSE on every frame since the line was
+		-- typed.  Magnetic Field therefore never fired for structures, only
+		-- for creeps>=3 or a live tower -- i.e. it went quiet exactly when the
+		-- T3 in front of the barracks died and the siege began.
+		--   Restoring the `=` is two characters but it is NOT a no-op: it
+		-- WIDENS this branch, so the widening rides gated (turbo-only) while
+		-- the assignment itself lands unconditionally.  Gate off, the two
+		-- disjuncts are `false and ...` where they used to be `nil ~= nil`:
+		-- same value, same short circuit, same call count and order.
+		-- (`sEnemyTowers` holds FILLERS, not towers; the name is left as the
+		-- issue quotes it rather than silently renamed in the same change.)
+		local nEnemyBarracks = bot:GetNearbyBarracks(888, true)
+		local sEnemyTowers = bot:GetNearbyFillers(888, true)
+		local bStructuresCount = J.IsModeTurbo() and J.IsSoakCandidate('awraxfield')
 
 		if J.IsAttacking(bot)
 		then
 			if (nEnemyLaneCreeps ~= nil and #nEnemyLaneCreeps >= 3)
 			or (nEnemyTowers ~= nil and #nEnemyTowers >= 1)
-			or (nEnemyBarracks ~= nil and #nEnemyBarracks >= 1)
-			or (sEnemyTowers ~= nil and #sEnemyTowers >= 1)
+			or (bStructuresCount and nEnemyBarracks ~= nil and #nEnemyBarracks >= 1)
+			or (bStructuresCount and sEnemyTowers ~= nil and #sEnemyTowers >= 1)
 			then
 				return BOT_ACTION_DESIRE_HIGH, bot:GetLocation()
 			end
