@@ -1,0 +1,138 @@
+{
+ "cand": "tpcommit,lf_rescue,ownhalf,overchase,wandbleed,zusult,blinkflee,liondrainstop,odaoe,pullcamp,stayfield,stayfield2,fieldbuy,pullcad,pulldrag,tpgap,tbearly,tpdeathbuy,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart,zusboltdom",
+ "cand_ref": null,
+ "contrast": "vs_stable",
+ "recovered_locally": true,
+ "per_seed": [
+  {
+   "seed": "10890",
+   "ab_games": 40,
+   "ba_games": 17,
+   "arm_depth": 23.86,
+   "scored": true,
+   "gpm": 12.15,
+   "gpm_ab": -68.18,
+   "gpm_ba": 92.49,
+   "xpm": 10.23,
+   "xpm_ab": -32.54,
+   "xpm_ba": 53.0,
+   "deaths": 0.17,
+   "deaths_ab": 0.35,
+   "deaths_ba": -0.02,
+   "last_hits": -1.59,
+   "last_hits_ab": -16.47,
+   "last_hits_ba": 13.29,
+   "scored_games": 57,
+   "unfinished": 0,
+   "winrate_arm_depth": 23.86,
+   "winrate_side_census": {
+    "radiant": 0,
+    "dire": 57
+   },
+   "winrate_headroom": 0.0,
+   "winrate": 0.5
+  },
+  {
+   "seed": "10900",
+   "ab_games": 28,
+   "ba_games": 14,
+   "arm_depth": 18.67,
+   "scored": true,
+   "gpm": -33.64,
+   "gpm_ab": -299.17,
+   "gpm_ba": 231.9,
+   "xpm": -22.82,
+   "xpm_ab": -177.92,
+   "xpm_ba": 132.27,
+   "deaths": 0.54,
+   "deaths_ab": 3.01,
+   "deaths_ba": -1.93,
+   "last_hits": 0.1,
+   "last_hits_ab": -1.08,
+   "last_hits_ba": 1.29,
+   "scored_games": 42,
+   "unfinished": 0,
+   "winrate_arm_depth": 18.67,
+   "winrate_side_census": {
+    "radiant": 0,
+    "dire": 42
+   },
+   "winrate_headroom": 0.0,
+   "winrate": 0.5
+  }
+ ],
+ "mean": {
+  "gpm": -10.75,
+  "xpm": -6.29,
+  "deaths": 0.36,
+  "last_hits": -0.74,
+  "winrate": 0.5,
+  "winrate_headroom": 0.0
+ },
+ "comps_better": {
+  "gpm": "1/2",
+  "xpm": "1/2",
+  "deaths": "0/2",
+  "last_hits": "1/2",
+  "winrate": "0/2",
+  "winrate_measurable": "0/0"
+ },
+ "input": {
+  "files_seen": 111,
+  "games_loaded": 111,
+  "source_dirs": 2,
+  "unparseable": 0,
+  "pooled_basename_dirs_overridden": 0
+ },
+ "strata": {
+  "gpm": {
+   "ab": -183.68,
+   "ba": 162.19,
+   "side": -172.94,
+   "sign_flip": true,
+   "side_gt_arm": "2/2"
+  },
+  "xpm": {
+   "ab": -105.23,
+   "ba": 92.64,
+   "side": -98.93,
+   "sign_flip": true,
+   "side_gt_arm": "2/2"
+  },
+  "deaths": {
+   "ab": 1.68,
+   "ba": -0.97,
+   "side": 1.33,
+   "sign_flip": true,
+   "side_gt_arm": "2/2"
+  },
+  "last_hits": {
+   "ab": -8.77,
+   "ba": 7.29,
+   "side": -8.03,
+   "sign_flip": true,
+   "side_gt_arm": "2/2"
+  }
+ },
+ "winrate_neutral": 0.5,
+ "winrate_forced_seeds": [
+  "10890",
+  "10900"
+ ],
+ "scored_games": 99,
+ "unfinished_games": 0,
+ "winner_by": {
+  "engine_natural": 111
+ },
+ "winrate_independent_of_gold": "111/111 games",
+ "winrate_side_census": {
+  "radiant": 0,
+  "dire": 111
+ },
+ "winrate_minority_side_share": 0.0,
+ "winrate_channel": "DEGENERATE",
+ "min_arm_depth": 8,
+ "thin_arm_seeds": [],
+ "thin_arm_winrate_seeds": [],
+ "suggested": "hold_or_reject"
+}

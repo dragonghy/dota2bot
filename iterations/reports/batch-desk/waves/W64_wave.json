@@ -34,7 +34,9 @@
   "gate_iii_crossing_ruling": "PASSES ONLY BECAUSE OF A RULING, and the tool says so itself: `WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes ONLY BECAUSE OF RULING GH#721/director-20260910. The derived fence $80.00 was NOT met; the ceiling that was met is $85.00, and it is a ruling with an expiry, not a reading. Do not copy either number forward; re-run the tool.` Registry line, printed on every run: `crossing registry: ruling GH#721/director-20260910 IS IN FORCE (read from /home/user/dota2bot/iterations/director_rulings.json, not from a flag). It is applied below.` Ruling line: `DIRECTOR CROSSING: ceiling $85.00 by ruling GH#721/director-20260910, expires 2026-09-30T23:59:00+00:00`. No --director-crossing flags were passed; RULING 11's registry supplied it.",
   "gate_iii_clock_disclosure": "`WAVE_FENCE CLOCK : the wave-accrual window above was anchored to snapshot instant ASSERTED by the operator (--snapshot-instant) -- a claim, not a reading.` The asserted instant is 2026-09-10T19:46:38Z, taken verbatim from check_costs.sh's `budget refreshed` field.",
   "gate_iv_inputs_harvest": "NO HARVEST OWED at launch, established before the wave flew. W63 was harvested by the 2026-09-10 round: iterations/reports/batch-desk/waves/W63_verdict.json is in the repo and W63_wave.json:machines[] carries status_code/ab/ba/arm_depth for all four machines (that is the input gate (iv) actually reads, and it is non-null). S3 s3://dota2bot-batch-results-4924/validation/ was re-scanned THIS ROUND and its newest object is 2026-09-10T13:02:15Z, which is W63's own -- no unharvested object exists. NOTE ON THE SCAN: `awsx s3 ls --recursive` sorts by KEY NAME, not by time; the first reading this round looked like nothing newer than 09-08 until it was re-sorted with `sort -k1,2`. Reading the tail of an unsorted listing is how a wave goes unharvested while the round reports it clean.",
-  "gate_iv_reclaim_blind": "RECLAIM_EXIT=0, `VERDICT: not blinded -- the wave delivered 3 paired seed(s).` / `NEXT WAVE: spot`. Run BEFORE launch, this round, by hand, on W63's own record."
+  "gate_iv_reclaim_blind": "RECLAIM_EXIT=0, `VERDICT: not blinded -- the wave delivered 3 paired seed(s).` / `NEXT WAVE: spot`. Run BEFORE launch, this round, by hand, on W63's own record.",
+  "gate_i_throttle_at_rerun": "THROTTLE_EXIT=3 twice (standalone 03:16:45Z and re-run inside the rerun launch script at the action instant, GH #469): `anchor wave : W64 (4 machine(s))`, `last machine up : 2026-09-11T00:21:17Z <- the anchor`, `slate spread : 22s`, `unlock : 2026-09-11T06:21:17Z`, `margin : 11072s SHORT of unlock`, `A launch at this instant BREACHES gate (i) by 184m32s.` NO ROUTINE WAVE WAS LAUNCHED. The two machines that did fly are registered rerun machines, exempt by GH #498. FIRST RUN OF THIS GATE THIS ROUND WAS exit 2, AND THE CAUSE WAS THIS WAVE'S OWN RECORD: `UNCERTIFIABLE: W64 machine 0 (seed 10890) has no launched_at` -- the launch round wrote machines[] with only `launch_time`, and gate (i) reads `launched_at`. W63 carries BOTH keys; W64 carried one. Fixed by writing `launched_at` from the launch round's own recorded instant (verbatim, not from AWS -- for seed 10900 the SIR CreateTime is 00:21:16Z and the launch record says 00:21:17Z, and the LATER one is the conservative anchor).",
+  "gate_iii_fence_at_rerun": "FENCE_EXIT=0. First run (no --pending) returned UNCERTIFIABLE exit 2 per RULING 6 and named TWO waves this time, not one: `must cover : 2 wave(s) listed above (W64, W63). This tool does not price them; check your sum covers each.` Re-run with --pending 2.20 (= W64 $1.10 + W63 $1.10, both at the GH #454 covering constant) and --planned 1.25 (2 on-demand machines; the charter's on-demand constant gives $1.075 for half a 4-machine wave and the machine-hour route gives $1.25 -- the LARGER was declared, which is the safe side). Verbatim: `actual (MTD) : $78.253`, `pending waves : $2.200`, `planned : $1.250`, `projected total : $81.703`, `fence : $80.00`, `brake : $90.00`, `operative ceiling: $85.00`, `headroom : $3.297 after this wave`. Clock: `wave accrual : records after 2026-09-10T08:28:38Z (= 2026-09-10T19:46:38Z - 11.3h lag, clock from budget snapshot)` -- the GH #692 epoch fix is holding, no --snapshot-instant was needed this round."
  },
  "cost": {
   "single_wave_constant_used": 1.1,
@@ -57,12 +59,18 @@
    "lifecycle": "spot",
    "launch_time": "2026-09-11T00:20:55Z",
    "market": "spot",
-   "status_code": null,
-   "create": null,
-   "update": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null
+   "status_code": "instance-terminated-by-user",
+   "create": "2026-09-11T00:20:55.000Z",
+   "update": "2026-09-11T01:17:34.000Z",
+   "ab": 40,
+   "ba": 17,
+   "arm_depth": 23.86,
+   "launched_at": "2026-09-11T00:20:55.000Z",
+   "status_update_time": "2026-09-11T01:17:34.000Z",
+   "terminated_at": "2026-09-11T01:17:34.000Z",
+   "machine_hours": 0.9442,
+   "scored": true,
+   "status_code_source": "describe-spot-instance-requests Status.Code + CreateTime/Status.UpdateTime, read at 2026-09-11T03:2xZ (~2.0h after the last termination). All four SIRs were still readable (state=closed), so survival is a NUMBER this wave, not GH #699's range -- that is exactly what harvest_notes (b) asked for."
   },
   {
    "seed": 10891,
@@ -74,12 +82,18 @@
    "lifecycle": "spot",
    "launch_time": "2026-09-11T00:21:12Z",
    "market": "spot",
-   "status_code": null,
-   "create": null,
-   "update": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null
+   "status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-11T00:21:12.000Z",
+   "update": "2026-09-11T00:32:26.000Z",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "launched_at": "2026-09-11T00:21:12.000Z",
+   "status_update_time": "2026-09-11T00:32:26.000Z",
+   "terminated_at": "2026-09-11T00:32:26.000Z",
+   "machine_hours": 0.1872,
+   "scored": false,
+   "status_code_source": "describe-spot-instance-requests Status.Code + CreateTime/Status.UpdateTime, read at 2026-09-11T03:2xZ (~2.0h after the last termination). All four SIRs were still readable (state=closed), so survival is a NUMBER this wave, not GH #699's range -- that is exactly what harvest_notes (b) asked for."
   },
   {
    "seed": 10892,
@@ -91,12 +105,18 @@
    "lifecycle": "spot",
    "launch_time": "2026-09-11T00:21:14Z",
    "market": "spot",
-   "status_code": null,
-   "create": null,
-   "update": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null
+   "status_code": "instance-terminated-no-capacity",
+   "create": "2026-09-11T00:21:14.000Z",
+   "update": "2026-09-11T00:32:26.000Z",
+   "ab": 0,
+   "ba": 0,
+   "arm_depth": 0.0,
+   "launched_at": "2026-09-11T00:21:14.000Z",
+   "status_update_time": "2026-09-11T00:32:26.000Z",
+   "terminated_at": "2026-09-11T00:32:26.000Z",
+   "machine_hours": 0.1867,
+   "scored": false,
+   "status_code_source": "describe-spot-instance-requests Status.Code + CreateTime/Status.UpdateTime, read at 2026-09-11T03:2xZ (~2.0h after the last termination). All four SIRs were still readable (state=closed), so survival is a NUMBER this wave, not GH #699's range -- that is exactly what harvest_notes (b) asked for."
   },
   {
    "seed": 10900,
@@ -108,12 +128,18 @@
    "lifecycle": "spot",
    "launch_time": "2026-09-11T00:21:17Z",
    "market": "spot",
-   "status_code": null,
-   "create": null,
-   "update": null,
-   "ab": null,
-   "ba": null,
-   "arm_depth": null
+   "status_code": "instance-terminated-by-user",
+   "create": "2026-09-11T00:21:16.000Z",
+   "update": "2026-09-11T01:12:38.000Z",
+   "ab": 28,
+   "ba": 14,
+   "arm_depth": 18.67,
+   "launched_at": "2026-09-11T00:21:17.000Z",
+   "status_update_time": "2026-09-11T01:12:38.000Z",
+   "terminated_at": "2026-09-11T01:12:38.000Z",
+   "machine_hours": 0.8561,
+   "scored": true,
+   "status_code_source": "describe-spot-instance-requests Status.Code + CreateTime/Status.UpdateTime, read at 2026-09-11T03:2xZ (~2.0h after the last termination). All four SIRs were still readable (state=closed), so survival is a NUMBER this wave, not GH #699's range -- that is exactly what harvest_notes (b) asked for."
   }
  ],
  "_machines_carries_note": "status_code/create/update/ab/ba/arm_depth are null BY DESIGN at launch and are the HARVEST round's job to fill. Gate (iv) on W65 reads THIS file, not W64_verdict.json -- the 00:14Z round scored W62 4/4, left machines[] all-null, and jammed the next round's gate.",
@@ -126,5 +152,104 @@
   "(f) owed_executions:overchase_new_body_first_reading -- `overchase` is armed in this wave's 37-id string, so this is the first wave reading of the new function body (test_set.md §FZ.5 / state.json:overchase_KEPT_20260908). Register its reading explicitly at harvest.",
   "(g) Evaluate BOTH GH #454 legs at harvest and say so even when neither trips: (乙1) billing-side single-wave cost > $1.10, (乙2) mean self-terminating machine-hours > 1.00 h/machine.",
   "(h) Iron rule 4(i-a): report ab AND ba strata readings for every registered quantity -- readings, not game counts. The economic four come from recover_verdict.py itself (per_seed[].<m>_ab/_ba + strata.<m>); do NOT hand-compute and NEVER pool by game count (4(i-d))."
- ]
+ ],
+ "harvest": {
+  "harvested_at": "2026-09-11T03:1x-03:2xZ",
+  "path": "tools/batch_test/soak/recover_verdict.py over per-game S3 data, four run dirs downloaded SEPARATELY into /tmp/pool/{53db33,8d88d3,db97c7,452004} (never `cp`-flattened -- GH #225). Per-run local file counts equal the S3 side exactly: 63 / 0 / 0 / 48 = 111.",
+  "arm_string_recomputed_at_harvest": "37 ids / 335 bytes / md5 b525d51d4b4957e0e40f22f203aea641 -- byte-identical to launch.",
+  "recover_exit": 0,
+  "mean": {
+   "gpm": -10.75,
+   "xpm": -6.29,
+   "deaths": 0.36,
+   "last_hits": -0.74,
+   "winrate": 0.5,
+   "winrate_headroom": 0.0
+  },
+  "comps_better": {
+   "gpm": "1/2",
+   "xpm": "1/2",
+   "deaths": "0/2",
+   "last_hits": "1/2",
+   "winrate": "0/2",
+   "winrate_measurable": "0/0"
+  },
+  "strata": {
+   "gpm": {
+    "ab": -183.68,
+    "ba": 162.19,
+    "side": -172.94,
+    "sign_flip": true,
+    "side_gt_arm": "2/2"
+   },
+   "xpm": {
+    "ab": -105.23,
+    "ba": 92.64,
+    "side": -98.93,
+    "sign_flip": true,
+    "side_gt_arm": "2/2"
+   },
+   "deaths": {
+    "ab": 1.68,
+    "ba": -0.97,
+    "side": 1.33,
+    "sign_flip": true,
+    "side_gt_arm": "2/2"
+   },
+   "last_hits": {
+    "ab": -8.77,
+    "ba": 7.29,
+    "side": -8.03,
+    "sign_flip": true,
+    "side_gt_arm": "2/2"
+   }
+  },
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "scored_games": 99,
+  "games_loaded": 111,
+  "seeds_excluded_BY_NAME": "10891 and 10892 contributed ZERO games -- they are not `thin_arm_seeds` and not `NO-PAIR` either; they never appear in per_seed at all, because a capacity reclaim killed both 11.2 minutes in, before any game finished. Their games cost real money (2 x 0.187 machine-hours) and bought nothing. Both are being re-run this round (see `rerun`).",
+  "gh696_winrate_measurable_first_live_read": "GH #696 winrate comps_better: 2 of 2 seed(s) had headroom 0 and could not vote yes (seeds 10890,10900). The pooled fraction 0/2 counts them; `comps_better.winrate_measurable` 0/0 does not. A promote bar above 0/2 is unreachable on this corpus.",
+  "gh352_winrate_channel": "DEGENERATE -- verbatim: `GH #352 winrate channel DEGENERATE: minority side won 0 of 111 finished games (share 0.0000 < 0.20). The winrate below is bounded to 0.5 +/- 0.0 and MUST NOT be cited as rule 2(b) support until the channel recovers.` mean.winrate_headroom 0.0. winrate and comps_better.winrate are therefore PLACEHOLDERS this wave, not readings.",
+  "winrate_independent_of_gold": "111/111 games -- the GH #108/#352 bucket-name bug is confirmed FIXED on the live path (W31 printed 0/222 for the same shape). The desk's per-wave recurrence registration can stay closed.",
+  "overchase_new_body_first_reading": "`overchase` is armed in this wave's 37-id string, so W64 is the first wave reading of the new function body (test_set.md FZ.5 / state.json:overchase_KEPT_20260908). It is registered as READ, and the reading is the wave-level one above -- this wave cannot attribute to a single id (37 ids, one arm).",
+  "gh454_leg_yi1": "NOT TRIPPED. Total machine-hours this wave 2.1742 (0.9442 + 0.8561 + 0.1872 + 0.1867). Even at the highest rate the account has been billed in the observed band, 2.1742 h cannot reach $1.10: the band's top implies ~$0.275/h ($1.022 over 4 x 0.93h at W46), giving $0.598 incl. the $0.005/h IPv4 line. At the ordinary $0.231-0.250/h band the wave is $0.513-0.554. NOTE this is a rate-band bound, not a settled billing-side read -- today's CE day is not settled at harvest.",
+  "gh454_leg_yi2": "NOT TRIPPED. Mean machine-hours of SELF-TERMINATING machines (Status.Code=instance-terminated-by-user) = (0.9442 + 0.8561)/2 = 0.9001 h/machine <= 1.00. The two capacity-reclaimed machines are excluded from this mean by the rule's own text -- including them would give 0.5436 and is exactly the downward bias (乙2) was written to route around.",
+  "family_depth_after": "9 paired seeds (W62 4 + W63 3 + W64 2). The >=8 second disjunct of gate (ii) is now SATISFIED, so W65 needs the FIRST disjunct -- real tree drift intersecting the armed string -- to qualify."
+ },
+ "rerun": [
+  {
+   "seed": 10891,
+   "instance_id": "i-0bcc97464e10626a7",
+   "run_id": "spot_20260911_031953_1_34ea0edd750b23f9450f0f4bbb351065cb2ab6b4_6f1d01",
+   "market": "on-demand",
+   "lifecycle": null,
+   "lifecycle_note": "InstanceLifecycle read back as null = on-demand, which is what GH #408 requires here; `spot_` in the run_id is a hard-coded string in spot_run.sh and is NOT evidence.",
+   "az": "us-west-2a",
+   "launched_at": "2026-09-11T03:19:56.000Z",
+   "launch_time": "2026-09-11T03:19:56.000Z",
+   "status_code": null,
+   "status_code_source": "EC2 StateReason.Code -- an on-demand machine has no SIR. To be read at the next harvest.",
+   "ab": null,
+   "ba": null,
+   "arm_depth": null
+  },
+  {
+   "seed": 10892,
+   "instance_id": "i-0409f3a0062f31507",
+   "run_id": "spot_20260911_031956_1_34ea0edd750b23f9450f0f4bbb351065cb2ab6b4_82390f",
+   "market": "on-demand",
+   "lifecycle": null,
+   "lifecycle_note": "InstanceLifecycle read back as null = on-demand, which is what GH #408 requires here; `spot_` in the run_id is a hard-coded string in spot_run.sh and is NOT evidence.",
+   "az": "us-west-2d",
+   "launched_at": "2026-09-11T03:19:58.000Z",
+   "launch_time": "2026-09-11T03:19:58.000Z",
+   "status_code": null,
+   "status_code_source": "EC2 StateReason.Code -- an on-demand machine has no SIR. To be read at the next harvest.",
+   "ab": null,
+   "ba": null,
+   "arm_depth": null
+  }
+ ],
+ "rerun_authority": "GH #408: both reclaimed machines carry SIR Status.Code=instance-terminated-no-capacity, which is the exact predicate that sends a rerun straight to --on-demand instead of down the (1)(2)(3) ladder. Fences: one rerun per seed (first for both) and at most 2 on-demand rerun machines per wave (this is exactly 2, i.e. AT the cap -- a third reclaim this wave would have to wait for the next one, not be launched alongside). GH #498: rerun machines are EXEMPT from gate (i)'s 6h window; gate (i) was still run at the action instant and read THROTTLED (exit 3, 11072s short of the 06:21:17Z unlock) -- recorded, not obeyed, because the exemption is what makes that legal. Gate (iii) DOES apply and was re-run inside the launch script: FENCE_AT_LAUNCH_EXIT=0. TREE PIN: origin/main had moved 2 commits past W64's pin with bots/ touched (hero_arc_warden.lua, mode_team_roam_generic.lua), so --ref 34ea0edd750b23f9450f0f4bbb351065cb2ab6b4 was passed EXPLICITLY -- a rerun that clones today's main is not buying back the seed, it is measuring a different tree under the old wave's name."
 }

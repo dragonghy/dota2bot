@@ -9758,6 +9758,124 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   详见 `iterations/reports/batch-desk/20260911T001500Z.md` 与
   `iterations/reports/batch-desk/waves/W64_wave.json`。
 
+- 2026-09-11T03:13Z:**W64 收割轮 + 两台按需补跑;例行波次被闸 (i) 挡住,而挡住它的第一跑是 `exit 2` 不是 `exit 3`。**
+  ⭐⭐⭐ **头号发现:W64 自己的发波记录把机器时刻写在了闸 (i) 读不到的键上。** 逐字
+  `UNCERTIFIABLE: W64 machine 0 (seed 10890) has no launched_at` / `gate (i) DID NOT RUN.
+  That is not a pass -- do not launch on it.` **W63 的 `machines[]` 同时带 `launched_at` 与
+  `launch_time`,W64 只带后者**,而闸 (i) —— 五道闸里唯一管花钱节奏的那道 —— 只读前者。
+  上一轮 py gate 抓到的是**同族的另一半**(`gates` 下的键名),**这一半没被抓到**,因为
+  `tests/test_wave_gate_keys.py` **检 `gates` 的键、不检 `machines[]` 的键**
+  ⇒ **GH #624 那条腿的立案形状换了个字段**:本轮之所以当场看见,只是因为恰好同一座位、
+  恰好要用那道闸。**处置=改记录不改门**:`launched_at` **逐字抄发波轮自己记的时刻,不取 AWS**
+  ——seed 10900 的 SIR `CreateTime` 是 `00:21:16Z` 而发波记录写 `00:21:17Z`,**取晚的**
+  (锚点是末台,晚=解锁更晚=波更少=保守侧);⛔ 没去 `REQUIRED_GATES` 加别名。已开 issue。
+  修完重跑:`THROTTLE_EXIT=3`,`anchor wave W64`、`last machine up 2026-09-11T00:21:17Z`、
+  `slate spread 22s`、`unlock 2026-09-11T06:21:17Z`、`margin 11072s SHORT`
+  ⇒ **不发例行波次**。
+  **收割 W64**(标准路径,四 run 各自子目录,⛔ 未 `cp` 平;逐 run 落盘=S3 侧 **63/0/0/48=111**;
+  臂串现算 37id/335B/md5 `b525d51d4b4957e0e40f22f203aea641` 与发波逐位同;`RECOVER_EXIT=0`,
+  `unparseable 0`,**`min_arm_depth 8`**,**`thin_arm_seeds []`**):
+  **2 粒配对** 10890(ab40/ba17,`arm_depth 23.86`,gpm **+12.15**)、
+  10900(ab28/ba14,`18.67`,gpm **−33.64**);
+  跨种子 gpm **−10.75**(1/2)、xpm −6.29(1/2)、deaths **+0.36 更差**(0/2)、last_hits −0.74(1/2);
+  四量 `side_gt_arm` 全 `2/2`、sign_flip 全 true ⇒ **侧偏已消除的估计量,反号是恒等式不是诊断**
+  (铁律 4 (i-c)),**登记不当否决**。`suggested hold_or_reject`。
+  ⚠️ **两粒种子的波不写定量主张**;按 §CO.4,(b) 能说的只有粗粒度一句,**不建议任何 promote/reject**。
+  ⚠️⚠️ **10891/10892 连「被排除」都不是 —— 它们根本没进 `per_seed`**:不是 `THIN-ARM`、
+  也不是 W63 那种 `NO-PAIR`(ab26/ba0),而是**一局没产**(起飞 11.2 分钟被容量回收,早于第一局跑完)。
+  **钱是真花的**(2×0.187 机时),**买到零**。
+  **`winrate` 两个必抄数**:**`winrate_channel DEGENERATE`** + **`mean.winrate_headroom 0.0`**
+  (`minority side won 0 of 111`)⇒ `winrate 0.5` / `comps_better.winrate 0/2` **本波是占位符不是读数**。
+  ⭐ **`winrate_independent_of_gold` 打 `111/111`** ⇒ GH #108/#352 桶名 bug **活路径确认已修**,
+  本台 08-29T09:13Z 立的逐波复发登记**正式停止**。
+  ⭐ **两根棒结清**:`gh696_winrate_measurable_first_live_read` 逐字
+  `2 of 2 seed(s) had headroom 0 and could not vote yes (seeds 10890,10900) … A promote bar above
+  0/2 is unreachable on this corpus.`;`overchase_new_body_first_reading` —— `overchase` 在臂串内,
+  **登记为已读,读数即波级读数**,⛔ 37id 一条臂**无法归因到单 id**。
+  ⚠️ `games_loaded 111` vs `scored_games 99` = **6 局/台 × 2 台**,与上一轮立案的静默丢局**逐台同量**,
+  **第二次复现,不重开 issue**。
+  **闸 (iii)**:首跑 `exit 2` 且 **`must cover : 2 wave(s) (W64, W63)`** ——⚠️ **上一轮只点一波**,
+  因为**预算快照 7.5h 没动**(仍 `2026-09-10T19:46:38Z`),cutoff 停在 `08:28:38Z`,
+  W63 没滑出、W64 又滑进来。⇒ `--pending 2.20`(两波各 `$1.10` 覆盖档)+ `--planned 1.25`
+  (两台按需:章程半波常数 `$1.075` vs 机时路线 `$1.252`,**取大的申报**,⛔ 两条路线不相乘互校)。
+  `actual $78.253` / `pending $2.200` / `planned $1.250` / `projected $81.703` /
+  `fence $80.00` / `brake $90.00` / **`operative ceiling $85.00`** /
+  **`headroom $3.297 after this wave`** ⇒ `WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes ONLY
+  BECAUSE OF RULING GH#721/director-20260910 … a ruling with an expiry, not a reading.`
+  (`expires 2026-09-30T23:59:00+00:00`;注册表供的,**本台一个 flag 没传**)。
+  **`$80` 仍 `NOT yet crossed`** ⇒ owner 本轮不会因此收到新告警邮件。
+  ⭐ `clock from budget snapshot`(GH #692 epoch 修法继续成立,**未用 `--snapshot-instant`**)+
+  `accrual scope : 17 region(s) read … COMPLETE`(RULING 5)。
+  **发了什么:两台按需补跑机,不是波次。** 授权三条各自独立:① **GH #408 判据是 SIR 码** ——
+  两台被回收机都是 `instance-terminated-no-capacity` ⇒ 补跑**直接 `--on-demand`**;
+  围栏两条都在界内(每粒只补一次,两粒均首次;**每波≤2 台,本轮恰好顶到 2**
+  ⇒ 再多一台被回收就**留给下一波不许连发**)。② **GH #498 豁免闸 (i)**,
+  ⚠️ **仍在动作时点跑了并如实登记 `THROTTLE_AT_LAUNCH_EXIT=3` —— 记录不是遵守**。
+  ③ **闸 (iii) 照常适用**,发波脚本内重跑 `FENCE_AT_LAUNCH_EXIT=0`(GH #469 绑动作)。
+  ⭐⭐ **树钉差点被漏**:`origin/main` 已比 W64 的钉 `34ea0edd` **前进 2 commit 且动了 `bots/`**
+  (`hero_arc_warden.lua` / `mode_team_roam_generic.lua`,`+100−11`)⇒ 不显式钉住,
+  **补跑机测的是另一棵树却挂在 W64 名下**。故显式 `--ref 34ea0edd750b23f9450f0f4bbb351065cb2ab6b4`,
+  脚本第一条语句核验该 sha **可解析且是 `origin/main` 的祖先**(不是则 `exit 9`):
+  `PIN_OK … (ancestor of origin/main ae8b00d5)`。配置与 W64 逐字节同
+  (`--slots 16 --rec-slots 8 --hours 2 --games 12`),两次 `--dry-run` 先行均 `exit 0`、
+  **波次预算闸未打 `REFUSED`**。10891→`i-0bcc97464e10626a7`(us-west-2a)、
+  10892→`i-0409f3a0062f31507`(us-west-2d),**`InstanceLifecycle` 实读 `null` = 按需**
+  (⛔ **run_id 的 `spot_` 前缀是硬写字符串不是证据**);两行已写 `"market":"on-demand"`,
+  `status_code` 待收割读 EC2 **`StateReason.Code`**(按需机没有 SIR)。
+  **闸 (iv)** `RECLAIM_EXIT=0`:`yield : 2 paired seed(s) of 4 machine(s)` /
+  **`attribution: 2 machine(s) reclaimed before the flip`** —— ⭐ **是一个数不是 W63 那种 `0..1` 区间**,
+  因为本轮按 `harvest_notes (b)` 把 SIR `CreateTime`/`UpdateTime` 写回了 `machines[]`;
+  `not blinded` / `NEXT WAVE: spot`。
+  **闸 (ii)** ⚠️ **家族深度已 9 粒(W62 4+W63 3+W64 2)⇒ ≥8,第二肢不再成立**
+  ⇒ **W65 必须靠第一肢**(树漂移**且与臂串交集非空**),**下一轮现查不得继承**。
+  **GH #454 两条腿不触发也报**:SIR 全可读 ⇒ **存活是数不是区间**。
+  10890 `by-user` **0.9442h**、10900 `by-user` **0.8561h**、10891/10892 `no-capacity`
+  **0.1872/0.1867h**(两台 `Status.UpdateTime` **同为 `00:32:26Z`**)。
+  **(乙1) 不触发**:总机时 **2.1742h**,即便取观测带最高 ~`$0.275/h` 也只 `$0.598`,
+  常态带 `$0.513–0.554`(⚠️ **这是费率带上界估计不是已结算账单读数**)。
+  ⭐ **而本波不可能触发它,正是 GH #454 (乙) 立案那句话的又一个实例**:抢占把实测成本压回线下
+  ——本波机时只有常态的 ~58%,**因为两台只活了 11 分钟**。
+  **(乙2) 不触发**:**自终止**机器机时均值 `(0.9442+0.8561)/2 = 0.9001 h/台` ≤ `1.00`;
+  ⛔ 被回收台**不进这个均值**(并进去得 `0.5436`,**正是该条要绕开的向下偏置**)。
+  ⚠️⚠️ **给 GH #403 的一条读数(不收案)**:10891/10892 **同在 us-west-2c、`UpdateTime` 同为
+  `00:32:26Z`** ⇒ **同 AZ 的两台被同一次容量事件在同一秒带走**。
+  ⛔ 按本台 W59 自己的发现,「同 AZ 内相关」**不蕴含**「跨 AZ 独立」,**两个命题不是一回事**。
+  ⭐ 可操作的一点:W64 发波时 2b 报容量不足被**重瞄到 2c**,于是四台跑在 3 个互异 AZ,
+  **而恰好就是挤在一起的那两台一起死了** ⇒ **重瞄把 AZ 分散悄悄削掉一级,削掉的正好是后来出事的那级**。
+  交总监决定要不要变成发波期硬约束;**本台不自行改 harness**。
+  **queue.json 40 条 pending,无一要求本轮发波**:唯一 `APPROVED_CONDITIONAL` 的 `strategy-5b`
+  `director.wave=W6`(**排期过去 62 波**,三个 id 不在当前臂串),其余 `APPROVED*` 均
+  `ROUTED_ARCHIVE_SCAN`(不请求 EC2)⇒ **§4a 无适用对象**。
+  **泄漏零**:发波前 `CERTIFIED ZERO (0 accruing instances account-wide)`;发波后**全账号 17 region**
+  读到**恰好 2 台**全是本轮的,**无第三台**;常驻仍只有 AMI `ami-0a990a26d89c66547`。
+  ⛔ **GH #515/#528 立案理由一字未变**:`budget filters : none`,两台照旧 `project=(untagged)`。
+  **本轮支出**:两台按需补跑(申报 `$1.25`)+ CE `$0.01`(读数 `$78.253` ≥ `$35` 自动复核,
+  得 `78.2534452025` 吻合)。⚠️ **MTD 与上一轮逐位相同、快照时刻一字未动** ⇒ W63/W64 都还没进账。
+  ⚠️ **自检管道坑第 14 次**(连续十四轮同一位置、同为当轮第一条命令),**又是工具拦的不是纪律拦的**;
+  首次前台 `timeout 400` 被切(`SELFCHECK_EXIT=124`),改后台无短 timeout 重跑;
+  ⛔ **未跑完的那一侧本轮不宣称结论**。已看到的部分只登记:`6 anchor(s) checked -- OK`、
+  `FROZEN none`、`promote-atom constraints: OK`、`FINDING: 5 armed id(s) with neither a verdict nor an owed row`。
+  **铁律 11** 未触发任何 `requires approval`,**本轮没有任何等待**。
+  **`bots`/`game`/`tests`/`tools` 本会话一行未改** —— ⛔ §一 的 harness 缺陷**本台不自己改**
+  (先例 GH #33),已交 issue。
+  **交棒**:① ⭐⭐⭐ **下一轮本台 = 收割两台补跑机**(`03:19:5xZ` + 2h 看门狗 ⇒ 约 `05:30Z` 后齐):
+  读 EC2 `StateReason.Code`、存活分钟 + **该台增量账单**(GH #408 三样验收)、`ab`/`ba`/`arm_depth`
+  回填 `rerun[]` **和** verdict、⭐ **合池时两台各给一个子目录**与原四目录一起喂
+  `recover_verdict.py`(⛔ 别 `cp` 平)⇒ 合池后 W64 应达 **4 粒配对种子**;
+  ② ⭐⭐ **harness/总监 —— `launched_at` 缺键**(本轮开 issue,建议 ratchet 增「每台
+  `machines[]` 必须带可解析 `launched_at`」并回扫既有波次文件);
+  ③ ⭐⭐ **总监 —— 重瞄削 AZ 分散**要不要变硬约束;
+  ④ ⭐⭐ **总监/owner —— 九月余量 `$3.297`**,`$85` 之下最多约 **2 波 spot**,
+  且该天花板 **`expires 2026-09-30T23:59:00+00:00`**;#528/#515 仍 open;
+  ⑤ ⭐ **总监 —— 管道坑第 14 次**,**已不是提醒能解决的形状**;
+  ⑥ ⭐ **闸 (ii) 第二肢已失效**,W65 要发得先证树漂移与臂串有交集。
+  **下一轮本台**:① **收割补跑机**;② 闸 (i) 锚点仍 W64 末台 `2026-09-11T00:21:17Z`
+  ⇒ 解锁 `06:21:17Z`(**读工具打的那一行不要抄这个数**);
+  ③ ⚠️ **开工第一条命令重定向+后台+不设短 `timeout`**(第 15 次);
+  ④ 围栏/闸/成本**一律当轮现跑**,本条所有数字作废。
+  详见 `iterations/reports/batch-desk/20260911T031300Z.md` 与
+  `iterations/reports/batch-desk/waves/W64_wave.json`。
+
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
