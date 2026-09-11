@@ -15174,3 +15174,70 @@
     `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`e3864404..df095db1`,**一次过,无 rebase**)。
   - token:`TOKENS total_in=11,586,361 out=62,469 turns=84`
   - 完整报告:`iterations/reports/replay-check/20260911T125909Z.md`
+- **2026-09-11T16:1xZ(本轮):`lf_rescue` 执行侧 = **WORKING**(新语料独立复现 GH #96);
+  而本轮真正的产出是 null 通道里那个**根本不是 TP 分支**的东西。**
+  ```
+  VERIFY id=lf_rescue verdict=WORKING episodes=115
+  ```
+  **无新波次**:W66 本轮 **15:24Z** 才发波(`W66_wave.json:machines[].launch_time` 逐字),
+  开机+首局约 30 分钟 ⇒ 开工时 S3 零对局。⚠️ **这是时序,不得读成「机器没在跑」。**
+  按工作流第 2 条转做「核验记录最少的 id」。**宽扫 85/85 局**(W65 四个 run,
+  `sweep_complete.json` 逐个 `unparseable 0`,暖场 skipped 24,四个 `SWEEP_EXIT=0`);
+  **深查逐帧 7 局**(下限 6 达标)。
+  - ⭐ **开工 `AEV_EXIT=0`:`armed 30 verdict 26 owed-row 4 UNOWED 0` —— UNOWED 归零。**
+    上一轮交棒单第 (2) 条(`aimguard` 等其余 UNOWED)**到此已无对象**,而且**不是被谁做掉的**:
+    是 09-11 的四个 promote(`zusult`/`zusboltdom`/`tpdeathbuy`/`liondrainstop`)把它们带出了 arm 串
+    (34→30)。**那条腿从今天起报的是另一件事,交下去的时候不要当成同一个量。**
+    剩 4 个「有 owed row、无 VERIFY」的 armed id:`blinkflee`(已登记结构性拒绝,排除)/
+    `overchase`(波级读数,不可归因到单 id,排除)/ `tpcommit`(无独立施法可观测量,本轮不取)/
+    **`lf_rescue`(选中:增量门,baseline 腿结构上就是它的 null 通道)**。
+  - **装置本轮一个新检测器都没写**:`lf_rescue_null_channel.collect()` + `tp_attribution.scan()`
+    原样调用(前者本来就按「每局两腿各扫一次」组织)。W65 是**单臂**,该文件的 A/B 臂守卫
+    **结构上不适用** ⇒ ⛔ **本轮不引用任何 `ARMED A−B` 估计量**,只报局内两腿对比。
+    帧表走 `tp_attribution.TL`(`IDX_LOCK=True`)—— 上一轮第 (6) 条「自写帧读件先拿 CLEAN 表」
+    **本轮的落实方式是不自写**。
+  - **读数(4(i-a) 两层都登记,扣掉复活窗后)**:armed **rad 50 / dire 47**(合 97,**1.14 次/局**),
+    baseline **rad 12 / dire 6**(合 18,**0.21 次/局**),**两层同号**。
+    GH #96 在 08-19 二分语料上是 **1.00 vs 0.25** ⇒ **独立复现。**
+    **供给对照两条都两层反号**(每局 TP 总施法 rad 52.83/55.32、dire 58.34/53.68;
+    机会 episode rad 37.04/35.34、dire 35.95/40.76)⇒ 按 4(i-b) 读不出腿级供给差 ⇒ **不是供给伪影**。
+    ⚠️ **阈值敏感性如实记:不全平** —— base 腿 24→32→34→34(1000/1500/2000/3000u),
+    armed 103→104→104→112;**符号稳、比值动**,引比值必须带档位。
+  - ⭐ **归属靠源码排他性不靠差分(铁律 4a)**:34 个 armed id 里能**新增**远程 TP 的只有它 ——
+    `tpgap` 是抑制、`tpcommit` 是落地后的 desire 地板、`tpdeathbuy` 改买卷(已由对照量覆盖)、
+    `suptp`/`midtp`/`teambrain` **不在串里**(两腿同态)。
+    ⚠️ **反过来那一半仍不成立**:baseline 腿那 18 次**是真的救援形状**,
+    `item_tpscroll` 的 consider 里至少四条分支共用 `J.GetNearbyLocationToTp` ⇒ 落点几何分不开消费方
+    (GH #96 §3 的结论,本轮从源码复核)。
+  - ⭐⭐ **头号:检测器把「复活后 0.3 秒从泉水按下的传送」记成了一次救援。**
+    承重帧 `dae390/20260911_095043_slot7` **baseline 腿**:lich t=584.5..586.5 `hp=0.000` 尸体帧 →
+    **t=587.5 在自家泉水 `hp=1.000`** → **ITEM t=587.8** → 591.5 落在 sven 旁,落点误差 **135.4u**;
+    同刻 sven hp=0.232、zuus 433u、距离 12940u ⇒ `gate()` 每条可观测子句都真。
+    **真门一票否决**(`jmz_func.lua:8578` 锚 `max(lastDeadFrameTime, lastRespawnTime)`,0.3 < 15),
+    而 `tp_attribution.gate():194` **锚在 DEATH 事件**上。
+    ⭐ **出厂注释 `jmz_func.lua:8472-8476` 逐字写过为什么锚点必须是复活,举的例子也是 lich 复活后立刻 TP**
+    ⇒ **检测器实现的正是 Lua 在 2026-07-31 明确废掉的那一版语义**。
+    修法仓库里已有:同目录 `tpdefend_events.py:237` 的 `fresh_respawn()` 是对的。
+    血量(**两腿都扣**):复活窗内 precondition-true 施法 armed **24** / base **28**,其中归属的 **6 / 6**。
+  - ⚠️ **本轮一处当场自我更正**:只跑完第一个 run 时被扣的 3 发**全在 baseline 腿**,
+    差点写成「它只夸大 null 通道」;**跑完 85 局是 6/6**。**单 run 读数不是波级读数。**
+    同理 `dt_respawn` 在第一个 run 上看着有 0.3→21.0 的干净间隙(n=3 的假象),
+    全语料是 **0.0→14.2 的连续分布** ⇒ 计数确实依赖 15.0 这个界,**但这个界是出厂代码写死的,不是我选的**。
+  - ⛔ **SILENT 方向买不到,这条要留下来**:门里 `nVsMe` / `WillAllySurviveTpWindow` /
+    `TryTakeTpResponseSlot` / `IsChainedRescue` **以及 `item_tpscroll` 的持有本身**(快照不含 slot 9+,
+    GH #647)全部离线不可观测 ⇒ 「有机会没触发」**永远有一个不可证伪的解释(手里没卷)**。
+    `11/85` 的 SILENT-嫌疑局数**只能当选点,不能当判决**。逐帧查了嫌疑最重的一局
+    (`551784/20260911_095136_slot2`,45 个机会 episode / 0 次施法):t=70.4 drow hp 0.306 被贴脸,
+    **但 `hp<0.35` 只持续 3 帧、随后自己回到 0.465,第二个敌人自己只剩 hp 0.033** ⇒ 不救是对的。
+  - **效果侧(条件 (b) 地界,只登记不判决)**:armed 腿 97 次 LIVE 救援里**队友 15s 内死亡 35 次(36%)**
+    (§4.1 前两帧就是两例);base 腿 10/18,**n=18,两腿之差不写成结论**。
+    方向与 GH #96 §3「门在算一场 4 秒结束的仗,派出的人要走 8 秒」一致。
+  - **AWS**:只读 S3(4 次 `sweep_run.sh` 列举 + 109 个 `.dem` + dumper 缓存命中),**零支出**。
+  - **树上改动**:仅报告 + 本文件;两个探针全落 scratchpad。
+  - **下一轮第一件事**:(1) **W66 收割后按本轮同法取 `tpcommit`** —— 但**先读它的落地可观测量**,
+    没有就别买语料(本轮 `lf_rescue` 之所以能买到,是因为它是增量门);
+    (2) ⭐ **UNOWED 已归零,`a_evidence_owed.py` 那条腿改看「owed-row 有、VERIFY 无」的 4 个 id**;
+    (3) 盯本轮新单 + GH #96 追评 / #747 / #744 / #736;
+    (4) ⛔ 覆盖行只引用 `sweep_complete.json`;(5) ⭐ sweep 一律把 `out_dir` 指到 scratchpad;
+    (6) ⭐ **单 run 读数不是波级读数** —— 跑完全部 run 再下方向性结论(本轮现踩);
+    (7) ⛔ **自检不要套外层 `timeout`**(上一轮逐字写过,本轮还是套了,`EXIT=124`)。
