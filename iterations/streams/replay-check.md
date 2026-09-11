@@ -14739,3 +14739,82 @@
     动态半(GH #124)**未跑,不声称**。`PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`c28f3c86..8078c4c2`)。
   - token:`TOKENS total_in=9,494,756 out=57,127 turns=74`
   - 完整报告:`iterations/reports/replay-check/20260910T220101Z.md`
+- **2026-09-11T00:4x–01:1xZ(本轮)**:**W64 未落地**(00:20:53Z 发波、2h 看门狗,本轮 00:46Z
+  仅 26 分钟;四台 spot 在跑)⇒ 交棒单第 (1) 条 `pullcamp_camp_gap.py` **连续第四轮未执行**,
+  按工作流第 2 条转做第 (2) 条:**取 7 条 UNOWED 里的 `fieldbuy`**。
+  **宽扫 64/64 局**(W63 四个 run,`dem21/` 88 `.dem` − 24 暖场,逐 run `unparseable 0`);
+  **深查 8 局逐帧**(8 个不同对局、覆盖四个 run)+ 同局基线腿阴性对照。
+  ```
+  VERIFY id=fieldbuy verdict=WORKING episodes=785
+  VERIFY id=aimguard verdict=INDETERMINATE episodes=0
+  ```
+  - ⭐⭐ **头号发现:`fieldbuy` 的 (a) 空了 11 波,是因为仪器自检钉在别人的过期前提上。**
+    `fieldbuy_domain.py --selfcheck` **23/24,`FB_SELFCHECK_EXIT=1`**,唯一红逐字
+    `[FAIL] sibling fieldregen IS armed (attribution band required)`;断言体 `:460-461`
+    是 `all(SIBLING_ID in r[2].split(","))`,而 **`fieldregen` 自 W56 起就不在臂串**
+    (逐波 `arm_string`:W55 True → W56/W57/W58/W64 全 False;`fieldbuy` 全程 True)。
+    W59–W63 无 `arm_string` 字段,但 **`arm_md5` 可补:W60–W64 全是
+    `b525d51d4b4957e0e40f22f203aea641`,与 W64 已知 37-id 串逐位相同**;逐局 manifest 复核
+    `cand` 含 `fieldbuy`+`fieldsip`、**不含 `fieldregen`**。它还**每次运行打一行假话**
+    (`report()` 无条件 print `sibling armed in the same wave: fieldregen`)。
+    ⇒ **「有仪器」与「仪器今天跑得动」之间没有任何东西在看**;与上一轮 `tbearly`
+    (普查只问时钟、不问控制流/单位)**同族更普遍的一条**。方向**良性**:`fieldregen`
+    两腿全关 ⇒ EXCL 带在解不存在的问题,读数只偏保守 ⇒ 本轮照跑并采信。
+  - **(a) 读数**(64 局,四条带全登记):EXCL **armed 221/549 = 40.3% vs base 10/599 = 1.7%**;
+    AIRTIGHT **10/56 = 17.9% vs 4/78 = 5.1%**;FIRST 前置对照 **39.5% vs 7.3%**;
+    **14/14 英雄同向无反号**。域**自消耗**(armed eps 785 < base 845 是效果不是坏对照)。
+    ⭐ **归属是纯 `fieldbuy` 不是 `fieldbuy`⊕`fieldsip`**(铁律 4a):`fieldsip` 也 armed 且就坐在
+    `jmz_func.lua:6246` 的返回式里,但打分域要求 `not HasFieldRegenSource`
+    ⇒ `not(false and X)==true` **与它 armed 与否无关**;**诚实边界**:`fieldsip` 另有不在
+    `fieldbuy` 门下的持有侧调用点(`:5862`)能改变**哪些帧入域** ⇒ **eps 计数是合力,
+    条件命中率才是纯 `fieldbuy`**,结论只建立在后者。
+  - **承重帧**:`w63_715cc0/20260910_124848_slot7`(seed 10889,armed=dire)**slardar team3 lvl6**,
+    t0=410.4 hp 0.181 九格无 flask、d(fnt)=3080 → **t=413.4 flask 落 slot 0** → 418.4→419.4
+    hp 0.257→0.322(正在喝)。窗口 410.4→470.4 **整个在 480s 开线下**,`lvl=6` 锁死出厂
+    「Init Healing in Lane」(`botLevel<6`),`laning=True` 锁死 `fieldregen` ⇒ **别的路径都开不了火**。
+    **同局同窗基线腿阴性对照**:team2 `ember_spirit` **141 个连续域帧**(t=204.4→419.4,
+    hp 0.522→0.302)**全局从未拿到 flask**;`bristleback` 40 帧亦从未。**深查 8/8 全部买到。**
+  - ⭐ **第二发现(新缺陷):买回来的药剂 61.1% 先落背包、18.0% 卡死喝不着。**
+    购买块闸 `Item.GetEmptyInventoryAmount>=1` **数九格**,而全族赖以判断有无补给的
+    `J.HasFieldRegenSource` **只读 slots 0..5** ⇒ 背包有空位就买得成,买完那条子句**仍读 false**,
+    bot **留在域里可以再买**,手上那瓶**喝不着**。350 次到手 214 次(61.1%)首见背包,
+    **63 次(18.0%)STUCK**。逐帧:`w63_16a195/20260910_122039_slot8` OD lvl13
+    **t=489.4 落 slot 7,到 511.4 仍在 slot 7**(22s 未挪未喝),其间 **hp 0.530→0.310**;
+    最刺眼 `201fec/…123446_slot5` spiritbreaker lvl23 t=1362.5 拿到 slot 7,**hp 0.536→0.000(死)**。
+    建议钉帧 `--t 489.4 --hero obsidiandestroyer`。⚠️ **不否定 WORKING**:购买确实执行了,
+    背包是**紧接着的下一个缺陷**。另:8.0% 的到手发生在泉水 2000u 环内(**P2 要的正相反**)。
+  - ⛔ **上一轮(21:4xZ)「W63 只有 11 个 `.dem`」是读错前缀,本组自己的缺陷。**
+    真语料在 **`dem21/<run_id>/` 共 88 个**(24/16/24/24);`replays/` 只是**每 run 约 3 个的
+    部分镜像**(11 = 12.5%)。⇒ 那条「有 analysis 不等于有录像」的可迁移教训**是假的**,
+    且那一轮的「深查 11/11、**完整不是抽样**」实际是 **11/88 抽样**。
+    **工具一直是对的**:`sweep_run.sh:48-57` 自带该回退并注释了原因;**那一轮绕过工具手敲 `ls` 才踩中**。
+    ⭐ 可迁移:**手敲一条 `aws s3 ls` 去替代已处理过该形状的脚本,是把脚本里的学费重交一遍**
+    (与批测台本轮 `sort -k1,2` 同族)。**对 `tbearly` 判决无影响**(那是出厂 Lua 的算术证明),
+    只更正覆盖陈述。
+  - **`aimguard` 结构性拒绝(不占判决位)**:门单向(armed 只能扣火),分歧集需
+    `CanBeAttacked([2])` 为假,而该谓词读 `IsAlive/CanBeSeen/IsAttackImmune/IsInvulnerable`+7 modifier;
+    **dumper creep 流每条只有 `t,team,x,y`**(`dumper/main.go:14` schema + `creepSnap`)且**不带实体身份**
+    ⇒ 连「谁是 [1] 谁是 [2]」都恢复不出来。与 `campvoid`/TP 族(GH #647)同族。
+    `sb_neutral_charge_attrib.py` 只分 **分支 B vs C,不回答 (a)**。⛔ 不另立单(#718 立案句)。
+  - **选点纪律兑现**:⚠️ **交棒单把 `abilanc`/`fieldbuy` 记成「自陈 NOT-observable」是误读** ——
+    头部确实列了三条不可观测合取项,但**紧接着写明它们只能 SUPPRESS**,打分域是引擎域**超集**,
+    (a) 照买。**照字面继承会把本轮唯一买得到的 id 排掉**,这正是「先验证再买语料」的那一下。
+  - **条件 (a) 台账**:`fieldbuy` 取得判决 ⇒ **UNOWED 7 → 6**(开工 `a-evidence-owed` 腿逐字
+    `FINDING: 7 armed id(s) with neither a verdict nor an owed row.`)。
+    ⛔ **不补 `owed_executions.json` 登记行** —— 本轮认领并交付了判决。
+  - **树上改动**:**`bots`/`game` 一行未改;`tools/` 与 `tests/` 一行未改**(分析脚本落 scratchpad)。
+  - **AWS**:只读 S3(3 次 `ls` + 1 次递归清单 + 88 `.dem` + dumper 缓存命中),
+    **零 EC2、零发波、零 CE、零支出**。
+  - **自检**:⭐ **单独跑且不加外层 `timeout`**(上一轮 124 是自己掐的)。`SELFCHECK_EXIT=3`、
+    `legs run 11`、`FINDINGS (exit 3): cadence queue-rulings owed-executions a-evidence-owed
+    trunk-red(python) trunk-red(lua)`。⚠️ **开工第一条命令第 15 次撞管道拒绝门**
+    (`REFUSED: ... stdout is a pipe; exit 2, nothing checked.`)。
+    ⚠️ 另读到 `UNCERTIFIABLE: W64 machine 0 (seed 10890) has no launched_at`(四台都缺,
+    顶层有)⇒ 闸 (i) 锚读不出;属批测台既有形状,**只登记不立案**。trunk 红两类**已有单子**
+    (#718/#650 族、#728),不开新单。
+  - **下一轮第一件事**:(1) ⭐ W64 应已落地(~02:20Z 后),第一条命令仍是 `pullcamp_camp_gap.py`
+    (**连续四轮未执行**);(2) **`abilanc`** —— UNOWED 只剩 6 条,它是除 `fieldbuy` 外唯一
+    头部自陈**正向可观测**的,**先跑 `--selfcheck` 读退出码**(本轮教训:在树上 ≠ 跑得动);
+    (3) 盯本轮三张单 + #700/#718/#728;(4) ⛔ **覆盖行只引用 `sweep_complete.json`,不手敲 `ls`**。
+  - token:`TOKENS total_in=7,433,726 out=52,184 turns=57`
+  - 完整报告:`iterations/reports/replay-check/20260911T010816Z.md`
