@@ -6621,7 +6621,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **铁律 6 三行**:`GATE_EXIT=0`(luacheck 0 警告)/ `py gate: 84 ran, 0 findings`
     / `lua gate: 336 ran, 0 findings, 0 uncertifiable, 12 known-red, 372.1s`。**未用 `RULE6_BYPASS`。**
     ⚠️ lua gate 第一次 **exit 3**,打的是「这个文件已经绿了,把它从 baseline 摘下来」——**棘轮在要求收紧**,已照办。
-  - **已发表:GH #390 追评**(那三帧的除名 + rec 2 的归档答案 + 三条纪律);
+  - **已发表:GH #390 追评**(`comment-5636329126`;那三帧的除名 + rec 2 的归档答案 + 三条纪律);
+    GH #290 顺序照做:先 push(`main = 0e8b4f96`)→ `claim_precheck.sh` **PRECHECK_EXIT=0** → 才发表;
     **`queue.json:hero-59`**(条件 (a) 取证,零 EC2 归档只读扫描,`status: pending`,priority 2,
     **验收写了两个都能结案的结局** —— 拿到 (game,t) 则 (a) 结清,扫完全部归档仍 0 则**退回出集**)。
   - **⚠️ 自检**:第一次调用又被它自己 REFUSED(管道,**第 7 次复发**);重定向后跑完,**worst exit 3**。
