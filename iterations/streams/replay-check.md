@@ -14929,8 +14929,8 @@
     (GH #117 第二条同族)。⭐ 第三个形状:`82390f/034913_slot2` **pos5 lion 用 Impale + 800 右键
     把离任何线 2918u 的营地自己清了就走 —— 零拖拽零连线,掉血 0pp**
     ⇒ ⚠️ **「掉血」在这一族上不是缺陷代理:最贵的两次是连上的那档,最便宜的是结构上连不上的那档,方向相反。**
-    **追评 GH #712,不另开单**(它问的正是 `PULL_CAMP_LANE_GAP=1200` 有没有被语料证成)。
-  - ⭐ **GH #739 读数更正 —— 交棒单第 (2) 条的答案推翻了它自己的前提。**
+    **追评 GH #712(comment `5630843292`),不另开单**(它问的正是 `PULL_CAMP_LANE_GAP=1200` 有没有被语料证成)。
+  - ⭐ **GH #739 读数更正(comment `5630829515`) —— 交棒单第 (2) 条的答案推翻了它自己的前提。**
     原话是「补齐可把 n 从 2 加到 4」;**补齐之后不能这么写**:两个欠帧**逐帧看完都不是缺陷**
     (`53db33/002248_slot7` lich 读条期间 hp **1.00→1.00**、`cr<400=0`、零 DAMAGE,他**先脱离回满才读条**;
     `53db33/010148_slot2` earthshaker 读条期间 **0.97→1.00 还在涨**,离营地约 1100u)。
@@ -14948,7 +14948,7 @@
     探针**先过正向对照再采信**(`POSITIVE_CONTROL: PASS`,#739 那条 `inflictor` 字段坑);
     对照表**只列 53db33 那一帧**,因为第二帧长在未扫的 `452004` 里 ——
     **把语料缺席列成 FAIL 会教读者忽略横幅**。
-  - ⭐ **新开 1 条 [harness]**:`tests/test_selfcheck_lua_leg.py:479` 的
+  - ⭐ **新开 1 条 [harness] GH #744**:`tests/test_selfcheck_lua_leg.py:479` 的
     `shutil.copytree(REPO, ..., ignore=ignore_patterns(".git"))` **不排除 gitignored 暂存树**
     ⇒ 在录像组容器上白拷 `.sweep_out/` **实测 2.0 GB**(该文件注释写的前提是「整棵树 ~29MB」,
     **差两个数量级**),且 `sweep_run.sh` 边扫边删 `.dem` 时**并发直接抛异常把腿顶红**,
@@ -14974,7 +14974,14 @@
   - **下一轮第一件事**:(1) **`abilanc`**(UNOWED 只剩 5,连续两轮欠着),**先跑 `--selfcheck` 读退出码**;
     (2) **`pulldrag`** 本轮判 INDETERMINATE 但已有 **11 个 drag episode** 在新语料里 ——
     把 drag 的**落点**从 `pullcamp` 的执行体里单独归属出来(铁律 4a),它是现成的下一个 (a) 证据;
-    (3) 盯 GH #712 / #739 / 本轮新开的 [harness] 单;
+    (3) 盯 GH #712 / #739 / #744;
     (4) ⛔ 覆盖行只引用 `sweep_complete.json`,不手敲 `aws s3 ls`;
-    (5) ⚠️ **跑自检前先确认没有 sweep 在并发**(§4 那条单修好之前)。
+    (5) ⚠️ **跑自检前先确认没有 sweep 在并发**(GH #744 修好之前)。
+  - **铁律 6**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0` /
+    `py gate: 95 ran, 0 findings, 0 uncertifiable, 43.2s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
+    `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=1` 被拒 ⇒ rebase(`8429009f..97371666`)⇒
+    重试 `PUSH_MAIN_EXIT=0`(`97371666..ccf4e572`)。两份草稿 `claim_precheck.sh` 各 `EXIT=0` / `clean`。
+  - token:`TOKENS total_in=10,484,213 out=62,511 turns=80`
   - 完整报告:`iterations/reports/replay-check/20260911T070109Z.md`
