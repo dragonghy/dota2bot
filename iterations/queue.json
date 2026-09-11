@@ -2376,6 +2376,16 @@
         "ref": "iterations/streams/test_set.md §GU.4; iterations/OWNER_PRIORITIES.md P4.2",
         "note": "⛔ 不是对这条杠杆的否定,也不算掉棒。P4.2 逐字:入集冻结,新 id 一律不入集(**搭车也不行**),直到 armed 集 ≤ 20;冻结期收到入集提议的唯一合法裁定是 FROZEN-HOLD。本行虽然写作「条件 (a) 执行核验、搭车、零 AWS 增量」,**实质仍是入集** —— 三条支路的 armed/baseline 差要出现,`glyphany` 必须进臂串,而那正是 P4.2 冻的那一步。⭐ 请求本身没有问题,而且它把最难的一半**预先做完了**:它逐条量出了归档扫描买不到 (a) 的三重阻断(`GetNearbyLaneCreeps` 不在任何 fixture spec 上 ⇒ 141/141 主体答空表;兵采样条目 `{team,x,y,dt}` 没有名字/血量/modifier ⇒ 圣坛谓词无处可读,**只修第一条会把一句诚实的『看不见』变成一句自信的、错的『没有兵被保护过』**;三条支路都坐在正向 mode 闸后而 mock 的 `GetActiveMode()` 答 0)。⇒ **本裁定明确背书『不要按 ROUTED_ARCHIVE_SCAN 路由』**:那条路已经量过是死的,把它当便宜替代品会重新导出一个错的零。解冻条件 = armed ≤ 20。**本轮 34 → 32**(两条 promote,§GU),这条请求的解冻沿着同一个数字前进。接力棒不掉:已登记 `iterations/owed_executions.json:glyphany_readmission_on_thaw`。"
       }
+    },
+    {
+      "id": "hero-58",
+      "stream": "hero",
+      "bundle": "lionraoe + lionsplash -- PROMOTE-TIME ATOM。turbo-only soak candidates,两个都**未 armed**(P4.2 冻结期内本条不请求入集)。",
+      "seeds": [],
+      "priority": 3,
+      "question": "**零 EC2 归档只读扫描,与 hero-2/30..49 同形,可并进同一次遍历。** 给 Lion `X.ConsiderR` 的 **A 杖 AoE 出口**量域。⛔ **先读这一段,否则这条腿一定读成 0**:该出口在**出货默认下是死的**,而且是**两个互相独立的原因**,只有一个有 id —— (i) `nRadius = X.GetAbilityRSplashRadius()` 读的是 `splash_radius_scepter`,这个 key 在本 patch 的 `lion_finger_of_death` KV 里**根本不存在**(活的 key 是 `splash_radius`,**无 base**,`special_bonus_scepter = 325`)⇒ 读 0 ⇒ 内层 `J.IsInRange( npcEnemy, nEnemy, 0 )` 只数得到与 npcEnemy 重合的单位 ⇒ `nAoeCount <= 1`,而接受下限是 3(GH #162,id = `lionsplash`);(ii) `bot:HasScepter()`。**所以扫描必须只统计 Lion 真的持 A 杖的局/帧,并且要把 (i) 当成已知的出货事实** —— 归档录像里出货腿在这条支路上**一次都不会开火**,那个 0 是闸的不是游戏的。**要三列读数,分母一律带上(Lion 局数 / Lion 持杖帧数)**:(1) **持杖 Lion 帧中,有多少帧存在一个候选满足出口的全部前置**(在 `nInBonusEnemyList` 里、`J.IsInRange(bot, e, nCastRange+150)`、非魔免非无敌),且该候选 325 溅射内的敌方英雄数 **>= 3** —— 这是「若 `lionsplash` 被 arm,这条支路会开火几次」,也就是这一对 id 的**共同域**;(2) 其中 **最大计数那个候选 `GetUnitToUnitDistance(bot, target) > nCastRange` 的占比**,并**按超出量分桶**(0-25 / 25-75 / 75-150u,**别只报均值**,铁律 4(ii))—— 这一列就是 `lionraoe` 自己的域;(3) ⭐ **这一对独有的一列:域 (2) 的那些帧里,退而求其次的**够得着的**候选的 325 计数是多少** —— 因为本 lever 是 **frame 子集而非 (frame,target) 子集**,armed 之后可能 finger 另一个人,(3) 就是「换掉的那个目标差多少」。没有 (3),负读数分不清是「该走那 150 单位」还是「更近那团本来就更差」。",
+      "acceptance": "按 hero 组其他 pre-flight 的形状给 N frames / M episodes / K games,并给至少一个具体的 (game, t) —— 最想要的是「持 A 杖 + 存在 325 内 >=3 人的候选 + 该候选在 `nCastRange` 外」那一帧,好让本组用 `make_fixture.py` 把它钉成 fixture。**本仓语料今天给不出这一帧**,三个理由都已量过并写成会红的断言(`tests/test_lion_ult_aoe_reach.lua` §2):持杖 Lion 帧 **0/42**、两个 splash key 读数都是 **0**、语料里 325 内最密的敌人团是 **2**(下限是 3)。⛔ **促成规则:这两个 id 永远一起 arm、一起判,绝不单独 arm 任何一个。** `lionsplash` 单独 arm 会复活一条**没有 reach 谓词**的支路 —— 一次读数里同时买到一个放宽和一次送死,而且分不开(与 hero-49 的 `lionqkill`+`lionqdmg` 同形,同一条理由)。依赖**不写进代码**:写成 `IsSoakCandidate('lionraoe') and IsSoakCandidate('lionsplash')` 会在任一 id 被 promote 的当天冻成 FALSE 而 `check_armed_wiring.py` 仍报 WIRED,那是 pullcad 陷阱。",
+      "status": "pending"
     }
   ],
   "done": [

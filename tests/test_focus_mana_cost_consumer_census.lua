@@ -412,22 +412,43 @@ tests['[4] 16 of 90 live-Q focus-hero frames sit where the ladder flips a gate']
     -- and this new flip is one more member of exactly the set §2 exists to say
     -- means nothing behaviourally. It is still recorded, because the arithmetic
     -- is what it is and hiding it would be the §2 trap in reverse.
-    local EXPECT = {
+    -- ⭐ REWRITTEN 2026-09-11 (hero, backlog -145).  Every number below was an
+    -- `==` pin on a CORPUS SIZE, so any group that froze a frame reddened this
+    -- file -- the GH #624 shape, and the reason this file sat in
+    -- tools/agent/lua_gate_manifest.json's known-red list.  Four rounds re-took
+    -- the numbers instead of changing their direction, which is re-burying the
+    -- same mine; the four sibling rewrites to copy are
+    -- test_cast_ring_mirror_discipline.lua, test_local_assign_discipline.lua,
+    -- test_zuus_jump_escape_any.lua §1 and test_axe_battle_hunger_fight_reach.lua.
+    --
+    -- WHAT IS AND IS NOT GIVEN UP.  These are now FLOORS.  The direction that
+    -- matters is DOWN: a shrinking domain means the sweep stopped reaching a
+    -- hero, and then the ratio this section is about would be computed over
+    -- nothing.  Growth is ordinary corpus drift and is exactly what the `==`
+    -- pins mistook for a defect.  The section's actual CONCLUSION -- that the
+    -- real ladder flips a live gate on a non-trivial share of live-Q frames --
+    -- is the `nEither` floor below, and it gets STRONGER as the corpus grows.
+    -- Readings when this was rewritten (2026-09-11), quote them from here and do
+    -- NOT re-pin them: axe 26/5/3/6, zuus 42/4/3/6, lion 24/3/2/4,
+    -- crystal_maiden 50/10/10/15, skeleton_king 31/4/5/5.
+    local FLOOR = {
         axe            = { n = 26, farm = 5, spam = 3, either = 6 },
         zuus           = { n = 42, farm = 4, spam = 3, either = 6 },
         lion           = { n = 24, farm = 3, spam = 2, either = 4 },
         crystal_maiden = { n = 50, farm = 10, spam = 10, either = 15 },
         skeleton_king  = { n = 31, farm = 4, spam = 5, either = 5 },
     }
-    for sHero, want in pairs(EXPECT) do
+    for sHero, want in pairs(FLOOR) do
         local got = per[sHero] or { n = 0, farm = 0, spam = 0, either = 0 }
-        assert(got.n == want.n and got.farm == want.farm and got.spam == want.spam
-            and got.either == want.either,
-            sHero .. ': corpus flip census moved -- expected n=' .. want.n
+        assert(got.n >= want.n and got.farm >= want.farm and got.spam >= want.spam
+            and got.either >= want.either,
+            sHero .. ': the flip census SHRANK -- floors n=' .. want.n
                 .. ' farm=' .. want.farm .. ' spam=' .. want.spam
                 .. ' either=' .. want.either .. ', got n=' .. got.n .. ' farm='
                 .. got.farm .. ' spam=' .. got.spam .. ' either=' .. got.either
-                .. '. Fixtures were added or the ladder moved; re-derive.')
+                .. '. A drop means the sweep stopped reaching this hero (a lost '
+                .. 'fixture, a ladder that went silent, or a slot-0 rename), not '
+                .. 'that the corpus grew. Re-derive before lowering a floor.')
     end
     local nLive, nEither = 0, 0
     for sHero, s in pairs(per) do
@@ -437,17 +458,29 @@ tests['[4] 16 of 90 live-Q focus-hero frames sit where the ladder flips a gate']
     -- 90 -> 92 on 2026-09-07 with the `zusultstrand` creation frame, which carries
     -- a live Zeus and a live Lion (both LIVE_Q); its CM is not counted here. The
     -- 16 flips are again unchanged -- neither of those two sits in the band.
-    assert(nLive == 92 and nEither == 16,
-        'live-Q total: expected 16 flips over 92 frames, got ' .. nEither
-            .. ' over ' .. nLive)
+    -- Floors, for the reason above.  `nEither` is the one that carries the
+    -- section's conclusion; `nLive` is a corpus size and only proves the ratio
+    -- is computed over something.  Readings at the rewrite: 16 flips / 92 frames.
+    assert(nLive >= 92, 'the live-Q frame supply SHRANK to ' .. nLive
+        .. ' (floor 92) -- the ratio this section is about is computed over it')
+    assert(nEither >= 16, 'the live-Q flip count SHRANK to ' .. nEither .. ' of '
+        .. nLive .. ' frames (floor 16). This is the section\'s CONCLUSION -- that '
+        .. 'the real ladder flips a live gate on a non-trivial share of frames -- '
+        .. 'so a drop here is the one movement that actually falsifies it.')
     -- The CM half of the same table is the §2 point in numbers: fourteen frames
     -- whose arithmetic says "flip" and whose code says "nobody reads this".
     -- 14 -> 15 on 2026-09-07: the `zusultstrand` creation frame's CM sits in the
     -- band (294/831 = 0.3538 before, 0.1432 after Crystal Nova's rank-4 175).
     -- One more frame whose arithmetic says "flip" and whose code says "nobody
     -- reads this" -- the sentence below is unchanged, only its count.
-    assert(per['crystal_maiden'].either == 15,
-        'the CM rows must stay counted and stay void -- see §2')
+    -- A floor, not a pin: the claim is that CM rows keep being COUNTED while
+    -- staying behaviourally void, and one row is enough to keep §2 owning
+    -- something.  15 at the rewrite.
+    assert(per['crystal_maiden'].either >= 1,
+        'no CM row sits in the flip band any more (was 15). The CM half of this '
+        .. 'table is what §2 is about -- frames whose arithmetic says "flip" and '
+        .. 'whose code says "nobody reads this" -- and with zero of them §2 owns '
+        .. 'nothing.')
 end
 
 tests['[5] negative control: with the pre-ladder price of 0 the flip band is empty'] = function()
@@ -459,16 +492,32 @@ tests['[5] negative control: with the pre-ladder price of 0 the flip band is emp
                 .. ' -- the §4 count would not be attributable to c386d5f3')
     end
     -- and the sweep still SAW the frames, so the zero above is a reading and not
-    -- an empty loop
-    local nSeen = 0
+    -- an empty loop.
+    --
+    -- ⭐ REWRITTEN 2026-09-11 (hero, backlog -145).  This used to read
+    -- `nSeen == 173`, and that pin was the SECOND known-red case in this file:
+    -- the number is a corpus size, so it moved every time any group froze a
+    -- frame carrying a focus hero, and two rounds re-took it (170 -> 173) rather
+    -- than fixing its direction.
+    --
+    -- The claim was never about 173.  It is "the control swept the SAME frames
+    -- §4 swept", and that is a RELATION between the two sweeps, not a constant --
+    -- so it is now written as one.  This is strictly stronger than the pin: a
+    -- pin is satisfied by any two sweeps that both happen to total 173, while
+    -- the relation catches a control that silently visits a different set (an
+    -- override that also changes which frames are admitted, say), which is the
+    -- only way this control could lie.  And it is immune to corpus growth,
+    -- because both sides grow together.
+    local nSeen, nShipped = 0, 0
     for _, s in pairs(per) do nSeen = nSeen + s.n end
-    -- 170 -> 173 on 2026-09-07 (replay-check): the `zusultstrand` creation frame
-    -- carries three live focus heroes with a trained slot-0 ability (zuus, lion,
-    -- crystal_maiden), so the same +1/+1/+1 that moved §4's three denominators
-    -- moves this sweep's total. The control's own claim -- every `either` is 0 at
-    -- a zero price -- is untouched; only the "and it really saw the frames" number
-    -- moved.
-    assert(nSeen == 173, 'the control must sweep the same 173 frames, saw ' .. nSeen)
+    for _, s in pairs(corpus_flips(nil)) do nShipped = nShipped + s.n end
+    assert(nSeen == nShipped, 'the zero-price control swept ' .. nSeen
+        .. ' frames while the real-ladder sweep in §4 swept ' .. nShipped
+        .. '. The override may only change the PRICE; if it also changes which '
+        .. 'frames are admitted, §5 is a control over a different population and '
+        .. 'the `either == 0` above is not attributable to c386d5f3.')
+    assert(nSeen >= 173, 'the control swept ' .. nSeen .. ' frames, floor 173 -- '
+        .. 'an empty sweep and a clean sweep produce the same zero above')
 end
 
 -- ---------------------------------------------------------------------------

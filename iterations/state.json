@@ -8026,5 +8026,25 @@
     "next": "(1) ⛔ **不提入集**(P4.2 冻结未解),不催任何未答裁定。(2) **验收路径已由 GH #740 给定**:一份垂距读数,说明上限落在哪、依据的连上次数与垂距、2336/2907 那一档不再被选中 —— 本条目 `readings` 就是那份读数的本地半,**波次半仍欠**。(3) `pullcamp`+`pulldrag` 的重新入集仍由 `owed_executions.json:pullcamp_atom_readmission` 那一棒管,本 id **不代它提**,但它若成波,本 id 是该波天然的同行候选。(4) ⛔ `pulldrag` 永远不许单独提(单独 armed 结构上恒 no-op)。",
     "published": "GH #740 追评(本轮);报告 `iterations/reports/strategy/<本轮时间戳>.md`。",
     "iron_rule_6": "见本轮报告「铁律 6 三条腿读数」节。"
+  },
+  "lionraoe_20260911": {
+    "owner": "hero",
+    "date": "2026-09-11T12:30Z",
+    "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
+    "backlog_item": "hero -149(P4.4 (i):工作单元主体是一个 bots/ 行为改动;量具只占附带一条 —— 那一条是 `-145` 最后欠的 `test_focus_mana_cost_consumer_census.lua`,本轮已清并退出 known-red 14→13)。[hero] open issue 逐条看过:#745/#741/#732/#725/#720/#716/#714/#708 全是已 gated 落地、等裁定或等波次的发现,没有一条可认领。",
+    "headline": "⭐ **X.ConsiderR 的第三条 reach 约定,`lionrreach` 点了名却留给了别的 id —— 而那条把它排除的理由,恰恰是它该有自己 id 的理由。** 出货的 A 杖 AoE 出口用 `J.IsInRange( bot, npcEnemy, nCastRange + 150 )` 挑候选,然后对它下 `ActionQueue_UseAbilityOnEntity`:超出施法距离的指令**先是一条移动指令**,而 `X.SkillsComplement` 在排完 R 之后立刻 return ⇒ 只要 desire 还在,Q/W/E 一帧都不被考虑。`lionrreach` 的注释写着这条支路「是价值支路不是击杀主张」所以不收 —— **击杀主张至少拿这趟走换来了点东西;走 150 单位去凑一个溅射,换来的是一个可以继续走的目标身上的溅射。**",
+    "defect": "`bots/BotLib/hero_lion.lua` X.ConsiderR 对一个技能用了三套 reach 约定,其中两套已经过 `lionrreach`(X.lion_ShouldCommitUltKill),第三套(A 杖 AoE 出口的 `nCastRange + 150`)没有任何 reach 谓词。",
+    "gate": "lionraoe(NEW soak id,turbo-only,**未 armed**;**STANDALONE**)。⛔ **它不与 `lionsplash` 合取,这是刻意的**:写成 `IsSoakCandidate('lionraoe') and IsSoakCandidate('lionsplash')` 会在任一 id 被 promote 的当天冻成 FALSE,而 `check_armed_wiring.py` 仍然报 WIRED —— 那是 pullcad 陷阱。依赖登记成 **queue.json 的 promote-time ATOM**,并由 `tests/test_lion_ult_aoe_reach.lua` §5 断言谓词体里不出现 `lionsplash`(按**出现次数**数、且**先剥注释**;第一次跑时正是这条把本 id 自己 header 里那句警告文字读成了第二个 gate site)。",
+    "bots_lua_changed": "bots/BotLib/hero_lion.lua —— 新 helper `X.lion_IsUltAoeTargetInReach( hBot, hTarget, nCastRange, bShippedInReach )`;A 杖 AoE 出口的候选过滤改为对它的调用,出货谓词逐字作为 `bShippedInReach` 传入。另:改正 `X.lion_ShouldCashUltAtWeakest` header 里一句已发表的假命题(见 `correction`)。",
+    "change": "armed 时把 A 杖 AoE 出口的候选收窄到真正够得着的那些(nCastRange,不是 nCastRange+150)。",
+    "direction": "**NARROWING,且是 FRAME 的子集、不是 (frame,target) 对的子集 —— 这两句不许合并。** armed 腿只会从 max 搜索里**移走**候选 ⇒ 每一帧 `nMaxAoeCount(armed) <= nMaxAoeCount(shipped)`;出口的接受判据(`>=4`,或 `>=3` 配同一个未变的 nHP)对该计数**单调递增** ⇒ `armed 开火 ⇒ shipped 开火`。**但动作可以不同**:丢掉够不着的那个最大值之后,分支可能落到一个更近、计数更小的候选上 ⇒ 同一帧上 armed 可能 finger **另一个**英雄。负读数只能读作「那些 150 单位的走位值得走」或「更近那团是更差的一团」,**永远不能读作这个 lever 凭空加了一次施法**。",
+    "domain": "⛔ **决策离线不可驱动,三个互相独立的原因,全部是量出来的不是猜的**(`tests/test_lion_ult_aoe_reach.lua` §2,语料 = `tests/fixtures` + `tests/frames` 共 141 帧,存活 Lion **42** 帧):(1) **没有任何一帧给 Lion A 杖(0/42)** —— 而本文件四个 buy list **全部**带 `item_ultimate_scepter`,所以真实 Turbo 局里这是活路径;(2) 两个 splash key 读数都是 **0**(`splash_radius` 无 base、`splash_radius_scepter` 这个 key 根本不存在 —— GH #162);(3) 语料里 325 溅射半径内**最密的敌人团是 2**,低于出口自己的下限 3。**三个 0 都写成了带成因的断言**,哪天语料长出 A 杖或三人团,这个文件会自己红并点名(GH #741 纪律)。✅ **但谓词层的域非空,而且 §4 在真实帧上零注入地驱动它**:44 个 (frame,enemy) 对里 **4 个**落在 band (900,1050] 上、分布在 **4 个不同帧**上,armed 与 shipped 在这 4 对上答得不一样。",
+    "why_land_it_now": "**这是 `lionqkill` 那段论证的逐字复用,换了一对 id。** 该支路在出货默认下死于**两个互相独立的原因**,而只有一个有 id:(i) nRadius==0(GH #162,id = `lionsplash`);(ii) `HasScepter()`。`lionsplash` 只修 (i)。**单独 arm `lionsplash` 会复活一条没有 reach 谓词的支路 —— 一次读数里同时买到一个放宽和一次送死,而且分不开。** 本项先落地,这一对才读成一个问题。",
+    "correction": "⭐ **改正一句已发表、且在写下时就已被同一棵树证伪的话。** `X.lion_ShouldCashUltAtWeakest` 的 header 原本以「What the `or J.IsDyingUnderAttack( bot )` disjunct actually buys is entry to the BLOCK, whose only reachable exit is the scepter AoE branch below.」收尾。**那句是假的**:GH #162 已经证明 A 杖 AoE 支路在出货默认下**同样不可达**(nRadius==0 ⇒ 内层 `J.IsInRange(a,b,0)` 只能数到与 npcEnemy 重合的单位 ⇒ nAoeCount<=1,而下限是 3;语料上**重合对数 = 0**,§1.2 量的就是这个)。⇒ **同一个函数里相隔三十行的两份闭式死证,各自把对方那条出口当成活的。** 改正后的陈述比任何一份都强:**出货默认下这个 团战 block 根本没有可达出口**,于是 `lionultcash` 是唯一能给它一条出口的已登记 id —— 它当初为之写下的那盘录像(231244 t=10:50,一个握着满 CD 大招死掉的 Lion)**在任何别的 armed 状态下都不可能被这个 block 修好**。这是 `lionultcash` 的 (b)/(c) 论据,不是它的脚注。",
+    "local_validation": "`tests/test_lion_ult_aoe_reach.lua`,**8 tests / 0 failures**。变异台 **7/7 全红**:M1 拆掉 gate(§3 §5 红)、M2 armed 腿不收窄(§4 红)、M3 出口不再路由过 helper(§5 红)、M4 把 `lionsplash` 合取进谓词(§4 §5 红)、M5 改正块不再称那句为假(§1.4 红)、M6 出货 splash 读数变非 0(§1.1 红)、M7 AoE 下限降到 1(§1.3 红)。⭐ **头两次跑是自己的断言抓自己的文档**:§1.4 把改正块里**引用**的那句假命题当成假命题复活了,§5 把 header 里那句「不要写成 `IsSoakCandidate('lionraoe') and IsSoakCandidate('lionsplash')`」的警告读成了**第二个 gate site**。⇒ 修法不是改措辞:**gate site 普查必须先剥注释再数**(`code_only`),而「这句话没了」这种断言在**引用它的改正块存在时**是错的断言,应改成「它只剩一处出现,且那一处在称它为假的那段里」。",
+    "tests": "tests/test_lion_ult_aoe_reach.lua(新,8/0)",
+    "admission": "**不提入集**(P4.2 冻结期,armed 集仍 >20)。促成时按 **ATOM** 处理:`lionraoe` + `lionsplash` 一起,永不单独 arm 任何一个 —— 见 iterations/queue.json。",
+    "issue": "见本轮报告;MCP 可用则开 [hero] issue,不可用则留在报告里下轮补。",
+    "iron_rule_6": "见本轮报告的闸读数三行。"
   }
 }

@@ -1352,8 +1352,15 @@ function X.ConsiderR()
 			local nBestAoeEnemy = nil
 			for _, npcEnemy in pairs( nInBonusEnemyList )
 			do
+				-- [lionraoe] gate off this is `J.IsInRange( bot, npcEnemy,
+				-- nCastRange + 150 )`, byte for byte: the shipped answer is
+				-- computed here and handed in, and the armed leg can only turn
+				-- its true into a false.  See X.lion_IsUltAoeTargetInReach --
+				-- the THIRD reach convention in this function, the one
+				-- X.lion_ShouldCommitUltKill named and left for its own id.
 				if J.IsValidHero( npcEnemy )
-					and J.IsInRange( bot, npcEnemy, nCastRange + 150 )
+					and X.lion_IsUltAoeTargetInReach( bot, npcEnemy, nCastRange,
+							J.IsInRange( bot, npcEnemy, nCastRange + 150 ) )
 					and not npcEnemy:IsMagicImmune()
 					and not npcEnemy:IsInvulnerable()
 				then
@@ -1564,9 +1571,26 @@ end
 ---
 --- ⇒ The comment above the block -- "[ultcash / freehunt#1] a DYING lion cashes
 --- the finger out even at ult level 1" -- describes something this exit has
---- never done.  What the `or J.IsDyingUnderAttack( bot )` disjunct actually
---- buys is entry to the BLOCK, whose only reachable exit is the scepter AoE
---- branch below.
+--- never done.
+---
+--- ⭐ CORRECTED 2026-09-11 (hero).  This paragraph used to end "What the
+--- `or J.IsDyingUnderAttack( bot )` disjunct actually buys is entry to the
+--- BLOCK, whose only reachable exit is the scepter AoE branch below."  THAT
+--- SENTENCE IS FALSE, and it was already falsified by a fact landed in this
+--- same tree when it was written: GH #162 (`lionsplash`) proved the scepter AoE
+--- branch is ALSO unreachable on shipped defaults, because
+--- X.GetAbilityRSplashRadius reads the absent key `splash_radius_scepter`, so
+--- `nRadius` is 0, so that branch's own `nAoeCount` can never exceed 1 against a
+--- test of `>= 3`.  Two closed-form deadness proofs, thirty lines apart, in one
+--- function -- and each was written as if the other exit were the live one.
+--- The corrected statement is STRONGER than either: on shipped defaults this
+--- block has NO reachable exit at all, so the `or J.IsDyingUnderAttack( bot )`
+--- disjunct buys entry to a dead end, and `lionultcash` is the only registered
+--- id that can give the block an exit.  That is the (b)/(c) case for this id,
+--- not a footnote to it: the watched replay it was written for (231244 t=10:50,
+--- a Lion who died holding a ready finger) cannot be fixed by this block in any
+--- other armed state.  Pinned in closed form by
+--- tests/test_lion_ult_aoe_reach.lua §1.
 ---
 --- WIDENING, and one-directional by construction: the shipped lethality answer
 --- is computed by the caller and handed in as `bShippedLethal`, this function
@@ -1694,6 +1718,84 @@ function X.lion_ShouldCommitUltKill( hBot, hTarget, nCastRange, bShippedLethal )
 	if type( nCastRange ) ~= 'number' then return bShippedLethal end
 
 	return J.IsInRange( hTarget, hBot, nCastRange )
+
+end
+
+
+--- May the scepter AoE exit of X.ConsiderR nominate a candidate it cannot cast
+--- at?  Soak candidate `lionraoe`, turbo-only.  NARROWING.
+---
+--- THE THIRD REACH CONVENTION, and the one X.lion_ShouldCommitUltKill named and
+--- deliberately did not take.  Its header lists the branch as "NOT IN THIS ID
+--- ... the scepter AoE branch's `nCastRange + 150` (an AoE-value branch, not a
+--- kill claim)".  That is the right scoping call and the wrong resting place:
+--- being a value branch rather than a kill claim is an argument for a SEPARATE
+--- id, not for leaving the slack alone.  A kill claim at least buys something
+--- with the walk -- the branch that walks 150 units to line up a splash buys a
+--- splash, on a target that is free to keep walking.  The order is the same
+--- `ActionQueue_UseAbilityOnEntity` on a unit outside cast range, i.e. a MOVE
+--- order first, and X.SkillsComplement returns the moment R is queued, so Q/W/E
+--- are not considered for as long as the desire holds.
+---
+--- ⛔ WHY IT IS LANDED NOW, WITH A PROVABLY EMPTY DOMAIN -- this is the
+--- `lionqkill` argument verbatim, on a different pair.  The branch is dead on
+--- shipped defaults for TWO independent reasons, and only one of them has an id:
+---   (i) `nRadius` is X.GetAbilityRSplashRadius(), which as shipped reads
+---       `splash_radius_scepter` -- a key that is not in this patch's
+---       lion_finger_of_death KV at all (the live key is `splash_radius`, base
+---       ABSENT, special_bonus_scepter 325).  GetSpecialValueInt answers 0, and
+---       with nRadius == 0 the inner `J.IsInRange( npcEnemy, nEnemy, 0 )` can
+---       only count a unit coincident with npcEnemy, so nAoeCount <= 1,
+---       nMaxAoeCount never leaves its seed of 1, and neither `>= 4` nor
+---       `>= 3` can hold.  That is GH #162, and `lionsplash` is the id for it.
+---   (ii) bot:HasScepter() -- false on all 25 alive-Lion frames in this repo's
+---       corpus (measured 2026-09-11, tests/test_lion_ult_aoe_reach.lua §2),
+---       though all FOUR of this file's buy lists carry item_ultimate_scepter,
+---       so it is a live path in a real Turbo game.
+--- `lionsplash` repairs (i) and nothing else.  Arming it alone therefore
+--- resurrects a branch that has no reach term -- a widening and a dive in one
+--- reading with no way to separate them.  With this term already in the tree the
+--- pair reads as one question.  iterations/queue.json asks for the pair, never
+--- for either id alone.
+---
+--- ⛔ AND IT DOES NOT NAME `lionsplash`.  Writing the dependency as
+--- `IsSoakCandidate('lionraoe') and IsSoakCandidate('lionsplash')` is the
+--- pullcad trap: the day either is promoted the conjunction freezes false in
+--- every wave while check_armed_wiring.py still calls it WIRED.  The dependency
+--- is registered as a promote-time ATOM in queue.json and asserted absent from
+--- this predicate by §5 of the test.
+---
+--- DIRECTION, and it is a subset of FRAMES, not of (frame, target) pairs -- the
+--- distinction matters and merging the two sentences would overclaim.  The armed
+--- leg only ever removes candidates from the max-search, so
+--- nMaxAoeCount(armed) <= nMaxAoeCount(shipped) on every frame; the exit's
+--- acceptance test (`>= 4`, or `>= 3` with the same unchanged nHP) is monotone
+--- increasing in that count, so `armed fires => shipped fires`.  What it does
+--- NOT claim is that the ACTION is the same: dropping the out-of-reach maximum
+--- can hand the branch to a nearer candidate with a smaller count, so on a frame
+--- where both fire the armed side may finger a DIFFERENT hero.  A negative wave
+--- reading may be read as "those 150-unit walks were worth taking" or as "the
+--- nearer cluster was the worse one"; it can never be read as the lever having
+--- invented a cast.
+---
+--- CONDITION (c).  Finger of Death is a 200/400/600 mana ultimate on a support
+--- whose own frames in this corpus sit at 354-607 hp, and the scepter splash is
+--- a 325-radius bonus on a cast that happens anyway.  Standard practice is that
+--- an AoE bonus is a reason to pick a better TARGET from where you stand, never
+--- a reason to walk into the cluster to collect it; walking at a fight to
+--- improve a splash count is the initiator's job, and in Turbo those 150 units
+--- are also 150 units deeper into the enemy's half.
+function X.lion_IsUltAoeTargetInReach( hBot, hTarget, nCastRange, bShippedInReach )
+
+	if not bShippedInReach then return bShippedInReach end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'lionraoe' ) ) then return bShippedInReach end
+
+	if hBot == nil or hTarget == nil then return bShippedInReach end
+
+	if type( nCastRange ) ~= 'number' then return bShippedInReach end
+
+	return J.IsInRange( hBot, hTarget, nCastRange )
 
 end
 

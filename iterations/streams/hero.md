@@ -22,6 +22,48 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-149. ✅ **`-145` 结清了** —— `test_focus_mana_cost_consumer_census.lua` 本轮已清、已退出 known-red
+   (**14 → 13**)。本轮(报告 `iterations/reports/hero/20260911T111009Z.md`)按 P4.4 把主体放在
+   `bots/` 行为改动上:**`lionraoe`**(Lion,gated,turbo-only,**NARROWING**)—— `X.ConsiderR` 的
+   **第三条 reach 约定**(A 杖 AoE 出口的 `nCastRange + 150`),`lionrreach` 点了名却留给了别的 id。
+   附带改正了 `X.lion_ShouldCashUltAtWeakest` header 里**一句在写下时就已被同一棵树证伪的话**。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. **`-145` 换了文件又回来了,而且这回是三条 Lion 大招文件一起**:
+        `test_lion_ult_reach.lua` / `test_lion_ult_cash_weakest.lua` / `test_lion_ult_reserve_domain.lua`
+        今天全红,**成因是同一个**(存活 Lion 帧 `27 → 42`、rank-2 Finger 实例 `2 → 7`),
+        全都是**语料规模的 `==` 钉**。可照抄的写法现在有**六个**,最贴的是本轮的
+        `test_focus_mana_cost_consumer_census.lua`(同族、同成因),以及
+        `test_axe_battle_hunger_fight_reach.lua`。⚠️ **三条同源 ⇒ 一次清掉,别一轮清一条**;
+        但它仍是量具,**只能占附带那一条**。
+     2. ⭐ **GH #390 要的帧已经在树里,躺在一条红断言的消息体里**:
+        `test_wk_q_castrange_meter_domain.lua:509` 自己打出
+        「a frame separated {meter zero, fed shipped, fed armed}:
+        `tests/frames/f_260909_215040_wk_blast_lion_480.lua`(另两帧同上)—— **That is the frame
+        GH #390 asked for, write it up rather than letting this assertion carry it.**」
+        ⇒ 这是一条**判定完结所需的最后一块证据**(P4.4 (ii)),可以**当主体**做。
+   - **⭐ 本轮买到的、值得复用的一条 —— 断言在数「代码」还是在数「关于代码的散文」?**
+     本文件头两次跑是**自己的断言抓自己的文档**,两条红同一个成因:§5 把 header 里那句
+     *警告不要这么写* 的 `IsSoakCandidate('lionraoe') and IsSoakCandidate('lionsplash')` 读成了
+     **第二个 gate site**;§1.4 断言「那句假命题不在树里」,而改正块为了留档**逐字引用了它**。
+     ⇒ (a) **gate site 普查必须先剥注释再数**(`code_only`)——这是上一轮 M5「枚举的粒度必须和缺陷
+     的粒度一样细」的第二个实例,换了个轴(上次是*行 vs 调用*,这次是*文本 vs 代码*);
+     (b) **「这句话没了」在引用它的改正块存在时是错的断言**,应写成
+     **「它只剩一处出现,且那一处在称它为假的那段里」** —— 否则留档与断言二选一,而留档才是产出。
+   - **⭐ 第二条:一个 `==` 钉要换掉时,先问「我其实想说的是一个关系吗?」**
+     `[5]` 的 `nSeen == 173` 想说的是「对照扫了 §4 扫的同一批帧」。写成**关系不变量**
+     (`corpus_flips(0)` 与 `corpus_flips(nil)` 的总 n 相等)**严格强于**那个钉:钉子对
+     「两次扫描碰巧都等于 173」同样满足,关系却抓得住**对照悄悄扫了另一个人群**这唯一一种
+     它能撒谎的方式,而且对语料增长免疫。**方向安全的下界是兜底,关系不变量是上策。**
+   - **⛔ 证不实就不动,哪怕形状很像**:Axe `X.HasSpecialModifier` 全树 15 处只查
+     `modifier_item_sphere_target`、无一处查 Linken **被动**那个名字,形状与 `axebhrecast` 的
+     `modifier_axe_battle_hunger_self` 一模一样。**但 modifier 名在仓内证不实**:实拉了
+     666KB `items.txt`,`item_sphere` 块**不带任何 modifier 名**,fixture 语料里 `modifier_item_sphere*`
+     **零命中**。按「Verify on Liquipedia 再信名字」**放弃,不写成猜测**。下轮若有网,这是一条
+     现成的候选(它是**收窄**方向,且 `item_sphere` 在 riki/drow/puck/TA/WW/invoker 的 buy list 里)。
+   - **⛔ 一条干净的阴性,记下来省得重查**:Lion `nRawDamage` 的硬编码阶梯**是对的** ——
+     KV `damage` = `600 725 850`、`special_bonus_scepter +100`;出货 `475+125*lv` 与持杖
+     `575+125*lv` **逐位吻合**。不是 `cullthresh` 那一族。
+
 -148. **已发表:GH #745**(主发现);**GH #744 追评**(自检 python 那侧的肇事者)。
    **⭐ 下一轮:`-145` 只剩最后一条了 —— 清 `test_focus_mana_cost_consumer_census.lua`,
    照抄的样板现在有四个。**
@@ -6497,6 +6539,44 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-11T11:10Z(报告 `iterations/reports/hero/20260911T111009Z.md`;**backlog:新开 `-149`,
+  `-145` 结清**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动 + **一条**量具附带;
+  **P4.2 冻结期内不请求入集**,只登记 `iterations/state.json:lionraoe_20260911`)
+  **`lionraoe`:`X.ConsiderR` 的第三条 reach 约定 —— `lionrreach` 点了名却留给了别的 id;
+  外加一句在写下时就已被同一棵树证伪的话。**
+  - **缺陷**:A 杖 AoE 出口用 `J.IsInRange( bot, npcEnemy, nCastRange + 150 )` 挑候选,
+    然后对它下 `ActionQueue_UseAbilityOnEntity` —— 射程外的施法指令**首先是一条移动指令**,
+    而 `X.SkillsComplement` 排完 R **立刻 return** ⇒ desire 在期间 Q/W/E 一帧不被考虑。
+    `lionrreach` 的 header 把它排除的理由是「是价值支路不是击杀主张」——
+    **那是它该有自己 id 的理由,不是把 150 单位留着的理由**:击杀主张至少拿这趟走换了点东西。
+  - **改动**:`X.lion_IsUltAoeTargetInReach`(出货谓词由调用方算好逐字传入,闸关原样返回)。
+    **方向 = NARROWING,且是 FRAME 子集不是 (frame,target) 子集** ——
+    `nMaxAoeCount(armed) <= nMaxAoeCount(shipped)` 且接受判据单调递增 ⇒ `armed 开火 ⇒ shipped 开火`;
+    **但同一帧上可能 finger 另一个人**(丢掉够不着的最大值后落到更近、计数更小的候选)。
+    ⛔ **不与 `lionsplash` 合取**(pullcad),依赖登记成 `queue.json:hero-58` 的 **promote-time ATOM**。
+  - **为什么域是空的还要现在落地**:该支路在出货默认下死于**两个独立原因**,只有一个有 id ——
+    (i) `nRadius==0`(`splash_radius_scepter` 这个 key 不存在;GH #162 = `lionsplash`)、
+    (ii) `HasScepter()`。**单独 arm `lionsplash` = 复活一条没有 reach 谓词的支路**,
+    一次读数里同时买到放宽和送死且分不开。**`lionqkill` 那段论证的逐字复用。**
+  - **⭐ 改正**:`X.lion_ShouldCashUltAtWeakest` header 原本收尾于「…whose only reachable exit
+    is the scepter AoE branch below」——**假的**,GH #162 早已证明那条出口在出货默认下同样不可达。
+    **同一函数里相隔三十行的两份闭式死证,各自把对方那条出口当成活的。**
+    改正后更强:**出货默认下这个 团战 block 根本没有可达出口**,于是 `lionultcash` 是**唯一**
+    能给它出口的已登记 id —— **这是它的 (b)/(c) 论据,不是脚注。**
+  - **本地验证**:`tests/test_lion_ult_aoe_reach.lua` **8/0**,变异台 **7/7 全红**。
+    域:语料 141 帧 / 存活 Lion **42**;**持杖 0/42**、两个 splash key 读数 **0/0**、
+    325 内最密敌人团 **2**(下限 3)—— **三个 0 都写成带成因的断言**(GH #741 纪律)。
+    ✅ **谓词层零注入可驱动**:44 个 (frame,enemy) 对里 **4 个**落在 band (900,1050]、分布在 4 帧。
+  - **附带(量具,一条)**:`test_focus_mana_cost_consumer_census.lua` 两条 case 清完 ⇒ **9/0**,
+    **known-red 14 → 13**,`-145` 结清。`[5]` 换成**关系不变量**(对照与实价扫同一帧集),
+    **严格强于**原来的 `== 173`。变异台 2/2 红。
+  - **铁律 6 三行**:`GATE_EXIT=0`(luacheck 0 警告)/ `py gate: 96 ran, 0 findings, 34.6s`
+    / `lua gate: exit 0`(322 条快 ratchet;76 条慢的与全量套件**不被声称**)。**未用 `RULE6_BYPASS`。**
+    ⚠️ **py gate 第一次 exit 3,抓的是本轮自己的产物**(`hero-58` 缺 `status` key),已补、复跑 0。
+  - **⚠️ 自检**:第一次调用又被它自己 REFUSED(管道,**第 6 次复发**);重定向后**跑完**,
+    worst exit **3**。✅ **`-147` 那条「python 那侧没人看过」本轮不再成立**(python 腿跑完并报红)。
+    Lua 那侧 4 条红**全非本轮造成**,且**四条里三条同一个成因**(存活 Lion 帧 27→42、
+    rank-2 Finger 2→7),均在 known-red 名单、失败的正是被 amnesty 的 case ⇒ lua gate 仍 exit 0。
 - 2026-09-11T08:15Z(报告 `iterations/reports/hero/20260911T081500Z.md`;**backlog:新开 `-148`,
   `-147` 划掉,`-145` 执行了一半**;OWNER_PRIORITIES **P4.4 (i)** 主体是一个 `bots/` 行为改动
   + **一条**量具附带;**P4.2 冻结期内不请求入集**,只登记

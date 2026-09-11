@@ -8,7 +8,6 @@
     "tests/test_cm_pos5_boots.lua",
     "tests/test_cm_w_lane_band.lua",
     "tests/test_focus_level_claims.lua",
-    "tests/test_focus_mana_cost_consumer_census.lua",
     "tests/test_lion_ult_cash_weakest.lua",
     "tests/test_lion_ult_reach.lua",
     "tests/test_lion_ult_reserve_domain.lua",
@@ -35,10 +34,6 @@
     ],
     "tests/test_focus_level_claims.lua": [
       "[hero] wk: the wkqaim supply argument spans levels 2 to 12"
-    ],
-    "tests/test_focus_mana_cost_consumer_census.lua": [
-      "[4] 16 of 90 live-Q focus-hero frames sit where the ladder flips a gate",
-      "[5] negative control: with the pre-ladder price of 0 the flip band is empty"
     ],
     "tests/test_lion_ult_cash_weakest.lua": [
       "\u00a71 the archive reaches the body 5 times and the domain 0 times"
