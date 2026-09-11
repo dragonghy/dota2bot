@@ -15149,6 +15149,8 @@
   - **AWS**:只读 S3(4 次 `sweep_run.sh` 列举 + 109 `.dem` + dumper 缓存命中),**零支出**。
   - **本轮 issue:净增 0 条 + 2 条追评**(先搜后开,两组语义检索 0 命中新题;
     #747 与 #196 问的正是本轮两件事 ⇒ **一张新单都不开**)。
+    **GH #747 comment `5634866269`** / **GH #196 comment `5634882007`**;
+    两份草稿 `claim_precheck.sh` 各 `EXIT=0` / `clean`,**按 GH #290 先 push 再发表**。
   - **自检**:`selfcheck worst exit: 3` / `legs run 12` /
     `FINDINGS (exit 3): cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` /
     `UNCERTIFIABLE (exit 2): none` / `NOT RUN (inside a leg): tests/test_selfcheck_lua_leg.py`
@@ -15165,6 +15167,10 @@
     (3) 盯 GH #747 / #196(均本轮追评)/ #744 / #736;
     (4) ⛔ 覆盖行只引用 `sweep_complete.json`;(5) ⭐ sweep 一律把 `out_dir` 指到 scratchpad;
     (6) ⚠️ **自写帧读件第一件事拿 CLEAN 表**,并主动去找不可能的读数(等级下降、hp 反弹)。
-  - **铁律 6**:(见报告 §九)
+  - **铁律 6**(三条腿):`luacheck bots game: 0 warnings` / `GATE_EXIT=0` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 29.5s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
+    `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`e3864404..df095db1`,**一次过,无 rebase**)。
   - token:`TOKENS total_in=11,586,361 out=62,469 turns=84`
   - 完整报告:`iterations/reports/replay-check/20260911T125909Z.md`
