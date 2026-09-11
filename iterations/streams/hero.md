@@ -22,6 +22,53 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-153. ✅ **`-152` 第 1 条执行了,而且这一次先量后选没有白量** —— 本轮(报告
+   `iterations/reports/hero/20260911T225500Z.md`)主体回到 `bots/`(P4.4 (i)):落地 **`cmtfclock`**
+   (Crystal Maiden,gated,turbo-only,**加宽**)。⭐ **缺陷不是「6 分钟太长」,是这道宵禁相对证据是反的**:
+   `X.ConsiderW` 的八个**打英雄**的射击点里**只有一个**带整点闸,而它恰恰是自身前提最能说明
+   「这一发该放」的那个 —— 第一个合取项就是 `J.IsInTeamFight( bot, 1200 )`(**直接测量**),
+   第二个却是 `DotaTime() > 6 * 60`(同一件事的**代理**),代理压过测量;另外七个 —— 包括回报最小、
+   `cmlaneband` 还得给它补射程项的**对线骚扰** —— 一个闸都没有 ⇒ 骚扰可以 0:30 开火,真实团战等到 6:00。
+   **6 分钟是常规模式常数**,本项目优化 Turbo(~20min vs ~35-40)⇒ 宵禁吃掉约 30% 的对局,且吃的是**前** 30%。
+   id 登记 `state.json:cmtfclock_20260911`;取证请求 `queue.json:hero-61`。
+   - ⭐ **本轮买到的第一条 —— 「先量后选」这次真的挡住了四根,一个字节都没浪费在死域上。**
+     `-152` 是「换了五根全是死域」,本轮是**先对活轴表再读源码**,四根各花约一次探针的钱就量掉:
+     (1) **Lion `X.ConsiderW` 保护自己 = `cmwhit` 的第四个同形站点**,域实测 **0**
+     (42 存活帧 → 6 帧近 3s 被打 → **没有一帧环里 ≥ 2 人**,且那 6 帧 Hex 全在冷却);
+     (2) Lion / SK 的 `IsChanneling` 打断出口(无任何距离项)**不是缺陷** —— 本树在
+     `X.wk_IsLaneHarassTargetInReach` 头注释里**已经明确判过**「打断值得走过去」;
+     (3) Lion `X.ConsiderE` 缺蓝抽蓝的 `GetNearbyCreeps( 1600, true )`(真实射程 850 ⇒ **750 单位无界余量**)
+     域 **0**:全语料 42 帧**一只敌方小兵都没有**(GH #581);
+     (4) Lion `X.ConsiderE` 秒杀幻像域 **0**:全语料 0 个可疑幻象。
+     ⇒ **这四根不要重开。**
+   - ⭐ **第二条 —— `cmwhit` 的兄弟普查漏了 Lion,而漏法是有信息的。**
+     `cmwhit` 头注释点名了 SK 与 Zeus,却**引用 `hero_lion.lua:1085` 当作「逐候选谓词的正确用法」** ——
+     而那一行就在 Lion 那个**有缺陷**的 保护自己 支路**下面 25 行**。
+     `test_cm_w_selfdefense_damager.lua` §1.1 的天花板普查只枚举 SK 和 Zeus,
+     **所以 Lion 长出一个可钉帧的那天,没有任何东西会举手。**
+   - ⛔ **第三条 —— 断言抓到的不是笔误,是一句过宽的普查陈述。** 头注释初稿写「函数里**唯一一个**整点闸」,
+     §5.1 当场打红:`X.ConsiderW` 实测读 `DotaTime()` **2 次**。正确说法要收窄成
+     「唯一一个带闸的**打英雄的**射击点」—— 另外两处在**小兵**支路,而且形状**相反**:
+     各是一个析取项 `DotaTime() > 10 * 60 or <这只不是普通兵线兵>`,时间在那里**放松**一条目标类别规则,
+     不是**闸住**一次施法。⇒ **写「唯一 / 全部 / 恰好 N」之前,先让断言去数一遍。**
+   - ⛔ **第四条 —— 「域在变大」这一族又抓到两条,而它们红的样子和坏消息一模一样。**
+     清掉的 `test_cm_w_lane_band.lua` 红了**三轮**,红的内容是 nLive 53→**70**、band 3→**5**、
+     in-gate 13→**20**;自检里仍红的 `test_lion_ult_reserve_domain.lua` 是 rank-2 实例 2→**7**。
+     **同一族,同一个修法**:改下界 → 结论另起一条 → 计数移出测试名 → manifest 两处退场 →
+     **不跑全量重测**(全量会用本容器秒数重写另外 415 条、按本容器红绿重算**别组**基线)。
+   - ⛔ **第五条 —— 开工自检接管道这件事,`-152` 已经写过一次,本轮仍然犯了**(它自己说这是第 5 次复发)。
+     写法就一条:`bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo EXIT=$?`。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体继续放在 `bots/`(P4.4 (i)),而且这一根已经量好了,不用再找**:
+        把 **Lion 补进 `test_cm_w_selfdefense_damager.lua` §1.1 的兄弟普查**(今天 0 翻转 ⇒ 补进去是
+        **天花板断言**,绿的;红了就是「Lion 可以开自己的 lever」的信号),**同一工作单元内**再挑一根有域的开。
+        ⚠️ 上面四根已量掉,别重开。
+     2. **`test_lion_ult_cash_weakest.lua` 的 amnesty 退场**(`-152` 第三条的残余)。
+        ⚠️ **本轮收尾时这一条已经缩到只剩一个文件**:`test_lion_ult_reserve_domain.lua`
+        在本轮进行期间被**别的流**修掉并从 amnesty 退场(`state.json:lionult_rank2_RETAKE_20260911`),
+        rebase 后实测 8/8 绿;`cash_weakest` 实测仍 **8 绿 1 红**、仍在名单里。
+        本轮已在 `cm_w_lane_band` 上把这套手法完整跑通一遍,**照抄即可**。
+
 -152. ✅ **`-151` 第 1 条执行了,而且它的前置条件不成立** —— 本轮(报告
    `iterations/reports/hero/20260911T200300Z.md`)先看 `test_cm_w_selfdefense_damager.lua` §1.1:
    **绿**(15 例 0 失败)⇒ SK / Zeus 兄弟分支仍然 0 翻转,按指令「换一根,别硬钉」。
@@ -6694,6 +6741,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-11T22:55Z(报告 `iterations/reports/hero/20260911T225500Z.md`;**backlog:新开 `-153`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`cmtfclock`(Crystal Maiden,gated,turbo-only,未 armed,方向=加宽):
+  八个打英雄的射击点里只有一个带整点闸,而它恰恰是自身前提最能说明「这一发该放」的那个。**
+  - **缺陷**:`X.ConsiderW` 团战支路 `J.IsInTeamFight( bot, 1200 ) and DotaTime() > 6 * 60` ——
+    第一个合取项是**直接测量**,第二个是同一件事的**代理**,代理压过测量。另外七个射击点
+    (击杀确认 / 保护自己 / TP 打断 / 进攻 / 撤退 / roshan / **对线期消耗**)**一个闸都没有**
+    ⇒ 回报最小的**对线骚扰**可以 0:30 开火,真实五人团要等 6:00。
+  - ⛔ **它不是省蓝策略,这一条量过**:`X.ConsiderW` 唯一入口闸是 `abilityW:IsFullyCastable()`,
+    八个射击点**没有一个带蓝量储备**(§5.2 钉住)。真是蓝量策略就会挂在函数上,不会只挂一个支路。
+  - **修法**:具名常数 `X.nWTeamfightClockShipped = 6 * 60` / `X.nWTeamfightClockTurbo = 3 * 60`,
+    armed 读后者。**只减半不删闸**是刻意的窄改动(「该不该有闸」是第二个问题)。
+  - ⚠️ **方向=加宽,与本组近期每一个 reach 杠杆相反**:armed 是出货的**真超集**,
+    只可能在 (3:00, 6:00] 内**增加**施法,永不移走或改写一发(§4 全语料 70 帧双向驱动)。
+    ⇒ 负面读数只能归因为「那些早期团战的 Frostbite 不值得放」。
+  - **读数**:`tests/fixtures/f_260820_162821_lion_drain_lethal.lua` **t=307.4(5:07)**,零注入,
+    `IsInTeamFight` 真、环 630(真 GetCastRange + 30 + **aether 项**)里 1 个合法敌人 ⇒ **闸是唯一在拒的**。
+    ⛔ **两个域分开登记**:**闸层域 = 1 帧**,**端到端域 = 0 帧**(同帧 Frostbite 在冷却,
+    `X.ConsiderW` 第一行就返回 NONE)。与 `cmwhit` 同形。**不是频率** ⇒ 下一棒 `queue.json:hero-61`。
+  - **主体之前量掉四根,一个字节没浪费**(详见 backlog `-153`):Lion 保护自己(域 0)、
+    Lion/SK 的 IsChanneling 打断(**本树已判过不是缺陷**)、Lion 缺蓝抽蓝 1600 环(语料无小兵)、
+    Lion 秒杀幻像(语料无幻象)。
+  - **附带**:清 trunk 红 `test_cm_w_lane_band.lua`(三个 `== N` 改下界;**它红了三轮,
+    红的内容是它自己的域正在变大** 53→70 / 3→5 / 13→20)+ manifest amnesty 退场(**4 行删除**,
+    **未跑全量重测**,理由是范围)。**本轮改动自造一条红并重锚**:`test_ckpush_minute_unit.lua`
+    `N*60` 普查 127→**126** —— ⭐ **站点不是被删了,是被具名了**。
+  - **闸**:`GATE_EXIT=0`(luacheck 0 warnings)/ `py gate: EXIT=0 84 ran, 0 findings, 0 uncertifiable`
+    / `lua gate: EXIT=0 341 ran, 0 findings, 0 uncertifiable, 10 known-red, 369.8s`,**没用过 RULE6_BYPASS**。
+    ⚠️ 动态全量(~100min,GH #124)本轮没跑。
+  - ⛔ **开工自检真码 `EXIT=3`**(`FINDINGS: cadence owed-executions trunk-red(python) trunk-red(lua)`;
+    `UNCERTIFIABLE: none`)。Lua trunk 红 2 条**均非本轮引入**:`test_stayfield2_marginal_domain.lua`(协同组)
+    与 `test_lion_ult_reserve_domain.lua`(⭐ 红的内容**又是域在变大**:rank-2 实例 2→7,与本轮清掉的那条同族)。
+    ⚠️ **收尾更正**:后者在本轮进行期间被**别的流**修掉并退场(`state.json:lionult_rank2_RETAKE_20260911`),
+    rebase 后实测 8/8 绿 —— 上面那条是**自检时刻**的状态不是收尾时刻的。
+    ⚠️ 第一次调用接了管道被自检自己拒绝(exit 2,**它说这是第 5 次复发**)—— `-152` 已写过一次,本轮仍犯。
 - 2026-09-11T20:03Z(报告 `iterations/reports/hero/20260911T200300Z.md`;**backlog:新开 `-152`**;
   OWNER_PRIORITIES **P4.4 (i)** —— ⚠️ **本轮没有推进 (i):`bots/` 一个字节都没改,而且这是量出来的判断**)
   **按 `-151` 的前置条件换杠杆,换了五根,五根全是死域 —— 落地的是清 trunk 红 + 重取

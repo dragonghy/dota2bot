@@ -6,7 +6,6 @@
     "tests/test_activemode_world_assertion.lua",
     "tests/test_axe_t15_payoff.lua",
     "tests/test_cm_pos5_boots.lua",
-    "tests/test_cm_w_lane_band.lua",
     "tests/test_focus_level_claims.lua",
     "tests/test_lion_ult_cash_weakest.lua",
     "tests/test_roshdist_pit_truth_operand.lua",
@@ -25,9 +24,6 @@
     ],
     "tests/test_cm_pos5_boots.lua": [
       "[hero] census: the corpus still carries the arms these numbers came from"
-    ],
-    "tests/test_cm_w_lane_band.lua": [
-      "\u00a71 the corpus puts an enemy in the band on 3 of 53 Crystal Maiden frames"
     ],
     "tests/test_focus_level_claims.lua": [
       "[hero] wk: the wkqaim supply argument spans levels 2 to 12"

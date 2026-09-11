@@ -75,20 +75,28 @@
 -- §0.3  LIMITS -- load-bearing, quote these with any number above
 -- ===========================================================================
 --
--- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Over both corpus directories (116
---    frames), Crystal Maiden is present and alive on 53; on 3 of those an enemy
---    hero sits in the band (outside nCastRange + 50, inside nCastRange + 200),
---    3 band members in total; on 13 an enemy sits inside the gate, where this
---    lever is a byte-for-byte no-op.  These counts are ASSERTED, not narrated:
---    if the corpus grows, §1 goes red and this section is re-taken rather than
---    quoted.
---    RE-TAKEN 2026-09-09 (hero, GH #659), 52 -> 53: the staged transit frame
---    f_260908_094909_cm_cmqreach_transit.lua is a CM-subject frame.  ⭐ ONLY THE
---    DENOMINATOR MOVED -- and the reason is the frame's own subject matter: it
---    was pinned BECAUSE Crystal Maiden is in transit with her nearest live enemy
---    2790u away, which is far outside both the band and the gate.  So 3/52
---    becomes 3/53 and 13 stays 13.  A reader quoting "3 of 52" after this round
---    is quoting a stale denominator, not a stale finding.
+-- 1. THE DOMAIN AND §1 COUNTS IT.  Over both corpus directories (141 frames),
+--    Crystal Maiden is present and alive on 70; on 5 of those an enemy hero
+--    sits in the band (outside nCastRange + 50, inside nCastRange + 200), 5
+--    band members in total; on 20 an enemy sits inside the gate, where this
+--    lever is a byte-for-byte no-op.
+--    RE-TAKEN 2026-09-11 (hero), 53 -> 70 live / 3 -> 5 band / 13 -> 20 gate.
+--    ⛔ AND THE WAY THIS ONE WAS RE-TAKEN IS THE POINT.  The three counts above
+--    were pinned with `==`, so for three rounds this file sat RED on trunk --
+--    and what it was red ABOUT was its own domain GROWING.  A `== N` on a
+--    corpus size makes good news and bad news look identical, and the reader
+--    who finds the red has to re-derive which one it is.  They are FLOORS now
+--    (growth may only push them up), with the conclusion -- "the band domain is
+--    non-empty at all" -- asserted separately so a drifting count cannot
+--    satisfy it.  Same cause and same fix as the three re-anchored in
+--    tests/test_lion_ult_reach.lua §1; hero backlog -152 第四条.
+--    The earlier 52 -> 53 re-take (2026-09-09, GH #659) is kept below because
+--    its reasoning is still the model for reading a moved denominator: the
+--    staged frame f_260908_094909_cm_cmqreach_transit.lua was a CM-subject
+--    frame pinned BECAUSE Crystal Maiden is in transit with her nearest live
+--    enemy 2790u away -- far outside both band and gate -- so ONLY THE
+--    DENOMINATOR MOVED.  A reader quoting a stale denominator is not quoting a
+--    stale finding.
 --
 -- 2. ⚠️ THE BRANCH AS A WHOLE FIRING IS **NOT** A READING THIS ROUND BOUGHT,
 --    and both reasons are about the harness, not the game.  §4 opens three
@@ -253,7 +261,7 @@ end
 -- ---------------------------------------------------------------- section 1 --
 -- The domain, counted over the whole corpus.  §0.3 limit 1's evidence.
 
-tests['§1 the corpus puts an enemy in the band on 3 of 53 Crystal Maiden frames'] = function()
+tests['§1 the corpus still puts an enemy in the band on some Crystal Maiden frame'] = function()
     local nFiles, nLive = 0, 0
     local nWithBand, nBandEnemies, nWithGate = 0, 0, 0
     local tBandFrames = {}
@@ -289,14 +297,26 @@ tests['§1 the corpus puts an enemy in the band on 3 of 53 Crystal Maiden frames
     assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
         .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 53, 'Crystal Maiden is alive on ' .. nLive .. ' corpus '
-        .. 'frames, was 53 -- re-take §0.3 limit 1 rather than quoting it')
-    assert(nWithBand == 3 and nBandEnemies == 3,
-        'the band domain moved: ' .. nWithBand .. ' frames / ' .. nBandEnemies
-        .. ' enemies, was 3 / 3.  Re-take §0.3 limit 1.')
-    assert(nWithGate == 13, 'the in-gate domain moved: ' .. nWithGate
-        .. ' frames, was 13.  Those are the frames on which this lever is a '
+    -- ⭐ FLOORS, not `==` pins (hero backlog -152, same cause as the three
+    -- re-anchored in tests/test_lion_ult_reach.lua §1).  A `== N` on a CORPUS
+    -- SIZE makes good news and bad news look identical: this file was red for
+    -- three rounds because Crystal Maiden went from 53 live instants to 70 --
+    -- i.e. because its own domain was GROWING.  Growth may only push these up,
+    -- so a floor is the direction-safe bound and a shrinking corpus still
+    -- speaks up.
+    assert(nLive >= 53, 'Crystal Maiden is alive on only ' .. nLive .. ' corpus '
+        .. 'frames (floor 53) -- the corpus SHRANK; re-take §0.3 limit 1 rather '
+        .. 'than quoting it')
+    assert(nWithBand >= 3 and nBandEnemies >= 3,
+        'the band domain shrank: ' .. nWithBand .. ' frames / ' .. nBandEnemies
+        .. ' enemies (floor 3 / 3).  Re-take §0.3 limit 1.')
+    assert(nWithGate >= 13, 'the in-gate domain shrank: ' .. nWithGate
+        .. ' frames (floor 13).  Those are the frames on which this lever is a '
         .. 'byte-for-byte no-op, and the count belongs in §0.3 limit 1.')
+    -- The CONCLUSION, stated on its own so it cannot be satisfied by a count
+    -- drifting: the lever must still have a local domain at all.
+    assert(nWithBand >= 1, 'no corpus frame puts an enemy in the band any more '
+        .. '-- this lever has no locally-checkable domain left')
     local bHasFrame = false
     for _, p in ipairs(tBandFrames) do if p == FRAME then bHasFrame = true end end
     assert(bHasFrame, 'the §0.1 frame ' .. FRAME .. ' is no longer one of the '

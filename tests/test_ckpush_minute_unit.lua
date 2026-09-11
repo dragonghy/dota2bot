@@ -204,9 +204,20 @@ tests['[census] every DotaTime minute gate multiplies by 60, except two'] = func
         end
     end
 
-    assert(by_sixty >= 127, string.format(
-        'the N*60 population fell to %d (recorded 127). This ruling rests on '
-        .. '"* 60 is the house idiom"; if that population shrank, re-derive it.',
+    -- 127 -> 126, 2026-09-11 (hero, `cmtfclock`).  ⭐ THE SITE WAS NOT DELETED,
+    -- IT MOVED BEHIND A NAMED CONSTANT -- the same refactor the `* 30` half
+    -- below already records for X.GetPushCommitTime.  hero_crystal_maiden.lua
+    -- X.ConsiderW's teamfight curfew used to read `DotaTime() > 6 * 60` inline;
+    -- it now reads `DotaTime() > X.nWTeamfightClockShipped`, and that constant
+    -- is still `6 * 60` -- just not on a line this pattern can see, because the
+    -- pattern requires the literal and the comparison in one expression.
+    -- ⚠️ So a DROP here is ambiguous by construction: it means either "a minute
+    -- gate was removed" or "a minute gate was named".  Re-derive which one
+    -- before reading a shrink as evidence against the house idiom.
+    assert(by_sixty >= 126, string.format(
+        'the N*60 population fell to %d (recorded 126). This ruling rests on '
+        .. '"* 60 is the house idiom"; if that population shrank, re-derive it '
+        .. '-- and check first whether the site was NAMED rather than removed.',
         by_sixty))
     -- Was 2 before this commit; the gated site now resolves through
     -- X.GetPushCommitTime, so only the registered-not-fixed twin is left inline.

@@ -1464,6 +1464,119 @@ function X.cm_FindSelfDefenseTarget( hBot, tEnemies )
 end
 
 
+--- The shipped wall clock on X.ConsiderW's teamfight firing point, and the
+--- turbo value that halves it.  Named so the two legs of X.cm_IsTeamfightClockOpen
+--- read as one question asked at two thresholds, and so the test can mirror the
+--- numbers off the source instead of re-typing them (the stale-mirror family:
+--- tests/test_cast_ring_mirror_discipline.lua).
+X.nWTeamfightClockShipped = 6 * 60
+X.nWTeamfightClockTurbo   = 3 * 60
+
+
+--- The wall-clock curfew on X.ConsiderW's TEAMFIGHT firing point, and the
+--- turbo-only narrowing of it.  Soak candidate `cmtfclock` (turbo-only, INERT
+--- until armed).  STANDALONE: this function holds exactly one J.IsSoakCandidate
+--- call and it names only its own id.
+---
+--- ⭐ THE DEFECT IS NOT "6 MINUTES IS TOO LONG".  It is that the curfew is
+--- INVERTED WITH RESPECT TO THE EVIDENCE.  X.ConsiderW bids from eight
+--- HERO-target firing points (the census is in X.cm_IsLaneHarassTargetInReach's
+--- header).  Exactly ONE of them carries a wall clock, and it is the one whose
+--- own precondition is the strongest evidence a cast is warranted:
+---
+---     teamfight      J.IsInTeamFight( bot, 1200 )   + DotaTime() > 6 * 60
+---     kill-confirm   a weakest enemy in the ring     (no clock)
+---     protect-self   she is being hit right now      (no clock)
+---     TP interrupt   an enemy is teleporting         (no clock)
+---     进攻 / 撤退 / roshan / 对线期消耗                (no clock)
+---
+--- ⚠️ "HERO-target" is load-bearing and was written after the test caught this
+--- paragraph's first draft.  The function does read DotaTime() twice more, on
+--- the two CREEP branches (先远 / 再近) -- but each of those is a DISJUNCT,
+--- `DotaTime() > 10 * 60 or <this creep is not a basic lane creep>`, so time
+--- RELAXES a target-class rule there rather than gating a cast.  Opposite
+--- shape, different target class, not in this lever
+--- (tests/test_cm_w_teamfight_clock.lua §5.1 pins both counts).
+---
+--- So a lane HARASS -- the smallest payoff in the function, and the one
+--- `cmlaneband` had to put a reach term on -- may fire at 0:30, while a real
+--- five-hero fight with Frostbite off cooldown and a legal target in range is
+--- refused until 6:00.  Whatever the clock was a proxy FOR ("laning is over,
+--- fights are real"), `J.IsInTeamFight( bot, 1200 )` is the direct measurement
+--- of it, and it is already the first conjunct.  The proxy overrides the
+--- measurement, and only here.
+---
+--- ⛔ AND IT IS NOT A MANA POLICY, checked rather than assumed.  X.ConsiderW's
+--- only entry guard is `abilityW:IsFullyCastable()`; the function has no mana
+--- reserve of any kind at any of its eight firing points (unlike X.ConsiderQ,
+--- which carries J.ShouldConserveManaInLane, and unlike the Roshan branches
+--- elsewhere in this file, which carry J.GetManaAfter).  So the clock cannot be
+--- read as "do not spend her small early pool" -- if it were, it would be on the
+--- function, not on one branch of it.
+---
+--- WHY TURBO IS WHERE THIS BITES.  6 minutes is a NORMAL-MODE constant.  This
+--- project's optimization target is Turbo (docs/PROJECT.md), where games run
+--- ~20 minutes against ~35-40 -- so the curfew costs roughly 30% of the game,
+--- and it costs the FIRST 30%, which in Turbo is not a farming phase at all:
+--- doubled XP/gold and halved respawns mean five-hero fights genuinely happen
+--- before 6:00, which is the mode's defining property.  Frostbite's value is
+--- also highest exactly there -- a 1.5-3s root that also disarms, thrown at
+--- hero levels where nobody owns a BKB or a dispel and HP pools are small.
+---
+--- ARMED: 3 * 60, which is the shipped number halved.  The 2x is not invented
+--- here -- it is this repo's own stated Turbo pace ratio (~20 min vs ~35-40).
+--- Halving rather than REMOVING is deliberate and is the narrow change: whether
+--- the branch should carry a clock AT ALL is a second question, and conjoining
+--- the two would make one wave reading unattributable to either.
+---
+--- ⚠️ DIRECTION: THIS IS A WIDENING, and it is the first thing a reader must
+--- know.  Every t past 6:00 is also past 3:00, so the armed predicate is a
+--- strict SUPERSET of the shipped one: arming can only ADD teamfight casts, in
+--- the window (3:00, 6:00], and can never remove or move one.  Asserted over
+--- the whole corpus rather than argued (tests/test_cm_w_teamfight_clock.lua §4).
+--- A negative wave reading is therefore attributable to "those early-fight
+--- Frostbites were not worth casting" and NEVER to a cast this lever refused.
+--- It also cannot relocate a cast: the branch sits ABOVE 保护自己 / 进攻 /
+--- 撤退 / roshan, so a frame the clock refuses falls through to them today and
+--- an armed frame simply stops earlier with a target those branches could not
+--- have chosen the same way (they pick by distance or by damage authorship;
+--- this one picks by GetEstimatedDamageToTarget).
+---
+--- THE READING (one real frame, real clock, real roster, nothing moved).
+--- tests/fixtures/f_260820_162821_lion_drain_lethal.lua at t=307.4 (5:07) --
+--- Crystal Maiden loaded as the subject unit.  J.IsInTeamFight( bot, 1200 ) is
+--- TRUE on the real frame with no injection, Frostbite's real ring (630 = real
+--- GetCastRange + 30 + the aether term) holds one enemy hero, and that hero
+--- clears the branch's whole per-candidate chain.  Shipped refuses on the clock
+--- alone; armed enters.  307.4 is 52.6s inside the window this lever opens.
+---
+--- ⛔ TWO DOMAINS, REGISTERED SEPARATELY because they are different numbers and
+--- a reader who conflates them has performed an execution verification out of
+--- thin air:
+---   * GATE-LAYER domain = 1 corpus frame (the pin above): the clock is the
+---     only thing refusing.
+---   * END-TO-END domain = 0 corpus frames: on that same frame Frostbite is on
+---     cooldown, so X.ConsiderW returns NONE at its first line and the branch is
+---     never evaluated there.  The flip is measured on the clock the branch
+---     WOULD have read.  Same shape as `cmwhit`, and both halves are asserted
+---     in that direction (tests §3.3 / §3.4).
+---
+--- ⚠️ NOT A FREQUENCY.  Over the whole 70-instant CM corpus: 5 instants have a
+--- teamfight running, 15 sit in (3:00, 6:00], and exactly 1 is both.  How often
+--- a real Turbo game puts a fight in that window is a wave question, filed as
+--- iterations/queue.json hero-61.
+function X.cm_IsTeamfightClockOpen()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmtfclock' )
+	then
+		return DotaTime() > X.nWTeamfightClockTurbo
+	end
+
+	return DotaTime() > X.nWTeamfightClockShipped
+
+end
+
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then
@@ -1519,8 +1632,10 @@ function X.ConsiderW()
 	end
 
 	--团战中对最强的敌人使用
+	-- [cmtfclock] gate off the second conjunct is `DotaTime() > 6 * 60`, byte
+	-- for byte.  See X.cm_IsTeamfightClockOpen just above X.ConsiderW.
 	if J.IsInTeamFight( bot, 1200 )
-		and  DotaTime() > 6 * 60
+		and X.cm_IsTeamfightClockOpen()
 	then
 		local npcMostDangerousEnemy = nil
 		local nMostDangerousDamage = 0
