@@ -66,11 +66,14 @@
 -- shipped answers. The defect and its repair are read off ONE apparatus.
 --
 -- ⛔ SECTION 7 IS THE BATON, AND IT IS AN ASSERTION, NOT AN ISSUE. The identical
--- expression sits at three more sites in the same file. They are deliberately
--- NOT changed (one lever at a time -- the lanefix bundle is why), and section 7
--- pins them as still `[1]`-shaped so that "there are three more" cannot decay
--- into a sentence nobody re-reads. This is the GH #13 shape the charter names:
--- a baton handed over as a closeable issue is a baton on the floor.
+-- expression sat at three more sites in the same file. They are deliberately
+-- NOT changed by THIS lever (one lever at a time -- the lanefix bundle is why),
+-- and section 7 pins them as still `[1]`-shaped so that "there are more" cannot
+-- decay into a sentence nobody re-reads. This is the GH #13 shape the charter
+-- names: a baton handed over as a closeable issue is a baton on the floor.
+-- 2026-09-11: the baton was picked up -- 'lvlcarry' took the first of the three
+-- and section 7 moved 3 -> 2 by having the repaired site leave the table, which
+-- is what a moved baton is supposed to look like from in here.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -505,16 +508,29 @@ end
 
 -- ----------------------------------------------------- 7. THE BATON ---------
 
-tests['[lvlany] 7. the three untouched siblings are still there, still `[1]`']
+tests['[lvlany] 7. the untouched siblings are still there, still `[1]`']
 = function()
     -- Deliberately not fixed in this work unit: one lever at a time. Pinned here
     -- rather than left to the report, because a baton written only in prose (or
     -- only in a closeable issue) is the GH #13 failure the charter names -- that
     -- one went missing for 37 rounds. When one of these is repaired, THIS
     -- assertion is what tells the next round the count moved.
+    --
+    -- ⭐ 2026-09-11: IT MOVED, AND THIS IS WHAT THAT LOOKS LIKE. The strategy
+    -- desk took the first of the three -- X.CarryFindTarget's deny guard, the
+    -- level-12 site -- as 'lvlcarry', with its OWN id and its OWN helper
+    -- (X.NoNearbyEnemyAtLevelCarry) so that arming one does not arm the other.
+    -- The repaired site is moved OUT of the table below rather than the count
+    -- being quietly lowered: the level-12 entry drops 2 -> 1 because one of the
+    -- two is gone from the source, and the total drops 3 -> 2. The remaining two
+    -- are the second level-12 site in X.CarryFindTarget (the group-push branch)
+    -- and the level-10 site inside X.CanAttackTogether -- and section 7b of
+    -- tests/test_lvlcarry_carry_deny_level_quantifier.lua now carries the
+    -- measured reason the CanAttackTogether one is not takeable on this corpus
+    -- yet (its full predicate never flips here).
     local src = stripped(read_file(TRG))
     local siblings = {
-        ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12'] = 2,
+        ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12'] = 1,
         ['nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 10'] = 1,
     }
     local total = 0
@@ -534,9 +550,10 @@ tests['[lvlany] 7. the three untouched siblings are still there, still `[1]`']
             .. 'number.')
         total = total + n
     end
-    assert(total == 3,
-        'the baton is ' .. total .. ' sites, not 3 -- the report and GH issue '
-        .. 'both say three')
+    assert(total == 2,
+        'the baton is ' .. total .. ' sites, not 2 -- one of the original three '
+        .. 'was taken by \'lvlcarry\' on 2026-09-11 and the report says two '
+        .. 'remain')
 end
 
 return tests

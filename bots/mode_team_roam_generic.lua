@@ -719,14 +719,81 @@ end
 -- while it is above 20).  Registered in state.json:lvlany_20260910; the armed
 -- string, queue.json and test_set.md are untouched.
 --
--- ⛔ SCOPE IS ONE CALL SITE ON PURPOSE.  The identical expression sits at three
--- more places in this file (:884 and :919 at level 12, :1432 inside
--- X.CanAttackTogether at level 10).  They are NOT changed here -- one lever at a
--- time is what the lanefix bundle cost us -- and they are named in the report
--- and in the GitHub issue so the baton is a written line, not a memory.
+-- ⛔ SCOPE IS ONE CALL SITE ON PURPOSE.  The identical expression sat at three
+-- more places in this file.  They are NOT changed by THIS lever -- one lever at
+-- a time is what the lanefix bundle cost us -- and they are pinned as an
+-- assertion (section 7 of this lever's test) so the baton is a counted line, not
+-- a memory.  2026-09-11: the first of the three was taken off that baton by
+-- 'lvlcarry' (X.CarryFindTarget's deny guard, level 12, its own id and its own
+-- helper -- see the block above X.NoNearbyEnemyAtLevelCarry).  TWO remain: the
+-- second level-12 site in X.CarryFindTarget, and the level-10 one inside
+-- X.CanAttackTogether.
 function X.NoNearbyEnemyAtLevel(tHeroes, nLevel)
 	if tHeroes == nil or tHeroes[1] == nil then return true end
 	if J.IsModeTurbo() and J.IsSoakCandidate('lvlany') then
+		for i = 1, #tHeroes do
+			if tHeroes[i]:GetLevel() >= nLevel then return false end
+		end
+		return true
+	end
+	return tHeroes[1]:GetLevel() < nLevel
+end
+
+-- [lvlcarry 20260911] THE SAME EXISTENTIAL-QUESTION-ANSWERED-BY-THE-NEAREST
+-- DEFECT, TAKEN OFF THE BATON 'lvlany' LEFT (one of the three siblings named in
+-- the block above).  This one is X.CarryFindTarget's last-hit/deny guard:
+--     local nNearbyEnemyHeroes = bot:GetNearbyHeroes(650, true, BOT_MODE_NONE)
+--     if IsModeSuitHit
+--        and (botHP > 0.38 or not bot:WasRecentlyDamagedByAnyHero(3.0))
+--        and (nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12)
+-- The empty-list leg beside it is again what proves the question is existential:
+-- the author already spent a term separating "nobody here" from "somebody here
+-- who is weak".  What the expression answers is "is the NEAREST one weak".
+--
+-- ⭐ THREE DIFFERENCES FROM 'lvlany', AND THEY ARE WHY THIS IS A SECOND LEVER
+-- RATHER THAN THE SAME ONE WIDENED.  (1) Different function, different branch:
+-- the support's laning guard there, the carry's deny/tower-last-hit branch here.
+-- (2) Different constants: r = 650 and level 12, not 750 and 10 -- and the
+-- corpus reads differently at them (the miss population is 2 here against 7
+-- there; see the sweep in the test).  (3) ⛔ Different PRODUCER: this call site
+-- reads bot:GetNearbyHeroes DIRECTLY, not J.GetNearbyHeroes, so the list is not
+-- put through J.IsValidHero / the meepo-clone filter.  That is a separate
+-- pre-existing question and it is NOT touched here; section 4d of the test
+-- measures that on this corpus the two lists never differ, so nothing below
+-- rests on the difference either way.
+--
+-- ⛔ WHY A SECOND HELPER RATHER THAN A SECOND CALLER OF THE ONE ABOVE.  Sharing
+-- it would put both call sites behind the single id 'lvlany', which is exactly
+-- the bundling the lanefix rejections (gpm -74.5, then -88.7, 0/4 comps) cost
+-- us; and giving the shared helper two ids would be the pullcad trap, where a
+-- gate written as a conjunction of ids freezes FALSE the day either is promoted.
+-- One lever, one id, one call site.  The duplication is nine lines and is the
+-- cheap side of that trade.
+--
+-- WHAT IT COSTS.  The branch this guard protects walks the bot up to last-hit
+-- and deny at BOT_MODE_DESIRE_ABSOLUTE * 0.97, and the term above it caps the
+-- bot at level 8.  When the nearest enemy is the level-8 offlaner standing 191
+-- units away and a level-12 Lina is the other name inside the same 650, the
+-- guard reads "clear" -- that frame is real and is the anchor of the test
+-- (tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua, slardar at level 7).
+--
+-- DOMAIN AND LIMITS are measured in
+-- tests/test_lvlcarry_carry_deny_level_quantifier.lua and stated there BEFORE
+-- any count is read -- in particular, the branch's other terms (IsModeSuitHit,
+-- WasRecentlyDamagedByAnyHero, the two fountain distances) are not driven by
+-- this corpus, so no in-game fire rate is claimed anywhere.
+--
+-- ⭐ THE WHOLE CHANGE IS INSIDE THE GATE and the unarmed leg is the shipped
+-- expression term for term, in the same slot of the same conjunction, so the
+-- short-circuit order is unchanged.  Section 3b measures that equality on all
+-- 1306 live rows rather than reading it off the diff.
+--
+-- ⛔ FROZEN-HOLD per OWNER_PRIORITIES P4.2 (new ids do not enter the armed set
+-- while it is above 20).  Registered in state.json:lvlcarry_20260911; the armed
+-- string, queue.json and test_set.md are untouched.
+function X.NoNearbyEnemyAtLevelCarry(tHeroes, nLevel)
+	if tHeroes == nil or tHeroes[1] == nil then return true end
+	if J.IsModeTurbo() and J.IsSoakCandidate('lvlcarry') then
 		for i = 1, #tHeroes do
 			if tHeroes[i]:GetLevel() >= nLevel then return false end
 		end
@@ -949,9 +1016,12 @@ function X.CarryFindTarget()
 
 	local denyDamage = botAD + 3
 	local nNearbyEnemyHeroes = bot:GetNearbyHeroes(650,true,BOT_MODE_NONE);
-	if  IsModeSuitHit 
+	if  IsModeSuitHit
 		and ( botHP > 0.38 or not bot:WasRecentlyDamagedByAnyHero(3.0))
-		and (nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12)
+		-- [lvlcarry 20260911] see the block above X.NoNearbyEnemyAtLevelCarry.
+		-- Unarmed this is `nNearbyEnemyHeroes[1] == nil or
+		-- nNearbyEnemyHeroes[1]:GetLevel() < 12` term for term, in this slot.
+		and X.NoNearbyEnemyAtLevelCarry(nNearbyEnemyHeroes, 12)
 		and bot:DistanceFromFountain() > 3800
 		and J.GetDistanceFromEnemyFountain(bot) > 5000
 	then

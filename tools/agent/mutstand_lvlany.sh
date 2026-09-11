@@ -35,11 +35,16 @@
 #   * M9 is the FORBIDDEN DIRECTION: leave the helper alone and rewrite the
 #     CALLER so nothing asks the question. Every behavioural assertion about the
 #     helper stays green while the lever gates nothing at all.
-#   * M10 is the BATON eroding. Section 7 pins the three sibling sites that this
-#     work unit deliberately did NOT touch. If one is quietly repaired (or
-#     quietly deleted), the report's "three more" becomes false while nothing
-#     else in the file notices. This is the GH #13 shape written as an
-#     assertion.
+#   * M10 is the BATON eroding. Section 7 pins the sibling sites that this lever
+#     deliberately did NOT touch. If one is quietly repaired (or quietly
+#     deleted), the report's count becomes false while nothing else in the file
+#     notices. This is the GH #13 shape written as an assertion.
+#     2026-09-11: the baton legitimately moved from three to two ('lvlcarry'
+#     took X.CarryFindTarget's deny guard, with its own id and its own helper),
+#     and section 7 was updated by having the repaired site LEAVE the table --
+#     which is the difference between a baton moving and a baton eroding. M10
+#     still asks the second question: a sibling repaired with no id, no test and
+#     no line in any report.
 #   * M11 is the premise itself. This lever's whole argument is that `[1]` is
 #     CORRECTLY the nearest and the guard is wrong anyway -- that is what makes
 #     it a different finding from 'anyhero' rather than a second copy of it. If
@@ -100,7 +105,11 @@ PY
 }
 
 GATE=$'\tif J.IsModeTurbo() and J.IsSoakCandidate(\'lvlany\') then'
-HIT=$'\t\t\tif tHeroes[i]:GetLevel() >= nLevel then return false end'
+# ⚠️ 2026-09-11: this anchor MUST carry the gate line above it. 'lvlcarry' landed
+# a second helper with a byte-identical loop body, so the bare line now occurs
+# TWICE in $SRC and `sub` would (correctly) abort the stand as AMBIGUOUS rather
+# than silently mutate the wrong helper. The gate id is what disambiguates.
+HIT=$'\'lvlany\') then\n\t\tfor i = 1, #tHeroes do\n\t\t\tif tHeroes[i]:GetLevel() >= nLevel then return false end'
 LOOP=$'\t\tfor i = 1, #tHeroes do'
 CALL='    and X.NoNearbyEnemyAtLevel(nNearbyEnemyHeroes, 10)'
 
@@ -164,7 +173,7 @@ score "M3" "exactly what the shipped expression answers"
 # M4: the armed leg is present, gated, loops -- and answers the wrong way.
 echo
 echo "=== M4: the loop finds the dangerous hero and returns true anyway ==="
-sub "$SRC" "$HIT" $'\t\t\tif tHeroes[i]:GetLevel() >= nLevel then return true end'
+sub "$SRC" "$HIT" $'\'lvlany\') then\n\t\tfor i = 1, #tHeroes do\n\t\t\tif tHeroes[i]:GetLevel() >= nLevel then return true end'
 score "M4" "somebody IS over the bar"
 
 # ---------------------------------------------------------------------------
@@ -172,7 +181,7 @@ score "M4" "somebody IS over the bar"
 # Every structural pin in section 6 stays green; only the drive can see this.
 echo
 echo "=== M5: the loop body re-reads tHeroes[1] instead of tHeroes[i] ==="
-sub "$SRC" "$HIT" $'\t\t\tif tHeroes[1]:GetLevel() >= nLevel then return false end'
+sub "$SRC" "$HIT" $'\'lvlany\') then\n\t\tfor i = 1, #tHeroes do\n\t\t\tif tHeroes[1]:GetLevel() >= nLevel then return false end'
 score "M5" "somebody IS over the bar"
 
 # ---------------------------------------------------------------------------

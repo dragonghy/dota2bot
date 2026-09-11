@@ -27,6 +27,68 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0LVLCARRY. **【2026-09-11T01:31Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**。
+   认领依据 = `0LVLANY`「下一格」**第 (1) 项**逐字点名的那一格(三个同形兄弟,一次一个)。
+   ⚠️ **先写本轮自己的程序瑕疵**:工作流第 1 步是**先扫 open issue**,本轮是**先取 backlog、
+   后扫的 issue**;扫到时发现 **GH #734(`[strategy]`,01:15:52Z 开)比本会话只早一分钟**,
+   而且是**外部来件 + owner P2 族**。改动已做完验完全绿,**不回滚**;**#734 放进「下一格」第 (0) 项,
+   排在剩下两根兄弟之前**。顺序错了就记下来,不要靠下一轮的记忆(GH #13 的形状)。
+   ⭐ **本轮接走第一根兄弟**:`X.CarryFindTarget` 的补刀/反补/拆残塔支路
+   `(nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12)`,名单来自**裸的**
+   `bot:GetNearbyHeroes(650,true,BOT_MODE_NONE)`。锚定帧是真的:
+   `tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua` —— slardar **7 级**(上一项
+   `GetLevel() <= 8` **满足**),650 内三人,**最近的是 191 码外的 8 级 tidehunter**,
+   **12 级 lina 是另外两个之一** ⇒ 出货守卫读成「安全」,支路以 `DESIRE_ABSOLUTE * 0.97` 送它上兵线。
+   ⭐ **为什么是第二个杠杆而不是 `lvlany` 被拓宽**:不同函数/支路;**不同常数**(r650/12 级,
+   语料读数也不同 —— miss 这边 **2**、那边 **7**);⛔ **不同 producer**(裸 `bot:GetNearbyHeroes`,
+   **不过 `J.IsValidHero`**;那是独立的既有问题,§4d 实测本语料上两个 producer **从不出现差异**,
+   本文件任何结论都不依赖它)。
+   ⛔ **为什么另起一个 helper 而不是给 `lvlany` 那个加第二个调用者**:共用 = 两个站点**一起 arm** =
+   lanefix 捆绑手工重建;共用 helper 挂两个 id = **pullcad 陷阱**。`lvlany` 的 §5b 早把它钉死在
+   「恰好一个调用者」上,本轮**撞上那根钉子然后照它说的做**。这条失效形状进了变异台 **M7**
+   (`lvlany` 那台没有对应腿)。
+   ⭐ **量具上唯一比上一轮强的地方:驱动人群是 1306 不是 2。** 效应人群只有 2 行,
+   「2 of 2 全绿」近乎空洞 ⇒ **每一个 live 行都驱动**,主张拆两半:§3b unarmed 与**出货表达式的文本**
+   在 **1306 行逐行相同**;§3c armed **恰好只在 miss 行不同**(2 行答 false)、其余 **1304 行相同**,
+   且 `on_matches_off + on_false_on_miss == drives` 逐位对上。**薄的效应人群于是是一条关于语料的
+   实测,不是一副薄的量具。**
+   ⭐⭐ **变异台这次改了测试,这才是它的用处(最该带走的一条)。** M13(去掉 mock 的 `other ~= self`)
+   第一轮**红得对不上题**:敌方名单**字节不变**,因为 mock 在**队伍比较**上把提问者**第二次**挡掉了
+   (`isEnemy` 对自己恒 false);真正动的是**友方**名单,连带 `#allies >= 2` —— 也就是 §7b 那个零
+   所说的东西。⇒ §4a 长出**友方侧那条等式**,让正确的文件去喊;按 §7b 的报错记成「caught」
+   就是变异台替自己撒谎(evidence-discipline 第 4 条:**结论对不等于理由对**)。
+   M14 是**量尺自己退化**(`shipped_answer()` 塌成常量 `true`)⇒ 本轮**调整了 §3b 内部的断言顺序**:
+   关于**量尺**的话在逻辑上先于关于**被测物**的话。
+   ⛔ **一条替换故意不上台并写明理由**:把驱动里的裸 `h:GetNearbyHeroes` 换成 `J.GetNearbyHeroes`
+   会**存活** —— 那不是洞,那正是 §4d 的主张本身。
+   产出:**新 id `lvlcarry`**(turbo-only,**FROZEN-HOLD,不请求入集**)、
+   `tests/test_lvlcarry_carry_deny_level_quantifier.lua` **17/17**、
+   `tools/agent/mutstand_lvlcarry.sh` **14 腿 14/14 STAND GREEN**、`state.json:lvlcarry_20260911`;
+   报告 `iterations/reports/strategy/20260911T013107Z.md`;**armed 串 / `queue.json` / `test_set.md`
+   一字未动**;零 AWS、零波次。
+   **附带(两条,都是流程债)**:(i) `mutstand_lvlany.sh` 的 `HIT` 锚点被本轮的近似复制 helper
+   **顶成歧义**(裸行从一处变两处,`sub` 会**正确地 ABORT** —— 而一台 abort 的变异台**什么也没称**)
+   ⇒ 两台的 `HIT` 都改成带各自 **gate 行**由 id 消歧,`mutstand_lvlany.sh` **重跑 11/11 STAND GREEN**;
+   (ii) trunk 红先按「谁弄红的」分类:`test_bots_walk_farm_only.py` 的红是英雄组
+   `test_cast_ring_mirror_discipline.lua` 的 `io.popen` 没进 hand-read 名单,
+   ⚠️ **而本轮我自己的新测试是同一份普查的新成员**(`0LVLANY` 那条警告**当场复现**)⇒
+   两条一起手读登记,`EXIT=0`。`test_py_gate.py`(GH #728)与 `test_wave_throttle.py`(批测台)不动。
+   ⚠️ **开工自检 EXIT=124**:被我自己设的 600s 超时打断,**「fast Lua detectors」那条腿一行没跑**
+   —— 按铁律 10,那一侧**这轮没人看过**,不是通过。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐⭐ **GH #734 排在最前** —— 外部来件 + owner **P2 族**
+   (`J.HasFieldRegenSource` 只读六格 / 购买闸数九格;野区药剂 61.1% 买进背包、18.0% 卡死喝不着);
+   (1) 主体仍是 `bots/` 行为改动:剩下两根兄弟一次一个,**取 `X.CarryFindTarget` 第二处 12 级站点**
+   —— ⭐ **这句是量出来的不是排的序**:§7b 实测 `X.CanAttackTogether` 那根的**整条谓词
+   一次都不翻转**(4 个 miss 行**全部**卡在 `#allies >= 2`,`cat_flip == 0`),在本语料上接它
+   **驱动是空的**;那条零断言**哪天红了是好消息**,不是要调小的数字;
+   (2) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,连续第六轮有效);
+   (3) ⛔ 兵营分支(GH #713)仍不落 gate,接力棒是 `tests/test_isvalid_building_sentinel.lua §2b`;
+   (4) ⛔ 裸 `bot:GetNearbyHeroes` **不过 `J.IsValidHero`** 已登记(§4d),**故意不碰** ——
+   一次一个杠杆,且语料现在分不开两个 producer;
+   (5) ⛔ P4.2 冻结未解 ⇒ 本轮没有提入集;`tombhp`(#719)/`anyhero`(#724)/`lvlany`(#731)
+   的裁定请求仍未答,本轮不催。】**
+
 0LVLANY. **【2026-09-10T22:39Z 新增。**P4.4 归属 = **(i) 一个 `bots/` 行为改动**。
    认领依据 = 工作流第 1 步扫 open issue,`[strategy]` open(#724/#719/#713/#706/#701/#697/#676)
    **全是本组自报、无外部来件** ⇒ 取 `0ANYHERO`「下一格」**第 (1) 项**
@@ -7763,6 +7825,41 @@
 
 ## 当前状态(每次触发后更新)
 
+- 2026-09-11T01:31Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = `0LVLANY`
+  「下一格」第 (1) 项逐字点名的那一格:三个同形兄弟,一次一个)。
+  ⚠️ **程序瑕疵写在最前**:工作流第 1 步是先扫 open issue,本轮**先取 backlog、后扫 issue**;
+  扫到时 **GH #734(`[strategy]`,01:15:52Z)比本会话只早一分钟**,且是**外部来件 + owner P2 族**。
+  改动已做完验完全绿,**不回滚**;#734 已放进「下一格」**第 (0) 项**,排在剩下两根兄弟之前。
+  ⭐ **接走第一根兄弟**:`X.CarryFindTarget` 的补刀/反补/拆残塔支路
+  `(nNearbyEnemyHeroes[1] == nil or nNearbyEnemyHeroes[1]:GetLevel() < 12)`,名单是**裸的**
+  `bot:GetNearbyHeroes(650,true,BOT_MODE_NONE)`。锚定帧
+  `tests/fixtures/f_20260827_091703_slot12_zuus_473_1.lua`:slardar **7 级**,650 内三人,
+  **最近的是 191 码外的 8 级 tidehunter**,**12 级 lina 是另外两个之一** ⇒ 守卫读成「安全」。
+  ⭐ **是第二个杠杆不是拓宽**:不同函数/支路;**不同常数**(r650/12,miss 人群 **2** vs `lvlany` 的 **7**);
+  ⛔ **不同 producer**(裸 `bot:GetNearbyHeroes`,不过 `J.IsValidHero` —— 独立既有问题,
+  §4d 实测本语料上两者**从不出现差异**,结论不依赖它)。
+  ⛔ **另起一个 helper 的理由**:共用 = 两个站点一起 arm = lanefix 捆绑手工重建;共用 helper 挂两个 id
+  = pullcad 陷阱。`lvlany` §5b 早把它钉死在「恰好一个调用者」上 —— 本轮**撞上那根钉子然后照它说的做**,
+  并把这条失效形状做成变异台 **M7**(`lvlany` 那台没有对应腿)。
+  ⭐ **驱动人群 1306 不是 2**:效应人群只有 2 行,「2 of 2」近乎空洞 ⇒ 每一个 live 行都驱动,
+  §3b unarmed 与**出货表达式的文本**在 1306 行逐行相同;§3c armed **恰好只在 miss 行不同**、
+  其余 1304 行相同,且 `on_matches_off + on_false_on_miss == drives` 逐位对上。
+  ⭐⭐ **变异台改了测试**:M13 第一轮**红得对不上题** —— 敌方名单字节不变(mock 在队伍比较上把提问者
+  **第二次**挡掉),动的是**友方**名单和 `#allies >= 2`(§7b 那个零所说的东西)⇒ §4a 长出
+  **友方侧等式**。按 §7b 的报错记成「caught」就是变异台替自己撒谎(evidence-discipline 第 4 条)。
+  M14(量尺塌成常量)⇒ **调整 §3b 内部断言顺序**:关于量尺的话先于关于被测物的话。
+  产出:新 id **`lvlcarry`**(turbo-only,**FROZEN-HOLD**)、
+  `tests/test_lvlcarry_carry_deny_level_quantifier.lua` **17/17**、
+  `tools/agent/mutstand_lvlcarry.sh` **14 腿 14/14 STAND GREEN**、`state.json:lvlcarry_20260911`。
+  接力棒 §7 **3→2**,而且是**把被修好的那条移出表**不是把数字调小;
+  ⭐ 新增实测交下一轮:`X.CanAttackTogether` 那根**在本语料上买不到**(整条谓词一次不翻转,
+  4 个 miss 行全卡在 `#allies >= 2`,`cat_flip == 0`)⇒ **下一根取第二处 12 级站点**。
+  **附带两条**:`mutstand_lvlany.sh` 的 `HIT` 锚点被本轮的近似复制 helper 顶成歧义(会 ABORT ⇒
+  什么也没称)⇒ 两台都改成带 gate 行消歧,`lvlany` 台**重跑 11/11 STAND GREEN**;
+  trunk 红分类后手读登记两条 `io.popen`(本组新测试自己一条 + 英雄组 `cast_ring` 一条),
+  `test_bots_walk_farm_only.py` **EXIT=0**。⚠️ **开工自检 EXIT=124**(我自己的 600s 超时),
+  **fast Lua detectors 那条腿一行没跑 —— 不是通过**。零 AWS、零波次,`armed 串`/`queue.json`/
+  `test_set.md` 一字未动。详见 `iterations/reports/strategy/20260911T013107Z.md`。
 - 2026-09-10T22:39Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。认领依据 = 扫 open issue,
   `[strategy]` open 全是本组自报、无外部来件 ⇒ 取 `0ANYHERO`「下一格」**第 (1) 项**:
   上一轮点名但没扫的 `mode_*.lua` 那一半)。

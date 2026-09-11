@@ -94,6 +94,12 @@ UNRESOLVED_HAND_READ = {
         "keeps only names ending .lua; same non-recursive `ls` as the two lines "
         "above, same reason (hand-read 2026-09-10, strategy desk -- this walk is "
         "that round's own)",
+    """tests/test_lvlcarry_carry_deny_level_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'} and "
+        "keeps only names ending .lua; identical walk to the lvlany line above "
+        "and safe for the same reason -- plain `ls` is NOT recursive, so it "
+        "never reaches bots/Customize/. Hand-read 2026-09-11 (strategy desk -- "
+        "this walk is that round's own, which is exactly why it costs a read)",
     """tests/test_zuus_arc_execute_kill.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {'tests/fixtures', 'tests/frames'}; same "
         "non-recursive `ls` as the line above, same reason",
@@ -108,6 +114,15 @@ UNRESOLVED_HAND_READ = {
         "{'tests/fixtures', 'tests/frames'} (:62-:63); the '/*.lua' is appended "
         "by the caller, and plain `ls` is NOT recursive, so it never reaches "
         "bots/Customize/. Hand-read 2026-09-10 (director, GH #729 round) at :80-:88",
+    """tests/test_cast_ring_mirror_discipline.lua  ::  'ls ' .. glob .. ' 2>/dev/null'""":
+        "ls(glob) has three callers, all passing a LITERAL glob: "
+        "frame_paths() loops over {'tests/fixtures/*.lua', 'tests/frames/*.lua'} "
+        "(:109) and the suite census passes 'tests/test_*.lua' (:295). Same "
+        "whole-glob-instead-of-directory shape as the anyhero line above, same "
+        "reason it is safe: still non-recursive, still rooted in tests/, so it "
+        "never reaches bots/Customize/. Hand-read 2026-09-11 (strategy desk) at "
+        ":97-:110 and :295 -- not this desk's walk, cleared because it was the "
+        "one finding standing between trunk and green on this leg",
     """tests/test_itemtrip_supply_gap.lua  ::  'ls "' .. dir .. '"'""":
         "ls('bots', ...) x2 and ls('tests/fixtures', ...); `ls \"bots\"` is NOT "
         "recursive, so it never reaches bots/Customize/ at all",
