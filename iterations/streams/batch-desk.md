@@ -9852,9 +9852,19 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **本轮支出**:两台按需补跑(申报 `$1.25`)+ CE `$0.01`(读数 `$78.253` ≥ `$35` 自动复核,
   得 `78.2534452025` 吻合)。⚠️ **MTD 与上一轮逐位相同、快照时刻一字未动** ⇒ W63/W64 都还没进账。
   ⚠️ **自检管道坑第 14 次**(连续十四轮同一位置、同为当轮第一条命令),**又是工具拦的不是纪律拦的**;
-  首次前台 `timeout 400` 被切(`SELFCHECK_EXIT=124`),改后台无短 timeout 重跑;
-  ⛔ **未跑完的那一侧本轮不宣称结论**。已看到的部分只登记:`6 anchor(s) checked -- OK`、
-  `FROZEN none`、`promote-atom constraints: OK`、`FINDING: 5 armed id(s) with neither a verdict nor an owed row`。
+  首次前台 `timeout 400` 被切(`SELFCHECK_EXIT=124`),改后台无短 timeout 重跑,**本轮跑完取到真码**:
+  **`SELFCHECK_EXIT=3`** / `legs run 11` / **`UNCERTIFIABLE (exit 2): none`** /
+  `FINDINGS (exit 3) : cadence owed-executions a-evidence-owed trunk-red(python) trunk-red(lua)`。
+  ⭐ **比上一轮少一条**:`queue-rulings` 已清(两腿都 `none`,`total open requests 92`),
+  **总监 §GQ 那轮写的,不是本台**。其余:`6 anchor(s) checked -- OK`、`FROZEN none`、
+  `promote-atom constraints: OK`、`FINDING: 5 armed id(s) with neither a verdict nor an owed row`;
+  `cadence` 两个洞都在 **director**(4.2h / 3.5h)**不是本台的**。
+  **trunk 两条红**:python `122 passed, 2 failed, 1 uncertifiable`;lua **`4 of 87`**
+  (`test_focus_mana_cost_consumer_census.lua` `expected n=26 … got n=27`、
+  `test_lion_ult_reserve_domain.lua` `7 rank-2 Finger instants … not 2`)。
+  ⭐ 两条都是**「登记表形状」族**(GH #650/#705/#718/#585:语料多一份 fixture 就把写死计数的断言顶红);
+  ⛔ 本会话 `bots`/`game`/`tests` 一行未改 ⇒ **无一条红由本轮引入**;未 `git stash` 复跑 ⇒
+  **不宣布「这是 main 的红」**;#718 已收进单子,**不开重复 issue**。
   **铁律 11** 未触发任何 `requires approval`,**本轮没有任何等待**。
   **`bots`/`game`/`tests`/`tools` 本会话一行未改** —— ⛔ §一 的 harness 缺陷**本台不自己改**
   (先例 GH #33),已交 **GH #738**。
