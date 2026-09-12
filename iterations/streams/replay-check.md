@@ -77,6 +77,33 @@
    从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
+- **⭐⭐ [2026-09-12 新踩,W69]「域为空 / 罕见」这一格里必须再切一刀,否则交棒单会把
+  **加局无救**的 id 当成 n=1 候选反复捡起来。** 上一轮(18:54Z)§一把
+  `campfarm`/`campvoid`/`creepthink`/`blinkflee` 一起归进「域为空/罕见 ⇒ ⭐能 —— 罕见是语料问题」,
+  并点名 **`creepthink` 优先**;逐个读第一手源,**四个里三个加局无救**:
+  `creepthink` —— **本组自己 GH #521 判它 dump 侧结构性买不到**(它只改 `Think()` 会不会走到
+  下命令那一行,**命令流不在 dump 里**),而 **(a) 已于 09-05 在 fixture 层买到**
+  (`state.json:creepthink_CONDA_20260905`,§EU,变异台 12/12);
+  `campvoid` —— `campvoid_escape.py` 头注逐字「**NEITHER CONJUNCT OF THE GATE CAN BE
+  EVALUATED ON THIS CORPUS**」(dumper 不发 creep 实体);
+  `blinkflee` —— 09-10 已登记**结构性拒绝**,09-11 那轮的表里写的就是「排除」。
+  ⇒ **判别子极便宜**:读该 id `*_domain.py` 头注的 **LIMITS 段** + `state.json` 里有没有
+  `_CONDA_` / 结构性拒绝记录。**本组 09-11T16:11Z 自己立过这条纪律**
+  (「先读工具头部 LIMITS,再决定买不买语料」)——**三轮之后在自己的交棒单里失效了一次**,
+  失效的形状是「**上一轮的分类表被当成第一手源引用**」。
+- **⭐ [2026-09-12 新踩,W69] `dota_unknown` 伤害行不等于「下过攻击命令」** ——
+  激怒之后的右键与**引擎自动索敌**在 dump 上**同形**(命令流不在 dump 里,GH #521 同族)。
+  判别子(本轮新增,动手前 `grep -rln 'pre-aggro|preaggro|pre_aggro' tools/ tests/ iterations/reports/`
+  **零命中**):**该普攻行是否严格早于目标第一次还手**(`item_blade_mail` 反伤必须排除,
+  否则自己的反伤会把「还手」提前到自己身上)。
+  ⚠️ **而「还手」本身可能是英雄自己 0.7 秒前的 AoE 制造的**:`0128b9/20260912_094042_slot1`
+  bristleback t=547.0 的 episode 由**他自己的 Quill Spray** 溅进相邻远古营开的,他真正在打的是
+  **407u 外的普通营 `centaur_khan`** ⇒ `opened_by='ability'` 是这种污染的签名,
+  而**它抬高的正是 armed 腿的域内计数**(方向朝着结论)。
+- **⭐ [2026-09-12 新踩] `a_evidence_route.py` 的 `DELIVER 0` 不等于条件 (a) 的债清了。**
+  它数的是「**有没有判决**」;W69 的 27 个 armed id **全部 VERIFIED / DELIVER 0**,
+  而按仓内 `VERIFY id=` 行机械统计最新判决,**19 个停在 INDETERMINATE**(WORKING 7 / SILENT 1)。
+  ⇒ 真实堵点是「判决是什么」,而那张表**按设计看不见它**。
 - **[2026-09-11 新踩,W66] `roam_conversion` 的死亡区间是按 `canon_hero()` 建键的,
   `g['dead'].get('npc_dota_hero_x')` 永远返回空元组 ⇒ 每一帧都读成存活。**
   它**不报错、不为空、不缺字段**,只是把 liveness 这一整道网静默拆掉;
@@ -16056,3 +16083,64 @@
     实测 **>14 分钟**(章程写「约 20s」,**GH #358 不重开**)。
   - token:`TOKENS total_in=10,886,898 out=66,508 turns=75`
   - **完整报告**:`iterations/reports/replay-check/20260912T185424Z.md`
+- **2026-09-12T21:2xZ(本轮):还 09-10 交下来的棒 —— `campfarm` 的**触发级逐帧**;
+  判决仍 `INDETERMINATE`,但**第一次钉到一个帧锚定的候选泄漏**;另纠正上一轮交棒单的分类
+  (四个 id 里三个加局无救)+ 结清 GH #521 (丙)**。
+  - `VERIFY id=campfarm verdict=INDETERMINATE episodes=8`(带内 clean episode;9 条原始里 1 条被
+    实体卫生规则排除)。**不是上一条的重申**:09-10 那条是 W63(34-id,64 局,31 episode)的**计数侧**读数,
+    本条是 W69(27-id,12 局)的**触发级逐帧**,两族**不并池**,W63 只作量级对照。
+  - **覆盖**:宽扫 **12/12 局**(四个 `SWEEP_EXIT=0`,逐 run `dem 4 / swept 3 / skipped 1 / unparseable 0`,
+    读数取自 `sweep_complete.json` 未手敲 `s3 ls`);**深查逐帧 6 局**(章程下限 6 ✅)。
+    `.dem` 按 run 分四目录,`uniq -d` 零输出。
+    ⚠️ **分层 ab 8 / ba 4**(replay 子集不平衡,非波次不平衡)——本轮每个分层读数都继承这个 2:1。
+  - ⭐⭐ **承重帧**(可复现):`spot_20260912_092624_1_main_0128b9` / `20260912_094042_slot1` /
+    seed **13027** / `script_version = mirror:…,campfarm,…:s13027:**radiant**`(逐字现读)/
+    **`sniper` 等级 10、armed 腿、`camp_side=own`**、`illusion_suspect=False`、`anchor_shift=0.2u`、
+    `alone=True`(最近敌人 1626u)、`hp_min=0.917`、**普通营 406.9u / 远古营 575.6u(`mixed=True`)**:
+    **t=546.0…555.0 连续 12 条 `dota_unknown` 伤害行打在一只远古小兵上,全程零还手**
+    ⇒ **激怒之前**的普攻,正是 `FilterFarmNeutrals` 在 `level<12` 时声称不可能的形状。
+  - ⛔ **仍判 INDETERMINATE 的四条理由**(都不是客套):命令流不在 dump(哪个 `Consider*` 下的这一击分不开)/
+    引擎自动索敌与下过命令同形 / `campvoid` 共臂照登(§BW.3)/ 腿别只做了 stamp 直读,
+    **未做**正交 id 交叉验证。⇒ **交 fixture 层**:`make_fixture.py …094042…timeline.json --t 546.0 --hero sniper`,
+    断言 armed 世界交给 `J.Site.FindFarmNeutralTarget` 的表里**没有远古小兵**(照 `creepthink` §EU 的做法)。
+  - **计数侧为什么说不出话**:带内 8 个 clean episode(armed 3 / baseline 5),每局 n∈{0,1};
+    **MECHANISM(普攻开营)那一列两腿皆 0**,而那是工具自称「the one shape the list edit is supposed to
+    make impossible」;**REVERSE GUARD(≥12 带)没塌**(+1.562,两层同号 YES)⇒ 域可达,不是死管子。
+    量级:W63 64 局→31 episode,W69 12 局→8,**线性** ⇒ MECHANISM 第一格要 **50+ 局**,
+    ⛔ **不要再为 `campfarm` 买语料**。
+  - ⛔ **一条读法纠正(4(i-b) vs 4(i-c))**:`campfarm_target.py` 每张表打的
+    `strata agree in sign: NO` 那一行,**09-10 那轮据此引 4(i-b) 把读数作废**;
+    但该工具头注自报估计量是「the mean of the two strata's paired per-game differences,
+    **which cancels the side term exactly**」,`BALANCED` 逐位可验 `(+0.125−0.750)/2=−0.3125`
+    ⇒ 归 **4(i-c)**:反号是恒等式不是诊断,**不是否决理由**(但必须登记,4(i-a))。
+    **结论不变(n≤1/局),理由变了** —— 正是 §CL 立的「『对上了』不等于『理由对』」。
+  - ⭐ **GH #521 (丙) 本轮结清**(挂 7 天,总监 09-05 三轮各写一次「不抢」):
+    `midtp` = **已交付且已驱动裁定**(`VERIFY id=midtp verdict=BUGGY episodes=8` → 总监 09-06
+    按 §FK.3 退集三条,`state.json:roshdist_midtp_suptp_WITHDRAWN_20260906`);
+    `zusstatic` = **也不是 `creepthink` 那一类,而它的退集理由被记成了那一类** ——
+    `test_set.md` 记「条件 (a) 结构上买不到,加局无用」,证据是 `verify_coverage.py` 的 **BLIND SPOTS(一个缺席)**;
+    而**本组自己的 `zusstatic_domain.py`(GH #207,头注自报 08-26,早于 09-05 退集)头注逐字说相反的话**
+    (「What the corpus **can** settle is … **exactly what condition (a) asks**」),
+    且它在 **W39/W40/W41** 三波 arm 串里(逐个 `arm_string` 现核 True;那三波 S3 前缀仍在)。
+    ⇒ 正确类别是**交付债**(§FB.2/FB.3),不是不可买;`a_evidence_route.py` 自己的 LIMITS 正禁止
+    「用缺席论证不可买」。**该标签已作先例类别传播**(`test_set.md` 用「`zusstatic` 那一型」退 `teambrain`,
+    §FB 又拿它当对照极)。⛔ **不主张 `teambrain` 退错** —— 它另有自带的结构性证据,只是借了个记错的标签。
+    **本组不自裁入集/出集**,交总监。
+  - **issue**:先搜后开(`grep` 判别子零命中);追评 **#521**((丙) 结清 + 类别纠正)、
+    新开 **[strategy]**(`campfarm` 候选泄漏 + 钉帧提案)、新开 **[harness]**
+    (`strata agree in sign` 那一行应自报适用 4(i-c) 还是 4(i-b))。
+  - **量具**:全部既有(动手前 `ls … | grep -iE 'campfarm|campvoid|creepthink|blinkflee'` 四命中);
+    **零新增仓库文件**,两个探针(`cf_frames.py` / `cf_preaggro.py`)**全程 scratchpad**,
+    只 import 既有谓词(`entities.frames_by_hero/alive_interp/death_times`、
+    `ancient_camp_domain.is_ancient`、`campfarm_target.ATTACK_INFLICTOR`),**一个都没重新实现**。
+    退出码逐条 bare 读取未经管道:`CF_SELFCHECK_EXIT=0`(**28 PASS / 0 FAIL**)、`CF_EXIT=0`、
+    `PREAGGRO_EXIT=0`、`AER_EXIT=0`、`DUMPER_EXIT=0`(S3 缓存 HIT 未重建)。
+  - **AWS**:只读(`s3 ls` ×3 + `sweep_run.sh` 拉 16 份 `.dem`);**零 EC2 / 零 CE / 零支出**;`AWS_SETUP_EXIT=0`。
+  - **树上改动**:仅报告 + 本文件;`bots/` `game/` `tests/` `tools/` **一行未改**。
+  - ⚠️ **一处自我纠正(现核推翻)**:第一遍把 `test_set.md` 里「W49…**含这两个 id**,它的读数正是买 (a) 的语料」
+    错读成指 `zusstatic`,据此差点写出「退集记录自称语料存在却又说不可买」的更强指控;
+    **现核 W49_wave.json 自报是 61-id 家族首波、`arm_delta_vs_W48` 把 `zusstatic` 列为 REMOVED**,
+    那句说的是 `tpdying`/`tpreach`。**已改掉,只留下能站住的那条(头注 vs 退集理由)。**
+  - **下一轮第一件事**:(1) ⭐⭐ `campfarm` 的 fixture(`--t 546.0 --hero sniper`)——**唯一没试过的层**;
+    (2) ⛔ 别再捡 `creepthink`/`campvoid`/`blinkflee`/`campfarm` 的语料(捡之前先读本文件新增的第一条工具坑);
+    (3) 等总监对 `zusstatic` 退集理由的裁定。
