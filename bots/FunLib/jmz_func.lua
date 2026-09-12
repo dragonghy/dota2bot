@@ -3368,6 +3368,38 @@ function J.IsValidBuilding( nTarget )
 	return J.Utils.IsValidBuilding(nTarget)
 end
 
+-- [strategy 20260912, GH #782 second family] IS THIS "BUILDING" ACTUALLY AN
+-- OUTPOST? The tree had no canonical answer, which is why the question keeps
+-- being answered ad hoc or not at all.
+--
+-- ⭐ THE MEASURED FACT THIS EXISTS FOR, and it is bigger than the issue that
+-- found it. GH #782 was filed as a NAME TEST defect: `string.find( name,
+-- 'tower' )` matches `npc_dota_watch_tower`, so a captured outpost reads as a
+-- defensible tower. Every site counted there has a name test to narrow. But a
+-- captured outpost is ALSO a member of `GetUnitList( UNIT_LIST_ALLIED_BUILDINGS )`
+-- and it PASSES `J.IsValidBuilding` (= IsValidUnit and unit:IsBuilding()) --
+-- measured over the fixture corpus by tests/_outpost_anchor_sweep.lua:
+-- `wt_fixtures 68 / wt_allied 68 / wt_valid 68`, i.e. every outpost that is in
+-- the allied list also clears the filter, none is rejected. So every reader
+-- that uses that list as a PROXIMITY ANCHOR and carries NO name test at all is
+-- contaminated as well, and there is nothing there for a name-test fix to
+-- narrow. That is the half of the family GH #782's own framing cannot reach.
+--
+-- Written as `string.find` on the unit name rather than a modifier or a team
+-- test on purpose: an outpost's TEAM is whoever holds it (that is exactly how
+-- it gets into the ALLIED list), and `modifier_watch_tower_capturing` is only
+-- present mid-channel. The name is the only stable discriminator, and
+-- tests/test_ohnum_outpost_anchor.lua parses this literal out of this function
+-- so the census and the narrowing can never disagree about it.
+--
+-- Pure predicate, no gate: it changes nothing on its own and every caller
+-- carries its own gate.
+function J.IsOutpostBuilding( nTarget )
+	return nTarget ~= nil
+			and not nTarget:IsNull()
+			and string.find( nTarget:GetUnitName(), 'watch_tower' ) ~= nil
+end
+
 function J.IsRoshan( nTarget )
 
 	return nTarget ~= nil
@@ -9379,6 +9411,53 @@ function J.ShouldRefuseUnsupportedPunish( bot, target )
 	for _, building in pairs( GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) or {} )
 	do
 		if J.IsValidBuilding( building )
+		-- [strategy 20260912, GH #782 second family] AN OUTPOST IS NOT THE ALLY
+		-- THIS RELEASE IS NAMED AFTER. The release above it is justified, in its
+		-- own words one screen up, by "the tower is the ally the count does not
+		-- name, so parity there is really parity plus a tower". A captured
+		-- outpost passes J.IsValidBuilding and sits in this very list
+		-- (tests/_outpost_anchor_sweep.lua: wt_valid 68 of wt_allied 68), and it
+		-- has NO attack -- it contributes exactly none of the support the
+		-- release's stated reason rests on. So this loop could release the
+		-- refusal on an anchor that adds zero fighters, and hand back a
+		-- parity/1v1 punish at 0.98 desire, which is the single thing this
+		-- helper exists to refuse. The defect is CLOSED FORM (an outpost does
+		-- not shoot), not sampled.
+		--
+		-- ⚠️ EFFECT SIZE ON THIS CORPUS IS ZERO, AND THE ZERO IS ATTRIBUTED
+		-- RATHER THAN WAVED AT: over 111 fixtures / 1031 live hero-frames / 804
+		-- (subject, visible enemy) pairs, `oa_anchor 53` anchor hits and
+		-- `oa_anchor_has_wt 0` -- not one of them involves an outpost at all, so
+		-- `oa_anchor_wt_only 0` and the flip set `oa_wt_only_would_refuse 0`.
+		-- The POSITIVE CONTROL that makes those zeros readable rather than free:
+		-- the same handles and the same distance call answer `oa_wt_within_4800
+		-- 127` and the closest an allied outpost ever comes to a visible enemy
+		-- hero is 2,466.3 units -- more than TWICE this 1200 radius. So the zero
+		-- is GEOMETRY (this corpus has no outpost fight), not a dead instrument
+		-- and not constructive inertness: an enemy hero within 1200 of one of
+		-- our outposts is an ordinary in-game configuration, which is what
+		-- separates this from the 'table zero' family that gets registered
+		-- without a cut (GH #782's mode_retreat_generic site, where the outpost
+		-- branch is inert in the game too).
+		--
+		-- DIRECTION IS FIXED BY CONSTRUCTION: this is a conjunct ADDED to the
+		-- condition of an early `return false`, so it can only make the refusal
+		-- MORE likely. Armed, the refused set is a strict superset of the
+		-- un-narrowed one, and the call site joins as `and not <this>` -- so it
+		-- can only REMOVE a punish target, never add one.
+		--
+		-- NO NEW SOAK ID, ON PURPOSE, and the rule is the one this helper's
+		-- sibling J.ShouldPunishOverchase already wrote down: when the host
+		-- helper is itself an unpromoted candidate, NO placement inside it
+		-- yields a readable single-arm zero -- a nested
+		-- `J.IsSoakCandidate('<new>')` here would be the conjunction
+		-- `ohnum AND <new>`, and an isolation wave arming <new> alone would read
+		-- a zero that is STRUCTURALLY IMPOSSIBLE rather than informative, which
+		-- check_armed_wiring.py would still call WIRED (the 'pullcad' trap, GH
+		-- #606/#576). So this narrows the host's own body and inherits 'ohnum'.
+		-- Shipped play is unchanged either way: 'ohnum' is unpromoted, so this
+		-- function returns false on its second line in every real game.
+		and not J.IsOutpostBuilding( building )
 		and GetUnitToUnitDistance( target, building ) <= 1200
 		then
 			return false

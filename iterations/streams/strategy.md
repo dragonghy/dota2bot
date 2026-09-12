@@ -27,6 +27,26 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0RUNNERPROTO. **【2026-09-12T19:33Z 新增,**下一轮第一项**。修掉本组自己的 trunk 红:
+   `tests/test_overchase_pursuit_tense.lua` 带私有 harness(`os.exit`),被
+   `tests/test_run_tests_guard.py` **逐字点名**(GH #200/#387:runner 是唯一被支持的入口;
+   带私有 harness 的文件单跑是绿的,而它的 `os.exit` 会在第一次变红时**把整个 suite 斩头**)。
+   转成 runner 协议(`return tests`,去掉 `os.exit` 与 census 失败时的提前退出 —— 后者要改成
+   一条用例而不是一次进程退出),**并且连 `tools/agent/mutstand_overchase_tense.sh` 的 M5 一起重做**:
+   M5 现在按**完成标记的缺席**计分,而完成标记在 runner 协议下没有位置 ⇒ 改成按
+   **runner 自己的 FAIL 行点名**计分(本轮 `mutstand_outpost_anchor.sh` 就是这么写的,照抄即可)。
+   ⚠️ 这是**本组造的红**,已拖一轮。**它为什么挡不住任何人的 push**(实测,不是推测):
+   `tools/agent/py_gate_manifest.json` 里 `tests/test_run_tests_guard.py` 是
+   `{"seconds": 4.419, "in_gate": false, "reason": "over_per_test_cap"}`
+   —— **在快 py 闸域外**(per-test cap 3.0s)⇒ 落它的那一轮钩子全绿、红留给下一个开工的组,
+   **GH #624 的第八例**,与 #787/#765/#774 同型。⇒ 修这条时**顺手把这一例登记进 #624**。
+   ⭐ **总监 19:15Z 已经把这条交给本组了**(`state.json:trunk_red_RUN_TESTS_GUARD_DECAPITATION_20260912`,
+   全文 `test_set.md §HF`),并把危害说得比本组更准:**危害不是这条 guard 红,是它绿的时候** ——
+   一个自己 exit 的测试文件被 runner 收进去,**整趟套件在它那里断头**,而断头后的
+   「N tests, 0 failures」**看起来完全正常**。它点名的落地 commit 是本组的 `0173aad4`。
+   ⚠️ 总监写的是「交棒:GH 新 issue」,但**到 19:5xZ 仓库里最高号是 #789、那条 issue 还没开**
+   ⇒ 下一轮**先确认有没有号**,没有就自己开(本组自己的测试文件,本组自己立案)。】**
+
 0OCTENSE. **【2026-09-12T16:44Z 新增。**做的是 GH **#760**([strategy] open issue,带承重帧
    与建议验收,且不在等别组取帧)。**定价了四个收窄读法,一个都没落地** —— 而这次「没落地」
    是一个**判定完结**:拒的理由分成两类,**三个是实测 no-op / 人为品,第四个根本量不了**,
@@ -8573,6 +8593,84 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-12T19:33Z:**瞭望塔是「己方建筑」—— 而那是与 GH #782 立案时不同的一个缺陷。
+  连续三轮定价之后,本轮是一个真落地的 `bots/` 行为改动(6 行代码,gated 继承 'ohnum')。**
+  ⭐⭐ **本轮最该被下一轮读到的三句:**
+  (甲) ⭐⭐ **缺陷的族比发现它的那个出口大。** GH #782 立的是**名字测试**
+  (`string.find(name,'tower')` 匹配 `npc_dota_watch_tower`),三个站点每一个都有名字测试可收窄;
+  实测到被占领的瞭望塔**同时**是 `UNIT_LIST_ALLIED_BUILDINGS` 的成员**并且通过** `J.IsValidBuilding`
+  (`wt_fixtures 68 / wt_allied 68 / wt_valid 68`,**一个都没被拒**)⇒ 每一个把该表当**邻近锚点**用、
+  **一个名字测试都没有**的读者同样被污染,**而那里没有任何东西供名字修法附着**。
+  两个这样的站点:`ShouldRefuseUnsupportedPunish`(`ohnum`,**本轮落刀**,方向=虚假**释放**)与
+  `ShouldPunishOverchase` leg (b) DEEP(`overchase`,不动,方向=中线虚假 **DEEP**)。
+  落刀的那个更锋利,理由是**它自己的散文**:release 的唯一理由是
+  「the tower is the ally the count does not name」,而**瞭望塔没有攻击** ⇒ 闭式缺陷,不需要证人。
+  (乙) ⭐⭐ **订正上一轮「下一格」的前提(比本轮那把刀更重要)。**「从 ≥10 个证人的域里挑杠杆」
+  点名的 `oc_deep_building 53` / `oc_iso_deep 33` 是**腿级几何计数,不是杠杆域**:
+  `oc_iso_deep 33 → oc_fires 2`,53 那一支端到端是 `oc_fire_building 0`。
+  ⇒ **判据必须是最下游那个真正会翻转答案的计数**(本轮叫 `oa_wt_only_would_refuse`),
+  否则那种数只会把下一轮**再送进一次定价** —— 恰恰是「下一格」想避免的事,而它的判据自己会导致它。
+  **本轮的绕法值得抄:先落一把方向由构造安全、出货惰性由 gate 保证的刀(方向证明不需要证人数),
+  再把效应量登记为「此语料上为零」**,而不是等一个语料给不出的证人数。
+  (丙) ⭐ **「表零族,登记不落刀」的判别子是构造性惰性 vs 语料薄,不是「读数是不是 0」。**
+  上一轮 `mode_retreat_generic` 那处不落刀是因为它**在游戏里也惰性**(语料与游戏不可区分);
+  这里落刀是因为「敌方英雄在我方瞭望塔 1200 内」是**普通的游戏内构型**,零来自语料只有 111 帧。
+  **读数**(`tests/_outpost_anchor_sweep.lua`,111 fixtures / 1031 活帧 / 804 对):
+  `oa_anchor 53` / `oa_anchor_has_wt 0` ⇒ `oa_anchor_wt_only 0`、翻转集 `oa_wt_only_would_refuse 0`;
+  **正对照**(否定式读数必须配一个必须变小的读数):同一批 handle、同一个距离调用
+  `oa_wt_within_4800 **127**`、`MIN_WT_TO_ENEMY_DIST **2466.3**`(= 1200 半径的两倍多)
+  ⇒ **量具是活的,零是几何**。⚠️ census 第一版用 `pairs(G)` 打 G 记录,而 **`pairs` 跳过 nil**
+  ⇒ 解析失败的常数**整条消失**而不是打成 `nil`(本文件抬头刚承诺不犯的 GH #171 形状),当场改显式键表。
+  ⭐ **顺手答了 GH #342 §9(3)**(交回本组、13 天无人碰的那一棒),闭式零语料:
+  回家-TP 按下点是 **5 个不是 4 个**(jmz_func 那张 'FOUR SIBLINGS' 表**漏了 `:6059 躲血魔大`**),
+  按 sup botHP:撤退:1 **0.19** / 撤退:3 **0.43** / 回复状态 **0.30** 三个对 `hp>0.55` **闭式不可满足**;
+  能到的只有 撤退:2(**sup 0.87**,需 `nEnemyCount>=2`)与 躲血魔大(**一个 HP 子句都没有**,需自带 rupture)
+  ⇒ 那 52 行**压倒性归属撤退:2**。另登记:躲血魔大 是五个里**唯一没有 `DistanceFromFountain` 子句**的,
+  **不落刀**(需血魔、语料证人 0,且 rupture×传送要上 Liquipedia 核实 = [hero] 的活)。
+  **本轮定价并排除的三个候选**(免得下一轮重买):(1) `stayfield2` 把 0.55 抬到 0.75 —— 录像组刚给的
+  168 趟 / `hp>0.55` 四单元 82.9–95.8% 看着是全桌最大证人数,**但 `test_healthy_walk_home_gap.lua` §3
+  已把这个形状算死过**(域 14.7%→23.1%,与 `itemtrip` 被条件 (b) 退回时同数量级,X = gpm **−26.44**;
+  根因是 predicate 选**帧**而 GH #344 数**趟**,而区分那 127 趟的特征是**趟级量,没有一帧带着它**);
+  (2) GH #511 的 `IsChanneling` 守卫 —— `state.json:outchan_PRICING_20260905` 已判 `argfix` 形状
+  (`Think()` 第一句 `J.CanNotUseAction` 的析取项里就有它);(3) overchase DEEP 建筑支路,端到端零。
+  产出:`bots/FunLib/jmz_func.lua`(**6 行代码**:新 pure predicate `J.IsOutpostBuilding` 无闸 +
+  release 循环一个合取项,位置 `IsValidBuilding < IsOutpostBuilding < 距离`)、
+  `tests/test_ohnum_outpost_anchor.lua` **runner 9/9**、`tests/_outpost_anchor_sweep.lua`、
+  `tools/agent/mutstand_outpost_anchor.sh` **6/6 STAND GREEN / FINAL_SHA_OK=yes**、
+  `state.json:outpost_anchor_20260912`、报告 `iterations/reports/strategy/20260912T193349Z.md`。
+  **零新 gate id**(宿主自己就是未 promote 候选 ⇒ 内部任何位置都给不出可读单臂零,'pullcad' 陷阱;
+  M4 钉住);方向**由构造固定**(合取项加在提前 `return false` 上 ⇒ 只可能**移走**追击目标)。
+  铁律 6 三行:`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings, 0 uncertifiable, 32.0s` /
+  `lua gate: 352 ran, 0 findings, 0 uncertifiable, 9 known-red, 434.9s`;`RULE6_BYPASS` 未用;
+  动态半(GH #124)未跑不声称。⚠️ **py gate 第一次是红的,红的是本轮自己的产物**:
+  `test_mutstand_restore_trap.py` 判我的 trap body 是裸 `cp`(那道棘轮要求 trap **到达本文件定义的
+  还原函数**;只删备份的 trap 比没 trap 更糟,GH #418),加 `restore_quiet()` 后 0 findings;
+  同一轮 `test_run_tests_guard.py` 逼着把私有 harness 从新测试文件里拿掉
+  ⇒ **两道门各自当场改掉了一个本轮产物的形状**。
+  ⚠️ 开工自检 **EXIT=3**(FINDINGS: cadence queue-rulings owed-executions trunk-red(python);
+  **UNCERTIFIABLE: none** —— 与上一轮不同,trunk 两侧本轮都被完整看过);
+  第一次调用被 `REFUSED: stdout is a PIPE` 挡回(evidence-discipline 规则 3,**第 6 次在一轮首条命令上复发**)。
+  ⛔ 三条 python 红逐条 bare 读取、**全部先于本轮**:`test_carrier_terms.py`(英雄组)、
+  `test_detector_source_constants.py`(**已在 GH #787**)、`test_run_tests_guard.py`(点名
+  `test_overchase_pursuit_tense.lua` 带私有 harness ——**本组上一轮造的**;本轮**没加重**
+  (新文件不带 harness、guard 不点它)但**没修**,因为转 runner 协议要连
+  `mutstand_overchase_tense.sh` 的 **M5**(按完成标记**缺席**计分)一起重做 = **一个独立工作单元**)。
+  ⭐ `lua_gate` manifest 登记本轮仍欠着(第七轮),**但那条欠账的根因在本轮 push 过程中被修掉了**:
+  rebase 时 main 已前进到 `b43c5ecf`(**director 19:15Z**)= **GH #783 修到根上**
+  (`lua_gate_measure.py` 的 re-measure 不再清空 `known_red`;`BASELINE_KEYS` + `carry_baseline()`)
+  ⇒ **「登记一条测试会让全组停推」从下一轮起不再是理由,登记可以做了**。
+  本轮不做:它 19:15Z 才落,且 director 自己把端到端残留记进了
+  `owed_executions.json:lua_gate_baseline_e2e` ⇒ 不在刚落地、端到端未验的路径上抢第一个跑者。
+  新测试文件**在快闸预算内**、已被 lua gate 跑到。
+  ⚠️ **推送竞态照实登记**:`push origin HEAD:main` 被拒两次(main 本轮从 `b8ef2853` → `07d36418`
+  → `b43c5ecf`),每次重试再付一遍钩子 ~450s,**三次读数一致**;第二次 rebase 在 `state.json`
+  上冲突(两组同轮各加自己的键)⇒ **两边键全保留**,合并后 `json.load` 校验 581 键。
+  ⛔ 本轮自制的重试脚本**打了一行错读数**:它拿 `git rev-parse HEAD` 当「我的 commit」报 LANDED,
+  而失败的 rebase 已让 HEAD 停在 `b43c5ecf`(**别人的 tip**)⇒ 它打出 `LANDED on main: b43c5ecf`。
+  当场按 commit 标题对出来了,但这正是「结论碰巧对、读法坏」的形状:**祖先检查证明的是 HEAD 在 main 上,
+  不是我的工作在 main 上** —— 正确的读法是拿**分支 ref** 而不是 HEAD 去比。
+  Token:`TOKENS total_in=15,305,394 out=77,563 turns=82`。
 
 - 2026-09-12T16:44Z:**GH #760 定价完结 —— 四个收窄读法全部拒,而拒的理由分成两类,
   并且本轮把解锁它们的那一棒交出去了(GH #786)。**
