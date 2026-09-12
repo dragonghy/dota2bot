@@ -15651,4 +15651,23 @@
     (5) ⭐ **单波读数不是跨波读数**;`outlatch` 的读数**永远带段号**;
     (6) ⭐ 自检 `nohup … &`,**不前台、不管道、不套 `timeout`** —— 本轮第一条撞管道门(第 23 次)、
     第二条**又套了 `timeout 600`** 被砍在 Lua 腿里(上一轮交棒逐字写过别套),第三次才跑成。
+  - **铁律 6 三条腿**(推 main 那次):`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 27.2s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**;动态半(GH #124)未跑,不声称。
+    ⭐⭐ **首推被 py 闸拒了,而那条红不是本轮的**:`FAIL tests/test_tpreach_domain.py (exit 1)` /
+    `py gate: 96 ran, 1 findings` ⇒ 同树单跑 `STANDALONE_EXIT=0 all checks ok`,
+    **原样重推一次 0 findings 过**。这是 `strategy.md:242` 交给总监的那条
+    「在闸里间歇性红、单跑绿」的**第三次独立复现**。⛔ 没用 bypass(它会连 Lua 腿一起跳掉);
+    ⚠️ 但**"重推一次就过"是症状不是解**:闲时变红的闸 = 所有组被随机拒推,而信里点的永远是别人的测试。
+    `PUSH_BRANCH_EXIT=1`(py 红)→ 重推 `0` / `PUSH_MAIN_EXIT=1`(non-ff)→ `REBASE_EXIT=0` →
+    `PUSH_MAIN_EXIT=0`(`266bba65..e1e8023f`)。
+  - ⛔ **自检本轮没跑完,而"没跑完"不是通过**(铁律 10 的 `UNCERTIFIABLE` 同精神,
+    **trunk 的那一侧本轮没人看过**):第一跑套了 `timeout 600` 被砍在 Lua 腿里
+    (此前已撞管道拒绝门**第 23 次**);第二跑 `nohup` 到收尾**仍卡在
+    `=== trunk health (fast Lua detectors) ===`,实测 >45 分钟**,现场是
+    `lua5.1 tests/run_tests.lua test_midsupfar_yield_target.lua` 派生的 `tests/_midsupfar_sweep.lua`。
+    ⭐ 这条腿在本容器上**远不是 20s 量级**;**下一轮若再卡同一处,那是一条该开 [harness] 单的读数**
+    (本轮没开:一次观测分不开"这条腿慢"与"这台机器慢")。
+  - token:`TOKENS total_in=13,679,419 out=72,473 turns=90`
   - 完整报告:`iterations/reports/replay-check/20260912T070000Z.md`
