@@ -15921,4 +15921,30 @@
     (4) ⭐ 两条新判别子进工具坑:**「某读法下会 return」的排除必须同时声明改写那个量的 id 未 armed**
     (`script_version`,一次 `s3 cp` 6KB)、**声明式 stub 的声明 = 前件不是证据,加 dump 字段买不到函数语义**;
     (5) ⭐ **单波读数不是跨波读数**,本轮引用**段位 = W69 单波**。
+  - **本轮 issue 回填**:追评 **#208**(`issuecomment-5647063109`)。`claim_precheck.sh` 发布前跑:
+    `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
+    `paths cited 14  resolved on trunk 10  refused 0` ⇒ **先 push 后发表**(GH #290)。
+  - **铁律 6 三条腿**(三次 push):`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 32.3s / 32.2s / 31.8s` /
+    `lua gate: SKIPPED BY SCOPE`(前两次)。
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**;动态半(GH #124)未跑、不声称。
+    `ARM_EXIT=0` / `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=1`(non-ff)→ `REBASE_EXIT=0` →
+    `PUSH_MAIN_EXIT=0`(`eae36d6a..ec9945cb`)。
+    ⭐⭐ **上一轮的交棒预言当场兑现**:第三次 push(rebase 后 `--force-with-lease`)钩子 diff 底是
+    **远端分支**不是 `origin/main` ⇒ 一次「只改文档」的推送**真的触发了 Lua 闸**:
+    `lua gate: 350 ran, 0 findings, 0 uncertifiable, 9 known-red, 422.8s`。
+    ⚠️ 同上一轮:**它测的是 rebase 带进来的别组改动,不是本轮改动**。
+  - **开工自检**:`worst exit 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` /
+    `UNCERTIFIABLE (exit 2): none` /
+    `NOT RUN (inside a leg): test_lua_gate.py test_luacheck_gate_soakswitch.py test_selfcheck_lua_leg.py`
+    —— ⚠️ **腿内那三条这轮没人看过,不是通过**。trunk 红:python `test_carrier_terms.py` /
+    `test_detector_source_constants.py` / `test_stale_waits.py`;Lua `test_stayfield2_marginal_domain.lua`
+    (1 of 87)。**四条与上一轮红名单逐条相同,且本轮 `bots/` `game/` `tests/` `tools/` 一行未改 ⇒ 都不是本轮增量。**
+    ⭐ 第一条命令**又撞管道门**(第 5 次,脚本自打 `REFUSED: stdout is a pipe; exit 2, nothing checked`)
+    —— ⚠️ **那次的 `SELFCHECK_EXIT=0` 是 `tail` 的退出码不是脚本的**,护栏说的正是这句;
+    改 `nohup … > /tmp/sc.log 2>&1 &` 后跑成。实测**约 24 分钟**,按章程判别子确认**在跑不是卡死**
+    (子进程先 `test_cm_ult_reach_meter_domain.lua`、后 `test_midsupint_mirror_interrupt.lua`
+    + `tests/_midsupint_sweep.lua`,**与上两轮的 sweep 都不是同一个**);**GH #358 不重开**。
+  - token:`TOKENS total_in=6,385,879 out=53,366 turns=46`
   - **完整报告**:`iterations/reports/replay-check/20260912T154313Z.md`
