@@ -22,6 +22,47 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-155. ✅ **`-154` 第 1 条执行了:主体回到 `bots/`,先量后选,量掉三根落了第四根** —— 本轮(报告
+   `iterations/reports/hero/20260912T045958Z.md`)落地 **`zusarcimm`**(Zeus,gated,turbo-only,**收窄**)。
+   ⭐ **缺陷形状:同一个函数里、同一个技能、两个选目标的 helper 隔十一行,只有一个问「这法术打得进去吗」。**
+   `X.ConsiderQ` 撤退支路用 `J.GetVulnerableWeakestUnit` → 委托 `J.GetAttackableWeakestUnitFromList`,
+   它筛的是**攻击免疫**族(`IsAttackImmune`/`IsInvulnerable`/forbidden/illusion),**从不问法术免疫**;
+   而十一行之下团战/带线支路用的 `J.GetVulnerableUnitNearLoc` 自己循环里就带 `J.CanCastOnNonMagicImmune`。
+   ⚠️ **被点名的不是那个共享 helper**(它叫 `Attackable`,对攻击决策是对的、还有别的读者),**是调用点**。
+   域实测 **60 存活帧 → 57 学了 Q → 15 次选择器出目标 → 1 次出的是法免目标**
+   (`tests/frames/f_260909_215227_zeus_exec_od_1467.lua`,OD 带 BKB,389u,590hp,
+   且 `CanCastOnTargetAdvanced` 答 true ⇒ **出货链剩下的每一项都通过**)。
+   id 登记 `state.json:zusarcimm_20260912`;取证请求 `queue.json:hero-63`;测试
+   `tests/test_zuus_arc_retreat_immunity.lua`(11 绿,变异台 M1/M2/M3 三发全中)。
+   - ⭐ **第一条 —— `J.IsDisabled` 是一整根死轴,补进死轴表。**
+     `tests/mock/bot_api.lua` 的 `Is*`/`Has*`/`Can*`/`Was*` 默认 **false**,而 `J.IsDisabled` 读的
+     `IsRooted/IsStunned/IsHexed/IsNightmared` **没有一个被 loader 接上** ⇒ 任何以「目标已被控」
+     为条件的支路离线**永远走同一边**。本轮就是靠这条把 Axe 先手支路的「单目标否决 AoE」形状
+     (形状是真的:`not J.IsDisabled( botTarget )` 否决一个 315 半径的嘲讽)判成**由构造死域**。
+     同族:运动整轴、`GetActiveMode*` 整轴。
+   - ⭐⭐ **第二条 —— loader 不接 `IsMagicImmune`,而方向和「表零族」相反:它是*静默放行*。**
+     `replay_fixture` 把 `HasModifier` 接到真实 modifier 列表上,却没接 `IsMagicImmune()`
+     ⇒ 在**为研究魔免而切的那一帧**(`f_260828_002127_axe_call_bkb_ring`,lina 带 BKB remaining **7.1s**)
+     上 `IsMagicImmune()` 答 **false**、`CanCastOnNonMagicImmune` 答 **true**。
+     表零(`GetActualIncomingDamage` 等)把支路**静音**,这一条**放行**了魔免守卫存在的理由。
+     实测面:9 个语料文件带法免 modifier,**7 对(焦点英雄, 帧)**在 700u 内看得见法免敌人
+     (axe 3 / zuus 2 / lion 2 / SK 0 / CM 0)。⇒ **`axecallbkb_i`+`axecallbkb_ii` 的 armed 腿与
+     shipped 腿在每个语料帧上逐位相同**,它们的 fixture 级核验在今天的 loader 上**结构性不可得**;
+     `test_axe_call_immune_veto.lua` 能看见差别只因为它**自己注入**(:171),而同文件 §3 那句
+     「**every frame in this corpus**(没人魔免)」按语料自己的 modifier 列表是**假的**。
+     ⛔ **本轮刻意没改 loader**:那是一次全语料世界状态翻转,容器跑不完 Lua 动态半(GH #124),
+     按 #624 的教训**不落一个自己验不了、红留给下一个组的改动**。已交 harness/总监。
+   - ⛔ **第三条 —— 「环里有人」本身就是稀缺的,这解释了近四轮为什么老撞死域。**
+     CM:70 存活帧里**只有 4 帧** Frostbite 环内有任何敌人;Zeus:57 帧里选择器只在 **15 帧**出目标。
+     ⇒ **多英雄几何**的域天生小;**单英雄自身状态**(HP/蓝/等级/冷却/modifier/物品)才是富轴。
+     下一轮选杠杆**先按这条筛**,能省一次探针。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体继续放在 `bots/`(P4.4 (i)),并按上面第三条筛轴** —— 优先找**只读英雄自身状态**的
+        缺陷(`wksaveidle` 拿到 2/33、`cmtfclock` 拿到时钟域,都是这一类)。
+        ⚠️ 已量掉的别重开:`-154` 的九根 + 本轮三根(CM 击杀支路魔免项、Axe 同族站点、`J.IsDisabled` 整轴)。
+     2. ⛔ **`test_lion_ult_cash_weakest.lua` 的 amnesty 退场 —— 已经滚了三轮(`-153`→`-154`→`-155`)。**
+        再滚一次就**别写进 backlog 了,直接开 issue 交给别的组**。手法在 `cm_w_lane_band` 上跑通过,照抄即可。
+
 -154. ✅ **`-153` 第 1 条两半都做了,而「再挑一根有域的开」这一半的答案是「那根没有域」** —— 本轮(报告
    `iterations/reports/hero/20260912T020625Z.md`)挑的是 `zusfightquorum` **自己在头注释里登记不认领**的
    第二个杠杆(把团战规模的计数中心从 Zeus 挪到团战)。**先量后选,量出两件事,第二件比第一件重要。**
@@ -6780,6 +6821,38 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-12T04:59Z(报告 `iterations/reports/hero/20260912T045958Z.md`;**backlog:新开 `-155`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`zusarcimm`(Zeus,gated,turbo-only,未 armed,方向=收窄):
+  同一个函数里、同一个技能、两个选目标的 helper 隔十一行,只有一个问「这法术打得进去吗」。**
+  - **缺陷**:`X.ConsiderQ` 撤退支路 `J.GetVulnerableWeakestUnit` → `J.GetAttackableWeakestUnitFromList`,
+    过滤的是**攻击免疫**族,**从不问法术免疫**;十一行之下的 `J.GetVulnerableUnitNearLoc`
+    自己循环里就带 `J.CanCastOnNonMagicImmune`(`jmz_func.lua:282`)。Arc Lightning 不穿魔免。
+    ⚠️ **点名的是调用点不是那个共享 helper** —— 它叫 `Attackable`,对攻击决策是对的,还有别的读者。
+  - **域(全语料实测)**:60 存活 Zeus 帧 → 57 学了 Q → **15 次选择器出目标** → 2 帧射程内有法免敌人
+    → **1 次出的就是那个法免敌人**:`tests/frames/f_260909_215227_zeus_exec_od_1467.lua`,
+    OD 带 `modifier_black_king_bar_immune`,389u,590hp,`CanCastOnTargetAdvanced` 答 **true**
+    ⇒ **该帧出货链剩下的每一个合取项都通过,唯一会拒绝的就是这条不存在的项**。
+  - **修法**:`X.zuus_IsArcTargetSpellVulnerable`,闸关 `true`(逐字节等于出货),
+    闸开 `J.CanCastOnNonMagicImmune`。**方向是代码的性质**:只往已答过的谓词上再 AND 一项 ⇒ 只能删施法。
+    **故意不做**:最弱者法免时直接放弃,不挑次弱(重排候选池方向相反,是第二根杠杆)。
+  - ⭐ **先量后选量掉三根**:CM `X.ConsiderW` 击杀支路缺魔免项(域 **0**:70 存活帧里**只有 4 帧**环里有敌人);
+    Axe 同族站点(**不是缺陷**:`X.ConsiderW` 五个打英雄射击点**全部**带该项,Q 的两个已被 `axecallbkb_i/ii` 认领);
+    Axe 先手支路「单目标否决 AoE」(**`J.IsDisabled` 是整根死轴** —— `Is*` 默认 false,loader 不接)。
+  - ⛔ **附带一条(量具,只此一条)**:`replay_fixture` **不接 `IsMagicImmune`**,方向与表零族**相反**
+    (静默放行)。9 个语料文件带法免 modifier,7 对(焦点英雄, 帧)在 700u 内看得见法免敌人。
+    ⇒ **`axecallbkb_i/ii` 的 armed 与 shipped 腿在每个语料帧上逐位相同**,fixture 级核验结构性不可得。
+    **本轮刻意没改 loader**(全语料世界翻转 + 容器跑不完动态半 + GH #624 的教训),已交 harness/总监。
+  - **测试**:`tests/test_zuus_arc_retreat_immunity.lua` **11 绿**;变异台 **M1/M2/M3 三发全中**
+    (闸关腿 / armed 腿 / 调用点,各自打红不同的断言)。
+  - **闸**:`GATE_EXIT=0`(luacheck 0 warnings)/ `py gate: 96 ran, 0 findings, 0 uncertifiable, 31.3s`
+    / `lua gate:` 见报告 §4。**没用过 RULE6_BYPASS**。⚠️ 动态全量(~100min,GH #124)本轮没跑。
+  - ⛔ **开工自检读到 trunk 已红且非本轮引入**:`test_carrier_terms.py` / `test_detector_source_constants.py`
+    / `test_stale_waits.py`(GH #751/#765/#650 族)+ 3 条 `UNCERTIFIABLE`(**没跑成 ≠ 通过**)。
+    ⚠️ 第一条命令**又**接了管道被自检拒绝(它自己说这是第 5 次复发)—— `-152`/`-153`/`-154` 都写过。
+  - **交棒**:harness/总监接 loader 缺口;`queue.json:hero-63`(零 EC2 归档扫描,要频率不要域);
+    两条 GH issue(报告 §6)。⛔ `test_lion_ult_cash_weakest.lua` amnesty 退场**第三轮没做**,
+    滚进 `-155`;**再滚就直接开 issue 交出去**。
 - 2026-09-12T02:06Z(报告 `iterations/reports/hero/20260912T020625Z.md`;**backlog:新开 `-154`**;
   OWNER_PRIORITIES **P4.4 (ii)** —— ⚠️ **本轮主体是「判定完结所需的证据」不是 (i);`bots/` 只动注释,
   而这是量出来的判断不是偷懒**)

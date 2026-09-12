@@ -851,6 +851,82 @@ function X.zuus_ArcExecuteFinishes( hTarget, nDamage, nCastPoint )
 
 end
 
+--- Soak candidate `zusarcimm` (turbo-only, INERT until armed) -- written
+--- 2026-09-12 under OWNER_PRIORITIES P4.4 (i).
+---
+--- THE DEFECT, and it is a SIBLING ASYMMETRY inside one function rather than a
+--- missing idea.  X.ConsiderQ picks the target of Arc Lightning through two
+--- different helpers:
+---
+---     J.GetVulnerableWeakestUnit( bot, true, true, nCastRange )   -- retreat branch
+---     J.GetVulnerableUnitNearLoc( bot, ..., locationAoE.targetloc ) -- fight/push
+---
+--- The second one carries `J.CanCastOnNonMagicImmune( u )` inside its own loop
+--- (bots/FunLib/jmz_func.lua).  The first one does not: it delegates to
+--- J.GetAttackableWeakestUnitFromList, whose filter is the ATTACK-immunity
+--- family -- `not unit:IsAttackImmune()`, `not unit:IsInvulnerable()`,
+--- HasForbiddenModifier, IsSuspiciousIllusion -- and never asks about SPELL
+--- immunity.  That helper is not wrong; its name says `Attackable` and it is
+--- shared tree-wide by branches that queue an ATTACK.  What is wrong is using
+--- its answer as the target of a magical, unit-targeted spell.  Arc Lightning
+--- does not pierce spell immunity, so the cast is mana and a 1.6s cooldown for
+--- nothing -- spent in the retreat branch, i.e. on the frame Zeus is running
+--- and can least afford a wasted one.  ⛔ THE FIX IS SCOPED TO THIS CALL SITE:
+--- J.GetAttackableWeakestUnitFromList is read by many heroes for attack
+--- decisions and must not grow a spell term.
+---
+--- MEASURED, on this repo's whole frame corpus (tests/fixtures/ + tests/frames/,
+--- gates all off, Zeus driven as subject, spell immunity read as GROUND TRUTH
+--- off each frame's own modifier list -- see the honest bound below):
+---     60 live-Zeus instants -> 57 with Arc Lightning trained
+---  -> 15 on which this selector returns any target at all
+---  ->  2 that hold a spell-immune enemy inside Arc Lightning's cast range
+---  ->  1 on which the selector RETURNS that spell-immune enemy:
+---        tests/frames/f_260909_215227_zeus_exec_od_1467.lua -- obsidian
+---        destroyer carrying modifier_black_king_bar_immune, 389u away, 590 hp,
+---        and J.CanCastOnTargetAdvanced answers TRUE, so every remaining
+---        shipped conjunct on that frame passes.  The only thing that would
+---        have refused the cast is the term this branch does not have.
+--- The funnel and that frame are pinned in tests/test_zuus_arc_retreat_immunity.lua.
+---
+--- WHY IT IS A GATE, and the direction is a property of the CODE.  Armed, this
+--- helper can only ever turn a shipped `true` into `false` -- it ANDs one more
+--- conjunct onto a predicate that already answered -- so the lever can only
+--- DELETE an Arc Lightning order, never add one.  Gate OFF it returns `true`
+--- and the branch is the shipped one byte for byte.
+---
+--- WHAT IS DELIBERATELY LEFT ALONE.  When the weakest unit is spell-immune the
+--- armed leg DECLINES; it does not walk down to the next-weakest.  Re-ranking
+--- the pool is a second lever with its own direction (it ADDS casts) and this
+--- round is one lever, not two.  So "armed Zeus arcs a different target" is NOT
+--- a prediction of this change; "armed Zeus does not arc a BKB" is.
+---
+--- ⚠️ HONEST BOUNDS, three:
+---   1. `J.IsRetreating( bot )` is a mode predicate and reads FALSE on every
+---      fixture frame (GH #474), so the archive cannot show the BRANCH firing.
+---      What the 1 above measures is the SELECTOR's answer, which is the half
+---      this lever changes; the test asserts that limit rather than papering it.
+---   2. tests/mock/replay_fixture.lua does not connect `IsMagicImmune()` to the
+---      modifier list it already carries, so on the loader's own reading that
+---      OD is NOT immune and this lever is a no-op offline.  The measurement
+---      above and the test both read the frame's own
+---      `modifier_black_king_bar_immune` instead.  That loader gap is filed
+---      separately -- it silently PERMITS the branches an immunity guard exists
+---      to stop, which is the opposite direction to the meter-zero family.
+---   3. 1 frame is a DOMAIN, not a frequency: nothing here says how often a
+---      retreating Zeus faces a BKB.  Sizing that needs a wave
+---      (iterations/queue.json).
+function X.zuus_IsArcTargetSpellVulnerable( hTarget )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'zusarcimm' ) )
+	then
+		return true
+	end
+
+	return J.CanCastOnNonMagicImmune( hTarget )
+
+end
+
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable() then	return BOT_ACTION_DESIRE_NONE, nil	end
@@ -903,7 +979,12 @@ function X.ConsiderQ()
 	if J.IsRetreating( bot ) and bot:WasRecentlyDamagedByAnyHero( 2.0 )
 	then
 		local target = J.GetVulnerableWeakestUnit( bot, true, true, nCastRange )
+		-- [zusarcimm] gate off, this call IS `true`.  See
+		-- X.zuus_IsArcTargetSpellVulnerable: this selector screens for ATTACK
+		-- immunity only, and the sibling selector eleven lines below already
+		-- asks the spell question for the same ability.
 		if target ~= nil
+			and X.zuus_IsArcTargetSpellVulnerable( target )
 			and J.CanCastOnTargetAdvanced( target )
 			and bot:IsFacingLocation( target:GetLocation(), 45 )
 		then

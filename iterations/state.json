@@ -8327,5 +8327,18 @@
     "no_new_id": "No soak id was created. Any future narrowing of this site must edit the HOST's body and inherit midtp/suptp (the 0OVERCHASE rule, test_set.md FY): the host is itself an unpromoted candidate, so a nested IsSoakCandidate would be `(midtp or suptp) AND <new>` and a single-arm wave would read a structurally impossible 0 that check_armed_wiring.py still calls WIRED (GH #606).",
     "host_is_retired": "midtp 退集 (test_set.md:108, VERIFY verdict=BUGGY, TP landing point not an arithmetically valid coordinate, GH #539); suptp 退集 (test_set.md:109, same NaN + dominated by midtp, GH #545). No wave is disturbed and none would have measured the reverted lever. armed string / queue.json / test_set.md untouched; zero AWS.",
     "next": "GH #767: the site stays open. A re-attempt needs either (a) a winnability read anchored at the TOWER (the engage point actually being TP-ed to) rather than at a member, which is a new predicate and needs its own pricing, or (b) the tparrive/midsupyield frames re-priced first so the cross-lever cost is bought before the change, not after. tests/test_tpdefall_tower_commit_quantifier.lua section 4e pins those two frames so a re-attempt learns if its cost estimate went stale."
+  },
+  "zusarcimm_20260912": {
+    "owner": "hero",
+    "date": "2026-09-12T05:xxZ",
+    "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
+    "backlog_item": "hero -154 第 1 条(P4.4 (i):工作单元主体是一个 bots/ 行为改动)。⭐ 本轮先量后选,**量掉三根才落第四根**:CM `X.ConsiderW` 击杀支路缺魔免项(域实测 **0**:70 个存活 CM 帧 → 44 帧 W 可施法 → **只有 4 帧环里有任何敌人**,其中 0 帧带魔免);Axe `X.ConsiderQ`/`X.ConsiderW` 的同族站点(**不是缺陷**:W 的五个打英雄射击点**全部**带 `CanCastOnNonMagicImmune`,Q 的两个已由 `axecallbkb_i/ii` 认领);Axe 先手支路的「单目标否决 AoE」形状(`J.IsDisabled` 在 fixture 世界**恒假** —— `Is*` 默认 false,loader 不接 —— 域由构造为 0)。",
+    "headline": "⭐ **同一个函数里,同一个技能,两个选目标的 helper 隔十一行,只有一个问「这法术打得进去吗」。** `X.ConsiderQ` 撤退支路用 `J.GetVulnerableWeakestUnit`,它委托给 `J.GetAttackableWeakestUnitFromList` —— 那个 helper 的过滤是**攻击免疫**族(`IsAttackImmune` / `IsInvulnerable` / forbidden modifier / illusion),**从不问法术免疫**;而十一行之下团战/带线支路用的 `J.GetVulnerableUnitNearLoc` 自己循环里就带 `J.CanCastOnNonMagicImmune`。⚠️ **被点名的不是那个共享 helper**(它叫 `Attackable`,对攻击决策是对的,`bots/` 里还有别的读者)**,是调用点**:把它的答案交给一个不穿魔免的单体法术。代价落在**撤退帧**上 —— Zeus 最付不起一次空放的那一帧。",
+    "defect": "bots/BotLib/hero_zuus.lua X.ConsiderQ 撤退支路(`J.IsRetreating(bot) and bot:WasRecentlyDamagedByAnyHero(2.0)`)对 `J.GetVulnerableWeakestUnit` 返回的目标只再问 `J.CanCastOnTargetAdvanced` + 朝向,没有任何法术合法性项。Arc Lightning 不穿法术免疫。",
+    "fix": "gated helper `X.zuus_IsArcTargetSpellVulnerable`(turbo-only,id `zusarcimm`)。闸关 = `true`,出货支路逐字节不变;闸开 = `J.CanCastOnNonMagicImmune( hTarget )`。**方向是代码的性质不是数据的性质**:它只往一条已经答过的谓词上再 AND 一个合取项 ⇒ 只能**删**一次施法,永远不能加。",
+    "domain": "全语料实测(tests/fixtures/ + tests/frames/,gate 全关,Zeus 作主体,魔免按**每帧自己的 modifier 列表**读):60 个存活 Zeus 帧 → 57 帧 Arc 已学 → **15 帧该选择器返回任何目标** → 2 帧射程内有法免敌人 → **1 帧选择器返回的就是那个法免敌人**:`tests/frames/f_260909_215227_zeus_exec_od_1467.lua`,obsidian_destroyer 带 `modifier_black_king_bar_immune`,389u,590 hp,且 `J.CanCastOnTargetAdvanced` 答 **true** ⇒ 该帧上**出货链剩下的每一个合取项都通过**,唯一会拒绝的就是这条不存在的项。",
+    "tests": "tests/test_zuus_arc_retreat_immunity.lua(11 例全绿)。变异台三发全中:M1 把闸关腿改成 armed 答案 → §3/§4 惰性断言红;M2 把 armed 腿改成 `true` → §3 两条红;M3 删调用点 → §4 wiring 红。",
+    "limits": "(i) `J.IsRetreating` 是 mode 谓词,fixture 世界恒假(GH #474)⇒ 语料能证的是**选择器**的答案,不是**支路**开火;§4 有一条断言钉住这条限制,哪天它不成立就自己报红。(ii) ⛔ `tests/mock/replay_fixture.lua` **不把 `IsMagicImmune()` 接到它自己已经带着的 modifier 列表上**(`Is*` 默认 false)⇒ 在 loader 自己的读数里那个 BKB 的 OD **不是**魔免,本杠杆离线是 no-op;§5 直接断言这个缺口,修好那天它自己报红并点名。(iii) 1 帧是**域**不是频率。",
+    "next": "queue.json:hero-63(零 EC2 归档扫描:真实 Turbo 里撤退中的 Zeus 面对法免目标的频率)。GH issue 已开(见报告)。"
   }
 }
