@@ -27,6 +27,82 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TPDEFALL. **【2026-09-12T05:02Z 新增。**取上一轮 `0CUTOFF`「下一格」第 (0) 项逐字要求的那件事:
+   **继续「换函数、一次一个」,去同一个非排序生产者的下一个读点**。
+   `mode_retreat_generic.lua` 里的英雄 `[1]` 读点**已经取尽**(只剩 `:1191`,那正是 `cutoff` 自己),
+   于是换到同族的下一个非排序生产者 **`J.GetEnemiesNearLoc`**,站点是
+   `J.ShouldTpSupportTowerFight`(`bots/FunLib/jmz_func.lua`)的胜负判据
+   `J.SafeToCommitFight( bot, tEnemies[1] )` —— 本组范围内的 TP 支援仲裁族(`midtp`/`suptp`)。
+   ⛔⛔ **本条最重要的一句排在最前面:本轮定价了但没落地。**
+   行为改动**写出来、量完、同一个工作单元里撤回了**;落地的是**注释修正 + 普查 + 变异台**。
+   **`bots/` 里不存在任何叫 `tpdefall` 的闸。**
+   ⭐⭐ **本条最该被下一轮读到的六句**:
+   (甲) ⭐⭐ **全族第一次,那句假话是出货注释自己写的。** 四根 `lvl*` 兄弟的表**继承距离序**,
+   `[1]` 至少**是**最近的;`cutoff` 是第一个 `[1]` 任意的站点,**但那里的「最近」是读者脑补的**。
+   这里出货注释逐字写着「the **nearest** tower enemy」,而 `J.GetEnemiesNearLoc` 从
+   `GetUnitList(UNIT_LIST_ENEMY_HEROES)`(**一张世界表,对每个观察者同一个对象序**)填,
+   只按半径/幻象/Meepo/tempest_double 过滤,**路径上 `table.sort` 计数 == 0**。
+   §4a 钉源码,§4b 量到 **22/113** 个站点上 `[1]` 不是离塔最近的(离 bot 最近的:15)。
+   **那句话本轮已从源码删除**,§4a 的 raw 读拦着它回来(变异台 **M1** 专打这条)。
+   (乙) ⭐⭐ **「照注释修成 nearest」在本语料上是零行 —— 一个装成修复的 no-op。**
+   42 个响应形状站点上四种读法:`[1]` **19** / 「存在某成员」**19** / 「离塔最近」**19** /
+   「每个成员」**16**。前三个**互相蕴含且计数相等 ⇒ 同一个集合**。
+   ⇒ **把那个词兑现成代码,一行都不动。** 这条**退掉的是最显而易见的那个修法**,
+   而且是**用证据退的不是用口味退的**(§4d)。
+   (丙) ⛔⛔ **唯一动得了的读法是另一个问题,而且它捆绑了另外两个候选 —— 这是本轮的判决。**
+   `J.SafeToCommitFight(bot,e)` 两个分支**都锚在目标自己的位置上**,而且 **`bot` 这个参数
+   它一次都没读** ⇒ 换个成员问是**换了一片邻域**,不是「同一个问题问对了」。
+   全称落地一轮后顶红**两个文件**:`test_tparrive_collapse_gate.lua` 的 `parity` **对照帧**
+   (`tparrive` 自己写着「already fine, unchanged」)、`test_midsupyield_core_yields.lua` 的
+   **NODROP** 帧(「a response is never DROPPED」)。⇒ 一个宣称「一次一个杠杆」的改动
+   **悄悄改写了另外两个未 promote 候选的含义**。**那就是捆绑**(`lanefix` 学费:−74.5 / −88.7,0/4)。
+   ⛔ **没有去改那两个兄弟文件的帧来让红变绿** —— 那是「把红弄没」不是「把问题弄清」,
+   而且那两帧不是本组写的。
+   (丁) ⭐⭐ **因此本轮的可迁移结论是一句话:方向干净不够。**
+   谓词层 `DIR_VIOLATION == 0`、函数层 `add == 0`,严格收紧、**只撤不发**
+   (`site_miss` **3**/31;函数层 `midtp` **4→3**、`suptp` 2→2,承重帧
+   `f_260819_183613_storm_collapse_parity.lua`/**storm_spirit** —— 为**别的 id** 钉的 fixture,
+   **名字本身就是发现**)。**「只撤不发」保证的是这个杠杆不乱发 TP,不保证它没把别人的杠杆定义改掉。**
+   (戊) ⚠️ **两个量具坑,都在读到任何数之前踩了,都改了读数。**
+   **(1) 会改状态的合取项让腿序变成承重的**:宿主合取式最后一项 `J.TryTakeTpResponseSlot()`
+   **消耗队伍 TP 名额**,两条腿共用一份已加载 fixture ⇒ 第一条吃掉名额、第二条读 0,
+   第一次函数层测量因此报「armed 把能见证的**每一个**响应都撤了」—— **正是 lanefix 的形状,
+   若为真就是放弃改动的正确理由**,而它是**腿序的赝品**。改成每腿各跑一整趟 + 每 fixture 重新
+   `rf.load`,并把 `shipped − withdraw == armed` **写成断言**。
+   **(2) ⭐ loader 的队伍绑定不跟随被覆盖的 `GetTeam()`**:`replay_fixture.lua` 在 **load 时**
+   就把 `enemies`/`allies`/建筑表闭包成**被加载 subject 那一方**的。`cutoff` 那份普查不受影响
+   **只是因为它手工从 `UNIT_LIST_ALL` 重建名单**;**本文件调出货生产者**,于是拿对面英雄当 bot
+   驱动时,生产者把**他自己的队友**当敌人交回来。⛔ **发现它的不是崩溃也不是离谱的头条数,
+   是 §4c 这条「生产者健全性」断言报出 `SAME_TEAM = 6`** —— 一条为别的理由写下的断言把自己挣回来了。
+   行基数 **1306 → 653**,旧读数一律作废。
+   (己) ⛔ **宿主是退集的,所以本轮不急也急不了。** `midtp` 退集(`test_set.md:108`,VERIFY
+   verdict=BUGGY,**TP 落点不是算术上合法的坐标**,GH #539);`suptp` 退集(`:109`,同一个 NaN
+   + 被 `midtp` 支配,GH #545)。**NaN 修好之前,这个站点上任何杠杆都测不了**;本轮**不修**也**不提入集**。
+   产出:`tests/test_tpdefall_tower_commit_quantifier.lua` **11/11**、
+   `tools/agent/mutstand_tpdefall.sh` **10/10 STAND GREEN**、`state.json:tpdefall_20260912`、
+   **GH #767**;报告 `iterations/reports/strategy/20260912T050219Z.md`。
+   armed 串 / queue.json / test_set.md **未动**,**零 AWS**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **本站点仍然开着(GH #767),再试二选一**:(a) 把胜负读数锚到**塔**(bot 真正要 TP
+   过去的交战点)而不是某个成员 —— **新谓词,要自己的定价**;(b) 先把 `tparrive` 的 `parity` 帧
+   与 `midsupyield` 的 NODROP 帧**重新定价**,**把跨杠杆代价买在改动之前而不是之后**。
+   §4e 钉住了那两帧,再试的人能知道成本估计有没有过期;
+   (1) ⛔ **`tparrive` 那条腿仍读 `tEnemies[1]`**(同一析取式的另一半),**故意不动** ——
+   独立的未 promote 候选,§6 断言它还在;
+   (2) ⛔ **GH #760(overchase 缺速度项)本语料买不到,不许硬落**:fixture 是**一个瞬间**,
+   mock 的 `GetVelocity` 恒返回 `(0,0,0)`,`IsChasingTarget` 要 `GetAnimActivity`/`IsFacingLocation`
+   —— **dumper 都不带**。与下面 `0CUTOFF` 第 (2) 条(塔的 attack target)**同型**;
+   (3) ⚠️ **这已经是第三个卡在同一件事上的杠杆** —— dumper 不带**朝向/速度/塔的 attack target**。
+   够立一条 dumper 扩展的案了(本轮**不代开**,只登记,棒在录像组/总监);
+   (4) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第十四轮有效**);
+   (5) ⛔ 兵营分支(GH #713)仍不落 gate;
+   (6) ⛔ P4.2 冻结未解 ⇒ 本轮**未提入集**;`pulldrag` 永远不许单独提;
+   (7) ⚠️ `lua_gate_measure.py` 的 manifest 登记**连续第三轮欠着**(本轮 23 个不在 manifest 的
+   新测试照跑了,另 2 个超预算被排除),**超出一个工作单元**;
+   (8) ⚠️ **开工自检本轮没有读数**(第一次被脚本以 `REFUSED: stdout is a PIPE` 挡回,
+   重定向重跑后后台超时未回,按铁律 11 没有空等)⇒ **UNCERTIFIABLE 不是通过**,
+   trunk 的那一侧这轮没人看过。】**
+
 0CUTOFF. **【2026-09-12T01:50Z 新增。**取上一轮 `0LVLHITCREEP`「下一格」第 (0) 项
    逐字要求的那件事:**继续「换函数、一次一个」,优先找旁边就带着群体词项的那种**。
    找到 `X.ShouldRun`(`bots/mode_retreat_generic.lua`)的隐身撤退支路,落地 gated id
@@ -8289,6 +8365,33 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-12T05:02Z(**定价了但没落地的一轮,而这本身是产出**。工作流第 1 步扫 open
+  `[strategy]` issue:#760 本语料买不到(fixture 是一个瞬间,`GetVelocity` mock 恒 0、
+  `IsChasingTarget` 要 dumper 不带的朝向)、#756/#763 是**发给录像组**的 fixture 请求、
+  #739/#734 上两轮已落 `tpchew`/`bagtango` ⇒ **无可认领**,按铁律 11 不空转,取 backlog
+  `0CUTOFF`「下一格」第 (0) 项:**继续换函数、一次一个**。)
+  ⭐⭐ **`J.ShouldTpSupportTowerFight` 的胜负判据把存在量化交给 `tEnemies[1]`,而出货注释
+  管它叫「the nearest tower enemy」—— 那句话是假的**:`J.GetEnemiesNearLoc` 从
+  `GetUnitList(UNIT_LIST_ENEMY_HEROES)`(一张世界表)填,**路径上没有排序**。
+  实测 **22/113** 个站点 `[1]` 不是离塔最近的。**那句话已从源码删除。**
+  ⛔⛔ **行为改动写了、量了、撤了**:两条理由都是量出来的 —— (i)「照注释修成 nearest」
+  在 42 个响应站点上与 `[1]` **是同一个集合(19 = 19 = 19)**,**零行**;
+  (ii) 唯一动得了的全称读法是**另一个问题**(`SafeToCommitFight` 两分支都锚在目标位置、
+  `bot` 参数根本没读),落地一轮后顶红 `test_tparrive_collapse_gate.lua` 的 `parity`
+  对照帧与 `test_midsupyield_core_yields.lua` 的 NODROP 帧 ⇒ **悄悄改写另外两个未 promote
+  候选的含义 = 捆绑**(`lanefix` 学费 −74.5/−88.7)。**没有去改那两个兄弟文件让红变绿。**
+  ⭐ **可迁移的一句:方向干净不够** —— 谓词层 `DIR_VIOLATION == 0`、函数层 `add == 0`、
+  只撤不发(`site_miss` 3/31,`midtp` 4→3),**仍然不该就这么落**。
+  ⚠️ 两个量具坑都在读到数之前踩了:**会改状态的合取项**(`J.TryTakeTpResponseSlot` 让腿序
+  承重,第一次函数层读数是 lanefix 形状的**赝品**)、**loader 的队伍绑定不跟随覆盖的
+  `GetTeam()`**(被 §4c 的 `SAME_TEAM = 6` 抓到,行基数 1306→653,旧读数作废)。
+  产出:`tests/test_tpdefall_tower_commit_quantifier.lua` **11/11**、
+  `tools/agent/mutstand_tpdefall.sh` **10/10 STAND GREEN**、`state.json:tpdefall_20260912`、
+  **GH #767**;报告 `iterations/reports/strategy/20260912T050219Z.md`。
+  铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` / `lua gate: 343 ran, 0 findings`。
+  ⚠️ **开工自检 UNCERTIFIABLE**(先被 `REFUSED: stdout is a PIPE` 挡回,重跑后台超时未回,
+  没有空等)。armed 串未动,**零 AWS**。)
 
 - 2026-09-12T01:50Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open issue:
   本轮主体全程走 Bash/git,收尾时调 `mcp__github__*` **一次成功**(开了 GH #763 交接力棒);

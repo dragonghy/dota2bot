@@ -10585,8 +10585,38 @@ function J.ShouldTpSupportTowerFight( bot )
 						break
 					end
 				end
-				-- Winnable-only: reuse the lethal-or-numbers commit gate against
-				-- the nearest tower enemy. If neither holds, do NOT waste the TP.
+				-- Winnable-only: reuse the lethal-or-numbers commit gate on ONE
+				-- of the enemies at the tower. If it does not hold, do NOT
+				-- waste the TP.
+				--
+				-- ⚠️ [strategy 20260912, GH #767] `tEnemies[1]` IS NOT "THE
+				-- NEAREST TOWER ENEMY" -- this comment said that until today and
+				-- it was false. J.GetEnemiesNearLoc fills from
+				-- `GetUnitList(UNIT_LIST_ENEMY_HEROES)` -- one world list, the
+				-- same object order for every observer -- and filters by radius,
+				-- illusion, Meepo clone and the tempest-double modifier, with no
+				-- `table.sort` anywhere on the path. So `[1]` is an ARBITRARY
+				-- enemy hero within 1200 of the tower: not nearest to the tower,
+				-- not nearest to the bot, not the most dangerous. Measured on
+				-- 113 real sites: `[1]` is not the tower-nearest on 22 of them,
+				-- not the bot-nearest on 15
+				-- (tests/test_tpdefall_tower_commit_quantifier.lua §4a-4b).
+				--
+				-- ⛔ NO BEHAVIOUR CHANGE HERE, AND THE REASON IS MEASURED, NOT
+				-- CAUTION. The obvious repair -- ask the tower-nearest one --
+				-- is a NO-OP on this corpus: over the 42 responder-shaped sites,
+				-- `[1]`, "some member" and "the tower-nearest member" admit the
+				-- SAME 19 sites (§4d). The only reading that moves is the
+				-- universal ("winnable against EVERY enemy at the tower", 16 of
+				-- 42), and that is a STRICTER, DIFFERENT question rather than
+				-- this one asked correctly: J.SafeToCommitFight anchors both its
+				-- branches at the TARGET's location, so each member is scored in
+				-- its own neighbourhood. Landed and then reverted the same round
+				-- (2026-09-12) because it silently re-scopes TWO OTHER unpromoted
+				-- candidates -- it withdraws the response on tparrive's `parity`
+				-- control frame and on midsupyield's NODROP frame -- which is a
+				-- bundle, not one lever. §4e pins that collision so the next
+				-- attempt starts from it. state.json:tpdefall_20260912.
 				-- [tparrive] ...except that gate is blind to the responder: the
 				-- > 3500 requirement above puts this bot outside the 1200 radius
 				-- it scores, so shipped asks whether the fight is already fine
