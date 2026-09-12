@@ -27,6 +27,79 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0OCTENSE. **【2026-09-12T16:44Z 新增。**做的是 GH **#760**([strategy] open issue,带承重帧
+   与建议验收,且不在等别组取帧)。**定价了四个收窄读法,一个都没落地** —— 而这次「没落地」
+   是一个**判定完结**:拒的理由分成两类,**三个是实测 no-op / 人为品,第四个根本量不了**,
+   而**卡点不在选哪个修法,在 dumper**。那一棒 GH #767 §6.3 自己说「够立一条案了」
+   并且**明写不代开**,本轮交出去了(GH **#786**)。
+   ⭐⭐ **本条最该被下一轮读到的四句**:
+   (甲) ⭐⭐ **否定式读数的正对照必须是一个「必须变小」的读数,不能是那些 no-op 断言自己。**
+   本轮全部结论都是否定式(「它一个都不拒」「这个量具是瞎的」),而一个**忽略自己回看参数**的
+   `WasRecentlyDamagedByHero` 会把每一条**免费**证成 —— 并且它**长得跟真 no-op 一模一样**
+   (tight 读数恒等于 loose 读数,**正是本轮要报的那个数**)。⇒ 加一个 **0.2s 探针**
+   (低于证人集最小 dt,**必须**比 `oc_a_recentdmg` 小;实测 **0 vs 2**)。变异台 **M1/M2
+   机制不同、都只被这一条断言抓住**;那 6 条 no-op 断言对两者**全部存活**。
+   (乙) ⭐⭐ **一个咽下去的 FAIL 咽不下任何别的东西 —— 包括退出码。**
+   `tests/mock/bot_api.lua:415` 在 fixture 加载时把全局 `print` 设成空函数,于是本文件
+   **第一次跑打了 13 个 ok、退出 0**,而 §6/§7 **两节连汇总行一起消失**
+   (`fail` 仍正确计数、`os.exit` 仍答 0,**读者眼里是绿的**)。修法:mock 碰全局之前把
+   `print` 绑成 local `say` + 一行**完成标记**。⇒ **M5 不按退出码计分**(那缺陷动不了退出码),
+   按**标记缺席**计分;按退出码计分再宣布 7/7,**那是 stand 自己在说谎**。
+   (丙) ⚠️ **M6 的锚歧义,而歧义的那一侧正是被钉的断言自己**:`REGISTERED, NOT REPAIRED`
+   在 `jmz_func.lua` 里**出现两次**(同一天 `tpdeftower` 用了同一句)⇒ 原断言那句 bare search
+   **由另一处注释满足**,leg (a) 的注释删掉它照样过。两边同时收窄成
+   `GH #760] REGISTERED, NOT REPAIRED`。**是变异台找出来的,不是复核找出来的。**
+   (丁) ⭐ **#760 的抱怨在 leg (a) 上比在 leg (b) 上更锋利**:三个追击析取项里语料能答的
+   只有**过去时**那一个(`oc_a_attacktarget 0` / `oc_a_ischasing 0` / `oc_a_recentdmg 2`)⇒
+   「追击者正压在我队友身上」**全部**由「他最多 2 秒前打过我队友」推出,**那正是一个已经掉头回家的人的样子**。
+   **读数**(111 fixtures / 1031 活英雄行 / `oc_pairs` 804 / `oc_iso_deep` 33):
+   (1) leg (b) 速度项(#760 建议 (a))**量不了**(mock `GetVelocity` 按已申报世界假设恒零向量);
+   (2) `IsChasingTarget` 提成必要条件(#760 建议 (b))拒 **2/2** 但**构造性**(要 `GetAnimActivity`/
+   `IsFacingLocation`,dumper 都不带);(3) 回看窗 2.0→1.0s(**唯一一个 dump 能答的现在时收窄**)
+   拒 **0/2**(`oc_a_dmg_dt_le_1s 2`,追击者 **0.3s/0.7s** 前刚打)= **no-op,是它结案**;
+   (4) leg (d) 扣掉将死队友(`f_071423_luna_chase` 形状)`oc_d_numbers_thin` **0** = no-op。
+   **效应量上界:全语料 `oc_fires` 2,同一份 fixture、同一个 0.18 血队友。**
+   ⭐ **顺手替 GH #782 数了第三个站点**:`string.find(name,'tower')` 缺陷共 **3 处**
+   (`GetRescueTpTarget`/`lf_rescue` —— outpost 会**压掉**救援 TP,方向是**假阴性**;
+   `ShouldAbortRoshanAttempt`/`roshgate`;以及**出货未 gated** 的
+   `bots/mode_retreat_generic.lua:95`)。几何普查:**每份 fixture 都带 2 枚 `watch_tower`**,
+   但救援候选队友只 **5** 个、**在任何己方塔/outpost 900 内的 0 个** ⇒ `bUnderOwnTower`
+   全语料**恒假**,这一刀在这里也没帧。`mode_retreat_generic` 那处**构造性惰性**
+   (outpost 无攻击 ⇒ `towerDamage` 为负),但**在语料里和在游戏里不可区分** ⇒ **表零族,登记不落刀**。
+   ⭐ 另两条排除也登记:leg (a) **没有**幻象漏洞(`GetAlliesNearLoc` 只遍历 `GetTeamMember`);
+   `GetRescueTpTarget` 里那层 `IsSuspiciousIllusion` 重复过滤**是冗余的**(`GetEnemiesNearLoc` 已滤)。
+   产出:`tests/test_overchase_pursuit_tense.lua` **20/20**(实测 **30s**)、
+   `tools/agent/mutstand_overchase_tense.sh` **7/7 STAND GREEN**、
+   `tests/_overchase_sweep.lua` 普查扩展、`bots/FunLib/jmz_func.lua` leg (a) 一处登记注释
+   (**零行为改动**)、`state.json:overchase_tense_20260912`、
+   报告 `iterations/reports/strategy/20260912T164456Z.md`。
+   铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` / `lua gate: 351 ran, 0 findings, 9 known-red`。
+   ⚠️ **开工自检 UNCERTIFIABLE**(先被 `REFUSED: stdout is a PIPE` 挡回,重定向后 **300s 与 900s
+   两次都超时**,死在 trunk-health 那条腿上)⇒ **trunk 那一侧这轮没人完整看过**;
+   跑完的部分干净(8 锚 ok、promote-atom ok、inverse census `FROZEN 0`)。
+   ⛔ **它报了一条不是本轮造成的 TRUNK RED**:`tests/test_detector_source_constants.py` ←
+   `tpdeathbuy_domain.py:150` 要求 `item_purchase_generic` 还有 `gate then bDyingWithDoomedGold
+   = botHP < X` 这个**闸形状**,而 `tpdeathbuy` 已在 **stable-v7** promote、闸被摘掉 ⇒
+   检测器的 source-constant 钉的是**只在 gated 状态下存在的形状**;它**在快 py 域外**(不挡 push)
+   ⇒ **promote 那轮全绿、红留给下一个开工的组**,GH #624 第七例,与 #765 同型、与 #762 同楼层
+   (那条讲可达性前提,这条讲**源码形状断言**;三个 promote-time 普查**都只读 `bots/`**)。已交 issue。
+   ⚠️ `lua_gate` manifest 登记**连续第六轮欠着**(本测试 30s **超** per-test cap 5.5s,本就在闸外);
+   **不是懒**:唯一被许可的登记路径会清空 main 上 **9 条 known-red**,根因 GH **#783**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐⭐ **主体必须是一个真落地的 `bots/` 行为改动(P4.4 (i)),不许再是定价。**
+   **连续三轮**(`tpdefall`/`tpdeftower`/本轮)主体都是定价,**而三轮的零各有不同的实测理由**
+   ⇒ 问题不在某个站点选错了,在**本组一直拿语料买不到的杠杆当工作单元**。
+   下一轮**先按「语料有几个证人」挑杠杆、再看它对不对**:从普查已量出 **≥10 个证人**的域里挑,
+   **证人数不到 5 的一律不立为本轮主体**(登记进 backlog 等 dumper)。本轮量到的候选域:
+   `oc_deep_building` **53** / `oc_iso_deep` **33** / 救援候选队友 **5**(太少);
+   (1) GH **#786** 落地后,leg (a) 的 (2) 与 leg (b) 的 (1) **同时**重新定价(卡在同一个字段集上);
+   (2) ⛔ GH #760 / #782 **都不关**(前者是「语料挖干了」不是「缺陷不存在」;后者的取帧请求在录像组);
+   (3) ⛔ `midtp`/`suptp` 入集/退集是**总监的球**,P4.2 冻结期内不提不催;
+   (4) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第十八轮有效**);
+   (5) ⛔ 兵营分支(GH #713)仍不落 gate,`pulldrag` 永远不许单独提;
+   (6) ⚠️ **给主会话,连续第五轮**:`OWNER_PRIORITIES.md` 的 P1/P2 仍写「球在协同组」,
+   但两项本组交付都已落地,请核对球权并归档或改派。】**
+
 0TPDEFTOWER. **【2026-09-12T13:33Z 新增。**做的是上一条「下一格」第 (0) 项逐字要求的那件事:
    回到 GH **#767**,在 (a)(把胜负读数锚到**塔**,新谓词自己定价)和 (b)(先重新定价
    `tparrive` 的 `parity` 帧与 `midsupyield` 的 NODROP 帧)里**二选一** —— 本轮做 **(a)**,
@@ -8500,6 +8573,34 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-12T16:44Z:**GH #760 定价完结 —— 四个收窄读法全部拒,而拒的理由分成两类,
+  并且本轮把解锁它们的那一棒交出去了(GH #786)。**
+  ⭐⭐ 本轮最值钱的两条**都在量具上,不在杠杆上**:(i) **否定式结论的正对照必须是一个
+  「必须变小」的读数** —— 一个忽略回看参数的 `WasRecentlyDamagedByHero` 会把本轮每一条
+  no-op 结论**免费**证成,而且**长得跟真 no-op 一模一样**;0.2s 探针(实测 **0 vs 2**)是
+  唯一抓住 M1/M2 的断言,那 6 条 no-op 断言对两者**全部存活**。
+  (ii) **一个咽下去的 FAIL 咽不下退出码** —— `bot_api.lua:415` 在 fixture 加载时把全局
+  `print` 设成空函数,本文件**第一次跑打了 13 个 ok、退出 0** 而 §6/§7 **两节连汇总行一起消失**;
+  修法是 local `say` + 完成标记,**M5 因此按标记缺席计分而不是退出码**。
+  读数:`oc_a_attacktarget 0` / `oc_a_ischasing 0` / `oc_a_recentdmg 2`(语料只答**过去时**);
+  回看窗 2.0→1.0s 拒 **0/2**(追击者 0.3s/0.7s 前刚打)、leg (d) 扣将死队友 `oc_d_numbers_thin` **0**、
+  速度项**量不了**、`IsChasingTarget` 提必要条件拒 2/2 但**构造性**。
+  **效应量上界:`oc_fires` 2,同一份 fixture、同一个 0.18 血队友。**
+  顺手替 GH #782 数了**第三个** `'tower'` 站点(3 处全部 0 见证;`mode_retreat_generic:95`
+  是**出货未 gated** 的那处,构造性惰性但**语料与游戏不可区分** ⇒ 表零族,登记不落刀)。
+  产出:`tests/test_overchase_pursuit_tense.lua` 20/20(30s)、
+  `tools/agent/mutstand_overchase_tense.sh` 7/7 STAND GREEN、`tests/_overchase_sweep.lua` 扩展、
+  `jmz_func.lua` leg (a) 登记注释(**零行为改动**)、`state.json:overchase_tense_20260912`、
+  报告 `iterations/reports/strategy/20260912T164456Z.md`。
+  铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` / `lua gate: 351 ran, 0 findings, 9 known-red`。
+  ⚠️ 开工自检 **UNCERTIFIABLE**(300s + 900s 两次超时,死在 trunk-health);
+  ⛔ 它报了一条**不是本轮造成**的 TRUNK RED:`test_detector_source_constants.py` 被
+  `tpdeathbuy` 的 **stable-v7 promote** 顶红(检测器 source-constant 钉的是**只在 gated
+  状态下存在的闸形状**),**在快 py 域外所以不挡 push** ⇒ GH #624 第七例,已交 issue。
+  ⛔ **下一格是硬的:下一轮主体必须是真落地的 `bots/` 行为改动(P4.4 (i))。**
+  连续三轮主体都是定价,**三轮的零各有不同的实测理由** ⇒ 根因是**本组一直拿语料买不到的
+  杠杆当工作单元**;改法是**先按证人数挑杠杆**(≥10 才立为主体,<5 一律登记等 dumper)。
 
 - 2026-09-12T13:33Z(**P4.4 归属 = (ii) 一个判定所需的最后一块证据**(GH #767 (a) 的定价),
   附带两条 `bots/` 注释更正。工作流第 1 步扫 open `[strategy]` issue:**#775** 上一轮已做并追评;

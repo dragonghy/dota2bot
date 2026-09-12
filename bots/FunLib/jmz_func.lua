@@ -9689,6 +9689,52 @@ function J.ShouldPunishOverchase( bot )
 			if bIsolated and bDeep then
 				-- (a) CHASING A LOW ALLY: a low-HP teammate (not this bot) near
 				-- the chaser that the chaser is on.
+				--
+				-- ⚠️ [strategy 20260912, GH #760] REGISTERED, NOT REPAIRED --
+				-- AND THE REASON IS THAT THIS CORPUS IS EXHAUSTED, NOT THAT THE
+				-- DEFECT IS ABSENT. GH #760's complaint about leg (b) ("pure
+				-- position, no velocity term: it asks WHERE the chaser is, not
+				-- whether he is coming IN or going OUT") is true of leg (a) as
+				-- well, and more sharply: of the three pursuit disjuncts below,
+				-- the ONLY one this corpus can answer is the PAST-TENSE one.
+				-- Measured over 111 fixtures / 1031 live hero-frames
+				-- (tests/_overchase_sweep.lua):
+				--   oc_a_attacktarget 0 | oc_a_ischasing 0 | oc_a_recentdmg 2
+				-- So "is chasing" is inferred entirely from "did damage, up to
+				-- 2 s ago" -- which is exactly what a chaser who has already
+				-- turned around and left looks like.
+				--
+				-- ⛔ ALL FOUR NARROWINGS THE DUMP CAN EXPRESS READ AS A NO-OP OR
+				-- AS AN ARTEFACT. Priced, not assumed:
+				--   * leg (b) velocity term (#760's own proposal (a)): NOT
+				--     MEASURABLE. A fixture is ONE INSTANT and the mock's
+				--     GetVelocity answers the zero vector by declared world
+				--     assumption (tests/mock/replay_fixture.lua), so no depth
+				--     delta exists to read.
+				--   * J.IsChasingTarget promoted from disjunct to necessary
+				--     (#760's proposal (b)): refuses 2 of 2 -- but
+				--     CONSTRUCTIVELY, because it needs GetAnimActivity and
+				--     IsFacingLocation and the dumper carries neither. An
+				--     annihilation that is an artefact of the instrument is not
+				--     a reading.
+				--   * the pursuit lookback tightened 2.0 -> 1.0 s (one Turbo
+				--     attack cycle; the one PRESENT-TENSE narrowing the dump CAN
+				--     answer, since recent_damage carries per-event dt):
+				--     refuses 0 of 2. oc_a_pass_tight == oc_a_pass == 2, and
+				--     oc_a_dmg_dt_le_1s 2 -- on both witnesses the chaser hit
+				--     the low ally 0.3 s and 0.7 s ago. A NO-OP.
+				--   * leg (d) discounting the dying ally from the numbers branch
+				--     (the f_071423_luna_chase shape, which this file's own
+				--     J.ShouldNotChaseWhenLow header records as having cost a
+				--     batch run): oc_d_numbers_thin 0. Also a no-op.
+				-- The whole corpus carries exactly TWO witnesses (oc_fires 2),
+				-- both in one fixture and both on the SAME 0.18-HP ally, so
+				-- there is no frame on which any of these can be shown to change
+				-- a decision. tests/test_overchase_pursuit_tense.lua pins every
+				-- number above, so the day the corpus grows this comment goes
+				-- red instead of quietly becoming false.
+				-- ⇒ This lever is blocked on the dumper carrying facing /
+				-- velocity / attack-target (GH #786), not on choosing a repair.
 				local bChasingLowAlly = false
 				for _, ally in pairs( J.GetAlliesNearLoc( vEnemyLoc, 900 ) ) do
 					if J.IsValidHero( ally )
