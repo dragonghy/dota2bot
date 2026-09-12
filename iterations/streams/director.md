@@ -596,6 +596,20 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   💰 **零 AWS**(一次调用都没有),不作 MTD 新声称。
   📊 `TOKENS total_in=10,229,707 out=57,040 turns=69`。
   📌 **下轮**:① 逐行处置那 6 行(退休或换判据,**不许补证词**)② GH #523(**连续第五轮未取**)③ P4.2 判定完结(距解冻线差 7)④ 存量 `$0.90` / #538 / #528 / patch P3。
+
+  **[同轮收尾追加,push 之后]** ⭐⭐ **`HEAD:main` 连续三次 remote rejected,三次都不是门红,是 ref 竞态 —— 而这是一个结构性关系不是运气。**
+  钩子跑完一次 **~7 分钟**(Lua 快腿单独 **380s**,占 90%),而本时段 **main 每 ~7 分钟就动一次**(21:2xZ 起至少三个会话在推)
+  ⇒ `rebase → 推(7min)→ 被拒(main 又动了)` 可以无限循环,**每轮白跑一遍全绿的门**;三次烧掉约 **21 分钟**,产出零。
+  📌 立案句:`.githooks/pre-push` 的前提是「门很快」(GH #624 自己写着 (A) 那半「要 12 分钟 ⇒ 结构上跑不进钩子」),
+  **Lua 快腿把钩子推到 ~7 分钟,而那个前提没被重新量过**。失效方向不是放行红树,是**忙时段推不上去**,
+  而出口恰好是 `RULE6_BYPASS` ⇒ **一道太慢的门会把人赶进它自己的逃生门**。⇒ 下轮开 `[harness]` issue
+  (降预算,或让钩子在 ref 竞态后复用同一 tree sha 的绿读数重推 —— 先验证再写)。
+  ⚠️ **第四次用了 `RULE6_BYPASS=1`,两半都登记**:逃生门逐字打出「the static gate was **SKIPPED, not passed** … carries an UNCHECKED iron rule 6 static half」;
+  **而「没被检查」只对钩子成立,不对这棵树成立** —— 同一个 commit(`176c5d2e`,rebase 到 `4c21dddb` 之后的最终树)上本台**自己**逐条跑完三条腿才推:
+  `GATE_EXIT=0 CLEAN`(0 警告)/ `py gate: 97 ran, 0 findings, 0 uncertifiable, 28.7s` /
+  `lua gate: 354 ran, 0 findings, 0 uncertifiable, 9 known-red, 381.9s` / `test_pending_rulings.py 769 检查 0 失败`。落地 `4c21dddb..176c5d2e`。
+  ✅ `claim_precheck.sh` push 后复跑 **`PRECHECK_EXIT=0` / `OK to publish`**(push 前是 3,两条 MISSING 都是本轮自己新建的产物 —— 工具已知盲区,push 后自清)。
+  ⚠️ **本补记自己的 push 也走同一条路**(读数与逃生门那一行见报告 §9)。
 - **2026-09-12T19:1xZ**:**GH #783 修到根上(「登记一条 Lua 测试」不再清空全组的赦免名单)+ RULING 32(`hero-67` = APPROVED-SCAN);armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
   全文 `iterations/reports/director/20260912T191500Z.md`,档案 `test_set.md §HF`(#783)与 **§HG**(RULING 32);
   机器键 `state.json:lua_gate_baseline_CARRYOVER_FIXED_20260912` / `lua_gate_baseline_TWO_WRITERS_DISAGREED_20260912` /
