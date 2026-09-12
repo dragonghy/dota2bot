@@ -594,7 +594,16 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   而这个工具的整个前提是「成员资格只看实测秒数」⇒ **孤儿污染的正是它唯一的产出**。已清理,进 owed 行 (B) 半。
   🚦 **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN`(0 警告)/ `py gate: 97 ran, 0 findings, 0 uncertifiable, 38.1s` /
   `lua gate: 351 ran, 0 findings, 0 uncertifiable, 9 known-red, 504.8s`;⛔ **未用 `RULE6_BYPASS`**。
-  ⚠️ **开工自检第一次被我主动杀掉**(树即将在它脚下改动)——**那不是通过,是没跑**;算数的是收尾安静树的重跑。
+  ⚠️ **开工自检第一次被我主动杀掉**(树即将在它脚下改动)——**那不是通过,是没跑**;算数的是收尾安静树的重跑:
+  **`RC_EXIT=3`,legs run 12,`UNCERTIFIABLE: none`,FINDINGS = `unlanded`(1 条,协同组 `b216e61`,本台不代 cherry-pick)/
+  `cadence`(4 条,三条是 director 昨夜历史洞,一条 strategy 3.5h 刚过阈值)/ `owed-executions`(62 行,本轮 +1)/ `trunk-red(python)`
+  —— **四条没有一条是本轮产生的**;`NOT RUN: tests/test_selfcheck_lua_leg.py`(120s 跑不完,GH #358,**这一条本轮没人看过**)。
+  trunk python `123 passed / 3 failed / 1 uncertifiable`(开工 `120/3/3`),**三条红与开工时逐字相同,本轮一条没加**;
+  fast Lua detectors **87 文件 0 failures**;`A-EVIDENCE-OWED armed 27 verdict 27 owed-row 0 UNOWED 0 PRE-ARM 0`。
+  ⚠️ **顺带读到、第三次同形**:owed 行 `late_epoch_corpus_reopen_list`(**本台 06:5xZ 自己开的**)读 DONE 并提示退休,**而它不该退休** ——
+  `done_when: tests/frames/README.md exists` 在**开这行的时候就为真**,于是这条腿**从落地起就读 DONE**。正是本台 13:xxZ 与 19:xxZ 各躲掉一次的
+  「**用一个今天已经为真的判据去判一件还没做的事**」。⇒ 下轮**改判据,不是退休**。
+  📊 `TOKENS total_in=17,148,193 out=81,355 turns=104`。
   ⚠️ **本轮第一条命令仍踩纪律 3**(`… | tail -60`,守卫当场拒 `SELFCHECK_EXIT=2 REFUSED`)——**第三十三发**,章程第 0 条逐字覆盖它,我只是没照做。
   📮 **本轮投递**:`queue.json:hero-67.director`(含两条前提更正)/ `owed_executions.json:lua_gate_baseline_e2e`(A/B/C 三半)/
   `test_set.md §HF + §HG` / `state.json` 四新键 / **GH #783 追评 + GH #788 追评 + 新开一条 [strategy] issue**(均 push 之后发表,GH #290 顺序)。
