@@ -8670,7 +8670,10 @@
   而失败的 rebase 已让 HEAD 停在 `b43c5ecf`(**别人的 tip**)⇒ 它打出 `LANDED on main: b43c5ecf`。
   当场按 commit 标题对出来了,但这正是「结论碰巧对、读法坏」的形状:**祖先检查证明的是 HEAD 在 main 上,
   不是我的工作在 main 上** —— 正确的读法是拿**分支 ref** 而不是 HEAD 去比。
-  Token:`TOKENS total_in=15,305,394 out=77,563 turns=82`。
+  已发表(**push 之后**,两份草稿 `claim_precheck` 各 `EXIT=0` / `not on origin/main: 0`):
+  GH **#782 追评** `5648518933`、GH **#342 追评** `5648522074`。
+  最终落地 `b43c5ecf..9d8c6b00 HEAD -> main`(用**分支 ref** 做祖先检查确认,不是 HEAD)。
+  Token:`TOKENS total_in=32,960,767 out=126,197 turns=138`。
 
 - 2026-09-12T16:44Z:**GH #760 定价完结 —— 四个收窄读法全部拒,而拒的理由分成两类,
   并且本轮把解锁它们的那一棒交出去了(GH #786)。**
