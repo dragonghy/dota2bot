@@ -23,7 +23,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## Backlog(做完划掉,补新的)
 
 -157. ✅ **`-156` 第 1 条执行了:主体在 `bots/`,按两道筛选杠杆,量掉四根落第五根** —— 本轮
-   (报告 `iterations/reports/hero/20260912T110301Z.md`,**GH #776**)落地
+   (报告 `iterations/reports/hero/20260912T110301Z.md`,**GH #778**)落地
    **`zusboltimm`**(Zeus,gated,turbo-only,**收窄**)。
    ⭐ **缺陷形状:一个被显式 scope 到单个调用点的已落地修复,它的兄弟调用点就是下一根杠杆。**
    `zusarcimm`(本日早些时候,GH #768)的头注释自己写着「⛔ THE FIX IS SCOPED TO THIS CALL SITE」,

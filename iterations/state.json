@@ -8447,6 +8447,6 @@
     "tests": "tests/test_zuus_bolt_retreat_immunity.lua(14 例全绿)。变异台(按 evidence-discipline:文件副本恢复,恢复后逐字节 diff 为空且复跑全绿)四发全中:M1 闸关腿改成 armed 答案 → 2 红;M2 armed 腿改成 `true` → 3 红;M3 删调用点 → 1 红(§4 wiring);M4 删 t25 豁免 → 1 红(§4 carve-out,该例真驱动 `talent7` 句柄,不是读源码字符串)。",
     "limits": "(i) `J.IsRetreating` 是 mode 谓词,fixture 世界恒假(GH #474)⇒ 语料能证的是**选择器**的答案,不是**支路**开火;§4 有断言钉住这条限制。(ii) ⛔ `tests/mock/replay_fixture.lua` 不把 `IsMagicImmune()` 接到它自己已经带着的 modifier 列表上(GH #769)⇒ 本杠杆离线是 no-op,§5 直接断言这个缺口,修好那天它自己报红并点名。(iii) 1 帧是**域**不是频率,且这一帧与 `zusarcimm` 共享。(iv) t25 豁免本身在语料上几乎恒假(≥25 级只有 8/263 焦点实例),它是按**代码的派发**论证的,不是按频率。",
     "next": "queue.json:hero-65(零 EC2 归档扫描,与 hero-63 同形、可并进同一次遍历)。第三个调用点 `X.ConsiderW2:1353` **刻意不动**(地面施法,需要一份没人取过的 splash 读数),由 `tests/test_zuus_bolt_retreat_immunity.lua` §4 的一条断言钉住「它仍然没有被这条 helper 守住」。",
-    "issue": "GH #776(本轮开)"
+    "issue": "GH #778(本轮开)。⚠️ 落地时报告/登记先写的是 #776,那个号当轮被总监占了(`director: 回填本轮 issue 号(GH #776)`);发表后立刻回填为真号 —— 这正是 GH #290 要求「先 push 再发」的另一半:**号也要发了才知道**。"
   }
 }
