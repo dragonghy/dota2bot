@@ -2161,6 +2161,97 @@ function X.cm_IsFieldCrowdReleaseOk( nAoeCanHurtCount )
 
 end
 
+--- The ALLY term X.ConsiderR's branch 1 never had -- soak candidate `cmrsolo`
+--- (turbo-only, INERT until armed).
+---
+--- ⭐ WHY THIS ID EXISTS AT ALL: it is the sibling `cmrcrowd` wrote down and
+--- deliberately did not take.  LIMIT 4 above says, verbatim, "this lever does
+--- NOT touch branch 1's missing ALLY term ... a separate question with a
+--- separate id".  This is that id.  Nothing here re-opens `cmrcrowd`: the two
+--- read DIFFERENT inputs (hurt count vs ally count) and remove DIFFERENT cells,
+--- which is why widening `cmrcrowd` was the wrong shape (see THE TWO ARE NOT
+--- ONE LEVER below).
+---
+--- THE DEFECT.  `nAllies` is computed on X.ConsiderR's third line --
+--- `J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_NONE)` -- and branch 1, the
+--- crowd/teamfight release, never reads it.  The only reader is branch 2, the
+--- solo-kill branch, and it reads it in the OPPOSITE direction (`#nAllies <= 2`,
+--- i.e. "few enough allies that this kill is mine").  So the one path in this
+--- function that opens the ten-second channel on a group is the one path that
+--- never asks whether anybody is standing next to her while it runs.
+---
+--- CONDITION (c), argued rather than assumed.  crystal_maiden_freezing_field is
+--- `AbilityChannelTime 10` with `AbilityCooldown 100/95/90` (KV, mirrored in
+--- tests/mock/special_value_shapes.lua).  Casting it turns CM into a stationary
+--- target for ten seconds whose damage is paid out in 0.1s ticks across that
+--- whole window, so the cast is worth its cooldown only if the channel is
+--- allowed to run.  What keeps a channel running is not CM -- she has no
+--- stun-break, no self-dispel and no mobility -- it is somebody else's body,
+--- disable or heal between her and the people she is hitting.  With zero allied
+--- heroes inside 1200u there is no such somebody: standard practice with a
+--- channelled team ultimate is to open it INSIDE a fight her team is already in,
+--- not to start one alone.  Note this argument is about SURVIVING the channel
+--- and `cmrcrowd`'s is about the damage LANDING; they are different claims about
+--- the same branch, which is the second reason they are two ids.
+---
+--- THE TWO FRAMES, from two different games, hitting the two different
+--- disjuncts -- so this is NOT `zusboltimm`'s one shared instant:
+---   * tests/fixtures/f_260820_043039_cm_cask_close.lua (20260820_043039_slot1,
+---     t=515.5): 3 heads / 0 hurt / 0 allies, `died_after = 0.2`.  Fires the
+---     HEAD-COUNT disjunct.  This is `cmrcrowd`'s pin frame too.
+---   * tests/fixtures/f_260820_103216_cm_es_aftershock.lua (20260820_103216_slot1,
+---     t=473.5): 2 heads / 2 hurt / 0 allies, nearest ally phantom_assassin at
+---     1543.4u, `died_after = 1`.  Fires the `aoeCanHurtCount >= 2` disjunct,
+---     which `cmrcrowd` does not touch and never will.
+--- Both are CM at 26-30% health dying inside a second of the decision instant,
+--- asking for a ten-second channel nobody was there to protect.
+---
+--- ⛔ THE TWO ARE NOT ONE LEVER, and the grid says so rather than the prose:
+--- `cmrcrowd` removes exactly {heads>=3, hurt<1}; this removes exactly
+--- {branch 1 fires, allies==0}.  Neither contains the other -- (heads=3, hurt=1,
+--- allies=0) is removed only here, (heads=3, hurt=0, allies=2) only there.
+--- tests/test_cm_r_solo_release.lua §3 sweeps the joint grid and asserts both
+--- witnesses, so a later edit that collapses one into the other goes red.
+---
+--- DIRECTION BY CONSTRUCTION, not by today's data (the `cullthresh` lesson).
+--- The armed predicate is the shipped branch-1 predicate AND one more conjunct,
+--- so the armed release set is a strict subset of the shipped one for every
+--- (head count, hurt count, ally count) triple.  Arming this id can only REMOVE
+--- releases; it can never invent one.
+---
+--- ⚠️ LIMITS, four, none rhetorical:
+---   1. ⛔ ON TODAY'S CORPUS THIS ID IS INDISTINGUISHABLE FROM ARMED `cmrself`.
+---      Both frames above sit at HP 0.26/0.30 with `WasRecentlyDamagedByAnyHero
+---      (2.0)` true, so armed `cmrself` already answers NONE on both (measured,
+---      §5.3).  The separation is STRUCTURAL, not observed: `cmrself` needs
+---      HP < 0.38 AND recent damage, so a full-health solo CM opening on three
+---      mobile enemies -- the commonest form of this misplay -- is outside its
+---      predicate and inside this one.  The corpus holds no such frame, and this
+---      file does not pretend it does.  A wave, not the archive, separates them
+---      (iterations/queue.json hero-66).
+---   2. Both domain frames ride the same two meters `cmrcrowd` declares: the 835
+---      Liquipedia AoE anchor (GH #502) and the mock's flat 300 movespeed.  The
+---      ally count itself rides NEITHER -- `J.GetNearbyHeroes` at a literal 1200
+---      reads positions straight out of the frame -- which is why the es_aftershock
+---      witness survives both.
+---   3. 2 domain frames out of 10 CM-subject fixtures is a DOMAIN, not a rate.
+---   4. This lever does NOT touch the ally RADIUS or the floor's size: it reads
+---      the 1200u list branch 2 already computes and asks for one ally, not two.
+---      Whether 1200u is the right ring for "can peel for a channel" is a
+---      separate question with a separate id; one lever at a time.
+X.nRSoloAllyFloor = 1
+
+function X.cm_IsFieldSoloReleaseOk( nAllyCount )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmrsolo' )
+	then
+		return nAllyCount >= X.nRSoloAllyFloor
+	end
+
+	return true
+
+end
+
 function X.ConsiderR()
 
 	if not abilityR:IsFullyCastable()
@@ -2195,8 +2286,15 @@ function X.ConsiderR()
 	then
 		-- [cmrcrowd] the escape term the head-count disjunct never had.  See
 		-- X.cm_IsFieldCrowdReleaseOk above; gate off it is `true`, byte for byte.
+		-- [cmrsolo] the ally term BRANCH 1 never had -- conjoined to the whole
+		-- branch, not to one disjunct, because the peel argument does not
+		-- distinguish them.  See X.cm_IsFieldSoloReleaseOk above; gate off it is
+		-- `true`, byte for byte.  The two helpers are independent calls on
+		-- purpose: an `and` between the two ids would freeze whichever survives
+		-- the other's promote (AGENTS.md, the pullcad trap).
 		if ( ( #nEnemysHeroesInRange >= 3 and X.cm_IsFieldCrowdReleaseOk( aoeCanHurtCount ) )
 			 or aoeCanHurtCount >= 2 )
+			and X.cm_IsFieldSoloReleaseOk( #nAllies )
 		then
 			return BOT_ACTION_DESIRE_HIGH
 		end

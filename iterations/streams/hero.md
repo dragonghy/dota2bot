@@ -22,6 +22,61 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-158. ✅ **`-157` 第 1 条执行了:主体在 `bots/`,而这一轮找杠杆的代价是零次 grep** —— 本轮
+   (报告 `iterations/reports/hero/20260912T141628Z.md`,**GH #%%ISSUE%%**)落地
+   **`cmrsolo`**(Crystal Maiden,gated,turbo-only,**收窄**)。
+   ⭐ **缺陷形状:一条支路读不到它自己的函数第三行就算好的那个局部,而唯一的读者把它读反了。**
+   `X.ConsiderR` 第三行 `local nAllies = J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_NONE)`;
+   branch 1(群战释放路)两条析取项**都不含任何队友项**,唯一的读者是 branch 2(单杀路),
+   而且方向**相反**(`#nAllies <= 2`)⇒ 这个函数里唯一一条「对着一群人开 10 秒引导」的路,
+   恰恰是唯一一条不问「引导跑的时候身边有没有人」的路。
+   ⭐ **`-157` 的启发这一轮升了一级:兄弟不一定是调用点,也可以是「已落地修复自己写下来但声明不碰」的那一项。**
+   `cmrcrowd` 的 **LIMIT 4** 逐字写着「this lever does NOT touch branch 1's missing ALLY term …
+   a separate question with a separate id」⇒ **找它的代价是零次 grep**,形状的正确性上一轮已经付过钱。
+   ⭐ **为什么另开 id 而不是改宽 `cmrcrowd` —— 网格说的不是散文说的**:
+   `cmrcrowd` 删的恰好是 {heads>=3, hurt<1},本 id 删的恰好是 {branch 1 开火, allies==0},
+   **互不包含**,各有一个见证格((heads=3,hurt=1,allies=0) 只被本 id 删;(heads=3,hurt=0,allies=2)
+   只被 `cmrcrowd` 删)。而且两者是对同一条支路的**两个不同主张**:`cmrcrowd` 讲伤害落不落得到,
+   本 id 讲引导活不活得下来。
+   域实测 **10 个 CM-subject fixture → branch 1 全语料只开火 2 次 → 两次都是 0 队友 → 两次都在 1 秒内死亡**,
+   而且**走两条不同的析取项、来自两局**:`f_260820_043039_cm_cask_close`(t=515.5,3/0/0,died_after 0.2,
+   走人头数)与 `f_260820_103216_cm_es_aftershock`(t=473.5,**2/2/0**,最近队友 1543.4u,died_after 1,
+   走 `aoeCanHurtCount >= 2` —— `cmrcrowd` 永远不碰的那条)。⭐ **这是两次独立目击**,与 `zusarcimm`/`zusboltimm`
+   共享同一瞬间的情况相反。
+   id 登记 `state.json:cmrsolo_20260912`;取证请求 `queue.json:hero-66`;
+   测试 `tests/test_cm_r_solo_release.lua`(21 绿),变异台 `tools/agent/mutstand_cmrsolo.sh`(**10/10**)。
+   - ⛔ **第一条,本轮最该被人读到的 —— 今天的语料分不开本 id 与 `cmrself`,而这条限制被写成了断言。**
+     两个域帧 HP 0.263/0.300 且近期挨打 ⇒ **armed `cmrself` 已经在这两帧上答 NONE**(实测)。
+     分界是**结构性**的不是观测到的:`cmrself` 要 HP<0.38 **且**近期挨打,
+     **满血孤身开大**落在它之外、落在本 id 之内,而语料里没有这种帧,**本文件不假装有**。
+     `tests/test_cm_r_solo_release.lua` §5.3 把这条重叠钉成断言 ⇒ `cmrself` 谓词一变、或出现一个能分开
+     两者的帧,它**自己报红并点名**,而不是等下一个人重读散文。`hero-66` 因此**先问可分性,再问域**,
+     并预登记了「不可分 ⇒ 合并成一个决定(留 `cmrself`,退掉本 id)」这条处置。
+   - ⭐ **第二条 —— 接在整条 branch 1 上,不是接在某一条析取项上,而这个选择有变异体守着。**
+     理由一条论证一条实测:peel 这个论证**不区分**两条析取项;第二个目击帧走的正是
+     `aoeCanHurtCount >= 2` 那条。变异台 **M6(把合取项挪进人头数析取项)** 专门控这个失效模式 ——
+     闸、id、接线、注释、(c) 论证全都还在,只有 es_aftershock 见证帧**静默**掉出覆盖。
+   - ⛔ **第三条 —— 量掉的四根,别重开**(逐条理由见报告 §5.1):
+     Zeus `J.GetVulnerableWeakestUnit` 支线**已走完**(三读者两修、第三个地面施法刻意不动,
+     且 CM 自己的 `X.cm_GetWeakestUnit` 已经筛 `CanCastOnNonMagicImmune`,缺陷不迁移);
+     `guard_implication_census.py --all` 在五个焦点英雄文件上 **findings 0**;
+     `ability_value_key_census.py` 的 8 个 READS-ZERO 站点**一个都不在焦点五英雄里**;
+     CM `X.ConsiderR` branch 3 的 `nHP > 0.38 * #nEnemysHeroesFurther`(3 敌时右边 >1.0 恒假
+     —— **形状是真的但出货行为站得住**,(c) 太弱)。
+   - ⛔ **第四条 —— 自检第一条命令又被管道吃掉了一次,而脚本自己数到第 5 次。**
+     `routine_selfcheck.sh … | tail -40` 被脚本主动 REFUSE(evidence discipline 3:管道里读到的是
+     `tail` 的退出码)。**下一轮的第一条命令就写成**
+     `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?"`。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体继续放在 `bots/`(P4.4 (i))**,继续用 `-156` 的两道筛(不碰小兵 / 不以高 hero-level 为地板),
+        并加本轮新得的第三条:**已落地修复的 LIMIT / 「deliberately left alone」段落是现成的杠杆清单** ——
+        它们是作者已经付过形状钱、只欠「集合不同 + 代价不同」那笔的候选。
+        ⛔ 但必须像本轮一样**先证明两个集合互不包含**(给出两个见证格),否则就该改宽原 id。
+        ⚠️ 已量掉的别重开:`-154` 九根 + `-155` 三根 + `-156` 四根 + `-157` 四根 + 本轮四根。
+     2. **`cmrsolo` 的下一棒不在本组**:`hero-66` 的可分性读数出来之前,**不要再在
+        `X.ConsiderR` 上开第三条 id** —— 这个函数已经有 `cmrguard`/`cmrcap`/`cmrself`/`cmrcrowd`/`cmrsolo`
+        五条 gated id,而语料里它只开火 2 次。再加一条是往一个域为 2 的函数上堆杠杆。
+
 -157. ✅ **`-156` 第 1 条执行了:主体在 `bots/`,按两道筛选杠杆,量掉四根落第五根** —— 本轮
    (报告 `iterations/reports/hero/20260912T110301Z.md`,**GH #778**)落地
    **`zusboltimm`**(Zeus,gated,turbo-only,**收窄**)。
@@ -6924,6 +6979,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-12T14:16Z(报告 `iterations/reports/hero/20260912T141628Z.md`;**backlog:新开 `-158`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`cmrsolo`(Crystal Maiden,gated,turbo-only,未 armed,方向=收窄):
+  一条支路读不到它自己函数第三行就算好的那个局部,而唯一的读者把它读反了。**
+  - **缺陷**:`X.ConsiderR` 第三行算好 `nAllies = J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_NONE)`;
+    branch 1(群战释放路)两条析取项**都不含任何队友项**,唯一读者是 branch 2(单杀路)且方向**相反**
+    (`#nAllies <= 2`)⇒ 这个函数里唯一一条「对着一群人开 10 秒引导」的路,恰恰是唯一一条
+    不问「引导跑的时候身边有没有人」的路。
+  - ⭐ **找它的代价是零次 grep**:`cmrcrowd` 的 **LIMIT 4** 逐字写着「this lever does NOT touch
+    branch 1's missing ALLY term … a separate question with a separate id」。
+    ⇒ **`-157` 的启发升一级:兄弟不一定是调用点,也可以是「已落地修复自己写下来但声明不碰」的那一项。**
+  - ⭐ **为什么另开 id 不是改宽 `cmrcrowd` —— 网格说的不是散文说的**:两者删的集合**互不包含**,
+    各有一个见证格((3,1,0) 只被本 id 删;(3,0,2) 只被 `cmrcrowd` 删);而且是对同一支路的**两个不同主张**
+    —— `cmrcrowd` 讲伤害落不落得到,本 id 讲引导活不活得下来。
+  - **域(10 个 CM-subject fixture 实测,gate 全关,835 AoE 锚)**:branch 1 **全语料只开火 2 次,
+    两次都是 0 队友,两次都在 1 秒内死亡**,而且**来自两局、走两条不同的析取项** ——
+    `f_260820_043039_cm_cask_close`(t=515.5,3/0/0,died_after 0.2,人头数)与
+    `f_260820_103216_cm_es_aftershock`(t=473.5,**2/2/0**,最近队友 1543.4u,died_after 1,
+    `aoeCanHurtCount >= 2` —— `cmrcrowd` 永远不碰的那条)。⭐ **两次独立目击**,与 `zusboltimm` 相反。
+  - **修法**:`X.cm_IsFieldSoloReleaseOk( nAllyCount )`,闸关 `true`(逐字节等于出货),闸开
+    `>= X.nRSoloAllyFloor (=1)`;**接在整条 branch 1 上,不是某一条析取项上**(peel 论证不区分析取项,
+    且第二个见证帧走的正是另一条)。**方向是代码的性质**:只再 AND 一个合取项 ⇒ 只能删不能加,
+    §3.1 在 (heads,hurt,allies) **全网格**上扫过而不是抽样。⛔ 两个闸**互不合取**(pullcad)。
+  - ⛔ **本轮最该被人读到的一条:今天的语料分不开本 id 与 `cmrself`,而这条限制被写成了断言。**
+    两个域帧 HP 0.263/0.300 且近期挨打 ⇒ armed `cmrself` **已经**在两帧上答 NONE(实测)。
+    分界是**结构性**的:`cmrself` 要 HP<0.38 **且**近期挨打,**满血孤身开大**落在它之外、落在本 id 之内,
+    而语料里没有这种帧,**不假装有**。`tests/test_cm_r_solo_release.lua` **§5.3** 把它钉成断言 ⇒
+    谓词一变或出现可分帧,它**自己报红并点名**。`hero-66` 因此先问可分性再问域,并预登记了
+    「不可分 ⇒ 合并成一个决定(留 `cmrself`,退掉本 id)」。
+  - **测试**:`tests/test_cm_r_solo_release.lua` **21 绿**;变异台 `tools/agent/mutstand_cmrsolo.sh`
+    **10/10 全中**,其中 **M6 是 scope 变异体**(把合取项挪进人头数析取项 —— 闸/id/接线/注释/(c) 全都还在,
+    只有 es_aftershock 见证帧**静默**掉出覆盖),**M10 是分离性控制**(抬 `cmrcrowd` 地板去吞见证格)。
+  - **闸**:`GATE_EXIT=0`(luacheck bots game 0 warnings)/ `py gate: exit 0,96 ran, 0 findings,
+    0 uncertifiable, 38.4s` / `lua gate: exit 0,322 fast ratchets`。**没用过 RULE6_BYPASS**。
+    ⚠️ 动态全量(~100min,GH #124)本轮没跑。
+  - ⚠️ **既有 trunk 红,逐条在干净树上对照过、都不是本轮的**:`test_cm_pos5_boots.lua`、
+    `test_tpscroll_branch_shadow_census.lua`、`test_gated_getter_stub_control.lua`、
+    `test_focus_level_claims.lua`、`test_stayfield2_marginal_domain.lua`(自检 Lua 腿点名)。
+  - ⚠️ 自检第一条命令**又**接了管道被拒(脚本自报第 5 次复发);改重定向后真码 **EXIT=3**
+    (findings:cadence / queue-rulings / owed-executions / trunk-red python+lua)。
 - 2026-09-12T11:03Z(报告 `iterations/reports/hero/20260912T110301Z.md`;**backlog:新开 `-157`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`zusboltimm`(Zeus,gated,turbo-only,未 armed,方向=收窄):
