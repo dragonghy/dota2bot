@@ -563,6 +563,44 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-12T16:xxZ**:**两条挂了多轮的 trunk red 修到根上 + RULING 31(`hero-66`/`cmrsolo` = APPROVED-SCAN);armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
+  全文 `iterations/reports/director/20260912T16xxxxZ.md`,档案 `test_set.md §HE`(§HE.1–§HE.3),
+  机器键 `state.json:cmrsolo_SCAN_RULED_20260912` / `trunk_red_SIGN_NATURAL_NEG_RECLASSIFIED_20260912` /
+  `trunk_red_ARMED_FLOOR_IS_A_POLICY_VARIABLE_20260912`;针脚 28 → 29;
+  `pending_rulings.py` 裁前 **RIDESHARE 1**,裁后**两节 `none`**,`STRATA_SILENT: none`,clause 16 → 17。
+  ⭐⭐⭐ **(甲) 两条红挂在同一行 `FINDINGS` 里、长得像同一件事,实际失效方向相反 ——
+  「trunk red」不是一个类别,它是一个收件箱。** 连续两轮被本台「登记顺延」,本轮两条都修完。
+  **(甲1) `test_stayfield2_marginal_domain.lua`(GH #624 族第 5 例)—— 这次先做了前几例没做的事:排除行为改动再改数字。**
+  `natural_neg` 56 → 57。在**今天整个 `bots/` diff 的两端**(`2186d6a2..HEAD`,6 文件 **+567/−11**,
+  `jmz_func.lua` 独占 **+128**)各跑一次同一趟 sweep,**七条读数行逐字节相同**
+  (`COUNT frames=1031 S=24 T=13 ST=5 margin=19` / `CLAUSE 0/18/1/5` / `HPBAND 0/6` / `RING 1031/0` /
+  `BAGSALVE 15/0/0` / `BID 24/19/19/0` / `SIGN subsample=111 neg=57 zero=14 pos=40 margin 14/5`)
+  ⇒ **今天英雄组/协同组的改动被实测排除**;移动量归语料(110 → 111 fixture)。`neg` 是逐 fixture 求和量
+  ⇒ append 不可能让它下降 ⇒ 按 `corpus_scale` 自己的定义就是 ratchet,改 `cs.ratchet` 地板 57,
+  下降方向一字未丢并**当场看着它失败过**(地板改 58 ⇒ `… FELL to 57 (registered 58)`)。
+  ⚠️ **建立不了也无结论依赖**:该数是否曾在 111-fixture 语料上等于 56 —— clone 是 shallow 且
+  **地板正好在 `2186d6a2`**,而该 commit 上这条测试**已红且数字逐位相同**。
+  ⭐⭐⭐ **(甲2) `test_stale_waits.py` —— 这条不是普查被顶红,是一道闸口朝着本台自己的政策方向失效,而且是假阳性。**
+  红字 `member string parsed to only 27 ids -- line 2 looks truncated`,地板 `len(armed) >= 30`。
+  **line 2 没被截断**:27 个 id 格式完好、结尾 `arbheart` 无悬挂逗号,且**同一趟里 canary `campvoid` 通过**
+  (canary 通过 = 解析到了对的那一行;只有两半一起红才叫截断)。27 正是上一轮登记的读数。
+  ⭐ **真缺陷是「拿什么当地板」**:armed 不是会长大的语料,是本台**向下驱动的政策变量**
+  (P4.2:armed > 20 冻结,**`armed <= 20` 是明写的解冻目标**)⇒ 停在当日人口下方一点的地板
+  **必然在政策成功的那天变红** —— 这道闸的失效条件是「本台把活干成了」。canary 管「解析对了行」,
+  地板**只防真空** ⇒ 必须落在政策能合法产生的一切数值之下,改 `>= 5` 并把理由写进注释。
+  📌 *一个把当日人口当地板的闸,会把「目标达成」读成「量具坏了」。*
+  ⭐⭐ **(乙) RULING 31 前先做了引用预检,起因是这个 id 与一根掉在地上的棒同名。**
+  批测台 `unlanded` 腿点名 `1455ce9 hero: cmrsolo …`(只在 `origin/claude/admiring-hawking-4m5ld4` 上)。
+  现查**前提全在 trunk 上**:`tests/test_cm_r_solo_release.lua` 在 `origin/main` 存在、`§5.3` 锚点存在、
+  `cmrsolo` 在 `origin/main:bots/BotLib/hero_crystal_maiden.lua` **3 处** ⇒ `1455ce9` 是**后续细化不是地基**,
+  裁定不依赖它;那根棒仍归英雄组(本台不代 cherry-pick)。⚠️ 这一步是 **GH #290/#287** 的形状,不是礼节。
+  ⭐ **(丙) `hero-66` 罕见地自己就写对了三处**(acceptance 自带 4(i-a) ab/ba 条款、按 4(ii) 要均值+分布+`==0` 占比、
+  三条出口事前写下)⇒ **请求原文一字不改,不追加 acceptance 节**。本台只补一条下游约束:
+  出口 (ii) 成立时退掉本 id 的理由要写「**与既有 id 域重合**」而**不是「无效」**。入集按 P4.2 **不批**(armed 27 > 20)。
+  ⚠️ **(丁) 另两条 python 红不是本台的,按铁律 5 交出去不代修**:`test_carrier_terms.py`(→ 英雄组,5 处,
+  `zusult -> zuus` / `liondrainstop -> lion` 仍 hero-scoped off the tree)与 `test_detector_source_constants.py`
+  (→ 先查谁动了 `item_purchase_generic`;它在 `read_source()` 里 raise ⇒ **整个文件一条断言都没跑**,
+  不是「一条红」是「这一侧没人看过」)。两条**都在推送钩子快域之外** ⇒ **GH #774 再加两个直接证据**。
 - **2026-09-12T13:3xZ**:**RULING 28/29/30 —— 五条未裁请求一次裁完(搭车 2 + 拆两半 2 + 并入 GH #581 1);armed 27 不变,判定完结 3。**
   零 AWS(**一次调用都没有**)、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、无 promote / reject / 入集 / 退集。
   全文 `iterations/reports/director/20260912T133000Z.md`,档案 `test_set.md §HD`(§HD.1–§HD.4),

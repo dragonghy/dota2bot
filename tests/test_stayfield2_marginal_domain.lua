@@ -111,6 +111,10 @@ local cs = require('corpus_scale')
 -- this block stays an equality, because every other one is this file's own
 -- FINDING about stayfield2, and a finding can be moved UP by a behaviour change
 -- that `ratchet` would not see.
+-- ⚠️ 2026-09-12: that last sentence held for eleven constants for five days and
+-- is now true of TEN -- see the SIGN_NATURAL_NEG note below. Left standing rather
+-- than edited, because the sentence is also the REASON, and the reason is what
+-- the new note has to argue against.
 --
 -- The 110th fixture is the measurement that separates the two kinds, and it is
 -- unusually clean: it moved exactly the two corpus restatements (1012 -> 1021,
@@ -123,6 +127,29 @@ local cs = require('corpus_scale')
 -- detector a new evasion: 109 WAS the fixture count the day it landed, and the
 -- detector still could not see it, because the `==` compared against a NAME.
 -- That hole is closed in the same commit as this file (`assignment_literal`).
+--
+-- ⭐⭐ 2026-09-12 (director; the GH #624 structural-census family, 5th instance).
+-- THE 111TH FIXTURE IS TO SIGN_NATURAL_NEG WHAT THE 110TH WAS TO SIGN_SUBSAMPLE.
+-- It moved `natural_neg` 56 -> 57 and left ALL ELEVEN findings digit-identical,
+-- so the count that moved is again one that was never about stayfield2. Measured,
+-- not assumed: the sweep was run at BOTH ENDS of today's entire bots/ diff
+-- (2186d6a2..HEAD, +567/-11 over 6 files, jmz_func.lua alone +128) and all seven
+-- readout lines are byte-identical -- COUNT frames=1031 S=24 T=13 ST=5 margin=19,
+-- CLAUSE 0/18/1/5, HPBAND 0/6, RING 1031/0, BAGSALVE 15/0/0, BID 24/19/19/0,
+-- SIGN subsample=111 neg=57 zero=14 pos=40 margin 14/5. So today's hero/strategy
+-- fixes are EXONERATED as the cause, and what is left is the corpus: 110 -> 111
+-- fixtures, +10 live frames, +1 subsample slot, +1 negative.
+-- ⇒ `neg` is a SUM OVER FIXTURES (one fixture.self frame each), so it cannot FALL
+-- under append. That is corpus_scale's own definition of a ratchet, so it is one
+-- now, with the floor re-measured to 57 rather than re-baselined blind.
+-- ⚠️ WHAT THIS DOES NOT ESTABLISH, and nothing below rests on it: whether the
+-- count was ever 56 on a 111-fixture corpus. This container's clone is SHALLOW
+-- with its floor AT 2186d6a2, where the test is ALREADY red with these exact
+-- digits -- so "which fixture, and when did it go red" is unanswerable here.
+-- The claim the number is quoted for -- a negative natural bid is ORDINARY in this
+-- mode, which is what makes the constant-return shape a general hazard rather
+-- than a curiosity -- is carried by `neg > pos` below, which is growth-immune and
+-- keeps saying it over fixtures nobody has written yet.
 local LIVE_FRAMES     = 1012  -- FLOOR: live hero frames, every hero of every fixture
 local S_FIRES         = 24    -- J.ShouldRegenNotGoHome true
 local ABSORBED        = 5     -- ... and J.ShouldStayAndRegen already true
@@ -132,7 +159,9 @@ local MARGIN_SUPPLY   = 18    -- of MARGIN: only T5 (supply) failed
 local MARGIN_BOTH     = 1     -- of MARGIN: both failed
 local T_ONLY_HP_BAND  = 6     -- T true with hp in (0.55, 0.75] -- S cannot speak
 local BAG_FRAMES      = 15    -- frames carrying a backpacked salve
-local SIGN_NATURAL_NEG = 56   -- of the declared slice: natural retreat bid NEGATIVE
+local SIGN_NATURAL_NEG = 57   -- FLOOR (cs.ratchet): of the declared slice, natural
+                              -- retreat bid NEGATIVE. Was 56 as an equality; see the
+                              -- 2026-09-12 note above for why it is a floor.
 local SIGN_MARGIN_NEG = 14    -- of MARGIN: the guard RAISES the bid
 local SIGN_MARGIN_POS = 5     -- of MARGIN: the guard LOWERS the bid
 
@@ -588,10 +617,19 @@ tests['[recorded] most of that movement is the bid going UP, not down'] = functi
     -- The population shape on the declared subsample: this is not a quirk of
     -- the 19, a negative natural bid is ORDINARY in this mode -- which is what
     -- makes the constant-return shape a general hazard rather than a curiosity.
-    assert(tonumber(neg) == SIGN_NATURAL_NEG,
-        'the negative-natural-bid count moved from ' .. SIGN_NATURAL_NEG
-        .. ' -- every "this guard suppresses" sentence about this file has to '
-        .. 'be re-read: ' .. out)
+    -- ⭐ 2026-09-12 (director): a FLOOR, not an equality. This is a sum over
+    -- fixtures, so appending one can only raise it -- and the equality charged
+    -- the 111th fixture an edit fee for a move that said nothing about
+    -- stayfield2 (all eleven of its own findings stayed digit-identical across
+    -- it). A FALL is still the finding it was written to catch, and ratchet
+    -- catches a fall exactly: that direction means a deleted fixture or a frame
+    -- that stopped satisfying the predicate, i.e. behaviour moved.
+    -- The label ends where ratchet's own ' FELL to %d' continues it, so the two
+    -- read as one sentence; the four numbers ride along because the next reader
+    -- of this red is a different stream than the one that turned it.
+    cs.ratchet(tonumber(neg), SIGN_NATURAL_NEG, string.format(
+        'the negative-natural-bid count [subsample=%s neg=%s zero=%s pos=%s]',
+        sub, neg, zero, pos))
     assert(tonumber(neg) > tonumber(pos),
         'negative natural bids stopped being the majority of the subsample; '
         .. 'the generality of the sign hazard is no longer supported: ' .. out)
