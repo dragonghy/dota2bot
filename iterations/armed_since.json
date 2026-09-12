@@ -20,7 +20,9 @@
   "tpcommit": {
    "armed_since": "2026-07-25",
    "precision": "lower_bound",
-   "source": "state.json:family_bisect_launch"
+   "source": "state.json:family_bisect_launch",
+   "retired_at": "2026-09-12",
+   "retired_note": "PROMOTE 出集(test_set.md §GZ.2;state.json:tpcommit_PROMOTE_20260912;锚点 stable-v8)。armed 30 → 29。三条件齐:(a) WORKING episodes=1360(W66,与 (b) 同一个 30-id 家族);(b) W66+W67 并池深度 5 / 239 局,gpm −11.78 ± 12.4(SE,本轮自算),与零不可分辨,过粗粒度门,⛔ 非正面证据、胜负半边缺席不引;(c) owner 亲眼看过的病灶(tp_audit_20260723:一帧 5 次 TP 应答 0 次出手),「传送进防守之后就防守」是标准打法,且这条 floor 不新增任何 TP。"
   },
   "lf_rescue": {
    "armed_since": "2026-07-25",

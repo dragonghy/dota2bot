@@ -90,10 +90,15 @@ tests['NO-FIRE: trigger gone cold (no visible enemy there) -> nil'] = function()
 		'a fog frame only skips the floor; the stamp survives (they may reappear)')
 end
 
-tests['OFF: inert off the soak candidate (shipped default)'] = function()
+-- PROMOTED 2026-09-12 (director RULING 20, anchor stable-v8). Until then this
+-- case read `armed = false -> nil`. The assertion is not deleted, it is
+-- INVERTED to state the promote: with NOTHING armed the floor is now the turbo
+-- default. Keeping it means a future accidental re-gating of tpcommit turns
+-- this case red instead of passing silently.
+tests['PROMOTED: the floor is the turbo default with nothing armed'] = function()
 	local J, bot = fresh({ armed = false })
-	assert(J.GetTpCommitDefendDesire(bot, LANE_TOP) == nil,
-		'off the tpcommit candidate the floor must never fire')
+	assert(J.GetTpCommitDefendDesire(bot, LANE_TOP) == 0.85,
+		'tpcommit is promoted: an un-armed turbo game must get the 0.85 floor')
 end
 
 tests['OFF: inert in normal (non-turbo) mode'] = function()

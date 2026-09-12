@@ -105,12 +105,28 @@ tests['[final bid] armed tpcommit pins the lander at 0.85 over the retreat bid']
         .. 'retreat ' .. tostring(nRetreat) .. ' vs defend ' .. tostring(nDefend))
 end
 
+-- The counterfactual used to be "nothing armed". Since tpcommit was PROMOTED
+-- (2026-09-12, director RULING 20, anchor stable-v8) an un-armed turbo frame
+-- IS the floor, so the un-floored reading has to be bought another way. The
+-- claim being defended is unchanged -- 0.85 is the pin, not a coincidence --
+-- and the honest counterfactual for it is the frame WITHOUT the commitment
+-- stamp, which is what every frame that never answered a TP looks like.
 tests['[final bid] the shipped defend term alone is far below the floor'] = function()
-    landed({})   -- nothing armed: shipped behavior
+    local _, bot = landed({})
+    bot.tpRespondUntil = nil   -- no commitment stamped: the floor returns nil
     local nShipped = defend_bid()
     assert(nShipped < FLOOR,
         'without the floor the same frame bids ' .. tostring(nShipped)
         .. ' -- so the 0.85 really is the pin, not a coincidence')
+end
+
+-- Added with the promote: the case above only shows the un-stamped frame is
+-- low. This one shows the promote itself -- a STAMPED frame with nothing armed
+-- now reaches the floor, which before 2026-09-12 required arming tpcommit.
+tests['[final bid] PROMOTED: a stamped frame reaches the floor un-armed'] = function()
+    landed({})
+    assert(defend_bid() == FLOOR,
+        'tpcommit is promoted: the stamped frame bids the floor with nothing armed')
 end
 
 tests['[final bid] arming tpdying drops the pin on this frame'] = function()

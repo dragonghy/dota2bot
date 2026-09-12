@@ -563,6 +563,58 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-12T02:45Z**:**RULING 19/20/21 —— 第十二条 promote(`tpcommit`,锚点 `stable-v8`,armed 30 → 29)、`lf_rescue` HOLD、批测台交棒 ② 答复。判定完结 2,owner P4.2 的 ≥2 本轮达标。**
+  零 AWS(**一次调用都没有**)、零波次、**不发 owner 邮件**(第 19 条进 `DECISIONS_NEEDED.md` 等 W37 周信)。
+  全文 `iterations/reports/director/20260912T024500Z.md`,档案 `test_set.md §GZ`(§GZ.1–§GZ.3),
+  机器键 `state.json:tpcommit_PROMOTE_20260912` / `lf_rescue_HOLD_20260912` / `winrate_channel_2b_RULING_20260912`。
+  ⭐⭐⭐ **(甲) 本轮两条判定是同一个形状的两面,而那个形状是「先确认挡路的是什么」(RULING 15 的同构)。**
+  批测台请我裁「铁律 2(b) 的胜负半边缺席六波,要不要改写成经济代理量 + 录像 WORKING」——
+  **去读了一遍判例,那一步就是答案**:`tpdeathbuy_PROMOTE_20260911:condition_b` **逐字**写着
+  `The winrate channel is DEGENERATE in all five, so NO win/loss reading is cited. This clears iron
+  rule 2(b)'s coarse 'no clear negative' and is NOT positive evidence`,`liondrainstop` 同款,两条都点名 §FT.2
+  ⇒ **这条读法至少追到 §FT,昨天的 `stable-v7` 就是按它过的门。⇒ 不改写 owner 2026-08-01 立的铁律**
+  (改它只买到「字面与执行一致」,不值一次单方面重写);登记判例 + 进 `DECISIONS_NEEDED` 第 19 条。
+  ⛔ **GH #352 的 `≥0.20` 既不放宽也不收紧** —— 放宽等于把一条报警改成恒真的行;前置是成因,归录像组。
+  📌 *一个组请你把一条规则改写成它已经被执行了九次的样子时,先读判例 ——「要不要改」和「已经这么做了没有」是两个问题,而第二个是免费的。*
+  ⭐⭐⭐ **(乙) RULING 21:`lf_rescue` 撤回上一轮的 promote 第一格,判 HOLD。挡路的从来不是 (a)。**
+  `lf_rescue_CONDITION_A_RERULED_20260821T2300Z:verdict` 逐字 `WORKING (...) + **BUGGY (effect)**`,
+  08-19 处置逐字 `Neither promote nor reject: hand to the strategy stream` ⇒ **(a) 三周前就绿着**,
+  09-11 那次是新语料上的**独立复现**(报告自己把效果侧明写成「只登记不判决」)。
+  条件 (c) 不成立:4 秒预算 vs **最近活塔前 575u** 的落点,而队友被越塔杀恰恰因为**他离塔远** ⇒ 两条件负相关;
+  原始 11 次救援 1 次准时、**7 次 45 秒没到**,09-11 同方向复现 **35/97(36%)队友仍死**(baseline n=18 为 56%,
+  **两腿之差不写成结论**)。⛔ 不 reject(病在 `J.GetNearbyLocationToTp` 自己,9 个调用点 **7 个出厂常开**);⛔ 不出集。
+  接力棒 `owed_executions.json:lf_rescue_landing_point_fix`,**逐字带上「验收帧必须来自两个消费者」**。
+  📌 *一条 id 的 (a) 变绿,不等于路通了 —— 当它的 (a) 三周前就绿着,今天这次变绿**什么都没解锁**。*
+  ⭐⭐⭐ **(丙) 本轮最贵的一条不在裁定里,在 promote 的连带清单里:`pullcad` 陷阱有一层楼上。**
+  `tools/batch_test/behavioral/tpdying_release.py` 的 `REQUIRED_PARTNER = 'tpcommit'` 在 `--assert-arm` 时
+  **不在臂串里就 `[fatal]` 拒绝**;而 **promoted 的 id 在任何臂串里都不再出现** ⇒ 它**从今天起拒绝每一波真波**,
+  话术还是「`tpdying` 是 byte-for-byte inert」——**一句在树上已不成立的话**。改成对**不可达性**而非对**名字**
+  (`REQUIRED_PARTNER = None`,`tpdying` 自己缺席仍拒绝,`--selfcheck` 源码钉改锚到**围住它的函数**并新增一条
+  「那个闸没有回来」)。⚠️ **它是被一个碰巧引用它的 python 测试炸出来的,不是被任何普查** ——
+  `check_armed_wiring` / `inverse_gate_census` / `promote_atoms` **三个都只读 `bots/`**。**这是缺口不是胜利。**
+  ⭐ **(丁) promote 的连带三件**:原子 `tp_response_releases_need_commit` 按**它自己写下的 RELEASE CONDITION**
+  退休(⛔ 不删行,移进 `retired` 留理由;`promote_atoms.py` EXIT=0,atoms 5);
+  变异台 **M6 反转**(原「删掉闸」promote 后**打不进去**,⭐ **是台子自己的 `ANCHOR MISS` 守卫让它可见的**,
+  否则会安静记一个 `CAUGHT`)⇒ 改成「把闸装回去」,实测 **control ok / 10 CAUGHT / 0 SURVIVED / 0 ANCHOR MISS**;
+  **六处断言翻面一条没删**(不 armed ⇒ 门就是 0.85 floor),两处无-floor 对照改用**去掉 commitment 戳**买,
+  `[separability] tpdead alone changes nothing` 前提随原子消失 ⇒ 换成**更强**的「只许降不许升,死队友帧必须严格更低」。
+  ⚠️ 变异台收尾的 `RESTORE:` 行拿**工作树 vs git index** 比,未提交的树上两行 `RESTORE: NO`
+  —— **那是未提交编辑不是没还原**(还原走文件副本,13 个文件 diff 逐条复核过)。
+  ⭐ **(戊) (b) 的离散度本轮自算,没抄形容词**:每粒 gpm `−13.28/−39.12/+5.53/−37.43/+25.42`
+  ⇒ SD **27.8**、SE **12.4** ⇒ **−11.78 ± 12.4**,`|t| = 0.95`,与零不可分辨 ⇒ 过粗粒度门。⛔ **不是正面证据。**
+  ⚠️ **(己) 本轮自己的失手,又是 `timeout`**:上一轮刚登记「开工自检不许带任何 `timeout`」,本轮**用了两次**
+  (`300` 被守卫以管道拒;`600` 咬出真码 `124`)。第三次后台跑到一半被我主动杀 —— 理由是**它开工时读的树
+  已经在我脚下改了一个多小时**(含变异台反复改写 `jmz_func.lua`),**它的读数不可用**。算数的那次在安静树上跑。
+  💰 **零 AWS**,不作 MTD 新声称;转述批测台 00:11Z 当轮现跑:MTD `$83.035`、`operative ceiling $90.00`、
+  headroom `$3.715`,其下**无** `DIRECTOR CROSSING:` ⇒ RULING 15 的退休第二次兑现。三条线一字未动。
+  🩺 五组 3.5h 内全部有产出,无掉队组。**armed 29,离 P4.2 解冻线(≤20)差 9 条。**
+  ⑨ **下次触发**:①判定完结 ≥2 继续(⛔ **`lf_rescue` 不再算一格**,先跑 `a_evidence_owed.py` 现读别抄报告)
+  ②⭐⭐ **补 (丙) 那个缺口**:三个 promote-time 普查都只读 `bots/`,`tools/` 侧的 id 硬编码前提无人查
+  ③两条仍红的 python 腿(不挡 push)④**GH #584 三条测试第三分支 + AGENTS.md 加宽**(**第四轮顺延**)
+  ⑤批测台交棒 ①(GH #759 收割义务可以写成不可满足的)/ `batch-desk.md` 节序 / GH #663 / GH #469
+  ⑥`py_gate_budget_premise` + `consequence_polarity_census` + `pullcamp_atom_readmission` +
+  五条 `a_evidence_*`(**第八次顺延**)⑦存量 GH #523 / patch 缺口 P3 /
+  `DECISIONS_NEEDED` 15/18/19 等 owner(随 W37 周信)。
 - **2026-09-11T22:45Z**:**RULING 16/17 —— 两条 trunk 红,一条是别人的语料长大了,一条是四舍五入。**
   零 AWS(**一次调用都没有**)、零波次、`bots/`+`game/` **零 diff**、armed 串 **30 一字未动**、
   **不发 owner 邮件**、无 promote、无 reject、无入集。

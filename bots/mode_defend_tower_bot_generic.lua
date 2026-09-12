@@ -9,7 +9,8 @@ end
 
 -- [tpcommit fix C] A fresh TP responder stays committed to the lane it
 -- answered instead of being reclaimed by lane assignment mid-engagement;
--- floor from J.GetTpCommitDefendDesire (gated turbo + 'tpcommit', nil off).
+-- floor from J.GetTpCommitDefendDesire. PROMOTED (was soak-candidate
+-- 'tpcommit'); turbo default-on 2026-09-12, nil outside turbo.
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
 
 function GetDesire()

@@ -11046,3 +11046,17 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **十二、Token 用量**:`TOKENS total_in=7,324,404 out=55,563 turns=55`(到统计时刻为止,此后收尾回合不计入)。
   **下一轮本台**:1. **闸 (i) 解锁 `2026-09-12T03:25:21Z`**(⛔ 别抄,跑 `wave_throttle.py`),在其后触发即可发波;2. **市场 = spot**(闸 (iv) 逐字 `NEXT WAVE: spot`),但**当轮现跑** `reclaim_blind.py`;3. **30-id 家族现在深度 5** ⇒ 同串再发时闸 (ii) 腿 2(`5 < 8`)仍成立而**腿 1 大概率照旧为空**,⛔ 收割时不得写成「新杠杆的独立重复」;4. ⛔ **围栏/闸/成本一律当轮现跑**,本条目的 `$83.035`、cutoff `10:23:17Z`、`headroom $3.715`、解锁 `03:25:21Z` **全部作废不得抄作前提**;5. **泄漏检查直接用 `describe-instances`**,别为那个块重跑 `check_costs.sh`(本轮多花 `$0.01`);6. ⚠️ 开工第一条命令**重定向 + 后台 + 不设短 `timeout`**(**第 17 次**登记);7. ⛔ **本条目的 issue 号与自检/闸读数已当轮回填,无待补项。**
   详见 `iterations/reports/batch-desk/20260912T001100Z.md`、`waves/W67_verdict.json` 与 `waves/W66W67_pooled.json`。
+
+- **2026-09-12T02:45Z 总监裁定投递(RULING 19,答复本台 00:11Z 交棒 ②;全文 `test_set.md §GZ.1`,机器键 `state.json:winrate_channel_2b_RULING_20260912`)**:
+  **铁律 2(b) 不改写,而你请我改成的那个样子已经是判例了。**
+  `state.json:tpdeathbuy_PROMOTE_20260911:condition_b` 逐字
+  `The winrate channel is DEGENERATE in all five, so NO win/loss reading is cited. This clears iron
+  rule 2(b)'s coarse 'no clear negative' and is NOT positive evidence`;`liondrainstop_PROMOTE_20260911`
+  逐字 `winrate DEGENERATE throughout`;两条都点名 §FT.2 ⇒ 昨天的 `stable-v7` 就是按它过的门。
+  ⇒ **本台照旧**:并池读数照打、两层照登记、⛔ **不代裁好坏**;胜负通道 DEGENERATE 时**不引任何胜负读数**,
+  这不是本台的临时妥协,是已生效的判例。铁律 2 是 owner 立的,改不改字面进 `DECISIONS_NEEDED` 第 19 条等 W37 周信。
+  ⛔ **GH #352 的 `≥0.20` 既不放宽也不收紧** —— 放宽等于把一条报警改成恒真的行。
+  它的前置是**成因**,已交录像组(你的交棒 ③)。
+  **本台下一轮不需要为此改任何做法,也不要再把这一问当待决带上来。**
+  ⚠️ 另:本轮 promote 了 `tpcommit`,**armed 30 → 29**(串在 `test_set.md` 第 2 行,257 字节,
+  md5 `33047ce53c029f3901e5f63eab872ecb`)⇒ **W66/W67 的 30-id 池不与今后的 29-id 波并池**。

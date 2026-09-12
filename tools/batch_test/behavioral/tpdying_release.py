@@ -142,8 +142,19 @@ PIN_RADII_U = (800.0, 1200.0, 1600.0)
 # him where he stood.  Well under the trip floor on purpose -- this test only
 # has to separate "landed" from "did not land".
 LANDED_JUMP_U = 2000.0
-# The id whose gate ENCLOSES this one.  Without it armed, `tpdying` is inert.
-REQUIRED_PARTNER = 'tpcommit'
+# The id whose gate ENCLOSES this one, or None when the enclosing gate is a
+# shipped default and nothing has to be co-armed.
+#
+# Was 'tpcommit' until 2026-09-12, when that id was PROMOTED to a turbo default
+# (director RULING 20, anchor stable-v8).  The refusal below is written against
+# UNREACHABILITY, not against a name: once the enclosure is default-on, `tpdying`
+# armed alone is reachable in every turbo game, and leaving the old name here
+# would have made this tool refuse EVERY future wave -- a promoted id is in no
+# armed string, so the check could never pass again.  That is the CLAUDE.md
+# "promoting an id silently kills any gate that names it" trap one level up: the
+# thing frozen is not a gate in bots/ but a precondition in a measuring tool, and
+# nothing in the repo greps for it.  The refusal on `tpdying` itself is unchanged.
+REQUIRED_PARTNER = None
 
 
 def tp_episodes(timeline, game, trip_floor):
@@ -555,10 +566,17 @@ def selfcheck():
                             'jmz_func.lua')).read()
     chk('tpdying is still gated and still turbo-only',
         "J.IsSoakCandidate( 'tpdying' )" in src)
-    chk('tpdying still sits INSIDE the tpcommit gate',
-        src.index("if not J.IsSoakCandidate( 'tpcommit' ) then return nil end")
+    # Was 'tpdying still sits INSIDE the tpcommit gate' until 2026-09-12, when
+    # tpcommit was PROMOTED (director RULING 20).  The enclosure is still what
+    # decides reachability -- only its entry condition changed from an armed id
+    # to plain turbo -- so the pin follows the enclosure, not the vanished id.
+    chk('tpdying still sits INSIDE J.GetTpCommitDefendDesire',
+        src.index('function J.GetTpCommitDefendDesire( bot, nLane )')
         < src.index("if J.IsSoakCandidate( 'tpdying' )"),
-        'the enclosing gate is what makes --assert-arm necessary')
+        'the enclosure is what decides reachability')
+    chk('...and that enclosure is now a turbo default, not a gated id',
+        "if not J.IsSoakCandidate( 'tpcommit' ) then return nil end" not in src,
+        'REQUIRED_PARTNER is None only because this holds')
     chk('the commitment window is still 12 s',
         'DotaTime() + 12.0' in open(
             os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -597,19 +615,25 @@ def main():
         sys.exit(selfcheck())
 
     arm_note = ('arm string NOT supplied: reachability unverified -- a zero '
-                'delta below could be "no effect" OR "tpcommit not armed"')
+                'delta below could be "no effect" OR "`tpdying` not armed"')
     if args.assert_arm is not None:
         ids = {s.strip() for s in args.assert_arm.split(',') if s.strip()}
-        if REQUIRED_PARTNER not in ids:
+        if REQUIRED_PARTNER is not None and REQUIRED_PARTNER not in ids:
             sys.exit('[fatal] `%s` is NOT in the arm string, so `tpdying` is '
                      'byte-for-byte inert in this wave -- there is no (a) to '
                      'buy here.  Refusing to print a clean-looking zero.'
                      % REQUIRED_PARTNER)
         if 'tpdying' not in ids:
             sys.exit('[fatal] `tpdying` is not in the arm string either.')
-        arm_note = ('reachability VERIFIED: both `tpdying` and its enclosing '
-                    '`%s` gate are armed in this wave (%d ids)'
-                    % (REQUIRED_PARTNER, len(ids)))
+        if REQUIRED_PARTNER is None:
+            arm_note = ('reachability VERIFIED: `tpdying` is armed in this wave '
+                        '(%d ids) and its enclosing floor is a shipped turbo '
+                        'default (tpcommit promoted 2026-09-12), so nothing has '
+                        'to be co-armed' % len(ids))
+        else:
+            arm_note = ('reachability VERIFIED: both `tpdying` and its enclosing '
+                        '`%s` gate are armed in this wave (%d ids)'
+                        % (REQUIRED_PARTNER, len(ids)))
 
     rows, dropped = [], 0
     for d in args.sweeps:

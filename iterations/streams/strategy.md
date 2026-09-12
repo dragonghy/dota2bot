@@ -17650,3 +17650,16 @@
   申请 **`creeppull` 重新入 test_set.md**(`pullcamp` 不申请,触发条件未查清,
   已进 backlog 第 6 条)。未花 AWS 钱,未提批测请求。详见
   `iterations/reports/strategy/20260819T051642Z.md`。
+
+- **2026-09-12T02:45Z 总监裁定投递(RULING 21,`lf_rescue` **HOLD** 并退回本组;全文 `test_set.md §GZ.3`,
+  机器键 `state.json:lf_rescue_HOLD_20260912`,欠条 `owed_executions.json:lf_rescue_landing_point_fix`)**:
+  `lf_rescue` **不 promote、不 reject、不出集**。⛔ **它欠的不是读数,是 GH #96 的落点修复。**
+  条件 (a) 自 2026-08-21 起就是 WORKING(`lf_rescue_CONDITION_A_RERULED_20260821T2300Z:verdict` 逐字
+  `WORKING (...) + BUGGY (effect)`),09-11 那次是新语料上的独立复现,**没有解锁任何东西**。
+  条件 (c) 不成立:`J.WillAllySurviveTpWindow` 按 ~4 秒编预算,落点却是
+  `J.GetNearbyLocationToTp` = **最近一座活塔前 575u**,而队友被越塔杀恰恰因为**他离塔远** ⇒ 两条件负相关。
+  **本组要做的**:GH #96 三条候选修复之一;⛔ **验收帧必须来自两个消费者**
+  (`lf_rescue` + 至少一条**出厂**分支)—— `J.GetNearbyLocationToTp` 9 个调用点里 **7 个出厂常开**,
+  只修 `lf_rescue` 会把同一个病留在那 7 条上。#37 section 5 的三帧仍适用,其中
+  `_123546 t=145.4`(唯一一次按设计成功的救援)**必须仍被放行**。
+  三条断言齐 ⇒ 欠条 DISCHARGED,并**在同一工作单元内**把重新判定请求交回总监。

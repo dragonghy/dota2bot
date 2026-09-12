@@ -10639,11 +10639,12 @@ end
 -- window, so the fight logic there gets to run instead of the walk home.
 -- Returns a defend-desire floor (0.85) for the answered lane, or nil. The
 -- commitment releases early when nobody is visible at the trigger any more
--- (no standing around a cold spot). Gated turbo + 'tpcommit'; the stamps are
--- inert state, so shipped behavior is unchanged off the candidate.
+-- (no standing around a cold spot). PROMOTED (was soak-candidate 'tpcommit',
+-- turbo default-on 2026-09-12, director RULING 20, anchor stable-v8). Outside
+-- turbo the first statement still returns nil, so non-turbo play is unchanged;
+-- the stamps were always inert state and remain so.
 function J.GetTpCommitDefendDesire( bot, nLane )
 	if not J.IsModeTurbo() then return nil end
-	if not J.IsSoakCandidate( 'tpcommit' ) then return nil end
 	if bot == nil or not bot:IsAlive() then return nil end
 	if bot.tpRespondLoc == nil or bot.tpRespondUntil == nil then return nil end
 	if DotaTime() > bot.tpRespondUntil then return nil end
@@ -10683,9 +10684,12 @@ function J.GetTpCommitDefendDesire( bot, nLane )
 	-- claims, and the sharper defect is that a SURVIVAL release depends on the
 	-- responder's own wallet at all. Restore the anticipation in this floor's own domain:
 	-- release when the burst the visible enemies can cast right now already
-	-- covers my current health. Gated turbo + 'tpdying' and reachable only
-	-- inside the 'tpcommit' gate, so both shipped play and today's armed
-	-- tpcommit behavior are unchanged until this id is armed. Structurally it
+	-- covers my current health. Gated turbo + 'tpdying'. Since 2026-09-12 the
+	-- enclosing floor is a turbo default (tpcommit PROMOTED), so this release
+	-- is reachable in every turbo game the moment 'tpdying' is armed -- before
+	-- that promote it was reachable only while 'tpcommit' was itself armed,
+	-- which is why promote_atoms.json carried a row until then. Shipped play is
+	-- unchanged until this id is armed. Structurally it
 	-- can only RELEASE a pin (return nil sooner), never raise or create one.
 	if J.IsSoakCandidate( 'tpdying' )
 	and J.IsIncomingBurstLethal( bot, 3.0 ) then
@@ -10705,7 +10709,9 @@ function J.GetTpCommitDefendDesire( bot, nLane )
 	-- The stamp is the only thing that distinguishes them, which is why the
 	-- landing-distance ceiling (candidate 1) and the widened survival window
 	-- (candidate 2) were both falsified on these same frames.
-	-- Gated turbo + 'tpdead' and reachable only inside 'tpcommit'; like the
+	-- Gated turbo + 'tpdead'. It sits inside J.GetTpCommitDefendDesire, which
+	-- is a turbo default since 2026-09-12 (tpcommit PROMOTED), so arming this
+	-- id is now enough to reach it; like the
 	-- release above it can only ever drop a pin, never raise or create one.
 	if J.IsSoakCandidate( 'tpdead' )
 	and bot.tpRespondAlly ~= nil

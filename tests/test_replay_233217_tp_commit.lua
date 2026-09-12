@@ -68,10 +68,13 @@ tests['counterfactual: window expired -> released'] = function()
         'a stale commitment must not pin the bot forever')
 end
 
-tests['OFF: inert off the soak candidate (shipped default)'] = function()
+-- PROMOTED 2026-09-12 (director RULING 20, anchor stable-v8). Inverted rather
+-- than deleted, same reasoning as tests/test_tp_commit.lua: this real frame is
+-- now the SHIPPED turbo behavior, and a re-gating would turn the case red.
+tests['PROMOTED: this real frame now pins on the shipped turbo default'] = function()
     local J, bot = armed({ armed = false })
-    assert(J.GetTpCommitDefendDesire(bot, LANE_BOT) == nil,
-        'off tpcommit the floor never fires -- shipped behavior unchanged')
+    assert(J.GetTpCommitDefendDesire(bot, LANE_BOT) == 0.85,
+        'tpcommit is promoted: the 233217 frame gets the floor with nothing armed')
 end
 
 return tests

@@ -773,7 +773,11 @@ local PINNED = {
     -- pullthink`.
     "creepthink,pullcad,pullthink | Think | J.GetCampPullPokeTarget | campbind | bots/mode_roam_generic.lua",                             -- P
     "towerfear,towerring | X.ShouldRun | J.IsBasePresenceAdverse | basesiege | bots/mode_retreat_generic.lua",                             -- W
-    "tpcommit,tpdead,tpdying | J.GetTpCommitDefendDesire | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/FunLib/jmz_func.lua",        -- P
+    -- P. Was "tpcommit,tpdead,tpdying | ..." until 2026-09-12: tpcommit was
+    -- PROMOTED (director RULING 20, anchor stable-v8), so the outer gate id
+    -- left the row and the two releases now hang on the turbo default instead
+    -- of on another armed id. The census reading itself is unchanged.
+    "tpdead,tpdying | J.GetTpCommitDefendDesire | J.ShouldRetreatLaneBurst | ccburst,lanehyst | bots/FunLib/jmz_func.lua",
     -- [staysrc 20260905] The inner helper here is the (A) exemplar this file's
     -- own header already names: armed 'bagsalve', J.HasFieldRegenSource only
     -- ever admits ONE MORE backpack slot, so un-armed it returns the shipped

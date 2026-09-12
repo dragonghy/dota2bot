@@ -136,10 +136,16 @@ tests['[final bid] shipped tpcommit holds the pin on all three, corpses included
     end
 end
 
-tests['[final bid] without tpcommit the same frames bid far below the floor'] = function()
+tests['[final bid] without a commitment stamp the same frames bid far below the floor'] = function()
     -- So the 0.85 above really is the pin and not the lane's own defend term.
+    -- The counterfactual used to be "nothing armed"; since tpcommit was
+    -- PROMOTED (2026-09-12, RULING 20) an un-armed turbo frame IS the floor, so
+    -- the un-floored reading is bought by removing the stamp instead -- which
+    -- is what every frame that never answered a TP looks like. Same claim,
+    -- honest counterfactual.
     for _, f in ipairs(FRAMES) do
-        landed(f, {})
+        local _, bot = landed(f, {})
+        bot.tpRespondUntil = nil
         local nBid = defend_bid()
         assert(nBid < FLOOR,
             f.name .. ': shipped defend term should be under the floor, got '
@@ -181,16 +187,33 @@ end
 
 -- ---- separability: what the candidate can and cannot touch -------------------
 
-tests['[separability] tpdead alone, without tpcommit, changes nothing'] = function()
-    -- The release sits under the tpcommit gate, so the id is a no-op on its own
-    -- -- the same scheduling note tpdying carries: never bisect it by itself.
+-- REWRITTEN 2026-09-12 with the tpcommit promote (director RULING 20, anchor
+-- stable-v8). The old case asserted "tpdead alone is bit-identical to shipped",
+-- which was true only because the release hung under the tpcommit GATE -- that
+-- no-op-ness is exactly what promote_atoms.json's
+-- `tp_response_releases_need_commit` row existed to stop somebody shipping, and
+-- promoting tpcommit is that row's own written RELEASE CONDITION. So the
+-- premise is gone and the case cannot stand as written.
+-- What is NOT gone is the half that still constrains the id: tpdead can only
+-- ever DROP a pin, never raise or create one. That is asserted here instead,
+-- which is strictly stronger than the old equality on the frames that matter.
+tests['[separability] tpdead alone can only ever lower the bid'] = function()
     for _, f in ipairs(FRAMES) do
         landed(f, { 'tpdead' })
-        local nBid = defend_bid()
+        local nArmed = defend_bid()
         landed(f, {})
-        assert(nBid == defend_bid(),
-            f.name .. ': tpdead without tpcommit must be bit-identical to '
-            .. 'shipped')
+        local nShipped = defend_bid()
+        assert(nArmed <= nShipped,
+            f.name .. ': tpdead must never raise a bid, got '
+            .. tostring(nArmed) .. ' vs shipped ' .. tostring(nShipped))
+        if not f.ally_alive then
+            assert(nArmed < nShipped,
+                f.name .. ': a finished rescue must drop the pin now that the '
+                .. 'enclosing floor is the turbo default')
+        else
+            assert(nArmed == nShipped,
+                f.name .. ': a live rescue is untouched by tpdead')
+        end
     end
 end
 

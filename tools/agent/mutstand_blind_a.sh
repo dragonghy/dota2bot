@@ -164,11 +164,16 @@ mutate "M5 the stayfield mock declaration is reworded (finding loses its citatio
     's/GetCurrentCharges default is 0\. Declared, not hidden\./GetCurrentCharges default is 0 by default./'
 
 # ---------------------------------------------------------------- half 2
-# M6 -- the GATE that makes `tpdead` unreachable alone.  Remove it and the id
-# becomes measurable by a single-arm wave, which is precisely the purchase the
-# ruling names -- so the test must go red rather than keep calling it a no-op.
-mutate "M6 the tpcommit gate leaves the function (tpdead reachable alone)" "$JMZ" \
-    's/\tif not J\.IsSoakCandidate\( \x27tpcommit\x27 \) then return nil end\n\tif bot == nil or not bot:IsAlive\(\) then return nil end/\tif bot == nil or not bot:IsAlive() then return nil end/'
+# M6 -- INVERTED 2026-09-12 with the tpcommit PROMOTE (director RULING 20).
+# It used to REMOVE the `tpcommit` gate, because the gate was what made `tpdead`
+# unreachable alone.  The promote removed it for real, so the old mutation no
+# longer lands (the stand's ANCHOR MISS guard would have said so rather than
+# quietly scoring a CAUGHT -- that guard is why this was visible at all).  The
+# mutation worth making now is the REVERSE: re-gate the promoted floor.  That is
+# the shape a future round can drift into by accident, it silently un-ships a
+# turbo default, and it puts `tpdead` back out of single-arm reach.
+mutate "M6 a tpcommit gate returns to the promoted floor (turbo default un-ships)" "$JMZ" \
+    's/function J\.GetTpCommitDefendDesire\( bot, nLane \)\n\tif not J\.IsModeTurbo\(\) then return nil end/function J.GetTpCommitDefendDesire( bot, nLane )\n\tif not J.IsModeTurbo() then return nil end\n\tif not J.IsSoakCandidate( \x27tpcommit\x27 ) then return nil end/'
 
 # M7 -- the OTHER half of "armed alone is a no-op".  The stamp having exactly one
 # reader is what makes the ungated writer inert; give it a second reader outside

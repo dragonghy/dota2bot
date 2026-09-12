@@ -44,41 +44,6 @@
    ]
   },
   {
-   "name": "tp_response_releases_need_commit",
-   "rule": "no_promote_without",
-   "subject": [
-    "tpdying",
-    "tpdead"
-   ],
-   "prereq": [
-    "tpcommit"
-   ],
-   "ruled_at": "2026-09-05T19:xxZ",
-   "ruled_by": "director",
-   "ref": "iterations/streams/test_set.md §EZ.5; GH #35 (tpdying) / GH #37 (tpdead) / GH #531 (the shape)",
-   "direction": "one-way: promoting tpcommit while either release stays gated is NOT constrained by this row.",
-   "note": [
-    "REGISTERED BEFORE A VIOLATION, per this file's own README ('ADD A ROW the moment a",
-    "constraint is ruled'). Nothing is wrong with these two ids today: tpcommit is armed",
-    "alongside them, so both releases are reachable in every wave that carries them.",
-    "WHAT THE ROW STOPS is the promote-day configuration. Both gate sites live INSIDE",
-    "J.GetTpCommitDefendDesire (bots/FunLib/jmz_func.lua:8655), whose first statement is",
-    "`if not J.IsSoakCandidate('tpcommit') then return nil end` (:8657). Promote tpdying or",
-    "tpdead alone and the promoted code ships behind a gate that is OFF in every real game:",
-    "a promote that changes nothing, recorded as a shipped improvement. That is the same",
-    "family as GH #531 -- a lever whose reachability is decided by a DIFFERENT id -- and the",
-    "same family as the pullcad trap, one level up: pullcad freezes a predicate FALSE at",
-    "promote time, this ships a live predicate nobody can reach.",
-    "WHY IT WAS INVISIBLE UNTIL NOW: the dependency is structural NESTING, not a conjunction,",
-    "so no gate-reading tool sees it, and it was written down twice in prose -- the function's",
-    "own comments ('reachable only inside the tpcommit gate') and test_set.md:3625 ('挂在已",
-    "armed 的 tpcommit 下,可接受'). Prose is exactly what zusstatic was carrying when it sat",
-    "armed for a fortnight measuring nothing (§EX.3).",
-    "RELEASE CONDITION (what would retire this row): tpcommit promoted, or either release",
-    "lifted out of J.GetTpCommitDefendDesire so that it stands on its own gate."
-   ]
-  },
-  {
    "name": "static_field_needs_binding",
    "rule": "no_promote_without",
    "subject": [
@@ -230,6 +195,59 @@
     "unarmed. Today the corpus cannot even produce the frame (tests/test_lion_ult_aoe_reach.lua §2:",
     "0/42 scepter-carrying Lion frames, both splash keys read 0, densest enemy clump is 2 against a",
     "floor of 3), so no such reading exists and the row is not over-strict."
+   ]
+  }
+ ],
+ "retired": [
+  {
+   "name": "tp_response_releases_need_commit",
+   "rule": "no_promote_without",
+   "subject": [
+    "tpdying",
+    "tpdead"
+   ],
+   "prereq": [
+    "tpcommit"
+   ],
+   "ruled_at": "2026-09-05T19:xxZ",
+   "ruled_by": "director",
+   "ref": "iterations/streams/test_set.md §EZ.5; GH #35 (tpdying) / GH #37 (tpdead) / GH #531 (the shape)",
+   "direction": "one-way: promoting tpcommit while either release stays gated is NOT constrained by this row.",
+   "note": [
+    "REGISTERED BEFORE A VIOLATION, per this file's own README ('ADD A ROW the moment a",
+    "constraint is ruled'). Nothing is wrong with these two ids today: tpcommit is armed",
+    "alongside them, so both releases are reachable in every wave that carries them.",
+    "WHAT THE ROW STOPS is the promote-day configuration. Both gate sites live INSIDE",
+    "J.GetTpCommitDefendDesire (bots/FunLib/jmz_func.lua:8655), whose first statement is",
+    "`if not J.IsSoakCandidate('tpcommit') then return nil end` (:8657). Promote tpdying or",
+    "tpdead alone and the promoted code ships behind a gate that is OFF in every real game:",
+    "a promote that changes nothing, recorded as a shipped improvement. That is the same",
+    "family as GH #531 -- a lever whose reachability is decided by a DIFFERENT id -- and the",
+    "same family as the pullcad trap, one level up: pullcad freezes a predicate FALSE at",
+    "promote time, this ships a live predicate nobody can reach.",
+    "WHY IT WAS INVISIBLE UNTIL NOW: the dependency is structural NESTING, not a conjunction,",
+    "so no gate-reading tool sees it, and it was written down twice in prose -- the function's",
+    "own comments ('reachable only inside the tpcommit gate') and test_set.md:3625 ('挂在已",
+    "armed 的 tpcommit 下,可接受'). Prose is exactly what zusstatic was carrying when it sat",
+    "armed for a fortnight measuring nothing (§EX.3).",
+    "RELEASE CONDITION (what would retire this row): tpcommit promoted, or either release",
+    "lifted out of J.GetTpCommitDefendDesire so that it stands on its own gate."
+   ],
+   "retired_at": "2026-09-12T0x:xxZ",
+   "retired_by": "director",
+   "retired_ref": "iterations/streams/test_set.md §GZ.2b(1);state.json:tpcommit_PROMOTE_20260912",
+   "retired_reason": [
+    "RETIRED by this row's OWN written RELEASE CONDITION, verbatim: 'tpcommit promoted, or either",
+    "release lifted out of J.GetTpCommitDefendDesire'.  tpcommit was PROMOTED to a turbo default on",
+    "2026-09-12 (director RULING 20, anchor stable-v8), so J.GetTpCommitDefendDesire's only entry",
+    "condition is now J.IsModeTurbo(): arming tpdying or tpdead ALONE reaches the release in every",
+    "turbo game, which is exactly the configuration this row existed to stop somebody shipping",
+    "unmeasured.  The row's `direction` field already said so -- 'one-way: promoting tpcommit while",
+    "either release stays gated is NOT constrained by this row' -- so promoting the prereq is not a",
+    "way around the constraint, it is the constraint being discharged.",
+    "NOT DELETED, moved to `retired`: a row deleted outright can no longer explain why it was ever in",
+    "force, and the pre-promote no-op-ness of tpdying/tpdead is a fact a future reader will need when",
+    "reading any wave that armed them before today."
    ]
   }
  ]

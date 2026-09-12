@@ -76,20 +76,33 @@ def _game(post, press_t=10.0, end_t=13.0, hero='npc_dota_hero_lion'):
 
 # ---- 2. the reachability refusal -------------------------------------------
 def test_refuses_unreachable_wave():
+    # REWRITTEN 2026-09-12.  `tpcommit` was PROMOTED to a turbo default
+    # (director RULING 20, anchor stable-v8), so the enclosure no longer needs
+    # co-arming and REQUIRED_PARTNER is None.  Had this case been left as
+    # written it would have kept passing -- the tool refuses everything -- while
+    # the tool refused every real wave: a promoted id is in no armed string.
+    # So the case now pins BOTH halves: the reachability refusal is disarmed
+    # only because the enclosure is default-on, and the refusal that is still
+    # meaningful (`tpdying` itself unarmed) still fires.
+    check('REQUIRED_PARTNER is None now that the enclosure is a turbo default',
+          T.REQUIRED_PARTNER is None)
+    src = open(os.path.join(ROOT, 'bots', 'FunLib', 'jmz_func.lua'),
+               encoding='utf-8', errors='replace').read()
+    check('...and that is true of the tree, not just of the constant',
+          "if not J.IsSoakCandidate( 'tpcommit' ) then return nil end"
+          not in src)
     without = subprocess.run(
-        [sys.executable, TOOL, '--assert-arm', 'tpdying,lf_rescue,midtp'],
+        [sys.executable, TOOL, '--assert-arm', 'lf_rescue,midtp'],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    check('a wave without `tpcommit` is REFUSED, not reported as a zero',
+    check('a wave without `tpdying` itself is still REFUSED',
           without.returncode != 0)
-    check('the refusal names the enclosing gate',
-          b'tpcommit' in without.stdout)
-    check('REQUIRED_PARTNER is still the enclosing gate',
-          T.REQUIRED_PARTNER == 'tpcommit')
-    both = subprocess.run(
-        [sys.executable, TOOL, '--assert-arm', 'tpcommit,tpdying'],
+    check('the refusal names the id it cannot measure',
+          b'tpdying' in without.stdout)
+    armed = subprocess.run(
+        [sys.executable, TOOL, '--assert-arm', 'tpdying'],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    check('a wave with both armed is not refused for reachability',
-          b'byte-for-byte inert' not in both.stdout)
+    check('`tpdying` armed alone is no longer refused for reachability',
+          b'byte-for-byte inert' not in armed.stdout)
 
 
 # ---- 3. the strictly-after landing sample ----------------------------------
@@ -152,9 +165,10 @@ def test_source_constants():
           T.DEFAULT_TRIP_FLOOR_U == 5000.0 and 'nMinTPDistance = 5500' in src)
     check('detector (1) still uses the 10 s window §A\'.3 named',
           T.DEATH_WINDOW_S == 10.0)
-    check('tpdying is still gated, and still nested inside tpcommit',
+    check('tpdying is still gated, and still nested inside the turbo-default '
+          'floor whose gate tpcommit used to be',
           "J.IsSoakCandidate( 'tpdying' )" in jmz
-          and (jmz.index("if not J.IsSoakCandidate( 'tpcommit' ) then return nil end")
+          and (jmz.index('function J.GetTpCommitDefendDesire( bot, nLane )')
                < jmz.index("if J.IsSoakCandidate( 'tpdying' )")))
     check('the default pin radius is one of the reported radii',
           T.DEFAULT_PIN_RADIUS_U in T.PIN_RADII_U)

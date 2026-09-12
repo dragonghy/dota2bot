@@ -292,20 +292,32 @@ end
 
 -- ============================================================== half 2
 
-tests['[2a] the tpdead clause lives inside the tpcommit gate'] = function()
+-- REWRITTEN 2026-09-12. tpcommit was PROMOTED (director RULING 20, anchor
+-- stable-v8), so the id's gate line is gone from J.GetTpCommitDefendDesire and
+-- the old assertion cannot hold. Its own failure text named the outcome
+-- exactly -- "`tpdead` may now be reachable alone, which is the purchase this
+-- ruling asked for" -- so this case now asserts the purchase instead of the
+-- gate: the clause still lives inside that function, and the function's only
+-- remaining entry condition is turbo. The half that still constrains anything
+-- is the ORDER (the turbo guard precedes the clause), and that is kept.
+tests['[2a] the tpdead clause lives inside a turbo-default floor'] = function()
     local src = read_file(JMZ)
     local at = src:find('function J.GetTpCommitDefendDesire( bot, nLane )', 1, true)
     assert(at, 'J.GetTpCommitDefendDesire is gone')
     -- Searched from the function head, not from the file head: the id is named
     -- in several unrelated comments elsewhere.
-    local gate = src:find("if not J.IsSoakCandidate( 'tpcommit' ) then return nil end",
-        at, true)
-    assert(gate, 'the tpcommit gate left J.GetTpCommitDefendDesire')
+    assert(not src:find("if not J.IsSoakCandidate( 'tpcommit' ) then return nil end",
+        at, true),
+        'a tpcommit gate is back inside J.GetTpCommitDefendDesire -- the id was '
+        .. 'promoted on 2026-09-12 and re-gating it would silently un-ship a '
+        .. 'turbo default and make tpdead unreachable alone again')
+    local turbo = src:find('if not J.IsModeTurbo() then return nil end', at, true)
+    assert(turbo, 'the turbo guard left J.GetTpCommitDefendDesire')
     local clause = src:find("if J.IsSoakCandidate( 'tpdead' )", at, true)
     assert(clause, 'the tpdead clause left J.GetTpCommitDefendDesire')
-    assert(gate < clause,
-        'the tpcommit gate no longer precedes the tpdead clause -- `tpdead` may now '
-        .. 'be reachable alone, which is the purchase this ruling asked for')
+    assert(turbo < clause,
+        'the turbo guard no longer precedes the tpdead clause -- the clause would '
+        .. 'be reachable outside turbo, which no wave has ever measured')
 end
 
 tests['[2b] the clause is INLINE, which is why the nesting census cannot see it'] = function()
@@ -324,10 +336,15 @@ tests['[2b] the clause is INLINE, which is why the nesting census cannot see it'
         .. 'about -- if it became a gated helper, the nesting census now covers it '
         .. 'and section 2b should be retired rather than repaired')
 
+    -- The row lost `tpcommit` from its outer-id column when that id was
+    -- promoted on 2026-09-12 (RULING 20). The GH #622 reading is unaffected:
+    -- it is about `tpdead` sitting in an OUTER-id column with no verdict slot,
+    -- and `tpdead` is still there. Cite what exists now, not what existed then.
     local census = read_file('tests/test_gated_helper_nesting_census.lua')
-    assert(census:find('tpcommit,tpdead,tpdying | J.GetTpCommitDefendDesire', 1, true),
-        'the census row that names all three ids is gone -- the GH #622 reading in '
-        .. 'this header cited it as the live example and now cites nothing')
+    assert(census:find('tpdead,tpdying | J.GetTpCommitDefendDesire', 1, true),
+        'the census row that names tpdead in its outer-id column is gone -- the '
+        .. 'GH #622 reading in this header cited it as the live example and now '
+        .. 'cites nothing')
 end
 
 tests['[2c] the writer is ungated but declared inert, and has no other reader'] = function()

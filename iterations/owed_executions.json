@@ -997,6 +997,22 @@
     "kind": "manual"
    },
    "done_when_note": "**裸读得出的验收句**:`ohnum`(或其继任 id)的重新提议里,`J.ShouldRefuseUnsupportedPunish` 的我方人头**不再只数以目标为圆心的那个圈**,**且**该提议附带一次 `tests/_ohnum_sweep.lua` 的重跑,报出**新估计量下的 `recenter_flip`**。⛔ **明确不接受的修法**:把半径从 1200 放大(如 2000)。它动的是同一个圆的**边**而不是**圆心**,会对称地把敌人也数进来(而实测的单边性说问题不在那里),而且 `tools/agent/mutstand_ohnum.sh` **分辨不出它和真修法** —— M8 打的是圆心,不是半径。⚠️ 本行**没有机器键,而这是诚实的**:验收对象是一份**还不存在的提议**,没有可以事先钉死的 `path`;伪造一个会在提议换名时静默变成 UNCERTIFIABLE。"
+  },
+  {
+   "id": "lf_rescue_landing_point_fix",
+   "issue": "GH #96 [bug] / GH #37 [strategy]",
+   "ruling": "`lf_rescue` **HOLD**(总监 RULING 21,2026-09-12T0x:xxZ,全文 `iterations/streams/test_set.md §GZ.3`,机器键 `state.json:lf_rescue_HOLD_20260912`)。条件 (a) 自 2026-08-21 起就是 WORKING,**挡路的是条件 (c)**:`J.WillAllySurviveTpWindow` 按 ~4 秒编预算,而落点是 `J.GetNearbyLocationToTp` = 最近一座活塔前 575u —— 队友正被越塔杀恰恰因为他离塔远,两个条件**负相关**。原始 11 次救援 1 次准时到、7 次 45 秒没到;2026-09-11 新语料同方向复现(armed 97 次归属救援里 35 次即 36% 队友仍在 15 秒内死亡;baseline n=18 为 56%,**两腿之差不写成结论**)。⛔ 不 reject(动作本身是标准打法,坏的是落点,而 GH #96 §3 已把病定在 `J.GetNearbyLocationToTp` 自己身上,它 9 个调用点里 **7 个是出厂常开的**);⛔ 不出集(它继续给家族级读数供货)。",
+   "ruled_at": "2026-09-12T0x:xxZ",
+   "executor": "协同组(strategy) —— GH #96 三条候选修复之一;录像组供验收帧",
+   "trigger": "常驻:不属于任何一波、任何一个 id 的收割清单,所以进 registry 而不是进某张 `W<N>_wave.json:harvest_obligations`(GH #413 的形状)",
+   "delivered_to": "`iterations/streams/test_set.md §GZ.3`;`state.json:lf_rescue_HOLD_20260912`;本行",
+   "why_registered_here": "⭐ **立这一行的理由就是上一轮的失手本身。** 上一轮把 `lf_rescue` 排进 promote 第一格,因为它的 (a) 那天刚变绿 —— 而**没有任何一行在说这条 id 欠的是效果侧修复**:2026-08-19 的处置逐字 `Neither promote nor reject: hand to the strategy stream`,只活在 `state.json` 的一个键里,而 **`state.json` 不是任何人在选下一步时会去读的表**。同 GH #290 / #413 一族:裁定写了,下游按未裁走。",
+   "blocking_precondition": "无。这条不等波次、不等预算,是纯 Lua 侧修复 + fixture 验收。",
+   "strata_requirement": "⛔ **验收帧必须来自两个消费者**:`lf_rescue` **加上至少一条出厂分支** —— 逐字取自 `state.json:lf_rescue_CONDITION_A_RERULED_20260821T2300Z:constraint_on_37_fixes`,否则「`lf_rescue` 修好了,同一个病还留在 7 个出厂消费者里」。#37 section 5 的三帧仍然适用,其中 `_123546 t=145.4`(唯一一次按设计成功的救援)**必须仍被放行**。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "GH #96 的一条落地修复在 `bots/` 里,且 `tests/` 里存在一条 fixture 测试,其断言同时覆盖 (i) 一条 `lf_rescue` 帧被正确拒绝或改落点、(ii) 至少一条**出厂**消费者帧的同一判定、(iii) `_123546 t=145.4` 仍被放行。三条齐 ⇒ DISCHARGED,并**在同一个工作单元内**把重新判定请求交回总监。 ⚠️ 这一行**判产物不判工作**:三条断言存在即结清,好不好由重新判定那一轮读。⛔ **`lf_rescue` 的 (a) 再测一次不结清这一行** —— 那正是上一轮踩的坑。 ⛔ **`kind` 只能是 `manual`**:释放条件里那条 fixture 测试的文件名此刻还不存在,写成 `path_exists` 就是替协同组把文件名先定死。⚠️ 顺带一条本轮实测的 registry 纪律:`done_when` **必须是带 `kind` 的对象,不是散文** —— 我第一次就写成了字符串,`pending_rulings.py:_machine_key_status` 当场 `AttributeError`,**而抓住它的是推送闸的 python 那条腿(GH #616),不是任何人的眼睛**。"
   }
  ],
  "retired": [

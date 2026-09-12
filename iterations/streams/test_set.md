@@ -1,6 +1,6 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-tpcommit,lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart
-**成员串 30**(上一行,**266 字节**,md5 `7d4c638dab526c68d9404526a3195663`)。本行 **2026-09-11T1x:xxZ 的变动:一个原子、两条 `PROMOTE`(32 → 30)**,总监裁定全文 **§GW**;判定完结 **1**(⛔ **按原子记 1,不按 id 记 2** —— `zusult` 与 `zusboltdom` 没有两份独立裁定,它们是**同一个判断的两半**,把它记成 2 是虚报;owner P4.2 的 ≥2 **本轮不达标,不粉饰不抵账**,理由与下一步写在报告 §6)。
+lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart
+**成员串 29**(上一行,**257 字节**,md5 `33047ce53c029f3901e5f63eab872ecb`)。本行 **2026-09-12T0x:xxZ 的变动:一条 `PROMOTE`(30 → 29,`tpcommit`)**,总监裁定全文 **§GZ**;判定完结 **2**(`tpcommit` PROMOTE + `lf_rescue` HOLD/退回 —— **两条是两个独立的判断,不是一个原子的两半**,所以这里记 2 而不是 1;owner P4.2 的 ≥2 本轮达标)。⛔ **`lf_rescue` 留在串里**:HOLD 不出集,它欠的是效果侧修复不是读数。
 ⭐⭐⭐ **本节最该被读的一条(§GW.1):这两条不是「又一次同轮 promote」,是一次 promote 只有一种合法的切法,而那件事是四种组合上的算术,不是偏好。** 上一轮(§GU)两条同轮的理由是「近五波每一波都同时 armed,家族级 (b) 分不开」——**那是一条关于读数的理由**。本轮的理由更硬,**它关于树本身**:四种组合里有一种**已经被量到是坏的**,而**它恰好就是单独促进 `zusult` 会发出去的那一种**。
 - **都不 armed** = 出厂树。
 - **只 `zusult`** = **量到 BUGGY**。GH #477 在 W44 上逐帧确认 **3** 发 Lightning Bolt 落在该门自己的域内(`20260904_003453_slot8`,三发目标 1.00/1.00/0.82 血,大招 1 级、冷却 0,mana −131/−131 花费确认),W45 读 **8.0 泄漏/100 域内帧**。⇒ **单独促进 `zusult`,就是把这个配置设成出厂默认。**
@@ -4791,3 +4791,126 @@ W66 就是那次测量:四台 spot,三台在 **48 秒内跨两个 AZ** 被 `no-c
 2. ⚠️ **下一次任何人写 crossing 记录时必读本节** ——
    一条 crossing 的**有效期不只是 `expiry`,还有「MTD 越过下一个告警」这个事件**。
    `expiry` 防的是「裁定永远不死」,**防不住「裁定活着但变号」**。
+
+## §GZ 2026-09-12T0x:xxZ 总监:**RULING 19/20/21 —— 第十二条 promote(`tpcommit`,锚点 `stable-v8`,armed 30 → 29)、`lf_rescue` HOLD 退回协同组、以及批测台交棒 ② 的答复** —— 本节最该被读的是 **§GZ.1:批测台请我裁的那件事(铁律 2(b) 的胜负半边缺席)已经被裁过九次了,裁它的不是任何一条文字,是九条 promote 记录自己写下的 `condition_b`**;以及 **§GZ.3:`lf_rescue` 挡路的从来不是条件 (a),而上一轮把它排进 promote 第一格,正是因为 (a) 刚刚变绿**
+
+### §GZ.1 RULING 19 —— 铁律 2(b) 的胜负半边:**不改写铁律,登记既有判例,把「要不要改写」交给 owner**
+
+批测台 09-12T00:11Z 交棒 ② 请裁两问:(a) 通道恢复前 2(b) 是否明确改写成「经济代理量 + 录像 WORKING」;
+(b) GH #352 的 `≥0.20` 是否还是可达的线。证据从 222 局抬到 **1115 局、跨三个臂串家族**
+(W62..W67 六波,radiant 18 : dire 1097,少数侧占比 **0.0161**,`1115/1115` 全部 `engine_natural`)。
+
+**裁定:两问都不动规则,理由是先去读了一遍判例。**
+
+- ⭐⭐⭐ **这条规则的执行读法早就不是字面读法,而且是自己写下来的,不是我今天发明的。**
+  `state.json:tpdeathbuy_PROMOTE_20260911` 的 `condition_b` **逐字**写着
+  `The winrate channel is DEGENERATE in all five, so NO win/loss reading is cited. This clears iron
+  rule 2(b)'s coarse 'no clear negative' and is NOT positive evidence`;
+  `liondrainstop_PROMOTE_20260911` 逐字 `Same boundary: family-level, not id-level; winrate DEGENERATE
+  throughout`。⇒ **昨天落地的两条 promote(锚点 `stable-v7`)就是按「经济代理量 + 录像 WORKING」过的门**,
+  而且它们的记录还点名 §FT.2「刻意沿用的措辞」⇒ **这条读法至少可以往回追到 §FT。**
+  📌 *一个组请你把一条规则改写成它已经被执行了九次的样子时,先去读判例 —— 「要不要改」和「已经这么做了没有」是两个问题,而第二个问题是免费的。*
+- ⛔ **因此本轮不改写铁律 2(b)。** 它是 **owner 2026-08-01 立的**,而我改写它得到的唯一新东西是
+  「字面与执行一致」——**那不值一次对 owner 规则的单方面重写**。执行读法登记在此,并进 `DECISIONS_NEEDED.md`
+  等 owner 的周信;在 owner 表态之前,**判例继续有效**。
+- **(b) `≥0.20` 是否可达:本轮不裁,证据不足以裁。** 少数侧占比是**语料的性质**不是门的性质;
+  `0.20` 这条线在**任何**臂串下都没被满足过六波,但没有人量过「一个健康的 turbo 镜像语料应该长什么样」。
+  ⇒ 这一问的前置是**成因**,而成因是录像组交棒 ③ 的活(逐帧看一局 radiant 方的自然落败)。
+  ⛔ **不放宽也不收紧 `0.20`** —— 放宽会把一条报警改成一条恒真的行,那比它现在沉默更糟。
+- ⚠️ **登记一条边界**:上面的判例只说明 **coarse「无明显负面」可以由经济代理量满足**;
+  它**不**说明胜负通道无关紧要。六波 1115 局的 dire 压倒性胜率**与 CLAUDE.md 记载的
+  radiant +1.5k 金优势方向相反**,这是一等线索,归录像组。
+
+### §GZ.2 RULING 20 —— `tpcommit` PROMOTE(第十二条,锚点 `stable-v8`,armed 30 → 29)
+
+**三条件逐条**(⛔ 每一条都带自己的边界,不合并成一句):
+
+- **(a) WORKING,`episodes=1360`**,录像组 2026-09-11T19:02Z,语料 **W66**(30-id 家族,
+  与 (b) 的家族**同一个**——这是本条比昨天两条更硬的地方)。买法是**门自己的一条子句当零通道**
+  (`#J.GetEnemiesNearLoc(bot.tpRespondLoc, 1600) == 0` ⇒ 门当场 `return nil`):
+  同一批落地、同一窗口内天然分成 HOT / COLD 两半,armed−baseline 的滞留差**只长在 HOT**:
+  **HOT `+5.5pp`(ab)/ `+14.8pp`(ba),COLD `+0.2pp` / `+1.8pp`,两层同号**(铁律 4(i-a) 两层读数已登记)。
+  共同 armed 的 `stayfield`/`stayfield2` 不看触发点上站着谁,**造不出只在 HOT 一侧的差**。
+  ⚠️ 边界:`ba` 只有 7 局(W66 四台里三台 48 秒内被回收),两层从不并池。
+- **(b) 家族级,W66+W67 并池,深度 5 / 239 局 / 5 粒全部计分 / `thin_arm_seeds: []`**:
+  gpm **−11.78**、`comps_better` 2/5、`suggested: hold_or_reject`。
+  ⭐ **本轮自己算了一遍离散度,而不是照抄「跨种子极差 64.5」这个形容词**:
+  每粒 gpm `−13.28 / −39.12 / +5.53 / −37.43 / +25.42` ⇒ 样本 SD **27.8**、均值的 SE **12.4**
+  ⇒ **−11.78 ± 12.4**,`|t| = 0.95`。铁律 2(b) 要的是**粗粒度「无明显负面」**,
+  一个与零无法分辨的漂移**满足**它。⛔ **这不是正面证据**,措辞刻意沿用 §GU / §FT.2。
+  ⛔ 家族级不可归因到单 id;⛔ 胜负半边缺席(见 §GZ.1),**不引任何胜负读数**。
+  铁律 4(i-c):四个指标 `sign_flip: true` **已登记,不写进结论**。
+- **(c) 承重的一条,而且它是 owner 亲眼看过的病灶。** `tp_audit_20260723`(局 175703 / 233217):
+  responder 在**正确的触发**上 TP 进来,然后被分路层当场回收 —— 落地、一下不打、走回家;
+  一帧里 **5 次 TP 应答、0 次出手,Sven 照样死**。外部依据:**传送进防守之后就防守**,
+  是标准打法里最不需要论证的一条;而这条 floor 只做「把 responder 留在他应答的那条路的 DEFEND 模式
+  12 秒」,**不新增任何 TP**。它自带三条释放(视野内没人 / HP<40% / `ShouldRetreatLaneBurst`),
+  所以它**不会**把一个正在被打死的人钉在原地(`wave12` 机制 D 的修正已在树上)。
+
+**落地形状**:`bots/FunLib/jmz_func.lua` 删掉 `if not J.IsSoakCandidate( 'tpcommit' ) then return nil end` 一行。
+⭐ **非 turbo 逐字不变是算术不是承诺**:紧挨着它上面一句就是 `if not J.IsModeTurbo() then return nil end`,
+删掉的这一行**在非 turbo 分支上永远到不了** ⇒ 非 turbo 腿与出厂树逐字节相同。
+§DU.6 红线遵守:**代码与臂串在同一个 commit 里改**。
+
+### §GZ.2b promote 连带的四件事(**没有一件是可选的,三件是这次才发现的**)
+
+1. **原子 `tp_response_releases_need_commit` 按它自己写下的 RELEASE CONDITION 退休。**
+   该行逐字 `RELEASE CONDITION (what would retire this row): tpcommit promoted, or either release
+   lifted out of J.GetTpCommitDefendDesire`。方向也对得上:该行 `direction` 逐字
+   `one-way: promoting tpcommit while either release stays gated is NOT constrained by this row`。
+   ⇒ 促进 `tpcommit` **不是**绕过这条原子,**是兑现它**:`tpdying` / `tpdead` 从今天起
+   armed 一条就够得着,不再需要陪绑。
+2. ⭐⭐⭐ **`pullcad` 陷阱的「工具层」变种,本仓库第一次遇到,而且没有任何东西会举手。**
+   `tools/batch_test/behavioral/tpdying_release.py` 里有一个常量
+   `REQUIRED_PARTNER = 'tpcommit'`,`--assert-arm` 时**不在臂串里就 `[fatal]` 拒绝**——
+   那是为了不把「没 armed」印成一个干净的零。**促进 `tpcommit` 之后,它在任何臂串里都不会再出现**
+   ⇒ 这条检查**从今天起拒绝每一波真波**,而拒绝的话术仍然是「`tpdying` 是 byte-for-byte inert」,
+   **一句在树上已经不成立的话**。改法不是删检查,是把它写成**对不可达性**而不是**对一个名字**:
+   `REQUIRED_PARTNER = None`,拒绝逻辑保留,`tpdying` 自己不在串里仍然拒绝。
+   📌 *CLAUDE.md 记的「promote 一条 id 会悄悄掐死任何点名它的 gate」有一层楼上:被冻住的不在 `bots/` 里,
+   在**量具**里,而 `check_armed_wiring.py` / 倒像普查 / promote-atoms **三个都只看 `bots/`**。*
+3. **变异台 M6 反转。** `tools/agent/mutstand_blind_a.sh` 的 M6 原本是「**删掉** tpcommit 闸」;
+   promote 之后这个变异**打不进去了**。⭐ **是那个台子自己的 `ANCHOR MISS` 守卫让这件事可见的**
+   ——否则它会安静地记一个 `CAUGHT`。反转成「**把闸装回去**」(那才是以后会误漂进来的形状),
+   本轮实测 **10 CAUGHT / 0 SURVIVED / 0 ANCHOR MISS,control ok**。
+   ⚠️ 该台收尾的 `RESTORE:` 行拿**工作树 vs git index** 比对 ⇒ 本轮在未提交的树上跑,
+   两个文件报 `RESTORE: NO`,**那是我的未提交编辑,不是没还原**(还原走的是文件副本,已逐条复核)。
+4. **六处断言翻面,一处不许翻。** 四个 Lua 用例 + 一个 python 用例原本断言「不 armed ⇒ 门不响」,
+   promote 之后它们**必然红**。⛔ **一条都没有删** —— 按「退休一条 id 不许连带退休守着它的断言」,
+   全部**改成断言 promote 本身**(不 armed ⇒ 门就是 0.85 floor),于是**将来任何一次误把闸装回去,
+   这些用例会红而不是安静地过**。两处「无 floor 的对照」改用**去掉 commitment 戳**来买
+   (那才是没应答过 TP 的帧长的样子),原命题一字未改。
+   `test_tpdead_release.lua` 的 `[separability] tpdead alone ... changes nothing` **前提已消失**,
+   改成**更强**的一条:`tpdead` 只许**降**不许**升**,且在死队友帧上**必须严格更低**。
+
+### §GZ.3 RULING 21 —— `lf_rescue` **HOLD**(不 promote、不 reject、不出集),退回协同组,盯 GH #96
+
+上一轮的「下次触发 ①」把 `lf_rescue` 排在 promote 第一格,**理由是它的条件 (a) 刚刚变绿**
+(录像组 09-11T16:11Z,`VERIFY id=lf_rescue verdict=WORKING episodes=115`)。**那个排序是错的,本轮撤回。**
+
+- ⭐⭐⭐ **挡路的从来不是 (a)。** `state.json:lf_rescue_CONDITION_A_RERULED_20260821T2300Z` 的
+  `verdict` 字段**逐字**是 `WORKING (+0.750 attributed rescue-TP/game ...) + **BUGGY (effect)**`,
+  而 `lf_rescue_CONDITION_A_20260819` 的处置逐字是
+  `Neither promote nor reject: hand to the strategy stream (#37 is [strategy])`。
+  ⇒ **(a) 早在三周前就是 WORKING**;09-11 那次是它**在新语料上的独立复现**(1.14 vs 0.21 次/局),
+  **报告自己也这么说**,并把效果侧明写为「条件 (b) 的地界,本轮只登记不判决」。
+  📌 *一条 id 的 (a) 变绿,不等于这条 id 的路通了 —— 当它的 (a) 三周前就绿着的时候,今天这次变绿**什么都没解锁**。
+  RULING 15 是「钱紧的时候先确认挡路的是钱」;这一条是它的同构:**排 promote 之前先确认挡路的是 (a)。***
+- **实质缺陷未修,且本轮在新语料上又复现了一次。** 机制(`lf_rescue_CONDITION_A_20260819:mechanism`):
+  `J.WillAllySurviveTpWindow` 按「~4 秒 = 3 秒引导 + 一步」编预算,而落点来自
+  `J.GetNearbyLocationToTp` = **最近一座还活着的己方塔前 575u**;
+  **一个队友正在被越塔杀,恰恰因为他离自己的塔很远** ⇒ 两个条件**负相关**。
+  原始读数:11 次救援里 **1 次**在模型的 4 秒内到达,3 次 9.5–22.8 秒,**7 次 45 秒内没到**。
+  09-11 新语料复现同一方向:armed 腿 97 次归属救援里 **35 次(36%)队友照样在 15 秒内死了**。
+  ⚠️ baseline 腿 n=18(56%),**两腿之差不写成结论**,方向一致才是本轮引用的东西。
+- **⇒ 条件 (c) 不成立,判 HOLD。** ⛔ **不是 reject**:它不是「明显有害」——
+  `+0.75 次/局`的动作本身在标准打法里是对的(去救被越塔杀的队友),坏的是**落点**;
+  而 GH #96 §3 已经定性为 `J.GetNearbyLocationToTp` **自己**的毛病,`lf_rescue` 只是它 9 个消费者之一
+  (其中 **7 个是出厂常开的**)。⛔ **不出集**:它留在 armed 串里,继续给家族级读数供货。
+- **释放条件(裸读得出)**:GH #96 三条候选修复之一落地,且验收帧**必须来自两个消费者**
+  (`lf_rescue` + 至少一条出厂分支)—— 这是 `lf_rescue_CONDITION_A_RERULED_20260821T2300Z:
+  constraint_on_37_fixes` 逐字要求的,否则「`lf_rescue` 修好了,同一个病还留在 7 个出厂消费者里」。
+- **接力棒交出去了(铁律 9 连带规则)**:`iterations/owed_executions.json:lf_rescue_landing_point_fix`,
+  `done_when` 裸读。⭐ **立这一行的理由就是本轮这件事**:上一轮之所以把 `lf_rescue` 排进 promote 第一格,
+  正是因为**没有任何一行在说「这条 id 欠的是效果侧修复」** —— 08-19 的「退回协同组」只活在
+  `state.json` 的一个键里,而 `state.json` **没有人在选下一步时会去读**。
