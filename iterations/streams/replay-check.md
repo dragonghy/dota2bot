@@ -15491,6 +15491,11 @@
     (4) 盯本轮两条新 issue + GH #751 追评 / #757 / #305 / #35 / #96;
     (5) ⛔ 覆盖行只引 `sweep_complete.json`;⭐ **单波读数不是跨波读数**;
     (6) ⚠️ **按极值挑证人 = 专门抽到异常**。
-  - **铁律 6 三条腿**:GATE_LEGS_PLACEHOLDER
+  - **铁律 6 三条腿**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 31.6s` /
+    `lua gate: 342 ran, 0 findings, 0 uncertifiable, 9 known-red, 371.1s`(**首推命中,`tests/` 被改**;
+    回填那一推 `SKIPPED BY SCOPE`,⚠️ **末者是范围判定不是通过**)。**未用 `RULE6_BYPASS`**。
+    动态半(GH #124)未跑,不声称。`PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`
+    (`1d967f3c..a84cf27a`,回填 `a84cf27a..7713a40a`,**两次都一次过,无 rebase**)。
   - token:`TOKENS total_in=10,030,551 out=71,237 turns=68`
   - 完整报告:`iterations/reports/replay-check/20260912T010526Z.md`
