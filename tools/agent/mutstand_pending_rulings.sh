@@ -67,8 +67,8 @@ PAIRS = {
     # -- the domain watch ---------------------------------------------------
     "M6": ('if str(director.get("ruling") or "").strip().upper().startswith(HOLD_RULING):',
            "if False:"),
-    "M7": ("    return 3 if (ride or orphans or unblocked) else 0",
-           "    return 3 if (ride or orphans) else 0"),
+    "M7": ("    return 3 if (ride or orphans or unblocked or strata_level) else 0",
+           "    return 3 if (ride or orphans or strata_level) else 0"),
     "M8": (".startswith(HOLD_RULING)", " is not None"),
     "M9": ('''for hero, n, _weak in (domain_price(r, counts, weak) if counts is not None
                                    else []):''',
@@ -80,21 +80,49 @@ PAIRS = {
     "M10": ('        return "UNCERTIFIABLE", "could not read %s (%s)" % (rel, exc)',
             '        return "DONE", "could not read %s (%s)" % (rel, exc)'),
     "M11": ("    return 3 if finding else 0", "    return 0"),
-    "M12": ('''        head = "  %-9s %-22s %-10s executor=%s" % (
-            state, row.get("id", "?"), row.get("issue", "?"), row.get("executor", "?"))''',
-            '''        head = "  %-9s %-22s" % (state, row.get("id", "?"))'''),
+    # ⚠️ RE-ANCHORED 2026-09-12: this target was stale and the stand ABORTED on
+    # it (APPLY-FAILED), which is the stand working -- the `%-9s`/`state` pair
+    # it quoted was rewritten to `%-11s`/`shown` when the IN-FLIGHT claim landed,
+    # and a stand that silently skipped the mutant would have reported 12 caught
+    # out of 12 with one mutant never on the bench.
+    "M12": ('''        head = "  %-11s %-22s %-10s executor=%s" % (
+            shown, row.get("id", "?"), row.get("issue", "?"), row.get("executor", "?"))''',
+            '''        head = "  %-11s %-22s" % (shown, row.get("id", "?"))'''),
     "M13": ('''    if kind == "manual":
         return ("OWED",''',
             '''    if kind == "manual":
         return ("DONE",'''),
+    # -- the iron rule 4(i-a) leg (director 2026-09-12) ---------------------
+    # M14 is the one that matters most here: it is the mistake that was
+    # actually made while the leg was being written, and its failure direction
+    # is silent -- a loose marker moves rows onto the "this one is fine" side.
+    "M14": ('    "4(i-a)",\n    "4(i)",', '    "4(i-a)",\n    "4(i)",\n    "分层",'),
+    "M15": ("    return 3 if (new_silent or ordered_not_delivered) else 0",
+            "    return 0"),
+    # the cutoff stops existing: every backlog row becomes a finding, which is
+    # the always-full section the cutoff was traded for.
+    "M16": ("            (new_silent if (day is not None and day >= cutoff)\n"
+            "             else backlog).append(req)",
+            "            new_silent.append(req)"),
+    # an unreadable `at` ratchets instead of parking -- the non-conservative side.
+    "M17": ("day is not None and day >= cutoff", "day is None or day >= cutoff"),
+    # is_delivery degrades to the length threshold the docstring rules out.
+    "M18": ('    status = str(req.get("status") or "").lower()\n'
+            '    return "deliver" in status or "交付" in str(req.get("result") or "")',
+            '    return len(str(req.get("result") or "")) > 400'),
+    # the hypothesis-testing leg never fires: every silent harvest is booked as
+    # the informational population, so the row that would prove the clause
+    # insufficient lands in a line that drives nothing.
+    "M19": ("(ordered_not_delivered if named else delivered_silent).append(req)",
+            "delivered_silent.append(req)"),
 }
 if mut == "M4":
     # the price reddens -- LIMIT 8's inverse, and the shape that turns a fact
     # to weigh into an every-round shout.
-    old = "    return 3 if (ride or orphans or unblocked) else 0"
+    old = "    return 3 if (ride or orphans or unblocked or strata_level) else 0"
     new = ("    _price_red = any(n == 0 for r in (ride + other)\n"
            "                     for _h, n, _w in (domain_price(r, counts, weak) if counts else []))\n"
-           "    return 3 if (ride or orphans or unblocked or _price_red) else 0")
+           "    return 3 if (ride or orphans or unblocked or strata_level or _price_red) else 0")
 else:
     old, new = PAIRS[mut]
 if old not in src:
@@ -105,7 +133,7 @@ PY
 
 echo "== mutation stand: $SRC / $TEST"
 worst=0
-for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12 M13; do
+for m in M1 M2 M3 M4 M5 M6 M7 M8 M9 M10 M11 M12 M13 M14 M15 M16 M17 M18 M19; do
     purge_pyc
     if ! apply_mutant "$m"; then
         echo "$m  APPLY-FAILED -- stand aborted rather than score a no-op as caught"

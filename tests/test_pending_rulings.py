@@ -1291,6 +1291,112 @@ check(_res_rows,
       "(roshan_pit_daynight_fix / hero_domain_scan_2_30_31) were the reason "
       "for the field, so an empty set means one of them lost it")
 
+# ------------------------------------------- INVARIANT 7: iron rule 4(i-a)
+# The leg (director 2026-09-12) has two ratchets and two informational counts,
+# and every check below pins a failure mode that ACTUALLY HAPPENED while it was
+# being written -- the first one happened to the director, in the reading that
+# motivated the leg.
+
+def _scan(rid, acceptance, at="2026-09-01", result="", status="pending"):
+    return {"id": rid, "status": status, "acceptance": acceptance,
+            "result": result,
+            "director": {"ruling": "APPROVED-SCAN", "at": at}}
+
+
+def _strata_run(rows):
+    _out = io.StringIO()
+    with contextlib.redirect_stdout(_out):
+        _lvl = pr.render_strata(rows)
+    return _lvl, _out.getvalue()
+
+
+# 7a. THE LOOSE MARKER. A bare `分层` reads two rows that stratify by the
+# LEVER's own variable as carriers of the ab/ba clause. This is not a
+# hypothetical: the first cut of the census scored 12 carriers against a true
+# 10, and both inventions landed on the "this row is fine" side of the ledger.
+check(not pr.names_strata("按 Frostbite 等级分层给,不许并池"),
+      "`按 Frostbite 等级分层给` counted as the ab/ba clause -- that is "
+      "stratification by the lever's own variable (hero-33), a different "
+      "obligation that shares a word")
+check(not pr.names_strata("要按 (4) 的分层看目标换了没有"),
+      "`按 (4) 的分层` counted as the ab/ba clause (hero-35)")
+check(pr.names_strata("按铁律 4(i) **ab / ba 两层分开报**"),
+      "the real phrasing ten rows use was NOT read as the clause -- the "
+      "markers must stay harvested, not invented")
+check(pr.names_strata("铁律 4(i-a):两个分层的**读数**都要登记"),
+      "the 4(i-a) phrasing was not read as the clause")
+
+# 7b. THE RATCHET FIRES ON A NEW SILENT ROW, AND ONLY ON A NEW ONE. A leg that
+# reddened on the whole backlog would be the always-full section GH #276 warns
+# about; a leg that never reddens is decoration. Both directions are pinned.
+_lvl, _txt = _strata_run([_scan("x-new", "give N frames", at=pr.STRATA_CUTOFF)])
+check(_lvl == 3, "a scan ruled on the cutoff date with a silent acceptance "
+                 "did not raise the leg's exit level")
+check("x-new" in _txt, "the new silent row was not named:\n%s" % _txt)
+_lvl, _txt = _strata_run([_scan("x-old", "give N frames", at="2026-09-11")])
+check(_lvl == 0, "a PRE-cutoff silent row drove the exit code -- the backlog "
+                 "is informational by construction")
+check("BACKLOG" in _txt and "x-old" in _txt,
+      "the pre-cutoff row was neither counted nor named; a backlog that is "
+      "invisible is the thing the cutoff traded away:\n%s" % _txt)
+
+# 7c. AN UNREADABLE RULING DATE FALLS INTO THE BACKLOG, NOT THE RATCHET. The
+# house style fuzzes the time, and a director who writes `at: "2026-09-xxZ"`
+# must not be reddened on a date the tool could not read.
+_lvl, _txt = _strata_run([_scan("x-fuzzy", "give N frames", at="soon")])
+check(_lvl == 0 and "x-fuzzy" in _txt,
+      "an unreadable `at` was ratcheted instead of parked in the backlog -- "
+      "the conservative side is the backlog:\n%s" % _txt)
+
+# 7d. THE LEG THAT TESTS THE HYPOTHESIS. Population 0 on the day it landed, by
+# construction: not one of the ten clause-carrying rows had been harvested, so
+# "the clause buys the disclosure" was UNTESTED, never demonstrated. The first
+# row to land here is that evidence.
+_ordered = _scan("x-ord", "按铁律 4(i) ab / ba 两层分开报",
+                 result="2026-09-12 录像组交付读数:1,843 帧 / 257 episode",
+                 status="delivered-and-consumed")
+_lvl, _txt = _strata_run([_ordered])
+check(_lvl == 3, "an acceptance that ORDERED the ab/ba disclosure and a "
+                 "harvest that arrived without it did not raise the exit level "
+                 "-- that row is the only evidence that the clause is not "
+                 "sufficient")
+check("STRATA_ORDERED_NOT_DELIVERED" in _txt and "x-ord" in _txt,
+      "the ordered-not-delivered row was not named:\n%s" % _txt)
+# Control: the same row whose harvest DOES name the strata must go quiet, or
+# the check above is satisfied by a leg that fires on every delivery.
+_delivered = dict(_ordered, result="录像组交付:ab / ba 两层分别 +2.1 / +1.8")
+_lvl, _txt = _strata_run([_delivered])
+check(_lvl == 0 and "STRATA_ORDERED_NOT_DELIVERED: none" in _txt,
+      "a harvest that DID disclose both strata still fired the leg:\n%s" % _txt)
+
+# 7e. `is_delivery` MUST NOT BE A LENGTH THRESHOLD. Measured: `hero-10`'s
+# result is a hero-desk pointer and `hero-51`'s is a ruling transcript -- both
+# long, neither a harvest. A length rule reads them as deliveries and the leg
+# starts answering a question nobody asked.
+check(not pr.is_delivery({"status": "pending", "result": "x" * 4000}),
+      "a 4,000-character note with no delivery marker was read as a harvest "
+      "-- that is the length threshold this predicate exists to avoid")
+check(pr.is_delivery({"status": "delivered-and-consumed", "result": "short"}),
+      "a row whose STATUS says delivered was not read as a delivery")
+check(pr.is_delivery({"status": "pending", "result": "批测台部分交付(分母侧)"}),
+      "a partial harvest parked on a `pending` row was missed -- `hero-1` is "
+      "exactly that shape, and it is the row that reports `radiant 77 / dire "
+      "76` (side GAME COUNTS) with the reading itself pooled, i.e. the #329 "
+      "failure verbatim")
+
+# 7f. THE LEG MUST BE MEASURING A NON-EMPTY SET ON THE REAL QUEUE. A census
+# whose population went to zero is a census nobody can be wrong about -- same
+# sentence, same reason, as the `residual` check above.
+_real = pr.load_requests()
+_real_scans = [r for r in _real if pr.is_scan_ruling(r)]
+check(len(_real_scans) >= 20,
+      "the real queue carries %d approved-SCAN rows; 40 were read on "
+      "2026-09-12, so a collapse this large means `is_scan_ruling` stopped "
+      "matching the ruling vocabulary" % len(_real_scans))
+check(any(pr.names_strata(str(r.get("acceptance") or "")) for r in _real_scans),
+      "not one approved-SCAN row on the real queue names the ab/ba clause -- "
+      "ten did on 2026-09-12, so the markers have drifted off the prose")
+
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:
     print("FAIL: %s" % f)

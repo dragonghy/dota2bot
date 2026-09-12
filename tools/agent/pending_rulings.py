@@ -498,6 +498,163 @@ def is_rideshare(req):
     return any(marker in text for marker in RIDESHARE_MARKERS)
 
 
+# ------------------------------------------------------- iron rule 4(i-a)
+# The phrases a request actually uses to order the ab/ba disclosure.  Literal
+# substrings, HARVESTED from the ten rows that carry the clause (read
+# 2026-09-12) rather than invented -- and the invented version is the reason
+# this comment exists.  A first cut matched bare `分层`, which reads `hero-33`
+# ("按 Frostbite 等级分层给") and `hero-35` ("按 (4) 的分层") as carriers: both
+# stratify by the LEVER's own variable, which is a different obligation that
+# happens to share a word.  That loose pattern scored 12 carriers; the true
+# count is 10, and the two it invented sat on the side of the ledger that says
+# "this one is fine".
+STRATA_MARKERS = (
+    "ab / ba",
+    "ab/ba",
+    "AB/BA",
+    "两个分层",
+    "4(i-a)",
+    "4(i)",
+)
+
+# Rows ruled on or after this date must name the clause.  A CUTOFF and not a
+# sweep, because on the day this landed 30 of the 40 approved-SCAN rows were
+# silent: a leg that reddens on 30 rows is the "section that is always full"
+# this file's own siblings were written against (GH #276).  The backlog is
+# printed with its count instead, so it cannot hide -- it just does not drive
+# the exit code.
+STRATA_CUTOFF = "2026-09-12"
+
+
+def names_strata(text):
+    """Does this prose name iron rule 4(i-a)'s ab/ba disclosure?"""
+    return any(marker in text for marker in STRATA_MARKERS)
+
+
+def is_scan_ruling(req):
+    """Has this row been ruled an archive SCAN?"""
+    director = req.get("director")
+    if not isinstance(director, dict):
+        return False
+    return "SCAN" in str(director.get("ruling") or "").upper()
+
+
+def is_delivery(req):
+    """Does the row's `result` hold a HARVEST, not a note parked in the field?
+
+    MEASURED, and the measurement is the whole point of the predicate: a
+    length threshold does NOT separate these.  `hero-10`'s result is a hero-desk
+    pointer note and `hero-51`'s is a director ruling transcript -- both long,
+    neither a delivery -- and reading either as one is how the delivery leg
+    below would have answered a question nobody asked.  Keying off the two
+    things a delivery actually carries (a `deliver*` status, or the word the
+    replay desk writes when it hands a reading over) separates 3 from 2
+    cleanly on the real queue.
+
+    Over-inclusive is the tolerable direction, same argument as `is_open`: a
+    note misread as a delivery costs one look, while a delivery misread as a
+    note costs the disclosure its only check.
+    """
+    status = str(req.get("status") or "").lower()
+    return "deliver" in status or "交付" in str(req.get("result") or "")
+
+
+def ruled_on(req):
+    """Date prefix (YYYY-MM-DD) of the ruling, or None when unreadable.
+
+    Only the DATE is parsed: the house style fuzzes the time (`T13:xxZ`), so
+    there is no instant to read.  An unreadable `at` returns None and the row
+    falls into the BACKLOG rather than under the ratchet -- the conservative
+    side, because the ratchet is aimed at rulings written from today on and a
+    director writing those writes a readable date.
+    """
+    director = req.get("director")
+    if not isinstance(director, dict):
+        return None
+    match = re.match(r"(\d{4}-\d{2}-\d{2})", str(director.get("at") or ""))
+    return match.group(1) if match else None
+
+
+def render_strata(requests, cutoff=STRATA_CUTOFF):
+    """Print the iron rule 4(i-a) section.  Returns the exit level (0 or 3).
+
+    WHY THIS LEG EXISTS, AND WHY IT IS TWO LEGS
+    -------------------------------------------
+    Iron rule 4(i-a) says the disclosure is owed on EVERY reading ("披露,对一
+    切读数成立").  A scan's acceptance is what its executor builds the output
+    table from, so an acceptance that never names the clause is a reading that
+    will arrive without it -- §DR's shape exactly: the iron rule is the
+    archive, the acceptance is the delivery.
+
+    MEASURED 2026-09-12, and the measurement refused the obvious conclusion.
+    Three rows carry a real harvest (`hero-31`, `hero-35`, `hero-37`); all
+    three came from acceptances silent on the clause, and all three delivered
+    silent.  That looks like proof the clause would have bought it -- and it is
+    not, because **not one of the ten clause-carrying rows has been harvested
+    yet**.  The clause's efficacy is UNTESTED, 0/10, not demonstrated 3/3.
+
+    So the second leg is the one that tests it.  `STRATA_ORDERED_NOT_DELIVERED`
+    fires when an acceptance DID name the clause and the harvest came back
+    without it -- population 0 today, by construction, and the first row to
+    land there is the evidence this round could not buy.  A ratchet that starts
+    silent and fires exactly on the hypothesis nobody could test is worth more
+    than a count of the backlog, which is why the backlog is only printed.
+    """
+    scans = [r for r in requests if is_scan_ruling(r)]
+    new_silent, backlog, ordered_not_delivered, delivered_silent = [], [], [], []
+    for req in scans:
+        named = names_strata(str(req.get("acceptance") or ""))
+        if not named:
+            day = ruled_on(req)
+            (new_silent if (day is not None and day >= cutoff)
+             else backlog).append(req)
+        if is_delivery(req) and not names_strata(str(req.get("result") or "")):
+            (ordered_not_delivered if named else delivered_silent).append(req)
+
+    print("=== iron rule 4(i-a): ab/ba disclosure on approved scans ===")
+    print("approved-SCAN rows: %d   acceptance names the clause: %d"
+          % (len(scans), len(scans) - len(new_silent) - len(backlog)))
+
+    if new_silent:
+        print("STRATA_SILENT (ruled on/after %s -- name the clause in the "
+              "ACCEPTANCE, which is what the executor reads): %d" % (cutoff, len(new_silent)))
+        for req in new_silent:
+            print("  %-12s ruled=%s bundle=%s"
+                  % (req.get("id"), ruled_on(req), req.get("bundle") or "-"))
+    else:
+        print("STRATA_SILENT (ruled on/after %s): none" % cutoff)
+
+    if ordered_not_delivered:
+        # The leg that tests the hypothesis.  A row here means the acceptance
+        # DID order the disclosure and the harvest arrived without it -- i.e.
+        # writing the clause is not sufficient, and the check has to move to
+        # harvest time.  That is a ruling the director owes, not a nit.
+        print("STRATA_ORDERED_NOT_DELIVERED (acceptance named it, harvest did "
+              "not -- the clause was NOT sufficient; re-rule where the check "
+              "lives): %d" % len(ordered_not_delivered))
+        for req in ordered_not_delivered:
+            print("  %-12s status=%s" % (req.get("id"), req.get("status")))
+    else:
+        print("STRATA_ORDERED_NOT_DELIVERED: none")
+
+    if backlog:
+        # Informational by construction (see the cutoff's comment).  Printed
+        # with the ids because a bare count is a number nobody can act on.
+        print("BACKLOG (ruled before %s, acceptance silent -- informational, "
+              "does NOT drive the exit code): %d" % (cutoff, len(backlog)))
+        print("  %s" % ", ".join(str(r.get("id")) for r in backlog))
+    if delivered_silent:
+        print("DELIVERED-SILENT (silent acceptance, silent harvest -- the "
+              "measured population, informational): %d  [%s]"
+              % (len(delivered_silent),
+                 ", ".join(str(r.get("id")) for r in delivered_silent)))
+
+    print("LIMITS: this leg reads PROSE for a clause, never a reading for its "
+          "strata. A row that names `ab / ba` and then pools anyway is CLEAN "
+          "here -- that is the harvest's own verdict to make, not this leg's.")
+    return 3 if (new_silent or ordered_not_delivered) else 0
+
+
 # ------------------------------------------------------------- domain price
 # A hero file's subject is its filename (AGENTS.md: the engine loads
 # `bots/BotLib/hero_<internal_name>.lua` by fixed path), so the path IS the
@@ -1283,6 +1440,9 @@ def main():
                 print("  %-12s UNCERTIFIABLE -- the census could not run, so whether "
                       "the hold still stands was NOT read this round" % r.get("id"))
 
+    print()
+    strata_level = render_strata(requests)
+
     unknown = unknown_status_rows(requests)
     if unknown:
         # LIMIT 7: since GH #317 these are COUNTED AS OPEN (so they reach the
@@ -1336,7 +1496,7 @@ def main():
     # fact), it is a state CHANGE that owes a re-ruling, it is rare, and the
     # director clears it in-round -- so it cannot become the every-round noise
     # GH #276 warns about.
-    return 3 if (ride or orphans or unblocked) else 0
+    return 3 if (ride or orphans or unblocked or strata_level) else 0
 
 
 if __name__ == "__main__":
