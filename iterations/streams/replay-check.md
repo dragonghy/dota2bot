@@ -15662,12 +15662,21 @@
     ⚠️ 但**"重推一次就过"是症状不是解**:闲时变红的闸 = 所有组被随机拒推,而信里点的永远是别人的测试。
     `PUSH_BRANCH_EXIT=1`(py 红)→ 重推 `0` / `PUSH_MAIN_EXIT=1`(non-ff)→ `REBASE_EXIT=0` →
     `PUSH_MAIN_EXIT=0`(`266bba65..e1e8023f`)。
-  - ⛔ **自检本轮没跑完,而"没跑完"不是通过**(铁律 10 的 `UNCERTIFIABLE` 同精神,
-    **trunk 的那一侧本轮没人看过**):第一跑套了 `timeout 600` 被砍在 Lua 腿里
-    (此前已撞管道拒绝门**第 23 次**);第二跑 `nohup` 到收尾**仍卡在
-    `=== trunk health (fast Lua detectors) ===`,实测 >45 分钟**,现场是
-    `lua5.1 tests/run_tests.lua test_midsupfar_yield_target.lua` 派生的 `tests/_midsupfar_sweep.lua`。
-    ⭐ 这条腿在本容器上**远不是 20s 量级**;**下一轮若再卡同一处,那是一条该开 [harness] 单的读数**
-    (本轮没开:一次观测分不开"这条腿慢"与"这台机器慢")。
+  - **自检**:`selfcheck worst exit: 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` /
+    `UNCERTIFIABLE (exit 2): none` / `NOT RUN (inside a leg): tests/test_selfcheck_lua_leg.py`
+    —— **腿内那条这轮没人看过,不是通过**。trunk 红逐条:python `test_bots_walk_farm_only.py` /
+    `test_carrier_terms.py` / `test_detector_source_constants.py` / `test_stale_waits.py`;
+    Lua `test_stayfield2_marginal_domain.lua`(87 个里 1 个)。**`bots/` `game/` `tests/` 本轮一行未改
+    ⇒ 五条都不是本轮增量**(⚠️ `test_bots_walk_farm_only.py` 上上轮被别组修掉过,**本轮又红了**)。
+    ⛔ 一处**不一致**留给下轮看:`test_tpreach_domain.py` 在 pre-push 的 py 闸里红过一次,
+    **自检这一跑的 python 红名单里却没有它** —— 与「间歇性」一致,再添一次证据。
+  - ⚠️⚠️ **当轮第三处自我更正(改过一次已写下的结论)**:我先把自检记成了「没跑完,没跑完不是通过」,
+    **那是错的** —— 当时它只是还在 `fast Lua detectors` 那一段里跑(实测 **>45 分钟**,现场是
+    `test_midsupfar_yield_target` 派生的 `tests/_midsupfar_sweep.lua`),随后自己跑完了。
+    ⭐ **可迁移:「进程还在」与「进程卡住」在 `pgrep` 上完全同形** —— 判别子是
+    **输出文件有没有在长**(`ls -la` 两次)或**它在跑哪个子进程**,不是「我等了多久」。
+    ⚠️ 这条腿确实慢(>45min vs 文档 ~20s),但**「慢」要另开 [harness] 单,不许被读成「没跑成」**;
+    本轮没开(一次观测分不开「腿慢」与「容器慢」),**下轮复现就开**。
   - token:`TOKENS total_in=13,679,419 out=72,473 turns=90`
   - 完整报告:`iterations/reports/replay-check/20260912T070000Z.md`
