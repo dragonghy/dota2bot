@@ -615,8 +615,20 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   而这一对正是立案现场** ⇒ 等第二个数据点。
   ⚠️ **(己) 开工自检本轮没有可引用的读数**:09:50Z 那次在 Lua 腿上仍在跑时被我**主动杀掉**(树即将在它脚下改动,
   与 02:45Z 同一处置)——**这不是通过,是没跑**;算数的那次在收尾安静树上重跑。
+  🚦 **铁律 6 三条腿**(push 钩子自己打,四次一致):`GATE_EXIT=0 CLEAN`(0 警告)/
+  `py gate: 96 ran, 0 findings, 0 uncertifiable, ~37s` / `lua gate: 346 ran, 0 findings, 0 uncertifiable, 9 known-red, ~460s`;
+  ⛔ **未用 `RULE6_BYPASS`**。`PUSH1_EXIT=0` → `PUSH2_EXIT=1`(`fetch first`)→ `PULL_EXIT=0`(rebase 1/1 干净)
+  → **`PUSH3_EXIT=0`(落 main `91a16b83..4a4f7e50`)** → `PUSH4_EXIT=1`(分支 non-fast-forward)
+  → `PUSH5_EXIT=0`(`--force-with-lease=…:e1e622c0`)。⚠️ **那次 force 只动分支指针,内容此前已在 main 上。**
+  **开工自检(收尾重跑,安静树,零 `timeout`)`SELFCHECK_EXIT=3`**:`legs run : 12` /
+  **`UNCERTIFIABLE (exit 2): none`** / `FINDINGS : unlanded cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)`。
+  ⭐ **新落的那一节在自检里跑到了**(`42 / 12`,两条棘轮均 `none`,`BACKLOG 30`,`DELIVERED-SILENT 4`)。
+  ⚠️ **`unlanded` 查过了,瞬态不是掉棒,与上一轮同形**:点名协同组 `6c35d00`,而**同一条工作已以 `69581984`
+  落在 `origin/main`**(标题逐字相同的 rebase 孪生)⇒ 自检撞进了那个组两次 push 之间的窗口。
+  📌 *`CLAIMS-LANDED: 0` 是文本匹配,**不是**「没落地」的判据。*
+  `queue-rulings` 就是我没裁的那四条(见 ⑨①),其余与前三轮同一组存量。
   📮 **本轮投递**:`queue.json:hero-62/63.director` + `status=ruled_approved_scan` / `owed_executions.json` 那一行的
-  `ruling`+`contains`+`delivered_to` / `test_set.md §HC` / `state.json` 三键。**未发 GitHub 评论**(MCP 未试,按铁律 11 不空转)。
+  `ruling`+`contains`+`delivered_to` / `test_set.md §HC` / `state.json` 三键。**新开 GH #776 `[harness]`**(§HC.4 全文,评论 id `5432897971`;⭐ 顺序按 GH #290:先 push 再发表引用)。
   💰 **零 AWS**,不作 MTD 新声称;三条线一字未动。🩺 五组 24h 内全部有产出,无掉队组。**armed 27,离解冻线(≤20)差 7。**
   ⑨ **下次触发**:①⭐ **本轮期间新到的四条我没裁**(现读,不是我造成的):RIDESHARE `hero-64`(`wkqcommit`)/
   `harness-corpus-creeps`(**[harness] 归总监**);OTHER `hero-60`(`cmwhit`)/ `hero-61`(`cmtfclock`)——
