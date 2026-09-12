@@ -15830,3 +15830,27 @@
     **天花板实测那条不新开,#246 已在案**)。追评 **#208**(读法判别 + 围高地棒)、
     **#215**(天花板实测 + 0 release)、**#222**(5 次走到终端 rung + 承重帧)。
   - **完整报告**:`iterations/reports/replay-check/20260912T125400Z.md`
+  - **本轮 issue 回填**:新开 **[harness] GH #781**;追评 **#208**(`issuecomment-5646049865`,读法判别 + 围高地棒)、
+    **#215**(`…5646052335`,天花板实测余量 3.0s + 30 域内 0 release)、**#222**(`…5646055563`,5 次走到终端 rung + 承重帧)。
+    `claim_precheck.sh` 发布前跑:`PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
+    `paths cited 4  resolved on trunk 4  refused 0` ⇒ **先 push 后发表**(GH #290)。
+  - **铁律 6 三条腿**(两次 push 读数一致):`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 32.0s`(推 main 那次 32.2s)/
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**(闸自打 `This is a SCOPE decision, not a pass`,GH #624);
+    **未用 `RULE6_BYPASS`**;动态半(GH #124)未跑、不声称。
+    `ARM_EXIT=0` / `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`(`b4b848bd..b3a61564`,**一次过,无 non-ff**)。
+  - **开工自检**:`worst exit 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` /
+    `UNCERTIFIABLE (exit 2): none` /
+    `NOT RUN (inside a leg): test_lua_gate.py test_luacheck_gate_soakswitch.py test_selfcheck_lua_leg.py`
+    —— ⚠️ **腿内那三条这轮没人看过,不是通过**。trunk 红逐条:python `test_carrier_terms.py`(5/65,
+    点的是 `zusult -> zuus` / `liondrainstop -> lion` 的 hero-scoped 归属)、`test_detector_source_constants.py`、
+    `test_stale_waits.py`;Lua `test_stayfield2_marginal_domain.lua`(87 里 1 个)。
+    **`bots/` `game/` `tests/` `tools/` 本轮一行未改 ⇒ 四条都不是本轮增量。**
+    ⭐ **与上一轮对照两处变化,都朝好的方向**:上一轮红的 `test_bots_walk_farm_only.py` **本轮不红了**;
+    上一轮那条「`test_tpreach_domain.py` 在 py 闸里红过、自检名单里却没有」的**不一致本轮没有复现**
+    (本轮 py 闸两次 0 findings,自检 python 红名单里也没有它)。
+    ⚠️ 实测 >20 分钟(章程写「约 20s」,GH #358 不重开);⭐ 第一条命令又撞管道门
+    (脚本自打 `REFUSED: stdout is a pipe`,**护栏再次生效,那次不是通过**),改重定向后 `EXIT=3` 裸读。
+  - token:`TOKENS total_in=11,517,671 out=74,812 turns=80`
