@@ -15948,3 +15948,74 @@
     + `tests/_midsupint_sweep.lua`,**与上两轮的 sweep 都不是同一个**);**GH #358 不重开**。
   - token:`TOKENS total_in=6,385,879 out=53,366 turns=46`
   - **完整报告**:`iterations/reports/replay-check/20260912T154313Z.md`
+- **2026-09-12T18:5xZ(本轮):还清上一轮欠的 ≥6 局深查(深查 12/12,超额),
+  并接下 GH #342 §9 那根点名交给本组、已 open 13 天的棒。**
+  ```
+  VERIFY id=stayfield  verdict=INDETERMINATE episodes=1
+  VERIFY id=stayfield2 verdict=INDETERMINATE episodes=0
+  ```
+  **段位声明(GH #424)**:W69 单波(27-id),**未与 W68(29-id)/ W66+W67(30-id)并池**。
+  - **覆盖**:**宽扫 12/12 局**(四个 `sweep_complete.json` 逐字
+    `dem_found 4 / swept 3 / skipped 1 / unparseable 0 / exit_code 0` ×4,只引它不手敲 `ls`);
+    **深查逐帧 12/12 局** —— 1,421 个 SITUATION 帧 + 218 次回家 TP + 168 趟走路回家逐帧过子句阶梯,
+    外加一帧完整还原。**本波无新语料**(`s3 ls soak/` 最新四前缀仍是 W69,批测台刹车零发波)
+    ⇒ 走章程工作流第 2 条「核验记录最少的 id 补课」。
+  - ⭐ **选题判据(登记下来给下一轮省一轮)**:并列最少(n=1)的有 **11 个 id**,
+    按「堵点能不能用更多语料买」分三类 —— **离线结构性拒绝**(`aimguard`:creep 流只有
+    `t,team,x,y`,谓词全不在流里且无实体身份)/ **通道不可分离**(`overchase`、`pullcad`)/
+    **域为空即罕见**(`stayfield`、`stayfield2`、`campfarm`、`campvoid`、`creepthink`、`blinkflee`)。
+    **只有第三类是语料能买的** ⇒ 取 `stayfield`/`stayfield2`(上次读数 08-30 W29,13 天前,跨波不可并池)。
+  - ⭐⭐ **头号产出:求交后的第一失败子句分解,推翻了 `stayfield_domain.py` 自己的头注。**
+    头注逐字说「`itemFlask == nil` is the load-bearing one and it is why STRICT is much
+    smaller than SITUATION」;按 #342 §9(1) 要求**先与调用点进入条件求交**后实测
+    (1,421 帧,两腿两层):承重的是**调用点自己的 HP/法力帽**(`hp>=0.34 and hp+mp>=0.43`,
+    armed **72.1%** / baseline **70.7%**,**四个 leg×层单元全是第一名**),次之 `level<9`
+    (22.9%/27.2%);**salve 只有 2.6%/1.0%**,**在它被求值前人口就空了**(HP+level 合计 95.0%/97.9%)。
+    ⭐ 头注是**条件正确**:清过 HP+level 后剩下的那一小撮里 salve 确实第一(armed ab 剩 36 帧,salve 18 = 50.0%),
+    ⚠️ 但剩余人口 armed ba **1** / baseline ba **0** ⇒ **条件结论压在 ab 单层(36 of 37)**,
+    按 4(i-b) **登记为选点信号不入结论**;入结论的是那张**无条件表**(四单元同序同方向、无反号)。
+  - ⭐ **独立证实 GH #342 §3 的闭式预言**:它算死 `hp>0.55` 在 TP 腿**不可满足**(sup botHP = 0.43)
+    并预测「走路腿上两条边都是活的」。W69 走路腿实测 `hp>0.55` 是**压倒性第一桶**,
+    四单元 **82.9%–95.8%**。**闭式推导第一次拿到帧证据。**
+  - **承重帧(§3.1)**:`0128b9/20260912_095139_slot1`(armed=radiant)`skywrath_mage` L9 ——
+    t=499.5–500.5 门**真开着**(hp 0.229、敌人 1694u CLEAR、包里 faerie_fire、无大药)却**无事可做**;
+    t≈501 **喝掉 clarity**(法力)⇒ `modifier_clarity_potion` 上身 ⇒ 掉出 STRICT;
+    之后 12s 在 hp 0.21–0.27 徘徊被磨到 **hp=0.074** 才回家 TP,而 **0.074 < 0.18**
+    ⇒ **按下那一帧 SITUATION 已假,门结构上够不着**。
+    ⭐ 这解释了 `STRICT episodes = 1` 与 `STRICT leaks = 0` **为何能并存**:
+    **episode 按首个域帧记,门在按下那一帧求值,两者不是同一帧。**
+    (顺带:`faerie_fire` 从 t=469.5 到 524.5 一次没喝、hp 1.000→0.074 —— 与 owner P2 同向,
+    但 **`stayfield` 只否 TP 从不下令喝**,喝归 `fieldsip`/`fieldbuy`,按 §BW.3 不并记。)
+  - ⚠️ **本轮弃用一个桶**:回家-TP 阶梯的 `hp>0.55`(armed 25 / baseline 37)**不算 `stayfield` 的** ——
+    #342 §1 已闭式证明该调用点 `sup(botHP)=0.43 < 0.55` ⇒ 那些行是**别的按下点**发的 TP。
+    本轮**独立复算 sup 成立**(`BRANCH_HP=0.34`/`BRANCH_HPMP=0.43` 由工具从源码取;`J.GetMP` 非负 ⇒ 第二析取项蕴含 `botHP<0.43`)。
+    ⛔ **#342 §9(3)(那 52 行从哪个按下点发出)未买** —— 需在树上枚举其余回家-TP 按下点逐个求交,
+    是**源码工作不是帧工作**,留给协同组;本组只复证「不是『撤退:3』」。
+  - ⚠️ **查过并排除的一个反对意见(§4.2)**:自检那条 `ok` 逐字说「stayfield2 widens the band
+    on purpose」且 `stayfield2_margin.py:95` 是 **0.75**,看着像 §4 的 `hp>0.55` 用错了天花板。
+    逐条追调用链排除:`ShouldRegenNotWalkHome:6256 → ShouldRegenNotGoHome:5999 →
+    IsFieldRegenSituation:5903` = **0.55**;**0.75 是 `J.ShouldStayAndRegen:5284` 的带,
+    那个 helper 已 promote、是 `stayattr` 住的地方,不在 `stayfield2` 链上** ⇒ 工具用 0.55 **是对的**。
+  - ⚠️ **分层不平衡,登记(4(i-a))**:W69 的 `.dem` 语料 **ab 8 / ba 4**(每 run 带戳三局
+    radiant/radiant/dire)。**这是 replay 子集不平衡不是波次不平衡** —— 每 run 只有 slot1 落 `.dem`。
+    **任何「ba 层偏小/为零」的判读都要先减掉这个 2:1。**
+  - **量具**:全部既有(动手前 `grep -i stayfield` 四命中,确认复用非重写);
+    **零新增仓库文件**,两个判别探针(`sf_hpband.py` / `sf_strictfunnel.py`)**全程落 scratchpad**,
+    且**只 import `stayfield_domain` 的谓词与常数,一个都没重新实现**。
+    funnel **按帧记分不按 episode**(`scan_game` 用 **OR** 折 `strict`,折完说不出是哪条子句在失败)。
+    退出码**逐条 bare 读取未经管道**:`SF_SELFCHECK_EXIT=0`(15/0)、`SELFCHECK12_EXIT=0`、
+    `SF2_SELFCHECK_EXIT=0`(**27/27**)、`SF_EXIT=0`、`SF2_EXIT=0`、`FRAMES_EXIT=0`、
+    `PROBE_EXIT=0`、`FUNNEL_EXIT=0`。
+  - ⭐ **本波一个 W29 没有的干净条件**:`fieldcreep` **不在 W69 armed 串里**(两个工具的披露头自打
+    `NOT ARMED in this wave's cand string`)⇒ GH #341 那族「armed 腿谓词更严、而这个差与
+    `stayfield` 无关」的混杂**结构上不存在**。**披露块可见 = 查过了;看不见才必须读成没查。**
+  - **AWS**:只读(`s3 ls` ×5 + `s3 cp` 一份 6KB + 16 份 `.dem` 由 `sweep_run.sh` 拉取);
+    **零 EC2 / 零 CE / 零支出**;`AWS_SETUP_EXIT=0`。
+  - **树上改动**:仅报告 + 本文件;`bots/` `game/` `tests/` `tools/` **一行未改**。
+  - **下一轮第一件事**:(1) ⭐ `creepthink` 优先(`creepthink_stillness.py` 现成,且不像营地那两个
+    受 §BW.3 三方合力限制),然后 `campfarm`/`campvoid`/`blinkflee`;
+    (2) ⛔ **别重跑本轮三条**:`stayfield`/`stayfield2` 的 W69 域读数(12/12 已满覆盖)、
+    #342 的 `sup botHP = 0.43`(已独立复算成立)、§一那三个结构性拒绝(别再当 n=1 候选捡起来);
+    (3) ⭐ **W70 有语料也不必**再首检这一族 —— 12 局 1 episode 已说明**不是样本量问题**;
+    (4) ⭐ 两条新判别子已进工具坑:**求交纪律**(读任何 `*_domain.py` 的 why-not 表前先问
+    「这张表的人口与该 gate 唯一调用点的进入条件求过交没有?」)+ **`.dem` 子集分层不平衡**。
