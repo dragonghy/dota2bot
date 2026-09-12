@@ -23,7 +23,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## Backlog(做完划掉,补新的)
 
 -161. ✅ **`-160` 第 1 条执行了:主体在 `bots/`,继续形状 census —— 但本轮换的是**作用域**不是形状,
-   而那更便宜** —— 本轮(报告 `iterations/reports/hero/20260912T225717Z.md`)落地
+   而那更便宜** —— 本轮(报告 `iterations/reports/hero/20260912T225717Z.md`,**GH #793**)落地
    **`lionpushclock`**(Lion,gated,turbo-only,**加宽**)。
    ⭐ **缺陷形状:`-159` 立「整点宵禁」这条筛时,census 的作用域是**一个文件**(「`hero_axe.lua` 里
    唯一的一座整点钟」);同一条 grep 跑过焦点五英雄,`hero_lion.lua` 的 `X.ConsiderQ` 推线出价点里
@@ -7124,7 +7124,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
-- 2026-09-12T22:57Z(报告 `iterations/reports/hero/20260912T225717Z.md`;**backlog:新开 `-161`**;
+- 2026-09-12T22:57Z(报告 `iterations/reports/hero/20260912T225717Z.md`,**GH #793**;**backlog:新开 `-161`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`lionpushclock`(Lion,gated,turbo-only,未 armed,方向=**加宽**):
   `-159` 把「整点宵禁」写成「`hero_axe.lua` 里唯一的一座钟」,而那句话的作用域是**一个文件**;
