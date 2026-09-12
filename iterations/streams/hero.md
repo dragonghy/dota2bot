@@ -66,13 +66,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      #771 引用 `tests/test_wk_q_commit_ration.lua` 与本轮报告,发表那一刻两者**只在容器里**;
      同一工作单元内随即 push 补上,但**顺序是错的**,`claim_precheck.sh` 本该在发表前跑。
      下一轮:**任何带引用的评论/issue,发表前先 `bash tools/agent/claim_precheck.sh <草稿文件>`。**
+     ✅ **#772 / #773 已经是照这条发的**(两次都 exit 0,`local commits not on origin/main: 0`)。
    - **⭐ 下一轮最该做的两件,按顺序**:
      1. ⭐ **主体继续放在 `bots/`(P4.4 (i))。选杠杆前先过两道筛**:
         (a) **碰小兵 = 本语料证不了**(第一条);(b) **hero-level 地板越高域越薄**(第二条)。
         ⚠️ 已量掉的别重开:`-154` 的九根 + `-155` 的三根 + 本轮四根
         (CM `nLV == 25`、WK `nMP > 0.68` 当「拦截」看、储备算术版 armed 腿、Axe t25 行)。
      2. **`test_lion_ult_cash_weakest.lua` 的 amnesty 退场已按 `-155` 的交代交出去了**
-        (滚了四轮,本轮**不再写进 backlog**;issue 见本轮报告 §8)。这一条**不要再滚回来**。
+        (滚了四轮,本轮**不再写进 backlog**;已开 **GH #773**)。这一条**不要再滚回来**。
 
 -155. ✅ **`-154` 第 1 条执行了:主体回到 `bots/`,先量后选,量掉三根落了第四根** —— 本轮(报告
    `iterations/reports/hero/20260912T045958Z.md`)落地 **`zusarcimm`**(Zeus,gated,turbo-only,**收窄**)。
@@ -6904,8 +6905,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     (它自己打的原话:`it has recurred 5x, every time as the first command of the round`)。
   - ⛔ **本轮自己踩了 GH #290 的顺序**:先发了带引用的 **#771**,再 push(同一工作单元内补上,
     但顺序是错的)。下一轮:带引用的评论/issue 发表前先跑 `claim_precheck.sh`。
-  - **交棒**:`queue.json:hero-64`(零 EC2 归档扫描,要频率不要域,**按 R 是否已学分层**);
-    `queue.json:harness-corpus-creeps`(dumper 带小兵);总监接 trunk 红。
+  - **交棒**:**GH #771**(本杠杆)/ **#772**(语料无小兵,harness)/ **#773**(lua_gate amnesty 退场);
+    `queue.json:hero-64`(零 EC2 归档扫描,要频率不要域,**按 R 是否已学分层**);
+    `queue.json:harness-corpus-creeps`;总监接 trunk 红 `test_stayfield2_marginal_domain.lua`。
     ✅ `test_lion_ult_cash_weakest.lua` 的 amnesty 退场**按 `-155` 的交代改为 issue 交出**,
     **不再滚进 backlog**。
 - 2026-09-12T04:59Z(报告 `iterations/reports/hero/20260912T045958Z.md`;**backlog:新开 `-155`**;
