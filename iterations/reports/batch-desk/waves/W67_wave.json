@@ -39,7 +39,25 @@
    "launched_at": "2026-09-11T21:25:14.000Z",
    "lifecycle": "None (on-demand)",
    "run_id": "spot_20260911_212512_1_6b933bacf447197782a8b6200eb74546c81e5cf8_65af1b",
-   "carriers": "crystal_maiden,obsidian_destroyer,pudge,skeleton_king"
+   "carriers": "crystal_maiden,obsidian_destroyer,pudge,skeleton_king",
+   "instance_id": "i-0c4a3a64739dc7b84",
+   "_instance_id_source": "TRANSCRIBED from iterations/reports/batch-desk/20260911T212500Z.md section 5 (the launch round's own describe-instances read). NOT re-read this round: describe-instances returns [] for all four ids at 2026-09-12T00:1xZ (~2h after terminate; ~1h ageout, GH #375). Discriminator run this round: a one-character mutation of a real id errors InvalidInstanceID.Malformed (exit 255) while the real id returns Reservations:[] (exit 0), so the empty list is an aged-out read and not a blind query.",
+   "market": "on-demand",
+   "ab": 32,
+   "ba": 18,
+   "arm_depth": 23.04,
+   "scored": true,
+   "_backfill_source": "W67_verdict.json:per_seed[] -- recomputed PROGRAMMATICALLY this round by recover_verdict.py over the full S3 corpus (5 run dirs, GH #225 one-dir-per-run). First-hand.",
+   "survival_min_lower_bound": 56.93,
+   "_survival_source": "LOWER BOUND ONLY: launched_at -> last S3 object under this run prefix (2026-09-11T22:22:10Z). The shutdown tail after the final upload is not included, so the true survival is larger by an unmeasured amount. Deliberately NOT written to `survival_min`, which reclaim_blind.py would treat as a read value.",
+   "status_code": null,
+   "status_code_unrecoverable": {
+    "why": "on-demand row needs EC2 StateReason.Code; the only primary source this account can reach was read this round and no longer holds it",
+    "describe_instances": "returned Reservations:[] at 2026-09-12T00:1xZ for all four ids, account-wide and per-id (~2h after terminate; instances age out in ~1h, GH #375)",
+    "cloudtrail_lookup_events": "not attempted this round -- dota2bot-agent had no cloudtrail:LookupEvents when W62 tried it (2026-09-10)",
+    "do_not_fill": "UNRECOVERABLE, not UNDONE. Do not guess a code to make gate (iv) pass: reclaim_blind.py refuses invented strings by design (GH #661). GH #699 carries absence as a named hole instead.",
+    "predicted_by_the_tool": "reclaim_blind.py's own docstring points 2-3 state that an on-demand wave's rows arrive at harvest with status_code null PERMANENTLY. So W67's harvest_obligations item on GH #454 (yi2) -- which named this wave 'the cleanest measurement point' BECAUSE every machine would reach instance-terminated-by-user -- was unsatisfiable as written, at the instant it was written."
+   }
   },
   {
    "seed": 11646,
@@ -49,7 +67,25 @@
    "launched_at": "2026-09-11T21:25:17.000Z",
    "lifecycle": "None (on-demand)",
    "run_id": "spot_20260911_212514_1_6b933bacf447197782a8b6200eb74546c81e5cf8_2a2de3",
-   "carriers": "obsidian_destroyer,pudge,skeleton_king,spirit_breaker"
+   "carriers": "obsidian_destroyer,pudge,skeleton_king,spirit_breaker",
+   "instance_id": "i-0d9f92bd20f5f9c11",
+   "_instance_id_source": "TRANSCRIBED from iterations/reports/batch-desk/20260911T212500Z.md section 5 (the launch round's own describe-instances read). NOT re-read this round: describe-instances returns [] for all four ids at 2026-09-12T00:1xZ (~2h after terminate; ~1h ageout, GH #375). Discriminator run this round: a one-character mutation of a real id errors InvalidInstanceID.Malformed (exit 255) while the real id returns Reservations:[] (exit 0), so the empty list is an aged-out read and not a blind query.",
+   "market": "on-demand",
+   "ab": 41,
+   "ba": 17,
+   "arm_depth": 24.03,
+   "scored": true,
+   "_backfill_source": "W67_verdict.json:per_seed[] -- recomputed PROGRAMMATICALLY this round by recover_verdict.py over the full S3 corpus (5 run dirs, GH #225 one-dir-per-run). First-hand.",
+   "survival_min_lower_bound": 52.13,
+   "_survival_source": "LOWER BOUND ONLY: launched_at -> last S3 object under this run prefix (2026-09-11T22:17:25Z). The shutdown tail after the final upload is not included, so the true survival is larger by an unmeasured amount. Deliberately NOT written to `survival_min`, which reclaim_blind.py would treat as a read value.",
+   "status_code": null,
+   "status_code_unrecoverable": {
+    "why": "on-demand row needs EC2 StateReason.Code; the only primary source this account can reach was read this round and no longer holds it",
+    "describe_instances": "returned Reservations:[] at 2026-09-12T00:1xZ for all four ids, account-wide and per-id (~2h after terminate; instances age out in ~1h, GH #375)",
+    "cloudtrail_lookup_events": "not attempted this round -- dota2bot-agent had no cloudtrail:LookupEvents when W62 tried it (2026-09-10)",
+    "do_not_fill": "UNRECOVERABLE, not UNDONE. Do not guess a code to make gate (iv) pass: reclaim_blind.py refuses invented strings by design (GH #661). GH #699 carries absence as a named hole instead.",
+    "predicted_by_the_tool": "reclaim_blind.py's own docstring points 2-3 state that an on-demand wave's rows arrive at harvest with status_code null PERMANENTLY. So W67's harvest_obligations item on GH #454 (yi2) -- which named this wave 'the cleanest measurement point' BECAUSE every machine would reach instance-terminated-by-user -- was unsatisfiable as written, at the instant it was written."
+   }
   },
   {
    "seed": 11678,
@@ -59,7 +95,25 @@
    "launched_at": "2026-09-11T21:25:19.000Z",
    "lifecycle": "None (on-demand)",
    "run_id": "spot_20260911_212517_1_6b933bacf447197782a8b6200eb74546c81e5cf8_d2a2fd",
-   "carriers": "obsidian_destroyer,pudge,skeleton_king,spirit_breaker"
+   "carriers": "obsidian_destroyer,pudge,skeleton_king,spirit_breaker",
+   "instance_id": "i-06737fec7ef9cd627",
+   "_instance_id_source": "TRANSCRIBED from iterations/reports/batch-desk/20260911T212500Z.md section 5 (the launch round's own describe-instances read). NOT re-read this round: describe-instances returns [] for all four ids at 2026-09-12T00:1xZ (~2h after terminate; ~1h ageout, GH #375). Discriminator run this round: a one-character mutation of a real id errors InvalidInstanceID.Malformed (exit 255) while the real id returns Reservations:[] (exit 0), so the empty list is an aged-out read and not a blind query.",
+   "market": "on-demand",
+   "ab": 31,
+   "ba": 12,
+   "arm_depth": 17.3,
+   "scored": true,
+   "_backfill_source": "W67_verdict.json:per_seed[] -- recomputed PROGRAMMATICALLY this round by recover_verdict.py over the full S3 corpus (5 run dirs, GH #225 one-dir-per-run). First-hand.",
+   "survival_min_lower_bound": 52.17,
+   "_survival_source": "LOWER BOUND ONLY: launched_at -> last S3 object under this run prefix (2026-09-11T22:17:29Z). The shutdown tail after the final upload is not included, so the true survival is larger by an unmeasured amount. Deliberately NOT written to `survival_min`, which reclaim_blind.py would treat as a read value.",
+   "status_code": null,
+   "status_code_unrecoverable": {
+    "why": "on-demand row needs EC2 StateReason.Code; the only primary source this account can reach was read this round and no longer holds it",
+    "describe_instances": "returned Reservations:[] at 2026-09-12T00:1xZ for all four ids, account-wide and per-id (~2h after terminate; instances age out in ~1h, GH #375)",
+    "cloudtrail_lookup_events": "not attempted this round -- dota2bot-agent had no cloudtrail:LookupEvents when W62 tried it (2026-09-10)",
+    "do_not_fill": "UNRECOVERABLE, not UNDONE. Do not guess a code to make gate (iv) pass: reclaim_blind.py refuses invented strings by design (GH #661). GH #699 carries absence as a named hole instead.",
+    "predicted_by_the_tool": "reclaim_blind.py's own docstring points 2-3 state that an on-demand wave's rows arrive at harvest with status_code null PERMANENTLY. So W67's harvest_obligations item on GH #454 (yi2) -- which named this wave 'the cleanest measurement point' BECAUSE every machine would reach instance-terminated-by-user -- was unsatisfiable as written, at the instant it was written."
+   }
   },
   {
    "seed": 11856,
@@ -69,7 +123,25 @@
    "launched_at": "2026-09-11T21:25:21.000Z",
    "lifecycle": "None (on-demand)",
    "run_id": "spot_20260911_212519_1_6b933bacf447197782a8b6200eb74546c81e5cf8_71f624",
-   "carriers": "crystal_maiden,lion,pudge,skeleton_king"
+   "carriers": "crystal_maiden,lion,pudge,skeleton_king",
+   "instance_id": "i-010ac88e29c597668",
+   "_instance_id_source": "TRANSCRIBED from iterations/reports/batch-desk/20260911T212500Z.md section 5 (the launch round's own describe-instances read). NOT re-read this round: describe-instances returns [] for all four ids at 2026-09-12T00:1xZ (~2h after terminate; ~1h ageout, GH #375). Discriminator run this round: a one-character mutation of a real id errors InvalidInstanceID.Malformed (exit 255) while the real id returns Reservations:[] (exit 0), so the empty list is an aged-out read and not a blind query.",
+   "market": "on-demand",
+   "ab": 30,
+   "ba": 12,
+   "arm_depth": 17.14,
+   "scored": true,
+   "_backfill_source": "W67_verdict.json:per_seed[] -- recomputed PROGRAMMATICALLY this round by recover_verdict.py over the full S3 corpus (5 run dirs, GH #225 one-dir-per-run). First-hand.",
+   "survival_min_lower_bound": 41.87,
+   "_survival_source": "LOWER BOUND ONLY: launched_at -> last S3 object under this run prefix (2026-09-11T22:07:13Z). The shutdown tail after the final upload is not included, so the true survival is larger by an unmeasured amount. Deliberately NOT written to `survival_min`, which reclaim_blind.py would treat as a read value.",
+   "status_code": null,
+   "status_code_unrecoverable": {
+    "why": "on-demand row needs EC2 StateReason.Code; the only primary source this account can reach was read this round and no longer holds it",
+    "describe_instances": "returned Reservations:[] at 2026-09-12T00:1xZ for all four ids, account-wide and per-id (~2h after terminate; instances age out in ~1h, GH #375)",
+    "cloudtrail_lookup_events": "not attempted this round -- dota2bot-agent had no cloudtrail:LookupEvents when W62 tried it (2026-09-10)",
+    "do_not_fill": "UNRECOVERABLE, not UNDONE. Do not guess a code to make gate (iv) pass: reclaim_blind.py refuses invented strings by design (GH #661). GH #699 carries absence as a named hole instead.",
+    "predicted_by_the_tool": "reclaim_blind.py's own docstring points 2-3 state that an on-demand wave's rows arrive at harvest with status_code null PERMANENTLY. So W67's harvest_obligations item on GH #454 (yi2) -- which named this wave 'the cleanest measurement point' BECAUSE every machine would reach instance-terminated-by-user -- was unsatisfiable as written, at the instant it was written."
+   }
   }
  ],
  "market_verified": "`describe-instances` read back `InstanceLifecycle = None` on all four => ON-DEMAND, which is what gate (iv) ruled. The run_id `spot_` prefix is hard-coded by spot_run.sh and is NOT evidence of market type (charter, GH #158); the lifecycle field is. `instanceInitiatedShutdownBehavior` queried PER INSTANCE, all four `terminate`; watchdog `--hours 2`. Success is not asserted from the four `SPOT_RUN_EXIT=0` alone.",
@@ -93,5 +165,6 @@
   "GH #454 (yi2): the on-demand machines here are NOT subject to spot reclaim, so every machine that reaches `instance-terminated-by-user` counts toward the `> 1.00 h/machine` trigger. This wave is the cleanest measurement point the desk has had in several rounds -- four machines, none reclaimable. Compute the mean and name it in the harvest report.",
   "GH #454 (yi1): billing-side single-wave cost. The budget snapshot was 7.3h stale at launch (13:49:53Z); a harvest round that finally sees a refreshed snapshot whose cutoff clears 21:25:21Z can settle the 12th-round-owed reading."
  ],
- "_launched_at_repair_20260911": "director RULING 18, 2026-09-11T23:xxZ. This record shipped `launch_time` on all four machines and `launched_at` on none. gate (i) (`wave_throttle.py`) reads `launched_at` ONLY and refuses to guess, so it answered `UNCERTIFIABLE: W67 machine 0 (seed 11574) has no launched_at / gate (i) DID NOT RUN` -- i.e. the anchor the NEXT wave throttles against was missing while this record looked complete. The four values here are COPIED from this record's own `launch_time`, not reconstructed: W48..W66 carry both fields with byte-identical values on every machine (19 consecutive waves), and these four instants (21:25:14/17/19/21Z) match the LaunchTimes the desk read from `describe-instances` in its own W67 report section 5. NOT a new measurement and NOT a guess. The recurrence guard is a needle in `tests/test_wave_gate_keys.py` (0.032s, already inside the push gate), so the NEXT omission is refused at its author's own push instead of being found by the next stream to start work."
+ "_launched_at_repair_20260911": "director RULING 18, 2026-09-11T23:xxZ. This record shipped `launch_time` on all four machines and `launched_at` on none. gate (i) (`wave_throttle.py`) reads `launched_at` ONLY and refuses to guess, so it answered `UNCERTIFIABLE: W67 machine 0 (seed 11574) has no launched_at / gate (i) DID NOT RUN` -- i.e. the anchor the NEXT wave throttles against was missing while this record looked complete. The four values here are COPIED from this record's own `launch_time`, not reconstructed: W48..W66 carry both fields with byte-identical values on every machine (19 consecutive waves), and these four instants (21:25:14/17/19/21Z) match the LaunchTimes the desk read from `describe-instances` in its own W67 report section 5. NOT a new measurement and NOT a guess. The recurrence guard is a needle in `tests/test_wave_gate_keys.py` (0.032s, already inside the push gate), so the NEXT omission is refused at its author's own push instead of being found by the next stream to start work.",
+ "_harvest_backfill_20260912": "Backfilled at the W67 harvest round 2026-09-12T00:1xZ. Per-field provenance is on each field: ab/ba/arm_depth/scored are first-hand (recomputed), instance_id is transcribed from the launch round's report, survival is a LOWER BOUND derived from S3 object times, status_code is unrecoverable."
 }
