@@ -15414,3 +15414,77 @@
     ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
   - token:`TOKENS total_in=11,902,270 out=79,836 turns=79`
   - 完整报告:`iterations/reports/replay-check/20260911T221023Z.md`
+- **2026-09-12T01:0xZ(本轮):`overchase` 的仪器落地 + (a) 首次读数 = **INDETERMINATE**;
+  ⭐⭐ 定案的不是那张反号的聚合表,是**两条 baseline 腿的帧** —— 门结构上关着,`closed` 照样读 35–46%。**
+  ```
+  VERIFY id=overchase verdict=INDETERMINATE episodes=912
+  ```
+  **宽扫 81/81 局**(W67 四台全收;四份 `sweep_complete.json` 逐字
+  `dem_found 104 / swept 81 / skipped 23 / unparseable 0 / exit_code 0`),
+  **深查逐帧 7 局**(下限 6 达标),分布在 **3 台**上,armed 5 局 + **baseline 2 局**。
+  分层 **ab / ba 全程分开,从不并池**;⚠️ **本轮全部读数只代表 W67(30-id 串)**,W65 是 34-id,不跨波并读。
+  取棒:`a_evidence_overchase_instrument`(总监 RULING 13 §GS.5 / GH #540),**开工时认领**。
+  - ⭐ **owed row 的两半本轮都买到了**:仪器 `tools/batch_test/behavioral/overchase_domain.py`
+    (**主题句点名 `overchase`**,不是 `capmono_*` 里那句混杂因子)+ 上面那行 `VERIFY`。
+    ⛔ **本组不自行 retire**,退休判定是总监那一半。⚠️ **退休 ≠ 可促进**(与 `ownhalf` 那条逐字同形)。
+  - ⭐ **建仪器前先跑了 W58 那条判别子**:`ls … | grep -i overchase` **零命中** ⇒ 确认新增不是重写。
+  - **八个阈值全部读源码不抄**(`ring=1600 / isolate=1400 且 <=1 / building=1200 /
+    depth_margin=1600 / ally_ring=900 / ally_hp=0.5 / recent_dmg=2`)。⭐ 这里「不抄」有**比通例更硬的理由**:
+    §FY 换体**继承了宿主 id** ⇒ **id 登记表里没有任何一格记录这条杠杆变过**,抄一个 800 会得到
+    「正确描述一条不存在的杠杆」的文件,**全树无红**。
+  - **读数(4(i-a) 两层全登记)**:`admit` 带 armed−baseline **ab `+1.45pp` closed**(311 vs 212)/
+    **ba `−9.41pp`**(190 vs 199)——**两层反号,按 4(i-b) 只登记不解释**。
+    两条底:`nearmiss`(两腿都关)**ab −14.11 / ba −6.40**,`noally` 零通道 −1.17 / +0.93
+    ⇒ **信号没越过自己的噪声底**。两条自建更锐的通道也没改判:剔掉闪现后 **+2.54 / −10.08**;
+    门自己那句「turn instead of fleeing」的反身通道 **+22.48 / −11.57**(ba baseline n=17,薄)。
+  - ⭐⭐ **承重帧是 baseline 腿的**:`d2a2fd/20260911_214152_slot2` phantom_assassin vs skywrath_mage
+    t=1579.5,`1504→56` 三秒,**`hp_b` 全程 0.01–0.04** —— 她不是回身惩罚,**她是被追死的那个**,
+    而这条腿上门返回 nil。`71f624/20260911_212708_slot7` pudge `1541→125`(建筑门)同形状。
+    ⇒ **`closed`/`engaged` 分不开「回身惩罚」与「被追上」** —— 这是 INDETERMINATE 的**帧级**理由,
+    比反号表硬:**反号说的是这一波的侧偏,这两帧说的是量具的分辨率**。
+  - **不是 `SILENT`**(域非空且大:79/81 局有命中);**不是 `WORKING`**(没通道越过底);
+    **不是 `BUGGY`**(没有一帧显示门做了不该做的事 —— ⛔ 特意收着写,GH #757 就是把代理阴性升格成 BUGGY 的现场)。
+  - **本轮 issue:净增 2 条 + 1 条追评**(先搜后开,`overchase` 只命中 #65/#44/#20,
+    `sweep key` 只命中 #433/#258,都不是同一件事)。
+    (1) **[strategy]**:`bDeep` 是**纯位置判据没有速度项** ⇒ **211/524 = 40.3%** 的入场在追一个
+    **正在撤的人**,**57/524 = 10.9%** 的追击者在 4s 窗内就退回线外。⭐ **这是门的结构属性不是 armed 读数**
+    (两腿撤退占比 36–50% 都有)⇒ **不受反号表牵连**。承重帧 `2a2de3/20260911_220523_slot6` OD vs SK
+    t=1319.4:入场 depth 2062,4s 内掉到 **−1371**,两人在**中线**撞上(t=1322.4,depth=138)。
+    ⚠️ 修法必须落宿主体内**继承 `overchase` 的 id**(嵌套 id = 合取,单臂波读出结构上不可能的零,GH #606 族)。
+    (2) **[harness]**:一个波次里**四台的 game key 会撞** —— W67 相隔 7 秒起飞,
+    `20260911_214155_slot8` / `20260911_214214_slot4` **两例重名**。本仪器聚合没错(各读各的路径),
+    错的是**下游按 bare key 并池**:一台的 episode 接到另一台的 timeline 上。
+    ⚠️ **它被发现纯属运气**(那局阵容恰好没那个英雄才抛 `KeyError`;换个阵容会 join 成功、不报错不为空)。
+    与 W66 `.get(raw_name)` 同族。本轮已把 run 前缀并进本仪器的 game key;**普查交 issue**。
+    与 GH #433 **同失效面不同成因**(#433 是 `out_dir` 撞,本条是**标识符自己撞**)。
+  - ⚠️ **一处必须写下的自我限制**:11 条新断言写进了 `tests/test_detector_source_constants.py`,
+    **但该文件本轮 `EXIT=1` 且死在我这一段的上游**(GH #751 表第一行,总监 promote `tpdeathbuy` 的副作用)。
+    顺序执行的脚本 ⇒ **一条上游红把下面新加的每一条一起埋掉**。单独跑 **11/11 全绿**(探针落 scratchpad),
+    **但「我在别处跑过」不是「树上有这道门」** ⇒ 已在 #751 追评登记这笔新增代价。
+  - ⚠️ **当轮一处自我更正**:先按最大 close 挑了两条证人,看到单帧 1519→71 就读成
+    「这个量被闪现主导」;量了之后 jump 只占 closed 的 **0.9%/3.9%/10.1%/6.6%**,剔掉后符号格局不变。
+    **按极值挑证人 = 专门抽到异常**,留档。
+  - **AWS**:只读 S3(4 次 `sweep_run.sh` 列举 + 104 个 `.dem` + dumper 缓存命中),**零支出**。
+  - **树上改动**:新仪器 + 该测试 +11 断言 + 报告 + 本文件 + `owed_executions.json` 认领两格;
+    **探针与 sweep 产物全落 scratchpad**。
+  - **自检**:`selfcheck worst exit: 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence owed-executions trunk-red(python) trunk-red(lua)` /
+    `UNCERTIFIABLE (exit 2): none` / `NOT RUN (inside a leg): tests/test_selfcheck_lua_leg.py`
+    —— **腿内那条这轮没人看过,不是通过**。trunk 红逐条 python `test_bots_walk_farm_only.py` /
+    `test_carrier_terms.py` / `test_detector_source_constants.py` + Lua
+    `test_stayfield2_marginal_domain.lua`,**四条全在 GH #751 表里**,`bots/` 本轮一行未改
+    ⇒ **不是本轮增量**(⚠️ #751 立案时 4+2,现在 3+1,两条已被别组修掉)。
+    ⚠️ **开工第一条命令第 22 次撞管道拒绝门**;⛔ **随后又撞一次 400s 外层 `timeout`(exit 124)** ——
+    上一轮交棒明说别套 `timeout`,我套了,**第三次(后台 `nohup`)才跑成**。
+  - **下一轮第一件事**:(1) ⭐ **零通道家族第三条边界**:`tpcommit` 证明它能**存在**,
+    `blinkflee` 证明它**证不了方向**,本轮再加 —— **当后果量具在「门关着」的腿上读出同量级的值时,
+    连「门动了什么」都证不了**。⇒ **下一个建仪器的人:先跑 baseline 腿的对照,再决定统计量**;
+    (2) ⭐ 新判别子进工具坑:**并池多台 sweep 前先
+    `ls */timelines/ | xargs -n1 basename | sort | uniq -d`**(一秒,本轮当场抓到两例);
+    (3) ⭐ **自检第一件事就 `nohup … > /tmp/sc.log &`** —— 不要前台、不要管道、不要 `timeout`;
+    (4) 盯本轮两条新 issue + GH #751 追评 / #757 / #305 / #35 / #96;
+    (5) ⛔ 覆盖行只引 `sweep_complete.json`;⭐ **单波读数不是跨波读数**;
+    (6) ⚠️ **按极值挑证人 = 专门抽到异常**。
+  - **铁律 6 三条腿**:GATE_LEGS_PLACEHOLDER
+  - token:`TOKENS total_in=10,030,551 out=71,237 turns=68`
+  - 完整报告:`iterations/reports/replay-check/20260912T010526Z.md`

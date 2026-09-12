@@ -1439,6 +1439,47 @@ check('ownhalf_domain nearmiss band is below the margin and non-empty',
       0 < ohd.NEARMISS_WIDTH <= ohd.DEPTH_MARGIN,
       '(width %r, margin %r)' % (ohd.NEARMISS_WIDTH, ohd.DEPTH_MARGIN))
 
+# ---- `overchase`, the sibling admission gate (replay-check 2026-09-12) -----
+# Same contract as `ownhalf` above, and a sharper reason for it: the BODY of
+# J.ShouldPunishOverchase was swapped on 2026-09-07T23:xxZ (test_set.md §FY)
+# and the swap INHERITED the host's soak id, so nothing in the id registry
+# records that the lever changed.  A hand-copied margin in the instrument would
+# therefore be a file correctly describing a lever that no longer exists, with
+# nothing red anywhere.  Pinning all eight thresholds here makes the NEXT such
+# swap loud at the exact site.
+import overchase_domain as ocd                            # noqa: E402
+
+eq('overchase_domain.COLLAPSE_RING', float(ocd.COLLAPSE_RING),
+   float(call_arg('J.ShouldPunishOverchase', 'J.GetNearbyHeroes', 1,
+                  {2: 'true'})))
+eq('overchase_domain.ISOLATE_RING', float(ocd.ISOLATE_RING),
+   float(call_arg('J.ShouldPunishOverchase', 'J.GetEnemiesNearLoc', 1)))
+eq('overchase_domain.BUILDING_RING', float(ocd.BUILDING_RING),
+   float(literal('J.ShouldPunishOverchase',
+                 r'GetUnitToUnitDistance\(\s*enemy,\s*building\s*\)'
+                 r'\s*<=\s*(?P<n>\d+)')))
+eq('overchase_domain.DEPTH_MARGIN', float(ocd.DEPTH_MARGIN),
+   float(literal('J.ShouldPunishOverchase',
+                 r'hEnemyAncient:GetLocation\(\)\s*\)\s*-\s*(?P<n>\d+)')))
+eq('overchase_domain.ALLY_RING', float(ocd.ALLY_RING),
+   float(call_arg('J.ShouldPunishOverchase', 'J.GetAlliesNearLoc', 1)))
+eq('overchase_domain.ALLY_HP', float(ocd.ALLY_HP),
+   float(literal('J.ShouldPunishOverchase',
+                 r'J\.GetHP\(\s*ally\s*\)\s*<\s*(?P<n>[0-9.]+)')))
+eq('overchase_domain.RECENT_DMG', float(ocd.RECENT_DMG),
+   float(literal('J.ShouldPunishOverchase',
+                 r'WasRecentlyDamagedByHero\(\s*enemy,\s*(?P<n>[0-9.]+)\s*\)')))
+check('overchase_domain nearmiss band is below the margin and non-empty',
+      0 < ocd.NEARMISS_WIDTH <= ocd.DEPTH_MARGIN,
+      '(width %r, margin %r)' % (ocd.NEARMISS_WIDTH, ocd.DEPTH_MARGIN))
+# The two siblings must stay on ONE scale: they bid into the same collapse
+# pathway, and a reader comparing their deltas would be comparing two
+# different definitions of "closed" if these ever drifted apart.
+eq('overchase/ownhalf share the consequence window',
+   float(ocd.CONSEQUENCE_WIN), float(ohd.CONSEQUENCE_WIN))
+eq('overchase/ownhalf share the close threshold',
+   float(ocd.CLOSE_DELTA), float(ohd.CLOSE_DELTA))
+
 print()
 if FAIL:
     print('%d FAILED: %s' % (len(FAIL), ', '.join(FAIL)))
