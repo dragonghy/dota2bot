@@ -79,7 +79,7 @@
    (`:380-396`,不合并旧文件),`lua_gate.py:298` 又逐字写着「A missing key is an EMPTY
    baseline, never a permissive one」⇒ 一次 re-measure 会把 main 上 **9 条 known-red 变成挡住
    所有组 push 的 finding**。本轮跑到 154/427 **主动杀掉**,manifest 逐字未动;修法是让
-   `main()` 像 `reselect()` 那样先读回旧文件再 `update`,已交 [harness]。】**
+   `main()` 像 `reselect()` 那样先读回旧文件再 `update`,**已交 GH #783**。】**
 
 0ARBDOMAIN. **【2026-09-12T10:39Z 新增。**做的是 GH **#775**(录像组当轮开出、带帧证据、§6 把下一步
    逐字交给本组),**压过上一条的「下一格」**;上一条的 (a)/(b) 二选一**仍然有效,只是往后排一轮**。
@@ -8532,7 +8532,10 @@
   ⚠️ **开工自检 UNCERTIFIABLE**:`EXIT=124`(被 `timeout 600` 掐在 trunk health 的 python 腿上;
   anchors / promote-time / inverse-gate 三节 OK)⇒ **trunk 的那一侧这轮没人看过**。
   armed 串 / `queue.json` / `test_set.md` **未动**,**零 AWS**。
-  本轮交出的棒:GH **#782**([strategy] outpost 取帧请求)、GH **#767** 追评。
+  本轮交出的棒:GH **#782**([strategy] outpost 取帧请求)、GH **#783**([harness] re-measure
+  清空 known_red 赦免名单 ⇒ 登记一条测试会挡住所有组的下一次 push)、GH **#767** 追评。
+  ⚠️ `HEAD:main` 被拒两次(钩子 ~9 分钟,main 在此期间被别组推进),按铁律 6 rebase 重试,
+  一次 `state.json` 尾部冲突两块都保留;第三次落上 **`be9fd8b9`**。
 
 - 2026-09-12T10:39Z(**P4.4 归属 = (ii) 一个判定所需的最后一块证据**(`arbheart` 的 (a) 定价),
   附带一条 `bots/` 注释更正。工作流第 1 步扫 open `[strategy]` issue:**#775** 10:00Z 刚由录像组
