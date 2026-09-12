@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Mutation stand for the `overchase` PURSUIT-TENSE pricing (strategy desk
-# 2026-09-12, GH #760). Not part of any suite -- run by hand when leg (a) of
+# 2026-09-12, GH #760; rebuilt for the runner protocol 2026-09-12T22:xxZ,
+# GH #790). Not part of any suite -- run by hand when leg (a) of
 # J.ShouldPunishOverchase (bots/FunLib/jmz_func.lua), the census
 # tests/_overchase_sweep.lua, or tests/test_overchase_pursuit_tense.lua is
 # edited.
@@ -23,17 +24,52 @@
 # the blindness claims, which have the same defect in the other direction: a
 # stub that answers nothing satisfies "is blind" without being evidence of it.
 #
-# ⚠️ M5 IS THE ONE THIS ROUND ADDED BECAUSE IT ALREADY BIT. On its first run the
-# pinned file printed 13 ok lines and exited 0 while §6 and §7 WENT UNREPORTED:
-# tests/mock/bot_api.lua sets `G.print = function() end` when a fixture loads,
-# so every line after the first rf.load -- including a FAIL line -- is swallowed.
-# A swallowed FAIL with os.exit(0) is a file that reads green. M5 restores that
-# defect on purpose.
+# ⛔ THE FILE UNDER TEST IS DRIVEN THROUGH tests/run_tests.lua, NOT DIRECTLY.
+# [GH #790] The pinned file used to carry a private harness ending in os.exit.
+# That is the shape tests/test_run_tests_guard.py names and GH #200/#387
+# measured: one process loads every tests/test_*.lua, so a file that exits
+# DECAPITATES the suite at itself and the truncated `N tests, 0 failures` reads
+# exactly like a complete pass. The harness is gone. Two consequences for this
+# stand, and both change how it scores:
+#   * run directly, the file now merely returns its table and exits 0 in
+#     silence -- which would score EVERY mutant as SURVIVED. So every run below
+#     goes through the runner, under a filter.
+#   * the runner exits non-zero for a run that executed zero test bodies (GH
+#     #200), so a filter typo cannot read as a pass. Scoring therefore demands
+#     BOTH a non-zero exit AND the runner's own summary line; a run missing the
+#     summary is scored NOT-RUN rather than passed.
+#
+# ⚠️ M5 CHANGED WITH THE PROTOCOL, AND THE OLD ONE'S SUBJECT DID NOT SURVIVE IT.
+# The old M5 restored the defect this file was born with: reporting routed
+# through the global `print`, which tests/mock/bot_api.lua blanks on fixture
+# load, so the last two sections went unreported while the exit code stayed 0.
+# It could not be scored on an exit code (a swallowed FAIL moves nothing), so it
+# was scored on the absence of a completion marker the file printed for that
+# purpose. Under the runner BOTH halves of that are gone: reporting goes through
+# io.write, which the mock does not touch, and a completion marker has no place
+# in a file that does not report for itself. The defect is fixed structurally
+# rather than watched. What replaced M5 is the mutant for the structure itself:
+# give the file a private harness back and check the RUNNER names the breach.
+# (The os.exit variant of the same shape is unreportable by construction -- it
+# kills the runner -- and is covered statically by tests/test_run_tests_guard.py
+# instead. A stand can only score what can be reported.)
+#
+# ⭐ M8 IS THE OTHER HALF OF THE CONVERSION, and it is the sharper one. The old
+# harness bailed with os.exit(1) when the census subprocess died. With the
+# counts nil, `C.oc_a_pass_tight == C.oc_a_pass` reads nil == nil = TRUE -- a
+# DEAD INSTRUMENT SATISFIES THIS FILE'S LOAD-BEARING CONCLUSION FOR FREE (the GH
+# #171 shape, and the reason the bail existed). The runner has no escape hatch,
+# so every count-reading case calls census_or_die() first instead. M8 kills the
+# census and demands that the failure list name the NO-OP case by name -- not
+# merely the census case, which would go red either way. That is the difference
+# between the guard being present and the guard being load bearing.
 #
 # DISCIPLINE (evidence-discipline skill, rules 1-3):
 #   * restore is an out-of-tree `cp` verified with `sha256sum -c`, never
 #     `git checkout` (which would revert unrelated working-tree edits);
-#   * exit codes are read BARE -- no pipe between the test and `$?`;
+#   * the EXIT trap reaches a restore FUNCTION DEFINED IN THIS FILE and is armed
+#     BEFORE the first mutation (tests/test_mutstand_restore_trap.py, GH #418);
+#   * exit codes are read BARE -- no pipe between the runner and `$?`;
 #   * a mutant whose anchor is absent OR ambiguous ABORTS: a no-op edit scored
 #     as "caught" is the stand lying about what was on the bench.
 #
@@ -48,6 +84,7 @@ SRC=bots/FunLib/jmz_func.lua
 SWEEP=tests/_overchase_sweep.lua
 TEST=tests/test_overchase_pursuit_tense.lua
 MOCK=tests/mock/replay_fixture.lua
+FILTER=overchase_pursuit_tense
 FILES=("$SRC" "$SWEEP" "$TEST" "$MOCK")
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/mutstand_overchase_tense.XXXXXX")
@@ -66,10 +103,16 @@ restore() {
 
 trap restore EXIT
 
-# Bare exit code: the test writes to a file, nothing is piped between it and $?.
+# Bare exit code: the runner writes to a file, nothing is piped between it and $?.
 run_test() {
-    lua5.1 "$TEST" > "$WORK/run.log" 2>&1
+    lua5.1 tests/run_tests.lua "$FILTER" > "$WORK/run.log" 2>&1
     return $?
+}
+
+# The runner's own summary line. Its ABSENCE means the run did not complete, and
+# a run that did not complete is never scored as a catch.
+ran() {
+    grep -qE '[0-9]+ tests, [0-9]+ failures' "$WORK/run.log"
 }
 
 # Substitute LITERALLY (no regex). Abort if the anchor is missing OR ambiguous.
@@ -98,11 +141,16 @@ PY
 echo "=== baseline ==="
 run_test; BASE=$?
 tail -2 "$WORK/run.log"
+if ! ran; then
+    echo "BASELINE DID NOT RUN -- no summary line from the runner (exit $BASE)."
+    echo "Nothing below would be meaningful; stand aborted."
+    exit 2
+fi
 if [ "$BASE" -ne 0 ]; then
     echo "BASELINE RED (exit $BASE) -- stand aborted, nothing below is meaningful"
     exit 2
 fi
-echo "baseline EXIT=$BASE (green)"
+echo "baseline EXIT=$BASE (green, and the runner said so)"
 
 CAUGHT=0
 TOTAL=0
@@ -111,7 +159,11 @@ score() {
     local name="$1" want="$2"
     TOTAL=$((TOTAL + 1))
     run_test; local rc=$?
-    if [ "$rc" -eq 0 ]; then
+    if ! ran; then
+        echo "$name  NOT-RUN (exit $rc) -- the runner printed no summary line, so"
+        echo "        this is not a catch; treat as survived:"
+        tail -3 "$WORK/run.log" | sed 's/^/        /'
+    elif [ "$rc" -eq 0 ]; then
         echo "$name  SURVIVED (exit 0) -- the stand cannot see this"
     elif grep -qF "$want" "$WORK/run.log"; then
         echo "$name  caught (exit $rc), and it says why:"
@@ -120,7 +172,7 @@ score() {
     else
         echo "$name  RED (exit $rc) but with the WRONG MESSAGE -- red for a"
         echo "        reason the reader cannot act on; treat as survived:"
-        grep -m1 -i 'fail\|assert\|error' "$WORK/run.log" | sed 's/^/        /'
+        grep -m1 '^FAIL' "$WORK/run.log" | sed 's/^/        /'
     fi
     restore > /dev/null
 }
@@ -154,33 +206,19 @@ score "M3 mock grows a real velocity               " "dumper has grown the field
 sub "$SWEEP" 'local bChase = J.IsChasingTarget(e, a)' 'local bChase = true'
 score "M4 census claims IsChasingTarget answers    " "PAST-TENSE pursuit disjunct"
 
-# M5: reporting routes back through the global print, which tests/mock/bot_api.lua
-# blanks on fixture load. The file then reads GREEN while its last two sections
-# go unreported -- the defect this file was actually born with.
+# M5: the private harness comes back. The file runs its own bodies, prints its
+# own summary and returns nothing -- the GH #387 contract breach, and the exact
+# shape this round removed. The runner must FAIL THE FILE and say what it
+# returned; the danger it is guarding is that the file looks fine standalone.
 #
-# ⭐⭐ THIS MUTANT CANNOT BE SCORED ON THE EXIT CODE, AND SAYING SO IS THE POINT.
-# A swallowed FAIL line is swallowed together with nothing else: `fail` still
-# counts, os.exit still answers 0 when the assertions pass, and `score` would
-# print SURVIVED for a mutant that is in fact catastrophic for the reader.
-# Scoring it on exit code and then calling the stand green would be the stand
-# lying. So it is scored on the ABSENCE OF THE COMPLETION MARKER -- which is why
-# the pinned file emits one at all.
-score_absent() {
-    local name="$1" marker="$2"
-    TOTAL=$((TOTAL + 1))
-    run_test
-    if grep -qF "$marker" "$WORK/run.log"; then
-        echo "$name  SURVIVED -- the marker still printed, so this stand cannot"
-        echo "        tell a reported run from a silent one"
-    else
-        echo "$name  caught (marker absent), and that is the whole failure mode:"
-        echo "        '$marker' never reached stdout; exit code was $? -- unchanged"
-        CAUGHT=$((CAUGHT + 1))
-    fi
-    restore > /dev/null
-}
-sub "$TEST" $'local say = print' $'local say = function(...) return print(...) end'
-score_absent "M5 reporting swallowed after mock load     " "OVERCHASE-TENSE-REPORT-COMPLETE"
+# ⚠️ The mutant deliberately does NOT call os.exit, even though the original did.
+# A stand writes a real defect into a tracked file, and an os.exit left behind by
+# an interrupted run is the GH #418 leak with the worst possible payload. The
+# unreportable variant is covered statically by tests/test_run_tests_guard.py;
+# this one is covered here because it is the one the runner can name.
+sub "$TEST" $'return tests\n' \
+            $'local pass, fail = 0, 0\nfor name, fn in pairs(tests) do\n    if pcall(fn) then pass = pass + 1 else fail = fail + 1 end\nend\nio.write(string.format("%d run, %d failed\\n", pass, fail))\n'
+score "M5 the private harness comes back           " "contract error"
 
 # M6: the source registration is deleted. A census whose finding is no longer
 # written where the next reader of the code will see it has lost half its value.
@@ -198,16 +236,26 @@ score "M6 source registration removed             " "registration comment is gon
 sub "$SWEEP" "bump('oc_fires')" "bump('oc_fires', 3)"
 score "M7 witness set silently grows              " "witness set moved"
 
+# M8: the census dies. What is scored is NOT that the file notices -- the census
+# case would go red on its own. It is that the LOAD-BEARING NO-OP CASE is named
+# in the failure list, because with the counts nil that case's own comparison
+# (nil == nil) is TRUE and it would otherwise report a clean no-op off a dead
+# instrument. This is what census_or_die() replaced the old os.exit(1) with, and
+# the only mutant that can tell the guard apart from decoration.
+sub "$TEST" $'local SWEEP = \'tests/_overchase_sweep.lua\'' \
+            $'local SWEEP = \'tests/_overchase_sweep_NOT_THERE.lua\''
+score "M8 census dies; no-op case must go red too  " "[no-op] the tightened pursuit lookback refuses NOTHING"
+
 echo
 echo "=== stand result ==="
 echo "caught $CAUGHT / $TOTAL"
 if [ "$CAUGHT" -eq "$TOTAL" ]; then
     echo "STAND GREEN -- every mutant on the bench is visible to the pinned file."
     echo
-    echo "⚠️ Read M5's scoring rule before quoting this line: it is scored on the"
-    echo "   ABSENCE OF A MARKER, not on an exit code, because the defect it"
-    echo "   restores cannot move an exit code. The other six are exit-code"
-    echo "   mutants in the ordinary way."
+    echo "⚠️ Read M5 and M8 before quoting this line. Both are about the RUNNER"
+    echo "   PROTOCOL rather than about overchase: M5 restores the private"
+    echo "   harness this file was born with, M8 kills the census and demands"
+    echo "   that the no-op case -- not merely the census case -- be named."
     exit 0
 fi
 echo "STAND RED -- $((TOTAL - CAUGHT)) mutant(s) invisible. A conclusion drawn"

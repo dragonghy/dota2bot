@@ -27,7 +27,48 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0RUNNERPROTO. **【2026-09-12T19:33Z 新增,**下一轮第一项**。修掉本组自己的 trunk 红:
+0NEXT. **【2026-09-12T22:25Z 新增,**下一轮第一项**。回到 `bots/` 杠杆 ——
+   OWNER_PRIORITIES **4.4**(每轮工作单元主体 = 一个 `bots/` 行为改动,或一个判定完结的最后一块证据)
+   上一轮与本轮**连续两轮未满足**(上一轮是 6 行 `bots/`,本轮是 **0 行**;本轮主体在 `tests/` +
+   `tools/agent/`,理由写在报告 §7 —— 本组自己造的红、总监正式交棒)。⇒ 下一轮**主体必须在 `bots/`**。
+   ⭐ **选杠杆的判据用 19:33Z 那条订正过的**:判据是**最下游那个真正会翻转答案的计数**
+   (`oa_wt_only_would_refuse` 那一型),**不是腿级几何计数** —— 后者只会把下一轮再送进一次定价。
+   已被前三轮**定价并排除、不要重买**的:`stayfield2` 抬 0.55→0.75(`test_healthy_walk_home_gap.lua` §3
+   已算死:predicate 选**帧**而 GH #344 数**趟**)、GH #511 的 `IsChanneling` 守卫(`argfix` 形状)、
+   overchase leg (b) DEEP 建筑支路(端到端 `oc_fire_building 0`)、overchase 四个收窄(GH #760 全部拒,
+   卡在 dumper = GH **#786**)、`mode_retreat_generic:95` 的 `'tower'` 站点(**构造性惰性,表零族**)。
+   ⇒ 起点建议:从 `iterations/streams/test_set.md` 最新 § 的**未决 armed id** 里挑一个
+   **方向由构造安全**(像本组 `ohnum` 那把:合取项加在提前 `return false` 上 ⇒ 只可能移走目标)的收窄,
+   效应量允许登记为「此语料上为零」;**不要等一个语料给不出的证人数**。】**
+
+0RUNNERPROTO. ✅ **【2026-09-12T19:33Z 新增 → 2026-09-12T22:25Z 做完(GH #790)。
+   转 runner 协议已落地:`tests/test_overchase_pursuit_tense.lua` 断言 20→20、读数不变、
+   两处 `os.exit` 去掉;`tools/agent/mutstand_overchase_tense.sh` 同轮重做 **8/8 STAND GREEN**;
+   `python3 tests/test_run_tests_guard.py` **18 checks, 0 failures**。
+   **报告 `iterations/reports/strategy/20260912T222508Z.md`、`state.json:runner_protocol_overchase_tense_20260912`。**
+   ⭐⭐ **下一轮真正要带走的不是「红修了」,是这三句**:
+   (甲) ⭐⭐ **替换 `os.exit(1)` 的守卫,比 `os.exit` 本身重要。** 转协议时最省事的写法是直接删掉那句
+   bail —— 而那**不是等价改写**:普查死掉时 `C.oc_a_pass_tight == C.oc_a_pass` 读作 `nil == nil` = **TRUE**,
+   即**一个死掉的量具会免费证成本文件唯一一个用能工作的量具取到的定价**(GH #171 形状)。
+   ⇒ 每个读计数的用例**首句**调 `census_or_die()`。**并且这条被钉住了**:新增 **M8** 杀掉普查,
+   要求失败列表**点名 no-op 用例**而不仅仅是 census 用例(后者无论如何都会红)——
+   **这才是「守卫在场」和「守卫承重」的分界**,实测 `FAIL[11] :: [no-op] ... refuses NOTHING`。
+   (乙) ⭐⭐ **旧 M5 的标的整个消失了,不是换了个记分法。** 它复原的缺陷(上报走全局 `print`,
+   被 `bot_api.lua:415` 抹掉 ⇒ 吞 FAIL 行且动不了退出码)在 runner 下**结构性**不存在:
+   runner 走 `io.write`、自己计数自己点名,「完成标记」在一个不为自己上报的文件里没有位置。
+   ⇒ 新 M5 标的换成**结构本身**(把私有 harness 装回去),按 **runner 自己的 FAIL 行**计分
+   (`contract error: the file returned nil`)。⚠️ **故意不用 `os.exit` 那一变体**:变异台往被跟踪的文件里
+   写真缺陷,被打断时留下的 `os.exit` 是 GH #418 泄漏里**载荷最坏的一种**;不可上报的那一形由
+   `test_run_tests_guard.py` **静态**盖住 ⇒ **变异台只给能被上报的东西记分**(这条分工写进台子抬头了)。
+   (丙) ⭐ **活体 `print` 探针在 runner 下测的是「跑法」不是「代码」**:~100 个用 fixture 的文件按
+   **字母序**装进同一进程,全量跑轮到本文件时全局 `print` 通常**早被别人抹了** ⇒ 同一条断言会随过滤器时红时绿。
+   改成对 `tests/mock/bot_api.lua` 的**源码**断言。
+   📌 **GH #624 第八例已登记**(§4):`test_run_tests_guard.py` 在 py 闸域外(4.419s > cap 3.0s)⇒ 落红那轮
+   钩子全绿、红留给下一个开工的组。**并且本轮新数到一条**:修好后的 `test_overchase_pursuit_tense.lua`
+   **自己也在 Lua 闸域外**(~30s > cap 5.5s,`lua_gate.py` 当场打 EXCLUDED)⇒ **这份文件的红今后同样挡不住
+   任何人的 push**,而这不是登记 manifest 能修的(登进去也是 `in_gate:false`)—— 动它的人靠
+   `tests/run_py_tests.sh`,不能靠钩子。
+   ⛔ 原文保留在下,便于对照:修掉本组自己的 trunk 红:
    `tests/test_overchase_pursuit_tense.lua` 带私有 harness(`os.exit`),被
    `tests/test_run_tests_guard.py` **逐字点名**(GH #200/#387:runner 是唯一被支持的入口;
    带私有 harness 的文件单跑是绿的,而它的 `os.exit` 会在第一次变红时**把整个 suite 斩头**)。
@@ -8593,6 +8634,50 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-12T22:25Z:**本组自己造的 trunk 红修掉了(GH #790,backlog 0RUNNERPROTO)——
+  而本轮真正的产出不是「红变绿」,是**替换 `os.exit(1)` 的那个守卫比 `os.exit` 本身值钱**这一条。**
+  `tests/test_overchase_pursuit_tense.lua`(本组 `0173aad4`)带私有 harness(两处 `os.exit`),
+  被 `tests/test_run_tests_guard.py` 逐字点名。转成 runner 协议(`return tests`),
+  **断言 20→20、读数逐字不变**,改的只是谁跑谁报;`mutstand_overchase_tense.sh` 同轮重做。
+  ⭐⭐ **本轮最该被下一轮读到的三句:**
+  (甲) ⭐⭐ **转协议时删掉那句 bail 不是等价改写。** 普查子进程死掉 ⇒ 计数全 nil ⇒
+  `C.oc_a_pass_tight == C.oc_a_pass` 读作 **`nil == nil` = TRUE**,
+  即**死量具免费证成本文件唯一一个用能工作的量具取到的定价**(GH #760 四个收窄里唯一那个;GH #171 形状)。
+  ⇒ 每个读计数的用例首句 `census_or_die()`。**并且钉住了**:新增 **M8** 杀普查,要求失败列表
+  **点名 no-op 用例**而不仅仅是 census 用例(后者无论如何会红)——**这才是「守卫在场」与「守卫承重」的分界**。
+  (乙) ⭐⭐ **旧 M5 的标的整个消失,不是换记分法。** 它复原的缺陷(上报走全局 `print`、被
+  `bot_api.lua:415` 抹掉 ⇒ 吞 FAIL 行且**动不了退出码**,所以旧台按**完成标记缺席**计分)在 runner 下
+  **结构性**不存在:runner 走 `io.write` 且自己点名,完成标记在不为自己上报的文件里**没有位置**。
+  ⇒ 新 M5 标的换成**结构本身**(装回私有 harness),按 runner 自己的 FAIL 行计分
+  (`contract error: the file returned nil`)。⚠️ **故意不取 `os.exit` 那一变体** —— 变异台是往被 git 跟踪的
+  文件里写真缺陷,被打断时留下的 `os.exit` 是 GH #418 泄漏里**载荷最坏的一种**;不可上报的那一形由
+  `test_run_tests_guard.py` **静态**盖住 ⇒ **变异台只给能被上报的东西记分**。
+  (丙) ⭐ **活体 `print` 探针在 runner 下测的是跑法不是代码**(~100 个 fixture 文件同进程、字母序,
+  轮到本文件时全局 `print` 通常早被别人抹了 ⇒ 随过滤器时红时绿)⇒ 改为对 `tests/mock/bot_api.lua` 源码断言。
+  **读数**:`lua5.1 tests/run_tests.lua overchase_pursuit_tense` **20 tests, 0 failures**;
+  `python3 tests/test_run_tests_guard.py` **18 checks, 0 failures**(转换前该条 FAIL);
+  `bash tools/agent/mutstand_overchase_tense.sh` **caught 8/8 STAND GREEN**(旧台 7/7,新增 M8)。
+  台子本轮加了一条**前置条件**:必须同时有非零退出码**和 runner 自己的汇总行**,缺汇总行判 **NOT-RUN
+  不判 catch**(「过滤器打错 ⇒ 0 个用例跑过」在 runner 里是 exit 2,GH #200)。
+  📌 **GH #624 第八例登记,并新数到一条**:`test_run_tests_guard.py` 在 py 闸域外(4.419s > cap 3.0s)
+  ⇒ 落红那轮钩子全绿、红留给下一个开工的组(与 #787/#765/#774 同型);**并且修好后的
+  `test_overchase_pursuit_tense.lua` 自己也在 Lua 闸域外**(~30s > cap 5.5s,本轮 `lua_gate.py` 当场打
+  `EXCLUDED`)⇒ **这份文件的红今后同样挡不住任何人的 push**,且这不是登记 manifest 能修的。
+  产出:`tests/test_overchase_pursuit_tense.lua`(转协议)、`tools/agent/mutstand_overchase_tense.sh`(重做)、
+  `state.json:runner_protocol_overchase_tense_20260912`、报告
+  `iterations/reports/strategy/20260912T222508Z.md`。**零 `bots/` 改动、零新 gate id、零 AWS。**
+  铁律 6 三行:`GATE_EXIT=0 CLEAN`(luacheck 0 警告)/ `py gate: 97 ran, 0 findings, 0 uncertifiable, 26.0s` /
+  `lua gate: 354 ran, 0 findings, 0 uncertifiable, 9 known-red, 353.6s`;`RULE6_BYPASS` **未用**;
+  动态半(GH #124)**未跑不声称**。
+  ⚠️ 开工自检:首条命令再次被 `REFUSED: ... stdout is a pipe` 挡回(evidence-discipline 规则 3,
+  **第 7 次复发在一轮首条命令上**);重定向后 EXIT=0 但 600s 超时砍在 trunk-health 那条腿 ⇒ 该腿**单独裸跑**:
+  `124 passed, 2 failed, 1 uncertifiable`。⭐ **上一轮三条 python 红本轮剩两条,掉的就是本轮修的这条**;
+  剩下两条均先于本轮且均有号:`test_carrier_terms.py`(英雄组)、`test_detector_source_constants.py`(**GH #787**)。
+  ⚠️ **OWNER_PRIORITIES 4.4 本轮未满足,如实登记**:主体在 `tests/` + `tools/agent/`,**零 `bots/` 行为改动**。
+  理由是接力不是选择(本组自己造的红、上一轮自标「下一轮第一项」、总监 19:15Z 正式交棒 + 20:16Z 开 #790);
+  4.4 的「附带一条」额度用在了 #624 登记上。**backlog 新首项 0NEXT 明写下一轮主体必须回 `bots/`。**
+  Token:见报告 §8。
 
 - 2026-09-12T19:33Z:**瞭望塔是「己方建筑」—— 而那是与 GH #782 立案时不同的一个缺陷。
   连续三轮定价之后,本轮是一个真落地的 `bots/` 行为改动(6 行代码,gated 继承 'ohnum')。**
