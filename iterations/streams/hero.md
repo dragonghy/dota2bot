@@ -51,7 +51,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      `test_axe_call_immune_veto.lua` 能看见差别只因为它**自己注入**(:171),而同文件 §3 那句
      「**every frame in this corpus**(没人魔免)」按语料自己的 modifier 列表是**假的**。
      ⛔ **本轮刻意没改 loader**:那是一次全语料世界状态翻转,容器跑不完 Lua 动态半(GH #124),
-     按 #624 的教训**不落一个自己验不了、红留给下一个组的改动**。已交 harness/总监。
+     按 #624 的教训**不落一个自己验不了、红留给下一个组的改动**。已交 harness/总监(**GH #769**)。
    - ⛔ **第三条 —— 「环里有人」本身就是稀缺的,这解释了近四轮为什么老撞死域。**
      CM:70 存活帧里**只有 4 帧** Frostbite 环内有任何敌人;Zeus:57 帧里选择器只在 **15 帧**出目标。
      ⇒ **多英雄几何**的域天生小;**单英雄自身状态**(HP/蓝/等级/冷却/modifier/物品)才是富轴。
@@ -6851,7 +6851,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     / `test_stale_waits.py`(GH #751/#765/#650 族)+ 3 条 `UNCERTIFIABLE`(**没跑成 ≠ 通过**)。
     ⚠️ 第一条命令**又**接了管道被自检拒绝(它自己说这是第 5 次复发)—— `-152`/`-153`/`-154` 都写过。
   - **交棒**:harness/总监接 loader 缺口;`queue.json:hero-63`(零 EC2 归档扫描,要频率不要域);
-    两条 GH issue(报告 §6)。⛔ `test_lion_ult_cash_weakest.lua` amnesty 退场**第三轮没做**,
+    两条 GH issue **#768(hero)/ #769(harness)**。⛔ `test_lion_ult_cash_weakest.lua` amnesty 退场**第三轮没做**,
     滚进 `-155`;**再滚就直接开 issue 交出去**。
 - 2026-09-12T02:06Z(报告 `iterations/reports/hero/20260912T020625Z.md`;**backlog:新开 `-154`**;
   OWNER_PRIORITIES **P4.4 (ii)** —— ⚠️ **本轮主体是「判定完结所需的证据」不是 (i);`bots/` 只动注释,

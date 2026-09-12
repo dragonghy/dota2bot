@@ -8339,6 +8339,7 @@
     "domain": "全语料实测(tests/fixtures/ + tests/frames/,gate 全关,Zeus 作主体,魔免按**每帧自己的 modifier 列表**读):60 个存活 Zeus 帧 → 57 帧 Arc 已学 → **15 帧该选择器返回任何目标** → 2 帧射程内有法免敌人 → **1 帧选择器返回的就是那个法免敌人**:`tests/frames/f_260909_215227_zeus_exec_od_1467.lua`,obsidian_destroyer 带 `modifier_black_king_bar_immune`,389u,590 hp,且 `J.CanCastOnTargetAdvanced` 答 **true** ⇒ 该帧上**出货链剩下的每一个合取项都通过**,唯一会拒绝的就是这条不存在的项。",
     "tests": "tests/test_zuus_arc_retreat_immunity.lua(11 例全绿)。变异台三发全中:M1 把闸关腿改成 armed 答案 → §3/§4 惰性断言红;M2 把 armed 腿改成 `true` → §3 两条红;M3 删调用点 → §4 wiring 红。",
     "limits": "(i) `J.IsRetreating` 是 mode 谓词,fixture 世界恒假(GH #474)⇒ 语料能证的是**选择器**的答案,不是**支路**开火;§4 有一条断言钉住这条限制,哪天它不成立就自己报红。(ii) ⛔ `tests/mock/replay_fixture.lua` **不把 `IsMagicImmune()` 接到它自己已经带着的 modifier 列表上**(`Is*` 默认 false)⇒ 在 loader 自己的读数里那个 BKB 的 OD **不是**魔免,本杠杆离线是 no-op;§5 直接断言这个缺口,修好那天它自己报红并点名。(iii) 1 帧是**域**不是频率。",
-    "next": "queue.json:hero-63(零 EC2 归档扫描:真实 Turbo 里撤退中的 Zeus 面对法免目标的频率)。GH issue 已开(见报告)。"
+    "next": "queue.json:hero-63(零 EC2 归档扫描:真实 Turbo 里撤退中的 Zeus 面对法免目标的频率)。GH #768 已开;loader 缺口交 harness/总监 GH #769。",
+    "issue": "GH #768(本轮开);配套的 loader 缺口 GH #769([harness])"
   }
 }
