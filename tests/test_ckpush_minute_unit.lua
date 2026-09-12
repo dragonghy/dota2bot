@@ -214,8 +214,20 @@ tests['[census] every DotaTime minute gate multiplies by 60, except two'] = func
     -- ⚠️ So a DROP here is ambiguous by construction: it means either "a minute
     -- gate was removed" or "a minute gate was named".  Re-derive which one
     -- before reading a shrink as evidence against the house idiom.
-    assert(by_sixty >= 126, string.format(
-        'the N*60 population fell to %d (recorded 126). This ruling rests on '
+    --
+    -- 126 -> 125, 2026-09-12 (hero, `axecallclock`).  SAME CAUSE, SECOND
+    -- INSTANCE, re-derived rather than assumed: hero_axe.lua X.ConsiderQ's 带线
+    -- curfew used to read `DotaTime() > 6 * 60` inline and now reads
+    -- `DotaTime() > X.nQLanePushClockShipped`, with that constant still `6 * 60`
+    -- on a line this pattern cannot see.  The minute gate was NAMED, not
+    -- removed -- and the naming was the point (a test must mirror the threshold
+    -- off the source instead of re-typing it).  That is now twice in two days,
+    -- so the ambiguity above is a live property of this census and not a
+    -- hypothetical: `* 60` is still the house idiom for a minute, and the
+    -- population this ruling rests on is the inline SPELLING of it, which is
+    -- shrinking for a reason that has nothing to do with the idiom.
+    assert(by_sixty >= 125, string.format(
+        'the N*60 population fell to %d (recorded 125). This ruling rests on '
         .. '"* 60 is the house idiom"; if that population shrank, re-derive it '
         .. '-- and check first whether the site was NAMED rather than removed.',
         by_sixty))
