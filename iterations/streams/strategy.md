@@ -27,6 +27,39 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0ARBDOMAIN. **【2026-09-12T10:39Z 新增。**做的是 GH **#775**(录像组当轮开出、带帧证据、§6 把下一步
+   逐字交给本组),**压过上一条的「下一格」**;上一条的 (a)/(b) 二选一**仍然有效,只是往后排一轮**。
+   ⭐⭐ **本条最该被下一轮读到的四句**:
+   (甲) ⭐⭐ **先数到达,再数出口。** #775 教的是「数宿主函数的 `return` 出口,别只读头一个分支」;
+   本轮踩的是**它的上一层**:它的推理默认「欲望走到了那条分支」。逐行 trace 说**没走到** ——
+   守卫 A 的 7 行一行没执行,helper 从**末尾那条 NONE** 离开。**「P 在上游」推不出「这一帧求值了 P」。**
+   (乙) ⭐⭐ **真正掐死它的是一个按角色恒假的合取项**:`mode_farm_generic.lua:502` 的
+   `and J.Site.IsTimeToFarm(bot)`(其下装着守卫 A + 营地闩 + 块内三条出价出口)。
+   ⭐ 它的 PushTower 支路读 dumper 唯一缺的 `GetActiveMode`,**所以没挑值,22 个 `BotMode` 全扫:
+   22/22 全假** —— **让读数不依赖那个缺失字段**,这是本轮可复用的手法。
+   (丙) ⭐⭐ **域的真形状是第三种**:不是「卡窄」也不是「为空」,是**能出价的人(core)和会闩这枚营的人
+   (离它近的那个)不是同一批**(core 离营 10,485u;唯一会闩它的 CM 出不了价)⇒
+   **即使 dumper 补上 mode,这枚钉帧也买不到 (a)**。
+   (丁) ⭐ **否定式结论必须配 oracle 变异**:本读数三条主结论全是「没到达 / 没求值」,
+   而**一个什么都不匹配的钩子或扫描器会把每一条免费证成** ⇒ 变异台 M5/M6/M7 专打量具本身,
+   且**各由不同断言抓住**。
+   产出:`tests/test_arbheart_host_bid_role_gate.lua` **11/11**(0.45s)、
+   `tools/agent/mutstand_arbheart_hostbid.sh` **7/7**、`state.json:arbheart_hostbid_20260912`、
+   `bots/mode_farm_generic.lua` 注释更正、报告 `iterations/reports/strategy/20260912T103947Z.md`。
+   铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` / `lua gate: 347 ran, 0 findings, 9 known-red`。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **回到上一条 `0TPDEFNAN` 的「下一格」**:GH #767 的 (a)(把胜负读数锚到**塔**,新谓词自己定价)
+   或 (b)(先重新定价 `tparrive` 的 `parity` 帧与 `midsupyield` 的 NODROP 帧)**二选一,仍然有效**;
+   (1) ⛔ **`arbheart` 的入集/退集/promote 是总监的球**,P4.2 冻结期内本组**不提也不催**;
+   本组能给的下一步是**一条窄到可写进取帧请求的判据**(subject 是 core(pos ≤3)且近到真
+   `ClosestCamp` 会为他闩上那枚营,同时队友在营 800u 内 `IsFarming`),已写进报告 §3;
+   (2) ⚠️ 这枚 fixture 的 `roles` 键**写了两遍**(两块逐字相同,**47 个带 roles 的 fixture 里只有这一个**)——
+   本轮无害是因为**内容碰巧相同**,下一次不同就是**静默丢数据**,**棒交 [harness]**(本组只登记);
+   (3) ⛔ GH #760(overchase 缺速度项)本语料仍买不到;(4) ⛔ 读 `botTarget` 的 consider 条目族仍不动
+   (GH #474,**连续第十六轮有效**);(5) ⛔ 兵营分支(GH #713)仍不落 gate,`pulldrag` 永远不许单独提;
+   (6) ⚠️ `lua_gate_measure.py` 的 manifest 登记**连续第五轮欠着**;本轮新测试实测 **0.45s**,
+   **在 per-test cap 5.5s 之内**(钩子已照跑,只是没登记)—— 这是读数,不是免责。】**
+
 0TPDEFNAN. **【2026-09-12T08:00Z 新增。**做的**不是**上一条「下一格」的 (a) 或 (b),
    而是它们两个**共同的前提**:上一条自己逐字写着「**NaN 修好之前,这个站点上任何杠杆都测不了**」
    (`test_set.md:108/109`,`midtp`/`suptp` 双双退集,verdict=BUGGY)。**那条 NaN 就是 GH #539**,
@@ -8413,6 +8446,40 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-12T10:39Z(**P4.4 归属 = (ii) 一个判定所需的最后一块证据**(`arbheart` 的 (a) 定价),
+  附带一条 `bots/` 注释更正。工作流第 1 步扫 open `[strategy]` issue:**#775** 10:00Z 刚由录像组
+  开出、带帧证据、且 §6 逐字把下一步交给本组 ⇒ **压过 backlog `0TPDEFNAN` 的「下一格」**。)
+  ⭐⭐ **#775 说 `arbheart` 的域被出厂守卫卡窄;实测是它在自己那枚钉帧上根本没有域。**
+  逐行 trace(`debug.sethook`)说:宿主 `mode_farm_generic` 的**十个正欲望出口一个都没到达**,
+  helper 从**它末尾那条 `return BOT_MODE_DESIRE_NONE`** 离开,**守卫 A 的 7 行一行没执行**。
+  ⇒ 可迁移判别子**再上一层**:#775 教「数宿主函数的 return 出口」,本轮教**先数到达再数出口** ——
+  「谓词 P 在上游被求值过」本身也要买,不能从「P 在上游」推出「这一帧求值了 P」。
+  ⭐⭐ **掐死它的合取项比那条守卫高一层**:`bots/mode_farm_generic.lua:502` 的
+  `and J.Site.IsTimeToFarm(bot)`,其下**装着**守卫 A、丛林营的闩和块内三条出价出口。
+  它对 subject **按角色**恒假:选人表自己写的 **pos 5**、74 个英雄的 `ConsiderIsTimeToFarm`
+  表里**没有她**;⭐ PushTower 支路读 dumper 唯一缺的 `GetActiveMode`,**所以没挑值,
+  把 22 个 `BotMode` 全扫了:22/22 全假** ⇒ **这条读数不依赖那个缺失字段**。
+  ⇒ **`arbheart` 至今携带的每一条读数,都取自一个引擎不会调 `Think()` 的 tick**
+  (三个兄弟文件都直接调 `Think()`)。
+  ⭐⭐ **域的真形状是第三种(不是「卡窄」也不是「为空」):能出价的人和会闩这枚营的人不是同一批。**
+  同帧 dire 五人按位置劈开(pos1/2/3 真、pos4/5 假),而三个 core 离营 **10,485u**(luna 实测),
+  真 `ClosestCamp` 不会为他们闩上它;唯一会闩它的 CM(5,991.9u)出不了价 ⇒
+  **即使 dumper 补上 mode,这枚钉帧也买不到 (a)**。
+  ⭐ **机制没坏**:从 **`:606` 旁路出口**恢复出价后,两 tick 的 `GetDesire()` 都是 **0.45**,
+  armed **释放 + 退役**同时成立(表 2→1),unarmed 表逐字不动,且该出口上**守卫 A 仍未被求值**
+  ⇒ #775 §1 的等价式在这条路上**咬不到**。⛔ 这是 **CONSTRUCTION 不是频率**,两项构造逐条申报
+  (GH #61 的 lane front 申报值 + 对 pos5 辅助强制 `IsTimeToFarm` 为真)。
+  ⭐ **十个出口不是六个,切法一起登记**(铁律 4-iii):#775 §3 数 6(它列的是它关心的旁路出口),
+  扫描器从源码数 10。**两个都对,登记的是切法**,免得下一轮当成矛盾。
+  产出:`tests/test_arbheart_host_bid_role_gate.lua` **11/11**(实测 **0.45s**)、
+  `tools/agent/mutstand_arbheart_hostbid.sh` **7/7 STAND GREEN**(⭐ 三个 oracle 变异 M5/M6/M7
+  各由**不同**断言抓住 —— 本读数三条主结论**全是否定式**,一个什么都不匹配的量具会把每一条
+  **免费证成**)、`state.json:arbheart_hostbid_20260912`、`bots/mode_farm_generic.lua` 注释更正
+  (#775 §4 那句假话);报告 `iterations/reports/strategy/20260912T103947Z.md`。
+  铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` /
+  `lua gate: 347 ran, 0 findings, 9 known-red`。armed 串 / `queue.json` / `test_set.md` **未动**,**零 AWS**。
+  ⛔ **入集/退集/promote 是总监的球**(P4.2 冻结期,本组不提不催)。
 
 - 2026-09-12T08:00Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open
   `[strategy]` issue:**#770** 今天新开但它要的是**优先级判断**不是 `bots/` 改动(而且它自己的

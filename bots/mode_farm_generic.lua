@@ -817,11 +817,38 @@ function Think()
 			-- three shipped guards fired again -- the initial arbitration
 			-- `IsTheClosestOne` is only queried the tick the latch closes
 			-- (six call sites all read `if preferedCamp == nil then
-			-- preferedCamp = ClosestCamp(...) end`), and the two anti-steal
-			-- guards at :589 / :811 need `IsFarming AND IsAttacking` true at
-			-- the CM tick -- signals that lag during the SB "walk-then-open-
+			-- preferedCamp = ClosestCamp(...) end`), and the anti-steal
+			-- guard further down this file (`local nAllyNearCamp =
+			-- J.GetAlliesNearLoc(targetFarmLoc, 800)`, :946 today) needs both
+			-- `IsFarming` AND `IsAttacking` true at the
+			-- CM tick -- signals that lag during the SB "walk-then-open-
 			-- fire" transition and can miss the whole window while CM
 			-- crosses the map.
+			-- ⛔ [GH #775, strategy 20260912] THE SENTENCE THAT USED TO
+			-- STAND HERE SAID `the two anti-steal guards at :589 / :811 need
+			-- IsFarming AND IsAttacking`, AND FOR THE FIRST OF THE TWO THAT
+			-- WAS FALSE.  The guard on the jungle-camp desire branch (:615
+			-- today, :589 in the commit that landed this gate) reads
+			-- `J.IsFarming` ALONE -- the same predicate this block uses --
+			-- and its answer is `BOT_MODE_DESIRE_NONE`: it does not merely
+			-- decline to steal, it removes this mode for the frame.  So on
+			-- any tick whose bid comes out of that branch this heartbeat is
+			-- not reached at all, and the domain left for it is the bids that
+			-- leave GetDesireHelper by another exit while a camp is still
+			-- latched.  The finding above survives the correction (the
+			-- geometry #455 photographed is in that domain), but it had been
+			-- riding on a reason that does not hold.
+			-- ⛔ SECOND, MEASURED THE SAME ROUND ON THIS GATE'S OWN PINNED
+			-- FRAME: the host mode bids NONE through EVERY one of its ten
+			-- positive-desire exits, and the conjunct that closes it sits one
+			-- level above that guard -- `J.Site.IsTimeToFarm(bot)` at :502,
+			-- false for the pinned subject BY ROLE (a drafted position 5 with
+			-- no ConsiderIsTimeToFarm entry) under all 22 BotMode values.
+			-- Every reading this gate carries was therefore taken on a tick
+			-- the engine would not have run Think() on.  The release itself
+			-- works once a bid exists, witnessed on that same frame through a
+			-- bypass exit: tests/test_arbheart_host_bid_role_gate.lua, with
+			-- tools/agent/mutstand_arbheart_hostbid.sh 7/7.
 			-- arbheart inserts the re-ask into the 1s heartbeat: any alive
 			-- team member (scanned via the slot-correct pattern
 			-- `for i = 1, #GetTeamPlayers` + `GetTeamMember(i)`) sitting
