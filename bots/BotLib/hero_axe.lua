@@ -620,6 +620,95 @@ function X.IsCallPierceInitiateOn()
 end
 
 
+--- The wall clock on X.ConsiderQ's 带线 firing point, and the turbo-only halving
+--- of it.  Written as two named constants so a test mirrors the NUMBERS off the
+--- source instead of re-typing them (the stale-mirror family,
+--- tests/test_cast_ring_mirror_discipline.lua).
+X.nQLanePushClockShipped = 6 * 60
+X.nQLanePushClockTurbo   = 3 * 60
+
+
+--- The wall-clock curfew on X.ConsiderQ's 带线 (lane-push) firing point.  Soak
+--- candidate `axecallclock` (turbo-only, INERT until armed).  STANDALONE: this
+--- function holds exactly one J.IsSoakCandidate call and it names only its own
+--- id.
+---
+--- ⭐ THE DEFECT.  `DotaTime() > 6 * 60` is the ONLY wall clock anywhere in
+--- bots/BotLib/hero_axe.lua, and 6 minutes is a NORMAL-MODE constant standing in
+--- front of the one Axe play whose whole engine is online long before it.  The
+--- branch taunts a lane wave onto Axe so that Counter Helix spins it down --
+--- and THIS FILE'S OWN ability build maxes Counter Helix at hero level 7:
+---
+---     tAllAbilityBuildList = { {2,3,1,3,3,6,3,2,2,2,6,1,1,1,6} }  -- pos3
+---                              ^   ^ ^   ^
+---                          lv2 |   | |   `-- lv7: Counter Helix RANK 4
+---                              |   | `------ lv5: rank 3
+---                              `---`-------- lv2/lv4: ranks 1-2
+---
+--- so by the time the curfew lifts the payoff has been at full rank for several
+--- hero levels.  In Turbo, where XP is doubled, level 7 arrives well inside the
+--- window this clock closes.
+---
+--- ⚠️ WHAT THE CLOCK IS NOT, checked rather than assumed.  It is not a mana
+--- policy: the same conjunction already carries `J.IsAllowedToSpam( bot,
+--- nManaCost )`, which is this tree's own mana rationer, so a second
+--- time-shaped rationer on the same `if` would be rationing twice.  It is not a
+--- safety term either: the same conjunction already carries `#hEnemyList == 0`
+--- (no enemy hero in view) and `#hAllyList <= 2`, which are the direct
+--- measurements of "is it safe to stand in a wave" -- as with `cmtfclock`, the
+--- proxy sits beside the measurement and overrides it.
+---
+--- ARMED: 3 * 60, the shipped number halved.  The 2x is not invented here -- it
+--- is this repo's own stated Turbo pace ratio (docs/PROJECT.md: ~20 minute games
+--- against ~35-40).  Halving rather than REMOVING is deliberate and is the
+--- narrow change: whether this branch should carry a clock at all is a second
+--- question, and conjoining the two would make one wave reading unattributable
+--- to either.
+---
+--- ⚠️ DIRECTION: THIS IS A WIDENING, and it is the first thing a reader needs.
+--- Every t past 6:00 is also past 3:00, so the armed predicate is a strict
+--- SUPERSET of the shipped one: arming can only ADD 带线 taunts, inside the
+--- window (3:00, 6:00], and can never remove one or move one onto a different
+--- target.  A negative wave reading is attributable to "those early lane-push
+--- taunts were not worth casting" and NEVER to a cast this lever refused.
+--- Gate off (or non-turbo) the function is literally `DotaTime() > 6 * 60`.
+---
+--- ⚠️ HONEST BOUNDS, four, none of them rhetorical:
+---   1. ⛔ END-TO-END DOMAIN IS 0 AND CANNOT BE ANYTHING ELSE TODAY.  The branch
+---      also requires `#laneCreepList >= 4`, and the fixture corpus carries NO
+---      non-hero units at all (GH #772: 1410/1410 dumped units are heroes).  So
+---      no archived frame can drive this branch to its `return`.  What IS
+---      measured is the GATE-LAYER domain -- the clock's own answer on real
+---      frames at real DotaTime() -- which is the half this lever changes.
+---      Quoting the two as one number would be an execution verification out of
+---      thin air.
+---   2. GATE-LAYER DOMAIN, stated as the number it is: over the 16 Axe-subject
+---      instants in tests/fixtures/ + tests/frames/, exactly 2 sit inside
+---      (3:00, 6:00] -- f_260909_215412_axe_call_init_224 (t=224.3, 3:44) and
+---      f_260909_215412_axe_cull_viper_348 (t=348.0, 5:48).  Those are the two
+---      frames on which shipped refuses on the clock and armed does not.  The
+---      other 14 are byte-for-byte identical armed and shipped (13 past 6:00,
+---      1 at 2:25 which BOTH legs refuse), which is what makes the direction
+---      claim above an assertion over the corpus rather than a hope.
+---   3. A corpus count is a DOMAIN, not a frequency.  How often a real Turbo
+---      game puts Axe in a 4-creep wave with no enemy hero in view inside
+---      (3:00, 6:00] is a wave question (iterations/queue.json hero-67).
+---   4. This lever does NOT touch the branch's other five conjuncts, and in
+---      particular not `#hAllyList <= 2` -- a lane-push taunt that should also
+---      ask how many allies are standing in the same wave is a separate
+---      question with a separate id; one lever at a time.
+function X.axe_IsLanePushClockOpen()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'axecallclock' )
+	then
+		return DotaTime() > X.nQLanePushClockTurbo
+	end
+
+	return DotaTime() > X.nQLanePushClockShipped
+
+end
+
+
 function X.ConsiderQ()
 
 
@@ -685,8 +774,12 @@ function X.ConsiderQ()
 	if ( J.IsPushing( bot ) or J.IsDefending( bot ) or J.IsFarming( bot ) )
 		and J.IsAllowedToSpam( bot, nManaCost )
 		and bot:GetAttackTarget() ~= nil
-		and DotaTime() > 6 * 60
-		and #hAllyList <= 2 
+		-- [axecallclock] gate off this is `DotaTime() > 6 * 60`, byte for byte.
+		-- See X.axe_IsLanePushClockOpen -- the only wall clock in this file, and
+		-- it stands in front of the Call/Counter-Helix wave clear this file's own
+		-- build has at rank 4 by hero level 7.
+		and X.axe_IsLanePushClockOpen()
+		and #hAllyList <= 2
 		and #hEnemyList == 0
 	then
 		local laneCreepList = bot:GetNearbyLaneCreeps( nRadius - 50, true )

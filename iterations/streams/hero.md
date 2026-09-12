@@ -22,6 +22,50 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-159. ✅ **`-158` 第 1 条执行了:主体在 `bots/`,而本轮把「LIMIT 清单」这道筛**走完了** —— 六根全量掉,落地的那根来自另一条线索** —— 本轮
+   (报告 `iterations/reports/hero/20260912T170148Z.md`,**GH #786**)落地
+   **`axecallclock`**(Axe,gated,turbo-only,**加宽**)。
+   ⭐ **缺陷形状:一座整点钟站在两个直接量度旁边并压过它们,而它挡的那条支路的收益引擎按本文件自己的加点表 7 级就满级。**
+   `DotaTime() > 6 * 60` 是 **`bots/BotLib/hero_axe.lua` 里唯一的一座整点钟**(实测 census,§5.1:全文件 `DotaTime()`
+   只出现 2 次,就是 helper 的两条腿)。带线支路把 `>=4` 个兵线小兵嘲讽到 Axe 身上让 **Counter Helix** 转掉它;
+   加点行 `{2,3,1,3,3,6,3,2,2,2,6,1,1,1,6}`(pos3)给 Counter Helix **5 级 rank 3 / 7 级 rank 4**,
+   Turbo 双倍经验下两者都远在 6:00 之前 ⇒ **引擎满功率好几个英雄等级,而支路还关着**。
+   ⭐ **「这座钟不在做钟能做的任何一件事」是数出来的不是散文**(§5.2):同一个 `if` 里已经有
+   `J.IsAllowedToSpam( bot, nManaCost )`(这棵树自己的蓝量配给器)⇒ 时间形状的第二个配给器是配给两遍;
+   同一个 `if` 里已经有 `#hEnemyList == 0` 与 `#hAllyList <= 2`(「站在兵线里安不安全」的直接量度)⇒
+   **代理坐在量度旁边并压过它**,与 `cmtfclock`(GH #758)逐字同形。
+   ⭐ **本轮的线索不是 LIMIT 清单,是「同族 id 的跨英雄复用」** —— 问题写成「这棵树里还有谁有整点宵禁」,
+   一次 grep 就落到唯一的那一处。**这是比 `-158` 第三道筛更便宜的一条**,因为它问的是**形状**不是**作者的备注**。
+   id 登记 `state.json:axecallclock_20260912`;取证请求 `queue.json:hero-67`(零 EC2);
+   测试 `tests/test_axe_q_lane_push_clock.lua`(14 绿),变异台 `tools/agent/mutstand_axecallclock.sh`(**10/10**)。
+   - ⛔ **第一条,本轮最该被人读到的 —— `-158` 的第三道筛(LIMIT 清单)在焦点五英雄上**走完了,六根全量掉**。**
+     逐条理由见报告 §5:(1) Zeus Static Field 的「圈外」不存在(本仓库 KV 镜像里 `zuus_static_field` **只有
+     `damage_health_pct` 一个键,没有 radius**);(2) `zusbind` 的 `abilityD` **两个消费点都已接线**;
+     (3) WK `ShouldSaveMana` 的 rank blindness **LIMIT 自己写明证据上不可修**(语料里 `lv>=6 且 R rank 0` 的帧 = 0);
+     (4) Lion `ConsiderQ` 缺 `J.IsDisabled` 的不对称**方向是反的**(Impale 是地面技能,被控目标更好命中);
+     (5) Zeus `ConsiderR` 的 `GetUnitList` 不问死活 —— 形状漂亮(`IsValidUnit` 自己把 `CanBeSeen()` 与
+     `IsAlive()` **并**起来,证明两者不互蕴)**但这棵树自己不同意前提**(`replay_fixture.lua:908` 逐字写着
+     `GetUnitList` 是 alive-only,"like in game"),⇒ 按空域处置;(6) 幻象守卫缺失 —— **形状是真的,今天买不到域**,
+     dumper 按英雄名建键,幻象的 modifier 并到本体那一行上(两个现场帧)。
+     ⇒ **下一轮不要再从 LIMIT 段落找杠杆**(这条筛在焦点五英雄上已见底);**改用「形状 census」**:
+     挑一个失效形状(整点宵禁 / 缺 reach 项 / 缺免疫项 / 死条件),grep 整棵树问「还有谁是这个形状」。
+   - ⭐ **第二条 —— 幻象这根是真的,只是今天买不到域,交给下一轮或录像组。**
+     焦点五英雄**一个** `J.IsIllusion` / `J.IsSuspiciousIllusion` **都没有**,而 venomancer / ember_spirit 等
+     文件有;Lion 的 Finger 击杀环、CM 与 WK 的最弱目标选择器都会优先选中低血的幻象,而杀幻象**零金零经验**。
+     ⛔ 先解决**「幻象与本体在 dump 里分不开」**(dumper 按英雄名建键)再谈落地,否则域读数不可信。
+   - ⛔ **第三条 —— 本轮新测试的 walk 当场把 `test_bots_walk_farm_only.py` 顶红,同一工作单元内登记修回。**
+     这正是 GH #624 / #774 的形状(红由**下一个开工的组**发现)。**新测试只要用 `io.popen` 走目录,就在落地那一轮
+     登进手读名单**,不要等 census 替你通知下一个人。
+   - ⚠️ **第四条 —— 测试头 §0.2 的单文件跑法在本容器里静默退出(exit 0,无输出),这不是本轮引入的。**
+     既存的 `tests/test_cm_w_teamfight_clock.lua` 表现完全一样(两者都跑到第一个 `rf.load` 就结束)。
+     **唯一可信的入口是 `lua5.1 tests/run_tests.lua <filter>`**,本轮所有读数都从那个入口取。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体继续放在 `bots/`(P4.4 (i)),但换筛法**:用上面第一条说的**形状 census**,不再读 LIMIT 段落。
+        ⚠️ 已量掉的别重开:`-154` 九根 + `-155` 三根 + `-156` 四根 + `-157` 四根 + `-158` 四根 + 本轮**六根**。
+     2. **`axecallclock` 的下一棒不在本组**:`hero-67` 的域频率读数出来之前,不要在 `X.ConsiderQ` 上再开 id
+        —— 这个函数已经有 `axecallbkb_i`/`axecallbkb_ii`/`axecallclock` 三条,而它的带线支路在语料里
+        **端到端一次都驱动不了**(GH #772)。
+
 -158. ✅ **`-157` 第 1 条执行了:主体在 `bots/`,而这一轮找杠杆的代价是零次 grep** —— 本轮
    (报告 `iterations/reports/hero/20260912T141628Z.md`,**GH #784**)落地
    **`cmrsolo`**(Crystal Maiden,gated,turbo-only,**收窄**)。
