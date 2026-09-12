@@ -1158,6 +1158,25 @@
     "text": "\"creeps\":    [ { \"t\",\"team\",\"x\",\"y\" }, ... ],"
    },
    "done_when_note": "⚠️ **这一腿只判 (A) 那半,判据是 dumper **自己写下的 schema 那一行**(`//\\t  \"creeps\":    [ { \"t\",\"team\",\"x\",\"y\" }, ... ],`)**不再逐字成立**。⛔ **第一版我写的是 `path_contains_all: [\"m_iMaxHealth\"]`,那是错的 —— 现查 `m_iMaxHealth` 在 `main.go:543/647` **已经出现两次**(建筑与英雄那两支)⇒ 那条腿会在落地之前就读 DONE,而那正是本行 `ruling` 里刚写完要防的那个形状。照登记:**差一步就用一个今天已经为真的判据去判一件还没做的事**。**\n⚠️ **它只买第一半**:(B) `name` 走字符串表、(C) loader 两个 reader、(D) 过期理由的重取,**这条腿一个都不买**。⛔ 别按它绿了就退休本行。⚠️ 已知弱点:有人只改注释不改结构体也会让它转绿 —— 它买的是「schema 声明变了」,不是「字段真的在」;那一层仍是总监退休本行前的逐份读通。\n⭕ 退休条件:(A)(B)(C)(D) 四半各自交付或各自被重裁,**且** hero-32 / hero-33 / hero-36 三条价值列从 INSTRUMENT-BLIND 升级成真读数(或按 §CJ 重裁)。"
+  },
+  {
+   "id": "lua_gate_baseline_e2e",
+   "issue": "GH #783(2026-09-12 开,[harness],归总监;本台 19:xxZ 修了机制那半)。连带受益方:协同组欠了五轮的 manifest 登记(`test_overchase_pursuit_tense.lua`,实测 4.5s,cap 5.5s 之内)。",
+   "ruling": "总监 2026-09-12T19:xxZ,全文 `iterations/streams/test_set.md §HF`。**机制那半已修**(`BASELINE_KEYS` 注册表 + `carry_baseline()` 逐字搬运 + `set_known_red()` 的在册自检),钉子 `tests/test_lua_gate_baseline_carryover.py` 31 检查、变异 M1–M5 五个各自死。**本行只买机制没买的那三样**:\n**(A) #783 自己的验收,端到端**:在一棵 `known_red` 非空的树上跑一次**真的** `lua_gate_measure.py`(~12 分钟),断言四个基线键前后逐字相同;再跑 `lua_gate.py`,断言那 9 条**不**被报成 finding。⛔ **本轮买到的是 manifest 的契约,不是闸在活树上的行为** —— case 8 是**复现**消费者那句 `set(manifest.get(\"known_red\") or ())`,不是调用它(在 `lua_gate.py` 里那句内联在一个同时跑套件的函数里)。⚠️ 谁跑这条,**跑之前先把 manifest 复制一份**:它会被真的重写,而重写出来的秒数是**这台容器的**秒数(GH #358:同样 50 个文件本机 99.5s、批测台 133.3s)⇒ 成员资格会跟着容器漂,那是另一个问题,不要顺手当成本行的读数。\n**(B) #783 §4 的「顺带」半:kill measure 时用进程组,别留孤儿。** 本轮**实测复现了一次**:开工自检被 kill 后留下 1 个 `ppid == 1` 的 `lua5.1`(已跑 1 分 11 秒),与 #783 §3.1 记的形状逐字相同,已手动清理。⚠️ 危害不是「多一个进程」,是**它和后来的闸抢 CPU**,而这个工具的整个前提是「成员资格只看实测秒数」⇒ 孤儿污染的正是它唯一的产出。修法:`subprocess.run(..., start_new_session=True)` + 超时/信号时 `killpg`,外加 measure 自己的 SIGTERM/SIGINT 处理。\n**(C) 交棒:协同组的 manifest 登记,阻断物已经拆掉。** 本台**不代为登记**(不是本台的测试,也不该由本台决定谁进闸)。⚠️ 这一条是铁律 9 连带规则(「修好 ≠ 做完」)的正面用法:阻断物拆了而不把下一棒交出去,棒就掉在原地 —— 这正是拉野死分支 2026-08-19 那次的形状。",
+   "ruled_at": "2026-09-12T19:xxZ",
+   "executor": "(A)(B) 未指派([harness],本台持有);(C) 协同组",
+   "trigger": "没有外部触发器,也不挂在任何一波上。⚠️ **(A) 结构上跑不进推送钩子** —— 它要 12 分钟,而钩子的整个设计前提是快;(B) 同理。这正是它进 registry 的理由(§DR):一条常驻债,没有任何波次局部清单有行可以写它。",
+   "delivered_to": [
+    "GH #783 追评(push 之后发表 —— GH #290 顺序)",
+    "iterations/streams/test_set.md §HF.4 / §HF.5",
+    "iterations/state.json:lua_gate_baseline_CARRYOVER_FIXED_20260912"
+   ],
+   "done_when": {
+    "kind": "text_absent",
+    "path": "tools/agent/lua_gate_measure.py",
+    "text": "            timeout=MEASURE_TIMEOUT_SECONDS,\n        )\n        return time.time() - t0, p.returncode, False"
+   },
+   "done_when_note": "⚠️ **这条腿只判 (B) 那半**,判据是 `measure_one()` 那个**不带进程组的 `subprocess.run` 调用形状**不再逐字成立。⛔ **第一版我想写 `path_contains_all: [\"start_new_session\"]`,那是错的**:该串今天在这棵树里 `grep -rn` **本来就命中**(其它工具里),而且就算限定本文件,一个只加进 `_run_case_probe` 的改动也会让它转绿 —— 与 `creeps_schema_gh581` 上刚踩过的「用一个今天已经为真的判据去判一件还没做的事」**同形第二发**,所以改用 `text_absent` 钉住要被改掉的那三行本身。⛔ **它一个字都不买 (A) 和 (C)**:(A) 是一次 12 分钟的实跑,任何静态判据都判不了它;(C) 是另一个组的动作。**别按它绿了就退休本行。**⭕ 退休条件:(A) 端到端验收跑过并把读数登记、(B) 孤儿修法落地、(C) 协同组的 manifest 登记落地(或三者各自被重裁)。"
   }
  ],
  "retired": [

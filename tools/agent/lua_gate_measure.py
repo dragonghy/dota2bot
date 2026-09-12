@@ -205,6 +205,55 @@ def select(measurements, per_test_cap, budget):
     return tests, total
 
 
+# The manifest keys that carry the RED BASELINE rather than a measurement.
+#
+# WHY THEY ARE NAMED IN ONE PLACE (GH #783).  Three writers touch this file --
+# `set_known_red()` sets the baseline, `reselect()` replays the knobs, and
+# `main()` re-measures -- and only the first two used to preserve it.  `main()`
+# built its dict from scratch, so the single action the manifest's own
+# `_comment` PERMITS ("Do not hand-edit; re-measure") silently dropped all four
+# keys, and `lua_gate.py` reads a missing key as an EMPTY baseline, never a
+# permissive one.  The next `git push` -- very likely by someone else -- was
+# then refused by nine reds that predated them.
+#
+# ⭐ THE DEFECT'S SHAPE WAS THE DISAGREEMENT, NOT THE MISSING LINE.  Two code
+# paths writing the same file disagreed about what belonged to whom, and the
+# documentation pointed at the lossy one.  Adding four keys to `main()` would
+# fix today's instance and leave the shape intact: a FIFTH baseline key added
+# to `set_known_red()` later would be dropped exactly the same way.  So the set
+# is named once, both survivors read it from here, and
+# `tests/test_lua_gate_baseline_carryover.py` asserts that every baseline key
+# `set_known_red` writes is a member -- which is the part that cannot rot.
+BASELINE_KEYS = ("known_red", "known_red_cases", "known_red_at",
+                 "known_red_note")
+
+
+def carry_baseline(manifest, path=None):
+    """Copy the red baseline from the manifest on disk into `manifest`.
+
+    VERBATIM, AND THAT IS THE WHOLE POINT.  A re-measure knows perfectly well
+    which tests came back red on THIS tree, so re-deriving the baseline from
+    that run is the tempting version -- and it is a fail-OPEN: it would amnesty
+    every red the measuring round had just introduced, which is precisely the
+    thing the gate exists to refuse.  The baseline answers "what was already
+    broken before you arrived", and only the previous file can say that.
+
+    A missing file (first-ever measure) carries nothing and is not an error --
+    an absent baseline is an empty one, matching how `lua_gate.py` reads it.
+    """
+    try:
+        with open(path or MANIFEST) as fh:
+            old = json.load(fh)
+    except (IOError, OSError, ValueError):
+        return 0
+    n = 0
+    for key in BASELINE_KEYS:
+        if key in old:
+            manifest[key] = old[key]
+            n += 1
+    return n
+
+
 def set_known_red(argv):
     """Write the manifest's `known_red` baseline from a file of test names.
 
@@ -267,10 +316,16 @@ def set_known_red(argv):
         print("   These are recorded as-is. An empty case list is NOT an "
               "amnesty: the gate treats an unrecognised red shape as new.")
 
-    man["known_red"] = rels
-    man["known_red_cases"] = {r: cases[r] for r in rels if r in cases}
-    man["known_red_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    man["known_red_note"] = (
+    # Built as one dict and checked against BASELINE_KEYS before it is merged:
+    # a baseline key this writer invents but never registers is a key the
+    # re-measure path will drop again, silently, exactly as in GH #783.  The
+    # check is here rather than only in the test because this is the writer --
+    # it is the place that can still be wrong at the moment it matters.
+    baseline = {}
+    baseline["known_red"] = rels
+    baseline["known_red_cases"] = {r: cases[r] for r in rels if r in cases}
+    baseline["known_red_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    baseline["known_red_note"] = (
         "Red on trunk when this leg landed (GH #624), each confirmed by an "
         "individual unloaded re-run. The gate does not refuse a push for these; "
         "it refuses for anything NOT on this list. The list is meant to SHRINK "
@@ -278,6 +333,12 @@ def set_known_red(argv):
         "`known_red_cases` narrows each entry to the CASES that were failing: a "
         "baselined file that starts failing somewhere NEW refuses the push, "
         "while ordinary corpus drift inside an already-failing case does not.")
+    unregistered = sorted(set(baseline) - set(BASELINE_KEYS))
+    if unregistered:
+        print("REFUSED -- these baseline keys are not in BASELINE_KEYS, so a "
+              "re-measure would drop them (GH #783): %s" % " ".join(unregistered))
+        return 2
+    man.update(baseline)
     with open(MANIFEST, "w") as fh:
         json.dump(man, fh, indent=2, sort_keys=True)
         fh.write("\n")
@@ -296,6 +357,13 @@ def reselect(argv):
     the older of which is invisible in the diff.  So a knob change replays the
     stored seconds and says so in `reselected_at`.
     """
+    # This path preserves the red baseline by CONSTRUCTION -- it mutates the
+    # old dict rather than building a new one -- and that accident is what made
+    # GH #783 hard to see: the two write paths disagreed, and the documented
+    # one was the lossy one.  Keep the `old.update(...)` shape here; if this is
+    # ever rewritten to build a fresh dict, it owes a `carry_baseline()` call
+    # like `build_manifest()` has.  Pinned by
+    # tests/test_lua_gate_baseline_carryover.py case 7.
     with open(MANIFEST) as fh:
         old = json.load(fh)
     measurements = {
@@ -377,10 +445,32 @@ def main(argv):
         print("\n--dry-run: manifest NOT written")
         return 0
 
+    manifest, carried = build_manifest(tests, total, n_in, len(measurements))
+    with open(MANIFEST, "w") as fh:
+        json.dump(manifest, fh, indent=2, sort_keys=True)
+        fh.write("\n")
+    print(f"\nwrote {MANIFEST}")
+    # Say it out loud: the baseline is the one thing here that was NOT measured
+    # by this run, and a silent carry-over is indistinguishable from the silent
+    # drop it replaces (GH #783).
+    print("carried the red baseline forward: %d key(s), %d baselined test(s) "
+          "-- NOT re-derived from this run"
+          % (carried, len(manifest.get("known_red") or ())))
+    return 0
+
+
+def build_manifest(tests, total, n_in, measured_count):
+    """The measure path's manifest, baseline included.  Returns (dict, n_keys).
+
+    Split out of `main()` so the write can be exercised without paying for a
+    ~12-minute measurement pass -- the reason GH #783's defect survived from
+    the leg's landing to its first use is that nothing cheap ever ran this.
+    """
     manifest = {
         "_comment": ("Generated by tools/agent/lua_gate_measure.py (GH #624). "
                      "Selection is by MEASURED SECONDS, never by filename. "
-                     "Do not hand-edit; re-measure."),
+                     "Do not hand-edit; re-measure -- which PRESERVES the "
+                     "`known_red` baseline (GH #783)."),
         "measured_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "per_test_cap_seconds": PER_TEST_CAP_SECONDS,
         "budget_seconds": BUDGET_SECONDS,
@@ -388,14 +478,10 @@ def main(argv):
         "hook_timeout_seconds": HOOK_TIMEOUT_SECONDS,
         "selected_total_seconds": round(total, 3),
         "selected_count": n_in,
-        "measured_count": len(measurements),
+        "measured_count": measured_count,
         "tests": tests,
     }
-    with open(MANIFEST, "w") as fh:
-        json.dump(manifest, fh, indent=2, sort_keys=True)
-        fh.write("\n")
-    print(f"\nwrote {MANIFEST}")
-    return 0
+    return manifest, carry_baseline(manifest)
 
 
 if __name__ == "__main__":

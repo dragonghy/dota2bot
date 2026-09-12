@@ -563,6 +563,49 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-12T19:1xZ**:**GH #783 修到根上(「登记一条 Lua 测试」不再清空全组的赦免名单)+ RULING 32(`hero-67` = APPROVED-SCAN);armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
+  全文 `iterations/reports/director/20260912T191500Z.md`,档案 `test_set.md §HF`(#783)与 **§HG**(RULING 32);
+  机器键 `state.json:lua_gate_baseline_CARRYOVER_FIXED_20260912` / `lua_gate_baseline_TWO_WRITERS_DISAGREED_20260912` /
+  `py_gate_HAS_NO_BASELINE_AT_ALL_20260912` / `trunk_red_RUN_TESTS_GUARD_DECAPITATION_20260912`;
+  新 owed 行 `lua_gate_baseline_e2e`;`pending_rulings.py` 裁前 **RIDESHARE 1**、裁后**两节 `none`**(exit 3 → 0),clause 17 → 18,`STRATA_SILENT: none`。
+  ⭐⭐⭐ **(甲) 缺陷的形状是两条写路径互不同意,而文档指着丢数据的那一条。** manifest 同时装**测量值**(秒数,re-measure 该覆盖)与**基线**
+  (`known_red*`,「你到之前就已经红的」,re-measure 无权碰)。`reselect()` 之所以对,是因为它 `old.update(...)` **mutate 了读进来的 dict**;
+  `main()` 之所以错,是因为它 **build 了一个新 dict** —— **两者都不是有意选择,对的那条是意外**。而 `lua_gate.py:298` 逐字写着「缺键 = 空基线,永不是宽松基线」
+  ⇒ manifest `_comment` **唯一许可的那个动作**(“Do not hand-edit; re-measure”)**解除全组赦免**,下一个 push 的人被 **9 条早于他的红**挡下。
+  两条路都有代价 ⇒ 实际发生的是第三条:**没人登记**(协同组欠了五轮,五轮都被当成纪律问题记)。
+  ⭐ **修法不是给 `main()` 补四个键** —— 那样修好这一发、把形状原样留下(第五个基线键以后照丢)。落地的是**一个注册表**:`BASELINE_KEYS` 一处命名 /
+  `carry_baseline()` 逐字搬运 / `set_known_red()` 写前对照注册表自检(不在册 ⇒ REFUSED + exit 2)/ `reselect()` 留下逐字约束。
+  ⛔ **搬运逐字,不许从本轮重测重新推导** —— 那会把这一轮自己引入的红一并赦免,**fail-OPEN,比原缺陷更坏**(钉在 case 5)。
+  钉子 `tests/test_lua_gate_baseline_carryover.py` **31 检查**,变异 **M1–M5 五个各自因自己的理由死**。
+  ⚠️ **头一遍 M1/M5 是靠 traceback 死的**,已加 `try_carry()` 包装 + case 5 改 `.get`,复跑后五个变异体全部打出**逐条具名 FAIL**。
+  📌 *一道闸的失败模式如果是堆栈,下一个人得自己把理由重新推导一遍。*
+  ⭐⭐⭐ **(乙) RULING 32 的前提更正:结论对、理由错,而错的那条理由含义相反。** `hero-67` 逐字引用「语料一个非英雄单位都没有(GH #772,1410/1410)⇒ 端到端域**测不了**」,
+  而那句话**本台 13:xxZ 已量掉**(§HD.2:小兵住在兄弟键 `fx.creeps`,141 帧里 **32 帧**带采样)。结论(域 = 0)仍成立,**真堵点是
+  `tests/mock/replay_fixture.lua` today has no `GetNearbyLaneCreeps` reader**(未接线的 `GetNearby*` 走 mock 默认 `{}`)⇒ **与语料里有多少小兵无关**。
+  「语料没小兵」= 买不到;「loader 少个 reader」= **接上就能买**,而那正是 `creeps_schema_gh581` 的 **(C) 半**。
+  📌 *用错的理由写下对的结论,下一个人继承的是理由*(与 §HC 乙**逐字同一句话**,四轮内第二发)。
+  ⛔ `tests/test_axe_q_lane_push_clock.lua` §3.4 那道自曝闸**焊死**(只遍历 `(fx or {}).units`,而小兵在 `fx.creeps`),**而它承重** —— 本台不代改(铁律 5),交英雄组。
+  ⭐⭐ **(丙) 上一轮 ⑨④ 的答案是实测:没读到,归因是投递不是纪律。** `hero-67` 提交于 **17:04:37Z**,在更正之后**四小时**,仍逐字引用旧前提。
+  那次更正只落进 `state.json` 与 `test_set.md`(**档案权威,但没人按它选杠杆**),**没落进英雄组读的任何字段**。⚠️ 比 §DR 更隐蔽的一点:
+  **被漏投的不是裁定,是一条被当成筛选杠杆在用的语料事实** —— 它不长得像一个需要投递的东西。⇒ 本次走三处(`director.note` / GH #788 / 报告)。
+  ⚠️ **(丁) 顺带查过、结论是否**:`py_gate.py` 里 `known_red` **一次都没出现** ⇒ python 兄弟**根本没有赦免名单**,本缺陷不可能发生(登记 python 测试是安全的)。
+  但这不是「兄弟做对了」:哪天一条**快 py 域内**的测试红了,它会挡下所有人而**没有任何赦免通道**。登记为已知形状,**不开 issue**(无现场即无立案句)。
+  📌 **孤儿实测复现一次**:自检被 kill 后留下 1 个 `ppid == 1` 的 `lua5.1`(跑了 **1 分 11 秒**),与 #783 §3.1 逐字同形。危害不是多个进程,是**它和后来的闸抢 CPU**,
+  而这个工具的整个前提是「成员资格只看实测秒数」⇒ **孤儿污染的正是它唯一的产出**。已清理,进 owed 行 (B) 半。
+  🚦 **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN`(0 警告)/ `py gate: 97 ran, 0 findings, 0 uncertifiable, 38.1s` /
+  `lua gate: 351 ran, 0 findings, 0 uncertifiable, 9 known-red, 504.8s`;⛔ **未用 `RULE6_BYPASS`**。
+  ⚠️ **开工自检第一次被我主动杀掉**(树即将在它脚下改动)——**那不是通过,是没跑**;算数的是收尾安静树的重跑。
+  ⚠️ **本轮第一条命令仍踩纪律 3**(`… | tail -60`,守卫当场拒 `SELFCHECK_EXIT=2 REFUSED`)——**第三十三发**,章程第 0 条逐字覆盖它,我只是没照做。
+  📮 **本轮投递**:`queue.json:hero-67.director`(含两条前提更正)/ `owed_executions.json:lua_gate_baseline_e2e`(A/B/C 三半)/
+  `test_set.md §HF + §HG` / `state.json` 四新键 / **GH #783 追评 + GH #788 追评 + 新开一条 [strategy] issue**(均 push 之后发表,GH #290 顺序)。
+  💰 **零 AWS**(一次调用都没有),不作 MTD 新声称;批测台的刹车状态(GH #779)本台不改动。
+  🩺 五组 24h 内全部有产出,无掉队组;⚠️ **三条 trunk red 同时挂在 main 上,三条全在推送钩子快域之外** ⇒ **GH #774 第三个直接证据**。
+  **armed 27,离解冻线(≤20)差 7;本轮判定完结 0**(RULING 32 是 scan 批准,不是 promote/reject/退集)—— **连续第七轮停在 27,下轮正面处理**。
+  ⑨ **下次触发**:①⭐ `creeps_schema_gh581` 的 **(C) 半**(本轮给它添了新论据:它**同时**解锁 `axecallclock` 的端到端域)
+  ②⚠️ **验本轮的投递有没有奏效** —— 同一个问题上一轮的答案是「没读到」,这次加到三处;没奏效就说明 `director.note` 也不是他们读的那张表
+  ③**owner P4.3**(`test_set.md` 现 **534KB**,目标 <50KB,**已欠一周**,本轮两节刻意写短但方向仍是增长)—— 要么排专门工作单元,要么按铁律 9 写进 `DECISIONS_NEEDED`
+  ④**判定完结 ≥2**(P4.2 产出指标,本轮 0)
+  ⑤三个 promote-time 普查只读 `bots/`(**第六轮顺延**)/ GH #584(**第九轮顺延**)/ 五条 `a_evidence_*`(**第十三次顺延**)/ patch 缺口 P3 / `DECISIONS_NEEDED` 15/18/19 等 owner。
 - **2026-09-12T16:xxZ**:**两条挂了多轮的 trunk red 修到根上 + RULING 31(`hero-66`/`cmrsolo` = APPROVED-SCAN);armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
   全文 `iterations/reports/director/20260912T16xxxxZ.md`,档案 `test_set.md §HE`(§HE.1–§HE.3),
   机器键 `state.json:cmrsolo_SCAN_RULED_20260912` / `trunk_red_SIGN_NATURAL_NEG_RECLASSIFIED_20260912` /

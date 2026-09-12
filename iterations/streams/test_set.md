@@ -5467,3 +5467,87 @@ hero-38 的是 `"zusfightquorum"` —— **词法查重会漏掉这一对,而这
 - **`tests/test_detector_source_constants.py`(→ 归属待定,先看谁动了 `item_purchase_generic`)**:硬失败在 `tpdeathbuy_domain.py:150`,逐字 `item_purchase_generic: the tpdeathbuy arm is no longer 'gate then bDyingWithDoomedGold = botHP < X'` ⇒ **检测器读的源码形状变了**,它在 `read_source()` 里 raise,所以**整个文件一条断言都没跑**(不是「一条红」,是「这一侧没人看过」)。
 
 ⛔ 两条**都在推送钩子的快域之外**(钩子那半本轮三条腿全绿),⇒ **GH #774 再加两个直接证据**:红全落在闸看不见的地方。本台**不开重复 issue**,按 GH #624/#705/#751/#774 族登记。
+
+---
+
+## §HF 2026-09-12T19:xxZ(第七轮)总监:**GH #783 修到根上 —— 「登记一条 Lua 测试」这个动作不再清空 `known_red` 赦免名单** —— 本节最该被读的是 **§HF.1:缺陷的形状是两条写路径互相不同意,而文档指着丢数据的那一条;只给 `main()` 补四个键会修好今天这一发并把形状原样留下**
+
+⚠️ **本节刻意写短。** `test_set.md` 现 **524KB**,而 owner 优先项 **P4.3 的目标是 <50KB**(责任在本台,已欠一周)。铁律 2.5 要求档案留全文,P4.3 要求档案变小;本轮的处置是**把长篇理由写进源码注释和报告,档案只留裁定与读数**。⇒ 全文在 `tools/agent/lua_gate_measure.py` 的 `BASELINE_KEYS` / `carry_baseline()` 两处注释与 `tests/test_lua_gate_baseline_carryover.py` 的文件头,报告 `iterations/reports/director/20260912T191500Z.md`。
+
+### §HF.1 缺陷:把新测试登进钩子的**唯一被许可的动作**会解除全组的赦免
+
+`lua_gate_manifest.json` 同时装两种东西:**测量值**(每条测试的秒数,re-measure 本就该覆盖)与**基线**(`known_red*`,「你到之前就已经红的那些」,re-measure 无权碰)。三个写者:`set_known_red()` 立基线;`reselect()` 重放旋钮,**靠 `old.update(...)` 顺带保住了基线**;`main()` 从零构造 dict ⇒ **四个键全丢**,而 `lua_gate.py` 逐字写着「缺键 = 空基线,永不是宽松基线」。
+
+于是 manifest 自己 `_comment` **唯一许可的那个动作**(“Do not hand-edit; re-measure”)会解除赦免,下一个 `git push` 的人——**很可能不是 re-measure 的那个人**——被 9 条早于他的红挡下。两条路都有代价 ⇒ 实际发生的是第三条:**没人登记**(协同组的 manifest 登记欠了五轮,五轮都被当成纪律问题记)。
+
+⭐ **修法不是给 `main()` 补四个键。** 那样修好今天这一发,形状原样留下:两条写路径仍然互不同意,**第五个基线键**以后照丢不误。落地的是**一个注册表**:`BASELINE_KEYS` 一处命名,`carry_baseline()` 逐字搬运,`set_known_red()` 把基线先建成一个 dict 再**当场对照 `BASELINE_KEYS` 自检**(不在册的键 ⇒ 打印 REFUSED 并 exit 2,而不是写进去等着被丢)。
+
+⛔ **搬运必须逐字,不许从本轮重测「重新推导」。** re-measure 当然知道今天哪些测试红——采纳那个集合就会**把这一轮自己引入的红一并赦免**,是 fail-OPEN,**比原缺陷更坏**。基线回答的是「你来之前就坏的是哪些」,只有上一份文件说得出这句话。钉在 case 5。
+
+### §HF.2 变异台:五个变异体各自因**自己的**理由死
+
+| 变异 | 死在 |
+|---|---|
+| M1 `build_manifest` 不再搬运(**原缺陷逐字**) | 8 red(case 4 四键 + case 5 + case 8 两条) |
+| M2 `carry_baseline` 改为「并入本轮的红」(fail-open) | 2 red(case 5) |
+| M3 从 `BASELINE_KEYS` 悄悄摘掉 `known_red_note` | 1 red(case 6,逐字点名该键) |
+| M4 `reselect` 改写成构造新 dict | 4 red(case 7) |
+| M5 `carry_baseline` 在文件缺失/损坏时 raise | 4 red(case 2/3) |
+
+⚠️ **头一遍 M1 与 M5 是靠 traceback 死的,不是靠具名断言** —— 作为信号正确,作为消息没用,而且**中断了后面的 case**,于是一次变异读起来像「一处不明形状的失败」。已加 `try_carry()` 包装并把 case 5 的 `man5["known_red"]` 改成 `.get`,复跑后五个变异体**全部打出逐条具名的 FAIL**。📌 *一道闸的失败模式如果是堆栈,下一个人得自己把理由重新推导一遍。*
+
+### §HF.3 顺带查过、**结论是否**的一条:python 兄弟没有这个缺陷,但理由不同
+
+`py_gate.py` 里 **`known_red` 一次都没出现** ⇒ 它**根本没有赦免名单**,所以 re-measure 无从清空,**登记一条 python 测试是安全的**(本轮新测试因此没有登记压力)。⚠️ 但这不是「兄弟做对了」:它意味着**哪天一条在快 py 域内的测试红了,py 闸会挡下所有人而没有任何赦免通道**。登记为已知形状,本轮不修。
+
+### §HF.4 读数与残留
+
+🚦 **铁律 6 三条腿**(手动一遍):`GATE_EXIT=0 CLEAN`(0 警告)/ `py gate: 97 ran, 0 findings, 0 uncertifiable, 38.1s`(新测试在「13 new test(s) not in the manifest were run anyway」里,绿)/ lua gate 读数见报告。⛔ **未用 `RULE6_BYPASS`**。
+
+⛔ **本轮买到的是 manifest 的契约,不是闸在活树上的行为。** 从没跑过真的 12 分钟 measure,也没端到端跑过 `lua_gate.py`;case 8 是**复现**消费者那句读法,不是调用它(在 `lua_gate.py` 里那句内联在一个同时跑套件的函数里)。⇒ #783 自己的验收(真 measure + 真闸)**仍然欠着**,连同 §4 的「kill 时用进程组别留孤儿」一起进 `owed_executions.json:lua_gate_baseline_e2e`。
+
+📌 **孤儿本轮实测复现了一次**:开工自检被我 kill 后留下 1 个 `ppid == 1` 的 `lua5.1`(已跑 1 分 11 秒),与 #783 §3.1 记的形状逐字相同。已手动清理。
+
+### §HF.5 交棒(铁律 9 连带规则:修好 ≠ 做完)
+
+**协同组欠了五轮的 manifest 登记,阻断物已经拆掉。** 本轮不代为登记(不是本台的测试,也不该由本台决定谁进闸),而是把下一棒显式交出去:GH #783 追评点名协同组,新测试 `test_overchase_pursuit_tense.lua`(实测 4.5s,cap 5.5s 之内)可以登记了,`--set-known-red` 名单会被 re-measure 原样保住。
+
+---
+
+## §HG 2026-09-12T19:xxZ(第七轮)总监:**RULING 32 —— `hero-67`(`axecallclock` 域频率)= APPROVED-SCAN,零 EC2,入集仍冻结;并当场答掉上一轮 ⑨④ 那个问题** —— 本节最该被读的是 **§HG.2:那条被更正过的前提,在更正之后 4 小时被另一个组逐字重新引用了一遍 —— 归因不是纪律,是投递**
+
+### §HG.1 裁定
+
+`hero-67` = **APPROVED-SCAN**,零 EC2,不发波(请求自己也写了「不要为它单独发波」)。⛔ **入集不批**:P4.2 冻结期,armed **27 > 20**。
+
+**请求原文一字不改。** 它自己就把铁律 4(i-a) 的 ab/ba 分层条款、4(ii) 的「均值 + 分布 + `>=4` 占比」写进了 acceptance,三条出口也事前写下 —— 与 `hero-66` / RULING 31 同一句评价,**本月第二条**。
+
+⭐ **批的理由不是「这个 id 值得」,是「这道滤网与 P4.2 同向」**(§HC.0 的口径):出口 (i)「联合占比 ~0 ⇒ 按**域为 0** 退场」让本 id 在**从未占用 armed 位**的情况下出局。不裁并不能把 id 挡在集合外,只会让它停在一个默认下一步是「申请取证波」的状态里。
+
+### §HG.2 ⭐⭐⭐ 前提更正:结论对,理由错,而**错的那条理由含义相反**
+
+请求(与 `tests/test_axe_q_lane_push_clock.lua` 头部注释、§3.4)逐字写着:**「归档语料里一个非英雄单位都没有(GH #772,1410/1410 是英雄)⇒ 端到端域恒为 0,不是『测得少』是『测不了』」**。
+
+**(甲) 那句话是错的**,本台 **13:xxZ 已经量掉**(RULING 30 / §HD.2,机器键 `CORPUS_HAS_NO_NONHERO_UNITS_20260912` 已就地更正)。1410/1410 逐位正确,**但小兵不住在 `fx.units` 里** —— `make_fixture.py:618-626` 写进**兄弟键 `fx.creeps`**。现量 **141 帧里 32 帧带 `creeps = {`**;焦点五存活实例 263 中,265u 内敌方兵线兵 **24** / 700u **34** / 1200u **39** / 1600u **44**。
+
+**(乙) 结论(端到端域 = 0)仍然成立,而真正的堵点是另一条,含义相反。** `tests/mock/replay_fixture.lua` **今天根本没有 `GetNearbyLaneCreeps` 这个 reader**;未接线的 `GetNearby*` 走 mock 默认 `{}`(`tests/mock/bot_api.lua:175`)⇒ `#laneCreepList` **恒为 0,与语料里有多少小兵无关**。
+
+两条理由指向相反的下一步:「语料没有小兵」= **买不到**;「loader 少一个 reader」= **接上就能买**,而那个 reader 正是本台 RULING 30 的 `creeps_schema_gh581` **第 (C) 半**,且**明写不依赖 GH #581**。
+
+📌 *用错的理由写下对的结论,下一个人继承的是理由。* —— 与本台 10:3xZ(§HC 乙)**逐字同一句话**,四轮内第二发。
+
+### §HG.3 ⛔ 那道自曝闸是焊死的
+
+`tests/test_axe_q_lane_push_clock.lua` §3.4 承诺「语料出现非英雄单位的那天自己报红点名」。**它永远不会**:line 292-298 逐字只遍历 `(fx or {}).units`,而小兵在 `fx.creeps`。它自己的 docstring 说这道断言承重(「stops §3.1's \"2\" from being quoted as an execution verification」)⇒ **一个承重的自曝闸,焊死在关着的位置上**。
+
+修法一行级(同时数 `(fx or {}).creeps`)。⛔ **本台不代改** —— 铁律 5,英雄组的测试文件。与 §HD.4(过期的理由没人举手)**同形第二发,4 小时内、换了一个组**。
+
+### §HG.4 ⭐⭐ 上一轮 ⑨④ 的答案:没读到,而归因是投递不是纪律
+
+16:xxZ 那轮留了一问:「英雄组的选杠杆筛子已更正,**但我没主动通知英雄组** —— 下轮确认更正有没有被读到」。
+
+**答案是实测,不是猜测**:`hero-67` **提交于 2026-09-12T17:04:37Z**,在 13:xxZ 更正之后**四小时**,仍然逐字引用 `GH #772 / 1410 全是英雄`。⇒ **没有读到。**
+
+⚠️ **归因不是纪律,是投递。** 那次更正只落进了 `state.json` 与 `test_set.md` —— **档案权威,但没有人按它选杠杆**;它**没有落进英雄组读的任何字段**。这正是 §DR 的形状(裁定要落到被裁方**读的那张表**上),而这一次被漏投的不是裁定,是**一条被当成筛选杠杆在用的语料事实** —— 比裁定更隐蔽,因为它不长得像一个需要投递的东西。
+
+⇒ 本次更正走**三处**:`queue.json:hero-67.director.note`(英雄组按章程读 `director` 字段)、**GH #788 追评**(该 id 的活 issue)、本节。
