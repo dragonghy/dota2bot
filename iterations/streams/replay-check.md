@@ -15738,3 +15738,8 @@
     (谓词等价 / 执行顺序 / 行号漂移);(3) ⭐ 新判别子进工具坑:**数 `return` 出口**;
     (4) ⭐ **并池前 `uniq -d`**;(5) ⚠️ **W69 09:26Z 才起飞,下一轮大概率有新语料,先还宽扫**;
     (6) ⭐ **单波读数不是跨波读数**,`arbheart` 读数**永远带段号**(W68 单波,29-id 深度 0)。
+  - **本轮 issue:净增 1 条 [strategy] GH #775**(先搜后开:两次语义检索**各 0 命中**;
+    全仓 grep `GetAlliesNearLoc` 的 8 处既有提及**全部指向 `:811`/`:919` 那条守卫**,
+    `strategy.md:11387/11392` 逐字比对过,**没有一处提到 `:615`/`:589` 这条**)。
+    `claim_precheck.sh` 发布前跑:`PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
+    `resolved on trunk 6  refused 0` ⇒ **先 push 后发表**(GH #290 顺序)。
