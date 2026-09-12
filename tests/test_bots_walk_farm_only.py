@@ -131,6 +131,13 @@ UNRESOLVED_HAND_READ = {
     """tests/test_tpdefnan_tower_tp_landing.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "same shape at :106-:107: two literals, non-recursive `ls`, never "
         "reaches bots/Customize/",
+    """tests/test_tpdeftower_anchor_pricing.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "same shape again: corpus_paths() loops dir over the two LITERALS "
+        "{'tests/fixtures', 'tests/frames'} with no parameter reaching it, and "
+        "runs a plain non-recursive `ls`, so it never reaches bots/Customize/. "
+        "Hand-read 2026-09-12 (strategy desk) -- registered in the SAME work "
+        "unit that added the walk, which is the half GH #774 says keeps going "
+        "missing",
     """tests/test_wk_q_commit_ration.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() at :110 loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:79-:80); non-recursive `ls`, "

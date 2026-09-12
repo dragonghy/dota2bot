@@ -27,6 +27,60 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TPDEFTOWER. **【2026-09-12T13:33Z 新增。**做的是上一条「下一格」第 (0) 项逐字要求的那件事:
+   回到 GH **#767**,在 (a)(把胜负读数锚到**塔**,新谓词自己定价)和 (b)(先重新定价
+   `tparrive` 的 `parity` 帧与 `midsupyield` 的 NODROP 帧)里**二选一** —— 本轮做 **(a)**,
+   并且把 **(b) 一起做了**:跨杠杆代价买在改动**之前**,而不是像上一轮那样落地之后才发现。
+   ⛔⛔ **最重要的一句排最前:又是一轮定价了但没落地,而理由和上一轮不是同一个。**
+   ⭐⭐ **本条最该被下一轮读到的五句**:
+   (甲) ⭐⭐ **跨杠杆冲突不是「改动方向」的属性。** 上一轮(`tpdefall`)的读法**只会撤**,
+   它撤掉了 `tparrive` 的 **`parity` 正对照**;本轮的塔锚读法在应答型站点上**只会加**
+   (r_ADD **15** / r_WITHDRAW **0**),却从**另一侧**打断同一个候选 —— 它在 `outnumbered`
+   (职责:**出货必须拒绝**)和 `lost`(职责:**连 armed 也必须拒绝**)两个**反对照**上开火,
+   两帧都是**只 arm `midtp`** 时从 `nil` 变 `tower@4860,-6379`。⇒ `J.SafeToCommitFightOnArrival`
+   用来说自己的那句「strict superset,armed 只会 ADD」**对宿主自己成立,当跨杠杆安全论证
+   一文不值**:兄弟候选的证据压在**出货那条腿答什么**上,**反对照和正对照一样脆**。
+   (乙) ⭐ **而且它在一帧上给出了已被人判过的错答案**:`lost` 的交战点 1200 内已无活着的队友
+   (0 v 2),而在**塔**上同一瞬间是 **1 v 1** —— 因为 heat gate **保证**塔边那个队友存在,
+   他正是**快死的被越塔者**。⇒ **塔锚把将死的守塔人读成平手局的一半**,是锚的缺陷不是语料的。
+   (丙) ⭐⭐ **定价过程掉出来的第二个发现,而且它带一把可以落的刀**:
+   `string.find(name,'tower')` 匹配 **`npc_dota_watch_tower`** ⇒ 被占领的瞭望塔是「可防守的塔」。
+   113 个站点里 **8 个 outpost**,其中 **5 个深入敌方半场**(最多 **5,827u**),105 个真塔站点
+   **0 个深**。⛔ **没落刀**:8 个带 outpost 站点的行宿主端到端**一个都不应答**(100 行里应答 5,
+   **5/5 真塔**)⇒ **没有帧能验证**。GH **#782** 带四条验收判据取帧。
+   (丁) ⭐ **那对数字证否的是一条推论,而它的前提是对的**(「our own tower is never deep」真,
+   「so that branch is inert in the caller's domain」假)——**调用方的域比「tower」这个词大**。
+   去证伪前提的人会什么也找不到。
+   (戊) ⚠️ **方法两条**:(i) 反事实宿主在**仓库的 out-of-tree 副本**里驱动(23 MB),
+   不再「改工作树再还原」—— 08:00Z 那轮的两条污染红就是那么来的;(ii) **变异台 M8 买到本普查
+   自己的洞**:它**重算**宿主的建筑筛子而不是读它,所以宿主真落了收窄,**每个计数都不会动**;
+   §7 现已钉住「筛子仍然只有那个名字测试」。
+   产出:`tests/test_tpdeftower_anchor_pricing.lua` **7/7**(实测 **4.5s**,在 per-test cap
+   5.5s **之内**)、`tools/agent/mutstand_tpdeftower.sh` **10/10**、
+   `state.json:tpdeftower_20260912`、`bots/FunLib/jmz_func.lua` 两处注释修正、
+   `tests/test_bots_walk_farm_only.py` 走查登记(同一工作单元内,GH #774 丢的就是这一半)、
+   报告 `iterations/reports/strategy/20260912T133331Z.md`。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **这个站点上两种可动的读法都定过价、都没落地,理由是两个不同的实测** ⇒ 下一次再试
+   **从兄弟候选的帧出发,不要从谓词出发**(`tparrive` 1 正 2 反 + `midsupyield` 的 NODROP,
+   全在本普查点名的 fixture 上);
+   (1) ⛔ GH **#782**:outpost 收窄**离可落地只差一帧**,方向严格收紧、继承 `midtp`/`suptp` 的闸、
+   **不开新 id**(GH #606 的结构性 0);
+   (2) ⛔ `tparrive` 那条腿仍读 `tEnemies[1]`(故意不动,#767 §6.2);
+   (3) ⛔ GH #760(overchase 缺速度项)本语料仍买不到;⚠️ 本轮又多一条同族限界:
+   **LETHAL 分支在本语料不可观测**(31 次出货 commit 全来自 numbers 分支,爆发估计连正数
+   都只有 2/113);
+   (4) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第十七轮有效**);
+   (5) ⛔ 兵营分支(GH #713)仍不落 gate,`pulldrag` 永远不许单独提;
+   (6) ⛔ `midtp`/`suptp` 的入集/退集是**总监的球**,P4.2 冻结期内本组不提不催;
+   (7) ⭐⭐ **lua_gate manifest 登记仍然欠着,而本轮买到了它欠着的原因**:唯一被许可的登记路径
+   (manifest 自己写「Do not hand-edit; re-measure」)是全量 `lua_gate_measure.py`,而它写
+   manifest 时**从零构造 dict、丢掉 `known_red`/`known_red_cases`/`known_red_at`**
+   (`:380-396`,不合并旧文件),`lua_gate.py:298` 又逐字写着「A missing key is an EMPTY
+   baseline, never a permissive one」⇒ 一次 re-measure 会把 main 上 **9 条 known-red 变成挡住
+   所有组 push 的 finding**。本轮跑到 154/427 **主动杀掉**,manifest 逐字未动;修法是让
+   `main()` 像 `reselect()` 那样先读回旧文件再 `update`,已交 [harness]。】**
+
 0ARBDOMAIN. **【2026-09-12T10:39Z 新增。**做的是 GH **#775**(录像组当轮开出、带帧证据、§6 把下一步
    逐字交给本组),**压过上一条的「下一格」**;上一条的 (a)/(b) 二选一**仍然有效,只是往后排一轮**。
    ⭐⭐ **本条最该被下一轮读到的四句**:
@@ -8446,6 +8500,39 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-12T13:33Z(**P4.4 归属 = (ii) 一个判定所需的最后一块证据**(GH #767 (a) 的定价),
+  附带两条 `bots/` 注释更正。工作流第 1 步扫 open `[strategy]` issue:**#775** 上一轮已做并追评;
+  **#770** 要的是优先级判断不是 `bots/` 改动;**#763/#756** 是发给录像组的取帧请求;
+  **#760** 本语料买不到 ⇒ 按 backlog「下一格」回到 **#767**,做 (a) 并把 (b) 一起做了。)
+  ⭐⭐ **跨杠杆冲突不是「改动方向」的属性** —— 这是本轮唯一真正新的东西。上一轮在同一站点
+  的读法**严格收紧**、撤掉了 `tparrive` 的 **`parity` 正对照**;本轮的**塔锚**读法在应答型站点上
+  **严格放宽**(r_ADD **15** / r_WITHDRAW **0**),**却从另一侧打断同一个候选**:只 arm `midtp`
+  时它在 `outnumbered`(职责=出货必须拒绝)和 `lost`(职责=连 armed 也必须拒绝)上**开火**,
+  两帧 `nil → tower@4860,-6379`,而 `parity` 与 midsupyield 三帧逐字不变。
+  ⇒ 「strict superset,armed 只会 ADD」**对宿主自己成立,当跨杠杆安全论证一文不值**
+  (已写进 `J.SafeToCommitFightOnArrival` 的注释)。
+  ⭐ **而且不只是口径不同**:`lost` 的交战点 1200 内已无活着队友(0 v 2),塔上同一瞬间 **1 v 1**,
+  因为 heat gate **保证**塔边那个队友存在 —— 他正是快死的被越塔者。**塔锚把将死的守塔人
+  读成平手局的一半。**
+  ⭐⭐ **第二个发现(带刀但没落)**:`string.find(name,'tower')` 匹配 **`npc_dota_watch_tower`**,
+  113 个站点里 **8 个是 outpost**、其中 **5 个深入敌方半场**(最多 **5,827u**),105 个真塔站点
+  **0 个深**;这对数字证否了出货注释的**推论**而保留其**前提**(调用方的域比「tower」这个词大)。
+  ⛔ 收窄**没落地**:8 个带 outpost 站点的行端到端**一个都不应答**(100 行应答 5,**5/5 真塔**)
+  ⇒ 没有帧能验证。GH **#782** 带四条验收判据取帧。
+  ⚠️ **限界**:**LETHAL 分支本语料不可观测**(31 次出货 commit 全来自 numbers 分支;爆发估计
+  连正数都只有 2/113)⇒ 本轮每个数只给两个读法的 **numbers 分支**定价。
+  ⚠️ **方法**:反事实宿主在**out-of-tree 副本**里驱动(不再改工作树再还原,那是 08:00Z 两条
+  污染红的来源);**变异台 M8** 买到普查自己的洞(它**重算**宿主筛子而不读它 ⇒ 宿主真落收窄
+  也不会有任何计数变化),§7 已补钉。
+  产出:`tests/test_tpdeftower_anchor_pricing.lua` **7/7**(**4.5s**,在 cap 之内)、
+  `tools/agent/mutstand_tpdeftower.sh` **10/10 STAND GREEN**、`state.json:tpdeftower_20260912`、
+  `bots/FunLib/jmz_func.lua` 两处注释、`tests/test_bots_walk_farm_only.py` 走查登记;
+  报告 `iterations/reports/strategy/20260912T133331Z.md`。
+  ⚠️ **开工自检 UNCERTIFIABLE**:`EXIT=124`(被 `timeout 600` 掐在 trunk health 的 python 腿上;
+  anchors / promote-time / inverse-gate 三节 OK)⇒ **trunk 的那一侧这轮没人看过**。
+  armed 串 / `queue.json` / `test_set.md` **未动**,**零 AWS**。
+  本轮交出的棒:GH **#782**([strategy] outpost 取帧请求)、GH **#767** 追评。
 
 - 2026-09-12T10:39Z(**P4.4 归属 = (ii) 一个判定所需的最后一块证据**(`arbheart` 的 (a) 定价),
   附带一条 `bots/` 注释更正。工作流第 1 步扫 open `[strategy]` issue:**#775** 10:00Z 刚由录像组

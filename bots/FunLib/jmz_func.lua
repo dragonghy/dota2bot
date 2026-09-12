@@ -8166,10 +8166,27 @@ end
 --
 -- This counts the arriving responder in both branches. One more ally can only
 -- raise the burst sum and the head count, so this is a strict SUPERSET of
--- J.SafeToCommitFight -- armed it can add a response, never remove one. The
--- 'depthnum' margin is honoured unchanged: a collapse onto our own tower is
--- never deep, so that branch is inert in the caller's domain, but the predicate
--- is public and must not quietly undercut it.
+-- J.SafeToCommitFight -- armed it can add a response, never remove one.
+--
+-- ⚠️ [tpdeftower 20260912, GH #767] THE SUPERSET BOUND IS ABOUT THIS HOST'S OWN
+-- BEHAVIOUR AND IS NOT A CROSS-LEVER SAFETY ARGUMENT. A sibling candidate's
+-- evidence rests on the SHIPPED arm answering a particular way, so a widening
+-- here can break a NEGATIVE control exactly as a narrowing breaks a positive
+-- one -- measured both ways at this site inside one day
+-- (tests/test_tpdeftower_anchor_pricing.lua §4; state.json tpdefall_20260912
+-- then tpdeftower_20260912).
+--
+-- ⚠️ THE 'depthnum' MARGIN IS HONOURED UNCHANGED, AND THE OLD REASON GIVEN FOR
+-- IT WAS WRONG IN ITS INFERENCE. This comment used to call that branch inert in
+-- the caller's domain, on the ground that a collapse onto one of our own towers
+-- is never deep. The premise holds -- over the corpus's 105 real-tower sites, 0
+-- are deep by the 'depthnum' convention -- but the conclusion does not, because
+-- THE CALLER'S DOMAIN IS BIGGER THAN THE WORD "TOWER":
+-- J.ShouldTpSupportTowerFight admits any allied building whose name matches
+-- `tower`, and `npc_dota_watch_tower` (a captured OUTPOST) matches. 8 of the corpus's 113 sites are outposts and 5 of
+-- those are deep at the caller's own engage point, by up to 5,827 units toward
+-- the enemy ancient. The branch is therefore NOT inert in this caller's domain;
+-- it is inert only on the part of it that is actually a tower.
 -- Pure predicate: the soak gate lives at the call site.
 function J.SafeToCommitFightOnArrival( bot, target )
 	if not J.IsValidHero( target ) then return true end
@@ -10599,6 +10616,19 @@ function J.ShouldTpSupportTowerFight( bot )
 
 	for _, building in pairs( tBuildings ) do
 		if J.IsValidBuilding( building )
+		-- ⚠️ [tpdeftower 20260912, GH #767 / #782] REGISTERED, NOT REPAIRED: this
+		-- name test also admits `npc_dota_watch_tower` -- a captured OUTPOST is an
+		-- allied building whose name contains "tower", so an outpost fight is a
+		-- "tower fight" here. Measured over the frame corpus: 8 of 113 sites are
+		-- outposts, and 5 of those sit DEEP in the enemy half (up to 5,827 units
+		-- closer to their ancient than to ours) -- the one place the responder is
+		-- least able to win and the shipped prose on J.SafeToCommitFightOnArrival
+		-- assumed could not occur. It is NOT narrowed here because the corpus
+		-- cannot witness it end to end: of the 100 rows that reach this loop with
+		-- a live site, the host answers 5 and all 5 are real towers, so a narrowing
+		-- would be a change with no frame to validate it (the discipline's "gate
+		-- plumbing is not local validation"). tests/test_tpdeftower_anchor_pricing
+		-- §6 pins both halves, and GH #782 carries the frame request.
 		and string.find( building:GetUnitName(), 'tower' ) ~= nil
 		-- Far enough that only a TP arrives in time; a close fight the bot can
 		-- just walk to is not this fix (avoids wasting a TP on a nearby scrap).
