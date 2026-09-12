@@ -798,6 +798,71 @@ function X.RetreatWhenTowerTargetedDesire()
     return 0
 end
 
+-- [strategy 2026-09-12] Soak candidate 'cutoff' (turbo-only). The 'lvlany'
+-- family shape -- a question that is existential asked of ONE list member --
+-- in a new function, and the first site of the family where `[1]` is not even
+-- the nearest member.
+--
+-- THE SITE. X.ShouldRun's invisible-retreat branch below:
+--     and J.GetDistanceFromAncient(bot, false) < J.GetDistanceFromAncient(nEnemyHeroes[1], false)
+-- `false` means OUR ancient (J.GetDistanceFromAncient reads GetAncient(GetTeam())
+-- and only swaps sides when bEnemy is true), so both sides of the comparison are
+-- measured to the same building. The clause therefore asks "am I ahead of the
+-- enemy in the race home" -- and commits to `return 5`, run for the ancient, on
+-- the answer. The question is existential: ONE chaser standing between the bot
+-- and its own ancient is enough to make running home the losing line, which is
+-- what being cut off means. Asking it of a single list member answers a
+-- different question.
+--
+-- WHY THIS SITE AND NOT A FIFTH `[1] < N` SIBLING. `#nEnemyHeroes` is the
+-- author's own group term and it is spent EIGHT times in this same file on this
+-- same list (lines 449, 492, 493, 495, 517, 565, 600 and the `> #nAllyHeroes`
+-- comparisons among them). A whole term was already being spent asking about the
+-- GROUP; the race-home term beside it asks about one member.
+--
+-- ⭐ AND `[1]` HERE IS NOT "THE NEAREST". Every earlier member of this family
+-- (lvlany / lvlcarry / lvlgroup / lvltogether / lvlhitcreep) read a list that
+-- inherits a distance sort, so `[1]` at least meant something. `nEnemyHeroes` is
+-- C.enemyHeroes, filled by buildContext() from `GetUnitList(UNIT_LIST_ALL)` in
+-- ENGINE order with no sort anywhere on the path -- so the shipped clause
+-- compares the bot against an ARBITRARY enemy hero within 1600. That is a
+-- measurement, not a reading of the diff: section 4 of
+-- tests/test_cutoff_retreat_ancient_race_quantifier.lua counts the corpus rows
+-- where this list is out of distance order, and the number is the reason this
+-- site was taken.
+--
+-- ⛔ DIRECTION. Armed answers `forall e in list: d(bot) < d(e)`; shipped answers
+-- `d(bot) < d(list[1])`. The loop starts at i = 1 and the caller has already
+-- established that `[1]` is a valid hero, so `[1]` is always evaluated ⇒ armed
+-- TRUE implies shipped TRUE. Arming is a pure NARROWING of the permission this
+-- clause guards: it can only ever WITHHOLD a `return 5` that ships today, never
+-- issue one baseline withheld. The skip of an invalid member cannot break that
+-- -- a skipped member never withdraws anything -- and `[1]` is not skippable.
+--
+-- ⛔ UNARMED THIS IS THE SHIPPED EXPRESSION, term for term, including the empty
+-- list: the caller's `J.IsValidHero(nEnemyHeroes[1])` conjunct already means the
+-- branch does not fire on an empty list, and the early return returns false for
+-- exactly that case rather than indexing nil.
+--
+-- ⛔ FROZEN-HOLD per OWNER_PRIORITIES P4.2 (new ids do not enter the armed set
+-- while it is above 20). Registered in state.json:cutoff_20260912; the armed
+-- string, queue.json and test_set.md are untouched.
+function X.AheadOfEveryEnemyToAncient(tHeroes, hBot)
+	if tHeroes == nil or tHeroes[1] == nil then return false end
+	local nBotDist = J.GetDistanceFromAncient(hBot, false)
+	if J.IsModeTurbo() and J.IsSoakCandidate('cutoff') then
+		for i = 1, #tHeroes do
+			if J.IsValidHero(tHeroes[i])
+			and nBotDist >= J.GetDistanceFromAncient(tHeroes[i], false)
+			then
+				return false
+			end
+		end
+		return true
+	end
+	return nBotDist < J.GetDistanceFromAncient(tHeroes[1], false)
+end
+
 local enemyPids = nil;
 function X.ShouldRun()
     if bot:HasModifier('modifier_medusa_stone_gaze_facing') 
@@ -1127,7 +1192,7 @@ function X.ShouldRun()
         and botName ~= "npc_dota_hero_riki"
         and botName ~= "npc_dota_hero_bounty_hunter"
         and botName ~= "npc_dota_hero_slark"
-        and J.GetDistanceFromAncient(bot, false) < J.GetDistanceFromAncient(nEnemyHeroes[1], false)
+        and X.AheadOfEveryEnemyToAncient(nEnemyHeroes, bot)
     then
         return 5
     end

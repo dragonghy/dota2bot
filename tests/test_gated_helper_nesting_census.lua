@@ -945,6 +945,30 @@ local PINNED = {
     -- to 'tombhp' alone -- the same sentence the 'waitclar' row makes about the
     -- same helper, for the same reason.
     "tombhp | ConsiderGeneralRoamingInConditions | J.IsInLaningPhase | c2,c4 | bots/mode_roam_generic.lua",                                -- P
+    -- [cutoff 20260912, strategy] The identity answer is direct and is the
+    -- reason this is (P): un-armed, X.AheadOfEveryEnemyToAncient's last line is
+    --     return nBotDist < J.GetDistanceFromAncient(tHeroes[1], false)
+    -- which is the shipped sub-expression it replaced, term for term -- the
+    -- shipped value, not a constant and not a nil that would kill the caller's
+    -- branch. tests/test_cutoff_retreat_ancient_race_quantifier.lua section 3a
+    -- asserts exactly that, row by row, on 1306 live rows.
+    -- ⛔ THE PAIR HALF (GH #576), and here it does NOT reduce to the identity
+    -- answer, so it is spelled out. 'towerfear' and 'towerring' are not in this
+    -- clause's conjunction at all -- they guard EARLIER, unrelated early
+    -- `return`s in the same X.ShouldRun (:1080, :1085; this site is :1195). The
+    -- census pairs them because it is conservative about the enclosing function,
+    -- which is the right default. Consequences, both directions:
+    --   * a 'cutoff'-only wave DOES reach this site: un-armed, those two early
+    --     returns do not fire, so nothing preempts the branch;
+    --   * a wave arming 'towerfear' or 'towerring' ALONGSIDE 'cutoff' may
+    --     SUPPRESS it -- an early return that fires never reaches :1195 -- so a
+    --     zero measured in such a wave means "the branch never ran", NOT "the
+    --     lever has no effect". Do not attribute across that pair.
+    -- ⚠️ Neither statement is a fire rate: this branch's own outer guard
+    -- (J.IsRealInvisible + J.IsRetreating) has 0 rows in the frame corpus, which
+    -- section 5 of the cutoff file measures and state.json:cutoff_20260912.bar
+    -- registers as an owed frame.
+    "towerfear,towerring | X.ShouldRun | X.AheadOfEveryEnemyToAncient | cutoff | bots/mode_retreat_generic.lua",                           -- P
 }
 
 local tests = {}

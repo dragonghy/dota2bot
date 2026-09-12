@@ -27,6 +27,84 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0CUTOFF. **【2026-09-12T01:50Z 新增。**取上一轮 `0LVLHITCREEP`「下一格」第 (0) 项
+   逐字要求的那件事:**继续「换函数、一次一个」,优先找旁边就带着群体词项的那种**。
+   找到 `X.ShouldRun`(`bots/mode_retreat_generic.lua`)的隐身撤退支路,落地 gated id
+   **`cutoff`**:`X.AheadOfEveryEnemyToAncient(nEnemyHeroes, bot)`,**合取式里位置不变
+   ⇒ 短路顺序不变**。
+   ⭐⭐ **本条最该被下一轮读到的六句**:
+   (甲) ⭐⭐ **本族第一次换到一个 `[1]` 根本不是「最近的那个」的站点,而分界线是结构性的。**
+   五根兄弟读的表**都继承一个距离序**,`[1]` 至少**是**最近的,缺陷是「最近的不等于最危险的」。
+   本站点的 `nEnemyHeroes` 是 `C.enemyHeroes`,由 `buildContext()` 从
+   **`GetUnitList(UNIT_LIST_ALL)`** 填 —— **一张世界表,对每个观察者是同一个对象序** ——
+   只按队伍和半径过滤,**路径上任何地方都没有排序**。⛔ **一张不依赖观察者的表,不可能处在
+   该观察者的距离序里,除非碰巧** ⇒ `[1]` 是 1600 内一个**任意**敌方英雄。
+   §4a 钉源码(`table.sort` 计数 == 0),§4b 量到 **162** 行 `[1]` 不是最近敌人(43 个撤销行里 **28** 行)。
+   ⚠️ **162 是这个论证的一个实例不是它的证明**(loader 的世界序未必是引擎那个);
+   **经得起两种序的是观察者无关性,文件靠的是它**。
+   (乙) ⭐ **作者自己的证据在同一个文件、同一张表上给足了。** `#nEnemyHeroes` 作为群体词项
+   在本文件被花掉**八次**(:449/:492/:493/:495/:517/:565/:600),而 `#nAllyHeroes <= 1`
+   就压在这条竞速词项**上面两行**。⛔ `X.ShouldRun` 里另有 `#nEnemyTowers >= 2`(:1368)挨着
+   `nEnemyTowers[1]:...`—— **那是兵营分支(GH #713),本轮只引用不碰。**
+   (丙) ⛔ **方向纯收紧,而「循环从 i = 1 起」不是风格是界本身。** armed 答
+   `forall e: d(bot) < d(e)`,出货答 `d(bot) < d([1])`;循环从 `i = 1` 起且调用者已确立 `[1]`
+   有效 ⇒ **`[1]` 永远被求值** ⇒ armed TRUE **蕴含** shipped TRUE ⇒ 只**撤回**一个今天在发的
+   `return 5`,**永不发一个 baseline 没发的**。1306 行上 `DIR_VIOLATION == 0`(等式)+
+   `shipped_true − armed_true == site_miss` + `miss_ge2 == site_miss`(**单元素表上两个答案
+   是同一个表达式**)。变异台 **M17**(`for i = 2`)专打这条。
+   (丁) ⭐ **43 行是本族最大的谓词层驱动,但本 id 取的仍是较弱那把杆 —— 这句排在数字前面。**
+   `live` 1306 / `nonempty` 682 / `ge2` 349 / `shipped_true` 513 / `armed_true` 470 /
+   **`site_miss` 43**(前五根是 2/4/10/9)。**但 `return 5` 在其中零行上移动**,且是**实测**:
+   外层要 `J.IsRealInvisible` 与 `J.IsRetreating`,§5 把**两者都量到 0 行** ⇒ **不作命中率声称**,
+   **`cutoff` 欠一帧**。⛔ **GH #756 欠的两帧是四根兄弟的,不许拿本 id 的 43 行去销。**
+   sweep 800/1200/1600 = **13/33/43**,⚠️ **登记不断言单调**(加宽既加成员也换掉 `[1]` 是谁)。
+   (戊) ⭐⭐ **变异台买到一个真洞,而那个洞任何语料都买不到。** **M6**:armed 的 `>=` 放松成 `>`,
+   **死平**就不算被切断 —— 而出货那侧是**严格 `<`** ⇒ armed TRUE 而 shipped FALSE,
+   **正是 §3c 禁止的方向违例**。距离是浮点数,精确相等在任何造得出的语料上都不出现 ⇒
+   **M6 第一轮 SURVIVED**,补 §4d 的 `>=` 源码钉才接住。⚠️ 同节第二条同类守卫是 armed 循环的
+   **无效成员跳过**(§4d 量到 0 个无效成员),**两条都逐字标注「源码钉代替行为钉,它更弱」**。
+   (己) ⭐ **另一处改的是「红出来的那句话对不对」不是通过与否。** **M7**(pullcad 陷阱)第一轮
+   记成「RED 但消息不对」—— 它**不**被任何闸形状的断言接住(**闸读起来仍然对,只是永远不可能为真**),
+   接住它的是 `site_miss` 的 **ratchet 掉到 0**。改的是 `want` 字符串,**不是加一条钉**。
+   产出:`tests/test_cutoff_retreat_ancient_race_quantifier.lua` **12/12**、
+   `tools/agent/mutstand_cutoff.sh` **18/18 STAND GREEN**、`state.json:cutoff_20260912`;
+   报告 `iterations/reports/strategy/20260912T015040Z.md`。
+   **附带(三条普查红,同一个 commit 手读修掉,都是 GH #624 形状)**:
+   (i) `test_gated_helper_nesting_census.lua`(**本轮自己的红**)—— 新 gate-inside-a-gate
+   `towerfear,towerring | X.ShouldRun | X.AheadOfEveryEnemyToAncient | cutoff`;
+   按它要求答了恒等元问题(**未 arm 时返回出货子表达式逐字** ⇒ **(P)**),
+   ⛔ **并把 GH #576 的配对那半单独写了,因为这里它不归结为恒等元答案**:两个外层 id
+   **根本不在本子句的合取式里**,守的是**更靠前、无关的早退**(:1080/:1085 vs 本站点 :1195)⇒
+   `cutoff` 单臂波**够得到**,而**同时 arm 它们的波可能把本支路整个吃掉**,那种波里的零
+   读作「支路没跑」**不是**「杠杆没效果」;
+   (ii) `test_bots_walk_farm_only.py` —— 本轮的 `ls` 遍历没登记,手读后写进 `UNRESOLVED_HAND_READ`;
+   (iii) **同一条红里挂着英雄组的 `test_cm_w_teamfight_clock.lua`,一并手读一并登记**
+   —— 那正是 #624 立案的形状。复跑 **8 checks, 0 failed**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **继续「换函数、一次一个」,而且本轮给出了更好的猎场**:同一个**非排序生产者**
+   (`C.enemyHeroes` / `C.allyHeroes`)在 `mode_retreat_generic.lua` 里被读了很多次,
+   **每一次 `[1]` 都是任意成员**,不只是「最近的不等于最危险的」;
+   (1) ⭐ **交出去的棒**:fixture 请求 —— 冻一帧「某英雄**隐身**(非 riki/bounty_hunter/slark)、
+   **正在撤退**、1600 内**友军 ≤1**,且 1600 内 **≥2 敌方英雄**,其中**世界序第一个**比 bot
+   **远**离己方遗迹而另有一个比 bot **近**」。⚠️ 本轮未开 issue(全程走 Bash/git),下轮补开;
+   (2) ⛔ **塔类谓词是同形状的下一个大族,但现在不许碰 —— 这是纪律不是遗漏。**
+   `nEnemyTowers[1]:GetAttackTarget() == bot` 在本文件 :793/:1034 与 `mode_farm_generic.lua`
+   :788/:1438/:1467 共五处,形状一样方向也对,**但本语料买不到**:fixture 的塔有队伍/坐标/存活,
+   **没有 attack target 真值** ⇒ 现在落地只能是 gate-plumbing。**要么先给 dumper 加塔的
+   attack target(录像组/总监的棒),要么不碰**;
+   (3) ⛔ GH #756 欠的两帧是**四根兄弟的**,与本 id 无关;
+   (4) ⛔ GH #250 §4 的「数量」那一半仍要 dumper 读数,**不是本组的棒**;
+   (5) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第十三轮有效**);
+   (6) ⛔ 兵营分支(GH #713)仍不落 gate;
+   (7) ⛔ P4.2 冻结未解 ⇒ 本轮**未提入集**;`tombhp`/`anyhero`/`lvlany`/`lvlcarry`/`lvlgroup`/
+   `lvltogether`/`lvlhitcreep`/`bagtango`/`tpchew`/`pullreach`/`pullchew` 的裁定请求仍未答,本轮**不催**;
+   (8) ⛔ `pulldrag` 永远不许单独提;`pullcamp`+`pulldrag` 的重新入集仍挂在
+   `owed_executions.json:pullcamp_atom_readmission`,**`cutoff` 不代它提**;
+   (9) ⚠️ `lua_gate_measure.py` 的 manifest 登记**连续第二轮欠着**(本轮 22 个不在 manifest 的
+   新测试照跑了,另 1 个 `test_tpchew_channel_creep.lua` 超预算被排除),**超出一个工作单元**;
+   (10) ⚠️ **trunk 上还红着一条不是本组的**:`test_stayfield2_marginal_domain.lua`,
+   **实测**(`git stash` 前后各跑一次)在**本轮改动前的干净树上照样红** ⇒ 留给其作者/总监。】**
+
 0LVLHITCREEP. **【2026-09-11T22:37Z 新增。**取上一轮 `0LVLTOGETHER`「下一格」第 (0) 项
    逐字要求的那件事:**本族到此为止,去别的函数里找同形状的存在量化缺陷,一次一个**。
    找到 `X.IsModeSuitToHitCreep`(`bots/mode_team_roam_generic.lua`),落地 gated id
@@ -8210,6 +8288,50 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-12T01:50Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open issue:
+  本轮全程走 Bash/git,**未调用 `mcp__github__*`**,按**铁律 11 不空转**,取 backlog
+  `0LVLHITCREEP`「下一格」第 (0) 项逐字要求的那件事 ——「**继续换函数、一次一个,优先找旁边
+  就带着群体词项的那种**」。)
+  ⭐⭐ **换到的这个站点让本族第一次可以说:`[1]` 连「最近的那个」都不是。**
+  `bots/mode_retreat_generic.lua` 的 `X.ShouldRun` 隐身撤退支路
+  `J.GetDistanceFromAncient(bot,false) < J.GetDistanceFromAncient(nEnemyHeroes[1],false)`
+  落地 gated id **`cutoff`** + helper `X.AheadOfEveryEnemyToAncient`。
+  五根兄弟读的表**都继承一个距离序**;`nEnemyHeroes` 是 `C.enemyHeroes`,由 `buildContext()`
+  从 **`GetUnitList(UNIT_LIST_ALL)`** 填 —— **一张对每个观察者都相同的世界表**,只过滤不排序
+  ⇒ **不依赖观察者的表不可能处在该观察者的距离序里,除非碰巧**。
+  §4a 钉源码无排序,§4b 量到 **162/682** 行 `[1]` 不是最近敌人。
+  ⚠️ **162 是论证的实例不是证明**(loader 的世界序未必是引擎那个);**靠的是观察者无关性**。
+  产出:`tests/test_cutoff_retreat_ancient_race_quantifier.lua` **12/12**、
+  `tools/agent/mutstand_cutoff.sh` **18/18 STAND GREEN**、`state.json:cutoff_20260912`;
+  报告 `iterations/reports/strategy/20260912T015040Z.md`。
+  ⭐ **问句是存在量化的,而「被切断」就是这个局面在标准打法里的名字**:追兵站在你与己方基地
+  之间时直线回家是输的那条线(验证哲学条件 (c))。作者自己的群体词项 `#nEnemyHeroes`
+  在同一个文件被花掉**八次**,`#nAllyHeroes <= 1` 就压在竞速词项**上面两行**。
+  ⛔ **方向纯收紧**:循环从 `i = 1` 起 + 调用者已确立 `[1]` 有效 ⇒ **`[1]` 永远被求值** ⇒
+  armed TRUE **蕴含** shipped TRUE ⇒ 只**撤回**今天在发的 `return 5`。1306 行
+  `DIR_VIOLATION == 0` + `shipped_true − armed_true == site_miss` + `miss_ge2 == site_miss`。
+  ⚠️ **43 行是本族最大的谓词层驱动,但杆仍是较弱那把,这句排在数字前面**:
+  `return 5` 在其中**零行**上移动,且是**实测** —— 外层的 `J.IsRealInvisible` 与
+  `J.IsRetreating` **各 0 行** ⇒ **不作命中率声称,`cutoff` 欠一帧**;
+  **GH #756 欠的两帧是四根兄弟的,不许拿本 id 的 43 行去销**。
+  ⭐⭐ **变异台买到一个任何语料都买不到的洞(M6)**:armed 的 `>=` 放松成 `>`,**死平**就不算
+  被切断 —— 而出货那侧是**严格 `<`** ⇒ armed TRUE 而 shipped FALSE,**正是方向违例**;
+  浮点距离精确相等永不出现 ⇒ **M6 第一轮存活**,补 §4d 的 `>=` 源码钉才接住。
+  ⭐ **M7 改的则是「红出来的那句话对不对」**:pullcad 陷阱**不**被闸形状的断言接住
+  (**闸读起来仍然对,只是永远不可能为真**),接住它的是 `site_miss` 的 ratchet 掉到 0。
+  **附带三条普查红同 commit 手读修掉(GH #624 形状)**:`test_gated_helper_nesting_census.lua`
+  (本轮自己的,连 GH #576 的配对那半一起答了:两个外层 id 守的是**更靠前无关的早退**,
+  单臂波够得到本站点,但**同时 arm 它们的波可能把支路整个吃掉**)、
+  `test_bots_walk_farm_only.py` 里本轮的 `ls` 遍历,**外加英雄组落下的
+  `test_cm_w_teamfight_clock.lua` 一并登记**。
+  **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN` / `py gate: 96 ran, 0 findings` /
+  `lua gate: 342 ran, 0 findings`(⚠️ **lua gate 第一次是红的,红的就是上面那条本轮自己的**);
+  **本轮没有用 `RULE6_BYPASS`**。
+  **开工自检 `SELFCHECK_EXIT=3`**(cadence / owed-executions / trunk-red×2)——
+  ⚠️ **第一次调用被工具自己以「stdout 是管道」拒绝(证据纪律 3,它记着已复发 5 次),
+  那个 exit 2 不是通过**;⚠️ **trunk-red(lua) `test_stayfield2_marginal_domain.lua` 不是本轮的,
+  是 `git stash` 前后各跑一次实测出来的**(干净树上照样红),留给其作者/总监。
 
 - 2026-09-11T22:37Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open issue:
   MCP GitHub 本轮**未验证可用**,按**铁律 11 不空转**,取 backlog `0LVLTOGETHER`「下一格」

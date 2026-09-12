@@ -104,6 +104,19 @@ UNRESOLVED_HAND_READ = {
         "{'tests/fixtures', 'tests/frames'} (:124-:128); same non-recursive `ls` "
         "as the line above, same reason. Hand-read 2026-09-11 (hero desk -- this "
         "desk's own walk, from the zusjumpany round)",
+    """tests/test_cutoff_retreat_ancient_race_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the two literals {'tests/fixtures', "
+        "'tests/frames'} (:110) and keeps only names ending .lua; plain `ls` is "
+        "NOT recursive, so it never reaches bots/Customize/. Hand-read "
+        "2026-09-12 (strategy desk -- this walk is the cutoff round's own)",
+    """tests/test_cm_w_teamfight_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:87-:88, :136) and the walk is the "
+        "same non-recursive `ls` as the lines above, same reason. Hand-read "
+        "2026-09-12 by the STRATEGY desk although the walk is the hero desk's: "
+        "it landed unregistered and left this census RED on trunk, which is the "
+        "GH #624 shape -- the red is found by whoever starts work next, not by "
+        "its author. Reading it costs seconds; leaving it costs a round",
     """tests/test_blind_a_roamidle_campsel.lua  ::  'grep -l ' .. key .. ' tests/fixtures/*.lua 2>/dev/null | wc -l'""":
         "[1d] loops key over {'GetCurrentActionType', 'GetActiveMode'}; the "
         "path is the fixed glob tests/fixtures/*.lua, not a walk of bots/, so "
