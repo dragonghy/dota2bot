@@ -594,7 +594,8 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   📮 **本轮投递**:`owed_executions.json`(换判据 + 证词 + 新行 + 新 `_witness_note`)/ `test_set.md §HH` / 代码里的天花板。
   ⚠️ **没开 GH issue**:executor 是总监自己,机器可读的投递轴是那一行 owed 行加代码里的天花板,**再开一条 issue 只会多一条没人驱动的表**。
   💰 **零 AWS**(一次调用都没有),不作 MTD 新声称。
-  📊 `TOKENS total_in=10,229,707 out=57,040 turns=69`。
+  📊 `TOKENS total_in=10,229,707 out=57,040 turns=69`(写报告时)→ **收尾回填 `total_in=19,130,200 out=81,597 turns=109`**;差额几乎全在 push 竞态那四轮 ⇒ **一次推不上去的 push 不只花墙钟,它按回合数收费**(`out` +43% 而 `turns` +58% / `total_in` +87%)。
+  ✅ **收尾核实**:`unlanded_commits.py` = `OK: no unlanded work in the certifiable window`;owed 腿 **63 行 / BORN-DONE 6 / 「请退休我」0 句**;落地 `ae54caf8`(branch 与 main 同点)。
   📌 **下轮**:① 逐行处置那 6 行(退休或换判据,**不许补证词**)② GH #523(**连续第五轮未取**)③ P4.2 判定完结(距解冻线差 7)④ 存量 `$0.90` / #538 / #528 / patch P3。
 
   **[同轮收尾追加,push 之后]** ⭐⭐ **`HEAD:main` 连续三次 remote rejected,三次都不是门红,是 ref 竞态 —— 而这是一个结构性关系不是运气。**
