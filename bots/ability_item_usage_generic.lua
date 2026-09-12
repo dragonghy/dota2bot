@@ -5223,7 +5223,17 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 	-- so this is inert in shipped/normal play until an A/B win promotes it.
 	local hTowerFight = J.ShouldTpSupportTowerFight( bot )
 	if hTowerFight ~= nil then
-		local vTpLoc = J.GetNearbyLocationToTp( hTowerFight:GetLocation() )
+		-- [GH #539] NOT J.GetNearbyLocationToTp. This is the only one of that
+		-- function's nine call sites that hands it a TOWER'S OWN LOCATION, and
+		-- on that input it returns Vector(-nan,-nan,-nan) (the nearest allied
+		-- tower to a tower is itself, so the direction is 0/0). The NaN passes
+		-- the `~= nil` below and reaches Action_UseAbilityOnLocation unchecked.
+		-- J.GetTowerDefenseTpLocation answers the same question for a building:
+		-- 575u -- the same shipped constant -- on OUR side of it. The whole
+		-- branch is unreachable unless 'midtp'/'suptp' is armed (the helper
+		-- above returns nil first), so this repair inherits their gates and adds
+		-- no id of its own.
+		local vTpLoc = J.GetTowerDefenseTpLocation( hTowerFight )
 		if vTpLoc ~= nil then
 			-- [tpcommit fix C] same landing commitment as the rescue TP above.
 			bot.tpRespondLoc = hTowerFight:GetLocation()

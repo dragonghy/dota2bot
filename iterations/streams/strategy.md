@@ -27,6 +27,54 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0TPDEFNAN. **【2026-09-12T08:00Z 新增。**做的**不是**上一条「下一格」的 (a) 或 (b),
+   而是它们两个**共同的前提**:上一条自己逐字写着「**NaN 修好之前,这个站点上任何杠杆都测不了**」
+   (`test_set.md:108/109`,`midtp`/`suptp` 双双退集,verdict=BUGGY)。**那条 NaN 就是 GH #539**,
+   而 #539 逐字写着「修法在协同组的代码里 …… 哪一刀由协同组定」。⇒ **先修量能测的前提。**
+   ⭐⭐ **本条最该被下一轮读到的五句**:
+   (甲) ⭐ **落点不是坐标**。`J.GetNearbyLocationToTp` 答「离 `nLoc` 最近的己方塔,朝 `nLoc` 575u」;
+   9 个调用点里 **8 个**传队友/laneFront/Roshan/Tormentor/团战点/target(两个地方,方向有定义),
+   **第 9 个传一座塔自己的坐标** ⇒ 最近的塔是它自己、`minDist == 0`、瞭望塔分支要 `< -1300` 恒假、
+   返回 `(towerLoc − towerLoc)/0` = **`Vector(-nan,-nan,-nan)`**,过 `~= nil`、无检查进
+   `Action_UseAbilityOnLocation`。**语料 895/1115 座己方塔(80.3%)复现。**
+   (乙) ⭐⭐ **不是头条数,是一条两个方向都断言了的等价式**:NaN ⟺(距泉水 > 2500)∧(与某个
+   `GetTower(team,0..10)` 槽位重合)。`nan_unexplained = 0` + `nan_missing = 0`。
+   **以后谁挪了边界,这里报不匹配,而不是一个悄悄变小的计数。**
+   (丙) ⭐ **切在调用点不切共享函数,而且不新开 id**。新 helper
+   `J.GetTowerDefenseTpLocation( hTower )` = 塔后 **575u(出货常数,没重调)朝我方泉水**;
+   调用点在 `if hTowerFight ~= nil` 里,宿主第 2、3 行 `return nil` ⇒ **继承 `midtp`/`suptp` 的闸**。
+   **这正是上一轮自己写下的约束**(`test_tpdefall…lua` §5 / 0OVERCHASE / GH #606):再嵌一层闸
+   = `(midtp or suptp) AND <new>`,单独 arm `<new>` 的波读到**结构上不可能的 0**,
+   而 `check_armed_wiring.py` 仍叫它 WIRED。修完 **1115/1115 有限、offset_wrong 0、wrong_side 0**;
+   端到端 witness **1**(`f_260819_183613_storm_collapse_parity.lua`/storm_spirit,**和上一轮同一帧**)。
+   (丁) ⭐⭐ **M4 是本语料买不到的那一个,而这件事被写出来了**:helper 的
+   `if nDist <= 0 then return vTower end` 在本语料**不可达**(没有塔站在泉水上),删掉它
+   **每个计数都不变、2-4 节全绿**;**只被第 7 节的源码钉买到**。
+   ——**那正是当初 0/0 进来的洞的形状:一个没人能观察到它无定义的方向。**
+   (戊) ⚠️ **不要在开工自检的 Lua 套件还在跑的时候开变异台。** 两者共用工作树,
+   变异台反复写 mutant 再还原 ⇒ 自检读到**半份文件**,报出来的红**长得像一次真的回归**
+   (烟枪:`replay_fixture.lua:1480: attempt to index local 'J' (a boolean value)`)。
+   静默复跑后 2 条污染红清零,只剩 `test_stayfield2_marginal_domain` —— **HEAD 上逐字相同,
+   既存 trunk 红,不是本轮的**(GH #751 族)。
+   产出:`tests/test_tpdefnan_tower_tp_landing.lua` **7/7**、
+   `tools/agent/mutstand_tpdefnan.sh` **9/9 STAND GREEN**、`state.json:tpdefnan_20260912`、
+   报告 `iterations/reports/strategy/20260912T080000Z.md`。
+   铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` / `lua gate: 346 ran, 0 findings, 9 known-red`。
+   armed 串 / queue.json / test_set.md **未动**,**零 AWS**。
+   ⛔ **下一格(本组下一轮第一项)**:
+   (0) ⭐ **`midtp`/`suptp` 的重新入集是总监的球**(`test_set.md:108/109`),P4.2 冻结期内
+   本组**不提入集、也不催**;#539 的**代码那半已结清**。本组下一轮回到 **GH #767**:
+   宿主现在落点是坐标了,`0TPDEFALL` 的「下一格」(a)(把胜负读数锚到**塔**,新谓词自己定价)
+   或 (b)(先重新定价 `tparrive` 的 `parity` 帧与 `midsupyield` 的 NODROP 帧)**二选一,仍然有效**;
+   (1) ⛔ **共享的 `J.GetNearbyLocationToTp` 仍对「一座塔自己的坐标」答 NaN,这是这一刀的设计结果**
+   (测试第 6 节带着这句话)—— **谁加第 10 个传建筑的调用点,谁在那一轮连共享函数一起修,自己定价**;
+   (2) ⛔ GH #760(overchase 缺速度项)本语料仍买不到(`GetVelocity` mock 恒 0、朝向 dumper 不带);
+   (3) ⚠️ dumper 扩展(朝向/速度/塔的 attack target)仍只登记不代开,棒在录像组/总监;
+   (4) ⛔ 读 `botTarget` 的 consider 条目族仍不动(GH #474,**连续第十五轮有效**);
+   (5) ⛔ 兵营分支(GH #713)仍不落 gate;`pulldrag` 永远不许单独提;
+   (6) ⚠️ `lua_gate_measure.py` 的 manifest 登记**连续第四轮欠着**;本轮新测试实测 **6.17s** >
+   per-test cap **5.5s** ⇒ **它本来就在钩子快域之外**(这是读数,不是免责)。】**
+
 0TPDEFALL. **【2026-09-12T05:02Z 新增。**取上一轮 `0CUTOFF`「下一格」第 (0) 项逐字要求的那件事:
    **继续「换函数、一次一个」,去同一个非排序生产者的下一个读点**。
    `mode_retreat_generic.lua` 里的英雄 `[1]` 读点**已经取尽**(只剩 `:1191`,那正是 `cutoff` 自己),
@@ -8365,6 +8413,37 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-12T08:00Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open
+  `[strategy]` issue:**#770** 今天新开但它要的是**优先级判断**不是 `bots/` 改动(而且它自己的
+  结论是**少花在瞭望塔这一族上**);**#511** 的码半已由 `outcommit` 落地
+  (`mode_outpost_generic.lua:142-144`);**#740** 的两半已由 `pullreach` + 注释修正落地;
+  #760/#756/#763 上轮已判 ⇒ 取上一条 backlog「下一格」两个选项**共同的前提**。)
+  ⭐⭐ **`midtp`/`suptp` 的 TP 落点不是坐标,是 `Vector(-nan,-nan,-nan)`(GH #539)。**
+  `J.GetNearbyLocationToTp` 的 9 个调用点里,**只有这一个传一座塔自己的坐标** ⇒ 最近的塔是
+  它自己、`minDist == 0`、瞭望塔分支 `< -1300` 恒假、`(towerLoc − towerLoc)/0`。
+  NaN 过 `~= nil`,无检查进 `Action_UseAbilityOnLocation`。**141 帧 / 1115 座己方塔里 895 座
+  (80.3%)复现**,⭐ 且不是「有时候」:**NaN ⟺(距泉水 > 2500)∧(与某个 `GetTower` 槽位重合)**,
+  `nan_unexplained = 0` + `nan_missing = 0`,**两个方向都断言了**。
+  ⭐ **修法:切在调用点,不切共享函数;不新开 id。** 新 helper `J.GetTowerDefenseTpLocation`
+  = 塔后 **575u(出货常数不重调)朝我方泉水**(守塔的人该出现在建筑自己这一侧,验证哲学 (c));
+  调用点在 `if hTowerFight ~= nil` 里 ⇒ **继承 `midtp`/`suptp` 的闸**,这正是上一轮
+  `test_tpdefall…lua` §5 给下一个落地的人写下的约束(再嵌一层 = `(midtp or suptp) AND <new>`,
+  单独 arm 会读到**结构上不可能的 0**,GH #606)。修完 **1115/1115 有限 / offset_wrong 0 /
+  wrong_side 0**;端到端 witness **1**(`f_260819_183613_storm_collapse_parity`/storm_spirit,
+  **和上一轮承重的同一帧**,⚠️ 1 不是命中率,宿主条件极窄且语料是为别的候选冻的)。
+  ⭐⭐ **M4 是本语料买不到的那一个,而它被写出来了**:`if nDist <= 0` 分支在本语料**不可达**,
+  删掉它**全绿**,**只被源码钉买到** —— 那正是当初 0/0 进来的洞的形状。
+  ⚠️ **不要在开工自检的 Lua 套件还在跑时开变异台**(共用工作树,自检读到半份文件;
+  烟枪 `replay_fixture.lua:1480: attempt to index local 'J' (a boolean value)`)。
+  静默复跑后污染红清零,只剩 `test_stayfield2_marginal_domain` —— **HEAD 上逐字相同,
+  既存 trunk 红不是本轮的**(GH #751 族)。
+  产出:`tests/test_tpdefnan_tower_tp_landing.lua` **7/7**、
+  `tools/agent/mutstand_tpdefnan.sh` **9/9 STAND GREEN**、`state.json:tpdefnan_20260912`;
+  报告 `iterations/reports/strategy/20260912T080000Z.md`。
+  铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` /
+  `lua gate: 346 ran, 0 findings, 9 known-red`。armed 串未动,**零 AWS**。
+  ⛔ **入集的球在总监**(`test_set.md:108/109`);P4.2 冻结期内本组不提入集、不催。)
 
 - 2026-09-12T05:02Z(**定价了但没落地的一轮,而这本身是产出**。工作流第 1 步扫 open
   `[strategy]` issue:#760 本语料买不到(fixture 是一个瞬间,`GetVelocity` mock 恒 0、

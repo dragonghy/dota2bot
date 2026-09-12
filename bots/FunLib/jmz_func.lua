@@ -4541,6 +4541,62 @@ function J.GetNearbyLocationToTp( nLoc )
 end
 
 
+-- [GH #539] WHERE A DEFENCE TP LANDS WHEN THE THING BEING DEFENDED IS A TOWER.
+--
+-- J.GetNearbyLocationToTp above answers "575u from the nearest allied tower,
+-- TOWARD nLoc". Eight of its nine shipped call sites pass an ally / laneFront /
+-- Roshan / Tormentor / fight point / target, so that tower and nLoc are distinct
+-- units apart and the direction is defined. The midtp/suptp wiring
+-- (ability_item_usage_generic.lua, J.ShouldTpSupportTowerFight) passes A TOWER'S
+-- OWN LOCATION, and then:
+--   * the i=0..10 loop picks the allied tower nearest nLoc -- which is that same
+--     tower, at distance 0, so minDist == 0;
+--   * the watch-tower branch needs `< minDist - 1300` = `< -1300` and is now
+--     unsatisfiable;
+--   * J.GetLocationTowardDistanceLocation( tower, tower:GetLocation(), 575 )
+--     computes ( towerLoc - towerLoc ) / 0 = 0/0 = Vector(-nan,-nan,-nan).
+-- NaN survives the caller's `~= nil` check and reaches
+-- Action_UseAbilityOnLocation with no nil/NaN/bounds test anywhere on the path,
+-- so neither candidate can deliver the behaviour it wrote down. Measured on the
+-- W48 corpus: 18 of the 22 tower slots sit >=3260u from their own fountain, i.e.
+-- outside the `<= 2500` early return that is the only thing keeping the four
+-- base towers finite -- and "a lane tower being collapsed on" is exactly the
+-- case the change exists to answer.
+--
+-- THE CUT IS NARROW ON PURPOSE. Repairing J.GetNearbyLocationToTp itself would
+-- reach all nine call sites; the degenerate input is produced by exactly one of
+-- them, and that one already sits behind the unpromoted 'midtp'/'suptp' gates.
+-- So this helper inherits those gates instead of adding a new id -- a nested
+-- J.IsSoakCandidate here would read `(midtp or suptp) AND <new>` and a wave
+-- arming <new> alone would measure a structurally impossible 0 that
+-- check_armed_wiring.py still calls WIRED (GH #606, test_set.md 0OVERCHASE).
+--
+-- DIRECTION: toward OUR OWN fountain, i.e. 575u BEHIND the tower being defended.
+-- The shipped 575 is kept, not retuned. A defender who arrives by TP should
+-- appear on his own side of the building, under its protection, rather than
+-- ahead of it among the heroes who are diving it -- standard defensive-TP play
+-- (verification philosophy condition (c)). The tower-to-fountain direction is
+-- always defined: no tower stands on a fountain (the nearest, a base tower, is
+-- ~2300u away), and the `nDist <= 0` branch below states that rather than
+-- assuming it, because assuming it is how the 0/0 above got written.
+function J.GetTowerDefenseTpLocation( hTower )
+
+	if hTower == nil then return nil end
+
+	local vFountain = J.GetTeamFountain()
+	if vFountain == nil then return nil end
+
+	local vTower = hTower:GetLocation()
+	if vTower == nil then return nil end
+
+	local nDist = J.GetLocationToLocationDistance( vTower, vFountain )
+	if nDist <= 0 then return vTower end
+
+	return J.GetLocationTowardDistanceLocation( hTower, vFountain, 575 )
+
+end
+
+
 function J.IsEnemyFacingUnit( bot, nRadius, nDegrees )
 
 	local nLoc = bot:GetLocation()
