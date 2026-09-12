@@ -705,6 +705,100 @@ function X.lion_IsFieldImpaleEngagementOk()
 end
 
 
+--- The wall clock on X.ConsiderQ's 推线 (lane-push) firing point, and the
+--- turbo-only halving of it.  Written as two named constants so a test mirrors
+--- the NUMBERS off the source instead of re-typing them (the stale-mirror
+--- family, tests/test_cast_ring_mirror_discipline.lua).
+X.nQLanePushClockShipped = 9 * 60
+X.nQLanePushClockTurbo   = 4.5 * 60
+
+
+--- The wall-clock curfew on X.ConsiderQ's 推线 firing point.  Soak candidate
+--- `lionpushclock` (turbo-only, INERT until armed).  STANDALONE: this function
+--- holds exactly one J.IsSoakCandidate call and it names only its own id.
+---
+--- ⭐ THE DEFECT.  `DotaTime() > 9 * 60` is the ONLY wall-clock COMPARISON
+--- anywhere in bots/BotLib/hero_lion.lua -- the file's two other DotaTime()
+--- reads are cast-timestamp bookkeeping (`lastCastQTime`), a recency test and
+--- not a curfew, and the test counts all three rather than asserting the
+--- distinction in prose.  9 minutes is a NORMAL-MODE constant standing in front
+--- of a branch whose OWN enabling condition, `nSkillLV >= 4`, this file's own
+--- ability build satisfies at hero level 8:
+---
+---     tAllAbilityBuildList = { {1,3,1,2,3,6,1,1,3,3,6,2,2,2,6} }
+---                              ^   ^     ^ ^
+---                          lv1 |   |     | `-- lv8: Impale RANK 4 (maxed)
+---                              |   |     `---- lv7: rank 3
+---                              `---`---------- lv1/lv3: ranks 1-2
+---
+--- (Row index is hero level only up to 9 -- J.Skill.GetSkillList spends levels
+--- 10 and 15 on talents, GH #134 -- and index 8 is inside that prefix, so no
+--- correction applies here.  The test drives the real skill list anyway.)
+--- In Turbo, where XP is doubled, level 8 arrives well inside the window this
+--- clock closes, so the branch's payoff channel is at FULL rank for several
+--- hero levels while the branch itself is refused.
+---
+--- ⚠️ WHAT THE CLOCK IS NOT, checked rather than assumed (the test counts it).
+--- It is not a mana policy: the same conjunction already carries
+--- `J.IsAllowedToSpam( bot, nManaCost )`, which is this tree's own mana
+--- rationer (jmz_func.lua: it keeps fKeepManaPercent of max mana AFTER the
+--- cast), so a second, time-shaped rationer on the same `if` would be rationing
+--- twice.  It is not a safety term either: the same conjunction already carries
+--- `#hEnemyList == 0` (no enemy hero in the cast ring) and `#hAllyList <= 2`,
+--- which are the DIRECT measurements of "is it safe to stand here and clear a
+--- wave".  As with `cmtfclock` (GH #758) and `axecallclock` (GH #788), the
+--- proxy sits beside the measurement and overrides it.
+---
+--- ARMED: 4.5 * 60, the shipped number halved.  The 2x is not invented here --
+--- it is this repo's own stated Turbo pace ratio (docs/PROJECT.md: ~20 minute
+--- games against ~35-40).  Halving rather than REMOVING is deliberate and is
+--- the narrow change: whether this branch should carry a clock at all is a
+--- second question, and conjoining the two would make one wave reading
+--- unattributable to either.
+---
+--- ⚠️ DIRECTION: THIS IS A WIDENING, and it is the first thing a reader needs.
+--- Every t past 9:00 is also past 4:30, so the armed predicate is a strict
+--- SUPERSET of the shipped one: arming can only ADD 推线 Impales, inside the
+--- window (4:30, 9:00], and can never remove one or move one onto a different
+--- location.  Gate off (or non-turbo) the function is literally
+--- `DotaTime() > 9 * 60`.
+---
+--- ⚠️ HONEST BOUNDS, four, none of them rhetorical:
+---   1. ⛔ END-TO-END DOMAIN IS 0 AND CANNOT BE ANYTHING ELSE TODAY.  The branch
+---      also requires `#laneCreepList >= 5` off `bot:GetNearbyLaneCreeps`, and
+---      the fixture corpus carries NO non-hero units at all (GH #772: 1410/1410
+---      dumped units are heroes).  So no archived frame can drive this branch
+---      to its `return`.  What IS measured is the GATE-LAYER domain -- the
+---      clock's own answer on real frames at real DotaTime() -- which is the
+---      half this lever changes.  Quoting the two as one number would be an
+---      execution verification out of thin air.
+---   2. GATE-LAYER DOMAIN, stated as the number it is: over the 14 Lion-subject
+---      instants in tests/fixtures/ + tests/frames/, exactly 5 sit inside
+---      (4:30, 9:00] -- t = 278.0, 299.2, 307.4, 314.0 and 419.0.  Those are
+---      the frames on which shipped refuses on the clock and armed does not.
+---      The other 9 answer identically on both legs (3 below 4:30 where BOTH
+---      refuse, 6 past 9:00 where BOTH admit), which is what makes the
+---      direction claim above an assertion over the corpus rather than a hope.
+---   3. A corpus count is a DOMAIN, not a frequency.  How often a real Turbo
+---      game puts Lion beside a 5-creep wave with no enemy hero in the ring and
+---      at most 2 allies inside (4:30, 9:00] is a wave question
+---      (iterations/queue.json hero-69).
+---   4. This lever does NOT touch the branch's other conjuncts, and in
+---      particular not `nSkillLV >= 4`, not `not bot:HasScepter()` and not the
+---      `[glyphany]` veto that already lives in the branch body; one lever at a
+---      time, and a second id on the same `if` would make either unattributable.
+function X.lion_IsLanePushClockOpen()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'lionpushclock' )
+	then
+		return DotaTime() > X.nQLanePushClockTurbo
+	end
+
+	return DotaTime() > X.nQLanePushClockShipped
+
+end
+
+
 function X.ConsiderQ()
 
 
@@ -824,7 +918,7 @@ function X.ConsiderQ()
 	--Push
 	if ( J.IsPushing( bot ) or J.IsDefending( bot ) or J.IsFarming( bot ) )
 		and J.IsAllowedToSpam( bot, nManaCost )
-		and nSkillLV >= 4 and DotaTime() > 9 * 60
+		and nSkillLV >= 4 and X.lion_IsLanePushClockOpen()
 		and #hAllyList <= 2 and #hEnemyList == 0
 		and not bot:HasScepter()
 	then

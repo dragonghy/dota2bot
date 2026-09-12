@@ -226,8 +226,23 @@ tests['[census] every DotaTime minute gate multiplies by 60, except two'] = func
     -- hypothetical: `* 60` is still the house idiom for a minute, and the
     -- population this ruling rests on is the inline SPELLING of it, which is
     -- shrinking for a reason that has nothing to do with the idiom.
-    assert(by_sixty >= 125, string.format(
-        'the N*60 population fell to %d (recorded 125). This ruling rests on '
+    --
+    -- 125 -> 124, 2026-09-12 (hero, `lionpushclock`).  SAME CAUSE, THIRD
+    -- INSTANCE IN TWO DAYS, re-derived rather than assumed: hero_lion.lua
+    -- X.ConsiderQ's 推线 curfew used to read `DotaTime() > 9 * 60` inline and
+    -- now reads `DotaTime() > X.nQLanePushClockShipped`, with that constant
+    -- still `9 * 60` on a line this pattern cannot see.  The minute gate was
+    -- NAMED, not removed.
+    -- ⭐ THREE IS A PATTERN, SO READ IT AS ONE: this census's floor is now
+    -- tracking the wall-clock-curfew census the hero desk is walking through
+    -- the focus five (cmtfclock / axecallclock / lionpushclock), and every one
+    -- of those rounds names its clock on the way past.  A shrink here is
+    -- EXPECTED while that walk continues and is evidence about SPELLING, never
+    -- about the idiom.  What would be evidence against the idiom is a new
+    -- inline minute gate written some OTHER way -- which this assertion cannot
+    -- see at all, and that limit is the reason the floor is a floor.
+    assert(by_sixty >= 124, string.format(
+        'the N*60 population fell to %d (recorded 124). This ruling rests on '
         .. '"* 60 is the house idiom"; if that population shrank, re-derive it '
         .. '-- and check first whether the site was NAMED rather than removed.',
         by_sixty))

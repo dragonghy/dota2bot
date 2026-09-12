@@ -22,6 +22,60 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-161. ✅ **`-160` 第 1 条执行了:主体在 `bots/`,继续形状 census —— 但本轮换的是**作用域**不是形状,
+   而那更便宜** —— 本轮(报告 `iterations/reports/hero/20260912T225717Z.md`)落地
+   **`lionpushclock`**(Lion,gated,turbo-only,**加宽**)。
+   ⭐ **缺陷形状:`-159` 立「整点宵禁」这条筛时,census 的作用域是**一个文件**(「`hero_axe.lua` 里
+   唯一的一座整点钟」);同一条 grep 跑过焦点五英雄,`hero_lion.lua` 的 `X.ConsiderQ` 推线出价点里
+   还站着一座没人看过的 —— `DotaTime() > 9 * 60`。**
+   同一个 `if` 里已经有 `J.IsAllowedToSpam( bot, nManaCost )`(`jmz_func.lua:2119`,施法**后**仍留
+   `fKeepManaPercent`)⇒ 时间形状的第二个配给器是配给两遍;同一个 `if` 里已经有 `#hEnemyList == 0`
+   与 `#hAllyList <= 2`(直接量度)⇒ 代理坐在量度旁边并压过它,与 `cmtfclock`(GH #758)、
+   `axecallclock`(GH #788)逐字同形。而支路**自己**写着收益前提 `nSkillLV >= 4`,本文件加点行
+   `{1,3,1,2,3,6,1,1,3,3,6,2,2,2,6}` 在**英雄 8 级**满 Impale ⇒ Turbo 双倍经验下前提成立了
+   好几个英雄等级,而支路还关着。
+   id 登记 `state.json:lionpushclock_20260912`;取证请求 `queue.json:hero-69`(零 EC2);
+   测试 `tests/test_lion_q_lane_push_clock.lua`(**14 绿**),变异台
+   `tools/agent/mutstand_lionpushclock.sh`(**10/10**)。
+   - ⛔ **第一条,本轮最该被人读到的 —— 一个跨英雄的 census 便宜到几乎免费,而上一轮把同一句话
+     只问了一个文件。** `-159` 的结论句是「**`bots/BotLib/hero_axe.lua` 里**唯一的一座整点钟」,
+     那句话**逐字是对的**;错的是**没有人把作用域从它上面摘下来再问一遍**。摘下来的代价是
+     一条 grep 跑五个文件,收益是一根落地的杠杆 + 三根当场量掉 + 一根挂起(见下)。
+     ⇒ **凡是带「这个文件里唯一/仅有/没有」的已登记结论,下一轮都该问一句:换成五个文件还成立吗。**
+   - ⚠️ **第二条 —— 「唯一一座钟」必须分两类数,不能只数总数。** Lion 代码里(剥注释)有 3 处
+     `DotaTime()`,其中 2 处是 `lastCastQTime` 的**时间戳记账**(`lastCastQTime > DotaTime() - 0.8`
+     是 recency 测试不是宵禁)。测试 §5.1 因此钉**算术**(落地后 4 = helper 2 + 记账 2)**并且同时**
+     钉 `lastCastQTime` 出现 3 次 —— 只钉总数的话,「唯一」这个词会被记账那一族悄悄满足。
+     与 `-160` 第二条(普查数到了修复自己的注释)同族:**普查的谓词要能把冒名者挑出来,不只是计数**。
+   - ⛔ **第三条 —— 本轮自己顶红了一条 ratchet,同一工作单元内修回,而修法是「把三例读成一件事」。**
+     `tests/test_ckpush_minute_unit.lua` 的 `N*60` 普查从 125 掉到 124,因为该普查要求
+     **字面量与比较在同一个表达式里**,而本轮把宵禁**命名**成了 `X.nQLanePushClockShipped`。
+     这是两天内**第三例**(cmtfclock 127→126、axecallclock 126→125、本轮 125→124)⇒
+     不是重新基线化,而是登记:**该普查的地板现在跟着英雄组正在走的宵禁 census 走**,期间的下降
+     是关于**拼写**的证据、永远不是关于「`* 60` 是不是 house idiom」的证据。
+     ⚠️ **推论给下一轮**:只要还在走这条 census,**每落一根就会再顶它一次**,当轮修回,不要留给下一个组。
+   - ⛔ **第四条 —— `-160` 第一条(变异台 baseline 必须是失败集合)照做了,而最便宜的做法是
+     把过滤器收成单文件。** `lion` 过滤器干净树带 7 条存量红 ⇒ 在那棵树上「exit != 0」与
+     「变异体被抓到」是两件事**而长得一模一样**。单文件过滤器让 baseline 是**真绿**(14/0),
+     `score` 的前提才成立。本轮实测 `lua5.1 tests/run_tests.lua lion` = 280 tests / 7 failures,
+     逐文件 **6 + 1**,与 `-160` 记录逐条相同,**新增 0 条**。
+   - **卫生债当轮还清**:新测试的 `io.popen` 目录 walk 已登进 `tests/test_bots_walk_farm_only.py`
+     手读名单(GH #774);实跑 `8 checks, 0 failed`。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **这条筛在焦点五英雄上还剩一根:`hero_crystal_maiden.lua` :1772/:1794 的
+        `DotaTime() > 10 * 60`。本轮看过、没落,理由在这里免得重走** —— 它是一个**析取**的一半
+        (前 10 分钟只放行非兵线单位,10 分钟后连兵线兵一起放),**不是**坐在直接量度旁边的合取项
+        ⇒ 「代理压过量度」那套论证**直接搬过去是错的**;价值论证也另起(CM 拿单体控 W 点兵线兵,
+        先回答蓝耗与控制留手)。**先有价值论证再动它**,不是先有形状。
+        ⚠️ 已量掉的别重开:`-154` 九 + `-155` 三 + `-156` 四 + `-157` 四 + `-158` 四 + `-159` 六 +
+        `-160` 一 + 本轮(五文件宵禁 census:Zeus 的 `DotaTime() > 0` 不是宵禁、WK 零处、
+        Axe 已 gated、Lion 落地、CM 挂起)。
+     2. **`lionpushclock` 的下一棒不在本组**:`hero-69` 的域频率读数出来之前,不要在 `X.ConsiderQ`
+        上再开 id —— 这个函数已经有 `lionqfight` / `glyphany` / 本 id 三条,而它的推线支路在语料里
+        **端到端一次都驱动不了**(GH #772:1410/1410 是英雄,`#laneCreepList >= 5` 买不到)。
+     3. GH **#785**(Lion `X.MayKillTarget` 形参只守约一半)仍开着 —— **卫生不是行为**,
+        按 P4.4 只能当附带项,不能当工作单元主体。
+
 -160. ✅ **`-159` 第 1 条执行了:主体在 `bots/`,而「形状 census」这条新筛法第一次按它走,一次就落地** —— 本轮
    (报告 `iterations/reports/hero/20260912T201939Z.md`,**GH #791**)落地
    **`lionwreach`**(Lion,gated,turbo-only,**收窄**)。
@@ -7070,6 +7124,52 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-12T22:57Z(报告 `iterations/reports/hero/20260912T225717Z.md`;**backlog:新开 `-161`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`lionpushclock`(Lion,gated,turbo-only,未 armed,方向=**加宽**):
+  `-159` 把「整点宵禁」写成「`hero_axe.lua` 里唯一的一座钟」,而那句话的作用域是**一个文件**;
+  同一条 grep 跑过焦点五英雄,`hero_lion.lua` 里还站着一座没人看过的。**
+  - **缺陷**:`X.ConsiderQ` 推线出价点的 `DotaTime() > 9 * 60`。同一个 `if` 里已经有
+    `J.IsAllowedToSpam( bot, nManaCost )`(`jmz_func.lua:2119`,施法**后**仍留
+    `fKeepManaPercent` 的配给器)⇒ 时间形状的第二个配给器是配给两遍;同一个 `if` 里已经有
+    `#hEnemyList == 0` 与 `#hAllyList <= 2`(「站这儿清兵安不安全」的**直接量度**)⇒
+    代理坐在量度旁边并压过它,与 `cmtfclock`(GH #758)、`axecallclock`(GH #788)逐字同形。
+    而支路**自己**写着它的收益前提 `nSkillLV >= 4`,本文件加点行
+    `{1,3,1,2,3,6,1,1,3,3,6,2,2,2,6}` 在**英雄 8 级**就满 Impale ⇒ Turbo 双倍经验下
+    前提成立了好几个英雄等级,而支路还关着。
+  - ⭐ **本轮换的不是形状是作用域,而这比换形状便宜**:`-159` 的 census 是
+    `grep DotaTime() hero_axe.lua`(一个文件);同一条 grep 跑五个文件,一次落到唯一一处
+    没被看过的**比较型**宵禁。⚠️ 数的时候要**分两类**:Lion 另外两处 `DotaTime()` 是
+    `lastCastQTime` 的**时间戳记账**(recency 测试不是宵禁),测试 §5.1 因此钉的是
+    **算术**(4 = helper 2 + 记账 2)**并且同时**钉 `lastCastQTime` 出现 3 次 ——
+    只钉总数的话,「唯一」会被记账那一族悄悄满足。
+  - **落地**:helper `X.lion_IsLanePushClockOpen()` + 具名常数
+    `X.nQLanePushClockShipped = 9 * 60` / `X.nQLanePushClockTurbo = 4.5 * 60`(**只减半不删**);
+    id 登记 `state.json:lionpushclock_20260912`;取证请求 `queue.json:hero-69`(**零 EC2**);
+    测试 `tests/test_lion_q_lane_push_clock.lua`(**14 绿**),变异台
+    `tools/agent/mutstand_lionpushclock.sh`(**10/10**)。
+  - ⛔ **本轮自己顶红了一条 ratchet,同一工作单元内修回**:`tests/test_ckpush_minute_unit.lua`
+    的 `N*60` 普查(125→124)。原因该文件自己写在断言上方 —— 它要求**字面量与比较在同一个
+    表达式里**,而本轮把宵禁**命名**了。这是两天内**第三例**(cmtfclock 127→126、
+    axecallclock 126→125、本轮 125→124)⇒ 修法不是重新基线化,是**把三例读成一件事**:
+    该普查的地板现在跟着英雄组正在走的宵禁 census 走,期间的下降是关于**拼写**的证据、
+    不是关于 house idiom 的证据。这一段推导写进了注释。
+  - ⛔ **`-160` 第一条的处置照做了,用的是最便宜的办法:变异台过滤器收成单文件。**
+    `-160` 实测 `lion` 过滤器干净树带 7 条存量红 ⇒ 在那棵树上「exit != 0」与「变异体被抓到」
+    长得一模一样。单文件过滤器让 baseline 是**真绿**,`score` 的前提才成立。
+    本轮 `lua5.1 tests/run_tests.lua lion` = 280 tests / **7 failures**,逐文件计数
+    **6 + 1**,与 `-160` 记录逐条相同,**本轮新增 0 条**。
+  - **⭐ 下一轮最该做的两件,按顺序**:
+    1. ⭐ **这条筛在焦点五英雄上还剩一根:`hero_crystal_maiden.lua` :1772/:1794 的
+       `DotaTime() > 10 * 60`。本轮看过、没落,理由写清了免得重走** —— 它是一个**析取**的
+       一半(前 10 分钟只放行非兵线单位),不是坐在直接量度旁边的合取项,
+       ⇒ 那套「代理压过量度」的论证**直接搬过去是错的**;价值论证也另起
+       (CM 拿单体控 W 点兵线兵,要先回答蓝耗与控制留手)。**先有价值论证再动它。**
+       ⚠️ 已量掉的别重开:`-154` 九 + `-155` 三 + `-156` 四 + `-157` 四 + `-158` 四 +
+       `-159` 六 + `-160` 一 + 本轮(五文件宵禁 census,四根量掉、一根落地、一根挂起)。
+    2. **`lionpushclock` 的下一棒不在本组**:`hero-69` 的域频率读数出来之前,不要在
+       `X.ConsiderQ` 上再开 id —— 这个函数已经有 `lionqfight` / `glyphany` / 本 id 三条,
+       而它的推线支路在语料里**端到端一次都驱动不了**(GH #772)。
 - 2026-09-12T20:19Z(报告 `iterations/reports/hero/20260912T201939Z.md`,**GH #791**;**backlog:新开 `-160`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`lionwreach`(Lion,gated,turbo-only,未 armed,方向=收窄):

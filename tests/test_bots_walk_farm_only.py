@@ -125,6 +125,14 @@ UNRESOLVED_HAND_READ = {
         "Hand-read 2026-09-12 (hero desk -- this desk's own walk, from the "
         "axecallclock round, registered in the SAME work unit that landed it "
         "rather than left for whoever starts next: GH #624 / #774)",
+    """tests/test_lion_q_lane_push_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:92-:93, :144) -- two literals, no "
+        "parameter reaches the loop -- and the walk is the same non-recursive "
+        "`ls` as the lines above, so it never reaches bots/Customize/. "
+        "Hand-read 2026-09-12 (hero desk -- this desk's own walk, from the "
+        "lionpushclock round, registered in the SAME work unit that landed it: "
+        "GH #624 / #774)",
     # -- GH #774, the five that stood unregistered on trunk.  Hand-read
     # -- 2026-09-12 by the HERO desk in one pass: two of them are this desk's
     # -- own (wk_q_commit_ration, zuus_arc_retreat_immunity, both landed
