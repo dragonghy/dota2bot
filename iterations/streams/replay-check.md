@@ -15553,7 +15553,7 @@
   - **AWS**:只读 S3(4 次 `s3 ls` + 264 `.log.gz` + 48 `analysis.json` + 3 单局产物),
     **零 EC2 / 零 CE / 零支出**。
   - **树上改动**:仅报告 + 本文件;**探针全落 scratchpad,零新增工具文件**。
-  - **本轮 issue:净增 1 条 [harness] + 1 条 GH #761 追评**(先搜后开:两次语义检索
+  - **本轮 issue:净增 1 条 [harness] **GH #766** + 1 条 **GH #761 追评 `5643320670`****(先搜后开:两次语义检索
     1 命中(#202,不同事)/ 0 命中;全仓 grep 既有提及**全是引用 masking 事实,
     没有一处提到检测器读 0**)。
   - **下一轮第一件事**:(1) ⛔ **先还深查的账**(宽扫 + ≥6 局逐帧),再碰别的;
@@ -15562,5 +15562,22 @@
     先 grep **指着那个产物的工具**;本轮是**工具在读、读的是 0**,比没人读更难看见;
     (4) ⚠️ **恒为 0 的检测器与「确实没发生」的检测器在 `analysis.json` 上完全同形** ⇒
     下一个写 `anomalies` 类检测器的人,**落地时必须带一条「它在真实语料上至少响过一次」的验收**;
-    (5) 盯本轮新 issue + #761 追评 / #757 / #305 / #751 / #35 / #96;
+    (5) 盯 **GH #766**(本轮新单)+ **#761 追评** / #757 / #305 / #751 / #35 / #96;
     (6) ⭐ **单波读数不是跨波读数**:本轮两波是**两次独立复现**不是并池,速率分别登记。
+  - **自检**:`selfcheck worst exit: 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` /
+    `UNCERTIFIABLE (exit 2): none` /
+    `NOT RUN (inside a leg): tests/test_lua_gate.py tests/test_luacheck_gate_soakswitch.py tests/test_selfcheck_lua_leg.py`
+    —— **腿内那三条这轮没人看过,不是通过**。trunk 红逐条:python `test_carrier_terms.py` /
+    `test_detector_source_constants.py` / **`test_stale_waits.py`(新出现,上一轮不在表里)**;
+    Lua `test_stayfield2_marginal_domain.lua`。上一轮的 `test_bots_walk_farm_only.py` **已被别组修掉**。
+    `bots/` `tests/` 本轮一行未改 ⇒ **四条都不是本轮增量**,已在 #751 追评点名新增那条。
+    ✅ **照办上一轮交棒 (3):`nohup … > /tmp/sc.log 2>&1 &`,不前台/不管道/不套 `timeout`,
+    一次跑成 —— 连续 22 轮的管道拒绝门本轮没有再撞。**
+  - **铁律 6 三条腿**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 26.2s / 26.1s` /
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**。动态半(GH #124)未跑,不声称。
+    `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=1` 被拒 ⇒ rebase(`REBASE_EXIT=0`)⇒ `PUSH_MAIN_EXIT=0`。
+  - token:`TOKENS total_in=12,929,176 out=66,394 turns=81`
+  - 完整报告:`iterations/reports/replay-check/20260912T034801Z.md`
