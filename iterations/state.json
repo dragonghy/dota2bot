@@ -8434,5 +8434,19 @@
     "artifacts": "tests/test_arbheart_host_bid_role_gate.lua 11/11(实测 0.45s);tools/agent/mutstand_arbheart_hostbid.sh 7/7 CAUGHT 0 SURVIVED(三个 oracle 变异 M5/M6/M7 各由不同断言抓住——本读数三条主结论全是否定式,一个什么都不匹配的量具会把每一条免费证成);报告 iterations/reports/strategy/20260912T103947Z.md。armed 串/queue.json/test_set.md 未动,零 AWS。",
     "next_baton": "给 arbheart 的 (a) 买一枚能自证域的帧,判据窄到可写进取帧请求:subject 是 core(pos<=3,IsTimeToFarm 真)且离目标营足够近以致真 ClosestCamp 会为他闩上它,同时队友在营 800u 内 IsFarming。入集/退集/是否 promote 是总监的球(P4.2 冻结期,本组不提不催)。",
     "side_notes": "(1) 这枚 fixture 的 roles 键写了两遍(两块逐字相同,Lua 后者覆盖前者,本轮无害),47 个带 roles 的 fixture 里只有这一个——生成器能写两遍,下一次内容不同就是静默丢数据,建议 [harness] 立一条。(2) 既存 trunk 红 test_activemode_world_assertion.lua:368(97/1031 vs 钉 96)在 HEAD 干净 worktree 上逐字复现,不是本轮的(GH #751 族)。"
+  },
+  "zusboltimm_20260912": {
+    "owner": "hero",
+    "date": "2026-09-12T11:xxZ",
+    "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
+    "backlog_item": "hero -156 第 1 条(P4.4 (i):工作单元主体是一个 bots/ 行为改动)。按 -156 的两道筛选杠杆:(a) **不碰小兵**(语料 1410/1410 是英雄 ⇒ 小兵支路由构造证不了,`state.json:CORPUS_HAS_NO_NONHERO_UNITS_20260912`);(b) **不以高 hero-level 为地板**(1-13 级占 82.5%)。本 lever 读的是**目标英雄的一个 modifier**,两道筛都过。",
+    "headline": "⭐ **`zusarcimm` 把自己的作用域写死在一个调用点上,而同一个文件里那个选择器有三个读者 —— 这是第二个。** `X.ConsiderW` 撤退支路和 `X.ConsiderQ` 撤退支路用的是同一个 `J.GetVulnerableWeakestUnit`(委托给只筛**攻击免疫**族的 `J.GetAttackableWeakestUnitFromList`),把答案交给一个不穿法术免疫的单体魔法技能。⭐ **为什么另开一个 id 而不是把 `zusarcimm` 改宽**:同一个错误在 Bolt 上**不是同一个数** —— odota/dotaconstants(2026-09-12 读)`zuus_arc_lightning` cd **1.6** / 蓝 **85-100** vs `zuus_lightning_bolt` cd **6** / 蓝 **120-135** ⇒ ~1.4 倍蓝、**3.75 倍冷却**,而且花在 Zeus 最付不起的那一帧上。两个 id 也让两份波读数各归各的射击点。",
+    "defect": "bots/BotLib/hero_zuus.lua X.ConsiderW 撤退支路(`J.IsRetreating(bot) and bot:WasRecentlyDamagedByAnyHero(2.0)`)对 `J.GetVulnerableWeakestUnit` 返回的目标只再问 `J.CanCastOnTargetAdvanced`,没有任何法术合法性项;而该守卫对法免目标实测答 **true** ⇒ 缺项后面没有第二道防线。Lightning Bolt `bkbpierce: No`。",
+    "fix": "gated helper `X.zuus_IsBoltTargetSpellVulnerable`(turbo-only,id `zusboltimm`)。闸关 = `true`,出货支路逐字节不变;闸开 = `J.CanCastOnNonMagicImmune( hTarget )`。**方向是代码的性质**:只往一条已经答过的谓词上再 AND 一个合取项 ⇒ 只能**删**一次施法,永不加。⭐ **t25 豁免(刻意的,不是遗漏)**:`X.SkillsComplement` 在 `talent7`(AoE Lightning Bolt,+325)已学时把这同一个 bid 改派成 `ActionQueue_UseAbilityOnLocation` ⇒ 地面施法世界里一个法免的**瞄点**照样把 325 圈的伤害交给别人,拒绝就变成一个没人量过的 splash 主张。armed 腿因此豁免 talent7 世界 —— 这是**把收窄再收窄**,保证 armed 在**每一个**世界都是 shipped 的真子集(方向论证正是靠这条)。",
+    "domain": "全语料实测(tests/fixtures/ + tests/frames/,gate 全关,Zeus 作主体,魔免按**每帧自己的 modifier 列表**读):60 个存活 Zeus 帧 → **56 帧 Bolt 已学** → **16 帧该选择器在 Bolt 的圈上返回任何目标** → 2 帧圈内有法免敌人 → **1 帧返回的就是那个法免敌人**:`tests/frames/f_260909_215227_zeus_exec_od_1467.lua`,obsidian_destroyer 带 `modifier_black_king_bar_immune`,**388.7u**,590 hp,在该帧自己的 **850u** Bolt 射程内,且 `J.CanCastOnTargetAdvanced` 答 **true**。⚠️ **与 `zusarcimm` 是同一帧,但不是同一个漏斗**:圈不同(Arc 的 cast range vs Bolt 的 700/750/800/850,所以 picked 是 16 不是 15)、已学计数不同(56 vs 57)。语料里只有**一个**「撤退中的 Zeus 面对 BKB」的瞬间,两条 id 在它上面都会开火 —— ⛔ **不得当成两次独立目击**。",
+    "tests": "tests/test_zuus_bolt_retreat_immunity.lua(14 例全绿)。变异台(按 evidence-discipline:文件副本恢复,恢复后逐字节 diff 为空且复跑全绿)四发全中:M1 闸关腿改成 armed 答案 → 2 红;M2 armed 腿改成 `true` → 3 红;M3 删调用点 → 1 红(§4 wiring);M4 删 t25 豁免 → 1 红(§4 carve-out,该例真驱动 `talent7` 句柄,不是读源码字符串)。",
+    "limits": "(i) `J.IsRetreating` 是 mode 谓词,fixture 世界恒假(GH #474)⇒ 语料能证的是**选择器**的答案,不是**支路**开火;§4 有断言钉住这条限制。(ii) ⛔ `tests/mock/replay_fixture.lua` 不把 `IsMagicImmune()` 接到它自己已经带着的 modifier 列表上(GH #769)⇒ 本杠杆离线是 no-op,§5 直接断言这个缺口,修好那天它自己报红并点名。(iii) 1 帧是**域**不是频率,且这一帧与 `zusarcimm` 共享。(iv) t25 豁免本身在语料上几乎恒假(≥25 级只有 8/263 焦点实例),它是按**代码的派发**论证的,不是按频率。",
+    "next": "queue.json:hero-65(零 EC2 归档扫描,与 hero-63 同形、可并进同一次遍历)。第三个调用点 `X.ConsiderW2:1353` **刻意不动**(地面施法,需要一份没人取过的 splash 读数),由 `tests/test_zuus_bolt_retreat_immunity.lua` §4 的一条断言钉住「它仍然没有被这条 helper 守住」。",
+    "issue": "GH #776(本轮开)"
   }
 }

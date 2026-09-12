@@ -372,7 +372,25 @@ local STRUCTURAL_CENSUS = {
     lion = 1,              -- talent8 (t25), read once inside X.IsHexAoe()
     skeleton_king = 2,     -- the two X.ConsiderW release disjuncts
     warlock = 2,           -- one of them is `talent6:IsTrained() and false`
-    zuus = 1,              -- picks UseAbilityOnLocation vs UseAbilityOnEntity
+    -- 2026-09-12, hero group: 1 -> 2.  The second site is the t25 carve-out in
+    -- X.zuus_IsBoltTargetSpellVulnerable (soak candidate `zusboltimm`), and it
+    -- is here rather than merely counted because this census asks the two
+    -- questions above by name:
+    --   * DOES THIS HERO'S OWN BUILD TRAIN IT?  Yes.  hero_zuus.lua's
+    --     tTalentTreeList takes t25 {0,10} == index [7], the same handle the
+    --     pre-existing site binds, so both rows are LIVE from level 25.
+    --   * WHAT DOES THE BRANCH DO WHEN IT IS TRAINED?  It returns the SHIPPED
+    --     answer (`true`), i.e. the lever switches itself off.  That is not
+    --     timidity: the site it guards is the very dispatch the other row
+    --     names -- trained talent7 turns this bid into a GROUND cast, where a
+    --     spell-immune aim point still delivers the 325u splash to everyone
+    --     else, so declining would be an unmeasured claim about splash.  The
+    --     two rows are therefore ONE decision read in two places, and they
+    --     must move together: repointing the SkillsComplement dispatch without
+    --     repointing the carve-out would silently leave the guard refusing
+    --     ground casts.
+    zuus = 2,              -- [7]: the UseAbilityOnLocation/OnEntity dispatch,
+                           -- and the `zusboltimm` carve-out that mirrors it
 }
 -- Read of the census, recorded with it 2026-08-22: three of the six non-WK heroes
 -- (legion_commander, lion, zuus) use the handle to choose GROUND-cast over

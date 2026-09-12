@@ -1147,6 +1147,114 @@ function X.GetBoltRangedKillDamage( hAbility )
 end
 
 
+--- Soak candidate `zusboltimm` (turbo-only, INERT until armed) -- written
+--- 2026-09-12 under OWNER_PRIORITIES P4.4 (i).
+---
+--- THE DEFECT IS THE ONE `zusarcimm` NAMES, AT THE SECOND OF ITS THREE CALL
+--- SITES IN THIS FILE, AND THAT IS THE WHOLE POINT OF LANDING IT SEPARATELY.
+--- X.ConsiderQ's retreat branch (:981), X.ConsiderW's retreat branch (below)
+--- and X.ConsiderW2's kill-AoE branch (:1353) all elect a target through
+---
+---     J.GetVulnerableWeakestUnit( bot, true, true, <ring> )
+---
+--- which delegates to J.GetAttackableWeakestUnitFromList -- the ATTACK-immunity
+--- family (IsAttackImmune / IsInvulnerable / HasForbiddenModifier /
+--- IsSuspiciousIllusion) and never a word about SPELL immunity.  `zusarcimm`
+--- repaired the first site ONLY, and said so: "⛔ THE FIX IS SCOPED TO THIS
+--- CALL SITE".  This is the second site.  The third is deliberately left alone
+--- (see WHAT IS DELIBERATELY LEFT ALONE below).
+---
+--- ⭐ WHY THE SECOND SITE IS NOT A COPY OF THE FIRST: THE PRICE OF A WASTED
+--- CAST IS NOT THE SAME NUMBER.  From the same source `axecull`/`axecallbkb`
+--- anchor on (odota/dotaconstants build/abilities.json, read 2026-09-12):
+---
+---     zuus_arc_lightning    bkbpierce No   Magical   cd 1.6   mana  85-100
+---     zuus_lightning_bolt   bkbpierce No   Magical   cd 6     mana 120-135
+---
+--- So the identical mistake, made here, costs ~1.4x the mana and 3.75x the
+--- cooldown -- and it is spent on the frame Zeus is running away, i.e. the one
+--- frame where a 6-second dead ability is what the chaser was hoping for.  The
+--- shipped branch asks J.CanCastOnTargetAdvanced and nothing else; that call
+--- answers TRUE for a spell-immune hero (measured, below), so there is no
+--- second line of defence behind the missing term.
+---
+--- MEASURED, on this repo's whole frame corpus (tests/fixtures/ + tests/frames/,
+--- gates all off, Zeus driven as subject, spell immunity read as GROUND TRUTH
+--- off each frame's own modifier list -- see honest bound 2):
+---     60 live-Zeus instants -> 56 with Lightning Bolt trained
+---  -> 16 on which THIS ring's selector returns any target at all
+---  ->  2 that hold a spell-immune enemy inside Lightning Bolt's cast range
+---  ->  1 on which the selector RETURNS that spell-immune enemy:
+---        tests/frames/f_260909_215227_zeus_exec_od_1467.lua -- obsidian
+---        destroyer carrying modifier_black_king_bar_immune, 388.7u away,
+---        590 hp, inside this frame's own 850u bolt range, and
+---        J.CanCastOnTargetAdvanced answers TRUE.
+--- ⚠️ That is the SAME frame `zusarcimm` reads, and the two funnels are not the
+--- same funnel: the rings differ (Arc's cast range vs Bolt's 700/750/800/850,
+--- which is why the "picked" count is 16 here against Arc's 15) and the ability
+--- levels differ (56 trained vs 57).  The corpus holds ONE instant in which a
+--- retreating Zeus faces an armed BKB, and on that instant BOTH spells would be
+--- thrown at it.  Do not read the pair as two independent sightings.
+---
+--- WHY IT IS A GATE, and the direction is a property of the CODE.  Armed, this
+--- helper can only ever turn a shipped `true` into `false` -- it ANDs one more
+--- conjunct onto a predicate that already answered -- so the lever can only
+--- DELETE a Lightning Bolt order, never add one.  Gate OFF it returns `true`
+--- and the branch is the shipped one byte for byte.
+---
+--- ⚠️ THE t25 CARVE-OUT, and it is not decoration.  X.SkillsComplement:716
+--- dispatches this very bid TWO WAYS: with talent7 ([7], AoE Lightning Bolt,
+--- +325 radius) trained it becomes ActionQueue_UseAbilityOnLocation at the
+--- elected unit's location, and without it ActionQueue_UseAbilityOnEntity.  In
+--- the ground-cast world a spell-immune aim point still delivers full damage to
+--- everyone else inside the 325u ring, so "the weakest unit is immune" stops
+--- being a reason to decline and becomes an unmeasured claim about splash.  The
+--- armed leg therefore exempts the trained-talent7 world rather than guessing at
+--- it.  This is a NARROWING of the narrowing: it keeps armed a strict subset of
+--- shipped in every world, which is the property the direction argument above
+--- rests on.  Corpus note, so the exemption is not mistaken for a live branch:
+--- level >= 25 is 8 of 263 focus-hero instants (backlog -156, second reading),
+--- so offline this term is very nearly always false.
+---
+--- WHAT IS DELIBERATELY LEFT ALONE, two things, each its own lever.
+---   1. X.ConsiderW2:1353 -- the third call site.  That branch casts on a
+---      LOCATION through J.GetCastLocation, so the same argument the t25
+---      carve-out makes applies to it unconditionally; refusing there needs a
+---      reading about splash that nobody has taken.
+---   2. Re-ranking.  When the weakest unit is spell-immune the armed leg
+---      DECLINES; it does not walk down to the next-weakest.  That ADDS casts
+---      and is the opposite direction.  So "armed Zeus bolts someone else" is
+---      NOT a prediction of this change; "armed Zeus does not bolt a BKB" is.
+---
+--- ⚠️ HONEST BOUNDS, three, the same three `zusarcimm` carries because they are
+--- properties of the corpus and the loader rather than of that lever:
+---   1. `J.IsRetreating( bot )` is a mode predicate and reads FALSE on every
+---      fixture frame (GH #474), so the archive cannot show the BRANCH firing.
+---      What the funnel above measures is the SELECTOR's answer, which is the
+---      half this lever changes.
+---   2. tests/mock/replay_fixture.lua does not connect `IsMagicImmune()` to the
+---      modifier list it already carries (GH #769), so on the loader's own
+---      reading that OD is NOT immune and this lever is a no-op offline.  The
+---      measurement above and the test both read the frame's own
+---      `modifier_black_king_bar_immune` instead.
+---   3. 1 frame is a DOMAIN, not a frequency.  Sizing needs a wave
+---      (iterations/queue.json hero-65).
+function X.zuus_IsBoltTargetSpellVulnerable( hTarget )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'zusboltimm' ) )
+	then
+		return true
+	end
+
+	if talent7 ~= nil and talent7:IsTrained()
+	then
+		return true
+	end
+
+	return J.CanCastOnNonMagicImmune( hTarget )
+
+end
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then return BOT_ACTION_DESIRE_NONE, nil end
@@ -1162,7 +1270,12 @@ function X.ConsiderW()
 	if J.IsRetreating( bot ) and bot:WasRecentlyDamagedByAnyHero( 2.0 )
 	then
 		local target = J.GetVulnerableWeakestUnit( bot, true, true, nCastRange )
-		if target ~= nil and J.CanCastOnTargetAdvanced( target ) then
+		-- [zusboltimm] the selector above screens for ATTACK immunity only; the
+		-- spell term lives in X.zuus_IsBoltTargetSpellVulnerable above.  Gate
+		-- off it is `true` and this condition is the shipped one byte for byte.
+		if target ~= nil and J.CanCastOnTargetAdvanced( target )
+			and X.zuus_IsBoltTargetSpellVulnerable( target )
+		then
 			return BOT_ACTION_DESIRE_HIGH, target
 		end
 	end

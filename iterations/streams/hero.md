@@ -22,6 +22,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-157. ✅ **`-156` 第 1 条执行了:主体在 `bots/`,按两道筛选杠杆,量掉四根落第五根** —— 本轮
+   (报告 `iterations/reports/hero/20260912T110301Z.md`,**GH #776**)落地
+   **`zusboltimm`**(Zeus,gated,turbo-only,**收窄**)。
+   ⭐ **缺陷形状:一个被显式 scope 到单个调用点的已落地修复,它的兄弟调用点就是下一根杠杆。**
+   `zusarcimm`(本日早些时候,GH #768)的头注释自己写着「⛔ THE FIX IS SCOPED TO THIS CALL SITE」,
+   而 `J.GetVulnerableWeakestUnit` 在 `hero_zuus.lua` 里有**三个**读者:
+   `X.ConsiderQ` 撤退(已修)、**`X.ConsiderW` 撤退(本轮)**、`X.ConsiderW2` 击杀 AoE(刻意不动,地面施法)。
+   它委托的 `J.GetAttackableWeakestUnitFromList` 只筛**攻击免疫**族,从不问法术免疫;
+   支路后面唯一的守卫 `J.CanCastOnTargetAdvanced` 对法免目标**答 true** ⇒ 缺项后面没有第二道防线。
+   ⭐ **为什么另开 id 而不是把 `zusarcimm` 改宽 —— 因为代价不是同一个数**
+   (odota/dotaconstants,2026-09-12 读):`zuus_arc_lightning` cd **1.6** / 蓝 **85-100**
+   vs `zuus_lightning_bolt` cd **6** / 蓝 **120-135** ⇒ **~1.4 倍蓝、3.75 倍冷却**,且花在撤退帧上。
+   域实测 **60 存活 Zeus 帧 → 56 帧 Bolt 已学 → 16 帧选择器出目标 → 2 帧圈内有法免 → 1 帧出的就是法免**
+   (`f_260909_215227_zeus_exec_od_1467`,OD 带 BKB,388.7u,590hp,在该帧自己的 850u 射程内)。
+   ⚠️ **与 `zusarcimm` 是同一帧但不是同一个漏斗**(圈不同 ⇒ picked 16 vs 15;已学 56 vs 57);
+   语料里只有**一个**「撤退中的 Zeus 面对 BKB」的瞬间,**两条 id 不得当成两次独立目击**。
+   id 登记 `state.json:zusboltimm_20260912`;取证请求 `queue.json:hero-65`(与 hero-63 同形,可并进同一次遍历);
+   测试 `tests/test_zuus_bolt_retreat_immunity.lua`(14 绿,变异台 M1/M2/M3/M4 四发全中)。
+   - ⭐ **第一条 —— t25 豁免不是遗漏,是让「收窄」在每一个世界都成立的那一项。**
+     `X.SkillsComplement:716` 把**同一个 bid** 按 `talent7:IsTrained()`(t25 [7] = AoE Bolt,+325)
+     派成两种施法:已学 → `UseAbilityOnLocation`,未学 → `UseAbilityOnEntity`。
+     **地面施法世界里一个法免的瞄点照样把 325 圈的伤害交给别人** ⇒ 在那儿拒绝是一个没人量过的
+     splash 主张。armed 腿因此豁免 talent7 世界 —— **把收窄再收窄**,保证 armed 在每一个世界都是
+     shipped 的真子集(方向论证正是靠这条)。⭐ 变异台 M4 **真驱动 `talent7` 句柄**
+     (`J.Skill.GetTalentList(bot)[7]` 取到 hero 文件绑的同一个 table,注入 `IsTrained=true`,
+     前 `false` 后 `true` 的对子就是身份的证明)——**读源码字符串的版本 M4 杀不掉**。
+   - ⛔ **第二条 —— 本轮自己把一条 Lua census 顶红了,而那正是铁律 6 第三条腿存在的理由。**
+     `tests/test_wk_fact_anchor.lua:440` 的 t20/t25 **结构读普查**被新 helper 里的 `talent7` 读点顶成
+     `zuus 1 → 2`。**同一工作单元内修**,并按普查自己的要求答了它问的两个问题(本 build 训练该 index:
+     **是**,t25 {0,10} 取 [7];训练后支路做什么:**返回出货答案、把自己关掉**)⇒ 两行是**一个决定读在两处**,
+     必须一起动。**如果按老习惯先 push 再跑 lua gate,这条红就会留给下一个开工的组(#624 第七例)。**
+   - ⛔ **第三条 —— GH #774 的手读名单补了五条,不是三条。**
+     `test_bots_walk_farm_only.py` 在 origin/main 上红着,四个 `io.popen` walk 没登记,其中
+     **两个是本组今天早些时候自己落的**(`test_wk_q_commit_ration` / `test_zuus_arc_retreat_immunity`),
+     两个是协同组的(`test_tpdefall_*` / `test_tpdefnan_*`)。**只登记本组那三条会把红留给下一个组** ——
+     那正是 #624 的形状,所以**五条一起手读一起登记**(全部是字面量循环 + 非递归 `ls`,够不到 `bots/Customize/`)。
+   - ⛔ **第四条 —— 量掉的四根,别重开**(逐条理由见报告 §5):
+     Lion `X.MayKillTarget` 忽略形参(**形状是真的但两个调用点传的都是 `botTarget` ⇒ 今天行为零差**,
+     P4.4 (i) 不收);Axe `X.ConsiderQ` 的三套蓝量规则(带闸的三条**全部**落在小兵/野怪/Roshan 上,**筛 (a) 判死**);
+     Axe `X.ConsiderR` 的 `nDamageType`/`nCastPoint`/`nManaCost` 三个死局部(**不是行为改动**);
+     WK `X.ConsiderW` 的 `max_skeleton_charges` 除零怀疑(**键名是对的**,`2 4 6 8`)。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体继续放在 `bots/`(P4.4 (i)),继续用 `-156` 的两道筛,并加一条本轮新得的启发**:
+        **一个被显式 scope 到单个调用点的已落地修复,它的兄弟调用点是现成的下一根杠杆** ——
+        找它们的代价是一次 grep,形状的正确性上一轮已经付过钱。⛔ **但必须先证明代价不同**
+        (本轮是 cd/蓝量 3.75x/1.4x),否则就该改宽原 id 而不是开新 id。
+        ⚠️ 已量掉的别重开:`-154` 九根 + `-155` 三根 + `-156` 四根 + 本轮四根。
+     2. **Lion `X.MayKillTarget` 的形参无视** —— 今天行为零差,但任何一个新调用点传非 `botTarget`
+        就静默答错。**不要滚进 backlog 当行为改动**,直接开 `[hero]` 卫生 issue 交出去。
+
 -156. ✅ **`-155` 第 1 条执行了:主体在 `bots/`,按第三条「先筛只读英雄自身状态的轴」选杠杆,
    量掉四根落第五根** —— 本轮(报告 `iterations/reports/hero/20260912T082300Z.md`,**GH #771**)落地
    **`wkqcommit`**(Wraith King,gated,turbo-only,**加宽**)。
@@ -6874,6 +6924,35 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-12T11:03Z(报告 `iterations/reports/hero/20260912T110301Z.md`;**backlog:新开 `-157`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`zusboltimm`(Zeus,gated,turbo-only,未 armed,方向=收窄):
+  一个被显式 scope 到单个调用点的已落地修复,它的兄弟调用点就是下一根杠杆。**
+  - **缺陷**:`J.GetVulnerableWeakestUnit` 在 `hero_zuus.lua` 有**三个**读者,`zusarcimm` 只修了第一个
+    (它头注释自己写着「⛔ THE FIX IS SCOPED TO THIS CALL SITE」)。本轮修**第二个**:
+    `X.ConsiderW` 撤退支路。该选择器委托的 `J.GetAttackableWeakestUnitFromList` 只筛**攻击免疫**族;
+    支路后唯一的守卫 `J.CanCastOnTargetAdvanced` 对法免目标**答 true** ⇒ 缺项后面没有第二道防线。
+  - ⭐ **为什么另开 id 不是改宽原 id**:代价不是同一个数(odota/dotaconstants,2026-09-12 读)——
+    Arc cd **1.6**/蓝 **85-100** vs Bolt cd **6**/蓝 **120-135** ⇒ **~1.4 倍蓝、3.75 倍冷却**,且花在撤退帧上。
+  - **域(全语料实测,gate 全关,魔免按每帧自己的 modifier 列表读)**:**60 → 56 → 16 → 2 → 1**
+    (`f_260909_215227_zeus_exec_od_1467`,OD 带 `modifier_black_king_bar_immune`,388.7u,590hp,850u 射程内)。
+    ⚠️ **与 `zusarcimm` 同一帧、不同漏斗**(圈不同 ⇒ picked 16 vs 15;已学 56 vs 57)——
+    语料里只有**一个**这样的瞬间,**不得当成两次独立目击**。
+  - **修法**:`X.zuus_IsBoltTargetSpellVulnerable`,闸关 `true`(逐字节等于出货),闸开
+    `J.CanCastOnNonMagicImmune`。**方向是代码的性质**:只往已答过的谓词上再 AND 一项 ⇒ 只能删不能加。
+    ⭐ **t25 豁免**(`talent7` 已学时 `X.SkillsComplement:716` 改派**地面施法**,法免瞄点照样给 325 圈
+    交伤害)⇒ armed 在**每一个**世界都是 shipped 的真子集。
+  - **测试**:`tests/test_zuus_bolt_retreat_immunity.lua` **14 绿**;变异台 **M1/M2/M3/M4 四发全中**
+    (闸关腿 / armed 腿 / 删调用点 / **删 t25 豁免** —— M4 真驱动 `talent7` 句柄,读字符串的版本杀不掉)。
+  - ⛔ **本轮自己顶红过一条 Lua census 并在同一工作单元内修掉**:`test_wk_fact_anchor.lua:440`
+    的 t20/t25 结构读普查 `zuus 1 → 2`(#624 那种结构性失效)。**先 push 再跑 lua gate 就会把红留给下一个组。**
+  - ⛔ **GH #774 手读名单补五条**(四条是 origin/main 上已经红着的,两条是本组今天自己落的,
+    两条是协同组的;第五条是本轮自己的)。只登记本组的会把红留给下一个组。
+  - **闸**:`GATE_EXIT=0`(luacheck 0 warnings)/ `py gate: EXIT=0,96 ran, 0 findings, 0 uncertifiable, 38.1s`
+    / `lua gate: EXIT=0`(⚠️ **第一次 EXIT=3,红是本轮自己造的**,修掉后复跑转绿)。
+    **没用过 RULE6_BYPASS**。⚠️ 动态全量(~100min,GH #124)本轮没跑。
+  - ⚠️ 自检第一条命令**又**接了管道被拒(它自报「本轮第 5 次复发」);改重定向后 **EXIT=0**,
+    并报出 trunk python 红 = GH #774,已在本轮修掉。
 - 2026-09-12T08:23Z(报告 `iterations/reports/hero/20260912T082300Z.md`;**backlog:新开 `-156`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`wkqcommit`(Wraith King,gated,turbo-only,未 armed,方向=加宽):

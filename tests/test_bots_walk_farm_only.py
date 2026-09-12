@@ -117,6 +117,33 @@ UNRESOLVED_HAND_READ = {
         "it landed unregistered and left this census RED on trunk, which is the "
         "GH #624 shape -- the red is found by whoever starts work next, not by "
         "its author. Reading it costs seconds; leaving it costs a round",
+    # -- GH #774, the five that stood unregistered on trunk.  Hand-read
+    # -- 2026-09-12 by the HERO desk in one pass: two of them are this desk's
+    # -- own (wk_q_commit_ration, zuus_arc_retreat_immunity, both landed
+    # -- earlier the same day) and the bolt one is this round's; the two tpdef
+    # -- walks are the strategy desk's.  Registering only this desk's three
+    # -- would have left the census RED for whoever starts next, which is the
+    # -- GH #624 shape this list exists to avoid -- so all five go in.
+    """tests/test_tpdefall_tower_commit_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "the loop at :140 iterates the two LITERALS {'tests/fixtures', "
+        "'tests/frames'} -- no parameter reaches it -- and :143 runs a plain "
+        "`ls`, which is NOT recursive, so it never reaches bots/Customize/",
+    """tests/test_tpdefnan_tower_tp_landing.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "same shape at :106-:107: two literals, non-recursive `ls`, never "
+        "reaches bots/Customize/",
+    """tests/test_wk_q_commit_ration.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() at :110 loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:79-:80); non-recursive `ls`, "
+        "same reason as every line above (hero desk, wkqcommit round)",
+    """tests/test_zuus_arc_retreat_immunity.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'}; non-recursive `ls` (hero desk, "
+        "zusarcimm round)",
+    """tests/test_zuus_bolt_retreat_immunity.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'}; non-recursive `ls` (hero desk, "
+        "zusboltimm round -- registered in the SAME work unit that wrote the "
+        "walk, which is the habit the four lines above failed to keep)",
     """tests/test_blind_a_roamidle_campsel.lua  ::  'grep -l ' .. key .. ' tests/fixtures/*.lua 2>/dev/null | wc -l'""":
         "[1d] loops key over {'GetCurrentActionType', 'GetActiveMode'}; the "
         "path is the fixed glob tests/fixtures/*.lua, not a walk of bots/, so "

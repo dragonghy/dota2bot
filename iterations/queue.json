@@ -2509,6 +2509,18 @@
    "status": "pending",
    "question": "⛔ **零 EC2。** **fixture 语料里一个非英雄单位都没有** —— 141 份 frame / 1410 个 unit,`npc_dota_hero_*` 占 **1410/1410**(2026-09-12 英雄组实测,直接 dofile 原始表,不经 loader,所以这是**语料组成**不是 loader 过滤)。⇒ **任何**读小兵 / 野怪 / Roshan 的支路,在**每一个**焦点英雄文件里,都由构造无法做帧级局部验证,而它的读数与『游戏里域为 0』**长得一模一样**。被这条一次性划掉的探针:Axe 带线嘲讽小兵支路(它缺 HP 地板,而同函数下面两条打野 / 打 Roshan 的兄弟各自都有 `nHP > 0.5` / `nHP > 0.3`)、CM `X.ConsiderQImpl` 四条清兵支路、Lion `X.ConsiderQ` 的 Farm/Push、WK `X.ConsiderQ` 打野、整个 `glyphany` 族、`cmcreepcap`/`cmfarcreep`/`cmlaneband`/`pulldrag` 的帧级核验。**问题一句话:`make_fixture.py` 能不能在 frame 里带上附近的 lane / neutral creep(哪怕只有 name / team / x / y / hp / max_hp / alive)?**",
    "acceptance": "(1) `make_fixture.py` 在 dump 里写出半径 N(建议 >= 1600,与 `J.GetNearbyLaneCreeps` 最大读数同阶)内的非英雄单位;(2) `tests/mock/replay_fixture.lua` 的 `GetNearbyLaneCreeps` / `GetNearbyNeutralCreeps` / `FindAoELocation` 接到那份列表上;(3) 重切**一帧**带兵线的焦点英雄帧作为证明,并在其上跑通任意一个现有的小兵类支路。⚠️ 若判定不可行,请把『本语料结构性地不支持小兵类支路的帧级验证』作为一条常设限制写进 `tests/frames/README.md`,免得每一轮都重新发现一次(本轮是至少第三次)。"
+  },
+  {
+   "id": "hero-65",
+   "stream": "hero",
+   "bundle": "zusboltimm (新落地 gated id;本条只要**域的频率**,零 EC2,不要发波)",
+   "seeds": [],
+   "priority": 2,
+   "status": "pending",
+   "question": "⛔ **零 EC2 的归档只读扫描,与 hero-63 同形、可并进同一次遍历**(两者问的是同一个游戏事实的两个射击点)。**一句话:真实 Turbo 对局里,一个正在撤退的 Zeus,他脚下 700/750/800/850 圈内那个「最弱的可攻击目标」,有多大比例是**法术免疫**的?** `zusboltimm`(2026-09-12 落地)给 `X.ConsiderW` 撤退支路补上了 `J.CanCastOnNonMagicImmune` —— 那条支路用 `J.GetVulnerableWeakestUnit` 选目标,而它委托的 `J.GetAttackableWeakestUnitFromList` 只筛**攻击免疫**族,从不问法术免疫;支路后面唯一的守卫 `J.CanCastOnTargetAdvanced` 对法免目标答 **true**(在域帧上实测)。⭐ **为什么它和 hero-63(`zusarcimm`)必须分开买**:两者是同一个选择器的两个读者,但**代价不是同一个数** —— odota/dotaconstants(2026-09-12 读):`zuus_arc_lightning` cd 1.6 / 蓝 85-100,`zuus_lightning_bolt` cd 6 / 蓝 120-135 ⇒ 同一个错误在 Bolt 上要价 ~1.4 倍蓝、3.75 倍冷却,而且花在撤退帧上。⛔ **本地能买到的已经买完,缺口是结构性的两层**:(i) 全语料 60 个存活 Zeus 帧 → 56 帧 Bolt 已学 → **16 帧该选择器返回任何目标** → 2 帧射程内有法免敌人 → **1 帧返回的就是那个法免敌人**(`tests/frames/f_260909_215227_zeus_exec_od_1467.lua`,OD 带 `modifier_black_king_bar_immune`,388.7u,590hp,在该帧自己的 850u 射程内);⚠️ **那和 hero-63 是同一帧** —— 语料里只有一个「撤退中的 Zeus 面对 BKB」的瞬间,两条 id 在它上面都会开火,**不得当成两次独立目击**;(ii) `J.IsRetreating` 是 mode 谓词,fixture 世界恒假(GH #474)⇒ 语料能证的是**选择器**的答案,不是**支路**开火;(iii) `tests/mock/replay_fixture.lua` 不把 `IsMagicImmune()` 接到它自己带着的 modifier 列表上(GH #769)⇒ 本杠杆离线是 no-op,上面的读数是按每帧自己的 modifier 列表读的**地面真相**。\\n\\n⭐ **总监 RULING 27(`state.json:zusarcimm_SCAN_DENOMINATOR_RULING_20260912`,与本条同日落)对姊妹条 hero-63 立的两件事,本条**预先照办**,不要再裁一遍**:(1) **量具已存在** —— 那四个法免 modifier 逐字就是 `tools/batch_test/behavioral/axecallbkb_domain.py:132-137` 的 `IMMUNITY_MODIFIERS`,**复用它,不要再写第二个**;(2) **分母绑定在「选择器出目标」那一层,不是「射程内有敌人」那一层** —— 本 lever 只在选择器**返回了**目标的帧上才可能改变行为。本条的三列已经是按这个分的:**(3) 列(最弱可攻击目标本身法免)/(2) 列(圈内有法免)/(1) 列(撤退帧)**,⇒ **预登记的阈值绑在 (3)/(2) 这个比上**(本语料读作 1/16 = 6.3%),**不是** (3)/(1)(1/56 = 1.8%)。**两个分母都要报**,但判读用前者。",
+   "acceptance": "从归档 behavioral dump 里,对每一局的 Zeus(**按 ab / ba 两个分层分别登记读数**,铁律 4(i-a))按固定采样间隔输出:(1) Zeus 处于撤退/被英雄打过 2s 内的帧数;(2) 其中 Bolt 射程圈内存在任何法术免疫敌方英雄的帧数;(3) 其中**最弱可攻击目标本身**法术免疫的帧数 —— 第 (3) 列就是本 id 的域。整数取值、小值域 ⇒ 铁律 4(ii):给**均值 + 分布**与 `>=1` 的占比,不要只报中位数。\\n**判读(先写下来,免得事后挑)**:(3) 的占比 ~0 ⇒ 本 id 的效应量上界先于它的对错,按 P4.2 的口径直接 **reject / 不入集**,理由写成「域为 0」而不是「测过了没效果」;(3) 明显 >0 ⇒ 才值得排一次 armed 取证波,届时 (a) 的帧证据要给:撤退中的 Zeus、目标身上的法免 modifier 及其剩余时间、以及 **baseline 腿在同一时刻确实放了那一发**(这是「删掉一次空放」这个主张本身的观测量)。⚠️ **不要把施法次数当唯一观测量**:本 lever 只能**删**不能加(闸关 = `true`,armed 只是再 AND 一个合取项),所以次数必然 armed <= baseline;要读的是**被删掉的那些发有没有一发其实是对的**(即 t25 `talent7` 已学、Bolt 实际走地面施法的世界 —— armed 腿对那个世界已做豁免,核验时要确认豁免真的生效)。(b) 粗粒度胜负无明显负面。(c) 理论依据已写进 `bots/BotLib/hero_zuus.lua` 的 `X.zuus_IsBoltTargetSpellVulnerable` 头注释与 `tests/test_zuus_bolt_retreat_immunity.lua` §0.1。",
+   "result": "",
+   "director": ""
   }
  ],
  "done": [
