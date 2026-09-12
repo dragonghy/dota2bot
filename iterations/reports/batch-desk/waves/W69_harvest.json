@@ -1,0 +1,192 @@
+{
+ "wave": "W69",
+ "harvested_at": "2026-09-12T12:1xZ",
+ "family": "27-id",
+ "family_depth_before": 0,
+ "family_depth_after": 4,
+ "pooling": "W69 is the FIRST wave of the 27-id family. NOT pooled with W68 (29-id), nor W66+W67 (30-id).",
+ "cand_argument": "the FULL 27-id arm string (NOT cand_name). Verified against the corpus: every scored game's analysis.json:script_version is mirror:<that 27-id string>:s<seed>:<side>.",
+ "download": {
+  "method": "one subdirectory per run, parent dir passed to recover_verdict.py (GH #225); no cp into a shared dir",
+  "runs": {
+   "13019": "spot_20260912_092622_1_main_896712",
+   "13027": "spot_20260912_092624_1_main_0128b9",
+   "13034": "spot_20260912_092627_1_main_006854",
+   "13052": "spot_20260912_092629_1_main_b920b0"
+  },
+  "files_local_vs_s3": "120/120 per run, 4 runs, zero mismatch, zero [Errno 36]"
+ },
+ "tool_self_report": {
+  "input": {
+   "files_seen": 224,
+   "games_loaded": 224,
+   "source_dirs": 4,
+   "unparseable": 0,
+   "pooled_basename_dirs_overridden": 0
+  },
+  "min_arm_depth": 8,
+  "thin_arm_seeds": [],
+  "scored_games": 200,
+  "winner_by": {
+   "engine_natural": 224
+  },
+  "winrate_independent_of_gold": "224/224 games",
+  "winrate_side_census": {
+   "radiant": 3,
+   "dire": 221
+  },
+  "suggested": "hold_or_reject"
+ },
+ "readings": {
+  "mean": {
+   "gpm": -23.75,
+   "xpm": -17.56,
+   "deaths": 0.46,
+   "last_hits": -3.01,
+   "winrate": 0.497,
+   "winrate_headroom": 0.0149
+  },
+  "comps_better": {
+   "gpm": "0/4",
+   "xpm": "0/4",
+   "deaths": "0/4",
+   "last_hits": "0/4",
+   "winrate": "1/4",
+   "winrate_measurable": "1/2"
+  },
+  "strata": {
+   "gpm": {
+    "ab": -22.05,
+    "ba": -25.45,
+    "side": 1.7,
+    "sign_flip": false,
+    "side_gt_arm": "4/4"
+   },
+   "xpm": {
+    "ab": -25.93,
+    "ba": -9.18,
+    "side": -8.38,
+    "sign_flip": false,
+    "side_gt_arm": "4/4"
+   },
+   "deaths": {
+    "ab": 0.53,
+    "ba": 0.4,
+    "side": 0.06,
+    "sign_flip": false,
+    "side_gt_arm": "4/4"
+   },
+   "last_hits": {
+    "ab": -6.02,
+    "ba": -0.01,
+    "side": -3.0,
+    "sign_flip": false,
+    "side_gt_arm": "4/4"
+   }
+  }
+ },
+ "dispersion_registered": {
+  "note": "arm estimates are already per-seed swap-averaged; SE = sd/sqrt(4). Registered because W65's reading was rejected for |mean| < SE/2 and this one is NOT in that regime.",
+  "gpm": {
+   "mean": -23.75,
+   "sd": 9.59,
+   "se": 4.8,
+   "abs_mean_over_se": 4.95
+  },
+  "xpm": {
+   "mean": -17.56,
+   "sd": 5.29,
+   "se": 2.64,
+   "abs_mean_over_se": 6.64
+  },
+  "deaths": {
+   "mean": 0.46,
+   "sd": 0.17,
+   "se": 0.09,
+   "abs_mean_over_se": 5.3
+  },
+  "last_hits": {
+   "mean": -3.01,
+   "sd": 1.32,
+   "se": 0.66,
+   "abs_mean_over_se": 4.58
+  }
+ },
+ "rule4_i_a": "both strata REGISTERED (tool's strata.<m>, NOT hand-computed). No sign_flip in any of the four metrics this wave; side_gt_arm 4/4 on all four.",
+ "rule4_i_d": "per-seed swap-average first, then arithmetic mean across seeds. No games-weighted pooling anywhere.",
+ "side_bias_finding": {
+  "headline": "dire won 221 of 224 games (98.7%); radiant won 3.",
+  "not_the_arm": {
+   "cand_on_radiant": {
+    "n": 138,
+    "dire_wins": 137,
+    "dire_share": 0.9928
+   },
+   "cand_on_dire": {
+    "n": 62,
+    "dire_wins": 61,
+    "dire_share": 0.9839
+   },
+   "reading": "the dire win share is the same in BOTH legs (99.3% vs 98.4%), while the CANDIDATE's own win rate swings 0.7% -> 98.4% purely by side assignment => the channel is measuring the map, not the arm."
+  },
+  "not_one_bad_draft": "four seeds = four DIFFERENT 5v5 line-ups (verified: exactly 1 distinct radiant line-up and 1 distinct dire line-up per seed, and they differ across seeds); dire took 49/50, 49/50, 50/50, 50/50.",
+  "correction_registered": "an earlier draft of this round's reasoning assumed 'mirrored draft' meant both TEAMS field the same 10 heroes. It does not: the mirror is between the ab and ba LEGS (same 10 heroes, same side assignment, armed side swapped). Checked before claiming: 0 of 200 games have identical radiant/dire line-ups. The finding survived the correction in stronger form (four independent drafts, not one symmetric one).",
+  "objective_side": {
+   "radiant_towers_lost_per_game": 6.2,
+   "dire_towers_lost_per_game": 4.47,
+   "first_tower_median_s": {
+    "radiant": 512,
+    "dire": 672
+   },
+   "reading": "radiant loses its first tower ~2.7 min earlier and 1.7 more towers per game => the story starts by the laning phase, not at the high ground."
+  },
+  "econ_decoupling": {
+   "econ_winner_eq_winner": "122/224 = 0.5446",
+   "radiant_econ_winner_games": 105,
+   "radiant_econ_winner_and_won": 3,
+   "reading": "radiant is the gold leader in 105 games and wins 3 of them (2.9%) => out-farming does not convert. Consistent with the standing hard knowledge that Turbo economy is kill/push-driven."
+  },
+  "longitudinal": {
+   "waves": 10,
+   "radiant": 58,
+   "dire": 1751,
+   "total": 1809,
+   "radiant_share": 0.0321,
+   "per_wave_minority_share": {
+    "W55": 0.0645,
+    "W58": 0.1552,
+    "W62": 0.0529,
+    "W63": 0.0057,
+    "W64": 0.0045,
+    "W65": 0.009,
+    "W66": 0.0,
+    "W67": 0.0093,
+    "W68": 0.0417,
+    "W69": 0.0134
+   },
+   "reading": "all ten DEGENERATE, and the minority side is radiant in every one. Not drift around a midpoint."
+  },
+  "limits": [
+   "no frame evidence this round => NO cause is claimed (bot radiant play vs a harness artifact is NOT settled here)",
+   "the 10-wave pool mixes different arm strings and is not equally spaced; only the LEVEL is claimed, not a trend",
+   "engine_natural 224/224 => not an artifact of the cap-25 scoring rule"
+  ]
+ },
+ "gh_454_leg_b2": {
+  "codes": "4/4 instance-terminated-by-user (zero capacity reclaim)",
+  "mean_machine_hours": 0.8744,
+  "threshold": 1.0,
+  "verdict": "NOT TRIGGERED",
+  "estimator_limit": "stop stamp = SIR Status.UpdateTime, trails termination => biased LARGE, i.e. toward 'triggered'"
+ },
+ "gate_iv_after_backfill": {
+  "exit": 0,
+  "yield": "4 paired seed(s) of 4 machine(s)",
+  "attribution": "0 machine(s) reclaimed before the flip  <- a DETERMINATE value, not a range",
+  "verdict": "not blinded",
+  "next_wave": "spot",
+  "note": "ran clean on the FIRST try. Last round the same gate opened at exit 2 because the harvest round had written these values into prose only. Executed as the launch round's top handoff item."
+ },
+ "gh_696": "2 of 4 seeds had winrate headroom 0 (13034, 13052); pooled fraction 1/4 counts them, winrate_measurable 1/2 does not. Not used at any gate.",
+ "gh_352": "winrate channel DEGENERATE (minority share 0.0134 < 0.20) => W69 cannot settle rule 2(b)'s win/loss half for ANY of its 27 ids."
+}

@@ -98,12 +98,18 @@
    "launch_time": "2026-09-12T09:26:24.000Z",
    "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544). BOTH key names written on purpose: wave_throttle.py reads `launched_at`, and W55 shipped only `launch_time`, which made gate (i) exit 2 on the next round.",
    "shutdown_behavior": "terminate (describe-instance-attribute, queried PER MACHINE, not inferred from the slate)",
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "survival_min": null,
-   "status_code": null,
-   "status_code_note": "UNREAD AT LAUNCH BY CONSTRUCTION -- the machine is still running. THE HARVEST ROUND MUST WRITE status_code / ab / ba / arm_depth / survival_min INTO THIS OBJECT, not only into its report prose: that exact omission by the 06:16Z round is what left gate (iv) at exit 2 for this launch round (see W69 report section 3). These are spot machines, so the SIR vocabulary applies and GH #699's permanent-null-for-on-demand clause does NOT. Read it IN THE HARVEST ROUND: this round measured the far end of the aging window at ~5h-5h30m post-termination, where describe-spot-instance-requests already returns []."
+   "ab": 35,
+   "ba": 15,
+   "arm_depth": 21.0,
+   "survival_min": 52.8,
+   "status_code": "instance-terminated-by-user",
+   "status_code_note": "FIRST-HAND, read in the harvest round at 2026-09-12T12:1xZ via describe-spot-instance-requests (SIR_EXIT=0, 4 of 4 records present, ~1h55m-2h after termination -- inside the aging window this wave's launch round measured the far end of). NOT a transcription: contrast W68, whose codes could only be copied forward because the records had already aged out. This is the launch round's top handoff item, executed.",
+   "leg_counts_source": "harvest round's recover_verdict.py per_seed (waves/W69_verdict.json) ab_games/ba_games/arm_depth verbatim, written machine-readably so gate (iv) reclaim_blind.py has its input on the next launch round (the omission that left it exit 2 last round).",
+   "survival_min_source": "LaunchTime -> SIR Status.UpdateTime, x60, computed this round from first-hand stamps. UpdateTime is the SIR close stamp and trails actual termination by seconds, so this is a small OVER-estimate: it fails toward 'survived past the flip', not toward 'reclaimed'.",
+   "machine_hours": 0.88,
+   "sir_status_update_time": "2026-09-12T10:19:12.000Z",
+   "run_id": "spot_20260912_092622_1_main_896712",
+   "run_id_source": "RECOVERED this round: the launch round lost it to a `tail -6` display filter. s3 ls soak/ gave the four 20260912_0926* prefixes; seed<->run resolved from each run's analysis.json:script_version stamp (mirror:<27-id>:s<seed>:<side>), which is independent of the lost line."
   },
   {
    "seed": 13027,
@@ -117,12 +123,18 @@
    "launch_time": "2026-09-12T09:26:26.000Z",
    "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544). BOTH key names written on purpose: wave_throttle.py reads `launched_at`, and W55 shipped only `launch_time`, which made gate (i) exit 2 on the next round.",
    "shutdown_behavior": "terminate (describe-instance-attribute, queried PER MACHINE, not inferred from the slate)",
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "survival_min": null,
-   "status_code": null,
-   "status_code_note": "UNREAD AT LAUNCH BY CONSTRUCTION -- the machine is still running. THE HARVEST ROUND MUST WRITE status_code / ab / ba / arm_depth / survival_min INTO THIS OBJECT, not only into its report prose: that exact omission by the 06:16Z round is what left gate (iv) at exit 2 for this launch round (see W69 report section 3). These are spot machines, so the SIR vocabulary applies and GH #699's permanent-null-for-on-demand clause does NOT. Read it IN THE HARVEST ROUND: this round measured the far end of the aging window at ~5h-5h30m post-termination, where describe-spot-instance-requests already returns []."
+   "ab": 31,
+   "ba": 19,
+   "arm_depth": 23.56,
+   "survival_min": 50.82,
+   "status_code": "instance-terminated-by-user",
+   "status_code_note": "FIRST-HAND, read in the harvest round at 2026-09-12T12:1xZ via describe-spot-instance-requests (SIR_EXIT=0, 4 of 4 records present, ~1h55m-2h after termination -- inside the aging window this wave's launch round measured the far end of). NOT a transcription: contrast W68, whose codes could only be copied forward because the records had already aged out. This is the launch round's top handoff item, executed.",
+   "leg_counts_source": "harvest round's recover_verdict.py per_seed (waves/W69_verdict.json) ab_games/ba_games/arm_depth verbatim, written machine-readably so gate (iv) reclaim_blind.py has its input on the next launch round (the omission that left it exit 2 last round).",
+   "survival_min_source": "LaunchTime -> SIR Status.UpdateTime, x60, computed this round from first-hand stamps. UpdateTime is the SIR close stamp and trails actual termination by seconds, so this is a small OVER-estimate: it fails toward 'survived past the flip', not toward 'reclaimed'.",
+   "machine_hours": 0.8469,
+   "sir_status_update_time": "2026-09-12T10:17:15.000Z",
+   "run_id": "spot_20260912_092624_1_main_0128b9",
+   "run_id_source": "RECOVERED this round: the launch round lost it to a `tail -6` display filter. s3 ls soak/ gave the four 20260912_0926* prefixes; seed<->run resolved from each run's analysis.json:script_version stamp (mirror:<27-id>:s<seed>:<side>), which is independent of the lost line."
   },
   {
    "seed": 13034,
@@ -136,12 +148,18 @@
    "launch_time": "2026-09-12T09:26:29.000Z",
    "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544). BOTH key names written on purpose: wave_throttle.py reads `launched_at`, and W55 shipped only `launch_time`, which made gate (i) exit 2 on the next round.",
    "shutdown_behavior": "terminate (describe-instance-attribute, queried PER MACHINE, not inferred from the slate)",
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "survival_min": null,
-   "status_code": null,
-   "status_code_note": "UNREAD AT LAUNCH BY CONSTRUCTION -- the machine is still running. THE HARVEST ROUND MUST WRITE status_code / ab / ba / arm_depth / survival_min INTO THIS OBJECT, not only into its report prose: that exact omission by the 06:16Z round is what left gate (iv) at exit 2 for this launch round (see W69 report section 3). These are spot machines, so the SIR vocabulary applies and GH #699's permanent-null-for-on-demand clause does NOT. Read it IN THE HARVEST ROUND: this round measured the far end of the aging window at ~5h-5h30m post-termination, where describe-spot-instance-requests already returns []."
+   "ab": 36,
+   "ba": 14,
+   "arm_depth": 20.16,
+   "survival_min": 51.1,
+   "status_code": "instance-terminated-by-user",
+   "status_code_note": "FIRST-HAND, read in the harvest round at 2026-09-12T12:1xZ via describe-spot-instance-requests (SIR_EXIT=0, 4 of 4 records present, ~1h55m-2h after termination -- inside the aging window this wave's launch round measured the far end of). NOT a transcription: contrast W68, whose codes could only be copied forward because the records had already aged out. This is the launch round's top handoff item, executed.",
+   "leg_counts_source": "harvest round's recover_verdict.py per_seed (waves/W69_verdict.json) ab_games/ba_games/arm_depth verbatim, written machine-readably so gate (iv) reclaim_blind.py has its input on the next launch round (the omission that left it exit 2 last round).",
+   "survival_min_source": "LaunchTime -> SIR Status.UpdateTime, x60, computed this round from first-hand stamps. UpdateTime is the SIR close stamp and trails actual termination by seconds, so this is a small OVER-estimate: it fails toward 'survived past the flip', not toward 'reclaimed'.",
+   "machine_hours": 0.8517,
+   "sir_status_update_time": "2026-09-12T10:17:35.000Z",
+   "run_id": "spot_20260912_092627_1_main_006854",
+   "run_id_source": "RECOVERED this round: the launch round lost it to a `tail -6` display filter. s3 ls soak/ gave the four 20260912_0926* prefixes; seed<->run resolved from each run's analysis.json:script_version stamp (mirror:<27-id>:s<seed>:<side>), which is independent of the lost line."
   },
   {
    "seed": 13052,
@@ -155,12 +173,18 @@
    "launch_time": "2026-09-12T09:26:31.000Z",
    "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544). BOTH key names written on purpose: wave_throttle.py reads `launched_at`, and W55 shipped only `launch_time`, which made gate (i) exit 2 on the next round.",
    "shutdown_behavior": "terminate (describe-instance-attribute, queried PER MACHINE, not inferred from the slate)",
-   "ab": null,
-   "ba": null,
-   "arm_depth": null,
-   "survival_min": null,
-   "status_code": null,
-   "status_code_note": "UNREAD AT LAUNCH BY CONSTRUCTION -- the machine is still running. THE HARVEST ROUND MUST WRITE status_code / ab / ba / arm_depth / survival_min INTO THIS OBJECT, not only into its report prose: that exact omission by the 06:16Z round is what left gate (iv) at exit 2 for this launch round (see W69 report section 3). These are spot machines, so the SIR vocabulary applies and GH #699's permanent-null-for-on-demand clause does NOT. Read it IN THE HARVEST ROUND: this round measured the far end of the aging window at ~5h-5h30m post-termination, where describe-spot-instance-requests already returns []."
+   "ab": 36,
+   "ba": 14,
+   "arm_depth": 20.16,
+   "survival_min": 55.15,
+   "status_code": "instance-terminated-by-user",
+   "status_code_note": "FIRST-HAND, read in the harvest round at 2026-09-12T12:1xZ via describe-spot-instance-requests (SIR_EXIT=0, 4 of 4 records present, ~1h55m-2h after termination -- inside the aging window this wave's launch round measured the far end of). NOT a transcription: contrast W68, whose codes could only be copied forward because the records had already aged out. This is the launch round's top handoff item, executed.",
+   "leg_counts_source": "harvest round's recover_verdict.py per_seed (waves/W69_verdict.json) ab_games/ba_games/arm_depth verbatim, written machine-readably so gate (iv) reclaim_blind.py has its input on the next launch round (the omission that left it exit 2 last round).",
+   "survival_min_source": "LaunchTime -> SIR Status.UpdateTime, x60, computed this round from first-hand stamps. UpdateTime is the SIR close stamp and trails actual termination by seconds, so this is a small OVER-estimate: it fails toward 'survived past the flip', not toward 'reclaimed'.",
+   "machine_hours": 0.9192,
+   "sir_status_update_time": "2026-09-12T10:21:40.000Z",
+   "run_id": "spot_20260912_092629_1_main_b920b0",
+   "run_id_source": "RECOVERED this round: the launch round lost it to a `tail -6` display filter. s3 ls soak/ gave the four 20260912_0926* prefixes; seed<->run resolved from each run's analysis.json:script_version stamp (mirror:<27-id>:s<seed>:<side>), which is independent of the lost line."
   }
  ],
  "harvest_obligations": [
@@ -185,6 +209,20 @@
   "detail": "us-west-2c x2 (seeds 13019, 13027), us-west-2b x1 (13034), us-west-2d x1 (13052)",
   "note": "The az ring's random start offset (GH #252) landed on us-west-2d in the dry-run probe and the four independent --count 1 calls each walked it from their own random start, so 2c drew twice and 2a not at all."
  },
- "run_id_loss": "REGISTERED AGAINST THIS DESK, not against a tool. The launch script piped each spot_run.sh call through `tail -6`, which discarded the `run_id=...` line for all four machines; `grep -c run_id` on the launch log returns 0. Nothing is unrecoverable: the four run prefixes will appear in S3 as soak/spot_20260912_0926*_1_main_*/ once the machines upload (they were absent when checked at 09:2xZ, as expected before the first game finishes), and the seed<->run mapping is independently recoverable from analysis.json:script_version, which stamps the seed. Same family as the stdout-pipe trap the charter has logged 17 times: a DISPLAY filter destroying a READING. The fix is to tee the launcher's output, not to tail it.",
- "post_launch_leak_check": "describe-instances with NO tag filter (state in pending/running/stopping/stopped) returned exactly the 4 machines this round intentionally launched, no extras. describe-volumes returned 4, each `in-use` and each attached to one of those 4 instance ids => zero orphans. Pre-launch both calls returned []. Standing cost is only the AMI ami-0a990a26d89c66547."
+ "run_id_loss": "REGISTERED AGAINST THIS DESK, not against a tool. The launch script piped each spot_run.sh call through `tail -6`, which discarded the `run_id=...` line for all four machines; `grep -c run_id` on the launch log returns 0. Nothing is unrecoverable: the four run prefixes will appear in S3 as soak/spot_20260912_0926*_1_main_*/ once the machines upload (they were absent when checked at 09:2xZ, as expected before the first game finishes), and the seed<->run mapping is independently recoverable from analysis.json:script_version, which stamps the seed. Same family as the stdout-pipe trap the charter has logged 17 times: a DISPLAY filter destroying a READING. The fix is to tee the launcher's output, not to tail it. || RESOLVED in the harvest round: all four run_ids recovered from S3 + script_version stamps and written into machines[].run_id. Nothing was unrecoverable.",
+ "post_launch_leak_check": "describe-instances with NO tag filter (state in pending/running/stopping/stopped) returned exactly the 4 machines this round intentionally launched, no extras. describe-volumes returned 4, each `in-use` and each attached to one of those 4 instance ids => zero orphans. Pre-launch both calls returned []. Standing cost is only the AMI ami-0a990a26d89c66547.",
+ "machines_backfilled_at": "2026-09-12T12:1xZ (harvest round, first-hand)",
+ "gh_454_leg_b2": {
+  "codes": "4 of 4 instance-terminated-by-user -- ZERO capacity reclaim",
+  "machine_hours": [
+   0.88,
+   0.8469,
+   0.8517,
+   0.9192
+  ],
+  "mean_machine_hours": 0.8744,
+  "threshold": 1.0,
+  "verdict": "NOT TRIGGERED (mean 0.8744 h/machine < 1.00)",
+  "estimator_limit": "stop stamp is SIR Status.UpdateTime (close stamp, trails termination) => biased LARGE, i.e. toward \"triggered\", not toward \"let off\"."
+ }
 }

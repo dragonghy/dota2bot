@@ -1,0 +1,194 @@
+{
+ "cand": "lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart",
+ "cand_ref": null,
+ "contrast": "vs_stable",
+ "recovered_locally": true,
+ "per_seed": [
+  {
+   "seed": "13019",
+   "ab_games": 35,
+   "ba_games": 15,
+   "arm_depth": 21.0,
+   "scored": true,
+   "gpm": -28.84,
+   "gpm_ab": 9.68,
+   "gpm_ba": -67.36,
+   "xpm": -17.45,
+   "xpm_ab": 34.08,
+   "xpm_ba": -68.97,
+   "deaths": 0.69,
+   "deaths_ab": -0.19,
+   "deaths_ba": 1.57,
+   "last_hits": -3.15,
+   "last_hits_ab": 22.95,
+   "last_hits_ba": -29.25,
+   "scored_games": 50,
+   "unfinished": 0,
+   "winrate_arm_depth": 21.0,
+   "winrate_side_census": {
+    "radiant": 1,
+    "dire": 49
+   },
+   "winrate_headroom": 0.0333,
+   "winrate": 0.514
+  },
+  {
+   "seed": "13027",
+   "ab_games": 31,
+   "ba_games": 19,
+   "arm_depth": 23.56,
+   "scored": true,
+   "gpm": -12.91,
+   "gpm_ab": 224.31,
+   "gpm_ba": -250.13,
+   "xpm": -10.4,
+   "xpm_ab": 76.21,
+   "xpm_ba": -97.01,
+   "deaths": 0.29,
+   "deaths_ab": -2.34,
+   "deaths_ba": 2.92,
+   "last_hits": -1.12,
+   "last_hits_ab": 3.34,
+   "last_hits_ba": -5.59,
+   "scored_games": 50,
+   "unfinished": 0,
+   "winrate_arm_depth": 23.56,
+   "winrate_side_census": {
+    "radiant": 1,
+    "dire": 49
+   },
+   "winrate_headroom": 0.0263,
+   "winrate": 0.474
+  },
+  {
+   "seed": "13034",
+   "ab_games": 36,
+   "ba_games": 14,
+   "arm_depth": 20.16,
+   "scored": true,
+   "gpm": -34.24,
+   "gpm_ab": -124.0,
+   "gpm_ba": 55.53,
+   "xpm": -19.43,
+   "xpm_ab": -71.72,
+   "xpm_ba": 32.87,
+   "deaths": 0.37,
+   "deaths_ab": 2.03,
+   "deaths_ba": -1.29,
+   "last_hits": -3.77,
+   "last_hits_ab": -11.44,
+   "last_hits_ba": 3.9,
+   "scored_games": 50,
+   "unfinished": 0,
+   "winrate_arm_depth": 20.16,
+   "winrate_side_census": {
+    "radiant": 0,
+    "dire": 50
+   },
+   "winrate_headroom": 0.0,
+   "winrate": 0.5
+  },
+  {
+   "seed": "13052",
+   "ab_games": 36,
+   "ba_games": 14,
+   "arm_depth": 20.16,
+   "scored": true,
+   "gpm": -19.01,
+   "gpm_ab": -198.18,
+   "gpm_ba": 160.16,
+   "xpm": -22.95,
+   "xpm_ab": -142.29,
+   "xpm_ba": 96.39,
+   "deaths": 0.5,
+   "deaths_ab": 2.61,
+   "deaths_ba": -1.6,
+   "last_hits": -4.02,
+   "last_hits_ab": -38.93,
+   "last_hits_ba": 30.89,
+   "scored_games": 50,
+   "unfinished": 0,
+   "winrate_arm_depth": 20.16,
+   "winrate_side_census": {
+    "radiant": 0,
+    "dire": 50
+   },
+   "winrate_headroom": 0.0,
+   "winrate": 0.5
+  }
+ ],
+ "mean": {
+  "gpm": -23.75,
+  "xpm": -17.56,
+  "deaths": 0.46,
+  "last_hits": -3.01,
+  "winrate": 0.497,
+  "winrate_headroom": 0.0149
+ },
+ "comps_better": {
+  "gpm": "0/4",
+  "xpm": "0/4",
+  "deaths": "0/4",
+  "last_hits": "0/4",
+  "winrate": "1/4",
+  "winrate_measurable": "1/2"
+ },
+ "input": {
+  "files_seen": 224,
+  "games_loaded": 224,
+  "source_dirs": 4,
+  "unparseable": 0,
+  "pooled_basename_dirs_overridden": 0
+ },
+ "strata": {
+  "gpm": {
+   "ab": -22.05,
+   "ba": -25.45,
+   "side": 1.7,
+   "sign_flip": false,
+   "side_gt_arm": "4/4"
+  },
+  "xpm": {
+   "ab": -25.93,
+   "ba": -9.18,
+   "side": -8.38,
+   "sign_flip": false,
+   "side_gt_arm": "4/4"
+  },
+  "deaths": {
+   "ab": 0.53,
+   "ba": 0.4,
+   "side": 0.06,
+   "sign_flip": false,
+   "side_gt_arm": "4/4"
+  },
+  "last_hits": {
+   "ab": -6.02,
+   "ba": -0.01,
+   "side": -3.0,
+   "sign_flip": false,
+   "side_gt_arm": "4/4"
+  }
+ },
+ "winrate_neutral": 0.5,
+ "winrate_forced_seeds": [
+  "13034",
+  "13052"
+ ],
+ "scored_games": 200,
+ "unfinished_games": 0,
+ "winner_by": {
+  "engine_natural": 224
+ },
+ "winrate_independent_of_gold": "224/224 games",
+ "winrate_side_census": {
+  "radiant": 3,
+  "dire": 221
+ },
+ "winrate_minority_side_share": 0.0134,
+ "winrate_channel": "DEGENERATE",
+ "min_arm_depth": 8,
+ "thin_arm_seeds": [],
+ "thin_arm_winrate_seeds": [],
+ "suggested": "hold_or_reject"
+}
