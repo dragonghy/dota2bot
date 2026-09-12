@@ -36,8 +36,10 @@ turn this leg back into the `none` it was built to stop printing.
 Run: python3 tests/test_pending_rulings.py
 """
 
+import hashlib
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -76,12 +78,86 @@ def member_string_ids(path=TEST_SET):
     return [s for s in line.split(",") if s]
 
 
+def raw_member_line(path=TEST_SET):
+    """Line 2 exactly as stored, so byte/md5 claims are checked on the real bytes."""
+    with open(path, encoding="utf-8") as fh:
+        return fh.read().splitlines()[1].strip()
+
+
+def declared_member_record(path=TEST_SET):
+    """Line 3's self-record of line 2 -> (count, bytes|None, md5|None), or None.
+
+    Line 3 reads e.g. `**成员串 27**(上一行,**239 字节**,md5 `76a8...`)`.
+    Count is required (it is what replaced the old size floor); the byte count
+    and md5 are optional because older rounds did not always record them, and a
+    missing one must not be reported as a MISMATCH -- absent and wrong are
+    different findings, and conflating them is how a check earns a bump instead
+    of a fix.  Scoped to line 3 on purpose: the archive further down the file
+    quotes historical member strings with their own counts, and a fuzzy search
+    would happily match one of those (the same reason member_string_ids reads
+    positionally).
+    """
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+    if len(lines) < 3:
+        return None
+    line = lines[2]
+    m_count = re.search(r"\*\*成员串\s*(\d+)\s*\*\*", line)
+    if not m_count:
+        return None
+    m_bytes = re.search(r"\*\*(\d+)\s*字节\*\*", line)
+    m_md5 = re.search(r"md5\s*`([0-9a-f]{32})`", line)
+    return (int(m_count.group(1)),
+            int(m_bytes.group(1)) if m_bytes else None,
+            m_md5.group(1) if m_md5 else None)
+
+
 # ---------------------------------------------------------------- invariant 1
 requests = pr.load_requests(QUEUE)
 members = member_string_ids()
 
 check(len(members) == len(set(members)), "member string has duplicate ids")
-check(len(members) >= 29, "member string shrank below its 2026-08-24 size (29)")
+
+# WAS `check(len(members) >= 29, ...)` -- a FLOOR written 2026-08-24, back when
+# the armed set only ever grew.  Owner priority P4.2 (2026-09-05) inverted the
+# direction: new ids are frozen out and the set must shrink to <= 20, and the
+# director's output metric IS the set getting smaller.  The floor therefore
+# asserted the opposite of the standing priority, and because it sat at exactly
+# the then-current size it went red on the FIRST withdrawal that moved it
+# (2026-09-12, outlatch + rotscope, 29 -> 27) and would have gone red on every
+# P4.2 withdrawal after that.
+#
+# This is GH #106 / #127 / #538's family verbatim -- AN ASSERTION THAT WRITES A
+# POPULATION SIZE AS A LITERAL -- and §7d's rule for that family is not "bump
+# the literal", it is "assert the record's INTERNAL SELF-CONSISTENCY instead".
+# Bumping 29 to 27 would buy one round and re-arm the same trap.
+#
+# What the floor was really guarding is line 2 being silently truncated or
+# mangled by a bad edit.  Line 3 already declares the count, the byte length and
+# the md5 of line 2 in prose, so checking line 2 AGAINST ITS OWN RECORD is a
+# strictly stronger instrument than any floor: it catches truncation, it catches
+# an edit that forgets to update the record, and it never goes stale.  It also
+# turns three numbers that were decorative prose into checked values.
+declared = declared_member_record()
+check(declared is not None,
+      "test_set.md line 3 no longer declares `**成员串 N**` -- the member "
+      "string's self-record is what replaced the old size floor, so losing "
+      "the record is itself the finding")
+if declared is not None:
+    d_count, d_bytes, d_md5 = declared
+    check(len(members) == d_count,
+          "member string holds %d ids but line 3 declares %d -- one of the two "
+          "was edited without the other" % (len(members), d_count))
+    line2 = raw_member_line()
+    if d_bytes is not None:
+        check(len(line2.encode("utf-8")) == d_bytes,
+              "member string is %d bytes but line 3 declares %d"
+              % (len(line2.encode("utf-8")), d_bytes))
+    if d_md5 is not None:
+        actual_md5 = hashlib.md5(line2.encode("utf-8")).hexdigest()
+        check(actual_md5 == d_md5,
+              "member string md5 is %s but line 3 declares %s"
+              % (actual_md5, d_md5))
 
 # Scoped to OPEN requests, and the scope is a finding rather than a
 # convenience: run unscoped, this check goes red on `pullcamp` via

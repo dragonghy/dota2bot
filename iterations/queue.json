@@ -1202,7 +1202,16 @@
    "last_wave_note": "*** rotscope read ZERO on W34 because its carrier was never drawn, not because it had no effect. *** Pudge appears in 0 of 208 games (it is not among W34's carrier terms: crystal_maiden, lion, obsidian_destroyer, skeleton_king, spirit_breaker, zuus). This request's own caveat (jia) requires exactly this registration: a wave that did not draw Pudge reads identically zero and can never serve as a single arm. It needs a wave with a pudge carrier term. W34 produced a VALID 4-of-4-seed reading (unlike W33, which bought 1 of 4). Econ verdict is a NULL: mean gpm +13.32 sits inside a cross-seed SD of 59.4 (SE ~29.7) and comps_better is 2/4 on every econ metric. The winrate channel is DEGENERATE (GH #352, third consecutive wave; minority side 3/207 = 0.0145) and MUST NOT be cited for iron-rule-2(b). *** What this wave DID buy for these riders is condition (a): 103 recorded replays under s3://dota2bot-batch-results-4924/dem21/<run>/ -- the first bulk frame corpus in eleven waves, delivered by GH #308 ruling (C) (--rec-slots 8). *** They EXPIRE ~2026-09-22 under the dem21-expire-21d lifecycle rule. Frame verification is the replay stream's next baton.",
    "result_wave": "W44 (58-id family, 1st wave with data; 4 seeds / 183 scored games)",
    "result_at": "2026-09-04T03:3xZ",
-   "prior_status": "running (rode W44) -> harvested_pending_verification 2026-09-04T03:3xZ. W44 delivered a complete 4-of-4-seed reading, so the 'restored by the W43 void' state is discharged. What is still owed on every one of these rows is condition (a) frame verification, not a batch reading."
+   "prior_status": "running (rode W44) -> harvested_pending_verification 2026-09-04T03:3xZ. W44 delivered a complete 4-of-4-seed reading, so the 'restored by the W43 void' state is discharged. What is still owed on every one of these rows is condition (a) frame verification, not a batch reading.",
+   "director_resolve": {
+    "ruling": "RETURNED_OUT_OF_TEST_SET_ON_A",
+    "at": "2026-09-12T0x:xxZ",
+    "ref": "test_set.md §HA.2;state.json:rotscope_RETURNED_20260912",
+    "issue": "GH #368(入集帖,提议 §CU,裁定 §CV);GH #474([harness],fixture 路线的堵点 —— **不是本 id 的**)",
+    "note": "条件 (a) **两条路同时堵死**,处置 **UNOBSERVABLE-BOTH-ROUTES**:波次路按录像组 `20260904T042500Z.md §4` 的三条理由(命令不可观测 / 两层反号判噪声 / 58-id 腿不许分摊);**fixture 路由 GH #474 结构性堵死** —— `make_fixture.py` 不产出攻击目标字段(109 个 fixture 里 0 个),`tests/mock/bot_api.lua` 对三个 target getter 一律答 `nil`(且那是**正确的默认**)⇒ `J.GetProperTarget` 在每一个 fixture 帧上恒 `nil`,而它被 `bots/` 下 165 个文件引用。⛔ **不是** DOMAIN-NOT-REACHED(域每局走到 87–114 次)、**不是** SILENT(「它动没动」本身不可观测)、**不是** BUGGY(逐帧两帧都正确)。⛔ **不是 reject**,本轮 `bots/` 零 diff。下一棒 `owed_executions.json:rotscope_readmission_on_gh474`;⛔ 重新入集仍受 owner P4.2 冻结约束(armed ≤ 20 前一律 FROZEN-HOLD),本行**只登记解锁条件,不预批入集**。",
+    "enum_note": "⚠️ `RETURNED_OUT_OF_TEST_SET_ON_A` 是本字段的**新值**(原枚举 PROMOTED|NOT_PROMOTED_RETURN_ON_C|REJECTED 里没有「退集」这一档,而退集**既不是 promote 也不是 reject**)。总监 2026-09-12 现查:`grep -rn director_resolve tools/ tests/` **零命中** ⇒ 本字段目前没有任何工具解析,新值不破坏任何门;登记在此是为了让下一个读者知道枚举动过,而不是让他重新发现。",
+    "status_note": "⛔ **本行故意保持 open**(`harvested_pending_verification`,与 `campbind` 退集时 `strategy-42` 的处理一致)。总监 2026-09-12 本轮**先写成 `done`,被 `pending_rulings.py` 当场顶红**:`ORPHAN_PROPOSAL (§CG.5) —— only closed rows, a ruling has nowhere to land`。**退集不是这条 id 的终点** —— 它的条件 (a) 仍然欠着(见 `owed_executions.json` 的下一棒行),将来重新入集/重裁需要一行能落地的请求。这与铁律 9 的拉野死分支教训同形:**一关闭,接力棒就从所有队列里消失**。"
+   }
   },
   {
    "id": "strategy-27",
@@ -1267,7 +1276,16 @@
    "last_wave_note": "W34 produced a VALID 4-of-4-seed reading (unlike W33, which bought 1 of 4). Econ verdict is a NULL: mean gpm +13.32 sits inside a cross-seed SD of 59.4 (SE ~29.7) and comps_better is 2/4 on every econ metric. The winrate channel is DEGENERATE (GH #352, third consecutive wave; minority side 3/207 = 0.0145) and MUST NOT be cited for iron-rule-2(b). *** What this wave DID buy for these riders is condition (a): 103 recorded replays under s3://dota2bot-batch-results-4924/dem21/<run>/ -- the first bulk frame corpus in eleven waves, delivered by GH #308 ruling (C) (--rec-slots 8). *** They EXPIRE ~2026-09-22 under the dem21-expire-21d lifecycle rule. Frame verification is the replay stream's next baton.",
    "result_wave": "W44 (58-id family, 1st wave with data; 4 seeds / 183 scored games)",
    "result_at": "2026-09-04T03:3xZ",
-   "prior_status": "running (rode W44) -> harvested_pending_verification 2026-09-04T03:3xZ. W44 delivered a complete 4-of-4-seed reading, so the 'restored by the W43 void' state is discharged. What is still owed on every one of these rows is condition (a) frame verification, not a batch reading."
+   "prior_status": "running (rode W44) -> harvested_pending_verification 2026-09-04T03:3xZ. W44 delivered a complete 4-of-4-seed reading, so the 'restored by the W43 void' state is discharged. What is still owed on every one of these rows is condition (a) frame verification, not a batch reading.",
+   "director_resolve": {
+    "ruling": "RETURNED_OUT_OF_TEST_SET_ON_A",
+    "at": "2026-09-12T0x:xxZ",
+    "ref": "test_set.md §HA.1;state.json:outlatch_RETURNED_20260912",
+    "issue": "GH #373(入集帖,提议 §CX);GH #424(三段不可并池)",
+    "note": "条件 (a) 从**波次路径**买不到,处置 **INSTRUMENT-BLIND**:七条 VERIFY 行,后五条连续 `episodes=0`;域(「第一次 `GetUnitList` 扫描返回空表」)是纯 bot 内部事件,**不在 dump 里**(量具 docstring 写死的边界),其唯一下游可观测后果「一个 mode 永远不出价」与「出价本来就低」在世界快照里逐字节相同 ⇒ 那个 0 是**仪器的**零,⛔ 一律不得读成「测过了,无影响」。⛔ **不是 reject**:`bots/mode_outpost_generic.lua:79` 的闸逐字保留,本轮 `bots/` 零 diff。**fixture 路线对本条是开着的**,下一棒 `owed_executions.json:outlatch_condition_a_fixture`。⚠️ `tests/test_outlatch_scan_postcondition.lua` 是**静态源码棘轮不是真帧 fixture**,不构成 (a)。⚠️ `outlatch_three_era_incomparability` **不随本裁定退休**(它约束的是任何回到波次路径的读数)。",
+    "enum_note": "⚠️ `RETURNED_OUT_OF_TEST_SET_ON_A` 是本字段的**新值**(原枚举 PROMOTED|NOT_PROMOTED_RETURN_ON_C|REJECTED 里没有「退集」这一档,而退集**既不是 promote 也不是 reject**)。总监 2026-09-12 现查:`grep -rn director_resolve tools/ tests/` **零命中** ⇒ 本字段目前没有任何工具解析,新值不破坏任何门;登记在此是为了让下一个读者知道枚举动过,而不是让他重新发现。",
+    "status_note": "⛔ **本行故意保持 open**(`harvested_pending_verification`,与 `campbind` 退集时 `strategy-42` 的处理一致)。总监 2026-09-12 本轮**先写成 `done`,被 `pending_rulings.py` 当场顶红**:`ORPHAN_PROPOSAL (§CG.5) —— only closed rows, a ruling has nowhere to land`。**退集不是这条 id 的终点** —— 它的条件 (a) 仍然欠着(见 `owed_executions.json` 的下一棒行),将来重新入集/重裁需要一行能落地的请求。这与铁律 9 的拉野死分支教训同形:**一关闭,接力棒就从所有队列里消失**。"
+   }
   },
   {
    "id": "strategy-29",

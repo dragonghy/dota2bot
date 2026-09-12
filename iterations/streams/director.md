@@ -563,6 +563,57 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-12T05:4xZ**:**RULING 22/23 —— 两条退集(`outlatch` + `rotscope`),armed 29 → 27;owner P4.2 的 ≥2 本轮达标。**
+  零 AWS(**一次调用都没有**)、零波次、**`bots/`+`game/` 零 diff**、**不发 owner 邮件**、无 promote、无 reject、无入集。
+  全文 `iterations/reports/director/20260912T054500Z.md`,档案 `test_set.md §HA`(§HA.0–§HA.5),
+  机器键 `state.json:outlatch_RETURNED_20260912` / `rotscope_RETURNED_20260912`。成员串 **239 字节**,md5 `76a888b622124fc5488503aa36ef6b25`。
+  ⭐⭐⭐ **(甲) 本轮最该被读走的一条不在裁定里:一条棘轮把 owner 的优先项写反了,而它的值恰好卡在今天这一步。**
+  `tests/test_pending_rulings.py` 的 `check(len(members) >= 29, ...)` 是 **2026-08-24** 写的**下界**,
+  那时 armed 集只会变大;**P4.2(09-05)把方向掉了头**(缩到 ≤20,**总监的产出指标就是集合变小**)
+  ⇒ 它断言的正是优先项的反面。**它偏偏今天才红**,是因为下界值 29 恰等于此后集合到达的最小值
+  (32 → 30 → 29,**每次都刚好满足**)⇒ 它对**第一条真正把集合推过 29 的裁定**开火,此后 **7 条退集会条条踩到**。
+  ⛔ **修法不是把 29 改成 27**(GH #106/#127/#538 同族:把总体规模写成字面量;§7d 的规矩是「改成断言记录的内部自洽」,
+  调值只买一轮**并把陷阱重新上膛**)。实际修法:line 3 本就用散文写着 line 2 的**条数/字节/md5**,让 line 2
+  **对着它自己的记录核** —— 截断抓得到、「改串忘改记录」抓得到、**永不过期**,顺带把三个装饰性数字变成被检查的值。
+  变异台 **4/4 CAUGHT 零 NO-OP**(M3 = 砍掉最后一个 id 而记录不动,三条断言同时红),还原按文件副本、md5 `OK`。
+  📌 *一条写成字面量的规模断言,会在它守护的那个量**第一次按计划移动**的那天开火 —— 那天开火的是计划,不是缺陷。*
+  ⭐⭐⭐ **(乙) 三条退集现在有三个处置名,而把它们叫成同一个名字会让下一个人用错的理由去救错的 id(§HA.3)。**
+  `campbind`(§FX)= `DOMAIN-NOT-REACHED`(§FW.2 **通过** ⇒ 零是**域的**);
+  `outlatch`(§HA.1)= **`INSTRUMENT-BLIND`**(§FW.2 **不通过**,域「不在 dump 里」⇒ 零是**仪器的**;
+  **且是被裁方自己先说的**,录像组已主动停手「本组不再自行发起同型核验」);
+  `rotscope`(§HA.2)= **`UNOBSERVABLE-BOTH-ROUTES`**(第一条**两条路同时堵死**:波次路命令不可观测 +
+  58-id 腿不许分摊;fixture 路由 **GH #474** 结构性堵死 —— `J.GetProperTarget` 每帧恒 `nil`,**165 个文件**引用它,
+  **那个堵点不是本 id 的**)。**动作相同(退集),代价差三个量级**:去做那份 fixture / 去做一份还不存在的 fixture / **谁也做不了直到 #474**。
+  📌 *退集是一个动作,不是一个理由;台账要存的是理由。*
+  ⭐⭐ **(丙) 特意没裁的三条,理由各自不同 —— `abilanc` 差点被我裁掉。**
+  `illureal` 的 `episodes=0` 是**「本轮未逐帧核过任何一帧」**(域上界 152)⇒ **掉棒不是买不到**;
+  `abilanc` 的 **SILENT 看着最硬,量的却是牌桌**(`GetMostHpUnit` 有 **13 个**英雄文件调用,含 axe/skeleton_king/luna,
+  而那六发施法来自 skywrath/zuus/spirit_breaker,**三个文件各 0 次**)⇒ **载体门**(`--assert-carrier`,从没对它用过);
+  `pullcad` 的陷阱**树上已修好**(`mode_roam_generic.lua:343` 已是独立门,`FROZEN none`)。
+  ⚠️ **(丁) 两条自造红都是工具举的手,不是我读出来的**,而两条都是**退集流程里我漏做的一步**:
+  ① 把 queue 行写成 `done` ⇒ `ORPHAN_PROPOSAL`(§CG.5「a ruling has nowhere to land」);现查先例
+  `campbind` 退集时 `strategy-42` **保持 open** ⇒ **退集不是 id 的终点,一关闭接力棒就消失**(铁律 9 拉野死分支同形),已回改;
+  ② `armed_since.json` 要求退集盖 `retired_at` ⇒ `arm_since.py` `STALE ROW`,已盖章并写 `retired_note`。
+  **这两条合起来就是退集流程的事实清单,下一个总监照做可少两个来回。**
+  ⭐ **(戊) 连带读数**:载体项 **6 → 5**,`pudge` 出局(`rotscope` 的唯一载体)⇒ **选种解空间变宽**,
+  往后镜像波不再被迫排出 Pudge。⚠️ 反向也记了:`rotscope` 重新入集会把这条约束**一起带回来**。
+  ⚠️ **(己) 本轮自己的失手,又是纪律 3**:开工自检第一条命令写成 `… | tail -60`,**被 §22 守卫当场拒**
+  (`exit 2, nothing checked`),改 `rc.sh` 后拿真码。**守卫仍然只长在自检那一条命令上。**
+  💰 **零 AWS**,不作 MTD 新声称;三条线一字未动。🩺 五组 24h 内全部有产出,无掉队组。**armed 27,离解冻线(≤20)差 7。**
+  🚦 **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN`(0 warnings)/ `py gate: 96 ran, 0 findings, 0 uncertifiable, 25.8s` /
+  `lua gate: 343 ran, 0 findings, 0 uncertifiable, 9 known-red, 311.9s`;⛔ **未用 `RULE6_BYPASS`**。
+  **开工自检 `RC_EXIT=3`**:`legs run : 12` / `FINDINGS : cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` /
+  **`UNCERTIFIABLE (exit 2): none`** —— 与前两轮同一组存量。**「零新增」是量出来的**:`git stash` 复跑
+  (前几轮点名跳过的那一步本轮做了)⇒ `pending_rulings` 基线 `RIDESHARE 1/ORPHAN none/ROWLESS 3` 逐项相同,
+  `test_carrier_terms.py` **基线就 5 failed**。动态半(GH #124)**未跑,不声称**(`bots/` 零 diff)。
+  ⑨ **下次触发**:①判定完结 ≥2 继续,**下轮前两个候选 `cmqreach`(verify 6 全 INDETERMINATE,先问「仪器还是域」)/ `arbheart`**;
+  ⛔ `illureal`/`abilanc` **不算候选**(欠的是交棒和载体门,不是裁定)
+  ②⭐ **把 (丙) 那两根棒交出去 —— 本轮未开 owed 行,是我自己的欠账,不许再顺延**
+  ③⭐⭐ 上一轮 ② 的缺口(三个 promote-time 普查只读 `bots/`)**第二轮顺延**,
+  **但人口本轮量过了,读数在报告 §10,不要从零再量**(58 行/10 id,抽查现场**全部合法**
+  ⇒ 词法普查会从出生起亮 58 个假阳;真判别式「对未来波次的前提 vs 对已存语料的前提」**在词法层不可得**)
+  ④GH #584(**第五轮顺延**)/ 批测台交棒 ① / 五条 `a_evidence_*`(**第九次顺延**)/ patch 缺口 P3 /
+  `DECISIONS_NEEDED` 15/18/19 等 owner(随 W37 周信)。
 - **2026-09-12T02:45Z**:**RULING 19/20/21 —— 第十二条 promote(`tpcommit`,锚点 `stable-v8`,armed 30 → 29)、`lf_rescue` HOLD、批测台交棒 ② 答复。判定完结 2,owner P4.2 的 ≥2 本轮达标。**
   零 AWS(**一次调用都没有**)、零波次、**不发 owner 邮件**(第 19 条进 `DECISIONS_NEEDED.md` 等 W37 周信)。
   全文 `iterations/reports/director/20260912T024500Z.md`,档案 `test_set.md §GZ`(§GZ.1–§GZ.3),

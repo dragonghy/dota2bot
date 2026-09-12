@@ -242,7 +242,9 @@
   "rotscope": {
    "armed_since": "2026-08-31",
    "precision": "exact",
-   "source": "test_set.md:87"
+   "source": "test_set.md:87",
+   "retired_at": "2026-09-12",
+   "retired_note": "退回出集(test_set.md §HA.2;state.json:rotscope_RETURNED_20260912;armed 28 → 27)。处置 **UNOBSERVABLE-BOTH-ROUTES** —— 第一条**两条路同时堵死**的 id:波次路上命令(`ActionQueue_AttackUnit`)不可观测且 58-id 腿不许分摊;fixture 路由 **GH #474** 结构性堵死(`make_fixture.py` 不产出攻击目标字段,109 个 fixture 里 0 个;`J.GetProperTarget` 在每一帧恒 `nil`,而它被 165 个文件引用)——**那个堵点不是本 id 的**。⛔ 不是 reject,`bots/` 零 diff。重新入集挂在 GH #474 的修复上(owed 行 `rotscope_readmission_on_gh474`),且仍受 P4.2 冻结约束。⚠️ 重新入集会把 **`pudge` 载体项**一起带回来(§HA.5)。"
   },
   "roamidle": {
    "armed_since": "2026-09-01",
@@ -254,7 +256,9 @@
   "outlatch": {
    "armed_since": "2026-09-01",
    "precision": "exact",
-   "source": "test_set.md:84"
+   "source": "test_set.md:84",
+   "retired_at": "2026-09-12",
+   "retired_note": "退回出集(test_set.md §HA.1;state.json:outlatch_RETURNED_20260912;armed 29 → 28)。处置 **INSTRUMENT-BLIND** —— 条件 (a) 从**波次**这条路买不到:域是「第一次 `GetUnitList` 扫描返回空表」,一个纯 bot 内部事件,**不在 dump 里**(量具 docstring 的边界),七条 VERIFY 行里后五条连续 `episodes=0`,而录像组已自行停手不再走同一条路。⛔ 不是 reject,gate 逐字保留,`bots/` 零 diff。⛔ `episodes=0` 不得读成「测过了,无影响」。买 (a) 改走 **fixture**(owed 行 `outlatch_condition_a_fixture`);⚠️ `tests/test_outlatch_scan_postcondition.lua` 是静态源码棘轮,**不构成 (a)**。"
   },
   "illureal": {
    "armed_since": "2026-09-01",

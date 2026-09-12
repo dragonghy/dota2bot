@@ -1,6 +1,7 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,rotscope,outlatch,illureal,slotarb,slotdust,wandbleed2,arbheart
-**成员串 29**(上一行,**257 字节**,md5 `33047ce53c029f3901e5f63eab872ecb`)。本行 **2026-09-12T0x:xxZ 的变动:一条 `PROMOTE`(30 → 29,`tpcommit`)**,总监裁定全文 **§GZ**;判定完结 **2**(`tpcommit` PROMOTE + `lf_rescue` HOLD/退回 —— **两条是两个独立的判断,不是一个原子的两半**,所以这里记 2 而不是 1;owner P4.2 的 ≥2 本轮达标)。⛔ **`lf_rescue` 留在串里**:HOLD 不出集,它欠的是效果侧修复不是读数。
+lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart
+**成员串 27**(上一行,**239 字节**,md5 `76a888b622124fc5488503aa36ef6b25`)。本行 **2026-09-12T0x:xxZ 第二轮的变动:两条 `RETURNED`(退集,29 → 27,`outlatch` + `rotscope`)**,总监裁定全文 **§HA**(§HA.1 `outlatch` / §HA.2 `rotscope` / §HA.3 两条的处置不同名);判定完结 **2**(两条退集,owner P4.2 的 ≥2 本轮达标)。⛔ **两条都不是 reject**:gate、helper、调用点**逐字保留**,`bots/`+`game/` 本轮**零 diff**;退集买的是「不再为一份已证买不到的证据付波次成本」,**不是**「这个改动是坏的」。⛔ **两条的退集理由不同名,不许混着写**(见 §HA.3)。
+*(上一轮同日的历史行:**成员串 29**,257 字节,md5 `33047ce53c029f3901e5f63eab872ecb`,一条 `PROMOTE`(30 → 29,`tpcommit`),裁定全文 §GZ,判定完结 2。)*
 ⭐⭐⭐ **本节最该被读的一条(§GW.1):这两条不是「又一次同轮 promote」,是一次 promote 只有一种合法的切法,而那件事是四种组合上的算术,不是偏好。** 上一轮(§GU)两条同轮的理由是「近五波每一波都同时 armed,家族级 (b) 分不开」——**那是一条关于读数的理由**。本轮的理由更硬,**它关于树本身**:四种组合里有一种**已经被量到是坏的**,而**它恰好就是单独促进 `zusult` 会发出去的那一种**。
 - **都不 armed** = 出厂树。
 - **只 `zusult`** = **量到 BUGGY**。GH #477 在 W44 上逐帧确认 **3** 发 Lightning Bolt 落在该门自己的域内(`20260904_003453_slot8`,三发目标 1.00/1.00/0.82 血,大招 1 级、冷却 0,mana −131/−131 花费确认),W45 读 **8.0 泄漏/100 域内帧**。⇒ **单独促进 `zusult`,就是把这个配置设成出厂默认。**
@@ -4914,3 +4915,185 @@ W66 就是那次测量:四台 spot,三台在 **48 秒内跨两个 AZ** 被 `no-c
   `done_when` 裸读。⭐ **立这一行的理由就是本轮这件事**:上一轮之所以把 `lf_rescue` 排进 promote 第一格,
   正是因为**没有任何一行在说「这条 id 欠的是效果侧修复」** —— 08-19 的「退回协同组」只活在
   `state.json` 的一个键里,而 `state.json` **没有人在选下一步时会去读**。
+
+---
+
+## §HA 2026-09-12T0x:xxZ(第二轮)总监:**RULING 22/23 —— 两条退集(`outlatch` + `rotscope`),armed 29 → 27** —— 本节最该被读的是 **§HA.3:三条退集记录现在有三个不同的处置名,而把它们叫成同一个名字会让下一个人用错的理由去救错的 id**;以及 **§HA.2:`rotscope` 是第一条**两条路同时堵死**的 id,而第二条路的堵点不是它的(GH #474,波及 165 个文件)**
+
+**零 AWS(一次调用都没有)、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote、无 reject。**
+判定完结 **2**(owner P4.2 的 ≥2 本轮达标)。成员串 **29 → 27**,239 字节,md5 `76a888b622124fc5488503aa36ef6b25`。
+
+### §HA.0 选取不是我挑的,是现读出来的
+
+章程「下次触发」① 逐字要求「先跑 `a_evidence_owed.py` 现读别抄报告」,照办:
+`A-EVIDENCE-OWED armed 29 verdict 29 owed-row 0 UNOWED 0`,`RC_EXIT=0`
+⇒ **09-05 立项 P4.2 时那句「40 条 id 的 (a) 今天没有一行替它举手」已经结清**,
+瓶颈从**投递**移回**裁定**。`verify_coverage.py --all` 现读 29 行,
+按「核验次数最多、产出最少」排:`outlatch` **7 次核验 / episodes 0**、`cmqreach` 6/158、
+`lionqdmg` 5、`ownhalf` 5。两条被裁的是 `outlatch`(7 次)与 `rotscope`
+(1 次,但那一次**自己就把两条路都判死了**,见 §HA.2)。
+
+⛔ **本轮特意没裁的三条,理由各自不同,写下来免得下一轮当遗漏补上**:
+- **`illureal`**(verify 3 / episodes 0):那个 0 **不是域的 0**,是
+  `20260902T065455Z.md` 逐字「**本轮未逐帧核过任何一帧**」——域上界 152 帧,**没人去看**。
+  这是**掉棒**不是**买不到**,而 §FB.4 之后这两种理由**不许混着写**。处置 = 交棒,不是退集。
+- **`abilanc`**(verify 2 / verdict **SILENT** / episodes 122):SILENT 看着像最硬的退集理由,
+  **而它这一次是载体缺席**。`grep -rln GetMostHpUnit bots/` ⇒ **13 个英雄文件**(含焦点英雄
+  axe / skeleton_king / luna),而录像组 `20260911T125909Z.md` §3.1 的六发 under-tier 施法
+  全部来自 skywrath_mage / zuus / spirit_breaker，**三个文件各 0 次调用**。
+  ⇒ 域没被走到的原因是**牌桌上没有能走到它的英雄**,`seed_draft.py --assert-carrier`
+  (backlog §11)正是为这件事造的、**没有人对这条 id 用过**。处置 = 载体门,不是退集。
+- **`pullcad`**(verify 1 / episodes 5020):`promote_atoms.py` 本轮现读
+  `FROZEN none`,`bots/mode_roam_generic.lua:343` 已是**独立门** `J.IsSoakCandidate('pullcad')`
+  ⇒ AGENTS.md 记的那个 `pullcad` 陷阱**在树上已经修好了**,该 id 不是空操作。**不退。**
+
+### §HA.1 RULING 22:`outlatch` 退集,处置 **INSTRUMENT-BLIND**
+
+**ruling**:RETURNED OUT OF THE TEST SET(29 → 28)。**不是 reject**:
+`bots/mode_outpost_generic.lua` 的闸(`:79` `local bRescan = J.IsModeTurbo() and J.IsSoakCandidate('outlatch')`)、
+`OUTPOST_RESCAN_INTERVAL`、`NextOutpostScanTime` **逐字保留**,本轮 `bots/` 零 diff。
+
+**why_a —— 条件 (a) 从波次路径买不到,而且这一次是仪器瞎不是域空**:
+录像组 **7 条 VERIFY 行**,后 **5 条连续 `episodes=0`**
+(`20260907T185034Z` / `20260907T215610Z` / `20260908T005451Z` / `20260908T033000Z` / `20260908T064838Z`)。
+机制是**结构性的、写死在量具 docstring 里的**:`outlatch` 的域是「**第一次** `GetUnitList(UNIT_LIST_ALL)`
+扫描返回空表」——一个**纯 bot 内部**的事件。它的下游可观测后果恰恰是**一个 mode 永远不出价**,
+而「mode 因为闩死了不出价」与「mode 因为出价本来就低而不出价」在世界状态快照里**逐字节相同**。
+⇒ `episodes=0` 是**仪器的 0**,不是**域的 0**。
+
+⭐ **§FW.2 检查(「仪器是不是瞎的」)本轮的答案与 `campbind` 相反,而这正是两条不同名的原因。**
+`campbind` 那次 §FW.2 **通过**(同一条归因腿在同一批帧上两个方向都返回非零)
+⇒ 它的零是**域的零** ⇒ `DOMAIN-NOT-REACHED`。
+`outlatch` 这次 §FW.2 **不通过,而且是被裁方自己先说的**:录像组 `20260908T064838Z.md` §六逐字
+「它的域…**不在 dump 里**…本波 34 个组 / 37 次 attempt 只是**活性上界**」,
+并据此**主动停手**:「⇒ **兑现上一轮点名的第 (2) 条:不再用同一条路买第六次。**
+…本组不再自行发起同型核验。」**这是一份交到总监手上的、被裁方已经停在裁定形状里的棒**
+(`campbind` §FX 的 `baton_age` 记过同一种形状:被裁方先停,棒才是 BLOCKING 的)。
+⛔ **`episodes=0` 一律不得读成「测过了,无影响」。**
+
+**why_not_留着 armed**:不是免费默认。五轮波次各买回一个相同的零;
+`outlatch_three_era_incomparability`(GH #424)还给它加了一道**三段不可并池**的分界
+(I = W38 及更早 / II = W39–W53 / III = W54 起),**只有第 III 段能干净买** ——
+即每多留一轮,能用的语料**比总语料少一段**,而买不到的理由与语料多少无关。
+
+**condition_b**:**无可主张的负面**,也**不作为正面证据**。armed 腿带 29–58 个 id,
+按章程 4a(§BW.3)任何聚合差分**不许记到这一条名下**;`winrate` 通道按 GH #352 不引用。
+⇒ 粗粒度门「对胜负无明显负面影响」**以「没有任何可归因于它的负面读数」通过**,措辞照抄不得加强。
+
+**next(交棒,机器可读)**:`owed_executions.json:outlatch_condition_a_fixture`,executor = 录像组/协同组。
+**fixture 路线对本条是开着的**(与 `rotscope` 的分野见 §HA.2):`tests/test_outlatch_scan_postcondition.lua`
+**已经在树上**,但它是**静态源码棘轮**(读一个文件证明机制),**不是一份真帧 fixture**,
+⇒ 它**不构成条件 (a)**,别把它当成已经买到了。
+⭐ **退集反而让 fixture 路线更干净**:fixture 钉的是**一帧**,不是**一池波次**,
+所以 §HA.1 引的那道三段分界**对 fixture 路线不适用**。
+⇒ `outlatch_three_era_incomparability` **仍然 owed,不退休**:它约束的是**任何回到波次路径的读数**,
+而本轮只是暂停了那条路径,没有满足它的 `done_when`(「某一轮报告逐字写明读数取自哪一段」)。
+
+### §HA.2 RULING 23:`rotscope` 退集,处置 **UNOBSERVABLE-BOTH-ROUTES**
+
+**ruling**:RETURNED OUT OF THE TEST SET(28 → 27)。**不是 reject**:
+`bots/mode_roam_generic.lua` 的 Pudge 块改动**逐字保留**,本轮 `bots/` 零 diff。
+
+**why_a —— 这是第一条「两条路同时堵死」的 id,而两条堵点性质不同**:
+录像组 `20260904T042500Z.md` §4 给的三条理由**缺一不可**,本轮逐条复核后照收:
+1. **命令不可观测**:combat log 不记 `ActionQueue_AttackUnit`;`.dem` 里既没有 mode 竞价结果,
+   也没有 `J.GetProperTarget` 的取值。唯一的下游可观测量(一次普通攻击)**每个 mode 都产生**。
+2. **机制直接预测的量两层反号** ⇒ 铁律 4(i-b) 判**噪声**,不写进结论。
+3. **就算不反号也记不到它名下**:armed 腿带 **58 个 id**,按 §BW.3 聚合差分不许分摊
+   ⇒ (a) **只能按触发级逐帧买**,而第 1 条说明触发在这个量具下不可见。
+⛔ 录像组自己写死了三个**不适用**的词,本轮照抄不改:**不是 `DOMAIN-NOT-REACHED`**
+(域每局被走到 87–114 次)、**不是 `SILENT`**(SILENT 要能说「域到了而它没动」,
+而这里「它动没动」本身不可观测)、**不是 `BUGGY`**(逐帧两帧都正确,无一帧与 gate 矛盾)。
+
+⭐⭐ **第二条路(fixture)也是堵的,而堵点不是这条 id 的 —— 这是本节最该被读的一条。**
+GH **#474**([harness],录像组 2026-09-04 开):
+- `tests/mock/bot_api.lua:87-91` 的 `handle_getters` 对 `GetAttackTarget` / `GetTarget` /
+  `GetCurrentActionTarget` 一律答 `nil`(`:165`)——**而这是正确的默认**,注释自己写了理由
+  (答 `0` 会让 `target:GetTeam()` 崩)。
+- `make_fixture.py` **不产出任何攻击目标字段**;**109 个 fixture 里 0 个**带这类数据。
+- ⇒ `J.GetProperTarget` 在**每一个 fixture 帧上结构性为 `nil`**,而它在 `bots/` 下被 **165 个文件**引用。
+📌 **可迁移的一句**:*§CU.5 当时把这件事记成了本 id 的一条 `[limit]`,
+而它其实是「fixture 路线整条堵死」——**一个被记在错误作用域里的限制,会让每一个后来者各自重新发现它一次**。*
+⇒ 退集**不等于**放弃:`#474` 修好那天,`rotscope` 的 (a) 才**第一次**有路可走。
+
+**condition_b**:同 §HA.1,**无可主张的负面,也不作正面证据**(58-id 腿,分摊被 §BW.3 禁止)。
+
+**next**:`owed_executions.json:rotscope_readmission_on_gh474`,`done_when` 挂在 **GH #474 的修复**上,
+不挂在时间上。⛔ **重新入集仍受 owner P4.2 冻结约束**(armed ≤ 20 之前一律 FROZEN-HOLD),
+本行**只登记解锁条件,不预先批准入集**。
+
+### §HA.3 ⭐⭐⭐ 三条退集,三个处置名 —— 而把它们叫成同一个名字会让下一个人用错的理由去救错的 id
+
+到本轮为止,退集记录有三条,**它们看起来完全一样(都是 armed → 出集、都是 `bots/` 零 diff、
+都写着「不是 reject」),而解锁条件互不相同**:
+
+| id | 处置 | 零是谁的零 | 解锁条件 | 需要花钱吗 |
+|---|---|---|---|---|
+| `campbind`(§FX,09-07) | `DOMAIN-NOT-REACHED` | **域的**(§FW.2 通过) | 一帧已点名的目标帧做成 fixture | 否(除非语料已过期) |
+| `outlatch`(§HA.1,本轮) | `INSTRUMENT-BLIND` | **仪器的**(域不在 dump 里) | **fixture 路线本就开着**,做一份真帧 fixture | 否 |
+| `rotscope`(§HA.2,本轮) | `UNOBSERVABLE-BOTH-ROUTES` | **两条路各自的** | **GH #474**(别人的堵点,波及 165 文件) | 否,但**不由本组决定何时** |
+
+**为什么这张表必须存在**:三条的**动作**相同(退集),**代价**却差三个量级 ——
+`campbind` 是「去做那一份 fixture」,`outlatch` 是「去做一份还不存在的 fixture」,
+`rotscope` 是「**谁也做不了,直到 #474**」。**一个只记了「退集」的台账,会让第三种被当成第一种去救**,
+于是下一轮有人去写一份**结构上必然为 `nil`** 的 fixture,跑完发现每一帧都没有 target,
+**再把这件事重新发现一次**——这正是 §HA.2 那句「记在错误作用域里的限制」自己预言的失效。
+📌 *退集是一个动作,不是一个理由;台账要存的是理由。*
+
+⚠️ **诚实边界(照抄,不得省略)**:本轮**没有**新买任何一条 (a) 证据,
+**也没有**对这两条 id 的**效果**作任何判断。退集买到的**只有**一件事:
+**不再为一份已被证明在当前量具下买不到的证据支付波次成本**。
+它**不是**「这两个改动没用」,**也不是**「这两个改动有用」。
+
+### §HA.4 ⭐⭐ 本轮最该被下一个总监读走的一条不在裁定里:**一条棘轮把 owner 的优先项写反了,而它正好卡在今天**
+
+落地这两条退集时,`tests/test_pending_rulings.py` **当场顶红**:
+
+```
+FAIL: member string shrank below its 2026-08-24 size (29)
+```
+
+断言原文是 `check(len(members) >= 29, ...)` —— **一条 2026-08-24 写下的下界**,
+写它的时候 armed 集**只会变大**。而 owner **P4.2(2026-09-05)把方向掉了个头**:
+新 id 一律冻结入集,集合必须缩到 **≤ 20**,并且**总监的产出指标就是集合变小**。
+⇒ 这条棘轮**断言的正是 owner 优先项的反面**。
+
+⭐ **它为什么偏偏今天才红**:下界的值 **29** 恰好等于它写下之后集合到达的最小值 ——
+前几轮的 promote 是 32 → 30 → 29,**每一次都刚好满足 `>= 29`**。
+⇒ 它对**第一条真正把集合推过 29 的裁定**开火,
+而在那之后,**P4.2 路上每一条退集都会踩到它**(29 → 20 还有 7 条)。
+
+⛔ **修法不是把 29 改成 27。** 这是 GH #106 / #127 / #538 **同一族**
+(「一条断言把一个总体规模写成字面量」),而 §7d 给这一族定的规矩不是「把字面量调一下」,
+是「**改成断言那份记录的内部自洽**」。把 29 改成 27 只买到一轮,**并把同一个陷阱重新上膛**。
+
+**实际修法**:下界真正想守的是「line 2 被一次坏编辑悄悄截断」。
+而 **line 3 本来就用散文写着 line 2 的条数、字节数和 md5** ——
+让 line 2 **对着它自己的记录**核,**严格强于任何下界**:
+截断抓得到、「改了串忘了改记录」抓得到、**而且永远不会过期**;
+顺带把三个**装饰性散文数字变成被检查的值**。
+新增 `raw_member_line()` / `declared_member_record()`(条数必需;字节与 md5 **可选** ——
+老轮次不一定记了,**「没记」与「记错」是两种发现,混成一种正是这条断言当初该被修却只会被调值的原因**)。
+
+**变异台(控制 + 四发,还原按文件副本,md5 逐位复核 `OK`)**:
+控制 `682 checks / 0 failed`;**M1** line 3 条数 27→28 ⇒ 红;**M2** md5 改零 ⇒ 红;
+**M3** line 2 砍掉最后一个 id、记录不动(**这正是老下界真正想守的那件事**)⇒ **三条断言同时红**;
+**M4** 字节数 239→240 ⇒ 红。**4/4 CAUGHT,零 NO-OP。**
+📌 *一条写成字面量的规模断言,会在**它所守护的那个量第一次按计划移动**的那天开火 —— 而那天,开火的是计划,不是缺陷。*
+
+### §HA.5 退集的一个连带读数:载体项少了一个,**选种解空间变宽**
+
+`carrier_terms.py` 本轮两次现读(新旧串各一次,`RC_EXIT=0`,`0 unresolved`):
+
+```
+29-id: 6 hero-scoped, 23 generic => 6 term(s)
+       TERMS crystal_maiden,lion,obsidian_destroyer,pudge,skeleton_king,spirit_breaker
+27-id: 5 hero-scoped, 22 generic => 5 term(s)
+       TERMS crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker
+```
+
+⇒ **`pudge` 出局**(它是 `rotscope` 的唯一载体,`bots/mode_roam_generic.lua:1039`)。
+此前几轮的记法是「`TERMS` 行与上一波**逐字节相同** ⇒ 选种解空间不动」;
+**本轮它动了,而且方向是变宽** —— 往后的镜像波**不再被迫排出 Pudge**。
+⚠️ **反向也要记**:`rotscope` 将来若重新入集(GH #474 修好后),**这条 Pudge 约束会一起回来**,
+⇒ 重裁它的那一轮**必须把这一项算进代价**,不能只看「一个 id 而已」。

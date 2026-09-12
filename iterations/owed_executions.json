@@ -1013,6 +1013,46 @@
     "kind": "manual"
    },
    "done_when_note": "GH #96 的一条落地修复在 `bots/` 里,且 `tests/` 里存在一条 fixture 测试,其断言同时覆盖 (i) 一条 `lf_rescue` 帧被正确拒绝或改落点、(ii) 至少一条**出厂**消费者帧的同一判定、(iii) `_123546 t=145.4` 仍被放行。三条齐 ⇒ DISCHARGED,并**在同一个工作单元内**把重新判定请求交回总监。 ⚠️ 这一行**判产物不判工作**:三条断言存在即结清,好不好由重新判定那一轮读。⛔ **`lf_rescue` 的 (a) 再测一次不结清这一行** —— 那正是上一轮踩的坑。 ⛔ **`kind` 只能是 `manual`**:释放条件里那条 fixture 测试的文件名此刻还不存在,写成 `path_exists` 就是替协同组把文件名先定死。⚠️ 顺带一条本轮实测的 registry 纪律:`done_when` **必须是带 `kind` 的对象,不是散文** —— 我第一次就写成了字符串,`pending_rulings.py:_machine_key_status` 当场 `AttributeError`,**而抓住它的是推送闸的 python 那条腿(GH #616),不是任何人的眼睛**。"
+  },
+  {
+   "id": "outlatch_condition_a_fixture",
+   "issue": "GH #373(入集帖,提议 §CX);GH #424(三段不可并池,**不随本裁定退休**)",
+   "ruling": "`outlatch` RETURNED_OUT_OF_TEST_SET_ON_A(总监 2026-09-12T0x:xxZ,全文 `iterations/streams/test_set.md §HA.1`,armed 29 → 28)。⛔ **不是 reject**:`bots/mode_outpost_generic.lua:79` 的闸、`OUTPOST_RESCAN_INTERVAL`、`NextOutpostScanTime` 逐字保留,本轮 `bots/` 零 diff。处置 **INSTRUMENT-BLIND** —— 与同族的 `campbind`(§FX,`DOMAIN-NOT-REACHED`)**不同名,理由相反**:那次 §FW.2 检查**通过**(同一条归因腿在同一批帧上两个方向都非零)⇒ 零是**域的**;这次 §FW.2 **不通过**,而且是被裁方自己先说的(录像组 `20260908T064838Z.md` §六:域「**不在 dump 里**」,37 次 attempt 只是**活性上界**),并据此主动停手「本组不再自行发起同型核验」⇒ 零是**仪器的**。⛔ `episodes=0` 一律不得读成「测过了,无影响」。",
+   "ruled_at": "2026-09-12T0x:xxZ",
+   "executor": "replay-check(录像组;它是把这条棒交到总监手上、并已停在裁定形状里的那一方)",
+   "trigger": "无外部触发器,**也没有时限** —— 这是本行与 `campbind_condition_a_fixture` 的实质差别:那一行的目标帧属于 W46、同族 W44 录像约 2026-09-25 过期,**取晚了就没了**;本行要的 fixture 帧**还没被点名**,可以从任何一段语料里选,因此不抢时间。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HA.1(裁定全文档案)",
+    "iterations/state.json:outlatch_RETURNED_20260912",
+    "iterations/queue.json:strategy-28 的 director_resolve 字段(被裁方读的那一格)",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "why_registered_here": "§DR:常驻义务,不属于任何一波。⚠️ `outlatch` **已经退集**,所以 arm 串里没有任何 id 行能载它 —— 与 `campbind_condition_a_fixture` / `lanekill_condition_a_detector` 同形。",
+   "done_when": {
+    "kind": "path_exists",
+    "path": "iterations/reports/replay-check/a_evidence_outlatch.md"
+   },
+   "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句**:该报告里出现一份 `tests/fixtures/` 的**真帧** fixture + 一条断言:在一个 `GetUnitList(UNIT_LIST_ALL)` 不含任何 `#DOTA_OutpostName_*` 的真实帧上,armed 时 `DidWeGetOutpost` **未被置位**(或 `NextOutpostScanTime` 被推进 ⇒ 下一秒会重扫),而 shipped 时它**被置位**。⛔ **`tests/test_outlatch_scan_postcondition.lua` 不算** —— 它已经在树上,但它是**静态源码棘轮**(读一个文件证明机制),不是真帧 fixture,**不构成条件 (a)**;把它当成已完成是本行最可能的失效方式,所以写在这里。⭐ **退集让这条路更干净**:fixture 钉的是**一帧**不是**一池波次**,所以 GH #424 那道三段分界**对本行不适用**。"
+  },
+  {
+   "id": "rotscope_readmission_on_gh474",
+   "issue": "GH #368(入集帖,提议 §CU,裁定 §CV);**GH #474**([harness],堵点本身 —— **不是本 id 的**)",
+   "ruling": "`rotscope` RETURNED_OUT_OF_TEST_SET_ON_A(总监 2026-09-12T0x:xxZ,全文 `iterations/streams/test_set.md §HA.2`,armed 28 → 27)。⛔ **不是 reject**:`bots/mode_roam_generic.lua` 的 Pudge 块改动逐字保留,本轮 `bots/` 零 diff。处置 **UNOBSERVABLE-BOTH-ROUTES** —— 这是第一条**两条路同时堵死**的 id,而两条堵点性质不同:波次路是**量具看不见这个命令**(combat log 不记 `ActionQueue_AttackUnit`,`.dem` 无 mode 竞价结果、无 `J.GetProperTarget` 取值,唯一下游可观测量每个 mode 都产生);fixture 路是 **GH #474**,且那个堵点**波及 165 个文件,不归本 id**。",
+   "ruled_at": "2026-09-12T0x:xxZ",
+   "executor": "总监(本行是**解锁条件登记**,不是一份取证任务 —— 执行方在 #474 修好之前不存在;#474 落地后由总监在下一次触发重裁本 id 的入集)",
+   "trigger": "**GH #474 的修复落地**(`make_fixture.py` 产出攻击目标字段 且 `tests/mock/bot_api.lua` 能在有该字段时答出真 target)。⛔ **不挂在时间上** —— 本行不会因为「过了几轮」而到期。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HA.2(裁定全文档案)",
+    "iterations/state.json:rotscope_RETURNED_20260912",
+    "iterations/queue.json:strategy-26 的 director_resolve 字段(被裁方读的那一格)",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "why_registered_here": "§DR:常驻义务。⚠️ **本行的真正用途是防一次重复发现**:§CU.5 当时把「`J.GetProperTarget` 在 fixture 帧上 993/993 为 nil」记成了**本 id 的一条 `[limit]`**,而它其实是「fixture 路线整条堵死」。**一个被记在错误作用域里的限制,会让每一个后来者各自重新发现它一次** —— 没有这一行,下一个人会去写一份**结构上必然为 `nil`** 的 fixture,跑完才发现每一帧都没有 target。",
+   "done_when": {
+    "kind": "manual",
+    "note": "⚠️ 机器键买不到:验收物是**另一条 issue 的修复 + 一次总监重裁**,不是一个文件存在。**裸读得出的验收句**:GH #474 已关闭为已修,**且**某一轮总监报告对 `rotscope` 给出实质裁定(重新入集 / 继续 HOLD / reject),并逐字说明 fixture 路线现在是否真的通了。总监据此退休本行。"
+   },
+   "readmission_is_NOT_preapproved": "⛔ 重新入集仍受 owner P4.2 冻结约束:armed ≤ 20 之前,任何入集提议的唯一合法裁定是 **FROZEN-HOLD**。本行只登记解锁条件,**不构成预先批准**。"
   }
  ],
  "retired": [
