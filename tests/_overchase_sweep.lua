@@ -86,6 +86,11 @@ G.CHASE_COLLAPSE_R = chase and tonumber(chase:match('GetNearbyHeroes%( bot, (%d+
 G.CHASE_ISOLATED_R = chase and tonumber(chase:match('GetEnemiesNearLoc%( vEnemyLoc, (%d+) %)'))
 G.CHASE_ALLY_R = chase and tonumber(chase:match('GetAlliesNearLoc%( vEnemyLoc, (%d+) %)'))
 G.CHASE_LOW_HP = chase and tonumber(chase:match('GetHP%( ally %) < (0%.%d+)'))
+-- The pursuit lookback, parsed out of leg (a)'s third disjunct. It is the ONLY
+-- one of the three pursuit tests this corpus can answer (see oc_a_* below), and
+-- it is PAST TENSE -- which is GH #760's structural complaint about leg (b)
+-- restated at leg (a). oc_a_recentdmg_tight prices tightening it.
+G.CHASE_DMG_LOOKBACK = chase and tonumber(chase:match('WasRecentlyDamagedByHero%( enemy, (%d+%.%d+) %)'))
 G.CHASE_OWNHALF = chase and tonumber(chase:match('hEnemyAncient:GetLocation%(%) %) %- (%d+)'))
 G.CHASE_BUILDING_R = chase and tonumber(chase:match('building %) <= (%d+)'))
 -- The (d) disc. This is the number that makes the double count structural: it
@@ -125,6 +130,8 @@ for _, k in ipairs({ 'fixtures', 'live', 'oc_pairs', 'oc_iso_deep', 'oc_a_pass',
     'oc_d_numbers_tie', 'oc_fires', 'oc_raised',
     'oc_a_lowally_present', 'oc_a_pursuit_unseen',
     'oc_a_attacktarget', 'oc_a_ischasing', 'oc_a_recentdmg',
+    'oc_a_recentdmg_tight', 'oc_a_pass_tight', 'oc_a_dmg_dt_le_1s',
+    'oc_a_dmg_dt_le_02s',
     'oc_deep_building', 'oc_deep_midline', 'oc_deep_midline_shallow',
     'oc_iso_deep_building', 'oc_iso_deep_midline',
     'oc_fire_building', 'oc_fire_midline', 'oc_fire_midline_shallow' }) do
@@ -201,6 +208,7 @@ for _, path in ipairs(fixture_files()) do
                                 -- states it: not this bot, sub-threshold, and
                                 -- the chaser is on it.
                                 local bLowAlly = false
+                                local bLowAllyTight = false
                                 local bLowAllyPresent = false
                                 for _, a in pairs(J.GetAlliesNearLoc(vE, G.CHASE_ALLY_R or 900) or {}) do
                                     if J.IsValidHero(a) and a ~= bot
@@ -216,13 +224,59 @@ for _, path in ipairs(fixture_files()) do
                                         bLowAllyPresent = true
                                         local bTgt = (e:GetAttackTarget() == a)
                                         local bChase = J.IsChasingTarget(e, a)
-                                        local bDmg = a:WasRecentlyDamagedByHero(e, 2.0)
+                                        local bDmg = a:WasRecentlyDamagedByHero(
+                                            e, G.CHASE_DMG_LOOKBACK or 2.0)
+                                        -- [strategy 20260912, GH #760] The SAME
+                                        -- test at a 1.0 s lookback -- one
+                                        -- Turbo-era attack cycle, so "he is
+                                        -- still on my ally right now" rather
+                                        -- than "he was, two seconds ago". This
+                                        -- is the only present-tense narrowing
+                                        -- of leg (a) the dump can answer
+                                        -- (recent_damage carries per-event dt),
+                                        -- so it is priced HERE before any lever
+                                        -- is written. A no-op reading is a
+                                        -- refusal, not a green light.
+                                        local bDmgTight =
+                                            a:WasRecentlyDamagedByHero(e, 1.0)
+                                        -- ⭐ THE POSITIVE CONTROL FOR THE
+                                        -- LOOKBACK ITSELF. Every conclusion the
+                                        -- tightened reading supports is NEGATIVE
+                                        -- ("it refuses nothing"), and a
+                                        -- WasRecentlyDamagedByHero that had
+                                        -- degenerated to constant-true would
+                                        -- prove all of them for free. 0.2 s is
+                                        -- below the smallest dt in the witness
+                                        -- set, so this bucket MUST come back
+                                        -- smaller than oc_a_recentdmg. If it
+                                        -- does not, the instrument is broken and
+                                        -- the no-op reading means nothing.
+                                        local bDmgProbe =
+                                            a:WasRecentlyDamagedByHero(e, 0.2)
                                         if bTgt then bump('oc_a_attacktarget') end
                                         if bChase then bump('oc_a_ischasing') end
                                         if bDmg then bump('oc_a_recentdmg') end
+                                        if bDmgTight then
+                                            bump('oc_a_recentdmg_tight')
+                                            bump('oc_a_dmg_dt_le_1s')
+                                        end
+                                        if bDmgProbe then bump('oc_a_dmg_dt_le_02s') end
+                                        if bTgt or bChase or bDmgTight then
+                                            bLowAllyTight = true
+                                        end
                                         if bTgt or bChase or bDmg then
                                             bLowAlly = true
-                                            break
+                                            -- ⚠ NO `break`. The old body broke
+                                            -- here, which is right for the
+                                            -- shipped answer but wrong for a
+                                            -- census: the tightened reading
+                                            -- needs EVERY low ally in the disc,
+                                            -- not the first one that happens to
+                                            -- satisfy the loose test. The
+                                            -- shipped answer is unaffected --
+                                            -- bLowAlly is monotone in the loop
+                                            -- and the function is driven
+                                            -- separately for the real answer.
                                         end
                                     end
                                 end
@@ -234,9 +288,17 @@ for _, path in ipairs(fixture_files()) do
                                             'F %s %s oc_a_pursuit_unseen\n', short, u.name))
                                     end
                                 end
+                                if bLowAllyTight then bump('oc_a_pass_tight') end
                                 if bLowAlly then
                                     bump('oc_a_pass')
                                     out:write(string.format('F %s %s oc_a_pass\n', short, u.name))
+                                    -- Auditable identity of the pair, so the
+                                    -- pricing above can be checked by hand
+                                    -- against the fixture rather than trusted.
+                                    if not bLowAllyTight then
+                                        out:write(string.format(
+                                            'F %s %s oc_a_pass_loose_only\n', short, u.name))
+                                    end
 
                                     -- (d), attributed branch by branch. The
                                     -- shipped function is driven for the
