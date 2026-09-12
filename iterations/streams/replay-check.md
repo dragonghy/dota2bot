@@ -16019,3 +16019,40 @@
     (3) ⭐ **W70 有语料也不必**再首检这一族 —— 12 局 1 episode 已说明**不是样本量问题**;
     (4) ⭐ 两条新判别子已进工具坑:**求交纪律**(读任何 `*_domain.py` 的 why-not 表前先问
     「这张表的人口与该 gate 唯一调用点的进入条件求过交没有?」)+ **`.dem` 子集分层不平衡**。
+  - **本轮 issue:净增 1 条 + 1 条追评**(先搜后开:两次语义检索
+    「stayfield HP 带太窄/机器人高血走回家」**1 命中 = #342**、「stayfield2 走路谓词从不为真/level 9 地板」
+    **0 命中**)。追评 **#342**(`issuecomment-5648043419`,答 §9 的第 (1)(2) 条,
+    如实登记 (3) 未买 + 交回协同组);新开 **[harness] GH #789**(头注错归 +
+    建议把那张表钉成 `--selfcheck` 断言 + 给同族每份 `*_domain.py` 加「本表人口求交没有」的表头声明)。
+    `claim_precheck.sh` 发布前跑:`PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
+    `paths cited 2  resolved on trunk 2  refused 0` ⇒ **先 push 后发表**(GH #290)。
+  - **铁律 6 三条腿**(两次 push 读数一致):`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 37.7s`(推 main 那次 38.2s)/
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**;动态半(GH #124)未跑、不声称。
+    `ARM_EXIT=0`(already set)/ `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`
+    (`a6e51b2c..b8ef2853`,**一次过,无 non-ff**)。
+  - **开工自检**:`worst exit 3` / `legs run 12` /
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions trunk-red(python)` /
+    `UNCERTIFIABLE (exit 2): none` /
+    `NOT RUN (inside a leg): test_lua_gate.py test_luacheck_gate_soakswitch.py test_selfcheck_lua_leg.py`
+    —— ⚠️ **腿内那三条这轮没人看过,不是通过**。
+    trunk 红逐条(python `120 passed / 3 failed / 3 uncertifiable`):`test_carrier_terms.py`(65 里 5)、
+    `test_detector_source_constants.py`、**`test_run_tests_guard.py`**。
+    **`bots/` `game/` `tests/` `tools/` 本轮一行未改 ⇒ 三条都不是本轮增量。**
+    ⭐ **与上一轮对照三处变化,两处朝好的方向**:(i) 上一轮 Lua 红的
+    `test_stayfield2_marginal_domain.lua` **本轮不红了**(87 打标检测器 / 0 失败,
+    `trunk-red(lua)` 整条从 FINDINGS 消失)—— **恰在本轮这一族里,别组两轮之间修掉了**;
+    (ii) 上一轮红的 `test_stale_waits.py` 本轮不红了;
+    (iii) ⚠️ **新红 `test_run_tests_guard.py`**,本轮不认领,**点名给总监**。
+    ⚠️ `test_detector_source_constants.py` 那条**特意查过**(本轮整份读数建立在 detector 源码常数上):
+    失败点是 `tpdeathbuy_domain.py:150` 的 `read_source()` 抛 `SourceConstantError`,
+    **与本族无关**,且本轮用到的四个常数在**同一次运行里逐条 `ok`** ⇒ **不污染本轮读数**。
+    ⭐ 第一条命令**又撞管道门**(第 **6** 次,脚本自打 `REFUSED: ... stdout is a pipe; exit 2,
+    nothing checked`,并逐字说「已复发 5 次,每次都是本轮第一条命令」)——
+    ⚠️ 那次的 `SELFCHECK_EXIT=0` **是 `tail` 的码**;改重定向后 **`EXIT=3` 裸读**。
+    ⚠️ 另**登记一条同族新形状**:后台任务通知栏报的 `exit code 0` 是
+    **wrapper 的码不是脚本的**(`echo "EXIT=$?"` 成功 ⇒ 复合命令 0),**不许引用它**。
+    实测 **>14 分钟**(章程写「约 20s」,**GH #358 不重开**)。
+  - token:`TOKENS total_in=10,886,898 out=66,508 turns=75`
+  - **完整报告**:`iterations/reports/replay-check/20260912T185424Z.md`
