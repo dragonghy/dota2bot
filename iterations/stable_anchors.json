@@ -177,6 +177,28 @@
         "同一个 commit 里还有测试翻面、变异台新建、census 重钉、W65 记录修补与几个 registry 文件 —— 它们**不改变稳定版**(`bots/` 只有上面两处 diff),所以锚点语义不受影响。",
         "⚠️ **SHA 在落地当轮被 rebase 挪过一次,这一行是那次挪动的记录**:首次写入时 promote commit 是 `9aeda130a24fdbac46daf813e9dfbf584356014e`,`git push origin HEAD:main` 被拒 non-fast-forward(录像组 10:15Z 的两条先到)⇒ `git pull --rebase origin main` 后变成 `92648c8161170c93f00967730bc41e050c8d339d`。**两个不变量都重新量过**,不是承诺:rebase 后重跑 armed 串 md5、`carrier_terms.py`、倒像普查与三条腿的推送闸,读数逐字未变;新进来的两条 commit 只碰 `iterations/`。⛔ **登记这一行的理由**:`stable_anchors.py` 的不变量 2 (ref 仍指着 `ref_sha`)会在 SHA 漂了而本文件没跟着改的那一刻变红,而那时读者会以为**锚点被人移动过** —— 实际是登记那一步排在 rebase 之前。**下一次 promote:先 push 成功、再写 ref_sha。**"
       ]
+    },
+    {
+      "name": "stable-v8",
+      "ref": "refs/heads/stable-v8",
+      "ref_kind": "branch",
+      "ref_sha": "2dd2778ed390f0be7a81f69062bf341c86dff190",
+      "promote_commit": "2dd2778ed390f0be7a81f69062bf341c86dff190",
+      "promote_commit_subject": "director: PROMOTE tpcommit to a turbo default (stable-v8), armed 30 -> 29; lf_rescue HOLD; iron rule 2(b) precedent registered",
+      "promoted_ids": [
+        "tpcommit"
+      ],
+      "promoted_at": "2026-09-12T0x:xxZ",
+      "state_json_key": "tpcommit_PROMOTE_20260912",
+      "on_main_first_parent": true,
+      "note": [
+        "第十二条 promote,总监 RULING 20,armed 30 → 29。稳定版语义只由 `bots/` 的一处 diff 决定:`bots/FunLib/jmz_func.lua` 删掉 `if not J.IsSoakCandidate( 'tpcommit' ) then return nil end` 一行⇒ turbo 下 TP 应答者在应答的那条路保持 DEFEND 模式最多 12 秒(0.85 地板),不再被分路层当场回收。`game/` 零 diff;其余四处 `bots/` 改动全是注释(三个 mode 文件 + 同一函数内两段说明)。",
+        "⭐ **非 turbo 逐字节相同是算术不是承诺**:被删的那一行紧挨在 `if not J.IsModeTurbo() then return nil end` **下面**,非 turbo 分支永远到不了它。",
+        "⭐ **引用本锚点时连引这一句**:(b) 是**家族级** W66+W67 并池(深度 5 / 239 计分局),gpm **−11.78**,而本轮自算的离散度是 SD 27.8 / SE 12.4 ⇒ **−11.78 ± 12.4,|t| = 0.95,与零不可分辨**。它过的是铁律 2(b) 的**粗粒度**门,**不是正面证据**;胜负通道连续第六波 DEGENERATE ⇒ **没有引用任何胜负读数**(判例见 `state.json:winrate_channel_2b_RULING_20260912`)。裁定压在条件 (c) 上:owner 亲眼看过的病灶 `tp_audit_20260723`(一帧 5 次 TP 应答、0 次出手),而这条 floor **不新增任何 TP**。",
+        "⚠️ **本锚点同时退休了一条 promote 原子**:`tp_response_releases_need_commit` 按它自己写下的 RELEASE CONDITION(逐字 `tpcommit promoted, ...`)移进 `promote_atoms.json:retired`。⇒ 从本锚点起,`tpdying` / `tpdead` **armed 一条就够得着**,不再需要陪绑 `tpcommit`。",
+        "⚠️ **本锚点还改了一个量具的前提,引用它的人必须知道**:`tools/batch_test/behavioral/tpdying_release.py` 的 `REQUIRED_PARTNER` 由 `'tpcommit'` 改为 `None`。不改它,那条 `--assert-arm` 检查会**从本锚点起拒绝每一波真波**(promoted 的 id 不在任何臂串里),而拒绝时打印的话在树上已经不成立。全文 `test_set.md §GZ.2b(2)`。",
+        "⭐ **本行是 push 成功之后才写的**(stable-v7 的 note 末尾登记的那条教训:「下一次 promote:先 push 成功、再写 ref_sha」)。`2dd2778e` 是 rebase 之后、`582cf363..2dd2778e HEAD -> main` 成功之后读出来的 SHA,`git ls-remote origin refs/heads/stable-v8` 现跑复核一致。"
+      ]
     }
   ]
 }
