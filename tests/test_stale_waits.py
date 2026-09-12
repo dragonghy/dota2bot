@@ -552,9 +552,25 @@ except sw.InputError as exc:
 # the canary to another armed id is the intended repair; deleting the check is
 # not.  The size floor makes a truncated line 2 fail even if the canary happens
 # to survive it.
+#
+# 2026-09-12 (director): THE FLOOR WAS 30 AND IT WENT RED ON THE POLICY WORKING.
+# The armed set is not a corpus that grows -- it is a POLICY VARIABLE the director
+# drives DOWNWARD (P4.2 freezes new entries while armed > 20, so `armed <= 20` is
+# the stated unfreeze goal).  A floor parked just under the day's population is
+# therefore guaranteed to go red on SUCCESS, and on 2026-09-12 it did: armed is 27
+# (test_set.md line 2, ending in a real id with no dangling comma), the canary
+# `campvoid` is present -- so line 2 parsed fine and nothing was truncated.
+# Read the two checks for what each is FOR: the canary proves we parsed the right
+# line, and the floor is ANTI-VACUUM ONLY -- it exists so a sweep over nothing
+# cannot read as "nothing found".  So it belongs BELOW anything the policy can
+# legitimately produce (the unfreeze target itself is 20), not next to today's
+# count.  At an armed set this small the canary is the load-bearing half.
+# ⚠️ If the set is ever driven to empty, BOTH halves go red and the right repair
+# is the one the paragraph above already names -- rewrite the premise, not the
+# number.
 check("campvoid" in armed,
       "the canary id is not in the member string -- rewrite this test's premise")
-check(len(armed) >= 30,
+check(len(armed) >= 5,
       "member string parsed to only %d ids -- line 2 looks truncated" % len(armed))
 settled = armed | sw.promoted_ids(os.path.join(REPO, "bots"))
 check("creeppull" in settled, "promoted ids not read from bots/ PROMOTED notes")

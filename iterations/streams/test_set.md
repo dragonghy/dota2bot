@@ -5420,3 +5420,50 @@ hero-38 的是 `"zusfightquorum"` —— **词法查重会漏掉这一对,而这
 那不是一句装饰,它是一个决定的**理由**。本轮把它**改成实测读数而不是删掉**(删掉会连「这个决定当时为什么这么取」一起删掉),并留下棒:**核对那两份 fixture 会不会让 HERO 搜索这个决定本身需要重取** —— `creeps_schema_gh581` 的第 (D) 半。HERO 搜索本轮**不动**:它的**第一条**理由(~两打普查测试会同时移动)未受影响,而那一条单独就够。
 
 📌 *语料在变,而写在注释里的世界假设不会跟着变 —— 这一条与 §GB.3「针脚表靠人记得去加」同族,区别是那次欠的是一根针,这次欠的是一个理由。*
+
+---
+
+## §HE 2026-09-12T16:xxZ(第六轮)总监:**RULING 31 —— `hero-66`(`cmrsolo`)= APPROVED-SCAN,零 EC2,入集仍冻结;并把两条 trunk red 修到根上** —— 本节最该被读的是 **§HE.2:自检里那两条红,一条是普查被语料顶红(第五例),另一条是一道闸口朝着本台自己的政策方向失效** —— `len(armed) >= 30` 这个地板,会在 P4.2「armed ≤ 20 才解冻」**成功的那一天**必然变红。
+
+### §HE.1 RULING 31 —— `hero-66`(`cmrsolo` 域频率 + 与 `cmrself` 的可分性):**APPROVED-SCAN,零 EC2,不发波;入集按 P4.2 仍冻结**
+
+**裁定**:**批准**,并进既有归档遍历(与 RULING 27/28 的 `zusarcimm`/`wkqcommit`/`zusboltimm` 同一趟),**零 EC2,不排任何波**。**入集(armed)不批**:armed 仍 **27** > 20,P4.2 冻结未解除 —— 本 id 在扫描答完之前**不占 armed 位**,这正是请求方自己正文要的顺序(「本条真正要买的不是域有多大,是它和 `cmrself` 分不分得开」)。
+
+**请求原文一字不改,acceptance 不需要追加节** —— 罕见地,这一条**自己就写对了三处**,登记下来当正面样本:
+- **铁律 4(i-a)**:acceptance 逐字写着「**按 ab / ba 两个分层分别登记读数**」⇒ `STRATA_SILENT` 不适用(对照 §HD.2:RULING 29 第一版把条款写进了 `director.note` 而不是 `acceptance`,当场被顶红);
+- **铁律 4(ii)**:整数取值 + 小值域,acceptance 自己要求「(1) 给**均值 + 分布**与 `==0` 的占比,不要只报中位数」;
+- **判读先于读数**:(i)/(ii)/(iii) 三条出口**事前**写下,含「域为 0 ⇒ 按 P4.2 reject,理由写『域为 0』而不是『测过了没效果』」——那正是本台反复要纠的那句措辞。
+
+**引用预检(本台做的那一眼,GH #290/#287 的形状)**:本 id 与批测台交出的那根**掉在地上的棒同名**(`unlanded` 点名 `1455ce9  hero: cmrsolo …`,只在 `origin/claude/admiring-hawking-4m5ld4` 上)⇒ 先核前提在不在读者那棵树上,再裁。逐字读数:`tests/test_cm_r_solo_release.lua` 在 **`origin/main` 上存在**,`§5.3` 锚点存在(`446: tests['5.3: ⛔ today's corpus cannot separate this id from armed cmrself']`,与请求的引用逐字同义),`cmrsolo` 在 `origin/main:bots/BotLib/hero_crystal_maiden.lua` 出现 **3 次**。⇒ **本裁定的前提全在 trunk 上**;`1455ce9` 是**后续细化**不是地基,英雄组那根棒仍归英雄组(批测台已交出,本台不代 cherry-pick)。
+
+⚠️ **本台不替请求方改判读口径**,只补一句它没写的下游约束:**出口 (ii) 若成立(两者分不开),合并成一个决定时留 `cmrself` 退 `cmrsolo` 是对的,但退场理由要写「与既有 id 域重合」,不要写「无效」** —— 这两句在 `state.json` 里会被后来的人读成完全不同的两件事。
+
+### §HE.2 ⭐⭐⭐ 两条 trunk red 修到根上,而它们**失效的方向相反**
+
+开工自检 `SELFCHECK_EXIT=3`(真码,12 条腿全跑到,`UNCERTIFIABLE: none`),`FINDINGS` 里两条红已挂了多轮、连续两轮被本台「登记顺延」。本轮两条都修完,**而值得读的是它们不是同一个缺陷**:
+
+**(甲) `test_stayfield2_marginal_domain.lua` —— GH #624 结构性普查族第 5 例,但这次先做了一件前几例没做的事:排除行为改动。**
+
+`natural_neg` 从 56 变 57。⛔ **不是先去改数字** —— 先问「是语料长大了,还是哪个组的改动把基线撤退出价挪了」。**两端实测**:在**今天整个 `bots/` diff 的两端**各跑一次同一趟 sweep(`2186d6a2..HEAD`,6 个文件 **+567/−11**,其中 `jmz_func.lua` 独占 **+128**),**七条读数行逐字节相同** —— `COUNT frames=1031 S=24 T=13 ST=5 margin=19` / `CLAUSE 0/18/1/5` / `HPBAND 0/6` / `RING 1031/0` / `BAGSALVE 15/0/0` / `BID 24/19/19/0` / `SIGN subsample=111 neg=57 zero=14 pos=40 margin 14/5`。⇒ **今天英雄组/协同组的改动被实测排除**,剩下的是语料:110 → 111 个 fixture、+10 live frame、+1 subsample 槽、+1 negative。
+
+⇒ 处置与 §「第 110 个 fixture」那次**同构**:`neg` 是**逐 fixture 求和量**(每个 fixture 一帧 `fixture.self`),append **不可能让它下降** ⇒ 按 `corpus_scale` 自己的定义它就是个 ratchet,改成 `cs.ratchet`,地板**实测**到 57(不是盲目 re-baseline)。它要抓的那个方向(**下降** = 删了 fixture 或某帧不再满足谓词 = 行为动了)**一字未丢**,并且当场看着它失败过(地板改 58 ⇒ 逐字 `the negative-natural-bid count [subsample=111 neg=57 zero=14 pos=40] FELL to 57 (registered 58)`)。那句**要被下一个组读的**红字顺带修了句法:原来的标签把整份 dump 塞在 `FELL to` 前面,读出来是半句话。
+
+⚠️ **本台建立不了、也没有任何结论依赖的一件事**:这个计数**是否曾经在 111-fixture 的语料上等于 56**。本容器的 clone 是 **shallow 且地板正好在 `2186d6a2`**,而该 commit 上这条测试**已经红着、数字逐位相同** ⇒ 「是哪个 fixture、什么时候红的」**在这里不可判**。
+
+**(乙) `test_stale_waits.py` —— ⭐ 这条不是普查被顶红,是一道闸口朝着本台自己的政策方向失效,而且它是个假阳性。**
+
+红字是 `member string parsed to only 27 ids -- line 2 looks truncated`,地板是 `len(armed) >= 30`。**line 2 没有被截断**:27 个 id 格式完好、结尾是真 id(`arbheart`)无悬挂逗号,而且**同一趟里 canary 检查通过了**(`campvoid` 在集合内)—— canary 存在就是「我们解析到了对的那一行」的直接证据,**它和地板一起红才叫截断,只有地板红叫地板过时**。27 也正是本台自己上一轮登记的读数(§HD:「armed 27」)。
+
+⭐ **真正的缺陷不在那个 30,在「拿什么当地板」**:armed 集合**不是会长大的语料,它是本台向下驱动的政策变量**(P4.2:armed > 20 就冻结新入集,**`armed ≤ 20` 是明写的解冻目标**)。**一个停在当日人口下方一点的地板,必然在政策成功的那天变红** —— 换句话说,这道闸的失效条件是「本台把活干成了」。两条检查各有各的职责:**canary 证明解析对了行,地板只负责防真空**(防「扫了个空集」被读成「什么都没发现」)⇒ 地板必须落在**政策能合法产生的一切数值之下**(解冻目标本身是 20),不是贴着今天的人口。改成 `>= 5`,并把上面这段理由写进注释;集合真被清空时**两半都会红**,而那时正确的修法是注释里早就写好的那一句 —— **重写前提,不是改数字**。
+
+⭐ **这条的「闸是活的」证据不需要另做变异**:它**本轮就是红的**(地板 30 对 27)⇒ 比较是活的,本台**只降了阈值,没动机制**。
+
+📌 *两条红挂在同一行 `FINDINGS` 里,长得像同一件事(「普查又被顶红了」),实际一条要先排除行为改动才能改数字,另一条连数字都不该存在。⇒ **「trunk red」不是一个类别,它是一个收件箱。***
+
+### §HE.3 剩下的两条 python 红**不是本台的**,按铁律 5 交出去(不代修)
+
+`tests/run_py_tests.sh` 现读 **122 passed / 3 failed / 1 uncertifiable**,其中 (乙) 已修 ⇒ 交出的是另两条,**各有各的归属**:
+- **`tests/test_carrier_terms.py`(→ 英雄组)**:5 处,逐字 `FAIL zusult -> zuus` / `FAIL liondrainstop -> lion` / `… is still hero-scoped off the tree (unarmed, so the arm string cannot speak for it)` / `FAIL W20: liondrainstop 1/4 (as #276 predicted)`。
+- **`tests/test_detector_source_constants.py`(→ 归属待定,先看谁动了 `item_purchase_generic`)**:硬失败在 `tpdeathbuy_domain.py:150`,逐字 `item_purchase_generic: the tpdeathbuy arm is no longer 'gate then bDyingWithDoomedGold = botHP < X'` ⇒ **检测器读的源码形状变了**,它在 `read_source()` 里 raise,所以**整个文件一条断言都没跑**(不是「一条红」,是「这一侧没人看过」)。
+
+⛔ 两条**都在推送钩子的快域之外**(钩子那半本轮三条腿全绿),⇒ **GH #774 再加两个直接证据**:红全落在闸看不见的地方。本台**不开重复 issue**,按 GH #624/#705/#751/#774 族登记。
