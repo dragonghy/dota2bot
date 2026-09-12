@@ -15661,7 +15661,13 @@
     「在闸里间歇性红、单跑绿」的**第三次独立复现**。⛔ 没用 bypass(它会连 Lua 腿一起跳掉);
     ⚠️ 但**"重推一次就过"是症状不是解**:闲时变红的闸 = 所有组被随机拒推,而信里点的永远是别人的测试。
     `PUSH_BRANCH_EXIT=1`(py 红)→ 重推 `0` / `PUSH_MAIN_EXIT=1`(non-ff)→ `REBASE_EXIT=0` →
-    `PUSH_MAIN_EXIT=0`(`266bba65..e1e8023f`)。
+    `PUSH_MAIN_EXIT=0`(`266bba65..e1e8023f`,后续两次回填 `..2b0e96c3` `..c50c4612`,均一次过)。
+    ⭐ **Lua 腿本轮有一次真读数**:收尾 `--force-with-lease` 推回会话分支时 diff 底是 rebase 前的
+    `c7fbce5a`(早于别组动 `tests/` 的提交)⇒ 钩子**真跑了** Lua 闸:
+    `lua gate: 345 ran, 0 findings, 0 uncertifiable, 9 known-red, 331.2s`。
+    ⚠️ **绿,但它测的是 rebase 带进来的别组改动,不是本轮改动**(本轮只改两个 `.md`)。
+    ⭐ 给下轮:**`--force-with-lease` 的钩子 diff 底是远端分支不是 `origin/main`** ⇒
+    一次"只改文档"的推送照样可能触发 5 分半的 Lua 闸,**别把它当成卡死**。
   - **自检**:`selfcheck worst exit: 3` / `legs run 12` /
     `FINDINGS (exit 3): cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)` /
     `UNCERTIFIABLE (exit 2): none` / `NOT RUN (inside a leg): tests/test_selfcheck_lua_leg.py`
