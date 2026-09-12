@@ -1053,6 +1053,42 @@
     "note": "⚠️ 机器键买不到:验收物是**另一条 issue 的修复 + 一次总监重裁**,不是一个文件存在。**裸读得出的验收句**:GH #474 已关闭为已修,**且**某一轮总监报告对 `rotscope` 给出实质裁定(重新入集 / 继续 HOLD / reject),并逐字说明 fixture 路线现在是否真的通了。总监据此退休本行。"
    },
    "readmission_is_NOT_preapproved": "⛔ 重新入集仍受 owner P4.2 冻结约束:armed ≤ 20 之前,任何入集提议的唯一合法裁定是 **FROZEN-HOLD**。本行只登记解锁条件,**不构成预先批准**。"
+  },
+  {
+   "id": "a_evidence_illureal",
+   "issue": "GH #389(载体分类器);本行由总监 2026-09-12T05:4xZ 开(test_set.md §HA.0)",
+   "ruling": "**不是裁定,是交棒** —— 总监本轮**特意没有裁** `illureal`,理由必须写清楚免得下一轮当遗漏补上:它最近一条 VERIFY 行是 `INDETERMINATE episodes=0`,而那个 0 **不是域的 0** —— 录像组 `20260902T065455Z.md` 自己逐字写着「**本轮未逐帧核过任何一帧**」,同一份报告记的**域上界是 152 帧**。⇒ 这是**掉棒**,不是**买不到**。⛔ 按 §FB.4 / §HA.3,这两种理由**不许混着写**:`outlatch`/`rotscope` 本轮退集是因为 (a) 结构上买不到,`illureal` 的 (a) **路是通的,只是没人走**。把它一起退集会把一条**还没被尝试过**的证据登记成**已被证明买不到**。",
+   "ruled_at": "2026-09-12T05:4xZ",
+   "executor": "replay-check(录像组)",
+   "trigger": "无外部触发器。⚠️ **时间本身就是这一行的理由**:最后一次报 VERIFY 是 2026-09-02,到开行时已 **10 天**,而该 id 一直 armed —— 即每一波都在为它付载体与并池成本,却没有一帧被看过。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HA.0(不裁它的理由,全文)",
+    "iterations/reports/director/20260912T054500Z.md §1",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "why_registered_here": "§DR:常驻义务,不属于任何一波。⚠️ **这一行存在的唯一理由,就是本仓库记了无数次的那个失效**:总监在报告散文里写下「下一轮该做 X」,而**散文里的棒会掉**(铁律 9 拉野死分支 37 轮;§FB.3「失效的不是证据,是投递」)。本轮报告 §9 已经把它写成散文一次了 —— 那**不算**投递,所以有了这一行。",
+   "done_when": {
+    "kind": "manual",
+    "note": "⚠️ 机器键买不到:验收物是**一次逐帧核验**,不是一个文件存在。**裸读得出的验收句**:某一轮录像组报告给出 `VERIFY id=illureal verdict=<WORKING|BUGGY|SILENT|INDETERMINATE> episodes=<N>`,**且 N > 0**,或者**逐字说明为什么这 152 帧里一帧都不可判读**(后者同样结清本行,并且会把这条 id 转成 §HA.3 表里的第三类,届时由总监重裁)。⛔ 再来一条 `episodes=0` 且不带理由的行**不结清本行**。"
+   }
+  },
+  {
+   "id": "abilanc_carrier_gate",
+   "issue": "GH #747(仪器的 reachable 计数);本行由总监 2026-09-12T05:4xZ 开(test_set.md §HA.0)",
+   "ruling": "**不是裁定,是交棒。** `abilanc` 本轮读 `VERIFY verdict=SILENT episodes=122` —— **SILENT 看起来是最硬的退集理由,而它这一次量的是牌桌不是代码**,所以总监**没有**裁它。现读:`grep -rln GetMostHpUnit bots/` ⇒ **13 个英雄文件**(含焦点英雄 axe / skeleton_king / luna);而录像组 `20260911T125909Z.md` §3.1 的六发 under-tier 施法全部来自 **skywrath_mage / zuus / spirit_breaker**,**三个文件各 0 次调用**(录像组自己独立复核过,不信仪器字面量)。⇒ 域没被走到的原因是**牌桌上没有能走到它的英雄**,**不是**这条 id 不响。⛔ 按 §HA.3,把载体缺席记成「(a) 买不到」是用错的理由退错的 id。",
+   "ruled_at": "2026-09-12T05:4xZ",
+   "executor": "batch-desk(批测台;它是唯一能在发波时决定牌桌的一方)",
+   "trigger": "**下一次 arm `abilanc` 的波**。⚠️ 本行**不请求任何新波次、零 AWS 增量** —— 它要求的是**既有发波流程里多跑一道已经存在的门**。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HA.0(不裁它的理由,全文)",
+    "iterations/reports/director/20260912T054500Z.md §1",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "why_registered_here": "§DR:常驻义务,**不属于任何一波** —— 这正是 GH #413 第二次掉棒的形状(一条常驻义务在**发波当时**写的 `harvest_obligations` 局部清单里**没有行可以被写进去**)。⭐ **工具早就在,缺的是把它变成一道门**:backlog §11 的 `seed_draft.py --assert-carrier` 立项依据逐字是「`seed_draft.py` 自己的文件头记着 **224 局镜像局、零 Axe**(为 `axebuyblink` 买 (a),买了个空)」—— **与本行今天的现场同形,而那一次已经付过款了。**",
+   "done_when": {
+    "kind": "manual",
+    "note": "**裸读得出的验收句**:某一轮批测台的发波记录里,对 `abilanc` 跑过 `seed_draft.py --assert-carrier`,并**原样登记它打印的 `satisfied/seeds` 分数**(⛔ backlog §11 写死:exit 0 **也必须**打印这个分数,`PARTIAL` 不是失败但它是预登记的域要照抄的数)。载体名单从 `grep -rln GetMostHpUnit bots/BotLib/` 现取,**不从本行抄** —— 树会变。⚠️ 若该分数是 **0/N**(没有一粒种子排得出载体),那**本身就是结论**:`abilanc` 的 (a) 在当前选种解空间下买不到,届时交总监按 §HA.3 重裁,**而不是再发一波**。"
+   }
   }
  ],
  "retired": [
