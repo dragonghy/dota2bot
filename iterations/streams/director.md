@@ -563,6 +563,39 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-12T22:2xZ**:**`pending_rulings.py` LIMIT 14 落地 —— 一个开行时就已经为真的 `done_when`,此后永远读 DONE,而「请退休我」就印在它下面;armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
+  全文 `iterations/reports/director/20260912T222000Z.md`,档案 `test_set.md §HH`;新 owed 行 `born_done_inherited_disposal`;
+  owed 腿入轮 **62 行 / 7 句「请退休我」** → 收轮 **63 行 / 0 句**。
+  ⭐⭐⭐ **(甲) 本轮最该被读的一条:我把 7 读成了 1,而读错的原因是我读了工具的视图不是工具的数据。**
+  `rc.sh` 的输出逐字写着 `RC_LOG=/tmp/rc.XXXX (198 line(s); last 40 shown)` —— **它自己说了它是尾巴、也给了完整日志的路径**,而我 `grep` 的是那 40 行,
+  于是把范围定成「修一行」。📌 教训不是「grep 要小心」:`rc.sh` 是本台为纪律 3(管道读退出码)立的工具,它把**退出码**救回来了,
+  **而同一个动作把输出换成了一个视图** ⇒ 一个为防止误读退出码而存在的工具,成了误读**读数**的入口。
+  ⇒ **规矩**:据 `rc.sh` 下结论时读它打印的 `RC_LOG=` 那个文件,不读它的尾巴。
+  ⭐⭐ **(乙) 缺陷的形状是「判据从来没有辨别过任何东西」,不是「判据过期」。** 它是 LIMIT 13 的更锋利同胞:13 那两例是**判据活过了它的义务**,
+  这一例是**判据压根没在说任何事**;两者都落在 `DONE` 上、都印「请退休我」,**而处置相反**。三例三条路:
+  `wandlimbo_charge_instrument`(needle 拼错 ⇒ 从未匹配)/ `roshan_pit_daynight_fix`(文件前一天就落了)/ `late_epoch_corpus_reopen_list`(README 早存在好几天,**本台 06:5xZ 自己开的**)。
+  ⇒ LIMIT 11 的 ⭕ 只登记未建的那道闸,**本轮建了**:DONE 读数要求 `unmet_at_ruling` 证词(裁定当时取到的 OWED 读数,**这个区别唯一还可观测的那一刻**);
+  没有它读 **BORN-DONE** —— finding、进退出码、**永不打印「请退休我」**。
+  ⚠️ **买方向不买证明**:只检查字面 token `OWED` + 一个能解析的 UTC 瞬间(「yes」与散文式 `T22:xxZ` 都被拒),**查不出这句话是不是真的**;编造那行就能绕过。它消灭的只是**沉默**的那个方向。
+  ⚠️ **git 替代不了它,理由要写下来免得看起来像疏漏**:按引入提交重算确实机械可答,**而实测本轮 clone = 50 提交、全部同一天** ⇒ 比一天更老的行引入提交不在树里,
+  答案恰好在这一行**老到已经被忘掉**时变成「说不出」。
+  ⭐ **(丙) 那 6 行落地的是天花板不是零(`tests/test_pending_rulings.py:BORN_DONE_INHERITED = 6`)。** 前三条点名的产物现查都在(12,028 / 12,763 / 21,296 字节)
+  ⇒ 大概率是「真执行完了而没人退休」(GH #276 墙纸)。⛔ **本台不替它们补证词** —— 证词只能由当场取到 OWED 读数的那个人写,替别人追记就是签字画押;
+  而要求它们有证词就是点一个**本轮清不掉的红**(六行全部早于这个字段好几天),正是「三轮之后没人看」的做法。⚠️ **不追溯已退休的那批**:14 条 retired 行里 12 条判据是机器键、**没有一条带证词**。
+  ⭐ **(丁) 变异台自己被修了一处,现场是它的首跑**:它按兄弟台写法用 `git diff --quiet` 判还原,而被守护的代码本轮还没提交 ⇒ 首跑在一个**完好还原**的文件上打了 `RESTORE: NO`。
+  改成两个判据:`START_SHA`(跑前的 sha,**并进退出码**)+ `git diff`(第二意见,抓「备份取自已被变异的文件」)。**一个自己会喊狼来了的还原判据,三次之后就没人读了。**
+  🚦 **铁律 6 三条腿**(安静树):`GATE_EXIT=0 CLEAN`(0 警告)/ `py gate: 97 ran, 0 findings, 0 uncertifiable, 28.5s` /
+  `lua gate: 354 ran, 0 findings, 0 uncertifiable, 9 known-red, 377.4s`;⛔ **未用 `RULE6_BYPASS`**。动态那半未跑,不声称(`bots/` 零 diff)。
+  ⚠️ **开工自检 `SELFCHECK_EXIT=3`**(裸读非管道),legs 12,`UNCERTIFIABLE: none`,FINDINGS = `cadence`/`queue-rulings`/`owed-executions`/`trunk-red(python)`;
+  **它跨过了本轮的编辑(跑了约 68 分钟,树在它脚下改动)⇒ 它的读数是「我继承的那棵树」**,收尾算数的是上面那三条腿。
+  `NOT RUN`:`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py` / `test_selfcheck_lua_leg.py` —— **这三条本轮没人看过**;
+  `trunk-red(python)` 与上一轮同一组三条,`git stash` 复跑**没做,不声称**。
+  🧪 钉子:`tests/test_pending_rulings.py` **741 → 769 检查 0 失败**;`mutstand_owed_witness.sh` **9 CAUGHT / 0 SURVIVED / control_ok=1 / restored=1**。
+  📮 **本轮投递**:`owed_executions.json`(换判据 + 证词 + 新行 + 新 `_witness_note`)/ `test_set.md §HH` / 代码里的天花板。
+  ⚠️ **没开 GH issue**:executor 是总监自己,机器可读的投递轴是那一行 owed 行加代码里的天花板,**再开一条 issue 只会多一条没人驱动的表**。
+  💰 **零 AWS**(一次调用都没有),不作 MTD 新声称。
+  📊 `TOKENS total_in=10,229,707 out=57,040 turns=69`。
+  📌 **下轮**:① 逐行处置那 6 行(退休或换判据,**不许补证词**)② GH #523(**连续第五轮未取**)③ P4.2 判定完结(距解冻线差 7)④ 存量 `$0.90` / #538 / #528 / patch P3。
 - **2026-09-12T19:1xZ**:**GH #783 修到根上(「登记一条 Lua 测试」不再清空全组的赦免名单)+ RULING 32(`hero-67` = APPROVED-SCAN);armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
   全文 `iterations/reports/director/20260912T191500Z.md`,档案 `test_set.md §HF`(#783)与 **§HG**(RULING 32);
   机器键 `state.json:lua_gate_baseline_CARRYOVER_FIXED_20260912` / `lua_gate_baseline_TWO_WRITERS_DISAGREED_20260912` /

@@ -48,6 +48,11 @@ sys.path.insert(0, os.path.join(REPO, "tools", "agent"))
 
 import pending_rulings as pr  # noqa: E402
 
+# A well-formed `unmet_at_ruling` witness (LIMIT 14).  Every synthetic row
+# below whose SUBJECT is a `done_when` kind carries it, so that those checks
+# keep reading the key and not the witness -- the witness has its own section.
+WITNESS = ("read OWED at 2026-09-12T22:00:00Z, before the owed work started")
+
 QUEUE = os.path.join(REPO, "iterations", "queue.json")
 TEST_SET = os.path.join(REPO, "iterations", "streams", "test_set.md")
 
@@ -851,7 +856,7 @@ def _row_413(done_when):
     return {"id": "recslot8_baseline", "issue": "GH #413",
             "executor": "batch-desk", "trigger": "the next harvest round",
             "ruled_at": "2026-09-02T10:16Z", "ruling": "rebuild the baseline",
-            "done_when": done_when}
+            "unmet_at_ruling": WITNESS, "done_when": done_when}
 
 
 def _jv(path):
@@ -1052,7 +1057,7 @@ for _r in _real_rows:
     for _f in ("id", "issue", "executor", "trigger", "done_when"):
         check(_r.get(_f), "real owed row %r is missing %s" % (_r.get("id"), _f))
     _st, _ = pr.owed_status(_r)
-    check(_st in ("DONE", "RESIDUAL", "OWED", "UNCERTIFIABLE"),
+    check(_st in ("DONE", "RESIDUAL", "BORN-DONE", "OWED", "UNCERTIFIABLE"),
           "real owed row %r produced an unknown state" % _r.get("id"))
 
 # ---- done_when kind `path_contains_all` (director 2026-09-06, LIMIT 11).
@@ -1069,8 +1074,10 @@ try:
     with open(os.path.join(_tmpdir, _art), "w", encoding="utf-8") as _fh:
         _fh.write("# scan\n\nhero-2 reading here.\nhero-30 reading here.\n")
 
-    _row_exists = {"done_when": {"kind": "path_exists", "path": _art}}
-    _row_all = {"done_when": {"kind": "path_contains_all", "path": _art,
+    _row_exists = {"unmet_at_ruling": WITNESS,
+                   "done_when": {"kind": "path_exists", "path": _art}}
+    _row_all = {"unmet_at_ruling": WITNESS,
+                "done_when": {"kind": "path_contains_all", "path": _art,
                               "contains": ["hero-2", "hero-30", "hero-31"]}}
     check(pr.owed_status(_row_exists, repo=_tmpdir)[0] == "DONE",
           "path_exists did not go DONE on an existing artefact")
@@ -1131,7 +1138,8 @@ try:
             fh.write(body)
 
     _write("-- %s\n-- %s\nlocal x = 1\n" % (_wrong, _also))
-    _row = {"done_when": {"kind": "text_absent", "path": _art,
+    _row = {"unmet_at_ruling": WITNESS,
+            "done_when": {"kind": "text_absent", "path": _art,
                           "text": [_wrong, _also]}}
     _st, _detail = pr.owed_status(_row, repo=_tmpdir)
     check(_st == "OWED",
@@ -1198,7 +1206,8 @@ finally:
 # it was asserting the string to be absent from, and the check failed on its
 # own text (LIMIT 11's "read the file through", collected immediately).
 _absent_needle = "".join(["no-such", "-needle-", "%08x" % 0xDEADBEEF])
-check(pr.owed_status({"done_when": {"kind": "text_absent",
+check(pr.owed_status({"unmet_at_ruling": WITNESS,
+                      "done_when": {"kind": "text_absent",
                                     "path": "tests/test_pending_rulings.py",
                                     "text": [_absent_needle]}})[0] == "DONE",
       "text_absent is implemented but not reachable through the kind whitelist")
@@ -1222,7 +1231,8 @@ try:
     with open(os.path.join(_tmpdir, _art), "w", encoding="utf-8") as _fh:
         _fh.write("-- the pin landed\n")
 
-    _base = {"id": "r", "done_when": {"kind": "path_exists", "path": _art}}
+    _base = {"id": "r", "unmet_at_ruling": WITNESS,
+             "done_when": {"kind": "path_exists", "path": _art}}
     check(pr.owed_status(_base, repo=_tmpdir)[0] == "DONE",
           "the control row (no residual, key satisfied) did not read DONE")
 
@@ -1257,6 +1267,7 @@ try:
     # `render_owed` reads the REAL repo, so the rendered pair points its key
     # at a file that is certainly there -- this test file.
     _rbase = {"id": "r", "issue": "-", "executor": "-", "trigger": "-",
+              "unmet_at_ruling": WITNESS,
               "done_when": {"kind": "path_exists",
                             "path": os.path.join("tests",
                                                  "test_pending_rulings.py")}}
@@ -1290,6 +1301,139 @@ check(_res_rows,
       "no live row carries `residual`; the two rows measured on 2026-09-08 "
       "(roshan_pit_daynight_fix / hero_domain_scan_2_30_31) were the reason "
       "for the field, so an empty set means one of them lost it")
+
+# ---- the `unmet_at_ruling` witness (director 2026-09-12, LIMIT 14).
+# The defect it answers is LIMIT 13's sharper sibling: a `done_when` that was
+# ALREADY SATISFIED the minute it was written never discriminates, and from
+# then on is byte-for-byte identical to one the owed work satisfied -- so the
+# row reads DONE, with "the director should retire this row" under it, from
+# birth.  Founding case `late_epoch_corpus_reopen_list`: key
+# `path_exists tests/frames/README.md`, on a README that had existed for days.
+# The load-bearing assertion is the ARROW LINE: a state that reads BORN-DONE
+# while still printing "retire me" would be decoration.
+_tmpdir = tempfile.mkdtemp(prefix="pr_witness_")
+try:
+    _art = os.path.join("iterations", "reports", "x", "born.md")
+    os.makedirs(os.path.join(_tmpdir, os.path.dirname(_art)))
+    with open(os.path.join(_tmpdir, _art), "w", encoding="utf-8") as _fh:
+        _fh.write("the artefact was here all along\n")
+    _key = {"kind": "path_exists", "path": _art}
+    _born = {"id": "b", "issue": "-", "executor": "-", "trigger": "-",
+             "done_when": _key}
+
+    _st, _detail = pr.owed_status(_born, repo=_tmpdir)
+    check(_st == "BORN-DONE",
+          "a satisfied key with no witness read %s, not BORN-DONE" % _st)
+    check("unmet_at_ruling" in _detail,
+          "the BORN-DONE detail did not name the field that would settle it: "
+          "%s" % _detail)
+    check("exists" in _detail,
+          "the BORN-DONE detail dropped the key's own reading, so the reader "
+          "cannot see WHICH key never discriminated: %s" % _detail)
+
+    # A witness makes it DONE again -- otherwise the guard is just a way of
+    # never retiring anything, and the next director would delete it.
+    _st, _detail = pr.owed_status(dict(_born, unmet_at_ruling=WITNESS),
+                                 repo=_tmpdir)
+    check(_st == "DONE", "a witnessed satisfied key read %s, not DONE" % _st)
+    check(WITNESS in _detail,
+          "the DONE detail dropped the witness it is standing on: %s" % _detail)
+
+    # An UNMET key is not the witness's business: reporting BORN-DONE there
+    # would replace the sharper sentence ("the file is not there") with a
+    # vaguer one, and a never-started row would look like a finished one.
+    _st, _ = pr.owed_status({"id": "b", "done_when": {"kind": "path_exists",
+                                                     "path": "nope.md"}},
+                            repo=_tmpdir)
+    check(_st == "OWED",
+          "an unmet key with no witness read %s -- the witness must grade only "
+          "the plain-DONE path" % _st)
+
+    # A residual already keeps the row open and already names a SHARPER reason,
+    # so it wins.  This gap is deliberate (LIMIT 14's last paragraph) and is
+    # pinned so that a later reader can tell it from an oversight.
+    _st, _ = pr.owed_status(dict(_born, residual="one wave's reading is owed"),
+                            repo=_tmpdir)
+    check(_st == "RESIDUAL",
+          "a residual row with no witness read %s, not RESIDUAL -- the "
+          "residual's sentence is the sharper one" % _st)
+
+    # A witness nobody can read must REFUSE, never fall through: falling
+    # through restores "retire me" at a row whose author was trying to speak
+    # (identical rule, identical reason, to a malformed `residual`).  The last
+    # three are the shapes that look like compliance: a bare promise, the house
+    # style's FUZZED stamp, and a reading with no reading in it.
+    for _bad in (True, 3, "", "   ", [WITNESS],
+                 "yes, checked before starting",
+                 "read OWED at 2026-09-12T22:xxZ",
+                 "ran the leg at 2026-09-12T22:00:00Z and all was well"):
+        _st, _d = pr.owed_status(dict(_born, unmet_at_ruling=_bad),
+                                 repo=_tmpdir)
+        check(_st == "UNCERTIFIABLE",
+              "an unreadable witness (%r) read %s, not UNCERTIFIABLE"
+              % (_bad, _st))
+
+    # ---- the arrow line and the exit level, read through render_owed.
+    # ⚠ `render_owed` calls `owed_status` WITHOUT `repo`, so these two rows key
+    # off a path that exists in the REAL repo.  The first version of this
+    # section reused the tmpdir row, which read OWED here and made both
+    # assertions grade a state they were not about -- caught by the control
+    # below, which is the whole reason the control is there.
+    _real_key = {"kind": "path_exists",
+                 "path": os.path.join("tests", "test_pending_rulings.py")}
+    _born_real = dict(_born, done_when=_real_key)
+    _out = io.StringIO()
+    with contextlib.redirect_stdout(_out):
+        _lvl = pr.render_owed([_born_real])
+    _text = _out.getvalue()
+    check(_lvl == 3, "a BORN-DONE row did not raise the leg's exit level")
+    check("NEVER WITNESSED" in _text,
+          "the BORN-DONE arrow line did not say the key was never witnessed "
+          "unmet:\n%s" % _text)
+    check("retire this row" not in _text,
+          "a BORN-DONE row STILL printed the retire line -- that one sentence "
+          "is the whole defect this state exists to stop printing:\n%s" % _text)
+
+    # The control, so the assertion above cannot pass vacuously: the SAME row
+    # with a witness must go back to asking for retirement at exit level 0.
+    _out = io.StringIO()
+    with contextlib.redirect_stdout(_out):
+        _lvl = pr.render_owed([dict(_born_real, unmet_at_ruling=WITNESS)])
+    _text = _out.getvalue()
+    check(_lvl == 0 and "retire this row" in _text,
+          "the witnessed control stopped asking for retirement (level %d) -- "
+          "the BORN-DONE assertions above would then be vacuous:\n%s"
+          % (_lvl, _text))
+finally:
+    shutil.rmtree(_tmpdir, ignore_errors=True)
+
+# The founding row must be ON a criterion that can discriminate.  Its original
+# `path_exists tests/frames/README.md` read DONE from the minute it was
+# written; if it ever goes back to a key that is satisfied on the live tree
+# with no witness, this leg is back to printing "retire me" at it.
+# ⚠ The count is a CEILING, and it is 6 rather than 0 for a reason worth
+# writing down: all six predate the field by days, so no witness for them could
+# ever have been taken, and demanding one would light a red that THIS round
+# cannot clear -- which is how a gate becomes wallpaper (iron rule 10's own
+# founding reason).  What the ceiling buys is the only thing that was missing:
+# a NEW row of this shape cannot be added quietly.  The named six are the
+# inherited debt, registered as `born_done_inherited_disposal`; lower the
+# number as they are disposed of, and never raise it.
+BORN_DONE_INHERITED = 6
+_born_rows = [(r.get("id"), pr.owed_status(r)[0]) for r in pr.load_owed()]
+_bd = sorted(i for i, st in _born_rows if st == "BORN-DONE")
+check(len(_bd) <= BORN_DONE_INHERITED,
+      "%d live registry rows read BORN-DONE (%s) but the ceiling is %d -- a "
+      "criterion that has never been observed to say anything but DONE cannot "
+      "be retired on that reading; fix the criterion, or record the OWED "
+      "reading taken at ruling time"
+      % (len(_bd), ", ".join(_bd), BORN_DONE_INHERITED))
+# The founding case must STAY off the list: its `path_exists tests/frames/README.md`
+# was satisfied the minute it was written, and this is the assertion that
+# notices if anybody puts it back.
+check("late_epoch_corpus_reopen_list" not in _bd,
+      "the founding row is BORN-DONE again -- its criterion is back to one "
+      "that cannot discriminate")
 
 # ------------------------------------------- INVARIANT 7: iron rule 4(i-a)
 # The leg (director 2026-09-12) has two ratchets and two informational counts,

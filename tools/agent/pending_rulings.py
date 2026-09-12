@@ -280,6 +280,44 @@ LIMITS FOR THE OWED LEG (in addition to 1-8 below)
     cannot check that the residual text is true or still current.  A row
     whose residual has actually been discharged reads RESIDUAL forever until
     the director clears the field; that direction is the safe one.
+14. **A `done_when` that was ALREADY SATISFIED when it was written never
+    discriminates, and nothing downstream can tell.**  This is the sharper
+    sibling of LIMIT 13: there the key outlived its obligation, here the key
+    was never about anything.  Both land on `DONE`, under the line that says
+    `the director should retire this row`.  Three measured instances, each
+    arriving by a different route:
+      * `wandlimbo_charge_instrument` (LIMIT 11's ⛔) -- two `text_absent`
+        needles mistyped in the two most ordinary ways there are, so the row
+        was born retired on an instrument purchase nobody had begun;
+      * `roshan_pit_daynight_fix` (LIMIT 13) -- the keyed file had landed the
+        day before the row was written;
+      * `late_epoch_corpus_reopen_list` -- `path_exists tests/frames/README.md`
+        on a README that had existed for days.  Registered 2026-09-12T06:5xZ;
+        it printed "retire this row" on its FIRST run and on every run after,
+        and the round that registered it had to be told by prose, twice, that
+        this was the shape it had just dodged elsewhere.
+    ⇒ The guard LIMIT 11 ⭕ registered rather than built, now built: a DONE
+    reading requires a `unmet_at_ruling` witness -- the OWED reading taken at
+    ruling time, the one moment the distinction is observable.  Without it the
+    state is **BORN-DONE**: a finding, and never "retire me".
+    ⚠️ What it buys is a DIRECTION, not a proof.  It cannot check that the
+    quoted reading is true (`_witness_problems` only asks for the literal
+    token `OWED` and a real UTC instant, which refuses "yes" and refuses a
+    fuzzed `T19:xxZ` stamp, and nothing more).  An author who fabricates the
+    line defeats it.  What it removes is the SILENT direction: a row can no
+    longer read "executed, retire me" on a key nobody ever saw say anything
+    else.
+    ⚠️ Git cannot replace the witness, and it is worth writing down why rather
+    than leaving it to look like an oversight: re-evaluating the key against
+    the tree at the row's introducing commit WOULD answer this mechanically,
+    but measured 2026-09-12 a routine container clones 50 commits -- all 50
+    dated the same day -- so for any row older than about a day the
+    introducing commit is not in the checkout, and the answer would be
+    "cannot tell" exactly when the row is old enough to have been forgotten.
+    ⚠️ It grades the plain-DONE path only.  A RESIDUAL row's key may be just
+    as undiscriminating; RESIDUAL is already a finding that already refuses to
+    print "retire me", so this leg says nothing more about it, and that gap is
+    deliberate rather than unnoticed.
 
 LIMITS (read these before quoting the output)
 ---------------------------------------------
@@ -1010,7 +1048,8 @@ def load_owed(path=OWED):
 def owed_status(row, repo=REPO):
     """Evaluate one row, machine key first, then the director's residual.
 
-    Returns (state, detail); state is DONE / RESIDUAL / OWED / UNCERTIFIABLE.
+    Returns (state, detail); state is DONE / RESIDUAL / BORN-DONE / OWED /
+    UNCERTIFIABLE.
 
     A condition that could not be READ yields UNCERTIFIABLE, never DONE
     (GH #171's rule, and here the failure direction is what matters: a
@@ -1021,10 +1060,17 @@ def owed_status(row, repo=REPO):
     it.  It is deliberately layered ON TOP of the key rather than replacing
     it -- the reader still gets to see that the artefact arrived, which is
     true and is half of why the row is still open.
+
+    BORN-DONE (LIMIT 14) is the never-discriminated case: the key is
+    satisfied and nothing records that it was ever UNMET.  It is checked
+    LAST, and only on the plain-DONE path, because every other state already
+    keeps the row open and already names a sharper reason than this one.
     """
     state, detail = _machine_key_status(row, repo=repo)
     residual = row.get("residual")
     if residual is None:
+        if state == "DONE":
+            return _witness_overlay(row, detail)
         return state, detail
     if not isinstance(residual, str) or not residual.strip():
         # A residual nobody can read must not be silently dropped: dropping
@@ -1043,6 +1089,79 @@ def owed_status(row, repo=REPO):
     return ("RESIDUAL",
             "%s -- BUT the row records a residual the key cannot see: %s"
             % (detail, residual.strip()))
+
+
+WITNESS_FIELD = "unmet_at_ruling"
+
+
+def _witness_problems(text):
+    """Shape check for a `unmet_at_ruling` witness.  Returns a list of gripes.
+
+    Deliberately two cheap requirements, and it is worth saying why each one
+    and not more:
+
+    * the literal token `OWED` -- the witness is a QUOTED READING of this
+      leg, not a promise ("yes", "checked", "I ran it") that a hurried author
+      can type without running anything;
+    * a real ISO-8601 UTC instant, by the same parser and the same reason
+      `claimed_at` is strict (`parse_utc`): the house style for prose is a
+      FUZZED stamp (`2026-09-12T19:xxZ`), and a fuzzed stamp is not a time.
+
+    What it does NOT and CANNOT check is whether the quoted reading is true;
+    see LIMIT 14.  It moves the failure direction, it does not close it.
+    """
+    problems = []
+    if "OWED" not in text:
+        problems.append("it does not quote an OWED reading (the literal token "
+                        "`OWED` is absent)")
+    if not any(parse_utc(tok.strip("()[],;")) for tok in text.split()):
+        problems.append("it carries no parseable ISO-8601 UTC instant (a fuzzed "
+                        "`T19:xxZ` stamp is prose, not a time -- same rule as "
+                        "`claimed_at`)")
+    return problems
+
+
+def _witness_overlay(row, detail):
+    """LIMIT 14.  Grade the plain-DONE path on whether anybody saw it OWED.
+
+    A `done_when` that was ALREADY SATISFIED the minute it was written is
+    byte-for-byte indistinguishable, forever after, from one the owed work
+    later satisfied -- and the failure direction is DONE, under the line that
+    says `the director should retire this row`.  Measured three times
+    (LIMIT 11's `wandlimbo_charge_instrument` mistyped needles; LIMIT 13's
+    `roshan_pit_daynight_fix`; `late_epoch_corpus_reopen_list`, whose
+    `path_exists tests/frames/README.md` was true the minute it was written).
+
+    The one moment the distinction is observable is RULING TIME, which is why
+    the witness is a recorded reading and not a derivation.  Git cannot
+    stand in for it: measured 2026-09-12 a routine container's clone is 50
+    commits, which is about ONE DAY of this repo's traffic, so for any row
+    older than that the introducing commit is not in the checkout at all.
+    """
+    text = row.get(WITNESS_FIELD)
+    if text is None:
+        return ("BORN-DONE",
+                "%s -- and no `%s` is recorded, so a key that was ALREADY "
+                "satisfied when this row was written cannot be told apart from "
+                "one the owed work satisfied (LIMIT 14).  Do not retire: either "
+                "record the OWED reading taken at ruling time, or -- if the key "
+                "was true all along -- replace the criterion with one that can "
+                "discriminate" % (detail, WITNESS_FIELD))
+    if not isinstance(text, str) or not text.strip():
+        # Same rule as a malformed `residual`, for the same reason: dropping
+        # an unreadable witness restores the "retire me" line on a row whose
+        # author was trying to say something.
+        return ("UNCERTIFIABLE",
+                "%s -- and this row's `%s` is not a non-empty string (%r)"
+                % (detail, WITNESS_FIELD, text))
+    problems = _witness_problems(text)
+    if problems:
+        return ("UNCERTIFIABLE",
+                "%s -- and this row's `%s` is not a readable reading: %s"
+                % (detail, WITNESS_FIELD, "; ".join(problems)))
+    return ("DONE",
+            "%s -- and the key was witnessed UNMET at ruling time: %s"
+            % (detail, text.strip()))
 
 
 def _machine_key_status(row, repo=REPO):
@@ -1318,6 +1437,16 @@ def render_owed(rows, now=None):
             print("      -> artefact arrived, but this row is NOT retirable: "
                   "a residual is recorded above; discharge it or narrow it, "
                   "and clear `residual` only when it is actually gone")
+        elif state == "BORN-DONE":
+            # LIMIT 14.  Same prohibition as RESIDUAL and a different reason:
+            # there we know the artefact arrived, here we do not know that the
+            # key ever said anything else.  "Retire me" would be this leg
+            # vouching for a reading it has never seen change.
+            finding = True
+            print("      -> the key reads satisfied and was NEVER WITNESSED "
+                  "UNMET: this row is NOT retirable on that reading. Record "
+                  "`%s` (a quoted OWED reading + a real UTC instant), or "
+                  "replace a criterion that was true all along" % WITNESS_FIELD)
         elif shown == "IN-FLIGHT":
             inflight += 1
             print("      -> somebody is already on this one; prefer another baton. "

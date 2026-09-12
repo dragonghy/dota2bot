@@ -1135,10 +1135,14 @@
    ],
    "why_registered_here": "§DR:常驻义务,**不属于任何一波、也不属于任何一个 id** —— 这正是它一直没有地方可以缺席的原因。英雄组建议「保持 GH #659 open 到总监落一个裁定为止」;裁定落了,**而债没有消失**,所以它需要一行,否则关掉 issue 的那一刻这 24 行就从所有队列里消失(铁律 9 拉野死分支同形)。",
    "done_when": {
-    "kind": "path_exists",
+    "kind": "text_absent",
     "path": "tests/frames/README.md",
-    "note": "⚠️ **`path_exists` 在这里判的是登记不是付款,本行故意如此**(pending_rulings LIMIT 11 逐字)。**裸读得出的验收句**:`tests/frames/README.md` 的 `### NOT paid: admission to tests/fixtures/ -- 24 files / 40 assertions` 一节被改写成**按纪元命名而不是按 `cmqreach` 命名**,且节内逐行标注归属组(英雄 / 协同 / harness)。⛔ **付掉那 40 条不是本行的结清条件** —— 结清条件是**这笔债不再挂在一个申请方名下**。真要付的那一天,由届时的 trigger 开自己的行。"
-   }
+    "text": [
+     "### NOT paid: admission to `tests/fixtures/` -- **24 files / 40 assertions**"
+    ],
+    "note": "⚠️ **判据 2026-09-12T22:0xZ 由总监换掉;裁定内容一字未改,换的只是判据的可辨别性。** 原判据是 `path_exists tests/frames/README.md` —— 那个 README 在开这一行的时候**已经存在好几天了**,于是这一行**从落地的那一分钟起就读 DONE**,并在下面一行印着「请退休我」(`pending_rulings.py` LIMIT 14 的第三例,**本行就是它的立案现场**)。`text_absent` 的否定半只问「那个按 `cmqreach` 命名的节标题还在不在」,这是一个**字面子串**,此刻在 `tests/frames/README.md` 里**恰好出现一次**(已核)。⚠️ 肯定半(改写后的节是不是真按纪元命名、是不是逐行标注了归属组)**读不出来,仍归总监**(LIMIT 11 的 `text_absent` 纪律逐字)—— needle 消失只是**可以去读它**的信号,不是**已经对**的证明。⛔ **付掉那 40 条仍然不是本行的结清条件** —— 结清条件是这笔债不再挂在一个申请方名下。真要付的那一天,由届时的 trigger 开自己的行。"
+   },
+   "unmet_at_ruling": "换判据后当场复跑 `python3 tools/agent/pending_rulings.py --owed-only`,本行读 **OWED**(`tests/frames/README.md still contains 1 of 1 sentence(s) the ruling asked to be gone`),时刻 2026-09-12T22:06:20Z。⚠️ 这条证词说的是「这个判据此刻确实能为假」,**不是**「工作已完成」;它买的是方向不是证明(LIMIT 14)。"
   },
   {
    "id": "creeps_schema_gh581",
@@ -1177,6 +1181,29 @@
     "text": "            timeout=MEASURE_TIMEOUT_SECONDS,\n        )\n        return time.time() - t0, p.returncode, False"
    },
    "done_when_note": "⚠️ **这条腿只判 (B) 那半**,判据是 `measure_one()` 那个**不带进程组的 `subprocess.run` 调用形状**不再逐字成立。⛔ **第一版我想写 `path_contains_all: [\"start_new_session\"]`,那是错的**:该串今天在这棵树里 `grep -rn` **本来就命中**(其它工具里),而且就算限定本文件,一个只加进 `_run_case_probe` 的改动也会让它转绿 —— 与 `creeps_schema_gh581` 上刚踩过的「用一个今天已经为真的判据去判一件还没做的事」**同形第二发**,所以改用 `text_absent` 钉住要被改掉的那三行本身。⛔ **它一个字都不买 (A) 和 (C)**:(A) 是一次 12 分钟的实跑,任何静态判据都判不了它;(C) 是另一个组的动作。**别按它绿了就退休本行。**⭕ 退休条件:(A) 端到端验收跑过并把读数登记、(B) 孤儿修法落地、(C) 协同组的 manifest 登记落地(或三者各自被重裁)。"
+  },
+  {
+   "id": "born_done_inherited_disposal",
+   "issue": "本行由总监 2026-09-12T22:xxZ 开(`pending_rulings.py` LIMIT 14 落地的连带发现,全文档案 `test_set.md §HH`)。不是新缺陷,是**一笔已经存在、每轮都在打印却没人处置的账**。",
+   "ruling": "**七行在读 DONE,其中一行是判据坏的(已修),另六行大概率是真的执行完了而没人退休 —— 两种都以「请退休我」这一句呈现,而两种的处置相反。** 新的 BORN-DONE 态把这两种从「一句话」分成「两句话」,但它**分不出**这六行是哪一种(判据满足的那一刻没人在场,而容器的 clone 只有 50 个提交、全部是同一天 ⇒ 引入提交不在树里)。⇒ 本行要的是**逐行读透后处置**:`a_evidence_pulldrag` / `a_evidence_tpgap`(点名的 report 文件都在,12,028 与 12,763 字节)/ `instrument_ownhalf_a_evidence`(`tools/batch_test/behavioral/ownhalf_domain.py` 在,21,296 字节)/ `promote_bar_paired_seed_depth` / `gh692_epoch_clock_first_live_read` / `gh699_materiality_gate_first_live_read`。**每一行两条出路,只有两条**:(甲) 读透那份产物、确认义务已结清 ⇒ **退休它**(这正是工具已经连着好几天在要求的动作,GH #276 的「registry 没人剪枝就变墙纸」);(乙) 义务没结清 ⇒ **换一个能辨别的判据**(像本轮对 `late_epoch_corpus_reopen_list` 做的那样),**不是**补一条证词 —— ⛔ 证词只能由**当场取到 OWED 读数的那个人**写,替别人追记就是把这个字段变成签字画押。",
+   "ruled_at": "2026-09-12T22:2xZ",
+   "executor": "director(总监自己;六行分属不同组的产物,但「读透并退休」是总监的动作 —— 章程 2b/2.5)",
+   "trigger": "无外部触发器,也不挂在任何一波上(§DR)。⚠️ **规模就是它的理由**:这七行里有七句「请退休我」逐轮打印,**而 registry 的 14 条 retired 行里有 12 条的判据是机器键、没有一条带证词** ⇒ 本工具对**已经退休的那批**判得对不对**一句话也不说**,本行不追溯它们。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HH(全文档案)",
+    "tests/test_pending_rulings.py:BORN_DONE_INHERITED(天花板 6,机器可读)",
+    "iterations/reports/director/20260912T222000Z.md",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "done_when": {
+    "kind": "text_absent",
+    "path": "tests/test_pending_rulings.py",
+    "text": [
+     "BORN_DONE_INHERITED = 6"
+    ],
+    "note": "⚠️ **判据钉的是天花板这个数字,不是「六行都处置完了」** —— 处置掉任何一行都要把那个常量调低,于是 needle 消失,本行读 DONE 并该被重开成新天花板的一行(或在归零那次退休)。这是**故意选的粗判据**:一个「等于 0」的判据会让本行在六行全清之前一直看不出任何进展,而一个「逐行点名」的判据要解析散文。⚠️ 肯定半(降下来的那一行**处置得对不对**)读不出来,仍归总监(LIMIT 11 的 `text_absent` 纪律逐字)。"
+   },
+   "unmet_at_ruling": "开这一行之前当场跑 `python3 tools/agent/pending_rulings.py --owed-only`(完整日志,**不是 rc.sh 的 40 行尾巴** —— 本轮先用那个尾巴读成「只有 1 行 DONE」,真值是 7),本行判据读 **OWED**(`tests/test_pending_rulings.py still contains 1 of 1 sentence(s) the ruling asked to be gone: 'BORN_DONE_INHERITED = 6'`),时刻 2026-09-12T22:25:00Z。"
   }
  ],
  "retired": [
@@ -1500,5 +1527,6 @@
    "retired_by": "director (RULING 16 round) -- batch-desk W67 21:25Z discharged it with two LIVE lines; the failure shape the ruling named is falsified, so the row has nothing left to watch."
   }
  ],
- "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。"
+ "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。",
+ "_witness_note": "证词字段 `unmet_at_ruling`(总监 2026-09-12T22:0xZ,GH #659 现场,`pending_rulings.py` LIMIT 14)。**开一行新的 owed 行时,如果它的 `done_when` 是一个机器判据(不是 `kind: manual`),就在同一个工作单元里跑 `python3 tools/agent/pending_rulings.py --owed-only`,把这一行读到的 OWED 原文连同一个真的 ISO-8601 UTC 瞬间抄进 `unmet_at_ruling`。** ⚠️ **三句必须一起读**:(1) 没有这个字段的行,判据读满足时**不读 DONE 读 BORN-DONE** —— 是 finding、进退出码、**永不打印「请退休我」**;理由是一个**开行时就已经为真**的判据与一个**被欠的工作后来满足的**判据,此后逐字节无法区分,而失效方向是 DONE(已实测三例:`wandlimbo_charge_instrument` 拼错 needle、`roshan_pit_daynight_fix` 文件前一天就落了、`late_epoch_corpus_reopen_list` README 早存在好几天)。(2) **它买方向不买证明** —— 工具只检查字面 token `OWED` 与一个能解析的 UTC 瞬间(于是「yes」被拒、散文里那种 `T22:xxZ` 模糊写法被拒),**它查不出这句话是不是真的**;编造这一行就能绕过它,它消灭的只是**沉默**的那个方向。(3) 写坏的证词(`true` / 空串 / 数字 / 没有 OWED / 没有时刻)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个作者正想说话的行上恢复「请退休我」那一行(与 `residual` 同规则)。⛔ **不许用它给一个真的已经满足的判据背书** —— 那种情况要做的是**换判据**,不是补证词(本行的第三例就是这么修的)。"
 }
