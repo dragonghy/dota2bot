@@ -8489,7 +8489,23 @@
     "method_note": "反事实是在 out-of-tree 副本里驱动的(cp bots/ tests/ 到 scratch 目录、在那里打补丁、在那里跑),不是改工作树再还原。2026-09-12T08:00Z 那轮在工作树上打补丁,而开工自检正在读同一批文件,拿到两条**长得跟真回归一模一样**的污染红。一份副本 23 MB,换掉整整一类。另外变异台 M8 买到一件事:这份普查**自己重算**宿主的建筑筛子而不是去读它,所以宿主里真落了收窄,本文件每个计数和每条 ratchet 都不会动 —— §7 现在钉住「筛子仍然只有那个名字测试」。",
     "next": "(0) 这个站点上,本组已经把胜负读数**两种可动的读法都定过价、都没落地**,理由是两个不同的实测。下一次再试必须**从兄弟候选的帧出发**而不是从谓词出发:tparrive 在这个宿主上带着 1 正 2 反三个对照,midsupyield 带着一个 NODROP 帧,全在本普查点名的 fixture 上。(1) tparrive 那条腿仍读 tEnemies[1](同一析取式的另一半,故意不动,GH #767 §6.2)。(2) GH #782:outpost 收窄离「可落地」只差一帧,验收判据已写好。(3) GH #760(overchase 缺速度项)本语料仍买不到。(4) 读 botTarget 的 consider 条目族仍不动(GH #474,连续第十七轮)。(5) 兵营分支(GH #713)仍不落 gate,pulldrag 永远不许单独提。(6) ⭐⭐ lua_gate manifest 登记**仍然欠着,而本轮买到了它欠着的原因**:新测试实测 4.5s、在 per-test cap 5.5s 之内,本该进钩子快腿,但唯一被许可的登记路径(manifest 自己写着 Do not hand-edit; re-measure)是全量 `lua_gate_measure.py`,而它写 manifest 时**从零构造 dict、丢掉 `known_red`/`known_red_cases`/`known_red_at`**(:380-396,且不合并旧文件),而 `lua_gate.py:298` 逐字说「A missing key is an EMPTY baseline, never a permissive one」⇒ 一次 re-measure 会把 main 上 9 条 known-red 变成**挡住所有组 push** 的 finding。⛔ 本轮跑到 154/427 主动杀掉,manifest **逐字未动**;修法是让 `main()` 像 `reselect()` 那样先读回旧文件再 update(两条路径不一致本身就是缺陷的形状),已交 GH #783。"
   },
-  "cmrsolo_20260912": {
+  "axecallclock_20260912": {
+  "owner": "hero",
+  "date": "2026-09-12T17:xxZ",
+  "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
+  "backlog_item": "hero -158 第 1 条(P4.4 (i):工作单元主体是一个 bots/ 行为改动)。-158 的第三条筛(「已落地修复的 LIMIT / deliberately-left-alone 段落是现成的杠杆清单」)本轮**走完了焦点五英雄的整份清单并且全部量掉**(六根,逐条理由见报告 §5);落地的这一根来自另一条线索 —— **同族 id 的跨英雄复用**:`cmtfclock`(CM,2026-09-11)的形状是「整点宵禁站在直接量度旁边并且压过它」,本轮问的是「这棵树里还有谁有整点宵禁」。",
+  "headline": "⭐ **`DotaTime() > 6 * 60` 是 `bots/BotLib/hero_axe.lua` 里唯一的一座整点钟(实测 census,`tests/test_axe_q_lane_push_clock.lua` §5.1 钉住),而它挡的那条支路的收益引擎按本文件自己的加点表 7 级就满级。** 带线支路把兵线嘲讽到 Axe 身上让 Counter Helix 转掉它;加点表 `{2,3,1,3,3,6,3,2,2,2,6,1,1,1,6}`(pos3)给 Counter Helix **5 级 rank 3 / 7 级 rank 4**,Turbo 双倍经验下两者都远在 6:00 之前 ⇒ **引擎满功率好几个英雄等级,而支路还关着**。",
+  "defect": "bots/BotLib/hero_axe.lua X.ConsiderQ 的 带线 出货点:`( J.IsPushing or J.IsDefending or J.IsFarming ) and J.IsAllowedToSpam( bot, nManaCost ) and bot:GetAttackTarget() ~= nil and DotaTime() > 6 * 60 and #hAllyList <= 2 and #hEnemyList == 0`。6 分钟是**普通模式常数**,而本项目的优化目标是 Turbo(docs/PROJECT.md:~20 分钟 vs ~35-40)⇒ 宵禁吃掉大约 30% 的比赛,而且吃掉的是**前** 30%。",
+  "not_a_mana_or_safety_term": "两条都是**数出来的不是散文**(§5.2):同一个 `if` 里已经有 `J.IsAllowedToSpam( bot, nManaCost )`(这棵树自己的蓝量配给器)⇒ 再加一个时间形状的配给器是配给两遍;同一个 `if` 里已经有 `#hEnemyList == 0` 与 `#hAllyList <= 2`(「站在兵线里安不安全」的**直接量度**)⇒ 代理坐在量度旁边并压过它,与 `cmtfclock` 逐字同形。",
+  "fix": "gated helper `X.axe_IsLanePushClockOpen()`(turbo-only,id `axecallclock`),常数写成 `X.nQLanePushClockShipped = 6 * 60` / `X.nQLanePushClockTurbo = 3 * 60` 两个具名量,测试**从源码读数字**而不是重打(stale-mirror 族)。闸关(或非 turbo)= `DotaTime() > 6 * 60` 逐字节不变。**只减半不删**:这条支路该不该有钟是第二个问题,把两者合在一起会让一次波的读数对谁都不可归因。",
+  "direction": "**WIDENING,严格超集**:任何 t > 6:00 必然 t > 3:00 ⇒ armed 只能**加**带线嘲讽(窗口 (3:00, 6:00]),永远不能删一发、也不能把一发挪到别的目标上。§4.1 在全语料 111+ 个计时瞬间上驱动这条(不是论证),§4.2 再用真实 load 驱动一遍谓词本身。负向读数只能读成「那些早期带线嘲讽不值得开」。",
+  "domain": "⛔ **两个域,两个数字,不许当成一个**。**闸层域 = 2 个瞬间**:16 个 Axe-subject 瞬间(tests/fixtures/ + tests/frames/)里落在 (3:00, 6:00] 的恰好两个 —— `tests/frames/f_260909_215412_axe_call_init_224.lua`(t=224.3,3:44,pin)与 `f_260909_215412_axe_cull_viper_348.lua`(t=348.0,5:48);另外 14 个 armed 与 shipped 逐字节相同(13 个在 6:00 之后,1 个在 2:25 两条腿都拒)。**端到端域 = 0,而且今天不可能是别的数**:支路还要 `#laneCreepList >= 4`,而归档语料里**一个非英雄单位都没有**(GH #772,1410/1410 是英雄)⇒ 没有任何归档帧能把支路驱动到 return。§3.4 把这个 0 **按这个方向**钉成断言,并在语料出现非英雄单位的那天自己报红点名。",
+  "condition_c": "Berserker's Call + Counter Helix 清兵/清野是 Axe 的标准打法;本 id 的 (c) 不靠外部攻略而靠**本文件自己的加点表**:pos3 行在 7 级把 Counter Helix 点满,Turbo 双倍经验下 7 级远在 6:00 之前。§5.4 把这条论证钉成 ratchet(数加点行里的 3,不重打结论),变异台 M10 是它的控制组。",
+  "tests": "tests/test_axe_q_lane_push_clock.lua(14 例全绿)。变异台 `tools/agent/mutstand_axecallclock.sh`(evidence-discipline:文件副本恢复 + `sha256sum -c`,`trap restore EXIT` 在第一个变异体之前,退出码无管道)**10/10 全中**:M1 去闸 / M2 去 turbo / M3 改 id 名 / M4 死接线 / M5 调用点回退成字面量 / **M6 两个阈值对调(widening 静默变成 narrowing)** / M7 armed 阈值离开 SHIPPED/2 / M8 pullcad 陷阱 / M9 闸层域 census 的控制组 / **M10 (c) 论证的控制组(打坏加点行)**。",
+  "same_unit_hygiene": "本轮新测试的 `io.popen` 目录 walk **在同一个工作单元里**登进 `tests/test_bots_walk_farm_only.py` 的手读名单(落地时该 census 先报了红,当场读、当场登记)—— GH #624 / #774 的形状是「红留给下一个开工的组」,这一次没有留。",
+  "next": "`iterations/queue.json:hero-67`(零 EC2 归档只读扫描,只买域的频率;判读三分支已预登记,含「域为 0 ⇒ reject,理由写成域为 0 而不是测过没效果」)。⛔ 冻结期不提入集。"
+ },
+ "cmrsolo_20260912": {
     "owner": "hero",
     "date": "2026-09-12T14:xxZ",
     "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
