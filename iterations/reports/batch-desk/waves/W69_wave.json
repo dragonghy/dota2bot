@@ -1,0 +1,190 @@
+{
+ "wave": "W69",
+ "market": "spot",
+ "market_source": "gate (iv) reclaim_blind.py on W68, verbatim `NEXT WAVE: spot (the default; GH #158 unchanged).`",
+ "ref_pin": "52ea2be45696c7d547ea00754ece1e32c0090061",
+ "ref_pin_source": "git ls-remote origin main, run INSIDE the launch script immediately before the spot_run.sh calls (instances clone origin/main, not the container's working tree).",
+ "arm_ids": 27,
+ "arm_bytes": 239,
+ "arm_md5": "76a888b622124fc5488503aa36ef6b25",
+ "arm_string": "lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart",
+ "arm_source": "origin/main:iterations/streams/test_set.md line 2, read fresh this round and re-verified byte-for-byte inside the launch script. UNITS TRAP registered: the registration in test_set.md line 3 is of the string WITHOUT the trailing newline (239 bytes / 76a888b622124fc5488503aa36ef6b25); `sed -n 2p` keeps the newline and gives 240 bytes / b8227a7f8372bc5c7f581798b0ebe500. This record uses the registered quantity.",
+ "family": "27-id",
+ "family_depth_before": 0,
+ "family_note": "FIRST wave of the 27-id family. DO NOT POOL with W68 (29-id, md5 33047ce5...) nor with W66+W67 (30-id, md5 7d4c638d...). The 29 -> 27 change is two RETURNED ids (outlatch + rotscope) per the director's ruling section HA, registered in test_set.md line 3. Corroborated arithmetically without relying on that prose: 239 + len('outlatch,')=9 + len('rotscope,')=9 = 257 = W68's arm_bytes exactly.",
+ "cand_name": "UNREAD THIS ROUND -- see run_id_loss. Read it at harvest from analysis.json:script_version (form mirror:<27-id string>:s<seed>:<side>); it is also the cand argument recover_verdict.py needs.",
+ "games_per_leg": 12,
+ "watchdog_hours": 2,
+ "slots": 14,
+ "rec_slots": 1,
+ "expected_games": "~96 scored (4 seeds x 12 games x 2 legs), REGISTERED FOR COMPARABILITY ONLY -- actual yield has run far off this number on every recent wave (W62 203, W63 126, W66 46, W67 176, W68 136 scored of 168 loaded).",
+ "seeds": [
+  13019,
+  13027,
+  13034,
+  13052
+ ],
+ "seed_selection": {
+  "method": "Enumerated seeds 13000-13299 with seed_draft.position_map, kept those carrying >=1 carrier term, then chose the 4-seed combination that (a) covers ALL 5 carrier terms and (b) maximizes total carrier slots.",
+  "chosen_total_carrier_slots": 13,
+  "first_feasible_rejected": {
+   "seeds": [
+    13000,
+    13001,
+    13002,
+    13034
+   ],
+   "total_carrier_slots": 6,
+   "why_rejected": "covers all 5 terms but with less than half the carrier redundancy of the chosen slate"
+  },
+  "per_seed": {
+   "13019": [
+    "crystal_maiden",
+    "lion",
+    "skeleton_king"
+   ],
+   "13027": [
+    "obsidian_destroyer",
+    "skeleton_king",
+    "spirit_breaker"
+   ],
+   "13034": [
+    "crystal_maiden",
+    "lion",
+    "spirit_breaker"
+   ],
+   "13052": [
+    "crystal_maiden",
+    "lion",
+    "obsidian_destroyer",
+    "skeleton_king"
+   ]
+  },
+  "limit": "A seed pins WHICH 10 heroes play, which side, and which position -- it does NOT pin the pick slot (seed_draft.py header, GH #57)."
+ },
+ "gates": {
+  "i_throttle": "Read THREE times this round; two refusals and one pass, and the refusals were load-bearing. Decision instants: THROTTLE_EXIT=3 (`margin : 758s SHORT of unlock`) and THROTTLE_EXIT=3 (`margin : 474s SHORT`) -- the desk did NOT rule a zero-wave round on these, it suspended the launch instead. Action instant, inside the launch script per GH #469: THROTTLE_EXIT_AT_LAUNCH=0, verbatim `now : 2026-09-12T09:26:21Z` / `margin : +9s past unlock`. A FIRST attempt to run the launch script at 09:20:15Z was refused BY THE SCRIPT ITSELF: `margin : 357s SHORT of unlock` -> `ABORT: gate (i) does not pass at the launch instant. Nothing launched.` (script exit 3). Anchor was W68's last machine 2026-09-12T03:26:12Z -> unlock 09:26:12Z.",
+  "ii_new_to_test": "PASSES on leg 1 (member string changed), the FIRST disjunct. W68 arm_md5 33047ce53c029f3901e5f63eab872ecb (29 ids / 257 bytes) -> this wave 76a888b622124fc5488503aa36ef6b25 (27 ids / 239 bytes). NOTE this refutes the 06:16Z round's handoff item 3, which predicted leg 1 would be empty this round because the 29-id family had reached depth 1; two ids were RETURNED in between, so leg 1 is live and leg 2 was not needed.",
+  "iii_fence": "FENCE_EXIT=0 with --pending 3.25 --planned 1.10. Verbatim: `projected total $88.295` / `operative ceiling: $90.00 = min(fence, brake)` / `headroom : $1.705 after this wave`. FIRST run this round was FENCE_EXIT=2 UNCERTIFIABLE (Ruling 6: two waves launched inside the 11.3h accrual lag, so pending=$0.000 is not certifiable); the exit 2 was NOT read as a pass -- --pending was supplied and the tool re-run.",
+  "iv_inputs": "BACKFILLED THIS ROUND, and that is the round's headline. reclaim_blind.py first returned exit 2 `UNDECIDABLE: seed 12924: missing leg count 'ab'` because the 06:16Z harvest round recorded its first-hand readings only in prose and in W68_harvest.json, never into W68_wave.json:machines[] -- the structure the gate actually reads. Back-filled ab/ba/arm_depth from W68_verdict.json:per_seed, and status_code/machine-hours from W68_harvest.json (marked NOT re-read first-hand: the SIRs had already aged out, see gh_375_observation).",
+  "iv_reclaim_blind": "BLIND_EXIT=0 after the backfill. Verbatim `VERDICT: not blinded -- the wave delivered 3 paired seed(s).` / `NEXT WAVE: spot`. With survival_min also back-filled the attribution became determinate: `attribution: 1 machine(s) reclaimed before the flip` (was a 0..1 RANGE before).",
+  "wiring": "WIRING_EXIT=0, verbatim `all 27 armed ids wired on 52ea2be45696c7d547ea00754ece1e32c0090061`, run against the REMOTE tip.",
+  "carrier": "CARRIER_GATE_EXIT=0, verbatim `CARRIER_GATE ids=5 seeds=4 exit=0`; 5 terms crystal_maiden,lion,obsidian_destroyer,skeleton_king,spirit_breaker, none ABSENT.",
+  "dryrun": "DRYRUN_EXIT=0, wave budget gate did NOT refuse => --allow-short-watchdog was NOT used."
+ },
+ "fence_arithmetic": {
+  "mtd": 83.945,
+  "mtd_source": "budgets/dota2bot-batch, refreshed 2026-09-12T05:22:16Z, CE cross-check 83.9453960689 digit-identical",
+  "snapshot_note": "Stamp AND value both digit-identical to the 06:16Z round => the snapshot is frozen; W67 and W68 are still un-accrued.",
+  "pending": 3.25,
+  "pending_breakdown": "W68 spot $1.10 + W67 on-demand $2.15",
+  "planned": 1.1,
+  "projected": 88.295,
+  "ceiling": 90.0,
+  "headroom_after": 1.705,
+  "honest_cutoff": "2026-09-11T18:04:16Z (= 05:22:16Z - 11.3h). Both W67 and W68 launched after it.",
+  "no_backsolve": "The MTD delta was NOT used to infer any wave's cost (step 2-b forbidden)."
+ },
+ "machines": [
+  {
+   "seed": 13019,
+   "instance_id": "i-023af1cbf9c998329",
+   "az": "us-west-2c",
+   "instance_type": "c6i.4xlarge",
+   "market": "spot",
+   "lifecycle": "spot -- describe-instances InstanceLifecycle == 'spot', read this round (NOT inferred from the run_id's spot_ prefix, GH #158)",
+   "state_at_launch": "running (describe-instances State.Name, read this round)",
+   "launched_at": "2026-09-12T09:26:24.000Z",
+   "launch_time": "2026-09-12T09:26:24.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544). BOTH key names written on purpose: wave_throttle.py reads `launched_at`, and W55 shipped only `launch_time`, which made gate (i) exit 2 on the next round.",
+   "shutdown_behavior": "terminate (describe-instance-attribute, queried PER MACHINE, not inferred from the slate)",
+   "ab": null,
+   "ba": null,
+   "arm_depth": null,
+   "survival_min": null,
+   "status_code": null,
+   "status_code_note": "UNREAD AT LAUNCH BY CONSTRUCTION -- the machine is still running. THE HARVEST ROUND MUST WRITE status_code / ab / ba / arm_depth / survival_min INTO THIS OBJECT, not only into its report prose: that exact omission by the 06:16Z round is what left gate (iv) at exit 2 for this launch round (see W69 report section 3). These are spot machines, so the SIR vocabulary applies and GH #699's permanent-null-for-on-demand clause does NOT. Read it IN THE HARVEST ROUND: this round measured the far end of the aging window at ~5h-5h30m post-termination, where describe-spot-instance-requests already returns []."
+  },
+  {
+   "seed": 13027,
+   "instance_id": "i-0a802c6f7687025dd",
+   "az": "us-west-2c",
+   "instance_type": "c6i.4xlarge",
+   "market": "spot",
+   "lifecycle": "spot -- describe-instances InstanceLifecycle == 'spot', read this round (NOT inferred from the run_id's spot_ prefix, GH #158)",
+   "state_at_launch": "running (describe-instances State.Name, read this round)",
+   "launched_at": "2026-09-12T09:26:26.000Z",
+   "launch_time": "2026-09-12T09:26:26.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544). BOTH key names written on purpose: wave_throttle.py reads `launched_at`, and W55 shipped only `launch_time`, which made gate (i) exit 2 on the next round.",
+   "shutdown_behavior": "terminate (describe-instance-attribute, queried PER MACHINE, not inferred from the slate)",
+   "ab": null,
+   "ba": null,
+   "arm_depth": null,
+   "survival_min": null,
+   "status_code": null,
+   "status_code_note": "UNREAD AT LAUNCH BY CONSTRUCTION -- the machine is still running. THE HARVEST ROUND MUST WRITE status_code / ab / ba / arm_depth / survival_min INTO THIS OBJECT, not only into its report prose: that exact omission by the 06:16Z round is what left gate (iv) at exit 2 for this launch round (see W69 report section 3). These are spot machines, so the SIR vocabulary applies and GH #699's permanent-null-for-on-demand clause does NOT. Read it IN THE HARVEST ROUND: this round measured the far end of the aging window at ~5h-5h30m post-termination, where describe-spot-instance-requests already returns []."
+  },
+  {
+   "seed": 13034,
+   "instance_id": "i-07eaed0571a85d81d",
+   "az": "us-west-2b",
+   "instance_type": "c6i.4xlarge",
+   "market": "spot",
+   "lifecycle": "spot -- describe-instances InstanceLifecycle == 'spot', read this round (NOT inferred from the run_id's spot_ prefix, GH #158)",
+   "state_at_launch": "running (describe-instances State.Name, read this round)",
+   "launched_at": "2026-09-12T09:26:29.000Z",
+   "launch_time": "2026-09-12T09:26:29.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544). BOTH key names written on purpose: wave_throttle.py reads `launched_at`, and W55 shipped only `launch_time`, which made gate (i) exit 2 on the next round.",
+   "shutdown_behavior": "terminate (describe-instance-attribute, queried PER MACHINE, not inferred from the slate)",
+   "ab": null,
+   "ba": null,
+   "arm_depth": null,
+   "survival_min": null,
+   "status_code": null,
+   "status_code_note": "UNREAD AT LAUNCH BY CONSTRUCTION -- the machine is still running. THE HARVEST ROUND MUST WRITE status_code / ab / ba / arm_depth / survival_min INTO THIS OBJECT, not only into its report prose: that exact omission by the 06:16Z round is what left gate (iv) at exit 2 for this launch round (see W69 report section 3). These are spot machines, so the SIR vocabulary applies and GH #699's permanent-null-for-on-demand clause does NOT. Read it IN THE HARVEST ROUND: this round measured the far end of the aging window at ~5h-5h30m post-termination, where describe-spot-instance-requests already returns []."
+  },
+  {
+   "seed": 13052,
+   "instance_id": "i-0594672d686a7556f",
+   "az": "us-west-2d",
+   "instance_type": "c6i.4xlarge",
+   "market": "spot",
+   "lifecycle": "spot -- describe-instances InstanceLifecycle == 'spot', read this round (NOT inferred from the run_id's spot_ prefix, GH #158)",
+   "state_at_launch": "running (describe-instances State.Name, read this round)",
+   "launched_at": "2026-09-12T09:26:31.000Z",
+   "launch_time": "2026-09-12T09:26:31.000Z",
+   "launched_at_source": "describe-instances LaunchTime, read in the SAME round as launch (GH #544). BOTH key names written on purpose: wave_throttle.py reads `launched_at`, and W55 shipped only `launch_time`, which made gate (i) exit 2 on the next round.",
+   "shutdown_behavior": "terminate (describe-instance-attribute, queried PER MACHINE, not inferred from the slate)",
+   "ab": null,
+   "ba": null,
+   "arm_depth": null,
+   "survival_min": null,
+   "status_code": null,
+   "status_code_note": "UNREAD AT LAUNCH BY CONSTRUCTION -- the machine is still running. THE HARVEST ROUND MUST WRITE status_code / ab / ba / arm_depth / survival_min INTO THIS OBJECT, not only into its report prose: that exact omission by the 06:16Z round is what left gate (iv) at exit 2 for this launch round (see W69 report section 3). These are spot machines, so the SIR vocabulary applies and GH #699's permanent-null-for-on-demand clause does NOT. Read it IN THE HARVEST ROUND: this round measured the far end of the aging window at ~5h-5h30m post-termination, where describe-spot-instance-requests already returns []."
+  }
+ ],
+ "harvest_obligations": [
+  "(a) Read each machine's SIR Status.Code AND machine-hours, and WRITE THEM INTO machines[] of THIS file, not only into the report prose or the harvest json. The 06:16Z round read them correctly and still left gate (iv) undecidable for the next launch round, because reclaim_blind.py reads machines[].",
+  "(b) Do it IN THE HARVEST ROUND. This round measured the aging window's far end: the SIRs were GONE ~5h-5h30m after termination (describe-spot-instance-requests returned []). A backfill deferred one round is transcription, not a first-hand reading.",
+  "(c) Pool with cand = the FULL 27-id arm string as stamped in analysis.json:script_version, NOT the wave's cand_name. Passing cand_name exits 0 with per_seed: [] / mean: {} -- indistinguishable from a completed run that measured nothing.",
+  "(d) Download per run into SEPARATE subdirectories and merge with a prefix; never `s3 cp` several runs into one directory (GH #225). Confirm with recover_verdict.py's own counters: source_dirs, files_seen == games_loaded, pooled_basename_dirs_overridden: 0.",
+  "(e) Iron rule 4: register BOTH strata READINGS (not game counts) from the tool's own strata.<m>; swap-average per seed FIRST, then take the arithmetic mean across seeds -- never weight the pool by game count (i-d).",
+  "(f) DO NOT POOL with W68 or W66+W67 -- different families (27 vs 29 vs 30 ids)."
+ ],
+ "gh_375_observation": "This round read describe-spot-instance-requests with no filter and got [] for all four W68 SIRs, ~5h-5h30m after their termination. The 06:16Z round read all four codes successfully at 2h01m-2h32m after termination. Together these bracket the aging window at > 2h32m and <= ~5h30m, against GH #375's recorded '~1h'. Registered for GH #375's owner; the desk did not change the constant.",
+ "next_gate_i_anchor": "W69's last machine up 2026-09-12T09:26:31Z + 6h window => nominal unlock 2026-09-12T15:26:31Z. DO NOT COPY THIS -- run wave_throttle.py, which re-derives the anchor from the live wave archive.",
+ "launch_window": {
+  "first_machine_up": "2026-09-12T09:26:24.000Z",
+  "last_machine_up": "2026-09-12T09:26:31.000Z",
+  "slate_spread_s": 7,
+  "source": "describe-instances LaunchTime"
+ },
+ "az_spread": {
+  "distinct": 3,
+  "of": 4,
+  "detail": "us-west-2c x2 (seeds 13019, 13027), us-west-2b x1 (13034), us-west-2d x1 (13052)",
+  "note": "The az ring's random start offset (GH #252) landed on us-west-2d in the dry-run probe and the four independent --count 1 calls each walked it from their own random start, so 2c drew twice and 2a not at all."
+ },
+ "run_id_loss": "REGISTERED AGAINST THIS DESK, not against a tool. The launch script piped each spot_run.sh call through `tail -6`, which discarded the `run_id=...` line for all four machines; `grep -c run_id` on the launch log returns 0. Nothing is unrecoverable: the four run prefixes will appear in S3 as soak/spot_20260912_0926*_1_main_*/ once the machines upload (they were absent when checked at 09:2xZ, as expected before the first game finishes), and the seed<->run mapping is independently recoverable from analysis.json:script_version, which stamps the seed. Same family as the stdout-pipe trap the charter has logged 17 times: a DISPLAY filter destroying a READING. The fix is to tee the launcher's output, not to tail it.",
+ "post_launch_leak_check": "describe-instances with NO tag filter (state in pending/running/stopping/stopped) returned exactly the 4 machines this round intentionally launched, no extras. describe-volumes returned 4, each `in-use` and each attached to one of those 4 instance ids => zero orphans. Pre-launch both calls returned []. Standing cost is only the AMI ami-0a990a26d89c66547."
+}
