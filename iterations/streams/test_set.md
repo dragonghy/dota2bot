@@ -5361,3 +5361,62 @@ hero-38 的是 `"zusfightquorum"` —— **词法查重会漏掉这一对,而这
 ⚠️ **M12 本轮 APPLY-FAILED 中止过一次,而那是台子在干活**:它引的 `%-9s` / `state`
 在 IN-FLIGHT claim 落地时被改成了 `%-11s` / `shown`,**靶子早就飘了**;
 一个默默跳过的台子会报「12 个全中」而**其中一个从没上过台**。已重新锚定。
+
+---
+
+## §HD 2026-09-12T13:xxZ(第五轮)总监:**RULING 28/29/30 —— 四条搭车裁毕 + 两条 FROZEN-HOLD 拆成两半 + `harness-corpus-creeps` 并入 GH #581 并更正三处前提;armed 27 不变** —— 本节最该被读的是 **§HD.3:这条重复请求不是重复,它是一条挂了五天、正文明写「需要总监先裁」的 issue 的症状**;以及 **§HD.4:一句用来支撑决定的理由已经悄悄过期,而没有任何东西举手**
+
+**零 AWS(一次调用都没有)、零波次、`bots/` + `game/` 零 diff、不发 owner 邮件、无 promote / reject / 入集 / 退集。判定完结 3(RULING 28 / 29 / 30),满足 owner P4.2 的 ≥2。armed 27,离解冻线(≤20)差 7。**
+
+本轮把上一轮 ⑨① 点名的四条、以及本轮期间新到的 `hero-65` 一次裁完。裁前 `pending_rulings.py` 第一节读 **RIDESHARE 3 / OTHER 2**,裁后 **两节都是 `none`**。
+
+### §HD.1 RULING 28 —— `hero-64`(`wkqcommit`)与 `hero-65`(`zusboltimm`):APPROVED-SCAN,并进既有遍历
+
+两条都是零 EC2 只读档案扫描,并进 `iterations/owed_executions.json:hero_domain_scan_2_30_31`(产物路径不改名),针脚 24 → 26。全文见各自 `queue.json:director.note`。
+
+⭐ **`hero-64` 与 hero-62/hero-38 那一对不同形,而这一句是现查的不是默认的**:上一轮的立案现场是「同一条 id 的同一个域被同一个组申请了两次」,所以本轮对每条搭车都先问一次「它与已批的哪条互相包含」。`wkqcommit` 的域是 WK 的**配给层**(四个自身状态析取项),同一次遍历里另一条 WK 腿 `hero-31`(`wkbonefight`)买的是骨王团战列 —— **分母不同、腿不同** ⇒ 单独占一根针,是真正的新读数。
+
+⭐ **`hero-65` 预先照办了 RULING 27 的两条**(量具复用 `axecallbkb_domain.py:132-137` 的 `IMMUNITY_MODIFIERS`;阈值绑「选择器出目标」那个分母),现查属实,**本轮不重裁**。它与 `hero-63` 是**同一个选择器的两个读者**,分开买的理由是**代价不是礼貌**:同一个错误在 Bolt 上要价 ~1.4 倍蓝、3.75 倍冷却,且花在撤退帧上。⛔ 两条在语料唯一那枚「撤退中的 Zeus 面对 BKB」帧(`tests/frames/f_260909_215227_zeus_exec_od_1467.lua`)上**都会开火,不得当成两次独立目击** —— 这是请求方自己举的手,照登记。
+
+### §HD.2 RULING 29 —— `hero-60`(`cmwhit`)与 `hero-61`(`cmtfclock`):**裁定分成两半,而分界线是「归档答得了哪一半」**
+
+- **(甲) 入集 / armed 腿那一半 = FROZEN-HOLD**(`OWNER_PRIORITIES.md` P4.2,armed **27 > 20**):登记、不入集、不视为掉棒。两条的 `acceptance` 逐字要求「录像组在 **armed 腿**的对局里核验」,而归档是 **baseline**,结构上答不了「armed 腿当时改选了谁 / 多放了哪一发」。`status` 写 `frozen_hold` —— 批测台按章程 4a **只看 `status`** 选波,这一半的投递终点就是那个字段。
+- **(乙) 频率那一半 = APPROVED-SCAN,零 EC2**,并进同一次遍历,针脚 26 → 28。
+
+⭐ **(乙) 不是我替请求方改题,是请求方自己的正文点名要的,只是写在 `question` 里而没写进 `acceptance`。** 两条都逐字写着「本地能买到的已经买完,缺口是结构性的」,并把问题收敛成一个**占比**问题:`cmwhit` 问「一个被集火的 CM,多大比例的帧环里既有打她的人、又有一个更近的旁观者」;`cmtfclock` 自己写「**因此本请求要买的是频率,不是正确性**」。**占比问题归档现在就答得了,不必占一个 armed 位。**
+
+⛔ **为什么不能只裁 (甲) 了事** —— 只发 FROZEN-HOLD 会让这条 id 停在一个「默认下一步 = 等解冻发取证波」的状态里,而解冻的定义是**集合变小**。先买频率是 P4.2 **同向**的那条路:读数 <0.1% ⇒ 这条 id **在从未占用 armed 位的情况下退场**;>=1% ⇒ 解冻后它带着一个已经买好的域优先排。这与 §HC 对 hero-62/63 的口径一致(「退场支路 = 入集之前那道便宜滤网」)。
+
+⭐⭐⭐ **本节最该被读走的一条:`STRATA_SILENT` 这条棘轮人口从 0 变成非 0 的第一轮,抓到的是总监自己的裁定。** 第一版我把铁律 4(i-a) 的 ab/ba 条款写进了 `director.note` 的 ⑦,`pending_rulings.py` 当场把 `hero-60`/`hero-61` 两条都顶红,并逐字说明理由:**「name the clause in the ACCEPTANCE, which is what the executor reads」**。失效形状正是 §DR 的「裁定要落到被裁方读的那个字段上」——**上一轮刚立的工具,第一次开火就打在立法者身上**。已把条款补进两条的 `acceptance` 追加节(请求方原文一字不改),复跑后 `STRATA_SILENT: none`,`acceptance names the clause` 14 → 16。
+
+📌 *一条只写在裁定理由里的条款,对执行者而言等于没写 —— 而这一次,是工具而不是我发现的。*
+
+### §HD.3 RULING 30 —— `harness-corpus-creeps`:**并入 GH #581,并更正三处前提**
+
+⛔ **先说最要紧的那一句:这条请求不是重复,它是 GH #581 挂了五天没人裁的症状。** GH #581(2026-09-07 开,`[harness]` 归总监,现读 `updated_at == created_at` ⇒ **零回应**)要的就是 `creeps[]` 的 `name`/`hp`/`idx` 三列,而它正文里明写「**这一条是本请求里唯一需要总监先定的技术分叉**」。五天里那个分叉没被裁,于是**另一个组从 fixture 那一侧把同一堵墙又申请了一次**。
+
+⭐ **这是 §HC(戊) 登记的「请求上行重复」缺口的第二个数据点,而它与第一个不同形、更难查**:第一个(hero-38/hero-62)是**同组、同 id、同域**;这一个是**跨组、跨载体(issue ↔ queue 行)、跨措辞**(「dumper 补三列」↔「fixture 能不能带小兵」)⇒ **任何按 id 或按词法的查重都抓不到这一对**。⚠️ **但本轮仍不造表**,理由变了:第一个数据点说「查重要按域不按 id」,第二个说**载体都不同一个** ⇒ 真正的修法不是查重表,而是**让 issue 不再是常驻债的载体**(本轮已把这条债搬进 `owed_executions.json:creeps_schema_gh581`,它每轮被开工自检第 9 条腿点名,而 issue 不会)。**第三个数据点之前不加表。**
+
+**三处前提更正(全部现量,不是读源码猜的):**
+
+1. ⛔ **「fixture 语料里一个非英雄单位都没有」是假的。** 现量 `tests/fixtures/` + `tests/frames/` 共 **141** 份帧文件,**32 份**带 `creeps = {` 块(`tests/fixtures/` **2** 份、`tests/frames/` 30 份),最多一份 65 只。⭐ **请求方数对了表,数错了张**:小兵**不在 `fx.units` 里** —— `make_fixture.py:618-626` 把它们写进兄弟键 `fx.creeps`,正因为它们没有 `name`(只有 `{team, x, y, dt}`)。「1410/1410 都是 `npc_dota_hero_*`」这个读数本身没错(141 × 10 = 1410,逐位对得上),错的是从它推出的那句话。📌 *一个只遍历 `units` 的普查,会把「小兵住在隔壁键」读成「语料里没有小兵」。*
+2. ⛔ **验收 (1) 已经发货了。** `make_fixture.py:497-519 / 618-626` 已在写 lane + neutral creep,半径 **3000**(请求建议 >= 1600,已覆盖),取**离 t 最近**的采样点,并写出 `creep_interval` 让测试自己读陈旧度;上游 `dumper/main.go:108-113, 468-478` 也已在采。**不要再实现一遍。**
+3. ⛔ **请求的兜底那句话不许写进 `tests/frames/README.md` —— 它是假的,而且与 README 自己已有的记账矛盾。** README 第 9 行把「the corpus carries no creeps」列为会被 admission 顶红的普查棘轮之一,第 94 行逐字记着 `test_campfarm_ancient_target`(**0 -> 1 fixtures with a `creeps` key**)。**真正的限制比请求写的窄,而那条窄的正是 GH #581**:dump 每行只有 `{t,team,x,y}`(18,709,698 行单一键形,零例外)⇒ **读小兵血量 / 名字 / 近战远程之分的支路是瞎的;读数量 / 几何 / 阵营的支路今天就能在那 32 帧上验。** ⚠️ **请求自己举的例子骑在这条线的两侧**:Axe 带线嘲讽小兵支路缺的是 **HP 地板** ⇒ 瞎的一侧;CM `X.ConsiderQImpl` 清兵支路 / `cmcreepcap` / `cmfarcreep` 读的是数量与几何 ⇒ 今天就能验的一侧。**把两侧写成一句「结构性地不支持」,会连今天买得到的那一半一起划掉。**
+
+**顺带把 GH #581 点名要总监裁的那个分叉裁了(全文在 `owed_executions.json:creeps_schema_gh581.ruling`):**
+
+- **(A) 无分叉、先做**:`creepSnap` 增 `hp` / `maxhp` / `idx`,与 `buildings[]` **逐字同形**(`m_iHealth` / `m_iMaxHealth`,`dumper/main.go:449-466`)。⚠️ **(A) 先做的理由不是省事,是它单独就解锁三条 BLIND 里的两条** —— #581 自己的表格逐字写着 hero-32 / hero-33 的价值列要的是**血量**,只有 hero-36 要 melee/ranged 之分。
+- **(B) 有分叉、后做**:`name` 必须走字符串表。⛔ **不许用类名当名字,这一条现读源码确认过** —— `buildingName(cn)` 之所以成立是因为每种建筑各有自己的类,而 `isCreepClass`(`dumper/main.go:860-868`)一共只列三个类,`CDOTA_BaseNPC_Creep_Lane` **把近战/远程/升级/超级兵折成同一个**。实现者先在一局上打印验证再发出去。
+- ⚠️ **登记为待验假设,不作裁定依据**:`maxhp` 也许能替 `name` 分近战/远程 —— **但两者都随时间升级,阈值会漂**;谁想用它必须按时间分层在一局上验证,⛔ 不得当成已知事实,也不得据此取消 (B)。
+- **体积**:#581 自己提的 `-creep-detail`(默认 off)**批准**,且只对 `_Creep_Lane` / `_Creep_Siege` 写详细字段 —— 三条被卡的腿要的都是兵线兵。
+- **(C) loader 那半(来自本请求的验收 (2),不依赖 #581)**:`GetNearbyLaneCreeps` 今天**连一个 reader 都没有**;`GetNearbyNeutralCreeps` **存在但 opt-in**,且是从 `recent_damage` 的**归因**合成的、不是从小兵采样读的,四个测试把「它恒答 {}」当**声明过的世界假设**在用 ⇒ **换实现要带那四个测试的重开清单,不许悄悄换**。⭐ lane / neutral 今天就分得开(`team == 4` 即中立),**接这两个 reader 不需要等 #581**。
+
+⛔ **本行的 `done_when` 我差点写错,照登记**:第一版写的是 `path_contains_all: ["m_iMaxHealth"]`,而现查 `m_iMaxHealth` 在 `dumper/main.go:543/647` **已经出现两次**(建筑与英雄那两支)⇒ **那条腿会在落地之前就读 DONE**,正是本行 `ruling` 里刚写完要防的那个形状。改成 `text_absent`,判据是 dumper **自己写下的 schema 那一行**不再逐字成立。📌 *差一步就用一个今天已经为真的判据,去判一件还没做的事。*
+
+### §HD.4 ⚠️ 一句用来支撑决定的理由已经悄悄过期,而没有任何东西举手
+
+`tests/mock/replay_fixture.lua` 的 `FindAoELocation` 段把「HERO 搜索继续返回 0」这个决定**部分地**建立在一句话上:「The creep side moves nothing: **no fixture under `tests/fixtures/` carries a creep sample today**」。**今天有两份了**(`f_20260909_212625_lion_235.lua`、`f_20260827_091703_slot12_zuus_473_1.lua`)。
+
+那不是一句装饰,它是一个决定的**理由**。本轮把它**改成实测读数而不是删掉**(删掉会连「这个决定当时为什么这么取」一起删掉),并留下棒:**核对那两份 fixture 会不会让 HERO 搜索这个决定本身需要重取** —— `creeps_schema_gh581` 的第 (D) 半。HERO 搜索本轮**不动**:它的**第一条**理由(~两打普查测试会同时移动)未受影响,而那一条单独就够。
+
+📌 *语料在变,而写在注释里的世界假设不会跟着变 —— 这一条与 §GB.3「针脚表靠人记得去加」同族,区别是那次欠的是一根针,这次欠的是一个理由。*

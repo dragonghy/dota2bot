@@ -302,8 +302,22 @@ end
 --     every fixture carries them: switching that on moves readings in ~two
 --     dozen census tests at once, which is a decision to take on purpose with
 --     the reopen list in hand (tests/frames/README.md), not a side effect of
---     this one.  The creep side moves nothing: no fixture under
---     tests/fixtures/ carries a creep sample today.
+--     this one.
+--     ⚠️ THE SECOND HALF OF THIS JUSTIFICATION HAS EXPIRED, AND IT IS LEFT
+--     HERE CORRECTED RATHER THAN DELETED (director 2026-09-12, RULING 30,
+--     test_set.md §HD.4).  It used to read "The creep side moves nothing: no
+--     fixture under tests/fixtures/ carries a creep sample today."  Measured
+--     on 2026-09-12: 32 of the 141 frame files carry a `creeps` block -- 30
+--     under tests/frames/ and TWO under tests/fixtures/ itself
+--     (f_20260909_212625_lion_235.lua, f_20260827_091703_slot12_zuus_473_1.lua),
+--     which tests/frames/README.md's own bookkeeping already records as
+--     "0 -> 1 fixtures with a `creeps` key".  So the creep side is no longer
+--     empty, and whether it now moves a reading is an OPEN question, not a
+--     settled "nothing" -- owed row `creeps_schema_gh581`, half (D).  The HERO
+--     search stays at 0 on the FIRST half of the reason alone (the ~two dozen
+--     census tests), which is untouched by this.
+--     📌 The stale sentence was not decoration: it was load-bearing for a
+--     decision, and nothing raised a hand when the world under it changed.
 --   * KILL search (`nMaxHealth > 0`, e.g. `nCanKillCreepsLocationAoE`) -> still
 --     0.  The dumper writes {t, team, x, y} per creep and no health, so a count
 --     of creeps the cast would KILL cannot be computed from a fixture at all.

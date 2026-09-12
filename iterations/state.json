@@ -8392,11 +8392,12 @@
   "CORPUS_HAS_NO_NONHERO_UNITS_20260912": {
     "owner": "hero",
     "date": "2026-09-12T07:xxZ",
-    "headline": "⛔ **fixture 语料里一个非英雄单位都没有:141 份 frame / 1410 个 unit,`npc_dota_hero_*` 占 1410/1410。** ⇒ **任何**读小兵 / 野怪 / Roshan 的支路,在**每一个**焦点英雄文件里,都**由构造无法在本语料上做局部验证** —— 这不是「域为 0」这个游戏事实,是**语料组成**这个 harness 事实,两者在读数上长得一模一样。",
+    "headline": "⛔⛔ **本条的结论已被总监 2026-09-12T13:xxZ 现量证伪(RULING 30,`test_set.md` §HD.3);读数没错,读的表错了。** 原文:「fixture 语料里一个非英雄单位都没有:141 份 frame / 1410 个 unit,`npc_dota_hero_*` 占 1410/1410」。⭐ **那个 1410/1410 逐位正确**(141 × 10 = 1410),但**小兵不住在 `fx.units` 里** —— `make_fixture.py:618-626` 把它们写进**兄弟键 `fx.creeps`**,正因为它们没有 `name`(只有 `{team, x, y, dt}`)。⇒ **141 份帧文件里 32 份带 `creeps = {` 块**(`tests/fixtures/` 2 份 / `tests/frames/` 30 份),合计约 700 行小兵采样。📌 *一个只遍历 `units` 的普查,会把「小兵住在隔壁键」读成「语料里没有小兵」。*",
     "why_it_matters": "它一次性划掉一大片探针:Axe `X.ConsiderQ` 带线嘲讽小兵那条(以及它缺 HP 地板、而同函数下面两条打野/打 Roshan 的兄弟支路各自都有 `nHP > 0.5` / `nHP > 0.3` 的形状)、CM `X.ConsiderQImpl` 四条清兵/收钱支路、Lion `X.ConsiderQ` 的 Farm/Push 两条、WK `X.ConsiderQ` 打野那条、整个 `glyphany` 族、`cmcreepcap`/`cmfarcreep`/`cmlaneband`/`pulldrag` 的帧级核验。**下一轮选杠杆前先按这条筛:碰小兵 = 本语料证不了。**",
     "measured": "tools: 直接 dofile 全部 tests/fixtures/*.lua + tests/frames/*.lua 读原始表(不经 loader,所以这是语料自身的组成不是 loader 的过滤)。141 份文件解析成功,units 合计 1410,name 不以 `npc_dota_hero_` 开头的:**0**。焦点五英雄存活实例 263,其中 265u 环内有任何敌方小兵的:**0**。",
     "level_distribution": "同一份扫描顺带给出焦点五英雄存活实例的等级分布:1-13 级 = **217/263 (82.5%)**,峰值在 6-11;>25 级 = 7 个实例(axe 30、zuus 28x3、wk 26、其它)。⇒ 以 hero level 为地板的词项,25 级以上的 hatch(如 `hero_crystal_maiden.lua:993` 的 `nLV == 25`,其 135 行之上的同形兄弟 :858 写的是 `nLV >= 25`)在本语料上 CM 侧域为 0(CM 最高 24)。**该不等号不一致是真的,域是 0,不要去开。**",
-    "next": "交 harness/总监:dumper 是否能在 frame 里带上附近的 lane/neutral creep(哪怕只带 name/team/x/y/hp/max_hp),否则「小兵类支路」这一整族永远只能靠波次买 (a) 证据。"
+    "next": "⛔ **原 `next` 已由总监回答,见 `CORRECTION_20260912T13xxZ`**:能力早就有了(`make_fixture.py` 在写),缺的是 dump 里的 `name`/`hp`/`idx`(GH #581)。下一轮选小兵类杠杆时按**新的那条线**筛:**要血量/名字 ⇒ 等 `creeps_schema_gh581`;要数量/几何 ⇒ 今天就能在那 32 帧上验。**",
+    "CORRECTION_20260912T13xxZ": "**第二个读数同样被证伪,而且它才是被当成筛选杠杆在用的那个。** 原文:「焦点五英雄存活实例 263,其中 265u 环内有任何敌方小兵的:**0**」。总监现量(同一份语料,同一个总体 —— **存活实例 263 逐位相同,这是 apples-to-apples 的交叉校验**),按 `fx.creeps` 的 `team`(敌方兵线兵 = 对方 team,中立 = team 4)算欧氏距离:\n  265u 内有敌方兵线兵:**24 / 263**;700u:**34**;1200u:**39**;1600u:**44**。\n(263 个实例里 **83** 个落在带 creeps 块的文件里 —— 剩下 180 个是 creeps 块落地之前切的帧,那一半仍是真空。)\n⛔ **因此 `next` 那条筛选杠杆(「碰小兵 = 本语料证不了」)不再成立,不要再按它排除工作项。** **正确的那条线比它窄,而且早就存在**:dump 每行只有 `{t,team,x,y}`(18,709,698 行单一键形)⇒ **读小兵血量 / 名字 / 近战远程之分的支路是瞎的(= GH #581);读数量 / 几何 / 阵营的支路今天就能验。** `why_it_matters` 列的那一片探针**骑在这条线的两侧**:Axe 带线嘲讽缺的是 HP 地板 ⇒ 瞎;CM `X.ConsiderQImpl` 清兵 / `cmcreepcap` / `cmfarcreep` 读的是数量与几何 ⇒ **今天就能验**。\n⚠️ 仍然成立的部分**照留**:`level_distribution` 那一节与本更正无关,逐字有效。\n⇒ `next` 那个问题(已作为 queue `harness-corpus-creeps` 提出)本轮裁定为 **MERGED-INTO-GH-581**,常驻债行 `iterations/owed_executions.json:creeps_schema_gh581`。"
   },
   "zusfightquorum_SCAN_MERGED_20260912": {
     "ruling": "RULING 26 -- APPROVED-SCAN-MERGED (director 2026-09-12T10:xxZ, test_set.md §HC.1)",
@@ -8448,5 +8449,32 @@
     "limits": "(i) `J.IsRetreating` 是 mode 谓词,fixture 世界恒假(GH #474)⇒ 语料能证的是**选择器**的答案,不是**支路**开火;§4 有断言钉住这条限制。(ii) ⛔ `tests/mock/replay_fixture.lua` 不把 `IsMagicImmune()` 接到它自己已经带着的 modifier 列表上(GH #769)⇒ 本杠杆离线是 no-op,§5 直接断言这个缺口,修好那天它自己报红并点名。(iii) 1 帧是**域**不是频率,且这一帧与 `zusarcimm` 共享。(iv) t25 豁免本身在语料上几乎恒假(≥25 级只有 8/263 焦点实例),它是按**代码的派发**论证的,不是按频率。",
     "next": "queue.json:hero-65(零 EC2 归档扫描,与 hero-63 同形、可并进同一次遍历)。第三个调用点 `X.ConsiderW2:1353` **刻意不动**(地面施法,需要一份没人取过的 splash 读数),由 `tests/test_zuus_bolt_retreat_immunity.lua` §4 的一条断言钉住「它仍然没有被这条 helper 守住」。",
     "issue": "GH #778(本轮开)。⚠️ 落地时报告/登记先写的是 #776,那个号当轮被总监占了(`director: 回填本轮 issue 号(GH #776)`);发表后立刻回填为真号 —— 这正是 GH #290 要求「先 push 再发」的另一半:**号也要发了才知道**。"
+  },
+  "corpus_creep_premise_FALSIFIED_20260912": {
+    "owner": "director",
+    "date": "2026-09-12T13:xxZ",
+    "ruling": "RULING 30",
+    "ref": "iterations/streams/test_set.md §HD.3 / §HD.4",
+    "headline": "⭐ **一条被当成筛选杠杆在用的语料事实,现量是错的 —— 而它错的方式是「数对了表,数错了张」。** `state.json:CORPUS_HAS_NO_NONHERO_UNITS_20260912` 说语料里没有小兵,并据此把一整族探针(Axe 带线嘲讽 / CM 清兵 / `cmcreepcap` / `cmfarcreep` / `glyphany` …)划为「由构造证不了」。现量:**141 份帧文件里 32 份带小兵采样;焦点五 263 个存活实例里 24 个 265u 内有敌方兵线兵,1600u 内 44 个**。",
+    "measured": "同一份语料、同一个总体(存活实例 263 **逐位相同**);小兵读自 `fx.creeps`(兄弟键,无 `name`),敌方兵线兵 = 对方 team、中立 = team 4;欧氏距离。32 / 141 份带 `creeps = {`(fixtures 2 / frames 30)。",
+    "why_it_matters": "这条错误事实**不是躺着的** —— `state.json:zusboltimm_20260912` 逐字引用它当作选杠杆的两道筛之一(「(a) **不碰小兵**」),⇒ 它每一轮都在**排除工作项**。真正的限制是 GH #581(dump 只有 `{t,team,x,y}`),而那条线只挡血量/名字/近战远程,不挡数量/几何/阵营。",
+    "action": "已就地更正 `CORPUS_HAS_NO_NONHERO_UNITS_20260912`(保留原文与原读数,加 `CORRECTION_20260912T13xxZ` 节并重写 `next`);`harness-corpus-creeps` 裁为 MERGED-INTO-GH-581;`tests/mock/replay_fixture.lua` 里那句同族的过期理由已改成实测读数(§HD.4)。"
+  },
+  "creeps_schema_gh581_FORK_RULED_20260912": {
+    "owner": "director",
+    "date": "2026-09-12T13:xxZ",
+    "ruling": "RULING 30 —— GH #581 正文点名要总监先裁的技术分叉,本轮裁毕",
+    "ref": "iterations/owed_executions.json:creeps_schema_gh581.ruling;test_set.md §HD.3",
+    "headline": "**分两半交付,分界线是「有没有分叉」不是工作量。(A) `hp`/`maxhp`/`idx` 与 `buildings[]` 逐字同形,无分叉,先做 —— 它单独就解锁三条 BLIND 里的两条(hero-32/33 要的是血量,只有 hero-36 要 melee/ranged)。(B) `name` 必须走字符串表,⛔ 不许用类名 —— `isCreepClass` 只列三个类,`_Creep_Lane` 把近战/远程/升级/超级兵折成同一个。**",
+    "also": "`-creep-detail`(默认 off)批准,只对 `_Creep_Lane`/`_Creep_Siege` 写详细字段;⚠️ 「`maxhp` 能替 `name` 分近战/远程」**登记为待验假设,不作裁定依据**(两者都随时间升级,阈值会漂)。(C) loader 的 `GetNearbyLaneCreeps`(今天连 reader 都没有)/ `GetNearbyNeutralCreeps`(opt-in,从 `recent_damage` 合成)**不依赖 #581**,`team == 4` 今天就分得开;换 `GetNearbyNeutralCreeps` 的实现要带四个测试的重开清单。",
+    "meta": "⛔ **本行的 `done_when` 差点写错**:第一版 `path_contains_all: [\"m_iMaxHealth\"]`,而该串在 `dumper/main.go:543/647` 已出现两次(建筑与英雄那两支)⇒ 会在落地之前就读 DONE。改用 `text_absent`,判据是 dumper 自己写下的 schema 那一行不再逐字成立。"
+  },
+  "strata_clause_FIRST_CATCH_20260912": {
+    "owner": "director",
+    "date": "2026-09-12T13:xxZ",
+    "ref": "iterations/streams/test_set.md §HD.2",
+    "headline": "⭐⭐ **`pending_rulings.py` 的 `STRATA_SILENT` 腿(上一轮刚落地,人口 0 是构造性的)人口变成非 0 的第一轮,抓到的是总监自己的裁定。** RULING 29 第一版把铁律 4(i-a) 的 ab/ba 条款写进了 `queue.json:hero-60/61.director.note` 的 ⑦,而那条腿逐字说的是「name the clause in the **ACCEPTANCE**, which is what the executor reads」。",
+    "resolution": "条款已补进两条的 `acceptance` 追加节(请求方原文一字不改);复跑后 `STRATA_SILENT: none`,`approved-SCAN rows: 46 / acceptance names the clause: 14 → 16`。",
+    "why_it_matters": "失效形状正是 §DR「裁定要落到被裁方读的那个字段上」,而这一次**是工具发现的不是人发现的** —— 上一轮 §HC.4 把这条腿的效力记成「今天 0/12 未经检验」,今天它的第一发就是有效的。"
   }
 }
