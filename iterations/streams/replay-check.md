@@ -15854,3 +15854,71 @@
     ⚠️ 实测 >20 分钟(章程写「约 20s」,GH #358 不重开);⭐ 第一条命令又撞管道门
     (脚本自打 `REFUSED: stdout is a pipe`,**护栏再次生效,那次不是通过**),改重定向后 `EXIT=3` 裸读。
   - token:`TOKENS total_in=11,517,671 out=74,812 turns=80`
+- **2026-09-12T15:4xZ(本轮):撤回上一轮自己交下的头号棒(#208 钉帧)——
+  ⭐⭐⭐ `GetRespawnTime()` 的读法之争**在构造上买不到 fixture 证据**,
+  而「加个 dump 字段就能钉」也不成立:**dump 字段落的是世界状态,争的是引擎函数的语义**。**
+  ```
+  VERIFY id=bbrespawn verdict=INDETERMINATE episodes=0
+  ```
+  (`episodes=0` **不是「没数据」也不是「没触发」**:`bbrespawn` 从未入集、**没有 armed 腿**;
+  判 INDETERMINATE 的理由是**条件 (a) 在本组现有量具下结构上买不到**。)
+  **段位声明(GH #424)**:引用语料 **W69 单波**,**未与 W68(29-id)/ W66+W67(30-id)并池**。
+  - **覆盖**:⛔ **宽扫 0/0 局 —— 本波无新语料**(`s3 ls soak/` 最新四前缀仍是
+    `0926{22,24,27,29}_1_main_*` = W69,与上一轮 12/12 同批;批测台预算刹车 $90.058 零发波,
+    与上一轮交棒 (4) 预判一致)⇒ 按章程工作流第 2 条转「核验记录最少的 id 补课」。
+    ⛔⛔ **深查 0 局,欠章程 ≥6 局下限,如实登记为本轮欠账** —— 理由不是没时间,是
+    **本轮判别子全部落在源码与 armed 串上、不在帧上**(再逐帧 6 局也答不了「引擎那个 getter 返回什么」);
+    **W70 一有语料先还这 6 局**。
+  - ⭐ **A-排除:成立,本轮独立重算通过**,并补上了上一轮**没明写而整条推理依赖**的承重前提:
+    `bbrespawn` **不在 W69 armed 串里**(`0128b9/…100236_slot1.analysis.json:script_version`
+    27 个 id 逐字核过)⇒ 两腿跑的都是出厂 `R−2e`。**若它 armed,裸 getter 下读法 A 也能买活,
+    A-排除当场崩掉。** 另复验 ogre_magi 在 **dire = 本局 armed 侧**;
+    且 A-排除**不依赖 `bbshort` armed 与否** —— `bbshort` 动的是 `:639` 的 `nFullRespawnTime`,
+    卡死 A 的是 `:659` 的 `nRemainingRespawnTime`,**两个门读的不是同一个量**(`:619` vs `:620`)。
+  - ⛔⛔ **但「⇒ 只与 B 相容 ⇒ 出厂 R−e 算的是对的」over-reach**:「A 假 ⇒ B 真」只在
+    读法**恰好两种**时成立,而那个枚举**从未被买过**。它写在源码里三遍,每遍都以「读法无关」的口气:
+    `jmz_func.lua:13808-13811`(#215)、`:13835-13836`(#222)、`hero_zuus.lua:1683-1691`
+    (`zusultstrand`,逐字枚举「0 while alive」与「the full duration」两种)。
+    三处都是**在 {A,B} 上**读法无关,**不是绝对的**。⛔ **本组不主张存在第三种读法**,
+    只主张那句判决应写成**「排除 A;在 getter 返回时长这一(未买的)前提下选 B」**。
+    ⚠️ `docs/BOT_API_REFERENCE.md:1106` 的单位(「Seconds until…」)支持「时长」,
+    **但那正是同一句里「remaining」被帧否掉的那半句** —— 一份文档的前半句不能给它自己的后半句背书。
+  - ⭐⭐⭐ **头号(§3.2)**:**fixture 能钉决策,永远钉不了 getter 的语义** ——
+    fixture 里那个函数的**函数体就是本组要写的**,写什么就得到什么。
+    **树上已经有一份,而且它做得诚实,诚实到把问题暴露出来了**:
+    `tests/test_bbrespawn_double_subtract.lua:92-96` 的 `declare_respawn` 把
+    `GetRespawnTime = R − e` **明确标注为 DECLARED stand-in**(文件头 `:19-24` 逐字说明为何选倒计时)
+    ⇒ **它不是作弊,它证明的是一个蕴含式「若 getter 是倒计时,则出厂那行双减了」**;
+    ⭐ **而 W69 那一帧否掉的正是这个蕴含式的前件**,于是形成**没有人会举手的组合**:
+    `bbrespawn` 的立项论证 = 该蕴含式,前件 = 读法 A,真帧排除 A,
+    **而那个测试永远绿** —— 它的前件是自己声明的,不是量出来的,语料再反对也不会变红。
+  - **腿一(意料之中)**:`make_fixture.py` `grep -ci respawn` = **0**;`tests/mock/` 装 `GetRespawnTime`
+    **0 命中**;仓库自己逐字记过(`hero_zuus.lua:1740`「LOADER GAP (nothing installs GetRespawnTime)」);
+    两个既有测试**把洞直接断言出来**,做得对(`test_bbfight_turbo_respawn_ceiling.lua:156` /
+    `test_bbshort_turbo_respawn_floor.lua:188`)。
+  - ⛔ **本组不建议为 #208 向 [harness] 要 respawn 字段**;GH **#781** 要的 `has_buyback`
+    是**另一件事、完全成立**(它买的是 `:614` 那条合取项,**世界状态不是函数语义**),
+    **本轮不动它、不给它加范围**。#208 的三条出路:①**重写成真正读法无关的形式**
+    (`zusultstrand` 已示范;`J.RESPAWN_TABLE_MAX`/`J.TURBO_RESPAWN_FACTOR` 现成在
+    `jmz_func.lua:13822-13823`,elapsed 由 `fDeathTime` 正确维护 ⇒ `R_table(level)×0.75 − e`,
+    **一次都不碰争议 getter**);②外部权威 API 来源;③owner 实机观察。
+  - ⭐ **一条查过的否定结论(登记下来别再走)**:假设「`fDeathTime` 只在 `==0` 时赋值 ⇒ 从不复位
+    ⇒ 第二次起 elapsed 是距**首次**死亡」——**不成立,已排除**。复位在
+    `ability_item_usage_generic.lua:602-604`;守卫 `J.Role.ShouldBuyBack()`
+    (`aba_role.lua:273-275` = `DotaTime() > lastbbtime + 1`,初值 −90)**几乎恒真**;
+    `BuybackUsageThink`(`:8906-8910`)节流 **2s** ⇒ 复活后 ~2s 内必复位。
+    **记它不是因为有结果,是因为它看起来非常像 bug**(模块级 local + 复位在早返回下游),
+    下一个读这段的人大概率会重新怀疑一次;判别子 `grep -n fDeathTime <file>` 一行六个命中。
+  - **AWS**:只读 S3(`s3 ls soak/` 1 + 单 run `s3 ls` 1 + `s3 cp` 一份 6KB analysis.json),
+    **零 EC2 / 零 CE / 零 .dem 下载 / 零支出**;`AWS_SETUP_EXIT=0`。
+  - **树上改动**:仅报告 + 本文件;`bots/` `game/` `tests/` `tools/` **一行未改**;零新增工具文件。
+  - **本轮 issue:净增 0 条新单,1 条追评 #208**(先搜后开:两次语义检索
+    「fixture 买不到 getter 语义」**1 命中**(#503,不同族)、「GetRespawnTime 读法/买活阶梯」
+    **2 命中 #208/#222** ⇒ 同题已有,走追评)。
+  - **下一轮第一件事**:(1) ⛔⛔ **撤回上一轮交棒 (1)**,#208 钉帧**不要做**,
+    判别子是「fixture 里那个 getter 的函数体是谁写的?」;(2) ⭐ **先还欠的 6 局深查**;
+    (3) ⛔ 别重跑本轮三条排除(A-排除重算 / `fDeathTime` 从不复位**已否定** / `bbrespawn` 未 armed);
+    (4) ⭐ 两条新判别子进工具坑:**「某读法下会 return」的排除必须同时声明改写那个量的 id 未 armed**
+    (`script_version`,一次 `s3 cp` 6KB)、**声明式 stub 的声明 = 前件不是证据,加 dump 字段买不到函数语义**;
+    (5) ⭐ **单波读数不是跨波读数**,本轮引用**段位 = W69 单波**。
+  - **完整报告**:`iterations/reports/replay-check/20260912T154313Z.md`
