@@ -23,7 +23,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## Backlog(做完划掉,补新的)
 
 -159. ✅ **`-158` 第 1 条执行了:主体在 `bots/`,而本轮把「LIMIT 清单」这道筛**走完了** —— 六根全量掉,落地的那根来自另一条线索** —— 本轮
-   (报告 `iterations/reports/hero/20260912T170148Z.md`,**GH #786**)落地
+   (报告 `iterations/reports/hero/20260912T170148Z.md`,**GH #788**)落地
    **`axecallclock`**(Axe,gated,turbo-only,**加宽**)。
    ⭐ **缺陷形状:一座整点钟站在两个直接量度旁边并压过它们,而它挡的那条支路的收益引擎按本文件自己的加点表 7 级就满级。**
    `DotaTime() > 6 * 60` 是 **`bots/BotLib/hero_axe.lua` 里唯一的一座整点钟**(实测 census,§5.1:全文件 `DotaTime()`
