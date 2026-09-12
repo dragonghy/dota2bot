@@ -1,0 +1,2 @@
+GH #696 winrate comps_better: 2 of 3 seed(s) had headroom 0 and could not vote yes (seeds 12542,12888). The pooled fraction 1/3 counts them; `comps_better.winrate_measurable` 1/1 does not. A promote bar above 1/3 is unreachable on this corpus.
+GH #352 winrate channel DEGENERATE: minority side won 7 of 168 finished games (share 0.0417 < 0.20). The winrate below is bounded to 0.5 +/- 0.0588 and MUST NOT be cited as rule 2(b) support until the channel recovers.

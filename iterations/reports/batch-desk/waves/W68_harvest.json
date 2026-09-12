@@ -1,0 +1,85 @@
+{
+  "wave": "W68",
+  "harvested_at": "2026-09-12T06:2xZ",
+  "harvested_by": "batch-desk (06:16Z round)",
+  "family": "29-id, depth 0 -> depth 1 after this harvest",
+  "arm_md5": "33047ce53c029f3901e5f63eab872ecb",
+  "pool_rule": "DO NOT POOL with the W66+W67 30-id pool (director RULING 19). W68 stands alone as the 29-id family's first wave.",
+
+  "download_method": "GH #225 compliant: four `s3 cp --recursive --include '*.analysis.json'` into FOUR separate subdirectories (w68pool/{a6cf27,1fb832,c9aad7,192177}), then recover_verdict.py pointed at the PARENT. Never flattened. recover_verdict.py's own counter confirms it: `pooled_basename_dirs_overridden: 0`, `files_seen 168 == games_loaded 168`, `source_dirs 4`, `unparseable 0`.",
+  "cand_token_note": "The cand argument recover_verdict.py wants is the FULL 29-id armed string as stamped in `script_version` (mirror:<string>:s<seed>:<side>), NOT the wave's cand_name `lf_rescue+29ids-3b400ddc10ec`. Passing the cand_name exits 0 with `per_seed: []` / `mean: {}` and `suggested: hold_or_reject` -- i.e. it looks like a completed run that measured nothing. Read `script_version` from one analysis.json before trusting a first pooling.",
+
+  "per_run_files": {
+    "spot_20260912_032603_1_main_a6cf27": 55,
+    "spot_20260912_032605_1_main_1fb832": 54,
+    "spot_20260912_032608_1_main_c9aad7": 14,
+    "spot_20260912_032610_1_main_192177": 45
+  },
+
+  "verdict": {
+    "file": "iterations/reports/batch-desk/waves/W68_verdict.json",
+    "stderr": "iterations/reports/batch-desk/waves/W68_verdict.stderr.txt",
+    "scored_seeds": 3,
+    "excluded_seeds": [{"seed": 12939, "reason": "NO-PAIR (ab_games 8 / ba_games 0) -- its machine was reclaimed for capacity 21m16s in"}],
+    "scored_games": 136,
+    "games_loaded": 168,
+    "unfinished_games": 0,
+    "mean": {"gpm": 13.4, "xpm": 5.99, "deaths": 0.05, "last_hits": -0.49, "winrate": 0.501},
+    "comps_better": {"gpm": "2/3", "xpm": "2/3", "deaths": "1/3", "last_hits": "1/3", "winrate": "1/3", "winrate_measurable": "1/1"},
+    "min_arm_depth": 8,
+    "thin_arm_seeds": [],
+    "suggested": "hold_or_reject"
+  },
+
+  "iron_rule_4_registrations": {
+    "i_a_both_strata_readings": {
+      "note": "READINGS, not game counts. Printed by recover_verdict.py itself (`strata.<m>`), not hand-computed -- that is (i-d)'s reason for existing.",
+      "gpm": {"ab": 50.59, "ba": -23.78, "side": 37.19, "sign_flip": true},
+      "xpm": {"ab": 8.5, "ba": 3.49, "side": 2.51, "sign_flip": false},
+      "deaths": {"ab": -1.19, "ba": 1.29, "side": -1.24, "sign_flip": true},
+      "last_hits": {"ab": -9.13, "ba": 8.15, "side": -8.64, "sign_flip": true}
+    },
+    "i_c": "gpm/deaths/last_hits all sign_flip=true. These are per-seed 50/50 swap-averaged estimators, so a flip is the identity |side|>|arm| and is NOT a rejection reason -- it is registered, not ruled on.",
+    "i_d": "No game-count weighting anywhere. per_seed swap-average first, arithmetic mean across the 3 scored seeds second -- recover_verdict.py's own math.",
+    "winrate_channel": "DEGENERATE (minority side won 7/168 = 0.0417 < 0.20; bound 0.5 +/- 0.0588). GH #352: MUST NOT be cited as rule-2 condition (b) support. => W68 CANNOT settle condition (b) for any of its 29 ids."
+  },
+
+  "gh_454_obligations": {
+    "b2_machine_hour_mean": {
+      "status": "SATISFIED -- first satisfiable test point in nine rounds (W67's four machines were on-demand, whose Status.Code is permanently null per GH #699).",
+      "estimator": "SIR Status.UpdateTime minus describe-instances LaunchTime, per machine. UpdateTime is the SIR close stamp, which trails instance termination slightly; the reading is therefore a small OVER-estimate of machine-hours -- it fails toward triggering, not away from it.",
+      "machines_counted": 3,
+      "machines_excluded": ["i-0d372a0b1795fb447 (instance-terminated-no-capacity -- excluded exactly as leg (b2) requires)"],
+      "per_machine_hours": {"i-0f239f5fc29a97021": 0.8731, "i-08e9cb09ec2581e6b": 0.8381, "i-04c24c4a18ee03576": 0.8367},
+      "mean_h_per_machine": 0.8493,
+      "trigger_threshold": 1.0,
+      "triggered": false
+    },
+    "b1_billing_side_cost": {
+      "status": "NOT CONFIRMABLE FROM BILLING THIS ROUND -- the MTD snapshot's honest cutoff does not reach 2026-09-12T03:26Z. Registered as an hours-side estimate, explicitly NOT as a billing-side reading.",
+      "machine_hours_all_four": 2.9022,
+      "price_band_used": "$0.231-0.250/h (the band this charter records for c6i.4xlarge spot in us-west-2)",
+      "estimate_all_four_charged": "$0.670 - $0.726",
+      "trigger_threshold": 1.1,
+      "triggered_on_estimate": false,
+      "caveat": "Even charging the capacity-reclaimed machine's full 0.3544 h (AWS generally does not bill a first-hour capacity interruption), the estimate stays 34% under the $1.10 constant. The constant is not challenged by this wave."
+    }
+  },
+
+  "gh_375_aging_window": {
+    "claim_under_test": "SIR Status.Code is readable only within ~1h of termination.",
+    "observation": "All four codes were read at 2026-09-12T06:19Z -- 2h01m to 2h32m after each machine's termination stamp. None had aged out.",
+    "ruling": "NOT a batch-desk ruling. Registered as one counter-observation for whoever owns GH #375; one wave does not retire a window, but this round's harvest did not need to race it.",
+    "operational_consequence": "None taken. The next harvest still reads the codes first, on the assumption the window is real."
+  },
+
+  "spot_reclaim": {
+    "machine": "i-0d372a0b1795fb447",
+    "seed": 12939,
+    "az": "us-west-2d",
+    "code": "instance-terminated-no-capacity",
+    "alive_for": "03:26:10Z -> 03:47:26Z = 21m16s",
+    "cost_to_the_wave": "one of four seeds, dropped NO-PAIR (8 ab games, 0 ba games). The wave scored 3 seeds instead of 4; its 14 uploaded per-game files are in the pool directory but contribute nothing.",
+    "note": "Not a defect -- it is the price of the market this wave's gate (iv) ruled for. Registered so the 3-seed comps_better denominators are not later read as a 4-seed wave's. NOT claimed to be the first reclaim since the desk defaulted to spot; this round did not scan the wave archive to find out."
+  }
+}
