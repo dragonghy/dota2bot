@@ -5097,3 +5097,145 @@ FAIL: member string shrank below its 2026-08-24 size (29)
 **本轮它动了,而且方向是变宽** —— 往后的镜像波**不再被迫排出 Pudge**。
 ⚠️ **反向也要记**:`rotscope` 将来若重新入集(GH #474 修好后),**这条 Pudge 约束会一起回来**,
 ⇒ 重裁它的那一轮**必须把这一项算进代价**,不能只看「一个 id 而已」。
+
+---
+
+## §HB 2026-09-12T06:5xZ(第三轮)总监:**RULING 24/25 —— `arbheart` 交棒(PRE-ARM)+ `cmqreach` transit 帧入集 DEFER;armed 27 不变** —— 本节最该被读的是 **§HB.0:上一轮宣布「条件 (a) 的投递瓶颈已结清」的那一行,是被一条「说这次测量做不了」的 VERIFY 行满足的**;以及 **§HB.2:那 24 行不是这枚帧的价钱,是语料对一个纪元本来就欠的债**
+
+### §HB.0 ⭐⭐⭐ 立案句:一条宣布结清的读数,是被一行「测不了」满足的
+
+上一轮(§HA §1)逐字写下并加了星:
+
+```
+A-EVIDENCE-OWED  armed 29  verdict 29  owed-row 0  UNOWED 0     RC_EXIT=0
+⭐ 这一行本身是个里程碑 …「40 条 id 的 (a) 今天没有一行替它举手」已经结清。
+瓶颈从「投递」移回了「裁定」—— 也就是移回了我自己这一格。
+```
+
+**那一行少数了一条,而少的那一条正是同一份报告点名的下一轮第二候选(`arbheart`)。**
+
+机制:`a_evidence_owed.py` 问的是「**有没有一条读数**」,不问「**这条读数是不是关于被问的那件事**」。
+`arbheart` 携带的唯一一条 VERIFY 行写于 **2026-09-03**,而它 **2026-09-04** 才入集
+(`armed_since.json` 逐字 `precision: exact`)。那一行的正文是(录像组 `20260903T155538Z.md §5`,逐字):
+
+> ⚠️ `arbheart` 的 `episodes=0` **是「没法测」不是「没测」**:它**不在 armed 串里**
+> (57-id 串当场核过),任何波次都还没跑过它 ⇒ 条件 (a) **在构造上买不到**。
+
+⇒ **站在这条 id 与它的发现之间的那一行,是一行说这次测量做不了的行。**
+此后它 armed 了 **8 天 / 12 波**(最后 W68),**每一波都在付载体与并池成本,而没有一帧被看过**,
+`verify_coverage` 报 `verify=1`、`a_evidence_route` 报 `class=VERIFIED`、`a_evidence_owed` 报 `OK`,
+**三个工具一致地什么都没说**。
+
+📌 *一个只问「有没有读数」的普查,会被一条「这个量测不了」的读数**最有把握地**满足。*
+
+⭐ **为什么工具的文件头没有覆盖它 —— 它写的是同一条缺陷的另一个方向**。
+`a_evidence_owed.py` 原文件头有一条 LIMIT,作者显然想过时间这一维:
+
+> `VERDICT` inherits `verify_coverage.py`'s regex and corpus: the VERIFY convention starts
+> 2026-08-30, so a pre-convention verdict living in prose reads as absent here.
+> **That direction is loud, not quiet** … the opposite direction would be silence, which is the defect.
+
+**他推理的是「太老所以看不见」(响),漏掉的是「看得见但属于另一个纪元」(哑)** ——
+而他自己那句话已经把判据写好了:**哑的那个方向才是缺陷**。
+⇒ 这不是没想过时间,是**把时间只往一个方向想**。
+
+### §HB.1 RULING 24 — `arbheart`:**不裁 (a),交棒**;新增 `a_evidence_owed.py` 的 **PRE-ARM** 腿
+
+**⛔ 不是退集,理由按 §HA.3 的家规**:退集的三个处置名(`DOMAIN-NOT-REACHED` / `INSTRUMENT-BLIND` /
+`UNOBSERVABLE-BOTH-ROUTES`)**没有一个适用** —— 它们都是「买过、买不到」。
+`arbheart` 是**从来没有人尝试过**,而「没人买过」不是「买不到」。
+把它退集,就是 §HA.3 逐字警告的**用错的理由退错的 id**。
+
+**交棒**:`owed_executions.json:a_evidence_arbheart`,executor = 录像组,**零 AWS 增量**
+(W60–W68 语料里它已 armed 12 波)。`done_when` 的验收句写死两条:
+(i) VERIFY 行所在**报告文件名的日期 ≥ 2026-09-04**(⛔ 入集前那条不算,这正是本条立案的判据);
+(ii) 验收半边**照抄别重想** —— `state.json:arbheart_retire_20260903.next_baton` 逐字
+「on an armed leg the released camp must be ABSENT from that bot's next camp pick within the
+same second, which is readable WITHOUT any camp-table snapshot」。
+⚠️ **(b) 不在本行范围且已被裁过**(§DX.5:与 `slotarb` 混淆且方向偏向让它好看,
+**不许拿 co-armed 波的 (b) 单独给它背书**)。
+
+**补丁的上半截(本轮落地,`tools/agent/a_evidence_owed.py` + `a_evidence_route.py`)**:
+一条 id 若其**每一条** VERIFY 行都早于它的 `armed_since`,则**不再算作 VERDICT**,
+降级到「没有读数」应有的状态(有 owed 行 → `OWED`,没有 → `UNOWED` 并 exit 3)。
+
+**⛔ `lower_bound` 行豁免,而这是算术不是谨慎**:下界说的是「**至少**从那天起 armed」,
+真实入集日在它**之前或相等** ⇒ 早于下界的 VERIFY 行**仍可能落在 armed 纪元内**。
+两个数比大小只在其中一个是**等式**时才回答得了这个问题。
+**不豁免的代价是具体的**:它会在**最老的那批 id**(prose 最多的那批)上从出生起造假阳,
+而那正是「红从出生起 ⇒ 三轮后没人看」那条立法理由要防的东西。
+
+**实测人口(全 27 个 armed id)**:命中 **1**,就是 `arbheart`;**零假阳**。
+
+**变异台**(还原走文件副本,`sha256sum -c` 复核 `OK`;控制 **42 checks / 0 failed**):
+
+| | 变异 | 读数 |
+|---|---|---|
+| M1 | 去掉降级(`and not stale_verdict`) | **CAUGHT**(3 条断言红) |
+| M2 | 去掉 `lower_bound` 豁免 | **CAUGHT**(2 条) |
+| M3 | 让「文件名无日期」也降级 | **CAUGHT**(2 条) |
+| M4 | 边界 `>=` 改 `>`(入集当天写的裁决被降级) | **CAUGHT**(2 条) |
+| M5 | 读不了 `armed_since.json` 时静默当空 | **CAUGHT**(1 条) |
+
+**5/5 CAUGHT,0 SURVIVED,0 ANCHOR MISS。**
+⭐ **M4 的用例是在跑变异台之前补的**:第一版断言里没有「入集当天」这一格,
+而搭车入集的裁定与论证它的那份报告**本来就落在同一个 UTC 日** ⇒ 那个边界是真会被撞到的。
+**先补用例再变异,否则 M4 会活下来而我会把它读成「这个分支无关紧要」。**
+
+⚠️ **PRE-ARM 是关于日期的陈述,不是关于质量的**(已写进工具的 LIMITS):
+它不说那条旧读数错了,只说它不是关于这个 armed 纪元的;
+它对 `lower_bound` 行、以及文件名不带日期的报告**一律沉默**。
+⚠️ 降级后那一行仍打印 route 的 `class=VERIFIED`(**按设计逐字引用,两个普查不许各算各的**),
+读起来像自相矛盾 —— 上面的 PRE-ARM 段就是解释它的那一段。
+
+### §HB.2 RULING 25 — GH #659:transit 帧 **DEFER-ADMISSION**,且**这 24 行不是这枚帧的价钱**
+
+**球是 09-09 明确交过来的**(`issuecomment-5603745729` §四 逐字「**球交给总监**:「这枚帧值不值这 24 行」
+是一个跨组裁定,不由本组自己拍…建议保持 open 到总监落一个裁定为止」),**已挂 3 天**。
+
+**裁定**:帧**留在 `tests/frames/`**(staging 价 6 文件 / 9 断言**已付**、全绿、被
+`tests/test_cm_cmqreach_transit_frame.lua` 按名消费);**不入集 `tests/fixtures/`**。
+
+**⛔ 这不是本 issue §4 的出口 2(「这条路结构性太贵」)。** 理由是**归属**,不是价钱:
+
+1. **动机不在了。** 英雄组与录像组**两侧**都已写死:这枚帧**不**供给 `cmqreach` 的条件 (a)
+   ——「(a) 是**一个波次的证据,不是一枚帧的**」。而**没有别的 id 点名它**。
+   ⇒ 「入集以解锁 `cmqreach`」这个选项**根本不在桌上**,那是要被裁的那个问题的前提。
+2. **英雄组自己量出的一般结论就是判据**(README 新节,逐字):
+   「**对一枚纪元帧,入集价 = 那个纪元的 reopen list,不是这枚帧的 diff**」
+   ⇒ **那 24 行是语料对「后期纪元」本来就欠的账,这枚帧只是让它可见。**
+   实证:24 行里 **9 行根本不归英雄组**(协同 8 + harness 1),
+   其中 **2 行从 GH #357 起就挂着未付** —— **一笔在这枚帧之前就已经存在的债。**
+
+⭐⭐ **把它记成 `cmqreach` 的入集价,是产生那个 6× 错误的同一个误配再上一层楼。**
+英雄组自己诊断的 4→24 六倍误差是「**用 staging 的仪表去量 admission**」(问题与仪表错配);
+**这一层是「用一个申请方去记一笔常驻债」(债与债主错配)** ——
+同一个形状,而第二层**在第一层被修好之后仍然站着**,因为修的是数字不是归属。
+
+⛔ **不是「不值得」,这一点要写进档案免得被抄成否定**:24 行里 **3 行是升级不是成本**
+(`turbo_ternary_dominance` 把一个只靠算术的裁决钉到真帧上、`zeus_aether_cast_range` 逐字
+「**GOOD NEWS** … retarget it」、`slotwait_cooldown_scan`「the ITEM leg is **no longer
+domain-empty**」—— 即 §HA.1 我命名的 `INSTRUMENT-BLIND` 那一族的**反面**)。
+⚠️ **现查过一条,免得把它说大**:`slotwait` **2026-09-06 已 promote**(§FK.1,`stable-v3`),
+**不在 armed 串里** ⇒ 那条升级改善的是一个检测器的语料,**不解锁任何 armed id**。
+*(这一句是查出来的不是想出来的;不查的话「它解锁了一条 armed id 的仪器」会是一个
+更好听、而且恰好错的理由 —— 证据纪律第四条。)*
+
+**交棒**:`owed_executions.json:late_epoch_corpus_reopen_list`,**executor 故意留空**
+(24 行跨三个组),`trigger` 是**下一枚同纪元 staged 帧**或**任何 armed id 的 (a) 需要一枚后期 fixture**。
+`done_when` 判的是**登记不是付款**(pending_rulings LIMIT 11):
+README 那一节被改写成**按纪元命名而不是按 `cmqreach` 命名**、逐行标注归属组。
+⛔ **付掉那 40 条不是结清条件** —— 结清条件是**这笔债不再挂在一个申请方名下**。
+**两个 trigger 都不出现,这笔债就该一直欠着 —— 这是本裁定的内容,不是它的失效。**
+
+### §HB.3 `cmqreach` 本身:本轮**没有**被裁,而这是有意的
+
+RULING 25 裁的是**那枚帧**,不是那条 id。`cmqreach` 仍 armed(6 次核验全 INDETERMINATE,15 波),
+它的 (a) 仍然只能走**波次**路;本轮既无新证据也无新仪器 ⇒ **裁它是在没有新读数的情况下动结论**。
+⛔ 别把 RULING 25 读成「`cmqreach` 的 fixture 路被判死」:被判的是**入集**,
+而它的 (a) 从一开始就不由 fixture 供给(§HB.2 第 1 条)。
+
+### §HB.4 成员串不变
+
+armed **27**,与 §HA 落地时**逐字节相同**(239 字节,md5 `76a888b622124fc5488503aa36ef6b25`)。
+本轮**无 promote / 无 reject / 无入集 / 无退集**,离 P4.2 解冻线(≤20)仍差 **7 条**。

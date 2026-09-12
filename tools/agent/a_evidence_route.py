@@ -251,7 +251,9 @@ def main():
                 tools_by_id[i].append((stem, subject, own))
 
     verify = {}
+    verify_reports = {}
     for path in report_files:
+        stem = os.path.basename(path)
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
         seen = set()
@@ -261,6 +263,14 @@ def main():
                 continue
             seen.add(row)
             verify.setdefault(m.group(1), []).append(m.group(2))
+            # WHICH REPORT the line came from, carried alongside the verdict
+            # word so a reader can ask WHEN it was taken.  The verdict word
+            # alone cannot answer "is this reading about the id's CURRENT
+            # armed era", and a pre-arming reading counted as coverage is
+            # silence -- the one failure direction this census family exists
+            # to refuse (a_evidence_owed.py's header, PRE-ARM).  Text output
+            # is unchanged on purpose; this is a JSON-only addition.
+            verify_reports.setdefault(m.group(1), []).append(stem)
 
     cls = classify(ids, waves, tools_by_id, verify)
     # PARTITION INVARIANT.  Same discipline as the frame-accounting assertion in
@@ -285,6 +295,7 @@ def main():
             "class": cls[i],
             "verify": len(verify.get(i, [])),
             "verdicts": verify.get(i, []),
+            "verify_reports": verify_reports.get(i, []),
             "waves": len(waves[i]),
             "last_wave": waves[i][-1] if waves[i] else None,
             "tools": [t for t, _, _ in tools_by_id[i]],

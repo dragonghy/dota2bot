@@ -61,6 +61,27 @@ Counting `retired` here would let the registry close its own case.
     reads as absent here.  That direction is loud, not quiet -- it asks for a
     row that already exists in prose, which is cheap; the opposite direction
     would be silence, which is the defect.
+
+⭐ PRE-ARM (director 2026-09-12, and it is the OPPOSITE direction of the line
+above, which is why the line above did not cover it)
+-------------------------------------------------------------------------
+The bullet above reasons about a verdict that is too OLD to be seen.  The
+mirror case is a verdict that IS seen and is about the wrong era: a VERIFY
+line written BEFORE the id entered the arm string.  That is not a reading
+about armed behaviour, and counted as coverage it is silence -- the exact
+failure this leg exists to refuse, arriving through the door the leg itself
+opened.
+
+Measured on the day it was added: 27 armed ids, 1 hit -- `arbheart`.  Its
+single VERIFY line is dated 2026-09-03, it was armed 2026-09-04, and the
+line's own body reads "`arbheart` 的 episodes=0 是「没法测」不是「没测」:
+它不在 armed 串里 ... 条件 (a) 在构造上买不到".  So the one line standing
+between that id and this leg's finding was a line SAYING THE PURCHASE WAS
+IMPOSSIBLE.  It then rode 12 waves (last W68) with nothing raising a hand.
+
+📌 A census that asks "is there a reading" and not "is the reading about the
+thing being asked about" will be satisfied most confidently by a reading that
+says the measurement could not be made.
   * The route class printed beside a finding (DELIVER / MENTION / BUILD /
     NO-CORPUS) is `a_evidence_route.py`'s reading, quoted verbatim so the two
     censuses cannot drift.  It says what the PURCHASE would be; it does not say
@@ -87,6 +108,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 ROUTE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                      "a_evidence_route.py")
 REGISTRY = os.path.join(REPO, "iterations", "owed_executions.json")
+ARMED_SINCE = os.path.join(REPO, "iterations", "armed_since.json")
 
 # The convention the two hand-written rows already use.  Kept as a constant so
 # the test can assert the real rows still match it rather than restating it.
@@ -132,24 +154,82 @@ def coverage(registry):
     return out
 
 
-def judge(rows, covered):
+def report_day(stem):
+    """`20260903T155538Z.md` -> `2026-09-03`.  None when the name is not one.
+
+    The day comes off the FILENAME, not out of the prose, for the reason
+    `armed_since.json`'s own header gives: a Routine container is a shallow
+    clone, so `git log` cannot date a report, and prose gets rewritten while
+    a filename does not drift.
+    """
+    if len(stem) < 8 or not stem[:8].isdigit():
+        return None
+    return "%s-%s-%s" % (stem[:4], stem[4:6], stem[6:8])
+
+
+def pre_arm_reason(row, arm):
+    """Is EVERY VERIFY line this id carries older than its current arm?
+
+    A verdict taken before the id was armed is not a reading about the id's
+    armed behaviour -- at best it is a reading about the shipped default, and
+    in the case that filed this check (`arbheart`, 2026-09-03) the line's own
+    body said the purchase was structurally impossible BECAUSE the id was not
+    armed yet.  Counted as coverage it is silence, and silence is the one
+    failure direction this leg exists to refuse.
+
+    ⛔ `lower_bound` rows are EXEMPT, and that is not caution, it is
+    arithmetic: a lower bound says the id was armed AT LEAST since that day,
+    so the true arm date is at or BEFORE it, and a VERIFY line earlier than
+    the bound may still sit inside the armed era.  Ordering two numbers only
+    answers this question when one of them is an equality.  Applying the rule
+    to a bound would manufacture findings on the OLDEST ids -- the ones with
+    the most prose behind them -- which is how a new check gets ignored.
+
+    Returns a reason string, or None when the rule does not apply.
+    """
+    if not row.get("verify"):
+        return None                      # no verdict at all: not this rule's
+    a = arm.get(row["id"])
+    if not isinstance(a, dict):
+        return None                      # arm_since.py owns "no row at all"
+    if a.get("precision") != "exact":
+        return None                      # see the docstring: bounds cannot order
+    since = a.get("armed_since")
+    if not isinstance(since, str) or not since:
+        return None
+    stems = row.get("verify_reports") or []
+    if len(stems) != row["verify"]:
+        return None                      # older route.py: cannot date the lines
+    days = [report_day(s) for s in stems]
+    if any(d is None for d in days):
+        return None                      # one undatable line => cannot conclude
+    if max(days) >= since:
+        return None                      # at least one reading is in this era
+    return ("%d VERIFY line(s), newest %s, ALL before armed_since=%s"
+            % (row["verify"], max(days), since))
+
+
+def judge(rows, covered, arm=None):
     """One state per armed id.  The order of the tests IS the definition."""
+    arm = arm or {}
     out = []
     for r in rows:
         i = r["id"]
-        if r.get("verify"):
+        stale_verdict = pre_arm_reason(r, arm)
+        if r.get("verify") and not stale_verdict:
             state, why = "VERDICT", "%d VERIFY line(s)" % r["verify"]
         elif i in covered:
             state, why = "OWED", covered[i]
         else:
             state, why = "UNOWED", r.get("class", "?")
-        out.append((state, i, why, r))
+        out.append((state, i, why, r, stale_verdict))
     return out
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--registry", default=REGISTRY)
+    ap.add_argument("--armed-since", default=ARMED_SINCE)
     ap.add_argument("--route", default=ROUTE)
     # ONE string, shlex-split, rather than a repeatable `--route-arg`: argparse
     # refuses a value that begins with `--`, so the repeatable form could not
@@ -183,10 +263,27 @@ def main():
               "census" % a.registry, file=sys.stderr)
         return 2
 
+    # SAME FAILURE DIRECTION AS THE REGISTRY ABOVE.  An arm-date file this tool
+    # cannot read must not read as "every verdict is current" -- that would
+    # restore, silently, exactly the reading PRE-ARM was added to remove.
+    try:
+        with open(a.armed_since, encoding="utf-8") as fh:
+            arm = json.load(fh).get("ids")
+    except Exception as exc:                                   # noqa: BLE001
+        print("AEO_COULD_NOT_RUN: armed_since %s: %s" % (a.armed_since, exc),
+              file=sys.stderr)
+        return 2
+    if not isinstance(arm, dict):
+        print("AEO_COULD_NOT_RUN: armed_since %s has no `ids` map -- every "
+              "verdict would read as current, which is the PRE-ARM silence "
+              "this leg refuses" % a.armed_since, file=sys.stderr)
+        return 2
+
     rows = data.get("rows") or []
     covered = coverage(registry)
-    verdicts = judge(rows, covered)
+    verdicts = judge(rows, covered, arm)
     armed = {r["id"] for r in rows}
+    prearm = [v for v in verdicts if v[4]]
 
     unowed = [v for v in verdicts if v[0] == "UNOWED"]
     owed = [v for v in verdicts if v[0] == "OWED"]
@@ -195,22 +292,34 @@ def main():
         print(json.dumps({
             "counts": {"armed": len(rows), "verdict": len(verdicts) - len(unowed) - len(owed),
                        "owed": len(owed), "unowed": len(unowed)},
-            "rows": [{"id": i, "state": s, "why": w, "class": r.get("class")}
-                     for s, i, w, r in verdicts],
+            "rows": [{"id": i, "state": s, "why": w, "class": r.get("class"),
+                      "pre_arm": pa}
+                     for s, i, w, r, pa in verdicts],
             "covers_unarmed": sorted(i for i in covered if i not in armed),
+            "pre_arm": {i: pa for _s, i, _w, _r, pa in prearm},
         }, indent=1))
         return 3 if unowed else 0
 
-    print("A-EVIDENCE-OWED  armed %d  verdict %d  owed-row %d  UNOWED %d"
+    print("A-EVIDENCE-OWED  armed %d  verdict %d  owed-row %d  UNOWED %d  "
+          "PRE-ARM %d"
           % (len(rows), len(verdicts) - len(unowed) - len(owed), len(owed),
-             len(unowed)))
+             len(unowed), len(prearm)))
+
+    if prearm:
+        print("\nPRE-ARM -- these ids DO carry VERIFY lines, and every one of "
+              "them was written\nbefore the id was armed, so none of them is a "
+              "reading about its armed behaviour.\nThey are demoted to the "
+              "state they would have with no verdict at all:")
+        for s, i, _w, r, pa in sorted(prearm, key=lambda v: v[1]):
+            print("  %-16s -> %-7s %s (waves since: %s, last %s)"
+                  % (i, s, pa, r.get("waves", "?"), r.get("last_wave") or "-"))
 
     if unowed:
         print("\nnothing is raising a hand for these ids' condition (a) "
               "(GH #540); the cheap fix is ONE row in\n"
               "iterations/owed_executions.json named `%s<id>` (or one row "
               "carrying `covers_ids`),\nnot the analysis itself:" % ROW_PREFIX)
-        for _, i, cls, r in sorted(unowed, key=lambda v: (v[2], v[1])):
+        for _, i, cls, r, _pa in sorted(unowed, key=lambda v: (v[2], v[1])):
             subj = [t for t in (r.get("subject_tools") or r.get("tools") or [])]
             print("  %-16s %-10s waves %2s last %-4s  %s"
                   % (i, cls, r.get("waves", "?"), r.get("last_wave") or "-",
@@ -219,7 +328,7 @@ def main():
     if owed:
         print("\nowed row exists (this leg is satisfied; whether the row is "
               "GOOD is pending_rulings.py's question):")
-        for _, i, rid, _r in sorted(owed, key=lambda v: v[1]):
+        for _, i, rid, _r, _pa in sorted(owed, key=lambda v: v[1]):
             print("  %-16s <- %s" % (i, rid))
 
     stale = sorted(i for i in covered if i not in armed)
@@ -242,6 +351,11 @@ def main():
     print("    plus no VERIFY line is precisely what this leg shouts about.")
     print("  * The class beside a finding is a_evidence_route's reading,")
     print("    quoted; DELIVER is not a claim the named tool answers (a).")
+    print("  * PRE-ARM is a statement about DATES, not about quality: it does")
+    print("    not say the old reading was wrong, only that it is not about")
+    print("    this armed era.  It is silent on `lower_bound` arm rows (a")
+    print("    bound cannot order the comparison) and on any id whose VERIFY")
+    print("    line sits in a report whose filename carries no date.")
 
     if unowed:
         print("\nFINDING: %d armed id(s) with neither a verdict nor an owed "

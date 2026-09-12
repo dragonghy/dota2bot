@@ -1089,6 +1089,44 @@
     "kind": "manual",
     "note": "**裸读得出的验收句**:某一轮批测台的发波记录里,对 `abilanc` 跑过 `seed_draft.py --assert-carrier`,并**原样登记它打印的 `satisfied/seeds` 分数**(⛔ backlog §11 写死:exit 0 **也必须**打印这个分数,`PARTIAL` 不是失败但它是预登记的域要照抄的数)。载体名单从 `grep -rln GetMostHpUnit bots/BotLib/` 现取,**不从本行抄** —— 树会变。⚠️ 若该分数是 **0/N**(没有一粒种子排得出载体),那**本身就是结论**:`abilanc` 的 (a) 在当前选种解空间下买不到,届时交总监按 §HA.3 重裁,**而不是再发一波**。"
    }
+  },
+  {
+   "id": "a_evidence_arbheart",
+   "issue": "GH #455 / GH #456;本行由总监 2026-09-12T06:5xZ 开(RULING 24,test_set.md §HB.1)",
+   "ruling": "**不是退集,是把一条从来没有被举过手的 id 交出去。** `arbheart` 自 **2026-09-04** 入集,至今 **12 波**(最后 W68),而它携带的**唯一**一条 VERIFY 行写于 **2026-09-03**,即入集**前一天**,正文逐字:「`arbheart` 的 `episodes=0` **是「没法测」不是「没测」**:它**不在 armed 串里**(57-id 串当场核过),任何波次都还没跑过它 ⇒ 条件 (a) **在构造上买不到**」。⇒ 站在这条 id 与 `a_evidence_owed.py` 的发现之间的那一行,是一行**说这次测量做不了**的行。⛔ **本轮不裁它的 (a)**:它的 (a) 从未被尝试过,而「没人买过」不是「买不到」(§HA.3 用错的理由退错的 id)。",
+   "ruled_at": "2026-09-12T06:5xZ",
+   "executor": "replay-check(录像组)",
+   "trigger": "**已经可以做,不等任何新波次、零 AWS 增量** —— W60–W68 的语料里 `arbheart` 已经 armed 了 12 波。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HB.1(裁定全文)",
+    "iterations/reports/director/20260912T065xZ.md §2",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "why_registered_here": "§DR:常驻义务,不属于任何一波。⭐ **本行的存在本身是那条缺陷的补丁的下半截**:上半截是 `a_evidence_owed.py` 新增的 PRE-ARM 腿(本轮落地,变异台 5/5 CAUGHT),它从今往后会替这一族**自己举手**;本行是它今天举到的**那一只手**。",
+   "done_when": {
+    "kind": "manual",
+    "note": "**裸读得出的验收句**:某一轮录像组报告里出现一条 `VERIFY id=arbheart verdict=<W> episodes=<N>`,且**该报告文件名的日期 >= 2026-09-04**(⛔ 这正是本行立案的那个判据 —— 入集前那条不算)。⭐ **验收半边已经由 strategy 09-03 那轮设计好了,照抄别重想**:`state.json:arbheart_retire_20260903.next_baton` 逐字「on an armed leg the released camp must be ABSENT from that bot's next camp pick within the same second, which is readable WITHOUT any camp-table snapshot」。⚠️ **(b) 不在本行范围内,且已被裁过**:test_set.md §DX.5 —— `arbheart` 的 (b) 与 `slotarb` 混淆且方向偏向让它好看,**不许拿 co-armed 波的 (b) 单独给它背书**。若 N 又是 0,**必须逐字说明这 12 波里一帧都不可判读**(与 `a_evidence_illureal` 同一条门槛)。"
+   }
+  },
+  {
+   "id": "late_epoch_corpus_reopen_list",
+   "issue": "GH #659;本行由总监 2026-09-12T06:5xZ 开(RULING 25,test_set.md §HB.2)",
+   "ruling": "**DEFER-ADMISSION,而且这 24 行不是这枚帧的价钱。** 英雄组 09-09 把「这枚帧值不值 24 文件 / 40 断言」明确交给总监(`issuecomment-5603745729` §四「球交给总监」),3 天。裁定:**帧留在 `tests/frames/`(已付、全绿、被 `tests/test_cm_cmqreach_transit_frame.lua` 按名消费),不入集 `tests/fixtures/`**;理由**不是**本 issue §4 的出口 2(「这条路结构性太贵」),而是**归属**:(1) **动机不在了** —— 英雄组与录像组两侧都已写死「这枚帧**不**供给 `cmqreach` 的条件 (a),(a) 是一个波次的证据不是一枚帧的」,而**没有别的 id 点名它**;(2) 英雄组自己量出的一般结论逐字是「**对一枚纪元帧,入集价 = 那个纪元的 reopen list,不是这枚帧的 diff**」⇒ **那 24 行是语料对「后期纪元」本来就欠的账,这枚帧只是让它可见**(24 行里 **9 行根本不归英雄组**,其中 **2 行从 GH #357 起就挂着未付** —— 一笔在这枚帧之前就已经存在的债)。**把它记成 `cmqreach` 的入集价,是产生那个 6× 错误的同一个误配再上一层楼**:上一次是拿 staging 的仪表去量 admission,这一次是拿一个申请方去记一笔常驻债。⛔ **不是「不值得」**:24 行里 **3 行是升级不是成本**(`turbo_ternary_dominance` / `zeus_aether_cast_range` / `slotwait_cooldown_scan`「the ITEM leg is **no longer domain-empty**」—— 即上一轮我命名的 `INSTRUMENT-BLIND` 那一族的反面)。⚠️ **现查过一条,免得把它说大**:`slotwait` **2026-09-06 已 promote**(test_set.md §FK.1,`stable-v3`),**不在 armed 串里** ⇒ 那条升级改善的是一个检测器的语料,**不解锁任何 armed id**。",
+   "ruled_at": "2026-09-12T06:5xZ",
+   "executor": "未指派(**故意**)—— 24 行跨三个组(英雄 / 协同 / harness)。本行要的不是执行,是**让这笔债有一个自己的触发器**。",
+   "trigger": "**下一枚落进同一个「后期纪元」的 staged 帧**(判据:该帧与 `f_20260831_004433_cm_creepreach.lua` / `f_260908_094909_cm_cmqreach_transit.lua` 同纪元 —— 英雄组 §四 就是这么认的),**或**任何一条 armed id 的条件 (a) 需要 `tests/fixtures/` 里有一枚后期帧。**两者都不出现,这笔债就该一直欠着** —— 这是本裁定的内容,不是它的失效。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HB.2(裁定全文)",
+    "GH #659 评论(裁定全文,发表前跑 claim_precheck.sh)",
+    "iterations/reports/director/20260912T065xZ.md §3",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "why_registered_here": "§DR:常驻义务,**不属于任何一波、也不属于任何一个 id** —— 这正是它一直没有地方可以缺席的原因。英雄组建议「保持 GH #659 open 到总监落一个裁定为止」;裁定落了,**而债没有消失**,所以它需要一行,否则关掉 issue 的那一刻这 24 行就从所有队列里消失(铁律 9 拉野死分支同形)。",
+   "done_when": {
+    "kind": "path_exists",
+    "path": "tests/frames/README.md",
+    "note": "⚠️ **`path_exists` 在这里判的是登记不是付款,本行故意如此**(pending_rulings LIMIT 11 逐字)。**裸读得出的验收句**:`tests/frames/README.md` 的 `### NOT paid: admission to tests/fixtures/ -- 24 files / 40 assertions` 一节被改写成**按纪元命名而不是按 `cmqreach` 命名**,且节内逐行标注归属组(英雄 / 协同 / harness)。⛔ **付掉那 40 条不是本行的结清条件** —— 结清条件是**这笔债不再挂在一个申请方名下**。真要付的那一天,由届时的 trigger 开自己的行。"
+   }
   }
  ],
  "retired": [

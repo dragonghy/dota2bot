@@ -74,7 +74,8 @@ SUBJECT_TOOL = (
 )
 
 
-def build_route_tree(base, ids, verified=(), name="t"):
+def build_route_tree(base, ids, verified=(), name="t",
+                     report_name="20260909T000000Z.md"):
     """A synthetic tree for a_evidence_route: every id armed, one wave, one
     subject-line tool each (so every id is DELIVER), and a VERIFY line only for
     the ids named in `verified`.
@@ -103,7 +104,7 @@ def build_route_tree(base, ids, verified=(), name="t"):
     lines = ["# synthetic replay-check report\n"]
     for i in verified:
         lines.append("VERIFY id=%s verdict=WORKING episodes=7\n" % i)
-    with open(os.path.join(rdir, "20260909T000000Z.md"), "w",
+    with open(os.path.join(rdir, report_name), "w",
               encoding="utf-8") as fh:
         fh.write("".join(lines))
     return ["--route-args",
@@ -119,12 +120,23 @@ def write_registry(path, owed=(), retired=()):
     return path
 
 
+def write_arm(path, rows):
+    """`armed_since.json`, synthetic.  rows: {id: (day, precision)}."""
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump({"_note": "synthetic",
+                   "ids": {i: {"armed_since": d, "precision": p}
+                           for i, (d, p) in rows.items()}}, fh)
+    return path
+
+
 def states(out):
     """{id: state} parsed from the printed sections."""
     got = {}
     section = None
     for line in out.splitlines():
-        if line.startswith("nothing is raising a hand"):
+        if line.startswith("PRE-ARM --"):
+            section = "PREARM"
+        elif line.startswith("nothing is raising a hand"):
             section = "UNOWED"
         elif line.startswith("owed row exists"):
             section = "OWED"
@@ -226,6 +238,119 @@ def main():
         check(rc == 0, "a row naming an unarmed id does not redden (got %d)" % rc)
         check(states(out).get("ghost") == "NOTE",
               "...it is reported as a note: %s" % states(out))
+
+        # ------------------------------------------------------------------
+        print("\n3b. PRE-ARM: a verdict written before the id was armed is not "
+              "a reading about\n    its armed behaviour (director 2026-09-12; "
+              "filed on `arbheart`, whose only\n    VERIFY line said the "
+              "purchase was impossible BECAUSE it was not armed yet)")
+
+        def prearm_block(out):
+            got = {}
+            on = False
+            for line in out.splitlines():
+                if line.startswith("PRE-ARM --"):
+                    on = True
+                elif on and line.startswith("  ") and line.strip():
+                    got[line.split()[0]] = line.strip()
+                elif on and line.startswith("nothing is raising a hand"):
+                    break
+            return got
+
+        # alpha's verdict is dated 2026-09-03; beta's tree is the same file, so
+        # both ids are verified on that day and only the ARM DATE differs.
+        ptree = build_route_tree(base, ["alpha", "beta"],
+                                 verified=["alpha", "beta"], name="prearm",
+                                 report_name="20260903T155538Z.md")
+        write_registry(reg)
+        arm = os.path.join(base, "arm.json")
+
+        # (i) exact arm date AFTER the verdict => demoted, and with no owed row
+        #     that lands on UNOWED and reddens.  This is arbheart's shape.
+        write_arm(arm, {"alpha": ("2026-09-04", "exact"),
+                        "beta": ("2026-09-01", "exact")})
+        rc, out, err = run(["--registry", reg, "--armed-since", arm] + ptree)
+        st, pa = states(out), prearm_block(out)
+        check(rc == 3, "a pre-arm-only verdict reddens (got %d)" % rc)
+        check(st.get("alpha") == "UNOWED",
+              "...the id it demotes lands on UNOWED: %s" % st)
+        check("alpha" in pa, "...and is listed under PRE-ARM: %s" % pa)
+        check("2026-09-04" in pa.get("alpha", ""),
+              "...the reason quotes the arm date it compared against: %s" % pa)
+        check("beta" not in pa and st.get("beta") != "UNOWED",
+              "an id armed BEFORE its verdict is untouched: %s / %s" % (st, pa))
+
+        # (i-b) THE BOUNDARY, and it belongs to the current era: an admission
+        #       ruling and the verdict that argues it land the same UTC day
+        #       (that is what a rideshare admission looks like), so a verdict
+        #       dated ON the arm day must NOT be demoted.  `>=`, not `>`.
+        write_arm(arm, {"alpha": ("2026-09-03", "exact"),
+                        "beta": ("2026-09-01", "exact")})
+        rc, out, err = run(["--registry", reg, "--armed-since", arm] + ptree)
+        check(rc == 0, "a verdict dated ON the arm day is current (got %d)" % rc)
+        check(not prearm_block(out),
+              "...and is not listed under PRE-ARM: %s" % prearm_block(out))
+
+        # (ii) ⛔ a `lower_bound` arm row is EXEMPT, and it is arithmetic, not
+        #      caution: the bound says "armed at least since", so the true arm
+        #      date is at or before it and an earlier VERIFY line may still sit
+        #      inside the armed era.  Ordering answers this only for equalities.
+        #      Without this exemption the check would manufacture findings on
+        #      the OLDEST ids, which is how a new check gets ignored.
+        write_arm(arm, {"alpha": ("2026-09-04", "lower_bound"),
+                        "beta": ("2026-09-01", "exact")})
+        rc, out, err = run(["--registry", reg, "--armed-since", arm] + ptree)
+        check(rc == 0, "a lower_bound arm row does not demote (got %d)" % rc)
+        check(not prearm_block(out),
+              "...and nothing is listed under PRE-ARM: %s" % prearm_block(out))
+
+        # (iii) demotion is not a verdict about the id: an owed row still
+        #       satisfies this leg, exactly as it would with no verdict at all.
+        write_registry(reg, owed=[{"id": "a_evidence_alpha"}])
+        write_arm(arm, {"alpha": ("2026-09-04", "exact"),
+                        "beta": ("2026-09-01", "exact")})
+        rc, out, err = run(["--registry", reg, "--armed-since", arm] + ptree)
+        check(rc == 0, "a demoted id with an owed row is clean (got %d)" % rc)
+        check(states(out).get("alpha") == "OWED",
+              "...and reads OWED, not UNOWED: %s" % states(out))
+        check("alpha" in prearm_block(out),
+              "...while still being listed under PRE-ARM (the demotion is "
+              "reported even when something covers it)")
+
+        # (iv) no arm row at all => arm_since.py owns that finding, not this
+        #      leg.  Two tools shouting about one gap is how both get muted.
+        write_registry(reg)
+        write_arm(arm, {"beta": ("2026-09-01", "exact")})
+        rc, out, err = run(["--registry", reg, "--armed-since", arm] + ptree)
+        check(rc == 0, "an id with no arm row is not demoted here (got %d)" % rc)
+
+        # (v) an undatable report filename cannot conclude, so it must not
+        #     demote.  The day is read off the FILENAME (armed_since.json's own
+        #     header: a shallow clone cannot date a report with `git log`).
+        utree = build_route_tree(base, ["alpha", "beta"],
+                                 verified=["alpha"], name="undated",
+                                 report_name="staged_notes.md")
+        write_arm(arm, {"alpha": ("2026-09-04", "exact"),
+                        "beta": ("2026-09-01", "exact")})
+        rc, out, err = run(["--registry", reg, "--armed-since", arm] + utree)
+        check(rc == 3, "the undated tree still reddens for beta (got %d)" % rc)
+        check("alpha" not in prearm_block(out),
+              "...but an undatable VERIFY line does not demote: %s"
+              % prearm_block(out))
+
+        # (vi) THE FAILURE DIRECTION, same as the registry in section 1: an
+        #      arm file this tool cannot read must be exit 2, never "every
+        #      verdict is current" -- that would restore the silence in
+        #      silence.
+        rc, out, err = run(["--registry", reg, "--armed-since",
+                            os.path.join(base, "nope.json")] + ptree)
+        check(rc == 2, "an unreadable armed_since is exit 2 (got %d)" % rc)
+        badarm = os.path.join(base, "badarm.json")
+        with open(badarm, "w", encoding="utf-8") as fh:
+            json.dump({"ids": ["alpha"]}, fh)
+        rc, out, err = run(["--registry", reg, "--armed-since", badarm] + ptree)
+        check(rc == 2, "an armed_since with no `ids` MAP is exit 2 (got %d)"
+              % rc)
 
         # ------------------------------------------------------------------
         print("\n4. the live tree (invariants only -- the counts move weekly)")
