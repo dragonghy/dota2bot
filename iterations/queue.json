@@ -2474,6 +2474,26 @@
    "status": "pending",
    "question": "⛔ **这不是发波申请,是一次零 EC2 的归档只读扫描** —— 与 hero-2/30/…/38/62 同形,可并进同一次遍历。**问题一句话:真实 Turbo 对局里,一个正在撤退的 Zeus,他 Arc Lightning 射程(800+aether)内那个『最弱的可攻击单位』有多大比例是法术免疫的(BKB / 剑刃风暴 / 狂战士之血 / 驱逐)?**\n**为什么问**:`zusarcimm`(2026-09-12 落地)修的是 `X.ConsiderQ` 撤退支路把 `J.GetVulnerableWeakestUnit`(只筛**攻击**免疫)的答案交给一个不穿魔免的法术。fixture 语料把**域**钉住了(60 存活帧 → 15 次选择器出目标 → **1 次出的是法免目标**,`tests/frames/f_260909_215227_zeus_exec_od_1467.lua`),但 1 帧是域不是频率:语料是为别的调查切的 100 来个瞬间。\n⇒ 要的是频率,不是存在性。",
    "acceptance": "从归档 replay/behavioral dump 里,对每一局的 Zeus **两条腿都要**(按 ab / ba 两个分层分别登记读数,铁律 4(i-a)):(1) Zeus 处于撤退状态且近 2s 被英雄打过的帧数;(2) 其中射程内存在敌方英雄的帧数;(3) 其中『最弱可攻击单位』带法免 modifier 的帧数与占比。**计数类量按铁律 4(ii) 报均值 + 占比,不报中位数。** 占比 >= 1% 即认为域值得买 (a) 证据;< 0.1% 则本 id 直接登记为『域太小,不值得占 armed 位』并退场。"
+  },
+  {
+   "id": "hero-64",
+   "stream": "hero",
+   "bundle": "wkqcommit (新落地 gated id;本条只要**域的频率**,不要发波)",
+   "seeds": [],
+   "priority": 3,
+   "status": "pending",
+   "question": "⛔ **这不是发波申请,是一次零 EC2 的归档只读扫描** —— 与 hero-2/30/…/62/63 同形,可并进同一次遍历。**问题一句话:真实 Turbo 对局里,一个已经锁定目标(going-on-someone)、Wraithfire Blast 可施法、且已被 `X.ShouldSaveMana` 放行的 Wraith King,有多大比例的帧被支路本地那层配给(`nSkillLV >= 3 or nMP > 0.68 or GetHP(target) < 0.38 or nHP < 0.25`)拦下来?并按**复活甲是否已学**分层。**\n**为什么问**:`wkqcommit`(2026-09-12 落地)放弃的正是那层配给。fixture 语料把**域的上界**钉住了(51 存活 WK 帧 → 48 有 abilities → 27 进函数体 → **3 帧三个自身状态析取项全假**),但 (a) 3 帧是域不是频率;(b) 第四个析取项问的是**目标**血量,归档帧上读不到,所以 3 是**上界**不是施法改变数 —— 归档 dump 里目标是可读的,这一条正好补上语料补不了的那半。",
+   "acceptance": "从归档 replay/behavioral dump 里,对每一局的 Wraith King **两条腿都要**(按 ab / ba 两个分层分别登记读数,铁律 4(i-a)):(1) going-on-someone 且 Blast 可施法且储备规则放行的帧数;(2) 其中**四个**出货析取项全假(含目标血量那一项)的帧数与占比;(3) 把 (2) 按 `skeleton_king_reincarnation` rank == 0 / rank >= 1 分层。**计数类量按铁律 4(ii) 报均值 + 占比,不报中位数。** 占比 >= 1% 即认为域值得买 (a) 证据;< 0.1% 则本 id 直接登记为『域太小,不值得占 armed 位』并退场。⚠️ 分层是本条的重点:若拦截几乎全在 rank == 0 那一层,条件 (c)(『不能为一个还没学的死亡触发大招攒蓝』)就从论证升级成读数。"
+  },
+  {
+   "id": "harness-corpus-creeps",
+   "stream": "harness",
+   "bundle": "(非发波;dumper 能力请求)",
+   "seeds": [],
+   "priority": 2,
+   "status": "pending",
+   "question": "⛔ **零 EC2。** **fixture 语料里一个非英雄单位都没有** —— 141 份 frame / 1410 个 unit,`npc_dota_hero_*` 占 **1410/1410**(2026-09-12 英雄组实测,直接 dofile 原始表,不经 loader,所以这是**语料组成**不是 loader 过滤)。⇒ **任何**读小兵 / 野怪 / Roshan 的支路,在**每一个**焦点英雄文件里,都由构造无法做帧级局部验证,而它的读数与『游戏里域为 0』**长得一模一样**。被这条一次性划掉的探针:Axe 带线嘲讽小兵支路(它缺 HP 地板,而同函数下面两条打野 / 打 Roshan 的兄弟各自都有 `nHP > 0.5` / `nHP > 0.3`)、CM `X.ConsiderQImpl` 四条清兵支路、Lion `X.ConsiderQ` 的 Farm/Push、WK `X.ConsiderQ` 打野、整个 `glyphany` 族、`cmcreepcap`/`cmfarcreep`/`cmlaneband`/`pulldrag` 的帧级核验。**问题一句话:`make_fixture.py` 能不能在 frame 里带上附近的 lane / neutral creep(哪怕只有 name / team / x / y / hp / max_hp / alive)?**",
+   "acceptance": "(1) `make_fixture.py` 在 dump 里写出半径 N(建议 >= 1600,与 `J.GetNearbyLaneCreeps` 最大读数同阶)内的非英雄单位;(2) `tests/mock/replay_fixture.lua` 的 `GetNearbyLaneCreeps` / `GetNearbyNeutralCreeps` / `FindAoELocation` 接到那份列表上;(3) 重切**一帧**带兵线的焦点英雄帧作为证明,并在其上跑通任意一个现有的小兵类支路。⚠️ 若判定不可行,请把『本语料结构性地不支持小兵类支路的帧级验证』作为一条常设限制写进 `tests/frames/README.md`,免得每一轮都重新发现一次(本轮是至少第三次)。"
   }
  ],
  "done": [

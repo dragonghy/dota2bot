@@ -873,6 +873,114 @@ function X.wk_IsCatchAllOddsOk( tAllies, tEnemiesInView )
 end
 
 
+--- May a COMMITTED Wraith King spend Wraithfire Blast on the target he has
+--- already chosen?
+---
+--- Soak candidate `wkqcommit` (turbo-only, INERT until armed).  Gate off this
+--- returns FALSE, so the disjunction it joins is the shipped one byte for byte.
+--- STANDALONE: this function holds exactly one J.IsSoakCandidate call and it
+--- names only 'wkqcommit' (the `pullcad` trap is a gate that names a SECOND id,
+--- which freezes FALSE the day that id is promoted).
+---
+--- THE BRANCH.  X.ConsiderQ's 打架时先手 firing point has already established,
+--- in its own outer `if`, everything a cast needs: the bot is going on someone,
+--- the target is a valid hero inside `nCastRange + 80`, castable, not disabled,
+--- not disarmed.  What it then asks before letting the blast go is a second,
+--- branch-local rationing layer:
+---
+---     nSkillLV >= 3  or  nMP > 0.68  or  GetHP(target) < 0.38  or  nHP < 0.25
+---
+--- THE DEFECT, in two halves.
+---
+---   1. THE RANK TERM IS UNREACHABLE UNDER THIS FILE'S OWN BUILD ROW.  Its
+---      plain intent is "once the blast is well-levelled, stop rationing it".
+---      tAllAbilityBuildList (:159 region) spends Q's points at row entries
+---      2, 12, 13, 14, and J.Skill.GetSkillList lands those at HERO LEVELS
+---      2 / 13 / 14 / 16 (levels 10/15/20/25 are talent slots and consume no
+---      ability point -- the same arithmetic the `wkqdmg` block above works
+---      through).  So `nSkillLV >= 3` first becomes true at hero level 14, and
+---      the term is constant FALSE for hero levels 1-13 -- which in turbo is
+---      essentially the whole game.  It is also backwards with respect to its
+---      own intent: the blast is rationed hardest while it is rank 1 and
+---      cheapest in absolute terms (95 mana) and un-rationed only from hero 14,
+---      where it costs 125-140 against the largest pool the hero ever has.
+---
+---   2. THE MANA TERM RE-ASKS A QUESTION THIS FUNCTION ALREADY ANSWERED.  The
+---      FIRST line of X.ConsiderQ refuses outright when X.ShouldSaveMana says
+---      the pool would drop under Reincarnation's price.  Any frame that
+---      reaches this branch has therefore already been cleared by this file's
+---      OWN declared reserve rule; `nMP > 0.68` is a second, unexplained,
+---      absolute-ish floor stacked on top of it.  That is the same shape the
+---      `wkrosh` note above argues at the Roshan branch ("a constant that
+---      predates the reserve"), arriving at the branch that decides whether
+---      Wraith King opens a fight with his only disable.
+---
+--- WHAT ARMED DOES.  It drops the branch-local rationing layer and leaves the
+--- file's own reserve rule -- already consulted, on line one of this very
+--- function -- as the mana authority for a cast the bot is already committed
+--- to.  No threshold is invented, moved, or re-typed: the lever adds a
+--- disjunct, it does not edit the four that are there.
+---
+--- ⛔ DIRECTION AND ATTRIBUTION.  This is a WIDENING lever: the armed release
+--- set is a strict SUPERSET of the shipped one for every input, because the
+--- only change is an added disjunct.  Arming it can only ADD a blast, never
+--- withhold one, so a negative wave reads "those extra committed stuns were
+--- bad" and NEVER "a blast was lost".
+---
+--- THE DOMAIN, measured, gates all off, over tests/fixtures/ + tests/frames/
+--- (tests/test_wk_q_commit_ration.lua):
+---     51 live Wraith King instants
+---  -> 48 priced (the other 3 carry no abilities list, so their rank 0 is an
+---     ABSENCE and would manufacture a reading)
+---  -> 27 reach this function's body (Wraithfire Blast castable AND
+---     X.ShouldSaveMana false)
+---  ->  3 have ALL THREE own-state disjuncts false -- i.e. the three frames on
+---     which this lever can act:
+---       f_260909_215040_wk_blast_lane_121   hero 3, Q rank 1, R RANK 0,
+---                                           mana 194/327 = 0.59
+---       f_260909_215040_wk_blast_mid_269    hero 5, Q rank 1, R RANK 0,
+---                                           mana 124/363 = 0.34, hp 0.67
+---       f_260820_102645_cm_laning_release   hero 9, Q rank 1, R rank 1 on a
+---                                           94.9s cooldown, mana 179/411 = 0.44
+---     On the first two Reincarnation is UNLEARNED and on the third it is 95
+---     seconds away, so on all three the mana the 0.68 floor is protecting is
+---     not spoken for by anything on the frame.  The other 24 are byte-for-byte
+---     identical armed and shipped (`nMP > 0.68` already true on them).
+---
+--- CONDITION (c), argued rather than assumed.  Wraithfire Blast is Wraith
+--- King's only disable and the setup for everything else he does; standard
+--- practice with a committed initiation is to spend the disable and not to
+--- hoard mana against a contingency that is not on the clock.  Holding mana for
+--- a death-trigger ultimate the hero has not learned yet is not a rule anyone
+--- plays by, and turbo sharpens both halves -- the pool refills far faster than
+--- a fight arrives, and a blast not thrown in the laning phase is a 1.0-1.6s
+--- stun and 100-140 damage that simply never happened.
+---
+--- ⚠️ HONEST BOUNDS, four, none of them rhetorical:
+---   1. The fourth shipped disjunct, `J.GetHP( npcTarget ) < 0.38`, is about
+---      the TARGET and this branch's target comes from J.GetProperTarget, a
+---      mode-dependent read that is not available on an archived frame.  The 3
+---      above are frames where the three OWN-STATE disjuncts are false; if the
+---      chosen target happened to be under 38% health the shipped branch would
+---      have fired anyway and the lever is a no-op there.  3 is an upper bound.
+---   2. `J.IsGoingOnSomeone` is a mode predicate and reads false on every
+---      archived frame, so the corpus cannot show the BRANCH firing.  What is
+---      measured is the PERMISSION SET, which is the half this lever changes.
+---   3. 3 frames is a DOMAIN, not a frequency.  Nothing here says how often a
+---      committed Wraith King is refused by this layer in a real game; sizing
+---      that needs a wave (iterations/queue.json hero-64).
+---   4. This lever does NOT touch X.ShouldSaveMana's own rank blindness
+---      (`nLV >= 6` standing in for "R is learned"), registered as bound 3 of
+---      X.IsReincarnationReserveIdle below and still unfixable on evidence.
+---      The two evidence frames here sit at hero 3 and 5, where `nLV >= 6` and
+---      "R is trained" agree, so nothing in this lever rests on that gap.
+function X.wk_IsCommitBlastPermitted()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'wkqcommit' )
+
+end
+
+
 function X.ConsiderQ()
 
 	if not abilityQ:IsFullyCastable()
@@ -1102,7 +1210,10 @@ function X.ConsiderQ()
 			and not J.IsDisabled( npcTarget )
 			and not npcTarget:IsDisarmed()
 		then
+			-- [wkqcommit] gate off the added disjunct is `false`, byte for byte.
+			-- See X.wk_IsCommitBlastPermitted above.
 			if nSkillLV >= 3 or nMP > 0.68 or J.GetHP( npcTarget ) < 0.38 or nHP < 0.25
+				or X.wk_IsCommitBlastPermitted()
 			then
 				return BOT_ACTION_DESIRE_HIGH, npcTarget
 			end

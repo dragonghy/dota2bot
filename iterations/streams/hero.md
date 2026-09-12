@@ -22,6 +22,58 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-156. ✅ **`-155` 第 1 条执行了:主体在 `bots/`,按第三条「先筛只读英雄自身状态的轴」选杠杆,
+   量掉四根落第五根** —— 本轮(报告 `iterations/reports/hero/20260912T082300Z.md`,**GH #771**)落地
+   **`wkqcommit`**(Wraith King,gated,turbo-only,**加宽**)。
+   ⭐ **缺陷形状:一个支路可以把同一个问题问两遍,而第二遍的第一个词项在这份出货升级表下*永远*为假。**
+   `X.ConsiderQ` 的 **打架时先手** 在外层 `if` 已确认「已锁定目标 / 目标在 `nCastRange+80` 内 / 可施法 /
+   未被控 / 未被缴械」之后,再问一层**支路自己的**配给
+   `nSkillLV >= 3 or nMP > 0.68 or GetHP(target) < 0.38 or nHP < 0.25`:
+   (i) `nSkillLV >= 3` 由**本文件自己的** `tAllAbilityBuildList` 驱动(真 `J.Skill.GetSkillList`,不手抄)
+   **要到英雄 14 级才第一次为真**(Q 点落在 2/13/14/16 级)⇒ hero 1–13 恒假,在 Turbo 里就是整局;
+   **而且相对它自己的意图是反的** —— rank 1、绝对价格最低(95)时配给最紧,14 级价格最高时才放开。
+   (ii) `nMP > 0.68` **重问了本函数第一行已经答过的问题**:`X.ShouldSaveMana`(复活甲储备)就在第一行,
+   凡走到这条支路的帧都已被本文件自己声明的储备规则放行过。这是 `wkrosh` 注释在 Roshan 支路上讲的
+   同一个形状(「一个早于储备规则的常数」),落在**决定要不要用唯一硬控开团**的那条支路上。
+   域实测 **51 存活 WK 帧 → 48 有 abilities 表 → 27 进函数体 → 3 帧三个自身状态析取项全假**
+   (`wk_blast_lane_121` 3 级 **R rank 0**、`wk_blast_mid_269` 5 级 **R rank 0**、
+   `cm_laning_release` 9 级 R 冷却剩 94.9s)。id 登记 `state.json:wkqcommit_20260912`;
+   取证请求 `queue.json:hero-64`(**按 R 是否已学分层**);测试 `tests/test_wk_q_commit_ration.lua`
+   (13 绿,变异台 M1/M2/M3/M4 四发全中)。
+   - ⭐⭐ **第一条,本轮最值钱 —— fixture 语料里一个非英雄单位都没有。**
+     直接 dofile 全部 `tests/fixtures/*.lua` + `tests/frames/*.lua` 读**原始表**(不经 loader,
+     所以这是**语料组成**不是 loader 过滤):**141 份 frame / 1410 个 unit,
+     `npc_dota_hero_*` 占 1410/1410**;焦点五英雄 263 个存活实例里,265u 环内有任何敌方小兵的:**0**。
+     ⇒ **任何**读小兵 / 野怪 / Roshan 的支路,在**每一个**焦点英雄文件里,
+     **由构造无法在本语料上做帧级局部验证** —— 而它的读数与「游戏里域为 0」**长得一模一样**。
+     一次性划掉:Axe 带线嘲讽小兵那条(**形状是真的**:它一个 HP 地板都没有,而同函数下面两条兄弟
+     打野 `nHP > 0.5` / 打 Roshan `nHP > 0.3` 各自都有,且被嘲讽的是敌方兵线、通常就在敌塔下 ——
+     **证不了,别开**)、CM `X.ConsiderQImpl` 四条清兵支路、Lion `X.ConsiderQ` 的 Farm/Push、
+     WK `X.ConsiderQ` 打野、整个 `glyphany` 族、`cmcreepcap`/`cmfarcreep`/`cmlaneband`/`pulldrag` 的帧级核验。
+     已登记 `state.json:CORPUS_HAS_NO_NONHERO_UNITS_20260912`,并开 `queue.json:harness-corpus-creeps`。
+   - ⭐ **第二条 —— 等级分布,选杠杆前先看它。** 263 个焦点存活实例:**1–13 级 = 217/263 (82.5%)**,
+     峰值 6–11;25 级及以上共 **8** 个(25×1 / 26×3 / 28×3 / 30×1)。
+     ⇒ **以 hero level 为地板的词项,地板越高域越薄**。因此放掉:CM `:993` 的 `nLV == 25`
+     (它 135 行之上的同形兄弟 `:858` 写的是 `nLV >= 25`,**不等号不一致是真的**,26–30 级那道 hatch
+     会静默关上 —— 但 CM 在本语料最高 24 级,域 **0**,而且它还坐在小兵上);
+     Axe t25 天赋行 `{0,10}`→`{10,0}`(Axe 只有 1 个 ≥25 的实例)。
+   - ⛔ **第三条 —— 「把闸改小」和「把闸拿掉」是两根不同的杠杆,前者是凭空造数。**
+     `nMP > 0.68` 在 **24/27** 个进体帧上**本来就真**(它几乎从不拦人)⇒ 本轮的证据不是「0.68 太高」,
+     而是那 3 帧 + 两条结构论证。更花哨的 armed 腿(`GetMana() - nManaCost >= abilityR:GetManaCost()`)
+     实测在 lv>=6 的 17 帧上**一帧都不加**,还会在「R 剩 94.9s 冷却」那帧上**重新**施加一道
+     上游已经放弃的储备 —— **比出货还严**。丢掉,取更简单也更诚实的那条。
+   - ⛔ **第四条 —— 我自己踩了 GH #290 的顺序:先发了带引用的 issue,再 push。**
+     #771 引用 `tests/test_wk_q_commit_ration.lua` 与本轮报告,发表那一刻两者**只在容器里**;
+     同一工作单元内随即 push 补上,但**顺序是错的**,`claim_precheck.sh` 本该在发表前跑。
+     下一轮:**任何带引用的评论/issue,发表前先 `bash tools/agent/claim_precheck.sh <草稿文件>`。**
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体继续放在 `bots/`(P4.4 (i))。选杠杆前先过两道筛**:
+        (a) **碰小兵 = 本语料证不了**(第一条);(b) **hero-level 地板越高域越薄**(第二条)。
+        ⚠️ 已量掉的别重开:`-154` 的九根 + `-155` 的三根 + 本轮四根
+        (CM `nLV == 25`、WK `nMP > 0.68` 当「拦截」看、储备算术版 armed 腿、Axe t25 行)。
+     2. **`test_lion_ult_cash_weakest.lua` 的 amnesty 退场已按 `-155` 的交代交出去了**
+        (滚了四轮,本轮**不再写进 backlog**;issue 见本轮报告 §8)。这一条**不要再滚回来**。
+
 -155. ✅ **`-154` 第 1 条执行了:主体回到 `bots/`,先量后选,量掉三根落了第四根** —— 本轮(报告
    `iterations/reports/hero/20260912T045958Z.md`)落地 **`zusarcimm`**(Zeus,gated,turbo-only,**收窄**)。
    ⭐ **缺陷形状:同一个函数里、同一个技能、两个选目标的 helper 隔十一行,只有一个问「这法术打得进去吗」。**
@@ -6821,6 +6873,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-12T08:23Z(报告 `iterations/reports/hero/20260912T082300Z.md`;**backlog:新开 `-156`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`wkqcommit`(Wraith King,gated,turbo-only,未 armed,方向=加宽):
+  一个支路可以把同一个问题问两遍,而第二遍的第一个词项在这份出货升级表下*永远*为假。**
+  - **缺陷**:`X.ConsiderQ` **打架时先手** 在外层 `if` 已确认目标/射程/可施法/未被控/未被缴械之后,
+    再问一层支路自己的配给。(i) `nSkillLV >= 3` 由本文件 `tAllAbilityBuildList` 驱动
+    **14 级才第一次为真**(Q 点落 2/13/14/16),hero 1–13 恒假,**且相对意图是反的**;
+    (ii) `nMP > 0.68` 重问了**本函数第一行** `X.ShouldSaveMana` 已经答过的问题
+    —— 同 `wkrosh` 的「一个早于储备规则的常数」,落在决定要不要用唯一硬控开团的那条支路上。
+  - **域(全语料实测,真 loader + 真 hero 文件)**:**51 → 48 → 27 → 3**
+    (`wk_blast_lane_121` 3 级 **R rank 0** 蓝 0.59 / `wk_blast_mid_269` 5 级 **R rank 0** 蓝 0.34 /
+    `cm_laning_release` 9 级 R 冷却剩 94.9s 蓝 0.44)。其余 24 帧两腿逐位相同。
+    ⚠️ **3 是上界**:第四个析取项问的是目标血量,`GetProperTarget` 归档帧读不到(§5.2 钉住)。
+  - **修法**:`X.wk_IsCommitBlastPermitted`,闸关 `false`(逐字节等于出货),闸开 `true`。
+    **不新造、不移动、不重抄任何阈值。方向是代码的性质**:`or` 追加 ⇒ 严格超集,只能加不能删。
+  - ⭐⭐ **本轮最值钱的一条:fixture 语料里一个非英雄单位都没有**(141 frame / **1410 个 unit 全是英雄**)。
+    ⇒ 任何读小兵/野怪/Roshan 的支路**由构造无法帧级验证**,而读数与「游戏里域为 0」长得一模一样。
+    划掉 Axe 带线嘲讽小兵(形状是真的:**一个 HP 地板都没有**,兄弟支路各自都有)、CM 四条清兵、
+    Lion Farm/Push、WK 打野、整个 `glyphany` 族。已开 `queue.json:harness-corpus-creeps`。
+  - ⭐ **等级分布**:1–13 级 = **217/263 (82.5%)**;≥25 级共 8 个 ⇒ 放掉 CM `:993` 的 `nLV == 25`
+    (不等号与 135 行之上的兄弟 `:858` 不一致**是真的**,但 CM 本语料最高 24 级,域 0,还坐在小兵上)。
+  - **测试**:`tests/test_wk_q_commit_ration.lua` **13 绿**;变异台 **M1/M2/M3/M4 四发全中**
+    (闸关腿 / armed 腿 / 删调用点 / `or` 改 `and`)。
+  - **闸**:`GATE_EXIT=0`(luacheck 0 warnings)/ `py gate: 96 ran, 0 findings, 0 uncertifiable, 26.0s`
+    / `lua gate: EXIT=0`。**没用过 RULE6_BYPASS**。⚠️ 动态全量(~100min,GH #124)本轮没跑。
+  - ⛔ **自检 worst exit 3,trunk 红且非本轮引入(已核实)**:`test_stayfield2_marginal_domain.lua`
+    (GH #751/#584/#650 那个「把活体计数硬编码进断言」的族);单独复跑确认红,且它
+    `grep -c "skeleton_king\|state.json"` = **0**。⚠️ 第一条命令**又**接了管道被自检拒绝
+    (它自己打的原话:`it has recurred 5x, every time as the first command of the round`)。
+  - ⛔ **本轮自己踩了 GH #290 的顺序**:先发了带引用的 **#771**,再 push(同一工作单元内补上,
+    但顺序是错的)。下一轮:带引用的评论/issue 发表前先跑 `claim_precheck.sh`。
+  - **交棒**:`queue.json:hero-64`(零 EC2 归档扫描,要频率不要域,**按 R 是否已学分层**);
+    `queue.json:harness-corpus-creeps`(dumper 带小兵);总监接 trunk 红。
+    ✅ `test_lion_ult_cash_weakest.lua` 的 amnesty 退场**按 `-155` 的交代改为 issue 交出**,
+    **不再滚进 backlog**。
 - 2026-09-12T04:59Z(报告 `iterations/reports/hero/20260912T045958Z.md`;**backlog:新开 `-155`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`zusarcimm`(Zeus,gated,turbo-only,未 armed,方向=收窄):
