@@ -23,7 +23,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## Backlog(做完划掉,补新的)
 
 -158. ✅ **`-157` 第 1 条执行了:主体在 `bots/`,而这一轮找杠杆的代价是零次 grep** —— 本轮
-   (报告 `iterations/reports/hero/20260912T141628Z.md`,**GH #%%ISSUE%%**)落地
+   (报告 `iterations/reports/hero/20260912T141628Z.md`,**GH #784**)落地
    **`cmrsolo`**(Crystal Maiden,gated,turbo-only,**收窄**)。
    ⭐ **缺陷形状:一条支路读不到它自己的函数第三行就算好的那个局部,而唯一的读者把它读反了。**
    `X.ConsiderR` 第三行 `local nAllies = J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_NONE)`;
@@ -45,6 +45,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    共享同一瞬间的情况相反。
    id 登记 `state.json:cmrsolo_20260912`;取证请求 `queue.json:hero-66`;
    测试 `tests/test_cm_r_solo_release.lua`(21 绿),变异台 `tools/agent/mutstand_cmrsolo.sh`(**10/10**)。
+   **`-157` 第 2 条同轮交出:GH #785**(Lion `X.MayKillTarget` 读了一次形参就改读 `botTarget`,
+   今天行为零差 ⇒ 卫生 issue,不进 backlog)。
    - ⛔ **第一条,本轮最该被人读到的 —— 今天的语料分不开本 id 与 `cmrself`,而这条限制被写成了断言。**
      两个域帧 HP 0.263/0.300 且近期挨打 ⇒ **armed `cmrself` 已经在这两帧上答 NONE**(实测)。
      分界是**结构性**的不是观测到的:`cmrself` 要 HP<0.38 **且**近期挨打,
@@ -7011,9 +7013,18 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **测试**:`tests/test_cm_r_solo_release.lua` **21 绿**;变异台 `tools/agent/mutstand_cmrsolo.sh`
     **10/10 全中**,其中 **M6 是 scope 变异体**(把合取项挪进人头数析取项 —— 闸/id/接线/注释/(c) 全都还在,
     只有 es_aftershock 见证帧**静默**掉出覆盖),**M10 是分离性控制**(抬 `cmrcrowd` 地板去吞见证格)。
-  - **闸**:`GATE_EXIT=0`(luacheck bots game 0 warnings)/ `py gate: exit 0,96 ran, 0 findings,
-    0 uncertifiable, 38.4s` / `lua gate: exit 0,322 fast ratchets`。**没用过 RULE6_BYPASS**。
-    ⚠️ 动态全量(~100min,GH #124)本轮没跑。
+  - **闸(push 实测)**:`GATE_EXIT=0`(luacheck bots game 0 warnings)/
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 37.8s` / `lua gate: 350 ran, 0 findings,
+    0 uncertifiable, 9 known-red, 493.7s`。**没用过 RULE6_BYPASS**。⚠️ 动态全量(~100min,GH #124)本轮没跑。
+  - ⚠️ **第一次 push 被 py 腿拒了,而那条红不是本轮的、也不稳定**:`tests/test_tpreach_domain.py`
+    在钩子里报 `FAILED 14 check(s)`,第一条是 `selfcheck exits clean: exit 1`,其余十三条全是
+    `battery still runs <name>` —— **它自己那套自检电池跑不完**。单独跑它 exit 0(41 例全 PASS),
+    紧接着单独跑 `py_gate.py` 也回到 `0 findings`,再 push 就过。⇒ **闸的并行电池里不稳的 python
+    ratchet**,不是 trunk 红(红的形状是电池半途停摆,不是断言不成立)。交给量具的主人看一眼。
+  - ⚠️ **推 main 被拒两次**(协同组/总监同窗口推了 `be9fd8b9`、`9c920f16`),两次 `pull --rebase`
+    重试。冲突都在 `queue.json` / `state.json` 的**追加位**上 —— 解法是**拿 main 的文件、把自己那条
+    重新 append 回去**,不是二选一。本轮两条都保住(hero-65 的 RULING 28 与 hero-66 并存;
+    `zusboltimm_20260912` 与 `cmrsolo_20260912` 并存)。
   - ⚠️ **既有 trunk 红,逐条在干净树上对照过、都不是本轮的**:`test_cm_pos5_boots.lua`、
     `test_tpscroll_branch_shadow_census.lua`、`test_gated_getter_stub_control.lua`、
     `test_focus_level_claims.lua`、`test_stayfield2_marginal_domain.lua`(自检 Lua 腿点名)。
