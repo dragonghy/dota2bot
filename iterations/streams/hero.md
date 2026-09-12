@@ -22,6 +22,51 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-160. ✅ **`-159` 第 1 条执行了:主体在 `bots/`,而「形状 census」这条新筛法第一次按它走,一次就落地** —— 本轮
+   (报告 `iterations/reports/hero/20260912T201939Z.md`)落地
+   **`lionwreach`**(Lion,gated,turbo-only,**收窄**)。
+   ⭐ **缺陷形状:同一个 `if` 体里的两个打断子支路,十一行之隔,一个带着射程界,另一个一个距离项都没有 —— 而没界的那个是整个函数的第一个出价点。**
+   `X.ConsiderW` 的 `nInBonusEnemyList = J.GetNearbyHeroes( bot, nCastRange + 300, ... )` 有**三个读者**:
+   `IsChanneling` 子支路(**无距离项**)、`IsCastingAbility` 子支路(`J.IsInRange( bot, npcEnemy, nCastRange + 50 )`)、
+   团战最危险目标搜索(同样 `+ 50`)⇒ **三个读者两个按 +50 收口,只有这一个不收**。
+   存活的两个词项**都不是距离项**,这是从 `jmz_func.lua` 读出来的不是散文
+   (`J.CanCastOnNonMagicImmune` :988 / `J.CanCastOnTargetAdvanced` :1006,§2 逐个断言)。
+   引擎拿到的 `ActionQueue_UseAbilityOnEntity` 在射程外**先是一条移动指令**,而这是函数里的**第一个**出价点
+   ⇒ 一个射程外的引导者会**挤掉**同一函数本可在射程内找到的那发团战控。
+   ⭐ **本轮的筛法比 `-158` / `-159` 都便宜,而且这一根比同族五根都硬**:同族(`lionrreach` #617 /
+   `wkqlane` #621 / `cmlaneband` #630 / `zusjumpland` #634 / `axebhreach`)都是「这个出价点比它的兄弟出价点松」;
+   这一根的反例**在同一个 `if` 体里**、同一个循环变量、同一个目的。
+   id 登记 `state.json:lionwreach_20260912`;取证请求 `queue.json:hero-68`(零 EC2);
+   测试 `tests/test_lion_hex_interrupt_reach.lua`(**9 绿**),变异台 `tools/agent/mutstand_lionwreach.sh`。
+   - ⛔ **第一条,本轮最该被人读到的 —— 这座变异台的 baseline 必须是「失败集合」不是「退出码」,否则它把每一发都记成 caught。**
+     `lion` 过滤器在**干净树上**就带 **7 条存量红**(6 条 `test_lion_considere_earlyreturn_domain.lua` +
+     1 条 `test_lion_ult_cash_weakest.lua`,全是语料 27→42 把 `==` 顶红的那一族)。
+     实测方式:把 `hero_lion.lua` 从 git 还原、复跑、再放回 —— 干净树 **10** 条红
+     (7 条存量 + **3 条本轮新测试在没有修复时该红的**),带修复 **7** 条。
+     ⇒ 这 7 条与本轮无关,**而且新测试在未修的树上确实是红的**(一条免费的控制组)。
+     **这是 evidence-discipline 的「结论对了不等于理由对了」在变异台上的形状**:
+     在这棵树上 `exit != 0` 与「变异体被抓到」不是同一件事,**而它们长得一模一样**。
+   - ⚠️ **第二条 —— 形状普查必须先剥注释再数。** §2 第一次跑,`nCastRange + 50` 数到 **3** 不是 2,
+     第三处是**修复自己在调用点留下的那条注释**。一个注释就能满足的形状普查不是普查。
+   - ⚠️ **第三条 —— 量尺先修好才写数字。** 环带普查若只读 `GetCastRange()` 不加 aether,读数是 11 帧/12 个;
+     用真 helper(`J.IsItemAvailable` → `J.GetAetherLensRangeBonus`)逐帧算是 **10 帧/11 个**。
+     与 `test_lion_q_field_engagement.lua` 那次「670 的尺量 920 的支路」同族,本轮在写下任何数字之前就修好了。
+   - **卫生债当轮还清**:新测试的 `io.popen` 目录 walk 已登进 `tests/test_bots_walk_farm_only.py` 手读名单(GH #774)。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **继续 `bots/`(P4.4 (i)),继续形状 census,换一个形状。** 「缺 reach 项」这一族在焦点五英雄上
+        现在有六根。⚠️ 已量掉的别重开:`-154` 九 + `-155` 三 + `-156` 四 + `-157` 四 + `-158` 四 + `-159` 六 + 本轮一。
+        **本轮顺手看到、没做的两个形状**:
+        (甲) **「waste veto 的不对称」** —— `not J.IsDisabled(x)` 与 `not x:IsDisarmed()` 在焦点五英雄里
+        成对出现 8 次、**单独出现 5 次**(WK :1192 / :1395,CM :1699 / :1712 / :1723 / :1834)。
+        形状是真的,⚠️ **但 (c) 很薄**(对被缴械的目标该不该省下控制,论不硬)—— 先想清价值论证再落。
+        (乙) **「hero-level 宵禁」`nLV >= 15`**(Lion `X.ConsiderQ` 的 `--常规` 支路)。
+        ⛔ **本轮看过并明确不取**:该支路第一个合取项已由 `lionqfight` 占着,而 `lionqfight` header 里
+        记着的地面真相是**那些 15 级后的 Impale 打出去两次跟着送命** ⇒ 放宽 `nLV >= 15` 是**加宽**,
+        方向与已登记的地面真相**相反**。要动它得先有新的帧,不是先有形状。
+     2. **`lionwreach` 的下一棒不在本组**:`hero-68` 的域读数出来之前,不要在 `X.ConsiderW` 上再开 id
+        —— 这个函数已有 `lionhexaoe` 与本 id 两条,而它的打断支路**在语料里前提不可观测**
+        (与 GH #772 同族:这次缺的不是单位类别,是 `IsChanneling` 这个字段)。
+
 -159. ✅ **`-158` 第 1 条执行了:主体在 `bots/`,而本轮把「LIMIT 清单」这道筛**走完了** —— 六根全量掉,落地的那根来自另一条线索** —— 本轮
    (报告 `iterations/reports/hero/20260912T170148Z.md`,**GH #788**)落地
    **`axecallclock`**(Axe,gated,turbo-only,**加宽**)。
@@ -7025,6 +7070,61 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-12T20:19Z(报告 `iterations/reports/hero/20260912T201939Z.md`;**backlog:新开 `-160`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`lionwreach`(Lion,gated,turbo-only,未 armed,方向=收窄):
+  同一个 `if` 体里的两个打断子支路,十一行之隔,一个带着射程界,另一个一个距离项都没有 ——
+  而没界的那个是整个函数的第一个出价点。**
+  - **缺陷**:`X.ConsiderW` 的 `nInBonusEnemyList = J.GetNearbyHeroes( bot, nCastRange + 300, ... )`
+    有**三个读者**:`IsChanneling` 子支路(**无距离项**)、`IsCastingAbility` 子支路
+    (`J.IsInRange( bot, npcEnemy, nCastRange + 50 )`)、团战最危险目标搜索(同样 `+ 50`)
+    ⇒ **三个读者两个按 +50 收口,只有这一个不收**。存活的两个词项**都不是距离项**,
+    这是从 `bots/FunLib/jmz_func.lua` 读出来的不是散文(`J.CanCastOnNonMagicImmune` :988 =
+    CanBeSeen + 魔免 + 无敌 + 幻象;`J.CanCastOnTargetAdvanced` :1006 = linken/antimage/宝石表;
+    §2 逐个断言两者都不含 `GetUnitToUnitDistance` / `J.IsInRange`)。
+    `X.SkillsComplement` 交给引擎的 `ActionQueue_UseAbilityOnEntity` 在射程外**先是一条移动指令**,
+    而这是函数里的**第一个**出价点 ⇒ 射程外的引导者会**挤掉**同一函数本可在射程内找到的那发团战控。
+  - ⭐ **找它的筛法是 `-159` 指定的「形状 census」,第一次按它走,一次就落地。** 问法写得很窄:
+    「哪个出价点读的搜索环比它自己的射程宽,而且那一路上没有任何距离项?」——
+    这比读作者的备注便宜,也比读 LIMIT 段落耐用:它问**形状**,不问任何人写没写下来。
+    ⭐ **而且这一根比同族五根(`lionrreach`/`wkqlane`/`cmlaneband`/`zusjumpland`/`axebhreach`)都硬**:
+    那五根是「这个出价点比它的兄弟出价点松」,这一根的反例**在同一个 `if` 体里**。
+  - **修法**:`X.lion_IsInterruptTargetInReach( hTarget, nCastRange )`,`X.nWInterruptReachSlack = 50`。
+    闸关 `true`(逐字节等于出货),闸开 `J.IsInRange( bot, hTarget, nCastRange + 50 )`。接线**一处**。
+    ⛔ **一个阈值都没新造**:界的形状与那个 50 都抄自**十一行之外的兄弟子支路**;`nCastRange` 是
+    **传进来的**不是重读的,aether lens 项因此与其余出价点看到的一致。
+    **方向是代码的性质**:first-match 循环上只再 AND 一个合取项 ⇒ 严格子集,只能删不能加。
+    ⭐ **重定位是可能的且有界**(`lionrreach` 陷阱的诚实写法):下方**每一个**出价点都把目标收在
+    `nCastRange + 150` 或更紧 ⇒ armed 只能产出「不施法」或「施法到一个**严格更近**的目标」。
+  - **域**:⛔ **前提是注入的,环带不是,两者不许合成一个数。** `IsChanneling()` **不是 dump 字段**
+    (`tools/batch_test/behavioral/axecallbkb_domain.py` 自己写明并用 MODIFIER_ADD/REMOVE 重建它),
+    fixture loader 不做这件重建 ⇒ 域**未定尺**不是空。环带域实测(141 帧 / **42** 个 live-Lion 帧):
+    **10 帧 / 11 个**可施法的环带敌人,其中 **4 帧**同时还有一个圈内候选**可被挤掉**。
+    两帧枚举:`f_260910_124853_lion_spike_slardar_1416`(rank 4 + 真镜,`nCastRange 900`;
+    slardar 879.8u 界内 / zuus 1182.0u 界外 232.0u;**两人都引导那一格 armed 只能取 slardar** ——
+    这才是「换人」而不仅是「放弃」的证据)与 `f_260820_182906_lion_drain_survived`
+    (rank 1 无镜,`nCastRange 575`;luna **177.8u** / CM **625.2u**,界外 **50.2u**)。
+  - ⛔ **本轮最该被人读到的一条:这座变异台的 baseline 必须是「失败集合」不是「退出码」。**
+    `lion` 过滤器在**干净树上**就带 **7 条存量红**(6 条 `test_lion_considere_earlyreturn_domain.lua` +
+    1 条 `test_lion_ult_cash_weakest.lua`,全是语料 27→42 把 `==` 顶红那一族)。实测:把
+    `hero_lion.lua` 从 git 还原复跑 —— 干净树 **10** 条红(7 存量 + **3 条本轮新测试未修时该红的**),
+    带修复 **7** 条。⇒ 7 条与本轮无关,**且新测试在未修的树上确实是红的**(免费的控制组)。
+    要退出码的台在这里会**把每一发都记成 caught**;本台改记 baseline 失败用例集合,
+    只有集合之外的新失败才计分,红若出现在本 lever 自己的文件里就直接中止。
+  - ⚠️ **形状普查先剥注释再数**:§2 第一次跑 `nCastRange + 50` 数到 **3** 不是 2,
+    第三处是**修复自己在调用点留下的那条注释**。一个注释就能满足的形状普查不是普查。
+  - ⚠️ **量尺先修好才写数字**:只读 `GetCastRange()` 不加 aether 会读成 11 帧/12 个;
+    用真 helper 逐帧算是 10 帧/11 个(与 `test_lion_q_field_engagement.lua`「670 的尺量 920 的支路」同族)。
+  - **卫生债当轮还清**:新测试的 `io.popen` 目录 walk 已登进 `tests/test_bots_walk_farm_only.py` 手读名单(GH #774)。
+  - ⛔ **本轮自己顶红过一条 Lua census 并在同一工作单元内修掉**:`test_gate_claim_consistency.lua`
+    的 comment-only wired 名单多出一个 `Y` —— 是新 helper header 里把 pullcad 陷阱拼成
+    ``IsSoakCandidate('X') and IsSoakCandidate('Y')`` 造成的(那条 census 检测「`IsSoakCandidate`
+    + 引号里的 id」,读不出占位符;全树 grep 确认 `'Y'` 只有这一处)。**修法是改散文不是改名单**,
+    并在原地写下为什么不能那样写。⇒ GH #624 的形状,**先 push 再跑 lua gate 就会把红留给下一个组**。
+  - **闸(push 前实测)**:`GATE_EXIT=0`(luacheck bots game 0 warnings)/
+    `py gate: 96 ran, 0 findings, 0 uncertifiable, 32.0s` /
+    `lua gate: 352 ran, 0 findings, 0 uncertifiable, 9 known-red, 423.5s`。**没用过 RULE6_BYPASS**。
+    ⚠️ 动态全量(~100min,GH #124)本轮没跑。变异台 **11/11 caught**(含 M11 scope 变异体)。
 - 2026-09-12T14:16Z(报告 `iterations/reports/hero/20260912T141628Z.md`;**backlog:新开 `-158`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`cmrsolo`(Crystal Maiden,gated,turbo-only,未 armed,方向=收窄):

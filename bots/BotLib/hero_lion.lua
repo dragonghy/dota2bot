@@ -910,6 +910,114 @@ function X.ConsiderQ()
 end
 
 
+--- The reach term X.ConsiderW's 打断 (interrupt) firing point has never had --
+--- soak candidate `lionwreach` (turbo-only, INERT until armed).  Written
+--- 2026-09-12 under OWNER_PRIORITIES P4.4 (i).
+---
+--- THE DEFECT, and it is INSIDE ONE `if` BODY.  X.ConsiderW draws one wide
+--- search ring
+---     nInBonusEnemyList = J.GetNearbyHeroes( bot, nCastRange + 300, true, ... )
+--- and hands it to TWO interrupt sub-branches that sit in the same `if` body,
+--- eleven lines apart, for the same ability and the same purpose:
+---
+---     npcEnemy:IsChanneling()      -- NO distance term at all
+---     npcEnemy:IsCastingAbility()  -- J.IsInRange( bot, npcEnemy, nCastRange + 50 )
+---
+--- Neither of the two terms it does carry is a distance term:
+--- J.CanCastOnNonMagicImmune is CanBeSeen + immunity + illusion
+--- (jmz_func.lua:988) and J.CanCastOnTargetAdvanced is a linken/antimage/orb
+--- table (jmz_func.lua:1006).  So the channelling sub-branch can bid Hex on a
+--- hero up to 300 units OUTSIDE cast range.
+---
+--- THE THIRD CONSUMER AGREES WITH THE SIBLING, NOT WITH THIS ONE.  The +300
+--- ring has exactly three readers in this function -- these two sub-branches
+--- and the 团战 most-dangerous search -- and the 团战 exit also spells
+--- `J.IsInRange( bot, npcMostDangerousEnemy, nCastRange + 50 )`.  Two of three
+--- bound at +50; this one is the one that does not.  Every other hero firing
+--- point in the function is tighter still (攻击 nCastRange + 150; 保护自己,
+--- 撤退 and roshan read nCastRange with zero slack).
+---
+--- WHAT THE ENGINE IS HANDED.  X.SkillsComplement:475 issues
+--- `bot:ActionQueue_UseAbilityOnEntity( abilityW, castWTarget )` (and :473
+--- `...OnLocation` under the scepter), and on an out-of-range target that order
+--- is a MOVE order first: Lion walks the gap toward whoever is channelling --
+--- in a fight, the enemy who is standing still in the middle of his own team.
+--- This is also the FIRST firing point in the whole function, so an
+--- out-of-range channeller displaces the 团战 Hex on the most dangerous enemy
+--- the same function would otherwise have found INSIDE cast range.  Same
+--- family as `lionrreach` (GH #617) / `wkqlane` (GH #621) / `cmlaneband`
+--- (GH #630) / `zusjumpland` (GH #634) / `axebhreach` -- and this one is a
+--- sub-branch whose own twin, in the same `if`, already writes the bound down.
+---
+--- ARMED: the candidate must be inside `nCastRange + X.nWInterruptReachSlack`.
+--- NOTHING IS INVENTED: both the shape and the 50 are copied off the sibling
+--- sub-branch eleven lines below, and nCastRange is PASSED IN rather than
+--- re-read, so the aether-lens term (X.SkillsComplement sets aetherRange = 250
+--- for any Lion holding item_aether_lens, and this file's pos_4 and pos_5 buy
+--- lists both carry it) composes exactly as the other firing points see it.
+---
+--- DIRECTION BY CONSTRUCTION, not by today's data.  This is a pure extra
+--- conjunct on a FIRST-MATCH loop, so the armed release set at this firing
+--- point is a strict SUBSET of the shipped one for every input.  Arming can
+--- never add a Hex here.  RELOCATION IS POSSIBLE AND IS BOUNDED, which is the
+--- honest form of the `lionrreach` trap: a refused candidate lets the loop and
+--- the branches below it run, and EVERY one of them bounds its own target at
+--- nCastRange + 150 or tighter (enumerated above).  So arming can only produce
+--- no cast, or a cast on a target STRICTLY CLOSER than the one it refused; it
+--- can never move a cast further away.  A negative wave read is attributable
+--- to "those walks were worth taking" and never to a cast this lever invented.
+---
+--- CONDITION (c), argued rather than assumed.  lion_voodoo is 575/600/625/650
+--- cast range, 24/20/16/12s cooldown, 110-200 mana (game KV via
+--- tests/mock/special_value_shapes.lua) -- Lion's only reliable disable while
+--- Finger is down, and the thing his 团战 exit exists to spend on the enemy's
+--- biggest damage dealer.  Standard support practice is to spend a hard disable
+--- on the most dangerous REACHABLE enemy; walking toward a channeller is a
+--- positional commitment, not a free action, and this is the one firing point
+--- in the function that makes it without asking.  ⛔ WHAT IS NOT CLAIMED: that
+--- interrupting a channel is low value.  It is high value -- which is why the
+--- bound is the sibling's +50 and not nCastRange, and why the cost of arming
+--- (the channels in the (nCastRange+50, nCastRange+300] annulus that now go
+--- uninterrupted) is registered here rather than argued away.  Only a wave
+--- settles it: iterations/queue.json `hero-68`.
+---
+--- WHAT IS DELIBERATELY LEFT ALONE.  One conjunct at ONE sub-branch.
+---   * The +300 search ring stays.  This lever filters the ring; it does not
+---     shrink it.
+---   * The `IsCastingAbility` sub-branch is untouched -- it already carries the
+---     bound this lever copies.
+---   * The 攻击 exit's LOOSER `nCastRange + 150` stays.  It is a different
+---     firing point with a different premise (J.IsGoingOnSomeone + botTarget);
+---     arguing it down is a different id.  Section 5 asserts it is still 150 so
+---     a later round cannot read this file as having fixed it.
+---   * No other id is named inside this predicate.  That is the pullcad trap,
+---     stated in full in bots/FunLib/jmz_func.lua: a gate that ANDs a SECOND
+---     candidate id freezes FALSE the day that id is promoted, because a
+---     promoted id appears in no armed string -- and check_armed_wiring.py
+---     still calls the site WIRED.  ⚠️ WRITTEN WITHOUT A SECOND QUOTED ID ON
+---     PURPOSE: spelling the trap with a placeholder literal enrols this file
+---     in tests/test_gate_claim_consistency.lua's comment-only-wired register,
+---     which is a claim about arming, not about prose.  It cost this round one
+---     red (GH #624's shape), caught by the push gate and fixed here.
+---
+--- DOMAIN, and it is UNSIZED rather than empty -- see
+--- tests/test_lion_hex_interrupt_reach.lua §1 for the counts and §0.3 for why.
+--- `IsChanneling()` is not a dumped field (it is reconstructible from modifier
+--- intervals -- tools/batch_test/behavioral/axecallbkb_domain.py says so and
+--- does it), so the corpus can size the BAND but not the PREMISE.  §1 counts
+--- the band on real frames; §3 drives the real dispatch with the premise
+--- injected and everything else real.  Do NOT promote on the (c) argument alone.
+X.nWInterruptReachSlack = 50
+
+function X.lion_IsInterruptTargetInReach( hTarget, nCastRange )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'lionwreach' ) ) then return true end
+
+	return J.IsInRange( bot, hTarget, nCastRange + X.nWInterruptReachSlack )
+
+end
+
+
 function X.ConsiderW()
 
 
@@ -958,6 +1066,10 @@ function X.ConsiderW()
 			and J.CanCastOnNonMagicImmune( npcEnemy )
 		then
 			if npcEnemy:IsChanneling()
+				-- [lionwreach] gate off this conjunct is `true`, byte for byte.
+				-- Armed it is the SIBLING sub-branch's own bound, eleven lines
+				-- below: J.IsInRange( bot, npcEnemy, nCastRange + 50 ).
+				and X.lion_IsInterruptTargetInReach( npcEnemy, nCastRange )
 			then
 				if X.IsHexAoe()
 				then

@@ -284,6 +284,16 @@ UNRESOLVED_HAND_READ = {
     """tests/test_lion_ult_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
         "tests/frames}",
+    # Hand-read 2026-09-12 (hero), at the file's `corpus_paths()`: no parameter,
+    # one caller (§1) passing none, loop is `for _, dir in ipairs({ FIXTURE_DIR,
+    # STAGED_DIR })` over the literals ('tests/fixtures' / 'tests/frames').  It
+    # is the file's only io.popen.  Same shape as the lion/wk sisters above;
+    # bots/ is not in the enumeration.  ⭐ REGISTERED IN THE SAME WORK UNIT THAT
+    # CREATED THE FILE -- GH #774's whole case is that an unregistered new walk
+    # turns this census red for the NEXT group, hours after its author left.
+    """tests/test_lion_hex_interrupt_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() over {FIXTURE_DIR, STAGED_DIR} == {tests/fixtures, "
+        "tests/frames}",
     # Hand-read 2026-09-08 (hero), at :140-144: identical shape to the entry
     # above -- `corpus_paths()` over {FIXTURE_DIR, STAGED_DIR}, literals at
     # :116-117, one caller (:224) passing no argument.  Registered in the SAME
