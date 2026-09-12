@@ -54,7 +54,7 @@
    本组能给的下一步是**一条窄到可写进取帧请求的判据**(subject 是 core(pos ≤3)且近到真
    `ClosestCamp` 会为他闩上那枚营,同时队友在营 800u 内 `IsFarming`),已写进报告 §3;
    (2) ⚠️ 这枚 fixture 的 `roles` 键**写了两遍**(两块逐字相同,**47 个带 roles 的 fixture 里只有这一个**)——
-   本轮无害是因为**内容碰巧相同**,下一次不同就是**静默丢数据**,**棒交 [harness]**(本组只登记);
+   本轮无害是因为**内容碰巧相同**,下一次不同就是**静默丢数据**,**已立 GH #777 交 [harness]**(本组只登记);
    (3) ⛔ GH #760(overchase 缺速度项)本语料仍买不到;(4) ⛔ 读 `botTarget` 的 consider 条目族仍不动
    (GH #474,**连续第十六轮有效**);(5) ⛔ 兵营分支(GH #713)仍不落 gate,`pulldrag` 永远不许单独提;
    (6) ⚠️ `lua_gate_measure.py` 的 manifest 登记**连续第五轮欠着**;本轮新测试实测 **0.45s**,
@@ -8480,6 +8480,8 @@
   铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` /
   `lua gate: 347 ran, 0 findings, 9 known-red`。armed 串 / `queue.json` / `test_set.md` **未动**,**零 AWS**。
   ⛔ **入集/退集/promote 是总监的球**(P4.2 冻结期,本组不提不催)。
+  本轮交出的棒:GH **#775** 追评(读数 + §6 路线 1 的落地 + §4 注释更正)、GH **#777**
+  ([harness],fixture 生成器能把同一个键写两遍)。
 
 - 2026-09-12T08:00Z(**P4.4 归属 = (i) 一个 `bots/` 行为改动**。工作流第 1 步扫 open
   `[strategy]` issue:**#770** 今天新开但它要的是**优先级判断**不是 `bots/` 改动(而且它自己的
