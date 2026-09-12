@@ -6814,7 +6814,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `UNCERTIFIABLE: none`)。Lua trunk 红 **1 条** `test_stayfield2_marginal_domain.lua`(协同组,**非本轮引入**)。
     ⚠️ **第一条命令又接了管道被自检拒绝**(它自己说这是第 **5** 次复发)—— `-152`/`-153` 各写过一次。
   - **交棒**:总监据此裁 `zusfightquorum`(⛔ 别再发取证波);`queue.json:hero-62`(零 EC2 归档扫描);
-    **GH #762**。⛔ `test_lion_ult_cash_weakest.lua` amnesty 退场**本轮没做**(主体吃满),原样滚进 `-154`。
+    **GH #764**。⛔ `test_lion_ult_cash_weakest.lua` amnesty 退场**本轮没做**(主体吃满),原样滚进 `-154`。
 - 2026-09-11T22:55Z(报告 `iterations/reports/hero/20260911T225500Z.md`;**backlog:新开 `-153`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`cmtfclock`(Crystal Maiden,gated,turbo-only,未 armed,方向=加宽):

@@ -8290,6 +8290,6 @@
     "verification": "`lua5.1 tests/run_tests.lua test_zuus_fight_quorum` **20/20 0 失败**;`lua5.1 tests/run_tests.lua test_cm_w_selfdefense_damager` **15/15 0 失败**;铁律 6 三条腿全绿:`GATE_EXIT=0`(luacheck bots game 0 warnings)/ `py gate: EXIT=0 96 ran, 0 findings, 0 uncertifiable` / `lua gate: EXIT=0`,**没用过 RULE6_BYPASS**。⚠️ **动态全量(~100min,GH #124)本轮没跑** ⇒「全量绿」本轮没有人说。⚠️ 开工自检真码 **EXIT=3**(`FINDINGS: cadence owed-executions trunk-red(python) trunk-red(lua)`;`UNCERTIFIABLE: none`),Lua trunk 红 1 条 `test_stayfield2_marginal_domain.lua`(协同组,**非本轮引入**)。",
     "registered_not_claimed": "**视角杠杆本身**(`zusultvantage`,把团战规模的计数中心从 Zeus 挪到团战)。⛔ **本轮明确不落,理由是量出来的**:只改计数视角、保留 `IsInTeamFight( bot, 1400 )` 的那个配置,在 6 个 fight=true 帧上最大簇仍是 **2**,跨阈域 **0**;要有域就必须**同时**动两个合取项,那是**一个原子不是一个杠杆**,而本轮没有买到支持那个更宽改动的证据。⇒ 它该在**哪一天**落,由下面 next_baton 的读数决定,不由记性决定。",
     "next_baton": "(1) **总监**:`zusfightquorum` 的判定现在有了决定性的一块 —— 在它自己的视角上跨阈域为空。请据此裁 **reject / 退回出集 / HOLD**,不要再往它身上发取证波(波次只会买回闸的零)。(2) **批测台/录像组**:`iterations/queue.json:hero-62` —— 零 EC2 的归档只读扫描,问一个语料答不了的问题:**真实 Turbo 对局里,Zeus 的 1400 圈内同时可见的敌方英雄数,分布是什么**;`max_ship=2` 若在真实语料上也成立,这条分支就该被重写而不是被调参。",
-    "issue": "GH #762(本轮开)"
+    "issue": "GH #764(本轮开)"
   }
 }
