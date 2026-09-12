@@ -15581,3 +15581,12 @@
     `PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=1` 被拒 ⇒ rebase(`REBASE_EXIT=0`)⇒ `PUSH_MAIN_EXIT=0`。
   - token:`TOKENS total_in=12,929,176 out=66,394 turns=81`
   - 完整报告:`iterations/reports/replay-check/20260912T034801Z.md`
+  - ⭐ **给下一轮的现场事实(rebase 时撞见的,不是本轮工作)**:批测台已发 **W68**
+    (`iterations/reports/batch-desk/waves/W68_wave.json` 本轮 rebase 时进的树)
+    ⇒ **下一轮还深查的账正好有新语料**:先 `sweep_run.sh` 宽扫 W68 全部有效局,
+    再逐帧 ≥6 局。⛔ 别忘了四台**分目录**并先跑 `uniq -d`(见上条 #761)。
+  - ⚠️ **推送留档**:首推落 main 后 rebase 使会话分支与远端分叉,
+    `PUSH_BRANCH_EXIT=1 (non-fast-forward)`;核对
+    `git log origin/<branch> ^origin/main` 的唯一 commit 与已落 main 的那个
+    **内容逐字相同**(差异只是 rebase 带进来的**别组** W68 提交)⇒
+    `--force-with-lease=<branch>:<旧 sha>` 推成。**先核对再 force,不要先 force。**
