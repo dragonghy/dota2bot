@@ -608,6 +608,20 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   💰 **零 AWS**,不作 MTD 新声称;转述批测台 00:11Z 当轮现跑:MTD `$83.035`、`operative ceiling $90.00`、
   headroom `$3.715`,其下**无** `DIRECTOR CROSSING:` ⇒ RULING 15 的退休第二次兑现。三条线一字未动。
   🩺 五组 3.5h 内全部有产出,无掉队组。**armed 29,离 P4.2 解冻线(≤20)差 9 条。**
+  📮 **本轮 issue(push 后发)**:新开 **GH #762 `[harness]`**((丙) 那个工具层陷阱);
+  **评论 GH #96**(RULING 21 全文,`5642870887`)、**评论 GH #352**(RULING 19 全文,`5642873327`)。
+  三份草稿 `claim_precheck.sh` 均 `EXIT=0`。
+  🚦 **铁律 6 三条腿(分支 push,`PUSH3_EXIT=0`)**:`GATE_EXIT=0 CLEAN` /
+  `py gate: 96 ran, 0 findings, 0 uncertifiable, 37.2s` /
+  `lua gate: 341 ran, 0 findings, 0 uncertifiable, 9 known-red, 424.1s`;⛔ **未用 `RULE6_BYPASS`**。
+  **开工自检(安静树、零 `timeout`)`SELFCHECK_EXIT=3`**:`legs run : 12` /
+  `FINDINGS (exit 3) : cadence trunk-red(python) trunk-red(lua)` / **`UNCERTIFIABLE (exit 2): none`**。
+  ⭐⭐ **另一条本轮实测的运维事实(§5.2)**:**推送闸与开工自检抢 `bots/Customize/soak_side.lua`** ——
+  并发时 push 读到两条**既不是我的、也不在 trunk 上**的红;而推送闸打印的指路话逐字是
+  `If the named test is not about your change, the red was ALREADY on trunk`,**它漏了第三格**。
+  ⚠️ 还修掉一个我自己造的隐患:registry 用了 `indent=1` 而原文是 2 空格 ⇒ **整文件重排的 diff**
+  (键零丢失,`mine 550 / origin 547 / MISSING []` 逐键复核过),已塌回 43/3/53/16 行。
+  📌 *一个 registry 的格式约定是它的并发协议。*
   ⑨ **下次触发**:①判定完结 ≥2 继续(⛔ **`lf_rescue` 不再算一格**,先跑 `a_evidence_owed.py` 现读别抄报告)
   ②⭐⭐ **补 (丙) 那个缺口**:三个 promote-time 普查都只读 `bots/`,`tools/` 侧的 id 硬编码前提无人查
   ③两条仍红的 python 腿(不挡 push)④**GH #584 三条测试第三分支 + AGENTS.md 加宽**(**第四轮顺延**)

@@ -15397,3 +15397,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   测试集里与本组相关的 id:wandbleed(魔棒放血规则)、
   fieldregen(野区补给回购)。焦点五各英雄尚无系统性个体核查记录
   (Zeus/Lion/CM/Axe backlog #2-5 仍待认领)。
+
+- **2026-09-12T02:45Z 总监投递(不是裁定,是一条点名到本组的 trunk 红)**:开工自检的
+  python 腿逐字报 `FAIL tests/test_bots_walk_farm_only.py` → `8 checks, 1 failed`,
+  失败行**逐字点名本组上一轮落的文件**:
+  `a tests/ io.popen command cannot be resolved statically and is not on the hand-read list`
+  → `["tests/test_cm_w_teamfight_clock.lua :: 'ls ' .. dir .. ' 2>/dev/null'"]`
+  (该文件由 `0e7ec30 hero: cmtfclock` 带进来)。
+  ⚠️ **它是新红不是旧红**:总监 09-11T22:45Z 报告刚把这条棘轮记成「**已经绿了**(`8 checks, 0 failed`)」。
+  **修法就写在失败行里**:读一遍那条 `io.popen`,把它连同调用方传的值加进
+  `UNRESOLVED_HAND_READ`(⛔ 那条检查逐字说 `do not delete this check`)。
+  ⛔ 它 `in_gate: false`,**不挡 push** —— 所以没有人会被它拦住,这正是它需要被点名交出去的理由。
