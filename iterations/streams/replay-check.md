@@ -16144,3 +16144,39 @@
   - **下一轮第一件事**:(1) ⭐⭐ `campfarm` 的 fixture(`--t 546.0 --hero sniper`)——**唯一没试过的层**;
     (2) ⛔ 别再捡 `creepthink`/`campvoid`/`blinkflee`/`campfarm` 的语料(捡之前先读本文件新增的第一条工具坑);
     (3) 等总监对 `zusstatic` 退集理由的裁定。
+  - **补记(收工回填)**:**issue 号与发表读数** —— 追评 **#137**(`issuecomment-5648980593`,
+    campfarm 立项 issue,**它自己写着本轮读的那条验收判据**:「等级 ≤11 的远古交火从 12/40 降到 ~0」
+    ⇒ armed 腿实测 **0.50/局(6 个 episode)未达成**,而「≥12 不许塌」那一半**达成**)、
+    追评 **#521**(`issuecomment-5648984021`,(丙) 结清 + `zusstatic` 类别纠正)、
+    新开 **[harness] #792**(`strata agree in sign` 那一行应自报 4(i-c) / 4(i-b))。
+    `claim_precheck.sh` 第一轮三份**全部 exit 3**,唯一 finding 是本报告自己未 push ⇒ 先 push;
+    push 后 **三份全部 `PRECHECK2_*_EXIT=0`**(refused 0)⇒ 才发表(GH #290 的顺序)。
+    ⚠️ **新登记一条工具限制**:`mcp__github__search_issues` 的语义检索对 `campfarm` 等
+    **三次查询全部 0 命中**,而 #137 标题正文都是 campfarm ⇒ **该检索在本仓不是可靠查重手段**,
+    本轮查重靠**直读 issue**;⭐ 也正因为直读才发现读数属于 #137 而**不该新开 issue**。
+  - **铁律 6 三条腿**(两次 push 读数一致):`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 97 ran, 0 findings, 0 uncertifiable, 39.5s`(推 main 那次 39.3s)/
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**;动态半(GH #124)未跑、不声称。
+    `ARM_EXIT=0` / `PUSH_BRANCH_EXIT=0` / ⚠️ **`PUSH_MAIN_EXIT=1`(non-ff)** →
+    `git pull --rebase origin main`(`REBASE_EXIT=0`)→ **`PUSH_MAIN_EXIT2=0`**(`b936fb17..b1e25139`)。
+    ⭐ **要照登的对照**:`py gate` 绿**与 trunk 上 3 条 python 红并存**(那三条在快棘轮清单之外)
+    ⇒ **闸绿不等于动态半绿**,别把前者当后者引。
+  - **开工自检**:`worst exit 3`(裸读 `SELFCHECK_EXIT=3`)/ `legs run 12` /
+    `FINDINGS: unlanded cadence owed-executions trunk-red(python)` / `UNCERTIFIABLE: none` /
+    `NOT RUN (inside a leg): test_lua_gate.py test_luacheck_gate_soakswitch.py test_selfcheck_lua_leg.py`
+    —— ⚠️ 腿内那三条这轮没人看过,**不是通过**。实测 **>20 分钟**(章程写「约 20s」,GH #358 不重开)。
+    ⭐ **管道门第 7 次撞上**(脚本自打「REFUSED … exit 2, nothing checked」并逐字说已复发 5 次、
+    每次都是本轮第一条命令);⚠️ 后台通知栏的 `exit code 0` 是 **wrapper 的码**,不引用。
+    **`unlanded`(1 commit)本轮判为已落地的同一份工作**:点名 `34f5ca3`
+    (`origin/claude/admiring-hawking-fa10vg`,英雄组 lionwreach),而**同一句标题已在 main 上**
+    (`17d62cfd`)⇒ 属该工具 LIMIT 写明的「OFF-TRUNK 可能是已改头换面落地的同一份工作」
+    (浅 clone 下 patch-id 认不出双胞胎)。**不点名任何组。**
+    trunk 红逐条(python `121 passed / 3 failed / 3 uncertifiable`):`test_carrier_terms.py`(65 里 5)、
+    `test_detector_source_constants.py`、`test_run_tests_guard.py` —— **与上一轮逐条相同**,
+    本轮 `bots/ game/ tests/ tools/` 一行未改 ⇒ **都不是本轮增量**;
+    ⚠️ 第二条特意查过(本轮读数建立在 detector 源码常数上):它是 `tpdeathbuy_domain.py` 的
+    `read_source()` 抛错,**与本族无关**,本轮用到的常数由 `campfarm_target --selfcheck`
+    **28 PASS / 0 FAIL** 逐条覆盖 ⇒ **不污染本轮读数**。
+  - token:`TOKENS total_in=16,185,894 out=93,536 turns=94`
+  - **完整报告**:`iterations/reports/replay-check/20260912T214936Z.md`
