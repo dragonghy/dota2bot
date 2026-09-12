@@ -1629,11 +1629,34 @@ X.nUltFightQuorumArmed = 3
 --- TOUCH IT.  Thundergod's Wrath is GLOBAL (no AbilityCastRange key at all --
 --- see the note inside X.ConsiderR), so measuring the fight from the CASTER's
 --- position is measuring it from the one position a backline mage should never
---- be in.  The corpus shows the bias directly: in f_260819_222052_zuus_w2_leak
---- two of Zeus's own enemies each see FOUR enemies inside 1400 while Zeus, in
---- the same frame, sees two.  Repointing the count at the fight rather than at
---- Zeus is a second lever with its own id; one lever at a time, and this one is
---- the quorum.
+--- be in.  Repointing the count at the fight rather than at Zeus is a second
+--- lever with its own id; one lever at a time, and this one is the quorum.
+---
+--- ⛔ CORRECTED 2026-09-12.  The sentence struck from here read: "The corpus
+--- shows the bias directly: in f_260819_222052_zuus_w2_leak two of Zeus's own
+--- enemies each see FOUR enemies inside 1400 while Zeus, in the same frame, sees
+--- two."  Those two numbers COUNT DIFFERENT TEAMS.  `bEnemy = true` is relative
+--- to the hero the call is made on, so read at a DIRE vantage point that
+--- expression counts RADIANT heroes -- the 4 is how many of Zeus's own ALLIES
+--- stood near centaur.  Asked what the branch actually asks (how many DIRE
+--- heroes are inside 1400 of centaur) that frame answers 2, the same 2 Zeus
+--- reads from his own feet.  The bias is real but SMALLER than that sentence
+--- claimed, and it is now measured with the quantity held fixed and fog-honest
+--- in tests/_zusultvantage_sweep.lua (section 7 of the test file below).
+---
+--- ⭐⭐ AND THE RE-MEASUREMENT CARRIES A READING ABOUT *THIS* LEVER, so read it
+--- before quoting any wave verdict on `zusfightquorum`.  Counted where this
+--- branch actually reads it -- at Zeus, counting Zeus's enemies -- the count
+--- NEVER EXCEEDS 2 over 45 live Zeus frames.  The armed quorum 3 is therefore
+--- still an off-switch at the shipped vantage, one notch down from the 5 this
+--- lever was written to replace, and a wave reporting "no effect" for this id
+--- would be reporting the gate's zero rather than the game's.  Worse, BOTH
+--- conjuncts of the call site are caster-centred: J.IsInTeamFight( bot, R ) is
+--- true on 6 of those 45 frames and the count clears 3 on others, but never both
+--- at once, so the shipped conjunction is false on every live Zeus frame at
+--- EITHER quorum.  ⇒ the vantage half is not an optional follow-up; it is what
+--- would give this lever a domain at all.  Both halves are pinned as tripwires
+--- (section 7) so the day the corpus grows a creation frame, something says so.
 ---
 --- WHY 3.  A three-hero fight is where a 275/425/575 magic nuke on every enemy
 --- plus 3s of true sight on all of them starts to be worth a 130s cooldown and

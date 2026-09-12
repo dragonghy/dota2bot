@@ -37,11 +37,20 @@
 -- FIX IT.  Thundergod's Wrath is GLOBAL -- the ability declares no
 -- AbilityCastRange key at all -- so measuring the fight from the CASTER's
 -- position measures it from the one position a backline mage should never be
--- in.  Section 6 pins the bias off the corpus instead of asserting it in prose:
--- in f_260819_222052_zuus_w2_leak two of Zeus's own enemies each count FOUR
--- enemies inside 1400 while Zeus, in the very same frame, counts two.
--- Repointing the count at the fight rather than at Zeus is a second lever with
--- its own id; one lever at a time, and this one is the quorum.
+-- in.  Repointing the count at the fight rather than at Zeus is a second lever
+-- with its own id; one lever at a time, and this one is the quorum.
+--
+-- ⛔ CORRECTED 2026-09-12, AND THE CORRECTION IS IN SECTION 7.  This paragraph
+-- used to cite "two of Zeus's own enemies each count FOUR enemies inside 1400
+-- while Zeus, in the very same frame, counts two", pinned by a section-6 test.
+-- Those two numbers count DIFFERENT TEAMS -- `bEnemy` is relative to the hero
+-- the call is made on -- so the 4 was Zeus's own ALLIES near centaur.  Section 7
+-- re-measures the bias with the quantity held fixed and fog-honest, and reports
+-- a headline that changes how this file's own lever must be read: at the
+-- SHIPPED vantage the count never exceeds 2 over 45 live Zeus frames, so the
+-- armed quorum 3 is still an off-switch there.  Read section 7 before quoting
+-- section 2's "a filter -- it admits some, and few": that reading is taken at
+-- every hero in the corpus, not at the one vantage point the branch uses.
 --
 -- WHAT THIS FILE COVERS AND WHAT IT DOES NOT -- READ BEFORE QUOTING IT
 -- -------------------------------------------------------------------
@@ -433,30 +442,133 @@ tests['section 6: TRIPWIRE -- no Zeus-subject frame reaches even the armed quoru
     end
 end
 
-tests['section 6: the vantage bias is real, and it is NOT this round\'s lever'] = function()
-    local X = on_frame(ZUUS_FRAMES[1])
-    -- The registered second lever's premise, read off the corpus: a frame where
-    -- somebody standing in the fight counts a quorum while Zeus, in the same
-    -- frame, does not.  Global ult, caster-centred measurement.
-    local byFix = {}
-    for _, row in ipairs(ZSUBJ) do byFix[row.fix] = row.n end
-    local nBiased = 0
-    for _, v in ipairs(VP) do
-        if byFix[v.fix] ~= nil
-            and not v.subject
-            and v.n >= X.nUltFightQuorumArmed
-            and byFix[v.fix] < X.nUltFightQuorumArmed
-        then
-            nBiased = nBiased + 1
+-- ---------------------------------------------------------------- section 7 --
+-- ⭐ THE VANTAGE BIAS, RE-MEASURED 2026-09-12 AFTER THE OLD READING WAS
+-- FALSIFIED.  Section 6 used to close with a test called "the vantage bias is
+-- real, and it is NOT this round's lever".  It compared two rows of
+-- _zusfightquorum_sweep.lua against each other, and THE TWO ROWS COUNT
+-- DIFFERENT TEAMS: `bEnemy = true` is relative to the hero the call is made on,
+-- so at a dire vantage point that expression counts RADIANT heroes and at Zeus
+-- it counts DIRE heroes.  The sentence it licensed --
+--
+--     "two of Zeus's own enemies each see FOUR enemies inside 1400 while Zeus,
+--      in the same frame, sees two"
+--
+-- -- reads as one quantity measured from two places, and is two quantities.
+-- The 4 in f_260819_222052_zuus_w2_leak is how many of ZEUS'S OWN ALLIES stood
+-- near centaur.  Asked the question the branch actually asks -- how many DIRE
+-- heroes are inside 1400 of centaur -- that frame answers 2, the same 2 Zeus
+-- reads from his own feet.  So the old test could be satisfied by Zeus's team
+-- clumping up, which is not the defect and is not evidence for any lever.
+--
+-- ⚠️ THE BIAS ITSELF SURVIVES THE CORRECTION -- it is the SIZE that moves, and
+-- the direction of the error was toward over-stating it.  tests/
+-- _zusultvantage_sweep.lua holds the quantity fixed (visible castable enemies
+-- of Zeus) and moves only the vantage point, fog-honestly.  Readings below.
+
+local function vantage_sweep()
+    local p = assert(io.popen('lua5.1 tests/_zusultvantage_sweep.lua 2>/dev/null'))
+    local text = p:read('*a')
+    p:close()
+    assert(text:find('\nDONE\n') or text:find('^DONE\n'),
+        'tests/_zusultvantage_sweep.lua did not finish (no DONE line). Nothing in '
+        .. 'section 7 is a reading until it does.')
+    local c, rows, radius = {}, {}, nil
+    for line in text:gmatch('[^\n]+') do
+        local r = line:match('^RADIUS (%d+)$')
+        if r then radius = tonumber(r) end
+        local f, s, sh, be, fi, ca =
+            line:match('^Z (%S+) (%d) (%d+) (%d+) (%d) (%d)$')
+        if f then
+            rows[#rows + 1] = { fix = f, subject = s == '1', ship = tonumber(sh),
+                best = tonumber(be), fight = fi == '1', castable = ca == '1' }
         end
+        local ck, cv = line:match('^C ([%w_]+) (%-?%d+)$')
+        if ck then c[ck] = tonumber(cv) end
     end
-    assert(nBiased > 0,
-        'the corpus no longer shows a frame in which a non-Zeus vantage point reaches '
-        .. 'the armed quorum while the Zeus subject in the SAME frame does not. That '
-        .. 'asymmetry is the evidence for the registered-but-unclaimed second lever '
-        .. '(a global ult whose fight size is measured from the caster). If it is '
-        .. 'gone, re-read the registration in bots/BotLib/hero_zuus.lua before '
-        .. 'quoting it.')
+    return c, rows, radius
+end
+
+local VC, VROWS, VRADIUS = vantage_sweep()
+
+tests['section 7: the vantage sweep measured the radius the hero file ships'] = function()
+    local X = on_frame(ZUUS_FRAMES[1])
+    assert(VRADIUS == X.nUltFightRadius, string.format(
+        'the vantage sweep counted inside %s units while the hero file ships %s.',
+        tostring(VRADIUS), tostring(X.nUltFightRadius)))
+    assert(VC.zeus_frames ~= nil and VC.zeus_frames > 0,
+        'the vantage sweep found no live Zeus frame at all; every reading below '
+        .. 'would then be vacuously true.')
+end
+
+tests['section 7: the bias is real with the quantity held fixed'] = function()
+    -- The corrected premise: on frames where the count centred on some enemy
+    -- exceeds the count centred on Zeus, the SAME set of heroes is being
+    -- counted -- only the centre of the circle moved.
+    assert(VC.vantage_gain_frames > 0, string.format(
+        'no live Zeus frame now shows a larger enemy clump measured from an enemy '
+        .. 'than from Zeus (%d of %d). That asymmetry is the whole premise of the '
+        .. 'registered-but-unlanded vantage lever; if it is gone, re-read the '
+        .. 'registration in %s before quoting it.',
+        VC.vantage_gain_frames, VC.zeus_frames, SRC))
+end
+
+tests['section 7: TRIPWIRE -- the ARMED quorum is still an off-switch at the SHIPPED vantage'] = function()
+    -- ⭐ THE HEADLINE, and the reason this section is worth its runtime.  Section
+    -- 2 priced the armed quorum as "a filter -- it admits some, and few" off a
+    -- histogram taken at EVERY hero.  Measured where the branch actually reads
+    -- it -- at Zeus, counting Zeus's enemies -- the count never exceeds this
+    -- number over the whole corpus.  While that holds, lowering the quorum from
+    -- 5 to 3 cannot change a single decision, and a wave that reports "no
+    -- effect" for `zusfightquorum` will be reporting the gate's zero, not the
+    -- game's.
+    local X = on_frame(ZUUS_FRAMES[1])
+    assert(VC.max_ship < X.nUltFightQuorumArmed, string.format(
+        'GOOD NEWS: the caster-centred count now reaches %d over %d live Zeus '
+        .. 'frames, which meets the armed quorum %d. `zusfightquorum` has a domain '
+        .. 'at its own vantage point for the first time; take the reading and '
+        .. 're-anchor this tripwire.',
+        VC.max_ship, VC.zeus_frames, X.nUltFightQuorumArmed))
+end
+
+tests['section 7: and repointing the count is what would make that quorum reachable'] = function()
+    -- The other half of the same sentence: the ceiling is a property of WHERE
+    -- the circle is centred, not of how many heroes exist.  Same corpus, same
+    -- heroes, same radius -- centre it on the fight and the count clears the
+    -- armed quorum.
+    local X = on_frame(ZUUS_FRAMES[1])
+    assert(VC.max_best >= X.nUltFightQuorumArmed, string.format(
+        'the fight-centred count now tops out at %d, below the armed quorum %d. '
+        .. 'The claim that repointing the vantage makes the quorum reachable is '
+        .. 'read off this number and no longer holds -- do not quote it.',
+        VC.max_best, X.nUltFightQuorumArmed))
+    assert(VC.max_best > VC.max_ship, string.format(
+        'fight-centred and caster-centred counts now top out at the same value '
+        .. '(%d). The two are then not distinguishable on this corpus and the '
+        .. 'vantage registration has no evidence behind it.',
+        VC.max_best))
+end
+
+tests['section 7: TRIPWIRE -- the shipped conjunction is false on every live Zeus frame'] = function()
+    -- ⚠️ BOTH conjuncts are caster-centred, and this is the assertion that keeps
+    -- the two halves from being read separately.  J.IsInTeamFight( bot, R ) is
+    -- true on some frames and the count clears a quorum on others; the branch
+    -- needs BOTH at once, and over the corpus that never happens at either
+    -- quorum.  A fix to one half alone therefore cannot be shown to move this
+    -- branch -- which is why no vantage lever was landed this round.
+    local X = on_frame(ZUUS_FRAMES[1])
+    local nFireArmed, nFireShipped = 0, 0
+    for _, r in ipairs(VROWS) do
+        if r.fight and r.ship >= X.nUltFightQuorumArmed then nFireArmed = nFireArmed + 1 end
+        if r.fight and r.ship >= X.nUltFightQuorumShipped then nFireShipped = nFireShipped + 1 end
+    end
+    assert(nFireShipped == 0 and nFireArmed == 0, string.format(
+        'GOOD NEWS: the branch condition is now satisfiable on real frames '
+        .. '(%d at the shipped quorum, %d at the armed one, over %d live Zeus '
+        .. 'frames, %d of which are in a team fight at all). This branch has been '
+        .. 'dark for the whole life of this file; a creation frame exists now, so '
+        .. 'pin it and re-anchor this tripwire.',
+        nFireShipped, nFireArmed, VC.zeus_frames, VC.in_team_fight))
 end
 
 return tests

@@ -17,9 +17,16 @@
 -- frames.  First, the load-bearing sentence of the round is a claim about the
 -- RANGE of the count ("5 is its ceiling, not a point inside it"), and a claim
 -- about a range is worth exactly as many vantage points as you can pay for.
--- Second, the same rows price the vantage BIAS that the round registers but
--- does not fix: a global nuke whose fight size is measured from the caster is
--- measured from the one position a backline mage should not be in.
+-- ⛔ CORRECTED 2026-09-12.  The second reason used to read: "the same rows price
+-- the vantage BIAS that the round registers but does not fix".  THEY CANNOT, and
+-- a section-6 test read them that way for six days.  `bEnemy = true` is relative
+-- to the hero the call is made on, so at a DIRE vantage point this expression
+-- counts RADIANT heroes and at a RADIANT one it counts dire: the histogram below
+-- is a range claim about "heroes of the opposing side", which is the only thing
+-- it may be quoted for.  Two of its rows compared against each other are two
+-- different quantities, not one quantity seen from two places.  The vantage bias
+-- is measured, with the quantity held fixed and fog-honest, in
+-- tests/_zusultvantage_sweep.lua instead.
 --
 -- THE RADIUS IS READ FROM THE HERO SOURCE, NOT RE-TYPED.  A census that copies
 -- the constant it measures reports the old world unmoved after the constant

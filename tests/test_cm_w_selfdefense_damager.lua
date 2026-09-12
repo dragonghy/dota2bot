@@ -272,18 +272,44 @@ tests['§1 the corpus supply: 13 CM instants under fire, exactly one where the n
         .. ' (this file reads ' .. PIN .. ')')
 end
 
---- ⚠️ ONLY the two heroes whose self-defence branch is the SAME shape are in
---- this census: a single-target disable chosen out of a distance-ordered ring
+--- ⚠️ ONLY the heroes whose self-defence branch is the SAME shape are in this
+--- census: a single-target disable chosen out of a distance-ordered ring
 --- (hero_skeleton_king.lua X.ConsiderQ / Hellfire Blast, hero_zuus.lua
 --- X.ConsiderW / Lightning Bolt -- the pair tests/test_cm_w_selfdefense_facing
---- .lua's header already named).  Axe is NOT in the family and must not be
---- added to it: Berserker's Call is a no-target taunt, so its branch has no
---- per-target choice for authorship to move.  (Measured while writing this:
---- Axe does have 1 corpus frame where the nearest ring member is not a damager.
---- That number is real and it is about nothing -- there is no target to pick.)
-tests['§1.1 the two same-shape sibling branches have 0 corpus flips -- which is why they did not ride along'] = function()
+--- .lua's header already named -- and hero_lion.lua X.ConsiderW / Hex).  Axe is
+--- NOT in the family and must not be added to it: Berserker's Call is a
+--- no-target taunt, so its branch has no per-target choice for authorship to
+--- move.  (Measured while writing this: Axe does have 1 corpus frame where the
+--- nearest ring member is not a damager.  That number is real and it is about
+--- nothing -- there is no target to pick.)
+---
+--- ⭐ LION WAS MISSING FROM THIS LIST UNTIL 2026-09-12, AND THE WAY IT WENT
+--- MISSING IS THE INFORMATIVE PART.  §0 of this file cites `hero_lion.lua:1085`
+--- as the tree's own correct per-candidate idiom -- and that line sits 25 lines
+--- BELOW a 保护自己 branch with exactly the defect this file is about:
+---
+---     if bot:WasRecentlyDamagedByAnyHero( 3.0 ) and nLV >= 10        <- existential
+---         and bot:GetActiveMode() ~= BOT_MODE_RETREAT
+---         and #nInRangeEnemyList >= 1
+---     then
+---         for _, npcEnemy in pairs( nInRangeEnemyList ) do           <- distance order
+---             if <validity, non-immune, CanCastOnTargetAdvanced, not
+---                disabled, not taunted, not disarmed>
+---             then return BOT_ACTION_DESIRE_HIGH, npcEnemy           <- nearest wins
+---
+--- So the file quoted the good half of Lion's X.ConsiderW while the bad half,
+--- one screen up, was outside the only census that would have raised a hand the
+--- day it grew a pinnable frame.  It is in the list now.
+---
+--- ⚠️ THE YARDSTICK IS CM'S RING (630), NOT EACH SIBLING'S OWN, AND THAT IS ONLY
+--- LEGAL BECAUSE THIS IS A CEILING.  Lion's Hex reads at most 575 cast range
+--- over this corpus, so 630 is the WIDER circle: it can only admit candidate
+--- frames the shipped branch would not have, never hide one.  A census that
+--- narrowed the ring would not be direction-safe and could not be read this way.
+tests['§1.1 the three same-shape sibling branches have 0 corpus flips -- which is why they did not ride along'] = function()
     local tSeen = {}
-    for _, sUnit in ipairs({ 'npc_dota_hero_skeleton_king', 'npc_dota_hero_zuus' }) do
+    for _, sUnit in ipairs({ 'npc_dota_hero_skeleton_king', 'npc_dota_hero_zuus',
+                             'npc_dota_hero_lion' }) do
         local nFlip, nLive = 0, 0
         for _, path in ipairs(corpus_paths()) do
             if frame_has(path, sUnit) then

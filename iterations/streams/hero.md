@@ -22,6 +22,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-154. ✅ **`-153` 第 1 条两半都做了,而「再挑一根有域的开」这一半的答案是「那根没有域」** —— 本轮(报告
+   `iterations/reports/hero/20260912T020625Z.md`)挑的是 `zusfightquorum` **自己在头注释里登记不认领**的
+   第二个杠杆(把团战规模的计数中心从 Zeus 挪到团战)。**先量后选,量出两件事,第二件比第一件重要。**
+   - ⭐ **第一条 —— 「同一个量的两个视角」在代码里可能是两个量,而且读数长得一模一样。**
+     `J.GetNearbyHeroes(h, R, bEnemy, …)` 的 `bEnemy` **相对于被调用的那个英雄**。
+     `_zusfightquorum_sweep.lua` 在每个英雄身上跑同一条表达式 ⇒ 在 Zeus(radiant)上数 dire,
+     在 centaur(dire)上数 **radiant**。于是被引用六天的那句证据里的 **4,是 Zeus 自己的队友**
+     站在 centaur 旁边的数目。问分支真正在问的问题,同一帧答 **2**,与 Zeus 自己脚下**逐位相同**。
+     ⇒ **跨主体复用一条表达式做对比之前,先问「这个参数是相对于谁的」。**
+     同族:`-153` 的「代理压过测量」、GH #757「把代理的阴性花成排除」。
+   - ⭐⭐ **第二条 —— 一个杠杆的域,可能被*同一个条件里的另一个合取项*钉死,而那个合取项没有 id。**
+     `pullcad` 陷阱讲的是 gate 里名了别的 id;这是它的**无 id 版本**:`J.IsInTeamFight( bot, 1400 )`
+     不是候选、不在任何普查里、`check_armed_wiring.py` 只检查调用点存在。
+     实测 45 个活 Zeus 帧:`IsInTeamFight` 真 **6** 帧,计数在**另外**一些帧上过阈,**从不同时成立**
+     ⇒ **shipped 合取式 0/45**,法定人数 5 或 3 一样。**量域必须端到端量到调用点为止。**
+   - ⭐⭐⭐ **第三条 —— 顺带买到一条关于 `zusfightquorum`(已落地 id)自己的决定性读数**:
+     **`max_ship = 2`**(施法者视角计数在 45 帧上的最大值)⇒ **armed 法定人数 3 在它自己的视角上
+     仍然是一个关掉的开关**。波次若报「无效果」= **闸的零不是游戏的零**。已交总监裁。
+   - ⛔ **第四条 —— 迷雾诚实不是可选的。** 在 fixture 上从**敌方英雄**身上调 `GetNearbyHeroes`,
+     loader 按**那个英雄的队伍视野**作答(`visible_to_team(v, self:GetTeam())`)⇒ 会数到我方看不见的单位。
+     拿那种读数当杠杆的域 = 一次凭空的执行核验(`-152` 第二条同族,换到「视野」这一侧)。
+   - ⛔ **第五条 —— `json.dump` 会重排整个文件。** 本轮第一次写 `state.json` 打出 **8228 增 / 8212 删**。
+     **先验证往返再写**:实测 `state.json` = `indent=2` **带**结尾换行;`queue.json` = `indent=1` **不带**。
+   - ⭐ **新划掉一整块死域(给下一轮省一次探针)**:`bot:GetActiveMode() == BOT_MODE_LANING`
+     之下的**任何**支路域**由构造为 0**(第 13 条世界断言,该比较恒假)。
+     `hero_crystal_maiden.lua` 整个 **对线期消耗** 块住在那下面 —— 包括 1719 行那个
+     `J.GetAllyUnitCountAroundEnemyTarget( nEnemysHeroesInView[1], 350 ) >= 5` 的存在量化缺陷。
+     **形状是真的,域是死的,不要去开。**
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **主体回到 `bots/`(P4.4 (i))。⚠️ 已量掉九根,不要重开**:Lion 保护自己(域 0)、
+        Lion/SK `IsChanneling` 打断(**本树已判过不是缺陷**)、Lion 缺蓝抽蓝 1600 环(语料无小兵)、
+        Lion 秒杀幻像(语料无幻象)、SK/Zeus `cmwhit` 兄弟(0 翻转)、运动/提前量整轴、
+        `GetActiveMode*` 整轴、`nCastRange + N` 到达族(焦点四英雄各自已有 lever)、
+        **本轮的 Zeus 大招视角**(跨阈域 0,要动就得动两个合取项)。
+     2. **`test_lion_ult_cash_weakest.lua` 的 amnesty 退场** —— `-153` 第 2 条**原样滚进来**
+        (本轮主体吃满了工作单元,**没掉棒**)。本轮 `lua_gate.py` 原样:
+        `tests/test_lion_ult_cash_weakest.lua  [amnestied for 1 case(s); any OTHER case refuses]`。
+        手法在 `-153` 的 `cm_w_lane_band` 上已跑通一遍,**照抄即可**。
+
 -153. ✅ **`-152` 第 1 条执行了,而且这一次先量后选没有白量** —— 本轮(报告
    `iterations/reports/hero/20260911T225500Z.md`)主体回到 `bots/`(P4.4 (i)):落地 **`cmtfclock`**
    (Crystal Maiden,gated,turbo-only,**加宽**)。⭐ **缺陷不是「6 分钟太长」,是这道宵禁相对证据是反的**:
@@ -6741,6 +6780,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-12T02:06Z(报告 `iterations/reports/hero/20260912T020625Z.md`;**backlog:新开 `-154`**;
+  OWNER_PRIORITIES **P4.4 (ii)** —— ⚠️ **本轮主体是「判定完结所需的证据」不是 (i);`bots/` 只动注释,
+  而这是量出来的判断不是偷懒**)
+  **挑了 `zusfightquorum` 自己登记不认领的第二个杠杆(视角),先量后选把它量掉了 ——
+  而量掉它的同时把它的前提也证否了。**
+  - ⭐ **被证否的那句**:`X.zuus_ShouldUltForTeamFight` 头注释与 `test_zuus_fight_quorum.lua` §6 引用
+    「`f_260819_222052_zuus_w2_leak` 里 Zeus 的两个敌人各自数到 **4**、同一帧 Zeus 数到 **2**」当作视角偏差。
+    **那两个数数的是两支不同的队伍**:`J.GetNearbyHeroes(h, R, bEnemy, …)` 的 `bEnemy` **相对于被调用的英雄**,
+    dire 视角上它数 **radiant** ⇒ 那个 **4 是 Zeus 自己的队友**。问分支真正在问的问题
+    (centaur 身边 1400 内有几个 dire),同一帧答 **2**,与 Zeus 自己脚下**逐位相同**。
+    ⇒ 旧断言 `nBiased > 0` **可被我方抱团满足**,既非缺陷也非证据,**被引用了六天**。
+  - ⭐⭐ **更正带出的、关于 `zusfightquorum` 自己的读数(比上面那条重要)**。新
+    `tests/_zusultvantage_sweep.lua`(量固定 + **迷雾诚实**),45 个活 Zeus 帧:
+    **`max_ship=2`** / `max_best=4` / `vantage_gain=36/45` / `in_team_fight=6/45` /
+    **shipped 合取式命中 0/45(法定人数取 5 或 3 都一样)**。
+    ⇒ **armed 法定人数 3 在 shipped 视角上仍然是一个关掉的开关**;波次若报「无效果」,
+    报的是**闸的零不是游戏的零**(§CJ)。
+  - ⭐⭐⭐ **两个合取项都是施法者中心的,这把两半焊死了**:`IsInTeamFight` 真的那 6 帧上最大簇仍是 **2**
+    ⇒ **只改计数视角、留着 `IsInTeamFight( bot, 1400 )` 的配置,实测就是坏配置**,跨阈域 **0**。
+    要有域必须**同时动两个合取项** = **一个原子不是一个杠杆**(与 `creeppull`+`pullbeat` 同形),
+    而本轮没买到支持那个更宽改动的证据 ⇒ ⛔ **`zusultvantage` 明确不落**,登记不认领。
+  - **落地**:`tests/_zusultvantage_sweep.lua`(新)+ `test_zuus_fight_quorum.lua` **删 §6 被证否断言、
+    新开 §7 五条单向 tripwire** + 三处散文更正(`hero_zuus.lua` 头注释 / 测试头 / `_zusfightquorum_sweep.lua` 头)。
+  - **附带**:`test_cm_w_selfdefense_damager.lua` §1.1 **补进 Lion**(同形第四例;**0 翻转 ⇒ 天花板断言,绿**)。
+    ⭐ 漏法有信息:§0 引用 `hero_lion.lua:1085` 当正确惯用法,而它就在**有缺陷**的 保护自己 支路**下面 25 行**。
+    ⚠️ 尺子用 CM 的 **630** 合法**只因为它是天花板**(Lion Hex 实测最大 `GetCastRange()` **575** < 630 ⇒ 更宽)。
+    ⛔ `lua_gate.py` 报该文件超 per-test cap 被 EXCLUDED,**不是本轮造成的**:本轮 **19.58s** vs
+    `git stash` 后 **19.72s**(噪声内,cap 5.5s),且它本来就不在 manifest 里;**没跑全量重测**。
+  - **闸**:`GATE_EXIT=0`(luacheck 0 warnings)/ `py gate: EXIT=0 96 ran, 0 findings, 0 uncertifiable, 31.8s`
+    / `lua gate: EXIT=0`,**没用过 RULE6_BYPASS**。⚠️ 动态全量(~100min,GH #124)本轮没跑。
+  - ⛔ **开工自检真码 `EXIT=3`**(`FINDINGS: cadence owed-executions trunk-red(python) trunk-red(lua)`;
+    `UNCERTIFIABLE: none`)。Lua trunk 红 **1 条** `test_stayfield2_marginal_domain.lua`(协同组,**非本轮引入**)。
+    ⚠️ **第一条命令又接了管道被自检拒绝**(它自己说这是第 **5** 次复发)—— `-152`/`-153` 各写过一次。
+  - **交棒**:总监据此裁 `zusfightquorum`(⛔ 别再发取证波);`queue.json:hero-62`(零 EC2 归档扫描);
+    **GH #762**。⛔ `test_lion_ult_cash_weakest.lua` amnesty 退场**本轮没做**(主体吃满),原样滚进 `-154`。
 - 2026-09-11T22:55Z(报告 `iterations/reports/hero/20260911T225500Z.md`;**backlog:新开 `-153`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`cmtfclock`(Crystal Maiden,gated,turbo-only,未 armed,方向=加宽):
