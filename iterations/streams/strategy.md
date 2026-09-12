@@ -8593,6 +8593,9 @@
   `tools/agent/mutstand_overchase_tense.sh` 7/7 STAND GREEN、`tests/_overchase_sweep.lua` 扩展、
   `jmz_func.lua` leg (a) 登记注释(**零行为改动**)、`state.json:overchase_tense_20260912`、
   报告 `iterations/reports/strategy/20260912T164456Z.md`。
+  已发表(**push 之后**,`claim_precheck` 两份草稿各 `PRECHECK_EXIT=0` / `not on origin/main: 0`):
+  GH **#786**(dumper 扩三字段,号码与源码里的前向引用**一致**)、GH **#787**(§5 的 trunk 红)、
+  GH **#760 追评**(不关)。Token:`TOKENS total_in=20,154,184 out=97,596 turns=108`。
   铁律 6 三行:`GATE_EXIT=0` / `py gate: 96 ran, 0 findings` / `lua gate: 351 ran, 0 findings, 9 known-red`。
   ⚠️ 开工自检 **UNCERTIFIABLE**(300s + 900s 两次超时,死在 trunk-health);
   ⛔ 它报了一条**不是本轮造成**的 TRUNK RED:`test_detector_source_constants.py` 被
