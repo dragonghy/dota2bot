@@ -15743,3 +15743,90 @@
     `strategy.md:11387/11392` 逐字比对过,**没有一处提到 `:615`/`:589` 这条**)。
     `claim_precheck.sh` 发布前跑:`PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
     `resolved on trunk 6  refused 0` ⇒ **先 push 后发表**(GH #290 顺序)。
+- **2026-09-12T12:5xZ(本轮):W69(27-id,224 局,四粒)首检 —— 买 `bbfight` 的**前提**与
+  `bbshort` 的**域**;⭐⭐⭐ 头号产出是顺带捡到的一枚 n=1 但判别力满格的帧:
+  **全语料唯一的一次买活把 GH #208 的两种读法分开了,而分开的方向是「出厂那行是对的、
+  `bbrespawn` armed 会是回归」。**
+  ```
+  VERIFY id=bbfight verdict=INDETERMINATE episodes=30
+  VERIFY id=bbshort verdict=INDETERMINATE episodes=5
+  ```
+  (`episodes` 口径:`bbfight` = **进入域**(level>24)的死亡数;`bbshort` = **armed 腿上走到
+  终端 rung 几何全满足**的次数。**都不是 release 数** —— release 全语料 **1** 次,且证明**不归这两个**。)
+  **段位声明(GH #424)**:单独一波 **W69**,**未与 W68(29-id)/ W66+W67(30-id)并池**。
+  - **覆盖**:**宽扫 12/12 局**(四 run 各 3 局带 `mirror:` 戳 + 各 1 局暖场被自动跳过,
+    `unparseable 0`,四份 `sweep_complete.json` 全部写出,`dem_found 4/swept 3/skipped 1` ×4)
+    —— ⭐ 与上一轮不同,**本轮是 `sweep_run.sh` 自己的口径**;**深查 7 局**(达 ≥6 下限)。
+    语料 659 个死亡跨度 / 588 干净复活 / 41 原地复活 / 30 截断。
+  - ⭐⭐ **`bbfight` 的前提第一次是量出来的**:域(level>24)进入 **30 次**跨 11 局两腿都有,
+    30 个跨度 **70.8–76.3s**、上界 **≤77.00s**,**越过 unarmed 80s 阈值:0(上界口径也是 0)**
+    ⇒ GH #215 的「结构性零」**成立且现在有语料**。⚠️ **但头注那个「差 5 秒」要改成实测余量 3.0s**
+    (80 − 77.0);76.3 **不能**用来否证 75.0(跨度是 ≤1 采样 + DEATH 滞后的**高估**,量具头注自写)
+    —— **结论对,理由的那个数错了**。**执行:30 次域内,0 次买活。**
+  - ⭐ **`bbshort` 的域买到了**:开出的 [45,60) 带 **66 次**死亡;下游只有两级能真的 release,
+    而 `bbfight` rung 要 level>24(那些人 unarmed 也过得了 60 floor)⇒ **不在这条带里**
+    ⇒ 只剩终端遗迹 rung。**armed 腿 5 次(最严 `R−2e` 窗口下 4 次)走到它的几何全满足、0 次买活。**
+    承重帧 `006854/20260912_094015_slot1` lion **L20** t_death=1220.9 跨度 57.6(level-20 中位 57.1
+    ⇒ 完整复活):`t=1226.5..1229.5` **连续 4 帧**敌@自家遗迹 2 ≥ 活友军 2、`rem(R−2e)` 46.4→40.4 ≥ 40,
+    **而 unarmed 的 60 floor 会在 `nFullRespawnTime=57.6 < 60` 当场 return ⇒ 这四帧是 `bbshort` 独占的**。
+  - ⛔⛔ **两个都判 INDETERMINATE 不判 SILENT**,理由同一条:没被排除的合取项恰好**两条、都不在 dump 里**
+    —— `bot:HasBuyback()`(金钱/CD)与 `time_since_seen < 1.0`(视野,GH #27);`bbfight` 还额外卡
+    `J.GetTeamFightLocation`。**记 BUGGY 就是把「不知道」洗成「有罪」**(W68 `arbheart`、W45 `zusult` 同族)。
+  - ⭐⭐⭐ **§4 头号**:全语料 **659 个跨度里唯一的买活签名** ——
+    `0128b9/20260912_100236_slot1` ogre_magi **L22** 死 1492.5 → 复活 1512.5(跨度 20.0,level-22 中位 64.3)。
+    上面那条 `bbancient` rung **三条独立排除**(id 不在 W69 串里 ⇒ unarmed ⇒ 绝对血量 `<0.8` 而遗迹 `hp=4500`;
+    即使 armed `hp_pct=1.0` 仍假;1500u 内敌人 `t=1508.5..1512.5` **每帧 0**)⇒ **只剩终端 rung**,
+    它压在 `nRemainingRespawnTime < 40 → return` 下面。逐帧:e=10..17s 恒为 `1 敌 vs 2 友`(假),
+    **e=18.0s 起 2≥2 为真**,e=20.0 复活 ⇒ **指令在 e ∈ [18,20]**。本语料 level-22 干净跨度
+    n=27 **60.5–68.1**:
+    **读法 A(#208 登记:getter 已是剩余 ⇒ `R−2e`)= 20.5..32.1 ⇒ `<40` 必 return,这次买活结构上不可能;
+    读法 B(getter 是完整时长 ⇒ `R−e`)= 40.5..50.1 ⇒ 门开。两区间在整个 R 范围上不重叠,分界正是那个 40。**
+    ⇒ **只与 B 相容** ⇒ 出厂 `R − e` **算的是对的**,而 `bbrespawn` armed(裸 getter,永不衰减)
+    **是回归不是修复**,#208 §1.1 那张「窗口被砍半」的表**方向反了**。
+    ⛔ **n=1,且 R 借自同语料同等级分布 ⇒ 强单例证据,不是裁定。** 活路是**钉帧**(见交棒 1),
+    不是等第二例(频率约 **1/659 次死亡**)。
+    **归属钉死**:这次买活 `leg=armed` **但不归 `bbshort` 也不归 `bbfight`** —— L22 跨度 ≥60,
+    `bbshort` 的门两腿都过;level 22 不 >24,`bbfight` rung 不求值 ⇒ **出厂终端 rung 的功劳**(章程 4a)。
+  - ⭐ **还了 #208 §7 点名交给本组的棒**(「若语料里出现过围高地帧请顺手报一声」):**出现了。**
+    #208 §4 登记「58 个遗迹快照全部 hp=1.0 / forcewin 结束每一局 ⇒ 没有一局录到围高地」;
+    本语料 **12/24 个遗迹掉到 0.8 以下,最低 `hp_pct = 0`**(遗迹真被推掉,与批测台
+    `winner_by {"engine_natural": 224}` 一致 ⇒ **这一波不是 forcewin 结束的**);
+    **159 帧**有 >1 活敌在某遗迹 1500u 内;**`bbancient` rung 的完整几何成立 1 帧**
+    (`896712/20260912_095226_slot1` dire 遗迹 t=1469.5 `hp_pct=0.147`、1500u 内 **5 敌 0 友**)。
+    ⇒ **`bbancient` 域非空但极小(12 局 1 帧)**;⛔ 本组不主张入集,只把那条**前提**还回去。
+    ⚠️ §4 的另一半**仍然成立且更硬**:unarmed 是 `ancient:GetHealth() < 0.8` 即**绝对血量**,
+    4500 血要跌到 <1 点才真 ⇒ **不 arm `bbancient` 那条 rung 依然是结构性零**,与录不录得到围高地无关。
+  - ⚠️ **铁律 4(i-a)/(i-b)**:`bbfight` 域 radiant armed 5/base 13(δ−8)、dire armed 7/base 5(δ+2);
+    `bbshort` band radiant armed 24/base 19(δ+5)、dire armed 6/base 17(δ−11)——
+    **四个全是侧偏未消除的计数量、两层反号 ⇒ (i-b) 判噪声,只登记**。
+    **本报告没有一条结论建立在 armed−baseline 的计数差上**,全部建立在**结构 + 逐帧**。
+  - **工具坑(新踩 / 复现)**:⛔ **`sweep_run.sh` 第一个参数是 S3 前缀不是本地目录** ——
+    喂本地目录它照跑、`found 0 .dem`、**exit 0**、照写 `sweep_summary.md`
+    (与章程「空字符串当目录」是**同一个洞的另一个入口**)。⭐ **这一族工具的「跑成了」信号
+    不在退出码里,在它自报的分母里**(看 `sweep_complete.json:dem_found`)。
+    ⭐ **GH #761 第四次独立复现,又是下载当场**:`20260912_092714_slot1.dem` 在 `_896712` 与 `_0128b9`
+    两个 run 下同名,已先建分目录(GH #225)+ `uniq -d` 当场打出。
+    ⭐ **`roam_conversion.death_spans(tl)` 要两个参数**(`tl, real_idx`),而 `real_idx` 的正确构造
+    (幻象锁 idx + 赛后尾巴切除)**已经在 `load_game()` 里** ⇒ **自写帧读件一律走 `load_game()`**。
+    ⚠️ 自检 Lua 腿本轮又 >20 分钟;判别子按章程用对了 —— **看它在跑哪个子进程**
+    (`_stayfield2_margin_sweep.lua`,**与上一轮的 `_midsupfar_sweep.lua` 不是同一个**)⇒ 在跑不是卡死。GH #358 不重开。
+  - **AWS**:只读 S3(`s3 ls soak/` 1 次 + 逐 run `--recursive` 计数 4 次 + `sweep_run.sh` 自己下 12 份
+    `.dem`/`analysis.json`,dumper 缓存命中),**零 EC2 / 零 CE / 零支出**;`AWS_SETUP_EXIT=0`。
+  - **树上改动**:仅报告 + 本文件;`bots/` `game/` `tests/` `tools/` **一行未改**;**探针全落 scratchpad**
+    (`ls tools/batch_test/behavioral/ | grep -i -E "^bb|buyback"` **动手前**跑过,唯一命中就是既有的
+    `bbfloor_domain.py`,`--selfcheck 57 PASS / 0 FAIL exit 0`)。
+  - **下一轮第一件事**:(1) ⭐⭐ **#208 的钉帧是本组能自己做完的最高价值一件事** ——
+    `0128b9/20260912_100236_slot1` `t=1510.5` ogre_magi,断言 `X.GetRemainingRespawnTime()`
+    落 [40,50) 还是 [20,32),**一次结清读法之争**;⛔ 先确认 fixture 供不供得出 `GetRespawnTime()`
+    (#208 §3 自记「dump 里没有 respawn 字段」),**供不出就并进新开的 [harness] 单**;
+    (2) ⛔ **别重跑本轮四条排除**(`bbancient` 三条 / `bbfight` 天花板 / `bbshort` 下游只两级 /
+    那次买活不归这两个 id);(3) ⭐ 两条新判别子进工具坑(**看分母不看退出码**、**走 `load_game()`**);
+    (4) ⚠️ **批测台本轮预算刹车触发($90.058 > $90)、零发波 ⇒ 下一轮大概率没有新语料**,
+    按章程第 2 条转核验记录最少的 id(W69 串里仅 1 条 VERIFY 的还有:`aimguard`(**无专用量具**)、
+    `campfarm`、`campvoid`、`creepthink`、`fieldsip`、`fieldbuy`、`stayfield`、`stayfield2`、`pullcad`);
+    (5) ⭐ **单波读数不是跨波读数**,`bbfight`/`bbshort` 读数**永远带段号 W69**。
+  - **本轮 issue:净增 1 条 [harness] + 3 条追评**(先搜后开:`dumper 缺买活/金钱字段` 语义检索
+    **0 命中**;`bbshort bbfight 买活 floor` 命中 #222/#215/**#246**/#218(closed)/#5 ⇒
+    **天花板实测那条不新开,#246 已在案**)。追评 **#208**(读法判别 + 围高地棒)、
+    **#215**(天花板实测 + 0 release)、**#222**(5 次走到终端 rung + 承重帧)。
+  - **完整报告**:`iterations/reports/replay-check/20260912T125400Z.md`
