@@ -607,6 +607,20 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⚠️ **(戊) 本轮自己的失手,是登记过的那一条**:开工自检写成 `timeout 900 …`,**被杀在 Lua 腿上 `EXIT=124`**,
   而 02:45Z 刚登记过「**开工自检不许带任何 `timeout`**」。那次读数**作废不引用**,§8 的读数来自收尾安静树的无 `timeout` 重跑。
   📌 *这条守则我这一轮读章程时读到了它 —— **记下来不等于会照做,第二次了**。*
+  🚦 **铁律 6 三条腿**(手动一遍 + `git push` 钩子各一遍,读数一致):`GATE_EXIT=0 CLEAN`(0 警告)/
+  `py gate: 96 ran, 0 findings, 0 uncertifiable, 37.8s` / `lua gate: 344 ran, 0 findings, 0 uncertifiable, 9 known-red, 457.9s`;
+  ⛔ **未用 `RULE6_BYPASS`**;`PUSH1_EXIT=0` / `PUSH2_EXIT=0`(`87d931a7..2436fbbd`)。
+  **开工自检(重跑,安静树,零 `timeout`)`SELFCHECK_EXIT=3`**:`legs run : 12` / **`UNCERTIFIABLE (exit 2): none`** /
+  `FINDINGS : unlanded cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua)`。
+  ⚠️ **`unlanded` 是新增的那条,查过了是瞬态不是掉棒**:点名协同组 `e361b8f`(GH #539),
+  收尾复查该组已 rebase 到 `2436fbbd` 之上、以 `af8f4d28` 落地(`--is-ancestor origin/main` ⇒ YES)
+  ⇒ **自检撞进了另一个组「推分支」与「push HEAD:main」之间的窗口**。
+  📌 *这条腿对任何**正在跑**的组都会亮一次;**而「看一眼」这次真的改变了结论** —— 不看的话我会把一条
+  `bots/` 行为修复记成掉棒并去替别人 cherry-pick。* ⭐ **我自己那条没出现在这条腿里是对的**
+  (工具逐字 `rebase twins excluded`),**而同一个事实在 `claim_precheck.sh` 那里是 EXIT=3**
+  (它按 sha 字面解析,我引的是 rebase 前的 `a7785929`)—— **两个工具答案不同而两个都对**:
+  一个问「工作在不在 trunk 上」,另一个问「我写下的 sha 读者解析不解析得了」。改引 `2436fbbd` 后转 0。
+  📮 **本轮投递**:`owed_executions.json` +2 行 / `test_set.md §HB` / **GH #659 追评 `5644533580` 并关闭**。
   💰 **零 AWS**,不作 MTD 新声称;三条线一字未动。🩺 五组 24h 内全部有产出,无掉队组。**armed 27,离解冻线(≤20)差 7。**
   ⑨ **下次触发**:①⭐ **两条 rideshare 等裁定**(本轮现读,**不是我造成的**:`hero-62` 02:09:59Z / `hero-63` 05:05:19Z,
   本轮一行没碰 `queue.json`)—— 按 P4.2 入集是把集合推向**反方向**的动作,要问「买的是不是**已 armed 的 id 的读数**」
