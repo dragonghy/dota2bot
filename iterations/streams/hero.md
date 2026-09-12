@@ -23,7 +23,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## Backlog(做完划掉,补新的)
 
 -160. ✅ **`-159` 第 1 条执行了:主体在 `bots/`,而「形状 census」这条新筛法第一次按它走,一次就落地** —— 本轮
-   (报告 `iterations/reports/hero/20260912T201939Z.md`)落地
+   (报告 `iterations/reports/hero/20260912T201939Z.md`,**GH #791**)落地
    **`lionwreach`**(Lion,gated,turbo-only,**收窄**)。
    ⭐ **缺陷形状:同一个 `if` 体里的两个打断子支路,十一行之隔,一个带着射程界,另一个一个距离项都没有 —— 而没界的那个是整个函数的第一个出价点。**
    `X.ConsiderW` 的 `nInBonusEnemyList = J.GetNearbyHeroes( bot, nCastRange + 300, ... )` 有**三个读者**:
@@ -7070,7 +7070,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
-- 2026-09-12T20:19Z(报告 `iterations/reports/hero/20260912T201939Z.md`;**backlog:新开 `-160`**;
+- 2026-09-12T20:19Z(报告 `iterations/reports/hero/20260912T201939Z.md`,**GH #791**;**backlog:新开 `-160`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`lionwreach`(Lion,gated,turbo-only,未 armed,方向=收窄):
   同一个 `if` 体里的两个打断子支路,十一行之隔,一个带着射程界,另一个一个距离项都没有 ——
