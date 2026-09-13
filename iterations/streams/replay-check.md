@@ -16577,3 +16577,73 @@
     (「别在手跑 Lua 测试的同时后台挂自检」)。push 前已清掉自检与残留 `run_tests.lua`,
     并确认 `bots/Customize/soak_side.lua` 不存在 ⇒ 两次 push 的 lua 闸是干净窗口。
     token:`TOKENS total_in=7,648,424 out=42,557 turns=59`
+- **2026-09-13T09:5xZ(本轮):`overchase` 补课 —— 判别子买到了,而上一轮的定案帧被逐帧推翻;
+  堵点换成「归因」并已具名。**
+  ```
+  VERIFY id=overchase verdict=INDETERMINATE episodes=501
+  ```
+  (501 = 本轮 81 局 **armed 腿** `admit` episode 数;上一轮那个 **912 是两腿合计**,
+  **不是同一个量** —— 按铁律 4(iii) 连切法一起登记。)
+  - **覆盖:宽扫 81/81 局(W67 四台全收,逐字引 `sweep_complete.json`:104 dem / 81 swept /
+    23 skipped / **0 unparseable**);深查逐帧 7 局(下限 6 达标)。** 连续第七轮无新波次
+    (GH #779 刹车第八轮),W69 只有 12 局且**跨波不并池** ⇒ 补课必须回同一份 W67 语料。
+    ⭐ **免费的复现检查**:`closed` 两层读数(ab **+1.45pp** / ba **−9.41pp**)与上一轮**逐位相同**。
+  - ⛔⛔ **头号更正:上一轮 §四「定案的是帧不是表」的那两条帧,两条都读反了。**
+    上一轮逐字写「`hp_b` 全程 0.01–0.04:PA 不是回身惩罚谁,**她是被追死的那个**」。
+    逐帧重读(`d2a2fd/20260911_214152_slot2` t=1579.5):`hp_e` **0.59 → 0.00**,
+    三条伤害事件**整行**是 `phantom_assassin -> skywrath_mage`(dagger 371 / 259 / 876),
+    **1576–1586 打过 skywrath 的只有她一个**;她**没死在后果窗内**,死在 **1584.5**,
+    而 1582–1585 打到她身上的只有 `1584.10 luna -> PA` ⇒ **3% 血回身秒了追击者,
+    两秒后被第三个人收掉**。⑦(`71f624/…_212708_slot7` pudge vs SK)同样:pudge **全程 ≥0.96**,
+    SK **0.797 → 0.000**,窗口内 SK 身上的伤害**全是** `pudge_rot`/`pudge_dismember`。
+    ⇒ **「这个量分不开回身惩罚与被追上」这句话,在它自己的两条承重帧上不成立。**
+    ⭐ **误读的机制与处置**:那张 trace **没打追击者血量、没打伤害方向**,读者只能从**自己人**
+    的血量推谁在挨打,而 `hp_b 0.01→0.04`(**在涨**)恰好是「刚打完还活着」与「正被追死」
+    共有的样子。⇒ 本轮把 **`hp_e` / `hit` 两列加进仪器的 trace**(不是加进 scratchpad 探针):
+    **没被打出来的列,就是被读者脑补的列。**
+  - ⭐⭐ **判别子落地(上一轮欠的那件「没有别的组能替本组想」的事)**:把 `closed = d0 − dmin`
+    这个**两具身体运动之和**拆开 —— 按入场连线投影出 `bot_adv` / `chaser_adv`,
+    `punish` = bot 自己进 ≥250 **且** 是较大的一方 **且** 同窗内**对追击者落了英雄伤害事件**,
+    `rundown` = 镜像。**两半来自两条互不推导的流**(snapshot 位置 / DAMAGE 事件)。
+    控制 `tests/test_overchase_attribution.py` **15/15**:A 反打 / **B 被追死(负控制)** /
+    C 站桩 / **D 走过去但一次没打中 ⇒ `bot_driven` 真而 `punish` 假**。
+    ⭐ 承重的**不是**「A 读成 punish」,是 **`closed` 在 A 与 B 上都为真而判别子把它们分开**。
+  - **读数(81 局,两层全登记,⛔ 零结论买自反号)**:`admit` 差分 `punish`
+    **ab +7.03pp / ba +1.26pp(同号,而 `closed` 反号)**;
+    但**没越过自己的零通道底** —— `noally` 上 `punish` 也抬(**ab +4.46 / ba +2.84**),
+    `admit − noally` = **ab +2.57 / ba −1.58,两层反号 ⇒ 回到 4(i-b)**。
+    `nearmiss` 底 **ab −20.69 / ba −4.27,薄(n 191)且本轮新打的 `floor_overlap` 读出 16.8% 污染**
+    ⇒ **本轮不拿它当否决**;`noally` 污染 **5.5%**,可以当底。
+    **`rundown` 全带 0.3%–3.4%** ⇒ 上一轮担心的那种污染**真实存在**(Ⓓ/Ⓔ 两条 armed 帧),
+    但**最多解释 `closed` 的 2 个百分点,解释不了 35–46%**。
+  - ⭐⭐⭐ **堵点具名:`ownhalf` 在同一条 collapse 通道的上游,且同波 armed ⇒ (a) 不可归因。**
+    `bots/mode_team_roam_generic.lua` 现读:`J.ShouldPunishDive` **:301 先命中先 `return`**,
+    `J.ShouldPunishOverchase` 在 **:315**;前者**基座已 promote(两腿都开)而 own-half 域扩展
+    gated 在 `ownhalf` 上**,`ownhalf` 就在 W67 的 armed 串里 ⇒ **遮蔽只在 armed 腿上被加宽**。
+    实测(两把仪器 episode 按 `(局, bot, 追击者)` 时间区间相交 ±2.5s):armed 腿
+    **317/501 = 63.3%** 与 `ownhalf` 域重叠(与已出厂的 `shipped` 域 51.3%);baseline 69.1% / 48.4%。
+    ⚠️ **精确措辞**:重叠是**可观测子句口径**(`ShouldPunishDive` 自己的 `SafeToCommitFight`
+    同样不可观测)⇒ **63.3% 是遮蔽上界,不是被遮蔽帧的计数**;但方向确定 ——
+    **只会让 `overchase` 在 armed 腿少开火,不会多开火**。
+    ⇒ **`overchase` 的 (a) 在任何与 `ownhalf` 同腿 arm 的波上结构性买不到**;
+    `noally` 底上那份同号抬升正是这个混杂**在门闭嘴的带上留下的影子**。
+    ⛔ **这不是在要单臂隔离波**(AGENTS.md 循环第 6 条禁止,上一轮已差点误交棒一次),
+    要的是**一条 arm 串组成约束**,先例是 `campfarm`/`campgrade` 的 `blocking_precondition`。
+  - **issue:净增 1 条([batch],正文含重叠表 + `:301`/`:315` 源码行 + 复现命令),零追评;
+    ⛔ 未碰 `issue_write(update)`(工具坑第一条)。** 未开的两条已登记理由:量具侧缺口归 GH #786;
+    #760 **不受本轮推翻牵连**(它的承重帧是⑤与 40.3% 那个统计,不引这两条)。
+  - **AWS**:只读 S3(104 `.dem` + 104 `.analysis.json`,约 2.4GB),**零 EC2 / 零 CE / 零支出**;
+    `AWS_SETUP_EXIT=0`、`DUMPER_EXIT=0`(cache HIT)、四次 sweep 各 `exit=0`、`unparseable 0/104`。
+  - ⚠️ **开工自检:管道门第 26 次,又是本轮第一条命令**(脚本自己拦下:
+    `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`)。
+    第二跑重定向 + 后台 + **不设短 timeout**,跑完读到 `124 passed, 1 failed, 3 uncertifiable`,
+    `failed: tests/test_py_gate_hook.py` —— **不是本轮引入**,正是 **GH #795** 现读点名的 trunk red;
+    `UNCERTIFIABLE tests/test_selfcheck_lua_leg.py (did NOT run)` ⇒ **Lua 腿这轮没人看过,不是通过**。
+  - **下一轮第一件事**:(1) ⭐⭐⭐ **等对那条 arm 串约束的表态;在它落地前不要再为 `overchase` 的
+    (a) 花语料** —— 同腿 arm `ownhalf` 时加局只会把同一个不可归因的差分测得更精确
+    (**「加局无救」那一格的第三例**,前两例 `creepthink`/`campvoid`);
+    (2) ⛔ **别重跑**:81 局宽扫、7 条帧证人、`punish/rundown` 四表、63.3%/51.3%/69.1%/48.4%;
+    (3) ⭐ **判别子可移植**:`ownhalf` 自己的 `closed` 有同一个病,且两把仪器**共享
+    `CONSEQUENCE_WIN`/`CLOSE_DELTA`**(source-constants 已钉)⇒ 移植是加两个字段不是新建尺子;
+    **本轮没替它做**;(4) ⚠️ **别直接引本轮 `nearmiss` 的 −20.69 / −4.27**(n 191 且 16.8% 污染)。
+  - **完整报告**:`iterations/reports/replay-check/20260913T095506Z.md`

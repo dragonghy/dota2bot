@@ -68,6 +68,29 @@ printed table:
 `--loose` prints the proximity-only chase band alongside, so the reader can see
 the size of that second gap instead of inferring it.
 
+THE DISCRIMINATOR (2026-09-13, replay-check)
+--------------------------------------------
+The 2026-09-12 reading came back INDETERMINATE, and the thing that decided it
+was not the sign-flipped aggregate but two BASELINE-leg frames: on the leg
+where this gate is shut entirely, `closed` still read 35-46%, and a 1%-HP
+phantom_assassin being run down by a skywrath was scored as a textbook
+collapse.  `closed` = d0 - dmin is the SUM of two bodies' motion, so it counts
+"the bot turned and punished" and "the bot was caught" as the same event --
+which is precisely the distinction the gate exists to make.
+
+`punish` and `rundown` split that sum, and each needs BOTH halves:
+
+    punish   the BOT's own displacement toward the chaser, projected on the
+             line that joined them at admission, is >= CLOSE_DELTA and is the
+             larger of the two advances, AND the bot landed hero damage on the
+             chaser inside the same consequence window.
+    rundown  the mirror: the CHASER supplied the advance, it landed damage on
+             the bot, and the bot landed none.
+
+An episode can be neither (nobody committed); they are never both.  Motion
+comes from the snapshot stream and damage from the DAMAGE event stream, so
+neither half is inferred from the other.
+
 THE CONTROLS (the answer to an unobservable commit test is not a better
 estimate of it -- it is a control that shares the blindness)
 ----------------------------------------------------------------------------
@@ -253,6 +276,13 @@ class Game(object):
                 return True
         return False
 
+    def dealt(self, actor, target, t0, t1):
+        """Did `actor` land a hero-damage event on `target` inside [t0, t1]?"""
+        for td in self.dmg.get((actor, target), ()):
+            if t0 <= td <= t1:
+                return True
+        return False
+
     def low_ally(self, live, bot, bteam, chaser, ex, ey, t):
         """(strict, loose, witness): strict = damage-witnessed chase.
 
@@ -336,6 +366,58 @@ class Game(object):
                 best = dd
         return best
 
+    def attribute(self, t0, bh, eh):
+        """Who supplied the closing?  (bot_adv, chaser_adv, t_star) or None.
+
+        `closed` (d0 - dmin) is the SUM of two bodies' motion and therefore
+        cannot tell "the bot turned and punished" from "the bot was run down"
+        -- 2026-09-12 read 35-46% `closed` on the BASELINE leg, where this gate
+        is structurally shut, with a 1%-HP PA counted as a textbook collapse
+        while she was the one dying.  This decomposes it: project each body's
+        own displacement (t0 -> the frame of closest approach) onto the line
+        that joined them at admission.  Positive = that body moved in.
+        """
+        here = self.by_t.get(t0) or {}
+        if bh not in here or eh not in here:
+            return None
+        b0, e0 = here[bh], here[eh]
+        ux, uy = e0['x'] - b0['x'], e0['y'] - b0['y']
+        d0 = math.hypot(ux, uy)
+        if d0 <= 1e-6:
+            return None                      # no line to project onto
+        ux, uy = ux / d0, uy / d0
+        best, tstar = None, None
+        for t in self.times:
+            if t < t0:
+                continue
+            if t > t0 + CONSEQUENCE_WIN:
+                break
+            hh = self.by_t[t]
+            if bh not in hh or eh not in hh:
+                continue
+            if hh[bh].get('hp', 0) <= 0:
+                continue
+            dd = dist(hh[bh]['x'], hh[bh]['y'], hh[eh]['x'], hh[eh]['y'])
+            if best is None or dd < best:
+                best, tstar = dd, t
+        if tstar is None:
+            return None
+        b1, e1 = self.by_t[tstar][bh], self.by_t[tstar][eh]
+        bot_adv = (b1['x'] - b0['x']) * ux + (b1['y'] - b0['y']) * uy
+        chaser_adv = -((e1['x'] - e0['x']) * ux + (e1['y'] - e0['y']) * uy)
+        return (bot_adv, chaser_adv, tstar)
+
+    def died_in(self, hero, t0, t1):
+        for t in self.times:
+            if t < t0:
+                continue
+            if t > t1:
+                break
+            s = self.by_t[t].get(hero)
+            if s is not None and s.get('hp', 0) <= 0:
+                return True
+        return False
+
     def episodes(self):
         runs, out = {}, []
         for t, bh, eh, band, dd in self.admitted_frames():
@@ -355,6 +437,24 @@ class Game(object):
             ep['dmin'] = dmin
             ep['closed'] = dmin is not None and ep['d0'] - dmin >= CLOSE_DELTA
             ep['engaged'] = dmin is not None and dmin <= ENGAGE_RANGE
+            t1 = ep['t0'] + CONSEQUENCE_WIN
+            att = self.attribute(ep['t0'], ep['bot'], ep['enemy'])
+            ep['bot_adv'] = None if att is None else round(att[0], 1)
+            ep['chaser_adv'] = None if att is None else round(att[1], 1)
+            ep['bot_driven'] = bool(att is not None and att[0] >= CLOSE_DELTA
+                                    and att[0] >= att[1])
+            ep['chaser_driven'] = bool(att is not None and att[1] >= CLOSE_DELTA
+                                       and att[1] > att[0])
+            ep['hit_chaser'] = self.dealt(ep['bot'], ep['enemy'], ep['t0'], t1)
+            ep['hit_by_chaser'] = self.dealt(ep['enemy'], ep['bot'], ep['t0'], t1)
+            ep['bot_died'] = self.died_in(ep['bot'], ep['t0'], t1)
+            ep['chaser_died'] = self.died_in(ep['enemy'], ep['t0'], t1)
+            # The two readings `closed` conflates, each requiring BOTH halves:
+            # the body that moved AND a landed hit.  Neither is inferred from
+            # the other, and an episode can be neither (nobody committed).
+            ep['punish'] = bool(ep['bot_driven'] and ep['hit_chaser'])
+            ep['rundown'] = bool(ep['chaser_driven'] and ep['hit_by_chaser']
+                                 and not ep['hit_chaser'])
             ep['leg'] = self.leg(ep['bot'])
             ep['game'] = self.name
             ep['side'] = self.side
@@ -371,8 +471,15 @@ class Game(object):
         """
         print('# trace %s  bot=%s  chaser=%s  t0=%.1f' % (self.name, bot,
                                                           enemy, t0))
-        print('#%7s %8s %8s %8s %5s %5s %7s %8s' %
-              ('t', 'd_pair', 'depth', 'd_bldg', 'iso', 'hp_b', 'ally', 'band'))
+        # `hp_e` and `hit` are here because of what their ABSENCE cost on
+        # 2026-09-12: this same trace, read without the chaser's HP and without
+        # the damage exchange, was reported as "the bot is the one being run
+        # down" on a frame where the bot killed the chaser 3s later (the
+        # phantom_assassin/skywrath_mage episode below).  A column that is not
+        # printed is a column the reader infers.
+        print('#%7s %8s %8s %8s %5s %5s %5s %4s %7s %8s' %
+              ('t', 'd_pair', 'depth', 'd_bldg', 'iso', 'hp_b', 'hp_e', 'hit',
+               'ally', 'band'))
         for t in self.times:
             if t < t0 - pre or t > t0 + span:
                 continue
@@ -411,9 +518,13 @@ class Game(object):
                 band = 'nearmiss'
             else:
                 band = '-'
-            print(' %7.1f %8.0f %8.0f %8.0f %5s %5.2f %7s %8s' %
+            fwd = self.dealt(bot, enemy, t - 1.0, t)
+            back = self.dealt(enemy, bot, t - 1.0, t)
+            hit = ('%s%s' % ('>' if fwd else '', '<' if back else '')) or '-'
+            print(' %7.1f %8.0f %8.0f %8.0f %5s %5.2f %5.2f %4s %7s %8s' %
                   (t, dpair, depth if depth is not None else float('nan'), db,
-                   'Y' if iso else 'n', b.get('hp_pct', -1), ally, band))
+                   'Y' if iso else 'n', b.get('hp_pct', -1),
+                   e.get('hp_pct', -1), hit, ally, band))
 
 
 def tally(eps):
@@ -426,6 +537,8 @@ def tally(eps):
         c[k]['frames'] += e['frames']
         c[k]['closed'] += 1 if e['closed'] else 0
         c[k]['engaged'] += 1 if e['engaged'] else 0
+        c[k]['punish'] += 1 if e.get('punish') else 0
+        c[k]['rundown'] += 1 if e.get('rundown') else 0
     return c
 
 
@@ -441,21 +554,24 @@ def report(c, games, loose=False):
           % (GATE, COLLAPSE_RING, ISOLATE_RING, int(ISOLATE_MAX), BUILDING_RING,
              DEPTH_MARGIN, ALLY_RING, ALLY_HP, RECENT_DMG))
     print('')
-    print('%-9s %-9s %-9s %7s %7s %8s %8s' %
-          ('stratum', 'band', 'leg', 'eps', 'frames', 'closed', 'engaged'))
+    print('%-9s %-9s %-9s %7s %7s %8s %8s %8s %8s' %
+          ('stratum', 'band', 'leg', 'eps', 'frames', 'closed', 'engaged',
+           'punish', 'rundown'))
     for stratum in ('ab', 'ba'):
         for band in bands:
             for leg in ('armed', 'baseline'):
                 k = (stratum, leg, band)
                 r = c.get(k)
                 if not r:
-                    print('%-9s %-9s %-9s %7d %7d %8s %8s' %
-                          (stratum, band, leg, 0, 0, '--', '--'))
+                    print('%-9s %-9s %-9s %7d %7d %8s %8s %8s %8s' %
+                          (stratum, band, leg, 0, 0, '--', '--', '--', '--'))
                     continue
-                print('%-9s %-9s %-9s %7d %7d %8s %8s' %
+                print('%-9s %-9s %-9s %7d %7d %8s %8s %8s %8s' %
                       (stratum, band, leg, r['episodes'], r['frames'],
                        pct(r['closed'], r['episodes']),
-                       pct(r['engaged'], r['episodes'])))
+                       pct(r['engaged'], r['episodes']),
+                       pct(r['punish'], r['episodes']),
+                       pct(r['rundown'], r['episodes'])))
         print('')
     print('DELTA (armed - baseline), percentage points, per stratum:')
     for stratum in ('ab', 'ba'):
@@ -468,9 +584,12 @@ def report(c, games, loose=False):
                 continue
             da = 100.0 * a['closed'] / a['episodes'] - 100.0 * b['closed'] / b['episodes']
             de = 100.0 * a['engaged'] / a['episodes'] - 100.0 * b['engaged'] / b['episodes']
+            dp = 100.0 * a['punish'] / a['episodes'] - 100.0 * b['punish'] / b['episodes']
+            dr = 100.0 * a['rundown'] / a['episodes'] - 100.0 * b['rundown'] / b['episodes']
             print('  %-3s %-9s  closed %+6.2fpp   engaged %+6.2fpp   '
-                  '(n %d vs %d)' % (stratum, band, da, de,
-                                    a['episodes'], b['episodes']))
+                  'punish %+6.2fpp   rundown %+6.2fpp   (n %d vs %d)'
+                  % (stratum, band, da, de, dp, dr,
+                     a['episodes'], b['episodes']))
     print('')
     print('LIMITS (print these with any quotation of the numbers above):')
     print('  * an `admit` episode is an UPPER BOUND on firing: the dump cannot')
@@ -482,6 +601,52 @@ def report(c, games, loose=False):
     print('    is noise (iron rule 4(i-b)); it is registered, not interpreted.')
     print('  * the body of %s was swapped 2026-09-07T23:xxZ (§FY);' % GATE)
     print('    readings from before that instant are a different lever.')
+    print('  * `punish` / `rundown` are the 2026-09-13 discriminator: `closed`')
+    print('    is the SUM of two bodies\' motion and reads 35-46%% on the leg')
+    print('    where the gate is SHUT, so it cannot separate "turned and')
+    print('    punished" from "was run down".  Each of the two requires BOTH a')
+    print('    named body\'s own advance (>= %g along the admission line) AND a'
+          % CLOSE_DELTA)
+    print('    landed hero-damage event in the same window.')
+    print('  * they are still not the gate\'s output: a bot can advance and hit')
+    print('    a chaser for reasons this gate had no part in (that is what the')
+    print('    baseline leg and the two floors are for).  `punish` says the')
+    print('    episode WAS a counter-punish, not that THIS gate caused it.')
+    print('  * damage is the hero-on-hero DAMAGE event stream: a kill landed by')
+    print('    an illusion, a summon or a tower is not attributed to the bot,')
+    print('    so `punish` is a LOWER bound on committing.')
+
+
+def floor_overlap(eps, window=5.0):
+    """How independent are the two floors from the band they are a floor FOR?
+
+    A floor is only a noise floor if it is not made of the SAME physical
+    events.  It is not, by construction, disjoint in TIME: the bands are
+    disjoint per FRAME, so one chase can be `noally` at t and `admit` at t+1
+    (the pinned 2026-09-12 PA/skywrath episode is exactly that -- `noally` at
+    1578.5, `admit` at 1579.5).  This prints the share of each floor's episodes
+    that share a (game, bot, chaser) with an `admit` episode inside `window`,
+    so the reader sees the contamination instead of assuming it away.
+    """
+    admit = collections.defaultdict(list)
+    for e in eps:
+        if e['band'] == 'admit':
+            admit[(e['game'], e['bot'], e['enemy'])].append(e['t0'])
+    print('FLOOR INDEPENDENCE (share of each floor sharing a pair with an '
+          '`admit` episode within %.0fs):' % window)
+    for band in ('nearmiss', 'noally'):
+        pop = [e for e in eps if e['band'] == band]
+        if not pop:
+            print('  %-9s (empty)' % band)
+            continue
+        n = 0
+        for e in pop:
+            for t in admit.get((e['game'], e['bot'], e['enemy']), ()):
+                if abs(t - e['t0']) <= window:
+                    n += 1
+                    break
+        print('  %-9s n=%-6d overlap %s' % (band, len(pop), pct(n, len(pop))))
+    print('')
 
 
 def load_sweep(sweep_dirs, max_games=None):
@@ -588,6 +753,7 @@ def main():
                 print(json.dumps(e))
             return 0
         report(tally(eps), len(games), a.loose)
+        floor_overlap(eps)
         return 0
 
     if not a.timeline or not a.side:
