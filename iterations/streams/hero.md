@@ -28,7 +28,12 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    (Crystal Maiden,`bots/BotLib/hero_crystal_maiden.lua`,gated,turbo-only,**WIDENING**)。报告
    `iterations/reports/hero/20260913T225735Z.md`,新测试 `tests/test_cm_r_retreat_crowd.lua`(19 绿),
    变异台 `tools/agent/mutstand_cmrflee.sh`(**13/13**),取证请求 `queue.json:hero-80`(零 EC2,优先级 3),
-   新开 **GH #807**(`[hero]`)。零 AWS,零波次。
+   新开 **GH #808**(`[hero]`)。零 AWS,零波次。
+   - ⚠️ **本轮抓到自己一条,写进产物而不是抹平**:三处产物第一稿都写 **#807** ——
+     **在 issue 开出来之前**写下的**前向引用**,而协同组在同一小时里拿走了 #807(`7b9c1cc6`)。
+     ⭐ **判别子:issue 号只能从创建返回值里抄,不能按「上一个号 + 1」推**;
+     并发的组会在两次 fetch 之间拿走它。`claim_precheck.sh` **抓不到这一条**
+     (它解析路径 / `state.json` 键 / 章程节,**不解析 `#NNN`**)。
    - ⭐ **新形状:一个把有界量乘以无界量的合取项,不是梯度,是一个穿着梯度衣服的开关 ——
      而它的关断点全文件没人写过。** `X.ConsiderR` branch 3:`nHP > 0.38 * #nEnemysHeroesFurther`,
      `nHP` 在 `:325` 就是 `[0,1]` 的分数。**crowd 1 = 外层守卫的逐字复述(空操作);

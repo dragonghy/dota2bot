@@ -8884,6 +8884,6 @@
   "domain": "⛔ **端到端新增域在本语料上是 0,而且是结构性的**:需要同一帧上 500u 内 ≥1 敌、1300u 内 ≥3 敌、`HP > 0.38` 三者同时成立,十个 CM-subject fixture 没有一个满足。唯一 crowd ≥3 的那帧 `f_260820_043039_cm_cask_close`(crowd 4)另外两个前提都不满足(500u 内 0 人、HP 0.300);清得过 500u 前提的两帧 crowd 分别是 1 和 2,正是本 lever **不碰**的两档。⇒ **谁也不许报一个本 lever 新增的释放数。** 十帧逐条读数由 `tests/test_cm_r_retreat_crowd.lua` §5.2 在失败信息里打印。取证走 `iterations/queue.json:hero-80`(零 EC2,优先级 3)。",
   "meters": "**无**。`nHP` 与 1300u 环都直接读帧 —— 与 branch 1 的 head/hurt 计数不同,本合取项既不骑 835 AoE 锚(GH #502)也不骑 mock 的平坦移速,§5.4 把这条独立性**断言**下来而不是假设。",
   "verification": "`lua5.1 tests/run_tests.lua test_cm_r_retreat_crowd.lua` **19 绿 / 0 红**;`lua5.1 tests/run_tests.lua test_cm_r_` **58 绿 / 0 红**(三个 ConsiderR 测试文件同跑,查串扰);变异台 `tools/agent/mutstand_cmrflee.sh` **13/13 全杀**,`RESTORED OK`。",
-  "issue": "GH **#807**(`[hero]`)。"
+  "issue": "GH **#808**(`[hero]`)。⚠️ 本轮的产物里一度写着 #807 —— 那是**在 issue 开出来之前**写下的前向引用,而协同组在同一小时里拿走了 #807(`7b9c1cc6`)。真号是 **#808**,已在同一工作单元内回填。"
  }
 }
