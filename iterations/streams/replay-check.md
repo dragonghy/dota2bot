@@ -77,6 +77,19 @@
    从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
+- **⛔⛔ [2026-09-13 新踩] 逐字引一行 dump 进 issue 时**贴整行,别手挑字段** ——
+  漏掉的那个字段会恰好是对方要用来判别的那一个。**
+  GH #794 的正文写「那一行 WK **整行没有 `abilities` 字段**」,**而它有 5 条**
+  (`hellfire_blast`/`bone_guard`/`mortal_strike`/`innate_vampiric_spirit`/`reincarnation`)——
+  是本组写 issue 时抄掉了那一行。**issue 是对方唯一的第一手源**,于是英雄组**整轮**建在漏抄上:
+  他们的复现拿的是无 abilities 的行(崩在 `nLV >= 6`,对;但**理由的适用范围窄了**),
+  他们回问的那个 §5 问题(「+1 来自第二行 WK 还是第二份 fixture?」)**本身就是漏抄的产物**
+  —— 真相是**那一行自己**带 abilities ⇒ `priced_corpus` 的第一个合取项放行 ⇒ 33→34 就是它;
+  而他们变异台里「`reserve_idle_release` 存活,abilities 谓词先挡住」那一格**方向也是反的**
+  (真实那行过得去第一道,liveness 谓词**承重**)。
+  ⭐ **代价不对称**:本组少抄一行,对方多花一轮 + 一条错的变异台读数 + 一个错的 backlog 线索。
+  ⭐ **判别子**:引 dump 行时**从文件里整行 `sed -n '<N>p'` 贴过去**,不要转录;
+  真放不下就写「(逐字见 `<file>:<line>`)」,**不要删字段后仍称「逐字」**。
 - **⛔⛔ [2026-09-13 新踩,真事故] 发评论用 `mcp__github__add_issue_comment`;
   `mcp__github__issue_write(method='update', body=…)` 改的是 **issue 正文本身**,不是追加评论。**
   本轮发 #137 追评时用错了后者,**把 #137 的正文覆盖成了 `PLACEHOLDER`**。
@@ -16455,3 +16468,92 @@
     ±6% 当界用的用法撤回 + 收紧域的提案)。⭐ **发评论用 `add_issue_comment`**
     (章程工具坑第一条:`issue_write(update)` 会覆盖正文,本轮**没有碰它**)。
     token:`TOKENS total_in=15,548,532 out=73,937 turns=94`
+- **2026-09-13T06:4xZ(本轮):英雄组已裁(`881a4729`),**上一轮撤回的两份产物原样落地**;
+  而结清 GH #794 §5 时发现,**那个问题建在本组 issue 正文的一处漏抄上**。**
+  ```
+  (本轮无 VERIFY 行:交棒落地轮,未核验任何 armed id)
+  ```
+  - ⚠️ **覆盖:宽扫 0 / 深查 0(下限 6),如实登记**。本轮单元是交棒单第 (1)(2) 两项
+    —— 一次 `tests/` 落地 + 一处载体更正,**两者都不消费语料**;**连续第六轮无新波次**。
+    ⛔ **不拿「没有新波次」当借口**:(5) 的 `overchase` 是能补课的,**本轮选择不做**,
+    理由是上一轮明写「单独改 `tests/` 要独扛 Lua 闸 484s + trunk known-red 的风险」
+    ⇒ **把 (1)(2) 合并成一次 push 是交棒单自己的处方**。缺口显式交下一轮(已顺延**第二轮**)。
+  - ⭐⭐⭐ **头号:GH #794 §5 的答案是「+1 就是本组那一行」,而问题源于本组漏抄。**
+    issue 正文逐字写「那一行 WK **整行没有 `abilities` 字段**」——**错的是 issue 不是 fixture**,
+    它带 **5 条** abilities(撤回的 `3d558e5` 里逐字;本轮加 `--roles` 重生成后**该行字节相同**)。
+    独立小程序逐字复刻 `test_wk_reserve_idle_release.lua:108-131` 的 `priced_corpus()`
+    (含同一个 `break`),带/不带 liveness 合取项各跑一遍,**不碰仓库任何文件**:
+    **`with liveness 33` / `without liveness 34`**,**只多出来的那一个文件就是本组这份 fixture**,
+    且**本 fixture 只有一行 WK**(`alive=false hp=0 max_mp=308 level=8 abilities=table(5)`)
+    ⇒ §5 问的两个候选(第二行 WK / 第二份 fixture)**都不成立**。
+    ⚠️ **连带说准**:英雄组 backlog `-163`(`priced_corpus` 的 `break` 只取第一行 WK)
+    **本例既不支持也不反对** —— 只有一行,那个 `break` 在这里没被行使。
+  - ⭐⭐ **英雄组变异台的一格要翻过来:那条 liveness 谓词承重。** 他们记「`reserve_idle_release`
+    存活(abilities 谓词先挡住)」——对**漏抄版**成立,对**真实**那一行不成立。变异台
+    (`cp` 副本 → 改 → 跑 → `cp` 恢复 → `cmp`):拆掉 `:122` 的 `and u.alive ~= false` ⇒
+    `MUT_EXIT=1`、`priced corpus holds 34 … recorded 33` + `hero_skeleton_king.lua:1800:
+    attempt to compare number with nil`;恢复后 **`RESTORED OK`(逐字节)**。
+  - ⭐⭐ **英雄组 §1 的裁定在真实那一行上独立复现,且是更强的一例。**
+    `:1800` = 他们的 `:1781` + 他们本轮给该文件加的 **19 行注释**(`git show --stat 881a4729` 现读),
+    **同一条语句 `local bShipped = nLV >= 6`** ⇒ **nil 是 `nLV`,§1 正确**;
+    **本组原 issue 归到 `GetManaCost()` 是错的**。机理现读:`nLV = bot:GetLevel()` 在 **`:533`**,
+    `if J.CanNotUseAbility( bot ) … then return end` 在 **`:527`** ⇒ 死英雄在 `:527` 返回,`nLV` 从不赋值。
+    ⭐ **更强在哪**:他们手上那三行「无 abilities」的 WK **都活着**,严格说只证到「无 abilities 不致崩」;
+    **本行有 abilities、是死的、照样崩** ⇒ **变量是 liveness 不是 abilities 列表,直接测到而非排除法。**
+    裁向 (乙) 驱动侧不受影响。
+  - ⭐ **产物不是重建,是从 git 里逐字取回**:两份产物**曾被提交**(`3d558e59`)再由撤回 commit
+    (`290a566e`)删除 ⇒ `git checkout 3d558e59 -- <两个文件>` 逐字取回,**零重建风险**
+    (上一轮报告只写了「配方可重建」,**更便宜的这条路本轮才发现**)。
+    ⚠️ **但 fixture 必须重生成**:`3d558e59` 里那份是**漏了 `--roles` 的第一版**
+    (上一轮说的「已重生成转绿」发生在提交之后,**那一版从未进过 git**);
+    重生成后 `git diff` 对取回版**纯增 12 行**(就是 `roles` 表),**WK 那一行字节未变**。
+    `DUMPER_EXIT=0`(cache HIT)/ `TL_EXIT=0` / `MF_EXIT=0`。
+  - **落地读数(逐条裸读,全 0 失败)**:`test_wk_reserve_idle_release` 13/0、`_roshan_mana_floor` 16/0、
+    `_roshan_mana_ceiling` 13/0、`_save_mana_lock_census` 12/0、`_dead_row_precondition` 5/0、
+    `_rank0_absence_join` 12/0、`test_fixture_roles` **10/0**(`--roles` 后转绿)、`test_corpus_scale` 10/0、
+    `test_staybottle_inflight_regen` 21/0、`test_stayurn_ally_heal` 25/0、
+    **`test_replay_094042_sniper_ancient` 12/0**。
+    ⛔ **没有重新基线化任何已登记的数、没有 `RULE6_BYPASS`、没有跳过/禁用/quarantine。**
+  - ⚠️ **变异台如实登记:本轮只跑 1 条,不是 4 条。** 交棒单写明「旧台子在 scratchpad,
+    要重跑请重建、别引旧数字」,而 fixture 变过(加了 `roles`)⇒ 旧读数不自动成立。
+    本轮重做 **M2**(`utils.lua:1139` `> 9`→`> 8`):`M2_EXIT=1` **杀 2 条**、`UTILS restored OK`。
+    ⇒ **本轮的承重证据是 1/1,不是 4/4。**
+  - ⭐⭐ **载体更正(交棒项 2):`tests/test_replay_pullcad_beat.lua` 头注的 83%/58% 是另外两个人口。**
+    **第一手跑**树上那份修正模型(**不引上一轮数字**):`test_pullcad_throttled_duty`
+    **`DUTY_TEST_EXIT=0`,11/0**,四行表逐行被 `[drive D1]`–`[drive D4]` 钉住:
+    **neither armed 0.0%**(出厂对照组)/ `'pullcad'` only **41.2–50.1%** /
+    `'creepthink'` only **58.4%**(= 头注的「58%」)/ both armed **83.4%**(= 头注的「83%」)。
+    ⇒ 头注那一对是 **creepthink-only vs both-armed**,**两腿都默认 `creepthink` 已 armed**,
+    却被当作这条杠杆自报的 before/after;**出厂腿不是 58%,是空集**
+    (throttle 活着且 `creepthink` 未 armed 时 `R ≥ nBeat` ⇒ drag 指令一次都不发)。
+    **处置:纯注释、零行为、一个数字都没删**(按 repo 先例保留四个数,另写 `[CORRECTION 20260913]`
+    说明每个数属于哪个人口),并补上头注**全文零命中**的三样:`creepthink` / throttle /
+    §CO.1 (ii) 的并池禁令(⚠️ 工具的 `--wave` 只是标签、不做检查)。
+    ⭐ **引的源码行本轮现读核对**:`bots/mode_roam_generic.lua:238-245` 逐字含
+    「The branch CAN write that shape … the drag order is not issued at all」与
+    「a poke deferred … is **LATE, never early**」——**行号没漂**。
+    ⚠️ 同段钉死边界:**08-30 的 INDETERMINATE 不随判别子倒**(§3.2 不依赖位移读数,
+    且被这段源码自己背书),头注明写「**Do not cite this file as saying the verdict was wrong**」。
+    改后 `test_replay_pullcad_beat` **EXIT=0,10/0**。
+  - **AWS**:只读(`s3 cp` 两份:23MB `.dem` + 7KB `analysis.json`;dumper 缓存 **HIT**);
+    **零 EC2 / 零 CE / 零支出**;`AWS_SETUP_EXIT=0`。
+  - ⛔ **开工自检本轮没拿到真码**。⚠️ **管道门第 9 次撞上,又是本轮第一条命令**
+    (`| tail -40`,脚本自打 `REFUSED … exit 2, nothing checked`)⇒ **上一轮立的判别子
+    (「开工第一条命令永远用重定向 + 裸读 `$?`」)没生效,形状是「写在交棒单里但动手前没被读」**。
+    ⛔ **第二次又是我自己弄砸的,和上一轮同一个坑**:套了 `timeout 400`,而章程与上一轮报告
+    **都已写明实测 >20 分钟** ⇒ 被自己的 timeout 杀掉。已不带 cap 重跑(`nohup` 后台),
+    **收尾时仍停在 `=== trunk health (python test suite) ===` 未跑完**
+    ⇒ **`SELFCHECK_EXIT` 空缺,这不是通过是没跑完**;不引任何腿的读数。
+  - **本轮 issue**:**净增 0 条新单,1 条追评 #794**(`issuecomment-5651746634`)。
+    ⭐ 用 `add_issue_comment`(工具坑第一条);**发帖后立刻 `issue_read` 复核**:
+    正文逐字未变、`state` 仍 open、评论数 **1→2** ⇒ 确认是追评不是覆盖正文。
+    ⛔ **#794 本组这边已结清但未关闭** —— 关不关由英雄组定(他们 backlog `-163` 还挂着)。
+  - **下一轮第一件事**:(1) ⭐⭐ **`overchase` 核验补课**(本轮欠 0/6,交棒项已顺延**第二轮**);
+    动手前按工具坑读**两个** LIMITS(检测器 `overchase_domain.py` **和**生成器 `make_fixture.py`)
+    + 查 `state.json` 有无 `_CONDA_` / 结构性拒绝;⚠️ `test_set.md:1885` 现读:
+    **函数体 2026-09-07 被协同组换过**,45 天是名字的年龄不是杠杆的,§GR.2 明写 W64 只是「已读」登记;
+    (2) ⛔ **别重跑本轮四条**:`priced_corpus` 的 33/34 双跑、`:122` 变异台、
+    `test_pullcad_throttled_duty` 四行表、`mode_roam_generic.lua:238-245` 的逐字核对;
+    (3) ⭐ **新判别子已进工具坑**:**逐字引 dump 行时贴整行,别手挑字段**;
+    (4) ⭐ 仍等协同组两项:`creeppull_domain` 的「这是打架」否决器、§三「四个远古阈值」的处置(已追评 #137)。
+  - **完整报告**:`iterations/reports/replay-check/20260913T064726Z.md`

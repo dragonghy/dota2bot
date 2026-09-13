@@ -31,6 +31,39 @@
 -- also the beat the sister camp pull in the same file has used since wave13 --
 -- asserted below, so the two cadences cannot silently drift apart.
 --
+-- [CORRECTION 20260913, replay desk] THE 83%/58% PAIR TWO PARAGRAPHS UP NAMES
+-- THE WRONG TWO POPULATIONS, and both halves of it live in a world this header
+-- never mentions. Neither number is deleted -- each is a real row of the duty
+-- table -- but neither is the before/after of arming 'pullcad'. The corrected
+-- four-row table is DRIVEN and asserted in tests/test_pullcad_throttled_duty.lua
+-- (read first-hand here, 11 tests / 0 failures):
+--     neither armed      0.0%           <- the shipped comparator
+--     'pullcad' only     41.2-50.1%     <- what arming THIS lever alone buys
+--     'creepthink' only  58.4%          <- the "58%" above
+--     both armed         83.4%          <- the "83%" above
+-- So the pair quoted above is creepthink-only vs both-armed: it silently
+-- assumes 'creepthink' is armed in BOTH legs, and the reader takes it for the
+-- lever's own self-reported gain. The shipped leg is not 58% of anything; it is
+-- the EMPTY SET, because while the throttle is alive and 'creepthink' is not
+-- armed, R >= nBeat means the drag order is never issued at all
+-- (bots/mode_roam_generic.lua:238-245 says this in its own words). Read against
+-- the right comparator the lever still lifts the drag out of that empty set --
+-- the claim survives; the arithmetic advertising it did not.
+--
+-- TWO THINGS THAT TRAVEL WITH THAT CORRECTION:
+--   * test_set.md section CO.1 (ii) forbids pooling this id's readings across
+--     the W30 boundary ('creepthink' shares the armed string from W30 on, and
+--     the two are strongly super-additive -- the table above is why). The
+--     --wave flag on pullcad_beat.py is a LABEL and checks nothing, so pooling
+--     two waves' sweep dirs raises no hand anywhere.
+--   * The 40.0-51.8% non-branch lower bound published with GH #326 rests on a
+--     discriminator ("a poke pair bracketing a stationary hero was authored by
+--     neither cadence") that the same source lines refute: stillness is the
+--     SHIPPED cadence's own signature. The 20260830 INDETERMINATE verdict does
+--     NOT fall with it -- section 3.2 of that report argues structurally, from
+--     sub-2s gaps a 3.0s beat cannot write, and needs no displacement reading.
+--     Do not cite this file as saying the verdict was wrong.
+--
 -- THE WIND-UP HOLD IS A STRUCTURAL PRECONDITION of this lever. Without it the
 -- poke is cancelled 33ms after it is ordered, so aggro is drawn only by luck --
 -- and a longer beat then buys FEWER lucky draws, i.e. strictly worse than
