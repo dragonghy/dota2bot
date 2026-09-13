@@ -7378,7 +7378,18 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     ⚠️ 边界:抽样不是逐条,支持「不必再优先分诊」,不支持「存量里没有价值」。
   - **变异台 12/12**(`tools/agent/mutstand_cmcreepclock.sh`),含**故意的 M0 无操作对照如期 SURVIVED**;
     判定读 runner 自己的 `N tests, M failures` **计数**不读行子串;还原走**文件拷贝**不走 `git checkout`。
-  - **门**:`GATE_EXIT=0`(luacheck 0 警告)、smoke exit 0;三条腿读数见报告 §5 与末尾 push 节。
+  - ⭐ **闸拦了我三次,三次点的都是我自己的红,没有一次是 trunk 存量** —— 这是 GH #624 想买的东西,本轮买到了:
+    (1) py 闸点 `mutstand_cmcreepclock.sh verifies its restore`(普查要**字节级证明**,不是「调了 restore 就算」);
+    (2) lua 闸点 `test_ckpush_minute_unit`:N*60 人口 124→122(两处 inline 时钟被 **NAMED 不是 removed**,
+    「焦点五挂钟漫步」**第四例**,第一次一次动两处);
+    (3) lua 闸点 `test_activemode_call_site_census`:注释提及 6→8 + 原始总数 260→262
+    (**RE-TAKEN NOT RAISED**,可执行半未动)。**三条都重新推导,不是把数字改成对得上。**
+    ⇒ 第 2、3 条是 #624 立案句的教科书复现,**区别是红在作者自己的闸上而不是几小时后红在下一个开工的组身上**。
+  - **门**:最终读数 `GATE_EXIT=0` / `py gate: 100 ran, 0 findings` /
+    `lua gate: 364 ran, 0 findings, 8 known-red, 483.1s`;**未向 known-red 添加任何一条,未用 RULE6_BYPASS**。
+    smoke exit 0。`push HEAD:main` 被拒一次(闸跑 8 分钟期间 main 动了,GH #161),
+    `state.json` 冲突按**「按键差并池」**解:取 main 版本,用**脚本**从**自己 commit 的 blob** 读回一个键
+    并打印**键集差 = `['cmcreepclock_20260913']`** 作证 —— 同形状**第三次**,merge driver 仍然该买。
     **动态全套未跑完,不声称。** 自检真码从日志 `exit sources` 节读作 **3**
     (`cadence`/`queue-rulings`/`owed-executions` **归总监**;`trunk-red(python)` UNCERTIFIABLE);
     ⚠️ 自检第一次调用被工具**自己拒绝**(证据纪律 3,提示称**第 5 次**同形复发),
