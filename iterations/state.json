@@ -8838,7 +8838,8 @@
   "domain_end_to_end": "⛔ **买不到,而且是结构性的**:分支需要**带真实蓝池的敌方小兵**,而语料在每个存活 Lion 瞬间上 `GetNearbyCreeps` 答**空表**(`CORPUS_HAS_NO_NONHERO_UNITS_20260912`,首见于 `cmcreepclock`)。§4 **驱动**这个 0 而不是断言它,并且是**单向 tripwire**:哪天语料里出现带兵的帧,§4 变红并指名去测,而不是安静地绿在一句已经过期的话上。⛔ **谁也不许报一个本 lever 删掉的出价数。** 取证走 `queue.json:hero-79`(**零 EC2**)。",
   "limits": "1. ⛔ **本轮第一稿把准入测试的第二个析取项 `GetMana() > 349` 写成「每一级都是死代码」,那是错的,查 KV 后当场改正**:`mana_per_second` 是 `20 40 60 120`、`duration` 恒 `5.0` ⇒ `nManaDrain * 0.8` = 80/160/240/**480**;前三级 349 确实被第一项吞掉,**第四级 349 是更弱的那个测试**,放进 350–480 蓝量的兵。⇒ 它是一条**四级里三级空、第四级承重**的析取项,不是死代码。§5 用 KV 算术钉住 3/1 这个比,改了要去改抬头而不是放松断言。**这一项本轮不修**(与射程是两个问题,合并会让波读数无法归因)。\n2. 环读数用的是**英雄**句柄(语料没有兵),所以它是关于**带**的读数不是关于**供给**的读数。\n3. 本轮**没有**逐帧看录像;缺陷是从源码 + KV 快照推出来的,这一点写在报告里。",
   "verification": "`lua5.1 tests/run_tests.lua lion_drain_creep_reach` **13/13 绿**;`tools/agent/mutstand_liondrainreach.sh` **15/15**(含 M0 无操作对照如期 SURVIVED);`bash tools/agent/luacheck_gate.sh` **GATE_EXIT=0 / 0 警告**。\n⭐ **变异台自己抓到一条**:M11(把 1600 直接改小 = 不 gate 就把缺陷修了)第一版锚在裸的 `bot:GetNearbyCreeps( 1600, true )` 上,而**同一个 needle 更早地出现在本 lever 自己的抬头注释里**(它在引用缺陷)⇒ perl 改的是**散文**、mutant **SURVIVED**。改成锚 `local nEnemyCreepList = ...` 后 CAUGHT。**改了注释的 mutant 不是一个结果**,这条写进了台子里。",
-  "issue": "无既有 issue;本轮新开 `[hero]` issue 记录缺陷与取证请求(若 MCP 可用;不可用则本条与报告即为登记,下轮补)。"
+  "issue": "GH **#805**(本轮新开,`[hero]`,`https://github.com/dragonghy/dota2bot/issues/805`)。",
+  "trunk_red_spillover": "⚠️ 外溢一条,不归英雄组修:`tests/test_lion_considere_earlyreturn_domain.lua` 在 trunk 上 **6 红**(干净 HEAD worktree 逐字复现),**既不在 `known_red` 也不在 `tools/agent/lua_gate_manifest.json` 的运行集里** ⇒ 闸三行读数全绿地放行,而 trunk 那一侧确实红着。已按 `[bug]` 立案 GH **#806**。⛔ 本组未放松任何断言、未加 known_red(GH #783)。"
  },
  "talentqueue_ORDERING_NOT_A_DEFECT_20260913": {
   "owner": "hero",
@@ -8848,6 +8849,7 @@
   "derivation": "`X.GetSkillList` 的通用腿:`totalSlots = 15 ability + 8 talent = 23`,talent 落在 `i >= 10 and (i % 5 == 0 or ability_idx > 15)` ⇒ 槽位是 1–9 技能、**10 = t10**、11–14 技能、**15 = t15**、16–17 技能、**18 = t20**、**19 = t25**、20–23 = 四个层级各自的**另一半**。\n把每个槽位跟引擎的升级等级要求对齐(基础技能 rank N 要 2N−1 级;大招 6/12/18;天赋 10/15/20/25):\n* 17 级时**可花上限** = 14 个技能点(大招 rank3 要 18 级)+ t10 + t15 = **16** < 17 ⇒ **必然攒 1 点**,与顺序无关;\n* 18、19 级同理(t20 要 20 级),21–24 级同理(t25 要 25 级);\n* 20–23 槽是**同层另一半**,第一半点掉之后永久不可点 —— 但那时也已经无点可花。\n⇒ **顺序在这条约束下是紧的**,任何重排都只会更差或等价。",
   "load_bearing_finding": "⭐ **t10/t15 两个槽是**承重的垫片**,不是插进来的杂物**:正是它们把六条焦点 build 里的**大招 rank 2**(ability idx 11)顶到槽 12 = **恰好 12 级**,也就是引擎对大招 rank 2 的要求。把天赋挪到技能之后会让 idx11 落到槽 11 = 11 级,**低于要求**。⇒ 「把天赋全挪到最后」这个直觉修法会**打坏大招节奏**。",
   "one_real_off_by_one": "六条焦点 build 的**大招 rank 3**(ability idx 15)都落在槽 **17**,而引擎要 **18 级** ⇒ 17 级那一帧队头进不了中间分支、落在终局 `else`。**这不是缺陷**(见上:17 级可花上限就是 16),但它解释了为什么终局 `else` 在**每一局、每一个英雄**身上都会被进入至少一次 —— `[WARN] Skipped to level up ability` 不是异常信号,这一点直接影响 `queue.json:hero-78` 那条日志扫描怎么读分母。",
-  "limits": "⛔ **这是从两份 build 表 + 引擎公布的等级要求推出来的,不是从帧上量的。** 本轮**没有**给它写断言(`tests/test_focus_talent_reach_wall.lua` 已有相邻读数,但没有钉这条算术)。⇒ 登记为**推导**,不是判决;下一轮把它钉成断言是自足小单元。\n⛔ **它不结掉 #799**:#799 量到的墙在槽 **15**(13 技能点 + ≤1 天赋),那是**消费**缺陷(`skillstall` 的域),与排序无关。按 `-167` 的要求,两者**不合并**。"
+  "limits": "⛔ **这是从两份 build 表 + 引擎公布的等级要求推出来的,不是从帧上量的。** 本轮**没有**给它写断言(`tests/test_focus_talent_reach_wall.lua` 已有相邻读数,但没有钉这条算术)。⇒ 登记为**推导**,不是判决;下一轮把它钉成断言是自足小单元。\n⛔ **它不结掉 #799**:#799 量到的墙在槽 **15**(13 技能点 + ≤1 天赋),那是**消费**缺陷(`skillstall` 的域),与排序无关。按 `-167` 的要求,两者**不合并**。",
+  "issue": "登记在 GH **#799** 的评论 `issuecomment-5656136279`(**不结案** —— 结的是「排序」那一半)。"
  }
 }

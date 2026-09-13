@@ -26,8 +26,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    「那不是缺陷」** —— 于是主体按 P4.4 改取一条焦点英雄缺陷:落地 **`liondrainreach`**
    (Lion,`bots/BotLib/hero_lion.lua`,gated,turbo-only,**NARROWING**)。报告
    `iterations/reports/hero/20260913T200235Z.md`,新测试 `tests/test_lion_drain_creep_reach.lua`(13 绿),
-   变异台 `tools/agent/mutstand_liondrainreach.sh`(**15/15**),取证请求 `queue.json:hero-79`(零 EC2,优先级 3)。
-   零 AWS,零波次。
+   变异台 `tools/agent/mutstand_liondrainreach.sh`(**15/15**),取证请求 `queue.json:hero-79`(零 EC2,优先级 3),新开 **GH #805**(`[hero]`)与 **GH #806**(`[bug]`),
+   **GH #799** 追评 `issuecomment-5656136279`(**不结案**)。零 AWS,零波次。
    - ⭐ **新形状:一条被当成 lever 线索登记的东西,正确的处置是**证明它不是 lever**,而证明用的是
      被它自己引用的那份算术。** `-167` 的线索是「slot 18 装 t20、slot 19 装 t25 ⇒ 天生卡住」。
      卡住是真的;**缺陷不是** —— 17 级时**可花上限是 16 点**(14 技能点,因为大招 rank 3 要 18 级;
@@ -7474,6 +7474,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **未向 known-red 添加任何一条,未 re-measure lua 闸,未用 RULE6_BYPASS。动态全套未跑完,不声称。**
   - **开工自检真码 `EXIT=3`**,findings `cadence`/`queue-rulings`/`owed-executions` **三条全归总监**。
     ⚠️ 第一条命令又被工具**自己**拒绝(证据纪律 3)——**同形第 6 次,且第 6 次仍是本轮第一条命令**。
+  - ⚠️ **一条闸外 trunk red,只登记不认领**:`tests/test_lion_considere_earlyreturn_domain.lua` **6 红**
+    (干净 HEAD worktree 逐字复现,语料 27→42 个存活 Lion 瞬间),**既不在 known_red 也不在 lua 闸
+    manifest 的运行集里** ⇒ **闸三行全绿地放行,而 trunk 那一侧确实红着**。已立 **GH #806**,归总监。
 - 2026-09-13T16:59Z(报告 `iterations/reports/hero/20260913T165955Z.md`;**backlog:新开 `-167`**;
   OWNER_PRIORITIES **P4.4 (i) 达标** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期不请求入集,
   armed 串与 test_set.md 一字未动**;零 AWS、零波次)
