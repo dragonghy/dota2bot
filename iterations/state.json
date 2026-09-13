@@ -8766,8 +8766,8 @@
  },
  "chasering_20260913": {
   "ruling": "LANDED 收窄('lf_chase' 继承,turbo-only,UNARMED,**0 个新 gate id**)。J.ShouldNotChaseWhenLow 的「队友已拿下人头」豁免只在**目标是正在打我的那些敌人之一**时计算。",
-  "at": "2026-09-13T16:1xZ",
-  "ref": "iterations/reports/strategy/20260913T161xxxZ.md;GH #802;tests/test_chasering_target_in_ring.lua;tools/agent/mutstand_chasering.sh",
+  "at": "2026-09-13T16:15Z",
+  "ref": "iterations/reports/strategy/20260913T161500Z.md;GH #802;tests/test_chasering_target_in_ring.lua;tools/agent/mutstand_chasering.sh",
   "task": "strategy work unit。章程 backlog 0NEXT6 指定的候选(`J.ShouldSuppressDive` leg (b) 的 vLoc 两类调用点)**读了、定价、不认领**(理由见报告 §1:三个站点逐一按树数过,leg (b) 在三处问的都是「我若把身子交到 vLoc,会不会被秒」,在出货站点 vLoc 就是 bot 自己 —— 不是缺陷,是同一个问题的两种取点)。实际认领的是隔壁八行的**姊妹守卫**,它吃的是**同一个无界句柄**。主体在 bots/(OWNER_PRIORITIES 4.4 (i),**连续第六轮满足**)。",
   "change": "bots/FunLib/jmz_func.lua:J.ShouldNotChaseWhenLow 的豁免段整体包进 `if J.IsExistInTable( target, tEnemies ) then ... end`。**6 行代码(缩进 + 一个合取),0 个新 gate id。**",
   "why_no_new_id": "判据(甲′)**第三态**:宿主第一行是 `if not J.IsLaneFixOn( 'chase' ) then return false end` ⇒ 整体上闸于一个**未 promote** 候选(`lanefix` 捆绑已 REJECT,`lf_chase` 仍是活候选且**不在当前 armed 串里**)。此时加新 id = 把候选嵌在未 armed 候选之下,没有任何波次能隔离它,而 check_armed_wiring.py 仍会叫它 WIRED(pullcad 陷阱的表亲)。代价:**armed 串 / queue.json / test_set.md 一字未动**。⚠️ `lf_chase` 一旦 promote,本收窄立刻变成出货行为改动 —— 该前提写成了会红的断言(测试 §1(d)),不是一句说明。",
@@ -8780,6 +8780,8 @@
   "mutation_stand": "tools/agent/mutstand_chasering.sh —— 见报告 §5。关键两腿:**M2**(在 `J.IsExistInTable` 内部让成员判定恒真,调用点逐字节不变 ⇒ 文本断言与**全部答案计数**都照绿,只有分支计数看得见)与 **M4**(打断豁免自己的 `return false` ⇒ 语料扫描完全看不见,只有 §4 的反事实抓得住)。这两腿把「为什么要数分支」「为什么要留反事实」各钉成一条会红的断言。",
   "gate_finding": "⭐ 被闸点名抓到一条**别组的** trunk 红:`tests/test_bots_walk_farm_only.py` exit 1,点名 `tests/test_cm_w_creep_clock.lua` 的 `io.popen` 未进 `UNRESOLVED_HAND_READ` —— 该文件由英雄组 `cmcreepclock` 轮次(8f2e6394,13:56Z)落地,**文件里写着注释「UNRESOLVED_HAND_READ: io.popen, registered per GH #596's habit」而登记从未发生**。注释写了、登记没写 ⇒ 这是 GH #774 循环的**新变体:一条注释让它看起来已登记**。本轮手读后连同本轮自己的新文件一起登记,重跑 **8 checks / 0 failed**。",
   "rule290_violation": "⚠️ **本轮自曝一条**:GH #802 在 `git push` **之前**发表,正文引用了三个当时只在容器里的产物(`tests/test_chasering_target_in_ring.lua` / `tools/agent/mutstand_chasering.sh` / 本 state 键)。铁律 6 的 #290 条款要求「push 排在写下引用之前」,应先跑 `claim_precheck.sh`。本轮没跑 —— 如实登记,不补叙成「顺序没问题」。补救:同一工作单元内立即 push,窗口以分钟计。",
-  "cost": "零 AWS(一次调用都没有)、零波次、armed 串一字未动、queue.json 一字未动、不发 owner 邮件。"
+  "cost": "零 AWS(一次调用都没有)、零波次、armed 串一字未动、queue.json 一字未动、不发 owner 邮件。",
+  "rule6": "钩子三行(最终 push 0823de1a → main):`GATE_EXIT=0 CLEAN` / `py gate: 101 ran, 0 findings, 0 uncertifiable, 44.5s` / `lua gate: 365 ran, 0 findings, 0 uncertifiable, 8 known-red, 601.3s`。未用 RULE6_BYPASS。动态半没有整体跑(子集,逐项见报告 §7)。",
+  "dup_key_finding": "⭐ rebase 后才发现:总监 16:09Z(GH #803)独立登记了同一个 `UNRESOLVED_HAND_READ` 键,`git pull --rebase` **无冲突地**把两条并存进同一个 dict ⇒ **Python 重复键不报错、静默只留最后一条**,且我那条插在中间**打断了总监条目里「the entry directly below is its 09-12 twin」的交叉引用**。处置:删掉自己那条,把它唯一多出来的事实(文件里那句让它*看起来*已登记的注释)折进总监那条。**GH #777 的形状在一个新文件里**,差别是这两条**不**逐字相同 ⇒ 有害且仍然不报错。教训:**两个座位同一小时修同一条红,合并器不会告诉你。**"
  }
 }
