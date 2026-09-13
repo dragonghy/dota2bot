@@ -8638,8 +8638,8 @@
  },
  "divepost_20260913": {
   "ruling": "LANDED gated ('divepost', turbo-only by inheritance, UNARMED). J.ShouldPunishDive 的出厂建筑循环不再把被占领的瞭望塔当成「我们正被钻塔」的建筑。",
-  "at": "2026-09-13T0x:xxZ",
-  "ref": "iterations/reports/strategy/20260913T0xxxxxZ.md; GH #796",
+  "at": "2026-09-13T05:00Z",
+  "ref": "iterations/reports/strategy/20260913T050052Z.md; GH #796; landed origin/main=1b5dc9bf",
   "task": "strategy work unit。章程 backlog 0NEXT2 要求主体在 bots/(OWNER_PRIORITIES 4.4 (i)),并且优先挑「方向由构造固定」的收窄。",
   "change": "bots/FunLib/jmz_func.lua:J.ShouldPunishDive 的建筑循环准入式加一个合取项 `and not ( bDivePost and J.IsOutpostBuilding( building ) )`,`local bDivePost = J.IsSoakCandidate( 'divepost' )` 读在循环之上。**2 行代码,1 个新 gate id**。",
   "why_a_new_id_here": "⭐⭐ 本轮最该被带走的一条:**同一族的第三个站点,而它是第一个「宿主已 promote」的站点** —— 'punish' 是 promoted 默认(AGENTS.md),J.ShouldPunishDive 在**每一局 Turbo 里都在跑**,所以这里**没有宿主 gate 可继承**,不加 id 就是在改出货行为。前两个站点(ohnum 2026-09-12、overchase)都挂在未 promote 的宿主下,收窄继承宿主 id 即可(那时新 id 反而会踩 pullcad 陷阱);这里恰好相反:宿主已 promote ⇒ 单 id gate 的隔离读数是**真数**而不是结构性零。",
@@ -8652,6 +8652,10 @@
   "stand": "tools/agent/mutstand_divepost.sh **caught=9 survived=0 STAND GREEN / FINAL_SHA_OK=yes**。M4 是本台存在的理由:把 §1 读的字节**一字不动**,在下一行 `bDivePost = true` 覆盖掉闸 ⇒ §1/§2/§3 全绿,**只有臂 D 变红**。M6 杀臂 C(退回无覆盖驱动)只被 §4 抓到。M9 往树里落一个**新的未收窄 anchor**,§1 的按树计数必须变红。",
   "collateral": "(1) 本组自己造的 trunk 红修掉:tests/test_bots_walk_farm_only.py 的 UNRESOLVED_HAND_READ 缺 tests/test_tpdeftower_outpost_narrow.lua 的 ls(上一轮落地当天没登记,红留给了本轮开工)—— 连本轮新文件一起补,**同一工作单元内**登记;修后 8 checks / 0 failed。(2) tests/test_gated_helper_nesting_census.lua 两行 re-key(ownhalf → divepost,ownhalf):**不是新嵌套**,是该普查按宿主的 id **集合**做键的既知性质(它自己在 outcommit | slotpush 那条注释里写过),嵌套分类 (P)/(I) 与一切已测读数不变;10/10 绿。",
   "scope": "零 AWS(一次调用都没有)、零波次、armed 串一字未动(P4.2 冻结:本 id **gated 且 UNARMED**,出货行为逐字节不变)、test_set.md / queue.json 未动。",
-  "next_baton": "(a) 入集解冻后 divepost 需要一个入集提议 + 条件 (a) 核验(证人形状:一帧「敌人在我方瞭望塔 1200 内、且不在任何真建筑 1200 内」—— 本语料 anchor_has_wt 0、最近 2257.3u,所以这一帧要从批测录像里取);(b) 同族**第四个**站点的判据已钉在 §1 的按树计数上,不靠散文。"
+  "next_baton": "(a) 入集解冻后 divepost 需要一个入集提议 + 条件 (a) 核验(证人形状:一帧「敌人在我方瞭望塔 1200 内、且不在任何真建筑 1200 内」—— 本语料 anchor_has_wt 0、最近 2257.3u,所以这一帧要从批测录像里取);(b) 同族**第四个**站点的判据已钉在 §1 的按树计数上,不靠散文。",
+  "push_race": "⚠️ push 被拒 4 次(main 在 9.5 分钟钩子期间连跳 4 次),两条新登记:(1) rebase 撞上英雄组在同一小时里对**同一条** trunk 红的修复 —— 保留他们那条(先落地、归因更准),只加本轮新文件那条;**两个组同修一条红是 GH #624 的副作用不是巧合**。(2) ⭐ 一次被 harness 回收的后台 push **服务端其实已落地**:第 4 次尝试的 ref-lock 报 `is at 1b5dc9bf`,那正是本轮的 commit ⇒ **读到 ref-lock 先看那个 sha 是不是自己的**,否则会再白付一遍 9.5 分钟的钩子(本轮就这么付掉第 5 遍)。",
+  "rule6_three_legs": "落地那棵树上钩子自己打的(RULE6_MEMO=REUSE,05:53:23Z):GATE_EXIT=0 CLEAN / py gate: 98 ran, 0 findings, 0 uncertifiable, 41.9s / lua gate: 358 ran, 0 findings, 0 uncertifiable, 9 known-red, 506.0s。RULE6_BYPASS 未用;动态半(GH #124)未跑不声称。",
+  "tokens": "TOKENS total_in=26,686,011 out=99,775 turns=129(偏高:约 15 分钟花在两次 `pgrep -f` 自匹配的空等上,5 遍推送钩子有 2 遍是竞态白付)",
+  "bots_lua_changed": true
  }
 }
