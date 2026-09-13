@@ -16364,3 +16364,72 @@
     **fixture 上的物品否定断言必须配一条正控制**(NAMESPACE 洞会让它在空世界上也绿);
     (5) ⭐ 等协同组对「四个远古阈值」的处置(已追评 #137,**本组不自改 bot 代码**)。
   - **完整报告**:`iterations/reports/replay-check/20260913T004000Z.md`
+- **2026-09-13T03:5xZ(本轮):按交棒 (2) 挑 `pullcad` —— **它 08-30 那条裁决的判别子,树在 13 天前就逐字推翻了**,
+  而三个载体还在传播;但**头号产出是拉线域的 pull-certified 人口有 ~95% 是打架**,于是
+  **08-30「足迹压在 ±6% 以内」那个 bound 用法必须撤回**。**
+  ```
+  VERIFY id=pullcad verdict=INDETERMINATE episodes=278
+  ```
+  **段位声明(GH #424)**:**W69 单波**(4 run / 12 局),**遵 §CO.1 (ii) 不与 W25–W29 并池**
+  (W30 起 `creepthink` 同波共 armed,两者强次可加)。
+  - **覆盖达标**:**宽扫 12/12**(W69 全部有效局,`SWEEP_EXIT ×4` 裸读全 0);
+    **深查 7 局逐帧 / 8 个 episode**(下限 6;**上一轮欠的 1/6 一并还上**)。
+    ⚠️ **连续第五轮无新波次**(批测台在 $90 刹车线持有,MTD $88.692)。
+  - ⛔ **考古(先读源码再读数据,顺序是对的)**:08-30 §3.3 的判别子(「两次 poke 之间原地不动
+    ⇒ 两条腿的节拍都不是作者」,由此得 **40.0–51.8% 非分支下界**,已随 GH #326 发表)
+    **被 `bots/mode_roam_generic.lua:238-245` 逐字点名推翻**:「**The branch CAN write that shape,
+    and this is how: the drag order is not issued at all**」—— throttle 活着且 `creepthink` 未 arm 时
+    **R ≥ nBeat ⇒ drag 指令一次都不发**,于是**静止恰恰是出厂节拍自己的签名**。
+    修正模型在树上绿:`test_pullcad_throttled_duty.lua` **11 tests / 0 failures**(`DUTY_TEST_EXIT=0`)。
+    ⚠️⚠️ **必须说准:裁决不倒,判别子倒** —— 同报告 **§3.2** 另有一条**不依赖位移**的结构性论证
+    (短于 nBeat 的 gap 该腿节拍写不出来),而那条正是源码修正**自己背书**的
+    (「a poke deferred … is **LATE, never early**」)。**别写成「08-30 结论错了」。**
+  - ⭐⭐ **三个未修正的载体**(逐字核):`pullcad_beat.py` 的 `stillness()` 头注**一字不改**地写着那句被推翻的话;
+    `duty()` 把 **+43%** 当 lever 自报量**且称本表是 bound**;文件头行号已漂(`:268-271`→`:342-349`)、
+    **全文零次**提 `creepthink`/throttle/§CO.1 —— 而 **§CO.1 (ii) 正是一条关于这个工具读数的并池禁令**,
+    工具的 `--wave` **只是标签、不做任何检查**。⇒ **本轮已改这三处(纯注释)**;
+    ⛔ `tests/test_replay_pullcad_beat.lua` 头注仍裸述 83%/58%,**本轮故意没动**(见交棒 2)。
+  - ⭐⭐⭐ **头号:先逐帧后聚合,拉线域 ~95% 是打架。**
+    第一个手读的 episode(`094113` ab/armed,axe→venomancer,`pull=True` `drag=376`,gaps 1.1/1.1/1.0)
+    **是一次击杀**:Berserker's Call + Battle Hunger + Counter Helix,**t=348.5 Culling Blade 斩杀**,
+    随后被 juggernaut 大招反打,离自家泉水 **11,166u**。第二个是 Storm Spirit 的 Ball Lightning 对决
+    (`drag=878` **就是 Ball Lightning 的位移**)。再五局无一例外(WK 在 **13,106u** 处放 Hellfire Blast、
+    Drow 在 **13,167u** 处站桩团战…)。**聚合**(`pullcert_fight.py`,scratchpad,只 import 既有谓词):
+    278 个 certified episode,**armed 96.0% / baseline 92.2% 带打架标记**(施法 75.8/72.9%、
+    窗口内阵亡 20.1/19.4%、全程 >6000u 66.4/69.8%)。
+    ⚠️ **标记诚实度**:`far>6k` 粗(劣单本就在 ~11k 作业),承重的是施法+阵亡+八个手读。
+    ⛔⛔ **尺寸必须说准,否则会被读成一个它不是的发现**:**「这个域不 specific」是 08-23 就已登记的** ——
+    `creeppull_specificity.py` 头注逐字:213 局上 `core_pull` **armed 1,869 : baseline 1,424 = 1.31x**,
+    并已下结论「**the *metric* is not specific to the behaviour**」;`creeppull_domain` 也自称 **deliberate SUPERSET**。
+    本轮 W69 的 **149 : 129 = 1.16x** 是**复现**。⇒ **本轮增量只有两条**:
+    (i) 把「不 specific」从一个比值变成**逐帧的内容**(八个手读全是打架)+ **~95%** 这个比例;
+    (ii) ⭐ **把后果落到一个仍在被当界用的读数上**(下一条)——**(ii) 才是新的那一格**:
+    非 specific 已知 21 天,而 ±6% 那个界**在 GH #326 正文、工具头注、08-30 裁决里一直被当界用**。
+  - ⛔ **由此撤回一个用法**:08-30 §3.4「可观测足迹被压在 **±6%** 以内」是把 duty 表当**界**用;
+    两腿各 ~95% 人口在 lever 域外 ⇒ **稀释约 20 倍**,±6% 的 null **与「域内有大效应」完全相容**。
+    **撤回的是 bound 这个用法,不是那四个数**;**也不主张 lever 有效**。
+  - **裁决**:仍 INDETERMINATE,**理由换了且第一次被量出来** ——
+    (i) armed 腿 **77%** 的域内 gap 短于 3.0s(结构上不可能是 armed 节拍写的,W69 复现 §3.2);
+    (ii) 域人口 ~95% 是打架且**两腿几乎等量** ⇒ gap 与 duty **两个通道都**被稀释。
+    ⛔ 不主张 WORKING/BUGGY/SILENT,不主张退集/promote/改动,**不自裁入集出集**。
+    ⭐ **要买 (a) 得先收紧域,不是加局** —— 加局只等比例放大同一份污染。
+  - **树上改动**:仅 `tools/batch_test/behavioral/pullcad_beat.py` 三处**纯注释** + 报告 + 本文件;
+    **`bots/` `game/` `tests/` 一行未改**。⭐ **验证是等值性**:改前改后各跑全量 12 局,
+    `diff` **IDENTICAL_OUTPUT**(`PULLCAD2_EXIT=0`)⇒ 零行为;旧数字**一个没删**
+    (照 repo 先例「they are not wrong: they are the R -> 0 reading」);
+    动手前 `grep -rln pullcad_beat tests/` **零命中**(无测试绑定其文本)。
+  - **AWS**:只读(`s3 ls` ×1、16 份 `.dem` + 16 份 `.analysis.json`、dumper 缓存 **HIT**);
+    **零 EC2 / 零 CE / 零支出**;`AWS_SETUP_EXIT=0`。
+  - ⛔ **开工自检:第一次是我自己弄砸的** —— 套了 `timeout 900`,而上一轮报告**已写明它实测 >20 分钟**
+    ⇒ **`SELFCHECK_EXIT=124`(被自己的 timeout 杀掉),什么都没核验,124 不是通过**。已不带 timeout 重跑。
+    ⚠️ **管道门第 8 次撞上**(本轮第一条命令 `| tail -60` 被脚本自己拒绝,它自报已复发 5 次、
+    **每次都是当轮第一条命令**)⇒ **判别子:开工第一条命令永远用重定向 + 裸读 `$?`,不要管道。**
+  - **下一轮第一件事**:(1) ⭐⭐ GH #794 仍 **open 零评论**(本轮现读)⇒ 上一轮撤回的两份产物**仍阻塞**,
+    配方在 `20260913T004000Z.md` §7.1,**不要重新设计那个测试**;
+    (2) ⛔ `tests/test_replay_pullcad_beat.lua` 的 83%/58% 待修,**建议与 #794 的处置合并成一次 `tests/` 改动**
+    (单独改要独扛 Lua 闸 484s + trunk 9 条 known-red 的风险,上一轮整份产物就是这样落不了地的);
+    (3) ⛔ 别重跑:W69 的 12 局 sweep、`pullcad_beat` 的 W69 四表、八个手读 episode;
+    (4) ⭐ 等裁定:给 `creeppull_domain` 加「这是打架」否决器(**本组开了 issue 没自己动手**,那是仪器改动);
+    (5) ⭐ `verify_coverage.py --all` 现读:27 个 armed id **全部**≥1 条 VERIFY 行、**零盲点**;
+    下一批 verify=1 且未被禁的是 `overchase`(INDETERMINATE 912)。
+  - **完整报告**:`iterations/reports/replay-check/20260913T035829Z.md`

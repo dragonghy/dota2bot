@@ -3,9 +3,11 @@
 
 WHAT THE CANDIDATE DOES (and it is ONLY this)
 ---------------------------------------------
-`mode_roam_generic.lua:268-271`, inside the lane creep-pull execution branch
-(`bot.roamCreepPull ~= nil`, reachable only because `creeppull` is PROMOTED and
-therefore live on BOTH legs of a mirrored game):
+`mode_roam_generic.lua:342-349` (the line numbers in this file were :268-271
+when it was written and have since drifted -- re-grep, do not trust them),
+inside the lane creep-pull execution branch (`bot.roamCreepPull ~= nil`,
+reachable only because `creeppull` is PROMOTED and therefore live on BOTH legs
+of a mirrored game):
 
     local nBeat = 1.2
     if J.IsSoakCandidate('pullcad') then
@@ -79,6 +81,15 @@ in-domain reading must not be attributed to `pullcad`.  This is the charter's
 co-armed attribution discipline (§4a) discharged by construction rather than by
 prose: the control shares the wave, the game, the hero and the target, and
 differs only by being outside the branch the candidate lives in.
+
+⛔ POOLING RULE THIS TOOL DOES NOT ENFORCE (test_set.md §CO.1 (ii))
+-------------------------------------------------------------------
+`creepthink` entered the test set 2026-08-30 and changes HOW OFTEN the block
+above is asked; `pullcad`'s constant sits inside that frequency, and the two
+are strongly SUB-additive (0 -> 50 and 0 -> 58 alone, 0 -> 83 together).
+Therefore **`pullcad` readings from W30 onward may not be pooled with
+W25-W29.**  `--wave` is a LABEL ONLY -- nothing here checks it, so the caller
+carries this rule.  Pass sweeps from one arm-string family per invocation.
 
 STRATIFICATION (铁律 4(i))
 --------------------------
@@ -230,19 +241,38 @@ def collect(games, keep_examples=0):
 def stillness(games):
     """WAS THE PULLER MOVING BETWEEN TWO CONSECUTIVE POKES?
 
-    This is the discriminator that decides whether the poke channel is the
-    BRANCH at all, and it is not optional prose -- it is the thing that turns
-    "the armed leg carries sub-2 s gaps" from a verdict into a question.
+    ⛔ THE INFERENCE THIS TABLE WAS BUILT TO SUPPORT IS REFUTED.  READ ON
+    BEFORE QUOTING A NUMBER OUT OF IT.  (replay-check 2026-09-13)
 
-    The branch cannot be silent about movement: between pokes it issues
-    Action_MoveToLocation(pull.retreat) on EVERY frame from 0.5 s after the
-    poke until nBeat -- 2.5 of every 3.0 s armed, 0.7 of every 1.2 s shipped.
-    So a poke pair that brackets a STATIONARY hero was authored by neither
-    cadence; it is an ordinary standing lane trade that the (deliberately
-    superset) domain let in.  Path length is summed over the 1 Hz frames, so
-    it under-reads a walk that leaves and returns inside one second -- which
-    makes `still` an UNDER-count of the non-branch population, never an over-
-    count.
+    The paragraph below used to end "so a poke pair that brackets a STATIONARY
+    hero was authored by neither cadence", and the 2026-08-30 round derived
+    from it a "40.0-51.8% of short gaps are provably not branch output" lower
+    bound, which reached GH #326.  `mode_roam_generic.lua:238-245` now reads
+    explicitly AGAINST that step, in the source this tool measures:
+
+        "READ #326 §'证据' AGAINST THIS: ... The branch CAN write that shape,
+         and this is how: the drag order is not issued at all."
+
+    With the think-throttle live and 'creepthink' gated -- the world that
+    ships -- the branch is asked only on frames the throttle reopens, and a
+    hero that just right-clicked sits in ACTIVITY_ATTACK for a whole attack
+    cycle R.  When R >= nBeat the drag order is NEVER issued, so a stationary
+    hero between two pokes is the SHIPPED cadence's own signature, not
+    evidence against the branch.  `tests/test_pullcad_throttled_duty.lua`
+    drives the corrected table (neither armed 0.0%; 'pullcad' only
+    41.2-50.1%; 'creepthink' only 58.4%; both armed 83.4%).
+
+    WHAT SURVIVES, AND IT IS ENOUGH: a gap SHORTER THAN nBeat cannot be
+    authored by that leg's cadence at all -- the throttle can only make a
+    poke LATE, never early (same source comment).  That is a structural
+    argument needing no movement reading, it is what the 08-30 round's own
+    §3.2 already rested on, and it is why the INDETERMINATE verdict stands
+    even though this discriminator does not.
+
+    So: keep reading this table as a description of movement, and do NOT
+    convert it into a branch/non-branch split.  Path length is summed over
+    the 1 Hz frames, so it under-reads a walk that leaves and returns inside
+    one second.
     """
     out = defaultdict(lambda: [0, 0, 0, 0])   # short, short_still, long, long_still
     per_game = defaultdict(lambda: [0, 0])
@@ -287,18 +317,40 @@ def stillness(games):
 def duty(games):
     """THE LEVER'S OWN CLAIMED QUANTITY, measured directly.
 
-    mode_roam_generic.lua:249-251 registers the intended effect as a DUTY
-    CYCLE: "the drag owns 2.5s of every 3.0s (83%) against 0.7s of every 1.2s
-    (58%)" -- i.e. armed should raise the fountain-ward walk rate of a pull by
-    ~43% relative.  `creeppull_domain`'s `drag` field is exactly that rate:
-    fountain-ward displacement over the next 3.0 s from a domain frame.  So
-    this table is a bound on the lever's observable footprint that needs NO
-    channel separation and no counterfactual -- unlike the poke tables above.
+    ⚠️ THE EXPECTATION IN THIS DOCSTRING WAS RESTATED 2026-08-31, AND THIS
+    TABLE IS NOT A BOUND.  (replay-check 2026-09-13)
 
-    Caveat that must travel with the number (charter §4a): 44 other ids are
-    co-armed, so a null here bounds the BUNDLE's footprint on this quantity.
-    It bounds `pullcad`'s own only under the assumption that no co-armed id
-    cancels it -- state that, do not drop it.
+    The source comment (now mode_roam_generic.lua:291-322, the sentence itself
+    at :292-293) registers the intended effect as a DUTY CYCLE: "the drag owns
+    2.5s of every 3.0s (83%) against 0.7s of every 1.2s (58%)" -- i.e. ~+43%
+    relative.  That arithmetic is exact but presupposes the branch is asked on
+    EVERY engine frame.  The think-throttle denies it.  The corrected table
+    (tests/test_pullcad_throttled_duty.lua) is:
+
+        neither armed 0.0% | 'pullcad' only 41.2-50.1%
+        'creepthink' only 58.4% | both armed 83.4%
+
+    So in a wave where BOTH are armed (W30 onward, W69 included) the predicted
+    contrast is 0.0% -> 83.4%, far LARGER than the +43% this docstring used to
+    state -- do not quote +43% as the thing being tested.
+
+    ⛔ AND THE TABLE DOES NOT BOUND IT.  `creeppull_domain` is a deliberate
+    SUPERSET of the Lua gate, and replay-check measured how super on W69
+    (12 games, 278 pull-certified episodes): 96.0% of armed-leg and 92.2% of
+    baseline-leg certified episodes carry a fight marker -- the puller casting
+    an ability (75.8%/72.9%), a hero dying inside the window (20.1%/19.4%), or
+    the whole window spent >6000u from the puller's own fountain (66.4%/69.8%).
+    Eight hand-read episodes across seven games were, without exception, ganks
+    / teamfights / lane trades: an Axe Culling Blade kill, a Storm Spirit Ball
+    Lightning duel, a Wraith King Hellfire Blast 13.1k from his own fountain.
+    With ~95% of the measured population outside the lever's domain ON BOTH
+    LEGS, a null here is a ~20x-diluted reading, NOT a bound on the in-pull
+    effect.  The 08-30 round's "footprint pressed inside ±6%" used it as a
+    bound; that use is withdrawn.  (Full frame evidence:
+    iterations/reports/replay-check/20260913T0[45]*.md.)
+
+    Caveat that still travels with the number (charter §4a): the other ids are
+    co-armed, so anything here describes the BUNDLE, not `pullcad` alone.
     """
     acc, accP = defaultdict(list), defaultdict(list)
     for g, name, seed, stratum in games:
