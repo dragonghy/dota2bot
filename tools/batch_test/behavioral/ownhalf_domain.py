@@ -104,6 +104,16 @@ CONSEQUENCE_WIN = 4.0
 CLOSE_DELTA = 250.0
 # "Engaged it": the bot actually arrived in fighting range.
 ENGAGE_RANGE = 600.0
+# SENSITIVITY ONLY -- never the definition of `punish`.  Two of the six frame
+# witnesses read on 2026-09-13 land the bot's first hit at exactly t0+5.0s,
+# one second past the consequence window, so `punish` declines them.  That is
+# not a bug (a move order that lands its hit five seconds later is a weaker
+# claim than one that lands it in four), but its SIZE has to be visible rather
+# than rediscovered: on the 81-game W67 corpus 18.6% of closed+bot_driven
+# armed-leg episodes land their first hit in (4s, 8s].  `punish_wide` carries
+# that, and the report prints both so a reader can see the knife edge
+# (iron rule 4(ii): never a single cut without the share it hides).
+HIT_WINDOW_WIDE = 8.0
 # THE DISCONTINUITY CONTROL.  Pairs whose invade depth lands in
 # [margin - NEARMISS_WIDTH, margin) are geometrically almost identical to the
 # admitted ones -- same map region, same kind of enemy, same bot -- and the
@@ -150,6 +160,20 @@ class Game(object):
             self.btimes.append(t)
             self.blds[t] = by_t[t]
             self.ancients[t] = anc_by_t.get(t, {})
+
+        # hero-on-hero damage times, canon-keyed on BOTH ends.
+        # ⚠️ The snapshot stream and the event stream spell heroes differently;
+        # a raw-name lookup here returns empty for every pair while raising
+        # nothing (charter tool-pit, W66).
+        self.dmg = collections.defaultdict(list)
+        for e in d.get('events', ()):
+            if e.get('type') != 'DAMAGE':
+                continue
+            if not (e.get('actor_hero') and e.get('target_hero')):
+                continue
+            self.dmg[(canon(e['actor']), canon(e['target']))].append(e['t'])
+        for k in self.dmg:
+            self.dmg[k].sort()
 
     def leg(self, hero):
         return 'armed' if self.teams.get(hero) == self.armed_team else 'baseline'
@@ -234,6 +258,77 @@ class Game(object):
                 best = dd
         return best
 
+    def dealt(self, actor, target, t0, t1):
+        """Did `actor` land a hero-damage event on `target` inside [t0, t1]?"""
+        for td in self.dmg.get((actor, target), ()):
+            if t0 <= td <= t1:
+                return True
+        return False
+
+    def died_in(self, hero, t0, t1):
+        for t in self.times:
+            if t < t0:
+                continue
+            if t > t1:
+                break
+            s = self.by_t[t].get(hero)
+            if s is not None and s.get('hp', 0) <= 0:
+                return True
+        return False
+
+    def attribute(self, t0, bh, eh):
+        """Who supplied the closing?  (bot_adv, enemy_adv, t_star) or None.
+
+        PORTED FROM `overchase_domain.py` (2026-09-13), unchanged in method and
+        in constants -- both instruments read `CLOSE_DELTA` / `CONSEQUENCE_WIN`
+        from the same source-pinned definitions, so this is two extra fields on
+        an existing ruler, not a second ruler.
+
+        WHY IT IS NEEDED HERE TOO.  `closed` (d0 - dmin) is the SUM of two
+        bodies' motion, so it cannot tell "the bot collapsed on the invader"
+        from "the invader walked into the bot" or, worse, "the invader ran the
+        bot down".  That conflation is not hypothetical for `ownhalf`: this
+        band is BY CONSTRUCTION the frames where an enemy hero is deep on our
+        ground and inside the collapse ring -- i.e. exactly the geometry of a
+        dive, where the invader is the party with a reason to advance.  On
+        `overchase` the same blindness produced a 1%-HP phantom_assassin
+        scored as a textbook collapse while she was the one dying
+        (`iterations/reports/replay-check/20260913T095506Z.md` section 2).
+
+        The decomposition: project each body's OWN displacement (t0 -> the
+        frame of closest approach) onto the line that joined them at
+        admission.  Positive = that body moved in.
+        """
+        here = self.by_t.get(t0) or {}
+        if bh not in here or eh not in here:
+            return None
+        b0, e0 = here[bh], here[eh]
+        ux, uy = e0['x'] - b0['x'], e0['y'] - b0['y']
+        d0 = math.hypot(ux, uy)
+        if d0 <= 1e-6:
+            return None                      # no line to project onto
+        ux, uy = ux / d0, uy / d0
+        best, tstar = None, None
+        for t in self.times:
+            if t < t0:
+                continue
+            if t > t0 + CONSEQUENCE_WIN:
+                break
+            hh = self.by_t[t]
+            if bh not in hh or eh not in hh:
+                continue
+            if hh[bh].get('hp', 0) <= 0:
+                continue
+            dd = dist(hh[bh]['x'], hh[bh]['y'], hh[eh]['x'], hh[eh]['y'])
+            if best is None or dd < best:
+                best, tstar = dd, t
+        if tstar is None:
+            return None
+        b1, e1 = self.by_t[tstar][bh], self.by_t[tstar][eh]
+        bot_adv = (b1['x'] - b0['x']) * ux + (b1['y'] - b0['y']) * uy
+        enemy_adv = -((e1['x'] - e0['x']) * ux + (e1['y'] - e0['y']) * uy)
+        return (bot_adv, enemy_adv, tstar)
+
     def episodes(self):
         """Collapse admitted frames into (bot, enemy, band) episodes."""
         runs = {}
@@ -256,6 +351,28 @@ class Game(object):
             ep['closed'] = (dmin is not None
                             and ep['d0'] - dmin >= CLOSE_DELTA)
             ep['engaged'] = dmin is not None and dmin <= ENGAGE_RANGE
+            t1 = ep['t0'] + CONSEQUENCE_WIN
+            att = self.attribute(ep['t0'], ep['bot'], ep['enemy'])
+            ep['bot_adv'] = None if att is None else round(att[0], 1)
+            ep['enemy_adv'] = None if att is None else round(att[1], 1)
+            ep['bot_driven'] = bool(att is not None and att[0] >= CLOSE_DELTA
+                                    and att[0] >= att[1])
+            ep['enemy_driven'] = bool(att is not None and att[1] >= CLOSE_DELTA
+                                      and att[1] > att[0])
+            ep['hit_enemy'] = self.dealt(ep['bot'], ep['enemy'], ep['t0'], t1)
+            ep['hit_by_enemy'] = self.dealt(ep['enemy'], ep['bot'],
+                                            ep['t0'], t1)
+            ep['bot_died'] = self.died_in(ep['bot'], ep['t0'], t1)
+            ep['enemy_died'] = self.died_in(ep['enemy'], ep['t0'], t1)
+            # The two readings `closed` conflates, each requiring BOTH halves:
+            # the body that moved AND a landed hit.  Neither is inferred from
+            # the other, and an episode can be neither (nobody committed).
+            ep['hit_enemy_wide'] = self.dealt(ep['bot'], ep['enemy'], ep['t0'],
+                                              ep['t0'] + HIT_WINDOW_WIDE)
+            ep['punish'] = bool(ep['bot_driven'] and ep['hit_enemy'])
+            ep['punish_wide'] = bool(ep['bot_driven'] and ep['hit_enemy_wide'])
+            ep['rundown'] = bool(ep['enemy_driven'] and ep['hit_by_enemy']
+                                 and not ep['hit_enemy'])
             ep['leg'] = self.leg(ep['bot'])
             ep['game'] = self.name
             ep['side'] = self.side
@@ -276,8 +393,16 @@ class Game(object):
         """
         print('# trace %s  bot=%s  enemy=%s  t0=%.1f' % (self.name, bot,
                                                          enemy, t0))
-        print('#%7s %8s %8s %9s %10s' % ('t', 'd_pair', 'depth', 'd_bldg',
-                                          'band'))
+        # `hp_b` / `hp_e` / `hit` are here because of what their ABSENCE cost
+        # on 2026-09-12 in the sibling instrument: a trace read without the
+        # other body's HP and without the damage direction was reported as
+        # "the bot is the one being run down" on a frame where the bot killed
+        # the other hero 3s later.  A column that is not printed is a column
+        # the reader infers (`iterations/reports/replay-check/
+        # 20260913T095506Z.md` section 2).
+        print('#%7s %8s %8s %9s %5s %5s %4s %10s'
+              % ('t', 'd_pair', 'depth', 'd_bldg', 'hp_b', 'hp_e', 'hit',
+                 'band'))
         for t in self.times:
             if t < t0 - pre or t > t0 + span:
                 continue
@@ -313,8 +438,12 @@ class Game(object):
                 band += ' (out of ring)'
             if b.get('hp', 0) <= 0:
                 band += ' (bot dead)'
-            print(' %7.1f %8.0f %8.0f %9.0f %10s'
-                  % (t, dpair, dshow, db if db is not None else -1, band))
+            fwd = self.dealt(bot, enemy, t - 1.0, t)
+            back = self.dealt(enemy, bot, t - 1.0, t)
+            hit = ('%s%s' % ('>' if fwd else '', '<' if back else '')) or '-'
+            print(' %7.1f %8.0f %8.0f %9.0f %5.2f %5.2f %4s %10s'
+                  % (t, dpair, dshow, db if db is not None else -1,
+                     b.get('hp_pct', -1), e.get('hp_pct', -1), hit, band))
 
 
 def tally(eps):
@@ -327,6 +456,15 @@ def tally(eps):
         c[k]['frames'] += e['frames']
         c[k]['closed'] += 1 if e['closed'] else 0
         c[k]['engaged'] += 1 if e['engaged'] else 0
+        c[k]['punish'] += 1 if e.get('punish') else 0
+        c[k]['punish_wide'] += 1 if e.get('punish_wide') else 0
+        c[k]['rundown'] += 1 if e.get('rundown') else 0
+        c[k]['bot_driven'] += 1 if e.get('bot_driven') else 0
+        c[k]['enemy_driven'] += 1 if e.get('enemy_driven') else 0
+        c[k]['closed_bot_driven'] += (1 if (e['closed'] and e.get('bot_driven'))
+                                      else 0)
+        c[k]['closed_enemy_driven'] += (1 if (e['closed']
+                                              and e.get('enemy_driven')) else 0)
     return c
 
 
@@ -342,21 +480,25 @@ def report(c, games):
     print('games: %d   episode gap %.1fs   consequence window %.1fs'
           % (games, EPISODE_GAP, CONSEQUENCE_WIN))
     print('')
-    print('%-4s %-9s %-8s %8s %8s %8s %8s'
-          % ('str', 'leg', 'band', 'eps', 'frames', 'closed', 'engaged'))
+    print('%-4s %-9s %-8s %8s %8s %8s %8s %8s %8s'
+          % ('str', 'leg', 'band', 'eps', 'frames', 'closed', 'engaged',
+             'punish', 'rundown'))
     for stratum in ('ab', 'ba'):
         for band in ('shipped', 'nearmiss', 'ownhalf'):
             for leg in ('armed', 'baseline'):
                 k = (stratum, leg, band)
                 v = c.get(k)
                 if not v:
-                    print('%-4s %-9s %-8s %8s %8s %8s %8s'
-                          % (stratum, leg, band, 0, 0, '   n/a', '   n/a'))
+                    print('%-4s %-9s %-8s %8s %8s %8s %8s %8s %8s'
+                          % (stratum, leg, band, 0, 0, '   n/a', '   n/a',
+                             '   n/a', '   n/a'))
                     continue
-                print('%-4s %-9s %-8s %8d %8d %8s %8s'
+                print('%-4s %-9s %-8s %8d %8d %8s %8s %8s %8s'
                       % (stratum, leg, band, v['episodes'], v['frames'],
                          pct(v['closed'], v['episodes']),
-                         pct(v['engaged'], v['episodes'])))
+                         pct(v['engaged'], v['episodes']),
+                         pct(v['punish'], v['episodes']),
+                         pct(v['rundown'], v['episodes'])))
     print('')
     print('SIGNATURE (armed - baseline, percentage points):')
     for stratum in ('ab', 'ba'):
@@ -371,12 +513,21 @@ def report(c, games):
                             - b['closed'] / b['episodes'])
             d_en = 100.0 * (a['engaged'] / a['episodes']
                             - b['engaged'] / b['episodes'])
-            row.append('%s closed %+5.1f engaged %+5.1f' % (band, d_cl, d_en))
+            d_pu = 100.0 * (a['punish'] / a['episodes']
+                            - b['punish'] / b['episodes'])
+            d_rd = 100.0 * (a['rundown'] / a['episodes']
+                            - b['rundown'] / b['episodes'])
+            row.append('%s closed %+5.1f engaged %+5.1f punish %+5.1f '
+                       'rundown %+5.1f' % (band, d_cl, d_en, d_pu, d_rd))
         print('  %s: %s' % (stratum, '\n      '.join(row)))
     def did(stratum, treated, control):
         """[(armed-baseline) on `treated`] - [(armed-baseline) on `control`]."""
         parts = []
-        for metric in ('closed', 'engaged'):
+        # `closed` and `engaged` stay FIRST and in this order: the cross-run
+        # aggregator parses this line with a prefix regex
+        # (`ownhalf_across_runs.py:32`), so metrics may be appended but never
+        # reordered or inserted ahead of those two.
+        for metric in ('closed', 'engaged', 'punish', 'rundown'):
             vals = {}
             for band in (treated, control):
                 a = c.get((stratum, 'armed', band), collections.Counter())
@@ -417,6 +568,43 @@ def report(c, games):
     print('  ownhalf %d : shipped %d  = %s' %
           (of, sf, ('%.2fx' % (of / sf)) if sf else 'n/a'))
     print('')
+    print('WHAT `closed` IS MADE OF (why it is not a collapse count):')
+    print('  `closed` is d0 - dmin, the SUM of two bodies moving, so an')
+    print('  invader walking into a standing bot scores exactly like a')
+    print('  collapse. Split per leg, on the ownhalf band:')
+    print('  %-9s %8s %10s %12s %10s' % ('leg', 'closed', 'bot-driven',
+                                         'enemy-driven', 'punish'))
+    for leg in ('armed', 'baseline'):
+        cl = bd = ed = pu = 0
+        for (s, l, band), v in c.items():
+            if l != leg or band != 'ownhalf':
+                continue
+            cl += v['closed']
+            bd += v['closed_bot_driven']
+            ed += v['closed_enemy_driven']
+            pu += v['punish']
+        print('  %-9s %8d %10s %12s %10s'
+              % (leg, cl, pct(bd, cl), pct(ed, cl), pct(pu, cl)))
+    print('  A leg-dependent split is the point: if the two legs decomposed')
+    print('  alike, the confound would cancel in armed-baseline and `closed`')
+    print('  would still be usable. Read the two rows before assuming it did.')
+    print('')
+    print('WINDOW SENSITIVITY (`punish` at %.0fs vs %.0fs, ownhalf band):'
+          % (CONSEQUENCE_WIN, HIT_WINDOW_WIDE))
+    for leg in ('armed', 'baseline'):
+        eps = pu = pw = 0
+        for (s, l, band), v in c.items():
+            if l != leg or band != 'ownhalf':
+                continue
+            eps += v['episodes']
+            pu += v['punish']
+            pw += v['punish_wide']
+        print('  %-9s episodes %5d   punish %s   punish@%.0fs %s'
+              % (leg, eps, pct(pu, eps), HIT_WINDOW_WIDE, pct(pw, eps)))
+    print('  The gap is the collapse that lands its hit late. `punish` is the')
+    print('  registered quantity; the wide column exists so the knife edge is')
+    print('  visible, NOT so a reader may pick whichever is larger.')
+    print('')
     print('READ THIS BEFORE QUOTING A NUMBER:')
     print('  * band counts are UPPER BOUNDS on fires -- SafeToCommitFight and')
     print('    ShouldRefuseUnsupportedPunish are not evaluated here.')
@@ -425,6 +613,17 @@ def report(c, games):
     print('    statistic returns when the lever is known to be absent.')
     print('  * a sign flip between ab and ba is noise (iron rule 4(i-b)):')
     print('    these are detector counts, not side-de-biased estimators.')
+    print('  * `closed` is the SUM of two bodies moving and cannot tell a')
+    print('    collapse from being walked into or run down. `punish` and')
+    print('    `rundown` split it (ported from overchase_domain.py,')
+    print('    2026-09-13): each needs BOTH a >= %.0fu own advance along the'
+          % CLOSE_DELTA)
+    print('    admission line AND a landed hero-damage event in that')
+    print('    direction. Controls: tests/test_ownhalf_attribution.py.')
+    print('  * `punish` still says the episode WAS a collapse-and-hit, NOT')
+    print('    that THIS gate caused it -- that is what the baseline leg and')
+    print('    the two floor bands are for; and because the commit test is')
+    print('    unobservable, `punish` is a LOWER bound on committing.')
 
 
 def load_sweep(sweep_dir, max_games=None):

@@ -16678,3 +16678,56 @@
     —— ⛔ **丢弃的只有本会话 rebase 前的重复历史,没有别人的提交,没在别人分支上改写历史**。
     (3) ⚠️ 收尾两次 push 的 lua 闸打的是 **`SKIPPED BY SCOPE`,那是范围判定不是通过**;
     force-with-lease 那次差集含 `tests/` ⇒ 闸真跑了:**`361 ran, 0 findings, 0 uncertifiable, 9 known-red, 391.8s`**。
+- **2026-09-13T12:5xZ(本轮):`ownhalf` 补课 —— 上一轮欠的第 (3) 件事(判别子移植)做完了,
+  代价是 `closed` 在 own-half 带上当场作废。**
+  ```
+  VERIFY id=ownhalf verdict=INDETERMINATE episodes=7088
+  ```
+  (7088 = W67 全 81 局 **armed 腿 own-half 带** episode 数;⚠️ 与此前三轮的 `episodes=0`
+  **不是同一个量** —— 那是「专用仪器尚不存在」的 0,不是域为空。按 4(iii) 连切法一起登记。)
+  - **覆盖:宽扫 81/81 局(W67 四台全收,`sweep_complete.json` 逐字:104 dem / 81 swept /
+    23 skipped / 0 unparseable);深查逐帧 6 局(下限达标)。** 连续第八轮无新波次(GH #779 刹车
+    第九轮),跨波不并池 ⇒ 仍回同一份 W67 语料。⭐ 覆盖表与上一轮**逐格相同** = 免费的复现检查。
+  - ⛔⛔ **头号读数:`closed` 在这条带上不是合围计数。** 81 局、两腿分开:armed 腿 3,795 个
+    `closed` 里 **bot-driven 56.2% / enemy-driven 40.2% / bot 自己在后退 12.7% / 真正 punish 26.7%**;
+    baseline 腿 51.1 / 44.4 / 13.7 / 21.0。⭐ **承重的是「两腿分解比例不同」** —— 一致的话混杂会在
+    armed−baseline 里抵消,`closed` 尚可用;实测不一致 ⇒ **凡引用过 own-half 带 `closed` 当合围率的
+    读数(含上一轮报告那一行)都作废**。四台同向;该分解**已长进仪器**(`WHAT closed IS MADE OF` 节),
+    下轮不必重算。
+  - **帧证据(六条,证人按确定性规则挑不按极值挑)**:②`d2a2fd/…214152_slot2` skywrath vs PA
+    t=54.5(`bot_adv −182` / `enemy_adv +634`,单向 `hit=<`,`hp_b` 0.93→0.70)、
+    ⑤`71f624/…212718_slot8` jakiro vs CK t=54.7(窗内零伤害,CK 推进 991u)、
+    ⑥`71f624/…214111_slot5` jakiro vs CK t=50.5(互伤,`hp_b` 0.78→**0.04**)
+    —— **三条 `closed` 为真而 bot 自身位移为负**;①centaur vs pudge t=84.8 与 ④viper vs pudge
+    t=87.6 是正向证人(bot 自己走进去并先落伤害)。⭐ ⑥ 说明设计对:**互殴不冒充「被单方面追死」**。
+  - **读数(四台逐台 → 算术平均,⛔ 不按局数加权,铁律 4(i-d))**:`punish` 的 DiD
+    **ab +6.3 / ba +1.2,两层同号**,且两层都越过自己的 placebo(ab +1.5 / ba −0.4)
+    ⇒ **`ownhalf` 迄今第一个非空签名**;`closed` 的 ba 层 **+0.9 恰等于自己的 placebo +0.9 ⇒ 不是读数**;
+    `rundown` **两层反号 ⇒ 按 4(i-b) 当噪声**。
+    ⚠️⚠️ **但不要把 +6.3 当定案**:placebo 自己的跨台离散度与效应同量级
+    (ab 逐台 −2.3/−0.3/−1.5/**+9.9**)⇒ **一台读数在这把尺子上不可信,四台均值是能引的最小单位**,
+    而四台就是 W67 的全部 ⇒ **堵点从「没有量」换成「精度」**。
+  - ⭐ **窗口刀口已做成常驻读数**:六条证人里 **两条第一刀恰在 t0+5.0s**,4s 窗一律拒;
+    实测 armed 腿 closed+bot_driven 中 **18.6%** 的第一刀落在 (4s, 8s]。新增 `punish_wide`(8s)
+    **只作敏感性**,`punish` 仍是登记量;**结论对窗口稳健**(wide 的 DiD ab +8.7 / ba +2.3,同号)。
+    ⛔ 两列并打是为让刀口可见(4(ii)),**不是给读者挑大的那个**。
+  - **改动**:`ownhalf_domain.py`(移植 `attribute`/`dealt`/`died_in` + 11 个 episode 字段 +
+    两节新读数 + **trace 加 `hp_b`/`hp_e`/`hit` 三列**)、`tests/test_ownhalf_attribution.py` 新增 **21/21**
+    (A/B/C/D 同姊妹仪器,**E 控制走的是候选门不是出厂门**,**F t0+5s 的刀**)。
+    ⚠️ `punish`/`rundown` 追加在 DiD 行**末尾**,`ownhalf_across_runs.py:32` 前缀正则照常命中
+    (约束已写在源码处:**可追加不可重排**)。⛔ `bots/`/`game/` 一行未改,零新 soak id。
+  - **issue**:净增 1 条([bug] 给总监),零追评;⛔ 未碰 `issue_write(update)`。
+    未开的两条已登记理由(窗口刀口已自解决;⑥ 那条行为嫌疑**一条帧不够立案**,先量频率)。
+  - **AWS**:只读 S3(104 `.dem`),零 EC2 / 零 CE / 零支出;`AWS_SETUP_EXIT=0`、`DUMPER_EXIT=0`(cache HIT)、
+    四次 sweep 各 `exit_code=0`、`unparseable 0/104`。
+  - ⚠️ **开工自检:管道门第 27 次,又是第一条命令**;重定向重跑得 **`EXIT=3`**,
+    `trunk-red(python)` = **`FAIL tests/test_py_gate_hook.py`**,⚠️ **同树单跑该文件 10/0 绿**
+    ⇒ 只在自检腿上下文里红(失败文本逐字说钩子看到 `a clean working tree`);
+    同文件上一轮已由 **GH #795** 点名,**本轮不新开 issue**,只补登记这个形状。
+    ⛔ **本轮自己制造了并发**:自检在后台跑而前台挂着 2 条 sweep ⇒ **下一轮先跑完自检再起 sweep**。
+  - **下一轮第一件事**:(1) ⛔ 别重跑上面任何一项;(2) ⭐⭐ **在新波次到来前不要再为 `ownhalf` 的 (a)
+    花语料** —— 缺的是精度不是量具,加局无救(第四例,前三 `creepthink`/`campvoid`/`overchase`);
+    (3) ⭐ 判别子的可移植面**已普查完**:`tools/batch_test/behavioral/*.py` 里只有这两把用 `d0−dmin`
+    语义的 `closed`,**`towerfear_domain.py` 的 `closed` 是 episode 终止原因,同名不同物,别误移植**;
+    (4) ⚠️ 别引本轮任何**单台**读数。
+  - **完整报告**:`iterations/reports/replay-check/20260913T125915Z.md`
