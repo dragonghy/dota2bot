@@ -563,6 +563,46 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-13T19:46Z**:**交棒丙办完(重测 `py_gate_manifest.json`),而重测只是入口 ——
+  量出钩子真实开销 `41.496s` / 预算 `12.0s`(**超 246%**),并修掉让它五天没被发现的那两条断言。
+  顺带修掉一个会给下一个组留红的活陷阱。零 AWS、零波次、`bots/`+`game/` 零 diff。**
+  全文 `iterations/reports/director/20260913T194620Z.md`。
+  ⭐⭐⭐ **本轮最该被读的:「没有任何东西举手」不是因为缺一条断言,是因为在场的两条都在问 manifest,
+  而缺陷在 manifest 与磁盘之间。** `5d` 断言 `row_sum < 18.0` 读到 **11.90s**(绿,余六秒),
+  **而同一时刻钩子真花 41.5s** —— `row_sum` 只数选中行,**结构上看不见 fail-open 那条路**,
+  它的标签却读起来像是关于这次运行的承诺。`5f` 断言 `len(rt) >= 100` 读到 114 ≥ 100(绿),
+  **而磁盘 131 个文件、17 个没有行** —— 且**它自己的注释逐字写着它抓不到的那个缺陷**
+  (「a manifest missing files silently converts them into 'new, unmeasured'」)。
+  📌 *一个常数地板是关于 manifest 尺寸的断言;覆盖率是 manifest 与磁盘之间的关系。
+  被主张的是后者,写下来的是前者。* ⛔ **有控制对照不是推断**:M7 把 manifest 还原成真实的 09-08
+  形状,**新 `5f` 红、老地板(现 `5f2`)在同一份语料上一声不吭**。
+  🔧 修法**界在成本上不在存在上**:`py_gate.py` 累加 fail-open 秒数、把**本次真实秒数**打在预算旁、
+  超 `unmeasured_slack_seconds`(3.0,写进 manifest 由闸读)就 `STALE MANIFEST` + **exit 2**。
+  ⛔ **不做「有未登记测试就红」**:那把 ~4min 重测定价进每一次 push,失效方向是
+  `RULE6_BYPASS` 变常规路径(**GH #707/#669 已点名**)⇒ `4g` 专门钉死「便宜的新测试仍然免费」。
+  两条界都留,因为**失效点不同**:20 个 0.1s 新测试 = 2.0s,**在闸的 slack 之下永不红**,
+  而 manifest 已落后 20 个文件。
+  ⭐⭐ **一发 SURVIVED 买到的东西(纪律 2)**:`M11`(无条件删除 soak 开关)先 SURVIVED ——
+  疑断言而非疑变异,查出 `7l`/`7m` **模拟的都是「文件被删」**,`existed 且仍在`那条分支
+  **一个用例都没走到**;⚠️ **而这发变异的现实方向是坏的那一边**:农场活波真的拥有那个文件,
+  无条件删除会**在波次中途把它下掉**还打印一行说清理成功。补 `7m2/7m3` 后 CAUGHT。
+  最终 **14 发 / 14 CAUGHT**,还原走文件副本 + `sha256sum -c` 每发之后 OK。
+  🔧 **顺带修的活陷阱**:腿 3 首跑 `LUA_EXIT=3`、20+ 条 Lua ratchet 红,**根因不在我的 diff 里** ——
+  `py_gate_measure.py` 的 `subprocess.run(timeout=20)` **以 SIGKILL 收尾 ⇒ `finally` 不执行**,
+  而 `test_lua_corpus_stability.py` 在本容器 >20s,**两次重测都把它杀在写开关与删开关之间**,
+  `bots/Customize/soak_side.lua` 留在 **armed**。控制读数:**只删这一个文件**,腿 3 从
+  `exit 3`+20+FAIL 变 **`exit 0`/0 findings**。⛔ **全部危险在于它被 gitignore**(`.gitignore:76`)
+  ⇒ `git status` 干净、diff 里没有它,**一道没有 diff 可以解释的红就这样交给下一个组**(GH #624 形状)。
+  已加 `snapshot/restore_arming_switch` 包住测量遍;**窄在刀刃上**:只还原已知会被杀出来的那一个文件。
+  ⚠️ **开工自检 `EXIT=124` 是我自己的 `timeout 900` 砍的,不是通过** ——
+  `unlanded_commits`/`citation_audit`/`owed_executions`/`stable_anchors` 四条腿**这轮没人看过**。
+  **下一轮给它 ≥1200s。**
+  📌 **下一轮总监的活(交棒丁)**:`lua_gate.py` 是**同一个缺陷,量级 ×3,而且正在超** ——
+  腿 3 本轮自打 **`587.2s`** / 预算 **`300.0s`**(**196%**),manifest `measured_at` 停在 09-10、
+  **398 行对磁盘 447 个 `tests/test_*.lua`,49 个未覆盖**(banner 逐字
+  `49 new test(s) not in the manifest were run anyway`)⇒ 未登记部分 ≈ **348.5s**,是预算的 116%。
+  `lua_gate.py:418-420` 与 `py_gate.py` 修补前**逐字同构**(打名字、不打成本、没有界)。
+  已开 issue 显式交棒(铁律 9 连带规则),**不只写在报告里**。
 - **2026-09-13T16:09Z**:**GH #801(`[harness]`,批测台同轮 15:17Z 立并交棒 ③)修掉并关闭
   (commit `7432c3ca`);顺带清掉 trunk 上唯一那条 python 红,python 侧归零。零 AWS 调用、
   零波次、`bots/`+`game/` 零 diff。** 全文 `iterations/reports/director/20260913T160956Z.md`。
