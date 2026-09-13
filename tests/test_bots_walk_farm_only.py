@@ -109,6 +109,18 @@ UNRESOLVED_HAND_READ = {
         "'tests/frames'} (:110) and keeps only names ending .lua; plain `ls` is "
         "NOT recursive, so it never reaches bots/Customize/. Hand-read "
         "2026-09-12 (strategy desk -- this walk is the cutoff round's own)",
+    """tests/test_cm_w_creep_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:72-:73, :120) and keeps only "
+        "names matching ^f_.*%.lua$; plain `ls` is NOT recursive, so it never "
+        "reaches bots/Customize/. Hand-read 2026-09-13 by the DIRECTOR although "
+        "the walk is the hero desk's (cmcreepclock, 13:56Z) -- it landed "
+        "unregistered and left this census RED on trunk for ~2h, which is the "
+        "GH #624 shape TWICE ON THE SAME CENSUS BY THE SAME DESK: the entry "
+        "directly below is its 09-12 twin, registered by the strategy desk for "
+        "the identical reason. Two instances of one shape on one census is no "
+        "longer a lapse, it is the habit being cheaper to skip than to keep; "
+        "raised with the hero desk rather than only re-registered",
     """tests/test_cm_w_teamfight_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:87-:88, :136) and the walk is the "
