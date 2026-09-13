@@ -2680,6 +2680,17 @@
    "question": "⛔ **首选零 EC2:扫已归档的批测对局日志,数 `[WARN] Skipped to level up ability` 这一行。**\n一句话:真实 Turbo 对局里,派发器的终局 `else`(队头升不了级、手里又攥着加点)**每局被进入多少次,而那一行打印出来的 `abilityName` 是什么**?\n\n`skillstall`(2026-09-13 落地,`bots/ability_item_usage_generic.lua` + `bots/FunLib/aba_skill.lua`,turbo-only,gated,**纯放宽**)在那条分支里加了一次前瞻:队头仍然**原地不动**,但这一点被花在队头**后面**第一个四条准入条件全过的条目上,并把该条目从队列里摘掉。\n\n⭐ **为什么这一条的优先级是 1**:GH #366 / #799 已经把缺口判成 (a) bot 侧 —— 十个英雄(17–22 级)全部停在 **13 加点 + 至多 1 天赋**。但那是**一帧一局**的读数;本 lever 的域(每局被挡住多少个点)至今**一个数都没有**,而它是全仓域最大的一次行为改动(127 英雄全跑)。\n\n⭐ **证据路线,零 EC2**:那条分支**自己**每帧打印 `[WARN] Skipped to level up ability <name> for <bot> for this time because it may fail.`。如果归档日志里有它,就同时买到**频率**与**队头是谁**—— 后者正是 #799 验收 1 还欠的那半(`abilityName` 是不是 `special_bonus_*`)。\n\n⚠️ **这条路线本组判不了真假,请先花两分钟证伪**:`AGENTS.md` 写着「`print()` 从不到服务器控制台」,而 GH **#766** 实测 264 份归档日志里 `[VScript]` 前缀出现 **0** 次、同时 W67 有 113/216 局抛错(即日志里**确实**有 Lua 侧文本)。两句话不能同时为真地描述同一件事。**先在任意一份已归档 `.log` 上 `grep -c 'Skipped to level up ability'`**:>0 就照上面数;=0 就把这条改判为「日志路线不通」并回填一行,本组下轮改走 armed 波。",
    "acceptance": "(1) 给出扫了几份日志(分母)与命中局数/次数(分子),**分母必须打印**;(2) 命中时给 `abilityName` 的**取值分布**(是不是 `special_bonus_*`),这直接结掉 GH #799 验收 1 剩下的那一半;(3) 若 grep 为 0:回填「日志路线不通 + 所扫日志路径与份数」,**不要**就此推断域为 0(那会是「没测到」冒充「不存在」)。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;且本组不花 AWS)。解冻后若要买条件 (a),再单独提 armed 波申请。",
    "note": "本地已把能离线买到的都买了:`tests/test_skillstall_lookahead.lua` 9 绿、`tools/agent/mutstand_skillstall.sh` **15/15**(含故意的 M0 无操作对照如期 SURVIVED)。⛔ **fixture 层结构上买不到端到端域**:语料里没有活的天赋句柄(#366 的 LIMIT;GH #772 同族),所以**谁也不许报一个本 lever 增加的加点数**。"
+  },
+  {
+   "id": "hero-79",
+   "stream": "hero",
+   "bundle": "liondrainreach (新落地 gated id;**零 EC2 的归档扫描**,不要为它单独发波)",
+   "priority": 3,
+   "status": "pending",
+   "seeds": [],
+   "question": "⛔ **零 EC2:在已归档的批测对局里数两件事,都关于 Lion 的抽蓝(`lion_mana_drain`)。**\n(1) **供给**:一局里有多少个瞬间,Lion 身边 1600 内存在**带真实蓝池的敌方小兵**(蓝量 > `mana_per_second * 5.0 * 0.8`,即按 rank 取 80/160/240/480,或 > 349)?这决定了 `X.ConsiderE` 那条「缺蓝抽兵」分支到底有没有域 —— fixture 语料在这个问题上**结构性地**答不了(`GetNearbyCreeps` 在每个存活 Lion 瞬间答空表,`CORPUS_HAS_NO_NONHERO_UNITS_20260912`)。\n(2) **带宽**:在那些瞬间里,被分支挑中的兵(列表按距离升序,所以是**最近的合格兵**)有多少落在 `(nCastRange, 1600]` —— `nCastRange = 850`,或带秘法胶 1100。落在带里的那些,就是 `liondrainreach` armed 后会被删掉的出价。\n\n⭐ **为什么零 EC2 就够**:两个量都只需要位置 + 蓝量 + 物品栏,行为 dumper 已经导出这些;**不需要**任何 armed 腿。",
+   "acceptance": "(1) 打印**分母**(扫了几局 / 几个存活 Lion 瞬间),没有分母的分子不收;(2) 供给为 0 时**只许**回填「本语料没有合格兵」并给出所扫路径,**不许**推断「域为 0」(那是「没测到」冒充「不存在」);(3) 带宽读数按 `ab` / `ba` 两个分层分别登记(铁律 4 (i-a)),即使本条不是 armed 对比 —— 登记的是**读数**不是局数。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;本组不花 AWS)。",
+   "note": "本地已把能离线买到的都买了:`tests/test_lion_drain_creep_reach.lua` **13 绿**、`tools/agent/mutstand_liondrainreach.sh` **15/15**。⛔ **fixture 层结构上买不到端到端域**,所以**谁也不许报一个本 lever 删掉的出价数**。方向是 **NARROWING**,负读数只能读成「删掉了 N 次出价」。"
   }
  ],
  "done": [

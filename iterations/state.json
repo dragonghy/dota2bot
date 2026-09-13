@@ -8823,5 +8823,31 @@
   "next": "解冻后**单独** arm(不搭车)。在此之前:`queue.json:hero-78` 的日志扫描 → 若通,同时买到域的频率与 #799 验收 1 剩下的那一半;若不通,下轮改走 armed 波申请。GH #799 的**排序**那一半(t20 坐在 slot 18)仍然开着,是下一条。",
   "selfcheck": "`SELFCHECK_EXIT=3`,`UNCERTIFIABLE: none`,legs run 12。findings 四条:`cadence`/`queue-rulings`/`owed-executions` **归总监**;`trunk-red(python)` **是本轮自己的,且是陈旧快照** —— 点名 `tests/test_threshold_chain_census.py`,报的还是**修前**文本(`FAIL line 1541 is the ...`,全日志出现 1 次)⇒ 那条腿跑在本轮 §5.3 修复之前;现读 `PASS`/`RC_EXIT=0`。⚠️ `tests/test_selfcheck_lua_leg.py` 标 `NOT RUN`,python 腿自身 **6 条 UNCERTIFIABLE**(120s 预算内没跑完:88 文件/120.1s,GH #358 同族)—— **UNCERTIFIABLE 不是通过**,归 harness。⚠️ 报告 §7 第一版写成「本轮没有真码」,**已更正**(写它时第三次调用还在跑)。",
   "gate_readings": "push-path(实际把本提交推上 main 的那次,落地 commit `b684ebb9`):`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` / `py gate: 101 ran, 0 findings, 0 uncertifiable, 36.5s` / `lua gate: 366 ran, 0 findings, 0 uncertifiable, 8 known-red, 485.4s`。未用 RULE6_BYPASS;未向 known_red 添加任何一条;未对 lua 闸 re-measure(GH #783)。⚠️ `test_axe_t15_payoff.lua` 2 红**不是本轮的**(干净 HEAD worktree 复现,语料 28→29 live-Axe 帧),已在 known_red。**动态全套(~100min,GH #124)未跑完,不声称。**"
+ },
+ "liondrainreach_20260913": {
+  "owner": "hero",
+  "date": "2026-09-13T20:xxZ",
+  "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(冻结期唯一合法裁定是 FROZEN-HOLD)。turbo-only,未 armed。与 `liondrain` / `liondrainmi` / `liondrainstop` / `liondrainbkb` **相互独立**:四个 gate 谁也不出现在本 gate 的条件里,可以单独 arm(§1.4 断言)。",
+  "backlog_item": "OWNER_PRIORITIES **P4.4 (i)**:工作单元主体是一个 `bots/` 行为改动。章程 backlog `-167` 第 1 条(GH #799 的「排序」那一半)本轮**被一条源码推导结掉了而不是被落地**(见 `talentqueue_ORDERING_NOT_A_DEFECT_20260913`),主体因此改取焦点英雄 Lion 的一条作用域缺陷。",
+  "headline": "⭐ **一个函数里唯一一条不把自己的环跟施法距离挂钩的分支 —— 而同一个函数在别处**故意**放宽过一次环。** `X.ConsiderE` 第一行working line 就算出 `nCastRange = abilityE:GetCastRange() + aetherRange`,团战腿与打架腿都测 `J.IsInRange( ..., nCastRange )`,幻像腿**有意**开到 `nCastRange + 300`(= 作者知道要把环挂在施法距离上)。缺蓝抽兵那条读 `bot:GetNearbyCreeps( 1600, true )`,准入只测蓝量,从列表到 `return BOT_ACTION_DESIRE_HIGH, nCreep` 之间**一个距离项都没有**。",
+  "defect": "`bots/BotLib/hero_lion.lua` `X.ConsiderE` 的「缺蓝的时候抽蓝」分支:搜索环 **1600**,而 `lion_mana_drain / AbilityCastRange` 是**逐级恒定的 850**(KV 快照 `tests/mock/special_value_shapes.lua`)⇒ 裸差 **750**,带秘法胶(+250)仍差 **500**。对照该技能**自己**的 `break_distance = 1100`:这条分支能挑一个**比引导会被打断的距离还远**的兵。对射程外单位下施法令 = 先下移动令,而这一注是 `BOT_ACTION_DESIRE_HIGH`,整段走路都压过把他放在原地的那个 mode;而分支的准入条件(`#hEnemyList == 0` 且 1000 内无敌方塔)恰恰是「地图上此刻没人跟他抢」的时刻,也就是辅助的**站位**本身是他握着的东西的时刻。",
+  "fix": "gated helper `X.lion_IsDrainCreepInReach( hBot, hCreep, nCastRange, bShippedInReach )`(turbo-only,id `liondrainreach`),出货答案由调用点算好传进来;准入测试末尾加一个合取项,未 armed 时逐字节就是出货分支里的字面 `true`。唯一调用点、唯一闸解析点(§1.3 / §1.4 断言)。",
+  "bots_lua_changed": true,
+  "direction": "⚠️ **NARROWING,按构造单向**:出货答案由调用点算好作为 `bShippedInReach` 传入,除 armed 那条之外每条路径原样返回它,而 armed 那条只能把 true 变成 false ⇒ armed 在出货帧的**严格子集**上开火,且**从不重选目标**(循环已经选好了)。⛔ 负读数**只能**读成「这道否决删掉了 N 次抽蓝出价」,**绝不能**读成「避免了 N 次白走」,更不能读成本 lever 增加或移动了一次施法。",
+  "domain_gate_layer": "**环读数,不是分支读数**(§3.3):在每个存活 Lion 帧上按该帧**真实**的 `GetCastRange()` + 秘法胶槽位(0–5,与 `J.IsItemAvailable` 同界)算出环,数落在 `(nCastRange, 1600]` 这条带里的单位 —— 带**非空**。⚠️ 它回答的是「这条带在这些瞬间上是地图的一块真实区域吗」,**不是**「分支多久开火一次」。",
+  "domain_end_to_end": "⛔ **买不到,而且是结构性的**:分支需要**带真实蓝池的敌方小兵**,而语料在每个存活 Lion 瞬间上 `GetNearbyCreeps` 答**空表**(`CORPUS_HAS_NO_NONHERO_UNITS_20260912`,首见于 `cmcreepclock`)。§4 **驱动**这个 0 而不是断言它,并且是**单向 tripwire**:哪天语料里出现带兵的帧,§4 变红并指名去测,而不是安静地绿在一句已经过期的话上。⛔ **谁也不许报一个本 lever 删掉的出价数。** 取证走 `queue.json:hero-79`(**零 EC2**)。",
+  "limits": "1. ⛔ **本轮第一稿把准入测试的第二个析取项 `GetMana() > 349` 写成「每一级都是死代码」,那是错的,查 KV 后当场改正**:`mana_per_second` 是 `20 40 60 120`、`duration` 恒 `5.0` ⇒ `nManaDrain * 0.8` = 80/160/240/**480**;前三级 349 确实被第一项吞掉,**第四级 349 是更弱的那个测试**,放进 350–480 蓝量的兵。⇒ 它是一条**四级里三级空、第四级承重**的析取项,不是死代码。§5 用 KV 算术钉住 3/1 这个比,改了要去改抬头而不是放松断言。**这一项本轮不修**(与射程是两个问题,合并会让波读数无法归因)。\n2. 环读数用的是**英雄**句柄(语料没有兵),所以它是关于**带**的读数不是关于**供给**的读数。\n3. 本轮**没有**逐帧看录像;缺陷是从源码 + KV 快照推出来的,这一点写在报告里。",
+  "verification": "`lua5.1 tests/run_tests.lua lion_drain_creep_reach` **13/13 绿**;`tools/agent/mutstand_liondrainreach.sh` **15/15**(含 M0 无操作对照如期 SURVIVED);`bash tools/agent/luacheck_gate.sh` **GATE_EXIT=0 / 0 警告**。\n⭐ **变异台自己抓到一条**:M11(把 1600 直接改小 = 不 gate 就把缺陷修了)第一版锚在裸的 `bot:GetNearbyCreeps( 1600, true )` 上,而**同一个 needle 更早地出现在本 lever 自己的抬头注释里**(它在引用缺陷)⇒ perl 改的是**散文**、mutant **SURVIVED**。改成锚 `local nEnemyCreepList = ...` 后 CAUGHT。**改了注释的 mutant 不是一个结果**,这条写进了台子里。",
+  "issue": "无既有 issue;本轮新开 `[hero]` issue 记录缺陷与取证请求(若 MCP 可用;不可用则本条与报告即为登记,下轮补)。"
+ },
+ "talentqueue_ORDERING_NOT_A_DEFECT_20260913": {
+  "owner": "hero",
+  "date": "2026-09-13T20:xxZ",
+  "bots_lua_changed": false,
+  "headline": "⭐ **章程 backlog `-167` 第 1 条(GH #799 的「排序」那一半)结论是:那不是缺陷,是层级约束的算术。** 线索原文是「队列 slot 18 装 t20、slot 19 装 t25,而它们最早分别在 18 级 / 20 级成为队头 ⇒ 天生卡住」。卡住是真的,**缺陷不是** —— 那两级上**本来就没有别的东西可买**。",
+  "derivation": "`X.GetSkillList` 的通用腿:`totalSlots = 15 ability + 8 talent = 23`,talent 落在 `i >= 10 and (i % 5 == 0 or ability_idx > 15)` ⇒ 槽位是 1–9 技能、**10 = t10**、11–14 技能、**15 = t15**、16–17 技能、**18 = t20**、**19 = t25**、20–23 = 四个层级各自的**另一半**。\n把每个槽位跟引擎的升级等级要求对齐(基础技能 rank N 要 2N−1 级;大招 6/12/18;天赋 10/15/20/25):\n* 17 级时**可花上限** = 14 个技能点(大招 rank3 要 18 级)+ t10 + t15 = **16** < 17 ⇒ **必然攒 1 点**,与顺序无关;\n* 18、19 级同理(t20 要 20 级),21–24 级同理(t25 要 25 级);\n* 20–23 槽是**同层另一半**,第一半点掉之后永久不可点 —— 但那时也已经无点可花。\n⇒ **顺序在这条约束下是紧的**,任何重排都只会更差或等价。",
+  "load_bearing_finding": "⭐ **t10/t15 两个槽是**承重的垫片**,不是插进来的杂物**:正是它们把六条焦点 build 里的**大招 rank 2**(ability idx 11)顶到槽 12 = **恰好 12 级**,也就是引擎对大招 rank 2 的要求。把天赋挪到技能之后会让 idx11 落到槽 11 = 11 级,**低于要求**。⇒ 「把天赋全挪到最后」这个直觉修法会**打坏大招节奏**。",
+  "one_real_off_by_one": "六条焦点 build 的**大招 rank 3**(ability idx 15)都落在槽 **17**,而引擎要 **18 级** ⇒ 17 级那一帧队头进不了中间分支、落在终局 `else`。**这不是缺陷**(见上:17 级可花上限就是 16),但它解释了为什么终局 `else` 在**每一局、每一个英雄**身上都会被进入至少一次 —— `[WARN] Skipped to level up ability` 不是异常信号,这一点直接影响 `queue.json:hero-78` 那条日志扫描怎么读分母。",
+  "limits": "⛔ **这是从两份 build 表 + 引擎公布的等级要求推出来的,不是从帧上量的。** 本轮**没有**给它写断言(`tests/test_focus_talent_reach_wall.lua` 已有相邻读数,但没有钉这条算术)。⇒ 登记为**推导**,不是判决;下一轮把它钉成断言是自足小单元。\n⛔ **它不结掉 #799**:#799 量到的墙在槽 **15**(13 技能点 + ≤1 天赋),那是**消费**缺陷(`skillstall` 的域),与排序无关。按 `-167` 的要求,两者**不合并**。"
  }
 }

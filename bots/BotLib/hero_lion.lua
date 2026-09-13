@@ -1329,6 +1329,96 @@ function X.ConsiderW()
 end
 
 
+--- Is the creep this drain bid picked inside the range Mana Drain can be cast at?
+---
+--- Soak candidate `liondrainreach` (turbo-only, INERT until armed).
+---
+--- THE DEFECT, and it is a scope defect, not an arithmetic one.  X.ConsiderE
+--- computes `nCastRange = abilityE:GetCastRange() + aetherRange` on its FIRST
+--- working line (:1338) and every later branch in the function measures against
+--- it: the teamfight loop tests `J.IsInRange( bot, npcEnemy, nCastRange )`, the
+--- combat branch tests the same, and the illusion loop deliberately widens to
+--- `nCastRange + 300` -- an author who knew to relate a ring to cast range even
+--- when opening it on purpose.  The low-mana creep branch is the one that does
+--- not: it reads `bot:GetNearbyCreeps( 1600, true )` and its accept test is
+--- mana-only (`GetMana() > nManaDrain * 0.8 or GetMana() > 349`).  There is no
+--- distance term of any kind between that list and `return
+--- BOT_ACTION_DESIRE_HIGH, nCreep`.  So the correctly scoped number is not
+--- merely available, it is the local the rest of the function already uses.
+---
+--- THE SIZE OF THE GAP, read off the KV snapshot rather than guessed:
+--- lion_mana_drain / AbilityCastRange is a flat `850` at every rank
+--- (tests/mock/special_value_shapes.lua).  So the ring the branch searches is
+--- 1600 against a reach of 850, or 1100 for a Lion carrying an aether lens --
+--- a gap of 750 units, 500 with the lens.  For scale the ability's own
+--- `break_distance` is 1100: the branch can pick a creep from FURTHER away than
+--- the distance at which the channel would break.
+---
+--- WHAT THAT COSTS.  X.SkillsComplement feeds the returned handle to a
+--- UseAbilityOnEntity order, and a cast order on a unit beyond cast range is a
+--- MOVE order first: Lion walks at the creep until he is inside 850 (+ lens).
+--- The bid is `BOT_ACTION_DESIRE_HIGH`, so for the length of that walk it
+--- outranks whatever mode put him where he was standing.  The branch's own
+--- entry conditions are what make the walk unattractive rather than merely long:
+--- it fires only when `#hEnemyList == 0` and no enemy tower is within 1000, i.e.
+--- precisely when nothing is contesting the map near him, which is when a
+--- support's position (a ward spot, a lane, a smoke) is the thing he is holding.
+---
+--- ⚠️ DIRECTION IS NARROWING, and it is one-way by construction.  The shipped
+--- answer is computed by the caller and handed in as `bShippedInReach`; every
+--- path returns it unchanged except the armed one, which can only turn a true
+--- into a false.  Armed fires on a strict SUBSET of shipped frames, and never
+--- re-picks the target -- the loop has already chosen it.  A negative reading
+--- may ONLY be read as "the guard deleted N drain bids"; it may NEVER be read
+--- as "N wasted walks were avoided", and it may never be read as the lever
+--- adding or moving a cast.
+---
+--- ⛔ THE DOMAIN IS UNSIZED AND THIS ROUND COULD NOT SIZE IT.  Two separate
+--- reasons, both structural, neither an argument that the domain is empty:
+---   1. The enclosing branch needs enemy creeps with a real mana pool.  Dota
+---      lane creeps carry none, so the supply is whatever `GetNearbyCreeps( ...,
+---      true )` returns that does -- and the fixture corpus answers an EMPTY
+---      table for creep queries on every instant this stream has measured
+---      (CORPUS_HAS_NO_NONHERO_UNITS_20260912, recorded against `cmcreepclock`).
+---   2. There is no live-Lion instant in the corpus with the branch's entry
+---      state.  So neither the end-to-end count nor the gate-layer count can be
+---      bought offline.
+--- No one may report a number of bids this lever removes.  Evidence is
+--- requested as iterations/queue.json `hero-79` (zero EC2, archive-only).
+---
+--- CONDITION (c).  Standard practice for Mana Drain on a position-4/5 Lion is
+--- that it is a top-up taken from whatever is already next to you -- it is a
+--- multi-second stationary channel, and in Turbo mana is the constraint that
+--- regenerates on its own while position is the one that does not.  Walking an
+--- arbitrary distance up to 1600 units to start a channel inverts that.
+---
+--- ⚠️ NOT IN THIS ID, registered rather than fixed, and the first draft of this
+--- note had it BACKWARDS -- which is why it is written with the arithmetic
+--- rather than the conclusion.  The accept test's second disjunct
+--- `nCreep:GetMana() > 349` is subsumed at ranks 1-3 and LOAD-BEARING at rank 4.
+--- `nManaDrain = mana_per_second * duration` and the KV says mana_per_second is
+--- `20 40 60 120` over a flat `5.0` duration, so nManaDrain * 0.8 is
+--- 80 / 160 / 240 / 480.  Below 349 for three ranks (there the 349 clause can
+--- never be the reason the test passes); ABOVE it at rank 4, where 349 is the
+--- weaker test and admits creeps holding 350-480 mana that the first disjunct
+--- refuses.  So it is a real rank-4 widening, not dead code -- a different
+--- question from reach, and merging the two would make a wave reading
+--- unattributable.  Pinned in tests/test_lion_drain_creep_reach.lua section 5.
+function X.lion_IsDrainCreepInReach( hBot, hCreep, nCastRange, bShippedInReach )
+
+	if not bShippedInReach then return bShippedInReach end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainreach' ) ) then return bShippedInReach end
+
+	if hBot == nil or hCreep == nil then return bShippedInReach end
+
+	if type( nCastRange ) ~= 'number' then return bShippedInReach end
+
+	return J.IsInRange( hCreep, hBot, nCastRange )
+
+end
+
+
 function X.ConsiderE()
 
 
@@ -1361,6 +1451,9 @@ function X.ConsiderE()
 			if J.IsValid( nCreep )
 				and ( nCreep:GetMana() > nManaDrain * 0.8 or nCreep:GetMana() > 349 )
 				and J.CanCastOnNonMagicImmune( nCreep )
+				-- [liondrainreach] gate off, this conjunct is the literal `true`
+				-- the shipped branch has here; see X.lion_IsDrainCreepInReach.
+				and X.lion_IsDrainCreepInReach( bot, nCreep, nCastRange, true )
 			then
 				return BOT_ACTION_DESIRE_HIGH, nCreep, 'E-补篮'
 			end
