@@ -1,8 +1,9 @@
 # Workshop 发布手册(beta 起用)
 
 > 第一版:2026-09-13,`beta-20260913` = main `4b789a70`(稳定锚点 stable-v9)。
-> **已发布 2026-09-13:创意工坊物品 id **(https://steamcommunity.com/sharedfiles/filedetails/?id=3801134119),
-> owner 经路线 B(steamcmd, macOS)上传成功,当前私有可见;git tag  = main 。
+> **已发布 2026-09-13:创意工坊物品 id `3801134119`**(https://steamcommunity.com/sharedfiles/filedetails/?id=3801134119),
+> owner 经路线 B(steamcmd, macOS)上传成功,当前私有可见;打包树 = main `4b789a70`
+> (指针:tag `beta-20260913` 与分支 `release/beta-20260913`,以能推上远端的那个为准)。
 >
 > 主会话打包;**上传这一步必须由 owner 在装有 Dota 2 的机器上用自己的 Steam 账号完成**
 > (需要 Steam 登录 + Steam Guard,沙盒无法代劳)。
