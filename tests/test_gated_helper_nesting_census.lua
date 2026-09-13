@@ -569,6 +569,21 @@ local PINNED = {
     -- exactly what it measured before this landed, which is the question this
     -- census exists to ask.
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | divepocket,nodive2 | bots/mode_retreat_generic.lua",               -- W
+    -- [runring 20260913] Read by hand before pinning, and it is (W) on the outer
+    -- half and (I) on the inner one. Outer (W): the same sibling-statement
+    -- reading the 'roshdist' paragraph above sets out -- c12/retnear/towerreach
+    -- are separate statements in the same 500-line GetDesireHelper, and the
+    -- `if X.LowChanceToRun() then` call sits in the desire ladder outside all
+    -- three, so arming any of them alone measures exactly what it measured
+    -- before. Inner (I): un-armed, the added guard is
+    -- `local bTargetInRing = not (J.IsSoakCandidate('runring') and
+    -- J.IsModeTurbo()) or ...`, which evaluates to the literal `true` and
+    -- short-circuits before the membership call -- the identity element of the
+    -- `and` it joined, so the admission below it is byte-for-byte the shipped
+    -- one. This is a NEW soak id, not an inherited one: the host is shipped
+    -- code, so unlike this desk's 'chasering' row there was no unarmed outer
+    -- gate to hang it under, and arming 'runring' alone is a real lever.
+    "c12,retnear,towerreach | GetDesireHelper | X.LowChanceToRun | runring | bots/mode_retreat_generic.lua",                              -- W
     -- [towerring 20260906 GH #558] The outer-id column of BOTH X.ShouldRun rows
     -- grew a second id. The classification does not move: the new id gates the
     -- SAME clock local as 'towerfear' in the same block, and un-armed it leaves

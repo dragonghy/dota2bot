@@ -714,7 +714,24 @@ function X.LowChanceToRun()
     if #nEnemysHeroes >= 3 and #nEnemysHeroes >= #nAllyHeroes and botHP < 0.4
         and bot:WasRecentlyDamagedByAnyHero(1) and bot:GetCurrentMovementSpeed() < 330
     then
-        if J.IsValidHero(botTarget) and J.CanKillTarget(botTarget, bot:GetAttackDamage() * 2.5, DAMAGE_TYPE_PHYSICAL) then
+        -- [runring, soak-candidate, turbo-only] "I cannot run, but I can kill
+        -- someone" has to be about someone in the fight the bot is standing in.
+        -- The loop eleven lines below already asks exactly this question of
+        -- `nEnemysHeroes` -- the 900 ring this function computed for its own
+        -- outnumbered test. This leg asks it of `botTarget` instead, and
+        -- `botTarget` is J.GetProperTarget(bot) = bot:GetTarget() falling back
+        -- to bot:GetAttackTarget(), filtered only by "not one of our own", with
+        -- no distance bound of any kind: a stale order target on the far side
+        -- of the map can answer for a bot that four enemies are beating on.
+        -- Armed, the leg is skipped unless the caller's target is one of the
+        -- ring members -- identity, so it inherits the ring's illusion/clone
+        -- filtering too, which J.IsValidHero does not do. Strictly narrowing at
+        -- the predicate: the armed TRUE set is a subset of the shipped one.
+        -- NO claim is made about the direction of the resulting retreat BID.
+        local bTargetInRing = not (J.IsSoakCandidate('runring') and J.IsModeTurbo())
+                              or J.IsExistInTable(botTarget, nEnemysHeroes)
+        if bTargetInRing and J.IsValidHero(botTarget)
+            and J.CanKillTarget(botTarget, bot:GetAttackDamage() * 2.5, DAMAGE_TYPE_PHYSICAL) then
             return true
         end
         for _, enemy in pairs(nEnemysHeroes) do
