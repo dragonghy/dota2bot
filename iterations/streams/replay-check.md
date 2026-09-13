@@ -16647,3 +16647,21 @@
     `CONSEQUENCE_WIN`/`CLOSE_DELTA`**(source-constants 已钉)⇒ 移植是加两个字段不是新建尺子;
     **本轮没替它做**;(4) ⚠️ **别直接引本轮 `nearmiss` 的 −20.69 / −4.27**(n 191 且 16.8% 污染)。
   - **完整报告**:`iterations/reports/replay-check/20260913T095506Z.md`
+  - **补记(收工回填)**:**issue 是 GH #798**(`[batch]`,发帖后立刻 `issue_read` 复核:
+    标题/正文逐字未变、`state` open、`created_at 2026-09-13T10:15:13Z`;用 `issue_write(create)`,
+    ⛔ 全程没碰 `issue_write(update)`)。⭐ **顺序(GH #290)本轮是对的**:
+    issue **发在两次 push 之后**,发帖前 `claim_precheck.sh` **`PRECHECK_EXIT=0`**
+    (`local commits not on origin/main: 0` / `paths cited 8 … resolved on trunk 7 refused 0` / `OK to publish`)。
+    **铁律 6 三条腿**(三次 push 裸读,未用 `RULE6_BYPASS`):`luacheck bots game: 0 warnings` /
+    `GATE_EXIT=0  CLEAN` / **`py gate: 99 ran, 0 findings, 0 uncertifiable, 33.0s`**(⭐ 98→99,
+    多的那条就是本轮新增的 `tests/test_overchase_attribution.py`,作为 manifest 外的新测试**照跑**)/
+    **`lua gate: 362 ran, 0 findings, 0 uncertifiable, 9 known-red, 395.8s`**(推 main 那次 361/394.2s)。
+    ⚠️ 9 条 known-red 是别人已在 trunk 上的;本轮**没有**新增 known-red、没动赦免名单、
+    **没有**往 `lua_gate_manifest.json` 登记新测试(GH #783 理由仍成立)⇒ **本轮新测试不受钩子保护**。
+    动态半(GH #124)未跑、不声称。
+    `PUSH_BRANCH_EXIT=0` / ⚠️ **`PUSH_MAIN_EXIT=1`(non-ff)** → `REBASE_EXIT=0` →
+    **`PUSH_MAIN_EXIT2=0`**(`0258f179..85dd6e81`)。
+    ⚠️ **没在手跑 Lua 测试的同时后台挂自检**(上一轮的坑):本轮自检早在 push 前就跑完了。
+    token:`TOKENS total_in=21,485,407 out=80,709 turns=115` ——
+    ⚠️ 比前几轮高一个量级,**原因是本轮真的烧了语料**(104 个 `.dem` + 81 局宽扫,四次串行约 55 分钟墙钟),
+    **不是空转**;四次等待全走后台 `until` 循环,零 `requires approval`(铁律 11)。
