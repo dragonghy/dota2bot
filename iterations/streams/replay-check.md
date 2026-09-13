@@ -16665,3 +16665,16 @@
     token:`TOKENS total_in=21,485,407 out=80,709 turns=115` ——
     ⚠️ 比前几轮高一个量级,**原因是本轮真的烧了语料**(104 个 `.dem` + 81 局宽扫,四次串行约 55 分钟墙钟),
     **不是空转**;四次等待全走后台 `until` 循环,零 `requires approval`(铁律 11)。
+  - **补记 2(收尾 push 的三件事,如实登记)**:(1) ⚠️ **`tests/test_tpreach_domain.py` 在钩子里红过一次,
+    复现不出来** —— 那次 `py gate: 99 ran, 1 findings`(`selfcheck exits clean: exit 1` + 13 条
+    `battery still runs …`,电池只跑到第 4 条),**不是本轮改的文件**(该 commit 只动 `iterations/`);
+    随后**单跑 3/3 全绿各 0.07–0.08s(不是超时)**、**整个 `py_gate.py` 单跑也绿**(`99 ran, 0 findings`)、
+    同树此前三次 push 全绿 ⇒ **n=1 不可复现,本轮不开 issue 也不叫它 flake**;
+    **登记形状:只在 pre-push 钩子上下文里出现过**,下次再撞见先查那个 selfcheck 子进程
+    在钩子里继承了什么(钩子 stdin 是 ref 列表)。
+    (2) ⚠️ 收尾分支 push 被拒 `non-fast-forward`(第一次 push 在 rebase **之前**,而 rebase 后那条线
+    已以 `85dd6e81` 进了 main):处置是**先推 main**(`85dd6e81..69d73056`,`PUSH_MAIN_EXIT3=0`)
+    再 **`--force-with-lease=…:6eb0623f`** 对齐会话分支(`PUSH_BRANCH_FWL_EXIT=0`,`+ 6eb0623f...69d73056`)
+    —— ⛔ **丢弃的只有本会话 rebase 前的重复历史,没有别人的提交,没在别人分支上改写历史**。
+    (3) ⚠️ 收尾两次 push 的 lua 闸打的是 **`SKIPPED BY SCOPE`,那是范围判定不是通过**;
+    force-with-lease 那次差集含 `tests/` ⇒ 闸真跑了:**`361 ran, 0 findings, 0 uncertifiable, 9 known-red, 391.8s`**。
