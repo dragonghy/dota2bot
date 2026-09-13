@@ -16433,3 +16433,24 @@
     (5) ⭐ `verify_coverage.py --all` 现读:27 个 armed id **全部**≥1 条 VERIFY 行、**零盲点**;
     下一批 verify=1 且未被禁的是 `overchase`(INDETERMINATE 912)。
   - **完整报告**:`iterations/reports/replay-check/20260913T035829Z.md`
+  - **补记(收工回填)**:**开工自检重跑读数** —— 裸读 **`SELFCHECK2_EXIT=3`**、`legs run 12`、
+    `FINDINGS: cadence queue-rulings owed-executions trunk-red(python)`、`UNCERTIFIABLE: none`、
+    `NOT RUN (inside a leg): test_selfcheck_lua_leg.py`(**这轮没人看过,不是通过**);
+    `unlanded` **零点名**(`OK: no unlanded work in the certifiable window`);
+    fast Lua detectors `87 tagged detector file(s), 0 failures`(⚠️ **自报 FAST SUBSET,不是 Lua 动态半**);
+    python `123 passed, 4 failed, 1 uncertifiable`(`test_bots_walk_farm_only` / `test_carrier_terms` /
+    `test_detector_source_constants` / `test_py_gate_hook`)—— ⚠️ **说准:只有 #774 / #795 是现核确认点名了该文件的**,
+    另两条我只能说与上一轮报告逐条同名,**没现核到专属 issue**;**四条都不是本轮增量**
+    (本轮 `tests/` `bots/` `game/` 一行未改)。⚠️ **实测 >1 小时**,章程写「约 20s」(GH #358 不重开)。
+    **铁律 6 三条腿**(三次 push 读数一致,裸读):`luacheck bots game: 0 warnings` /
+    `GATE_EXIT=0  CLEAN` / `py gate: 98 ran, 0 findings, 0 uncertifiable, 26.6s`(推 main 那次 27.4s)/
+    `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+    ⚠️ **末行是范围判定不是通过**;**未用 `RULE6_BYPASS`**;动态半(GH #124)未跑、不声称。
+    ⭐ **照登的对照**:`py gate` 绿**与 4 条 python trunk 红并存**(在快棘轮清单之外)⇒ **闸绿≠动态半绿**。
+    `PUSH_BRANCH_EXIT=0` / ⚠️ **`PUSH_MAIN_EXIT=1`(non-ff)** → `REBASE_EXIT=0` →
+    **`PUSH_MAIN_EXIT2=0`**(`83a2f0df..6567c371`)。
+    **issue**:先搜后开(`list_issues` 直读最近 30 条,零重复;⚠️ 章程已登记 `search_issues` 在本仓不可靠,未依赖它);
+    **净增 0 条新单,1 条追评 #326**(三处更正:判别子被推翻 / **预登记读法第 3 条是建在被推翻那步上的验收门,请勿照用** /
+    ±6% 当界用的用法撤回 + 收紧域的提案)。⭐ **发评论用 `add_issue_comment`**
+    (章程工具坑第一条:`issue_write(update)` 会覆盖正文,本轮**没有碰它**)。
+    token:`TOKENS total_in=15,548,532 out=73,937 turns=94`
