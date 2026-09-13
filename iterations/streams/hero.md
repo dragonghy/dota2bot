@@ -7348,6 +7348,13 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **不是赦免**、闸会把那条红当**新**形状 ⇒ 会把**别组**的 trunk 红变成**全队的 push 拦路石**。
     代价不对称(留着=下次新红不拦,且闸每轮再喊;摘掉=可能挡住所有人)⇒ **已回滚**,
     交 `[harness]`/总监在一次完整重测里做。
+    ⛔ **同一个 manifest 本轮回滚了两次,第二次是个陷阱**:为了看 `--set-known-red` 的参数形状跑了
+    `lua_gate_measure.py --help`,而**该工具没有 `--help` 处理**,不认的旗**直接落进默认分支
+    跑了一次全量重测并写回 manifest**。重测路径本身合法且保留了 `known_red`,但**这一份是在
+    已知偏慢的容器上测的**(自检当轮:同样 50 个文件本机 99.5s / 批测台 133.3s,GH #358)⇒
+    `selected_total_seconds` **238.7 → 299.1**(预算 300)、`selected_count` **322 → 319**,
+    **三个测试被挤出快闸,依据是容器速度不是测试本身**。已回滚。
+    ⇒ **「读一个工具的用法」不该是一个写操作**,建议交 `[harness]`:给它一个未知旗即退出的分支。
   - **产物**:`tests/test_focus_talent_reach_wall.lua`(6 绿,`[ratchet]`)、
     `tools/agent/mutstand_talentwall.sh`(9/9)、GH #799、`queue.json:hero-2` 域声明(1 行 diff)。
 - 2026-09-13T08:15Z(报告 `iterations/reports/hero/20260913T081500Z.md`;**backlog:新开 `-164`**;
