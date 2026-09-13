@@ -11,6 +11,7 @@ checked against the repo's own git history rather than against itself.
 
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -166,11 +167,101 @@ for a in anchors:
     check("%s: promote_commit must be an ancestor of ref_sha" % a["name"],
           proc.returncode == 0)
 
+# ---------------------------------------------------------------------------
+# coverage -- every promote in the SOURCE must be covered by a registered
+# anchor.  This section runs the registry backwards, and that direction is the
+# whole point of it.
+#
+# WHY IT EXISTS (2026-09-13, director).  Everything above this line reads
+# `stable_anchors.json` first and then asks whether each row is healthy.  A
+# promote whose row was **never written** is therefore invisible: it is not a
+# row, so nothing checks it, so the tool prints ok.  `stable_anchors.json`'s own
+# `_doc` says "漏登记不会自己举手 -- 加那一行就是让它会", but adding a row only
+# makes THAT anchor checked; it does nothing for the next one somebody forgets.
+#
+# It was not hypothetical.  `zusult` + `zusboltdom` were promoted 2026-09-11
+# (gate deleted in bots/BotLib/hero_zuus.lua, machine key
+# state.json:zusult_zusboltdom_PROMOTE_20260911) and went two days and a dozen
+# routine triggers with no row and no ref, through a week in which the director
+# registered four other anchors correctly.  Nothing was red.  The miss was found
+# by hand while counting promotes for a weekly ledger -- i.e. by luck.
+#
+# So the assertion starts from the tree that actually ships: each
+# `PROMOTED ... (was soak-candidate '<id>')` note under bots/ + game/ marks a
+# gate that a promote deleted, and every such id must be either covered by an
+# anchor or on the frozen pre-registry list below.
+SRC_DIRS = ("bots", "game")
+PROMOTE_NOTE = re.compile(r"was soak-candidate '([a-z0-9_]+)'")
+
+# Promoted before the anchor registry existed (stable-v1, 2026-08-19).  There is
+# no anchor for these and there never will be -- inventing one would mean
+# inventing a ref_sha for a tree state nobody recorded.  FROZEN: this list must
+# never grow.  A new promote goes in `stable_anchors.json`, not here, and the
+# count below is asserted so that appending to it cannot pass review unseen.
+PRE_REGISTRY = frozenset([
+    "deathzone", "fight", "lanesurv", "nodive", "punish",
+    "regroup", "skyburst", "tphome", "tpsafe", "vsafe",
+])
+check("the pre-registry allowlist is frozen at 10 ids", len(PRE_REGISTRY) == 10,
+      "got %d -- a new promote belongs in stable_anchors.json, not on this list"
+      % len(PRE_REGISTRY))
+
+
+def promoted_in_source():
+    found = {}
+    for top in SRC_DIRS:
+        for root, _dirs, files in os.walk(os.path.join(REPO, top)):
+            for fn in files:
+                if not fn.endswith(".lua"):
+                    continue
+                path = os.path.join(root, fn)
+                with open(path, encoding="utf-8", errors="replace") as fh:
+                    for pid in PROMOTE_NOTE.findall(fh.read()):
+                        found.setdefault(pid, os.path.relpath(path, REPO))
+    return found
+
+
+source_ids = promoted_in_source()
+# A corpus that came back empty would make every assertion below vacuously true,
+# which is the failure mode this whole section is about.  Refuse it.
+check("the source scan must find promote notes at all", len(source_ids) >= 20,
+      "found %d -- an empty scan passes coverage vacuously" % len(source_ids))
+
+anchored_ids = set()
+for a in anchors:
+    for pid in a.get("promoted_ids", []):
+        check("promoted id %r is claimed by two anchors" % pid,
+              pid not in anchored_ids)
+        anchored_ids.add(pid)
+
+for pid, where in sorted(source_ids.items()):
+    check("%s: promoted in %s but no anchor row and not pre-registry" % (pid, where),
+          pid in anchored_ids or pid in PRE_REGISTRY,
+          "add a row to iterations/stable_anchors.json")
+
+# The other direction: an anchor may not claim a promote the tree does not have.
+# This is what catches a promote that was reverted, or a row typed from a report
+# rather than from the source.
+for pid in sorted(anchored_ids):
+    check("%s: an anchor claims this promote but bots/+game/ has no "
+          "\"was soak-candidate '%s'\" note" % (pid, pid),
+          pid in source_ids)
+
+# The pre-registry list is an exemption, not a parking lot: each member must
+# still be a live promote in the tree, so a stale id cannot sit here covering
+# for nothing.
+for pid in sorted(PRE_REGISTRY):
+    check("%s: on the pre-registry list but not promoted in the tree" % pid,
+          pid in source_ids)
+    check("%s: on the pre-registry list AND anchored -- pick one" % pid,
+          pid not in anchored_ids)
+
 if failures:
     print("FAIL (%d):" % len(failures))
     for f in failures:
         print("  " + f)
     sys.exit(1)
 
-print("ok -- %d anchors, %d ancestry assertion(s) skipped (objects below graft point)"
-      % (len(anchors), skipped))
+print("ok -- %d anchors, %d promoted id(s) in source (%d anchored, %d pre-registry), "
+      "%d ancestry assertion(s) skipped (objects below graft point)"
+      % (len(anchors), len(source_ids), len(anchored_ids), len(PRE_REGISTRY), skipped))

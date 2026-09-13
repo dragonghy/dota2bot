@@ -199,6 +199,28 @@
         "⚠️ **本锚点还改了一个量具的前提,引用它的人必须知道**:`tools/batch_test/behavioral/tpdying_release.py` 的 `REQUIRED_PARTNER` 由 `'tpcommit'` 改为 `None`。不改它,那条 `--assert-arm` 检查会**从本锚点起拒绝每一波真波**(promoted 的 id 不在任何臂串里),而拒绝时打印的话在树上已经不成立。全文 `test_set.md §GZ.2b(2)`。",
         "⭐ **本行是 push 成功之后才写的**(stable-v7 的 note 末尾登记的那条教训:「下一次 promote:先 push 成功、再写 ref_sha」)。`2dd2778e` 是 rebase 之后、`582cf363..2dd2778e HEAD -> main` 成功之后读出来的 SHA,`git ls-remote origin refs/heads/stable-v8` 现跑复核一致。"
       ]
+    },
+    {
+      "name": "stable-v9",
+      "ref": "refs/heads/stable-v9",
+      "ref_kind": "branch",
+      "ref_sha": "2a82d6bc9d50dadb7b196563b89b690372a31dc7",
+      "promote_commit": "2a82d6bc9d50dadb7b196563b89b690372a31dc7",
+      "promote_commit_subject": "director: zusult + zusboltdom 作为一个原子 PROMOTE(armed 32 → 30)",
+      "promoted_ids": [
+        "zusult",
+        "zusboltdom"
+      ],
+      "promoted_at": "2026-09-11T13:58:22Z",
+      "state_json_key": "zusult_zusboltdom_PROMOTE_20260911",
+      "on_main_first_parent": true,
+      "note": [
+        "⚠️ **本行是补登记的,补的那一天是 2026-09-13,promote 那一天是 09-11 —— 中间隔了两天、十余轮触发,而这两天里没有任何东西举手。** 这就是本文件 `_doc` 里那句「漏登记不会自己举手」的第一个实例:`stable_anchors.py` 逐轮核的是**已登记的锚点**,一条从未被写下的锚点在它眼里**不存在,也因此永远 ok**。⇒ 同轮补的 `tests/test_stable_anchors.py` 覆盖度那一节(§coverage)把方向反过来钉:**先从 `bots/` 的 promote 注记出发**,再要求每个 id 被某个锚点覆盖。那一节若早存在,这条会在 09-11 当轮红。",
+        "第十与第十一条 promote(与 stable-v7 同为一个锚点带两个 id)。ref 指着 promote commit 本身 ⇒ 不变量 3 平凡成立。",
+        "稳定版的变化只在 `bots/BotLib/hero_zuus.lua` 一个文件里(`game/` 零 diff),裁定全文 `test_set.md §GW`,四种组合的算术抄在该文件 `X.ConsiderW2` 上方的注记里 —— promote 之后那里是唯一还会被读到的地方。",
+        "⭐ **引用本锚点时连引这一句**:两条**不能分开 promote**,而理由是四种组合的算术不是偏好 —— `'zusult'` 单独 armed 是**实测 BUGGY**(GH #477 逐帧 + W45 读到 8.0 泄漏 / 100 域内帧),`'zusboltdom'` 单独 armed 是**结构性 no-op**(它的返回值在全文件只有一个消费者,而那个消费者在 `zusult` 未 armed 时先行返回)。⇒ 分开 promote 会把**实测 BUGGY 的那个配置**变成出厂默认。条件 (a) 买在 replay-check 2026-09-07T15:53Z / W52 / 47 局:两条各 WORKING(episodes 11 / 6),而第二条 id 为之而写的那批 considerW2 泄漏读 0。",
+        "⚠️ **本行的 ref_sha 是在一棵 deepen 过的克隆里读出来的,而这一步不是可选的**:routine 容器默认 depth 50,promote commit 在 graft point 以下 ⇒ 补登记当轮 `git merge-base --is-ancestor 2a82d6bc origin/main` 第一次答 **no**,`git log origin/main -- bots/BotLib/hero_zuus.lua` 只回一条。**那个 no 是浅克隆的假象,不是一次 rebase。** `git fetch --deepen=200` 之后(depth 50 → 404)两条读数都翻面:ancestor **yes**、first-parent **yes**。📌 差一点就按 stable-v7 的先例把它记成「被 rebase 挪过」,而那会在登记表里写下一个**没有发生过的事件**。"
+      ]
     }
   ]
 }
