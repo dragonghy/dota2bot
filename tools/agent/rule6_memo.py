@@ -46,6 +46,13 @@ FAIL-CLOSED IN EVERY DIRECTION (the memo may only ever be an optimization):
     output from `git status --porcelain -uall` refuses the memo outright.
   * Only an ALL-GREEN reading is ever stored.  Red and could-not-run are never
     memoized, so a retry after a failure always re-runs.
+  * A REDIRECTED gate neither reads nor writes the memo (GH #795).
+    PY_GATE_ROOT / PY_GATE_MANIFEST / LUA_GATE_ROOT / LUA_GATE_MANIFEST move
+    what legs 2 and 3 actually read off the tree this key names, so a reading
+    taken under them is not about this tree at all.  Both gates already PRINT
+    that they were redirected ("PY GATE REDIRECTED -- ... (not the repo's own)")
+    -- the memo simply never asked, and that omission disarmed this repo's push
+    gate for real; see the comment on REDIRECT_ENV below.
   * Anything unexpected -- no git, no `origin/main`, unreadable memo dir,
     corrupt entry -- is a MISS, never a hit.
 
@@ -71,6 +78,44 @@ MEMO_DIRNAME = "rule6_memo"
 MAX_ENTRIES = 32
 MAX_AGE_SECONDS = 24 * 60 * 60
 
+# Environment variables that move what legs 2 and 3 READ off the tree the key
+# names.  The key is (HEAD^{tree}, origin/main) + "the working tree is clean",
+# and every one of those inputs is about THIS repo; none of them can see that
+# py_gate.py was pointed at a two-file scratch tree in /tmp.
+#
+# GH #795, and the store direction is the one that reached production.
+# tests/test_py_gate_hook.py drives the REAL hook from the REAL repo with these
+# set, because what it tests is the hook's wiring, not the repo's ratchets.  Its
+# all-green control case therefore stored a reading ABOUT A SYNTHETIC TWO-FILE
+# TREE under the real tree's key -- measured 2026-09-13T12:55Z on a clean trunk:
+#
+#     py gate: 1 ran, 0 findings, 0 uncertifiable, 0.0s
+#     lua gate: 1 ran, 0 findings, 0 uncertifiable, 0 known-red, 0.0s
+#
+# under HEAD^{tree}=47de5248, with `rule6_memo.py get` answering rc=0 and a
+# banner asserting "all three legs really ran ... on THIS EXACT tree".  They had
+# not.  The next real `git push` of that tree would have replayed it and skipped
+# all three legs while printing that sentence -- a fail-open with a friendlier
+# face than RULE6_BYPASS, which is exactly what this file's own header says the
+# memo may never become.
+#
+# The read direction bit first and is how it was found: the same entry then
+# answered the file's own RED cases, so four of the six assertions that say "a
+# red gate refuses the push" were being satisfied by a memo hit (10 checks /
+# 6 failed on a clean tree, 10/0 on a dirty one -- i.e. red exactly on the trees
+# where a push really happens).
+#
+# Fail closed in BOTH directions rather than adding them to the key: a redirected
+# run is not a reading of this tree, so there is nothing here worth storing under
+# any key, and RULE6_NO_MEMO is not a substitute (it suppresses the read and
+# leaves the write).
+REDIRECT_ENV = (
+    "PY_GATE_ROOT",
+    "PY_GATE_MANIFEST",
+    "LUA_GATE_ROOT",
+    "LUA_GATE_MANIFEST",
+)
+
 
 def _git(*args):
     """Return (rc, stdout) for a git command; never raises."""
@@ -92,6 +137,12 @@ def memo_inputs():
     Every branch that returns a reason is a fail-closed branch: the caller must
     treat it as "no memo", never as "green".
     """
+    # First, and before any git call: if the legs have been pointed somewhere
+    # else, no key computed from this repo describes what they measured.
+    redirected = [name for name in REDIRECT_ENV if os.environ.get(name)]
+    if redirected:
+        return None, "gate inputs are redirected by env (%s)" % ", ".join(redirected)
+
     rc, top = _git("rev-parse", "--show-toplevel")
     if rc != 0 or not top.strip():
         return None, "not inside a git work tree"

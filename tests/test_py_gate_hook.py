@@ -24,6 +24,19 @@ What it asserts, and why each one can fail open:
      the python half was skipped TOO -- a bypass whose text names only half of
      what it skipped is a report the author will copy honestly and still get
      wrong (GH #198 §2).
+  5. THE MEMO MUST NOT ANSWER FOR THIS FILE, IN EITHER DIRECTION (GH #795).
+     Driving the real hook from the real repo means the rule 6 memo
+     (tools/agent/rule6_memo.py) is keyed on the REAL tree while the legs are
+     redirected at a scratch tree -- so for two days case 3's all-green control
+     stored "py gate: 1 ran, 0.0s" under trunk's own key, and cases 1, 2 and 4
+     were then answered out of it: 10 checks / 6 failed on a CLEAN tree, 10/0 on
+     a dirty one, i.e. broken exactly on the trees where a push really happens.
+     Worse than a red test: the entry survived this file, so trunk's own next
+     push replayed it and skipped all three legs (measured live, 12:55Z).  The
+     fix is in the memo (a redirected gate is "memo unavailable", both get and
+     put); the two checks here are its acceptance, and they are written as
+     assertions about THE REAL REPO's memo dir on purpose -- an assertion that
+     only looked at stdout would pass while the poison entry was being written.
 
 Run:  python3 tests/test_py_gate_hook.py
 """
@@ -38,6 +51,12 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 HOOK = os.path.join(REPO, ".githooks", "pre-push")
+
+# IMPORTED, not spelled out as "rule6_memo": a literal here would keep matching
+# an empty directory after a rename, and "a detector whose passing state is
+# 'matches nothing'" is the exact shape this repo keeps paying for.
+sys.path.insert(0, os.path.join(REPO, "tools", "agent"))
+from rule6_memo import MEMO_DIRNAME  # noqa: E402
 
 failures = []
 checks = 0
@@ -95,6 +114,9 @@ def make_tree(tmp, tag, body):
     return root, mpath, lpath
 
 
+hook_outputs = []
+
+
 def run_hook(root, mpath, lpath, **extra_env):
     env = dict(os.environ)
     env["PY_GATE_ROOT"] = root
@@ -102,11 +124,34 @@ def run_hook(root, mpath, lpath, **extra_env):
     env["LUA_GATE_ROOT"] = root
     env["LUA_GATE_MANIFEST"] = lpath
     env.update(extra_env)
-    return subprocess.run(["bash", HOOK], cwd=REPO, env=env,
-                          capture_output=True, text=True, timeout=900)
+    p = subprocess.run(["bash", HOOK], cwd=REPO, env=env,
+                       capture_output=True, text=True, timeout=900)
+    hook_outputs.append(p.stdout + p.stderr)
+    return p
+
+
+def memo_entries():
+    """The REAL repo's rule 6 memo entries (a frozenset of file names).
+
+    Deliberately reads the repo this file lives in, not the scratch tree: the
+    whole of GH #795 is that the hook was consulting and WRITING trunk's memo
+    while measuring something else.
+    """
+    p = subprocess.run(["git", "rev-parse", "--git-dir"], cwd=REPO,
+                       capture_output=True, text=True)
+    if p.returncode != 0:
+        return frozenset()
+    gitdir = p.stdout.strip()
+    if not os.path.isabs(gitdir):
+        gitdir = os.path.join(REPO, gitdir)
+    try:
+        return frozenset(os.listdir(os.path.join(gitdir, MEMO_DIRNAME)))
+    except OSError:
+        return frozenset()
 
 
 tmp = tempfile.mkdtemp(prefix="pygatehook_")
+memo_before = memo_entries()
 try:
     # ---- 3 first: the control.  If a clean tree does not pass, checks 1 and
     # 2 below are satisfied by a hook that simply refuses everything, and the
@@ -156,6 +201,23 @@ try:
           "4c: and names the PYTHON half among what it skipped.  A bypass "
           "banner that lists only luacheck would be copied into a report "
           "honestly and still understate what went unchecked")
+
+    # ---- 5. the memo answered for this file, in both directions (GH #795)
+    # Order matters: both checks run AFTER all four cases, because the write
+    # that poisoned trunk happened in case 3 and the reads it then served
+    # happened in cases 1, 2 and 4.
+    hits = [o for o in hook_outputs if "RULE6_MEMO=REUSE" in o]
+    check(not hits,
+          "5a: no case may be answered out of the rule 6 memo -- the legs here "
+          "are REDIRECTED at a scratch tree while the memo is keyed on the real "
+          "one, so a hit means this file is asserting nothing about the gate "
+          "(%d of %d runs were memo hits)" % (len(hits), len(hook_outputs)))
+    check(memo_entries() == memo_before,
+          "5b: and running this file must leave the REAL repo's memo untouched "
+          "-- a green reading taken on a two-file scratch tree, stored under "
+          "trunk's key, is replayed by trunk's own next push and skips all "
+          "three legs (GH #795; before=%d entries, after=%d)"
+          % (len(memo_before), len(memo_entries())))
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 

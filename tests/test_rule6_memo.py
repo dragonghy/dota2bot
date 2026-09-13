@@ -292,6 +292,50 @@ try:
     # ...and could-not-run (exit 2) is not a pass either, on the leg that has
     # no banner to cross-check.
     red_leg_case("leg3-unrun", "lua_gate.py", "import sys\nsys.exit(2)\n")
+
+    # ---- case 7: a REDIRECTED gate must neither read nor write (GH #795) --
+    # PY_GATE_ROOT / LUA_GATE_ROOT (and their MANIFEST twins) move what legs 2
+    # and 3 read off the tree the key names.  Nothing in the key can see that,
+    # which is not a hypothetical: tests/test_py_gate_hook.py drives the real
+    # hook from the real repo with exactly those set, and for two days its
+    # all-green control case stored "py gate: 1 ran, 0.0s" -- a reading of a
+    # two-file scratch tree -- under TRUNK's key, where `get` served it back at
+    # rc=0 under a banner reading "all three legs really ran ... on THIS EXACT
+    # tree".  The read direction is asserted here too, but the WRITE is the one
+    # that reached production: trunk's own next push would have replayed it.
+    work7, _b7 = new_repo(TMP, "redirect")
+    elsewhere = os.path.join(TMP, "elsewhere")
+    other = os.path.join(TMP, "readings_scratch.txt")
+    with open(other, "w") as fh:
+        fh.write("GATE_EXIT=0  CLEAN (iron rule 6 static half passed)\n"
+                 "py gate: 1 ran, 0 findings, 0 uncertifiable, 0.0s\n"
+                 "lua gate: 1 ran, 0 findings, 0 uncertifiable, 0 known-red, 0.0s\n")
+    rc, _ = memo(work7, "put", src)
+    check(rc == 0, "case 7 baseline put should succeed, got rc=%d" % rc)
+    rc, _ = memo(work7, "get")
+    check(rc == 0, "case 7 baseline get should HIT, got rc=%d" % rc)
+    for name in ("PY_GATE_ROOT", "PY_GATE_MANIFEST",
+                 "LUA_GATE_ROOT", "LUA_GATE_MANIFEST"):
+        rc, out = memo(work7, "get", env={name: elsewhere})
+        check(rc == 2,
+              "%s set must make get UNAVAILABLE (2, fail-closed), got rc=%d "
+              "out=%s" % (name, rc, out))
+        rc, out = memo(work7, "put", other, env={name: elsewhere})
+        check(rc == 2,
+              "%s set must REFUSE put (2) -- storing is the direction that "
+              "disarmed the real gate, and RULE6_NO_MEMO does not cover it "
+              "(it suppresses the read and leaves the write); got rc=%d out=%s"
+              % (name, rc, out))
+    rc, out = memo(work7, "get")
+    check(rc == 0 and "py gate: 97 ran" in out,
+          "after four refused redirected puts the REAL reading must still be "
+          "the one stored -- a '1 ran, 0.0s' here is the production defect "
+          "verbatim; got rc=%d out=%s" % (rc, out))
+    rc, out = memo(work7, "key", env={"PY_GATE_ROOT": elsewhere})
+    check("MEMO_UNAVAILABLE" in out and "redirected" in out,
+          "and the reason must SAY it was a redirect, not just refuse: the two "
+          "gates already print 'GATE REDIRECTED', and a memo that goes quiet "
+          "here is how nobody noticed for two days; got %r" % out)
 finally:
     shutil.rmtree(TMP, ignore_errors=True)
 
