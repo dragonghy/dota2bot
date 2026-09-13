@@ -31,6 +31,7 @@ Run: python3 tests/test_stale_waits.py
 """
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -574,6 +575,31 @@ check(len(armed) >= 5,
       "member string parsed to only %d ids -- line 2 looks truncated" % len(armed))
 settled = armed | sw.promoted_ids(os.path.join(REPO, "bots"))
 check("creeppull" in settled, "promoted ids not read from bots/ PROMOTED notes")
+# ⚠️ The line above is a ONE-ID pin, and one id is what let a 5-of-23 miss sit
+# here unseen (2026-09-13): `creeppull`'s note is the older dateless
+# `PROMOTED (was soak-candidate ...)` spelling, while the pattern demanded the
+# paren follow the word immediately and every DATED note -- tpdeathbuy and
+# liondrainstop included -- fell out.  Pin the shape, not one example: every
+# `was soak-candidate 'x'` note in bots/ must be read, whatever sits between
+# the word and the paren.
+# Read across newlines: four notes wrap between the word and the id, and a
+# single-line premise would have declared the wrapped ones out of scope --
+# the same narrowness this is pinning.
+NOTE_IDS = set()
+for _p in sw.lua_corpus.bots_lua_files(REPO):
+    NOTE_IDS.update(re.findall(r"was soak-candidate\s*'([a-z0-9_]+)'",
+                               sw.lua_corpus.read_lua(_p, errors="replace")))
+check(len(NOTE_IDS) >= 20,
+      "only %d promote notes found in bots/ -- premise looks broken, not the "
+      "reader" % len(NOTE_IDS))
+_missed = sorted(NOTE_IDS - sw.promoted_ids(os.path.join(REPO, "bots")))
+check(not _missed,
+      "promoted_ids() misses %d id(s) that carry a `was soak-candidate` note: "
+      "%s -- the note spelling drifted away from the pattern"
+      % (len(_missed), _missed))
+check("tpdeathbuy" in settled and "liondrainstop" in settled,
+      "the stable-v7 pair is not read as promoted -- dated PROMOTED notes are "
+      "being dropped")
 live_findings = [(os.path.basename(path), n, t)
                  for path, hits, _hist in sw.scan(charters, settled)
                  for n, t, _ids in hits]

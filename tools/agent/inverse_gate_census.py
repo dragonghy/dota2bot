@@ -131,6 +131,9 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__) + "/../")))
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 BOTS = os.path.join(ROOT, "bots")
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lua_corpus  # noqa: E402
 TEST_SET = os.path.join(ROOT, "iterations", "streams", "test_set.md")
 
 GATE_RE = re.compile(r"J\.IsSoakCandidate\(\s*['\"]([a-z0-9_]+)['\"]\s*\)")
@@ -311,17 +314,22 @@ def code_part(line):
 
 
 def load_files():
+    # GH #243's collector, not an open-coded walk: the gate switch
+    # `bots/Customize/soak_side.lua` is created and deleted mid-run by the Lua
+    # gate tests, so listing it makes this census's answer depend on test
+    # timing.  Caught 2026-09-13 by the widened ratchet in
+    # tests/test_lua_corpus_stability.py -- the narrow one matched only the
+    # inline `os.walk(os.path.join(..., "bots"))` spelling and this file
+    # walks the module-level alias.
     out = {}
-    for dirpath, _dirs, names in os.walk(BOTS):
-        for n in names:
-            if not n.endswith(".lua"):
-                continue
-            p = os.path.join(dirpath, n)
-            rel = os.path.relpath(p, ROOT)
-            try:
-                out[rel] = open(p, encoding="utf-8", errors="replace").read().split("\n")
-            except OSError as exc:
-                fail("cannot read %s (%s)" % (rel, exc))
+    for p in lua_corpus.bots_lua_files(ROOT):
+        rel = os.path.relpath(p, ROOT)
+        try:
+            out[rel] = lua_corpus.read_lua(p, errors="replace").split("\n")
+        except lua_corpus.CorpusVanished as exc:
+            lua_corpus.uncertifiable(str(exc))
+        except OSError as exc:
+            fail("cannot read %s (%s)" % (rel, exc))
     if not out:
         fail("no .lua files under %s" % BOTS)
     return out

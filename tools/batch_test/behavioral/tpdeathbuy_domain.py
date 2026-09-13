@@ -6,7 +6,7 @@ THE LEVER
 `bots/item_purchase_generic.lua`, the "死前如果会损失金钱则购买额外TP" block:
 
     local bDyingWithDoomedGold = botHP < 0.08 and botHP >= 1
-    if J.IsModeTurbo() and J.IsSoakCandidate('tpdeathbuy') then
+    if J.IsModeTurbo() then                       -- was: and J.IsSoakCandidate('tpdeathbuy')
         bDyingWithDoomedGold = botHP < 0.08
     end
     if botGold >= tpCost and bot:IsAlive()
@@ -21,12 +21,40 @@ THE LEVER
 
 `botHP` is `J.GetHP`'s 0..1 fraction, so the shipped conjunction
 `< 0.08 and >= 1` is unsatisfiable and the block is dead code exactly as
-shipped.  Armed (turbo + `tpdeathbuy`) the stray lower bound is dropped and
-the block becomes reachable.  This is the test set's only WIDENING: the armed
-predicate is a strict SUPERSET of the shipped one (which is the empty set),
-so -- per the director's pre-registered reading (GH #168) -- *a reading of
-"armed and baseline are indistinguishable" does not validate this id*; it
-says only that it was not armed or that the domain is empty.
+shipped in NON-turbo.  In turbo the stray lower bound is dropped and the block
+becomes reachable.  This is the test set's only WIDENING: the turbo predicate
+is a strict SUPERSET of the non-turbo one (which is the empty set), so -- per
+the director's pre-registered reading (GH #168) -- *a reading of "armed and
+baseline are indistinguishable" does not validate this id*; it says only that
+it was not armed or that the domain is empty.
+
+THE GATE IS GONE (promoted 2026-09-11, `stable-v7`), AND THAT CHANGES THE READING
+--------------------------------------------------------------------------------
+This file was written while `tpdeathbuy` was a soak candidate.  Its central
+argument is that the BASELINE leg of a mirrored wave is an *empty control*:
+same clone, same turbo, and the only asymmetry is `J.IsSoakCandidate`, so on
+the unarmed leg the clause is unsatisfiable BY ARITHMETIC and any firing there
+would be an instrument fault.
+
+The promote deleted that asymmetry.  Both legs of a turbo wave now run
+`botHP < 0.08`, so the armed/baseline split this file prints is **no longer a
+control** -- it is two samples of the same population.  `read_source()`
+therefore reports `gate_state`, and `verdict()` answers
+`PROMOTED-NO-CONTROL` rather than `WIDENING` once the gate is gone.
+
+Matching the ungated shape and carrying on would have been the cheap repair,
+and it is the wrong one: the leg columns would keep printing, keep looking
+like an A/B reading, and a baseline-leg firing -- previously a loud
+instrument fault -- would silently become the expected result.  Post-promote
+this tool is a SINGLE-POPULATION domain census (still useful for condition
+(a): does the promoted block ever fire, and where), and it says so in its own
+output instead of leaving the reader to notice.
+
+⚠️ This is a FAMILY, not an incident.  Every detector whose `read_source()`
+pins `IsSoakCandidate('<id>')` asserts a shape that the id's own promote
+deletes, and the promote-time censuses read only `bots/`, so nothing raises a
+hand at promote time; the red lands on whichever stream starts work next.  See
+GH #787.
 
 WHAT THIS TOOL MEASURES, AND WHAT IT CANNOT
 -------------------------------------------
@@ -143,23 +171,49 @@ def read_source():
             'clause is gone -- this whole file argues about that clause')
     shipped_hi, shipped_lo = float(m.group(1)), float(m.group(2))
 
-    m = re.search(r"if\s+(J\.IsModeTurbo\(\)[^\n]*IsSoakCandidate\('tpdeathbuy'\)"
-                  r"[^\n]*)then\s*\n\s*bDyingWithDoomedGold\s*=\s*botHP\s*<\s*([\d.]+)",
-                  buy)
-    if not m:
+    # The turbo arm, in EITHER of its two lawful shapes.  The condition is
+    # captured whole and classified afterwards rather than matched twice with
+    # two hand-written patterns: one pattern means one place can drift.
+    arms = re.findall(r'if\s+([^\n]*?)\s*then\s*\n\s*bDyingWithDoomedGold\s*='
+                      r'\s*botHP\s*<\s*([\d.]+)', buy)
+    # source_constants' contract: zero OR MORE THAN ONE match raises.  Picking
+    # "the first one" is how a reader quietly returns the wrong arm.
+    if len(arms) != 1:
         raise SC.SourceConstantError(
-            'item_purchase_generic: the tpdeathbuy arm is no longer '
-            '`gate then bDyingWithDoomedGold = botHP < X`')
-    gate, armed_hi = m.group(1).strip(), float(m.group(2))
+            'item_purchase_generic: expected exactly one '
+            '`if <cond> then bDyingWithDoomedGold = botHP < X` arm, found %d: %s'
+            % (len(arms), arms))
+    gate, armed_hi = arms[0][0].strip(), float(arms[0][1])
 
-    # The pullcad lesson (charter): a gate written as a conjunction of TWO
-    # soak ids freezes FALSE the day either one is promoted, and every wiring
-    # check still calls it WIRED.  Refuse to certify such a gate here.
-    n_ids = len(re.findall(r"IsSoakCandidate\(\s*'([a-z0-9_]+)'\s*\)", gate))
-    if n_ids != 1:
+    if 'IsModeTurbo' not in gate:
         raise SC.SourceConstantError(
-            'tpdeathbuy gate names %d soak ids, expected exactly 1: %s'
-            % (n_ids, gate))
+            'item_purchase_generic: the arm that widens bDyingWithDoomedGold '
+            'is no longer turbo-only -- this whole file reads it as a turbo '
+            'lever: %s' % gate)
+
+    ids = re.findall(r"IsSoakCandidate\(\s*'([a-z0-9_]+)'\s*\)", gate)
+    if not ids:
+        # PROMOTED: the gate was removed (stable-v7).  Demand that the removal
+        # was COMPLETE -- a half-promote, where this site is ungated but the
+        # id still gates something else in bots/, would leave the two halves
+        # of one lever disagreeing, and nothing else in the tree looks here.
+        stray = [l for l in buy.splitlines()
+                 if "IsSoakCandidate('tpdeathbuy')" in l.replace(' ', '')]
+        if stray:
+            raise SC.SourceConstantError(
+                'tpdeathbuy: this arm is ungated (promoted) but the id still '
+                'gates %d other site(s) in item_purchase_generic -- a '
+                'half-promote: %s' % (len(stray), stray))
+        gate_state = 'promoted'
+    elif ids == ['tpdeathbuy']:
+        gate_state = 'gated'
+    else:
+        # The pullcad lesson (charter): a gate written as a conjunction of TWO
+        # soak ids freezes FALSE the day either one is promoted, and every
+        # wiring check still calls it WIRED.  Refuse to certify such a gate.
+        raise SC.SourceConstantError(
+            'tpdeathbuy gate names %d soak ids %s, expected exactly the one: %s'
+            % (len(ids), ids, gate))
 
     m = re.search(r'WasRecentlyDamagedByAnyHero\(\s*([\d.]+)\s*\)', buy)
     if not m:
@@ -201,6 +255,7 @@ def read_source():
         'shipped_lo': shipped_lo,
         'armed_hi': armed_hi,
         'gate': gate,
+        'gate_state': gate_state,
         'dmg_window': dmg_window,
         'normal_clock': normal_clock,
         'roam_radius': roam_radius,
@@ -209,7 +264,22 @@ def read_source():
 
 
 def verdict(sc):
-    """Can the two legs disagree at all, on the source alone?"""
+    """Can the two legs disagree at all, on the source alone?
+
+    Answered in this order on purpose.  Once the gate is gone the legs are the
+    same population and the shipped-clause arithmetic below -- true as ever --
+    stops being an argument about a CONTROL, so reporting `WIDENING` from it
+    would be a correct sentence used to license a wrong reading.
+    """
+    if sc.get('gate_state') == 'promoted':
+        return ('PROMOTED-NO-CONTROL',
+                'the soak gate is gone (promoted): in turbo BOTH legs run '
+                'botHP < %g, so the armed/baseline split is two samples of one '
+                'population, NOT a control. Read the census below as a '
+                'single-population domain reading (condition (a): does the '
+                'block fire, and where); a firing on the baseline-stamped leg '
+                'is now EXPECTED, not an instrument fault'
+                % sc['armed_hi'])
     if sc['shipped_lo'] > sc['shipped_hi']:
         shipped = 'EMPTY (botHP < %g and botHP >= %g is unsatisfiable on a 0..1 fraction)' % (
             sc['shipped_hi'], sc['shipped_lo'])
@@ -430,9 +500,17 @@ def run(dirs, dump_rows=False):
     for k in ('shipped_hi', 'shipped_lo', 'armed_hi', 'dmg_window',
               'normal_clock', 'roam_radius', 'tp_buy_sites'):
         print('   %-14s %s' % (k, sc[k]))
-    print('   gate           %s' % sc['gate'])
+    print('   gate           %s   [%s]' % (sc['gate'], sc['gate_state']))
     print('   VERDICT(source-only) %s -- %s' % (label, why))
     print()
+    if sc['gate_state'] == 'promoted':
+        print('   ' + '!' * 68)
+        print('   !! THE LEG COLUMNS BELOW ARE NOT A CONTROL.  The gate this')
+        print('   !! file was built around was removed when the id was promoted,')
+        print('   !! so both turbo legs run the same clause.  Do not read the')
+        print('   !! armed/baseline difference as an A/B effect.')
+        print('   ' + '!' * 68)
+        print()
     print('== corpus ==   games=%d  max game-clock=%.1fs' % (n_games, maxt_all))
     print('   NOTE: every count below is an UPPER BOUND on the true domain.')
     print('   Gold and TP charges are NOT in the dump (see module docstring),')
@@ -492,11 +570,19 @@ def run(dirs, dump_rows=False):
                      r['attacker'], r['dmg_dt']))
     else:
         print('== uniquely-attributable firings: NONE ==')
-        print('   ZERO IS A READING, NOT A MISSING OUTPUT.  On the BASELINE leg')
-        print('   zero is REQUIRED (the block is unsatisfiable there); on the')
-        print('   ARMED leg zero means one of: not armed, or the unevaluated')
-        print('   gold/charges conjuncts empty the window, or the window is')
-        print('   genuinely never reached.  It does NOT mean "tested, neutral".')
+        print('   ZERO IS A READING, NOT A MISSING OUTPUT.')
+        if sc['gate_state'] == 'promoted':
+            print('   The gate is gone, so BOTH legs should be able to fire and')
+            print('   neither one is a control: zero here means the unevaluated')
+            print('   gold/charges conjuncts empty the window, or the window is')
+            print('   genuinely never reached.  It does NOT mean "tested,')
+            print('   neutral", and it does NOT confirm the promoted block works.')
+        else:
+            print('   On the BASELINE leg zero is REQUIRED (the block is')
+            print('   unsatisfiable there); on the ARMED leg zero means one of:')
+            print('   not armed, or the unevaluated gold/charges conjuncts empty')
+            print('   the window, or the window is genuinely never reached.  It')
+            print('   does NOT mean "tested, neutral".')
     return 0
 
 
@@ -532,9 +618,12 @@ def selfcheck():
     chk('damage window read', sc['dmg_window'] == 3.1, str(sc))
     chk('normal spare-TP clock read', sc['normal_clock'] == 240, str(sc))
     chk('roam fountain radius read', sc['roam_radius'] == 150, str(sc))
-    chk('gate names exactly one soak id',
-        sc['gate'].count('IsSoakCandidate') == 1, sc['gate'])
-    chk('gate is turbo-only', 'IsModeTurbo' in sc['gate'], sc['gate'])
+    chk('gate_state is one of the two lawful shapes',
+        sc['gate_state'] in ('gated', 'promoted'), sc['gate_state'])
+    chk('gate_state agrees with whether the arm still names a soak id',
+        (sc['gate'].count('IsSoakCandidate') == 1) == (sc['gate_state'] == 'gated'),
+        '%s / %s' % (sc['gate_state'], sc['gate']))
+    chk('the arm is turbo-only', 'IsModeTurbo' in sc['gate'], sc['gate'])
 
     # No retyped thresholds: every number the argument leans on must have come
     # out of the Lua.  Checked on the AST (not on the text), so quoting the Lua
@@ -570,12 +659,29 @@ def selfcheck():
         str(probe_leak))
 
     label, why = verdict(sc)
-    chk('verdict is WIDENING', label == 'WIDENING', label + ' ' + why)
-    # counterfactuals: verdict must CHANGE, and must refuse rather than guess
+    expect = 'PROMOTED-NO-CONTROL' if sc['gate_state'] == 'promoted' else 'WIDENING'
+    chk('verdict matches the tree we are actually standing on (%s)' % expect,
+        label == expect, label + ' ' + why)
+    # counterfactuals: verdict must CHANGE, and must refuse rather than guess.
+    # Both gate states are exercised regardless of which one the tree is in, so
+    # this selfcheck does not go quiet the day the id's status flips again.
+    gated = dict(sc, gate_state='gated')
+    promoted = dict(sc, gate_state='promoted')
     chk('counterfactual: satisfiable shipped clause => REFUSE',
-        verdict(dict(sc, shipped_lo=0.05))[0] == 'REFUSE')
+        verdict(dict(gated, shipped_lo=0.05))[0] == 'REFUSE')
     chk('counterfactual: armed clause emptied => STRUCTURAL-ZERO',
-        verdict(dict(sc, armed_hi=0.0))[0] == 'STRUCTURAL-ZERO')
+        verdict(dict(gated, armed_hi=0.0))[0] == 'STRUCTURAL-ZERO')
+    chk('counterfactual: still gated => WIDENING',
+        verdict(gated)[0] == 'WIDENING', str(verdict(gated)))
+    chk('counterfactual: gate removed => PROMOTED-NO-CONTROL',
+        verdict(promoted)[0] == 'PROMOTED-NO-CONTROL', str(verdict(promoted)))
+    # The load-bearing one: the promote must not be reported as a WIDENING that
+    # a reader can spend on an A/B claim.  Same arithmetic, different reading.
+    chk('the promoted verdict OUTRANKS the shipped-clause arithmetic (it is '
+        'not WIDENING once the control is gone)',
+        verdict(promoted)[0] != verdict(gated)[0] and
+        'NOT a control' in verdict(promoted)[1],
+        str(verdict(promoted)))
 
     # --- anti-selfskip: every predicate must be able to answer YES *and* NO ---
     teams = {'npc_dota_hero_axe': RAD, 'npc_dota_hero_lion': DIRE}

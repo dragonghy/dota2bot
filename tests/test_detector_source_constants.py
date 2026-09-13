@@ -902,10 +902,30 @@ import tpdeathbuy_domain as tdb                     # noqa: E402
 TD = tdb.read_source()
 check('tpdeathbuy shipped clause is still `botHP < 0.08 and botHP >= 1`',
       TD['shipped_hi'] == 0.08 and TD['shipped_lo'] == 1.0, str(TD))
-check('tpdeathbuy armed clause is still `botHP < 0.08`', TD['armed_hi'] == 0.08,
+check('tpdeathbuy turbo clause is still `botHP < 0.08`', TD['armed_hi'] == 0.08,
       str(TD))
-check('tpdeathbuy verdict on the shipped tree is WIDENING',
-      tdb.verdict(TD)[0] == 'WIDENING', tdb.verdict(TD)[1])
+# PROMOTED 2026-09-11 (stable-v7): the gate was removed, so this detector's
+# leg split stopped being a control on that commit.  Pin the CURRENT truth and
+# pin that the reader noticed the difference, because the cheap repair here --
+# widen the regex, keep printing armed/baseline -- would have gone green while
+# turning a loud instrument fault (a baseline-leg firing) into the expected
+# result.  If the id is ever re-gated, this flips back to WIDENING and the
+# check below flips with it; neither state is allowed to be silent.
+check('tpdeathbuy gate_state is read, not assumed',
+      TD['gate_state'] in ('gated', 'promoted'), str(TD.get('gate_state')))
+check('tpdeathbuy is PROMOTED on this tree (gate removed in stable-v7)',
+      TD['gate_state'] == 'promoted', str(TD['gate']))
+check('tpdeathbuy verdict tracks gate_state: promoted => PROMOTED-NO-CONTROL',
+      tdb.verdict(TD)[0] == ('PROMOTED-NO-CONTROL'
+                             if TD['gate_state'] == 'promoted' else 'WIDENING'),
+      tdb.verdict(TD)[1])
+check('the promoted verdict says out loud that the leg split is not a control',
+      'NOT a control' in tdb.verdict(TD)[1], tdb.verdict(TD)[1])
+# The arithmetic the file was built on is unchanged and must stay checkable:
+# re-gating the same source must still read WIDENING.
+check('a re-gated tree would still read WIDENING (the arithmetic did not move)',
+      tdb.verdict(dict(TD, gate_state='gated'))[0] == 'WIDENING',
+      str(tdb.verdict(dict(TD, gate_state='gated'))))
 # The attribution window in the report is `DotaTime <= 240`, and it is only a
 # window because the ORDINARY spare-TP buy is gated on `currentTime > 4*60`.
 # If that clock moves, every "uniquely attributable" row stops being unique.
@@ -921,13 +941,19 @@ check('bots/ still has exactly 4 item_tpscroll purchase sites (a new one '
       str(TD['tp_buy_sites']))
 # The pullcad lesson, third time: a gate written as a conjunction of two soak
 # ids freezes FALSE the day either is promoted.  read_source() raises on that;
-# assert it explicitly too.
+# assert it explicitly too.  Post-promote the same line is the HALF-PROMOTE
+# check instead -- zero live gate sites, or the two halves of one lever
+# disagree and nothing else in the tree looks here.
 TD_GATE = [l for l in open(os.path.join(ROOT, 'bots', 'item_purchase_generic.lua'),
                            encoding='utf-8').read().splitlines()
            if "IsSoakCandidate('tpdeathbuy')" in l and not l.strip().startswith('--')]
-check('tpdeathbuy has exactly one gate site naming exactly one candidate',
-      len(TD_GATE) == 1 and TD_GATE[0].count('IsSoakCandidate') == 1,
-      str(TD_GATE))
+if TD['gate_state'] == 'gated':
+    check('tpdeathbuy has exactly one gate site naming exactly one candidate',
+          len(TD_GATE) == 1 and TD_GATE[0].count('IsSoakCandidate') == 1,
+          str(TD_GATE))
+else:
+    check('tpdeathbuy is promoted and the removal was COMPLETE (zero live gate '
+          'sites left in item_purchase_generic)', TD_GATE == [], str(TD_GATE))
 # The instrument fault the same round found: PURCHASE `value` is a PER-REPLAY
 # name-table index.  The dumper now resolves it; assert the resolution is
 # still there and still scoped to PURCHASE, because a revert would send every

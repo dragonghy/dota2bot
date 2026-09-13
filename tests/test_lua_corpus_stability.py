@@ -120,6 +120,8 @@ import talent_name_binding_census as TN      # noqa: E402
 import write_only_local_census as WO         # noqa: E402
 import guard_implication_census as GI        # noqa: E402
 
+sys.path.insert(0, os.path.join(REPO, "tools", "batch_test", "behavioral"))
+
 
 def rel(paths):
     return sorted(os.path.relpath(p, REPO).replace(os.sep, "/") for p in paths)
@@ -138,11 +140,34 @@ with switch_present():
                                          "guard_implication_census.py"),
             "--all", "--json"],
            capture_output=True, text=True, cwd=REPO).stdout)
+    # The SEVENTH copy (found 2026-09-13, GH #243 family).  It lived under
+    # tools/batch_test/behavioral/, outside both the directory scan and the
+    # spelling the text ratchet below used to recognise, and it surfaced only
+    # as a FileNotFoundError traceback in test_detector_source_constants.py
+    # while a concurrent 开工自检 churned the gate switch.
+    import abilanc_domain as AB                   # noqa: E402
+    ok("abilanc_domain.selector_sites() excludes it",
+       not any(SWITCH_REL in s for s in (AB.selector_sites()[0]
+                                         | AB.selector_sites()[1])))
 
 # The defect was six copies of two lines, so pin that no seventh grows back.
 # Scoped to walks of bots/ -- walks of tools/ or tests/ are a different corpus.
+#
+# ⚠️ TWO WIDENINGS, 2026-09-13, and each one is why the seventh copy was missed:
+#   (1) DIRECTORY.  The scan covered tools/agent/ and tests/ only, so a walker
+#       under tools/batch_test/ was structurally invisible.  Now all of tools/.
+#   (2) SPELLING.  The pattern demanded the walked path be written inline as
+#       `os.walk(os.path.join(..., "bots"))`.  abilanc_domain wrote
+#       `BOTS = os.path.join(REPO, 'bots')` once and then `os.walk(root)` with
+#       `root=BOTS` as a default -- the same walk, invisible to a regex that
+#       matches the literal.  Module-level aliases of a bots/ path are now
+#       resolved first and their names matched too.
+#       A ratchet whose scope is narrower than the defect it names reads exactly
+#       like a ratchet that is holding.
 WALKERS = []
-for base, _dirs, names in os.walk(os.path.join(REPO, "tools", "agent")):
+for base, _dirs, names in os.walk(os.path.join(REPO, "tools")):
+    if "__pycache__" in base:
+        continue
     for n in sorted(names):
         if n.endswith(".py"):
             WALKERS.append(os.path.join(base, n))
@@ -151,15 +176,95 @@ for n in sorted(os.listdir(os.path.join(REPO, "tests"))):
         WALKERS.append(os.path.join(REPO, "tests", n))
 
 WALK_BOTS = re.compile(r"os\.walk\(\s*os\.path\.join\([^)]*[\"']bots[\"']")
+#: `NAME = os.path.join(<anything>, 'bots')` -- an alias for the corpus root.
+BOTS_ALIAS = re.compile(r"^([A-Za-z_]\w*)\s*=\s*os\.path\.join\([^)\n]*"
+                        r"[\"']bots[\"']\s*\)\s*$", re.M)
+
+
+def code_only(src):
+    """`src` with `#` comments removed and everything else byte-identical.
+
+    A ratchet that reads comments cannot tell a call site from a sentence
+    ABOUT a call site -- and the sentences about this one are exactly the
+    repair notes each converted file now carries, so the naive version goes
+    red on its own fix.  ("A commented-out call site is not a call site" is
+    already the rule elsewhere in this tree.)
+
+    Comment SPANS are blanked in place rather than the file being rebuilt from
+    tokens: re-joining tokens normalises whitespace, and `WALK_BOTS` matches
+    `os.walk(` with no spaces around the dots, so a token-rebuilt file matches
+    nothing at all -- a strip that silently disarms the pattern it feeds.
+    """
+    import io
+    import tokenize
+    lines = src.splitlines(True)
+    try:
+        cuts = [(t.start[0], t.start[1])
+                for t in tokenize.generate_tokens(io.StringIO(src).readline)
+                if t.type == tokenize.COMMENT]
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return src            # unparseable: scan the raw text rather than skip
+    for row, col in cuts:
+        line = lines[row - 1]
+        lines[row - 1] = line[:col] + ("\n" if line.endswith("\n") else "")
+    return "".join(lines)
+
+
+def open_coded_walks(src):
+    """Repo-corpus walks in `src`, by either spelling.  [] means none."""
+    src = code_only(src)
+    hits = list(WALK_BOTS.findall(src))
+    aliases = set(BOTS_ALIAS.findall(src))
+    for name in aliases:
+        # `os.walk(BOTS)` and, via a default argument, `os.walk(root)` where
+        # `root=BOTS`.  Both are the same two lines wearing a local name.
+        if re.search(r"os\.walk\(\s*%s\s*[,)]" % re.escape(name), src):
+            hits.append(name)
+        for param in re.findall(r"\(\s*(\w+)\s*=\s*%s\s*\)" % re.escape(name), src):
+            if re.search(r"os\.walk\(\s*%s\s*[,)]" % re.escape(param), src):
+                hits.append("%s=%s" % (param, name))
+    return hits
+
+
 open_coded = []
 for path in WALKERS:
     if os.path.basename(path) in ("lua_corpus.py", "test_lua_corpus_stability.py"):
         continue
     with open(path, encoding="utf-8", errors="replace") as fh:
-        if WALK_BOTS.search(fh.read()):
+        if open_coded_walks(fh.read()):
             open_coded.append(os.path.relpath(path, REPO))
 eq("no tool or test open-codes a walk of bots/ any more (use lua_corpus)",
    open_coded, [])
+
+# ...and prove the widened ratchet can still FAIL, in BOTH spellings and from
+# the newly-covered directory.  A scope widening that quietly matches nothing
+# is indistinguishable from the scope it replaced.
+ok("anti-selfskip: the inline spelling is still caught",
+   open_coded_walks('for a,b,c in os.walk(os.path.join(REPO, "bots")):') != [])
+ok("anti-selfskip: the aliased spelling is caught (the seventh copy's shape)",
+   open_coded_walks("BOTS = os.path.join(REPO, 'bots')\n"
+                    "def f(root=BOTS):\n    for a, b, c in os.walk(root):\n"
+                    "        pass\n") != [])
+ok("anti-selfskip: a bare alias walk is caught",
+   open_coded_walks("B = os.path.join(REPO, 'bots')\nos.walk(B)\n") != [])
+ok("anti-selfskip: a walk of some OTHER root is not a hit",
+   open_coded_walks("T = os.path.join(REPO, 'tools')\nos.walk(T)\n") == [])
+ok("a walk quoted in a COMMENT is not a call site (the repair notes on the "
+   "converted files say the pattern out loud)",
+   open_coded_walks('# for a,b,c in os.walk(os.path.join(REPO, "bots")):\n'
+                    'pass\n') == [])
+ok("...but the comment strip must not disarm the pattern: the same line "
+   "UNcommented is still a hit",
+   open_coded_walks('for a,b,c in os.walk(os.path.join(REPO, "bots")):\n'
+                    '    pass\n') != [])
+ok("the comment strip leaves code byte-identical (a normalising strip would "
+   "silently stop matching `os.walk(`)",
+   code_only('x = 1  # os.walk\nfor a in os.walk(os.path.join(R, "bots")):\n'
+             '    pass\n').splitlines()[1]
+   == 'for a in os.walk(os.path.join(R, "bots")):')
+ok("the widened directory scan actually reaches tools/batch_test/",
+   any("tools/batch_test/behavioral/abilanc_domain.py" ==
+       os.path.relpath(p, REPO).replace(os.sep, "/") for p in WALKERS))
 
 # ----------------------------------------------------------------------------
 # 3. vanish is did-not-run, not a different answer

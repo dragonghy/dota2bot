@@ -97,6 +97,10 @@ from creeppull_domain import DIRE, RADIANT, load_sweep  # noqa: E402
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     '..', '..', '..'))
+# GH #243's collector.  This file open-coded the walk it exists to replace --
+# see selector_sites() for why that was a race and not just a duplication.
+sys.path.insert(0, os.path.join(REPO, 'tools', 'agent'))
+import lua_corpus  # noqa: E402
 JMZ = os.path.join(REPO, 'bots', 'FunLib', 'jmz_func.lua')
 BOTS = os.path.join(REPO, 'bots')
 
@@ -148,27 +152,37 @@ def gate_facts(path=JMZ):
     }
 
 
-def selector_sites(root=BOTS):
+def selector_sites(repo_root=None):
     """Files that feed the GUARDED selector, and the one opt-out, by grep.
 
     Returned as a set of repo-relative paths so a residual cast can be asked
     the cheap half of "is this hero even on a covered path".  The expensive
     half (which ABILITY inside the file) stays with the human reader -- see the
     module docstring's WHAT THIS CANNOT SAY.
+
+    ⚠️ GOES THROUGH `lua_corpus` (GH #243), and that is load-bearing, not
+    tidiness.  This function used to open-code `os.walk(bots/)` + a later
+    `open()`, which is the exact two-line pair GH #243 retired: the sixteen Lua
+    gate tests create and delete `bots/Customize/soak_side.lua` mid-run, so a
+    listing taken before the deletion and read after it dies with
+    FileNotFoundError -- and dies as a TRACEBACK naming a file that has nothing
+    to do with the selector.  Measured here 2026-09-13: this function was the
+    SEVENTH open-coded copy, and the ratchet that exists to stop a seventh
+    (`tests/test_lua_corpus_stability.py`) scanned only `tools/agent/` and
+    `tests/`, so a walker under `tools/batch_test/` was outside it.
+    `bots_lua_files()` excludes the gate switch by name, so the answer no
+    longer depends on whether a gate test happens to be in flight; `read_lua()`
+    turns any OTHER vanish into `CorpusVanished` (did-not-run) rather than a
+    quietly smaller count.
     """
     guarded, optout = set(), set()
-    for dirpath, _, names in os.walk(root):
-        for n in names:
-            if not n.endswith('.lua'):
-                continue
-            p = os.path.join(dirpath, n)
-            with open(p, 'r', encoding='utf-8') as fh:
-                src = _strip_comments(fh.read())
-            rel = os.path.relpath(p, REPO)
-            if re.search(r'J\.GetMostHpUnitAnyTier\s*\(', src):
-                optout.add(rel)
-            if re.search(r'J\.GetMostHpUnit\s*\(', src):
-                guarded.add(rel)
+    for p in lua_corpus.bots_lua_files(repo_root):
+        src = _strip_comments(lua_corpus.read_lua(p))
+        rel = os.path.relpath(p, REPO)
+        if re.search(r'J\.GetMostHpUnitAnyTier\s*\(', src):
+            optout.add(rel)
+        if re.search(r'J\.GetMostHpUnit\s*\(', src):
+            guarded.add(rel)
     guarded.discard(os.path.relpath(JMZ, REPO))
     optout.discard(os.path.relpath(JMZ, REPO))
     return guarded, optout

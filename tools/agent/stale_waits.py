@@ -122,6 +122,9 @@ STREAMS = os.path.join(REPO, "iterations", "streams")
 TEST_SET = os.path.join(STREAMS, "test_set.md")
 BOTS = os.path.join(REPO, "bots")
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lua_corpus  # noqa: E402
+
 # Charter files only.  test_set.md is the 待裁区 archive itself and README.md
 # is the iron-rule sheet; neither has a 当前状态 section.
 NOT_A_CHARTER = ("test_set.md", "README.md", "routine_prompts.md")
@@ -143,7 +146,21 @@ BACKTICKED = re.compile(r"`([a-z][a-z0-9_]{2,})`")
 # Any inline-code span, whatever it holds.  Used ONLY to decide whether a
 # clause names its own referent (see wait_scopes); never to extract ids.
 ANY_BACKTICK = re.compile(r"`[^`]+`")
-PROMOTED = re.compile(r"PROMOTED \(was soak-candidate '([a-z0-9_]+)'\)")
+# ⚠️ THE NOTE SPELLING DRIFTED THREE SEPARATE WAYS AND THIS PATTERN FOLLOWED
+# NONE OF THEM (found 2026-09-13).  It used to read
+# `PROMOTED \(was soak-candidate 'x'\)`, which requires that
+#   (1) the paren follow the word PROMOTED immediately -- but the convention
+#       grew a date: `PROMOTED 2026-09-11 (was soak-candidate 'tpdeathbuy')`;
+#   (2) the id be on the same line as PROMOTED -- four notes wrap;
+#   (3) `)` follow the id -- `(was soak-candidate 'tpcommit',` continues.
+# Six of the 24 promote notes fell out, BOTH stable-v7 ids among them.  A wait
+# for the admission of one of those read as a LIVE wait forever, which is the
+# exact opposite of what this module exists to say -- and it said it silently,
+# because a missing id looks identical to an id that was never promoted.
+# The pin that should have covered this checked ONE example ('creeppull'),
+# which happens to use the oldest spelling of the three.
+# Bounded and non-greedy so a distant PROMOTED cannot adopt an unrelated note.
+PROMOTED = re.compile(r"PROMOTED\b[\s\S]{0,200}?was soak-candidate\s*'([a-z0-9_]+)'")
 
 # Both halves must be present on the same line.  The admission half keeps the
 # finding off legitimate live waits of other kinds -- "等录像组核验 `campexit`"
@@ -283,16 +300,19 @@ def promoted_ids(root=BOTS):
     found = set()
     if not os.path.isdir(root):
         return found
-    for dirpath, _dirnames, filenames in os.walk(root):
-        for name in filenames:
-            if not name.endswith(".lua"):
-                continue
-            try:
-                with open(os.path.join(dirpath, name), encoding="utf-8",
-                          errors="replace") as fh:
-                    found.update(PROMOTED.findall(fh.read()))
-            except OSError:
-                continue
+    # GH #243's collector, not an open-coded walk.  The `except OSError:
+    # continue` this replaced is precisely the shape lua_corpus was written
+    # against: a gate test deleting `bots/Customize/soak_side.lua` mid-scan
+    # would be swallowed, turning "did not run" into a quietly smaller set of
+    # promoted ids.  `CorpusVanished` is deliberately not an OSError, so it
+    # cannot be swallowed here; a genuine unreadable file still is.
+    for path in lua_corpus.bots_lua_files(os.path.dirname(os.path.abspath(root))):
+        try:
+            found.update(PROMOTED.findall(lua_corpus.read_lua(path, errors="replace")))
+        except lua_corpus.CorpusVanished as exc:
+            lua_corpus.uncertifiable(str(exc), what="promoted_ids")
+        except OSError:
+            continue
     return found
 
 

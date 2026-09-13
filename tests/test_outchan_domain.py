@@ -151,15 +151,17 @@ if think:
 
 # Sole cast site -- what upgrades "a cast happened" into "the predicate was
 # false on that frame".
-bots_dir = os.path.join(ROOT, 'bots')
+# GH #243's collector, not an open-coded walk: the gate switch
+# `bots/Customize/soak_side.lua` is written and deleted mid-run by the Lua gate
+# tests, so an open-coded list-then-read races them.  Caught 2026-09-13 by the
+# widened ratchet in tests/test_lua_corpus_stability.py.
+sys.path.insert(0, os.path.join(ROOT, 'tools', 'agent'))
+import lua_corpus  # noqa: E402
+
 sites = []
-for dirpath, _dirs, files in os.walk(bots_dir):
-    for fn in files:
-        if not fn.endswith('.lua'):
-            continue
-        path = os.path.join(dirpath, fn)
-        if 'ability_capture' in strip_comments(open(path).read()):
-            sites.append(os.path.relpath(path, ROOT))
+for path in lua_corpus.bots_lua_files(ROOT):
+    if 'ability_capture' in strip_comments(lua_corpus.read_lua(path)):
+        sites.append(os.path.relpath(path, ROOT))
 check(sites == ['bots/mode_outpost_generic.lua'],
       "ability_capture is referenced in exactly one shipped file",
       'found %s -- a second cast site would break the deduction that every '
