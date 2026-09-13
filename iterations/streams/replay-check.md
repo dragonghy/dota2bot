@@ -16259,9 +16259,40 @@
     ⭐ **前置激怒判别子独立复核,两个计数都是零**:546.0 之前 prowler 作 target **0 条**、
     作 actor **0 条**;该判别子警告的两种污染(自己的 AoE 546.9、队友 quill 547.0)**都在它之后**。
     ⛔ **仍 INDETERMINATE**:离线说不出**哪个**消费者(GH #521 同族);**收窄了集合,没点名消费者**。
-  - **产物**:`tests/fixtures/f_20260912_094042_sniper_546.lua`(`MF_EXIT=0`)+
-    `tests/test_replay_094042_sniper_ancient.lua`(**12 case,12 PASS / 0 FAIL**)。
-    ⚠️ **`bots/` `game/` 一行未改**(本组不改 bot 代码)。
+  - ⛔⛔ **产物建好了、跑绿了、变异台过了,然后本轮主动撤回,没有落地**:
+    `tests/fixtures/f_20260912_094042_sniper_546.lua`(`make_fixture.py --roles`,`MF2_EXIT=0`)+
+    `tests/test_replay_094042_sniper_ancient.lua`(**12 case,12 PASS / 0 FAIL**,变异台 **4/4 杀死**)。
+    **原因**:推送钩子的 **Lua 闸拒绝了 push**(`PUSH_BRANCH_EXIT=1`,
+    `lua gate: 355 ran, **4 findings**, 0 uncertifiable, **9 known-red**, 484.0s`;
+    ⚠️ 那 9 条 known-red **是别人已在 trunk 上的**,与本轮无关),而**四个 findings 全是这一份 fixture 引起的**:
+    (i) `test_fixture_roles.lua` 「carry player_id but no drafted roles … regenerate with `--roles`」
+    —— ⭐ **对本轮 fixture 的正当质量要求,不是 census 耦合;本轮第一次生成漏了 `--roles`,已按它重生成,转绿 10/0**;
+    (ii)(iii)(iv) `test_wk_reserve_idle_release` / `test_wk_roshan_mana_floor` / `test_wk_roshan_mana_ceiling`
+    共 **六条**断言 —— ⛔ **它们自己的报错信息逐字要求「re-read」而不是 re-baseline**
+    (「re-read every count in this file before quoting one」/「re-read them rather than lowering the bar」),
+    其中 ceiling 那条更说**第二个分歧会 invalidate 掉整份模型推出的每一个 crossing level**。
+    ⭐⭐ **本轮找到了这三条的共同原因,而它指向「实体卫生」不是「该重新基线」**:
+    本轮 fixture 里那行 WK 是 **`alive = false`、`hp = 0`、整行没有 `abilities` 字段**(死人那帧不采技能),
+    ⇒ 那三个 census 数的是「WK hero **rows**」**没滤掉死行**;
+    而拿这行去驱动出厂代码**当场崩**:`bots/BotLib/hero_skeleton_king.lua:1693:
+    attempt to compare number with nil`(`:1693` = `bot:GetMana() - nAbility:GetManaCost() < abilityR:GetManaCost()`,
+    前面的 `and` 已短路保证两个 handle 非 nil ⇒ **nil 来自某个 `GetManaCost()`**,与「没有 abilities」同向)。
+    ⇒ ⭐ **「第二个 mana model 分歧」极可能就是这行死 WK,不是模型真失效**;
+    **正因如此 re-baseline 是错的**(会把卫生问题记成一次模型再测量),
+    **而本组不能替英雄组下这个裁定** ⇒ 走 issue 交棒(铁律 5)。
+    ⛔ **本轮明确没做三件事**:**没有** `RULE6_BYPASS`(那会把四个文件的红丢给下一个开工的组,
+    正是 GH #624 立案的那件事)、**没有**跳过/禁用/quarantine 任何测试、**没有**动那六条断言的数字。
+    撤回后逐条复跑**全绿**:`test_corpus_scale` 10/0、`test_fixture_roles` 10/0、
+    `test_wk_reserve_idle_release` 13/0、`test_wk_roshan_mana_ceiling` 13/0、
+    `test_wk_roshan_mana_floor` 16/0、`test_staybottle_inflight_regen` 21/0、`test_stayurn_ally_heal` 25/0。
+    ⭐ **§`cs.ratchet` 那两条保留**:在**没有**本轮 fixture 的树上依然成立(地板 112 / 125 是撤回前就已达到的值),
+    **而且正是下一个 fixture 作者会撞上的那两条** ⇒ 顺手把耦合面缩小两条,**留着**。
+    ⚠️ **量级事实要登记:一份 fixture = 四个文件 = 七条断言**
+    (`corpus_scale.lua` 头注记的 2026-08-22 那次是「一份 fixture 顶红 7 个文件 18 条断言」)——
+    **耦合面没有消失,只是从 `==` 换成了「要求 re-read 的守卫」**;后者更诚实
+    (它不假装自己是被测行为),但**成本仍由 fixture 作者承担**,这一次的成本是**整份产物落不了地**。
+    ⚠️ **`bots/` `game/` 一行未改**;**本轮实际落地的树上改动只有**两条 `cs.ratchet` + 报告 + 章程。
+    ⭐ **两份撤回的产物完全可复现**(逐字配方在报告 §7.1),**没有丢失**。
   - ⭐ **变异台 4/4 杀死、0 存活、0 NO-OP**(`MUTSTAND_EXIT=0` 裸读;按 evidence-discipline 规则 1
     **从文件副本恢复不从 git**;脚本全程 scratchpad;恢复后 `cmp` 逐字节 `SITE/UTILS restored OK`):
     M1 `FilterFarmNeutrals` 永不丢弃 → 两条 `[gate]` 红;M2 `IsValidCreep` `>9`→`>8` → 阈值条 + viper 条红;
@@ -16308,10 +16339,13 @@
     **教训归本轮:别在手跑 Lua 测试的同时后台挂自检。**
   - **AWS**:只读(`s3 ls` ×2、`s3 cp` 一份 23MB `.dem` + 一份 7KB analysis.json、dumper 缓存 HIT);
     **零 EC2 / 零 CE / 零支出**;`AWS_SETUP_EXIT=0`、`DUMPER_EXIT=0`、`MF_EXIT=0`、`TL_EXIT=0`。
-  - **本轮 issue:净增 0 条新单,1 条追评 #137**(先搜后开:`list_issues` 直读最近 12 条;
+  - **本轮 issue:净增 1 条新单([hero],WK census 没滤死行 + `:1693` 崩溃)+ 1 条追评 #137**(先搜后开:`list_issues` 直读最近 12 条;
     ⚠️ 章程已登记 `search_issues` 在本仓对这一族**不可靠**,本轮不依赖它;
     `campfarm` 归属 issue 现读确认是 #137)。
-  - **下一轮第一件事**:(1) ⛔⛔ **撤回上一轮交棒 (1)**,那条断言**不要再做**(已钉成会自己退休的断言);
+  - **下一轮第一件事**:(0) ⭐⭐ **落地本轮撤回的那两份产物**,前置条件是英雄组处置完那三条 WK census
+    (本轮新开的 [hero] issue);**配方在报告 §7.1,一条命令重建**,本轮已验证 **12/12 + 变异台 4/4**,
+    ⚠️ **不要重新设计那个测试**,它唯一缺的是一个能落地的语料环境;
+    (1) ⛔⛔ **撤回上一轮交棒 (1)**,那条断言**不要再做**(已钉成会自己退休的断言);
     (2) ⭐ **还本轮欠的深查局数**(本轮 1/6),**但不要为 `campfarm` 买**(工具坑第一条仍有效),
     按工作流第 2 条挑**核验最少且语料能买**的 id;
     (3) ⛔ **别重跑本轮三条**:135,137 条 creep 采样键集合、本局 TA/Slardar/solar-crest 的时间线、4/4 变异台;
