@@ -77,6 +77,32 @@
    从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
+- **⭐⭐ [2026-09-13 新踩] 「给 X 钉一帧」这类交棒,动手前要读的 LIMITS 是**生成器**的,
+  不只是检测器的。** 09-12T21:2xZ 的交棒单点名「`campfarm` 的 fixture(`--t 546.0 --hero sniper`)
+  —— **唯一没试过的层**」,要断言「armed 世界交给 `FindFarmNeutralTarget` 的表里没有远古小兵」。
+  **那条断言结构上买不到**:`make_fixture.py:474-478` 自己逐字写着 creep 采样
+  「**POSITION AND TEAM ONLY -- no entity id, no name, no health**」,
+  而 `FilterFarmNeutrals` 读的**唯一**谓词就是 `IsAncientCreep()`
+  (第一手复核:该 timeline **135,137** 条采样键集合逐条 `{t,team,x,y}`)。
+  ⭐ **同一段注释自己点名了同族先例**:「GH #354 section 5's 'pin a fixture on the gap frame'
+  **could not be built**: the datum the question is about was dropped at fixture-write time」
+  ⇒ 与 `campvoid`(「NEITHER CONJUNCT ... CAN BE EVALUATED」)、`aimguard`(creep 流只有 `t,team,x,y`)
+  是**同一条结构性拒绝的第三、第四例**。
+  **判别子极便宜**:一次 `grep -n 'neutral\|creep' tools/batch_test/replayscope/make_fixture.py`,
+  30 行内命中;**它拦住的是一整轮的 fixture 工作**。
+  ⚠️ 与 09-11T16:11Z 立的「先读工具头部 LIMITS」同族,但**换了一个文件**:
+  那条读**检测器**的 LIMITS,这条要读**生成器**的 —— 上一轮读了前者、没读后者,
+  于是**点名了一个买不到的层**。
+  ⭐ **处置模板**:买不到就把**拒绝本身钉成断言**(本轮 `[limit]` case 检查 `fx.creeps` 的键集合,
+  **dumper 哪天发身份它就变红**)⇒ 拒绝**会自己退休**,而不是留在散文里被下一轮当第一手源引用。
+- **⭐ [2026-09-13 新踩] fixture 上的**物品否定断言**必须配一条正控制,否则它在空世界上也绿。**
+  `tests/mock/replay_fixture.lua` 的 NAMESPACE 头注自报:**114 个 fixture 物品名里 24 个**
+  从不以 `item_<name>` 出现在 `bots/` 里 —— **而 `bfury` 恰好是那一族**
+  (bot 代码写 `item_bfury`,dump 写的是实体类名的 snake)。
+  ⇒ 「这个英雄**没有** bfury/maelstrom/mjollnir/radiance」若只走 `HasItem`,
+  **即使他真的拿着也会绿**。本轮改为**在 dump 原始字符串上**逐条查(两种拼法都列),
+  **并另加一条正控制**(`item_power_treads` 必须被真谓词看见)。
+  **判别子**:任何形如「fixture 里没有 X」的断言,先问「如果这个世界是空的,它还绿不绿?」
 - **⭐⭐ [2026-09-12 新踩,W69]「域为空 / 罕见」这一格里必须再切一刀,否则交棒单会把
   **加局无救**的 id 当成 n=1 候选反复捡起来。** 上一轮(18:54Z)§一把
   `campfarm`/`campvoid`/`creepthink`/`blinkflee` 一起归进「域为空/罕见 ⇒ ⭐能 —— 罕见是语料问题」,
@@ -16180,3 +16206,90 @@
     **28 PASS / 0 FAIL** 逐条覆盖 ⇒ **不污染本轮读数**。
   - token:`TOKENS total_in=16,185,894 out=93,536 turns=94`
   - **完整报告**:`iterations/reports/replay-check/20260912T214936Z.md`
+- **2026-09-13T00:4xZ(本轮):做上一轮点名的 `campfarm` fixture 层 —— **它要的那条断言结构上买不到**
+  (判别子在 `make_fixture.py` 自己的源码里),但同一帧买到了更重的:**#137 的 maxHP 承重机制
+  在这一帧上两个真英雄都不成立**,而路径上藏着**第四个远古阈值(9)**。**
+  ```
+  VERIFY id=campfarm verdict=INDETERMINATE episodes=1
+  ```
+  **段位声明(GH #424)**:**W69 单局单帧**(`0128b9/20260912_094042_slot1`,t=546.0),
+  **不与任何波次并池**,不引 W63 / W68 / W66+W67。
+  - ⚠️ **覆盖低于章程下限,如实登记**:**宽扫 0 新局**(`s3 ls soak/` 最新四前缀仍是 W69,
+    **连续第四轮无新波次**;W69 的 12/12 已由前两轮完成,不重跑);**深查 1 局**(下限 6,**未达**)。
+    理由:本轮单元是交棒单点名的 **fixture/源码层**,而**同一份章程的工具坑第一条**逐字禁止
+    **再为 `campfarm` 买语料**(MECHANISM 第一格要 50+ 局)⇒ **两条要求在无新波次的一轮里方向相反**,
+    本轮选了交棒单那条,缺口显式交下一轮。
+  - ⛔⛔ **交棒单第 (1) 条买不到,且不是语料量问题**:`make_fixture.py:474-478` 自己逐字写着
+    creep 采样「**POSITION AND TEAM ONLY -- no entity id, no name, no health**」,
+    而 `FilterFarmNeutrals` 读的**唯一**谓词就是 `IsAncientCreep()`。
+    ⭐ **本轮第一手复核**:该 timeline **135,137** 条 creep 采样键集合逐条 `{t,team,x,y}`。
+    ⭐ 同一段注释**自己点名同族先例**(「GH #354 section 5's 'pin a fixture on the gap frame'
+    **could not be built**」)⇒ 与 `campvoid` / `aimguard` 是**同一条结构性拒绝的第三、第四例**。
+    **处置**:不写那条断言,改把**拒绝本身钉成断言**(`[limit]` case 检查 `fx.creeps` 键集合,
+    **dumper 哪天发身份它就变红** ⇒ 这条拒绝**会自己退休**,不会留在散文里被下一轮当第一手源引)。
+  - ⭐⭐⭐ **头号产出:#137 的承重机制在这一帧上对两个真英雄都不成立。**
+    #137 立项句是「maxHP 农夫(viper/naga_siren/huskar 或持 bfury/maelstrom/mjollnir/radiance)
+    **必然**挑中远古」。**主体 sniper 两条都不满足**:不在 `ConsiderFarmNeutralType` 的 13 个键里,
+    真背包 7 格**无一件 maxHP 物品** ⇒ 落到 **`GetMinHPCreep`(纯最低血)**;
+    其提前返回 `HasArmorReduction` **结构性死**(阵容无 TA 无 Slardar,
+    **全局第一件 solar crest 在 t=1191.5,晚 645 秒**,medallion 全局零命中)。
+    ⭐⭐ **对照组本来是要复现 #137 的,结果它也拒绝了远古**:viper **就在本局阵容里**(dire,不需替身),
+    `ConsiderFarmNeutralType[viper]()` 现跑 = `maxHP`(分支没走错)、背包同样无 maxHP 物品
+    ⇒ 走 maxHP **靠名字表**,**却仍返回普通小兵**;**只把远古交给它返回 `nil`**。
+    ⇒ **两个真英雄都拒绝远古,理由是两条相差一级的不同理由** ⇒ **#137 的机制需要恰好 10 或 11 级的
+    maxHP 农夫,一个两级宽的窗口** —— **本轮第一次从机制侧独立推出那条 10..11 带**
+    (此前是从工具分带参数里继承的);**本局唯一的 maxHP 农夫差一级(9)。**
+  - ⭐⭐ **第四个远古阈值,写在 `utils.lua:1139` 的 `IsValidCreep` 里,值是 9**,
+    任何 campfarm 头注都没提过它;`GetMinHPCreep` 与 `GetMaxHPCreep` **都**逐 creep 调它
+    ⇒ 每个读者各自又带一道远古闸。**这条路径现在有四个阈值**:
+    **9**(`IsValidCreep`,新)/ 10(两处 `nNeutrals[1]` 子句)/ 12(`ANCIENT_MIN_LEVEL`、营地梯子)/
+    **无**(1000u 分支 + `Action_AttackUnit(nNeutrals[1])` `:992`)。
+    ⭐ 这是 **#137 §1 第 2 条**(「`<=11` 与 `>=10` 这两个数字得先对齐一个」)的直接延伸:
+    **「两个」变成「四个」**,而新发现那个(9)**恰好是决定本帧读数的那一个**
+    —— 主体 10 级 `10>9` 放行、对照 9 级 `9>9` 假拦死。**同一条 if,相差一级,相反的世界。**
+  - ⭐ **t=546.0 的收窄(对 09-10「命令流不在 dump 里」那堵墙的实际进展)**:
+    armed 腿第一手确认(`script_version = mirror:…,campfarm,…:s13027:radiant`,主体 team 2)。
+    **普通营已于 545.1 清空**(centaur_outrunner 541.2 被 sniper 打死 / centaur_khan 545.1)
+    ⇒ 那一瞬 sweep 里**只剩远古**;`FilterFarmNeutrals` 头注**自己声明**这种情况
+    「**the armed list is EMPTY**」⇒ wrapper 下游**三个读者一个都发不出这一击**
+    (目标选择返回 `nil`、两处 `[1]` 无 `[1]`、`:992` 的裸 fallback 也无 `[1]`)——
+    **三条都已跑成断言,不是推理**。⇒ **这一击来自 `NeutralFarmList` 之外的消费者**,
+    而「wrapper 之外还有消费者」是 `mode_farm_generic.lua` 的 **GH #265 头注自己写的**
+    (`bot:GetNearbyNeutralCreeps` **3 个站点一个没包**)。
+    ⭐ **前置激怒判别子独立复核,两个计数都是零**:546.0 之前 prowler 作 target **0 条**、
+    作 actor **0 条**;该判别子警告的两种污染(自己的 AoE 546.9、队友 quill 547.0)**都在它之后**。
+    ⛔ **仍 INDETERMINATE**:离线说不出**哪个**消费者(GH #521 同族);**收窄了集合,没点名消费者**。
+  - **产物**:`tests/fixtures/f_20260912_094042_sniper_546.lua`(`MF_EXIT=0`)+
+    `tests/test_replay_094042_sniper_ancient.lua`(**12 case,12 PASS / 0 FAIL**)。
+    ⚠️ **`bots/` `game/` 一行未改**(本组不改 bot 代码)。
+  - ⭐ **变异台 4/4 杀死、0 存活、0 NO-OP**(`MUTSTAND_EXIT=0` 裸读;按 evidence-discipline 规则 1
+    **从文件副本恢复不从 git**;脚本全程 scratchpad;恢复后 `cmp` 逐字节 `SITE/UTILS restored OK`):
+    M1 `FilterFarmNeutrals` 永不丢弃 → 两条 `[gate]` 红;M2 `IsValidCreep` `>9`→`>8` → 阈值条 + viper 条红;
+    M3 给 sniper 加 maxHP 名字表条目 → 两条红;M4 `GetMinHPCreep` 取最高血 → 一条红。
+    ⭐ **M4 只杀一条而那是对的**(9 级时远古根本不是候选,最高血写法也只能返回普通小兵)——
+    **测试正文预先解释了它,不是事后找补**。
+  - ⭐ **一处 vacuous-pass 被正控制拦下**:「不持有四件 maxHP 物品」若只走 `HasItem`,
+    会被 **replay_fixture 的 NAMESPACE 洞**放行(loader 头注自报 114 个 fixture 物品名里 **24 个**
+    从不以 `item_<name>` 出现在 `bots/`,**`bfury` 恰好是那一族**)⇒ 改为**在 dump 原始字符串上**查,
+    **另加正控制**(`item_power_treads` 必须被真谓词看见),否则否定断言**在空世界上也会绿**。
+  - ⛔ **未登记进 `lua_gate_manifest.json`,是故意的**:**GH #783** 逐字说明
+    「登记一条测试 = 清空 `known_red` 赦免名单 = 让下一个人的 push 被 9 条既存红挡下」
+    ⇒ 本轮不碰它,**并声明新测试因此不受钩子保护**。
+  - ⚠️ **一处本轮自己制造的假红**:手跑同族测试时 `test_replay_212636_tide_ancient` /
+    `test_abilanc_ancient_selector` 各报一次 `soak_side.lua already exists` ——
+    **是本轮把开工自检重新挂后台造成的并发**(**GH #417 那条护栏工作正常**);
+    窗口过后两条各自复跑**全绿**(9/0、13/0)。⚠️ **不是 trunk red,不点名任何组**;
+    **教训归本轮:别在手跑 Lua 测试的同时后台挂自检。**
+  - **AWS**:只读(`s3 ls` ×2、`s3 cp` 一份 23MB `.dem` + 一份 7KB analysis.json、dumper 缓存 HIT);
+    **零 EC2 / 零 CE / 零支出**;`AWS_SETUP_EXIT=0`、`DUMPER_EXIT=0`、`MF_EXIT=0`、`TL_EXIT=0`。
+  - **本轮 issue:净增 0 条新单,1 条追评 #137**(先搜后开:`list_issues` 直读最近 12 条;
+    ⚠️ 章程已登记 `search_issues` 在本仓对这一族**不可靠**,本轮不依赖它;
+    `campfarm` 归属 issue 现读确认是 #137)。
+  - **下一轮第一件事**:(1) ⛔⛔ **撤回上一轮交棒 (1)**,那条断言**不要再做**(已钉成会自己退休的断言);
+    (2) ⭐ **还本轮欠的深查局数**(本轮 1/6),**但不要为 `campfarm` 买**(工具坑第一条仍有效),
+    按工作流第 2 条挑**核验最少且语料能买**的 id;
+    (3) ⛔ **别重跑本轮三条**:135,137 条 creep 采样键集合、本局 TA/Slardar/solar-crest 的时间线、4/4 变异台;
+    (4) ⭐ **两条新判别子进工具坑**:**钉帧交棒动手前先读生成器 `make_fixture.py` 的 LIMITS**(不只读检测器的)、
+    **fixture 上的物品否定断言必须配一条正控制**(NAMESPACE 洞会让它在空世界上也绿);
+    (5) ⭐ 等协同组对「四个远古阈值」的处置(已追评 #137,**本组不自改 bot 代码**)。
+  - **完整报告**:`iterations/reports/replay-check/20260913T004000Z.md`
