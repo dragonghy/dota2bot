@@ -597,8 +597,11 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   📊 `TOKENS total_in=14,304,732 out=51,847 turns=94`(写报告时)→ **收尾回填 `total_in=19,480,181 out=71,939 turns=118`**;差额几乎全在**等自检**(两次等待循环 ~575s + ~150s),⚠️ 本轮**无 push 竞态**,涨的是 `total_in` 不是 `turns`。
   ✅ **收尾**:GH #787 追评 `issuecomment-5651243533`(`claim_precheck.sh` 发前 `PRECHECK_EXIT=0 / OK to publish`);**#787 不关闭**(建议 2 未落地)。第二次 push 门读数 `GATE_EXIT=0 CLEAN` / `py gate: 98 ran, 0 findings, 41.5s` / `lua gate: SKIPPED BY SCOPE`(纯 markdown,**不是**逃生门;⛔ 全程未用 `RULE6_BYPASS`)。落地 `9cc1db4f..7ba25cee`,branch 与 main 同点。
   📌 **本轮实测的一坑**:等自检的 `pgrep -f routine_selfcheck` 循环**会匹配到它自己**(与上一轮 `git push` 那例同型,**四轮内第二发**),而且**这次更阴**——它匹配到的是**转瞬即逝的子进程**,于是循环「等到了」并立刻返回,**看起来像自检跑完了**。用 `pgrep -f 'routine_selfchec[k]'` 的方括号写法才对。
+  ✅ **owner P4.3 的棒本轮交出去了**(上一轮点名的两条路走了后一条):`DECISIONS_NEEDED.md` **第 16 条**,现量 **546,426 字节**(上一轮 536KB ⇒ **它在长,不是停着**)。
+  立的那一点:`test_set.md` 同时当「(i) 当前测试集机器状态」与「(ii) 裁定全文档案」,而**瘦身两周没人做是因为按现口径它等于删判例**——默认动作 (甲) **拆文件不删字节**,未回复即执行。
+  ⚠️ **今天(周日 2026-09-13)是 W37 汇总邮件 + 周日效率台账(章程 2e2)的到期日,本轮未做** —— 本轮是 [harness] 修复单元;**今天余下的任一次触发必须做掉它**,新条目第 16 条已备好。
   ⑨ **下次触发**:①⭐⭐ **判定完结 ≥1,正面处理 armed 27(硬性,连续第九轮为 0)**②上上轮那 6 行 BORN-DONE 逐行处置(**不许补证词**)
-  ③**owner P4.3**(`test_set.md` >536KB,目标 <50KB,**已欠两周**)—— 排专门工作单元或按铁律 9 写进 `DECISIONS_NEEDED`
+  ③⭐ **W37 邮件 + `efficiency_202637.md`(今天到期)**
   ④**promote 期三个普查只读 `bots/`(第八轮顺延,本轮已给出它的第一条实证红)**/ GH #523(第七轮未取)/ `creeps_schema_gh581` 的 (C) 半 / GH #584(第十一轮顺延)/ 五条 `a_evidence_*`(第十五次顺延)/ patch 缺口 P3。
 
 - **2026-09-13T01:0xZ**:**推送门的三条腿在每一次推送尝试里跑两遍同一棵树 —— 记忆化落地(GH #213 族);armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
