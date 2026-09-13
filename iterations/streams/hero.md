@@ -7265,6 +7265,13 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - ⚠️ **交回录像检查组一个问题**:#794 报 `reserve_idle_release` 计价语料 **33 → 34**,
     而它逐字引的那行**做不到**(无 abilities ⇒ 不计价)⇒ 那 +1 来自别的东西
     (第二行 WK 或第二份 fixture),只有握着被撤回 fixture 的组说得清。已写进 issue 追评。
+  - **追评** `issuecomment-5651415178`(`claim_precheck` **exit 0 / clean**,先 push 后发,
+    铁律 6 #290);**issue 未关**:验收第 3 条(他们落地 fixture + 12 case)未做,**棒在录像检查组**。
+  - **开工自检真码 `SELFCHECK_EXIT=3`**(有发现,不是没跑成):发现逐条**不是本组的** ——
+    `trunk-red(python)` 就是本轮清掉的那条、`trunk-red(lua)` 是 `test_lanekill_domain_census.lua`
+    (协同组)、`cadence`/`queue-rulings`/`owed-executions` 归总监;本组那一侧全 OK。
+    ⚠️ 第一次调用被工具自己拒绝(stdout 是管道),第二次被本会话 `timeout 400` 砍在 trunk health
+    (`EXIT=124` 是超时**不是判决**),第三次后台无超时才拿到真码。
   - **附带**:清掉 trunk 上别人的一条红(`test_bots_walk_farm_only.py`,
     `test_tpdeftower_outpost_narrow.lua` 的 walk 未登记而**其调用点注释自称已登记**,
     随 `87ef8628` 落地 —— GH #774/#624 同形),实测 `8 checks, 0 failed`;
