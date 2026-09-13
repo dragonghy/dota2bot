@@ -24,7 +24,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 -162. ✅ **`-161` 的三条「下一轮」全部不导向一个可落地的主体(一条要价值论证、一条被明令禁止、
    一条是卫生),于是本轮按 P4.4 (i) 自选,换一个新形状并落地** —— 本轮
-   (报告 `iterations/reports/hero/20260913T015440Z.md`)落地 **`wkbonebank`**
+   (报告 `iterations/reports/hero/20260913T015440Z.md`,落地 sha **`a3c75c64`**,附带 **GH #795**)落地 **`wkbonebank`**
    (Wraith King,gated,turbo-only,**加宽**),**并把 CM 那根判成「不动」写死**。
    ⭐ **新形状:「比率定价一个绝对收益」。** `hero_skeleton_king.lua` `X.ConsiderW` 进攻分支
    用 `nStack / maxStack >= 0.6` 给骷髅存量定价,而这发释放值多少钱的每一项都是**绝对计数**
@@ -7181,7 +7181,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
-- 2026-09-13T01:54Z(报告 `iterations/reports/hero/20260913T015440Z.md`;**backlog:新开 `-162`**;
+- 2026-09-13T01:54Z(报告 `iterations/reports/hero/20260913T015440Z.md`,落地 sha **`a3c75c64`**,**GH #795**;**backlog:新开 `-162`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`wkbonebank`(Wraith King,gated,turbo-only,未 armed,方向=**加宽**):
   一条释放规则可以在能力等级上**非单调** —— 它拒绝的状态**严格支配**着它接受的状态。**
@@ -7218,8 +7218,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     ⚠️ **trunk 上三条 python red 先于本轮存在**(`git stash -u` 实测,干净树上逐条仍红,
     `stash pop` 后工作树完整):`test_carrier_terms.py` / `test_detector_source_constants.py`(GH #787)/
     **`test_py_gate_hook.py`** —— 最后这条红的正是「红的棘轮必须**拒绝** push」(实测 `got 0`),
-    落在 push 路径上,**已在报告 §6/§7 交棒给总监**(GH #624 家族,疑与
-    `e6ef15d` 的 push-gate memoize 相关)。
+    落在 push 路径上,**已立案 GH #795** 交棒给总监(GH #624 家族第八例,疑与
+    `e6ef15d` 的 push-gate memoize 相关;那条测试**不在快 py 清单里**,所以落它那轮钩子全绿)。
 - 2026-09-12T22:57Z(报告 `iterations/reports/hero/20260912T225717Z.md`,**GH #793**;**backlog:新开 `-161`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`lionpushclock`(Lion,gated,turbo-only,未 armed,方向=**加宽**):
