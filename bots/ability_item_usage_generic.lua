@@ -12,6 +12,7 @@ local Utils = require( GetScriptDirectory()..'/FunLib/utils' )
 local BotBuild = dofile( GetScriptDirectory().."/BotLib/"..string.gsub( botName, "npc_dota_", "" ) )
 local Localization = require( GetScriptDirectory()..'/FunLib/localization' )
 local Customize = require(GetScriptDirectory()..'/Customize/general')
+local Version = require( GetScriptDirectory()..'/FunLib/version' )
 Customize.ThinkLess = Customize.Enable and Customize.ThinkLess or 1
 if GAMEMODE_TURBO == nil then GAMEMODE_TURBO = 23 end
 if GAMEMODE_ARDM == nil then GAMEMODE_ARDM = 20 end
@@ -496,6 +497,11 @@ function X.SetTalkMessage()
 			bInstallChatCallbackDone = true
 			--print(botName)
 			InstallChatCallback( function( tChat ) X.SetReplyHumanTime( tChat ) end )
+			-- Version banner: one all-chat line per team per game, from the same
+			-- bot that owns human replies. The lobby never shows which script or
+			-- release is loaded ("Local Dev Script" is all a player sees), so the
+			-- script announces itself. See FunLib/version.lua.
+			bot:ActionImmediate_Chat( Version.name..' '..Version.tag..' ('..Version.stable..') loaded', true )
 		end
 
 		if sHumanString ~= nil

@@ -72,6 +72,9 @@ steamcmd +login <你的Steam用户名> +workshop_build_item C:\dota2bot-beta\dot
 
 ## 5. 发布前检查清单
 
+- [ ] **`bots/FunLib/version.lua` 的 `tag`/`stable` 已改成本次发布的值**(开局全体聊天横幅
+      "Dota2Bot Turbo Bots <tag> (<stable>) loaded" 就读它;bot 名字后缀 `.D2B` 在
+      `FunLib/aba_team_names.lua`,不用每次改)
 - [ ] main 上 `luacheck bots game` 0 警告、smoke 0 错
 - [ ] 包根目录是 `hero_selection.lua`(不是 `bots/hero_selection.lua`)
 - [ ] 包内没有 `soak_side.lua`、没有 `.bat/.sh/.md`
