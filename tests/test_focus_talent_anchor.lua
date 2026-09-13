@@ -34,9 +34,20 @@
 --      it -- iterations/pending/tpgap_159_fixture/, t=1382.2 (23:02) of a
 --      24.9-minute naturally-ended game -- reads TEN heroes at level 22-27,
 --      three of them focus heroes (crystal_maiden 22, zuus 23,
---      skeleton_king 26).  t20 and t25 are live rows, they are reached in the
---      order section 6 pins, and the ten picks they resolve to have never been
+--      skeleton_king 26).  The ten picks t20/t25 resolve to have never been
 --      examined by this project: they are the OpenHyperAI snapshot's defaults;
+--      RE-CORRECTED 2026-09-13.  That paragraph used to close "t20 and t25 are
+--      live rows, they are reached in the order section 6 pins".  Reaching the
+--      LEVEL is not spending the POINT, and this file made the retired premise's
+--      mistake from the other side.  GH #366 /
+--      tests/test_skill_point_stall_frame.lua reads ten heroes at level 17-22 ALL
+--      holding thirteen ability points and at most ONE talent, and
+--      tests/test_focus_talent_reach_wall.lua drives all six focus build rows to
+--      the same thirteen-point {4,4,3,2} prefix.  So t15/t20/t25 are NOT reached,
+--      whatever level the hero shows.  The rows below are still pinned -- an
+--      unreached row is exactly the kind of thing that rots unwatched, and the
+--      day the spender's stall is fixed they become live in one commit -- but
+--      nothing may be argued from them being trained today;
 --   3. Axe's t10 change of 2026-08-22 (index [1] -> [2]) together with the
 --      rationale block that has to travel with it;
 --   4. a ratchet that the dead 7.2x talent names never come back as live data.
@@ -131,12 +142,17 @@ local FOCUS = {
         --     it guards is dead code, not merely a zero read (GH #232 priced the
         --     read; this prices the guard). Whoever takes `hero-2` inherits both
         --     halves of that.
-        --   * `talent7:IsTrained()` becomes TRUE for the first time at level 25.
-        --     GH #228 ruled that read harmless because the engine folds the +85
-        --     into the base `radius` the site already reads -- and until this
-        --     round that ruling was also protected by the branch being
-        --     unreachable. It is not any more: the fold argument is now the only
-        --     thing holding it. It still holds; it is now load-bearing.
+        --   * `talent7:IsTrained()` is false for the whole game even though [7]
+        --     is the pick. GH #228 ruled that read harmless because the engine
+        --     folds the +85 into the base `radius` the site already reads.
+        --     RE-CORRECTED 2026-09-13: this bullet used to say the handle
+        --     "becomes TRUE for the first time at level 25" and that the fold
+        --     argument was therefore "now load-bearing". Level 25 is not a
+        --     thirteenth-point-plus-one; GH #366 measured ten heroes at level
+        --     17-22 holding thirteen ability points and at most one talent, and
+        --     Axe's own row puts Culling's third point in entry 15. The branch is
+        --     unreachable again and the fold argument is a second line of defence.
+        --     tests/test_focus_talent_reach_wall.lua sections 2/2b drive it.
         expect = { t10 = 2, t15 = 3, t20 = 6, t25 = 7 },
     },
     crystal_maiden = {

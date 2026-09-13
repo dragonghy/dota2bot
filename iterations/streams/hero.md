@@ -22,6 +22,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-165. ✅ **`-164` 的第 1 条(`cullthresh` 的域声明)与第 2 条(CM/Lion/Zeus 的 t15+ 读点没量过)
+   本轮一起做完,而第 1 条自己的前提被**收窄**了** —— 报告
+   `iterations/reports/hero/20260913T110825Z.md`,新测试 `tests/test_focus_talent_reach_wall.lua`(6 绿),
+   变异台 `tools/agent/mutstand_talentwall.sh`(**9/9**),开 **GH #799**。零 AWS,零波次。
+   ⭐ **新形状:一个前提被**正确地**退休,而顶替它的那句话是同一个错误的镜像。**
+   2026-08-27(GH #235)退掉「GH #84 的 0 ⇒ 后期天赋是死重」是对的(那个 0 是 10 分钟上限);
+   但顶替它的**五句活断言**(`hero_axe.lua` / `hero_zuus.lua` / `test_focus_talent_anchor.lua` ×2 /
+   `test_focus_build_level_legality.lua`)共用同一个隐含步骤:**把 HERO LEVEL 当成 POINTS SPENT**。
+   #366 的帧正好是这一步的反例:十个英雄都过了 10/15/20 三层,**加起来只持有六个天赋**。
+   ⇒ **退休一条前提时,顶替它的那句话要重新证明,不能沿用被退休那句的推理形状。**
+   - ⭐ **硬读数:六条焦点 build 行独立复现出 #366 在十个无关英雄上测到的同一个多重集。**
+     驱动出货 `J.Skill.GetSkillList`:六条行(Zeus 两条)**各自**把前 13 点花成 **{4,4,3,2}**,
+     且**六条里六条**把大招第三点放在**第 15 项** ⇒ **焦点五英雄的大招全局 rank ≤ 2**。
+     一份是 dump、一份是源码,两条互不相关的路碰在同一个数上。
+     ⚠️ §2 只测「13 点买到什么」,**不断言「每局都停在 13」**(那是 #366 的,LIMIT 一帧一局一瞬间);
+     墙的**源码那一半**(末尾 `else` 只在 `botLevel > 25` 时 pop)由 §1 自己断言,不靠那一帧。
+   - ⭐ **`cullthresh` 的域塌成两带**:`[450,475)` 是**空层**(Culling 第三点在第 15 位)。
+     扫描器安全(从 dump 读 rank 并打 `rank_hist`),错的是**预期** —— 按三带估 power 有三分之一
+     押在取不到的层上。第二处收窄压在一个「风险」上:抬头说的 `talent8` double-count
+     「那一天」**到不了**(同层取舍 + 本墙各杀一次)⇒ **armed 与出货的差是两个可达 rank 上
+     无条件的 +25**。已进 `hero_axe.lua` 抬头(棘轮钉住)与 `queue.json:hero-2`。
+   - ⭐ **散文棘轮的正确形状:被撤的句子必须留下来,而且只能以引文形式留下来。**
+     第一稿写「这句话必须不存在」,而本轮自己的更正**逐字引用了它** ⇒ 当场红,而那次红把问题问对了:
+     删掉它,下一个人可以原样再写一遍;留着它又等于没撤。最终断言是**位置性**的:
+     每次出现必须 (i) 落在一对双引号之内(就近 300 字符,**故意不做全文奇偶扫描** ——
+     上方任何一个孤立引号都会静默翻转奇偶扫描对下方一切的答案),且 (ii) 前 500 字符内有撤回标记。
+   - ⚠️ **块注释先剥,再剥行注释**:第一版普查把 `hero_skeleton_king.lua` 一句 `--[[ ]]` 里的散文
+     读成了代码行。
+   - **卫生债当轮还清**:`test_focus_level_claims` 在 trunk 上红着(「from hero level 2 to 12」
+     出现 2 次,棘轮要求 1 次),第二份是**本组上一轮**(`a81c98ba`)写抬头时复制进去的,已改回 17 绿。
+   - ⛔ **P4.4 交代**:`bots/` 零行为改动,按 **(ii)** 记 —— 主体是 registered queue row `hero-2`
+     的域证据。墙本身在 `bots/ability_item_usage_generic.lua`(127 英雄全跑),**机制未定**
+     (#366 自己写明离线判不了),是本项目迄今域最大的一次行为改动,一个工作单元装不下
+     ⇒ **棒显式交出去:GH #799**,不是掉了。
+   - ⭐ **下一轮最该做的,按顺序**:
+     0. ⛔ **老 `[hero]` 存量分诊 —— 已连续两轮被排在后面**。下一轮再不做就直接当主体。
+     1. ⭐⭐ **GH #799 的第 1 步**:在 mock 里给天赋槽真实句柄,把三个升级条件里失败的那个
+        **指出来**。自足的小单元,不碰 `bots/`,且它是本组眼下最大的一根杠杆的入口。
+     2. `cullthresh_domain.py` 的 docstring **还写着三带**(本轮只改了英雄抬头与 queue 行)。工具侧,附带项。
+     3. ⛔ **不要因为 #799 去翻任何 t10 行**:那条「零天赋英雄的 t10 项没训练就离开队列」的线索
+        是 **n=1、一帧**,按线索登记不按结论登记。
+     4. GH **#785**(Lion `X.MayKillTarget` 形参只守约一半)仍开着 —— 卫生,只能当附带项。
+
 -164. ✅ **`-163` 的「下一轮最该做的」第 2 条本轮做掉并落地了一根杠杆** —— 报告
    `iterations/reports/hero/20260913T081500Z.md`,新 id **`wkidleshare`**(WK,gated,turbo-only,**纯收窄**),
    附带**两处被推翻的已登记前提**的更正。
@@ -7272,6 +7315,32 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-13T11:08Z(报告 `iterations/reports/hero/20260913T110825Z.md`;**backlog:新开 `-165`**;
+  OWNER_PRIORITIES **P4.4 (ii)** —— 主体是 registered queue row `hero-2` 的域证据,
+  `bots/` 零行为改动,理由见报告 §6;**P4.2 冻结期内不请求入集**;零 AWS)
+  **十三点的墙从一帧走到五个焦点英雄自己的 build 行上,并带走了 `cullthresh` 的第三带。**
+  - ⭐ **一个前提被正确地退休,而顶替它的那句话是同一个错误的镜像。** GH #235 退掉
+    「GH #84 的 0 ⇒ 后期天赋死重」是对的(那个 0 是 10 分钟批测上限);但顶替它的**五句活断言**
+    把 **HERO LEVEL 当成 POINTS SPENT**,而 #366 的帧正是这一步的反例(十个英雄都过了 10/15/20,
+    加起来只持有六个天赋)。五处已更正,被撤的句子按棘轮要求**以引文保留**。
+  - ⭐ **读数(零 dump,驱动出货 `J.Skill.GetSkillList`)**:六条焦点 build 行(Zeus 两条)
+    **各自**把前 13 点花成 **{4,4,3,2}**,**六条里六条**把大招第三点放在**第 15 项**
+    ⇒ **焦点五英雄大招全局 rank ≤ 2**。与 #366 在十个无关英雄上的 dump 读数**碰在同一个数上**。
+  - ⭐ **`cullthresh` 两带不是三带**:`[450,475)` 是空层;`talent8` 那一项**永不开火**
+    ⇒ armed 与出货的差是两个可达 rank 上**无条件的 +25**。进 `hero_axe.lua` 抬头 + `queue.json:hero-2`。
+  - **交棒**:GH **#799**(`[hero]`)—— 墙本身在 `bots/ability_item_usage_generic.lua`(127 英雄全跑),
+    机制未定、必须 gated、一个工作单元装不下,**显式交出去**。
+  - **变异台 9/9**(`tools/agent/mutstand_talentwall.sh`);M3/M4 是一对(只动行尾 / 只动前缀),
+    拆开才证明了 §2 与 §2b 各自承重。
+  - **卫生**:清掉**本组上一轮**(`a81c98ba`)在 trunk 上留的红
+    (`test_focus_level_claims`,「from hero level 2 to 12」两份),回到 17 绿。
+  - **开工自检真码 `SELFCHECK_EXIT=3`**:发现逐条**不是本组的**(`cadence`/`queue-rulings`/
+    `owed-executions` 归总监;`trunk-red(python)` = `tests/test_py_gate_hook.py`,GH #616/#624 族)。
+    ⚠️ 自检的 `test_selfcheck_lua_leg.py` 一节报 **9 条 UNCERTIFIABLE**(那条腿 120s 预算内没跑完)
+    —— **UNCERTIFIABLE 不是通过**,那九条这一轮没人看过。
+    ⚠️ 第一次调用被工具**自己拒绝**(stdout 是管道,证据纪律 3),改 `> file; echo EXIT=$?` 才拿到真码。
+  - **产物**:`tests/test_focus_talent_reach_wall.lua`(6 绿,`[ratchet]`)、
+    `tools/agent/mutstand_talentwall.sh`(9/9)、GH #799、`queue.json:hero-2` 域声明(1 行 diff)。
 - 2026-09-13T08:15Z(报告 `iterations/reports/hero/20260913T081500Z.md`;**backlog:新开 `-164`**;
   P4.4 (i) **达标** —— 主体是一个 `bots/` 行为改动)
   **落地 `wkidleshare`(Wraith King,gated,turbo-only,纯收窄),并更正两处被推翻的已登记前提。零 AWS。**

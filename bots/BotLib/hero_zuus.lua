@@ -1905,11 +1905,22 @@ function X.ConsiderR()
 	-- same change to close that hole; the header of this file is where the corrected
 	-- reading lives.
 	-- WHAT THE CORRECTION COSTS THIS LINE, which is the part that is not prose: this
-	-- file's t20 row takes [5], so `talent5:IsTrained()` is TRUE from level 20 on and
-	-- the guarded term below really runs.  Until today the term was ALSO protected by
-	-- the branch being unreachable.  It is not any more, so the fold argument set out
-	-- in (2) below is now the only thing holding this line up.  It still holds; it is
-	-- now load-bearing.  (Same shape, same day, as hero_axe.lua's talent7.)
+	-- file's t20 row takes [5], so the guarded term below is the PICK's own read and
+	-- not the abandoned half's.
+	-- RE-CORRECTED 2026-09-13.  This paragraph used to continue "`talent5:IsTrained()`
+	-- is TRUE from level 20 on and the guarded term below really runs [...] the fold
+	-- argument is now the only thing holding this line up.  It still holds; it is now
+	-- load-bearing."  That reads LEVEL REACHED as TALENT TRAINED, which is the retired
+	-- GH #84 premise taken from the other side.  GH #366 /
+	-- tests/test_skill_point_stall_frame.lua measured ten heroes at level 17-22 ALL
+	-- holding thirteen ability points and at most ONE talent, and this file's own two
+	-- build rows spend their first thirteen points into {4,4,3,2} with the third
+	-- Thundergod's Wrath point sitting in row entry 15 -- behind the wall.  So t20 is
+	-- not reached, `talent5:IsTrained()` is false for the whole game, and the fold
+	-- argument in (2) below is a SECOND line of defence again, not the only one.
+	-- Driven per-hero in tests/test_focus_talent_reach_wall.lua section 2; carry
+	-- #366's LIMIT (one frame, one game, one instant) with it.  (Same shape, same
+	-- day, as hero_axe.lua's talent7 -- and corrected on the same day too.)
 	--
 	-- CORRECTED 2026-08-26 (GH #228, axis TALENTVALUE, read off the game's own KV
 	-- rather than the datafeed -- the source swap GH #214 made).  The 08-22 note said

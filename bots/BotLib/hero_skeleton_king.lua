@@ -856,8 +856,12 @@ end
 --- as chip damage; spending it on a full-health hero while outnumbered gives up
 --- the disable for the fight that is about to start and buys ~100 magical damage.
 --- Turbo sharpens this rather than softening it: Wraithfire Blast sits at rank 1
---- (14s) from hero level 2 to 12 under the shipped build row, which is most of a
---- turbo game.
+--- (14s) across hero levels 2-12 under the shipped build row, which is most of a
+--- turbo game.  The canonical statement of that span, with the level it is driven
+--- from, lives in X.ConsiderQ's SUPPLY note; this sentence is deliberately NOT a
+--- second verbatim copy of it -- tests/test_focus_level_claims.lua counts the
+--- phrase and a second copy makes the level unreadable off one driven source
+--- (it went red on trunk that way, 2026-09-13).
 ---
 --- THE REAL FRAME (tests/test_wk_q_catchall_odds.lua):
 --- tests/frames/f_260909_215040_wk_blast_lion_480.lua, t=480.6, Wraith King the

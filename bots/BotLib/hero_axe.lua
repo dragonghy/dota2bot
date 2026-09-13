@@ -371,14 +371,29 @@ local talent7 = bot:GetAbilityByName( sTalentList[7] ) -- t25 pair, odd index: t
 -- two, and they point opposite ways, which is why the retired sentence was worth
 -- more than a comment edit:
 --
---   * talent7 is LIVE from level 25.  This file's t25 row is {0,10} = index [7],
---     so the handle above is the one this Axe actually trains, and the
---     `nRadius + talent7:GetSpecialValueInt('value')` line below now really runs.
---     It adds 0, and GH #228 says that is CORRECT -- the engine has already folded
---     the +85 into the base `radius` the site reads, so a handle that answered
---     would double-count.  The ruling has not changed; what changed is that it
---     used to be protected by the branch being unreachable as well, and now the
---     fold argument is the only thing holding it up.
+--   * talent7 IS THE PICK AND IS STILL NEVER TRAINED, and the two halves of that
+--     sentence come from different places.  This file's t25 row is {0,10} = index
+--     [7], so the handle above is the one this Axe would train; the
+--     `nRadius + talent7:GetSpecialValueInt('value')` line below is therefore the
+--     pick's own read and not the abandoned half's.  It adds 0, and GH #228 says
+--     that is CORRECT -- the engine has already folded the +85 into the base
+--     `radius` the site reads, so a handle that answered would double-count.
+--     CORRECTED 2026-09-13.  This bullet used to open "talent7 is LIVE from level
+--     25" and end "it used to be protected by the branch being unreachable as
+--     well, and now the fold argument is the only thing holding it up".  Both
+--     halves are quoted rather than deleted, which is what
+--     tests/test_focus_talent_reach_wall.lua section 4 requires of a retired
+--     sentence: it may stand as a record, never on its own.  That was the retired
+--     GH #84 premise's mistake taken from the
+--     other side: it reads LEVEL REACHED as TALENT TRAINED.  GH #366 /
+--     tests/test_skill_point_stall_frame.lua measured ten heroes at level 17-22
+--     ALL holding thirteen ability points and at most ONE talent -- so reaching
+--     level 25 buys nothing, and this file's own row says why: its third Culling
+--     point is row entry 15, and thirteen points stop at entry 13.  The branch is
+--     unreachable again, for a stronger reason than the one that was retired, and
+--     the fold argument is back to being a second line of defence rather than the
+--     only one.  Driven per-hero in tests/test_focus_talent_reach_wall.lua
+--     section 2; carry #366's LIMIT (one frame, one game, one instant) with it.
 --   * talent8 is STRUCTURALLY UNTRAINED.  A hero takes one talent per tier and
 --     this file takes [7], so `talent8:IsTrained()` is false for the whole game
 --     and the nKillDamage term it guards is dead code -- not merely a zero read.
@@ -1486,6 +1501,28 @@ end
 --- would double-count the day that handle ever answers.  So the armed branch
 --- returns before the talent line -- this is the "drop this line in the same
 --- change" the old comment here asked for.
+---
+--- THE DOMAIN IS NARROWER THAN THIS HEADER USED TO SAY, and it is narrower in two
+--- independent places.  Both come from GH #366 /
+--- tests/test_skill_point_stall_frame.lua: ten heroes at level 17-22 ALL holding
+--- thirteen ability points and at most one talent.  Driven against this file's own
+--- row in tests/test_focus_talent_reach_wall.lua sections 2/2b:
+---   * THE THIRD BAND IS AN EMPTY STRATUM.  This file's build row puts Culling's
+---     third point in entry 15 and thirteen points stop at entry 13, so the
+---     ability holds rank 2 for the whole game.  The domain is
+---     [250,275) at rank 1 and [350,375) at rank 2 -- the [450,475) band written
+---     here, in the hero-2 queue row and in cullthresh_domain.py's docstring
+---     cannot be occupied.  A wave that budgets for three bands budgets a third of
+---     its power on nothing; the scanner itself is safe (it reads rank off the
+---     dump and prints `rank_hist`), the expectation is what was wrong.
+---   * THE `talent8` TERM CAN NEVER FIRE, so the double-count risk this header
+---     names above is not a risk that has to be traded against anything.  It was
+---     already dead by tier-pick (one talent per tier, this row takes [7]); it is
+---     now dead by reachability as well.  What that buys is a clean statement of
+---     what arming does: the armed/shipped difference is an unconditional +25 at
+---     BOTH reachable ranks, with no state in which the shipped value could be the
+---     larger one.
+--- Carry #366's LIMIT with both: one frame, one game, one instant.
 ---
 --- THE DIRECTION IS STRUCTURAL, NOT HOPED FOR.  A getter that silently answers 0
 --- is how `zusboltcap` (GH #175) turned an AoE health filter into "is anyone

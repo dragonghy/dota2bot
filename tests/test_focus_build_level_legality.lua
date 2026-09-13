@@ -34,11 +34,24 @@
 --    14th and 15th entries land at levels 16 and 17).
 -- 3. THE ONE EXCEPTION, WITH ITS COST.  Every row's third ultimate point lands
 --    at level 17 and the ultimate's rank 3 needs level 18, so all seven rows
---    hold one point idle for exactly one level.  That is registered as a
---    NON-DEFECT, and the reason is checked rather than asserted in prose: at
---    level 17 every basic ability is already at rank 4, so the idle point has no
---    legal alternative -- there is nothing the hero could have spent it on, and
---    rank 3 of the ultimate is taken at 18, the earliest level it exists.
+--    hold one point idle across that boundary.  That is registered as a
+--    NON-DEFECT *of the row*, and the reason is checked rather than asserted in
+--    prose: at level 17 every basic ability is already at rank 4, so the idle
+--    point has no legal alternative -- there is nothing the hero could have
+--    spent it on, and rank 3 of the ultimate is taken at 18, the earliest level
+--    it exists.
+--
+--    RE-READ 2026-09-13 (GH #366).  This bullet used to say the rows "hold one
+--    point idle for exactly one level", and "exactly one" is the half that did
+--    not survive.  It is a statement about LEGALITY -- nothing in the row asks
+--    for a rank before it exists -- and legality is all this file grades.  What
+--    the frame says is that the point is never spent at all: ten heroes at level
+--    17-22 hold thirteen ability points and at most one talent, and every focus
+--    row's fourteenth and fifteenth entries sit behind that wall
+--    (tests/test_focus_talent_reach_wall.lua sections 2/2b drive all six).  The
+--    park is therefore PERMANENT and it belongs to the spender, not to the row,
+--    which is why the NON-DEFECT verdict here is unchanged and the sentence
+--    still had to be.  Do not read this bullet as "the point is spent at 18".
 --
 -- WHAT IS NOT CLAIMED
 -- -------------------
