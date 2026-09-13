@@ -15,7 +15,25 @@ SRC=bots/BotLib/hero_crystal_maiden.lua
 TEST=tests/test_cm_w_creep_clock.lua
 TMP=$(mktemp -d)
 cp "$SRC" "$TMP/src.bak"
-restore() { cp "$TMP/src.bak" "$SRC"; }
+
+# The restore is PROVED, not asserted: a stand that cannot show it put the tree
+# back may have eaten the fix it was measuring.  `restore` compares the file's
+# sha256 against the pristine copy taken before the first mutation and dies loud
+# if they differ, so every mutant in the loop below starts from a tree that has
+# been shown byte-identical to the original.
+BASE_SHA=$(sha256sum < "$SRC")
+restore() {
+  cp "$TMP/src.bak" "$SRC"
+  local now; now=$(sha256sum < "$SRC")
+  if [ "$now" != "$BASE_SHA" ]; then
+    echo "  !! RESTORE FAILED: $SRC does not match the pristine copy." >&2
+    echo "     pristine=$BASE_SHA" >&2
+    echo "     now     =$now" >&2
+    echo "     A pristine copy is at $TMP/src.bak -- recover from it BEFORE" >&2
+    echo "     touching the tree; this stand's results are void." >&2
+    exit 3
+  fi
+}
 trap 'restore; rm -rf "$TMP"' EXIT
 
 run() {
