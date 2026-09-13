@@ -47,7 +47,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      而 clamp **每一档都惰性** ⇒ 波次读回「测了,无效果」而无人举手。§3.1 的 `nAdded > 0` 专为它写。
      M6(三个标量里两个是数,实参交换)与 M13(台子自身的对照:普查读错环)同族。
    - ⚠️ **开工自检同形第 7 次被工具自己拒绝**(证据纪律 3),**第 7 次仍是本轮第一条命令**;
-     重跑后超 300s 移入后台、收尾仍无最终退出码 —— **「还在跑」不是通过**。
+     重跑真码 **`EXIT=3`**(findings `unlanded`/`cadence`/`queue-rulings`/`owed-executions`/
+     `trunk-red(python)`,`UNCERTIFIABLE: none`,快 Lua 腿 88 文件 0 失败)。按 GH #267 不做手工归因;
+     `trunk-red(python)` **不是本轮引入**(与 GH #751 / #806 同族,本轮不认领)。
    - ⭐ **下一轮最该做的,按顺序**:
      1. ⭐⭐ **`-168` 的第 1 条仍然欠着**(六条焦点 build 的槽→等级要求钉成断言,尤其
         「t10/t15 是把大招 rank 2 顶到 12 级的垫片」)。**只是推导,已连续两轮被排在后面**;
@@ -7513,9 +7515,12 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     ⭐ **M4(`math.min`→`math.max`)是本台真正的理由**:gate / 接线 / 方向保证全在,而 clamp
     **每一档都惰性** ⇒ 波次读回「测了,无效果」而无人举手;§3.1 的 `nAdded > 0` 专为它写。
   - ⚠️ **开工自检:同形第 7 次被工具自己拒绝**(证据纪律 3,stdout 是管道),**第 7 次仍是本轮第一条命令**;
-    改走 `> /tmp/sc.log; echo EXIT=$?` 重跑后**超 300s 移入后台,收尾仍未给出最终退出码** ——
-    **「还在跑」不是通过**。已读到:python 腿 **9 条 UNCERTIFIABLE**(88 文件 / 120.1s,GH #358 同族)、
-    `TRUNK RED`(**不是本轮引入**,自检在任何编辑之前启动;与 GH #751 / #806 同族,**本轮不认领**)、
+    改走 `> /tmp/sc.log; echo EXIT=$?` 重跑(超 300s 移入后台,**收尾前跑完**),真码 **`EXIT=3`**:
+    findings `unlanded` / `cadence` / `queue-rulings` / `owed-executions` / `trunk-red(python)`,
+    `UNCERTIFIABLE (exit 2): none`,快 Lua 腿 **88 个检测器文件 0 失败**。
+    ⚠️ 按 GH #267 **不做手工归因**:前四条归总监;`trunk-red(python)` **不是本轮引入**
+    (自检在任何编辑之前启动;与 GH **#751** / **#806** 同族,**本轮不认领**)。
+    python 腿 **9 条 UNCERTIFIABLE 仍在**(88 文件 / 120.1s,GH #358:墙钟分不开「集合变大」与「容器变慢」)。
     `INVERSE-GATE CENSUS live 216 / armed 26`。
   - **未向 `known_red` 添加任何一条,未 re-measure lua 闸**(GH #783:re-measure 会清空赦免名单)
     ⇒ 新测试**不在钩子快域内**,这是**登记**不是疏漏。
