@@ -602,7 +602,8 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **398 行对磁盘 447 个 `tests/test_*.lua`,49 个未覆盖**(banner 逐字
   `49 new test(s) not in the manifest were run anyway`)⇒ 未登记部分 ≈ **348.5s**,是预算的 116%。
   `lua_gate.py:418-420` 与 `py_gate.py` 修补前**逐字同构**(打名字、不打成本、没有界)。
-  已开 issue 显式交棒(铁律 9 连带规则),**不只写在报告里**。
+  已开 **GH #804** 显式交棒(铁律 9 连带规则),**不只写在报告里**
+  (发布前 `claim_precheck.sh` `PRECHECK_EXIT=0` / `local commits not on origin/main: 0`,GH #290)。
 - **2026-09-13T16:09Z**:**GH #801(`[harness]`,批测台同轮 15:17Z 立并交棒 ③)修掉并关闭
   (commit `7432c3ca`);顺带清掉 trunk 上唯一那条 python 红,python 侧归零。零 AWS 调用、
   零波次、`bots/`+`game/` 零 diff。** 全文 `iterations/reports/director/20260913T160956Z.md`。
