@@ -581,9 +581,20 @@ end
 --- window should be permanent, so the Roshan branch applies the same reserve
 --- unconditionally instead of a constant that predates it.  Both sides scale with
 --- rank: Reincarnation costs 220/110/0 (same file, AbilityValues/AbilityManaCost,
---- read 2026-08-26 -- rank 3 is FREE, which is why the armed floor collapses to
---- the blast's own price at level 16+), so the armed floor is 315/330 at R rank 1,
---- 235/250 at rank 2 and 95..140 at rank 3, against 600 either way today.
+--- read 2026-08-26), so the armed floor is 315/330 at R rank 1 and 235/250 at
+--- rank 2, against 600 either way today.
+--- ⛔ PREMISE CORRECTED 2026-09-13, and this one was load-bearing on a NUMBER.
+--- This sentence used to read "rank 3 is FREE, which is why the armed floor
+--- collapses to the blast's own price at level 16+", and listed "95..140 at rank
+--- 3" as a third column of the armed floor.  That column is unreachable: R's
+--- third point is entry 15 of both build rows in this file, and GH #366 is
+--- settled (tests/test_skill_point_stall_frame.lua) that entry 15 is a wall --
+--- every hero stops at 13 build points plus at most one talent.  The armed floor
+--- therefore has TWO reachable values, not three, and the late game is permanently
+--- the 235/250 one.  Nothing about this lever's direction moves (235 < 600 is the
+--- whole claim); what moves is that a reader sizing it must not expect the floor
+--- to fall to the blast's own price.  Same correction, same day, same cause as the
+--- one in X.IsReincarnationReserveIdle's note below.
 ---
 --- ONE-DIRECTIONAL BY CONSTRUCTION, not by today's arithmetic: the relative floor
 --- is returned only when it is strictly BELOW the shipped one, so no future KV
@@ -1710,11 +1721,32 @@ end
 --- Wraithfire Blast not cast in the laning phase is a stun and 40-160 damage
 --- that simply never happened.  At level 6-9 the reserve is most of the pool
 --- (220 against a 272-399 max on the frames above), so "hold it always" is close
---- to "never cast" for as long as R sits at rank 1.  Note the reserve already
---- collapses on its own at R rank 3, where Reincarnation is FREE (220/110/0,
+--- to "never cast" for as long as R sits at rank 1.
+---
+--- ⛔ PREMISE CORRECTED 2026-09-13 -- THE ESCAPE HATCH THIS NOTE CLAIMED DOES NOT
+--- EXIST.  Until today this paragraph ended: "Note the reserve already collapses
+--- on its own at R rank 3, where Reincarnation is FREE (220/110/0,
 --- npc_dota_hero_skeleton_king.txt AbilityValues/AbilityManaCost, the same read
 --- X.GetRoshanManaFloor's note above cites) -- this lever is about the rank-1/2
---- window, not about the late game.
+--- window, not about the late game."  The KV read is right and the CONCLUSION is
+--- wrong, because R rank 3 is not reachable by a bot in this tree.  Both of this
+--- file's build rows put Reincarnation's third point at ENTRY 15
+--- ({2,1,2,3,2,6,2,3,3,3,6,1,1,1,6} and {2,1,3,3,1,6,3,3,2,2,6,2,1,1,6}; entries
+--- 6 and 11 are the first two), and tests/test_skill_point_stall_frame.lua settled
+--- GH #366 as (a): ten heroes at levels 17-22 all stop at 13 build points plus at
+--- most one talent, and entry 15 is a wall for the rest of any game that ends
+--- below level 26.  So Reincarnation is PERMANENTLY rank 1 or 2 and the reserve is
+--- PERMANENTLY 220 or 110 -- it never collapses on its own, and "not about the
+--- late game" was a property of a paragraph, not of the code.  The code had no
+--- rank or level term at all; X.IsReserveShareHigh below is the term that gives
+--- it one, and it is gated separately (`wkidleshare`) rather than folded in here,
+--- because this id's readings were taken without it.
+--- ⚠️ Corroborated but NOT proved by the corpus: the 33 priced frames top out at
+--- hero level 12 and hold ZERO rank-3 frames, with R's cost reading 220 at ranks
+--- 0-1 and 110 at rank 2 exactly as the KV says.  The corpus cannot see past
+--- level 12; the wall is what rules, and it is quoted as a registered reading.
+--- The same corrected premise stands in X.GetRoshanManaFloor's note above and in
+--- iterations/state.json:wksaveidle_20260907 (star_main_judgement).
 ---
 --- ⛔ DIRECTION AND ATTRIBUTION.  This is a WIDENING lever: armed, the bot casts
 --- MORE.  A negative wave reads "the extra casts were bad" and NEVER "N
@@ -1747,9 +1779,105 @@ end
 ---      file measured that the shipped ConsiderQ returns 0 on all 33 priced
 ---      frames regardless.  So "the reserve is released" must not be quoted as
 ---      "a blast is cast".
+--- The floor X.IsReserveShareHigh compares the reserve against, as a fraction of
+--- max mana.  Named rather than inlined so the source assertions in
+--- tests/test_wk_reserve_share_floor.lua read the constant instead of retyping it.
+X.nReserveShareFloor = 0.5
+
+--- Is the Reincarnation reserve still big enough, RELATIVE TO THE POOL, to be
+--- worth releasing at all?
+---
+--- Soak candidate `wkidleshare` (turbo-only, INERT until armed).  It is a pure
+--- NARROWING of `wksaveidle` above: unarmed it answers true on every frame, so
+--- X.IsReincarnationReserveIdle is byte-for-byte what it was.
+---
+--- WHY IT EXISTS.  `wksaveidle`'s whole value sentence is "at level 6-9 the
+--- reserve is MOST OF THE POOL (220 against a 272-399 max), so 'hold it always'
+--- is close to 'never cast'".  That sentence is about a RATIO, and the code that
+--- implements it has no ratio term -- it has an HP term and an enemy-count term
+--- and nothing else.  The paragraph got away with it because it also claimed the
+--- rank-3 collapse bounded the lever to the early game; with that premise
+--- falsified (see the ⛔ block in the note above), `wksaveidle` armed releases the
+--- reserve at EVERY hero level for the rest of the game, on exactly the argument
+--- that only holds while the reserve is most of the pool.  This helper supplies
+--- the missing term and nothing else.
+---
+--- WHY 0.5, and it is an argument rather than a fit.  "Most of the pool" means at
+--- least half of it; that is the sentence, and 0.5 is the one number in the
+--- corpus's indistinguishability band that has one.  ⚠️ The band is real and it is
+--- narrow: across the 33 priced frames the reserve's share takes the values
+--- ..., 0.467, 0.467, 0.492, 0.492, 0.492, 0.506, 0.506, 0.506, ..., so ANY floor
+--- in (0.492, 0.506] selects the same frames and the corpus cannot tell 0.5 from
+--- 0.50001.  This note does not pretend it can.
+---
+--- ⛔ THE DOMAIN IS ZERO ON THIS CORPUS, said first and not buried.  Driven over
+--- all 33 priced frames (same split as tests/test_wk_save_mana_lock_census.lua
+--- section 1, same reason), the shipped reserve rule fires on 6 and `wksaveidle`
+--- releases 2 of those -- f_114311_drow_pushguard_silent (share 0.587) and
+--- f_260820_103216_cm_es_aftershock (share 0.568).  BOTH clear 0.5, so arming this
+--- id on top changes the release decision on ZERO of the 33.  That is a
+--- behaviour-level no-op here, and only the source assertions in section 4 of the
+--- test see this lever at all.  It is landed anyway because the thing it guards
+--- against is off the end of the corpus, not absent from the game: the corpus tops
+--- out at hero level 12 and its only two rank-2 frames (share 0.240) are frames
+--- where the shipped rule does not fire.  Condition (a) is REQUESTED, not claimed
+--- (iterations/queue.json, zero-EC2 row).
+---
+--- CONDITION (c), argued.  At R rank 2 the reserve is 110 and the shipped rule
+--- only fires when GetMana() - Q:GetManaCost() < 110, i.e. below ~205 mana on a
+--- 459+ pool -- a genuinely starved frame, and precisely the frame on which
+--- holding 110 for a reincarnation is the correct play.  Releasing there is all
+--- risk and almost no reward: the blast it buys costs 95-140 and the death it
+--- stops paying for costs a whole respawn plus the reset.  The reward side is
+--- concentrated exactly where the reserve is most of the pool, which is what this
+--- term selects.
+---
+--- ⛔ PROMOTE RECIPE, because this gate's polarity makes the pullcad trap point the
+--- OTHER WAY.  Unarmed means NO narrowing, so promoting `wkidleshare` by the usual
+--- reflex -- deleting the id from the armed string -- would silently delete the
+--- behaviour instead of shipping it.
+--- ⇒ PROMOTING THIS ID MEANS DELETING THE GUARD CLAUSE, not the id.
+--- Keep the ratio; the helper then reduces to its last line.  ⚠️ That sentence is
+--- on ONE line on purpose: the source assertion that pins this recipe is a
+--- substring match, and a claim split across a `---` line break is one no
+--- line-by-line sweep can see (the GH #235 lesson, from X.ShouldSaveMana's own
+--- note below -- and the first draft of this block made exactly that mistake).
+--- ⛔ AND IT NAMES EXACTLY ONE ID.  It must not be conjoined with `wksaveidle`:
+--- a gate naming a sibling freezes FALSE the day the sibling is promoted (the
+--- `pullcad` trap).  The coupling here is by CALL SITE -- this helper is only ever
+--- consulted from inside `wksaveidle`'s own armed path -- which the self-check's
+--- inverse-gate census reads and reports, and which a `wksaveidle` promote leaves
+--- working rather than freezing.
+function X.IsReserveShareHigh()
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkidleshare' ) )
+	then
+		return true
+	end
+
+	local nMaxMana = bot:GetMaxMana()
+	if nMaxMana == nil or nMaxMana <= 0
+	then
+		return true
+	end
+
+	local nReserve = 0
+	if abilityR ~= nil then nReserve = abilityR:GetManaCost() end
+
+	return ( nReserve / nMaxMana ) >= X.nReserveShareFloor
+end
+
 function X.IsReincarnationReserveIdle()
 
 	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wksaveidle' ) )
+	then
+		return false
+	end
+
+	-- soak candidate `wkidleshare` -- answers true on every frame while unarmed,
+	-- so this line is a no-op until somebody arms it.  See that helper's note for
+	-- why the missing term is a RATIO and why its domain is zero on the corpus.
+	if not X.IsReserveShareHigh()
 	then
 		return false
 	end

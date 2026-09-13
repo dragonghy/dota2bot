@@ -986,6 +986,28 @@ local PINNED = {
     -- section 5 of the cutoff file measures and state.json:cutoff_20260912.bar
     -- registers as an owed frame.
     "towerfear,towerring | X.ShouldRun | X.AheadOfEveryEnemyToAncient | cutoff | bots/mode_retreat_generic.lua",                           -- P
+    -- [wkidleshare 20260913] Read by hand before pinning, and it is (I) -- the
+    -- second helper in the tree deliberately written the `fieldsip` way, and for
+    -- the reason §CE.6 gives.  X.IsReserveShareHigh's un-armed path is `return
+    -- true` on its first statement, and it joins X.IsReincarnationReserveIdle as
+    -- `if not X.IsReserveShareHigh() then return false end` -- an `and` whose unit
+    -- is exactly that true.  So arming 'wksaveidle' ALONE is not arming a no-op:
+    -- the host's two release terms (HP >= 0.95, zero visible enemies in 1600u)
+    -- decide on their own and the corpus reading behind that id (6 fire / 2
+    -- release of 33 priced frames) is unchanged, which
+    -- tests/test_wk_reserve_share_floor.lua section 3 re-measures under all three
+    -- arm sets rather than asserting.
+    -- ⚠️ The pair question GH #576 added, answered in the direction that matters:
+    -- 'wkidleshare' IS only reachable when 'wksaveidle' is armed -- it has exactly
+    -- one call site and that call site sits past the host's own gate.  That is
+    -- deliberate and registered (state.json:wkidleshare_20260913.armed): it is the
+    -- host's NARROWING, so arming it alone would measure nothing and it must be
+    -- proposed for the armed set together with 'wksaveidle', never on its own.
+    -- ⛔ And the polarity is the unusual half.  Un-armed means NO narrowing, so
+    -- promoting 'wkidleshare' by deleting the id from the armed string would
+    -- delete the behaviour instead of shipping it; the promote recipe is written
+    -- in the helper's own header and pinned by that test file's section 6.
+    "wksaveidle | X.IsReincarnationReserveIdle | X.IsReserveShareHigh | wkidleshare | bots/BotLib/hero_skeleton_king.lua",                 -- I
 }
 
 local tests = {}
