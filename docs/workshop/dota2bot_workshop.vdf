@@ -1,0 +1,11 @@
+"workshopitem"
+{
+	"appid"		"570"
+	"publishedfileid"	"0"
+	"contentfolder"	"C:\\dota2bot-beta\\content"
+	"previewfile"	"C:\\dota2bot-beta\\preview.jpg"
+	"visibility"	"2"
+	"title"		"Dota2Bot Turbo Bots (BETA)"
+	"description"	"Turbo-mode bot script tuned for Axe, Zeus, Wraith King, Lion, Crystal Maiden. Beta. See workshop page for details."
+	"changenote"	"beta-20260913 (stable-v9): first public beta"
+}

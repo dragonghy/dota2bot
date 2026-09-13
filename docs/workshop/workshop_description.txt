@@ -1,0 +1,36 @@
+[h1]Dota2Bot Turbo Bots — BETA[/h1]
+
+[b]Turbo 模式专用的 Bot 脚本(公测版)[/b] / [b]Bot script tuned for TURBO mode (beta)[/b]
+
+基于 OpenHyperAI (OHA) 7.41a 快照独立演进,重点打磨五个英雄:斧王 Axe、宙斯 Zeus、冥魂大帝 Wraith King、莱恩 Lion、水晶室女 Crystal Maiden。所有改动只在 Turbo 模式验证;在普通模式下行为与 OHA 基线接近但未针对性调优。
+
+[h2]怎么用 / How to use[/h2]
+[olist]
+[*] 订阅本物品,等待下载完成。
+[*] 创建房间(自定义房间)→ 服务器地点选 [b]本地主机 (Local Host)[/b] → 游戏模式选 [b]Turbo[/b]。
+[*] 机器人设置里脚本选择本物品(或「Local Dev Script」如果你是手动安装)。
+[*] 开始游戏。Bot 会自动选人并进行对局。
+[/olist]
+
+[h2]这一版做了什么 / What's in this beta[/h2]
+[list]
+[*] 拉线/勾兵(creep pull)真正生效,不再是死代码。
+[*] TP 纪律:落地后必须动手(tpcommit)、不在危险时开传送、支援塔前团战的仲裁。
+[*] 少回家:低血无危险时优先补给/野区回复而不是 TP 回城(部分仍在测试集)。
+[*] 防守惩罚:对越境深入我方半场的敌人进行合围。
+[*] 对局内经济/推进节奏按 Turbo 调整(弱塔、快节奏、成组推进)。
+[*] 相对原始 OHA 基线的镜像对局胜率约 55%(80 局,Turbo)。
+[/list]
+
+[h2]已知限制 / Known limitations[/h2]
+[list]
+[*] 公测版:仍有行为在验证中,可能出现个别英雄决策异常。
+[*] 只面向 Turbo;普通模式请使用原版 OHA。
+[*] 非焦点英雄沿用 OHA 逻辑,未做专门调优。
+[/list]
+
+[h2]反馈 / Feedback[/h2]
+问题请附对局 ID 或录像时间点提交:https://github.com/dragonghy/dota2bot/issues
+
+[h2]致谢 / Credits[/h2]
+本项目以 MIT 协议发布,源自 OpenHyperAI (OHA) 及其上游社区脚本(BotEXP / Ranked Matchmaking AI 等),保留原作者署名与授权。感谢所有上游作者。
