@@ -12,7 +12,7 @@
 
 Steam **社区市场(Community Market)** 只交易物品,放不了脚本。Bot 脚本走
 **Steam 创意工坊(Workshop)→ Dota 2 → Bot Scripts**。OHA 本身就是这么发的
-(它的物品 id 3801134119)。
+(它的物品 id 3246316298;我们自己的是 3801134119)。
 
 ## 1. 发布包是什么
 
@@ -65,7 +65,7 @@ steamcmd +login <你的Steam用户名> +workshop_build_item C:\dota2bot-beta\dot
 
 ## 4. 发布后
 
-- 把新物品 id 写回本文件与 `bots/Install-to-vscript/README.md`(替换 3801134119)。
+- 把新物品 id 写回本文件与 `bots/Install-to-vscript/README.md`(首版已从 OHA 的 3246316298 换成 3801134119;以后换新物品时同样全局替换)。
 - 在房间设置里选择该物品即可(Valve 服务器房间也能用,不限本地主机)。
 - 打 git tag `beta-YYYYMMDD` 对应 main commit,便于回溯"用户玩到的是哪棵树"。
 - 收集反馈:issue 链接已在描述里;#322(脚本自动上报对局)落地后可自动收对局 id。
