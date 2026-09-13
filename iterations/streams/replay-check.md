@@ -16817,3 +16817,81 @@
     (3) ⭐ **新波次到来时花 30 秒做那个 n=1 的复现**(逐局跑仪器看两个非零幸存格),**只需要一局**;
     (4) ⚠️ 别引 591606 的任何 B3 读数(CARRIER ABSENT)。
   - **完整报告**:`iterations/reports/replay-check/20260913T163024Z.md`
+- **2026-09-13T18:48Z(本轮):上一轮交棒指的方向被逐帧证伪 —— 六条基线证人的英雄,
+  **引擎自带 AI 没在跑**;`#441` 候选 1 两半都关上,候选 2 成为唯一活候选。**
+  ```
+  VERIFY id=slotdust verdict=INDETERMINATE episodes=6
+  ```
+  (6 = 逐帧核到底的**基线证人条数**(#441 那 9 条里的 6 条)。⚠️ 按 4(iii) 连切法登记:
+  与上一轮 `episodes=20`(armed 腿不可达槽位扔尘)、更早的 `episodes=0`(仪器不存在)
+  **三个都不是同一个量**。)
+  - **覆盖:深查逐帧 6 局 / 6 条证人(下限 6,达标);宽扫 0 局 —— 故意不跑,理由登记在案**:
+    连续第九轮无新波次(batch-desk 18:13Z 第 11 轮持有,`FENCE_SPOT_EXIT=3`,MTD $86.76/刹车 $90),
+    语料仍是上两轮已 100% 宽扫过的 W40;上一轮交棒逐字「⛔ 别重跑」。本轮问的是**代码结构问题**,
+    选点由 #441 已登记的九条证人直接给出 ⇒ **只取 6 局 `.dem`,不是 81 局**。
+  - ⭐⭐ **头号:交棒第 (2) 条的方向(「下一处该找的不在 `bots/` 里,引擎自带通用物品使用」)
+    被证伪。** 承重的是一个 **chunk 事实**:`ability_item_usage_generic.lua:4` 的早退在**模块作用域**,
+    而引擎调用的 `ItemUsageThink`(**:8924**)/`AbilityUsageThink`(:8933)/
+    `AbilityLevelUpThink`(**:8960**)**全定义在它之后**,且全仓**无树内调用者**
+    (只剩 `hero_muerta.lua:152/153/155` 三行注释)⇒ **调用者只能是引擎**
+    ⇒ 加点跟着我们的表走 ⟺ chunk 跑到底 ⟺ `ItemUsageThink` 在。
+    **六局实测:15 点(或局止前 13 点)逐位等于各自 `BotLib` 唯一 build**:
+    ④⑤⑥ shadow_shaman `1,3,1,2,1,6,1,2,3,3,6,2,2(,3,6)`;② skywrath_mage
+    `2,1,1,3,2,6,1,1,3,3,6,3,2,2,6`(**15/15**);①⑨ jakiro `1,3,1,2,1,6,1,2,2,2,6,3,3(,3,6)`。
+    ⭐ ② **开局第一点是 W 不是 Q**(`concussive_shot` t=−59.5 先于 `arcane_bolt` t=95.5),
+    单这一条就否定「走引擎默认」。**零偏差 6/6。**
+  - **判别子的确定性前提(逐一核过,否则尺子不成立)**:三英雄 `tAllAbilityBuildList` **各只有一条**;
+    `J.SetUserHeroInit`(`jmz_func.lua:39-56`)只在 `Customize/hero/<name>.lua` 且 `Enable` 时改写,
+    **全仓该目录只有 `viper.lua`**;`bDeafaultAbility=false`。
+    ⛔ **⑧ lich 按尺子自身前提排除**(`hero_lich.lua:144` `bDeafaultAbility=true`,对它恒真)——
+    **是适用域不是样本损失**。⚠️ **`bDeafaultItem=true` 是红鲱鱼**:它**不是物品总开关**,
+    全仓只被 `:1394`/`:4064` 两个单独条目消费,**不关闭 :1114 那个物品循环** —— 三个证人英雄都写着它,差点读反。
+  - ⭐ **普查升级:从「按物品名」到「按施法动作」** —— 上一轮是 `grep item_dust bots/`,
+    **盲区是「用槽里那件东西」的通用路径永远不含该字符串**。本轮:全仓无目标
+    `Action_UseAbility`/`ActionQueue_UseAbility` **341 处**,按首参表达式聚类后通用把手只 **9 类**,
+    逐条落地(`hConsume`×7=`life_stealer_consume` 非物品;`hItem`×3=`X.SetUseItem` 自己 `:1152`/`:1168`;
+    其余为小兵控制/覆写包装)⇒ **`bots/` 内不存在第四条扔尘路径,且这次是按动作证的**。
+    **#441 点名的两处销账**:`advanced_item_strategy.lua:316/317` 是**采购表**
+    (消费点 `:457`/`:531` 的 `__TS__ArrayPushArray(build,…)`);`aba_item.lua:141`=`sBasicItems`、
+    `:507`=`sNotSellItemList`、`:375` 已注释。
+  - ⭐ **给候选 2 的前提:`GetTeamPlayers` 不是引擎那个。** `aba_global_overrides.lua:15-70`
+    把它**全局覆写**(真全局,无 `local`)。(1) 对 `TEAM_DIRE` 的重映射分支条件是 `#sHuman > 0`,
+    **批测全 bot ⇒ 不触发**,dire 仍得 `{5,6,7,8,9}` ⇒ **#441 的可达性算术在本语料上不受影响**
+    (这是**支持**不是推翻);(2) ⚠️ **但它自带第二个模块级缓存 `direTeamPlaters`
+    (`:16` 定义、`:25-27` 读、`:66` 写),一局只写一次、永不重置**,与 `jmz_func.lua:14741`
+    的 `AllyPIDs` **同族同病**,差别是**这一个按队伍加了条件而 `AllyPIDs` 没有键控**
+    ⇒ 候选 2 在线核**必须先知道自己核的是哪一层**,否则归错因。
+  - ⚠️ **自己证伪掉的那条中途假说(如实登记,因为它很像发现)**:`:4` 的 `IsInvulnerable()` 是
+    **加载期**读数,`mode_item_generic.lua:66-71` 逐字称这种写法「a coin flip we do not need」,
+    `minion_lib/utils.lua:30` 又点名 `modifier_fountain_invulnerability` ⇒ 「某些 bot 被弹回引擎 AI」
+    极可信且**恰好**解释一条无 `item_dust` 字样的路径。**六条证人逐帧打掉它。**
+    ⭐ 可迁移:**能解释现象的机制 ≠ 真在跑的机制**;证伪成本(6 dem + 40 行读件)**远小于**
+    写进 issue 后对方去复现的成本(上一轮 #794 漏抄一行 = 对方整轮建在错前提上)。
+    ⛔ **发生率未测(6/6 全 0,n 太小),不据此开 issue**。
+  - ⭐ **身份纪律照做**(GH #176 族,本组两天前刚踩):读件按 **`(hero, idx)`** 且取 **`t<0` 开场前那具**;
+    ⑤⑥ 两局 `shadow_shaman` 各有**五具**同名身体、④ 有**三具**,**按名字取第一具会取到尸体**。
+    解出的 idx(1535/1535/1535/1498/1425)与 #441 及上一轮报告**逐位吻合** = 免费交叉校验。
+  - **issue**:净增 0,**GH #441 追一条评论**(⛔ `add_issue_comment`,全程没碰 `issue_write(update)`;
+    发帖前已 `issue_read` 读过正文=备份)。未开的两条理由已登记(早退发生率未测;
+    `direTeamPlaters` 并入评论不另开号)。
+  - **AWS**:`AWS_SETUP_EXIT=0`,只读 S3(**6 个 `.dem`**),**零 EC2 / 零 CE / 零支出**;
+    `DUMPER_EXIT=0`(cache HIT),**6/6 `DUMP_EXIT=0`,unparseable 0/6**。
+  - ⚠️ **自检与并发,如实登记**:`nohup` 起、**未套 `timeout`、未走管道**(上一轮连踩两条,本轮都避开)。
+    python 腿 **`128 passed, 0 failed, 3 uncertifiable`**,`test_selfcheck_lua_leg` **5a\* 系列 9 条
+    `UNCERTIFIABLE`**(120s 预算超时)⇒ **那一侧这轮没人看过,不是通过**;⚠️ **本轮无 `trunk-red(python)`**。
+    ⛔ **本轮仍有并发**:自检 python 腿第 ~25 分钟时起了 6 次单局 dump(各约 1s)——
+    不是 sweep(6 局 vs 81 局),但**确实是并发**,**登记为有意识的取舍**;dump 全写 scratchpad,
+    `bots/` 零写入。**下一轮更稳妥仍是等自检跑完。**
+  - **下一轮第一件事**:(1) ⛔ 别重跑上面任何一项;(2) ⭐⭐ **候选 1 已关,别再找第四条扔尘路径**,
+    `slotdust` 的 (a) 仍买不到(**加局无救,第六例**);(3) ⭐ **免费的发生率 meter**:
+    本轮读件对任意英雄都跑,对已 dump 的 6 局 × 10 英雄跑一遍,「实测序列 ≠ build」即早退嫌疑
+    ——⚠️ 前提是该英雄 `bDeafaultAbility==false` **且** `tAllAbilityBuildList` 只有一条,
+    ⛔ **别对 `bDeafaultAbility==true` 的英雄用这把尺子**;(4) ⚠️ 新波次到来时,
+    上一轮那个 **n=1 复现仍然欠着**,只需一局。
+  - **完整报告**:`iterations/reports/replay-check/20260913T184812Z.md`
+- **[2026-09-13T18:48Z 补入「工具坑」的一条,便宜且会反复踩]**
+  ⛔⛔ **别用 `pgrep -fc <脚本名>` 判断长跑任务是否结束** —— 等待循环自己的命令行里就含那个字符串
+  (`until ! pgrep -f routine_selfcheck; do …`),**`pgrep` 把自己数了进去,计数永远 ≥1**,
+  读起来**恰好像「还在跑」**。本轮因此多等了两轮才发现自检早已收工(真相在日志末行
+  `selfcheck worst exit: 3`)。⭐ **判别子:认终止横幅,不认 `pgrep` 计数**;非用不可就 `-x` 或排除自身 PID。
+  ⚠️ 与 09-13 那条「按名字取第一具身体」**同族**:两条都是**「我数到的那个,是不是我以为的那个」**。
