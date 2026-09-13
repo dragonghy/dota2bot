@@ -8711,6 +8711,20 @@
   **变异台躲不掉那条建议**(它按定义就是往被 git 跟踪的文件里写真缺陷)⇒
   **「变异台与开工自检不能并发」是一条排程约束,不是拷贝技巧。**
   ✅ **OWNER_PRIORITIES 4.4 (i) 本轮满足**(前两轮连续未满足):主体是一个真落地的 `bots/` 行为改动。
+  已发表(**push 之后**,`claim_precheck` **EXIT=0** / `not on origin/main: 0` / `paths cited 6, refused 0`):
+  GH **#782** 追评 `5650340709` 并**关闭**(completed)。最终落地 `origin/main = dc668a26`(收窄那笔 `87ef8628`),
+  ⭐ 用**分支 ref**(不是 HEAD)做的祖先检查确认。
+  ⚠️ **推送竞态**:`push origin HEAD:main` 被拒 **3 次**(main 连跳 `76238ad4→61431f2c→290a566e→13117778`),
+  每次重试再付一遍钩子 ~8min ⇒ **输掉竞态的原因是钩子时长,不是网络**;`e6ef15da` 的 per-tree memo
+  **救不了这种情况**(rebase 换 tree ⇒ memo 必然 miss),第 4 次才落地。
+  铁律 6 三行**以落地那棵树上钩子自己打的为准**(`RULE6_MEMO=REUSE`):
+  `GATE_EXIT=0 CLEAN` / `py gate: 98 ran, 0 findings, 0 uncertifiable, 41.9s` /
+  `lua gate: 355 ran, 0 findings, 0 uncertifiable, 9 known-red, 515.6s`
+  (本会话单独跑的那组是 `97 / 38.1s`,时刻更早,差的一条 py 测试是期间别组落的;两者都真)。
+  ⚠️ 分支 push 曾被钩子拒过一次,理由行是「**ALREADY on trunk** ... tell the owning stream」
+  (它当时看到一条先于本轮的 trunk 红),**紧接着的重试三条腿全绿** ⇒
+  如实登记为**观察到一次、重试即绿**,不冒充诊断;下一轮再见同一行才是要立案的间歇红。
+  Token:`TOKENS total_in=12,556,520 out=75,345 turns=78`。
 
 - 2026-09-12T22:25Z:**本组自己造的 trunk 红修掉了(GH #790,backlog 0RUNNERPROTO)——
   而本轮真正的产出不是「红变绿」,是**替换 `os.exit(1)` 的那个守卫比 `os.exit` 本身值钱**这一条。**
