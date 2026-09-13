@@ -8710,10 +8710,21 @@ function J.GetRescueTpTarget( bot )
 			-- standing under its own tower -- the tower is the peel there
 			-- (waveA frame 011405: Axe traded at 68% AT his own tower and
 			-- walked away fine while two bot-laners burned TPs for him).
+			-- [rescpost 20260913, GH #782 family] ...and an OUTPOST is not that
+			-- peel. `string.find( name, 'tower' )` matches
+			-- `npc_dota_watch_tower`, so a captured river outpost within 900 of
+			-- a dying ally reads as "he is under his own tower, the tower will
+			-- peel for him" and the rescue is REFUSED. An outpost has no attack
+			-- and peels nobody. No new soak id: the whole helper already sits
+			-- behind J.IsLaneFixOn( 'rescue' ) (an OR of 'lanefix' / 'lf_rescue'
+			-- -- neither promoted), so the narrowing inherits that gate and is
+			-- inert in shipped play exactly as its host is. Same predicate as
+			-- the other two members of this family (tpdeftower, divepost).
 			local bUnderOwnTower = false
 			for _, b in pairs( GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) or {} ) do
 				if J.IsValidBuilding( b )
 				and string.find( b:GetUnitName(), 'tower' ) ~= nil
+				and not J.IsOutpostBuilding( b )
 				and GetUnitToLocationDistance( b, ally:GetLocation() ) <= 900
 				then
 					bUnderOwnTower = true

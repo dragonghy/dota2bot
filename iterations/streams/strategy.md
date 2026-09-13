@@ -27,7 +27,45 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT3. **【2026-09-13T05:00Z 新增,**下一轮第一项**。**主体继续留在 `bots/`**
+0NEXT4. **【2026-09-13T07:33Z 新增,**下一轮第一项**。主体继续留在 `bots/`**
+   (OWNER_PRIORITIES **4.4 (i)**;`rescpost` 让它**连续第三轮**满足,**不要断**)。
+   0NEXT3 的三条判据(甲/乙/丙)继续有效,本轮把 (甲) 补成三态、把 (丙) 的边界量出来了:
+   ⭐⭐ **(甲′) 落法判据是三态不是两态,而第三态最干净。** 宿主**已 promote** ⇒ 必须加新 id
+   (`divepost`);宿主是**未 promote 候选** ⇒ 不要加(pullcad 陷阱,`ohnum`/`tpdeftower`);
+   ⭐ 宿主**整体上闸**(自己头一行 `if not <gate> then return nil end`)⇒ **必须不加** ——
+   再加一个就是把候选嵌在未 armed 候选之下,**没有任何波次能隔离它**,而
+   `check_armed_wiring.py` 仍会叫它 WIRED。本轮 `rescpost` 走的是第三态,代价是
+   **armed 串 / queue / test_set 一字未动、没有新 id 需要入集**(P4.2 冻结期内最干净的落法)。
+   ⇒ **选杠杆时先看宿主是「已 promote / 未 promote 候选 / 整体上闸」哪一种。**
+   ⭐⭐ **(丙′) 臂 D 由「宿主上闸」放电时,它证的是弱命题 —— 而让它不空转的是「臂 A 真的开火」。**
+   两个姊妹文件的臂 A 与臂 D 都不开火 ⇒ 那里的臂 D 是 `nil == nil`。本轮 `fire_a 6` ⇒
+   两条臂之间隔着实测差。⛔ **并且抄形状会抄错**:第一版照姊妹写 `flip_ad == 0`,
+   而本文件臂 A 是 **armed**、臂 D **未 armed** ⇒ 那句话在断言**「闸什么也不改」= 这个 helper 是死的**;
+   正确的是 **`flip_ad == fire_a`**(差集恰好是开火集)。**抄形状要连「这个形状为什么成立」一起抄。**
+   ⭐ **(丁) 承重证据优先找「正向多开一次火」,不要只找「全部被压掉」。**
+   `fire_c 7 > fire_b 6`:把队友身边那座建筑当成瞭望塔,**真的多放出来一次救援** ——
+   比「32 次全被压掉」那种反事实更便宜也更直接,因为它**不需要域非空**以外的任何东西。
+   ⭐ **(戊) 变异台第一轮跑出 SURVIVED 是产出,不是返工。** 本轮 **M8 存活**
+   (arm B 塌回 arm A),根因是 `flip_ab == 0` 的语料上**没有任何计数**能分开这两条臂;
+   补法是**数分支不数拼法**(`real_pred_drives == live + isolated_rows`)。
+   ⇒ **每台子至少要有一条「量具自己塌掉」的变异体**,而且**控制项 C0(只改注释,必须 SURVIVE)
+   要一起带**,否则分不清「台子灵敏」和「台子恒红」。
+   ⛔ **已被定价并排除、不要重买**(继承 0NEXT3 全部,本轮新增两条):
+   ① **`J.WeAreStronger` 上的任何杠杆**(含「给敌方塔加对称的塔力项」这把看起来很甜的刀)——
+   四个 power getter 在 **9747** 个 hero-row 上全读 0 ⇒ 它在整个语料上**恒为 false**,
+   效应与承重**都买不到**,已立 **GH #797** 交总监;买到仪器之前**不要动它**。
+   ② `J.GetRescueTpTarget` 本身(本轮已落)。
+   ⛔ **排程约束(继承)**:变异台与开工自检**不能并发**;⭐ 新增一条:**变异台在跑时不要编辑
+   它会写的那两个文件**(它按 sha 还原,中途编辑会被它的 `FINAL_SHA_OK` 或下一条腿吃掉)。
+   ⚠️ **本轮实测的一条性能坑**:「每条臂一次独立 `rf.load`」的全隔离写法在本容器
+   **7 分钟未出结果**(657 行 × 5 次 load);两层写法(无开火的行共用、有开火的行重做)**32s**,
+   而它的正确性**是一个可核对的论证**(模块状态只在开火路径上被动),不是一句方便。
+   ⚠️ **仍然 open 且本轮未认领的 `[strategy]` issue:#767 / #770 / #775** —— 下一轮先看它们,
+   再看本条。】**
+
+0NEXT3. ✅ **【2026-09-13T05:00Z 新增 → 2026-09-13T07:33Z 做完(`rescpost` 落地,
+   **1 行 `bots/` 代码 + 0 个新 gate id**;报告 `iterations/reports/strategy/20260913T073350Z.md`、
+   `state.json:rescpost_20260913`)。原文保留在下,便于对照。**主体继续留在 `bots/`**
    (OWNER_PRIORITIES **4.4 (i)**;连续第二轮满足,**不要断**)。0NEXT2 的两条选杠杆判据继续有效
    (方向由构造固定的收窄不需要证人;判据是最下游那个会翻转答案的计数),再加本轮挣到的三条:
    ⭐⭐ **(甲) 「要不要给收窄加新 id」的判据是「宿主是不是已 promote」,以前只写了一半。**
@@ -8684,6 +8722,53 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-13T07:33Z:**GH #782 家族第三刀落了(`rescpost`,**1 行 `bots/` 代码、0 个新 gate id**)——
+  而本轮真正的产出是**本组自己写的第一版断言里有两条是错的,两条都是被语料顶红的、不是被读出来的**这一条。**
+  `J.GetRescueTpTarget` 的 `bUnderOwnTower` 循环准入式加 `and not J.IsOutpostBuilding( b )`。
+  缺陷用出货代码自己的话:循环上方注释逐字「no rescuing an ally that is standing under its own
+  tower —— **the tower is the peel there**」,而认塔的方式是 `string.find( b:GetUnitName(), 'tower' )`,
+  它**匹配 `npc_dota_watch_tower`** ⇒ **一个快死的队友身边有一座被我方占领的河道瞭望塔,
+  就被读成「他在自己塔下、塔会替他挡」,救援 TP 被拒绝。** 瞭望塔没有攻击,它谁也挡不住。
+  ⭐⭐ **本轮最该被下一轮读到的三句:**
+  (甲) ⭐⭐ **落法判据是三态不是两态,而第三态最干净。** 宿主**整体上闸**时(本轮:
+  `if not J.IsLaneFixOn( 'rescue' ) then return nil end`,而 `IsLaneFixOn` 是
+  `IsSoakCandidate('lanefix') or IsSoakCandidate('lf_'..sub)`,**是 OR 不是 AND** ⇒ 不吃 pullcad 冻结),
+  **必须不加新 id** —— 再加就是把候选嵌在未 armed 候选之下,没有任何波次能隔离它。
+  代价:**armed 串 / `queue.json` / `test_set.md` 一字未动,没有新 id 需要入集**(P4.2 冻结期内最干净)。
+  (乙) ⭐⭐ **抄形状会抄错,而且错得能通过语法。** 第一版 §5 照姊妹文件写 `flip_ad == 0` ——
+  在那两个文件里臂 A 与臂 D **都未 armed** 所以理应相等;本文件臂 A 是 **armed**、臂 D **未 armed**,
+  `flip_ad == 0` 于是在断言**「闸什么也不改」= 断言这个 helper 是死的**,语料给 `flip_ad 6` 把它顶红。
+  正确的是 **`flip_ad == fire_a`**。同轮第二条:§2 找站点宿主名用了
+  `head:match('function (J%.[%w_]+)[^\n]*$')`,`$` 锚整个前缀末尾而中间有几千个换行 ⇒
+  **永不匹配、每个未收窄站点报成 `?`**,即一份**读不出结论的普查**。⇒ **抄形状要连理由一起抄。**
+  (丙) ⭐ **承重证据优先找「正向多开一次火」:`fire_c 7 > fire_b 6`。** 把队友身边那座建筑
+  当成瞭望塔,**真的多放出来一次救援** ⇒ 合取项**承重**(装饰性的做不到)。这比两个姊妹的
+  「全部被压掉」型反事实更直接,也是本族第一次**臂 A 真的开火**(`fire_a 6`)⇒ 臂 D 不再是 `nil == nil`。
+  **读数**(142 frames / **657** 活行 / `load_fail 0` / `raised 0`):`far_pairs 1794`、
+  `utb 275`、`utb_has_wt 8` = **`utb_wt_only 8`**(域,**非空**)、`pred_true/false 1166/20752`、
+  **`PRED_DISAGREES 0`**、`lowhp_divers 61`(同支路队友侧条件**活着**)、`flip_candidates 0`;
+  正对照 `min_outpost_to_ally` **360.9u** / `wt_within_tower_r 14` / `wt_within_2x 45`
+  ⇒ 零是**几何**不是死量具。四臂:A(收窄前的树)**6** = B(落地后)**6** ⇒ **`flip_ab 0`**、
+  **`shrink_ba 0`**(禁止方向未出现)、C **7**、D **0**、`flip_ad 6` = `fire_a`、
+  `fire_a2 657` = `live`、`isolated_rows 7`。
+  产出:`bots/FunLib/jmz_func.lua`(**1 行代码,gated 继承 `lanefix`/`lf_rescue`,两者均未 armed**)、
+  `tests/test_rescpost_outpost_narrow.lua` **runner 6/6(32s)**、
+  `tools/agent/mutstand_rescpost.sh`(读数见报告 §9)、`state.json:rescpost_20260913`、
+  报告 `iterations/reports/strategy/20260913T073350Z.md`。
+  **附带一条(不是主体):GH #797** —— `J.WeAreStronger` 在整个 fixture 语料上**恒为 false**,
+  四个 power getter 在 **9747** 个 hero-row 上全读 0,它有 **57 个调用点**,而
+  `tests/test_creeppull_zone_clause.lua` 的 **WORLD ASSERTION 23** 把这个恒定值**钉成了世界事实**
+  (分层证据:**601/1039** 行在 1200 内无任何可见敌人,引擎在这些帧上会答 true)。
+  ⚠️ **开工自检没跑完**:trunk-health(python)那条腿被本轮自己的 `timeout 400` 杀掉,**EXIT=124**
+  ⇒ **trunk 的 python 那一侧本轮没人看过**(按铁律 10:这不是通过)。前几条腿有读数:
+  unlanded **OK**、cadence **1 finding**、queue **RIDESHARE 3**、`STRATA_SILENT none`、
+  stable-vN 锚点 **8/8 OK**、promote-atom **OK**、inverse-gate **FROZEN 0 / COUPLED 1**。
+  ⚠️ 首条命令**第 10 次**被 `REFUSED: stdout is a pipe` 挡回。
+  ⚠️ **全隔离(每臂一次独立 load)在本容器 7 分钟未出结果、被主动 kill ⇒ 没有读数**;
+  两层写法 **32s**,正确性是一个可核对的论证(模块状态只在开火路径上被动),不是一句方便。
+  ✅ **OWNER_PRIORITIES 4.4 (i) 连续第三轮满足**。**零 AWS、零波次、armed 串一字未动**
+  (gated 且未 armed ⇒ 出货行为逐字节不变)。铁律 6 三行与 token 用量见报告 §9/§10。
 
 - 2026-09-13T05:00Z:**同一族的第三个站点落刀(`divepost`,2 行 `bots/` 代码)——
   而本轮真正的产出是**昨天那份普查抬头写着「the two no-name-test anchor sites」,是三个,

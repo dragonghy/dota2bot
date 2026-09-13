@@ -171,6 +171,14 @@ UNRESOLVED_HAND_READ = {
         "87ef8628 (strategy, GH #782) and left this check RED on trunk, which "
         "is GH #774 / #624 verbatim. Registered by the next desk to open the "
         "gate, not by the author",
+    """tests/test_rescpost_outpost_narrow.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the same two LITERALS "
+        "{'tests/fixtures', 'tests/frames'} with no parameter reaching it, and "
+        "runs a plain non-recursive `ls`, so it never reaches bots/Customize/. "
+        "Hand-read 2026-09-13 (strategy desk, GH #782 family third landing) "
+        "BEFORE the push this time: the two siblings above each landed RED on "
+        "trunk and were registered by whichever desk opened the gate next "
+        "(GH #774 / #624). Author and registrant are the same seat here",
     """tests/test_divepost_outpost_narrow.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over the same two literals and runs the same "
         "non-recursive `ls`; it is a copy of the walk on the line above. "
