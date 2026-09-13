@@ -591,11 +591,24 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   owed 判据 `path_contains_all`:manifest 里**必须出现这个文件名**(选中、或按 GH #616 约束 1 带 `reason` 显式排除,**两条都可接受**);
   证词当场取到,逐字 `tools/agent/py_gate_manifest.json exists but 1 of 1 required mention(s) are absent: tests/test_rule6_memo.py`。
   ⛔ **不许为了塞进 3.0s 而砍测试** —— 被砍的一定是 case 5/6 那批端到端 push,而 M4/M6 正是在那里被抓住的。
-  🚦 **铁律 6 三条腿**:见报告 §9(收尾回填)。⛔ **未用 `RULE6_BYPASS`**。动态那半未跑,不声称(`bots/`+`game/` 零 diff)。
+  🚦 **铁律 6 三条腿**(推分支那一次真跑):`GATE_EXIT=0 CLEAN`(0 警告)/ `py gate: 98 ran, 0 findings, 0 uncertifiable, 42.1s` /
+  `lua gate: 354 ran, 0 findings, 0 uncertifiable, 9 known-red, 486.0s`;⛔ **未用 `RULE6_BYPASS`**。动态那半未跑,不声称(`bots/`+`game/` 零 diff)。
+  ⭐ **`HEAD:main` 那一次就是现场演示**:`RULE6_MEMO=REUSE`(`HEAD^{tree}=700cbe85…` / `origin/main=76238ad4…`),**实测 3 秒** vs 推分支的 **~9 分钟**,落地 `76238ad4..e6ef15da`。
+  ⚠️ **开工自检 `EXIT=3`**(裸读),`legs run 12`,`UNCERTIFIABLE: none`,FINDINGS = `cadence`/`queue-rulings`/`owed-executions`/`trunk-red(python)`;
+  ⚠️ 它**跨过了本轮的编辑**(~70 分钟,树在它脚下改动)⇒ 读数是「我继承的那棵树」。
+  `NOT RUN`:`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py` / `test_selfcheck_lua_leg.py` —— **这三条本轮没人看过**。
+  ⚠️ **本轮第一条命令仍踩纪律 3**(`… | tail -60`,守卫当场拒 `SELFCHECK_EXIT=2 REFUSED`)—— **第三十四发**,章程第 0 条逐字覆盖它,我只是没照做。
+  ⚠️ **trunk red 两条(上一轮 3 条),按铁律 5 交出去不代修**:`test_carrier_terms.py`(5 处 → 英雄组,与上一轮同一条)/
+  `test_detector_source_constants.py`(逐字 `item_purchase_generic: the tpdeathbuy arm is no longer 'gate then …'` ——
+  **很可能是 `tpdeathbuy` 在 `stable-v7` 被 promote 的连带,归总监**,下轮正面处理;**本轮只登记,不声称已诊断**)。两条**都在钩子快域之外** ⇒ **GH #774 第四个直接证据**。
+  📌 **另有一条本轮实测的坑**:`until ! pgrep -f 'git push'; do sleep …` **永远不退出** —— 循环自己的命令行里就有字面量 `git push`,`pgrep -f` 匹配到它自己;
+  连开五个等待器全部自旋,**而它们看起来和「推送还在跑」一模一样**。按 pid 等(`kill -0 <pid>`)才对。
+  *一个用命令行文本认人的检测器,第一个认出来的是它自己。*
   📮 **本轮投递**:`owed_executions.json`(新行)/ `test_set.md §HI` / **GH #669 与 GH #707 追评**(均 push 之后发表,GH #290 顺序)。
   ⚠️ **不新开 issue**:#669/#707 已经在说这件事的成因半,再开第三条只会多一张没人驱动的表(§DR 的教训反向用)。**两条都不关闭** —— 并发负载那个成因没被碰,只是被踩到的频率减半。
   💰 **零 AWS**(一次调用都没有),不作 MTD 新声称;批测台刹车状态(GH #779)本台不改动。
   🩺 五组 24h 内全部有产出,无掉队组。**armed 27,离解冻线(≤20)差 7;本轮判定完结 0**(本轮是 [harness] 修复轮)—— **连续第八轮停在 27**。
+  📊 `TOKENS total_in=16,654,847 out=73,704 turns=106`(写报告时)。⚠️ 相当一部分是**等待** —— 自检(~70min)与快 Lua 腿(486s)抢 CPU,加上上面那条自匹配等待器;**下轮先跑完自检再动手,不要并发**。
   ⑨ **下次触发**:①⭐ **判定完结 ≥1,正面处理 armed 27**(已连续八轮为 0)②上一轮那 6 行 BORN-DONE 逐行处置(**不许补证词**)
   ③**owner P4.3**(`test_set.md` 现 **536KB**,目标 <50KB,**已欠两周**)—— 排专门工作单元,或按铁律 9 写进 `DECISIONS_NEEDED`
   ④GH #523(**第六轮未取**)/ `creeps_schema_gh581` 的 (C) 半 / 三个 promote-time 普查只读 `bots/`(第七轮顺延)/ GH #584(第十轮顺延)/ 五条 `a_evidence_*`(第十四次顺延)/ patch 缺口 P3。
