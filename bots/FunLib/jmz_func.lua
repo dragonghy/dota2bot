@@ -10741,20 +10741,38 @@ function J.ShouldTpSupportTowerFight( bot )
 
 	for _, building in pairs( tBuildings ) do
 		if J.IsValidBuilding( building )
-		-- ⚠️ [tpdeftower 20260912, GH #767 / #782] REGISTERED, NOT REPAIRED: this
-		-- name test also admits `npc_dota_watch_tower` -- a captured OUTPOST is an
-		-- allied building whose name contains "tower", so an outpost fight is a
-		-- "tower fight" here. Measured over the frame corpus: 8 of 113 sites are
-		-- outposts, and 5 of those sit DEEP in the enemy half (up to 5,827 units
-		-- closer to their ancient than to ours) -- the one place the responder is
-		-- least able to win and the shipped prose on J.SafeToCommitFightOnArrival
-		-- assumed could not occur. It is NOT narrowed here because the corpus
-		-- cannot witness it end to end: of the 100 rows that reach this loop with
-		-- a live site, the host answers 5 and all 5 are real towers, so a narrowing
-		-- would be a change with no frame to validate it (the discipline's "gate
-		-- plumbing is not local validation"). tests/test_tpdeftower_anchor_pricing
-		-- §6 pins both halves, and GH #782 carries the frame request.
+		-- ⚠️ [tpdeftower 20260913, GH #782] REPAIRED (was REGISTERED-ONLY the day
+		-- before): this name test also admits `npc_dota_watch_tower` -- a captured
+		-- OUTPOST is an allied building whose name contains "tower", so an outpost
+		-- fight read as a "tower fight" here. Measured over the frame corpus: 8 of
+		-- 113 sites are outposts, and 5 of those sit DEEP in the enemy half (up to
+		-- 5,827 units closer to their ancient than to ours) -- the one place the
+		-- responder is least able to win, and the case the shipped prose on
+		-- J.SafeToCommitFightOnArrival assumed could not occur.
+		--
+		-- WHY IT LANDS WITHOUT AN END-TO-END WITNESS, AND WHY THAT IS NOT THE
+		-- DISCIPLINE BEING WAIVED. The effect size on this corpus is ZERO and is
+		-- registered as zero (tests/test_tpdeftower_outpost_narrow.lua §3: of the
+		-- 8 rows carrying an outpost site the host answers none, narrowed or not).
+		-- What replaces the witness is that the DIRECTION IS FIXED BY
+		-- CONSTRUCTION: this is a conjunct added to the loop's admission test, so
+		-- the candidate set is a strict subset of the un-narrowed one. The loop
+		-- returns the FIRST admitted building, so a frame that answers narrowed
+		-- answers un-narrowed too -- the response set can only shrink, never grow,
+		-- and the only reachable difference is swapping an outpost for a real
+		-- tower, which is the repair itself. A defect whose direction is closed
+		-- form needs a proof, not a witness; the witness count prices it, and here
+		-- it prices it at zero. (Same move as J.IsOutpostBuilding's other caller,
+		-- J.ShouldRefuseUnsupportedPunish, 2026-09-12.)
+		--
+		-- NO NEW SOAK ID: this narrows inside a host that is already gated turbo +
+		-- ('midtp' or 'suptp'), both unpromoted. A nested J.IsSoakCandidate here
+		-- would be the conjunction `midtp AND <new>`, whose single-arm isolation
+		-- zero is structurally impossible rather than informative -- the 'pullcad'
+		-- trap (GH #606/#576). Shipped play is unchanged either way: the host
+		-- returns nil on its gate line in every real game.
 		and string.find( building:GetUnitName(), 'tower' ) ~= nil
+		and not J.IsOutpostBuilding( building )
 		-- Far enough that only a TP arrives in time; a close fight the bot can
 		-- just walk to is not this fix (avoids wasting a TP on a nearby scrap).
 		-- [midsupfar 20260904] ONE constant, read by both this clause and the

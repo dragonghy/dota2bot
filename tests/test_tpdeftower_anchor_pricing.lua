@@ -59,11 +59,22 @@
 -- ("a collapse onto our own tower is never deep, so that branch is inert in the
 -- caller's domain") while leaving its PREMISE true -- the caller's domain is
 -- simply bigger than the word "tower". Both comments are repaired this round.
--- ⛔ The narrowing itself is NOT landed: over the 100 rows that reach the tower
--- loop with a live site the host answers 5, and all 5 are real towers, so the
--- corpus cannot witness the change end to end (section 6). GH #782 carries the
--- frame request; section 6 is what makes the absence a measured zero rather
--- than an assumption.
+-- ⛔ The narrowing itself was NOT landed by THIS round: over the 100 rows that
+-- reach the tower loop with a live site the host answers 5, and all 5 are real
+-- towers, so the corpus cannot witness the change end to end (section 6). GH
+-- #782 carried the frame request; section 6 is what makes the absence a
+-- measured zero rather than an assumption.
+--
+-- ⭐ SUPERSEDED 2026-09-13 (GH #782 closed): the narrowing LANDED without the
+-- witness, on the ground that a conjunct added to an admission test has its
+-- DIRECTION FIXED BY CONSTRUCTION -- a closed-form direction needs a proof, not
+-- a witness, and the witness count only ever priced it (at zero, still zero,
+-- now measured on both arms). See tests/test_tpdeftower_outpost_narrow.lua.
+-- Sections 2-6 here are therefore a pricing of the UN-NARROWED filter, kept as
+-- history: the sweep rebuilds that filter itself, so its counts are unaffected
+-- by the landing, and section 6's end-to-end drive was moved onto the explicit
+-- counterfactual because driving the shipped host there became a dead gauge.
+-- Section 7 records why its own guard did not notice the landing.
 --
 -- ⚠️ SCOPE OF EVERY NUMBER HERE: THE LETHAL BRANCH IS UNOBSERVABLE ON THIS
 -- CORPUS (section 5). All 31 shipped commits come from the NUMBERS branch, the
@@ -492,12 +503,22 @@ tests['[tpdeftower] 6. the outpost half: the domain is real, the witness is not'
         'the deep sites are no longer all outposts (' .. SWEEP['deep_vloc_outpost']
         .. ' of ' .. SWEEP['deep_vloc'] .. '), so the repaired comment names the '
         .. 'wrong mechanism.')
-    -- ⛔ THE HALF THAT KEPT THE NARROWING OUT OF THE TREE. A fresh drive of the
-    -- real host per row that carries an outpost site: if it never answers an
-    -- outpost, a narrowing has nothing to validate it and must not land.
+    -- ⛔ THE HALF THAT KEPT THE NARROWING OUT OF THE TREE -- AND THE ONE PLACE
+    -- IN THIS FILE THAT HAD TO CHANGE WHEN IT LANDED ANYWAY (2026-09-13, GH
+    -- #782). Driving the SHIPPED host here is now a dead gauge: the host can no
+    -- longer answer an outpost at all, so `outpost_answered == 0` would be true
+    -- BY CONSTRUCTION and would free-certify forever -- the 2026-09-12 lesson
+    -- (a dead gauge silently certifying the one reading the file exists to
+    -- take), in its other direction. The measurement this section wanted is the
+    -- COUNTERFACTUAL one, so take it that way: un-narrow the host exactly, by
+    -- making the conjunct's predicate answer false. Same code path, one term
+    -- removed, no out-of-tree copy.
     local answered, outpost_answered = 0, 0
     for _, row in ipairs(OUTPOST_ROWS) do
-        local b = host_answer(row[1], row[2], { 'midtp' })
+        local J0, bot0 = rf.load(row[1], row[2])
+        J0.IsSoakCandidate = function(id) return id == 'midtp' end
+        J0.IsOutpostBuilding = function() return false end
+        local b = J0.ShouldTpSupportTowerFight(bot0)
         if b ~= nil then
             answered = answered + 1
             if is_outpost(b) then outpost_answered = outpost_answered + 1 end
@@ -505,10 +526,20 @@ tests['[tpdeftower] 6. the outpost half: the domain is real, the witness is not'
     end
     cs.ratchet(#OUTPOST_ROWS, 8, 'rows that carry at least one outpost site')
     assert(outpost_answered == 0,
-        outpost_answered .. ' row(s) now answer an OUTPOST end to end. That is '
-        .. 'the witness GH #782 asked for: the narrowing can be landed with a '
-        .. 'fixture instead of registered as a comment. Read this as a TODO, '
-        .. 'not as a regression.')
+        outpost_answered .. ' row(s) answer an OUTPOST end to end with the '
+        .. 'narrowing removed. That is the witness GH #782 asked for -- the '
+        .. 'corpus can now validate the landed change on a real frame. Pin it '
+        .. 'as a fixture. Read this as a TODO, not as a regression.')
+    -- ⭐ And the un-narrowing is real, not a no-op override: the SHIPPED host
+    -- must refuse every outpost by construction. If this ever disagreed with
+    -- the counterfactual above, the override is not reaching the conjunct.
+    for _, row in ipairs(OUTPOST_ROWS) do
+        local b = host_answer(row[1], row[2], { 'midtp' })
+        assert(b == nil or not is_outpost(b),
+            'the SHIPPED host answered an outpost on ' .. row[1] .. '. The '
+            .. 'narrowing landed 2026-09-13 and this is impossible unless the '
+            .. 'conjunct was removed or J.IsOutpostBuilding stopped matching.')
+    end
     -- ⛔ How they fail matters, and it is stronger than the claim needed: none
     -- of the 8 rows answers ANY tower (answered == 0 when this was taken), so
     -- the outpost sites are not losing a race against a real tower -- they die
@@ -544,18 +575,25 @@ tests['[tpdeftower] 7. shipped play is untouched'] = function()
         .. 'test admits `npc_dota_watch_tower`; if it was narrowed, the '
         .. 'narrowing this file declined to land has happened and section 6 '
         .. 'needs to be read as history.')
-    -- ⭐ AND THE FILTER IS STILL ONLY THAT TEST. Bought by the mutation stand
-    -- (M8): the sweep RECOMPUTES the host's filter rather than reading it, so a
-    -- narrowing landed in the host would leave all 8 outpost sites, every count
-    -- and every ratchet in this file exactly as they are -- the census would go
-    -- on pricing a domain the shipped code had already given up. Read off the
-    -- STRIPPED block, so the outpost note in the source comment does not
-    -- satisfy it.
-    assert(host:find('watch_tower', 1, true) == nil,
-        'the host now names `watch_tower` in CODE, i.e. the outpost narrowing '
-        .. 'has landed. Section 6 still counts 8 outpost sites because it '
-        .. 'rebuilds the filter itself -- re-read it as history and move the '
-        .. 'counts onto the new filter.')
+    -- ⭐⭐ THIS GUARD FIRED LATE, AND THE REASON IS THE LESSON. It was written
+    -- (2026-09-12) to notice the outpost narrowing landing, as:
+    --     assert(host:find('watch_tower', 1, true) == nil, ...)
+    -- The narrowing landed the next day as `and not J.IsOutpostBuilding(
+    -- building )` -- a call to the shared predicate -- and the string
+    -- `watch_tower` never appeared in the host at all. So the guard stayed
+    -- GREEN across exactly the event it existed for, while section 6 went on
+    -- pricing 8 outpost sites the shipped code had already given up.
+    -- ⇒ A GUARD THAT NAMES A SPELLING GUARDS THE SPELLING, NOT THE EVENT.
+    -- Repaired by asking about the EVENT: does the host's admission test still
+    -- admit outposts? Any spelling of "no" trips it. Read off the STRIPPED
+    -- block, so the outpost note in the source comment cannot satisfy it.
+    local bNarrowed = host:find('IsOutpostBuilding', 1, true) ~= nil
+        or host:find('watch_tower', 1, true) ~= nil
+    assert(bNarrowed,
+        'the outpost narrowing has been REMOVED from the host. It landed '
+        .. '2026-09-13 (GH #782, tests/test_tpdeftower_outpost_narrow.lua); '
+        .. 'sections 2-6 here are a pricing of the UN-NARROWED filter and only '
+        .. 'make sense as history while it is in the tree.')
     -- ⛔ THE THREE CONSTANTS THIS FILE SWEEPS WITH ARE THE HOST'S, NOT ITS OWN.
     -- A census whose ring or floor drifts keeps every ratchet satisfied while
     -- measuring a cell the shipped code never reads.

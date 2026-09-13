@@ -27,7 +27,29 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT. **【2026-09-12T22:25Z 新增,**下一轮第一项**。回到 `bots/` 杠杆 ——
+0NEXT2. **【2026-09-13T01:37Z 新增,**下一轮第一项**。**主体继续留在 `bots/`**
+   (OWNER_PRIORITIES **4.4 (i)**;上一轮 0NEXT 已由本轮的 GH #782 收窄满足,连续未满足的链条断了 ——
+   **不要让它重新接上**)。判据仍是 **最下游那个真正会翻转答案的计数**,不是腿级几何计数。
+   ⭐ **本轮新增的一条选杠杆判据(比「有没有证人」好用)**:如果一把刀的**方向由构造固定**
+   (合取项加在准入式 / 提前 `return` 的条件上 ⇒ 候选集严格子集),那么**它不需要证人就可以落**,
+   证人数只用来**定价**,允许登记为「此语料上为零」。⇒ 优先在**未决 armed id** 里找这种形状的收窄,
+   不要再把一轮花在「买一个语料给不出的证人数」上。
+   ⭐ **同时新增一条落地时必查的**:落刀之后**去看有没有别的测试文件为这次落地写过门**,
+   并检查那道门是**认拼法**还是**认事件**(本轮 §7 就是认拼法的,落地当天全绿 —— 见「当前状态」甲)。
+   ⛔ **已被定价并排除、不要重买**(逐条继承自上一轮,加本轮一条):
+   `stayfield2` 抬 0.55→0.75(`test_healthy_walk_home_gap.lua` §3 已算死:predicate 选**帧**而 GH #344 数**趟**)、
+   GH #511 的 `IsChanneling` 守卫(`argfix` 形状)、
+   **`J.ShouldPunishOverchase` leg (b) 的 DEEP 建筑支路(`overchase`)—— 同族第三个站点,端到端 `oc_fire_building 0`,本轮再次确认不重买**、
+   overchase 四个收窄(GH #760 全部拒,卡在 dumper = GH **#786**)、
+   `mode_retreat_generic:95` 的 `'tower'` 站点(**构造性惰性,表零族**)。
+   ⛔ **本轮新增的一条排程约束(不是选题,是怎么跑)**:**变异台与开工自检不能并发** ——
+   变异台按定义往被 git 跟踪的文件里写真缺陷,自检的 trunk-health 腿会读到半截文件并报**假红**
+   (本轮实测:`jmz_func.lua:10112 '=' expected near '<eof>'`,单独重跑 11/0)。
+   先等自检跑完再开台,或反过来。】**
+
+0NEXT. ✅ **【2026-09-12T22:25Z 新增 → 2026-09-13T01:37Z 做完(GH #782 收窄落地,1 行 `bots/` 代码)。
+   报告 `iterations/reports/strategy/20260913T013746Z.md`、`state.json:tpdeftower_outpost_20260913`。
+   原文保留在下,便于对照:回到 `bots/` 杠杆 ——
    OWNER_PRIORITIES **4.4**(每轮工作单元主体 = 一个 `bots/` 行为改动,或一个判定完结的最后一块证据)
    上一轮与本轮**连续两轮未满足**(上一轮是 6 行 `bots/`,本轮是 **0 行**;本轮主体在 `tests/` +
    `tools/agent/`,理由写在报告 §7 —— 本组自己造的红、总监正式交棒)。⇒ 下一轮**主体必须在 `bots/`**。
@@ -8634,6 +8656,61 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-13T01:37Z:**GH #782 的刀落了(1 行 `bots/` 代码,gated 继承 `midtp`/`suptp`)——
+  而本轮真正的产出是**昨天专门为这次落地写的那道门,在落地当天保持全绿**这一条。**
+  `J.ShouldTpSupportTowerFight` 建筑循环准入式加 `and not J.IsOutpostBuilding( building )`
+  (位置 `IsValidBuilding` < 名字测试 < 本项 < 距离);谓词是上一轮为同族另一个调用点(`ohnum`)落的无闸纯谓词。
+  ⭐⭐ **本轮最该被下一轮读到的三句:**
+  (甲) ⭐⭐ **命名一种拼法的门守的是拼法,不是事件。**
+  `test_tpdeftower_anchor_pricing.lua` §7 昨天写的是
+  `assert(host:find('watch_tower') == nil)`,专门用来在收窄落地时报警。落地的写法是调用
+  **共享谓词** `J.IsOutpostBuilding( building )`,宿主里**从头到尾没有 `watch_tower` 这个串**
+  ⇒ 那道门**在它唯一存在理由的事件上全绿**,§6 会继续给一个出货代码已放弃的域定价 8 个站点。
+  与 09-12 的 M8 同型、方向相反(那次死量具免费证成定价,这次**活量具**给一个它**自己重建而非读取**的
+  过滤器免费证成)。解药同一条:**让测试解析出货表达式,不要复述它**。§6/§7/抬头三处同轮修掉,
+  §6 的端到端驱动改走**显式反事实**(收窄落地后驱动出货宿主是**死量具**:`outpost_answered == 0`
+  由构造恒真、永久免费证成)。
+  (乙) ⭐⭐ **方向闭式就证明,不要证人;证人数只用来定价 —— 这里它把效应量定在零。**
+  合取项加在准入式上 ⇒ 候选集严格子集;循环 `return` 第一个准入者 ⇒ 收窄后能应答的帧未收窄时也能应答
+  ⇒ 响应集只可能变小,唯一可达差别是把瞭望塔换成真塔 = 修复本身。**论证不依赖语料,没有哪一帧能让它更真**;
+  一帧能买的是效应量,而本轮**直接量了**(不是留白):`flip 0`。GH #782 §4 的取帧请求**不撤销**,
+  但它现在是「给已落地的刀买真帧」而不是「等帧才能落刀」。
+  (丙) ⭐ **两条臂读数相同时,没有任何端到端计数能区分「活的反事实」与「死的反事实」。**
+  只有在真 handle 上直接读谓词能(narrow 臂 `IsOutpostBuilding(真瞭望塔)==true`,loose 臂被
+  `host_answer` **自己的** override 置 false)。**M6 就是这一条,而且它是唯一抓得到 M6 的断言。**
+  反事实取法值得抄:`J.IsOutpostBuilding = function() return false end` —— 不出树拷贝、不重实现宿主
+  40 行函数体,**同一条代码路径减一个词项**。
+  **读数**(141 帧 / 653 活行 / `load_fail 0`):`site 113` = `site_tower 105` + `site_outpost 8`,
+  收窄后 `site_narrow 105`;端到端每行两次 fresh `rf.load`、`midtp` armed:
+  `e2e_rows 8` / `ans_narrow 0` / `ans_loose 0` / `ans_loose_outpost 0` / **`flip 0`**(逐位复现 #782 §2/§3)。
+  **正对照**:`pred_true 441` / `pred_false 7843` / `PRED_DISAGREES 0`(字面量是**从谓词源码解析**的,不是复述);
+  `site_narrow + site_outpost == site`(刀恰好只切瞭望塔);`site_narrow < site`(刀碰到了东西);
+  `parity` 帧上**两条臂**都能让宿主开火。
+  产出:`bots/FunLib/jmz_func.lua`(**1 行代码**,注释 REGISTERED→REPAIRED)、
+  `tests/test_tpdeftower_outpost_narrow.lua` **runner 4/4**(~4.3s,**在快 Lua 闸预算内且本轮已被跑到**)、
+  `tests/test_tpdeftower_anchor_pricing.lua` 三处修补 **7/7**、
+  `tools/agent/mutstand_tpdeftower_outpost.sh` **caught=9 survived=0 STAND GREEN / FINAL_SHA_OK=yes**、
+  `state.json:tpdeftower_outpost_20260913`、报告 `iterations/reports/strategy/20260913T013746Z.md`。
+  **零新 gate id**(宿主自己是未 promote 候选 ⇒ 内部任何新 id 都是 `midtp AND <new>`,单臂零结构性不可能,'pullcad';M4 钉住)、零 AWS。
+  ⚠️ 变异台抬头登记的陷阱:合取项那行文本在 `jmz_func.lua` **两处逐字相同**(`:9460` 的 `ohnum` 与 `:10775` 本宿主)
+  ⇒ 所有变异锚在本宿主独有的 `building:GetUnitName()` 名字测试行上;不锚会**静默变异兄弟杠杆**。
+  ⛔ 如实登记**一条未被变异覆盖的断言**:本语料上**不存在**能到达 §2「matched EVERY valid building」的
+  blanket-true 变异 —— 建筑名 `ancient`/`barracks`/`tower...`/`watch_tower`,**没有单个 `[%w_]+` 字面量是它们全体的子串**
+  ⇒ 每种 blanket-true 拼法要么是 M9(解析不了)要么是 M3(匹配不到)。**不冒充覆盖。**
+  铁律 6 三行:`GATE_EXIT=0 CLEAN`(luacheck 0 警告)/ `py gate: 97 ran, 0 findings, 0 uncertifiable, 38.1s` /
+  `lua gate: 355 ran, 0 findings, 0 uncertifiable, 9 known-red, 503.4s`;`RULE6_BYPASS` **未用**;动态半(GH #124)**未跑不声称**。
+  ⚠️ 开工自检 **EXIT=3**(FINDINGS: cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua);
+  **UNCERTIFIABLE: none**);首条命令再次被 `REFUSED: stdout is a pipe` 挡回(**第 8 次复发在一轮首条命令上**)。
+  python 两条红与上一轮**逐条相同、均先于本轮且均有号**:`test_carrier_terms.py`(英雄组)、
+  `test_detector_source_constants.py`(**GH #787**)。
+  ⭐ **`trunk-red(lua)` 是本轮自造的污染,不是缺陷,而它值一条通用教训**:
+  `test_pullcad_throttled_duty.lua` 报 `jmz_func.lua:10112 '=' expected near '<eof>'` ——
+  自检 Lua 腿与**本轮变异台**同时读同一个文件,读到变异中途的半截文件;单独重跑 **11 tests, 0 failures**、
+  `luac5.1 -p` **SYNTAX OK**。pricing 抬头警告过这一类,但它说的是**手工**补丁、建议「用出树拷贝」——
+  **变异台躲不掉那条建议**(它按定义就是往被 git 跟踪的文件里写真缺陷)⇒
+  **「变异台与开工自检不能并发」是一条排程约束,不是拷贝技巧。**
+  ✅ **OWNER_PRIORITIES 4.4 (i) 本轮满足**(前两轮连续未满足):主体是一个真落地的 `bots/` 行为改动。
 
 - 2026-09-12T22:25Z:**本组自己造的 trunk 红修掉了(GH #790,backlog 0RUNNERPROTO)——
   而本轮真正的产出不是「红变绿」,是**替换 `os.exit(1)` 的那个守卫比 `os.exit` 本身值钱**这一条。**
