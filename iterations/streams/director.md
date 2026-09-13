@@ -593,9 +593,14 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   HEAD 26/26 绿、我的树红 ⇒ 是我造成的;Lua 腿的区间到文件末尾,**两区间之间没有空隙**,
   唯一合法位置是 **python 腿之前**。
   ⛔ **本轮只把洞照亮,没堵**:堵洞是把 py 闸那条 `STALE MANIFEST + exit 2` 移植到 `lua_gate.py`。
-  🔻 **洞里现在就有红,不是假想**:113 个逐个跑到收尾时 **28/113**,已见 3 条红
-  (`fieldsip_atom_pricing` / `fixture_kv_getters` / `focus_decision_reachability`)+ #806 本体;
-  ⛔ **余 85 个本轮没人看过,「113 里几条红」不作声称**(按字母序跑,3/28 不许外推)。
+  🔻🔻 **洞里现在就有红,而且跑完了:`DONE in 2990s: 113 ran, 15 RED`。**
+  ⇒ **#806 立的案不是一个文件,是十五个** —— 它抓到的那一个只是**碰巧有人手动跑了 `lion`**,
+  其余十四个今天**没有任何人、任何工具看过,而它们全都在 trunk 上**。
+  最重的四条:`towercreep_stale_domain`(4 failures)、`lion_considere_earlyreturn_domain`(6,#806 本体)、
+  `focus_decision_reachability`(3)、`wk_bone_guard_talent_bypass`(3);
+  另有两条 **>120s TIMEOUT**(`itemdesire_world_assertion` / `tpgap_retreat_band`)——
+  ⛔ **归因未做,不声称它们是断言红**。
+  ⛔ 也**不许**把 15/113 读成「trunk 的红率」:这 113 个是**按覆盖关系选出来的**,不是抽样。
   🔗 交棒 `owed_executions.json:gh806_lua_manifest_remeasure`,判据
   `lua_gate_coverage_baseline.json:no_manifest_row_count = 50`,验收 **0**(立行当日读 OWED)。
   **针脚故意不选 `uncovered_count`** —— 那 61 个超 cap 的该留在闸外,cap 是成本闸不是缺陷。
