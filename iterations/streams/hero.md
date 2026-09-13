@@ -7339,6 +7339,15 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     ⚠️ 自检的 `test_selfcheck_lua_leg.py` 一节报 **9 条 UNCERTIFIABLE**(那条腿 120s 预算内没跑完)
     —— **UNCERTIFIABLE 不是通过**,那九条这一轮没人看过。
     ⚠️ 第一次调用被工具**自己拒绝**(stdout 是管道,证据纪律 3),改 `> file; echo EXIT=$?` 才拿到真码。
+  - **铁律 6 三条腿(pre-push 真跑)**:`GATE_EXIT=0` / `py gate: 99 ran, 0 findings, 41.5s` /
+    `lua gate: 361 ran, 0 findings, 0 uncertifiable, 8 known-red, 534.5s`。
+    **没有向 known-red 添加任何一条。**
+    ⚠️ **反过来有一条故意**没摘**,交量具线**:闸提示把已转绿的 `test_focus_level_claims`
+    摘出赦免名单,而 `--set-known-red` 接的是**整份名单**并会整体重写 —— 试跑的 diff 里
+    `test_activemode_world_assertion` 的 case 列表被重测成**空**,而空列表按工具自己的措辞
+    **不是赦免**、闸会把那条红当**新**形状 ⇒ 会把**别组**的 trunk 红变成**全队的 push 拦路石**。
+    代价不对称(留着=下次新红不拦,且闸每轮再喊;摘掉=可能挡住所有人)⇒ **已回滚**,
+    交 `[harness]`/总监在一次完整重测里做。
   - **产物**:`tests/test_focus_talent_reach_wall.lua`(6 绿,`[ratchet]`)、
     `tools/agent/mutstand_talentwall.sh`(9/9)、GH #799、`queue.json:hero-2` 域声明(1 行 diff)。
 - 2026-09-13T08:15Z(报告 `iterations/reports/hero/20260913T081500Z.md`;**backlog:新开 `-164`**;
