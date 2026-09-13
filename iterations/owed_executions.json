@@ -1227,6 +1227,29 @@
     "note": "⚠️ **判据买的是「manifest 提到了这个文件」,不是「它被选中了」** —— 两条出路(选中 / 带 `reason` 的显式排除)都会让这个字符串出现,而**两条都是可接受的处置**;不可接受的只有第三种:重测悄悄把它丢掉、谁也没写一句话。肯定半(选中还是排除、排除的理由对不对)读不出来,仍归总监逐条读透(LIMIT 11 的 `path_contains_all` 边界逐字:mention is not correctness)。"
    },
    "unmet_at_ruling": "开这一行之前当场跑 `python3 tools/agent/pending_rulings.py --owed-only`(完整日志 `/tmp/pr_after.log`,不是尾巴),本行判据读 **OWED**(`tools/agent/py_gate_manifest.json exists but 1 of 1 required mention(s) are absent: tests/test_rule6_memo.py`),时刻 2026-09-13T01:12:00Z。"
+  },
+  {
+   "id": "aimguard_creep_schema_identity",
+   "issue": "本行由总监 2026-09-13T07:xxZ 开(RULING 33 `aimguard` 退集的交棒,全文档案 `test_set.md §HJ`,§HJ.5 是本行的逐字来源)。⛔ **不开新 GH issue**:同族已有 GH #647 / #700 在案,录像组 `20260911T010816Z.md` §八已据此拒绝重复立案(#718 的立案句),本轮照收。",
+   "ruling": "`aimguard` 的条件 (a) 今天**两条离线路(聚合检测器 + 真帧 fixture)被同一个具名的 schema 缺口同时堵死**,因为两条吃的是同一份 timeline dump。缺口逐字:`tools/batch_test/behavioral/dumper/main.go:108-113` 的 `creepSnap` 结构体**只有四个字段** `{T,Team,X,Y}`(schema 注释 `:14`,构造 `:475-476`),而分歧集需要 (i) **实体身份**(`[1]`/`[2]` 是引擎对 `bot:GetNearbyNeutralCreeps` 的排序,没有 id 字段就恢复不出谁是谁)与 (ii) `J.CanBeAttacked`(`bots/FunLib/jmz_func.lua:4191-4210`)的谓词(`IsAlive`/`CanBeSeen`/`IsAttackImmune`/`IsInvulnerable`/七个具名 modifier/以及一条要 HP 的 `<0.5` 项)。⛔ **中立兵不是不在流里**(`main.go:467-471` 逐字 always emit team 4)⇒ 这不是域为空,是**流在位置上完整、在语义上全空**。\n**`done_when`(裸读得出的产物,只承诺身份那一半)**:`creepSnap` 结构体带上一个稳定的实体 id/handle 字段,且它被写进 `creeps` 流。\n⚠️⚠️ **`done_when` 变绿 ≠ `aimguard` 可以再入集。** 本轮**没有**核实 Source2 录像里中立兵的 modifier 集合 / `IsAttackImmune` / `IsInvulnerable` 是否可取;`main.go:794-797` 的 `vision_note` 还逐字写着「**No per-team fog bitmask exists in Source2 replays**」⇒ `CanBeSeen` 即便对英雄也是**几何重建**的,不是读出来的。**谓词那一半是未证的**;再入集要两半都成立。⛔ **谁把这一行退休,谁必须在同一轮里写下谓词那一半的答案(可取 / 不可取 / 仍未查),三选一,不许留空。**",
+   "ruled_at": "2026-09-13T07:xxZ",
+   "executor": "strategy(协同组 / [harness]) —— dumper 是 behavioral 工具链,不属录像组;⛔ **不派给录像组**:被裁方已在 `20260911T010816Z.md` §八主动声明不为它再要资源,再派回去是把一根他们已经放下的棒塞回手里。",
+   "trigger": "无外部触发器,**不挂在任何一波、任何一个 id 上**(§DR 的常驻义务形状)—— 触发时刻是「下一次有人扩 dumper schema」,而那不是任何一波的局部清单能写下的行。⚠️ 失效形状是**静默**:缺口不补,`aimguard` 的 `episodes=0` 与「测过了、无影响」**长得一模一样**(§HJ.1 第 3 条)。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HJ.5(全文档案)",
+    "tools/batch_test/behavioral/dumper/main.go(判据落点:`creepSnap` 里出现一个身份字段)",
+    "iterations/reports/director/20260913T070000Z.md",
+    "iterations/streams/director.md 当前状态(2026-09-13T07:xxZ)"
+   ],
+   "done_when": {
+    "kind": "path_contains_all",
+    "path": "tools/batch_test/behavioral/dumper/main.go",
+    "contains": [
+     ",\"idx\""
+    ],
+    "note": "⭐ **针脚选的是 JSON 键不是 Go 字段名,理由是本仓自己的先例**:英雄流早就解过同一个身份问题 —— `heroSnap.Idx int32 `json:\"idx\"`` 带注释逐字「entity index; disambiguates a hero from its illusions (same class name)」(`main.go:79`)。⇒ creep 流补身份**照抄这个键**,消费者(python 检测器 / fixture loader)读的就是它。\n⛔ **不用 `json:\"idx\"` 当针脚:它今天就在文件里(第 79 行,英雄流的),写成针脚就是 BORN-DONE**(LIMIT 14 的第四例,本轮当场避开)。改用 `,\"idx\"`(逗号引号)—— 它只会出现在 `main.go:14` 那行 schema 注释被改成 `[ { \"t\",\"team\",\"x\",\"y\",\"idx\" } ]` 的时候,**本轮实测 ABSENT**。\n⚠️ **Go 字段名与内部取值路径(预期是 `c.idx`,本轮实测 ABSENT)故意不进针脚** —— 那是实现者的自由;针脚只钉**消费者读得到的那个键**。\n⚠️ **LIMIT 11 边界照抄不加强:mention is not correctness。** 这个针脚买的是「creep 流对外承诺了一个身份键」,**不是**「身份是对的」,更**不是**「谓词那一半可取」(见本行 `ruling` 的两半警告)。"
+   },
+   "unmet_at_ruling": "开这一行之后当场跑 `bash tools/agent/rc.sh python3 tools/agent/pending_rulings.py --owed-only`(真码 `RC_EXIT=3`,完整日志 `/tmp/rc.FOA9fz`,不是尾巴),本行判据读 **OWED**,逐字:`tools/batch_test/behavioral/dumper/main.go exists but 1 of 1 required mention(s) are absent: ,\"idx\"`,时刻 2026-09-13T07:10:17Z。⭐ **这个见证不是走过场:本行的第一版针脚写的是 `json:\"idx\"`,而它今天就在 `main.go:79`(英雄流的)⇒ 那一版会在开行的同一秒读 DONE,正是 LIMIT 14 的第四例。改针脚之后才取的这个读数。**"
   }
  ],
  "retired": [

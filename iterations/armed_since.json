@@ -204,11 +204,6 @@
    "retired_at": "2026-09-09",
    "retired_note": "退回出集(test_set.md §GF;state.json:pullthink_RETURNED_20260909)。**两个操作数各自独立地死**:作用域项 `bot.roamCampPull ~= nil` 要 `J.ShouldPullNeutralCamp` 非 nil,而它在**全上门 + 强制 turbo** 之下仍 1100/1100 返回 nil(与 `pulllane` 同一堵 lane-front 墙);节流项 `J.Utils.IsBotThinkingMeaningfulAction` **1100/1100 为 false**,⭐ 而它 false 时 **baseline 腿也不提前 return** ⇒ 两条腿在语料每一帧逐字节相同。机制:`bot:GetAnimActivity()` 未被加载器 spec,落 `bot_api.lua` 的 `^Get -> 0` 兜底,1100/1100 读 0。⭐⭐ 其源码注释(`mode_roam_generic.lua:210-211`)称 meaningfulActivities 是 **EMPTY table** 并当作两条独立理由之一 —— **实测为假**(`ACTIVITY_RUN` 1153 / `ACTIVITY_ATTACK` 1154,表是满的;注入真哨兵节流项当场翻 true)⇒ 结论活着、两条理由死了一条(纪律 4)。⭐ 后果:`GetAnimActivity` 是加载器**够得着**的 getter ⇒ 这是四轮四个仪器缺口里**最便宜的一个,dumper 一行不用动**。⛔ 不是 reject:两处 gate 点与两个半边(节流跳过 + wind-up hold)逐字保留,`bots/`+`game/` 零 diff。买 (a) 见 owed 行 `pullthink_animactivity_instrument`(⛔ 两端都要买,只买节流项仍买不到 (a))。"
   },
-  "aimguard": {
-   "armed_since": "2026-08-28",
-   "precision": "exact",
-   "source": "test_set.md:116"
-  },
   "campvoid": {
    "armed_since": "2026-08-28",
    "precision": "exact",
@@ -299,5 +294,17 @@
    "retired_at": "2026-09-11",
    "retired_note": "PROMOTE 作为**一个原子**(test_set.md §GW;state.json:zusult_zusboltdom_PROMOTE_20260911)。armed 32 → 30。⛔ 两条没有各自的裁定 —— 单独促进 `zusult` 会把 GH #477 量到的 BUGGY 配置设成默认,单独促进 `zusboltdom` 是一个结构性空操作(它的返回值全文件唯一消费者在 `zusult` 的门后面)⇒ 只有一种合法切法。 动作是删掉 hero_zuus.lua X.BoltAoEKillTarget 门里那个 `and J.IsSoakCandidate('zusboltdom')` 合取项;VALUE 判据 `type(nHealthCap)=='number' and nHealthCap <= 0` 逐字保留(§GV.4:写成 VALUE 而不是 id,正是它今天没被这一促进冻死的原因)。armed 6 天。"
   }
+ },
+ "history": {
+  "aimguard": [
+   {
+    "armed_since": "2026-08-28",
+    "armed_until": "2026-09-13",
+    "days": 16,
+    "precision": "exact",
+    "source": "test_set.md:116",
+    "exit": "RETURNED (退集,非 reject)。总监 RULING 33,2026-09-13T07:xxZ,全文 `iterations/streams/test_set.md §HJ`。处置 **DUMP-SCHEMA-BLIND**:条件 (a) 的两条离线路(聚合检测器 + 真帧 fixture)被同一个具名 schema 缺口同时堵死 —— `dumper/main.go` 的 `creepSnap{T,Team,X,Y}` 既无实体身份、也无 `J.CanBeAttacked` 的任何谓词。gate / 调用点 / 测试逐字保留,`bots/` 零 diff。再入集的前提见 `owed_executions.json:aimguard_creep_schema_identity`(⚠️ `done_when` 只承诺身份那一半)。"
+   }
+  ]
  }
 }

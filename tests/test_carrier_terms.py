@@ -29,6 +29,9 @@ sys.path.insert(0, SOAK)
 import carrier_terms as ct          # noqa: E402
 import seed_draft                   # noqa: E402
 
+sys.path.insert(0, os.path.join(ROOT, "tools", "agent"))
+import stale_waits                  # noqa: E402
+
 CHECKS = []
 
 
@@ -53,12 +56,35 @@ def main():
           "aimguard resolved ACROSS files (no gate literal in hero_spirit_breaker.lua)")
 
     # --- 2. the five that a filename read would also have found ---------------
+    # [director 2026-09-13, test_set.md SS HJ] A PROMOTED id has NO gate literal
+    # -- deleting it is what promoting means -- so `derive_id` cannot resolve it
+    # and must not be asked to.  `zusult` (SS GW) and `liondrainstop` (stable-v7)
+    # were promoted in 2026-09-11 and these two lines have been red ever since,
+    # handed between rounds as someone else's, because the red LOOKS like a
+    # derivation bug and reads like one in every report.  It is not: the deriver
+    # is answering correctly ("no gate literal found in bots/") about a shape the
+    # promote removed on purpose.  This is the same family the 2026-09-13T04:3xZ
+    # round named for the detectors -- any assertion pinned to
+    # `J.IsSoakCandidate('<id>')` asserts a shape that id's OWN promote deletes.
+    #
+    # Dropping the check would retire the guard with the id, which this file's
+    # own doctrine forbids.  So the claim is replaced by the one that still has
+    # teeth for a promoted id: the gate literal is GONE (the promote finished)
+    # and the `PROMOTED (was soak-candidate ...)` note is THERE (it was recorded).
+    # A half-promote -- gate deleted, note never written, or note written while
+    # the gate still stands -- fails here, and that is the real hazard.
+    promoted = stale_waits.promoted_ids()
     for cand, want in [("cmrguard", "crystal_maiden"), ("zusult", "zuus"),
                        ("zusstatic", "zuus"), ("liondrainstop", "lion"),
                        ("odaoe", "obsidian_destroyer")]:
         r = ct.derive_id(tree, cand)
-        check(r["kind"] == "hero" and r["heroes"] == {want},
-              "%s -> %s" % (cand, want))
+        if cand in promoted:
+            check(r["kind"] == "unresolved" and not r["sites"],
+                  "%s is PROMOTED, so it has no gate literal left to derive "
+                  "(kind=%s sites=%d)" % (cand, r["kind"], len(r["sites"])))
+        else:
+            check(r["kind"] == "hero" and r["heroes"] == {want},
+                  "%s -> %s" % (cand, want))
 
     # --- 3. the live arm string derives exactly the six, and nothing else -----
     # Input it cannot read => exit 2 (did not run), never a FAIL: same 0/2/3
@@ -120,11 +146,48 @@ def main():
             check(cand in scoped,
                   "%s is still hero-scoped (the six replay-check derived by hand)"
                   % cand)
+        elif cand in promoted:
+            # [director 2026-09-13, SS HJ] Third branch: the 2026-09-05 split was
+            # armed / not-armed, and "not armed" silently meant "RETURNED, gate
+            # still in bots/".  A PROMOTED id is also not armed and its gate is
+            # gone by design, so the else-branch below demanded a shape the
+            # promote deleted.  Section 2 carries the claim that still has teeth.
+            check(cand not in scoped,
+                  "%s is PROMOTED, so the live arm string must not scope it"
+                  % cand)
         else:
             check(ct.derive_id(tree, cand)["kind"] == "hero",
                   "%s is still hero-scoped off the tree (unarmed, so the arm "
                   "string cannot speak for it)" % cand)
-    check("spirit_breaker" in terms, "spirit_breaker IS asked about")
+    # [director 2026-09-13, test_set.md SS HJ] THIRD TIME, THIRD DIRECTION.  This
+    # line used to read `check("spirit_breaker" in terms, ...)` -- a frozen
+    # snapshot of the live arm string, true only while `aimguard` (the sole
+    # spirit_breaker-scoped id) was armed.  RULING 33 returned `aimguard` out of
+    # the test set (gate site in bots/ untouched), so no armed id is
+    # spirit_breaker-scoped any more and the gate must now NOT ask about
+    # spirit_breaker -- for exactly the reason it must not ask about axe.  The
+    # old line called that correct behaviour a failure.
+    #
+    # That is the same defect the two comment blocks above describe, and the
+    # reason it recurred is that both previous patches fixed an INSTANCE: growth
+    # (2026-08-29), then removal in the membership loop (2026-09-05).  This one
+    # is removal in the TERM LIST.  So state it as the biconditional it always
+    # was -- a hero is asked about IFF some armed id is scoped to it -- which is
+    # #276's actual half ("the gate must not ask about a hero NO armed id
+    # needs") and which holds in both directions as ids come and go.
+    claimed = set()
+    for r in rows:
+        if r["kind"] == "hero":
+            claimed |= set(r["heroes"])
+    for hero in ("spirit_breaker", "axe"):
+        check((hero in terms) == (hero in claimed),
+              "%s is asked about IFF an armed id is scoped to it "
+              "(term=%s claimant=%s)"
+              % (hero, hero in terms, hero in claimed))
+    check(set(terms) <= claimed and claimed <= set(terms),
+          "every term has a claimant and every claimant has a term "
+          "(terms-without-claimant=%s, claimants-without-term=%s)"
+          % (sorted(set(terms) - claimed), sorted(claimed - set(terms))))
     # ⚠️ NOT written as `set(terms) == {h for r in rows ...}`.  That was the first
     # draft and it is a TAUTOLOGY: derive_terms builds `terms` by exactly that
     # comprehension (carrier_terms.py:293), so the check could not fail and would
@@ -145,15 +208,47 @@ def main():
     # the gate must not ask about axe.  (skeleton_king WAS in this line until
     # `wkqdmg` was admitted -- it is asked about now, correctly, which is exactly
     # why the frozen pair had to go.)
-    check("axe" not in terms, "axe is NOT asked about (no axe-scoped armed id)")
     check(summary["unresolved"] == 0,
           "no unresolved id on the live arm string (got %d)" % summary["unresolved"])
 
     # --- 4. the two waves that paid for this file ----------------------------
+    # [director 2026-09-13, test_set.md SS HJ] These two replays are statements
+    # about W20 and W21 -- two waves that ran in 2026-08, whose arm strings are
+    # FROZEN HISTORY.  They were being driven with `rows` derived from TODAY's
+    # arm string, so every promote or return silently changed the input to a
+    # fixed-answer question: `liondrainstop`'s promote (stable-v7) took the
+    # "W20: liondrainstop 1/4" line red and it stayed red for four rounds, and
+    # RULING 33's return of `aimguard` would have taken the other three with it.
+    # Neither red was about what this section guards -- whether #276's defect
+    # would have been CAUGHT -- and the answer to that cannot depend on what is
+    # armed today.  So section 4 derives its own rows from the three ids the two
+    # waves actually turned on.  ALL THREE ARE DELIBERATELY NAMED: this list is
+    # historical input, so it must NOT track the live arm string.
+    W20_W21_IDS = ["aimguard", "odaoe", "liondrainstop"]
+    _, hist_rows, _ = ct.derive_terms(W20_W21_IDS, ROOT, tree=tree)
+    # `liondrainstop` was PROMOTED (stable-v7, 2026-09-11), so its gate literal
+    # is gone and the deriver correctly answers "unresolved" for it TODAY.  W20's
+    # carrier terms are a fact about 2026-08, when the gate was there, so the row
+    # is pinned as frozen history rather than re-derived.  ⛔ This is the ONLY
+    # place a row is hand-written, and only for ids the tree can no longer speak
+    # about; anything still derivable stays derived, or this section stops
+    # testing the deriver and starts re-stating my own model of it.
+    FROZEN_HISTORICAL_ROWS = {
+        "liondrainstop": {"id": "liondrainstop", "kind": "hero",
+                          "heroes": {"lion"}, "sites": [],
+                          "why": "frozen: gate literal removed by the stable-v7 "
+                                 "promote (2026-09-11); W20 ran with it present"},
+    }
+    hist_rows = [FROZEN_HISTORICAL_ROWS.get(r["id"], r) for r in hist_rows]
+    for _hid in W20_W21_IDS:
+        _hr = [r for r in hist_rows if r["id"] == _hid]
+        check(len(_hr) == 1 and _hr[0]["kind"] == "hero",
+              "W20/W21 historical row for %s is hero-scoped (%s)"
+              % (_hid, _hr[0]["kind"] if _hr else "missing"))
     for label, seeds in [("W20", [947, 959, 971, 974]), ("W21", [983, 986, 995, 1138])]:
         import io
         buf = io.StringIO()
-        rc = ct.assert_carrier_ids(seeds, rows, pool, out=buf)
+        rc = ct.assert_carrier_ids(seeds, hist_rows, pool, out=buf)
         text = buf.getvalue()
         check(rc == 1, "%s: gate REFUSES (exit 1, was exit 0 in the field)" % label)
         check("id=aimguard" in text and "verdict=ABSENT" in text,
@@ -161,7 +256,7 @@ def main():
     # #276's own worked example, digit for digit.
     import io
     buf = io.StringIO()
-    ct.assert_carrier_ids([947, 959, 971, 974], rows, pool, out=buf)
+    ct.assert_carrier_ids([947, 959, 971, 974], hist_rows, pool, out=buf)
     w20 = buf.getvalue()
     check("id=odaoe term=obsidian_destroyer seeds=4 satisfied=2" in w20,
           "W20: odaoe 2/4 (as #276 predicted)")

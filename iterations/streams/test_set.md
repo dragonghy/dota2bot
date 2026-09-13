@@ -1,6 +1,7 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,aimguard,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart
-**成员串 27**(上一行,**239 字节**,md5 `76a888b622124fc5488503aa36ef6b25`)。本行 **2026-09-12T0x:xxZ 第二轮的变动:两条 `RETURNED`(退集,29 → 27,`outlatch` + `rotscope`)**,总监裁定全文 **§HA**(§HA.1 `outlatch` / §HA.2 `rotscope` / §HA.3 两条的处置不同名);判定完结 **2**(两条退集,owner P4.2 的 ≥2 本轮达标)。⛔ **两条都不是 reject**:gate、helper、调用点**逐字保留**,`bots/`+`game/` 本轮**零 diff**;退集买的是「不再为一份已证买不到的证据付波次成本」,**不是**「这个改动是坏的」。⛔ **两条的退集理由不同名,不许混着写**(见 §HA.3)。
+lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart
+**成员串 26**(上一行,**230 字节**,md5 `3a438e729b3960382dfd51a89a7da54e`)。本行 **2026-09-13T07:xxZ 第十轮的变动:一条 `RETURNED`(退集,27 → 26,`aimguard`)**,总监裁定全文 **§HJ**(§HJ.1 处置 `DUMP-SCHEMA-BLIND` / §HJ.2 为什么它与 `abilanc` 的载体门**不同名** / §HJ.3 为什么 `overchase` 本轮**特意没裁**);判定完结 **1**(⚠️ owner P4.2 要的是 ≥2,本轮**没达标**,差额与理由逐字写在 §HJ.4,**不许读成 2**)。⛔ **不是 reject**:`J.CanBeAttackedPair`(`bots/FunLib/jmz_func.lua:4244-4255`)、调用点(`bots/BotLib/hero_spirit_breaker.lua:297`)、`tests/test_aimguard_target_axis.lua` **逐字保留**,`bots/`+`game/` 本轮**零 diff**;退集买的是「不再为一份已证买不到的证据付波次成本」,**不是**「这个改动是坏的」。⛔ **退集理由不许与 §HA.1 / §HA.2 / §FW.2 三条混着写**(见 §HJ.1 的处置名表)。
+*(上一轮的历史行:**成员串 27**,239 字节,md5 `76a888b622124fc5488503aa36ef6b25`,两条 `RETURNED`(29 → 27,`outlatch` + `rotscope`),裁定全文 §HA,判定完结 2。)*
 *(上一轮同日的历史行:**成员串 29**,257 字节,md5 `33047ce53c029f3901e5f63eab872ecb`,一条 `PROMOTE`(30 → 29,`tpcommit`),裁定全文 §GZ,判定完结 2。)*
 ⭐⭐⭐ **本节最该被读的一条(§GW.1):这两条不是「又一次同轮 promote」,是一次 promote 只有一种合法的切法,而那件事是四种组合上的算术,不是偏好。** 上一轮(§GU)两条同轮的理由是「近五波每一波都同时 armed,家族级 (b) 分不开」——**那是一条关于读数的理由**。本轮的理由更硬,**它关于树本身**:四种组合里有一种**已经被量到是坏的**,而**它恰好就是单独促进 `zusult` 会发出去的那一种**。
 - **都不 armed** = 出厂树。
@@ -5665,3 +5666,150 @@ bypass **什么都不断言**;命中是**重放一次真实运行**在**这棵�
 manifest 里**必须出现这个文件名**(选中、或按 GH #616 约束 1 的写法带 `reason` 显式排除,**两条都可接受**);
 不可接受的只有第三种:重测悄悄丢掉它,谁也没写一句话。
 ⛔ **不许为了塞进 3.0s 而砍测试** —— 被砍的一定是 case 5/6 那批端到端 push,而 M4/M6 正是在那里被抓住的。
+
+## §HJ 2026-09-13T07:xxZ(第十轮)总监:**RULING 33 —— `aimguard` 退集(27 → 26),处置 `DUMP-SCHEMA-BLIND`** —— 本节最该被读的是 **§HJ.2:这条 id 的载体问题和 `abilanc` 逐字同型,而 §HA.0 给 `abilanc` 开的那味药(载体门)对它是「必要但不充分」—— 把两条写成同一个名字,下一个人会拿一道已经装好的闸去救一个不是被它挡住的 id**;以及 **§HJ.4:本轮判定完结 1 < owner P4.2 要的 2,而我不打算凑第二条**
+
+**零 AWS(一次调用都没有)、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote、无 reject。**
+判定完结 **1**(一条退集)。成员串 **27 → 26**,**230 字节**,md5 `3a438e729b3960382dfd51a89a7da54e`
+(退集前 27 / 239 字节 / `76a888b622124fc5488503aa36ef6b25`,**本轮开工时逐位复核过**)。
+
+### §HJ.0 选取不是我挑的,是被裁方自己列的表
+
+章程「下次触发」① 逐字要求「判定完结 ≥1,正面处理 armed 27(硬性,连续第九轮为 0)」。
+`verify_coverage.py --all` 现读 27 行(`RC_EXIT=0`),而**选哪一条不是我排的序** ——
+录像组 `20260912T185424Z.md` §一自己给了一张**按堵点分类**的表,逐字三档:
+
+| 堵点 | id | 能否用更多语料买到(录像组原话) |
+|---|---|---|
+| **离线结构性拒绝** | **`aimguard`** | ⛔ 不能,再多语料也一样 |
+| **通道不可分离** | `overchase`、`pullcad` | ⛔ 不能 |
+| **域为空 / 罕见** | `stayfield`/`stayfield2`/`campfarm`/`campvoid`/`creepthink`/`blinkflee` | ⭐ 能 |
+
+第三档**不动**(罕见是语料能买的,退它等于把可买的证据丢掉)。第二档两条**本轮特意没裁**(§HJ.3)。
+⇒ 第一档只有一条,就是本轮唯一的候选。**这是一份被裁方已经停在裁定形状里的棒**
+(§HA.1 的 `outlatch` 同型):录像组 `20260911T010816Z.md` §七的标题逐字是
+「`aimguard` 结构性拒绝(**顺带交付,不占本轮判决位**)」,并在 §八写明
+「⛔ **不为它开新 issue**」「**不计入「买到」**」「⛔ **不补 `owed_executions.json` 登记行**」
+—— 被裁方交付了理由、**主动不为它再要资源**,棒就停在我这一格。
+
+### §HJ.1 RULING 33:`aimguard` 退集,处置 **DUMP-SCHEMA-BLIND**
+
+**ruling**:RETURNED OUT OF THE TEST SET(27 → 26)。**不是 reject**:
+`J.CanBeAttackedPair`(`bots/FunLib/jmz_func.lua:4244-4255`)、唯一调用点
+(`bots/BotLib/hero_spirit_breaker.lua:297`)、`tests/test_aimguard_target_axis.lua`
+**逐字保留**,本轮 `bots/`+`game/` 零 diff。
+
+**why_a —— 三条,全部本轮裸读源码现证,不转载**:
+
+1. **门是单向的 ⇒ 分歧集是一个「缺席」而不是一个「出现」。**
+   `jmz_func.lua:4246` 先 `if not J.CanBeAttacked(hGuard) then return false end`(两腿逐字相同),
+   `:4248-4251` 未 armed 直接 `return true`,armed 才 `return J.CanBeAttacked(hTarget)`
+   ⇒ **armed 只能扣下一次出厂会打的火,永远造不出新火。**
+   ⇒ 两腿分歧集 = 到站 ∧ `CanBeAttacked([1])` 真 ∧ **`CanBeAttacked([2])` 假**。
+2. **那个谓词的每一个合取项都不在 dump 里。** `J.CanBeAttacked`(`:4191-4210`)读
+   `HasForbiddenModifier` / `IsAlive` / `CanBeSeen` / `IsNull` / `IsAttackImmune` /
+   `IsInvulnerable` / **七个具名 modifier** / 以及一条自家单位的 `GetHealth()/GetMaxHealth() < 0.5`。
+   而 dumper 的 creep 流**结构体只有四个字段**:`creepSnap{T,Team,X,Y}`
+   (`tools/batch_test/behavioral/dumper/main.go:108-113`,schema 注释 `:14`,构造 `:475-476`)。
+   ⚠️ **本轮比录像组多读到的一条**:被扣下的是 `[2]`,但 `[1]` 的谓词**同样重建不出来**
+   —— 那条 `< 0.5` 的血量项要 HP,creep 流里**没有 HP** ⇒ **分歧集的两端都是盲的**,不只一端。
+3. **实体身份也不在流里 ⇒ 「谁是 `[1]` 谁是 `[2]`」恢复不出来。**
+   `creepSnap` 没有任何 id/handle 字段,而 `[1]`/`[2]` 是引擎对
+   `bot:GetNearbyNeutralCreeps(nRadius)` 的排序结果。⛔ **中立兵确实在流里**
+   (`:467-471` 逐字「Neutrals (team 4) legitimately stand at their camp, so always emit them」)
+   ⇒ **这不是域为空**,是**流在位置上完整、在语义上全空**。⛔ `episodes=0` 一律不得读成「测过了,无影响」。
+
+**⭐ 处置名为什么是新的一个(§HA.3 的要求):它必须编码「什么东西能解开它」。**
+
+| 处置名 | 现场 | 解开它的是什么 |
+|---|---|---|
+| `DOMAIN-NOT-REACHED`(§FW.2,`campbind`) | 归因腿两个方向都非零 ⇒ 零是**域的零** | 更多语料 |
+| `INSTRUMENT-BLIND`(§HA.1,`outlatch`) | 下游可观测后果与另一种成因**逐字节相同** | 一份真帧 fixture(**route 2 是开的**) |
+| `UNOBSERVABLE-BOTH-ROUTES`(§HA.2,`rotscope`) | 两条路各自被**不同**的东西堵死 | 两件互不相干的事 |
+| **`DUMP-SCHEMA-BLIND`(本条,`aimguard`)** | 两条路被**同一个具名的 schema 缺口**堵死 | **一次 `creepSnap` 的字段扩充** |
+
+⭐ **两条路同堵、而堵点只有一个,这是本条独有的形状。** 聚合检测器与真帧 fixture
+**吃的是同一份 timeline dump** ⇒ creep 流缺字段,**同时**关掉两条路;
+反过来,补上字段**同时**打开两条。§HA.2 的 `rotscope` 是两个堵点,本条是一个。
+
+**condition_b**:**无可主张的负面**,也**不作为正面证据**。armed 腿本波带 27 个 id,
+按章程 4a(§BW.3)任何聚合差分**不许记到这一条名下**;`winrate` 通道按 GH #352 不引用
+(六波 1115 局、少数侧占比 0.0161,DEGENERATE)。⇒ 粗粒度门「对胜负无明显负面影响」
+**以「没有任何可归因于它的负面读数」通过,措辞照抄不得加强**。
+
+**condition_c**:**逻辑依据本身是成立的,这正是它不被 reject 的理由。**
+「一道被问了 A、而实际动手的是 B 的守卫,不是守卫,是一个大多数时候恰好成立的巧合」
+(`jmz_func.lua:4213-4215` 头注原话)。⇒ 退的是**证据路径**,不是**这条改动的道理**。
+
+**why_not_留着 armed**:不是免费默认。armed **自 2026-08-28 起 16 天**
+(`arm_since.py` 现读 `exact`),期间产出**一条 VERIFY 行、`episodes=0`**;
+而买不到的理由(schema)**与语料多少无关** ⇒ 每多留一轮,付的是波次成本、买回的是同一个零。
+
+### §HJ.2 ⭐⭐ 它的载体问题与 `abilanc` 逐字同型,而 §HA.0 给 `abilanc` 开的药对它**不充分**
+
+`carrier_terms.py` 的文件头注(`tools/batch_test/soak/carrier_terms.py:4-13`)逐字记着:
+`aimguard` 是 **hero-scoped**,**唯一载体是 `spirit_breaker`**;W20 在 **180/180** 带戳局里
+drafted **zero spirit_breaker**,闸 `exit 0`,波照跑,**没有任何东西举手**;W21 **逐字节重演**;
+`--rates` 给出 **P(spirit_breaker 缺席于一个 4 粒种子的波)= 0.518**。
+⇒ 这**正是** §HA.0 给 `abilanc` 写的那句「域没被走到的原因是牌桌上没有能走到它的英雄」。
+
+⛔ **而两条不能同名,理由是算术不是措辞**:§HA.0 给 `abilanc` 的处置是**载体门**
+(`seed_draft.py --assert-carrier`,backlog §11)。那道闸**今天已经装好了**
+(GH #276 之后 `carrier_terms.py` 机械派生,不再手写焦点五)⇒ 对 `abilanc` 它**必要且可能充分**。
+**对 `aimguard` 它必要但不充分**:把 `spirit_breaker` 保证进每一波、把站点走到,
+**分歧集仍然读不出来**,因为 §HJ.1 的三条堵点**一条都不被载体门碰到**。
+📌 **可迁移的一句**:*两条 id 可以卡在**同一个症状**(`episodes=0`)、**同一个近因**(载体缺席),
+而**远因不同**;按症状或近因命名处置,会把一道装好的闸推荐给一个不是被它挡住的 id。*
+⇒ `abilanc` **本轮照旧不退**(§HA.0 的裁定不动),`aimguard` 退。
+
+### §HJ.3 本轮特意没裁的两条,理由各自不同,写下来免得下一轮当遗漏补上
+
+- **`overchase`**(verify 1 / INDETERMINATE / **episodes 912**):录像组
+  `20260912T010526Z.md` 昨天**刚把仪器 `overchase_domain.py` 落树**,并逐字写下
+  「**`INDETERMINATE` 是判决不是失败;缺的是判别子,不是样本**」,以及
+  「这一条**留在本组自己的 backlog 里**(下一轮清单第 (1) 条),**不外派**」。
+  ⇒ 与 `outlatch` **形状相反**:`outlatch` 的被裁方**主动停手**(「本组不再自行发起同型核验」),
+  棒才停在总监这一格;`overchase` 的被裁方**明确认领了下一步**,棒在他们手上、**一轮都还没到期**。
+  ⛔ **退一条正在被认领的 id,是把还在走的那条路砍掉** —— 处置 = **等认领到期**,不是退集。
+  ⚠️ 它同时是 armed 最久的一档(`lower_bound` 50 天),**下一轮若仍无进展,这条豁免就用完了**。
+- **`pullcad`**(verify 2 / episodes 278 / 今天 03:58Z 还有新读数):§HA.0 **已经裁过不退**,
+  理由是「`promote_atoms.py` 读 `FROZEN none`,闸已是独立门 ⇒ 该 id 不是空操作」。
+  ⚠️ **那条理由与 (a) 买不买得到是两条轴**(它回答「这条杠杆活着吗」,不回答「(a) 买得到吗」),
+  而录像组的表把它归进「通道不可分离 ⛔ 不能」。**两条轴今天指向不同的方向,本轮不替它们定谁赢**
+  —— 但登记这件事本身:**一条 id 被一条不回答本问题的理由留在集合里,是 §HA.3 那一族**,
+  留给下一轮正面处理,**不许当作「§HA.0 已经裁过了」就跳过**。
+
+### §HJ.4 ⚠️ 本轮判定完结 **1**,owner P4.2 要的是 **≥2**,我不凑第二条
+
+**不许把这一行读成 2。** 本轮唯一的第二候选是 `overchase`,而凑它需要**推翻 §HJ.3 的理由**
+—— 即在被裁方认领次日、拿「他们还没做完」当退集依据。那样得到的是**一个达标的计数**和
+**一条用错理由做出的处置**,而本章程 §HA.3 / §HJ.2 两节反复在纠的正是后者。
+⇒ **计数不达标,如实登记**:连续第九轮 0 之后,本轮 **1**,累计缺口按 P4.2 口径记 **1**。
+armed **26**,离解冻线(≤20)**差 6**。
+📌 *一个为了满足配额而做出的处置,和一个正确的处置,在 `state.json` 里长得一模一样* ——
+这正是 §HA.3 立案的那句话,本轮把它用在**我自己的产出指标**上。
+
+### §HJ.5 交棒(机器可读)
+
+`owed_executions.json:aimguard_creep_schema_identity`,executor = **协同组 / [harness]**。
+`done_when` 是一个**裸读得出的产物**:`tools/batch_test/behavioral/dumper/main.go` 的
+`creepSnap` 结构体带上一个稳定的实体 id 字段。
+⚠️ **诚实边界,不许被读成「补上字段就能买到」**:本轮**没有**核实 Source2 录像里
+中立兵的 modifier 集合 / `IsAttackImmune` / `IsInvulnerable` 是否可取;
+`main.go:794-797` 的 `vision_note` 还逐字写着「**No per-team fog bitmask exists in Source2 replays**」
+⇒ `CanBeSeen` 那一项即便对英雄也是**几何重建**出来的,不是读出来的。
+⇒ `done_when` 只承诺**身份那一半**(排序可恢复),**谓词那一半是未证的**。
+**再入集的前提是两半都成立**,不是 `done_when` 变绿。
+⛔ **不为它开新 issue**:同族已有 GH #647 / #700 在案,录像组 `20260911T010816Z.md` §七
+已经据此拒绝重复立案(#718 的立案句),本轮照收。
+
+### §HJ.6 顺带量到的一条,不改本裁定:引用按行号解析会漂,按内容不漂
+
+录像组 `20260911T010816Z.md` §七引的是 `jmz_func.lua:4127-4138`(门体)与 `:4073-4092`
+(`CanBeAttacked`);**今天树上的真值是 `:4244-4255` 与 `:4191-4210`**,
+**内容逐字相同,行号全错**(文件在这两周里长了约 118 行)。
+⇒ `citation_audit.py` / `claim_precheck.sh` 的解析器按**路径**锚定、不按行号,所以**它们不会红**
+—— 这不是工具的缺陷,是**它的正确设计**(行号是最易漂的锚)。
+📌 但要登记一句:**报告里写行号是给人看的,而人会照着行号跳过去读**,
+跳到 `:4127` 今天读到的是**别的函数**。⇒ 本节引用一律**行号 + 函数名**双锚,
+行号漂了还剩一个锚。**与 §BG 的老规矩同族,本轮第二发。**
