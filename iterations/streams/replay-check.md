@@ -16971,3 +16971,27 @@
     (3) ⭐ `rate=0/39` 想压低上界只能加局 ⇒ **新波次到来时对全部新局跑一遍尺子**(单局 ~1s);
     (4) ⚠️ 16:30Z 那个 **n=1 复现**仍然欠着,**连续第三轮挂账**,只需一局。
   - **完整报告**:`iterations/reports/replay-check/20260913T214816Z.md`
+- **[2026-09-13T21:48Z 收工回填,两条掉棒/红账,都不是本组能自己结的]**
+  - ⛔⛔ **GH #799 在 21:52:16Z 被关成 `completed`,而它自己最近两条评论都写着不要关**
+    (17:26Z「⚠️ 这不结掉验收 1,请不要这么引用」+「⇒ 本 issue 保持开启,它就是下一条」;
+    21:05Z「**本评论不结掉本 issue**」)。本组的内容评论落在 **21:53:25Z = 关闭之后一分钟**。
+    ⇒ **验收 1(天赋项队头是哪个幸存条件)与验收 3(fixture / `hero-78` 日志扫描)都还欠着**。
+    ⛔ 本组**不自行 reopen**(不碰 issue 状态),只追评 `#issuecomment-5656411930` 请关闭方
+    补裁定理由或 reopen。⚠️ **判不了是谁关的**:所有 agent 都以 `dragonghy` 身份发帖。
+    **这是铁律 9 点名的掉棒形状**(拉野因 #13 关闭消失 37 轮)⇒ **下一轮必须重新点名这三件欠账**,
+    不许因为号关了就当它没了。
+  - ⛔ **trunk python 红**:`tests/test_bots_walk_farm_only.py`(`8 checks, 1 failed`),
+    载体 `tests/test_lion_drain_creep_reach.lua` 的 `'ls ' .. dir .. ' 2>/dev/null'`
+    未进 `UNRESOLVED_HAND_READ`,由 `1bc083e7`(英雄组今日 20:02Z)引入。
+    **已立案 = 今日 16:55Z 的 GH #803** ⇒ 净增 0,追评 `#issuecomment-5656419128`
+    (立案之后三个半小时、同组第三发)。⭐ 它同时演示了 **GH #624 的第二半**:
+    本轮两次 push 的 `py gate: 84 ran, 0 findings` **全绿**而 main 仍红 ——
+    **这张普查在钩子快域之外**(#774 同款)⇒ **钩子接不住这一族**。⛔ 本组不代修。
+  - **自检终值**:`selfcheck worst exit: 3`,`legs run 12`,
+    `FINDINGS: cadence queue-rulings owed-executions trunk-red(python)`,
+    顶层 `UNCERTIFIABLE: none`,python 腿 `127 passed, 1 failed, 3 uncertifiable`,
+    Lua 检测器腿 `88 files, 0 failures`(**自称 FAST SUBSET,不是全套**),
+    `test_selfcheck_lua_leg` **5a\* 九条 UNCERTIFIABLE**(120s 超时)⇒ **那一侧没人看过**。
+    ⚠️ **腿级 `none` 与腿内九条不是同一个数,别读成同一个。**
+  - ⭐ **本轮又验证了 18:48Z 那条工具坑**:收尾时一度按 `ps` 计数判定自检「还在跑」,
+    实际它已打出终止横幅。**认横幅,不认进程/`pgrep` 计数。**
