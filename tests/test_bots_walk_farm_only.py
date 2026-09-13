@@ -154,6 +154,14 @@ UNRESOLVED_HAND_READ = {
         "Hand-read 2026-09-12 (strategy desk) -- registered in the SAME work "
         "unit that added the walk, which is the half GH #774 says keeps going "
         "missing",
+    # -- ⚠️ BOTH DESKS FIXED THIS RED IN THE SAME HOUR (2026-09-13), and the
+    # -- rebase collided here.  The hero desk's entry for the tpdeftower walk is
+    # -- kept verbatim below because it landed first and its attribution is the
+    # -- accurate one: the walk landed in 87ef8628 (strategy, GH #782) and left
+    # -- this check RED on trunk, and the desk that opened the gate next
+    # -- registered it.  The strategy desk's own round (divepost) registers its
+    # -- new walk in the SAME work unit that wrote it, which is the half GH #774
+    # -- says keeps going missing.
     """tests/test_tpdeftower_outpost_narrow.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() at :126 loops dir over the two LITERALS "
         "{'tests/fixtures', 'tests/frames'} with no parameter reaching it, and "
@@ -163,6 +171,11 @@ UNRESOLVED_HAND_READ = {
         "87ef8628 (strategy, GH #782) and left this check RED on trunk, which "
         "is GH #774 / #624 verbatim. Registered by the next desk to open the "
         "gate, not by the author",
+    """tests/test_divepost_outpost_narrow.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the same two literals and runs the same "
+        "non-recursive `ls`; it is a copy of the walk on the line above. "
+        "Hand-read 2026-09-13 (strategy desk, divepost round -- registered in "
+        "the same work unit that wrote it)",
     """tests/test_wk_q_commit_ration.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() at :110 loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:79-:80); non-recursive `ls`, "

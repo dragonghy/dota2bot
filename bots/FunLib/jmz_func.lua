@@ -9518,6 +9518,48 @@ function J.ShouldPunishDive( bot )
 	-- discipline, and the team_roam desire stays HP-remapped (cap, not gate).
 	local bOwnHalf = J.IsSoakCandidate( 'ownhalf' )
 
+	-- [divepost 20260913] Soak candidate 'divepost' (turbo-only by inheritance:
+	-- this helper returns nil on its first line outside turbo). A CAPTURED
+	-- OUTPOST IS NOT A BUILDING WE ARE BEING DIVED AT.
+	--
+	-- ⭐ WHY THIS SITE IS DIFFERENT FROM THE TWO THE FAMILY ALREADY FIXED, and
+	-- it is the reason this one carries an id of its own: 'punish' is PROMOTED
+	-- (see the header), so this loop runs in EVERY turbo game today. The two
+	-- earlier no-name-test anchors -- J.ShouldRefuseUnsupportedPunish ('ohnum',
+	-- 2026-09-12) and J.ShouldPunishOverchase leg (b) ('overchase') -- sit under
+	-- unpromoted hosts, where a narrowing inherits the host id and is inert
+	-- until that id is armed. Here there is no host gate to inherit and
+	-- narrowing in place would change SHIPPED play with no wave behind it, so
+	-- the conjunct carries 'divepost'. No pullcad trap: the host is promoted, so
+	-- this is a single-id gate whose isolation wave reads a real number rather
+	-- than a structurally impossible zero (AGENTS.md, GH #606).
+	--
+	-- THE MEMBERSHIP FACT, measured not argued (tests/_outpost_anchor_sweep.lua:
+	-- wt_fixtures 68 / wt_allied 68 / wt_valid 68): a captured outpost IS in
+	-- GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) and it PASSES J.IsValidBuilding,
+	-- and this loop carries no name test at all -- so an enemy standing 1200 of
+	-- an outpost we happen to hold reads here as an enemy diving one of our
+	-- towers, and the whole team is invited to collapse on it. An outpost has no
+	-- attack, no lane behind it and nothing to lose; proximity to one is not
+	-- over-extension into our defended ground, which is the only fact this
+	-- branch exists to detect (the header calls the 1200 a stand-in for
+	-- tower aggro, a signal the API does not expose).
+	--
+	-- DIRECTION IS FIXED BY CONSTRUCTION: a conjunct ADDED to the loop's
+	-- admission test, so the admitted set is a strict subset of the shipped one
+	-- and `bInDomain` can only go from true to false, never the other way.
+	-- Narrowing it cannot create a punish target; at most it lets the 'ownhalf'
+	-- branch below re-decide the same enemy on the invade-depth reading, which
+	-- is itself a subset test. Un-armed, `not ( false and ... )` is the identity
+	-- element of this `and`, i.e. the shipped bytes.
+	--
+	-- EFFECT SIZE ON THE FIXTURE CORPUS: ZERO, and measured rather than assumed
+	-- -- no visible enemy hero is ever within 1200 of an allied outpost
+	-- (oa_anchor_has_wt 0 over 804 pairs; nearest ever seen 2466.3u, so the
+	-- instrument is alive and the zero is geometry). tests/test_divepost_outpost_narrow.lua
+	-- drives the real helper on both arms and pins the counterfactual.
+	local bDivePost = J.IsSoakCandidate( 'divepost' )
+
 	local tBuildings = GetUnitList( UNIT_LIST_ALLIED_BUILDINGS )
 	if ( tBuildings == nil or #tBuildings == 0 ) and not bOwnHalf then return nil end
 
@@ -9538,6 +9580,7 @@ function J.ShouldPunishDive( bot )
 			local bInDomain = false
 			for _, building in pairs( tBuildings or {} ) do
 				if J.IsValidBuilding( building )
+				and not ( bDivePost and J.IsOutpostBuilding( building ) )
 				and GetUnitToUnitDistance( enemy, building ) <= 1200
 				then
 					bInDomain = true

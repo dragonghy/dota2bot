@@ -8635,5 +8635,23 @@
   "limits": "⛔ **频率本轮一个数都没有,且本地结构上买不到。** `nStack` 是 modifier 层数,make_fixture.py **一个 modifier 都不 dump**,`modifier_skeleton_king_bone_guard` 在语料里 0/111 帧(§5.1 钉这个零,并写明「哪天它不是零了是好消息不是回归」)。⇒ 本 lever 的**存量那一半没有任何真实帧证据**,只有闭式算术。语料**能**承的是 **rank 那一半**(技能等级有 dump:Bone Guard rank 1/2/3/4 各 4/4/7/18 帧,共 33)⇒ §6 把头号反转(rank 3 接受 / rank 4 拒绝)钉在**真实对局里真的到得了的两个 rank** 上。取证请求 `queue.json:hero-70`(零 EC2)。",
   "second_id_same_if": "⚠️ **同一个 `if` 上的第二根 id,登记而不是留成意外**:`wkbonefight` 闸的是同一分支的**敌人数**合取项。两者是独立的 AND 合取项、各自可单独 arm,但**同时 arm 比任何一个单独 arm 都放得更宽** ⇒ 捆绑读数不得归因给其中任何一个。变异台 **M8** 就是「把它俩合取起来」这个格外诱人的 pullcad 陷阱。",
   "bots_lua_changed": true
+ },
+ "divepost_20260913": {
+  "ruling": "LANDED gated ('divepost', turbo-only by inheritance, UNARMED). J.ShouldPunishDive 的出厂建筑循环不再把被占领的瞭望塔当成「我们正被钻塔」的建筑。",
+  "at": "2026-09-13T0x:xxZ",
+  "ref": "iterations/reports/strategy/20260913T0xxxxxZ.md; GH #796",
+  "task": "strategy work unit。章程 backlog 0NEXT2 要求主体在 bots/(OWNER_PRIORITIES 4.4 (i)),并且优先挑「方向由构造固定」的收窄。",
+  "change": "bots/FunLib/jmz_func.lua:J.ShouldPunishDive 的建筑循环准入式加一个合取项 `and not ( bDivePost and J.IsOutpostBuilding( building ) )`,`local bDivePost = J.IsSoakCandidate( 'divepost' )` 读在循环之上。**2 行代码,1 个新 gate id**。",
+  "why_a_new_id_here": "⭐⭐ 本轮最该被带走的一条:**同一族的第三个站点,而它是第一个「宿主已 promote」的站点** —— 'punish' 是 promoted 默认(AGENTS.md),J.ShouldPunishDive 在**每一局 Turbo 里都在跑**,所以这里**没有宿主 gate 可继承**,不加 id 就是在改出货行为。前两个站点(ohnum 2026-09-12、overchase)都挂在未 promote 的宿主下,收窄继承宿主 id 即可(那时新 id 反而会踩 pullcad 陷阱);这里恰好相反:宿主已 promote ⇒ 单 id gate 的隔离读数是**真数**而不是结构性零。",
+  "defect": "一个被我方占领的瞭望塔(npc_dota_watch_tower)**在 GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) 里,并且通过 J.IsValidBuilding**(实测 tests/_outpost_anchor_sweep.lua:wt_fixtures 68 / wt_allied 68 / wt_valid 68),而这个循环**一个名字测试都没有** ⇒ 站在我方瞭望塔 1200 内的敌人读作「在钻我们的塔」,全队被邀请去 collapse。瞭望塔没有攻击、身后没有兵线、丢了也不掉东西;离它近**不是**越界进入我方防御地带,而后者是这条分支唯一想探测的事实(注释自陈 1200 是 tower-aggro 的替身,引擎不给那个信号)。",
+  "census_was_wrong_by_one": "⭐ tests/_outpost_anchor_sweep.lua 抬头逐字写「The two no-name-test anchor sites in bots/」—— **是三个,漏掉的那个正是唯一活着的那个**。归因不是粗心:那份普查是在给两个**候选**定价时写的,**没人在定价的那个站点就不在它的视野里**,而「the two sites」事后读起来像一个封闭枚举。⇒ 新测试 §1 **按树数**(把每个 anchor 和它的 cut 在同一个合取式里配对),不再信散文清单;第四个站点落地当天会自己举手。",
+  "direction": "方向由构造固定:合取项加在循环的**准入式**上 ⇒ 准入集是出厂集的严格子集,bInDomain 只能 true→false;helper 的响应集只可能变小,**不可能造出一个 punish 目标**。收窄至多让下面的 ownhalf 分支在同一个敌人上按入侵深度重新判一次,而那本身也是子集判据。未 armed 时 `not ( false and ... )` 是这个 and 的单位元 = 出厂字节。",
+  "measured": "tests/test_divepost_outpost_narrow.lua **runner 5/5,实测 3.9s**(在快 Lua 闸的 5.5s per-test cap 内,但**没有登进 manifest ⇒ 今天不在钩子里**,如实登记)。141 帧 / 653 活英雄行 / load_fail 0 / raised 0 / pairs 557。出厂 anchor `anchor 62`,其中 **anchor_has_wt 0**;端到端四条臂:`fire_a 32`(出厂开火)= `fire_b 32`(armed)⇒ **flip_ab 0,效应量在本语料上为零且是量出来的**。",
+  "positive_control": "⭐ 否定式读数的正对照:谓词活体 `pred_true 357 / pred_false 6500`(真 handle 两边都非零)、`PRED_DISAGREES 0`(谓词与从它自己源码解析出的字面量 watch_tower 一致)、`anchor 62 > 0`(出厂循环**确实**在准入建筑 ⇒ 「没有瞭望塔 anchor」是关于瞭望塔的陈述,不是关于循环的)、**MIN_WT 2257.3 > 1200**(同一个距离量具在同一批 handle 上报出有限的最近瞭望塔距离,且在半径之外 ⇒ 那个零**归因于几何,不是归因于死量具**)。",
+  "two_arms_that_discriminate": "⭐⭐ 无操作读数分不出「合取项承重且已上闸」与「合取项是死代码」。两条臂都在**同一条代码路径**上只改一个词项(不出树拷贝、不重实现 40 行宿主):**臂 C**(divepost armed + J.IsOutpostBuilding 强制为真)⇒ 32 次出厂开火**全部被压掉**(fire_c 0、cf_suppressed 32);**臂 D**(同样的覆盖但 divepost **未 armed**)⇒ **一次都不变**(fire_d 32、flip_ad 0)。臂 D 是本组此前不会写的那条,它是「闸在场」与「闸承重」的分界 —— 一个漏写 `bDivePost and` 的落地会通过本文件**其他每一节**,只被臂 D 抓住。",
+  "stand": "tools/agent/mutstand_divepost.sh **caught=9 survived=0 STAND GREEN / FINAL_SHA_OK=yes**。M4 是本台存在的理由:把 §1 读的字节**一字不动**,在下一行 `bDivePost = true` 覆盖掉闸 ⇒ §1/§2/§3 全绿,**只有臂 D 变红**。M6 杀臂 C(退回无覆盖驱动)只被 §4 抓到。M9 往树里落一个**新的未收窄 anchor**,§1 的按树计数必须变红。",
+  "collateral": "(1) 本组自己造的 trunk 红修掉:tests/test_bots_walk_farm_only.py 的 UNRESOLVED_HAND_READ 缺 tests/test_tpdeftower_outpost_narrow.lua 的 ls(上一轮落地当天没登记,红留给了本轮开工)—— 连本轮新文件一起补,**同一工作单元内**登记;修后 8 checks / 0 failed。(2) tests/test_gated_helper_nesting_census.lua 两行 re-key(ownhalf → divepost,ownhalf):**不是新嵌套**,是该普查按宿主的 id **集合**做键的既知性质(它自己在 outcommit | slotpush 那条注释里写过),嵌套分类 (P)/(I) 与一切已测读数不变;10/10 绿。",
+  "scope": "零 AWS(一次调用都没有)、零波次、armed 串一字未动(P4.2 冻结:本 id **gated 且 UNARMED**,出货行为逐字节不变)、test_set.md / queue.json 未动。",
+  "next_baton": "(a) 入集解冻后 divepost 需要一个入集提议 + 条件 (a) 核验(证人形状:一帧「敌人在我方瞭望塔 1200 内、且不在任何真建筑 1200 内」—— 本语料 anchor_has_wt 0、最近 2257.3u,所以这一帧要从批测录像里取);(b) 同族**第四个**站点的判据已钉在 §1 的按树计数上,不靠散文。"
  }
 }

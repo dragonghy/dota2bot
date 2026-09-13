@@ -698,7 +698,22 @@ local PINNED = {
     -- function, so landing a second gate anywhere in GetDesireHelper rewrites
     -- this row even when nothing about the nesting changed.
     "overchase | J.ShouldPunishOverchase | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                     -- P
-    "ownhalf | J.ShouldPunishDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                            -- P
+    -- [divepost 20260913] RE-KEYED, NOT NEW NESTING. 'divepost' joined the id
+    -- set of J.ShouldPunishDive when the outpost narrowing landed on the
+    -- SHIPPED building loop (the host is PROMOTED, so the conjunct needed a gate
+    -- of its own). Nothing about this row's nesting moved: 'divepost' is read
+    -- into a local above the loop and used in one admission conjunct; it neither
+    -- encloses nor is enclosed by the call below. This is the same "keys on the
+    -- id SET of the enclosing function" artifact the 'outcommit | slotpush' note
+    -- above describes, and it re-keyed BOTH ShouldPunishDive rows at once.
+    -- Hand-read answer to the question this census asks: un-armed, `bDivePost`
+    -- is false, so `not ( false and ... )` is the identity element of the `and`
+    -- it joined -- the shipped bytes. Measured, not argued: arm D of
+    -- tests/test_divepost_outpost_narrow.lua drives the UNARMED helper with the
+    -- outpost predicate forced true over 653 live rows and gets 0 changed
+    -- answers (tools/agent/mutstand_divepost.sh M4 is the mutant that proves
+    -- that arm is load-bearing).
+    "divepost,ownhalf | J.ShouldPunishDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                   -- P
     -- [ohnum 20260907] It is (I), and unlike most (I) rows in this file the
     -- un-armed identity is the POINT of the lever's placement rather than a
     -- property it happened to have. The conjunct reads `and not
@@ -727,7 +742,9 @@ local PINNED = {
     -- alternative is not left to a comment: tools/agent/mutstand_ohnum.sh M4
     -- performs the move and the placement pin in tests/test_ohnum_refusal.lua
     -- catches it.
-    "ownhalf | J.ShouldPunishDive | J.ShouldRefuseUnsupportedPunish | ohnum | bots/FunLib/jmz_func.lua",                                   -- I
+    -- [divepost 20260913] Re-keyed for the reason given on the sibling row
+    -- above; the (I) reading and everything measured about it is unchanged.
+    "divepost,ownhalf | J.ShouldPunishDive | J.ShouldRefuseUnsupportedPunish | ohnum | bots/FunLib/jmz_func.lua",                          -- I
     -- [GH #326 20260830] 'creepthink' joined this row when it added a second
     -- throttle-bypass clause to the same 400-line Think.  Read by hand before
     -- re-pinning, and it stays (W): the callee `J.GetLanePullDragTarget` is

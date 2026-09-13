@@ -27,7 +27,35 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT2. **【2026-09-13T01:37Z 新增,**下一轮第一项**。**主体继续留在 `bots/`**
+0NEXT3. **【2026-09-13T05:00Z 新增,**下一轮第一项**。**主体继续留在 `bots/`**
+   (OWNER_PRIORITIES **4.4 (i)**;连续第二轮满足,**不要断**)。0NEXT2 的两条选杠杆判据继续有效
+   (方向由构造固定的收窄不需要证人;判据是最下游那个会翻转答案的计数),再加本轮挣到的三条:
+   ⭐⭐ **(甲) 「要不要给收窄加新 id」的判据是「宿主是不是已 promote」,以前只写了一半。**
+   宿主是**未 promote 候选** ⇒ **不要**加新 id(pullcad 陷阱,`ohnum`/`tpdeftower` 两轮都是这样);
+   宿主**已 promote** ⇒ **必须**加,因为没有 gate 可继承,不加就是在无波次背书下改出货行为
+   (本轮 `divepost`)。⇒ **选杠杆时先查宿主的 promote 状态**,它决定落法而不只是文书。
+   ⭐⭐ **(乙) 优先找「出货中」的站点,不要只在候选里找。** 本轮的站点是同族第三个,却是**第一个
+   活着的**,而它此前不在任何普查视野里 —— 因为那份普查是在给两个**候选**定价时写的。
+   ⇒ 凡是「某个族有 N 个站点」的散文清单,**先按树重数一遍**(`anchor` 与它的 `cut` 在同一个
+   合取式里配对),尤其要数 promoted helper 里的。
+   ⭐ **(丙) 收窄落地必须带一条「未 armed 臂 + 强制谓词为真」的臂(本轮臂 D)。**
+   它是「闸在场」与「闸承重」的分界:漏写 `<gate> and` 的落地会通过其他每一节,只被这条臂抓住;
+   对应的变异体是「读闸然后下一行覆盖掉它」(`mutstand_divepost.sh` M4)。
+   ⛔ **已被定价并排除、不要重买**(继承 0NEXT2 全部,本轮无新增):
+   `stayfield2` 抬 0.55→0.75、GH #511 的 `IsChanneling` 守卫、
+   `J.ShouldPunishOverchase` leg (b) 的 DEEP 建筑支路(`overchase`,端到端 `oc_fire_building 0`
+   —— **注意它现在被 `test_divepost_outpost_narrow.lua §1` 明确登记为「恰好一个允许的未收窄锚点」**,
+   哪天要动它,先改那条断言)、overchase 四个收窄(GH #760 全拒,卡 dumper = GH #786)、
+   `mode_retreat_generic:95` 的 `'tower'` 站点。
+   ⛔ **排程约束(继承)**:变异台与开工自检**不能并发**。
+   ⚠️ **两条本轮实测的工具坑**:(i) `pgrep -f <名字>` 会匹配**发出命令的 shell 自己** ⇒ 别用它判断
+   后台任务死活(白等 15 分钟),读后台输出文件或按 `comm` 筛;(ii) `lua_gate_measure.py`
+   **没有 `--help`**,传了它当场开始全量重测并会重写 manifest —— **对会写仓库的工具不要试探性
+   传 `--help`**。】**
+
+0NEXT2. ✅ **【2026-09-13T01:37Z 新增 → 2026-09-13T05:00Z 做完(GH #796,`divepost` 落地,
+   2 行 `bots/` 代码 + 1 个新 gate id;报告 `iterations/reports/strategy/20260913T050052Z.md`、
+   `state.json:divepost_20260913`)。原文保留在下,便于对照。**主体继续留在 `bots/`**
    (OWNER_PRIORITIES **4.4 (i)**;上一轮 0NEXT 已由本轮的 GH #782 收窄满足,连续未满足的链条断了 ——
    **不要让它重新接上**)。判据仍是 **最下游那个真正会翻转答案的计数**,不是腿级几何计数。
    ⭐ **本轮新增的一条选杠杆判据(比「有没有证人」好用)**:如果一把刀的**方向由构造固定**
@@ -8656,6 +8684,66 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-13T05:00Z:**同一族的第三个站点落刀(`divepost`,2 行 `bots/` 代码)——
+  而本轮真正的产出是**昨天那份普查抬头写着「the two no-name-test anchor sites」,是三个,
+  漏掉的那个恰好是唯一一个出货中的**这一条。**
+  `J.ShouldPunishDive`(promoted `punish`,**每一局 Turbo 都在跑**)的建筑循环没有名字测试,
+  于是一个被我方占领的瞭望塔读作「我们正被钻塔」并邀请全队 collapse
+  (成员资格是实测的:`wt_allied 68 / wt_valid 68`,在表里且过 `IsValidBuilding`)。
+  ⭐⭐ **本轮最该被下一轮读到的三句:**
+  (甲) ⭐⭐ **「要不要给收窄加新 id」的判据是「宿主是不是已 promote」,而这条以前只写了一半。**
+  写下来的那一半是「宿主是未 promote 候选 ⇒ 不要加(pullcad 陷阱)」,`ohnum` 与 `tpdeftower`
+  两轮都按它落。另一半是它的**反面**:宿主**已 promote** ⇒ **必须**加,因为没有 gate 可继承,
+  不加就是在**无波次背书**下改出货行为;而且此时单 id 的隔离读数是**真数**,不是结构性零。
+  ⇒ 选杠杆时**先查宿主的 promote 状态**,它决定落法,不只是文书。
+  (乙) ⭐⭐ **普查按「谁在被定价」枚举,就找不到没人在定价的那个站点。**
+  `tests/_outpost_anchor_sweep.lua` 是在给两个**候选**(`ohnum`/`overchase`)定价时写的,
+  于是同形状的**出货** helper 从来不在它视野里,而「the two sites」事后读起来像封闭枚举。
+  解药比「解析出货表达式」再进一步:**按树数,不要按散文清单数** —— 新文件 §1 把每个
+  `GetUnitToUnitDistance( _, building ) <=` 锚点与它所在合取式里的 `IsOutpostBuilding`
+  **配对**(回看 240 字符),断言**恰好一个**未收窄锚点(登记在案的 overchase leg (b))。
+  ⛔ 特意**不**写成「两个总数相等」:今天两个总数恰好都是 3,但三个 cut 里有一个 narrow 的是
+  `>` 距离测试、**根本不是这个形状的锚点** —— **两个都错的数相等是世界上最容易误得的绿**。
+  (丙) ⭐ **一条「未 armed 臂 + 强制谓词为真」的臂(臂 D),是「闸在场」与「闸承重」的分界。**
+  无操作读数分不出「承重且已上闸」与「死代码」:臂 C(armed + 谓词强制真)⇒ 32 次出厂开火
+  **全部被压掉**,那是**承重**;臂 D(同样覆盖但**未 armed**)⇒ **一次都不变**,那是**已上闸**。
+  一个漏写 `bDivePost and` 的落地会通过本文件**其他每一节**,只被臂 D 抓住;对应变异体 **M4**
+  是「读闸,然后下一行 `bDivePost = true` 覆盖掉它」—— §1 读的字节一字不动,§1/§2/§3 全绿。
+  **读数**(141 帧 / 653 活行 / `load_fail 0` / `raised 0` / `pairs 557`):`anchor 62`、
+  **`anchor_has_wt 0`**、`MIN_WT 2257.3`(> 1200 ⇒ 零**归因几何不归因死量具**)、
+  `pred_true 357 / pred_false 6500` / `PRED_DISAGREES 0`(字面量**从谓词源码解析**);
+  端到端 `fire_a 32`(出厂,2026-09-09 登记 28)= `fire_b 32` ⇒ **`flip_ab 0`**;
+  臂 C `fire_c 0` / `cf_suppressed 32`;臂 D `fire_d 32` / `flip_ad 0`。
+  产出:`bots/FunLib/jmz_func.lua`(**2 行代码 + 1 个新 gate id `divepost`,gated 且 UNARMED**)、
+  `tests/test_divepost_outpost_narrow.lua` **runner 5/5(3.9s)**、
+  `tools/agent/mutstand_divepost.sh` **caught=9 survived=0 STAND GREEN / FINAL_SHA_OK=yes**、
+  `state.json:divepost_20260913`、报告 `iterations/reports/strategy/20260913T050052Z.md`、GH **#796**。
+  **附带两条**(都不是主体):(i) **本组自己造的 trunk 红修掉** ——
+  `tests/test_bots_walk_farm_only.py` 的 `UNRESOLVED_HAND_READ` 缺**上一轮**
+  `test_tpdeftower_outpost_narrow.lua` 的 `ls`(落地当天没登记,红留给本轮开工;GH #624/#774 形状,
+  这次作者与登记者是同一个座位),连本轮新文件一起补,修后 **8 checks / 0 failed**;
+  (ii) `tests/test_gated_helper_nesting_census.lua` 两行 re-key(`ownhalf` → `divepost,ownhalf`)
+  —— **不是新嵌套**,是该普查按宿主 id **集合**做键的既知性质(它自己在 `outcommit | slotpush`
+  那条注释里写过),分类 (P)/(I) 不变,而它问的那个问题(未 armed 时内层是不是单位元)
+  **本轮有实测答案 = 臂 D**;10/10 绿。
+  ⚠️ **新测试不在钩子里,如实登记**:3.9s 在 5.5s cap 内,但进 manifest 的唯一合法动作是
+  **全量 436 文件重测**(重写整份 manifest,GH #783 演示过代价)⇒ 这份文件的红**挡不住任何人的
+  push**(GH #624 形状),上一轮那份同样在闸外。
+  ⚠️ 开工自检 **EXIT=3**(FINDINGS: cadence queue-rulings owed-executions trunk-red(python);
+  **UNCERTIFIABLE: none**);首条命令**第 9 次**被 `REFUSED: stdout is a pipe` 挡回。
+  完整 python 套件本轮跑过:**125 passed / 2 failed / 1 uncertifiable**,两条 failed
+  (`test_carrier_terms.py` 英雄组、`test_detector_source_constants.py` GH #787)**均先于本轮且有号**;
+  ⚠️ `test_py_gate_hook.py`(GH #795)在自检那一遍 FAIL、在本轮套件里 **PASS** ——
+  如实登记**两个不同读数,不冒充诊断**。
+  ⚠️ **两条自伤的工具教训**(都进 backlog):(i) `pgrep -f <名字>` **匹配得到发出命令的 shell
+  自己** ⇒ 两次把「早跑完了」读成「还在跑」,白等约 15 分钟;(ii)
+  `lua_gate_measure.py` **没有 `--help`**,传了它当场开始全量重测并会重写 manifest,
+  被 `| head` 的 SIGPIPE 打断、`git status` 确认 manifest **零 diff** ——
+  **对会写仓库的工具不要试探性传 `--help`**。
+  ✅ **OWNER_PRIORITIES 4.4 (i) 连续第二轮满足**。**零 AWS、零波次、armed 串一字未动**
+  (P4.2 冻结;gated 且 UNARMED ⇒ 出货行为逐字节不变)。
+  铁律 6 三行与 token 用量见报告 §9/§10。
 
 - 2026-09-13T01:37Z:**GH #782 的刀落了(1 行 `bots/` 代码,gated 继承 `midtp`/`suptp`)——
   而本轮真正的产出是**昨天专门为这次落地写的那道门,在落地当天保持全绿**这一条。**
