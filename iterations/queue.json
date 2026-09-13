@@ -2660,6 +2660,15 @@
    "acceptance": "从归档 behavioral dump 里,对每一局的 Wraith King(**按 ab / ba 两个分层分别登记读数**,铁律 4(i-a))输出:(1) WK 同帧满足出货储备规则**全部五个合取项**(`nLV >= 6`、Q/R 句柄非 nil、`abilityR` 冷却剩余 <= 3.0、`GetMana() - Q:GetManaCost() < abilityR:GetManaCost()`)的帧数 —— 这是 `wksaveidle` 的全域,本组目前只有 6/33 的 fixture 读数;(2) ⭐ **本请求的价值列**:把 (1) 的帧按 `abilityR:GetManaCost() / bot:GetMaxMana()` 分成 `>= 0.5` / `[0.4, 0.5)` / `< 0.4` 三层,并**同时按 R 的 rank 分层**(rank 1 → 220,rank 2 → 110)。`< 0.5` 那一层就是 `wkidleshare` 的域,其余层 armed 与 baseline 逐字节相同;(3) (2) 的 `< 0.5` 层里,同帧 1600u 内可见敌方英雄数与 WK 血量比 —— 这两列决定这些帧本来**会不会被 `wksaveidle` 释放**(只有满血 + 零可见敌人的才会,其余本来就被拦);(4) ⭐ **顺带买一条独立读数,因为同一份 dump 就能答**:全语料里 WK 的 **R rank 最大值** 与 **英雄等级最大值**。这是对 GH #366 那堵墙的第一次**跨语料**核对 —— fixture 侧只能说「12 级以下没见过 rank 3」。整数取值、小值域 ⇒ 铁律 4(ii):(2) 与 (3) 给**均值 + 分布**与某阈值的占比,不要只报中位数。\n**判读(先写下来,免得事后挑)**:\n(i) (2) 的 `< 0.5` 层里再叠上 (3) 的「满血 + 零敌人」之后帧数 ~0 ⇒ 效应量上界先于对错,按 P4.2 口径 **reject / 不入集**,理由写「域为 0」而非「测过了没效果」;\n(ii) 该层可观 ⇒ `wksaveidle` armed 在后期确实在释放一份只占池子一成的储备,`wkidleshare` 的条件 (c) 到手,P4.2 解冻后**与 `wksaveidle` 一起**提入集(它是后者的收窄,单独 arm 无意义);\n(iii) ⛔ 若 (4) 报出**任何** rank-3 的 WK,先停下来:那不是这条 lever 的读数,那是 GH #366 的墙被推翻,`hero_skeleton_king.lua` 里两处 2026-09-13 的 ⛔ 更正块与本条请求都要重读。",
    "requested_by": "hero 2026-09-13",
    "zero_ec2": true
+  },
+  {
+   "id": "hero-77",
+   "stream": "hero",
+   "bundle": "cmcreepclock (新落地 gated id;本条只要**域的频率**,零 EC2,不要为它单独发波)",
+   "priority": 3,
+   "status": "pending",
+   "question": "⛔ **零 EC2 的归档只读扫描。一句话:真实 Turbo 对局里,Crystal Maiden 满足 `X.ConsiderW` 小兵分支外层块全部前提(不在 LANING/RETREAT/ATTACK、1600 内无敌方英雄、1200 内友军 < 3、等级 >= 5)、且视野内有一只合法基础兵的帧,有多少落在 (5:00, 10:00] 这个窗口里?** `cmcreepclock`(2026-09-13 落地)把那两条小兵分支的析取时钟从 `DotaTime() > 10*60` 减半到 `5*60`(turbo-only,gated,**纯放宽**)。\n\n⛔ **fixture 层结构上买不到这个数,本地已量到并写在源码抬头与 `tests/test_cm_w_creep_clock.lua` §3.4 里**:该分支需要一个小兵**单位**,而 `bot:GetNearbyCreeps` 在 **70/70** 个 CM 瞬间上答空表(`CORPUS_HAS_NO_NONHERO_UNITS_20260912`,与 `cmfarcreep`/`cmrangedhp`/`cmcreepcap` 同一阻塞)⇒ **端到端域 = 0,结构性的**。gate 层域倒是量到了:32 个瞬间过三个可测合取项,其中 **15 个**在窗口内。\n\n⚠️ **`mode` 合取项这条扫描必须自己测**,本地测不了:`GetActiveMode()` 在 1314/1314 个语料句柄上是 mock 默认 0(**已登记**的世界断言 13),所以本地那个 15 **不包含** mode 项成立的证据。",
+   "acceptance": "从归档 behavioral dump 里,对每一局的 Crystal Maiden(**按 ab / ba 两个分层分别登记读数**,铁律 4(i-a))输出:(1) 落在 (5:00, 10:00] 且外层块四个前提**全部**成立(mode 项**要真的读**)的帧数 / 每局;(2) 其中视野内确有一只**基础车兵/近战兵**(那四个 `npc_dota_creep_*guys_melee/ranged` 名字)且血量过该分支自己的地板的帧数 —— **(2) 才是本 lever 的真实域**;(3) 同样两个数在 t > 10:00 的一侧,作分母对照。⛔ 计数类整数量**不报中位数**(铁律 4(ii)),报均值 + 分布。"
   }
  ],
  "done": [

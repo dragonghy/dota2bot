@@ -22,6 +22,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-166. ✅ **`-165` 的第 0 条(老 `[hero]` 存量分诊)本轮做掉了,而分诊的结论是「存量不是待办,是档案」;
+   主体则回到 P4.4 (i):落地 `cmcreepclock`(CM,gated,turbo-only,**纯放宽**)** —— 报告
+   `iterations/reports/hero/20260913T135651Z.md`,新测试 `tests/test_cm_w_creep_clock.lua`(10 绿)+
+   `tests/test_lion_maykilltarget_param.lua`(4 绿),变异台 `tools/agent/mutstand_cmcreepclock.sh`(**12/12**),
+   GH **#785** 结案。零 AWS,零波次。
+   - ⭐ **新形状:一条被**正确地** scope-out 的读数,和一条从来没有人问过的问题,是两件事。**
+     `cmtfclock` 的抬头把 `X.ConsiderW` 另外两处 `DotaTime()` 读数排除在外,理由是**形状**
+     (它们是 DISJUNCT,时间在那里放宽目标类规则而不是门住施法)。**那个 scoping 是对的,本轮一字未动。**
+     它没回答的是另一根轴:`10 * 60` 是**普通模式常量**(GH #157),而一个普通模式常量在 Turbo 里错不错,
+     **跟它坐在合取里还是析取里无关**。⇒ 同一字面量上的两个问题,**故意不合并**(合并会让波读数无法归因)。
+   - ⛔ **本轮最该被别组拿走的自我约束:差点把一条五周前的世界断言当成新发现。**
+     量到 `GetActiveMode()` 在 **1314/1314** 个语料句柄上答 **0**(而 BOT_MODE_* 是 1001–1005),
+     第一反应是「新世界断言,开 issue」;**收尾前查注册表,它五周前就在**
+     (`activemode_WORLD_ASSERTION_13_20260821`)。已改成引用。
+     ⇒ **写「发现」之前先 grep 注册表**,代价是一次 grep,不写的代价是一条假新闻。
+     它对本 lever 的后果是**坏消息**:mode 合取项离线**空洞地真** ⇒ gate 层域那个 15
+     **不含任何「mode 项成立」的证据**,抬头那段是**从源码读的不是从帧读的**(§5.3 钉住)。
+   - ⭐ **棘轮开火了,而那正是它存在的理由**:`test_cm_w_teamfight_clock.lua` §5.1 原本钉
+     `count(ConsiderW,'DotaTime()')==2`,字面量搬进 helper 后归零。**重新推导**(不是把数字改成对得上):
+     现在断言问时钟**恰好三次、全走具名 helper、一次裸读都没有**。
+   - **域两个数,第二个是零**:gate 层 **15/70**(32 个过三个可测合取项,15 个落在 (5:00,10:00]);
+     端到端 **0,结构性** —— `GetNearbyCreeps` 在 **70/70** 个 CM 瞬间上答空表
+     (`CORPUS_HAS_NO_NONHERO_UNITS_20260912`)⇒ **谁也不许报一个本 lever 增加的施法**。取证走 `queue.json:hero-77`(**零 EC2**)。
+   - **分诊结论(可以停止把它排在前面了)**:全部 676 条 open issue 按标题分类 + 三条抽样读正文核实,
+     **三选三全部落空** —— #154 已落地 gated `axebhpure`、#59 的 `zusult` 已 PROMOTED、#63 的 `cmrguard` 已退集。
+     ⚠️ **边界**:标题分类 + 三例抽样,**不是 676 条逐条读正文**;支持「不必再优先分诊」,
+     **不支持**「存量里没有任何有价值的东西」。
+   - ⭐ **下一轮最该做的,按顺序**:
+     1. ⭐⭐ **GH #799 的第 1 步**(已被排在后面**两轮**):在 mock 里给天赋槽真实句柄,把三个升级条件里
+        失败的那个**指出来**。自足小单元、不碰 `bots/`,是本组眼下最大杠杆的入口。
+        ⚠️ 但它是**量具**,按 P4.4 **只能当附带项** —— 要么与一个 `bots/` 改动同轮做,要么先说服总监这算 (ii)。
+     2. `cullthresh_domain.py` 的 docstring **还写着三带**(`-165` 留下的,工具侧,附带项)。
+     3. ⛔ **不要因为 #799 去翻任何 t10 行**(线索 n=1、一帧,按线索登记不按结论登记)。
+     4. 自检日志里两行 `lua5.1 is absent` / `luacheck is not installed` 与容器现状矛盾
+        (两者都在 `/usr/bin/`)⇒ 描述的是自检开跑那一刻,**交量具线看一眼**。
+
 -165. ✅ **`-164` 的第 1 条(`cullthresh` 的域声明)与第 2 条(CM/Lion/Zeus 的 t15+ 读点没量过)
    本轮一起做完,而第 1 条自己的前提被**收窄**了** —— 报告
    `iterations/reports/hero/20260913T110825Z.md`,新测试 `tests/test_focus_talent_reach_wall.lua`(6 绿),
@@ -7315,6 +7351,39 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-13T13:56Z(报告 `iterations/reports/hero/20260913T135651Z.md`;**backlog:新开 `-166`**;
+  OWNER_PRIORITIES **P4.4 (i) 达标** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期不请求入集,
+  armed 串与 test_set.md 一字未动**;零 AWS、零波次)
+  **落地 `cmcreepclock`(CM,gated,turbo-only,纯放宽),做掉欠了两轮的存量分诊,结掉 GH #785。**
+  - ⭐ **一条被正确地 scope-out 的读数,和一条从来没有人问过的问题,是两件事。**
+    `cmtfclock` 抬头以**形状**为由排除 `X.ConsiderW` 另两处 `DotaTime()`(DISJUNCT,放宽目标类规则
+    而非门住施法)——**那个 scoping 是对的,本轮一字未动**。未被回答的是另一根轴:`10 * 60` 是
+    **普通模式常量**(GH #157),而它在 Turbo 里错不错**与合取/析取无关**。两个问题,**故意不合并**。
+  - **修法**:`X.cm_IsCreepClockOpen()` + 具名常量 `10*60` / `5*60`(减半,复用 `cmtfclock` 用过的
+    同一个 ~2x Turbo 节奏比,两次读数才可比);两处调用点各换一次;**未 armed 逐字节等于出货表达式**。
+    方向 **WIDENING 按构造**(TURBO<SHIPPED ⇒ armed 是严格超集,只能加施法、永不移除)。
+  - **域两个数,第二个是零**:gate 层 **15/70**;端到端 **0,结构性**
+    (`GetNearbyCreeps` 在 70/70 个 CM 瞬间答空表)⇒ **谁也不许报一个本 lever 增加的施法**。
+  - ⛔ **差点把一条五周前的世界断言当成新发现**:`GetActiveMode()` 在 **1314/1314** 个句柄上答 **0**
+    (BOT_MODE_* 是 1001–1005),收尾前查注册表发现 `activemode_WORLD_ASSERTION_13_20260821`
+    **五周前就在**,已改成引用。⇒ **写「发现」前先 grep 注册表。**
+    后果是坏消息:mode 合取项离线**空洞地真**,那个 15 **不含「mode 项成立」的证据**。
+  - ⭐ **棘轮开火并被重新推导**(不是把数字改成对得上):`test_cm_w_teamfight_clock.lua` §5.1 从
+    「裸 `DotaTime()` 恰好 2 次」改成「问时钟恰好三次、全走具名 helper、裸读 0 次」。
+  - **附带 GH #785 结案**(Lion `X.MayKillTarget` 形参只守约一半):按 issue 的第 1 条处置做**可证等价重构**,
+    棘轮 §2 断言的是「函数体不出现任何文件作用域目标名」**而不是**「读了三次 `nTarget`」——
+    后者能被「三次 `nTarget` 外加一次 `botTarget`」满足,而缺陷正是那第二个名字的**存在**。
+  - **分诊**:676 条 open issue 按标题分类 + 三条抽样读正文,**三选三全部落空**
+    (#154 已落地 / #59 已 promote / #63 已退集)⇒ 存量以**交付档案**为主。
+    ⚠️ 边界:抽样不是逐条,支持「不必再优先分诊」,不支持「存量里没有价值」。
+  - **变异台 12/12**(`tools/agent/mutstand_cmcreepclock.sh`),含**故意的 M0 无操作对照如期 SURVIVED**;
+    判定读 runner 自己的 `N tests, M failures` **计数**不读行子串;还原走**文件拷贝**不走 `git checkout`。
+  - **门**:`GATE_EXIT=0`(luacheck 0 警告)、smoke exit 0;三条腿读数见报告 §5 与末尾 push 节。
+    **动态全套未跑完,不声称。** 自检真码从日志 `exit sources` 节读作 **3**
+    (`cadence`/`queue-rulings`/`owed-executions` **归总监**;`trunk-red(python)` UNCERTIFIABLE);
+    ⚠️ 自检第一次调用被工具**自己拒绝**(证据纪律 3,提示称**第 5 次**同形复发),
+    第二次超 300s 转后台**丢了 `echo EXIT=$?`** ⇒ 退出码是**读日志**得到的,不是读 shell。
+    ⚠️ `test_selfcheck_lua_leg.py` **9 条 UNCERTIFIABLE** —— **不是通过**,那九条这轮没人看过。
 - 2026-09-13T11:08Z(报告 `iterations/reports/hero/20260913T110825Z.md`;**backlog:新开 `-165`**;
   OWNER_PRIORITIES **P4.4 (ii)** —— 主体是 registered queue row `hero-2` 的域证据,
   `bots/` 零行为改动,理由见报告 §6;**P4.2 冻结期内不请求入集**;零 AWS)

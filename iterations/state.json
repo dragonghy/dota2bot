@@ -8745,5 +8745,23 @@
   "limits": "(i) mock 的 GetEstimatedDamageToTarget 只对「作用于该 fixture 主体的敌人」给真实伤害 ⇒ SafeToCommitFight 的 LETHAL 支路在此近乎死支,本文件所有臂差基本都是 NUMBERS 支路差(GH #611 同族)。(ii) **dumper 不带 attack-target 字段(GH #786)** ⇒ 本语料无法回答「真实对局里 `bot:GetTarget()` 有多**常**落在圈外」,只能回答「落在圈外时会怎样」。**本文件任何一处都没有声称过那个频率**;§5 的近带读数是**证人计数,不是频率**。(iii) 只驱动**主体同队**的行,因为 J.GetEnemiesNearLoc / GetAlliesNearLoc 经全局 `GetTeam()` 解析阵营,而那是 fixture **主体**的阵营。",
   "mutation_stand": "tools/agent/mutstand_divepocket.sh:**caught=8 survived=1(C0 控制项)FINAL_SHA_OK=yes STAND GREEN**。⭐⭐ **M4(无条件丢弃代表目标)第一次跑 SURVIVED,而那是产出不是返工**:§3 原来把臂 C 写成 `flip_ac == 0`(一个**答案**计数),而这份语料上「把圈内代表换成圈内血最低的那个」**不改变任何答案** ⇒ 该断言在变异体下同样为真。补法是本组的(戊)规则:**数分支不数答案** —— 测试现在包住 `J.SafeToCommitFight` 读回它真正拿到的那个句柄(`in_rep_swapped` / `far_rep_kept`),M4 今天由它抓住。另:M7 改锚后一度打出 **NON-MUTANT**(零字节改动),那条护栏按设计拦下了一个会被误读成 CAUGHT 的绿。",
   "next": "本 id **未 armed、未入集**(P4.2 冻结)。要买条件 (a) 需要:①(可选)dumper 补 attack-target 字段(GH #786)以给出「圈外命令目标」的**频率**;② 一个 armed `divepocket` 的波次,录像组核验 `sandwiched_walk` 与 `tp_home_wasteful` 不退化。**本轮不提 queue 请求**(冻结期内合法裁定只有 FROZEN-HOLD),登记在此等解冻。"
+ },
+ "cmcreepclock_20260913": {
+  "owner": "hero",
+  "date": "2026-09-13T14:xxZ",
+  "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(冻结期唯一合法裁定是 FROZEN-HOLD)。turbo-only,未 armed。与 `cmtfclock` **相互独立**:两个 gate 谁也不出现在对方的条件里,可以单独 arm。",
+  "backlog_item": "OWNER_PRIORITIES **P4.4 (i)**:工作单元主体是一个 `bots/` 行为改动。认领路径是章程工作流第 1 步的**老 `[hero]` 存量分诊**(backlog `-165` 第 0 条,已连续两轮被排在后面)——分诊结论见 headline。",
+  "headline": "⭐ **一条被正确地 scope-out 的读数,和一条从来没有人问过的问题,是两件事。** `X.cm_IsTeamfightClockOpen`(`cmtfclock`)的抬头把 `X.ConsiderW` 里另外两处 `DotaTime()` 读数**明确排除在外**,理由是**形状**:那两处各是一个 DISJUNCT(`DotaTime() > 10 * 60 or <这只小兵不是基础兵>`),时间在那里**放宽一条目标类规则**而不是**门住一次施法**。那个 scoping **是对的,本轮一字未动**。但它没有回答、也没打算回答的是另一根轴:**`10 * 60` 是一个普通模式常量**(GH #157:全仓 381 处时钟比较,只有 18 处 turbo 感知),而一个普通模式常量在 Turbo 里错不错,**跟它坐在合取里还是析取里无关**。同一个字面量上的两个问题,故意不合并(合并会让一次波读数无法归因)。",
+  "defect": "`bots/BotLib/hero_crystal_maiden.lua` `X.ConsiderW` 的两条小兵分支(先远 / 再近)各带一个 `DotaTime() > 10 * 60` 析取项。该时钟是「对线期结束了」的**代理**,而外层块的**第一个合取项**已经直接测了同一件事(`bot:GetActiveMode() ~= BOT_MODE_LANING`,旁边还有 RETREAT / ATTACK)。普通模式下 10:00 与 mode 翻转大致重合,代理几乎免费;**Turbo 下 mode 远早于 10:00 就离开 LANING,那段间隙里时钟是唯一还在拒绝的项**。",
+  "fix": "gated helper `X.cm_IsCreepClockOpen()`(turbo-only,id `cmcreepclock`),阈值写成命名常量 `X.nWCreepClockShipped = 10 * 60` / `X.nWCreepClockTurbo = 5 * 60`(出货数**减半**,2x 用的是本仓自己写下的 Turbo 节奏比 ~20min vs ~35-40,也是 `cmtfclock` 在 6*60 上用过的同一个比 —— 复用而不是再发明一个,两次读数才可比)。两处调用点各换成 `X.cm_IsCreepClockOpen()`;**未 armed 时该 helper 逐字节就是出货表达式**(`tests/test_cm_w_creep_clock.lua` §5.2 钉住)。",
+  "bots_lua_changed": true,
+  "direction": "WIDENING,**按构造**不是按单调性:TURBO < SHIPPED ⇒ 出货接受的每一个 t,armed 也接受 ⇒ armed 是出货的**严格超集**。arming 只能**增加**小兵施法,窗口 (5:00, 10:00],永远不会移除或移动一次施法。§4 在整份语料上断言,不靠论证。",
+  "domain_gate_layer": "**15 个语料瞬间**。70 个存活 CM 瞬间里,32 个通过外层块**可测的**三个非时钟合取项(1600 内无敌方英雄 / 1200 内友军 < 3 / 等级 >= 5),其中 **15 个**落在 (5:00, 10:00] —— 时钟是唯一还在拒绝的项;另有 **17 个**已过 10:00(出货本来就放行)。对照:`cmtfclock` 的 gate 层域是**单帧**。",
+  "domain_end_to_end": "⛔ **0,而且是结构性的 0 不是运气**:该分支需要一个小兵**单位**,而这份语料一个都没有 —— `bot:GetNearbyCreeps` 在 70/70 个 CM 瞬间上答空表,与 `cmfarcreep` / `cmrangedhp` / `cmcreepcap` 记录的是同一个阻塞(见本文件 `CORPUS_HAS_NO_NONHERO_UNITS_20260912`)。⇒ **没有任何语料帧能展示本 lever 增加的施法,谁也不许报一个。** 翻转量在**分支本来会读的那个时钟**上测。两半分别断言(§3.3 / §3.4),§3.4 是**单向 tripwire**。",
+  "limits": "⛔ **mode 合取项本轮没有被测量,任何域读数都不许被读成『mode 项成立』。** `GetActiveMode()` 在 **1314/1314** 个语料英雄句柄上答 **0**,而 BOT_MODE_NONE/LANING/ATTACK/RETREAT 是 1001/1002/1003/1005 ⇒ 通用 `^Get` 默认值,谁也不匹配 ⇒ 该合取项离线**恒真(空洞地真)**。这是**已登记的世界断言 13**(`activemode_WORLD_ASSERTION_13_20260821`,`tests/test_activemode_world_assertion.lua`),**本轮不是新发现**——收尾核对时查到它五周前就在了,原本要当新发现写。抬头那段「块自己已经直接测了对线期」是**从源码读的,不是从帧读的**,§5.3 把这条钉住,防止后来的读者把它升格成帧证据。",
+  "not_in_this_id": "(1) 这条分支**该不该带时钟**;(2) 冻住基础兵值不值那点蓝。减半是窄改动;把两问合并会让一次波读数无法归因。",
+  "tests": "tests/test_cm_w_creep_clock.lua(**10 绿**)。变异台 `tools/agent/mutstand_cmcreepclock.sh`(含 M0 无操作对照)。",
+  "ratchet_fired": "⭐ **本轮改动把 `tests/test_cm_w_teamfight_clock.lua` §5.1 顶红了,而那正是它存在的理由。** 该断言原本钉 `count(ConsiderW, 'DotaTime()') == 2` 与 `count(..., 'DotaTime() > 10 * 60') == 2`;两处字面量搬进 helper 后**双双归零**。⇒ 棘轮在它守着的普查**真的变了**的那一刻开火。已**重新推导**(不是把数字改成对得上):现在断言 `X.ConsiderW` 问时钟**恰好三次、三次全走具名 helper、一次裸 `DotaTime()` 都没有**。`cmtfclock` 抬头里引用旧字面量的那一段同步更正,并写明 **scoping 未变、变的只是字面量住在哪里**。",
+  "next": "条件 (a) 只能从波上买(语料结构上买不到)。已提 `iterations/queue.json` **`hero-77`**(**零 EC2**,归档 .dem 只读扫描)。⛔ **不许只凭 (c) promote** —— 这是一个加施法的改动,而语料结构上量不出加多少。"
  }
 }

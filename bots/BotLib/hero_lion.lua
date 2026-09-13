@@ -2354,6 +2354,29 @@ function X.IsOtherAbilityFullyCastable()
 end
 
 
+--- GH #785, resolved by the issue's own option 1: a PROVABLE-EQUIVALENCE
+--- refactor, not a behavior change, so no gate and no soak candidate.
+---
+--- WHAT WAS WRONG.  The parameter `nTarget` was read exactly ONCE (the Finger
+--- modifier test); the damage estimate and the kill check below it both read the
+--- FILE-SCOPE `botTarget` instead.  Today that is byte-for-byte the same thing --
+--- both call sites (:1441, :1459) pass `botTarget` -- which is precisely why no
+--- test and no census ever caught it.  It is a timer, not a bug: the signature
+--- says the function answers a question about the target you hand it, and the
+--- body only honours that for one of its three readings.  A future call site
+--- asking "can I kill this OTHER hero" would have got armour, evasion and health
+--- from the CURRENT target and a Finger modifier from the one it asked about, and
+--- would have been answered SILENTLY -- no error, no nil, no luacheck warning
+--- (`botTarget` is a legal file-scope local).
+---
+--- ⚠️ nil BEHAVIOUR IS UNCHANGED, checked rather than assumed: line 1 already
+--- indexes `nTarget`, so a nil argument raised before this change and raises
+--- after it.  Only the SOURCE of the two lower readings moved.
+---
+--- Pinned by tests/test_lion_maykilltarget_param.lua, which asserts the body
+--- names no file-scope target at all -- a comment saying "it really means
+--- botTarget" would have been the one fix the issue ruled out, because it swaps
+--- an executable constraint for prose.
 function X.MayKillTarget( nTarget )
 
 	if nTarget:HasModifier( "modifier_lion_finger_of_death" )
@@ -2361,8 +2384,8 @@ function X.MayKillTarget( nTarget )
 		return true
 	end
 
-	local nDamageToTarget = bot:GetEstimatedDamageToTarget( true, botTarget, 9.0, DAMAGE_TYPE_PHYSICAL )
-	if J.CanKillTarget( botTarget, nDamageToTarget, DAMAGE_TYPE_PHYSICAL )
+	local nDamageToTarget = bot:GetEstimatedDamageToTarget( true, nTarget, 9.0, DAMAGE_TYPE_PHYSICAL )
+	if J.CanKillTarget( nTarget, nDamageToTarget, DAMAGE_TYPE_PHYSICAL )
 	then
 		return true
 	end

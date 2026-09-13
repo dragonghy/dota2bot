@@ -82,6 +82,10 @@ local SRC    = 'bots/BotLib/hero_crystal_maiden.lua'
 local CAND   = 'cmtfclock'
 local UNIT   = 'npc_dota_hero_crystal_maiden'
 local HELPER = 'cm_IsTeamfightClockOpen'
+--- Named here only so §5.1's census can say WHERE the two creep-branch clock
+--- reads went.  This file asserts nothing about that lever; see
+--- tests/test_cm_w_creep_clock.lua.
+local CREEP_HELPER = 'cm_IsCreepClockOpen'
 local PIN    = 'tests/fixtures/f_260820_162821_lion_drain_lethal.lua'
 
 local FIXTURE_DIR = 'tests/fixtures'
@@ -340,22 +344,35 @@ end
 --- the honest claim is narrower: the teamfight branch was the only HERO-target
 --- firing point with a clock.  The other two readings are on the CREEP branches
 --- (先远 / 再近) and they are not curfews at all -- each is a DISJUNCT,
---- `DotaTime() > 10 * 60 or <this creep is not a basic lane creep>`, so time
---- RELAXES a target-class rule there instead of gating a cast.  Opposite shape,
---- different target class, not in this lever.
+--- `<clock> or <this creep is not a basic lane creep>`, so time RELAXES a
+--- target-class rule there instead of gating a cast.  Opposite shape, different
+--- target class, not in this lever.
+---
+--- ⚠️ UPDATED 2026-09-13, and the update is the point of the ratchet rather than
+--- damage to it.  This assertion used to read `count(w, 'DotaTime()') == 2` and
+--- `count(w, 'DotaTime() > 10 * 60') == 2`.  Both went to 0 when the creep
+--- branches' literal moved behind X.cm_IsCreepClockOpen (soak candidate
+--- `cmcreepclock`) -- so the ratchet fired on a real change to the census it
+--- guards, exactly as designed, and the census below was re-derived rather than
+--- the numbers merely being edited to match.  What is asserted now is the claim
+--- the header actually makes: X.ConsiderW asks a clock exactly THREE times, all
+--- three through a named helper, and NONE of them is a bare DotaTime() read.
 tests['§5.1 the teamfight branch was the only HERO-target firing point with a wall clock'] = function()
     local w = fn_body(strip_comments(SRC_TEXT), 'ConsiderW')
     local n = count(w, 'DotaTime()')
-    assert(n == 2, 'X.ConsiderW now reads DotaTime() directly ' .. n
-        .. ' time(s), not 2.  The two that belong there are the creep branches\' '
-        .. '`DotaTime() > 10 * 60 or <not a basic lane creep>` disjuncts; the '
-        .. 'teamfight clock moved into X.' .. HELPER .. '.  Any other reading means '
-        .. 'a firing point grew its own curfew and this file\'s census is stale')
-    local nRelax = count(w, 'DotaTime() > 10 * 60')
-    assert(nRelax == 2, 'the two creep-branch time DISJUNCTS are no longer '
-        .. '`DotaTime() > 10 * 60` (' .. nRelax .. ' found).  They are the reason '
-        .. 'the count above is 2 rather than 0; if they changed shape, re-derive '
-        .. 'the census before trusting the header')
+    assert(n == 0, 'X.ConsiderW reads DotaTime() directly ' .. n
+        .. ' time(s), not 0.  All three of its clock questions go through a named '
+        .. 'helper: the teamfight one through X.' .. HELPER .. ', the two creep '
+        .. 'DISJUNCTS through X.' .. CREEP_HELPER .. '.  A bare read means a '
+        .. 'firing point grew its own curfew and this file\'s census is stale')
+    local nTF = count(w, 'X.' .. HELPER .. '()')
+    assert(nTF == 1, 'the teamfight branch calls X.' .. HELPER .. ' ' .. nTF
+        .. ' time(s), not 1 -- the "exactly one HERO-target clock" census is stale')
+    local nCreep = count(w, 'X.' .. CREEP_HELPER .. '()')
+    assert(nCreep == 2, 'the two creep-branch time DISJUNCTS no longer call X.'
+        .. CREEP_HELPER .. ' (' .. nCreep .. ' found).  They are the reason the '
+        .. 'HERO-target claim above has to say "HERO-target" at all; if they '
+        .. 'changed shape, re-derive the census before trusting the header')
 end
 
 tests['§5.2 X.ConsiderW still carries no mana reserve -- so the clock was never a mana policy'] = function()

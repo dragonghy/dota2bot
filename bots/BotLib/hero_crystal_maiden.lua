@@ -1473,6 +1473,93 @@ X.nWTeamfightClockShipped = 6 * 60
 X.nWTeamfightClockTurbo   = 3 * 60
 
 
+--- The shipped wall clock on X.ConsiderW's two CREEP firing points (先远 / 再近),
+--- and the turbo value that halves it.  Same naming reason as the pair above.
+X.nWCreepClockShipped = 10 * 60
+X.nWCreepClockTurbo   = 5 * 60
+
+
+--- The wall clock on X.ConsiderW's two CREEP firing points, and the turbo-only
+--- relaxation of it.  Soak candidate `cmcreepclock` (turbo-only, INERT until
+--- armed).  STANDALONE: this function holds exactly one J.IsSoakCandidate call
+--- and it names only its own id.
+---
+--- ⭐ WHY THIS IS A SEPARATE ID FROM `cmtfclock`, AND WHY IT IS NOT THAT LEVER'S
+--- LEFTOVERS.  X.cm_IsTeamfightClockOpen's header scopes these two reads OUT, and
+--- the reason it gives is about SHAPE: each of these is a DISJUNCT
+--- (`DotaTime() > 10 * 60 or <this creep is not a basic lane creep>`), so time
+--- RELAXES a target-class rule here instead of gating a cast.  That scoping is
+--- correct and stands.  What it does NOT settle is the axis this id is on: 10*60
+--- is a NORMAL-MODE constant (GH #157 -- 381 clock comparisons in bots/, 18 of
+--- them turbo-aware), and a normal-mode constant is wrong in Turbo whether it
+--- sits in a conjunct or a disjunct.  Two different questions about the same
+--- literal; conjoining them would make one wave reading unattributable.
+---
+--- WHAT THE CLOCK IS A PROXY FOR.  The enclosing block already refuses to run
+--- while she is laning -- `bot:GetActiveMode() ~= BOT_MODE_LANING` is its FIRST
+--- conjunct, with RETREAT and ATTACK beside it.  So "laning is over" is already
+--- measured directly, and the clock is a second, weaker proxy for the same thing.
+--- In normal mode 10:00 roughly coincides with the mode flip, so the proxy was
+--- nearly free.  In Turbo the mode leaves LANING far earlier than 10:00, and in
+--- that gap the clock is the only term still refusing.
+---
+--- ⚠️ THAT PARAGRAPH IS READ OFF THE SOURCE, NOT OFF A FRAME, and the difference
+--- is load-bearing.  `GetActiveMode()` answers 0 on 1314/1314 corpus hero handles
+--- while BOT_MODE_NONE/LANING/ATTACK/RETREAT are 1001/1002/1003/1005 -- i.e. the
+--- generic `^Get` default, matching nothing.  That is WORLD ASSERTION 13, already
+--- registered (state.json:activemode_WORLD_ASSERTION_13_20260821,
+--- tests/test_activemode_world_assertion.lua) and NOT rediscovered here.  Its
+--- consequence for this lever is exact: the mode conjunct is VACUOUSLY TRUE on
+--- every corpus frame, so no domain number below may be read as evidence that the
+--- mode term held -- only that the clock was the only term REFUSING among those
+--- the corpus can evaluate.
+---
+--- ARMED: 5 * 60, the shipped number halved.  The 2x is this repo's own stated
+--- Turbo pace ratio (~20 min against ~35-40, docs/PROJECT.md), and it is the same
+--- ratio `cmtfclock` used on 6*60 -- reusing it rather than inventing a second
+--- one keeps the two readings comparable.
+---
+--- ⚠️ DIRECTION: THIS IS A WIDENING.  Every t past 10:00 is also past 5:00, so
+--- the armed predicate is a strict SUPERSET of the shipped one: arming can only
+--- ADD creep casts, in the window (5:00, 10:00], and can never remove or move
+--- one.  Asserted over the whole corpus rather than argued
+--- (tests/test_cm_w_creep_clock.lua §4).
+---
+--- ⛔ TWO DOMAINS, REGISTERED SEPARATELY -- and here the second one is ZERO.
+---   * GATE-LAYER domain = 15 corpus instants: of 70 live-CM instants, 32 clear
+---     the block's three MEASURABLE non-clock conjuncts (no enemy hero within
+---     1600, fewer than 3 allies within 1200, level >= 5), and 15 of those sit in
+---     (5:00, 10:00] where the clock is the only refusing term.  17 more are past
+---     10:00, where shipped already permits.  (Contrast `cmtfclock`, whose
+---     gate-layer domain is a single frame.)
+---   * END-TO-END domain = 0 corpus frames, STRUCTURALLY, not by luck: the branch
+---     needs a creep UNIT and this corpus has none -- bot:GetNearbyCreeps answers
+---     an empty table on 70/70 CM instants, the same blocker `cmfarcreep`,
+---     `cmrangedhp` and `cmcreepcap` all record
+---     (state.json:CORPUS_HAS_NO_NONHERO_UNITS_20260912).  So NO corpus frame can
+---     show a cast this lever adds, and nobody may report one.  The flip is
+---     measured on the clock the branch WOULD have read.  Both halves asserted in
+---     that direction (tests §3.3 / §3.4).
+---
+--- ⚠️ NOT A FREQUENCY.  A fixture corpus is a set of instants chosen for OTHER
+--- investigations.  How often a real Turbo game puts this block's preconditions
+--- and a legal creep together inside (5:00, 10:00] is a WAVE question, filed as
+--- iterations/queue.json hero-77 (zero EC2: archived .dem scan).
+---
+--- ⛔ DO NOT PROMOTE ON THE (c) ARGUMENT ALONE.  This adds casts, and the corpus
+--- structurally cannot size how many.  Condition (a) has to come off a wave.
+function X.cm_IsCreepClockOpen()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'cmcreepclock' )
+	then
+		return DotaTime() > X.nWCreepClockTurbo
+	end
+
+	return DotaTime() > X.nWCreepClockShipped
+
+end
+
+
 --- The wall-clock curfew on X.ConsiderW's TEAMFIGHT firing point, and the
 --- turbo-only narrowing of it.  Soak candidate `cmtfclock` (turbo-only, INERT
 --- until armed).  STANDALONE: this function holds exactly one J.IsSoakCandidate
@@ -1491,12 +1578,21 @@ X.nWTeamfightClockTurbo   = 3 * 60
 ---     进攻 / 撤退 / roshan / 对线期消耗                (no clock)
 ---
 --- ⚠️ "HERO-target" is load-bearing and was written after the test caught this
---- paragraph's first draft.  The function does read DotaTime() twice more, on
---- the two CREEP branches (先远 / 再近) -- but each of those is a DISJUNCT,
---- `DotaTime() > 10 * 60 or <this creep is not a basic lane creep>`, so time
---- RELAXES a target-class rule there rather than gating a cast.  Opposite
---- shape, different target class, not in this lever
+--- paragraph's first draft.  The function asks the clock twice more, on the two
+--- CREEP branches (先远 / 再近) -- but each of those is a DISJUNCT,
+--- `<clock> or <this creep is not a basic lane creep>`, so time RELAXES a
+--- target-class rule there rather than gating a cast.  Opposite shape, different
+--- target class, not in this lever
 --- (tests/test_cm_w_teamfight_clock.lua §5.1 pins both counts).
+---
+--- ⚠️ UPDATED 2026-09-13: those two reads are no longer the literal
+--- `DotaTime() > 10 * 60` this paragraph used to quote -- they now call
+--- X.cm_IsCreepClockOpen, whose shipped leg is that expression byte for byte.
+--- The SCOPING above is unchanged and still correct (shape, not constant); what
+--- moved is only where the literal lives.  The 10*60 constant got its own
+--- turbo-only id `cmcreepclock` on the GH #157 normal-mode-constant axis, which
+--- is a different question from this lever's -- see X.cm_IsCreepClockOpen.
+--- The two ids are INDEPENDENT: neither appears in the other's gate.
 ---
 --- So a lane HARASS -- the smallest payoff in the function, and the one
 --- `cmlaneband` had to put a reach term on -- may fire at 0:30, while a real
@@ -1768,8 +1864,10 @@ function X.ConsiderW()
 	then
 
 		--先远
+		-- [cmcreepclock] gate off this disjunct is `DotaTime() > 10 * 60`, byte for
+		-- byte.  See X.cm_IsCreepClockOpen.
 		if J.IsValid( nEnemysStrongestCreeps2 )
-			and ( DotaTime() > 10 * 60
+			and ( X.cm_IsCreepClockOpen()
 				or ( nEnemysStrongestCreeps2:GetUnitName() ~= 'npc_dota_creep_badguys_melee'
 					and nEnemysStrongestCreeps2:GetUnitName() ~= 'npc_dota_creep_badguys_ranged'
 					and nEnemysStrongestCreeps2:GetUnitName() ~= 'npc_dota_creep_goodguys_melee'
@@ -1790,8 +1888,10 @@ function X.ConsiderW()
 		end
 
 		--再近
+		-- [cmcreepclock] gate off this disjunct is `DotaTime() > 10 * 60`, byte for
+		-- byte.  See X.cm_IsCreepClockOpen.
 		if J.IsValid( nEnemysStrongestCreeps1 )
-			and ( DotaTime() > 10 * 60
+			and ( X.cm_IsCreepClockOpen()
 				or ( nEnemysStrongestCreeps1:GetUnitName() ~= 'npc_dota_creep_badguys_melee'
 					and nEnemysStrongestCreeps1:GetUnitName() ~= 'npc_dota_creep_badguys_ranged'
 					and nEnemysStrongestCreeps1:GetUnitName() ~= 'npc_dota_creep_goodguys_melee'
