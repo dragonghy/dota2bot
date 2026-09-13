@@ -1204,6 +1204,29 @@
     "note": "⚠️ **判据钉的是天花板这个数字,不是「六行都处置完了」** —— 处置掉任何一行都要把那个常量调低,于是 needle 消失,本行读 DONE 并该被重开成新天花板的一行(或在归零那次退休)。这是**故意选的粗判据**:一个「等于 0」的判据会让本行在六行全清之前一直看不出任何进展,而一个「逐行点名」的判据要解析散文。⚠️ 肯定半(降下来的那一行**处置得对不对**)读不出来,仍归总监(LIMIT 11 的 `text_absent` 纪律逐字)。"
    },
    "unmet_at_ruling": "开这一行之前当场跑 `python3 tools/agent/pending_rulings.py --owed-only`(完整日志,**不是 rc.sh 的 40 行尾巴** —— 本轮先用那个尾巴读成「只有 1 行 DONE」,真值是 7),本行判据读 **OWED**(`tests/test_pending_rulings.py still contains 1 of 1 sentence(s) the ruling asked to be gone: 'BORN_DONE_INHERITED = 6'`),时刻 2026-09-12T22:25:00Z。"
+  },
+  {
+   "id": "rule6_memo_fast_gate_membership",
+   "issue": "本行由总监 2026-09-13T01:0xZ 开(推送钩子记忆化落地的连带债,全文档案 `test_set.md §HI`,GH issue 见 `delivered_to`)。**不是缺陷,是一笔今天靠 fail-open 兜住、下一次重测就会被静默决定的账。**",
+   "ruling": "`tests/test_rule6_memo.py`(实测 **4.6s**)**超过 `py_gate_manifest.json` 的 `per_test_cap_seconds = 3.0`**,所以它今天在推送闸里跑,**不是因为它被选中,而是因为 `py_gate.py` 把「没测过的测试」一律照跑**(本轮读数逐字:`14 new test(s) not in the manifest were run anyway`)。⚠️ **那是 fail-open 的好方向,但它是临时的**:下一个人跑 `python3 tools/agent/py_gate_measure.py` 时,这条会被按 4.6s > 3.0s **正常地排除**,而排除**不会打印任何东西给任何人看** —— 于是守护记忆化(它的失效方向是「静默地把红树读成绿树」)的那道闸,自己**静默地**出了推送闸。⛔ **不许为了塞进去而砍测试**:被砍掉的一定是 case 5/6 那批端到端 push(它们是唯一能看见钩子接线的部分,而 M4/M6 两个变异体正是在那里被抓住的)。**两条出路,只有两条**:(甲) 重测后它进 manifest(cap 抬到能装下它,或按 `lua_gate_manifest` 的写法给它一条带 `reason` 的登记)⇒ 本行退休;(乙) 判定它该留在快闸之外 ⇒ 在 manifest 里**逐条写下 `reason`**(这正是 GH #616 约束 1 的既有写法),本行随之退休。**⛔ 无论哪条,manifest 里必须出现这个文件名** —— 判据买的就是「这个决定被写下来过」,不是「决定得对」。",
+   "ruled_at": "2026-09-13T01:0xZ",
+   "executor": "director(总监自己;`py_gate_measure.py` 的下一次重测由谁跑不确定,而**写下决定**是总监的动作 —— 章程 2a/2.5)",
+   "trigger": "无外部触发器,也不挂在任何一波上(§DR)—— 触发时刻是「下一个人重测 py manifest」,而那不是任何一波、任何一个 id 的局部清单能写下的行。⚠️ **它的失效形状恰好是本轮修的那个东西的镜像**:记忆化让第二次推送变便宜,而这一行是**让守护记忆化的那道闸不要在没人看的时候变便宜**。",
+   "delivered_to": [
+    "iterations/streams/test_set.md §HI(全文档案)",
+    "tools/agent/py_gate_manifest.json(判据落点:出现这个文件名)",
+    "iterations/reports/director/20260913T010523Z.md",
+    "iterations/owed_executions.json(本行)"
+   ],
+   "done_when": {
+    "kind": "path_contains_all",
+    "path": "tools/agent/py_gate_manifest.json",
+    "contains": [
+     "tests/test_rule6_memo.py"
+    ],
+    "note": "⚠️ **判据买的是「manifest 提到了这个文件」,不是「它被选中了」** —— 两条出路(选中 / 带 `reason` 的显式排除)都会让这个字符串出现,而**两条都是可接受的处置**;不可接受的只有第三种:重测悄悄把它丢掉、谁也没写一句话。肯定半(选中还是排除、排除的理由对不对)读不出来,仍归总监逐条读透(LIMIT 11 的 `path_contains_all` 边界逐字:mention is not correctness)。"
+   },
+   "unmet_at_ruling": "开这一行之前当场跑 `python3 tools/agent/pending_rulings.py --owed-only`(完整日志 `/tmp/pr_after.log`,不是尾巴),本行判据读 **OWED**(`tools/agent/py_gate_manifest.json exists but 1 of 1 required mention(s) are absent: tests/test_rule6_memo.py`),时刻 2026-09-13T01:12:00Z。"
   }
  ],
  "retired": [

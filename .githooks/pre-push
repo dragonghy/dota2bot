@@ -45,8 +45,72 @@ if [ "${RULE6_BYPASS:-}" = "1" ]; then
     exit 0
 fi
 
-bash tools/agent/luacheck_gate.sh
-rc=$?
+# ---------------------------------------------------------------------------
+# THE MEMO (director ruling 2026-09-13, filed off the 09-12T22:2xZ 收尾追加).
+#
+# git runs this hook once per `git push` INVOCATION, and the mandated push path
+# in .claude/rules/claude-code.md is two of them:
+#
+#     git push -u origin <branch> && git push origin HEAD:main
+#
+# so every attempt pays for the three legs TWICE on a byte-identical tree.
+# Measured in a throwaway repo (bare remote, counting hook, one commit pushed
+# to two refs): `hook invocations: 2`, same HEAD, same HEAD^{tree}.
+#
+# The cost of that is not the point; the RACE is.  09-12T22:2xZ: the gate runs
+# ~7 minutes (fast Lua leg 380s, ~90%) while `main` moved every ~7 minutes, and
+# `HEAD:main` was remote-rejected three times running -- never on a red, always
+# on a ref race -- ~21 minutes for zero product, then out under RULE6_BYPASS.
+# The push that loses that race is the second one, and the second one is the
+# run that provably cannot answer a different question than the first.
+#
+# ⚠️ A hit is a REUSE, not a bypass, and rule6_memo.py's banner says so in the
+# line you are meant to quote.  RULE6_BYPASS asserts nothing; a hit replays a
+# reading that a real run of all three legs produced on THIS EXACT tree, with
+# the working tree clean.  Every unavailability -- dirty tree, no origin/main,
+# moved base, red or could-not-run last time -- is a MISS, never a hit; see the
+# fail-closed list in tools/agent/rule6_memo.py.
+#
+# RULE6_NO_MEMO=1 forces the full three legs (use it when you want a second
+# independent reading of the same tree).
+# ---------------------------------------------------------------------------
+if [ "${RULE6_NO_MEMO:-}" != "1" ]; then
+    # Command substitution, NOT a pipe: `$?` here is python's own exit code.
+    # (Iron-rule-3 hazard: this repo has misread an exit code through a pipe
+    # 33 times. There is no `| tail` anywhere on this path, by construction.)
+    memo_out=$(python3 tools/agent/rule6_memo.py get 2>/dev/null)
+    memo_rc=$?
+    if [ "$memo_rc" -eq 0 ]; then
+        printf '%s\n' "$memo_out"
+        exit 0
+    fi
+fi
+
+# Readings are collected here so a green run can be memoized for its twin push.
+RULE6_LOG=$(mktemp 2>/dev/null) || RULE6_LOG=""
+if [ -n "$RULE6_LOG" ]; then
+    trap 'rm -f "$RULE6_LOG"' EXIT
+fi
+
+# `tee` puts a pipe on the path, so the exit code is read from PIPESTATUS[0],
+# never from `$?` (which would be tee's, and tee always succeeds -- that is
+# precisely how a red gets read as green). Leg 1 also prints its own exit code
+# as `GATE_EXIT=`, so it gets a second opinion below; the other two legs do not
+# print theirs, which is why only this one can be cross-checked.
+if [ -n "$RULE6_LOG" ]; then
+    bash tools/agent/luacheck_gate.sh 2>&1 | tee -a "$RULE6_LOG"
+    rc=${PIPESTATUS[0]}
+    claimed=$(grep -E '^GATE_EXIT=' "$RULE6_LOG" | tail -1 | sed -e 's/^GATE_EXIT=\([0-9]*\).*/\1/')
+    if [ -n "$claimed" ] && [ "$claimed" != "$rc" ]; then
+        printf 'PUSH REFUSED -- leg 1 exit code disagrees with its own banner\n'
+        printf '  (PIPESTATUS said %s, GATE_EXIT= said %s). Not a pass; re-run with\n' "$rc" "$claimed"
+        printf '  RULE6_NO_MEMO=1 and report this.\n'
+        exit 1
+    fi
+else
+    bash tools/agent/luacheck_gate.sh
+    rc=$?
+fi
 
 case "$rc" in
     0) : ;;
@@ -90,8 +154,13 @@ esac
 #
 # Same 0/2/3 vocabulary, same refusal on BOTH 2 and 3, as the Lua half.
 # ---------------------------------------------------------------------------
-python3 tools/agent/py_gate.py
-prc=$?
+if [ -n "$RULE6_LOG" ]; then
+    python3 tools/agent/py_gate.py 2>&1 | tee -a "$RULE6_LOG"
+    prc=${PIPESTATUS[0]}   # NOT $? -- see the note on leg 1
+else
+    python3 tools/agent/py_gate.py
+    prc=$?
+fi
 
 case "$prc" in
     0) : ;;
@@ -145,12 +214,38 @@ esac
 # positive answer, never the absence of one.
 changed=$(git diff --name-only origin/main...HEAD 2>/dev/null) || changed=""
 
-# shellcheck disable=SC2086 -- word splitting on the path list is intended
-python3 tools/agent/lua_gate.py --if-touched $changed
-lrc=$?
+if [ -n "$RULE6_LOG" ]; then
+    # shellcheck disable=SC2086 -- word splitting on the path list is intended
+    python3 tools/agent/lua_gate.py --if-touched $changed 2>&1 | tee -a "$RULE6_LOG"
+    lrc=${PIPESTATUS[0]}   # NOT $? -- see the note on leg 1
+else
+    # shellcheck disable=SC2086 -- word splitting on the path list is intended
+    python3 tools/agent/lua_gate.py --if-touched $changed
+    lrc=$?
+fi
 
 case "$lrc" in
-    0) exit 0 ;;
+    0)
+        # All three legs green on this tree. Store the three verdict lines so
+        # the twin push of the SAME tree replays them instead of re-earning
+        # them. Only an all-green reading is ever stored: a red or a
+        # could-not-run must always be re-run, so neither reaches this branch.
+        if [ -n "$RULE6_LOG" ]; then
+            readings=$(mktemp 2>/dev/null) || readings=""
+            if [ -n "$readings" ]; then
+                {
+                    grep -E '^GATE_EXIT=' "$RULE6_LOG" | tail -1
+                    grep -E '^py gate: ' "$RULE6_LOG" | tail -1
+                    grep -E '^lua gate: ' "$RULE6_LOG" | tail -1
+                } > "$readings" 2>/dev/null
+                # Storage is best effort: a failure here costs the next push
+                # seven minutes, never correctness, so it must not fail a push.
+                python3 tools/agent/rule6_memo.py put "$readings" >/dev/null 2>&1
+                rm -f "$readings"
+            fi
+        fi
+        exit 0
+        ;;
     3)
         printf 'PUSH REFUSED -- iron rule 6 fast LUA TEST leg is RED (see the FAIL lines above).\n'
         printf '  If the named test is a CENSUS and your change added a gate, call site or\n'

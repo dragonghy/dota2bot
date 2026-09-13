@@ -563,6 +563,43 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-13T01:0xZ**:**推送门的三条腿在每一次推送尝试里跑两遍同一棵树 —— 记忆化落地(GH #213 族);armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
+  全文 `iterations/reports/director/20260913T010523Z.md`,档案 `test_set.md §HI`;新 owed 行 `rule6_memo_fast_gate_membership`(63 → 64 行)。
+  新产物:`tools/agent/rule6_memo.py` / `tests/test_rule6_memo.py` / `tools/agent/mutstand_rule6_memo.sh`,`.githooks/pre-push` 改。
+  ⭐⭐⭐ **(甲) 立案句:被浪费的那 7 分钟不是理由,输掉的那场竞速才是 —— 而输掉竞速的恰好就是那次冗余的运行。**
+  git **每一次 `git push` 调用**跑一遍钩子,而规定的推送路径是**两条命令**
+  (`git push -u origin <branch> && git push origin HEAD:main`)⇒ **每次尝试在一棵逐字节相同的树上跑两遍三条腿**;
+  一次性 repo 实测(裸远端 + 计数钩子,同一 commit 推到两个 ref):`hook invocations: 2`,两次 `HEAD`/`HEAD^{tree}` 相同。
+  上一轮的现场是:门 ~7 分钟(快 Lua 腿 380s,占 90%)、main 每 ~7 分钟动一次、`HEAD:main` 连拒三次(**全是 ref 竞态没有一次门红**)、~21 分钟零产出、第四次 `RULE6_BYPASS=1`。
+  **输掉竞速的永远是第二次推送,而它在结构上不可能回答出与第一次不同的答案**(腿读工作树,两条命令之间没有任何东西碰过它)。
+  ⇒ 选「消掉第二遍」而不是「降预算」:降预算要**减少被检查的东西**,消掉第二遍**一个测试都不少跑**。
+  ⛔ **它不是 `RULE6_BYPASS`**:bypass 什么都不断言,命中是**重放一次真实运行**在**这棵完全相同的树**上的读数;
+  横幅逐字打 `RULE6_MEMO=REUSE … This is a REUSE, not a skip`。四条 fail-closed:
+  键 = `HEAD^{tree}`+`origin/main`(快 Lua 腿用 `origin/main...HEAD` 定域)/ 工作树必须干净(**含未跟踪**,腿 lint 的是磁盘)/ **只有全绿才存** / 任何异常一律未命中;`RULE6_NO_MEMO=1` 强制跑满。
+  ⭐⭐ **(乙) 变异台推翻了本轮第一版测试,而两个存活体都不是「测试写漏了」。** 首跑 **3 CAUGHT / 2 SURVIVED**:
+  **M2**(base 只从键里拿掉)存活**而它是对的** —— 记录里还会把 base 读回来比对,照样未命中;两层独立防线是**设计**,
+  拿掉一层的变异体是**等价变异体不是逃逸缺陷**,记成 CAUGHT 就是把另一层干的活算在测试头上(已改成两层一起拿掉)。
+  **M4**(腿 1 用 `$?` 而非 `PIPESTATUS[0]`)存活**而它揭出了真缺口** —— 腿 1 自己打 `GATE_EXIT=`、钩子拿它做第二意见,所以腿 1 **恰好**扛得住;
+  **腿 2、腿 3 既不打退出码也没有第二意见** ⇒ 只弄红腿 1 的测试会把管道缺陷记成已抓,而真实失效是**静默推一棵红树**。
+  测试改成**逐条腿分别弄红**(含 exit 2 那一档),变异体改打 `prc`/`lrc`,当场被抓。
+  📌 *`tee` 是本轮给这条路径加的第一个管道 —— 纪律 3 的第 34 种形状,而且是记忆化**引入**的、不是它没防住的。*
+  📌 *一个只在一条腿上验证过的管道修法,会把「那条腿碰巧有第二意见」读成「管道修对了」。*
+  🧪 复跑 **6 CAUGHT / 0 SURVIVED / control_ok=1 / restored=1**;`tests/test_rule6_memo.py` **39 检查 0 失败**(实测 4.6s)。
+  ⭐ **(丙) 连带债已登记,不靠散文。** 4.6s > py manifest 的 `per_test_cap_seconds = 3.0`
+  ⇒ 它今天在闸里跑**是因为 `py_gate.py` 把没测过的测试一律照跑**(逐字:`14 new test(s) not in the manifest were run anyway`),**不是因为被选中**;
+  下一次 `py_gate_measure.py` 重测会**正常地**排除它,而**排除不打印任何东西给任何人看** —— 守护记忆化的那道闸自己**静默地**出了推送闸。
+  owed 判据 `path_contains_all`:manifest 里**必须出现这个文件名**(选中、或按 GH #616 约束 1 带 `reason` 显式排除,**两条都可接受**);
+  证词当场取到,逐字 `tools/agent/py_gate_manifest.json exists but 1 of 1 required mention(s) are absent: tests/test_rule6_memo.py`。
+  ⛔ **不许为了塞进 3.0s 而砍测试** —— 被砍的一定是 case 5/6 那批端到端 push,而 M4/M6 正是在那里被抓住的。
+  🚦 **铁律 6 三条腿**:见报告 §9(收尾回填)。⛔ **未用 `RULE6_BYPASS`**。动态那半未跑,不声称(`bots/`+`game/` 零 diff)。
+  📮 **本轮投递**:`owed_executions.json`(新行)/ `test_set.md §HI` / **GH #669 与 GH #707 追评**(均 push 之后发表,GH #290 顺序)。
+  ⚠️ **不新开 issue**:#669/#707 已经在说这件事的成因半,再开第三条只会多一张没人驱动的表(§DR 的教训反向用)。**两条都不关闭** —— 并发负载那个成因没被碰,只是被踩到的频率减半。
+  💰 **零 AWS**(一次调用都没有),不作 MTD 新声称;批测台刹车状态(GH #779)本台不改动。
+  🩺 五组 24h 内全部有产出,无掉队组。**armed 27,离解冻线(≤20)差 7;本轮判定完结 0**(本轮是 [harness] 修复轮)—— **连续第八轮停在 27**。
+  ⑨ **下次触发**:①⭐ **判定完结 ≥1,正面处理 armed 27**(已连续八轮为 0)②上一轮那 6 行 BORN-DONE 逐行处置(**不许补证词**)
+  ③**owner P4.3**(`test_set.md` 现 **536KB**,目标 <50KB,**已欠两周**)—— 排专门工作单元,或按铁律 9 写进 `DECISIONS_NEEDED`
+  ④GH #523(**第六轮未取**)/ `creeps_schema_gh581` 的 (C) 半 / 三个 promote-time 普查只读 `bots/`(第七轮顺延)/ GH #584(第十轮顺延)/ 五条 `a_evidence_*`(第十四次顺延)/ patch 缺口 P3。
+
 - **2026-09-12T22:2xZ**:**`pending_rulings.py` LIMIT 14 落地 —— 一个开行时就已经为真的 `done_when`,此后永远读 DONE,而「请退休我」就印在它下面;armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
   全文 `iterations/reports/director/20260912T222000Z.md`,档案 `test_set.md §HH`;新 owed 行 `born_done_inherited_disposal`;
   owed 腿入轮 **62 行 / 7 句「请退休我」** → 收轮 **63 行 / 0 句**。
