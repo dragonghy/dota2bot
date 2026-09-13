@@ -2352,6 +2352,90 @@ function X.cm_IsFieldSoloReleaseOk( nAllyCount )
 
 end
 
+--- [cmrflee] X.ConsiderR BRANCH 3 (the retreat release) scales an HP FRACTION
+--- by an UNBOUNDED HEAD COUNT, so the conjunct is not a gradient -- it is an
+--- off-switch wearing a gradient's clothes, and its off-point is written
+--- nowhere in this file.
+---
+--- THE ARITHMETIC, all of it derivable from this file and none of it from data.
+--- `nHP` is assigned at :325 as `bot:GetHealth()/bot:GetMaxHealth()`, i.e. a
+--- fraction in [0, 1].  Branch 3's own conjunct is
+--- `nHP > 0.38 * #nEnemysHeroesFurther`, and `nEnemysHeroesFurther` is the 1300u
+--- enemy ring.  Enumerate the rungs the branch can actually reach:
+---
+---   #further   the conjunct asks for      status
+---      0       nHP > 0       UNREACHABLE: branch 3 needs `nEnemysHeroesNearby[1]`
+---                            to be a valid hero, and the 500u list is a SUBSET of
+---                            the 1300u list (same anchor, same filter, smaller
+---                            radius) -- so one nearby enemy is one further enemy
+---      1       nHP > 0.38    NO-OP: byte for byte the guard eleven lines above
+---                            (`J.IsRetreating( bot ) and nHP > 0.38`)
+---      2       nHP > 0.76    the ONLY rung that does any work
+---     >=3      nHP > 1.14    UNSATISFIABLE: nHP <= 1 by construction
+---
+--- So the term has exactly ONE live rung, and from three visible chasers upward
+--- it is a permanent refusal.  Three-plus chasers with Q and W both on cooldown
+--- is the state branch 3 exists for -- the branch's own other conjuncts are
+--- `not abilityQ:IsFullyCastable()` and `not abilityW:IsFullyCastable()` -- and
+--- it is exactly the state the conjunct silently deletes.  Nobody wrote "refuse
+--- at three"; it arrives as a side effect of multiplying a bounded quantity by
+--- an unbounded one.
+---
+--- WHAT THE ARMED LEG ADDS, and why the cap is 2 rather than a new number: the
+--- armed leg clamps the multiplier at the rule's OWN last satisfiable rung, so
+--- the added states are exactly (crowd >= 3, 0.76 < nHP <= 1) -- and for every
+--- one of them the shipped rule ALREADY commits at crowd 2 on that same health.
+--- It invents no willingness this branch does not already display; it is the
+--- monotone closure of the shipped rule, the same construction
+--- hero_skeleton_king.lua's X.wk_IsBoneGuardBankCommittable uses, and the test
+--- re-derives the 2 from the ladder rather than asserting it.
+---
+--- DIRECTION IS GUARANTEED BY CONSTRUCTION, not by data: the shipped predicate
+--- is computed and returned on its own whenever it is true, so arming can only
+--- move this answer false -> true.  A negative wave read may therefore be
+--- attributed to "it opens the channel too often", NEVER to "the lever ate a
+--- shipped release".
+---
+--- ⛔ WHAT THIS CANNOT SHOW, said plainly and BEFORE anyone quotes a count.  The
+--- domain this lever adds is EMPTY on today's corpus, and structurally so: it
+--- needs one enemy inside 500u AND three inside 1300u AND nHP > 0.38 on the same
+--- frame, and no CM-subject fixture carries all three.  Measured over all ten
+--- (tests/test_cm_r_retreat_crowd.lua section 5, which prints the table):
+--- f_260820_043039_cm_cask_close is the only frame with a crowd of 4, and it
+--- fails the other two premises (0 inside 500u, nHP 0.300); the only two frames
+--- that clear the 500u premise carry crowds of 1 and 2, i.e. the rungs this
+--- lever does not touch.  ⇒ NOBODY MAY REPORT A NUMBER OF RELEASES THIS LEVER
+--- ADDS.  Sizing needs a wave: iterations/queue.json hero-80 (zero EC2).
+---
+--- METERS: none.  `nHP` and the 1300u ring are read straight off the frame --
+--- unlike branch 1's head/hurt counts, this conjunct rides neither the 835 AoE
+--- anchor (GH #502) nor the mock's flat movespeed, which is why section 5's
+--- table is trustworthy even though the end-to-end bid is not drivable.
+---
+--- The cap lives here as a named constant and the STEP does not: 0.38 stays at
+--- the call site, where the shipped branch already types it, so the number is
+--- still read off one place and this helper cannot drift from it.
+X.nRRetreatCrowdCap = 2
+
+function X.cm_IsFieldRetreatCrowdOk( nHp, nStep, nCrowd )
+
+	-- Byte for byte the shipped expression, bound and returned first.
+	local bShipped = nHp > nStep * nCrowd
+
+	if bShipped
+	then
+		return true
+	end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'cmrflee' ) )
+	then
+		return false
+	end
+
+	return nHp > nStep * math.min( nCrowd, X.nRRetreatCrowdCap )
+
+end
+
 function X.ConsiderR()
 
 	if not abilityR:IsFullyCastable()
@@ -2425,7 +2509,11 @@ function X.ConsiderR()
 			and J.CanCastOnNonMagicImmune( npcTarget )
 			and not abilityQ:IsFullyCastable()
 			and not abilityW:IsFullyCastable()
-			and nHP > 0.38 * #nEnemysHeroesFurther
+			-- [cmrflee] gate off this is `nHP > 0.38 * #nEnemysHeroesFurther`,
+			-- byte for byte.  The 0.38 is typed HERE, as the shipped branch
+			-- typed it; see X.cm_IsFieldRetreatCrowdOk above for the rung
+			-- ladder, the direction guarantee, and the empty domain.
+			and X.cm_IsFieldRetreatCrowdOk( nHP, 0.38, #nEnemysHeroesFurther )
 		then
 			return BOT_ACTION_DESIRE_HIGH
 		end

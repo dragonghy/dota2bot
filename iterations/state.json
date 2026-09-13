@@ -8871,5 +8871,19 @@
   "trunk_red_found": "本轮开工时在 trunk 上发现**两条红**(都不是本轮造成,均在 HEAD worktree 上独立复现):(1) `tests/test_gated_getter_stub_control.lua` 的 NILGLOB 用例 —— **单文件跑是绿的**,多文件同进程跑才红,根因是 `tests/test_arbheart_host_bid_role_gate.lua:151` 与 `tests/test_arbheart_release_retires_camp.lua:134` 把 `GetRoshanDesire` 等引擎全局**写进进程 `_G` 且不还原**;⭐ 快 Lua 闸**按构造看不见它**(`lua_gate.py` 每个文件一个子进程),只有铁律 6 动态半那一次进程内跑得到 —— 已开 `[harness]` issue 交总监;(2) `tests/test_tpscroll_branch_shadow_census.lua`「撤退:2's trigger bound moved to 31」,**单文件隔离跑也红**,不在 `lua_gate_manifest.json:known_red` 里(它落在闸外那 76 个慢测试里),同样已登记。",
   "gates": "GATE_EXIT=0(luacheck bots game 0 警告) / py gate: 84 ran, 0 findings / lua gate: 370 ran, 0 findings, 8 known-red(全部是 #624 baseline,非本轮)。⚠️ **动态半没有整体跑**(~100min,GH #124);跑了受影响子集(见报告 §6)。**这是子集不是全量。**",
   "cost": "零 AWS(一次调用都没有)、零波次、armed 串一字未动、queue.json 一字未动、不发 owner 邮件。"
+ },
+ "cmrflee_20260913": {
+  "owner": "hero",
+  "date": "2026-09-13T22:xxZ",
+  "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(冻结期唯一合法裁定是 FROZEN-HOLD)。turbo-only,未 armed。与同函数的 `cmrcrowd` / `cmrsolo` / `cmrself` / `cmrcap` **相互独立**:那四个都在 branch 1 或前置守卫上,本 id 在 **branch 3**,四个 gate 谁也不出现在本 gate 的条件里(§1.4 断言),可以单独 arm。",
+  "backlog_item": "OWNER_PRIORITIES **P4.4 (i)**:工作单元主体是一个 `bots/` 行为改动。章程 backlog `-168` 的「下一轮第 1 条」(把天赋槽算术钉成断言)按 P4.4 是**量具**、只能当附带项,且开工时无带帧证据的未结 `[hero]` issue(#794 两组已结清,#805 是本组上轮的登记),主体因此改取焦点英雄 Crystal Maiden 的一条**算术**缺陷。",
+  "headline": "⭐ **一个把有界量乘以无界量的合取项,不是梯度,是一个穿着梯度衣服的开关 —— 而它的关断点全文件没人写过。** `X.ConsiderR` branch 3(撤退释放路)问 `nHP > 0.38 * #nEnemysHeroesFurther`,而 `nHP` 在 `:325` 就被定义成 `bot:GetHealth()/bot:GetMaxHealth()`(∈[0,1])。可达的档只有三种:crowd 1 ⇒ `nHP > 0.38`,**与十一行之上的外层守卫逐字相同**(空操作);crowd 2 ⇒ `nHP > 0.76`(**唯一干活的一档**);crowd ≥3 ⇒ `nHP > 1.14`,**恒假**。crowd 0 由构造不可达(500u 表是 1300u 表的子集,而 branch 3 要求 `nEnemysHeroesNearby[1]` 是有效英雄)。",
+  "defect": "`bots/BotLib/hero_crystal_maiden.lua` `X.ConsiderR` branch 3:该支路的其余合取项是 `J.IsRetreating(bot)`、`nHP > 0.38`、`not abilityQ:IsFullyCastable()`、`not abilityW:IsFullyCastable()` —— 即「被追、Q 和 W 都在 CD」。**三个以上可见追兵**正是这条支路存在的理由,也正是这个合取项静默删掉的状态。没有人写下「三个就拒绝」;它是把一个有界量乘以一个无界量的副产品。",
+  "fix": "新 helper `X.cm_IsFieldRetreatCrowdOk( nHp, nStep, nCrowd )`(gated `cmrflee`,turbo-only):出厂表达式先算先返回;armed 腿把乘子夹在该规则**自己最后一个可满足的档**上 —— `nHp > nStep * math.min( nCrowd, X.nRRetreatCrowdCap )`,`X.nRRetreatCrowdCap = 2`。⭐ **不发明任何数字**:新增的状态 (crowd ≥3, 0.76 < nHP ≤ 1) 每一个,出厂规则在 crowd 2 的**同一血量**上都已经同意 —— 这是出厂规则的**单调闭包**,与 `hero_skeleton_king.lua` `X.wk_IsBoneGuardBankCommittable` 同一构造。0.38 仍然只在**调用点**出现(出厂分支原本就在那里写它),helper 不许自己再打一份(§1.2 + 变异台 M11)。",
+  "direction": "**WIDENING,按构造单向**:出厂谓词先绑定、为真先 `return true`,armed 只能把答案从 false 移到 true。⛔ 负读数**只能**读成「引导开得太频」,**永远不能**读成「lever 吃掉了一次出厂释放」(§3.1 在整张网格上断言 armed ⊇ shipped,§3.2 断言新增集**恰好**等于单调闭包)。",
+  "domain": "⛔ **端到端新增域在本语料上是 0,而且是结构性的**:需要同一帧上 500u 内 ≥1 敌、1300u 内 ≥3 敌、`HP > 0.38` 三者同时成立,十个 CM-subject fixture 没有一个满足。唯一 crowd ≥3 的那帧 `f_260820_043039_cm_cask_close`(crowd 4)另外两个前提都不满足(500u 内 0 人、HP 0.300);清得过 500u 前提的两帧 crowd 分别是 1 和 2,正是本 lever **不碰**的两档。⇒ **谁也不许报一个本 lever 新增的释放数。** 十帧逐条读数由 `tests/test_cm_r_retreat_crowd.lua` §5.2 在失败信息里打印。取证走 `iterations/queue.json:hero-80`(零 EC2,优先级 3)。",
+  "meters": "**无**。`nHP` 与 1300u 环都直接读帧 —— 与 branch 1 的 head/hurt 计数不同,本合取项既不骑 835 AoE 锚(GH #502)也不骑 mock 的平坦移速,§5.4 把这条独立性**断言**下来而不是假设。",
+  "verification": "`lua5.1 tests/run_tests.lua test_cm_r_retreat_crowd.lua` **19 绿 / 0 红**;`lua5.1 tests/run_tests.lua test_cm_r_` **58 绿 / 0 红**(三个 ConsiderR 测试文件同跑,查串扰);变异台 `tools/agent/mutstand_cmrflee.sh` **13/13 全杀**,`RESTORED OK`。",
+  "issue": "GH **#807**(`[hero]`)。"
  }
 }
