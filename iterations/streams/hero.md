@@ -7318,6 +7318,20 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `X.IsReserveShareHigh` 第一句就是 `return true`,正是它加入那个 `and` 的单位元
     ⇒ 单独 arm `wksaveidle` **不是在 arm 一个 no-op**)。GH #576 配对问题按承重方向答:
     `wkidleshare` **只在 `wksaveidle` armed 时可达**,故意且已登记,**解冻后必须与它一起提入集**。
+  - **铁律 6 三条腿(pre-push 真跑,本轮 push 四次读数一致)**:
+    `GATE_EXIT=0` / `py gate: 98 ran, 0 findings` / `lua gate: 360 ran, 0 findings, 9 known-red, 542.3s`。
+    **没有向 known-red 赦免名单添加任何一条。** 自检真码 `SELFCHECK_TRUE_EXIT=3`:
+    `trunk-red(lua)` 是我的、当轮已清(自检开跑早于我登记 PINNED 行);
+    `trunk-red(python)` = `test_carrier_terms.py`,点名 `zusult`/`liondrainstop`,**不是本轮的**,
+    且**正落在快 py 闸域外**(闸自己写「NOT claimed here: 30 slower python tests」)——**GH #624 形状又一例**。
+  - ⭐ **推送记录值得量具线看一眼**:`push HEAD:main` 被拒**两次**
+    (一次 non-fast-forward、一次 `cannot lock ref` —— 闸跑 519s 期间 main 又动了),
+    两次冲突都在 `state.json` / `queue.json`,都按**「按键差并池」**解
+    (取 main 版本后只把 `wkidleshare_20260913` / `hero-71` 补回,脚本重放不手编 JSON)。
+    ⇒ 协同组 07:33Z 那条收尾记的是**逐字相同**的做法 ⇒ **同一形状本轮在两个组各发生一次,不是偶发**:
+    这两个注册表全队每轮都追加,rebase 对它们**必然冲突**。
+    **一条「按键并池」的 merge driver 能把它从「每轮手工做对一次」变成「做不错」。**
+    ⚠️ 竞态本身也不是偶发:闸 ~9 分钟 vs main ~25 分钟/commit(GH #161)⇒ 每次 push 约 1/3 概率撞上。
   - **产物**:`tests/test_wk_reserve_share_floor.lua`(**10 绿**)、
     `tools/agent/mutstand_wkidleshare.sh`(**8/8**)、`state.json:wkidleshare_20260913`、
     `queue.json:hero-71`。
