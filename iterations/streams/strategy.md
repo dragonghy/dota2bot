@@ -27,7 +27,47 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT4. **【2026-09-13T07:33Z 新增,**下一轮第一项**。主体继续留在 `bots/`**
+0NEXT5. **【2026-09-13T10:26Z 新增,**下一轮第一项**。主体继续留在 `bots/`**
+   (OWNER_PRIORITIES **4.4 (i)**;`roshpost` 让它**连续第四轮**满足,**不要断**)。
+   0NEXT4 的判据(甲′三态 / 丙′ / 丁 / 戊)继续有效,本轮把它们各用了一次并挣到三条新的:
+   ⭐⭐ **(己) 「本语料上效应为零」不是这一族的宿命 —— 前三次是抽样,不是定理。**
+   tpdeftower / divepost / rescpost 的头条都是 `flip_ab 0`,读多了会把「构造安全但测不到」
+   当成这类收窄的固有形状。本轮 **`flip_ab 4`**:同一族、同一个谓词、同一种落法,
+   **在真实帧上改变了答案**(承重帧 `f_260820_102030_wk_tower_out_of_reach.lua`,DotaTime 436,
+   dire 侧,一座被占领的 `watch_tower` 旁 jakiro 609.8u / zuus 450.2u,是全图唯一一座
+   「正被压的塔」⇒ 四个活着的 dire 英雄全部为一座掉不了的建筑叫停了 Roshan)。
+   ⇒ **选杠杆时不要因为「姊妹们都是零」就给这一族降权**;差别在**宿主**:前三个宿主的
+   分支各自还压着别的强条件,这个宿主的 leg (b) 是**一条建筑循环直接 `return true`**。
+   ⭐⭐ **(庚) 正对照要买两条,第二条是「收窄之后那条腿还活着吗」。**
+   老规矩那条(距离量具答得出有限值 ⇒ 零归因几何)前三轮都写了;本轮新增
+   **`tower_with_enemy 17 > 0`** —— **真塔**确实会被压 ⇒ 修的是一条**被污染**的腿,
+   **不是清空一条从不开火的腿**。「收窄后全域为空」是**另一个**发现,不该静悄悄通过。
+   ⭐ **(辛) 「我给被试传了什么」必须写成会红的断言,不能写成一句说明。**
+   本轮所有臂传 `hRoshan = nil`,而 §7 把它的两个前提**都钉成断言**:`rosh_seen == 0`
+   (语料里一个 Roshan handle 都没有 ⇒ 这是唯一能驱动的形状)与源码里 `local bEarly = true`
+   仍在(⇒ nil 就是出货的「Roshan unseen」窗口)。哪天语料出现 Roshan,**它会变红**而不是
+   继续默默通过,而 `fire_c 0` 是同一件事的端到端确认。
+   ⛔ **已被定价并排除、不要重买**(继承 0NEXT4 全部,本轮新增两条):
+   ① ⛔⛔ **GH #782 名字测试那一族到此收口** —— `tests/test_rescpost_outpost_narrow.lua` §2
+   的 allowed-open 集**已空**、断言 `#open == 0`。**不要再在这个族里找名字测试杠杆**;
+   族里仍允许的**唯一**未收窄**距离锚点**是 `J.ShouldPunishOverchase` leg (b) DEEP 建筑支路
+   (`overchase`,`oc_fire_building 0`,登记在 `test_divepost_outpost_narrow.lua §1`,
+   **已排除,要动先改那条断言**)。
+   ② **GH #767 / #770 三条本轮读了并定价、结论是不认领**:#767 唯一动得了的读法捆绑另外两个
+   候选(且宿主 `midtp`/`suptp` 因 GH #539 的 NaN 落点**退集**,修好前测不了);
+   #770 是一条**效应量上界**、不产生 `bots/` 杠杆。**下一轮不要重新定价这两条。**
+   ⭐ **下一轮候选(读了但没买,理由是形状不对不是没看)**:**GH #775 §4** 的注释更正 ——
+   `bots/mode_farm_generic.lua:821` 对它点名的守卫 `:589` **说错了话**(那条守卫只要
+   `J.IsFarming`,与 `arbheart` 同一个谓词)。⚠️ 它是**一行注释、不是行为改动**,
+   按 4.4 **只能当附带一条,不能当工作单元主体** —— 要它当主体就得连 #775 §6 建议的
+   「旁路出口 fixture」一起做,而那个主体会落在 `tests/`。
+   ⚠️ **本轮实测的两条工具事实**:(i) `tests/mock/bot_api.lua:415` 把 `print` 换成 no-op,
+   于是**任何 scratch 探针脚本在第一次 `rf.load` 之后就哑了**(表现为「exit 0、只打出第一行」,
+   看起来像脚本被 os.exit 掐了)⇒ 探针要在文件头 `local RP = print` 先把引用存下来;
+   (ii) 首条命令**第 11 次**被 `REFUSED: stdout is a pipe` 挡回 —— 开工自检**不要走管道**,
+   用 `> /tmp/sc.log 2>&1; echo "EXIT=$?"`。】**
+
+0NEXT4. ✅ **【2026-09-13T07:33Z 新增 → 2026-09-13T10:26Z 做完(`roshpost` 落地,**1 行 `bots/` 代码 + 0 个新 gate id**;报告 `iterations/reports/strategy/20260913T102652Z.md`、`state.json:roshpost_20260913`)。原文保留在下,便于对照(其中「下一轮第一项」已由本条完成,现由 0NEXT5 接替)。主体继续留在 `bots/`**
    (OWNER_PRIORITIES **4.4 (i)**;`rescpost` 让它**连续第三轮**满足,**不要断**)。
    0NEXT3 的三条判据(甲/乙/丙)继续有效,本轮把 (甲) 补成三态、把 (丙) 的边界量出来了:
    ⭐⭐ **(甲′) 落法判据是三态不是两态,而第三态最干净。** 宿主**已 promote** ⇒ 必须加新 id
@@ -8722,6 +8762,59 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-13T10:26Z:**GH #782 家族第四刀落了,家族的名字测试那一半收口(`roshpost`,
+  **1 行 `bots/` 代码、0 个新 gate id**)—— 而本轮真正的产出是**这一族的「效应为零」是抽样不是定理**这一条。**
+  `J.ShouldAbortRoshanAttempt` 的 leg (b) 建筑循环准入式加 `and not J.IsOutpostBuilding( b )`。
+  缺陷用出货代码自己的话:leg (b) 的注释逐字「one of our towers is under visible pressure …
+  **Roshan waits, towers don't**」—— 整条论证的力量在于**塔会掉**;而认塔的方式是
+  `string.find( b:GetUnitName(), 'tower' )`,它**匹配 `npc_dota_watch_tower`** ⇒
+  **一座被我方占领的瞭望塔周围 900 内有任何敌人,整次 Roshan 团就被叫停**。
+  瞭望塔掉不了:没有血条可失,只能被 channel 重新占领、从不被摧毁。
+  ⭐⭐ **本轮最该被下一轮读到的三句:**
+  (甲) ⭐⭐ **前三次的 `flip_ab 0` 是抽样不是定理。** 本轮 **`flip_ab 4`** —— 同一族、同一个
+  谓词、同一种落法,**在真实帧上改变了答案**。承重帧钉了名字:
+  `tests/fixtures/f_260820_102030_wk_tower_out_of_reach.lua`,**DotaTime 436**,dire 侧,
+  被占领的 `watch_tower` 旁 **jakiro 609.8u / zuus 450.2u**,是全图**唯一**一座「正被压的塔」
+  ⇒ 该帧**四个活着的 dire 英雄全部**为一座掉不了的建筑叫停了 Roshan。测试 §4 按名字钉住它,
+  语料换了会**红**而不是悄悄变成空集。⇒ **不要因为姊妹们都是零就给这一族降权**;
+  差别在宿主:前三个宿主的分支各自还压着别的强条件,这个宿主的 leg (b) 是**建筑循环直接 `return true`**。
+  (乙) ⭐⭐ **正对照买两条,第二条是「收窄之后那条腿还活着吗」。** 新增
+  **`tower_with_enemy 17 > 0`**(**真塔**确实会被压)⇒ 修的是**被污染**的腿,不是清空一条
+  从不开火的腿。「收窄后全域为空」是**另一个**发现,不该静悄悄通过。
+  (丙) ⭐ **「给被试传了什么」要写成会红的断言。** 所有臂传 `hRoshan = nil`,§7 把两个前提
+  都钉住:`rosh_seen == 0`(语料里一个 Roshan handle 都没有 ⇒ 唯一能驱动的形状)+ 源码
+  `local bEarly = true` 仍在(⇒ nil 正是出货的「Roshan unseen」窗口);`fire_c 0` 是端到端确认。
+  **读数**(142 帧 / **657** 活行 / `load_fail 0` / `raised 0`):`pred_true/false 97/1721`、
+  **`PRED_DISAGREES 0`**;leg-(b) 站点 `site 17` 帧、`site_has_wt 1`、**`site_wt_only 1`**(域,非空)。
+  四臂:A(收窄前的树)**75**、B(落地后)**71** ⇒ **`flip_ab 4`**、**`grow_ba 0`**(禁止方向未出现)、
+  C **0**、D **0**、`flip_ad 75 == fire_a`、`fire_a2 657 == live`、`real_pred_drives 657 == live`;
+  正对照 `wt_allied 97` / 最近敌人-瞭望塔 **450.2u < 900**。
+  产出:`bots/FunLib/jmz_func.lua`(**1 行代码,gated 继承 `roshgate`,未 armed**)、
+  `tests/test_roshpost_outpost_narrow.lua` **runner 7/7(2.8s)**、
+  `tools/agent/mutstand_roshpost.sh` **caught=10 survived=1(控制项)FINAL_SHA_OK=yes STAND GREEN**
+  (关键腿 **M5b** 就地废闸只被臂 D 抓住;**M8** 把语料截成一个 fixture = 本组要求的
+  「量具自己塌掉」那条腿)、`state.json:roshpost_20260913`、
+  报告 `iterations/reports/strategy/20260913T102652Z.md`。
+  ⭐ **被 push 前的闸点名抓到一条**:`tests/test_bots_walk_farm_only.py` **exit 1**,逐字点名
+  新文件的 `io.popen('ls ' .. dir .. ' 2>/dev/null')` 未进 `UNRESOLVED_HAND_READ` ⇒
+  **同一个工作单元内**登记完毕,重跑 **8 checks, 0 failed**。两个姊妹文件都是落地当天红在
+  trunk 上、由下一个开门的台子补登的(GH #774 / #624)——这次作者与登记者是**同一个座位**。
+  ⚠️ **三条 open `[strategy]` issue 本轮读了并定价、结论是不认领**(理由逐条见报告 §2):
+  #767(唯一动得了的读法捆绑另外两个候选,且宿主 `midtp`/`suptp` 因 GH #539 的 NaN **退集**)、
+  #770(是效应量上界、不产生 `bots/` 杠杆)、#775(建议的验收主体落在 `tests/`;其 §4 的
+  一行注释更正**登记为下一轮的附带项**)。
+  ⚠️ **开工自检 `TRUE_EXIT=3`**:findings = cadence / queue-rulings / owed-executions /
+  **trunk-red(python)**,python 唯一的红是 `tests/test_py_gate_hook.py` = **GH #795**
+  ([harness],同日 09:36Z 已立案),与本轮无关;Lua 快检测器 **87 文件 0 失败**;
+  3 个 python 文件 **UNCERTIFIABLE(未跑,不是通过)**。首条命令**第 11 次**被
+  `REFUSED: stdout is a pipe` 挡回。⛔ 变异台与自检**没有并发**。
+  ⚠️ **一条新的工具坑**:`tests/mock/bot_api.lua:415` 把 `print` 换成 no-op ⇒ **任何 scratch
+  探针在第一次 `rf.load` 之后就哑了**(表现为「exit 0、只打出第一行」,看着像被 os.exit 掐掉);
+  探针要在文件头 `local RP = print` 先存引用。
+  ✅ **OWNER_PRIORITIES 4.4 (i) 连续第四轮满足**。**零 AWS、零波次、armed 串一字未动**
+  (gated 且未 armed ⇒ 出货行为逐字节不变)。铁律 6 三行与 token 用量见报告 §9/§10。
+
 
 - 2026-09-13T07:33Z:**GH #782 家族第三刀落了(`rescpost`,**1 行 `bots/` 代码、0 个新 gate id**)——
   而本轮真正的产出是**本组自己写的第一版断言里有两条是错的,两条都是被语料顶红的、不是被读出来的**这一条。**

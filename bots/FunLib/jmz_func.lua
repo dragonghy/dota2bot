@@ -8843,9 +8843,26 @@ function J.ShouldAbortRoshanAttempt( bot, hRoshan )
 	end
 
 	if bEarly then
+		-- [roshpost 20260913, GH #782 family -- the LAST registered-open site]
+		-- Leg (b)'s own words are "Roshan waits, towers don't": the reason to
+		-- walk away from the pit is that a TOWER can fall while we are in it.
+		-- `string.find( name, 'tower' )` matches `npc_dota_watch_tower`, so a
+		-- captured OUTPOST with any enemy within 900 reads as "one of our
+		-- towers is under visible pressure" and the whole attempt is called
+		-- off. An outpost cannot fall: it has no health bar to lose, it is
+		-- re-captured by channel and never destroyed, so nothing about an
+		-- enemy standing beside it is the loss leg (b) is racing. No new soak
+		-- id: this helper's first two lines are `IsModeTurbo` + a bare
+		-- `IsSoakCandidate( 'roshgate' )` early return, so the whole host is
+		-- already inert in shipped play and the narrowing inherits that gate
+		-- (criterion 甲′ third state -- nesting a second candidate under an
+		-- unarmed one is the pullcad trap's cousin and no wave can isolate it).
+		-- Same predicate as the other three members (tpdeftower, divepost,
+		-- rescpost); this closes the family's name-test half.
 		for _, b in pairs( GetUnitList( UNIT_LIST_ALLIED_BUILDINGS ) or {} ) do
 			if J.IsValidBuilding( b )
 			and string.find( b:GetUnitName(), 'tower' ) ~= nil
+			and not J.IsOutpostBuilding( b )
 			and #J.GetEnemiesNearLoc( b:GetLocation(), 900 ) > 0 then
 				return true
 			end

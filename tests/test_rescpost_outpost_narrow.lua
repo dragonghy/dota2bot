@@ -27,8 +27,12 @@
 -- site nobody is pricing), and the tree says the family's live members are:
 --   * J.ShouldTpSupportTowerFight -- narrowed 2026-09-13 ('tpdeftower').
 --   * J.GetRescueTpTarget         -- THIS ROUND.
---   * J.ShouldAbortRoshanAttempt  -- still open, host 'roshgate', registered
---                                    in §1 as the one allowed un-narrowed site.
+--   * J.ShouldAbortRoshanAttempt  -- narrowed 2026-09-13 ('roshpost', no new
+--                                    id: that host is gated as a WHOLE by one
+--                                    unpromoted candidate). §2's allowed-open
+--                                    set is therefore EMPTY as of that round;
+--                                    it was `{ J.ShouldAbortRoshanAttempt }`
+--                                    when this file landed.
 -- (bots/mode_retreat_generic_wip.lua carries a fourth; `_wip` is not a mode
 -- name the engine loads, and §1 says so rather than silently skipping it.)
 --
@@ -535,7 +539,18 @@ tests['[rescpost] 2. the name-test family, counted in the TREE not in prose'] = 
     -- ⛔ Deliberately NOT written as "two totals are equal": today both totals
     -- happen to be small, and two numbers that are both wrong are the easiest
     -- green in the world. The allowed open set is named.
-    local allowed = { ['J.ShouldAbortRoshanAttempt'] = true }
+    --
+    -- ⭐ 2026-09-13, one round later: THE ALLOWED SET IS NOW EMPTY. The single
+    -- entry it carried -- J.ShouldAbortRoshanAttempt, host `roshgate` -- was
+    -- narrowed by `roshpost` (tests/test_roshpost_outpost_narrow.lua), which
+    -- closes the name-test half of the GH #782 family. ⛔ This is not "making a
+    -- red go green": the assertion below said "exactly one open site", the site
+    -- was narrowed, and the registered state moved with it. The MECHANISM is
+    -- deliberately kept rather than deleted -- an empty allowed set plus
+    -- `#open == 0` is what makes a NEW un-narrowed site announce itself by
+    -- name, which is the whole reason this section counts the tree instead of
+    -- reading a sentence.
+    local allowed = {}
     for _, fn in ipairs(open) do
         assert(allowed[fn] == true,
             'a `tower` name test on a building handle is UN-NARROWED in ' .. fn
@@ -544,9 +559,11 @@ tests['[rescpost] 2. the name-test family, counted in the TREE not in prose'] = 
             .. 'id of its own), or it is deliberate -- in which case add it to '
             .. 'the allowed set here with the reason.')
     end
-    assert(#open == 1,
+    assert(#open == 0,
         'the open-site count moved to ' .. #open .. '. The registered state is '
-        .. 'exactly one: J.ShouldAbortRoshanAttempt (host `roshgate`).')
+        .. 'ZERO: every `tower` name test on a building handle in ' .. TRG
+        .. ' is paired with the outpost cut (tpdeftower / divepost / rescpost / '
+        .. 'roshpost).')
 end
 
 tests['[rescpost] 3. the domain is real, and the instrument is alive'] = function()

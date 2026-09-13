@@ -184,6 +184,16 @@ UNRESOLVED_HAND_READ = {
         "non-recursive `ls`; it is a copy of the walk on the line above. "
         "Hand-read 2026-09-13 (strategy desk, divepost round -- registered in "
         "the same work unit that wrote it)",
+    """tests/test_roshpost_outpost_narrow.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the same two literals "
+        "{'tests/fixtures', 'tests/frames'} with no parameter reaching it, and "
+        "runs the same plain non-recursive `ls`; it is a copy of the walk two "
+        "lines above and never reaches bots/Customize/. Hand-read 2026-09-13 "
+        "(strategy desk, GH #782 family FOURTH and final name-test landing -- "
+        "roshpost). ⭐ Registered because THIS CHECK CAUGHT IT before the push: "
+        "the finding named the file and the exact unresolved command, which is "
+        "the GH #774 loop closing in the authoring work unit instead of on the "
+        "next desk to open a gate",
     """tests/test_wk_q_commit_ration.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() at :110 loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:79-:80); non-recursive `ls`, "
