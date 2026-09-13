@@ -241,8 +241,25 @@ tests['[census] every DotaTime minute gate multiplies by 60, except two'] = func
     -- about the idiom.  What would be evidence against the idiom is a new
     -- inline minute gate written some OTHER way -- which this assertion cannot
     -- see at all, and that limit is the reason the floor is a floor.
-    assert(by_sixty >= 124, string.format(
-        'the N*60 population fell to %d (recorded 124). This ruling rests on '
+    --
+    -- 124 -> 122, 2026-09-13 (hero, `cmcreepclock`).  FOURTH INSTANCE, and the
+    -- first that moves TWO sites at once, re-derived rather than assumed:
+    -- hero_crystal_maiden.lua X.ConsiderW's two CREEP branches (先远 / 再近)
+    -- each used to read `DotaTime() > 10 * 60` inline and now both read
+    -- `X.cm_IsCreepClockOpen()`, whose shipped leg is
+    -- `DotaTime() > X.nWCreepClockShipped` with that constant still `10 * 60`
+    -- on a line this pattern cannot see.  Both minute gates were NAMED, not
+    -- removed.  -2 in one commit is why the arithmetic is spelled out here: the
+    -- shrink is exactly the number of call sites that got a helper, and nothing
+    -- else in that file's clock population moved.
+    -- ⚠️ This one is NOT the same lever as `cmtfclock` even though it is the
+    -- same file and the same function.  `cmtfclock` named the TEAMFIGHT clock
+    -- (a conjunct that gates a cast); this names the two CREEP clocks
+    -- (disjuncts that relax a target-class rule).  Two ids, deliberately not
+    -- conjoined -- so a reader counting "how many rounds of the walk are left"
+    -- must not treat X.ConsiderW as already visited.
+    assert(by_sixty >= 122, string.format(
+        'the N*60 population fell to %d (recorded 122). This ruling rests on '
         .. '"* 60 is the house idiom"; if that population shrank, re-derive it '
         .. '-- and check first whether the site was NAMED rather than removed.',
         by_sixty))

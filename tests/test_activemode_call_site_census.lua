@@ -191,8 +191,27 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- census cannot tell the two apart and a future reader counting "notes about
     -- the 13th world assertion" off this number would over-count by one.
     -- ⛔ RE-TAKEN, NOT RAISED: `get_active_mode` is still 253.
-    assert(c.commented_out == 6,
-        'GetActiveMode() mentions inside comments moved from 6 to ' .. c.commented_out ..
+    -- RE-TAKEN 6 -> 8 (TWO at once) on 2026-09-13 by hero, IN THE SAME COMMIT
+    -- that caused it.  Both are in bots/BotLib/hero_crystal_maiden.lua, in the
+    -- doc block of the 'cmcreepclock' landing, and they are TWO DIFFERENT
+    -- sentences that a counter must not merge:
+    --   * the seventh quotes the shipped conjunct
+    --     `bot:GetActiveMode() ~= BOT_MODE_LANING` to say what the wall clock
+    --     beside it is a PROXY for -- i.e. it is an argument about the shipped
+    --     code, read off the source;
+    --   * the eighth is the fourth instance of the "bot-VM state, in no .dem"
+    --     sentence, but sharpened: it records that GetActiveMode() answers 0 on
+    --     1314/1314 corpus hero handles while BOT_MODE_* are 1001-1005, so the
+    --     conjunct is VACUOUSLY TRUE offline and no domain count in that lever
+    --     may be read as evidence the mode term held.
+    -- ⚠️ The second one exists BECAUSE the first one does: a lever whose header
+    -- argues from a shipped conjunct has to say in the same breath that the
+    -- conjunct is unmeasurable offline, or the argument reads as frame-backed.
+    -- That pairing is why this number moved by two and not by one.
+    -- ⛔ RE-TAKEN, NOT RAISED: `get_active_mode` is still 253 -- the
+    -- 'cmcreepclock' landing adds no GetActiveMode CALL, only prose about one.
+    assert(c.commented_out == 8,
+        'GetActiveMode() mentions inside comments moved from 8 to ' .. c.commented_out ..
         ' -- that is a prose change, NOT a call-site change; re-take THIS number, ' ..
         'never fold it into get_active_mode')
     -- 259 -> 260 on 2026-09-11 (strategy), and note WHICH half moved: the
@@ -200,8 +219,13 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- the 'bagtango' doc block does not mention GetActiveMode in prose -- so this
     -- total moving while the prose count holds is exactly the arithmetic this
     -- pair exists to keep visible.
-    assert(c.get_active_mode + c.commented_out == 260,
-        'executable + commented must equal the raw pattern count (260); if it does ' ..
+    -- 260 -> 262 on 2026-09-13 (hero, 'cmcreepclock'), and note WHICH half
+    -- moved: the PROSE one, 6 -> 8, asserted above.  `get_active_mode` is still
+    -- 254 -- that landing adds no GetActiveMode call -- so this total moving by
+    -- exactly the prose delta is the arithmetic this pair exists to keep
+    -- visible, run in the other direction from the 2026-09-11 entry above.
+    assert(c.get_active_mode + c.commented_out == 262,
+        'executable + commented must equal the raw pattern count (262); if it does ' ..
         'not, strip_line_comment cut somewhere it should not have')
 
     -- Direct unit checks on the cut, including the one the naive `find("--")`
