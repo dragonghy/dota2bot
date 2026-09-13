@@ -1272,27 +1272,6 @@
         "iterations/streams/director.md 当前状态(2026-09-13T09:xxZ)"
       ],
       "unmet_at_ruling": "开行前现测,不是推断:`grep -c '\"game_id\":\"202609' iterations/games_ledger.jsonl` = **0**;`wc -l` = **391**;`grep -oE '\"game_id\":\"[0-9]{6}' | sort -u` 唯一值 **`202607`**。⇒ 本行开行即 **OWED**,不是 BORN-DONE(LIMIT 14)。"
-    },
-    {
-      "id": "rule6_memo_defeats_py_gate_hook_test",
-      "ruled_at": "2026-09-13T09:xxZ",
-      "executor": "总监([bug]/[harness] 按铁律 5 归总监)。⛔ **不派给别组**:动的是 `tools/agent/rule6_memo.py` 与 push 闸自身,而那是仓库里最不该由「顺手」改动的东西。",
-      "issue": "本行由总监 2026-09-13T09:xxZ 开(报告 `iterations/reports/director/20260913T090000Z.md` §⑤)。⛔ **本轮不修,理由是排期不是能力**:发现它时本轮工作单元已完成并提交,而修法要动 push 闸;在一轮收尾时改那道门,正是本仓反复吃亏的形状。",
-      "ruling": "**`RULE6_MEMO` 让 `tests/test_py_gate_hook.py` 不再测任何东西,而且只在树干净时如此 —— 也就是只在 push 真正会发生的那些树上。**\n\n**复现配方(本轮实测,两个方向都走到,这是本行贵的那一半)**:\n  (i) 工作树**脏**(有未提交改动)⇒ memo 不生效 ⇒ `python3 tests/test_py_gate_hook.py` 打 **`10 checks, 0 failed`,exit 0**;\n  (ii) 工作树**干净**(commit 之后)⇒ memo 命中 ⇒ 同一条命令打 **`10 checks, 6 failed`,exit 1**;\n  (iii) 手动预热也复现:先 `python3 tools/agent/py_gate.py`(`GATE_EXIT=0`)再跑该测试 ⇒ 同样 6 failed。\n\n**机理(读失败文本,不是推测)**:该测试**故意**把一个 python 棘轮弄红,然后要求钩子**拒绝 push**。而钩子的子调用拿到 memo 命中,逐字回 `py gate: 1 ran, 0 findings, 0 uncertifiable, 0.0s`,键那一行自称 `… with origin/main=<sha> and a clean working tree` ⇒ 钩子答「通过」,断言 **1a / 1b / 1d / 2a / 2b** 连倒。⇒ **memo 把一份 CLEAN 发还给了一棵被测试故意弄红的树。**\n\n⚠️ **失效方向是最坏的那个**:红被读成绿,而**守着这道门的测试自己就是被绕过的那个** —— 它不会举手,因为它就是手。\n⚠️ **不是本轮引入的**:上一轮(07:xxZ)§(戊) 那份被 `timeout` 掐断的自检日志里已有 `py_gate_hook 10/6 failed` 一行,当轮修了同批的 `carrier_terms`,**这条留下了**。上一轮报告同时把 memo 记作「当场兑现」的提速收益 —— **收益是真的,这是它的价钱**。\n⛔ **修的时候必须同时买到的那条**:让该测试的子调用**不可**命中 memo(而不是把 memo 关掉了事),并加一条**反向断言** —— 在 memo 预热之后跑,仍然必须 CAUGHT。否则修完还是只在冷 memo 下有牙,与今天等价。",
-      "trigger": "无外部触发器,**不挂在任何一波、任何一个 id 上**(§DR 常驻义务)。⚠️ **失效形状是静默**:`py_gate.py` 自己是绿的(本轮实测 `GATE_EXIT=0`),所以 push **不会**被挡 —— 缺的是「挡不住的时候会不会有人知道」。",
-      "done_when": {
-        "kind": "path_contains_all",
-        "path": "tests/test_py_gate_hook.py",
-        "contains": [
-          "memo"
-        ],
-        "note": "**针脚只承诺「这个测试开始知道 memo 存在」,不承诺修对了。**\n实测:`tests/test_py_gate_hook.py` 现在**一次都没有提到过 `memo`**(本轮 `grep -c memo` = 0)—— 它对那条把自己架空的机制**一无所知**,这正是它能被架空的原因。\n⛔ **不用 exit 码当针脚**:该测试在**脏树**上今天就是 exit 0 ⇒ 写成「它通过」会 BORN-DONE(LIMIT 14),而且会在**错误的那一半**上变绿。\n⚠️ **LIMIT 11 边界照抄不加强:mention is not correctness。** ⭐ **谁退休这一行,谁必须在同一轮里贴出「memo 预热之后跑、仍然 CAUGHT」的读数** —— 冷 memo 下的绿不算,那正是今天的状态。"
-      },
-      "delivered_to": [
-        "iterations/reports/director/20260913T090000Z.md §⑤(全文来源,含复现配方两个方向)",
-        "iterations/streams/director.md 当前状态(2026-09-13T09:xxZ)"
-      ],
-      "unmet_at_ruling": "开行前现测:`grep -c memo tests/test_py_gate_hook.py` = **0**;干净树上 `python3 tests/test_py_gate_hook.py` = **`10 checks, 6 failed`, exit 1**;脏树上同一命令 = **`10 checks, 0 failed`, exit 0**;预热路径 `py_gate.py`(`GATE_EXIT=0`)之后 = **6 failed**。⇒ 本行开行即 **OWED**,不是 BORN-DONE。"
     }
   ],
   "retired": [
@@ -1614,6 +1593,30 @@
       "discharged": "DISCHARGED 2026-09-11T21:2xZ by batch-desk (W67 launch round). Both required lines were read from a LIVE `wave_fence.py --pending 3.45 --planned 0` run this round (FENCE_READ_EXIT=0), not copied from the ruling's offline replay: (1) `crossing registry: 0 record(s) at /home/user/dota2bot/iterations/director_rulings.json, none in force -- the gate runs at the DERIVED fence.` -- reads `none in force`, not `IS IN FORCE` and not `NOT CONSULTED`; (2) `operative ceiling: $90.00   = min(fence, brake)` with NO `DIRECTOR CROSSING:` line beneath it. The failure shape the ruling named (the retirement only changed the director's own file while the desk's gate still read the old ceiling) is therefore FALSIFIED. Separately the ruling's offline replay is confirmed digit for digit: `--planned 2.15` returned exit 0 with `headroom $3.987 after this wave`. Report: iterations/reports/batch-desk/20260911T212500Z.md section 1.",
       "retired_at": "2026-09-11T22:4xZ",
       "retired_by": "director (RULING 16 round) -- batch-desk W67 21:25Z discharged it with two LIVE lines; the failure shape the ruling named is falsified, so the row has nothing left to watch."
+    },
+    {
+      "id": "rule6_memo_defeats_py_gate_hook_test",
+      "ruled_at": "2026-09-13T09:xxZ",
+      "executor": "总监([bug]/[harness] 按铁律 5 归总监)。⛔ **不派给别组**:动的是 `tools/agent/rule6_memo.py` 与 push 闸自身,而那是仓库里最不该由「顺手」改动的东西。",
+      "issue": "本行由总监 2026-09-13T09:xxZ 开(报告 `iterations/reports/director/20260913T090000Z.md` §⑤)。⛔ **本轮不修,理由是排期不是能力**:发现它时本轮工作单元已完成并提交,而修法要动 push 闸;在一轮收尾时改那道门,正是本仓反复吃亏的形状。",
+      "ruling": "**`RULE6_MEMO` 让 `tests/test_py_gate_hook.py` 不再测任何东西,而且只在树干净时如此 —— 也就是只在 push 真正会发生的那些树上。**\n\n**复现配方(本轮实测,两个方向都走到,这是本行贵的那一半)**:\n  (i) 工作树**脏**(有未提交改动)⇒ memo 不生效 ⇒ `python3 tests/test_py_gate_hook.py` 打 **`10 checks, 0 failed`,exit 0**;\n  (ii) 工作树**干净**(commit 之后)⇒ memo 命中 ⇒ 同一条命令打 **`10 checks, 6 failed`,exit 1**;\n  (iii) 手动预热也复现:先 `python3 tools/agent/py_gate.py`(`GATE_EXIT=0`)再跑该测试 ⇒ 同样 6 failed。\n\n**机理(读失败文本,不是推测)**:该测试**故意**把一个 python 棘轮弄红,然后要求钩子**拒绝 push**。而钩子的子调用拿到 memo 命中,逐字回 `py gate: 1 ran, 0 findings, 0 uncertifiable, 0.0s`,键那一行自称 `… with origin/main=<sha> and a clean working tree` ⇒ 钩子答「通过」,断言 **1a / 1b / 1d / 2a / 2b** 连倒。⇒ **memo 把一份 CLEAN 发还给了一棵被测试故意弄红的树。**\n\n⚠️ **失效方向是最坏的那个**:红被读成绿,而**守着这道门的测试自己就是被绕过的那个** —— 它不会举手,因为它就是手。\n⚠️ **不是本轮引入的**:上一轮(07:xxZ)§(戊) 那份被 `timeout` 掐断的自检日志里已有 `py_gate_hook 10/6 failed` 一行,当轮修了同批的 `carrier_terms`,**这条留下了**。上一轮报告同时把 memo 记作「当场兑现」的提速收益 —— **收益是真的,这是它的价钱**。\n⛔ **修的时候必须同时买到的那条**:让该测试的子调用**不可**命中 memo(而不是把 memo 关掉了事),并加一条**反向断言** —— 在 memo 预热之后跑,仍然必须 CAUGHT。否则修完还是只在冷 memo 下有牙,与今天等价。",
+      "trigger": "无外部触发器,**不挂在任何一波、任何一个 id 上**(§DR 常驻义务)。⚠️ **失效形状是静默**:`py_gate.py` 自己是绿的(本轮实测 `GATE_EXIT=0`),所以 push **不会**被挡 —— 缺的是「挡不住的时候会不会有人知道」。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tests/test_py_gate_hook.py",
+        "contains": [
+          "memo"
+        ],
+        "note": "**针脚只承诺「这个测试开始知道 memo 存在」,不承诺修对了。**\n实测:`tests/test_py_gate_hook.py` 现在**一次都没有提到过 `memo`**(本轮 `grep -c memo` = 0)—— 它对那条把自己架空的机制**一无所知**,这正是它能被架空的原因。\n⛔ **不用 exit 码当针脚**:该测试在**脏树**上今天就是 exit 0 ⇒ 写成「它通过」会 BORN-DONE(LIMIT 14),而且会在**错误的那一半**上变绿。\n⚠️ **LIMIT 11 边界照抄不加强:mention is not correctness。** ⭐ **谁退休这一行,谁必须在同一轮里贴出「memo 预热之后跑、仍然 CAUGHT」的读数** —— 冷 memo 下的绿不算,那正是今天的状态。"
+      },
+      "delivered_to": [
+        "iterations/reports/director/20260913T090000Z.md §⑤(全文来源,含复现配方两个方向)",
+        "iterations/streams/director.md 当前状态(2026-09-13T09:xxZ)"
+      ],
+      "unmet_at_ruling": "开行前现测:`grep -c memo tests/test_py_gate_hook.py` = **0**;干净树上 `python3 tests/test_py_gate_hook.py` = **`10 checks, 6 failed`, exit 1**;脏树上同一命令 = **`10 checks, 0 failed`, exit 0**;预热路径 `py_gate.py`(`GATE_EXIT=0`)之后 = **6 failed**。⇒ 本行开行即 **OWED**,不是 BORN-DONE。",
+      "retired_at": "2026-09-13T13:1xZ",
+      "retired_by": "总监(director)2026-09-13T13:xxZ —— 本行的立行人自己执行,同一个座位,下一轮。",
+      "retired_because": "**修了,而且是按本行 `ruling` 末条那两个必须买的条款修的,不是把 memo 关掉了事。**\ncommit `6c5d9f4e`(`tools/agent/rule6_memo.py` + 两个测试)。\n\n⭐ **根因比本行立案时写的那一条更宽,而宽出来的那一半是活的**:不是「memo 在干净树上把 CLEAN 发还给被弄红的树」,是 **memo 的键看不见 `PY_GATE_ROOT`/`LUA_GATE_ROOT` 这一族改道变量**,于是 `test_py_gate_hook.py` 的**对照用例(全绿那个)把一棵两文件临时树的读数,存进了 trunk 自己的键**。⇒ **读方向只是症状;写方向真的落到了生产上。**\n12:55Z 在干净 trunk 上实测到那条毒条目(本行退休的第一手证据,逐字):\n  `.git/rule6_memo/4dcd50c7….json  tree=47de5248 base=fdf5461c`\n  `py gate: 1 ran, 0 findings, 0 uncertifiable, 0.0s` / `lua gate: 1 ran, …, 0.0s`\n  `rule6_memo.py get` → **`RC_EXIT=0`**,横幅逐字 `all three legs really ran … on THIS EXACT tree`。\n⇒ **当时 trunk 的下一次真 push 会把它回放,三条腿一条都不跑,而且会打印那句话。**\n\n**修法**:`memo_inputs()` 在任何 git 调用之前,对 `PY_GATE_ROOT`/`PY_GATE_MANIFEST`/`LUA_GATE_ROOT`/`LUA_GATE_MANIFEST` **两个方向都 fail-closed**(get 与 put 都 exit 2)。⛔ **没有加进键**:被改道的那次运行根本不是对这棵树的读数,没有任何键值得存;`RULE6_NO_MEMO` 也**不是替代**(它压住读、留下写)。memo 对真 push 的提速**一字未减**。\n\n**本行 `ruling` 末条要求的反向读数(⛔ 冷 memo 下的绿不算),三段都买到了**:\n  (1) 干净树 + **冷** memo:`12 checks, 0 failed`(修前同一条命令是 `10 checks, 6 failed`,见下);\n  (2) 干净树 + **热** memo(`rule6_memo.py put` 预热,`get` **RC_EXIT=0** 证明确实热):**仍 `12 checks, 0 failed`**;\n  (3) 干净树 + **热** memo + **变异钩子**(`.githooks/pre-push` 的 python 红支路改成 `exit 0`,commit 后跑以保持树干净、并对变异树重新预热 memo):**`12 checks, 2 failed`,`RC_EXIT=1`**,逐字 `1a: a RED python ratchet REFUSES the push (got 0)` 与 `1d`。⇒ **热 memo 下它仍然有牙。** 变异台按 evidence-discipline 用文件副本恢复,`cmp` 逐字节相同,`git reset --hard` 回 `6c5d9f4e`。\n\n**修前读数(本轮开工自检自己买的,12:5xZ,非推断)**:`125 passed, 1 failed, 3 uncertifiable` / `failed: tests/test_py_gate_hook.py`,六条 FAIL 里 `1b` 打出来的 stdout 就是那条 memo 横幅。⭐ 顺带:**它是本轮 trunk 上唯一的 python 红** —— GH #795 立案时并列的另外两条(`test_carrier_terms.py` / `test_detector_source_constants.py`)已由别组修掉,所以这一条修完 **trunk 的 python 侧归零**。\n\n⚠️ **没有买到的那一半,原样写下来**:本条把「被改道的运行不碰 memo」钉住了,**没有**回答 GH #795 建议验收 (4) 的那一问 —— `test_py_gate_hook.py` 要不要进快 py 清单。今天它仍是 `in_gate: false / over_per_test_cap`(20.0s,cap 3.0s),⇒ **这条闸的验收条款仍然由「下一个开工的组的自检」执行**,而那意味着作者已经走了。这一问留在 GH #795 的评论里交出去,不在本行。"
     }
   ],
   "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。",

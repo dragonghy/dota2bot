@@ -563,6 +563,35 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-13T13:14Z**:**GH #795 修掉并关闭(commit `6c5d9f4e`);它是本轮 trunk 上唯一的 python 红,修完归零。零 AWS、零波次、`bots/`+`game/` 零 diff。**
+  全文 `iterations/reports/director/20260913T131428Z.md`。
+  ⭐⭐⭐ **本轮最该被读的:#795 立的是「闸的验收测试红了」,而实测到的是「闸关着」。**
+  `tests/test_py_gate_hook.py` 从**真仓库**驱动**真钩子**(它测的是接线),用
+  `PY_GATE_ROOT`/`LUA_GATE_ROOT` 把第 2、3 条腿改道到一棵**两文件临时树**;而 memo 的键
+  `(HEAD^{tree}, origin/main) + 干净树` **全部是关于这个仓库的,看不见改道** ⇒ 它的**全绿对照用例**
+  把那棵临时树的读数**存进了 trunk 自己的键**。12:55Z 干净 trunk 上实测:
+  `rule6_memo.py get` **`RC_EXIT=0`**,readings 逐字 `py gate: 1 ran, …, 0.0s` /
+  `lua gate: 1 ran, …, 0.0s`,横幅逐字 `all three legs really ran … on THIS EXACT tree`。
+  ⇒ **那一刻这个容器上任何一次 `git push` 都会跳过全部三条腿,并打印那句话。**
+  ⛔ **比 `RULE6_BYPASS` 坏**:bypass 打印「这是跳过不是通过」,它打印「跑过了」。
+  📌 **读方向(#795 立的那半)只是第二跳;写方向真的落到了生产上。**
+  ✅ 修在 memo:改道变量任一被设 ⇒ `get`/`put` **两个方向都 exit 2**。⛔ **没加进键**
+  (被改道的运行不是对这棵树的读数,没有键值得存);⛔ **`RULE6_NO_MEMO` 不是替代**
+  (压住读、留下写)。真 push 的提速一字未减。
+  ⭐ **验收带反向读数,因为欠条自己写着「冷 memo 下的绿不算」**:干净树+冷 memo `12/0`;
+  干净树+**热** memo `12/0`;干净树+热 memo+**变异钩子**(python 红支路 `exit 0`,**commit 后**跑
+  以保持树干净)**`12 checks, 2 failed` `RC_EXIT=1`** ⇒ 热 memo 下仍然有牙。
+  单元侧 `tests/test_rule6_memo.py` case 7(+10,`51/0`),变异台删守卫 ⇒ **10 FAIL / `RC_EXIT=1`**,
+  失败文本里逐字出现 `1 ran, 0.0s` 覆盖真读数 —— **抓到的是同一个形状**。
+  ⚠️ **没买到的那一半,写下来**:#795 建议验收 (4)「这个测试要不要进快 py 清单」**未答** ——
+  它仍是 `in_gate: false / over_per_test_cap`(20.0s / cap 3.0s)⇒ **闸的验收条款仍由
+  「下一个开工的组的自检」执行,而那意味着作者已经走了**。已随 issue 评论交出去。
+  ⚠️ 相邻但**没有顺手办**:`tests/test_rule6_memo.py` 至今不在 `py_gate_manifest.json` 的**任何一侧**
+  (欠条 `rule6_memo_fast_gate_membership`)—— 成员资格只看实测秒数,重测是独立工作单元。
+  💰 批测台刹车(MTD `$88.917` / `$90`)本轮**零处置是正确的**:它要的是钱的表态,
+  而 W37 邮件 09:00Z 已发、本周配额用完。**W38(周日)那封只带 DECISIONS_NEEDED 第 15 条**
+  (预算加 `Project` 过滤器)—— GH #603 把它从预判变成读数:九月 `$64.4` 里 `$44.8`
+  烧在 09-05/09-06 且**不是本台的波**,我们的刹车被别人踩下去了。
 - **2026-09-13T09:xxZ**:**W37 效率台账写完(欠两轮,今天到期)+ W37 邮件已发(Gmail `1a09a3cb7bea27df`,配额用完);数 promote 数时对出「本周 7 个 promote 里有 2 个从来没有锚点」,补建 `stable-v9` + 给测试加反向读的覆盖度一节(5/5 CAUGHT)。零 AWS、零波次、`bots/`+`game/` 零 diff。**
   全文 `iterations/reports/director/20260913T090000Z.md`;台账 `iterations/reports/director/efficiency_202637.md`。
   ⭐⭐⭐ **(甲) 本轮最该被读的:一条从未被写下的锚点,在每一轮里都是 ok。** `zusult`+`zusboltdom` 09-11 promote(闸从 `bots/BotLib/hero_zuus.lua` 删除,机器键 `state.json:zusult_zusboltdom_PROMOTE_20260911`,裁定 §GW),而 `stable_anchors.json` **没有它的行**、origin **没有 `stable-v9`**,两天十余轮触发**全绿**。⛔ **静默是结构性的**:`stable_anchors.py` **先读登记表、再问每一行健不健康** ⇒ 一条**从未被写下**的锚点**不是一行,没有东西检它,于是打 ok**。📌 `stable_anchors.json` 的 `_doc` 写着「漏登记不会自己举手 —— 加那一行就是让它会」,**而这句话只对已经加了的那一行成立,对下一个被忘掉的一个字都没说**。⚠️ **它不是在混乱的周里被忘的**:同周 v5/v6/v7/v8 **四个锚点登记全对**,六次裁定只漏一次 ⇒ **不是流程没人执行,是流程没有反向的门**;**发现方式是运气**(为写台账数 promote 数,顺手对了一次账)。
