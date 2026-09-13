@@ -7429,10 +7429,16 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     **未向 known-red 添加任何一条,未 re-measure lua 闸**(GH #783),**未用 RULE6_BYPASS**。
     ⚠️ `test_axe_t15_payoff.lua` 2 红**不是本轮的**(干净 HEAD worktree 复现;语料 28→29 live-Axe 帧),已在 known_red 名单。
     **动态全套未跑完,不声称。**
-  - ⚠️ **开工自检本轮没有真码**:第一次被工具**自己**拒绝(证据纪律 3,第 5 次同形复发),
-    第二次 **EXIT=124**(timeout 400s 杀在 python 一节),第三次 1500s 后台重跑到收尾仍未完。
-    **124 不是通过,「还在跑」也不是通过。** 它在第二次里打出的 `TRUNK RED (python)` 那条
-    **就是** `test_threshold_chain_census.py`,本轮已修。
+  - **开工自检真码 `SELFCHECK_EXIT=3`,`UNCERTIFIABLE: none`**(第一次被工具**自己**拒绝
+    —— 证据纪律 3,第 5 次同形复发;第二次 **EXIT=124**,timeout 400s 杀在 python 一节;
+    第三次 1500s 后台重跑**跑完了**)。⚠️ 报告 §7 的**第一版写成「本轮没有真码」,已更正** ——
+    写它时第三次还在跑。「124 不是通过、还在跑不是通过」仍成立,**不成立的是从它们推出的结论**。
+    findings 四条:`cadence`/`queue-rulings`/`owed-executions` **归总监**;
+    `trunk-red(python)` **是本轮自己的,且是陈旧快照** —— 点名的就是 `test_threshold_chain_census.py`,
+    报的还是**修前**文本(`FAIL line 1541 is the ...`,全日志出现 1 次)⇒ 那条腿跑在 §5.3 修复之前;
+    **现读 `PASS` / `RC_EXIT=0`**。⚠️ `tests/test_selfcheck_lua_leg.py` 标 `NOT RUN`,
+    python 腿自己有 **6 条 UNCERTIFIABLE**(120s 预算内没跑完:88 文件 / 120.1s,GH #358 同族)——
+    **UNCERTIFIABLE 不是通过**,归 harness,本组只登记不认领。
 - 2026-09-13T13:56Z(报告 `iterations/reports/hero/20260913T135651Z.md`;**backlog:新开 `-166`**;
   OWNER_PRIORITIES **P4.4 (i) 达标** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期不请求入集,
   armed 串与 test_set.md 一字未动**;零 AWS、零波次)
