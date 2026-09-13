@@ -95,6 +95,8 @@
 
 package.path = 'tests/?.lua;' .. package.path
 
+local skillmap = require('skill_level_map')
+
 local FRAME = 'tests/frames/f_20260831_004433_cm_creepreach.lua'
 local DISPATCH_SRC = 'bots/ability_item_usage_generic.lua'
 local DUMPER_SRC = 'tools/batch_test/behavioral/dumper/main.go'
@@ -371,25 +373,33 @@ end
 -- nothing below level 26.
 
 tests['[hero] skill stall: the terminal else is a head-of-line block'] = function()
-    local sSrc = strip_comments(read_file(DISPATCH_SRC))
+    -- ⭐ RE-DERIVED 2026-09-13 (the gated `skillstall` look-ahead, GH #799).  The
+    -- old reading is quoted so the next reader can see what broke rather than
+    -- re-writing it:
+    --     "Anchored on the branch's own warning string, and closed on the `end`
+    --      that ends the guard -- not on a bare substring."
+    -- It was closed on `(.-)\n%s*end%s*\n%s*end`, which ends on the first NESTED
+    -- block's `end`, and it reported "0 head removals" the day the branch grew
+    -- one -- i.e. it announced the stall was FIXED when the guarded head pop was
+    -- still sitting there, untouched, three lines below where it stopped
+    -- reading.  Its negative control had the mirrored flaw: it located "the
+    -- removal" with a prefix match on `table.remove( sAbilityLevelUpList`, so any
+    -- removal of any index ahead of the guard failed the order check.
+    -- ⚠️ The fix is not a bigger number.  Both halves mistook "a removal" for
+    -- "the HEAD removal"; the block is now cut by block depth and the removals
+    -- are read by their ARGUMENT.  Removing an entry BEHIND the head does not
+    -- unpark the head, and this section is about the head.
+    local sBlock = skillmap.terminal_else_body(read_file(DISPATCH_SRC))
 
-    -- Anchored on the branch's own warning string, and closed on the `end` that
-    -- ends the guard -- not on a bare substring.  A renamed variable inside the
-    -- block still matches; a block that grows an unguarded removal does not.
-    local sBlock = sSrc:match('Skipped to level up ability(.-)\n%s*end%s*\n%s*end')
-    assert(sBlock ~= nil,
-        DISPATCH_SRC .. ' no longer contains the "Skipped to level up ability" '
-        .. 'terminal branch this assertion is anchored on.  If the branch was '
-        .. 'renamed, re-anchor; if it was REMOVED, the head-of-line block may be '
-        .. 'fixed and sections 2-4 should be re-taken.')
-
+    local tArgs = skillmap.queue_removals(sBlock)
     local nRemovals = 0
-    for _ in sBlock:gmatch('table%.remove%s*%(%s*sAbilityLevelUpList%s*,%s*1%s*%)') do
-        nRemovals = nRemovals + 1
+    for _, sArg in ipairs(tArgs) do
+        if sArg == '1' then nRemovals = nRemovals + 1 end
     end
     assert(nRemovals == 1,
         'the terminal branch now performs ' .. nRemovals .. ' head removals, not '
-        .. 'one.  The count is the point: exactly one, and it is guarded.')
+        .. 'one.  The count is the point: exactly one, and it is guarded.  (All '
+        .. 'queue removals in the branch: ' .. table.concat(tArgs, ', ') .. ')')
 
     local sGuard = sBlock:match('(if%s+botLevel%s*>%s*25%s+then)')
     assert(sGuard ~= nil,
@@ -397,16 +407,32 @@ tests['[hero] skill stall: the terminal else is a head-of-line block'] = functio
         .. 'That would MEAN THE STALL IS FIXED (or that the guard was renamed); '
         .. 'either way sections 2-4 are registered exceptions that must be re-taken.')
 
-    -- Negative control: the removal must sit INSIDE the guard, not merely next to
-    -- it.  A block with the guard first and the removal after the guard's `end`
-    -- would satisfy both assertions above and be a different program.
+    -- Negative control: the HEAD removal must sit INSIDE the guard, not merely
+    -- next to it.  A block with the guard first and the removal after the
+    -- guard's `end` would satisfy both assertions above and be a different
+    -- program.  Matched on index 1 specifically -- see the note above.
     local nGuardAt = sBlock:find('if%s+botLevel%s*>%s*25%s+then')
-    local nRemoveAt = sBlock:find('table%.remove%s*%(%s*sAbilityLevelUpList')
+    local nRemoveAt = sBlock:find('table%.remove%s*%(%s*sAbilityLevelUpList%s*,%s*1%s*%)')
     assert(nGuardAt ~= nil and nRemoveAt ~= nil and nGuardAt < nRemoveAt,
         'the head removal in the terminal branch no longer sits after its '
         .. '`botLevel > 25` guard.  Order is the whole claim here: the guard is '
         .. 'what makes every entry behind an unupgradeable head unreachable in a '
         .. 'game that ends below level 26.')
+
+    -- The branch may now carry a GATED removal of an entry behind the head.
+    -- That is not an exception to sections 2-4 and must not become one silently:
+    -- every non-head removal here has to sit under a soak gate, so the shipped
+    -- leg is byte for byte the program this file measured.
+    for _, sArg in ipairs(tArgs) do
+        if sArg ~= '1' then
+            assert(sBlock:find('IsSkillStallSkipOn') ~= nil,
+                'the terminal branch removes queue entry `' .. sArg .. '` with no '
+                .. 'soak gate in the block.  An UNGATED skip past a parked head '
+                .. 'changes shipped behaviour, and sections 2-4 of this file are '
+                .. 'registered exceptions that assert the shipped stall is still '
+                .. 'there -- re-take them rather than letting this pass.')
+        end
+    end
 end
 
 -- ---------------------------------------------------------------------------

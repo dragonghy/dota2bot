@@ -2669,6 +2669,17 @@
    "status": "pending",
    "question": "⛔ **零 EC2 的归档只读扫描。一句话:真实 Turbo 对局里,Crystal Maiden 满足 `X.ConsiderW` 小兵分支外层块全部前提(不在 LANING/RETREAT/ATTACK、1600 内无敌方英雄、1200 内友军 < 3、等级 >= 5)、且视野内有一只合法基础兵的帧,有多少落在 (5:00, 10:00] 这个窗口里?** `cmcreepclock`(2026-09-13 落地)把那两条小兵分支的析取时钟从 `DotaTime() > 10*60` 减半到 `5*60`(turbo-only,gated,**纯放宽**)。\n\n⛔ **fixture 层结构上买不到这个数,本地已量到并写在源码抬头与 `tests/test_cm_w_creep_clock.lua` §3.4 里**:该分支需要一个小兵**单位**,而 `bot:GetNearbyCreeps` 在 **70/70** 个 CM 瞬间上答空表(`CORPUS_HAS_NO_NONHERO_UNITS_20260912`,与 `cmfarcreep`/`cmrangedhp`/`cmcreepcap` 同一阻塞)⇒ **端到端域 = 0,结构性的**。gate 层域倒是量到了:32 个瞬间过三个可测合取项,其中 **15 个**在窗口内。\n\n⚠️ **`mode` 合取项这条扫描必须自己测**,本地测不了:`GetActiveMode()` 在 1314/1314 个语料句柄上是 mock 默认 0(**已登记**的世界断言 13),所以本地那个 15 **不包含** mode 项成立的证据。",
    "acceptance": "从归档 behavioral dump 里,对每一局的 Crystal Maiden(**按 ab / ba 两个分层分别登记读数**,铁律 4(i-a))输出:(1) 落在 (5:00, 10:00] 且外层块四个前提**全部**成立(mode 项**要真的读**)的帧数 / 每局;(2) 其中视野内确有一只**基础车兵/近战兵**(那四个 `npc_dota_creep_*guys_melee/ranged` 名字)且血量过该分支自己的地板的帧数 —— **(2) 才是本 lever 的真实域**;(3) 同样两个数在 t > 10:00 的一侧,作分母对照。⛔ 计数类整数量**不报中位数**(铁律 4(ii)),报均值 + 分布。"
+  },
+  {
+   "id": "hero-78",
+   "stream": "hero",
+   "bundle": "skillstall (新落地 gated id;本条**首选零 EC2 的归档日志扫描**,不要为它单独发波)",
+   "priority": 1,
+   "status": "pending",
+   "seeds": [],
+   "question": "⛔ **首选零 EC2:扫已归档的批测对局日志,数 `[WARN] Skipped to level up ability` 这一行。**\n一句话:真实 Turbo 对局里,派发器的终局 `else`(队头升不了级、手里又攥着加点)**每局被进入多少次,而那一行打印出来的 `abilityName` 是什么**?\n\n`skillstall`(2026-09-13 落地,`bots/ability_item_usage_generic.lua` + `bots/FunLib/aba_skill.lua`,turbo-only,gated,**纯放宽**)在那条分支里加了一次前瞻:队头仍然**原地不动**,但这一点被花在队头**后面**第一个四条准入条件全过的条目上,并把该条目从队列里摘掉。\n\n⭐ **为什么这一条的优先级是 1**:GH #366 / #799 已经把缺口判成 (a) bot 侧 —— 十个英雄(17–22 级)全部停在 **13 加点 + 至多 1 天赋**。但那是**一帧一局**的读数;本 lever 的域(每局被挡住多少个点)至今**一个数都没有**,而它是全仓域最大的一次行为改动(127 英雄全跑)。\n\n⭐ **证据路线,零 EC2**:那条分支**自己**每帧打印 `[WARN] Skipped to level up ability <name> for <bot> for this time because it may fail.`。如果归档日志里有它,就同时买到**频率**与**队头是谁**—— 后者正是 #799 验收 1 还欠的那半(`abilityName` 是不是 `special_bonus_*`)。\n\n⚠️ **这条路线本组判不了真假,请先花两分钟证伪**:`AGENTS.md` 写着「`print()` 从不到服务器控制台」,而 GH **#766** 实测 264 份归档日志里 `[VScript]` 前缀出现 **0** 次、同时 W67 有 113/216 局抛错(即日志里**确实**有 Lua 侧文本)。两句话不能同时为真地描述同一件事。**先在任意一份已归档 `.log` 上 `grep -c 'Skipped to level up ability'`**:>0 就照上面数;=0 就把这条改判为「日志路线不通」并回填一行,本组下轮改走 armed 波。",
+   "acceptance": "(1) 给出扫了几份日志(分母)与命中局数/次数(分子),**分母必须打印**;(2) 命中时给 `abilityName` 的**取值分布**(是不是 `special_bonus_*`),这直接结掉 GH #799 验收 1 剩下的那一半;(3) 若 grep 为 0:回填「日志路线不通 + 所扫日志路径与份数」,**不要**就此推断域为 0(那会是「没测到」冒充「不存在」)。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;且本组不花 AWS)。解冻后若要买条件 (a),再单独提 armed 波申请。",
+   "note": "本地已把能离线买到的都买了:`tests/test_skillstall_lookahead.lua` 9 绿、`tools/agent/mutstand_skillstall.sh` **15/15**(含故意的 M0 无操作对照如期 SURVIVED)。⛔ **fixture 层结构上买不到端到端域**:语料里没有活的天赋句柄(#366 的 LIMIT;GH #772 同族),所以**谁也不许报一个本 lever 增加的加点数**。"
   }
  ],
  "done": [

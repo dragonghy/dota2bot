@@ -95,12 +95,30 @@ with open(SITE, encoding="utf-8") as fh:
 check("the source file is readable and long enough",
       len(site_lines) >= 1560, "only %d lines" % len(site_lines))
 
-first_rung = site_lines[1540] if len(site_lines) > 1540 else ""
-dead_rung = site_lines[1542] if len(site_lines) > 1542 else ""
-check("line 1541 is the `>= 7.5*60 / 15*60` rung",
+# ⭐ THE LADDER IS FOUND BY CONTENT, NOT READ OFF A LINE NUMBER (re-derived
+# 2026-09-13).  Every assertion below used to index site_lines[1540] and friends,
+# so all six went red the day an unrelated edit 1500 lines higher up
+# (`skillstall`, GH #799) pushed the same unchanged ladder down by 36 lines.
+# ⚠️ The fix is not to write 1576 here.  These assertions are about the LADDER's
+# shape, and none of them was ever about where in the file it sits; the search is
+# asserted unique so the derivation cannot silently pick a different ladder.
+FIRST_HITS = [i for i, s in enumerate(site_lines)
+              if "7.5*60" in s and "15*60" in s and ">=" in s]
+check("the `>= 7.5*60 / 15*60` rung occurs exactly once in the file",
+      len(FIRST_HITS) == 1,
+      "lines %s" % [i + 1 for i in FIRST_HITS])
+
+FIRST_IDX = FIRST_HITS[0] if len(FIRST_HITS) == 1 else 0
+FIRST_LINE = FIRST_IDX + 1          # 1-based, the census's own convention
+DEAD_IDX = FIRST_IDX + 2
+DEAD_LINE = DEAD_IDX + 1
+
+first_rung = site_lines[FIRST_IDX]
+dead_rung = site_lines[DEAD_IDX] if len(site_lines) > DEAD_IDX else ""
+check("the found rung is the `>= 7.5*60 / 15*60` rung",
       "7.5*60" in first_rung and "15*60" in first_rung and ">=" in first_rung,
       repr(first_rung))
-check("line 1543 is the `>= 12.5*60 / 25*60` rung, and it is an `elseif`",
+check("two lines below it is the `>= 12.5*60 / 25*60` rung, and it is an `elseif`",
       "12.5*60" in dead_rung and "25*60" in dead_rung
       and dead_rung.strip().startswith("elseif"),
       repr(dead_rung))
@@ -109,13 +127,13 @@ check("the two rungs read the same left-hand quantity (DotaTime())",
 check("the ladder is ASCENDING, which is what makes rung 2 unreachable",
       12.5 > 7.5 and 25 > 15)
 check("the dead rung's body is the +135 tier that never applies",
-      "135" in "\n".join(site_lines[1543:1545]),
-      repr(site_lines[1543:1545]))
+      "135" in "\n".join(site_lines[DEAD_IDX + 1:DEAD_IDX + 3]),
+      repr(site_lines[DEAD_IDX + 1:DEAD_IDX + 3]))
 # The ladder lives inside the keen-eyed branch; if that moves, the whole
 # reading moves with it, so it is named here rather than assumed.
 check("the ladder sits in the item_enhancement_keen_eyed branch",
-      "item_enhancement_keen_eyed" in "\n".join(site_lines[1537:1541]),
-      repr(site_lines[1537:1541]))
+      "item_enhancement_keen_eyed" in "\n".join(site_lines[FIRST_IDX - 4:FIRST_IDX]),
+      repr(site_lines[FIRST_IDX - 4:FIRST_IDX]))
 
 # ---------------------------------------------------------------- section 1
 print("=== 1. ratchet: exactly one dead rung in bots/, and a real denominator ===")
@@ -129,16 +147,23 @@ if len(findings) == 1:
     f = findings[0]
     check("it is the known site",
           (f["file"], f["first_line"], f["dead_line"])
-          == ("bots/ability_item_usage_generic.lua", 1541, 1543),
-          str((f["file"], f["first_line"], f["dead_line"])))
+          == ("bots/ability_item_usage_generic.lua", FIRST_LINE, DEAD_LINE),
+          str((f["file"], f["first_line"], f["dead_line"]))
+          + " vs derived " + str((FIRST_LINE, DEAD_LINE)))
     check("dead in BOTH legs (this is not a turbo-only defect)",
           sorted(f["dead_in"]) == ["normal", "turbo"], str(f["dead_in"]))
     check("the turbo thresholds are the 7.5 / 12.5 minute pair",
           (f["first"][1][0], f["dead"][1][0]) == (450.0, 750.0),
           str((f["first"][1][0], f["dead"][1][0])))
 check("every finding carries a judgement (a NEW one must be visible as new)",
-      all((f["file"], f["first_line"], f["dead_line"]) in mod.JUDGED
-          for f in findings))
+      all(mod.judged_key(f) in mod.JUDGED for f in findings),
+      str([mod.judged_key(f) for f in findings]))
+# And the registry's key is address-free, so a judged finding that MOVES is
+# still judged.  Asserted rather than trusted: keying it back on line numbers is
+# exactly the regression that took this file red on 2026-09-13.
+check("the judgement registry is not keyed on line numbers",
+      all(not any(isinstance(part, int) for part in key) for key in mod.JUDGED),
+      str(list(mod.JUDGED)))
 
 # ---------------------------------------------------------------- section 2
 print("=== 2. reverse assertions: what 'subsumes' means, both directions ===")

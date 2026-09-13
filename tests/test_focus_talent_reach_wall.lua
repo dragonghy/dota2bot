@@ -152,21 +152,51 @@ tests['1. the spender parks an unspendable head and only pops it above level 25'
     -- Located by the branch's own warning text rather than by brace shape: the
     -- file holds many `else`s and the first draft of this assertion matched one
     -- of them (`kez_*` swap chain) and reported the wrong thing.
+    --
+    -- ⭐ RE-DERIVED 2026-09-13, and the old reading is quoted so the next reader
+    -- can see what was wrong with it rather than re-writing it:
+    --     "the final else branch holds N table.remove calls, not 1;
+    --      a second pop outside the level-25 guard would skip a parked head."
+    -- That counted REMOVALS and then reasoned about HEAD POPS, which are not the
+    -- same set, and it read the branch through `\n\tend` -- an anchor that ends
+    -- on the first nested block's `end`.  Both halves broke the day the branch
+    -- grew the gated `skillstall` look-ahead: a nested `if`, and inside it a
+    -- `table.remove( sAbilityLevelUpList, nSpendIdx )` that removes an entry
+    -- BEHIND the head and never the head.  The property this section is for --
+    -- the head is parked, not popped, below level 26 -- was true throughout.
+    -- So the block is now delimited by block depth, and the removals are read by
+    -- their ARGUMENT.
     local sRaw = src_of('bots/ability_item_usage_generic.lua')
-    local sTail = sRaw:match('print%("%[WARN%] Skipped to level up ability "(.-)\n\tend')
-    assert(sTail ~= nil,
-        'the spender\'s final else branch could not be located by its own warning '
-        .. 'text; re-read bots/ability_item_usage_generic.lua before trusting '
-        .. 'anything below.')
+    local sTail = skillmap.terminal_else_body(sRaw)
+
     assert(sTail:find('botLevel > 25') ~= nil,
         'the final else no longer guards its pop with `botLevel > 25`.  If an '
         .. 'unspendable head now pops at any level, the queue is no longer '
         .. 'head-blocking and the thirteen-point wall this file is built on is '
         .. 'gone -- re-read GH #366 rather than loosening this.')
-    local nPops = select(2, sTail:gsub('table%.remove', ''))
-    assert(nPops == 1,
-        'the final else branch holds ' .. nPops .. ' table.remove calls, not 1; '
-        .. 'a second pop outside the level-25 guard would skip a parked head.')
+
+    local tArgs = skillmap.queue_removals(sTail)
+    local nHeadPops = 0
+    for _, sArg in ipairs(tArgs) do
+        if sArg == '1' then nHeadPops = nHeadPops + 1 end
+    end
+    assert(nHeadPops == 1,
+        'the final else branch now performs ' .. nHeadPops .. ' removals of queue '
+        .. 'index 1, not exactly one.  More than one, or one that is not the '
+        .. 'guarded pop, and a parked head can be skipped; none, and this file '
+        .. 'is reading the wrong block.  (All removals seen: '
+        .. table.concat(tArgs, ', ') .. ')')
+
+    -- The guarded pop is the LAST thing the branch does, so everything a
+    -- non-head removal could do happens while the head is still parked.  Stated
+    -- positionally because that is the property, not "there is a guard
+    -- somewhere in the text".
+    local nGuard = sTail:find('botLevel > 25')
+    local nHeadPop = sTail:find('table%.remove%s*%(%s*sAbilityLevelUpList%s*,%s*1%s*%)')
+    assert(nHeadPop ~= nil and nGuard ~= nil and nHeadPop > nGuard,
+        'the head pop in the final else no longer sits after its `botLevel > 25` '
+        .. 'guard.  An unguarded head pop is exactly the wall coming down; '
+        .. 're-read GH #366 and #799 rather than loosening this.')
 end
 
 -- ---------------------------------------------------------------------------

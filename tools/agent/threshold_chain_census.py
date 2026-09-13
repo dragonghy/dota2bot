@@ -71,10 +71,23 @@ import lua_corpus  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Every finding carries a judgement, so a NEW one is visibly new.  Keyed by
-# (relpath, first_rung_line, dead_rung_line).
+# Every finding carries a judgement, so a NEW one is visibly new.
+#
+# ⭐ KEYED BY CONTENT, NOT BY ADDRESS (re-derived 2026-09-13).  The key used to
+# be `(relpath, first_rung_line, dead_rung_line)`, and that made the registry
+# drift with any edit ANYWHERE ABOVE the ladder in a 9000-line file: landing the
+# gated `skillstall` lever (GH #799) inserted 36 lines near the top of
+# bots/ability_item_usage_generic.lua and the very same, entirely unchanged
+# ladder came back at :1577 -> :1579, read as *NEW*, and took
+# tests/test_threshold_chain_census.py red with it.
+# ⚠️ The fix is not to write the new numbers down.  A line number is how a
+# finding is ADDRESSED, not what it IS; two different judgements can never share
+# an lhs and a threshold pair in one file, and a judged finding that moves is
+# still the same judged finding.  Line numbers are still PRINTED, because that
+# is what a reader needs to go look at it.
 JUDGED = {
-    ("bots/ability_item_usage_generic.lua", 1541, 1543):
+    ("bots/ability_item_usage_generic.lua",
+     "DotaTime()", (450.0, 900.0), (750.0, 1500.0)):
         "GH #431: the blink cast-range ladder for item_enhancement_keen_eyed. "
         "Written ascending, so the 12.5-turbo-minute +135 rung is unreachable "
         "in BOTH modes and the bonus stays +125 forever.  REGISTERED, NOT "
@@ -83,6 +96,11 @@ JUDGED = {
         "numbers, including the two that the first draft of that reading got "
         "wrong, are pinned in tests/test_threshold_chain_census.py section 3.",
 }
+
+
+def judged_key(f):
+    """The identity of a finding, address excluded -- see JUDGED above."""
+    return (f["file"], f["lhs"], tuple(f["first"][1]), tuple(f["dead"][1]))
 
 
 def strip_comments(text):
@@ -209,7 +227,7 @@ def main():
     print("SCANNED   if-chains %d" % chains)
     novel = 0
     for f in findings:
-        key = (f["file"], f["first_line"], f["dead_line"])
+        key = judged_key(f)
         known = key in JUDGED
         if not known:
             novel += 1

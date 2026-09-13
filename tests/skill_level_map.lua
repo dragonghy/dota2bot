@@ -139,4 +139,89 @@ function M.rank_ladder(sHero, tRow, tTalentRows)
     return tLadder
 end
 
+--- The BODY of the level-up dispatcher's terminal `else` -- the branch a queue
+--- head that cannot be upgraded falls into -- delimited by BLOCK DEPTH rather
+--- than by a pattern.
+---
+--- ⭐ WHY THIS EXISTS, and it is a re-derivation rather than a convenience.  Two
+--- files pinned this branch with `\n%s*end%s*\n%s*end` and with a bare
+--- `table.remove` count, and both anchors said what they said only while the
+--- branch held exactly one flat `if`.  On 2026-09-13 the branch grew a second,
+--- NESTED `if` (the gated `skillstall` look-ahead) and both went red at once --
+--- the non-greedy match stopped on the nested block's own `end`, reporting a
+--- branch with ZERO head pops, and the bare count reported two removals without
+--- looking at what either one removes.  Neither reading was about a defect: the
+--- head is still parked, and the shipped pop is still under `botLevel > 25`.
+--- ⚠️ So the lesson is not "raise the count".  An anchor that cannot survive a
+--- nested block was never measuring block structure; this one walks it.
+---
+--- The walk assumes the body's only block openers are statement `if`s.  That
+--- assumption is ASSERTED here rather than trusted: a `for` / `while` / `do` /
+--- `function` / `repeat` inside the body raises instead of silently
+--- mis-balancing, which is the failure mode the old anchors had.
+function M.terminal_else_body(sSrc)
+    local sNeedle = 'print("[WARN] Skipped to level up ability '
+    local nStart = sSrc:find(sNeedle, 1, true)
+    assert(nStart ~= nil,
+        'bots/ability_item_usage_generic.lua no longer contains the "Skipped to '
+        .. 'level up ability" terminal branch this reading is anchored on.  If it '
+        .. 'was renamed, re-anchor; if it was REMOVED, the head-of-line block may '
+        .. 'be fixed and every reading built on it must be re-taken.')
+
+    -- Comments are stripped first, and only within the scan: this branch is
+    -- comment-heavy (the `skillstall` header quotes `botLevel > 25` while
+    -- explaining it), and a depth walk that reads prose counts prose (GH #136).
+    --
+    -- ⭐ STRING LITERALS TOO, and that is not belt-and-braces -- the very first
+    -- run of this walk stopped on a `for` it had read out of the branch's own
+    -- warning text ("... for "..botName.." for this time ..."), which is the
+    -- GH #136 family one level down: the needle that ANCHORS this block is a
+    -- print, so the block always opens with prose whether or not anybody writes
+    -- a comment.  Strings are blanked rather than deleted so positions stay
+    -- comparable to the text a reader sees.
+    local sTail = sSrc:sub(nStart)
+        :gsub('%-%-%[%[.-%]%]', '')
+        :gsub('%-%-[^\n]*', '')
+        :gsub('"[^"\n]*"', '""')
+        :gsub("'[^'\n]*'", "''")
+
+    local nDepth, nCut = 0, nil
+    local nPos = 1
+    while nCut == nil do
+        local nFrom, nTo, sWord = sTail:find('%f[%w_]([%a_]+)%f[^%w_]', nPos)
+        if nFrom == nil then break end
+        nPos = nTo + 1
+        if sWord == 'if' then
+            nDepth = nDepth + 1
+        elseif sWord == 'end' then
+            if nDepth == 0 then
+                nCut = nFrom - 1
+            else
+                nDepth = nDepth - 1
+            end
+        elseif sWord == 'for' or sWord == 'while' or sWord == 'do'
+            or sWord == 'function' or sWord == 'repeat' then
+            error('the terminal else body now opens a `' .. sWord .. '` block; '
+                .. 'this walk balances statement `if`s only.  Extend it rather '
+                .. 'than reading a mis-balanced block.')
+        end
+    end
+    assert(nCut ~= nil,
+        'the terminal else branch never closes -- the depth walk ran off the end '
+        .. 'of bots/ability_item_usage_generic.lua.')
+
+    return sTail:sub(1, nCut)
+end
+
+--- Every `table.remove( sAbilityLevelUpList, <arg> )` in a block, as a list of
+--- the literal argument text.  Reported rather than counted, because "how many
+--- removals" was never the question -- "does anything pop the HEAD" is.
+function M.queue_removals(sBlock)
+    local tArgs = {}
+    for sArg in sBlock:gmatch('table%.remove%s*%(%s*sAbilityLevelUpList%s*,%s*([%w_]+)%s*%)') do
+        tArgs[#tArgs + 1] = sArg
+    end
+    return tArgs
+end
+
 return M

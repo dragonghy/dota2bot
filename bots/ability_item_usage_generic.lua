@@ -61,6 +61,22 @@ local function ClosestDustCarrier( hBot, vLoc )
 		J.IsModeTurbo() and J.IsSoakCandidate( 'slotdust' ) )
 end
 
+--- The ONE gate-resolution site for soak candidate `skillstall` (GH #799,
+--- turbo-only, INERT until armed).  Named rather than inlined for the same
+--- reason ClosestDustCarrier above is: one place to arm, and a call site that
+--- cannot silently miss the gate.
+---
+--- SCOPE, and it is the widest in the repo: this file runs for all 127 heroes,
+--- so the turbo conjunct is doing real work here and is not decoration.  The
+--- gate's own domain is narrower than the file's: it is consulted only inside
+--- the level-up dispatcher's terminal `else`, i.e. only on a frame that already
+--- has an unspendable queue head AND an unspent ability point.
+function X.IsSkillStallSkipOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'skillstall' )
+
+end
+
 local function CompactSkillList( tList )
 	local nMaxKey = 0
 	for k in pairs( tList ) do
@@ -375,6 +391,26 @@ local function AbilityLevelUpComplement()
 			table.remove( sAbilityLevelUpList, 1 )
 		else
 			print("[WARN] Skipped to level up ability "..abilityName.." for "..botName.." for this time because it may fail.")
+			-- [skillstall] GH #799.  Gate off, this whole `if` is absent and the
+			-- branch is byte for byte the shipped one: a point earned on a frame
+			-- whose queue head cannot be upgraded is banked, and stays banked for
+			-- the rest of any game that ends below hero level 26.  Armed, the point
+			-- is spent on the first entry BEHIND the head that passes all four of
+			-- this branch's own sibling conditions.  Direction is WIDENING by
+			-- construction: this is the branch in which shipped code levels
+			-- nothing, so the armed leg can only ADD a level-up, never remove or
+			-- reorder one the shipped leg would have taken.  The head is left in
+			-- place on purpose -- a head blocked only by an unreached talent tier
+			-- is still taken when the tier arrives -- and the entry that was spent
+			-- is removed so it is never offered twice.
+			if X.IsSkillStallSkipOn() then
+				local nSpendIdx, hSpend =
+					J.Skill.FindUpgradableBehindHead( bot, sAbilityLevelUpList, botLevel )
+				if nSpendIdx ~= nil then
+					bot:ActionImmediate_LevelAbility( hSpend:GetName() )
+					table.remove( sAbilityLevelUpList, nSpendIdx )
+				end
+			end
 			if botLevel > 25 then
 				print("[WARN] Ignore ability "..abilityName.." for "..botName.." because it may always fail.")
 				table.remove( sAbilityLevelUpList, 1 )
