@@ -16895,3 +16895,17 @@
   读起来**恰好像「还在跑」**。本轮因此多等了两轮才发现自检早已收工(真相在日志末行
   `selfcheck worst exit: 3`)。⭐ **判别子:认终止横幅,不认 `pgrep` 计数**;非用不可就 `-x` 或排除自身 PID。
   ⚠️ 与 09-13 那条「按名字取第一具身体」**同族**:两条都是**「我数到的那个,是不是我以为的那个」**。
+  - **补记(收工回填)**:issue = **GH #441 追评** `#issuecomment-5655487654`
+    (⛔ `add_issue_comment`;发帖后 `issue_read` 复核:**正文逐字未变 / `state` open /
+    评论数 2→3 / `created_at` 未受影响**;全程没碰 `issue_write(update)`)。
+    ⭐ **顺序对(GH #290)**:评论发在两次 push 之后,`PRECHECK_EXIT=0`
+    (`local commits not on origin/main: 0` / `paths cited 17 … resolved on trunk 12 refused 0`)。
+    **铁律 6 三条腿**(裸读,⛔ 未用 `RULE6_BYPASS`):`luacheck bots game: 0 warnings` /
+    `GATE_EXIT=0 CLEAN` / **`py gate: 101 ran, 0 findings, 0 uncertifiable, 38.8s`**(99→101)/
+    **`lua gate: SKIPPED BY SCOPE`** —— ⚠️ **范围判定不是通过**(本轮只动 `iterations/` 两个文件)。
+    动态半(GH #124)未跑、不声称。
+    `PUSH_BRANCH_EXIT=0` / ⚠️ `PUSH_MAIN_EXIT=1`(non-ff + 一次 `RPC failed; HTTP 403`)→
+    `REBASE_EXIT=0` → **`PUSH_MAIN_EXIT2=0`**(`69c11bb9..8e4a307e`)→ 分支 `--force-with-lease`
+    对齐 `PUSH_BRANCH2_EXIT=0`(⛔ 只丢本会话 rebase 前的重复历史)。
+    token:`TOKENS total_in=16,911,990 out=75,295 turns=100` —— 比上一轮**更低**,
+    而本轮只下 6 个 `.dem`(上轮 104):差额主要是**读代码**不是读语料。零 `requires approval`。
