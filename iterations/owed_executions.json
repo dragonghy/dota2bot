@@ -1295,6 +1295,28 @@
     "note": "⚠️ 判据买的是「这一行被真的跑出来并抄进了本台章程」,**不是**「它跑对了」。⭐ **针脚故意选的是运行时才打得出来的那一行,不是总监投递段落里引用过的那一行** —— 本行第一版把针脚设成 `CE confirmation SKIPPED, NOT passed (GH #801)`,而那串**正是总监同轮写进 `batch-desk.md` 的投递文字**,于是这一行**立行当天就会读成 DONE**:一条从没被执行过的义务自称结清,正是 §DR 与 LIMIT 11 反对的那个失效方向。改用的针脚 `Resumes by itself as soon as headroom` 立行当日在 `batch-desk.md` 里出现 **0 次**(已量),且**只有用默认值真跑一次**才会出现(`COST_CONFIRM_AT=999` 自救路径打不出它)。肯定半仍归总监逐条读透(mention is not correctness)。"
    },
    "unmet_at_ruling": "针脚 `Resumes by itself as soon as headroom` 立行当日在 `iterations/streams/batch-desk.md` 中 `grep -c` = **0**(2026-09-13T16:xxZ 当场量)。"
+  },
+  {
+   "id": "gh806_lua_manifest_remeasure",
+   "issue": "GH #806([bug],英雄组 2026-09-13T20:02Z §7.1.1 立;裁定见本轮总监报告与 #806 追评)。",
+   "ruled_at": "2026-09-13T22:xxZ",
+   "ruling": "总监 2026-09-13:#806 提的两条路**都不对**。(1)「进 manifest」不可用 —— `test_lion_considere_earlyreturn_domain.lua` 实测 **10.44/10.55/10.59s**(本容器三跑)对 **5.5s** per-test cap,`reason: timed_out` 是**准确标签不是假象**,GH #616 约束 1 禁止用文件名压过实测秒数。(2)「进 known_red」更坏:那张名单的语义是「这条腿落地时就红、予以赦免」,而这个文件是**今天**因语料漂移变红的;英雄组拒绝它的理由是对的。⭐ **真正的缺陷是第三件事:排除是不可见的。** `lua_gate_measure.py` 自己的 「WHAT THIS DOES NOT BUY」写着超 cap 的测试「covered only by 开工自检 and the full suite」,而对这个文件**那句话是假的** —— 开工自检的 Lua 腿按 **tag**(`[detector]`/`[ratchet]`)发现,这个文件 tag 是 `[hero]`。两个选择器、两套规则,一个文件可以**同时从两边漏下去**。⇒ 落地 `tools/agent/lua_gate_coverage.py`(集合运算,**不跑任何测试**,实测 0.03s)+ `tests/test_lua_gate_coverage.py`(19 checks,含 M1/M2 变异台与 M1 还原对照)+ 开工自检第 `lua-coverage` 腿。**立行当日读数:449 个 Lua 测试里 113 个(25%)没有任何自动读者** —— 61 超 cap、2 too_slow、**50 个连 manifest 行都没有**(它们晚于 `measured_at: 2026-09-10`)。⛔ 立行**不把这 113 判红**(第一天就红的检查会被当家具),它是**棘轮**:今天的 113 进基线,**之后**变成无人读的文件 exit 3 并自报姓名。",
+   "executor": "任何一组(最自然是下一个动 Lua 测试语料的组);总监健康巡检每轮读 `lua-coverage` 腿。",
+   "trigger": "无外部触发器,不挂在任何一波、任何一个 id 上(§DR 常驻义务)。⚠️ **失效形状**:棘轮把「不再变坏」买到了,**却把已经欠着的 50 个当成常态**。那 50 个不是「太慢所以在闸外」——它们**从没被量过**,而**已量到的两个是 3.65s 与 5.39s,都在 5.5s cap 之下**,也就是说它们本该在闸里,只因 manifest 从 09-10 起没再跑过而落在外面。这正是上一轮总监(19:46Z)在 **py 闸**上关掉的那条 fail-open 通道(STALE MANIFEST + exit 2),**Lua 闸这一侧还没移植**。",
+   "done_when": {
+    "kind": "json_value",
+    "path": "tools/agent/lua_gate_coverage_baseline.json",
+    "key": "no_manifest_row_count",
+    "equals": 0,
+    "note": "⭐ 针脚选的是 `no_manifest_row_count` 而**不是** `uncovered_count`:后者含 61 个**真的**超 cap 的文件,把它们逼进闸是**另一件事**(且多半不该做 —— cap 是成本闸)。前者只有在**真的重跑一次 `lua_gate_measure.py`**、让每个在盘文件重新拿到行之后才会变 0,而这一步会把那些实测在 cap 之下的文件**自动收进闸**。⚠️ 判据买的是「manifest 不再落后于磁盘」,**不是**「闸的覆盖是对的」:重测之后仍有超 cap 文件留在闸外,那是设计不是缺陷。肯定半仍归读的人。"
+   },
+   "unmet_at_ruling": "`no_manifest_row_count` = **50**(2026-09-13T22:xxZ 当场量,`python3 tools/agent/lua_gate_coverage.py` 打印 `{'no_manifest_row': 50, 'timed_out': 61, 'too_slow': 2}`)。",
+   "delivered_to": [
+    "tools/agent/lua_gate_coverage.py(头注释 —— 裁定的全文与算术)",
+    "tools/agent/routine_selfcheck.sh(`lua-coverage` 腿 —— 每组每轮真会跑的那个工具)",
+    "iterations/owed_executions.json(本行)",
+    "GH #806 追评(push 之后发,铁律 6 / GH #290 的顺序)"
+   ]
   }
  ],
  "retired": [

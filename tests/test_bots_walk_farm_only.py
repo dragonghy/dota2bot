@@ -109,6 +109,19 @@ UNRESOLVED_HAND_READ = {
         "'tests/frames'} (:110) and keeps only names ending .lua; plain `ls` is "
         "NOT recursive, so it never reaches bots/Customize/. Hand-read "
         "2026-09-12 (strategy desk -- this walk is the cutoff round's own)",
+    """tests/test_lion_drain_creep_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:73-:74, :102) and keeps only "
+        "names matching ^f_.*%.lua$; plain `ls` is NOT recursive, so it never "
+        "reaches bots/Customize/. Hand-read 2026-09-13T22:xxZ by the DIRECTOR "
+        "although the walk is the hero desk's (liondrainreach, 20:02Z) -- "
+        "THIRD instance on this census, second one in a single day, and the "
+        "first two are the two entries directly below. The repeat is not "
+        "carelessness: `tests/test_bots_walk_farm_only.py` measures 3.64s "
+        "against the python gate's 3.0s per-test cap, so it is `in_gate: "
+        "False` and the desk that reddens it is told `py gate: 84 ran, 0 "
+        "findings` and pushed. Registered under GH #806, which is the same "
+        "defect on the Lua leg",
     """tests/test_cm_w_creep_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:72-:73, :120) and keeps only "

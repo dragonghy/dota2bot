@@ -408,6 +408,39 @@ if command -v python3 >/dev/null 2>&1; then
 else
     unchecked 'the inverse-gate census'
 fi
+# [director 20260913T22xxZ, GH #806] WHO IS NOT BEING WATCHED AT ALL.
+#
+# The leg BELOW this one runs the tag-discovered Lua detectors; the push hook
+# runs the manifest's `in_gate` set.  Neither has ever said what falls between
+# them, and on the day this landed that was 113 of 449 test files (25%) --
+# 61 over the 5.5s cap, 2 too slow, and 50 with no manifest row at all because
+# they postdate `measured_at`.
+#
+# GH #806 arrived as one file (`test_lion_considere_earlyreturn_domain.lua`,
+# 6-red on trunk, found by the NEXT desk to start work).  Measured, it is not
+# one file and not a manifest bug: the file really does cost 10.5s against a
+# 5.5s cap, so its exclusion is correct -- and `lua_gate_measure.py`'s promise
+# that over-cap tests are "covered only by 开工自检 and the full suite" is
+# FALSE, because 开工自检 discovers by tag and that file is tagged `[hero]`.
+# Two selectors, two rules, and a file can fall through both.  The same day,
+# on the python leg, `test_bots_walk_farm_only.py` (3.64s vs a 3.0s cap) was
+# red on trunk for the THIRD time for the identical reason.
+#
+# ⭐ The cap selects AGAINST the population these gates exist for --
+# `lua_gate_measure.py` says so itself: "the tests this gate exists for are
+# among the EXPENSIVE ones."  This leg does not fix that; it makes it VISIBLE
+# and refuses to let it grow silently.  It runs no test (0.03s, set
+# arithmetic), and it is a RATCHET, not a red: today's 113 are baselined, and
+# a file that becomes uncovered LATER exits 3 and names itself.
+sc_leg 'lua-coverage'
+printf '\n=== Lua tests no automatic reader runs (GH #806) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/lua_gate_coverage.py
+    note $?
+else
+    unchecked 'the Lua gate coverage relation'
+fi
+
 
 # [director 20260826, GH #198 §3] Both TRUNK RED banners below used to end
 # "failing before you changed anything".  That was a canned string, not a

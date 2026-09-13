@@ -563,6 +563,43 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-13T22:16Z**:**裁定 GH #806:它提的两条路都不对,而量它的过程发现问题不是那个文件。**
+  全文 `iterations/reports/director/20260913T221613Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff。
+  ⭐ **强制要回答的那问「为什么它不在 manifest 里」有答案:因为它真的慢** ——
+  `test_lion_considere_earlyreturn_domain.lua` 实测 **10.442 / 10.554 / 10.588s** 对 **5.5s** cap,
+  `reason: timed_out` **是准确标签不是假象** ⇒ 方案 1(进 manifest)被 GH #616 约束 1 挡死;
+  方案 2(进 `known_red`)更坏 —— 那张名单的语义是「落地时就红、予以赦免」,而它是**今天**漂红的。
+  ⭐⭐⭐ **本轮最该被读的:`lua_gate_measure.py` 自己写的那句缓解是假的。**
+  它说超 cap 的测试「covered only by 开工自检 and the full suite」,而开工自检的 Lua 腿
+  **按 tag 发现**(`[detector]`/`[ratchet]`),这个文件 tag 是 `[hero]`(`grep -c` = **0**)⇒
+  **两个选择器、两套规则(闸按实测秒数,自检按字符串),一个文件可以同时从两边漏下去,而两边都不报。**
+  立行当日量出来:盘上 **449** 个 Lua 测试,**113 个(25%)没有任何自动读者** ——
+  61 超 cap、2 too_slow、**50 个连 manifest 行都没有**(晚于 `measured_at: 2026-09-10`)。
+  📌 *cap 是按成本设的,却在决定覆盖* —— `lua_gate_measure.py` 头注释自己写着
+  「the tests this gate exists for are among the EXPENSIVE ones」。**今天两条腿的两条 trunk red
+  都是超 cap 文件**:Lua 那条是 #806 本体,python 那条是 `test_bots_walk_farm_only.py`
+  (**3.64s 对 3.0s cap**,今天被同样方式顶红**第三次**,而作者的 push 读数是 `py gate: 84 ran, 0 findings`)。
+  🔧 落地 `tools/agent/lua_gate_coverage.py`(**一个测试都不跑**,集合运算,实测 **0.03s**)+
+  `tests/test_lua_gate_coverage.py`(19 checks)+ 开工自检 `lua-coverage` 腿。
+  ⛔ **它不把今天的 113 判红**(第一天就红的检查会被当家具);它是**棘轮**,
+  之后变成无人读的文件 `exit 3` 并自报姓名,`--update-baseline` **拒绝记录增长**。
+  ⭐⭐ **咬人的那一半是变异台**:M1(已 tag 文件失去 tag)→ exit 3 且点名,
+  **3c 还原对照**回到 exit 0(证明红是变异造成的);M2(新测试无 manifest 行)→ exit 3;
+  `6a` 用会留痕的假 `lua5.1` 断言**它一次都没调过**。**1c 是最要紧那条**:
+  把 `routine_selfcheck.sh` 里**它自己的** `files=$(…)` 管道抽出来真跑,断言两种拼写**集合相等**
+  (两边各 88,`shell-only=[] py-only=[]`)—— 规则在本仓有两份拼写,这是唯一不许它们各自漂移的东西。
+  ⚠️ **落位踩过一次**:第一版放在 python 腿与 Lua 腿之间,`test_selfcheck_py_leg.py` `6a` 立刻红
+  (我的腿被那个测试的区间定义**当成 python 腿的一部分**在临时树里跑)。⛔ **没猜,拿干净 worktree 对照**:
+  HEAD 26/26 绿、我的树红 ⇒ 是我造成的;Lua 腿的区间到文件末尾,**两区间之间没有空隙**,
+  唯一合法位置是 **python 腿之前**。
+  ⛔ **本轮只把洞照亮,没堵**:堵洞是把 py 闸那条 `STALE MANIFEST + exit 2` 移植到 `lua_gate.py`。
+  🔻 **洞里现在就有红,不是假想**:113 个逐个跑到收尾时 **28/113**,已见 3 条红
+  (`fieldsip_atom_pricing` / `fixture_kv_getters` / `focus_decision_reachability`)+ #806 本体;
+  ⛔ **余 85 个本轮没人看过,「113 里几条红」不作声称**(按字母序跑,3/28 不许外推)。
+  🔗 交棒 `owed_executions.json:gh806_lua_manifest_remeasure`,判据
+  `lua_gate_coverage_baseline.json:no_manifest_row_count = 50`,验收 **0**(立行当日读 OWED)。
+  **针脚故意不选 `uncovered_count`** —— 那 61 个超 cap 的该留在闸外,cap 是成本闸不是缺陷。
+  💰 MTD **`$89.505`**(抄批测台 21:08Z,刹车 $90 之下 $0.495),**本台零 AWS 调用**。
 - **2026-09-13T19:46Z**:**交棒丙办完(重测 `py_gate_manifest.json`),而重测只是入口 ——
   量出钩子真实开销 `41.496s` / 预算 `12.0s`(**超 246%**),并修掉让它五天没被发现的那两条断言。
   顺带修掉一个会给下一个组留红的活陷阱。零 AWS、零波次、`bots/`+`game/` 零 diff。**
