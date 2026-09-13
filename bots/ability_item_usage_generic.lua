@@ -62,6 +62,20 @@ local function ClosestDustCarrier( hBot, vLoc )
 		J.IsModeTurbo() and J.IsSoakCandidate( 'slotdust' ) )
 end
 
+--- The ONE gate-resolution site for soak candidate `dusttower` (GH #441,
+--- turbo-only, INERT until armed). Named rather than inlined for the same
+--- reason ClosestDustCarrier above is: one place to arm, and a call site that
+--- cannot silently miss the gate.
+---
+--- The rationale (GetNearbyTowers answers relative to the unit it is called
+--- on, so the shipped `enemyHero:GetNearbyTowers(700, true)` reads OUR towers
+--- and the guard is inverted in both directions) is on J.IsDustDiveBlocked in
+--- bots/FunLib/jmz_func.lua, next to the helper it gates.
+local function DustDiveBlocked( hEnemy )
+	return J.IsDustDiveBlocked( hEnemy, 700,
+		J.IsModeTurbo() and J.IsSoakCandidate( 'dusttower' ) )
+end
+
 --- The ONE gate-resolution site for soak candidate `skillstall` (GH #799,
 --- turbo-only, INERT until armed).  Named rather than inlined for the same
 --- reason ClosestDustCarrier above is: one place to arm, and a call site that
@@ -7609,8 +7623,7 @@ X.ConsiderItemDesire['item_dust'] = function(item)
 			and not J.HasInvisCounterBuff(enemyHero)
 			and not J.IsSuspiciousIllusion(enemyHero)
 			then
-				local nEnemyTowers = enemyHero:GetNearbyTowers(700, true)
-				if nEnemyTowers == nil or #nEnemyTowers == 0
+				if not DustDiveBlocked(enemyHero)
 				then
 					return BOT_ACTION_DESIRE_HIGH, bot, 'none', nil
 				end

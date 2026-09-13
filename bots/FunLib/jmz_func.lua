@@ -14821,6 +14821,41 @@ function J.IsClosestToDustLocation(bot, loc, bSlotDust)
 	end
 end
 
+-- Soak candidate 'dusttower' (turbo-only; resolved in exactly one place, the
+-- DustDiveBlocked wrapper in bots/ability_item_usage_generic.lua).
+--
+-- THE DEFECT. GetNearbyTowers(nRadius, bEnemies) answers RELATIVE TO THE UNIT
+-- IT IS CALLED ON: the mock restores it as `h:GetTeam() ~= self:GetTeam()`
+-- (tests/mock/replay_fixture.lua, from dump ground truth), and the shipped
+-- readers agree. The dust branch calls it on the ENEMY hero with bEnemies
+-- TRUE, so the list it names `nEnemyTowers` is the set of towers hostile to
+-- that enemy -- i.e. OUR OWN towers. The branch then refuses to dust while
+-- that list is non-empty. Both halves of that are backwards:
+--   * an enemy fading out NEXT TO OUR TOWER is the single best dust there is
+--     (a revealed unit is a unit our tower can shoot) -- and that is the case
+--     the shipped guard blocks;
+--   * an enemy fading out UNDER THEIR OWN TOWER is a dive, which is what the
+--     guard's name and its 700u radius were plainly written to prevent -- and
+--     that is the case the shipped guard waves through.
+-- Standard play backs the second reading (do not spend 80g and commit to a
+-- chase under the defender's tower); nothing backs the first.
+--
+-- SAME FAMILY AS 'slotdust'/'slotarb' (GH #441, GH #406), and it sits in the
+-- same function: an argument whose meaning is RELATIVE TO THE RECEIVER, passed
+-- as though it were absolute. It does not raise, it does not log, and the
+-- variable name records the intent the code does not have.
+--
+-- Unarmed (`bOwnTower` false/nil) this is the shipped question verbatim --
+-- `hEnemy:GetNearbyTowers(nRadius, true)`, empty-or-nil means "not blocked" --
+-- so shipped behaviour is byte-for-byte unchanged. Armed it asks the enemy's
+-- own tower ring instead. Both directions are pinned on ONE real frame
+-- (20260820_043120 t=398.5) in tests/test_dusttower_dive_guard.lua, where the
+-- shipped guard answers backwards on two different enemies at once.
+function J.IsDustDiveBlocked( hEnemy, nRadius, bOwnTower )
+	local tTowers = hEnemy:GetNearbyTowers( nRadius, not bOwnTower )
+	return tTowers ~= nil and #tTowers > 0
+end
+
 function J.GetXUnitsTowardsLocation2(iLoc, tLoc, nUnits)
     local dir = (tLoc - iLoc):Normalized()
     return iLoc + dir * nUnits

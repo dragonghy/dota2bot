@@ -12,8 +12,16 @@
   兵线控制、换血、吃经验;标准策略要上网检索佐证(验证哲学条件 (c))。
 
 ## 每次触发的工作流
-1. 扫 [strategy] 前缀的 open issue(dragonghy/dota2bot),优先处理带帧证据的;
-   没有 issue 就从下面 backlog 取最上面一条。
+1. **先读 `iterations/OWNER_PRIORITIES.md`**(铁律 9)。有属于本组、且「当前球在」
+   写着协同组的未完成项 ⇒ **做它**,它压过 issue 流和本文件的 backlog。
+   ⚠️ **这一步 2026-09-13T22:45Z 才补上,补它的原因是一次实测违例**:
+   原文第 1 步写的是「先扫 issue」,而 backlog 0NEXT8 又把一个 issue 点名成
+   「下一轮第一项」—— 两条互相加固,**而它们都排在铁律 9 之下**,于是那一轮
+   把 P1/P2 晾了一整轮并且**当时没有任何东西会报警**。章程文本的缺陷只登记不改,
+   下一轮原样复发。
+1b. 没有属于本组的 owner 优先项时,才扫 [strategy] 前缀的 open issue
+   (dragonghy/dota2bot),优先处理带帧证据的;没有 issue 就从下面 backlog
+   取最上面一条。
 2. 改动纪律(铁律之上的本组细则):
    - 每个行为改动 **gated**(`J.IsSoakCandidate('<id>')`,turbo-only),
      新 id 要在 `iterations/state.json` 登记;
@@ -27,7 +35,56 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT8. **【2026-09-13T20:10Z 新增,**下一轮第一项**。⚠️ 这一条与前七条不同:它**不是**自选杠杆,
+0NEXT9. **【2026-09-13T22:45Z 新增,**下一轮第一项,而且这一条压过工作流第 1b 步(扫 issue)**。
+   ⚠️ 它不是自选杠杆,也不是 issue:它是 **`OWNER_PRIORITIES.md` 的 P1(1)**,
+   「当前球在:**协同组**」已经写在那里很久了。上一轮(本条的作者)**违了铁律 9**——
+   拿 backlog 里点名的 GH #441 压过了 owner 优先项,报告 §0 自曝并处置。
+   **不要再用「issue 比 backlog 优先」推翻这一条:铁律 9 在两者之上。**
+
+   **本轮要做的**:**P1 完成定义的第 1 条 —— `pullcamp` 的 SILENT 根因有结论。**
+   线索(来自 P1 原文,未经本台复核,**先复核再动手**):它仍用 `J.IsLanePullSafe`
+   的和平期闸门 + 6:00 宵禁,而在 Turbo 对线期「1800 内无可见敌人」可能几乎**恒 false**,
+   疑似与 `creeppull` 那条已修的死分支**同族**。
+   **两种合法产出,择一**:(a) 是死条件 ⇒ 按本组纪律落一个 gated 收窄 + 真实帧 fixture
+   (主体在 `bots/`,满足 4.4 (i));(b) 是场景稀缺 ⇒ 给出**频率证据**(语料里该门各条腿的
+   漏斗计数),并在报告里写清「不是死条件」的判据。
+   ⚠️ **(b) 也要落在 bots/ 之外的代价上说清楚**:若本轮产出是 (b),4.4 (i) 这一轮**不满足**,
+   如实写「连续满足次数归零」,不要用附带的量具工作冒充主体。
+   ⚠️ 交棒连带规则(铁律 9 后半):P1 的下一棒是**总监重新入集**——
+   但 **4.2 冻结期**未解除时唯一合法裁定是 FROZEN-HOLD,所以本轮的交棒是
+   「根因结论 + 一个写明在等冻结解除的 FROZEN-HOLD 登记」,**不是**一个入集申请。
+
+   **0NEXT10(排在其后)= `OWNER_PRIORITIES.md` 的 P2**(低血不回家的**决策侧** gated id,
+   铁证帧 `20260822_063722_slot1` lina t=349.1 hp=0.32 已经写在 P2 原文里,不用再找)。
+
+   判据继承 0NEXT8 全部(甲′三态 / 丙′ / 丁 / 戊 / 己 / 庚 / 辛 / 壬 / 癸 / 子 / 丑 / 寅 / 卯 / 辰 / 巳),
+   本轮新增一条:
+   ⭐⭐ **(午) 点名要点在「哪个用例」上,而且这个点名本身必须跑一遍才算数。**
+   (辰) 说「每条断言都要能说出哪个变异体只打坏我」;本轮是它的镜像:变异台**抓住了、方向也对**,
+   而**台子对「是谁抓的」说错了**。`mutstand_dusttower.sh` 第一版给 M4 / M6 点的名是**断言消息**,
+   实测 M4 让 helper **抛错**(红文本是 Lua 运行时报错,不是 assert 消息),
+   M6 落在同一用例里**更靠前**的那条断言上(helper 的**定义**仍然名字在 ⇒ 计数没变,
+   先红的是「分支必须走 wrapper」)。⇒ **按用例名点名;expect 串写完要跑一遍看它是不是真的打 `CAUGHT by the named case`。**
+   ⛔ **已被定价并排除、不要重买**(继承 0NEXT8 全部,本轮新增一条):
+   ① ⛔ **`bots/BotLib/hero_venomancer.lua:231` 的 `enemyHero:GetNearbyTowers(700, true)`
+   —— 读了、不是缺陷**:它接着查 `nInRangeTower[1]:GetAttackTarget() == enemyHero`,
+   问的就是「我方塔**已经**在打他了」,`true` 在那里是对的。本轮已把「它不被动到」
+   钉成 `tests/test_dusttower_dive_guard.lua` 的一条断言。**不要下一轮再买。**
+   ⚠️ **本轮实测的三条工具事实**:(i) 首条命令**第 15 次**被 `REFUSED: stdout is a pipe` 挡回;
+   (ii) `routine_selfcheck.sh` 跑到 **400s 超时被杀**(`EXIT=124`),死在最后一条腿
+   「trunk health (python test suite)」上 ⇒ **trunk 的那一侧这轮没人看过**,不算通过;
+   (iii) **trunk 上两条红,都不是本轮造成**(HEAD worktree 独立复现):
+   `test_gated_getter_stub_control.lua`(**跨文件 `_G` 泄漏**,单文件跑是绿的,
+   ⭐ 快 Lua 闸**按构造看不见**——它每个文件一个子进程)与
+   `test_tpscroll_branch_shadow_census.lua`(隔离跑也红,且不在 `known_red` 里、落在闸外)。
+   两条都已开 `[harness]` issue 交总监,**本组不代修**(4.4:量具类工作至多附带一条)。】**
+
+0NEXT8. ✅ **【2026-09-13T20:10Z 新增 → 2026-09-13T22:45Z 做完(GH #441 已裁定并追评;
+   `dusttower` 落地,**~8 行 `bots/` 代码 + 1 个新 gate id**,未 armed;
+   报告 `iterations/reports/strategy/20260913T224500Z.md`、`state.json:dusttower_20260913`、
+   `tests/test_dusttower_dive_guard.lua` 12/12、`tools/agent/mutstand_dusttower.sh`
+   caught=7 survived=1 STAND GREEN)。⚠️ **但它本身就是那次铁律 9 违例的载体**——
+   见 0NEXT9 开头。原文保留在下,便于对照。⚠️ 这一条与前七条不同:它**不是**自选杠杆,
    而是一条**本组的 open issue**,按章程工作流第 1 步优先于 backlog。主体继续留在 `bots/`**
    (OWNER_PRIORITIES **4.4 (i)**;`runring` 让它**连续第七轮**满足,**不要断**)。
    ⭐ **先做 GH #441**(`[strategy]`,2026-09-13T19:16Z 刚被动过):
@@ -8881,6 +8938,53 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-13T22:45Z:**`dusttower` 落地(~8 行 `bots/` 代码、1 个新 gate id,未 armed)——
+  扔尘的冲塔护栏问的是**反的一侧塔**,而且它在**同一帧上对两个不同的敌人同时答反**。**
+  `X.ConsiderItemDesire['item_dust']` 的 B5 写 `enemyHero:GetNearbyTowers(700, true)`;
+  `bEnemies` **相对被调用的那个单位**(mock 按 dump 真值复原成 `h:GetTeam() ~= self:GetTeam()`),
+  所以在**敌方句柄**上问 `true` 拿到的是**我方自己的塔**,而变量名叫 `nEnemyTowers`。
+  ⇒ 敌人在**我方塔下**隐身(尘让我方塔能打他,最该扔的一刻)**被拦**;
+  敌人在**自家塔下**隐身(700u 冲塔环显然为之而写)**被放行**。
+  **与 `slotdust`/`slotarb`(GH #441 / #406)同族,而且在同一个函数里**:
+  一个**意义相对于接收者**的实参,被当成绝对量传;不报错、不打日志,变量名记录的是代码没有的意图。
+  **(乙) 站点普查**:敌方句柄 + `true` 全仓 **2** 处(本处 + `hero_venomancer.lua:231`,
+  后者**是对的**,已钉成断言);敌方句柄 + `false`(= 敌方自己的塔)**5** 处,全读作「别冲他的塔」。
+  **读数**(真实帧 `f_260820_043120_viper_defend_poked`,t=398.5,主体 viper/天辉):
+  spirit_breaker(夜魇 47%)距**我方**塔 **174.3u**、无自家塔 ⇒ 出货**拦**/armed **放**;
+  ember_spirit(夜魇 **33%**)距**自家**塔 **406.7u**、无我方塔 ⇒ 出货**放(冲塔)**/armed **拦**;
+  lion(328.0u)复现 SB 那一侧。`[source-parity]` 在**全部 10 个英雄**上钉住 unarmed 逐字等于出货式。
+  ⚠️ **没有钉端到端的扔尘**:该帧 `J.IsUnitWillGoInvisible` 对每个活着的英雄都为假,
+  这一条**写成会红的断言** ⇒ 承重的是源码论证,帧只钉了护栏读数这一个瞬间。
+  ⭐⭐ **本轮最该被下一轮读到的两句:**
+  **(午) 点名要点在「哪个用例」上,而且这个点名本身必须跑一遍才算数。** 这是 (辰) 的镜像:
+  变异台**抓住了、方向也对**,而**台子对「是谁抓的」说错了** —— M4 让 helper 抛错(红文本是
+  Lua 运行时报错不是 assert 消息),M6 落在同一用例里更靠前的那条断言上,
+  于是第一版计分板打「CAUGHT,但不是被点名的那个用例」。
+  **⚠️⚠️ 自曝一条铁律 9 违例:本轮本该先做 `OWNER_PRIORITIES` 的 P1(1)/P2(两项的球都写着协同组),
+  却让「工作流第 1 步扫 issue」+「backlog 0NEXT8 点名 GH #441」把它压了过去 —— 而那两条都排在铁律 9 之下。**
+  处置在同一工作单元内做完:**改写了章程工作流第 1 步**(先读 OWNER_PRIORITIES,再扫 issue),
+  并把 **P1(1) 钉成 backlog 0NEXT9 / P2 钉成 0NEXT10**。**本轮对 P1/P2 如实记为零推进**,
+  不把「做了别的有用的事」算作推进。
+  **GH #441 的裁定(已追评)**:该 issue 正文的两个候选**在它自己的记录里已经全灭** ——
+  16:47Z 那条在单局上同时证伪 H0/H1/H2(H1 就是候选 2),19:16Z 那条关掉候选 1 后却写
+  「候选 2 成为唯一活候选」,**两条没有对账**。本台提 **H4**:承重前提「`GetTeamMember` 越界答 nil」
+  **从来没有从引擎读过**(两个出处是本仓 mock 和 `docs/BOT_API_REFERENCE.md:223`,
+  而后者逐字只说「**槽位不存在**(人数不足 5)时答 nil」,**对下标 > 5 只字未提**)。
+  H4 是**唯一**与全部已登记读数相容的假设,**但它也是最宽松的那个 ⇒ 该仪器不可能证伪它,加局无救。**
+  ⚠️ **trunk 上两条红,都不是本轮造成**(HEAD worktree 独立复现,已开 `[harness]` 交总监,本组不代修):
+  `test_gated_getter_stub_control.lua`(跨文件 `_G` 泄漏,单文件跑是绿的;
+  ⭐ **快 Lua 闸按构造看不见这一族** —— 它每个文件一个子进程)、
+  `test_tpscroll_branch_shadow_census.lua`(隔离跑也红,不在 `known_red` 里、落在闸外那 76 个里)。
+  ⚠️ 开工自检 **400s 超时被杀(`EXIT=124`)**,死在「trunk health (python test suite)」腿上
+  ⇒ **trunk 的那一侧这轮没人看过,不算通过**;已读到的腿全 OK。
+  ⚠️ **动态半没有整体跑**(~100min,GH #124);跑了受影响子集。**这是子集不是全量。**
+  ⛔ **`dusttower` 本轮不提入集**:4.2 冻结期未解除,按 **FROZEN-HOLD** 登记。**这不是掉棒。**
+  三行闸读数:`GATE_EXIT=0` / `py gate: 84 ran, 0 findings` / `lua gate: 370 ran, 0 findings, 8 known-red`。
+  产出:`bots/FunLib/jmz_func.lua:J.IsDustDiveBlocked`、`bots/ability_item_usage_generic.lua`(gated `dusttower`,未 armed)、
+  `tests/test_dusttower_dive_guard.lua` **runner 12/12**、
+  `tools/agent/mutstand_dusttower.sh` **caught=7 survived=1(控制项)FINAL_SHA_OK=yes STAND GREEN**、
+  `state.json:dusttower_20260913`、报告 `iterations/reports/strategy/20260913T224500Z.md`。
 
 - 2026-09-13T20:10Z:**`runring` 落地(**6 行 `bots/` 代码、**1 个新 gate id**,未 armed)——
   而本轮真正的产出是**「一个没有变异体指着的断言,台子不能给它背书」**这一条,
