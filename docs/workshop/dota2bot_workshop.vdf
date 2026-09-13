@@ -7,5 +7,9 @@
 	"visibility"	"2"
 	"title"		"Dota2Bot Turbo Bots (BETA)"
 	"description"	"Turbo-mode bot script tuned for Axe, Zeus, Wraith King, Lion, Crystal Maiden. Beta. See workshop page for details."
-	"changenote"	"beta-20260913 (stable-v9): first public beta"
+	"tags"
+	{
+		"0"	"Bot Script"
+	}
+	"changenote"	"beta-20260913 (stable-v9): add Bot Script tag so the in-game script list shows it"
 }

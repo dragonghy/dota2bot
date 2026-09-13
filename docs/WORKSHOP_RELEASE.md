@@ -77,3 +77,10 @@ steamcmd +login <你的Steam用户名> +workshop_build_item C:\dota2bot-beta\dot
 - [ ] 包内没有 `soak_side.lua`、没有 `.bat/.sh/.md`
 - [ ] 描述里的版本号 = 包名里的版本号 = main commit
 - [ ] 先私有可见,自己打 2 局 Turbo 确认 bot 名字/选人/行为正常,再公开
+
+## 6. 坑:steamcmd 发布必须带 `Bot Script` 标签
+
+游戏内机器人脚本下拉框只列带 **Bot Script** 标签的物品(工坊浏览页也按此标签筛)。
+Workshop Tools 会自动打,steamcmd 只打 vdf 里写的——2026-09-13 第一次发布漏了,
+物品存在、已订阅、却不在下拉框里。vdf 里的 `tags { "0" "Bot Script" }` 块即为修复;
+网页端也可在物品页右侧"编辑标签"补勾。
