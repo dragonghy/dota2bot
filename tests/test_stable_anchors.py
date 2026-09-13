@@ -191,7 +191,25 @@ for a in anchors:
 # gate that a promote deleted, and every such id must be either covered by an
 # anchor or on the frozen pre-registry list below.
 SRC_DIRS = ("bots", "game")
-PROMOTE_NOTE = re.compile(r"was soak-candidate '([a-z0-9_]+)'")
+
+# TWO spellings, and the second one is why this is a list rather than one regex.
+# The first draft of this section matched only `was soak-candidate '<id>'` and
+# reported a clean 23/23 partition -- while silently missing two promoted ids:
+# `pushguard` is annotated `was soak candidate 'pushguard'` (NO HYPHEN, three
+# files) and `tpsafe2`'s note carried no id-bearing clause at all until this
+# round added one.  The scan said "every promote in the source" and meant "every
+# promote spelled the way I happened to grep for".
+#
+# That is the 2026-09-13T04:3xZ finding turned on its author: *a ratchet
+# narrower than the defect it names reads exactly like a ratchet that is
+# holding* -- it prints ok every round, and ok means "none where I can see".
+# It was caught only because the AGENTS.md reconciliation below was added as an
+# independent second source; the regex alone could never have reported its own
+# blind spot.
+PROMOTE_NOTES = (
+    re.compile(r"was soak[- ]candidate '([a-z0-9_]+)'"),
+    re.compile(r"PROMOTED \(was '([a-z0-9_]+)'\)"),
+)
 
 # Promoted before the anchor registry existed (stable-v1, 2026-08-19).  There is
 # no anchor for these and there never will be -- inventing one would mean
@@ -199,10 +217,10 @@ PROMOTE_NOTE = re.compile(r"was soak-candidate '([a-z0-9_]+)'")
 # never grow.  A new promote goes in `stable_anchors.json`, not here, and the
 # count below is asserted so that appending to it cannot pass review unseen.
 PRE_REGISTRY = frozenset([
-    "deathzone", "fight", "lanesurv", "nodive", "punish",
-    "regroup", "skyburst", "tphome", "tpsafe", "vsafe",
+    "deathzone", "fight", "lanesurv", "nodive", "punish", "pushguard",
+    "regroup", "skyburst", "tphome", "tpsafe", "tpsafe2", "vsafe",
 ])
-check("the pre-registry allowlist is frozen at 10 ids", len(PRE_REGISTRY) == 10,
+check("the pre-registry allowlist is frozen at 12 ids", len(PRE_REGISTRY) == 12,
       "got %d -- a new promote belongs in stable_anchors.json, not on this list"
       % len(PRE_REGISTRY))
 
@@ -216,7 +234,9 @@ def promoted_in_source():
                     continue
                 path = os.path.join(root, fn)
                 with open(path, encoding="utf-8", errors="replace") as fh:
-                    for pid in PROMOTE_NOTE.findall(fh.read()):
+                    text = fh.read()
+                for pat in PROMOTE_NOTES:
+                    for pid in pat.findall(text):
                         found.setdefault(pid, os.path.relpath(path, REPO))
     return found
 
@@ -226,6 +246,46 @@ source_ids = promoted_in_source()
 # which is the failure mode this whole section is about.  Refuse it.
 check("the source scan must find promote notes at all", len(source_ids) >= 20,
       "found %d -- an empty scan passes coverage vacuously" % len(source_ids))
+
+# The independent second source.  AGENTS.md keeps a hand-maintained list of the
+# promoted turbo defaults, written by people, in a file nobody edits to make a
+# test pass.  Every id it names must be visible to the scan above.
+#
+# This is the assertion that catches a blind spot in the SCAN ITSELF, which no
+# amount of care inside the regex can do: a pattern cannot report the promote it
+# does not match.  It is deliberately one-directional -- AGENTS.md's list must
+# be a subset of the scan, not equal to it -- because the prose is allowed to
+# lag a fresh promote, while the scan missing a documented one is a defect.
+AGENTS_MD = os.path.join(REPO, "AGENTS.md")
+with open(AGENTS_MD, encoding="utf-8", errors="replace") as fh:
+    agents_text = fh.read()
+#
+# The capture stops at the first "(" after the list, and that bound is load-
+# bearing rather than tidy: the paragraph continues past the ids into a caveat
+# sentence naming `nodive2` and `ownhalf` as the extensions that STAY GATED.  A
+# capture that ran to the blank line swallowed those two and reported them as
+# missing promotes -- i.e. the reconciliation's first run failed on its own
+# parsing, not on the tree.  A list-scraper that also scrapes the sentence
+# explaining what is NOT on the list is worse than no scraper: it manufactures
+# findings, and findings that are always wrong get ignored, including the real
+# one underneath them.
+m = re.search(r"\*\*Promoted turbo defaults[^*]*\*\*\s*(.*?)\(", agents_text, re.S)
+check("AGENTS.md must still carry a 'Promoted turbo defaults' list", m is not None,
+      "the reconciliation below is vacuous without it")
+if m:
+    documented = set(re.findall(r"`([a-z0-9_]+)`", m.group(1)))
+    # 15 ids as of 2026-09-13.  The floor is asserted, not the exact count: a
+    # new promote legitimately grows this list, while a reworded header that
+    # silently shrinks the capture is the failure this section cannot survive.
+    check("the documented promote list must not have shrunk", len(documented) >= 15,
+          "got %d (%s) -- a vacuous reconciliation is the thing this guards "
+          "against; check the AGENTS.md wording the capture depends on"
+          % (len(documented), ", ".join(sorted(documented))))
+    for pid in sorted(documented):
+        check("%s: AGENTS.md calls it a promoted turbo default, but the source "
+              "scan does not see it" % pid, pid in source_ids,
+              "either the promote note is missing/spelled differently in "
+              "bots/, or PROMOTE_NOTES needs the spelling")
 
 anchored_ids = set()
 for a in anchors:
