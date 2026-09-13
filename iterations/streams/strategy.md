@@ -27,7 +27,46 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT5. **【2026-09-13T10:26Z 新增,**下一轮第一项**。主体继续留在 `bots/`**
+0NEXT6. **【2026-09-13T13:43Z 新增,**下一轮第一项**。主体继续留在 `bots/`**
+   (OWNER_PRIORITIES **4.4 (i)**;`divepocket` 让它**连续第五轮**满足,**不要断**)。
+   0NEXT5 的判据(甲′三态 / 丙′ / 丁 / 戊 / 己 / 庚 / 辛)继续有效;本轮挣到三条新的,
+   而且**每一条都是被顶红或被 SURVIVED 顶出来的,不是读出来的**:
+   ⭐⭐ **(壬) 承重证据挑「最难得到的那一个」,不是「最多的那一批」。**
+   本轮 `flip_ab 22`,其中 **21 个在 5.6k 以外** —— 两个 1200 半径圆盘在那里早已不相交,
+   翻转**近乎免费**;**唯一的反向翻转在 1,657.4u**,一个寻常的命令目标距离
+   (`f_260909_215227_zeus_bolt_od_1084`,本方 Pudge 0.38 HP,2 人包围圈,命令目标 1,657u 外:
+   出货答「不撤退」,收窄后**撤退** = 守卫声明的职责)。论证建在那一个上,另外 21 个**明确降格**为
+   「便宜那一半的定价」。⇒ **下次看到一个大翻转集,先按「效应在哪个几何带上」切一刀**;
+   全落在圆盘不相交的远带 = 定的是便宜那一半的价。
+   ⭐⭐ **(癸) 断言要数分支不数答案 —— 而分辨这两者的唯一办法是变异台。**
+   臂 C 写成 `flip_ac == 0`(一个**答案**计数)时,变异体 **M4「无条件丢弃代表目标」SURVIVED**:
+   本语料上换圈内代表**不改变任何答案**,于是该断言在变异体下同样为真。
+   补法是包住 `J.SafeToCommitFight` 读回它**真正拿到的那个句柄**。
+   ⭐ 并且 **`flip_ac == 0` 保留在文件里但标注为「真实读数、非判别性读数」** ——
+   删掉会丢信息,留着不说清楚会骗下一个人。⇒ **每台子除了(戊)的「量具自己塌掉」那条腿,
+   还要有一条「断言恒真」腿**:一个只动被试、不动语料的变异体。
+   ⭐ **(子) 方向不由构造固定时,两个符号都要登记。** GH #782 全族都是「合取项加在准入式上
+   ⇒ 集合只能变小」,有子集论证可倚;**换代表目标没有**。本轮因此把 `a1b0 21 / a0b1 1` 一起登记,
+   并在 `bots/` 注释里写明「那 1 个反向翻转不是噪声要抹平的东西,它是承重证据」。
+   ⇒ **选杠杆时先问「这个改动有没有闭形式方向」**;没有就别写「严格收窄」四个字,改为实测两符号。
+   ⛔ **已被定价并排除、不要重买**(继承 0NEXT5 全部,本轮新增两条):
+   ① **GH #760(overchase 的 DEEP 没有速度项)本轮读了、不重开** —— 上一轮已在宿主注释里
+   REGISTERED-NOT-REPAIRED,四种可表达的收窄逐条定价为 no-op 或仪器产物,整条挂在 **GH #786**
+   (dumper 缺朝向/速度/attack-target)上。**买到那三个字段之前不要重新定价它。**
+   ② `J.ShouldSuppressDive` 的代表目标选取本身(本轮已落 `divepocket`)。
+   ⭐ **下一轮候选(读了但没买,理由是形状不对不是没看)**:继承 0NEXT5 的 **GH #775 §4**
+   注释更正(一行注释,按 4.4 只能当附带项);新增一条 —— **`J.ShouldSuppressDive` 的
+   `(b) 致命来袭` 支路把 `tEnemies`(圈在 `vLoc` 周围)的合计爆发算在 `bot` 身上,
+   而 `vLoc` 在出货调用点等于 bot 自己的位置、在 PA/SB 调用点等于**目标**的位置** ——
+   即同一条支路在两类调用点下问的不是同一个问题。⚠️ **先按树数站点再定价**((乙)),
+   而且它**没有闭形式方向**((子)),要按两符号实测。
+   ⚠️ **本轮实测的三条工具事实**:(i) 首条命令**第 12 次**被 `REFUSED: stdout is a pipe` 挡回 ——
+   开工自检**不要走管道**;(ii) `tests/test_gated_helper_nesting_census.lua` 是 GH #624 那种
+   **结构性** census:**落任何一个新 gate 都会把它顶红**,本轮两行受影响,**同一工作单元内**
+   手读 + 分类 + 写理由后重绿;(iii) `tests/test_bots_walk_farm_only.py` 会点名任何新
+   `tests/*.lua` 里的 `io.popen`,**连续第二轮由作者自己闭环**。】**
+
+0NEXT5. ✅ **【2026-09-13T10:26Z 新增 → 2026-09-13T13:43Z 做完(`divepocket` 落地,**约 9 行 `bots/` 代码 + 1 个新 gate id**;报告 `iterations/reports/strategy/20260913T134316Z.md`、`state.json:divepocket_20260913`)。原文保留在下,便于对照(其中「下一轮第一项」已由本条完成,现由 0NEXT6 接替)。主体继续留在 `bots/`**
    (OWNER_PRIORITIES **4.4 (i)**;`roshpost` 让它**连续第四轮**满足,**不要断**)。
    0NEXT4 的判据(甲′三态 / 丙′ / 丁 / 戊)继续有效,本轮把它们各用了一次并挣到三条新的:
    ⭐⭐ **(己) 「本语料上效应为零」不是这一族的宿命 —— 前三次是抽样,不是定理。**
@@ -8762,6 +8801,58 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-13T13:43Z:**`divepocket` 落地(**约 9 行 `bots/` 代码、**1 个新 gate id**,
+  未 armed)—— 而本轮真正的产出是**承重证据要挑「最难得到的那一个」而不是「最多的那一批」,
+  以及「断言在数答案还是数分支」只有变异台分得出来**这两条。**
+  `J.ShouldSuppressDive` 的代表目标选取加一个 gated 分支:调用方的目标**不在这个包围圈里**就丢掉,
+  落回函数已经有的「圈内血最低的敌人」回退。
+  缺陷用出货代码自己的话:那行**正上方的注释**逐字「representative lethal target: the caller's
+  target **if it is one of the flanking enemies**, else the lowest-HP enemy in the pocket」,
+  而它下面的谓词只有 `J.IsValidHero( target )` —— **「包围圈」三个字在代码里一次都没出现过**。
+  这不是措辞:`hTarget` 是**整个安全判读被取在哪里**的那个点
+  (`J.SafeToCommitFight( bot, hTarget )` 数的是 `hTarget` 周围 1200 内的敌我人数)。
+  出货的、**已 promote** 的调用点 `bots/mode_retreat_generic.lua:345` 传的是
+  `J.GetProperTarget(bot)` = `bot:GetTarget()` 退化到 `bot:GetAttackTarget()`,
+  **唯一的过滤是「不是我方英雄/建筑」,没有任何距离界**(这条写成了会红的断言,不是说明)。
+  ⭐⭐ **本轮最该被下一轮读到的三句:**
+  (壬) ⭐⭐ **`flip_ab 22` 里 21 个在 5.6k 以外(圆盘不相交,翻转近乎免费),
+  承重的是唯一那个反向翻转、在 1,657.4u** —— `f_260909_215227_zeus_bolt_od_1084`,
+  本方 Pudge **0.38 HP**、2 人包围圈、命令目标 1,657u 外:出货答「不撤退」,收窄后**撤退**。
+  论证建在那一个上,另外 21 个**明确降格**为「便宜那一半的定价」。
+  (癸) ⭐⭐ **变异台 M4「无条件丢弃代表目标」第一轮 SURVIVED** —— 臂 C 原写成
+  `flip_ac == 0`(答案计数),而本语料上换圈内代表不改变任何答案 ⇒ 断言在变异体下同样为真。
+  补法:包住 `J.SafeToCommitFight` 读回它**真正拿到的那个句柄**(`in_rep_swapped`/`far_rep_kept`)。
+  `flip_ac == 0` **保留但标注为「非判别性读数」**。
+  (子) ⭐ **方向不由构造固定 ⇒ 两个符号都登记**(`a1b0 21` / `a0b1 1`)。GH #782 全族有子集论证,
+  换代表目标**没有**;别写「严格收窄」四个字。
+  **读数**(142 帧 / **657** 活的本方行 / `load_fail 0` / `raised 0`):`pocket2 58`、
+  配对 `far 154` / `in_p 126`;四臂 A **49** / B **29** / D **29**,**`flip_ab 22`**
+  (`a1b0 21`/`a0b1 1`)、`flip_ac 0`、`flip_ad 22 == flip_ab`、**`bd_mismatch 0`**、
+  `fire_a2 280 == far+in_p`;分支计数 `in_rep_swapped 0` / `far_rep_kept 0`;
+  仪器对照 `MIN_FAR_D > 700 >= MAX_IN_D`;近带 `near_pairs 10` / `near_flip 1`。
+  产出:`bots/FunLib/jmz_func.lua`(gated `divepocket`,未 armed)、
+  `tests/test_divepocket_target_in_pocket.lua` **runner 5/5(3.0s)**、
+  `tools/agent/mutstand_divepocket.sh` **caught=8 survived=1(控制项)FINAL_SHA_OK=yes STAND GREEN**、
+  `state.json:divepocket_20260913`、报告 `iterations/reports/strategy/20260913T134316Z.md`。
+  ⭐ **被闸点名抓到两条,都在同一个工作单元内登记完毕**:
+  ① `tests/test_bots_walk_farm_only.py` exit 1(新文件的 `io.popen` 未进 `UNRESOLVED_HAND_READ`)
+  → 重跑 8 checks / 0 failed,**连续第二轮由作者自己闭环**;
+  ② `tests/test_gated_helper_nesting_census.lua` exit 1 —— GH #624 那种**结构性** census,
+  **落任何新 gate 都会把它顶红**;两行手读后分类不变(外 (W) / 内 (P))并写下理由,
+  重跑 10 tests / 0 failures。
+  ⚠️ **三条 open `[strategy]` issue 按 0NEXT5 的登记不重新定价**(#767/#770/#775);
+  **#760 本轮读了、不重开**(已在宿主注释里 REGISTERED-NOT-REPAIRED,整条挂 GH #786)。
+  ⚠️ **开工自检 `TRUE_EXIT=3`**:findings = cadence / queue-rulings / owed-executions /
+  **trunk-red(python)**,python 唯一的红是 `tests/test_py_gate_hook.py` = **GH #795**
+  ([harness]),与本轮无关;Lua 快检测器 **88 文件 0 失败**;3 个 python 文件
+  **UNCERTIFIABLE(未跑,不是通过)**。首条命令**第 12 次**被 `REFUSED: stdout is a pipe` 挡回。
+  ⛔ 变异台与自检**没有并发**。
+  ⚠️ **动态半没有整体跑**(~100min,GH #124);改跑了所有点名 `ShouldSuppressDive`/`nodive`
+  的测试 + 受影响的静态检查(全绿,逐项见报告 §7)。**这是子集不是全量,报告里如实说明。**
+  ✅ **OWNER_PRIORITIES 4.4 (i) 连续第五轮满足**。**零 AWS、零波次、armed 串一字未动**
+  (gated 且未 armed ⇒ 出货行为逐字节不变)。铁律 6 三行与 token 用量见报告 §7/§10。
+
 
 - 2026-09-13T10:26Z:**GH #782 家族第四刀落了,家族的名字测试那一半收口(`roshpost`,
   **1 行 `bots/` 代码、0 个新 gate id**)—— 而本轮真正的产出是**这一族的「效应为零」是抽样不是定理**这一条。**

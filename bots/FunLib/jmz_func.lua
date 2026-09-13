@@ -9279,6 +9279,88 @@ function J.ShouldSuppressDive( bot, vLoc, target )
 	-- representative lethal target: the caller's target if it is one of the
 	-- flanking enemies, else the lowest-HP enemy in the pocket (most killable).
 	local hTarget = J.IsValidHero( target ) and target or nil
+
+	-- [divepocket 20260913, strategy] "IF IT IS ONE OF THE FLANKING ENEMIES" IS
+	-- THE COMMENT DIRECTLY ABOVE, AND THE PREDICATE UNDER IT NEVER ASKED.
+	--
+	-- The test the line actually runs is J.IsValidHero( target ) -- alive,
+	-- visible, a hero, not ours. Nothing in it ties `target` to THIS pocket.
+	-- The shipped, promoted call site is mode_retreat_generic.lua's retreat
+	-- desire, which passes `botTarget = J.GetProperTarget( bot )`, and that
+	-- helper is `bot:GetTarget()` (the bot's current ORDER target) falling back
+	-- to `bot:GetAttackTarget()`, with its only filter being "not one of our own
+	-- heroes/buildings". It carries NO DISTANCE BOUND of any kind. So the
+	-- representative target can be an enemy hero standing anywhere on the map.
+	--
+	-- That matters because hTarget is not cosmetic -- it is the location the
+	-- whole safety read is taken at. J.SafeToCommitFight( bot, hTarget ) scores
+	-- allies and enemies within 1200 of hTarget:GetLocation(), and the
+	-- self-critical branch below reads J.GetAlliesNearLoc( hTarget:GetLocation(),
+	-- 1200 ). With an off-pocket target, this anti-suicide-dive guard answers
+	-- "is that OTHER fight winnable" and then raises BOT_MODE_DESIRE_HIGH
+	-- retreat for the pocket the bot is actually standing in. A guard whose
+	-- stated domain is "a pocket of 2+ enemies within ~700" decided by a
+	-- neighbourhood the bot is nowhere near is not a conservative read; it is a
+	-- read of a different question.
+	--
+	-- THE REPAIR IS THE COMMENT: keep the caller's target only when it is one of
+	-- the flanking enemies, otherwise fall through to the lowest-HP enemy in the
+	-- pocket -- the branch the function ALREADY has and already calls the
+	-- representative. Membership is tested against tEnemies by identity rather
+	-- than by re-measuring 700, so it inherits that list's illusion / Meepo
+	-- clone / tempest-double filters and cannot drift from the radius above.
+	--
+	-- DIRECTION IS MEASURED, NOT ASSUMED. This is not a strict narrowing by
+	-- construction (a different representative can move the answer either way),
+	-- so it is priced on real frames instead: over 142 frames / 657 live
+	-- own-team hero-rows / 58 rows in the 2+ pocket / 154 (row, off-pocket
+	-- enemy) pairs, the narrowing flips 22: 21 of them suppress ->
+	-- don't-suppress and ONE the other way. That single reverse flip is
+	-- registered, not smoothed -- it is the honest shape of "a different
+	-- representative can move the answer either way", and a file claiming a
+	-- one-sided direction here would be claiming a narrowing this is not. On
+	-- the 126 (row, IN-pocket enemy) pairs the gate changes nothing
+	-- (`flip_ac 0`), which is the intended domain being left alone. See
+	-- tests/test_divepocket_target_in_pocket.lua.
+	--
+	-- ⭐ THE LOAD-BEARING WITNESS IS THE ONE REVERSE FLIP, NOT THE 21, and it is
+	-- the nearest flipping pair in the corpus at 1,657.4 units -- an ordinary
+	-- order-target distance, not a map-width artefact.
+	-- tests/fixtures/f_260909_215227_zeus_bolt_od_1084.lua, subject-team Pudge at
+	-- 0.38 HP standing in a 2-enemy pocket with an obsidian_destroyer 1,657u
+	-- away: shipped answers DON'T SUPPRESS, because J.SafeToCommitFight read the
+	-- neighbourhood around the Destroyer and found it fine. Narrowed, the read is
+	-- taken at the pocket, the (a) low-HP clause is reached, and a 38%-HP hero in
+	-- a two-man pocket retreats. That is this guard's whole stated job, and the
+	-- off-pocket representative was the reason it did not do it.
+	--
+	-- ⚠️ LIMIT, REGISTERED RATHER THAN WAVED AT: the corpus is thin in exactly
+	-- the band that matters. Of the 154 off-pocket pairs only 10 sit inside 3,000
+	-- units, and that near band holds ONE of the 22 flips -- the witness above.
+	-- The other 21 sit beyond 5.6k, where the two 1200-radius discs are disjoint
+	-- and a flip is nearly free. So the corpus WITNESSES the near-band effect
+	-- rather than measuring its rate, and it cannot say how often a real
+	-- `bot:GetTarget()` sits outside the pocket at all: the dumper carries no
+	-- attack-target field (GH #786). What is NOT in doubt is that the shipped
+	-- predicate permits it, because that is a fact about the source.
+	--
+	-- NEW SOAK ID, ON PURPOSE -- criterion (甲′)'s FIRST state. The host is
+	-- PROMOTED ('nodive', see the header), so it runs in every turbo game today
+	-- and there is no host gate to inherit; narrowing in place would change
+	-- SHIPPED play with no wave behind it. Same placement call as 'divepost'
+	-- (2026-09-13) under the same promoted-host rule. Turbo-only by inheritance:
+	-- this function returns false on its first line outside turbo.
+	if hTarget ~= nil and J.IsSoakCandidate( 'divepocket' ) then
+		local bInPocket = false
+		for _, e in pairs( tEnemies ) do
+			if e == hTarget then
+				bInPocket = true
+				break
+			end
+		end
+		if not bInPocket then hTarget = nil end
+	end
+
 	if hTarget == nil then
 		local nLowHP = 1.1
 		for _, e in pairs( tEnemies ) do

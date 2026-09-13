@@ -194,6 +194,14 @@ UNRESOLVED_HAND_READ = {
         "the finding named the file and the exact unresolved command, which is "
         "the GH #774 loop closing in the authoring work unit instead of on the "
         "next desk to open a gate",
+    """tests/test_divepocket_target_in_pocket.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the same two literals "
+        "{'tests/fixtures', 'tests/frames'} with no parameter reaching it, and "
+        "runs the same plain non-recursive `ls`; it is a copy of the walk above "
+        "and never reaches bots/Customize/. Hand-read 2026-09-13 (strategy desk, "
+        "divepocket round). ⭐ Registered in the authoring work unit because THIS "
+        "CHECK CAUGHT IT before the push -- second consecutive round the GH #774 "
+        "loop closed with the author, not with the next desk to open a gate",
     """tests/test_wk_q_commit_ration.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() at :110 loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:79-:80); non-recursive `ls`, "

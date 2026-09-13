@@ -555,7 +555,20 @@ local PINNED = {
     -- lever -- two independently sufficient vetoes -- is 'stayattr' and
     -- 'staytower', and their domains are measured DISJOINT rather than argued.
     "c12,retnear,towerreach | GetDesireHelper | J.ShouldStayAndRegen | stayattr,staybag,staybottle,staysrc,staytower,stayurn | bots/mode_retreat_generic.lua", -- P
-    "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | nodive2 | bots/mode_retreat_generic.lua",                          -- W
+    -- [divepocket 20260913] 'divepocket' joined the inner-id column of BOTH
+    -- J.ShouldSuppressDive rows (this one and the J.SafeToCommitFight row far
+    -- below). Read by hand before pinning; NEITHER classification moves.
+    -- Outer (W), unchanged: the three outer ids are SIBLING statements inside
+    -- the same GetDesireHelper, not a block enclosing the anti-dive paragraph
+    -- at :345 -- the same reading every row above carries.
+    -- Inner: un-armed, `J.IsSoakCandidate( 'divepocket' )` sits in
+    -- `if hTarget ~= nil and J.IsSoakCandidate( 'divepocket' ) then`, whose
+    -- whole body is skipped, so hTarget keeps the SHIPPED representative and
+    -- the function is byte-identical to what shipped -- including for the
+    -- sibling 'nodive2' below it. Arming nodive2 ALONE therefore measures
+    -- exactly what it measured before this landed, which is the question this
+    -- census exists to ask.
+    "c12,retnear,towerreach | GetDesireHelper | J.ShouldSuppressDive | divepocket,nodive2 | bots/mode_retreat_generic.lua",               -- W
     -- [towerring 20260906 GH #558] The outer-id column of BOTH X.ShouldRun rows
     -- grew a second id. The classification does not move: the new id gates the
     -- SAME clock local as 'towerfear' in the same block, and un-armed it leaves
@@ -681,7 +694,15 @@ local PINNED = {
     "midsupyield,midtp,suptp,tparrive | J.ShouldTpSupportTowerFight | J.CanEnemyInterruptTpChannel | tpreach | bots/FunLib/jmz_func.lua",  -- P
     "midsupyield,midtp,suptp,tparrive | J.ShouldTpSupportTowerFight | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",          -- P
     "midsupyield,midtp,suptp,tparrive | J.ShouldTpSupportTowerFight | J.SafeToCommitFightOnArrival | depthnum | bots/FunLib/jmz_func.lua", -- P
-    "nodive2 | J.ShouldSuppressDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                                          -- P
+    -- [divepocket 20260913] The outer-id column grew 'divepocket'; the answer
+    -- is still (P) and for the SAME reason it always was -- `depthnum` is a
+    -- PARAMETER gate on the inner helper (un-armed J.SafeToCommitFight returns
+    -- the shipped read, only the margin moves). What 'divepocket' changes is
+    -- the ARGUMENT that inner helper is called with, not whether it answers:
+    -- armed, the representative is a pocket member instead of whatever the
+    -- caller handed over. See tests/test_divepocket_target_in_pocket.lua §3,
+    -- which counts that argument directly rather than inferring it.
+    "divepocket,nodive2 | J.ShouldSuppressDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                               -- P
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_crystal_maiden.lua",                        -- P
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_jakiro.lua",                                -- P
     -- [outcommit 20260905] 'outcommit' joined the row 'outlatch' already held,
