@@ -288,11 +288,20 @@ tests['[domain] the corpus, and what reaches the supply clause'] = function()
         'some live frame is not turbo, which the first line of the function '
         .. 'would have vetoed before anything this file measures')
     assert(C('raises') == 0, C('raises') .. ' frames raised inside the drive')
-    assert(C('supply_tested') == 125, 'frames reaching the supply clause: '
-        .. C('supply_tested') .. ' (both sibling levers measured 125 on the same '
-        .. 'corpus through their own prefix walks)')
-    assert(C('blocked_supply') == 112, 'frames the supply clause vetoes: '
-        .. C('blocked_supply'))
+    -- [replay-check 2026-09-13] Was `== 125`, and the new fixture made it 126 --
+    -- the same GH #106 / #127 shape as the line below, caught one line later.
+    -- The cross-lever agreement this sentence is really about is preserved: both
+    -- sibling levers walk their own prefixes and ratchet the same counter from
+    -- the same floor, so they still have to move together.
+    cs.ratchet(C('supply_tested'), 125, 'frames reaching the supply clause')
+    -- [replay-check 2026-09-13] Was `== 112`. Landing tests/fixtures/
+    -- f_20260912_094042_sniper_546.lua made the corpus 112, at which point
+    -- test_corpus_scale.lua's detector flagged this literal as the GH #106 /
+    -- #127 defect -- a per-fixture sum pinned by equality, which the next
+    -- fixture author turns red without anything this file measures having
+    -- moved. Same treatment as the two ratchets directly above; a count that
+    -- FALLS still fails, which is the behaviour change this pin was for.
+    cs.ratchet(C('blocked_supply'), 112, 'frames the supply clause vetoes')
     assert(C('blocked_with_mod') + C('blocked_no_mod') == C('blocked_supply'),
         'the two-bin split of the vetoed frames does not sum -- counted, not '
         .. 'subtracted, so this is an arithmetic invariant')

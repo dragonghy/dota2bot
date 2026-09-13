@@ -16275,6 +16275,32 @@
   - ⛔ **未登记进 `lua_gate_manifest.json`,是故意的**:**GH #783** 逐字说明
     「登记一条测试 = 清空 `known_red` 赦免名单 = 让下一个人的 push 被 9 条既存红挡下」
     ⇒ 本轮不碰它,**并声明新测试因此不受钩子保护**。
+  - ⭐⭐ **落一份 fixture 顶红了一条 census —— GH #624 那一族,但这次作者在 push 前自己抓到并修了。**
+    开工自检「fast Lua detectors」腿报 `RED test_corpus_scale.lua`:
+    「2 assertion(s) compare a literal to the **current fixture count (112)** … GH #106 / #127 defect」,
+    点名 `test_staybottle_inflight_regen.lua:247` 与 `test_stayurn_ally_heal.lua:294` 的
+    `assert(C('blocked_supply') == 112, …)`。
+    ⭐ **归因不靠推理,靠一次可复现的移出/移回实验**(先 `cp` 副本,再 `mv` 出去→跑→`mv` 回来→`cmp`):
+    **移出 111 个 fixture ⇒ 10/0 绿;放回 112 个 ⇒ 9/1 红;移回后 `cmp` 逐字节一致**
+    ⇒ **是本轮这份 fixture 顶红的**,而两条被点名的断言**在别的组的文件里**。
+    **处置:本组修,不留给下一个开工的组** —— 理由就是 #624 的立案句本身
+    (「红由**下一个开工的组**发现,几小时后,**作者已经走了**」),**这一轮作者还没走**。
+    修法**不是本组发明的**,是该 census 的报错信息**自己开的处方**(「Use `corpus_scale.lua` --
+    `ratchet()` for a per-fixture sum」),而且**两个文件都已 `require('corpus_scale')`、
+    上面两行就在用 `cs.ratchet`** ⇒ 改动落在它们自己的既有惯用法里。
+    ⚠️ **级联是真的,第二条 literal 在第一条修好后才露出来**:`C('supply_tested') == 125`
+    本轮变成 **126**(本轮 fixture 多贡献一帧到达 supply 子句)⇒ 同族同处方一并改。
+    ⭐ 这正是 `corpus_scale.lua` 头注说的:2026-08-22 落一份 fixture **一次顶红 7 个文件 18 条断言**,
+    而「**18 条没有一条是关于它自己那个测试要测的东西**」。
+    **改后逐条复跑(裸读)**:`test_corpus_scale` **10/0**、`test_staybottle_inflight_regen` **21/0**、
+    `test_stayurn_ally_heal` **25/0**、本轮新测试 **12/0**。
+    ⛔ **没有跳过、没有禁用、没有降低任何 FLOOR**;`ratchet` 保留了这两条 pin 本来要抓的东西
+    (**计数下降仍然红**),只停止为「语料长大」收费。
+    ⚠️ **归属(铁律 5)**:改的是别组的**测试文件**、不是别组的 bot 逻辑,**动因是本轮自己的改动**,
+    处方是工具自己打印的;若相关组认为该重新基线而非 ratchet,按 `corpus_scale.lua` 头注
+    「HOW TO RE-BASELINE HONESTLY」处置。
+    ⭐ **一条给所有组的判别子(建议进全队铁律或工具坑)**:**落任何新 fixture 之前/之后,
+    跑一次 `test_corpus_scale.lua`** —— 它是这一族唯一会举手的东西,而它举手的对象**永远是别人的文件**。
   - ⚠️ **一处本轮自己制造的假红**:手跑同族测试时 `test_replay_212636_tide_ancient` /
     `test_abilanc_ancient_selector` 各报一次 `soak_side.lua already exists` ——
     **是本轮把开工自检重新挂后台造成的并发**(**GH #417 那条护栏工作正常**);
