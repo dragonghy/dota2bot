@@ -309,7 +309,24 @@ local function wk_frames()
     for sPath in p:lines() do
         local tFix = dofile(sPath)
         for _, tUnit in ipairs((tFix or {}).units or {}) do
-            if tUnit.name == 'npc_dota_hero_skeleton_king' then
+            -- ⭐ LIVENESS, added 2026-09-13 under the GH #794 ruling
+            -- (tests/test_wk_dead_row_precondition.lua).  This is the file the
+            -- issue was most worried about, and its central guess is CONFIRMED
+            -- here by reproduction rather than agreed with: staging the dead
+            -- row #794 quotes verbatim (level 8, `max_mp = 308`, `hp = 0`,
+            -- `alive = false`) makes the assertion below report exactly the
+            -- "2 real frames" it reported, and this predicate removes it.  So
+            -- the second disagreement is THAT ROW, not a failure of the model,
+            -- and none of the crossing levels this file derives is invalidated.
+            -- ⚠️ Note the pool is NOT zero on such a row -- 308 is recorded --
+            -- so "a corpse reports 0 mana" is not the reason and must not be
+            -- quoted as one; the reason is that a dead hero is not a frame on
+            -- which this file's model was ever meant to be evaluated.
+            -- Changes no count today (the corpus holds no dead Wraith King
+            -- row); it is what keeps this assertion meaning what it says once
+            -- one lands.
+            if tUnit.name == 'npc_dota_hero_skeleton_king'
+                and tUnit.alive ~= false then
                 tRows[#tRows + 1] = {
                     file = sPath:match('([^/]+)$'),
                     level = tUnit.level, max_mp = tUnit.max_mp,

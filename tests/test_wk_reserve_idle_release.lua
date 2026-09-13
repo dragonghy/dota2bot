@@ -71,12 +71,40 @@ end
 
 local function short(path) return (path:gsub('^tests/fixtures/', '')) end
 
---- Every fixture holding a Wraith King WITH an abilities list.  Same split, and
---- for the same reason, as tests/test_wk_save_mana_lock_census.lua section 1: a
---- fixture without abilities hands out blank handles, and a blank handle answers
+--- Every fixture holding a LIVE Wraith King WITH an abilities list.  Same split,
+--- and for the same reason, as tests/test_wk_save_mana_lock_census.lua section 1:
+--- a fixture without abilities hands out blank handles, and a blank handle answers
 --- rank 0 / cooldown 0 / cost 0 -- three readings indistinguishable from
 --- "unlearned, ready, free".  Counting those as "the reserve did not fire" would
 --- put an absence into every ratio in this file.
+---
+--- ⭐ LIVENESS IS A SECOND, DIFFERENT PREDICATE, added 2026-09-13 under the GH
+--- #794 ruling (tests/test_wk_dead_row_precondition.lua).  A dead row is not
+--- merely unreadable: this file DRIVES X.ShouldSaveMana, and the shipped file
+--- assigns its per-frame state (nLV, nMP, nHP) only past X.SkillsComplement's
+--- own `J.CanNotUseAbility( bot )` return, which a dead hero never passes -- so
+--- driving one raises `attempt to compare number with nil` on `nLV >= 6`.  The
+--- two predicates are DISJOINT on today's corpus (3 abilities-less rows, all
+--- alive; 0 dead rows), so neither one implies the other.  Adding this changes
+--- no count today, which is the point: it is what lets replay-check land that
+--- fixture without re-baselining anything here.
+--- ⚠️ MEASURED, AND WEAKER HERE THAN IN THE OTHER THREE FILES: staging the dead
+--- row #794 quotes verbatim and then REMOVING this predicate again leaves this
+--- file green, because the abilities test above already excludes that row (a
+--- dumper does not record abilities on the frame a hero dies).  So here the
+--- predicate is a second, defensive statement of the population -- it is
+--- load-bearing in test_wk_save_mana_lock_census.lua, _roshan_mana_floor.lua
+--- and _roshan_mana_ceiling.lua, and not on this row in this file.
+--- ⚠️ UNEXPLAINED, and it belongs to replay-check rather than here: #794
+--- reports THIS file's priced corpus moving 33 -> 34, and the row it quotes
+--- cannot do that (it is abilities-less, so it is not priced).  Something else
+--- in that fixture -- a second Wraith King row, or a second fixture -- carried
+--- that +1.  Only the desk holding the withdrawn fixture can say which.
+--- ⚠️ LIMIT, unchanged by this edit: the `break` below takes the FIRST Wraith
+--- King row in a fixture and stops.  A mirrored draft can put one on each team,
+--- and which of the two the loader then serves as the subject is already
+--- ambiguous.  Not settled here; recorded so the next reader does not mistake
+--- the filter for an answer to it.
 local function priced_corpus()
     local out = {}
     local p = assert(io.popen('ls tests/fixtures'))
@@ -91,7 +119,9 @@ local function priced_corpus()
         if ok and type(fx) == 'table' and type(fx.units) == 'table' then
             for _, u in ipairs(fx.units) do
                 if u.name == WK then
-                    if type(u.abilities) == 'table' then out[#out + 1] = path end
+                    if type(u.abilities) == 'table' and u.alive ~= false then
+                        out[#out + 1] = path
+                    end
                     break
                 end
             end

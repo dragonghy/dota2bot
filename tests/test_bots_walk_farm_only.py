@@ -154,6 +154,15 @@ UNRESOLVED_HAND_READ = {
         "Hand-read 2026-09-12 (strategy desk) -- registered in the SAME work "
         "unit that added the walk, which is the half GH #774 says keeps going "
         "missing",
+    """tests/test_tpdeftower_outpost_narrow.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() at :126 loops dir over the two LITERALS "
+        "{'tests/fixtures', 'tests/frames'} with no parameter reaching it, and "
+        "runs a plain non-recursive `ls`, so it never reaches bots/Customize/. "
+        "Hand-read 2026-09-13 (hero desk): the call site's own comment already "
+        "claimed it was registered here and it was not -- the walk landed in "
+        "87ef8628 (strategy, GH #782) and left this check RED on trunk, which "
+        "is GH #774 / #624 verbatim. Registered by the next desk to open the "
+        "gate, not by the author",
     """tests/test_wk_q_commit_ration.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() at :110 loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:79-:80); non-recursive `ls`, "

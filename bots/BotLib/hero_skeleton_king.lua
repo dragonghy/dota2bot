@@ -1762,6 +1762,25 @@ function X.IsReincarnationReserveIdle()
 	return #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) == 0
 end
 
+--- ⚠️ NO NIL-GUARD HERE, AND THAT IS A RULING, NOT AN OVERSIGHT (GH #794,
+--- 2026-09-13).  A replay-check fixture carrying a DEAD Wraith King row made
+--- the first comparison of the chain below raise `attempt to compare number
+--- with nil`, and the issue asked this desk to choose between guarding the call
+--- site and keeping such rows out of the test driver.  The answer is the
+--- driver, because this file states its own precondition twice and neither
+--- statement was written for the occasion: bots/ability_item_usage_generic.lua's
+--- AbilityUsageThink refuses to call SkillsComplement at all unless
+--- `bot:IsAlive()`, and X.SkillsComplement's first statement returns on
+--- `J.CanNotUseAbility( bot )`, whose first disjunct is `not bot:IsAlive()` --
+--- and every per-frame value read below is assigned past that return.  So a
+--- dead hero never reaches this function in a game; only a driver that skips
+--- both guards can.  A guard added here would defend shipped code against a
+--- state it structurally refuses to enter, and would convert a loud crash into
+--- a quiet answer on exactly the frames whose readings are absences.
+--- ⚠️ The issue's own attribution is falsified rather than adopted: the nil is
+--- the file-scope `nLV`, not either `GetManaCost()` (an abilities-less row
+--- answers 0, never nil).  Driven, with the line number parsed rather than
+--- quoted, in tests/test_wk_dead_row_precondition.lua sections 3 and 4.
 function X.ShouldSaveMana( nAbility )
 
 	-- (a commented-out `if talent5:IsTrained() then return false end` used to open

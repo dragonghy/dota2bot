@@ -206,7 +206,17 @@ local function wk_frames()
     for sPath in p:lines() do
         local tFix = dofile(sPath)
         for _, tUnit in ipairs((tFix or {}).units or {}) do
-            if tUnit.name == WK then
+            -- ⭐ LIVENESS, added 2026-09-13 under the GH #794 ruling
+            -- (tests/test_wk_dead_row_precondition.lua).  The population of
+            -- this file is "Wraith King hero ROWS", and a dead row is one: it
+            -- carries a level and an mp, no abilities list, and it moved three
+            -- recorded counts here the day one appeared.  A dead hero's mana
+            -- and ranks describe nothing the Roshan floor is about, and the
+            -- shipped code it models is never entered on one (the generic
+            -- AbilityUsageThink refuses `not bot:IsAlive()`).  Disjoint from
+            -- the abilities-list predicate on today's corpus, so it is stated
+            -- separately rather than folded into one; changes no count today.
+            if tUnit.name == WK and tUnit.alive ~= false then
                 local nBlast, nReincarn = 0, 0
                 for _, tAb in ipairs(tUnit.abilities or {}) do
                     if tAb.name == BLAST then nBlast = tAb.level end

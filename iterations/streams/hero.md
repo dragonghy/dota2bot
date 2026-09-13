@@ -22,6 +22,58 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-163. ✅ **`-162` 的第 1 条(继续找「读数自己声明的未测列」)本轮换成了另一件更该做的:
+   认领唯一一条带证据的 `[hero]` issue —— 因为**另一个组的工作单元正卡在本组的一条裁定上**(铁律 9)。**
+   本轮(报告 `iterations/reports/hero/20260913T045952Z.md`)裁掉 **GH #794**,并把棒**送到底**。
+   ⭐ **新形状:「一个报错的行号可以指着无辜的那一行」。** Lua 把跨行表达式报在**算符所在行**,
+   而 `local bShipped = A and B and C` 是**一个**表达式;#794 引的是它的**最后一行**
+   (`… GetManaCost() < abilityR:GetManaCost()`)并据此把 nil 归给两个 `GetManaCost()`。
+   实际是**第一个**比较 `nLV >= 6` 上的 `nLV`。⇒ **凡是拿报错行给多行表达式归因的,先复现再归因;
+   断言要解析源码取行号,不要引行号**(`tests/test_wk_dead_row_precondition.lua` §4 同时钉
+   「报错行 == `nLV >= 6` 那行」与「报错行 ≠ `GetManaCost` 那行」)。
+   - ⭐ **第一条,本轮最该被人读到的 —— 两个看起来同义的谓词在语料上是不相交的两个集合。**
+     「没有 abilities 的行」与「死掉的行」在本语料上**完全不相交**(3 行无 abilities,**全活着**;
+     0 行死)⇒ #794 提议的 abilities 过滤器**连它自己那一行都挡不住**,而 liveness 过滤器
+     也挡不住现存那 3 行。**两条都要,而且要分开声明。** 逐行驱动的读数:三行无 abilities 的 WK
+     `GetManaCost()` 全答 **0**(不是 nil)、`ShouldSaveMana` 全答 false、**全不崩**。
+   - ⭐⭐ **第二条 —— 「加不加守卫」这种问题,答案常常已经写在出厂代码自己的前置条件里,而且写了不止一遍。**
+     `AbilityUsageThink`(`bots/ability_item_usage_generic.lua`)在调用 `SkillsComplement` **之前**
+     就 `not bot:IsAlive()` 返回;`X.SkillsComplement` 第一条语句 `J.CanNotUseAbility( bot )` 的
+     **第一个析取项**同样是 `not bot:IsAlive()`,而该文件所有逐帧状态都在那条 return **之下**赋值。
+     ⇒ 裁定是**驱动侧**,理由不是口味:调用点守卫会**替出厂代码防一个它结构上拒绝进入的状态**,
+     并把**一次响亮的崩溃换成一个安静的答案** —— 而那答案的每一项读数都是**缺席**。
+   - ⛔ **第三条 —— 只裁不修就是把同一个红还给同一个组。** 本轮把 liveness 谓词落进**四个**普查
+     (#794 只点了三个;第四个 `test_wk_save_mana_lock_census.lua` 是**拿暂存的死行**找出来的),
+     并**在暂存了 #794 逐字那一行的语料上**实测六个文件全绿 ⇒ 那份 fixture 现在**可以落地**,
+     **不必重新基线化任何一个数**。⚠️ 同时把第一版 §5 里的 `dead rows == 0` **删掉**:
+     那是一条**对着那份 fixture 自己的绊线**,会把同一个 push 以另一个文件名再退回去一次。
+     现在 §5 钉的是「四个普查**都带**谓词」(源码断言)+ 可升不可降的 ratchet。
+   - ⚠️ **第四条 —— 变异台存活的那一个不许写成「谓词多余」。** 四个谓词逐个拆:census/floor/ceiling
+     三个被杀(其中 ceiling 复现的正是 #794 那句「disagrees with **2**」⇒ **模型没失效,
+     那条分歧就是那行尸体**);`test_wk_reserve_idle_release` **存活**,因为它的 abilities 谓词
+     先挡住了(死亡帧 dumper 不采技能)⇒ 那里 liveness 是**第二道、今天不承重**的声明,
+     照实写进注释。⚠️ 另:那一行的 `max_mp` **是 308 不是 0**,「尸体报 0 蓝」**不是**原因,不许引。
+   - **卫生债当轮还清**:清掉 trunk 上别人的一条红(`test_bots_walk_farm_only.py`;
+     `test_tpdeftower_outpost_narrow.lua` 的 walk 未登记而**调用点注释自称已登记**,
+     随 `87ef8628` 落地 —— GH #774/#624 同形),实测 `8 checks, 0 failed`;
+     本轮自顶红 `test_level_premise_registry`(指纹 `'dead row'` **同形异义**),
+     改**本组措辞**修回,**未动那份指纹表**。
+   - **⭐ 下一轮最该做的,按顺序**:
+     1. ⛔ **不要再开 `X.ShouldSaveMana` 的 rank 盲区(`wksaverank` 这一类)** —— 本轮量过:
+        本文件**两套 build 行的第 6 位都是 `6`**(`{2,1,2,3,2,6,…}` / `{2,1,3,3,1,6,…}`)
+        ⇒ `nLV >= 6` 与「R 已学」**逐级等价**,代理是**精确**的。**缺口是真的,杠杆不是。**
+        (§6 那条登记继续留着,但它是个**登记**不是一根待落的杠杆。)
+     2. ⭐ **一个已登记前提被 GH #366 的读数推翻,而它还站在出厂抬头里 —— 下一根该读的源码就是它。**
+        `X.IsReincarnationReserveIdle` 抬头写着「the reserve already collapses on its own at R rank 3」,
+        但 **R 的第三点是 build 行第 15 位**,而 `tests/test_skill_point_stall_frame.lua` 把 GH #366
+        判成 (a):十个英雄(17–22 级)**全部**停在 **13 加点 + 至多 1 天赋**,第 15 位是一堵墙
+        ⇒ **rank 3 在真实对局里到不了**,那句「自己塌掉」的逃生口不存在,后期储备是**常驻 110 蓝**。
+        ⚠️ 那份读数的 LIMIT 是**一帧一局一瞬间**,按「已登记读数」引,不当普遍真理;
+        但足以改掉抬头那句,并可能**加强** `wksaveidle` 的价值论证。
+     3. **同形异义登记**:`test_level_premise_registry.lua` 的 `'dead row'` 指纹分不出
+        「加点行」与「死亡帧行」,随 liveness 口径铺开会越撞越多。**量具,只能当附带项**或交 `[harness]`。
+     4. GH **#785**(Lion `X.MayKillTarget` 形参只守约一半)仍开着 —— 卫生,只能当附带项。
+
 -162. ✅ **`-161` 的三条「下一轮」全部不导向一个可落地的主体(一条要价值论证、一条被明令禁止、
    一条是卫生),于是本轮按 P4.4 (i) 自选,换一个新形状并落地** —— 本轮
    (报告 `iterations/reports/hero/20260913T015440Z.md`,落地 sha **`a3c75c64`**,附带 **GH #795**)落地 **`wkbonebank`**
@@ -7181,6 +7233,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-13T04:59Z(报告 `iterations/reports/hero/20260913T045952Z.md`;**backlog:新开 `-163`**;
+  **认领 GH #794**(章程工作流第 1 步:唯一一条未认领、带证据的 `[hero]` issue);
+  ⚠️ **P4.4 偏离并写明理由** —— 主体是一条 issue 裁定,`bots/` 只有注释、**零行为改动**,
+  因为**裁定的内容就是「不加那个守卫」**,为凑配额去加它等于用配额推翻裁定)
+  **GH #794 裁定:(乙) 驱动侧 —— 而且 issue 自己的归因被复现证否。**
+  - ⭐ **nil 不是 `GetManaCost()`,是 `nLV`。** 语料现存 3 行「无 abilities」的 WK **全部活着、
+    全部答 `GetManaCost()=0`(不是 nil)、全部不崩**(`ShouldSaveMana -> false`);暂存一行
+    **死** WK 才崩,报错行是链的**第一个**比较 `local bShipped = nLV >= 6`。
+    issue 引的是那条跨行表达式的**最后一行** —— Lua 报在**算符所在行**,不是表达式末行。
+  - ⭐⭐ **裁向驱动侧的理由是出厂代码自己声明了两遍的前置条件**:
+    `bots/ability_item_usage_generic.lua` 的 `AbilityUsageThink` 在调用 `SkillsComplement`
+    **之前**就 `not bot:IsAlive()` 返回;`X.SkillsComplement` 第一条语句是
+    `J.CanNotUseAbility( bot )` 返回,而它的**第一个析取项**就是 `not bot:IsAlive()`
+    (`jmz_func.lua:114`),该文件所有逐帧状态(`nLV`/`nMP`/`nHP`)都在那条 return **之下**赋值。
+    ⇒ 在调用点加 nil 守卫 = 替出厂代码防一个**它结构上拒绝进入**的状态,
+    并把**一次响亮的崩溃换成一个安静的答案**,而那答案的每一项都是**缺席**。
+  - **棒送到底**:liveness 谓词落进**四个** WK 普查(issue 点了三个;第四个
+    `test_wk_save_mana_lock_census.lua` 是本轮**拿暂存死行**找出来的 —— 它 §1 **驱动**未计价那一桶)。
+    **暂存 #794 逐字那一行后六个文件实测全绿**(含 `test_wk_rank0_absence_join`)
+    ⇒ **录像检查组下一轮可直接落地那份 fixture,不必重新基线化任何一个数**。
+    新测试 `tests/test_wk_dead_row_precondition.lua`(**5 绿**,§4 **解析源码取行号、不引行号**)。
+  - ⭐ **「第二个 mana model 分歧」复现并归因了**:暂存逐字那一行,
+    `test_wk_roshan_mana_ceiling` 就报它报的那句「disagrees with **2**」,补谓词后回到 1
+    ⇒ **模型没失效,那条分歧就是那行尸体**。⚠️ 机理别说错:那一行 `max_mp` **是 308 不是 0**,
+    「尸体报 0 蓝」不是原因,不许这么引。
+  - ⚠️ **变异台四拆两杀两活,存活的照实记**:census / floor / ceiling 三个**承重**(各被杀);
+    `test_wk_reserve_idle_release` **存活** —— 它的 abilities 谓词先把那行挡了
+    (死亡帧 dumper 不采技能)⇒ 那里 liveness 是**第二道、今天不承重**的声明,已写进该文件注释,
+    **不写成承重**。
+  - ⚠️ **交回录像检查组一个问题**:#794 报 `reserve_idle_release` 计价语料 **33 → 34**,
+    而它逐字引的那行**做不到**(无 abilities ⇒ 不计价)⇒ 那 +1 来自别的东西
+    (第二行 WK 或第二份 fixture),只有握着被撤回 fixture 的组说得清。已写进 issue 追评。
+  - **附带**:清掉 trunk 上别人的一条红(`test_bots_walk_farm_only.py`,
+    `test_tpdeftower_outpost_narrow.lua` 的 walk 未登记而**其调用点注释自称已登记**,
+    随 `87ef8628` 落地 —— GH #774/#624 同形),实测 `8 checks, 0 failed`;
+    本轮自顶红 `test_level_premise_registry`(指纹 `'dead row'` **同形异义**:加点行 vs 死亡帧行),
+    **改本组措辞**修回,**没动那份指纹表**。
 - 2026-09-13T01:54Z(报告 `iterations/reports/hero/20260913T015440Z.md`,落地 sha **`a3c75c64`**,**GH #795**;**backlog:新开 `-162`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`wkbonebank`(Wraith King,gated,turbo-only,未 armed,方向=**加宽**):

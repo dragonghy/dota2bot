@@ -89,7 +89,18 @@ local function split_corpus()
         local ok, fx = pcall(dofile, path)
         if ok and type(fx) == 'table' and type(fx.units) == 'table' then
             for _, u in ipairs(fx.units) do
-                if u.name == WK then
+                -- ⭐ LIVENESS, added 2026-09-13 under the GH #794 ruling
+                -- (tests/test_wk_dead_row_precondition.lua).  #794 named three
+                -- files; a staged dead row shows this is the FOURTH, and the
+                -- worst of them: section 1 below DRIVES X.ShouldSaveMana over
+                -- the unpriced bucket, and on a dead row that raises rather
+                -- than answering, because the shipped file assigns nLV/nMP/nHP
+                -- only past X.SkillsComplement's `J.CanNotUseAbility( bot )`
+                -- return.  A corpse is not a frame on which a mana decision was
+                -- taken, so it leaves the population entirely rather than
+                -- joining the unpriced bucket.  Disjoint from the abilities
+                -- predicate on today's corpus; changes no count today.
+                if u.name == WK and u.alive ~= false then
                     local row = { path = path, unit = u }
                     if type(u.abilities) == 'table' then
                         priced[#priced + 1] = row
