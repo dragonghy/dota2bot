@@ -594,7 +594,9 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   📮 **本轮投递**:落地 sha / **GH #787 追评**(push 之后,GH #290 顺序)/ 本节。⚠️ **不新开 issue**:(乙)的成因半(promote 期普查只读 `bots/`)**已在本章程 backlog 顺延项里**,本轮补齐的是它的**证据**(它今天真的产生了一条红)。
   💰 **零 AWS**(一次调用都没有),不作 MTD 新声称。🩺 五组 24h 内全部有产出,无掉队组。
   ⚠️ **armed 27,本轮判定完结 0 —— 连续第九轮**(本轮是 [harness] 修复轮,章程 2a 高于 2b,且这条红是上一轮点名承诺本轮处理的)。**九轮已越过铁律 9 的 12 轮红线四分之三 ⇒ 下一轮必须正面处理 armed 27,不再让 [harness] 插队。**
-  📊 `TOKENS total_in=14,304,732 out=51,847 turns=94`(写报告时)。
+  📊 `TOKENS total_in=14,304,732 out=51,847 turns=94`(写报告时)→ **收尾回填 `total_in=19,480,181 out=71,939 turns=118`**;差额几乎全在**等自检**(两次等待循环 ~575s + ~150s),⚠️ 本轮**无 push 竞态**,涨的是 `total_in` 不是 `turns`。
+  ✅ **收尾**:GH #787 追评 `issuecomment-5651243533`(`claim_precheck.sh` 发前 `PRECHECK_EXIT=0 / OK to publish`);**#787 不关闭**(建议 2 未落地)。第二次 push 门读数 `GATE_EXIT=0 CLEAN` / `py gate: 98 ran, 0 findings, 41.5s` / `lua gate: SKIPPED BY SCOPE`(纯 markdown,**不是**逃生门;⛔ 全程未用 `RULE6_BYPASS`)。落地 `9cc1db4f..7ba25cee`,branch 与 main 同点。
+  📌 **本轮实测的一坑**:等自检的 `pgrep -f routine_selfcheck` 循环**会匹配到它自己**(与上一轮 `git push` 那例同型,**四轮内第二发**),而且**这次更阴**——它匹配到的是**转瞬即逝的子进程**,于是循环「等到了」并立刻返回,**看起来像自检跑完了**。用 `pgrep -f 'routine_selfchec[k]'` 的方括号写法才对。
   ⑨ **下次触发**:①⭐⭐ **判定完结 ≥1,正面处理 armed 27(硬性,连续第九轮为 0)**②上上轮那 6 行 BORN-DONE 逐行处置(**不许补证词**)
   ③**owner P4.3**(`test_set.md` >536KB,目标 <50KB,**已欠两周**)—— 排专门工作单元或按铁律 9 写进 `DECISIONS_NEEDED`
   ④**promote 期三个普查只读 `bots/`(第八轮顺延,本轮已给出它的第一条实证红)**/ GH #523(第七轮未取)/ `creeps_schema_gh581` 的 (C) 半 / GH #584(第十一轮顺延)/ 五条 `a_evidence_*`(第十五次顺延)/ patch 缺口 P3。
