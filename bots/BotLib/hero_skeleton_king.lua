@@ -1524,6 +1524,94 @@ function X.IsBoneGuardEnemyCountOk( nEnemies, tEnemies, nRadius )
 	return nEnemies == 1
 end
 
+-- The smallest bank the SHIPPED rule is willing to spend anywhere on the ladder:
+-- rank 1 holds max_skeleton_charges 2, and 2/2 = 1.0 clears 0.6.  It is written
+-- here as a named constant rather than inline because it is not a tuning knob --
+-- it is read OFF the shipped rule, and section 3 of
+-- tests/test_wk_bone_guard_bank_floor.lua re-derives it from the ladder instead
+-- of trusting this line.
+X.nBoneGuardShippedFloor = 2
+
+--- [wkbonebank] X.ConsiderW's attack branch prices the skeleton bank as a RATIO
+--- of the bank's own capacity (`nStack / maxStack >= 0.6`) while every term the
+--- release is worth is an ABSOLUTE count.  Bone Guard fields one skeleton per
+--- charge; this file's own re-anchored KV block (:44 region, live datafeed
+--- 2026-08-22) gives max_skeleton_charges 2/4/6/8 and skeleton damage
+--- 34/39/43/49 with +25 more against heroes.  Ratio against an absolute payoff
+--- makes the rule NON-MONOTONE IN RANK -- it refuses states that strictly
+--- dominate states it accepts:
+---
+---   rank  maxStack  ratio needs (integer bank)  per-skeleton hero damage
+---     1       2               2                          59
+---     2       4               3                          64
+---     3       6               4                          68
+---     4       8               5                          74
+---
+---   bank 4 @ rank 3 -> 4/6 = 0.67  ACCEPTED,  4 x 68 = 272 hero damage
+---   bank 4 @ rank 4 -> 4/8 = 0.50  REFUSED,   4 x 74 = 296 hero damage
+---
+--- Same bank, same 100-mana 42s-cooldown release, MORE damage per skeleton, and
+--- the rule flips to no.  The same inversion stands at bank 3 (accepted at rank
+--- 2, refused at 3 and 4) and bank 2 (accepted at rank 1, refused at 2, 3 and 4).
+--- Three inversions, all pointing the same way: the gate tightens in absolute
+--- terms exactly where each charge is worth most.
+---
+--- WHAT THE ARMED LEG ADDS, and why the floor is 2 and not a new number: the
+--- added states are (rank r, bank b) with 2 <= b < the ratio threshold at r, so
+--- b is 2, 3 or 4.  For each of them there is a LOWER rank at which the shipped
+--- rule already commits on that same bank (b=2 -> rank 1, b=3 -> rank 2, b=4 ->
+--- rank 2 or 3), with strictly weaker skeletons.  So the armed leg invents no
+--- willingness this file does not already display; it is the monotone closure of
+--- the shipped rule, and section 4 of the test re-derives that closure rather
+--- than asserting the 2.
+---
+--- DIRECTION IS GUARANTEED BY CONSTRUCTION, not by data (the `wkbonefight`
+--- reading of 2026-09-09, state.json:wkbonefight_ring_20260909, is the in-repo
+--- precedent for insisting on this): the shipped predicate is computed and bound
+--- FIRST and returned on its own whenever it is true, so arming can only move
+--- this answer false -> true.  A negative wave read may therefore be attributed
+--- to "it releases too often", NEVER to "the lever ate a shipped release".
+---
+--- WHAT THIS CANNOT SHOW, said plainly.  `nStack` is a MODIFIER STACK COUNT, and
+--- tools/batch_test/replayscope/make_fixture.py dumps no modifiers at all -- 0 of
+--- the fixture corpus carries modifier_skeleton_king_bone_guard.  So no frame
+--- this repo holds can drive this conjunct end to end, and the `hero-31` domain
+--- reading delivered 2026-09-06 says the same thing from the other side: its
+--- own section 6 records that charge stack counts could not be bought, which is
+--- exactly WHY its first three columns are upper bounds.  The unmeasured filter
+--- behind that "upper bound" is this conjunct, and until 2026-09-13 nobody had
+--- asked whether it was correct.  What the corpus CAN carry is the RANK half --
+--- ability levels are dumped, and the corpus holds real Bone Guard frames at all
+--- four ranks (4/4/7/18) -- so the test pins the inversion on real frames for
+--- rank and declares the bank unrepresentable.  Frequency is not priced here;
+--- that is queue.json hero-70 (zero EC2).
+---
+--- SECOND ID ON THE SAME `if`, registered rather than left as a surprise:
+--- `wkbonefight` gates the enemy-count conjunct of this same branch.  The two are
+--- independent AND-ed conjuncts and each arms alone, but arming BOTH widens the
+--- branch more than either does by itself, so a bundle read must not be
+--- attributed to either one.
+function X.wk_IsBoneGuardBankCommittable( nStack, maxStack )
+
+	-- Byte for byte the shipped expression, including its absence of a
+	-- maxStack > 0 guard: with maxStack 0 Lua 5.1 answers inf (bank > 0) or nan
+	-- (bank 0), and `inf >= 0.6` / `nan >= 0.6` are what the shipped branch
+	-- already does today.  Adding a guard here would change gate-OFF behavior.
+	local bShipped = nStack / maxStack >= 0.6
+
+	if bShipped
+	then
+		return true
+	end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkbonebank' ) )
+	then
+		return false
+	end
+
+	return nStack >= X.nBoneGuardShippedFloor
+end
+
 function X.ConsiderW()
 	if not abilityW:IsFullyCastable()
 		or not bot:HasModifier( "modifier_skeleton_king_bone_guard" )
@@ -1549,7 +1637,7 @@ function X.ConsiderW()
 	if J.IsValidHero( npcTarget )
 		and X.IsBoneGuardEnemyCountOk( #nEnemysHerosInView, nEnemysHerosInView, nEngageRange )
 		and J.IsInRange( npcTarget, bot, nEngageRange )
-		and ( nStack / maxStack >= 0.6 or talent6:IsTrained() )
+		and ( X.wk_IsBoneGuardBankCommittable( nStack, maxStack ) or talent6:IsTrained() )
 	then
 		return BOT_ACTION_DESIRE_HIGH
 	end

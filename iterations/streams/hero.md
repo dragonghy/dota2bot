@@ -22,6 +22,63 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-162. ✅ **`-161` 的三条「下一轮」全部不导向一个可落地的主体(一条要价值论证、一条被明令禁止、
+   一条是卫生),于是本轮按 P4.4 (i) 自选,换一个新形状并落地** —— 本轮
+   (报告 `iterations/reports/hero/20260913T015440Z.md`)落地 **`wkbonebank`**
+   (Wraith King,gated,turbo-only,**加宽**),**并把 CM 那根判成「不动」写死**。
+   ⭐ **新形状:「比率定价一个绝对收益」。** `hero_skeleton_king.lua` `X.ConsiderW` 进攻分支
+   用 `nStack / maxStack >= 0.6` 给骷髅存量定价,而这发释放值多少钱的每一项都是**绝对计数**
+   (每层充能出一只骷髅)。按本文件自己重锚的 KV(`max_skeleton_charges` 2/4/6/8、骷髅伤害
+   34/39/43/49、对英雄另加 25),比率要的整数存量是 **2/3/4/5** ⇒ 规则在 rank 上**非单调**:
+   **存量 4 @ rank 3 接受(272 伤害)、@ rank 4 拒绝(296 伤害)** —— 同一份存量、同一发
+   100 蓝/42s 冷却、骷髅更疼,答案翻成不。存量 3、存量 2 同形 ⇒ **三处支配反转,方向一致**。
+   id 登记 `state.json:wkbonebank_20260913`;取证请求 `queue.json:hero-70`(**零 EC2**);
+   测试 `tests/test_wk_bone_guard_bank_floor.lua`(**13 绿**),变异台
+   `tools/agent/mutstand_wkbonebank.sh`(**10/10**)。
+   - ⭐ **第一条,本轮最该被人读到的 —— 一份已发表读数自己声明的那个上界,就是下一根杠杆的坐标。**
+     `wkbonefight` 的域读数(`queue.json:hero-31`,09-06 交付、09-09 消费)在它自己的 §6 写着
+     「**(4) 充能层数买不到** ⇒ 前三列是上界」。那句话点名的**未测滤波器就是本轮这个合取项** ——
+     它在一份已发表读数底下当了四天未知量,而**没有人问过它对不对**;而它根本不需要新读数才能问:
+     **域买不到 ≠ 逻辑读不了**,本轮读的是源码,花费为零。
+     ⇒ **凡是读数自己写着「这一列买不到」的,那一列就是下一轮该去读源码的地方。**
+   - ⛔ **第二条 —— 「形状对」不等于「该动」,而本轮第一次为此**否掉**一根形状齐全的杠杆。**
+     `-161` 挂起的 CM `:1772/:1794` `DotaTime() > 10 * 60`,本轮按它的要求做了价值论证,
+     **结论是不动**:那个析取放行的是「用 Frostbite 点兵线兵打钱」,而 `AGENTS.md` 的
+     hard-won learnings 里有一条**已经付过钱的负读数**正对着它(`c3` −37 GPM、`corefarm`
+     −17 GPM,两者 0/4;「Turbo 经济是 kill/push/passive 驱动,低 CS 是症状不是杠杆」),
+     且本文件自己还带着 `X._nopush_ShouldSuppressWaveShove`(:685)—— 这棵树**已经**学过推波不好。
+     ⇒ **要动一座钟,先说清它挡着的是哪条收益通道**(`cmtfclock`/`axecallclock`/`lionpushclock`
+     开的是打架/控制/推塔通道,CM 这根开的是**农兵**通道),再去对照那条通道上有没有已付费的读数。
+     ⭐ **焦点五英雄的整点宵禁 census 到此收工**(Zeus 的 `DotaTime() > 0` 不是宵禁、WK 零处、
+     Axe 已 gated、Lion 已落地、CM 判不动并说明理由)—— **下一轮不要再开它**。
+   - ⛔ **第三条 —— 「加宽」有两种,而数格子分不出来;要见证者才分得出来。** 地板 2 不是调参,
+     是出货规则**自己的单调闭包**:armed 新增的格子(rank r, 存量 b∈{2,3,4})每一个都存在一个
+     **更低的 rank**,在那儿出货规则本来就对同一份存量出手,而那儿的骷髅**更弱**。测试 §4.2
+     因此**逐格去找那个更低-rank 见证者**,不是数格子 —— 变异台 **M6**(`>=` 改 `<=`)正是那个
+     「照样是加宽(**11 格 > 6 格**)、照样过全部闸管道测试、却把**空存量**也放进来」的变异,
+     **数格子抓不住它**。⇒ 凡是声称「本杠杆只加不减」的,除了证明超集,还要证明**加的是哪一类**。
+   - ⚠️ **第四条 —— 同一个 `if` 上的第二根 id 要当场登记。** `wkbonefight` 闸的是同一分支的
+     **敌人数**合取项,本 id 闸的是**存量**合取项。两者独立、各自可单独 arm,但**同时 arm 比任何
+     一个单独 arm 都宽** ⇒ 捆绑读数不得归因给其中任何一个。变异台 **M8** 就是「把它俩合取起来」
+     这个格外诱人的 pullcad 陷阱。
+   - **卫生债当轮还清**:新测试的两处 `io.popen` 目录 walk 已带 `UNRESOLVED_HAND_READ` 注记;
+     实跑 `tests/test_bots_walk_farm_only.py` = **8 checks, 0 failed**。
+     ⚠️ **新测试没有登进 `lua_gate` manifest,这是故意的**:GH #783 —— 登记动作(re-measure)
+     会清空 `known_red` 赦免名单,等于让下一个人的 push 被既存红挡下。它**不在 manifest 里也照样
+     被跑了**(`lua_gate.py` 的「36 new tests run anyway」名单,未超预算),`LUAGATE_EXIT=0`。
+   - **⭐ 下一轮最该做的两件,按顺序**:
+     1. ⭐ **接着找「一份读数自己声明的未测列」** —— 本轮的方法在 `hero-31` 上一次就兑现了。
+        判据:`queue.json` 里 `result` 非空的 `hero-*` 行,搜它自己写的「买不到 / 上界 / 未测」,
+        那一列若是**源码里读得出来的逻辑**(不是频率),就是下一根杠杆。
+        ⚠️ 已量掉的别重开:`-154` 九 + `-155` 三 + `-156` 四 + `-157` 四 + `-158` 四 + `-159` 六 +
+        `-160` 一 + `-161`(五文件宵禁 census)+ 本轮(**CM 那根判死,宵禁 census 收工**)。
+     2. **`wkbonebank` 的下一棒不在本组**:`hero-70` 的域频率读数出来之前,不要在 `X.ConsiderW`
+        上再开 id —— 这个分支已经有 `wkbonefight` 与本 id 两条,而**存量那一半本地结构上买不到**
+        (`nStack` 是 modifier 层数,dumper 一个 modifier 都不 dump,`modifier_skeleton_king_bone_guard`
+        0/111 帧;同族 GH #786 / #781)。
+     3. GH **#785**(Lion `X.MayKillTarget` 形参只守约一半)仍开着 —— **卫生不是行为**,
+        按 P4.4 只能当附带项,不能当工作单元主体。
+
 -161. ✅ **`-160` 第 1 条执行了:主体在 `bots/`,继续形状 census —— 但本轮换的是**作用域**不是形状,
    而那更便宜** —— 本轮(报告 `iterations/reports/hero/20260912T225717Z.md`,**GH #793**)落地
    **`lionpushclock`**(Lion,gated,turbo-only,**加宽**)。
@@ -7124,6 +7181,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-13T01:54Z(报告 `iterations/reports/hero/20260913T015440Z.md`;**backlog:新开 `-162`**;
+  OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
+  **`wkbonebank`(Wraith King,gated,turbo-only,未 armed,方向=**加宽**):
+  一条释放规则可以在能力等级上**非单调** —— 它拒绝的状态**严格支配**着它接受的状态。**
+  - **缺陷**:`X.ConsiderW` 进攻分支的 `nStack / maxStack >= 0.6` 把骷髅存量定价成**自己容量的
+    比率**,而这发释放值多少钱的每一项都是**绝对计数**(Bone Guard 每层充能出一只骷髅)。
+    按本文件 2026-08-22 重锚的 KV(`max_skeleton_charges` 2/4/6/8、骷髅伤害 34/39/43/49、
+    对英雄另加 25),比率要的**整数**存量是 **2/3/4/5**:
+    **存量 4 @ rank 3 → 4/6 = 0.67 接受(4 × 68 = 272);@ rank 4 → 4/8 = 0.50 拒绝(4 × 74 = 296)**。
+    同一份存量、同一发 100 蓝/定长 42s 冷却、每只骷髅**更疼**,答案翻成不。存量 3(rank 2 接受、
+    3 与 4 拒绝)与存量 2(rank 1 接受、2/3/4 拒绝)同形 ⇒ **三处支配反转,方向全部一致:
+    闸在每层充能最值钱的地方收得最紧**。
+  - ⚠️ **不是「文件里没写过这串算术」**:`:104` 区域**逐字印着** `1.2 / 2.4 / 3.6 / 4.8` 那道阶梯,
+    印在那儿是为了论证**加点行**。**没有人把它横着读一遍**(固定存量、扫 rank)。新的是那一横行。
+  - ⭐ **这根的坐标是一份已发表读数自己给的**:`wkbonefight` 域读数(`queue.json:hero-31`)的 §6
+    写着「(4) 充能层数买不到 ⇒ 前三列是上界」—— 那个未测滤波器**就是本合取项**,
+    它在读数底下当了四天未知量而没人问过它对不对。**域买不到 ≠ 逻辑读不了。**
+  - **落地**:helper `X.wk_IsBoneGuardBankCommittable( nStack, maxStack )` + 具名常数
+    `X.nBoneGuardShippedFloor = 2`。**闸关逐字节复现出货**,含**不加** `maxStack > 0` 守卫
+    (Lua 5.1:`2/0 = inf` 为真、`0/0 = nan` 为假;加守卫就是改出货行为,§7 钉死,M9 是控制)。
+    id 登记 `state.json:wkbonebank_20260913`;取证请求 `queue.json:hero-70`(**零 EC2**);
+    测试 `tests/test_wk_bone_guard_bank_floor.lua`(**13 绿**),变异台
+    `tools/agent/mutstand_wkbonebank.sh`(**10/10**,baseline 真绿 13/0)。
+  - ⛔ **本轮第二个产物:CM 那根判「不动」** —— `-161` 挂起的 `hero_crystal_maiden.lua`
+    `:1772/:1794` `DotaTime() > 10 * 60`,价值论证做了,结论是**不落**:它开的是**农兵**通道,
+    而 `AGENTS.md` 在那条通道上有**已付过钱的负读数**(`c3` −37 GPM、`corefarm` −17 GPM,0/4)。
+    **焦点五英雄的整点宵禁 census 到此收工,下一轮不要再开。**
+  - ⛔ **频率本轮一个数都没有,且本地结构上买不到**:`nStack` 是 modifier 层数,dumper
+    **一个 modifier 都不 dump**(`modifier_skeleton_king_bone_guard` **0 / 111 帧**,§5.1 钉这个零,
+    并写明「哪天它不是零了是好消息不是回归」)。语料**能**承的是 **rank 那一半**
+    (Bone Guard rank 1/2/3/4 各 **4/4/7/18** 帧,共 33)⇒ §6 把头号反转钉在**真实对局里
+    真的到得了的两个 rank** 上。同族:GH #786 / #781。
+  - **铁律 6**:`GATE_EXIT=0 CLEAN`(luacheck bots game **0 警告**)、`LUAGATE_EXIT=0`、
+    `smoke_load` 3/0、`test_bots_walk_farm_only.py` 8 checks 0 failed。
+    ⚠️ **trunk 上三条 python red 先于本轮存在**(`git stash -u` 实测,干净树上逐条仍红,
+    `stash pop` 后工作树完整):`test_carrier_terms.py` / `test_detector_source_constants.py`(GH #787)/
+    **`test_py_gate_hook.py`** —— 最后这条红的正是「红的棘轮必须**拒绝** push」(实测 `got 0`),
+    落在 push 路径上,**已在报告 §6/§7 交棒给总监**(GH #624 家族,疑与
+    `e6ef15d` 的 push-gate memoize 相关)。
 - 2026-09-12T22:57Z(报告 `iterations/reports/hero/20260912T225717Z.md`,**GH #793**;**backlog:新开 `-161`**;
   OWNER_PRIORITIES **P4.4 (i)** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期内不请求入集**)
   **`lionpushclock`(Lion,gated,turbo-only,未 armed,方向=**加宽**):

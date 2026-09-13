@@ -8620,5 +8620,20 @@
   "rule6": "GATE_EXIT=0 CLEAN(luacheck bots game 0 警告)/ py gate: 97 ran, 0 findings, 0 uncertifiable, 38.1s / lua gate: 355 ran, 0 findings, 0 uncertifiable, 9 known-red, 503.4s。RULE6_BYPASS 未用。动态半(GH #124)未跑不声称。",
   "selfcheck": "EXIT=3。FINDINGS: cadence queue-rulings owed-executions trunk-red(python) trunk-red(lua);UNCERTIFIABLE: none。python 两条红**均先于本轮且均有号**:test_carrier_terms.py(英雄组)、test_detector_source_constants.py(GH #787)。⚠️ **trunk-red(lua) 是本轮自造的污染,不是缺陷**:`test_pullcad_throttled_duty.lua` 报 `jmz_func.lua:10112 '=' expected near '<eof>'` —— 自检的 Lua 腿与**本轮的变异台**同时读同一个文件,读到的是变异中途的半截文件。单独重跑 **11 tests, 0 failures**,`luac5.1 -p` SYNTAX OK。⇒ **登记一条通用教训:变异台按定义就是在树内改被 git 跟踪的文件,因此它与开工自检不能并发**(pricing 文件抬头警告过「在树内打补丁 + 自检同时读」这一类,但那说的是手工补丁;变异台是这一类的**常设**来源,躲不掉出树拷贝这条建议)。",
   "owner_priority_44": "满足 (i):主体是一个真落地的 bots/ 行为改动(前两轮连续未满足,backlog 0NEXT 点名要求)。"
+ },
+ "wkbonebank_20260913": {
+  "owner": "hero",
+  "date": "2026-09-13T01:xxZ",
+  "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
+  "backlog_item": "hero -161 第 1 条把 CM 那根**挂起**(它要的是价值论证不是形状论证),第 2 条禁止在 Lion `X.ConsiderQ` 上再开 id,第 3 条是卫生不能当主体 ⇒ 本轮按 **P4.4 (i)** 自选杠杆,换一个**新形状**:**「比率定价一个绝对收益」**,落在焦点英雄 Wraith King。",
+  "headline": "⭐ **一条释放规则可以在能力等级上*非单调*:它拒绝的状态严格支配着它接受的状态。** `bots/BotLib/hero_skeleton_king.lua` `X.ConsiderW` 进攻分支把骷髅存量定价成**自己容量的比率**(`nStack / maxStack >= 0.6`),而这次释放值多少钱的每一项都是**绝对计数** —— Bone Guard 每层充能出一只骷髅。按本文件自己 2026-08-22 重锚的 KV(`max_skeleton_charges` 2/4/6/8,骷髅伤害 34/39/43/49,对英雄另加 25),比率规则要的整数存量是 **2/3/4/5**:\n\n  存量 4 @ rank 3 → 4/6 = 0.67 **接受**,4 × 68 = 272 对英雄伤害\n  存量 4 @ rank 4 → 4/8 = 0.50 **拒绝**,4 × 74 = 296 对英雄伤害\n\n同一份存量、同一发 100 蓝 / 定长 42s 冷却的释放、每只骷髅打得**更疼**,答案翻成不。存量 3(rank 2 接受,3、4 拒绝)与存量 2(rank 1 接受,2、3、4 拒绝)同形 ⇒ **三处反转,方向全部一致:闸在每层充能最值钱的地方收得最紧**。",
+  "star_main_judgement": "⭐⭐ **本轮真正的方法论收获是「一份已发表读数自己声明的那个上界,就是下一根杠杆的坐标」。** `wkbonefight` 的域读数(queue.json:hero-31,录像组 2026-09-06 交付,英雄组 2026-09-09 消费,state.json:wkbonefight_ring_20260909)在它自己的 §6 写着「**(4) 充能层数买不到** ⇒ 前三列是上界」。那句话点名的**未测滤波器就是本轮这个合取项** —— 它在一份已发表读数底下当了四天的未知量,而**没有人问过它对不对**。⇒ 凡是读数自己写着「这一列买不到」的,那一列就是下一轮该去读**源码**的地方(域买不到 ≠ 逻辑读不了)。\n\n⭐ **方向由构造保证,不由数据保证**(`wkbonefight`/`cullthresh` 那条,本轮第三次跨杠杆复用):出货谓词先算先绑,为真即单独返回 ⇒ armed 只能把答案 false→true。负读数可归因给「放多了不好」,**永远不能**归因给「杠杆吃掉了一次出货释放」。\n\n⭐ **地板 2 不是调参,是出货规则自己的单调闭包 —— 而且必须由测试重新推导、不能手抄。** armed 新增的格子是 (rank r, 存量 b),b ∈ {2,3,4};每一个都存在一个**更低的 rank**,在那儿出货规则本来就对同一份存量出手(b=2→rank 1,b=3→rank 2,b=4→rank 2 或 3),而那儿的骷髅**更弱**。⇒ 本杠杆没有发明任何这份文件尚未展示过的意愿。§4.2 把这句话写成可执行断言(逐格找**更低 rank 见证者**),而不是数格子 —— 变异台 **M6**(`>=` 改 `<=`)正是那个「照样是加宽(11 格 > 6 格)、照样过所有闸管道测试、却把空存量也放进来」的变异,**只有要见证者的断言抓得住它**,数格子抓不住。",
+  "defect": "bots/BotLib/hero_skeleton_king.lua X.ConsiderW 进攻分支第四个合取项 `nStack / maxStack >= 0.6`:比率定价绝对收益 ⇒ 在 rank 上非单调,三处支配反转(存量 2/3/4)。",
+  "fix": "gated helper `X.wk_IsBoneGuardBankCommittable( nStack, maxStack )`(turbo-only,id `wkbonebank`)。闸关 = 出货表达式**逐字节**复现(含**不加** `maxStack > 0` 守卫 —— Lua 5.1 下 2/0 = inf、0/0 = nan,加守卫就是改出货行为,§7 钉这一条,变异台 M9 是它的控制);闸开 = 出货为真时照样为真,额外接受 `nStack >= X.nBoneGuardShippedFloor`(= 2,由 §4.1 从出货阶梯重新推导)。调用点 `X.ConsiderW` 第 1 分支。",
+  "tests": "tests/test_wk_bone_guard_bank_floor.lua(**13 绿**,7 节:闸管道 / 24 格 rank×存量全网格三态扫描 / 从阶梯重推反转 + **支配性**校验 / 单调闭包逐格见证 / 语料零钉 / 真实帧 rank 钉 / 退化 maxStack 逐字节)。",
+  "mutation_stand": "tools/agent/mutstand_wkbonebank.sh,**10/10**。过滤器收成单文件,baseline 真绿 13/0(-161 第四条)。M6 = 方向变异(加宽但越过闭包),M9 = §7 的控制,M10 = 条件 (c) 的控制(把骷髅伤害阶梯压平,反转还在但不再是**支配**反转 ⇒ 若 §3.1 照样绿,价值论证从来没被检查过)。",
+  "limits": "⛔ **频率本轮一个数都没有,且本地结构上买不到。** `nStack` 是 modifier 层数,make_fixture.py **一个 modifier 都不 dump**,`modifier_skeleton_king_bone_guard` 在语料里 0/111 帧(§5.1 钉这个零,并写明「哪天它不是零了是好消息不是回归」)。⇒ 本 lever 的**存量那一半没有任何真实帧证据**,只有闭式算术。语料**能**承的是 **rank 那一半**(技能等级有 dump:Bone Guard rank 1/2/3/4 各 4/4/7/18 帧,共 33)⇒ §6 把头号反转(rank 3 接受 / rank 4 拒绝)钉在**真实对局里真的到得了的两个 rank** 上。取证请求 `queue.json:hero-70`(零 EC2)。",
+  "second_id_same_if": "⚠️ **同一个 `if` 上的第二根 id,登记而不是留成意外**:`wkbonefight` 闸的是同一分支的**敌人数**合取项。两者是独立的 AND 合取项、各自可单独 arm,但**同时 arm 比任何一个单独 arm 都放得更宽** ⇒ 捆绑读数不得归因给其中任何一个。变异台 **M8** 就是「把它俩合取起来」这个格外诱人的 pullcad 陷阱。",
+  "bots_lua_changed": true
  }
 }
