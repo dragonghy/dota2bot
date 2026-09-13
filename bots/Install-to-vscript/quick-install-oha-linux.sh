@@ -41,7 +41,7 @@ echo "Found Steam at: $steam_path"
 
 # Define paths
 dota_path="$steam_path/steamapps/common/dota 2 beta/game/dota/scripts/vscripts/bots"
-workshop_path="$steam_path/steamapps/workshop/content/570/3246316298"
+workshop_path="$steam_path/steamapps/workshop/content/570/3801134119"
 
 # Check if Dota 2 is installed
 if [ ! -d "$steam_path/steamapps/common/dota 2 beta" ]; then

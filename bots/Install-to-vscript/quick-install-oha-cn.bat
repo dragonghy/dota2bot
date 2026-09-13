@@ -44,8 +44,8 @@ if %errorlevel% equ 0 (
     echo ============
 ) else (
     echo ============
-    echo "1. 请在正确的文件夹 (Steam\steamapps\workshop\content\570\3246316298\Install-to-vscript) 内运行此文件"
-    echo "2. 如果你不知道这个Steam文件夹的位置，请在Steam库中右键点击Dota2，选择属性 > 已安装文件 > 浏览。" 这时会打开文件夹: "Steam\steamapps\common\dota 2 beta"，将地址中的 "common\dota 2 beta" 部分替换成 "workshop\content\570\3246316298\Install-to-vscript"，按下回车键即可打开正确的文件夹。 
+    echo "1. 请在正确的文件夹 (Steam\steamapps\workshop\content\570\3801134119\Install-to-vscript) 内运行此文件"
+    echo "2. 如果你不知道这个Steam文件夹的位置，请在Steam库中右键点击Dota2，选择属性 > 已安装文件 > 浏览。" 这时会打开文件夹: "Steam\steamapps\common\dota 2 beta"，将地址中的 "common\dota 2 beta" 部分替换成 "workshop\content\570\3801134119\Install-to-vscript"，按下回车键即可打开正确的文件夹。 
     echo "3. 请确保以管理员身份运行该文件"
     echo ============
     echo 创建失败!!!

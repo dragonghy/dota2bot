@@ -1,6 +1,6 @@
 ## Quick Install Scripts
 
-> **Note (upstream-inherited):** These scripts and instructions come from the upstream [OpenHyperAI](https://github.com/forest0xia/dota2bot-OpenHyperAI) project and reference *its* Steam Workshop item (`3246316298`). This fork is not on the Workshop yet — for a local checkout of this repo, just symlink or copy the repo's `bots/` folder to `<Steam>/steamapps/common/dota 2 beta/game/dota/scripts/vscripts/bots` (same target as below). Once this project publishes its own Workshop item, these scripts will be updated with the new ID.
+> **Note (upstream-inherited):** These scripts and instructions come from the upstream [OpenHyperAI](https://github.com/forest0xia/dota2bot-OpenHyperAI) project and reference *its* Steam Workshop item (`3801134119`). This project is now on the Workshop as item `3801134119` (beta-20260913, private until the owner flips it public); the scripts below point at it.
 
 These scripts create a symbolic link from the Steam Workshop download folder to the Dota 2 vscripts/bots folder. This lets the bot scripts load correctly in Custom Lobbies with **Local Host** server.
 
@@ -18,10 +18,10 @@ These scripts create a symbolic link from the Steam Workshop download folder to 
 ## Usage — Windows
 
 1. In Dota 2, subscribe to **Open Hyper AI** in the Steam Workshop. Wait for the download to complete.
-2. Navigate to folder: `Steam\steamapps\workshop\content\570\3246316298\Install-to-vscript`
+2. Navigate to folder: `Steam\steamapps\workshop\content\570\3801134119\Install-to-vscript`
 3. Double-click `quick-install-oha.bat` to install.
 
-**Finding the folder:** Right-click Dota 2 in your Steam Library → Properties → Installed Files → Browse. This opens `Steam\steamapps\common\dota 2 beta`. In the address bar, replace `common\dota 2 beta` with `workshop\content\570\3246316298\Install-to-vscript` and press Enter.
+**Finding the folder:** Right-click Dota 2 in your Steam Library → Properties → Installed Files → Browse. This opens `Steam\steamapps\common\dota 2 beta`. In the address bar, replace `common\dota 2 beta` with `workshop\content\570\3801134119\Install-to-vscript` and press Enter.
 
 ---
 
@@ -31,7 +31,7 @@ These scripts create a symbolic link from the Steam Workshop download folder to 
 2. Open Terminal.
 3. Navigate to the script folder:
     ```bash
-    cd ~/Library/Application\ Support/Steam/steamapps/workshop/content/570/3246316298/Install-to-vscript
+    cd ~/Library/Application\ Support/Steam/steamapps/workshop/content/570/3801134119/Install-to-vscript
     ```
 4. Make it executable and run:
     ```bash
@@ -48,8 +48,8 @@ These scripts create a symbolic link from the Steam Workshop download folder to 
 3. Navigate to the script folder (common Steam locations):
     ```bash
     # Try one of these:
-    cd ~/.steam/steam/steamapps/workshop/content/570/3246316298/Install-to-vscript
-    cd ~/.local/share/Steam/steamapps/workshop/content/570/3246316298/Install-to-vscript
+    cd ~/.steam/steam/steamapps/workshop/content/570/3801134119/Install-to-vscript
+    cd ~/.local/share/Steam/steamapps/workshop/content/570/3801134119/Install-to-vscript
     ```
 4. Make it executable and run:
     ```bash
@@ -66,7 +66,7 @@ The Linux script automatically checks multiple common Steam install locations (`
 The script creates a **symbolic link** from the Workshop folder to the Dota 2 vscripts directory:
 
 ```
-Workshop:  Steam/steamapps/workshop/content/570/3246316298
+Workshop:  Steam/steamapps/workshop/content/570/3801134119
      ↓ (symlink)
 Target:    Steam/steamapps/common/dota 2 beta/game/dota/scripts/vscripts/bots
 ```

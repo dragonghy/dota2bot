@@ -10,7 +10,7 @@ fi
 # Define paths
 steam_path="$HOME/Library/Application Support/Steam"
 dota_path="$steam_path/steamapps/common/dota 2 beta/game/dota/scripts/vscripts/bots"
-workshop_path="$steam_path/steamapps/workshop/content/570/3246316298"
+workshop_path="$steam_path/steamapps/workshop/content/570/3801134119"
 install_folder=$(cd "$(dirname "$0")" && pwd)
 
 # Check if Steam and Dota paths exist
