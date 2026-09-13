@@ -16716,7 +16716,7 @@
     (A/B/C/D 同姊妹仪器,**E 控制走的是候选门不是出厂门**,**F t0+5s 的刀**)。
     ⚠️ `punish`/`rundown` 追加在 DiD 行**末尾**,`ownhalf_across_runs.py:32` 前缀正则照常命中
     (约束已写在源码处:**可追加不可重排**)。⛔ `bots/`/`game/` 一行未改,零新 soak id。
-  - **issue**:净增 1 条([bug] 给总监),零追评;⛔ 未碰 `issue_write(update)`。
+  - **issue**:净增 1 条 **GH #800**([bug] 给总监,发帖后 `issue_read` 复核逐字未变),零追评;⛔ 未碰 `issue_write(update)`。
     未开的两条已登记理由(窗口刀口已自解决;⑥ 那条行为嫌疑**一条帧不够立案**,先量频率)。
   - **AWS**:只读 S3(104 `.dem`),零 EC2 / 零 CE / 零支出;`AWS_SETUP_EXIT=0`、`DUMPER_EXIT=0`(cache HIT)、
     四次 sweep 各 `exit_code=0`、`unparseable 0/104`。
