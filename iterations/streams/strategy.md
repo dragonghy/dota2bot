@@ -27,7 +27,47 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT6. **【2026-09-13T13:43Z 新增,**下一轮第一项**。主体继续留在 `bots/`**
+0NEXT7. **【2026-09-13T16:15Z 新增,**下一轮第一项**。主体继续留在 `bots/`**
+   (OWNER_PRIORITIES **4.4 (i)**;`chasering` 让它**连续第六轮**满足,**不要断**)。
+   0NEXT6 的判据(甲′三态 / 丙′ / 丁 / 戊 / 己 / 庚 / 辛 / 壬 / 癸 / 子)继续有效;本轮挣到三条新的,
+   **每一条都是被变异台或被闸顶出来的,不是读出来的**:
+   ⭐⭐ **(丑) 把域拆成两半的那把尺子,不许是被改的那个谓词自己。**
+   第一版把「环内/环外」用 `J.IsExistInTable`(= 收窄调用的那个 helper)去分,于是变异体
+   **M2 一改那个 helper,§2 的对数分布跟着一起塌** —— M2 被 §2 抓住而不是被 §3 抓住。
+   **看起来像灵敏,实际是轴和被试一起动**:那一刻 §2 不再是一条独立读数。改成内联身份循环后,
+   M2 只被 §3 的分支计数抓住,而那正是整份文件的论证落点。
+   ⇒ **凡是「域拆两半」的读数,先问「这把尺子会不会跟着我要改的东西一起动」。**
+   ⭐⭐ **(寅) 不能解析的变异体不是被试的变异体 —— 退化方向是假 CAUGHT。**
+   M2 第一版写成裸 `return true` 插在函数头下面;Lua 的 `return` 必须结束所在的块 ⇒
+   **整个 `jmz_func.lua` 语法错**,`rf.load` 全线失败,台子把 `load_fail` 记成「CAUGHT」。
+   **「文件根本没载入」的红与「断言抓住了缺陷」的红,在计分板上一模一样。**
+   ⇒ **每条变异体都要问一句「它编译吗」**;改成 `if true then return true end` 才是真 M2。
+   ⭐ **(卯) 「效应为零」要分清 by construction 与 by sampling,而分法是可执行的。**
+   (己) 说过「姊妹们都是零是抽样不是定理」;本轮是**反面那一半**:mock 只对「打到 fixture
+   subject 身上的伤害」给地面真值 ⇒ 我方队友打敌人的爆发**恒读 0** ⇒ 出货豁免全语料一次不开火,
+   `flip_ab` 是 **0 by construction**。判定方法:**问「有没有哪一帧能让它非零」**,答不出就是构造性的。
+   构造性的零要配两样东西:**分支计数**(承重)+ **一个只声明一个数的反事实**(答案层面,逐字标注)。
+   变异台把这两样各钉成一条腿:**M2 只有分支计数抓得住,M4 只有反事实抓得住。**
+   ⛔ **已被定价并排除、不要重买**(继承 0NEXT6 全部,本轮新增两条):
+   ① ⛔ **0NEXT6 自己指定的那个候选 —— `J.ShouldSuppressDive` 的 `(b) 致命来袭` 在两类调用点下
+   问的不是同一个问题 —— 本轮按(乙)数完三个站点后判定「不是缺陷」**:leg (b) 三处问的都是
+   「我若把身子交到 `vLoc`,那里的人能不能在我走掉之前把我打残」;出货站点 `vLoc` 就是 bot 站的
+   地方,PA 闪烁 / SB 冲锋**都会把身子送到 `vLoc`** ⇒ 取点取在目的地是对的。**不要下一轮再买。**
+   ② `J.ShouldNotChaseWhenLow` 的豁免锚点(本轮已落 `chasering`)。
+   ⭐ **下一轮候选(读了但没买,理由是形状对、只是本轮工作单元已满)**:
+   **`bots/mode_retreat_generic.lua:X.LowChanceToRun()`** —— **同一个无界 `botTarget` 的第三个消费者**,
+   而且它自带对照:`:717` 用 `J.CanKillTarget(botTarget, ...)` **一个距离项都没有**,
+   而**十一行之外**同一个 `if` 体里的兄弟支路(`:719-723`)把同一个判定**限制在 `nEnemysHeroes`
+   (bot 周围 900)**上。⇒「被 3 人围住、血 <40%、跑不掉」时,一个**地图另一头**的可击杀目标
+   就能让 `LowChanceToRun` 答 true。⚠️ 先按(乙)数站点(`X.LowChanceToRun` 的读者是谁、几个),
+   再按(丑)选分类轴,方向看着是闭形式(合取项加在准入式上)但**要实测确认**((子))。
+   ⚠️ **本轮实测的两条工具事实**:(i) 首条命令**第 13 次**被 `REFUSED: stdout is a pipe` 挡回;
+   (ii) `tests/test_bots_walk_farm_only.py` 本轮点名的是**别组的**新文件
+   (`tests/test_cm_w_creep_clock.lua`,英雄组 8f2e6394),而那个文件里**写着**一行
+   「`-- UNRESOLVED_HAND_READ: io.popen, registered per GH #596's habit`」而登记从未发生 ——
+   **GH #774 循环的新变体:一条注释让它看起来已登记**。本轮连同自己的新文件一起登记并重绿。】**
+
+0NEXT6. ✅ **【2026-09-13T13:43Z 新增 → 2026-09-13T16:15Z 做完(`chasering` 落地,**6 行 `bots/` 代码 + **0 个新 gate id**(继承 `lf_chase`);报告 `iterations/reports/strategy/20260913T161500Z.md`、`state.json:chasering_20260913`、GH #802)。⚠️ **它指定的那个候选本轮被定价后排除**(见 0NEXT7 的 ⛔①),实际主体是自找的姊妹守卫。原文保留在下,便于对照。主体继续留在 `bots/`**
    (OWNER_PRIORITIES **4.4 (i)**;`divepocket` 让它**连续第五轮**满足,**不要断**)。
    0NEXT5 的判据(甲′三态 / 丙′ / 丁 / 戊 / 己 / 庚 / 辛)继续有效;本轮挣到三条新的,
    而且**每一条都是被顶红或被 SURVIVED 顶出来的,不是读出来的**:
@@ -8801,6 +8841,50 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-13T16:15Z:**`chasering` 落地(**6 行 `bots/` 代码、**0 个新 gate id**,继承 `lf_chase`)——
+  而本轮真正的产出是**「分类轴不许是被试自己」与「不能解析的变异体不是变异体」**这两条,
+  两条都是**变异台顶出来的**。
+  `J.ShouldNotChaseWhenLow` 三条腿里,**两条锚在 `bot` 身上,唯一能 `return false` 的豁免锚在
+  `target` 上**,而 `target` 全函数唯一的过滤是第一行的 `J.IsValidHero`。出货调用点传
+  `J.GetProperTarget(bot)` = `bot:GetTarget()` 退化到 `bot:GetAttackTarget()`,**没有任何距离界**
+  (写成会红的断言:该 helper 体内三个距离函数一个都不出现)。⇒「队友已经拿下人头、不用我扛」
+  可以在**地图另一头**取读,并据此取消一个正在被打死的 bot 的撤退出价。
+  **与今晨 `divepocket` 吃的是同一个句柄**,两个调用点在 `mode_retreat_generic` 里相隔八行。
+  ⭐⭐ **本轮最该被下一轮读到的三句:**
+  (丑) ⭐⭐ **第一版用 `J.IsExistInTable` 自己去分「环内/环外」,于是 M2 一改它,§2 的对数分布
+  跟着一起塌** —— 看起来像灵敏,实际是轴和被试一起动。改成内联身份循环后 M2 只被 §3 的
+  **分支计数**抓住,那才是全文件的论证落点。
+  (寅) ⭐⭐ **M2 第一版是裸 `return true`,Lua 语法错 ⇒ 整个 `jmz_func.lua` 载不进来,
+  台子把 `load_fail` 记成 CAUGHT。**「文件没载入」的红与「断言抓住缺陷」的红在计分板上一模一样。
+  (卯) ⭐ **`flip_ab 0` 这次是 by construction 不是 by sampling**(mock 只给「打到 subject 身上」
+  的地面真值 ⇒ 队友爆发恒 0 ⇒ 出货豁免全语料不开火)。构造性的零要配**分支计数 + 只声明一个数的
+  反事实**,M2/M4 各钉一条腿。
+  **读数**(142 帧 / `load_fail 0` / `raised 0`):漏斗 `low_hp 23` → `reach_rows 8` → 40 对
+  (`in_p 17` / `off_p 23`);**`exempt_off_a 23 → exempt_off_b 0`**、`exempt_in_a 17 == exempt_in_b 17`;
+  `fire_a 40 == fire_b 40`、`flip_ab 0`、**`shrink_ba 0`**(方向由构造固定:豁免是那点唯一的
+  `return false`);仪器 `MIN_OFF_D 1372.0 > 1200 >= MAX_IN_D`;正对照 **`off_with_allies 10`**、
+  `near_off 3`、`exempt_fires_natural 0`。反事实 `f_231411_ck_zoned`:CK **11.8%** 血、
+  Lina 853u / Tide 361u 压着,命令目标 OD 在 **6,486.8u** 外 ⇒ 出货 `false`,收窄 `true`。
+  产出:`bots/FunLib/jmz_func.lua`、`tests/test_chasering_target_in_ring.lua` **runner 5/5**、
+  `tools/agent/mutstand_chasering.sh` **caught=7 survived=1(控制项)FINAL_SHA_OK=yes STAND GREEN
+  (七腿全部由被点名的断言抓住)**、`state.json:chasering_20260913`、**GH #802**、
+  报告 `iterations/reports/strategy/20260913T161500Z.md`。
+  ⭐ **被闸点名抓到一条别组的 trunk 红**:`tests/test_bots_walk_farm_only.py` exit 1,点名
+  `tests/test_cm_w_creep_clock.lua`(英雄组 `cmcreepclock`,8f2e6394)—— 文件里**写着**
+  「UNRESOLVED_HAND_READ: …, registered per GH #596's habit」而**登记从未发生**;
+  **GH #774 循环的新变体:注释让它看起来已登记**。本轮手读 + 登记 + 重跑 8 checks / 0 failed。
+  ⚠️ **自曝一条 #290 违例**:GH #802 在 `git push` **之前**发表且**没跑 `claim_precheck.sh`**,
+  正文引用了三个当时只在容器里的产物。如实登记,补救是同一工作单元内立即 push(窗口以分钟计)。
+  ⚠️ **开工自检 `TRUE_EXIT=3`**:findings = cadence / queue-rulings / owed-executions /
+  **trunk-red(python)**,而 python 唯一的红**就是上面那条,本轮已修**;Lua 快检测器
+  **88 文件 0 失败**;python 腿 9 个 **UNCERTIFIABLE(没跑成不是通过)**。
+  ⛔ 变异台与自检**没有并发**。
+  ⚠️ **动态半没有整体跑**(~100min,GH #124);改跑了所有点名 `ShouldNotChaseWhenLow` /
+  `lf_chase` / `IsLaneFixOn` 的测试 + 受影响的静态检查(全绿,逐项见报告 §7)。**这是子集不是全量。**
+  ✅ **OWNER_PRIORITIES 4.4 (i) 连续第六轮满足**。**零 AWS、零波次、armed 串一字未动**
+  (宿主 `lf_chase` 未 armed ⇒ 出货行为逐字节不变)。铁律 6 三行与 token 用量见报告 §7/§10。
+
 
 - 2026-09-13T13:43Z:**`divepocket` 落地(**约 9 行 `bots/` 代码、**1 个新 gate id**,
   未 armed)—— 而本轮真正的产出是**承重证据要挑「最难得到的那一个」而不是「最多的那一批」,

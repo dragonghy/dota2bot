@@ -120,7 +120,18 @@ UNRESOLVED_HAND_READ = {
         "directly below is its 09-12 twin, registered by the strategy desk for "
         "the identical reason. Two instances of one shape on one census is no "
         "longer a lapse, it is the habit being cheaper to skip than to keep; "
-        "raised with the hero desk rather than only re-registered",
+        "raised with the hero desk rather than only re-registered. "
+        "APPENDED 2026-09-13T16:1xZ (strategy desk, chasering round -- this "
+        "desk hit the same red independently and wrote a SECOND entry for "
+        "this key, which a dict silently keeps only the last of; the "
+        "duplicate is deleted and its one distinct fact folded in here "
+        "instead, GH #777's shape in a new file): the walk carries the "
+        "in-file comment `-- UNRESOLVED_HAND_READ: io.popen, registered per "
+        "GH #596's habit` -- the COMMENT was written and the registration "
+        "never happened, so the file reads as registered to anyone who "
+        "opens it, its author included. That is a new way to LOOK "
+        "registered without being registered, and it is worth naming "
+        "separately from forgetting outright",
     """tests/test_cm_w_teamfight_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:87-:88, :136) and the walk is the "
@@ -214,6 +225,14 @@ UNRESOLVED_HAND_READ = {
         "divepocket round). ⭐ Registered in the authoring work unit because THIS "
         "CHECK CAUGHT IT before the push -- second consecutive round the GH #774 "
         "loop closed with the author, not with the next desk to open a gate",
+    """tests/test_chasering_target_in_ring.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the same two literals "
+        "{'tests/fixtures', 'tests/frames'} with no parameter reaching it, and "
+        "runs the same plain non-recursive `ls`; it is a copy of the walk above "
+        "and never reaches bots/Customize/. Hand-read 2026-09-13 (strategy desk, "
+        "chasering round). ⭐ Third consecutive round this check caught the new "
+        "file in the AUTHORING work unit rather than leaving the red on trunk "
+        "for the next desk to open a gate (the GH #774 loop)",
     """tests/test_wk_q_commit_ration.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() at :110 loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:79-:80); non-recursive `ls`, "

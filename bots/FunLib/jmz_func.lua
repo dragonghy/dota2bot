@@ -8800,14 +8800,65 @@ function J.ShouldNotChaseWhenLow( bot, target )
 	if nBurst < bot:GetHealth() * 0.45 then return false end
 	-- Exception: the kill is secured WITHOUT me tanking -- allies excluding self
 	-- near the target can burst it down on their own.
-	local tAllies = J.GetAlliesNearLoc( target:GetLocation(), 1200 )
-	local tOthers = {}
-	for _, a in pairs( tAllies ) do
-		if a ~= bot then table.insert( tOthers, a ) end
-	end
-	local nKillBurst = J.GetTotalEstimatedDamageToTarget( tOthers, target )
-	if nKillBurst >= target:GetHealth() + target:GetHealthRegen() * 3 then
-		return false
+	--
+	-- [chasering 20260913, strategy] "WITHOUT ME TANKING" IS A CLAIM ABOUT THE
+	-- FIGHT I AM IN, AND THE EXEMPTION NEVER ASKED WHICH FIGHT THAT IS.
+	--
+	-- Every other line of this guard is anchored on the BOT: the HP test is the
+	-- bot's, and `tEnemies` above is the ring of enemies within 1200 of the bot
+	-- -- the ones who are punishing me right now. The exemption alone is anchored
+	-- on `target`, whose only filter is the `J.IsValidHero( target )` on the
+	-- first line. The shipped call site is mode_retreat_generic.lua's retreat
+	-- desire, which passes `J.GetProperTarget( bot )` = `bot:GetTarget()` (the
+	-- current ORDER target) falling back to `bot:GetAttackTarget()`, filtered
+	-- only by "not one of our own heroes/buildings" and carrying NO DISTANCE
+	-- BOUND of any kind. So the exemption can be computed around a hero on the
+	-- far side of the map: `J.GetAlliesNearLoc( target:GetLocation(), 1200 )`
+	-- scores OUR heroes standing next to THAT hero, and if they can burst it
+	-- down, a bot at 12% HP with two enemies on top of it is told to keep going.
+	-- "The kill is secured" was never the question; "am I about to die for it"
+	-- was.
+	--
+	-- THE REPAIR IS THE SENTENCE ABOVE IT: the exemption counts only when the
+	-- target is one of the enemies actually punishing me, tested by IDENTITY
+	-- against `tEnemies` rather than by re-measuring 1200 -- so it inherits that
+	-- list's illusion / Meepo-clone / tempest-double filters and cannot drift
+	-- from the radius the burst was summed over. Off-ring, the exemption is
+	-- skipped and the guard answers with its own three anchored facts.
+	--
+	-- ONE-DIRECTIONAL BY CONSTRUCTION: the exemption is the only `return false`
+	-- left at this point, so gating it can only ADD `true` answers -- the
+	-- narrowed FALSE set is a subset of the shipped one. Sign asserted, not
+	-- hoped for (tests/test_chasering_target_in_ring.lua §3, `shrink_ba == 0`).
+	--
+	-- NO NEW SOAK ID -- criterion (甲′)'s THIRD state, the same call as
+	-- 'roshpost'/'rescpost' (2026-09-13): this helper's FIRST line is a bare
+	-- `J.IsLaneFixOn( 'chase' )` early return, so the whole host is already inert
+	-- in shipped play and the narrowing inherits that gate. Nesting a second
+	-- candidate under an unarmed one is the pullcad trap's cousin: no wave could
+	-- isolate it, while check_armed_wiring.py would still call it WIRED.
+	--
+	-- ⚠️ THE ANSWER-LEVEL EFFECT IS NOT MEASURABLE ON THIS CORPUS, and that is
+	-- registered rather than worked around. The mock's GetEstimatedDamageToTarget
+	-- answers ground truth only for damage dealt TO the fixture subject, so an
+	-- ALLY's burst on an enemy reads 0 and the exemption never fires naturally:
+	-- flip_ab is 0 by construction, not by sampling. What the corpus does buy is
+	-- the BRANCH and its inputs -- 23 (row, off-ring target) pairs reach this
+	-- exemption, 10 of them with a real non-empty ally set around a hero the bot
+	-- is not fighting (up to 14,582u away), and the nearest off-ring pair sits at
+	-- 1,372.0u, an ordinary order-target distance. The answer flip is shown on a
+	-- real frame with ONE declared number (§4's counterfactual), and is labelled
+	-- a counterfactual there.
+	if J.IsExistInTable( target, tEnemies ) then
+		local tAllies = J.GetAlliesNearLoc( target:GetLocation(), 1200 )
+		local tOthers = {}
+		for _, a in pairs( tAllies ) do
+			if a ~= bot then table.insert( tOthers, a ) end
+		end
+		local nKillBurst = J.GetTotalEstimatedDamageToTarget( tOthers, target )
+		if nKillBurst >= target:GetHealth() + target:GetHealthRegen() * 3 then
+			return false
+		end
 	end
 	return true
 end
