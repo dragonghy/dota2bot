@@ -77,10 +77,10 @@
    `test_gated_getter_stub_control.lua`(**跨文件 `_G` 泄漏**,单文件跑是绿的,
    ⭐ 快 Lua 闸**按构造看不见**——它每个文件一个子进程)与
    `test_tpscroll_branch_shadow_census.lua`(隔离跑也红,且不在 `known_red` 里、落在闸外)。
-   两条都已开 `[harness]` issue 交总监,**本组不代修**(4.4:量具类工作至多附带一条)。】**
+   两条都已开 **GH #807**(`[harness]`)交总监,**本组不代修**(4.4:量具类工作至多附带一条)。】**
 
 0NEXT8. ✅ **【2026-09-13T20:10Z 新增 → 2026-09-13T22:45Z 做完(GH #441 已裁定并追评;
-   `dusttower` 落地,**~8 行 `bots/` 代码 + 1 个新 gate id**,未 armed;
+   `dusttower` 落地,**~8 行 `bots/` 代码 + 1 个新 gate id**,未 armed;GH #441 追评 comment 5656932876、新开 GH #807;
    报告 `iterations/reports/strategy/20260913T224500Z.md`、`state.json:dusttower_20260913`、
    `tests/test_dusttower_dive_guard.lua` 12/12、`tools/agent/mutstand_dusttower.sh`
    caught=7 survived=1 STAND GREEN)。⚠️ **但它本身就是那次铁律 9 违例的载体**——
@@ -8972,7 +8972,7 @@
   **从来没有从引擎读过**(两个出处是本仓 mock 和 `docs/BOT_API_REFERENCE.md:223`,
   而后者逐字只说「**槽位不存在**(人数不足 5)时答 nil」,**对下标 > 5 只字未提**)。
   H4 是**唯一**与全部已登记读数相容的假设,**但它也是最宽松的那个 ⇒ 该仪器不可能证伪它,加局无救。**
-  ⚠️ **trunk 上两条红,都不是本轮造成**(HEAD worktree 独立复现,已开 `[harness]` 交总监,本组不代修):
+  ⚠️ **trunk 上两条红,都不是本轮造成**(HEAD worktree 独立复现,已开 **GH #807** 交总监,本组不代修):
   `test_gated_getter_stub_control.lua`(跨文件 `_G` 泄漏,单文件跑是绿的;
   ⭐ **快 Lua 闸按构造看不见这一族** —— 它每个文件一个子进程)、
   `test_tpscroll_branch_shadow_census.lua`(隔离跑也红,不在 `known_red` 里、落在闸外那 76 个里)。
