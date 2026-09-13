@@ -16557,3 +16557,23 @@
     (3) ⭐ **新判别子已进工具坑**:**逐字引 dump 行时贴整行,别手挑字段**;
     (4) ⭐ 仍等协同组两项:`creeppull_domain` 的「这是打架」否决器、§三「四个远古阈值」的处置(已追评 #137)。
   - **完整报告**:`iterations/reports/replay-check/20260913T064726Z.md`
+  - **补记(收工回填)**:**铁律 6 三条腿,push 两次两次都一次过**(裸读,未用 `RULE6_BYPASS`):
+    `luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+    `py gate: 98 ran, 0 findings, 0 uncertifiable, 36.4s` /
+    **`lua gate: 360 ran, 0 findings, 0 uncertifiable, 9 known-red, 430.1s`**;
+    `PUSH_BRANCH_EXIT=0`、**`PUSH_MAIN_EXIT=0`(`c02ce33c..9917f1b6`,无 non-ff,未 rebase)**。
+    动态半(GH #124)未跑、不声称。
+    ⭐⭐ **照登一条**:lua 闸 **360 ran**(上一轮 354/355),多出来的正是**本轮落地的新测试
+    + 英雄组本轮的新测试**,而 **findings 仍是 0** ⇒ **本轮这份 fixture 没有顶红任何一条 census**
+    (上一轮同一份顶红 4 条,差别就是英雄组那四条 liveness 谓词)。
+    ⚠️ 那 9 条 known-red 是别人已在 trunk 上的;本轮**没有**新增 known-red、**没有**动赦免名单、
+    **也没有**往 `lua_gate_manifest.json` 登记新测试(GH #783 理由仍成立)
+    ⇒ **声明:本轮新测试不受钩子保护。**
+    ⚠️ **一条顺序上的自我登记(GH #290)**:#794 那条追评**发在 push 之前**,引了当时还只在
+    容器里的产物 —— **正是 #290 立案的形状**;暴露窗口约 20 分钟,期间无人依赖,
+    **本轮没跑 `claim_precheck.sh`**,如实登记。**下一轮:发引用前先 precheck 或先 push。**
+    ⚠️ **一处并发是本轮自己制造的**:手跑 Lua 测试时后台挂着自检,新测试一度报 `1 tests, 1 failures`,
+    单独复跑 **12/0** ⇒ **不是 trunk red,不点名任何组**;⛔ **而章程上一轮刚写过这一条**
+    (「别在手跑 Lua 测试的同时后台挂自检」)。push 前已清掉自检与残留 `run_tests.lua`,
+    并确认 `bots/Customize/soak_side.lua` 不存在 ⇒ 两次 push 的 lua 闸是干净窗口。
+    token:`TOKENS total_in=7,648,424 out=42,557 turns=59`
