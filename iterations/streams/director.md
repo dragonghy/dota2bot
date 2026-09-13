@@ -563,6 +563,42 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-13T04:3xZ**:**一个 promote 删掉的闸形状顶红了检测器,而拦这一族的棘轮两处比它自己声称的窄 —— 放宽后当场又抓到三份;armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
+  全文 `iterations/reports/director/20260913T043000Z.md`;落地 `edb753d2..9cc1db4f`。改动:`tpdeathbuy_domain.py` / `abilanc_domain.py` / `inverse_gate_census.py` / `stale_waits.py` / `test_detector_source_constants.py` / `test_lua_corpus_stability.py` / `test_outchan_domain.py` / `test_stale_waits.py`。
+  ⭐⭐⭐ **(甲) 便宜的修法是放宽正则继续跑,而它会把响亮的仪器故障静默地变成预期结果。** 上一轮登记、本轮承诺"正面处理"的 trunk red 坐实:
+  `tpdeathbuy` 已在 `stable-v7` promote、闸被摘掉,而 `tpdeathbuy_domain.py:150` 钉的是**一个只在 gated 状态下存在的形状**。
+  该文件的核心论证是「baseline 腿是空对照」(两臂同一 clone,唯一不对称是 `IsSoakCandidate`)⇒ **promote 删掉的正是那个不对称**,turbo 两条腿现在都跑 `botHP < 0.08`。
+  ⇒ `read_source()` 报 `gate_state`,`verdict()` 在闸没了时答 **`PROMOTED-NO-CONTROL`**(这一支**排在**出厂子句的算术判断**之前**:算术一字未变,**变的是读法**),`run()` 打横幅说 leg 列不是对照,半 promote 现在响亮地抛。
+  钉子含**「重新 gate 回去仍读 WIDENING」**(防止修复把旧读法一起删掉);`--selfcheck` **31 PASS / 0 FAIL**,两种 gate 状态都被反事实走到。
+  ⚠️ **一族不是一发**:任何 `read_source()` 钉了 `IsSoakCandidate('<id>')` 的检测器,都断言一个**该 id 自己的 promote 会删掉**的形状,而 promote 期三个普查**只读 `bots/`** ⇒ promote 那轮全绿,红留给下一个开工的组。
+  ⭐⭐⭐ **(乙) 第一条红后面藏着第二条,而它是并发假象 —— 真正的根是棘轮比它点名的缺陷窄。** `abilanc_domain.selector_sites()` 自己 `os.walk(bots/)` 再 `open()`,撞上**我自己并发跑着的开工自检**对 `bots/Customize/soak_side.lua` 的创建与删除 ⇒ `FileNotFoundError`,**以一个跟选择器毫无关系的文件名抛栈**。
+  这正是 **GH #243** 立案退休的那两行,而它是**第七份**;拦第七份的棘轮 `tests/test_lua_corpus_stability.py` 逐字写着「pin that no seventh grows back」,却两处更窄:
+  **(1) 目录** 只扫 `tools/agent/`+`tests/`(第七份住 `tools/batch_test/`);**(2) 拼写** 只认内联 `os.walk(os.path.join(...,"bots"))`(第七份写 `BOTS=...` 再 `os.walk(root), root=BOTS`)。
+  两处一起放宽 ⇒ **当场又抓到三份**(`inverse_gate_census.py` / `stale_waits.py` / `test_outchan_domain.py`,全部先于本轮存在),四份全部改走 `lua_corpus`。
+  📌 **立案句:一道比它点名的缺陷更窄的棘轮,读起来和一道正拦着的棘轮一模一样** —— 它每轮都打 `ok`,而 `ok` 的含义是「在我看得见的地方没有」。
+  ⚠️ `stale_waits.py` 原来还写着 `except OSError: continue`,**正是 lua_corpus docstring 点名的「把 did-not-run 洗成 counted-fewer」**;`CorpusVanished` 故意不是 `OSError`,换过去之后吞不掉了。
+  📌 **自己踩自己**:放宽后的棘轮**被我自己的修复注释顶红**;第一版按 token 重建源码——**那会归一化空白,而 `WALK_BOTS` 认的是无空格的 `os.walk(`** ⇒ **一个悄悄解除了它自己所喂模式的 strip,和一棵干净的树打印完全相同**。改成**原地抹注释跨度、其余逐字节不动**,补四条反自欺(含「抹完之后代码行逐字节相同」)。
+  ⭐⭐ **(丙) 换收集器时顺带量出第三条,与并发无关:一个漏 6/24 的静默漏读。** `stale_waits.PROMOTED` 要求四者相邻,而注记拼写朝**三个方向**各漂过一次(中间插日期 / **跨行** / id 后跟逗号不跟右括号)⇒ 24 条漏 **6**,**`stable-v7` 两个 id 都在里面**。
+  后果:等待"已 promote 的 id 入集"的记录**永远读作 LIVE**,而这正是本模块 docstring 自己写的立身之本;**失效静默 —— 漏掉的 id 与从未 promote 的 id 长得一模一样**。
+  原钉子只检查**一个**例子(`creeppull`,恰好是三种拼写里**最老**的那种)⇒ 改成**钉形状**(每条 `was soak-candidate` 注记都必须被读到),**落地当场又抓到第六个**(`tpcommit`)。`promoted_ids()` **18 → 23**,`test_stale_waits.py` **52 检查 0 失败**。
+  🚦 **铁律 6 三条腿**(推分支那一次真跑,安静树):`GATE_EXIT=0 CLEAN`(0 警告)/ `py gate: 98 ran, 0 findings, 0 uncertifiable, 42.3s` /
+  `lua gate: 356 ran, 0 findings, 0 uncertifiable, 9 known-red, 498.6s`;⛔ **未用 `RULE6_BYPASS`**。动态那半未跑,不声称(`bots/`+`game/` 零 diff)。
+  ⭐ **上一轮的记忆化当场兑现**:`HEAD:main` 那次打 `RULE6_MEMO=REUSE … This is a REUSE, not a skip`,三条腿读数逐字复用,第二次推送**没有**再花 ~9 分钟 —— 上一轮为它立案的那场竞速本轮没有发生。
+  ⚠️ **开工自检本轮跑了两次都没拿到读数,两次都是我自己弄砸的**:第一次**本轮第一条命令**又是 `… | tail -60`(守卫拒,`SELFCHECK_EXIT=2 REFUSED`)—— **纪律 3 第三十五发,连续第二轮,章程第 0 条逐字覆盖它**;
+  第二次改走 `rc.sh` 了却套了 `timeout 600`,而它实测 ~68 分钟 ⇒ **exit 124、零行输出,是没跑成不是通过**(⚠️ 那个 68 分钟的读数**就在我读过的上一轮报告里**)。第三次已在收尾时无上限重跑。
+  第三次在收尾时无上限重跑(安静树)**~10 分钟就完了**,⚠️ 与上一轮报的 ~68 分钟差一个数量级,而差别只有「树在不在它脚下被改」⇒ **上一轮那个 68 分钟很可能量的是竞争不是它自己**。
+  读数:`SELFCHECK_EXIT=3`(裸读),`legs run 12`,**`UNCERTIFIABLE: none`**,FINDINGS = `cadence`/`queue-rulings`/`owed-executions`/`trunk-red(python)`;`NOT RUN`: `tests/test_selfcheck_lua_leg.py`;fast Lua 检测器 87 个文件 0 失败;python `125 passed, 2 failed, 1 uncertifiable`。
+  ✅ **原来那条第三红没了**:`test_detector_source_constants.py` 本轮 **PASS**。
+  ⚠️ **python trunk red 两条,均非本轮造成,按铁律 5 交出去不代修**:①`test_carrier_terms.py`(zusult/liondrainstop hero-scope,**英雄组**,连续第三轮)
+  ②`test_bots_walk_farm_only.py`(**本轮首见而先于本轮存在**:`tests/test_tpdeftower_outpost_narrow.lua` 的 `io.popen` 解析不了;`git log` 归属 **`87ef8628` 协同组 GH #782**;上一轮 state.json 还记着这条「现在是绿的」⇒ **#782 落地之后重新红的,GH #624 一族又一例**)。两条**都没 `git stash` 复跑,不声称 main 是否同样红**。
+  📮 **本轮投递**:落地 sha / **GH #787 追评**(push 之后,GH #290 顺序)/ 本节。⚠️ **不新开 issue**:(乙)的成因半(promote 期普查只读 `bots/`)**已在本章程 backlog 顺延项里**,本轮补齐的是它的**证据**(它今天真的产生了一条红)。
+  💰 **零 AWS**(一次调用都没有),不作 MTD 新声称。🩺 五组 24h 内全部有产出,无掉队组。
+  ⚠️ **armed 27,本轮判定完结 0 —— 连续第九轮**(本轮是 [harness] 修复轮,章程 2a 高于 2b,且这条红是上一轮点名承诺本轮处理的)。**九轮已越过铁律 9 的 12 轮红线四分之三 ⇒ 下一轮必须正面处理 armed 27,不再让 [harness] 插队。**
+  📊 `TOKENS total_in=14,304,732 out=51,847 turns=94`(写报告时)。
+  ⑨ **下次触发**:①⭐⭐ **判定完结 ≥1,正面处理 armed 27(硬性,连续第九轮为 0)**②上上轮那 6 行 BORN-DONE 逐行处置(**不许补证词**)
+  ③**owner P4.3**(`test_set.md` >536KB,目标 <50KB,**已欠两周**)—— 排专门工作单元或按铁律 9 写进 `DECISIONS_NEEDED`
+  ④**promote 期三个普查只读 `bots/`(第八轮顺延,本轮已给出它的第一条实证红)**/ GH #523(第七轮未取)/ `creeps_schema_gh581` 的 (C) 半 / GH #584(第十一轮顺延)/ 五条 `a_evidence_*`(第十五次顺延)/ patch 缺口 P3。
+
 - **2026-09-13T01:0xZ**:**推送门的三条腿在每一次推送尝试里跑两遍同一棵树 —— 记忆化落地(GH #213 族);armed 27 不变,零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。**
   全文 `iterations/reports/director/20260913T010523Z.md`,档案 `test_set.md §HI`;新 owed 行 `rule6_memo_fast_gate_membership`(63 → 64 行)。
   新产物:`tools/agent/rule6_memo.py` / `tests/test_rule6_memo.py` / `tools/agent/mutstand_rule6_memo.sh`,`.githooks/pre-push` 改。
