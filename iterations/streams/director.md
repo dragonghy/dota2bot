@@ -563,6 +563,46 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-14T04:15Z**:**trunk 红修好了,而本轮真正的产物是「为什么推的人的闸拦不住它」,并且那是可量的。**
+  全文 `iterations/reports/director/20260914T041500Z.md`。零 AWS、零波次、`bots/`+`game/`+`tests/` 零 diff。
+  ⚠️ **先更正一条归因**:批测台 03:11Z 点名的 `test_bots_walk_farm_only.py` **单跑 `RC_EXIT=0`**
+  (`8 checks, 0 failed`);真正红的是 **`tests/test_pending_rulings.py`**(`810 checks, 1 failed`),
+  本轮自检独立复现。⛔ 不指责批测台 —— 那个文件 **3.64s 对 3.0s cap**,真的被同样方式顶红过三次,
+  **两条红长得一样而归因不同**,这恰恰是下面那条的理由。
+  **根因**:`lua_gate_baseline_e2e` 的退休条件是 (A)∧(B)∧(C),而 `done_when` 只钉着 (B);
+  **(B) 在 01:4xZ 由总监自己落地 ⇒ 判据在「它自己被满足之外的理由」下转绿**,而 (C) 一个字没买到。
+  该行原注**自己预言过**(逐字「别按它绿了就退休本行」)—— **预言写在散文里,判据是机器读的**;
+  又因立行时没留 `unmet_at_ruling`,工具只能读成 **BORN-DONE**,顶破 `BORN_DONE_INHERITED = 6`。
+  ⭐ **棘轮干了它该干的事**(它的注释逐字:`a NEW row of this shape cannot be added quietly`)。
+  **修法走 (乙) 换判据**,⛔ 三件事都没做:没退休它((C) 真欠着)、没把天花板抬到 7
+  (注释逐字 `never raise it`)、**没给旧判据追记证词**(`born_done_inherited_disposal` 逐字禁止替别人追记,
+  那个读数**永远是空的**)。新判据 `path_contains_all` 钉住唯一没买到的 (C),
+  ⛔ **当场量过才写**(`present=False` / `grep -c` = `0`,时刻 `2026-09-14T04:13:26Z`,已写进 `unmet_at_ruling`
+  并声明**它属于新判据、不冒充旧判据**)—— 本行原注记着的坑正是「用一个今天已经为真的判据去判还没做的事」。
+  读数:`('OWED', '... 1 of 1 required mention(s) are absent ...')` + `810 checks, 0 failed`
+  ⇒ **红清除,且棒仍可见地 OWED 而不是被判据洗成 DONE**。(C) 被 **GH #810** 挡着 ⇒ 它会一直读 OWED,
+  **那是正确的可见状态,不是掉棒**。
+  ⭐⭐⭐ **最该被读的**:红在 main 上挂了约 **2.5 小时**没人举手,而 `test_pending_rulings.py`
+  **就在 `py_gate_manifest.json` 里** —— `{"seconds": 0.707, "in_gate": false, "reason": "over_cumulative_budget"}`,
+  **0.707s,远在 3.0s cap 之内,被「预算满了」挤出闸**。实测全貌:in_gate **84** 个合计 **11.787s**/预算 **12.0s**
+  (余 **0.213s**);因预算出局 **28** 个,**28 个全部在 cap 之内**;**刀口 0.412s vs 0.432s —— 0.02 秒决定一条棘轮守不守 trunk**;
+  出局的那批里有 `test_promote_atoms.py`、`test_verdict_pool_lossless.py`,以及 **`test_push_gate_hook.py`(这道闸自己的验收测试)**。
+  📌 选择器**故意**「cheapest first, never by name」(GH #616 约束 1,防按口味塞私货)—— **那条是对的**;
+  问题是**一条按成本写的规则正在充当覆盖面规则**。⭐ 09-13 的总监已看见过一次并修了一半
+  (`previous_membership()`,逐字 `an eviction should be an act, not a silence`)——
+  **但那只打给「当场跑 re-measure 的那一个人」看一次**;Lua 侧 09-13T22:16Z 已有持久棘轮
+  (`lua_gate_coverage.py`),**python 侧没有对应物**,今天是那个缺口的第一笔实测代价。
+  ⇒ 立 `[harness]` issue(⛔ 查过重复:**GH #616 是立案祖先但已关闭**,今天的读数说明它的修复
+  **按构造只覆盖塞得进 12.0s 的那 84 个**,被挤出的 28 个仍在 #616 的原始状态;#728/#804 均不同)。
+  ⚖️ **裁定批测台交棒 ④(欠两轮)结案:守字面 + 补第四项** `(iv) 已发布的零批测日下界 ≥ headroom 的 80%`,
+  已投递进 `batch-desk.md`「与其他 agent 的接口」节顶部。**80% 照着立案现场选**(03:11Z 实测 91% ⇒ 那次合规;
+  09-13 各轮离得远 ⇒ **不回溯性变松**)。⛔ **交棒 ⑤(`running` 词表歧义)本轮未裁,体量原因,未掉棒**(仍挂批测台交棒 ⑤)。
+  ⚠️ **两条自我登记**:(i) 管道坑**第 29 次**仍是本轮第一条命令,守卫当场拦下零损失;
+  (ii) 第二跑给了 `timeout 600` 又被砍进后台 —— **批测台上一轮交棒 ⑥ 逐字要求的「一次到位」,我自己踩了同一发**
+  ⇒ 这不是某一个组的习惯问题。自检 `TRUE_EXIT=3`,腿内 **3 条没跑成**(不是通过),
+  py 腿另有 **9 条 UNCERTIFIABLE**,原因逐字「clean run did not finish inside 120s」⇒ **本容器慢,与 GH #810 同一条缝**。
+  💰 MTD **`$89.505`**(转载批测台,本台零 AWS 调用),刹车 `$90` 之下 `$0.495`;**GH #779 第十一轮零表态**,
+  已挂 `DECISIONS_NEEDED.md §15` 不重复立条;W37 效率台账**已存在**,本周邮件档期未欠。
 - **2026-09-14T02:00Z**:**上一轮点名的第 1 件事(重测 Lua manifest)跑完了 —— 451 文件 / 896s ——
   而本轮的产物是「它不能落地」,并且那个理由是量出来的。** 全文
   `iterations/reports/director/20260914T020000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff。
