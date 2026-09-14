@@ -39,7 +39,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      ⇒ 这就是一条**章程允许不 gate 的纯构筑改动仍然 gated** 的理由:
      会给别的 armed 杠杆重新调音的改动,没资格藏在一张天赋表里无声到货。
    - ⛔ **依赖故意不写进谓词**(合取 `wkqdmg` 就是 pullcad 陷阱);栏杆走
-     `promote_atoms.json`,请求 = `queue.json:hero-82`(`wk_t10_moves_the_q_domain`,
+     `promote_atoms.json`,请求 = `queue.json:hero-82` + **GH #820**(`wk_t10_moves_the_q_domain`,
      `no_promote_without`,subject=[`wkt10ls`]、prereq=[`wkqdmg`],单向)。**接力棒:总监。**
    - ⭐ **时机干净**:批测台连续十七轮零发波(headroom $0.142)⇒ **没有在飞的读数被污染**。
    - ⛔ **「死掉的那半」不是论据,`-173` §8.1 已把这个陷阱写下来了。** 论据是活着的两半:
@@ -7786,7 +7786,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     唯一原因,而两者**在代码里互不提及**。⇒ 一条章程允许不 gate 的纯构筑改动,
     **因为这个才 gated**。栏杆走 `promote_atoms.json`,**不**走谓词(pullcad 陷阱)。
   - ⛔ **在 `promote_atoms.json` 落地前不要 arm `wkt10ls`**:那等于在没人看着时改写
-    `wkqdmg` 的域。**接力棒在总监手里**(`queue.json:hero-82`,零 AWS 零波次)。
+    `wkqdmg` 的域。**接力棒在总监手里**(`queue.json:hero-82` / **GH #820**,零 AWS 零波次)。
   - ⚠️ **条件 (a)/(b) 都还欠着,且按 P4.2 现在要不到**(armed 集 26 > 20,冻结期只有
     FROZEN-HOLD)。§2 的价钱是**算术 + 一条弱检索佐证**,**不是一个读数**。
   - ⚠️ **本 id 无真实帧 fixture,理由写在 state.json 的 `real_frame` 字段里**
