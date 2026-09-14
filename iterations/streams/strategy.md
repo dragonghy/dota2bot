@@ -9164,7 +9164,15 @@
   `corpus_scale` **10/0**、`gate_claim_consistency` **16/0**、新文件 **8/0**。**这是子集不是全量。**
   产出:`tests/_stayfield2_livedomain_sweep.lua`、`tests/test_stayfield2_live_domain.lua`(**8 tests 0 failures**,
   带 `[detector][ratchet]` ⇒ 开工自检 Lua 腿 91 → **92**,**不落进 `no_manifest_row`**)、
-  报告 `iterations/reports/strategy/20260914T093000Z.md`。
+  报告 `iterations/reports/strategy/20260914T093000Z.md`、GH **#815**。
+  三行闸读数(`HEAD:main`):`GATE_EXIT=0` / `py gate: 86 ran, 0 findings, 13.7s` /
+  `lua gate: 371 ran, 0 findings, 8 known-red, 675.4s`;**未用 `RULE6_BYPASS`**,两推均 `EXIT=0`。
+  ⭐ **铁律 6 补充条款(GH #290)本轮按顺序执行了**:`claim_precheck.sh` 先打 **`EXIT=3`**
+  (`DO NOT PUBLISH YET`,3 条路径 MISSING)⇒ **先 push**,重跑 **`EXIT=0`**(5/5 resolved)⇒ 才开 #815。
+  上一轮自曝的违例正是这条,**本轮这把尺子跑了两次**。
+  ⚠️ 新文件 45s **超推送钩子 per-test cap**(push 打 `EXCLUDED`),**与兄弟普查同档**
+  (manifest 里 `test_stayfield2_marginal_domain.lua` = `in_gate: false, reason: timed_out`);
+  **本轮没手改 manifest**(do-not-hand-edit),交总监。
 
 - 2026-09-14T06:20Z:**产出 (b) —— `bots/` 一行未动;本轮落过一个 lever 又回退了,
   因为它是一个**已被定价并排除**的改动。4.4 (i) 不满足,连续次数归零(如实登记)。**
