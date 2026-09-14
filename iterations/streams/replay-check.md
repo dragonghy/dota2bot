@@ -17059,3 +17059,40 @@
     (4) ⚠️ 09-13T16:30Z 那个 **n=1 复现连续第四轮挂账**,只需一局,等新波次;
     (5) ⛔ 别引 `head_slot` 单行读数,除非该行「一点吃一槽」已逐帧核过。
   - **完整报告**:`iterations/reports/replay-check/20260914T005158Z.md`
+- **[2026-09-14T00:51Z 收工回填,两条:一条仪器缺陷、一条自检真码]**
+  - ⛔⛔ **「免费的复现检查」不是 5/5,而它抓到的是**尺子自己的缺陷**。** OD 五行对上一轮
+    21:48Z 报告 §4 的表:**4 行 canon 逐位相同**,第 5 行 `ab6c0d/220100_slot6`
+    本轮 **5** 点 / 上一轮 **6** 点。逐帧查到原因,**不是本轮改动引入的**,是原有的**同帧合并**规则:
+    `#5 t=424.4 herolvl=7 astral_imprisonment+sanity_eclipse`。
+    ⭐ **把 8 局全部 31 次同帧合并列出来:30 次是真连锁**(`shadowraze1+2+3` 28 次、
+    `liquid_fire+liquid_ice`),**恰好 1 次不是** —— astral 与 eclipse **互不相关**,
+    只是落进同一个 1 秒采样格 ⇒ **「同帧齐涨 = 一个技能点」对连锁成立,对
+    「派发器一帧排一个 + dumper 1 Hz」造成的偶然同格不成立,方向是少数一点**。
+    ⚠️ **本轮承重的 8 行(6 干净形 + 2 塌墙)一行都不在那 31 次里**,结论不受影响;
+    ⛔ 但**凡引 `n_abil_pts` 的地方都要知道它可能少数**。
+    **修法(下一轮最便宜的仪器格)**:只合并**每一次都一起涨**的集合 —— 连锁全局同涨,
+    偶然同格只同涨一次,一次全局扫描即可分开。⛔ **本轮故意不改**:改了会动能力列,
+    而能力列逐位不变正是那张对照表的前提。
+  - **自检真码**:⛔ **管道门第 29 次,又是第一条命令**(`SELFCHECK_EXIT=2`,没跑成不是通过);
+    重定向重跑得 **`SELFCHECK_EXIT=3`**,`legs run 13`,
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage`,
+    `UNCERTIFIABLE: trunk-red(python)`。`test_selfcheck_lua_leg` **5a\* 九条 UNCERTIFIABLE**
+    (120s 超时)⇒ **那一侧没人看过**;Lua 检测器腿 `88 files, 0 failures`(**自称 FAST SUBSET**)。
+    `lua-coverage` 是新出现的 finding = **GH #806** 那笔欠条(`no_manifest_row_count = 50`),
+    **不是本组的活、非本轮引入**,只登记。
+    ⚠️ `trunk-red(python)` 本轮是 **UNCERTIFIABLE 不是 finding**,横幅逐字要求
+    「re-run on a quiet tree」—— ⭐ **本轮对 `bots/` 零写入**,但**并发确实存在**
+    (自检跑着的同时下 8 个 `.dem` + 8 次 dump),**登记为有意识的取舍**;
+    ⛔ **连续第三轮**记下同一句:更稳妥是等自检跑完。
+  - ⛔ **工具坑第三次现场**:收尾时用 `ps aux | grep … | wc -l` 读到 3 判定「还在跑」,
+    真相在**终止横幅**里。**认横幅,不认进程计数。**
+  - **铁律 6 三条腿(裸读,⛔ 未用 `RULE6_BYPASS`)**,两次 push 逐字相同:
+    `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+    `py gate: 85 ran, 0 findings, 0 uncertifiable, 12.5s` /
+    **`lua gate: SKIPPED BY SCOPE`** —— ⚠️ **范围判定不是通过**(本轮只动 `tools/` 与 `iterations/`)。
+    动态半(GH #124)未跑、不声称。`PUSH_BRANCH_EXIT=0` / `PUSH_MAIN_EXIT=0`
+    (`3562fdc4..5dd80f7a`,**零 rebase、零 403**);`PRECHECK_EXIT=0`
+    (`local commits not on origin/main: 0`),评论 `#issuecomment-5657573584` 发在两次 push
+    **之后**(GH #290 顺序),发帖后 `issue_read` 复核:**正文逐字未变 / 评论数 4→5 /
+    `state` 仍 closed(本组未碰状态)**。
+  - **token**:`TOKENS total_in=9,166,773 out=67,565 turns=66`(统计时刻为止;零 `requires approval`)。
