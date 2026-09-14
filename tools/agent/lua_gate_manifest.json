@@ -6,14 +6,13 @@
     "tests/test_activemode_world_assertion.lua",
     "tests/test_axe_t15_payoff.lua",
     "tests/test_cm_pos5_boots.lua",
-    "tests/test_focus_level_claims.lua",
     "tests/test_lion_ult_cash_weakest.lua",
     "tests/test_roshdist_pit_truth_operand.lua",
     "tests/test_salveally_missing_floor.lua",
     "tests/test_wk_level_supply_horizon.lua",
     "tests/test_wk_q_lane_reach.lua"
   ],
-  "known_red_at": "2026-09-10T16:18:18Z",
+  "known_red_at": "2026-09-14T04:47:13Z",
   "known_red_cases": {
     "tests/test_activemode_world_assertion.lua": [
       "[reverse] dropping it makes the mode-filtered call over-permissive"
@@ -24,9 +23,6 @@
     ],
     "tests/test_cm_pos5_boots.lua": [
       "[hero] census: the corpus still carries the arms these numbers came from"
-    ],
-    "tests/test_focus_level_claims.lua": [
-      "[hero] wk: the wkqaim supply argument spans levels 2 to 12"
     ],
     "tests/test_lion_ult_cash_weakest.lua": [
       "\u00a71 the archive reaches the body 5 times and the domain 0 times"

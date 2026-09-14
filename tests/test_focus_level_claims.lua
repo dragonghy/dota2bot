@@ -273,4 +273,165 @@ tests['[hero] lion t10: the build holds Mana Drain at rank 3 when the t10 pick i
         .. 'the failure this assertion exists to stop recurring (GH #134).')
 end
 
+-- ---------------------------------------------------------------------------
+-- 5. THE SPACER ARITHMETIC.  Added 2026-09-14 to pin what
+--    iterations/streams/hero.md `-168` derived and deliberately did NOT assert
+--    ("是推导不是判决"), which is why it is here: an unpinned derivation is read
+--    as a ruling by the next person who needs it.
+--
+--    THE DERIVATION.  Every focus build row buys the ultimate as its 6th, 11th
+--    and 15th ABILITY entry.  The engine makes those ranks legal at hero levels
+--    6 / 12 / 18.  The row's 11th ability entry cannot arrive before hero level
+--    11 whatever else is in the queue -- eleven points is eleven levels -- so on
+--    the abilities alone the 2nd ultimate point arrives ONE LEVEL EARLY.  What
+--    saves it is the t10 pick sitting at queue position 10: exactly one non-
+--    ability entry ahead of it, lifting it to exactly 12.
+--
+--    ⭐ SO THE TALENT ROWS ARE LOAD-BEARING SPACERS, not clutter, and the slack
+--    is ZERO.  "Move the talents behind the abilities" is the obvious tidy-up
+--    and it drops the 2nd ultimate point to level 11, where it is illegal, where
+--    the head-blocking spender parks it, and where every ability point behind it
+--    parks too (tests/test_focus_build_level_legality.lua section 1 pins that
+--    shape).  ⛔ Do not reorder a focus build row on tidiness grounds.
+--
+--    WHAT IS DRIVEN vs WHAT IS WRITTEN DOWN.  The arrival levels come from
+--    skill_level_map.rank_ladder, which runs the shipped J.Skill.GetSkillList;
+--    the entry indices come from the row literal.  The REQUIREMENTS (6/12/18)
+--    are constants, for the same reason and with the same limit that
+--    test_focus_build_level_legality.lua states: GetHeroLevelRequiredToUpgrade()
+--    is the engine's and is not readable offline.  None of the focus five
+--    carries a non-standard requirement.
+
+local ULT_SLOT = 6
+local ULT_REQ = { 6, 12, 18 }
+
+local FOCUS_ROWS = {
+    { name = 'axe',            spec = AXE },
+    { name = 'lion',           spec = LION },
+    { name = 'wk default',     spec = WK },
+    { name = 'zuus pos_2',     spec = ZUUS },
+    { name = 'zuus pos_4/5',   spec = ZUUS2 },
+    { name = 'crystal_maiden', spec = { hero = 'crystal_maiden',
+                                        file = 'bots/BotLib/hero_crystal_maiden.lua' } },
+}
+
+--- The row's ABILITY-entry index of the nRank-th point in nSlot, i.e. how many
+--- ability points are down (inclusive) when that rank is bought.  This is the
+--- floor on the hero level it can arrive at, and it is read off the row literal
+--- rather than off the driven list on purpose: the two disagreeing is exactly
+--- the arithmetic this section prices.
+local function entry_index(spec, nSlot, nRank)
+    local row = skillmap.build_row(src_of(spec.file), spec.row, spec.table)
+    local nSeen = 0
+    for i, v in ipairs(row) do
+        if v == nSlot then
+            nSeen = nSeen + 1
+            if nSeen == nRank then return i end
+        end
+    end
+    return nil
+end
+
+tests['[hero] the ultimate is still sAbilityList[6], so section 5 reads the right slot'] = function()
+    assert(src_of('bots/FunLib/aba_skill.lua'):find('sAbilityList%[6%] = name') ~= nil,
+        'bots/FunLib/aba_skill.lua no longer parks the ultimate at sAbilityList[6]; '
+        .. 'every level in section 5 is then about some other ability.')
+end
+
+tests['[hero] every focus row buys the ultimate as its 6th / 11th / 15th ability entry'] = function()
+    for _, r in ipairs(FOCUS_ROWS) do
+        for nRank, nWantIdx in ipairs({ 6, 11, 15 }) do
+            local nIdx = entry_index(r.spec, ULT_SLOT, nRank)
+            assert(nIdx == nWantIdx, r.name .. ' buys ultimate rank ' .. nRank
+                .. ' as ability entry #' .. tostring(nIdx) .. ', not #' .. nWantIdx
+                .. '. The spacer arithmetic below is written against the shared '
+                .. 'shape of the six rows; re-derive it for this row before '
+                .. 'editing the number here.')
+        end
+    end
+end
+
+tests['[hero] the t10 pick is the spacer that lifts ultimate rank 2 to exactly level 12'] = function()
+    for _, r in ipairs(FOCUS_ROWS) do
+        local nIdx   = entry_index(r.spec, ULT_SLOT, 2)
+        local nLevel = level_of(r.spec, ULT_SLOT, 2)
+        local nReq   = ULT_REQ[2]
+        assert(nLevel == nReq, r.name .. ' reaches ultimate rank 2 at level '
+            .. nLevel .. ', and it is legal at ' .. nReq .. '. Early means the '
+            .. 'head parks and the whole queue behind it parks; late means a '
+            .. 'level of ultimate was given away.')
+        -- The floor, and the spacers that clear it.  nLevel - nIdx is the number
+        -- of NON-ability entries the queue spends before this point arrives.
+        --
+        -- ⚠️ The third assertion below is an IDENTITY once the first two hold
+        -- (12 - 11 = 1), and tools/agent/mutstand_focus_spacer.sh records that
+        -- no mutant can kill it alone.  It is kept for its failure TEXT: the
+        -- first two say a level moved, this one says which structural fact
+        -- moved it, and that is the sentence a reader needs before touching a
+        -- build row.
+        assert(nIdx == nReq - 1, r.name .. ': ultimate rank 2 is ability entry #'
+            .. nIdx .. ', so the ability points alone put it at level ' .. nIdx
+            .. ' against a requirement of ' .. nReq .. '. This section exists '
+            .. 'because that gap is exactly 1.')
+        assert(nLevel - nIdx == 1, r.name .. ' now has ' .. (nLevel - nIdx)
+            .. ' non-ability entries ahead of ultimate rank 2, not 1. With ZERO '
+            .. 'the point arrives at level ' .. nIdx .. ' and head-blocks; the '
+            .. 't10 pick at queue position 10 is a load-bearing spacer, not '
+            .. 'clutter (iterations/streams/hero.md -168).')
+    end
+end
+
+tests['[hero] ultimate rank 3 arrives one level early on every focus row, by construction'] = function()
+    for _, r in ipairs(FOCUS_ROWS) do
+        local nIdx   = entry_index(r.spec, ULT_SLOT, 3)
+        local nLevel = level_of(r.spec, ULT_SLOT, 3)
+        local nReq   = ULT_REQ[3]
+        assert(nLevel == 17 and nReq - nLevel == 1, r.name
+            .. ' reaches ultimate rank 3 at level ' .. nLevel .. ' against a '
+            .. 'requirement of ' .. nReq .. '. The "the warning is structural" '
+            .. 'reading below is conditional on that shortfall being exactly 1 '
+            .. 'level; re-take it.')
+        assert(nLevel - nIdx == 2, r.name .. ' has ' .. (nLevel - nIdx)
+            .. ' non-ability entries ahead of ultimate rank 3, not 2 (t10 and t15).')
+    end
+end
+
+tests['[hero] so the level-up warning is structural, not an anomaly signal'] = function()
+    -- ⚠️ THE CLAIM, stated at the strength the arithmetic supports and no
+    -- higher.  `-168` wrote it as "the terminal else is entered at least once
+    -- per hero per game"; driven, the honest form is CONDITIONAL ON REACHING
+    -- LEVEL 17.  A focus hero that reaches 17 asks for a rank that is legal at
+    -- 18, the head cannot be levelled, and the spender falls into the terminal
+    -- `else` -- which prints "[WARN] Skipped to level up ability" and, below
+    -- hero level 25, does NOT pop.  A hero that never reaches 17 never gets
+    -- there.  This matters to whoever reads that warning out of a log: the
+    -- DENOMINATOR is heroes that reached level 17, and a sighting is evidence
+    -- of nothing by itself.
+    local body = skillmap.terminal_else_body(src_of('bots/ability_item_usage_generic.lua'))
+    local removals = skillmap.queue_removals(body)
+    assert(#removals >= 1, 'the terminal else no longer pops the queue at all; '
+        .. 'the parked-head reading above was taken against a branch that pops '
+        .. 'only above hero level 25.')
+    assert(body:find('botLevel > 25', 1, true) ~= nil,
+        'the terminal else pops without the `botLevel > 25` guard -- an illegal '
+        .. 'head is now SKIPPED rather than parked, so the level-17 park (and '
+        .. 'everything section 5 says about it) has to be re-read.')
+    -- And the wall itself: at 17 there is nothing else legal to buy, so the
+    -- point has no alternative.  Every non-ultimate slot is already at its last
+    -- rank by then on every focus row.
+    for _, r in ipairs(FOCUS_ROWS) do
+        local src = src_of(r.spec.file)
+        local row = skillmap.build_row(src, r.spec.row, r.spec.table)
+        local ladder = skillmap.rank_ladder(r.spec.hero, row, skillmap.talent_rows(src))
+        for nSlot, tRanks in pairs(ladder) do
+            if nSlot ~= ULT_SLOT then
+                assert(tRanks[#tRanks] <= 17, r.name .. ' slot ' .. nSlot
+                    .. ' still wants a point at level ' .. tRanks[#tRanks]
+                    .. ', i.e. AFTER the level-17 ultimate park. The park is then '
+                    .. 'no longer costless and this case is understating it.')
+            end
+        end
+    end
+end
+
 return tests
