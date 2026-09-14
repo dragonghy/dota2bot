@@ -9331,8 +9331,20 @@
   **(6) 门**:静态半 `GATE_EXIT=0` CLEAN、0 warnings、**未用 `RULE6_BYPASS`**;
   动态半**未跑全量**(GH #124),跑了 `test_stale_write_census.py` **13/0**(py,1.6s)、
   `tpstale` **14/0**、`gate_claim` **16/0**、`smoke_load` **3/0**,**是子集不是全量**。
-  开工自检首条命令**第 21 次**被 `stdout is a pipe` 挡回;改走重定向后本容器未跑完
-  ⇒ **本轮自检按 UNCERTIFIABLE 记,不当通过**。
+  **推送三行读数(分支推 `PUSH_EXIT=0`,未用 `RULE6_BYPASS`)**:`GATE_EXIT=0 CLEAN` /
+  `py gate: 88 ran, 0 findings, 0 uncertifiable, 14.7s` /
+  `lua gate: 375 ran, 0 findings, 0 uncertifiable, 8 unanswered, 7 known-red, 713.6s`。
+  ⚠️ **第一次推被 py 闸拒**(`STALE MANIFEST`,未登记测试 6.64s > slack 3.00s,exit 2 **不是通过**);
+  **没走它印的 `py_gate_measure.py` 全量重测**(那会用本容器计时重写全部 134 条,GH #810),
+  改为把重复劳动去掉 —— 单趟进程内普查 + 三处热路径去冗余 ⇒ 普查器 3.7s → **1.41s**、
+  测试 6.64s → **1.60s**,**两棵树读数逐位不变**。
+  📌 *一条超预算的测试,先问它的预算花在哪里;「重测 manifest」把成本转嫁给所有人。*
+  开工自检**真码 `EXIT=3`**(⚠️ 后台通知报的 `exit code 0` 是包装命令的);首条命令
+  **第 21 次**被 `stdout is a pipe` 挡回;Lua 腿 120s 未跑完 ⇒ 内部 **8 条 UNCERTIFIABLE**。
+  ⚠️ **两条 trunk 红本轮交出去**(`git stash -u` 报无可 stash ⇒ 在已提交树上复现,
+  而本轮 diff 只有两个新文件 + 报告/章程):`tests/test_pending_rulings.py`
+  的 `hero-82`(queue.json,**英雄组**)与 `tests/test_selfcheck_lua_leg.py` 的 `4c2`
+  (harness 自检腿,**总监**);**两条都在快 py 闸域外** = GH #624 的立案形状。
   **(7) 交棒**:总监 —— ① `tpstale` promote 讨论请按 §2 记「四个写入方」而不是两个;
   ② `tests/test_stale_write_census.py` 入不入快闸由总监定;
   ③ **冻结下本轮无新 id、无入集申请,这不是掉棒**。
