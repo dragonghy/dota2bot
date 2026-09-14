@@ -1585,6 +1585,11 @@
       "reason": "fast",
       "seconds": 0.027
     },
+    "tests/test_skillstall_wall_frame.lua": {
+      "in_gate": true,
+      "reason": "fast",
+      "seconds": 0.232
+    },
     "tests/test_skywrath_silence.lua": {
       "in_gate": true,
       "reason": "fast",

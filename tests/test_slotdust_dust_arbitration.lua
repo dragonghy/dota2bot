@@ -529,9 +529,19 @@ tests['[instrument I2] the fixture item namespace is not the engine one'] = func
         -- pattern skips past its opening quote, then matches the SEPARATOR
         -- between two real names as if it were one (', '). That mis-parse read
         -- 115 where there were 114 -- a fake name nobody would look at twice.
-        -- (Vocabulary is 117 since 2026-09-03: f_260903_101254_cm_farm_stealcamp
+        -- (Vocabulary was 117 since 2026-09-03: f_260903_101254_cm_farm_stealcamp
         -- added three names, all of which RESOLVE in bots/, so nMissing held
         -- at 23 -- the namespace hole did not widen.)
+        -- (Vocabulary is 124 since 2026-09-14, and this time the hole DID widen,
+        -- 23 -> 25.  replay-check landed tests/fixtures/skillstall/ -- two frames
+        -- of 20260902_220100_slot6 for GH #799 acceptance 3 -- which brought seven
+        -- new names: black_king_bar, bloodthorn, greater_critical, gris_gris,
+        -- lotus_orb, radiance, ultimate_scepter.  Five resolve in bots/; the two
+        -- that do not are `greater_critical` and `gris_gris`.  Both are the benign
+        -- half of what this ceiling mixes: they are dumper ENTITY-CLASS names for
+        -- items bots/ simply never mentions (Daedalus, Gris-Gris), not a namespace
+        -- divergence on an item the bot code actually uses.  Registered rather
+        -- than absorbed, because this ceiling's whole job is to not grow silently.)
         for it in line:gmatch("'([^']*)'") do
             if it ~= '' then names[it] = true end
         end
@@ -548,8 +558,8 @@ tests['[instrument I2] the fixture item namespace is not the engine one'] = func
             nMissing = nMissing + 1
         end
     end
-    assert(nNames == 117, 'the fixture item vocabulary changed size: ' .. nNames)
-    assert(nMissing == 23, 'unresolvable fixture item names moved from 23 to ' .. nMissing ..
+    assert(nNames == 124, 'the fixture item vocabulary changed size: ' .. nNames)
+    assert(nMissing == 25, 'unresolvable fixture item names moved from 25 to ' .. nMissing ..
         ' -- either a fixture arrived with new items, or the namespace hole widened')
 end
 
