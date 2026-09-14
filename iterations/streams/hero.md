@@ -7860,6 +7860,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     将来买证据**必须在发波请求里自己写明 co-arm `wkqdmg`**;(乙) 它**不是入集批准**。
   - ⚠️ **证据纪律 3 同形第 13 次**(第一条命令又是 `routine_selfcheck.sh | tail`,脚本当场 REFUSED);
     改用 `bash tools/agent/rc.sh` 才拿到真读数。**下一轮第一条命令就用 rc.sh。**
+  - **落地 `91bd45b0`(main)**;`HEAD:main` 第一次被拒 + 一次 HTTP 403 ⇒ 按 `-172` 的判别子
+    先 `git ls-remote origin main`(tip 动了 = 争用)再 rebase,**没有在 30 秒内连推四次**。
+    两次 rebase 的 JSON 冲突(双方各追加一个键)按「两边都留」解并 `json.load` 复核。
+    GH **#794** 追评在 push **之后**发(`claim_precheck.sh` → `clean` / `OK to publish`)。
+  - ⚠️ **本轮 token 偏高(49.1M in),归因是等待**:三次 `lua_gate.py` + 两次 push 钩子
+    = **五次**十分钟级的闸。⭐ **下一轮的省法是顺序**:三条 `talent6:IsTrained()` 计数普查
+    是被闸**一条一条**顶出来的,而 `grep -rln "talent6:IsTrained" tests/` 两秒能一次列全
+    ⇒ **同族普查普扫要排在第一次跑闸之前**。
 - 2026-09-14T13:53Z(报告 `iterations/reports/hero/20260914T135322Z.md`;**backlog:新开 `-174`**;
   **零 AWS、零波次;`bots/` 改了 —— P4.4 (i)**;新 gated id **`wkt10ls`**,登记
   `state.json:wkt10ls_20260914`,请求 `queue.json:hero-82`)
