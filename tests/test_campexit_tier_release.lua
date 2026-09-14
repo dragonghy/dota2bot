@@ -214,7 +214,18 @@ tests['[ratchet][source] the third neutral branch carries no tier clause of its 
     local blk = third_branch(code)
     assert(blk, 'the third neutral branch was reshaped -- re-read it before ' ..
         'trusting the no-op argument above')
-    assert(blk:find('J%.Site%.FindFarmNeutralTarget'),
+    -- RE-READ 2026-09-14 (strategy desk, GH #137 §4 suggestion 2). This used to
+    -- name `J.Site.FindFarmNeutralTarget` literally. The soak candidate
+    -- 'camppick' routed all four farm-path selections through the file-level
+    -- wrapper `FarmNeutralTarget(bot, ...)`, so the literal spelling left this
+    -- branch while the FACT this assertion rests on -- the branch that acts
+    -- still selects a farm target, and asks no tier question of its own -- is
+    -- unchanged. Accepting either spelling is therefore a re-read, not a
+    -- re-baseline: the two assertions below (no IsAncientCreep, no direct
+    -- GetLevel) are what actually carry the no-op argument, and both still hold
+    -- verbatim. GH #624: a census keyed to a call site goes red for whoever
+    -- lands the next gate, so the repair belongs to the desk that moved it.
+    assert(blk:find('J%.Site%.FindFarmNeutralTarget') or blk:find('FarmNeutralTarget%s*%(%s*bot%s*,'),
         'the third branch no longer selects a farm target -- wrong slice')
     assert(not blk:find('IsAncientCreep'),
         'the third branch grew an ancient clause of its own -- if that is the ' ..

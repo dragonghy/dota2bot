@@ -554,27 +554,55 @@ export const FilterFarmNeutrals = function (
     return kept;
 };
 
-export const FindFarmNeutralTarget = function (creepList: Unit[]): Unit | null {
+// [GH #137 section 4 suggestion 2; replay desk handoff 2026-09-13T00:4xZ] Soak
+// candidate 'camppick' (turbo-only). The gate is resolved ONCE, at the single
+// wrapper (FarmNeutralTarget) in bots/mode_farm_generic.lua, and arrives here as
+// bStrictAncient.
+//
+// The bound this aligns is the `GetBot().GetLevel() > 9` inside IsValidCreep --
+// the only ancient bound evaluated per creep, inside target selection, and the
+// one that decided the replay desk's bearing frame (a level-10 sniper passes
+// `10 > 9`; a level-9 viper in the same game does not).
+//
+// This is NOT 'campfarm' a second time. 'campfarm' filters the sweep itself, so
+// every reader of the list loses the ancients -- including readers that only
+// COUNT, which is the state GH #265 photographed (a level-4 Earthshaker crossing
+// an ancient camp's aggro radius six times, no damage of its own, dead at
+// t=238.1) and which needed a second id ('campvoid') to patch. This lever
+// filters only the copy the SELECTOR walks and hands the caller's table back
+// untouched, so list length, both `[1]` clauses, the `>= 3` latch and the
+// presence axis read exactly what they read today. Only the choice narrows.
+//
+// DECLARED CONSEQUENCE: an all-ancient sweep returns null and control reaches
+// the caller's ungated Action_AttackUnit fallback -- unchanged shipped
+// behaviour, and the price of preserving presence. The domain is the MIXED
+// sweep, which is the shape GH #137 was filed on.
+//
+// NOT CONJOINED with 'campfarm'; armed together 'campfarm' dominates this id, so
+// reading this lever needs a leg with 'campfarm' unarmed. See
+// tests/test_camppick_target_tier.lua.
+export const FindFarmNeutralTarget = function (creepList: Unit[], bStrictAncient?: boolean): Unit | null {
     const bot = GetBot();
+    const tPick = FilterFarmNeutrals(creepList, bot.GetLevel(), bStrictAncient);
     const botName = bot.GetUnitName();
     let targetCreep: Unit | null = null;
 
     if (ConsiderFarmNeutralType[botName] !== undefined) {
         const farmType = ConsiderFarmNeutralType[botName]();
         if (farmType === "nearest") {
-            targetCreep = GetNearestCreep(creepList);
+            targetCreep = GetNearestCreep(tPick);
         } else if (farmType === "maxHP") {
-            targetCreep = GetMaxHPCreep(creepList);
+            targetCreep = GetMaxHPCreep(tPick);
         } else {
-            targetCreep = GetMinHPCreep(creepList);
+            targetCreep = GetMinHPCreep(tPick);
         }
     }
 
     if (HasItem(bot, "item_bfury") || HasItem(bot, "item_maelstrom") || HasItem(bot, "item_mjollnir") || HasItem(bot, "item_radiance")) {
-        targetCreep = GetMaxHPCreep(creepList);
+        targetCreep = GetMaxHPCreep(tPick);
     }
 
-    return targetCreep || GetMinHPCreep(creepList);
+    return targetCreep || GetMinHPCreep(tPick);
 };
 
 export const ConsiderFarmNeutralType = {

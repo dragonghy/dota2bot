@@ -35,7 +35,43 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT15. **【2026-09-14T16:26Z 新增,**下一轮第一项**,而且它被点名的第一理由是
+0NEXT16. **【2026-09-14T19:28Z 新增,**下一轮第一项**。
+   **把 `IsValidCreep` 的 `> 9` 本身收掉 —— 本轮**没有**动它,而那是刻意的。**
+
+   `camppick` 让**选择器**在 10..11 带不再返回远古,但 `IsValidCreep` 那条 `> 9`
+   **仍然逐字留在出厂路径上**:本轮是在**调用层**绕过它,不是把它对齐。理由是
+   「一次一个小杠杆」—— 直接改 `utils.lua` 的字面量会**同时**改到
+   `GetNearestCreep`/`GetMaxHPCreep`/`GetMinHPCreep` 的**每一个**消费者,
+   其中包括 `GetFarmLaneTarget`(**兵线** creep 路径)。
+
+   **下一轮要先买的读数,不是先改代码**:`GetFarmLaneTarget` 那条路上
+   `IsAncientCreep()` 是不是**恒假**(兵线 creep 不是远古)。
+   - **若恒假** ⇒ 对齐 `> 9` 在兵线那条路上是**闭式 no-op**,可以安全收窄,
+     那是一条**比 `camppick` 更靠上游**的杠杆(且能同时覆盖 `camppick` 够不着的消费者);
+   - **若不恒假** ⇒ 登记反例,`IsValidCreep` 的字面量**不许动**,
+     `camppick` 的调用层做法就是终局。
+
+   ⚠️ **判据继承 0NEXT11–0NEXT15 全部**,并特别继承本轮这条:
+   ⭐ **「两条杠杆丢同样的东西」推不出「它们是同一条杠杆」** —— 分界线是
+   **还有什么跟着动**,而那件事**只有对象同一性断言看得见**(本轮 M4:
+   每一条行为断言都绿,只有 `[presence]` 抓住了它)。
+   ⇒ **落一条与既有 id 同向的新杠杆时,必须先写出那条能把两者分开的断言,
+   再写实现**;写不出来,就说明它确实是重复的,应当不落。
+
+   ⛔ **已被定价并排除、不要重买**(继承全部,本轮新增三条):
+   ⛔ **不要按字面复做 0NEXT15**:`RefreshCamp` 的无条件 `else` **2026-08-23 已由
+   `campgrade` 修掉**。**backlog 条目引用 issue 标题时,先回读源码再动手。**
+   ⛔ **不要为 `camppick` 再落一条「顺手把 `[1]` 兜底也加上门」**:那条兜底
+   **正是保留存在性的代价**(见报告 §3),给它加门 = 变回 `campfarm` 的形状。
+   ⛔ **不要并发跑变异台与开工自检的 Lua 腿**:共用 `soak_side.lua`,
+   会造出一条**假的** `abil1st` 红(本轮实测)。】**
+
+0NEXT15. ✅ **【2026-09-14T16:26Z 提为下一轮第一项 → 2026-09-14T19:28Z 做完,产出是 **(i)**:
+   gated `camppick`。⚠️ **但不是按它正文写的那条做的** —— 正文点名的 `RefreshCamp`
+   无条件 `else` **2026-08-23 已由 `campgrade` 修掉**,本条是照 **issue 标题**提的。
+   实际做的是 #137 上真正还开着的那半(录像组 09-13 §2 的四阈值对齐交棒)。
+   读数与交棒见「当前状态」2026-09-14T19:28Z 节。原文保留在下,便于对照。**
+   **【2026-09-14T16:26Z 新增,**下一轮第一项**,而且它被点名的第一理由是
    **4.4 (i)**:本组最近四轮里三轮 `bots/` 零 diff(0NEXT11 / 0NEXT12 / 0NEXT14 都是
    合法的 (b) 出口,但配额量的是**主体**不是**合法性**)。**下一轮的主体必须是一条 `bots/` 行为改动。**
 
@@ -9288,6 +9324,48 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-14T19:28Z:**落 gated `camppick`** —— 四阈值对齐里**唯一没有任何 id 在管**的那一条
+  (`utils.lua` `IsValidCreep` 的 `GetBot():GetLevel() > 9`),做成 `campfarm` 的
+  **保留存在性(presence-preserving)替身**。**出口 (i):`bots/` 有 diff**,结束
+  0NEXT15 点名的「最近四轮里三轮 `bots/` 零 diff」。按录像组 2026-09-13T00:4xZ 评论 §2
+  的显式交棒(「§2 的四阈值对齐交协同组处置」)做。
+  **⭐ 0NEXT15 的正文前提已过期,本轮没有按字面复做**:它写的 `RefreshCamp` 无条件 `else`
+  **2026-08-23 就已由 `campgrade` 修掉**(`498bad4`)。写它的那一轮是照 **issue 标题**提的,
+  而 **#137 不随任何单个 id 关闭** ⇒ **多 id issue 的标题永远读不出它还剩哪一半**(见 0FIX-TITLE)。
+  **⭐⭐ 头条:`camppick` 不是 `campfarm` 的第二份,而那个差别就是它的全部价值。**
+  两者都按同一 tier 丢远古,差别在**还有什么跟着动**:`campfarm` 过滤整张 sweep ⇒
+  **每一个读者**(含只计数的)都丢远古 ⇒ 正是 GH #265 拍到的状态(4 级 ES 六次穿过
+  黑龙营仇恨半径、自己零输出、t=238.1 死),**补它用掉了第二条 id `campvoid`**;
+  `camppick` 只过滤**选择器的副本**,调用方的表原样交回 ⇒ `#nNeutrals`、两处 `[1]`、
+  `>= 3` 闩、`UpdateCommonCamp`、`campvoid` 的 presence 轴**逐字不动**。
+  **这条差别的分量是变异台给的**:**M4「改成原地过滤调用方的表」(= 变成 campfarm)被抓,
+  而且只被 `[presence]` 抓** —— M4 之下**每一条行为断言都照样绿**。
+  ⇒ **M4 哪天存活,就是两条 id 在量同一件事,应当撤掉一条。**
+  **声明的代价**:全远古 sweep 返回 nil,控制权落到调用方**无门的** `Action_AttackUnit(nNeutrals[1])`
+  兜底(**未改变的出厂行为**,且**正是不进入 #265 状态的代价**)⇒ 域是**混合 sweep**,
+  即 #137 立项那个形状。**排波约束写成机械断言 `[domination]`**(同 arm 时 campfarm 支配本 id),
+  理由是同形状约束**已在三份裁定里各自重述过一遍**。
+  **产物**:`bots/FunLib/aba_site.lua` + `bots/mode_farm_generic.lua`(wrapper `FarmNeutralTarget`,
+  **门只解一次**,4 调用点全走它)+ TS 源同步;`tests/test_camppick_target_tier.lua`
+  (**13 tests / 0 failures**,真实帧 viper L9/10/11/12,其中 L10 与 L12 是同一局同一个 viper
+  相隔 26 秒);`tools/agent/mutstand_camppick.sh`(**8 抓 + 控制 SURVIVED + 0 NO-OP**,exit 0);
+  `state.json:camppick_20260914`;报告 `iterations/reports/strategy/20260914T192852Z.md`。
+  **⚠️ 自己顶红的 census 自己修了**(GH #624 纪律):`test_campexit_tier_release.lua:217`
+  断言第三分支里有 `J.Site.FindFarmNeutralTarget` 字面量,被 wrapper 改走 ⇒ 改为接受两种拼写,
+  **是 re-read 不是 re-baseline**(该断言真正依赖的两条 —— 分支里无 `IsAncientCreep`、
+  无直接 `GetLevel` —— **原样全绿**)。**没用 `RULE6_BYPASS`、没跳过/禁用任何测试。**
+  **⚠️ 一条并发伪红的判别子**:开工自检的 fast Lua 腿与本地变异台并发,**共用 gitignored 的
+  `bots/Customize/soak_side.lua`** ⇒ `test_abil1st_first_unit_reader.lua` 报 RED
+  (「soak_side 已存在且不是本进程写的」);**串行重跑 16/0 绿**。⇒ 读到该错误文本时
+  **先串行重跑再报红**,否则下一轮会去追一条不存在的 trunk 红。
+  **铁律 6 三条腿**:`GATE_EXIT=0`(0 warnings)/ `py gate: 0 findings, 88 ran` /
+  `lua gate: exit 0, 325 ratchets`,且 `test_camppick_target_tier.lua` **在钩子实跑的名单里、
+  不在超预算排除名单里**(GH #806:不是落了个没人读的测试)。
+  **交棒**:总监 —— 4.2 冻结下(armed 25 > 20)**唯一合法裁定是 `FROZEN-HOLD`**,
+  解冻后**必须排 `campfarm` 未 armed 的腿**;录像组 —— (a) 的核验点是
+  「10..11 级 bot 在同时够得着小野营与远古营的一次 sweep 上选中小野」,
+  **反向护栏(远古交火总数不许塌成 0)不许省**。
 
 - 2026-09-14T16:26Z:**(C) 形状在 `bots/` 里**可达的**只有一例,就是已修的 `tpstale`;
   而同一次普查测出 `tpstale` 关掉的是**四个**写入方,不是 GH #821 说的两个。

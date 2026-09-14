@@ -665,24 +665,78 @@ ____exports.FilterFarmNeutrals = function(creepList, botLevel, bStrictAncient)
     end
     return kept
 end
-____exports.FindFarmNeutralTarget = function(creepList)
+-- [GH #137 §4 suggestion 2; replay desk handoff 2026-09-13T00:4xZ] Soak
+-- candidate 'camppick' (turbo-only). The gate is resolved ONCE, at the single
+-- wrapper (FarmNeutralTarget) in bots/mode_farm_generic.lua, and arrives here as
+-- bStrictAncient.
+--
+-- THE BOUND THIS ALIGNS. The replay desk counted the ancient bounds on the farm
+-- path and found FOUR, not the two GH #137 §1 named:
+--
+--     9     bots/FunLib/utils.lua IsValidCreep -- `GetBot():GetLevel() > 9`
+--     10    bots/mode_farm_generic.lua, the two `nNeutrals[1]` clauses
+--     12    ANCIENT_MIN_LEVEL -- the camp ladder, 'campgrade', 'campfarm'
+--     none  the 1000u branch and the raw Action_AttackUnit fallback
+--
+-- The 9 is the one that decided their bearing frame: a level-10 sniper passes
+-- `10 > 9`, and a level-9 viper in the same game does not -- one `if`, one level
+-- apart, opposite worlds. It is also the ONLY bound evaluated per creep, inside
+-- target selection, so every selector walking a mixed sweep carries it.
+--
+-- WHY THIS IS NOT 'campfarm' A SECOND TIME -- the first thing to check, because
+-- both levers drop ancients below the same tier. They differ in WHAT ELSE
+-- MOVES, and that difference has already cost a bot its life once. 'campfarm'
+-- filters the sweep at NeutralFarmList, so EVERY reader of that list loses the
+-- ancients -- including the readers that only COUNT. GH #265 photographed the
+-- state that leaves behind: "may I attack a neutral here" and "are there
+-- neutrals here" start answering from different lists, the lane-creep escape
+-- stays shut because the dropped ancients are still counted there, and a
+-- level-4 Earthshaker crossed the Black Dragon camp's aggro radius six times in
+-- 19s with no damage of its own and died at t=238.1. Patching that took a
+-- SECOND id ('campvoid').
+--
+-- This lever filters only the copy the SELECTOR walks and hands the caller's
+-- table back untouched, so `#nNeutrals`, both `[1]` clauses, the `>= 3` latch,
+-- UpdateCommonCamp and 'campvoid's presence axis all read exactly what they read
+-- today. Presence is preserved BY CONSTRUCTION; only the choice narrows.
+--
+-- DECLARED CONSEQUENCE, stated because it is the price of that and not an
+-- oversight: when the sweep holds nothing but ancients this returns nil, and
+-- control reaches the caller's ungated `Action_AttackUnit(nNeutrals[1])`
+-- fallback, which can still be an ancient. That is UNCHANGED shipped behaviour
+-- rather than a regression introduced here -- and it is exactly what keeps the
+-- bot out of the #265 state. The domain of this lever is the MIXED sweep, which
+-- is the shape GH #137 was filed on (an ogre camp and an ancient camp ~590u
+-- apart, one 900u sweep).
+--
+-- NOT CONJOINED with 'campfarm' (AGENTS.md: promoting an id silently freezes any
+-- gate that names it). The two are separately armable, and armed TOGETHER
+-- 'campfarm' DOMINATES this id -- its list has no ancient left to refuse -- so
+-- reading this lever needs a leg with 'campfarm' NOT armed. That domination is
+-- asserted in tests/test_camppick_target_tier.lua, not left to prose.
+--
+-- Unarmed, at or above the tier, or with no ancient in the sweep,
+-- FilterFarmNeutrals returns the SAME table by its own contract, so the
+-- selection below walks the very list the caller handed in.
+____exports.FindFarmNeutralTarget = function(creepList, bStrictAncient)
     local bot = GetBot()
+    local tPick = ____exports.FilterFarmNeutrals(creepList, bot:GetLevel(), bStrictAncient)
     local botName = bot:GetUnitName()
     local targetCreep = nil
     if ____exports.ConsiderFarmNeutralType[botName] ~= nil then
         local farmType = ____exports.ConsiderFarmNeutralType[botName]()
         if farmType == "nearest" then
-            targetCreep = ____exports.GetNearestCreep(creepList)
+            targetCreep = ____exports.GetNearestCreep(tPick)
         elseif farmType == "maxHP" then
-            targetCreep = ____exports.GetMaxHPCreep(creepList)
+            targetCreep = ____exports.GetMaxHPCreep(tPick)
         else
-            targetCreep = ____exports.GetMinHPCreep(creepList)
+            targetCreep = ____exports.GetMinHPCreep(tPick)
         end
     end
     if HasItem(bot, "item_bfury") or HasItem(bot, "item_maelstrom") or HasItem(bot, "item_mjollnir") or HasItem(bot, "item_radiance") then
-        targetCreep = ____exports.GetMaxHPCreep(creepList)
+        targetCreep = ____exports.GetMaxHPCreep(tPick)
     end
-    return targetCreep or ____exports.GetMinHPCreep(creepList)
+    return targetCreep or ____exports.GetMinHPCreep(tPick)
 end
 ____exports.ConsiderFarmNeutralType = {
     npc_dota_hero_templar_assassin = function() return "nearest" end,

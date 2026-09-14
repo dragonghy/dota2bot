@@ -124,6 +124,23 @@ local function NeutralPresenceList(hBot, tCreeps)
 		J.IsModeTurbo() and J.IsSoakCandidate('campvoid'))
 end
 
+-- [GH #137 §4 suggestion 2] Soak candidate 'camppick' (turbo-only). Every
+-- `FindFarmNeutralTarget` call on this path goes through here, so the gate is
+-- resolved in exactly one place and no call site can drift away from it; the
+-- call-site count is an assertion in tests/test_camppick_target_tier.lua rather
+-- than a promise that the next sweep remembers to come through here.
+--
+-- This narrows the CHOICE and leaves the caller's list alone -- see the head
+-- note on J.Site.FindFarmNeutralTarget for why that is a different lever from
+-- 'campfarm' above and not a second copy of it. NOT conjoined with 'campfarm'
+-- (AGENTS.md: a gate naming another id freezes FALSE the day that id is
+-- promoted); armed together 'campfarm' dominates this id, so reading it needs a
+-- leg with 'campfarm' unarmed.
+local function FarmNeutralTarget(hBot, tCreeps)
+	return J.Site.FindFarmNeutralTarget(tCreeps,
+		J.IsModeTurbo() and J.IsSoakCandidate('camppick'))
+end
+
 
 if bot.farmLocation == nil then bot.farmLocation = bot:GetLocation() end
 
@@ -981,7 +998,7 @@ function Think()
 
 			-- Use ability-specific range for neutral farming too
 			local nFarmRange = math.max(nEffectiveRange, bot:GetAttackRange())
-			local farmTarget = J.Site.FindFarmNeutralTarget(nNeutrals)
+			local farmTarget = FarmNeutralTarget(bot, nNeutrals)
 			if J.IsValid(farmTarget)
 			then
 				bot:SetTarget(farmTarget);
@@ -1047,7 +1064,7 @@ function Think()
 
 				farmState = FARM_STATE_FARM;
 				
-				local farmTarget = J.Site.FindFarmNeutralTarget(neutralCreeps)
+				local farmTarget = FarmNeutralTarget(bot, neutralCreeps)
 				if J.IsValid(farmTarget)
 				then
 					bot:SetTarget(farmTarget);
@@ -1064,7 +1081,7 @@ function Think()
 					preferedCamp  = ClosestCamp(bot, availableCamp);
 
 
-					local farmTarget = J.Site.FindFarmNeutralTarget(neutralCreeps)
+					local farmTarget = FarmNeutralTarget(bot, neutralCreeps)
 					if J.IsValid(farmTarget)
 					then
 						bot:SetTarget(farmTarget);
@@ -1073,7 +1090,7 @@ function Think()
 					end
 			else
 			
-				local farmTarget = J.Site.FindFarmNeutralTarget(neutralCreeps)
+				local farmTarget = FarmNeutralTarget(bot, neutralCreeps)
 				if J.IsValid(farmTarget)
 				then
 					bot:SetTarget(farmTarget);
