@@ -10417,7 +10417,30 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   `9 anchor(s) checked -- OK`;⚠️ `UNCOVERED SET GREW` **2 个新文件**(`tests/test_dusttower_dive_guard.lua`、
   `tests/test_fieldsip_transfer_receiving_site.lua`,均逐字 `NEW UNCOVERED  no_manifest_row`),总体
   `UNCOVERED 115 of 460 (25%)` ⇒ ⛔ **本台不代登记、不新开 issue**(GH #783/#804/#806 已立案,再开即重复)。
-  ⚠️ `trunk health (python test suite)` 腿在报告写作时**仍在跑** ⇒ ⛔ **本台不声称它跑过**,真码见报告补记。
+  ⚠️ `trunk health (python test suite)` 腿在报告写作时**仍在跑**,**之后跑完 ⇒ 报告补记 (E) 同轮更正了补记 (B)**。
+  **真码**:`selfcheck worst exit: 3`;`legs run : 13`;
+  `FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage trunk-red(python)`;
+  `UNCERTIFIABLE (exit 2): none`;python 腿 **`130 passed, 3 failed, 2 uncertifiable`**;
+  Lua 快腿 `97 tagged detector file(s), 0 failures -- FAST SUBSET`。
+  ⚠️ ⛔ **未把 exit 3 归给任何单一条腿**(GH #267 那句防滥读提醒逐字照抄进报告)。
+  ⭐ **`origin/main` 现在红着,且「main 也红」这一条本轮是立住的**:自检那行自带限定
+  `Whether main is red too is NOT established by this line: re-run after git stash`,
+  故本台**在干净树上另跑一遍**(`git status` 空,`HEAD` = `fc3c4ea8` = `origin/main`):
+  `test_call_arity_census EXIT=1` / `test_lua_corpus_stability EXIT=1` ⇒ **一手,非转述**。
+  **三条红的归属(⛔ 均非本台产物,不代修,先例 GH #33)**:
+  (甲) `test_call_arity_census.py` ← `91bd45b0` **英雄组** `wkbonespawn`,逐字
+  `bots/BotLib/hero_skeleton_king.lua X.wk_IsBoneGuardEmptyBankOpen UNDER passed 0 declares 1`
+  ⚠️ 这是棘轮**正常工作**:它要的是一个 `ALLOWLIST`/`ROUTED` 裁决词,**不一定是改代码**;
+  (乙) `test_lua_corpus_stability.py` ← `3cb7a3ff` **协同组**,逐字
+  `no tool or test open-codes a walk of bots/ any more (use lua_corpus) -- got ['tests/test_stale_write_census.py']`;
+  ⇒ **(甲)(乙) 本轮开 `[bug]` GH #825**(立案+点名+一手复现,⛔ 不代修、不判断修复形状);
+  (丙) `test_selfcheck_lua_leg.py` 的 `4c2` ⛔ **不收进 #825** —— `owed_executions.json` 的
+  `selfcheck_lua_leg_4c2_red` 已在案(`executor=总监自己`),**再开即重复立案**;
+  两条 `UNCERTIFIABLE`(逐字 `did NOT run -- this is not a pass and not a failure`)**不下判断**。
+  ⭐ **闸是绿的而且没做错**:四次 push 逐字 `py gate: 88 ran, 0 findings` ⇒ **三条红一条都不在那 88 条里**,
+  推它们进来的那次闸**也是绿的且是对的** ⇒ **GH #624/#616/#806 立案形状的又一例**(缺陷在成员资格)。
+  ⛔ 本台不自行调整闸的成员资格。⛔ 自检跑得久与在案的 `selfcheck_recursive_fork_amplifier`
+  **不连起来归因**(未读源码,可能同源也可能无关)。
   **六、铁律 9 优先项**:`OWNER_PRIORITIES.md` **4.1 upstream 标尺波**仍挂最高优先,
   ⛔ 闸 (iii) `exit 3` ⇒ 发不出,**本轮零推进,原因是预算不是排期**。
   **七、⛔ 本会话 `bots`/`game` 一行未改。** 铁律 11:MCP 本轮可用,零 `requires approval`、零空转。
