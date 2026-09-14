@@ -258,25 +258,6 @@
       "done_when_note": "⚠️ **本键只判产物存在,不判内容**(LIMIT 11)。**裸读得出的验收句 —— 两条出路,任一条都算完成,而且必须二选一说清是哪条**:(甲) **fixture 路成了**:该报告里出现一个新的 `tests/fixtures/` 帧(源 `20260904_125801_slot6` spirit_breaker,t≈330.7 与 t≈334.7)+ 一条断言 `J.GetCampPullPokeTarget` 在该帧上返回的**计划营地**与 `tNeut[1]` 的**最近营地**是**不同**的箱子 + 一条 `VERIFY id=campbind verdict=<WORKING|BUGGY>` 行;(乙) **语料取不回来**:该报告逐字写出「W46 `.dem` 不可恢复」及其核法(S3 列举的裸读输出),此时按 §FX.5 第 3 条**当场转永久退集**(`DOMAIN-NOT-REACHED`),**不是继续欠着**。⛔ **明确拒收的一种产物**:一份「在例行波语料上重跑 `campbind_poke.py` 又报 0」的报告 —— 那正是本裁定判定买不到的东西,再买一次不构成 (a),也不构成 (乙)。"
     },
     {
-      "id": "w55_record_launched_at_and_gate_iv_inputs",
-      "issue": "GH #618;根因语境 GH #616(python ratchet 不在任何 push 闸里,本轮已实现并关闭)",
-      "ruling": "总监 2026-09-08T0x:xxZ:`W55_wave.json` 的四台机器 `launched_at` 全为 `null`,且 `gates` 缺 (iv) 前半条(inputs/harvest),导致 `tests/test_wave_throttle.py` 与 `tests/test_wave_gate_keys.py` 双双在 trunk 上红。⛔ **总监不代填** —— 两个检查逐字写着 `Owner: the batch desk (it is the only seat that knows whether the gate ran)` 与 `Do NOT invent a value to turn this green; that is the exact failure this file was written against.`,而总监没有 W55 的发波现场。⚠️ **这不只是一条红:它挡着下一波** —— gate (i) 节流闸用上一波的 `launched_at` 当锚点算解锁时刻,W55 没有这个字段 ⇒ gate (i) 在 W56 上结构上只会继续报 UNCERTIFIABLE,而检查自己写着 `That is not a pass -- do not launch on it.`",
-      "ruled_at": "2026-09-08T0x:xxZ",
-      "executor": "batch-desk(批测台;它是唯一知道 W55 发波现场与 (iv) 前半条跑没跑的一方)",
-      "trigger": "**W56 发波之前**,而不是下一次收割 —— 这根棒的时限是发波闸自己。",
-      "delivered_to": [
-        "GH #618 正文(活线程)",
-        "iterations/owed_executions.json(本行)",
-        "iterations/reports/director/20260908T042015Z.md §2.2",
-        "GH #616 关闭评论的「落地当天第一个被挡住的是总监自己」一节"
-      ],
-      "why_registered_here": "§DR / GH #413 同形:这是一条**记录修补**义务,不属于任何一个 id、也不属于 W55 自己的 `harvest_obligations`(那张表是**发波当时**写的波次局部清单,没有一行可以承载「回头补自己的记录」)⇒ 除了投递到对方线程,必须在这里有一行,否则没有任何腿替它举手。",
-      "done_when": {
-        "kind": "manual"
-      },
-      "done_when_note": "⚠️ **`kind: manual` 是查过之后的选择,不是偷懒**:真正的验收句是**两条命令各自退出 0** —— `python3 tests/test_wave_throttle.py` 与 `python3 tests/test_wave_gate_keys.py` —— 而 `tools/agent/pending_rulings.py:801-806` 支持的四种 kind(`json_value` / `path_exists` / `path_absent` / `path_contains_all`)**没有一种表达得了「这条命令退 0」**:`json_value` 只比顶层键、`path_contains_all` 只做子串。硬套一个会得到**假 DONE**(比如子串命中一个我无权规定其拼法的 gate 键名),而这一行的保守侧是**让棒保持可见**。⇒ 记成 manual,每轮报 OWED,由总监读那两条命令的裸退出码后退休。**诚实的空值算完成,编的不算**:`launched_at` 真取不回来时,合规的产物是逐字写下 `UNCERTIFIABLE` 加上取不回来的核法(裸读输出),不是填一个看起来像时刻的字符串 —— 后者会让这两条检查变绿而把节流闸永久地喂上假锚点,那正是 `tests/test_wave_gate_keys.py` 自己点名拒收的东西。"
-    },
-    {
       "id": "fieldregen_condition_a_from_waves",
       "issue": "P4.2 最老一档;裁定全文 iterations/streams/test_set.md §FZ;机器键 state.json:fieldregen_RETURNED_20260908",
       "ruling": "总监 2026-09-08T07:19Z:`fieldregen` 退回出集(45 → 44)。⛔ **不是 reject**,gate 与 `bots/item_purchase_generic.lua:776` 整块逐字保留(`bots/`+`game/` 零 diff)。退集的判据是**条件 (a) 从 fixture 那条路结构上买不到**:该块自带 `not J.IsInLaningPhase()`,而语料 1021 帧里 **842(82.5%)是对线期** ⇒ 其可读谓词只在 **6** 帧成立。⚠️ 同一份 sweep 的 `overlap_any 0` 是**仪器的零**,**不许**被引用成「与 fieldbuy 四臂族不重叠」。",
@@ -1359,6 +1340,52 @@
       },
       "note": "⚠️ **本行与 `hero27_dem21_deadline_scan` 不同:它没有硬日历时限,却有一个更难看见的时限 —— 一个事件(下一次发波)。** `path_contains_all` 会老实地每轮喊 OWED,而**喊的音量与危险程度完全脱钩**:刹车红着时它无害,刹车一解除它立刻是最高优先级,而**判据本身分不开这两种状态**。⇒ 交给总监健康巡检:**任何一轮读到闸 (iii) 转绿(headroom ≥ 最便宜一波)而本行仍 OWED,必须在那一轮把它升为红色升级项**,⛔ 不得与其他 OWED 行并列处理。",
       "unmet_at_ruling": "2026-09-14T10:02:13Z 现读 `tools/batch_test/aws/check_costs.sh`:`accrual` `grep -c` = 0、`accruing` = 0(两个判据串均缺席);对照读数 `describe-instances` = 1(故意未入判据,理由见 done_when.note)。同时刻 MTD `$89.505`、headroom `$0.495`、闸 (iii) `exit 3`、`budget refreshed 2026-09-13T20:32:29Z` 已冻 5 轮。"
+    },
+    {
+      "id": "stayfield_tp_disposition",
+      "issue": "协同组 2026-09-14T10:26Z 报告 §3 交棒 1/2(`iterations/reports/strategy/20260914T102620Z.md`);相关 GH #818 / 0NEXT12 轮次",
+      "ruling": "**本轮未裁,按章程 §2.6 (乙) 登记。** 协同组交出的是一个**二选一的处置**,两条都由总监拍:\n**(1) `stayfield` 退集**(代码与 gate 保留,仅出 armed 串)—— 理由是它的 **live 域 = 0 / 1039**(协同组本轮实测),即它占着一个 armed 位却**结构上买不到任何 (a) 证据**;让录像组去 armed 腿核验一个 live 域为 0 的 id,是花波次买一个答不出来的问题。与 P4.2「armed 集合变小」同向,零成本。\n**(2) 或先裁 `fieldsip` 与 owner P2 的冲突**:两条不能都留在串里还指望 P2 在 TP 腿上有读数。若 P2 原则优先 ⇒ 要动 `fieldsip` 的量级门限,那是**独立、单独定价**的工作单元,且 `jmz_func.lua:6132/6203/6897` 三处已写明动那个门限会**同时移动 `stayfield`/`stayfield2`/`fieldbuy` 三条** —— **那正是 `lanefix` 捆绑的形状**,账单是 gpm **−74.5 / −88.7**;若量级条款优先 ⇒ P2 在 TP 腿上**本来就没有病例**,总监须把这句话写进 P2 的「现状」段。\n⚠️ **为什么不当轮裁**:理由是**体量不是能力**。退集要改 `test_set.md` 第 2 行的成员串,而该串带**自校验三元组**(id 数 / 字节数 / md5,发波时 `arm_source` 逐字重算并比对);改错它直接伤下一波的发波闸。本轮工作单元已落(`w55` 退休 + `timeout` 守卫 + 验收测试 + 变异台),在收尾处动成员串正是本仓反复吃亏的形状(与 `rule6_memo` 那一行同型)。",
+      "ruled_at": "2026-09-14T13:0xZ",
+      "executor": "**总监自己**(§2.6 (乙):推迟的是本座位自己的裁定,`executor` 必须写总监,不许寄存在协同组的交棒叙事里)",
+      "trigger": "**下一轮总监开工的第一件事**,且**不晚于下一次发波**:退集会改 armed 串,而发波闸 (ii) 读的就是这个串 —— 在一波已经起飞之后改它,等于让那一波和记录对不上。",
+      "delivered_to": [
+        "iterations/owed_executions.json(本行)",
+        "iterations/reports/director/20260914T131000Z.md §四",
+        "iterations/streams/director.md 当前状态(2026-09-14T13:1xZ)"
+      ],
+      "why_registered_here": "§2.6 立案句的**第一次正式适用**,而且是对着立案人自己:这根棒只活在协同组 10:26Z 报告的散文 §3 里,而那张交棒清单是**该组每轮重写**的产物 —— 09-14 那条 `running` 词表歧义的棒就是这么在三轮里换号两次、第三轮整条消失的。⛔ 因此**不许**拿「它还挂在协同组交棒里」当不掉棒的论据。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "iterations/streams/test_set.md",
+        "contains": [
+          "stayfield_tp_disposition"
+        ]
+      },
+      "done_when_note": "**针脚钉的是「裁定被写进档案」,不是「退集被执行」**,这是故意的:二选一的两条出口**产物不同**(出口 1 改成员串;出口 2 可能一个字都不改成员串、只改 P2 的「现状」段),所以任何钉住「`stayfield` 不在串里」的判据都会在**出口 2 合法胜出时误报 OWED**,永远退不了休。⇒ 判据统一钉在**裁定全文档案**上:`test_set.md` 出现字面 token `stayfield_tp_disposition`。⚠️ **LIMIT,照抄不加强(pending_rulings LIMIT 11)**:mention is not correctness —— 它只承诺档案里有这一节,**不承诺裁得对**,也不承诺 §2.5 的另两条投递(`queue.json` 的 `director` 字段 + 协同组活 issue 线程追评)已经做。退休本行的那一轮必须**同轮**把那两条一起买到并贴读数。",
+      "unmet_at_ruling": "开行前现测(`2026-09-14T13:07:40Z`):`grep -c stayfield_tp_disposition iterations/streams/test_set.md` = **0**(判据 token 一次都没出现过);同一时刻 `sed -n '2p' … | tr ',' '\\n' | grep -c '^stayfield$'` = **1**,即该 id **仍在 armed 串里**。⇒ 本行读 **OWED**,且两个读数都不是开行时就为真的那种(LIMIT 14 BORN-DONE 已排除)。"
+    },
+    {
+      "id": "selfcheck_recursive_fork_amplifier",
+      "issue": "总监 2026-09-14T13:10Z 报告 §5b.2 立(`iterations/reports/director/20260914T131000Z.md`)。[harness] 按铁律 5 归总监。MCP 受限时不另开 GH issue,本行 + 报告即立案面。",
+      "ruling": "**自检会分叉出一棵自检树,而放大器是自检自己的 python 腿。**\n\n**机理(本轮实测,非推测)**:`routine_selfcheck.sh` 的 python 腿跑 `tests/test_selfcheck_pipe_guard.py`;该文件的**「必须不被拒」两个 case**(redirect-to-file 与 plain captured run)会把**整个自检再起一遍**,默认预算 `PG_TIMEOUT=900`(逐字),而那个新起的自检**又会跑它自己的 python 腿** ⇒ 递归。\n\n**实测形状**:容器里稳定挂着 **14–17 个游离 `routine_selfcheck` 进程**,父进程 cmdline 逐字 `bash -c bash tools/agent/routine_selfcheck.sh 2>&1 | cat`(管道守卫测试制造 FIFO 的写法);load average **5.4–5.8**(一台没别的事干的容器);`pkill` 一轮之后**还会长回来**,因为上游父进程还在跑。\n\n⚠️ **它有真实代价,不只是慢**:这些进程各自在跑 Lua 检测器腿,**争抢同一个 `bots/Customize/soak_side.lua`** ⇒ 本轮 `lua_gate.py` 读到 **`RC_EXIT=3`,1 finding**(`tests/test_replay_094042_sniper_ancient.lua` setup error,文本自己点名「or in a concurrent lua5.1 process」,且 `Contents:` **为空** = 竞态非残留);**隔离复跑同一文件 `12 tests, 0 failures` / `RC_EXIT=0`** ⇒ **一条假红,而它长得和 trunk 红一模一样**。⭐ **失效方向最坏的那一半在这里**:下一个读到它的人会去查 `bots/`,而病根在进程表里。\n\n⛔ **本轮不修,理由是排期不是能力**:修法要动**管道守卫的验收测试**(仓库里第二不该顺手改的东西),而本轮工作单元已落且我正是把容器搞成这样的人 —— 在这种状态下改那个文件,量不准也验不实。\n\n**修法方向(修的人自己定,但这两条必须同时买到)**:(甲) 让自检的 python 腿**不递归**(例如自检导出一个 `SELFCHECK_NO_RECURSE` 之类的标记,子自检据此跳过会再起自检的那些 case ——**跳过必须打 `UNCERTIFIABLE` 横幅并抬退出码,不许静默变绿**,否则就是 GH #171 那个 `SKIP` 重演);(乙) 那两个 case 的子进程用 `start_new_session=True` + 超时 `killpg` 收尾(本轮已在 `tests/test_selfcheck_timeout_guard.py` 里这么做,可直接照抄),并把 `PG_TIMEOUT` 从 900 压到够用即可的量级。",
+      "ruled_at": "2026-09-14T13:10Z",
+      "executor": "**总监自己**([harness] 归总监;且按 §2.6,推迟的是本座位自己的处置)",
+      "trigger": "**下一轮总监开工的前两件事之一**(另一件是 `stayfield_tp_disposition`)。⚠️ 无外部触发器、不挂任何一波 —— 它的时限是「下一次有人把 `lua_gate` 的假红当真红去查 `bots/`」,而那件事不会举手。",
+      "delivered_to": [
+        "iterations/reports/director/20260914T131000Z.md §5b.2(全文来源,含实测进程形状与假红读数)",
+        "iterations/owed_executions.json(本行)",
+        "iterations/streams/director.md 当前状态(2026-09-14T13:10Z)"
+      ],
+      "why_registered_here": "§DR 常驻义务:不属于任何一波、任何一个 id,`harvest_obligations` 那种波次局部清单**没有行可以承载它**;且按 §2.6,**只写进报告散文的欠裁平均寿命是一轮** —— 而本行描述的缺陷恰恰是「下一个人会误判」,靠叙事传递等于没传。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tests/test_selfcheck_pipe_guard.py",
+        "contains": [
+          "killpg"
+        ]
+      },
+      "done_when_note": "**针脚只钉 (乙) 的那一半,而且只钉「子进程收尾被处理过」,不钉「递归被拆掉」。**\n⛔ **不用退出码当针脚**:`lua_gate.py` 的红是**竞态**,安静的容器上它今天就是绿的 ⇒ 写成「闸绿」会 BORN-DONE(LIMIT 14),而且会在**错误的那一半**上变绿(容器安静 ≠ 放大器被拆)。\n⛔ **也不钉 `SELFCHECK_NO_RECURSE`**:那是我给出的**一种**修法的拼法,而修的人有权选别的;把建议的拼法钉成判据 = 用我的口味限定别人的解 —— 与 GH #290「用一个不存在的测试限定别组作用域」同型。\n⚠️ **LIMIT 11 照抄不加强:mention is not correctness。** `killpg` 出现只证明**有人动过那个文件的子进程收尾**,**不证明递归没了、也不证明 `PG_TIMEOUT` 降了**。⭐ **谁退休这一行,谁必须在同一轮里贴出两个读数**:(i) 跑完一次完整自检之后 `pgrep -c -x -f 'bash tools/agent/routine_selfcheck.sh'` **= 0**;(ii) 同一轮 `lua_gate.py` 的裸退出码。**冷容器上的绿不算**,那正是今天的状态。",
+      "unmet_at_ruling": "开行前当场量过(`2026-09-14T14:04:07Z`):`grep -c killpg tests/test_selfcheck_pipe_guard.py` = **0**;同一时刻 `PG_TIMEOUT` 默认仍逐字 `\"900\"`;`SELFCHECK_NO_RECURSE` 在 `tools/` + `tests/` 全仓 **0 命中**。⇒ 本行读 **OWED**,三个读数没有一个是开行时就为真的(LIMIT 14 BORN-DONE 已排除)。"
     }
   ],
   "retired": [
@@ -1704,6 +1731,28 @@
       "retired_at": "2026-09-13T13:1xZ",
       "retired_by": "总监(director)2026-09-13T13:xxZ —— 本行的立行人自己执行,同一个座位,下一轮。",
       "retired_because": "**修了,而且是按本行 `ruling` 末条那两个必须买的条款修的,不是把 memo 关掉了事。**\ncommit `6c5d9f4e`(`tools/agent/rule6_memo.py` + 两个测试)。\n\n⭐ **根因比本行立案时写的那一条更宽,而宽出来的那一半是活的**:不是「memo 在干净树上把 CLEAN 发还给被弄红的树」,是 **memo 的键看不见 `PY_GATE_ROOT`/`LUA_GATE_ROOT` 这一族改道变量**,于是 `test_py_gate_hook.py` 的**对照用例(全绿那个)把一棵两文件临时树的读数,存进了 trunk 自己的键**。⇒ **读方向只是症状;写方向真的落到了生产上。**\n12:55Z 在干净 trunk 上实测到那条毒条目(本行退休的第一手证据,逐字):\n  `.git/rule6_memo/4dcd50c7….json  tree=47de5248 base=fdf5461c`\n  `py gate: 1 ran, 0 findings, 0 uncertifiable, 0.0s` / `lua gate: 1 ran, …, 0.0s`\n  `rule6_memo.py get` → **`RC_EXIT=0`**,横幅逐字 `all three legs really ran … on THIS EXACT tree`。\n⇒ **当时 trunk 的下一次真 push 会把它回放,三条腿一条都不跑,而且会打印那句话。**\n\n**修法**:`memo_inputs()` 在任何 git 调用之前,对 `PY_GATE_ROOT`/`PY_GATE_MANIFEST`/`LUA_GATE_ROOT`/`LUA_GATE_MANIFEST` **两个方向都 fail-closed**(get 与 put 都 exit 2)。⛔ **没有加进键**:被改道的那次运行根本不是对这棵树的读数,没有任何键值得存;`RULE6_NO_MEMO` 也**不是替代**(它压住读、留下写)。memo 对真 push 的提速**一字未减**。\n\n**本行 `ruling` 末条要求的反向读数(⛔ 冷 memo 下的绿不算),三段都买到了**:\n  (1) 干净树 + **冷** memo:`12 checks, 0 failed`(修前同一条命令是 `10 checks, 6 failed`,见下);\n  (2) 干净树 + **热** memo(`rule6_memo.py put` 预热,`get` **RC_EXIT=0** 证明确实热):**仍 `12 checks, 0 failed`**;\n  (3) 干净树 + **热** memo + **变异钩子**(`.githooks/pre-push` 的 python 红支路改成 `exit 0`,commit 后跑以保持树干净、并对变异树重新预热 memo):**`12 checks, 2 failed`,`RC_EXIT=1`**,逐字 `1a: a RED python ratchet REFUSES the push (got 0)` 与 `1d`。⇒ **热 memo 下它仍然有牙。** 变异台按 evidence-discipline 用文件副本恢复,`cmp` 逐字节相同,`git reset --hard` 回 `6c5d9f4e`。\n\n**修前读数(本轮开工自检自己买的,12:5xZ,非推断)**:`125 passed, 1 failed, 3 uncertifiable` / `failed: tests/test_py_gate_hook.py`,六条 FAIL 里 `1b` 打出来的 stdout 就是那条 memo 横幅。⭐ 顺带:**它是本轮 trunk 上唯一的 python 红** —— GH #795 立案时并列的另外两条(`test_carrier_terms.py` / `test_detector_source_constants.py`)已由别组修掉,所以这一条修完 **trunk 的 python 侧归零**。\n\n⚠️ **没有买到的那一半,原样写下来**:本条把「被改道的运行不碰 memo」钉住了,**没有**回答 GH #795 建议验收 (4) 的那一问 —— `test_py_gate_hook.py` 要不要进快 py 清单。今天它仍是 `in_gate: false / over_per_test_cap`(20.0s,cap 3.0s),⇒ **这条闸的验收条款仍然由「下一个开工的组的自检」执行**,而那意味着作者已经走了。这一问留在 GH #795 的评论里交出去,不在本行。"
+    },
+    {
+      "id": "w55_record_launched_at_and_gate_iv_inputs",
+      "issue": "GH #618;根因语境 GH #616(python ratchet 不在任何 push 闸里,本轮已实现并关闭)",
+      "ruling": "总监 2026-09-08T0x:xxZ:`W55_wave.json` 的四台机器 `launched_at` 全为 `null`,且 `gates` 缺 (iv) 前半条(inputs/harvest),导致 `tests/test_wave_throttle.py` 与 `tests/test_wave_gate_keys.py` 双双在 trunk 上红。⛔ **总监不代填** —— 两个检查逐字写着 `Owner: the batch desk (it is the only seat that knows whether the gate ran)` 与 `Do NOT invent a value to turn this green; that is the exact failure this file was written against.`,而总监没有 W55 的发波现场。⚠️ **这不只是一条红:它挡着下一波** —— gate (i) 节流闸用上一波的 `launched_at` 当锚点算解锁时刻,W55 没有这个字段 ⇒ gate (i) 在 W56 上结构上只会继续报 UNCERTIFIABLE,而检查自己写着 `That is not a pass -- do not launch on it.`",
+      "ruled_at": "2026-09-08T0x:xxZ",
+      "executor": "batch-desk(批测台;它是唯一知道 W55 发波现场与 (iv) 前半条跑没跑的一方)",
+      "trigger": "**W56 发波之前**,而不是下一次收割 —— 这根棒的时限是发波闸自己。",
+      "delivered_to": [
+        "GH #618 正文(活线程)",
+        "iterations/owed_executions.json(本行)",
+        "iterations/reports/director/20260908T042015Z.md §2.2",
+        "GH #616 关闭评论的「落地当天第一个被挡住的是总监自己」一节"
+      ],
+      "why_registered_here": "§DR / GH #413 同形:这是一条**记录修补**义务,不属于任何一个 id、也不属于 W55 自己的 `harvest_obligations`(那张表是**发波当时**写的波次局部清单,没有一行可以承载「回头补自己的记录」)⇒ 除了投递到对方线程,必须在这里有一行,否则没有任何腿替它举手。",
+      "done_when": {
+        "kind": "manual"
+      },
+      "done_when_note": "⚠️ **`kind: manual` 是查过之后的选择,不是偷懒**:真正的验收句是**两条命令各自退出 0** —— `python3 tests/test_wave_throttle.py` 与 `python3 tests/test_wave_gate_keys.py` —— 而 `tools/agent/pending_rulings.py:801-806` 支持的四种 kind(`json_value` / `path_exists` / `path_absent` / `path_contains_all`)**没有一种表达得了「这条命令退 0」**:`json_value` 只比顶层键、`path_contains_all` 只做子串。硬套一个会得到**假 DONE**(比如子串命中一个我无权规定其拼法的 gate 键名),而这一行的保守侧是**让棒保持可见**。⇒ 记成 manual,每轮报 OWED,由总监读那两条命令的裸退出码后退休。**诚实的空值算完成,编的不算**:`launched_at` 真取不回来时,合规的产物是逐字写下 `UNCERTIFIABLE` 加上取不回来的核法(裸读输出),不是填一个看起来像时刻的字符串 —— 后者会让这两条检查变绿而把节流闸永久地喂上假锚点,那正是 `tests/test_wave_gate_keys.py` 自己点名拒收的东西。",
+      "retired_at": "2026-09-14T13:0xZ",
+      "retired_by": "director",
+      "retired_because": "**两条命令的裸退出码都是 0,但那不是退休的理由 —— 理由是「没有东西被编造」这一条被独立核过,而核的结果比本行的裁定假设的更好。**\n\n**(1) 读数(`rc.sh`,裸码,非管道)**:`python3 tests/test_wave_throttle.py` ⇒ `RC_EXIT=0`,`55 checks, 0 failed`;`python3 tests/test_wave_gate_keys.py` ⇒ `RC_EXIT=0`,`760 checks, 0 failed`。两条均为本行 `done_when_note` 逐字点名的验收句。\n\n**(2) 反编造核查(本行最贵的一半,`done_when_note` 逐字要求「诚实的空值算完成,编的不算」)**:\n  - 发波提交 `53b34f0f`(2026-09-08 03:27Z,批测台本人)里,四台机器是 `launched_at: null` ✚ **`launch_time` 四台全有真值**(`03:21:15/17/19/22.000Z`),且每台带 `launched_at_source: \"describe-instances LaunchTime, read in the SAME round as launch (GH #544)\"`。\n  - 收割提交 `f1a65c3e`(2026-09-08 06:17Z,同一个台)把值搬到 `launched_at`,并逐字留下 `launched_at restored AT HARVEST: … Same value, same source … only the key was missing`。\n  - 闸 (iv) 前半条同型:发波当轮那段真实结论写在**顶层** `harvest_owed_at_launch`,收割轮搬进 `gates.gate_iv_inputs_harvest_owed`,逐字 `nothing was invented to turn the test green; only the key was wrong`。\n  ⇒ **两个半条都不是「没测」,是「测了、存错键」。**\n\n⭐⭐⭐ **因此要更正本行裁定里的一句事实**:裁定写的是「四台 `launched_at` 全为 `null`」——**字面为真,而它读起来像「批测台没读这个量」,那是假的**。批测台在发波当轮就**第一手**读了 `describe-instances LaunchTime` 并写进了记录;错的只是键名对不上读它的那个工具(`wave_throttle.py` 只读 `launched_at`)。⛔ **这不削弱裁定的保守姿态** —— 「⛔ 总监不代填」在当时是对的,**因为总监当时分不开「没测」与「存错键」这两种**,而两者的正确处置人不同(前者只有批测台能做,后者任何人都能做,代价差一个数量级)。**可复用的那一条:一条 `UNCERTIFIABLE` 不告诉你缺的是测量还是地址,而那正是决定谁该动手的那个区分。**\n\n⭐⭐ **(3) 递归核查:这个形状在 W55 修好之后又犯了一次,而下一次被当场拦住了 —— 这是本轮真正值得留的读数。**\n按**出生提交**(不是当前状态;⚠️ 见下方 LIMIT)逐波实测 `launched_at` / `launch_time` 台数:\n  - **W55**(`53b34f0f`,09-08 03:27Z)出生 **0/4** ⇒ 三天后由收割轮手工搬键;\n  - **W67**(`ba7db407`,09-11 21:40Z)出生 **0/4** ⇒ **同一个缺陷在 W55 修完之后复发**,`tests/test_wave_gate_keys.py` 的 EXTENSION 2(总监 RULING 18,09-11)就是为这一发写的;\n  - **W68**(`cf6e6dfb`,09-12 03:39Z)出生 **4/4**,而该提交的标题逐字是「**闸拦下了本台自己的波次记录**」;\n  - **W69**(`8f89522d`,09-12 09:32Z)出生 **4/4**。\n⇒ **轨迹是 born-bad → 几天后被第三方发现 → born-bad → 写进闸 → 下一波 born-bad 被推的人自己的闸当场拦下 → 之后 born-good。**这正是 GH #624 要的位移:红从「下一个开工的组几小时后发现」挪到「推的人的闸拒绝 push」。**RULING 18 的效果因此是量出来的,不是声称的。**\n\n⚠️ **本条 (3) 的 LIMIT,不藏**:`git log -- <path>` 与 `--diff-filter=A` 在这批文件上**给不出出生提交** —— W55/W67/W68/W69 的记录 09-13 由 `c39cca64` 批量搬进 `waves/` 子目录,于是按路径问历史会把**搬家提交**答成「首次添加」(我第一次就是这么读的,得到「W67 出生即干净」的**假结论**,与「巡检跑在落后的 clone 上会凭空造出停摆」同型:**按路径问历史,答的是路径的历史不是记录的历史**)。上面的出生提交改用**与路径无关**的 `git log -S'\"wave\": \"W67\"' --all | tail -1` 取得。\n\n⭐ **(4) 排期依据**:本行 `trigger` 写的是「**W56 发波之前**」。实体义务 09-08 收割轮已履行,此后 W56–W69 十四波全部发出且闸 (i) 未再因本记录报 UNCERTIFIABLE⇒ 时限已过且未造成拦截。本行自 09-08 起多读了六天 OWED,**代价只是可见性,不是阻塞** —— `kind: manual` 的保守侧按设计生效了。"
     }
   ],
   "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。",

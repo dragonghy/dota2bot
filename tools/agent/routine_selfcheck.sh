@@ -56,9 +56,20 @@ cd "$(dirname "$0")/../.."
 # substitution and `subprocess.run(capture_output=True)` are pipes that DO read
 # the true exit code, and nothing visible from inside this process tells them
 # apart from `| tail`.  They take the env opt-out below.  Measured cost of that
-# today: ZERO call sites -- no test executes this wrapper (the three that touch
-# it run slices, `HARNESS_PRE + LEG_SRC`, or read it as text), and no script in
-# the repo pipes it.
+# when this was written: ZERO call sites -- no test executed this wrapper (the
+# three that touch it run slices, `HARNESS_PRE + LEG_SRC`, or read it as text),
+# and no script in the repo pipes it.
+#
+# [director 20260914] THAT COUNT IS NO LONGER ZERO, and the correction is worth
+# more than the number.  tests/test_selfcheck_timeout_guard.py executes this
+# wrapper end to end via `subprocess.run(capture_output=True)` -- the exact row
+# above -- and therefore sets SELFCHECK_PIPE_OK=1.  It was written WITHOUT that
+# line first, and the result is the reason this note exists: cases 1a/1b/1c of
+# that file PASSED, because the PIPE guard also prints `REFUSED` and also exits
+# 2.  A brand-new guard's acceptance test was being satisfied by THIS guard.
+# Only the check that asked the refusal to NAME its cause told them apart.
+# ⇒ Two refusals that share a vocabulary can stand in for each other, and the
+# test that cannot tell them apart reads green either way.
 #
 # WHY REFUSE INSTEAD OF WARN.  A warning is the fourth reminder, and reminders
 # are what the charter just retired.  A refusal costs the round a re-run, which
@@ -93,6 +104,81 @@ if [ -z "${SELFCHECK_PIPE_OK:-}" ] && [ -p /dev/stdout ]; then
     printf 'substitution, subprocess capture), set SELFCHECK_PIPE_OK=1.\n'
     printf 'SELFCHECK_EXIT=2  REFUSED (nothing was checked; this is NOT a pass)\n'
     exit 2
+fi
+
+# --- refusal: running under `timeout` --------------------------------------
+# [director 20260914] SAME DEFECT SHAPE AS THE PIPE GUARD ABOVE, SAME SLOT, and
+# the pipe guard's own comment predicted this one would need the same cure:
+# "the command is typed BEFORE the charter is read, which is precisely the
+# window a note cannot reach."
+#
+#     timeout 600 bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1
+#
+# MEASURED COST, not a worry.  2026-09-14T06:57Z: real code `EXIT=124`
+# (`timeout`'s kill code -- not 0/2/3, so it is outside this script's whole
+# vocabulary), 537 lines of log, last line the just-opened banner
+# `=== trunk health (fast Lua detectors) ===`, no `legs run` line, no
+# `worst exit` line.  The entire fast-Lua detector leg did not run, and the
+# round had no trunk reading at all.  The container is slow (GH #810); the
+# `timeout` is what turns slow into unchecked.
+#
+# THREE CONSECUTIVE DIRECTOR ROUNDS, each having registered the previous one:
+# 04:15Z recorded it, 06:57Z recorded it again WITH the 124 reading and wrote
+# "next round: redirect + background + NO timeout, all three at once", 10:05Z
+# claimed all three were done -- and 13:0xZ typed `timeout 600` again.  That is
+# the pipe guard's history (three charter reminders, three breaks) repeating on
+# a second flag, which is why this is a guard and not a fourth reminder.
+#
+# WHY REFUSE RATHER THAN LET IT RIDE.  A bounded self-check is not a faster
+# self-check; it is a self-check whose ANSWER is decided by where the clock
+# lands.  The legs run in a fixed order, so a `timeout` does not sample the
+# suite -- it always truncates the SAME tail (Lua detectors last), meaning the
+# same legs go unread every time, silently, while the exit code says 124 and
+# the log's final line looks like a leg that ran.
+#
+# DISCRIMINANT: an ancestor process named exactly `timeout`, walked up 3 levels
+# so that `timeout N bash -c '... selfcheck ...'` is caught too.  KNOWN LIMITS,
+# stated rather than papered over: (a) a harness that wraps every command in
+# `timeout(1)` would be refused on every call -- this one does not (measured:
+# its `bash -c` is the direct parent when no `timeout` is typed), and such a
+# caller takes the env opt-out; (b) a caller who kills by other means (a harness
+# watchdog, SIGKILL from outside) is NOT caught -- this guard covers the typed
+# flag, which is the shape that has actually recurred three times.
+if [ -z "${SELFCHECK_TIMEOUT_OK:-}" ] && [ -r /proc/self/status ]; then
+    sc_ppid_of() { awk '/^PPid:/ { print $2; exit }' "/proc/$1/status" 2>/dev/null; }
+    sc_timeout_anc=""
+    sc_walk=$$
+    sc_depth=0
+    while [ "$sc_depth" -lt 3 ]; do
+        sc_walk=$(sc_ppid_of "$sc_walk")
+        [ -n "$sc_walk" ] && [ "$sc_walk" != "0" ] || break
+        if [ "$(cat "/proc/$sc_walk/comm" 2>/dev/null)" = "timeout" ]; then
+            sc_timeout_anc="$sc_walk"
+            break
+        fi
+        sc_depth=$((sc_depth + 1))
+    done
+    if [ -n "$sc_timeout_anc" ]; then
+        # stderr copy first, then stdout: same ordering reason as the pipe
+        # guard -- the VERDICT line must be the last thing a small `tail`
+        # window sees.
+        printf 'REFUSED: routine_selfcheck.sh is running under `timeout`; exit 2, nothing checked.\n' >&2
+        printf 'REFUSED: an ancestor process is `timeout`, so this run would be KILLED\n'
+        printf '         mid-leg rather than finishing. Measured 2026-09-14: EXIT=124,\n'
+        printf '         537 lines, no `legs run` line, the whole fast-Lua detector leg\n'
+        printf '         never ran -- and 124 is not in this script'"'"'s 0/2/3 vocabulary.\n'
+        printf '         The legs run in a FIXED order, so a clock cut always removes\n'
+        printf '         the SAME tail. This has recurred 3 rounds running.\n'
+        printf '\n'
+        printf 'Use this instead (redirect + background, no clock):\n'
+        printf '  nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &\n'
+        printf '  # ...then read /tmp/sc.log; its last line carries the real exit code.\n'
+        printf '\n'
+        printf 'If you truly want a bounded run, set SELFCHECK_TIMEOUT_OK=1 -- and record\n'
+        printf 'that the legs after the cut were NOT checked this round.\n'
+        printf 'SELFCHECK_EXIT=2  REFUSED (nothing was checked; this is NOT a pass)\n'
+        exit 2
+    fi
 fi
 
 extra=()

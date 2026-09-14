@@ -55,6 +55,18 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
       GH **#219 路 4** 一并成立(单波 ~$2.15 → ~$0.8,余量 2.7 → ~7 波);
       围栏 $60 / 刹车 $90 / 批准线 $100 **不动**。W14 不杀;W15 起由批测台执行。
    e. 巡检 Routine 体系健康:哪个组连续多轮没有产出/报告,记录并调整;
+      ⭐⭐ **巡检读数的取法是规定的,不是口味(2026-09-14T13:1xZ 立,两轮各栽一次)**:
+      必须 **(甲) 在 `git fetch` / `pull --rebase` 之后取,(乙) 按名字序,(丙) 从 `origin/main` 取** ——
+      一条命令:`git ls-tree -r --name-only origin/main iterations/reports/<组>/ | sort | tail -1`,并写明取数时刻。
+      ⛔ **`ls -t` 是错的,而且是稳定地错**:Routine 容器按构造是新 clone,
+      `iterations/reports/*/` 下每个文件的 mtime **逐纳秒相同**(实测 `12:50:38.657246041`,即 clone 那一刻)⇒
+      `ls -t` 退化成名字序,`| head` 交回来的是**最旧**的几份。**它不是「无序」,是反着。**
+      ⛔ **落后的 clone 同理**(10:05Z 那一发):clone 只会**缺**别人刚落的报告、不会多出来。
+      ⚠️ **两种错的失效方向只有一个:永远凭空造出停摆,永不掩盖真停摆**,
+      而巡检的下一步是点名 / 红色升级 ⇒ **代价永远落在被误判的那个组身上**。
+      实测两发:10:05Z 误判 `replay-check` 停摆(落后 clone),13:10Z 误判 `hero` 停摆 11h(`ls -t`),
+      **两发都是 rebase / 改用名字序之后当场自证为假**。
+      📌 与「发波前先 `git ls-remote` 核对远端 tip」同型:那条管发波前,这条管巡检前。
    e2. **效率台账(owner 2026-08-19 认可,每周日的触发做一次)**:汇总本周
       各组报告里的三类数字——AWS 花费(批测台)、有效局数(批测台)、
       token 用量(各组 TOKENS 行)——写进
@@ -585,6 +597,71 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-14T13:10Z**:**结清欠七天的 `w55`,而退休它的理由推翻了当初裁定里的一句事实;
+  本轮真正的产物是把连犯三轮的 `timeout` 从提醒改成门,以及那道门的验收测试**被自己的变异台抓出在假装测一件它没测的事**。**
+  全文 `iterations/reports/director/20260914T131000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff。
+  ⚖️ **裁定一:`w55_record_launched_at_and_gate_iv_inputs` 退休**(`owed` 70→69→70,`retired` 15→**16**,带 `retired_because` 全文证词;
+  旧 15 条里只有 2 条带证词)。两条验收命令裸码均 **0**(`test_wave_throttle` `55 checks`、`test_wave_gate_keys` `760 checks`),
+  ⛔ **但两个 0 不是理由** —— 本行逐字要求「诚实的空值算完成,编的不算」,而两条命令对「值真不真」一个字答不出来。
+  ⭐⭐⭐ **核来源之后要更正裁定的一句话**:裁定写「四台 `launched_at` 全为 `null`」**字面为真,读起来像「批测台没读这个量」,那是假的** ——
+  发波提交 `53b34f0f` 里 `launch_time` 四台全有真值,旁边还有个**叫 `launched_at_source` 的键**;
+  收割 `f1a65c3e` 只是搬键(逐字 `only the key was missing`),闸 (iv) 前半条同型(顶层 `harvest_owed_at_launch` → `gates.*`)。
+  ⇒ **两个半条都不是「没测」,是「测了、存错键」**,而「⛔ 总监不代填」当时仍然对,**因为那时分不开这两种**,
+  ⭐ **可复用:一条 `UNCERTIFIABLE` 不告诉你缺的是测量还是地址,而那正是决定谁该动手的那个区分。**
+  ⭐⭐ **递归核查(按出生提交,非当前状态)**:W55 `0/4` → 三天后手工搬键;**W67 `0/4` 复发**;
+  W68 `4/4`**且提交标题逐字「闸拦下了本台自己的波次记录」**;W69 `4/4`
+  ⇒ **RULING 18 的效果是量出来的**:红从「下一个开工的组几小时后发现」挪到「推的人的闸拒绝 push」(GH #624 要的位移)。
+  ⚠️ **LIMIT**:`git log -- <path>` / `--diff-filter=A` 在这批文件上**给不出出生提交**(09-13 `c39cca64` 批量搬进 `waves/`),
+  **我第一次就是这么读的,得到「W67 出生即干净」的假结论**;改用与路径无关的 `git log -S'"wave": "W67"' --all | tail -1`。
+  📌 **按路径问历史,答的是路径的历史不是记录的历史。**
+  ⚖️ **裁定二:`timeout` 守卫落地**(`routine_selfcheck.sh` 第二道拒绝,祖先进程名 `timeout` ⇒ exit 2,
+  逃生门 `SELFCHECK_TIMEOUT_OK=1`;验收 `tests/test_selfcheck_timeout_guard.py` **9 checks**)。
+  立它的理由**逐字抄自管道守卫自己的注释**:「the command is typed BEFORE the charter is read,
+  which is precisely the window a note cannot reach」—— 04:15Z 记过、06:57Z 记过并附 `EXIT=124`、10:05Z 声称已改,**13:0xZ 又打了一遍**。
+  **各条腿顺序固定 ⇒ `timeout` 不是抽样,是永远截同一条尾巴。**
+  ⭐⭐⭐ **变异台(本轮最该被读的一段)**:M1 CAUGHT(6 条)/ M2 CAUGHT(2a)/ **M3 ⛔ SURVIVED `9 checks, 0 failed`** / M3′ CAUGHT(4a)/ M4 CAUGHT(3a)。
+  **M3 活下来揭发的是我的测试在假装测祖先回溯** —— `bash -c '<单条简单命令>'` 会 **exec**,于是 `timeout` 成了**直接父进程**
+  (当场两向实测:加 `; true` 父进程才是 `bash`)。修成 `; true` 又踩第二坑(**它把退出码换成 `true` 的**,4a 读 `rc=0` 而拒绝文本明明在),
+  最终 `|| exit $?`。📌 **两个坑同形:一条「看起来在测 X」的命令实际测了别的,而两次都读绿。**
+  ⭐⭐ **同型第二发,同一文件,早两小时**:该测试第一版没设 `SELFCHECK_PIPE_OK=1` ⇒ **管道守卫抢先应答**,
+  **1a/1b/1c 三条全 PASS**(两道守卫都打 `REFUSED`、都 exit 2),只有「要求拒绝**说出原因**」的 1d 分开了它们。
+  已写回管道守卫注释,并**更正它那句过期自述**(逐字 `ZERO call sites` —— 现在不是零了)。
+  ⭐ **可复用:两道共用词汇的拒绝可以互相冒充,而分不开它们的测试两边都读绿。**
+  ⭐⭐⭐ **巡检:`hero` 停摆又是假的,这次造假的仪器是 `ls -t`。** 起手读到最新 `20260914T020024Z`(≈11h,像停摆);
+  现读(fetch 后 12:57:58Z,名字序)是 **`20260914T110833Z`,1.8h,正常**。
+  机理当场量到:**新 clone 里每个报告的 mtime 逐纳秒相同**(`12:50:38.657246041`)⇒ `ls -t` 退化成名字序,
+  `| head` 交回**最旧**的几份。⛔ **不是「无序」,是稳定地反着**;而 **Routine 容器按构造永远是新 clone ⇒ 每轮都成立**。
+  📌 与上一轮「巡检跑在落后的 clone 上」**同一失效方向**:**只会凭空造出停摆,不会掩盖真停摆**,代价落在被误判的组身上。
+  ⇒ 补上另一半规矩:**巡检读数必须在 `git fetch` 之后、按名字序、从 `origin/main` 取**
+  (`git ls-tree -r --name-only origin/main … | sort | tail -1`)。
+  **现读五条流全部在产出**:hero 1.8h / strategy 2.5h / replay-check 3.1h / batch-desk 3.8h / director 2.9h,无红色升级。
+  ⚖️ **协同组 10:26Z 交棒本轮未裁(体量),按 §2.6 (乙) 登记** `owed_executions.json:stayfield_tp_disposition`
+  (`executor` 写**总监自己**,trigger = 下轮开工第一件事且不晚于下次发波;`owed` 69 → **70**)。
+  ⛔ **没拿「它还挂在协同组交棒里」当论据**(那正是 §2.6 立案句)。判据钉在**裁定档案 token** 而**不是**「`stayfield` 不在串里」——
+  二选一的出口 (2) 可能一个字都不改成员串,钉后者会让本行**永远误报 OWED**;证词 13:07:40Z 当场量过(marker `0`,`stayfield` 在串 `1`)。
+  ⚠️ **三条自我登记**:(i) ⭐ 管道坑**本轮没犯**——第一条命令确实带了 `| tail`,**被 §22 守卫当场拒**,零损失
+  (**守卫又替我兜了一次,这正是 §二要给 `timeout` 买的东西**);
+  (ii) ⛔ **`timeout` 坑犯了第三次**,代价是**本轮自检没有完整读数**(被截在 python 套件,随后因我编辑了正在运行的脚本而主动杀掉)
+  ⇒ **不声称自检绿、也不声称它跑完**;守卫**从下一轮起**生效(它拦起手那条命令,而本轮那条跑在守卫落地之前);
+  (iii) `lua5.1` / `luacheck` 起手均不在位,由各自 gate 自装。
+  🔧 **铁律 6 三条腿读数(GH #624:三行不是两行)**:`GATE_EXIT=0`(`luacheck bots game: 0 warnings`);
+  `py gate` 起初 **exit 2 STALE MANIFEST**(新测试未计量)⇒ 按提示跑 `py_gate_measure.py`(`MEASURE_EXIT=0`)后 **`PY_EXIT=0`**;
+  `lua gate` **`RC_EXIT=3`,1 finding** —— ⭐ **而那条红是我自己造的,不是 trunk 红**(见下)。
+  ⚠️ **重测的副作用已登记**:`tests/test_cap25_harness.py` 被挤出快闸(`0.555s`,**远在 3.0s cap 内**,死于累计预算),
+  工具主动打印驱逐清单(逐字 `an eviction should be an act, not a silence`)⇒ **这一行就是「读过了」的回执**;
+  ⛔ 未抬预算、未按名字给自己的测试塞位。本轮新测试自己 `{"seconds": 12.106, "in_gate": false, "reason": "over_per_test_cap"}`,**不进快闸是对的**。
+  ⭐⭐⭐ **本轮第三个产物,是被那条假红逼出来的:自检会分叉出一棵自检树。**
+  `routine_selfcheck.sh` 的 python 腿跑 `test_selfcheck_pipe_guard.py`,而它的**「必须不被拒」两个 case 会把整个自检再起一遍**
+  (`PG_TIMEOUT` 默认逐字 `900`),新自检**又跑自己的 python 腿** ⇒ 递归。
+  实测:**14–17 个游离 `routine_selfcheck`**,父进程 cmdline 逐字 `bash -c bash tools/agent/routine_selfcheck.sh 2>&1 | cat`,
+  load **5.4–5.8**,`pkill` 一轮**还会长回来**。它们各自跑 Lua 检测器腿、**争抢同一个 `bots/Customize/soak_side.lua`**
+  ⇒ `lua_gate` 那条 finding(`test_replay_094042_sniper_ancient`,文本自己点名「concurrent lua5.1 process」,`Contents:` **为空** = 竞态非残留);
+  **隔离复跑 `12 tests, 0 failures` / `RC_EXIT=0`**。⛔ **失效方向最坏的一半:下一个人会去查 `bots/`,而病根在进程表里。**
+  已按 §2.6 登记 `owed_executions.json:selfcheck_recursive_fork_amplifier`(`owed` 70 → **71**,executor 总监自己),
+  ⛔ 本轮不修(要动管道守卫的验收测试,而我正是把容器搞成这样的人 —— 那种状态下量不准也验不实)。
+  `test_pending_rulings.py` **`837 checks, 0 failed`**(上轮 817,**升 20 不是降**)。
+  💰 MTD **`$89.505`**(转载批测台 09:11Z,本台零 AWS),刹车下 `$0.495`;⚠️ 同一快照第五次、**冻结 12.65h**,是「没测」不是「没涨」。
+  **GH #779 第十四轮零表态**,已挂 `DECISIONS_NEEDED.md §15` 不重复立条;本周邮件档期未欠。
 - **2026-09-14T10:05Z**:**`main` 上的红是我 06:57Z 自己种的,而拔它的过程说明了棘轮为什么拦不住我。**
   全文 `iterations/reports/director/20260914T100500Z.md`。零 AWS 调用、零波次、`bots/`+`game/` 零 diff。
   ⭐⭐⭐ **归因是我自己**:`fbe71369`(06:57Z 落地 §2.6 的那一行)带了八个字段**独缺必填的 `trigger`**
