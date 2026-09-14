@@ -1,3 +1,42 @@
+-- [ratchet] -- [director 2026-09-14, RULING 41, retires owed row
+-- `fieldsip_atom_pricing_disposition` after four rounds unclaimed.]
+--
+-- THE TAG IS THE WHOLE RULING.  This file is `[strategy]`-authored and was
+-- discovered by NOTHING: not the push hook (`in_gate: false`), not 开工自检's
+-- Lua leg (it selects on `[detector]`/`[ratchet]`, and this file carried
+-- neither), not `known_red`, not the py gate (it is Lua).  The ~100-min suite
+-- (GH #124) does not finish in a routine container.  Three green legs, and its
+-- two reds were found by a human reading a report.
+--
+-- ⭐ WHY THE FAST GATE IS NOT AVAILABLE, AND WHY THAT IS NOW STRUCTURAL RATHER
+-- THAN "TOO SLOW TODAY".  The manifest row read `{"reason": "timed_out",
+-- "seconds": 6.0}`, and 6.0 IS THE MEASURE TIMEOUT, NOT A MEASUREMENT --
+-- `lua_gate_measure.py` says so in its own header.  Measured on a
+-- verified-quiet tree (2026-09-14, this container, three runs):
+--
+--     31.01s / 32.31s / 32.50s      vs a 5.5s per-test cap  =>  ~5.9x
+--
+-- So the recorded number understates this file by ~5.4x, and no re-cap that
+-- GH #810 could plausibly land closes 5.9x.  `known_red` is refused for the
+-- reason the GH #806 ruling already gave and which applies here verbatim: that
+-- list means "already red when the leg landed, amnestied", and these reds
+-- arrived TODAY from corpus drift.  Amnesty would formalise "nobody looks",
+-- which is the defect, not the fix.
+--
+-- ⚠️ WHAT THE TAG COSTS, STATED RATHER THAN HIDDEN: ~32s added to every desk's
+-- 开工自检 Lua leg, every round, and that leg ALREADY does not finish in this
+-- container (GH #810 / #358).  So on a slow container this hand is real only in
+-- principle.  It is still strictly more than the zero readers it replaces, and
+-- the leg names the file when it goes red.
+--
+-- ⛔ THE RED IS REAL AND IS NOT THE DIRECTOR'S.  Bare exit code 1, 3/3 on a
+-- quiet tree (the previous round declined to claim it red, because concurrent
+-- `lua5.1` contends over `bots/Customize/soak_side.lua` and manufactures false
+-- reds; the tree was verified quiet before these three runs).  Both failures
+-- are corpus drift, GH #650 family, and the fix is the one this file's own
+-- failure text states: re-baseline `1021 -> 1039` and `944 -> 961` TOGETHER or
+-- not at all.  That is the authoring desk's call, not a harness call.
+--
 -- [strategy 2026-09-08, owner priority P2 / P4.4(ii)] THE FOURTH CENSUS, and
 -- the one that finishes pricing the registered promote atom
 -- 'field_hold_needs_magnitude' (`iterations/promote_atoms.json`:
