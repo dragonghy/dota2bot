@@ -2762,6 +2762,17 @@
       "question": "⛔ **零 AWS、零波次、零 EC2:这是一条归档语料的计数请求,不是发波请求。**\n问题一句话:**Wraith King 在 `X.ConsiderW` 分支 2 的场景里(靠近兵线前沿或正在打钱、身边没有可打的英雄),骷髅弹仓的分布是什么?具体说:`nStack` 落在 `[2, maxStack-1]` 这个区间的 think tick 占多少比例?**\n为什么要这个数:`wkbonefull` 的域**恰好**是那个区间 —— 出货规则要求 `nStack == maxStack`,本杠杆把它放宽到支配闭包 `nStack >= 2`。区间之外它字节级 no-op。\n⚠️ **离线买不到**:`nStack` 是 modifier stack count,`make_fixture.py` 一个 modifier 都不 dump,全语料 0 帧带 `modifier_skeleton_king_bone_guard`(`tests/test_wk_bone_guard_bank_full.lua` §6 钉了这个零)。**rank 那一半买到了**(§7,四个 rank 都有真实帧),**bank 那一半结构上买不到**。\n⭐ 与 `hero-70`(分支 1 / `wkbonebank` 的频率)是**同一份读数的两个切片**,可以一次取完:同样的弹仓时间序列,一个按「进攻目标在 650 内」切,一个按「兵线前沿 600 内或 IsFarming」切。**若批测台/录像组取 hero-70,请顺手把本条的切片一起给出来,不要单独排一轮。**",
       "acceptance": "(1) 给出 WK 每局 `modifier_skeleton_king_bone_guard` 的 stack count 时间序列(或其直方图),按 Bone Guard rank 分层 —— rank 决定 `maxStack`(2/4/6/8),而本杠杆的域是 rank 的函数。\n(2) 在分支 2 的场景过滤下,给出 `nStack ∈ [2, maxStack-1]` 的 tick 占比 = **本杠杆域的上界**;并给出 `nStack == maxStack` 的占比 = 出货规则今天实际开火的频率。\n⛔ **若 (2) 的第一个数接近 0**:处置是 **DO-NOT-ARM 而不是 reject** —— 杠杆在那个世界里是结构性 no-op,两者对下一个读者不是同一句话(同 `hero-83` 的同一条约定)。\n⛔ **不要按局数加权并池**(铁律 4 (i-d));本条若跨种子,先每粒 swap-average 再跨种子取算术平均。",
       "note": "无 issue 面(本条没有需要别组动手的代码)。落地物:`bots/BotLib/hero_skeleton_king.lua` 的 `X.wk_IsBoneGuardBankFull`、`tests/test_wk_bone_guard_bank_full.lua`(16 绿)、`tools/agent/mutstand_wkbonefull.sh`。\n⚠️ **与 `wkbonebank`(hero-70)的关系写在这里,免得被读成同一条**:两者是 `X.ConsiderW` **两个不同分支**的bank 合取项,两条 gate **互不提及**(pullcad 陷阱),但**两条 armed 腿是同一个表达式** (`nStack >= X.nBoneGuardShippedFloor`,各自从自己分支的出货规则**独立推导**出来;`tests/test_wk_bone_guard_bank_full.lua` §5 断言这个一致性)。⇒ **同时 arm 两条会把 `X.ConsiderW` 放宽得比任一条单独放宽都多**,bundle 读数不得归因给其中一条。"
+    },
+    {
+      "id": "hero-85",
+      "stream": "hero",
+      "bundle": "(无新 gate id — 这是**落杠杆之前**要买的域读数,不是某个已落地 id 的条件 (a))",
+      "priority": 3,
+      "status": "pending",
+      "seeds": [],
+      "question": "⛔ **零 AWS、零波次、零 EC2:这是一条归档语料的计数请求,不是发波请求。**\n问题一句话:**Crystal Maiden 在开着 Freezing Field(`IsChanneling()` 为真)的那些 tick 里,880 半径内有敌方塔的占比是多少?**\n为什么要这个数:`hero_crystal_maiden.lua` 的 `X.ConsiderCombo`(:468)整个函数的作用就是「开大时用隐身道具躲集火」(Shadow Amulet / Glimmer Cape / Shadow Blade / Silver Edge),而它第一件事是 `local nEnemyTowers = bot:GetNearbyTowers( 880, true )` 然后`if nEnemyTowers[1] ~= nil then return end` —— **附近有敌方塔就一个道具都不用**。\n⭐ 这个守卫把自己证据的符号弄反了:**Dota 里塔没有真视**,隐身正是让塔也打不到她的东西;而 Turbo 的团战大量发生在塔边(集群推进收益更高,AGENTS.md)。⇒ 守卫越是常真,这条 combo 越是常年不开火。\n⛔ **但域没买到之前本组不落杠杆**(`stayfield2`/`pullcad` 被扣分的就是「域未知照样 arm」)。本轮已实测:**离线买不到** —— fixture 语料里既没有塔的坐标(`towers` 字段不存在),也没有 `IsChanneling()`;报告 `iterations/reports/hero/20260914T225854Z.md` §8 第 4 条。",
+      "acceptance": "(1) 在归档 `.dem` 里,对每一具 CM 身体给出「正在引导 Freezing Field」的 tick 集合(判别子可以是 `modifier_crystal_maiden_freezing_field` 或引导动画,取哪个请写明),以及每个这样的 tick 上**最近的敌方塔距离**。\n(2) 给出 `dist <= 880` 的 tick 占比 = **守卫今天实际拒绝掉的比例**,也就是这条杠杆域的下界;并给出 CM 每局开大的次数,让读者能把占比换成「每局被拒几次」。\n⛔ **若 (2) 接近 0**:处置是 **DO-NOT-ARM 而不是 reject** —— 守卫在那个世界里几乎不开火,翻它买不到东西(同 `hero-83`/`hero-84` 的同一条约定)。\n⛔ **不要按局数加权并池**(铁律 4(i-d));跨种子先每粒 swap-average 再取算术平均。\n⚠️ 本条**没有 armed 腿**,所以 (i-a) 的两层读数在这里不存在 —— 如实登记「无 ab/ba 读数」,谁要拿它和 armed 波次比必须自己重新分层。",
+      "note": "无 issue 面(本条不需要别组改代码)。**接力棒来自** `iterations/reports/hero/20260914T225854Z.md` §8 第 4 条:本轮按 P4.4 (i) 找杠杆,四个方向量掉四个,这一条是唯一一个**缺的只是一个域读数**的。\n⭐ 若批测台/录像组本来就要跑 CM 的归档扫描,请顺手带上;**不要为它单独排一轮**。\n⚠️ 顺带的仪器话:塔坐标与 `IsChanneling()` 两个字段都不在 dumper 的 snapshot 里(与 GH #786 / #781 同族)。若有人正在动 dumper,这两格加上之后本条就能在 fixture 上离线买,**那比一次归档扫描更便宜**。"
     }
   ],
   "done": [
