@@ -222,6 +222,74 @@ tests['census: IsLanePullSafe is NOT a dead condition (334/911)'] = function()
         .. 'become rare, the SILENT verdict needs a second look')
 end
 
+tests['P1(1): IsLanePullSafe per-leg funnel ON ITS OWN DOMAIN (53 -> 45/37/23)'] = function()
+    -- [OWNER_PRIORITIES P1(1) 20260914] THE NUMBER THE TEST ABOVE ARGUED FOR IN
+    -- PROSE. That test rejects the owner's "second dead condition" suspicion on
+    -- `pullsafe` 410/1039 and then adds, unmeasured, "on peacetime laning frames
+    -- it can only be commoner." The suspicion is specifically about the LANING
+    -- window -- where the lane opponent is SUPPOSED to be standing inside 1800 --
+    -- so a corpus-wide rate is the wrong estimator for it in exactly the way
+    -- #277 was the wrong population: it averages in late-game and teamfight
+    -- frames the camp pull never sees. What answers it is the CONDITIONAL rate
+    -- on the pull's own domain, and the denominator for that (`lane_support` =
+    -- turbo laning window 60-360s AND not a core, with every safety clause
+    -- REMOVED) did not exist in the sweep until this round.
+    --
+    -- Measured: 23/53 = 43.4% of the pull's own domain passes IsLanePullSafe,
+    -- against 410/1039 = 39.5% corpus-wide. The prose guess was right, and the
+    -- direction is the OPPOSITE of what the suspicion predicts -- a clause that
+    -- were "almost always false in Turbo laning" would read far BELOW its
+    -- corpus-wide rate, not above it. Per leg, out of the same 53: hp >= 0.5
+    -- passes 45, untouched-for-2s passes 43, nobody-inside-1800 passes 26.
+    -- The vision leg is the dearest of the three (it is the step that takes the
+    -- cumulative funnel 37 -> 23) -- but dearest is a COST, not a dead
+    -- condition: a dead condition is one that cannot fire, and this one fires
+    -- on half its domain. P1(1)'s answer is therefore (b) scenario scarcity,
+    -- and the SILENT root cause stands where GH #13 put it: the camp-occupancy
+    -- vision precondition, which was false on 1039/1039 (STOPPER 1).
+    local n = C('lane_support')
+    cs.ratchet(n, 53, 'lane-support frames [no safety clause]')
+
+    -- The split is only worth reading while it still IS the shipped helper.
+    -- A zero that a verdict is argued from stays an equality (corpus_scale's
+    -- own rule): the day the legs drift, every number in this test describes a
+    -- function nobody ships, and that must be red rather than quiet.
+    assert(C('ls_recon_mismatch') == 0,
+        'the per-leg reconstruction disagrees with J.IsLanePullSafe on '
+        .. C('ls_recon_mismatch') .. ' frame(s) -- the legs drifted; re-read '
+        .. 'PULLSAFE in tests/_pullcamp_sweep.lua before trusting any ls_* '
+        .. 'number, and re-take this census')
+    -- Same conjunction, same population, two independent tallies in the sweep.
+    assert(C('ls_f3') == C('peacetime_live'),
+        'the funnel`s last stage (' .. C('ls_f3') .. ') and peacetime_live ('
+        .. C('peacetime_live') .. ') are the same set by construction but do '
+        .. 'not agree -- one of the two tallies is mis-scoped')
+
+    -- The verdict itself: not a dead condition, on its own domain.
+    assert(C('peacetime_live') > n * 0.25,
+        'IsLanePullSafe now passes on ' .. C('peacetime_live') .. '/' .. n
+        .. ' of the pull`s own domain (<25%) -- P1(1) was answered "(b) '
+        .. 'scenario scarcity, not a dead condition" on 23/53; if it has '
+        .. 'become rare IN THE LANING WINDOW, that answer needs re-opening')
+    -- ...and the direction, which is the half the corpus-wide rate cannot say.
+    assert(C('peacetime_live') * C('frames') >= C('pullsafe') * n,
+        'IsLanePullSafe is now RARER inside the laning window ('
+        .. C('peacetime_live') .. '/' .. n .. ') than corpus-wide ('
+        .. C('pullsafe') .. '/' .. C('frames') .. ') -- that is the shape the '
+        .. 'owner`s "almost always false in Turbo laning" suspicion predicts, '
+        .. 'and P1(1)`s answer rests on it not holding')
+
+    -- No single leg is a dead condition either -- the funnel is three costs,
+    -- not one wall. Each is asked against the same 53.
+    for _, leg in ipairs({ 'ls_hp', 'ls_dmg', 'ls_vis' }) do
+        assert(C(leg) > n * 0.25,
+            'leg ' .. leg .. ' passes on only ' .. C(leg) .. '/' .. n
+            .. ' of the pull`s own domain -- a leg this narrow is the dead-'
+            .. 'condition shape GH #13 and GH #648 both were, and P1(1) '
+            .. 'reported all three as costs')
+    end
+end
+
 tests['census: the scenario frequency the DoD asked for (36 / 10 / 15)'] = function()
     -- The peacetime lane-support state a pull starts from, and what each
     -- window admits out of it. This is the "scenario scarcity" half of the

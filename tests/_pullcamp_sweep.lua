@@ -40,6 +40,24 @@ local WINDOW = (function()
     return { tonumber(a), tonumber(b), tonumber(c), tonumber(d) }
 end)()
 
+-- [OWNER_PRIORITIES P1(1) 20260914] The three legs of J.IsLanePullSafe, READ
+-- FROM THE SHIPPED SOURCE for the same M13 reason as WINDOW above: a funnel
+-- that restates the constants it is measuring reports the old world unmoved
+-- after the constants change.
+local PULLSAFE = (function()
+    local fh = assert(io.open('bots/FunLib/jmz_func.lua', 'r'))
+    local src = fh:read('*a'); fh:close()
+    local at = assert(src:find('function J.IsLanePullSafe', 1, true),
+        'J.IsLanePullSafe moved')
+    local body = src:sub(at, at + 700)
+    local hp = body:match('J%.GetHP%( bot %) < ([%d%.]+)')
+    local dmg = body:match('WasRecentlyDamagedByAnyHero%( ([%d%.]+) %)')
+    local r = body:match('J%.GetNearbyHeroes%( bot, (%d+), true')
+    assert(hp and dmg and r,
+        'J.IsLanePullSafe is no longer three literal legs -- reread the funnel')
+    return { hp = tonumber(hp), dmg = tonumber(dmg), r = tonumber(r) }
+end)()
+
 -- The window BEFORE the GH #13 repair: the aggro marks with no travel lead.
 -- Restated (the pre-repair source is gone), and pinned as such by the test's
 -- source assertions, which check the shipped edges against WINDOW above.
@@ -122,6 +140,59 @@ for _, path in ipairs(fixture_files()) do
                 if pullsafe and not no800 then bump('pullsafe_not_no800') end
                 -- The converse is the size of the gap, and it is not small.
                 if no800 and not pullsafe then bump('no800_not_pullsafe') end
+
+                -- [OWNER_PRIORITIES P1(1) 20260914] THE PER-LEG FUNNEL, and
+                -- the DENOMINATOR it has to be read against. P1's clue names
+                -- J.IsLanePullSafe as a suspected SECOND dead condition ("in
+                -- Turbo laning, no visible enemy within 1800 may be almost
+                -- always false"), and the banked answer to it -- `pullsafe`
+                -- 410/1039 -- is measured over the WHOLE corpus, i.e. over
+                -- late-game and teamfight frames the camp pull never sees.
+                -- The suspicion is specifically about the LANING window, where
+                -- the lane opponent is SUPPOSED to be standing next to you, so
+                -- the number that can answer it is the CONDITIONAL one:
+                -- `peacetime_live` / `lane_support`. `lane_support` (the pull's
+                -- own domain minus every safety clause) did not exist until
+                -- this round, so the conditional could not be formed.
+                -- `ls_hp` / `ls_dmg` / `ls_vis` then split it per leg, which is
+                -- what P1's outcome (b) asks for in as many words.
+                local leg_hp  = J.GetHP(bot) >= PULLSAFE.hp
+                local leg_dmg = not bot:WasRecentlyDamagedByAnyHero(PULLSAFE.dmg)
+                local leg_vis = true
+                for _, e in pairs(
+                    J.GetNearbyHeroes(bot, PULLSAFE.r, true, BOT_MODE_NONE) or {})
+                do
+                    if J.IsValidHero(e) and not J.IsSuspiciousIllusion(e) then
+                        leg_vis = false
+                    end
+                end
+                -- A split of a helper is only worth reading while it still IS
+                -- that helper. This compares the reconstruction against the
+                -- shipped answer on EVERY frame, not just the population: a
+                -- non-zero count here means the legs drifted (or that the
+                -- alive clause, which the reconstruction omits because the
+                -- frame body already filters on it, started biting) and every
+                -- ls_* number below is then describing a function nobody ships.
+                if (leg_hp and leg_dmg and leg_vis) ~= pullsafe then
+                    bump('ls_recon_mismatch')
+                end
+                if tw and support then
+                    bump('lane_support')
+                    if leg_hp then bump('ls_hp') end
+                    if leg_dmg then bump('ls_dmg') end
+                    if leg_vis then bump('ls_vis') end
+                    -- Cumulative, in the order the shipped helper asks them, so
+                    -- the drop at each step is that leg's marginal cost rather
+                    -- than its standalone rate. ls_f3 must equal
+                    -- `peacetime_live` -- same population, same conjunction.
+                    if leg_hp then
+                        bump('ls_f1')
+                        if leg_dmg then
+                            bump('ls_f2')
+                            if leg_vis then bump('ls_f3') end
+                        end
+                    end
+                end
 
                 -- [GH #277 20260828] The SAME three-clause population, but with
                 -- the threat clause the shipped chain actually applies. The
@@ -385,6 +456,8 @@ for _, k in ipairs({
     'pullsafe', 'peacetime_lane_support', 'chain_old', 'chain_new',
     'pullsafe_not_no800', 'no800_not_pullsafe',
     'peacetime_live', 'chain_old_live', 'chain_new_live',
+    'lane_support', 'ls_hp', 'ls_dmg', 'ls_vis',
+    'ls_f1', 'ls_f2', 'ls_f3', 'ls_recon_mismatch',
     'depth_honest', 'depth_past_mid', 'depth_forced_nil', 'depth_own_half',
     'depth_inert',
     'spnc_nil', 'spnc_nonnil', 'spnc_raise', 'spnc_raise_lanefront',
