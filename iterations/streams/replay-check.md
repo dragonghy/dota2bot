@@ -17225,3 +17225,30 @@
     (4) ⚠️ 09-13T16:30Z 的 n=1 复现**连续第六轮挂账**,等新波次;
     (5) ⛔ 引本轮任何数**必须连切法一起引**,两份 points 列**不可并池**。
   - **完整报告**:`iterations/reports/replay-check/20260914T094921Z.md`
+- **[2026-09-14T09:49Z 收工回填]** 落地 `origin/main` `249f9000..66f23ea0`(`PUSH_MAIN_EXIT=0`),
+  分支 `claude/lucid-pascal-rau2iv` 同点(`PUSH_BRANCH_EXIT=0`),⛔ **未用 `RULE6_BYPASS`**,
+  **零 rebase、零 403**。铁律 6 三条腿(裸读,两次 push 逐字相同):
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 86 ran, 0 findings, 0 uncertifiable, 11.3s` /
+  **`lua gate: SKIPPED BY SCOPE`** —— ⚠️ **范围判定不是通过**(本轮只动 `tools/` 与 `iterations/`)。
+  动态半(GH #124)未跑、不声称。
+  **issue**:`GH #817`(`[bug]` 天赋摄取是按英雄取值的常数),**发在两次 push 之后**(GH #290 顺序),
+  `PRECHECK_EXIT=0`(5/5 路径在 trunk 上解析);⛔ 本组未碰任何 issue 状态,**未 reopen #799**。
+  ⭐ **precheck 当场抓到一条**:草稿把批测那棵树的 commit 当锚点引,判 **OFF-TRUNK**
+  (`PRECHECK_EXIT=3`,解析到 `origin/claude/admiring-hawking-0xutf6`)—— 改写并把这件事写进正文后才发。
+  ⭐ **发布前砍掉两句买不到的话**:`GetHeroLevelRequiredToUpgrade()=10` **本轮一次没读过**
+  (dumper 看不见未点天赋),改成「Dota 档位规则不是读数」;「没有死亡」则**补了一次真读**
+  (窗口 `t∈[376.1,504.1]` **0 死帧**,等级 **9/10/11 逐帧出现**)。
+  **开工自检真码**(⛔ 第一跑踩管道门**第 30 次**,`SELFCHECK_EXIT=2 REFUSED` 没跑成不是通过;
+  重定向重跑,约 80 分钟才收尾):`EXIT=3`,`legs run 13`,`UNCERTIFIABLE: none`,
+  `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(python)`。
+  `trunk-red(python)` = `test_pending_rulings.py` 的
+  `FAIL: real owed row 'hero27_dem21_deadline_scan' is missing trigger`(**指向总监那张欠条表,非本组**),
+  横幅逐字「Whether main is red too is NOT established by this line」⇒ ⛔ 不读成 main 红;
+  `lua-coverage` = GH #806 欠条(新增两条 `no_manifest_row`)。Lua 检测器腿
+  `92 files, 0 failures` 但**自称 FAST SUBSET**;`test_selfcheck_lua_leg` **5a\* 九条 UNCERTIFIABLE**
+  ⇒ 自检自己那条腿这轮没人看过。
+  ⚠️ **连续第四轮**记同一句:自检与 9 次 dump 并行跑,更稳妥是等它跑完再开工。
+  ⭐ **本轮多一条教训**:我曾按「70 分钟没横幅」判它没跑完并写进报告,**它随后跑完了** ——
+  **认横幅不认进程计数是对的,但「还没打横幅」不是「不会打」**,结论要等进程真的退出。
+  `TOKENS total_in=8,593,742 out=65,033 turns=66`(零 `requires approval`)。
