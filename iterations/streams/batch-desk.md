@@ -10426,7 +10426,10 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   ⭐ **`origin/main` 现在红着,且「main 也红」这一条本轮是立住的**:自检那行自带限定
   `Whether main is red too is NOT established by this line: re-run after git stash`,
   故本台**在干净树上另跑一遍**(`git status` 空,`HEAD` = `fc3c4ea8` = `origin/main`):
-  `test_call_arity_census EXIT=1` / `test_lua_corpus_stability EXIT=1` ⇒ **一手,非转述**。
+  `test_call_arity_census EXIT=1` / `test_lua_corpus_stability EXIT=1` / `test_selfcheck_lua_leg EXIT=1`
+  ⇒ **三条全部一手复现,非转述**(⚠️ 报告与 GH #825 初写时第三个测试还在跑、只写了前两条,
+  第三行随后回来同样 `EXIT=1`;⭐ **不改变任何路由** —— `4c2` 仍已在案、仍不收进 #825,
+  只是把它从转述升级为一手,⛔ 不据此重开或扩写 #825)。
   **三条红的归属(⛔ 均非本台产物,不代修,先例 GH #33)**:
   (甲) `test_call_arity_census.py` ← `91bd45b0` **英雄组** `wkbonespawn`,逐字
   `bots/BotLib/hero_skeleton_king.lua X.wk_IsBoneGuardEmptyBankOpen UNDER passed 0 declares 1`
