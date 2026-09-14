@@ -471,10 +471,24 @@ function()
 
     -- The lever did NOT touch the ammunition tests themselves; they belong to
     -- wkbonebank / wkbonefight and a bundle read must not be attributed here.
-    assert(body:find('nStack == maxStack', 1, true),
-        'branch 2 no longer reads `nStack == maxStack`.  That exact equality (and '
-        .. 'its maxStack-reads-0 corner) predates this lever and was declared '
-        .. 'UNTOUCHED by it; if it moved, that declaration is now false')
+    -- 2026-09-14: branch 2's bank term now reads through X.wk_IsBoneGuardBankFull
+    -- (soak candidate `wkbonefull`), whose gate-OFF leg IS `nStack == maxStack`,
+    -- bound and returned first.  The declaration this cell defends is unchanged
+    -- and is NOT lowered: `wkbonespawn` still did not touch the equality, and the
+    -- equality still decides branch 2 while that other id is unarmed.  What the
+    -- cell now asserts is the same fact through its new address -- the call site
+    -- here, and the surviving copy of the equality inside that helper -- so a
+    -- future edit that DELETES the equality still reds this section.
+    assert(body:find('X.wk_IsBoneGuardBankFull( nStack, maxStack )', 1, true),
+        'branch 2 no longer prices the bank through X.wk_IsBoneGuardBankFull.  '
+        .. 'That exact equality (and its maxStack-reads-0 corner) predates this '
+        .. 'lever and was declared UNTOUCHED by it; if it moved, that '
+        .. 'declaration is now false')
+    local full = src:match('function X%.wk_IsBoneGuardBankFull%b()(.-)\nend')
+    assert(full ~= nil and full:find('nStack == maxStack', 1, true),
+        'the one surviving copy of branch 2\'s shipped equality is NOT inside '
+        .. 'X.wk_IsBoneGuardBankFull -- gate-OFF behaviour for branch 2 is no '
+        .. 'longer byte-for-byte the shipped rule')
     assert(body:find('X.wk_IsBoneGuardBankCommittable( nStack, maxStack )', 1, true),
         'branch 1 no longer prices the bank through X.wk_IsBoneGuardBankCommittable')
     assert(body:find('talent6:IsTrained()', 1, true),

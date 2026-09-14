@@ -22,6 +22,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-176. ✅ **⭐ 下一轮第一条命令用 `bash tools/agent/rc.sh bash tools/agent/routine_selfcheck.sh`
+   —— 上一轮已经写过这句提醒,本轮还是踩了(证据纪律 3 同形第 14 次)。提醒不管用,所以它现在是 backlog 的第一行。**
+   主体:新 gated id **`wkbonefull`**(turbo-only),落在 `bots/BotLib/hero_skeleton_king.lua`
+   的 `X.ConsiderW` **第二条分支**(兵线前沿 / 打钱的骷髅释放路)。报告
+   `iterations/reports/hero/20260914T200853Z.md`;新 `tests/test_wk_bone_guard_bank_full.lua`
+   **16 绿**;变异台 `tools/agent/mutstand_wkbonefull.sh` **9/9 全杀**。
+   **零 AWS、零波次。P4.4 自评:主体是 (i),连续第三轮。**
+   - ⭐⭐ **这条 residual 被登记过两次,一次都没被认领。** `wkbonebank`(分支 1)在 helper 头注
+     和 `test_wk_bone_guard_stock_gate.lua` §6 里**两处逐字**写着「branch 2 的精确等号
+     predates this lever and is unchanged by it」⇒ **同一族里最严的那个成员**
+     (`nStack == maxStack` 就是同一条比率规则的 **threshold = 1.0**)自继承以来没有闸、没人看过。
+     `X.wk_IsBoneGuardBankCommittable` **从不被分支 2 调用**,所以「分支 1 已 gated」在这里买不到东西。
+   - ⭐ **armed 腿不是抄邻居的,是各自推出来的同一个数。** 支配闭包(骷髅不更少、每个不更弱)
+     作用在分支 2 的接受集 `{(1,2),(2,4),(3,6),(4,8)}` 上 ⇒ 恰好是 `bank >= 2` =
+     `X.nBoneGuardShippedFloor`,而那个常数是**分支 1** 从自己的 0.6 规则读出来的。
+     §5 **断言这个一致性**(M9 只重调兄弟的 armed 腿,被杀);**两条 gate 互不提及**(M3 专打 pullcad)。
+   - ⚠️ **§4.3 是本轮真的坑**:邻居 §4.2 的见证搜索是**一维的**(只往低 rank 找同 bank)。
+     分支 1 每 rank 接受一个**区间**,分支 2 每 rank 只接受**一个点** ⇒ 照抄会在
+     12 个新增格里的 **6 个奇数 bank 格**上找不到见证,**把一条正确的杠杆顶红**。
+     §4.2 改成**两个方向**搜,§4.3 把「一维会漏 6 个」驱动出来钉住。
+   - ⚠️ **M7 第一版是个空变异**:`if bShipped then return false end` 插在
+     `if bShipped then return true end` **下面**,不可达 ⇒ SURVIVED。
+     **删掉一次出货释放必须先打破早返回的形状**,而那正是这个形状的全部作用。
+     第二版(「整理」成单出口 + armed 腿排除满仓)§2.1/2.2/2.3 全绿,**只有 §2.4 的超集半边看见**,被杀。
+   - ⛔ **不修 `0 == 0` 空弹仓角落**(soak candidate 不许动 gate-OFF 行为)⇒ §8 **钉住**它;
+     M8 就是那条被禁止的修复(给出货腿加 `maxStack > 0`),被杀。
+     `or talent6:IsTrained()` 是 `wkbonespawn` 的主体,**一字未动**。
+   - ⭐ **顺带关掉 GH #825 §2 的 trunk 红(本组上一轮造成)**:`X.wk_IsBoneGuardEmptyBankOpen`
+     的 `UNDER passed 0 declares 1`。**棘轮要的是裁决词不是改代码** ⇒ `DEFAULTED`
+     (下一行用文件作用域 `talent6` 顶上;唯一出货调用点传 0 个实参是故意的)。
+     `test_call_arity_census.py` **exit 0**。⛔ #825 §3 是协同组的,不代修。
+   - **接力棒**:`queue.json` **hero-84**(零 EC2、优先级 3)—— 与 **hero-70**(分支 1 的频率)
+     是**同一份读数的两个切片,请一次取完**。⛔ 占比接近 0 ⇒ **DO-NOT-ARM 不是 reject**。
+   - **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN`(0 warnings)/ `py gate: 88 ran, 0 findings, 9.9s` /
+     `lua gate:` 见报告 §9;`RULE6_BYPASS` **未使用**。
+
 -175. ✅ **一条挂了 18 天、两处逐字写着「要一个局内读数」的 residual —— 本轮发现它**不需要**那个读数。**
    主体:新 gated id **`wkbonespawn`**(turbo-only),落在 `bots/BotLib/hero_skeleton_king.lua`
    的 `X.ConsiderW` **第一道拒绝链**上。报告 `iterations/reports/hero/20260914T170143Z.md`;
@@ -7820,6 +7856,31 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-14T20:08Z(报告 `iterations/reports/hero/20260914T200853Z.md`;**backlog:新开 `-176`**;
+  **零 AWS、零波次;`bots/` 改了 —— P4.4 (i),连续第三轮**;新 gated id **`wkbonefull`**,
+  登记 `state.json:wkbonefull_20260914`,请求 `queue.json:hero-84`)
+  **主体:一条被登记过两次、一次都没被认领的 residual —— 同一族里最严的那个成员。**
+  - ⭐⭐ `X.ConsiderW` **分支 2** 的 `nStack == maxStack` **就是**邻居那条比率规则的
+    **threshold = 1.0** 版本,而 `wkbonebank` 在两处逐字声明「不动它」⇒ 它自继承以来
+    **没有闸也没人看过**。6 组支配反转从台阶推导(bank 2 在 rank 2/3/4;4 在 3/4;6 在 4)。
+    **升级不动弹仓** ⇒ 一升级这条分支就沉默到弹仓填满**新**容量;分支 1 保住台阶 60%,分支 2 保住**一个点**。
+  - ⭐ **两条 armed 腿逐字相同是推导出来的,不是共享常数**:支配闭包作用在
+    `{(1,2),(2,4),(3,6),(4,8)}` 上恰好是 `bank >= 2` = `X.nBoneGuardShippedFloor`。
+    §5 断言这个一致性;**两条 gate 互不提及**(pullcad,M3 专打)。
+  - ⚠️ **别照抄邻居的一维见证搜索**:分支 2 每 rank 只接受**一个点**,一维搜索会在 6 个奇数 bank 格上
+    **把正确的杠杆顶红**(§4.3 把这个数驱动出来钉住)。
+  - ⚠️ **M7 第一版是空变异**(插在不可达位置)⇒ 记成 SURVIVED;**删掉一次出货释放必须先打破早返回的形状**。
+    第二版只被 **§2.4 的超集半边**杀死 ⇒ 「超集」不是装饰,是将来每个负向波次归因的依据。
+  - ⭐ **顺带关掉 GH #825 §2 的 trunk 红(本组上一轮造成)**:裁决词 `DEFAULTED`,
+    `test_call_arity_census.py` exit 0。⛔ §3 是协同组的,不代修。
+  - 验证:新测试 **16 绿**;`mutstand_wkbonefull.sh` **9/9**;`mutstand_wkbonespawn.sh` 锚点更新后 **10/10**;
+    五个既有 WK 测试 13/13/12/21/14 绿且**未改一字**;`test_wk_bone_guard_stock_gate.lua` §6 换地址、**没降门槛**。
+  - **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN` / `py gate: 88 ran, 0 findings, 9.9s` /
+    `lua gate:` 见报告 §9;`RULE6_BYPASS` **未使用**。
+  - ⚠️ **证据纪律 3 同形第 14 次,又是本轮第一条命令**(`routine_selfcheck.sh | tail`,脚本当场 REFUSED);
+    **上一轮已经写过「下一轮第一条命令就用 rc.sh」这句提醒,没管用** ⇒ 本轮把它放进
+    **backlog `-176` 的第一行**,而不是再写一遍提醒。真读数 `RC_EXIT=3`,
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(python)`。
 - 2026-09-14T17:01Z(报告 `iterations/reports/hero/20260914T170143Z.md`;**backlog:新开 `-175`**;
   **零 AWS、零波次;`bots/` 改了 —— P4.4 (i),连续第二轮**;新 gated id **`wkbonespawn`**,
   登记 `state.json:wkbonespawn_20260914`,请求 `queue.json:hero-83`)

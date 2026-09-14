@@ -277,6 +277,29 @@ ALLOWLIST = {
         (2, "DEFAULTED: fExtra nil -> the extra conjunct is constant true, at "
             "`fExtra == nil or fExtra( npcOther )`; both sites carry no "
             "site-specific term to pass"),
+    # Landed 2026-09-14 with the soak candidate 'wkbonespawn' (GH #825 recorded
+    # the red the same day; the push that carried it was green because these
+    # census tests are not in the fast py gate's membership).
+    # THE READING.  X.wk_IsBoneGuardEmptyBankOpen( hTalent ) reads the parameter
+    # on exactly one line -- `if hTalent ~= nil then return hTalent:IsTrained()
+    # == true end` -- and the very next line substitutes the file-scope talent6
+    # handle for it (`return talent6 ~= nil and talent6:IsTrained() == true`).
+    # So the missing argument is supplied by the helper from its own source and
+    # cannot reach an unguarded read.  The sole shipped caller -- the second
+    # disjunct of X.ConsiderW's first refusal chain -- passes zero ON PURPOSE:
+    # it means "my own t20 row", which is what talent6 is, and the parameter
+    # exists so the test file can drive both trained and untrained without
+    # touching a file-scope upvalue.
+    # !! What would make this row wrong: a SECOND caller that means a DIFFERENT
+    # talent row (a hero-selection or ally handle).  The row is keyed by count
+    # (1), so a second zero-argument call site turns this file red again by
+    # itself -- that is the guard, not this sentence.  A test-only caller cannot
+    # trip it either way: this census reads bots/ only.
+    ("bots/BotLib/hero_skeleton_king.lua",
+     "X.wk_IsBoneGuardEmptyBankOpen", "UNDER", 0, 1):
+        (1, "DEFAULTED: hTalent nil -> the file-scope talent6 handle, "
+            "substituted on the helper's next line"),
+
     # The tree's only OVER member, and it was invisible for as long as the
     # resolver keyed on `____exports.CMLaneAssignment` while the call site
     # writes `CaptainMode.CMLaneAssignment`.  `userSwitchedRole` is a

@@ -155,8 +155,12 @@ run "M6 informative split dropped -> section 3 must red" "informative frames"
 python3 - <<'PY'
 p = 'bots/BotLib/hero_skeleton_king.lua'
 s = open(p).read()
-old = '\tif ( nStack == maxStack or talent6:IsTrained() )\n'
-new = '\tif ( nStack == maxStack or talent6:IsTrained() or X.wk_IsBoneGuardEmptyBankOpen() )\n'
+# The anchor moved on 2026-09-14 when `wkbonefull` routed branch 2's bank term
+# through X.wk_IsBoneGuardBankFull.  The MUTANT is unchanged in meaning -- a
+# second X.wk_IsBoneGuardEmptyBankOpen call site inside branch 2 -- and the
+# assert below is what stops this stand from silently mutating nothing.
+old = '\tif ( X.wk_IsBoneGuardBankFull( nStack, maxStack ) or talent6:IsTrained() )\n'
+new = '\tif ( X.wk_IsBoneGuardBankFull( nStack, maxStack ) or talent6:IsTrained() or X.wk_IsBoneGuardEmptyBankOpen() )\n'
 assert s.count(old) == 1, 'M7 anchor not found exactly once'
 open(p, 'w').write(s.replace(old, new, 1))
 PY

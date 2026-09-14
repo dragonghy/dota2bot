@@ -1706,6 +1706,102 @@ function X.wk_IsBoneGuardBankCommittable( nStack, maxStack )
 	return nStack >= X.nBoneGuardShippedFloor
 end
 
+--- [wkbonefull] The SECOND branch of X.ConsiderW prices the same skeleton bank
+--- with the same ratio rule at a different threshold -- `nStack == maxStack` is
+--- `nStack / maxStack >= 1.0` -- and the neighbour above says so in its own
+--- words: "branch 2's `nStack == maxStack` still reads an EXACT equality ...
+--- That predates this lever and is unchanged by it."  `wkbonebank` gates the
+--- ATTACK branch's conjunct and is never called from branch 2, so the lane/farm
+--- release has carried the strictest member of the family since the file was
+--- inherited, ungated and unexamined.
+---
+--- THE DEFECT IS THE NEIGHBOUR'S, A FORTIORI.  Every term the release is worth
+--- is an ABSOLUTE count (one skeleton per charge; the re-anchored KV block at
+--- the :44 region gives max_skeleton_charges 2/4/6/8 and skeleton damage
+--- 34/39/43/49, +25 more against heroes), and a ratio against an absolute payoff
+--- is NON-MONOTONE IN RANK.  At threshold 1.0 the shipped rule commits on
+--- exactly one bank per rank:
+---
+---   rank  maxStack  the ONLY bank branch 2 commits on  per-skeleton hero damage
+---     1       2                  2                              59
+---     2       4                  4                              64
+---     3       6                  6                              68
+---     4       8                  8                              74
+---
+---   bank 2 @ rank 1 -> 2 == 2  ACCEPTED,  2 x 59 = 118 hero damage
+---   bank 2 @ rank 2 -> 2 ~= 4  REFUSED,   2 x 64 = 128 hero damage
+---
+--- Same bank, same 100-mana 42s-cooldown release, MORE damage per skeleton, and
+--- the rule flips to no.  Six such (bank, lower-rank-accepts, higher-rank-
+--- refuses) pairs come off the ladder (bank 2 at ranks 2/3/4, bank 4 at 3/4,
+--- bank 6 at 4); section 3 of tests/test_wk_bone_guard_bank_full.lua derives
+--- them rather than trusting this table.
+---
+--- WHY IT BITES HARDER HERE THAN ON THE ATTACK BRANCH.  A rank-up does not touch
+--- the bank, so the instant Bone Guard is levelled the branch goes silent until
+--- the bank refills to the NEW capacity -- and in Turbo that levelling happens
+--- while the hero is doing the exact thing this branch exists for.  The attack
+--- branch at least keeps 60% of the ladder; this one keeps a single point of it.
+---
+--- WHAT THE ARMED LEG IS, and why it is the neighbour's predicate verbatim
+--- rather than a new number: the dominance closure of the shipped accept set.
+--- If the file commits at (rank r', bank b') it must commit at every (r, b) with
+--- r >= r' and b >= b' -- at least as many skeletons, each at least as strong.
+--- Closing {(1,2), (2,4), (3,6), (4,8)} under that relation gives exactly
+--- `bank >= 2`, i.e. X.nBoneGuardShippedFloor, which this file already read OFF
+--- the shipped rule for the attack branch.  So both armed legs are the same
+--- expression, and section 5 of the test asserts that agreement instead of
+--- letting the two drift.
+---
+--- ⛔ THE TWO GATES MUST NOT NAME EACH OTHER.  `wkbonefull` and `wkbonebank` are
+--- independent conjuncts of two different branches; writing either gate as
+--- `IsSoakCandidate('wkbonefull') and IsSoakCandidate('wkbonebank')` would be
+--- the pullcad trap (AGENTS.md) -- frozen FALSE the day either id is promoted,
+--- with check_armed_wiring.py still calling it WIRED.  Arming BOTH widens
+--- X.ConsiderW more than either does alone, so a bundle read must not be
+--- attributed to one of them.
+---
+--- DIRECTION IS GUARANTEED BY CONSTRUCTION, not by data: the shipped equality is
+--- computed and BOUND first and returned on its own whenever it is true, so
+--- arming can only move this answer false -> true.  A negative wave read may
+--- therefore be attributed to "it releases too often", NEVER to "the lever ate a
+--- shipped release".
+---
+--- ⚠️ WHAT THIS DOES NOT REPAIR, said before anyone reads it as a fix.  The
+--- shipped equality answers TRUE for an EMPTY bank whenever max_skeleton_charges
+--- reads 0 (`0 == 0`), and gate OFF must keep answering true there -- a soak
+--- candidate may not move shipped behaviour, so section 7 pins that cell rather
+--- than repairing it.  Nor does the lever touch the `or talent6:IsTrained()`
+--- disjunct beside it, which bypasses the bank entirely and is `wkbonespawn`'s
+--- subject, not this one's.
+---
+--- ⚠️ WHAT THIS CANNOT SHOW.  `nStack` is a MODIFIER STACK COUNT and
+--- make_fixture.py dumps no modifiers, so 0 frames of the corpus carry
+--- modifier_skeleton_king_bone_guard and NO frame can drive this conjunct end to
+--- end -- the same wall the neighbour hit.  The RANK half is frame-checkable
+--- (ability levels are dumped, and the corpus holds Bone Guard at all four
+--- ranks), so the test pins the inversion on real ranks and pins the bank zero.
+--- Frequency is not priced here: iterations/queue.json hero-84 (zero EC2).
+function X.wk_IsBoneGuardBankFull( nStack, maxStack )
+
+	-- Byte for byte the shipped expression, bound and returned first -- exact
+	-- equality included, degenerate maxStack included.  See the note above for
+	-- why the `0 == 0` cell is preserved rather than guarded.
+	local bShipped = ( nStack == maxStack )
+
+	if bShipped
+	then
+		return true
+	end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkbonefull' ) )
+	then
+		return false
+	end
+
+	return nStack >= X.nBoneGuardShippedFloor
+end
+
 --- [wkbonespawn] The one residual this file has carried REGISTERED-BUT-UNSETTLED
 --- since 2026-08-27, and the point of this lever is that it can be settled
 --- WITHOUT the reading the note asked for.
@@ -1828,7 +1924,11 @@ function X.ConsiderW()
 	end
 
 	--buff叠满了靠近兵线的时候
-	if ( nStack == maxStack or talent6:IsTrained() )
+	-- [wkbonefull] gate off this is `nStack == maxStack`, byte for byte.  See
+	-- X.wk_IsBoneGuardBankFull above for the ladder, the dominance closure, why
+	-- the floor is the neighbour's and not a new number, and why the `0 == 0`
+	-- cell is preserved rather than repaired.
+	if ( X.wk_IsBoneGuardBankFull( nStack, maxStack ) or talent6:IsTrained() )
 		and nLV >= 4
 		and ( X.IsNearLaneFront( bot ) or J.IsFarming( bot ) )
 	then
