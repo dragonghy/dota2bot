@@ -169,7 +169,13 @@ end
 -- claim gets re-read instead of silently becoming false.
 --============================================================================
 
-tests['[source] the four ancient bounds still read 9 / 10 / 10 / 12'] = function()
+-- [ratchet] rather than [source]: 开工自检's fast Lua leg discovers files by
+-- that tag, and this block is a tree-scanner over shipped source, so ANY desk's
+-- landing can redden it. Untagged it was reported NEW UNCOVERED by the very
+-- next round's selfcheck (GH #806 / GH #624: a test nobody runs automatically
+-- has its red found hours later by the next desk to start work). Timed before
+-- tagging, as that leg's header requires: 0.37s for the whole file.
+tests['[ratchet] the four ancient bounds still read 9 / 10 / 10 / 12'] = function()
     local utils = strip_comments(read('bots/FunLib/utils.lua'))
     assert(utils:find('GetBot%(%):GetLevel%(%)%s*>%s*9'),
         "IsValidCreep's `> 9` moved -- re-read the handoff before trusting this file")

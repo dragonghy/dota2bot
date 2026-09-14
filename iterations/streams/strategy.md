@@ -35,7 +35,44 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT16. **【2026-09-14T19:28Z 新增,**下一轮第一项**。
+0NEXT17. **【2026-09-14T22:19Z 新增,**下一轮第一项**,而且它被点名的第一理由和
+   0NEXT15 当初一样是 **4.4 (i)**:本轮 `bots/` 又是零 diff(那是**正确的**出口 ——
+   本轮的产出就是「不要落那条杠杆」—— 但配额量的是主体不是正确性)。
+   **下一轮的主体必须是一条 `bots/` 行为改动。**
+
+   **0NEXT16 已裁掉(见「当前状态」2026-09-14T22:19Z 节):`> 9` 不动,别再提。**
+   连带,**下面这三条也一并被定价并排除**,不要重买:
+   ⛔ **不要给 `GetMaxHPCreep`/`GetMinHPCreep` 的 `HasArmorReduction` 快捷路径补合法性过滤**:
+   中立路上它是 `camppick` 的重复(`camppick` 已经把远古从表里拿走),
+   兵线路上它依赖同一条**买不到**的读数(dumper 无 creep 身份)。写不出分开的断言 ⇒ 不落。
+   ⛔ **不要「顺手把 `GetNearestCreep` 改成扫描」**:那会**同时**改掉 `camppick` 与出厂两条路
+   的选择语义(本轮 M3 就是这条,被抓),是一条独立的大杠杆,不是附带。
+   ⛔ **兵线分支(`GetNearbyLaneCreeps` 里会不会出现远古)在 dumper 发出 creep 身份之前
+   结构上买不到**;`test_isvalidcreep_bound_completeness.lua` 的 `[world]` 断言会在
+   `#581` 落地那天自己变红点名它 —— **不要用人眼推断替它作答**。
+
+   **选题建议(按「小杠杆 + 有帧证据 + 不等 dumper 字段」排序)**:
+   从开着的 `[strategy]` issue 里挑一条带帧证据的对线期/TP 纪律项;
+   没有就回到本 backlog 下面各条里**不等 dumper 字段**的那些。
+   ⚠️ **判据继承 0NEXT11–0NEXT16 全部**,并特别继承本轮这条:
+   ⭐ **一条 backlog 词条可以点名错读数。** 0NEXT16 把一条**昂贵且不可核验**的读数设成闸
+   (「先量兵线路上 `IsAncientCreep` 是否恒假」),而真正决定它的读数是**它上面六行 shipped Lua**
+   (快捷路径跑在 `IsValidCreep` 前面 / `GetNearestCreep` 只测 `[1]`)。
+   ⇒ **动手买一条词条点名的读数之前,先问有没有更便宜的一条是在否掉**前提**而不是在选分支。**
+   (两轮内第二例:0NEXT15 的正文前提在源码里已经过期。)】**
+
+0NEXT16. ✅ **【2026-09-14T19:28Z 提为下一轮第一项 → 2026-09-14T22:19Z **裁掉**:
+   **`IsValidCreep` 的 `> 9` 不动,`camppick` 的调用层做法是终局。**
+   ⚠️ **但否掉它的不是本条点名的那条读数**(兵线路上 `IsAncientCreep` 是否恒假 ——
+   那条**今天买不到**,已按 UNCERTIFIABLE 登记成断言)。否掉它的是两条更便宜的源码级读数:
+   **(A)** `GetMaxHPCreep`/`GetMinHPCreep` 的 `HasArmorReduction` 快捷路径**跑在
+   `IsValidCreep` 前面**⇒ 收窄字面量**关不掉它自己那条路上的远古洞**(实测:真实帧 viper L9,
+   带 amplify damage 的远古**两个选择器都照样交回**,对照组正确拒绝);
+   **(B)** `GetNearestCreep` **只测 `[1]` 不扫描** ⇒ 收窄后 `nearest` 农民在「最近的是远古」
+   那一帧**悄悄变成 minHP 农民**(实测:真实帧 sven L4,shipped 选 800u 外的 300hp,
+   `camppick` 的表选 400u 的 550hp)。⇒ 收窄**不是更上游、覆盖更广**,是**不完整**且**改得更多**。
+   读数与交棒见「当前状态」2026-09-14T22:19Z 节;原文保留在下,便于对照。**
+   **【2026-09-14T19:28Z 新增,**下一轮第一项**。
    **把 `IsValidCreep` 的 `> 9` 本身收掉 —— 本轮**没有**动它,而那是刻意的。**
 
    `camppick` 让**选择器**在 10..11 带不再返回远古,但 `IsValidCreep` 那条 `> 9`
@@ -9324,6 +9361,56 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-14T22:19Z:**裁掉 0NEXT16 —— `IsValidCreep` 的 `> 9` 不动**,
+  `camppick` 的调用层做法是终局。出口 **(b)**:`bots/` + `game/` **零 diff**
+  (如实登记,**4.4 (i) 不满足**,结束上一轮的满足);**(ii) 不认领**(这是 backlog
+  裁定完结,不是 promote/reject 判定完结)。铁律 9:P1 DoD① 已完成;P2 的球虽写着本组,
+  但 TP 腿卡在 `owed_executions.json:wandlimbo_charge_instrument` 的两端仪器墙上
+  (RULING 37),不是一个工作单元能推的格 ⇒ 走章程 1b,取 backlog 最上面一条。
+  **⭐⭐ 头条:0NEXT16 点名的读数不是决定性的那条,而且它买不到。**
+  它把「兵线路上 `IsAncientCreep()` 是否恒假」设成闸 —— 那条**结构上买不到**
+  (dumper 写 creep 行只有 `{t, team, x, y}`,`IsAncientCreep()` 在落盘时就被丢掉,
+  与 `test_camppick_target_tier.lua` 的 `[world]` 同一堵墙),已写成断言而非散文:
+  `#581` 落地那天 `[world]` 自己变红点名它。**而它买不买得到都不改变结论**,因为
+  两条**更便宜的源码级读数直接否掉了前提**(「收窄 `> 9` 是比 `camppick` 更上游、
+  覆盖更广的杠杆」):
+  **(A) 不完整** —— `GetMaxHPCreep`/`GetMinHPCreep` 的循环第一句
+  `if not creep:IsNull() and HasArmorReduction(creep) then return creep end`
+  **先于** `IsValidCreep` 返回。实测真实帧 **viper L9**(即 `> 9` 已在拒绝远古的那一级):
+  一只带 `modifier_slardar_amplify_damage` 的远古**两个选择器都照样交回**,
+  去掉 modifier 的对照组正确拒绝 ⇒ **收窄那个字面量根本不是那条路上的闸,
+  只是那条路两个分支里的一个上的闸。**
+  **(B) 不是更窄,是更宽** —— `GetNearestCreep` **只测 `creepList[1]`,不扫描**,
+  所以收窄后「最近的是远古」那一帧,`nearest` 农民拿到的不是「最近的非远古」而是 nil,
+  顺 `targetCreep or GetMinHPCreep(tPick)` 的尾巴**悄悄变成 minHP 农民**。
+  实测真实帧 **sven L4**(`nearest` 农民;sweep = 远古 1400hp@260u / 550hp@400u / 300hp@800u):
+  shipped(= 收窄后的世界)选 **300hp@800u**,`camppick` 过滤后的表选 **550hp@400u**。
+  ⇒ **两条杠杆拒绝了同一只远古,攻击的却是不同的 creep** —— 这正是上一轮要求的
+  「能把两者分开的断言」,而它指的方向是**收窄那个字面量更差**。
+  **(C)** `camppick` 两个洞都关得掉(它在任何选择器走表之前过滤,快捷路径一并关在外面),
+  且调用方的表逐字不动(`#sweep == 2` 是断言)。
+  **产物**:`tests/test_isvalidcreep_bound_completeness.lua`(**7 tests / 0 failures / 0.08s**,
+  真实帧 viper L9 + sven L4;creep 是**申报的替身**,文件里没有任何一个数被当作语料数据);
+  `tools/agent/mutstand_isvalidcreep_bound.sh`(**6 抓 + 控制 SURVIVED + 0 NO-OP**,exit 0;
+  变异全打在出货实现上,先 `grep -c` 证落地、还原 `sha256sum` 校验;M1/M2 成对的理由与
+  camppick 台的 M2/M3 同族 —— **只驱动一个选择器的台子会把「不完整」在一个分支上证明、
+  在另一个分支上假设**;**M6 是 campfarm 形状**,保证本文件不会被引用成「过滤调用方的表」的论据);
+  报告 `iterations/reports/strategy/20260914T221901Z.md`。**没落新 gated id,`state.json` 未改。**
+  **⚠️ 附带:把本组上一轮自己捅出来的 UNCOVERED 洞补上。** 本轮开工自检报
+  `UNCOVERED SET GREW`,三个文件里第一个就是上一轮落的 `test_camppick_target_tier.lua`
+  (`no_manifest_row`)。两个文件的源码普查块从 `[source]` 改名 **`[ratchet]`**,
+  于是 `routine_selfcheck.sh` 的 fast Lua 腿(按标签 `grep -l`)当天就发现它们。
+  **按该腿 header 的要求先计时后打标签**:0.08s / 0.37s,都在「从来没超过毫秒级」的带内。
+  ⛔ **没碰** `lua_gate_measure.py` 全量重测、**没手改** manifest(GH #813 / #783 仍开着;
+  push 闸入闸与否是总监的格)。
+  **铁律 6**:静态半 `GATE_EXIT=0` CLEAN / 0 warnings,**未用 `RULE6_BYPASS`**;
+  动态半**未跑全量**(GH #124),跑了子集 `isvalidcreep_bound` 7/0 + `camppick_target_tier` 13/0。
+  **⚠️ 开工自检本轮未读到最终 `worst exit`**(python 套件那一腿到收尾仍在跑),
+  如实登记为**未核验,不是绿**;前两次调用各被它自己拒绝一次(pipe / `timeout`),
+  **REFUSED 是 exit 2「什么都没检」不是通过**。
+  **📌 可迁移(已写进 0NEXT17)**:*一条 backlog 词条可以点名错读数。动手买它点名的读数之前,
+  先问有没有更便宜的一条是在否掉**前提**而不是在选分支。* 两轮内第二例。
 
 - 2026-09-14T19:28Z:**落 gated `camppick`** —— 四阈值对齐里**唯一没有任何 id 在管**的那一条
   (`utils.lua` `IsValidCreep` 的 `GetBot():GetLevel() > 9`),做成 `campfarm` 的
