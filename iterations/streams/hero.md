@@ -7716,7 +7716,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     它 `in_gate:false`(GH #812 形状)⇒ 拦不住 push。
   - ⭐ **7 轮悬案了结**:`cullthresh_domain.py` docstring「三带」按 `-171` 罚则改写成**「这条不做了」**
     并移出 backlog(归属:工具侧外溢项)。
-  - **铁律 6 三条腿**:见报告 §8。
+  - **铁律 6 三条腿**:见报告 §8(`GATE_EXIT=0` / `py gate: 86 ran, 0 findings` /
+    `lua gate: 372 ran, 0 findings, 0 uncertifiable, 7 unanswered, 7 known-red`;`RULE6_BYPASS` 未使用)。
+  - ⛔⛔ **`git push origin HEAD:main` 被拒:HTTP 403,退避重试 4 次全同 —— 本轮产物只到了分支上**
+    (`claude/admiring-hawking-i8em8m`)。已排除:rebase 干净、语料未被那 6 个 commit 动过
+    (rebase 后 `lion` 复跑 297 绿)、代理 `recentRelayFailures: []`、**同一 remote 同一凭据的
+    分支 push 几十秒前刚成功两次** ⇒ **是 `main` 这个 ref 被拒,不是网络/凭据**。报告 §12。
+    ⚠️ **下一轮注意**:`unlanded_commits.py` 会点名这两个 commit,**那是对的不要消掉**;
+    且在它们进 main 之前**不要引用本轮读数当 trunk 事实**。
 - 2026-09-14T04:55Z(报告 `iterations/reports/hero/20260914T045531Z.md`;**backlog:新开 `-171`**;
   **零 AWS、零波次、`bots/` 未改一字**;P4.2 冻结期不请求入集,armed 串与 test_set.md 一字未动)
   **主体是量具:`tests/test_focus_level_claims.lua` §5(17 → 22 绿)。**
