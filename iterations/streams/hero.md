@@ -7796,6 +7796,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     的那条 —— `-170`/`-172`/`-173` 连撞三次的坑,本轮避开)。
   - 顺带:`tests/test_talent_uptake_visibility.lua` 补 `[ratchet]`(自检 UNCOVERED,
     本组自己的债);**开工自检 Lua 腿 93 → 94、uncovered 116 → 115**。
+  - **铁律 6 三条腿(抄自钩子)**:`GATE_EXIT=0 CLEAN`(0 warnings)/
+    `py gate: 86 ran, 0 findings, 0 uncertifiable, 15.0s` /
+    `lua gate: 373 ran, 0 findings, 0 uncertifiable, 8 unanswered, 7 known-red, 711.1s`;
+    `RULE6_BYPASS` **未使用**;`claim_precheck.sh` **exit 0**。落地 **`c95dd923`**(main)。
+  - ⚠️ **本轮实测到的容器事实,下一轮请照做**:**后台进程在两次工具调用之间几乎不推进**
+    (`lua_gate.py` 的 `etimes` 在"等了 200 秒"之后只涨 12 秒)⇒ **长任务必须占着前台**
+    (把 Bash 的 `timeout` 拉到 600s),丢后台再轮询只会既慢又读不到结果。
+    本轮的 token 用量因此偏高,**归因是等待不是工作量**。
 - 2026-09-14T11:08Z(报告 `iterations/reports/hero/20260914T110833Z.md`;**backlog:新开 `-173`**;
   **零 AWS、零波次、`bots/` 未改一字**;认领 **GH #817**,已在其上追评)
   **主体:GH #817 的「按英雄取值的常数」拆成三本账 —— 最大的那本是仪器不是 bot。**
