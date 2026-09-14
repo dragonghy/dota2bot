@@ -22,6 +22,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-175. ✅ **一条挂了 18 天、两处逐字写着「要一个局内读数」的 residual —— 本轮发现它**不需要**那个读数。**
+   主体:新 gated id **`wkbonespawn`**(turbo-only),落在 `bots/BotLib/hero_skeleton_king.lua`
+   的 `X.ConsiderW` **第一道拒绝链**上。报告 `iterations/reports/hero/20260914T170143Z.md`;
+   新 `tests/test_wk_bone_guard_stock_gate.lua` **8 绿**;变异台 `tools/agent/mutstand_wkbonespawn.sh`
+   **8 杀 + 2 声明存活 = 10/10**。**零 AWS、零波次。P4.4 自评:主体是 (i),连续第二轮。**
+   - ⭐⭐ **产出不是杠杆,是「这个问题不必答」。** residual 原文(talent6 注释 + `test_wk_bone_guard_talent_bypass.lua` §5):
+     「若引擎只在 charges ≥ 1 挂 `modifier_skeleton_king_bone_guard`,`X.ConsiderW` 顶上那道守卫
+     就把 t20 旁路要解掉的弹药测试**原样加回来**」。两处都把读者送去一个**局内读数**(hero-21)。
+     **两世界,同一根杠杆都对**:世界 A(0 弹也挂)⇒ 出货析取项已为真、`or` 短路、helper
+     **一次都不被调用** ⇒ **字节级 no-op**;世界 B ⇒ 杠杆把 t20 那一行买到的
+     (`min_skeleton_spawn` 0 → 5)还回来。⇒ **哪个世界定大小,不定该不该存在。**
+     **驱动出来的,不是论证**:§5 一个计数器、同一帧跑两遍,世界 A **0 次**、世界 B **1 次**。
+   - ⛔ **安全性靠天赋不靠弹仓**:空弹仓 + t20 未点 ⇒ **0 个骷髅** + 烧 42s 平冷却,比不放更差。
+     所以 `IsTrained()` 是**合取项**;它是**引擎读数不是 soak id** ⇒ **不是 pullcad 陷阱**。
+     最要紧的变异体 **M4**(拆掉这个合取项)被 §2 杀死 —— 那是整条安全性论证。
+   - ⭐ **真实帧买到可达性那一半**:33 个活着且 Bone Guard rank ≥ 1 的 WK 帧,**19** 带 modifier 列表
+     (兄弟对照 **19/19**),带充能 modifier 的 **0** ⇒ 出货析取项在 19/19 上拒绝;
+     armed+trained **19/19** vs unarmed **0/19**(同一 tally 换腿)。
+     ⚠️ **买不到 `IsTrained()`**(H1 天赋盲区,GH #817)⇒ 天赋那一半是**带标签的实参**。
+     ⚠️ **§7 驱动出的等价不是失望**:19 帧上 `X.ConsiderW` armed 与 unarmed 都答 0 ——
+     **效果在 helper 上可表示、在函数上不可表示**,混起来就是「已测试无效果」被错写的方式。
+   - ⭐ **两条「声明存活」的变异体**(S1/S2):survivor 记 PASS、**变红才是发现**。
+     S1 实测 rank 过滤器**在今天语料上排除不了任何东西**(33/33 全 rank ≥ 1),与 GH #794 在
+     `test_wk_reserve_idle_release` 里那条 liveness 谓词同形。
+   - ⚠️ **被别的检测器抓到一次,而修法与「让计数器高兴」相反**:第一版
+     `local hRow = hTalent or talent6` 被 `test_focus_talent_reach_wall.lua` §3 顶红
+     (规则是**关于行的**:t15+ 手柄的读必须与 `IsTrained()` 同行)⇒ 改成
+     `talent6 ~= nil and talent6:IsTrained() == true`,并把该断言**搬进本组自己的 §1**(M8)。
+   - ⭐ **顺带关掉两条 trunk 红,逐条归因,没有重新基线化任何数**:
+     (1) `test_wk_bone_guard_talent_bypass.lua` **开工时 main 上就 3 条红**(`git stash` 复核),
+     肇事者是 **GH #794 那一行死 WK**,而 **#794 当天补 liveness 的四个普查里漏了这一个**;
+     那个「幻影 +1」是死行触发 #794 的崩溃、被 `desire_on` 的 `'REFUSED'` 约定记成非零 desire
+     ⇒ **36/19/0 原样回来**。(2) `test_pending_rulings.py`:`hero-82`(本组上一轮)+ 新 `hero-83`
+     把「零 EC2」只写在 `bundle`/`note`,而 `partition` 只扫 `question`/`acceptance`
+     ⇒ 补进 `question`,**没改工具**;连带后果是这两行进 RIDESHARE 桶、按设计要一个裁定。
+   - **接力棒**:`queue.json` **hero-83**(零 EC2、优先级 3)—— 它同时答那条 residual,
+     判别子是事件流里 `MODIFIER_ADD/REMOVE` 的**配对形状**。
+     ⛔ **若结论是「常挂」,处置是 DO-NOT-ARM 不是 reject**(本杠杆在那个世界里是结构性 no-op)。
+   - **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN`(0 warnings)/ `py gate: 87 ran, 0 findings, 11.2s` /
+     `lua gate:` 见报告 §7;`RULE6_BYPASS` **未使用**。
+   - ⚠️ **证据纪律 3 同形第 13 次,又是本轮第一条命令**(`routine_selfcheck.sh | tail`,
+     脚本当场 REFUSED,harness 报的是 `tail` 的 0);改用 `rc.sh` 才拿到真读数(`RC_EXIT=3`)。
+
 -174. ✅ **给 t10 定的价买到了,但买到的不是 t10 —— 翻这张牌会把另一根*已经 armed* 的杠杆的域删掉。**
    主体:`-173` §8 第 1 条点名的 **WK t10 定价**,落成 `bots/` 行为改动 **`wkt10ls`**
    (gated,turbo-only,`tTalentTreeList['t10'] = {0, 10}` 取索引 [1] 吸血)。
@@ -7777,6 +7820,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-14T17:01Z(报告 `iterations/reports/hero/20260914T170143Z.md`;**backlog:新开 `-175`**;
+  **零 AWS、零波次;`bots/` 改了 —— P4.4 (i),连续第二轮**;新 gated id **`wkbonespawn`**,
+  登记 `state.json:wkbonespawn_20260914`,请求 `queue.json:hero-83`)
+  **主体:一条挂了 18 天的 residual,本轮发现它不需要它自己要的那个局内读数。**
+  - ⭐⭐ **两世界,同一根杠杆都对** ⇒ 「引擎是否在 0 弹时也挂充能 modifier」**定杠杆大小,
+    不定它该不该存在**。世界 A:出货析取项已为真、`or` 短路、helper 一次都不被调用
+    ⇒ **字节级 no-op**;世界 B:把 t20 那一行买到的 `min_skeleton_spawn` 0 → 5 还回来。
+    **§5 用一个计数器在同一帧上驱动出来**(世界 A **0** 次 / 世界 B **1** 次),不是论证。
+  - ⛔ **安全性靠天赋不靠弹仓**:t20 未点时空弹仓释放 = **0 骷髅 + 烧 42s 冷却**;
+    `IsTrained()` 是**引擎读数不是 soak id** ⇒ **不是 pullcad 陷阱**。变异体 **M4** 专打这条,被杀。
+  - ⭐ **可达性真实帧**:33 帧(Bone Guard rank ≥ 1)、**19** 带 modifier 列表、
+    充能 modifier **0**、兄弟对照 **19/19**;armed+trained **19/19** vs unarmed **0/19**。
+    ⚠️ **函数级等价是天赋盲区抵达调用点**(§7:19 帧上两腿都答 0),
+    **效果在 helper 上可表示、在函数上不可表示** —— 别把它读成「已测试无效果」。
+  - ⭐ **顺带关掉两条 trunk 红**:`test_wk_bone_guard_talent_bypass.lua`(开工时 main 上 3 条红,
+    肇事者 GH #794 的死 WK 行;**#794 当天补 liveness 的四个普查漏了这一个**;36/19/0 原样回来)
+    与 `test_pending_rulings.py`(`hero-82`+`hero-83` 的「零 EC2」写错了字段)。
+    **两条都没有重新基线化任何已登记的数,也没有改工具。**
+  - ⚠️ **本组的两行 queue 现在进 RIDESHARE 桶** ⇒ `pending_rulings.py` 按设计要一个裁定。
+  - ⚠️ **Lua 那条腿第一次跑是红的,而且是本轮造成的**(报告 §7 逐字抄了那一次):
+    `lua gate: 376 ran, 1 findings, ..., 637.6s`,`test_wk_facet_settlement.lua:265`
+    —— **同一条「`talent6:IsTrained()` 恰好读 2 次」的普查本轮撞到第三份**
+    (另两份:`wk_fact_anchor` 结构读数 2 → 3、`wk_bone_guard_talent_bypass` §1)。
+    **三份都拆成「两条 branch 内读数 + 一条 `wkbonespawn` 守卫读数」并断言守卫的形状**,
+    ⛔ **没有降数字**,也**没有**把新读数写成 `or talent6:IsTrained()` 去讨好计数器
+    (那会丢掉 nil 守卫,并在一条不承载该论证的行上声称 widening)。
+  - **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN` / `py gate: 87 ran, 0 findings, 12.2s` /
+    `lua gate:` 见报告 §7(权威读数 = push 钩子那一次);`RULE6_BYPASS` 未使用。
+  - ⭐ **没再欠上一轮那笔债**:新测试**当轮**就带 `[ratchet]`(两个选择器都漏过 = GH #806 的
+    立案句,`-174` 里本组自己踩过)。⛔ **不加 manifest 行**:加行要跑 `lua_gate_measure.py`,
+    那会清空 `known_red`(GH #783)⇒ 让下一个人的 push 被 7 条既存红挡下。
+    实测 **2.41s / 2.37s**(低于 5.5s cap)登记下来,给将来有正当理由重测的那一轮用。
+  - ⛔ **本轮自己写错一句、当场更正,两次读数都登记**:rebase 前读到
+    `promote_atoms` **5 atoms**、`wk_t10_moves_the_q_domain` 不在,于是写下「栏杆仍在总监手里」;
+    rebase 到 `origin/main` 后读到 **6 atoms**,**总监 RULING 38 早已批准并落地**。
+    ⭐ **判别子:引「某物还没落地」之前先 `git fetch origin main`**(与 GH #290 同形、方向相反)。
+    ⇒ **`wkt10ls` 的栏杆已在**,但总监留了两条削弱:(甲) atom **只管 promote 日不管 arm 日**,
+    将来买证据**必须在发波请求里自己写明 co-arm `wkqdmg`**;(乙) 它**不是入集批准**。
+  - ⚠️ **证据纪律 3 同形第 13 次**(第一条命令又是 `routine_selfcheck.sh | tail`,脚本当场 REFUSED);
+    改用 `bash tools/agent/rc.sh` 才拿到真读数。**下一轮第一条命令就用 rc.sh。**
 - 2026-09-14T13:53Z(报告 `iterations/reports/hero/20260914T135322Z.md`;**backlog:新开 `-174`**;
   **零 AWS、零波次;`bots/` 改了 —— P4.4 (i)**;新 gated id **`wkt10ls`**,登记
   `state.json:wkt10ls_20260914`,请求 `queue.json:hero-82`)

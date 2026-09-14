@@ -370,7 +370,18 @@ local STRUCTURAL_CENSUS = {
     -- here: the census is a drift alarm, and #166 was exactly the drift it is
     -- for.)
     lion = 1,              -- talent8 (t25), read once inside X.IsHexAoe()
-    skeleton_king = 2,     -- the two X.ConsiderW release disjuncts
+    -- 2026-09-14, hero group: 2 -> 3, and it is a RE-READ rather than a bump.
+    -- The third site is `local hRow = hTalent or talent6` inside
+    -- X.wk_IsBoneGuardEmptyBankOpen (soak candidate `wkbonespawn`,
+    -- tests/test_wk_bone_guard_stock_gate.lua).  It belongs in this census under
+    -- the census's own definition: the handle chooses whether a Bone Guard
+    -- release is ALLOWED AT ALL, so an unreachable t20 row removes behaviour and
+    -- not a bonus -- the same thing the two disjuncts below it do, one guard
+    -- earlier in the same function.  What it adds is that the t20 handle is now
+    -- read on the refusal chain as well as inside the branches, which is the
+    -- whole point of that lever: the two disjuncts below were unreachable on an
+    -- empty bank because the charge-modifier guard above them refused first.
+    skeleton_king = 3,     -- the two X.ConsiderW release disjuncts + wkbonespawn
     warlock = 2,           -- one of them is `talent6:IsTrained() and false`
     -- 2026-09-12, hero group: 1 -> 2.  The second site is the t25 carve-out in
     -- X.zuus_IsBoltTargetSpellVulnerable (soak candidate `zusboltimm`), and it

@@ -203,26 +203,61 @@ tests['[section 1] the talent read as talent6 is a FLAT skeleton floor'] = funct
     end
 end
 
-tests['[section 1] both t20 reads are RIGHT operands of `or` -- widening only'] =
+-- RE-READ 2026-09-14 (hero, `wkbonespawn`): 2 -> 3 live reads, AND THE CENSUS IS
+-- SPLIT RATHER THAN BUMPED.  The two in-branch reads are unchanged and still
+-- have to be right operands of `or`.  The third is a NEW KIND: the nil-safe read
+-- inside X.wk_IsBoneGuardEmptyBankOpen, the helper that decides whether the
+-- charge-modifier guard above those two branches refuses at all.
+--
+-- ⚠️ IT IS NOT AN `or`-RIGHT READ AND MUST NOT BE COUNTED AS ONE.  Its line is
+-- `talent6 ~= nil and talent6:IsTrained() == true`, i.e. the right operand of an
+-- `and` -- the position this test's own comment says "can REMOVE firings".  The
+-- widening property is real but it lives ONE LEVEL UP, at the call site, where
+-- the helper is the right operand of `not ( shipped-read or helper() )`; it is
+-- asserted there, on the call site, by tests/test_wk_bone_guard_stock_gate.lua
+-- section 1.  Writing the read `or talent6:IsTrained()` to make this counter
+-- happy would have been the wrong repair twice over: it would drop the nil guard
+-- that tests/test_focus_talent_reach_wall.lua section 3 requires, and it would
+-- claim a widening argument on a line that does not carry it.
+tests['[section 1] the two in-branch t20 reads are RIGHT operands of `or` -- widening only'] =
 function()
-    local n, widening = 0, 0
+    local n, widening, guard = 0, 0, 0
     for _, line in ipairs(live_lines(read_file(WK_SRC))) do
         for _ in line:gmatch('talent6:IsTrained%(%)') do n = n + 1 end
         -- `X or talent6:IsTrained()` can only ADD firings; `X and ...` or a
         -- negated form could remove them, and that would make the bypass a veto
         -- rather than a floor -- a different verdict entirely.
         if line:match('or%s+talent6:IsTrained%(%)') then widening = widening + 1 end
+        -- The one read whose widening argument is at its CALL SITE, not on its
+        -- line.  Pinned by shape so that a fourth read cannot hide behind it.
+        if line:match('talent6%s*~=%s*nil%s+and%s+talent6:IsTrained%(%)%s*==%s*true') then
+            guard = guard + 1
+        end
     end
-    if n ~= 2 then
-        error('expected exactly 2 live reads of talent6:IsTrained() in '
+    if n ~= 3 then
+        error('expected exactly 3 live reads of talent6:IsTrained() in '
             .. WK_SRC .. ', found ' .. n .. '.  Lever B is an accounting of TWO '
-            .. 'disjuncts; a third read (or a lost one) invalidates it')
+            .. 'in-branch disjuncts plus ONE wkbonespawn guard read; a fourth '
+            .. 'read (or a lost one) invalidates it')
+    end
+    if guard ~= 1 then
+        error(guard .. ' of the reads take the nil-safe guard shape '
+            .. '`talent6 ~= nil and talent6:IsTrained() == true`, expected 1.  '
+            .. 'That is the wkbonespawn read; if it is gone, the helper either '
+            .. 'lost its nil guard (see tests/test_focus_talent_reach_wall.lua '
+            .. 'section 3) or it stopped reading the t20 row at all, and the '
+            .. 'lever then opens an empty-bank release with the row UNTRAINED')
+    end
+    if widening ~= n - guard then
+        error(n .. ' live reads of talent6:IsTrained(), ' .. guard .. ' of them '
+            .. 'the wkbonespawn guard, but only ' .. widening .. ' of the rest '
+            .. 'are the right operand of `or`.  A read in any other position can '
+            .. 'REMOVE firings, and this file\'s verdict ("widening disjunct over '
+            .. 'a flat floor") does not cover that')
     end
     if widening ~= 2 then
-        error(n .. ' live reads of talent6:IsTrained(), but only ' .. widening
-            .. ' of them are the right operand of `or`.  A read in any other '
-            .. 'position can REMOVE firings, and this file\'s verdict '
-            .. '("widening disjunct over a flat floor") does not cover that')
+        error('the in-branch pair reads ' .. widening .. ', recorded 2.  This '
+            .. 'file is an accounting of exactly those two disjuncts')
     end
 end
 
@@ -288,7 +323,13 @@ local function scan_frames(frames)
         if type(fx) == 'table' and type(fx.units) == 'table' then
             c.frames = c.frames + 1
             for _, u in ipairs(fx.units) do
-                if u.name == WK then
+                -- LIVENESS: the GH #794 ruling's predicate, applied here for the
+                -- reason written above wk_fixture_paths() -- this census and that
+                -- one must describe the SAME population or section 3's "36 of 36"
+                -- is comparing two different 36s.  A dead row carries no
+                -- per-frame state and no learnable abilities; counting it would
+                -- put an absence into every ratio in this file.
+                if u.name == WK and u.alive ~= false then
                     c.wk = c.wk + 1
                     if u.modifiers ~= nil and #u.modifiers > 0 then
                         c.with_mods = c.with_mods + 1
@@ -409,13 +450,42 @@ end
 -- ---------------------------------------------------------------------------
 -- 3. The shipped function on every real frame, and the one-field counterfactual.
 
+--- ⭐ LIVENESS, added 2026-09-14 (hero) under the GH #794 ruling -- THIS IS THE
+--- FOURTH WK CENSUS TO GET IT AND IT IS THE ONE THAT WAS MISSED.  On 2026-09-13
+--- that ruling put `alive ~= false` into test_wk_reserve_idle_release,
+--- _save_mana_lock_census, _roshan_mana_floor and _roshan_mana_ceiling.  This
+--- file was not among them, and it has been RED ON TRUNK ever since replay-check
+--- landed the fixture the ruling was about
+--- (tests/fixtures/f_20260912_094042_sniper_546.lua, one DEAD Wraith King row):
+--- 36 -> 37 frames, 19 -> 20 with a modifier list, and a phantom +1 in section
+--- 3b's blind spot.
+---
+--- ⚠️ THE PHANTOM IS WORTH READING, because it is not "one more frame in the
+--- population".  Driving that row with HasModifier GRANTED raises
+--- `hero_skeleton_king.lua: attempt to compare number with nil` -- GH #794's own
+--- crash, `nLV` never assigned because X.SkillsComplement returns at
+--- J.CanNotUseAbility for a dead hero.  `desire_on` maps a raise to the STRING
+--- 'REFUSED', and 'REFUSED' ~= 0, so the dead row was being counted as a frame
+--- the modifier guard alone was hiding.  That convention ("a refusal means the
+--- function got PAST the guard") is sound for a LIVE hero and false for a dead
+--- one -- which is a second, independent reason the predicate belongs in the
+--- population definition rather than in a nil guard inside bots/, exactly as the
+--- #794 ruling decided.
+---
+--- ⛔ NO RECORDED NUMBER IS REBASELINED BY THIS.  36 / 19 / 0 come back because
+--- the added row was never a member of the population those numbers describe.
+--- If a future corpus holds a LIVE WK frame that moves any of them, that is a
+--- re-read and section 2's own instruction (:269) governs it.
 local function wk_fixture_paths()
     local out = {}
     for _, path in ipairs(fixture_files()) do
         local ok, fx = pcall(dofile, path)
         if ok and type(fx) == 'table' and type(fx.units) == 'table' then
             for _, u in ipairs(fx.units) do
-                if u.name == WK then out[#out + 1] = path break end
+                if u.name == WK then
+                    if u.alive ~= false then out[#out + 1] = path end
+                    break
+                end
             end
         end
     end
@@ -758,5 +828,16 @@ end
 -- it".  tests/test_lategame_talent_visibility.lua.  The reading that would
 -- settle the residual is an in-game one, and queue request `hero-21` (a re-dump
 -- with the drop rule lifted) is the cheapest thing that gets near it.
+--
+-- STATUS 2026-09-14: THE RESIDUAL NOW HAS A LEVER, and every word above stays as
+-- written.  Soak candidate `wkbonespawn` (hero_skeleton_king.lua, the block above
+-- X.ConsiderW; tests/test_wk_bone_guard_stock_gate.lua) opens the top guard on an
+-- empty bank when -- and only when -- the t20 row is trained.  What that changes
+-- is not the ANSWER to this note's question but its ROLE: the lever short-circuits
+-- to the shipped behaviour in the world where the engine does carry the modifier
+-- at 0 charges, and is the fix in the world where it does not, so the in-game
+-- reading `hero-21` asks for now SIZES the lever instead of deciding whether it
+-- should exist.  This section is still RECORDED-NOT-TESTED: nothing here is
+-- asserted, and no number in this file moved.
 
 return tests

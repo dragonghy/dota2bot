@@ -581,6 +581,12 @@ local abilityR = bot:GetAbilityByName('skeleton_king_reincarnation')
 -- engine only carries modifier_skeleton_king_bone_guard while charges >= 1, the
 -- guard at the top of X.ConsiderW re-imposes the very ammunition test the bypass
 -- lifts.  tests/test_wk_bone_guard_talent_bypass.lua sections 1 and 5.
+-- SINCE 2026-09-14 that residual has a LEVER and not only a note: soak candidate
+-- `wkbonespawn` (the block above X.ConsiderW).  The note above still stands word
+-- for word, and so does the in-game reading it asks for -- what changed is that
+-- the reading no longer DECIDES anything: the lever is a structural no-op in the
+-- world where the modifier is carried at 0 charges and the fix in the world
+-- where it is not, so which world we are in sizes the lever without choosing it.
 local talent6 = bot:GetAbilityByName( sTalentList[6] )
 
 local castQDesire, castQTarget
@@ -1700,9 +1706,100 @@ function X.wk_IsBoneGuardBankCommittable( nStack, maxStack )
 	return nStack >= X.nBoneGuardShippedFloor
 end
 
+--- [wkbonespawn] The one residual this file has carried REGISTERED-BUT-UNSETTLED
+--- since 2026-08-27, and the point of this lever is that it can be settled
+--- WITHOUT the reading the note asked for.
+---
+--- THE RESIDUAL, in the words already on the tree (the talent6 comment at :584
+--- and tests/test_wk_bone_guard_talent_bypass.lua section 5): "if the engine
+--- applies modifier_skeleton_king_bone_guard only while charges are >= 1, then
+--- the guard at the top of X.ConsiderW re-imposes exactly the ammunition
+--- requirement the t20 bypass exists to lift, and the '+5 from an empty bank'
+--- case can never happen no matter how the disjuncts read."  Both of those notes
+--- then send the reader to an IN-GAME reading (queue.json hero-21, a re-dump
+--- with the dumper's talent drop rule lifted), because HasModifier is engine
+--- state and section 3 of that file proves no fixture can answer it.
+---
+--- ⭐⭐ WHY THAT READING IS NOT NEEDED FOR THE DECISION.  The residual is a
+--- two-world question, and the SAME lever is right in both worlds:
+---   * WORLD A -- the engine carries the modifier at 0 charges.  Then the
+---     shipped disjunct `bot:HasModifier(...)` is already true and the `or`
+---     below short-circuits before this helper is ever called.  Armed or not,
+---     this file is byte-for-byte what it shipped.  The lever is a NO-OP.
+---   * WORLD B -- the engine carries it only at charges >= 1.  Then the shipped
+---     guard returns 0 on every empty-bank frame, both t20 bypasses below are
+---     unreachable exactly when they are worth the most, and the whole of what
+---     this hero's t20 row buys (min_skeleton_spawn 0 -> 5, the facet
+---     settlement above) is refused.  The lever restores it.
+--- So the answer to "which world is it" changes what the lever DOES and not
+--- whether it should exist.  That is the step neither of the two notes took;
+--- they are otherwise correct and stay as written.
+---
+--- ⛔ WHAT MAKES IT SAFE IS THE TALENT, NOT THE BANK.  On an empty bank with the
+--- t20 row NOT trained a release fields ZERO skeletons and burns the flat 42s
+--- cooldown -- strictly worse than not casting.  So the talent handle is a
+--- CONJUNCT here, not a courtesy: `talent6:IsTrained()` is an engine read, not a
+--- soak id, so this is not the `pullcad` trap (a gate frozen false by a sibling
+--- id's promote).  The talent is index 6 = the t20 slot and is facet-invariant
+--- (no facet block in the game's roster names a talent row), so the handle binds
+--- the same row in every game.
+---
+--- ⛔ DIRECTION IS SINGLE, BY CONSTRUCTION AND NOT BY DATA.  This helper is only
+--- consulted when the shipped disjunct has already failed, and its only possible
+--- contribution is `false -> true` on one disjunct of a refusal chain.  Arming
+--- can therefore only ADD Bone Guard releases; a negative wave read is
+--- attributable to "the extra empty-bank releases were bad" and NEVER to a
+--- release this lever took away.
+---
+--- ⚠️ GATE-OFF EQUIVALENCE INCLUDES ERROR BEHAVIOUR, which is why the gate test
+--- is the FIRST statement and the talent handle is touched only past it.  Moving
+--- `HasModifier` into a helper that takes `talent6:IsTrained()` as an ARGUMENT
+--- would have dereferenced the handle eagerly, on frames the shipped chain
+--- returns 0 from without ever touching it -- turning a nil handle into an
+--- earlier raise.  Same-file precedent for caring: the nil-argument note on
+--- X.MayKillTarget in hero_lion.lua.
+---
+--- ⚠️ WHAT THIS DOES NOT TOUCH, stated so nobody prices it twice: branch 2's
+--- `nStack == maxStack` still reads an EXACT equality, so a frame where
+--- max_skeleton_charges reads 0 satisfies it with an empty bank.  That predates
+--- this lever and is unchanged by it (on such a frame the trained talent carries
+--- branch 2 anyway).  The bank FLOOR question is `wkbonebank` and the engaged
+--- count is `wkbonefight`; all three are independent conjuncts of the same
+--- branch and a bundle read must not be attributed to any one of them.
+---
+--- ⚠️ COVERAGE, said before anyone calls this fixture-validated.  What IS driven
+--- on real frames is the reachability half: 33 live Wraith King frames carry
+--- Bone Guard at rank >= 1, 19 of them carry a modifier list at all, and 0 of
+--- those 19 carry the charge modifier -- so the shipped disjunct refuses on
+--- 19/19 informative frames and this helper is the only thing that can open
+--- them.  What CANNOT be driven is `IsTrained()`: the dumper drops every
+--- hero-unique talent before it is written (settled H1, GH #817), so a corpus
+--- read of it answers false whether or not it is trained.  Sizing still needs a
+--- wave: iterations/queue.json hero-83.
+function X.wk_IsBoneGuardEmptyBankOpen( hTalent )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkbonespawn' ) )
+	then
+		return false
+	end
+
+	-- BOTH the handle read and its IsTrained() test on ONE line, deliberately.
+	-- tests/test_focus_talent_reach_wall.lua section 3 enforces exactly that for
+	-- every t15+ handle in the focus five, and it CAUGHT the first draft of this
+	-- helper (`local hRow = hTalent or talent6`) -- an unguarded read of a handle
+	-- that the GH #366 level wall can leave untrained is the shape `zusboltcap`
+	-- (GH #175) shipped.  The two-line form was nil-safe and still wrong by that
+	-- rule, which is the point of having the rule be about the LINE.
+	if hTalent ~= nil then return hTalent:IsTrained() == true end
+
+	return talent6 ~= nil and talent6:IsTrained() == true
+
+end
+
 function X.ConsiderW()
 	if not abilityW:IsFullyCastable()
-		or not bot:HasModifier( "modifier_skeleton_king_bone_guard" )
+		or not ( bot:HasModifier( "modifier_skeleton_king_bone_guard" )
+					or X.wk_IsBoneGuardEmptyBankOpen() )
 		or X.ShouldSaveMana( abilityW )
 		or abilityW:GetName() ~= "skeleton_king_bone_guard"
 	then return 0 end

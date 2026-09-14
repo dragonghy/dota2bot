@@ -260,9 +260,36 @@ tests['[hero] the t20 premise is live: talent6 is still read as an OR-bypass in 
     assert(live:find('local talent6 = bot:GetAbilityByName( sTalentList[6] )', 1, true),
         HERO .. ' no longer binds talent6 from sTalentList[6]. The t20 pricing rests '
         .. 'entirely on that handle being read; if the binding moved, re-price the row.')
-    local n = 0
+    -- RE-READ 2026-09-14 (hero, `wkbonespawn`): 2 -> 3, and the count is SPLIT
+    -- rather than bumped.  The two in-branch reads that the t20 pricing is sized
+    -- on are unchanged.  The third is the nil-safe read inside
+    -- X.wk_IsBoneGuardEmptyBankOpen, one guard EARLIER in the same function: the
+    -- soak candidate that decides whether the charge-modifier guard above those
+    -- two branches refuses at all.  It STRENGTHENS this section's premise rather
+    -- than diluting it -- "slot [6] is the only talent this decision layer
+    -- reads" is now true at three sites instead of two, and the new one is on
+    -- the refusal chain, which is precisely where the two branches were
+    -- unreachable from on an empty bank.
+    -- ⚠️ THE THIRD READ IS NOT AN `or`-RIGHT READ and is deliberately excluded
+    -- from the `or` shape test below: its line is
+    -- `talent6 ~= nil and talent6:IsTrained() == true` (the nil guard
+    -- tests/test_focus_talent_reach_wall.lua section 3 requires on the same
+    -- line), and its widening property lives at its CALL SITE, asserted by
+    -- tests/test_wk_bone_guard_stock_gate.lua section 1.
+    local n, guard = 0, 0
     for _ in live:gmatch('talent6:IsTrained%(%)') do n = n + 1 end
-    assert(n == 2, 'talent6:IsTrained() is read ' .. n .. ' times in live code, not 2. '
+    for _ in live:gmatch('talent6%s*~=%s*nil%s+and%s+talent6:IsTrained%(%)%s*==%s*true') do
+        guard = guard + 1
+    end
+    assert(guard == 1, guard .. ' of the reads take the wkbonespawn guard shape '
+        .. '`talent6 ~= nil and talent6:IsTrained() == true`, expected 1. If it is '
+        .. 'gone, either the helper lost its nil guard (GH #366 leaves that handle '
+        .. 'untrainable and an unguarded read is the shape zusboltcap shipped) or '
+        .. 'the empty-bank lever stopped reading the t20 row at all -- and it then '
+        .. 'opens a release that fields ZERO skeletons.')
+    assert(n - guard == 2, 'talent6:IsTrained() is read ' .. n .. ' times in live '
+        .. 'code with ' .. guard .. ' of them the wkbonespawn guard, i.e. '
+        .. (n - guard) .. ' in-branch reads, not 2. '
         .. 'The t20 argument is "this is the only talent that changes a command here", '
         .. 'and it is sized on BOTH branches of X.ConsiderW. A different count means '
         .. 'the argument is about a different piece of code than the one it was written '
