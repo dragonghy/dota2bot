@@ -63,6 +63,7 @@ AIUG = os.path.join(REPO, "bots", "ability_item_usage_generic.lua")
 
 sys.path.insert(0, os.path.join(REPO, "tools", "agent"))
 import stale_write_census as swc  # noqa: E402
+import lua_corpus  # noqa: E402
 
 FAIL = []
 
@@ -90,8 +91,13 @@ _BOTS = os.path.join(REPO, "bots")
 _sites, _unbalanced = swc.scan_paths([_BOTS])
 _counts = swc.summary(_sites)
 
-_n_lua = sum(1 for dirpath, _d, names in os.walk(_BOTS)
-             for n in names if n.endswith(".lua"))
+# Through lua_corpus, not an open-coded walk: tests/test_lua_corpus_stability.py
+# ratchets that nobody re-derives the corpus listing, and this line was the one
+# copy still doing it (found red on trunk 2026-09-14T22:xxZ, one file, this
+# desk's own from the 16:26Z round -- GH #624's shape exactly: the red is found
+# by the next desk to start work). The listing is also the more correct operand
+# here: it excludes the gitignored gate switch, which is not shipped Lua.
+_n_lua = len(lua_corpus.bots_lua_files())
 ok("bots/ has Lua to walk", _n_lua > 50, "found %d files" % _n_lua)
 
 ok("every file returns to depth 0", not _unbalanced,
