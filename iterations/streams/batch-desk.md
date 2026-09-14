@@ -10217,6 +10217,54 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **十二、铁律 11 与改动面**:**零 `requires approval`、零空转**(自检后台跑,成本/闸/收割/泄漏/铁律 9 并行推进)。⛔ **本会话 `bots`/`game`/`tests`/`tools` 一行未改** ⇒ **无一条 trunk red 由本轮引入**(§一 那条已证在 `origin/main` 上)。⭐ **每个读了退出码的命令全部重定向到文件后裸读,零管道**(`AWS_SETUP_EXIT`/`COST_EXIT`/`FENCE_EXIT`/`THROTTLE_EXIT`/`S3VAL_EXIT`/`INST_EXIT`/`VOL_EXIT`/`TPR_EXIT`)。⭐ **报告序列按 `ls | sort` 取得,⛔ 未用 `ls -t`**。
   详见 `iterations/reports/batch-desk/20260914T031100Z.md`。
 
+- 2026-09-14T12:15Z(**第十七轮 —— 连续十七轮里第一轮有实质交付物落地**):
+  **⭐⭐⭐ 头号:刹车将由「闲置」越过,不是由测试。** 戳自 5 轮冻结后本轮**第一次变了**
+  (`2026-09-13T20:32:29Z` → `2026-09-14T10:54:23Z`),于是两条写死的判据**同时解锁并被照字面执行**:
+  买了那 `$0.01` 逐日 CE(顺带 `GROUP BY SERVICE`,同一次请求不加价),并**推了 owner 通知**
+  (连续 12 轮不推之后第一次;命中的析取项是「零批测日完整行第一次可得」)。
+  **09-13 是一个零批测日**(`CERTIFIED 0 accruing instances account-wide`),那天仍花 **$0.7806**
+  = S3 `$0.6599` + Cost Explorer `$0.1200` + Route53 `$0.0007`。
+  MTD **`$89.858`**、headroom **`$0.142`** ⇒ **约 4.4h 后 MTD 自己越过 `$90`**,到 09-30 **~$102 > limit $100**,
+  **中间一波都没发**。⇒ GH #779 的三选一**从"天"变成"小时"**。
+  ⚠️ 诚实边界:$0.78 是**一天**的读数不是趋势;`forecast 196.979` 原样登记不据以决策。
+  **⭐⭐ 第二:那 `$0.66` 的 S3 不是存储,是 agent 自己在读桶。** 桶现读 **184.5 GB / 81,897 对象**
+  ⇒ 牌价存储 ~`$0.141/天`,只解释 ~21%;`get-bucket-versioning` **空**、`list-multipart-uploads` **1**
+  ⇒ **隐形存储被排除** ⇒ 余下 ~`$0.52/天` 只能是请求与出网。
+  ⛔ **这推翻了 `ROUTED_ARCHIVE_SCAN` 裁词里的「零 AWS 增量」**,已开 **GH #819 `[bug]`**。
+  ⚠️ 推论不是测量:`dota2bot-agent` **没有** `cloudwatch:GetMetricStatistics`(实读 `AccessDenied`)
+  ⇒ 计费存储量测不到;`GROUP BY USAGE_TYPE` 的那 `$0.01` **本轮没买**(不改结论方向)。
+  **工作单元 = `hero-27` 归档扫描,已交付**:`iterations/reports/batch-desk/hero27_savemana_archive_scan.md`
+  ⇒ owed 行 `hero27_dem21_deadline_scan` 的 `path_exists` **已满足**;工具
+  `tools/batch_test/behavioral/wk_savemana_domain.py` 入库;`queue.json:hero-27`
+  **`running` → `harvested_pending_verification`** 并带五条验收的逐条答复(`running` 3 → 2)。
+  **结论**:桌面那条 `DOMAIN-EMPTY` **只对 fixture 语料成立** —— 真实语料(W34,103 份 `.dem`,
+  102 解析成功 / **1 份在 S3 上就是截断的**,78 局含 WK)里锁**开火 5,449 帧 / 317 事件**,
+  **边际域 3,690 帧 = 开火帧 67.72%**,见于 **61/78 局**;而 (丁) 的读数
+  **只有 11.04% 的锁事件在结束后 2s 内放出 Q** ⇒ **取消不是延迟,代价成立,⛔ 不下调优先级**。
+  ⚠️ **(丙) 没有按字面满足**:**radiant 分层是空的(78/78 WK 在 dire)**,镜像 A/B 把阵容钉在侧别上,
+  而 armed 标签**在 run log 里不在 `.dem` 里**;已给每粒种子的分层(三粒方向一致)并
+  **把「(i-a) 是否约束单总体普查」交总监裁**,⛔ 本台不自行宣布满足或不适用。
+  **⭐⭐ 方法侧两条给全组**:(1) **幻象坑** —— 英雄与幻象共用 class name,本语料 **12/78 局**中招;
+  ⚠️ **总数本身看不出异常**,是两个各自独立推导的事件计数对不上(**514 vs 317**)把它顶出来的,
+  修掉后同为 **317** ⇒ `behavioral/` 下按 `hero` 名选快照的脚本**值得普查**。
+  (2) **挑出来的 fixture 语料可估条件比例、不可估边际频率**:fixture 把「开火/闸内」高估 **5.3×**、
+  「构造性/开火」高估 **9.6×**,但「边际域/开火」**差不到 1pp**(66.7% vs 67.72%)。
+  **一处路径更正**:`dem21/` **不是**那 103 份的路径 —— 它现读 **6,756 个 `.dem` / 125.28 GB**、17 个波次日;
+  lifecycle 是 `dem21-expire-21d`(`Days=21`)⇒ **每个对象按自己上传日 +21 天到期**,
+  **09-22 只是 09-01 那批的到期日** ⇒ ⛔ 不要读成「09-22 之后归档扫描就没语料了」。
+  **闸**:(iii) `FENCE_EXIT=3` **连续第十七轮**(缺口 `$0.858`);(i) `THROTTLE_EXIT=0`(W69 已解锁 ~45h)
+  ⇒ 不发波的原因是 (iii) 不是 (i)。**收割零欠**(`validation/` **592 对象**逐位同上轮,`recover_verdict.py` 未跑)。
+  **泄漏四条路径全零**。**本轮 AWS 支出 ⛔ 不是零**:EC2 `$0.00` + CE `$0.01` + **S3 出网估 ~`$0.4`**
+  (2.13 GB × 2,因一个 `null` 切片的 bug 重跑过一次)—— **比 headroom 还大**,正是 #819 的立案句。
+  **自检**:`selfcheck worst exit: 3`(`cadence queue-rulings owed-executions lua-coverage`);
+  ⚠️ **harness 后台任务通知报的 `exit code 0` 不是自检的退出码**,与上轮补记 D **同形第二次复现**。
+  ⭐ 上轮那条 trunk red(GH #816)已由总监 `3c3b8de5` 修掉,本轮第一手复跑 **`824 checks, 0 failed`**。
+  **铁律 6 三条腿**:`GATE_EXIT=0` / `PY_GATE_EXIT=0` / `LUA_GATE_EXIT=0`,⛔ **`RULE6_BYPASS` 未用**
+  ⇒ 本报告无"跳过不是通过"行;⚠️ lua gate 报 **58 个新测试不在 manifest**、**8 个超预算被排除**,
+  建议下轮跑一次 `lua_gate_measure.py` 登记(**不是本轮工作单元**)。
+  **铁律 11**:零 `requires approval`、零空转。⛔ **`bots/` 一行未动**。
+  详见 `iterations/reports/batch-desk/20260914T121500Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
