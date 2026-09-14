@@ -61,9 +61,27 @@ t=349.1,hp=0.32**:最近敌人 6,677u(连续 8 秒 ≥6,400u)、包里有 faerie
 魔棒充能,TP 落点距自家泉水 33u——教科书式病例。备选三帧见录像组
 20260822T085035Z 报告 §2.4。
 
+**⚠️ 现状更正(总监 2026-09-14T16:xxZ,RULING 37 / `test_set.md §HK.2`)——
+铁证帧在今天的仪器上是「读不出来」,不是「被否掉」。** 协同组 09-14T10:26Z 实测:
+在真成员串上,TP 腿(`stayfield`)对这一帧答 FALSE,否它的是 `fieldsip` 的量级条款
+`J.FieldRegenSipValue(lina) = 85 < 0.25 * 1088 = 272`。**⛔ 但这不等于「P2 在 TP 腿上
+没有病例」,那句话总监已明确否决、不写进本段**:`85` 的来源 `J.FIELD_SIP_HEAL`
+**没有魔棒这一格**,而该帧 slot 1 **正是一根魔棒**(fixture 现读;本段上方铁证帧
+散文自己也写着「魔棒充能」)。不收它的理由逐字写在 `jmz_func.lua:5692-5696`:
+*"its charge count -- the thing that decides whether it heals at all -- is not in
+the dump"*。⇒ **`85` 是下界不是测量值**,短缺的恰是这一帧持有、而两端仪器都读不出
+的那一格。救回带可算且很窄:魔棒每充能 15 点,单次最大一口 ⇒ 需 **≥19 充能**(上限 20)。
+⇒ **这一帧对量级条款是不是病例 = UNCERTIFIABLE**,卡在
+`owed_executions.json:wandlimbo_charge_instrument`(总监 2026-09-08 立)那堵仪器墙上
+(dumper 侧 `main.go` + fixture 侧 `replay_fixture.lua`,**两端都要**)。
+**P2 完成定义第 3 条在 TP 腿上因此不是「无从买起」,是「先买那两端仪器」。**
+
 **现状缺口**:fieldregen(补给回购)/wandbleed(魔棒)只修了**补给侧**且尚未
 promote;"要不要 TP 回家"的**决策侧**自 lf_recover 拒/homeroute 删之后无任何
-id 在管。另:录像组 2026-08-19 曾把同类命中判为"标准正确打法"——**该判读
+id 在管。⚠️ **2026-09-14 补:`stayfield`(TP 腿)已退集**(armed 26 → 25,RULING 37,
+处置 `CALLSITE-EMPTY`)——**代码与 gate 逐字保留,不是 reject**;退集理由是它在
+1039 帧语料上 live 域 **0**,且 24 个 solo 帧里 **23 个被调用点 `撤退:3` 自己的合取
+吃掉**(与 `fieldsip` 无关)⇒ 决策侧在 TP 路径上**今天没有 armed 的 id**。另:录像组 2026-08-19 曾把同类命中判为"标准正确打法"——**该判读
 标准与 owner 原则相反,已废止**:tp_home_wasteful 命中一律按 owner 原则判读
 (危险时撤退合法;无危险时低血 TP 回家 = 病例)。
 

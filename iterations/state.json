@@ -8943,5 +8943,14 @@
     "next": "**交总监**:(1) 本 id 记 **FROZEN-HOLD**,不申请入集;(2) ⭐ **`tprecov` / `tpdeep` 的既有读数需要重判** —— 它们的 (a) 证据是在「否决可以被兄弟分支架空」的树上取的,`tpstale` 未 armed 时那条泄漏路径**今天仍然是出货行为**;(3) promote 建议:`tpstale` 与 `tprecov`+`tpdeep` **同进同退**(它是那两条的**前置条件**,单独 arm 它去买行为差会落进它自己诊断出来的那种读数)。**另请主会话 / Cursor**:`OWNER_PRIORITIES.md` P2「现状缺口」一段可加一句——决策侧的问题不只是「没有 id 在管」,还有「管了的 id 在一条分支上被上游残留状态架空」(本组不自行改该文件)。",
     "status": "GATED,未 armed,未发波。**FROZEN-HOLD**(4.2 冻结期)。`bots/` **有 diff**(4.4 (i) 满足,结束连续三轮不满足);(ii) 亦满足——本轮同时是 `stayfield`/`tprecov`/`tpdeep` 处置判定所缺的一块证据(外壳恒假 + 否决被架空)。",
     "aws": "零:无 EC2、无 S3 写、无 CE 调用、无波次。"
+  },
+  "stayfield_RETURNED_20260914": {
+    "verdict": "RETURNED(退集,**非 reject**)—— 总监 RULING 37,2026-09-14T16:xxZ,armed 26 → 25。",
+    "ruling_archive": "iterations/streams/test_set.md §HK(§HK.1 处置名 / §HK.2 P2 铁证帧的否决 / §HK.3 为什么不动 fieldsip / §HK.4 判定完结 1)",
+    "disposition": "CALLSITE-EMPTY —— 语料、仪器、schema 全健在,域被**调用点自己的合取**吃掉。⭐ 三种域为空的处置里唯一「读数是完备的」那一个:不是看不见,是看见了、是空的。⇒ 解开它**什么都不用买**。",
+    "reading": "协同组 2026-09-14T10:26Z,1039 live hero frames,真 26 串:solo_S 24 / live_S 2 / branch_open 4(上界)/ margin_solo 1 / **margin_live 0**。分解:23/24 被 `撤退:3` 自身合取吃掉(`fieldsip` 未上场),2/2 live_S 被分支自带 `itemFlask == nil` 否掉。",
+    "not_a_reject": "gate、`J.IsFieldRegenSituation`、`J.ShouldRegenNotGoHome`、TP 腿 wrapper `J.ShouldRegenNotTpHome`、`tests/test_stayfield_callsite_domain.lua`、`tests/test_stayfield_tpleg_live_domain.lua` **逐字保留**;`bots/`+`game/` 零 diff;条件 (c) 成立且未被取代。",
+    "p2_correction": "⭐⭐⭐ 同轮否决了协同组交棒出口 (2) 里那句要写进 owner P2 的话(「P2 在 TP 腿上本来就没有病例」)。否掉 P2 铁证帧的算术是 `FieldRegenSipValue(lina)=85 < 0.25*1088=272`,而 `J.FIELD_SIP_HEAL` **没有魔棒这一格**,该帧 slot 1 **正是魔棒**(fixture 现读),不收它的理由逐字是 `jmz_func.lua:5692-5696` 的 `its charge count … is not in the dump` ⇒ **85 是下界不是测量值**。救回带可算且窄:15 HP/充能、取单次最大 ⇒ 需 ≥19 充能(上限 20)。⇒ 该帧是不是病例 = **UNCERTIFIABLE**,卡在 `owed_executions.json:wandlimbo_charge_instrument`。P2「现状」段已按诚实版本更正。",
+    "re_admission": "走三条件重判。⚠️ 其 (a) 的前置与 `wandlimbo` 同墙:魔棒充能在 dumper 侧(`main.go`)与 fixture 侧(`replay_fixture.lua`)**两端都要买**。"
   }
 }

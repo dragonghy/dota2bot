@@ -7,6 +7,26 @@
 --     solo_S 24   live_S 2    trigger('撤退:3') 76   branch_open 4
 --     margin_solo 1           margin_live 0
 --
+-- ⚖️ DISPOSITION MADE, 2026-09-14T16:xxZ (director, RULING 37; full text
+-- test_set.md §HK). This file's closing sentence -- "that is a disposition
+-- question and it belongs to the director" -- was answered ON this reading:
+-- `stayfield` is RETURNED out of the member string (armed 26 → 25, disposition
+-- CALLSITE-EMPTY). ⛔ NOT a reject: gate, predicate, both wrappers and this
+-- file are kept verbatim, bots/ zero diff. The census above therefore describes
+-- the string as it stood WHEN THE RULING WAS MADE -- it is the evidence that
+-- got acted on, not a stale number. Two guards below carry the consequence.
+--
+-- ⭐ AND THE HALF OF THE RULING THAT CAME OUT OF THIS FILE'S OWN FRAME: the
+-- proposal handed up with it asked the director to write "P2 has no case on the
+-- TP leg" into OWNER_PRIORITIES.md. That was REFUSED. `FieldRegenSipValue = 85`
+-- is a FLOOR, not a measurement -- J.FIELD_SIP_HEAL has no magic_wand row (the
+-- declaration at jmz_func.lua:5692-5696 says why: "its charge count ... is not
+-- in the dump"), and slot 1 of this very fixture is a magic wand. The rescue
+-- band is computable and narrow: 15 HP/charge, best SINGLE sip ⇒ the wand alone
+-- clears 272 only at ≥19 charges. Narrow is not empty, and the difference is
+-- precisely the number nobody can read ⇒ the frame's status is UNCERTIFIABLE,
+-- blocked on owed_executions.json:wandlimbo_charge_instrument.
+--
 -- ⛔ AND THE HEADLINE IS *NOT* THE ZERO -- it is the ONE.
 --
 -- tests/test_stayfield2_live_domain.lua measured the WALK leg on the same day
@@ -309,8 +329,44 @@ tests['[ratchet][precondition] both ids are armed TODAY, or the census is about 
     -- If either id leaves the string the reading is not wrong -- it is about a
     -- world that no longer exists, and the honest response is to re-run the
     -- sweep, not to edit a number. Going red here is that instruction.
-    assert(armed_has('stayfield'),
-        'stayfield left the member string; re-run tests/_stayfield_tpleg_sweep.lua')
+    --
+    -- ⭐ 2026-09-14T16:xxZ, DIRECTOR. `stayfield` left the string, and this
+    -- guard fired exactly as designed -- on the pusher's own hook, in the same
+    -- work unit that removed it (GH #624's whole point). It is NOT deleted and
+    -- NOT weakened to `true`: what changes is that ONE named exit is now
+    -- allowed, and it has to be PROVED from the archive rather than assumed.
+    --
+    -- Why an exit exists at all: this file's own header ends "that is a
+    -- disposition question and it belongs to the director; this file only makes
+    -- it unavoidable." The disposition was made -- RULING 37, 退集 (armed
+    -- 26 → 25), disposition CALLSITE-EMPTY, full text test_set.md §HK -- and it
+    -- was made ON this reading. So the census is not stale here; it is the
+    -- evidence that got acted on. Re-running the sweep on the 25-string would
+    -- measure live_S = 0 BY CONSTRUCTION (the gate is simply off), which is a
+    -- vacuous number wearing the old number's name -- the exact "green for the
+    -- wrong reason" shape this lab keeps paying for.
+    --
+    -- ⛔ WHAT STILL GOES RED: a SILENT removal. The exit demands the ruling's
+    -- own tokens be present in the archive, so dropping `stayfield` out of the
+    -- string without ruling it still fails here.
+    if not armed_has('stayfield') then
+        local f = assert(io.open('iterations/streams/test_set.md', 'r'),
+            'stayfield left the member string and test_set.md cannot be read '
+            .. 'to check whether that was a ruling or an accident')
+        local doc = f:read('*a')
+        f:close()
+        assert(doc:find('stayfield_tp_disposition', 1, true),
+            'stayfield left the member string with NO disposition on record '
+            .. '(test_set.md carries no `stayfield_tp_disposition`) -- either '
+            .. 'rule it and archive the ruling, or put it back')
+        assert(doc:find('RULING 37', 1, true),
+            'stayfield left the member string but test_set.md carries no '
+            .. 'RULING 37 -- the retirement is not archived; re-run '
+            .. 'tests/_stayfield_tpleg_sweep.lua or restore the id')
+    end
+    -- `fieldsip` has NO exit. It is the absorber this file attributes the last
+    -- frame to, and the P2 correction in OWNER_PRIORITIES.md rests on that
+    -- attribution -- if it leaves the string, the attribution must be re-taken.
     assert(armed_has('fieldsip'),
         'fieldsip left the member string; the live veto this file attributes '
         .. 'margin_live = 0 to is gone -- re-run tests/_stayfield_tpleg_sweep.lua')
@@ -354,7 +410,37 @@ end
 
 tests['[detector] ... and the live member string takes that one frame, by arithmetic'] = function()
     local J, bot = world(PINNED, PINNED_HERO)
-    arm(J, armed_list())
+    -- ⭐ 2026-09-14T16:xxZ, DIRECTOR -- the driven set is the CENSUSED string,
+    -- not `armed_list()` alone, and the difference is the point.
+    --
+    -- RULING 37 took `stayfield` out of the member string. Driving bare
+    -- `armed_list()` after that still makes the assertion below PASS -- the
+    -- wrapper answers false at its own `IsSoakCandidate('stayfield')` line,
+    -- before any arithmetic runs. That is a pass FOR THE WRONG REASON: the
+    -- claim this test exists to hold is that the MAGNITUDE CLAUSE takes the
+    -- frame, and a gate that is simply off proves nothing about the clause.
+    -- (Same shape as the director's own 09-14 mutation stand, where a command
+    -- that "looked like it tested X" tested something else and read green.)
+    --
+    -- So the frame is driven in the world the census actually measured: the
+    -- live string PLUS `stayfield`. Every assertion below then still has teeth,
+    -- and `fieldsip` is still read off the live string rather than hardcoded.
+    local driven = armed_list()
+    driven[#driven + 1] = 'stayfield'
+    arm(J, driven)
+    -- ⛔ AND PIN THE DRIVEN WORLD, because the repair above is otherwise
+    -- INVISIBLE TO THIS TEST: reverting to bare `armed_list()` changes only the
+    -- REASON the next assertion passes, never the result, so without this line
+    -- a mutation that re-vacuums the test survives green. Measured, not
+    -- assumed -- the director ran exactly that mutation (M2) when landing the
+    -- repair, and it SURVIVED until this assertion existed.
+    assert(J.IsSoakCandidate('stayfield') == true,
+        'the driven world does not have `stayfield` armed, so the assertions '
+        .. 'below are answered by the wrapper\'s own gate and prove nothing '
+        .. "about `fieldsip`'s magnitude clause -- this test is vacuous")
+    assert(J.IsSoakCandidate('fieldsip') == true,
+        '`fieldsip` is not in the driven world (it is read off the live member '
+        .. 'string) -- the attribution below has no absorber to attribute to')
     assert(J.ShouldRegenNotTpHome(bot) == false,
         'the TP wrapper is TRUE on the pinned frame under the live member '
         .. 'string -- margin_live is no longer 0 and `stayfield` has a live '

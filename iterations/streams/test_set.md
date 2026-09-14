@@ -1,6 +1,7 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart
-**成员串 26**(上一行,**230 字节**,md5 `3a438e729b3960382dfd51a89a7da54e`)。本行 **2026-09-13T07:xxZ 第十轮的变动:一条 `RETURNED`(退集,27 → 26,`aimguard`)**,总监裁定全文 **§HJ**(§HJ.1 处置 `DUMP-SCHEMA-BLIND` / §HJ.2 为什么它与 `abilanc` 的载体门**不同名** / §HJ.3 为什么 `overchase` 本轮**特意没裁**);判定完结 **1**(⚠️ owner P4.2 要的是 ≥2,本轮**没达标**,差额与理由逐字写在 §HJ.4,**不许读成 2**)。⛔ **不是 reject**:`J.CanBeAttackedPair`(`bots/FunLib/jmz_func.lua:4244-4255`)、调用点(`bots/BotLib/hero_spirit_breaker.lua:297`)、`tests/test_aimguard_target_axis.lua` **逐字保留**,`bots/`+`game/` 本轮**零 diff**;退集买的是「不再为一份已证买不到的证据付波次成本」,**不是**「这个改动是坏的」。⛔ **退集理由不许与 §HA.1 / §HA.2 / §FW.2 三条混着写**(见 §HJ.1 的处置名表)。
+lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart
+**成员串 25**(上一行,**220 字节**,md5 `850bdee1fde2c42a00eb3c23fd3e04fb`)。本行 **2026-09-14T16:xxZ 的变动:一条 `RETURNED`(退集,26 → 25,`stayfield`)**,总监裁定全文 **§HK**(§HK.1 处置 `CALLSITE-EMPTY`(**新名,与 `fieldsip` 无关**)/ §HK.2 为什么协同组交棒里那句「P2 在 TP 腿上本来就没有病例」**被否决、没有写进 P2** / §HK.3 为什么 `fieldsip` 的量级门限**本轮特意没动**);判定完结 **1**(⚠️ owner P4.2 要的是 ≥2,本轮**没达标**,理由逐字写在 §HK.4,**不许读成 2**)。⛔ **不是 reject**:核谓词 `J.IsFieldRegenSituation` / `J.ShouldRegenNotGoHome`、TP 腿 wrapper `J.ShouldRegenNotTpHome`(`bots/FunLib/jmz_func.lua`)、`tests/test_stayfield_callsite_domain.lua` / `tests/test_stayfield_tpleg_live_domain.lua` **逐字保留**,`bots/`+`game/` 本轮**零 diff**;退集买的是「不再为一份**结构上**买不到的 (a) 证据付 armed 位与波次成本」,**不是**「这个改动是坏的」——(c) 逻辑依据成立且未被取代。⛔ **退集理由不许与 §HJ.1 `DUMP-SCHEMA-BLIND` / §GC 的 `wandlimbo` 仪器墙混着写**(三者的解锁条件互不相同,见 §HK.1 的处置名表)。
+*(上一轮的历史行:**成员串 26**,230 字节,md5 `3a438e729b3960382dfd51a89a7da54e`,一条 `RETURNED`(27 → 26,`aimguard`),裁定全文 §HJ,判定完结 1。)*
 *(上一轮的历史行:**成员串 27**,239 字节,md5 `76a888b622124fc5488503aa36ef6b25`,两条 `RETURNED`(29 → 27,`outlatch` + `rotscope`),裁定全文 §HA,判定完结 2。)*
 *(上一轮同日的历史行:**成员串 29**,257 字节,md5 `33047ce53c029f3901e5f63eab872ecb`,一条 `PROMOTE`(30 → 29,`tpcommit`),裁定全文 §GZ,判定完结 2。)*
 ⭐⭐⭐ **本节最该被读的一条(§GW.1):这两条不是「又一次同轮 promote」,是一次 promote 只有一种合法的切法,而那件事是四种组合上的算术,不是偏好。** 上一轮(§GU)两条同轮的理由是「近五波每一波都同时 armed,家族级 (b) 分不开」——**那是一条关于读数的理由**。本轮的理由更硬,**它关于树本身**:四种组合里有一种**已经被量到是坏的**,而**它恰好就是单独促进 `zusult` 会发出去的那一种**。
@@ -5813,3 +5814,117 @@ armed **26**,离解冻线(≤20)**差 6**。
 📌 但要登记一句:**报告里写行号是给人看的,而人会照着行号跳过去读**,
 跳到 `:4127` 今天读到的是**别的函数**。⇒ 本节引用一律**行号 + 函数名**双锚,
 行号漂了还剩一个锚。**与 §BG 的老规矩同族,本轮第二发。**
+
+---
+
+## §HK 2026-09-14T16:xxZ(总监)**RULING 37 —— `stayfield` 退集(26 → 25),处置 `CALLSITE-EMPTY`;并**否决**协同组交棒出口 (2) 里那句要写进 owner P2 的话** —— 本节最该被读的是 **§HK.2:否掉 P2 铁证帧的那个数(`85`),是一个被树自己声明为不完整的数,而它缺的那一格就摆在同一帧的 slot 1 上**;以及 **§HK.1:为什么这条退集与 `fieldsip` 无关,尽管两者在同一帧上相遇**
+
+**结案的是** `owed_executions.json:stayfield_tp_disposition`(总监 2026-09-14T13:0xZ 按 §2.6 (乙) 自登记,`executor` 总监自己,`trigger` 逐字「下一轮总监开工的第一件事,且不晚于下一次发波」)。本轮是那个「下一轮」,**发波侧无风险**:批测台 15:08Z 现读 MTD `$89.858`、对 `$90` 刹车 headroom `$0.142` ⇒ **最便宜的一波 `$1.10` 也起不飞**,且 `W69` 是最后一波(距今 >48h),**改成员串期间没有任何波在空中**。
+
+### §HK.1 处置名 `CALLSITE-EMPTY`(新名)—— 为什么它不叫 `DUMP-SCHEMA-BLIND`,也不叫 `wandlimbo` 的那堵墙
+
+按 §HA.3 的要求,处置名要**编码「什么能解开它」**。三个名字今天同时活着,解锁条件**互不相同**,写成同一个名字会让下一个人拿一把配错的钥匙去开:
+
+| 处置名 | 域为什么是空的 | 解开它需要 |
+|---|---|---|
+| `DUMP-SCHEMA-BLIND`(§HJ,`aimguard`) | 流在**位置上完整、语义上全空**(`creepSnap` 只有 `{T,Team,X,Y}`) | 给 dump 加**实体身份/谓词字段** |
+| 仪器墙(§GC,`wandlimbo`) | 谓词的第一条合取读 **item charges**,而 charges 在证据链**两端都不存在** | 改 `main.go` **且**改 `replay_fixture.lua`(两端,缺一仍买不到) |
+| **`CALLSITE-EMPTY`(本节,`stayfield`)** | **语料、仪器、schema 全都健在**;域被**调用点自己的合取**吃掉 | **什么都不用买 —— 它是一个已经答完的问题**,答案是 0 |
+
+⭐ **这一条是三者里唯一「读数是完备的」那一个**,所以它的退集**最干净**:不是「我们看不见」,是「我们看见了,是空的」。
+
+**读数(协同组 2026-09-14T10:26Z,1039 live hero frames,真 26 串)**:
+
+| 量 | 值 |
+|---|---|
+| `solo_S`(只 arm `stayfield`) | 24 |
+| `live_S`(真串) | 2 |
+| `branch_open`(触发集 ∩ 所有可读合取,**上界**) | 4 |
+| `margin_solo` | **1** |
+| **`margin_live`** | **0 / 1039** |
+
+⭐⭐ **分解比那个 0 重要,而分解说的正是这条 id 与 `fieldsip` 无关**:24 个 solo-S 帧里 **23 个被调用点(`撤退:3`)自己的合取吃掉**,`fieldsip` 根本没上场;剩下的 **1 帧**才轮到 `fieldsip`。另两个 live-S 帧(`f_071859_qop_salve` / `f_260819_222559_od_eclipse_pair`)`s_live_blocked_by_branch = 2/2`,否它们的是分支自带的 `itemFlask == nil` ⇒ **有没有 `fieldsip`,它们都不是这条腿的域**。
+
+⇒ **即使 `fieldsip` 明天从串里消失,这条腿的域也只有 1 帧**(上界 4)。**退集不依赖 `fieldsip` 的任何处置**,这是 §HK.3 能把那件事分开定价的前提。
+
+⛔ **不是 reject**:gate、核谓词、两个 wrapper、两份测试**逐字保留**,`bots/`+`game/` 零 diff。(c) 逻辑依据(Turbo 里 20.3 秒的泉水往返 vs 一口野区回复)**成立且未被取代**。重新入集走三条件,由总监重判。
+
+### §HK.2 ⭐⭐⭐ 否决:协同组出口 (2) 要我写进 P2 的那句话,**不成立**
+
+协同组交棒逐字给了总监一个二选一,其出口 (2) 的后半是:
+
+> 「若量级条款优先,那 P2 在 TP 腿上**本来就没有病例**,应当由总监把这句话写进 P2 的「现状」段。」
+
+**⛔ 这句话本轮被否决,不写进 P2。** 理由是**同一帧上的一次现读**,不是口味:
+
+`OWNER_PRIORITIES.md` P2 的铁证帧 `f_260822_063722_lina_tp_home`,lina 的六个可用槽(fixture 现读,`tests/fixtures/f_260822_063722_lina_tp_home.lua:21`)逐字是:
+
+```
+items = { 'faerie_fire', 'magic_wand', 'arcane_boots', 'blitz_knuckles', 'null_talisman', 'empty_bottle', ... }
+```
+
+**slot 1 是一根魔棒**,而 P2 自己的铁证帧散文也逐字写着「包里有 faerie_fire + **魔棒充能**」。
+
+否掉这一帧的算术是 `J.FieldRegenSipValue(lina) = 85` vs `0.25 * 1088 = 272`。而 **85 的来源是 `J.FIELD_SIP_HEAL`,那张表里根本没有魔棒这一格**,并且**不收它的理由写在表上方五行处**(`bots/FunLib/jmz_func.lua:5692-5696`,`J.HasFieldRegenSource` 的声明块),逐字:
+
+> `Deliberately NOT counted: magic_wand / magic_stick. … its charge count -- the thing that decides whether it heals at all -- is not in the dump.`
+
+⇒ **`85` 不是「这一帧能喝到多少」的测量值,它是一个下界**,而且**短的那一格恰好就是这一帧真正持有、且读不出来的那一格**。
+
+⭐ **于是那句被提议的话,把一个关于 faerie fire 的真命题,说成了一个关于这一帧的真命题**:
+「85 < 272 ⇒ 一个 faerie fire 救不回 31.8% 血的 lina」——**这句是对的**(协同组自己也说了),
+「⇒ 这一帧不是病例」——**这句买不到**,因为 slot 1 的贡献是未知的,不是零。
+
+**⚠️ 而这个未知有确定的、可算的救回带,总监这里把它算出来,不让它含混过去**:魔棒每充能 15 点生命(`J.ShouldDrinkWandInLimbo` 注释逐字 `15 HP per charge, both stick and wand`),`FieldRegenSipValue` 取的是**单次最大**一口(不求和),所以魔棒单独清过 272 需要 **≥19 充能**(18 充能 = 270 < 272),上限 20。
+⇒ **救回带很窄,但不是空的 —— 而「窄」与「空」的差别,恰好就是那个买不到的数。**
+📌 **本节最该被带走的一句:一个被声明为不完整的数,不会因为它算出来的方向唯一就变完整;而这一次它的方向恰好是掐死 owner 优先项的那一边**(§GB.2 形状,第三例)。
+
+**⇒ 写进 P2「现状」段的是诚实的那一句,不是被提议的那一句**:铁证帧在今天的仪器上读 `85`,而该读数**已知是一个下界**,短缺量未知、救回带 ≥19 充能;这一帧对量级条款是不是病例 ⇒ **UNCERTIFIABLE**,**卡在 `owed_executions.json:wandlimbo_charge_instrument`(总监 2026-09-08 立)那堵墙上**。
+
+⭐⭐ **连带效果,本轮真正的产物**:`wandlimbo_charge_instrument` 立行时自述是「**一整类 id 的前置**(bottle 腿的 `stayfield`/`fieldsip`、未来任何 wand/stick 杠杆)」,而它的 `trigger` 逐字是「**没有外部触发器** … 任何一轮有余量的工作单元;或有人提 `wandlimbo` 重新入集的那一刻」——**两个触发器都没在响**。本节把它接到了一个**会响的**东西上:**它同时挡着 owner 优先项 P2 的铁证帧**。该行的 `trigger` 已据此就地加强(见 `owed_executions.json`),**判据一字未动**(⛔ 加强触发器不许顺手改 `done_when`,那是两件事)。
+
+### §HK.3 为什么 `fieldsip` 的量级门限本轮**特意没动**
+
+出口 (2) 的前半(动 `FIELD_SIP_MIN_FRACTION` / `FIELD_SIP_HEAL` 把那 1 帧要回来):**⛔ 不动**,而理由写在树上不在我这里 —— `bots/FunLib/jmz_func.lua` 三处(`J.IsFieldRegenSituation` 的 0.18 地板注释、`J.ShouldSipNotTpRecover` 注释、`tpdeep` 注释)**各自独立地**写着:动那个门限会**在同一次编辑里同时移动 `stayfield` / `stayfield2` / `fieldbuy` 三条**,逐字 `which is the lanefix bundle mistake`,账单是 gpm **−74.5 / −88.7**、0/4 comps。
+
+⇒ 它是**独立的、单独定价的**工作单元,**不是本次退集的副作用**,也**不是本次退集的前提**(§HK.1 末:退集不依赖 `fieldsip` 的任何处置)。⛔ 本轮不排期、不指派:它的真正前置是 §HK.2 那堵仪器墙 —— **在魔棒读不出来之前,动门限是在一份已知不完整的读数上调常数**。
+
+### §HK.4 判定完结 **1** < owner P4.2 要的 **2**,如实登记,没凑第二条
+
+本轮完结 1 条(`stayfield`)。⛔ **没有凑第二条**:armed 25 里今天唯一另一条读数齐备的是 `stayfield2`(0NEXT11 测得 solo 19 → live 0),**而它的 0 与本条的 0 不同型** —— 它是「**有过域、被 `fieldsip` 拿走**」,本条是「**从来没有过域**」。协同组 §2 已经把这条区分写成可迁移的一句:*「真串给这条 id 留了多少域」不是每族一个问题,是每调用点一个问题*。⇒ 把 `stayfield2` 搭本轮的车退集,等于**用本条的理由裁另一条**,而那个理由对它不成立(它的域是被一条**可以被裁定移走**的兄弟 helper 拿走的,不是被结构吃掉的)。**留给它自己的裁定。**
+
+### §HK.5 §2.5 三条投递
+
+(i) `iterations/queue.json` 的 `director` 字段;(ii) 本节(档案全文);(iii) 协同组活 issue 线程追评 —— MCP 受限时按铁律 11 写进报告,不空转等待。读数逐字贴在本轮报告 §五。
+
+---
+
+## §HL 2026-09-14T16:xxZ(总监)**RULING 38 —— `hero-82` = APPROVED:`promote_atoms.json` 落行 `wk_t10_moves_the_q_domain`(零 AWS、零波次、armed 串不变)** —— 本节最该被读的是 **§HL.2:`direction` 那一行这次是**量出来的**,而不是照抄前四行 atom 的措辞**
+
+**为什么本轮顺手裁了它**:它是**开工自检 python 腿那条 trunk red 的正主**。`tests/test_pending_rulings.py` 逐字报
+`rows in the OTHER bucket that declare a rideshare in their own prose -- §BB.4's 'rule it this round' cannot fire for these: [('hero-82', ['零 EC2'])]`
+—— 一条**自称零 EC2、却落在裁定机器够不着的桶里**的请求。⇒ 它既是铁律 2a 的 [harness] 红,也是一条本座位自己欠的裁定,**两件事同一个动作**。裁完实读 `836 checks, 0 failed`(裸码 `RC_EXIT=0`)。
+
+### §HL.1 前提**逐条复核在源码上**,不是对请求散文的背书
+
+`promote_atoms.json` 的 README 要求「按裸读重建前提」(先例 `field_hold_needs_magnitude`:提议方那句「至今每一波都同时 armed」被现测**证伪了三波**)。本轮四条现读**全部命中**:
+
+| 复核项 | 现读 |
+|---|---|
+| `wkt10ls` 门改写 t10 | `bots/BotLib/hero_skeleton_king.lua:85-87` 逐字 `tTalentTreeList['t10'] = {0, 10}` ✓ |
+| 耦合是**源码声明**不是推测 | 同文件 72-84 行 COUPLING 块,逐字 `Its armed side is min(honest, shipped)` / `byte-for-byte no-op from hero level 13` / `the two ids must be armed and ruled together or not at all` ✓ |
+| 耦合**故意没写成代码合取** | 写成合取即 `pullcad` 陷阱(先例 hero-49 `impale_kill_needs_damage`)⇒ **没有任何机器看得见它** ⇒ 这正是它必须有一行 atom 的理由 ✓ |
+| 今天的 armed 串 | `wkqdmg` **在**、`wkt10ls` **不在**(25 串现测)✓ |
+
+### §HL.2 ⭐⭐ `direction` = one-way,而这一次方向是**量出来的**
+
+前四行 atom 的 `direction` 都写「反方向不受本行约束」。本行照抄了**措辞**,但**理由是本轮现测的第四条**:
+
+- **不构成陷阱的那一向**(先 promote `wkqdmg`):它今天的 (a)/(b) 证据**本来就在「出货 t10 被点、dot = 4.0」的世界里采集**(第四条现读:`wkqdmg` armed、`wkt10ls` 未 armed)——而**那正是单独 promote 它之后 bot 所处的世界** ⇒ 证据与被 promote 的世界同型。
+- **⛔ 陷阱的那一向**(先 promote `wkt10ls`):删门 ⇒ turbo 默认 t10 = `{0,10}` ⇒ dot 永远 2.0 ⇒ honest 在**每一阶**都低于硬编码(120/180/240/300 vs 168/235.2/302.4/369.6)⇒ `wkqdmg` 的 no-op 区**整个消失**(作用等级数 **11 → 24**;英雄 2-12 扣 48、13 扣 55.2、14-15 扣 62.4、16+ 扣 69.6)⇒ **此前所有为 `wkqdmg` 买的读数描述的都是另一个世界**。
+- ⭐ **而没有任何东西会为此转红**:`check_armed_wiring.py` 查的是「调用点存在」不是「谓词能不能为真」(AGENTS.md 的 `pullcad` 教训逐字)。**这就是 atom 行买的那件事。**
+
+### §HL.3 ⚠️ 两处如实登记:本行**比源码那句话弱**,且**不是入集批准**
+
+- **(甲) 弱在哪里**:源码写的是两条「必须**一起 arm**、一起裁,或者都不动」;而 atom 的 `rule=no_promote_without` 只管 **promote 日**的配置,**管不了 arm 日**。⇒ 将来给 `wkt10ls` 买证据时**同波 co-arm `wkqdmg`**,**本行不保证**,发波请求里要自己写明。⛔ 不把 atom 的语义拉宽去盖住一件它盖不住的事 —— 那会造出一条读起来像栏杆、实际没装的行。
+- **(乙) 不是入集批准**:armed 串本轮 **25**,`wkt10ls` **不在其中**,入集仍受 owner P4.2 的冻结约束。本行只在它**将来**被 promote 的那一天有牙。
