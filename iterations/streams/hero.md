@@ -22,6 +22,48 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-173. ✅ **一个「按英雄取值的常数」被拆成三本账,而最大的那本是仪器不是 bot。**
+   主体:认领 **GH #817**(录像组 09-14T09:55Z 开,比开工早 1 小时,点名两个焦点英雄)。
+   新落 `tests/test_talent_uptake_visibility.lua`(**8 绿**)+ 变异台
+   `tools/agent/mutstand_talent_visibility.sh`(**7/7 全杀**)。报告
+   `iterations/reports/hero/20260914T110833Z.md`。**零 AWS、零波次、`bots/` 未改一字。**
+   - ⭐⭐ **判别子是一个离线可算的属性:该英雄自己的 build 在 t10 选中的行是不是 hero-unique。**
+     `pick` 由 `aba_skill.X.GetTalentBuild` 的规则**源码读出不重打**,行由
+     `tests/mock/hero_slots.lua` 查。**#817 的十个英雄,对 9 个。**
+     机制是本仓库 2026-08-27 **已定谳**的 H1(`test_fixture_talent_blindness.lua`):
+     dumper 的 `isRealAbility()` 把 `Special_Bonus_Base`/`_Attributes` 类
+     **在 `return level > 0` 之前**丢掉,unique 行共用那个基类、generic 行有自己的类
+     ⇒ 点在 unique 行上的那一点**不抬能力账本**,「10 级没花点」是尺子的**必然**输出。
+     本轮在 `dumper/main.go:231–237` **源码上复核过顺序**,不是引注释。
+   - ⭐ **唯一的那个漏,漏在第二个已立案缺陷预测的方向上**:`obsidian_destroyer` 的
+     t10 选中行是 `special_bonus_mp_200`(**generic,可见**)却仍 0/8 ⇒ 盲区不覆盖它;
+     覆盖它的是 GH #286 的 nil-hole 塌缩(`ability_item_usage_generic.lua:32–50`
+     原话「OD stalled at 6 spent points in 5/6 games」),而 #817 自己的数就是佐证
+     (终局 5–6 点、停摆中位 1279.5 s、≥900 s 的 8 具全是 OD)。
+   - ⭐ **WK 的可见天花板恰好是 1,而波读到恰好 1(8/8)**:t10 unique(盲)、
+     **t15 `special_bonus_hp_300` generic(可见)**、t20/t25 unique ⇒ 那个 1 是天花板,
+     **对摄取零信息**。
+   - ⛔ **三条不声称,写进文件不是写进报告**:(1) **不声称任何 bot 真点了 unique 天赋**
+     ——被丢掉的实体不在文件里可数;⇒ **#817 验收 3(波级重跑看 34/80 降下来)
+     对三个 unique-t10 英雄在构造上不可测**,数字不可能为它们动,**这是必须赶在
+     有人发波之前落地的那句**;(2) **WK 的残差留开**——盲区预测第一个可见天赋在
+     **15 级**,波读到 **18–20**,3–5 级滞后本轮不解释,§4 只钉天花板绝不钉时点
+     (候选:`special_bonus_hp_300` 有没有自己的类;语料里被真看见过的只有 `hp_200`);
+     (3) 十个英雄一波一棵树,而且这十个是**按结局挑出来列表的**,**「10 中 9」不是率**。
+   - ⭐ **顺带买到一条焦点英雄 LIMIT**:**Axe 四档选中行全是 unique ⇒ 天赋摄取对 dumper
+     100% 不可见**,「Axe 没点天赋」从本仓库任何 dump 里都说不出来;Zeus/Lion/CM
+     天花板各 1(t10 可见、其上全盲)。已钉成断言,TALENTPRICE 类回合不必再各撞一次。
+   - ⭐ **py 闸抓到本轮一个真缺陷**:`test_mutstand_restore_trap.py` 判本台
+     **只 `cp` 不证明 restore**。已加每文件 `sha256sum` 对拍 + 不一致 **abort(2)**。
+     **不是我发现的,是闸发现的。**
+   - ⚠️ **变异台第一轮 6/7,M5 记成 WRONG MESSAGE —— 与 `-170`/`-172` 同形第三次**:
+     正则捕获两个数字,规则翻转后**形状仍匹配**,先开火的是下一行的取值 assert。
+   - ⚠️ **P4.4 自评:主体是 (ii) 不是 (i),连续第三轮。** 理由只有时序一条(见报告 §7)。
+     **下一轮必须回到 (i)**,候选是 WK 的 t10 定价(报告 §8 第 1 条)。
+   - ⚠️ **证据纪律 3 同形第 11 次**:第一条命令又是 `routine_selfcheck.sh | tail`。
+   - **铁律 6 三条腿**:`GATE_EXIT=0` / `py gate: 86 ran, 0 findings` /
+     `lua gate: 323 ran, 0 findings, 0 uncertifiable, 7 known-red`;`RULE6_BYPASS` 未使用。
+
 -172. ✅ **一条自己写下了「我坏掉那天该怎么办」的断言,本轮坏掉了,本轮就是那个 re-argument。**
    主体:把 GH #806 立的那条 trunk 红 `tests/test_lion_considere_earlyreturn_domain.lua`(13 tests / **6 红**)
    按它**自己的措辞**重取(「re-read, do not rebaseline」),连带同一次语料移动顶红的姊妹棘轮
@@ -7696,6 +7738,29 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-14T11:08Z(报告 `iterations/reports/hero/20260914T110833Z.md`;**backlog:新开 `-173`**;
+  **零 AWS、零波次、`bots/` 未改一字**;认领 **GH #817**,已在其上追评)
+  **主体:GH #817 的「按英雄取值的常数」拆成三本账 —— 最大的那本是仪器不是 bot。**
+  - ⭐⭐ **判别子离线可算:该英雄自己的 build 在 t10 选中的行是不是 hero-unique。**
+    十个英雄**对 9 个**。机制是已定谳的 H1:dumper `isRealAbility()` 把
+    `Special_Bonus_Base`/`_Attributes` **在 `return level > 0` 之前**丢掉,unique 行
+    共用那个基类 ⇒ 点在其上的一点**不抬能力账本**。源码复核 `dumper/main.go:231–237`。
+  - ⭐ **唯一的漏漏在第二个已立案缺陷的方向上**:OD 的 t10 是 `special_bonus_mp_200`
+    (generic,**可见**)却仍 0/8 ⇒ 归 GH #286 的 nil-hole 塌缩,不归盲区。
+  - ⭐ **WK 可见天花板恰好 1,波读到恰好 1(8/8)** ⇒ 那个 1 **对摄取零信息**。
+  - ⛔ **#817 验收 3(波级重跑看 34/80 降下来)对三个 unique-t10 英雄构造上不可测** ——
+    修没修都不会让它们的数字动。**发波前必须听见这句。**
+  - ⛔ **WK 残差留开**:盲区预测第一个可见天赋在 **15 级**,波读到 **18–20**,不解释。
+    ⛔ **「10 中 9」不是率**:十个英雄一波一棵树,且是按结局挑出来列表的。
+  - ⭐ **新 LIMIT:Axe 四档全 unique ⇒ 天赋摄取对 dumper 100% 不可见**;
+    Zeus/Lion/CM 天花板各 1。
+  - ⭐ **py 闸抓到本轮真缺陷**(变异台只 `cp` 不证明 restore),已加 `sha256sum` 对拍 + abort。
+  - ⚠️ **P4.4 自评:主体 (ii) 不是 (i),连续第三轮;下一轮必须回 (i)**
+    (候选:WK t10 `..._facet_1` 的定价,两个 facet 都 `Deprecated`,该行 KV 的一半是死的)。
+  - ⚠️ 变异台第一轮 6/7(M5 `want` 指错断言,同形第三次);证据纪律 3 同形**第 11 次**。
+  - ⚠️ 容器开工时 **`lua5.1` 与 `luacheck` 都不在**(包名 **`lua-check`**),先装再跑门。
+  - **铁律 6 三条腿**:`GATE_EXIT=0` / `py gate: 86 ran, 0 findings` /
+    `lua gate: 323 ran, 0 findings, 0 uncertifiable, 7 known-red`;`RULE6_BYPASS` 未使用。
 - 2026-09-14T08:11Z(报告 `iterations/reports/hero/20260914T081141Z.md`;**backlog:新开 `-172`**;
   **零 AWS、零波次、`bots/` 未改一字**)
   **主体:Lion 两条语料棘轮重取(语料 27 → 42),`run_tests.lua lion` 由 297/7红 → 297 绿 0 红。**
