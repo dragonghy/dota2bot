@@ -275,23 +275,33 @@ tests['§1 the archive reaches the body 5 times and the domain 0 times'] = funct
     assert(nFiles > 0, 'the corpus enumerator returned nothing')
     -- NON-VACUITY first: over an empty set "0 in the domain" is true for free
     -- and this case would stay green whatever the corpus did.
-    assert(nLive == 27, nLive .. ' live-Lion instants, was 27 as of 2026-09-07. '
-        .. 'The corpus moved -- re-take §0.3 limit 1 rather than re-baselining it.')
-    assert(nReady == 5, nReady .. ' of them have Finger of Death fully castable, '
-        .. 'was 5.  That count is §0.3 limit 1\'s middle line.')
+    assert(nLive == 42, nLive .. ' live-Lion instants, was 42 as of the '
+        .. '2026-09-14 re-take (27 before it). The corpus moved -- re-take '
+        .. '§0.3 limit 1 rather than re-baselining it.')
+    assert(nReady == 9, nReady .. ' of them have Finger of Death fully castable, '
+        .. 'was 9 (5 before the 2026-09-14 re-take).  That count is §0.3 limit '
+        .. '1\'s middle line.')
     assert(nInDomain == 0, nInDomain .. ' archive instants are inside this lever\'s '
         .. 'domain (Finger castable AND HP < 0.4), was 0.  THIS IS GOOD NEWS: the '
         .. 'lever can now be measured on a real frame.  Go take that reading and '
         .. 'rewrite §0.3 limit 1 -- do not relax this assertion.')
     assert(nMaxReadyHP > 0.4, 'the castable instants are no longer all above the '
         .. 'threshold; re-read the census')
-    -- The archive DOES carry damage-recency -- on 5 of the 27 -- and none of
-    -- those five is one of the five with a castable Finger.  The two counts
+    -- The archive DOES carry damage-recency -- on 6 of the 42 -- and none of
+    -- those six is one of the nine with a castable Finger.  The two counts
     -- are kept apart on purpose: "the loader has no answer" and "the answer is
     -- there but never co-occurs" are different limits, and only the second is
     -- true here.
-    assert(nRecent == 5, nRecent .. ' archive instants answer '
-        .. 'WasRecentlyDamagedByAnyHero(2.0), was 5')
+    --
+    -- ⭐ 2026-09-14 RE-TAKE.  The corpus grew 56% (27 -> 42) and the castable
+    -- count nearly doubled (5 -> 9), and BOTH zeros below held.  That matters
+    -- more than the new integers: "no archive instant is in this lever's domain"
+    -- and "a castable Finger never co-occurs with recent hero damage" were read
+    -- on 5 castable instants in 09-07 and could have been small-n artefacts.
+    -- They are now read on 9, and the closest any castable instant comes to the
+    -- HP threshold is 0.838 against a 0.4 limit -- not close, on any of them.
+    assert(nRecent == 6, nRecent .. ' archive instants answer '
+        .. 'WasRecentlyDamagedByAnyHero(2.0), was 6 (5 before the re-take)')
     assert(nReadyRecent == 0, nReadyRecent .. ' archive instants have BOTH a '
         .. 'castable Finger and recent hero damage, was 0.  That zero is why the '
         .. 'second armed conjunct is injected in §3 rather than observed.')

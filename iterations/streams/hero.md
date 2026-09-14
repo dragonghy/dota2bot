@@ -22,6 +22,75 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-172. ✅ **一条自己写下了「我坏掉那天该怎么办」的断言,本轮坏掉了,本轮就是那个 re-argument。**
+   主体:把 GH #806 立的那条 trunk 红 `tests/test_lion_considere_earlyreturn_domain.lua`(13 tests / **6 红**)
+   按它**自己的措辞**重取(「re-read, do not rebaseline」),连带同一次语料移动顶红的姊妹棘轮
+   `tests/test_lion_ult_cash_weakest.lua`(**在 `known_red` 上**,赦免的正是同一条读数)。
+   语料 **27 → 42** live-Lion 帧。报告 `iterations/reports/hero/20260914T081141Z.md`;
+   `lua5.1 tests/run_tests.lua lion` **297 绿 0 红**(开工时 297/**7 红**)。
+   **零 AWS,零波次,`bots/` 未改一字。**
+   - ⭐⭐ **本轮的产出不是新整数,是 bound (A) 从「全称」变成「分层」。** 该文件 09-07 写着:
+     「if it ever stops being true the archive has acquired an instant that reaches the branch
+     WITHOUT having been selected for it … it must be **RE-ARGUED (not re-baselined)**」。
+     第四条 fall-through 帧是 **`tests/frames/f_260909_215412_axe_cull_cm_838.lua`(t=838.9)**
+     —— 一帧**为 AXE 的 cull threshold 切的**,Lion 只是碰巧活着。
+   - ⭐ **它买到的不是率,是偏差的大小**(旧 bound 只能说 "biased UPWARD",量不出多少):
+     **selected 分层 3/3 穿过(100%)vs unselected 分层 1/27(3.7%)**,池化 4/30 = 13.3% 是二者的
+     **混合物** ⇒ 按结局选样把它抬高约 **27 倍**。`liondrainmi` 定价:池化天花板 4/42 = **9.5%**,
+     只按 unselected 读是 1/35 = **2.9%**(**约四分之一**)。
+   - ⛔ **三条它不买到的,写进文件不是写进报告**:(1) **n=1**,1/27 不是率,§4 **刻意不断言任何百分比**
+     —— 变的只是**分母第一次有意义**;(2) 「unselected」= **没按*这个结局*选样**,不等于随机抽样
+     (该分层里仍有 `f_*_lion_spike_*` / `f_*_lion_235` 这类按「Lion 重要」选的帧)⇒ 仍偏高,只是少得多;
+     (3) 每局率**仍然**是 `queue.json` hero-4 / hero-40。
+   - ⭐ **设计主张反而变强了**:`[liondrain]` 那条注释(抽蓝只在 Q/W/R 全不可用时开火)在**全部四个**
+     fall-through instant 上仍成立 —— **包括那个没人为 Lion 切的帧**(Impale L4/cd7.5、Hex L1/cd23.3、
+     Finger L2/cd68.2)。⇒ 它过去**只有被选来证实它的证人**,现在有了**一个独立证人**。
+   - **其余 CLAIM 逐条存活**:主约束 17/20(85%)→ **26/30(87%)**;两半边际 15:1 → **22:2**(11:1,
+     断言是 **≥5× 的不等式**故不读成新闻);basics 关线 Q12/W11/R5 → **Q19/W17/R9**(R 仍最稀)。
+   - ⭐ **姊妹棘轮:两个零都守住了,而这比新整数重要。** `nLive` 27→**42**、`nReady` 5→**9**(近乎翻倍)、
+     `nRecent` 5→**6**,而 **`nInDomain` = 0 不变**、**`nReadyRecent` = 0 不变**,最接近阈值的
+     castable instant 是 **HP 0.838 对 0.4 的界**。⇒ §0.3 limit 1 的两条限制**不是小 n 假象**。
+     ⛔ 断言**没有被放松**,只被重取。
+   - **变异台 `mutstand_lionearlyreturn.sh` 新增 M11–M13**(旧 M1–M10 守 09-07 的读数与那次 NOT-TAKEN):
+     **M11** 在那**唯一一个 unselected** fall-through 帧上清 Impale 的 CD ⇒ 池化几乎不动(M1 已守),
+     但 unselected 分层 **1/27 → 0/27**,本轮发现整个作废 —— **台子看不见它,分层就只是装饰**;
+     **M12** 把分层判别子放宽成匹配所有帧 ⇒ unselected 清空而**池化一个都不动**;
+     **M13** 拆掉一个分层计数器的自增 ⇒ **且只有** §1 的 re-sum 断言该红。
+   - ⚠️ **第一轮 11/13:M11/M12 红了却被记成「WRONG MESSAGE ⇒ 当作 survived」** —— 与 `-170` 同形,
+     `want` 串指的断言**不是实际先开火的那一条**(同一个 test 里前一条 assert 先失败)。改 `want` 后复跑。
+     ⭐ **M12 的 `want` 有个坑**:`"selected stratum moved"` 是 `"unselected stratum moved"` 的**子串**,
+     `grep -F` 会拿另一个分层的消息给它记分 ⇒ 改用 `"Total fall-through among frames cut FOR this"`。
+   - ⚠️ **域:分层判别子是文件名** `path:match('lion_drain')` —— 那是**选样意图的代理**,不是选样记录
+     (仓库没有「这帧当初为什么被切」的字段)。漏的方向是**低估偏差**。**本轮没发现这样的帧,
+     但这是没查的,不是查过为空的。**
+   - ⛔ **本轮的 NOT-TAKEN**:没放松任何断言(#806 明写禁止改数字「修」它);**没给这条早退线落 gate**
+     (它仍测得 DESIGNED-CORRECT,且证据比以前强);**没碰 `known_red` 名单** —— `test_lion_ult_cash_weakest.lua`
+     这轮**真的回绿**,它的赦免条目成了**死条目**,但摘它要走 GH #783 的定向路径,而 **#810 尚未裁定**,
+     #806 的总监裁定明写「**先裁 #810,再重测**」⇒ **棒交出去,不自己动手**。
+   - ⚠️ **trunk 上另有一条 python 红,本轮没修也不该本组修**:`tests/test_pending_rulings.py`
+     报 `real owed row 'hero27_dem21_deadline_scan' is missing trigger`。该行是**总监今天 06:5xZ 落的**、
+     executor 是**批测台**,缺的是 schema 上的 `trigger` 字段。⛔ **替别人的裁定行补字段 = 替他写裁定**
+     (GH #287 同形)⇒ 只点名不动手。它 `in_gate:false`(`over_cumulative_budget`,**GH #812 那个形状**)
+     ⇒ **拦不住任何人的 push**,红会一直挂着。
+   - ⚠️ **开工自检 UNCERTIFIABLE,而且是我亲手杀的**:它的 Lua 腿还在跑,而变异台要改
+     `hero_lion.lua` / `bot_api.lua` ⇒ GH #507 撕裂窗。先 `pkill` + `pgrep` 复核为空再发台子。
+     半程读数见报告 §9(`lua-coverage` **UNCOVERED 115/454 = 25%**,两个新增无人读文件均非本组落地)。
+   - ⚠️ **证据纪律 3 同形第 10 次**:本轮**第一条命令**又是 `routine_selfcheck.sh | tail`,被工具自己拒绝。
+   - ⭐ **`cullthresh_domain.py` docstring「三带」:按 `-171` 的自订罚则,第八次让位 ⇒ 本轮改写成
+     「这条不做了」并从 backlog 移除。** 理由不是没时间,是**归属错了**:本组档案 line 2802 早就把它的实体
+     登记为**外溢项**(`cullthresh_domain.py:215` 闭区间 vs `make_fixture.py` 半开,工具侧)。
+     **连续七轮一致判它输给真正的英雄工作,那是一个归属结论,不是七次拖延。**
+     ⛔ 本轮**没去改那段 docstring**:实读之后**无法从代码确认**「三带」错在哪
+     (`band()` 按 `CULL_LIVE_DAMAGE=[275,375,475]` 确实给三条带)。
+     **在不理解缺陷形状时改一段解释性注释,是把未理解伪装成已修。**
+   - ⭐ **下一轮最该做的,按顺序**:
+     1. `hero-81` / `hero-80` / `hero-79` 三条零 EC2 归档扫描若回填(`hero-81` 仍卡 GH #786)。
+        ⛔ **回填「买不到」是合法的,用 mock 的 300 当代理值凑读数不是。**
+     2. **GH #813**(`[harness]`,`-171` 开的)的修复。⛔ 它落地前不要对任何人说「`--help` 是安全的」。
+     3. ⛔ **不要**把本轮的 1/27 读成率,也**不要**把「bound (A) 分层了」读成「bound (A) 没了」——
+        selected 分层仍是 3/3,池化天花板仍然只能当天花板引。
+     4. ⛔ **不要**替 `hero27_dem21_deadline_scan` 补 `trigger`(上面一条);它归总监。
+
 -171. ✅ **`-170` 的「下一轮第 1 条」本轮兑现了,而它被推迟到第五轮的那条自订罚则**(「若再让位必须
    改写成『不做了』」)**没有被触发** —— 主体是**量具**不是杠杆:`tests/test_focus_level_claims.lua`
    新增 **§5**(17 → **22 绿**),把 `-168` §4 那段**自称「是推导不是判决」**的算术钉成断言。报告
@@ -65,8 +134,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      1. `hero-81` / `hero-80` / `hero-79` 三条零 EC2 归档扫描若回填。`hero-81` 仍卡在 GH #786
         —— ⛔ **回填「买不到」是合法的,用 mock 的 300 当代理值凑一个读数不是。**
      2. **GH #813**(`[harness]`,本轮已开)的修复。⛔ 它落地之前不要对任何人说「`--help` 是安全的」。
-     3. `cullthresh_domain.py` 的 docstring **还写着三带** —— 已连续**七轮**被排在后面。
-        ⛔ 第八次让位就必须改写成明确的「这条不做了」并说明。
+     3. ~~`cullthresh_domain.py` 的 docstring **还写着三带**~~ —— **`-172` 已按本条的罚则了结:
+        改写成「这条不做了」并从 backlog 移除**(归属是工具侧外溢项,见 `-172`)。
      4. ⛔ **不要**把 6/12/18 读成「量出来的」:它是常量,离线读不到
         `GetHeroLevelRequiredToUpgrade()`,域声明在报告 §4。
      5. ⛔ **不要**把「WARN 是结构性的」读成「每局每英雄都会进 else」—— 那是本轮**改弱**掉的措辞。
@@ -7616,6 +7685,25 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-14T08:11Z(报告 `iterations/reports/hero/20260914T081141Z.md`;**backlog:新开 `-172`**;
+  **零 AWS、零波次、`bots/` 未改一字**)
+  **主体:Lion 两条语料棘轮重取(语料 27 → 42),`run_tests.lua lion` 由 297/7红 → 297 绿 0 红。**
+  - ⭐⭐ **产出不是新整数,是 bound (A) 从全称变成分层。** 第四条 fall-through 帧
+    `tests/frames/f_260909_215412_axe_cull_cm_838.lua` **是为 AXE 切的**,Lion 只是碰巧活着
+    ⇒ 这条线第一次有了**不是被选来证实它的证人**。
+  - ⭐ **偏差第一次被量出来**:selected 分层 **3/3(100%)** vs unselected **1/27(3.7%)**,
+    池化 13.3% 是混合物 ⇒ 选样把它抬高约 **27 倍**。`liondrainmi` 天花板 9.5%(池化)/ **2.9%**(unselected)。
+  - ⛔ **n=1,1/27 不是率**;「unselected」只是**没按这个结局选样**,不是随机抽样;每局率仍是 hero-4/hero-40。
+  - ⭐ **姊妹棘轮两个零守住**:`nReady` 5→**9** 而 `nInDomain`/`nReadyRecent` **仍为 0**,
+    最近的 castable instant HP **0.838** 对 0.4 界 ⇒ §0.3 limit 1 不是小 n 假象。断言未放松。
+  - **变异台 M11–M13 新增**;第一轮 **11/13**(M11/M12 `want` 串指错断言,与 `-170` 同形),改后复跑。
+  - ⚠️ **自检 UNCERTIFIABLE(我亲手杀的,为给变异台让出 GH #507 的窗)**;`lua-coverage` **UNCOVERED 115/454**。
+  - ⚠️ **trunk 另有一条 python 红且本组不该修**:`test_pending_rulings.py` 报
+    `hero27_dem21_deadline_scan` 缺 `trigger` —— **总监今天 06:5xZ 落的行**,只点名不动手;
+    它 `in_gate:false`(GH #812 形状)⇒ 拦不住 push。
+  - ⭐ **7 轮悬案了结**:`cullthresh_domain.py` docstring「三带」按 `-171` 罚则改写成**「这条不做了」**
+    并移出 backlog(归属:工具侧外溢项)。
+  - **铁律 6 三条腿**:见报告 §8。
 - 2026-09-14T04:55Z(报告 `iterations/reports/hero/20260914T045531Z.md`;**backlog:新开 `-171`**;
   **零 AWS、零波次、`bots/` 未改一字**;P4.2 冻结期不请求入集,armed 串与 test_set.md 一字未动)
   **主体是量具:`tests/test_focus_level_claims.lua` §5(17 → 22 绿)。**

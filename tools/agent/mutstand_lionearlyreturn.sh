@@ -12,11 +12,12 @@
 # guarding is a READING plus a NON-DECISION, and they rot differently:
 #
 #   * the FUNNEL is really reading frames, not restating a constant  -> M1, M2
-#   * the SPLIT (castability 15 : level 1) is the round's answer     -> M2, M3
+#   * the SPLIT (castability 22 : level 2) is the round's answer     -> M2, M3
 #   * the CEILING's structural premise (lever is downstream)         -> M4, M5
 #   * the ABSENCE of a lever on this line                            -> M6, M7
 #   * bound (C): the creep zero is the MOCK's, and knows it          -> M8, M9
 #   * bound (D): names read here vs indices bound there              -> M10
+#   * bound (A)'s STRATA -- the 2026-09-14 re-take's actual finding  -> M11-M13
 #
 # THE FOUR WORTH READING:
 #   * M1 IS THE FUNNEL'S ANTI-TAUTOLOGY.  Every integer in the header is
@@ -34,9 +35,14 @@
 #     from the dumper schema (which is what test_lion_drain_refill_domain.lua
 #     records).  Wire it and the file must announce that -114's NOT TAKEN and
 #     this file's ceiling both need re-reading.
-#   * M4 IS THE CEILING'S PREMISE.  3/27 is a ceiling on `liondrainmi` ONLY
+#   * M4 IS THE CEILING'S PREMISE.  4/42 is a ceiling on `liondrainmi` ONLY
 #     because its call site is below the line.  Move it above and the number
 #     must stop being quotable.
+#   * M11 IS THE 2026-09-14 RE-TAKE'S OWN MUTANT.  Bound (A) stopped being total
+#     that day: one fall-through instant arrived from a frame cut for AXE, and
+#     it is the only evidence in the repo that this line's fall-through share is
+#     not simply an artefact of which frames past rounds chose to keep.  M11
+#     deletes exactly that instant and nothing else.
 #
 # DISCIPLINE (inherited from tools/agent/mutstand_liondrainrefill.sh):
 #   * out-of-tree restore, verified with `sha256sum -c`;
@@ -60,9 +66,13 @@ HERO=bots/BotLib/hero_lion.lua
 LOADER=tests/mock/replay_fixture.lua
 BOTAPI=tests/mock/bot_api.lua
 FRAME=tests/fixtures/f_260819_182323_lion_drain_calm.lua
+# The UNSELECTED fall-through frame, added 2026-09-14.  It was cut to study
+# AXE's cull threshold on Crystal Maiden; Lion is merely alive in it, which is
+# exactly why it is the only independent witness this line has (bound (A)).
+UNSEL_FRAME=tests/frames/f_260909_215412_axe_cull_cm_838.lua
 TEST=tests/test_lion_considere_earlyreturn_domain.lua
 
-FILES=("$HERO" "$LOADER" "$BOTAPI" "$FRAME" "$TEST")
+FILES=("$HERO" "$LOADER" "$BOTAPI" "$FRAME" "$UNSEL_FRAME" "$TEST")
 
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/mutstand_lionearlyreturn.XXXXXX")
 for f in "${FILES[@]}"; do
@@ -123,6 +133,9 @@ BIND_R='local abilityR = bot:GetAbilityByName( sAbilityList[6] )'
 CALM_IMPALE="{ name = 'lion_impale', level = 2, cd = 6.5 }"
 CALM_DRAIN="{ name = 'lion_mana_drain', level = 2, cd = 0 }"
 NEARBY_DEFAULT="if key:find('^GetNearby') then return {} end"
+UNSEL_IMPALE="{ name = 'lion_impale', level = 4, cd = 7.5 }"
+STRATIFIER="local b = r.path:match('lion_drain') and t.sel or t.uns"
+STRATA_FALL='                b.falls = b.falls + 1'
 LOADER_TOWERS='            spec.GetNearbyTowers = nearby_structures('"'"'tower'"'"')'
 
 # ---------------------------------------------------------------------------
@@ -259,6 +272,42 @@ echo
 echo "=== M10: abilityR is re-pointed from sAbilityList[6] to [5] ==="
 sub "$HERO" "$BIND_R" 'local abilityR = bot:GetAbilityByName( sAbilityList[5] )'
 score "M10" "no longer bound to sAbilityList"
+
+# ---------------------------------------------------------------------------
+# M11: THE INDEPENDENT WITNESS.  Added 2026-09-14, and it is the mutant this
+#      round exists for.  Bound (A) was TOTAL until the corpus grew a
+#      fall-through instant nobody cut for Lion's drain; that one frame is the
+#      entire difference between "the archive cannot answer this even in
+#      principle" and a stratified reading (3/3 selected vs 1/27 unselected).
+#      Take Impale off cooldown on it and the witness disappears -- the pooled
+#      integers barely move (4 -> 3 falls, which M1 already guards), but the
+#      UNSELECTED stratum goes 1/27 -> 0/27 and the round's finding is void.
+#      If the stand cannot see that, the strata are decoration.
+echo
+echo "=== M11: Impale comes off cooldown on the UNSELECTED fall-through frame ==="
+sub "$UNSEL_FRAME" "$UNSEL_IMPALE" "{ name = 'lion_impale', level = 4, cd = 0 }"
+score "M11" "lost the only independent witness"
+
+# ---------------------------------------------------------------------------
+# M12: THE STRATIFIER IS A READING, NOT A CONSTANT.  Widen the selector so every
+#      frame counts as "cut for the drain".  The unselected stratum empties, the
+#      pooled numbers do not move at all, and the 27x bias factor quietly becomes
+#      undefined.  This is the tautology M1 is to the funnel: without it the two
+#      strata could be any two numbers that happen to add up.
+echo
+echo "=== M12: the selection stratifier matches every frame ==="
+sub "$TEST" "$STRATIFIER" "local b = r.path:match('f_') and t.sel or t.uns"
+score "M12" "Total fall-through among frames cut FOR this"
+
+# ---------------------------------------------------------------------------
+# M13: THE RE-SUM IS NOT DECORATIVE.  Section 1 asserts the strata add back up
+#      to the pooled row; a decomposition whose parts do not re-sum is not a
+#      decomposition.  Drop one stratum increment and that assertion -- and only
+#      that assertion -- must fire.
+echo
+echo "=== M13: the unselected/selected fall-through counter stops incrementing ==="
+sub "$TEST" "$STRATA_FALL" ''
+score "M13" "strata fall-through counts do not re-sum"
 
 # ---------------------------------------------------------------------------
 echo
