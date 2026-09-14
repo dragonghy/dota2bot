@@ -9411,6 +9411,21 @@
   **REFUSED 是 exit 2「什么都没检」不是通过**。
   **📌 可迁移(已写进 0NEXT17)**:*一条 backlog 词条可以点名错读数。动手买它点名的读数之前,
   先问有没有更便宜的一条是在否掉**前提**而不是在选分支。* 两轮内第二例。
+  **⚠️ 收尾回填两条(报告 §8b)**:
+  **(甲)** 开工自检最终 `worst exit: 3`,findings =
+  `cadence queue-rulings owed-executions lua-coverage trunk-red(python)`;
+  **`trunk-red(python)` 是本组自己的**(`test_lua_corpus_stability.py` 点名本组 16:26Z 落的
+  `tests/test_stale_write_census.py` 开码 `os.walk(bots/)`),**本轮已修**
+  (改用 `lua_corpus.bots_lua_files()`),两个文件事后全绿。**又是 GH #624 的形状。**
+  **(乙)⭐ 第一次 `git push` 被四条假红拒绝,假红出在 push 闸自己的 Lua 腿上**:
+  四条错误文本逐字同一句 `soak_side.lua already exists ... a concurrent lua5.1 process`,
+  并发写方是**仍在后台跑的开工自检的 fast Lua 腿**;**串行重跑 0 findings、`PUSH_EXIT=0`**。
+  比上一轮登记的「变异台 × 开工自检 ⇒ 一条 `abil1st` 假红」**严重一级**:
+  铁律 10 与铁律 6 第三条腿**各自都要求跑**,于是这个碰撞**按构造**可达,
+  后果是**拒绝一次完全正确的 push**。已在 **GH #229** 下追评(未新开重复 issue)。
+  📌 **判别子**:读到 `soak_side.lua already exists` 先跑
+  `ps aux | grep lua5.1` + `ls bots/Customize/soak_side.lua`,**串行重跑之后再报红**。
+  落 main:`c829652c..bebd3485`(第一次 `HEAD:main` 被拒 → `git pull --rebase origin main` → 重推)。
 
 - 2026-09-14T19:28Z:**落 gated `camppick`** —— 四阈值对齐里**唯一没有任何 id 在管**的那一条
   (`utils.lua` `IsValidCreep` 的 `GetBot():GetLevel() > 9`),做成 `campfarm` 的
