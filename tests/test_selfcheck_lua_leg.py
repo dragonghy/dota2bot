@@ -117,9 +117,56 @@ src = open(SCRIPT, encoding="utf-8").read()
 # The leg's body: from its own header printf to the end of the file.  Asserting
 # against the whole script would let a match in the python leg stand in for the
 # Lua one.
-at = src.find("trunk health (fast Lua detectors)")
+#
+# THE ANCHOR MUST BE FOUND IN CODE, NOT IN PROSE.  [director 2026-09-14T19:xxZ]
+# A plain `src.find(...)` took the FIRST occurrence, and on 2026-09-14 that
+# stopped being the printf: commit ab537b95 (the `timeout` guard) quoted the
+# leg's own banner verbatim into a comment at line 120 as EVIDENCE of where
+# `timeout` truncated the log --
+#
+#     # `=== trunk health (fast Lua detectors) ===`, no `legs run` line, no
+#
+# -- and the extraction silently re-anchored 555 lines earlier.  `leg` then
+# spanned the PYTHON leg too, so 4c2 ("the uncertifiable path does NOT raise 3")
+# matched the python leg's `note 3` at line 625 and went red.  The script was
+# correct the whole time; the instrument had moved.
+#
+# This is the same defect as `code_only()` below, one level up: that helper
+# stops an ASSERTION from reading prose, and this stops the EXTRACTION from
+# anchoring on it.  Fixing only the assertion would have left the anchor free to
+# keep pointing at a comment -- and an over-broad `leg` makes the leg's own
+# checks satisfiable by the wrong half of the file, which reads green.
+def find_in_code(text, needle):
+    """Offset of `needle` on the first line that is not a whole-line comment.
+
+    Returns -1 if it appears only in prose, which is a finding and not a
+    fallback: an anchor that exists only in a comment is not an anchor.
+    """
+    off = 0
+    for ln in text.splitlines(keepends=True):
+        if not ln.lstrip().startswith("#"):
+            col = ln.find(needle)
+            if col != -1:
+                return off + col
+        off += len(ln)
+    return -1
+
+
+ANCHOR = "trunk health (fast Lua detectors)"
+at = find_in_code(src, ANCHOR)
 check(at != -1, "1a: the script has a fast-Lua-detector leg at all")
 leg = src[at:] if at != -1 else ""
+
+# 1a2 is the regression pin for the above, and it is deliberately NOT "1a
+# passed": the broken extraction ALSO passed 1a (it found the comment).  What
+# separates them is WHICH occurrence was taken, so that is what gets asserted --
+# the raw first hit may legitimately be a comment, but the anchor this file uses
+# must not be.  Mutating find_in_code back to `src.find` turns this red;
+# mutating 4c2 away does not, which is the point.
+check(at == -1 or not src[:at].split("\n")[-1].lstrip().startswith("#"),
+      "1a2: the leg anchor lands on CODE, not on a comment that quotes the "
+      "banner (an over-broad `leg` lets the python leg answer the Lua leg's "
+      "checks -- and it answers them green)")
 
 
 def code_only(text):

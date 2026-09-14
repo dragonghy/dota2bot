@@ -597,6 +597,69 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-14T19:24Z**:**章程指定的序号 (1) 两条同源欠条一并结清(`owed` 72 → 70,`retired` 17 → **19**);
+  而本轮真正的产物是:**两条红都不是树的红,是量树的尺子的红**,而两把尺子都是上一轮总监自己经手的。**
+  全文 `iterations/reports/director/20260914T192406Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  ⭐ **序号第一次被照做**:上一轮自我登记过「并列不是排序」并改写成 (1)(2);本轮把 (1) 的**两条一起做完**,(2) 未动其行。
+  ⚖️ **RULING 39 `selfcheck_lua_leg_4c2_red` 退休 —— 红是真的,但它是仪器的红。**
+  `tests/test_selfcheck_lua_leg.py` 用 `src.find("trunk health (fast Lua detectors)")` 取 Lua 腿起点,取**第一个**出现处;
+  而 **commit `ab537b95`(上一轮总监自己落的 `timeout` 守卫)把该 banner 逐字引进第 120 行的一句注释**当证据 ⇒
+  **锚点静默前移 555 行**,`leg` 变成「120 行到文件尾」**把 python 腿整个含进去**,`4c2` 于是匹配到
+  **python 腿第 625 行那个完全正确的 `note 3`**。三个位置逐一打印复核:锚点 char 7009 = **line 120**(注释)/
+  首个 `UNCERTIFIABLE` = **line 213**(python 腿)/ 命中的 `note 3` = **line 625**(python 腿)/ 真 banner = **line 675**。
+  ⭐ **脚本从头到尾是对的;动的是量它的尺子。**
+  修法 `find_in_code()`:只在**非整行注释**的行上找锚点,找不到返回 -1(**finding 不是 fallback**)。
+  ⛔ **没删 `4c2`(`grep -c` 仍 3)、没改成期望 3**(裁定正文与 GH #171 明令禁止的两条)。
+  📌 **可复用,换了一层**:同文件**早就有** `code_only()` 防**断言**读到散文;本轮栽的是**提取**读到散文 ——
+  **上游那层没有同一道防线,而下游那道防线一个字都没失效。** ⇒ 新增 `1a2` 钉住这层;
+  ⛔ 它**故意不写成「`1a` 通过了」**:坏掉的提取**同样通过 `1a`**,区分两者的是**取了哪个出现处**。
+  🔧 **M1(改回 `src.find`)CAUGHT,`50 checks, 2 failures`,`1a2` 与 `4c2` 同时红** ——
+  `1a2` 报**病因**、`4c2` 报**病象**,而那正是「下一个人该去查哪儿」的全部差别;台子按 evidence-discipline **从文件副本恢复**。
+  **三读数**:failures **1 → 0**;checks **49 → ⭐50(不是 48)**;uncertified **9 逐位不变**
+  —— 本行逐字点名 `49 → 48` 是删 `4c2` 的指纹,本轮是 **+1**。
+  ⛔⛔ **而 `done_when` 自己买不到这个结果,已登记不追认**:判据写 `expect_exit: 0`,**实测裸码 `RC_EXIT=2`**,
+  2 **全部**来自那 9 条 `UNCERTIFIABLE`,而本行 note **明令禁止**消掉它们 ⇒ **判据与它自己的 note 互相矛盾**。
+  📌 **形状:退出码是三值词汇(0/2/3),`expect_exit: 0` 把它当两值用 ⇒ 分不开「红修好了」与「容器变快了」。**
+  ⚖️⭐⭐⭐ **RULING 40 `selfcheck_recursive_fork_amplifier` 退休 —— 立行时写下的机理,本轮实测不成立。**
+  立行证据「14–17 个游离 `routine_selfcheck`」本轮照样出现(`1961 → 3240`,argv 逐字相同),
+  ⭐ **而 3240 不是第二个自检,是 `1961` 的命令替换子 shell**:python 腿逐字 `suite=$(bash tests/run_py_tests.sh 2>&1)`,
+  **子 shell 在 `ps` 里沿用父进程 argv**。🔧 **最小复现当场两向实测**(脚本里零递归):
+  `out=$(sleep 5; echo hi)` ⇒ `ps` 同时显示 8866/8868,**两行 argv 都是 `bash /tmp/subshell_demo.sh`**。
+  ⚠️ 收尾杀进程时读到更狠的一笔:两行「相同」的进程**年龄是 `25:11` 与 `00:00`** —— 计数还抹掉了这个。
+  **第二处 falsification**:被点名的 `test_selfcheck_pipe_guard.py` **没有任何路径会把自检跑完** ——
+  它对自检的三处调用**本轮逐条隔离实测全部被守卫当场拒**(`| cat` / `> >(cat)`(**实测确是 FIFO**)/ `| tail -1`),
+  而那两个「必须不被拒」的 case 一个是 `[ -p /dev/stdout ]` 探针、一个带 `--bogus-arg` **停在参数解析器**。
+  **第三处(最该被读)**:真正跑完自检的是 `test_selfcheck_timeout_guard.py` case 2/3,而它**已经**带
+  `start_new_session=True` + `killpg` + `PROCEED_BUDGET_S=6`,注释逐字留着 `11 stray … load average of 4.88` ⇒
+  ⭐ **代价是真的、也确实被修了,修它的正是登记本行的那同一个 commit —— 作者把病根和功劳都记到了隔壁文件头上。**
+  🔧 `killpg` 现读:timeout_guard **2** / pipe_guard **0** ⇒ ⛔ **本行 `done_when`(钉 pipe_guard 里出现 `killpg`)
+  是任何正确修法都买不到的**,而在那个文件里加它只会让一个**不需要它**的文件出现这个词
+  —— 本行 note 自己引的 LIMIT 11「mention is not correctness」**反着成立一次**。
+  ⛔ **不是「查无此事」地撤销,三件事分开记账**:(甲) 代价存在过 /(乙) 已被修好 /(丙) 裁定正文+判据+`unmet_at_ruling`
+  三处指的都是不成立的机理和错的文件 ⇒ **退休理由是 (乙)+(丙),不是 (甲) 不存在。**
+  📌⭐ **可复用,且比它修掉的东西值钱:`ps` 的进程计数是一个 argv 的计数,不是一个程序的计数**,
+  两者在**有命令替换的脚本上系统性地不等**。上一轮数出三个「墙写下来了、读数的人没读」的例子
+  (`85` 下界 / `6.0` 超时 / `merge-base` 的 SHA 身份);**这一条狠一格:`ps` 那堵墙根本没人写下来过**,
+  而这个数**直接进了一条裁定的正文**。⇒ **进程计数进结论之前,必须先证明它数的是进程不是 argv**(三行复现已留在裁定里)。
+  ⚠️ **LIMIT**:本行退休不声称「自检不会再长出游离进程」,只声称那条**递归路径今天不存在**、
+  跑完自检的文件**已带 killpg 与预算**、**本轮观察到的父子对是命令替换**。新游离进程 = 新行,不是本行复活。
+  🔧 **三条腿(最终树,裸码)**:`GATE_EXIT=0`(0 警告)/ `py gate: 88 ran, 0 findings` `PY_EXIT=0` /
+  `lua gate` 见报告 §八;未用 `RULE6_BYPASS`;动态半未跑也不被声称。
+  `tests/test_pending_rulings.py` 裸码 **`848 checks, 0 failed`**(上轮 843/0,+5 来自两条新退休行)。
+  ⚠️ **trunk red 不是我的,且已归属**:自检 python 腿 `132 passed, 2 failed`
+  (`test_call_arity_census` ← `hero_skeleton_king.lua X.wk_IsBoneGuardEmptyBankOpen UNDER passed 0 declares 1`;
+  `test_lua_corpus_stability` ← `test_stale_write_census.py` 开码走 `bots/`,裸码 `LCS_EXIT=1` 亲跑)——
+  本轮 diff 只有两个文件、`bots/`+`game/` 零 diff;**批测台 `20260914T180741Z.md` 三个文件名全部点到** ⇒ 不抢这条活。
+  ⚠️ **三条自我登记**:(i) 管道坑**第 21 次**仍是起手第一条命令(守卫当场拒,零损失);
+  (ii) ⛔ **两次把后台启动器的退出码当成被等待者的退出码** —— 自检被 harness 挪进后台报 `exit 0`(实际是我 `pkill` 的),
+  等待循环跑满 100 轮也报 `exit 0`(而 `procs` 仍读 2)⇒ **「等到了」与「等超时了」退出码一个字答不出来**,
+  两次都靠**同轮第二个读数**分开;📌 **与 `expect_exit: 0` 同型:一个两值读数被派去区分三种情况,本轮第三例**;
+  (iii) ⛔ **不声称自检跑完也不声称它绿** —— Lua 腿跑到 **25:11** 仍未完(本容器慢,GH #810/#358),
+  按铁律 7「不空转等待」主动停掉后在**安静的树**上量 `lua_gate` ⇒ **自检 Lua 腿那一侧本轮没有读数**。
+  ⇒ **下一轮顺序**:**(1) `fieldsip_atom_pricing_disposition`(上轮序号 (2),其行未动);
+  (2) ⭐ 上轮那个「更该问的问题」本轮量到数了 —— 自检逐字 `UNCOVERED 115 of 460 (25%)`
+  (`no_manifest_row` 52 / `timed_out` 61 / `too_slow` 2)且**本轮又长 2 个**,GH #806 的工具在数、缺的是有人拍处置;
+  (3) 查 `owed_executions.json` 里还有几行把 `command_exit_zero` 用在退出码带 UNCERTIFIABLE 语义的命令上(与 (2) 同源)。**
 - **2026-09-14T16:3xZ**:**结清了按 §2.6 自登记的 `stayfield_tp_disposition`(RULING 37,退集 26 → 25);
   而本轮真正的产物是**被否决的那一半** —— 要我写进 owner P2 的那句话,建立在一个被树自己声明为不完整的数上,
   而它缺的那一格就摆在同一帧的 slot 1。**
