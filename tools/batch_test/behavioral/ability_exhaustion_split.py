@@ -42,8 +42,11 @@ reusing either, because the wrong one is the more obvious one:
 
 CUT (iron rule 4(iii) -- quote it with every number this prints):
 
-  body        = (hero name, FIRST idx that name appears), as skipped_alive_levels.py.
-                Keying by name alone pools illusions/clones and biases holds longer.
+  body        = (hero name, LONGEST-LIVED idx for that name).  ⚠️ CHANGED
+                2026-09-14T21:xxZ: it used to be the FIRST idx the name appears
+                at.  Keying by name alone pools illusions/clones and biases
+                holds longer, but "which idx" is itself a choice and this repo
+                held three different answers to it -- see LIMIT E.
   ability     = ledger entry whose name does not start with 'special_bonus'.
   corpus-max  = highest level an ability NAME reaches on any body in the games
                 passed to THIS run.  A lower bound on true max rank -- see v1.
@@ -51,16 +54,38 @@ CUT (iron rule 4(iii) -- quote it with every number this prints):
   skipped-alive = complete level, no ability-ledger movement, hp_pct > 0 on
                 every frame of it.  The body's top level is dropped (the game
                 ended inside it).
-  banked      = level - sum(visible ability ranks) - #{tiers 10,15,20,25 <= level}.
+  free        = max(sum of visible ranks over the body's HERO-LEVEL-1 frames)-1,
+                clamped at >= 0; 0 when the body has no level-1 window.  A LOWER
+                bound on the ranks the engine handed this body for free
+                (innates, and the first point of a linked group).  Measured, not
+                tabled -- free_rank_census.py, GH #822.
+  banked      = level - (sum(visible ability ranks) - free)
+                      - #{tiers 10,15,20,25 <= level}.
+                ⚠️ CHANGED 2026-09-14T21:xxZ: the `- free` term is new.  Before
+                it, every innate row was charged to the hero as a spent point.
   release     = the hero level at the first ability spend that ENDS a body's
                 longest ability-spend silence.
+
+⭐ WHY THE `- free` TERM IS SOUND, AND WHICH WAY IT CAN ONLY ERR.  free is a
+LOWER bound on the free ranks, so (visible - free) is an UPPER bound on the
+points actually spent, so banked is a LOWER bound on the points actually in
+hand.  ⇒ every PROVEN row stays PROVEN when the instrument improves; the
+correction can only ADD rows, never retract one.  That direction is why the
+GH #822 headline (`PROVEN 229`) survived being measured with the uncorrected
+sum: it was a lower bound then and it is a lower bound now.
 
 ⛔ LIMIT A -- BANKED IS NOT DEFINED WHEN THE VISIBLE COUNT IS INFLATED.  A
 chained ability rises several ranks on one point (nevermore's shadowraze1/2/3;
 recorded 2026-09-14T09:49Z as "account 23 = 15 actually spent").  Those bodies
 print banked < 0, which is the DETECTOR of the inflation, not a reading: this
-tool excludes them rather than repairing them.  Measured on W40: all 35 negative
-rows are nevermore.
+tool excludes them rather than repairing them.  Measured on W40 BEFORE the free
+term: all 35 negative rows are nevermore.
+⚠️ THE `free` TERM DOES NOT REPAIR LIMIT A, AND EXPECTING IT TO IS THE TRAP.
+free is read at hero level 1, where a linked group has been raised ONCE: it
+buys back 2 of nevermore's ranks and no more, while the inflation GROWS with
+every further point into the group (3 points -> 9 visible ranks -> 6 inflated).
+So a linked body stays detectable; it just sits 2 closer to zero.  Read a
+surviving banked < 0 as "still inflated", never as "now accounted".
 
 ⛔ LIMIT B -- this counts the HOLD, not a wasted point.  "Held at level 19 and
 spent at 23" is a delay, and a delay is what is measured; do not upgrade it into
@@ -77,6 +102,19 @@ subset.
 armed/baseline leg exists, so there is no ab/ba stratification (iron rule
 4(i-a)): registered as "no ab/ba reading", not as a balanced one.  Anyone
 comparing this against an armed wave must re-stratify from scratch.
+
+⛔ LIMIT E -- "KEY BY idx" IS NECESSARY AND NOT SUFFICIENT; WHICH idx IS A
+CHOICE.  This file used to take the FIRST idx a hero name appears at.  That is
+one of three answers living in this repo (`min(idx)` -- a named failure in
+free_rank_census.py LIMIT 3; "first appearance" -- here; "longest-lived" --
+make_fixture.py, the only sound one, because an illusion is short-lived and its
+level never moves).  It now uses longest-lived.  ⭐ On the W40 corpus the two
+choices select the SAME body for all 80 bodies -- MEASURED in the
+2026-09-14T21:xxZ round (report §3), not asserted by the test, which separates
+the two RULES on a synthetic illusion instead (the corpus cannot separate them
+and so cannot certify the rule).  So this change moved no number here; it is
+made because on the next corpus, where an illusion may well appear first, the
+old rule would read an illusion's frozen ledger as a hero's.
 """
 import json
 import sys
@@ -94,17 +132,66 @@ def _abilities(s):
 
 
 def bodies(path):
+    """(chosen idx per hero name, frames of that body).  LIMIT E: longest-lived."""
     d = json.load(open(path))
-    first = {}
+    byidx = defaultdict(list)
     for s in d['snapshots']:
-        first.setdefault(s['hero'], s['idx'])
-    per = defaultdict(list)
-    for s in d['snapshots']:
-        if s['idx'] == first[s['hero']]:
-            per[s['hero']].append(s)
-    for frames in per.values():
-        frames.sort(key=lambda x: x['t'])
-    return first, per
+        byidx[(s['hero'], s['idx'])].append(s)
+    chosen, per = {}, {}
+    # sorted(), not a set walk: str hashing is randomized per process, so an
+    # unsorted walk makes the per-hero table's TIE ORDER move between runs of
+    # the same corpus -- a diff that looks like a finding and is not.
+    for hero in sorted({h for (h, _) in byidx}):
+        idxs = [i for (h, i) in byidx if h == hero]
+        idx = max(idxs, key=lambda i: len(byidx[(hero, i)]))
+        chosen[hero] = idx
+        per[hero] = sorted(byidx[(hero, idx)], key=lambda x: x['t'])
+    return chosen, per
+
+
+def free_ranks(frames):
+    """Free ranks this body carries, LOWER bound, read at hero level 1 (GH #822).
+
+    At hero level 1 the engine has granted exactly one point, so any visible
+    rank beyond the first was handed out (innate row, or the extra rows of a
+    linked group).  Returns 0 -- never a guess -- when the dump has no level-1
+    frame for the body; 0 is still a valid lower bound, so `banked` stays a
+    lower bound either way.  The second return value says which it was, so a
+    caller can register the missing window instead of silently pooling it.
+    """
+    lvl1 = [f for f in frames if f.get('level') == 1 and f.get('abilities')]
+    if not lvl1:
+        return 0, False
+    return max(0, max(sum(_abilities(f).values()) for f in lvl1) - 1), True
+
+
+def is_linked(frames):
+    """True when this body's free ranks come from a LINKED group, not an innate.
+
+    ⭐ The discriminator is read off the frames, needs no table of innates, and
+    is the reason the `free` term does not quietly disarm LIMIT A.  At hero
+    level 1 exactly one point has been spent, so of the rows standing then:
+      * an INNATE row never moves again for the rest of the game;
+      * a LINKED group moves in lockstep, every member rising on every later
+        point into the group.
+    So "two or more of the level-1 standing rows move later" is exactly the
+    linked case.  Measured on W40: the five innate carriers (VS revenge, WD
+    gris_gris, SK innate_vampiric_spirit, BB prickly, SS fowl_play) each move
+    ONE row later (the bought one); nevermore moves all three shadowrazes, 1->4
+    together.  ⛔ On a linked body the inflation GROWS with every point, so
+    banked <= 0 there means "still inflated", never "accounted for".
+    """
+    lvl1 = [f for f in frames if f.get('level') == 1 and f.get('abilities')]
+    if not lvl1:
+        return False
+    best = max(lvl1, key=lambda f: sum(_abilities(f).values()))
+    standing = {k for k, v in _abilities(best).items() if v > 0}
+    top = defaultdict(int)
+    for f in frames:
+        for n, l in _abilities(f).items():
+            top[n] = max(top[n], l)
+    at_best = _abilities(best)
+    return sum(1 for k in standing if top[k] > at_best[k]) >= 2
 
 
 def _tiers_reached(lvl):
@@ -123,10 +210,14 @@ def scan(paths, lo=18, hi=22):
                     corpus[n] = max(corpus[n], l)
     basic = {n for n, v in corpus.items() if v >= 4}
 
-    rows, releases = [], []
+    rows, releases, nowindow = [], [], []
     for p, first, per in games:
         game = p.split('/')[-1].replace('.timeline.json', '')
         for hero, frames in per.items():
+            free, had_window = free_ranks(frames)
+            linked = is_linked(frames)
+            if not had_window:
+                nowindow.append((game, hero.replace(FULL, ''), first[hero]))
             moves, prev = [], None
             for f in frames:
                 L = _abilities(f)
@@ -155,17 +246,28 @@ def scan(paths, lo=18, hi=22):
                     continue
                 L = _abilities(led[-1])
                 gaps = {n: corpus[n] - v for n, v in L.items() if n in basic and corpus[n] > v}
+                visible = sum(L.values())
                 rows.append(dict(game=game, hero=hero.replace(FULL, ''), idx=first[hero],
-                                 level=lvl, t=led[-1]['t'], visible=sum(L.values()),
-                                 banked=lvl - sum(L.values()) - _tiers_reached(lvl),
+                                 level=lvl, t=led[-1]['t'], visible=visible,
+                                 free=free, free_window=had_window, linked=linked,
+                                 banked=lvl - (visible - free) - _tiers_reached(lvl),
+                                 banked_raw=lvl - visible - _tiers_reached(lvl),
                                  deficit=sum(gaps.values()), gaps=gaps))
-    return rows, releases, corpus, basic
+    return rows, releases, corpus, basic, nowindow
+
+
+def _split(rows, key):
+    return (sum(1 for r in rows if r[key] > 0 and r['deficit'] > 0),
+            sum(1 for r in rows if r[key] > 0 and r['deficit'] == 0),
+            sum(1 for r in rows if r[key] == 0),
+            sum(1 for r in rows if r[key] < 0))
 
 
 def main(paths, lo=18, hi=22):
-    rows, releases, corpus, basic = scan(paths, lo, hi)
+    rows, releases, corpus, basic, nowindow = scan(paths, lo, hi)
     proven = [r for r in rows if r['banked'] > 0 and r['deficit'] > 0]
     inflated = [r for r in rows if r['banked'] < 0]
+    raw = _split(rows, 'banked_raw')
 
     print('games %d   band %d-%d   BASIC names (corpus-max>=4) %d' % (len(paths), lo, hi, len(basic)))
     print('skipped-alive rows in band            %4d' % len(rows))
@@ -173,18 +275,40 @@ def main(paths, lo=18, hi=22):
           % len(proven))
     print('  banked>0 but NO basic gap seen       %4d  <- INDETERMINATE: corpus-max may be blind (v1 note)'
           % sum(1 for r in rows if r['banked'] > 0 and r['deficit'] == 0))
-    print('  banked==0 (tiers exactly account)    %4d' % sum(1 for r in rows if r['banked'] == 0))
-    print('  banked<0  = INFLATED visible count   %4d  <- LIMIT A, excluded not repaired' % len(inflated))
+    zero_clean = sum(1 for r in rows if r['banked'] == 0 and not r['linked'])
+    zero_linked = sum(1 for r in rows if r['banked'] == 0 and r['linked'])
+    print('  banked==0 (tiers exactly account)    %4d  <- of which on a LINKED body: %d (NOT accounted)'
+          % (zero_clean + zero_linked, zero_linked))
+    print('  banked<0  = INFLATED visible count   %4d  <- LIMIT A, still inflated, NOT repaired by `free`'
+          % len(inflated))
+    print('  on a LINKED body, any sign           %4d  <- the sign-free detector; see is_linked()'
+          % sum(1 for r in rows if r['linked']))
+
+    # The free-rank correction, shown as a delta so the pre-GH#822 reading stays
+    # auditable next to the corrected one (iron rule 4(iii): the cut travels).
+    carry = [r for r in rows if r['free'] > 0]
+    print('\nfree-rank correction (GH #822; `banked` = level - (visible - free) - tiers):')
+    print('  rows whose body carries free ranks   %4d / %d' % (len(carry), len(rows)))
+    print('  rows with NO level-1 window (free:=0) %4d  <- lower bound preserved, not a guess'
+          % sum(1 for r in rows if not r['free_window']))
+    print('  UNCORRECTED split for comparison: PROVEN %d / INDETERMINATE %d / zero %d / inflated %d'
+          % raw)
+    print('  ⭐ direction: free >= 0, so banked only RISES; a PROVEN row can never be retracted.')
+    if nowindow:
+        print('  bodies with no level-1 window:')
+        for g, h, i in nowindow:
+            print('    %-26s %-22s idx=%s' % (g, h, i))
 
     ph = defaultdict(lambda: [0, 0])
     for r in rows:
         ph[r['hero']][0 if (r['banked'] > 0 and r['deficit'] > 0) else 1] += 1
     print('\nper hero: PROVEN / not-proven   (⛔ NOT comparable across heroes -- LIMIT C)')
-    for h, (a, b) in sorted(ph.items(), key=lambda kv: -kv[1][0]):
+    for h, (a, b) in sorted(ph.items(), key=lambda kv: (-kv[1][0], kv[0])):
         print('  %-24s %3d / %-3d' % (h, a, b))
 
     print('\nwhich BASIC carries the gap (rows):')
-    for n, k in Counter(n for r in proven for n in r['gaps']).most_common(12):
+    for n, k in sorted(Counter(n for r in proven for n in r['gaps']).items(),
+                       key=lambda kv: (-kv[1], kv[0]))[:12]:
         print('  %-45s %3d   corpus_max=%d' % (n, k, corpus[n]))
 
     if releases:
