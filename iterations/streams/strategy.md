@@ -9230,8 +9230,15 @@
   `stayfield2_live_domain` 8/0、`stayfield_callsite_domain` 21/0、`stayfield_hp_window_reach` 15/0、
   `tprecov_recover_trip` 14/0、`gate_claim_consistency` 16/0、`smoke_load` 3/0、
   `corpus_scale` 10/0。**这是子集不是全量。**
+  **(9) 推送三行读数**(两推均 `EXIT=0`,**未用 `RULE6_BYPASS`**):`GATE_EXIT=0` /
+  `py gate: 86 ran, 0 findings, 10.1s` / `lua gate: 372 ran, 0 findings, 8 unanswered, 7 known-red, 499.2s`。
+  `HEAD:main` 第一次被拒(`fetch first`)⇒ `git pull --rebase origin main`(base `ea7d796d`)后重推成功。
+  ⭐ **闸自己证实了 (6) 的劈分**:新文件被列进「57 new test(s) ... **run anyway**」,
+  而 45s 的 `tests/test_stayfield2_live_domain.lua` 被列进「8 new test(s) ... **EXCLUDED**」。
+  **(10) GH #290 顺序执行了**:`claim_precheck.sh` **`EXIT=0`**(`local commits not on origin/main: 0`,
+  `refused 0`)⇒ **先 push 再开 issue** ⇒ **GH #818**(处置二选一 + 两件副产品)。
   产出:`tests/_stayfield_tpleg_sweep.lua`、`tests/test_stayfield_tpleg_live_domain.lua`、
-  报告 `iterations/reports/strategy/20260914T102620Z.md`。
+  报告 `iterations/reports/strategy/20260914T102620Z.md`、GH **#818**。
 
 - 2026-09-14T09:30Z:**`stayfield2` 在**真实成员串**上的 live 域 = **`0 / 1039`**。
   产出 (b);`bots/` + `game/` 零 diff,4.4 (i) 不满足、连续次数归零(如实登记)。**
