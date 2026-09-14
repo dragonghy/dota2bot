@@ -32,6 +32,32 @@
 # ⚠️ Fail direction, on purpose: if the brake cannot be read, the script PAYS
 #   (a missing brake must never be able to silence the confirmation).
 #
+# ⭐ ONE DOCUMENTED WAY BACK THROUGH THAT SKIP (GH #779, director
+# 2026-09-14T09:5xZ ruling 2).  The free MTD carries its own clock, and when
+# that clock freezes the figure above can be hiding spend that has already
+# happened.  #801's skip is keyed on headroom alone, so it stays shut in that
+# case too.  The accrual probe reopens it, and ONLY on the ruling's conjunction:
+#
+#     the `budget refreshed` stamp is FROZEN
+#       AND ( (alpha) the live census reads NON-ZERO accruing instances
+#             OR (beta) a wave record falls inside the 11.3h lag window )
+#
+#   ⛔ When (alpha) and (beta) are BOTH zero, a frozen stamp opens no blind
+#   spot and NOTHING is bought.  A stopped clock over an idle account is a
+#   stopped clock, not evidence of hidden spend -- and on this farm the account
+#   is idle between waves by construction (AGENTS.md forbids instances with no
+#   self-destruct path), so this is the common case, not the corner.
+#   ⛔ The criterion is NOT keyed on how long the freeze has lasted.  That
+#   quantity was measured for four rounds and then withdrawn: the readings were
+#   real, the USE was wrong.  "Frozen" here is a comparison against the last
+#   stamp seen, never a duration.
+#   ⚠️ Fail direction matches the brake's: an unreadable census PAYS, because an
+#   instrument that cannot be read must never be able to silence the check.
+#   The 11.3h window and the census both come from wave_fence.py -- gate (iii)
+#   itself -- so there is one definition of "could this have accrued without
+#   landing in MTD yet", not a second copy drifting toward the cheaper answer.
+#   Escape hatch: COST_NO_ACCRUAL_PROBE=1 skips the probe, and says so.
+#
 # Usage:
 #   check_costs.sh                 # instances + MTD (free) + AMI
 #   check_costs.sh --ce            # force the paid Cost Explorer read ($0.01)
@@ -41,6 +67,8 @@
 #   COST_BRAKE_AT=0                     # disable the headroom condition
 #   COST_BRAKE_SRC=<dir>                # where to import wave_fence from
 #                                       # (test seam; see the note below)
+#   COST_NO_ACCRUAL_PROBE=1             # skip the GH #779 probe (prints a SKIP)
+#   COST_ACCRUAL_STATE=<file>           # where the last budget stamp is kept
 set -euo pipefail
 cd "$(dirname "$0")"
 source aws.env
@@ -78,19 +106,27 @@ BRAKE_AT=${COST_BRAKE_AT:-$(python3 -c \
 print('%.2f' % wave_fence.DEFAULT_BRAKE)" "$BRAKE_SRC" 2>/dev/null || true)}
 CHEAPEST_WAVE=${COST_CHEAPEST_WAVE:-1.10}
 
+# GH #779. Where the accrual probe remembers the last `budget refreshed` stamp
+# it saw. A cache, deliberately not in the repo: it is a per-container memory,
+# and a missing one reads as "unknown", which is the paying direction.
+ACCRUAL_STATE=${COST_ACCRUAL_STATE:-${XDG_CACHE_HOME:-$HOME/.cache}/dota2bot/budget_stamp}
+
 MODE=auto
 for arg in "$@"; do
     case "$arg" in
         --ce)           MODE=ce ;;
         --budgets-only) MODE=budgets ;;
         --leak-only)    MODE=leak ;;
-        # 2,43 = the whole comment header, ending on the last Usage line.
+        # 2,71 = the whole comment header, ending on the last Usage line.
         # (It used to read 2,26, which stopped mid-header and then printed
-        # three lines of code; the header has grown since.)
+        # three lines of code; the header has grown since -- and grew again
+        # for GH #779, which is why tests/test_check_costs_confirm.py:7b
+        # asserts the range still lands on the usage block rather than
+        # trusting whoever edits the header to remember this line.)
         # `basename`, not `$0`: the script has already cd'd into its own
         # directory above, so a relative `$0` no longer resolves and --help
         # died with "can't read ..." for every caller outside that directory.
-        -h|--help)      sed -n '2,43p' "$(basename "$0")"; exit 0 ;;
+        -h|--help)      sed -n '2,71p' "$(basename "$0")"; exit 0 ;;
         *) echo "unknown option: $arg" >&2; exit 2 ;;
     esac
 done
@@ -147,10 +183,44 @@ if b > 0:
     print('%.3f' % (b - float(sys.argv[2])))" "${BRAKE_AT:-}" "$ACTUAL" 2>/dev/null || true)
                 if [[ -n "$HEADROOM" ]] \
                    && python3 -c "import sys;sys.exit(0 if float(sys.argv[1])<float(sys.argv[2]) else 1)" "$HEADROOM" "$CHEAPEST_WAVE" 2>/dev/null; then
+                    # GH #779: #801's skip is keyed on headroom alone, so it
+                    # stays shut even when the free MTD's own clock has frozen
+                    # over money that is already accruing. The probe is the one
+                    # documented way back through it, and it opens only on the
+                    # ruling's conjunction (frozen stamp AND alpha-or-beta).
+                    ACCRUAL_RC=1
+                    if [[ -n "${COST_NO_ACCRUAL_PROBE:-}" ]]; then
+                        echo "   accrual probe NOT CONSULTED (COST_NO_ACCRUAL_PROBE set)"
+                        echo "   — that is a SKIP, not a finding of 'nothing accruing' (GH #779)."
+                    else
+                        PROBE_ARGS=(--snapshot "$UPDATED" --state "$ACCRUAL_STATE")
+                        [[ -n "${COST_BRAKE_SRC:-}" ]] \
+                            && PROBE_ARGS+=(--fence-src "$COST_BRAKE_SRC")
+                        # Test seam: (beta) is otherwise only reachable by
+                        # having really launched a wave in the last 11.3h, so
+                        # without this the whole disjunct is untestable -- and
+                        # a mutant that deleted it survived the suite.
+                        [[ -n "${COST_WAVES_DIR:-}" ]] \
+                            && PROBE_ARGS+=(--waves-dir "$COST_WAVES_DIR")
+                        # rc 0 = bypass, 1 = keep the skip, 2 = uncertifiable.
+                        # `|| rc=$?` is the only way to read it under `set -e`,
+                        # and ACCRUAL_RC must start at 0 so a clean exit (which
+                        # never runs the `||`) is not misread as the 1 below.
+                        ACCRUAL_RC=0
+                        python3 accrual_probe.py "${PROBE_ARGS[@]}" \
+                            || ACCRUAL_RC=$?
+                    fi
+                    if [[ "$ACCRUAL_RC" == "0" || "$ACCRUAL_RC" == "2" ]]; then
+                        echo "   >= \$$CONFIRM_AT, headroom \$$HEADROOM < \$$CHEAPEST_WAVE would have SKIPPED,"
+                        echo "   but the accrual probe says the frozen MTD can be hiding spend (GH #779)"
+                        echo "   — confirming against cost-explorer (\$0.01):"
+                        mtd_from_ce | sed 's/^/   /'
+                    else
                     echo "   >= \$$CONFIRM_AT, but headroom to the \$$BRAKE_AT brake is \$$HEADROOM"
                     echo "   < \$$CHEAPEST_WAVE (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801)."
                     echo "   Nothing can launch at this MTD, so confirming it buys nothing."
                     echo "   Resumes by itself as soon as headroom >= \$$CHEAPEST_WAVE."
+                    fi
                 else
                     echo "   >= \$$CONFIRM_AT — confirming against cost-explorer (\$0.01):"
                     mtd_from_ce | sed 's/^/   /'

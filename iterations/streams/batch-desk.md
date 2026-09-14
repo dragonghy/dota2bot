@@ -10265,6 +10265,73 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **铁律 11**:零 `requires approval`、零空转。⛔ **`bots/` 一行未动**。
   详见 `iterations/reports/batch-desk/20260914T121500Z.md`。
 
+- 2026-09-14T15:08Z(**第十八轮 —— 零发波、零收割欠、零泄漏,本轮 AWS 新增计费 `$0.00`**
+  (EC2 `$0.00` + CE `$0.00`)。工作单元 = **`gh779_accrual_keyed_ce_bypass` 欠条落地**,零 AWS 成本):
+  **⭐⭐⭐ 头号:新落地的那道判据,第一次在真账号上跑就走了「不买」分支** ——
+  `alpha = 0 accruing instance(s) account-wide` / `beta = 0 wave record(s) after 2026-09-13T23:36:23Z`
+  ⇒ 皆零 ⇒ 冻结的戳不产生盲区 ⇒ `CE $0.00`。**这是被现跑证明的行为,不是被设计声称的。**
+  **一、成本**:`AWS_SETUP_EXIT=0`;`COST_EXIT=0`;MTD **`$89.858`**、headroom **`$0.142`**,
+  `budget refreshed 2026-09-14T10:54:23Z` ⇒ ⚠️ **与上一轮逐位相同,快照又冻住(≈4.2h)**
+  ⇒ **零新支出测量**。GH #801 四行整块已照抄进报告 §一(⚠️ SKIP 不是 pass;⛔ 未用 `COST_CONFIRM_AT=999`)。
+  **二、闸**:(i) `THROTTLE_EXIT=0`(W69 已解锁 `+171700s`);
+  **(iii) `FENCE_EXIT=3` 连续第十七轮是闸拒绝**(`projected total $90.958` > `operative ceiling $90.00`)。
+  RULING 5/6/7 三行逐字抄(`accrual scope : 17 region(s) ... COMPLETE` /
+  `wave accrual : ... clock from budget snapshot` / `accrual check : CERTIFIED ... account-wide`)。
+  ⭐ **`crossing registry:` 本轮多打的后半句自己回答了上一轮交棒 ④**:`$85` 那条
+  = **RULING 15 / GH#754,已退休并归档在 `_retired`**,不是丢失 ⇒ 那根棒可以收了(⛔ 本台不代填不复活)。
+  **三、工作单元**:判据 = 〔戳 FROZEN〕**且**〔(α) 普查非零 **或** (β) 波次落在 11.3h 窗口内〕才买;
+  **皆零不买**。产物:新 `tools/batch_test/aws/accrual_probe.py` + 改 `check_costs.sh`
+  + `tests/test_check_costs_confirm.py` **35 → 59 checks**。
+  ⛔ **11.3h 与普查都不重打一份**,从 `wave_fence.py`(闸 (iii) 自己)导入,钉在 `8h` 的 **AST 断言**;
+  ⛔ **一个字没挂到「冻结时长 ≥ N 小时」上**(那正是本台四轮前自己撤回的量),钉在 `8g`。
+  **⭐⭐ 变异台 9 个变异体,两个首跑存活,两次都是断言错了不是变异体错了**:
+  **(甲) M4 存活 ⇒ 挖出一条真缺陷** —— `read_accruing_instances()` 在**全区域失败**时
+  **不抛异常**,返回空列表 + 不完整 scope,**在调用点与「账号空闲」逐字节同形** ⇒ 读成零就走进
+  「皆零不买」,而那正是账号可能在看不见地烧钱的那一次;已在**探针侧**加 scope 守卫
+  (「scope 内为零」不是「为零」⇒ UNCERTIFIABLE ⇒ 付费),⛔ **未改 `wave_fence.py`**(扛钱的路径归总监)。
+  ⚠️ 本台 `8d` 第一版喂的是**非法 JSON**,那走通用异常分支 ⇒ 守卫整条删掉仍全绿;**到达守卫的是「调用失败」不是「返回畸形」**。
+  **(乙) M5/M7 存活 ⇒ 两条支路从来没被走过**:(β) 那条析取支零测试(补 `8j` + `8k`,后者防「有目录就过」),
+  新容器无历史戳那条路零测试(补 `8l` + `8m`,后者防「未知=冻结」变成让每个会话首轮都买一次的后门);
+  为此加 `COST_WAVES_DIR` 测试缝,否则 (β) 只能靠真的发过波才可达。**复跑 9/9 全逮住,变异台已从文件拷贝还原(`RESTORED_CLEAN`)。**
+  **顺带**:`--help` 的 `sed -n '2,43p'` 在本轮改动**之前**就已随 header 增长而失准(`7b` 当场红)⇒ 改 `2,71p`;
+  ⭐ **同形第三次**,已在源码注释里点名该断言。
+  **四、收割零欠 / 泄漏四条独立路径全零**(⛔ 不合并):`S3VAL_EXIT=0`,`validation/` **592 对象**逐位同上轮,
+  最新对象仍是 `..._20260907_2218_run.log` ⇒ 零新对象、零下载、零 S3 支出,`recover_verdict.py` 未跑;
+  泄漏 ①`running/pending` 空 ②`describe-instances` 不加 tag 五态零行(`INST_EXIT=0`)
+  ③闸 (iii) 账户级 `CERTIFIED 0`(17 区 COMPLETE)④AMI 仍一张。
+  **五、铁律 6 三条腿**:`ARM_EXIT=0` / `GATE_EXIT=0 CLEAN` + `luacheck bots game: 0 warnings` /
+  **`py gate: 87 ran, 0 findings, 0 uncertifiable, 10.8s`**;⛔ 未用 `RULE6_BYPASS` ⇒ 无「跳过不是通过」行。
+  ⚠️ **一条对本台不利的作用域事实,照登**:本轮写的 `tests/test_check_costs_confirm.py` 是
+  `in_gate: false / over_cumulative_budget`(1.611s → **2.38s**)⇒ **推我这笔改动的闸不会跑我这笔改动的测试**
+  —— GH #624/#616/#806 的立案形状,本轮新实例;⛔ 本台不自行调成员资格,**代偿是另跑了认领它的那一半**
+  (`run_py_tests.sh` 里 `PASS tests/test_check_costs_confirm.py`)。
+  **⛔⛔ `origin/main` 两条 python trunk 红,均非本轮引入,且本台第一手在净树上复现**:
+  自检打 `TRUNK RED`,其自带限定逐字 `Whether main is red too is NOT established by this line`
+  ⇒ 本台用 **`git worktree add /tmp/trunkcheck origin/main`** 独立复跑(⛔ 不用 `git stash`),
+  `test_pending_rulings.py` `837 checks, 1 failed`(`hero-82` 的 `零 EC2` 搭车措辞 vs §BB.4)与
+  `test_selfcheck_lua_leg.py` `49 checks, 1 failures`(`4c2`)**在净 main 上逐字相同** ⇒ 归总监,⛔ 本台不代修(GH #33);
+  worktree 已 `--force` 移除,工作树未被触碰。
+  **六、通知判据:本轮不推**。上一轮已就 `$89.858`/`$0.142` 推过通知与评论,本轮 MTD 与戳**两量逐位相同**
+  ⇒ 零新支出测量 ⇒ ⛔ 既不推通知也不发新评论(与 06:13Z/09:11Z 同判据);
+  ⚠️ **重复投递同一读数会稀释下一次真读数的信号**,这正是 18:13Z 立「停止同形投递」的理由。三条选项逐字不变。
+  **七、铁律 9**:P4.1 upstream 标尺波连续第十八轮欠,⛔ 唯一阻因是闸 (iii) `exit 3`(`$0.142 < $1.10`),不是本台未认领。
+  **八、⛔ `bots`/`game` 一行未改。**
+  **九、自查**:⚠️ **管道坑第 30 次**(首条命令走管道,脚本自卫 `REFUSED: ... stdout is a pipe`),
+  ⚠️ **紧接着第二道也踩**(改重定向后**带了 `timeout`**,脚本第二次自卫 `REFUSED: ... running under timeout`)
+  ⇒ **上一轮交棒 ⑧ 的 (1)(2) 各犯一次、(3) 做到了**;⭐ 两次零损失,**拦住它们的是工具不是纪律**;
+  第三次用对 `nohup … > /tmp/sc.log 2>&1 &`。此后每个读退出码的命令一律重定向后裸读,零管道。
+  **铁律 11**:零 `requires approval`、零空转(自检与慢 python 套件后台跑,成本/闸/收割/泄漏/工作单元并行)。
+  **交棒**:① **owner —— 刹车第十八轮持有,GH #779 第十四轮零表态**,本轮零新支出测量 ⇒ 未推未评;
+  ② ⭐⭐ **总监 —— 验收本轮欠条**(`done_when` 两串均已出现,⚠️ 该判据自带 LIMIT「买的是这条腿出现了,**不是**它写对了」
+  ⇒ 请读 diff;⭐ 特别看 (甲):`read_accruing_instances()` 的全区域失败读法,**闸 (iii) 自己是否同病归总监**);
+  ③ ⭐⭐ **总监 —— 上述两条 trunk 红**(本台已在净树复现,⛔ 不代修;两条都不在 py gate 作用域内 ⇒ 推它们的闸绿得对);
+  ④ **总监 —— 上一轮交棒 ④ 可收**(见 §二);
+  ⑤ **总监 —— py gate 成员资格**(⛔ 本台不自行调;慢容器上重测受 `lua_gate_baseline_e2e` 同族约束);
+  ⑥ **总监 —— 06:13Z/09:11Z 历史交棒本轮未获回应,逐字保留**,⛔ 本台不自行退休任何一行;
+  ⑦ **下一轮本台**:开工第一条命令 `nohup … &`(⛔ 无管道、⛔ 无 `timeout`);刹车解除时本欠条已落地 ⇒
+  发波那轮**不必再写代码**,但要**现跑一次**并把探针两行抄进报告(那才是它第一次走「该买」分支)。
+  详见 `iterations/reports/batch-desk/20260914T150800Z.md`。
+
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
   录像的第一目的都是看"测试版"的合成行为——owner 的原始定义就是
