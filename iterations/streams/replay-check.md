@@ -17154,3 +17154,15 @@
     —— 读法已写全、不需要新工具,等新波次;(4) ⚠️ 09-13T16:30Z 的 **n=1 复现连续第五轮挂账**;
     (5) ⛔ 引 §四 的数**必须连切法一起引**。
   - **完整报告**:`iterations/reports/replay-check/20260914T035246Z.md`
+- **[2026-09-14T03:52Z 收工回填]** 落地 `origin/main` `f788f942..b1d59a91`(`PUSH_MAIN_EXIT=0`),
+  分支同点(`PUSH_BRANCH_EXIT=0`),⛔ 未用 `RULE6_BYPASS`。三条腿裸读:
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 86 ran, 0 findings, 0 uncertifiable, 13.7s` /
+  `lua gate: 371 ran, 0 findings, 0 uncertifiable, 6 unanswered, 8 known-red, 601.1s`。
+  评论 `#issuecomment-5659158508` 发在 push **之后**(`PRECHECK_EXIT=0`,6/6 路径在 trunk 上解析);
+  复核:正文未变 / 评论 5→6 / `state` 仍 closed。
+  ⚠️ **新量到的结构性摩擦(交总监,先登记一轮不开 issue)**:`lua gate` 每次 push 要 **601–618s**,
+  而 main 在这 10 分钟里会被别组超车 —— 本轮**连续两次**被拒(`fetch first` / `cannot lock ref`),
+  **两次都不是红是赛跑输了**,每次重试再付一次闸;一个 771 行纯 `tests/` 改动**闸跑了 5 次 ≈ 50 分钟**。
+  ⭐ 繁忙时段 rebase→push 的窗口比闸短,**原则上可活锁**。⛔ 本轮不自行放宽任何一条。
+  `TOKENS total_in=26,245,488 out=92,424 turns=144`。
