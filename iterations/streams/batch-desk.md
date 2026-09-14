@@ -10549,6 +10549,38 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   刹车解除(headroom ≥ `$1.10`)时按规格发 P4.1 标尺波,并把 #801 那四行**恢复后**的样子抄进报告 ——
   那才是它第一次走「该买」分支。
   详见 `iterations/reports/batch-desk/20260914T212233Z.md`。
+  **补记(push 之后,GH #290 顺序;全文见报告补记 A–E)**:**(A) 铁律 6 三条腿**(三次 push 逐字一致):
+  `luacheck bots game: 0 warnings` / **`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)`** /
+  **`py gate: 88 ran, 0 findings, 0 uncertifiable, 11.6s`** /
+  `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`;`ARM_EXIT=0`;
+  ⛔ 未用 `RULE6_BYPASS` ⇒ 无「跳过不是通过」行。⚠️ **`lua gate` 那行是作用域判定不是绿灯**
+  (本轮只改 `iterations/`,它一个测试体都没执行),⛔ 不记成「Lua 测试通过」。
+  **(B) ⚠️ push 竞态一次**:`PUSH2_EXIT=1` 逐字 `! [rejected]  HEAD -> main (non-fast-forward)`
+  ⇒ `git pull --rebase origin main`(`REBASE_EXIT=0`,无冲突)后 `PUSH3_EXIT=0`(`d185747d..b49810b4`),
+  会话分支 `--force-with-lease` 对齐(`PUSH4_EXIT=0`)。
+  ⭐ **落地独立复核不靠 push 回显**:`git merge-base --is-ancestor HEAD origin/main` ⇒ 真。
+  **(C) 自检跑完,同轮补上正文 §九 当时读不到的真码**:`selfcheck worst exit: 3` / `legs run : 13` /
+  `FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage trunk-red(python)` /
+  **`UNCERTIFIABLE (exit 2): none`**;python 腿 `131 passed, 1 failed, 3 uncertifiable`;
+  Lua 快腿 `99 tagged detector file(s), 0 failures -- FAST SUBSET`。
+  ⭐ `UNCERTIFIABLE: none` ⇒ `trunk-red(python)` 是**真红不是没跑完**;
+  ⚠️ ⛔ 未把 exit 3 归给任何单一条腿(GH #267 防滥读提醒照抄)。
+  ⭐ **比上一轮少了 `unlanded`**(上一轮那三条协同组 commit 已开 GH #823);
+  ⚠️ ⛔ **本台不主张它们「已落地」** —— 该腿自带三条限度 ⇒「不再被点名」有多种成因,
+  本轮**未逐条现跑 `merge-base` 复核** ⇒ **只登记读数变化,不改 #823 的状态**。
+  **(D) ⭐⭐ 正文 §九 那句「不主张与上一轮三条红是同一批」,跑完后能说准了 —— 同轮补,方向对本台不利照登**:
+  (乙) `test_lua_corpus_stability.py` **仍 `FAIL`** ⇒ **同一条,已在 GH #825**,⛔ 不重开;
+  (甲) `test_call_arity_census.py` **不在 `FAIL` 列表**(在 131 passed 里)⚠️ **「变绿了」是读数,
+  「被谁怎么弄绿的」不是** —— 该行要的本来就可能是 `ALLOWLIST`/`ROUTED` 裁决词而非改代码,
+  ⛔ **本台不主张它被修好**、⛔ 不据此关 #825 的任何一半;
+  (丙) `test_selfcheck_lua_leg.py` **`UNCERTIFIABLE`**(逐字 `did NOT run -- this is not a pass and not a failure`)
+  ⛔ **不是变绿**,它在案于 `owed_executions.json:selfcheck_lua_leg_4c2_red`(`executor=总监自己`),
+  **状态未知不是已修**。⇒ **本轮唯一的 trunk 红是一条已立案的旧红**,⛔ 无新红、⛔ 不新开 issue。
+  ⭐ **闸仍然绿得对**:`py gate: 88 ran, 0 findings` ⇒ `test_lua_corpus_stability.py` **不在那 88 条里**
+  ⇒ **GH #624/#616/#806 立案形状的又一例**(缺陷在**成员资格**);⛔ 本台不自行调整成员资格。
+  **(E)** owner 推送**两条**(第二条是当轮自我更正);GH #779 新评论 `issuecomment-5670989166`。
+  **铁律 11**:MCP 可用,零 `requires approval`、零空转。
+  **Token**:`TOKENS total_in=3,667,466 out=35,373 turns=34`(统计后的收尾回合不计入)。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
