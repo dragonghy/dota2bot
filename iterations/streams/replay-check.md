@@ -17313,3 +17313,25 @@
     (5) ⛔ 引本轮任何数**必须连切法一起引**,**每英雄那张表不作结论**;
     (6) ⛔ **钉任何帧之前先把该 issue 的评论读完**。
   - **完整报告**:`iterations/reports/replay-check/20260914T131232Z.md`
+- **[2026-09-14T13:12Z 收工回填]** 落地 `origin/main` `20a1141c..d1c97fda`(`PUSH_MAIN_EXIT=0`),
+  分支 `claude/lucid-pascal-hlxr14` 同点(`PUSH_BRANCH_EXIT=0`),⛔ **未用 `RULE6_BYPASS`**。
+  铁律 6 三条腿(裸读):`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 86 ran, 0 findings, 0 uncertifiable, 11.9s` /
+  `lua gate: 374 ran, 0 findings, 0 uncertifiable, 8 unanswered, 7 known-red, 590.9s`。
+  ⚠️ **上一轮登记的那条赛跑摩擦本轮复现一次**:main push 被拒(`a pushed branch tip is behind`),
+  **不是红是赛跑输了**(闸跑 ~590s,这段时间批测台的 `20a1141c` 超车);
+  `git pull --rebase origin main` 后重推即成,**每次重试再付一次闸**,本轮闸共跑 **4 次 ≈ 40 分钟**。
+  评论 `#issuecomment-5665012696` 发在 push **之后**(GH #290 顺序),`PRECHECK_EXIT=0`
+  (3/3 路径在 trunk 上解析,本地领先 0 个 commit);发帖后复核:**正文未变 / 评论 1→2 / `state` 仍 open**
+  (用的是 `add_issue_comment`,⛔ 全程没碰 `issue_write`)。
+  **开工自检真码**:⛔ 第一跑踩管道门(`EXIT=2 REFUSED`,没跑成不是通过);
+  ⛔⛔ 第二跑**踩了章程逐字写着的 `timeout` 坑**得 `EXIT=124`(**连续两轮踩同一条**,
+  124 不在它的退出码词表里);第三跑 `nohup` **跑完了**:`legs run 13`,
+  `FINDINGS: cadence queue-rulings owed-executions lua-coverage`,
+  `UNCERTIFIABLE: trunk-red(python)`,`worst exit: 3`。
+  ⭐⭐ **上一轮那条教训第二次当场兑现**:我已在报告里写下「收工时仍在跑、登记为没人看过」,
+  **它随后就跑完了** ⇒「还没打横幅」不是「不会打」;报告 §八 已改写成实读。
+  ⚠️ 下一轮**别照抄「自检没跑完」**:它跑得完,只是比一个工作单元长。
+  `lua-coverage` 的三条 NEW `no_manifest_row` **都不是本组的**;本轮新测试**自带 manifest 行进闸**。
+  `trunk-red(python)` 是 **UNCERTIFIABLE 不是红**(横幅逐字「This line is NOT a pass」)⇒ ⛔ 不读成 main 红。
+  `TOKENS total_in=13,375,003 out=79,397 turns=93`(零 `requires approval`)。
