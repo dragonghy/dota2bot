@@ -64,9 +64,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      (仓库没有「这帧当初为什么被切」的字段)。漏的方向是**低估偏差**。**本轮没发现这样的帧,
      但这是没查的,不是查过为空的。**
    - ⛔ **本轮的 NOT-TAKEN**:没放松任何断言(#806 明写禁止改数字「修」它);**没给这条早退线落 gate**
-     (它仍测得 DESIGNED-CORRECT,且证据比以前强);**没碰 `known_red` 名单** —— `test_lion_ult_cash_weakest.lua`
-     这轮**真的回绿**,它的赦免条目成了**死条目**,但摘它要走 GH #783 的定向路径,而 **#810 尚未裁定**,
-     #806 的总监裁定明写「**先裁 #810,再重测**」⇒ **棒交出去,不自己动手**。
+     (它仍测得 DESIGNED-CORRECT,且证据比以前强);`bots/` 零改动。
+   - ⭐ **`known_red` 8 → 7,而草稿里写的是「不动」—— 改判登记在报告 §5。**
+     `test_lion_ult_cash_weakest.lua` 回绿后赦免条目成了**死条目**。草稿按 #806 裁定
+     (「先裁 #810,再重测」)判不动它,**那是把两件事混成一件**:被 #810 挡住的是**裸 re-measure**
+     (重算所有秒数、清空名单,GH #783),摘一条走的是**定向** `--set-known-red` ——
+     `-171` 上一轮(9→8)走的正是这条,**而 push 钩子自己就在逐字要这一步**
+     (`1 baselined test(s) are GREEN again -- take them off the baseline`)。
+     **还原对照**:`known_red` 8→7、`known_red_cases` 8→7、`known_red_at` 04:47→09:44Z,
+     而 **`measured_at` 2026-09-10T13:08:31Z 逐位未变、399 条 test 行一条没变**
+     ⇒ **没有发生 re-measure**,#810 原样挂着。该文件**重新拦门**。
+     ⚠️ 工具自带保险:`--set-known-red` 会在本树上**重跑**每个被点名文件,**通过的拒绝写进红基线**。
    - ⚠️ **trunk 上另有一条 python 红,本轮没修也不该本组修**:`tests/test_pending_rulings.py`
      报 `real owed row 'hero27_dem21_deadline_scan' is missing trigger`。该行是**总监今天 06:5xZ 落的**、
      executor 是**批测台**,缺的是 schema 上的 `trigger` 字段。⛔ **替别人的裁定行补字段 = 替他写裁定**
@@ -89,6 +97,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      2. **GH #813**(`[harness]`,`-171` 开的)的修复。⛔ 它落地前不要对任何人说「`--help` 是安全的」。
      3. ⛔ **不要**把本轮的 1/27 读成率,也**不要**把「bound (A) 分层了」读成「bound (A) 没了」——
         selected 分层仍是 3/3,池化天花板仍然只能当天花板引。
+     3b. ⭐ **判别子,给下一轮省一次同样的犹豫**:`--set-known-red`(定向,摘一条)**不被 #810 挡**;
+        裸 `lua_gate_measure.py`(全量 re-measure,会重算秒数并清空名单)**被挡**。
+        两者在 #806/#783 里写在相邻的段落,本轮草稿混过一次。
      4. ⛔ **不要**替 `hero27_dem21_deadline_scan` 补 `trigger`(上面一条);它归总监。
 
 -171. ✅ **`-170` 的「下一轮第 1 条」本轮兑现了,而它被推迟到第五轮的那条自订罚则**(「若再让位必须
@@ -7698,6 +7709,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     最近的 castable instant HP **0.838** 对 0.4 界 ⇒ §0.3 limit 1 不是小 n 假象。断言未放松。
   - **变异台 M11–M13 新增**;第一轮 **11/13**(M11/M12 `want` 串指错断言,与 `-170` 同形),改后复跑。
   - ⚠️ **自检 UNCERTIFIABLE(我亲手杀的,为给变异台让出 GH #507 的窗)**;`lua-coverage` **UNCOVERED 115/454**。
+  - ⭐ **`known_red` 8 → 7**(`test_lion_ult_cash_weakest.lua` 回绿后摘掉,**定向**路径,
+    `measured_at` 逐位未变 ⇒ 没有 re-measure,#810 原样挂着)。草稿原写「不动」,改判见报告 §5。
   - ⚠️ **trunk 另有一条 python 红且本组不该修**:`test_pending_rulings.py` 报
     `hero27_dem21_deadline_scan` 缺 `trigger` —— **总监今天 06:5xZ 落的行**,只点名不动手;
     它 `in_gate:false`(GH #812 形状)⇒ 拦不住 push。
