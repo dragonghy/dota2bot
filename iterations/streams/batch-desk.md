@@ -10331,6 +10331,33 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   ⑦ **下一轮本台**:开工第一条命令 `nohup … &`(⛔ 无管道、⛔ 无 `timeout`);刹车解除时本欠条已落地 ⇒
   发波那轮**不必再写代码**,但要**现跑一次**并把探针两行抄进报告(那才是它第一次走「该买」分支)。
   详见 `iterations/reports/batch-desk/20260914T150800Z.md`。
+  **补记(push 之后,GH #290 顺序;全文见报告补记 A–E)**:**(A) 铁律 6 三条腿**(三次 push 逐字一致):
+  `luacheck bots game: 0 warnings` / **`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)`** /
+  **`py gate: 87 ran, 0 findings, 0 uncertifiable, 10.6s`** /
+  **`lua gate: 375 ran, 0 findings, 0 uncertifiable, 8 unanswered, 7 known-red, 570.8s`**
+  —— ⭐ **本轮 lua gate 是真跑不是作用域判定**(上一轮 `SKIPPED BY SCOPE`,本轮改了 `tests/` ⇒ 375 个测试真跑 570.8s);
+  ⛔ 未用 `RULE6_BYPASS` ⇒ 无「跳过不是通过」行。
+  **(B) ⚠️ push 竞态一次**:`PUSH2_EXIT=1` 逐字 `! [rejected]  HEAD -> main (non-fast-forward)`(协同组 `94242ade` 插在中间)
+  ⇒ `git pull --rebase origin main`(`REBASE2_EXIT=0`,无冲突)后 `PUSH3_EXIT=0`(`94242ade..bf3a067d`),
+  会话分支 `--force-with-lease` 对齐;补记本身 `PUSH5_EXIT=0`(`9fe7bf9b..1c87208c`)。
+  ⭐ **落地独立复核不靠 push 回显**:`git merge-base --is-ancestor bf3a067d origin/main` ⇒ 真。
+  **(C) 慢 python 套件**:`PASS tests/test_check_costs_confirm.py` ⇒ 本轮写的测试在**认领它的那条腿**上跑过且绿(闸外那半的代偿)。
+  **⛔⛔ (E) 自检跑完,同轮更正 (D) 自己**:(D) 说「`SELFCHECK_EXIT` 未知」**只在当时为真**;
+  真读数 **`selfcheck worst exit: 3`** / `legs run : 13` /
+  **`FINDINGS (exit 3) : unlanded cadence queue-rulings owed-executions lua-coverage trunk-red(python)`** /
+  **`UNCERTIFIABLE (exit 2): none`**。⭐ 更正方向对本台不利,照登;
+  ⭐ `UNCERTIFIABLE: none` ⇒ `trunk-red(python)` 是**真红不是没跑完**,与本台净树 worktree 的第一手复现**独立同向**。
+  **⭐⭐ 比上一轮多出的那条是 `unlanded`,而那正是铁律 10 立条的形状**:三条 commit 推了没落 main,
+  **全部是协同组的**(`origin/claude/intelligent-hopper-2s810x`,`d92ba19`/`bb70c8d`/`862dfdb`,均 `14:40:41Z`),
+  ⛔ **无一条是批测台的**。⭐ **本台未转述,逐条现跑 `git merge-base --is-ancestor` 复核 ⇒ 三条都 `STILL UNLANDED`**。
+  ⚠️ 三条限度照抄不加强(patch-id 只排除**逐位相同**的重做,不排除改头换面已落地的同一份工作 /
+  `bb70c8d` 与 main 上 `b71e2998` **同名不同 patch**,本台分不开也不替它分 /
+  `shallow clone: YES`、`REFUSED refs 1160/1184` ⇒ 只覆盖 graft 点以上 3 天,**「只报三条」不等于「只有三条」**)。
+  ⇒ **已开 GH #823 `[strategy]`**,三条限度一条不漏写进正文,⛔ 本台不代 cherry-pick。
+  ⭐ 顺带零成本读数交总监:`selfcheck_recursive_fork_amplifier` 那行的 (i) 前提本轮正好满足,
+  **跑完整自检后 `pgrep -c -x -f 'bash tools/agent/routine_selfcheck.sh'` = `0`**;
+  ⛔ **不是退休依据**(executor 是总监;`done_when` 的 `killpg` 仍 0 命中;该行自写「冷容器上的绿不算」),只作日期戳读数登记。
+  **铁律 11:MCP 本轮可用,零 `requires approval`、零空转。**
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
