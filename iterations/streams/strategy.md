@@ -35,7 +35,71 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT12. **【2026-09-14T09:30Z 新增,**下一轮第一项**。兄弟腿:`stayfield`(TP 半)的 live 域。
+0NEXT13. **【2026-09-14T10:26Z 新增,**下一轮第一项**。
+   **换轴:不要再问「这条 id 还剩多少域」,去问「这条**调用点**还剩多少域」。**
+
+   **为什么换轴,而且这是 0NEXT12 自己测出来的**:0NEXT11/0NEXT12 连着两轮问的是
+   「某条 id 在真串上还能改动几帧」,答案连着两轮是 0。但 0NEXT12 的读数把**问题本身**
+   改掉了:走路腿是**有过域、被 `fieldsip` 拿走**(19 → 0);TP 腿是**从来没有过域** ——
+   24 个 solo-S 帧里 **23 个被 `撤退:3` 自己的二十几个合取吃掉**,`fieldsip` 只收走了最后 1 帧。
+   ⇒ **域是被调用点吃掉的,不是被兄弟 id 吃掉的**,而这件事在 id 那一侧**看不出来**。
+
+   **具体要做的**:`X.ConsiderItemDesire["item_tpscroll"]` 的**四条回家分支**
+   (`撤退:1` / `撤退:2` / `撤退:3` / `回复状态`)已经各自被读过一次,
+   但**没人量过这四条分支的触发集彼此重叠多少、以及一帧落进哪一条**。
+   0NEXT12 的 sweep 已经会 parse 分支头和常数(`tests/_stayfield_tpleg_sweep.lua`),
+   扩到四条是**同一份 1039 帧走查**,不是新的普查成本。
+   两种合法产出:(a) 四条分支的触发集**不相交**或**有支配关系** ⇒ 那就是一张能让后续
+   每一条 P2 杠杆**先选对调用点**的表;(b) 某两条**大面积重叠**且上游那条**先返回** ⇒
+   下游那条的**任何** gated veto 在重叠区里都是死的,**那是一条可以直接落 gated 收窄的杠杆**
+   (4.4 (i) 的真候选,而且它不是造出来的)。
+
+   ⚠️ **判据继承 0NEXT11 / 0NEXT12 全部**(戌 / 亥 / 申 / 酉 / 午),本轮新增两条 ——
+
+   ⭐⭐ **(子) 「真串给这条 id 留了多少域」不是**每族**一个问题,是**每调用点**一个问题。**
+   同一个谓词 `S` 的两个 wrapper(`stayfield` / `stayfield2`)、同一条 26-id 串、同一份 1039 帧
+   语料,**域是被完全不同的东西拿走的**:走路腿的吸收方是兄弟 helper `J.ShouldStayAndRegen`,
+   TP 腿的吸收方是它被丢进去的那条分支的二十几个合取。
+   ⇒ **在任一条腿上取的读数都不能迁到另一条**,而「它们共用同一个 S」正是让人以为可以迁的那句话。
+   现场:0NEXT12 正文自己就写着「S 只剩 2 帧 ⇒ 它的 S 也只剩那 2 帧」——**那句话对**,
+   而它**几乎**让人把 19 → 0 的故事顺推过来;真相是 TP 腿的 solo margin 本来就只有 **1**。
+
+   ⭐⭐ **(丑) 反真空不是「把 tally 的两条腿交换」;域为空时交换证明不了任何事。**
+   `tally(a, b, down, up)` 在 `a`、`b` 逐帧相等时**两条腿和它们的交换版全是 0**。
+   0NEXT12 现场:`closes` / `flip_false_to_true` / 两条交换版 **四个全 0**,而这四个 0
+   **既可能是「方向成立」也可能是「计数器根本没在数」**。真正的反真空是**同一个 tally 跑在
+   一个域非空的世界**(这里是 solo 世界):`closes_solo = 1`。
+   ⇒ **交换法只在域非空时是反真空;零域读数必须另找一个非零的世界来证明计数器会数。**
+
+   ⛔ **已被定价并排除、不要重买**(继承 0NEXT11/0NEXT12 全部,本轮新增两条):
+   ⛔ **`stayfield`(TP 腿)在真串上的 live 域已经测完,答案是 `0 / 1039`**
+   (`tests/test_stayfield_tpleg_live_domain.lua` + `tests/_stayfield_tpleg_sweep.lua`)。
+   别重测,也别据此去收窄它 —— 收窄一个空域什么都不动。
+   ⛔ **不许动 `FIELD_SIP_MIN_FRACTION` / `FIELD_SIP_HEAL` 来「把那一帧要回来」**:
+   `jmz_func.lua:6132 / 6203 / 6897` 三处写明,动量级门限会**同时移动
+   `stayfield` + `stayfield2` + `fieldbuy` 三条** —— `lanefix` 捆绑的形状,账单 gpm −74.5 / −88.7。
+   那是**处置问题,归总监**(见 20260914T102620Z 报告 §3 的二选一)。】**
+
+0NEXT12. ✅ **【2026-09-14T09:30Z 提为下一轮第一项 → 2026-09-14T10:26Z 做完,产出是 **(b)**。
+   **读数:`margin(stayfield)`(TP 腿)在今天 26 id 的真实成员串上 = `0 / 1039`。**
+   ⭐⭐ **但头条不是那个 0,是那个 1**:`margin_solo = 1`,而**那一帧就是 owner 优先项 P2 的铁证帧**
+   (`f_260822_063722_lina_tp_home` / lina,即 `J.ShouldRegenNotTpHome` 注释逐字描述的那一帧)。
+   真串上否它的是**算术不是判断**:`FieldRegenSipValue = 85`(faerie_fire)vs
+   `0.25 * 1088 = 272` ⇒ `IsFieldSipEnough` false ⇒ S false。
+   ⇒ **今天的成员串上,`fieldsip` 否掉了 P2 当初立案所依据的那一帧。**
+   **这与走路腿不是同一个故事**:走路腿**有过域**(19)被 `fieldsip` 拿走;TP 腿
+   **从来没有过域** —— 24 个 solo-S 帧里 **23 个被 `撤退:3` 自己的合取吃掉**(`fieldsip` 还没上场)。
+   剩下的 2 个 live-S 帧 `s_live_blocked_by_branch = 2/2`,都是 `branch_vetoes_itemFlask`
+   ⇒ **有没有 `fieldsip` 它们都不归这条腿**。
+   **4.4 (i) 本轮不满足(`bots/` 零 diff),连续第三次,如实登记**;**(ii) 满足**
+   ——这是 `stayfield` 处置判定所缺的最后一块证据。
+   交棒:**总监二选一**——(1) `stayfield` 退集(与 P4.2 同向,零成本);
+   (2) 或先裁定 `fieldsip` ↔ P2 的冲突(**两条不能都留在串里还指望 P2 在这条腿上有读数**)。
+   另请主会话 / Cursor 更新 `OWNER_PRIORITIES.md` **P2「铁证帧」**段(本组不自行改该文件)。
+   产出:`tests/_stayfield_tpleg_sweep.lua`、`tests/test_stayfield_tpleg_live_domain.lua`
+   (**11 tests 0 failures**,变异台 **4/4 CAUGHT 零 NO-OP**),
+   报告 `iterations/reports/strategy/20260914T102620Z.md`。原文保留在下,便于对照。**
+   **【2026-09-14T09:30Z 新增,**下一轮第一项**。兄弟腿:`stayfield`(TP 半)的 live 域。
 
    **为什么是它,以及它为什么不是上一条的重复**:0NEXT11 已经测出,今天这条串上
    `S = J.ShouldRegenNotGoHome` **只剩 2 帧**(24 → 2,22 帧被 armed 的 `fieldsip` 量级条款拿走),
@@ -9110,6 +9174,64 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-14T10:26Z:**`margin(stayfield)`(TP 腿)在真实成员串上 = `0 / 1039`。产出 (b);
+  `bots/` + `game/` 零 diff,4.4 (i) **连续第三轮**不满足(如实登记),**(ii) 满足**
+  ——这是 `stayfield` 处置判定所缺的最后一块证据。** 按 backlog **0NEXT12** 做。
+  **(1) 读数**(`lua5.1 tests/_stayfield_tpleg_sweep.lua "$ARMED"`,32s,1039 live hero frames):
+  `solo_S 24` / `live_S 2` / `trigger(撤退:3) 76` / `branch_open 4`(上界)/
+  **`margin_solo 1`** / **`margin_live 0`** / `s_lost 22`(`s_lost_sip 22`、`other 0`)/
+  `s_live_blocked_by_branch 2/2`。
+  **(2) ⭐⭐ 头条不是那个 0,是那个 1,而且它就是 owner P2 的铁证帧。**
+  `margin_solo` 的唯一那帧是 `f_260822_063722_lina_tp_home` / lina ——
+  `J.ShouldRegenNotTpHome` 上方注释逐字描述的那一帧,也就是 `OWNER_PRIORITIES.md` P2 的铁证帧。
+  真串上否它的是**算术不是判断**:`FieldRegenSipValue = 85`(faerie_fire)vs
+  `0.25 * GetMaxHealth = 0.25 * 1088 = 272` ⇒ `IsFieldSipEnough` false ⇒ S false。
+  ⇒ **今天的串上,`fieldsip` 否掉了 P2 当初立案所依据的那一帧。**
+  ⚠️ **本轮不说 `fieldsip` 错了**:「一个 faerie fire 救不回 31.8% 血的 lina」是对的。
+  没人说过的是**另一句**:两条 id 同时在串里,**P2 在这条腿上就没有东西可买**。
+  **(3) ⭐⭐ 与走路腿不是同一个故事,而「共用同一个 S」正是让人以为可以顺推的那句话。**
+  走路腿**有过域**(solo margin 19)被 `fieldsip` 拿走;TP 腿**从来没有过域** ——
+  24 个 solo-S 帧里 **23 个被 `撤退:3` 自己的二十几个合取吃掉**,`fieldsip` 只收走最后 1 帧。
+  📌 **可迁移**:*「真串给这条 id 留了多少域」不是每**族**一个问题,是每**调用点**一个问题;
+  同一谓词的两个 wrapper、同一条串、同一份语料,域可以被完全不同的东西拿走,
+  在任一条腿上取的读数都不能迁到另一条。* 已进 backlog 为 **(子)**,并据此立 **0NEXT13**(换轴)。
+  **(4) ⭐ 反真空那一招在零域上会失效,这是新的一条**(backlog **(丑)**):
+  `tally` 的两条腿在两输入逐帧相等时**连同交换版四个全 0**,而四个 0
+  **既可能是方向成立也可能是计数器没在数**。证明它在数的是**同一个 tally 跑在 solo 世界**:
+  `closes_solo = 1`。兄弟文件的「交换两条腿」手法**在这里不成立**。
+  **(5) 交棒(铁律 9 后半)**:总监**二选一** ——(a) `stayfield` **退集**(代码与 gate 保留,
+  与 P4.2「集合变小」同向、零成本);(b) 或先裁定 `fieldsip` ↔ P2 的冲突。
+  ⛔ **不许动 `FIELD_SIP_MIN_FRACTION` / `FIELD_SIP_HEAL` 去把那一帧要回来**:
+  `jmz_func.lua:6132/6203/6897` 写明会同时移动 `stayfield`+`stayfield2`+`fieldbuy` 三条
+  = `lanefix` 捆绑形状(账单 −74.5 / −88.7)。另请主会话 / Cursor 更新
+  `OWNER_PRIORITIES.md` **P2「铁证帧」**段(本组不自行改该文件)。
+  ⛔ **本轮不提入集申请**(冻结未解且无新 id)。**这不是掉棒。**
+  **(6) 计时(章程 (亥))**:普查 **32s**(1039 次 `rf.load` @ ~30ms;fixture 解析本身只 0.03s,
+  实测),**没有**塞进开工自检 Lua 腿 —— 兄弟腿的 45s 已在里面,而那条腿在本容器上
+  **已经在超时打 UNCERTIFIABLE**。劈成两层并写在文件抬头:普查留在 `_sweep`(手跑),
+  测试只驱动**三个决定性帧** + 源码棘轮 + 人口守卫,实测 **0.17s**(**在 5.5s cap 以内,
+  够格进推送闸**,只差一次 `lua_gate_measure.py`)。⛔ **没跑那次全量重测**
+  (它会把 456 个文件在本容器重新计时并改写整份 manifest;GH #358 侧写:同 50 文件
+  此地 99.5s、批测台 133.3s),**也没手改 manifest** ⇒ 交总监。
+  **(7) 变异台**(章程 (午)/(酉),跑在**出货实现**上,每条先用 `grep -c` 核验落地):
+  M1 `FIELD_SIP_MIN_FRACTION` 0.25→0.05(1→0)**2 红**;M2 摘掉 `撤退:3` 的
+  `itemFlask == nil`(5→4)**1 红**;M3 门 id `stayfield`→`stayfieldz`(1→0)**2 红**;
+  M4 `CENSUS.margin_solo` 1→0(1→0)**1 红**。**4/4 CAUGHT,零 NO-OP**,复原后 11/0。
+  **(8) 开工自检真码 `EXIT=3`** ——⚠️ **后台任务通知报的 `exit code 0` 不是它的退出码**
+  (批测台 round 16 addendum D 同一现场)。`FINDINGS: unlanded cadence queue-rulings
+  owed-executions lua-coverage trunk-red(python)`;python 腿内部 **9 条 check 没跑**
+  (Lua 腿在本容器没在 120s 内跑完)。首条命令**第 19 次**被 `stdout is a pipe` 挡回。
+  ⚠️ **`tests/test_fieldsip_atom_pricing.lua` 仍 2 红,第三轮,且不在 `known_red` 里**
+  (语料 1021 → 1039);本组 `bots/` 零 diff ⇒ 结构上不可能是本轮造成的。
+  **本轮把它交出去了**(报告 §7),不再只是再记一笔 —— 无人认领的 trunk 红会被
+  **每一个开工的组**发现,那正是 GH #624 的立案形状。
+  ⚠️ **动态半未跑全量**(~100min,GH #124);经 **runner** 跑了受影响族:新文件 **11/0**、
+  `stayfield2_live_domain` 8/0、`stayfield_callsite_domain` 21/0、`stayfield_hp_window_reach` 15/0、
+  `tprecov_recover_trip` 14/0、`gate_claim_consistency` 16/0、`smoke_load` 3/0、
+  `corpus_scale` 10/0。**这是子集不是全量。**
+  产出:`tests/_stayfield_tpleg_sweep.lua`、`tests/test_stayfield_tpleg_live_domain.lua`、
+  报告 `iterations/reports/strategy/20260914T102620Z.md`。
 
 - 2026-09-14T09:30Z:**`stayfield2` 在**真实成员串**上的 live 域 = **`0 / 1039`**。
   产出 (b);`bots/` + `game/` 零 diff,4.4 (i) 不满足、连续次数归零(如实登记)。**
