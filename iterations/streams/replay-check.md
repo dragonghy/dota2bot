@@ -17405,3 +17405,37 @@
     (5) ⛔ **钉任何帧之前先把该 issue 的评论读完**;
     (6) ⛔ 引本轮任何数**必须连切法一起引**,**每英雄那张表只作选点不作结论**。
   - **完整报告**:`iterations/reports/replay-check/20260914T154849Z.md`
+- **[2026-09-14T15:48Z 收工回填]** 落地 `origin/main` `bf3a067d..9fe7bf9b`(`PUSH_MAIN_EXIT=0`),
+  分支 `claude/lucid-pascal-d38l7n` 同点(`PUSH_BRANCH_EXIT=0`),⛔ **未用 `RULE6_BYPASS`**。
+  铁律 6 三条腿(裸读,三次 push 逐字相同):
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 87 ran, 0 findings, 0 uncertifiable, 13.6s` /
+  **`lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`**
+  —— ⚠️ **范围判定不是通过**(本轮只动 `tools/` 与 `iterations/`)。动态半(GH #124)未跑、不声称。
+  ⚠️ **上两轮登记的赛跑摩擦本轮复现一次**:main push 第一次被拒(`fetch first`,
+  `PUSH_MAIN_EXIT=1`),**不是红是赛跑输了**(闸跑完这段时间别组超车);
+  `git pull --rebase origin main`(`REBASE_EXIT=0`)后重推即成,**每次重试再付一次闸**。
+  ⚠️ 分支那次 `--force-with-lease` 同步闸跑满 600s 被移到后台,**退出码 0**(不是失败)。
+  **issue**:`GH #822`(`[bug]`),**发在两次 push 之后**(GH #290 顺序),
+  `PRECHECK_EXIT=0`(**5/5 路径在 trunk 上解析,本地领先 0 个 commit**)。
+  ⭐ **发帖后按 09-13 那条事故的判别子复核**:用的是 `issue_write(method='create')` 与
+  `issue_read`,⛔ **全程没碰 `issue_write(method='update')`**;复核 #822 正文完整、`state` open;
+  ⛔ **#817 的状态/正文本轮一字未动**(只读了它和它的 2 条评论)。
+  ⭐ **读评论这一步本轮真的付了钱**:#817 的 [hero] 评论(11:30Z)判 VS/nevermore/WK
+  「构造上不可测」,**若不读就会把本轮 VS 那具当成天赋盲区而扔掉** ——
+  实际上 `banked` 由构造免疫该盲区、且 `command_aura` 是普通能力,**盲区不适用**,
+  这一条正是 #822 的立案句。⇒ 上一轮交棒第 (6) 条「钉帧前先读完评论」**本轮兑现且有正收益**。
+  **开工自检真码**(⭐ 一次跑成:`nohup` 重定向,⛔ **没套 `timeout`、没走管道** ——
+  连续两轮踩的那两个坑本轮都没踩):`legs run 13`,`selfcheck worst exit: 3`,
+  `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(python)`。
+  `trunk-red(python)` 横幅逐字:`TRUNK RED -- a python test is failing ON THE WORKING TREE.` +
+  `Whether main is red too is NOT established by this line: re-run after 'git stash'.`
+  ⇒ ⛔ **不读成 main 红**。两个红文件 **都不是本组的**:`test_pending_rulings.py`(总监那张欠条表,
+  与上一轮同一条)与 `test_selfcheck_lua_leg.py`(自检自己那条腿,5b–5g 六条因 clean run
+  **120s 内没跑完**而 UNCERTIFIABLE ⇒ **那条腿这轮仍然没人看过**,连续第二轮)。
+  Lua 检测器腿 `96 files, 0 failures` 但**自称 FAST SUBSET**;
+  `lua-coverage` 欠条 `UNCOVERED 115/459 (25%)`(`no_manifest_row` 52 / `timed_out` 61 / `too_slow` 2),
+  ⛔ **本轮零新增 Lua 测试,不欠新 manifest 行**。
+  ⚠️ **连续第五轮**记同一句:自检与 8 次 dump 并行跑;本轮自检在收工时**进程仍在**,
+  但**横幅已打全**(`worst exit: 3`)⇒ 按上一轮立的那条「**认横幅不认进程计数**」读,**这轮是实读不是挂账**。
+  `TOKENS total_in=9,492,997 out=71,191 turns=69`(零 `requires approval`)。
