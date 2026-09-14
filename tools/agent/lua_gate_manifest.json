@@ -34,7 +34,7 @@
       "6. the staged slot is level 21 -- and its pool reading is flagged, not usable"
     ],
     "tests/test_wk_q_lane_reach.lua": [
-      "\u00a71 the corpus puts an enemy in the band on 6 of 38 Wraith King frames"
+      "§1 the corpus puts an enemy in the band on 6 of 38 Wraith King frames"
     ]
   },
   "known_red_note": "Red on trunk when this leg landed (GH #624), each confirmed by an individual unloaded re-run. The gate does not refuse a push for these; it refuses for anything NOT on this list. The list is meant to SHRINK -- it is not an exemption, and it is printed by name on every run. `known_red_cases` narrows each entry to the CASES that were failing: a baselined file that starts failing somewhere NEW refuses the push, while ordinary corpus drift inside an already-failing case does not.",
@@ -1576,6 +1576,11 @@
       "in_gate": true,
       "reason": "fast",
       "seconds": 0.027
+    },
+    "tests/test_skillstall_banked_point_frames.lua": {
+      "in_gate": true,
+      "reason": "fast",
+      "seconds": 0.3
     },
     "tests/test_skillstall_wall_frame.lua": {
       "in_gate": true,
