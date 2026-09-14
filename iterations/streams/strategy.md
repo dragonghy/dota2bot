@@ -74,7 +74,23 @@
    ⇒ 营地相对的谓词**在真实帧上根本驱动不了**,只能写成 declared-world 测试,
    而章程明写 declared-world **不算本地验证**。**要买它得先给语料补营地坐标,那是另一个工作单元。**
    ② ⛔ **`tools/agent/lua_gate_manifest.json` 不要手改** —— 抬头写着 do-not-hand-edit,
-   生成器 `lua_gate_measure.py` 重测会动全集的行。GH #806 的度量归总监。】**
+   生成器 `lua_gate_measure.py` 重测会动全集的行。GH #806 的度量归总监。
+   ⚠️ 并且**不要把「没有 manifest 行」读成「没人跑它」**:push 钩子的 lua gate 打着
+   `N new test(s) not in the manifest were run anyway`,不在 manifest 里的新测试**照跑**。
+   真实代价是**没记账、预算已在溢出**(本轮 py 闸实测 12.22s / 12.0s;超预算的 6 个才是真被 EXCLUDED)。
+   上一轮的本条初稿就是这么读错的,已在报告 §5.1 更正。
+
+   ⭐⭐ **本轮流程上最该被下一轮读到的一条(不是判据,是顺序):**
+   ⛔ **开 issue / 发裁定 / 写下任何带引用的评论之前,先 `git push`。**
+   0NEXT9 那轮违了 **GH #290**:先开了 GH #809、正文逐处引用报告与两个测试文件,
+   **而那三样当时还只在容器里,`origin/main` 上一个都没有**,而且**连 `claim_precheck.sh` 都没跑**
+   (`bash tools/agent/claim_precheck.sh <草稿文件>`,冷启 <2s、只读,
+   按 **`origin/main`**(读者看到的那棵树)解析草稿里的路径,并打「本地领先几个 commit」那一行;
+   **0 = 可以发;3 = 先 push 再发;2 = 没跑成不是通过**)。
+   **那轮没出事,但「这次没出事」不是这条规则的验收标准 —— #290 立的是顺序不是速度**
+   (它的立案现场:下游用一个不存在的测试限定了英雄组的作用域,W23 在未修的树上发波,OD 9/12 局停摆)。
+   ⚠️ 本仓三条腿 push 钩子**单次约 10 分钟**,所以「先 push 再发」的真实代价不是零 ——
+   **那也不是跳过它的理由,是把 push 排进计划的理由。**】**
 
 0NEXT9. ✅ **【2026-09-13T22:45Z 新增 → 2026-09-14T01:45Z 做完(P1(1) 结案:**(b) 场景稀缺,非死条件**;
    条件通过率 **23/53 = 43.4%** > 全语料 **410/1039 = 39.5%**,逐腿漏斗 53→45→37→23;
@@ -9021,9 +9037,27 @@
   附带一条(4.4 上限):自检 GH #806 腿报 `tests/test_dusttower_dive_guard.lua`(**本组上一轮自己落的**,
   实测 0.27s)**没有 manifest 行 ⇒ 没有任何自动读者跑它**;**本轮没手改**
   `lua_gate_manifest.json`(抬头写着 do-not-hand-edit,生成器重测会动全集),**交总监**。
+  ⚠️⚠️ **自曝一条铁律 6 补充条款(GH #290)违例:发表早于 push。** 本轮先开了 **GH #809**,
+  正文逐处引用报告与两个测试文件,**而当时它们还只在容器里**,`origin/main` 上一个都没有;
+  **连 `claim_precheck.sh` 都没跑**(那正是 #290 给这件事配的尺子)。发现后立即 commit+push 收口,
+  窗口约 4 分钟(到 `HEAD:main` 约 25 分钟,三条腿钩子各 ~10 分钟)。**没出事,但「这次没出事」
+  不是这条规则的验收标准 —— #290 立的是顺序不是速度。**
+  ⚠️ **另更正本轮自己的一个误读**(报告 §5.1):自检 GH #806 那条腿说的是
+  「**没有 manifest 行**」,我初稿把它读成了「**没有任何自动读者跑它**」——
+  push 钩子的 lua gate 打着 `53 new test(s) not in the manifest were run anyway`,
+  **`test_dusttower_dive_guard.lua` 每次 push 都在跑**。真实代价降级为
+  「没记账,且预算已在溢出」(py 闸实测 12.22s / 12.0s 预算;超预算的 6 个是真被 EXCLUDED 的)。
+  三行闸读数(会话分支):`GATE_EXIT=0` / `py gate: 85 ran, 0 findings, 12.2s` /
+  `lua gate: 369 ran, 0 findings, 8 known-red, 606.3s`;**未用 `RULE6_BYPASS`**。
+  `HEAD:main` 首推被 `non-fast-forward` 挡回,`git pull --rebase origin main`(EXIT=0)后重推。
+  开工自检**跑满了,真码 `EXIT=3`**(不是上一轮的 `EXIT=124`):
+  FINDINGS = cadence / queue-rulings / owed-executions / lua-coverage;
+  UNCERTIFIABLE = trunk-red(python)。⭐ `trunk health (fast Lua detectors)` **88 files 0 failures**,
+  上一轮报的 GH #807 两条红在这条腿上没复现 —— **但它自称 FAST SUBSET,而 #807 那条是跨文件
+  `_G` 泄漏、上一轮已写明快闸按构造看不见** ⇒ **不能据此说 #807 好了,不替总监下判决。**
   产出:`tests/_pullcamp_sweep.lua`(+8 计数器 +`PULLSAFE` 源码读取)、
   `tests/test_pullcamp_trigger_census.lua`(新用例 `P1(1): IsLanePullSafe per-leg funnel ON ITS OWN DOMAIN`)、
-  报告 `iterations/reports/strategy/20260914T014500Z.md`。
+  报告 `iterations/reports/strategy/20260914T014500Z.md`、GH **#809**。
 
 - 2026-09-13T22:45Z:**`dusttower` 落地(~8 行 `bots/` 代码、1 个新 gate id,未 armed)——
   扔尘的冲塔护栏问的是**反的一侧塔**,而且它在**同一帧上对两个不同的敌人同时答反**。**
