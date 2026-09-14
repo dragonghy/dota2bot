@@ -936,6 +936,36 @@ check(_c is None and _err and "in force at once" in _err,
       "18g: two rulings in force at once refuse rather than pick",
       "err=%r" % _err)
 
+# ---- 18g2. "none in force" must not read as "none ever issued".  Measured
+#            cost of the old wording, 2026-09-14: the batch desk read
+#            `0 record(s) ... none in force`, correctly refused to guess
+#            whether the $85 ceiling had expired / been revoked / been
+#            rewritten, and spent a handoff on it -- while the answer (retired
+#            by RULING 15 because its sign flipped) sat in `_retired` in the
+#            same file the gate had just parsed.  Refusing to guess was right;
+#            having to guess was the defect.  The PAIR is load-bearing: the
+#            pointer appears when there is something to point at, and does not
+#            dangle when there is not.
+_ret_reg = os.path.join(_tmp, "retired.json")
+with open(_ret_reg, "w") as _fh:
+    _json.dump({"crossings": [],
+                "_retired": [{"ceiling": 85.0, "ref": "GH#721/old",
+                              "retired_ref": "GH#754/director-20260911"}]}, _fh)
+_c, _notes, _err = wf.load_standing_crossing(_ret_reg)
+check(_c is None and _err is None,
+      "18g2: a registry whose only records are retired is not fatal",
+      "err=%r" % _err)
+check(any("_retired" in n and "GH#754/director-20260911" in n
+          for n in _notes),
+      "18g2b: ...and the run points at `_retired` and names the ruling that "
+      "retired it, so the reader does not have to ask")
+
+_c, _notes, _err = wf.load_standing_crossing(_registry([], "empty.json"))
+check(_c is None and _err is None and not any("_retired" in n
+                                              for n in _notes),
+      "18g2c: ...but a registry with nothing retired does not grow a dangling "
+      "pointer to an empty field")
+
 # 18h. Ruling 10's four constraints hold verbatim on the registry path -- the
 #      registry is a delivery channel, not a second, laxer set of rules.
 _c, _n, _err = wf.load_standing_crossing(_registry([_rec(ceiling=95.0)],

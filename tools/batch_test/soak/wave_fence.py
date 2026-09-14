@@ -543,9 +543,27 @@ def load_standing_crossing(path, now=None, brake=DEFAULT_BRAKE,
             % (path, len(live), ", ".join(r["ref"] for r, _ in live)))
     if not live:
         if not expired:
+            # `records` is the `crossings` list only.  A ceiling that was
+            # RETIRED leaves this line reading "0 record(s)", which reads like
+            # "nothing was ever here" -- and on 2026-09-14 the batch desk spent
+            # a handoff asking whether the $85 ceiling had expired, been
+            # revoked, or been rewritten, when the answer (retired by RULING 15
+            # because its sign flipped) was in `_retired` in the very file this
+            # function had just parsed.  Refusing to guess was correct; having
+            # to guess was the defect.  So point at the field.
+            retired = blob.get("_retired") if isinstance(blob, dict) else None
+            tail = ""
+            if isinstance(retired, list) and retired:
+                last = retired[-1] if isinstance(retired[-1], dict) else {}
+                tail = (" %d retired record(s) archived in `_retired` (most "
+                        "recent %s) -- \"none in force\" is not \"none ever "
+                        "issued\"; why a ceiling went away is recorded there, "
+                        "not missing."
+                        % (len(retired),
+                           last.get("retired_ref") or last.get("ref") or "?"))
             notes.append("crossing registry: %d record(s) at %s, none in "
-                         "force -- the gate runs at the DERIVED fence."
-                         % (len(records), path))
+                         "force -- the gate runs at the DERIVED fence.%s"
+                         % (len(records), path, tail))
         return None, notes, None
 
     rec, _when = live[0]

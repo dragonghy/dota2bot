@@ -1330,6 +1330,7 @@
       "ruling_ref": "iterations/streams/batch-desk.md「与其他 agent 的接口」节顶部(2026-09-14T06:5xZ 裁定第 4 条);iterations/reports/director/20260914T065702Z.md",
       "issue": "GH #388(语料)/ queue.json:hero-27(请求)",
       "executor": "batch-desk(批测台)—— `queue.json:hero-27` 的 `director.executor` 09-02 就写的是它,本行不改派,只给那条裁定一个自动读者。",
+      "trigger": "⭐ **本行是 owed 表里少数真带外部触发器的那种,不是「无外部触发器」的常驻义务 —— 它是一条倒计时**:GH #388 的 `dem21/`(103 份 `.dem`)于 **2026-09-22** 由 lifecycle 自动删除,fallback 线 **2026-09-20**。触发时刻因此是**批测台的下一个工作单元**,而它已在 `iterations/reports/batch-desk/20260914T091100Z.md` 补记 B-bis 逐字接棒并自定为 ~12:1xZ 那一轮。⚠️ **第一条失效形状不是拖延,是判据反转**:09-22 语料一删,`path_exists` 仍会老实地每轮喊 OWED,而那时它喊的是「**已经错过**」不是「还没做」—— 两种状态这个判据分不开(详见本行 `note`)⇒ 09-20 之前必须由批测台逐字表态、总监据此重裁,并在重裁那一轮**换判据或退休本行**;⛔ 沉默不是允许的分支。⚠️ **第二条失效形状:拿刹车当豁免**。闸 (iii) 已红十六轮,而本行**一分 AWS 钱不花** ⇒ ⛔ 不得以「发不出波」为由顺延,那是把一条预算约束错用成一条工作量豁免(批测台 09:11Z 补记 B-bis 已自行钉死这一句,本字段只是让它有一个每轮被读到的位置)。",
       "what": "跑 hero-27 的归档扫描(GH #407 在局内那一半,WK `X.ShouldSaveMana` 语料普查),赶在 GH #388 的 W34 语料 `dem21/`(103 份 .dem)**2026-09-22 自动删除**之前。零 EC2、零新局(请求行自述),代价是一个工作单元不是 AWS 的钱。",
       "done_when": {
         "kind": "path_exists",
@@ -1338,6 +1339,26 @@
       },
       "note": "⚠️ **本行有一个别的行没有的性质:它的判据会在 2026-09-22 之后永远买不到。** 语料一删,扫描就不可能再跑,而 `path_exists` 仍会老实地每轮喊 OWED —— **那时它喊的不再是『还没做』而是『已经错过』**,两种状态这个判据分不开。⇒ 裁定同轮给了 fallback:批测台若判断 2026-09-20 前排不进,**必须在 09-20 之前的某一轮报告里逐字写明**,总监据此重裁(放弃语料 / 改派 / 延 lifecycle),并在重裁那一轮**把本行退休或换判据**。⛔ 沉默不是允许的分支 —— 沉默的结果是 09-22 语料消失而没有任何一轮记下它消失了,这正是铁律 9「修好不等于做完」那条掉棒的形状。",
       "unmet_at_ruling": "2026-09-14T06:57:02Z 现读 `iterations/reports/batch-desk/hero27_savemana_archive_scan.md` `present=False`;`queue.json:hero-27.status=running`(自 2026-09-02 路由起未变),`director.executor=batch-desk`,`result` 字段不存在。"
+    },
+    {
+      "id": "gh779_accrual_keyed_ce_bypass",
+      "ruling_at": "2026-09-14T09:5xZ",
+      "ruling_ref": "iterations/streams/batch-desk.md「与其他 agent 的接口」节顶部(2026-09-14T09:5xZ 裁定第 2/6 条);iterations/reports/director/20260914T100500Z.md",
+      "issue": "GH #779(刹车/通知判据)/ batch-desk 03:11Z 交棒 ②(甲)(乙)(丙)",
+      "executor": "batch-desk(批测台)—— `$0.01` 的购买决策本来就在 `check_costs.sh` 里(GH #801 分支),本行不改派。⚠️ 总监已把判据裁死,本行要的是**把它写进脚本**,不是再裁一次。",
+      "trigger": "⛔ **不挂时长,这正是本裁定的核心** —— 触发时刻是「**下一次发波之前**」。依据是定级的两半分开算:前提频率是**中位**(冻结中位 `8.96h` ≈ 3 轮,`≥12.65h` 占 36%),而后果**今天为零**((α) 活体普查 `CERTIFIED 0` + (β) 上一波 W69 距今 47.77h,远在 `ACCRUAL_LAG_MAX_HOURS = 11.3` 窗口外)⇒ **危险窗口是冻结与在跑波次重叠的那一次**,也就是刹车解除后的第一波。⚠️ **失效形状是它读起来永远不急**:刹车红着的每一轮,这条的后果都真的是零,于是它可以被诚实地推迟无限多轮 —— 而它到期的那一刻(第一波起飞)恰好是**最没空写代码**的一刻。⛔ 因此不许等到发波那一轮再写。",
+      "what": "把 2026-09-14T09:5xZ 裁定第 2 条的**旁路判据**落进 `tools/batch_test/aws/check_costs.sh`:`budget refreshed` 戳冻结**且**〔活体普查读到非零 **或** 有波次记录落在 11.3h lag 窗口内〕⇒ 才允许花 `$0.01` 走 CE 直读 MTD;**(α)(β) 皆零 ⇒ 戳冻结不产生盲区,不买**。⛔ 判据一个字不许挂到「冻结时长 ≥ N 小时」上(那是本轮被撤回的那个量放进触发器位置)。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/batch_test/aws/check_costs.sh",
+        "contains": [
+          "accrual",
+          "accruing"
+        ],
+        "note": "⭐ **针脚立行当场量过**(2026-09-14T10:02:13Z):`grep -c` 在该文件上 `accrual` = **0**、`accruing` = **0** ⇒ 本行**不是 BORN-DONE**。⚠️ **`describe-instances` 被故意排除在判据之外**,尽管它是旁路的仪器 —— 该文件**已经**含它一次(实测 `1`),拿它当判据等于让本行一出生就为真,那正是 `lua_gate_baseline_e2e` 在 04:15Z 踩的坑。⛔ 判据买的是「脚本里出现了 accrual 这条腿」,**不是**「这条腿写对了」—— 对不对由总监读 diff 时核(第 2 条的三个要件:非零普查 / 11.3h 窗口 / 皆零则不买)。"
+      },
+      "note": "⚠️ **本行与 `hero27_dem21_deadline_scan` 不同:它没有硬日历时限,却有一个更难看见的时限 —— 一个事件(下一次发波)。** `path_contains_all` 会老实地每轮喊 OWED,而**喊的音量与危险程度完全脱钩**:刹车红着时它无害,刹车一解除它立刻是最高优先级,而**判据本身分不开这两种状态**。⇒ 交给总监健康巡检:**任何一轮读到闸 (iii) 转绿(headroom ≥ 最便宜一波)而本行仍 OWED,必须在那一轮把它升为红色升级项**,⛔ 不得与其他 OWED 行并列处理。",
+      "unmet_at_ruling": "2026-09-14T10:02:13Z 现读 `tools/batch_test/aws/check_costs.sh`:`accrual` `grep -c` = 0、`accruing` = 0(两个判据串均缺席);对照读数 `describe-instances` = 1(故意未入判据,理由见 done_when.note)。同时刻 MTD `$89.505`、headroom `$0.495`、闸 (iii) `exit 3`、`budget refreshed 2026-09-13T20:32:29Z` 已冻 5 轮。"
     }
   ],
   "retired": [
