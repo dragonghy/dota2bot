@@ -542,6 +542,16 @@ tests['[instrument I2] the fixture item namespace is not the engine one'] = func
         -- items bots/ simply never mentions (Daedalus, Gris-Gris), not a namespace
         -- divergence on an item the bot code actually uses.  Registered rather
         -- than absorbed, because this ceiling's whole job is to not grow silently.)
+        -- (Vocabulary is 131 since 2026-09-14T18:xxZ, and the hole widened again,
+        -- 25 -> 26.  replay-check landed four more skillstall frames -- the
+        -- vengeful_spirit body of 20260902_214620_slot1 for GH #822 acceptance 1 --
+        -- bringing seven new names: aegis, cyclone, devastator, gungir,
+        -- recipe_pipe, solar_crest, spirit_vessel.  SIX resolve in bots/; the one
+        -- that does not is `recipe_pipe`, and it is the OTHER benign half again:
+        -- a RECIPE entity, which bots/ never names because GetItemComponents()
+        -- resolves recipes for it (AGENTS.md's "use GetItemComponents(), do not
+        -- hardcode component arrays").  ⛔ Not a namespace divergence on an item
+        -- the bot code uses.  Registered rather than absorbed.)
         for it in line:gmatch("'([^']*)'") do
             if it ~= '' then names[it] = true end
         end
@@ -558,8 +568,8 @@ tests['[instrument I2] the fixture item namespace is not the engine one'] = func
             nMissing = nMissing + 1
         end
     end
-    assert(nNames == 124, 'the fixture item vocabulary changed size: ' .. nNames)
-    assert(nMissing == 25, 'unresolvable fixture item names moved from 25 to ' .. nMissing ..
+    assert(nNames == 131, 'the fixture item vocabulary changed size: ' .. nNames)
+    assert(nMissing == 26, 'unresolvable fixture item names moved from 26 to ' .. nMissing ..
         ' -- either a fixture arrived with new items, or the namespace hole widened')
 end
 
