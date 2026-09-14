@@ -26,12 +26,17 @@ cp "$AIUG" "$BAK"
 cp "$JMZ" "$BAKJ"
 cp "$TEST" "$BAKT"
 
+# The proof that the tree went back is a HASH comparison, not the success of
+# `cp`.  sha256sum rather than `git diff --quiet` on purpose: this stand is
+# meant to be runnable mid-work, and a git comparison against the index reports
+# DIRTY for every uncommitted line of the change under test.
+SUMS=$(sha256sum "$AIUG" "$JMZ" "$TEST")
+
 restore() {
     cp "$BAK" "$AIUG"
     cp "$BAKJ" "$JMZ"
     cp "$BAKT" "$TEST"
-    if ! cmp -s "$BAK" "$AIUG" || ! cmp -s "$BAKJ" "$JMZ" \
-        || ! cmp -s "$BAKT" "$TEST"; then
+    if [ "$(sha256sum "$AIUG" "$JMZ" "$TEST")" != "$SUMS" ]; then
         echo "FATAL: restore failed -- the tree still carries a mutant" >&2
         exit 2
     fi
