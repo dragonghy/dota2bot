@@ -17500,3 +17500,34 @@
     (6) ⛔ 引本轮任何数**必须连切法一起引**,每英雄那张表**只作选点不作结论**;
     (7) ⚠️ manifest 汇总计数器**本轮才被拉回自洽**,下一个手加行的人**请一起更新三个汇总键**。
   - **完整报告**:`iterations/reports/replay-check/20260914T184500Z.md`
+- **[2026-09-14T18:45Z 收工回填]** 落地 `origin/main` `ba57c953..6fa8a417`(`PUSH_MAIN_EXIT=0`,**一次推成**
+  —— ⭐ 上三轮登记的「闸跑完被别组超车」摩擦**本轮未复现**),分支 `claude/lucid-pascal-sdcxlb` 同点
+  (`PUSH_BRANCH_EXIT=0`),⛔ **未用 `RULE6_BYPASS`**。
+  铁律 6 三条腿(裸读,两次 push 逐字相同 —— 第二次是记忆化命中,GH #213 族):
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 88 ran, 0 findings, 0 uncertifiable, 12.2s` /
+  **`lua gate: 377 ran, 0 findings, 0 uncertifiable, 8 unanswered, 7 known-red, 577.1s`**。
+  ⭐ **与上一轮不同,这条腿本轮是实读不是范围判定**(上一轮打的是 `SKIPPED BY SCOPE`),
+  本轮动了 `tests/` ⇒ 377 条真跑,**新测试就在这 377 条里**(自带 manifest 行)。动态半(GH #124)未跑、不声称。
+  **issue**:`GH #822` 的 **1 条评论**(`#issuecomment-5669190781`),**发在两次 push 之后**(GH #290 顺序),
+  `PRECHECK_EXIT=0`(**5/5 路径在 trunk 上解析,本地领先 0 个 commit**)。
+  ⭐ 发帖后按 09-13 那条事故的判别子复核:用的是 `add_issue_comment` 与 `issue_read`,
+  ⛔ **全程没碰 `issue_write`**;复核 #822 **正文与发帖前逐字相同**、`state` 仍 open、评论 0→1。
+  **开工自检**(⭐ 一次跑成:`> /tmp/sc.log 2>&1` 重定向,⛔ **没套 `timeout`** —— 上一轮那两条坑本轮都没踩;
+  ⛔ 但**第一跑仍被管道门拒了**(`EXIT=2 REFUSED`,横幅逐字「nothing was checked; this is NOT a pass」),
+  **连续第六例、且照例是本轮第一条命令**):
+  `legs run 13`,`selfcheck worst exit: 3`,
+  `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(python)`,`UNCERTIFIABLE: none`。
+  `trunk-red(python)` 横幅逐字带着 `Whether main is red too is NOT established by this line` ⇒ ⛔ **不读成 main 红**;
+  ⭐ **本轮逐条查了三个红文件的来源,全部不是本组的**:
+  `test_call_arity_census.py` → `bots/BotLib/hero_skeleton_king.lua` 的 `X.wk_IsBoneGuardEmptyBankOpen
+  UNDER passed 0 declares 1`(**英雄组**);`test_lua_corpus_stability.py` → `tests/test_stale_write_census.py`
+  开码走 `bots/`(**不是本轮新增文件**);`test_selfcheck_lua_leg.py` → 自检自己那条腿(**连续第三轮**)。
+  与批测台今日 `29ced62`/`ba57c95` 记的「main 上三条 python 红」同族。
+  ⭐⭐ **一条本轮新立的小纪律**:自检 `NOT RUN (inside a leg)` 列的**恰好是读 manifest 的那两条**
+  (`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py`),而**本轮改了 manifest**
+  ⇒ ⛔ **没把「自检跑过了」当成看过**,而是**手动单跑**三条读它的测试:
+  `test_lua_gate.py` 57 检查 / `test_lua_gate_coverage.py` 19 检查 /
+  `test_lua_gate_baseline_carryover.py` 31 检查,**全 0 失败**。
+  `lua-coverage` 欠条:**本轮零新增无 manifest 行的测试**。
+  `TOKENS total_in=11,681,361 out=63,757 turns=80`(零 `requires approval`)。
