@@ -1316,7 +1316,9 @@
     "tools/agent/routine_selfcheck.sh(`lua-coverage` 腿 —— 每组每轮真会跑的那个工具)",
     "iterations/owed_executions.json(本行)",
     "GH #806 追评(push 之后发,铁律 6 / GH #290 的顺序)"
-   ]
+   ],
+   "claimed_by": "director 2026-09-14T01:2xZ round",
+   "claimed_at": "2026-09-14T01:20:00Z"
   }
  ],
  "retired": [

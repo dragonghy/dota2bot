@@ -47,6 +47,7 @@ Usage:
 """
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -149,20 +150,115 @@ def ambiguous_filters(names):
     return sorted(a for a in names if any(a != b and a in b for b in names))
 
 
+# Every child this tool starts, while it is running.  Read by the signal
+# handler below, which is the only thing standing between "this measure pass was
+# killed" and "this container now has orphans stealing CPU from the next one".
+_LIVE = set()
+
+
+def run_capture(args, cwd, timeout):
+    """Run `args` in its OWN process group; return (rc, output, timed_out).
+
+    WHY THIS IS NOT `subprocess.run(timeout=...)` (GH #783 §4, owed_executions
+    `lua_gate_baseline_e2e` (B), director 2026-09-14).
+
+    `subprocess.run`'s timeout kills the DIRECT CHILD and nothing else.  The
+    child here is `lua5.1 tests/run_tests.lua <name>`, and a Lua test is free to
+    have spawned something of its own; the 09-12 round reproduced the shape from
+    the other end, finding a `ppid == 1` `lua5.1` still burning CPU 71 seconds
+    after the run that started it was killed.
+
+    ⚠️ The harm is NOT "one extra process".  It is that an orphan competes for
+    CPU with whatever runs next -- and what runs next here is the REST OF THIS
+    MEASUREMENT.  This tool's entire premise is GH #616 constraint 1, membership
+    by measured seconds and never by filename; an orphan pollutes precisely the
+    one number the tool exists to produce, in the direction that pushes a test
+    over the cap and OUT of the push gate.  A slow reading does not look wrong.
+
+    So: `start_new_session=True` puts the child in its own process group, and a
+    timeout kills the GROUP.  The second `communicate()` after the kill is not
+    decoration -- it reaps, so the pass does not accumulate zombies over ~450
+    invocations.
+    """
+    p = subprocess.Popen(
+        args,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        start_new_session=True,
+    )
+    _LIVE.add(p)
+    try:
+        try:
+            out, _ = p.communicate(timeout=timeout)
+            return p.returncode, out or b"", False
+        except subprocess.TimeoutExpired:
+            _kill_group(p)
+            try:
+                out, _ = p.communicate(timeout=10)
+            except subprocess.TimeoutExpired:
+                out = b""
+            return None, out or b"", True
+    finally:
+        _LIVE.discard(p)
+
+
+def _kill_group(p):
+    """SIGKILL the child's whole process group; never raise.
+
+    ⛔ NEVER SIGNALS OUR OWN GROUP, and that guard is not hypothetical: the
+    mutation that removed `start_new_session=True` did not make this tool leak
+    an orphan, it made the tool **SIGKILL itself** (the test stand died at
+    `exit 137` mid-case-1, before it could report anything).  A child that is
+    not in a session of its own shares ours, and `killpg` on a shared group is
+    a suicide note that reads like a cleanup.  Falling back to the single child
+    is strictly no worse than the shape this replaced.
+    """
+    try:
+        pgid = os.getpgid(p.pid)
+        if pgid == os.getpgid(0):
+            raise PermissionError("child shares our process group")
+        os.killpg(pgid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, OSError):
+        # Already gone, or (no session of its own) not ours to signal -- fall
+        # back to the single child so this is never WORSE than the old shape.
+        try:
+            p.kill()
+        except OSError:
+            pass
+
+
+def _install_signal_handlers():
+    """On SIGTERM/SIGINT, take the children down before we go.
+
+    The 09-12 orphan was left by a killed 开工自检, i.e. by a signal to THIS
+    process, not by a per-test timeout -- so the timeout path alone does not
+    close the hole.  Default disposition is restored before re-raising, so the
+    process still dies of the signal it was sent (an exit code that lies about
+    how a run ended is the same defect one level up).
+    """
+    def handler(signum, _frame):
+        for p in list(_LIVE):
+            _kill_group(p)
+        signal.signal(signum, signal.SIG_DFL)
+        os.kill(os.getpid(), signum)
+
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        try:
+            signal.signal(sig, handler)
+        except (ValueError, OSError):
+            pass  # not the main thread: the timeout path still holds
+
+
 def measure_one(root, name):
     """Return (seconds, rc, timed_out).  rc is the runner's own exit code."""
     t0 = time.time()
-    try:
-        p = subprocess.run(
-            [LUA, "tests/run_tests.lua", name],
-            cwd=root,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            timeout=MEASURE_TIMEOUT_SECONDS,
-        )
-        return time.time() - t0, p.returncode, False
-    except subprocess.TimeoutExpired:
+    rc, _out, timed_out = run_capture(
+        [LUA, "tests/run_tests.lua", name], root, MEASURE_TIMEOUT_SECONDS
+    )
+    if timed_out:
         return MEASURE_TIMEOUT_SECONDS, None, True
+    return time.time() - t0, rc, False
 
 
 def _run_case_probe(rel):
@@ -173,17 +269,12 @@ def _run_case_probe(rel):
     matters is that the output is the same output the GATE will parse, because
     the baseline is only worth anything if both sides read the same shape.
     """
-    try:
-        p = subprocess.run(
-            [LUA, "tests/run_tests.lua", os.path.basename(rel)],
-            cwd=ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            timeout=MEASURE_TIMEOUT_SECONDS,
-        )
-        return p.returncode, p.stdout.decode("utf-8", "replace")
-    except subprocess.TimeoutExpired as exc:
-        return None, (exc.output or b"").decode("utf-8", "replace")
+    rc, out, _timed_out = run_capture(
+        [LUA, "tests/run_tests.lua", os.path.basename(rel)],
+        ROOT,
+        MEASURE_TIMEOUT_SECONDS,
+    )
+    return rc, out.decode("utf-8", "replace")
 
 
 def select(measurements, per_test_cap, budget):
@@ -397,6 +488,7 @@ def reselect(argv):
 
 
 def main(argv):
+    _install_signal_handlers()
     if "--set-known-red" in argv:
         return set_known_red(argv)
     if "--reselect" in argv:
