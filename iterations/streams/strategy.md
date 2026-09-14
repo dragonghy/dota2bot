@@ -35,7 +35,63 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT10. **【2026-09-14T01:45Z 提为下一轮第一项。与 0NEXT9 同理,这一条**压过工作流第 1b 步
+0NEXT11. **【2026-09-14T06:20Z 新增,**下一轮第一项**。走路腿在**实际 armed 串**下的 live 域。
+
+   **为什么是它**:`tests/test_stayfield2_marginal_domain.lua` 已经给出闭式
+   `margin(stayfield2) = S and (¬T3 or ¬T5)`(S = `ShouldRegenNotGoHome`,T = 已 promote 的
+   `ShouldStayAndRegen`),**但那个闭式是在不含 `fieldsip` 的串上算的**。本轮实测:
+   在**今天的 44 成员串**上,P2 铁证帧的 `ShouldRegenNotWalkHome` 是 **false**
+   (`fieldsip` 把 `IsFieldSipEnough` 判否)⇒ **那个边际域在真串上还剩多少,没人读过。**
+   这与本轮 0NEXT10 是**同族问题、换一条腿**:一个读数是在**哪个串**上取的。
+
+   **两种合法产出,择一**:(a) 真串上域非空 ⇒ 按本组纪律落一个 gated 收窄 + 真实帧 fixture;
+   (b) 真串上域为空 ⇒ 给出频率证据,并把「`stayfield2` armed 而 live 域为 0」写成一条
+   交总监的读数(那是 `pullcad` 形状,而且是**事前**说出来而不是事后)。
+
+   ⚠️ **判据继承 0NEXT10 全部**,本轮新增两条 ——
+
+   ⭐⭐ **(申) 一个由「两个读者对同一份状态读数不一致」论证出来的缺陷,只是半个论证。
+   另外半个是:是不是已经有**第三个站点**在替它们对账 —— 而这半个,从那两个读者身上都看不出来。**
+   现场:三个谓词读同一份物品栏、为同一瓶大药,停在不同的槽
+   (`J.HasFieldRegenSource` **0..5** / 买方 block 的槽位条款 **0..8** / 复购闸 `FindItemSlot` **看得见背包**)。
+   两个不一致的读者都在 `jmz_func`/`aba_item`;**对账的那个在 mode 文件里**
+   (`TrySwapInvItemForFlask()`,`mode_team_roam_generic.lua:2237`),经
+   `ItemOpsDesire() → GetDesireHelper() → GetDesire()` 到达,而引擎**每帧对每个 bot 的每个 mode
+   轮询 `GetDesire()`** ⇒ **调用图上看不见,grep 那两个读者找不到它。**
+   配套顺序规则:⛔ **动手前先跑一次受影响族的测试,不要只跑自己新写的那个文件。**
+   本轮的棘轮从头到尾都在,却是在 lever 落地、fixture 写完、变异台跑完**之后**才被跑到的。
+
+   ⭐⭐ **(酉) (午) 的下一层:变异体本身也要先核验它真的改到了东西,再去读它被谁抓。**
+   本轮 M2 第一版打 **SURVIVED**,真相是**变异体根本没落地**(那行是四个空格缩进,
+   perl 锚写的是两个 tab)。**「存活」和「没打进去」在计分板上长得一模一样。**
+   改法:每个变异体打印改动前后的一个计数(本轮用 `grep -c`),计数没动就不是一次变异。
+
+   ⛔ **已被定价并排除、不要重买**(继承 0NEXT10 全部,本轮新增两条):
+   ① ⛔⛔ **给买方大药 block 加「要有空**主**槽」的条款 —— 这是 GH #123 的提案,
+   2026-08-23 已实测否决,`tests/test_fieldbuy_backpack_rescuer.lua` 是为它立的常设棘轮。**
+   反证见 (申)。代价实测:**干燥域** 28 帧里噤声 **13 帧(46.4%)**,而那 13 帧**救得回来 13/13、卡住 0**。
+   **本轮把它重买了一次并回退**,别买第三次。
+   ② ⛔ **「转移集的获救率没人读过」这个缺口已在本轮关掉** —— `no_main_slot 15 /
+   rescuable 15 / stuck 0`(`tests/test_fieldsip_transfer_receiving_site.lua`)。
+   ⇒ GH #123 的裁定**延伸到转移集**,棘轮现在关在**两个**总体上。别重测。
+
+   ⚠️ **本轮登记但不代修的三条 trunk 红**(干净 worktree 独立复现,已交总监,见报告 §6):
+   `tests/test_fieldsip_atom_pricing.lua`(2 红,**语料长大**:1021→1039、944→961,
+   该文件抬头明写「一起重定或都不重定」)、`tests/test_tpscroll_branch_shadow_census.lua`(GH #807)、
+   python `tests/test_pending_rulings.py`。】**
+
+0NEXT10. ✅ **【2026-09-14T01:45Z 提为下一轮第一项 → 2026-09-14T06:20Z 做完,产出是 **(b)**。
+   **结论一:正文写的「决策侧无任何 id 在管」是陈旧的** —— 现有**五条**
+   (`tpquiet`/`stayfield`/`tprecov`/`tpdeep` 覆盖四条 TP 分支,`stayfield2` 覆盖走路腿,
+   外加已 promote 的 `ShouldStayAndRegen`),再开第六个是重买。P2 完成定义第 1 条**视为已覆盖**。
+   **结论二(本轮真正的产出)**:2026-09-08 那条「`fieldsip` 的转移是正确的」裁定
+   **只在谓词层读过,没问接收方的 call site 能不能动手**;补测后 **15/15 可获救、0 卡住**,
+   ⇒ 裁定成立并延伸。**结论三(自曝)**:据此落的 `bots/` lever 是**已被定价并排除的 GH #123 提案**,
+   棘轮抓住、同一工作单元内回退 ⇒ **4.4 (i) 本轮不满足,连续次数归零,如实登记,
+   没有为了配额留着那个被否决的 lever。**
+   报告 `iterations/reports/strategy/20260914T062000Z.md`;`state.json:buymain_20260914`。
+   原文保留在下,便于对照。**
+   **【2026-09-14T01:45Z 提为下一轮第一项。与 0NEXT9 同理,这一条**压过工作流第 1b 步
    (扫 issue)**:它是 `OWNER_PRIORITIES.md` 的 **P2**,「当前球在:**协同组**」。铁律 9 在 issue 流
    和本 backlog 之上——**不要再用「issue 比 backlog 优先」推翻它**,0NEXT9 的作者就是这么违的例。
 
@@ -9001,6 +9057,62 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-14T06:20Z:**产出 (b) —— `bots/` 一行未动;本轮落过一个 lever 又回退了,
+  因为它是一个**已被定价并排除**的改动。4.4 (i) 不满足,连续次数归零(如实登记)。**
+  按铁律 9 / backlog 0NEXT10 做 `OWNER_PRIORITIES` **P2**。
+  **(1) 复核先救了一次重复劳动**:0NEXT10 正文的「决策侧自 `lf_recover` 被拒 / `homeroute` 被删
+  之后**无任何 id 在管**」**是陈旧的** —— 现有**五条**(`tpquiet` 管 `撤退:1`、`stayfield` 管 `撤退:3`、
+  `tprecov`+`tpdeep` 管 `回复状态`、`stayfield2` 管走路腿,外加已 promote 的 `ShouldStayAndRegen`),
+  `撤退:2` 按实测豁免。**P2 完成定义第 1 条视为已覆盖**;请主会话 / Cursor 更新
+  `OWNER_PRIORITIES.md` P2「现状缺口」段(本组不自行改该文件)。
+  **(2) 转而问的新问题**:2026-09-08 `tests/test_fieldsip_atom_pricing.lua` 判「`fieldsip` 的转移
+  是正确的」—— 那是 `J.ShouldFieldBuyRegen` **答什么**的读数,**它没问接收方的 call site 能不能
+  对这 22 帧动手**。这是本仓自己的判据(「域 = 谓词 ∩ 它被放进去的那个合取」)**第一次用在接收
+  转移的那条腿上**。实测(`tests/_buysite_sweep.lua`,112 fixture / **1039** live 帧):
+  `hold_bare 24` / `hold_sip 2` / `transferred 22`;接收侧 `site_main_slot 7` / **`no_main_slot 15`** /
+  `ceiling_readable 18` / `ceiling_readable_main_slot 6`。P2 铁证帧就在那 15 帧里。
+  **(3) ⛔ 自曝:据此落的 `buymain` 是 GH #123 的提案,2026-08-23 已实测否决**,
+  `tests/test_fieldbuy_backpack_rescuer.lua` 是为它立的**常设棘轮**,本轮跑族内子集时红。
+  反证:`TrySwapInvItemForFlask()`(`mode_team_roam_generic.lua:2237`)把背包大药换进主槽,
+  且**不是 roam 专属** —— 经 `ItemOpsDesire → GetDesireHelper → GetDesire`,而引擎**每帧对每个
+  bot 的每个 mode 轮询 GetDesire()**;代价实测:干燥域 28 帧噤声 **13 帧(46.4%)**,
+  而那 13 帧**救得回来 13/13、卡住 0**。**同一工作单元内回退**(`bots/` 零 diff,新测试删除)。
+  **(4) 本轮真正的产出**:把那条 ruling 留下的**唯一**缺口补上并**关掉** —— 13/13 是在**干燥域**
+  读的,而 `fieldsip` 的**转移集**(主槽里带着 faerie fire/tango、被**量级**判为供给不足)
+  晚十六天才存在,**获救率从没被读过**。用救援器自己的谓词
+  (`J.Item.GetMainInvLessValItemSlot ~= -1`,驱动非重写)实测:
+  **`no_main_slot_rescuable 15` / `no_main_slot_stuck 0`**,全 22 帧 `rescuable 22`
+  ⇒ **GH #123 裁定延伸到转移集,棘轮现在关在两个总体上。**
+  ⭐⭐ **最该被下一轮读到的两条(已进 backlog 为 (申)/(酉))**:
+  **(申) 一个由「两个读者对同一份状态读数不一致」论证出来的缺陷,只是半个论证 ——
+  另外半个是「是不是已经有第三个站点在替它们对账」,而这半个从那两个读者身上都看不出来。**
+  本轮三个不一致的读者全在 `jmz_func`/`aba_item`,对账者在 mode 文件里、经引擎每帧轮询
+  `GetDesire()` 这条**调用图上看不见**的路径到达 ⇒ grep 那两个读者找不到它。
+  配套顺序规则:⛔ **动手前先跑受影响族的测试,不要只跑自己新写的那个文件**
+  —— 棘轮从头到尾都在,却是在 lever 落地、fixture 写完、变异台跑完**之后**才被跑到的。
+  **(酉) (午) 的下一层:变异体本身也要先核验它真改到了东西,再读它被谁抓。**
+  本轮 M2 第一版打 **SURVIVED**,真相是**没落地**(四个空格缩进 vs perl 锚里的两个 tab)——
+  **「存活」和「没打进去」在计分板上长得一模一样。**
+  变异台(核验落地后):M1(`GetMainInvLessValItemSlot` 恒 -1)/ M2(删救援器调用)/
+  M3(断 `GetDesireHelper→ItemOpsDesire`)**三条都由点名的那条用例红**。
+  ⚠️ **trunk 三条红,都不是本轮造成的**(干净 worktree 独立复现,交总监,本组不代修):
+  `tests/test_fieldsip_atom_pricing.lua` **2 红 —— 语料长大**(`1021→1039`、`944→961`;
+  ⭐ 我审的那条 ruling 所在的文件,**它自己的数已经过期**,而本轮是在**今天的语料**上重算的,
+  转移计数 **22 稳定未变**;该文件抬头明写「一起重定或都不重定」)、
+  `tests/test_tpscroll_branch_shadow_census.lua`(GH #807)、python `tests/test_pending_rulings.py`。
+  ⚠️ 附带一条机械事实交总监:该棘轮靠 `src:sub(i, i+1200)` 取块,**本轮那段注释把
+  `ActionImmediate_PurchaseItem` 顶出了 1200 字符窗口**,于是它红在「block no longer ends in a
+  purchase」而**不是**它真想抓的那句 —— 抓住了、方向也对,但注释再短一点它可能一声不吭。
+  ⚠️ 开工自检跑满,**真码 `EXIT=3`**(首条命令**第 17 次**被 `REFUSED: stdout is a pipe` 挡回);
+  `FINDINGS` = cadence / queue-rulings / owed-executions / lua-coverage / trunk-red(python);
+  **python 腿内部 9 个 check 没跑成** ⇒ 那一侧这轮仍未被完整看过。
+  `trunk health (fast Lua detectors)` 90 files 0 failures,**它自称 FAST SUBSET,不据此替总监下判决**。
+  ⚠️ **动态半未跑全量**(~100min,GH #124),跑了受影响子集(报告 §7 逐项列出)。**这是子集不是全量。**
+  ⛔ **本轮不提入集申请**:P4.2 冻结未解,且**没有新 id**(lever 已回退)。**这不是掉棒。**
+  产出:`tests/_buysite_sweep.lua`、`tests/test_fieldsip_transfer_receiving_site.lua`(**8 tests 0 failures**)、
+  报告 `iterations/reports/strategy/20260914T062000Z.md`、`state.json:buymain_20260914`。
+
 
 - 2026-09-14T01:45Z:**P1(1) 结案 —— `IsLanePullSafe` 不是第二条死条件,而且
   方向与怀疑相反。`bots/` 一行未动,4.4 (i) 本轮不满足(连续次数归零,如实登记)。**
