@@ -1,0 +1,1818 @@
+{
+ "_comment": "⛔ NOT A MANIFEST -- do not copy this over tools/agent/lua_gate_manifest.json. This is the RAW per-file reading of a real lua_gate_measure.py pass (451 files, 896s wall) run by the director 2026-09-14T01:30-01:46Z on a routine container, saved so the next round does not pay 15 minutes to re-learn it. The pass was NOT landed: it moved 12 tests out of the push gate, 2 of them baselined, which trips tests/test_lua_gate.py:6g. See the round report.",
+ "container_drift_vs_20260910": {
+  "basis": "398 files with a row in both manifests, excluding any timed_out side and any old reading < 0.30s (n=153)",
+  "median_ratio": 1.175,
+  "p25": 1.105,
+  "p75": 1.224,
+  "what_it_means": "this container is ~17.5% slower than the one that wrote the 2026-09-10 manifest; cap 5.5s / measure timeout 6.0s / budget 300.0s are all ABSOLUTE seconds, so container speed -- not any decision -- re-decides gate membership"
+ },
+ "measure_timeout_seconds": 6.0,
+ "measured_at": "2026-09-14T01:45:51Z",
+ "readings": {
+  "tests/test_abil1st_first_unit_reader.lua": {
+   "flag": "ok",
+   "seconds": 0.65
+  },
+  "tests/test_abilanc_ancient_selector.lua": {
+   "flag": "ok",
+   "seconds": 0.44
+  },
+  "tests/test_ability_value_read_anchor.lua": {
+   "flag": "ok",
+   "seconds": 2.75
+  },
+  "tests/test_activemode_call_site_census.lua": {
+   "flag": "ok",
+   "seconds": 1.5
+  },
+  "tests/test_activemode_world_assertion.lua": {
+   "flag": "red",
+   "seconds": 5.7
+  },
+  "tests/test_aegis_grouping.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_aether_lens_range_bonus.lua": {
+   "flag": "ok",
+   "seconds": 0.96
+  },
+  "tests/test_aimguard_target_axis.lua": {
+   "flag": "ok",
+   "seconds": 1.14
+  },
+  "tests/test_alchemist_rage_clock_staged_frame.lua": {
+   "flag": "ok",
+   "seconds": 0.22
+  },
+  "tests/test_alchemist_rage_objective_clock.lua": {
+   "flag": "ok",
+   "seconds": 0.27
+  },
+  "tests/test_ancient_hp_unit.lua": {
+   "flag": "ok",
+   "seconds": 0.38
+  },
+  "tests/test_anyhero_first_member_quantifier.lua": {
+   "flag": "ok",
+   "seconds": 3.41
+  },
+  "tests/test_aoe_result_field_names.lua": {
+   "flag": "ok",
+   "seconds": 0.72
+  },
+  "tests/test_arbheart_farm_camp_heartbeat.lua": {
+   "flag": "ok",
+   "seconds": 0.19
+  },
+  "tests/test_arbheart_host_bid_role_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.4
+  },
+  "tests/test_arbheart_release_retires_camp.lua": {
+   "flag": "ok",
+   "seconds": 0.27
+  },
+  "tests/test_arbheart_repick_relatch.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_axe_battle_hunger_fight_reach.lua": {
+   "flag": "ok",
+   "seconds": 4.3
+  },
+  "tests/test_axe_battle_hunger_pure.lua": {
+   "flag": "ok",
+   "seconds": 0.49
+  },
+  "tests/test_axe_battle_hunger_recast.lua": {
+   "flag": "ok",
+   "seconds": 1.78
+  },
+  "tests/test_axe_bkb_supply_staged_frame.lua": {
+   "flag": "ok",
+   "seconds": 0.12
+  },
+  "tests/test_axe_blink_build.lua": {
+   "flag": "ok",
+   "seconds": 0.36
+  },
+  "tests/test_axe_call_immune_veto.lua": {
+   "flag": "ok",
+   "seconds": 1.11
+  },
+  "tests/test_axe_call_staged_frames.lua": {
+   "flag": "ok",
+   "seconds": 0.6
+  },
+  "tests/test_axe_cull_immune_veto.lua": {
+   "flag": "ok",
+   "seconds": 0.46
+  },
+  "tests/test_axe_cull_promise_premise.lua": {
+   "flag": "ok",
+   "seconds": 0.17
+  },
+  "tests/test_axe_cull_reach.lua": {
+   "flag": "ok",
+   "seconds": 4.35
+  },
+  "tests/test_axe_cull_threshold_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.52
+  },
+  "tests/test_axe_culling_band_power.lua": {
+   "flag": "ok",
+   "seconds": 0.1
+  },
+  "tests/test_axe_culling_threshold_preflight.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_axe_q_lane_push_clock.lua": {
+   "flag": "ok",
+   "seconds": 1.35
+  },
+  "tests/test_axe_t15_in_domain.lua": {
+   "flag": "ok",
+   "seconds": 0.07
+  },
+  "tests/test_axe_t15_payoff.lua": {
+   "flag": "red",
+   "seconds": 0.15
+  },
+  "tests/test_bagsalve_backpack_source.lua": {
+   "flag": "ok",
+   "seconds": 0.59
+  },
+  "tests/test_bagtango_field_regen_rescuer.lua": {
+   "flag": "ok",
+   "seconds": 0.41
+  },
+  "tests/test_basesiege_presence.lua": {
+   "flag": "ok",
+   "seconds": 0.44
+  },
+  "tests/test_bbfight_turbo_respawn_ceiling.lua": {
+   "flag": "ok",
+   "seconds": 0.24
+  },
+  "tests/test_bbrespawn_double_subtract.lua": {
+   "flag": "ok",
+   "seconds": 0.42
+  },
+  "tests/test_bbshort_turbo_respawn_floor.lua": {
+   "flag": "ok",
+   "seconds": 0.23
+  },
+  "tests/test_blind_a_cmrguard.lua": {
+   "flag": "ok",
+   "seconds": 0.23
+  },
+  "tests/test_blind_a_pulllane_pullthink.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_blind_a_roamidle_campsel.lua": {
+   "flag": "ok",
+   "seconds": 0.33
+  },
+  "tests/test_blind_a_wandlimbo_tpdead.lua": {
+   "flag": "ok",
+   "seconds": 0.05
+  },
+  "tests/test_blinkflee_scope_ruling.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_body_block.lua": {
+   "flag": "ok",
+   "seconds": 0.2
+  },
+  "tests/test_boots_supply_paths.lua": {
+   "flag": "ok",
+   "seconds": 0.02
+  },
+  "tests/test_botsinit_env_namespace.lua": {
+   "flag": "ok",
+   "seconds": 4.98
+  },
+  "tests/test_build_index_resolution.lua": {
+   "flag": "ok",
+   "seconds": 0.16
+  },
+  "tests/test_buyband_hp_band.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_buydeep_purchase_floor.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_buyring_purchase_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_buytower_purchase_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_camp_type_premise_polarity.lua": {
+   "flag": "ok",
+   "seconds": 2.81
+  },
+  "tests/test_campbind_coarm_vacuous.lua": {
+   "flag": "ok",
+   "seconds": 0.53
+  },
+  "tests/test_campbind_poke_target.lua": {
+   "flag": "ok",
+   "seconds": 0.43
+  },
+  "tests/test_campdanger_switch_safe.lua": {
+   "flag": "ok",
+   "seconds": 0.28
+  },
+  "tests/test_campexit_take_counterframes.lua": {
+   "flag": "ok",
+   "seconds": 0.33
+  },
+  "tests/test_campexit_tier_release.lua": {
+   "flag": "ok",
+   "seconds": 0.85
+  },
+  "tests/test_campfarm_ancient_target.lua": {
+   "flag": "ok",
+   "seconds": 0.56
+  },
+  "tests/test_campgrade_tier_ladder.lua": {
+   "flag": "ok",
+   "seconds": 0.63
+  },
+  "tests/test_campsel_wrapper_fields.lua": {
+   "flag": "ok",
+   "seconds": 0.49
+  },
+  "tests/test_campvoid_domain_geometry.lua": {
+   "flag": "ok",
+   "seconds": 0.18
+  },
+  "tests/test_campvoid_presence_axis.lua": {
+   "flag": "ok",
+   "seconds": 0.66
+  },
+  "tests/test_canbreakteleport.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_capmono_ceiling.lua": {
+   "flag": "ok",
+   "seconds": 1.39
+  },
+  "tests/test_cast_ring_mirror_discipline.lua": {
+   "flag": "ok",
+   "seconds": 4.43
+  },
+  "tests/test_ccburst.lua": {
+   "flag": "ok",
+   "seconds": 0.16
+  },
+  "tests/test_chasering_target_in_ring.lua": {
+   "flag": "ok",
+   "seconds": 3.21
+  },
+  "tests/test_ckpush_minute_unit.lua": {
+   "flag": "ok",
+   "seconds": 0.68
+  },
+  "tests/test_cm_ability_index_binding.lua": {
+   "flag": "ok",
+   "seconds": 0.39
+  },
+  "tests/test_cm_arcane_aura_passive.lua": {
+   "flag": "ok",
+   "seconds": 0.29
+  },
+  "tests/test_cm_cmqreach_transit_frame.lua": {
+   "flag": "ok",
+   "seconds": 0.11
+  },
+  "tests/test_cm_creep_reach_real_frame.lua": {
+   "flag": "ok",
+   "seconds": 0.35
+  },
+  "tests/test_cm_far_creep_floor.lua": {
+   "flag": "ok",
+   "seconds": 1.74
+  },
+  "tests/test_cm_frostbite_creep_cap.lua": {
+   "flag": "ok",
+   "seconds": 1.41
+  },
+  "tests/test_cm_nova_surplus_poke.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_cm_pos5_boots.lua": {
+   "flag": "red",
+   "seconds": 0.29
+  },
+  "tests/test_cm_q_creep_aoe_reach.lua": {
+   "flag": "ok",
+   "seconds": 0.43
+  },
+  "tests/test_cm_r_crowd_release.lua": {
+   "flag": "ok",
+   "seconds": 1.46
+  },
+  "tests/test_cm_r_retreat_crowd.lua": {
+   "flag": "ok",
+   "seconds": 2.03
+  },
+  "tests/test_cm_r_solo_release.lua": {
+   "flag": "ok",
+   "seconds": 1.69
+  },
+  "tests/test_cm_ranged_creep_health.lua": {
+   "flag": "ok",
+   "seconds": 2.36
+  },
+  "tests/test_cm_t10_payoff.lua": {
+   "flag": "ok",
+   "seconds": 1.67
+  },
+  "tests/test_cm_t20t25_payoff.lua": {
+   "flag": "ok",
+   "seconds": 0.03
+  },
+  "tests/test_cm_ult_reach_meter_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_cm_w_creep_clock.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_cm_w_lane_band.lua": {
+   "flag": "ok",
+   "seconds": 1.96
+  },
+  "tests/test_cm_w_selfdefense_damager.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_cm_w_selfdefense_facing.lua": {
+   "flag": "ok",
+   "seconds": 1.71
+  },
+  "tests/test_cm_w_teamfight_clock.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_coarmed_attribution_register.lua": {
+   "flag": "ok",
+   "seconds": 2.81
+  },
+  "tests/test_corefarm_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_corerole_closest_core.lua": {
+   "flag": "ok",
+   "seconds": 0.18
+  },
+  "tests/test_corpus_existence_claims.lua": {
+   "flag": "ok",
+   "seconds": 0.49
+  },
+  "tests/test_corpus_scale.lua": {
+   "flag": "ok",
+   "seconds": 1.58
+  },
+  "tests/test_creep_pull.lua": {
+   "flag": "ok",
+   "seconds": 0.26
+  },
+  "tests/test_creeppull_zone_clause.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_creepthink_anim_throttle.lua": {
+   "flag": "ok",
+   "seconds": 0.86
+  },
+  "tests/test_creepthink_pulldrag_vacuous.lua": {
+   "flag": "ok",
+   "seconds": 0.35
+  },
+  "tests/test_cutoff_retreat_ancient_race_quantifier.lua": {
+   "flag": "ok",
+   "seconds": 3.69
+  },
+  "tests/test_data_consistency.lua": {
+   "flag": "ok",
+   "seconds": 0.01
+  },
+  "tests/test_dead_manacost_binding_census.lua": {
+   "flag": "ok",
+   "seconds": 1.41
+  },
+  "tests/test_dead_numeric_local_census.lua": {
+   "flag": "ok",
+   "seconds": 1.34
+  },
+  "tests/test_deathzone_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_deepnum_parity.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_defclose_defender_arbitration.lua": {
+   "flag": "ok",
+   "seconds": 0.93
+  },
+  "tests/test_defend_ping_declaration_ratchet.lua": {
+   "flag": "ok",
+   "seconds": 0.27
+  },
+  "tests/test_defnum_recent_hit_parity.lua": {
+   "flag": "ok",
+   "seconds": 2.05
+  },
+  "tests/test_defstale_defend_bail.lua": {
+   "flag": "ok",
+   "seconds": 0.54
+  },
+  "tests/test_depthnum_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_divecap_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.18
+  },
+  "tests/test_divepocket_target_in_pocket.lua": {
+   "flag": "ok",
+   "seconds": 3.36
+  },
+  "tests/test_divepost_outpost_narrow.lua": {
+   "flag": "ok",
+   "seconds": 3.47
+  },
+  "tests/test_droppick_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_du5_archive_census.lua": {
+   "flag": "ok",
+   "seconds": 0.02
+  },
+  "tests/test_dup_component_buylist_census.lua": {
+   "flag": "ok",
+   "seconds": 0.16
+  },
+  "tests/test_dusttower_dive_guard.lua": {
+   "flag": "ok",
+   "seconds": 0.23
+  },
+  "tests/test_farmfear_block2_dominated.lua": {
+   "flag": "ok",
+   "seconds": 0.21
+  },
+  "tests/test_fbnoally_ally_center_origin.lua": {
+   "flag": "ok",
+   "seconds": 3.0
+  },
+  "tests/test_fieldbuy_backpack_rescuer.lua": {
+   "flag": "ok",
+   "seconds": 0.2
+  },
+  "tests/test_fieldcreep_magnitude_operand.lua": {
+   "flag": "ok",
+   "seconds": 4.82
+  },
+  "tests/test_fieldcreep_veto.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_fieldregen_family_overlap.lua": {
+   "flag": "ok",
+   "seconds": 0.01
+  },
+  "tests/test_fieldsip_atom_pricing.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_fieldsip_magnitude.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_fieldsrc_ff_premise.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_fightback_world_assertion.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_fixture_ability_slots.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_fixture_aoe_creeps.lua": {
+   "flag": "ok",
+   "seconds": 0.37
+  },
+  "tests/test_fixture_extrapolation_mock.lua": {
+   "flag": "ok",
+   "seconds": 0.36
+  },
+  "tests/test_fixture_illusion_ground_truth.lua": {
+   "flag": "ok",
+   "seconds": 0.18
+  },
+  "tests/test_fixture_kv_getters.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_fixture_last_seen.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_fixture_mana_price.lua": {
+   "flag": "ok",
+   "seconds": 3.23
+  },
+  "tests/test_fixture_modifiers.lua": {
+   "flag": "ok",
+   "seconds": 0.27
+  },
+  "tests/test_fixture_nearby_structures.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_fixture_recent_damage.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_fixture_roles.lua": {
+   "flag": "ok",
+   "seconds": 2.7
+  },
+  "tests/test_fixture_structure_modifiers.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_fixture_talent_blindness.lua": {
+   "flag": "ok",
+   "seconds": 0.01
+  },
+  "tests/test_fixture_unit_list_all.lua": {
+   "flag": "ok",
+   "seconds": 0.1
+  },
+  "tests/test_focus_build_level_legality.lua": {
+   "flag": "ok",
+   "seconds": 0.46
+  },
+  "tests/test_focus_cast_instant_frames.lua": {
+   "flag": "ok",
+   "seconds": 0.98
+  },
+  "tests/test_focus_decision_reachability.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_focus_innate_index_anchor.lua": {
+   "flag": "ok",
+   "seconds": 0.2
+  },
+  "tests/test_focus_level_claims.lua": {
+   "flag": "ok",
+   "seconds": 0.73
+  },
+  "tests/test_focus_mana_cost_consumer_census.lua": {
+   "flag": "ok",
+   "seconds": 0.22
+  },
+  "tests/test_focus_t15_payoff.lua": {
+   "flag": "ok",
+   "seconds": 0.1
+  },
+  "tests/test_focus_talent_anchor.lua": {
+   "flag": "ok",
+   "seconds": 0.25
+  },
+  "tests/test_focus_talent_reach_wall.lua": {
+   "flag": "ok",
+   "seconds": 0.29
+  },
+  "tests/test_fogmemory_corpus_limit.lua": {
+   "flag": "ok",
+   "seconds": 2.56
+  },
+  "tests/test_gamemode_world_assertion.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_gate_claim_consistency.lua": {
+   "flag": "ok",
+   "seconds": 1.21
+  },
+  "tests/test_gated_getter_stub_control.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_gated_helper_liveness.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_gated_helper_nesting_census.lua": {
+   "flag": "ok",
+   "seconds": 2.31
+  },
+  "tests/test_glyph_veto_subject.lua": {
+   "flag": "ok",
+   "seconds": 3.82
+  },
+  "tests/test_grenharass_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_healthy_walk_home_gap.lua": {
+   "flag": "ok",
+   "seconds": 0.27
+  },
+  "tests/test_hero_slot_order_anchor.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_hpbool_dead_conjunct.lua": {
+   "flag": "ok",
+   "seconds": 0.67
+  },
+  "tests/test_hrflee_retreat.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_hrparity_guard.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_hrreach_guard.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_illumove_shared_throttle.lua": {
+   "flag": "ok",
+   "seconds": 0.19
+  },
+  "tests/test_illureal_field_vs_engine.lua": {
+   "flag": "ok",
+   "seconds": 0.3
+  },
+  "tests/test_immguard_dead_filter.lua": {
+   "flag": "ok",
+   "seconds": 0.62
+  },
+  "tests/test_incoming_damage_callsite_census.lua": {
+   "flag": "ok",
+   "seconds": 0.32
+  },
+  "tests/test_invoker_cm_target_guard.lua": {
+   "flag": "ok",
+   "seconds": 0.24
+  },
+  "tests/test_is_there_core_in_location.lua": {
+   "flag": "ok",
+   "seconds": 0.22
+  },
+  "tests/test_isvalid_building_sentinel.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_isvalidtarget_fuse.lua": {
+   "flag": "ok",
+   "seconds": 1.85
+  },
+  "tests/test_item_name_census.lua": {
+   "flag": "ok",
+   "seconds": 1.34
+  },
+  "tests/test_itemdesire_world_assertion.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_itemtrip_supply_gap.lua": {
+   "flag": "ok",
+   "seconds": 2.5
+  },
+  "tests/test_itemtrip_wasteful_trip.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_l1_trade.lua": {
+   "flag": "ok",
+   "seconds": 0.2
+  },
+  "tests/test_l5_combo.lua": {
+   "flag": "ok",
+   "seconds": 0.19
+  },
+  "tests/test_l5_trees.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_lanefix_mana_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_lanehyst.lua": {
+   "flag": "ok",
+   "seconds": 0.16
+  },
+  "tests/test_lanekill_bid_reachable.lua": {
+   "flag": "ok",
+   "seconds": 0.6
+  },
+  "tests/test_lanekill_domain_census.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_lanenone_site_pricing.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_lategame_talent_visibility.lua": {
+   "flag": "ok",
+   "seconds": 0.03
+  },
+  "tests/test_level_gate_census.lua": {
+   "flag": "ok",
+   "seconds": 0.36
+  },
+  "tests/test_level_premise_registry.lua": {
+   "flag": "ok",
+   "seconds": 1.28
+  },
+  "tests/test_lf_rescue_final_action.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_lf_rescue_landing_reach.lua": {
+   "flag": "ok",
+   "seconds": 0.4
+  },
+  "tests/test_lf_salve_cast_type.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_lion_considere_earlyreturn_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_lion_drain_combat_widen.lua": {
+   "flag": "ok",
+   "seconds": 1.0
+  },
+  "tests/test_lion_drain_creep_reach.lua": {
+   "flag": "ok",
+   "seconds": 3.41
+  },
+  "tests/test_lion_drain_immune_target.lua": {
+   "flag": "ok",
+   "seconds": 0.39
+  },
+  "tests/test_lion_drain_refill_domain.lua": {
+   "flag": "ok",
+   "seconds": 0.33
+  },
+  "tests/test_lion_drainstop_vision_domain.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_lion_hex_interrupt_reach.lua": {
+   "flag": "ok",
+   "seconds": 1.48
+  },
+  "tests/test_lion_hex_reserve_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_lion_hex_talent_slot.lua": {
+   "flag": "ok",
+   "seconds": 0.28
+  },
+  "tests/test_lion_maykilltarget_param.lua": {
+   "flag": "ok",
+   "seconds": 0.01
+  },
+  "tests/test_lion_q_field_engagement.lua": {
+   "flag": "ok",
+   "seconds": 5.62
+  },
+  "tests/test_lion_q_kill_damage.lua": {
+   "flag": "ok",
+   "seconds": 0.67
+  },
+  "tests/test_lion_q_kill_reach.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_lion_q_lane_push_clock.lua": {
+   "flag": "ok",
+   "seconds": 1.41
+  },
+  "tests/test_lion_r_splash_radius_key.lua": {
+   "flag": "ok",
+   "seconds": 0.24
+  },
+  "tests/test_lion_spellamp_ladder.lua": {
+   "flag": "ok",
+   "seconds": 0.03
+  },
+  "tests/test_lion_t10_payoff.lua": {
+   "flag": "ok",
+   "seconds": 0.11
+  },
+  "tests/test_lion_t15_payoff.lua": {
+   "flag": "ok",
+   "seconds": 0.12
+  },
+  "tests/test_lion_ult_aoe_reach.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_lion_ult_cash_weakest.lua": {
+   "flag": "red",
+   "seconds": 1.34
+  },
+  "tests/test_lion_ult_reach.lua": {
+   "flag": "ok",
+   "seconds": 2.07
+  },
+  "tests/test_lion_ult_reserve_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_local_assign_discipline.lua": {
+   "flag": "ok",
+   "seconds": 0.45
+  },
+  "tests/test_lvlany_first_member_level_quantifier.lua": {
+   "flag": "ok",
+   "seconds": 3.42
+  },
+  "tests/test_lvlcarry_carry_deny_level_quantifier.lua": {
+   "flag": "ok",
+   "seconds": 3.41
+  },
+  "tests/test_lvlgroup_group_push_level_quantifier.lua": {
+   "flag": "ok",
+   "seconds": 3.42
+  },
+  "tests/test_lvlhitcreep_suit_to_hit_creep_level_quantifier.lua": {
+   "flag": "ok",
+   "seconds": 3.4
+  },
+  "tests/test_lvltogether_can_attack_together_level_quantifier.lua": {
+   "flag": "ok",
+   "seconds": 3.59
+  },
+  "tests/test_mid_tp_support.lua": {
+   "flag": "ok",
+   "seconds": 0.38
+  },
+  "tests/test_midguard.lua": {
+   "flag": "ok",
+   "seconds": 0.17
+  },
+  "tests/test_midsupfar_yield_target.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_midsupint_mirror_interrupt.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_midsupmirror_checkability.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_midsupyield_core_yields.lua": {
+   "flag": "ok",
+   "seconds": 0.41
+  },
+  "tests/test_mock_incoming_damage_default.lua": {
+   "flag": "ok",
+   "seconds": 0.05
+  },
+  "tests/test_mock_nearby_heroes_order.lua": {
+   "flag": "ok",
+   "seconds": 5.59
+  },
+  "tests/test_mockscalar_return_shape.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_mode_detect.lua": {
+   "flag": "ok",
+   "seconds": 0.07
+  },
+  "tests/test_name_predicate_multireturn.lua": {
+   "flag": "ok",
+   "seconds": 1.06
+  },
+  "tests/test_nil_guard_then_body.lua": {
+   "flag": "ok",
+   "seconds": 4.46
+  },
+  "tests/test_no_undefined_jmz_refs.lua": {
+   "flag": "ok",
+   "seconds": 0.9
+  },
+  "tests/test_nochaselow_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_nodive2_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_nodive_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_nopush_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.16
+  },
+  "tests/test_od_build_objurgation.lua": {
+   "flag": "ok",
+   "seconds": 0.12
+  },
+  "tests/test_od_eclipse_ring_conjunct_domain.lua": {
+   "flag": "ok",
+   "seconds": 0.25
+  },
+  "tests/test_od_levelup_double_spend.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_ohnum_outpost_anchor.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_ohnum_refusal.lua": {
+   "flag": "ok",
+   "seconds": 0.24
+  },
+  "tests/test_outcommit_channel_hold.lua": {
+   "flag": "ok",
+   "seconds": 0.35
+  },
+  "tests/test_outlatch_scan_postcondition.lua": {
+   "flag": "ok",
+   "seconds": 0.19
+  },
+  "tests/test_overchase_midline_margin.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_overchase_pursuit_tense.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_owhs_aggro_clearance.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_owhs_side_ruler.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_ownhalf_margin.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_pgchannel_veto.lua": {
+   "flag": "ok",
+   "seconds": 0.2
+  },
+  "tests/test_pingstamp_world_assertion.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_pollyhp_getter_axis.lua": {
+   "flag": "ok",
+   "seconds": 0.34
+  },
+  "tests/test_propertarget_corpus_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_pt_switch_target.lua": {
+   "flag": "ok",
+   "seconds": 1.17
+  },
+  "tests/test_pull_camp.lua": {
+   "flag": "ok",
+   "seconds": 0.41
+  },
+  "tests/test_pullcad_throttled_duty.lua": {
+   "flag": "ok",
+   "seconds": 5.12
+  },
+  "tests/test_pullcamp_lane_gap.lua": {
+   "flag": "ok",
+   "seconds": 0.32
+  },
+  "tests/test_pullcamp_ownside_camp.lua": {
+   "flag": "ok",
+   "seconds": 0.24
+  },
+  "tests/test_pullcamp_trigger_census.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_pullchew_camp_commit.lua": {
+   "flag": "ok",
+   "seconds": 0.34
+  },
+  "tests/test_pulldrag_lane_step.lua": {
+   "flag": "ok",
+   "seconds": 0.41
+  },
+  "tests/test_pullnolane_guard.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_pullreach_camp_lane_reach.lua": {
+   "flag": "ok",
+   "seconds": 0.29
+  },
+  "tests/test_pullthink_anim_throttle.lua": {
+   "flag": "ok",
+   "seconds": 2.86
+  },
+  "tests/test_punish_dive_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.05
+  },
+  "tests/test_punish_overchase.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_regroup_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.05
+  },
+  "tests/test_relicguard_siege_gate.lua": {
+   "flag": "ok",
+   "seconds": 3.03
+  },
+  "tests/test_replay_004757_veno_ancient.lua": {
+   "flag": "ok",
+   "seconds": 0.47
+  },
+  "tests/test_replay_071423_luna_chase.lua": {
+   "flag": "ok",
+   "seconds": 0.17
+  },
+  "tests/test_replay_071423_sky_rescue.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_replay_071859_oracle_screen.lua": {
+   "flag": "ok",
+   "seconds": 0.07
+  },
+  "tests/test_replay_071859_qop_salve.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_replay_071903_sven_idle.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_replay_072738_zuus_mana.lua": {
+   "flag": "ok",
+   "seconds": 0.1
+  },
+  "tests/test_replay_072738_zuus_script.lua": {
+   "flag": "ok",
+   "seconds": 0.34
+  },
+  "tests/test_replay_073148_zuus_lina.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_replay_080225_wk_lane.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_replay_080225_wk_revive.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_replay_094042_sniper_ancient.lua": {
+   "flag": "ok",
+   "seconds": 0.28
+  },
+  "tests/test_replay_175703_sven_tp.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_replay_181441_pushguard.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_replay_181441_wand_limbo.lua": {
+   "flag": "ok",
+   "seconds": 0.21
+  },
+  "tests/test_replay_212625_lion_ownhalf_punish.lua": {
+   "flag": "ok",
+   "seconds": 0.36
+  },
+  "tests/test_replay_212636_tide_ancient.lua": {
+   "flag": "ok",
+   "seconds": 0.21
+  },
+  "tests/test_replay_222428_axe_blink_call.lua": {
+   "flag": "ok",
+   "seconds": 0.2
+  },
+  "tests/test_replay_230124_roshgate.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_replay_230952_ultcash.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_replay_233217_tp_commit.lua": {
+   "flag": "ok",
+   "seconds": 0.12
+  },
+  "tests/test_replay_260725_wk_reincarn_gap.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_replay_260819_cm_r_range.lua": {
+   "flag": "ok",
+   "seconds": 0.52
+  },
+  "tests/test_replay_260819_cm_r_selfpreserve.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_replay_260819_lion_drain.lua": {
+   "flag": "ok",
+   "seconds": 0.43
+  },
+  "tests/test_replay_260819_lion_drain_stop.lua": {
+   "flag": "ok",
+   "seconds": 0.78
+  },
+  "tests/test_replay_260819_od_eclipse_aoe.lua": {
+   "flag": "ok",
+   "seconds": 0.62
+  },
+  "tests/test_replay_260819_zuus_boltdom.lua": {
+   "flag": "ok",
+   "seconds": 0.63
+  },
+  "tests/test_replay_260819_zuus_ult_manalock.lua": {
+   "flag": "ok",
+   "seconds": 0.53
+  },
+  "tests/test_replay_260819_zuus_w2_leak.lua": {
+   "flag": "ok",
+   "seconds": 0.49
+  },
+  "tests/test_replay_260820_181711_wk_l1trade.lua": {
+   "flag": "ok",
+   "seconds": 0.84
+  },
+  "tests/test_replay_260820_axe_blink_flee.lua": {
+   "flag": "ok",
+   "seconds": 0.41
+  },
+  "tests/test_replay_260820_axe_blink_kill.lua": {
+   "flag": "ok",
+   "seconds": 0.56
+  },
+  "tests/test_replay_260820_cm_cask_cap.lua": {
+   "flag": "ok",
+   "seconds": 2.77
+  },
+  "tests/test_replay_260820_cm_es_aftershock.lua": {
+   "flag": "ok",
+   "seconds": 1.1
+  },
+  "tests/test_replay_260820_cm_r_selfstate.lua": {
+   "flag": "ok",
+   "seconds": 0.74
+  },
+  "tests/test_replay_260820_es_blink_flee.lua": {
+   "flag": "ok",
+   "seconds": 0.26
+  },
+  "tests/test_replay_260820_lion_drain_stop_pair.lua": {
+   "flag": "ok",
+   "seconds": 0.64
+  },
+  "tests/test_replay_260820_wk_blast_overclaim.lua": {
+   "flag": "ok",
+   "seconds": 0.31
+  },
+  "tests/test_replay_260820_zuus_reserve_cross.lua": {
+   "flag": "ok",
+   "seconds": 0.91
+  },
+  "tests/test_replay_260820_zuus_static_band.lua": {
+   "flag": "ok",
+   "seconds": 0.39
+  },
+  "tests/test_replay_260822_fieldbuy_supply.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_replay_260822_lina_tp_home.lua": {
+   "flag": "ok",
+   "seconds": 0.43
+  },
+  "tests/test_replay_260822_lina_walk_home.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_replay_260827_zuus_ultstrand_creation.lua": {
+   "flag": "ok",
+   "seconds": 0.43
+  },
+  "tests/test_replay_437_wandbleed_source.lua": {
+   "flag": "ok",
+   "seconds": 2.25
+  },
+  "tests/test_replay_631400_dk_networth_wiring.lua": {
+   "flag": "ok",
+   "seconds": 0.08
+  },
+  "tests/test_replay_bc_silent_fixes.lua": {
+   "flag": "ok",
+   "seconds": 0.1
+  },
+  "tests/test_replay_creeppull_reachable.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_replay_creepthink_drag_order.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_replay_fixture_vision.lua": {
+   "flag": "ok",
+   "seconds": 0.22
+  },
+  "tests/test_replay_lf_rescue_narrow.lua": {
+   "flag": "ok",
+   "seconds": 0.14
+  },
+  "tests/test_replay_megabundle_laning.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_replay_ownhalf_standoff.lua": {
+   "flag": "ok",
+   "seconds": 0.12
+  },
+  "tests/test_replay_pullbeat_attack_cancel.lua": {
+   "flag": "ok",
+   "seconds": 0.4
+  },
+  "tests/test_replay_pullcad_beat.lua": {
+   "flag": "ok",
+   "seconds": 0.26
+  },
+  "tests/test_replay_teambrain_tp.lua": {
+   "flag": "ok",
+   "seconds": 0.11
+  },
+  "tests/test_replay_wave13_fixes.lua": {
+   "flag": "ok",
+   "seconds": 0.12
+  },
+  "tests/test_replay_wk_lane_burst.lua": {
+   "flag": "ok",
+   "seconds": 0.16
+  },
+  "tests/test_replay_wk_trade_kite.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_rescpost_outpost_narrow.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_retnear_radius_parity.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_retreat_priority_order.lua": {
+   "flag": "ok",
+   "seconds": 0.01
+  },
+  "tests/test_retreat_veto_reachability.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_roamidle_recovery_clobber.lua": {
+   "flag": "ok",
+   "seconds": 0.22
+  },
+  "tests/test_roamreach_bounded_chase.lua": {
+   "flag": "ok",
+   "seconds": 0.87
+  },
+  "tests/test_roamstale_collapse_action.lua": {
+   "flag": "ok",
+   "seconds": 0.22
+  },
+  "tests/test_roshan_pit_daynight.lua": {
+   "flag": "ok",
+   "seconds": 3.91
+  },
+  "tests/test_roshdist_pit_truth_operand.lua": {
+   "flag": "red",
+   "seconds": 5.71
+  },
+  "tests/test_roshpost_outpost_narrow.lua": {
+   "flag": "ok",
+   "seconds": 3.48
+  },
+  "tests/test_rotscope_shadowed_target.lua": {
+   "flag": "ok",
+   "seconds": 0.37
+  },
+  "tests/test_runring_target_in_ring.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_salveally_missing_floor.lua": {
+   "flag": "red",
+   "seconds": 1.41
+  },
+  "tests/test_salvepool_missing_floor.lua": {
+   "flag": "ok",
+   "seconds": 0.32
+  },
+  "tests/test_salvetarget_axis_undecidable.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_salveyield_arbitration.lua": {
+   "flag": "ok",
+   "seconds": 0.49
+  },
+  "tests/test_skill_list_nil_head_drain.lua": {
+   "flag": "ok",
+   "seconds": 0.01
+  },
+  "tests/test_skill_point_stall_frame.lua": {
+   "flag": "ok",
+   "seconds": 0.04
+  },
+  "tests/test_skillstall_lookahead.lua": {
+   "flag": "ok",
+   "seconds": 0.05
+  },
+  "tests/test_skywrath_silence.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_slardar_tp.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_slotarb_camp_arbitration.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_slotdust_dust_arbitration.lua": {
+   "flag": "ok",
+   "seconds": 2.75
+  },
+  "tests/test_slotpush_highground_scan.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_slotwait_cooldown_scan.lua": {
+   "flag": "ok",
+   "seconds": 5.44
+  },
+  "tests/test_smoke_load.lua": {
+   "flag": "ok",
+   "seconds": 4.35
+  },
+  "tests/test_soak_cand_ref_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.46
+  },
+  "tests/test_soak_draft.lua": {
+   "flag": "ok",
+   "seconds": 0.01
+  },
+  "tests/test_soakside_shared_switch.lua": {
+   "flag": "ok",
+   "seconds": 0.07
+  },
+  "tests/test_special_value_shape.lua": {
+   "flag": "ok",
+   "seconds": 0.07
+  },
+  "tests/test_stayattr_global_ult.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_staybag_backpack_salve.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_staybottle_inflight_regen.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_stayfamily_singlearm.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_stayfield2_marginal_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_stayfield_callsite_domain.lua": {
+   "flag": "ok",
+   "seconds": 0.73
+  },
+  "tests/test_stayfield_hp_window_reach.lua": {
+   "flag": "ok",
+   "seconds": 0.35
+  },
+  "tests/test_staysrc_field_supply.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_staytower_tower_ring.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_stayurn_ally_heal.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_suplh_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.18
+  },
+  "tests/test_talent_name_binding_anchor.lua": {
+   "flag": "ok",
+   "seconds": 2.05
+  },
+  "tests/test_talent_value_read_anchor.lua": {
+   "flag": "ok",
+   "seconds": 0.47
+  },
+  "tests/test_teamfight_idle.lua": {
+   "flag": "ok",
+   "seconds": 0.19
+  },
+  "tests/test_teamfight_location_origin.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_tiny_treegrab_hp_noop.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_tombhp_list_to_unit_ruler.lua": {
+   "flag": "ok",
+   "seconds": 3.21
+  },
+  "tests/test_tormself_identity_domain.lua": {
+   "flag": "ok",
+   "seconds": 3.23
+  },
+  "tests/test_towercreep_stale_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_towercreep_stale_source.lua": {
+   "flag": "ok",
+   "seconds": 0.02
+  },
+  "tests/test_towerfear_clock_leg.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_towerreach_out_of_range_veto.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_towerring_attack_circle.lua": {
+   "flag": "ok",
+   "seconds": 4.74
+  },
+  "tests/test_tp_channel_watch.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_tp_commit.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_tparrive_collapse_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.89
+  },
+  "tests/test_tpchew_channel_creep.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_tpclaim_stamp_on_commit.lua": {
+   "flag": "ok",
+   "seconds": 0.55
+  },
+  "tests/test_tpcommit_release_domain.lua": {
+   "flag": "ok",
+   "seconds": 0.24
+  },
+  "tests/test_tpdead_release.lua": {
+   "flag": "ok",
+   "seconds": 0.81
+  },
+  "tests/test_tpdeathbuy_dead_conjunct.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_tpdeep_recover_band.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_tpdefall_tower_commit_quantifier.lua": {
+   "flag": "ok",
+   "seconds": 3.41
+  },
+  "tests/test_tpdefnan_tower_tp_landing.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_tpdeftower_anchor_pricing.lua": {
+   "flag": "ok",
+   "seconds": 3.98
+  },
+  "tests/test_tpdeftower_outpost_narrow.lua": {
+   "flag": "ok",
+   "seconds": 3.97
+  },
+  "tests/test_tpdying_laning_domain.lua": {
+   "flag": "ok",
+   "seconds": 0.25
+  },
+  "tests/test_tpgap_retreat_band.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_tphome_tp_leg_counterfactual.lua": {
+   "flag": "ok",
+   "seconds": 0.21
+  },
+  "tests/test_tpquiet_shadowed_branch.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_tpreach_band.lua": {
+   "flag": "ok",
+   "seconds": 0.17
+  },
+  "tests/test_tpreach_retreat_exclusion.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_tprecov_recover_trip.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_tprespond_stamp_invariant.lua": {
+   "flag": "ok",
+   "seconds": 0.04
+  },
+  "tests/test_tpresponse_quota_chain.lua": {
+   "flag": "ok",
+   "seconds": 0.19
+  },
+  "tests/test_tpsafe_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_tpscroll_branch_shadow_census.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_tpstamp_channel_baseline.lua": {
+   "flag": "ok",
+   "seconds": 0.69
+  },
+  "tests/test_tpwatch_channel_bid.lua": {
+   "flag": "ok",
+   "seconds": 1.42
+  },
+  "tests/test_turbo_ternary_dominance.lua": {
+   "flag": "ok",
+   "seconds": 0.29
+  },
+  "tests/test_urnself_self_patient.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_utils_getitem_arity.lua": {
+   "flag": "ok",
+   "seconds": 1.79
+  },
+  "tests/test_waitclar_mana_trip.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_wk_bone_guard_bank_floor.lua": {
+   "flag": "ok",
+   "seconds": 0.22
+  },
+  "tests/test_wk_bone_guard_enemy_count.lua": {
+   "flag": "ok",
+   "seconds": 5.57
+  },
+  "tests/test_wk_bone_guard_talent_bypass.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_wk_bone_guard_thresholds.lua": {
+   "flag": "ok",
+   "seconds": 4.37
+  },
+  "tests/test_wk_considerq_level7_dominance.lua": {
+   "flag": "ok",
+   "seconds": 5.27
+  },
+  "tests/test_wk_dead_row_precondition.lua": {
+   "flag": "ok",
+   "seconds": 0.23
+  },
+  "tests/test_wk_facet_settlement.lua": {
+   "flag": "ok",
+   "seconds": 0.01
+  },
+  "tests/test_wk_fact_anchor.lua": {
+   "flag": "ok",
+   "seconds": 0.61
+  },
+  "tests/test_wk_level_supply_horizon.lua": {
+   "flag": "red",
+   "seconds": 0.27
+  },
+  "tests/test_wk_magic_wand_branches.lua": {
+   "flag": "ok",
+   "seconds": 0.09
+  },
+  "tests/test_wk_q_aim_preflight.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_wk_q_castrange_meter_domain.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_wk_q_catchall_odds.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_wk_q_commit_ration.lua": {
+   "flag": "ok",
+   "seconds": 5.41
+  },
+  "tests/test_wk_q_lane_reach.lua": {
+   "flag": "red",
+   "seconds": 1.51
+  },
+  "tests/test_wk_qdmg_domain.lua": {
+   "flag": "ok",
+   "seconds": 4.88
+  },
+  "tests/test_wk_rank0_absence_join.lua": {
+   "flag": "ok",
+   "seconds": 1.0
+  },
+  "tests/test_wk_reincarnation_mana_gate.lua": {
+   "flag": "ok",
+   "seconds": 0.13
+  },
+  "tests/test_wk_reserve_idle_release.lua": {
+   "flag": "ok",
+   "seconds": 5.13
+  },
+  "tests/test_wk_reserve_share_floor.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_wk_roshan_lategame_reconciliation.lua": {
+   "flag": "ok",
+   "seconds": 0.04
+  },
+  "tests/test_wk_roshan_mana_ceiling.lua": {
+   "flag": "ok",
+   "seconds": 0.15
+  },
+  "tests/test_wk_roshan_mana_floor.lua": {
+   "flag": "ok",
+   "seconds": 0.47
+  },
+  "tests/test_wk_save_mana_lock_census.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_wk_t25_reincarn_pricing.lua": {
+   "flag": "ok",
+   "seconds": 0.03
+  },
+  "tests/test_wkreinctr_untrained.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_zero_true_sites_driven.lua": {
+   "flag": "ok",
+   "seconds": 0.18
+  },
+  "tests/test_zeus_aether_cast_range.lua": {
+   "flag": "ok",
+   "seconds": 2.04
+  },
+  "tests/test_zeus_aghs_build.lua": {
+   "flag": "ok",
+   "seconds": 0.29
+  },
+  "tests/test_zusult_pre_ladder_claim_retake.lua": {
+   "flag": "ok",
+   "seconds": 0.46
+  },
+  "tests/test_zuus_ability_index_binding.lua": {
+   "flag": "ok",
+   "seconds": 0.28
+  },
+  "tests/test_zuus_arc_execute_kill.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_zuus_arc_retreat_immunity.lua": {
+   "flag": "ok",
+   "seconds": 3.97
+  },
+  "tests/test_zuus_bolt_kill_cap.lua": {
+   "flag": "ok",
+   "seconds": 0.57
+  },
+  "tests/test_zuus_bolt_ranged_damage.lua": {
+   "flag": "ok",
+   "seconds": 3.3
+  },
+  "tests/test_zuus_bolt_retreat_immunity.lua": {
+   "flag": "ok",
+   "seconds": 4.17
+  },
+  "tests/test_zuus_fight_quorum.lua": {
+   "flag": "ok",
+   "seconds": 5.49
+  },
+  "tests/test_zuus_jump_escape_any.lua": {
+   "flag": "TIMEOUT",
+   "seconds": 6.0
+  },
+  "tests/test_zuus_jump_landing_reach.lua": {
+   "flag": "ok",
+   "seconds": 1.89
+  },
+  "tests/test_zuus_static_field_pct.lua": {
+   "flag": "ok",
+   "seconds": 0.32
+  },
+  "tests/test_zuus_static_field_second_consumer.lua": {
+   "flag": "ok",
+   "seconds": 0.96
+  },
+  "tests/test_zuus_ult_strand.lua": {
+   "flag": "ok",
+   "seconds": 2.74
+  }
+ }
+}

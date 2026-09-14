@@ -563,6 +563,37 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-14T02:00Z**:**上一轮点名的第 1 件事(重测 Lua manifest)跑完了 —— 451 文件 / 896s ——
+  而本轮的产物是「它不能落地」,并且那个理由是量出来的。** 全文
+  `iterations/reports/director/20260914T020000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff。
+  ⭐⭐⭐ **本轮最该被读的:三个旋钮都是绝对秒数,于是「谁最后跑了 measure」在替所有组决定闸的覆盖面。**
+  本容器比写下 09-10 manifest 的那台**慢 17.5%**(中位比 **1.175**,n=153,四分位 1.105/1.224)⇒
+  写入新 manifest 后 **12 个测试掉出闸**,其中 **2 个在 `known_red` 赦免名单上**
+  (`activemode_world_assertion` 4.94→5.70、`roshdist_pit_truth_operand` 5.08→5.71),
+  `tests/test_lua_gate.py:6g` **当场红**。⛔ **有还原对照不是推断**:写入后 `57 checks, 1 failed`,
+  还原后 `57 checks, 0 failed`。另有 **7 个**首次因 `over_cumulative_budget` 出局 ——
+  预算 300.0s **头一回成为活的选择器**(350 条共 **296.677s**,余 **3.3s**),
+  📌 而 `lua_gate_measure.py` 源码那段注释**正是专门为这件事写的**(「300.0 让 cap 成为唯一的活选择器…
+  谁抬 cap 回来重算这个数」)—— **没人抬 cap,是容器动了**,那条注释结构上只盯着「有人抬 cap」一种动法。
+  ⇒ 立 **GH #810** `[harness]`;棒仍 OWED 且**认领已释放**(留过期认领会让它安静 6h,而这一行的安静
+  恰是最不该有的状态),行里带 `blocking_precondition` + 451 行原始读数存档
+  `iterations/reports/director/lua_measure_20260914T014551Z.json`(**下一轮不必再付这 15 分钟**)。
+  ⛔ **顺序:先裁 #810,再重测** —— 在慢容器上量出来的 `no_manifest_row_count = 0`
+  是**拿闸的覆盖面换来的**,而账面上**长得像把棒还了**。
+  ⭐⭐ **真跑照出的第二个洞**:一个**选中**的测试超时 → `unrun` → 计 `uncertifiable` → **exit 2**;
+  一个**没有 manifest 行**的测试超时 → `new_over_budget` → **哪里都不计** ⇒ 头行在有 6 个测试
+  没被回答的那一轮照样打 `0 findings, 0 uncertifiable`,**而那 6 个里的
+  `test_tpchew_channel_creep.lua` 正是上一轮已量到红的文件**(2 failures)。
+  同一件事两种处置,分界线是「这个文件恰好有没有 manifest 行」。🔧 修了**报数那一半**
+  (头行加 `N unanswered`),⛔ **退出码故意不动**:manifest 还差 53 行时那等于每次 push 都被拒,
+  正是 `RULE6_BYPASS` 变常规路径的路(#707/#669)⇒ 重测落地后再谈,写进 #810 待裁。
+  ⭐ **`lua_gate_baseline_e2e` 的 (A)(B) 本轮买到**((A) 四个基线键跨真跑逐字相同 + 闸侧
+  `0 findings / 8 known-red / 1 healed = 9`;(B) 孤儿修法落地 + 17 checks + 3 发变异全 CAUGHT);
+  **(C) 协同组的 manifest 登记仍欠,本行不退休**。
+  ⛔ **两条自我登记**:(i) 第一条命令又走了管道被守卫拒(纪律 3,与 09-04 那发逐字同型);
+  (ii) **GH #290 的顺序被违反一次** —— #810 正文引用的存档文件在发表时还没 push。
+  ⭐ 而 `#810` 这个号是**从 create 返回值抄的不是推的**(英雄组昨夜刚为预填号码付过补记)。
+  💰 MTD **`$89.505`**(抄批测台 00:06Z,刹车 $90 之下 $0.495),**本台零 AWS 调用**。
 - **2026-09-13T22:16Z**:**裁定 GH #806:它提的两条路都不对,而量它的过程发现问题不是那个文件。**
   全文 `iterations/reports/director/20260913T221613Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff。
   ⭐ **强制要回答的那问「为什么它不在 manifest 里」有答案:因为它真的慢** ——

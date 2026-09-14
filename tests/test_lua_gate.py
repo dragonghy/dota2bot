@@ -245,6 +245,53 @@ try:
           "4a a new unmeasured test is RUN and its red counts (got %d)" % r.returncode)
     check("tests/test_brand_new.lua" in r.stdout, "4b and it is named in the banner")
 
+    # ---- 4B. ...and an unmeasured test that CANNOT answer is counted ------
+    # THE GAP THIS CLOSES (director 2026-09-14).  Case 4 covers the unmeasured
+    # test that answers.  The one that does NOT answer had no case at all, and
+    # the behaviour nobody had written down was: land in `new_over_budget`, get
+    # a line in the detail block, and be counted NOWHERE.  So the headline --
+    # the line iron rule 6 asks every stream to quote verbatim -- read
+    # `0 findings, 0 uncertifiable` on a push where SIX tests went unanswered,
+    # one of them (`test_tpchew_channel_creep.lua`) already measured RED by the
+    # 09-13T22:16Z round.  A SELECTED test timing out is `uncertifiable`; an
+    # UNMEASURED one timing out was nothing.  Same event, two dispositions,
+    # chosen by whether the file happens to have a manifest row.
+    root, mpath = make_tree(
+        tmp,
+        {"test_known.lua": PASSING, "test_unpriced_slow.lua": HANGING},
+        {"tests/test_known.lua": {"seconds": 0.1, "in_gate": True, "reason": "fast"}},
+    )
+    r = run_gate(root, mpath)
+    head = [ln for ln in r.stdout.splitlines() if ln.startswith("lua gate: ")]
+    check(len(head) == 1, "4c the headline is printed exactly once")
+    check(bool(head) and "1 unanswered" in head[0],
+          "4d the headline COUNTS the unmeasured test that could not answer "
+          "(headline: %s)" % (head[0] if head else "MISSING"))
+    check("tests/test_unpriced_slow.lua" in r.stdout, "4e and names it")
+    # ⛔ STATED, NOT IMPLIED: the exit code is deliberately unchanged this
+    # round.  Refusing the push here would refuse EVERY push until someone
+    # pays for a ~25-minute re-measure, and a gate that expensive to satisfy
+    # is how `RULE6_BYPASS` becomes the normal path (GH #707 / #669).  The
+    # count is the round's product; the policy is a separate ruling.
+    check(r.returncode == 0,
+          "4f an unanswered unmeasured test does NOT refuse the push (rc=%d) "
+          "-- reported, not enforced, and that is a decision not an oversight"
+          % r.returncode)
+
+    # ---- 4G. CONTROL: the field is not a constant ------------------------
+    # Without this, `1 unanswered` could be satisfied by a headline that says
+    # it always -- the vacuous-green shape. Same tree, a FAST new test.
+    root, mpath = make_tree(
+        tmp,
+        {"test_known.lua": PASSING, "test_unpriced_fast.lua": PASSING},
+        {"tests/test_known.lua": {"seconds": 0.1, "in_gate": True, "reason": "fast"}},
+    )
+    r = run_gate(root, mpath)
+    head = [ln for ln in r.stdout.splitlines() if ln.startswith("lua gate: ")]
+    check(bool(head) and "0 unanswered" in head[0],
+          "4g CONTROL: a new test that DOES answer reads 0 unanswered "
+          "(headline: %s)" % (head[0] if head else "MISSING"))
+
     # ---- 5. the gate goes through the RUNNER, not the file ---------------
     # `lua5.1 tests/test_x.lua` loads the module and asserts nothing (exit 0).
     # This file is red only if its BODIES run, so a gate taking the direct

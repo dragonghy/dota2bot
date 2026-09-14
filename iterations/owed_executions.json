@@ -1180,7 +1180,8 @@
     "path": "tools/agent/lua_gate_measure.py",
     "text": "            timeout=MEASURE_TIMEOUT_SECONDS,\n        )\n        return time.time() - t0, p.returncode, False"
    },
-   "done_when_note": "⚠️ **这条腿只判 (B) 那半**,判据是 `measure_one()` 那个**不带进程组的 `subprocess.run` 调用形状**不再逐字成立。⛔ **第一版我想写 `path_contains_all: [\"start_new_session\"]`,那是错的**:该串今天在这棵树里 `grep -rn` **本来就命中**(其它工具里),而且就算限定本文件,一个只加进 `_run_case_probe` 的改动也会让它转绿 —— 与 `creeps_schema_gh581` 上刚踩过的「用一个今天已经为真的判据去判一件还没做的事」**同形第二发**,所以改用 `text_absent` 钉住要被改掉的那三行本身。⛔ **它一个字都不买 (A) 和 (C)**:(A) 是一次 12 分钟的实跑,任何静态判据都判不了它;(C) 是另一个组的动作。**别按它绿了就退休本行。**⭕ 退休条件:(A) 端到端验收跑过并把读数登记、(B) 孤儿修法落地、(C) 协同组的 manifest 登记落地(或三者各自被重裁)。"
+   "done_when_note": "⚠️ **这条腿只判 (B) 那半**,判据是 `measure_one()` 那个**不带进程组的 `subprocess.run` 调用形状**不再逐字成立。⛔ **第一版我想写 `path_contains_all: [\"start_new_session\"]`,那是错的**:该串今天在这棵树里 `grep -rn` **本来就命中**(其它工具里),而且就算限定本文件,一个只加进 `_run_case_probe` 的改动也会让它转绿 —— 与 `creeps_schema_gh581` 上刚踩过的「用一个今天已经为真的判据去判一件还没做的事」**同形第二发**,所以改用 `text_absent` 钉住要被改掉的那三行本身。⛔ **它一个字都不买 (A) 和 (C)**:(A) 是一次 12 分钟的实跑,任何静态判据都判不了它;(C) 是另一个组的动作。**别按它绿了就退休本行。**⭕ 退休条件:(A) 端到端验收跑过并把读数登记、(B) 孤儿修法落地、(C) 协同组的 manifest 登记落地(或三者各自被重裁)。",
+   "partial_execution": "⭐ **(A) 与 (B) 本轮已买到,(C) 仍欠**(总监 2026-09-14T01:4xZ)。**(A) 端到端验收:通过。** 在 `known_red` 非空(9 条)的树上跑了一次**真的** `lua_gate_measure.py`(451 文件 / 896s),四个基线键 `known_red` / `known_red_at` / `known_red_cases` / `known_red_note` 前后**逐字相同**(逐键 `json.dumps(sort_keys=True)` 比对,四个 identical=True);工具自己也打了 `carried the red baseline forward: 4 key(s), 9 baselined test(s) -- NOT re-derived from this run`。验收的后半(那 9 条**不**被闸报成 finding)由同轮两次真 push 的闸读数买到:`lua gate: 369 ran, 0 findings, 0 uncertifiable, 8 known-red, 546.8s`,外加 `1 baselined test(s) are GREEN again` ⇒ **8 red + 1 healed = 9,findings 0**。⚠️ 同一次跑还买到一条**本行没预料到的**读数:manifest 被写出来之后 `6g` 变红 ⇒ 见 `gh806_lua_manifest_remeasure.blocking_precondition` 与 GH #810。**(B) 孤儿修法:已落地**(`tools/agent/lua_gate_measure.py` 的 `run_capture` / `_kill_group` / `_install_signal_handlers`),钉子 `tests/test_lua_gate_measure_pgroup.py` **17 checks**,每个 kill 用例都带**对照**(老写法真的漏 2 个存活进程)。变异 3 发全 CAUGHT(M1 去掉 start_new_session → 2b/3b/4b;M2 不注册信号处理 → 仅 4b;M3 killpg→单子进程 kill → 3b/4b),每发之后 `sha256sum -c` OK。⛔ **`_kill_group` 不许对自己的进程组开枪**这条守卫**来自变异不是来自口味**:M1 没有让工具漏进程,而是让工具**把自己 SIGKILL 了**(变异台 `exit 137` 死在 case 1 中途)。**(C) 协同组的 manifest 登记:仍然欠着** —— 本轮重测被还原,所以它那一行**没有**被顺带买到。"
   },
   {
    "id": "born_done_inherited_disposal",
@@ -1317,8 +1318,8 @@
     "iterations/owed_executions.json(本行)",
     "GH #806 追评(push 之后发,铁律 6 / GH #290 的顺序)"
    ],
-   "claimed_by": "director 2026-09-14T01:2xZ round",
-   "claimed_at": "2026-09-14T01:20:00Z"
+   "blocking_precondition": "⛔ **棒没掉,是被一次真跑挡住了,而挡住它的东西是量出来的**(总监 2026-09-14T01:4xZ,全文 `iterations/reports/director/20260914T02xxZ.md`,原始读数 `iterations/reports/director/lua_measure_20260914T014551Z.json`)。重测**跑完了**(451 个文件 / 896s),**写出来的 manifest 被我还原了**,理由不是口味:(1) 本容器比写下 09-10 manifest 的那台**慢 17.5%**(中位比 1.175,n=153,四分位 1.105/1.224);(2) 于是 **12 个测试掉出闸**,其中 **2 个在 `known_red` 名单上** (`test_activemode_world_assertion.lua` 4.94→5.70、`test_roshdist_pit_truth_operand.lua` 5.08→5.71),`tests/test_lua_gate.py:6g`(「每条在册赦免的测试都必须是闸真的会跑的」)**当场变红** —— 实测:写入后 `57 checks, 1 failed`;还原后 `57 checks, 0 failed`;(3) 另有 **7 个**首次因 `over_cumulative_budget` 出局 —— 预算 300.0s 头一回成为**活的选择器**(选中 350 条共 **296.677s**,余 3.3s),而 `lua_gate_measure.py` 源码里那段注释正是**专门为这件事**写的:「300.0 让 cap 成为唯一的活选择器;将来谁抬 cap,回来重算这个数」——**没人抬 cap,是容器动了**。⇒ 先裁 **GH #810**(cap 5.5 / measure timeout 6.0 / budget 300.0 三个都是绝对秒数,成员资格因此跟着容器漂;GH #358 早记过同一族:同样 50 个文件本机 99.5s、批测台 133.3s),**再重测**。⛔ **不许把「在慢容器上量」当成本行的执行** —— 那样买到的 `no_manifest_row_count = 0` 是拿闸的覆盖面换来的,而账面上**长得像把棒还了**。",
+   "first_attempt": "2026-09-14T01:30-01:46Z,总监。跑了,没落地,原因已量化并登记在 `blocking_precondition`。原始逐文件读数(451 行,含 89 个 6s TIMEOUT 与 8 个 red)已存档,下一轮**不必再付这 15 分钟**。"
   }
  ],
  "retired": [

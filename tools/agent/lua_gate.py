@@ -348,6 +348,18 @@ def main(argv):
 
     # New tests nobody has measured yet: run them, but a slow one is out of
     # scope rather than a refusal -- this gate never promised to carry it.
+    #
+    # ⚠️ OUT OF SCOPE IS NOT THE SAME AS ANSWERED, and until 2026-09-14 the
+    # headline could not tell them apart.  A SELECTED test that times out lands
+    # in `unrun` and is counted as `uncertifiable`; an UNMEASURED one that times
+    # out landed here and was counted NOWHERE -- so the summary line read
+    # `0 findings, 0 uncertifiable` while six tests had gone unanswered, one of
+    # them (`test_tpchew_channel_creep.lua`) a file the director's 09-13T22:16Z
+    # round had already measured RED (2 failures).  Same event, two dispositions,
+    # and which one you get is decided by whether the file happens to have a
+    # manifest row -- the "one spelling calls the other absent" shape again.
+    # The count is printed in the headline below; the exit code is unchanged
+    # here on purpose (see the note at the summary).
     for rel in unmeasured:
         rc, out, secs, timed_out = run_one(rel, timeout)
         if timed_out:
@@ -368,9 +380,19 @@ def main(argv):
         if out.strip():
             print(indent(out), end="")
 
+    # `unanswered` is carried in the headline rather than only in the detail
+    # block below, because the detail block is what a reader skips and the
+    # headline is what a reader QUOTES -- iron rule 6 asks for this line
+    # verbatim in every report, so a number missing from it is a number that
+    # never reaches anyone.  It is deliberately NOT folded into
+    # `uncertifiable`: that word is already spoken for by a test this gate
+    # promised to run and then could not, and merging the two would erase the
+    # distinction rather than report it.
     print(
-        "\nlua gate: %d ran, %d findings, %d uncertifiable, %d known-red, %.1fs"
-        % (ran, len(findings), len(unrun), len(known_hit), elapsed)
+        "\nlua gate: %d ran, %d findings, %d uncertifiable, %d unanswered, "
+        "%d known-red, %.1fs"
+        % (ran, len(findings), len(unrun), len(new_over_budget),
+           len(known_hit), elapsed)
     )
     if known_hit:
         # BY NAME, every run.  A baseline that shows only as a count is an
