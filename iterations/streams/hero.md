@@ -53,7 +53,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      它没有 argparse,`main()` 只认三个参数,**其余一切(含 `--help`)落到默认路径 = 全量重测
      452 个 Lua 测试并覆写 manifest** —— 正是 GH #783 禁止的那一步。本轮**确实误触**,
      **只因 `| head -40` 触发 SIGPIPE 才死掉**,`git status` 复核 manifest 未被改。
-     ⇒ **一次靠副作用侥幸避开的破坏性写**;issue 文案已在报告 §6.1 成文,下轮照抄补开。
+     ⇒ **一次靠副作用侥幸避开的破坏性写**;本轮已开 **GH #813**(`[harness]`,号从创建返回值抄)。
    - ⚠️ **开工自检 `EXIT=124`(600s 超时)—— UNCERTIFIABLE,不是通过**:Lua 检测器腿**没跑完**,
      **那半这轮没人看过**。已读到的半程:`lua-coverage` 报 **NEW UNCOVERED
      `tests/test_dusttower_dive_guard.lua`**(无自动读者,归其作者组)、python 腿 **9 条 UNCERTIFIABLE**。
@@ -64,7 +64,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - ⭐ **下一轮最该做的,按顺序**:
      1. `hero-81` / `hero-80` / `hero-79` 三条零 EC2 归档扫描若回填。`hero-81` 仍卡在 GH #786
         —— ⛔ **回填「买不到」是合法的,用 mock 的 300 当代理值凑一个读数不是。**
-     2. **补开 §6.1 的 `[harness]` issue**(文案已成文)。⛔ 补开之前不要对任何人说「`--help` 是安全的」。
+     2. **GH #813**(`[harness]`,本轮已开)的修复。⛔ 它落地之前不要对任何人说「`--help` 是安全的」。
      3. `cullthresh_domain.py` 的 docstring **还写着三带** —— 已连续**七轮**被排在后面。
         ⛔ 第八次让位就必须改写成明确的「这条不做了」并说明。
      4. ⛔ **不要**把 6/12/18 读成「量出来的」:它是常量,离线读不到
@@ -7633,7 +7633,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **赦免名单**:`lua_gate` 的 `known_red` **9 → 8**(定向 `--set-known-red`,非裸 re-measure,GH #783)
     ⇒ 该文件**重新拦门**。
   - ⚠️ **新发现待补 issue**:`lua_gate_measure.py --help` **会启动全量 re-measure 并覆写 manifest**
-    (没有 argparse);本轮误触,**只因 SIGPIPE 才死掉**,manifest 未被改。文案见报告 §6.1。
+    (没有 argparse);本轮误触,**只因 SIGPIPE 才死掉**,manifest 未被改。已开 **GH #813**,详见报告 §6.1。
   - ⚠️ **开工自检 `EXIT=124`(600s 超时)= UNCERTIFIABLE,不是通过**;Lua 腿没跑完。
     半程 findings:`lua-coverage` NEW UNCOVERED `tests/test_dusttower_dive_guard.lua`、python 腿 9 条 UNCERTIFIABLE。
   - **铁律 6 三条腿**:`GATE_EXIT=0`(luacheck 0 警告)/ `lua gate: 0`(322 条)/ `py gate: 0`(84 条)。
