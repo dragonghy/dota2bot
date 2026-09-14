@@ -6290,6 +6290,48 @@ function J.ShouldRegenNotWalkHome( bot )
 	return J.ShouldRegenNotGoHome( bot )
 end
 
+-- [tpstale / owner priority P2, charter 0NEXT13] IS THE DESTINATION THIS
+-- BRANCH IS ABOUT TO TP TO THE ONE THIS BRANCH CHOSE?
+--
+-- The two helpers above are vetoes on the ASSIGNMENT of the 回复状态 branch's
+-- destination.  This one is about the FIRING condition underneath them, and it
+-- exists because a veto on the assignment is unreachable when the firing
+-- condition is satisfied by somebody else's assignment.
+--
+-- ⭐ THE DEFECT, closed form, no sampling needed.  The destination local in
+-- X.ConsiderItemDesire["item_tpscroll"] is ONE function-scoped variable shared
+-- by every branch.  前往守塔 and 前往推塔 both write it and then require a
+-- DISTANCE test to fire; when that test fails they neither fire nor return, and
+-- the write stands.  The only other place the function clears it runs BEFORE
+-- that distance test.  So a tower destination arrives at the 回复状态 branch
+-- still set, and that branch fires on nothing but a non-nil test -- TPing to a
+-- tower under a recover motive, skipping its own DistanceFromFountain floor,
+-- and skipping BOTH 'tprecov' and 'tpdeep'.  Those two are therefore dead on
+-- every leaked frame whatever they answer, while check_armed_wiring.py still
+-- calls them WIRED: the 'pullcad' shape (GH #622) reached from a new direction
+-- -- not a gate frozen false, but a call site a sibling overwrites.
+--
+-- The caller passes TRUE when its own conjunction set the destination.  This
+-- helper answers "drop it" only when the caller did NOT.  So armed it can turn
+-- that branch's TRUE into FALSE and never the other way: a NARROWING, on
+-- exactly the frames the branch itself had already declined.
+--
+-- ⛔ WHAT THE CORPUS CAN AND CANNOT SAY (GH #622's question, asked in advance).
+-- X is file-local, so no test can call X.GetDefendTPLocation / X.GetPushTPLocation
+-- and no fixture can show a leak happening; the defect above is a statement
+-- about the SOURCE, ratcheted in tests/test_tpstale_recover_leak.lua.  What the
+-- corpus does measure is the EXPOSURE: of 17 alive hero frames inside the
+-- branch's outer head, 10 have its own inner conjunction shut (fountain 5, ring
+-- 3, allies 2), i.e. 10 frames where whether the branch fires is decided
+-- entirely by whether a sibling leaked (tests/_stayfield_tpleg_sweep.lua
+-- section 2, 1039 frames, live 26-id member string).  Gate-first then turbo, so
+-- unarmed it reaches no engine call at all.
+function J.ShouldDropUnownedRecoverTp( bOwnsDestination )
+	if not J.IsSoakCandidate( 'tpstale' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	return bOwnsDestination ~= true
+end
+
 -- [tpquiet / owner priority P2, 2026-09-08] THE SAME JUDGEMENT, AT THE BRANCH
 -- THAT ACTUALLY REACHES THE FRAME.  This helper is not a new opinion about when
 -- a hurt bot should stay in the field -- 'tpdeep' already formed that opinion

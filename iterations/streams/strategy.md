@@ -35,7 +35,73 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT13. **【2026-09-14T10:26Z 新增,**下一轮第一项**。
+0NEXT14. **【2026-09-14T14:09Z 新增,**下一轮第一项**。
+   **把 (C) 那种缺陷当成一类去找,而不是当成一个去修。**
+
+   **为什么**:0NEXT13 找到的不是「一条分支写错了」,是**一种形状** ——
+   *一个 gated 否决守着某个赋值,而下游的发射条件读的是一个**兄弟也能写**的共享变量*。
+   在这种形状里,**否决无论答什么都不算数**,而 `check_armed_wiring.py` 照样说 WIRED,
+   倒像普查照样满意,门也确实能为真。⇒ 它**逃过我们拥有的每一个自动读者**,
+   和 `pullcad` 一样,但**来自另一个方向**(不是门被冻死,是结论被覆盖)。
+
+   **具体要做的**:在 `bots/` 里普查这个形状,判据是可机械化的三条——
+   (a) 某个 gated helper 的返回值只影响一个**局部变量的赋值**;
+   (b) 该变量在同一作用域内**还有别的写入点**;
+   (c) 下游存在一个**只读该变量、不重读那些 helper** 的分支/返回。
+   `X.ConsiderItemDesire` 家族里 `tpLoc` / `hEffectTarget` / `sCastType` 都是候选,
+   `bots/mode_*.lua` 里的 `target_loc` 一族同理。产出两种都合法:
+   (a) 找到 ≥1 处 ⇒ **落一条 gated 收窄**(与 `tpstale` 同形,4.4 (i));
+   (b) 一处都没有 ⇒ **`tpstale` 是孤例**,那本身是关于这份代码库的一条结论,
+   连同判据一起登记,并把判据做成 `tests/` 里的普查以免下轮重查。
+
+   ⚠️ **判据继承 0NEXT11/0NEXT12/0NEXT13 全部**,本轮新增两条 ——
+
+   ⭐⭐ **(寅) 注释里逐字引用一个代码锚点,会把别人的切片截断。**
+   `_tprecov_sweep.lua` 一族的 `branch()` 是**在原始文本上**找分支头、再找**下一个**
+   cast-motive 赋值,**之后才剥注释**。本轮第一版把 `sCastMotive = '回复状态'` 写进了
+   新注释 ⇒ 切片被截到注释块,`tpquiet`/`tprecov`/`tpdeep` **五条断言**报
+   「分支丢了它其实还带着的合取项」。⇒ **在被 sweep 切片的函数里写注释,描述代码,
+   不要引用锚点**;这条警告已经写进那段注释本身。
+
+   ⭐⭐ **(卯) 「同一族里有人处理过某个结构性前提」推不出「这一份 sweep 处理了它」。**
+   `_tpquiet_sweep.lua:224`(09-08)已经钉住 `nMode == BOT_MODE_RETREAT` 外壳并明写
+   `nMode` 不可读;**六天后**写的 `_stayfield_tpleg_sweep.lua` section 1 **完全没有它**,
+   于是 0NEXT12 的四个头条读数其实都是「给定撤退模式」的条件读数,而**当时没有任何
+   东西会报警**。⇒ 复用一族的方法时,**打开那份文件确认前提在不在**,别从族推。
+
+   ⛔ **已被定价并排除、不要重买**(继承全部,本轮新增两条):
+   ⛔ **GH #652 的 lane-nil 家族剩下两处**已定价并排除:`J.ShouldLaneRecoverFarm`
+   **0 帧到达**其 lane 块(不可定价);`J.ShouldCreepPullLane` 的 `frontamt_differs`
+   **0 / 1021**(实测 no-op),且它在**已 promote 的 `creeppull`** 里。
+   见 `tests/test_lanenone_site_pricing.lua` 抬头。别重测,别去改。
+   ⛔ **`回复状态` 分支不要再加第三条 regen 否决**:`tests/test_tpdeep_recover_band.lua`
+   钉死「每族恰好一条」;缺的从来不是否决,是**否决够不着的那个发射条件**(= `tpstale`)。】**
+
+0NEXT13. ✅ **【2026-09-14T10:26Z 提为下一轮第一项 → 2026-09-14T14:09Z 做完,产出是 **(b) + 一条 bots/ 杠杆**。
+   **读数:四条回家分支的分界线是**模式**不是血量带** —— `撤退:1/2/3` 同处一个
+   `nMode == BOT_MODE_RETREAT ...` 外壳(`WRAP_ENCLOSES_R1R2R3 1`),`回复状态` 在**外壳之外**
+   (`WRAP_EXCLUDES_R4 1`);血量头嵌套 `撤退:1 ⊂ 回复状态 ⊂ 撤退:3`(三个 viol 列**全 0**,
+   反真空 `h3_beyond_h1 46` / `h3_beyond_h4 45` **非零**)。
+   ⭐⭐ **头条是 (C):`tpLoc` 是四条分支共用的一个函数级 local,`前往守塔`/`前往推塔`
+   写它之后在距离条件失败时既不发射也不 return,而 `回复状态` 的发射条件只是一个非空判断**
+   ⇒ bot 顶着「回复状态」的 motive **TP 到一座塔**,并**绕过本分支每一条合取项,
+   包括 `tprecov`/`tpdeep` 两条 owner-P2 的 gated 否决** —— **否决守的是赋值,
+   发射读的是别人的赋值**,于是那两条 id 在泄漏帧上**无论答什么都是死的**,
+   而 `check_armed_wiring.py` 照样说 WIRED(**`pullcad` 形状的新方向**)。
+   ⛔ **另一条限定别人读数的事实**:`bot:GetActiveMode()` 在 **1039/1039** 帧答 0 而
+   `BOT_MODE_RETREAT` = 1005 ⇒ 那个外壳在语料上**恒假**,而 section 1 的 `branch_stop`
+   **从不建模它** ⇒ 0NEXT12 的 `trigger 76`/`branch_open 4`/`margin_solo 1`/`margin_live 0`
+   **全是「给定撤退模式」的条件读数**。
+   **4.4 (i) 满足(`bots/` 有 diff,结束连续三轮不满足)**;**(ii) 亦满足**。
+   产出:新 gated id **`tpstale`** + 纯谓词 `J.ShouldDropUnownedRecoverTp`、
+   `tests/_stayfield_tpleg_sweep.lua` **section 2**(同一份 1039 帧走查,未新建 sweep)、
+   `tests/test_tpstale_recover_leak.lua`(**14 tests 0 failures**,0.21s)、
+   `tools/agent/mutstand_tpstale.sh`(**5 CAUGHT + 控制项 SURVIVED,零 NO-OP**)、
+   `state.json:tpstale_20260914`、报告 `iterations/reports/strategy/20260914T140942Z.md`。
+   交棒:**总监** —— `tprecov`/`tpdeep` 既有读数需重判(它们的 (a) 证据取自一棵
+   「否决可被兄弟残留状态架空」的树);promote 建议三条同进同退;0NEXT12 四个读数按上面重新标注。
+   原文保留在下,便于对照。**
+   **【2026-09-14T10:26Z 新增,**下一轮第一项**。
    **换轴:不要再问「这条 id 还剩多少域」,去问「这条**调用点**还剩多少域」。**
 
    **为什么换轴,而且这是 0NEXT12 自己测出来的**:0NEXT11/0NEXT12 连着两轮问的是
@@ -9174,6 +9240,65 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-14T14:09Z:**`回复状态` 分支发射在一个它没有选过的目的地上;新 gated id
+  **`tpstale`** 落地。`bots/` **有 diff** ⇒ **4.4 (i) 满足,结束连续三轮不满足**;(ii) 亦满足。**
+  按 backlog **0NEXT13** 做,而 0NEXT13 **本身就是 owner P2 的工作**(那四条回家分支
+  就是 P2「决策侧」的全部决策面)⇒ 铁律 9 与 backlog 本轮**指向同一件事**,不存在上一轮那种冲突。
+  **(1) ⭐⭐ 头条是泄漏,而且它是闭式的、在源码上就能判定**:`tpLoc` 是
+  `X.ConsiderItemDesire["item_tpscroll"]` 里**一个**函数级 local,四条分支共用;
+  `前往守塔`(`X.GetDefendTPLocation`)与 `前往推塔`(`X.GetPushTPLocation`)**都先写它、
+  再要一个距离条件才发射**,距离那半失败时**既不发射也不 return**,写入**留在原地**;
+  函数里唯一的清除动作(守塔分支的 `J.ShouldAllowDefendTp` 清空)**排在那个距离测试之前**,
+  **清不掉一个栽在距离上的目的地**。而 `回复状态` 的发射条件是**一个裸的非空判断**。
+  ⇒ **两个 bug**:bot 顶着「回复状态」的 motive **TP 到一座塔**(它刚刚自己拒绝过去的地方,
+  且跳过本分支的 `DistanceFromFountain > nMinTPDistance + 200`);以及**每一条合取项被绕过,
+  包括 `tprecov`/`tpdeep` 两条 owner-P2 的 gated 否决**。
+  📌 **可迁移**:*否决守的是**赋值**,发射读的是**别人的赋值** —— 这是 `pullcad` 形状的
+  **新方向**:不是门被冻成 false,而是**调用点的结论被兄弟分支的残留状态覆盖**;
+  两者在我们拥有的每一个自动读者眼里都是「WIRED 且 armed」。* 已据此立 **0NEXT14**(按形状普查)。
+  **(2) 真实帧曝光人口**(section 2,1039 帧):`r4_head 17`,其中
+  **`r4_head_inner_shut 10`**(`fountain` 5 / `ring` 3 / `allies` 2)、`inner_open 7`
+  ⇒ **10 帧上「发不发射」完全由「兄弟有没有泄漏」决定**;另外 7 帧本修复按构造 no-op。
+  ⛔ **泄漏本身不是频率是闭式**(`X` 是 file-local,没有 fixture 能演示一次泄漏);
+  曝光计数 **10 是下界**(没建模 `X.CanJuke()`)。
+  **(3) ⭐⭐ 一条限定本组自己上一轮头条的事实**:`bot:GetActiveMode()` 在 **1039/1039** 帧答 **0**
+  而 `BOT_MODE_RETREAT` = **1005** ⇒ `撤退:1/2/3` 共处的外壳在语料上**恒假**,
+  而 `_stayfield_tpleg_sweep.lua` **section 1 的 `branch_stop` 从不建模它**
+  ⇒ 0NEXT12 的 `trigger 76`/`branch_open 4`/`margin_solo 1`/`margin_live 0`
+  **全部是「给定撤退模式」的条件读数**。兄弟文件 `_tpquiet_sweep.lua:224`(09-08)
+  **六天前就钉过这个外壳**,知识没传过来 ⇒ 立 **(卯)**。
+  **section 1 的读数逐位不变**(`solo_S 24`/`live_S 2`/`trigger 76`/`branch_open 4`/`margin_solo 1`)
+  ⇒ 本轮扩列没有扰动 0NEXT12 的测量。
+  **(4) 本轮踩到并登记的两个坑**:**(寅)** 第一版把 `sCastMotive = '回复状态'` 逐字写进新注释,
+  截断了兄弟 sweep 的切片,`tpquiet`/`tprecov`/`tpdeep` **五条断言**报假红;
+  门第一版写在**分支条件里**,被既有断言 `RECOVER_NIDS == 0` 顶回 ⇒ 已搬进 helper
+  (`J.ShouldDropUnownedRecoverTp`,gate-first-then-turbo、只点名一个 id、不读 bot)。
+  **(5) 变异台**(跑在出货实现上,每条先 `grep -c` 核验落地):**5/5 CAUGHT,
+  控制项 SURVIVED,零 NO-OP,STAND GREEN**。承重:**M1b 顺序盲**(helper 改 turbo-first)、
+  **M2 极性**(gated 块改成赋目的地 ⇒ armed 能**打开**分支)、**M3 语义盲**(flag 在合取式
+  之上无条件置 true,四项存在性检查全过、每帧 no-op)。⚠️ M2 第一版 `sed` 按行文匹配
+  **同时改到了守塔分支的清空** ⇒ 已改按偏移定位;**一个 NO-OP 报出来的其实是
+  「你做的是另一个变异体」**。
+  **(6) 开工自检真码 `EXIT=3`** ——⚠️ 后台任务通知报的 `exit code 0` **不是它的退出码**。
+  `FINDINGS: cadence queue-rulings owed-executions lua-coverage`;python 腿内部
+  **9 条 check 未跑**(Lua 腿本容器 120s 未跑完)。首条命令**第 20 次**被 `stdout is a pipe` 挡回。
+  **(7) 验证入口(章程 (戌))**:全部读数用 `lua5.1 tests/run_tests.lua <filter>` 取得。
+  受波及族全 0 failures:`tpstale_recover_leak` 14、`tprecov` 14、`tpdeep` 18、`tpquiet` 15、
+  `stayfield_tpleg_live_domain` 11、`tphome` 14、`gate_claim_consistency` 16、
+  `gated_helper_nesting_census` 10、`smoke_load` 3。**这是子集不是全量**(GH #124)。
+  静态半 `GATE_EXIT=0` CLEAN、0 warnings、**未用 `RULE6_BYPASS`**。
+  ⛔ **没跑** `lua_gate_measure.py` 全量重测、**没手改** manifest ⇒ 新测试入闸与否交总监。
+  **(8) 交棒**:总监 —— `tpstale` 记 **FROZEN-HOLD**(⛔ **本轮不提入集申请,这不是掉棒**);
+  **`tprecov`/`tpdeep` 既有读数需重判**;promote 建议**三条同进同退**;
+  0NEXT12 四个读数按 (3) 重新标注(**不推翻** `fieldsip` 否掉 P2 铁证帧那条算术结论,
+  但把「live 域 = 0/1039」改读为「**在语料能看见的那部分世界里** = 0」)。
+  另请主会话 / Cursor 在 `OWNER_PRIORITIES.md` P2「现状缺口」补一句:决策侧的问题不只是
+  「没有 id 在管」,还有「管了的 id 在一条分支上被上游残留状态架空」(本组不自行改该文件)。
+  产出:`bots/FunLib/jmz_func.lua`、`bots/ability_item_usage_generic.lua`、
+  `tests/_stayfield_tpleg_sweep.lua` section 2、`tests/test_tpstale_recover_leak.lua`、
+  `tools/agent/mutstand_tpstale.sh`、`state.json:tpstale_20260914`、
+  报告 `iterations/reports/strategy/20260914T140942Z.md`。**零 AWS。**
 
 - 2026-09-14T10:26Z:**`margin(stayfield)`(TP 腿)在真实成员串上 = `0 / 1039`。产出 (b);
   `bots/` + `game/` 零 diff,4.4 (i) **连续第三轮**不满足(如实登记),**(ii) 满足**

@@ -76,6 +76,11 @@
 --   O <fixture> <hero> <hp> <lvl> solo_w=<0|1> live_w=<0|1>
 --       one live frame where the branch is OPEN by every readable conjunct,
 --       with the wrapper's answer in each of the two worlds.
+--   V <fixture> <hero> <hp> <mp> <why>
+--       one live frame inside 回复状态's OUTER head, with the first conjunct of
+--       its own inner conjunction that shuts it: fountain | ring | allies |
+--       propertarget | flask | target | modifier | open.  `open` means the
+--       branch sets its own tpLoc; anything else means 'tpstale' decides.
 --   B <fixture> <hero> <why>
 --       one frame where S is TRUE on the live member string, with the branch
 --       conjunct that already falsifies the branch: NOT_BLOCKED if none does.
@@ -134,6 +139,9 @@ local function count(s, needle)
 end
 
 local aiug = read_file(AIUG)
+-- Section 2 anchors on CODE only: a comment in this file names every branch
+-- head it measures, so an offset taken on the raw text could be a comment's.
+local aiug_code = strip_comments(aiug)
 local jmz = strip_comments(read_file(JMZ))
 
 local G = {}
@@ -164,6 +172,137 @@ G.T3_SUM_TRIGGER = tonumber(b3 and b3:match('botHP %+ botMP < ([%d%.]+)')) or -1
 G.T3_LEVEL = tonumber(b3 and b3:match('GetLevel%(%) >= (%d+)')) or -1
 G.T3_ENEMY_CAP = tonumber(b3 and b3:match('nEnemyCount <= (%d+)')) or -1
 G.T3_ALLY_CAP = tonumber(b3 and b3:match('nAllyCount <= (%d+)')) or -1
+
+-- =========================== SECTION 2 (charter 0NEXT13) ====================
+-- THE FOUR HOME BRANCHES OF X.ConsiderItemDesire["item_tpscroll"], PRICED ON
+-- THIS SAME 1039-FRAME WALK -- no second census cost, per the charter.
+--
+-- 0NEXT12 asked "how much domain does this ID have left" and got 0 twice.
+-- 0NEXT13 changes the axis to the CALL SITE. The answer for this function is
+-- not a band, it is a SHAPE, and two facts about that shape were never
+-- written down anywhere:
+--
+-- ⭐ (A) THE FOUR BRANCHES ARE NOT ONE FLAT CHAIN. 撤退:1 / 撤退:2 / 撤退:3 all
+-- sit INSIDE one wrap -- `nMode == BOT_MODE_RETREAT and nModeDesire >=
+-- BOT_MODE_DESIRE_MODERATE and bot:GetLevel() >= 3 and not arc_warden` -- and
+-- 回复状态 sits OUTSIDE it, at the function's top level. So the partition
+-- between the four is by MODE, not by HP band: off retreat mode 回复状态 is
+-- the ONLY home branch that can fire, and its two gated P2 vetoes own that
+-- whole region alone. The HP heads then nest 撤退:1 ⊂ 回复状态 ⊂ 撤退:3
+-- (0.19 < 0.2 <= 0.2, and 0.3 < 0.43 / 0.2 < 0.34), counted below rather than
+-- argued, so inside the wrap the upstream branch that RETURNS decides.
+--
+-- ⛔ (B) AND THE CORPUS CANNOT SEE THAT WRAP AT ALL. `bot:GetActiveMode()`
+-- answers 0 on every frame here while BOT_MODE_RETREAT is 1005 -- active mode
+-- is bot-VM state, not entity state, so it is absent from the .dem exactly
+-- like lane assignment (the pullcamp census's STOPPER 4). `mode_is_retreat`
+-- below is the reading. THIS QUALIFIES SECTION 1 OF THIS VERY FILE: its
+-- `branch_stop` walks 撤退:3's OWN conjuncts and never models the wrap, so
+-- every number section 1 reports -- `trigger`, `branch_open`, `margin_solo`,
+-- `margin_live` -- is conditional on "given the bot is in retreat mode", and
+-- the corpus contributes nothing to whether it is. The sibling
+-- tests/_tpquiet_sweep.lua (2026-09-08) already pinned this wrap at its line
+-- 224; the knowledge existed six days before section 1 was written and did not
+-- travel. Registered here rather than left for a reader to rediscover.
+--
+-- ⭐⭐ (C) THE LEAK, which is what made this round a bots/ change. `tpLoc` is
+-- ONE function-scoped local. 前往守塔 and 前往推塔 assign it and fall through
+-- without clearing it when their DISTANCE half fails, and 回复状态's firing
+-- condition is the bare `if tpLoc ~= nil`. So on those frames 回复状态 fires
+-- with somebody else's destination and EVERY conjunct of its own -- including
+-- J.ShouldSipNotTpRecover and J.ShouldDeepSipNotTpRecover, both owner-P2
+-- levers -- is bypassed. `r4_head_inner_shut` below is the real-frame
+-- exposure population: frames whose outer head opens while the modelled part
+-- of the inner conjunction is false, i.e. frames where 'tpstale' decides.
+--
+-- ⛔ WHAT THIS SECTION CANNOT SAY. `X` is file-local, so `X.CanJuke()`,
+-- `X.GetDefendTPLocation` and `X.GetPushTPLocation` are not callable from
+-- here: the inner conjunction is modelled WITHOUT CanJuke (so
+-- `r4_head_inner_shut` is a LOWER bound on the exposure -- a false CanJuke can
+-- only move frames from open to shut), and whether an upstream branch actually
+-- leaked on a given frame is not readable at all. (C) is therefore a
+-- CLOSED-FORM claim about the source, ratcheted in
+-- tests/test_tpstale_recover_leak.lua, not a frequency measured here.
+
+-- ⛔ EVERY SECTION-2 OFFSET IS TAKEN INSIDE THE tpscroll FUNCTION, not in the
+-- file. The first draft of this block anchored the wrap file-wide and matched
+-- `if nMode == BOT_MODE_RETREAT` in an EARLIER item's Consider function: the
+-- wrap read 94k bytes before 撤退:1 and the source-order assertion passed
+-- anyway, because a wrong-but-smaller offset is still smaller. An ordering
+-- check cannot notice that its own anchors are in different functions.
+local TP_FN = (function()
+    local a = assert(aiug_code:find('X.ConsiderItemDesire["item_tpscroll"] = function', 1, true),
+        'the tpscroll Consider function moved')
+    local b = assert(aiug_code:find('\nend\n', a, true), 'the tpscroll function has no end')
+    return aiug_code:sub(a, b)
+end)()
+
+local function at_code(needle)
+    local i = TP_FN:find(needle, 1, true)
+    return i or -1
+end
+
+G.AT_RETREAT_WRAP = at_code('if nMode == BOT_MODE_RETREAT')
+G.AT_R1 = at_code('if botHP < 0.19')
+G.AT_R2 = at_code('if botHP < ( 0.15 + 0.24 * nEnemyCount )')
+G.AT_R3 = at_code('if ( botHP < 0.34 or botHP + botMP < 0.43 )')
+G.AT_R4 = at_code('if ( botHP + botMP < 0.3 or botHP < 0.2 )')
+assert(G.AT_RETREAT_WRAP > 0 and G.AT_R1 > 0 and G.AT_R2 > 0 and G.AT_R3 > 0
+    and G.AT_R4 > 0, 'a home-TP branch head moved; the four-branch map refuses '
+    .. 'to run on anchors it cannot find')
+-- Source order, so "upstream" is read off the file and not believed.
+G.ORDER_OK = (G.AT_RETREAT_WRAP < G.AT_R1 and G.AT_R1 < G.AT_R2
+    and G.AT_R2 < G.AT_R3 and G.AT_R3 < G.AT_R4) and 1 or 0
+-- The wrap's own close, taken as the first one-tab `end` AFTER 撤退:3. If 撤退:3
+-- is inside a one-tab block that closes before 回复状态, then 回复状态 is not in
+-- that block -- which is the nesting claim of (A) read off the structure rather
+-- than from indentation alone.
+G.AT_WRAP_END = (function()
+    local i = TP_FN:find('\n\tend\n', G.AT_R3, true)
+    return i or -1
+end)()
+G.WRAP_ENCLOSES_R1R2R3 = (G.AT_WRAP_END > 0 and G.AT_RETREAT_WRAP < G.AT_R1
+    and G.AT_R3 < G.AT_WRAP_END) and 1 or 0
+G.WRAP_EXCLUDES_R4 = (G.AT_WRAP_END > 0 and G.AT_R4 > G.AT_WRAP_END) and 1 or 0
+
+-- Head constants of the other three branches, parsed like T3's above. Each is
+-- matched INSIDE its own sliced body -- `if botHP <` appears in other item
+-- functions, so a file-wide match would report whichever came first.
+local b1 = TP_FN:sub(G.AT_R1, (TP_FN:find("sCastMotive = '撤退:1'", G.AT_R1, true) or G.AT_R1))
+G.R1_HP = tonumber(b1:match('if botHP < ([%d%.]+)')) or -1
+G.R4_SUM, G.R4_HP = (function()
+    local a, b = aiug_code:match('if %( botHP %+ botMP < ([%d%.]+) or botHP < ([%d%.]+) %)')
+    return tonumber(a) or -1, tonumber(b) or -1
+end)()
+-- 回复状态's own conjuncts, parsed from its body rather than retyped.
+local b4 = (function()
+    local a = TP_FN:find('if ( botHP + botMP < 0.3 or botHP < 0.2 )', 1, true)
+    local b = TP_FN:find("sCastMotive = '回复状态'", a, true)
+    return a and b and TP_FN:sub(a, b) or nil
+end)()
+assert(b4 ~= nil, 'the 回复状态 branch body could not be sliced')
+G.R4_LEVEL = tonumber(b4:match('GetLevel%(%) >= (%d+)')) or -1
+G.R4_ENEMY_CAP = tonumber(b4:match('nEnemyCount <= (%d+)')) or -1
+G.R4_ALLY_CAP = tonumber(b4:match('nAllyCount <= (%d+)')) or -1
+G.R4_FOUNTAIN_PAD = tonumber(b4:match('nMinTPDistance %+ (%d+)')) or -1
+-- The repair itself, read off the shipped source: the flag, the gate, the drop.
+G.R4_OWNFLAG = count(b4, 'bRecoverTpIsOurs = true')
+-- The gate lives in the HELPER, not in the branch condition (the suite's
+-- convention for this call site: tests/test_tprecov_recover_trip.lua asserts
+-- RECOVER_NIDS == 0), so what is counted here is the CALL.
+G.R4_TPSTALE_CALL = count(b4, 'J.ShouldDropUnownedRecoverTp(')
+G.R4_BRANCH_NAMES_NO_ID = (count(b4, 'IsSoakCandidate') == 0) and 1 or 0
+assert(G.R1_HP > 0 and G.R4_SUM > 0 and G.R4_HP > 0 and G.R4_LEVEL > 0,
+    'the 撤退:1 / 回复状态 head constants could not be parsed')
+
+local R1_HP = G.R1_HP
+local R4_SUM, R4_HP2 = G.R4_SUM, G.R4_HP
+local R4_LVL = G.R4_LEVEL
+local R4_ECAP, R4_ACAP = G.R4_ENEMY_CAP, G.R4_ALLY_CAP
+local R4_PAD = G.R4_FOUNTAIN_PAD
+local MIN_TP = tonumber(TP_FN:match('local nMinTPDistance = (%d+)')) or -1
+assert(MIN_TP > 0, 'nMinTPDistance is no longer a literal')
+G.MIN_TP = MIN_TP
 
 local HP_TRIG = G.T3_HP_TRIGGER
 local SUM_TRIG = G.T3_SUM_TRIGGER
@@ -291,7 +430,7 @@ local function why_blocked(J, bot)
     return 'NOT_BLOCKED'
 end
 
-local rows, brows = {}, {}
+local rows, brows, vrows = {}, {}, {}
 
 for _, path in ipairs(fixture_files()) do
     for _, hero in ipairs(hero_names(path)) do
@@ -373,6 +512,83 @@ for _, path in ipairs(fixture_files()) do
                     path, hero, nHP, bot:GetLevel(), W0 and 1 or 0, W1 and 1 or 0))
             end
 
+            -- ---- SECTION 2 (charter 0NEXT13): the four-branch map ----------
+            do
+                -- (B) THE WRAP THE CORPUS CANNOT SEE. Active mode is bot-VM
+                -- state and absent from the .dem, so this reads a constant --
+                -- which is the point: it is the measurement that says section 1
+                -- above is conditional on "given the bot is retreating".
+                if bot:GetActiveMode() == BOT_MODE_RETREAT then
+                    bump('mode_is_retreat')
+                else
+                    bump('mode_not_retreat')
+                end
+
+                -- (A) THE THREE HEADS, and their nesting COUNTED not argued.
+                local H1 = nHP < R1_HP
+                local H3 = (nHP < HP_TRIG) or (nHP + nMP < SUM_TRIG)
+                local H4 = (nHP + nMP < R4_SUM) or (nHP < R4_HP2)
+                if H1 then bump('h1_r1') end
+                if H3 then bump('h3_r3') end
+                if H4 then bump('h4_r4') end
+                -- These three must stay 0: 撤退:1 ⊂ 回复状态 ⊂ 撤退:3. Moving any
+                -- head constant makes one non-zero and names which containment
+                -- broke.
+                if H1 and not H3 then bump('viol_h1_in_h3') end
+                if H1 and not H4 then bump('viol_h1_in_h4') end
+                if H4 and not H3 then bump('viol_h4_in_h3') end
+                -- ⭐ ANTI-VACUUM for those three zeros (0NEXT12's (丑)): an
+                -- all-zero column cannot tell "the containment holds" from "the
+                -- counter never ran". These two are the SAME comparisons with
+                -- the containment reversed, and they must be NON-zero, so the
+                -- zeros above are zeros of a tally that is demonstrably tallying.
+                if H3 and not H1 then bump('h3_beyond_h1') end
+                if H3 and not H4 then bump('h3_beyond_h4') end
+
+                -- (C) 回复状态's EXPOSURE POPULATION -- the frames 'tpstale'
+                -- decides. Outer head open, inner conjunction shut => the branch
+                -- chose NOT to set tpLoc, so whether it fires is decided
+                -- entirely by whether an upstream branch leaked one.
+                if H4 and bot:GetLevel() >= R4_LVL
+                    and hero ~= 'npc_dota_hero_huskar'
+                    and hero ~= 'npc_dota_hero_slark'
+                    and not bot:HasModifier('modifier_arc_warden_tempest_double')
+                then
+                    bump('r4_head')
+                    local okFar2, far2 = pcall(function() return bot:DistanceFromFountain() end)
+                    local nFar = (okFar2 and type(far2) == 'number') and far2 or -1
+                    -- The inner conjunction MINUS X.CanJuke() (file-local, not
+                    -- callable) => `r4_head_inner_shut` is a LOWER bound: a
+                    -- false CanJuke can only move a frame from open to shut.
+                    -- The eight negated modifiers are the same set 撤退:3
+                    -- carries, checked term by term against the source in
+                    -- tests/test_tpstale_recover_leak.lua.
+                    local sWhy = 'open'
+                    if not (nFar > MIN_TP + R4_PAD) then sWhy = 'fountain'
+                    elseif #J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE) > R4_ECAP then sWhy = 'ring'
+                    elseif J.GetAllyCount(bot, 1600) > R4_ACAP then sWhy = 'allies'
+                    elseif J.GetProperTarget(bot) ~= nil then sWhy = 'propertarget'
+                    elseif J.IsItemAvailable('item_flask') ~= nil then sWhy = 'flask'
+                    elseif bot:GetAttackTarget() ~= nil then sWhy = 'target'
+                    else
+                        for _, m in ipairs(BRANCH_MODIFIERS) do
+                            if bot:HasModifier(m) then sWhy = 'modifier' break end
+                        end
+                    end
+                    bump('r4_why_' .. sWhy)
+                    if sWhy == 'open' then
+                        bump('r4_head_inner_open')
+                    else
+                        bump('r4_head_inner_shut')
+                    end
+                    -- Every head frame gets a V row, open or shut: the
+                    -- anti-vacuum column for the exposure count, and the source
+                    -- of the decisive frames the calling test drives.
+                    vrows[#vrows + 1] = string.format('V %s %s %.3f %.3f %s',
+                        path, hero, nHP, nMP, sWhy)
+                end
+            end
+
             -- Every live-S frame gets a B row whether or not the branch blocks
             -- it: the anti-vacuum column for the closed-form claim.
             if S1 then
@@ -401,4 +617,5 @@ for _, k in ipairs(ck) do out:write(string.format('C %s %d\n', k, c[k])) end
 
 for _, l in ipairs(rows) do out:write(l .. '\n') end
 for _, l in ipairs(brows) do out:write(l .. '\n') end
+for _, l in ipairs(vrows) do out:write(l .. '\n') end
 out:write('DONE\n')

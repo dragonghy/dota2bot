@@ -6044,6 +6044,66 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 		and botName ~= 'npc_dota_hero_slark'
 		and not bot:HasModifier( "modifier_arc_warden_tempest_double" )
 	then
+		-- [tpstale / owner priority P2, charter 0NEXT13] DID THIS BRANCH SET
+		-- THE DESTINATION IT IS ABOUT TO TP TO?
+		--
+		-- ⛔ NOTE FOR ANYONE EDITING THIS COMMENT: several sibling sweeps slice
+		-- this branch by finding its head and then the NEXT occurrence of its
+		-- cast-motive assignment, on the RAW text, stripping comments only
+		-- afterwards. A comment here that spells that assignment out verbatim
+		-- becomes a false anchor and truncates their slice to this block --
+		-- measured 2026-09-14: five assertions across tpquiet / tprecov /
+		-- tpdeep went red reporting that the branch had "dropped" conjuncts it
+		-- still carries. So this block describes the code and does not quote
+		-- the anchors: no cast-motive assignment, no bare non-nil test.
+		--
+		-- tpLoc is ONE function-scoped local shared by every branch of
+		-- X.ConsiderItemDesire["item_tpscroll"], and two upstream branches
+		-- write it and then fall through WITHOUT clearing it:
+		--
+		--   * 前往守塔 (~line 5455) writes it from X.GetDefendTPLocation, then
+		--     fires only if it is set AND the distance exceeds
+		--     nMinTPDistance - 500;
+		--   * 前往推塔 (~line 5523) writes it from X.GetPushTPLocation, then
+		--     fires only if it is set AND the distance exceeds
+		--     nMinTPDistance - 600.
+		--
+		-- When the DISTANCE half fails, the branch neither fires nor returns,
+		-- and the write stands. Apart from the declaration and the gated drop
+		-- below, the only place this function clears it is the defend branch's
+		-- own J.ShouldAllowDefendTp check -- and that runs BEFORE the distance
+		-- test, so it cannot clear a destination that failed ON distance. A
+		-- tower destination computed for a DEFEND or a PUSH therefore arrives
+		-- here still set, and this branch's firing condition is nothing but a
+		-- non-nil test on it.
+		--
+		-- ⭐ THE CONSEQUENCE IS TWO BUGS AT ONCE, and the second is why this
+		-- sits under owner priority P2. (1) The bot TPs to a TOWER under this
+		-- branch's recover motive -- a destination where it cannot recover,
+		-- chosen by a branch that already declined to go there. (2) EVERY
+		-- conjunct below is bypassed, including this branch's own
+		-- DistanceFromFountain floor of nMinTPDistance + 200 and BOTH of the
+		-- gated P2 regen vetoes on it. A veto that guards the ASSIGNMENT cannot
+		-- be reached when the FIRING condition is satisfied by somebody else's
+		-- assignment -- so on every leaked frame 'tprecov' and 'tpdeep' are
+		-- dead no matter what they answer, an armed wave reads back "tested, no
+		-- effect", and check_armed_wiring.py still calls them WIRED (the
+		-- 'pullcad' shape, GH #622, reached from a new direction: not a gate
+		-- frozen false, but a call site whose result a sibling overwrites).
+		--
+		-- THE REPAIR IS THIS BRANCH'S OWN DECLARED POLICY, not a new one: the
+		-- conjunction below exists to decide whether to go to the team
+		-- fountain, and the motive it stamps names that decision. Requiring the
+		-- destination to be the one this branch chose cannot remove anything it
+		-- ever meant to allow -- the flag is true on exactly the frames the
+		-- conjunction already passed.
+		--
+		-- Gated turbo-only on the 'tpstale' soak candidate: disarmed, the flag
+		-- below is written and never read, and the shipped answer is unchanged
+		-- byte for byte. Direction is a NARROWING only -- armed can turn this
+		-- branch's TRUE into FALSE and never the other way, because the flag is
+		-- true on exactly the frames the conjunction below already passed.
+		local bRecoverTpIsOurs = false
 		if	X.CanJuke()
 			-- [tprecov / owner priority P2, 2026-09-08] The fourth home-TP
 			-- branch of this function, and the only one carrying no regen veto
@@ -6082,6 +6142,18 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 			and not bot:HasModifier( "modifier_tango_heal" )
 		then
 			tpLoc = J.GetTeamFountain()
+			bRecoverTpIsOurs = true
+		end
+
+		-- [tpstale] see the block above the conjunction: drop a destination this
+		-- branch did not choose, so the non-nil test below means what it reads
+		-- like. The gate lives in the helper (as it does for stayfield /
+		-- tprecov / tpdeep) so this branch's condition names no candidate id and
+		-- each lever here stays separately armable. Inert unless turbo AND the
+		-- candidate is armed.
+		if J.ShouldDropUnownedRecoverTp( bRecoverTpIsOurs )
+		then
+			tpLoc = nil
 		end
 
 		if tpLoc ~= nil
