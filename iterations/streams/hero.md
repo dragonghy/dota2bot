@@ -7875,8 +7875,15 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `test_call_arity_census.py` exit 0。⛔ §3 是协同组的,不代修。
   - 验证:新测试 **16 绿**;`mutstand_wkbonefull.sh` **9/9**;`mutstand_wkbonespawn.sh` 锚点更新后 **10/10**;
     五个既有 WK 测试 13/13/12/21/14 绿且**未改一字**;`test_wk_bone_guard_stock_gate.lua` §6 换地址、**没降门槛**。
-  - **铁律 6 三条腿**:`GATE_EXIT=0 CLEAN` / `py gate: 88 ran, 0 findings, 9.9s` /
-    `lua gate:` 见报告 §9;`RULE6_BYPASS` **未使用**。
+  - **铁律 6 三条腿(抄自 push 钩子,两次 push 逐字相同)**:`GATE_EXIT=0 CLEAN` /
+    `py gate: 88 ran, 0 findings, 0 uncertifiable, 10.3s` /
+    `lua gate: 380 ran, 0 findings, 0 uncertifiable, 7 unanswered, 7 known-red, 495.0s`;
+    `RULE6_BYPASS` **未使用**。落地 **`ba45b156`**(main,rebase 到 `ebbbe3e6` 之后)。
+    新测试**当轮就带 `[ratchet]`**(379→380、unanswered 8→7 就是它);⛔ 不加 manifest 行(GH #783)。
+  - ⚠️ **rebase 冲突是本组自己造的,判别子写下来**:`state.json` 整文件冲突,
+    **不是**双方各追加一个键,是本组 `json.dump(indent=2)` 把用 `indent=1` 的文件**整个重排版**了。
+    修法:`git checkout --ours` 拿回上游那份,再用 `indent=1` 重落自己的键(`numstat` 从整文件变成 16/1)。
+    ⭐ **程序化改 JSON 前先读一眼它自己的缩进** —— 同一个仓库里 `queue.json` 是 2、`state.json` 是 1。
   - ⚠️ **证据纪律 3 同形第 14 次,又是本轮第一条命令**(`routine_selfcheck.sh | tail`,脚本当场 REFUSED);
     **上一轮已经写过「下一轮第一条命令就用 rc.sh」这句提醒,没管用** ⇒ 本轮把它放进
     **backlog `-176` 的第一行**,而不是再写一遍提醒。真读数 `RC_EXIT=3`,
