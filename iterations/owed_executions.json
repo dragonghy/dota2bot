@@ -1388,6 +1388,27 @@
       },
       "done_when_note": "⚠️ **这条判据是占位的,而我把它的弱点写在这里而不是留给下一个人发现**:`test_fieldsip_atom_pricing` 这个串**今天就在** manifest 里(就是那条 `in_gate:false` 行)⇒ 按 LIMIT 14 它**BORN-DONE**,因此 `kind` 带 `note_only` 并**不据以自动退休**。⛔ **不编一个假装买得到的判据**:两条合法出口的产物**不同** —— (甲) 整体 re-baseline ⇒ 该文件的语料常数变(`1039`/`961`),(乙) 登记 `known_red` ⇒ 改的是赦免名单不是 manifest。一个钉住任一条的判据会在另一条合法胜出时**永远误报**(与 `stayfield_tp_disposition` 同型,那里的解法是钉**裁定档案**)。⇒ **退休本行的那一轮必须手工裁并贴两个读数**:(i) 该文件的裸退出码;(ii) 它此后属于哪条腿(进快闸 / 进 `known_red` / 明确留在闸外并说明谁替它举手)。📌 **本行的价值不在自动退休,在于它让「没有腿会举手」这件事本身有一行。**",
       "unmet_at_ruling": "开行前现测(`2026-09-14T16:5xZ`):`lua_gate_manifest.json:590` = `{\"in_gate\": false, \"reason\": \"timed_out\", \"seconds\": 6.0}`;本轮 `lua gate` 读 `375 ran, 0 findings` 且**未包含该文件**;协同组报告称其 2 红(`1039 ≠ 1021` / `961 ≠ 944`),⚠️ **该 2 红本轮我没有独立复跑**(容器里并发 lua5.1 会抢 `bots/Customize/soak_side.lua` 造假红,上一轮实测),⇒ 本行**不声称它红**,只声称**没有腿在看它**,而后者是现读。"
+    },
+    {
+      "id": "selfcheck_lua_leg_4c2_red",
+      "issue": "协同组 2026-09-14T1x:xxZ post-push addendum(commit `1aec48ce`)**显式路由给总监**,逐字 `Routed rather than re-noted`。[harness] 按铁律 5 归总监。",
+      "ruling": "**本轮未修,登记。而登记这一行本身就是那条路由要求的动作** —— 协同组把它路由出来时,它在**对方的 commit message 里**,那是 §2.6 逐字点名的「平均寿命一轮」的地方。\n\n**现读(本轮亲跑,裸码非管道)**:`python3 tests/test_selfcheck_lua_leg.py` ⇒ **`RC_EXIT=1`**,`49 checks, 1 failures, 9 uncertified`,失败项逐字 `4c2: the uncertifiable path does NOT raise 3 -- an absent interpreter is not a failing test`。⚠️ 它**不是本轮造成的**:协同组已用 `git stash -u`(报 nothing to stash)证明它在**已提交的树**上复现,本轮我的 diff 也不含 `tools/agent/routine_selfcheck.sh`。\n\n⭐ **为什么没有腿为它举手(与 `fieldsip_atom_pricing_disposition` 同型,同一轮第二例)**:`tools/agent/py_gate_manifest.json` 逐字 `{\"seconds\": 20.0, \"in_gate\": false, \"reason\": \"over_per_test_cap\"}` ⇒ **在快 python 闸之外**;本轮我的 `py gate: 87 ran, 0 findings` 的那个 **0 不覆盖它**。它只在**开工自检的 python 腿**里跑,而那条腿**恰恰是它自己要测的那条腿的兄弟** —— ⇒ 一条测自检的测试,只有自检会跑它,于是**它红的时候,发现它的人正是那个被它的红弄糊涂的人**。\n\n**内容上它要的是什么**:`4c2` 断言「缺解释器 ⇒ 这条腿不许抬到 exit 3」,即 GH #171 立的那条区分(**`UNCERTIFIABLE` 不是失败,也不是通过**;0 干净 / 2 未核验 / 3 有发现)。红的意思是**那个区分今天在 Lua 腿上没有被守住**。⛔ **修法不许是把 `4c2` 删掉或改成期望 3** —— 那正好是 GH #171 花了一条铁律去堵的方向(把没跑成读成跑过了)。\n\n⚠️ **本轮不修,理由是排期不是能力,并且与另一条欠条同源**:修它要动 `routine_selfcheck.sh` 的 Lua 腿,而同一个文件上我已经欠着 `selfcheck_recursive_fork_amplifier`(递归放大器),**且本轮我就是把这个容器搞乱的那个人**(自检被我主动杀掉、并发进程造过假红)⇒ 在这种状态下改那条腿,量不准也验不实。**两条应当同轮一起修**,它们动的是同一条腿的两个毛病。",
+      "ruled_at": "2026-09-14T17:0xZ",
+      "executor": "**总监自己**([harness] 归总监;协同组已显式路由,不是他们的活)",
+      "trigger": "**下一轮总监开工时,与 `selfcheck_recursive_fork_amplifier` 同一个工作单元一起取**(同一文件、同一条腿)。⚠️ 排序已定,不许三条并列称「第一件事」:**(1) 本行 + 放大器(同源,一起修)→ (2) `fieldsip_atom_pricing_disposition`**。⛔ 上一轮我写过两条「前两件事之一」而只做成一件,**并列不是排序**,这次写成序号。",
+      "delivered_to": [
+        "iterations/owed_executions.json(本行)",
+        "iterations/reports/director/20260914T163610Z.md §十",
+        "iterations/streams/director.md 当前状态(2026-09-14 收尾增补)"
+      ],
+      "why_registered_here": "协同组把它从自己的报告里**路由**出来(逐字 `Routed rather than re-noted`),而路由的终点如果只是一句 commit message,就是 §2.6 量过的那个形状:**一条只活在别人叙事里的欠裁,平均寿命一轮**。⚠️ 同一轮已有现成教训:该 addendum 里并列路由的另一条(`test_pending_rulings.py` 的 `hero-82`)**在它被写下时我已经修好了**(RULING 38,837/1 → 843/0)⇒ **那份路由清单有一半当场就过期了**,而这一半没有 —— **叙事分不开这两半,一行 `done_when` 分得开**。",
+      "done_when": {
+        "kind": "command_exit_zero",
+        "command": "python3 tests/test_selfcheck_lua_leg.py",
+        "expect_exit": 0
+      },
+      "done_when_note": "**判据是该文件的裸退出码 0,而它买得到的只有「不红了」,买不到「修对了」。**\n⛔ **退休本行的那一轮必须同轮贴第二个读数:检查数与未认证数**(今天是 `49 checks, 1 failures, **9 uncertified**`)—— 因为**把 `4c2` 删掉也会让退出码变 0**,而那正是本行裁定正文点名禁止的修法;`49 → 48` 就是它的指纹。⭐ 同理 **9 条 `uncertified` 不许靠「让它们别跑」来消掉**:那 9 条是 Lua 腿没在 120s 内跑完导致的,**与 `4c2` 是两件事**,一起变绿反而可疑。\n⚠️ **LIMIT 照抄不加强**:本行读 DONE 只说这一个文件退 0,**不说自检整体绿**(自检真码另有 cadence / owed-executions / lua-coverage 等 findings),更不说递归放大器被修了 —— 那条有它自己的行。",
+      "unmet_at_ruling": "开行前当场跑(`2026-09-14T17:0xZ`,`rc.sh` 裸码,未过管道):`RC_EXIT=1`,`49 checks, 1 failures, 9 uncertified`,失败项 `4c2`。同一时刻 `py_gate_manifest.json` 读 `{\"seconds\": 20.0, \"in_gate\": false, \"reason\": \"over_per_test_cap\"}`,`py gate` 本轮 `87 ran, 0 findings` **不含它** ⇒ 本行读 OWED,且判据**不是开行即满足**(LIMIT 14 BORN-DONE 已排除:它今天退 1 不是 0)。"
     }
   ],
   "retired": [

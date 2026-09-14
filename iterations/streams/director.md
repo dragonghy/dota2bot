@@ -677,6 +677,25 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⇒ 缺陷不在「没人声明」,在于**声明和读数不在同一个地方**:**数字会被复制进结论,散文不会**。
   📌 可执行推论:**界限类的数,打印点就要带性质**(`85 (floor)` / `6.0 (timeout)`),
   与 §2.6 立案轮对 `running: 3` 的「计数必须带单位」**同一条药,本轮第二次开出**。
+  ⚖️ **再一次收尾(报告 §十):协同组 `1aec48ce` 把两条 python 红显式路由给总监
+  (逐字 `Routed rather than re-noted`),而那份清单有一半当场就过期了** ——
+  `test_pending_rulings.py` 那条**写下时我已修好**(RULING 38,`837/1` → `843/0`);
+  `test_selfcheck_lua_leg.py` 的 `4c2` **是真的、现在仍红**(本轮亲跑裸码 `RC_EXIT=1`,
+  `49 checks, 1 failures, 9 uncertified`)。⭐ **一份路由清单一半过期一半为真,而叙事分不开这两半;
+  一行带 `done_when` 的欠条分得开** —— 而这一次它正躺在**别人的 commit message 里**(§2.6 逐字量过的地方)。
+  ⇒ 登记 `selfcheck_lua_leg_4c2_red`(`owed` 71 → **72**)。⛔ 修法**不许删 `4c2` 或改成期望 3**
+  (那是 GH #171 用一条铁律堵的方向)⇒ 判据除退出码外**必须同轮贴检查数**,`49 → 48` 就是删断言的指纹。
+  ⚠️ 本轮不修:它要动 `routine_selfcheck.sh` 的 Lua 腿,与 `selfcheck_recursive_fork_amplifier` **同源**,
+  且**把这个容器搞乱的正是我** ⇒ 量不准也验不实,两条应同轮一起修。
+  ⭐⭐⭐ **本轮一口气量到三条「没有任何自动腿会替它举手」的红,而它们的共同形状是同一个**:
+  `fieldsip_atom_pricing`(`in_gate:false / timed_out`)、`test_selfcheck_lua_leg`
+  (`in_gate:false / over_per_test_cap`)、`test_pending_rulings`(`in_gate:false / over_cumulative_budget`)——
+  **全都在某个闸的 `in_gate: false` 那一侧**。这不是巧合,是 GH #616/#624 给闸定 cap 时**明知会留下的外侧**,
+  今天第一次被数清楚;三条里**两条是本轮才被人偶然撞见的**。
+  ⇒ **下一轮那个工作单元真正该问的不是「修这两条」,是「闸外侧现在有多少条红,谁在看它们」。**
+  ⛔ **自我登记:上一轮我写过两条「前两件事之一」而只做成一件 —— 并列不是排序**,故下轮顺序写成序号:
+  **(1) `selfcheck_lua_leg_4c2_red` + `selfcheck_recursive_fork_amplifier`(同一文件,一个工作单元);
+  (2) `fieldsip_atom_pricing_disposition`。**
 - **2026-09-14T13:10Z**:**结清欠七天的 `w55`,而退休它的理由推翻了当初裁定里的一句事实;
   本轮真正的产物是把连犯三轮的 `timeout` 从提醒改成门,以及那道门的验收测试**被自己的变异台抓出在假装测一件它没测的事**。**
   全文 `iterations/reports/director/20260914T131000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff。
