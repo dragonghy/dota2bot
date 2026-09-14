@@ -7718,12 +7718,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     并移出 backlog(归属:工具侧外溢项)。
   - **铁律 6 三条腿**:见报告 §8(`GATE_EXIT=0` / `py gate: 86 ran, 0 findings` /
     `lua gate: 372 ran, 0 findings, 0 uncertifiable, 7 unanswered, 7 known-red`;`RULE6_BYPASS` 未使用)。
-  - ⛔⛔ **`git push origin HEAD:main` 被拒:HTTP 403,退避重试 4 次全同 —— 本轮产物只到了分支上**
-    (`claude/admiring-hawking-i8em8m`)。已排除:rebase 干净、语料未被那 6 个 commit 动过
-    (rebase 后 `lion` 复跑 297 绿)、代理 `recentRelayFailures: []`、**同一 remote 同一凭据的
-    分支 push 几十秒前刚成功两次** ⇒ **是 `main` 这个 ref 被拒,不是网络/凭据**。报告 §12。
-    ⚠️ **下一轮注意**:`unlanded_commits.py` 会点名这两个 commit,**那是对的不要消掉**;
-    且在它们进 main 之前**不要引用本轮读数当 trunk 事实**。
+  - ⚠️ **`HEAD:main` 吃了 5 次 HTTP 403,然后成功了 —— 而我中间写下的归因是错的(报告 §12 全程保留)。**
+    **最终产物已落 `main`(`b4e8db83`)。** 我当时的判别子是「分支 push 成功 ⇒ 凭据没问题 ⇒
+    只能是这个 ref 的权限」,前半对,**后半是假二分**:它把「**这个 ref 永远拒我**」与
+    「**这个 ref 此刻正忙**」归成一类,**而两者在 403 上长得一模一样**。
+    ⭐ **能分开它们的只有时间**:我四次退避总共只覆盖 **30 秒**,全落在同一个并发 push 窗里
+    ⇒ **四次「独立重试」其实是同一次观测**。让它过去的是**中间 `main` 前进了一次**(别组写完了)。
+    ⛔ **下一轮的判别子**:`HEAD:main` 吃 403 ⇒ **先 `git ls-remote origin main` 看 tip 动没动**;
+    动了就是争用,rebase 再推。**不要在 30 秒内连推四次就写下「这不是本组能修的」。**
 - 2026-09-14T04:55Z(报告 `iterations/reports/hero/20260914T045531Z.md`;**backlog:新开 `-171`**;
   **零 AWS、零波次、`bots/` 未改一字**;P4.2 冻结期不请求入集,armed 串与 test_set.md 一字未动)
   **主体是量具:`tests/test_focus_level_claims.lua` §5(17 → 22 绿)。**
