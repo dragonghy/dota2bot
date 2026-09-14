@@ -22,6 +22,70 @@ local tTalentTreeList = {
 							['t10'] = {10, 0},
 }
 
+--- THE t10 PRICE, and the flip it buys.  Soak candidate `wkt10ls` (turbo-only,
+--- INERT until armed).  Shipped t10 stays exactly where it was; arming this id
+--- takes the OTHER row.
+---
+--- THE PAIR, read off the game's own KV (tests/mock/talent_slots.lua and
+--- tests/mock/special_value_shapes.lua, both generated from npc_dota_hero_*.txt
+--- by tools/agent/special_value_shape_census.py -- not retyped here):
+---
+---   right/index 2, `..._facet_1`  skeleton_king_hellfire_blast/blast_dot_duration +2
+---                                 skeleton_king_spectral_blade/cursed_damage_pct +15
+---   left /index 1, `..._2`        skeleton_king_vampiric_spirit/vampiric_aura     +8
+---
+--- HALF OF THE SHIPPED PICK IS DEAD, and that is a fact this file already
+--- settled rather than a new claim: `skeleton_king_spectral_blade` is granted by
+--- `skeleton_king_facet_cursed_blade` and by nothing else, and both of Wraith
+--- King's facet entries read `"Deprecated" "true"` (the facet block further down,
+--- tests/test_wk_facet_settlement.lua).  So the shipped row delivers ONE of the
+--- two things its KV lists.  The left row's single line is live: `vampiric_aura`
+--- has base 20 with `hero_levelup +0.5`, so +8 is eight PERCENTAGE POINTS on a
+--- base that is ~25 at hero level 10 -- about a third more lifesteal, on every
+--- attack, permanently.
+---
+--- ⛔ THE DEAD HALF IS NOT THE ARGUMENT.  "One line of the shipped row does
+--- nothing" does not make the other row worth more; the previous round wrote
+--- that down as the trap to avoid and this block is not allowed to fall into it.
+--- The price is the surviving halves against each other, in turbo:
+---
+---   SHIPPED (dot duration 2.0 -> 4.0).  Under tAllAbilityBuildList Q is still
+---   RANK 1 at hero levels 10-12 (its second point is row entry 12 and lands at
+---   hero level 13 -- section 2 of tests/test_wk_qdmg_domain.lua drives this
+---   through the real J.Skill.GetSkillList).  blast_dot_damage is PER SECOND and
+---   is 20 at rank 1, so the extra two seconds are worth +40 magical damage per
+---   cast, on a 14s cooldown, plus two more seconds of the -20% blast_slow.
+---   ~30 after a 25% magic resist.  It scales with Q rank, which this build does
+---   not raise until hero 13.
+---   FLIPPED (vampiric_aura ~25 -> ~33).  Applies to every attack of a melee
+---   right-click hero whose shipped pos_1 row buys phase boots -> armlet ->
+---   radiance.  At a modest hero-level-10 turbo attack damage of ~120 that is
+---   ~+10 HP per attack; a single 8-attack exchange already returns more than
+---   the whole extra dot, and the farming minutes between fights return it
+---   again and again.
+---
+--- WHY IT IS GATED ANYWAY, when the charter lets a pure build change ship
+--- ungated: not because the arithmetic is shaky but because of the COUPLING in
+--- the next paragraph, which is a behaviour change to a DIFFERENT armed lever
+--- and has no business arriving unannounced inside a talent table.
+---
+--- ⚠️ COUPLING -- `wkt10ls` AND `wkqdmg` ARE NOT INDEPENDENT.  X.wk_GetBlastKillDamage
+--- reads `blast_dot_duration` off the handle, into which the engine folds a
+--- trained talent (GH #228).  Its armed side is min(honest, shipped), so it acts
+--- exactly where the honest read is smaller -- and the shipped t10 pick is the
+--- only reason that stops happening: with the dot at 4.0 the honest read
+--- overtakes the hardcode at Q rank 2, which is why the lever is documented as a
+--- byte-for-byte no-op from hero level 13.  Arming `wkt10ls` holds the dot at
+--- 2.0 forever, the honest read then sits below the hardcode at EVERY rank
+--- (120/180/240/300 against 168/235.2/302.4/369.6), and `wkqdmg`'s no-op region
+--- disappears: it withdraws 48 at hero 2-12 and 55.2/62.4/69.6 above that
+--- instead of 0.  That is a bigger change to what a wave measures than the
+--- talent itself.  Pinned in section 5b of tests/test_wk_qdmg_domain.lua; the
+--- two ids must be armed and ruled together or not at all.
+if J.IsModeTurbo() and J.IsSoakCandidate( 'wkt10ls' ) then
+	tTalentTreeList['t10'] = {0, 10}
+end
+
 
 -- ABILITY INDEX MAP -- re-anchored 2026-08-22 against the live Dota 2 datafeed
 -- (https://www.dota2.com/datafeed/herodata?language=english&hero_id=42), because
@@ -306,7 +370,10 @@ aba_skill.lua rather than asserting it):
 
 tTalentTreeList above therefore resolves to [2] at t10, [4] at t15, [6] at t20 and
 [7] at t25 ({10,0} takes the even/right index, {0,10} the odd/left one -- see
-aba_skill.lua:135).  All four picks are taken in turbo.  This used to read "only
+aba_skill.lua:135).  All four picks are taken in turbo.  SINCE 2026-09-14 the t10
+half of that sentence is conditional: soak candidate `wkt10ls` (the priced block
+above the table) rewrites t10 to {0, 10} and takes index [1] instead.  Unarmed --
+which is every shipped game -- the resolution is unchanged.  This used to read "only
 the t10 and t15 picks can ever be taken in turbo: the level census behind GH #84
 read level >= 20 on 0 of 210 hero-slots, high-water 19".  CORRECTED 2026-08-27:
 that zero was the batch harness's 10-minute economy cap, not turbo.  Owner
@@ -662,6 +729,12 @@ end
 --- domain to hero 5: rank 2 before the talent still narrows, harder (55.2).  See
 --- the ConsiderQ note below and tests/test_wk_qdmg_domain.lua, which derives both
 --- ladders from the real J.Skill.GetSkillList rather than re-typing them.
+--- ⚠️ A SECOND id moves this domain, and it is not an ability-build id at all:
+--- arming `wkt10ls` (the t10 price at the top of this file) keeps the dot at 2.0
+--- for the whole game, so the honest read never overtakes the hardcode and this
+--- lever has NO no-op floor -- it withdraws at every hero level Q is learned.
+--- Section 5b of tests/test_wk_qdmg_domain.lua pins that; the two ids are one
+--- ruling, not two.
 ---
 --- WHY MIN AND NOT THE HONEST NUMBER.  Taking the handle read straight would ADD
 --- casts at rank 2+ once the t10 talent lands (260 > 235), and this stream ships

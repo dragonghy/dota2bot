@@ -1,5 +1,12 @@
--- [hero] GH #817's "talent uptake is a per-hero CONSTANT" is three different
--- things wearing one sentence, and the biggest of the three is the instrument.
+-- [hero] [ratchet] GH #817's "talent uptake is a per-hero CONSTANT" is three
+-- different things wearing one sentence, and the biggest of the three is the
+-- instrument.
+--
+-- ⚠️ THE TAG IS LOAD-BEARING, 2026-09-14.  It landed a round late: this file
+-- went in untagged and with no lua_gate_manifest.json row, so 开工自检's next
+-- run reported it as NEW UNCOVERED (GH #806) -- nothing automatic would have
+-- run it, and its red would have been found by whichever desk started work
+-- next.  Do not drop [ratchet] to "tidy" the header.
 -- 2026-09-14.  Zero behaviour change, zero gate: this file registers what a
 -- wave-level talent read CAN and CANNOT see, not a decision about the bots.
 --

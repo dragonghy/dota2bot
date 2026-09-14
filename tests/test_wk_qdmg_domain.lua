@@ -273,6 +273,116 @@ tests['[hero] wkqdmg domain 5: arming wkbuild moves the no-op floor 13 -> 10, an
         .. 'the conditional above is then not conditional on anything')
 end
 
+-- ------------------------------------------- 5b. the wkt10ls dependency (2026-09-14)
+
+--- The same narrowing, but with the dot duration held at its base for the whole
+--- game -- which is what arming `wkt10ls` does, because that id spends t10 on
+--- Vampiric Spirit lifesteal instead of on blast_dot_duration +2.
+local function narrowing_flat_dot(tQLadder, nHeroLevel)
+    local nRank = 0
+    for r = 1, 4 do
+        if tQLadder[r] ~= nil and tQLadder[r] <= nHeroLevel then nRank = r end
+    end
+    if nRank == 0 then return nil end
+    return shipped_at(nRank) - armed_value(nRank, Q_DOT_BASE), nRank
+end
+
+tests['[hero] wkqdmg domain 5b: the t10 flip is real, and it is a talent-table id that moves an ABILITY lever'] = function()
+    -- (a) the counterfactual is conditional on something that exists.
+    assert(src:find('J.IsSoakCandidate%(%s*\'wkt10ls\'%s*%)'),
+        'hero_skeleton_king.lua no longer carries the wkt10ls gate; section 5b is '
+        .. 'then a counterfactual about nothing')
+    local a, b = src:match('tTalentTreeList%[\'t10\'%]%s*=%s*{%s*(%d+)%s*,%s*(%d+)%s*}')
+    assert(a and b, 'the wkt10ls body no longer assigns a t10 row')
+    assert(tonumber(a) == 0,
+        'the flip must put a 0 first -- that is what selects the LEFT/odd talent '
+        .. 'index in J.Skill.GetTalentBuild.  Got {' .. a .. ', ' .. b .. '}')
+
+    -- (b) and the shipped row still selects the other one.  DRIVEN through the
+    -- real J.Skill.GetTalentBuild, never re-typed: the whole defect this section
+    -- guards is that an index mapping looks obvious and is off by one.
+    local api = require('mock.bot_api')
+    api.reset_modules()
+    api.install({ bot = api.MakeHero('skeleton_king') })
+    local J = require(GetScriptDirectory() .. '/FunLib/jmz_func')
+    local tShipped = { t10 = talents.t10, t15 = talents.t15, t20 = talents.t20, t25 = talents.t25 }
+    local tFlipped = { t10 = { tonumber(a), tonumber(b) }, t15 = talents.t15,
+                       t20 = talents.t20, t25 = talents.t25 }
+    local nShippedPick = J.Skill.GetTalentBuild(tShipped)[1]
+    local nFlippedPick = J.Skill.GetTalentBuild(tFlipped)[1]
+    assert(nShippedPick == 2,
+        'the shipped t10 row should still take talent index 2, got ' .. tostring(nShippedPick))
+    assert(nFlippedPick == 1,
+        'arming wkt10ls should take talent index 1, got ' .. tostring(nFlippedPick))
+
+    -- (c) index 1 is the lifesteal row and index 2 is the dot row -- read out of
+    -- the KV snapshot, so this test fails on a patch that re-orders the pair
+    -- rather than silently pricing the wrong two things.
+    local slots = require('mock.talent_slots')
+    local tWk = slots.SLOTS['skeleton_king']
+    assert(tWk, 'tests/mock/talent_slots.lua no longer carries skeleton_king')
+    assert(tWk[1].name == 'special_bonus_unique_wraith_king_2',
+        'talent index 1 is no longer the Vampiric Spirit row, got ' .. tostring(tWk[1].name))
+    assert(tWk[2].name == 'special_bonus_unique_wraith_king_facet_1',
+        'talent index 2 is no longer the blast_dot_duration row, got ' .. tostring(tWk[2].name))
+    local bDot = false
+    for _, sMod in ipairs(tWk[2].mods) do
+        if sMod == 'skeleton_king_hellfire_blast/blast_dot_duration = +2' then bDot = true end
+    end
+    assert(bDot,
+        'talent index 2 no longer carries blast_dot_duration +2 -- the entire '
+        .. 'reason wkqdmg has a no-op floor is that this row exists and is taken')
+end
+
+tests['[hero] wkqdmg domain 5b2: arming wkt10ls DELETES this lever\'s no-op region -- it does not shrink it'] = function()
+    local ladder = q_ladder('tAllAbilityBuildList')
+
+    -- Shipped: hero 13+ withdraws exactly nothing (section 4 proves it).
+    for nHeroLevel = 13, 25 do
+        assert(narrowing_at_hero_level(ladder, nHeroLevel) == 0,
+            'section 4 disagrees: shipped hero level ' .. nHeroLevel .. ' should be a no-op')
+    end
+
+    -- Flipped: the honest read sits BELOW the hardcode at every rank, so there is
+    -- no hero level at which Q is learned and the lever does nothing.
+    assert(narrowing_flat_dot(ladder, 1) == nil, 'Q is still unlearned at hero level 1')
+    local nActive = 0
+    for nHeroLevel = 2, 25 do
+        local n = narrowing_flat_dot(ladder, nHeroLevel)
+        assert(n ~= nil and n > 0,
+            'with wkt10ls armed, hero level ' .. nHeroLevel .. ' must still withdraw; got '
+            .. tostring(n) .. '.  If this ever hits 0 the coupling note in '
+            .. 'hero_skeleton_king.lua is wrong and must be re-argued, not re-baselined.')
+        nActive = nActive + 1
+    end
+    assert(nActive == 24, 'hero 2-25 all act, got ' .. nActive)
+
+    -- The sizes, per rank, so a wave reading can be joined to a hero level.
+    -- Ladder (driven above): rank 1 at hero 2, 2 at 13, 3 at 14, 4 at 16.
+    local tExpect = { [12] = 48, [13] = 55.2, [14] = 62.4, [15] = 62.4, [16] = 69.6, [25] = 69.6 }
+    for nHeroLevel, nWant in pairs(tExpect) do
+        local n = narrowing_flat_dot(ladder, nHeroLevel)
+        assert(math.abs(n - nWant) < 1e-9,
+            'with wkt10ls armed, hero level ' .. nHeroLevel .. ' should withdraw ' .. nWant
+            .. ', got ' .. tostring(n))
+    end
+
+    -- The headline, as an inequality rather than a pair of numbers: the flip
+    -- more than doubles the span of an ALREADY-ARMED lever.
+    local function span(fn)
+        local n = 0
+        for lv = 1, 25 do
+            local w = fn(ladder, lv)
+            if w ~= nil and w > 0 then n = n + 1 end
+        end
+        return n
+    end
+    assert(span(narrowing_at_hero_level) == 11, 'shipped span is hero 2-12')
+    assert(span(narrowing_flat_dot) >= 2 * span(narrowing_at_hero_level),
+        'the whole reason wkt10ls may not be armed alone: it takes wkqdmg from '
+        .. span(narrowing_at_hero_level) .. ' acting hero levels to ' .. span(narrowing_flat_dot))
+end
+
 -- --------------------------------------------------------- 6. the text ratchet
 
 tests['[hero] wkqdmg domain 6: the reversed wording may not come back (GH #311)'] = function()

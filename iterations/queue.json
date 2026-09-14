@@ -2721,6 +2721,17 @@
       "question": "⛔ **零 EC2:在已归档的批测对局里数两件事,都关于 Crystal Maiden 冰封禁制(`crystal_maiden_freezing_field`)branch 1 的「打得到」计数。**\n(1) **速度分布**:CM 开大的那些瞬间(以及她身边 734.8u 内有敌方英雄的瞬间),**敌方英雄的实际移动速度**是多少?这决定了出厂环 `602.536 - speed` 到底缩到多小 —— 600+ 就是**恒假的关断点**。⚠️ fixture 语料**结构上答不了**这一问:dumper 不导出速度(GH #786),mock 对每个单位每一帧一律答 **300**。\n(2) **带宽**:在那些瞬间里,落在 `(602.536 - speed, 602.536 - speed*0.1]` 这条带里的敌方英雄有几个 —— 那些就是 `cmrspeed` armed 后**新增**的「打得到」计数,也就是 `aoeCanHurtCount >= 2` 这条析取项新增的出价。\n\n⭐ **为什么零 EC2 就够**:两个量都只需要位置 + 移动速度,**不需要**任何 armed 腿。⛔ **如果 dumper 仍然不带速度字段,本条唯一合法的回填是「买不到,卡在 GH #786」** —— 不许用 300 当代理值凑一个读数出来。",
       "acceptance": "(1) 打印**分母**(扫了几局 / 几个 CM 在场瞬间),没有分母的分子不收;(2) 速度字段缺失时**只许**回填「本语料没有速度字段(GH #786)」,**不许**推断域;(3) 读数按 `ab` / `ba` 两个分层分别登记(铁律 4 (i-a)),登记的是**读数**不是局数。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;本组不花 AWS)。\n⛔ **若将来有人为本 id 发波:不得与 `cmrcrowd` 同腿 arm** —— 两者在同一帧把 branch 1 推向相反方向(见下 note),同腿读数对谁都不可归因。",
       "note": "本地已把能离线买到的都买了:`tests/test_cm_field_hurt_ring.lua` **21 绿**、`tools/agent/mutstand_cmrspeed.sh` 见报告。方向是 **WIDENING(按构造单向)**,负读数只能读成「引导开得太频」,**永远不能**读成「lever 吃掉了一次出厂释放」。⭐ **已测得的碰撞**:在 `cmrcrowd` 自己的钉帧 `f_260820_043039_cm_cask_close.lua`(t=515.5)上,出厂环 302.5 一个都不收 ⇒ `aoeCanHurtCount == 0`;armed 环 572.5 收**两个** ⇒ `aoeCanHurtCount >= 2` 在**同一帧**从另一条析取项把 branch 1 打开 —— 正是 `cmrcrowd` 要拿掉的那次出价(GH #798 的 ownhalf/overchase 同形)。"
+    },
+    {
+      "id": "hero-82",
+      "stream": "hero",
+      "bundle": "wkt10ls (新落地 gated id；**零 EC2**，不要为它发波，也**不申请入集**)",
+      "priority": 2,
+      "status": "pending",
+      "seeds": [],
+      "question": "⛔ **本条的主体不是扫描，是一条给总监的裁定请求，零 AWS、零波次。**\n请在 `iterations/promote_atoms.json` 加一行 `wk_t10_moves_the_q_domain`，`rule=no_promote_without`，**subject=[\"wkt10ls\"]、prereq=[\"wkqdmg\"]**。\n**理由（可逐条核源码，不要照抄）**：`X.wk_GetBlastKillDamage` 的 armed 侧是 `min(honest, shipped)`，而 `honest` 把手柄上的 `blast_dot_duration` 读进去（引擎把已学天赋折进手柄，GH #228）。出货 t10 把 dot 从 2.0 抬到 4.0，**这是 `wkqdmg` 从英雄 13 级起是字节级 no-op 的唯一原因**；arm `wkt10ls` 把 dot 永远按在 2.0，honest 在**每一阶**都低于硬编码（120/180/240/300 vs 168/235.2/302.4/369.6）⇒ `wkqdmg` 的 no-op 区**整个消失**：英雄 2-12 扣 48、13 扣 55.2、14-15 扣 62.4、16+ 扣 69.6，**作用等级数 11 → 24**。\n⚠️ **`wkqdmg` 现在就在 armed 串里**，所以这不是假设。本轮没发波也没人在飞（批测台连续十七轮零发波），所以这一次**没有**在飞的读数被变更污染 —— 这正是现在把栏杆装上的时候。\n⛔ **这条依赖故意没有写进代码**：在 `wkt10ls` 的谓词里合取 `wkqdmg` 就是 pullcad 陷阱（被 promote 的 id 不在任何 armed 串里，合取从那天起恒假）。先例：hero-49 / `impale_kill_needs_damage`。",
+      "acceptance": "(1) 裁定落地后 `python3 tools/agent/promote_atoms.py` 能复读出新行（现在是 **5 atoms / OK**），且开工自检的 promote-atom 那一节把 `wkt10ls=GATED wkqdmg=ARMED` 打出来。\n(2) 若总监判定方向应该反过来（subject/prereq 互换），**请直接改并写明理由**；本组只提请求不下裁定。本组选这个方向的理由：单独 promote `wkqdmg` 无害（它只能收回一个声称的击杀，从不凭空造一个），而单独 arm/promote `wkt10ls` 会把另一根已 armed 杠杆的域悔掉。\n⛔ **不申请入集**：P4.2 冻结期，armed 集 26 > 20；与 hero-40/hero-81 同一档。\n⛔ **不申请发波**：本组不花 AWS 钱，而且刷车线 headroom 只剩 $0.142。",
+      "note": "本地已把能离线买到的都买了：`tests/test_wk_qdmg_domain.lua` 由 7 → **9 绿**（新增 §5b/§5b2），变异台 `tools/agent/mutstand_wkt10ls.sh` **6/6 首轮全杀**。\n⚠️ **本 id 没有真实帧 fixture，而且这是写下来的不是省略的**：天赋选择是脚本加载时做一次的表驱动决定，没有可钉的帧；用 `make_fixture.py` 铉一帧只会把 mock 自己的天赋表断言回去。代替物是两份**从游戏 KV 生成而非重打**的快照（`tests/mock/talent_slots.lua` / `tests/mock/special_value_shapes.lua`）加一条**跑真 `J.Skill.GetSkillList` 的阶梯**。⛔ 两者都**买不到条件 (a)** —— 没有任何读数证明真实对局里的 WK 真去点了那一行。等 P4.2 解冻后再提入集。"
     }
   ],
   "done": [

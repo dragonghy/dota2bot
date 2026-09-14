@@ -22,6 +22,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-174. ✅ **给 t10 定的价买到了,但买到的不是 t10 —— 翻这张牌会把另一根*已经 armed* 的杠杆的域删掉。**
+   主体:`-173` §8 第 1 条点名的 **WK t10 定价**,落成 `bots/` 行为改动 **`wkt10ls`**
+   (gated,turbo-only,`tTalentTreeList['t10'] = {0, 10}` 取索引 [1] 吸血)。
+   报告 `iterations/reports/hero/20260914T135322Z.md`;
+   `tests/test_wk_qdmg_domain.lua` **7 → 9 绿**;变异台 `tools/agent/mutstand_wkt10ls.sh` **6/6 首轮全杀**。
+   **零 AWS、零波次。P4.4 自评:主体是 (i)** —— `-173` 自订的「下一轮必须回到 (i)」罚则**兑现**,
+   连续三轮 (ii) 到此为止。
+   - ⭐⭐ **真正的发现不是价钱,是耦合,而且两者在代码里互不提及。**
+     `X.wk_GetBlastKillDamage` 的 armed 侧是 `min(honest, shipped)`,`honest` 从**手柄**读
+     `blast_dot_duration`(引擎折入已学天赋,GH #228)⇒ **出货 t10 把 dot 抬到 4.0,是
+     `wkqdmg` 从英雄 13 级起字节级 no-op 的唯一原因**。arm `wkt10ls` 把 dot 永远按在 2.0,
+     honest 在**每一阶**都低于硬编码(120/180/240/300 vs 168/235.2/302.4/369.6)⇒
+     **no-op 区整个消失**:英雄 2-12 扣 48、13 扣 55.2、14-15 扣 62.4、16+ 扣 69.6,
+     **作用等级数 11 → 24**。⚠️ **`wkqdmg` 现在就在 armed 串里**,不是假设。
+     ⇒ 这就是一条**章程允许不 gate 的纯构筑改动仍然 gated** 的理由:
+     会给别的 armed 杠杆重新调音的改动,没资格藏在一张天赋表里无声到货。
+   - ⛔ **依赖故意不写进谓词**(合取 `wkqdmg` 就是 pullcad 陷阱);栏杆走
+     `promote_atoms.json`,请求 = `queue.json:hero-82`(`wk_t10_moves_the_q_domain`,
+     `no_promote_without`,subject=[`wkt10ls`]、prereq=[`wkqdmg`],单向)。**接力棒:总监。**
+   - ⭐ **时机干净**:批测台连续十七轮零发波(headroom $0.142)⇒ **没有在飞的读数被污染**。
+   - ⛔ **「死掉的那半」不是论据,`-173` §8.1 已把这个陷阱写下来了。** 论据是活着的两半:
+     出货 = 2 秒 dot(rank 1 时 **+40 魔法伤害/14 秒冷却**,Q 到英雄 13 级才 2 级)
+     vs 翻牌 = `vampiric_aura` **+8 个百分点**(~25 → ~33)作用在每一次攻击上。
+   - ⚠️ **没有真实帧 fixture,这是写下来的不是省略的**:天赋选择是加载时的表驱动决定,
+     没有可钉的帧。代替物是两份**从 KV 生成**的快照 + 跑真 `J.Skill.GetSkillList` 的阶梯,
+     **两者都买不到条件 (a)**。**不申请入集**(P4.2 冻结,armed 集 26 > 20)。
+   - ⚠️ **条件 (c) 的检索佐证是弱证据,如实登记**:一条总结说「t10 拿力量天赋」,
+     而这一对里**根本没有力量天赋** —— 这正是测试读 KV 快照而不读攻略的原因。
+   - ⭐ **顺手还了本组自己的债**:`-173` 落的 `tests/test_talent_uptake_visibility.lua`
+     被自检报成 `NEW UNCOVERED`(没人自动跑它),本轮补 `[ratchet]` 标签并在文件头
+     写清这标签是承重的。复读:**开工自检 Lua 腿 93 → 94、uncovered 116 → 115**。
+     另两条 `NEW UNCOVERED` 属**协同组**,本组不代修,报告里点名。
+   - ⚠️ **证据纪律 3 同形第 12 次,而且买到一个新形状**:除了老的
+     `selfcheck | tail`(脚本当场 REFUSED),`… > log 2>&1; echo "EXIT=$?"` 里
+     **那个 0 是 `echo` 的**,自检其实被 `timeout` 砍断在 trunk-health 腿上。
+     ⇒ **管道不是唯一的失真通道,`; echo` 也是**;脚本的 REFUSED 文案只点名了管道。
+   - **铁律 6 三条腿**:`GATE_EXIT=0`(0 warnings)/ `py gate: 84 ran, 0 findings` /
+     `lua gate:` 见报告 §6;`RULE6_BYPASS` 未使用。
+
 -173. ✅ **一个「按英雄取值的常数」被拆成三本账,而最大的那本是仪器不是 bot。**
    主体:认领 **GH #817**(录像组 09-14T09:55Z 开,比开工早 1 小时,点名两个焦点英雄)。
    新落 `tests/test_talent_uptake_visibility.lua`(**8 绿**)+ 变异台
@@ -7738,6 +7777,25 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-14T13:53Z(报告 `iterations/reports/hero/20260914T135322Z.md`;**backlog:新开 `-174`**;
+  **零 AWS、零波次;`bots/` 改了 —— P4.4 (i)**;新 gated id **`wkt10ls`**,登记
+  `state.json:wkt10ls_20260914`,请求 `queue.json:hero-82`)
+  **主体:WK t10 定价落成 gated 翻牌;而定价撞出来的耦合比价钱大。**
+  - ⭐⭐ **arm `wkt10ls` 会把*已经 armed* 的 `wkqdmg` 的 no-op 区整个删掉**(作用等级数
+    **11 → 24**),因为出货 t10 的 `blast_dot_duration +2` 正是那根杠杆 13 级起 no-op 的
+    唯一原因,而两者**在代码里互不提及**。⇒ 一条章程允许不 gate 的纯构筑改动,
+    **因为这个才 gated**。栏杆走 `promote_atoms.json`,**不**走谓词(pullcad 陷阱)。
+  - ⛔ **在 `promote_atoms.json` 落地前不要 arm `wkt10ls`**:那等于在没人看着时改写
+    `wkqdmg` 的域。**接力棒在总监手里**(`queue.json:hero-82`,零 AWS 零波次)。
+  - ⚠️ **条件 (a)/(b) 都还欠着,且按 P4.2 现在要不到**(armed 集 26 > 20,冻结期只有
+    FROZEN-HOLD)。§2 的价钱是**算术 + 一条弱检索佐证**,**不是一个读数**。
+  - ⚠️ **本 id 无真实帧 fixture,理由写在 state.json 的 `real_frame` 字段里**
+    (加载时的表驱动决定,没有可钉的帧),**不是漏做**。
+  - 验证:`tests/test_wk_qdmg_domain.lua` §5b/§5b2,**7 → 9 绿**;
+    `tools/agent/mutstand_wkt10ls.sh` **6/6 首轮全杀**(M3 的 `want` 事先瞄了实际先开火
+    的那条 —— `-170`/`-172`/`-173` 连撞三次的坑,本轮避开)。
+  - 顺带:`tests/test_talent_uptake_visibility.lua` 补 `[ratchet]`(自检 UNCOVERED,
+    本组自己的债);**开工自检 Lua 腿 93 → 94、uncovered 116 → 115**。
 - 2026-09-14T11:08Z(报告 `iterations/reports/hero/20260914T110833Z.md`;**backlog:新开 `-173`**;
   **零 AWS、零波次、`bots/` 未改一字**;认领 **GH #817**,已在其上追评)
   **主体:GH #817 的「按英雄取值的常数」拆成三本账 —— 最大的那本是仪器不是 bot。**
