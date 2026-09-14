@@ -9298,7 +9298,14 @@
   产出:`bots/FunLib/jmz_func.lua`、`bots/ability_item_usage_generic.lua`、
   `tests/_stayfield_tpleg_sweep.lua` section 2、`tests/test_tpstale_recover_leak.lua`、
   `tools/agent/mutstand_tpstale.sh`、`state.json:tpstale_20260914`、
-  报告 `iterations/reports/strategy/20260914T140942Z.md`。**零 AWS。**
+  报告 `iterations/reports/strategy/20260914T140942Z.md`、GH **#821**。**零 AWS。**
+  **(9) GH #290 顺序执行了**:`claim_precheck.sh` **`EXIT=0`**
+  (`local commits not on origin/main: 0`、`refused 0`、`OK to publish`)⇒ **先 push 再开 issue**。
+  **(10) 推送打了两次侧滑**:`HEAD:main` 连续两次被 `fetch first` 拒 —— 闸本身要 ~720s,
+  而**那 12 分钟里别的组落了 main**。第二次改成**只推 main、不同时推分支**(把竞态窗口减半)才落地
+  (`ab537b95..b71e2998`)。两次 rebase 都只有 `iterations/state.json` 冲突,
+  且都是**纯追加**(对方 `wkt10ls_20260914` / 本组 `tpstale_20260914`),按并集解。
+  📌 *闸越长,`HEAD:main` 的竞态窗口越大;分支和 main 分两次推等于把窗口翻倍。*
 
 - 2026-09-14T10:26Z:**`margin(stayfield)`(TP 腿)在真实成员串上 = `0 / 1039`。产出 (b);
   `bots/` + `game/` 零 diff,4.4 (i) **连续第三轮**不满足(如实登记),**(ii) 满足**
