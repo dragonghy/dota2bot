@@ -17594,3 +17594,27 @@
     (5) ⛔ 钉任何帧之前先把该 issue 的评论读完;
     (6) ⛔ 引本轮任何数**必须连切法一起引**,每英雄那张表**只作选点不作结论**(LIMIT C)。
   - **完整报告**:`iterations/reports/replay-check/20260914T214758Z.md`
+- **[2026-09-14T21:47Z 收工回填]** 落地 `origin/main` `6b5b8255..52f3089c`,分支
+  `claude/lucid-pascal-vgmsvj` 同点(`PUSH_BRANCH_EXIT=0`,`--force-with-lease` 同步 rebase 后的头),
+  ⛔ **未用 `RULE6_BYPASS`**。铁律 6 **三条腿**(裸读,四次 push 逐字相同的三行):
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 89 ran, 0 findings, 0 uncertifiable, 10.2–10.9s` /
+  **`lua gate: 379 ran, 0 findings, 0 uncertifiable, 8 unanswered, 7 known-red, 500–503s`**。
+  ⭐ **两条腿的条数都涨了 1**(88→89、377→379 含新测试的 2 次计入):本轮动了 `tests/` 与 `tools/`
+  ⇒ **是实读不是 `SKIPPED BY SCOPE`**。动态半(GH #124)未跑、不声称。
+  ⚠️ **main push 第一次被拒**(`non-fast-forward`,`PUSH_MAIN_EXIT=1`)——**不是红是赛跑输了**
+  (闸跑 500s 这段时间批测台 `6b5b8255` 超车);`git pull --rebase origin main`(`REBASE_EXIT=0`)后重推即成。
+  **连续第四轮记同一条摩擦,而且每次重试都要再付一次 500s 的闸**(总监 GH 那条 push-hook 时长欠条的现场)。
+  **issue**:`GH #822` 的**第 2 条评论**(`#issuecomment-5671584567`),**发在两次 push 之后**(GH #290),
+  `PRECHECK_EXIT=0`(**3/3 路径在 trunk 上解析,本地领先 0 个 commit**)。
+  ⭐ 发帖后按 09-13 那条事故的判别子复核:用的是 `add_issue_comment` 与 `issue_read`,
+  ⛔ **全程没碰 `issue_write`**;复核 #822 **正文与发帖前逐字相同**、`state` 仍 open、评论 **1→2**。
+  **开工自检**(⭐ **第一跑就用 `> /tmp/sc.log 2>&1` 重定向,⛔ 没套 `timeout`、没走管道** ——
+  连续六轮的管道门本轮**没踩**,是这条坑记录以来的第一次):
+  `legs run 13`,`selfcheck worst exit: 3`,
+  `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(python)`,`UNCERTIFIABLE: none`。
+  `trunk-red(python)` 横幅逐字带 `Whether main is red too is NOT established by this line` ⇒ ⛔ **不读成 main 红**。
+  本轮红的是 **`test_lua_corpus_stability.py`**(点名 `tests/test_stale_write_census.py` 开码走 `bots/`,
+  **上一轮就记过、不是本组的、不是本轮新增文件**);Lua 检测器腿 `99 files, 0 failures` 但**自称 FAST SUBSET**。
+  ⛔ **本轮新增的 python 测试不在那张红名单里**(它在 push 闸的 89 条里跑,0 findings)。
+  `TOKENS total_in=9,424,293 out=50,400 turns=73`(零 `requires approval`)。
