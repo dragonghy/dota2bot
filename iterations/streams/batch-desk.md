@@ -10358,6 +10358,70 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **跑完整自检后 `pgrep -c -x -f 'bash tools/agent/routine_selfcheck.sh'` = `0`**;
   ⛔ **不是退休依据**(executor 是总监;`done_when` 的 `killpg` 仍 0 命中;该行自写「冷容器上的绿不算」),只作日期戳读数登记。
   **铁律 11:MCP 本轮可用,零 `requires approval`、零空转。**
+- 2026-09-14T18:07Z:**刹车第十九轮持有。⭐⭐⭐ 本轮的新事实:`$90` 不再是「会被越过」,它已经被越过了。**
+  **零发波、零收割欠、零泄漏,本轮 AWS 新增计费 `$0.00`**(EC2 `$0.00` + CE `$0.00`)。
+  **一、成本(当轮现跑,⛔ 下轮不得抄作前提)**:`AWS_SETUP_EXIT=0`(容器无 CLI,自装
+  `aws-cli/1.46.1 Python/3.11.15 botocore/1.43.62`;身份逐字 `(restricted batch-runner user — correct)`);
+  `COST_EXIT=0`(⛔ 未走管道)。MTD **`$90.005`** / `forecast 196.979` / `budget limit 100.0` /
+  `budget refreshed 2026-09-14T15:57:27Z`;**headroom 对 `$90` = `$-0.005`,首次为负**。
+  ⭐ **两条通知判据首次同时成立**(戳 `10:54:23Z`→**`15:57:27Z`** 换了张 **且** MTD `$89.858`→**`$90.005`**)
+  ⇒ **本轮增量比对有证明力** ⇒ **已推送 owner 手机/邮箱** + GH #779 第十一条评论
+  (`issues/779#issuecomment-5668510897`)。⚠️ **与前十八轮的性质区别**:此前是「余量塞不下最便宜的一波
+  `$1.10`」(线**未**越),**本轮是 `actual` 自己 `$90.005 > $90.00`,连 `--planned 0` 都越线**。
+  ⭐ 这**验证**了本台 09-13T15:17Z 的预测区间(下界 09-14 / 上界 09-21),**实际落在下界**;
+  ⛔ n=1 次越线事件,**不据此改任何常数、不外推到十月**。
+  **GH #801 四行整块照抄**(与 `RULE6_BYPASS` 同规格;⛔ **未用 `COST_CONFIRM_AT=999` 自救,用默认值跑**):
+  `>= $35, but headroom to the $90.00 brake is $-0.005` /
+  `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).` /
+  `Nothing can launch at this MTD, so confirming it buys nothing.` /
+  `Resumes by itself as soon as headroom >= $1.10.`
+  ⚠️ **这是 SKIP 不是 pass** ⇒ 本轮 MTD **未经 CE 复核**,`$90.005` 只有 budgets 一个来源。
+  **二、闸**:`FENCE_EXIT=3`,逐字 `projected total : $90.005` / `operative ceiling: $90.00 = min(fence, brake)` /
+  `A launch at this instant would put MTD past the $90.00 BRAKE line.` /
+  `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence. Stop and report to the owner; do not wait it out.`
+  ⛔ 未传任何 `--no-*` / `--director-crossing` / `--pending` ⇒ **无一行「这是 SKIP 不是 pass」**。
+  ⚠️ 照登不藏:`$90`–`$100` 之间在 AWS 侧**仍可花**(`$100` 告警 `state=OK`),**挡住它的是 owner 这条线不是 AWS**。
+  **三、⭐⭐ 本轮实质工作单元:两条 `executor=batch-desk` 的欠条其实早已执行完,却永远无法被结清 —— 卡点不在本台。**
+  (甲) `gh801_confirm_headroom_first_live_read`:`done_when` = `path_contains_all` 针脚
+  `Resumes by itself as soon as headroom` 于本章程;**现测 `grep -c` = `8`**(立行当日自述 = `0`)
+  ⇒ **肯定半早已满足**,自检自己逐字打的也是 `exists and mentions all 1 rideshare id(s)`。
+  它**仍 `UNCERTIFIABLE`** 的理由在同一行后半句,逐字:`this row's unmet_at_ruling is not a readable reading:
+  it does not quote an OWED reading (the literal token OWED is absent); it carries no parseable ISO-8601 UTC instant`
+  —— 对照该行原文,`OWED` 确实不出现、`2026-09-13T16:xxZ` 确实是打了码的散文戳,**两条缺陷逐条对上**。
+  ⇒ ⭐⭐ **阻塞项是该行自己的元数据,不是本台的执行;批测台再跑多少轮 `check_costs.sh` 都不会让它变 `DONE`**,
+  而 `executor` 字段每轮点名的正是这个无论做什么都无法结清它的座位。
+  (乙) `hero27_dem21_deadline_scan`:`done_when` = `iterations/reports/batch-desk/hero27_savemana_archive_scan.md exists`;
+  **现测该文件存在,17283 字节,内容完整**(§0 逐字「桌面那条 `DOMAIN-EMPTY` 结论只对 fixture 语料成立,
+  对真实对局不成立」)⇒ **肯定半同样早已满足**,而它仍 `UNCERTIFIABLE`,理由**同族**(缺字面 `OWED`)。
+  ⚠️ **(乙) 比 (甲) 急**:它自带外部倒计时 —— `dem21/`(103 份 `.dem`)**2026-09-22 lifecycle 自动删除**,
+  fallback **2026-09-20**(**距今 6 天 / 8 天**),且该行 `trigger` 逐字「⛔ 沉默不是允许的分支」
+  与「**判据反转**:语料一删,`path_exists` 仍会每轮喊 OWED,而那时它喊的是『已经错过』不是『还没做』」。
+  ⇒ **本条即那句要求的「批测台逐字表态」:已执行完毕,产物在库,不需要也不打算再动 `dem21/` 语料;
+  请总监在 09-20 之前换判据或退休本行。** ⛔ 本台**不自行移进 `retired`、不自行改 `unmet_at_ruling`**
+  (肯定半 `mention is not correctness` 与 registry 写入权归总监,先例 GH #33)。
+  ⛔ **诚实边界**:**n=2**,不主张这是 `owed_executions.json` 的普遍缺陷、不统计全表同形行数、不外推;
+  归因**全部取自自检自己打印的那半句**,本台**未读** `pending_rulings.py` 判定源码。
+  **四、收割零欠 / 泄漏四条独立路径全零(⛔ 不合并成一句)**:`S3VAL_EXIT=0`,`validation/` **592 对象**
+  与上一轮基线**逐位相同**,最新对象仍是 `tpcommit+46ids-24c30245be01_20260907_2218_run.log`
+  (`2026-09-07 22:18:52`)⇒ 零新对象、零下载,`recover_verdict.py` 未跑。泄漏:① `check_costs.sh`
+  自带区块**空**;② `describe-instances` 五态**不加 tag 过滤** ⇒ **零行**(`INST_EXIT=0`);
+  ③ 账户级普查逐字 `CERTIFIED (0 accruing instances account-wide, read this run)`,
+  `accrual scope : 17 region(s) read <- COMPLETE`;④ AMI 仍只 `ami-0a990a26d89c66547` 一张(常设成本非泄漏)。
+  ⇒ **把 MTD 推过 `$90` 的不是本台的波**(末台 EC2 是 W69,`2026-09-12T09:26:31Z` 起飞 + 2h 看门狗)。
+  ⛔ 本轮**未做** MTD 增量归因(要花 `$0.01` 逐日 CE,而 headroom 已为负)。
+  **五、开工自检**:⚠️ **管道坑第 30 次**(当轮第一条命令,脚本自卫当场拦下、零损失)
+  **+ 超时坑第六次**(`timeout 400`,逐字 `REFUSED: ... is running under timeout; exit 2, nothing checked.`)
+  ⇒ **第三跑才用上 `run_in_background` + 重定向 + 无 `timeout`**;⛔ **上一轮交棒 ⑦-2 的「一次到位」仍未做到,不辩解**。
+  两次 `EXIT=2` **都不是通过**。**已跑完的腿**:`promote-atom constraints: OK`;
+  `INVERSE-GATE CENSUS live gate ids 222 armed 25`(⭐ 活 gate 218→**222**,armed 26→**25**);
+  `9 anchor(s) checked -- OK`;⚠️ `UNCOVERED SET GREW` **2 个新文件**(`tests/test_dusttower_dive_guard.lua`、
+  `tests/test_fieldsip_transfer_receiving_site.lua`,均逐字 `NEW UNCOVERED  no_manifest_row`),总体
+  `UNCOVERED 115 of 460 (25%)` ⇒ ⛔ **本台不代登记、不新开 issue**(GH #783/#804/#806 已立案,再开即重复)。
+  ⚠️ `trunk health (python test suite)` 腿在报告写作时**仍在跑** ⇒ ⛔ **本台不声称它跑过**,真码见报告补记。
+  **六、铁律 9 优先项**:`OWNER_PRIORITIES.md` **4.1 upstream 标尺波**仍挂最高优先,
+  ⛔ 闸 (iii) `exit 3` ⇒ 发不出,**本轮零推进,原因是预算不是排期**。
+  **七、⛔ 本会话 `bots`/`game` 一行未改。** 铁律 11:MCP 本轮可用,零 `requires approval`、零空转。
+  详见 `iterations/reports/batch-desk/20260914T180741Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
