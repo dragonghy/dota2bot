@@ -9422,7 +9422,7 @@
   并发写方是**仍在后台跑的开工自检的 fast Lua 腿**;**串行重跑 0 findings、`PUSH_EXIT=0`**。
   比上一轮登记的「变异台 × 开工自检 ⇒ 一条 `abil1st` 假红」**严重一级**:
   铁律 10 与铁律 6 第三条腿**各自都要求跑**,于是这个碰撞**按构造**可达,
-  后果是**拒绝一次完全正确的 push**。已在 **GH #229** 下追评(未新开重复 issue)。
+  后果是**拒绝一次完全正确的 push**。已在 **GH #229** 下追评(`issues/229#issuecomment-5671907548`,未新开重复 issue)。
   📌 **判别子**:读到 `soak_side.lua already exists` 先跑
   `ps aux | grep lua5.1` + `ls bots/Customize/soak_side.lua`,**串行重跑之后再报红**。
   落 main:`c829652c..bebd3485`(第一次 `HEAD:main` 被拒 → `git pull --rebase origin main` → 重推)。
