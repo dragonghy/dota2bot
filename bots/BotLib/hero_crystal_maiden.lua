@@ -2436,6 +2436,124 @@ function X.cm_IsFieldRetreatCrowdOk( nHp, nStep, nCrowd )
 
 end
 
+--- The TIME HORIZON the shipped hurt-count ring uses, written out because the
+--- shipped source never writes it: `nRadius * 0.82 - GetCurrentMovementSpeed()`
+--- is `nRadius * 0.82 - speed * 1.0`, and the 1.0 is the whole subject of the
+--- lever below.  It is also the clamp that makes the armed leg's direction a
+--- property of the shape rather than of today's KV.
+X.nRHurtHorizonShipped = 1.0
+
+--- [cmrspeed] gated (turbo + soak candidate): the ring branch 1's hurt-count
+--- admits an enemy by SUBTRACTS A SPEED FROM A DISTANCE.
+---
+--- ⭐ THE DEFECT IS DIMENSIONAL, WHICH IS WHY IT READS AS A TUNING NUMBER AND IS
+--- NOT ONE.  X.ConsiderR's quality loop admits an enemy when
+---
+---     J.IsInRange( bot, enemy, nRadius * 0.82 - enemy:GetCurrentMovementSpeed() )
+---
+--- The left term is units.  `GetCurrentMovementSpeed()` is units PER SECOND.  A
+--- displacement is speed x time, so the expression carries an unwritten factor
+--- of exactly 1.0 SECOND -- and no key of crystal_maiden_freezing_field is a
+--- 1.0-second travel horizon.  ⚠️ Stated honestly rather than conveniently: the
+--- ability DOES carry a 1.0, `slow_duration`, and that is the duration of the
+--- move/attack slow an explosion applies -- not a time between the decision and
+--- the damage.  So "1.0 is nobody's number" is a claim about what 1.0 MEANS
+--- here, not a claim that the token 1.0 appears nowhere in the KV.
+---
+--- ⭐ WHAT THE UNWRITTEN SECOND COSTS, as arithmetic and not as an opinion.  With
+--- the 835 AoE anchor this file's tests already carry (GH #502; `GetAOERadius()`
+--- is unserved offline, see tests/test_replay_260819_cm_r_range.lua), the base
+--- ring is 835 * 0.88 * 0.82 = 602.536u.  The shipped admitted ring is then
+--- `602.536 - speed`:
+---
+---     speed   300    ->  302.5u   (41% of the base ring)
+---     speed   400    ->  202.5u   (34%)
+---     speed   500    ->  102.5u   (17%)
+---     speed >= 602.6 ->  NEGATIVE -- J.IsInRange can never be true
+---
+--- So above ~602u of movespeed the conjunct is not a filter at all, it is an
+--- OFF-SWITCH; and at every ordinary hero movespeed the admitted band is set by
+--- the dimensional artifact rather than by the field's geometry.  Turbo is the
+--- half of the game where this bites hardest -- boots and mobility items land
+--- far earlier -- which is why the gate is turbo-only.
+---
+--- THE REPAIR READS THE HORIZON OFF THE ABILITY AND INVENTS NOTHING.  The thing
+--- `aoeCanHurtCount` is named for, and the only thing branch 1 consumes it for,
+--- is "can this ult damage him at all".  Freezing Field has AbilityCastPoint 0
+--- and detonates every `explosion_interval` (0.1s) for its whole channel, so the
+--- soonest damage instant is one interval after the channel opens, and one
+--- interval is the displacement that decides whether the enemy is still there
+--- for it.  The field also carries `movespeed_slow` -40, so the raw speed read
+--- OVERSTATES how far he actually gets.
+---
+--- DIRECTION IS GUARANTEED BY CONSTRUCTION, not by today's KV: the shipped ring
+--- is computed and bound FIRST, the armed leg is refused unless the horizon it
+--- reads is in [0, X.nRHurtHorizonShipped], and speed is non-negative -- so the
+--- armed ring is never smaller than the shipped one.  ⇒ this is a WIDENING, and
+--- a negative wave read may be attributed to "it opens the channel too often",
+--- NEVER to "the lever ate a shipped release".  Any handle that cannot answer
+--- the key degenerates to the shipped ring; there is no second branch.
+---
+--- ⛔ MUST NOT BE ARMED IN THE SAME LEG AS `cmrcrowd`, AND THE REASON IS A
+--- MEASURED COLLISION ON ONE FRAME, not a precaution.  On `cmrcrowd`'s own pin
+--- frame (tests/fixtures/f_260820_043039_cm_cask_close.lua, t=515.5) the three
+--- enemies stand at 546.0 / 571.4 / 609.4u.  Shipped ring 302.5 admits none, so
+--- `aoeCanHurtCount == 0` and the head-count disjunct is the sole reason for the
+--- bid -- which is exactly the bid `cmrcrowd` was built to remove.  Armed here
+--- the ring is 602.536 - 30 = 572.5 and it admits TWO of the three, so
+--- `aoeCanHurtCount >= 2` fires branch 1 through the OTHER disjunct on the same
+--- frame.  Co-arming the two ids therefore drives branch 1 in opposite
+--- directions on the same instant and no bundle read can be attributed to
+--- either (same shape as GH #798's ownhalf/overchase collision).
+---
+--- ⭐⭐ AND THAT COLLISION IS THE HONEST READING OF THIS LEVER, said before
+--- anybody quotes a verdict: the shipped expression suppresses that bad ult, and
+--- it suppresses it FOR THE WRONG REASON.  The frame's ground truth is
+--- `died_after = 0.2`, and what was wrong with it was a 0.30-HP Crystal Maiden
+--- with ZERO allies and three enemies on her -- a SAFETY fact.  `aoeCanHurtCount`
+--- is a DAMAGE-REACH meter; the unwritten second corrupts it into an accidental
+--- safety meter, and repairing the meter removes the accident.  The safety terms
+--- belong to `cmrsolo` (the ally term) and `cmrcrowd` (the head count), which is
+--- where this file already puts them.  ⛔ Nothing here claims CM should ult on
+--- that frame.
+---
+--- ⚠️ TWO METERS THIS LEVER RIDES OFFLINE, declared, both already registered by
+--- this file's neighbours: `GetAOERadius()` answers 0 under the fixture loader
+--- (so every distance above is the 835 ANCHOR a test writes in, not a frame
+--- reading), and `GetCurrentMovementSpeed()` is not in the dump -- the mock
+--- answers a flat 300 for every unit on every frame (GH #786).  ⇒ no frequency
+--- claim is available from this corpus and none is made; condition (a) is
+--- REQUESTED (iterations/queue.json, zero-EC2 row), not claimed.
+function X.cm_GetFieldHurtRing( nBaseRing, nSpeed, hAbility )
+
+	-- Byte for byte the shipped expression, bound and returned first.  `y * 1.0`
+	-- is exactly `y` for every finite y on this VM, so gate-OFF behaviour does
+	-- not move by so much as an ulp.
+	local nShipped = nBaseRing - nSpeed * X.nRHurtHorizonShipped
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'cmrspeed' ) )
+	then
+		return nShipped
+	end
+
+	if type( nSpeed ) ~= 'number' or nSpeed < 0 or hAbility == nil
+	then
+		return nShipped
+	end
+
+	local nHorizon = hAbility:GetSpecialValueFloat( 'explosion_interval' )
+
+	if type( nHorizon ) ~= 'number'
+		or nHorizon < 0
+		or nHorizon > X.nRHurtHorizonShipped
+	then
+		return nShipped
+	end
+
+	return nBaseRing - nSpeed * nHorizon
+
+end
+
 function X.ConsiderR()
 
 	if not abilityR:IsFullyCastable()
@@ -2459,8 +2577,15 @@ function X.ConsiderR()
 	do
 		if J.IsValid( enemy )
 			and J.CanCastOnNonMagicImmune( enemy )
+			-- [cmrspeed] gate off this is
+			-- `nRadius * 0.82 - enemy:GetCurrentMovementSpeed()`, byte for byte.
+			-- The 0.82 stays HERE, where the shipped branch types it, so the
+			-- base ring is read off one place; the helper only owns the TIME the
+			-- shipped source never wrote.  See X.cm_GetFieldHurtRing above for
+			-- the dimensional fact, the direction guarantee, the two offline
+			-- meters, and why this id must not be co-armed with `cmrcrowd`.
 			and ( J.IsDisabled( enemy )
-				  or J.IsInRange( bot, enemy, nRadius * 0.82 - enemy:GetCurrentMovementSpeed() ) )
+				  or J.IsInRange( bot, enemy, X.cm_GetFieldHurtRing( nRadius * 0.82, enemy:GetCurrentMovementSpeed(), abilityR ) ) )
 		then
 			aoeCanHurtCount = aoeCanHurtCount + 1
 		end

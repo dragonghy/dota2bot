@@ -22,6 +22,76 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-170. ✅ **开工时 open `[hero]` 仍然没有一条带帧证据的未结缺陷**(#808/#805/#803/#794/#793/#791/#788/
+   #784/#778 全是已落地修复的登记条或量具条),而 `-169` 的「下一轮第 1 条」**自己写着按 P4.4 只能当附带项**
+   ⇒ 主体按章程第 1 步末路改取焦点英雄自选缺陷:落地 **`cmrspeed`**(Crystal Maiden,
+   `bots/BotLib/hero_crystal_maiden.lua`,gated,turbo-only,**WIDENING**)。报告
+   `iterations/reports/hero/20260914T020024Z.md`,新测试 `tests/test_cm_field_hurt_ring.lua`(**22 绿**,`[ratchet]`),
+   变异台 `tools/agent/mutstand_cmrspeed.sh`,取证请求 `queue.json:hero-81`(零 EC2,优先级 3),
+   新开 **GH #811**(`[hero]`)。零 AWS,零波次。
+   - ⭐ **新形状:一个把速度当距离减的合取项 —— 出厂表达式里藏着一个谁也没写过的「1.0 秒」。**
+     `X.ConsiderR` branch 1 的 `aoeCanHurtCount` 环问
+     `J.IsInRange( bot, enemy, nRadius * 0.82 - enemy:GetCurrentMovementSpeed() )`:
+     左边是**单位**,右边是**单位/秒**。位移 = 速度 × 时间 ⇒ 隐含因子**恰好 1.0 秒**。
+     按 835 AoE 锚底环 = **602.536u**,于是准入环 `602.536 − speed`:300 ⇒ 302.5u(底环 41%)、
+     500 ⇒ 102.5u、**≥602.6 ⇒ 负数,`J.IsInRange` 恒假**。⇒ **高移速上它不是过滤器是关断器**;
+     普通移速上准入带由**量纲残余**而不是技能几何决定。Turbo 咬得最狠(鞋/位移装早)⇒ gate turbo-only。
+   - ⚠️ **「1.0 不是任何人的数字」这句话被削弱后写下,而不是抹平**:该技能 KV 里**确实**有一个 1.0 ——
+     `slow_duration` —— 那是爆炸减速的**持续时间**,不是「决策到伤害」的时间。§2.3 把**两半都钉住**
+     (既断言它仍是 1.0,也断言 helper **不得**从它读时间)。
+   - **修法**:`X.cm_GetFieldHurtRing( nBaseRing, nSpeed, hAbility )` —— 出厂环先绑定先返回,
+     armed 把时间**从技能自己身上读**:`explosion_interval` = **0.1s**(该技能 `AbilityCastPoint` 是 **0**、
+     引导期每 interval 引爆一次 ⇒ 「最早一次伤害」就在一个 interval 之后,而那正是 `aoeCanHurtCount`
+     **按它自己的名字**要问的位移;技能另带 `movespeed_slow` −40 ⇒ 裸速度**高估**位移)。
+     `0.82` 只留在调用点(变异台 M10 守着)。
+   - ⛔ **实测碰撞:不得与 `cmrcrowd` 同腿 arm。** 在 `cmrcrowd` 自己的钉帧 `f_260820_043039_cm_cask_close`
+     (t=515.5)三敌站 546.0/571.4/609.4u:出厂环 302.5 **一个不收** ⇒ `aoeCanHurtCount==0`,人头数析取项
+     是那次出价的**唯一**理由(正是 `cmrcrowd` 要拿掉的那次);armed 环 **572.5 收两个** ⇒
+     `aoeCanHurtCount>=2` 在**同一帧**从**另一条**析取项把 branch 1 重新打开(GH #798 同形)。§6.1 钉死 0→2。
+   - ⭐⭐ **而这次碰撞就是本 lever 的诚实读法**:出厂式**确实**压住了那次坏大招,**而且是为了错误的理由**。
+     那帧 ground truth `died_after=0.2`,坏在**0.30 血、零队友、三敌扑上**——那是**安全**事实。
+     `aoeCanHurtCount` 是**伤害可达**量具;没写出来的 1.0 把它腐化成**顺带的安全量具**,修好量具就拿掉这个顺带。
+     安全项归 `cmrsolo` / `cmrcrowd`。⛔ **本轮不声称 CM 在那一帧该开大。**
+   - ⭐ **变异台抓到自己,抓的正是立台子的那一条。** 第一轮 **10/12**:**M4**(horizon 改读
+     `AbilityCastPoint`,该技能声明为 **0** ⇒ armed 环变成**整个底环**,helper/id/调用点/clamp/方向保证全在)
+     **SURVIVED** —— 而台子抬头写着「M4 是立这个台子的理由」。原因是一个 **6.9u 的巧合**、不是关于 lever 的
+     任何事:§6 第三个敌人站 609.4u,整个底环 602.536u,**两种读法他都在环外**,那帧照样读 2。
+     ⇒ 新增 **§4.3 直接钉 helper 的输出**,horizon 由**测试自己**从 `explosion_interval` 读。
+     同轮 **M12**(台子自身对照:删一帧看普查会不会红)也 SURVIVED ⇒ §6.3 补**分母断言**
+     (`#CM_FRAMES == 10` + 钉帧仍在表内)。**一个分母能悄悄变小的率不是读数。**
+     ⚠️ 第二轮两条都红了却被台子记成「WRONG MESSAGE ⇒ 当作 survived」—— `want` 串是**旧的**;
+     改 `want` 后第三轮 ****12/12 全杀****。**台子拒绝给一条读不懂的红记分,这是它对的地方。**
+   - ⛔ **域:两个离线量具,声明而不是假设**(§7):`GetAOERadius()` 不被 loader 服务(裸读 0)⇒ 每个距离
+     都骑**测试自己写进去的 835 锚**(GH #502);`GetCurrentMovementSpeed()` **不在 dump 里**(GH #786)⇒
+     mock 对每单位每帧一律答 **300**。⇒ **本语料给不出任何频率读数,本轮也不给**;§6.3 只断言域**非空**。
+   - ⚠️ **issue 号第二次被前向引用**:`state.json` 第一稿写 **#810**,创建返回 **#811**。
+     `-169` 已记过这个形状,**本轮又犯一次** ⇒ 已在 `state.json:issue` 字段里逐字登记。
+     ⭐ 判别子不变:**号只能从创建返回值里抄**;`claim_precheck.sh` 抓不到(它不解析 `#NNN`)。
+   - **掉棒回收**:自检 `lua-coverage` 点名 `-169` 自己落的 `tests/test_cm_r_retreat_crowd.lua`
+     **没有任何自动读者** ⇒ 本轮按自检给的三条出路取最便宜的:**打 `[ratchet]` 标签**(先 TIME 再加,
+     见 `routine_selfcheck.sh:185` 的 `[census]` 教训)。⛔ **没走 re-measure**(GH #783:会清空 `known_red`)。
+   - ⚠️ **`tests/test_cm_pos5_boots.lua` 在工作树上红,而它不是本轮引入** —— 用
+     `git show HEAD:` 换回原文件复验(`PRE_EXISTING_EXIT=1`,同一条失败信息),且它**已在
+     `lua_gate_manifest.json:known_red` 名单里** ⇒ 已登记的赦免红,**不另开 issue**。
+     ⭐ 第一反应是「pos5 鞋子普查不可能被 ConsiderR 的环碰到」,**那是理由不是证据**;换文件重跑才是。
+   - ⚠️ **开工自检同形第 8 次被工具自己拒绝**(证据纪律 3),**第 8 次仍是本轮第一条命令**;
+     重跑真码 **`EXIT=3`**(findings `cadence`/`queue-rulings`/`owed-executions`/`lua-coverage`/
+     `trunk-red(python)`,`UNCERTIFIABLE: none`)。按 GH #267 不做手工归因。
+   - ⚠️ **并发教训(GH #507)**:第一次发台子时**开工自检还在跑它的 Lua 腿**,而台子就地重写
+     `hero_crystal_maiden.lua` ⇒ 撕裂窗。当场杀掉台子、等自检跑完再发。**台子的抬头本来就写着这条,
+     而写它的人(上一轮的我)照样撞上了。**
+   - ⭐ **下一轮最该做的,按顺序**:
+     1. ⭐⭐ **`-168` 的量具第 1 条(六条焦点 build 的槽→等级断言)已连续四轮被排在后面。**
+        本轮让位的真实原因是 §5 的变异台自捉吃掉了那格预算(换来的是「立台子的那条 mutant 原本活着」)。
+        ⛔ **下一轮若再让位,必须在报告里改写成明确的「这条量具不做了」并说明,不许第五次写「排在后面」。**
+     2. `hero-81` / `hero-80` / `hero-79` 三条零 EC2 归档扫描若回填。`hero-81` 卡在 GH #786(dumper 无速度字段)
+        —— ⛔ **回填「买不到」是合法的,用 mock 的 300 当代理值凑一个读数不是。**
+     3. `cullthresh_domain.py` 的 docstring **还写着三带**(工具侧,附带项)—— 已连续**六轮**被排在后面。
+     4. ⛔ **不要**把 §6.3 的「域非空」读成频率:量的是**十个 fixture** 不是十局游戏,而且那十帧的移速
+        **全部是 mock 的 300**。
+     5. ⛔ **不要**把 `cmrspeed` 与 `cmrcrowd` 写进同一个 armed 串,也**不要**把 `0.82` 或 835 锚挪进 helper
+        —— 整条算术都是**关于那两个数**推的。
+
 -169. ✅ **开工时 open `[hero]` 里没有一条带帧证据的未结缺陷**(#794 两组已结清;#805/#793/#791/
    #788/#784/#778/#771/#768/#764 都是已落地修复的登记条;#803 是量具),而 `-168` 的「下一轮第 1 条」
    **自己写着按 P4.4 只能当附带项** ⇒ 主体按章程第 1 步末路改取焦点英雄自选缺陷:落地 **`cmrflee`**
@@ -7493,6 +7563,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-14T02:00Z(报告 `iterations/reports/hero/20260914T020024Z.md`;**backlog:新开 `-170`**;
+  OWNER_PRIORITIES **P4.4 (i) 达标** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期不请求入集,
+  armed 串与 test_set.md 一字未动**;零 AWS、零波次)
+  **落地 `cmrspeed`(Crystal Maiden,gated,turbo-only,WIDENING)。**
+  - ⭐ **新形状:一个把速度当距离减的合取项 —— 出厂表达式里藏着一个谁也没写过的「1.0 秒」。**
+    `X.ConsiderR` branch 1:`J.IsInRange( bot, enemy, nRadius * 0.82 - enemy:GetCurrentMovementSpeed() )`
+    —— 左边**单位**,右边**单位/秒**。按 835 锚底环 **602.536u** ⇒ 准入环 `602.536 − speed`:
+    300 ⇒ 302.5u(41%)、500 ⇒ 102.5u、**≥602.6 ⇒ 负数恒假**(**关断器不是过滤器**)。
+  - ⚠️ **诚实的那一半**:KV 里**确实**有一个 1.0 —— `slow_duration`(减速**持续时间**,不是到伤害的时间)。
+    §2.3 两半都钉住。**声称的是 1.0 在这里是什么意思,不是「KV 里没有 1.0」。**
+  - **修法**:`X.cm_GetFieldHurtRing`,armed 把时间从技能自己身上读 —— `explosion_interval` **0.1s**
+    (`AbilityCastPoint` 为 **0**、引导期每 interval 引爆 ⇒ 最早一次伤害就在一个 interval 之后)。
+    方向 **WIDENING 按构造单向**(horizon ∉[0,1.0] / speed<0 / handle 答不出 ⇒ 一律退回出厂环)。
+  - ⛔ **不得与 `cmrcrowd` 同腿 arm(实测碰撞)**:`cmrcrowd` 的钉帧上出厂环收 0、armed 环收 **2** ⇒
+    同一帧从**另一条**析取项把 branch 1 重新打开。⭐⭐ **而这就是本 lever 的诚实读法** ——
+    出厂式压住那次坏大招是**为了错误的理由**(坏在安全:0.30 血 / 零队友 / 三敌);
+    `aoeCanHurtCount` 是**伤害可达**量具,那个 1.0 把它腐化成**顺带的安全量具**。
+  - ⛔ **域:两个离线量具,声明而不是假设** —— `GetAOERadius()` 裸读 0(距离全骑 **835 锚**,GH #502)、
+    `GetCurrentMovementSpeed()` 不在 dump(GH #786,mock 一律 **300**)。
+    ⇒ **本语料给不出频率读数**;§6.3 只断言域**非空**。取证 `queue.json:hero-81`(**零 EC2**)。
+  - **读数**:`test_cm_field_hurt_ring` **22 绿**、`test_cm_r_`(三个 ConsiderR 文件同跑)**58 绿**、
+    变异台 `mutstand_cmrspeed.sh` ****12/12 全杀****。
+    ⭐ **第一轮 10/12,而 SURVIVED 的 M4 正是立台子的那一条**(horizon 改读 `AbilityCastPoint`=0 ⇒
+    armed 环变整个底环);看不见它的原因是**一个 6.9u 的巧合**(第三个敌人 609.4u,底环 602.536u,
+    两种读法都在环外)⇒ 新增 §4.3 **直接钉 helper 输出**。M12(台子自身对照)同轮 SURVIVED ⇒
+    §6.3 补**分母断言**。**一个分母能悄悄变小的率不是读数。**
+  - ⚠️ **开工自检:同形第 8 次被工具自己拒绝**(证据纪律 3,stdout 是管道),**第 8 次仍是本轮第一条命令**;
+    重跑真码 **`EXIT=3`**:findings `cadence` / `queue-rulings` / `owed-executions` / `lua-coverage` /
+    `trunk-red(python)`,`UNCERTIFIABLE (exit 2): none`。按 GH #267 **不做手工归因**;
+    `trunk-red(python)` 与 GH #751/#806/#807 同族,**不是本轮引入,本轮不认领**。
+  - **掉棒回收**:`lua-coverage` 点名 `-169` 自己落的 `tests/test_cm_r_retreat_crowd.lua` 无自动读者
+    ⇒ 补 **`[ratchet]`** 标签(先 TIME 再加)。⛔ **没走 re-measure**(GH #783:会清空 `known_red`)。
+  - ⚠️ **`tests/test_cm_pos5_boots.lua` 工作树上红,复验确认红在 HEAD 上就有**(`git show HEAD:` 换回
+    原文件重跑,`PRE_EXISTING_EXIT=1`),且**已在 `known_red` 名单里** ⇒ **不另开 issue**。
+  - ⚠️ **issue 号第二次前向引用**(第一稿 #810,实际 **#811**)—— `-169` 记过这个形状,本轮又犯,已登记。
+  - ⚠️ **并发(GH #507)**:第一次发变异台时**自检还在跑 Lua 腿**,台子就地重写同一个 hero 文件 ⇒ 撕裂窗,
+    当场杀掉台子、等自检跑完再发。**台子抬头本来就写着这条。**
+  - **未向 `known_red` 添加任何一条,未 re-measure lua 闸**
+
 - 2026-09-13T22:57Z(报告 `iterations/reports/hero/20260913T225735Z.md`;**backlog:新开 `-169`**;
   OWNER_PRIORITIES **P4.4 (i) 达标** —— 主体是一个 `bots/` 行为改动;**P4.2 冻结期不请求入集,
   armed 串与 test_set.md 一字未动**;零 AWS、零波次)

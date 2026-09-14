@@ -1,4 +1,4 @@
--- [hero] `cmrflee` -- Crystal Maiden's Freezing Field RETREAT branch scales an
+-- [hero] [ratchet] `cmrflee` -- Crystal Maiden's Freezing Field RETREAT branch scales an
 -- HP fraction by an unbounded head count, so the conjunct is an off-switch, not
 -- a gradient.
 --
