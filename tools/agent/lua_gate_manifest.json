@@ -4,7 +4,6 @@
   "hook_timeout_seconds": 20.0,
   "known_red": [
     "tests/test_activemode_world_assertion.lua",
-    "tests/test_axe_t15_payoff.lua",
     "tests/test_cm_pos5_boots.lua",
     "tests/test_roshdist_pit_truth_operand.lua",
     "tests/test_salveally_missing_floor.lua",
@@ -15,10 +14,6 @@
   "known_red_cases": {
     "tests/test_activemode_world_assertion.lua": [
       "[reverse] dropping it makes the mode-filtered call over-permissive"
-    ],
-    "tests/test_axe_t15_payoff.lua": [
-      "[hero] axe t15 corpus health: Call is near its ceiling, Battle Hunger is not",
-      "[hero] axe t15 corpus: Battle Hunger is live on 5 axe frames, Call armor on 1"
     ],
     "tests/test_cm_pos5_boots.lua": [
       "[hero] census: the corpus still carries the arms these numbers came from"
