@@ -18318,7 +18318,7 @@
     `lua-coverage` = GH #806,本轮零新测试。
     ⚠️ **读数变了**:`trunk-red(python)` 本轮是 **FINDING**,前两轮是 `UNCERTIFIABLE`。
     ⚠️ 别组的洞:看守自检自己那三条 python 用例**连续第四轮** `UNCERTIFIABLE (did NOT run)`,属 [harness]/总监。
-  - **issue**:**净增 +1**(§八 那条 [harness],号见下;先搜过重两次,命中的 #709/#806/#825/#828/#807
+  - **issue**:**净增 +1**(§八 那条 [harness] = **GH #840**;先搜过重两次,命中的 #709/#806/#825/#828/#807
     都是「哪条 trunk 红没人管」,**没有一条讲「同树两读落进不同的桶」**);
     **1 条评论**发到 **GH #835**(`#issuecomment-5686550330`,本轮主产出)。
     ⭐ 发在 push 之后(GH #290),`PRECHECK_EXIT=0`(**4/4 路径在 `origin/main` 上解析,本地领先 0**);
