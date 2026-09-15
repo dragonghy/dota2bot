@@ -10750,6 +10750,117 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   ⑥ **下一轮本台**:开工第一条命令重定向裸读(⛔ 无管道、⛔ 无 `timeout`,**一次到位**);
   刹车解除时发 P4.1 标尺波,**收割必带 `--ledger`**,并抄 GH #801 四行**恢复后**的样子。
   详见 `iterations/reports/batch-desk/20260915T121536Z.md`。
+- **2026-09-15T15:20:22Z(无波轮 —— 刹车第二十六轮持有。⭐⭐⭐ 头号产出:`owed_executions.json:
+  s3_attribution_gap_remeasure_under_ruling48` 的窗口**本轮到期**(RULING 49 (乙) 的「三轮」
+  = 09:12Z / 12:15Z / 本轮)。**分子那一半跑完并换了载体**(新工具 `tools/agent/ruling48_adoption.py`,
+  ⛔ 不再手数);**分母那一半结构上跑不了** —— ⭐⭐ **「三轮」这个窗口比它自己分母所在的滞后带短**,
+  于是它**每次都会在分母存在之前关闭**,与各流做了什么无关。⛔ **欠条仍是 OWED,本轮没有结清它。**)**
+  **一、成本(现跑)**:`AWS_SETUP_EXIT=0`;`COST_EXIT=0`(⛔ 未走管道)。MTD **`$90.782`** /
+  `forecast 186.702` / `budget limit 100.0` / **`budget refreshed 2026-09-15T14:40:18Z`**;
+  **headroom 对 `$90` = `$-0.782`**。⭐ **快照动了** —— 上三轮读的是同一张冻结快照(`$90.569`/戳 `04:18:45Z`);
+  本轮戳 +10.37h、MTD **+`$0.213`** ⇒ **四轮以来第一次有新的支出测量**,折算 **`$0.49/天`**,
+  落在已登记的 `$0.40–0.92/天` 区间内(⛔ 不据一个点收窄那个区间)。
+  GH #801 四行整块照抄(⛔ 未用 `COST_CONFIRM_AT` 自救):`>= $35, but headroom to the $90.00 brake is $-0.782` /
+  `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).` /
+  `Nothing can launch at this MTD, so confirming it buys nothing.` / `Resumes by itself as soon as headroom >= $1.10.`
+  ⚠️ **这是 SKIP 不是 pass**;⛔ 欠条 `gh801_confirm_headroom_first_live_read` **仍未结清**(headroom 为负,走的还是 SKIP 分支)。
+  accrual probe 两行照抄:`alpha = 0 accruing instance(s) account-wide; beta = 0 wave record(s) after 2026-09-15T03:22:18Z` /
+  `stamp unknown (fresh container) -- alpha and beta are both zero -- a frozen stamp over an idle account opens no blind spot`。
+  **成本三段式(RULING 48,本台第 3/3 轮)**:**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**
+  (只发一次 `s3 ls --recursive` 的 LIST,⛔ 无 `s3 cp`/`sync`、⛔ 无 `.dem`/`analysis.json` 下载)。
+  **二、闸 (iii)**(`--planned 1.10`):`FENCE_EXIT=3`,逐字 `actual (MTD) : $90.782   <- re-read this run, never cached` /
+  `pending waves : $0.000` / `projected total : $91.882` / `operative ceiling: $90.00 = min(fence, brake)` /
+  `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence.` RULING 5/6/7 三行照抄(`17 region(s) read ... COMPLETE` /
+  `records after 2026-09-15T03:22:18Z (= 2026-09-15T14:40:18Z - 11.3h lag, clock from budget snapshot)` /
+  `CERTIFIED (0 accruing instances account-wide, read this run)`);⭐ **钟没有降级**。
+  ⛔ 未传任何 `--no-*`/`--pending`/`--director-crossing` ⇒ **无一行「这是 SKIP 不是 pass」**。
+  ⚠️ 照登不藏:`$90`–`$100` 在 AWS 侧**仍可花**(`$100` 告警 `state=OK`),挡住它的是 owner 这条线不是 AWS。
+  ⇒ **连续第二十六轮,不发波的原因是闸不是本台的处置。**
+  **三、⭐⭐ 工作单元(本轮实质):RULING 49 (乙) 重测窗口到期。**
+  **(甲) 分子跑完了,并且不再是手数的。** 新工具 `tools/agent/ruling48_adoption.py`(零 AWS 调用、只读 `iterations/reports/`)。
+  **为什么是脚本不是散文**:铁律 4 (i-a) 的立案句正是「第七轮用对了量,**代价是手算**」——
+  手数的数没人能复跑,分母落地那轮还要再数一次。读数(窗口 `[07:15Z, now]`,13 份报告,五流全在内,`R48_EXIT=3`):
+  **带三段式 11/13**、**声明对象总数 330**(跨 2 份真读了东西的报告)、散文零 2、近似 `<N>` 1、**MULTIPLIABLE N = 330**。
+  三条结论各带限度:(1) ⭐ **两份 `NO_LINE` 是传播延迟不是抗命,且可判定**:strategy `07:34Z` / hero `07:52Z`
+  分别在裁定落地(`07:15Z`)后 **19 分 / 37 分**开工,读章程时裁定还没发布;**`09:12Z` 起 11/11 全带**
+  ⇒ **采纳率不是 85%,是「第一个传播周期之后 100%」**,⛔ 不用前者代替后者。
+  (2) ⭐⭐ **通道买到的正是它要抓的那一类**:录像组 `12:53Z` 自报 **104 个 `.dem` + 约 200 个 `.analysis.json`**
+  (自报 `.dem` 约 **2.1 GB**),`09:43Z` 另一轮 **26 个对象** —— **按 RULING 48 之前的写法,这两轮都有资格写成「零支出」**,
+  而那正是 RULING 48 立案现场那一句的形状。(3) ⚠️ 两处形式漂移照登不判违规:hero 两轮写 `零 S3 读取`
+  (**交出的是词不是数**,而 RULING 48 逐字要「一个数,能被后来的人乘一个单价」);录像组写 `约 200`
+  (**近似值进了分子**,精确计数本在写的人手上)。
+  **证据**:`tests/test_ruling48_adoption.py` **16 checks, 0 failed**(全程 subprocess 驱动真脚本,
+  ⛔ 未在测试里重写第二份解析器);**变异台五只全杀零幸存**(M1 短路 findings 分支 / M2 把 `numerals` 判据退回 `seg3` /
+  M3 抹 `approx` 旗 / M4 重复行取先见者 / M5 空窗口 `exit 2`→`0`),`BASELINE exit 0` + `RESTORED exit 0`,
+  恢复后 **md5 与文件副本逐位相同**(⛔ 用副本恢复不用 `git stash`)。⚠️ **照登**:M5 那轮 heredoc 引号写炸、
+  变异台**中途 abort**,M4 变异体短暂留盘,当场副本恢复 + `md5sum -c` 验过才继续(**零污染,但那是补救不是没出事**)。
+  ⭐ **一条对本台不利、在任何结论压上去之前自捉并修掉的缺陷**:本工具第一版把 `零 S3 读取` 判成 `OK_N`,
+  因为它**包含**子串 `S3 读取` ⇒「匹配到第三段」被当成「写了数字」,`prose zeros` 打出 **0**(真值 2)。
+  📌 **与 (i-a)「读数不是局数」同型**:一个真命题(这行确实提到 S3 读取)被用来满足另一个问题(它写没写出一个数)。已钉成回归 case 4 + M2。
+  **(乙) ⭐⭐ 分母结构上读不了,那 `$0.01` 买不到答案 ⇒ ⛔ 本轮未买。** 闸自己打出的两个数就够判定:
+  滞后 **11.3h**(`records after 2026-09-15T03:22:18Z`),RULING 48 落地 **`07:15Z`**
+  ⇒ **09-15 在 CE 里可读的部分止于 `03:22Z`,整段都在裁定之前** ⇒ 现在买回来的是**关于裁定生效前那个世界的数**。
+  ⭐⭐ **而且不是「今天恰好来不及」,是那条判据本身的形状**:本台三轮跨 **6.1h**、窗口全长 **8.1h**,
+  **两者都 < 11.3h** ⇒ **「三轮」必然在它自己的分母存在之前关闭**,与流量无关、与各流做了什么无关。
+  📌 **与 GH #454 (乙) 同一条**(那次是「按钱写的判据与它要抓的东西负相关」,这次是「按轮数写的窗口短于其分母的滞后」)——
+  都是**门还在但被结构性绕开**,都不会自己举手(它会关闭、会显得「已执行」,只是那一半没有数)。
+  可读日期的算术:09-15 整日最早 **~09-16T11:20Z**(⚠️ **混日**,`00:00–07:15Z` 在裁定前 ⇒ 缺口被稀释,⛔ 不是干净读数);
+  **09-16 整日最早 ~09-17T11:20Z ⇒ 第一个干净的裁定后整日**。
+  **(丙) ⛔ 本轮不下「缺口收窄了」或「没收窄」——两个方向都不下。** RULING 49 (乙) 的两条判据**都要分母**。
+  ⚠️ 拿 330 单独说话是有诱惑的,⛔ **但那恰是 RULING 49 自己反对的动作的镜像**:它反对「拿修好之前的读数论证只能买新仪器」,
+  同理不许「拿没有分母的分子论证记账已经够了」。**330 是一个分子,不是一个结论。**
+  **(丁) ⚠️ 顺带登记一条 `<N>` 量不到的 S3 用量**:三段式计的是**对象**,而 `s3 ls` 是**一次计费的 LIST 请求**且在 `<N>` 里恒为 0
+  (本轮语料至少三处「若干次列目录」,**本台自己也一样**)。⛔ 不主张它能解释 74–77% 的缺口(单价极低),
+  ⭐ 但它是分子一条**方向确定**的下偏:`<N>` 只会**低估**真实 S3 用量、**永不高估** ⇒ 与 RULING 48 的保守侧同向,**登记即可**。
+  **四、收割:零欠。** `S3VAL_EXIT=0`,`validation/` **`OBJ_COUNT=592`** 与已登记的 592 **逐位相同** ⇒ 零新 verdict、零下载。
+  最新对象按 **RULING 47 取法**(`--recursive | sort | tail -1`,⛔ 不是裸 `| tail`)读作
+  `2026-09-12 10:18:26 validation/lf_rescue+27ids-d177b87026dd_20260912_1018_run.log` ⇒ **仍是 W69**。
+  `recover_verdict.py` **未跑 ——「没得收」不是「漏收」**。⚠️ 上一轮落地的 `--ledger` 接线**本轮未被行使**(没有波可收)
+  ⇒ 针脚 `"game_id":"202609` 仍 0 命中,**欠条 `games_ledger_cross_wave_accounting` 仍 OWED**,⛔ 未为回填下载任何对象。
+  **五、泄漏:五条独立路径全零(⛔ 不合并成一句)**:① `check_costs.sh` 自带区块**空**;
+  ② `describe-instances` 五态**不加 tag 过滤** ⇒ `INST_EXIT=0`、**`LINES=0`**;③ 账户级 **17 区 `COMPLETE`**、`alpha = 0`;
+  ④ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏);⑤ `pending waves : $0.000` 且为 **`CERTIFIED` 的读数不是默认值**。
+  ⚠️ 本轮**未**买账单侧那第六条(逐日 `EC2 - Compute`),理由同 §三(乙)。
+  **六、通知判据:本轮推。** 上几轮不推的逐字理由是「MTD 与预算戳两量逐位相同 ⇒ 零新支出测量」;
+  **本轮两量都动了** ⇒ 判据成立,**已推 owner 一条**(刹车第二十六轮 / 四轮来第一次新支出测量 / `$0.49/天` / §三(乙) 那条结构性关不上)。
+  ⚠️ 月末外推照旧口径重算、**区间未收窄**:`$90.782 + 15 天 × $0.40–0.92/天 − $0.8`
+  ⇒ 9/30 MTD 落在 **`$96.0 – $103.8`**(`dem21/` 09-22 自动过期省 `~$0.8` 已扣进两端)。
+  ⚠️ **诚实边界:空转日样本仍只有 n=3**(09-13 `$0.9185` / 09-14 `$0.3997`/20.5h / 09-15 `$0.213`/10.4h)
+  ⇒ **区间宽是真实的不确定性不是排版**;⛔ 不外推到十月、⛔ 不改任何常数、⛔ 不主张 `$100` 一定会/不会被越。
+  **七、铁律 9**:P4.1 upstream 标尺波**连续第二十一轮欠**,⛔ 唯一阻因是闸 (iii) `exit 3`(预算)。
+  **八、⛔ `bots`/`game` 一行未改**(只动 `tools/agent/` 1 个新 py + `tests/` 1 个新 py + `iterations/`)。
+  **九、自查**:⚠️ **管道坑第 33 次**(本轮第一条命令,脚本自卫逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`,零损失)
+  ⇒ 上一轮交棒 ⑥ 的「一次到位」**第四轮仍未做到**;⚠️ **超时坑复发一次**(第二跑带了 harness `timeout`,自检被挪进后台;
+  未丢读数但上一轮明写过「⛔ 无 `timeout`」)⇒ **两道坑本轮各踩一次,比上一轮差,如实登记不辩解**。
+  自检 python 腿 **`136 passed, 0 failed, 3 uncertifiable`**(上一轮 `135 passed, 0 failed, 3 uncertifiable`);
+  三条 `UNCERTIFIABLE` 逐字带 `did NOT run -- this is not a pass and not a failure`
+  (`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py` / `test_selfcheck_lua_leg.py`,末者在案于
+  `owed_executions.json:selfcheck_lua_leg_4c2_red`,`executor=总监自己`);⚠️ ⛔ **本台未用 worktree 在净 `origin/main` 复跑**
+  ⇒ ⛔ 不主张三条与上一轮同批、⛔ 不主张任何一条被修好。
+  ⭐ **GH #806 腿报了新东西**:`UNCOVERED SET GREW -- 3 file(s) that nothing reads automatically`
+  (`test_axe_cull_blade_mail.lua` / `test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua`,
+  全部 `no_manifest_row`),同时 `NOW COVERED tests/test_fieldsip_atom_pricing.lua`。
+  ⚠️ **Lua 快腿本轮仍 `RED test_fieldsip_atom_pricing.lua`**(语料走查 1021→**1039** 帧)
+  ⇒ ⭐ **「进了覆盖集」与「变绿了」是两件事,本轮语料上同时成立与不成立**:它现在有自动读者了,**而它仍然是红的**。
+  ⛔ 本台不代修、不归因、不调成员资格、不开新 issue(GH #624/#806 形状已在案)。
+  **铁律 11**:⚠️ **`mcp__github__*` 本轮不可用** —— 会话启动时 github MCP server 连接失败
+  (`SdkHttpError ... CLIENT_HTTP_NOT_IMPLEMENTED`),**不是 `requires approval`、零空转**
+  ⇒ 按铁律 11,本该发的 GH #779 评论写进报告与本节,**下轮补**;owner 通知走 PushNotification(该路可用)。
+  **交棒**:① ⭐⭐ **owner —— 刹车第二十六轮、#779 第十七轮零表态**,本轮**有新事实** ⇒ **已推一条**;
+  球在 owner:提高预算线,还是接受本月剩余时间批测全停;
+  ② ⭐⭐ **总监 —— 请重裁 `s3_attribution_gap_remeasure_under_ruling48` 的触发判据**:
+  现行「三轮」窗口(8.1h)**短于它自己分母的滞后带(11.3h)**⇒ **每次都会在分母存在之前关闭**;
+  建议改成**日期判据**(第一个干净的裁定后整日 = **09-16**,最早可读 **~09-17T11:20Z**)。
+  ⛔ 本台不自行改欠条(写入权归总监,先例 GH #33),**状态仍 OWED**;
+  ③ ⭐ **总监 —— 分子读数请收**(`MULTIPLIABLE N = 330`,采纳率「第一个传播周期后 11/11」);
+  ⛔ **本台不下缺口结论**;工具在 `tools/agent/ruling48_adoption.py`,下轮改 `--since` 即可重跑;
+  ④ **总监 —— 两处形式漂移请点一句**(hero 的 `零 S3 读取` 词非数、录像组的 `约 200` 近似值进分子)要不要收紧成 RULING 48 补充条款;⛔ 本台不代各流改写法;
+  ⑤ **总监/各流 —— 三条新 UNCOVERED Lua 测试 + 仍红的 `test_fieldsip_atom_pricing.lua`**(⛔ 本台未复现、不归因、不代修);
+  ⑥ **总监 —— 上一轮交棒 ②③④⑤ 本轮未获回应,逐字保留**,⛔ 本台不自行退休任何一行;
+  ⑦ **下一轮本台**:开工第一条命令重定向裸读(⛔ 无管道、⛔ 无 `timeout`,**一次到位**);
+  刹车解除(headroom ≥ `$1.10`)时按规格发 P4.1 标尺波,**收割必带 `--ledger`**,并抄 GH #801 四行**恢复后**的样子;
+  MCP 恢复后补发 #779 评论。
+  详见 `iterations/reports/batch-desk/20260915T152022Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
