@@ -891,6 +891,73 @@ rc12, out12 = _run_owed(_owed_registry(
 check("no machine check" in out12 and rc12 == 3,
       "a manual row pretended to be a gate, or stopped reddening")
 
+
+# --- json_value: a NESTED key, named as a LIST (director 2026-09-15) ---------
+# WHY A LIST AND NOT A DOTTED STRING.  The first row that needed this pins
+# `py_gate_manifest.json`, whose middle component is the literal
+# `tests/test_bots_walk_farm_only.py` -- dots AND a slash in one key.  Any
+# separator spelling collides with some real key, and the collision is SILENT:
+# the lookup misses and the row reads UNCERTIFIABLE, which is also what an
+# honestly-unreadable pin reads.  So the dead pin and the live-but-unreadable
+# one are byte-identical to the next reader, and a pin that can never go green
+# is worse than `kind: manual` -- manual at least announces that it is prose.
+# Found one edit after the dead key was written, with the whole registry green.
+def _nested(name, in_gate):
+    path = os.path.join(_owed_dir, name)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump({"budget_seconds": 12.0,
+                   "tests": {"tests/test_bots_walk_farm_only.py":
+                             {"seconds": 3.723, "in_gate": in_gate}}}, fh)
+    return path
+
+
+def _jv_nested(path, key):
+    return {"kind": "json_value", "path": path,
+            "key": key, "equals": True}
+
+
+_NEST_KEY = ["tests", "tests/test_bots_walk_farm_only.py", "in_gate"]
+
+rc12a, out12a = _run_owed(_owed_registry(
+    "owed_nested_open.json",
+    [_row_413(_jv_nested(_nested("nest_false.json", False), _NEST_KEY))]))
+check("OWED" in out12a and rc12a == 3,
+      "a nested json_value pin that is NOT yet satisfied did not read OWED "
+      "(got rc=%d) -- a live pin must be able to stay owed" % rc12a)
+check("UNCERTIFIABLE" not in out12a,
+      "a RESOLVABLE nested key read UNCERTIFIABLE -- that is the dead-pin "
+      "failure this case exists for: it looks identical to an unreadable one")
+
+rc12b, out12b = _run_owed(_owed_registry(
+    "owed_nested_done.json",
+    [_row_413(_jv_nested(_nested("nest_true.json", True), _NEST_KEY))]))
+check("DONE" in out12b and rc12b == 0,
+      "a nested json_value pin whose criterion is met did not read DONE "
+      "(got rc=%d) -- a pin that cannot go green is not a pin" % rc12b)
+
+# The negative half: a key that genuinely is not there must STILL refuse.
+# Widening the lookup must not turn "absent" into "assume the default".
+rc12c, out12c = _run_owed(_owed_registry(
+    "owed_nested_absent.json",
+    [_row_413(_jv_nested(_nested("nest_absent.json", False),
+                         ["tests", "tests/no_such_test.py", "in_gate"]))]))
+check("UNCERTIFIABLE" in out12c and "DONE" not in out12c and rc12c == 3,
+      "an absent nested key stopped reading UNCERTIFIABLE (got rc=%d) -- a "
+      "missing pin must never read as executed" % rc12c)
+
+# A component that resolves to a NON-dict mid-walk is the same refusal, not a
+# crash: `equals` must never be compared against a partially-walked node.
+rc12d, out12d = _run_owed(_owed_registry(
+    "owed_nested_scalar.json",
+    [_row_413(_jv_nested(_nested("nest_scalar.json", False),
+                         ["budget_seconds", "in_gate"]))]))
+check("UNCERTIFIABLE" in out12d and rc12d == 3,
+      "walking INTO a scalar did not refuse (got rc=%d)" % rc12d)
+
+# The original single-string form still means what it always meant.
+check("OWED" in out9 and "DONE" in out10,
+      "the string `key` form regressed while the list form was added")
+
 rc13, out13 = _run_owed(_owed_registry(
     "owed_bogus.json", [_row_413({"kind": "vibes"})]))
 check("UNCERTIFIABLE" in out13 and rc13 == 3,

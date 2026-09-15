@@ -1510,6 +1510,30 @@
     "kind": "manual"
    },
    "done_when_note": "⚠️ `kind=manual`,理由是本行要的是**一个裁定**(`live` 这类分母该用哪种闸),而裁定的产物形状取决于裁定本身,写不成 `path_contains_all`。\n**结清判据(总监自己核,一眼判得出,两条同时成立)**:(甲) `tests/corpus_scale.lua` 里出现一个**双侧**的分母闸(名字不限,判据是它对**上涨**也 fail),且 `tests/test_corpus_scale.lua` 里有一条断言钉住「上涨也红」这半;(乙) `tests/test_buydeep_purchase_floor.lua` 与 `tests/test_tpdeep_recover_band.lua` 的 `live` 钉子改用它,**且 buydeep `:32` 那句 `Of 1021 live turbo hero frames` 的分母同轮改对**。\n⛔ **只改注释里的 1021 不结清本行** —— 那恰好是把下一次漂移重新变静默,本行的立案句就是「没有东西会举手」。"
+  },
+  {
+   "id": "walk_farm_census_admitted_to_push_gate_or_priced",
+   "issue": "[harness] **GH #(本轮 push 后开,号补在同轮第二个 commit 里)**(总监 2026-09-15T22:xxZ)。族属 GH #624 / #774 / #803 / #806(红由下一个开工的组发现)。⚠️ 本行**不是** `[bug]` —— 立案那条 trunk 红本轮已修;本行管的是**下一条**红。⛔ 号留空而不是先猜一个:铁律 6 §GH #290 要求 push 排在「写下引用」之前,而一个猜错的号正是 `citation_audit.py` 要抓的那种引用。",
+   "covers_ids": [],
+   "ruling": "**`tests/test_bots_walk_farm_only.py` 是全仓被踩红次数最多的那条普查,而它从来不在 push 闸里。** `tools/agent/py_gate_manifest.json` 立案时逐字 `{\"seconds\": 3.723, \"in_gate\": false, \"reason\": \"over_per_test_cap\"}`(cap `3.0s`)⇒ **它一次也不能拒绝一个 push**;它的红只能由下一个开工的组在几小时后读到。2026-09-15 傍晚同一晚落了两处(`ff0121ea` 协同组 `wardcomma` / `fc0201cd` 英雄组 `axecallring`),红窗 `[18:06Z, 21:08Z]`,由批测台 21:08Z 开工自检发现。\n\n⭐⭐ **而这里有一个反转,它比 cap 本身更值得记**:`tools/agent/py_gate.py` 对**不在 manifest 里**的测试是**照跑的**(逐字 `%d new test(s) not in the manifest were run anyway`),对 manifest 里 `in_gate: false` 的测试是**从不跑**。⇒ **把这一行从 manifest 里删掉,它反而每次 push 都跑。被量过,正是它沉默的原因。**\n\n**本轮已交付的那一半(算术,不是意见)**:该普查执行 279 条命令,但只有 **82 条互不相同**(`ls tests/fixtures` 一条跑了 **107 次**)。子进程按命令串 memo 化之后,本容器实测三次 **2.465 / 2.584 / 2.568s**,而读数逐位不变(`8 checks, 0 failed [280 commands executed, 66 unresolved]`);本容器对 4 条未改测试比 manifest **慢 ~1.10x**(4.273→4.863 / 4.898→4.670 / 4.517→5.096 / 4.803→5.678)⇒ 参考机折算 **~2.3s < cap 3.0s**。⇒ **`over_per_test_cap` 这个理由本轮起不再成立。**\n\n⛔ **但它没有因此自动进闸,而本行要的正是这一步**:闸现读 `87/134 selected, 11.679s / budget 12.0s`,**余量只有 0.321s**,而在闸里的 87 条平均 `0.134s`(最慢一条 `0.393s`)⇒ 放这一条进去要**挤掉约 7 条**。那是一个**价格**,不是一次机械操作。⛔ 总监本轮**不在一台慢 ~10% 的容器上重跑 `py_gate_measure.py`** 来替全队做这个取舍 —— 重 measure 会按本容器的秒数系统性地挤掉一批边缘测试,那是拿容器噪声当政策。",
+   "ruled_at": "2026-09-15T22:xxZ",
+   "executor": "总监自己(harness 编排权)。⛔ 不派给协同组/英雄组:这两个台正是被这条普查反复点名的一方,让被测者决定测它的闸要不要开,是 RULING 58 那条「两条路由各指开对方」的另一种形状。",
+   "trigger": "**有自动触发器,而且针脚是特意挑的**:`done_when` 钉 manifest 里这一行的 `in_gate`。⛔ **不钉 `reason` 字段** —— 它本轮已经从 `over_per_test_cap` 变成(重 measure 后会变成)`over_cumulative_budget`,**理由变了而沉默没变**,拿它当针脚会让本行在什么都没解决的时候自己结清。实际取它的时机:下一次有人跑 `py_gate_measure.py`,或任何一轮总监有余量。",
+   "delivered_to": [
+    "iterations/reports/director/20260915T2204Z.md §三(裁定全文)"
+   ],
+   "why_registered_here": "因为**本轮交付的是半件事**:结构性不可能(`3.723s > 3.0s` cap)已被消除,预算取舍尚未做。⛔ 不把「已经变快了」写成「已经进闸了」—— 那正是本行要防的那种结清。",
+   "done_when": {
+    "kind": "json_value",
+    "path": "tools/agent/py_gate_manifest.json",
+    "key": [
+     "tests",
+     "tests/test_bots_walk_farm_only.py",
+     "in_gate"
+    ],
+    "equals": true,
+    "note": "⭐ 针脚是 `in_gate` 为真,**不是** manifest 的 `measured_at` 变新:重跑一次 measure 而这一行仍落在预算外,是**本行没被解决**的那个世界,而 `measured_at` 会照样变新。⛔ 也不接受「把这一行从 manifest 删掉,让它按 unmeasured 每次跑」—— 那利用的是上面记的那个反转,而下一次 measure 会把行写回来,沉默随之恢复。⚠️ 本行是 `key` 写成**列表**(嵌套键)的第一行:中间那一段字面是 `tests/test_bots_walk_farm_only.py`,**自带点和斜杠**,任何分隔符拼法都会撞上它(见 RULING 60)。"
+   }
   }
  ],
  "retired": [
