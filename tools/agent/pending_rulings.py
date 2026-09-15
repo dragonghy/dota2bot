@@ -1359,12 +1359,38 @@ def _machine_key_status(row, repo=REPO):
             doc = json.load(fh)
     except (OSError, ValueError) as exc:
         return "UNCERTIFIABLE", "could not read %s (%s)" % (rel, exc)
+    # `key` is EITHER a single top-level key (the original form, unchanged) OR
+    # a LIST of components naming a nested one.  A list and not a dotted
+    # string, deliberately: the thing this was first needed for is
+    # `py_gate_manifest.json`, whose second component is the literal
+    # `tests/test_bots_walk_farm_only.py` -- a key with dots AND a slash in it.
+    # Any separator-based spelling has to pick a separator that some real key
+    # contains, and the failure is silent: the lookup misses, the row reads
+    # UNCERTIFIABLE forever, and UNCERTIFIABLE is exactly what an
+    # honestly-unreadable pin looks like, so nothing raises its hand.  A pin
+    # that CANNOT go green is worse than `kind: manual`, which at least says so.
+    # (Director 2026-09-15: caught on this tool's own first nested pin, one
+    # edit after writing it -- the registry test passed all 951 checks with the
+    # dead key in place, because "does this key resolve" was nobody's check.)
     key = cond.get("key")
-    if not isinstance(doc, dict) or key not in doc:
-        return "UNCERTIFIABLE", "%s carries no key %r" % (rel, key)
-    got, want = doc[key], cond.get("equals")
+    path = key if isinstance(key, list) else [key]
+    if not path or not all(isinstance(k, str) and k for k in path):
+        return ("UNCERTIFIABLE",
+                "done_when kind json_value carries no readable `key` (%r) -- "
+                "want a string, or a list of strings naming a nested key" % (key,))
+    node, walked = doc, []
+    for part in path:
+        if not isinstance(node, dict) or part not in node:
+            return ("UNCERTIFIABLE",
+                    "%s carries no key %s (resolved %s, then %r is not there)"
+                    % (rel, " -> ".join(repr(p) for p in path),
+                       " -> ".join(repr(p) for p in walked) or "(root)", part))
+        node = node[part]
+        walked.append(part)
+    got, want = node, cond.get("equals")
+    shown = key if isinstance(key, str) else " -> ".join(path)
     return ("DONE" if got == want else "OWED",
-            "%s:%s = %r (the ruling's acceptance criterion is %r)" % (rel, key, got, want))
+            "%s:%s = %r (the ruling's acceptance criterion is %r)" % (rel, shown, got, want))
 
 
 def parse_utc(text):

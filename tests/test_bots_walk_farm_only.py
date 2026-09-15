@@ -101,6 +101,35 @@ UNRESOLVED_HAND_READ = {
         "cannot reach bots/Customize/. Hand-read 2026-09-15 (hero desk -- this "
         "desk's own walk, from the wkrank0 round, registered in the SAME work "
         "unit that landed it, per GH #803)",
+    # -- Registered 2026-09-15 by the DIRECTOR, not by either author.  Both
+    # -- walks below landed between the 18:06Z and 21:08Z self-checks and left
+    # -- this census RED on trunk for ~3.5h (batch-desk 20260915T210852Z.md
+    # -- §十), which is GH #624 / #774 verbatim.  ⛔ The wardcomma file ALSO
+    # -- held a real finding on the REACHING side, which is a different defect
+    # -- and got a different fix: its `[source]` case walked
+    # -- `find bots -name '*.lua' -print` with no clause at all, and that case
+    # -- asserts "exactly one" missing-comma literal exists in bots/ -- so on
+    # -- the farm, where bots/Customize/soak_side.lua exists, it was counting a
+    # -- different population than in CI.  Registration would have been the
+    # -- WRONG fix there; the clause was added to the walk instead.
+    # -- 📌 One commit pair, two halves of this census, two unlike defects.
+    """tests/test_axe_call_ring_anchor.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:57-:58, :86-:88) -- two file-scope "
+        "literals, no parameter reaches the loop -- and keeps only names ending "
+        ".lua; plain `ls` is NOT recursive, so it never reaches bots/Customize/. "
+        "Hand-read 2026-09-15 by the DIRECTOR although the walk is the hero "
+        "desk's (axecallring, fc0201cd, 20:00Z)",
+    """tests/test_wardcomma_mid3_spot.lua  ::  sFind""":
+        "a bare parameter, so nothing about it resolves here: scan(sFind) is a "
+        "closure local to one case (:374-:385) with exactly TWO call sites, "
+        "both file-literal, both rooted at tests/fixtures -- "
+        "\"find tests/fixtures -maxdepth 1 -name 'f_*.lua' -print\" (:387) and "
+        "\"find tests/fixtures -name 'f_*.lua' -print\" (:388). The case's whole "
+        "point is the flat/recursive DIFFERENCE between those two, so neither "
+        "can be folded into the other. Neither is rooted at bots/, so neither "
+        "reaches bots/Customize/. Hand-read 2026-09-15 by the DIRECTOR although "
+        "the walk is the strategy desk's (wardcomma, ff0121ea, 19:29Z)",
     """tests/test_lion_ult_aoe_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:127-:131); plain `ls` is NOT "
@@ -665,6 +694,39 @@ check(os.path.exists(os.path.join(REPO, PROXY)),
       % PROXY)
 
 # --- scan ---------------------------------------------------------------------
+# [director 2026-09-15, GH #624 family] THE SUBPROCESS IS MEMOISED, THE CALL
+# SITE IS NOT.  Every command here is a read-only walk (`find` / `ls`), so its
+# stdout is a pure function of the command string -- running `ls tests/fixtures`
+# a second time cannot answer differently.  It was being run 107 times.  279
+# executions collapse to 82 distinct commands, and THAT is what buys this census
+# a seat in the push gate: measured 3.723s against a 3.0s per-test cap, it was
+# `in_gate: false`, so it could not refuse a push, and its reds were found hours
+# later by the next desk to open a gate.  The cache is not a tidy-up; it is the
+# difference between this file guarding trunk and merely describing it.
+#
+# ⛔ `executed` still counts CALL SITES, not subprocesses.  The `>= 100` guard
+# below asks "did the extractor still match things", which is a question about
+# call sites; counting distinct commands (82) would trip it and turn a speed-up
+# into a false finding.  Two different questions, two different counters.
+_CMD_CACHE = {}
+_FAILED = object()
+
+
+def run_walk(cmd):
+    """stdout of one read-only walk, memoised on the command string."""
+    hit = _CMD_CACHE.get(cmd)
+    if hit is not None:
+        return hit
+    try:
+        proc = subprocess.run(["bash", "-c", cmd], cwd=REPO, timeout=60,
+                              stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        out = proc.stdout
+    except (OSError, subprocess.TimeoutExpired):
+        out = _FAILED
+    _CMD_CACHE[cmd] = out
+    return out
+
+
 reaching, unresolved, executed = [], [], 0
 for name in sorted(os.listdir(TESTS)):
     if not name.endswith(".lua"):
@@ -707,14 +769,12 @@ for name in sorted(os.listdir(TESTS)):
             continue
         if cmd.startswith("lua5.1 "):
             continue  # a sub-sweep: its own popens are separate rows
-        try:
-            proc = subprocess.run(["bash", "-c", cmd], cwd=REPO, timeout=60,
-                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        except (OSError, subprocess.TimeoutExpired):
+        out = run_walk(cmd)
+        if out is _FAILED:
             unresolved.append(key_of(rel, expr))
             continue
         executed += 1
-        if PROXY.encode() in proc.stdout and "soak_" not in cmd:
+        if PROXY.encode() in out and "soak_" not in cmd:
             reaching.append((rel, lineno, cmd))
 
 # The scanner must have looked at something.  A census pointed at nothing

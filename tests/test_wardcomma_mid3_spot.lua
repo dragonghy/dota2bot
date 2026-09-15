@@ -162,7 +162,12 @@ end
 
 tests['[source] exactly one missing-comma Vector literal exists in bots/']
 = function()
-    local p = assert(io.popen("find bots -name '*.lua' -print"))
+    -- The clause is NOT decoration. bots/Customize/soak_side.lua is gitignored
+    -- and exists only on the farm, so a walk without it counts a DIFFERENT
+    -- population there than here -- and this case's whole claim is "exactly
+    -- one". Read from lua_source_scan so there is one copy of the literal.
+    local p = assert(io.popen("find bots -name '*.lua' "
+        .. require('lua_source_scan').FARM_ONLY_FIND_CLAUSE .. " -print"))
     local nHits, sWhere = 0, nil
     for path in p:lines() do
         local code = strip_comments(read_file(path))
