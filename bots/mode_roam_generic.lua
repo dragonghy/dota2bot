@@ -1619,6 +1619,30 @@ function ConsiderWaitInBaseToHeal()
 			-- arriving, in the field, paid for -- still reads as "needs to go to
 			-- base for mana" and TPs.
 			--
+			-- ⛔⛔ CORRECTION 2026-09-15, AND IT IS THE LOAD-BEARING ONE.
+			-- THE ENGINE NEVER CALLS THIS FUNCTION.  ConsiderWaitInBaseToHeal's
+			-- only call site is the commented-out block at the top of this
+			-- file's Think (~115) -- and it was already commented out in the
+			-- upstream OHA snapshot this repo forked (74727e4a, its line 74),
+			-- so it has been dead for the whole life of the repo.  With
+			-- comments stripped, the token occurs exactly ONCE in this file: on
+			-- the `function` line.  The flag this function sets (~1681) is the
+			-- only `= true` for `ShouldWaitInBaseToHeal`, so the "Heal in Base"
+			-- consumer branch at ~484 is dead by the same one fact.
+			--   ⇒ 'waitclar' LIVE DOMAIN IS ZERO BY CONSTRUCTION, and the zero
+			-- is the CONSTRUCTIVE kind, not the corpus-coverage kind: no wave,
+			-- no seed and no corpus can reach a host nothing calls.  It must
+			-- NOT be admitted to the armed set in this state -- a wave that
+			-- armed it would report "tested, no effect" with nothing raising a
+			-- hand.  Pinned with its reverse calls in
+			-- tests/test_waitclar_callsite_empty.lua (§1 is the tripwire: it
+			-- goes red the day the call site comes back, which is the day this
+			-- lever becomes readable and must be re-priced).
+			--   The paragraph below is kept verbatim because it is still true
+			-- of the CONDITION, and false only about who asks: its 6 frames
+			-- were reached by the sweep CALLING this function directly, which
+			-- is the only caller that exists.  The probe was reading itself.
+			--
 			-- ⭐ IT IS THIS LEG THAT ACTUALLY FIRES, measured rather than
 			-- assumed: over the 1012 live hero frames this corpus carries,
 			-- ConsiderWaitInBaseToHeal answers true on 6, and 5 of the 6 come

@@ -4,8 +4,17 @@
 -- keeps run_tests.lua from globbing it (it globs `^test_.*%.lua$`).
 --
 -- WHAT IS MEASURED.  ConsiderWaitInBaseToHeal (bots/mode_roam_generic.lua) is
--- SHIPPED and ungated -- it decides whether a bot TPs to base.  Its condition is
+-- ungated, and would decide whether a bot TPs to base.  Its condition is
 -- one `or` with two legs:
+--
+-- ⛔ CORRECTION 2026-09-15: this header used to call that function SHIPPED, and
+-- the frame counts below have been quoted as if they were reachable play.  They
+-- are not.  The function's only call site is commented out (~115, and already
+-- commented out in the upstream snapshot 74727e4a:74), so the ONLY thing in
+-- this repo that ever calls it is this sweep, at the two pcall sites below.
+-- The probe is reading itself.  The counts remain correct about the condition's
+-- internals and say nothing about how often the engine reaches it -- which is
+-- zero.  See tests/test_waitclar_callsite_empty.lua.
 --   * the HP leg, triggered by `J.GetHP(bot) < 0.25`, which refuses the trip on
 --     TEN modifiers meaning "already recovering, or must not be moved" (tango,
 --     flask, chemical rage, tempest double, healing ward, purifying flames,

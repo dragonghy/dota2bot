@@ -3,9 +3,20 @@
 --
 -- WHAT THIS FILE ASSERTS
 -- ----------------------
--- ConsiderWaitInBaseToHeal (bots/mode_roam_generic.lua) is SHIPPED and ungated:
--- it decides whether a bot TPs to its own base. Its condition is one `or` with
--- two legs, and the legs disagree about supply by ten to zero:
+-- ConsiderWaitInBaseToHeal (bots/mode_roam_generic.lua) is ungated, and it
+-- would decide whether a bot TPs to its own base. Its condition is one `or`
+-- with two legs, and the legs disagree about supply by ten to zero:
+--
+-- ⛔ CORRECTION 2026-09-15: this header used to call that function SHIPPED.
+-- The ungated half is true; the SHIPPED half is not. Its only call site is
+-- commented out in mode_roam_generic's Think (~115) and was already commented
+-- out in the upstream OHA snapshot this repo forked (74727e4a, line 74), so
+-- the engine has never once called it. Every reading below is a reading of the
+-- function's INTERNALS, reached by calling it directly from a test -- correct
+-- about what the condition says, silent about whether anything asks. The
+-- call-site fact is pinned, with its reverse calls, in
+-- tests/test_waitclar_callsite_empty.lua; 'waitclar' must not be admitted to
+-- the armed set until that file's §1 goes red.
 --
 --   * the HP leg   -- trigger `J.GetHP(bot) < 0.25` -- refuses the trip on TEN
 --     modifiers meaning "already recovering, or must not be moved", among them
@@ -362,7 +373,13 @@ end
 
 tests['[corpus] every clarity carrier is accounted for, by counting'] = function()
     local _, C, _, B = sweep()
-    assert(C.clar_carriers == 12, 'clarity carriers moved to '
+    -- 2026-09-15: re-derived from the sweep after the corpus grew (12 -> 13
+    -- carriers). The new one is stopped by the OUTER guard, so `flips` and
+    -- `blocked_domain` are both unmoved at 1 and the pinned medusa frame is
+    -- still the only flip -- the carrier accounting moved, the lever's domain
+    -- did not. Bumped rather than relaxed: this assertion going red on a corpus
+    -- change is the point of it.
+    assert(C.clar_carriers == 13, 'clarity carriers moved to '
         .. tostring(C.clar_carriers))
     -- The five buckets SUM to the carrier count -- counted, never derived by
     -- subtraction. "The corpus has no clarities" and "it has clarities this
@@ -373,7 +390,7 @@ tests['[corpus] every clarity carrier is accounted for, by counting'] = function
         .. ' but there are ' .. C.clar_carriers .. ' carriers')
     assert(#B == C.clar_carriers, 'the sweep emitted ' .. #B .. ' carrier rows '
         .. 'for ' .. C.clar_carriers .. ' carriers')
-    assert(C.clar_stop_mp == 9 and C.clar_stop_outer == 2
+    assert(C.clar_stop_mp == 9 and C.clar_stop_outer == 3
         and C.clar_stop_hp_leg == 0 and C.blocked_domain == 1,
         'the carrier breakdown moved: mp=' .. C.clar_stop_mp .. ' outer='
         .. C.clar_stop_outer .. ' hp_leg=' .. C.clar_stop_hp_leg .. ' domain='
