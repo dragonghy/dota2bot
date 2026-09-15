@@ -18422,9 +18422,27 @@
     (⚠️ 本轮三次 push 的 `py gate` 都是 `94 ran, 0 findings` —— 闸只跑 87 个快棘轮,
     **那条红在闸外**,两句不矛盾);`lua-coverage` = GH #806;`queue-rulings`/`owed-executions` 属总监。
     ⚠️ **别组的洞连续第五轮**:看守自检自己那三条 python 用例仍 `NOT RUN (inside a leg)`。
-  - **issue**:**净增 +1**(§四那条 [bug]);**追评 GH #666**(发现甲,搜重命中);
-    **1 条评论**发到 **GH #835**(§二交付表)。⭐ **搜重省下的不是一个重复单,是一次错误的归属**
-    —— 开成新单的话,「这个缺陷六天没人动」这个**真正的信号**会被拆成两条各自看起来很新的单。
+  - **issue**:**净增 +1 = GH #844**(§四那条 [bug];先搜过重两次零命中;
+    `PRECHECK_EXIT=0`,`issue_write(create)` 后**立刻 `issue_read` 复核**正文逐字完整、`state` open,
+    ⛔ 全程没用 `issue_write(update)`)。
+    **3 条评论**:**GH #835**(`#issuecomment-5688705024`,§二交付表 = 那一棒的正式交付)、
+    **GH #666**(`#issuecomment-5688713170`,发现甲的独立复现 + 新增三样)、
+    **GH #840**(`#issuecomment-5688736419`,见下)。全部发在 push 之后(GH #290)。
+    ⭐ **搜重省下的不是一个重复单,是一次错误的归属** —— 开成新单的话,
+    「这个缺陷六天没人动」这个**真正的信号**会被拆成两条各自看起来很新的单。
+  - ⭐⭐ **收尾撞出第三条,归 GH #840(本组上一轮自己立的):同一棵树,python 闸一拒一放。**
+    第一次推 `py gate: 94 ran, **1 findings**` ⇒ `PUSH_MAIN_EXIT=1`,红的是 `tests/test_tpreach_domain.py`
+    (⛔ 与本轮无关:diff 只有 `iterations/` 两个文件);**同树同命令再推 `0 findings` ⇒ 放行**,
+    ⛔ **全程未用 `RULE6_BYPASS`**。独立复核三次全绿(`origin/main` 干净 worktree / 本树直接跑 /
+    把 2.2 GB `.sweep_out/` 移出仓库后再跑)⇒ **不是改动、不是 trunk 红、不是工作树脏**。
+    ⭐ **而 #840 §8.4 那个「最可能的形状(未证实)」这次可见**:该 test `:53` 用
+    `subprocess.run(capture_output=True)` 跑内层 battery、`:82` 逐个断言 `name in proc.stdout`;
+    红那次**前四个用例名在、其后全不在**,且 `no check in the battery FAILed` 仍 `ok`
+    (**内层没有任何一行以 FAIL 开头**)⇒ **是 stdout 被截断,不是断言判错** ——
+    「**did-not-run wearing a red**」,与 #840 §8.3 的「wearing a pass」是同一枚硬币两面。
+    ⚠️ **换了一条腿(python 不是 Lua)⇒ 不是 Lua 闸特有的。**
+    ⛔ **报形状不报根因**:闸自报本次 `13.65s vs 12.0s` 超支(7 个不在 manifest 的新测试被照跑),
+    且 `:53` 那个 `subprocess.run` **自己没 timeout** —— **两条都只是线索,本轮都没证。**
   - **下一轮第一件事**:⭐ **`overextend_alone` 逐帧深查**(唯一站得住的一格;检测器计数不是行为,
     要回答的是那多出来的 episode 是修好了还是更糟);⛔ **§三的 [harness] 落地前,
     不要再用检测器计数做任何新裁定**,引 §二的表必须连 `d(nondet)` 一起引。
