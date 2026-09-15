@@ -118,6 +118,37 @@ if "--cand-ref" in argv:
 allow_pooled = "--allow-pooled-basenames" in argv
 allow_unparseable = "--allow-unparseable" in argv
 
+
+def _opt(flag, what):
+    if flag not in argv:
+        return ""
+    i = argv.index(flag)
+    if i + 1 >= len(argv):
+        sys.exit("%s needs a value (%s)" % (flag, what))
+    return argv[i + 1]
+
+
+# [W37 efficiency ledger / owed `games_ledger_cross_wave_accounting`]
+# --ledger makes the harvest WRITE the cross-wave game account instead of
+# leaving it to be re-assembled by hand out of the wave verdicts.
+#
+# The obligation had been carried in prose for three weeks and was reported
+# three weeks running as a dropped baton, and the reason it kept dropping is
+# structural rather than anybody's diligence: it belongs to no wave and no
+# candidate id, so no wave-local harvest checklist has a line it can be
+# missing from.  A desk can audit its own checklist item by item, score full
+# marks, and still never write the ledger.  Hence the carrier changes: the
+# harvest step that already parses every per-game file also appends it.
+#
+# What this buys that `scored_games` did not: `scored_games` is a per-wave
+# scalar, computed AFTER the seed-level NO-PAIR/THIN-ARM exclusions, and every
+# efficiency ledger so far picked its own denominator out of whichever key the
+# wave files happened to share that week.  A per-game row set carries the
+# fields (stamp, seed, arm side, winner) to recompute ANY of those denominators
+# after the fact, so the $/game metric stops depending on who assembled it.
+ledger_path = _opt("--ledger", "path to games_ledger.jsonl")
+ledger_wave = _opt("--ledger-wave", "wave label, e.g. W70")
+
 # [GH #269] Keep this literal in sync with validate_onspot.sh's embedded copy
 # (tests/test_verdict_arm_depth.py asserts both carry the same number): the
 # farm's happy path runs THAT copy, so a gate that lives only here is a gate
@@ -561,6 +592,56 @@ if len(paired) >= 2 and not complete:
         "GH #269 depth gate: WAVE ZEROED BY THE GATE -- %d paired seeds, none "
         "at %g games/leg. Report the wave's shape; do NOT lower the gate.\n"
         % (len(paired), min_arm_depth))
+
+# --- the cross-wave game ledger (see --ledger above) ------------------------
+# Written LAST, after every GH #225 refusal has had its chance to exit: a
+# corpus this tool refused to score is a corpus whose game count is not known
+# either, and a ledger is worth less than nothing if it is the one record that
+# admits games the verdict rejected.
+if ledger_path:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import append_ledger
+
+    ledger_rows = []
+    for f in sorted(loaded):
+        a = loaded[f]
+        gid = os.path.basename(f).replace(".analysis.json", "")
+        # The per-run subdirectory IS the run identity in the #225 pooling
+        # layout (one directory per run, parent passed to this tool).  A flat
+        # single-run corpus has no subdirectory and falls back to the run dir's
+        # own name, which is what that layout names the run with.
+        rel = os.path.relpath(os.path.dirname(f), run_dir)
+        run_prefix = os.path.basename(os.path.normpath(run_dir)) if rel == "." else rel
+        row = append_ledger.row_from_analysis_obj(a, gid, run_prefix)
+        stamp = a.get("script_version") or ""
+        m = re.match(r"^mirror:(.*):s(\d+):(radiant|dire)$", stamp)
+        row["wave"] = ledger_wave or None
+        row["cand"] = m.group(1) if m else None
+        row["seed"] = m.group(2) if m else None
+        row["arm_side"] = m.group(3) if m else None
+        # `finished` is the complement of the verdict's `unfinished`, on the
+        # same predicate wr() uses (winner in radiant/dire).  It is NOT the
+        # verdict's `scored_games`, which is narrower: that one counts finished
+        # games only in seeds that survived NO-PAIR and THIN-ARM.  Both are
+        # legitimate denominators for a $/game figure and they differ by real
+        # games, so the ledger carries the fields to compute EITHER (seed +
+        # arm_side + finished) rather than picking one silently -- picking one
+        # silently, a different one each week, is the defect this row set
+        # exists to end.
+        row["finished"] = a.get("winner") in ("radiant", "dire")
+        ledger_rows.append(row)
+
+    added, total = append_ledger.append_rows(ledger_path, ledger_rows)
+    fin = sum(1 for r in ledger_rows if r["finished"])
+    sys.stderr.write(
+        "ledger: %d row(s) appended to %s (%d offered, %d already present; "
+        "%d finished / %d unfinished this wave; ledger now holds %d unique "
+        "(run_prefix, game_id) key(s))\n"
+        % (added, ledger_path, len(ledger_rows), len(ledger_rows) - added,
+           fin, len(ledger_rows) - fin, total))
+    v["ledger"] = {"path": ledger_path, "wave": ledger_wave or None,
+                   "offered": len(ledger_rows), "appended": added,
+                   "finished": fin, "unique_keys_after": total}
 
 g = v["mean"].get("gpm"); d = v["mean"].get("deaths")
 v["suggested"] = ("promote" if (g is not None and g > 5 and complete and

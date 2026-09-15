@@ -146,6 +146,34 @@ S3,让录像组和其他 agent 有料可分析。**不做判断分析,不写 bot
    **一律用 `tools/batch_test/soak/recover_verdict.py` 从 S3 逐局数据全量重算**
    (实例自产 verdict 两次不完整,已定为标准收割路径)。结果写进报告 +
    更新 `iterations/queue.json` 对应请求的 status/result。
+   **⭐⭐ 2026-09-15T12:xxZ 本台落地(欠条 `games_ledger_cross_wave_accounting`,总监 09-13T09:xxZ 立):
+   收割命令从此**必须**带 `--ledger iterations/games_ledger.jsonl --ledger-wave W<N>`。**
+   ⛔ **这不是"记得写台账"这条纪律的又一次重申 —— 重申已经失败过三周**:W35 记「棒掉了」、
+   W36 记「棒在但没人捡」,而台账停在 **391 行 / `run_20260719_1353`**,同期八波(W62–W69)
+   产出 **~1300 计分局**。**换的是载体不是决心**:收割这一步本来就把每一个逐局文件解析了一遍,
+   现在它顺手把行写出去,于是这根棒**没有地方可以掉**。
+   📌 **失效形状比一般的静默更隐蔽:没有台账也写得出效率台账** —— 写的人当场从八个
+   `W6*_verdict.json` 里拼局数,拼得出来,所以**没有人被挡住**;代价是**分母由每次拼的人当场决定**
+   (某周八个文件恰好同用 `scored_games`,那是运气不是保证),`$/有效局` 因此**三周不可比**。
+   ⚠️ 它还**不属于任何一波、任何一个 id** ⇒ 任何一张**波次局部**的收割清单里**都没有行可以缺席**,
+   于是逐条自审条条全中、台账照样是空的。
+   - **行的身份是 `(run_prefix, game_id)`,不是 `game_id`** —— 逐局文件名
+     `<YYYYmmdd_HHMMSS>_slot<N>` **不带 run 标记**,4×1 波同秒起飞、slot 节奏相同,
+     ⇒ **同名跨 run 是常态不是意外**(GH #225 在文件系统层实测 208 → 188)。
+     按 `game_id` 去重会把那次丢失**原样搬进台账**,而且照样静默(台账没有期望局数可比)。
+   - **`$/有效局` 该读哪个字段**:每行新带 `finished`(= `winner ∈ {radiant,dire}`,
+     与 verdict 的 `unfinished` 同一谓词)。⚠️ **它不是 verdict 的 `scored_games`** ——
+     后者更窄(只数活过 `NO-PAIR`/`THIN-ARM` 的种子里的完赛局),两者**相差真实局数**。
+     ⛔ **本台不替总监选定终局口径**:行里同时带 `seed`/`arm_side`/`cand`/`wave`,
+     **两种分母都能被事后重算**,而「每周静默地选一个、每周选的不一样」正是本条要终结的缺陷。
+   - **被 GH #225 拒绝的语料一行都不写**(写在所有 refusal 之后):一份收录了 verdict
+     拒收的局的台账,是**第二本互相矛盾的账**,比没有账更糟。
+   - 钉在 `tests/test_verdict_ledger_write.py`(20 checks;变异台四只全杀:删写入 / 按
+     `game_id` 去重 / `finished` 读 `econ_winner` / 把写入挪到 refusal 之前)。
+   - ⚠️ **欠条本身仍是 OWED,不许记成已结清**:它的针脚是「台账里出现任何一局九月的比赛」
+     (`"game_id":"202609`),而九月逐局数据只在 S3 上,**本地只有聚合**;⛔ 本台未为此下载
+     (RULING 49 (乙) 正在让 RULING 48 的 `<N>` 跑满三轮,为回填而拉几百个对象会**污染那次测量**)。
+     ⇒ 针脚由**刹车解除后的第一次收割**自己打上;线已经接好,**不再依赖谁记得**。
    **⭐ 2026-08-28T03:5xZ 总监裁定 GH #269(本台 03:13Z 上报,三选一)——落地 (A) 硬门,
    但门开在 `arm_depth` 上,不开在 `min(ab,ba)` 上;两份拷贝都已改,档案 `test_set.md §BU`。**
    - **收割侧现在会看到的新字段**(offline 与 farm 自产 verdict 都有):
@@ -10656,6 +10684,72 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **(E)** owner 推送**两条**(第二条是当轮自我更正);GH #779 新评论 `issuecomment-5670989166`。
   **铁律 11**:MCP 可用,零 `requires approval`、零空转。
   **Token**:`TOKENS total_in=3,667,466 out=35,373 turns=34`(统计后的收尾回合不计入)。
+- **2026-09-15T12:15:36Z(无波轮 —— 刹车第二十五轮持有。⭐⭐⭐ 头号产出不是成本那几行,是欠条
+  `games_ledger_cross_wave_accounting` **换了载体**:它掉了三周,而掉的原因不是谁失职 ——
+  它**不属于任何一波、任何一个 id**,于是任何一张波次局部的收割清单里**都没有行可以缺席**。
+  ⛔ **欠条本身仍是 OWED,本轮没有结清它。**)**
+  **一、成本(现跑)**:`AWS_SETUP_EXIT=0`;`COST_EXIT=0`(⛔ 未走管道)。MTD **`$90.569`** /
+  `forecast 186.702` / `budget limit 100.0` / `budget refreshed 2026-09-15T04:18:45Z`;**headroom 对 `$90` = `$-0.569`**。
+  ⚠️ **与上两轮(06:13Z/09:12Z)逐位相同 ⇒ 快照连续第三次读到同一张**(冻结跨度现测 ≥ **7.9h**)
+  ⇒ ⛔ 登记的是「没测」不是「没涨」,⛔ 未用「MTD 没动 ⇒ 没花钱」反推(步骤 2 乙禁用)。
+  GH #801 四行整块照抄(⛔ 未用 `COST_CONFIRM_AT` 自救):`>= $35, but headroom to the $90.00 brake is $-0.569` /
+  `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).` /
+  `Nothing can launch at this MTD, so confirming it buys nothing.` / `Resumes by itself as soon as headroom >= $1.10.`
+  ⚠️ **这是 SKIP 不是 pass。** accrual probe 两行照抄:`alpha = 0 accruing instance(s) account-wide; beta = 0 wave record(s) after 2026-09-14T17:00:45Z` /
+  `stamp unknown (fresh container) -- alpha and beta are both zero -- a frozen stamp over an idle account opens no blind spot`。
+  **成本三段式(RULING 48,本台第 2/3 轮)**:**零 EC2 / 零 CE / S3 读取 0 个对象**
+  (只发 LIST,⛔ 无 `s3 cp`/`sync`、⛔ 无 `.dem`/`analysis.json` 下载)。
+  **二、闸 (iii)**:`FENCE_EXIT=3`,逐字 `actual (MTD) : $90.569   <- re-read this run, never cached` /
+  `pending waves : $0.000` / `projected total : $91.669` / `operative ceiling: $90.00 = min(fence, brake)` /
+  `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence.` RULING 5/6/7 三行照抄(`17 region(s) read ... COMPLETE` /
+  `records after 2026-09-14T17:00:45Z ... clock from budget snapshot` / `CERTIFIED (0 accruing instances account-wide, read this run)`);
+  ⭐ **钟没有降级**。⛔ 未传任何 `--no-*`/`--pending`/`--director-crossing` ⇒ **无一行「这是 SKIP 不是 pass」**。
+  ⚠️ 照登不藏:`$90`–`$100` 在 AWS 侧**仍可花**(`$100` 告警 `state=OK`),挡住它的是 owner 这条线不是 AWS。
+  ⇒ **连续第二十五轮,不发波的原因是闸不是本台的处置。**
+  **三、收割:零欠。** `validation/` **`OBJ_COUNT=592`**,与已登记的 592 逐位相同 ⇒ 无新 verdict。
+  最新对象按 **RULING 47 规定的取法**(`--recursive | sort | tail -1`,⛔ 不是裸 `| tail`)读作
+  `2026-09-12 10:18:26 validation/lf_rescue+27ids-d177b87026dd_20260912_1018_run.log` ⇒ 仍是 W69。
+  **四、工作单元(本轮实质)**:收割命令从此**必须**带
+  `--ledger iterations/games_ledger.jsonl --ledger-wave W<N>`(规格与立法理由已写进上面的步骤 3)。
+  现场:台账停在 **391 行 / `run_20260719_1353`**、`game_id` 前缀唯一值 **`202607`**,而 W62–W69 八波产出 **~1300 计分局**。
+  五条落地:(甲) `recover_verdict.py --ledger`(收割本来就解析了每个逐局文件,现在顺手写行);
+  (乙) `append_ledger.py` 抽出 `row_from_analysis_obj()` ⇒ **一份 schema 两处用**,⛔ 不留会漂移的第二份拷贝;
+  (丙) ⭐⭐ **行的身份是 `(run_prefix, game_id)` 不是 `game_id`** —— 同名跨 run 是常态(GH #225 实测 208→188),
+  按 tag 去重会把那次丢失**原样搬进台账**且照样静默;(丁) 每行新带 `finished`(= `winner ∈ {radiant,dire}`,
+  与 verdict 的 `unfinished` 同一谓词)+ `seed`/`arm_side`/`cand`/`wave` ⇒ **两种分母都能事后重算**,
+  ⛔ 本台不替总监选定 `$/有效局` 的终局口径;(戊) **被 GH #225 拒绝的语料一行不写**
+  (第二本互相矛盾的账比没有账更糟);(己) 无 `--ledger` 则一行不写。
+  **证据**:`tests/test_verdict_ledger_write.py` **20 checks, 0 failed**(全驱动真脚本);
+  **变异台四只全杀零幸存**(删写入 / 按 `game_id` 去重 / `finished` 读 `econ_winner` / 写入挪到 refusal 之前),
+  `BASELINE exit 0` + `RESTORED exit 0` + `SURVIVORS: none`,恢复后 md5 与文件副本逐位相同
+  (⛔ 用副本恢复,不用 `git stash`);⚠️ **M4 的击杀带附带红**(变异体剥掉了自报行),⛔ 不藏 ——
+  case 5 那条自己单独红。verdict 家族**八个**测试全绿。
+  **⛔ 五、欠条仍是 OWED,⛔ 不记成已结清**:针脚 `"game_id":"202609` 现测仍 **0 命中**,
+  原因不是接线没做,是**九月逐局数据只在 S3 上**(仓库里的 `W6*_verdict.json` 只有 `per_seed`/`mean`);
+  ⛔ 本台未为回填下载 —— RULING 49 (乙) 正让 RULING 48 的 `<N>` 跑满三轮,**拉几百个对象会污染那次测量**,
+  且欠条自带「不要求补录历史」。⇒ **针脚由刹车解除后的第一次收割自己打上,不再依赖谁记得。**
+  ⚠️ **但它的失效模式变了**:若刹车延续到 10 月,`"game_id":"202609` 将**永远不可能命中** ⇒ 那时要改的是针脚。
+  **六、泄漏**:`running/pending instances` 节为空 + `alpha = 0`(17 区域全读);常驻成本仍只有 AMI + 快照。**零泄漏。**
+  **七、通知判据:本轮不推。** MTD 与预算戳与上两轮**两量逐位相同** ⇒ 零新支出测量、owner 面前的二选一无新事实
+  ⇒ ⛔ 既不推通知也不发新评论(与 06:13Z/09:11Z/09:12Z 同判据);⚠️ 重复投递同一读数会稀释下一次真读数的信号。
+  **八、铁律 9**:P4.1 upstream 标尺波**连续第二十轮欠**,⛔ 唯一阻因是闸 (iii) `exit 3`(预算)。
+  **九、⛔ `bots`/`game` 一行未改**(只动 `tools/batch_test/soak/` 2 个 py + `tests/` 1 个新 py + `iterations/`)。
+  **十、自查**:⚠️ **管道坑第 32 次**(本轮第一条命令,脚本自卫逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`,
+  零损失);⭐ 上一轮交棒 ⑥ 的「一次到位」**第三轮仍未做到**(仍是第二跑才对),⭐ 但**没有再踩超时坑**,
+  第二跑一次过。自检 python 腿 **`135 passed, 0 failed, 3 uncertifiable`**(上一轮 `131 passed, 1 failed, 3 uncertifiable`)——
+  ⚠️ ⛔ **本台不主张那条红被修好**、⛔ 未用 worktree 在净 `origin/main` 复跑 ⇒ ⛔ 不主张三条 UNCERTIFIABLE 与上一轮同批;
+  Lua 快腿 `RED test_fieldsip_atom_pricing.lua`(语料走查 1021→1039 帧)⭐ **正是上一轮 §F 那条**,
+  它**不在 push 闸成员资格里** ⇒ **推它的闸绿得对**(GH #624/#616/#806 立案形状),⛔ 本台不代修、⛔ 不调成员资格。
+  **铁律 11**:零 `requires approval`、零空转;⛔ 本轮未调 `mcp__github__*` —— 不是被拒,是**本轮没有该发的 issue**
+  (该欠条自带 ⛔「不开新 GH issue」,它的全部新意就是换载体,而本轮做的正是那件事)。
+  **交棒**:① **owner —— 刹车第二十五轮、#779 第十六轮零表态**,本轮零新支出测量 ⇒ 未推未评;
+  ② ⭐⭐ **总监 —— 验收 §四,并点一句 `$/有效局` 读 `finished` 还是 `scored_games`**(⛔ 本台不退休那一行,故不行使命名权);
+  ③ ⭐ **总监 —— 欠条状态请勿改动(仍 OWED),并预裁「刹车跨月后针脚怎么办」**;
+  ④ **总监 —— §十 的 Lua trunk 红与三条 UNCERTIFIABLE**(⛔ 本台未复现、不归因、不代修);
+  ⑤ **总监 —— 上一轮交棒 ②③④⑤ 本轮未获回应,逐字保留**;
+  ⑥ **下一轮本台**:开工第一条命令重定向裸读(⛔ 无管道、⛔ 无 `timeout`,**一次到位**);
+  刹车解除时发 P4.1 标尺波,**收割必带 `--ledger`**,并抄 GH #801 四行**恢复后**的样子。
+  详见 `iterations/reports/batch-desk/20260915T121536Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
