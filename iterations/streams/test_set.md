@@ -5928,3 +5928,96 @@ items = { 'faerie_fire', 'magic_wand', 'arcane_boots', 'blitz_knuckles', 'null_t
 
 - **(甲) 弱在哪里**:源码写的是两条「必须**一起 arm**、一起裁,或者都不动」;而 atom 的 `rule=no_promote_without` 只管 **promote 日**的配置,**管不了 arm 日**。⇒ 将来给 `wkt10ls` 买证据时**同波 co-arm `wkqdmg`**,**本行不保证**,发波请求里要自己写明。⛔ 不把 atom 的语义拉宽去盖住一件它盖不住的事 —— 那会造出一条读起来像栏杆、实际没装的行。
 - **(乙) 不是入集批准**:armed 串本轮 **25**,`wkt10ls` **不在其中**,入集仍受 owner P4.2 的冻结约束。本行只在它**将来**被 promote 的那一天有牙。
+
+---
+
+## §HM 2026-09-15T19:0xZ(总监)**RULING 58 —— `tests/test_fieldsip_atom_pricing.lua` 重设基线落地(`live` 1021→1039、`fs_maxhp_le_flask_bar` 944→961);兑付 GH #814 的三条验收** —— 本节最该被读的是 **§HM.2:#814 问的「哪些结论因为换了分母而要重读」,答案是**一条都不用**,而这个答案是量出来的不是推出来的**;以及 **§HM.3:红活过十轮的成因是**我自己**的 owed 行把它路由回了协同组,而 #814 的正文早在前一天就把它交给了总监**
+
+全文报告:`iterations/reports/director/20260915T190802Z.md`。
+
+### §HM.1 落地与现读
+
+断言现为 `tests/test_fieldsip_atom_pricing.lua:452 == 1039`(`live`)与 `:614 == 961`
+(`fs_maxhp_le_flask_bar`),测试标题里的 `1021-frame walk` 同轮改为 `1039-frame walk`。
+
+- `lua5.1 tests/run_tests.lua test_fieldsip_atom_pricing.lua` ⇒ **`15 tests, 0 failures`**(裸码 0)。
+  ⚠️ #814 的验收 2 写的是 `30 tests, 0 failures` —— **分母变了不是没跑全**:
+  该文件自 09-14 起被重构过,今天的 `tests` 表就是 15 条(`_tpquiet_sweep` 那批 census 合并了)。
+  **逐字登记这个差,不假装它是 30。**
+- 第二个、自动的见证:本轮 push 钩子第三条腿 **`lua gate: 391 ran, 0 findings`** ——
+  该文件现在是 `COVERED`(批测台 09-15 已登记 `NOW COVERED`)⇒ **闸自己跑过它并且是绿的**。
+
+### §HM.2 ⭐ #814 验收 3 的答案:**一条结论都不用重读**,而这是量出来的
+
+#814 逐字要求「把**哪些结论因为换了分母而要重读**写进 `test_set.md`,而不是只把数字改对」。
+本轮取的读数直接回答它 —— 一次新鲜 `lua5.1 tests/_tpquiet_sweep.lua` manifest,
+对该文件**每一个** `C.<key> == <N>` 断言逐条对差:
+
+```
+   400 live                          1021  ->  1039   DRIFT
+   404 raises                           0  ->     0   OK
+   408 fs_situation                    57  ->    57   OK
+   411 fs_situation_src                24  ->    24   OK
+   425 fs_sip_alone_moves_buy           0  ->     0   OK
+   440 fs_hold_gains                    0  ->     0   OK
+   450 fs_buy_losses                    0  ->     0   OK
+   464 fs_partition_both                0  ->     0   OK
+   468 fs_partition_neither             0  ->     0   OK
+   476 fs_hold_kills                   22  ->    22   OK
+   500 srnwh_armed_true_live           19  ->    19   OK
+   509 fs_sf2_live_survives             0  ->     0   OK
+   529 stayfield_true_in_t3             2  ->     2   OK
+   530 fs_sf1_ceil_killed               2  ->     2   OK
+   531 fs_sf1_ceil_survives             0  ->     0   OK
+   543 fs_maxhp_le_nonflask_bar        17  ->    17   OK
+   562 fs_maxhp_le_flask_bar          944  ->   961   DRIFT
+```
+
+**17 个常数,2 漂移,15 逐位相同**,且漂的两个**都是单调增的分母**。
+⇒ 2026-09-08 那条 `field_hold_needs_magnitude` 的定价裁定,**每一个承重的数都没有移动**:
+`srnwh_armed_true_live` 19 / `fs_sf2_live_killed` 19 / `fs_sf2_live_survives` **0** /
+`fs_sf1_ceil_killed` 2 / `fs_sf1_ceil_survives` **0** ⇒ **「该原子 armed 之后 hold 侧 live 域为 0」逐字仍然成立**,
+而且是在**更大的语料**(112 fixture / 1039 帧)上仍然成立。
+⭐ 这与协同组开 #814 时给的旁证同向并把它补完:它量了转移计数 22 稳定,本轮量的是**整份 census**。
+
+⇒ **按计量三条 (iii) 登记切法**:本节这 17 个数取自 `_tpquiet_sweep.lua` 的**同一次**运行
+(整份 manifest 一次读完),⛔ **不是**从 pass/fail 反推 ——
+两条失败断言都是各自测试体的**第一条**,其后的断言**根本没跑**,
+所以「`15 tests, 2 failures` ⇒ 只有两个数不对」是一个**在十轮里每轮都可以顺手推出来的错结论**。
+
+⛔ **本节不改任何 armed 串、不动任何 id 的进出集状态**;`fieldsip` 仍在 §HK 裁定的位置上。
+
+### §HM.3 ⛔ 立案句:**红活过十轮,成因是总监自己的 owed 行把它路由回了协同组**
+
+- **#814 正文(2026-09-14T05:49Z,协同组开)**逐字写着:
+  「`them` 跨**四个 census** ⇒ **不是协同组能单方面重定的**,**交总监**」,
+  并把验收 1 写成「**总监**决定是否重定,以及重定的范围」。
+- **而 2026-09-15T01:1xZ 总监开的 owed 行** `fieldsip_atom_pricing_corpus_rebaseline`
+  把 `executor` 写成 **strategy(协同组 —— 文件作者)**,并逐字写下「⛔ **修法不是总监的**」。
+
+⇒ **两条路由各指开对方,而先写的那条(#814)才是对的。** 此后四个台每轮抄同样两行 FAIL:
+hero「⛔ trunk red 不代修…协同组」、replay-check「#814 那一族…不 stash 复核」、
+batch-desk「⛔ 本台不代修」、协同组自己「**第四轮交出去**;非本轮造成」。
+**四个台各自「正确地」不修。**
+
+⛔ **归因写清楚不打折**:这不是协同组掉棒 —— 它开了 issue、写明了理由、点名了裁定人;
+**是总监座位在一天后用一条 owed 行把棒推了回去**,而那条 owed 行的正文**从未引用 #814 正文那句话**。
+📌 与 §DR / GH #413 同族但更难看见:那次是**投递到了错的表**,这次是
+**投递到了对的表、字段也对,而字段里写的执行人与立案文档相反** ——
+`owed-executions` 腿每轮都举手,举的却是「这行还没做」,**没有任何东西比对过两处的执行人**。
+
+⇒ **可复用的一条**:开 owed 行时,若该欠条**已有立案 issue**,
+`executor` 必须与 issue 正文点名的执行人一致;**不一致就是立案人被改判,要在行里写明理由**。
+⚠️ 本轮**未**把这一条写成闸(`pending_rulings.py` 读不到 issue 正文),只写成规矩 —— 登记这个限制。
+
+### §HM.4 顺带量到一条**绿着的**缺陷(单开 `[harness]`,不并进 #814)
+
+同一个 `live` 1021→1039,在 `tests/test_tpdeep_recover_band.lua:425` 与
+`tests/test_buydeep_purchase_floor.lua:371` 用的是 `cs.ratchet` ⇒ **静默放行**
+(`tests/corpus_scale.lua:70` 逐字 `if actual < recorded`,**只在下跌时 fail**)。
+⭐ ratchet 做对了它答应的事(实跑 `tests/_buydeep_sweep.lua`,**12 个被钉住的分子一个没动**);
+⛔ 垮的是分母那句话:`test_buydeep_purchase_floor.lua:32` 逐字仍写
+`Of 1021 live turbo hero frames, 29 sit below the floor`,而 `live` 实读 **1039**
+⇒ **作为率是错的,且会一直绿**。欠条:
+`iterations/owed_executions.json:corpus_denominator_drifts_silently_under_one_sided_ratchet`
+(`executor` = 总监自己)。
