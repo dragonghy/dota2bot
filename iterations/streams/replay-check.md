@@ -18308,6 +18308,14 @@
       的 docstring 逐字警告这正是 *"a did-not-run wearing a pass"*(直接跑文件只加载模块、
       **一条断言都不执行**就退 0)。**判别子就写在被测工具自己的注释里。**
       ⭐ 唯一正确的那一行:**`lua5.1 tests/run_tests.lua <basename>`**(走 runner)。
+  - ⭐ **收工又买到第三个同树读数(已追评 GH #840,`#issuecomment-5687104557`)**:
+    开单后再推分支(**同一棵树、同一条命令**)读 `lua gate: 390 ran, **0 findings**, 0 uncertifiable,
+    10 unanswered, **6 known-red**, 737.9s` ⇒ **放行**。三次同树:`1/5 拒` → `0/6 放` → `0/6 放`,
+    `ran`/`unanswered`/`uncertifiable` **三次逐位相同**。
+    ⇒ **排除两条**:(a) **不是「钩子里跑 vs 直接跑」的差别**(读数 1 与 3 是同一条命令,一拒一放);
+    (b) **不是单调漂移**(`5 known-red` 只出现在第一次)。⛔ n=3 **不是频率估计**。
+    ⭐ 分支已同步 `906dbb23...14e72ea3`;**三个 commit(`ceac585a`/`cb6ee0a7`/`14e72ea3`)
+    经 `git merge-base --is-ancestor` 逐个复核,均为 `origin/main` 的祖先**。
   - **开工自检**:⚠️ 第一条命令**误接管道**被它自己挡住(`REFUSED: … stdout is a pipe; exit 2,
     nothing checked`,**它自己记这是第 5 次复发**);改重定向后一次跑成,⛔ **没套 `timeout`**。
     `legs run 13`,**`selfcheck worst exit: 3`**,
