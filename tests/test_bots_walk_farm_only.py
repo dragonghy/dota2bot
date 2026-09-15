@@ -122,6 +122,16 @@ UNRESOLVED_HAND_READ = {
         "False` and the desk that reddens it is told `py gate: 84 ran, 0 "
         "findings` and pushed. Registered under GH #806, which is the same "
         "defect on the Lua leg",
+    """tests/test_axe_cull_blade_mail.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:79-:80, :102) and keeps only "
+        "names ending .lua; plain `ls` is NOT recursive, so it never reaches "
+        "bots/Customize/. Hand-read AND REGISTERED IN THE SAME WORK UNIT "
+        "2026-09-15 (hero desk, axecullbm round) -- which is what GH #803 asked "
+        "this desk for after the liondrainreach and cmcreepclock entries above "
+        "were both read by somebody else. The registration cost is one entry; "
+        "the alternative, twice measured, is a trunk red found by the next desk "
+        "to start work",
     """tests/test_cm_w_creep_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:72-:73, :120) and keeps only "

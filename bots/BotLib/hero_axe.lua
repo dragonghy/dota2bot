@@ -1656,6 +1656,146 @@ function X.CullKillThreshold( nSkillLV )
 end
 
 
+--- Blade Mail's Damage Return share, as a FRACTION.  RECORDED KV read, and the
+--- word RECORDED is load bearing: there is no in-repo cross-check for it,
+--- because tests/mock/special_value_shapes.lua snapshots HERO ability KV only
+--- and `item_blade_mail` is not in this tree at all.  Read 2026-09-15 from the
+--- d2vpkr mirror (dota/scripts/npc/items.txt, "item_blade_mail"):
+---     "duration" "5.5"   "passive_reflection_constant" "10"
+---     "passive_reflection_pct" "15"   "active_reflection_pct" "85"
+--- `modifier_item_blade_mail_reflect` is the ACTIVE modifier -- the 5.5s one --
+--- so 85 is the share that applies on every frame the guard below can see it.
+--- A LIVE read (the enemy's own item handle -> GetSpecialValueInt) is NOT
+--- attempted on purpose: the fixture loader hands back item handles with no KV
+--- installed, so such a read answers 0 offline and its fallback would be the
+--- only path anything ever drove.  A constant that is watched beats a live read
+--- that is not.  Section 6 of tests/test_axe_cull_blade_mail.lua pins this
+--- literal against the KV line quoted above.
+local nCullReflectShare = 0.85
+
+
+--- Soak candidate `axecullbm` (turbo-only, INERT until armed).  GH #833.
+---
+--- ⛔ THIS HELPER NAMES EXACTLY ONE ID.  It must never be conjoined with
+--- `cullthresh`, `axecull` or `axecullreach`: a gate naming a sibling freezes
+--- FALSE the day the sibling is promoted (the `pullcad` trap) and
+--- check_armed_wiring.py still calls it WIRED.  Section 6 asserts the single
+--- id from the source.
+function X.IsCullReflectOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecullbm' )
+
+end
+
+
+--- Would Culling this target's Damage Return kill Axe?  The last conjunct of
+--- X.ConsiderR's execute loop.  Unarmed it returns false on every frame, so the
+--- loop is byte-for-byte the shipped one until somebody arms `axecullbm`.
+---
+--- THE RULING THIS RESTS ON, BOUGHT 2026-09-15 AND NOT ASSUMED.  GH #833 filed
+--- the gap -- the execute loop asks seven vetoes and none of them is Blade Mail,
+--- while hero_windrunner.lua and hero_primal_beast.lua both ask it -- but
+--- refused to call it a defect, because it hangs on whether the kill below the
+--- threshold is a reflectable damage instance, and it said that question could
+--- not be settled offline.  ⭐ IT DISSOLVES RATHER THAN RESOLVING: there is no
+--- kill-threshold branch to ask about.  `axe_culling_blade` carries no
+--- kill_threshold key at all -- not in the live KV (d2vpkr
+--- dota/scripts/npc/heroes/npc_dota_hero_axe.txt, read 2026-09-15: a grep for
+--- `kill` and for `threshold` over the whole hero file returns nothing) and not
+--- in this tree's own snapshot (tests/mock/special_value_shapes.lua
+--- ['axe_culling_blade'] holds AbilityCastPoint / AbilityCastRange /
+--- AbilityCooldown / AbilityManaCost / armor_bonus / armor_per_stack /
+--- charge_speed / damage / speed_aoe / speed_bonus / speed_duration and nothing
+--- else).  What the ability has is `damage` 275/375/475 at
+--- `AbilityUnitDamageType DAMAGE_TYPE_PURE`; the threshold mechanic was folded
+--- into that damage, which is what this file's own talent8 note has said since
+--- 2026-08-27 and what `cullthresh` exists to read.  So X.ConsiderR's health
+--- test is a LETHALITY PREDICATE OVER A PURE DAMAGE INSTANCE, not a
+--- kill-threshold branch, and an ordinary pure damage instance is reflected.
+--- ⇒ condition (c) holds, and it holds for a reason two independent sources
+--- agree on.
+---
+--- ⭐⭐ AND THE SIBLING PATTERN IS THE WRONG FIX HERE, which is the sharper half.
+--- The three block/reflect vetoes already in X.HasSpecialModifier
+--- (modifier_antimage_spell_shield, modifier_item_lotus_orb_active,
+--- modifier_item_sphere_target) all stop the cast from killing anything: the
+--- spell is eaten and the 80s cooldown buys nothing, so refusing is free.  Blade
+--- Mail is NOT that family -- the cull still lands and the target still dies;
+--- what Axe pays is health.  Copying windrunner's and primal_beast's blanket
+--- `not HasModifier('modifier_item_blade_mail_reflect')` into this loop would
+--- throw away a certain hero kill every time an enemy had popped the item, and
+--- those two call sites are ordinary damage and initiation rather than an
+--- execution, so their line does not transfer.  This lever therefore vetoes
+--- ONLY the frames where the return kills Axe.
+---
+--- WHAT ARMED DOES, and why THIS bound rather than a bigger one.  The one thing
+--- the KV cannot settle is the MAGNITUDE: Damage Return is 85% of damage taken,
+--- and whether a lethal blow's excess counts as taken is a C++ question no
+--- offline stand can answer.  So the return lies somewhere in
+---     [ 0.85 * target health , 0.85 * the damage instance ]
+--- and the LOWER end is true under BOTH readings.  The guard uses the lower end
+--- -- `bot:GetHealth() <= 0.85 * npcEnemy:GetHealth()` -- so it fires only where
+--- Axe dies whichever reading is right, and the unresolved mechanism never
+--- leaks into the lever.  ⚠️ The price of that choice is stated rather than
+--- hidden: under the damage-instance reading there are further frames where Axe
+--- also dies (return up to 0.85 * nKillDamage, i.e. up to 403 at rank 3) and
+--- this lever deliberately leaves every one of them alone until somebody buys
+--- the mechanism.  It is the narrow half of the defect on purpose.
+---
+--- ⛔ DIRECTION.  Armed adds a conjunct to a loop that already has seven, so the
+--- armed target set is a subset of the shipped one and this lever can only ever
+--- DELETE a Culling order, never add one.  A negative wave reads "the deleted
+--- culls were worth more than Axe's life" and NEVER "N reflects were survived":
+--- no offline stand, and no counter, can price a death that did not happen.
+--- Direction is guaranteed by SHAPE, not by today's numbers.
+---
+--- ⚠️ HONEST BOUNDS, four:
+---   1. THE DECISION DOMAIN ON THIS CORPUS IS ZERO, measured this round and not
+---      inherited: 142 frames / 1420 hero rows, 23 rows holding blade_mail, 3
+---      rows carrying an ACTIVE modifier_item_blade_mail_reflect in 2 files, and
+---      NOT ONE of them below a cull threshold.  Section 2 drives that census.
+---      ⭐ What the corpus does carry, and what GH #833's own scan missed by
+---      looking only in tests/fixtures/, is a real frame with BOTH operands:
+---      tests/frames/f_260831_061811_axe_call_tp_channel.lua t=1209.9 has Axe
+---      (rank-2 Culling, cooldown 0) and a Bristleback with an active reflect
+---      190.2u away -- INSIDE the shipped 375 pool, one conjunct short of this
+---      guard.  The supply is real and the instrument reads it; the frequency is
+---      not measured here and no number is claimed for it (queue.json hero-89).
+---   2. THE 0.85 IS A RECORDED KV READ with no in-repo cross-check -- see
+---      nCullReflectShare above.  Do not quote it as verified.
+---   3. THE RETURN IS ASSUMED TO REACH AXE UNREDUCED.  If the engine applies a
+---      resistance to it, the guard can veto a cull Axe would have survived.
+---      That error is in the DELETE direction, which bound 1's shape already
+---      covers, and it cannot make the guard miss a death.
+---   4. "THE ORDER IS DELETED" IS NOT "AXE LIVES".  A declined frame falls
+---      through to X.ConsiderQ and X.ConsiderW, which may fire; and the fixture
+---      world answers 0 for those (their mode predicates are structurally
+---      false, tests/test_axe_cull_reach.lua section 9).  "Armed Axe casts
+---      fewer spells" is NOT a prediction of this lever.
+function X.IsCullReflectLethal( npcEnemy )
+
+	if not X.IsCullReflectOn()
+	then
+		return false
+	end
+
+	if npcEnemy == nil or not npcEnemy:HasModifier( 'modifier_item_blade_mail_reflect' )
+	then
+		return false
+	end
+
+	local nSelfHealth = bot:GetHealth()
+	local nTargetHealth = npcEnemy:GetHealth()
+	if type( nSelfHealth ) ~= 'number' or type( nTargetHealth ) ~= 'number'
+	then
+		return false
+	end
+
+	return nSelfHealth <= nCullReflectShare * nTargetHealth
+
+end
+
+
 function X.ConsiderR()
 
 
@@ -1703,6 +1843,11 @@ function X.ConsiderR()
 			and ( not npcEnemy:IsMagicImmune() or X.IsCullPierceOn() ) --V BUG (see X.IsCullPierceOn)
 			and not X.HasSpecialModifier( npcEnemy )
 			and not X.IsKillBotAntiMage( npcEnemy )
+			-- soak candidate `axecullbm` -- see X.IsCullReflectLethal above.  It
+			-- returns false on every frame while unarmed, so this conjunct is a
+			-- no-op until somebody arms it.  It is placed LAST so the shipped
+			-- conjuncts keep their order and their short-circuit cost.
+			and not X.IsCullReflectLethal( npcEnemy )
 		then
 			hCastTarget = npcEnemy
 			sCastMotive = 'R-击杀'..J.Chat.GetNormName( hCastTarget )
