@@ -28,8 +28,57 @@
 --     is observation: two more frames with Battle Hunger live (and Call still
 --     not) put it at 18 < 7 * 2.72.  So a red here means the bot's behaviour
 --     moved, which is exactly what the pin is for.
+--     ⛔ DEMOTED 2026-09-15, NOT DELETED (registered numbers are demoted, never
+--     removed).  "at these ranks" is doing work the sentence then drops: the
+--     "NEVER" is derived on a Call rank 3 / Hunger rank 4 frame and stated
+--     unconditionally.  It is FALSE at Call rank 4.  See the block below, which
+--     replaces the prose with a per-rank table the test actually evaluates.
 --   * The structural half (section 2) is untouched by any of this: it reads the
 --     datafeed and the build row, not the corpus.
+--
+-- RE-TAKEN 2026-09-15, VERDICT UNCHANGED, and the re-take found the sentence
+-- above to be rank-conditional.  tests/fixtures/f_20260909_212625_lion_235.lua
+-- is the 29th live-Axe frame and the 19th carrying modifier data; it arrived
+-- with the replay-check stream's own work, nobody touched this file, and it
+-- turned two equalities red.  The re-read, again not a bump:
+--   * THE NEW FRAME IS DRY, like the two before it -- but it is NOT the same
+--     shape.  Axe is at level 4, Call rank 1 / Hunger rank 1, so it adds
+--     0.1167 of Call ceiling and 0.60 of Hunger ceiling where the 2026-08-28
+--     pair added 0.1929 and 1.00.  call_ceiling 2.33 -> 2.45, hunger_ceiling
+--     16.00 -> 16.60, hunger_live and call_live again unmoved at 5 and 1.
+--   * The health reading SURVIVES, with slightly less room again.  Call
+--     realises 1/2.45 = 41% of its own ceiling (was 43%); Battle Hunger
+--     realises 5/16.60 = 30% (was 31%).  The ratio between the two shares is
+--     1.36x (was 1.37x, and 1.44x on 2026-08-28).
+--   * ⭐⭐ THE CORRECTION, and it is arithmetic on the datafeed, not a reading.
+--     Per DRY modifier-carrying frame added at (Call rank c, Hunger rank h),
+--     the margin `call_live * hunger_ceiling - hunger_live * call_ceiling`
+--     moves by `ceil_H(h) * call_live - ceil_C(c) * hunger_live`, i.e. by
+--     `ceil_H(h) - 5 * ceil_C(c)` while the two observed counts stand at 1 and
+--     5.  That is +0.017 at (1,1) -- the frame that actually arrived, and the
+--     thinnest positive rung on the ladder -- +0.217 at (1,2), +0.417 at (1,3)
+--     and (1,4), +0.036 at (3,4) which is the rung the 2026-08-28 note was
+--     derived on, and **-0.250 at (4,4)**.  Call rank 4 is the only negative
+--     rung and it is not hypothetical: ceil_C(4) = 3.0/12 = 0.25, so
+--     5 * 0.25 = 1.25 exceeds Hunger's ceiling of 1.00 no matter what Hunger
+--     does, because Hunger is already capped at "live continuously" from rank
+--     3 up while Call keeps climbing.  Today's margin is 16.60 - 12.23 = 4.37
+--     => EIGHTEEN dry Call-rank-4 frames would flip the direction.
+--   * ⭐ WHY IT HAS NOT BITTEN YET, stated because it is a fact about the
+--     corpus and not about the claim.  Call reaches rank 4 at hero level 16 on
+--     this build row -- ABOVE the t15 talent, i.e. exactly the in-domain frames
+--     tests/test_axe_t15_in_domain.lua went looking for.  That file's level-21
+--     Axe reads Call 3 / Hunger 4 only because nobody on that frame had spent
+--     the 16th point (its own ⚠️ says so).  So "corpus growth can never flip
+--     it" survives today on the ability-point stall, not on the arithmetic --
+--     and the ability-point stall is itself an open defect (GH #822).
+--   * ⚠️ WHAT THIS DOES AND DOES NOT PUT AT RISK.  Section 3's direction is
+--     CORROBORATION; the verdict rests on section 2, which reads the datafeed
+--     and the build row and cannot be moved by any number of frames.  A flip
+--     here would reopen the corroboration, not the verdict -- but it would do
+--     so silently if the "NEVER" had been left standing, which is the whole
+--     reason this block exists.  Section 3's fourth test now evaluates the
+--     per-rank table above rather than restating it in prose.
 --
 -- THE RULER (the one the other four pairs were decided with): payoff
 -- REACHABILITY.  Not "which single payout is bigger" but "how much of the game
@@ -419,13 +468,13 @@ tests['[hero] axe t15 corpus: Battle Hunger is live on 5 axe frames, Call armor 
     -- corpus_scale.ratchet: here a frame that arrives without an observation
     -- moves the ceiling underneath the verdict, so growth is not free and has to
     -- raise a hand.  Re-baselined 2026-08-28; see the RE-TAKEN block at the top.
-    assert(CORPUS.axe_frames == 28,
-        'the corpus now holds ' .. CORPUS.axe_frames .. ' live-Axe frames, not 28. '
+    assert(CORPUS.axe_frames == 29,
+        'the corpus now holds ' .. CORPUS.axe_frames .. ' live-Axe frames, not 29. '
         .. 'The t15 reading is a count over exactly these frames -- re-take it '
         .. '(this test does the counting; just update the three numbers together).')
-    assert(CORPUS.axe_frames_with_modifiers == 18,
+    assert(CORPUS.axe_frames_with_modifiers == 19,
         'modifier data now covers ' .. CORPUS.axe_frames_with_modifiers
-        .. ' of the Axe frames, not 18.  That is the denominator of both counts below.')
+        .. ' of the Axe frames, not 19.  That is the denominator of both counts below.')
     assert(CORPUS.hunger_live == 5,
         'Battle Hunger is live on ' .. CORPUS.hunger_live .. ' Axe frames, not 5.')
     assert(CORPUS.call_live == 1,
@@ -439,19 +488,88 @@ tests['[hero] axe t15 corpus health: Call is near its ceiling, Battle Hunger is 
     -- GH #115: a small count has to be readable.  Call being live on 1 of 18
     -- frames is not the bot neglecting it -- summed over the ranks these frames
     -- actually held, Call could not have been live on much more than 2.
-    assert(math.abs(CORPUS.call_ceiling - 2.33) < 0.05,
+    assert(math.abs(CORPUS.call_ceiling - 2.45) < 0.05,
         'the summed Berserker\'s Call uptime ceiling over the modifier-carrying '
         .. 'Axe frames is now ' .. string.format('%.2f', CORPUS.call_ceiling)
-        .. ', not ~2.33.  This is the number that makes "live on 1 frame" read as '
+        .. ', not ~2.45.  This is the number that makes "live on 1 frame" read as '
         .. 'SATURATED rather than as NEGLECTED.')
-    assert(math.abs(CORPUS.hunger_ceiling - 16.00) < 0.05,
+    assert(math.abs(CORPUS.hunger_ceiling - 16.60) < 0.05,
         'the summed Battle Hunger uptime ceiling is now '
-        .. string.format('%.2f', CORPUS.hunger_ceiling) .. ', not ~16.00.')
+        .. string.format('%.2f', CORPUS.hunger_ceiling) .. ', not ~16.60.')
     assert(CORPUS.call_live / CORPUS.call_ceiling > CORPUS.hunger_live / CORPUS.hunger_ceiling,
         'the direction that settled t15 has reversed.  It was: Call realises a '
         .. 'LARGER share of its (tiny) ceiling than Battle Hunger does of its '
         .. '(large) one -- so the gap between them is not slack the bot could '
         .. 'take up by casting Call more, it is the ceiling itself.')
+end
+
+--- The per-rank table the 2026-09-15 header block replaces the old "corpus
+--- growth can NEVER flip it" sentence with.  It is EVALUATED rather than
+--- restated, because the sentence it replaces was true of the rung it was
+--- derived on and false one rung up, and prose has no way to raise a hand about
+--- that.  The rungs are driven out of this file's own build row (the same
+--- skillmap the structural half uses), not hand-listed, so re-pointing a handle
+--- or re-ordering the build moves this table with it.
+tests['[hero] axe t15 corpus health: which added frames move the direction, per rank'] = function()
+    local nMargin = CORPUS.call_live * CORPUS.hunger_ceiling
+        - CORPUS.hunger_live * CORPUS.call_ceiling
+    assert(nMargin > 0,
+        'the corroborating direction is already flipped: margin '
+        .. string.format('%.2f', nMargin) .. '.  Section 3\'s previous test '
+        .. 'should have said so first; if it did not, the two disagree.')
+    assert(math.abs(nMargin - 4.37) < 0.05,
+        'the margin is now ' .. string.format('%.2f', nMargin) .. ', not ~4.37.  '
+        .. 'Re-take it together with the six counts above -- it is computed from '
+        .. 'exactly those and nothing else.')
+
+    -- Every (Call rank, Hunger rank) pair this build row can actually hold.
+    local tRungs, tSeen = {}, {}
+    for nLevel = 1, 25 do
+        local nCall, nHunger = ranks_at(nLevel)
+        if nCall > 0 and nHunger > 0 then
+            local sKey = nCall .. ',' .. nHunger
+            if not tSeen[sKey] then
+                tSeen[sKey] = true
+                tRungs[#tRungs + 1] = { call = nCall, hunger = nHunger }
+            end
+        end
+    end
+    assert(#tRungs >= 4,
+        'the build row now yields only ' .. #tRungs .. ' distinct (Call, Hunger) '
+        .. 'rank pairs over levels 1-25; the table below is not worth evaluating '
+        .. 'on fewer than four.')
+
+    -- A DRY modifier-carrying frame added at a rung moves the margin by
+    -- ceil_H(h) * call_live - ceil_C(c) * hunger_live.  Negative rungs are the
+    -- ones where corpus growth alone walks the direction toward a flip.
+    local tNegative = {}
+    for _, r in ipairs(tRungs) do
+        local nStep = ceiling(HUNGER, r.hunger) * CORPUS.call_live
+            - ceiling(CALL, r.call) * CORPUS.hunger_live
+        if nStep < 0 then
+            tNegative[#tNegative + 1] = { call = r.call, hunger = r.hunger, step = nStep }
+        end
+    end
+
+    assert(#tNegative == 1,
+        #tNegative .. ' rungs of the ladder now move the margin DOWN, not 1.  '
+        .. 'The 2026-09-15 block names exactly one (Call rank 4); if the count '
+        .. 'moved, the observed counts 1 and 5 moved with it and the whole '
+        .. 'sensitivity block has to be re-derived, not patched.')
+    assert(tNegative[1].call == 4,
+        'the rung that moves the margin down is now Call rank ' .. tNegative[1].call
+        .. ', not rank 4.  The block above rests on ceil_C(4) = 3.0/12 = 0.25 '
+        .. 'against Battle Hunger\'s ceiling being CAPPED at 1.00 from rank 3 up.')
+    assert(math.abs(tNegative[1].step + 0.25) < 0.005,
+        'the Call-rank-4 rung now moves the margin by '
+        .. string.format('%.3f', tNegative[1].step) .. ' per dry frame, not -0.250.')
+
+    -- The number the next reader actually wants: how much growth it would take.
+    local nFlip = math.floor(nMargin / -tNegative[1].step) + 1
+    assert(nFlip == 18,
+        'it now takes ' .. nFlip .. ' dry Call-rank-4 frames to flip the '
+        .. 'direction, not 18.  That is not a failure by itself -- it is the '
+        .. 'headroom the header block quotes, so update both together.')
 end
 
 tests['[hero] axe t15 corpus: the enemy-team filter is exercised, and INERT'] = function()

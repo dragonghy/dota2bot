@@ -22,6 +22,45 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-181. ✅ **⭐ 下一轮第一条命令(原文照抄,不要再当提醒写):**
+   `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "SELFCHECK_EXIT=$?"; tail -40 /tmp/sc.log`
+   —— 证据纪律 3 同形**第 16 次**,`-179`/`-180` 连着两轮把提醒放在 backlog 第一行**都没奏效**。
+   主体:`tests/test_axe_t15_payoff.lua` 语料重取(`-180` 交下来的第一件事)。
+   报告 `iterations/reports/hero/20260915T105533Z.md`;变异台 `tools/agent/mutstand_axe_t15_retake.sh`
+   **7/7 全杀**;新开 **GH #833**。**零 EC2 / 零 CE / 零 S3 读取。**
+   ⚠️ **P4.4 自评:本轮主体是 (ii) 不是 (i) —— `bots/` 没动**,四条候选逐条否掉见报告 §5。
+   - ⭐⭐ **「语料增长永远翻不了它」是分档条件的,而它是无条件写下的。** 08-28 那句
+     `16 + k > 11.65 + 0.965k ... true for every k` 是在 **Call rank 3 / Hunger rank 4**
+     那一档推出来的;逐档重推,每帧移动 `ceil_H(h) − 5·ceil_C(c)`:(1,1) **+0.017**、
+     (1,2) +0.217、(1,3)/(1,4) +0.417、(2,3)/(2,4) +0.250、**(3,4) +0.036**、
+     **(4,4) −0.250**。⇒ **Call rank 4 是唯一的负档**,因为 Hunger 从 rank 3 起
+     **已被「可以一直挂着」封顶**而 Call 还在爬。余量 `16.60 − 12.226 = 4.374`
+     ⇒ **18 帧 DRY 的 Call-rank-4 帧翻掉方向**。已**降级不删除**原句,并把表
+     **evaluate 进第 3 节第四条测试**(档位由出装行驱动,不手抄)。
+   - ⭐ **它没咬人是语料的事实不是那句话的功劳**:Call 在英雄 **16 级**到 rank 4(在 t15 之上),
+     而 `test_axe_t15_in_domain.lua` 那具 **21 级** Axe 读 Call 3 只因为**没人点第 16 点**
+     ⇒ 这条「NEVER」今天**站在技能点停摆(GH #822)上,不站在算术上**。
+   - ⚠️ **不许只引一半**:第 3 节是**佐证**,裁定站在第 2 节(datafeed + 出装行),
+     **帧搬不动它**。翻掉重开的是佐证不是裁定 —— 但留着那个「NEVER」会**悄悄地**重开。
+   - 六个数:`29 / 19 / 5 / 1 / 2.4452 / 16.60`。第 29 帧点名
+     `f_20260909_212625_lion_235.lua`(Axe **4 级**,Call r1 / Hunger r1),
+     **provenance 由变异台 M6 钉死**(挪开它必须打出「28 ... not 29」)。
+     健康读数存活:Call **40.9%** vs Hunger **30.1%**,两占比之比 **1.36x**。
+   - ⭐ **M1 与 M4 是同一条断言从两个输入被顶红**(datafeed / 出装行)—— 这一对才证明
+     那张表是驱动的。**M5 把 08-28 的盲区重新写成代码**(枚举只到 14 级)。
+     ⚠️ **M4 第一版 SURVIVED 是台子的错**:anchor 写成 `\ntAllAbilityBuildList`,
+     真实是 `local tAllAbilityBuildList`。
+   - **接力棒**:GH **#833**(新开)—— Axe 斩杀环七个 veto 里没有 Blade Mail,
+     **而 Axe 自己就买它**(19 个出装表买,语料 14 行持有 / 1 行 active reflect)。
+     ⛔ **本轮不落 gate**:斩杀线**以下**那一刀是不是可反弹的伤害实例,离线判不了,
+     而循环**只在斩杀线以下出价** ⇒ 争议点恰好落在唯一可达的那一侧。先买那条 KV 裁读。
+   - ⛔ **trunk red 不代修**:`test_fieldsip_atom_pricing`(**GH #814**,协同组,已 `known_red`)。
+     开工自检 `SELFCHECK_EXIT=3`,python 那条腿打 **UNCERTIFIABLE**(**不是通过**,本轮不引它)。
+   - **下一轮第一候选(只能当附带)**:把 `test_dead_numeric_local_census.lua` 的域从
+     「数字字面量局部」扩到「**getter 赋值局部**」—— 它已经在**同一个函数里**漏掉一个
+     (`hero_axe.lua` 三个 Consider 里 `nCastPoint` 全是死局部),漏法是结构性的。
+     ⚠️ **主体仍欠一条 `bots/`。**
+
 -180. ✅ **⭐ 下一轮第一件事:`tests/test_axe_t15_payoff.lua` 的语料计数重取**(28→29 live-Axe
    帧,**非本轮造成**,红因语料增长;它自己的报错写明修法「三个数一起重取」,本轮没顺手改
    是为了不让「本轮的红」与「语料的红」挤进同一个 commit)。
@@ -8001,6 +8040,46 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-15T10:55Z(报告 `iterations/reports/hero/20260915T105533Z.md`;**backlog:新开 `-181`**;
+  **零 EC2 / 零 CE / 零 S3 读取;`bots/` 未改 —— ⚠️ P4.4 自评 (ii) 不是 (i)**;
+  无新 gated id;新开 **GH #833**,无 issue 认领,无 queue 请求)
+  **主体:一条已登记裁定的敏感性条款是分档条件的,而它是无条件写下的。**
+  - ⭐⭐ `test_axe_t15_payoff.lua` 的 08-28 SENSITIVITY 句
+    (`16 + k > 11.65 + 0.965k ... true for every k -- corpus growth alone can NEVER flip it`)
+    里「**at these ranks**」做了全部的工作,然后那句话**把它丢掉了**。逐档重推:每加一帧
+    DRY 帧,余量移动 `ceil_H(h) − 5·ceil_C(c)` ⇒ (1,1) **+0.017** / (1,2) +0.217 /
+    (1,3)(1,4) +0.417 / (2,3)(2,4) +0.250 / **(3,4) +0.036**(那句话的推导档)/
+    **(4,4) −0.250**。**Call rank 4 是唯一负档**,因为 Hunger 从 rank 3 起已被封顶在 1.00
+    而 Call 还在爬(`ceil_C(4)=3.0/12=0.25`,`5×0.25=1.25 > 1.00`,与 Hunger 无关)。
+    余量 `16.60 − 12.226 = 4.374` ⇒ **18 帧就翻**。
+  - ⭐ **它没咬人靠的是技能点停摆不是算术**:Call 在英雄 **16 级**到 rank 4(**在 t15 之上**),
+    而 `test_axe_t15_in_domain.lua` 那具 **21 级** Axe 读 Call 3 只因为没人点第 16 点
+    (该文件自己的 ⚠️ 已写)⇒ 这条「NEVER」今天站在 **GH #822** 上。
+  - ⚠️ **动摇的是佐证不是裁定**(第 2 节读 datafeed + 出装行,帧搬不动)——
+    **但留着那个「NEVER」它会悄悄地重开**,这才是处置的理由。原句**降级不删除**,
+    表 **evaluate 进新的第四条测试**,档位由出装行驱动不手抄。
+  - 六个数重取:**29 / 19 / 5 / 1 / 2.4452 / 16.60**;第 29 帧
+    `f_20260909_212625_lion_235.lua`(Axe **4 级**,Call r1/Hunger r1,**不是** 08-28 那两帧的
+    r3/r4 形状)。健康读数存活:Call **40.9%** vs Hunger **30.1%**(比 **1.36x**)。
+  - 验证:`axe_t15_payoff` **14 绿**;`run_tests.lua axe` **283 绿 0 红**;
+    变异台 `mutstand_axe_t15_retake.sh` **7/7**。⭐ **M1/M4 是同一条断言从 datafeed 与
+    出装行两个输入被顶红**(这一对才证明表是驱动的);**M5 把 08-28 的盲区写成代码**
+    (枚举只到 14 级);**M6 钉 provenance**(挪开那份 fixture 必须打「28 ... not 29」)。
+    ⚠️ **M4 第一版 SURVIVED 是台子的错**(anchor 少了 `local`)。
+  - **接力棒 GH #833**:Axe 斩杀环七个 veto 里**没有 Blade Mail**,而 **Axe 自己就买它**
+    (19 个出装表买;语料 1120 hero row 里 **14** 行持有、**1** 行 active reflect)。
+    ⛔ 本轮**不落 gate**:斩杀线**以下**那一刀是否可被 Damage Return 反弹,离线判不了,
+    而循环**只在斩杀线以下出价** ⇒ 争议点落在唯一可达的那一侧,(c) 现在只有「别的文件都问了」。
+  - ⛔ **四条 `bots/` 候选逐条否掉**(报告 §5,免得重走):`axecullpoint`((c) 不成立 +
+    两堵仪器墙,fixture 无 `hp_regen` ⇒ 字节级 no-op)、illusion 换 `IsIllusion()`(方向反了,
+    modifier 才是可测的那条)、Linken `modifier_item_sphere`(**没有 bot 买 sphere**,域结构性 0)、
+    CM 三 gate 缺 turbo(**读错了**,函数第一句就是 `if not J.IsModeTurbo()`)。
+  - ⭐ **顺带钉下、交下一轮**:`hero_axe.lua` 三个 Consider 里 `nCastPoint` **全是死局部**
+    (`:750`/`:1267`/`:1673`),而 2026-09-03 抓到同函数 `nRadius = 600` 的那份普查**看不见它**
+    —— `test_dead_numeric_local_census.lua` 只看**数字字面量**赋值。**漏法是结构性的。**
+  - ⛔ **trunk red 不代修**:`test_fieldsip_atom_pricing`(**GH #814**,协同组,`known_red`)。
+    `SELFCHECK_EXIT=3`;python trunk-red 腿打 **UNCERTIFIABLE**(**不是通过**)。
+  - ⚠️ **证据纪律 3 第 16 次同形**:开工第一条命令又用管道。`-181` 不再写提醒,**写命令原文**。
 - 2026-09-15T07:52Z(报告 `iterations/reports/hero/20260915T075234Z.md`;**backlog:新开 `-180`**;
   **零 AWS、零波次;`bots/` 改了 —— P4.4 (i)**;新 gated id **`zusultd`**,
   登记 `state.json:zusultd_20260915`,请求 `queue.json:hero-88`;无 issue 认领)
