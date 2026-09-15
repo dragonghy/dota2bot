@@ -601,12 +601,66 @@ function X.IsMissing(nRune)
 	return false
 end
 
+-- [strategy 2026-09-15] Soak candidate 'runecamp' (turbo-only). ONE token
+-- changes: where this guard's CANDIDATE SET comes from. Every clause of the
+-- loop below is untouched.
+--
+-- THE ASYMMETRY. Every clause this guard tests is anchored on the RUNE
+-- (`IsFacingLocation(vRuneLocation, 30)`, `dist(enemy, rune) < 600`,
+-- `dist(enemy, rune) < dist(bot, rune) + 300`), but the set it tests them on is
+-- anchored on the BOT: `nEnemyHeroes` is `bot:GetNearbyHeroes(1600, true, ...)`
+-- from GetDesire. So the guard asks a question about the rune and looks for the
+-- answer around itself.
+--
+-- THE DOMAIN THAT LEAVES, derived rather than asserted. An enemy that could
+-- satisfy the conjunction lies within `dist(bot, rune) + 300` of the rune; an
+-- enemy actually STANDING on the rune is therefore `dist(bot, rune)` away from
+-- the bot. With the early return above (`< 600` -> false) this guard can see a
+-- rune-camper only while `600 < dist(bot, rune) <= 1600` -- a 1000u annulus --
+-- while the desire it guards is scaled out to 3500u (bounty) and
+-- `nProximityRadius * 2.5` = 4000u (power). Past 1600u the ambush the comment
+-- in GetDesire names ("prevents bots from walking into 5-man ambushes at rune
+-- spots") is invisible BY CONSTRUCTION, and it is invisible precisely when the
+-- walk is longest.
+--
+-- PRICED ON THE CORPUS (112 fixtures / 1039 live hero frames,
+-- tests/test_runecamp_contest_source.lua): 4034 of 4840 ordered live
+-- cross-team hero pairs -- 83.3% -- stand more than 1600u apart, and on 521 of
+-- the 1039 subject frames (50.1%) EVERY live enemy is beyond 1600u, i.e. this
+-- guard's candidate list is empty before a single clause runs.
+--
+-- ARMED, the set becomes the conjunction's OWN domain: enemies within
+-- `dist(bot, rune) + 300` of the rune, which is the exact bound the last clause
+-- already tests. No clause is relaxed, no constant is invented, and nothing
+-- that fails today starts passing on geometry alone.
+--
+-- NO FOG IS BOUGHT, and that is structural, not a promise: the first clause of
+-- the unchanged loop is `J.IsValidHero(enemy)`, which is
+-- `utils.IsValidUnit` -> `CanBeSeen()`. A candidate the team cannot see is
+-- dropped by the loop whichever set it came from. J.GetEnemiesNearLoc applies
+-- the same J.IsValidHero again on its way out.
+--
+-- DECLARED CONSEQUENCES, both stated because they are the price:
+--   * J.GetEnemiesNearLoc also drops Meepo clones and Arc Warden's tempest
+--     double, which the bot-centric list does not. Armed, one of those parked
+--     on a rune no longer counts as a claimant. (Suspicious illusions are
+--     already dropped by the loop's own second clause, so that half is a
+--     no-op.)
+--   * The change is one-directional: armed, the candidate set is a superset of
+--     the shipped set restricted to what the clauses can accept, so this guard
+--     can only ever refuse MORE runes, never bid for one it refuses today.
 function X.IsEnemyPickRune(nRune)
 	local vRuneLocation = GetRuneSpawnLocation(nRune)
 
 	if GetUnitToLocationDistance(bot, vRuneLocation) < 600 then return false end
 
-	for _, enemy in pairs(nEnemyHeroes) do
+	local tRuneContest = nEnemyHeroes
+	if J.IsModeTurbo() and J.IsSoakCandidate('runecamp') then
+		tRuneContest = J.GetEnemiesNearLoc(vRuneLocation,
+			GetUnitToLocationDistance(bot, vRuneLocation) + 300)
+	end
+
+	for _, enemy in pairs(tRuneContest) do
 		if J.IsValidHero(enemy)
 		and not J.IsSuspiciousIllusion(enemy)
 		and (enemy:IsFacingLocation(vRuneLocation, 30) or GetUnitToLocationDistance(enemy, vRuneLocation) < 600)

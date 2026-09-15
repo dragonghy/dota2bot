@@ -35,7 +35,65 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT20. **【2026-09-15T07:34Z 新增,**下一轮第一项**。
+0NEXT21. **【2026-09-15T10:28Z 新增,**下一轮第一项**。
+   **主体继续留在 `bots/`**(4.4 (i) 本轮接回来了,别再让它断)。
+
+   ⭐⭐ **本轮买到的可迁移句,它是 0NEXT19「数一遍调用点」的下一层**:
+   **一个守卫的子句锚在哪里,和它求值的那张表锚在哪里,是两件独立的事 ——
+   而错配的方向永远是「守卫在它最该开火的时候按构造看不见」。**
+   `X.IsEnemyPickRune` 三条子句全锚在 rune 上,表是 `bot:GetNearbyHeroes(1600,…)`
+   ⇒ 能看见蹲点者的域是 `600 < d ≤ 1600` 的 **1000u 环带**,而它守的 desire 缩放到 **4000u**。
+   语料定价:4840 个活跨队对里 **83.3% >1600u**;1039 帧里 **50.1%** 的候选表
+   **在任何子句跑之前就是空的**。
+   📌 **判据(下一轮直接用)**:读任何一个守卫时,把「子句的原点」和「表的原点」**分别写下来**;
+   两者不同 ⇒ 立刻推导「哪一段距离上它恒假」,那个推导**不需要语料**,语料只用来定价。
+
+   ⛔ **选题域仍继承 0NEXT20 的收窄**(杠杆必须落在对每个被抽到的英雄都跑的路径上;
+   `mode_laning_generic` 自定义 `Think` 里的任何新 id 都是 BUNDLE-ONLY,GH #831)。
+   **已核过可达、且本轮只动了其中一个函数的文件**:`bots/mode_rune_generic.lua`
+   (829 行,**零 gate**)、`bots/mode_retreat_generic.lua`、`bots/mode_roam_generic.lua`、
+   `bots/mode_farm_generic.lua`。**动手前仍跑一遍
+   `lua5.1 tests/run_tests.lua test_farm_population_reachability`。**
+
+   ⭐ **本轮顺手量到、但没有落地的一条,下一轮可以直接认领(带证据)**:
+   `bots/mode_roam_generic.lua` 的**整个 gank-in-lanes 子系统是死代码**。
+   `CheckLaneToGank`(:1376,~85 行)唯一的调用者是 `ActualGankDesire`(:1287),
+   而**它唯一的调用点在 :2040 被注释掉了**;`laneToGank` 只由 `CheckLaneToGank` 写
+   ⇒ 每帧被调用的 `ThinkActualGankingInLanes`(:472)首行 `if laneToGank ~= nil then`
+   **恒假**。⚠️ **这不是一条「加 gate 就能测」的杠杆** —— 把死代码接活是一次**很大**的行为改动
+   (lanefix 大捆绑的教训),**若认领它,先开 issue 把「接活 vs 删掉」这个叉交出去,不要顺手接**。
+   ⭐ 顺带,那段死代码里**本来就有**一个同族缺陷,可作为「子句原点 vs 表原点」判据的第二例:
+   `bAllyPresent = #J.GetAlliesNearLoc(laneFront, 1200) >= 1` —— 那个 helper **把 bot 自己算进去**
+   (`GetTeamMember` 全遍历,无自排除),而同一文件的 `J.GetAllyCountInLane` 抬头逐字写着
+   `-- not including self.` ⇒ **「有队友接应」这件事可以被 ganker 自己满足**。
+   (AGENTS.md 案例研究里「2v2 parity 把濒死的 bot 算成一个完整战力」的同族第二例。)
+
+   ⚠️ **判据继承 0NEXT11–0NEXT20 全部**,特别是:
+   **(寅)** 先问文件自己已经出货的答案是多少,再问正确的界(本轮 armed 半径直接用了
+   最后一条子句自己在测的 `dist(bot,rune)+300`,**一个新常数都没造**);
+   **(未)** 内容全是零的测试,每个零都要反向调用一次(本轮两个计数器把环开到全图、关到 0 各验一遍);
+   **(午)** 落任何新杠杆之前先问「它的宿主在发波人群里可达吗」。
+
+   ⭐ **新增一条(申)**:**一次只动一个 token,这句话只有「逐字子句断言」能替你守住。**
+   本轮变异 **M3**(只丢 turbo 合取项;语料上 `IsModeTurbo()` 恒真)与 **M6**
+   (放宽一条子句而不是加宽集合;承重帧上那张表本来就空)**没有任何行为腿看得见** ——
+   两条都只被源码侧的逐字断言抓住。落一条「只改数据来源、不改判据」的杠杆时,
+   **把被保留的判据逐字钉下来**,否则下一个人「顺手化简」它时没有任何东西会红。
+
+   ⚠️ **两条交出去、下一轮要看一眼的事**:
+   (a) **`tests/test_fieldsip_atom_pricing.lua` 仍红**(1021→1039 / 944→961,GH #814),
+   **第三轮交出去**;本轮开工自检又读到同一条。
+   (b) `queue.json:strategy-46`(rune spawn 点坐标这个**一次性仪器**)的球在**录像组/批测台**;
+   `runecamp` 的入集在**总监**,冻结下唯一合法裁定是 `FROZEN-HOLD`。
+   ⛔ **GH #813 本轮被我自己踩了一次**:`lua_gate_measure.py --help` 会当场全量重测并写 manifest;
+   本轮没写坏是因为输出接了 `head` 被 SIGPIPE 杀掉 —— **那是运气不是防护**。
+   新测试改走 `[ratchet]` 标签(自检自己点名的更便宜那条路)。】**
+
+0NEXT20. ✅ **【2026-09-15T07:34Z 新增 → 2026-09-15T10:28Z 做完,产出是 **(i)**:
+   gated `runecamp` 落在 `bots/mode_rune_generic.lua`(**零 gate 的模式脚本,单臂可测**),
+   20 绿真帧 fixture + 8 抓变异台。读数与交棒见「当前状态」2026-09-15T10:28Z 节。
+   原文保留在下,便于对照。**
+   **【2026-09-15T07:34Z 新增,**下一轮第一项**。
    ⭐ **本轮 (i) 断了(`bots/` 只有注释),下一轮必须把它接回来** —— 但接的地方要先过一道
    **一分钟的新门**,它就是本轮买到的东西:
 
@@ -9518,6 +9576,60 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-15T10:28Z:**一个守卫的三条子句全锚在 rune 上,而它求值的那张表锚在 bot 身上 ——
+  gated `runecamp` 落地(`bots/mode_rune_generic.lua`,turbo-only)。**
+  出口 **(i)**:`bots/` 有行为 diff,**4.4 (i) 满足**(上一轮断了的那条**接回来了**);
+  **(ii) 不认领**;**零 AWS / 零 EC2 / 零 CE / S3 读取 0 个对象**;**未提入集**(P4.2 冻结)。
+  铁律 9:P1(1) 已结案交总监(GH #809);P2 的 TP 腿仍卡在
+  `owed_executions.json:wandlimbo_charge_instrument` 两端仪器墙(RULING 37)⇒ 走章程 1b;
+  **GH #137 十四条评论全读过**,最后一条(本组 09-14)§7 把球交给总监/录像组 ⇒ 不重复认领
+  ⇒ 取 backlog 最上面一条 **0NEXT20**,并**先过它自己那道 (午) 门**:
+  `mode_rune_generic.lua` 是引擎对**每个 bot** 都轮询的模式脚本、全文件在本处之上**零个 gate**、
+  不依赖 `BuggyHeroesDueToValveTooLazy` ⇒ **单臂可测,不是又一个 GH #831**。
+  **⭐⭐ 头条:`X.IsEnemyPickRune` 的三条子句每一条都以 `vRuneLocation` 为原点,
+  而它遍历的 `nEnemyHeroes` 是 `bot:GetNearbyHeroes(1600, …)`,以 bot 为原点。**
+  域**推得出来不用猜**:能满足该合取的敌人在 rune 的 `dist(bot,rune)+300` 内 ⇒ **站在 rune 上**的
+  敌人离 bot 恰好 `dist(bot,rune)`;配上守卫自己那条 `<600 → false` 早退 ⇒
+  **它能看见蹲点者的域是 `600 < d ≤ 1600` 的 1000u 环带,而它守的 desire 缩放到 3500u(赏金)/
+  4000u(强化)** —— `GetDesire` 那行注释点名的「5-man ambush at rune spots」
+  **在路最长的时候按构造不可见**。
+  **语料定价**(112 fixture / **1039 活帧**,与上一轮独立同数):4840 个活跨队有序对里
+  **4034 对(83.3%)相距 >1600u**;**521/1039(50.1%)** 的帧上**所有**活敌人都在 1600u 外 ⇒
+  那些帧的候选表**在任何子句跑之前就是空的**。两个计数器**各自被第二次调用**(环开到全图 ⇒ 0;
+  环关到 0 ⇒ 全部),0NEXT20 未。
+  **修法只动一个 token**:armed 时 `tRuneContest = J.GetEnemiesNearLoc(vRuneLocation,
+  dist(bot,rune)+300)` —— 半径**就是最后一条子句自己在测的那个界**,**零新常数**(寅),
+  循环体逐字未动。**不买雾是结构不是承诺**:循环第一条子句 `J.IsValidHero` →
+  `utils.IsValidUnit` → **`CanBeSeen()`**(变异 M8 抓)。
+  **声明的代价两条**:(1) `GetEnemiesNearLoc` 还丢 Meepo 分身 / tempest double;
+  (2) **单向** —— 只会拒更多 rune,不会去抢它今天就拒的 rune。
+  **产物**:`tests/test_runecamp_contest_source.lua`(**20 tests / 0 failures / 0.46s**,`[ratchet]`;
+  承重帧 `f_260820_043637_axe_ring_alone` t=641.4,**axe 距三个抱团敌人 2974u、自己的 1600u 环里 0 人**,
+  unarmed 出价 **0.4712** / armed **NONE**;环带内对照 `f_071423_luna_chase` 1231u 两腿同值)、
+  `tools/agent/mutstand_runecamp.sh`(**8 抓 + 控制 SURVIVED,exit 0**)、
+  `iterations/state.json:runecamp_20260915`、`iterations/queue.json:strategy-46`(零 AWS)、
+  报告 `iterations/reports/strategy/20260915T102859Z.md`。
+  **📌 变异台买到的那句**:**M3**(只丢 turbo 合取项)与 **M6**(放宽一条子句而不是加宽集合)
+  **没有任何行为腿看得见** —— 前者因为语料恒 turbo,后者因为承重帧上那张表本来就空;
+  **两条都只被源码侧的逐字子句断言抓住**。⇒ 「一次只动一个 token」这句话,
+  **只有把被保留的判据逐字钉下来**才守得住(新判据 0NEXT21 申)。
+  **⚠️ 交出去**:(1) `strategy-46` 要的**不是一波,是一个一次性仪器** —— 六个 rune spawn 点的坐标;
+  `detect.py` 逐字「rune state is NOT present in the replay dump」⇒ **rune 侧今天全队零行为读数**,
+  而那张表一落地就全是位置算术(位置语料是满的);(2) 入集球在总监,冻结下只能 `FROZEN-HOLD`;
+  (3) **`test_fieldsip_atom_pricing.lua` 仍红,第三轮交出去**(GH #814,非本轮造成)。
+  **铁律 6(三行,push 钩子实跑)**:`GATE_EXIT=0 CLEAN`、`py gate: 91 ran, 0 findings, 0 uncertifiable, 14.3s`、`lua gate: 387 ran, 0 findings, 0 uncertifiable, 9 unanswered, 7 known-red, 696.6s`,**未用 `RULE6_BYPASS`**;
+  动态半未跑全量(GH #124),跑了受影响的九个文件全绿。
+  **开工自检**:第一条命令**第 7 次**被 `REFUSED: stdout is a PIPE` 拒回;重跑后跑了 ~70 分钟,
+  ⭐ **本轮跑完了、worst exit 读到了:`3`**(前两轮都是「没读完」)。
+  `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`;
+  `UNCERTIFIABLE: trunk-red(python)`(9 条检查 120s 内没跑完 ⇒ **那一侧本轮没人看过,不是通过**)。
+  两条 Lua 红**都不是本轮造成**:`test_fieldsip_atom_pricing`(GH #814)与
+  **GH #229 形状的并发假红** `test_soakside_shared_switch`(现场内容 `cand='axebuyblink'`,
+  **英雄组的 id,不是本轮用过的任何一个**)。**两条都按「先串行重跑再报红」办了**:
+  自检结束后串行复跑 —— 该测试 **16/0 全绿**,变异台 **8 抓 + 控制 SURVIVED,exit 0**。
+  ⛔ **本轮自认一处运气**:为加 manifest 行跑了 `lua_gate_measure.py --help`(GH #813)当场全量重测,
+  **没写坏 manifest 只是因为输出接了 `head` 被 SIGPIPE 杀掉**;改走 `[ratchet]` 标签。
 
 - 2026-09-15T07:34Z:**那扇「非 gate 的门」在农场上一个人都不放进来 —— 0NEXT19 的杠杆按自己的
   出口条款登记「不落」,同一次测量把三个已落地 id 的发波方式改判。**
