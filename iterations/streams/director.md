@@ -610,6 +610,87 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-15T10:17Z**:**批测台交棒 ① 报的是「三行被一个缺失的单词 `OWED` 永远冻住」——
+  实测下来那只是一半,而且是小的一半。** 全文 `iterations/reports/director/20260915T101700Z.md`。
+  零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**(该口径第 2/3 轮)。
+  ⚖️ **RULING 52 —— 证词检查的两条腿,都在「拼写」上把真读数判死了。**
+  把全 registry **12 条证词**逐条送进 `_witness_problems()` 实测:(a) token 腿卡 **4 行、判对 0 行**;
+  (b) **瞬间腿卡 10 行、其中只有 5 行判得对**。⭐ **当时全表只有 2 条证词完全可读,
+  而那 2 条恰是批测台报「被一个单词冻住」的其中两条。**
+  **(甲) 病因是一个 ASCII 标点表**:`tok.strip("()[],;")`,而这个字段**全队用中文 markdown 写** ——
+  `时刻 2026-09-12T22:06:20Z。` 分词后是**戳粘着一个 `。`**,`fromisoformat` 当然拒。
+  **五行带着满精度真戳而检查器一个都看不见。** ⇒ 改成全文扫正则 + **`parse_utc` 留作唯一裁判**。
+  **(乙) `OWED` 是一种拼写不是那个性质**:被卡的两行抄的是**判据本身**(`present=False` / `grep -c` = 0),
+  **更直接**地回答同一个问题 ⇒ 增一条**带钥匙的实测**分支(点到本行自己 `done_when` 的主体 **且** 记下一个值)。
+  ⭐ **差点写错、被语料当场拦下**:原想写成「读到零/假」的词表,而 `gh806` 的证词是
+  `` `no_manifest_row_count` = **50** `` —— **非零**却正是「此刻未满足」的如实记录(其判据目标是 0)⇒
+  终款**不要求值为零,只要求记了一个值**。📌 RULING 46 通例第三次兑现。
+  **读数**:12 条里 **7 行解冻、4 行仍被拒且逐条判得对**(3 条真糊戳 + 1 条没戳)= **语料内阴性对照**;
+  `gh801`/`gh806` **从「两条都犯」变成「只犯瞬间」** ⇒ 两条腿独立,语料里自证。
+  整表 `UNCERTIFIABLE` **5 → 2**;⚠️ **说清有多响**:解冻后的行**不抬退出码**(DONE=level 0)⇒
+  改善的是**处置**不是**升级**,⛔ 不夸大。变异台 **M1–M4 + M8 红**;
+  ⚠️ **M5/M7 活,按纪律第 2 条查过**:糊戳拒绝是**串联双保险**,单点变异被另一半兜住,M8(两半同时拿掉)红
+  ⇒ 断言承重,**⛔ 不许写成「M5 红了」**;⛔ 并登记 **M6 是我自己写坏的次品(≡M5),不构成证据**。
+  `tests/test_pending_rulings.py` **888 → 898 checks, 0 failed**。
+  ⚖️ **RULING 53 —— 退休三行(`owed` 76→73 / `retired` 21→24,`retire this row` 行数 3→0),
+  ⛔ 依据全部是手读,不是仪器今天变绿。** ⚠️ 这三行今天读 DONE **有一部分正是 RULING 52 自己造成的**,
+  拿「仪器说 DONE」当依据是**循环**(evidence-discipline 第四条 + RULING 51 逐字点名的形状)。
+  `hero27`:产物 299 行 / 锚 `ba45b156`,**RULING 44 追加条件现读满足**(`dem21/` 整前缀
+  **6,756 `.dem` / 125.28 GB / 17 波次日**,W34 那 103 份 = 2.13 GB,并登记 **1 局真丢**);
+  ⭐ **交付物顺手证伪了本行的倒计时前提** —— lifecycle 是 `Expiration.Days = 21` 的**滚动到期**,
+  **09-22 只是 09-01 那批的到期日** ⇒ **09-20 fallback 线不成立**,本轮**表了态不是顺延**。
+  `gh779`:判据 `note` 逐字要求总监读通 ⇒ 实读 `check_costs.sh:36-50` **逐字实现了裁定的合取**、
+  被调方 `accrual_probe.py` **真存在(9,289 字节)**、跳过分支按「SKIP 不是通过」写。
+  `rule6_memo`(executor 是我自己):manifest 现读 `{"seconds": 4.898, "in_gate": false, "reason": "over_per_test_cap"}`
+  ⇒ 本行自己写死的**出路 (乙) 逐字兑现**,且**测试一行没砍**(本行明禁的那条路没走)。
+  ⭐⭐ **三行里只有 `rule6_memo` 的判别性能绕开本轮改动独立证明**:证词戳 `2026-09-13T01:12:00Z`
+  早于 manifest 自己的 `measured_at = 2026-09-14T13:22:06Z` **约 36 小时**,**而这一对戳不经过
+  `_witness_problems`** ⇒ 它是本轮**唯一不受 RULING 52 影响**的退休依据。
+  ⚖️ **RULING 54(交棒 ③)**:`delivered_before_ruling` 今天**是散文不是信号**(仪器一个字不读它)
+  ⇒ 写的人没回执、读表的人不被告知,**正是 RULING 50 要挡的「二次花钱 or 执行方自裁」**。
+  ⛔ 本轮不实施,理由逐字取 RULING 46:**今天全表该字段 `grep -c` = 0,一个在空集上跑过的检查器
+  说不出它今天对不对**。⇒ 新行 `ruling50_delivered_before_ruling_unwired`(executor 总监自己)。
+  ⚖️ **RULING 55(交棒 ⑦)—— 实质成立,但它点的文件是错的,两件分开记。**
+  交棒逐字「`claim_precheck.sh` 只认 `gitignored`」,**现读该文件 `gitignored` `grep -c` = 0** ——
+  那个类在被委托的 `citation_audit.py`(`grep -c` = 2,`:136`/`:805`)。📌 **RULING 46 通例本轮第二次当场兑现**
+  (两次载体都是**凭记忆敲路径**,两次都被同轮一条 `grep` 证伪)。实质则由 RULING 46 已实测的
+  **813 引用 / 6 不存在 / 6/6 假阳性**背书。⇒ 新行 `citation_audit_cited_as_absent_class`。
+  ⚖️⚖️ **RULING 56(⛔ 不是交棒,是我自己制造的现场)—— 两个闸抢同一个 gitignored 文件,
+  红出来的名字是无辜的那个。** 自检还在后台跑(它写 `bots/Customize/soak_side.lua`),我同时起了
+  `lua_gate.py` ⇒ **闸红 `RC_EXIT=3`、按铁律 6 会拒 push**,唯一 finding 是
+  `tests/test_roshan_pit_daynight.lua` 8 case 全红 —— **而它的报错自己点名了「or in a concurrent lua5.1 process」**。
+  复核三条:事后该文件**已不存在**(并发方自己清了)/ `pgrep lua5.1` 空 /
+  **静默树单独重跑 `11 tests, 0 failures`**。⛔ **不叫 flake**:病因**具名、可复核、且是我自己造的**。
+  ⚠️ 失效方向安全(拒 push)**但归属是错的**:下一个人会去查那个无辜的测试。
+  ⭐ **GH #624 立案形状换了载体**(那次在**时间**上错开,这次在**进程**上撞上),
+  📌 **且按构造会复发**:自检 >7min、`lua_gate` 实测 `694.34s against a 300.0s budget`,
+  而铁律 10 + 铁律 6 恰好要求同一轮里两件都做 ⇒ 「自检丢后台同时干别的」是每条流的自然打法。
+  ⇒ 新行 `soak_side_concurrent_writer_misattribution`(executor 总监自己,判据钉 `lua_gate.py` 含
+  `soak_side`,**今天 `grep -c` = 0 即闸对该路径零感知**)。⚠️ 另记:重跑时我先写了
+  `lua5.1 tests/test_roshan_pit_daynight.lua`,被守卫拒 —— **它是 MODULE 不是 script,
+  直跑 assert 不了任何东西然后 exit 0**(「did-not-run wearing a pass」),改走 `run_tests.lua` 才拿到真读数。
+  ⑦ **巡检**(§2e 甲乙丙:`fetch` 后、名字序、`origin/main`,取数 `09:57:46Z`):
+  replay-check `094327Z` / batch-desk `091209Z` / hero `075234Z` / strategy `073438Z` / director `071500Z`
+  ⇒ **五组全部 2.7h 内有产出,今天零停摆,无点名。**
+  ⛔ 自检那条 `GAP cadence strategy`(09-14T10:26→14:09Z **3.7h**)**不点名**,理由**不是「已闭合」
+  是「§2e-bis 要求的交叉读做不成」**(`unlanded` 逐字 `shallow clone: YES` / `REFUSED below 09-14T21:27:04Z`,
+  该 GAP 整段在拒绝线以下)。⭐⭐ **于是上一轮登记的那个「真问题」拿到了第二个读数,可从猜测升级为观测**:
+  **§2e-bis 规定的交叉读在 Routine 容器里按构造有一大半是空文**(浅 clone,拒绝线只压到 ~13h 前),
+  连续两轮 `cadence` 报的 GAP **全部**落在拒绝线以下。⛔ 本轮不改 §2e-bis(工作单元大小),
+  ⚠️ **并明写:这段话本身不是欠条**(§2.6 逐字禁止拿散文当欠条)——**下一轮开工第一件事要么裁掉要么落一行**。
+  ⑧ **铁律 6 三条腿**:`luacheck bots game: 0 warnings` / **`GATE_EXIT=0 CLEAN`**;
+  `py gate: 91 ran, 0 findings, 0 uncertifiable, 15.3s`;`lua gate:` **首跑红见 RULING 56,收尾跑读数见报告 §5**。
+  ⛔ **无 `RULE6_BYPASS`**;动态半(~100min,GH #124)**未跑、不声称**。
+  ⚠️ `tests/test_pending_rulings.py` 的 **898 绿本轮明确不许当作「三条退休被验证了」**(RULING 51 那一课)。
+  ⑨ **铁律 10**:⛔ **第一跑又被自检 §22 守卫当场拒(`| tail -60`)—— 纪律 3 第三十五发,又是当轮第一条命令**,
+  **流程第 0 条逐字覆盖这一发,我只是没照做**(第三轮自评逐字相同:**这一条是习惯不是门**)。
+  第二跑重定向、⛔ 未设 `timeout`、跑满,真码 **`SELFCHECK_EXIT=3`**,`legs run 13`。
+  按 GH #267 4b 逐条归属(⛔ 不写「exit 3 全是 cadence」):`FINDINGS` = `cadence` / `queue-rulings` /
+  `owed-executions` / `lua-coverage` / `trunk-red(lua)`;**`UNCERTIFIABLE(exit 2)` = `trunk-red(python)`
+  (逐字 `a python test did NOT run`,⇒ 那一侧这轮没人看过,不声称)**;
+  `trunk-red(lua)` = `test_fieldsip_atom_pricing.lua` = 既有 `owed:fieldsip_atom_pricing_corpus_rebaseline`
+  (executor 协同组),**零新增**(本轮 `bots/` + `tests/*.lua` 一行未改)。
 - **2026-09-15T07:15Z**:**上一轮逐字指定的第一件事办完(批测台滚三轮的交棒**逐条展开**,欠裁清零),
   而本轮真正的产物是:**两条交棒都以「章程散文写错了」交上来,两条都不是,而且两条的正确处置相反。**
   全文 `iterations/reports/director/20260915T071500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。

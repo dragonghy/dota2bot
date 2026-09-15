@@ -1404,6 +1404,87 @@ try:
           "the witnessed control stopped asking for retirement (level %d) -- "
           "the BORN-DONE assertions above would then be vacuous:\n%s"
           % (_lvl, _text))
+
+    # ---- RULING 52 (director 2026-09-15): the two SPELLINGS a readable
+    # witness may take.  Both halves were measured on all 12 witnesses in the
+    # registry that day; the four that stay refused there are the negative
+    # controls, and they are reproduced below as shapes.
+    #
+    # (甲) The instant was read by `text.split()` + `.strip("()[],;")` -- an
+    # ASCII punctuation list, against a field every stream writes in CJK
+    # markdown prose.  `时刻 2026-09-12T22:06:20Z。` tokenizes to a stamp glued
+    # to `。`, and FIVE of twelve rows carried a real full-precision instant
+    # the check could not see.  The failure direction is what makes this a bug
+    # rather than taste: UNCERTIFIABLE is neither a pass nor a red, so such a
+    # row is never retired, never escalated, and costs a round of attention
+    # forever.
+    for _wrapped in ("本行判据读 **OWED**,时刻 2026-09-12T22:06:20Z。",
+                     "读 OWED,时刻 `2026-09-13T01:12:00Z`(当场量)",
+                     "OWED at **2026-09-14T04:13:26Z**、复核无误"):
+        _st, _ = pr.owed_status(dict(_born, unmet_at_ruling=_wrapped),
+                                repo=_tmpdir)
+        check(_st == "DONE",
+              "a witness whose real instant is wrapped in CJK/markdown "
+              "punctuation read %s, not DONE -- the check is about whether the "
+              "text CARRIES a time, not about how it is quoted: %r"
+              % (_st, _wrapped))
+
+    # (甲) negative control, same wrapping: a FUZZED stamp is still not a time.
+    # Without this the widening above could have been "accept anything".
+    _st, _ = pr.owed_status(
+        dict(_born, unmet_at_ruling="读 OWED,时刻 `2026-09-13T16:xxZ`。"),
+        repo=_tmpdir)
+    check(_st == "UNCERTIFIABLE",
+          "a FUZZED stamp in CJK punctuation read %s -- RULING 52 (甲) widened "
+          "how a stamp may be QUOTED, not what counts as a time" % _st)
+
+    # (乙) `OWED` is the token this LEG prints.  A witness may instead quote
+    # the KEY ITSELF, which answers the same question more directly.  Accepted
+    # only when KEYED: it must name this row's own `done_when` subject AND
+    # record a value.  Note the value need not read zero/false -- the registry's
+    # `no_manifest_row_count` = 50 is a real unmet reading of a key whose
+    # target is 0.
+    for _keyed in ("2026-09-14T06:57:02Z 现读 `%s` `present=False`" % _art,
+                   "2026-09-14T06:57:02Z:`born.md` `grep -c` = 0",
+                   "2026-09-14T06:57:02Z,`born.md` 计数 = 50(目标 0)"):
+        _st, _ = pr.owed_status(dict(_born, unmet_at_ruling=_keyed),
+                                repo=_tmpdir)
+        check(_st == "DONE",
+              "a keyed measurement of this row's own criterion read %s, not "
+              "DONE: %r" % (_st, _keyed))
+
+    # (乙) negative control 1: a measurement that names SOMEBODY ELSE'S leg is
+    # not a reading of this row.  This is the assertion that keeps the widened
+    # branch from degenerating into "any text with an `=` in it".
+    _st, _ = pr.owed_status(
+        dict(_born,
+             unmet_at_ruling="2026-09-14T06:57:02Z 现读 `other_leg.json` = 0"),
+        repo=_tmpdir)
+    check(_st == "UNCERTIFIABLE",
+          "a measurement naming another row's subject read %s -- RULING 52 (乙) "
+          "accepts a KEYED reading, not any `=` at all" % _st)
+
+    # (乙) negative control 2: naming your own key while PROMISING rather than
+    # recording is the exact shape the `OWED` token was bought to refuse, and
+    # it must keep being refused.
+    _st, _ = pr.owed_status(
+        dict(_born,
+             unmet_at_ruling="2026-09-14T06:57:02Z 已确认 `born.md` 这条,没问题"),
+        repo=_tmpdir)
+    check(_st == "UNCERTIFIABLE",
+          "a promise that merely NAMES the key read %s -- a witness has to "
+          "record a value, not assert an outcome" % _st)
+
+    # The two legs stay independent, which is how the live registry read on
+    # 2026-09-15: `gh801_confirm_headroom_first_live_read` has a perfectly good
+    # keyed measurement AND a fuzzed stamp, and must stay refused on the stamp.
+    _st, _d = pr.owed_status(
+        dict(_born,
+             unmet_at_ruling="`born.md` `grep -c` = 0(2026-09-13T16:xxZ 当场量)"),
+        repo=_tmpdir)
+    check(_st == "UNCERTIFIABLE" and "ISO-8601" in _d,
+          "a keyed measurement with a fuzzed stamp read %s (%s) -- satisfying "
+          "one leg must not excuse the other" % (_st, _d))
 finally:
     shutil.rmtree(_tmpdir, ignore_errors=True)
 

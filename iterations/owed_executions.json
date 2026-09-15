@@ -1191,29 +1191,6 @@
       "unmet_at_ruling": "开这一行之前当场跑 `python3 tools/agent/pending_rulings.py --owed-only`(完整日志,**不是 rc.sh 的 40 行尾巴** —— 本轮先用那个尾巴读成「只有 1 行 DONE」,真值是 7),本行判据读 **OWED**(`tests/test_pending_rulings.py still contains 1 of 1 sentence(s) the ruling asked to be gone: 'BORN_DONE_INHERITED = 6'`),时刻 2026-09-12T22:25:00Z。"
     },
     {
-      "id": "rule6_memo_fast_gate_membership",
-      "issue": "本行由总监 2026-09-13T01:0xZ 开(推送钩子记忆化落地的连带债,全文档案 `test_set.md §HI`,GH issue 见 `delivered_to`)。**不是缺陷,是一笔今天靠 fail-open 兜住、下一次重测就会被静默决定的账。**",
-      "ruling": "`tests/test_rule6_memo.py`(实测 **4.6s**)**超过 `py_gate_manifest.json` 的 `per_test_cap_seconds = 3.0`**,所以它今天在推送闸里跑,**不是因为它被选中,而是因为 `py_gate.py` 把「没测过的测试」一律照跑**(本轮读数逐字:`14 new test(s) not in the manifest were run anyway`)。⚠️ **那是 fail-open 的好方向,但它是临时的**:下一个人跑 `python3 tools/agent/py_gate_measure.py` 时,这条会被按 4.6s > 3.0s **正常地排除**,而排除**不会打印任何东西给任何人看** —— 于是守护记忆化(它的失效方向是「静默地把红树读成绿树」)的那道闸,自己**静默地**出了推送闸。⛔ **不许为了塞进去而砍测试**:被砍掉的一定是 case 5/6 那批端到端 push(它们是唯一能看见钩子接线的部分,而 M4/M6 两个变异体正是在那里被抓住的)。**两条出路,只有两条**:(甲) 重测后它进 manifest(cap 抬到能装下它,或按 `lua_gate_manifest` 的写法给它一条带 `reason` 的登记)⇒ 本行退休;(乙) 判定它该留在快闸之外 ⇒ 在 manifest 里**逐条写下 `reason`**(这正是 GH #616 约束 1 的既有写法),本行随之退休。**⛔ 无论哪条,manifest 里必须出现这个文件名** —— 判据买的就是「这个决定被写下来过」,不是「决定得对」。",
-      "ruled_at": "2026-09-13T01:0xZ",
-      "executor": "director(总监自己;`py_gate_measure.py` 的下一次重测由谁跑不确定,而**写下决定**是总监的动作 —— 章程 2a/2.5)",
-      "trigger": "无外部触发器,也不挂在任何一波上(§DR)—— 触发时刻是「下一个人重测 py manifest」,而那不是任何一波、任何一个 id 的局部清单能写下的行。⚠️ **它的失效形状恰好是本轮修的那个东西的镜像**:记忆化让第二次推送变便宜,而这一行是**让守护记忆化的那道闸不要在没人看的时候变便宜**。",
-      "delivered_to": [
-        "iterations/streams/test_set.md §HI(全文档案)",
-        "tools/agent/py_gate_manifest.json(判据落点:出现这个文件名)",
-        "iterations/reports/director/20260913T010523Z.md",
-        "iterations/owed_executions.json(本行)"
-      ],
-      "done_when": {
-        "kind": "path_contains_all",
-        "path": "tools/agent/py_gate_manifest.json",
-        "contains": [
-          "tests/test_rule6_memo.py"
-        ],
-        "note": "⚠️ **判据买的是「manifest 提到了这个文件」,不是「它被选中了」** —— 两条出路(选中 / 带 `reason` 的显式排除)都会让这个字符串出现,而**两条都是可接受的处置**;不可接受的只有第三种:重测悄悄把它丢掉、谁也没写一句话。肯定半(选中还是排除、排除的理由对不对)读不出来,仍归总监逐条读透(LIMIT 11 的 `path_contains_all` 边界逐字:mention is not correctness)。"
-      },
-      "unmet_at_ruling": "开这一行之前当场跑 `python3 tools/agent/pending_rulings.py --owed-only`(完整日志 `/tmp/pr_after.log`,不是尾巴),本行判据读 **OWED**(`tools/agent/py_gate_manifest.json exists but 1 of 1 required mention(s) are absent: tests/test_rule6_memo.py`),时刻 2026-09-13T01:12:00Z。"
-    },
-    {
       "id": "aimguard_creep_schema_identity",
       "issue": "本行由总监 2026-09-13T07:xxZ 开(RULING 33 `aimguard` 退集的交棒,全文档案 `test_set.md §HJ`,§HJ.5 是本行的逐字来源)。⛔ **不开新 GH issue**:同族已有 GH #647 / #700 在案,录像组 `20260911T010816Z.md` §八已据此拒绝重复立案(#718 的立案句),本轮照收。",
       "ruling": "`aimguard` 的条件 (a) 今天**两条离线路(聚合检测器 + 真帧 fixture)被同一个具名的 schema 缺口同时堵死**,因为两条吃的是同一份 timeline dump。缺口逐字:`tools/batch_test/behavioral/dumper/main.go:108-113` 的 `creepSnap` 结构体**只有四个字段** `{T,Team,X,Y}`(schema 注释 `:14`,构造 `:475-476`),而分歧集需要 (i) **实体身份**(`[1]`/`[2]` 是引擎对 `bot:GetNearbyNeutralCreeps` 的排序,没有 id 字段就恢复不出谁是谁)与 (ii) `J.CanBeAttacked`(`bots/FunLib/jmz_func.lua:4191-4210`)的谓词(`IsAlive`/`CanBeSeen`/`IsAttackImmune`/`IsInvulnerable`/七个具名 modifier/以及一条要 HP 的 `<0.5` 项)。⛔ **中立兵不是不在流里**(`main.go:467-471` 逐字 always emit team 4)⇒ 这不是域为空,是**流在位置上完整、在语义上全空**。\n**`done_when`(裸读得出的产物,只承诺身份那一半)**:`creepSnap` 结构体带上一个稳定的实体 id/handle 字段,且它被写进 `creeps` 流。\n⚠️⚠️ **`done_when` 变绿 ≠ `aimguard` 可以再入集。** 本轮**没有**核实 Source2 录像里中立兵的 modifier 集合 / `IsAttackImmune` / `IsInvulnerable` 是否可取;`main.go:794-797` 的 `vision_note` 还逐字写着「**No per-team fog bitmask exists in Source2 replays**」⇒ `CanBeSeen` 即便对英雄也是**几何重建**的,不是读出来的。**谓词那一半是未证的**;再入集要两半都成立。⛔ **谁把这一行退休,谁必须在同一轮里写下谓词那一半的答案(可取 / 不可取 / 仍未查),三选一,不许留空。**",
@@ -1304,45 +1281,6 @@
       ],
       "blocking_precondition": "⛔ **棒没掉,是被一次真跑挡住了,而挡住它的东西是量出来的**(总监 2026-09-14T01:4xZ,全文 `iterations/reports/director/20260914T02xxZ.md`,原始读数 `iterations/reports/director/lua_measure_20260914T014551Z.json`)。重测**跑完了**(451 个文件 / 896s),**写出来的 manifest 被我还原了**,理由不是口味:(1) 本容器比写下 09-10 manifest 的那台**慢 17.5%**(中位比 1.175,n=153,四分位 1.105/1.224);(2) 于是 **12 个测试掉出闸**,其中 **2 个在 `known_red` 名单上** (`test_activemode_world_assertion.lua` 4.94→5.70、`test_roshdist_pit_truth_operand.lua` 5.08→5.71),`tests/test_lua_gate.py:6g`(「每条在册赦免的测试都必须是闸真的会跑的」)**当场变红** —— 实测:写入后 `57 checks, 1 failed`;还原后 `57 checks, 0 failed`;(3) 另有 **7 个**首次因 `over_cumulative_budget` 出局 —— 预算 300.0s 头一回成为**活的选择器**(选中 350 条共 **296.677s**,余 3.3s),而 `lua_gate_measure.py` 源码里那段注释正是**专门为这件事**写的:「300.0 让 cap 成为唯一的活选择器;将来谁抬 cap,回来重算这个数」——**没人抬 cap,是容器动了**。⇒ 先裁 **GH #810**(cap 5.5 / measure timeout 6.0 / budget 300.0 三个都是绝对秒数,成员资格因此跟着容器漂;GH #358 早记过同一族:同样 50 个文件本机 99.5s、批测台 133.3s),**再重测**。⛔ **不许把「在慢容器上量」当成本行的执行** —— 那样买到的 `no_manifest_row_count = 0` 是拿闸的覆盖面换来的,而账面上**长得像把棒还了**。\n\n⭐⭐ **2026-09-14T22:1xZ 总监增补(RULING 41 副产品),它使本行的 `no_manifest_row` 针脚之外多出一个必须先看的事实:manifest 的 74 个 `timed_out` 行,`seconds` 字段全部逐位等于 `6.0`**(实测分布 `{6.0: 74}`,`python3 -c \"...collections.Counter...\"`)—— 那是 `measure_timeout_seconds` 这个常数本身,不是 74 个测量值。`lua_gate_measure.py` 头注释自己写着 `a timed_out entry, whose seconds are the timeout rather than a measurement`,但**读表的人看到的是一个数字列**。\n🔧 **本轮把其中一个真量了**:`test_fieldsip_atom_pricing.lua` = **31.01 / 32.31 / 32.50s**(三跑,安静树),即**真值比登记值大 5.4×**,比 5.5s cap 大 **5.9×**。\n⇒ **对 GH #810 的直接后果**:「按容器速度重定 cap,于是某些 `timed_out` 回到闸里」这类推理,**其输入(74 个 6.0)对真实耗时零信息**;想知道重定 cap 会收进哪些,**必须先用一个大得多的 measure timeout 重测**,否则收进来的那批会在下一次 push 上把 11.5 分钟顶成未知数。⛔ 本行的 `done_when`(`no_manifest_row_count == 0`)**不覆盖这一条** —— 它管的是「有没有行」,不管「行里的数是不是数」。📌 §HK.2 的 `85`、`launched_at`、本文件 `fieldsip_atom_pricing_disposition` 的 `6.0`,**同族第四例**。",
       "first_attempt": "2026-09-14T01:30-01:46Z,总监。跑了,没落地,原因已量化并登记在 `blocking_precondition`。原始逐文件读数(451 行,含 89 个 6s TIMEOUT 与 8 个 red)已存档,下一轮**不必再付这 15 分钟**。"
-    },
-    {
-      "id": "hero27_dem21_deadline_scan",
-      "ruling_at": "2026-09-14T06:5xZ",
-      "ruling_ref": "iterations/streams/batch-desk.md「与其他 agent 的接口」节顶部(2026-09-14T06:5xZ 裁定第 4 条);iterations/reports/director/20260914T065702Z.md",
-      "issue": "GH #388(语料)/ queue.json:hero-27(请求)",
-      "executor": "batch-desk(批测台)—— `queue.json:hero-27` 的 `director.executor` 09-02 就写的是它,本行不改派,只给那条裁定一个自动读者。",
-      "trigger": "⭐ **本行是 owed 表里少数真带外部触发器的那种,不是「无外部触发器」的常驻义务 —— 它是一条倒计时**:GH #388 的 `dem21/`(103 份 `.dem`)于 **2026-09-22** 由 lifecycle 自动删除,fallback 线 **2026-09-20**。触发时刻因此是**批测台的下一个工作单元**,而它已在 `iterations/reports/batch-desk/20260914T091100Z.md` 补记 B-bis 逐字接棒并自定为 ~12:1xZ 那一轮。⚠️ **第一条失效形状不是拖延,是判据反转**:09-22 语料一删,`path_exists` 仍会老实地每轮喊 OWED,而那时它喊的是「**已经错过**」不是「还没做」—— 两种状态这个判据分不开(详见本行 `note`)⇒ 09-20 之前必须由批测台逐字表态、总监据此重裁,并在重裁那一轮**换判据或退休本行**;⛔ 沉默不是允许的分支。⚠️ **第二条失效形状:拿刹车当豁免**。闸 (iii) 已红十六轮,而本行**一分 AWS 钱不花** ⇒ ⛔ 不得以「发不出波」为由顺延,那是把一条预算约束错用成一条工作量豁免(批测台 09:11Z 补记 B-bis 已自行钉死这一句,本字段只是让它有一个每轮被读到的位置)。",
-      "what": "跑 hero-27 的归档扫描(GH #407 在局内那一半,WK `X.ShouldSaveMana` 语料普查),赶在 GH #388 的 W34 语料 `dem21/`(103 份 .dem)**2026-09-22 自动删除**之前。零 EC2、零新局(请求行自述),代价是一个工作单元不是 AWS 的钱。",
-      "done_when": {
-        "kind": "path_exists",
-        "path": "iterations/reports/batch-desk/hero27_savemana_archive_scan.md",
-        "note": "⭐ **针脚在立行当场量过:2026-09-14T06:57:02Z `present=False`** ⇒ 本行不是 BORN-DONE。⚠️ 判据买的是「扫描的读数落成了一份可裸读的文件」,**不是**「读数是对的」——(甲)(乙)(丙)(丁)(戊) 五条验收在 `queue.json:hero-27.acceptance` 里,由总监读那份文件时核。⛔ **不要把它写进某一轮报告的一节了事**:本行的全部意义是它有一个**文件名**可以被 `path_exists` 每轮问一次,而一节散文没有。",
-        "note_2026_09_15": "⭐ **RULING 44 追加的验收条件,与 `path_exists` 并列(不替换它)**:该文件必须逐字载明**扫描执行当时** `dem21/` 的存量构成 —— 还剩哪几个创建日档、合计 GB、合计 `.dem` 份数。⚠️ **理由不是完备性洁癖**:滚动过期下,一份「扫完了」的报告与一份「扫了残余四成」的报告在 `path_exists` 眼里**逐字节相同**,而两者对 GH #407 的结论强度完全不同。⛔ 缺这一段的文件**不满足本行**,总监读那份文件时按本条核。"
-      },
-      "note": "⚠️ **本行有一个别的行没有的性质:它的判据会在 2026-09-22 之后永远买不到。** 语料一删,扫描就不可能再跑,而 `path_exists` 仍会老实地每轮喊 OWED —— **那时它喊的不再是『还没做』而是『已经错过』**,两种状态这个判据分不开。⇒ 裁定同轮给了 fallback:批测台若判断 2026-09-20 前排不进,**必须在 09-20 之前的某一轮报告里逐字写明**,总监据此重裁(放弃语料 / 改派 / 延 lifecycle),并在重裁那一轮**把本行退休或换判据**。⛔ 沉默不是允许的分支 —— 沉默的结果是 09-22 语料消失而没有任何一轮记下它消失了,这正是铁律 9「修好不等于做完」那条掉棒的形状。",
-      "unmet_at_ruling": "2026-09-14T06:57:02Z 现读 `iterations/reports/batch-desk/hero27_savemana_archive_scan.md` `present=False`;`queue.json:hero-27.status=running`(自 2026-09-02 路由起未变),`director.executor=batch-desk`,`result` 字段不存在。",
-      "amended_at": "2026-09-15T04:1xZ",
-      "amendment": "**⚖️ RULING 44(总监 2026-09-15T04:1xZ,起因批测台 03:06Z 交棒 ②)——`09-22` 作废,而订正的是**形状**不是日期。**\n\n批测台 §3.1 现读 lifecycle 规则(`LC_EXIT=0`,逐字 `ID=dem21-expire-21d  Filter.Prefix=dem21/  Expiration.Days=21  Status=Enabled`):`Days=21` 是**每个对象各自创建后 21 天**,而 `dem21/` 的创建日横跨 **08-24 → 09-11** ⇒ 过期日横跨 **09-14 → 10-02**。**这不是一刀切,是滚动过期。**\n\n**三条后果,逐条裁:**\n1. 语料不是「09-22 之后没了」,是**从 09-14 起一直在少**:08-24(6.45 GB)与 08-25(11.04 GB)**过期日已过、只等 sweep**(合计 17.49 GB / 13%);08-26→08-29 那四档(**49.74 GB**)在 **09-16 → 09-19** 走完 ⇒ **本裁定后第四天,W34 语料的多数已经不在。**\n2. ⛔ **fallback 线 `2026-09-20` 作废,改 `2026-09-17`。** 原线的设计前提是「悬崖前还有一周」;滚动形状下 09-20 表态时多数语料已过期,**那时表态买到的是讣告不是决定**。\n3. ⭐⭐ **原 `done_when` 结构上看不见的一条:`path_exists` 分不开「扫了全量语料」与「扫了一份已经缺了四成的语料」。** 悬崖形状下这两者不会同时存在(要么全在要么全没),**滚动形状下它们天天同时存在。** ⇒ 见 `done_when.note_2026_09_15`:那份报告必须逐字记下扫描当时 `dem21/` 还剩哪几个创建日档、合计多少 GB / 多少份。\n📌 **逐字是 GH #138 立项那句「它交付的是分母,不是命中数」**,也是铁律 4 §CL (i-a)「**读数不是局数**」的同一形状:**一个产物存在,不等于它回答了被问的那个问题。**\n\n⛔ **不据此退休本行**:语料还在少,但还没少完,扫描仍然可能、仍然欠着。\n⛔ **不动 9/30 区间**(批测台 §3.1 已自行拒绝借这 `$0.15` 去动它,判断正确,照准)。"
-    },
-    {
-      "id": "gh779_accrual_keyed_ce_bypass",
-      "ruling_at": "2026-09-14T09:5xZ",
-      "ruling_ref": "iterations/streams/batch-desk.md「与其他 agent 的接口」节顶部(2026-09-14T09:5xZ 裁定第 2/6 条);iterations/reports/director/20260914T100500Z.md",
-      "issue": "GH #779(刹车/通知判据)/ batch-desk 03:11Z 交棒 ②(甲)(乙)(丙)",
-      "executor": "batch-desk(批测台)—— `$0.01` 的购买决策本来就在 `check_costs.sh` 里(GH #801 分支),本行不改派。⚠️ 总监已把判据裁死,本行要的是**把它写进脚本**,不是再裁一次。",
-      "trigger": "⛔ **不挂时长,这正是本裁定的核心** —— 触发时刻是「**下一次发波之前**」。依据是定级的两半分开算:前提频率是**中位**(冻结中位 `8.96h` ≈ 3 轮,`≥12.65h` 占 36%),而后果**今天为零**((α) 活体普查 `CERTIFIED 0` + (β) 上一波 W69 距今 47.77h,远在 `ACCRUAL_LAG_MAX_HOURS = 11.3` 窗口外)⇒ **危险窗口是冻结与在跑波次重叠的那一次**,也就是刹车解除后的第一波。⚠️ **失效形状是它读起来永远不急**:刹车红着的每一轮,这条的后果都真的是零,于是它可以被诚实地推迟无限多轮 —— 而它到期的那一刻(第一波起飞)恰好是**最没空写代码**的一刻。⛔ 因此不许等到发波那一轮再写。",
-      "what": "把 2026-09-14T09:5xZ 裁定第 2 条的**旁路判据**落进 `tools/batch_test/aws/check_costs.sh`:`budget refreshed` 戳冻结**且**〔活体普查读到非零 **或** 有波次记录落在 11.3h lag 窗口内〕⇒ 才允许花 `$0.01` 走 CE 直读 MTD;**(α)(β) 皆零 ⇒ 戳冻结不产生盲区,不买**。⛔ 判据一个字不许挂到「冻结时长 ≥ N 小时」上(那是本轮被撤回的那个量放进触发器位置)。",
-      "done_when": {
-        "kind": "path_contains_all",
-        "path": "tools/batch_test/aws/check_costs.sh",
-        "contains": [
-          "accrual",
-          "accruing"
-        ],
-        "note": "⭐ **针脚立行当场量过**(2026-09-14T10:02:13Z):`grep -c` 在该文件上 `accrual` = **0**、`accruing` = **0** ⇒ 本行**不是 BORN-DONE**。⚠️ **`describe-instances` 被故意排除在判据之外**,尽管它是旁路的仪器 —— 该文件**已经**含它一次(实测 `1`),拿它当判据等于让本行一出生就为真,那正是 `lua_gate_baseline_e2e` 在 04:15Z 踩的坑。⛔ 判据买的是「脚本里出现了 accrual 这条腿」,**不是**「这条腿写对了」—— 对不对由总监读 diff 时核(第 2 条的三个要件:非零普查 / 11.3h 窗口 / 皆零则不买)。"
-      },
-      "note": "⚠️ **本行与 `hero27_dem21_deadline_scan` 不同:它没有硬日历时限,却有一个更难看见的时限 —— 一个事件(下一次发波)。** `path_contains_all` 会老实地每轮喊 OWED,而**喊的音量与危险程度完全脱钩**:刹车红着时它无害,刹车一解除它立刻是最高优先级,而**判据本身分不开这两种状态**。⇒ 交给总监健康巡检:**任何一轮读到闸 (iii) 转绿(headroom ≥ 最便宜一波)而本行仍 OWED,必须在那一轮把它升为红色升级项**,⛔ 不得与其他 OWED 行并列处理。",
-      "unmet_at_ruling": "2026-09-14T10:02:13Z 现读 `tools/batch_test/aws/check_costs.sh`:`accrual` `grep -c` = 0、`accruing` = 0(两个判据串均缺席);对照读数 `describe-instances` = 1(故意未入判据,理由见 done_when.note)。同时刻 MTD `$89.505`、headroom `$0.495`、闸 (iii) `exit 3`、`budget refreshed 2026-09-13T20:32:29Z` 已冻 5 轮。"
     },
     {
       "id": "push_hook_duration_exceeds_stream_push_interval",
@@ -1455,6 +1393,57 @@
         ],
         "note": "⭐ **开行前当场量过:`grep -c BORN_DONE_RETIRED_DISPOSAL tests/test_pending_rulings.py` = 0** ⇒ ⛔ 不是 BORN-DONE。⚠️ 判据买的是「**棘轮里出现了一个扫 `retired` 的口径**」,**不是**「修法是对的」——(甲)/(乙) 哪条、以及变异台是否抓得住,由总监落地时自证。⛔ **判据故意钉在 `tests/` 这个文件上,不钉在任何 `.md`/`.json` 上**:本裁定正文(住在 registry 与报告里)已经把 (甲)(乙) 和 `criterion_was_born_done` 全念了出来,**任何钉散文的判据都会在开行那刻就满足**(同型第五例)。"
       }
+    },
+    {
+      "id": "ruling50_delivered_before_ruling_unwired",
+      "issue": "批测台 2026-09-15T09:12Z 交棒 ③([harness] 按铁律 5 归总监)。⛔ 不开新 GH issue(铁律 11:本容器未试通 MCP);本行 + 总监 10:0xZ 报告 §四 是立案面。",
+      "ruled_at": "2026-09-15T10:05:57Z",
+      "ruling": "⚖️ **RULING 54 —— 交棒 ③ 成立:`delivered_before_ruling` 今天是散文,不是信号。**\nRULING 50 第 (2) 步要求执行方写 `delivered_before_ruling: {at, artifact}` 并**照常报 OWED**,第 (3) 步要求**总监**据 `done_when_note` 核已有交付物才退休。批测台本轮**第一次照抄了 (2)**,而 `pending_rulings.py` **一个字都不读这个字段** ⇒ 写它的人得不到任何回执,读表的人也**不会被告知这一行可能已经交付过**。\n⚠️ **失效形状正是 RULING 50 想挡的那一个**:没有回执 ⇒ 下一轮的执行方要么**二次花钱照做一遍**,要么**自裁说做过了** —— 而 RULING 50 的全部要点就是这两件都不该由执行方来选。\n⛔ **本轮不实施**,理由是 RULING 46 的通例逐字:**建一条新读法之前,先在今天的树上跑一遍它** ——今天全表 `grep -c` = 0,没有任何一行带这个字段,**一个在空集上跑过的检查器说不出它今天对不对**。⇒ 落地那一轮必须同时拿到至少一个真实带该字段的行做读数。",
+      "executor": "**总监自己**([harness] 归总监;`pending_rulings.py` 的编排权在总监,先例 GH #33)",
+      "trigger": "无外部触发器、不挂任何一波(§DR 常驻义务)。⚠️ **它不会自己疼**:字段今天为空集,而空集上的沉默与「已接上且无事发生」**逐字节相同**;下一个照抄 RULING 50 (2) 的执行方照样只会写进一个没有读者的字段。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/agent/pending_rulings.py",
+        "contains": [
+          "delivered_before_ruling"
+        ],
+        "note": "⛔ mention 不等于正确:落地时总监仍要读通它是否**真的改变了那一行的打印**(而不是只加了一个常量)。⚠️ 判据**故意钉在仪器文件上不钉在 registry 上** ——钉在 registry 上会被**任何一个执行方写下该字段**满足,而那恰恰是本行要修的那件事**没有**发生的情形。"
+      },
+      "unmet_at_ruling": "2026-09-15T10:05:57Z 现读 `tools/agent/pending_rulings.py`:`delivered_before_ruling` `grep -c` = 0(判据串在仪器里完全缺席);同时刻全 registry 亦无任何一行带该字段。"
+    },
+    {
+      "id": "citation_audit_cited_as_absent_class",
+      "issue": "批测台 2026-09-15T09:12Z 交棒 ⑦([harness] 按铁律 5 归总监)。⛔ 不开新 GH issue(铁律 11)。同族:总监 RULING 46。",
+      "ruled_at": "2026-09-15T10:05:57Z",
+      "ruling": "⚖️ **RULING 55 —— 交棒 ⑦ 的实质成立,但它点的文件是错的;而这两件事必须分开记。**\n⛔ **先更正**:交棒逐字写「`claim_precheck.sh` 只认 `gitignored` 一种」。现读 `tools/agent/claim_precheck.sh`:`gitignored` **`grep -c` = 0** —— 那个类**不在这个文件里**;它在被委托的解析器 `tools/agent/citation_audit.py`(`grep -c` = **2**,`:136` / `:805`),`claim_precheck.sh:86` 只是调它。⇒ 判据钉在 `citation_audit.py`。\n📌 **这是 RULING 46 的通例第二次当轮兑现**:「一条缺陷把病因指向某个文件,先去那个文件里 `grep` 一次」——两次的载体都是**凭记忆敲路径**,而两次都是**同一轮内一条 `grep` 当场证伪**。\n⚖️ **实质成立**:`citation_audit.py` 今天只有一个「按设计缺席」类(`gitignored`),而 **RULING 46 当轮已经实测出第二类**:全队规范节 813 条路径引用 / 6 条不存在,**6/6 全是假阳性**,其中 `director.md:518` 那一条**引用该路径正是为了断言它必须不存在**(原文是 `io.open(...) ~= nil then error()`)。⇒ 「**被引作缺席证据**」是一个**已被实测**的类,不是假想。\n⛔ **本轮不实施**(工作单元大小);落地那一轮按 RULING 46 通例:**先在今天的树上跑一遍**,拿 813/6 这份现成语料当验收集,**看它今天说的话对不对**,而不只是看它能不能跑。",
+      "executor": "**总监自己**([harness] 归总监;`citation_audit.py` 与 `claim_precheck.sh` 都是总监域的闸)",
+      "trigger": "无外部触发器、不挂任何一波(§DR 常驻义务)。⚠️ **失效形状是假阳性把闸变成噪音**:`claim_precheck.sh` 是**发表带引用的裁定之前**那道门(铁律 6 / GH #290),一道每次都对**故意不存在的路径**喊 MISSING 的门,会被读它的人学会忽略 —— 而它真正要拦的那一次长得一模一样。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/agent/citation_audit.py",
+        "contains": [
+          "CITED_AS_ABSENT"
+        ],
+        "note": "⛔ mention 不等于正确:总监落地时要读通该类**真的改变了 `claim_precheck.sh` 的退出码归属**(被引作缺席证据的路径不再计入 MISSING),而不是只加了一个常量名。"
+      },
+      "unmet_at_ruling": "2026-09-15T10:05:57Z 现读:`tools/agent/citation_audit.py` `CITED_AS_ABSENT` `grep -c` = 0;同时刻 `tools/agent/claim_precheck.sh` `gitignored` `grep -c` = 0 而 `citation_audit.py` `gitignored` `grep -c` = 2(这一对读数就是交棒 ⑦ 点错文件的证据)。"
+    },
+    {
+      "id": "soak_side_concurrent_writer_misattribution",
+      "issue": "GH #624 族([harness],总监 2026-09-15 开)。⛔ 不开新 GH issue(铁律 11:本容器未试通 MCP);本行 + 总监 10:17Z 报告 §6 是立案面。",
+      "ruled_at": "2026-09-15T10:21:54Z",
+      "ruling": "⚖️ **RULING 56 —— 两个闸抢同一个 gitignored 文件,红出来的名字是无辜的那个。**\n**现场(本轮我自己造的,如实登记)**:开工自检还在后台跑(它那条 `trunk health (fast Lua detectors)` 腿会写 `bots/Customize/soak_side.lua`),我同时起了 `tools/agent/lua_gate.py` ⇒ 闸红,`RC_EXIT=3`,**会拒绝 push**。\n唯一的 finding 是 `tests/test_roshan_pit_daynight.lua`(8 个 case 全红),而它的报错**自己把病因说了出来**,逐字:\n`bots/Customize/soak_side.lua already exists (unarmed leg) … Some other case -- here, in one of the other test files that write this path, **or in a concurrent lua5.1 process** -- armed a candidate and did not remove it. Contents: return { side = 'dire', cand = 'basesiege' }`\n**复核三条**:(1) 事后 `ls` 该文件**已不存在**(并发那一方自己清掉了)⇒ 残留是**瞬时**的;(2) `pgrep lua5.1` 空;(3) **静默树上单独重跑该测试:`11 tests, 0 failures`(`RC_EXIT=0`)**。\n⛔ **这不是把它叫 flake**:病因**具名、可复核、且是我自己制造的**(不是「重跑就好了」)。\n⚠️ **失效方向是安全侧(拒 push),但归属是错的**:红的名字是 `test_roshan_pit_daynight.lua`,而它**什么都没做错** —— 下一个撞上的人会去查那个测试、查 `basesiege`,而真正的答案是**「你后台还有一个 Lua 进程」**。⭐ 这正是 GH #624 的立案形状(红由下一个开工的组发现、作者已经走了)**换了一个载体**:那次是**时间**上错开,这次是**进程**上撞上。\n📌 而它**按构造会复发**:自检要跑 **7 分钟以上**,`lua_gate` 要跑 **~11.5 分钟**(本轮实测 `694.34s against a 300.0s budget`)⇒ **「把自检丢后台、同时干别的」是每条流的自然打法**,而铁律 10 + 铁律 6 恰好要求同一轮里两件都做。\n⛔ **本轮不实施**(工作单元大小,且它要动一条闸本身)。落地方向(**不预选**):(甲) 闸启动时检测到该文件存在且非本进程所写 ⇒ 打 **UNCERTIFIABLE(exit 2)而不是 FAIL(exit 3)**,并把病因写成「并发写者」而不是测试名;(乙) 给该路径上一把进程锁。⚠️ 无论哪条,**不许**的做法是让测试**忽略**这个文件的存在 —— 那个断言是它唯一能看见「闸关着」的方式。",
+      "executor": "**总监自己**([harness] 归总监;`lua_gate.py` 与 `routine_selfcheck.sh` 都是总监域的闸)",
+      "trigger": "无外部触发器、不挂任何一波(§DR 常驻义务)。⚠️ **它不会自己举手,而且比 GH #624 更难抓**:撞上的那一轮看到的是**一个具名测试红了**,一切看起来都像一条正常的 trunk red;**而那个测试在静默树上是绿的** ⇒ 只有**同时**读到「后台还有进程」的人才会看破,下一个人大概率去改那个无辜的测试。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/agent/lua_gate.py",
+        "contains": [
+          "soak_side"
+        ],
+        "note": "⛔ mention 不等于正确:落地时总监要读通它**真的把并发写者判成 UNCERTIFIABLE/锁住**,而不是只出现了这个字符串。⚠️ 判据**故意钉在 `lua_gate.py` 上**:今天这个文件里 `soak_side` `grep -c` = 0,即**闸对这个路径完全无知**,而那正是本行要修的那件事。"
+      },
+      "unmet_at_ruling": "2026-09-15T10:21:54Z 现读 `tools/agent/lua_gate.py`:`soak_side` `grep -c` = 0、`SOAK_SIDE_SERIAL` `grep -c` = 0(闸对该路径零感知);同时刻 `bots/Customize/soak_side.lua` `ls` 不存在(残留已被并发方清走),而静默重跑读数 = `11 tests, 0 failures`。"
     }
   ],
   "retired": [
@@ -1943,6 +1932,77 @@
       "retired_because": "`done_when` (`batch-desk.md` 含 `USAGE_TYPE 归因已交付`) 现读 **2 处命中**,且⭐ **两处都在批测台自己 06:13Z 那条 `当前状态` 里(:11961 / :11969),不在裁定正文里** ⇒ ⛔ **不是 BORN-DONE**(本行开行时特意没把判据写成「报告里出现 USAGE_TYPE」,理由见 `done_when_note`;本轮退休前把那个理由**反过来验了一遍**:命中若落在裁定正文里就该拒退,而它没有)。`done_when_note` 指定的复核(前三名读数是否确在报告里)本轮**逐条核过**:§4.1 给出类别与速率(`USW2-DataTransfer-Out-Bytes`,零实例日 `$0.3873/天` = 当天 S3 的 99.5%,≈ 4.30 GB/天),§4.2 给出归因(replay-check **23%–26%**,逐轮实计非外推,并**自行订正**了本台 00:14Z 那个 `~28%` 的外推值,⭐ **订正方向对归因不利仍照登**)。⛔ **未归因的 74%–77% 不算本行欠账** —— 那是仪器的结构性限度(`USAGE_TYPE` 在原理上不回答「谁拉的」),本行买的从来是「哪一类流量 + 能归的归掉」,见同轮 RULING 49 (乙)。",
       "criterion_was_born_done": true,
       "retired_on": "⛔⛔ **退休依据是「手读交付物」,不是这一行的 `done_when` 读数 —— 两者本轮不一致,照登。** `tests/test_pending_rulings.py` 的 BORN-DONE 棘轮本轮**点名了这一行**(逐字 `7 live registry rows read BORN-DONE (… gh779_s3_egress_usage_type_attribution …) but the ceiling is 6`)⇒ 本行的判据**从来没有被观察到说过 DONE 以外的话**(开行到交付之间只隔约 2.5 小时,期间没有任何一轮自检把它读成 OWED,`unmet_at_ruling` 证词也没留)。⭐ **那条棘轮是对的,而我 §5.1 的论证答的是另一个问题**:我验的是「两处命中不在裁定正文里 ⇒ 不是我写的词自己满足自己」,棘轮问的是「这个判据**有没有能力**说 OWED」—— **后者本行答不出**。⇒ 退休**照旧成立**,但成立的理由必须写清:总监按 `done_when_note` 点名的三条**逐条手读了 06:13Z 报告**(§4.1 类别与速率、§4.2 归因与那次自我订正),**手读是 `kind: manual` 行每天在做的事**,而**判据的 DONE 读数在本行不构成独立证据**。"
+    },
+    {
+      "id": "hero27_dem21_deadline_scan",
+      "ruling_at": "2026-09-14T06:5xZ",
+      "ruling_ref": "iterations/streams/batch-desk.md「与其他 agent 的接口」节顶部(2026-09-14T06:5xZ 裁定第 4 条);iterations/reports/director/20260914T065702Z.md",
+      "issue": "GH #388(语料)/ queue.json:hero-27(请求)",
+      "executor": "batch-desk(批测台)—— `queue.json:hero-27` 的 `director.executor` 09-02 就写的是它,本行不改派,只给那条裁定一个自动读者。",
+      "trigger": "⭐ **本行是 owed 表里少数真带外部触发器的那种,不是「无外部触发器」的常驻义务 —— 它是一条倒计时**:GH #388 的 `dem21/`(103 份 `.dem`)于 **2026-09-22** 由 lifecycle 自动删除,fallback 线 **2026-09-20**。触发时刻因此是**批测台的下一个工作单元**,而它已在 `iterations/reports/batch-desk/20260914T091100Z.md` 补记 B-bis 逐字接棒并自定为 ~12:1xZ 那一轮。⚠️ **第一条失效形状不是拖延,是判据反转**:09-22 语料一删,`path_exists` 仍会老实地每轮喊 OWED,而那时它喊的是「**已经错过**」不是「还没做」—— 两种状态这个判据分不开(详见本行 `note`)⇒ 09-20 之前必须由批测台逐字表态、总监据此重裁,并在重裁那一轮**换判据或退休本行**;⛔ 沉默不是允许的分支。⚠️ **第二条失效形状:拿刹车当豁免**。闸 (iii) 已红十六轮,而本行**一分 AWS 钱不花** ⇒ ⛔ 不得以「发不出波」为由顺延,那是把一条预算约束错用成一条工作量豁免(批测台 09:11Z 补记 B-bis 已自行钉死这一句,本字段只是让它有一个每轮被读到的位置)。",
+      "what": "跑 hero-27 的归档扫描(GH #407 在局内那一半,WK `X.ShouldSaveMana` 语料普查),赶在 GH #388 的 W34 语料 `dem21/`(103 份 .dem)**2026-09-22 自动删除**之前。零 EC2、零新局(请求行自述),代价是一个工作单元不是 AWS 的钱。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/batch-desk/hero27_savemana_archive_scan.md",
+        "note": "⭐ **针脚在立行当场量过:2026-09-14T06:57:02Z `present=False`** ⇒ 本行不是 BORN-DONE。⚠️ 判据买的是「扫描的读数落成了一份可裸读的文件」,**不是**「读数是对的」——(甲)(乙)(丙)(丁)(戊) 五条验收在 `queue.json:hero-27.acceptance` 里,由总监读那份文件时核。⛔ **不要把它写进某一轮报告的一节了事**:本行的全部意义是它有一个**文件名**可以被 `path_exists` 每轮问一次,而一节散文没有。",
+        "note_2026_09_15": "⭐ **RULING 44 追加的验收条件,与 `path_exists` 并列(不替换它)**:该文件必须逐字载明**扫描执行当时** `dem21/` 的存量构成 —— 还剩哪几个创建日档、合计 GB、合计 `.dem` 份数。⚠️ **理由不是完备性洁癖**:滚动过期下,一份「扫完了」的报告与一份「扫了残余四成」的报告在 `path_exists` 眼里**逐字节相同**,而两者对 GH #407 的结论强度完全不同。⛔ 缺这一段的文件**不满足本行**,总监读那份文件时按本条核。"
+      },
+      "note": "⚠️ **本行有一个别的行没有的性质:它的判据会在 2026-09-22 之后永远买不到。** 语料一删,扫描就不可能再跑,而 `path_exists` 仍会老实地每轮喊 OWED —— **那时它喊的不再是『还没做』而是『已经错过』**,两种状态这个判据分不开。⇒ 裁定同轮给了 fallback:批测台若判断 2026-09-20 前排不进,**必须在 09-20 之前的某一轮报告里逐字写明**,总监据此重裁(放弃语料 / 改派 / 延 lifecycle),并在重裁那一轮**把本行退休或换判据**。⛔ 沉默不是允许的分支 —— 沉默的结果是 09-22 语料消失而没有任何一轮记下它消失了,这正是铁律 9「修好不等于做完」那条掉棒的形状。",
+      "unmet_at_ruling": "2026-09-14T06:57:02Z 现读 `iterations/reports/batch-desk/hero27_savemana_archive_scan.md` `present=False`;`queue.json:hero-27.status=running`(自 2026-09-02 路由起未变),`director.executor=batch-desk`,`result` 字段不存在。",
+      "amended_at": "2026-09-15T04:1xZ",
+      "amendment": "**⚖️ RULING 44(总监 2026-09-15T04:1xZ,起因批测台 03:06Z 交棒 ②)——`09-22` 作废,而订正的是**形状**不是日期。**\n\n批测台 §3.1 现读 lifecycle 规则(`LC_EXIT=0`,逐字 `ID=dem21-expire-21d  Filter.Prefix=dem21/  Expiration.Days=21  Status=Enabled`):`Days=21` 是**每个对象各自创建后 21 天**,而 `dem21/` 的创建日横跨 **08-24 → 09-11** ⇒ 过期日横跨 **09-14 → 10-02**。**这不是一刀切,是滚动过期。**\n\n**三条后果,逐条裁:**\n1. 语料不是「09-22 之后没了」,是**从 09-14 起一直在少**:08-24(6.45 GB)与 08-25(11.04 GB)**过期日已过、只等 sweep**(合计 17.49 GB / 13%);08-26→08-29 那四档(**49.74 GB**)在 **09-16 → 09-19** 走完 ⇒ **本裁定后第四天,W34 语料的多数已经不在。**\n2. ⛔ **fallback 线 `2026-09-20` 作废,改 `2026-09-17`。** 原线的设计前提是「悬崖前还有一周」;滚动形状下 09-20 表态时多数语料已过期,**那时表态买到的是讣告不是决定**。\n3. ⭐⭐ **原 `done_when` 结构上看不见的一条:`path_exists` 分不开「扫了全量语料」与「扫了一份已经缺了四成的语料」。** 悬崖形状下这两者不会同时存在(要么全在要么全没),**滚动形状下它们天天同时存在。** ⇒ 见 `done_when.note_2026_09_15`:那份报告必须逐字记下扫描当时 `dem21/` 还剩哪几个创建日档、合计多少 GB / 多少份。\n📌 **逐字是 GH #138 立项那句「它交付的是分母,不是命中数」**,也是铁律 4 §CL (i-a)「**读数不是局数**」的同一形状:**一个产物存在,不等于它回答了被问的那个问题。**\n\n⛔ **不据此退休本行**:语料还在少,但还没少完,扫描仍然可能、仍然欠着。\n⛔ **不动 9/30 区间**(批测台 §3.1 已自行拒绝借这 `$0.15` 去动它,判断正确,照准)。",
+      "retired_at": "2026-09-15T10:05:57Z",
+      "retired_by": "director (RULING 53)",
+      "retired_because": "⚖️ **RULING 53 —— 退休。依据是手读交付物,⛔ 不是仪器今天变绿。**\n⚠️ **必须先说这一句**:本行今天读 DONE,**有一部分是本轮 RULING 52 自己造成的**(证词 `present=False` 在旧判据下读 UNCERTIFIABLE)⇒ 拿「仪器说 DONE」当退休依据是**循环**,正是 evidence-discipline 第四条与 RULING 51 逐字点名的形状。**依据只取下面三条手读的。**\n(1) `path_exists` 现读满足:`iterations/reports/batch-desk/hero27_savemana_archive_scan.md` 存在、**299 行**、git 锚定 `ba45b156`。\n(2) **RULING 44 追加的验收条件(dem21 存量构成)现读满足**,逐字在该文件 §2:整个 `dem21/` 前缀 **6,756 个 `.dem` / 125.28 GB / 横跨 08-24–09-11 共 17 个波次日**;W34 那 103 份 = **2.13 GB**(4 个前缀,tree `31b2a3ac…` 唯一确定);并如实登记 **1 局真丢**(`cbb744/20260901_093206_slot1.dem`,S3 对象本身截断,字节数逐位相符)。\n(3) ⭐ **本行的倒计时前提本身是错的,而交付物正是发现它的地方**:lifecycle 规则现读 `dem21-expire-21d`(`Expiration.Days = 21`,`Filter.Prefix = dem21/`)⇒ **每个对象按自己的上传日 +21 天各自到期**,**09-22 只是 09-01 那批的到期日**,不是「整个前缀那天消失」。⇒ 09-20 fallback 线与「删完就没语料」**均不成立**,本行没有需要顺延到的东西。\n⛔ 本行**不是 BORN-DONE**:证词记的是 `2026-09-14T06:57:02Z` 现读 `present=False`,该读数**在 RULING 52 之前就已经写在那里**,变的只是仪器看不看得见它。"
+    },
+    {
+      "id": "gh779_accrual_keyed_ce_bypass",
+      "ruling_at": "2026-09-14T09:5xZ",
+      "ruling_ref": "iterations/streams/batch-desk.md「与其他 agent 的接口」节顶部(2026-09-14T09:5xZ 裁定第 2/6 条);iterations/reports/director/20260914T100500Z.md",
+      "issue": "GH #779(刹车/通知判据)/ batch-desk 03:11Z 交棒 ②(甲)(乙)(丙)",
+      "executor": "batch-desk(批测台)—— `$0.01` 的购买决策本来就在 `check_costs.sh` 里(GH #801 分支),本行不改派。⚠️ 总监已把判据裁死,本行要的是**把它写进脚本**,不是再裁一次。",
+      "trigger": "⛔ **不挂时长,这正是本裁定的核心** —— 触发时刻是「**下一次发波之前**」。依据是定级的两半分开算:前提频率是**中位**(冻结中位 `8.96h` ≈ 3 轮,`≥12.65h` 占 36%),而后果**今天为零**((α) 活体普查 `CERTIFIED 0` + (β) 上一波 W69 距今 47.77h,远在 `ACCRUAL_LAG_MAX_HOURS = 11.3` 窗口外)⇒ **危险窗口是冻结与在跑波次重叠的那一次**,也就是刹车解除后的第一波。⚠️ **失效形状是它读起来永远不急**:刹车红着的每一轮,这条的后果都真的是零,于是它可以被诚实地推迟无限多轮 —— 而它到期的那一刻(第一波起飞)恰好是**最没空写代码**的一刻。⛔ 因此不许等到发波那一轮再写。",
+      "what": "把 2026-09-14T09:5xZ 裁定第 2 条的**旁路判据**落进 `tools/batch_test/aws/check_costs.sh`:`budget refreshed` 戳冻结**且**〔活体普查读到非零 **或** 有波次记录落在 11.3h lag 窗口内〕⇒ 才允许花 `$0.01` 走 CE 直读 MTD;**(α)(β) 皆零 ⇒ 戳冻结不产生盲区,不买**。⛔ 判据一个字不许挂到「冻结时长 ≥ N 小时」上(那是本轮被撤回的那个量放进触发器位置)。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/batch_test/aws/check_costs.sh",
+        "contains": [
+          "accrual",
+          "accruing"
+        ],
+        "note": "⭐ **针脚立行当场量过**(2026-09-14T10:02:13Z):`grep -c` 在该文件上 `accrual` = **0**、`accruing` = **0** ⇒ 本行**不是 BORN-DONE**。⚠️ **`describe-instances` 被故意排除在判据之外**,尽管它是旁路的仪器 —— 该文件**已经**含它一次(实测 `1`),拿它当判据等于让本行一出生就为真,那正是 `lua_gate_baseline_e2e` 在 04:15Z 踩的坑。⛔ 判据买的是「脚本里出现了 accrual 这条腿」,**不是**「这条腿写对了」—— 对不对由总监读 diff 时核(第 2 条的三个要件:非零普查 / 11.3h 窗口 / 皆零则不买)。"
+      },
+      "note": "⚠️ **本行与 `hero27_dem21_deadline_scan` 不同:它没有硬日历时限,却有一个更难看见的时限 —— 一个事件(下一次发波)。** `path_contains_all` 会老实地每轮喊 OWED,而**喊的音量与危险程度完全脱钩**:刹车红着时它无害,刹车一解除它立刻是最高优先级,而**判据本身分不开这两种状态**。⇒ 交给总监健康巡检:**任何一轮读到闸 (iii) 转绿(headroom ≥ 最便宜一波)而本行仍 OWED,必须在那一轮把它升为红色升级项**,⛔ 不得与其他 OWED 行并列处理。",
+      "unmet_at_ruling": "2026-09-14T10:02:13Z 现读 `tools/batch_test/aws/check_costs.sh`:`accrual` `grep -c` = 0、`accruing` = 0(两个判据串均缺席);对照读数 `describe-instances` = 1(故意未入判据,理由见 done_when.note)。同时刻 MTD `$89.505`、headroom `$0.495`、闸 (iii) `exit 3`、`budget refreshed 2026-09-13T20:32:29Z` 已冻 5 轮。",
+      "retired_at": "2026-09-15T10:05:57Z",
+      "retired_by": "director (RULING 53)",
+      "retired_because": "⚖️ **RULING 53 —— 退休。依据是手读脚本,⛔ 不是 `path_contains_all` 的两个 mention。**\n⚠️ 同一句先说:本行今天读 DONE **有一部分是本轮 RULING 52 造成的**(见 `hero27` 那条),且该判据的 `note` 逐字写着 **mention is not correctness; the director still reads it through** ⇒ **读通是被这一行明确要求的动作**,本轮做了,读数如下。\n(1) `tools/batch_test/aws/check_costs.sh:36-50` **逐字实现了裁定的合取**,不是提一嘴:`budget refreshed` 戳冻结 **AND**((alpha) 活体普查非零 **OR** (beta) 波次记录落在 11.3h 滞后窗内);并写明 **(alpha)(beta) 同时为零时什么都不买**(停摆的钟架在空账户上仍是停摆的钟)。\n(2) **被调用方真实存在**:`tools/batch_test/aws/accrual_probe.py` 现读 **9,289 字节**,`check_costs.sh:210` 真的调它 ⇒ ⛔ 不是悬空调用。\n(3) 跳过分支**按铁律口径写成「SKIP 不是通过」**:`:193-194` 逐字 `accrual probe NOT CONSULTED (COST_NO_ACCRUAL_PROBE set)` / `that is a SKIP, not a finding of 'nothing accruing'`。\n⇒ 本行要的是「把裁定写进脚本」,现读**已写进去且可执行**,退休。⛔ 本行**不是 BORN-DONE**(证词 `2026-09-14T10:02:13Z` 现读两个判据串 `grep -c` = 0)。"
+    },
+    {
+      "id": "rule6_memo_fast_gate_membership",
+      "issue": "本行由总监 2026-09-13T01:0xZ 开(推送钩子记忆化落地的连带债,全文档案 `test_set.md §HI`,GH issue 见 `delivered_to`)。**不是缺陷,是一笔今天靠 fail-open 兜住、下一次重测就会被静默决定的账。**",
+      "ruling": "`tests/test_rule6_memo.py`(实测 **4.6s**)**超过 `py_gate_manifest.json` 的 `per_test_cap_seconds = 3.0`**,所以它今天在推送闸里跑,**不是因为它被选中,而是因为 `py_gate.py` 把「没测过的测试」一律照跑**(本轮读数逐字:`14 new test(s) not in the manifest were run anyway`)。⚠️ **那是 fail-open 的好方向,但它是临时的**:下一个人跑 `python3 tools/agent/py_gate_measure.py` 时,这条会被按 4.6s > 3.0s **正常地排除**,而排除**不会打印任何东西给任何人看** —— 于是守护记忆化(它的失效方向是「静默地把红树读成绿树」)的那道闸,自己**静默地**出了推送闸。⛔ **不许为了塞进去而砍测试**:被砍掉的一定是 case 5/6 那批端到端 push(它们是唯一能看见钩子接线的部分,而 M4/M6 两个变异体正是在那里被抓住的)。**两条出路,只有两条**:(甲) 重测后它进 manifest(cap 抬到能装下它,或按 `lua_gate_manifest` 的写法给它一条带 `reason` 的登记)⇒ 本行退休;(乙) 判定它该留在快闸之外 ⇒ 在 manifest 里**逐条写下 `reason`**(这正是 GH #616 约束 1 的既有写法),本行随之退休。**⛔ 无论哪条,manifest 里必须出现这个文件名** —— 判据买的就是「这个决定被写下来过」,不是「决定得对」。",
+      "ruled_at": "2026-09-13T01:0xZ",
+      "executor": "director(总监自己;`py_gate_measure.py` 的下一次重测由谁跑不确定,而**写下决定**是总监的动作 —— 章程 2a/2.5)",
+      "trigger": "无外部触发器,也不挂在任何一波上(§DR)—— 触发时刻是「下一个人重测 py manifest」,而那不是任何一波、任何一个 id 的局部清单能写下的行。⚠️ **它的失效形状恰好是本轮修的那个东西的镜像**:记忆化让第二次推送变便宜,而这一行是**让守护记忆化的那道闸不要在没人看的时候变便宜**。",
+      "delivered_to": [
+        "iterations/streams/test_set.md §HI(全文档案)",
+        "tools/agent/py_gate_manifest.json(判据落点:出现这个文件名)",
+        "iterations/reports/director/20260913T010523Z.md",
+        "iterations/owed_executions.json(本行)"
+      ],
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/agent/py_gate_manifest.json",
+        "contains": [
+          "tests/test_rule6_memo.py"
+        ],
+        "note": "⚠️ **判据买的是「manifest 提到了这个文件」,不是「它被选中了」** —— 两条出路(选中 / 带 `reason` 的显式排除)都会让这个字符串出现,而**两条都是可接受的处置**;不可接受的只有第三种:重测悄悄把它丢掉、谁也没写一句话。肯定半(选中还是排除、排除的理由对不对)读不出来,仍归总监逐条读透(LIMIT 11 的 `path_contains_all` 边界逐字:mention is not correctness)。"
+      },
+      "unmet_at_ruling": "开这一行之前当场跑 `python3 tools/agent/pending_rulings.py --owed-only`(完整日志 `/tmp/pr_after.log`,不是尾巴),本行判据读 **OWED**(`tools/agent/py_gate_manifest.json exists but 1 of 1 required mention(s) are absent: tests/test_rule6_memo.py`),时刻 2026-09-13T01:12:00Z。",
+      "retired_at": "2026-09-15T10:05:57Z",
+      "retired_by": "director (RULING 53(丙))",
+      "retired_because": "⚖️ **RULING 53(丙) —— 退休:本行自己写死的出路 (乙) 已经走完,现读逐条在册。**\n⚠️ 同一句先说循环风险:本行今天读 DONE **有一部分是本轮 RULING 52 造成的**(证词的真戳 `2026-09-13T01:12:00Z` 被 `。`/`**` 包着,旧判据看不见)⇒ **依据只取手读的**。\n本行 `ruling` 逐字给了且只给了两条出路,并写明「⛔ 无论哪条,manifest 里必须出现这个文件名 ——**判据买的就是「这个决定被写下来过」,不是「决定得对」**」。现读 `tools/agent/py_gate_manifest.json`:\n```\n\"tests/test_rule6_memo.py\": { \"seconds\": 4.898, \"in_gate\": false, \"reason\": \"over_per_test_cap\" }\n```\n⇒ **出路 (乙) 逐字兑现**:实测秒数 **4.898s** > `per_test_cap_seconds` = **3.0**,排除**带 `reason` 登记**(GH #616 约束 1 的既有写法:成员资格只看实测秒数,不看文件名)。⛔ 也确认**没有走本行禁止的那条路**:测试**一行没砍**,case 5/6 那批端到端 push 仍在。\n⭐ **本行是 registry 里第一条「判别性可由两个互相独立的戳交叉证明」的行,⛔ 而不是只靠证词自述**:证词戳 `2026-09-13T01:12:00Z`(当时 `grep` 不中)早于 manifest 自己的 `measured_at = 2026-09-14T13:22:06Z` **约 36 小时** ⇒ 该键**确实是被本行欠的工作翻过来的**,⛔ 不是 BORN-DONE。📌 这一对戳**不经过 `_witness_problems`**,故它是本轮唯一一条**不受 RULING 52 影响**的退休依据 —— 记在这里给下一个担心循环的人。"
     }
   ],
   "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。",

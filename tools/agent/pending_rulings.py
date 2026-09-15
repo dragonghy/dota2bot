@@ -1094,27 +1094,105 @@ def owed_status(row, repo=REPO):
 WITNESS_FIELD = "unmet_at_ruling"
 
 
-def _witness_problems(text):
+# A full-precision ISO-8601 UTC stamp, ANYWHERE in the text.  The witness
+# field is CJK prose written in markdown, so a stamp arrives wrapped:
+# `2026-09-12T22:06:20Z。`, `**...**`, backticks.  See RULING 52 (甲) for why
+# this is a scan and not a whitespace tokenizer.  Fuzzing is still refused
+# here -- `T16:xxZ` has no digits where digits are required -- and `parse_utc`
+# stays the only authority on whether a candidate is a time.
+_UTC_STAMP_RE = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?"
+    r"(?:Z|[+-]\d{2}:?\d{2})")
+
+# `X = V` / `X=V`: the shape of a RECORDED VALUE.  A promise ("yes",
+# "checked", "I ran it") has no left and right side.  See RULING 52 (乙).
+_MEASUREMENT_RE = re.compile(r"[^\s=]\s*=\s*[^\s=]")
+
+
+def _witness_instants(text):
+    """Every parseable full-precision UTC instant carried by `text`."""
+    return [m.group(0) for m in _UTC_STAMP_RE.finditer(text)
+            if parse_utc(m.group(0))]
+
+
+def _key_subjects(row):
+    """What this row's OWN `done_when` is about: path, needles, json key.
+
+    Used to keep RULING 52 (乙)'s widened spelling KEYED: a measurement only
+    counts as a reading of THIS row if it names the thing this row's criterion
+    reads.  A generic `n = 0` from some other leg does not.
+    """
+    cond = (row or {}).get("done_when") or {}
+    subjects = []
+    path = cond.get("path")
+    if isinstance(path, str) and path.strip():
+        subjects.append(path)
+        subjects.append(os.path.basename(path))
+    for needle in cond.get("contains") or []:
+        if isinstance(needle, str) and needle.strip():
+            subjects.append(needle)
+    key = cond.get("key")
+    if isinstance(key, str) and key.strip():
+        subjects.append(key)
+    return subjects
+
+
+def _witness_problems(text, row=None):
     """Shape check for a `unmet_at_ruling` witness.  Returns a list of gripes.
 
-    Deliberately two cheap requirements, and it is worth saying why each one
-    and not more:
+    Two cheap requirements, and it is worth saying why each one and not more:
 
-    * the literal token `OWED` -- the witness is a QUOTED READING of this
-      leg, not a promise ("yes", "checked", "I ran it") that a hurried author
-      can type without running anything;
+    * a QUOTED READING of the key, not a promise ("yes", "checked", "I ran
+      it") that a hurried author can type without running anything;
     * a real ISO-8601 UTC instant, by the same parser and the same reason
       `claimed_at` is strict (`parse_utc`): the house style for prose is a
       FUZZED stamp (`2026-09-12T19:xxZ`), and a fuzzed stamp is not a time.
 
     What it does NOT and CANNOT check is whether the quoted reading is true;
     see LIMIT 14.  It moves the failure direction, it does not close it.
+
+    RULING 52 (director 2026-09-15, batch-desk 09:12Z §5.3 handoff ①) widened
+    HOW each requirement may be SPELLED, and neither half changed what is
+    bought.  Both halves had the same shape, measured on all 12 witnesses in
+    the registry that day:
+
+    (甲) the instant was read by `text.split()` + `.strip("()[],;")` -- an
+         ASCII punctuation list, against a field every stream writes in CJK
+         markdown prose.  `时刻 2026-09-12T22:06:20Z。` tokenizes to a stamp
+         glued to `。`, which `fromisoformat` refuses.  FIVE of twelve rows
+         carried a real full-precision instant the check could not see; the
+         four genuinely fuzzed ones and the one with no stamp at all stay
+         refused, and are the in-corpus negative controls.
+
+    (乙) `OWED` is the token this LEG prints, so quoting it proves the author
+         ran the leg.  But a witness may instead quote the KEY ITSELF, which
+         answers the same question more directly: `present=False`,
+         `` `grep -c` = 0``, `no_manifest_row_count = 50`.  That spelling is
+         accepted only when it is KEYED -- it names this row's own
+         `done_when` subject AND records a value -- so it cannot be satisfied
+         by prose about somebody else's leg.  Note the widened branch does
+         NOT require the value to read zero/false: `= 50` above is a real
+         unmet reading of a key whose target is 0.
+
+    ⚠️ The failure direction is why both halves are bugs and not taste.  A
+    refused witness reads UNCERTIFIABLE, which by the selfcheck's own
+    vocabulary is neither a pass nor a red -- so the row is never retired,
+    never escalated, and costs one round of attention forever.
     """
     problems = []
+    keyed = False
     if "OWED" not in text:
-        problems.append("it does not quote an OWED reading (the literal token "
-                        "`OWED` is absent)")
-    if not any(parse_utc(tok.strip("()[],;")) for tok in text.split()):
+        subjects = _key_subjects(row)
+        keyed = (bool(subjects)
+                 and any(s in text for s in subjects)
+                 and bool(_MEASUREMENT_RE.search(text)))
+        if not keyed:
+            problems.append(
+                "it quotes no reading: the literal token `OWED` is absent, and "
+                "it is not a keyed measurement either (RULING 52 (乙) also "
+                "accepts a witness that names this row's own `done_when` "
+                "subject and records a value, e.g. `grep -c` = 0)")
+    if not _witness_instants(text):
         problems.append("it carries no parseable ISO-8601 UTC instant (a fuzzed "
                         "`T19:xxZ` stamp is prose, not a time -- same rule as "
                         "`claimed_at`)")
@@ -1154,7 +1232,7 @@ def _witness_overlay(row, detail):
         return ("UNCERTIFIABLE",
                 "%s -- and this row's `%s` is not a non-empty string (%r)"
                 % (detail, WITNESS_FIELD, text))
-    problems = _witness_problems(text)
+    problems = _witness_problems(text, row)
     if problems:
         return ("UNCERTIFIABLE",
                 "%s -- and this row's `%s` is not a readable reading: %s"
