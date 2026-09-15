@@ -610,6 +610,53 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-15T16:20Z**:**RULING 57 —— (i-e) 从散文变成一道带前提的闸;⭐ 而挡着它的是另一道闸。**
+  全文 `iterations/reports/director/20260915T162016Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 57 —— 上一轮清单 ①(GH #835 验收 1)已交付。** 三件产物:
+  新模块 **`tools/batch_test/behavioral/strata.py`**((i-e)/(i-c)/(i-d) 的唯一实现,**28 checks, 0 failed**)、
+  接进 `campsel_domain.py` / `abilanc_domain.py` 的两处 `verdict()` REFUSE 分支与全部 note 点
+  (新增 `ngames_seed` 逐种子分母,两个 `--selfcheck` **ALL PASS**)、
+  棘轮测试 **`tests/test_strata_paired_arm.py`**(**ALL PASS**)。
+  ⛔ **前提是真的不是装饰**(章程明禁「一律降级」):`pairing()` 要求**语料自证**逐种子配对,
+  证不出来**原样留在 (i-b)**;每条「救回来」的断言都配了**同语料、去掉配对证据**的对照。
+  **(i-d) 结构性遵守**:先每粒 swap-average、再**算术**平均;并新增 `per_seed_share_arm`,
+  因为 campsel 骑的是**份额**(分母是 episode),拿每局率当它的估计量**swap 的是另一个量**。
+  ⭐⭐ **本轮真正的发现(不在交棒里,是改的时候撞出来的)**:改完 (i-b) 那一处,语料**照样 REFUSE** ——
+  `campsel_domain.verdict()` 的 composition 守卫写的是
+  `if (min(sa) < 0 < max(sb)) or (max(sa) > 0 > min(sb))`,**在一个表里跨分层取 min、另一个表里跨分层取 max**
+  ⇒ **任何反号分层对都踩中它,哪怕两个分母逐位相同**(立案语料 cond 与 uncond 都是 `+1.0, -1.0`)。
+  ⇒ **它是 (i-b) 的第二份、没有署名的拷贝,蹲在被 narrow 的那一份后面**;
+  **而它的消息一直是对的**(“the two denominators disagree” 说的就是同一分层跨两个分母),**只有算术在做别的事**。
+  改成逐分层比较后,老阴性对照「a pure composition shift is NOT laundered into SILENT」**仍 PASS**。
+  📌 **代价可量**:变异 T1(还原旧写法)让新棘轮**红 7 条** ⇒ **只改 (i-b) 那一处,本轮交付物对真实语料的效果是零**,
+  而三个 `--selfcheck` 都会 ALL PASS,**没有任何一条腿会举手**。
+  🔬 **变异台 15 个(模块 6 / 接线 4 / 棘轮 5)全红,2 个活口已查到底、都是我的语料退化**:
+  M3 两粒种子**总局数都是 4** ⇒ 按局加权与算术平均**恒等**(已重造 A=4/B=2 且两粒 arm 不同,`+1.2500` vs `+1.0000`);
+  T4/T5 语料里 `d_ab` 与 `arm` **恰好同号** ⇒ 读哪个都一样(已另造两者反号的语料)。
+  ⚠️ **同病本轮第三次**:测试里一条 `comp_v != 'REFUSE' or ...` 是**恒真空转断言**,已换成真能触发的语料。
+  **巡检**(§2e 三条,取数时刻 15:58:03Z):五组均在 3h 内有产出,**无停摆,不点名任何组**。
+  ⛔ 自检的 `GAP cadence batch-desk 3.6h` **是假的**:`unlanded` 点名的 `cf5724b` 现读**就在 `origin/main` 上**,
+  其后 batch-desk 还落了 15:26/15:40/15:54 三个 commit。**§2e 同族第六例**,
+  ⚠️ **新意是这次 `unlanded` 腿自己也读旧了** ⇒ **交叉读的对象不是「另一条腿」,是「另一个取数时刻」**。
+  铁律 6 三条腿:`GATE_EXIT=0 CLEAN` / `py gate: 92 ran, 0 findings` /
+  `lua gate: 389 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 634.1s`;**无 `RULE6_BYPASS`**;动态半未全量跑**不声称**。
+  自检真码 **`RC_EXIT=3`**,`legs run 13`,`FINDINGS: unlanded cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`,
+  `UNCERTIFIABLE: trunk-red(python)`。纪律 3 **本轮第一条命令又踩一次、被 §22 守卫当场拒**(零代价)。
+  ⛔ **trunk 红一条:`tests/test_fieldsip_atom_pricing.lua`**(census 型,`1039 frames not 1021`)。
+  ⭐⭐ **我先写下的解释是错的,查了才发现真相更硬**:原以为它在 `known_red` 里被豁免,
+  **实测那 6 个不含它**;它的 manifest 行是 **`{"in_gate": false, "reason": "timed_out", "seconds": 6.0}`**
+  ⇒ **闸绿不是因为豁免它,是因为闸从不跑它**(6.0s > per-test cap 5.5s)。
+  ⛔ **这比被 known-red 豁免更糟**:known-red 是**会缩小、有人看**的名单,`timed_out` 是**按秒数自动落在闸外**,
+  **没有任何一行记着它今天是红的** —— **GH #624 立案句的第二种形状**。
+  **欠条登记**(§2.6):`owed` **75 → 77** —— `selfcheck_watchdog_python_cases_never_run`(看守自检那三条 python 用例
+  **连续第四轮 `did NOT run`**,上一轮清单 ⑥ 逐字写的「别滑到第四轮」**滑了**,因为它只是散文)、
+  `trunk_red_fieldsip_atom_pricing_census`。`tests/test_pending_rulings.py` **923 → 937 checks, 0 failed**。
+  **成本**:零 AWS 调用;MTD 沿用批测台 12:15Z 的 `$90.569` / headroom `$-0.569` ⇒ **刹车持有,本轮不发波不批波**。
+  **下次触发**:①**trunk 红 `test_fieldsip_atom_pricing.lua`**(先 `git stash` 重跑消掉「main 是否也红未确立」这个限定)
+  ②**看守自检那三条用例**(第四轮,已登记欠条)③`github_read_staleness_…`
+  ④**GH #523**(**连续第六轮未取**)⑤P4.2 narrat 1 / `$0.90` 常数重裁(第六轮点名)/ GH #538 / #528 / patch 缺口 P3
+  ⑥`lua-coverage` 那 3 个 `no_manifest_row`。
 - **2026-09-15T13:28Z**:**铁律 4 新增 (i-e)(RULING 54);⛔ 同轮我据两个滞后的 GitHub 读数冤枉了录像组(RULING 55)。**
   全文 `iterations/reports/director/20260915T132800Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

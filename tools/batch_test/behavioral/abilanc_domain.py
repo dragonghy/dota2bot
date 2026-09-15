@@ -90,6 +90,7 @@ from collections import Counter, defaultdict
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import entities  # noqa: E402
 from ancient_camp_domain import is_ancient, is_hero, load  # noqa: E402
+import strata  # noqa: E402  -- iron rule 4(i-e), GH #835 / RULING 54
 from campfarm_target import (  # noqa: E402
     ANCIENT_MIN_LEVEL, R_SWEEP_MAX, SHIPPED_ANCIENT_MIN, WARMUP_GAMES,
     ANC_SUPPORT, NORM_SUPPORT, band_of, camp_samples, cluster, keep_supported)
@@ -292,6 +293,8 @@ def scan(dirs, warmup=WARMUP_GAMES):
 
     casts = []
     ngames = {'radiant': 0, 'dire': 0}
+    ngames_seed = Counter()       # (seed, arm_side) -> games
+
     keys = set()
     exposure = Counter()          # (leg, arm_side, band) -> hero-frames near a camp
     engage = Counter()            # (leg, arm_side) -> hero<->ancient DAMAGE events
@@ -301,6 +304,9 @@ def scan(dirs, warmup=WARMUP_GAMES):
         teams = tl['game']['teams']
         armed_team = RADIANT if m['side'] == 'radiant' else DIRE
         ngames[m['side']] += 1
+        # Per-seed denominators so rule 4(i-d) can be obeyed and so the
+        # corpus can be ASKED whether it is seed-paired (4(i-e)).
+        ngames_seed[(m.get('seed'), m['side'])] += 1
         keys.add((run_tag, m['game']))
         clean, _ = entities.frames_by_hero(tl)
         deaths = entities.death_times(tl)
@@ -359,7 +365,8 @@ def scan(dirs, warmup=WARMUP_GAMES):
                 'band': None if lo is None else band_of(lo),
             })
         del tl
-    return {'casts': casts, 'ngames': ngames, 'games': len(games),
+    return {'casts': casts, 'ngames': ngames,
+            'ngames_seed': dict(ngames_seed), 'games': len(games),
             'keys': len(keys), 'collisions': collisions,
             'anc_camps': anc_camps, 'anc_cov': anc_cov,
             'norm_camps': norm_camps, 'norm_cov': norm_cov,
@@ -406,7 +413,7 @@ def layered(casts, ngames, pred):
     return out
 
 
-def show(title, tab, ngames):
+def show(title, tab, ngames, paired=False):
     print('\n%s' % title)
     print('  %-9s %7s %9s %9s %9s'
           % ('arm side', 'games', 'armed', 'baseline', 'delta'))
@@ -425,12 +432,10 @@ def show(title, tab, ngames):
     if tab['absent']:
         note = ('LAYER ABSENT (0 games: %s) -- NOT a flat layer'
                 % ','.join(tab['absent']))
-    elif tab['opposed']:
-        note = 'OPPOSED => NOISE (rule 4i)'
-    elif tab['one_layer_flat']:
-        note = 'one layer flat (not a contradiction)'
     else:
-        note = 'both layers agree'
+        note = strata.note_for(
+            strata.pair_arm(tab['radiant']['delta'], tab['dire']['delta']),
+            paired)
     print('  %-9s %7s %9d %9d   two-layer: %s'
           % ('pooled', '-', p['armed_n'], p['baseline_n'], note))
 
@@ -482,9 +487,43 @@ def verdict(res):
     # rule 4(i) exists to catch -- so opposition is asked first.  Only when both
     # layers are themselves flat does a zero read as SILENT (the `tbearly`
     # lesson: a genuine Δ=0 must not be laundered into REFUSE either).
+    # Rule 4(i-e) / RULING 54 (GH #835): opposite-signed strata are NOISE only
+    # for a quantity with no paired structure.  A seed-paired mirrored corpus
+    # has it -- both legs of a run were dealt the SAME seed -- and there
+    # `opposed` is the identity |roster| > |arm|, which carries no information
+    # about precision.  The precondition is checked, never assumed: a corpus
+    # that cannot show every seed on both arm sides keeps the (i-b) refusal.
+    paired, _ps, unpaired = strata.pairing(casts, res.get('ngames_seed') or {})
+    if tab['opposed'] and not paired:
+        return 'REFUSE', ('ab and ba point in opposite directions and this '
+                          'corpus is not seed-paired (%s) -- iron rule 4(i-b) '
+                          'says that is noise, not a reading'
+                          % ('no seed carries both arm sides' if not _ps
+                             else 'unpaired seeds: %s'
+                             % ','.join(str(x) for x in unpaired)))
     if tab['opposed']:
-        return 'REFUSE', ('ab and ba point in opposite directions -- iron rule '
-                          '4(i) says that is noise, not a reading')
+        # Read as an arm.  The pooled counts `a`/`b` below cannot answer this
+        # case: pooling is what the roster term survives.
+        p = strata.pair_arm(tab['radiant']['delta'], tab['dire']['delta'])
+        est = strata.per_seed_arm(casts, res.get('ngames_seed') or {},
+                                  lambda c: True)
+        arm = est['arm'] if est else p['arm']
+        how = ('per-seed swap-average over %d seeds, arithmetic mean (4i-d)'
+               % est['n_seeds']) if est else \
+              'pooled across seeds -- a demonstration, not the estimator'
+        tail = ('ab %+.3f, ba %+.3f oppose, which is the identity '
+                '|roster|>|arm| (roster %+.3f) and says nothing about '
+                'precision (4i-e); arm %+.3f/game [%s]'
+                % (tab['radiant']['delta'], tab['dire']['delta'],
+                   p['roster'], arm, how))
+        if arm < 0:
+            return 'WORKING-OPPOSED-STRATA', ('armed casts at an ancient '
+                                              'under tier LESS often -- ' + tail)
+        if arm > 0:
+            return 'BUGGY-SUSPECT-OPPOSED-STRATA', ('armed casts at an ancient '
+                                                    'under tier MORE often -- '
+                                                    + tail)
+        return 'SILENT', 'the two strata cancel exactly -- ' + tail
     if a == b:
         return 'SILENT', 'armed and baseline fired the same number of times'
     if a < b and a == 0:
@@ -548,18 +587,30 @@ def report(res, top=12):
                  res['fed_exposure'][(leg, 'dire')]))
 
     ng = res['ngames']
+    # Established ONCE from the corpus and printed: a reader must be able to
+    # see WHY an opposed pair was read as an arm rather than called noise.
+    paired, pseeds, unpaired = strata.pairing(res['casts'],
+                                              res.get('ngames_seed') or {})
+    print('\n=== rule 4(i-e) precondition: is this corpus seed-paired?')
+    print('  %s   paired seeds %d %s'
+          % ('PAIRED -- opposed strata read as arm+roster (4i-e)' if paired
+             else 'NOT PAIRED -- opposed strata stay NOISE (4i-b)',
+             len(pseeds),
+             '' if not unpaired
+             else '| unpaired: %s' % ','.join(str(x) for x in unpaired)))
+
     under = [c for c in res['casts'] if c['placed'] == 'certain_under']
     show('DOMAIN (§BL.3) -- casts at an ancient by a hero below level %d'
-         % ANCIENT_MIN_LEVEL, layered(under, ng, lambda c: True), ng)
+         % ANCIENT_MIN_LEVEL, layered(under, ng, lambda c: True), ng, paired)
     show('  ... split: `under` band (<%d)' % SHIPPED_ANCIENT_MIN,
-         layered(under, ng, lambda c: c['band'] == 'under'), ng)
+         layered(under, ng, lambda c: c['band'] == 'under'), ng, paired)
     show('  ... split: `band` (%d..%d)' % (SHIPPED_ANCIENT_MIN,
                                            ANCIENT_MIN_LEVEL - 1),
-         layered(under, ng, lambda c: c['band'] == 'band'), ng)
+         layered(under, ng, lambda c: c['band'] == 'band'), ng, paired)
     show('REVERSE GUARD (甲) -- casts at an ancient at level >= %d '
          '(must NOT collapse > 30%%)' % ANCIENT_MIN_LEVEL,
          layered([c for c in res['casts'] if c['placed'] == 'certain_over'],
-                 ng, lambda c: True), ng)
+                 ng, lambda c: True), ng, paired)
 
     print('\n=== REVERSE GUARD (乙) -- hero->ancient DAMAGE events '
           '(must NOT collapse to 0)')
@@ -764,6 +815,48 @@ def selfcheck():
         verdict(mk([c('radiant', 'armed'), c('radiant', 'armed'),
                     c('dire', 'baseline'), c('dire', 'baseline')]))[0]
         == 'REFUSE')
+    # ---- rule 4(i-e) / RULING 54 (GH #835).  The corpus above is refused
+    # because `mk` supplies no `ngames_seed`, so the pairing cannot be shown.
+    # Here is the SAME shape with the dispatch fact present: nothing about the
+    # numbers changes, only whether the corpus can demonstrate that both legs
+    # of each run shared a seed.
+    def cs(side, leg, seed, cls='certain_under'):
+        d = c(side, leg, cls)
+        d['seed'] = seed
+        return d
+
+    def mks(casts, ng_seed):
+        d = mk(casts)
+        d['ngames_seed'] = ng_seed
+        return d
+
+    # ASYMMETRIC on purpose: ab = +2/10, ba = -1/10, so arm = +0.05 and the
+    # rescued reading has a DIRECTION.  The first draft reused the symmetric
+    # corpus below, whose arm is exactly 0, and asserted a direction on it --
+    # the corpus was wrong, not the code.
+    pair_ng = {('S1', 'radiant'): ng['radiant'], ('S1', 'dire'): ng['dire']}
+    opp = [cs('radiant', 'armed', 'S1'), cs('radiant', 'armed', 'S1'),
+           cs('dire', 'baseline', 'S1')]
+    chk('4(i-e): the same opposed corpus still REFUSEs when only one arm '
+        'side carries the seed (the precondition is real)',
+        verdict(mks(opp, {('S1', 'radiant'): ng['radiant']}))[0] == 'REFUSE')
+    v_p, why_p = verdict(mks(opp, pair_ng))
+    chk('4(i-e): once seed-paired, the opposed corpus is read as an arm '
+        'instead of refused (%s)' % v_p, v_p.endswith('-OPPOSED-STRATA'))
+    chk('4(i-e): the rescued verdict names the identity and the roster term',
+        'identity' in why_p and 'roster' in why_p)
+    chk('4(i-e): and quotes the per-seed estimator, not a pooled number',
+        'per-seed swap-average' in why_p)
+    # ab = +2/game, ba = -2/game -> arm exactly 0, which must read SILENT
+    # rather than be forced into a direction.
+    sym = [cs('radiant', 'armed', 'S1'), cs('radiant', 'armed', 'S1'),
+           cs('dire', 'baseline', 'S1'), cs('dire', 'baseline', 'S1')]
+    chk('4(i-e): ab and ba of equal magnitude give arm 0 => SILENT',
+        verdict(mks(sym, pair_ng))[0] == 'SILENT')
+    chk('4(i-e): the rescued direction follows the ARM, not the larger '
+        'stratum (ab is +2 and would have read BUGGY on its own)',
+        v_p == 'BUGGY-SUSPECT-OPPOSED-STRATA')
+
     chk('a genuinely flat pair reads SILENT, not REFUSE (`tbearly` lesson)',
         verdict(mk([c('radiant', 'armed'), c('radiant', 'baseline'),
                     c('dire', 'armed'), c('dire', 'baseline')]))[0]

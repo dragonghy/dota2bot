@@ -99,6 +99,7 @@ import entities  # noqa: E402
 from ancient_camp_domain import is_ancient, is_hero, load  # noqa: E402
 from campgrade_ladder import camp_owner  # noqa: E402
 from creeppull_domain import DIRE, RADIANT, load_sweep  # noqa: E402
+import strata  # noqa: E402  -- iron rule 4(i-e), GH #835 / RULING 54
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     '..', '..', '..'))
@@ -509,6 +510,7 @@ def scan(dirs, warmup=WARMUP_GAMES):
 
     recs = []
     ngames = {'radiant': 0, 'dire': 0}
+    ngames_seed = Counter()       # (seed, arm_side) -> games
     stats = Counter()
     pen = gate_facts()['penalty']
     for d, m, p in games:
@@ -517,6 +519,10 @@ def scan(dirs, warmup=WARMUP_GAMES):
         teams = tl['game']['teams']
         armed_team = RADIANT if m['side'] == 'radiant' else DIRE
         ngames[m['side']] += 1
+        # Per-seed denominators, so rule 4(i-d) can be obeyed structurally:
+        # the arm is averaged per seed FIRST.  Carried even when unused, so a
+        # corpus can always be ASKED whether it is seed-paired (4(i-e)).
+        ngames_seed[(m.get('seed'), m['side'])] += 1
         frames, _ = entities.frames_by_hero(tl)
         ancients = {}
         for b in tl.get('buildings', []):
@@ -581,8 +587,8 @@ def scan(dirs, warmup=WARMUP_GAMES):
             stats['unknown_half'] += 1 if r['half'] == 'unknown' else 0
             recs.append(r)
         del tl
-    return {'eps': recs, 'ngames': ngames, 'camps': camps, 'stats': stats,
-            'games': len(games)}
+    return {'eps': recs, 'ngames': ngames, 'ngames_seed': dict(ngames_seed),
+            'camps': camps, 'stats': stats, 'games': len(games)}
 
 
 # --------------------------------------------------------------------------
@@ -654,16 +660,47 @@ def verdict(res):
     if not any(e[k] is not None for e in eps):
         return 'EMPTY-DOMAIN', ('no enemy-half engagement with both halves of '
                                'the map carrying a known camp')
+    # Rule 4(i-e) / RULING 54: opposite-signed strata are only NOISE when the
+    # quantity has no paired structure.  A seed-paired mirrored corpus does
+    # have it -- both legs of a pair were dealt the SAME seed, so the roster
+    # term cancels term by term in `d_ab + d_ba` -- and there `opposed` is the
+    # identity |roster| > |arm|, which says nothing about precision.
+    #
+    # The precondition is NOT waived by assumption: a corpus that cannot show
+    # every contributing seed on both arm sides falls through to the original
+    # (i-b) refusal below, unchanged.  That is the difference between making
+    # (i-e) a gate and making it a blanket amnesty.
+    paired, _pseeds, unpaired = strata.pairing(eps, res.get('ngames_seed')
+                                               or {})
     for tab, why in ((cond, 'conditional'), (uncond, 'leg-independent')):
-        if tab['opposed']:
+        if tab['opposed'] and not paired:
             return 'REFUSE', ('ab and ba witness rates (%s denominator) move '
-                              'in opposite directions -- iron rule 4(i) says '
-                              'that is noise' % why)
+                              'in opposite directions and this corpus is not '
+                              'seed-paired (%s) -- iron rule 4(i-b) says that '
+                              'is noise'
+                              % (why, 'no seed carries both arm sides'
+                                 if not _pseeds else
+                                 'unpaired seeds: %s'
+                                 % ','.join(str(s) for s in unpaired)))
     sa = cond['radiant']['delta'], cond['dire']['delta']
     sb = uncond['radiant']['delta'], uncond['dire']['delta']
-    if (min(sa) < 0 < max(sb)) or (max(sa) > 0 > min(sb)):
-        return 'REFUSE', ('the two denominators disagree in sign -- the '
-                          'conditional reading is a composition shift')
+    # THE COMPARISON IS WITHIN A STRATUM, ACROSS DENOMINATORS -- which is what
+    # the message has always said and what the old arithmetic did not do.
+    # `min(sa) < 0 < max(sb)` takes its min over STRATA in one table and its
+    # max over STRATA in the other, so any opposed pair tripped it even when
+    # the two denominators agreed perfectly: the toy corpus that caught this
+    # has cond and uncond IDENTICAL (+1.0, -1.0) and was refused as a
+    # "composition shift".  That made this a second, undocumented copy of the
+    # (i-b) veto sitting behind the one 4(i-e) was written to narrow -- so
+    # rescuing an opposed reading upstream had no effect at all until here.
+    # A composition shift is a stratum whose reading CHANGES SIGN when the
+    # leg-dependent denominator is swapped for the leg-independent one.
+    for side, ca, cb in (('ab', sa[0], sb[0]), ('ba', sa[1], sb[1])):
+        if (ca < 0 < cb) or (ca > 0 > cb):
+            return 'REFUSE', ('the two denominators disagree in sign on the '
+                              '%s stratum (conditional %+.3f, leg-independent '
+                              '%+.3f) -- the conditional reading is a '
+                              'composition shift' % (side, ca, cb))
     a = (sa[0] + sb[0]) / 2.0
     b = (sa[1] + sb[1]) / 2.0
     tab = cond
@@ -688,7 +725,39 @@ def verdict(res):
             '(ab %+.3f, ba %+.3f, mean of both denominators)%s'
             % (a, b, '; only one stratum carries it' if flat else
                ' -- both strata and both denominators agree'))
-    return 'REFUSE', 'unreachable by construction -- signs already partitioned'
+    # Reachable ONLY on a seed-paired corpus, because that is the one case
+    # where an opposed pair is now allowed past the (i-b) gate above.  It used
+    # to be dead code guarded by that refusal; leaving the old "unreachable"
+    # return here would have turned every rescued reading into a REFUSE with a
+    # message calling itself impossible.
+    p = strata.pair_arm(a, b)
+    # The estimator must be formed from the SAME observable the strata deltas
+    # describe -- these are shares (denominator: episodes), so a per-GAME
+    # swap-average would be a swap-average of a different quantity.
+    est = strata.per_seed_share_arm(eps, res.get('ngames_seed') or {},
+                                    lambda e: e[k] is True,
+                                    lambda e: e[k] is not None)
+    # The per-seed estimator is the reading (4(i-d)); the pooled `p['arm']` is
+    # only a demonstration that a number exists, so it is never the one quoted
+    # when the estimator is available.
+    arm = est['arm'] if est else p['arm']
+    how = ('per-seed swap-average over %d seeds, arithmetic mean (4i-d)%s'
+           % (est['n_seeds'],
+              '' if not est['skipped'] else '; %d seed(s) skipped for an '
+              'empty stratum denominator' % len(est['skipped']))) if est else \
+          ('pooled across seeds -- a demonstration, not the estimator')
+    tail = ('ab %+.3f, ba %+.3f oppose, which is the identity |roster|>|arm| '
+            '(roster %+.3f) and says nothing about precision (4i-e); arm '
+            '%+.3f [%s]' % (a, b, p['roster'], arm, how))
+    if arm < 0:
+        return 'WORKING-OPPOSED-STRATA', (
+            'armed takes the enemy camp over a cheaper own one LESS often -- '
+            + tail)
+    if arm > 0:
+        return 'BUGGY-SUSPECT-OPPOSED-STRATA', (
+            'armed takes the enemy camp over a cheaper own one MORE often -- '
+            + tail)
+    return 'SILENT', ('the two strata cancel exactly -- ' + tail)
 
 
 def report(res):
@@ -737,14 +806,26 @@ def report(res):
           % (st['teleport_dropped'], len(DECIDE_LEADS)))
 
     eps = [e for e in res['eps'] if e['at_camp'] and e['half'] != 'unknown']
+    # Established ONCE, from the corpus, and printed -- a reader must be able
+    # to see WHY an opposed pair was read as an arm rather than refused.
+    paired, pseeds, unpaired = strata.pairing(eps, res.get('ngames_seed')
+                                              or {})
+    print('\n=== rule 4(i-e) precondition: is this corpus seed-paired?')
+    print('  %s   paired seeds %d %s'
+          % ('PAIRED -- opposed strata read as arm+roster (4i-e)' if paired
+             else 'NOT PAIRED -- opposed strata stay NOISE (4i-b)',
+             len(pseeds),
+             '' if not unpaired
+             else '| unpaired: %s' % ','.join(str(s) for s in unpaired)))
+
     print('\n=== HALF A (primary): share of camp engagements on the ENEMY half')
     show_share(shares(eps, lambda e: e['half'] == 'enemy', lambda e: True),
-               'all levels')
+               'all levels', paired)
     for lo, hi, name in ((1, 9, 'level 1..9'), (10, 11, 'level 10..11'),
                          (12, 99, 'level >=12')):
         show_share(shares(eps, lambda e: e['half'] == 'enemy',
                           lambda e, lo=lo, hi=hi: lo <= e['level'] <= hi),
-                   name)
+                   name, paired)
 
     print('\n=== rule 4(i) arithmetic on this observable: side vs leg')
     print('    (the size of the effect the PHYSICAL side has, next to the '
@@ -773,7 +854,7 @@ def report(res):
         k = 'w%d' % int(lead)
         show_share(shares(eps, lambda e, k=k: e[k] is True,
                           lambda e, k=k: e[k] is not None),
-                   'lead %.0fs' % lead)
+                   'lead %.0fs' % lead, paired)
     # The conditional rate above is conditioned on a quantity the legs may
     # themselves differ in (how often they engage an enemy camp at all), so
     # a composition shift could masquerade as a rate shift.  The same witness
@@ -786,7 +867,7 @@ def report(res):
         k = 'w%d' % int(lead)
         show_share(shares(eps, lambda e, k=k: e[k] is True,
                           lambda e: True),
-                   'lead %.0fs' % lead)
+                   'lead %.0fs' % lead, paired)
 
     # Rule 4(ii): expose the knife edge.  A witness that fires at ratio 0.99
     # is one step from not firing; the RATE cannot distinguish that corpus
@@ -811,11 +892,11 @@ def report(res):
     show(layered(eps, res['ngames'],
                  lambda e: e['ancient'] and e['level'] < g['ancient_level']),
          'ancient engagements below the selector gate (level < %d)'
-         % g['ancient_level'], res['ngames'])
+         % g['ancient_level'], res['ngames'], paired)
     show(layered(eps, res['ngames'],
                  lambda e: e['ancient'] and e['level'] >= g['ancient_level']),
          'ancient engagements at or above it (level >= %d)'
-         % g['ancient_level'], res['ngames'])
+         % g['ancient_level'], res['ngames'], paired)
 
     v, why = verdict(res)
     print('\n=== VERDICT  %s' % v)
@@ -823,16 +904,16 @@ def report(res):
     return v
 
 
-def show_share(tab, title):
+def show_share(tab, title, paired=False):
     print('  %-16s %14s %14s %9s  %s'
           % (title, 'armed', 'baseline', 'delta', 'two-layer'))
     for side in ('radiant', 'dire'):
         r = tab[side]
         note = ''
         if side == 'dire':
-            note = ('OPPOSED => NOISE (4i)' if tab['opposed']
-                    else ('one layer flat' if tab['one_layer_flat']
-                          else 'both layers agree'))
+            note = strata.note_for(
+                strata.pair_arm(tab['radiant']['delta'], tab['dire']['delta']),
+                paired)
         print('    %-14s %4d/%-4d %.3f %4d/%-4d %.3f %+9.3f  %s'
               % ('ab' if side == 'radiant' else 'ba',
                  r['armed_n'], r['armed_d'], r['armed'],
@@ -840,7 +921,7 @@ def show_share(tab, title):
                  r['delta'], note))
 
 
-def show(tab, title, ngames):
+def show(tab, title, ngames, paired=False):
     print('  %s' % title)
     print('    %-9s %7s %11s %11s %9s' % ('arm side', 'games', 'armed',
                                           'baseline', 'delta'))
@@ -850,9 +931,8 @@ def show(tab, title, ngames):
               % ('ab' if side == 'radiant' else 'ba', ngames[side],
                  r['armed_n'], r['armed'], r['baseline_n'], r['baseline'],
                  r['delta']))
-    note = ('OPPOSED => NOISE (4i)' if tab['opposed']
-            else ('one layer flat' if tab['one_layer_flat']
-                  else 'both layers agree'))
+    note = strata.note_for(
+        strata.pair_arm(tab['radiant']['delta'], tab['dire']['delta']), paired)
     print('    %-9s %7s %11d %11d   two-layer: %s'
           % ('pooled', '-', tab['pooled']['armed_n'],
              tab['pooled']['baseline_n'], note))
@@ -1074,9 +1154,10 @@ def selfcheck():
         camp_owner(0.0, 0.0, {RADIANT: (0, 0)}) is None)
 
     # ---- the reading ------------------------------------------------------
-    def ep(side, leg, half, level=8, ancient=False, at_camp=True, w=None):
+    def ep(side, leg, half, level=8, ancient=False, at_camp=True, w=None,
+           seed=None):
         r = {'arm_side': side, 'leg': leg, 'half': half, 'level': level,
-             'ancient': ancient, 'at_camp': at_camp}
+             'ancient': ancient, 'at_camp': at_camp, 'seed': seed}
         for lead in DECIDE_LEADS:
             r['w%d' % int(lead)] = w
         return r
@@ -1139,6 +1220,62 @@ def selfcheck():
         V([W('radiant', 'armed', True), W('radiant', 'baseline', False),
            W('dire', 'armed', False), W('dire', 'baseline', True)])
         == 'REFUSE')
+
+    # ---- rule 4(i-e) / RULING 54 (GH #835): the SAME opposed corpus, once
+    # without the pairing evidence and once with it.  The pair below is the
+    # whole point of the rule: nothing about the numbers changes, only whether
+    # the corpus can show that both legs of each run shared a seed.
+    def Wp(side, leg, w, seed):
+        return ep(side, leg, 'enemy' if w is not None else 'own', w=w,
+                  seed=seed)
+
+    def Vp(eps_, ng_seed):
+        return verdict({'eps': eps_, 'ngames': ng, 'camps': [],
+                        'stats': Counter(), 'games': 0,
+                        'ngames_seed': ng_seed})
+
+    opposed_eps = [Wp('radiant', 'armed', True, 'S1'),
+                   Wp('radiant', 'baseline', False, 'S1'),
+                   Wp('dire', 'armed', False, 'S1'),
+                   Wp('dire', 'baseline', True, 'S1')]
+    chk('4(i-e): the SAME opposed corpus still REFUSEs when no seed is '
+        'paired (the precondition is real, not decorative)',
+        Vp(opposed_eps, {('S1', 'radiant'): 1})[0] == 'REFUSE')
+    # `opposed_eps` is deliberately the EXACT-CANCEL corpus (ab +1.0, ba -1.0),
+    # so its arm is 0.  That must read SILENT, not be forced into a direction
+    # -- and it is why a second, ASYMMETRIC corpus is needed to see a rescued
+    # reading at all.  The first draft of this test asserted `-OPPOSED-STRATA`
+    # here and failed; the corpus was wrong, not the code.
+    chk('4(i-e): a paired corpus whose arm cancels exactly reads SILENT, '
+        'never a direction',
+        Vp(opposed_eps, {('S1', 'radiant'): 1, ('S1', 'dire'): 1})[0]
+        == 'SILENT')
+
+    # ab: armed 1/1 vs baseline 0/1 = +1.0;  ba: armed 1/2 vs baseline 1/1
+    # = -0.5.  Opposed, and arm = (+1.0 + -0.5)/2 = +0.25 -- a real reading
+    # the old rule threw away.  cond and uncond are identical here (every
+    # episode carries a witness), so the composition guard has nothing to say.
+    asym = [Wp('radiant', 'armed', True, 'S1'),
+            Wp('radiant', 'baseline', False, 'S1'),
+            Wp('dire', 'armed', True, 'S1'),
+            Wp('dire', 'armed', False, 'S1'),
+            Wp('dire', 'baseline', True, 'S1')]
+    ng_paired = {('S1', 'radiant'): 1, ('S1', 'dire'): 1}
+    chk('4(i-e): an opposed corpus with a NON-ZERO arm still REFUSEs while '
+        'unpaired', Vp(asym, {('S1', 'radiant'): 1})[0] == 'REFUSE')
+    v_paired, why_paired = Vp(asym, ng_paired)
+    chk('4(i-e): once seed-paired, the SAME numbers are read as an arm '
+        'instead of refused as noise (%s)' % v_paired,
+        v_paired.endswith('-OPPOSED-STRATA'))
+    chk('4(i-e): the rescued verdict names the identity and reports the '
+        'roster term, so nobody reads it as a clean agreement',
+        'identity' in why_paired and 'roster' in why_paired)
+    chk('4(i-e): the rescued verdict quotes the PER-SEED estimator (4i-d), '
+        'not a pooled demonstration',
+        'per-seed swap-average' in why_paired)
+    chk('4(i-e): the rescued arm has the sign of (d_ab+d_ba)/2, not of '
+        'either stratum alone',
+        v_paired == 'BUGGY-SUSPECT-OPPOSED-STRATA')
     # A flat layer is NOT refused (it is not a contradiction) but it must never
     # be reported as a two-layer agreement either -- so it gets its own name.
     chk('ORDER: one flat layer + one signed is NAMED, not laundered',

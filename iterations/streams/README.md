@@ -85,6 +85,16 @@ issue / `iterations/queue.json` / 章程文件;Cursor 读你们的报告,不替�
    **反号不再是否决理由**,管精度的仍是 arm 自己的跨种子离散度;(丙) 两层读数照 **(i-a)** 全登记。
    ⛔ **(i-b) 仍然管它原本管的东西**(GH #148 的 `med n_rc` 那一类**没有配对结构**的量),
    **不管有配对结构的层对**。
+   ⭐ **2026-09-15T16:2xZ 起这一条是闸不是散文(总监 RULING 57,验收 1 已交付)**:
+   唯一实现 **`tools/batch_test/behavioral/strata.py`**(`pair_arm` / `pairing` / `per_seed_arm` /
+   `per_seed_share_arm` / `note_for`),已接进 `campsel_domain.py` 与 `abilanc_domain.py` 的
+   `verdict()` 与全部 note 点;棘轮 **`tests/test_strata_paired_arm.py`**。
+   ⛔ **前提是真的**:`pairing()` 要求**语料自证**逐种子配对(每粒贡献种子都出现在两个 arm side),
+   **证不出来就原样留在 (i-b)** —— 这不是「一律降级」。
+   ⚠️ **落地时撞出的第二个缺陷,记在这里免得重学**:`campsel_domain.verdict()` 的 composition 守卫
+   `if (min(sa) < 0 < max(sb)) or (max(sa) > 0 > min(sb))` **在一个表里跨分层取 min、另一个表里跨分层取 max**
+   ⇒ **任何反号分层对都踩中它,哪怕两个分母逐位相同** ⇒ 它是 **(i-b) 的第二份、没有署名的拷贝**。
+   **只改 (i-b) 那一处,对真实语料的效果是零**,而三个 `--selfcheck` 全 ALL PASS。已改为逐分层比较。
    **代价是实测的**:09-11 那波 **14 个检测器里 12 个**按 (i-b) 判 noise、**一个数都没留下**;
    按本条重算(池化演示),被丢掉的那一侧最大的一个是 `overextend_alone`,`arm = +4.571/局`。
    ⭐ **判别子在同一张表里自证**:`enemy_overchase_unpunished` 的 `(arm, 阵容) = (−0.045, −1.104)`
