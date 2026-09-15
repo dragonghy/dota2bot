@@ -35,7 +35,75 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT21. **【2026-09-15T10:28Z 新增,**下一轮第一项**。
+0NEXT22. **【2026-09-15T13:41Z 新增,**下一轮第一项**。
+   **主体继续留在 `bots/`**(4.4 (i) 已连续两轮满足,别让它断)。
+
+   ⭐⭐ **本轮买到的可迁移句,它比 0NEXT21 的判据更便宜,因为证据已经有人写好了**:
+   **「登记」不是「修好」,而一条被登记在**别的文件的注释里**的缺陷,连「谁该修」都没有。**
+   本轮的 `i <= 3` 不是我找到的 —— `bots/FunLib/jmz_func.lua:9292` 的抬头
+   (`campdanger` 那一轮写的)**逐字**写着「unlike mode_farm_generic's own
+   `X.IsUnitAroundLocation`, **which would have asked only the first three enemy players**」。
+   它在那里是**另一条抬头的论据**(「我这个 helper 没有那个毛病」),不是工作项
+   ⇒ **一条缺陷被用来论证别的东西之后,它在所有队列里的存在感反而下降了**,
+   因为它读起来像已经被处理过。
+   📌 **判据(下一轮直接用)**:**grep 注释里拿别处当反面对照的句子**
+   (`unlike`、`carries no`、`without the`、「不像」、「没有那个」),
+   **对每一个被当成反面教材的地方,去数它有没有 id**;
+   没有 id 的对照物就是选题,而且**它的定价依据已经被写好了**。
+   起手就两条:`grep -rn "unlike\|carries no\|does not have the" bots/FunLib/jmz_func.lua`。
+
+   ⛔ **域为零的两种,这条本轮第一次分开,下一轮不要再混**:
+   **构造性的零**(GH #831:drafter 永远抽不到的英雄)⇒ **不落**;
+   **语料覆盖的零**(本轮:语料 t ∈ [35, 850]s,没人在 14 分钟围基地)⇒ **落,gated**,
+   把钉不住的那一半写成**欠条 + tripwire**。
+   ⚠️ 两者在自动读者眼里**都是一个 `0`**;区分它们要问的问题是
+   **「这个零是发波人群的性质,还是这批帧的性质?」**
+
+   ⭐ **本轮顺手量到、下一轮可以直接认领的一条(带证据)**:
+   **这个仓库今天没有任何后期帧。** 112 个 fixture 的 `fx.time` 上限是 **850.1s**
+   ⇒ **高地、买活、基地攻防、肉山争夺后段在这里一帧都没有**,
+   任何后期决策的 fixture **都卡在同一堵墙上**(本轮 `siegecap` 的答案就是被它挡住的)。
+   `queue.json:strategy-47` / GH #837 要的正是这样一帧,球在录像组/批测台 ——
+   **不要重复提,但下一轮开工时看一眼它有没有落地**,落了就先去把 §5 tripwire 兑现。
+
+   ⚠️ **判据继承 0NEXT11–0NEXT21 全部**,特别是:
+   **(寅)** 先问文件自己已经出货的答案是什么(本轮 armed 形态**逐字**等于
+   `mode_rune_generic.lua:676` 的同名副本,**一个新常数都没造**);
+   **(未)** 内容全是零的测试,每个零都要反向调用一次(本轮三个计数器各自配额抬到
+   `math.huge`、关到 0 各验一遍);
+   **(午)** 落任何新杠杆前先问「它的宿主在发波人群里可达吗」——
+   本轮答案是**位置性**的:调用点 :303 排在它所在函数两个 gated 语句(:321 / :598)**之前**,
+   直线代码,谁都关不住它;并且**实测**:什么都不 arm 时,60 个能驱动 `GetDesire()` 的帧里
+   告警在 **13** 个上被求值。
+
+   ⭐ **新增一条(酉):按模式定位的变异,会被你自己这一轮写的抬头打败。**
+   0NEXT19 **巳′** 第三例,而这次的第二个命中点**不是姊妹代码,是我自己刚写的注释** ——
+   变异 M7 按 `3000)$` 定位,落进抬头里那行**引用调用点原文**的注释(它不带行尾空格,
+   代码行带),`grep -c` 报「落地」,行为一点没动,腿读成 **SURVIVED**。
+   ⇒ **规矩**:(甲) 变异**锚在行首缩进上**,不要只锚行尾;
+   (乙) 台子要检查**是哪个用例抓住的**(`check` 的第 6 个参数),不只看红绿 ——
+   否则一个 mutant 被无关断言「抓住」,腿照样绿。
+
+   ⭐ **新增一条(戌):驱动一个模式脚本前,先证明你走到了。**
+   本轮第一版驱动 `mode_farm_generic` 的 `GetDesire()`,**69 帧里 0 帧**走到目标调用点。
+   原因是 **GH #91**:`GetDesireHelper` 第一条语句用**它随后要比较的那个时钟**惰性初始化
+   `defendPings` ⇒ 单次调用的 VM 里差恒为 0 ⇒ **函数在第一行就返回 NONE**。
+   loader 早就备好 `rf.declare_defend_ping(J, 'stale')`。
+   ⇒ **规矩**:任何驱动 `mode_*_generic` 的新测试,必须带一条
+   **故意把前提设成反面、断言走查报 0** 的对照用例,否则「驱动了」和「第一行就返回了」
+   **给出的是同一个绿**。
+
+   ⚠️ **两条交出去、下一轮要看一眼的事**:
+   (a) **`tests/test_fieldsip_atom_pricing.lua` 仍红**(1021→1039 / 944→961,GH #814),
+   **第四轮交出去**;
+   (b) **GH #837** / `queue.json:strategy-47` 的球在**录像组/批测台**;
+   `siegecap` 的入集在**总监**,冻结下唯一合法裁定是 `FROZEN-HOLD`。】**
+
+0NEXT21. ✅ **【2026-09-15T10:28Z 新增 → 2026-09-15T13:41Z 做完,产出是 **(i)**:
+   gated `siegecap` 落在 `bots/mode_farm_generic.lua`(调用点在本文件所有 gated 语句之上,
+   单臂可测),20 绿真帧测试 + 8 抓变异台。读数与交棒见「当前状态」2026-09-15T13:41Z 节。
+   原文保留在下,便于对照。**
+   **【2026-09-15T10:28Z 新增,**下一轮第一项**。
    **主体继续留在 `bots/`**(4.4 (i) 本轮接回来了,别再让它断)。
 
    ⭐⭐ **本轮买到的可迁移句,它是 0NEXT19「数一遍调用点」的下一层**:
@@ -9576,6 +9644,73 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-15T13:41Z:**一个对敌方全队成立的存在量词,被写成只问名单前三格 ——
+  gated `siegecap` 落地(`bots/mode_farm_generic.lua`,turbo-only)。**
+  出口 **(i)**:`bots/` 有行为 diff,**4.4 (i) 满足**(连续第二轮);**(ii) 不认领**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;**未提入集**(P4.2 冻结)。
+  铁律 9:P1(1) 已结案交总监(GH #809);P2 的 TP 腿仍卡在
+  `owed_executions.json:wandlimbo_charge_instrument` 两端仪器墙(RULING 37)⇒ 走章程 1b;
+  open 的 `[strategy]` issue(#834/#831/#824/#821/#818/#815/#137)球都不在本组
+  ⇒ 取 backlog 最上面一条 **0NEXT21**,先过它的 **(午)** 门。
+  **⭐⭐ 头条:`X.IsUnitAroundLocation`(:1124)的 `for i, id in pairs(GetTeamPlayers(
+  GetOpposingTeam())) do if IsHeroAlive(id) and i <= 3 then`,唯一调用点是 :303 的基地告警
+  `X.IsUnitAroundLocation(GetAncient(GetTeam()):GetLocation(), 3000) → return
+  BOT_MODE_DESIRE_NONE`** ⇒ **名单第 4、5 格的敌人可以站在自家遗迹上而告警恒 FALSE**。
+  ⛔ **引擎里比 fixture 更糟**:`GetTeamPlayers` 连**死人**一起报,`i <= 3` 数的是**名单格**
+  不是活人 ⇒ **前三格三个死队友就把配额吃光**。
+  **⭐ 这条不是我找到的 —— 它已经被写下来过了**:`jmz_func.lua:9292`(`campdanger` 那轮的抬头)
+  逐字写着「unlike mode_farm_generic's own `X.IsUnitAroundLocation`, which would have asked
+  only the first three enemy players」,而**至今只被写在那条注释里**,因为它在那里是
+  **另一条抬头的论据**不是工作项(新判据 0NEXT22)。
+  **修法零新政策零新常数**:`bots/mode_rune_generic.lua:676` 是**同名同体、没有 cap** 的
+  同一个函数 ⇒ armed 的农场副本**就是** rune 副本;落地只动一个 token
+  (`local bWholeRoster = J.IsModeTurbo() and J.IsSoakCandidate('siegecap')` +
+  `if IsHeroAlive(id) and (bWholeRoster or i <= 3) then`,unarmed = `false or i <= 3` = 出货)。
+  **方向**:armed TRUE 是出货 TRUE 的**严格超集**,唯一调用点把 TRUE 变成 farm 拒绝
+  ⇒ **只能增加拒绝,永不发出出货扣住的打钱出价**。
+  **语料定价**(112 fixture / **636 个带活遗迹的主体帧**,476 个带全员 `player_id`):
+  离自家遗迹**最近**的敌人在名单第 4/5 格的帧占 **207/636 = 32.5%**;环 6000u **39 帧里 15 帧**
+  cap 全看不见;环 8000u **255/54**;**环 3000u(调用点自己的环)= 0 帧**,全语料最近一次 **4440u**。
+  三个计数器各自**配额抬到 `math.huge` ⇒ 0 盲、关到 0 ⇒ 全盲**验过(未)。
+  **⛔ 域为零的两种,本轮第一次分开**:GH #831 是**构造性**的(drafter 抽不到 ⇒ 不落);
+  这条是**语料覆盖**的(t ∈ [35, 850]s,没人在 14 分钟围基地 ⇒ **落,gated + 欠条 + tripwire**)。
+  两者在自动读者眼里**都是一个 `0`**。
+  **本地验证:答案动不了,但问题动得了 —— 而问题正是 cap 截断的那个东西。**
+  包住 loader 自己的 `GetHeroLastSeenInfo`(只记 id 不改答案),驱动**真** `GetDesire()`:
+  三个真实帧(`f_260819_222559_od_eclipse_solo`/OD、`f_260820_163429_es_blink_init_621`/ES、
+  `f_260820_182906_lion_drain_survived`/Lion)上 **unarmed 问 3 个敌人 id,armed 问 5 个**;
+  60 帧上 `nMovedDesire == 0`(**杠杆在本语料里全程 inert**,诚实的那一半)。
+  **⭐ 探针不是在量自己**:第一版 **69 帧 0 命中**,原因是 **GH #91** —— `GetDesireHelper`
+  第一条语句用它随后要比较的时钟惰性初始化 `defendPings` ⇒ **第一行就返回 NONE**;
+  `rf.declare_defend_ping(J,'stale')` 早就在 loader 里备好。
+  测试里现在有一条**故意留 `'fresh'` 并断言同一条走查报 0** 的对照(新判据 0NEXT22 戌)。
+  **产物**:`tests/test_siegecap_ancient_roster.lua`(**20 tests / 0 failures / 4.7s**,`[ratchet]`;
+  §5 是 tripwire —— 语料哪天有了 3000u 内的帧它**自己变红并点名下一步**)、
+  `tools/agent/mutstand_siegecap.sh`(**8 抓 + 控制 SURVIVED,exit 0**)、
+  `tests/test_gated_helper_nesting_census.lua` 新增一行(标 `-- P`,理由是**位置性**的:
+  :303 排在 `campgrade` :321 / `tbearly` :598 **之前**,并附实测 **13/60** 可达性)、
+  `iterations/state.json:siegecap_20260915`、`iterations/queue.json:strategy-47`(零 AWS)、
+  **GH #837**、报告 `iterations/reports/strategy/20260915T134135Z.md`。
+  **📌 变异台买到的那句(0NEXT19 巳′ 第三例,而这次的第二命中点是我自己刚写的注释)**:
+  M7 按 `3000)$` 定位,落进本轮抬头里**引用调用点原文**的那一行(它不带行尾空格,代码行带),
+  `grep -c` 报落地、行为没动、腿读成 **SURVIVED**。台子现已锚在行首 tab 上,
+  并**检查是哪个用例抓住的**,不只看红绿(新判据 0NEXT22 酉)。
+  **⚠️ 交出去**:(1) `strategy-47` / GH #837 要的**不是一波,是一个帧**(t > 15 分钟、
+  敌人在自家遗迹 3000u 内,最好占名单第 4/5 格),球在**录像组/批测台**;
+  **它不止服务本 id —— 语料 t 上限 850s 意味着整个后期在这个仓库里今天一帧都没有**;
+  (2) 入集球在总监,冻结下只能 `FROZEN-HOLD`;
+  (3) **`test_fieldsip_atom_pricing.lua` 仍红,第四轮交出去**(GH #814,非本轮造成)。
+  **铁律 6(三行,push 钩子实跑)**:`GATE_EXIT=0 CLEAN`(0 warnings)、
+  `py gate: 92 ran, 0 findings, 0 uncertifiable, 10.8s`、`lua gate: 见报告 §6`,
+  **未用 `RULE6_BYPASS`**;动态半未跑全量(GH #124),跑了受影响的八个文件全绿。
+  **开工自检**:第一条命令**第 8 次**被 `REFUSED: stdout is a PIPE` 拒回;重跑后跑完,
+  **worst exit `3`**。`FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`;
+  `UNCERTIFIABLE: trunk-red(python)`(9 条检查 120s 内没跑完 ⇒ **那一侧本轮没人看过,不是通过**)。
+  Lua 两条红:`test_fieldsip_atom_pricing`(GH #814,非本轮)与
+  `test_gated_helper_nesting_census` —— **后者是本轮造成的,已在同一工作单元内回答并 pin**。
+  ⚠️ **本轮自认一处偏差**:自检(约 70 分钟)未归零时我就开始动树;自检对工作树只读、无冲突,
+  但顺序不合 0NEXT19 的习惯,登记在报告 §7。
 
 - 2026-09-15T10:28Z:**一个守卫的三条子句全锚在 rune 上,而它求值的那张表锚在 bot 身上 ——
   gated `runecamp` 落地(`bots/mode_rune_generic.lua`,turbo-only)。**

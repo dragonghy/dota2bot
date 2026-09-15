@@ -1121,9 +1121,65 @@ function X.IsNearLaneFront( bot )
 end
 
 
+-- [strategy 2026-09-15] Soak candidate 'siegecap' (turbo-only). A question that
+-- is existential over the enemy TEAM, asked of the first THREE roster slots.
+--
+-- THE SITE. This function has exactly ONE caller, the base-siege farm veto at
+-- the top of GetDesireHelper:
+--
+--     if X.IsUnitAroundLocation(GetAncient(GetTeam()):GetLocation(), 3000)
+--     then return BOT_MODE_DESIRE_NONE; end
+--
+-- i.e. "an enemy was seen within 3000u of OUR OWN ancient in the last second,
+-- so stop farming". The question is about the enemy team; `i <= 3` answers it
+-- from roster slots 1-3 only. Slots 4 and 5 can stand on the ancient, at any
+-- distance, at any freshness, and this predicate is FALSE -- not rarely, by
+-- construction. Worse in the engine than in a fixture: `GetTeamPlayers` reports
+-- all five ids including the DEAD, and the `i <= 3` cap counts roster slots
+-- rather than survivors, so three dead team mates in slots 1-3 leave the alarm
+-- with nothing at all to look at while the two living ones hit the ancient.
+--
+-- THE ANSWER IS ALREADY IN THE TREE, which is why no policy is invented here.
+-- bots/mode_rune_generic.lua:676 carries a function of the SAME NAME with the
+-- SAME BODY and no cap (`for _, id in pairs(...)` / `if IsHeroAlive(id) then`).
+-- jmz_func.lua:9292 already names the asymmetry in prose -- "unlike
+-- mode_farm_generic's own X.IsUnitAroundLocation, which would have asked only
+-- the first three enemy players" -- and registering it in a comment is all that
+-- has ever happened to it. Armed, this copy IS the rune copy, term for term.
+--
+-- ⛔ DIRECTION. Exactly one token moves: the `i <= 3` conjunct. Armed answers
+-- `exists i in 1..#roster`, shipped answers `exists i in 1..3`; slots 1-3 are
+-- still evaluated first and unchanged, so armed TRUE is a SUPERSET of shipped
+-- TRUE. The one caller turns TRUE into `return BOT_MODE_DESIRE_NONE`, so arming
+-- can only ADD farm REFUSALS while an enemy stands at our ancient, and can
+-- never produce a farm bid the shipped code withheld. Un-armed the expression
+-- is `false or i <= 3`, which is the shipped conjunct itself.
+--
+-- ⛔ HONEST BOUNDS, and this one is the important line: THE CALLER'S OWN
+-- INSTANT IS NOT IN THE CORPUS. Over the 636 live subject frames that carry an
+-- ancient, the closest any enemy ever comes to its opponents' ancient is
+-- 4440u, against this call's 3000u ring -- ZERO frames in the domain, so the
+-- armed and shipped answers are equal on every frame this repo owns and no
+-- fixture can pin the flip. That is a CORPUS COVERAGE zero (t in [35, 850]s;
+-- nobody sieges a base at 14 minutes), NOT the constructive zero of GH #831 --
+-- the branch is reachable by every drafted hero in every game that lasts.
+-- What the corpus CAN price is the blindness itself, on real geometry: the
+-- enemy nearest our own ancient sits in roster slot 4 or 5 on 207 of those 636
+-- frames (32.5%), and at a 6000u ring 15 of the 39 frames with an enemy inside
+-- are invisible to the capped form.
+--
+-- ⭐ AND THE LEVER IS OBSERVABLE ON REAL FRAMES ANYWAY, because the alarm's
+-- ANSWER is not the only thing the cap decides -- the QUESTION is. Driven
+-- through the real GetDesire() on three real frames
+-- (f_260819_222559_od_eclipse_solo, f_260820_163429_es_blink_init_621,
+-- f_260820_182906_lion_drain_survived), the shipped walk asks the engine about
+-- 3 enemy ids and the armed walk about 5. tests/test_siegecap_ancient_roster.lua
+-- computes all of it and goes RED the day a frame lands inside 3000u, which is
+-- the day the flip itself must be pinned (GH #837, queue strategy-47).
 function X.IsUnitAroundLocation(vLoc, nRadius)
+	local bWholeRoster = J.IsModeTurbo() and J.IsSoakCandidate('siegecap')
 	for i, id in pairs(GetTeamPlayers(GetOpposingTeam())) do
-		if IsHeroAlive(id) and i <= 3 then
+		if IsHeroAlive(id) and (bWholeRoster or i <= 3) then
 			local info = GetHeroLastSeenInfo(id)
 			if info ~= nil then
 				local dInfo = info[1]

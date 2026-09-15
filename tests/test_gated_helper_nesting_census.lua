@@ -1134,6 +1134,28 @@ local PINNED = {
     -- zusultd + zusultx are NOT the same experiment at rank 1, and neither
     -- may be quoted about the other.
     "zusultd | X.SkillsComplement | X.zuus_ShouldSaveManaForUlt | zusultx | bots/BotLib/hero_zuus.lua",                                    -- P
+    -- ⭐ 'siegecap' is the first row this file has taken whose answer is
+    -- POSITIONAL rather than algebraic, so it is written out rather than
+    -- labelled.  The two outer ids do not enclose the inner call site, they
+    -- FOLLOW it: X.IsUnitAroundLocation is called at mode_farm_generic.lua:303,
+    -- 'campgrade' is a parameter of a RefreshCamp call at :321 and 'tbearly' a
+    -- clock swap at :598, both in straight-line code strictly BELOW it, neither
+    -- inside a branch the alarm sits under.  No arming state of either can
+    -- decide whether the alarm is evaluated, so the conjunction the census
+    -- pattern matched is a lexical one (same enclosing function), not a control
+    -- one -- and a wave arming 'siegecap' alone reaches the real call site.
+    -- ⭐ MEASURED, not only argued: driven through the real GetDesire() on the
+    -- 60 corpus frames that carry a live ancient and NOTHING armed, the alarm is
+    -- evaluated on 13 of them; on 3 of those the armed walk asks the engine
+    -- about 5 enemy ids where the shipped walk asks about 3
+    -- (tests/test_siegecap_ancient_roster.lua §3).
+    -- ⛔ The limit that travels with the row: the alarm's own ANSWER cannot move
+    -- on this corpus at all -- no frame carries an enemy inside its 3000u ring
+    -- (closest ever: 4440u) -- so a wave arming 'siegecap' prices the widened
+    -- QUESTION and, until a late-game frame exists, nothing else. That is a
+    -- corpus-coverage zero, not GH #831's constructive one; the branch runs for
+    -- every drafted hero in every game that lasts. GH #837 / queue strategy-47.
+    "campgrade,tbearly | GetDesireHelper | X.IsUnitAroundLocation | siegecap | bots/mode_farm_generic.lua",                                -- P
 }
 
 local tests = {}
