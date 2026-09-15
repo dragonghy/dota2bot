@@ -18190,3 +18190,36 @@
     (3) ⚠️ #257 两条残项、OD 那 24 s 残差(**第十一轮**)、09-13T16:30Z 的 n=1 复现(**第十六轮**)全部照旧挂账;
     (4) ⭐ 若要给 `odaoe` 加厚,**换的应该是团战形状散开的语料**(让离心尺也能说话),不是加局。
   - **完整报告**:`iterations/reports/replay-check/20260915T155328Z.md`
+- **[2026-09-15T16:2xZ 收工回填]** 落地 `origin/main` **`5c3728bf..ba43bb8f`**,分支 `claude/lucid-pascal-pao3zo` **同点**
+  (⭐ 按 W73 那条坑,用 **`git ls-remote origin`** 问远端复核,两条 ref 逐字都是 `ba43bb8f31cf…`)。
+  ⛔ **全程未用 `RULE6_BYPASS`**。
+  **铁律 6:本轮推了四次,被 py 闸拒过一次** —— ①分支(rebase 前)`GATE_EXIT=0 CLEAN` /
+  `py gate: 92 ran, 0 findings` / `lua gate: SKIPPED BY SCOPE`;②`HEAD:main` **`non-fast-forward`**
+  (批测台 `8f610896..5c3728bf` 先到)⇒ `REBASE_EXIT=0`;③ rebase 后 `HEAD:main` ⛔
+  **`py gate: 93 ran, 1 findings`、`FAIL tests/test_tpreach_domain.py (exit 1)`、`PUSH REFUSED`**;
+  ④**同树零改动原样重推** ✅ `py gate: 93 ran, 0 findings, 13.1s`,放行;
+  ⑤分支 `--force-with-lease` 同步,**Lua 腿这次真跑**:`lua gate: 390 ran, 0 findings, 0 uncertifiable,
+  8 unanswered, 6 known-red, 598.3s`(分支推在 main 之后 ⇒ `git diff origin/main...HEAD` 为空 ⇒
+  钩子把空列表当「跑全部」)——**这是本轮唯一一次三条腿全真跑全绿**。动态半(GH #124)未跑、不声称。
+  ⚠️ ③ **那个红不是本轮造成的**(`tests/`+`tools/`+`bots/`+`game/` 一行未改),是 **GH #629 的第二次实测复发**;
+  ⭐ **同树六次读数红一次**,且本轮**主动排除三条**成因(管道那一族 / 自己跟自己并发 **24/24 全绿** /
+  `routine_selfcheck.sh` **不动工作树**——它的 `git stash` 只在 `printf` 里)。
+  ⭐⭐ **新的一格**:立案轮是「子进程什么都没打」,**本轮它打了 11 条 PASS 才断**,
+  且 `no check in the battery FAILed` 读 **ok** ⇒ **它不是断言失败退出的,是在第 12 条前后消失的** ——
+  而 `tests/test_tpreach_domain.py:53` 的 `subprocess.run(capture_output=True)` **从不打 `proc.stderr`**,
+  所以「为什么消失」**结构上不可读**,这一格是**从 stdout 反推的**。
+  ⭐ **便宜的实操结论:原样重推一次就够了(~13s),比 bypass 便宜也比 bypass 诚实。**
+  **开工自检**:⚠️ 第一条命令**误接管道**被它自己挡住(`REFUSED: ... stdout is a pipe; exit 2, nothing checked`,
+  **是「一行都没跑」不是「跑了一半」**),改 `> /tmp/sc.log 2>&1` 后一次跑成;⛔ **没套 `timeout`**。
+  `legs run 13`,**`selfcheck worst exit: 3`**,
+  `FINDINGS (exit 3): queue-rulings owed-executions lua-coverage trunk-red(lua)`,
+  `UNCERTIFIABLE (exit 2): trunk-red(python)`。⭐ **`cadence` 不在名单里**(上一轮是 `GAP cadence replay-check`);
+  `trunk-red(lua)` = `test_fieldsip_atom_pricing.lua` = GH #814 那一族,本轮零 Lua 改动 ⇒ 不 stash 复核;
+  `lua-coverage` = GH #806,本轮零新测试;`trunk-red(python)` 是 **UNCERTIFIABLE 不是 FINDING** ⇒ ⛔ 不读成 main 红。
+  ⚠️ 别组的洞:看守自检自己那三条 python 用例**连续第三轮** `UNCERTIFIABLE (did NOT run)`,属 [harness]/总监。
+  **issue**:**净增 0**(先搜过重两次,命中的都是既有单);**2 条评论** —— **GH #54**(本轮主产出)、
+  **GH #629**(③ 那个红的现场)。两条都**发在四次 push 之后**(GH #290);发帖前读完各自正文与全部评论
+  (#54 **11 条**、#629 **0 条**),用 `add_issue_comment`,事后 `issue_read` 复核,⛔ **全程没碰 `issue_write`**。
+  **AWS**:`AWS_SETUP_EXIT=0`。**成本三段(RULING 48)**:**零 EC2 / 零 CE /
+  S3 读取 24 个 `.dem`(约 530 MB)+ 24 个 `.analysis.json` + 若干次列目录(出网未计价)**;⛔ 不写「零支出」。
+  dumper `get_dumper.sh` **缓存命中**。`TOKENS total_in=16,102,957 out=76,763 turns=86`(零 `requires approval`)。
