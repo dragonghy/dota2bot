@@ -77,6 +77,20 @@
    从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
+- **⛔⛔ [2026-09-15 新踩,W75] `sweep_run.sh` 处理完**就把 `.dem` 删了** ——
+  在 `.sweep_out/<run>/dem/` 里搭「同一个 `.dem` 跑两遍」的复现台,会拿到**两个空文件**,
+  而 `cmp` 对两个空文件打出 **`IDENTICAL`** ⇒ **一个 did-not-run wearing a pass,第五例。**
+  本轮逐字:`ls …/dem/*.dem` 报 `No such file or directory`、`DUMP_A_EXIT=2`、
+  `wc -c` 两个 **`0`**,而结论那一行照样是 `DUMPER_SAME_DEM_TWICE: IDENTICAL`。
+  ⭐ **判别子在同一屏输出里,而且比结论早两行**:**先看 `wc -c`,再信 `cmp`** ——
+  任何 `cmp`/`diff`/`==` 类断言,**先证明两个操作数非空**。
+  ⭐ **正解:重新从 S3 取一个 `.dem`**(1 个对象,约 24 MB,几秒);
+  ⛔ 别改 `sweep_run.sh` 去留 `.dem`(81 局 × 24 MB 会把容器盘吃光,删除是对的)。
+  ⚠️ **代价不对称**:这条若没被抓住,本轮会得出「dumper 是确定性的」这个**反向结论**,
+  而 §当前状态 W75 的头号产出**正好建在它的反面**。
+  ⭐⭐ **可迁移的那一句(与 W71/W72/W73 同族,这是第四例)**:
+  **一个「看起来像状态」的读数,先问「我量到的是不是我以为的那个东西」** ——
+  这条是「**我 `cmp` 的是不是两份真的数据,还是两份『什么都没产出』**」。
 - **⛔⛔ [2026-09-15 新踩,W73] 被 `timeout` 砍掉的 `git push` 会留下一个**过期的本地 tracking ref**
   —— 远端**已经收下**,而 `git status` 仍报 `ahead 1`,stop-hook 因此喊「有未推送的 commit」。**
   本轮收尾第二次推分支时写 `timeout 110 git push -u origin <branch> --force-with-lease`,
@@ -18333,3 +18347,66 @@
     发帖前读完 #835 正文 + 全部评论(2 条);用 `add_issue_comment`,事后 `issue_read` 复核 ——
     正文**逐字相同**、`state` open、评论数 **2→3**;⛔ **全程没碰 `issue_write`**。
   - `TOKENS total_in=9,752,089 out=64,148 turns=67`(零 `requires approval`)。
+- **2026-09-15T21:46Z(W75)**:**欠了两轮、有期限的那一棒结清了** —— GH #835 总监评论点名的
+  「09-11 21:25 波 14 个检测器按铁律 4(i-d) **逐粒种子**出 `arm` + 跨种子离散度」。
+  批测台刹车**第二十七轮持有** ⇒ 零新波次;本轮重扫的是 `dem21/` 里那四个**有到期日**的 run。
+  完整报告:`iterations/reports/replay-check/20260915T214608Z.md`。
+  - **覆盖**:重扫 **81/81 局**(`dem_found 104 − skipped 23`,`unparseable 0`,分层 **47/34**,
+    4 粒种子全部配对)—— **与立案轮(`20260915T125314Z.md` §〇)逐位相同**。
+    四路并行约 **40 min**(上一轮估 35);`get_dumper.sh` **cache HIT 2.2s**(key `46fe9c6a2b084f9b`)。
+    **深查 0 局**:本轮题目是**估计量口径**不是帧级问题 ⇒ 登记为「题目不是帧级」不是「跳过」。
+    ⛔ **不发 `VERIFY` 行**:检测器计数不是行为(`sweep_strata.py` LIMIT 2),零 armed id 的 (a) 被买到。
+  - ⭐ **交付物**:`sweep_strata.py --verbose`,`STRATA_EXIT=0`(零 complaint)。
+    **(i-e) 真正救回来的是一格,不是十二格**:14 行里 **11 行 `sd > |arm|`**;
+    唯一「arm 四粒同号 + `sd < |arm|`」的是 **`overextend_alone`(arm +2.066/局,sd 1.773,0/4 为负)**
+    —— RULING 54 那句「真正付账的是它」**对,而且它是唯一那一个**。
+    `tp_under_threat`(−0.924)/ `lowhp_limbo`(−0.527)非 FLIP、判决不变。
+  - ⭐⭐ **发现甲 [harness] —— dumper 对同一个 `.dem` 不可复现**(本轮头号产出,比交付物值钱)。
+    局数/分层/种子/`unparseable` 全复现,**检测器计数 14 个里 11 个不同**,而
+    `git log --since=12:00Z -- detect.py dumper sweep_run.sh get_dumper.sh` **零 commit**、dumper 同 key。
+    定位两条腿:`detect.py` 对固定 timeline **byte 相同**(确定性);dumper 同 `.dem` 两遍
+    **长度逐位相同、62.34% 字节不同** ⇒ `buildings`/`creeps`/`snapshots`/`wards`
+    **同一批记录不同顺序**(`same_multiset=True, same_ORDER=False`),**`events` 稳定**。
+    闭环:一局上 **5/13 检测器**计数变,`sandwiched_walk` **31→25(−19%)**。
+    ⭐ **复现台自证**:一局上顺序不敏感的名单与 81 局逐格为 0 的名单**是同一张**
+    (`lowhp_limbo`/`missed_cs_at_tower`/`skywrath_solo_silence`)。
+    ⛔ **它吃掉了交付表的几行**:`laning_past_midline_death` 的不可复现量是其「效应」的 **≈13×**、
+    `enemy_overchase_unpunished` **≈1.9×**、`sandwiched_walk` **≈1.8×** ⇒ 这几个**不是测出来接近零,
+    是根本没测到**;而 `overextend_alone` 两次独立重扫只差 **0.9%** ⇒ 那一格又多一条独立支持。
+    ⛔ **报的是形状与量级不是根因**(dumper 是 `.dumper_cache` 里的二进制,源在别处)。
+  - ⭐⭐ **发现乙 [bug] —— `arm` 在同一部法里有两个差 2 倍的定义,两边都在被当读数引用**:
+    `README.md:79` / `strata.py:30-31` 把 **`d_ab+d_ba`** 叫 arm;`README.md:82` / `strata.py:68`
+    定义 **`(d_ab+d_ba)/2`**。**已发表的 RULING 54 表逐位就是 SUM**(用 `N_ab=47/N_ba=34` 反算,4/4 复现),
+    **而 RULING 57 的闸返回它的一半**。⛔ **棘轮抓不到**:恒等式 `opposed ⟺ |roster|>|arm|`
+    两种口径下都成立(两边同乘 ½)⇒ **没有任何一条腿会举手**。
+    ⭐ **RULING 54 自己的自洽性检查只在 SUM 口径下成立**(skywrath 和 −0.210 = 跨层 −23%「逐位相同」;
+    闸口径下是 −0.105 vs −0.21,差 2 倍)。📌 根因**猜测**:(i-c) 的 `ab/ba` 是**同一个量的两个读数**
+    ⇒ 除 2 是取平均;(i-e) 的 `d_ab/d_ba` 是**两个 delta 各带一队** ⇒ 求和才是全量。
+    **公式被搬了,单位没被搬。**
+  - ⭐ **发现丙(同一条 [bug])—— `per_seed_arm` 把「这粒种子没抽到这个英雄」读成「效应 = 0」**:
+    `skywrath_solo_silence` 逐种子 `0/0/−0.288/0`,登记值 **−0.072 = −0.288/4**;
+    逐 run 查 draft,**skywrath 只在 4 个 run 里的 1 个被抽到**(`d2a2fd`,466 条 finding)
+    ⇒ **稀释 `n_seeds / n_seeds_with_producer` = 4 倍**。
+    ⭐ **模块自己知道这个坑,只在另一个函数里补了**:`per_seed_share_arm` 的 docstring 逐字
+    *"inventing a 0.0 would be the absent-vs-flat confusion GH #257 already paid for"*,
+    而 **`per_seed_arm` 没有这一跳**,`sweep_strata.py:tabulate`(第二份实现)**同样没有**。
+    本波影响面 **1/14**(逐 (检测器,种子) 14×4 格全查),但**随机 draft 下「某粒没抽到」是常态**,
+    它是**英雄专属检测器的通例**。
+  - **⛔ 新踩的坑(已写进 §工具坑,这是 did-not-run-wearing-a-pass 第五例)**:
+    `sweep_run.sh` **处理完就删 `.dem`** ⇒ 在 `.sweep_out/<run>/dem/` 里搭复现台会拿到**两个空文件**,
+    `cmp` 打出 **`IDENTICAL`**。**判别子就在同一行输出里:`wc -c` 两个 `0`。**
+    正解:**重新从 S3 取一个 `.dem`**。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 210 个对象(出网未计价)** ——
+    104 `.dem`(约 2.1 GB)+ 104 `.analysis.json` + 1 dumper 二进制(cache HIT)+ 1 个为复现台重取的 `.dem`;
+    另 **3 次 `s3 ls`**(⚠️ LIST 不是对象,单独登记,不并进 `<N>`)。⛔ **不写「零支出」。**
+  - **开工自检**:⛔ 第一条命令**误接管道**被它自己挡住(`REFUSED: … stdout is a pipe; exit 2,
+    nothing checked`,**它自报第 5 次复发**);改重定向重跑,⛔ **没套 `timeout`**。
+    ⚠️ **收尾时仍未打出终行**(`selfcheck worst exit: N`),停在 `=== trunk health (fast Lua detectors) ===`,
+    已跑约 **2h** ⇒ **登记为「本轮没有拿到自检判决」,不是「通过」**(GH #171:没跑成 ≠ 通过)。
+    已读到的部分:`promote-atom constraints: OK`、`no armed id hangs under an unarmed gate -- OK`、
+    `UNCOVERED SET GREW`(`test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua`,
+    ⚠️ **不是本组的**,本轮零 Lua 改动)。
+  - **下一轮第一件事**:⭐ **`overextend_alone` 逐帧深查**(唯一站得住的一格;检测器计数不是行为,
+    要回答的是那多出来的 episode 是修好了还是更糟);⛔ **§三的 [harness] 落地前,
+    不要再用检测器计数做任何新裁定**,引 §二的表必须连 `d(nondet)` 一起引。
+    ⏳ `.dem` 仍约 **2026-10-02** 到期。
