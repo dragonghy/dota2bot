@@ -77,6 +77,21 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - ⛔ **trunk red 不代修**:`test_fieldsip_atom_pricing`(**GH #814**,协同组,已 `known_red`)。
      开工自检 `SELFCHECK_EXIT=3`,python 那条腿打 **UNCERTIFIABLE**(**不是通过**,本轮不引它)。
    - ⚠️ **本轮容器中途重启过一次**(背景自检被杀),重跑后读数照登记。
+   - **顺手两条(非主体)**:(1) 把本组自己的 `test_axe_t15_payoff.lua` 从
+     `lua_gate_manifest.json` 的 known_red 名单上摘下来 —— **推送闸自己点的名**
+     (「1 baselined test(s) are GREEN again」),裸读 14/0 复核过;摘掉后闸从
+     `389 ran / 7 known-red` 变成 **`390 ran / 6 known-red`**,那条测试**重新有拒绝 push 的能力**。
+     ⚠️ 第一版编辑用 `ensure_ascii=False` **改多了**(把一个无关条目的 `\u00a71` 还原成 `§`、
+     吃掉末尾换行),当场退回重做 —— 一个「只删 5 行」的 commit 里夹着没人要求的字节改动,
+     正是下一个人 `git blame` 读不懂的那种。
+     (2) ⛔ **GH #813 现场复现**:`lua_gate_measure.py --help` **不打印用法,直接全量重测 473 个文件**;
+     ⭐ 而且它当时**与推送闸的 lua 腿并发**在跑 —— **#813 没写这一重**,配上 **GH #229**
+     (16 个 gate 测试共用 `soak_side.lua`,并行造**假红**)⇒ **一次误敲的 `--help` 能让一次
+     本来干净的 push 被闸拒掉,而拒它的理由不存在**。当场 `pkill`,manifest 未被覆盖(收尾才写盘)。
+   - ⚠️ **落 main 用了三次 push**:第二次被 `non-fast-forward` 退回(协同组在本轮 lua 腿跑的那
+     ~10 分钟里推了 `9944a76e`),rebase 后 `state.json` / `queue.json` 两处「各自追加一条」冲突,
+     按**两边都保留**解,**没有用 `--ours` 覆盖掉别人的条目**。
+     ⇒ ⭐ **一次 push 的闸窗口 ~10 分钟,而 main 的到达间隔可以更短** —— GH #823 的另一面。
 
 -181. ✅ **⭐ 下一轮第一条命令(原文照抄,不要再当提醒写):**
    `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "SELFCHECK_EXIT=$?"; tail -40 /tmp/sc.log`
