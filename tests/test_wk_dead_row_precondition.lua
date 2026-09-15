@@ -314,7 +314,15 @@ function()
     assert(reported ~= nil, 'the error carries no line number: ' .. tostring(err))
     local nlv_line = line_of(WK_SRC, 'local bShipped = nLV >= 6',
         'the first comparison of the reserve chain')
-    local cost_line = line_of(WK_SRC, 'nAbility:GetManaCost%(%) < abilityR:GetManaCost',
+    -- ⚠️ RE-ANCHORED 2026-09-15 (hero, GH #407 / `wksavecap`).  The pattern used
+    -- to name both sides of this comparison, and its right-hand side moved into
+    -- X.GetReincarnationReserve -- so the LINE is still there and still the one
+    -- GH #794 blamed, while the old pattern matched nothing and this section
+    -- reddened on a rename it was written to survive.  The anchor is now the
+    -- left-hand side only, which is the half the ruling is about: the operand
+    -- GH #794 said carried the nil.
+    local cost_line = line_of(WK_SRC,
+        'bot:GetMana%(%) %- nAbility:GetManaCost%(%) <',
         'the mana-cost comparison GH #794 blamed')
     assert(reported == nlv_line, 'the dead row now raises at line ' .. reported
         .. ', while `local bShipped = nLV >= 6` is at line ' .. nlv_line

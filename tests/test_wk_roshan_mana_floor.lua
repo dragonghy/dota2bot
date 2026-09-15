@@ -599,9 +599,29 @@ tests['section 5: X.ShouldSaveMana still guards ConsiderQ upstream'] = function(
     assert(tail:find('abilityR:GetCooldownTimeRemaining%(%) <= 3%.0'),
         'the 3.0s window in X.ShouldSaveMana is gone; the armed floor is written '
         .. 'as the permanent version of exactly that window')
-    assert(tail:find('bot:GetMana%(%) %- nAbility:GetManaCost%(%) < abilityR:GetManaCost%(%)'),
+    -- ⚠️ RE-ANCHORED 2026-09-15 (hero, GH #407 / `wksavecap`).  The right-hand
+    -- side of this comparison moved into X.GetReincarnationReserve, so the old
+    -- one-line pattern matched nothing.  The claim is NOT weakened to "some
+    -- comparison exists": it is split into the two halves that together say the
+    -- same thing, and the second half is what keeps it strong -- the helper's
+    -- gate-OFF path must still hand back Reincarnation's price verbatim, so the
+    -- reserve the armed floor generalises is still the reserve that ships.
+    assert(tail:find('bot:GetMana%(%) %- nAbility:GetManaCost%(%) < X%.GetReincarnationReserve'),
         'X.ShouldSaveMana no longer reserves the reincarnation cost, which is the '
         .. 'rule the armed floor generalises')
+    local helper = src:find('function X%.GetReincarnationReserve')
+    assert(helper, 'X.GetReincarnationReserve is gone but X.ShouldSaveMana still '
+        .. 'calls it')
+    local hbody = src:sub(helper)
+    hbody = hbody:sub(1, hbody:find('\nfunction X%.') or #hbody)
+    assert(hbody:find('local nReserve = abilityR:GetManaCost%(%)'),
+        'X.GetReincarnationReserve no longer starts from Reincarnation\'s own '
+        .. 'price, so the shipped reserve X.ShouldSaveMana applies is no longer '
+        .. 'the reincarnation cost this section is about')
+    assert(hbody:find("J%.IsSoakCandidate%( 'wksavecap' %)"),
+        'X.GetReincarnationReserve lost its soak gate -- whatever it returns now '
+        .. 'is shipped behaviour, and this section\'s reading of "the shipped '
+        .. 'reserve" has to be re-taken before it is quoted')
 end
 
 return tests

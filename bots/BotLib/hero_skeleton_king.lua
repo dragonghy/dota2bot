@@ -2164,6 +2164,122 @@ function X.IsReincarnationReserveIdle()
 	return #J.GetNearbyHeroes( bot, 1600, true, BOT_MODE_NONE ) == 0
 end
 
+--- How much mana X.ShouldSaveMana below actually holds back for Reincarnation.
+---
+--- Soak candidate `wksavecap` (turbo-only, INERT until armed).
+---
+--- THE DEFECT, and it is a different one from `wksaveidle`'s.  That lever asks
+--- whether the reserve is IDLE (full health, nobody visible) and releases it
+--- when nothing on the frame threatens the death it is held for.  This one asks
+--- whether the reserve is REACHABLE AT ALL.  The shipped rule refuses a cast
+--- while `GetMana() - cost < R:GetManaCost()`, i.e. it tells the hero to wait
+--- until the pool holds `cost + reserve`.  When the pool CANNOT hold that much
+--- -- `GetMaxMana() < cost + reserve` -- "wait" is not a delay, it is a refusal
+--- with no exit: no regen tick, no mango, no clarity ever satisfies it.  The
+--- rule has no term that notices its own target is outside the pool.
+---
+--- THE FRAME THAT RAISED IT (GH #407, the issue's own headline reading, and a
+--- real frame rather than a constructed one).  f_232320_wk_od_burst, game
+--- 20260721_232320 at t=380.0: Wraith King level 6, mana 272 of a 272 MAX,
+--- Wraithfire Blast rank 1 cost 95 and off cooldown, Reincarnation rank 1 cost
+--- 220 and off cooldown, an Obsidian Destroyer 377u away at 86% health.  The
+--- threshold is 220 + 95 = 315 against a 272 maximum, so Q is refused at FULL
+--- POOL -- and 315 > 272 means it is refused at every mana this hero can ever
+--- hold at this rank pairing.  `wksaveidle` cannot reach this frame and is not
+--- a duplicate of this lever: BOTH of its release terms refuse here, the Wraith
+--- King is at 0.870 health against its 0.95 floor AND the Obsidian Destroyer is
+--- inside the 1600u ring it requires to be empty.  Driven, not argued: on the 6
+--- frames where the shipped reserve fires, `wksavecap` releases exactly 1 and
+--- `wksaveidle` releases exactly 2, and the two sets are DISJOINT.  Section 6
+--- of the new test drives that split rather than asserting it.
+---
+--- WHAT ARMED DOES, stated as arithmetic because it is arithmetic.  The reserve
+--- becomes `min( R:GetManaCost(), GetMaxMana() - cost )`.  When the pool can
+--- hold both prices the second term is the larger one and the reserve is
+--- UNCHANGED -- byte-identical behaviour, which is why the domain of this lever
+--- is exactly the constructive set and not one frame wider.  When it cannot,
+--- the threshold collapses to `GetMana() < GetMaxMana()`: the rule degrades
+--- from "never" to "cast at a full pool only", which is the most conservative
+--- behaviour that is not a permanent refusal.  On the frame above that is
+--- exactly the release: 272 of 272 is full.
+---
+--- CONDITION (c), argued rather than assumed.  Reserving mana for a death
+--- trigger is correct play and this lever does not dispute it -- it disputes
+--- reserving mana the hero cannot simultaneously hold.  Standard practice with
+--- Wraith King is that Wraithfire Blast is his only disable and his whole kill
+--- threat in the rank-1-R window; holding it unconditionally for the entire
+--- window trades a stun plus 40-160 damage that is certain for a reincarnation
+--- that is contingent.  And the window is not short: the premise that R rank 3
+--- makes Reincarnation free and collapses the reserve on its own is FALSE in
+--- this tree (both build rows put R's third point at entry 15, and
+--- tests/test_skill_point_stall_frame.lua settled GH #366 as a 13-point wall),
+--- so a rank-1 R holds 220 for the rest of the game.  After the release the
+--- hero still carries `GetMaxMana() - cost` -- 177 of 220 on the frame above,
+--- i.e. 80% of the reserve, one short regen window from whole.
+---
+--- ⛔ DIRECTION AND ATTRIBUTION.  This is a WIDENING lever: armed, the bot casts
+--- MORE.  A negative wave reads "the extra casts were bad" and NEVER "N
+--- reincarnations were lost" -- the reserve does not cause a reincarnation, it
+--- only preserves the mana for one, and no offline stand can price a death that
+--- did not happen.  Direction is guaranteed by SHAPE, not by today's numbers:
+--- the returned reserve is never larger than the shipped one, so the comparison
+--- it feeds can only move true -> false.
+---
+--- ⚠️ HONEST BOUNDS, four, none of them rhetorical:
+---   1. The in-game frequency is NOT measured here and this note does not
+---      pretend otherwise.  The GH #407 archive scan (W34, 78 games with a
+---      Wraith King, iterations/reports/batch-desk/hero27_savemana_archive_scan.md)
+---      priced the CONSTRUCTIVE cell at 1.74% of firing events and said in the
+---      same breath that all 95 of its frames came from ONE seed of three, so
+---      that number must not be quoted as a cross-seed rate.  ⚠️ And the two
+---      counts on the fixture corpus are NOT the same count, which is the cell
+---      a reader is likeliest to collapse: `GetMaxMana() < cost + reserve`
+---      holds on 5 of the 33 priced frames, but 4 of those 5 are BELOW hero
+---      level 6, where the shipped rule does not fire at all and this lever
+---      therefore changes nothing.  The DECISION domain is 1 frame of 33 --
+---      the headline frame above.  Section 2 of
+---      tests/test_wk_save_mana_unreachable_cap.lua drives both numbers and
+---      names the 4 that separate them.
+---   2. The prices are KV reads (tests/mock/special_value_shapes.lua), not
+---      engine reads; facets, talents and items can move them in a real game.
+---      That moves the SIZE of the constructive set, never its existence.
+---   3. This lever does NOT touch the rank blindness in the same function --
+---      `nLV >= 6` still stands in for "R is learned" and never asks the rank.
+---      That gap is GH #407's own open cell, registered by
+---      tests/test_wk_save_mana_lock_census.lua section 6.  One lever at a time.
+---   4. "The reserve is released" is not "a blast is cast".  X.ConsiderQ has
+---      further branches past this guard and the census measured it returning 0
+---      on all 33 priced frames regardless; section 5 of the new test pins the
+---      control that tells a released guard apart from a body that never ran.
+function X.GetReincarnationReserve( nAbility )
+
+	local nReserve = abilityR:GetManaCost()
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wksavecap' ) )
+	then
+		return nReserve
+	end
+
+	local nMaxMana = bot:GetMaxMana()
+	local nCost = nAbility:GetManaCost()
+	if nMaxMana == nil or nCost == nil or nReserve == nil
+	then
+		return nReserve
+	end
+
+	-- What the pool can still hold once this ability is paid for.  Negative
+	-- means the ability is unaffordable at a full pool, which is a question for
+	-- IsFullyCastable and not for the reserve -- leave the shipped answer alone
+	-- rather than handing back a negative reserve that would release the guard.
+	local nReachable = nMaxMana - nCost
+	if nReachable < 0 or nReachable >= nReserve
+	then
+		return nReserve
+	end
+
+	return nReachable
+end
+
 --- ⚠️ NO NIL-GUARD HERE, AND THAT IS A RULING, NOT AN OVERSIGHT (GH #794,
 --- 2026-09-13).  A replay-check fixture carrying a DEAD Wraith King row made
 --- the first comparison of the chain below raise `attempt to compare number
@@ -2203,7 +2319,12 @@ function X.ShouldSaveMana( nAbility )
 		and nAbility ~= nil
 		and abilityR ~= nil
 		and abilityR:GetCooldownTimeRemaining() <= 3.0
-		and ( bot:GetMana() - nAbility:GetManaCost() < abilityR:GetManaCost() )
+		-- soak candidate `wksavecap` -- see X.GetReincarnationReserve above.  It
+		-- returns abilityR:GetManaCost() verbatim while unarmed, so this line is
+		-- byte-for-byte the shipped comparison until somebody arms it.  It is
+		-- reached only past the two non-nil guards above, which is why the helper
+		-- may dereference both handles without repeating them.
+		and ( bot:GetMana() - nAbility:GetManaCost() < X.GetReincarnationReserve( nAbility ) )
 
 	-- soak candidate `wksaveidle` -- see X.IsReincarnationReserveIdle above.  The
 	-- shipped predicate is computed and BOUND first and the release is only ever

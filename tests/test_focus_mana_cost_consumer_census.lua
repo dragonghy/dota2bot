@@ -92,12 +92,21 @@
 --     affordable; nothing here narrows that.
 --   * §1 classifies by reading the source text of the hero files, not by
 --     executing them, and it covers `local <name> = <handle>:GetManaCost()`
---     bindings only.  Two INLINE reads in hero_skeleton_king.lua (:619 inside
---     X.GetRoshanManaFloor, :1183 inside X.ShouldSaveMana) are by construction
+--     bindings only.  INLINE reads in hero_skeleton_king.lua are by construction
 --     outside the census -- they are live by inspection, they have no binding to
 --     be dead, and they are the subject of test_wk_roshan_mana_floor.lua and
 --     test_wk_save_mana_lock_census.lua.  A consumer reached through a table
 --     field or a closure would likewise read as DEAD; none exists today.
+--     ⚠️ UPDATED 2026-09-15 (hero, GH #407 / `wksavecap`).  This paragraph used
+--     to name two such reads by LINE NUMBER (:619 and :1183) and one of them has
+--     since become a BINDING: X.ShouldSaveMana's `< abilityR:GetManaCost()` moved
+--     into X.GetReincarnationReserve as `local nReserve`, which §1 now counts.
+--     The line numbers are struck rather than re-taken -- a number that has gone
+--     stale twice is not load-bearing, and re-pinning it is the exact
+--     green-assertion/false-sentence shape this file opens by warning about.
+--     X.ShouldSaveMana still holds one inline read (`nAbility:GetManaCost()` on
+--     the left of that same comparison) and X.GetRoshanManaFloor still holds its
+--     own; both remain outside the census for the reason above.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf     = require('mock.replay_fixture')
@@ -184,7 +193,7 @@ local function binding_census(sSrc)
     return out
 end
 
-tests['[ratchet] [1] the focus five bind 17 mana prices and 9 of them are dead locals'] = function()
+tests['[ratchet] [1] the focus five bind 19 mana prices and 9 of them are dead locals'] = function()
     local nLive, nDead, tPer = 0, 0, {}
     for _, sHero in ipairs(FOCUS) do
         local rows = binding_census(hero_src(sHero))
@@ -204,11 +213,20 @@ tests['[ratchet] [1] the focus five bind 17 mana prices and 9 of them are dead l
         -- lion: Q(593) R(1105) live; W(791) E(978) dead
         -- cm:   BOTH dead -- see §2
         -- wk:   Q(712) live (X.GetRoshanManaFloor, a third predicate)
+        -- ⭐ RE-DERIVED 2026-09-15 (hero, GH #407 / `wksavecap`), and the re-take
+        -- is the action this block's own note asks for rather than a repair.
+        -- skeleton_king 1 -> 3 live, 0 dead: X.GetReincarnationReserve binds TWO
+        -- more prices (`nReserve` from Reincarnation, `nCost` from the ability
+        -- being priced) and reads both, so the focus-five total goes 8 -> 10
+        -- live with 9 dead unchanged.  ⚠️ Both are LIVE, which is the direction
+        -- this file cares about: no new dead binding joined the population §2
+        -- and §4 reason over, and neither section's numbers move (§4's are
+        -- corpus floors and no fixture was added).
         axe            = { live = 2, dead = 1 },
         zuus           = { live = 3, dead = 4 },
         lion           = { live = 2, dead = 2 },
         crystal_maiden = { live = 0, dead = 2 },
-        skeleton_king  = { live = 1, dead = 0 },
+        skeleton_king  = { live = 3, dead = 0 },
     }
     for _, sHero in ipairs(FOCUS) do
         local got, want = tPer[sHero], EXPECT[sHero]
@@ -218,8 +236,8 @@ tests['[ratchet] [1] the focus five bind 17 mana prices and 9 of them are dead l
                 .. got.dead .. '. Re-derive this file\'s counts (a binding that '
                 .. 'became live changes §4/§5 and possibly §2) before editing.')
     end
-    assert(nLive == 8 and nDead == 9,
-        'focus-five total: expected 8 live / 9 dead, got ' .. nLive .. ' / ' .. nDead)
+    assert(nLive == 10 and nDead == 9,
+        'focus-five total: expected 10 live / 9 dead, got ' .. nLive .. ' / ' .. nDead)
 end
 
 tests['[1b] the classifier is not vacuous: it finds both kinds inside ONE file'] = function()
