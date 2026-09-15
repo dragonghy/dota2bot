@@ -1364,6 +1364,14 @@ end
 ---     target is a CREEP, its premise is J.IsFarming, and a walk toward a camp
 ---     shares none of this branch's cost story.  Section 5 asserts it is still
 ---     unbounded so a later round cannot read this file as having fixed it.
+---     ⭐ SUPERSEDED 2026-09-15 by `axebhcamp`, which is the round this bullet
+---     asked for: the jungle pick now elects from a gated in-reach SUBSET of
+---     that same ring (X.axe_HungerCampCandidates, below).  The ring itself --
+---     `GetNearbyNeutralCreeps( nCastRange + 100 )` -- is still read unbounded,
+---     so the sentence above is now true of the QUERY and false of the PICK.
+---     §5.4 was rewritten to assert the new shape rather than deleted; this
+---     lever's own claims (subset, no relocation, no added hero cast) are
+---     untouched, because `axebhcamp` moves no hero-targeting firing point.
 ---   * `axebhrecast` and `axebhpure` are untouched.  This conjunct sits BESIDE
 ---     X.axe_IsBattleHungerFresh in the same `if`, each carrying its own id, and
 ---     the two ids are NEVER conjoined inside one predicate -- that is the
@@ -1391,6 +1399,121 @@ function X.axe_IsHungerFightTargetInReach( hTarget, nCastRange )
 	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'axebhreach' ) ) then return true end
 
 	return J.IsInRange( bot, hTarget, nCastRange )
+
+end
+
+
+--- Which camp creeps may the 打野 bid elect from?
+---
+--- Soak candidate `axebhcamp` (turbo-only, INERT until armed) -- the LAST
+--- unbounded ring in X.ConsiderW, and the one the sibling `axebhreach` header
+--- above pinned open on purpose ("a later round that bounded it should say so
+--- there").  This is that round; that bullet and §5.4 of
+--- tests/test_axe_battle_hunger_fight_reach.lua both now say so.
+---
+--- THE DEFECT.  X.ConsiderW bids from eight firing points.  Seven bound their
+--- target to the cast range the function computed on its own first working
+--- line (`nCastRange = abilityW:GetCastRange() + aetherRange`) -- six by the
+--- two conventions the function itself writes, and the 团战 min-search by
+--- `axebhreach`.  The 打野 pick is the one left:
+---
+---     local neutralCreepList = bot:GetNearbyNeutralCreeps( nCastRange + 100 )
+---     local targetCreep      = J.GetMostHpUnit( neutralCreepList )
+---
+--- There is no distance term of any kind between that list and
+--- `return BOT_ACTION_DESIRE_HIGH, hCastTarget`.
+---
+--- WHY THE 100 IS NOT THE SIZE OF THE MISTAKE, and this is the whole point.
+--- A first-match loop over a ring 100 units too wide costs at most a 100-unit
+--- walk.  This is not a first-match loop -- it is a SELECTION RULE, and it
+--- selects on the one axis that is anti-correlated with being close: MOST HP.
+--- Axe melees the camp he is clearing from ~128 units, so the creeps in the
+--- outer band are not the camp he is on, they are the NEXT camp; and the unit
+--- J.GetMostHpUnit prefers is exactly the big one (golem / ancient / centaur
+--- khan) that a neighbouring box is likelier to hold than the one he already
+--- ground down.  So the band member does not merely ADD a walk, it DISPLACES
+--- the in-reach creep that the same list already admitted -- the `axebhreach`
+--- swap argument, on the branch that sibling declined to touch.
+---
+--- WHAT THE WALK COSTS.  X.SkillsComplement hands the returned handle to
+--- ActionQueue_UseAbilityOnEntity, and a cast order on a unit beyond cast range
+--- is a MOVE order first.  The bid is BOT_ACTION_DESIRE_HIGH, so for the length
+--- of that walk it outranks the farming mode that put him in the camp; he
+--- leaves a camp he was mid-clear on, and arrives inside the aggro radius of a
+--- box he did not choose to pull.
+---
+--- SIZE OF THE BAND, off the KV snapshot rather than guessed.
+--- axe_battle_hunger / AbilityCastRange is `600 700 800 900`
+--- (tests/mock/special_value_shapes.lua), so the band (nCastRange,
+--- nCastRange + 100] is 600->700 at rank 1 and 900->1000 at rank 4 -- and at
+--- rank 1 its outer edge is exactly the rank-2 cast range, i.e. the branch
+--- already searches at the reach Axe will not have until his next point in W.
+---
+--- DIRECTION -- three claims that hold, and one residue that is registered
+--- rather than argued away.
+---   1. SUBSET OF CANDIDATES.  The armed pick is always a member of the list
+---      the shipped query returned; this predicate only ever removes entries.
+---   2. NEVER FURTHER.  Every surviving entry is inside nCastRange, so the
+---      armed pick is never further away than the shipped pick.
+---   3. NO-OP EXACTLY WHEN THE SHIPPED PICK IS ALREADY IN REACH.  If the
+---      overall max-health unit is inside nCastRange it is still the max of the
+---      filtered list, so J.MostHpUnitOf returns the SAME HANDLE -- ties
+---      included, because that scan keeps the first `uHp > maxHP` under
+---      iteration order and the filter below preserves order (ipairs in, array
+---      out).  Gate off, the shipped table is returned unchanged, by identity.
+---   4. ⚠️ RESIDUE: ARMING CAN ADD A BID.  Unlike the 团战 site, this branch
+---      applies four more conjuncts AFTER the election (J.IsValid,
+---      not J.IsRoshan, no `_self` modifier, not J.CanKillTarget), and those
+---      are re-evaluated on a DIFFERENT creep.  So a frame where the shipped
+---      far pick failed `not J.CanKillTarget` can bid once armed.  That is a
+---      real widening of the bid set and it is NOT claimed away: the added bid
+---      is a Battle Hunger, inside cast range, on a camp creep Axe cannot just
+---      auto-attack down, which is the branch's own stated purpose -- but a
+---      wave that reads this lever negative may attribute it here.
+---      tests/test_axe_hunger_camp_reach.lua §3.3 drives that case explicitly.
+---
+--- NO DEPENDENCY WRITTEN AS A CONJUNCTION.  This predicate names `axebhcamp`
+--- and nothing else.  `abilanc` lives INSIDE J.GetMostHpUnit, one call below,
+--- and composition through a call boundary is not the pullcad trap; conjoining
+--- the two ids inside this body would be, and mutation M10 of
+--- tools/agent/mutstand_axebhcamp.sh is that mutation.
+---
+--- WHAT IS NOT KNOWN, and it is a HARDER not-known than `axebhreach`'s.  The
+--- domain is UNSIZED and this corpus CANNOT size it, for a structural reason:
+--- a fixture carries no neutral units at all (make_fixture.py dumps heroes and
+--- structures only), and the opt-in model that synthesizes them from
+--- `recent_damage` stands every one of them AT THE SUBJECT'S OWN LOCATION --
+--- DISTANCE IS NOT MODELLED (tests/mock/replay_fixture.lua, the declared world
+--- assumption).  So on every frame in the repo this predicate answers "in
+--- reach" for every creep it is handed, and the offline band count is ZERO BY
+--- CONSTRUCTION.  ⛔ That zero is an instrument reading, not a domain: nobody
+--- may report it as "the lever is dead" (GH #838's shape).  §2 of the test
+--- DRIVES the construction rather than narrating it, and is a one-way
+--- tripwire -- the day the dumper carries positioned neutrals it goes red and
+--- says so instead of staying green on an expired claim.
+--- What the corpus CAN buy is the RING: nCastRange on real Axe frames, off the
+--- real ability handle, which is what §1 measures.  ⚠️ A reading about the
+--- ring is not a reading about the branch firing.
+--- ⛔ NO ONE MAY REPORT A NUMBER OF BIDS THIS LEVER MOVES.  Evidence is
+--- requested as iterations/queue.json `hero-92` (zero EC2, archive-only).
+--- Do NOT promote on the (c) argument alone.
+function X.axe_HungerCampCandidates( tCreepList, nCastRange )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'axebhcamp' ) ) then return tCreepList end
+
+	if type( tCreepList ) ~= 'table' or type( nCastRange ) ~= 'number' then return tCreepList end
+
+	local tInReach = {}
+
+	for _, hCreep in ipairs( tCreepList )
+	do
+		if J.IsInRange( bot, hCreep, nCastRange )
+		then
+			tInReach[#tInReach + 1] = hCreep
+		end
+	end
+
+	return tInReach
 
 end
 
@@ -1534,7 +1657,8 @@ function X.ConsiderW()
 	then
 		local neutralCreepList = bot:GetNearbyNeutralCreeps( nCastRange + 100 )
 
-		local targetCreep = J.GetMostHpUnit( neutralCreepList )
+		-- `axebhcamp` filters the ring; it does not shrink the query above.
+		local targetCreep = J.GetMostHpUnit( X.axe_HungerCampCandidates( neutralCreepList, nCastRange ) )
 
 		if J.IsValid( targetCreep )
 			and not J.IsRoshan( targetCreep )

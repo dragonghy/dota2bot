@@ -12,6 +12,35 @@
 # is "about".  tests/run_tests.lua sorts test names, so a source-shape mutant is
 # often caught upstream of the section it is aimed at.
 #
+# ⭐ APPLY-GUARDS ADDED 2026-09-15 (hero, while landing `axebhcamp`).  The
+# `axecallring` round found this failure mode on its own M9 and fixed it there,
+# and its backlog entry named THIS file as still carrying the hole.  The hole
+# turned out to be wider than that note said: it was not one mutant, it was ALL
+# TWELVE -- eleven `python3 - <<'PY'` heredocs with no `||` on them, plus an M1
+# that mutated with `sed -i`.
+#   * an unguarded heredoc whose `assert` fails writes NOTHING and exits
+#     non-zero INTO A SHELL THAT IGNORES IT, so `run` then measures the
+#     PRISTINE tree and prints SURVIVED for a mutant that never existed;
+#   * `sed -i` that matches nothing is worse -- it exits ZERO and says nothing
+#     at all.
+# Both directions are silent and both point the same way: they manufacture
+# evidence about whether an assertion is doing work.
+#
+# ⭐⭐ AND THE GUARD FIRED ON ITS VERY FIRST RUN, on M9 -- so this was not a
+# precaution, it was a repair.  M9's anchor was the single line
+# `\t\tif J.IsValidHero( npcEnemy )\n`, and it stopped being unique on
+# 2026-09-15 when `axecallring` added X.axe_CountCallRingTargets, whose loop
+# opens with the identical line.  From that commit on, M9's python `assert`
+# failed, the file was never written, the suite ran on the PRISTINE tree, and
+# the unguarded stand scored the result anyway.  ⛔ So the "12/12 全杀" this
+# stand reported on 2026-09-15 counted a mutant that had never been applied.
+# The anchor is now two lines (the second is where the two loops part), M9
+# applies, and it KILLS -- the assertion it aims at was doing work all along.
+# The number was right; the reason was not, and only the guard could tell them
+# apart.  (Same shape as the `axecallring` M9 the backlog pointed here from --
+# that round found it in its own stand and wrote that this file still had it.
+# It had it twelve times.)
+#
 # ⛔ MUTANTS THAT ARE NOT HERE, and why -- do not add them:
 #   * arming `axecullbm` in bots/Customize/soak_side.lua.  That is the change
 #     itself, not a mutation of an assertion.
@@ -81,12 +110,18 @@ fi
 # M1  The gate id is renamed, i.e. arming the published string moves nothing.
 #     The silent-no-op shape check_armed_wiring.py cannot see: a call site
 #     exists, the predicate is simply unreachable by any wave.
-sed -i "s/'axecullbm'/'axecullbmXX'/g" "$AXE"
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
+p = 'bots/BotLib/hero_axe.lua'
+s = open(p).read()
+old = "J.IsSoakCandidate( 'axecullbm' )"
+assert s.count(old) == 1, 'M1 anchor not found exactly once'
+open(p, 'w').write(s.replace(old, "J.IsSoakCandidate( 'axecullbmXX' )", 1))
+PY
 run "M1 gate id renamed -> the single-id pin must red" \
     "no longer names axecullbm"
 
 # M2  The turbo conjunct is dropped.  Every soak candidate is turbo-only.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'bots/BotLib/hero_axe.lua'
 s = open(p).read()
 old = "\treturn J.IsModeTurbo() and J.IsSoakCandidate( 'axecullbm' )"
@@ -101,7 +136,7 @@ run "M2 turbo conjunct dropped -> gate shape must red" "no longer requires turbo
 #     lever's own id, which is why section 6 quotes the ids instead of matching
 #     them bare -- the first draft of that check reported this mutant on the
 #     PRISTINE tree.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'bots/BotLib/hero_axe.lua'
 s = open(p).read()
 old = "J.IsModeTurbo() and J.IsSoakCandidate( 'axecullbm' )"
@@ -122,7 +157,7 @@ run "M3 gate names a sibling id -> pullcad guard must red" \
 #     to reject.  This is the mutant that "reads like the obvious fix": it vetoes
 #     every reflecting target, throwing away a certain hero kill whenever an
 #     enemy has popped the item.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'bots/BotLib/hero_axe.lua'
 s = open(p).read()
 old = "\treturn nSelfHealth <= nCullReflectShare * nTargetHealth"
@@ -137,7 +172,7 @@ run "M4 blanket veto (lethality test removed) -> the healthy-Axe control must re
 #     mutant with the SAME direction as the lever (it only ever deletes orders),
 #     so no direction argument catches it -- only the keyed-on-the-modifier
 #     control in section 5 does.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'bots/BotLib/hero_axe.lua'
 s = open(p).read()
 old = "\tif npcEnemy == nil or not npcEnemy:HasModifier( 'modifier_item_blade_mail_reflect' )"
@@ -152,7 +187,7 @@ run "M5 modifier check dropped -> the reflect-removed control must red" \
 #     i.e. the reading the KV could NOT settle is adopted instead of bounded.
 #     Direction is unchanged (still a narrowing), the corpus domain is still 0,
 #     and section 3 still passes: only the knife edge in section 5 moves.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'bots/BotLib/hero_axe.lua'
 s = open(p).read()
 old = "\treturn nSelfHealth <= nCullReflectShare * nTargetHealth"
@@ -166,7 +201,7 @@ run "M6 bound widened to the damage instance -> the crossing ladder must red" \
 # M7  The comparison loses its equality case (`<=` -> `<`), so a hero on exactly
 #     the return's worth of health is cleared to cull and dies.  The classic
 #     off-by-one that no aggregate reading can see.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'bots/BotLib/hero_axe.lua'
 s = open(p).read()
 old = "\treturn nSelfHealth <= nCullReflectShare * nTargetHealth"
@@ -185,7 +220,7 @@ run "M7 <= becomes < -> the equality probe must red" \
 # M8  The RECORDED constant drifts.  There is no in-repo cross-check for it
 #     (items are not in special_value_shapes.lua), so the source pin is the only
 #     reader it has -- this mutant is the proof of that claim.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'bots/BotLib/hero_axe.lua'
 s = open(p).read()
 old = "local nCullReflectShare = 0.85"
@@ -200,13 +235,16 @@ run "M8 the RECORDED 0.85 drifts to 0.75 -> the constant pin must red" \
 #     shipped vetoes.  Behaviour is identical (`and` is commutative here) but the
 #     header's "the shipped conjuncts keep their order and their short-circuit
 #     cost" stops being true -- a claim only a source pin can hold.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'bots/BotLib/hero_axe.lua'
 s = open(p).read()
 mine = "\t\t\tand not X.IsCullReflectLethal( npcEnemy )\n"
 assert s.count(mine) == 1, 'M9 anchor not found exactly once'
 s = s.replace(mine, "", 1)
-anchor = "\t\tif J.IsValidHero( npcEnemy )\n"
+# The one-line loop head matched TWICE from 2026-09-15 on: `axecallring` added
+# X.axe_CountCallRingTargets, whose loop opens with the identical line.  The
+# second line is where the two part (CanBeSeen against the ring's IsInRange).
+anchor = "\t\tif J.IsValidHero( npcEnemy )\n\t\t\tand npcEnemy:CanBeSeen()\n"
 assert s.count(anchor) == 1, 'M9 loop head not found exactly once'
 open(p, 'w').write(s.replace(anchor, anchor + mine, 1))
 PY
@@ -219,7 +257,7 @@ run "M9 conjunct hoisted above the shipped vetoes -> the ordering pin must red" 
 #     Section 6's "this tree KNOWS OF NO kill threshold" check is the ONLY thing
 #     standing between a future patch that reintroduces the mechanic and a
 #     header that still says the question dissolved.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'tests/mock/special_value_shapes.lua'
 s = open(p).read()
 old = "            ['damage'] = { base = '275 375 475'"
@@ -234,7 +272,7 @@ run "M10 a kill_threshold key reappears in the KV snapshot -> the ruling pin mus
 #     wrong reason: widen the threshold it measures against so a frame that is
 #     NOT in the lever's domain would be counted in it.  If section 2 stays
 #     green, its 0 was never a measurement of anything.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'tests/test_axe_cull_blade_mail.lua'
 s = open(p).read()
 old = "                        if d <= 175 + BONUS and u.hp < 150 + 100 * 3 then"
@@ -248,7 +286,7 @@ run "M11 census threshold inflated -> the domain-zero assertion must red" \
 # M12 THE LIVENESS CONTROL for section 3.  Make the inertness sweep vacuous by
 #     driving nothing, the way an `ipairs({})` slip does.  Section 3's own
 #     `nDriven` guard is the only thing that notices, and this proves it.
-python3 - <<'PY'
+python3 - <<'PY' || { echo 'ABORT: a mutation failed to apply; an unmutated tree is not a survivor.' >&2; exit 2; }
 p = 'tests/test_axe_cull_blade_mail.lua'
 s = open(p).read()
 old = "            and unit_named(fx, AXE) ~= nil and fx.self == AXE then"

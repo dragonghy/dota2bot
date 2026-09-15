@@ -22,6 +22,48 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-185. ✅ **主体:`axebhcamp`(turbo-only)—— `X.ConsiderW` 打野支路的选举由**射程内**的野怪决定。**
+   落在 `bots/BotLib/hero_axe.lua` 的新 `X.axe_HungerCampCandidates`(未 armed **按引用原样返回同一张表**)
+   + 打野支路选举点 `J.GetMostHpUnit( X.axe_HungerCampCandidates( neutralCreepList, nCastRange ) )`;
+   **查询环 `nCastRange + 100` 一字未动** —— 本杠杆过滤结果,不收缩查询。
+   报告 `iterations/reports/hero/20260915T220000Z.md`;新 `tests/test_axe_hunger_camp_reach.lua`
+   **23 绿 / 4.93s**;变异台 `tools/agent/mutstand_axebhcamp.sh` **12/12 全杀**;新 queue 请求 **hero-92**。
+   **零 EC2 / 零 CE / S3 读取 0 个对象。P4.4 自评:(i)**。
+   - ⭐⭐ **线索仍然是「已落地修复的 deliberately-left-alone 段落逐字点名下一根杠杆」**(`-184` 立的那条),
+     而这次它**点名了两次**:`axebhreach` 的 header 一条,外加一条**活着的断言**
+     (`test_axe_battle_hunger_fight_reach.lua` §5.4),后者的消息直接写明「retire this assertion
+     rather than deleting it silently」。⇒ **欠条可以写成可执行的,而写成可执行的那条更难被忘掉。**
+   - ⭐⭐ **本轮头条是一个改判:「域 = 0」→「域 UNASKABLE」,而两者的差别是「谁的性质」。**
+     `J.IsFarming` 在 40 个 Axe 帧上全 false,**但也在全语料 1314 个活 subject 上全 false**,
+     因为它读 `GetActiveMode()`(loader 没实现)**或**一个 TEAM_NEUTRAL 目标(1420 个 unit 行全是英雄)
+     ⇒ **两条支路被同一组缺失字段堵死**。
+     **一台在任何对象上都没有阳性对照的仪器,它的 0 不是读数** —— 找阳性对照是发现这件事的唯一动作。
+   - ⭐ **错在讨喜方向的那一条(§2.2 `[L1]`,断言当场红出来)**:`J.IsInRange` 先问 `CanBeSeen()`,
+     而合成野怪没有这个方法 ⇒ 对**距离 0** 的野怪答 false ⇒ 谁拿它量 band 会看到
+     「armed 丢掉每一只野怪」并读成**域很大**。**下一个想用 neutrals 模型量距离的人先读这一条。**
+   - ⭐ **一个完整读数换成一个构造性证明,因为成本决定谁会跑它**:1314-subject 横扫 **84s**
+     ⇒ 进不了闸(GH #624)⇒ 作为**带日期的读数**留在 header,棘轮换成「0 个非英雄 unit 行」(**0.05s**,
+     覆盖同一批 subject)。**文件从 9.4s 降到 4.93s,这才是它能进 manifest 的原因。**
+   - ⛔ **支路层 1 / 端到端 0**(`-184` 同形,这次抢跑的是 `X.ConsiderQ`,同帧同出 0.75 且排在前面)。
+   - ⭐ **残差窄于初稿,且是算术说的**:`not J.CanKillTarget` **加不出出货**
+     (须 `near > s >= far > near`,而选举钉死 `far > near`)⇒ 真载体是 `_self` modifier。
+     **写下一个残差时先问它的载体能不能被排序排除掉。**
+   - **附带(量具):`mutstand_axecullbm.sh` 补闸 —— ⭐⭐ 闸第一次跑就抓到一条真的。**
+     `-184` 说「补 M9 那条闸」,实际是**全部十二个**没闸。M9 的单行锚点因 `axecallring` 同日新增的
+     `X.axe_CountCallRingTargets`(循环头逐字相同)而不再唯一 ⇒ **那轮的「12/12 全杀」里有一个
+     mutant 从未被施加**。改两行锚点后 M9 真的施加且 kill。
+     ⇒ **「一个台子报的数字对」和「它报对了」是两件事。**
+   - **下一轮主体第一候选**:**第 1 条** —— `-184` 留下的第 3 条欠条**仍然没人接**:
+     `X.ConsiderQ` 带线支路的 `#hAllyList <= 2`,`axecallclock` 的 LIMIT 段第 4 条明说
+     「是另一个 id 的事」。**第 2 条**(量具,只能当附带,**已开 issue,别重做普查**):
+     本轮补完 `axecullbm` 后顺手数了一下 —— 在用**顶格 `python3 - <<'PY'` 这一种写法**的 **32** 个台子里,
+     **234 个变异点有 199 个(85%)没有 `||` 闸**,**全闸的只有 2 个**(都是今天改的)。
+     ⚠️ **这个分母只覆盖这一种写法** —— 另外约 180 个 `mutstand_*.sh` 用别的写法,**本轮没审**,
+     不要把 85% 读成全局。今天的证据是**无闸的台子真的报出过没施加过的 mutant**(axecullbm M9),不是推测。
+     **第 3 条**:`test_axe_hunger_camp_reach.lua` 的 §2 是一整套「这份语料答不了」的绊线,
+     而 `hero-92` 一旦回数,它们会**同时**过期 —— 到时候要的是**改写**不是放宽(每条断言的消息
+     已经写好了该怎么做)。
+
 -184. ✅ **主体:`axecallring`(turbo-only)—— Berserker's Call 由**环**决定,不由被问的那一个人决定。**
    落在 `bots/BotLib/hero_axe.lua` 的新 `X.IsCallRingOn` / `X.axe_CountCallRingTargets` /
    具名量 `X.nCallRingQuorum = 2` + `X.ConsiderQ` 里**排在出厂先手支路之后的一条独立 `if`**。
@@ -8203,6 +8245,49 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-15T22:00Z(报告 `iterations/reports/hero/20260915T220000Z.md`;**backlog:新开 `-185`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`axebhcamp`**(turbo-only,**未 armed**,
+  P4.2 冻结期不申请入集);新 queue 请求 **hero-92**;**P4.4 自评:(i)**)
+  **主体:`X.ConsiderW` 的八个出货点里七个把目标绑在 `nCastRange` 上,打野支路是剩下的那一个 ——
+  `GetNearbyNeutralCreeps( nCastRange + 100 )` 之后直接 `J.GetMostHpUnit`,列表到出货之间没有任何距离项。**
+  - ⭐ **线索是 `axebhreach` 自己写下的两处欠条**:header 的 *DELIBERATELY LEFT ALONE* 一条,
+    以及一条**活着的断言** `test_axe_battle_hunger_fight_reach.lua` §5.4,消息逐字写着
+    「if a later round bounded it, say so there and **retire this assertion rather than deleting it
+    silently**」。本轮是那一轮,**两处都改写了没有删**。
+  - ⭐ **100 不是错误的大小**:这不是首命中循环,是**选举规则**,而它选的轴(最高血量)与「近」反相关 ——
+    Axe 贴脸清野 ~128u,band 里的是**隔壁营**,而 `GetMostHpUnit` 偏好的正是隔壁营那只没被磨过的大野
+    ⇒ band 成员**把同一张表里已经合法的近处野怪挤掉**(`axebhreach` 的 swap 论证)。
+    band 大小逐帧核对过:cast range 阶梯 `600/700/800/900` 在 40 个真实 Axe 帧上全对
+    ⇒ rank 1 的 band 外沿**恰好是 rank 2 的施法距离**。
+  - ⭐⭐ **本轮真正的产出:把「域 = 0」改判成「域 UNASKABLE」。** 初稿写「`J.IsFarming` 在 40 个 Axe 帧上
+    全 false」——**一句关于 Axe 的话**;去找阳性对照才发现**全语料 1314 个活 subject 没有一个答 true**,
+    因为 `J.IsFarming` 读 `GetActiveMode()`(loader 根本没实现,GH #577 §5 同族)**或**一个 TEAM_NEUTRAL
+    目标(而 1420 个 unit 行**全部**是英雄)⇒ **两条支路被同一组缺失字段同时堵死**。
+    ⇒ **那个 0 是关于仪器的,不是关于 bot 的;一台在任何对象上都没有阳性对照的仪器,它的 0 不是读数。**
+  - ⭐ **第二条同型,而它错在讨喜的方向**(§2.2 `[L1]`,由断言当场红出来):`J.IsInRange` 第一件事是
+    `CanBeSeen()`,而 loader 合成的野怪**没有这个方法** ⇒ 对一只站在**距离 0** 的野怪答 **false**。
+    ⛔ 谁拿这个模型量 band,会看到 armed 腿**丢掉每一只野怪**并读成「域很大」。
+  - ⭐ **84s 的完整横扫换成 0.05s 的构造性证明**(§2.3b):跑不起的测试就是没有闸会跑的测试(GH #624);
+    横扫作为**带日期的读数**留在 header,棘轮换成「语料里 0 个非英雄 unit 行」。
+  - ⛔ **支路层 1 / 端到端 0**,同 `-184` 的形状(那次抢跑的是 `X.ConsiderR`,这次是 `X.ConsiderQ`
+    在同一帧同出 0.75 且排在前面)。**M9 专打这个合流。**
+  - ⭐ **残差的载体是被算术找出来的**:初稿把「armed 可以多出一发」记在 `not J.CanKillTarget` 上,
+    **那是错的** —— 要经它加出货须 `near > s >= far > near`,而选举已钉死 `far > near` ⇒ **算术上不可能**
+    (§3.5a 驱动)。真载体是 `modifier_axe_battle_hunger_self`(不被选举排序,§3.5b 驱动)。
+  - **附带(量具):`mutstand_axecullbm.sh` 补闸,而闸第一次跑就抓到一条真的。**
+    洞比 `-184` 那句话大:不是一个 mutant,是**全部十二个**(11 个无 `||` 的 heredoc + 一个 `sed -i`)。
+    ⛔ M9 的单行锚点从 **2026-09-15** 起不再唯一(`axecallring` 加的
+    `X.axe_CountCallRingTargets` 循环头逐字相同)⇒ **那轮报的「12/12 全杀」里有一个 mutant 从未被施加**。
+    锚点改两行后 M9 **真的施加且 kill** ——**数字对,理由不对,只有闸能分开两者**。
+  - 附带:一行手工登记进 `lua_gate_manifest.json`(实测 4.927s,242.192 → **247.119**/300.0),
+    **没跑全量重测**(GH #783),**没动 `measured_at`**(GH #810)。
+  - ⛔ trunk red 不代修:`tests/test_tpchew_channel_creep.lua`(2 处语料普查过期,GH #624 形状;
+    **不读 `hero_axe.lua`、不调 `load_hero`,与本轮无关**)。
+  - ⚠️ **GH #229 重叠照登记**:开工自检的 Lua tag 腿捡到本文件的**中间态**并在 `/tmp/sc.log` 里
+    留下三条失败;收尾复跑 **23/0**、树干净。**实际后果为零,但重叠要写。**
+  - ⚠️ 开工自检**两道门各生效一次**:第一条命令踩管道(证据纪律 3)被 `REFUSED` 拦下,
+    第二条改用 `timeout` **又被第二道门拦下**(会被腰斩,124 不在 0/2/3 词汇里),
+    第三条 `nohup ... > /tmp/sc.log 2>&1 &` 才对。
 - 2026-09-15T20:00Z(报告 `iterations/reports/hero/20260915T200000Z.md`;**backlog:新开 `-184`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`axecallring`**(turbo-only,**未 armed**,
   P4.2 冻结期不申请入集);新 queue 请求 **hero-91**;**P4.4 自评:(i)**)

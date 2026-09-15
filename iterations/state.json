@@ -9217,5 +9217,25 @@
   "local_validation": "tests/test_warddupkey_eaten_spots.lua. Real frames, real X.GetAvailabeObserverWardSpots / X.GetClosestObserverWardSpot, real J.IsSoakCandidate reading the real bots/Customize/soak_side.lua; no J.* stub anywhere. Bearing frame tests/fixtures/f_260820_043524_wd_defend_alone.lua, Lich, position 5, t=587.4.",
   "filed_not_bundled": "bots/FretBots/VoiceoverHeroes.lua:70 writes key `npc_dota_hero_bloodseeker` a second time, under the `-- Bounty Hunter` comment, mapping it to 'npc_dota_hero_bounty_hunter'. Two consequences: the Bloodseeker alias now resolves to Bounty Hunter, and there is NO npc_dota_hero_bounty_hunter key at all. Plus three cosmetic duplicates in bots/FretBots/Soundboard.lua (LYRICAL, WW13, WW14). NOT bundled into this id: different file, different failure mode, different consequence -- bundling would make the evidence unattributable (the lanefix lesson). Filed for a later work unit.",
   "next_baton": "Needs (a)-evidence that the restored spots are reached in a real dire Turbo game. queue.json:strategy-49 asks the replay desk for ONE FRAME, not a wave: a dire position>=4 hero standing where a restored spot wins the argmin, or any dire frame where the MID_1 group has drained below one available spot. Until then the promote case rests on the drain channel plus the source census, and that is stated rather than implied."
+ },
+ "axebhcamp_20260915": {
+  "owner": "hero",
+  "date": "2026-09-15T22:xxZ",
+  "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
+  "backlog_item": "hero -185。线索是本组上一轮(-184)自己留下的「下一轮主体第一候选」第 2 条,而那一条的来源更早:`axebhreach` 在 2026-09-09 落地时,**两处**白纸黑字写下它故意没碰打野支路 —— header 的 WHAT IS DELIBERATELY LEFT ALONE 一条,以及一条活着的断言 `tests/test_axe_battle_hunger_fight_reach.lua` §5.4,其消息逐字写着「if a later round bounded it, say so there and retire this assertion rather than deleting it silently」。本轮是那一轮。两处都已**改写**而非删除。",
+  "headline": "⭐ **`X.ConsiderW` 的八个出货点里七个把目标绑在 `nCastRange` 上,打野支路是剩下的那一个**:`bot:GetNearbyNeutralCreeps( nCastRange + 100 )` 之后直接 `J.GetMostHpUnit`,**列表到 `return BOT_ACTION_DESIRE_HIGH` 之间没有任何距离项**。⭐⭐ **而 100 不是这个错误的大小**:它不是首命中循环,是**选举规则**,选的轴(最高血量)恰好与「近」反相关 —— Axe 贴脸清野约 128u,band 里的野怪基本是**隔壁营**,而 `GetMostHpUnit` 偏好的正是隔壁营那只没被磨过的大野。于是 band 成员**不只是多走一段路,它把同一张表里已经合法的近处野怪挤掉**;出货是 HIGH,射程外的施法指令先是一条**移动**指令,这段路上盖过把他放在营地里的 farming 模式。",
+  "star_main_judgement": "⭐⭐ **本轮真正的产出是把一个「域 = 0」改判成「域 UNASKABLE」,而这两件事的差别是谁的性质。** 初稿把 §2.3 写成「J.IsFarming 在 40 个 Axe 帧上全 false」—— 一句**关于 Axe 的**话。去找阳性对照(哪怕一帧答 true)时才发现:全语料 **1314** 个活 subject **没有一个**答 true,而原因是结构性的 —— `J.IsFarming` 读 `GetActiveMode()`(loader 根本没实现,GH #577 §5 同族)**或**一个 TEAM_NEUTRAL 目标(而 dumper 的 1420 个 unit 行**全部**是英雄,0 个非英雄行)⇒ **两条支路被同一组缺失字段同时堵死**。⇒ 那个 0 是**关于仪器**的,不是关于 bot 的;**一台在任何对象上都没有阳性对照的仪器,它的 0 不是读数**。⭐ 第二条同型的发现更险,因为它错在讨喜的方向(§2.2 [L1],由一条断言当场红出来):`J.IsInRange` 第一件事是 `CanBeSeen()`,而 loader 合成的野怪**没有这个方法** ⇒ 它对一只站在**距离 0** 的野怪答 **false**。谁拿这个模型量 band,会看到 armed 腿**丢掉每一只野怪**并把它读成「域很大」。⇒ §0.2 (a) 因此不是「距离没建模」,是「这个模型两个方向都答不了」。",
+  "direction": "三条成立 + 一条残差,而**残差的载体是被算术找出来的,不是被我写对的**:(1) armed 的选择永远是 shipped 查询返回过的成员(只删不加);(2) 永不更远;(3) **shipped 选中的那只本来就在射程内时,armed 返回同一个句柄**(含并列:`MostHpUnitOf` 取首个 `uHp > maxHP`,而过滤保序 ipairs 进数组出);(4) ⚠️ **armed 可以多出一发**。初稿把这条记在 `not J.CanKillTarget` 上,**那是错的**:要经它加出货必须 near > swing >= far > near,而选举已钉死 far > near ⇒ **算术上不可能**(§3.5a 驱动这个不可能)。真正的载体是 `modifier_axe_battle_hunger_self` —— 它不被选举排序,于是远处那只可以已带 debuff 而近处那只干净(§3.5b 驱动)。",
+  "branch_vs_endtoend": "⛔ **两个数,必须分开报**:支路层 **1 次换人**(`X.ConsiderW` 直接驱动:gate off 打远处 granite_golem,armed 打近处 centaur_outrunner);**端到端 0**(`X.SkillsComplement` 两条腿都发 `axe_berserkers_call`)—— 因为 `X.ConsiderQ` 在这一帧同样出 0.75 且**排在前面**,平手归先问的那个。**与 -184(`axecallring`)是同一个形状,那次抢跑的是 `X.ConsiderR`。**变异体 **M9** 专打这个合流:把 §3.6 改成从 dispatch 读支路答案,当场红。",
+  "what_is_not_known": "⛔ **域未量过,且这份语料量不了**(上面两个构造性零)。⛔ **不许报出本杠杆移动了多少次出货**。证据请求 `iterations/queue.json` **hero-92**(零 EC2、优先级 2、只读归档;与 hero-2 / hero-13 / hero-89 / hero-91 同一个承载者阻塞,五条可以一次扫完)。⛔ 0 事件 ⇒ **DO-NOT-ARM 不是 reject**。**不要只凭 (c) 论证 promote。**",
+  "artifacts": {
+   "source": "bots/BotLib/hero_axe.lua :: X.axe_HungerCampCandidates(新)+ X.ConsiderW 打野支路选举点",
+   "test": "tests/test_axe_hunger_camp_reach.lua(新,23 绿,4.93s)",
+   "sibling_updated": "tests/test_axe_battle_hunger_fight_reach.lua §5.4(**改写而非删除**,14 绿)+ hero_axe.lua 里 `axebhreach` header 的 WHAT IS DELIBERATELY LEFT ALONE 段",
+   "mutation_stand": "tools/agent/mutstand_axebhcamp.sh(**12/12 全杀**;其中 M8/M9/M10/M12 变异的是测试自己的仪器)",
+   "gate_manifest": "tools/agent/lua_gate_manifest.json:手工加一行(4.927s < 5.5s cap;累计 242.192 → 247.119 / 300.0)。⛔ **没跑 `lua_gate_measure.py`**(GH #783:全量重测清空 `known_red` 的 6 条豁免,挡死下一个人),且**故意不动 `measured_at`**(GH #810)。"
+  },
+  "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(本轮未下载任何 `.dem` 或 `analysis.json`)。",
+  "report": "iterations/reports/hero/20260915T220000Z.md"
  }
 }

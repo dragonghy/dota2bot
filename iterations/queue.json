@@ -2895,6 +2895,18 @@
    "note": "本地已把能离线买到的都买了:`tests/test_warddupkey_eaten_spots.lua` **13 绿**、`tools/agent/mutstand_warddupkey.sh` **9 个变异体全 CAUGHT + control SURVIVED(exit 0,直读不过管道)**、源码普查 `tools/agent/table_dup_key_census.py` 全 `bots/` **7 处重复键 / 275 文件**(3 处是本 id,4 处在 FretBots 声音表、**故意没捆绑**)。方向是 **APPEND 且按构造单向**(只加候选点,不移动、不删除、不放宽任何 clause),所以负读数**只能**读成「多出来的那个点被选中后不好」,**永远不能**读成「lever 吃掉了一个出厂眼位」。⛔ 谁也不许报一个本 lever 新增的**插眼数** —— 端到端(argmin)域在本语料上是 0,这一点写在 issue 里而不是被绕过。",
    "result": null,
    "director": null
+  },
+  {
+   "id": "hero-92",
+   "stream": "hero",
+   "bundle": "axebhcamp(新落地 gated id;**零 EC2,不要为它发波** —— 搭任何一轮归档扫描的顺风车;**不申请入集**,P4.2 冻结下唯一合法裁定是 FROZEN-HOLD)",
+   "priority": 2,
+   "status": "pending",
+   "seeds": [],
+   "question": "⛔ **零 AWS、零 EC2、只读已归档 `.dem`。**\n\n一句话:**这个杠杆的域在离线语料里不是「小」,是 UNASKABLE ——「打野」这个前提本身读不出来,而两条读法被同一个缺失字段堵死。**\n\n杠杆:`bots/BotLib/hero_axe.lua` 的 `X.ConsiderW` 打野支路。出厂写法是\n`neutralCreepList = bot:GetNearbyNeutralCreeps( nCastRange + 100 )` 然后 `J.GetMostHpUnit( neutralCreepList )` —— **列表到出货之间没有任何距离项**。新 `X.axe_HungerCampCandidates` 在 armed 时把候选过滤到 `nCastRange` 之内再选举;**查询环一字未动**,只过滤选举。\n\n⭐ **为什么 100 不是错误的大小**:这不是首命中循环,是**选举规则**,而它选的轴(最高血量)恰好与「近」反相关 —— Axe 贴脸清野约 128u,band 里的野怪基本不是他正在打的那一营,是**隔壁营**,而 `GetMostHpUnit` 偏好的正是隔壁营那只没被磨过的大野。于是 band 成员**不只是多走一段路,它把同一张表里已经合法的近处野怪挤掉**(`axebhreach` 的 swap 论证,落在它当年明写「故意不碰」的那条支路上)。出货是 `BOT_ACTION_DESIRE_HIGH`,射程外的施法指令先是一条**移动**指令 ⇒ 这段路上它盖过把他放在营地里的 farming 模式。\n\n⛔ **为什么离线一个数都买不到(两个构造性零,已在 `tests/test_axe_hunger_camp_reach.lua` §2 驱动)**:\n(a) **没有任何带坐标的野怪**:`make_fixture.py` 只 dump 英雄与建筑(全语料 **1420** 个 unit 行**全部**是 `npc_dota_hero_*`,0 个非英雄行)。opt-in 的合成野怪把每一只**放在 subject 自己的坐标上**(`replay_fixture.lua` 明写 DISTANCE IS NOT MODELLED)⇒ band 计数**恒为 0**。⚠️ 更糟的一条(本轮实测,§2.2 [L1]):`J.IsInRange` 第一件事是 `CanBeSeen()`,而合成野怪**没有这个方法** ⇒ 它对一只站在**距离 0** 的野怪答 **false**。⇒ 谁想拿这个模型量 band,会看到 armed 腿**丢掉每一只野怪**并把它读成「域很大」—— **错在讨喜的那个方向**。\n(b) **前提读不出来**:`J.IsFarming` 读 `bot:GetActiveMode()`(loader 根本没实现,GH #577 §5 同族)或一个 TEAM_NEUTRAL 的目标(即 (a))⇒ **两条支路同时被堵**。实测:全语料 **1314** 个活 subject**没有一个**答 true —— 即这台仪器**在任何对象上都没有阳性对照**。⛔ 所以那个 0 是**关于仪器**的,不是关于 Axe 的。",
+   "acceptance": "在已归档 `.dem` 上(任一含 Axe 的语料;⚠️ 种子名册 888/895/896/906 **零 Axe**,`--find axe` 给 899/910/911 —— 与 hero-2 / hero-13 / hero-89 / hero-91 **同一个承载者阻塞,五条请求可以一次扫完**),数三个量,并按铁律 4 (i-a) 登记两个分层的读数:\n(1) **前提域**:活的 Axe 帧里,Battle Hunger 已学到 **rank ≥ 2**、cd 0、`GetManaAfter(manacost) > 0.3`、**且 Axe 真的在打野**的事件数。⚠️ 这一条是本请求的全部理由:它就是离线读不出来的那个数。\n(2) ⭐ **band 域**:(1) 里 `GetMostHpUnit` 选中的那只野怪**落在 `(nCastRange, nCastRange + 100]` 之间**(即 armed 会换人)的事件数。⚠️ **`nCastRange` 随 rank 变**(600/700/800/900,本轮已在 40 个真实 Axe 帧上逐帧核对过该阶梯),所以 band 必须**逐帧按该帧的 rank 算**,不能取一个常数。\n(3) **残差对照**:(2) 里换人之后,**出货判据翻转**的事件数 —— 即 shipped 因为`targetCreep:HasModifier('modifier_axe_battle_hunger_self')` 拒发、而 armed 换到的近处野怪干净因而**多发了一发**的部分。这是本杠杆**唯一**会 ADD 的方向(`not J.CanKillTarget` 那条路**算术上不可能**加出货:要加必须 near > swing >= far > near,而选举已经钉死 far > near;见 §3.5a)。\n\n⚠️ **单位是事件不是帧**(一次清野会落进多个连续帧)。\n⛔ **0 事件 ⇒ DO-NOT-ARM,不是 reject。**\n⛔ 按 RULING 48 记成本:`零 EC2 / 零 CE / S3 读取 <N> 个对象(出网未计价)`。",
+   "requested_by": "hero 2026-09-15T22:xxZ",
+   "requested_in": "iterations/reports/hero/20260915T220000Z.md"
   }
  ],
  "done": [

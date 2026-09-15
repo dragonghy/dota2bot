@@ -603,12 +603,31 @@ tests['§5.3 the helper names exactly one soak id, and it is not conjoined'] = f
         'the sibling Battle Hunger levers must not appear inside this predicate')
 end
 
-tests['§5.4 the jungle pick is still unbounded, on purpose'] = function()
+tests['§5.4 RETIRED 2026-09-15: the jungle pick was bounded by `axebhcamp`'] = function()
+    -- ⭐ THIS CASE USED TO ASSERT THE OPPOSITE, and it asked for exactly this.
+    -- Its old message read: "the jungle pick no longer reads nCastRange + 100.
+    -- This round deliberately left it alone; if a later round bounded it, say
+    -- so there and retire this assertion rather than deleting it silently."
+    -- A later round did (soak candidate `axebhcamp`, 2026-09-15), so the
+    -- assertion is retired BY REWRITING, not by deletion -- the quote above is
+    -- the record of what it used to guard.
+    --
+    -- Two halves, and they are now different answers:
+    --   * the QUERY is still unbounded (nCastRange + 100), deliberately -- the
+    --     new lever filters the result rather than shrinking the ring;
+    --   * the PICK is not, and goes through X.axe_HungerCampCandidates.
+    -- `axebhreach` itself is unchanged by that round, which is what the
+    -- ordering assertion below still guards.
     local body = consider_w_body(read_file(SRC))
     assert(body:find('GetNearbyNeutralCreeps%(%s*nCastRange%s*%+%s*100%s*%)'),
-        'the jungle pick no longer reads nCastRange + 100.  This round '
-        .. 'deliberately left it alone; if a later round bounded it, say so '
-        .. 'there and retire this assertion rather than deleting it silently.')
+        'the jungle QUERY no longer reads nCastRange + 100.  `axebhcamp` left '
+        .. 'the ring alone on purpose and filters the pick; a round that shrank '
+        .. 'the query itself should say so and retire THIS assertion in turn.')
+    assert(body:find('J%.GetMostHpUnit%(%s*X%.axe_HungerCampCandidates%('),
+        'the jungle PICK no longer runs through X.axe_HungerCampCandidates.  '
+        .. 'If `axebhcamp` was reverted, restore this case to its pre-09-15 '
+        .. 'form (quoted above) rather than leaving it half-true.')
+
     local iJungle = body:find('GetNearbyNeutralCreeps')
     local iWire   = body:find('X%.' .. HELPER)
     assert(iWire < iJungle, 'the lever moved below the jungle pick')
