@@ -18089,3 +18089,40 @@
     (5) ⚠️ **`dem21` 到期日 ≈ 2026-10-02**:09-11 15:24 那波(`…8d8c4b`,24 个 `.dem`)**本轮没扫**,
     是这批到期资源里**唯一还没被看过的**。
   - **完整报告**:`iterations/reports/replay-check/20260915T125314Z.md`
+- **[2026-09-15T13:05Z 收工回填]** 落地 `origin/main` **`b90b9c2e..07c2b666`**
+  (⚠️ **第一次 `push origin HEAD:main` 被拒**(`non-fast-forward`,别组的 `544baea7..b90b9c2e` 先到),
+  `git pull --rebase origin main` **`REBASE_EXIT=0`** 后重推 **`PUSH_MAIN_EXIT=0`**);
+  分支 `claude/lucid-pascal-ail30g` rebase 后用 `--force-with-lease` 同步。
+  ⛔ **未用 `RULE6_BYPASS`**。
+  铁律 6 **三条腿**(裸读):`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 91 ran, 0 findings, 0 uncertifiable, 10.2s` /
+  **`lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`**
+  ⚠️ **范围判定不是通过** —— 本轮只动 `iterations/`,闸自己逐字打
+  `This is a SCOPE decision, not a pass and not a skip of a gate that had something to say (GH #624)`。
+  动态半(GH #124)未跑、不声称。
+  **issue 回填**:§三那条新 issue = **GH #835**(`[bug]`,归总监);
+  **1 条评论**发到 **GH #830**(`#issuecomment-5680627148`,**第三个现场**)。
+  ⭐ 两件都**发在 push 之后**(GH #290),`PRECHECK_EXIT=0`
+  (**1/1 路径在 `origin/main` 上解析,本地领先 0 个 commit**)。
+  ⭐ 发帖前读完 #830 正文 + 全部评论(**1 条**),并逐条比对了 #257 的正文确认 §3.3 的边界。
+  ⭐ 发帖后按 09-13 事故判别子复核:评论用 `add_issue_comment`,新 issue 用
+  `issue_write(method='create')`(**不是 `update`**),事后 `issue_read` 复核 ——
+  #835 `state` open、正文与提交逐字相同;⛔ **全程没对任何既有 issue 用过 `issue_write`**。
+  **开工自检**:`legs run 13`,**`selfcheck worst exit: 3`**,
+  `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`,
+  `UNCERTIFIABLE (exit 2): trunk-red(python)` —— **逐条查过归属,本组这轮一条都不占**
+  (`cadence` 是 `GAP cadence strategy` 09-14T10:26Z→14:09Z **3.7h**,协同组的;
+  `trunk-red(lua)` = `TRUNK RED -- 1 of 110` = `test_fieldsip_atom_pricing.lua` = GH #814 那一族,
+  ⚠️ **但读数变了**:除前两轮那条 `1039/1021` 外**本轮同时还红着 `:562` 的 `961/944`**,
+  且分母 **109→110** ⇒ **有人又动过那份语料**,不是静止的旧红;本轮 `bots/`+`game/`+`tests/`
+  一行未改 ⇒ 不 stash 复核。`lua-coverage` = GH #806 欠条,本轮零新测试,不在这条里。
+  `trunk-red(python)` 是 **UNCERTIFIABLE 不是 FINDING** ⇒ ⛔ 不读成 main 红)。
+  ⚠️ **别组的洞顺手登记**:看守自检自己的三条 python 用例
+  (`test_lua_gate.py`/`test_luacheck_gate_soakswitch.py`/`test_selfcheck_lua_leg.py`)
+  **连续第二轮** `UNCERTIFIABLE (did NOT run)`,5a 逐字「**would pass vacuously**」,
+  5a0 逐字「the leg finishes inside 120s — **it did not on THIS container**」;属 [harness]/总监。
+  ⭐ **自检的三条坑本轮踩了两条又都被它自己挡住**:第一条命令误接管道 ⇒
+  `REFUSED: stdout is a pipe; exit 2, nothing checked`;第二次误套 `timeout` ⇒
+  `REFUSED: ... running under timeout`。**两次都是「一行都没跑」不是「跑了一半」**,
+  第三次按章程那一行 `nohup … > /tmp/sc.log 2>&1 &` 一次跑成,退出码从**日志最后一行**读。
+  `TOKENS total_in=18,155,067 out=86,470 turns=125`(零 `requires approval`)。
