@@ -650,6 +650,23 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   必须带大 timeout 重测」这个前置);**(2) `command_exit_zero` 那批欠条**(连续第三轮未动,如实登记);
   **(3)** §五那条**单次 `git push` 调用推双 ref** 的缓解(钩子 264 行全文无 `while read` ⇒ 三腿每次**调用**跑一次、
   与 ref 个数无关),若读数成立则写进 README 的 push 路径。
+  ⭐⭐⭐ **收尾增补(报告 §十一):本轮自己的 push 把 RULING 42 又演了一遍,而这次拿到了赢家的身份 ⇒ 它不是运气,是偏置。**
+  attempt 1 `01:07:31Z` 起,`lua gate 575.2s`/`real 9m59.598s`,**分支落地、`main` 被拒**;rebase(`REBASE_EXIT=0`)后
+  attempt 2 `01:18:00Z` 起,`lua gate 572.4s`/`real 9m55.729s`,**`main` 落地 `f8a521da..b9a1d536`**;首推到落地 **~20.4 分钟**。
+  ⭐⭐ **挤掉 attempt 1 的 `f8a521da` 标题逐字自带答案**:`replay-check … (lua leg SKIPPED BY SCOPE, docs-only)` ——
+  **它是 docs-only,575 秒那条腿一秒没跑**,push 秒级;而我带了 `tests/`,付满 575.2s。
+  ⇒ ⛔ **「那一窗恰好没人推」是把它读成运气**:**闸按「你有没有带代码」收费,而 `main` 按「谁先到」发放**
+  ⇒ **ref 被系统性地判给不带代码的 push**;⚠️ 而带 `bots/`/`game/`/`tests/` 的 push 正是**唯一会改变机器人行为**的那些
+  ⇒ **这道闸对产出的惩罚,恰好与产出的价值成正比。**
+  🔧 **memo 预测同轮验证**:attempt 2 仍跑满 572.4s,**没复用** attempt 1 ⇒ rebase 换树、memo 必 miss。
+  ✅/⛔ **单次调用推双 ref:机制成立(一次调用只跑一次三条腿,与 ref 个数无关),但它省的是每次尝试的成本、不是那个窗口**
+  ⇒ ⛔ **不写进 README 的 push 路径**(那会把省钱技巧读成修复)。
+  ⛔⛔ **单列一条差点骗到我的读数**:`PUSH2_EXIT=1` **而 `main` 是成功的**(1 来自分支那条 ref 的 non-fast-forward)——
+  **多 ref push 的退出码答的是「每一条都成了吗」,分不开「main 成了/分支没成」与「main 没成」,而两者下一步相反**;
+  📌 **同族第四例**(`expect_exit: 0` / 后台启动器的码 / `command_exit_zero`):**两值读数被派去答三值问题。**
+  🔧 正确读法已照做:`rev-list --count origin/main..HEAD` = **0**,`origin/main` 首行 = `b9a1d536`。
+  ⚠️ **铁律 9 自我登记**:`OWNER_PRIORITIES.md` 本轮**读了但没排在第一条**(先读了报告与自检)——**顺序错了,结论没错**;
+  P1–P4 无本座位名下被本轮阻塞的项。**W37 邮件(`1a09a3cb7bea27df`)已发且无回复,本轮零新增待决 ⇒ 不发邮件,档期未欠。**
 - **2026-09-14T22:02Z**:**章程指定的序号 (1) `fieldsip_atom_pricing_disposition` 结清(欠四轮;`owed` 71 → 70,`retired` 19 → **20**);
   而本轮真正的产物是那条裁定的副产品:**manifest 里 74 个 `timed_out` 行的 `seconds` 全部逐位是同一个常数 `6.0`,
   而本轮唯一被真量过的那一个比它大 5.4×。**
