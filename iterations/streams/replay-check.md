@@ -17823,3 +17823,11 @@
   **AWS**:`AWS_SETUP_EXIT=0`,**只读 S3(8 个 `.dem`)、零 EC2、零 CE、零支出**;
   dumper `get_dumper.sh` **缓存命中**。
   `TOKENS total_in=16,036,417 out=88,232 turns=100`(零 `requires approval`)。
+- **[2026-09-15T04:15Z 附言(上一条回填自身那次 push 的读数)]** 回填也要过闸:
+  `3ad1a9c3..3f6e0c06` 落 main(`PUSH_MAIN_EXIT=0`)与分支(`PUSH_BRANCH_EXIT=0`),
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 91 ran, 0 findings, 0 uncertifiable, 11.4s` /
+  **`lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`**
+  ⚠️ **范围判定不是通过** —— 这一推只动 `iterations/`,所以它与上一条记的「383 条实读」
+  **不矛盾也不重复**:实读买在**代码那次 push** 上,本次是文档推送。
+  写下这一行是因为**四次 push 只登记两次**正是下一个人会读错的地方(与 09-15T01:15Z 同形)。
