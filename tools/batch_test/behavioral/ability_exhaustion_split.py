@@ -26,7 +26,8 @@ reusing either, because the wrong one is the more obvious one:
   obvious thing for the next round to reinvent.
 
   v2 (WHAT THIS TOOL COMPUTES) makes both halves sound instead:
-    BASIC-DEFICIT -- restrict the gap to abilities whose corpus-max is >= 4.
+    BASIC-DEFICIT -- restrict the gap to abilities whose EFF-MAX is >= 4
+        (corpus-max until 2026-09-15; see rank-floor in CUT and rank_floor()).
         An ability reaching rank 4 anywhere is a 4-rank (basic) ability, and
         every basic rank is unlocked by hero level 7 (Dota tier rule).  Inside
         the band that is TIER-SAFE BY CONSTRUCTION: no row can be "waiting for
@@ -50,7 +51,14 @@ CUT (iron rule 4(iii) -- quote it with every number this prints):
   ability     = ledger entry whose name does not start with 'special_bonus'.
   corpus-max  = highest level an ability NAME reaches on any body in the games
                 passed to THIS run.  A lower bound on true max rank -- see v1.
-  BASIC       = ability whose corpus-max >= 4.
+  rank-floor  = source-side lower bound on max rank, read off
+                tests/mock/hero_slots.lua + the hero's own build row.  ⚠️ NEW
+                2026-09-15T0x:xxZ -- rank_floor(), GH #822.  {} unless three
+                guards pass, so it is absent, never guessed.
+  eff-max     = max(corpus-max, rank-floor).  Max of two LOWER bounds, so
+                still a lower bound.
+  BASIC       = ability whose EFF-MAX >= 4.  ⚠️ CHANGED: was corpus-max >= 4,
+                which is blind on an ability the corpus never trains (v1 note).
   skipped-alive = complete level, no ability-ledger movement, hp_pct > 0 on
                 every frame of it.  The body's top level is dropped (the game
                 ended inside it).
@@ -117,12 +125,19 @@ made because on the next corpus, where an illusion may well appear first, the
 old rule would read an illusion's frozen ledger as a hero's.
 """
 import json
+import os
+import re
 import sys
 from collections import defaultdict, Counter
 
 FULL = 'npc_dota_hero_'
 TALENT = 'special_bonus'
 TIERS = (10, 15, 20, 25)
+
+_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__)))))
+SLOT_MAP = os.path.join(_REPO, 'tests', 'mock', 'hero_slots.lua')
+BOTLIB = os.path.join(_REPO, 'bots', 'BotLib')
 
 
 def _abilities(s):
@@ -252,6 +267,126 @@ def _tiers_reached(lvl):
     return sum(1 for t in TIERS if lvl >= t)
 
 
+def _slot_rows(path=SLOT_MAP):
+    """hero short name -> {slot:int -> ability name}, from tests/mock/hero_slots.lua.
+
+    That file is GENERATED from the game's own npc_heroes.txt, so it is a
+    source reading, not a table typed from memory.
+    """
+    try:
+        src = open(path, encoding='utf-8', errors='replace').read()
+    except OSError:
+        return {}
+    out = {}
+    for m in re.finditer(r"\['([a-z0-9_]+)'\]\s*=\s*\{(.*?)\}", src, re.S):
+        out[m.group(1)] = {int(k): v for k, v in
+                           re.findall(r"\[(\d+)\]\s*=\s*'([^']*)'", m.group(2))}
+    return out
+
+
+def _build_rows(short):
+    """Every ability build row in this hero's BotLib file, as lists of indices.
+
+    Takes ALL rows, not just tAllAbilityBuildList: OD ships a turbo override
+    (tObjurgationBuildList) and it is the row that actually runs in turbo.
+    Only the per-index COUNT MULTISET is consumed below, and on this corpus
+    both OD rows give the same one -- measured, see rank_floor()'s docstring.
+    """
+    for cand in (short, short.replace('_', '')):
+        p = os.path.join(BOTLIB, 'hero_%s.lua' % cand)
+        if os.path.exists(p):
+            break
+    else:
+        return []
+    src = open(p, encoding='utf-8', errors='replace').read()
+    return [[int(x) for x in re.findall(r'\d+', row)]
+            for row in re.findall(r'\{([0-9,\s]+)\}', src)
+            if len(re.findall(r'\d+', row)) >= 10]
+
+
+def rank_floor(short, ledger_names, slots=None):
+    """Source-side LOWER bound on max rank, per ability name.  GH #822.
+
+    ⭐ WHY THIS EXISTS.  corpus-max (the only max-rank estimate this tool had)
+    is blinded by exactly the pathology it must detect: an ability no body in
+    the corpus ever trains has corpus-max equal to its STALLED value, so it
+    can never show a gap.  On W40 that is obsidian_destroyer -- arcane_orb
+    corpus-max 1, objurgation corpus-max 0 -- and it is why all 18 of the
+    tool's INDETERMINATE rows were OD rows and every one of them was OD.
+    The v1 note at the top of this file predicted this failure; this is the
+    repair it asked for, and it reads the bound OFF THE REPO, not off a batch.
+
+    THE READING, and it is two independent sources agreeing:
+      * WHICH abilities are the basics -- tests/mock/hero_slots.lua, generated
+        from npc_heroes.txt.  Slots 0,1,2 are the three learnable basics; the
+        ultimate sits at the ultimate slot and the innate/placeholder rows sit
+        between (OD: 3='generic_hidden', 4='equilibrium', 5=the ultimate).
+      * HOW MANY ranks a basic has -- the hero's own build row spends
+        4+4+4+3 over four distinct indices.  Three four-point blocks can only
+        be three four-rank basics, which is the same arithmetic the OD file's
+        own promote argument (condition (c)) runs.  MEASURED here rather than
+        assumed: all 10 W40 heroes' rows give the multiset (4,4,4,3), and OD's
+        two rows (shipped and turbo override) give it identically, so the
+        floor does not depend on which row runs.
+
+    GUARDED, and the guard is why this cannot quietly invent a rank:
+      (1) the hero's slot row must name exactly 3 real abilities at slots 0-2
+          (vengeful_spirit's key canon differs and yields 0 -> skipped, not
+          guessed);
+      (2) every build row must have count multiset (4,4,4,3);
+      (3) each of the 3 names must actually appear in THIS body's ledger.
+    Any guard failing returns {} -- no floor, corpus-max stands alone.
+
+    ⭐ WHICH WAY IT CAN ONLY ERR -- the same direction argument the `free`
+    term carries.  A floor is a LOWER bound on the true max rank, and the
+    caller takes max(corpus_max, floor), a max of two lower bounds, which is
+    still a lower bound.  So the effective max only RISES, the BASIC set only
+    GROWS, every gap only WIDENS, and deficit only increases.  ⇒ this term can
+    ADD PROVEN rows and can NEVER retract one.  Every number GH #822 published
+    under corpus-max alone survives it.
+
+    ⛔ LIMIT G -- THE NAME CANON IS FIXED ON THE KEY, NOT ON THE ABILITY
+    NAMES.  hero_slots.lua drops the underscore in both places: it keys VS as
+    'vengefulspirit' AND spells its abilities 'vengefulspirit_command_aura',
+    while the dumper emits 'vengeful_spirit_command_aura'.  The key lookup
+    below now tries both spellings, so the row resolves -- and guard (3) then
+    refuses VS anyway, because none of its three basics matches a ledger name.
+    ⇒ VS is still unfloorable on a real corpus.  It costs nothing on W40 (VS is
+    already 34/34 PROVEN off corpus-max) and would bite on a corpus where a VS
+    basic goes untrained.  Asserted in the test as LIMIT G so the key fix is
+    not misread as "VS works now".
+
+    ⛔ LIMIT F -- this bounds the BASIC side only.  The ultimate's rank 3 is
+    unlocked at level 18 and the band starts at 18, so an unspent ultimate
+    rank would also be provable; it is deliberately NOT counted, so the
+    'unlocked rank unbought' claim rests on basics alone, as it did before.
+    """
+    if slots is None:
+        slots = _slot_rows()
+    # name canon: hero_slots.lua is inconsistent about underscores exactly as
+    # BotLib is (dump name 'vengeful_spirit' -> slot key 'vengefulspirit').
+    # ⚠️ FOUND BY THE MUTATION STAND, not by reading: without this fallback VS
+    # was silently unfloorable.  It moves no W40 number (VS is already 34/34
+    # PROVEN off corpus-max) -- it is fixed because a name-canon miss that
+    # returns {} looks exactly like a guard refusing, and the next corpus may
+    # not be so forgiving.
+    row = slots.get(short) or slots.get(short.replace('_', ''))
+    if not row:
+        return {}
+    low = [row.get(i, '') for i in (0, 1, 2)]
+    basics = [n for n in low
+              if n and n != 'generic_hidden' and not n.startswith(TALENT)]
+    if len(basics) != 3:                                    # guard (1)
+        return {}
+    rows = _build_rows(short)
+    if not rows or any(tuple(sorted(Counter(r).values(), reverse=True))
+                       != (4, 4, 4, 3) for r in rows):      # guard (2)
+        return {}
+    if any(n not in ledger_names for n in basics):          # guard (3)
+        return {}
+    return {n: 4 for n in basics}
+
+
 def scan(paths, lo=18, hi=22):
     corpus = defaultdict(int)
     games = []
@@ -262,7 +397,24 @@ def scan(paths, lo=18, hi=22):
             for f in frames:
                 for n, l in _abilities(f).items():
                     corpus[n] = max(corpus[n], l)
-    basic = {n for n, v in corpus.items() if v >= 4}
+    # Source-side floor (GH #822, rank_floor()): raise corpus-max where the
+    # corpus never trained the ability at all.  max of two lower bounds is a
+    # lower bound, so `eff` only rises and PROVEN rows can only be ADDED.
+    slots = _slot_rows()
+    seen_names = defaultdict(set)
+    for _, _, per in games:
+        for hero, frames in per.items():
+            for f in frames:
+                seen_names[hero.replace(FULL, '')] |= set(_abilities(f))
+    floor = {}
+    for short, names in seen_names.items():
+        for n, v in rank_floor(short, names, slots).items():
+            floor[n] = max(floor.get(n, 0), v)
+    eff = dict(corpus)
+    for n, v in floor.items():
+        eff[n] = max(eff.get(n, 0), v)
+    basic = {n for n, v in eff.items() if v >= 4}
+    lifted = {n: (corpus.get(n, 0), eff[n]) for n in floor if eff[n] > corpus.get(n, 0)}
 
     rows, releases, nowindow = [], [], []
     for p, first, per in games:
@@ -300,7 +452,7 @@ def scan(paths, lo=18, hi=22):
                 if not led:
                     continue
                 L = _abilities(led[-1])
-                gaps = {n: corpus[n] - v for n, v in L.items() if n in basic and corpus[n] > v}
+                gaps = {n: eff[n] - v for n, v in L.items() if n in basic and eff[n] > v}
                 visible = sum(L.values())
                 # On a linked body the group DIVISION replaces the `free`
                 # subtraction; applying both would credit the level-1 extra
@@ -317,7 +469,7 @@ def scan(paths, lo=18, hi=22):
                                  banked_free=lvl - (visible - free) - _tiers_reached(lvl),
                                  banked_raw=lvl - visible - _tiers_reached(lvl),
                                  deficit=sum(gaps.values()), gaps=gaps))
-    return rows, releases, corpus, basic, nowindow
+    return rows, releases, eff, basic, nowindow, lifted
 
 
 def _split(rows, key):
@@ -328,12 +480,13 @@ def _split(rows, key):
 
 
 def main(paths, lo=18, hi=22):
-    rows, releases, corpus, basic, nowindow = scan(paths, lo, hi)
+    rows, releases, eff, basic, nowindow, lifted = scan(paths, lo, hi)
     proven = [r for r in rows if r['banked'] > 0 and r['deficit'] > 0]
     inflated = [r for r in rows if r['banked'] < 0]
     raw = _split(rows, 'banked_raw')
 
-    print('games %d   band %d-%d   BASIC names (corpus-max>=4) %d' % (len(paths), lo, hi, len(basic)))
+    print('games %d   band %d-%d   BASIC names (eff-max>=4) %d   of which lifted by SOURCE FLOOR %d'
+          % (len(paths), lo, hi, len(basic), len(lifted)))
     print('skipped-alive rows in band            %4d' % len(rows))
     print('  PROVEN held (banked>0 AND basic gap) %4d  <- point in hand AND an unlocked rank unbought'
           % len(proven))
@@ -398,7 +551,9 @@ def main(paths, lo=18, hi=22):
     print('\nwhich BASIC carries the gap (rows):')
     for n, k in sorted(Counter(n for r in proven for n in r['gaps']).items(),
                        key=lambda kv: (-kv[1], kv[0]))[:12]:
-        print('  %-45s %3d   corpus_max=%d' % (n, k, corpus[n]))
+        print('  %-45s %3d   max=%d%s'
+              % (n, k, eff[n], '  <- SOURCE FLOOR (corpus-max was %d)' % lifted[n][0]
+                 if n in lifted else ''))
 
     if releases:
         sil = sorted(r['silence'] for r in releases)

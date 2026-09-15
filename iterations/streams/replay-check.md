@@ -17729,3 +17729,67 @@
   ⚠️ **范围判定不是通过** —— 这一推只动 `iterations/`,所以它与上一条记的「381 条实读」
   **不矛盾也不重复**:实读买在**代码那次 push** 上,本次是文档推送。
   写下这一行是因为**四次 push 只登记两次**,正是下一个人会读错的地方(与 09-14T19:10Z 同形)。
+- **[2026-09-15T03:52Z]** **OD 那 18 行 INDETERMINATE 全部判掉,靠源码不靠新波次。**
+  上一轮交棒点名的「最便宜的下一格」做成了:`ability_exhaustion_split.py` 的 max-rank 估计量
+  从 **corpus-max** 换成 **`max(corpus-max, 源码 rank-floor)`**。
+  **切法(铁律 4(iii),与数一起引)**:W40 八局;带 18-22;skipped-alive;身体=活得最久的 idx。
+  - **读数**:**PROVEN 264 → 282**、**INDETERMINATE 18 → 0**(**282 行一个不剩全部可判**)、
+    BASIC 名字 30 → 32、未校正 `banked_raw` PROVEN 229 → 247;
+    `banked==0`/`banked<0` 两桶**改前改后都是 0**。
+    另外九个英雄每英雄计数**逐位不变**(35/34/33/32/31/27/27/26/19),OD **0 → 18**。
+    被抬起的两个名字:`arcane_orb` **1→4**、`objurgation` **0→4**(astral 已是 4,**未动**)。
+  - **立案句**:corpus-max **被它自己要检测的病蒙住** —— 没人练过的技能,corpus-max 就等于
+    停摆值 ⇒ gap 恒 0。所以 18 行 INDETERMINATE **全是 OD**,而 OD 带内的行**全是** INDETERMINATE。
+    (本文件头注 v1 段**早就预言过**这个失效模式;本轮做的就是它点名要的修复。)
+  - **帧证据**:`20260902_214620_slot1` OD **idx=1462**,**t=1428.1,19 级,`hp_pct=0.996`(活着)**,
+    账本逐字 `arcane_orb 1 / astral 4 / objurgation 0 / sanity_eclipse 1`,非天赋档位和 **6**
+    —— 与 `hero_obsidian_destroyer.lua` 头注 GH #330 的地面真相**逐位一致**。18 行 `banked` 落 **10..13**。
+    ⭐ 按 W71 判别子查过 `sorted({idx})`,该名字在这局**只有一具**(长度 1,不需消歧,但查了)。
+  - **方向论证(整个许可证)**:floor 是下界,调用处 `max(corpus, floor)` = **两个下界取 max 仍是下界**
+    ⇒ eff-max 只升、gap 只宽 ⇒ **只能新增 PROVEN 行,永不撤回**;GH #822 旧数**全部存活**。
+    ⭐ 且**对「哪条是大招」稳健**:枚举四种指派,最小 basic gap **6 > 0**(7/10/6/7),已钉进测试。
+  - **变异台 8/8 全杀,但第一轮 M1/M6/M7 三个存活,三个都是断言的错**(按 evidence-discipline 2 先疑断言):
+    ⛔ **M1:我那两个「测闸 (1)」的用例其实测的是闸 (2)**(无 BotLib 文件,闸 (2) 先拒)——
+    **因错误理由达成的拒绝与正确的那个长得一模一样**;换出厂英雄 **`morphling`**
+    (闸 (2)(3) 都过、slot 2 是 `generic_hidden`)才杀掉。
+    ⛔ **M6:OD 的 slot 3 恰好是 `generic_hidden`**,窗口 0-2 与 0-3 在这具身体上**构造上分不出**;
+    换 **`abaddon`**(slot 3 是真技能)才杀掉。
+    ⛔ **M7:W40 上 `max(corpus,floor)` 与 `=floor` 恒等**(没有被 floor 的名字 corpus-max 超过 4)
+    ⇒ `max()` 是防御性代码;补一具把 arcane_orb 抬到 5 的合成身体,⚠️ **该形状 W40 不存在,断言的是
+    契约不是实测**。台子带上一轮的 `cmp -s`「EDIT APPLIED NOTHING」判别子,**pycache 与 sed `\n`
+    两条坑本轮都没踩**;每次树外副本还原 + `sha256sum -c` OK。
+  - ⚠️ **`scan()` 返回 5 元组 → 6 元组,会顶红别组调用点**;按 GH #624 的教训**同一次改动里把 4 个
+    调用点全改掉并跑绿**(`test_exhaustion_free_correction.py` 1 处 + `test_exhaustion_linked_deflation.py`
+    3 处,两个文件实测 `EXIT=0`)。
+  - **新增两条限制**:⛔ **LIMIT F** floor 只管普通能力侧,大招第 3 档**故意不计**;
+    ⛔ **LIMIT G** name canon **只修好了键没修好技能名** —— `hero_slots.lua` 键是 `vengefulspirit`
+    **且技能名也丢下划线**,dumper 出的是 `vengeful_spirit_*` ⇒ VS 的行现在查得到、
+    **然后被闸 (3) 拒掉**,**真语料上 VS 仍拿不到 floor**。⛔ **别把键的修复读成「VS 修好了」**
+    (本轮不花 W40 任何一个数:VS 已 34/34 PROVEN 走 corpus-max)。该键缺陷是**变异台挖出来的**,非读代码发现。
+  - **交付**:`ability_exhaustion_split.py` 新增 `_slot_rows()`/`_build_rows()`/`rank_floor()`,
+    `scan()` 多返回 `lifted`(被抬起的名字连抬前值一起打);
+    `tests/test_exhaustion_source_rank_floor.py`(新,**39 条断言,实测 0.044s**)。
+    ⚠️ 新测试**不在** `py_gate_manifest.json`(头注 do not hand-edit)⇒ 按 GH #616 **fail-open**。
+  - **issue**:**净增 0**。⭐ **先搜后开救了一次**:自检报的 trunk red
+    `test_fieldsip_atom_pricing.lua`(语料 1021 → **1039** live frames)**已经是 GH #814**
+    (标题逐字带「its baseline drifted (1021→1039」)⇒ **不开重号**;OD 这格是 **GH #822 的续**,
+    按归属纪律**发评论不开新号**。
+  - ⭐ **trunk red 的归属是买来的不是猜的,而且路上差点两次把「没跑」读成「通过」**:
+    `git worktree` 跑得 **`EXIT=0` 零输出**(⛔ vacuous:worktree 没有语料);直接跑该文件也是
+    **`EXIT=0` 零输出**(⛔ vacuous:该文件只**定义** `tests[...]`,要 `run_tests.lua` 才跑)。
+    真读数走 **`lua5.1 tests/run_tests.lua test_fieldsip_atom_pricing.lua` ⇒ 2 failures**;
+    再把自己 4 个文件备份出树、`git checkout` 回到 **0 改动**重跑,**仍 2 failures**
+    ⇒ **红在 pristine 树上,与本轮无关**(还原后 `sha256sum -c` 四个文件全 OK)。与 GH #205/#171 同族。
+  - **AWS**:`AWS_SETUP_EXIT=0`,**只读 S3(8 个 `.dem`)、零 EC2、零 CE、零支出**。
+    dumper **缓存命中**(`get_dumper.sh`,不重建)。⚠️ 上一轮登记的「按 `2146` 通配少捞 4 局」
+    **本轮没踩**:按 8 个显式文件名下载,`DL_EXIT=0`,8/8。
+  - ⛔ **`bots/`/`game/` 一行未改,零新 soak id**。**本轮 `VERIFY` 行数为 0** ——
+    这是全体语料普查(LIMIT D:无 ab/ba 分层),**不在核验轨上**,不是「核验了 0 个」。
+  - **下一轮第一件事**:(1) ⛔ 别重做本轮任何一项(三个具名失败已入档);
+    (2) ⭐⭐ **最便宜的下一格:把 `VERIFY` 轨接回去** —— 仪器现在 282 行全部可判,
+    下一轮该拿它去核验一个**真正 armed 的 id**,而不是再补仪器;
+    (3) ⚠️ LIMIT G(VS 技能名 canon)挂账,修它要动 `hero_slot_map.py` 生成侧,属 [harness];
+    (4) ⚠️ GH #814 仍红(非本组),本轮只复核登记未修;
+    (5) ⚠️ OD 那 24 s 残差**连续第七轮挂账**;09-13T16:30Z 的 n=1 复现**连续第十二轮挂账**;
+    (6) ⛔ 钉帧前先读完该 issue 评论;(7) ⛔ 引数必连切法,每英雄表只作选点(LIMIT C)。
+  - **完整报告**:`iterations/reports/replay-check/20260915T035210Z.md`

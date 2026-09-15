@@ -183,7 +183,7 @@ chk('...and the gap GROWS with rank, which is LIMIT A verbatim: at rank 4 a '
 print('\n--- end to end: a stalling linked body is PROVEN, and was not before')
 with tempfile.TemporaryDirectory() as d:
     g1 = write_game(os.path.join(d, 'g1.timeline.json'), lk)
-    rows, _, _, basic, nowindow = AE.scan([g1], 18, 22)
+    rows, _, _, basic, nowindow, _ = AE.scan([g1], 18, 22)
     chk('the group is recorded on every row (so a reader can re-derive the cut)',
         rows and all(r['group'] == ['beta_r1', 'beta_r2', 'beta_r3'] for r in rows))
     chk('the band is the silence: one row per level 18..22 minus the top level',
@@ -216,14 +216,14 @@ with tempfile.TemporaryDirectory() as d:
 
     print('\n--- an unlocked-lockstep body keeps the OLD, excluded behaviour')
     g2 = write_game(os.path.join(d, 'g2.timeline.json'), uneven)
-    rows2, _, _, _, _ = AE.scan([g2], 18, 22)
+    rows2, _, _, _, _, _ = AE.scan([g2], 18, 22)
     chk('it carries no group, so `free` is what applies and it stays excluded '
         '(banked <= 0) rather than being laundered into PROVEN',
         rows2 and all(r['group'] == [] and r['banked'] == r['banked_free'] for r in rows2))
 
     print('\n--- an INNATE body is untouched by any of this')
     g3 = write_game(os.path.join(d, 'g3.timeline.json'), inn)
-    rows3, _, _, _, _ = AE.scan([g3], 18, 22)
+    rows3, _, _, _, _, _ = AE.scan([g3], 18, 22)
     chk('innate rows still use `visible - free`, bit-identical to before',
         rows3 and all(r['group'] == [] and r['spent'] == r['visible'] - r['free']
                       for r in rows3))

@@ -142,7 +142,7 @@ with tempfile.TemporaryDirectory() as d:
     g2 = write_game(os.path.join(d, 'g2.timeline.json'),
                     body('npc_dota_hero_alpha', 11, INNATE_SPENDER,
                          prespend={'alpha_inn': 1}))
-    rows, releases, corpus, basic, nowindow = AE.scan([g1, g2])
+    rows, releases, corpus, basic, nowindow, _lifted = AE.scan([g1, g2])
 
     a18 = [r for r in rows if r['hero'] == 'alpha' and r['level'] == 18
            and r['game'] == 'g1'][0]
