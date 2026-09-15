@@ -17964,3 +17964,47 @@
     (4) ⚠️ OD 那 24 s 残差**连续第九轮挂账**,09-13T16:30Z 的 n=1 复现**连续第十四轮挂账**;
     (5) ⛔ 钉帧前先读完该 issue 全部评论;⛔ 引数必连切法;⛔ 发评论只用 `add_issue_comment`,事后 `issue_read` 复核。
   - **完整报告**:`iterations/reports/replay-check/20260915T094327Z.md`
+- **[2026-09-15T10:12Z 收工回填]** 落地 `origin/main` **`0a62331a..88281851`**
+  (⚠️ **第一次 `push origin HEAD:main` 被拒**(`non-fast-forward`,批测台 09:12Z 那两个 commit 先到),
+  `git pull --rebase origin main` **`REBASE_EXIT=0`** 后重推 **`PUSH_MAIN_EXIT=0`**);
+  分支 `claude/lucid-pascal-tzfsqt` 同点(`PUSH_BRANCH_EXIT=0`,rebase 后 `--force-with-lease`)。
+  ⛔ **未用 `RULE6_BYPASS`**。
+  铁律 6 **三条腿**(裸读):`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 91 ran, 0 findings, 0 uncertifiable, 10.6s` /
+  **`lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`**
+  ⚠️ **范围判定不是通过** —— 本轮**只动 `iterations/`**(`git status --short` 全程只有那两个文件),
+  所以 Lua 腿由构造没有话说;闸自己逐字打 `This is a SCOPE decision, not a pass`。
+  ⭐ py 腿逐字自报「4 new test(s) not in the manifest were run anyway」——
+  **那四条是上一轮与别组留下的,不是本轮新增**(本轮零新测试)。动态半(GH #124)未跑、不声称。
+  **开工自检**(⭐ 逐字用了章程那一行 `nohup bash … > /tmp/sc.log 2>&1 &`,
+  ⛔ **没套 `timeout`、没走管道** —— 连续四轮登记的三条坑本轮都没踩;⭐ **一次跑成**,
+  退出码按脚本 `:175` 自己的指示从**日志最后一行**读):
+  `legs run 13`,**`selfcheck worst exit: 3`**,
+  `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`,
+  `UNCERTIFIABLE (exit 2): trunk-red(python)`。
+  ⭐ **逐条查了归属**:`trunk-red(lua)` = `TRUNK RED -- 1 of 109` = `test_fieldsip_atom_pricing.lua`
+  = **GH #814**(逐字「the corpus walk now covers 1039 live hero frames, not 1021」,
+  与前两轮登记的同一条);⭐ **本轮由构造与它无关:`git status --short` 收工时为空、
+  `bots/`+`game/`+`tests/` 一行未改** ⇒ **不必 stash 复核**(与 09-15T07:05Z 同理由)。
+  `queue-rulings`/`owed-executions` = 总监与批测台的欠条行;
+  `lua-coverage` = **GH #806** —— ⛔ **本轮零新测试(Lua 与 python 都是),不在这条里**。
+  `trunk-red(python)` 是 **UNCERTIFIABLE(exit 2)不是 FINDING**,横幅逐字带
+  `this is NOT a pass, and it is NOT evidence that trunk is red` ⇒ ⛔ **不读成 main 红**。
+  ⚠️ `GAP cadence replay-check` 是本组的,但量于**本轮开工时刻**(自检是本轮第一条命令,
+  那时本轮报告还不存在)⇒ **这份报告就是补上它的那一份**;⛔ 下一轮别当未了结的发现。
+  (另有 `GAP cadence strategy`,非本组。)
+  - ⚠️ **顺手登记一条别组的洞,免得被读成通过**:自检自己的那三条 python 用例
+    (`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py` / `test_selfcheck_lua_leg.py`)
+    本轮打 **`UNCERTIFIABLE (did NOT run)`**,其中 5a/5d 两格逐字说
+    「the clean run did not finish inside 120s -- these four did NOT run;
+    **5a in particular would pass vacuously**」。⇒ **看守自检的那套用例本轮没跑**,
+    属 [harness]/总监;本组只登记不改,**也不把它读成自检通过**。
+  **issue**:净增 **0**;**1 条评论**发到 **GH #830**(`#issuecomment-5678163398`),
+  **发在两次 push 之后**(GH #290),`PRECHECK_EXIT=0`(**2/2 路径在 trunk 上解析,本地领先 0 个 commit**)。
+  ⭐ 发帖前读完 #830 正文 + 全部评论(**0 条**)。
+  ⭐ 发帖后按 09-13 事故判别子复核:用 `add_issue_comment` 与 `issue_read`,
+  ⛔ **全程没碰 `issue_write`**;#830 **正文与发帖前逐字相同**、`state` 仍 open、评论 **0 → 1**。
+  **AWS**:`AWS_SETUP_EXIT=0`。**成本三段(RULING 48)**:
+  **零 EC2 / 零 CE / S3 读取 13 个 `.dem` + 13 个 `.analysis.json` + 若干次列目录(出网未计价)**;
+  dumper `get_dumper.sh` **缓存命中**(key `46fe9c6a2b084f9b`)。
+  `TOKENS total_in=10,723,194 out=49,086 turns=78`(零 `requires approval`)。
