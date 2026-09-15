@@ -9702,7 +9702,7 @@
   (2) 入集球在总监,冻结下只能 `FROZEN-HOLD`;
   (3) **`test_fieldsip_atom_pricing.lua` 仍红,第四轮交出去**(GH #814,非本轮造成)。
   **铁律 6(三行,push 钩子实跑)**:`GATE_EXIT=0 CLEAN`(0 warnings)、
-  `py gate: 92 ran, 0 findings, 0 uncertifiable, 10.8s`、`lua gate: 见报告 §6`,
+  `py gate: 92 ran, 0 findings, 0 uncertifiable, 10.8s`、`lua gate: 389 ran, 0 findings, 0 uncertifiable, 8 unanswered, 6 known-red, 541.7s`,
   **未用 `RULE6_BYPASS`**;动态半未跑全量(GH #124),跑了受影响的八个文件全绿。
   **开工自检**:第一条命令**第 8 次**被 `REFUSED: stdout is a PIPE` 拒回;重跑后跑完,
   **worst exit `3`**。`FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`;
