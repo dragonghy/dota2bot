@@ -7538,6 +7538,24 @@ end
 -- name that one, so "one id, one call site" cannot quietly expire in either
 -- direction.
 --
+-- ⛔⛔ BUNDLE-ONLY ON THE FARM, 2026-09-15 -- and the line above is where the
+-- mistake was: "reachable with EVERY gate off" answers LIVENESS (shipped games,
+-- nine override heroes, a human pos-5), and it was being read as an answer to
+-- MEASURABILITY (can a single-arm wave read this id?). Those are different
+-- questions and here they have different answers. Measured in
+-- tests/test_farm_population_reachability.lua: the soak drafter fills all ten
+-- slots from a CLOSED 41-hero pool (tools/batch_test/soak/hero_pool.txt) that
+-- contains NONE of the nine, the 1039-live-frame fixture corpus carries ZERO of
+-- their frames (and its hero set is exactly that pool), and both launchers pass
+-- `-fill_with_bots`, so J.IsPosxHuman(5) is false in every farm game. ⇒ on a
+-- farm instance BOTH ungated disjuncts are empty, the host Think is reached only
+-- under 'c3' / 'suplh' / 'lanefix' / 'lf_support' / 'lf_undertower' /
+-- 'bodyblock', and a wave arming 'denyreach' ALONE measures a STRUCTURAL ZERO
+-- while check_armed_wiring.py answers WIRED -- the GH #606 shape, the same one
+-- 'supdenyrange' carries. Arm it as `c3,denyreach` (cores; `cand_ref` = the host
+-- id alone, GH #141). This does NOT weaken the case for this id having its own
+-- gate: in SHIPPED games the doorway is real, which is exactly why it needs one.
+--
 -- ⛔ WHAT THE CORPUS CANNOT SAY, said here rather than left for a wave. The
 -- dumper writes `{t, team, x, y}` per creep and NO health or name (GH #581), so
 -- the HP half of GetBestDenyCreep -- and therefore how often the branch's
@@ -7567,7 +7585,10 @@ end
 --
 -- ⭐⭐ WHY IT IS A SEPARATE ID AND NOT A WIDENING OF 'denyreach'. The two sites
 -- sit behind DIFFERENT armed populations: the core Think body runs with every
--- gate off (`bCustomLastHit` = `local_mode_laning_generic`), while this one is
+-- gate off IN SHIPPED GAMES (`bCustomLastHit` = `local_mode_laning_generic`) --
+-- though NOT on the farm, where that disjunct is empty and 'denyreach' is
+-- BUNDLE-ONLY too (2026-09-15, tests/test_farm_population_reachability.lua; see
+-- the ⛔⛔ block in J.ShouldDropOutOfReachDeny's header) -- while this one is
 -- reached only through `if bSupLastHit or bLaneFixSupport then
 -- DoSupportLaningThink()`, i.e. only under 'suplh' / 'lanefix' / 'lf_support'.
 -- One id across both would make a per-id verdict unattributable (GH #29), and
@@ -10742,7 +10763,13 @@ end
 -- (an override laning module, or a pos-1 paired with a human pos-5). What
 -- keeps this helper inert is that ALL THREE of its behaviour changes carry
 -- their own soak gates, which is a property of the helper and not of its
--- callers. The distinction cost a round: the sibling mechanism-3 helper carried
+-- callers. ⛔ 2026-09-15: that reading is right about LIVENESS and must not be
+-- reused for MEASURABILITY -- on a FARM instance both of bCustomLastHit's
+-- ungated disjuncts are empty (no override hero is in the drafter's closed
+-- pool, no human fills a slot under `-fill_with_bots`), so 'hrparity' /
+-- 'hrreach' / 'hrflee' are BUNDLE-ONLY there just like 'denyreach': arm each
+-- with a host id ('c3' for cores) and read the host alone as `cand_ref`.
+-- Measured in tests/test_farm_population_reachability.lua. The distinction cost a round: the sibling mechanism-3 helper carried
 -- the same false claim and NO gate of its own, and the claim was what made that
 -- look safe (see J.IsLaneFrontTooDeepToHold's header, 'deepnum').
 -- NO LONGER a gate-free helper: 'hrparity' (2026-09-09) symmetrises the
@@ -10960,6 +10987,17 @@ end
 -- pos-5. On those bots this helper is LIVE in shipped games, so a change here
 -- needs its own gate rather than inheriting the caller's (the 0OVERCHASE rule
 -- points the other way only when the host really is gate-locked).
+-- ⛔⛔ AND THAT SENTENCE IS ABOUT SHIPPED GAMES ONLY (2026-09-15). On a FARM
+-- instance neither ungated disjunct exists: the soak drafter's closed 41-hero
+-- pool contains none of the nine override heroes (and the 1039-frame fixture
+-- corpus, whose hero set IS that pool, carries zero of their frames), and both
+-- launchers pass `-fill_with_bots`, so J.IsPosxHuman(5) is false in every game
+-- of every wave. ⇒ 'deepnum' is NOT single-arm testable, contrary to what the
+-- census row in tests/test_gated_helper_nesting_census.lua said until today:
+-- arm it as `c3,deepnum` (or with whichever host the wave wants) and read the
+-- host alone as the reference leg (`cand_ref`, GH #141). The liveness claim
+-- above stands untouched -- it is why this helper carries its own gate at all.
+-- Measured in tests/test_farm_population_reachability.lua.
 --
 -- [deepnum 2026-09-09] THE DEEP TIER COMPARES TWO COUNTS TAKEN WITH TWO
 -- RULERS. `(1 + nAllies) <= nEnemies` reads our bodies on the SHALLOW tier's

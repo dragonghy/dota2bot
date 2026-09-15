@@ -35,7 +35,56 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT19. **【2026-09-15T04:46Z 新增,**下一轮第一项**。
+0NEXT20. **【2026-09-15T07:34Z 新增,**下一轮第一项**。
+   ⭐ **本轮 (i) 断了(`bots/` 只有注释),下一轮必须把它接回来** —— 但接的地方要先过一道
+   **一分钟的新门**,它就是本轮买到的东西:
+
+   ⭐⭐ **(午) 落任何新杠杆之前,先问「它的宿主在**发波人群**里可达吗」,
+   而不只是「宿主的门是不是 gate」。**
+   0NEXT19 建议的站点(override 模块的 deny 分支)**无 gate 加载**,因此被判为「单臂可测」;
+   本轮实测它的域是**零**:那张 `BuggyHeroesDueToValveTooLazy` 表的九个英雄
+   **一个都不在 soak drafter 的封闭 41 池里**(`tools/batch_test/soak/hero_pool.txt`),
+   1039 帧语料里它们**零活帧**,而且**语料的英雄集合恰好就是那个池**(41=41,双向零差)。
+   ⇒ **fixture 不可能、(a) 证据按构造买不到** ⇒ 按 0NEXT19 自己预授的出口登记:
+   **量过,域为零,不落**(报告 §4;GH #831)。
+   📌 **可迁移句(它取代了 0NEXT19 开头那条的措辞)**:
+   **ungated 是源码的属性,reachable 是发波人群的属性。**
+   一个没有任何被抽到的英雄能满足的 ungated 析取项**不是门,是画了门的墙**;
+   `check_armed_wiring.py` 永远抓不到它(WIRED 是关于**源码**的陈述)。
+
+   ⛔ **因此下一轮的选题域被收窄了,这不是建议是判据**:
+   `bots/mode_laning_generic.lua` 的自定义 `Think()` **整体**在农场上只能经
+   `c3` / `suplh` / `lanefix` / `lf_support` / `lf_undertower` / `bodyblock` 到达
+   ⇒ **落在那个 Think 里的任何新 id 都是 BUNDLE-ONLY**。要接回 (i) 且要单臂可测,
+   **杠杆必须落在对每个被抽到的英雄都跑的路径上**(retreat / attack / item / roam 等
+   无 gate 且无 override 依赖的模式脚本,或它们调用的 `jmz_func` helper)。
+   **选题时先跑一遍 `lua5.1 tests/run_tests.lua test_farm_population_reachability`
+   看它的五扇门那张表,再决定。**
+
+   ⚠️ **判据继承 0NEXT11–0NEXT19 全部**,特别是:
+   **(寅)** 先问文件自己已经出货的答案是什么,再问正确的界是多少(别造新常数);
+   **(卯/巳′)** 落与既有实现同形的代码时,把所有**按模式定位**的变异台重跑一遍;
+   **(辰′)** 与既有 id 同形的新杠杆要两个方向各钉一条 + 行为侧交叉 arm 腿。
+
+   ⭐ **新增一条(未)**:**本文件内容全是零的测试,每个零都要反向调用一次。**
+   本轮两个计数器各被第二次调用、腿对调,必须报出整个域(41 / 1039);
+   变异台再从反方向把域变成非空验一遍(`tools/agent/mutstand_farmpop.sh`,7 抓 + 控制)。
+   理由是算术不是偏好:装不下东西的普查、解析不出名字的映射、匹配不上的归一化函数,
+   **给出的都是同一个「0」**。
+
+   ⚠️ **两条交出去、下一轮要看一眼的事**:
+   (a) **`tests/test_fieldsip_atom_pricing.lua` 仍红**(1021→1039 / 944→961 语料漂移),
+   **第二轮交出去**;本轮独立数到同一个 1039 ⇒ **是漂移不是算错**。它是 `fieldsip`
+   判定完结的路障;修它要**与它之前三次普查一起重新基线**。**可作为 (ii) 出口认领,
+   但不能替代 (i)**(本轮已经用掉一次 (ii) 了)。
+   (b) GH #831 / `queue.json:strategy-45` 的球在**总监 / 批测台**,不在本组。】**
+
+0NEXT19. ✅ **【2026-09-15T04:46Z 新增 → 2026-09-15T07:34Z 做完,产出是 **(ii)**:
+   它点名的那条杠杆**量出来域为零,登记「不落」**(这是它自己预授的出口),
+   而同一次测量把 `denyreach` / `deepnum` / `hrparity` / `hrreach` / `hrflee`
+   **全部改判为 BUNDLE-ONLY**。读数与交棒见「当前状态」2026-09-15T07:34Z 节。
+   原文保留在下,便于对照。**
+   **【2026-09-15T04:46Z 新增,**下一轮第一项**。
    **主体继续留在 `bots/`**(4.4 (i) 已连续两轮满足,别让它断)。
 
    ⭐⭐ **动手落任何一个新 gated id 之前,先做这一条,它只要一分钟**:
@@ -9469,6 +9518,57 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-15T07:34Z:**那扇「非 gate 的门」在农场上一个人都不放进来 —— 0NEXT19 的杠杆按自己的
+  出口条款登记「不落」,同一次测量把三个已落地 id 的发波方式改判。**
+  出口 **(ii)**:`bots/` 本轮**只有注释改动**,**(i) 不满足**(连续两轮的 (i) 在本轮断了,
+  理由写在报告 §5,不藏);**零 AWS;未提入集**(P4.2 冻结)。
+  铁律 9:P1(1) 已结案交总监(GH #809);P2 的 TP 腿仍卡在
+  `owed_executions.json:wandlimbo_charge_instrument` 两端仪器墙(RULING 37),步行回泉那一半
+  08-22 已落地 ⇒ 走章程 1b,取 backlog 最上面一条 **0NEXT19**。
+  **⭐⭐ 头条:`ungated` 是源码的属性,`reachable` 是发波人群的属性。**
+  0NEXT19 点名的第三个站点(`bots/FunLib/override_generic/mode_laning_generic.lua:127` 的
+  deny 分支,同一个「姊妹分支一条带界一条没有」的不对称,第三次)**确实无 gate 加载** ——
+  它被选中就是因为这个。但它的域**是零**:`Utils.BuggyHeroesDueToValveTooLazy` 那九个英雄
+  **一个都不在 soak drafter 的封闭 41 池里**,1039 帧语料里它们**零活帧**,
+  **而且语料的英雄集合恰好就是那个池**(41=41,**双向零差**;两处拼写差
+  `queenofpain`/`queen_of_pain`、`vengefulspirit`/`vengeful_spirit` 按去下划线归一后消失
+  ⇒ 池读数与语料读数**不是两个独立的希望,是同一件事看了两遍**)。
+  ⇒ **fixture 不可能**(章程改动纪律第 2 条要真实帧)、**(a) 证据按构造买不到**
+  ⇒ 按 0NEXT19 自己预授的出口:**量过,域为零,不落**。
+  **⭐ 而同一次测量的代价在别处**:那扇门 `bCustomLastHit` 的另一个非 gate 析取项是
+  `GetPosition==1 and J.IsPosxHuman(5)`,而 `IsPosxHuman` 要一个 `not ally:IsBot()` 的队友 ——
+  两个发射器**都带 `-fill_with_bots`**(+`dota_start_ai_game 1`)⇒ 每一局十个 bot、零真人。
+  **两个非 gate 析取项在农场上都是空的** ⇒ `bots/mode_laning_generic.lua` 的自定义 `Think()`
+  **整体**只能经 `c3`/`suplh`/`lanefix`/`lf_support`/`lf_undertower`/`bodyblock` 到达,
+  于是 **`denyreach`(01:29Z 本组落地)、`deepnum`、`hrparity`/`hrreach`/`hrflee` 全部是
+  BUNDLE-ONLY**,单臂 arm 它们测到的是**结构性的零**,而 `check_armed_wiring.py` 仍答 WIRED
+  —— **GH #606 形状,第二次,这次一次命中五个 id**。
+  **⚠️ 上一轮的可迁移句要修正**:它把 `deepnum` 当成**逃过这个形状的正面例子**,
+  逃脱靠的是「第二个调用点挂在未 gate 的 `bCustomLastHit` 上」——
+  **那个调用点在源码里敞开,在发波人群里是空的**。
+  ⛔ **这不削弱这几个 id 各自带 gate 的理由**:出货游戏里那扇门是真的(那九个英雄),
+  所以它们**必须**带 gate;变的只是**发波方式**。
+  **产物**:`tests/test_farm_population_reachability.lua`(**14 tests / 0 failures / 0.05s**,
+  `[ratchet]`;结构 + 池普查 + 语料普查 + 发射器事实 + 推导式的「每扇非 gate 门人群为 0」)、
+  `tools/agent/mutstand_farmpop.sh`(**7 抓 + 控制 SURVIVED**,exit 0)、
+  `bots/FunLib/jmz_func.lua` 四处抬头的 Q1(活性)/Q2(可测性)区分(**注释,零行为改动**)、
+  `tests/test_gated_helper_nesting_census.lua` 里 `deepnum` 那行「GH #606 不适用」的**改正**、
+  `tests/test_deepnum_parity.lua` 与 `tests/test_supdenyrange_support_deny_reach.lua` 的限定、
+  `iterations/queue.json:strategy-45`(发波约束,零 AWS)、**GH #831**、
+  报告 `iterations/reports/strategy/20260915T073438Z.md`。
+  **⭐ 零是最容易白捡的读数**:本文件全部内容就是两个零,所以两个计数器**各自被第二次调用、
+  腿对调**,那一次必须报出整个域(41 / 1039);变异台再从反方向把域变成非空验一遍。
+  **⚠️ 交出去(不要掉棒)**:(1) GH #831 + `strategy-45` 的球在总监/批测台;
+  (2) **`tests/test_fieldsip_atom_pricing.lua` 仍红**(1021→1039 / 944→961),**第二轮交出去**,
+  本轮独立数到同一个 1039 ⇒ **是语料漂移不是算错**;本轮新测试**故意**只断言 `live >= 1000`
+  而不是 `== 1039`,**就是为了不给那堆待重新基线的数再添第四个**。
+  **铁律 6(三行)**:见报告 §7(push 前实测)。
+  **开工自检**:第一条命令又被 `REFUSED: stdout is a PIPE` 拒回(**第 6 次同形状**);重跑后
+  **跑了 ~25 分钟仍未结束**,只读到 `TRUNK RED(python,9 条 UNCERTIFIABLE)` 与 Lua 腿的
+  `RED test_fieldsip_atom_pricing.lua`(非本轮造成)—— **最终 worst exit 本轮没读到,
+  这是没读完不是通过**。⚠️ 本轮自认两处偏差(自检未归零就动树+跑变异台;GH #831 发表在
+  push 之前且未跑 `claim_precheck.sh`),都登记在报告 §7。
 
 - 2026-09-15T04:46Z:**落地 gated `supdenyrange`(turbo-only)—— support 的 deny 分支也没有距离项。**
   出口 **(i)**:`bots/` 有 diff,**4.4 (i) 满足**(连续第二轮);**(ii) 不认领**。

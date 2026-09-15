@@ -14,7 +14,11 @@
 -- ⭐⭐ WHY IT IS A SECOND ID AND NOT A WIDENING OF THE FIRST.  The two sites sit
 -- behind DIFFERENT armed populations, and that is a fact about source, asserted
 -- in section 1d rather than asserted in prose: the core Think body runs with
--- every gate off (`bCustomLastHit` is `local_mode_laning_generic`), while this
+-- every gate off IN SHIPPED GAMES (`bCustomLastHit` is
+-- `local_mode_laning_generic`) -- though NOT on the farm, where that disjunct is
+-- empty and 'denyreach' is BUNDLE-ONLY too (measured 2026-09-15 in
+-- tests/test_farm_population_reachability.lua; the two ids stay independent
+-- either way, they just now need different HOST ids in a wave) -- while this
 -- branch is reached only through `if bSupLastHit or bLaneFixSupport then
 -- DoSupportLaningThink()`, i.e. only when 'suplh' / 'lanefix' / 'lf_support' is
 -- armed.  One id across both would make a per-id verdict unattributable
@@ -312,8 +316,13 @@ tests['[ratchet] 1d the two call sites really do sit behind different gates -- a
         1, true), 'bSupLastHit is no longer the suplh gate')
     assert(src:find('local bLaneFixSupport = J.IsModeTurbo()', 1, true),
         'bLaneFixSupport is no longer a turbo-gated flag')
-    -- ...while the core Think's own body needs no candidate at all, because
-    -- bCustomLastHit is just "the native laning module is present".
+    -- ...while the core Think's own body needs no candidate at all IN A SHIPPED
+    -- GAME, because bCustomLastHit is just "the native laning module is
+    -- present".  On the FARM it does need one: that module loads for nine heroes
+    -- the drafter's closed pool never drafts (2026-09-15,
+    -- tests/test_farm_population_reachability.lua), which is why 'denyreach' is
+    -- BUNDLE-ONLY too.  The independence asserted here is unaffected -- it is
+    -- about which helper each site names, not about who can reach them.
     assert(src:find('local bCustomLastHit = local_mode_laning_generic', 1, true),
         'bCustomLastHit is no longer ungated -- if BOTH sites are now gated the '
         .. 'two ids may no longer be independent; re-price before promoting')

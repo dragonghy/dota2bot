@@ -385,6 +385,14 @@ tests['[deepnum] the host Think is still reachable without any soak id']
     -- The premise of section 6, pinned where it can rot: if bCustomLastHit
     -- ever becomes a soak gate, the reason this repair carries its own id
     -- disappears and the 0OVERCHASE rule starts applying instead.
+    -- ⛔ SCOPE, corrected 2026-09-15: what this case pins is LIVENESS in
+    -- SHIPPED games (nine override heroes; a human pos-5), which is what
+    -- "carries its own id" rests on. It says NOTHING about whether a WAVE can
+    -- read this id: on a farm instance both ungated disjuncts are empty
+    -- (closed drafter pool without the nine; `-fill_with_bots`), so 'deepnum'
+    -- is BUNDLE-ONLY there. Measured in
+    -- tests/test_farm_population_reachability.lua; do not re-derive
+    -- measurability from this case.
     local fh = assert(io.open('bots/mode_laning_generic.lua', 'r'))
     local s = fh:read('*a'); fh:close()
     local at = assert(s:find('local bCustomLastHit', 1, true),

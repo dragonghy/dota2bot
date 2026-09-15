@@ -700,10 +700,19 @@ local PINNED = {
     -- block also lives in; the SAME helper is called a second time from the
     -- laning Think body, which is reachable through `bCustomLastHit` -- an
     -- ungated disjunct (an override laning module, or a pos-1 paired with a
-    -- human pos-5). So a wave arming 'deepnum' alone reaches it for real, and
-    -- the GH #606 shape ("single-arm zero is structurally impossible while
-    -- check_armed_wiring.py answers WIRED") does not apply here. That premise
-    -- is pinned where it can rot, in tests/test_deepnum_parity.lua section 6.
+    -- human pos-5). That premise is pinned where it can rot, in
+    -- tests/test_deepnum_parity.lua section 6.
+    -- ⛔⛔ CORRECTED 2026-09-15: this row used to continue "so a wave arming
+    -- 'deepnum' alone reaches it for real, and the GH #606 shape does not apply
+    -- here". IT DOES APPLY. The disjunct is ungated in the SOURCE and empty in
+    -- the FARM POPULATION: the soak drafter fills all ten slots from a closed
+    -- 41-hero pool holding none of the nine override heroes, and
+    -- `-fill_with_bots` means no human pos-5 exists in any wave game. Ungated is
+    -- a property of the source; reachable is a property of the population the
+    -- wave drafts. ⇒ 'deepnum' is BUNDLE-ONLY on the farm exactly like
+    -- 'supdenyrange' below: arm `c3,deepnum`, reference leg = the host alone
+    -- (`cand_ref`, GH #141). Measured, with both counters proved to count, in
+    -- tests/test_farm_population_reachability.lua.
     "l5trees | DoSupportLaningThink | J.IsLaneFrontTooDeepToHold | deepnum | bots/mode_laning_generic.lua",                               -- P
     -- [supdenyrange 20260915] (I), and the row carries a SECOND fact that is the
     -- exact mirror of the 'deepnum' row above it -- which is why it is written
@@ -714,9 +723,10 @@ local PINNED = {
     -- so the shipped branch is byte-identical and arming 'l5trees' alone still
     -- measures 'l5trees'.
     -- ⛔ THE SECOND FACT, and it is the GH #606 shape this census exists to make
-    -- visible -- the 'deepnum' row escaped it, this one does NOT. That row is
-    -- safe single-arm because the same helper has a second call site reachable
-    -- through the ungated `bCustomLastHit`. This helper has exactly ONE call
+    -- visible. (Until 2026-09-15 this sentence said the 'deepnum' row escaped it
+    -- and this one does not; the measurement says NEITHER escapes -- see that
+    -- row's correction. The difference is only in how the emptiness arrives:
+    -- there through a population, here through the source.) This helper has exactly ONE call
     -- site, and it is inside DoSupportLaningThink, which the Think body reaches
     -- only via `if bSupLastHit or bLaneFixSupport then` -- both gated
     -- ('suplh' / 'lanefix' / 'lf_support'). So a wave arming 'supdenyrange'
