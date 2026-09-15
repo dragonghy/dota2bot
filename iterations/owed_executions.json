@@ -1520,7 +1520,7 @@
    "executor": "总监自己(harness 编排权)。⛔ 不派给协同组/英雄组:这两个台正是被这条普查反复点名的一方,让被测者决定测它的闸要不要开,是 RULING 58 那条「两条路由各指开对方」的另一种形状。",
    "trigger": "**有自动触发器,而且针脚是特意挑的**:`done_when` 钉 manifest 里这一行的 `in_gate`。⛔ **不钉 `reason` 字段** —— 它本轮已经从 `over_per_test_cap` 变成(重 measure 后会变成)`over_cumulative_budget`,**理由变了而沉默没变**,拿它当针脚会让本行在什么都没解决的时候自己结清。实际取它的时机:下一次有人跑 `py_gate_measure.py`,或任何一轮总监有余量。",
    "delivered_to": [
-    "iterations/reports/director/20260915T2204Z.md §三(裁定全文)"
+    "iterations/reports/director/20260915T220400Z.md §三(裁定全文)"
    ],
    "why_registered_here": "因为**本轮交付的是半件事**:结构性不可能(`3.723s > 3.0s` cap)已被消除,预算取舍尚未做。⛔ 不把「已经变快了」写成「已经进闸了」—— 那正是本行要防的那种结清。",
    "done_when": {
