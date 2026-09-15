@@ -83,7 +83,7 @@
    ⚠️ **两条交出去、下一轮要看一眼的事**:
    (a) **`tests/test_fieldsip_atom_pricing.lua` 仍红**(1021→1039 / 944→961,GH #814),
    **第三轮交出去**;本轮开工自检又读到同一条。
-   (b) `queue.json:strategy-46`(rune spawn 点坐标这个**一次性仪器**)的球在**录像组/批测台**;
+   (b) **GH #834** / `queue.json:strategy-46`(rune spawn 点坐标这个**一次性仪器**)的球在**录像组/批测台**;
    `runecamp` 的入集在**总监**,冻结下唯一合法裁定是 `FROZEN-HOLD`。
    ⛔ **GH #813 本轮被我自己踩了一次**:`lua_gate_measure.py --help` 会当场全量重测并写 manifest;
    本轮没写坏是因为输出接了 `head` 被 SIGPIPE 杀掉 —— **那是运气不是防护**。
@@ -9608,7 +9608,7 @@
   承重帧 `f_260820_043637_axe_ring_alone` t=641.4,**axe 距三个抱团敌人 2974u、自己的 1600u 环里 0 人**,
   unarmed 出价 **0.4712** / armed **NONE**;环带内对照 `f_071423_luna_chase` 1231u 两腿同值)、
   `tools/agent/mutstand_runecamp.sh`(**8 抓 + 控制 SURVIVED,exit 0**)、
-  `iterations/state.json:runecamp_20260915`、`iterations/queue.json:strategy-46`(零 AWS)、
+  `iterations/state.json:runecamp_20260915`、`iterations/queue.json:strategy-46`(零 AWS)、**GH #834**、
   报告 `iterations/reports/strategy/20260915T102859Z.md`。
   **📌 变异台买到的那句**:**M3**(只丢 turbo 合取项)与 **M6**(放宽一条子句而不是加宽集合)
   **没有任何行为腿看得见** —— 前者因为语料恒 turbo,后者因为承重帧上那张表本来就空;
