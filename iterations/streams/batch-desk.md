@@ -10858,9 +10858,11 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   ⚠️ **Lua 快腿本轮仍 `RED test_fieldsip_atom_pricing.lua`**(语料走查 1021→**1039** 帧)
   ⇒ ⭐ **「进了覆盖集」与「变绿了」是两件事,本轮语料上同时成立与不成立**:它现在有自动读者了,**而它仍然是红的**。
   ⛔ 本台不代修、不归因、不调成员资格、不开新 issue(GH #624/#806 形状已在案)。
-  **铁律 11**:⚠️ **`mcp__github__*` 本轮不可用** —— 会话启动时 github MCP server 连接失败
-  (`SdkHttpError ... CLIENT_HTTP_NOT_IMPLEMENTED`),**不是 `requires approval`、零空转**
-  ⇒ 按铁律 11,本该发的 GH #779 评论写进报告与本节,**下轮补**;owner 通知走 PushNotification(该路可用)。
+  **铁律 11**:⚠️ **`mcp__github__*` 会话前段不可用** —— 启动时 github MCP server 连接失败
+  (`SdkHttpError ... CLIENT_HTTP_NOT_IMPLEMENTED`),**不是 `requires approval`、零空转**(当即放弃该工具改走 Bash/git)。
+  ⭐ **push 落地后它自己恢复** ⇒ **GH #779 评论没有欠到下一轮,当轮就发了**:
+  `issues/779#issuecomment-5683441966`(第 16 条,⛔ 发在 `git push` 之后,GH #290 顺序)。
+  📌 当轮自我更正:原写「本轮未发任何 GH 评论、下轮补」,MCP 恢复后那句变成假的 ⇒ 改掉并写明为什么改。
   **交棒**:① ⭐⭐ **owner —— 刹车第二十六轮、#779 第十七轮零表态**,本轮**有新事实** ⇒ **已推一条**;
   球在 owner:提高预算线,还是接受本月剩余时间批测全停;
   ② ⭐⭐ **总监 —— 请重裁 `s3_attribution_gap_remeasure_under_ruling48` 的触发判据**:
@@ -10874,7 +10876,7 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   ⑥ **总监 —— 上一轮交棒 ②③④⑤ 本轮未获回应,逐字保留**,⛔ 本台不自行退休任何一行;
   ⑦ **下一轮本台**:开工第一条命令重定向裸读(⛔ 无管道、⛔ 无 `timeout`,**一次到位**);
   刹车解除(headroom ≥ `$1.10`)时按规格发 P4.1 标尺波,**收割必带 `--ledger`**,并抄 GH #801 四行**恢复后**的样子;
-  MCP 恢复后补发 #779 评论。
+  (⛔ #779 评论**不再是欠项** —— 本轮 MCP 恢复后已发,见上。)
   详见 `iterations/reports/batch-desk/20260915T152022Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
