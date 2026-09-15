@@ -86,6 +86,108 @@ if J.IsModeTurbo() and J.IsSoakCandidate( 'wkt10ls' ) then
 	tTalentTreeList['t10'] = {0, 10}
 end
 
+--- THE t15 PRICE, and the flip it buys.  Soak candidate `wkt15stun` (turbo-only,
+--- INERT until armed).  Shipped t15 stays exactly where it was; arming this id
+--- takes the OTHER row.
+---
+--- ⭐⭐ WHY THIS TIER AND NOT ANOTHER: it is the LAST UNPRICED TIER IN THE FOCUS
+--- FIVE.  Axe, Lion, Zeus and Crystal Maiden all have their t15 pair argued in a
+--- file (tests/test_axe_t15_payoff.lua, tests/test_lion_t15_payoff.lua,
+--- tests/test_focus_t15_payoff.lua holds Zeus's flip and CM's deliberate
+--- stand-pat).  This hero's t20 and t25 were priced 2026-08-27 in the block
+--- below and his t10 on 2026-09-14 in the block above.  t15 was never argued at
+--- all -- it has carried an OpenHyperAI snapshot default through four separate
+--- talent rounds, each of which walked past it to reach the tier it came for.
+---
+--- THE PAIR, read off the game's own KV (tests/mock/talent_slots.lua and
+--- tests/mock/special_value_shapes.lua, both generated from npc_dota_hero_*.txt
+--- by tools/agent/special_value_shape_census.py -- not retyped here):
+---
+---   right/index 4, `special_bonus_hp_300`              +300 health (a GENERIC row)
+---   left /index 3, `..._unique_wraith_king_11`         skeleton_king_hellfire_blast
+---                                                      /blast_stun_duration +0.75
+---
+--- Neither half is dead here -- this is the one tier of this hero's tree where
+--- the facet settlement below changes nothing, because neither row touches
+--- `skeleton_king_spectral_blade`.
+---
+--- THE SIZE, DRIVEN AND NOT COUNTED.  The talent is chosen at hero level 15 and
+--- at no other moment, so its size is conditional on the Q rank held AT THAT
+--- LEVEL -- and counting entries of tAllAbilityBuildList answers a different
+--- question, off by one per talent already taken (GH #134).  Driven through the
+--- real J.Skill.GetSkillList, Wraithfire Blast's ladder is rank 1 at hero level
+--- 2, rank 2 at 13, rank 3 at 14 and rank 4 at 16, so hero level 15 holds RANK 3:
+---
+---   hero 15      stun 1.4 -> 2.15s   +53.6%
+---   hero 16+     stun 1.6 -> 2.35s   +46.9%
+---
+--- on the ONLY lockdown this hero has (the ability index map below: Wraithfire
+--- Blast is "the only lockdown", and nothing else in the kit stuns).  Section 3
+--- of tests/test_wk_t15_stun_price.lua derives that ladder rather than trusting
+--- this table.
+---
+--- WHY IT IS A CANDIDATE AT ALL.  This file's own GH #17 block records the batch
+--- reading this hero at 0.6 kills a game and names the cause -- the shipped row
+--- leaves the only lockdown at a SINGLE point until hero level 13.  A row that
+--- buys half again as much lockdown attacks the weakness this file already
+--- wrote down; `special_bonus_hp_300` attacks nothing this desk has measured.
+---
+--- ⛔ AND THAT IS NOT ENOUGH TO FLIP IT, WHICH IS WHY THIS SHIPS GATED.  The
+--- REACHABILITY RULER the four earlier rounds used (does the payoff CONDITION
+--- get reached?) does not decide this pair, and pretending it does is the
+--- failure mode:
+---   * [4]'s payoff condition is trivially met -- a stat pays every second of
+---     the game, with no cast to land and no aim.
+---   * [3]'s payoff condition is A WRAITHFIRE BLAST THAT LANDS ON A HERO, and
+---     this desk has never measured how often that happens.  Under the ruler as
+---     written the unconditional row therefore wins BY DEFAULT -- which is the
+---     same argument that would have kept Zeus's t15 damage row, and Zeus's
+---     round flipped it only because it MEASURED the unaffordability first.
+--- ⇒ the honest state is that the ruler is waiting on a number this repo does
+--- not hold, so the flip ships dark and a wave decides it.  The measurement is
+--- iterations/queue.json hero-87 (zero EC2).
+---
+--- ⚠️ THE TWO SIDES ARE NOT EQUALLY INERT, and the asymmetry is the bound this
+--- lever must not be quoted without.  [3] IS inert to the decision layer: no
+--- reader of `blast_stun_duration` exists anywhere under bots/ (section 5 of the
+--- test is that census), so arming creates no stale read -- unlike the t10 pair,
+--- where `blast_dot_duration` is read by X.wk_GetBlastKillDamage and drags
+--- `wkqdmg` along with it.  [4] is NOT inert in the same sense: taking the 300
+--- health AWAY moves GetMaxHealth(), and this file and jmz_func read health
+--- RATIOS constantly.  That is not a stale read -- every ratio is still computed
+--- on the true pool -- but it does move what every HP threshold means in
+--- absolute terms, from hero level 15 on.  So a negative wave read on this id
+--- has TWO admissible causes, "the longer stun was not worth the trade" and "he
+--- died more with 300 less health", and this lever cannot separate them.
+---
+--- ⚠️ NO FRAME IN THIS REPO CAN DRIVE THIS TIER, said before anyone calls it
+--- fixture-validated.  tests/fixtures/ holds 37 Wraith King hero rows and their
+--- high-water level is TWELVE, so 0 of 37 are at or past 15.  That is a
+--- statement about the CORPUS -- it was cut under the 10-minute economy cap --
+--- and NOT about turbo: owner priority P3 (GH #108) removed the cap and the
+--- first frame past it has this hero at level 26 in a 24.9-minute naturally
+--- ended game (GH #235).  Section 4 of the test pins both halves.
+---
+--- ⚠️ SECOND INSTRUMENT WALL, registered because it is the reason the test
+--- drives the row identity from the KV rather than from the frame: on a real
+--- Wraith King frame `J.Skill.GetTalentList` answers NIL AT ALL EIGHT INDICES
+--- (the dumper does not record talent abilities -- GH #817 / #822), so
+--- sSkillList's talent slots 10 / 15 / 18..23 are nil on every fixture this repo
+--- holds.  Section 6 drives that and hands it on: it is direct evidence for the
+--- surviving "the queue entry is not a FAILING head, it is nil" hypothesis that
+--- iterations/reports/hero/20260914T225854Z.md left open, and it is NOT this
+--- lever's to settle.
+---
+--- ⛔ THE GATE NAMES ONLY ITS OWN ID (the pullcad trap, AGENTS.md).  `wkt10ls`
+--- rewrites t10 of this same table and `wkt15stun` rewrites t15; they are
+--- independent rewrites of disjoint tiers touching disjoint special values
+--- (`blast_dot_duration` against `blast_stun_duration`), and neither gate may
+--- name the other.  Arming BOTH moves two tiers of the build at once, so a
+--- bundle read must not be attributed to either one.
+if J.IsModeTurbo() and J.IsSoakCandidate( 'wkt15stun' ) then
+	tTalentTreeList['t15'] = {0, 10}
+end
+
 
 -- ABILITY INDEX MAP -- re-anchored 2026-08-22 against the live Dota 2 datafeed
 -- (https://www.dota2.com/datafeed/herodata?language=english&hero_id=42), because
@@ -372,7 +474,9 @@ tTalentTreeList above therefore resolves to [2] at t10, [4] at t15, [6] at t20 a
 [7] at t25 ({10,0} takes the even/right index, {0,10} the odd/left one -- see
 aba_skill.lua:135).  All four picks are taken in turbo.  SINCE 2026-09-14 the t10
 half of that sentence is conditional: soak candidate `wkt10ls` (the priced block
-above the table) rewrites t10 to {0, 10} and takes index [1] instead.  Unarmed --
+above the table) rewrites t10 to {0, 10} and takes index [1] instead.  SINCE
+2026-09-15 the t15 half is conditional the same way: soak candidate `wkt15stun`
+rewrites t15 to {0, 10} and takes index [3] instead.  Unarmed --
 which is every shipped game -- the resolution is unchanged.  This used to read "only
 the t10 and t15 picks can ever be taken in turbo: the level census behind GH #84
 read level >= 20 on 0 of 210 hero-slots, high-water 19".  CORRECTED 2026-08-27:
