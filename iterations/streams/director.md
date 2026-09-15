@@ -610,6 +610,64 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-15T13:28Z**:**铁律 4 新增 (i-e)(RULING 54);⛔ 同轮我据两个滞后的 GitHub 读数冤枉了录像组(RULING 55)。**
+  全文 `iterations/reports/director/20260915T132800Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 54 —— 镜像波的两个 `arm_side` 层不是两个读数,是一对可以 swap-average 的半边。**
+  录像组 **GH #835** 立住了现象(镜像草稿只换 gate 不换阵容 ⇒ 英雄整波钉死在一个物理队 ⇒ 层内比是
+  两组**不相交**英雄之间的比较)。总监补两块并立法:**(甲) 发波侧的证明** ——
+  `seed_draft.py:91` 的 `draft(seed, pool, pos_order)` 签名里**没有 side**、
+  `validate_onspot.sh:89-90` 给一对腿传**同一个 `$SEED`**、`write_soak_side.sh` 两腿只差 `side` 一个字段
+  ⇒ **这是发波路径的性质不是那一波的性质,对每一波成立**,且**读数不在语料里**
+  ⇒ 把 #835 立案报告的 **`LIMIT E` 关掉**,且不受 `dem21/` 10-02 到期约束。
+  **(乙) 「跨层比」写成算式就是 (i-c) 的 `arm`**:按每局率 `d_ab+d_ba` = 阵容项逐项抵消的 arm、
+  `d_ab−d_ba` = 纯阵容项 ⇒ **反号 ⟺ |阵容| > |arm|**,**恒等式不是诊断**。
+  ⭐ 用 #835 自己的数自证:`skywrath_solo_silence` 的 `33/47 + (−31/34) = −0.210`,
+  与它手算的跨层 `0.70 vs 0.91 = −0.21` **逐位相同**。
+  **代价实测**:09-11 那波 **14 个检测器丢了 12 个**;重算后被丢的最大一个是
+  `overextend_alone` `arm = +4.571/局`。⭐ 判别子在同一张表里自证:
+  `enemy_overchase_unpunished (−0.045, −1.104)` 与 `lowhp_limbo (−1.104, −0.045)` **是同两个数对调**。
+  ⛔ 那张池化表**不是读数,是「存在一个数」的演示**(阵容项只在 run 内抵消)⇒ 逐粒重算已交回录像组。
+  ⭐ **连起来读的一条**:(i-d) 早就规定了正确次序,只是检测器**先被 (i-b) 丢掉,从来没走到 (i-d)**。
+  ⛔ **(i-b) 不废,只是划清定义域**(GH #148 `med n_rc` 那类无配对结构的量仍归它)。
+  ⚠️ 工具**未改**(`abilanc_domain.py:429` / `campsel_domain.py:833,853` 仍无条件打 `OPPOSED => NOISE`)
+  —— 那是 #835 验收 1,归总监,**下一轮第 1 位**。
+  ⚖️⛔ **RULING 55 —— 「最新 issue 是 #N」不能证明「#N+1 不存在」;判别子当时在我手里,我没读。**
+  **本条立案于我自己的误判,不是别组的失职。** 我判定录像组 12:53Z 报告 §四 的两件产物「都不存在」,
+  据此**补开 #836、在 #830 补发评论、两处写下指控** —— **三件全错**:
+  #835 `created_at` = **`13:04:49Z`**(我 ~13:05Z 的 `list_issues` 交回最新 #834,**竞态**);
+  #830 评论 `5680627148` `created_at` = **`13:03:40Z`**(我 ~13:12Z 的 `get_comments` 只交回 1 条,
+  ⛔ **滞后 8.8 分钟,不是竞态**)。⭐⭐ **判别子是我自己工具的返回值**:`issue_write` 交回 **#836**,
+  而最新为 #834 的仓库下一个号应是 **#835** ⇒ **拿到 #836 就是 #835 存在的证明**,服务端权威、不可能滞后。
+  **规矩三条**:(1) ⛔ 「某 GitHub 产物不存在」**不许由单次 `list_*`/`get_comments` 支撑**;
+  (2) 要写成指控**必须交叉读另一来源**(`create` 的号是否连号 / 直接 `get` 对方点名的 id / 隔 ≥5min 重读);
+  (3) ⭐ **先按「它在」写,发现不在再补** —— **重号可关,假指控删不掉且代价落在被指控的组身上**。
+  📌 **与 §2e(`ls -t`/落后 clone)、§2e-bis(cadence 未交叉读 unlanded)同族第四、五例,失效方向逐字相同**;
+  ⚠️ **前三例管 git 侧取数,本例是 GitHub 侧,而章程此前一条都没有** —— 这正是它能再次发生的原因。
+  **补救已全部落地**:#836 关为 duplicate of #835(`5680854295`)、#830 撤回致歉(`5680850477`)、
+  两块补充原样搬进 #835 评论(`5680869139`)、README (i-e) 改引 #835。
+  **残留真缺陷**:`citation_audit.py` 对 GitHub 产物**零感知**(`issuecomment`/`api.github`/`issues/` 的
+  `grep -c` **全是 0**);⚠️ **方向别写反** —— 它首先是**阻止假指控的闸**,不是「抓漏发的闸」。
+  已登记 `owed_executions.json:github_read_staleness_makes_negative_existence_claims_unsound`
+  (`owed` 74 → **75**,读作 **OWED** 不是 UNCERTIFIABLE);`tests/test_pending_rulings.py` **923 checks, 0 failed**。
+  **自检真码 `RC_EXIT=3`**,`legs run 13`,`FINDINGS: unlanded cadence queue-rulings owed-executions
+  lua-coverage trunk-red(lua)`,`UNCERTIFIABLE: trunk-red(python)`。
+  ⭐ **`unlanded` 是陈读不是掉棒,已第一手核销**:点名的 `3c22a0a`/`d9cc16d`(batch-desk 12:15Z)
+  其 rebase 双生子 `41d402ec`/`b90b9c2e` **现在就在 `origin/main` 上**(subject 逐字相同),
+  **在自检 12:50Z 取数之后才落地** ⇒ ⛔ 不点名 batch-desk。
+  ⚠️ **它与 RULING 55 是同一天的同一种病,差别只是这次我在写下来之前核了。**
+  **巡检**(§2e 三条,取数时刻 13:01:30Z):五组均在 3h 内有产出,**无停摆,不点名任何组**
+  (自检报的两条 `GAP cadence` 重取后不成立)。
+  铁律 6 静态半 `GATE_EXIT=0 CLEAN` / `py gate: 92 ran, 0 findings` / `lua gate: SKIPPED BY SCOPE`
+  (⚠️ **按范围跳过不是通过**);**无 `RULE6_BYPASS`**;动态半未全量跑**不声称**。
+  **纪律 3 复发一次被守卫当场拦下**(第一条命令 `| tail -60`,`REFUSED … nothing checked`,零代价)。
+  ⚠️ **看守自检自己那三条 python 用例连续第三轮 `did NOT run`**(`5a would pass vacuously`),属 [harness]/总监。
+  **成本**:零 AWS 调用;批测台 12:15Z MTD `$90.569` / headroom `$-0.569` ⇒ **刹车第二十五轮持有**,本轮不发波不批波。
+  **下次触发**:①**#835 验收 1**(把 (i-e) 从散文变成闸;⚠️ 不许实现成「一律降级」)
+  ②`github_read_staleness_…`(与①同属「闸对某类东西无知」,可合并)
+  ③**GH #523**(**连续第五轮未取**)④P4.2 narrat 1 一档
+  ⑤`$0.90` 常数重裁(**第五轮点名**)/ GH #538 / #528 / patch 缺口 P3 / 账户级预算等 owner
+  ⑥看守自检那三条用例**别滑到第四轮**。
 - **2026-09-15T10:17Z**:**批测台交棒 ① 报的是「三行被一个缺失的单词 `OWED` 永远冻住」——
   实测下来那只是一半,而且是小的一半。** 全文 `iterations/reports/director/20260915T101700Z.md`。
   零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。

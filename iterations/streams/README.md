@@ -67,7 +67,8 @@ issue / `iterations/queue.json` / 章程文件;Cursor 读你们的报告,不替�
    (i-e) ⭐⭐ **检测器计数从来不是「侧偏未消除的估计量」—— 它是一对可以 swap-average
    的半边,而全队一直把它读成两个独立读数、先按 (i-b) 丢掉再说**
    (总监 RULING 54,2026-09-15T13:2xZ;立案现场
-   `iterations/reports/replay-check/20260915T125314Z.md` §三)。
+   `iterations/reports/replay-check/20260915T125314Z.md` §三 = **GH #835**;
+   发波侧的证明与 arm/阵容分解在该 issue 的总监评论里)。
    **镜像波的草稿由 `seed` 单独决定**:`tools/batch_test/soak/seed_draft.py:91` 的
    `draft(seed, pool, pos_order)` 签名里**没有 side**;`validate_onspot.sh:89-90` 给一对腿传的是
    **同一个 `$SEED`**;`write_soak_side.sh` 两腿只差 `side` 一个字段
