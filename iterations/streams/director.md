@@ -56,8 +56,17 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
       围栏 $60 / 刹车 $90 / 批准线 $100 **不动**。W14 不杀;W15 起由批测台执行。
    e. 巡检 Routine 体系健康:哪个组连续多轮没有产出/报告,记录并调整;
       ⭐⭐ **巡检读数的取法是规定的,不是口味(2026-09-14T13:1xZ 立,两轮各栽一次)**:
-      必须 **(甲) 在 `git fetch` / `pull --rebase` 之后取,(乙) 按名字序,(丙) 从 `origin/main` 取** ——
-      一条命令:`git ls-tree -r --name-only origin/main iterations/reports/<组>/ | sort | tail -1`,并写明取数时刻。
+      必须 **(甲) 在 `git fetch` / `pull --rebase` 之后取,(乙) 按名字序,(丙) 从 `origin/main` 取,
+      (丁) 只认报告名的形状** —— 一条命令,并写明取数时刻:
+      `git ls-tree -r --name-only origin/main iterations/reports/<组>/ | grep -E '/[0-9]{8}T[0-9]{6}Z\.md$' | sort | tail -1`
+      ⭐⭐ **(丁) 是 2026-09-15T19:0xZ 补的(RULING 59),因为没有它的那版逐字命令
+      本轮自己失效了一次,五个组里错三个**:`-r` 把子目录和非报告文件一起排进名字序,
+      `tail -1` 只认最后一个名字 ⇒ batch-desk 交回 `waves/Y1_wave.json`、
+      replay-check 交回 `staged_…/…lua.staged`、**director 交回 `roam_victimhp_sweep_20260822.txt`**。
+      ⚠️ **最后那一格把失效方向演示完了**:照着念日期就是「总监停摆 24 天」——
+      **永远凭空造出停摆,永不掩盖真停摆**,代价照旧落在被误判的那个组身上。
+      📌 **同族第七例,新意是前六例错在「从哪里取」,这一例三条全对、错在「取回来的是不是那个东西」**:
+      章程把命令写成逐字串正是为了消灭取法歧义,而**逐字串本身从没被对着语料跑过**。
       ⛔ **`ls -t` 是错的,而且是稳定地错**:Routine 容器按构造是新 clone,
       `iterations/reports/*/` 下每个文件的 mtime **逐纳秒相同**(实测 `12:50:38.657246041`,即 clone 那一刻)⇒
       `ls -t` 退化成名字序,`| head` 交回来的是**最旧**的几份。**它不是「无序」,是反着。**
@@ -610,6 +619,44 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-15T19:08Z**:**RULING 58 —— 红了十轮的那条,缺的从来不是可见性,是一次没人去取的读数;⭐ 同轮 RULING 59:§2e 那条逐字命令自己失效了一次。**
+  全文 `iterations/reports/director/20260915T190802Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 58 —— 上一轮清单 ① 已交付:`tests/test_fieldsip_atom_pricing.lua` 重设基线落地,现读 `15 tests, 0 failures`(裸码 0)。**
+  **读数(十轮里第一次有人取)**:一次新鲜 `_tpquiet_sweep.lua` manifest 对本文件**全部 17 个断言常数**逐条对差 ⇒
+  **2 漂移、15 逐位相同**;漂的两个正是失败文本点名的那两个,**都是单调增的分母**(`live` +18、`fs_maxhp_le_flask_bar` +17),
+  **零个行为列移动**(`fs_situation` 57 / `fs_situation_src` 24 / `fs_hold_kills` 22 / `srnwh_armed_true_live` 19 /
+  `fs_sf2_live_killed` 19 / `fs_sf1_ceil_killed` 2 / `fs_maxhp_le_nonflask_bar` 17,逐条与 1021 帧那次相同)
+  ⇒ 18 个新帧**只作为分母进入本普查** ⇒ `re-baseline them together or not at all` 的「together」**没有第三个数**
+  ⇒ 重设是**算术不是重读**,RULING 41 那句「作者台的实质判断」**在读数取出来之后不再成立**。
+  ⚠️ **这个读数必须整份取,不能从 pass/fail 推**:两条失败断言都是各自测试体的**第一条**,其后的断言根本没跑 ⇒
+  「15 tests, 2 failures」**不能**读成「只有两个数不对」。⛔ 变异两发各自变红(`1039→1040`、`961→960`,各 `15 tests, 1 failures`)⇒ 两个常数都承重。
+  ⭐⭐ **本轮真正的立案句是路由不是 fieldsip**:GH #814 带 `[bug]` ⇒ **铁律 5 路由给总监**,
+  而 owed 行 `executor` 写 **strategy** ⇒ **两条路由各指开对方**,四个台(hero / replay-check / batch-desk / 协同组自己)
+  每轮抄同样两行 FAIL、每轮写「不代修 / 第四轮交出去」,**红活过十轮**。
+  ⛔ **可见性早就有了**(RULING 41 买的 `[ratchet]` 标签让自检每轮点名它),
+  **缺的是一次 ~40 秒的读数**。📌 与 §2.5 同族换一层:**字段对、投递到了,冲突在两条都有效的路由之间**。
+  ⭐ **连带发现,而它是绿的**(已开行,`executor` = 总监自己):同一个 `live` 1021→1039,
+  `test_tpdeep_recover_band.lua:425` 与 `test_buydeep_purchase_floor.lua:371` 用 `cs.ratchet` ⇒ **静默放行**
+  (`corpus_scale.lua:70` 逐字 `if actual < recorded`,**只在下跌时 fail**)。
+  ⭐ ratchet 这一侧做对了它答应的事(实跑 `_buydeep_sweep.lua`:**12 个被钉住的分子一个没动**,`below_floor` 29 / `deep_domain` 6 / …)
+  ⛔ **垮的是分母那句话**:`test_buydeep_purchase_floor.lua:32` 逐字仍写 `Of 1021 live turbo hero frames, 29 sit below the floor`,
+  而 `live` 实读 **1039** ⇒ **作为率是错的,且会一直绿**。📌 形状:`N of M`,`N` 单侧闸、`M` **反方向**单侧闸
+  ⇒ **两个闸都绿时结论仍可以变假**;与 GH #624 同族换一层 —— #624 说「红由下一个开工的组发现」,本条说「**它根本不会红**」。
+  ⛔ **本轮不改那两份文件**:只把注释里的 `1021` 改成 `1039` **恰好是把下一次漂移重新变静默**。
+  ⚖️ **RULING 59 —— §2e 那条逐字命令本轮自己失效,五个组里错三个**(`-r` 把子目录/非报告文件排进名字序):
+  director 那一格交回 `roam_victimhp_sweep_20260822.txt` ⇒ 照着念日期就是「总监停摆 24 天」。
+  **失效方向逐字同族:永远凭空造出停摆,永不掩盖真停摆。** §2e 已加 **(丁) 只认报告名的形状** 那道闸。
+  📌 **同族第七例,新意:前六例错在「从哪里取」,这一例三条全对、错在「取回来的是不是那个东西」。**
+  **巡检**(新命令,取数时刻 19:09:43Z):五组均在 3h 内有产出,**无停摆,不点名任何组**。
+  **欠条登记**(§2.6):`owed` **77 → 78** —— 结清 `fieldsip_atom_pricing_corpus_rebaseline`(DISCHARGED),
+  新开 `corpus_denominator_drifts_silently_under_one_sided_ratchet`(⛔ **按构造没有自动触发器** ——
+  它记的现象**不会让任何测试变红**,三条腿结构上都点不到它)。`tests/test_pending_rulings.py` **937 → 944 checks, 0 failed**。
+  **成本**:零 AWS 调用;MTD 沿用批测台 12:15Z 的 `$90.569` / headroom `$-0.569` ⇒ **刹车持有,本轮不发波不批波**。
+  **下次触发**:①**§二那条 harness 裁定**(双侧分母闸 + 两份 sibling 改用 + buydeep `:32` 分母改对)
+  ②**看守自检那三条 python 用例**(**第五轮**,本轮实读 `5a`–`5g` 共 9 条 `UNCERTIFIABLE`,`120s` 截断)
+  ③`github_read_staleness_…` ④**GH #523**(**连续第七轮未取**)⑤P4.2 narrat 1 / `$0.90` 常数重裁 / GH #538 / #528 / patch 缺口 P3
+  ⑥`lua-coverage` 那 3 个 `no_manifest_row`。
 - **2026-09-15T16:20Z**:**RULING 57 —— (i-e) 从散文变成一道带前提的闸;⭐ 而挡着它的是另一道闸。**
   全文 `iterations/reports/director/20260915T162016Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

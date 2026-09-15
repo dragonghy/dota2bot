@@ -1,4 +1,56 @@
--- [ratchet] -- [director 2026-09-14, RULING 41, retires owed row
+-- [ratchet] -- [director 2026-09-15, RULING 58, RE-BASELINED: `live` 1021 ->
+-- 1039 and `fs_maxhp_le_flask_bar` 944 -> 961, TOGETHER, on the measurement
+-- that was never taken in the ten rounds this file sat red.]
+--
+-- ⭐ WHAT LICENSED THE RE-BASELINE, AND WHY IT IS NOT THE AUTHORING DESK'S
+-- SUBSTANTIVE CALL AFTER ALL.  RULING 41 (below) handed this to [strategy] with
+-- "re-baseline them together or not at all.  That is the authoring desk's call,
+-- not a harness call."  That is right as far as it goes, and it is precisely
+-- what nobody then went and MEASURED: "together or not at all" is a question
+-- about how many of this file's numbers moved, and every desk that met the red
+-- (hero, replay-check, batch-desk, strategy itself) re-copied the same two
+-- failure lines instead of asking it.  Four desks, ten rounds, zero readings.
+--
+-- The reading, taken this round by diffing EVERY asserted census constant in
+-- this file against a fresh `tests/_tpquiet_sweep.lua` manifest:
+--
+--     17 constants asserted, 2 drifted, 15 bit-identical.
+--
+-- The two that moved are the two the failure text already named.  `live`
+-- +18, `fs_maxhp_le_flask_bar` +17 -- both MONOTONE, both denominators.  Not
+-- one behavioural column moved: `fs_situation` 57, `fs_situation_src` 24,
+-- `fs_hold_kills` 22, `srnwh_armed_true_live` 19, `fs_sf2_live_killed` 19,
+-- `fs_sf2_live_survives` 0, `fs_sf1_ceil_killed` 2, `fs_maxhp_le_nonflask_bar`
+-- 17 -- every one of them reads today exactly what it read on the 1021-frame
+-- walk.  ⇒ THE 18 NEW FRAMES ENTER THIS CENSUS ONLY AS DENOMINATOR.  The
+-- headline, the atom's zero-live-domain finding, and the salve-only reading are
+-- all stated against numbers that did not move, so re-baselining the two that
+-- did is arithmetic, not a re-reading -- and "or not at all" is satisfied
+-- because there is no third number to re-baseline.
+--
+-- ⛔ THE GENERAL LESSON, WHICH IS ABOUT ROUTING AND NOT ABOUT FIELDSIP.  Iron
+-- rule 5 routes `[bug]` to the DIRECTOR; the owed row
+-- `fieldsip_atom_pricing_corpus_rebaseline` routes this one to [strategy].  GH
+-- #814 carries the `[bug]` prefix.  So the two routings disagreed, each desk
+-- read the one that pointed away from itself, and the red survived ten rounds
+-- while being SEEN every round -- 开工自检's Lua leg named the file by name each
+-- time.  ⭐ Visibility was never the missing thing here.  RULING 41 bought
+-- visibility (the `[ratchet]` tag above) and its own owed row says so in as
+-- many words: "自检会一直喊,而喊的对象是所有人,即没有人."  What was missing is
+-- that no reading was ever taken that could END the hand-off -- and the reading
+-- cost one sweep and one diff.
+--
+-- ⚠️ WHAT THIS RULING DOES NOT DO.  It does not convert this file's `==` to
+-- `cs.ratchet`.  Its two sibling censuses do pin `live` with
+-- `cs.ratchet(C.live, 1021, ...)` (`tests/test_tpdeep_recover_band.lua:425`,
+-- `tests/test_buydeep_purchase_floor.lua:371`), and ratchet is ONE-SIDED -- it
+-- fails only on a FALL -- so the same 1021 -> 1039 drift passed silently there
+-- and loudly here.  That difference is real and is registered as its own
+-- `[harness]` question; it is NOT settled by bumping a number, and this file's
+-- arguments genuinely do need both bounds.  The cost of keeping `==` is stated
+-- rather than hidden: the next fixture that lands re-reds this file, on purpose.
+--
+-- [director 2026-09-14, RULING 41, retires owed row
 -- `fieldsip_atom_pricing_disposition` after four rounds unclaimed.]
 --
 -- THE TAG IS THE WHOLE RULING.  This file is `[strategy]`-authored and was
@@ -395,11 +447,11 @@ tests['[corpus] the manifest carries EXACTLY this census\'s columns, no more'] =
     end
 end
 
-tests['[corpus] the walk is the same 1021-frame walk, and it did not raise'] = function()
+tests['[corpus] the walk is the same 1039-frame walk, and it did not raise'] = function()
     local _, C = sweep()
-    assert(must(C.live, 'live') == 1021,
+    assert(must(C.live, 'live') == 1039,
         'the corpus walk now covers ' .. C.live .. ' live hero frames, not '
-        .. '1021. Every number in this file and in the three censuses before it '
+        .. '1039. Every number in this file and in the three censuses before it '
         .. 'is stated against that walk; re-baseline them together or not at all')
     assert(must(C.raises, 'raises') == 0,
         C.raises .. ' frame(s) raised inside a census read. A frame that raised '
@@ -559,9 +611,9 @@ tests['[corpus] the salve-only reading is earned on the killed set, not inherite
         .. 'finding wearing the same number')
     -- ...and the second reading the two bars produce, reported rather than
     -- assumed: frames where the armed predicate is unsatisfiable outright.
-    assert(must(C.fs_maxhp_le_flask_bar, 'fs_maxhp_le_flask_bar') == 944,
+    assert(must(C.fs_maxhp_le_flask_bar, 'fs_maxhp_le_flask_bar') == 961,
         C.fs_maxhp_le_flask_bar .. ' live frames are at or under the flask bar, '
-        .. 'not 944. The complement (1021 - this) is the set of frames where '
+        .. 'not 961. The complement (1039 - this) is the set of frames where '
         .. 'NOTHING in the sip table can pass the test')
 end
 

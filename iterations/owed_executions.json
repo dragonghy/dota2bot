@@ -1332,7 +1332,9 @@
     ]
    },
    "done_when_note": "⭐ **判据要求两个数同时出现,因为文件自己的失败文本逐字写着 `re-baseline them together or not at all`** ⇒ 按构造排除**半修**(只改一个数的树不满足它),而半修正是这类语料基线最常见的坏结局。\n\n⛔⛔ **判据里那两个 `== ` 前缀不是装饰,它是本行开行时当场修掉的一个 BORN-DONE。**\n**第一版判据写的是裸串 `[\"1039\", \"961\"]`,而开行前一验,两个 `grep -c` 都是 **1** 不是 0** —— 因为 **RULING 41 自己在文件头写的那句话**(`:37` 逐字 `re-baseline \\`1021 -> 1039\\` and \\`944 -> 961\\` TOGETHER or`)**已经把这两个目标值念了出来**。⇒ 那条判据**在开行的那一刻就满足了**,而断言仍逐字是 `:400 == 1021` 与 `:562 == 944`。\n📌 **可复用的一句,是 LIMIT 11「mention is not correctness」的一个新形状:一条要求把 X 改成 Y 的裁定,通常会把 Y 写进正文;于是任何按「Y 出现了没有」写的判据,分不开「请求」与「履行」 —— 而请求总是先到。**\n🔧 改成断言形 `== 1039` / `== 961` 后当场复验:两串 `grep -c` = **0 / 0**,而旧断言 `== 1021` / `== 944` = **1 / 1** ⇒ 判据**非开行即满足**,且只有动到断言本身才会翻。\n\n⚠️ **LIMIT(照 LIMIT 11 写明,不加强)**:它买的是「两条断言被改成了新基线」,**不是「测试通过了」**,也不是「新基线是对的」。⇒ **退休本行的那一轮必须手工贴一条读数**:开工自检 Lua 腿上 `test_fieldsip_atom_pricing.lua` 不再出现在 FAIL 行里(贴那行逐字输出)。\n⛔ **没用 `command_exit_zero`**(RULING 39:退出码分不开「红修好了」与「容器变快了」);⛔ 也没用 `text_absent` 钉旧数 —— 旧数会以「历史行/更正说明」的合法形式留在文件里,那样会买到一个**要求作者抹掉自己改动史**的判据。",
-   "unmet_at_ruling": "2026-09-15T01:2xZ 开行前现读(**两轮,第一轮的判据被自己的读数否掉了,见 `done_when_note`**):`tests/test_fieldsip_atom_pricing.lua` 中 `grep -c '== 1039'` = **0**、`grep -c '== 961'` = **0**;对照读数旧断言 `grep -c '== 1021'` = **1**(`:400`)、`grep -c '== 944'` = **1**(`:562`)。⚠️ **裸串对照**:`grep -c 1039` = 1、`grep -c 961` = 1 —— 两处**都只在 `:37` 那句裁定正文里**,这正是第一版判据 BORN-DONE 的原因,一并登记。同时刻自检 Lua 腿该文件 **FAIL**(两条断言,逐字见 ruling 正文);`owed` 表零命中 `1039`/`961`;`iterations/queue.json` `grep -c '1039\\|re-baseline'` = **0**。⇒ 本行读 OWED。"
+   "unmet_at_ruling": "2026-09-15T01:2xZ 开行前现读(**两轮,第一轮的判据被自己的读数否掉了,见 `done_when_note`**):`tests/test_fieldsip_atom_pricing.lua` 中 `grep -c '== 1039'` = **0**、`grep -c '== 961'` = **0**;对照读数旧断言 `grep -c '== 1021'` = **1**(`:400`)、`grep -c '== 944'` = **1**(`:562`)。⚠️ **裸串对照**:`grep -c 1039` = 1、`grep -c 961` = 1 —— 两处**都只在 `:37` 那句裁定正文里**,这正是第一版判据 BORN-DONE 的原因,一并登记。同时刻自检 Lua 腿该文件 **FAIL**(两条断言,逐字见 ruling 正文);`owed` 表零命中 `1039`/`961`;`iterations/queue.json` `grep -c '1039\\|re-baseline'` = **0**。⇒ 本行读 OWED。",
+   "status": "DISCHARGED",
+   "discharged": "DISCHARGED 2026-09-15T19:xxZ by 总监 (RULING 58). 断言现读 `:452 must(C.live,'live') == 1039` 与 `:614 must(C.fs_maxhp_le_flask_bar,...) == 961`,`lua5.1 tests/run_tests.lua test_fieldsip_atom_pricing.lua` ⇒ **15 tests, 0 failures**(裸码 0)。⛔ **本行的 executor 写的是协同组,而结清它的是总监 —— 这不是抢活,是把一个路由冲突裁掉**:GH #814 带 `[bug]` 前缀 ⇒ 铁律 5 路由给**总监**,本行 `executor` 路由给**协同组**,两条路由各指开对方,于是四个台(hero/replay-check/batch-desk/协同组自己)每轮都抄同样两行 FAIL、每轮都写「非本轮造成/不代修」,**红活过十轮**。⭐ **真正缺的从来不是可见性**(RULING 41 已买到,自检 Lua 腿每轮点名),**是一次没人去取的读数**:把本文件**全部 17 个断言常数**与一份新鲜 `_tpquiet_sweep.lua` manifest 逐条对差 ⇒ **2 漂移、15 逐位相同**,漂的两个正是失败文本点名的那两个,且**都是单调增的分母**(`live` +18、`fs_maxhp_le_flask_bar` +17);**零个行为列移动**(`fs_situation` 57 / `fs_situation_src` 24 / `fs_hold_kills` 22 / `srnwh_armed_true_live` 19 / `fs_sf2_live_killed` 19 / `fs_sf2_live_survives` 0 / `fs_sf1_ceil_killed` 2 / `fs_maxhp_le_nonflask_bar` 17,逐条与 1021 帧那次相同)⇒ 18 个新帧**只作为分母进入本普查** ⇒ `re-baseline them together or not at all` 的「together」**没有第三个数需要一起改**,于是重设基线是算术不是重读,RULING 41 所谓「作者台的实质判断」**在读数取出来之后不再是一个实质判断**。变异两发各自变红(`1039→1040`、`961→960`,各 `15 tests, 1 failures`)⇒ 两个常数都承重,⛔ 不是空转通过。"
   },
   {
    "id": "lua_gate_stale_manifest_refusal_port",
@@ -1487,6 +1489,26 @@
     "note": "⛔ **kind=manual 是如实登记不是偷懒**:判据是「**跑一次自检**,trunk 腿对 `tests/test_fieldsip_atom_pricing.lua` 不再打 RED」——同样是运行时读数。⚠️ **落地第一步是先消掉自检自己带的那个限定**:`Whether main is red too is NOT established by this line: re-run after git stash.` ⇒ 先 stash 后重跑,确认它在 **main** 上也红,再决定是重新基线化(`:400` 明说 `re-baseline them together or not at all`)还是改断言形状。⛔ 把该测试删掉/跳过/加进 known-red 基线**都不算**满足(铁律 6 明禁跳过测试换绿)。\n⭐ **落地时必须一并回答**:它是 `in_gate:false / timed_out (6.0s)` 才逃过闸的,⇒ 修绿之后要么把它拆到 per-test cap 以内**进闸**,要么在 `lua_gate_manifest.json` 里**逐条带 `reason` 地说明为什么它可以留在闸外**(铁律 6 对 `lua_gate_manifest.json` 的原话)。⛔ 只把它修绿而仍然没有任何自动读者,等于把同一个坑留给下一次。"
    },
    "unmet_at_ruling": "2026-09-15T16:20Z 实测:`TRUNK RED -- 1 of 111`,失败文件 `tests/test_fieldsip_atom_pricing.lua`。"
+  },
+  {
+   "id": "corpus_denominator_drifts_silently_under_one_sided_ratchet",
+   "issue": "[harness] 总监 2026-09-15T19:xxZ 立(RULING 58 的连带发现,不是它的前提)。族属 GH #650(语料漂移)。⚠️ **本行不是 `[bug]` —— 没有任何测试现在是红的**;它记的是**一个绿着的、已经量到的陈述失真**。",
+   "covers_ids": [],
+   "ruling": "**同一个 `live` 从 1021 涨到 1039,在三份普查里得到两种待遇,而两种都不对**:`tests/test_fieldsip_atom_pricing.lua` 用**双侧** `assert(C.live == 1021)` ⇒ **红十轮**;`tests/test_tpdeep_recover_band.lua:425` 与 `tests/test_buydeep_purchase_floor.lua:371` 用 `cs.ratchet(C.live, 1021, 'live hero frames')` ⇒ **静默放行**(`corpus_scale.lua:70` 的 ratchet 只在**下跌**时 fail,逐字 `if actual < recorded`)。\n\n⭐ **ratchet 这一侧本身做对了它答应的事,本轮量过**:跑 `tests/_buydeep_sweep.lua` 一遍,buydeep **12 个被 ratchet 钉住的分子一个没动** —— `below_floor` 29 / `below_floor_nosrc` 12 / `nosrc_ring_busy` 6 / `nosrc_attr` 4 / `deep_with_any_tower` 18 / `trigger_deep_nosrc` 8 / `stop_source_ring` 5 / `stop_source_domain` 3 / `stop_source_attr_any` 3 / `deep_domain` 6 / `deep_below_tpdeep_floor` 3 / `deep_with_bag_salve` 1 ⇒ 没有一条结论垮掉,两份文件绿得有道理。\n\n⛔ **垮掉的是分母那一句话。** `test_buydeep_purchase_floor.lua:32` 逐字仍写着 `Of 1021 live turbo hero frames, 29 sit below the floor` —— 而 `live` 今天实读 **1039**(同一次 sweep 的 `C live` 行)⇒ 这句话**作为率是错的**(29/1021 ≠ 29/1039),而**它是绿的,并且会一直绿**:ratchet 结构上不可能对一个**上涨的分母**举手,`cs.ceiling` 管的是上界而没人把它架在 `live` 上。\n\n📌 **形状**:一条 `N of M` 的结论,`N` 有单侧闸、`M` 有**方向相反**的单侧闸 ⇒ **两个闸都绿的时候这条结论仍然可以变假**,而变假的那一半住在注释里没有任何东西读它。⚠️ 与 GH #624 立案句同族但**换了一层**:#624 说「红由下一个开工的组发现」,本行说「**它根本不会红**」。",
+   "ruled_at": "2026-09-15T19:xxZ",
+   "executor": "总监自己(harness 编排权;⛔ 不派给协同组 —— RULING 58 刚裁过一次「两条路由各指开对方」把红养了十轮,本行开行时就把执行人写死)",
+   "trigger": "⛔ **没有自动触发器,而这一次是按构造没有**:本行记的现象**不会让任何测试变红**(那正是立案句)⇒ 开工自检的 `trunk-red(lua)` 腿、push 闸三条腿、`lua-coverage` 腿**结构上都不可能点名它**。实际取它的时机:任何一轮总监有余量;或下一次有人重设某份普查的语料基线的那一刻(以先到者为准)。",
+   "delivered_to": [
+    "iterations/owed_executions.json(本行)",
+    "tests/test_fieldsip_atom_pricing.lua 文件头 RULING 58 §「WHAT THIS RULING DOES NOT DO」",
+    "iterations/reports/director/20260915T190802Z.md §三",
+    "iterations/streams/director.md 当前状态(2026-09-15T19:08Z)"
+   ],
+   "why_registered_here": "§DR 常驻义务:不属于任何一波、任何一个 armed id。⭐ 更硬的理由是上一条:**没有任何一条自动腿会替它举手**,而 §2.6 已量过「只活在报告散文里的交棒平均寿命一轮」。",
+   "done_when": {
+    "kind": "manual"
+   },
+   "done_when_note": "⚠️ `kind=manual`,理由是本行要的是**一个裁定**(`live` 这类分母该用哪种闸),而裁定的产物形状取决于裁定本身,写不成 `path_contains_all`。\n**结清判据(总监自己核,一眼判得出,两条同时成立)**:(甲) `tests/corpus_scale.lua` 里出现一个**双侧**的分母闸(名字不限,判据是它对**上涨**也 fail),且 `tests/test_corpus_scale.lua` 里有一条断言钉住「上涨也红」这半;(乙) `tests/test_buydeep_purchase_floor.lua` 与 `tests/test_tpdeep_recover_band.lua` 的 `live` 钉子改用它,**且 buydeep `:32` 那句 `Of 1021 live turbo hero frames` 的分母同轮改对**。\n⛔ **只改注释里的 1021 不结清本行** —— 那恰好是把下一次漂移重新变静默,本行的立案句就是「没有东西会举手」。"
   }
  ],
  "retired": [
