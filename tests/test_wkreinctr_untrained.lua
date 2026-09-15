@@ -250,10 +250,16 @@ tests['[corpus] the sweep drives the real corpus and lands 14 helper flips'] = f
         and G.FN_GATE_FIRST == 1 and G.FN_GATE_ORDER == 1
         and G.FN_EARLY_RETURN == 1 and G.FN_NIDS == 2,
         'the structural facts the sweep parses out of the helper moved')
+    -- ⭐ CORRECTED 2026-09-15 (hero, `wkrank0` round): the sweep used to count
+    -- files whose TEXT mentions the name, which is not the question.  A doc note
+    -- in bots/BotLib/hero_skeleton_king.lua citing this helper as prior art for
+    -- the same blindness on a different call site turned this red on a tree
+    -- where nothing callable had moved.  The sweep now drops line comments
+    -- before matching; see its own ⭐ note for the limit that remains.
     assert(G.FILES_NAMING_HELPER == 2,
-        tostring(G.FILES_NAMING_HELPER) .. ' files under bots/ name this helper, '
-        .. 'not 2 (its definition and its one caller) -- a second caller changes '
-        .. 'what the call-site column below means')
+        tostring(G.FILES_NAMING_HELPER) .. ' files under bots/ name this helper '
+        .. 'OUTSIDE A LINE COMMENT, not 2 (its definition and its one caller) '
+        .. '-- a second caller changes what the call-site column below means')
     assert(C.wk_frames == 36, 'the corpus now holds ' .. tostring(C.wk_frames)
         .. ' live Wraith King frames, not 36')
     assert(C.ship_true == 24 and C.arm_true == 10,

@@ -94,6 +94,13 @@ UNRESOLVED_HAND_READ = {
         "from the awraxfield/GH #714 round; same missing-clause fix as the line "
         "above. A gitignored farm-only file is not shipped source, so a "
         "dropped-`=` census must not count its declarations)",
+    """tests/test_wk_reserve_rank_blind.lua  ::  'ls ' .. dir""":
+        "frame_files() loops dir over DIRS == {'tests/fixtures', 'tests/frames'} "
+        "(:78, :127-:141); the table is a file-scope local built from two "
+        "literals and nothing writes to it. A plain `ls` is NOT recursive, so it "
+        "cannot reach bots/Customize/. Hand-read 2026-09-15 (hero desk -- this "
+        "desk's own walk, from the wkrank0 round, registered in the SAME work "
+        "unit that landed it, per GH #803)",
     """tests/test_lion_ult_aoe_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:127-:131); plain `ls` is NOT "

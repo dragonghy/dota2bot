@@ -22,6 +22,61 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-183. ✅ **⭐ 开工第一条命令(`-182` 问「门开在哪里」,本轮的答案是:门已经开了,而且它管用):**
+   `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?"; tail -50 /tmp/sc.log`
+   —— ⭐⭐ **本轮第一条命令仍然踩了管道(证据纪律 3 同形第 18 次),而脚本的 `REFUSED` 门当场拦下它**
+   (退出码钉成 2、打「nothing was checked; this is NOT a pass」),第二条命令就对了。
+   **`-179`→`-182` 四轮的提醒零效果,门一次生效,第二次仍然生效** ⇒ **这一格可以不用再写提醒了**;
+   要写就写门。
+   主体:新 gated id **`wkrank0`**(turbo-only),落在 `bots/BotLib/hero_skeleton_king.lua` 的
+   新 `X.IsReincarnationReserveUnlearned` + `X.ShouldSaveMana` 末尾的一条**独立**释放语句。
+   报告 `iterations/reports/hero/20260915T170000Z.md`;新 `tests/test_wk_reserve_rank_blind.lua` **17 绿**;
+   变异台 `tools/agent/mutstand_wkrank0.sh` **13/13 全杀**;推进 **GH #407** 第二格(**不关**,见下)。
+   **零 EC2 / 零 CE / S3 读取 0 个对象。P4.4 自评:(i)**(`bots/` 动了一个文件)。
+   - ⭐⭐ **`-182` 交下来的「缺 `GetManaCost()` 对未学技能的返回值」不是被买到的,是被界住的。**
+     两种答案都让杠杆成立:返回 **0** ⇒ 出货那一项**算术不可达**(两个调用点都把
+     `not IsFullyCastable()` 排在 `X.ShouldSaveMana` 之前的 `or` 链里 ⇒ 进得来就蕴含
+     `GetMana() >= 价` ⇒ `>= 0 < 0` 恒假;`X.GetReincarnationReserve` 救不了它,它返回那个价的
+     **最小值**)⇒ **字节级 no-op**;返回**一级价** ⇒ 规则为一个放不出来的大招扣住 220 蓝 ⇒ 正是要删的。
+     ⇒ **那个未决读法移动的是域的大小,从不移动对错。** §4 两条分支都驱动。
+     ⭐ 与 `-182`(GH #833)同族**但不是同一句话**:那次是「争议点不存在」,这次是
+     **争议点存在且确实买不到,而两个答案给出同一个裁定**。
+   - ⭐⭐ **盲区是测量出来的不是论证出来的**:在 **7 个出货保蓝真的开火**的真实帧上把 R 的 rank
+     从 1 挪到 0(其余操作数一个不动),出货答案 **0/7 被移动**;armed 之后 **7/7 全释放**。
+     一条规则的答案**推不动**它所关于的那件事 —— 这是读数不是句子。
+     ⚠️ 那 7 帧是**探针不是域**:§3.3 驱动「按录制原样(R rank ≥ 1)的真实帧上 armed 一格都不动」。
+   - **域 = 0,而这个 0 不是「杠杆是死的」**:48 个计价活 WK 帧里 `nLV>=6` **32** 帧、R rank 0 **16** 帧,
+     **交集空**(16 帧全在英雄 1-5 级)。§2.3 专门断言**两个集合都非空**,免得 §2.2 读成「没什么可看的」。
+     不一致的 **42** 帧是 W34 归档扫描量到的,离线语料复现不了。
+   - ⭐ **顺带买到:同一个谓词兄弟文件说 6、本文件说 7,两个都对。**
+     抄兄弟 `test_wk_save_mana_unreachable_cap.lua` §2 的「开火 6 帧」当场红,差的那帧
+     `f_260909_215227_zeus_jump_283.lua` 住在 **`tests/frames`**,而兄弟只切 `tests/fixtures`。
+     ⇒ **一个在某种切法上量到的数不是关于另一种切法的数**,而两边散文都只写「priced 帧」;
+     `tests/frames/` 正是近期新帧的落点 ⇒ 这个差只会变大。变异体 **M7** 专打它。
+   - ⭐ **12 个变异里有两个变异的是测试(M7/M8),而它们是最重要的两个** —— 本杠杆的头条是一个**零**,
+     而零恰恰是坏掉的仪器**免费**产出的读数。**M8** 把三行无 `abilities` 的 WK 放进计价语料:
+     空句柄答 rank 0,而本杠杆读的就是 rank 0,其中**两行在 6 级以上** ⇒ 空交集凭空变成非空。
+     **没做这个切分的一轮会报出本杠杆的第一批域成员,错在感觉像成功的那个方向。**
+   - ⚠️ **本轮开工自检与变异台有时间重叠**(自检 Lua 腿在变异台运行期间跑完)。**GH #229 原则上会咬**;
+     实际只报出 `test_fieldsip_atom_pricing`(GH #814,协同组,与 WK 无关)⇒ 没落成错误归因,
+     **但重叠要登记,不能因为结果看着没事就不写**。
+   - ⛔ **trunk red 不代修**:`test_fieldsip_atom_pricing`(**GH #814**,协同组)。
+     `selfcheck worst exit: 3`,Lua 腿 **9 个 check 打 UNCERTIFIABLE**(120s 预算内没跑完)⇒
+     **不是通过,本轮不引它们**。
+   - **接力棒**:`queue.json` **hero-90**(零 EC2、优先级 2、只读归档)—— ⚠️ 要的**不是**归档扫描已报的
+     那 42 帧,而是那 42 帧里**出货保蓝真的在开火**的那一部分;两个数之差就是 (a) 能不能支撑本杠杆的全部问题。
+     ⛔ **必须按分支 B 定价报**(未学按一级价),按分支 A 域由算术恒为 0,那个 0 不是读数。
+     ⛔ 0 事件 ⇒ **DO-NOT-ARM 不是 reject**。
+   - **下一轮主体第一候选**:⚠️ **`tests/test_wk_reserve_rank_blind.lua` 与
+     `tests/test_axe_cull_blade_mail.lua` 都不在推送闸的 manifest 里**(开工自检 `lua-coverage` 腿点名了
+     后者,`no_manifest_row`)。本文件首行带 `[ratchet]` 标签 ⇒ **被开工自检的 tag 腿捡得到**;
+     **`test_axe_cull_blade_mail.lua` 首行没有标签 ⇒ 三条腿都看不见它**(GH #624 形状,
+     而且是**本组上一轮自己造出来的**)。⛔ 修法**不是**跑 `lua_gate_measure.py` 全量重测 ——
+     GH #783:重测会**清空 `known_red` 赦免名单**(现 6 条),把下一个人的 push 挡死。
+     先**实测那两个文件各自的秒数**,再决定是打标签(进 120s 预算已经超了的自检腿)还是
+     按「昂贵且别处看着」声明 —— ⚠️ 自检本轮 `5a0` 就是因为 120s 没跑完才 UNCERTIFIABLE,
+     **加文件会让那条腿更糟**,这一格要连着 GH #812 / #804 的预算问题一起想。
+
 -182. ✅ **⭐ 下一轮第一条命令仍然用重定向:**
    `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "SELFCHECK_EXIT=$?"`
    —— 证据纪律 3 同形**第 17 次**,`-179`/`-180`/`-181` **连着三轮**把提醒放在 backlog 第一行**都没奏效**。
@@ -8111,6 +8166,58 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-15T17:00Z(报告 `iterations/reports/hero/20260915T170000Z.md`;**backlog:新开 `-183`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`wkrank0`**(turbo-only,**未 armed**);
+  推进 **GH #407** 第二格(**不关**);新 queue 请求 **hero-90**;**P4.4 自评:(i)**)
+  **主体:WK 保蓝规则的五个操作数里没有一个是 R 的 rank —— 而卡了三轮的那个「买不到的引擎裁读」不必买。**
+  - ⭐⭐ **界住而不是买到。** 引擎对**未学**技能的 `GetManaCost()` 返回什么,两种答案都让杠杆成立:
+    返回 **0** ⇒ 出货那一项**算术不可达**(两个调用点都把 `not IsFullyCastable()` 排在
+    `X.ShouldSaveMana` 之前的 `or` 链里 ⇒ 进得来就蕴含 `GetMana() >= 价` ⇒ `>= 0 < 0` 恒假;
+    `X.GetReincarnationReserve` 返回那个价的**最小值**,救不了它)⇒ **字节级 no-op**;
+    返回**一级价** ⇒ 为一个放不出来的大招扣住 220 蓝 ⇒ 正是要删的。
+    ⇒ **那个未决读法移动的是域的大小,从不移动对错。** §4 两条分支**都驱动**。
+  - ⭐⭐ **盲区是测量出来的**:7 个出货保蓝**真的开火**的真实帧上,把 R 的 rank 从 1 挪到 0
+    (其余操作数一个不动)⇒ 出货答案 **0/7 被移动**、armed **7/7 释放**。
+    答案推不动它所关于的那件事,这就是盲区本身。⚠️ 那 7 帧是**探针不是域**(§3.3 驱动)。
+  - **域 0**:48 个计价活 WK 帧里 `nLV>=6` **32** / R rank 0 **16** / **交集空**(16 帧全在 1-5 级)。
+    §2.3 断言**两个集合都非空**,免得 §2.2 读成「没什么可看的」。不一致的 **42** 帧在 W34 归档里,
+    离线复现不了。
+  - ⭐ **顺带:同一个谓词兄弟文件说 6、本文件说 7,两个都对** —— 兄弟只切 `tests/fixtures`,
+    第 7 帧 `f_260909_215227_zeus_jump_283.lua` 住在 **`tests/frames`**。变异体 **M7** 专打。
+  - ⭐ **12 个变异里两个变异的是测试(M7/M8),而它们最重要** —— 头条是一个**零**,零正是坏仪器
+    免费产出的读数。**M8** 放三行无 `abilities` 的 WK 进计价语料(空句柄答 rank 0,两行在 6 级以上)
+    ⇒ 空交集凭空变非空 ⇒ **没做这个切分的一轮会报出域成员,错在感觉像成功的方向**。
+  - ⭐ **存取器用 `IsTrained()` 不是 `GetLevel() < 1`,而这不是口味**:两者对每个引擎答案等价,
+    但只有前者是本树自己的约定(huskar 块 / `axeblink` / `J.IsWkReincarnationArmed` 的 `wkreinctr`
+    都先问 `IsTrained()` 再相信一个技能句柄)—— **只被大多数实例遵守的约定就是 GH #235 的形状**。
+    变异体 **M13** 把两者对调:**每条行为读数都不动**,只有 §1.1b 看得见。
+  - ⚠️ **两条先行工作,免得本轮读数被当成发现**:(1) 同一盲区在第二个消费点
+    `J.IsWkReincarnationArmed`(`jmz_func.lua:12618`,关的是**整条撤退模式**)上早已立案、已有闸
+    `wkreinctr` —— ⚠️ **两根杠杆两个调用点,谁也不是谁的证据**;(2) 「域 = 0」有先行裁定
+    `tests/test_wk_rank0_absence_join.lua`(它在 **36** 帧上得到同一个零,并裁定那两帧「7 级 + 大招未学」
+    **就是缺席行**)⇒ 本轮 §2 是在 **48** 帧上**独立重取**,不是首次得到。
+  - ⭐ **本轮自己造成的那条红是一个仪器缺陷不是一次改名,当轮修掉**:
+    `tests/_wkreinctr_sweep.lua` 数的是 `grep -rl 'IsWkReincarnationArmed' bots/`,即**文本里提到这个名字的文件**,
+    而 `test_wkreinctr_untrained.lua` 问它的是**「有没有第二个调用者」**。**注释不是调用者。**
+    本轮 §6b 那条文档引用让两种读法**第一次分开**:**旧读法 3 / 新读法 2**,掉出来的正是只在 `---` 注释里
+    提到它的 `hero_skeleton_king.lua`。⇒ 改成**先滤行注释再匹配**。⚠️ 限度:只处理**行注释**形式,
+    `--[[ ]]` 块里的提及仍会被数进去(`bots/` 今天没有)—— **更小的洞,不是没有洞**。
+    ⛔ 另一条路(把注释里那个 token 改写掉)会让红消失而**缺陷留下**,且让引用源码普查搜不到。
+  - 验证:新测试 **17 绿**、变异台 **13/13**、`luacheck bots game` **0 警告**(`GATE_EXIT=0 CLEAN`);
+    `run_tests.lua wk` **427 tests / 4 failures**,其中 **3 条既有 known_red**
+    (`wk_level_supply_horizon` 两格 + `wk_q_lane_reach` 一格,**全是语料增长的再基线欠款**,
+    manifest 自 09-14 已赦免),第 4 条即上一条、当轮修掉;
+    `test_bots_walk_farm_only.py` **8/0**(新 `io.popen` **同轮**登记 `UNRESOLVED_HAND_READ`,GH #803);
+    `call_arity_census` / `check_armed_wiring` / `inverse_gate_census`(23/0)/ `gated_getter_stub_census`
+    / `gate_claim_consistency`(16)/ `gated_helper_nesting_census`(10)/ `focus_mana_cost_consumer_census`(9)
+    / `smoke_load`(3)**全 0 失败**。
+  - ⚠️ **开工自检与本轮变异台有时间重叠**(GH #229 原则上会咬);实际只报出
+    `test_fieldsip_atom_pricing`(GH #814,协同组,与 WK 无关)⇒ 没落成错误归因,**但重叠登记在案**。
+  - ⛔ **trunk red 不代修**:`test_fieldsip_atom_pricing`(**GH #814**,协同组)。
+    `selfcheck worst exit: 3`;Lua 腿 **9 个 check 打 UNCERTIFIABLE**(120s 没跑完)⇒ **不是通过**。
+  - ⭐ **证据纪律 3 第 18 次同形,而这次是门拦下的**:第一条命令又用管道,`routine_selfcheck.sh` 的
+    `REFUSED` 门把退出码钉成 2 并打「nothing was checked; this is NOT a pass」。
+    `-179`→`-182` 四轮提醒零效果,**门连着两轮生效** ⇒ `-183` 不再写提醒。
 - 2026-09-15T14:13Z(报告 `iterations/reports/hero/20260915T141314Z.md`;**backlog:新开 `-182`**;
   **零 EC2 / 零 CE / 零 S3 读取**;新 gated id **`axecullbm`**(turbo-only,**未 armed**);
   认领并结清 **GH #833**;新 queue 请求 **hero-89**;**P4.4 自评:(i)**)

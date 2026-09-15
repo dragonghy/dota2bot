@@ -153,10 +153,26 @@ G.RETREAT_FIGHT_GUARD =
     ret:find('J.IsInTeamFight(bot, 1200)', 1, true) and 1 or 0
 -- The helper has exactly ONE caller in bots/; a second one would change what
 -- the call-site column means, so it is counted rather than assumed.
+--
+-- ⭐ CORRECTED 2026-09-15 (hero, `wkrank0` round).  This read was
+-- `grep -rl 'IsWkReincarnationArmed' bots/`, i.e. FILES WHOSE TEXT MENTIONS THE
+-- NAME -- and the question it is asked is "is there a second CALLER".  A
+-- comment is not a caller, and the two readings separated for the first time
+-- the day a doc note in bots/BotLib/hero_skeleton_king.lua cited this helper as
+-- prior art for the SAME blindness on a different call site (`wkrank0`).  The
+-- census went red on a tree in which nothing callable had moved -- a presence
+-- grep standing in for a call-site count, which is this repo's most-repeated
+-- instrument defect.  Comment lines are now dropped before the match.
+-- ⚠️ THE LIMIT, stated rather than implied: the filter drops lines whose first
+-- non-space characters are `--`, so it handles the line-comment form only.  A
+-- mention inside a `--[[ ]]` block would still count, and there is none in
+-- bots/ today.  That is a smaller hole than the one it replaces, not no hole.
 local nCallers = 0
 do
     local p = assert(io.popen(
-        "grep -rl 'IsWkReincarnationArmed' bots/ 2>/dev/null | wc -l"))
+        "grep -rn 'IsWkReincarnationArmed' bots/ 2>/dev/null"
+        .. " | grep -v '^[^:]*:[0-9]*:[[:space:]]*--'"
+        .. " | cut -d: -f1 | sort -u | wc -l"))
     nCallers = tonumber(p:read('*a')) or -1
     p:close()
 end

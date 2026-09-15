@@ -2384,6 +2384,110 @@ function X.GetReincarnationReserve( nAbility )
 	return nReachable
 end
 
+--- Whether the Reincarnation reserve is being held for an ability the hero has
+--- not learned.
+---
+--- Soak candidate `wkrank0` (turbo-only, INERT until armed).  GH #407's other
+--- open cell -- the RANK BLINDNESS -- and a different defect from both siblings
+--- above: `wksavecap` asks how much is reserved, `wksaveidle` asks whether the
+--- reserve is idle, and this one asks whether there is anything to reserve for.
+---
+--- THE DEFECT.  X.ShouldSaveMana's five operands are hero level, two non-nil
+--- handles, R's remaining cooldown and a mana comparison.  NOT ONE OF THEM ASKS
+--- WHETHER R IS TRAINED.  `nLV >= 6` stands in for it, and the stand-in is not
+--- equivalent: a Wraith King at hero 6+ with Reincarnation still at rank 0 is a
+--- real state, and an UNLEARNED ability reports `GetCooldownTimeRemaining() = 0`
+--- , so the availability clause waves it through as well.  The lock then holds
+--- mana against a death trigger that does not exist -- Reincarnation refunds
+--- nothing and revives nobody at rank 0.
+---
+--- ⭐⭐ THE READING THIS DESK WAS TOLD IT HAD TO BUY IS NOT NEEDED -- IT IS
+--- BOUNDED OUT.  GH #407's archive scan closed with "`GetManaCost()` on an
+--- unlearned ability is something a replay cannot answer; that half needs a
+--- bot-side fixture", and the backlog carried the question forward.  The
+--- question does not have to be settled, because BOTH of its answers leave this
+--- lever correct and leave its direction unchanged:
+---
+---   * If the engine prices an unlearned ability at 0, the shipped clause is
+---     ARITHMETICALLY UNREACHABLE on exactly these frames and this lever is a
+---     byte-for-byte no-op.  Both call sites (X.ConsiderQ, X.ConsiderW) put
+---     `not ability:IsFullyCastable()` ahead of X.ShouldSaveMana in an `or`
+---     chain, so the function is only ever entered when the ability IS fully
+---     castable, which entails `GetMana() >= ability:GetManaCost()`, i.e.
+---     `GetMana() - GetManaCost() >= 0`.  A reserve of 0 then makes the last
+---     clause `>= 0 < 0`, false.  (X.GetReincarnationReserve cannot rescue it:
+---     it returns a MINIMUM of that price, so it is 0 too.)
+---   * If the engine prices it at the rank-1 price, the rule holds 220 mana for
+---     an ability that cannot be cast at all, and this lever removes that.
+---
+--- So the undecided reading moves the lever's DOMAIN SIZE and never its
+--- correctness -- which is why it ships gated rather than waiting on an answer
+--- nobody can buy offline.  tests/test_wk_reserve_rank_blind.lua section 3
+--- drives both branches of that disjunction rather than quoting this note.
+---
+--- DOMAIN, and it is 0 HERE while being non-zero in the world.  Across the 48
+--- priced live Wraith King frames in tests/fixtures + tests/frames, hero level
+--- and "R is trained" AGREE on every single one: the 32 frames at level >= 6 all
+--- carry R at rank >= 1, and all 16 rank-0 frames sit at hero level 1-5, where
+--- `nLV >= 6` already refuses.  The disagreement the lever exists for was
+--- measured somewhere else: W34's archive scan found 42 frames of `nLV >= 6` and
+--- R rank 0 (GH #407 comment 3).  A 0 that comes from a corpus assembled for
+--- other questions is not evidence of a 0 in game, and section 2 pins the
+--- census rather than this sentence.
+---
+--- DIRECTION.  This can only move X.ShouldSaveMana true -> false, never the
+--- other way: the shipped predicate is computed and bound FIRST and the release
+--- is consulted only once it already said true.  It is its own statement rather
+--- than a disjunct bolted onto `wksaveidle`'s, so the two stay independently
+--- armable (the pullcad trap) and neither is named in the other's gate.
+---
+--- ⭐ THE TREE ALREADY KNEW, AND IT KNEW IT ABOUT THIS EXACT ULTIMATE.
+--- J.IsWkReincarnationArmed (bots/FunLib/jmz_func.lua ~:12618) is the SAME
+--- blindness in a second consumer -- it switches the whole retreat mode off on
+--- an ultimate the hero may not own -- and it already carries the conjunct,
+--- gated as `wkreinctr`.  Its note names the tree's own precedent: the huskar
+--- and `axeblink` blocks in mode_retreat_generic both ask `IsTrained()` before
+--- believing an ability handle.  This helper uses `IsTrained()` for that reason
+--- and not `GetLevel() < 1`: the convention is what a source-level sweep for
+--- "who checks ownership before pricing an ability" can actually find.
+--- ⚠️ `wkrank0` and `wkreinctr` are DIFFERENT levers on different call sites
+--- (a mana reserve vs a retreat-mode veto) and neither is evidence for the
+--- other; what they share is the defect shape.
+---
+--- ⚠️ A fixture row with no abilities list hands back a blank handle on which
+--- EVERY read falls through to the generic mock defaults -- `^Get` 0, `^Is`
+--- false -- so `IsTrained()` answers false and `GetLevel()` answers 0, which
+--- are exactly the answers a genuinely unlearned ultimate gives.  That is an
+--- ABSENCE, not a reading, and the choice of accessor does not change it.  It
+--- is why every census below is driven over the PRICED corpus only.  The join
+--- that settled this for Wraith King specifically is
+--- tests/test_wk_rank0_absence_join.lua, which found the two hero-level-7
+--- "untrained ultimate" frames another file was quoting to be exactly those
+--- absence rows -- and concluded, as section 2 below independently does on a
+--- wider corpus, that this tree holds ZERO recorded frames of the shape.
+---
+--- CONDITION (c), argued rather than assumed.  Reserving mana for Reincarnation
+--- is correct play: it is a death-triggered ultimate, it costs mana AT THE
+--- MOMENT OF DEATH, and a Wraith King who dies without it is simply dead.  That
+--- argument has one premise -- that the hero owns the ability.  At rank 0 there
+--- is no death trigger to pay for, so the reserve buys nothing and costs the
+--- hero his only disable.  Turbo sharpens it: the levelling curve puts heroes
+--- past level 6 quickly while this tree's skill-point stall (GH #822) leaves
+--- points unspent, so the disagreeing state is reached more often here than in
+--- normal mode, not less.
+--- ⚠️ This lever does NOT touch the reserve's SIZE (`wksavecap`) or its
+--- idleness (`wksaveidle`), and it is not evidence for or against either.
+function X.IsReincarnationReserveUnlearned()
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkrank0' ) )
+	then
+		return false
+	end
+
+	return not abilityR:IsTrained()
+
+end
+
 --- ⚠️ NO NIL-GUARD HERE, AND THAT IS A RULING, NOT AN OVERSIGHT (GH #794,
 --- 2026-09-13).  A replay-check fixture carrying a DEAD Wraith King row made
 --- the first comparison of the chain below raise `attempt to compare number
@@ -2436,6 +2540,19 @@ function X.ShouldSaveMana( nAbility )
 	-- true -> false and never the other way.  That is a property of the shape,
 	-- not of today's arithmetic inside the helper.
 	if bShipped and X.IsReincarnationReserveIdle()
+	then
+		return false
+	end
+
+	-- soak candidate `wkrank0` -- see X.IsReincarnationReserveUnlearned above.
+	-- A SEPARATE statement rather than a second disjunct on the line above, so
+	-- that arming either id alone reaches its own release and neither gate
+	-- mentions the other.  Same shape argument as the sibling: `bShipped` is
+	-- already bound, so this can only move the answer true -> false.  The helper
+	-- dereferences abilityR without repeating the nil check because `bShipped`
+	-- contains `abilityR ~= nil` and is false otherwise, which short-circuits
+	-- the call away.
+	if bShipped and X.IsReincarnationReserveUnlearned()
 	then
 		return false
 	end
