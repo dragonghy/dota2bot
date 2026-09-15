@@ -18361,7 +18361,18 @@
     唯一「arm 四粒同号 + `sd < |arm|`」的是 **`overextend_alone`(arm +2.066/局,sd 1.773,0/4 为负)**
     —— RULING 54 那句「真正付账的是它」**对,而且它是唯一那一个**。
     `tp_under_threat`(−0.924)/ `lowhp_limbo`(−0.527)非 FLIP、判决不变。
-  - ⭐⭐ **发现甲 [harness] —— dumper 对同一个 `.dem` 不可复现**(本轮头号产出,比交付物值钱)。
+  - ⭐⭐ **发现甲 —— dumper 对同一个 `.dem` 不可复现。⚠️ 搜过重后发现它不是新的:GH #666**
+    (09-09 立,**本组自己立的**,零评论、仍 open,根因「Go map 迭代序 `dumper/main.go`」
+    与验收「同 `.dem` 两次 timeline md5 逐位相同」都已写死)⇒ **本轮是独立复现,追评,不开新单**。
+    ⭐ **「重新发现」本身才是要读的那句**:这个缺陷**有主、有验收、六天零推进**,
+    期间**静默污染了总监亲自派下来的那一棒**,而那一棒的验收里**没有一条**会让它举手。
+    ⭐ **相对 #666 新增三样**:(1) 换语料换二进制的独立复现(#666 是 W60 96 局 /
+    `md5 fb6b9fd0…`,本轮是 09-11 波 81 局 / cache key `46fe9c6a…`)⇒ **不是某次坏构建**;
+    (2) **第一次量出它对正在被引用的读数的代价**(§3.4 `d(nondet)`)——
+    #666 自己写「宽扫表本来就不进结论,**那条纪律恰好一直挡着它**」,
+    **而 (i-e) 立法之后那道挡板拆了,没人回头改 #666 的优先级**;
+    (3) #666 请求 4 拿到**跨语料证据**:两份互不相干的语料上逐位稳定的是**同两个检测器**
+    (`lowhp_limbo` / `missed_cs_at_tower`)⇒ 顺序敏感性是**每个检测器自己的性质**。
     局数/分层/种子/`unparseable` 全复现,**检测器计数 14 个里 11 个不同**,而
     `git log --since=12:00Z -- detect.py dumper sweep_run.sh get_dumper.sh` **零 commit**、dumper 同 key。
     定位两条腿:`detect.py` 对固定 timeline **byte 相同**(确定性);dumper 同 `.dem` 两遍
@@ -18401,11 +18412,19 @@
     另 **3 次 `s3 ls`**(⚠️ LIST 不是对象,单独登记,不并进 `<N>`)。⛔ **不写「零支出」。**
   - **开工自检**:⛔ 第一条命令**误接管道**被它自己挡住(`REFUSED: … stdout is a pipe; exit 2,
     nothing checked`,**它自报第 5 次复发**);改重定向重跑,⛔ **没套 `timeout`**。
-    ⚠️ **收尾时仍未打出终行**(`selfcheck worst exit: N`),停在 `=== trunk health (fast Lua detectors) ===`,
-    已跑约 **2h** ⇒ **登记为「本轮没有拿到自检判决」,不是「通过」**(GH #171:没跑成 ≠ 通过)。
-    已读到的部分:`promote-atom constraints: OK`、`no armed id hangs under an unarmed gate -- OK`、
-    `UNCOVERED SET GREW`(`test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua`,
-    ⚠️ **不是本组的**,本轮零 Lua 改动)。
+    ⚠️⚠️ **报告初稿写「收尾时仍未打出终行 ⇒ 没拿到判决」,那句已更正** —— 它在那之后跑完了
+    (全程约 2h):`legs run 13`、**`selfcheck worst exit: 3`**、
+    `FINDINGS: queue-rulings owed-executions lua-coverage trunk-red(python)`、
+    `UNCERTIFIABLE: none`。⭐ **这次更正登记下来,因为它正是本组 W72 那条纪律的反例**:
+    初稿用「**我此刻还没看到终行**」去满足「**它没跑完**」。正解仍是那条 ——
+    **轮询日志最后一行直到它真的出现**,不要用「此刻还没有」下判决。
+    **逐条查过归属,本组一条都不占**:`trunk-red(python)` 与批测台 21:08Z 点名的同族
+    (⚠️ 本轮三次 push 的 `py gate` 都是 `94 ran, 0 findings` —— 闸只跑 87 个快棘轮,
+    **那条红在闸外**,两句不矛盾);`lua-coverage` = GH #806;`queue-rulings`/`owed-executions` 属总监。
+    ⚠️ **别组的洞连续第五轮**:看守自检自己那三条 python 用例仍 `NOT RUN (inside a leg)`。
+  - **issue**:**净增 +1**(§四那条 [bug]);**追评 GH #666**(发现甲,搜重命中);
+    **1 条评论**发到 **GH #835**(§二交付表)。⭐ **搜重省下的不是一个重复单,是一次错误的归属**
+    —— 开成新单的话,「这个缺陷六天没人动」这个**真正的信号**会被拆成两条各自看起来很新的单。
   - **下一轮第一件事**:⭐ **`overextend_alone` 逐帧深查**(唯一站得住的一格;检测器计数不是行为,
     要回答的是那多出来的 episode 是修好了还是更糟);⛔ **§三的 [harness] 落地前,
     不要再用检测器计数做任何新裁定**,引 §二的表必须连 `d(nondet)` 一起引。
