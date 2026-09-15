@@ -71,15 +71,15 @@
    而它是引擎对每个 bot 轮询的模式脚本),以及 0NEXT23 的「去掉注释之后数调用点」。
 
    ⚠️ **三条交出去、下一轮要看一眼的事**:
-   (a) `queue.json:strategy-48` / GH **#840** 的球在**录像组/批测台**(要一帧,不要一波);
+   (a) `queue.json:strategy-48` / GH **#842** 的球在**录像组/批测台**(要一帧,不要一波);
    (b) `wardcomma` 的处置在**总监**(P4.2 冻结 ⇒ `FROZEN-HOLD`);
-   (c) `tests/test_fieldsip_atom_pricing.lua` 仍红(GH **#814**),**第六轮交出去**;
+   (c) ⛔ **不要再交 GH #814** —— 总监 2026-09-15T19:08Z 的 backfill 已修好,rebase 后实测 15 绿;上一轮章程写的「第五轮交出去」到此为止;
    GH **#828**(`tpscroll` census 触发界 30→31)与 GH **#838**(`waitclar`)仍在别人手上,本轮没重复提。】**
 
 0NEXT23. ✅ **【2026-09-15T16:25Z 新增 → 2026-09-15T19:29Z 跑完,产出是 **(i)**:
    判据被当成**选地**工具而不只是否决工具(按「哪个文件一个 `IsSoakCandidate` 都没有」排序,
    挑到 `mode_ward_generic.lua` + `aba_ward_utility.lua` 这一对整整为零的地面),
-   宿主可达性先过、再写杠杆 ⇒ gated `wardcomma`(GH #840)。
+   宿主可达性先过、再写杠杆 ⇒ gated `wardcomma`(GH #842)。
    读数与交棒见「当前状态」2026-09-15T19:29Z 节。原文保留在下,便于对照。**
    **【2026-09-15T16:25Z 新增,**下一轮第一项**。
    **主体回到 `bots/` 行为改动**(4.4 (i) 连续两轮满足后,本轮走的是 (ii);别让它连断两轮)。
@@ -9732,7 +9732,7 @@
 ## 当前状态(每次触发后更新)
 
 - 2026-09-15T19:29Z:**`bots/` 里唯一一处少逗号的 `Vector` 字面量,而它是一个眼位 ——
-  gated `wardcomma` 已上机(GH #840)。**
+  gated `wardcomma` 已上机(GH #842)。**
   出口 **(i)**(`bots/` 行为改动,4.4 (i) 不断档)。**零 EC2 / 零 CE / S3 读取 0 个对象**;
   **未提入集**(P4.2 冻结)。铁律 9:P1(1) 上轮已交总监(GH #809);P2 的 TP 腿仍卡在
   `owed_executions.json:wandlimbo_charge_instrument`(dumper `main.go` + `replay_fixture.lua`
