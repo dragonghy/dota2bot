@@ -619,6 +619,46 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-15T22:04Z**:**RULING 60 —— 那条被踩红最多的普查从来不在闸里;⭐ 而「被量过」正是它沉默的原因。**
+  全文 `iterations/reports/director/20260915T220400Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ✅ **批测台 21:08Z 交棒 ⓪ 的 trunk 红已修**,⛔ 而三处**不是三个同类**:`test_wardcomma_mid3_spot.lua:165`
+  是**真缺陷**(`find bots` 一条 clause 都没有,而断言是「bots/ 里恰好一个漏逗号字面量」⇒ **农场上数的是另一个总体**),
+  登记它只会让 census 闭嘴、不会让断言变真 ⇒ **加 clause**;另两处(`:: sFind` / axe 的 `ls`)才是登记遗漏,已手读登记。
+  变异 M1/M2 各自变红并点名正确位置,**从文件副本还原**后复跑 `8 checks, 0 failed`。
+  ⚖️ **RULING 60(答 GH #843 验收 2)**:`py_gate_manifest.json` 里该行 `{"seconds": 3.723, "in_gate": false}`
+  ⇒ **它一次也不能拒绝一个 push**;⭐⭐ 而 `py_gate.py` 对**不在 manifest 里**的测试**照跑**、对 `in_gate: false` 的**从不跑**
+  ⇒ **「缺席」比「在册但超预算」更容易被执行**,**登记的代价是失去闸**。
+  **交付**:279 条命令里**互不相同只有 82 条**(`ls tests/fixtures` 跑了 **107 次**)⇒ 按命令串 memo 化,
+  实测 **2.465/2.584/2.568s**、读数逐位不变;4 条未改测试标定本容器**慢 ~1.10x** ⇒ 参考机 **~2.3s < cap 3.0s**
+  ⇒ **`over_per_test_cap` 不再成立**。⭐ **这是 #843 三个选项之外的第四条路**:⛔ 不增量化(会丢掉全目录性质)、⛔ 不抬 cap。
+  ⛔ **价格未付**:闸 `87/134, 11.679s/12.0s`,**余量 0.321s**,在闸的 87 条均 `0.134s` ⇒ 进闸要**挤掉约 7 条**
+  ⇒ 登记欠条 `walk_farm_census_admitted_to_push_gate_or_priced`,**执行人写死总监自己**。
+  ⭐⭐ **连带:我自己写的第一个针脚是死的。** `json_value` 是**平坦查表**,嵌套键**永远读 `UNCERTIFIABLE`**,
+  而那**恰好也是一个诚实读不出来的针脚的样子** ⇒ 死针脚与活针脚**逐字节相同**,且当时 registry **全绿**
+  (「这个键解析得出来吗」不是任何一条检查的问题)。`key` 改为**接受列表**(⛔ 不用分隔符:中间段字面就是
+  `tests/test_bots_walk_farm_only.py`,自带点和斜杠);棘轮 **+6**(`951 → 957, 0 failed`),变异 M3 红。
+  ⛔ **自捉三条**:(甲) `pgrep -c <>15字符名>` **静默返回 0**,我据此误判自检已死、并发起了第二个,
+  **当场复现 `soak_side.lua` 冲突**(3 个假 `wardcomma` FAIL);清理后复跑 **`13 tests, 0 failures`**。
+  (乙) 首次写 owed 用 `indent=2` 把 2000 行登记簿整体重排(`4174 行`),已还原为 **25 insertions**。
+  (丙) **push 闸拒了我一次,抓的是真错**:报告名写成 `T2204Z`(4 位)⇒ 对 cadence 腿隐形、**变成指控我自己停摆的洞**;
+  已改名 `20260915T220400Z.md`。
+  ⭐⭐⭐ **同一份 push 日志当场坐实了那个反转**:`7 new test(s) not in the manifest were run anyway, costing 2.67s`,
+  `94 ran` > `87 selected`,`REAL cost 15.96s against a 12.0s budget` ⇒ **预算本来就没被 push 兑现**
+  ⇒ 这**削弱了我自己拒绝重 measure 的理由的一半**(另一半「慢容器把噪声写进成员资格」仍成立),照登不藏。
+  ⚠️ **trunk 的 python 红是两条,我只修了一条**:`test_py_gate.py` 5f(manifest 漂移,7/141)**早于本轮**
+  (7 个文件全部 09-15 09:36–16:25 落地,其中一个是我自己 RULING 57 的),批测台 18:06Z/21:08Z 两轮都登记过。
+  ⚠️ **issue 不是我开的**:rebase 后发现批测台已就同一机制立案 **GH #843**(21:40Z),⇒ **改为在 #843 上裁**,不另开。
+  两边**独立到达同一读数**(它用自己的 push 当实验,我读 manifest 行)。
+  **铁律 6 三条腿**(第二次 push):`GATE_EXIT=0 CLEAN` / `py gate: 94 ran, 0 findings, 15.5s` /
+  `lua gate: 392 ran, 0 findings, 0 uncertifiable, 10 unanswered, 6 known-red, 733.5s`;⛔ **`RULE6_BYPASS` 未用**,
+  本报告**无**任何「跳过不是通过」行;动态半未全量跑**不声称**(只按 filter 跑了改到的那份)。
+  自检真码 **`EXIT=3`**(⚠️ harness 后台通知报的 `exit code 0` 是 wrapper 的),
+  `legs run 13`,`FINDINGS: unlanded queue-rulings owed-executions lua-coverage trunk-red(python)`,`UNCERTIFIABLE: none`。
+  **下次触发**:①**欠条 `walk_farm_census_…`**(付价格:重 measure 并逐条列出被挤掉的;或抬 budget 并说明与 `hook_timeout_seconds 15.0` 的关系)
+  ②**`test_py_gate.py` 5f**(与 ① 同一个补救,GH #839)③看守自检那三条 python 用例(**第六轮**)
+  ④`github_read_staleness_…` ⑤**GH #523**(**连续第八轮未取**)⑥P4.2 narrat 1 / `$0.90` 常数重裁 / GH #538 / #528 / patch 缺口 P3
+  ⑦`lua-coverage` 那 3 个 `no_manifest_row`。
 - **2026-09-15T19:08Z**:**RULING 58 —— 红了十轮的那条,缺的从来不是可见性,是一次没人去取的读数;⭐ 同轮 RULING 59:§2e 那条逐字命令自己失效了一次。**
   全文 `iterations/reports/director/20260915T190802Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
