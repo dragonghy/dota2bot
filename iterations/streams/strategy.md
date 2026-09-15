@@ -35,7 +35,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT24. **【2026-09-15T19:29Z 新增,**下一轮第一项**。
+0NEXT25. **【2026-09-15T22:34Z 新增,**下一轮第一项**。
+   **主体继续留在 `bots/`**(4.4 (i) 连续两轮满足,别让它断)。
+
+   ⭐⭐ **本轮买到的可迁移句,它是 0NEXT24 的判据跑通之后、在它管不到的那一格上买到的**:
+   **一条立案记录里的「在哪个表 / 哪一边」不是元数据,它就是域本身 ——
+   而它抄进 backlog 的那一刻,就不再被任何东西检查了。**
+   现场:0NEXT24 把三处重复键记成 `AfterEnemyTowerFall__Radiant[TOWER_MID_1]` 等,
+   实测**两处在 `BeforeAllyTowerFall__Dire`,且三处全是 DIRE**。差别不是笔误级的:
+   `AfterEnemyTowerFall` 要**敌方**塔倒,而 `BeforeAllyTowerFall[TOWER_MID_1]` 是
+   **我方自己中一塔还站着**时读的 ⇒ **每一局 dire 方从零分钟起**。
+   **立案时记下的域比真实域稀有一个数量级**,而 0NEXT24 的判据管的是**形状**,
+   **形状对、归属错**这一格上一轮没有任何读者。
+   📌 **判据(下一轮直接用,排在写杠杆之前)**:**把立案散文里每一个「在 X 表 / 在 Y 边」
+   都当成待验证命题,用源码走一遍并钉成断言** —— 断言要按**首次出现**取
+   (resolver 里同名常量会把表名盖掉),且 `%w` **不含 `_`**(本轮三个 Lua 模式
+   全栽在这一条上,`WardLocations%w+` 永远匹配不到 `..._Dire`)。
+   ⚠️ **判据继承 0NEXT11–0NEXT24 全部**,特别是 (午) 先问宿主可达、
+   (未) 每个零都要反向调用一次、0NEXT24 的「把命中数当结论的一部分」。
+
+   ⛔ **本轮量到、故意没落的一处(不捆绑,不同文件、不同失效方式)**:
+   `bots/FretBots/VoiceoverHeroes.lua:70` 在 `-- Bounty Hunter` 注释下把键写成
+   `npc_dota_hero_bloodseeker` → `'npc_dota_hero_bounty_hunter'`。两个后果:
+   Bloodseeker 的别名现在解析成 Bounty Hunter,**而且根本没有
+   `npc_dota_hero_bounty_hunter` 这个键**。已登记在
+   `state.json:warddupkey_20260915.filed_not_bundled`。
+   ⚠️ **下一轮开工先查这一件再决定要不要落**:这张表的**读者是谁、在不在发波人群里可达**
+   (判据 (午))—— FretBots 是否进 Turbo 对局路径本轮**没查**。查不到活读者 = **构造性的零**
+   ⇒ 转成处置题,不要写杠杆(0NEXT23 的两分法)。
+
+   ⚠️ **三条交出去、下一轮要看一眼的事**:
+   (a) `queue.json:strategy-49`(新)的球在**录像组/批测台**(**要一帧,不要一波**:
+   补回点成为 argmin 的一帧,或某个 tower 组眼位全在 360s 冷却内的一帧);
+   (b) `warddupkey` 与 `wardcomma`(GH #842)的处置都在**总监**(P4.2 冻结 ⇒ `FROZEN-HOLD`);
+   (c) ⛔ **不要再交 GH #814 / #828 / #838** —— 本轮没有重复提,别把它们当掉棒捡回来。】**
+
+0NEXT24. ✅ **【2026-09-15T19:29Z 新增 → 2026-09-15T22:34Z 跑完,产出是 gated
+   `warddupkey`:三个被重复键吞掉的眼位补回来(`queue.json:strategy-49`)。
+   判据(挑一类「语法合法但语义一定错」的形状、扫遍 `bots/`、把命中数当结论的一部分)
+   **兑现了第二条**:工具 `tools/agent/table_dup_key_census.py`,全 `bots/` **7 处 / 275 文件**
+   (3 处本 id,4 处 FretBots 声音表、故意没捆绑)⇒ **是笔误不是约定**。
+   ⛔ **开工先查项的答案是「不用改」**:`AfterEnemyTowerFall__Dire[TOWER_MID_3]` 的
+   `[2]` 空洞在今天的读者上**惰性** —— 两个 producer 的 10 处遍历(8 组遍历 + 2 表遍历)
+   **全是 `pairs`**,`#spots` / `#WardLocations` **零命中**;该事实已钉成断言,
+   因为它同时是本轮「在 max 整数键 + 1 处追加」的前提。
+   域与交棒见「当前状态」2026-09-15T22:34Z 节。原文保留在下,便于对照。**
+   **【2026-09-15T19:29Z 新增,**下一轮第一项**。
    **主体继续留在 `bots/`**(4.4 (i) 本轮满足,别让它断)。
 
    ⭐⭐ **本轮买到的可迁移句,它比 0NEXT23 的判据便宜,而且指向的是一整类没人看过的缺陷**:
@@ -9730,6 +9775,50 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-15T22:34Z:**三个眼位不是「位置错了」,是从来没有存在过 ——
+  gated `warddupkey` 已上机(`queue.json:strategy-49`)。**
+  出口 **(i)**(`bots/` 行为改动,4.4 (i) 连续两轮不断档)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;**未提入集**(P4.2 冻结)。
+  铁律 9:P1(1) 上轮已交总监(GH #809);P2 的 TP 腿仍卡在
+  `owed_executions.json:wandlimbo_charge_instrument`(两端仪器),**量具类、按 P4.4
+  不得作为主体** ⇒ 走章程 1b,取 backlog **0NEXT24**。
+  报告:`iterations/reports/strategy/20260915T223441Z.md`。
+  **⭐⭐ 头条**:`bots/FunLib/aba_ward_utility.lua` 里三个表构造器把同一个整数键写了两遍,
+  Lua 保留**最后**一次赋值 ⇒ 每组里第一个点**在运行期根本不存在**,
+  **组比它看上去短一个,而没有任何东西说出这件事**:
+  `BeforeAllyTowerFall__Dire[TOWER_MID_1]` 的 `[4]`(吃掉 `(-2400.8, 1431.3)`)、
+  同表 `[TOWER_TOP_3]` 的 `[4]`(吃掉 `(605.6, 6996.9)`)、
+  `AfterEnemyTowerFall__Dire[TOWER_TOP_2]` 的 `[1]`(吃掉 `(-5218.0, -1648.6)`)。
+  ⛔ **两个自动读者按构造都看不见**:重复键是合法 Lua ⇒ luacheck 沉默;文件能加载 ⇒
+  smoke loader 也沉默。与 `wardcomma` **同盲区、不同失效方式**(逗号**挪走**一个点,
+  重复键**删掉**一个点)⇒ 另立 id,不合并。
+  普查 `tools/agent/table_dup_key_census.py`:全 `bots/` **7 处 / 275 文件**
+  (3 处本 id,4 处 FretBots 声音表)⇒ **是笔误不是约定**。
+  ⛔⛔ **顺带更正上一轮自己的立案**:0NEXT24 把三处记成
+  `AfterEnemyTowerFall__Radiant[...]`,实测**两处在 `BeforeAllyTowerFall__Dire`,
+  且三处全是 DIRE**。这不是笔误级差别 —— `AfterEnemyTowerFall` 要**敌方**塔倒,
+  而 `BeforeAllyTowerFall[TOWER_MID_1]` 是**我方自己中一塔还站着**时读的,
+  **即每一局 dire 方从零分钟起** ⇒ **立案时记下的域比真实域稀有一个数量级**。已钉成断言。
+  ⛔ **域的零写在最前面,不被绕过**(`tests/_warddupkey_sweep.lua`,每帧用它自己的塔状态,
+  什么都不声明):125 fixture / 625 dire 英雄行 / **126** 个 dire 且 `GetPosition>=4` 的帧;
+  自家中一塔还站着 **82/126**(分支是**活的**);armed 候选表**正好长一个**且含补回点
+  **80/126**;**argmin(真正会走过去插的那个点)改变 0/126** —— **在这份语料上这个杠杆
+  一次插眼都没改变**。⛔ 但它**不是「远远够不着」**:进前三 **13/80**,最近一帧
+  (`f_260820_043524_wd_defend_alone`,Lich,pos 5,t=587.4)差 **403u**(951u vs 548u)
+  ⇒ **语料覆盖的零**,不是构造性的零 ⇒ 按 0NEXT23 两分法**落,gated + 欠条 + tripwire**。
+  ⭐⭐ **单帧语料按构造看不见的那条通道才是真正的代价**:眼位插过后有 **360s** 冷却,
+  **4 个点比 5 个点先抽干**,抽干时出厂 bot 对那座塔**哪儿都不插**;测试**把它驱动出来**
+  (只声明 plant 时间):出厂 **0** 个可用点,armed **正好 1** 个。
+  ⚠️ **dire-only BY CONSTRUCTION**(三处全在 `__Dire` 表,`GetTeam()` 选边)⇒
+  镜像 A/B 里 **radiant 腿的零不是关于本 lever 的证据**;它是 `wardcomma`(radiant-only)的镜像。
+  读数:`GATE_EXIT=0` / `py gate: 94 ran, 0 findings` / `lua gate: 393 ran, 0 findings`;
+  `test_warddupkey_eaten_spots.lua` **13 绿**;`mutstand_warddupkey.sh` **9 全 CAUGHT + control
+  SURVIVED**(M5「把重复键改个号就完事」= 出厂默认无波次挪动,**只有源码普查看得见**;
+  M8「去掉幂等守卫」= 首次调用仍正确、此后每 tick 长一个)。
+  ⚠️ **本轮实测到一次并发事故并据此重跑**:开工自检与变异台**同时在跑**,自检报告
+  「a killed test left `bots/Customize/soak_side.lua` ARMED; removed it」——
+  那正是 GH #229/#365 §3 的一个全局 inode。**两份读数都在自检结束后串行重跑过,逐字复现。**
 
 - 2026-09-15T19:29Z:**`bots/` 里唯一一处少逗号的 `Vector` 字面量,而它是一个眼位 ——
   gated `wardcomma` 已上机(GH #842)。**

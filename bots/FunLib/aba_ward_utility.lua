@@ -55,6 +55,20 @@ local nTowerList = {
 local WARD_MID3_R3_SHIPPED = Vector(-2414.402100 -3802.327637)
 local WARD_MID3_R3_FIXED   = Vector(-2414.402100, -3802.327637)
 
+-- [warddupkey 20260915] THE THREE DUPLICATE TABLE KEYS IN bots/, HOISTED SO THE
+-- SWALLOWED VALUE HAS A NAME. Each of the three groups below writes the same
+-- integer key twice; Lua keeps the LAST assignment, so the first spot is not
+-- "wrong", it does not exist at run time -- the group is one spot short and
+-- nothing anywhere says so. The duplicate keys are LEFT IN PLACE, exactly as
+-- written: the shipped table must still answer with the second value, and the
+-- duplicate itself is the only witness that this file is what it is
+-- (tests/test_warddupkey_eaten_spots.lua re-runs the census rather than quoting
+-- it). See the head note on X.ApplyWardDupKeyFix for what is restored and why
+-- the restoration is gated rather than just made.
+local WARD_DUP_DIRE_MID1_EATEN = Vector(-2400.793457, 1431.276611)
+local WARD_DUP_DIRE_TOP3_EATEN = Vector(605.637573, 6996.875977)
+local WARD_DUP_DIRE_TOP2_EATEN = Vector(-5217.980957, -1648.555908)
+
 -- #############################################################
 -- RADIANT
 -- #############################################################
@@ -215,7 +229,7 @@ local WardLocationsBeforeAllyTowerFall__Dire = {
 		[1] = { location = Vector(-917.716919, 1233.115723), plant_time_obs = 0, plant_time_sentry = 0, },
 		[2] = { location = Vector(2769.960693, -1521.609985), plant_time_obs = 0, plant_time_sentry = 0, },
 		[3] = { location = Vector(-1679.397339, 3541.931396), plant_time_obs = 0, plant_time_sentry = 0, },
-		[4] = { location = Vector(-2400.793457, 1431.276611), plant_time_obs = 0, plant_time_sentry = 0, },
+		[4] = { location = WARD_DUP_DIRE_MID1_EATEN, plant_time_obs = 0, plant_time_sentry = 0, },
 		[4] = { location = Vector(1631.129028, -604.961731), plant_time_obs = 0, plant_time_sentry = 0, },
 	},
 	[TOWER_BOT_1] = {
@@ -250,7 +264,7 @@ local WardLocationsBeforeAllyTowerFall__Dire = {
 		[1] = { location = Vector(3126.187500, 5750.492676), plant_time_obs = 0, plant_time_sentry = 0, },
 		[2] = { location = Vector(1029.402222, 3571.081055), plant_time_obs = 0, plant_time_sentry = 0, },
 		[3] = { location = Vector(450.604736, 4730.952148), plant_time_obs = 0, plant_time_sentry = 0, },
-		[4] = { location = Vector(605.637573, 6996.875977), plant_time_obs = 0, plant_time_sentry = 0, },
+		[4] = { location = WARD_DUP_DIRE_TOP3_EATEN, plant_time_obs = 0, plant_time_sentry = 0, },
 		[4] = { location = Vector(2174.007812, 4253.548828), plant_time_obs = 0, plant_time_sentry = 0, },
 	},
 	[TOWER_MID_3] = {
@@ -290,7 +304,7 @@ local WardLocationsAfterEnemyTowerFall__Dire = {
 	},
 
 	[TOWER_TOP_2] = {
-		[1] = { location = Vector(-5217.980957, -1648.555908), plant_time_obs = 0, plant_time_sentry = 0, },
+		[1] = { location = WARD_DUP_DIRE_TOP2_EATEN, plant_time_obs = 0, plant_time_sentry = 0, },
 		[1] = { location = Vector(-4334.572266, -1036.464844), plant_time_obs = 0, plant_time_sentry = 0, },
 		[2] = { location = Vector(-7579.280762, -1119.693848), plant_time_obs = 0, plant_time_sentry = 0, },
 		[3] = { location = Vector(-5685, -3139), plant_time_obs = 0, plant_time_sentry = 0, },
@@ -446,8 +460,113 @@ function X.ApplyWardCommaFix()
 	tWardCommaSpot.location = WARD_MID3_R3_FIXED
 end
 
+-- [warddupkey 20260915] Soak candidate 'warddupkey' (turbo-only). THREE SPOTS
+-- COME BACK; no spot is moved, no spot is removed, no clause is relaxed, no
+-- coordinate is invented.
+--
+-- ⭐ THE DEFECT, closed form -- a statement about SOURCE, not a frequency.
+-- Three table constructors in this file write the same integer key twice:
+--
+--   WardLocationsBeforeAllyTowerFall__Dire[TOWER_MID_1]  [4] twice
+--   WardLocationsBeforeAllyTowerFall__Dire[TOWER_TOP_3]  [4] twice
+--   WardLocationsAfterEnemyTowerFall__Dire[TOWER_TOP_2]  [1] twice
+--
+-- Lua keeps the LAST assignment, so in each group the FIRST of the pair is not
+-- a wrong spot, it is a spot that does not exist -- the group is one shorter
+-- than it reads, and nothing anywhere says so. These are the ONLY three
+-- duplicate keys in a spot table in bots/ (tools/agent/table_dup_key_census.py
+-- re-runs the scan; the other four hits in the tree are in FretBots sound
+-- tables, a different file and a different consequence), so this is a
+-- transcription slip, not a convention. Neither automatic reader on the push
+-- path can see it: a repeated key is valid Lua, so luacheck is silent, and the
+-- file loads, so the smoke loader is too. Same blind spot as 'wardcomma'
+-- directly above -- different failure mode, hence a separate id: a comma moves
+-- one point, a duplicate key deletes one.
+--
+-- DOMAIN, measured, and the half this corpus cannot buy (declared, not buried).
+-- All three groups are DIRE tables, so in a mirrored A/B this id has a domain
+-- only on the leg whose armed side is dire -- a reader must not treat the
+-- radiant leg's zero as evidence about the lever ('wardcomma' is the mirror
+-- image of this and is radiant-only). Over the whole fixture corpus (125
+-- fixtures, 625 dire hero-frames, 126 at J.GetPosition >= 4, i.e. the
+-- population mode_ward_generic's own first line admits), on each frame's OWN
+-- tower state with nothing declared -- see tests/_warddupkey_sweep.lua:
+--
+--   82/126   still have their own mid tier-1 standing, the state the MID_1
+--            group is read in: the branch is live, not constructive-zero;
+--   80/126   armed candidate list is exactly one longer and contains a
+--            restored spot -- it passes IsLocationPassable and every filter;
+--    0/126   the ARGMIN changes. On this corpus the lever changes no plant.
+--
+-- ⛔ That zero is stated first and not explained away. What it is NOT is "a
+-- distant also-ran": the restored spot is inside the top 3 by distance on
+-- 13/80, and on the nearest frame (Lich, position 5, t=587.4,
+-- f_260820_043524_wd_defend_alone) it is 951u from the bot against the shipped
+-- argmin's 548u -- it loses by 403u. A bot standing 400u further on that same
+-- frame flips it. This is the CORPUS-COVERAGE kind of zero (GH #838), not the
+-- constructive kind: the host runs and the spot is admitted, the corpus just
+-- never samples a stance where it wins.
+--
+-- ⭐⭐ AND THE CHANNEL A SINGLE-FRAME CORPUS CANNOT SEE AT ALL, which is the
+-- real cost of being one spot short: a spot is filtered out for 360s after it
+-- is planted on (`spot.plant_time_obs`). Over a game the group drains, and a
+-- group of 4 drains sooner than a group of 5 -- when the last unexpired spot is
+-- the one the duplicate key deleted, the shipped bot has NO spot for that tower
+-- and wards nowhere. No frame can show this, so the test drives it instead, on
+-- a real frame with the plant times DECLARED.
+--
+-- SHAPE. Restored ONCE, on the spot tables themselves, at the head of the only
+-- two producers that read them -- so the observer path, the sentry path,
+-- X.GetClosestObserverWardSpot's argmin, mode_ward_generic's 3200u desire test
+-- and the Action_UseAbilityOnLocation that finally plants all see the same
+-- group, and the restored spot carries its own `plant_time_obs` bookkeeping on
+-- the same table as its neighbours. Un-armed the function falls out on its
+-- first conjunct and every table is the shipped one, identity and all. Single
+-- id, conjoined with nothing (no 'pullcad' trap). Appended at max-integer-key
+-- + 1, which is safe here because BOTH readers iterate with `pairs`, never `#`
+-- (checked: the four call sites at the two producers), so neither a hole nor an
+-- appended key can change what they see.
+--
+-- DECLARED CONSEQUENCE, not a hidden one: the restored spot faces the same
+-- IsLocationPassable / IsOtherWardClose / IsThereEnemySentry tests as every
+-- other spot, so on a frame where it is impassable the armed list is the same
+-- length as the shipped one rather than one longer. That is the only way armed
+-- can fail to grow the list, and it is asserted in the test rather than
+-- promised here.
+local tWardDupRestore = {
+	{ tbl = WardLocationsBeforeAllyTowerFall__Dire,  tower = TOWER_MID_1,
+	  spot = { location = WARD_DUP_DIRE_MID1_EATEN, plant_time_obs = 0, plant_time_sentry = 0, } },
+	{ tbl = WardLocationsBeforeAllyTowerFall__Dire,  tower = TOWER_TOP_3,
+	  spot = { location = WARD_DUP_DIRE_TOP3_EATEN, plant_time_obs = 0, plant_time_sentry = 0, } },
+	{ tbl = WardLocationsAfterEnemyTowerFall__Dire,  tower = TOWER_TOP_2,
+	  spot = { location = WARD_DUP_DIRE_TOP2_EATEN, plant_time_obs = 0, plant_time_sentry = 0, } },
+}
+
+function X.ApplyWardDupKeyFix()
+	if not (J.IsModeTurbo() and J.IsSoakCandidate('warddupkey')) then return end
+
+	for _, r in ipairs(tWardDupRestore) do
+		local tGroup = r.tbl[r.tower]
+		if tGroup ~= nil then
+			-- Idempotent against the WORLD, not against a flag: a flag can
+			-- disagree with the table after a reload, the table cannot disagree
+			-- with itself. Identity, not coordinates -- a group is allowed to
+			-- hold another spot at the same place.
+			local nMax, bPresent = 0, false
+			for k, s in pairs(tGroup) do
+				if s == r.spot then bPresent = true end
+				if type(k) == 'number' and k > nMax then nMax = k end
+			end
+			if not bPresent then
+				tGroup[nMax + 1] = r.spot
+			end
+		end
+	end
+end
+
 function X.GetAvailabeObserverWardSpots(bot)
 	X.ApplyWardCommaFix()
+	X.ApplyWardDupKeyFix()
 	local availableSpots = {}
 
 	if DotaTime() < 0 then
@@ -585,6 +704,7 @@ end
 
 function X.GetPossibleSentryWardSpots(bot)
 	X.ApplyWardCommaFix()
+	X.ApplyWardDupKeyFix()
 	local possibleSpots = {}
 
 	if J.IsEarlyGame() then

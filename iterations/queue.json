@@ -2882,6 +2882,19 @@
    "question": "⛔ **零 AWS、零 EC2、只读已归档 `.dem`。**\n\n一句话:**`axecallring` 有两个域,离线只买得到第一个的一个下界(=1),第二个在这份语料里结构性地是 0 —— 而能不能 arm 全看第二个。**\n\n杠杆:`bots/BotLib/hero_axe.lua` 的 `X.ConsiderQ`,在出厂先手支路**之后**新增一条独立 `if`:Axe 已在交战模式(`J.IsGoingOnSomeone`)且 **225u 环内有 ≥2 个可施法的敌方英雄**时放 Berserker's Call,**不再要求 `botTarget` 本人在环内**。方向是 **ADD-ONLY**(出厂支路排在前面且一字未动 ⇒ 只能加一发,永不删、永不挪)。\n\n为什么离线买不到:`tests/fixtures` + `tests/frames` 里 Call 就绪的活 Axe 共 **28** 行,225u 环内 ≥2 人的恰好 **1** 行(24 行 0 人、3 行 1 人)—— 而**就是那一行**,`X.SkillsComplement` 先问 `X.ConsiderR`,**斩杀赢了顺序**,armed 与 shipped 逐条发出相同指令 ⇒ **端到端域 = 0**。另外 `J.IsGoingOnSomeone` 读 `bot:GetActiveMode()`,dumper 的快照 schema **没有这一路**(GH #577 §5)⇒ 它在任何 fixture 上恒 false,本轮是**修了那一个读数**才驱动出支路的。",
    "acceptance": "在已归档 `.dem` 上(任一含 Axe 的语料;⚠️ 种子名册里 888/895/896/906 **零 Axe**,`--find axe` 给 899/910/911 —— 与 hero-2 / hero-13 / hero-89 同一个承载者阻塞,**四条请求可以一次扫完**),数三个量,并按铁律 4 (i-a) 登记两个分层的读数:\n(1) **支路层域**:活的 Axe 帧里,Berserker's Call 已学且 cd 0、Axe 处在交战模式、且 **225u 环内 ≥2 个可见可施法敌方英雄**,**而出厂锚点落空**(`botTarget` 不在 225u 内、或没有 `botTarget`)的**事件数**;\n(2) ⭐ **端到端域**:(1) 里 **`X.ConsiderR` 没有抢先**(Culling Blade 那一帧不出货)的那一部分 —— **只有这个数是 armed 真的会改变动作的集合**,(1) 与 (2) 之差就是被大招吃掉的部分;\n(3) **对照**:(1) 里环内恰好 **1** 人的事件数,即法定人数取 1 而不是 2 会额外买到的量,用来事后检验本轮那个保守选择。\n\n⚠️ **单位是事件不是帧**(一次交战会落进多个连续帧,帧级计数纯属分母膨胀);⚠️ 环内计数要套**出厂**的可施法判据(`CanCastOnNonMagicImmune` + 非 disabled),**不要**顺手把免疫的也算进去 —— 那是 `axecallbkb_ii` 的问题,两个 id **不得同腿 arm**,读数也不要合并。\n\n**预登记退回门**:(2) 为 0 ⇒ **DO-NOT-ARM,不是 reject**,并把 (1) 与承载者分布一起交出来;⛔ **不许读成「测过了没影响」**。(1) 为 0 而语料里有 Axe ⇒ 同样 DO-NOT-ARM,并说明是不是 `J.IsGoingOnSomeone` 那一路把分子掐掉的。",
    "filed_by": "hero 2026-09-15T20:xxZ(报告 iterations/reports/hero/20260915T200000Z.md,state.json:axecallring_20260915)"
+  },
+  {
+   "id": "strategy-49",
+   "stream": "strategy",
+   "bundle": "warddupkey (新落地 gated id;**零 EC2 的归档扫描 / 一帧请求**,不要为它单独发波)",
+   "priority": 3,
+   "status": "pending",
+   "seeds": [],
+   "question": "⛔ **零 EC2:要的是一帧,不是一波。** `warddupkey` 补回 `bots/FunLib/aba_ward_utility.lua` 里被重复键吃掉的三个眼位(两处 `BeforeAllyTowerFall__Dire`,一处 `AfterEnemyTowerFall__Dire`)。**本组自己量到的域是诚实的零**:125 个 fixture / 626 个 dire 英雄帧 / 126 个 `J.GetPosition >= 4` 的帧上,armed 把候选表**加长一个**的有 **80/126**,而 **argmin(真正会去插的那个点)改变的是 0/126**。\n\n⭐ 要的两件事,任一即可:\n(a) **一帧**:dire 方 position>=4 的英雄,站位使某个补回眼位成为 `X.GetClosestObserverWardSpot` 的 argmin。**最近的一次差 403u**(`f_260820_043524_wd_defend_alone`,Lich,pos 5,t=587.4:补回点 951u vs 出厂 argmin 548u),所以这不是「远远够不着」,是**没抽到那个站位**;\n(b) **一帧**:dire 方某个 tower 组里,出厂的眼位**全部**处在 360s 的 `plant_time_obs` 冷却内(即该组已抽干)。这是单帧语料**按构造**看不见的那条通道 —— 4 个点比 5 个点先抽干,而抽干时出厂 bot **哪儿都不插**。",
+   "acceptance": "(1) 打印**分母**(扫了几局 / 几个 dire 存活 support 瞬间),没有分母的分子不收;(2) 联合计数为 0 时**只许**回填「本语料没有这样的瞬间」并给出所扫路径,**不许**推断「域为 0」(那是「没测到」冒充「不存在」);(3) 读数按 `ab` / `ba` 两个分层分别登记(铁律 4 (i-a)),登记的是**读数**不是局数;⛔ (4) **本 id 是 dire-only BY CONSTRUCTION**(三处重复键全在 `__Dire` 表里,`GetTeam()` 选边),所以镜像波里 **radiant 腿的零不是关于本 lever 的证据** —— 谁都不许拿它当负读数。它是 `wardcomma`(radiant-only)的镜像。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;本组不花 AWS)。",
+   "note": "本地已把能离线买到的都买了:`tests/test_warddupkey_eaten_spots.lua` **13 绿**、`tools/agent/mutstand_warddupkey.sh` **9 个变异体全 CAUGHT + control SURVIVED(exit 0,直读不过管道)**、源码普查 `tools/agent/table_dup_key_census.py` 全 `bots/` **7 处重复键 / 275 文件**(3 处是本 id,4 处在 FretBots 声音表、**故意没捆绑**)。方向是 **APPEND 且按构造单向**(只加候选点,不移动、不删除、不放宽任何 clause),所以负读数**只能**读成「多出来的那个点被选中后不好」,**永远不能**读成「lever 吃掉了一个出厂眼位」。⛔ 谁也不许报一个本 lever 新增的**插眼数** —— 端到端(argmin)域在本语料上是 0,这一点写在 issue 里而不是被绕过。",
+   "result": null,
+   "director": null
   }
  ],
  "done": [
