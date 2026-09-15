@@ -490,8 +490,16 @@ if bCustomLastHit or bSupLastHit or bLaneFixSupport or bLaneFixCoreLH or bBodyBl
 			end
 		end
 
+		-- [denyreach] nAllyCreeps is the 1200 ring and this branch has no
+		-- distance term, while the last-hit branch eleven lines above reads the
+		-- 800 ring and tests botAttackRange twice. An out-of-reach deny is a
+		-- walk order down the lane that also `return`s above the
+		-- IsLaneFrontTooDeepToHold clamp below. Gated on 'denyreach'
+		-- (turbo-only); disarmed this conjunct is constant false and the branch
+		-- is byte-identical. See J.ShouldDropOutOfReachDeny in jmz_func.lua.
 		local denyCreep = GetBestDenyCreep(nAllyCreeps)
-		if J.IsValid(denyCreep) then
+		if J.IsValid(denyCreep)
+		and not J.ShouldDropOutOfReachDeny(bot, denyCreep) then
 			bot:SetTarget(denyCreep)
 			bot:Action_AttackUnit(denyCreep, true)
 			return

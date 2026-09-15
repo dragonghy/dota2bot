@@ -7456,6 +7456,101 @@ function J.IsHarassCreepAggroSafe( bot )
 	return tCreeps == nil or #tCreeps == 0
 end
 
+-- [denyreach / LANING_PLAYBOOK, charter 0NEXT18] THE DENY BRANCH HAS NO
+-- DISTANCE TERM, AND IT IS THE BRANCH READING THE WIDER RING.
+--
+-- ⭐ THE DEFECT, closed form -- a statement about SOURCE, not a frequency.
+-- mode_laning_generic's core laning Think holds two creep branches eleven lines
+-- apart, and only one of them ever asks how far away the creep is:
+--
+--   last-hit  reads  nEnemyCreeps = bot:GetNearbyLaneCreeps(  800, true  )
+--             and then tests distance TWICE before acting --
+--             `GetUnitToUnitDistance(bot, hitCreep) > botAttackRange` and, for
+--             the walk-up case, `> botAttackRange * 0.8` -- moving instead of
+--             swinging when the creep is out of reach;
+--   deny      reads  nAllyCreeps  = bot:GetNearbyLaneCreeps( 1200, false )
+--             and issues Action_AttackUnit with NO distance term at all.
+--
+-- So the branch holding the 1200 ring carries no reach test and the branch
+-- holding the 800 ring carries two. GetBestDenyCreep filters on HEALTH only
+-- (`J.GetHP(creep) < 0.49` and `creep:GetHealth() <= attackDamage`); nothing on
+-- that path -- not the selector, not the branch -- reads a position. The ring
+-- is therefore the only bound the deny has, and it is 1200 against a melee
+-- reach of 150 and a ranged laner's 400-700. No hero in the game attacks at
+-- 1200, so the gap is not an edge case: it is the branch's whole domain minus
+-- a disc of radius `GetAttackRange()`.
+--
+-- ⭐⭐ WHY THIS IS A BEHAVIOUR FINDING AND NOT A TIDINESS ONE. Two costs, and
+-- the second is the one that makes it worth an id:
+--
+--   (1) `Action_AttackUnit` on a unit 1100 units away is a WALK order with an
+--       attack on the end. A deny candidate is by construction a creep already
+--       under fire in the middle of the wave, i.e. down the lane, i.e. toward
+--       the enemy -- so the branch walks the bot into the lane to chase a deny
+--       it cannot arrive for. Standard laning theory is explicit that the deny
+--       window is one attack on a creep that is already in range; the walk is
+--       ~3.3s at 300 move speed for 1000 units, several times longer than a
+--       sub-49% creep under fire survives. The deny is unreachable AND the
+--       position is given up. (Condition (c).)
+--   (2) ⭐ THE BRANCH `return`s, AND IT SITS ABOVE THE DEEP-FRONT CLAMP. Below
+--       it in the same Think is the lane-front positioning block whose last act
+--       is `J.IsLaneFrontTooDeepToHold(bot, target_loc)` -- the guard added by
+--       the mega-bundle review precisely so a laner never holds a shoved-deep
+--       front alone (051728 ogre died at +4217 doing exactly this). Every frame
+--       the deny branch takes is a frame that clamp is never asked. So an
+--       out-of-reach deny does not merely waste an action: it is the one way
+--       into this Think that walks the bot down the lane WITH the anti-overextend
+--       guard skipped.
+--
+-- ⭐ THE REPAIR USES NO NEW NUMBER. The bound is `bot:GetAttackRange()` and the
+-- operator is `>`, both taken verbatim from the sibling branch eleven lines
+-- above -- the file's own already-shipped answer to "can I act on this creep
+-- from here". Nothing is invented, so nothing new has to be defended. The
+-- helper RE-READS the range rather than trusting mode_laning_generic's
+-- `botAttackRange` upvalue on purpose: that upvalue is written in GetDesire and
+-- keeps its previous value whenever GetDesire returned early (dead /
+-- invulnerable / illusion), so it is the stale one of the two.
+--
+-- ⭐ DIRECTION IS FIXED BY CONSTRUCTION, not by a count. The caller appends
+-- `and not J.ShouldDropOutOfReachDeny(...)` to a condition that already passed,
+-- so armed can only turn the deny branch's TRUE into FALSE -- it can never send
+-- the bot at a creep it was not already going at. On a drop the frame falls
+-- through to the positioning block, which is to say it falls through TO the
+-- deep-front clamp of (2). Unarmed, J.IsSoakCandidate is asked first and no
+-- engine call below it is reached, so the shipped answer is byte-identical.
+-- Turbo is asked explicitly: nothing on this path asks it for us. Gated
+-- STANDALONE -- one id, never a conjunction of two (the 'pullcad' trap, GH #622).
+--
+-- ⛔ ONE ID, ONE CALL SITE. There are TWO unguarded deny branches in that file:
+-- this one (the core laning Think, ~line 493) and DoSupportLaningThink's first
+-- branch (~line 356). Only the core one is wired here. The reason is not
+-- tidiness -- it is that the two sit behind DIFFERENT armed populations (the
+-- core Think is reachable with EVERY gate off, via `bCustomLastHit`'s
+-- `local_mode_laning_generic` / pos1-with-human-pos5 disjuncts; the support one
+-- is reachable only under 'suplh' / 'lanefix' / 'lf_support'), so one id across
+-- both would make a per-id verdict unattributable, which is the
+-- non-independence the retreat guard chain was reordered to remove (GH #29).
+-- The support site is left reading unguarded ON PURPOSE and
+-- tests/test_denyreach_lane_deny_reach.lua asserts it STILL does, so this
+-- sentence cannot quietly expire.
+--
+-- ⛔ WHAT THE CORPUS CANNOT SAY, said here rather than left for a wave. The
+-- dumper writes `{t, team, x, y}` per creep and NO health or name (GH #581), so
+-- the HP half of GetBestDenyCreep -- and therefore how often the branch's
+-- selector actually returns something -- is NOT readable from a fixture, today
+-- or by trying harder. What IS readable is the GEOMETRY, and that is the half
+-- this helper turns on: on the two fixtures carrying a creep sample, of the
+-- allied creep rows inside the 1200 ring, 9 of 9 are beyond melee reach and 3
+-- of 9 are beyond even 550. That is an UPPER bound on the branch's reachable
+-- set (the unreadable HP filter can only shrink it) and it is recorded as such
+-- in that test's [world] block, never as a trigger frequency.
+function J.ShouldDropOutOfReachDeny( bot, hCreep )
+	if not J.IsSoakCandidate( 'denyreach' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	if bot == nil or not J.IsValid( hCreep ) then return false end
+	return GetUnitToUnitDistance( bot, hCreep ) > bot:GetAttackRange()
+end
+
 -- [L5-TREES cut 2 / LANING_PLAYBOOK] Off-wave harass spot. When the support is
 -- standing ON the wave (harass would draw creep aggro -- IsHarassCreepAggroSafe
 -- false) but there IS an enemy laner worth pressuring, don't just give up the

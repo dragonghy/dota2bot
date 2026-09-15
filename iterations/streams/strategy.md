@@ -35,7 +35,51 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT17. **【2026-09-14T22:19Z 新增,**下一轮第一项**,而且它被点名的第一理由和
+0NEXT18. **【2026-09-15T01:29Z 新增,**下一轮第一项**。
+   **主体继续留在 `bots/`**(本轮 4.4 (i) 满足,别让它再断)。
+
+   **选题建议(按「小杠杆 + 不等 dumper 字段」排序)**:
+   对线期策略里**姊妹分支不对称**这一族本轮刚证明是富矿,而它**一条 dumper 字段都不等** ——
+   判据是「同一个 `if` 体/同一个 Think 里,两条做同一类事的分支,**一条带界另一条没有**」。
+   本轮的现场是 `mode_laning_generic` 的 last-hit(两次距离测试)vs deny(零距离项)。
+   **还没被读过的同族站点**:`DoSupportLaningThink` 里 deny(零距离项)vs
+   uncontested-last-hit(两次距离测试)—— **同一个不对称,另一个 armed 人群**,
+   见下面 ⛔ 的第一条:它**不是**本轮那条的复制,但**必须有自己的 id 和自己的定价**。
+
+   ⚠️ **判据继承 0NEXT11–0NEXT17 全部**,并特别继承本轮这两条:
+
+   ⭐⭐ **(寅) 修一条缺陷时,先问「这个文件自己已经出货的答案是什么」,再问「正确的界是多少」。**
+   本轮的界(`bot:GetAttackRange()`)与算符(`>`)**一个字都不是新的**:它们是十一行上面
+   那条姊妹分支已经在用的东西。⇒ 这条改动**没有第二件要辩护的东西**,条件 (c) 只需要
+   为「deny 该不该追」辩护,不需要再为一个数字辩护。反例的账单是 GH #788 / #793 / #811
+   连着三轮在定价**自造的常数**。**先找文件自己的答案;找不到,才允许引入一个数。**
+
+   ⭐⭐ **(卯) 「落地检查」必须计数,不能只看一眼。** 本轮变异台 M4 的第一版
+   (`sed` 按行尾模式)在 `jmz_func.lua` 上**命中两处**,打出来的是**另一个变异**;
+   台子按 `grep -c = 2, wanted 1` 报 **NO-OP** 并还原,**没有把它记成一次 CAUGHT**。
+   ⇒ 「改动落地了吗」与「落地的是**这一条**改动吗」是两个问题,`grep -c` 是唯一
+   同时答得了两个的问法。(与 `mutstand_tpstale` 的 M2 同族。)
+
+   ⛔ **已被定价并排除、不要重买**(继承全部,本轮新增三条):
+   ⛔ **不要「顺手把 `DoSupportLaningThink` 的 deny 分支也接上 `denyreach`」**:
+   两条站点在**不同 armed 人群**背后(核心 Think 全 gate 关时也可达;support 那条只在
+   `suplh`/`lanefix`/`lf_support` 下可达),一个 id 跨两者会让 per-id 裁定不可归因(GH #29)。
+   它**可以**做,但要**自己的 id、自己的定价**;`tests/test_denyreach_lane_deny_reach.lua`
+   有一条断言钉着它现在**仍然没接**,接了那条会红并点名。
+   ⛔ **不要去给 `GetBestDenyCreep` 这个选择器本身加距离过滤**:那会同时改掉
+   **两个**调用点(核心 Think 与 support Think),是上一条的更坏版本。杠杆落在**分支**上。
+   ⛔ **不要试图从语料里买 deny 分支的「触发频率」**:`GetBestDenyCreep` 的血量那一半
+   要 creep 血量,而 dump 里 creep 只有 `{t, team, x, y}`(GH #581)。**几何买得到、
+   血量买不到**,所以那条路上能报的只有**上界**。同理 `GetAttackRange()` **也不在 dump 里**
+   (loader 下答 mock 近战缺省值)⇒ 它只能被**扫**,不能被**引**。】**
+
+0NEXT17. ✅ **【2026-09-14T22:19Z 提为下一轮第一项 → 2026-09-15T01:29Z 做完,产出是 **(i)**:
+   gated **`denyreach`**。做的是它正文「选题建议」指的那件事(对线期策略里自找一条小杠杆),
+   而**不是**认领某条既有 issue —— 三条候选各自被它们自己的文本排除:#767 的宿主
+   `midtp`/`suptp` 是**退集的**(NaN 修好前那站点上任何杠杆都测不了)、#760 卡在 dumper
+   速度字段(#786,正文明写「不要再去撞」)、#824/#521/#441 都不是 `bots/` 改动。
+   读数与交棒见「当前状态」2026-09-15T01:29Z 节。原文保留在下,便于对照。**
+   **【2026-09-14T22:19Z 新增,**下一轮第一项**,而且它被点名的第一理由和
    0NEXT15 当初一样是 **4.4 (i)**:本轮 `bots/` 又是零 diff(那是**正确的**出口 ——
    本轮的产出就是「不要落那条杠杆」—— 但配额量的是主体不是正确性)。
    **下一轮的主体必须是一条 `bots/` 行为改动。**
@@ -9361,6 +9405,64 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-15T01:29Z:**落地 gated `denyreach`(turbo-only)—— 对线期 deny 分支没有距离项。**
+  出口 **(i)**:`bots/` 有 diff,**4.4 (i) 满足**(结束上一轮的不满足);**(ii) 不认领**。
+  铁律 9:P1(1) 上一轮已结案交总监(GH #809);P2 的球虽写着本组,但 TP 腿仍卡在
+  `owed_executions.json:wandlimbo_charge_instrument` 的两端仪器墙(RULING 37)⇒ 走章程 1b。
+  **⭐⭐ 头条:相隔十一行的两条 creep 分支,只有一条问距离 —— 而没问的那条读的是更宽的环。**
+  `mode_laning_generic` 核心对线 Think:last-hit 读 `GetNearbyLaneCreeps(800, true)`
+  并在动手前测**两次**距离(`> botAttackRange`、走位用的 `> botAttackRange * 0.8`);
+  deny 读 `GetNearbyLaneCreeps(1200, false)`,然后**一个距离项都没有**地发
+  `Action_AttackUnit`。选择器 `GetBestDenyCreep` 只过滤血量(`J.GetHP < 0.49` 且
+  `GetHealth() <= attackDamage`),**整条路径不读任何位置** ⇒ **1200 那个环是 deny 唯一的界**,
+  而近战 150 / 远程 400–700,**全游戏没有任何英雄的攻击距离到 1200**。
+  **⭐ 值一个 id 的是第二条代价,不是第一条。** 第一条是显然的(对 1100u 外发
+  `Action_AttackUnit` = 一条带攻击结尾的走位命令;而 deny 候选按构造就是**正在挨打的兵**,
+  即在兵线中段朝敌方那侧;300 移速走 1000u ≈ 3.3s,远长于那只兵的存活时间)。
+  **第二条是:这条分支 `return`,而且它排在 deep-front 夹子上面** ——
+  同一个 Think 下面站位块的最后一句是 `J.IsLaneFrontTooDeepToHold`,那是 mega-bundle
+  复盘专为「不许一个人守被推深的兵线」加的守卫(051728 ogre 在 +4217 处死于此)。
+  ⇒ **deny 分支走的每一帧,都是那个夹子没被问过的一帧**;够不着的 deny 是这个 Think 里
+  **唯一一条把 bot 往兵线深处带、同时跳过反过伸守卫**的路。源码顺序由 `[ratchet]` 钉住。
+  **修复没有引入任何新常数**:界是 `bot:GetAttackRange()`、算符是 `>`,**两者都逐字取自
+  十一行上面那条姊妹分支**;谓词重读射程而不信 `botAttackRange` upvalue(后者在
+  `GetDesire` 提前 return 时留着上一帧的值)。方向由构造固定(`and not` 追加在已通过的
+  合取式上),被 drop 的帧**落到站位块,也就是落到那个夹子上**。
+  **⛔ 一个 id 一个调用点**:那文件有**两条**无距离项的 deny 分支,本轮**只接核心 Think 那条**
+  ——它**全 gate 关时也可达**(`bCustomLastHit` 的 `local_mode_laning_generic` / pos1+人类 pos5),
+  support 那条只在 `suplh`/`lanefix`/`lf_support` 下可达,**不同 armed 人群**,一个 id 跨两者
+  会让 per-id 裁定不可归因(GH #29)。support 站点**故意不接**,并由测试断言它**仍然没接**
+  (变异台 M5 专打),所以这句话不会悄悄过期(GH #767 §6.2 的同一处理)。
+  **产物**:`bots/FunLib/jmz_func.lua:J.ShouldDropOutOfReachDeny`、
+  `bots/mode_laning_generic.lua` 调用点、`tests/test_denyreach_lane_deny_reach.lua`
+  (**15 tests / 0 failures / 0.14s**;真实帧 lion L4,**creep 坐标取自该 fixture 自己的
+  `creeps` 块**,只有「是合法 deny 候选」是申报的)、`tools/agent/mutstand_denyreach.sh`
+  (**6 抓 + 控制 SURVIVED + 0 NO-OP**,exit 0)、`state.json:denyreach_20260915`、
+  报告 `iterations/reports/strategy/20260915T012932Z.md`。
+  **⛔ 未提入集**(P4.2 冻结期,唯一合法裁定 FROZEN-HOLD;**这不是掉棒**);`test_set.md` /
+  `queue.json` 未动;**零 AWS**。
+  **⭐ 几何读数是上界,不是触发频率,永远不许被引成触发频率**:两个带 creep 采样的 fixture 上,
+  1200 环内友方 creep 行 **9 行里 9 行**在近战射程(150)之外、**3 行**在 550 之外;
+  血量那一半 GH #581 结构上买不到,它只会让集合**变小**。lion 帧 4 行 dt==0,zuus 帧 5 行
+  **全 off-instant**,**分开登记不并池**,且「zuus 同瞬间友方行 = 0」本身也是一条断言。
+  **⚠️ trunk 红一条交出去(非本轮造成,已量出归因)**:
+  `tests/test_tpscroll_branch_shadow_census.lua` `9 tests, 1 failures` /
+  `撤退:2's trigger bound moved to 31` —— 把本轮 `bots/` 两个文件 `git checkout` 还原后
+  **逐字复现同一条失败**,再把工作拷回;它在快 Lua 闸的 102 个 tagged detector **之外**
+  (那一腿本轮 0 failures)⇒ 三条推送腿会全绿放行它,**又是 GH #624 的立案形状**。
+  **📌 可迁移两条(已写进 0NEXT18)**:*(寅) 修缺陷前先问「这个文件自己已经出货的答案是什么」
+  再问「正确的界是多少」—— 本轮的界与算符一个字都不是新的,于是这条改动没有第二件要辩护的东西*;
+  *(卯) 落地检查必须**计数**不能只**看一眼** —— M4 的第一版 `sed` 命中两处,打出的是另一个变异,
+  台子按 `grep -c = 2, wanted 1` 报 NO-OP 而不是记一次 CAUGHT。*
+  **铁律 6**:静态半 `GATE_EXIT=0` CLEAN / **0 warnings**,**未用 `RULE6_BYPASS`**;
+  动态半未跑全量(GH #124),跑了子集(见报告 §7)。
+  **开工自检 `worst exit: 3`**,findings = `unlanded cadence queue-rulings owed-executions lua-coverage`;
+  ⚠️ `trunk-red(python)` 这一腿 **UNCERTIFIABLE**,而**本轮有自己的一份责任**:它印的出路是
+  「re-run on a quiet tree (nothing writing under `bots/`)」而本轮变异台正在写 `bots/`
+  ⇒ `mutstand_denyreach.sh` 抬头已加 ⛔「不要与开工自检的腿并跑」(共用 `soak_side.lua`
+  一个全局 inode,GH #229)。**登记为未核验,不是绿。** 另,第一次调用被脚本自己以
+  `REFUSED: stdout is a PIPE` 拒回(**exit 2 = 什么都没检,不是通过**,它记录的第 5 次同形状)。
 
 - 2026-09-14T22:19Z:**裁掉 0NEXT16 —— `IsValidCreep` 的 `> 9` 不动**,
   `camppick` 的调用层做法是终局。出口 **(b)**:`bots/` + `game/` **零 diff**
