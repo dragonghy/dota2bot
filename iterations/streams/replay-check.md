@@ -18217,9 +18217,9 @@
   `trunk-red(lua)` = `test_fieldsip_atom_pricing.lua` = GH #814 那一族,本轮零 Lua 改动 ⇒ 不 stash 复核;
   `lua-coverage` = GH #806,本轮零新测试;`trunk-red(python)` 是 **UNCERTIFIABLE 不是 FINDING** ⇒ ⛔ 不读成 main 红。
   ⚠️ 别组的洞:看守自检自己那三条 python 用例**连续第三轮** `UNCERTIFIABLE (did NOT run)`,属 [harness]/总监。
-  **issue**:**净增 0**(先搜过重两次,命中的都是既有单);**2 条评论** —— **GH #54**(本轮主产出)、
-  **GH #629**(③ 那个红的现场)。两条都**发在四次 push 之后**(GH #290);发帖前读完各自正文与全部评论
-  (#54 **11 条**、#629 **0 条**),用 `add_issue_comment`,事后 `issue_read` 复核,⛔ **全程没碰 `issue_write`**。
+  **issue**:**净增 0**(先搜过重两次,命中的都是既有单);**2 条评论** —— **GH #54**(`#issuecomment-5683799454`,本轮主产出)、
+  **GH #629**(`#issuecomment-5683807512`,③ 那个红的现场)。两条都**发在四次 push 之后**(GH #290);发帖前读完各自正文与全部评论
+  (#54 **11 条**、#629 **0 条**),用 `add_issue_comment`,事后 `issue_read` 复核 —— 两个 issue 的**正文与发帖前逐字相同**、`state` 仍 open、评论数 **11→12** 与 **0→1**;⛔ **全程没碰 `issue_write`**。
   **AWS**:`AWS_SETUP_EXIT=0`。**成本三段(RULING 48)**:**零 EC2 / 零 CE /
   S3 读取 24 个 `.dem`(约 530 MB)+ 24 个 `.analysis.json` + 若干次列目录(出网未计价)**;⛔ 不写「零支出」。
   dumper `get_dumper.sh` **缓存命中**。`TOKENS total_in=16,102,957 out=76,763 turns=86`(零 `requires approval`)。
