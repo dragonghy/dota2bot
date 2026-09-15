@@ -1492,7 +1492,7 @@
   },
   {
    "id": "corpus_denominator_drifts_silently_under_one_sided_ratchet",
-   "issue": "[harness] 总监 2026-09-15T19:xxZ 立(RULING 58 的连带发现,不是它的前提)。族属 GH #650(语料漂移)。⚠️ **本行不是 `[bug]` —— 没有任何测试现在是红的**;它记的是**一个绿着的、已经量到的陈述失真**。",
+   "issue": "[harness] **GH #841**(总监 2026-09-15T19:xxZ 开)(RULING 58 的连带发现,不是它的前提)。族属 GH #650(语料漂移)。⚠️ **本行不是 `[bug]` —— 没有任何测试现在是红的**;它记的是**一个绿着的、已经量到的陈述失真**。",
    "covers_ids": [],
    "ruling": "**同一个 `live` 从 1021 涨到 1039,在三份普查里得到两种待遇,而两种都不对**:`tests/test_fieldsip_atom_pricing.lua` 用**双侧** `assert(C.live == 1021)` ⇒ **红十轮**;`tests/test_tpdeep_recover_band.lua:425` 与 `tests/test_buydeep_purchase_floor.lua:371` 用 `cs.ratchet(C.live, 1021, 'live hero frames')` ⇒ **静默放行**(`corpus_scale.lua:70` 的 ratchet 只在**下跌**时 fail,逐字 `if actual < recorded`)。\n\n⭐ **ratchet 这一侧本身做对了它答应的事,本轮量过**:跑 `tests/_buydeep_sweep.lua` 一遍,buydeep **12 个被 ratchet 钉住的分子一个没动** —— `below_floor` 29 / `below_floor_nosrc` 12 / `nosrc_ring_busy` 6 / `nosrc_attr` 4 / `deep_with_any_tower` 18 / `trigger_deep_nosrc` 8 / `stop_source_ring` 5 / `stop_source_domain` 3 / `stop_source_attr_any` 3 / `deep_domain` 6 / `deep_below_tpdeep_floor` 3 / `deep_with_bag_salve` 1 ⇒ 没有一条结论垮掉,两份文件绿得有道理。\n\n⛔ **垮掉的是分母那一句话。** `test_buydeep_purchase_floor.lua:32` 逐字仍写着 `Of 1021 live turbo hero frames, 29 sit below the floor` —— 而 `live` 今天实读 **1039**(同一次 sweep 的 `C live` 行)⇒ 这句话**作为率是错的**(29/1021 ≠ 29/1039),而**它是绿的,并且会一直绿**:ratchet 结构上不可能对一个**上涨的分母**举手,`cs.ceiling` 管的是上界而没人把它架在 `live` 上。\n\n📌 **形状**:一条 `N of M` 的结论,`N` 有单侧闸、`M` 有**方向相反**的单侧闸 ⇒ **两个闸都绿的时候这条结论仍然可以变假**,而变假的那一半住在注释里没有任何东西读它。⚠️ 与 GH #624 立案句同族但**换了一层**:#624 说「红由下一个开工的组发现」,本行说「**它根本不会红**」。",
    "ruled_at": "2026-09-15T19:xxZ",
@@ -1502,7 +1502,8 @@
     "iterations/owed_executions.json(本行)",
     "tests/test_fieldsip_atom_pricing.lua 文件头 RULING 58 §「WHAT THIS RULING DOES NOT DO」",
     "iterations/reports/director/20260915T190802Z.md §三",
-    "iterations/streams/director.md 当前状态(2026-09-15T19:08Z)"
+    "iterations/streams/director.md 当前状态(2026-09-15T19:08Z)",
+    "GH #841(立案 issue,正文即本行 ruling;验收方式 = 本行 done_when_note 的两条)"
    ],
    "why_registered_here": "§DR 常驻义务:不属于任何一波、任何一个 armed id。⭐ 更硬的理由是上一条:**没有任何一条自动腿会替它举手**,而 §2.6 已量过「只活在报告散文里的交棒平均寿命一轮」。",
    "done_when": {
