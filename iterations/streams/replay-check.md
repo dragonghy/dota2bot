@@ -17691,3 +17691,33 @@
     (6) ⛔ 引本轮任何数**必须连切法一起引**,每英雄表**只作选点不作结论**(LIMIT C);
     (7) ⚠️ 下载 W40 别按 `2146` 通配。
   - **完整报告**:`iterations/reports/replay-check/20260915T005500Z.md`
+- **[2026-09-15T00:55Z 收工回填]** 落地 `origin/main` `740d6ceb..3f8ab32a`(`PUSH_MAIN_EXIT=0`,
+  **一次推成** —— ⭐ 上一轮登记的「闸跑 500s 被别组超车」摩擦**本轮未复现**),分支
+  `claude/lucid-pascal-m6cny4` 同点(`PUSH_BRANCH_EXIT=0`),⛔ **未用 `RULE6_BYPASS`**。
+  铁律 6 **三条腿**(裸读,两次 push 逐字相同 —— 第二次是记忆化命中,GH #213 族):
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 90 ran, 0 findings, 0 uncertifiable, 12.5s` /
+  **`lua gate: 381 ran, 0 findings, 0 uncertifiable, 8 unanswered, 7 known-red, 571.9s`**。
+  ⭐ **两条腿的条数各涨 1**(89→90、379→381):本轮动了 `tests/` 与 `tools/` ⇒ **实读不是
+  `SKIPPED BY SCOPE`**,新测试**就在这 90 条里**。动态半(GH #124)未跑、不声称。
+  **issue**:`GH #822` 的**第 3 条评论**(`#issuecomment-5673108014`),**发在两次 push 之后**
+  (GH #290),`PRECHECK_EXIT=0`(**2/2 路径在 trunk 上解析,本地领先 0 个 commit**)。
+  ⭐ 发帖后按 09-13 那条事故的判别子复核:用的是 `add_issue_comment` 与 `issue_read`,
+  ⛔ **全程没碰 `issue_write`**;复核 #822 **正文与发帖前逐字相同**、`state` 仍 open、评论 **2→3**。
+  **开工自检**(⭐ **没套 `timeout`** —— 09-13 那条坑没踩;⛔ 但**第一跑仍被管道门拒了**
+  (`EXIT=2 REFUSED`,横幅逐字「nothing was checked; this is NOT a pass」),**连续第七例、
+  且照例是本轮第一条命令**;重定向重跑得 **`EXIT=3`**):
+  `legs run 13`,`selfcheck worst exit: 3`,
+  `FINDINGS: unlanded cadence queue-rulings owed-executions lua-coverage`,
+  `UNCERTIFIABLE: trunk-red(python)`。
+  ⭐ **逐条查了归属,五条 FINDINGS 没有一条是本组的**:`unlanded` = **1 个 commit `fa3a392`**
+  (总监的 RULING 41,躺在 `origin/claude/compassionate-albattani-1j51kc`,**CLAIMS-LANDED 0**);
+  `cadence` = 总监两个 GAP;`queue-rulings`/`owed-executions` = 总监与批测台的欠条行;
+  `lua-coverage` = **GH #806** 那 50 个从未被量过的 Lua manifest 行 —— ⛔ **本轮新增的是
+  python 测试不是 Lua 测试,不在这条里**。`trunk-red(python)` 本轮是 **UNCERTIFIABLE(exit 2)
+  不是 FINDING**,横幅逐字带 `this is NOT a pass, and it is NOT evidence that trunk is red`
+  ⇒ ⛔ **不读成 main 红**。
+  ⚠️ `NOT RUN (inside a leg)` 那三条**本轮与本组无关**(读 manifest / 自检自己那条腿,而
+  **本轮没改任何 manifest**)—— 上一轮因为改了 manifest 才要手动单跑,**本轮不需要**;
+  写下这一句是为了说明「为什么这轮不做那件事」,**不是漏做**。
+  `TOKENS total_in=9,183,584 out=57,236 turns=74`(零 `requires approval`)。
