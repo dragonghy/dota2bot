@@ -724,6 +724,133 @@ function X.axe_IsLanePushClockOpen()
 end
 
 
+--- Soak candidate `axecallring` (turbo-only, INERT until armed) -- the ANCHOR of
+--- X.ConsiderQ's initiation firing point, which is a different question from the
+--- IMMUNITY of it (`axecallbkb_ii`, above).
+---
+--- THE DEFECT.  Berserker's Call is `No Target`: an AoE taunt centred on Axe that
+--- takes every enemy hero inside `radius` (315; tests/mock/special_value_shapes.lua
+--- carries the KV, and the +85 from special_bonus_unique_axe_2 is already folded
+--- into the handle X.ConsiderQ reads).  The shipped initiation branch nevertheless
+--- decides whether to cast it by interrogating ONE unit:
+---
+---     J.IsValidHero( botTarget ) and J.IsInRange( botTarget, bot, nRadius - 90 )
+---
+--- `botTarget` is J.GetProperTarget -- whoever Axe happens to be committing on.
+--- When that one hero stands outside the shrunken 225u ring the whole branch
+--- declines, and nothing downstream asks again: the remaining firing points are a
+--- channel interrupt, a creep-shove curfew, Roshan, Tormentor and a neutral camp.
+--- So a full multi-hero Call is thrown away because the WRONG HERO was the one
+--- asked about.
+---
+--- ⚠️ THIS IS NOT `axecallbkb_ii` RE-STATED, and the two must not be quoted as one
+--- sentence.  That id widens WHICH ANSWER the one interrogated unit may give (a
+--- spell-immune botTarget stops vetoing).  It leaves the anchor exactly where it
+--- is: with botTarget out of the ring, arming it still changes nothing.  This id
+--- moves the ANCHOR and leaves every immunity term alone -- the counter below
+--- applies the shipped J.CanCastOnNonMagicImmune to each ring member, i.e. the
+--- CONSERVATIVE reading, so an immune hero in the ring does not get counted here
+--- either.  ⛔ Neither gate names the other's id (the `pullcad` trap: a gate that
+--- names a sibling freezes FALSE the day the sibling is promoted, and
+--- check_armed_wiring.py still calls it WIRED).  Arming BOTH in one wave is a
+--- bundle read and is attributable to neither; section 7 of
+--- tests/test_axe_call_ring_anchor.lua asserts the independence.
+---
+--- WHY IT IS A GATE AND NOT A PLAIN FIX.  It ADDS casts, and this stream ships an
+--- action-adding change dark until a wave has sized its domain.  Gate OFF the
+--- block below is ABSENT, not re-derived: it is a separate `if` placed AFTER the
+--- shipped branch, so with the gate down X.ConsiderQ is byte-for-byte the shipped
+--- decision on every frame.
+---
+--- DIRECTION BY CONSTRUCTION, not by today's corpus.  The shipped branch is
+--- evaluated FIRST and is untouched, and this block only ever `return`s a desire
+--- where the shipped code fell through.  ⇒ arming can only ADD a Call; it can
+--- never remove one and can never move one onto a different instant.  A negative
+--- wave read is therefore attributable to "those extra multi-hero Calls were not
+--- worth their cooldown", and never to a Call this lever took away.
+---
+--- THE QUORUM IS 2, AND THAT CHOICE IS THE CONSERVATIVE SIDE.  A quorum of 1
+--- would also fire whenever any single castable enemy stands in the ring -- which
+--- would make this a superset of the shipped branch and would triple the offline
+--- domain (3 further Axe frames hold exactly one in-ring enemy).  It is refused
+--- on purpose: a Call spent on ONE hero who is not the one Axe committed on is
+--- the marginal case, and the argument this lever stands on -- that the ring and
+--- not the anchor is what a no-target AoE is worth -- only bites at >= 2.  The
+--- quorum is a named field so the test mirrors the number off the source instead
+--- of retyping it (the stale-mirror family).
+---
+--- WHAT IS DELIBERATELY LEFT ALONE.  One term moves: the anchor.  The 315u
+--- radius, the -50 search ring, the -90 anti-whiff margin (kept, and handed to
+--- the counter so the number is read off ONE place), the `not J.IsDisabled`
+--- veto, J.IsGoingOnSomeone, the creep-shove curfew, Roshan, Tormentor and the
+--- neutral-camp branch are untouched.  This is one lever, not a bundle.
+---
+--- WHAT IS NOT KNOWN.  The domain is UNSIZED and only a wave can size it; what IS
+--- measured, on real frames rather than assumed, is in
+--- tests/test_axe_call_ring_anchor.lua:
+---   * Over the 28 Call-READY Axe hero rows in tests/fixtures/ + tests/frames/,
+---     exactly ONE holds >= 2 live enemy heroes inside the 225u ring:
+---     tests/frames/f_260828_002127_axe_call_bkb_ring.lua (t=982.1, Call rank 3
+---     at cd 0, 319 mana against a 110 cost).  24 hold zero, 3 hold one.
+---   * On that frame the ring is Lina at 75.1u and Necrophos at 165.3u, both
+---     castable under the SHIPPED reader, while Shadow Shaman -- the enemy Axe is
+---     actually hitting, per that frame's own recent_damage (four 19-point Axe
+---     attack instances inside the window) -- stands at 276.9u, OUTSIDE the 225u
+---     anchor test and INSIDE the 315u taunt.  That is the defect's value column
+---     on real state: three heroes in the AoE, and the one the shipped branch
+---     asks about is the one that fails it.
+---   * J.IsGoingOnSomeone is false on EVERY frame make_fixture.py can produce
+---     (the behav dumper's snapshot schema carries no active-mode channel; GH
+---     #577 section 5), so section 4 repairs that ONE reader and labels the
+---     repair as FRAME ground truth (the recent_damage above), not as agreement
+---     with a shipped criterion -- the weaker of the two standings that file
+---     distinguishes.  Sizing still needs a wave: iterations/queue.json hero-91.
+function X.IsCallRingOn()
+
+	return J.IsModeTurbo() and J.IsSoakCandidate( 'axecallring' )
+
+end
+
+
+--- How many enemy heroes this Call would taunt AND the shipped readers agree it
+--- may be cast at, inside the ring the caller names.
+---
+--- `nRing` is handed in by the call site so the -90 margin is read off ONE place.
+--- Argument order on J.IsInRange is its own ( origin, target, radius ): that puts
+--- the CanBeSeen test on the ENEMY, which is the unit whose visibility the count
+--- is about.  (The shipped branch writes it the other way round,
+--- `J.IsInRange( botTarget, bot, ... )`, which lands CanBeSeen on Axe himself --
+--- harmless there only because J.CanCastOnNonMagicImmune( botTarget ) already
+--- tested the target's visibility on the same line.)
+---
+--- A nil list answers 0 -- the RESTRICTIVE default, because a permissive one
+--- would make a caller that forgot its argument fire the branch on every frame.
+function X.axe_CountCallRingTargets( tEnemies, nRing )
+
+	if tEnemies == nil then return 0 end
+
+	local nCount = 0
+	for _, npcEnemy in pairs( tEnemies )
+	do
+		if J.IsValidHero( npcEnemy )
+			and J.IsInRange( bot, npcEnemy, nRing )
+			and J.CanCastOnNonMagicImmune( npcEnemy )
+			and not J.IsDisabled( npcEnemy )
+		then
+			nCount = nCount + 1
+		end
+	end
+
+	return nCount
+
+end
+
+
+--- How many heroes the ring must hold before `axecallring` fires.  See the
+--- header above for why it is 2 and not 1.
+X.nCallRingQuorum = 2
+
+
 function X.ConsiderQ()
 
 
@@ -782,7 +909,22 @@ function X.ConsiderQ()
 			return BOT_ACTION_DESIRE_HIGH, sCastMotive
 		end
 	end
-	
+
+	-- [axecallring] The ring, not the anchor.  Gate off this whole block is
+	-- ABSENT -- it is a separate `if` placed after the shipped branch, so with
+	-- the gate down X.ConsiderQ answers exactly what it shipped.  See
+	-- X.IsCallRingOn for the defect, the direction argument and the domain.
+	if X.IsCallRingOn()
+		and J.IsGoingOnSomeone( bot )
+	then
+		local nRingTargets = X.axe_CountCallRingTargets( nInRangeEnemyList, nRadius - 90 )
+		if nRingTargets >= X.nCallRingQuorum
+		then
+			sCastMotive = 'Q-环'..nRingTargets
+			return BOT_ACTION_DESIRE_HIGH, sCastMotive
+		end
+	end
+
 
 
 	--带线时嘲讽小兵攻击自己

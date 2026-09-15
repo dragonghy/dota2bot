@@ -22,6 +22,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-184. ✅ **主体:`axecallring`(turbo-only)—— Berserker's Call 由**环**决定,不由被问的那一个人决定。**
+   落在 `bots/BotLib/hero_axe.lua` 的新 `X.IsCallRingOn` / `X.axe_CountCallRingTargets` /
+   具名量 `X.nCallRingQuorum = 2` + `X.ConsiderQ` 里**排在出厂先手支路之后的一条独立 `if`**。
+   报告 `iterations/reports/hero/20260915T200000Z.md`;新 `tests/test_axe_call_ring_anchor.lua` **19 绿**;
+   变异台 `tools/agent/mutstand_axecallring.sh` **12/12 全杀**;新 queue 请求 **hero-91**。
+   **零 EC2 / 零 CE / S3 读取 0 个对象。P4.4 自评:(i)**。
+   - ⭐⭐ **线索是本文件自己写下又明说没修的那一项**:`axecallbkb_ii` 的 header 逐字写着单位锚点
+     「throws away every OTHER enemy standing in the same 315u ring」,然后在
+     *WHAT IS DELIBERATELY LEFT ALONE* 里把**锚点**留在原地,只搬免疫项。
+     ⇒ **已落地修复的 deliberately-left-alone 段落不只是杠杆清单,它有时逐字点名下一根杠杆。**
+   - ⛔ **两个域两个数**:支路层 **1**(28 行 Call 就绪的活 Axe 里,225u 环内 ≥2 人的恰好 1 行;
+     24 行 0 人、3 行 1 人),**端到端 0** —— 就是那一行上 `X.SkillsComplement` 先问 `X.ConsiderR`,
+     **斩杀赢了顺序**,armed 与 shipped 指令逐条相同。**M12(让大招弃权)是这个 0 的对照。**
+     没做这个切分的一轮会把 1 当成端到端读数报出去,报的是一发不会发生的技能。
+   - ⭐⭐ **变异台报过一个从未存在过的存活者**:M9 第一版的四行锚点在 **`X.ConsiderW` 里逐字也有**
+     (第五行才分家:`nRadius - 90` 对 `nCastRange`)⇒ python `assert` 失败、文件没改、套件照绿、
+     台子打 **SURVIVED**。已给台子加闸:**变异没打上去就 abort**。
+     ⚠️ **`mutstand_axecullbm.sh` 今天仍有同一个洞。**
+   - ⚠️ **一个读数被修,标明是弱的那一种**:`J.IsGoingOnSomeone` 读 `GetActiveMode()`,dumper 快照
+     schema 没有这一路(GH #577 §5)⇒ 任何 fixture 上恒 false。§4 修成 `BOT_MODE_ATTACK`,
+     立足点**全部**是该帧自己的 `recent_damage`(四次 19 点 Axe 攻击落在 Shadow Shaman 身上),
+     §1.3 把它钉成可红的断言。
+   - **附带(量具,不是主体)**:`-183` 交下来的 Lua 闸覆盖面 —— 先实测秒数
+     (`test_axe_call_ring_anchor` **0.72s** / `test_axe_cull_blade_mail` **2.05s**,cap 5.5s,
+     累计 239.4 → **242.192 / 300.0**),再**手工**登记两行进 `lua_gate_manifest.json`。
+     ⛔ **没跑 `lua_gate_measure.py`**(GH #783:全量重测清空 `known_red`,挡死下一个人),
+     且**故意不动 `measured_at`**(GH #810:成员资格看绝对秒数,一个时间戳描述不了两次测量)。
+   - ⚠️ **GH #229 重叠登记**:开工自检与变异台时间重叠,自检报「a killed test left `soak_side.lua`
+     ARMED; removed it」。实际后果为零(收尾复跑 19/0,`git status` 干净),**但重叠要登记**。
+   - ⛔ **trunk red 不代修**:`tests/test_py_gate.py`(**GH #839**,harness/总监);
+     自检 Lua 腿 **9 个 check UNCERTIFIABLE**(120s 没跑完)⇒ **不是通过,本轮不引**。
+   - **下一轮主体第一候选**:⚠️ 第 1 条是量具**只能当附带** —— 给 `mutstand_axecullbm.sh` 补 M9 那条闸。
+     **能当主体的是第 2 条**:`X.ConsiderW` 打野支路搜 `nCastRange + 100` 却**没有任何 reach 判据**
+     (团战支路有 `X.axe_IsHungerFightTargetInReach`,打野支路没有)—— `liondrainreach` 同族,**域未量过**。
+     第 3 条:`X.ConsiderQ` 带线支路的 `#hAllyList <= 2`,`axecallclock` 的 LIMIT 段第 4 条明说
+     「是另一个 id 的事」,**那张欠条还没人接**。
+
 -183. ✅ **⭐ 开工第一条命令(`-182` 问「门开在哪里」,本轮的答案是:门已经开了,而且它管用):**
    `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "EXIT=$?"; tail -50 /tmp/sc.log`
    —— ⭐⭐ **本轮第一条命令仍然踩了管道(证据纪律 3 同形第 18 次),而脚本的 `REFUSED` 门当场拦下它**
@@ -8166,6 +8203,24 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-15T20:00Z(报告 `iterations/reports/hero/20260915T200000Z.md`;**backlog:新开 `-184`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`axecallring`**(turbo-only,**未 armed**,
+  P4.2 冻结期不申请入集);新 queue 请求 **hero-91**;**P4.4 自评:(i)**)
+  **主体:Berserker's Call 是 `No Target` 的 315u AoE 嘲讽,而 `X.ConsiderQ` 用一个单位(`botTarget`)
+  决定放不放 —— 那一个人站到 225u 环外整条支路就拒,下游没人再问一次。**
+  - ⭐ 真实帧 `tests/frames/f_260828_002127_axe_call_bkb_ring.lua`(t=982.1,Call rank 3 cd 0,319 蓝对 110):
+    Lina **75.1u** + Necrophos **165.3u** 都在 225u 环内,而 **Axe 正在打的** Shadow Shaman 在 **276.9u** ——
+    **在 315u 嘲讽里,在 225u 锚点外**(该帧自己的 `recent_damage`:四次 19 点 Axe 攻击)。
+  - ⛔ **不是 `axecallbkb_ii` 的复述**:那个 id 放宽「被问的那一个单位可以给什么答案」,**锚点不动**;
+    本 id 搬锚点,**一个免疫项都不碰**(计数器套用出厂 `CanCastOnNonMagicImmune`,M5 打的就是吞掉它那版)。
+    **两个 id 不得同腿 arm**,互不点名(pullcad,§7.2),§7.1 驱动「单 arm (ii) 不点火本支路」。
+  - ⛔ **支路层域 1 / 端到端域 0**,后者是测出来的(斩杀赢了 `SkillsComplement` 的顺序),M12 是它的对照。
+  - ⭐ **法定人数 2 不是 1 是保守侧,代价数出来了**:1 会把离线支路层域从 1 变成 4。
+  - ⚠️ 变异台报过一个**从未存在过的存活者**(M9 锚点在 `X.ConsiderW` 里也匹配)⇒ 已加「变异没打上去就 abort」闸;
+    **`mutstand_axecullbm.sh` 仍有同一个洞**。
+  - 附带:两行手工登记进 `lua_gate_manifest.json`(实测 0.72s / 2.05s,242.192/300.0),
+    **没跑全量重测**(GH #783),**没动 `measured_at`**(GH #810)。
+  - ⛔ trunk red 不代修:`tests/test_py_gate.py`(GH #839);自检 Lua 腿 9 个 check UNCERTIFIABLE。
 - 2026-09-15T17:00Z(报告 `iterations/reports/hero/20260915T170000Z.md`;**backlog:新开 `-183`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`wkrank0`**(turbo-only,**未 armed**);
   推进 **GH #407** 第二格(**不关**);新 queue 请求 **hero-90**;**P4.4 自评:(i)**)

@@ -29,18 +29,18 @@
       "6. the staged slot is level 21 -- and its pool reading is flagged, not usable"
     ],
     "tests/test_wk_q_lane_reach.lua": [
-      "\u00a71 the corpus puts an enemy in the band on 6 of 38 Wraith King frames"
+      "§1 the corpus puts an enemy in the band on 6 of 38 Wraith King frames"
     ]
   },
   "known_red_note": "Red on trunk when this leg landed (GH #624), each confirmed by an individual unloaded re-run. The gate does not refuse a push for these; it refuses for anything NOT on this list. The list is meant to SHRINK -- it is not an exemption, and it is printed by name on every run. `known_red_cases` narrows each entry to the CASES that were failing: a baselined file that starts failing somewhere NEW refuses the push, while ordinary corpus drift inside an already-failing case does not.",
   "measure_timeout_seconds": 6.0,
   "measured_at": "2026-09-10T13:08:31Z",
-  "measured_count": 401,
+  "measured_count": 403,
   "per_test_cap_seconds": 5.5,
   "reselected_at": "2026-09-10T13:14:32Z",
   "reselected_note": "knobs replayed over the seconds recorded at `measured_at`; no test was re-run",
-  "selected_count": 325,
-  "selected_total_seconds": 239.422,
+  "selected_count": 327,
+  "selected_total_seconds": 242.192,
   "tests": {
     "tests/test_abil1st_first_unit_reader.lua": {
       "in_gate": true,
@@ -2046,6 +2046,18 @@
       "in_gate": true,
       "reason": "fast",
       "seconds": 2.282
+    },
+    "tests/test_axe_call_ring_anchor.lua": {
+      "in_gate": true,
+      "reason": "fast (measured individually 2026-09-15 by hero, NOT by a suite re-measure: lua_gate_measure.py rewrites known_red and would block the next pusher, GH #783)",
+      "seconds": 0.72
+    },
+    "tests/test_axe_cull_blade_mail.lua": {
+      "in_gate": true,
+      "reason": "fast (measured individually 2026-09-15 by hero, NOT by a suite re-measure: lua_gate_measure.py rewrites known_red and would block the next pusher, GH #783)",
+      "seconds": 2.05
     }
-  }
+  },
+  "hand_added_at": "2026-09-15T20:xxZ",
+  "hand_added_note": "Two rows were added BY HAND, each with its own measured wall clock, rather than by re-running lua_gate_measure.py. Reason: a full re-measure rewrites `known_red` (6 entries today) and hands the next pusher a gate that refuses for reds it did not cause (GH #783). Both files were under `per_test_cap_seconds` when measured and the cumulative total stayed under `budget_seconds`. `measured_at` is NOT moved by this: these seconds were taken on a different container from the rest of the table, and a single `measured_at` cannot describe two measurement sessions (GH #810: membership is decided by absolute seconds, so which container measured them matters)."
 }
