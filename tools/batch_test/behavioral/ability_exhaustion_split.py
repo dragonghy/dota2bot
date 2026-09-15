@@ -194,6 +194,60 @@ def is_linked(frames):
     return sum(1 for k in standing if top[k] > at_best[k]) >= 2
 
 
+def linked_group(frames):
+    """The LINKED group's member names and its free innate ranks, or (None, 0).
+
+    is_linked() answers "is this body inflated"; this answers "by how much",
+    which is what LIMIT A said could not be repaired by `free`.  The repair is
+    division, not subtraction: a linked group rises as ONE ability, so the
+    points ever put into it equal the COMMON rank, i.e. group_sum // size, at
+    every level -- whereas `free` subtracts a constant 2 read at level 1 and so
+    falls further behind with every further point (LIMIT A, verbatim).
+
+    ⛔ THE DIVISION IS ONLY LICENSED BY LOCKSTEP, SO LOCKSTEP IS CHECKED, NOT
+    ASSUMED.  If any frame ever shows two members of the group at different
+    ranks, group_sum/size is not a rank and this returns (None, 0) -- the body
+    stays an excluded LIMIT A row, which is the conservative outcome.  Measured
+    on W40: 8/8 nevermore bodies, group size 3, frames-with-unequal-ranks 0.
+
+    Second return value is the body's INNATE free ranks: level-1 standing rows
+    that are NOT in the group.  At level 1 exactly one point has been spent and
+    (given a group) it went into the group, so every other standing rank was
+    handed over.  ⚠️ On W40 this is 0 for all 8 linked bodies -- no nevermore
+    carries an innate -- so that term is UNEXERCISED BY THIS CORPUS and is
+    written for the next one; do not cite it as measured.
+    """
+    lvl1 = [f for f in frames if f.get('level') == 1 and f.get('abilities')]
+    if not lvl1:
+        return None, 0
+    best = max(lvl1, key=lambda f: sum(_abilities(f).values()))
+    at_best = _abilities(best)
+    standing = {k for k, v in at_best.items() if v > 0}
+    top = defaultdict(int)
+    for f in frames:
+        for n, l in _abilities(f).items():
+            top[n] = max(top[n], l)
+    group = {k for k in standing if top[k] > at_best[k]}
+    if len(group) < 2:
+        return None, 0
+    for f in frames:
+        L = _abilities(f)
+        if L and len({L.get(k, 0) for k in group}) > 1:
+            return None, 0          # not lockstep -> no licence to divide
+    return group, sum(at_best[k] for k in standing - group)
+
+
+def deflated_spent(ledger, group, innate):
+    """Points this ledger proves were SPENT, with a linked group counted once.
+
+    group_sum is divisible by len(group) because linked_group() verified
+    lockstep; // is exact there, and is used rather than / so a future
+    non-lockstep caller gets an integer it can be challenged on.
+    """
+    gsum = sum(v for k, v in ledger.items() if k in group)
+    return sum(ledger.values()) - gsum + gsum // len(group) - innate
+
+
 def _tiers_reached(lvl):
     return sum(1 for t in TIERS if lvl >= t)
 
@@ -216,6 +270,7 @@ def scan(paths, lo=18, hi=22):
         for hero, frames in per.items():
             free, had_window = free_ranks(frames)
             linked = is_linked(frames)
+            group, innate = linked_group(frames)
             if not had_window:
                 nowindow.append((game, hero.replace(FULL, ''), first[hero]))
             moves, prev = [], None
@@ -247,10 +302,19 @@ def scan(paths, lo=18, hi=22):
                 L = _abilities(led[-1])
                 gaps = {n: corpus[n] - v for n, v in L.items() if n in basic and corpus[n] > v}
                 visible = sum(L.values())
+                # On a linked body the group DIVISION replaces the `free`
+                # subtraction; applying both would credit the level-1 extra
+                # ranks twice.  banked_free is kept alongside so the GH #822
+                # reading stays auditable next to the deflated one.
+                spent = (deflated_spent(L, group, innate) if group
+                         else visible - free)
                 rows.append(dict(game=game, hero=hero.replace(FULL, ''), idx=first[hero],
                                  level=lvl, t=led[-1]['t'], visible=visible,
                                  free=free, free_window=had_window, linked=linked,
-                                 banked=lvl - (visible - free) - _tiers_reached(lvl),
+                                 group=sorted(group) if group else [],
+                                 spent=spent,
+                                 banked=lvl - spent - _tiers_reached(lvl),
+                                 banked_free=lvl - (visible - free) - _tiers_reached(lvl),
                                  banked_raw=lvl - visible - _tiers_reached(lvl),
                                  deficit=sum(gaps.values()), gaps=gaps))
     return rows, releases, corpus, basic, nowindow
@@ -294,6 +358,31 @@ def main(paths, lo=18, hi=22):
     print('  UNCORRECTED split for comparison: PROVEN %d / INDETERMINATE %d / zero %d / inflated %d'
           % raw)
     print('  ⭐ direction: free >= 0, so banked only RISES; a PROVEN row can never be retracted.')
+
+    # The linked-group deflation (LIMIT A's repair).  Printed as a DELTA against
+    # the free-only reading so both cuts travel together (iron rule 4(iii)).
+    lk = [r for r in rows if r['group']]
+    if lk:
+        fp = sum(1 for r in lk if r['banked_free'] > 0 and r['deficit'] > 0)
+        dp = sum(1 for r in lk if r['banked'] > 0 and r['deficit'] > 0)
+        print('\nlinked-group deflation (LIMIT A repaired by DIVISION, not subtraction):')
+        print('  linked rows                          %4d  group(s)=%s'
+              % (len(lk), sorted({tuple(r['group']) for r in lk})[0]))
+        print('  under `free` only : PROVEN %3d   banked>0 %3d  ==0 %3d  <0 %3d'
+              % (fp, sum(1 for r in lk if r['banked_free'] > 0),
+                 sum(1 for r in lk if r['banked_free'] == 0),
+                 sum(1 for r in lk if r['banked_free'] < 0)))
+        print('  under DEFLATION   : PROVEN %3d   banked>0 %3d  ==0 %3d  <0 %3d'
+              % (dp, sum(1 for r in lk if r['banked'] > 0),
+                 sum(1 for r in lk if r['banked'] == 0),
+                 sum(1 for r in lk if r['banked'] < 0)))
+        bk = sorted(r['banked'] for r in lk)
+        print('  deflated banked: min %d  median %d  max %d   (⚠️ 4(ii): distribution, %s)'
+              % (bk[0], bk[len(bk) // 2], bk[-1],
+                 ' '.join('%d:%d' % (v, bk.count(v)) for v in sorted(set(bk)))))
+        print('  ⭐ direction: group_sum//size <= group_sum - free for every rank >= 1,')
+        print('     so deflation only LOWERS spent, only RAISES banked, and like the free')
+        print('     term can add PROVEN rows but never retract one.')
     if nowindow:
         print('  bodies with no level-1 window:')
         for g, h, i in nowindow:
