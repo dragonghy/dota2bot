@@ -18276,3 +18276,52 @@
     (4) ⚠️ 照旧挂账:#257 两条残项、OD 那 24 s 残差(**第十二轮**)、09-13T16:30Z 的 n=1 复现(**第十七轮**);
     (5) ⭐ 若刹车解除并发新波,**新波优先于以上任何一条**。
   - **完整报告**:`iterations/reports/replay-check/20260915T185102Z.md`
+- **[2026-09-15T19:5xZ 收工回填]** 落地 `origin/main` **`1e065f1a..ceac585a`**
+  (⚠️ 第一次 `push origin HEAD:main` 被拒(`! [rejected] … (fetch first)`,英雄组
+  `8094fc94..1e065f1a` 先到),`git pull --rebase origin main` **`REBASE_EXIT=0`** 后重推
+  **`PUSH_MAIN_EXIT=0`**)。⛔ **全程未用 `RULE6_BYPASS`。**
+  ⚠️ **分支 ref 停在 rebase 前的孪生 `906dbb23`(同内容),因下面那次拒推未同步** ——
+  ⭐ 用 `git ls-remote origin` 问的远端(章程 W73 坑):`main` = `ceac585a…` = 本地 HEAD
+  ⇒ **产出确实在 main 上**;`git status -sb` 的 `[ahead 3, behind 1]` 是**本地缓存的记忆,不是权威**。
+  **铁律 6 三条腿**:分支(rebase 前)`GATE_EXIT=0 CLEAN` / `py gate: 94 ran, 0 findings, 15.3s` /
+  `lua gate: SKIPPED BY SCOPE`;`HEAD:main` 重推 `py gate: 94 ran, 0 findings, 15.4s` /
+  `lua gate: SKIPPED BY SCOPE`。⚠️ **`SKIPPED BY SCOPE` 不是通过**(只动 `iterations/`);
+  动态半(GH #124)未跑、不声称。
+  - ⭐⭐ **收尾撞出一条,已开单(报告 §八)**:**同一棵树,Lua 闸一次拒推、一次放行。**
+    分支推(与 main 同点 ⇒ diff 为空 ⇒ 钩子跑全部)读
+    `lua gate: 390 ran, **1 findings**, 0 uncertifiable, 10 unanswered, **5 known-red**, 754.8s`
+    ⇒ **`PUSH_BRANCH_EXIT=1` 拒推**;约 13 分钟后**同树零改动**直接跑同一把闸读
+    `390 ran, **0 findings**, 0 uncertifiable, 10 unanswered, **6 known-red**, 743.6s`。
+    `ran`/`unanswered`/`uncertifiable` **逐位相同**,`git status` 空,
+    manifest mtime `18:36:04` **早于两次运行** ⇒ 基线没被改写。
+    ⇒ **不是红↔绿,是豁免↔拦路**:`lua_gate.py:298-340` 的豁免是**按用例**给的,
+    `known_red` 里的文件若以**别的**用例失败、或**一条用例名都没打出来**,就**升级成 finding ⇒ 拒推**。
+    **比 GH #629 更糟一档**:一个**早被基线接受**的红,把一个**毫不相关的组**的 push 拒掉,
+    而闸给的话术仍是 `RULE6_BYPASS=1`。
+    ⛔ **报的是形状不是根因**:第一次的逐条文本**被我自己在 `git push` 那行的 `grep -E` 过滤掉了**
+    (登记为操作失误)⇒ 哪个文件、以哪条用例升级,没抓到。
+    ⛔ **排除了**:六个 `known_red` 文件**各跑 3 次 = 18 次,全部确定性红且失败用例数与基线逐位相同**
+    ⇒ 单跑是稳的,不稳只在闸内(390 连跑、负载下)出现;
+    `test_fieldsip_atom_pricing.lua` **不在 `known_red` 里**,在那 10 个 `unanswered` 里,与本条无关。
+    - ⛔⛔ **新踩一坑(本组「量到的是不是我以为的东西」第四例)**:先跑
+      `lua5.1 tests/<file>.lua` 判活,六个文件**全部 rc=0 零 FAIL** —— 而 `lua_gate.py:160-168`
+      的 docstring 逐字警告这正是 *"a did-not-run wearing a pass"*(直接跑文件只加载模块、
+      **一条断言都不执行**就退 0)。**判别子就写在被测工具自己的注释里。**
+      ⭐ 唯一正确的那一行:**`lua5.1 tests/run_tests.lua <basename>`**(走 runner)。
+  - **开工自检**:⚠️ 第一条命令**误接管道**被它自己挡住(`REFUSED: … stdout is a pipe; exit 2,
+    nothing checked`,**它自己记这是第 5 次复发**);改重定向后一次跑成,⛔ **没套 `timeout`**。
+    `legs run 13`,**`selfcheck worst exit: 3`**,
+    `FINDINGS: unlanded cadence queue-rulings owed-executions lua-coverage trunk-red(python) trunk-red(lua)`,
+    `UNCERTIFIABLE: none`。**逐条查过归属,本组一条都不占**:
+    `unlanded` = `e2ed0e7` 英雄组 `wkrank0`,**同一份工作本轮已作为 `1e065f1a` 落地**(rebase 孪生 ⇒ 假阳);
+    `cadence` = `GAP cadence hero` **4.4h**,英雄组;`trunk-red(lua)` = GH #814 族,本轮零 Lua 改动 ⇒ 不 stash;
+    `lua-coverage` = GH #806,本轮零新测试。
+    ⚠️ **读数变了**:`trunk-red(python)` 本轮是 **FINDING**,前两轮是 `UNCERTIFIABLE`。
+    ⚠️ 别组的洞:看守自检自己那三条 python 用例**连续第四轮** `UNCERTIFIABLE (did NOT run)`,属 [harness]/总监。
+  - **issue**:**净增 +1**(§八 那条 [harness],号见下;先搜过重两次,命中的 #709/#806/#825/#828/#807
+    都是「哪条 trunk 红没人管」,**没有一条讲「同树两读落进不同的桶」**);
+    **1 条评论**发到 **GH #835**(`#issuecomment-5686550330`,本轮主产出)。
+    ⭐ 发在 push 之后(GH #290),`PRECHECK_EXIT=0`(**4/4 路径在 `origin/main` 上解析,本地领先 0**);
+    发帖前读完 #835 正文 + 全部评论(2 条);用 `add_issue_comment`,事后 `issue_read` 复核 ——
+    正文**逐字相同**、`state` open、评论数 **2→3**;⛔ **全程没碰 `issue_write`**。
+  - `TOKENS total_in=9,752,089 out=64,148 turns=67`(零 `requires approval`)。
