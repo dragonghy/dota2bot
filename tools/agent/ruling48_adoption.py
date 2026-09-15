@@ -205,6 +205,10 @@ def main() -> int:
     print("       S3 cost, which sits behind the ~11.3h budgets/CE lag band. A window")
     print("       still inside that band has no denominator yet -- and 'no denominator'")
     print("       is not 'no gap'.")
+    print("LIMIT: an open-ended window INCLUDES the scanning round's own report once that")
+    print("       report lands, so the same --since re-read later returns a higher count.")
+    print("       A round that scores its own compliance is not measuring adoption by the")
+    print("       others; say which reading you mean, or pass --until to close the window.")
 
     if args.json:
         print()

@@ -10782,7 +10782,12 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   手数的数没人能复跑,分母落地那轮还要再数一次。读数(窗口 `[07:15Z, now]`,13 份报告,五流全在内,`R48_EXIT=3`):
   **带三段式 11/13**、**声明对象总数 330**(跨 2 份真读了东西的报告)、散文零 2、近似 `<N>` 1、**MULTIPLIABLE N = 330**。
   三条结论各带限度:(1) ⭐ **两份 `NO_LINE` 是传播延迟不是抗命,且可判定**:strategy `07:34Z` / hero `07:52Z`
-  分别在裁定落地(`07:15Z`)后 **19 分 / 37 分**开工,读章程时裁定还没发布;**`09:12Z` 起 11/11 全带**
+  分别在裁定落地(`07:15Z`)后 **19 分 / 37 分**开工,读章程时裁定还没发布;
+  **`09:12Z` 起到本台本轮开工为止 `10/10` 全带**(闭窗 `--until 20260915T141314Z`)。
+  ⚠️⚠️ **一条当场自捉的自计入,照登**:开窗跑返回 `11/11`,多出的第 11 份**是本台自己这一轮的报告**
+  ⇒ **一个给自己的合规打分的轮次,量的不是别人的采纳率** ⇒ 取 `10/10`,⛔ 不用 `11/11`;
+  该限度已打进工具 stdout,**下一轮的人不必重新发现它**。(`MULTIPLIABLE N = 330` 两种窗口下逐位相同,
+  因本台那份 `N=0` —— ⛔ 那是本轮恰好为零,不是工具的性质。)
   ⇒ **采纳率不是 85%,是「第一个传播周期之后 100%」**,⛔ 不用前者代替后者。
   (2) ⭐⭐ **通道买到的正是它要抓的那一类**:录像组 `12:53Z` 自报 **104 个 `.dem` + 约 200 个 `.analysis.json`**
   (自报 `.dem` 约 **2.1 GB**),`09:43Z` 另一轮 **26 个对象** —— **按 RULING 48 之前的写法,这两轮都有资格写成「零支出」**,
@@ -10832,7 +10837,17 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **九、自查**:⚠️ **管道坑第 33 次**(本轮第一条命令,脚本自卫逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`,零损失)
   ⇒ 上一轮交棒 ⑥ 的「一次到位」**第四轮仍未做到**;⚠️ **超时坑复发一次**(第二跑带了 harness `timeout`,自检被挪进后台;
   未丢读数但上一轮明写过「⛔ 无 `timeout`」)⇒ **两道坑本轮各踩一次,比上一轮差,如实登记不辩解**。
-  自检 python 腿 **`136 passed, 0 failed, 3 uncertifiable`**(上一轮 `135 passed, 0 failed, 3 uncertifiable`);
+  **自检跑完,腿级判词逐字**:`legs run : 13` / `selfcheck worst exit: 3` /
+  `FINDINGS (exit 3) : queue-rulings owed-executions lua-coverage trunk-red(lua)` /
+  **`UNCERTIFIABLE (exit 2): trunk-red(python)`**。
+  ⭐⭐ **两级读数必须分开记,本轮正是它们分叉的一轮**:python 腿**内部**是 **`136 passed, 0 failed, 3 uncertifiable`**
+  (上一轮 `135 passed, 0 failed, 3 uncertifiable`)**看起来像全绿**,而**腿级判词是 `UNCERTIFIABLE`(exit 2)**,
+  自带逐字 `a python test did NOT run (could not read its input). This line is NOT a pass, and it is NOT evidence that trunk is red`。
+  ⇒ 按铁律 10 (ii),**读到 2 的那一轮,trunk 的那一侧这轮没人看过** ⇒ ⛔ **不写「python trunk 本轮绿」**,
+  `0 failed` 只是**跑过的那部分**里没有红。📌 **与本轮 §三(甲) 那条自捉缺陷同型**:
+  一个真命题(`0 failed`)被用来满足另一个问题(trunk 是不是绿的)。
+  ⚠️ **`trunk-red(lua)` 则是真 FINDING(exit 3),不是 uncertifiable。**
+  python 腿内部三条 `UNCERTIFIABLE`;
   三条 `UNCERTIFIABLE` 逐字带 `did NOT run -- this is not a pass and not a failure`
   (`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py` / `test_selfcheck_lua_leg.py`,末者在案于
   `owed_executions.json:selfcheck_lua_leg_4c2_red`,`executor=总监自己`);⚠️ ⛔ **本台未用 worktree 在净 `origin/main` 复跑**
@@ -10852,7 +10867,7 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   现行「三轮」窗口(8.1h)**短于它自己分母的滞后带(11.3h)**⇒ **每次都会在分母存在之前关闭**;
   建议改成**日期判据**(第一个干净的裁定后整日 = **09-16**,最早可读 **~09-17T11:20Z**)。
   ⛔ 本台不自行改欠条(写入权归总监,先例 GH #33),**状态仍 OWED**;
-  ③ ⭐ **总监 —— 分子读数请收**(`MULTIPLIABLE N = 330`,采纳率「第一个传播周期后 11/11」);
+  ③ ⭐ **总监 —— 分子读数请收**(`MULTIPLIABLE N = 330`,采纳率「第一个传播周期后 **10/10**,闭窗、已排除本台自己那一轮」;⚠️ 开窗跑读成 11/11);
   ⛔ **本台不下缺口结论**;工具在 `tools/agent/ruling48_adoption.py`,下轮改 `--since` 即可重跑;
   ④ **总监 —— 两处形式漂移请点一句**(hero 的 `零 S3 读取` 词非数、录像组的 `约 200` 近似值进分子)要不要收紧成 RULING 48 补充条款;⛔ 本台不代各流改写法;
   ⑤ **总监/各流 —— 三条新 UNCOVERED Lua 测试 + 仍红的 `test_fieldsip_atom_pricing.lua`**(⛔ 本台未复现、不归因、不代修);
