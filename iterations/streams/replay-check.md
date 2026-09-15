@@ -17793,3 +17793,33 @@
     (5) ⚠️ OD 那 24 s 残差**连续第七轮挂账**;09-13T16:30Z 的 n=1 复现**连续第十二轮挂账**;
     (6) ⛔ 钉帧前先读完该 issue 评论;(7) ⛔ 引数必连切法,每英雄表只作选点(LIMIT C)。
   - **完整报告**:`iterations/reports/replay-check/20260915T035210Z.md`
+- **[2026-09-15T04:10Z 收工回填]** 落地 `origin/main` **`d3d94498..3ad1a9c3`**
+  (`PUSH_MAIN_EXIT=0`,**一次推成**),分支 `claude/lucid-pascal-6vkg1l` 同点
+  (`PUSH_BRANCH_EXIT=0`),⛔ **未用 `RULE6_BYPASS`**。
+  铁律 6 **三条腿**(裸读):`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 91 ran, 0 findings, 0 uncertifiable, 11.9s` /
+  `lua gate: 383 ran, 0 findings, 0 uncertifiable, 8 unanswered, 7 known-red, 562.7s`。
+  ⭐ **py 腿 90 → 91:本轮新测试真的跑了** —— 闸自己打「66 new test(s) not in the manifest
+  were run anyway」⇒ ⛔ **「不在 manifest = fail-open 不执行」这个读法是错的**:
+  不在 manifest ≠ 不被执行,**它被执行了、只是没被 manifest 记账**;
+  真被 EXCLUDED 的是超预算的那 8 条,**本轮新测试不在其中**。动态半(GH #124)未跑、不声称。
+  **开工自检**(⭐ `nohup` 重定向、⛔ **没套 `timeout`、没走管道** —— 连续三轮登记的三条坑
+  本轮都没踩;⭐ **一次跑成**,上一轮那个「第一跑被管道门拒」本轮未复现):
+  `legs run 13`,`selfcheck worst exit: 3`,
+  `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`。
+  ⭐ **逐条查了归属**:`trunk-red(lua)` = `TRUNK RED -- 1 of 105` = `test_fieldsip_atom_pricing.lua`
+  = **GH #814**,已证明**红在 pristine 树上、非本轮引入**;`queue-rulings`/`owed-executions`
+  = 总监与批测台的欠条行(`campgrade` 独占波 / GH #388 的 09-22 倒计时 / GH #779);
+  `lua-coverage` = **GH #806** —— ⛔ **本轮新增的是 python 测试不是 Lua 测试,不在这条里**。
+  ⚠️ **`GAP cadence replay-check` 这一条是本组的**,但**它是在本轮开工时刻量的**
+  (自检是本轮第一条命令,那时本轮报告还不存在)⇒ **这一份报告就是补上它的那一份**;
+  ⛔ **下一轮不要把它当成未了结的发现**。
+  **issue**:净增 **0**;**1 条评论**发到 **GH #822**(`#issuecomment-5674584783`),
+  **发在两次 push 之后**(GH #290),`PRECHECK_EXIT=0`(**5/5 路径在 trunk 上解析,本地领先 0 个 commit**)。
+  ⭐ **发帖前读完了它全部 3 条评论**(均本组前三轮所发)—— 第三条结尾那句
+  「10 个英雄里 9 个 PROVEN,第 10 个(OD)…」**正是本轮的立案句,不读就会重新发明它**。
+  ⭐ 发帖后按 09-13 事故判别子复核:用 `add_issue_comment` 与 `issue_read`,
+  ⛔ **全程没碰 `issue_write`**;#822 **正文与发帖前逐字相同**、`state` 仍 open、评论 **3 → 4**。
+  **AWS**:`AWS_SETUP_EXIT=0`,**只读 S3(8 个 `.dem`)、零 EC2、零 CE、零支出**;
+  dumper `get_dumper.sh` **缓存命中**。
+  `TOKENS total_in=16,036,417 out=88,232 turns=100`(零 `requires approval`)。
