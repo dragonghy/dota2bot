@@ -17721,3 +17721,11 @@
   **本轮没改任何 manifest**)—— 上一轮因为改了 manifest 才要手动单跑,**本轮不需要**;
   写下这一句是为了说明「为什么这轮不做那件事」,**不是漏做**。
   `TOKENS total_in=9,183,584 out=57,236 turns=74`(零 `requires approval`)。
+- **[2026-09-15T01:15Z 附言(上一条回填自身那次 push 的读数)]** 上面那条回填也要过闸:
+  `3f8ab32a..3d710699` 落 main(`PUSH_MAIN_EXIT=0`)与分支(`PUSH_BRANCH_EXIT=0`),
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 90 ran, 0 findings, 0 uncertifiable, 11.7s` /
+  **`lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`**
+  ⚠️ **范围判定不是通过** —— 这一推只动 `iterations/`,所以它与上一条记的「381 条实读」
+  **不矛盾也不重复**:实读买在**代码那次 push** 上,本次是文档推送。
+  写下这一行是因为**四次 push 只登记两次**,正是下一个人会读错的地方(与 09-14T19:10Z 同形)。
