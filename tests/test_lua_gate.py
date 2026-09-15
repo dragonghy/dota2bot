@@ -72,6 +72,7 @@ Run:  python3 tests/test_lua_gate.py
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -103,6 +104,29 @@ FAILING = "local t = {}\nt['bad case'] = function() error('THE FINDING TEXT') en
 LOADS_CLEAN_FAILS_WHEN_RUN = FAILING
 HANGING = ("local t = {}\nt['hang'] = function() local x = os.time()\n"
            "while os.time() - x < 30 do end end\nreturn t\n")
+# Finishes, but only after ~1s of CPU -- the point is a test whose cost is
+# clearly above the noise floor of process startup, so a cost reading can be
+# told apart from a constant.  os.clock (CPU seconds, sub-second resolution)
+# rather than os.time (1s granularity, so a 2s window measures 1-2s).
+SLOWISH = ("local t = {}\nt['slow case'] = function() local x = os.clock()\n"
+           "while os.clock() - x < 1.0 do end end\nreturn t\n")
+
+
+def cost_of_unmeasured(out):
+    """Seconds the summary says the unmeasured half burned, or None.
+
+    Parsed out of the summary line rather than asserted as a substring: the
+    question these checks ask is what the NUMBER is, and a substring assertion
+    on a sentence answers whether the sentence is there.
+    """
+    m = re.search(r"not in the manifest were run anyway, costing ([\d.]+)s", out)
+    return float(m.group(1)) if m else None
+
+
+def wall_ratio(out):
+    """The `budget vs wall` ratio the summary reports, or None."""
+    m = re.search(r"budget vs wall:.*?\(([\d.]+)x\)", out)
+    return float(m.group(1)) if m else None
 
 
 def lua_available():
@@ -291,6 +315,99 @@ try:
     check(bool(head) and "0 unanswered" in head[0],
           "4g CONTROL: a new test that DOES answer reads 0 unanswered "
           "(headline: %s)" % (head[0] if head else "MISSING"))
+
+    # ---- 4H. the unpriced half of the run reports what it COST -----------
+    # THE GAP THIS CLOSES (director 2026-09-15, GH #810).  `budget_seconds` is
+    # a SELECTOR over tests that have a manifest row; it is not a bound on the
+    # leg.  The gate also runs every test with NO row, and until this landed
+    # that half was named but never priced -- so the summary printed
+    # `cumulative budget 300.0s` on a leg the five streams were reporting at
+    # 500-715s, and nothing in the output connected the two.  Trunk the day
+    # this landed: 325 selected priced at 239.4s, 66 unmeasured priced at
+    # nothing, and `ran` climbing 358 -> 391 in four days because every new
+    # test lands unmeasured while the re-measure stays blocked on GH #810.
+    # ⇒ the number that grows is the one nobody was printing.
+    root, mpath = make_tree(
+        tmp,
+        {"test_known.lua": PASSING, "test_unpriced_slowish.lua": SLOWISH},
+        {"tests/test_known.lua": {"seconds": 0.1, "in_gate": True, "reason": "fast"}},
+    )
+    r = run_gate(root, mpath)
+    cost = cost_of_unmeasured(r.stdout)
+    check(cost is not None,
+          "4h the unmeasured half reports a COST, not just a name list")
+    check(cost is not None and cost >= 1.0,
+          "4i and the cost is the one actually burned -- a ~1s test reads "
+          ">=1.0s (got %s)" % cost)
+
+    # ---- 4J. CONTROL: that cost is measured, not a constant --------------
+    # Same tree shape, a FAST unmeasured test.  Without this, 4i is satisfied
+    # by any implementation that prints a fixed number big enough to pass.
+    root, mpath = make_tree(
+        tmp,
+        {"test_known.lua": PASSING, "test_unpriced_fast.lua": PASSING},
+        {"tests/test_known.lua": {"seconds": 0.1, "in_gate": True, "reason": "fast"}},
+    )
+    r = run_gate(root, mpath)
+    fast_cost = cost_of_unmeasured(r.stdout)
+    check(fast_cost is not None and fast_cost < 1.0,
+          "4j CONTROL: a fast unmeasured test costs <1.0s, so the reading in "
+          "4i is measured and not a constant (got %s)" % fast_cost)
+
+    # ---- 4K. this container's speed is reported AGAINST THE MANIFEST -----
+    # GH #810's knob-is-absolute-seconds problem: whichever container last ran
+    # `measure` decides the whole repo's gate membership, and no reading ever
+    # said so out loud.  The ratio below is that reading, taken on the
+    # container that actually pays for the leg.  The manifest price here is
+    # deliberately absurd (0.01s) so a ratio computed against anything else --
+    # 1.0, the budget, the elapsed total -- comes out on the wrong side.
+    root, mpath = make_tree(
+        tmp,
+        {"test_known.lua": SLOWISH},
+        {"tests/test_known.lua": {"seconds": 0.01, "in_gate": True, "reason": "fast"}},
+    )
+    r = run_gate(root, mpath)
+    ratio = wall_ratio(r.stdout)
+    check(ratio is not None and ratio > 1.0,
+          "4k a container slower than the manifest price reads >1.00x "
+          "(got %s)" % ratio)
+
+    # ---- 4L. CONTROL: the ratio's divisor is the manifest price ----------
+    # Same file, same container, a manifest price 10000x larger.  A ratio that
+    # does not divide by the manifest number cannot move here.
+    root, mpath = make_tree(
+        tmp,
+        {"test_known.lua": SLOWISH},
+        {"tests/test_known.lua": {"seconds": 100.0, "in_gate": True, "reason": "fast"}},
+    )
+    r = run_gate(root, mpath)
+    slow_ratio = wall_ratio(r.stdout)
+    check(slow_ratio is not None and slow_ratio < 1.0,
+          "4l CONTROL: the same run against a 100.0s manifest price reads "
+          "<1.00x, so the divisor really is the manifest (got %s)" % slow_ratio)
+
+    # ---- 4M. the two halves of the hook keep saying it the same way ------
+    # ⭐ WHY A SOURCE CHECK IS THE RIGHT INSTRUMENT HERE, AND ONLY HERE.  Every
+    # other check in this file runs the gate and reads its behaviour, because
+    # the claim is about behaviour.  This claim is about WORDING PARITY between
+    # two sibling gates, so the text is the subject, not a proxy for it.
+    #
+    # It exists because the defect 4H closes was not discovered here: py_gate.py
+    # diagnosed and fixed it on 2026-09-13 and lua_gate.py -- three lines away
+    # in the same hook, and ~50x slower -- did not get the port until
+    # 2026-09-15.  The pair has form: py's STALE MANIFEST refusal is STILL not
+    # ported (deliberately, see lua_gate.py -- its remedy is the re-measure GH
+    # #810 blocks).  A drift nobody can see is a drift nobody ports, so the two
+    # sentences are pinned to each other and a reworder has to break this.
+    shared = ("new test(s) not in the manifest were run anyway, costing ",
+              "=> the hook's REAL cost this run is ")
+    lua_src = open(GATE).read()
+    py_src = open(os.path.join(REPO, "tools", "agent", "py_gate.py")).read()
+    for i, sentence in enumerate(shared):
+        check(sentence in lua_src and sentence in py_src,
+              "4m%d both halves of the hook report the unpriced cost in the "
+              "same words: %r (lua=%s py=%s)"
+              % (i + 1, sentence, sentence in lua_src, sentence in py_src))
 
     # ---- 5. the gate goes through the RUNNER, not the file ---------------
     # `lua5.1 tests/test_x.lua` loads the module and asserts nothing (exit 0).

@@ -1316,10 +1316,13 @@
       "done_when": {
         "kind": "path_exists",
         "path": "iterations/reports/batch-desk/hero27_savemana_archive_scan.md",
-        "note": "⭐ **针脚在立行当场量过:2026-09-14T06:57:02Z `present=False`** ⇒ 本行不是 BORN-DONE。⚠️ 判据买的是「扫描的读数落成了一份可裸读的文件」,**不是**「读数是对的」——(甲)(乙)(丙)(丁)(戊) 五条验收在 `queue.json:hero-27.acceptance` 里,由总监读那份文件时核。⛔ **不要把它写进某一轮报告的一节了事**:本行的全部意义是它有一个**文件名**可以被 `path_exists` 每轮问一次,而一节散文没有。"
+        "note": "⭐ **针脚在立行当场量过:2026-09-14T06:57:02Z `present=False`** ⇒ 本行不是 BORN-DONE。⚠️ 判据买的是「扫描的读数落成了一份可裸读的文件」,**不是**「读数是对的」——(甲)(乙)(丙)(丁)(戊) 五条验收在 `queue.json:hero-27.acceptance` 里,由总监读那份文件时核。⛔ **不要把它写进某一轮报告的一节了事**:本行的全部意义是它有一个**文件名**可以被 `path_exists` 每轮问一次,而一节散文没有。",
+        "note_2026_09_15": "⭐ **RULING 44 追加的验收条件,与 `path_exists` 并列(不替换它)**:该文件必须逐字载明**扫描执行当时** `dem21/` 的存量构成 —— 还剩哪几个创建日档、合计 GB、合计 `.dem` 份数。⚠️ **理由不是完备性洁癖**:滚动过期下,一份「扫完了」的报告与一份「扫了残余四成」的报告在 `path_exists` 眼里**逐字节相同**,而两者对 GH #407 的结论强度完全不同。⛔ 缺这一段的文件**不满足本行**,总监读那份文件时按本条核。"
       },
       "note": "⚠️ **本行有一个别的行没有的性质:它的判据会在 2026-09-22 之后永远买不到。** 语料一删,扫描就不可能再跑,而 `path_exists` 仍会老实地每轮喊 OWED —— **那时它喊的不再是『还没做』而是『已经错过』**,两种状态这个判据分不开。⇒ 裁定同轮给了 fallback:批测台若判断 2026-09-20 前排不进,**必须在 09-20 之前的某一轮报告里逐字写明**,总监据此重裁(放弃语料 / 改派 / 延 lifecycle),并在重裁那一轮**把本行退休或换判据**。⛔ 沉默不是允许的分支 —— 沉默的结果是 09-22 语料消失而没有任何一轮记下它消失了,这正是铁律 9「修好不等于做完」那条掉棒的形状。",
-      "unmet_at_ruling": "2026-09-14T06:57:02Z 现读 `iterations/reports/batch-desk/hero27_savemana_archive_scan.md` `present=False`;`queue.json:hero-27.status=running`(自 2026-09-02 路由起未变),`director.executor=batch-desk`,`result` 字段不存在。"
+      "unmet_at_ruling": "2026-09-14T06:57:02Z 现读 `iterations/reports/batch-desk/hero27_savemana_archive_scan.md` `present=False`;`queue.json:hero-27.status=running`(自 2026-09-02 路由起未变),`director.executor=batch-desk`,`result` 字段不存在。",
+      "amended_at": "2026-09-15T04:1xZ",
+      "amendment": "**⚖️ RULING 44(总监 2026-09-15T04:1xZ,起因批测台 03:06Z 交棒 ②)——`09-22` 作废,而订正的是**形状**不是日期。**\n\n批测台 §3.1 现读 lifecycle 规则(`LC_EXIT=0`,逐字 `ID=dem21-expire-21d  Filter.Prefix=dem21/  Expiration.Days=21  Status=Enabled`):`Days=21` 是**每个对象各自创建后 21 天**,而 `dem21/` 的创建日横跨 **08-24 → 09-11** ⇒ 过期日横跨 **09-14 → 10-02**。**这不是一刀切,是滚动过期。**\n\n**三条后果,逐条裁:**\n1. 语料不是「09-22 之后没了」,是**从 09-14 起一直在少**:08-24(6.45 GB)与 08-25(11.04 GB)**过期日已过、只等 sweep**(合计 17.49 GB / 13%);08-26→08-29 那四档(**49.74 GB**)在 **09-16 → 09-19** 走完 ⇒ **本裁定后第四天,W34 语料的多数已经不在。**\n2. ⛔ **fallback 线 `2026-09-20` 作废,改 `2026-09-17`。** 原线的设计前提是「悬崖前还有一周」;滚动形状下 09-20 表态时多数语料已过期,**那时表态买到的是讣告不是决定**。\n3. ⭐⭐ **原 `done_when` 结构上看不见的一条:`path_exists` 分不开「扫了全量语料」与「扫了一份已经缺了四成的语料」。** 悬崖形状下这两者不会同时存在(要么全在要么全没),**滚动形状下它们天天同时存在。** ⇒ 见 `done_when.note_2026_09_15`:那份报告必须逐字记下扫描当时 `dem21/` 还剩哪几个创建日档、合计多少 GB / 多少份。\n📌 **逐字是 GH #138 立项那句「它交付的是分母,不是命中数」**,也是铁律 4 §CL (i-a)「**读数不是局数**」的同一形状:**一个产物存在,不等于它回答了被问的那个问题。**\n\n⛔ **不据此退休本行**:语料还在少,但还没少完,扫描仍然可能、仍然欠着。\n⛔ **不动 9/30 区间**(批测台 §3.1 已自行拒绝借这 `$0.15` 去动它,判断正确,照准)。"
     },
     {
       "id": "gh779_accrual_keyed_ce_bypass",
@@ -1392,6 +1395,40 @@
       },
       "done_when_note": "⭐ **判据要求两个数同时出现,因为文件自己的失败文本逐字写着 `re-baseline them together or not at all`** ⇒ 按构造排除**半修**(只改一个数的树不满足它),而半修正是这类语料基线最常见的坏结局。\n\n⛔⛔ **判据里那两个 `== ` 前缀不是装饰,它是本行开行时当场修掉的一个 BORN-DONE。**\n**第一版判据写的是裸串 `[\"1039\", \"961\"]`,而开行前一验,两个 `grep -c` 都是 **1** 不是 0** —— 因为 **RULING 41 自己在文件头写的那句话**(`:37` 逐字 `re-baseline \\`1021 -> 1039\\` and \\`944 -> 961\\` TOGETHER or`)**已经把这两个目标值念了出来**。⇒ 那条判据**在开行的那一刻就满足了**,而断言仍逐字是 `:400 == 1021` 与 `:562 == 944`。\n📌 **可复用的一句,是 LIMIT 11「mention is not correctness」的一个新形状:一条要求把 X 改成 Y 的裁定,通常会把 Y 写进正文;于是任何按「Y 出现了没有」写的判据,分不开「请求」与「履行」 —— 而请求总是先到。**\n🔧 改成断言形 `== 1039` / `== 961` 后当场复验:两串 `grep -c` = **0 / 0**,而旧断言 `== 1021` / `== 944` = **1 / 1** ⇒ 判据**非开行即满足**,且只有动到断言本身才会翻。\n\n⚠️ **LIMIT(照 LIMIT 11 写明,不加强)**:它买的是「两条断言被改成了新基线」,**不是「测试通过了」**,也不是「新基线是对的」。⇒ **退休本行的那一轮必须手工贴一条读数**:开工自检 Lua 腿上 `test_fieldsip_atom_pricing.lua` 不再出现在 FAIL 行里(贴那行逐字输出)。\n⛔ **没用 `command_exit_zero`**(RULING 39:退出码分不开「红修好了」与「容器变快了」);⛔ 也没用 `text_absent` 钉旧数 —— 旧数会以「历史行/更正说明」的合法形式留在文件里,那样会买到一个**要求作者抹掉自己改动史**的判据。",
       "unmet_at_ruling": "2026-09-15T01:2xZ 开行前现读(**两轮,第一轮的判据被自己的读数否掉了,见 `done_when_note`**):`tests/test_fieldsip_atom_pricing.lua` 中 `grep -c '== 1039'` = **0**、`grep -c '== 961'` = **0**;对照读数旧断言 `grep -c '== 1021'` = **1**(`:400`)、`grep -c '== 944'` = **1**(`:562`)。⚠️ **裸串对照**:`grep -c 1039` = 1、`grep -c 961` = 1 —— 两处**都只在 `:37` 那句裁定正文里**,这正是第一版判据 BORN-DONE 的原因,一并登记。同时刻自检 Lua 腿该文件 **FAIL**(两条断言,逐字见 ruling 正文);`owed` 表零命中 `1039`/`961`;`iterations/queue.json` `grep -c '1039\\|re-baseline'` = **0**。⇒ 本行读 OWED。"
+    },
+    {
+      "id": "lua_gate_stale_manifest_refusal_port",
+      "issue": "GH #810([harness],总监 2026-09-14 开)。本行是总监 2026-09-15T03:5xZ **RULING 43** 落地时**故意没有一起买**的那一半,全文见 `iterations/reports/director/20260915T035500Z.md` §三。",
+      "ruled_at": "2026-09-15T03:5xZ",
+      "ruling": "**推送钩子的两条腿是兄弟,而其中一条在 2026-09-13 修好的缺陷,另一条到今天才被移植 —— 移植过来的只是**报数**那一半,**拒推**那一半不许现在装。**\n\n**现读(本轮亲测,非转述)**:\n- `py_gate.py` 本轮逐字打 `3 new test(s) not in the manifest were run anyway, costing 1.30s` + `=> the hook's REAL cost this run is 11.65s against a 12.0s budget.` —— 两行都在,09-13 就在。\n- `lua_gate.py` 同一形状的两行**一行都没有**;它只打 `cumulative budget 300.0s`,而 manifest 给 325 个 selected 的定价是 **239.422s**,五个组报的这条腿实测是 **500–715s**。\n- **算术上差在哪已经量到**:on-disk 467 个 Lua 测试,manifest 401 行,`in_gate` **325**,**66 个没有 manifest 行 —— 而闸把这 66 个照跑不误**,`budget_seconds` 对它们**定价为零**。按 09-14 那次全量重测(`iterations/reports/director/lua_measure_20260914T014551Z.json`)给这 66 个定价,**下界 172.6s**(13 个是 6.0s 的 TIMEOUT 行,真值只会更大;另有 13 个连那次都还不存在)。\n- **方向是单调的**:各组报告里 `lua gate: N ran` 四天内 **358 → 391**,而 `budget_seconds` 逐位不动地停在 `300.0`。每一个新落的 Lua 测试都以 unmeasured 身份入场,**因为给它一行 manifest 的那次重测正是 #810 卡着的那件事**。\n\n⭐ **本轮最该被带走的一句,是这个缺陷不是本轮发现的**:`py_gate.py` 的模块 docstring 自己把病因写死了 —— 「**every quantity in the old banner was a quantity ABOUT THE MANIFEST … printed next to an `elapsed` nobody compared it to**」,它 09-13 量到 **41.5s 对 12.0s 预算(246% over)** 并当场修掉。⇒ **修法在同一个钩子里、相隔三行、已经存在两天,而它到了 12 秒那条腿、没到 570 秒那条腿。**📌 同一对腿上**这不是第一例**:py 的 `STALE MANIFEST` 拒推(本行的标的)在开工自检的 `gh806_lua_manifest_remeasure` 行里**早就被写明「Lua 闸这一侧还没移植」**,一样没人搬。⇒ **看不见的漂移就是没人移植的漂移**,故 `tests/test_lua_gate.py:4m1/4m2` 把两条腿的**措辞**互钉,改写一边就红。\n\n⛔ **本行存在的唯一理由:拒推那一半今天装不了,而这不是懒,是它的救济命令正是 #810 卡住的那条。**\n`py_gate` 的拒推路径打的是 `Remedy (one command, ~4min): python3 tools/agent/py_gate_measure.py`。Lua 这一侧的同一句救济是 `lua_gate_measure.py` —— **正是 GH #810 立案要拦下的那次重测**(#810 自己写明:落地重测买到的 `no_manifest_row_count = 0` 是**拿闸的覆盖面换来的**)。⇒ 今天把 slack 装上,等于**仓库里每一次 push 都被拒**,直到有人付一笔 #810 明令先别付的账;而「闸贵到满足不了」正是 `RULE6_BYPASS` 变成常规路径的那条路(GH #707 / #669),也是 `lua_gate.py` 自己 4f 那条注释已经立过的戒律。**⇒ 报数落地,拒推挂账。**\n\n⚠️ **LIMIT,照 LIMIT 11 写明不加强**:RULING 43 买到的是**这条腿现在把自己的真实开销打出来了**,⛔ **不是**「闸变快了」,⛔ **不是**「66 个 unmeasured 有人管了」,⛔ 更**不是** #810 被关掉了。#810 的两条待裁(`unanswered > 0` 要不要拒推 / 成员资格怎么和容器速度脱钩)**一条都没裁**;本轮只给第二条添了一个它此前没有的输入 —— `budget vs wall` 那个比值,**取自真正付钱的那台容器**,而不是取自「最后一次跑 measure 的那台」。",
+      "executor": "**总监自己**([harness] 归总监;与 #810 同席位)",
+      "blocking_precondition": "**GH #810 的重测必须先落地**(且按 RULING 41 的前置:必须带大 timeout 重测,因为 manifest 里 74 个 `timed_out` 行的 `seconds` 逐位是 `6.0` = timeout 本身,对真实耗时零信息)。重测落地、`unmeasured` 归零之后,这条拒推才只会拦住「新加了一个超 cap 测试的那个人」—— 而那正是该被拦的人(#810 待裁 1 的原话)。",
+      "trigger": "无外部触发器,不挂在任何一波、任何一个 id 上(§DR 常驻义务)。⚠️ **失效形状**:报数那一半落地之后,`lua gate:` 每一轮都会打出真实开销 ⇒ **这条腿从此每轮自己举一次手**,但**举手的是数字不是义务** —— 一个读到 `REAL cost 620s against a 300.0s budget` 的人完全可以照旧 push,因为没有任何东西拒绝他。**这正是本行挂账的内容,也正是本行不许被那个数字的存在当成已还的理由。**",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/agent/lua_gate.py",
+        "contains": [
+          "LUA GATE COULD NOT RUN -- STALE MANIFEST",
+          "unmeasured_slack_seconds"
+        ]
+      },
+      "done_when_note": "⛔⛔ **判据里不许只写裸串 `STALE MANIFEST`,而这是开行前当场验掉的一个 BORN-DONE。** 本轮落地的注释里有一句逐字写着「py 的 `STALE MANIFEST` 拒推,still absent here」—— 于是 `grep -c 'STALE MANIFEST' tools/agent/lua_gate.py` 开行当日就是 **1**,一条按「这个词出现了没有」写的判据**在开行那一刻就满足了**。📌 与 `fieldsip_atom_pricing_corpus_rebaseline` 开行时修掉的那个**逐字同型**,而那一条把通例写得很清楚:**一条要求做 X 的裁定通常会把 X 写进正文,于是任何按「X 出现了没有」写的判据分不开「请求」与「履行」—— 而请求总是先到。**\n🔧 改成**只有真装了拒推才会出现**的两串后当场复验:`LUA GATE COULD NOT RUN -- STALE MANIFEST` 与 `unmeasured_slack_seconds` 在 `lua_gate.py` 里 `grep -c` = **0 / 0**;对照 `py_gate.py` = **0 / 2**(第一串在那边是 `PY GATE …`,词头不同,故不会互相误命中)。\n⛔ **没用 `command_exit_zero`**(RULING 39:该 `kind` 把三值退出码当两值用,分不开「真修好了」与「容器变快了」;而 `lua_gate.py` 的退出码正是 0/2/3 三值)。\n⚠️ **LIMIT**:判据买的是**拒推路径的两个部件在文件里**,⛔ **不是**「它的阈值定对了」,也**不是**「#810 关掉了」。退休本行的那一轮必须手工贴一条读数:一次 `unmeasured` 非空的真实 push 上,这条腿打出的 slack 判定行逐字输出。"
+    },
+    {
+      "id": "gh779_s3_egress_usage_type_attribution",
+      "issue": "GH #779(刹车/归因)/ 批测台 2026-09-15T03:06Z 交棒 ③(自 09-14 起逐轮保留,总监手上)。",
+      "ruled_at": "2026-09-15T04:1xZ",
+      "ruling": "**⚖️ RULING 45 —— 买,买一次,仅此一次。**\n\n**批准范围逐字**:**一次** `ce get-cost-and-usage`,`GroupBy=USAGE_TYPE`,限 S3 服务,成本 **`$0.01`**。⛔ 不批准第二次;⛔ 不批准把它写进 `check_costs.sh` 的每轮路径。\n\n**理由是算术不是偏好**:批测台 §3.4 实测 S3 那条线 `$0.3893/天`,其中 egress `$0.3873`(99.5%),已归因的只有 replay-check 的 **~30%** ⇒ **未归因 `~$0.271/天`**。一次性 `$0.01` 是唯一能把它拆开的仪器,**回本时间 < 1 小时**。\n\n⚠️ **刹车不构成否决,但必须说清为什么**:`headroom = $-0.373`,而闸 (iii) 拦的是**发波**;这 `$0.01` 不是波。且 owner 面前那三个选项里的**丙(削 egress)缺的正是这份归因** —— 不买它,丙只能凭已知的 30% 去猜。\n⛔⛔ **正因为刹车红着,它才必须是一次性的**:GH #801 裁掉的是「**每轮自动掏 `$0.01`**」那个**习惯**(实测 `$0.116/天`,占本月第一个零批测日已发布支出的 **53.1%**)。**本裁定不得被读成把那个习惯请回来** ——它批的是一次**具名的、有交付物的**购买,不是一条常设权限。\n\n**交付物**:归因结果(至少 `USAGE_TYPE` 前三名及各自 `$/天`)写进批测台下一轮报告,并据此对 owner 的选项丙给出**可执行的削减项**(哪一类流量、谁产生、削多少)。⛔ 仍不建议、不预选任何一条线。",
+      "executor": "batch-desk(批测台)—— 只有批测台花 AWS 的钱(铁律 1);总监批准,不代买。",
+      "trigger": "批测台的下一个工作单元。⚠️ **失效形状:拿刹车当豁免。** 闸 (iii) 已红二十二轮,而本次购买**不是发波**且总额 `$0.01` ⇒ ⛔ 不得以「发不出波」为由顺延(与 `hero27_dem21_deadline_scan` 的第二条失效形状逐字同型:把一条预算约束错用成一条工作量豁免)。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "iterations/streams/batch-desk.md",
+        "contains": [
+          "USAGE_TYPE 归因已交付"
+        ]
+      },
+      "done_when_note": "⛔ **判据没写成「报告里出现 `USAGE_TYPE`」,那是一个 BORN-DONE**:本裁定本身(投递进 `batch-desk.md` 的接口节)就把这个词念了出来,`grep -c USAGE_TYPE iterations/streams/batch-desk.md` 开行当日 **≥1**。📌 与 `fieldsip_atom_pricing_corpus_rebaseline` / `lua_gate_stale_manifest_refusal_port` 开行时各自修掉的那个**同型第三例**:**一条要求做 X 的裁定会把 X 写进正文,于是按「X 出现了没有」写的判据分不开「请求」与「履行」,而请求总是先到。**\n🔧 改用一个**只有交付方才会写下**的短语 `USAGE_TYPE 归因已交付`,开行当场复验 `grep -c` = **0**。\n⛔ **没用 `command_exit_zero`**(RULING 39:三值退出码当两值用)。\n⚠️ **LIMIT**:判据买的是「批测台宣告交付了」,**不是**归因是对的,**也不是** owner 的选项丙被裁了。退休本行的那一轮由总监核前三名读数是否真在报告里。"
     }
   ],
   "retired": [

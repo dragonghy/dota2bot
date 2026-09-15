@@ -306,9 +306,15 @@ def main(argv):
     findings, unrun, new_over_budget = [], [], []
     known_hit, healed, healed_cases = [], [], []
     ran = 0
+    # Wall seconds actually burned by each HALF of the run, kept apart on
+    # purpose -- see the `budget vs wall` block in the summary for why one
+    # number for the whole leg cannot answer the question being asked.
+    selected_secs = 0.0
+    unmeasured_secs = 0.0
 
     for rel in selected:
         rc, out, secs, timed_out = run_one(rel, timeout)
+        selected_secs += secs
         if timed_out:
             # Measured fast, now will not answer: a change of state on a test
             # this gate promised to run.  Not a pass.
@@ -362,6 +368,7 @@ def main(argv):
     # here on purpose (see the note at the summary).
     for rel in unmeasured:
         rc, out, secs, timed_out = run_one(rel, timeout)
+        unmeasured_secs += secs
         if timed_out:
             new_over_budget.append(rel)
         elif rc == 0:
@@ -433,13 +440,60 @@ def main(argv):
         "  scope: %d fast Lua ratchets (selected by measured seconds < %.1fs, "
         "cumulative budget %.1fs)" % (len(selected), cap, manifest.get("budget_seconds", 0.0))
     )
+    # WHAT THE `cumulative budget` NUMBER ABOVE DOES NOT COVER (director
+    # 2026-09-15, GH #810).  `budget_seconds` is a SELECTOR over the tests that
+    # have a manifest row.  It is not a bound on this leg: the gate also runs
+    # every test that has NO row (the `unmeasured` half below), priced by
+    # nothing at all.  Trunk the day this landed: the manifest priced 325
+    # selected tests at 239.4s against a 300.0s budget, while the five streams
+    # were reporting this leg at 500-715s -- and `ran` climbed 358 -> 391 in
+    # four days, because every new test lands unmeasured while the re-measure
+    # that would give it a row is what GH #810 is blocked on.  The overrun is
+    # therefore not noise and not only container speed: it is a half of the run
+    # the budget cannot see, and it grows monotonically.
+    #
+    # ⭐ THIS IS A PORT, NOT A DISCOVERY, AND THAT IS THE FINDING.  py_gate.py
+    # diagnosed and fixed the identical defect on 2026-09-13 -- its docstring
+    # states it exactly ("every quantity in the old banner was a quantity ABOUT
+    # THE MANIFEST ... printed next to an `elapsed` nobody compared it to"), it
+    # measured 41.5s against a 12.0s budget, and it has printed both lines on
+    # every push since.  The two gates are siblings in the same hook, three
+    # lines apart; the fix reached the 12s one and not the 570s one.  The
+    # wording below is copied rather than reworded so that the next reader can
+    # tell at a glance which half of the hook has a given line and which does
+    # not -- the previous un-ported item on this same pair (py's STALE MANIFEST
+    # refusal, still absent here) went unnoticed for the same reason.
+    #
+    # ⛔ ONLY THE REPORTING HALF PORTS TODAY.  py_gate refuses the push once the
+    # unmeasured cost passes its slack, with "re-measure" as the one-line
+    # remedy.  That half CANNOT port yet: the remedy here is the re-measure
+    # GH #810 is open about, so arming it today would refuse every push in the
+    # repo until someone pays a blocked bill -- which is how RULE6_BYPASS
+    # becomes the normal path (GH #707 / #669).  Reported, not enforced; the
+    # enforcement is a separate ruling and its precondition is #810.
+    #
+    # The `budget vs wall` ratio is the one line py_gate does NOT have, and it
+    # is the #810-specific half: `selected` against its own manifest price is
+    # this container's speed, measured on the container that actually pays for
+    # the leg instead of on whichever container last ran measure.  Kept apart
+    # from the unmeasured cost on purpose -- they answer different questions,
+    # and one combined number would answer neither.
+    priced = sum(manifest["tests"][rel]["seconds"] for rel in selected)
+    if priced > 0:
+        print("  budget vs wall: the manifest prices those %d at %.1fs; THIS "
+              "container ran them in %.1fs (%.2fx)."
+              % (len(selected), priced, selected_secs, selected_secs / priced))
     print(
         "  NOT claimed here: %d slower Lua tests -- the full suite (~100 min, "
         "GH #124) is still the only thing that runs them all." % len(skipped)
     )
     if unmeasured:
-        print("  %d new test(s) not in the manifest were run anyway: %s"
-              % (len(unmeasured), " ".join(unmeasured)))
+        # Wording deliberately identical to py_gate.py's two lines (see above).
+        print("  %d new test(s) not in the manifest were run anyway, costing "
+              "%.2fs: %s"
+              % (len(unmeasured), unmeasured_secs, " ".join(unmeasured)))
+        print("  => the hook's REAL cost this run is %.2fs against a %.1fs "
+              "budget." % (elapsed, manifest.get("budget_seconds", 0.0)))
     if new_over_budget:
         print("  %d new test(s) exceeded the hook budget and were EXCLUDED: %s"
               % (len(new_over_budget), " ".join(new_over_budget)))
