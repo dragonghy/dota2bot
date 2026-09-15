@@ -417,8 +417,19 @@ tests['tripwire: every consumption point passes the bidding ability handle'] = f
             end
         end
     end
-    assert(nCalls == 3,
-        'W, W2 and Q are the three consumption points (GH #47); found ' .. nCalls)
+    -- 3 -> 4 on 2026-09-15 (hero stream, soak candidate `zusultd`).  GH #47's
+    -- finding is that a reserve wired to a strict SUBSET of a pool's consumers
+    -- relocates the spend instead of narrowing it; W/W2/Q were three of FOUR,
+    -- and the unwired one -- X.ConsiderD, dispatched from the same pool in the
+    -- same tick, immediately after the guarded ConsiderQ -- was the most
+    -- expensive of them (Nimbus 275 flat against the ult's own 250/375/500).
+    -- ⛔ The fourth site is GATED (`zusultd`), so this number counting 4 is NOT
+    -- a claim that shipped behaviour changed; it is a claim about how many
+    -- places in this function name the reserve.  Argued and driven in
+    -- tests/test_zuus_nimbus_ult_reserve.lua.
+    assert(nCalls == 4,
+        'W, W2, Q and the gated Nimbus dispatch are the four consumption points '
+        .. '(GH #47, plus `zusultd` 2026-09-15); found ' .. nCalls)
 end
 
 tests['tripwire: the clause subtracts the spend, and only under `zusultx`'] = function()

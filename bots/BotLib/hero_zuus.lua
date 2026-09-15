@@ -330,7 +330,11 @@ local talent7 = bot:GetAbilityByName( sTalentList[7] )
 local castQDesire, castQTarget
 local castWDesire, castWTarget
 local castW2Desire, castWLocation, castW2Target
-local castDDesire, castDLocation
+-- castDTarget added 2026-09-15 for [zusultd]: X.ConsiderD casts on a LOCATION,
+-- so the hero the drop is ABOUT was never carried out of the function, and
+-- X.zuus_ShouldSaveManaForUlt is inert without it (it returns false on a
+-- non-hero target).  Gate off nothing reads this local.
+local castDDesire, castDLocation, castDTarget
 local castRDesire
 local castEDesire, castETarget
 
@@ -757,13 +761,96 @@ function X.SkillsComplement()
 		return
 	end
 
-	castDDesire, castDLocation = X.ConsiderD()
+	castDDesire, castDLocation, castDTarget = X.ConsiderD()
+	-- Resolved ONCE, and only on a frame the shipped tree would have resolved it
+	-- on, because the executor below is its only other reader.  Two readers of
+	-- one expression would be two chances to disagree about which ability the
+	-- desire and the order are talking about, which is the whole point of
+	-- X.GetBoundAbility (tests/test_zuus_ability_index_binding.lua).
+	local hCloudHandle = nil
+	if ( castDDesire > 0 )
+	then
+		hCloudHandle = X.GetBoundAbility( abilityD, 'zuus_cloud' )
+	end
+	-- [zusultd] THE FOURTH CONSUMER OF THE RESERVED POOL, AND THE ONLY ONE THE
+	-- RESERVE WAS NEVER WIRED TO.  Turbo-only soak candidate, INERT until armed.
+	--
+	-- ⭐ THE DEFECT IS A MISSING LINE, AND THE THREE LINES IT IS MISSING FROM ARE
+	-- DIRECTLY ABOVE IT.  X.zuus_ShouldSaveManaForUlt guards ConsiderW (:707),
+	-- ConsiderW2 (:734) and ConsiderQ (:748).  ConsiderD is dispatched here, from
+	-- the same pool, in the same tick, and is asked nothing.  GH #47 established
+	-- that a reserve wired to a strict subset of a spell's consumers does not
+	-- narrow the spend, it RELOCATES it -- there the held W bid walked out
+	-- through ConsiderW2 on the next line and spent the identical mana on the
+	-- identical target.  This is the same shape one dispatch further down: a Q
+	-- bid held at :748 falls through to here and Nimbus spends instead, in the
+	-- same call of X.SkillsComplement.
+	--
+	-- ⭐ AND NIMBUS IS THE EXPENSIVE ONE, which is why this is not the smallest
+	-- of the four holes but the largest.  Read off the KV snapshot the fixture
+	-- loader serves (tests/mock/special_value_shapes.lua):
+	--     zuus_cloud             AbilityManaCost 275            (flat, no ladder)
+	--     zuus_thundergods_wrath AbilityManaCost 250 / 375 / 500
+	-- so one Nimbus costs MORE than a rank-1 Thundergod's Wrath, and more than
+	-- either Bolt (125-150) or Arc (94). The three guarded sites hold spends
+	-- smaller than the unguarded one.
+	--
+	-- ⚠️ DIRECTION: THIS IS A NARROWING.  Armed, the only reachable effect is
+	-- castDDesire going HIGH -> 0; no frame gains a Nimbus.  A negative wave
+	-- reading may therefore NOT be read as "worse Nimbus placement" -- the only
+	-- thing it can mean is that the Nimbus casts this removed were worth more
+	-- than the ultimates they were being saved for.
+	--
+	-- ⛔ THE GATE NAMES EXACTLY ONE ID.  It must not be conjoined with `zusult`
+	-- (PROMOTED 2026-09-11) -- a gate naming a promoted id is frozen FALSE, since
+	-- a promoted id appears in no armed string, and check_armed_wiring.py still
+	-- calls it WIRED (the `pullcad` trap, AGENTS.md).  The helper is reached
+	-- unconditionally in turbo for exactly that reason; the one conjunct that
+	-- decides whether THIS site participates is `zusultd` and nothing else.
+	-- `zusultx` is not named either: it is read inside the helper, so arming it
+	-- widens all four sites together, which is what it already does for three.
+	--
+	-- WHAT THE ARMED LEG BUYS, stated so it can be argued with.  The helper only
+	-- holds when every one of its clauses passes: turbo, the ult TRAINED and off
+	-- cooldown, mana (minus the pending spend, under `zusultx`) below the ult's
+	-- cost, Zeus NOT retreating, the target a valid hero, and that hero above
+	-- X.nUltSaveHealthFloor (0.6) health.  That is the chip case the reserve was
+	-- written for, verbatim: a ready-but-unaffordable global finisher versus 275
+	-- mana of zone damage on somebody who is not dying.
+	--
+	-- ⚠️ THE DOMAIN ON THIS CORPUS IS ZERO, and the zero has two causes that must
+	-- not be merged.  (1) HARNESS: `bot:HasScepter()` is on no spec under
+	-- tests/mock, so it falls through bot_api.lua:167's `^Has -> false`
+	-- catch-all and X.ConsiderD returns on its FIRST branch on every real frame
+	-- -- the GH #656 family (a getter the loader answers with a silent false).
+	-- (2) WORLD, and this half is a reading rather than a harness artefact:
+	-- driven off the frames' own `items` arrays (which the getter does not
+	-- consult), 5 of the 71 Zeus bodies in tests/fixtures + tests/frames carry
+	-- item_ultimate_scepter -- 7.0%, so the branch is NOT unreachable in the game
+	-- -- but all five are level 23-28 with 1120-2745 mana against a rank-3 cost
+	-- of 500, i.e. every one of them is above the reserve's own
+	-- `GetMana() >= nCost` bail. So this corpus holds no instant where the
+	-- shipped tree and the armed tree differ, and saying so is not the same as
+	-- saying the lever has no domain in a game.
+	-- ⛔ DO NOT READ THIS AS "turbo Zeus never buys a scepter": all four role
+	-- rows in this file list item_ultimate_scepter, and ZeusSupportAghsFirst
+	-- deliberately moves it EARLIER for pos_5 -- earlier means a smaller pool and
+	-- a rank-2 ult (375), which is the middle of this lever's window, not its
+	-- edge. The number that would price it is queue.json:hero-88.
+	-- Pinned in tests/test_zuus_nimbus_ult_reserve.lua.
+	if ( castDDesire > 0
+		and J.IsModeTurbo()
+		and J.IsSoakCandidate( 'zusultd' )
+		and X.zuus_ShouldSaveManaForUlt( bot, castDTarget, hCloudHandle ) )
+	then
+		castDDesire = 0
+	end
 	if ( castDDesire > 0 )
 	then
 
 		J.SetQueuePtToINT( bot, true )
 
-		bot:ActionQueue_UseAbilityOnLocation( X.GetBoundAbility( abilityD, 'zuus_cloud' ), castDLocation )
+		bot:ActionQueue_UseAbilityOnLocation( hCloudHandle, castDLocation )
 		return
 	end
 	
@@ -1564,7 +1651,7 @@ function X.ConsiderD()
 		or not hCloud:IsFullyCastable()
 		or bot:IsInvisible()
 	then
-		return BOT_ACTION_DESIRE_NONE, nil
+		return BOT_ACTION_DESIRE_NONE, nil, nil
 	end
 
 	local numPlayer =  GetTeamPlayers( GetTeam() )
@@ -1579,7 +1666,10 @@ function X.ConsiderD()
 				and J.IsInRange( member, target, 1200 )
 				and J.CanCastOnNonMagicImmune( target )
 			then
-				return BOT_ACTION_DESIRE_HIGH, target:GetExtrapolatedLocation( 1.0 )
+				-- Third value is [zusultd]'s only input: the hero this drop is
+				-- ABOUT.  Gate off it reaches no consumer -- see the dispatch in
+				-- X.SkillsComplement.
+				return BOT_ACTION_DESIRE_HIGH, target:GetExtrapolatedLocation( 1.0 ), target
 			end
 		end
 	end
@@ -1592,12 +1682,23 @@ function X.ConsiderD()
 		do
 			if ( J.IsValid( npcEnemy ) and bot:WasRecentlyDamagedByHero( npcEnemy, 1.0 ) and J.CanCastOnNonMagicImmune( npcEnemy ) )
 			then
-				return BOT_ACTION_DESIRE_HIGH, bot:GetLocation()
+				-- ⛔ THIRD VALUE IS DELIBERATELY nil, AND THE nil IS THE EXEMPTION.
+				-- This drop is self-preservation (a chaser who damaged Zeus
+				-- inside 1.0s, cloud at his own feet), not chip on a healthy
+				-- target, and [zusultd] must never hold it.  Two independent
+				-- reasons make that structural rather than a promise: (1) nil
+				-- reaches X.zuus_ShouldSaveManaForUlt's `J.IsValidHero( hTarget )`
+				-- clause and is refused there; (2) that function's own "Fleeing
+				-- beats hoarding" clause fires first on this branch, because the
+				-- branch is inside `J.IsRetreating( bot )`.  Either one alone
+				-- suffices; both are asserted in
+				-- tests/test_zuus_nimbus_ult_reserve.lua section 4.
+				return BOT_ACTION_DESIRE_HIGH, bot:GetLocation(), nil
 			end
 		end
 	end
 
-	return BOT_ACTION_DESIRE_NONE, nil
+	return BOT_ACTION_DESIRE_NONE, nil, nil
 end
 
 -- How close an enemy hero has to be before the armed leg of

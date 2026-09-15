@@ -119,9 +119,21 @@ local T_CENSUS = 'tests/test_focus_mana_cost_consumer_census.lua'
 -- It hand-anchors the ult price on the handle exactly as §2 requires, and is
 -- asserted to do so there.
 local T_BOLTDOM = 'tests/test_replay_260819_zuus_boltdom.lua'
+-- Born 2026-09-15 (hero stream, candidate `zusultd` -- the reserve wired to its
+-- FOURTH consumer, the Nimbus dispatch), i.e. long after c386d5f3 and with
+-- nothing to re-take.  It arms `zusultx` in one section, because that id is the
+-- only thing that makes the reserve's window nonempty at ULT RANK 1: a Nimbus
+-- bid needs mana >= its own 275, the un-widened reserve only holds below the
+-- ult's rank-1 cost of 250, and 275 > 250.
+-- ⭐ IT DOES NOT NEED §2's ANCHOR, and the reason is the stronger one rather
+-- than an exemption: it never injects the ult price at all.  It reads
+-- GetManaCost off the real handle and ASSERTS that reading equals the KV
+-- snapshot's own 250/375/500 ladder before using it, so a loader that went back
+-- to answering 0 turns that file red instead of quietly re-taking #416's claim.
+local T_NIMBUS = 'tests/test_zuus_nimbus_ult_reserve.lua'
 
 local ARMING_FILES = {
-    T_CENSUS, T_MANALOCK, T_W2LEAK, T_CROSS, T_TOWERFEAR, T_BOLTDOM,
+    T_CENSUS, T_MANALOCK, T_W2LEAK, T_CROSS, T_TOWERFEAR, T_BOLTDOM, T_NIMBUS,
 }
 table.sort(ARMING_FILES)
 
@@ -206,8 +218,16 @@ tests['[3] the gate has no call site outside hero_zuus.lua (consumer-side)'] = f
     -- site. `bot` as the first argument separates the three calls from the
     -- definition (`hBot`) and from the prose mention at the bottom of the file.
     local _, nCalls = src:gsub('X%.zuus_ShouldSaveManaForUlt%s*%(%s*bot%s*,', '')
-    assert(nCalls == 3,
-        'the three SkillsComplement bids are the only call sites, found ' .. nCalls)
+    -- 3 -> 4 on 2026-09-15 (hero stream, soak candidate `zusultd`).  The fourth
+    -- bid is the Nimbus dispatch, which was the one consumer of this pool the
+    -- reserve had never been wired to -- and the most expensive of the four
+    -- (275 flat against Arc's 94 and Bolt's 125-150).  ⛔ This number moving does
+    -- NOT weaken §3's claim: all four sites are still inside
+    -- X.SkillsComplement, so the helper still has no call site outside
+    -- hero_zuus.lua and no mode script can reach it.  That is what this section
+    -- is about; the count is how it is measured.
+    assert(nCalls == 4,
+        'the four SkillsComplement bids are the only call sites, found ' .. nCalls)
     local lion = read_file('bots/BotLib/hero_lion.lua')
     assert(lion:find('zuus_ShouldSaveManaForUlt', 1, true) ~= nil
         and lion:find('X.zuus_ShouldSaveManaForUlt(', 1, true) == nil,

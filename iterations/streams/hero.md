@@ -22,6 +22,56 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-180. ✅ **⭐ 下一轮第一件事:`tests/test_axe_t15_payoff.lua` 的语料计数重取**(28→29 live-Axe
+   帧,**非本轮造成**,红因语料增长;它自己的报错写明修法「三个数一起重取」,本轮没顺手改
+   是为了不让「本轮的红」与「语料的红」挤进同一个 commit)。
+   主体:新 gated id **`zusultd`**(turbo-only),落在 `bots/BotLib/hero_zuus.lua` 的
+   `X.SkillsComplement` Nimbus 派发点 + `X.ConsiderD` 带出第三个返回值。
+   报告 `iterations/reports/hero/20260915T075234Z.md`;新 `tests/test_zuus_nimbus_ult_reserve.lua`
+   **8 绿**;变异台 `tools/agent/mutstand_zusultd.sh` **12/12 全杀**。
+   **零 AWS、零波次。P4.4 自评:主体是 (i)。**
+   - ⭐⭐ **储备接了同一个蓝池的四个消费点里的三个,而没接的那一个是最贵的。**
+     `X.zuus_ShouldSaveManaForUlt` 挂在 ConsiderW / ConsiderW2 / ConsiderQ 上;
+     **ConsiderD(Nimbus)在同一次 `X.SkillsComplement` 调用里、被保护的 ConsiderQ 之后**
+     派发,一句都没问。**GH #47 已经量过这个形状**:储备只接真子集时支出不是减少而是**搬家**。
+     价差读自 KV 不手抄:`zuus_cloud` **275 平价** vs 大招 **250/375/500** ⇒
+     **一次 Nimbus 比一发 rank-1 大招还贵**。
+   - ⭐⭐ **本轮最锋利的一条,是两个 KV 数上的算术不是读数:rank 1 上 `zusult` 腿的域是空的。**
+     出价要 `IsFullyCastable` ⇒ 蓝 ≥ **275**;储备要蓝 < R 价 ⇒ rank 1 上 < **250**;
+     **275 > 250 ⇒ 不可同时成立**。窗口只在 rank 2([275,375),宽 100)与 rank 3([275,500),宽 225)开;
+     `zusultx` 把它变成 [275, 价+275),**rank 1 第一次非空**。⛔ **所以「arm zusultd」与
+     「arm zusultd + zusultx」在 rank 1 上不是同一个实验**,读了一个的波次不许说另一个。
+     六条界全部 §3/§3b 驱动,并配**活性守卫**(helper 必须两种答案都给得出)。
+   - ⭐ **方向是收窄**:armed 唯一可达效果是 `HIGH → 0`,**没有一帧会多出一次 Nimbus**
+     ⇒ 负面波读**只能**读作「拿掉的 Nimbus 比替它攒的大招更值钱」。§5 把闸体逐字钉死。
+   - ⭐ **撤退支路双重豁免,两条都断言**:第三个返回值**故意是 nil**(撞 `J.IsValidHero`),
+     **且** helper 自己的「逃跑优先于囤积」在该支路先触发。单一理由离被重构掉只有一次改动。
+   - ⭐ **顺手关掉本轮自己造成的一条 trunk 红(GH #624 形状)**:
+     `test_gated_helper_nesting_census.lua` **四行**一次出现,**逐行手读后钉入**不是加行变绿
+     —— `aetherlens`/`zusstatic` 是 (W)(函数顶部兄弟语句),`zusbind` 是 (P)(未 armed
+     返回 `hShipped`,**与出货执行器逐字同一表达式**),`zusultx` 是 (P) **但带一条必须随行的
+     限度**:rank 1 上未 armed 窗口为空 ⇒ **单独 arm 测不到东西而 `check_armed_wiring.py`
+     照样叫 WIRED**,正是这张普查得名的形状,以**受 rank 限制**的形式存活。
+   - ⚠️ **两处别人的红是我改出来的,同轮修掉**:`test_zuus_ability_index_binding`(路由句柄
+     只许两处)与 `test_replay_260820_zuus_reserve_cross`(`[^)]*` 解析被嵌套调用截断)。
+     修法是**把句柄提成 `hCloudHandle` 解析一次**,出价与下单读同一个句柄——
+     ⭐ 这不是绕过测试,那两条测试要的正是这件事。消费点计数 3→4 带理由改。
+   - ⚠️ **M3 第一版是 WRONG MESSAGE 不是 kill,修的是测试**:§7 的 turbo 判据只读**点名 id
+     的那一行**,把兄弟 id AND 进条件时 `J.IsModeTurbo()` 被挤出匹配文本 ⇒ **pullcad 那条
+     断言没轮到说话**。改成 `gate_condition()` 读**整个 `if ( … ) then`**。
+   - ⚠️ **本语料域 = 0,两个原因不许合并**:(1) **仪器** `HasScepter()` 落进 `^Has -> false`
+     兜底 ⇒ ConsiderD 每帧第一分支就 return(GH #656 族);(2) **世界**(读数):
+     **71 具 Zeus 里 5 具带杖(7.0%)** ⇒ 分支在游戏里**不是不可达**,但 5 具全在 23–28 级、
+     蓝 1120–2745,**全在储备自己的早退之上**。⛔ 不许把 (1) 引成「turbo Zeus 不买杖」——
+     四行出装全列着杖,`ZeusSupportAghsFirst` 还**故意往前挪**。
+   - ⚠️ **第二道仪器墙**:Nimbus 句柄 `GetManaCost()` 答**静默 0** ⇒ `zusultx` 在离线台
+     **买不到价**(不是「空」)。§3b 把 275 作为**声明过的注入**,并配绊线。
+   - ⚠️ **UNRESOLVED_HAND_READ(GH #803)**:5/71 是本机一次 python 扫,写成**下界/上界**不是等式。
+   - **接力棒**:`queue.json` **hero-88**(零 EC2、优先级 3)。⛔ 若各 rank 占比都接近 0:
+     **DO-NOT-ARM 不是 reject**。⚠️ **(2) 的分母是「买到杖之后」不是整局**,按整局取会被
+     无关 tick 稀释,**而偏的方向正好是掐死这根杠杆的那一边**。
+   - ⛔ **没落 CM `X.ConsiderCombo` 那根**:`hero-85` 仍 pending,`-177` 明令域没买到不许落。
+
 -179. ✅ **⭐ 下一轮第一条命令用重定向不要用管道**(`bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1; echo "SELFCHECK_EXIT=$?"`)
    **—— 证据纪律 3 同形第 15 次,本轮又踩。**
    主体:新 gated id **`wkt15stun`**(turbo-only),落在 `bots/BotLib/hero_skeleton_king.lua`
@@ -7951,6 +8001,34 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-15T07:52Z(报告 `iterations/reports/hero/20260915T075234Z.md`;**backlog:新开 `-180`**;
+  **零 AWS、零波次;`bots/` 改了 —— P4.4 (i)**;新 gated id **`zusultd`**,
+  登记 `state.json:zusultd_20260915`,请求 `queue.json:hero-88`;无 issue 认领)
+  **主体:Zeus 的保蓝储备接了同一个蓝池的四个消费点里的三个,而没接的那一个是最贵的。**
+  - ⭐⭐ `X.zuus_ShouldSaveManaForUlt` 挂在 `X.ConsiderW` / `X.ConsiderW2` / `X.ConsiderQ` 上;
+    `X.ConsiderD`(Nimbus)**在同一次 `X.SkillsComplement` 调用里、被保护的 ConsiderQ 之后**
+    派发,**一句都没问**。**GH #47 把这个形状量过一次**(储备只接真子集 ⇒ 支出**搬家**不是减少:
+    被扣住的 W 出价在下一行从 W2 走掉,同一笔蓝同一个目标,armed 腿 3 次域内施法)。
+    价差读自 KV 快照:`zuus_cloud` **275 平价无阶梯** vs `zuus_thundergods_wrath` **250/375/500**
+    ⇒ **一次 Nimbus 比一发 rank-1 大招还贵**,被守住的三个点扣的都是更小的支出。
+  - ⭐⭐ **rank 1 上 `zusult` 腿的域是空的,而这是算术不是读数**:出价要 `IsFullyCastable`
+    ⇒ 蓝 ≥ 275;储备要蓝 < R 价 ⇒ rank 1 上 < 250;**275 > 250**。窗口只在 rank 2
+    ([275,375),宽 100)/ rank 3([275,500),宽 225)开;`zusultx` 变成 [275,价+275),
+    **rank 1 第一次非空**。⛔ **两种 arm 组合在 rank 1 上不是同一个实验。**
+  - ⭐ **方向是收窄**(`HIGH → 0`,不会多出任何一次 Nimbus)⇒ 负面波读只有一种可容许解释。
+  - ⭐ **撤退支路双重豁免**(第三个返回值故意 nil + helper 自己的逃跑条款),§4 两条都断言。
+  - 验证:新测试 **8 绿**;`mutstand_zusultd.sh` **12/12**;`lua5.1 tests/run_tests.lua zuus`
+    **298 绿 0 红**。⚠️ **M3 第一版是 WRONG MESSAGE**:turbo 判据只读点名 id 的那一行,
+    兄弟 id 一 AND 进来就把 `IsModeTurbo` 挤出匹配文本 ⇒ pullcad 那条没轮到说话。
+  - ⭐ **顺手关掉本轮自己造成的 trunk 红**:`test_gated_helper_nesting_census.lua` 四行,
+    **逐行手读后钉入**((W)/(P)/(W)/(P)),第四行带**受 rank 限制的部分 no-op** 限度。
+    另外两条(`zuus_ability_index_binding` / `zuus_reserve_cross`)也是我改出来的,同轮修掉:
+    **把句柄提成 `hCloudHandle` 解析一次**,出价与下单读同一个句柄。
+  - ⚠️ **语料域 = 0,两个原因分开写**:仪器(`HasScepter` 落 `^Has -> false` 兜底,GH #656 族)
+    与世界(**71 具 Zeus 里 5 具带杖 = 7.0%**,但全在 23–28 级、蓝 1120–2745,全在储备早退之上)。
+    ⛔ 不许把前者引成「turbo Zeus 不买杖」。
+  - ⛔ **trunk red 不代修**:`test_fieldsip_atom_pricing`(**GH #814**,协同组)、
+    `test_axe_t15_payoff`(语料计数漂移 28→29,**本组的文件但非本轮造成**,交下一轮第一件事)。
 - 2026-09-15T05:07Z(报告 `iterations/reports/hero/20260915T050707Z.md`;**backlog:新开 `-179`**;
   **零 AWS、零波次;`bots/` 改了 —— P4.4 (i)**;新 gated id **`wkt15stun`**,
   登记 `state.json:wkt15stun_20260915`,请求 `queue.json:hero-87`;无 issue 认领)

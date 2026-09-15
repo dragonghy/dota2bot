@@ -1078,6 +1078,62 @@ local PINNED = {
     -- delete the behaviour instead of shipping it; the promote recipe is written
     -- in the helper's own header and pinned by that test file's section 6.
     "wksaveidle | X.IsReincarnationReserveIdle | X.IsReserveShareHigh | wkidleshare | bots/BotLib/hero_skeleton_king.lua",                 -- I
+    -- [zusultd 20260915] Three rows landed together the moment a FOURTH gate id
+    -- appeared anywhere in X.SkillsComplement -- the Nimbus dispatch joining the
+    -- ult-mana reserve the other three dispatches already consult.  Read by hand
+    -- before pinning, and they split two ways:
+    --
+    --   * 'aetherlens' and 'zusstatic' are (W), the wide net doing exactly what
+    --     the header says.  Both call sites are SIBLING statements at the TOP of
+    --     X.SkillsComplement (the aether-lens range read and the Static Field
+    --     bonus read), 50-odd lines above the castD dispatch and running on
+    --     every frame regardless of it.  Neither encloses the 'zusultd' branch,
+    --     so arming 'zusultd' alone is not arming a no-op.
+    --   * 'zusbind' is the real conjunction of the three: X.GetBoundAbility is
+    --     called INSIDE the 'zusultd' condition, to hand the reserve the Nimbus
+    --     handle whose 275 it prices under the zusultx id.
+    --
+    -- And the inner half is (P) for ALL THREE, for the same reason at each site:
+    -- un-armed every one of them returns the SHIPPED value, never a constant
+    -- that kills the caller's branch --
+    --     J.GetAetherLensRangeBonus -> its `nShipped` argument (250)
+    --     X.GetStaticFieldBonus     -> the shipped 0.09
+    --     X.GetBoundAbility         -> `hShipped`, the caller's own local
+    -- ⭐ The 'zusbind' row is worth one extra sentence, because it is the one
+    -- that could have been an unnoticed conjunction: un-armed, X.GetBoundAbility
+    -- hands back `abilityD`, which is BYTE-FOR-BYTE the expression the shipped
+    -- executor two lines below already casts with
+    -- (ActionQueue_UseAbilityOnLocation( X.GetBoundAbility( abilityD,
+    -- 'zuus_cloud' ), ... )).  So a wave arming 'zusultd' alone prices exactly
+    -- the handle the shipped tree would have cast, in both legs, and the two ids
+    -- can be armed independently.
+    "zusultd | X.SkillsComplement | J.GetAetherLensRangeBonus | aetherlens | bots/BotLib/hero_zuus.lua",                                   -- W
+    "zusultd | X.SkillsComplement | X.GetBoundAbility | zusbind | bots/BotLib/hero_zuus.lua",                                              -- P
+    "zusultd | X.SkillsComplement | X.GetStaticFieldBonus | zusstatic | bots/BotLib/hero_zuus.lua",                                        -- W
+    -- ⭐ AND THE FOURTH ROW IS THE ONE THIS FILE EXISTS FOR, so it is read at
+    -- more length than the three above.  X.zuus_ShouldSaveManaForUlt is the
+    -- reserve itself, called from inside the 'zusultd' condition, and it carries
+    -- its own J.IsSoakCandidate for the zusultx id.  Un-armed it is (P): zusult
+    -- was PROMOTED 2026-09-11, so in turbo the helper runs unconditionally, and
+    -- with zusultx off `nSpend` stays 0 and the mana clause is byte-equivalent
+    -- to the shipped `GetMana() >= nCost`.  So arming 'zusultd' alone runs the
+    -- shipped reserve at a fourth call site -- a real lever, not a no-op, and
+    -- tests/test_zuus_nimbus_ult_reserve.lua section 3 drives both of its
+    -- nonempty windows (mana in [275, 375) at ult rank 2, [275, 500) at rank 3).
+    -- ⛔ WITH ONE LIMIT THAT MUST TRAVEL WITH THE ROW, because it is a genuine
+    -- partial no-op and (P) alone would hide it: at ULT RANK 1 the un-armed
+    -- window is EMPTY, and by arithmetic rather than by measurement.  A Nimbus
+    -- bid needs IsFullyCastable, i.e. mana >= its cost of 275; the reserve only
+    -- holds below the ult's cost, which at rank 1 is 250; 275 > 250, so the two
+    -- cannot hold together.  Arming 'zusultd' ALONE therefore measures nothing
+    -- on a rank-1 ult, while check_armed_wiring.py calls it WIRED -- the exact
+    -- shape this census is named after, surviving here as a RANK-BOUNDED case
+    -- rather than a whole-lever one.  The zusultx id subtracts the pending spend and
+    -- opens [275, cost + 275), which is nonempty at every rank; section 3b
+    -- drives that.  ⇒ A wave reading 'zusultd' alone and a wave reading
+    -- zusultd + zusultx are NOT the same experiment at rank 1, and neither
+    -- may be quoted about the other.
+    "zusultd | X.SkillsComplement | X.zuus_ShouldSaveManaForUlt | zusultx | bots/BotLib/hero_zuus.lua",                                    -- P
 }
 
 local tests = {}
