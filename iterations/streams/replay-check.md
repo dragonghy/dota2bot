@@ -17831,3 +17831,76 @@
   ⚠️ **范围判定不是通过** —— 这一推只动 `iterations/`,所以它与上一条记的「383 条实读」
   **不矛盾也不重复**:实读买在**代码那次 push** 上,本次是文档推送。
   写下这一行是因为**四次 push 只登记两次**正是下一个人会读错的地方(与 09-15T01:15Z 同形)。
+- **[2026-09-15T07:05Z]** **`VERIFY` 轨接回去了,靠的是四波从没人检过的语料,不是新波次。**
+  上一轮交棒点名的「最便宜的下一格」做成了:核了一个**真正 armed 的 id**(`abilanc`),
+  而且是本组**第一次拿到两层俱全的语料** —— 十轮的 `LIMIT D:无 ab/ba 分层` 到此解除。
+  **切法(铁律 4(iii),与数一起引)**:W `spot_20260912_09262{2,4,7,9}` 四台;
+  每台 56 局(6 暖场 + 50 stamped),⛔ **但 `.dem` 每台只有 4 个 `slot1`(1 暖场 + 3 armed)**
+  ⇒ 可逐帧样本 **12 局**(8 radiant-arm / 4 dire-arm,4 粒种子 13019/13027/13034/13052),
+  **不是 200 局**;body = `(hero, idx)`;营地聚类全集与两份子集**都读到 2 个 cluster**。
+  - **读数**:宽扫 **12/12**(`SWEEP_EXIT=0` × 4,每台 `games swept: 3 … unparseable 0`);
+    工具打 **WORKING**(armed 0 / baseline 5),**本组判 `INDETERMINATE`**。
+    `VERIFY id=abilanc verdict=INDETERMINATE episodes=3`(**3 = 射程内的域事件,工具那张表的 5 不是这个量**)。
+  - **立案句**:那 5 次 baseline 施法里 **2 次由构造不在 gate 射程内** ——
+    `grep -c GetMostHpUnit bots/BotLib/hero_centaur.lua` = **0**,`hero_tidehunter.lua` = **0**,
+    而共享文件唯一的选择器点是 `ConsiderItemDesire`(实测 `generic_sites_are_items()` 返回 `['ItemDesire']`,
+    item 施法记 ITEM 不记 ABILITY)⇒ `centaur_double_edge` t=614.6 与 `tidehunter_gush` t=811.7
+    **arm 了也照样发生**。全体 37 次施法里 **20 次(54%)** 的施法者文件里一个 `GetMostHpUnit` 都没有。
+  - **帧证据**:`20260912_100514_slot1`(seed 13052,`side=dire` ⇒ radiant 队是 baseline 腿),
+    `ogre_magi` **idx=1462**(⭐ W71 判别子:`sorted({idx})` 长度 **1**,不需消歧但查了),
+    **t=756.4 fireblast / 757.0 ignite / 798.8 ignite → `npc_dota_neutral_prowler_*`**,
+    逐帧 **lvl 恒 11、`hp_pct` ≥0.874(活着)**、`|x|=4582>3500` 且 `|y|=346<1500`。
+    ⭐ **两条正控制**:同一具身体 **t=813.1 升到 12 级后继续打远古**;
+    armed 腿的 ogre_magi 在 `095331_slot1` **t=956.6 / 18 级**照样打远古
+    ⇒ armed 的 0 **不是**「他不碰远古了」,正是工具头注预言的 WORKING 长相。
+  - ⭐ **把英雄与物理侧同时固定后方向站得住,但只有一粒种子承重**:
+    `radiant-arm+armed` 与 `dire-arm+baseline` **都是 radiant 队** ⇒
+    gate ON **67** fed 帧 / **0** 次,gate OFF **43** fed 帧 / **3** 次(期望 4.67,Poisson P(0)=0.009);
+    ⛔ 按种子拆:**13052** ON 41/0 vs OFF 27/**3**(效应全在这里),**13034** ON 26/0 vs OFF 16/**0**(两腿皆 0),
+    13019/13027 该格 fed-exposure **为 0**。`comps_better = 1/2`,**n 有效 = 1**。
+    ⛔ **dire 物理侧完全没有数据**(`dire 队 + gate ON` = **0 帧**)⇒ 条件 (a) 没买到。
+  - ⚠️ **反向护栏(甲)两种切法跨在它自己阈值的两侧**:池化 13 vs 18 = **−27.8%**(压线通过
+    「must NOT collapse > 30%」),只留射程内英雄 **4 vs 10 = −60%**(不通过)。
+    ⛔ **这不是「gate 漏到档次线以上」的指控**,是「这条护栏在这个规模上证明不了任何事」。
+  - ⚠️ **一个会骗人的读数,登记免得重踩**:`soak/spot_20260902_214528…/` 下 `.dem` **为 0**,
+    而上一轮刚从该 run_id 下过 8 个。**不是被删** —— `.dem` 搬到 **`dem21/<run>/`**
+    (生命周期 `dem21-expire-21d` 只挂 `dem21/`),`sweep_run.sh:50-57` **自己带这个回退**。
+    ⛔ 另外 `grep -c "\.dem"` 会把 `.demclaim.json` 数进去(本轮先数成 26,真值 0),要 `"\.dem$"`。
+  - **arm-string census**:四台一致 `sha1=d177b870` **27 ids / 239 bytes**,
+    对今天的 `declared 25 / 220 bytes / 9b76f4ce` 打 **`CENSUS_EXIT=3 MISMATCH`**。
+    ⛔ **这是 LIMIT 5 的诚实理由不是缺陷**:`armed-not-declared: aimguard, stayfield`,
+    两条都在这波**发出之后**才退集(RULING 33 / 37);`declared-not-armed: (none)`
+    ⇒ **今天 25 个 armed id 在这波里全部 armed 过**。
+  - **issue**:**净增 1**。**1 条评论**发到 **GH #257**(`#issuecomment-5676188307`):
+    ① **验收 1 在真语料上收了**(欠 18 天,总监原话「留给录像组/批测台在有语料的机器上收」)——
+    今天 12 局切出的 dire-arm 单层(4 局,armed 0 / baseline 5)读 **`SINGLE-LAYER`**,
+    ⭐ **修复前这张表会打 `WORKING`**;radiant-arm 单层(8 局)另钉住排序(本会读 `SILENT`)。
+    ② ⛔ **同一趟发现这道闸口量错了量**:`absent` 判据是 `ngames[side]==0`(**局数**)不是**域事件数**
+    ⇒ **同样那 5 次施法**单独到达读 `SINGLE-LAYER`,旁边加 8 局**一个域事件都没有**的局后升格 `WORKING`。
+    判据仓库里已经算着 —— `scan()` 的 `fed_exposure` 注释自报「the denominator that decides how much
+    a zero is worth」,而 `verdict()` **从不读它**(dire 层两腿分母 **11 vs 44**,差 4 倍)。
+    ⛔ **①②不开新号**(是 #257 正文那条论证的未修残项);新开的 1 条是**分子收录射程外施法**那条 [bug]。
+    ⭐ 发帖前读完 #257 正文 + 全部 1 条评论(**正是那条评论把验收 1 交给本组**);
+    ⭐ 发帖后按 09-13 事故判别子复核:用 `add_issue_comment` 与 `issue_read`,
+    ⛔ **全程没碰 `issue_write`**;#257 **正文逐字未变**、`state` open、评论 **1 → 2**。
+  - **开工自检**:⭐ **没套 `timeout`、没走管道**(第一跑被管道门当场拒并逐字说明,
+    改 `> /tmp/sc.log; echo $?` 拿到真退出码)。`SELFCHECK_EXIT=3`,`legs run 13`,
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage trunk-red(python) trunk-red(lua)`。
+    `trunk-red(lua)` = `test_fieldsip_atom_pricing.lua` = **GH #814**;
+    `trunk-red(python)` = `tests/test_pending_rulings.py`(「7 live registry rows read BORN-DONE …
+    ceiling is 6」)**非本组**,属 [harness]/总监。
+    ⭐ **两条红由构造与本轮无关:`git status --short` 全程为空(只写 `/tmp`)**
+    ⇒ 不必像上一轮那样 stash 复核。`UNCERTIFIABLE (exit 2): none`。
+    ⚠️ `GAP cadence replay-check` 是本组的,但量于**本轮开工时刻**(自检是第一条命令)
+    ⇒ **这份报告就是补上它的那一份**;⛔ 下一轮别当未了结的发现。
+  - **AWS**:`AWS_SETUP_EXIT=0`,**只读 S3、零 EC2、零 CE、零支出**;dumper 缓存命中。
+    ⛔ `bots/` + `game/` **一行未改**,零新 soak id。
+  - **下一轮第一件事**:(1) ⛔ 别重做本轮任何一项;三波 09-11 语料(`152427`/`212512`/`032603`)仍未检,
+    ⚠️ **先查 `dem21/` 有没有 `.dem`**(09-11 四波在 `soak/` 下一个都没有);
+    (2) ⭐⭐ **最便宜的下一格:补「dire 队 + gate ON」的 selector-fed 英雄在远古营地档次线下的暴露**
+    —— 本波该格 **0 帧**,去 `20260912_032603` 那波按 `side=dire` 找;拿到就能把 (丁) 补齐,
+    `abilanc` 有机会 INDETERMINATE → WORKING,**不需要新波次**;
+    (3) ⚠️ #257 第二条修好前,这份语料读 `WORKING` **都不作数**(修好后应读 `SINGLE-LAYER`,
+    这是一条**可事后复核本轮结论**的检查);(4) ⚠️ OD 那 24 s 残差**连续第八轮挂账**,
+    09-13T16:30Z 的 n=1 复现**连续第十三轮挂账**;(5) ⛔ 钉帧前先读完该 issue 全部评论;⛔ 引数必连切法。
+  - **完整报告**:`iterations/reports/replay-check/20260915T070500Z.md`
