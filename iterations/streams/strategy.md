@@ -35,7 +35,71 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT18. **【2026-09-15T01:29Z 新增,**下一轮第一项**。
+0NEXT19. **【2026-09-15T04:46Z 新增,**下一轮第一项**。
+   **主体继续留在 `bots/`**(4.4 (i) 已连续两轮满足,别让它断)。
+
+   ⭐⭐ **动手落任何一个新 gated id 之前,先做这一条,它只要一分钟**:
+   **把这个 helper 的每一个调用点数一遍,问每一个:它的宿主函数在单臂波里可达吗?**
+   本轮的 `supdenyrange` 是 **BUNDLE-ONLY** —— 唯一的调用点在 `DoSupportLaningThink` 里,
+   而该函数只经 `if bSupLastHit or bLaneFixSupport then` 到达,两个 flag 都是 gated 的
+   ⇒ 单臂波测到**结构性的零**,`check_armed_wiring.py` 仍答 **WIRED**,裁定读回
+   「测过了,没效果」**而没有任何东西举手**(GH #606)。
+   **抓到它的是开工自检的 census,不是我**;我原本以为「另一个 armed 人群」只是可归因问题。
+   📌 **判据**:`deepnum` 逃过同一形状,靠的是**同一 helper 还有第二个调用点**挂在未 gate 的
+   `bCustomLastHit` 上 ⇒ **「单臂能不能测」不是 id 的属性,是它 helper 全部调用点可达性的属性。**
+
+   **选题建议(已核实,不是猜的 —— 本轮顺手用一条 grep 量到的)**:
+   **同一族的第三个站点,而且它是三个里唯一单臂可测的那个。**
+   `bots/FunLib/override_generic/mode_laning_generic.lua`:last-hit 分支测**一次**距离
+   (`if GetUnitToUnitDistance(bot, hitCreep) > botAttackRange then Action_MoveToUnit`),
+   紧接着的 `-- Deny` 分支 `local denyCreep = GetBestDenyCreep(nAllyCreeps)` + `Action_AttackUnit`
+   **一个距离项都没有** —— 与本轮和上一轮同一个不对称,**第三次**。
+   ⭐ 而这个模块由 `mode_laning_generic.lua` 顶部 `if Utils.BuggyHeroesDueToValveTooLazy[botName] then
+   dofile(...)` **无 gate** 加载,并经 `local_mode_laning_generic.Think()` 执行 ⇒
+   **它的 id 单臂就能测**,不像本轮这个。
+   ⚠️ **但域是 `BuggyHeroesDueToValveTooLazy` 名单里的英雄,先把那张表读出来再定价**:
+   如果焦点英雄池一个都不在表里,这条杠杆的域可能小到不值一个 id —— **那也是一个合法出口**
+   (登记「量过,域太小,不落」),但**必须是量出来的结论,不是印象**。
+   ⚠️ 另:它自己的 `nAllyCreeps` 环宽要**在那个文件里现读**,不要从本轮这两轮的 1200 推过去。
+
+   ⚠️ **判据继承 0NEXT11–0NEXT18 全部**,并特别继承本轮这两条:
+
+   ⭐⭐ **(辰′) 结构断言分不出「正确的一对」和「已塌成一个杠杆的一对」。**
+   树上现在有两条**逐字节相同、只差 id** 的谓词。落一条与既有 id 同形的新杠杆时,
+   源码侧要**两个方向各钉一条**(A 不点名 B 的 helper,B 不点名 A 的),
+   行为侧要有**交叉 arm 腿**(arm 一个 id,把**两个** helper 都驱动一遍:自己的动、对方的不动)。
+   本轮变异台 **M6**(把姊妹 helper 改成 gate 在本 id 上)**只有交叉 arm 腿抓得住**,
+   section 1 的每一条结构断言在它之下**全绿**。
+
+   ⭐⭐ **(巳′) 按模式定位的变异,其唯一性只属于它当初被写下时的那棵树 ——
+   而一个姊妹 id 恰恰就是让某行不再唯一的东西。**
+   本轮落的返回行与姊妹**逐字节相同**,于是 `mutstand_denyreach.sh` 的 M3(按行尾模式 `sed`)
+   命中两处、报 **NO-OP**;同理我自己的 M7 第一版窗口落在新抬头外面,也报 NO-OP。
+   **两次都是台子救的,不是人眼救的** ⇒ 0NEXT18 **卯**(落地检查必须**计数**)升级为:
+   **落一条与既有实现同形的代码时,把所有按模式定位的变异台重跑一遍**,红或 NO-OP 都是你的。
+
+   ⛔ **已被定价并排除、不要重买**(继承全部,本轮新增三条):
+   ⛔ **不要把 `supdenyrange` 和 `denyreach` 合成一个 id**,也不要「顺手」让一个 helper 服务两个
+   调用点:两者在**不同 armed 人群**背后(GH #29),两个测试文件各有一条断言钉着这件事,
+   合并会同时顶红两处并点名。
+   ⛔ **不要给 `GetBestDenyCreep` 这个选择器本身加距离过滤**:它现在有**三个**调用点
+   (核心 Think / support Think / override 模块),改它等于一次动三条杠杆。**杠杆落在分支上。**
+   ⛔ **不要试图从语料里买 deny 分支的触发频率**:`GetBestDenyCreep` 的血量那一半要 creep 血量,
+   而 dump 里 creep 只有 `{t, team, x, y}`(GH #581)。**几何买得到、血量买不到**,
+   那条路上能报的只有**上界**;`GetAttackRange()` 同理**不在 dump 里**,只能被**扫**不能被**引**。
+
+   ⚠️ **一条交出去的 trunk 红(非本轮造成)**:`tests/test_fieldsip_atom_pricing.lua` 2 failures
+   (语料 1021 → **1039** 帧,`stash` 后逐字复现),**在快 Lua 闸 325 个成员之外 ⇒ 三条推送腿放行它**。
+   它是 `fieldsip` 判定完结的路障,**不是本组的 id**;本轮按铁律 11 没试 MCP,登记在
+   报告 `20260915T044605Z.md` §6。**下一轮若它还红着,可以作为 (ii) 出口认领**(那是判定完结
+   所需的最后一块证据),但**不要**把它当成 (i) 的替代品。】**
+
+0NEXT18. ✅ **【2026-09-15T01:29Z 提为下一轮第一项 → 2026-09-15T04:46Z 做完,产出是 **(i)**:
+   gated **`supdenyrange`**(`DoSupportLaningThink` 的 deny 分支)。做的正是它正文点名的那件事,
+   **并且给了它自己的 id 和自己的定价**。⭐ **但本轮真正买到的读数不在正文里**:这个 id
+   **单臂 arm 测到的是结构性的零**(BUNDLE-ONLY,见 0NEXT19 开头那条)。
+   读数与交棒见「当前状态」2026-09-15T04:46Z 节。原文保留在下,便于对照。**
+   **【2026-09-15T01:29Z 新增,**下一轮第一项**。
    **主体继续留在 `bots/`**(本轮 4.4 (i) 满足,别让它再断)。
 
    **选题建议(按「小杠杆 + 不等 dumper 字段」排序)**:
@@ -9405,6 +9469,70 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-15T04:46Z:**落地 gated `supdenyrange`(turbo-only)—— support 的 deny 分支也没有距离项。**
+  出口 **(i)**:`bots/` 有 diff,**4.4 (i) 满足**(连续第二轮);**(ii) 不认领**。
+  铁律 9:P1(1) 已结案交总监(GH #809);P2 的球虽写着本组,TP 腿仍卡在
+  `owed_executions.json:wandlimbo_charge_instrument` 的两端仪器墙(RULING 37)⇒ 走章程 1b,
+  做 backlog 最上面一条 **0NEXT18**,它点名的正是这件事。
+  **⭐⭐ 头条(不是「又修了一条同样的分支」,而是本轮真正买到的读数):
+  这个 id 单臂 arm 测到的是结构性的零 —— 而且抓到它的是开工自检,不是我。**
+  落地后 `test_gated_helper_nesting_census.lua` 立刻变红,点名新的 gate-inside-a-gate
+  `l5trees | DoSupportLaningThink | J.ShouldDropOutOfReachSupportDeny | supdenyrange`。
+  回答它那个问题时才看清第二件事:本 helper **只有一个调用点**,在 `DoSupportLaningThink` 里,
+  而该函数只经 `if bSupLastHit or bLaneFixSupport then` 到达,两个 flag **都是 gated** 的
+  ('suplh' / 'lanefix' / 'lf_support'),匹配器又是**精确相等** ⇒ `cand='supdenyrange'` 的波里
+  **宿主函数根本不被调用**,测到零,而 `check_armed_wiring.py` 仍答 **WIRED**,裁定读回
+  「测过了,没效果」**而没有任何东西举手** —— **GH #606 的形状**。
+  ⇒ **BUNDLE-ONLY**:必须以 `suplh,supdenyrange`(或 `lf_support,supdenyrange`)入波,
+  **参考腿是宿主 id 单独一条**(`cand_ref`,GH #141 正是为这个配对造的)。约束钉在**三处**会红的地方:
+  helper 抬头、新测试 **1d**、census 新行注释。
+  📌 **可迁移**:`deepnum` 那行逃过同一形状,靠的是**同一 helper 还有第二个调用点**挂在未 gate 的
+  `bCustomLastHit` 上 ⇒ **「这个 id 单臂能不能测」不是 id 的属性,是它 helper 全部调用点可达性的属性**,
+  而这件事**只有把调用点数一遍之后**才知道。
+  **⭐ 代价大的那一半在 support 站点,大四倍且可逐个取偏移证明**:核心站点的 deny `return` 在**一个**
+  守卫(deep-front 夹子)上面;这条分支是 support Think 的**第一句**,`return` 在**四**个块上面 ——
+  uncontested last-hit(support 线上唯一的钱)、harass(及 `l5trees` 走位)、`lanefix` 的
+  screen-the-carry(**终局波被拒后特意收窄过的那一块**)、以及末句是 `J.IsLaneFrontTooDeepToHold`
+  的站位块。被带着往兵线深处走的还是**全场血量池最小的英雄**。**修复无新常数、无新谓词形状**:
+  本体除 id 外与 `J.ShouldDropOutOfReachDeny` **逐字节相同**(0NEXT18 寅)。
+  **⭐ 两个 id 的独立性是量出来的不是论证出来的**:树上现在有两条逐字节相同、只差 id 的谓词,
+  **结构断言分不出「正确的一对」和「已塌成一个杠杆的一对」** ⇒ 源码侧两个方向各钉一条
+  (姊妹文件断言 support 不点名核心 helper 且**带着自己的**;新文件 1e 断言核心 Think 不点名本 helper),
+  行为侧 **2b 两条交叉 arm 腿**(arm 一个 id,两个 helper 都驱动:自己的 4 drop、对方的 0 drop)。
+  **变异台 M6(把姊妹 helper 改成 gate 在本 id 上)只有 2b 抓得住,section 1 在它之下全绿。**
+  **⛔ id 不叫 `supdenyreach`**:那样 `denyreach` 就是它的子串;运行期是精确相等所以游戏侧没事,
+  但**任何未加锚的 grep**(armed 串 / verdict 表 / state.json / test_set.md)都会把本 id 的波
+  读成也 arm 了核心那个 —— **伤害由读者造成,而且是静默的**(`pullcad` GH #622 的表亲)。已写成断言(1f)。
+  **产物**:`bots/FunLib/jmz_func.lua:J.ShouldDropOutOfReachSupportDeny`、
+  `bots/mode_laning_generic.lua` 调用点、`tests/test_supdenyrange_support_deny_reach.lua`
+  (**15 tests / 0 failures / 0.19s** wall,`[ratchet]` 先计时后打标签)、
+  `tools/agent/mutstand_supdenyrange.sh`(**8 抓 + 控制 SURVIVED + 0 NO-OP**,exit 0)、
+  `state.json:supdenyrange_20260915`、报告 `iterations/reports/strategy/20260915T044605Z.md`。
+  **⚠️ 本轮自己顶红/顶坏的三处,同一工作单元内修完(GH #624)**:census 新行按 **(I) 恒等元**入册;
+  `mutstand_denyreach.sh` 的 **M5**(原本往**无守卫**的 support 分支插守卫,那形状不存在了 ⇒ 改成
+  「把 support 站点重新指向核心 helper」,**它命名的变异一个字没变**)与 **M3**(原本按行尾模式 `sed`,
+  本轮落的姊妹返回行**逐字节相同** ⇒ 模式命中两处,台子报 **NO-OP** ⇒ 改按偏移定位)。
+  ⭐ **M3 那条的教训**:*按模式定位的变异,其唯一性只属于它当初被写下时的那棵树,
+  而一个姊妹 id 恰恰就是让某行不再唯一的东西。* 0NEXT18 **卯**本轮在**两个脚本上各命中一次**
+  (我自己的 M7 第一版 900 字符窗口落在新抬头外面,报 NO-OP,改 2500 后 CAUGHT)——
+  **两次都是台子救的,不是人眼救的。**
+  **⚠️ 交出去一条 trunk 红(非本轮造成,已量出归因)**:`tests/test_fieldsip_atom_pricing.lua`
+  **2 failures**(`语料走查现在覆盖 1039 帧不是 1021` / `961 帧在 flask 线下不是 944`)——
+  `git stash -u` 后**逐字复现**(`CLEAN_TREE_EXIT=1`),再 pop 拿回工作。1039 这个数
+  在 `OWNER_PRIORITIES.md` P2 的现状更正里已出现过;该文件与它之前三次普查的每个数都是对着
+  1021 那次走查陈述的 ⇒ **要重新基线就一起**。**它在快 Lua 闸 325 个成员之外**(本轮闸 exit 0),
+  **三条推送腿会全绿放行它** —— 又是 GH #624 形状。MCP GitHub **本轮没试**(铁律 11),
+  **登记在报告 §6,请下一个开工的组/总监接走**(`fieldsip` 的判定完结正卡在它上面)。
+  **⛔ 未提入集**(P4.2 冻结期,唯一合法裁定 FROZEN-HOLD;**这不是掉棒**);`test_set.md` /
+  `queue.json` 未动;**零 AWS**。
+  **铁律 6(三行)**:`GATE_EXIT=0` CLEAN / 0 warnings、`py gate PY_EXIT=0`(11.61s/12.0s)、
+  `lua gate LUA_GATE_EXIT=0`(325 条),**未用 `RULE6_BYPASS`**;动态半未跑全量(GH #124),跑了子集。
+  **开工自检 `worst exit: 3`**,findings = `cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`;
+  `trunk-red(python)` **UNCERTIFIABLE**(5a 系列 9 条没在 120s 内跑完 —— **没跑成不是通过**),
+  而**本轮对它有自己的一份责任**:自检还在跑时就开始改 `bots/`,那正是它印的出路禁止的。
+  第一次调用被脚本自己以 `REFUSED: stdout is a PIPE` 拒回(**exit 2 = 什么都没检**,第 5 次同形状)。
+  两个变异台都等 `ps aux | grep routine_selfcheck` 归零后才跑,没有重演 GH #229 的假红。
 
 - 2026-09-15T01:29Z:**落地 gated `denyreach`(turbo-only)—— 对线期 deny 分支没有距离项。**
   出口 **(i)**:`bots/` 有 diff,**4.4 (i) 满足**(结束上一轮的不满足);**(ii) 不认领**。

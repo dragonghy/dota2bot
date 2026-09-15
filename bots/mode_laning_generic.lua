@@ -353,8 +353,19 @@ end
 -- through the last-hit branch and the support does not attack it.
 local function DoSupportLaningThink()
 	-- Deny own creeps first (time-sensitive; never the core's responsibility).
+	-- [supdenyrange] Same missing term as the core Think's deny branch, at the
+	-- OTHER call site: nAllyCreeps is the 1200 ring and this branch tests reach
+	-- zero times, while the uncontested-last-hit branch just below tests it
+	-- twice. Its own id, not 'denyreach': this site is reachable only under
+	-- 'suplh' / 'lanefix' / 'lf_support' (different armed population -- GH #29),
+	-- and the skipped-guard half is larger here, because this branch is the
+	-- FIRST statement of the Think and returns above the last-hit, the harass,
+	-- the lanefix screen AND the deep-front clamp. Gated on 'supdenyrange'
+	-- (turbo-only); disarmed the conjunct is constant false and the branch is
+	-- byte-identical. See J.ShouldDropOutOfReachSupportDeny in jmz_func.lua.
 	local denyCreep = GetBestDenyCreep(nAllyCreeps)
-	if J.IsValid(denyCreep) then
+	if J.IsValid(denyCreep)
+	and not J.ShouldDropOutOfReachSupportDeny(bot, denyCreep) then
 		bot:SetTarget(denyCreep)
 		bot:Action_AttackUnit(denyCreep, true)
 		return

@@ -705,6 +705,30 @@ local PINNED = {
     -- check_armed_wiring.py answers WIRED") does not apply here. That premise
     -- is pinned where it can rot, in tests/test_deepnum_parity.lua section 6.
     "l5trees | DoSupportLaningThink | J.IsLaneFrontTooDeepToHold | deepnum | bots/mode_laning_generic.lua",                               -- P
+    -- [supdenyrange 20260915] (I), and the row carries a SECOND fact that is the
+    -- exact mirror of the 'deepnum' row above it -- which is why it is written
+    -- here rather than left for whoever writes the wave.
+    -- The census question first: un-armed, J.ShouldDropOutOfReachSupportDeny
+    -- returns false on its own first line, and it joins the deny branch as
+    -- `and not <it>`. `not false` is `true`, the identity element of that `and`,
+    -- so the shipped branch is byte-identical and arming 'l5trees' alone still
+    -- measures 'l5trees'.
+    -- ⛔ THE SECOND FACT, and it is the GH #606 shape this census exists to make
+    -- visible -- the 'deepnum' row escaped it, this one does NOT. That row is
+    -- safe single-arm because the same helper has a second call site reachable
+    -- through the ungated `bCustomLastHit`. This helper has exactly ONE call
+    -- site, and it is inside DoSupportLaningThink, which the Think body reaches
+    -- only via `if bSupLastHit or bLaneFixSupport then` -- both gated
+    -- ('suplh' / 'lanefix' / 'lf_support'). So a wave arming 'supdenyrange'
+    -- ALONE measures a STRUCTURAL ZERO while check_armed_wiring.py answers
+    -- WIRED, and the verdict would read back "tested, no effect".
+    -- ⇒ THIS ID IS BUNDLE-ONLY: it must be armed as `suplh,supdenyrange` (or
+    -- `lf_support,supdenyrange`), with the host id alone as the reference leg --
+    -- which is exactly what cand_ref (GH #141) is for. Registered in
+    -- state.json:supdenyrange_20260915 under `arming`, and pinned as source in
+    -- tests/test_supdenyrange_support_deny_reach.lua section 1d, where it can
+    -- rot loudly rather than silently.
+    "l5trees | DoSupportLaningThink | J.ShouldDropOutOfReachSupportDeny | supdenyrange | bots/mode_laning_generic.lua",                   -- I
     "midguard | J.ShouldRetreatPastMidline | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                       -- P
     "midsupyield,midtp,suptp,tparrive | J.ShouldTpSupportTowerFight | J.CanEnemyInterruptTpChannel | tpreach | bots/FunLib/jmz_func.lua",  -- P
     "midsupyield,midtp,suptp,tparrive | J.ShouldTpSupportTowerFight | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",          -- P

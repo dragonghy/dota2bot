@@ -7521,18 +7521,22 @@ end
 -- Turbo is asked explicitly: nothing on this path asks it for us. Gated
 -- STANDALONE -- one id, never a conjunction of two (the 'pullcad' trap, GH #622).
 --
--- ⛔ ONE ID, ONE CALL SITE. There are TWO unguarded deny branches in that file:
--- this one (the core laning Think, ~line 493) and DoSupportLaningThink's first
--- branch (~line 356). Only the core one is wired here. The reason is not
+-- ⛔ ONE ID, ONE CALL SITE. There are TWO deny branches with this shape in that
+-- file: this one (the core laning Think, ~line 493) and DoSupportLaningThink's
+-- first branch (~line 356). THIS id moves only the core one. The reason is not
 -- tidiness -- it is that the two sit behind DIFFERENT armed populations (the
 -- core Think is reachable with EVERY gate off, via `bCustomLastHit`'s
 -- `local_mode_laning_generic` / pos1-with-human-pos5 disjuncts; the support one
 -- is reachable only under 'suplh' / 'lanefix' / 'lf_support'), so one id across
 -- both would make a per-id verdict unattributable, which is the
 -- non-independence the retreat guard chain was reordered to remove (GH #29).
--- The support site is left reading unguarded ON PURPOSE and
--- tests/test_denyreach_lane_deny_reach.lua asserts it STILL does, so this
--- sentence cannot quietly expire.
+-- 2026-09-15: the support site got its OWN id ('supdenyrange',
+-- J.ShouldDropOutOfReachSupportDeny below) with its own pricing, which is the
+-- outcome that separation was for -- NOT a widening of this id.
+-- tests/test_denyreach_lane_deny_reach.lua asserts the support branch still
+-- does not name THIS helper, and the new file asserts the core branch does not
+-- name that one, so "one id, one call site" cannot quietly expire in either
+-- direction.
 --
 -- ⛔ WHAT THE CORPUS CANNOT SAY, said here rather than left for a wave. The
 -- dumper writes `{t, team, x, y}` per creep and NO health or name (GH #581), so
@@ -7546,6 +7550,86 @@ end
 -- in that test's [world] block, never as a trigger frequency.
 function J.ShouldDropOutOfReachDeny( bot, hCreep )
 	if not J.IsSoakCandidate( 'denyreach' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	if bot == nil or not J.IsValid( hCreep ) then return false end
+	return GetUnitToUnitDistance( bot, hCreep ) > bot:GetAttackRange()
+end
+
+-- [supdenyrange / charter 0NEXT18 / P4.4(i)] THE SAME MISSING TERM, AT THE
+-- SUPPORT CALL SITE -- its own id, its own pricing.
+--
+-- THE SHAPE is the sibling's, in DoSupportLaningThink: the deny branch reads
+-- `nAllyCreeps` (the 1200 ring) and tests reach ZERO times, while the
+-- uncontested-last-hit branch a few lines BELOW it tests reach TWICE
+-- (`> botAttackRange`, and `> botAttackRange * 0.8` for the walk-up). Same
+-- selector (`GetBestDenyCreep`, health-only, no position term anywhere on the
+-- path), same `Action_AttackUnit` at whatever distance.
+--
+-- ⭐⭐ WHY IT IS A SEPARATE ID AND NOT A WIDENING OF 'denyreach'. The two sites
+-- sit behind DIFFERENT armed populations: the core Think body runs with every
+-- gate off (`bCustomLastHit` = `local_mode_laning_generic`), while this one is
+-- reached only through `if bSupLastHit or bLaneFixSupport then
+-- DoSupportLaningThink()`, i.e. only under 'suplh' / 'lanefix' / 'lf_support'.
+-- One id across both would make a per-id verdict unattributable (GH #29), and
+-- it would also mean this id's reading was taken on a population that only
+-- exists when ANOTHER candidate is armed. Two ids, two call sites; each test
+-- file asserts the other site does not name its helper.
+--
+-- ⭐⭐ WHY IT IS WORTH ITS OWN PRICE: THE SKIPPED-GUARD HALF IS STRICTLY LARGER
+-- HERE. At the core site the out-of-reach deny `return`s above ONE guard (the
+-- deep-front clamp). This branch is the FIRST statement of the support Think and
+-- `return`s above FOUR later blocks, every one of which is a decision somebody
+-- added on purpose:
+--   * the uncontested last-hit (the support's only lane gold),
+--   * the harass block (and 'l5trees' off-wave sidestep below it),
+--   * the 'lanefix' screen-the-carry block -- NARROWED after a final-gate
+--     reject specifically so the support stands off the core when an enemy
+--     threatens it,
+--   * the lane-front hold, whose last act is `J.IsLaneFrontTooDeepToHold` --
+--     the anti-overextend clamp the mega-bundle review added (051728 ogre died
+--     at +4217 holding a shoved-deep front alone).
+-- And the unit being walked down the lane is a support: the hero with the
+-- smallest HP pool on the map, walking toward the enemy wave, for one attack it
+-- cannot arrive in time to land (a sub-49% creep already under fire does not
+-- survive the ~3.3s a 300-move-speed hero needs to cross 1000 units).
+-- (Condition (c): the deny window is one attack on a creep already in range --
+-- that is what the sibling branch eleven lines away already encodes.)
+--
+-- ⭐ NO NEW NUMBER, AND NOT EVEN A NEW PREDICATE SHAPE. The bound is
+-- `bot:GetAttackRange()` and the operator is `>`, lifted verbatim from this
+-- file's own already-shipped answer, exactly as 'denyreach' did (charter
+-- 0NEXT18 寅). The body is deliberately byte-identical to the sibling's except
+-- for the id: nothing here is a second thing to defend.
+--
+-- ⛔ THE ID IS NOT 'supdenyreach', AND THAT IS NOT A STYLE CHOICE. 'denyreach'
+-- would be a SUBSTRING of it. The runtime matcher (`SoakStrArms`) compares ids
+-- exactly, so the game would be fine -- but every UNANCHORED grep over an armed
+-- string, a verdict table, state.json or test_set.md would report a wave that
+-- arms this id as arming the core one too, and per-id attributability is the
+-- entire reason these are two ids. Cousin of the 'pullcad' trap (GH #622): the
+-- damage from an id that reads like another id is done by the READERS, and it
+-- is silent.
+--
+-- ⛔ BUNDLE-ONLY -- READ THIS BEFORE PUTTING THE ID IN AN ARMED STRING. This
+-- helper has exactly ONE call site and it lives inside DoSupportLaningThink,
+-- which the Think body reaches only through `if bSupLastHit or bLaneFixSupport
+-- then` -- both gated ('suplh' / 'lanefix' / 'lf_support'). So a wave arming
+-- 'supdenyrange' ALONE measures a STRUCTURAL ZERO, while
+-- check_armed_wiring.py still answers WIRED (WIRED means "a call site exists",
+-- and its own LIMITS block says so) and the verdict reads back "tested, no
+-- effect" with nothing raising a hand -- the GH #606 shape. Arm it as
+-- `suplh,supdenyrange` (or `lf_support,supdenyrange`) with the HOST ID ALONE as
+-- the reference leg; that pairing is exactly what cand_ref (GH #141) is for.
+-- Un-armed the branch is byte-identical either way, so nothing about the
+-- shipped tree depends on this paragraph -- only the measurement does.
+--
+-- ⛔ WHAT THE CORPUS CANNOT SAY. Identical to the sibling's and NOT re-bought:
+-- the dumper writes `{t, team, x, y}` per creep and no health (GH #581), so how
+-- often `GetBestDenyCreep` returns anything is unreadable, today or by trying
+-- harder. The geometry census lives in the sibling's test file and describes
+-- the SAME two frames -- it is one reading, quoted, never a second one.
+function J.ShouldDropOutOfReachSupportDeny( bot, hCreep )
+	if not J.IsSoakCandidate( 'supdenyrange' ) then return false end
 	if not J.IsModeTurbo() then return false end
 	if bot == nil or not J.IsValid( hCreep ) then return false end
 	return GetUnitToUnitDistance( bot, hCreep ) > bot:GetAttackRange()

@@ -123,8 +123,8 @@ local function think_fn()
     return src:sub(a)
 end
 
---- `DoSupportLaningThink`, comment-free -- the sibling site this round
---- deliberately does NOT wire.
+--- `DoSupportLaningThink`, comment-free -- the sibling call site, which THIS id
+--- does not wire (it got its own id, 'supdenyrange', on 2026-09-15).
 local function support_fn()
     local src = mask_comments(read(LANING))
     local a = assert(src:find('local function DoSupportLaningThink()', 1, true),
@@ -311,18 +311,37 @@ tests['[ratchet] the guard is wired into the core deny branch as a NARROWING'] =
         .. count(fn, 'J.ShouldDropOutOfReachDeny') .. ' times; one call site per id')
 end
 
-tests['[ratchet] the SUPPORT deny branch is still unguarded, on purpose'] = function()
+tests['[ratchet] the SUPPORT deny branch does not name THIS id\'s helper'] = function()
     local fn = support_fn()
-    -- Registered as a deliberate non-action (GH #767 §6.2's shape).  The two
-    -- sites sit behind different armed populations, so one id across both would
-    -- make a per-id verdict unattributable (GH #29).  If this goes red someone
-    -- wired it -- which is fine, but it needs its OWN id and its own pricing,
-    -- not this one's.
+    -- 2026-09-15: the support site was given its OWN id ('supdenyrange',
+    -- J.ShouldDropOutOfReachSupportDeny) with its own pricing and its own test
+    -- file -- which is the outcome the separation was for, not a violation of
+    -- it.  What must never happen is ONE id moving BOTH call sites: the two sit
+    -- behind different armed populations (this one runs with every gate off,
+    -- that one only under 'suplh' / 'lanefix' / 'lf_support'), so a shared id
+    -- would make a per-id verdict unattributable (GH #29).  So the claim this
+    -- leg pins is no longer "the support branch is unguarded" -- that sentence
+    -- expired the moment it was guarded -- but the claim that actually protects
+    -- attributability: the support branch never names THIS helper.  Read as a
+    -- RE-READ of what the assertion was always for, not a re-baseline: the
+    -- mirror leg lives in tests/test_supdenyrange_support_deny_reach.lua and
+    -- pins the core branch never naming THAT one.
     assert(fn:find('local denyCreep = GetBestDenyCreep(nAllyCreeps)', 1, true),
         'the support deny branch moved')
-    assert(not fn:find('ShouldDropOutOfReachDeny', 1, true),
-        'the support deny branch is now guarded too -- one id must not move two '
-        .. 'call sites; give it its own id and re-price')
+    -- Anchored on the full helper name plus its open paren, because
+    -- `ShouldDropOutOfReachSupportDeny` is NOT a superstring of
+    -- `ShouldDropOutOfReachDeny` but a sloppier pattern could still collide.
+    assert(not fn:find('ShouldDropOutOfReachDeny(', 1, true),
+        "the support deny branch now calls 'denyreach''s own helper -- one id "
+        .. 'must not move two call sites behind different armed populations; '
+        .. "it has its own id ('supdenyrange'), use that one")
+    -- ...and it IS guarded, by its own id's helper.  Without this half, deleting
+    -- the support guard outright would leave this leg green.
+    assert(fn:find('and not J.ShouldDropOutOfReachSupportDeny(bot, denyCreep) then',
+        1, true),
+        "the support deny branch lost its own guard ('supdenyrange'); if that "
+        .. 'was deliberate, re-read both rounds -- do not widen this id to cover '
+        .. 'it')
 end
 
 tests['[ratchet] the helper gates FIRST, turbo SECOND, and names one id'] = function()
