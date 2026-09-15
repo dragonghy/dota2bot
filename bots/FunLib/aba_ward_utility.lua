@@ -46,6 +46,15 @@ local nTowerList = {
 	TOWER_BOT_3,
 }
 
+-- [wardcomma 20260915] THE ONE MISSING COMMA IN bots/, HOISTED SO BOTH VALUES
+-- HAVE A NAME. The shipped literal below is kept BYTE FOR BYTE -- it is still
+-- `Vector(-2414.402100 -3802.327637)`, one argument, a subtraction -- because
+-- the un-armed path must answer with the exact number it answers with today.
+-- See the head note on X.ApplyWardCommaFix (just above the two spot producers)
+-- for what the typo does and why the correction is gated rather than just made.
+local WARD_MID3_R3_SHIPPED = Vector(-2414.402100 -3802.327637)
+local WARD_MID3_R3_FIXED   = Vector(-2414.402100, -3802.327637)
+
 -- #############################################################
 -- RADIANT
 -- #############################################################
@@ -106,7 +115,7 @@ local WardLocationsBeforeAllyTowerFall__Radiant = {
 	[TOWER_MID_3] = {
 		[1] = { location = Vector(-4377.171387, -3911.893555), plant_time_obs = 0, plant_time_sentry = 0, },
 		[2] = { location = Vector(-3888.701904, -1594.625244), plant_time_obs = 0, plant_time_sentry = 0, },
-		[3] = { location = Vector(-2414.402100 -3802.327637), plant_time_obs = 0, plant_time_sentry = 0, },
+		[3] = { location = WARD_MID3_R3_SHIPPED, plant_time_obs = 0, plant_time_sentry = 0, },
 		[4] = { location = Vector(-4334.572266, -1036.464844), plant_time_obs = 0, plant_time_sentry = 0, },
 		[5] = { location = Vector(-2706.345459, -1664.330566), plant_time_obs = 0, plant_time_sentry = 0, },
 		[6] = { location = Vector(-1288.418091, -4359.833496), plant_time_obs = 0, plant_time_sentry = 0, },
@@ -372,7 +381,73 @@ function X.GetGameStartWardSpots()
 	return GetTeam() == TEAM_RADIANT and WardSpotRadiant or WardSpotDire
 end
 
+-- [wardcomma 20260915] Soak candidate 'wardcomma' (turbo-only). ONE COORDINATE
+-- MOVES; no spot is added, no spot is removed, no clause is relaxed.
+--
+-- ⭐ THE DEFECT, closed form -- a statement about SOURCE, not a frequency.
+-- `WardLocationsBeforeAllyTowerFall__Radiant[TOWER_MID_3][3]` is written
+--
+--     Vector(-2414.402100 -3802.327637)
+--
+-- with no comma between the two numbers, so Lua reads it as ONE argument, the
+-- subtraction `-2414.402100 - 3802.327637`, and the spot lands at
+-- **(-6216.729737, 0)** instead of (-2414.4, -3802.3) -- 4,723 units away, on
+-- the far west edge at y EXACTLY zero, while every other member of the same
+-- mid-tier-3 group sits in a cluster around (-3300, -2500). It is the ONLY such
+-- literal in bots/: a scan of every `Vector(` call in the tree finds exactly one
+-- (tests/test_wardcomma_mid3_spot.lua re-runs that scan rather than quoting it),
+-- so this is a typo, not a convention. luacheck cannot see it -- the expression
+-- is valid Lua -- and the smoke loader cannot either, because it loads fine.
+--
+-- ⭐⭐ WHY IT IS A BEHAVIOUR FINDING AND NOT A TIDINESS ONE. The corrupted point
+-- is not merely wrong, it is wrong TOWARD the bot: X.GetClosestObserverWardSpot
+-- is an argmin over distance-to-bot, so a spot dragged 4.7k units across the map
+-- competes for the pick from wherever it lands. Measured on the fixture corpus
+-- (112 fixtures, 104 real radiant hero-frames at position >= 4, i.e. the bots
+-- mode_ward_generic's own `J.GetPosition(bot) <= 3` gate admits): with the
+-- mid-tier-2 tower declared down (see the debt below), the broken spot is in the
+-- candidate list on 104/104 and is the ARGMIN -- the spot the bot walks to and
+-- plants on -- on 8. On the bearing frame it is 760u from the bot while the spot
+-- it was meant to be is 5,788u away: inside mode_ward_generic's 3200u desire
+-- gate versus far outside it. The typo is what makes the mode fire at all there.
+--
+-- DOMAIN, AND THE HALF THIS CORPUS CANNOT BUY (declared, not buried). The
+-- MID_3 group is only read once our own mid tier-2 has fallen while tier-3
+-- stands. Shipped tower state over the same 104 frames reaches it 0 times --
+-- the corpus stops at t=850.1s and carries no game that far along. That zero is
+-- the CORPUS-COVERAGE kind, not the constructive kind (GH #838): the branch runs
+-- in every game that loses a mid tier-2, which in Turbo is most of them. The
+-- test declares that one ordinary state and drives everything else -- every hero,
+-- every position, every distance -- off real frames. `queue.json:strategy-48`
+-- asks the replay desk for a post-tier-2 frame so the declaration can retire.
+--
+-- SHAPE. Resolved ONCE, on the spot OBJECT, at the head of the only two
+-- producers that read these tables -- so the observer path, the sentry path,
+-- X.GetClosestObserverWardSpot's argmin, mode_ward_generic's 3200u desire test
+-- and the Action_UseAbilityOnLocation that finally plants the ward all read the
+-- same coordinate, and the `plant_time_obs` / `plant_time_sentry` bookkeeping
+-- stays on the same table (a corrected COPY would silently fork that state).
+-- Un-armed the `if` falls out on its first conjunct and the table is the shipped
+-- one, identity and all. Single id, conjoined with nothing (no 'pullcad' trap).
+-- Radiant-only BY CONSTRUCTION -- the typo is in the __Radiant table and
+-- GetTeam() picks the side -- so in a mirrored A/B this id has a domain only on
+-- the leg whose armed side is radiant; a reader must not treat the dire leg's
+-- zero as evidence about the lever.
+--
+-- DECLARED CONSEQUENCE, not a hidden one: the corrected point is subject to the
+-- same `IsLocationPassable(spot.location)` test as every other spot, so if the
+-- intended coordinate is impassable the armed list is one spot SHORTER rather
+-- than one spot moved. That is the only way armed can change the size of the
+-- list, and it is asserted in the test rather than promised here.
+local tWardCommaSpot = WardLocationsBeforeAllyTowerFall__Radiant[TOWER_MID_3][3]
+function X.ApplyWardCommaFix()
+	if tWardCommaSpot.location ~= WARD_MID3_R3_SHIPPED then return end
+	if not (J.IsModeTurbo() and J.IsSoakCandidate('wardcomma')) then return end
+	tWardCommaSpot.location = WARD_MID3_R3_FIXED
+end
+
 function X.GetAvailabeObserverWardSpots(bot)
+	X.ApplyWardCommaFix()
 	local availableSpots = {}
 
 	if DotaTime() < 0 then
@@ -509,6 +584,7 @@ function X.GetClosestObserverWardSpot(bot, spots)
 end
 
 function X.GetPossibleSentryWardSpots(bot)
+	X.ApplyWardCommaFix()
 	local possibleSpots = {}
 
 	if J.IsEarlyGame() then
