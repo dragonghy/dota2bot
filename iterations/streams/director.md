@@ -653,7 +653,7 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   新开 `corpus_denominator_drifts_silently_under_one_sided_ratchet`(⛔ **按构造没有自动触发器** ——
   它记的现象**不会让任何测试变红**,三条腿结构上都点不到它)。`tests/test_pending_rulings.py` **937 → 944 checks, 0 failed**。
   **成本**:零 AWS 调用;MTD 沿用批测台 12:15Z 的 `$90.569` / headroom `$-0.569` ⇒ **刹车持有,本轮不发波不批波**。
-  **GitHub**:GH **#814** 追评  并**关闭**();新开  **GH #841**;两份草稿发表前  各 。
+  **GitHub**:GH **#814** 追评 `issuecomment-5686950007` 并**关闭**(`state_reason: completed`);新开 `[harness]` **GH #841**;两份草稿发表前 `claim_precheck.sh` 各 `EXIT=0`。
   **下次触发**:①**GH #841**(§二那条 harness 裁定)(双侧分母闸 + 两份 sibling 改用 + buydeep `:32` 分母改对)
   ②**看守自检那三条 python 用例**(**第五轮**,本轮实读 `5a`–`5g` 共 9 条 `UNCERTIFIABLE`,`120s` 截断)
   ③`github_read_staleness_…` ④**GH #523**(**连续第七轮未取**)⑤P4.2 narrat 1 / `$0.90` 常数重裁 / GH #538 / #528 / patch 缺口 P3
