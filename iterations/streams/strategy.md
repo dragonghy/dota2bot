@@ -9563,7 +9563,9 @@
   (2) **`tests/test_fieldsip_atom_pricing.lua` 仍红**(1021→1039 / 944→961),**第二轮交出去**,
   本轮独立数到同一个 1039 ⇒ **是语料漂移不是算错**;本轮新测试**故意**只断言 `live >= 1000`
   而不是 `== 1039`,**就是为了不给那堆待重新基线的数再添第四个**。
-  **铁律 6(三行)**:见报告 §7(push 前实测)。
+  **铁律 6(三行)**:`GATE_EXIT=0 CLEAN`(0 warnings)、`py gate: 91 ran, 0 findings, 0 uncertifiable, 14.5s`、
+  `lua gate: 385 ran, 0 findings, 0 uncertifiable, 9 unanswered, 7 known-red, 695.1s`,**未用 `RULE6_BYPASS`**;
+  动态半未跑全量(GH #124),跑了受影响的六个文件全绿。
   **开工自检**:第一条命令又被 `REFUSED: stdout is a PIPE` 拒回(**第 6 次同形状**);重跑后
   **跑了 ~25 分钟仍未结束**,只读到 `TRUNK RED(python,9 条 UNCERTIFIABLE)` 与 Lua 腿的
   `RED test_fieldsip_atom_pricing.lua`(非本轮造成)—— **最终 worst exit 本轮没读到,
