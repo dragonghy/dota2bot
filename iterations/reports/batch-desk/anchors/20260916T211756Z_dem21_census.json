@@ -1,0 +1,236 @@
+{
+  "expire_days": 21,
+  "days_source": "/tmp/lifecycle.json (live rule, read this run)",
+  "now": "2026-09-16T21:17:56Z",
+  "cohorts": [
+    {
+      "day": "2026-08-26",
+      "objects": 539,
+      "bytes": 12006098895,
+      "gb": 12.01,
+      "first": "2026-08-26T03:26:04Z",
+      "last": "2026-08-26T22:08:15Z",
+      "due": "2026-09-17T00:00:00Z",
+      "due_spread": [
+        "2026-09-17T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 2.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-08-27",
+      "objects": 670,
+      "bytes": 14811774637,
+      "gb": 14.81,
+      "first": "2026-08-27T00:28:13Z",
+      "last": "2026-08-27T22:12:41Z",
+      "due": "2026-09-18T00:00:00Z",
+      "due_spread": [
+        "2026-09-18T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 26.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-08-28",
+      "objects": 563,
+      "bytes": 12418682982,
+      "gb": 12.42,
+      "first": "2026-08-28T00:33:18Z",
+      "last": "2026-08-28T19:01:05Z",
+      "due": "2026-09-19T00:00:00Z",
+      "due_spread": [
+        "2026-09-19T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 50.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-08-29",
+      "objects": 479,
+      "bytes": 10504973482,
+      "gb": 10.5,
+      "first": "2026-08-29T00:31:45Z",
+      "last": "2026-08-29T13:08:22Z",
+      "due": "2026-09-20T00:00:00Z",
+      "due_spread": [
+        "2026-09-20T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 74.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-01",
+      "objects": 180,
+      "bytes": 4010631288,
+      "gb": 4.01,
+      "first": "2026-09-01T09:45:54Z",
+      "last": "2026-09-01T22:25:46Z",
+      "due": "2026-09-23T00:00:00Z",
+      "due_spread": [
+        "2026-09-23T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 146.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-02",
+      "objects": 372,
+      "bytes": 8244792419,
+      "gb": 8.24,
+      "first": "2026-09-02T03:44:07Z",
+      "last": "2026-09-02T22:37:57Z",
+      "due": "2026-09-24T00:00:00Z",
+      "due_spread": [
+        "2026-09-24T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 170.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-03",
+      "objects": 235,
+      "bytes": 5252457021,
+      "gb": 5.25,
+      "first": "2026-09-03T03:46:00Z",
+      "last": "2026-09-03T13:11:41Z",
+      "due": "2026-09-25T00:00:00Z",
+      "due_spread": [
+        "2026-09-25T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 194.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-04",
+      "objects": 414,
+      "bytes": 9094036652,
+      "gb": 9.09,
+      "first": "2026-09-04T00:33:41Z",
+      "last": "2026-09-04T19:25:19Z",
+      "due": "2026-09-26T00:00:00Z",
+      "due_spread": [
+        "2026-09-26T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 218.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-05",
+      "objects": 244,
+      "bytes": 5367080652,
+      "gb": 5.37,
+      "first": "2026-09-05T00:46:34Z",
+      "last": "2026-09-05T22:11:03Z",
+      "due": "2026-09-27T00:00:00Z",
+      "due_spread": [
+        "2026-09-27T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 242.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-06",
+      "objects": 223,
+      "bytes": 5033455180,
+      "gb": 5.03,
+      "first": "2026-09-06T03:35:17Z",
+      "last": "2026-09-06T19:10:59Z",
+      "due": "2026-09-28T00:00:00Z",
+      "due_spread": [
+        "2026-09-28T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 266.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-07",
+      "objects": 366,
+      "bytes": 8079790206,
+      "gb": 8.08,
+      "first": "2026-09-07T00:36:29Z",
+      "last": "2026-09-07T22:18:32Z",
+      "due": "2026-09-29T00:00:00Z",
+      "due_spread": [
+        "2026-09-29T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 290.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-08",
+      "objects": 296,
+      "bytes": 6521090363,
+      "gb": 6.52,
+      "first": "2026-09-08T03:35:42Z",
+      "last": "2026-09-08T22:04:20Z",
+      "due": "2026-09-30T00:00:00Z",
+      "due_spread": [
+        "2026-09-30T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 314.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-09",
+      "objects": 272,
+      "bytes": 6033096726,
+      "gb": 6.03,
+      "first": "2026-09-09T03:38:11Z",
+      "last": "2026-09-09T22:17:56Z",
+      "due": "2026-10-01T00:00:00Z",
+      "due_spread": [
+        "2026-10-01T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 338.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-10",
+      "objects": 88,
+      "bytes": 1931350646,
+      "gb": 1.93,
+      "first": "2026-09-10T12:32:33Z",
+      "last": "2026-09-10T13:02:07Z",
+      "due": "2026-10-02T00:00:00Z",
+      "due_spread": [
+        "2026-10-02T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 362.7,
+      "status": "not due"
+    },
+    {
+      "day": "2026-09-11",
+      "objects": 346,
+      "bytes": 7715478406,
+      "gb": 7.72,
+      "first": "2026-09-11T00:35:02Z",
+      "last": "2026-09-11T22:21:42Z",
+      "due": "2026-10-03T00:00:00Z",
+      "due_spread": [
+        "2026-10-03T00:00:00Z"
+      ],
+      "overdue_hours": null,
+      "hours_until_due": 386.7,
+      "status": "not due"
+    }
+  ],
+  "unparsed_lines": 0,
+  "objects": 5287,
+  "bytes": 117024789555
+}
+census: 15 cohort(s), 5287 object(s), 0 unparsed line(s), 0 line(s) outside 'dem21/'
