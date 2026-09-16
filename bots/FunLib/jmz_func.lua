@@ -13195,6 +13195,41 @@ local function GetHealthMultiplier(hUnit)
 	return mul
 end
 
+-- [fightstate, strategy 2026-09-16] WHICH OF THE TWO ACCUMULATORS J.WeAreStronger
+-- ALREADY BUILDS IS THE ONE IT COMPARES.
+--
+-- J.WeAreStronger keeps `ourPower` and `ourPowerRaw` side by side and writes to
+-- BOTH on every branch (allies, illusions, glyphed towers, the teamfight bonus).
+-- They differ in exactly one factor: `ourPower` uses unit:GetOffensivePower()
+-- ("respects cooldowns and mana", docs/BOT_API_REFERENCE.md:1170) and
+-- `ourPowerRaw` uses unit:GetRawOffensivePower() ("ignoring cooldowns and mana",
+-- :1171).  The enemy accumulator is built from the RAW getter only -- there is no
+-- state-aware enemy total anywhere in the function.
+--
+-- As shipped the comparison is `ourPowerRaw > enemyPower`, so `ourPower` is
+-- computed for every ally in the radius and then thrown away: a dead store, and
+-- the only thing in the function that knows our own side is out of mana or has
+-- its ultimates down.  Raw-vs-raw LOOKS symmetric, but the two sides are not
+-- symmetric in what the bot can know: it knows its own cooldowns and cannot see
+-- the enemy's.  The standard conservative engagement rule is the other pairing --
+-- count yourself at what you can actually do right now, credit the enemy with
+-- everything they own -- and that pairing is exactly the one the author built the
+-- second accumulator for.
+--
+-- GetOffensivePower() <= GetRawOffensivePower() by construction, so arming this
+-- can only LOWER our side of the comparison: strictly fewer frames answer "we are
+-- stronger", never more.  Turbo is where that matters -- fights are constant and
+-- mana, not damage, is the binding constraint.
+--
+-- 56 call sites read this predicate, so the blast radius is large and the gate is
+-- the point: un-armed the helper returns false, the selection below is provably
+-- the same expression that shipped, and no frame can move.
+function J.ShouldRateOurFightPowerByState()
+	if not J.IsSoakCandidate( 'fightstate' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	return true
+end
+
 function J.WeAreStronger(bot, nRadius)
 	local cacheKey = 'WeAreStronger'..tostring(bot:GetPlayerID())..'-'..tostring(nRadius)
 	local cachedVar = J.Utils.GetCachedVars(cacheKey, 0.5)
@@ -13239,7 +13274,13 @@ function J.WeAreStronger(bot, nRadius)
 					then
 						table.insert(tAllyHeroes, unit)
 					end
-					ourPower = ourPower + (math.log(1 + unit:GetOffensivePower())) * (math.sqrt(unit:GetAttackDamage() * unit:GetAttackSpeed() * 5)) * fMul
+					-- Max(0, ...) mirrors the sibling line below, which the author
+					-- already wrote that way.  Unguarded, a negative product makes
+					-- math.sqrt return nan, and nan > x is false -- i.e. the moment
+					-- 'fightstate' is armed the whole predicate would answer "we are
+					-- NOT stronger" for a reason that has nothing to do with the
+					-- lever.  Un-armed this line's value is still unread.
+					ourPower = ourPower + (math.log(1 + unit:GetOffensivePower())) * (math.sqrt(Max(0, unit:GetAttackDamage() * unit:GetAttackSpeed() * 5))) * fMul
 					ourPowerRaw = ourPowerRaw + (math.log(1 + unit:GetRawOffensivePower())) * (math.sqrt(Max(0, unit:GetAttackDamage() * unit:GetAttackSpeed() * 5))) * fMul
 				end
 			else
@@ -13284,7 +13325,15 @@ function J.WeAreStronger(bot, nRadius)
 		end
 	end
 
-	local res = ourPowerRaw > enemyPower
+	-- soak candidate 'fightstate' -- see J.ShouldRateOurFightPowerByState above.
+	-- Un-armed the helper returns false and nOurPower IS ourPowerRaw, so this is
+	-- the expression that shipped, not a superset of it.
+	local nOurPower = ourPowerRaw
+	if J.ShouldRateOurFightPowerByState() then
+		nOurPower = ourPower
+	end
+
+	local res = nOurPower > enemyPower
 	J.Utils.SetCachedVars(cacheKey, res)
 	return res
 end

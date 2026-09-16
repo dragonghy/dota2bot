@@ -2950,6 +2950,21 @@
    "status": "pending",
    "seeds": [],
    "question": "⛔ **零 AWS、零 EC2、只读已归档 `.dem`。要的是一帧(或一个 dumper 字段),不是一波。**\n\n一句话:**这根杠杆的判据在有限域上已经穷举证完了,缺的不是把握而是仪器 —— 分支另外两个操作数(仓库格、当前 mode)按构造不在 dump 里。**\n\n杠杆:`bots/ability_item_usage_generic.lua` 的 `X.ConsiderItemDesire['item_tpscroll']` 「Go complete items」支,出货的 mode 守卫是**恒真式**(`m ~= A or m ~= B or m ~= C or m ~= D`,四个常量两两不等 ⇒ 对**一切**取值为 `true`),于是**背着满包 + 仓库里有合成卷轴的 bot 可以在推塔途中 TP 回家**(`撤退:1`,DESIRE_HIGH)。armed 后守卫变成作者本来要写的合取。\n\n**两条路,任一条都能把欠条销掉:**\n\n**(i) 首选 —— dumper 发仓库格。** 仓库是槽位 **9-14**(`X.GetNumStashItem` / `X.IsThereRecipeInStash` 只读这六格),而 dumper 现在恰好只发**随身九格 0-8**。⇒ 全语料 **125 个 fixture / 每个 subject,仓库物品数恒 0**,**这不是稀少,是问不出来**。只要 9-14 开始进 dump,`tests/test_tpstash_mode_tautology.lua` 的 **W1 会自己变红并点名下一步**,这根杠杆就第一次可以端到端钉住。⚠️ 与 GH #837 / `strategy-47` 是**同一堵仪器墙的两面**,顺手一起量最省。\n\n**(ii) 退一步 —— 一帧行为证据。** 归档 `.dem` 里找一帧:主体处于 `BOT_MODE_PUSH_TOWER_TOP/MID/BOT` 或 `BOT_MODE_ATTACK`、随身九格满、1600u 内无敌人,而它**起手了回泉水的 TP**。那是出货行为本身,armed 腿要拿掉的就是它。\n\n⭐ **反向护栏,不是可选项**:`tpstash` 只该拦**推塔/攻击途中**的回家 TP。**armed 腿的合成/出装节奏不许塌** —— 如果 armed 腿的成装时间明显晚于 baseline,那说明它拦掉的不只是「推塔途中」那一类,即**不算通过**。\n\n⛔ **入集不在本条射程内**:P4.2 冻结(armed > 20)下唯一合法裁定是 `FROZEN-HOLD`。\n\n登记:`iterations/state.json:tpstash_20260916`;本地验证 19 tests / 0 failures;变异台 `tools/agent/mutstand_tpstash.sh` 10 抓 + 控制 SURVIVED。"
+  },
+  {
+   "id": "strategy-52",
+   "stream": "strategy",
+   "bundle": "fightstate(新落地 gated id;**零 EC2,不要为它发波** —— 要的是一个 **dumper 字段**,不是一波;**不申请入集**,P4.2 冻结下唯一合法裁定是 FROZEN-HOLD)",
+   "priority": 2,
+   "status": "pending",
+   "seeds": [],
+   "question": "⛔ **零 AWS、零 EC2。要的是一个 dumper 字段,不是一波,也不是一帧。**\n\n一句话:**这根杠杆的判据在有限域上已经穷举证完了,缺的不是把握而是仪器 —— 比较式两边的数按构造都不在 dump 里。**\n\n杠杆:`bots/FunLib/jmz_func.lua` 的 `J.WeAreStronger(bot, nRadius)`(团战强弱谓词,**56 个调用点**在读)。它给己方同时累两个总量 `ourPower` / `ourPowerRaw`,**每个分支都同时写**,两边表达式逐字相同只差一个 getter:`unit:GetOffensivePower()`(**算冷却和蓝**,`docs/BOT_API_REFERENCE.md:1170`)对 `unit:GetRawOffensivePower()`(**不算**,:1171)。敌方总量**只**用 raw。而出货的比较是 `ourPowerRaw > enemyPower` ⇒ **`ourPower` 每次调用为半径内每个队友算一遍,然后丢掉**(luacheck W311 死存储)。\n\n**要的字段**:行为 dumper 的每个 hero 槽位上加 **`offensive_power`** 与 **`raw_offensive_power`** 两个数(引擎 getter 直出,无需推导)。\n\n**为什么是字段不是帧**:`tests/fixtures/` **125 局 1250 个 hero 槽位里,含 'offensive' 或 'power' 的字段数 = 0**。这个零**被反向调用过**(同一个扫描器在同样 1250 个槽位上找到 `max_mp` **1250/1250**)⇒ 是语料的性质,不是扫描器坏了。所以这不是「稀有」,是**按构造问不出来**:再多帧也不会长出这两个数。\n\n⚠️ 与 `queue.json:strategy-51`(仓库槽位 9-14)、**GH #837 / `strategy-47`** 是**同一堵仪器墙的第三面**,顺手一起量最省。",
+   "acceptance": "(1) dumper 每个 hero 槽位输出 `offensive_power` / `raw_offensive_power` 两个浮点数;`tests/test_fightstate_power_accumulator.lua` 的 **§5 W1 会自己变红**(它断言语料里这两个字段数为 0,并在失败信息里逐字写明「这是好消息」和下一步该做什么)—— **红了就是交付**,不需要另开验收。\n(2) 拿到字段后本组补一个端到端 fixture:一帧上两个总量**跨在 `enemyPower` 两侧**(`ourPowerRaw > enemyPower >= ourPower`),断言 armed 腿答 false 而出货腿答 true。\n(3) 顺带给**分母**:扫了几局 / 几个 hero 槽位;并给「两个总量在同一帧上相对差」的**分布**(按铁律 4 (ii),整数小值域报均值+分布,浮点量报分位数),该分布本身就是这根杠杆效应量的上界。\n(4) 读数按 `ab` / `ba` 两个分层分别登记(铁律 4 (i-a)),登记的是**读数**不是局数。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;本组不花 AWS)。",
+   "requested_by": "strategy 2026-09-16T07:xxZ",
+   "requested_in": "iterations/reports/strategy/20260916T072643Z.md",
+   "note": "本地已把能离线买到的都买了:`tests/test_fightstate_power_accumulator.lua` **18 绿**(§4 在 10 格网格上**穷举**,不是抽样)、`tools/agent/mutstand_fightstate.sh` **10 CAUGHT + 控制 SURVIVED**。方向**按构造单向**:`GetOffensivePower() <= GetRawOffensivePower()` ⇒ armed 只能让「我方更强」这个答案**变少不会变多**。所以负读数**只能**读成「bot 本来就该按满状态算自己」,**永远不能**读成「这根杠杆挑起了一场团战」。\n⭐ 语料能买到的那一半已经买了:**1250 个 hero 槽位里 703 个(56.2%)有已升级技能在冷却(654)或蓝低于 25%(136)**,120/125 帧至少有一个 ⇒ 两个总量**能**不同的频度在这个语料上是高的,只是**差值本身**问不出来。",
+   "result": null,
+   "director": null
   }
  ],
  "done": [
