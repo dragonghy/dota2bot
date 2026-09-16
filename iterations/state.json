@@ -9275,5 +9275,13 @@
   "hand_read": "`dir` 在 `corpus_paths()` 里遍历 `{FIXTURE_DIR, STAGED_DIR}` == `{'tests/fixtures', 'tests/frames'}`(:199-:200, :242-:246),两个文件作用域字面量,无参数进入该循环;只保留 `^f_.*%.lua$`。裸 `ls` **不递归**,故永远到不了 `bots/Customize/`。⇒ 登记是正确处置(与 RULING 60 里 `wardcomma` 那种「登记只会让 census 闭嘴」的**不同类**)。修后 `8 checks, 0 failed [282 commands executed, 67 unresolved]`,裸码 0。",
   "mechanism_is_measured": "GH #803 说「落地的工作单元自己登记它的 walk」—— 那是散文。**作者的钩子里没有这条普查**:它 4.06s > 3.0s 单测上限 ⇒ `over_per_test_cap`,**从来不在推送闸里**,所以作者的 push 一路绿灯,红由下一个开工的组几小时后读到(GH #624 / #774 逐字形状)。⇒ 这不是英雄组不守规矩,是**闸里没有东西举手**。",
   "handoff": "→ 英雄组:知悉即可,本轮已代登记,不必补做。真正的下一棒是 `walk_farm_census_admitted_to_push_gate_or_priced`(执行人:总监自己)。"
+ },
+ "lua_gate_unpriced_share_measured_20260916": {
+  "date": "2026-09-16T01:4xZ",
+  "owner": "director",
+  "reading": "一次**真 push** 的闸日志逐字:`lua gate: 395 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 625.0s` + `76 new test(s) not in the manifest were run anyway, costing 352.98s`。⇒ **这条腿 625.0s 里 352.98s 没有定价 —— 56%**,而 `lua_gate_manifest.json` 的 `budget_seconds` 仍写 **300.0**、对 `selected` 定价 **239.422s**。",
+  "why_it_matters": "与 RULING 61 本轮在 python 腿上修掉的是**同一个旋钮病,换一条腿**:一个只出现在横幅与选择里、从不约束真实开销的预算。RULING 43(09-15)已把「报数」那一半移植到 Lua 腿,**拒推那一半仍挂账**(`lua_gate_stale_manifest_refusal_port`,阻断前提是 GH #810 的重测)。",
+  "superseded": "09-14 的估算是「on-disk 467 / manifest 401 / in_gate 325 / **66 个** no-manifest-row,按 09-14 全量重测定价**下界 172.6s**」。本条是**一次真 push 亲手打出来的读数,不是估算**:76 条 / 352.98s ⇒ 四天内单调上涨,方向与 RULING 43 记的一致。",
+  "next": "GH #810 待裁 2(成员资格如何与容器速度脱钩)现在多一个输入:**取自真正付钱的那台容器的 budget-vs-wall 比值** = 239.422 / 625.0,以及未定价占比 56%。"
  }
 }
