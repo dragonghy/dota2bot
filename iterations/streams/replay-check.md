@@ -18660,3 +18660,23 @@
   - **下一轮第一件事**:⭐ 把 §四 那条(GH #752 的第三个消费者)**在全 81 局上量一次血**
     —— 本轮只有 1 局,43% 是单局读数;同时对 **`_paused_spans`** 补 W77 判别不了的那一条
     (要一局**有开局后暂停**的)。⏳ `.dem` 约 **2026-10-02** 到期,硬期限。
+  - **开工自检判决(⭐ 轮询到终行真的出现才写)**:`legs run 13`、**`selfcheck worst exit: 3`**、
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage`、
+    `UNCERTIFIABLE: trunk-red(python)`、`NOT RUN: test_lua_gate/test_luacheck_gate_soakswitch/test_selfcheck_lua_leg`。
+    **逐条查过归属,本组一条都不占**:`cadence` = **英雄组**(唯一的 `GAP cadence hero`,
+    09-15T22:00Z→09-16T02:10Z,4.2h);`lua-coverage` = GH #806(新增 2 个无人自动跑的测试,
+    ⛔ 本轮 `tests/` 一行未改);`queue-rulings`/`owed-executions` 属总监。
+    ⚠️ **`trunk-red(python)` 与我那 11 秒并发的关系说清楚**:该腿处方是「re-run on a quiet tree」,
+    原则上我的并发是混杂因子,**但 W77 在没有该并发时报的是同一条** ⇒ **它早于本轮并发**;
+    ⛔ 两句都不省 —— 不是我造的,**也不等于 trunk 是绿的**。
+    ⚠️ 自检自己那三条 python 用例**连续第七轮 `NOT RUN`**。
+  - **push 三行**(两次 push 逐位相同):`GATE_EXIT=0 CLEAN` /
+    `py gate: 125 ran, 0 findings, 0 uncertifiable, 55.8s` / `lua gate: SKIPPED BY SCOPE`
+    (⛔ SCOPE 决定不是通过;本轮 diff 只有 `iterations/`)。`PUSH_BRANCH_EXIT=0`/`PUSH_MAIN_EXIT=0`
+    **都是前台真退出码**(W77 那条 wrapper 码的坑本轮没踩);main `bc285bee..555e0eeb`;
+    两次都没被拒 ⇒ **零 `pull --rebase`**;⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
+    ⭐ **本轮只丢串行 push、没有并发**,规避了 W77 §八 那个自造染红的坑。
+  - **issue**:**净增 0**,**2 条评论**(都在 push 之后,两份草稿 `PRECHECK_EXIT=0`):
+    **GH #752**(`#issuecomment-5693270240`,§四 = 正式交付,第三个消费者 + 43% 血量)、
+    **GH #849**(`#issuecomment-5693276589`,§二/§三 范围证据 +2)。
+  - **token**:`TOKENS total_in=6,390,699 out=52,138 turns=55`。
