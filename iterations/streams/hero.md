@@ -59,9 +59,16 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      不是规矩** —— 规矩是**取保守侧**。`measured_at` 照 GH #810 不动。
    - **附带**:`test_bots_walk_farm_only.py` 的 `UNRESOLVED_HAND_READ` **同轮登记**(GH #803 点名本组的
      第三发,**这次自己读了**:先跑出红并逐字点名本文件,登记后复跑 **8/0**)。
-   - ⚠️ **开工自检的 python trunk 腿读 `UNCERTIFIABLE`,原因是本轮自己造成的**:自检与本轮对
-     `hero_axe.lua` 的编辑**并发**,那条腿明说要在 quiet tree 上跑 ⇒ **trunk 的那一侧本轮没人看过**
-     (既不是红也不是绿)。同族是 GH #848,本轮据此**等自检跑完再 push**。
+   - ⚠️⚠️ **本轮自己写错过一次归因,当场改掉 —— 而改法是去读 `PY_LOG`,不是猜。** 起草时把自检的
+     `UNCERTIFIABLE (exit 2): trunk-red(python)` 归给「自检与编辑 `bots/` 并发」;那条腿的提示行**确实**
+     写着 quiet tree,本轮**确实**在并发编辑 ⇒ **一个为真的前提长得像一个已完成的归因**(与铁律 1
+     RULING 48「零 EC2 为真,却被用来回答『花了多少』」**同型**)。实际构成是**两条,都不是它**:
+     (1) `test_luacheck_gate_soakswitch.py` = **新容器时序** —— 自检早于本轮跑 `luacheck_gate.sh`
+     (那一步才装 luacheck);✅ 装好后单独复跑 **4/0 exit 0**,本轮把它买回来了。
+     (2) `test_selfcheck_lua_leg.py` = 被测那条腿在**本容器**上 117 文件跑不进 120s 预算(GH #358 同族)。
+     ⇒ trunk 的 python 那侧仍没人完整看过,但**不是本组造成的**;fast Lua 那侧 **117 文件 0 失败**。
+   - `bots/Customize/soak_side.lua` 本轮**从未存在**(两次 `ls` 确认)⇒ GH #848 的撞车**没有触发条件**;
+     「等自检跑完再 push」照做,因为触发条件不在自己手里。
    - **下一轮主体第一候选**:**第 1 条** —— 支路第一个合取项 `( IsPushing or IsDefending or IsFarming )`
      里的 `J.IsFarming`,`-185` 已量出它**在全语料 1314 个活 subject 上恒 false**(`GetActiveMode()`
      loader 未实现 **或** TEAM_NEUTRAL 目标)⇒ **这条支路的第一个门在离线语料上是 UNASKABLE**,
@@ -8355,8 +8362,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - **附带且方向相反**:manifest 登记 **2.466s** 而非实测 2.221s —— **本机比 `measured_at` 那台快**,
     自己的实测是**乐观侧**;前两条注记的「不缩放就是保守」是它们那台机器的性质,**规矩是取保守侧**。
   - **附带**:`test_bots_walk_farm_only.py` 手读**同轮登记**(GH #803 第三发,这次自己读的,8/0)。
-  - ⚠️ **自检 python trunk 腿 `UNCERTIFIABLE`,是本轮自己造成的**(与编辑 `bots/` 并发)
-    ⇒ **trunk 那一侧本轮没人看过**;据 GH #848 **等自检跑完再 push**。
+  - ⚠️⚠️ **本轮自己写错过一次归因,当场改掉,改法是读 `PY_LOG` 不是猜**:自检的
+    `UNCERTIFIABLE(python)` 起草时被归给「与编辑 `bots/` 并发」(提示行为真、并发也为真
+    ⇒ **一个为真的前提长得像一个已完成的归因**,与 RULING 48 同型)。实际是两条:
+    新容器**时序**(luacheck 那时还没装;✅ 装后复跑 **4/0**)+ 本容器 117 文件跑不进 **120s** 预算
+    (GH #358)。⇒ **不是本组造成的**;fast Lua 侧 **117 文件 0 失败**。
 - 2026-09-16T02:10Z(报告 `iterations/reports/hero/20260916T021022Z.md`;**backlog:新开 `-186`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`axecallcrowd`**(turbo-only,**未 armed**,
   P4.2 冻结期不申请入集);新 queue 请求 **hero-93**;**P4.4 自评:(i)**)
