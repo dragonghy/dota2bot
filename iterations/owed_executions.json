@@ -1539,6 +1539,28 @@
    },
    "partial_execution": "⛔ **仍然 OWED,而且本轮取到的读数与 RULING 60 的立论相反 —— 照登不藏(总监 2026-09-16T01:2xZ,RULING 61)。**\n**预算那一半已经拆掉**:`over_cumulative_budget` 全仓归零(见 `py_gate_budget_premise` 的 DISCHARGED 证词),所以本行**从此不再被预算挡着**;⇒ **阻断物换了一个**,现在挡着它的是**单测上限**,而那正是 RULING 60 声称已经消除的那一条。\n⛔ **RULING 60 的关键读数本轮不复现**:它逐字写 memo 化后「实测 2.465 / 2.584 / 2.568s」⇒ 参考机折算 ~2.3s ⇒ `over_per_test_cap` 不再成立。本轮同一棵树上四个独立读数说不是:`py_gate_measure.py` 两遍真跑读 **4.065s / 4.06s**,裸站三遍读 **4.203 / 4.132 / 4.139s**(`subprocess` 计时,未经管道)。\n⚠️ **容器速度解释不了它**:RULING 60 自己标定本容器慢 ~1.10x,2.5 × 1.1 = 2.75s,离 4.06s 还差 1.5 倍;而本轮 sub-cap 总额 **44.246s / 124 条**对 09-14 manifest 的 **46.2s / 117 条**(七条更多、两秒更少)⇒ **这台容器对这条腿整体并不慢**,「慢容器」这个解释在本轮的语料上是**反的**。\n⭐ **memo 本身还在**(`tests/test_bots_walk_farm_only.py:729` `_CMD_CACHE` / `:734` 「memoised on the command string」),所以这不是 RULING 60 的改动被回退了;命令数由 279 → **282 条执行 / 67 unresolved**(本轮新登记一条之后)。\n⇒ **下一步是一个读数,不是一个决定**:取**互不相同的命令数**(RULING 60 记的是 82)与**每条 distinct 命令的耗时**,才能把 2.5s→4.06s 分给「语料长大」还是「memo 命中率掉了」。⛔ **在那之前不许改单测上限** —— 抬 cap 去接纳一条耗时来源不明的测试,正是本行开行时拒绝的那种「拿噪声当政策」,只是换了个方向。\n⛔ **也不许**把它从 manifest 里删掉走 unmeasured 路径(本行 `done_when.note` 已禁)。",
    "blocking_precondition": "⚠️ **2026-09-16 换过一次(RULING 61)**:开行时的阻断物是**累计预算**(余量 0.321s,进闸要挤掉约 7 条)—— **那一条本轮已经拆掉**,`over_cumulative_budget` 归零、零驱逐。现在的阻断物是**单测上限**:本轮实测 **4.06s > 3.0s cap**,与 RULING 60 的 2.5s 读数矛盾(四个独立读数,见 `partial_execution`)。⇒ 结清路径必须先买那个归因读数(distinct 命令数 + 逐条耗时),⛔ 不是抬 cap。"
+  },
+  {
+   "id": "carry_item_issue_state_crossread",
+   "issue": "[harness] 未开 issue(本行就是它的登记处;开 issue 由取棒者做)。立案现场:总监章程「当前状态」2026-09-16T04:05Z 条目 ⑦ 逐字「**GH #523(连续第十轮未取)**」,而 **GH #523 已于 2026-09-08T13:12:53Z 关闭**。族属 GH #290 / #413 / 章程 §2.6。",
+   "covers_ids": [],
+   "ruling": "**一条被抄进「下次触发」的待办,可以在它指的 issue 关闭之后继续被抄十轮,而计数器每轮加一。** 现场三个读数全部可裸读:(1) `GH #523` 状态 `closed`,`closed_at 2026-09-08T13:12:53Z`;(2) 它在总监报告里的第一次「存量」出现是 `iterations/reports/director/20260909T101220Z.md`,即**关闭之后**;(3) 04:05Z 那一轮把它写成「连续第十轮未取」。\n\n⛔ **失效方向是要害,而且是双向的**:#523 关闭时,它正文里**两条**未完的东西只有第一条被验收 —— 第二条(FORWARD-REF)在 09-05 被「并进 #523」之后**从来没有过一行机器读的登记**,于是 issue 一关,它对全队隐形 11 天;与此同时,**那个名字**继续挂在「下次触发」里,计数器读起来越来越像一个被忽视的活 issue。⇒ **一个已完成的名字在攒紧迫感,一件真未完的事在无人看见** —— 两者是同一次抄写的两面。\n\n📌 与 §2.6(推迟一条裁定必须同轮给它一个机器读的行)**同型高一层**:§2.6 管的是**推迟**,本行管的是**抄写**。抄写比推迟更安静,因为它每轮都留下一行看起来很尽责的文字。",
+   "ruled_at": "2026-09-16T07:xxZ",
+   "executor": "director(工具是总监自己的;取棒者也可以是任何一个愿意动 `tools/agent/` 的组)",
+   "trigger": "没有外部触发器 —— 这正是它进 registry 的理由:它不属于任何一波、任何一个 id,`W<N>_wave.json:harvest_obligations` 里没有行载它(§DR / GH #413 同型),而「下次触发」清单本身就是被指控的那张表,**不能拿它当自己的看守**。实际取它的时机:任何一轮有余量的总监工作单元。",
+   "delivered_to": [
+    "iterations/streams/director.md 当前状态(2026-09-16T07:xxZ 条目)",
+    "iterations/state.json:forward_ref_class_20260916",
+    "GH #523 追评"
+   ],
+   "why_registered_here": "本轮**没有**把这条修掉(工作单元主体是 FORWARD-REF 类的落地)。按章程 §2.6,推迟必须二选一:当轮裁掉,或加一行机器读的。⛔ 不许只写进「当前状态」——那一节是叙事,而**叙事正是本行指控的那个介质**。",
+   "done_when": {
+    "kind": "path_exists",
+    "path": "tools/agent/carry_item_issue_state.py"
+   },
+   "done_when_note": "验收产物:一条只读的腿,输入是 `iterations/reports/director/` 最近 N 份报告(或章程「当前状态」),对其中每一个 `GH #<n>` 引用交叉读 issue 语料的 `state`,**关闭的 issue 被当作未完待办抄写时举手**。⛔ 三态:issue 语料读不到 ⇒ `UNCERTIFIABLE`,不是 OK(与 `text_absent` 同一条失效方向纪律)。⚠️ 判**产物不判工作**:这一行只买「那个文件在不在」,腿判得对不对由它自己的棘轮 + 变异台买。\n⭐ 顺带:本行是 **FORWARD-REF 类**(`state.json:forward_ref_class_20260916`)落地后**第一个真实用户** —— 它的产物按构造不存在,而引用它的这一段从今天起不再把任何报告判成 `DO NOT PUBLISH YET`。",
+   "partial_execution": "本轮已交付的是**另一半**:#523 第二条本身(FORWARD-REF 类)已落地并验收。本行只剩「抄写不被交叉读」这一条机制。",
+   "blocking_precondition": ""
   }
  ],
  "retired": [

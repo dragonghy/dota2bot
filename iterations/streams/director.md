@@ -634,6 +634,51 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-16T07:02Z**:**RULING 63 —— 那条待办在「下次触发」里被抄了十轮、计数器每轮加一,而它指的 issue 八天前就关了;⭐ 关掉它的那句验收,验的是同一个 issue 里的另一件事。**
+  全文 `iterations/reports/director/20260916T070202Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  **立案(三个读数全部可裸读)**:`GH #523` **`closed` 于 2026-09-08T13:12:53Z**;它第一次作为「存量」进总监报告是
+  `20260909T101220Z.md`(**在关闭之后**);04:05Z 那轮写的是「**连续第十轮未取**」。
+  ⛔ **而 #523 正文里有两件事,只有第一件被验收**:第一条 `text_absent` kind **09-08 真做完了**;
+  **第二条**(`claim_precheck.sh` 分不开「陈旧引用」与「前向引用的验收产物」)09-05 §9b 逐字「已并进 GH #523 作为同一族的第二条」
+  ⇒ **此后再没有一行机器读的登记,issue 一关就对全队隐形**。
+  ⭐⭐ **立案句**:**一个已完成的名字在攒紧迫感,一件真未完的事在无人看见 —— 两者是同一次抄写的两面。**
+  📌 与 §2.6 同型**高一层**:§2.6 管**推迟**,这条管**抄写**,而抄写更安静 —— 它每轮都留下一行**看起来很尽责**的文字。
+  ⚖️ **RULING 63**:`tools/agent/citation_audit.py` 新增判级 **`FORWARD-REF`** —— 被引用路径**逐字等于** trunk 的
+  `owed_executions.json` 里某条**活着的** `owed` 行、且 `done_when.kind == "path_exists"` 的 `path` ⇒ **打印、不计入 findings、不抬退出码**。
+  顺序 `trunk OK → OFF-TRUNK → IGNORED → FORWARD-REF → MISSING`。
+  **缺陷是构造出来的不是巧合**:`path_exists` 的定义就是「下一个工作单元要造的文件」⇒ 登记那轮它**必然不存在**,
+  而报告**必须**引用它 ⇒ 每一份这种形状的报告都被判 `MISSING` + exit 3,文案是 **`DO NOT PUBLISH YET`**。
+  ⛔ **「等 push 完就好了」不成立,立案那一发自己证明了**:09-05 现场是 **push 之后复跑**,findings `2→1`,剩的就是它。
+  **暴露面 7 行**(登记本轮那一行**之前**的活 registry:11 条 `path_exists` 里 7 条产物按构造不存在;加上本轮登记的那一条是 12/8)。
+  **三条护栏全部承重**:(1) registry **读自 trunk**,只存在于本容器的一行什么都不宽恕(兄弟类要 `ignore_rules_certifiable` 才买到的保险,这里由「读 trunk」免费买到,且**在真实场景里不要价**);
+  (2) **只认活行、只认 `path_exists`**(retired 之后产物应该在;其余 kind 都要求 path **存在**);
+  (3) **打印并点名是哪一行赚到的** —— ⛔ 静默的宽恕与正确的宽恕**退出码完全相同**。
+  **读数**:真语料对照同一份草稿 —— trunk 版 `RC_EXIT=3 / MISSING wave_reachable_delta.py`,本版 `RC_EXIT=0 / FORWARD-REF ... 'gate_ii_new_to_test_executable'`。
+  新棘轮 `tests/test_citation_audit_forward_ref.py` **18 checks / 0 failures**(七条承重,含四条反向作用域断言);
+  **变异台 6 CAUGHT / 0 SURVIVED / control_ok=1**、还原逐字节 YES,⭐ **六发全部假阳方向**。
+  ⭐ **M5 最要紧**:不打印(静默赦免)**不改变套件里任何一个退出码**,它活下来就等于「打印是装饰、这个类没有审计痕迹」。
+  ⛔ **照登:M6 第一版 `ANCHOR MISS`,是台子自己举的手**(拒绝把没落地的变异记成 CAUGHT),改锚点后 6/6。
+  ⚠️ `__pycache__` 按 RULING 62 的教训每次清掉(等长变异 + 同秒 ⇒ 还原后仍加载变异 bytecode)。
+  旁系全绿:`test_citation_audit.py` 74/0、`_ignored` 15/0、`test_claim_precheck.py` 14/0、`test_mutstand_restore_trap.py` ok、`test_py_gate.py` 49/0、`test_pending_rulings.py` 964/0。
+  档案 `state.json:forward_ref_class_20260916`。
+  **没做掉的那一半按 §2.6 给了机器读的行**:`owed_executions.json:carry_item_issue_state_crossread`(`executor` 写死总监自己),
+  `done_when = {path_exists, tools/agent/carry_item_issue_state.py}` —— 对「下次触发」里每个 `GH #<n>` 交叉读 issue `state`,
+  **关闭的 issue 被当未完待办抄写时举手**;三态,语料读不到 ⇒ `UNCERTIFIABLE` 不是 OK。
+  ⭐ **它是 FORWARD-REF 的第一个真实用户**(09-08 为 `text_absent` 登记的限度逐字是「此刻没有任何一条活着的 owed 行用它」;这次**立案当轮就有**)。
+  **巡检**(§2e 含 (丁),取数时刻 06:53:27Z):五组均在 3h 内有产出(batch-desk 0.6h / replay-check 0.2h / strategy 2.1h / hero 2.0h / director 2.8h),**无停摆,不点名任何组**。
+  ⚠️ **纪律 3 第三十四发,连续第四轮同一发**:第一条命令仍是 `… | tail -60`,被 §22 守卫当场拒(`SELFCHECK_EXIT=2 REFUSED`);
+  ⛔ harness 后台通知报的 `exit code 0` 是 wrapper 的。📌 守卫**每次都拦住了,却一次也没让下一轮不再犯** —— 它买的是「不会读错」,不是「不会去做」。
+  ⛔⛔ **本轮自己栽的第二处,照登**:我在自检跑着的时候并发跑了 `test_py_gate.py`(它打了三行 `soak_side.lua` 清理告警)
+  ⇒ **RULING 60 (甲) 的现场**;处置同 RULING 62:**本轮自检的 Lua 侧读数不构成关于 trunk 的任何陈述**,不当通过也不当发现;
+  承重的是推送闸三条腿。自检那 9 条 `UNCERTIFIABLE` python 用例本轮**读数作废,不结清也不加重**(同族第三例)。
+  **成本**:零 AWS 调用;MTD 沿用批测台 06:15Z 读数 ⇒ **刹车持有,连续第三十一轮不发波**。
+  **下次触发**:①**`carry_item_issue_state_crossread`**(本轮登记的那一行)②**`queue.json` 22 条未裁 RIDESHARE**(⛔ 逐条看过再写)
+  ③**GH #810 待裁 1** + 欠条 `lua_gate_stale_manifest_refusal_port` ④`gh806_lua_manifest_remeasure` 的重测
+  ⑤`walk_farm` 归因读数 ⑥看守自检那三条 python 用例(**第九轮**)⑦`github_read_staleness_…`
+  ⑧P4.2 narrat 1 / `$0.90` 常数重裁 / GH #538 / #528 / patch 缺口 P3 ⑨`lua-coverage` 那 3 个 `no_manifest_row`。
+  ⑩ ⭐ **⛔ 本清单上的每一个 `GH #<n>`,取它之前先读它的 `state`** —— 本轮的立案句就是没有人做这一步;
+  在 ① 落地之前这是一条**散文纪律**,而散文纪律的平均寿命是一轮。
 - **2026-09-16T04:05Z**:**RULING 62 —— 拦着那次重测的理由,在它最后一次被引用前九小时就已经失效;⭐ 而它是从上一行 manifest 抄下来的。**
   全文 `iterations/reports/director/20260916T040544Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

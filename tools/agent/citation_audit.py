@@ -130,6 +130,40 @@ FINDING CLASSES
     PENDING    unresolved, but the comment is inside grace  -> printed, not a finding
     IGNORED-BY-DESIGN
                a path trunk's own .gitignore matches        -> printed, not a finding
+    FORWARD-REF
+               a live owed row's acceptance artifact        -> printed, not a finding
+
+THE FORWARD-REF CLASS (GH #523 second item, director 2026-09-05T13:00Z §9b)
+---------------------------------------------------------------------------
+A round that registers a new `owed_executions.json` row with
+`done_when: {kind: path_exists, path: P}` is, by the definition of that key,
+naming a file that does NOT exist yet: P is what the NEXT work unit must build.
+Cite P in the same report -- and the report has to, or the row's acceptance
+sentence is unreadable -- and this tool answered `MISSING path P` plus exit 3,
+whose text is `DO NOT PUBLISH YET`.  So it told a completely publishable report
+not to be published, and it did so not by accident but for every report of that
+shape.  The first case was `tools/agent/mutstand_text_absent.sh` on 09-05; the
+registry carried 7 more absent-by-construction acceptance paths on 09-16.
+
+A stable false positive is how a detector stops being read (GH #276), which is
+the same reason IGNORED-BY-DESIGN exists.  The criterion here is likewise
+machine-readable and does not depend on anyone being honest: the cited path is
+byte-equal to the `done_when.path` of a row in the registry.
+
+Three things keep it from becoming an amnesty, and all three are load-bearing:
+  * The registry is read FROM TRUNK (`git show <trunk>:iterations/...`), never
+    from the working tree.  A row that exists only in this container forgives
+    nothing -- exactly the guard `ignore_rules_certifiable` provides for the
+    ignore class, except that reading trunk gets it for free.  This costs the
+    class nothing in the live case: the 09-05 finding survived the push, i.e.
+    it was still reported after the registering commit was on trunk.
+  * LIVE rows only (`owed`, not `retired`), and `kind: path_exists` only.  Once
+    a row retires its artifact is supposed to exist, so a missing one is a real
+    finding; and the other kinds (`text_absent`, `path_contains_all`, ...) all
+    require their `path` to EXIST, so absence there is a finding too.
+  * PRINTED, one line per path, naming the row that earns it.  Silent
+    forgiveness and correct forgiveness have the same exit code; only the
+    printout separates them.
 
 THE IGNORED-BY-DESIGN CLASS (GH #365 comment, 2026-08-31T13:57Z)
 ----------------------------------------------------------------
@@ -454,7 +488,44 @@ def path_ignored_by_design(cwd, path):
     return git_ok(["check-ignore", "-q", "--no-index", "--", path], cwd)
 
 
-def resolve_path(cwd, path, trunk_ref, refs, ignore_ok=False):
+OWED_REGISTRY = "iterations/owed_executions.json"
+
+
+def forward_ref_targets(cwd, trunk_ref):
+    """{path: owed row id} for acceptance artifacts that are absent BY DESIGN.
+
+    Read from TRUNK, not the working tree: a registry row that exists only in
+    this container must not forgive anything (see THE FORWARD-REF CLASS).  An
+    unreadable or unparseable registry returns {} -- no downgrade at all, so
+    MISSING keeps its old meaning to the letter.
+
+    Scoped to live `owed` rows whose `done_when.kind` is `path_exists`.  Every
+    other kind wants its `path` to be THERE, and a retired row's artifact is
+    supposed to have been built; in both cases an absence is a real finding.
+    """
+    raw = show(cwd, trunk_ref, OWED_REGISTRY)
+    if raw is None:
+        return {}
+    try:
+        registry = json.loads(raw)
+    except ValueError:
+        return {}
+    if not isinstance(registry, dict):
+        return {}
+    targets = {}
+    for row in registry.get("owed") or []:
+        if not isinstance(row, dict):
+            continue
+        done_when = row.get("done_when")
+        if not isinstance(done_when, dict) or done_when.get("kind") != "path_exists":
+            continue
+        path = done_when.get("path")
+        if isinstance(path, str) and path.strip():
+            targets.setdefault(path.strip(), row.get("id") or "<unnamed row>")
+    return targets
+
+
+def resolve_path(cwd, path, trunk_ref, refs, ignore_ok=False, forward=None):
     if git_ok(["cat-file", "-e", "%s:%s" % (trunk_ref, path)], cwd):
         return "OK", trunk_ref
     for ref in refs:
@@ -469,6 +540,12 @@ def resolve_path(cwd, path, trunk_ref, refs, ignore_ok=False):
     # class exists to keep MISSING meaning "you forgot to push".
     if ignore_ok and path_ignored_by_design(cwd, path):
         return "IGNORED", None
+    # GH #523 second item (director 09-05 §9b): the acceptance artifact of a
+    # live `kind: path_exists` owed row is absent because that row has not been
+    # executed yet -- which is the fact the citing report is reporting, not a
+    # push anybody forgot.  `forward` is built from TRUNK's registry.
+    if forward and path in forward:
+        return "FORWARD-REF", forward[path]
     return "MISSING", None
 
 
@@ -550,15 +627,19 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
     findings = []
     counts = {"paths": 0, "hashes": 0, "hex_seen": 0, "keys": 0, "sections": 0,
               "ok": 0, "refused": 0, "pending": 0, "ignored": 0,
-              "unbound_sections": 0}
+              "forward": 0, "unbound_sections": 0}
     pending = []
     ignored = []
+    forward_hits = []
     unbound = []
     cache = {}
     now = now or datetime.now(timezone.utc)
     # Computed once: whether this container's ignore rules are trunk's rules.
     # False => no path is downgraded and MISSING keeps its old meaning exactly.
     ignore_ok = ignore_rules_certifiable(cwd, trunk_ref)
+    # Computed once, from trunk: acceptance artifacts of live owed rows.
+    # {} => no path is downgraded, same failure direction as ignore_ok.
+    forward = forward_ref_targets(cwd, trunk_ref)
 
     def record(verdict, kind, what, label, where, created):
         """Grace: an unresolved citation from a comment younger than the window
@@ -582,12 +663,16 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
             if key in seen:
                 continue
             seen.add(key)
-            verdict, where = resolve_path(cwd, p, trunk_ref, refs, ignore_ok)
+            verdict, where = resolve_path(cwd, p, trunk_ref, refs, ignore_ok,
+                                          forward)
             if verdict == "OK":
                 counts["ok"] += 1
             elif verdict == "IGNORED":
                 counts["ignored"] += 1
                 ignored.append((p, label))
+            elif verdict == "FORWARD-REF":
+                counts["forward"] += 1
+                forward_hits.append((p, label, where))
             else:
                 record(verdict, "path", p, label, where, created)
         for h in hashes:
@@ -631,7 +716,7 @@ def audit_citations(cwd, sources, trunk_ref, refs, shallow, hash_mode,
             else:
                 record(verdict, "section", "%s §%s" % (os.path.basename(spath), sec),
                        label, note, created)
-    return findings, counts, pending, ignored, unbound
+    return findings, counts, pending, ignored, forward_hits, unbound
 
 
 def audit_cadence(cwd, reports_dir, cadence_h, tolerance, window_h):
@@ -788,7 +873,7 @@ def main(argv=None):
         except RuntimeError as exc:
             print("REFUSE  git: %s" % exc)
             return 2
-        f, counts, pending, ignored, unbound = audit_citations(
+        f, counts, pending, ignored, forward_hits, unbound = audit_citations(
             cwd, sources, trunk_ref, refs, shallow, args.hash_mode,
             grace_hours=args.comment_grace_hours)
         findings += f
@@ -804,6 +889,8 @@ def main(argv=None):
                counts["pending"]))
         print("           paths absent from trunk BY DESIGN (gitignored) %d" %
               counts["ignored"])
+        print("           paths absent BY CONSTRUCTION (live owed row's "
+              "acceptance artifact) %d" % counts["forward"])
         print("           section citations DECLINED (the first § after the "
               "filename is not an id) %d" % counts["unbound_sections"])
         # Declined, not audited and not judged.  Printed for the same reason
@@ -823,6 +910,15 @@ def main(argv=None):
             print("IGNORED-BY-DESIGN  path    %s\n          cited by: %s\n"
                   "          matched by trunk's own .gitignore -- absent on purpose, "
                   "not unpushed" % (what, label))
+        # Same rule as above, and for the same reason: the row that earns the
+        # downgrade is named, so a correct forgiveness cannot read like a silent
+        # one.  Absence here is the CONTENT of the citation, not a lost push.
+        for what, label, row_id in forward_hits:
+            print("FORWARD-REF  path    %s\n          cited by: %s\n"
+                  "          acceptance artifact of the LIVE owed row '%s' "
+                  "(done_when kind=path_exists, read from %s:%s) -- absent until "
+                  "that row is executed, not unpushed"
+                  % (what, label, row_id, trunk_ref, OWED_REGISTRY))
         if counts["paths"] + counts["hashes"] + counts["keys"] + counts["sections"] == 0:
             # Anti-empty-match: an empty scan must not print as a clean bill.
             print("REFUSE  zero citations extracted from %d source(s) -- 'nothing bad' "
