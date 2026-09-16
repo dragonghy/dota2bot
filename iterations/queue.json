@@ -2916,6 +2916,18 @@
    "status": "pending",
    "seeds": [],
    "question": "⛔ **零 AWS、零 EC2、只读已归档 `.dem`。要一帧,不要一波。**\n\n一句话:**这是 GH #137 四条建议里最后一条没有 id 管的,而它之所以一直没人写,是因为它的两个操作数在离线语料里都不存在 —— 本轮把这件事量出来了,所以要买的东西也随之变了。**\n\n杠杆:营地梯子 `IsCampAllowedForLevel` 用 `attackDamage <= 80` 拦**大野营**,却只用等级拦**远古营**。远古营严格比大野营难(血更厚、护甲更高,石头人营还额外挂 `modifier_ancient_rock_golem_weakening`)⇒ **梯子在营地难度上非单调**:12 级、攻击力 60 的 bot 被拒了**容易**的那个营,却被塞进**难**的那个。全网格(等级 1..30 × 攻击力 0..200 步长 5)实测 **323 格**如此,armed 后 **0 格**;两个数都是断言不是散文。\n\n⛔ **本轮量到的两个构造性零(决定你们该买什么)**:\n(a) `GetAttackDamage()` 在**每一枚 fixture 英雄**上都读 **0** —— `.dem` 切片不带攻击力;\n(b) `GetNeutralSpawners()` 在**每一枚 fixture** 上都是**空表**。\n⇒ 本杠杆的**两个**操作数都不在语料里,fixture 里的伤害值与营地表都是**声明的替身**(两条限制都已钉成世界断言 W1/W2,dumper 哪天开始发就自己变红退休)。**离线 fixture 层买不到这一条的 (a),这不是偷懒,是结构。**\n\n📌 **因此要的核验点(用 GH #137 §4 你们自己那把尺子,不要另造)**:\n**「一个等级 ≥12、攻击力 ≤80 的 bot,在一次同时够得着普通营与远古营的 sweep 上,选中的不是远古营」** 的**一帧**。\n⚠️ **等级 ≤11 的帧不算** —— 那一带 `campgrade` 的等级档(`ANCIENT_MIN_LEVEL = 12`)已经拦住了,**GH #137 自己的承重帧(11 级 WK)就落在这里,它是立案帧不是判别帧**。判别格是 **≥12 带**,也正是该 issue 直方图里最大的一格(12 级 12 次)。\n⚠️ **攻击力这一列请从伤害行反解**(立案时那句「WK 那一帧每下 80–81」就是这么来的),因为 unit 行里没有这个字段 —— 顺带这也是 (a) 的唯一活路。\n\n⛔ **反向护栏不许省**(GH #137 §4 第 4 条逐字):远古交火总数**不许塌成 0**;≥12 级、攻击力够的那一群**本来就该打远古营**。\n\n⚠️ **排波约束**:要读本 id 请排 `campgrade` **未 armed** 的腿,或明确按 arm 组合分层 —— 两者都动营地表。`campdmg` 单独 armed 是良定义的(独立性已驱动:campgrade 关掉时它照样丢远古营),`campgrade` 单独 armed 不受本 id 影响。\n\n档案:`state.json:campdmg_20260916`;本地验证 `tests/test_campdmg_ancient_damage_tier.lua`(19 tests / 0 failures)。"
+  },
+  {
+   "id": "hero-93",
+   "stream": "hero",
+   "bundle": "axecallcrowd(新落地 gated id;**零 EC2,不要为它发波** —— 搭任何一轮归档扫描的顺风车;**不申请入集**,P4.2 冻结下唯一合法裁定是 FROZEN-HOLD)",
+   "priority": 2,
+   "status": "pending",
+   "seeds": [],
+   "question": "⛔ **零 AWS、零 EC2、只读已归档 `.dem`。**\n\n一句话:**这根杠杆的合取层域在离线语料里量得干净(4/16),但支路层域是 0,而那个 0 是「选样」不是「稀少」—— 要的正是选样买不到的那个分母。**\n\n杠杆:`bots/BotLib/hero_axe.lua` 的 `X.ConsiderQ` 带线支路里的 `#hAllyList <= 2`(现为 `X.axe_IsLanePushCrowdOpen( #hAllyList )`,armed 帽子 4)。支路整体是\n`( IsPushing or IsDefending or IsFarming ) and IsAllowedToSpam and GetAttackTarget() ~= nil and <钟> and <人数帽> and #hEnemyList == 0` → `#laneCreepList >= 4` → 嘲讽。\n\n**为什么必须从归档语料买**:`tests/frames` + `tests/fixtures` 的 16 个 Axe-subject 瞬间里,`#hEnemyList == 0` 只成立 **1** 个 —— 因为这批帧是为研究 Call / Culling Blade **决策**采的,即**有敌人在场**的时刻。⇒ 一份打架瞬间的语料按构造量不出一条「无敌人带线」支路的频率。**把「这份样本里没有」说成「罕见」正是要避免的那一步。**\n\n⭐ **零 EC2 就够**:只要 Axe 的位置、队友/敌人的位置与存活、以及 `GetAttackTarget` 是否非空这三样,行为 dumper 已经导出前两样;**不需要任何 armed 腿** —— 问的是出厂状态下这个状态有多常见,不是 armed 改了什么。",
+   "acceptance": "在已归档 `.dem` 上(任一含 Axe 的语料;⚠️ 种子名册 888/895/896/906 **零 Axe**,`--find axe` 给 899/910/911 —— 与 hero-2 / hero-13 / hero-89 / hero-91 / hero-92 **同一个承载者阻塞,六条请求可以一次扫完**),数三个量,并按铁律 4 (i-a) 登记两个分层的读数:\n(1) **分母**:扫了几局、几个存活 Axe 瞬间 —— **没有分母的分子不收**。\n(2) **支路前提的联合计数**:活的 Axe 瞬间里同时满足「1600u 内 0 个敌方英雄」**且** DotaTime() > 6:00 的事件数。这是本杠杆唯一真正缺的数。\n(3) **1600u 内存活队友数(含 Axe 自己)的分布**:0/1/2/3/4/5 各占多少,**在 (2) 的子集里再报一次**。按铁律 4 (ii),整数小值域的计数类量**报均值 + 分布,不报中位数**。⇒ 落在 (2,4] 的那一档占比**就是本 lever 效应量的上界**。\n⛔ (2) 的联合计数为 0 时**只许**回填「本语料没有这样的瞬间」并给出所扫路径,**不许**推断「域为 0」(那是「没测到」冒充「不存在」)。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;本组不花 AWS)。",
+   "requested_by": "hero 2026-09-16T02:xxZ",
+   "requested_in": "iterations/reports/hero/20260916T021022Z.md"
   }
  ],
  "done": [

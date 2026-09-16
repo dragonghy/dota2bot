@@ -724,6 +724,116 @@ function X.axe_IsLanePushClockOpen()
 end
 
 
+--- The ally-crowd cap on X.ConsiderQ's 带线 firing point, and the turbo-only
+--- raising of it.  Two named constants so a test mirrors the NUMBERS off the
+--- source instead of re-typing them (the stale-mirror family,
+--- tests/test_cast_ring_mirror_discipline.lua).
+---
+--- ⚠️ BOTH NUMBERS COUNT AXE HIMSELF.  J.GetAlliesNearLoc (jmz_func.lua:474)
+--- walks every living team member and keeps the ones inside the radius; the
+--- caster is at distance 0 from his own location, so he is always element one.
+--- Shipped `<= 2` therefore means "Axe plus at most ONE other ally", and armed
+--- `<= 4` means "Axe plus at most THREE" -- i.e. armed still refuses exactly
+--- one state, the full five-man stack.  Read the cap as a headcount and it is
+--- off by one in both legs.
+X.nQLanePushAllyCapShipped = 2
+X.nQLanePushAllyCapTurbo   = 4
+
+
+--- The ally-crowd cap on X.ConsiderQ's 带线 (lane-push) firing point.  Soak
+--- candidate `axecallcrowd` (turbo-only, INERT until armed).  STANDALONE: this
+--- function holds exactly one J.IsSoakCandidate call and it names only its own
+--- id.
+---
+--- ⭐ THE DEFECT.  The 带线 branch taunts a >= 4 creep lane wave onto Axe so
+--- Counter Helix spins it down, and it refuses to do so whenever two or more
+--- allies stand within 1600u.  But `#hEnemyList == 0` is a conjunct of the SAME
+--- `if`: the state this cap refuses is "a group of my team, standing in a lane
+--- wave, with no enemy hero in view" -- which is not a danger, it is a GROUPED
+--- PUSH, the one thing docs/PROJECT.md names as paying off MORE in Turbo than
+--- in normal mode ("weaker towers, shorter games, grouped pushing pays off
+--- more").  The cap is at its most restrictive exactly where the mode's own
+--- doctrine wants the wave deleted fastest.
+---
+--- ⚠️ WHAT THE CAP IS NOT, checked rather than assumed -- the same two counts
+--- X.axe_IsLanePushClockOpen's header had to make, and for the same reason:
+---   * not a mana policy -- `J.IsAllowedToSpam( bot, nManaCost )` is already a
+---     conjunct of this `if`, so a second, headcount-shaped rationer would be
+---     rationing twice;
+---   * not a safety term -- `#hEnemyList == 0` is already a conjunct, and it is
+---     the direct measurement.  Allies do not make standing in a creep wave
+---     more dangerous, and they do not reduce Counter Helix's proc rate: the
+---     passive triggers on ATTACKS TAKEN, so a taunted wave pays the same
+---     whether or not a teammate is beside Axe.
+---
+--- ⛔ NOT the radius.  The first draft of this lever moved the 1600u that
+--- `hAllyList` is built with (hero_axe.lua:426) on the grounds that 1600 is ~5x
+--- Berserker's Call's own 315u.  MEASURED FIRST, and the measurement killed it:
+--- over the 16 Axe-subject instants in the corpus, shrinking 1600 -> 1200, 900,
+--- 800 or 600 moves the answer to `<= 2` on ZERO of them (and 3 of 16 at 400).
+--- The radius is true but not load-bearing; the CAP is.  §2.3 of
+--- tests/test_axe_q_lane_push_crowd.lua keeps that measurement executable so
+--- nobody re-derives the dead lever.
+---
+--- ARMED: 4, i.e. "everyone except the full five-man stack".  The number is not
+--- free -- it is the largest cap that still leaves the branch a refusal to
+--- make, and the corpus shows that refusal is occupied rather than theoretical
+--- (f_260828_124358_axe_cull_promise, t=1452.8, all five alive inside 1600u).
+--- Raising the cap to 5 would delete the conjunct, and whether this branch
+--- should carry a crowd cap AT ALL is a second question: conjoining the two
+--- would make one wave reading unattributable to either.
+---
+--- ⚠️ DIRECTION: THIS IS A WIDENING, and it is the first thing a reader needs.
+--- Every count that satisfies `<= 2` also satisfies `<= 4`, so armed is a
+--- strict SUPERSET of shipped: arming can only ADD 带线 taunts, and can never
+--- remove one or move one onto a different target.  A negative wave reading is
+--- attributable to "those grouped lane-push taunts were not worth casting" and
+--- NEVER to a cast this lever refused.  Gate off (or non-turbo) the function is
+--- literally `#hAllyList <= 2`.
+---
+--- ⚠️ HONEST BOUNDS, four, none of them rhetorical:
+---   1. ⛔ END-TO-END DOMAIN IS 0 AND CANNOT BE ANYTHING ELSE TODAY, for the
+---      same reason X.axe_IsLanePushClockOpen's is: the branch needs
+---      `#laneCreepList >= 4` and the dumped corpus carries NO non-hero units
+---      at all (GH #772).  What IS measured is the CONJUNCT-LAYER domain --
+---      this cap's own answer on real frames -- which is the half this lever
+---      changes.  Quoting the two as one number would be an execution
+---      verification out of thin air.
+---   2. CONJUNCT-LAYER DOMAIN, stated as the number it is: over the 16
+---      Axe-subject instants, shipped admits 11 and armed admits 15, so the
+---      lever moves 4 -- f_260909_215412_axe_cull_viper_348 (4 allies),
+---      f_260909_215412_axe_cull_cm_415 (3), f_260909_215412_axe_cull_cm_838
+---      (4), f_260831_061811_axe_call_tp_channel (4) -- and the 16th,
+---      f_260828_124358_axe_cull_promise (5), is refused by BOTH legs.
+---   3. ⛔ THE BRANCH-LEVEL DOMAIN IS 0 ON THIS CORPUS AND THE REASON IS
+---      SELECTION, NOT RARITY.  `#hEnemyList == 0` holds on exactly 1 of the 16
+---      Axe instants (f_260820_043637_axe_ring_alone), and that one already
+---      passes shipped -- because these frames were harvested to study Call and
+---      Culling Blade DECISIONS, i.e. moments with enemies present.  A corpus
+---      of fight instants cannot size a no-enemy lane-push branch, and saying
+---      "rare" when the honest word is "absent from this sample" is the error
+---      this bound exists to block.  How often a real Turbo game puts 3-5
+---      grouped allies in a 4-creep wave with no enemy hero in view is a wave
+---      question (iterations/queue.json hero-93).
+---   4. ⛔ NOT a bundle with `axecallclock`.  Both levers sit on conjuncts of
+---      this same `if`, so arming both in one wave is a bundle read
+---      attributable to neither, and neither gate names the other's id (the
+---      `pullcad` trap).  The two are not redundant either: of the 4 instants
+---      this lever moves, 3 are already past the shipped 6:00 clock, and the
+---      4th (axe_cull_viper_348, t=348.0) is refused by the clock whether or
+---      not this id is armed.  Section 7 of the test asserts the independence.
+function X.axe_IsLanePushCrowdOpen( nAllyCount )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'axecallcrowd' )
+	then
+		return nAllyCount <= X.nQLanePushAllyCapTurbo
+	end
+
+	return nAllyCount <= X.nQLanePushAllyCapShipped
+
+end
+
+
 --- Soak candidate `axecallring` (turbo-only, INERT until armed) -- the ANCHOR of
 --- X.ConsiderQ's initiation firing point, which is a different question from the
 --- IMMUNITY of it (`axecallbkb_ii`, above).
@@ -936,7 +1046,11 @@ function X.ConsiderQ()
 		-- it stands in front of the Call/Counter-Helix wave clear this file's own
 		-- build has at rank 4 by hero level 7.
 		and X.axe_IsLanePushClockOpen()
-		and #hAllyList <= 2
+		-- [axecallcrowd] gate off this is `#hAllyList <= 2`, byte for byte.
+		-- See X.axe_IsLanePushCrowdOpen -- the cap refuses a GROUPED PUSH, and
+		-- `#hEnemyList == 0` on the next line is what makes it a push rather
+		-- than a fight.  The count includes Axe himself.
+		and X.axe_IsLanePushCrowdOpen( #hAllyList )
 		and #hEnemyList == 0
 	then
 		local laneCreepList = bot:GetNearbyLaneCreeps( nRadius - 50, true )

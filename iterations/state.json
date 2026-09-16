@@ -9298,5 +9298,22 @@
   "admission": "NOT PROPOSED for the armed set. Owner priority P4.2 entry freeze is in force (armed 25 > 20), so the only legal ruling is FROZEN-HOLD -- registered, not admitted, not a dropped baton.",
   "sequencing_when_unfrozen": "Read this lever on a leg where 'campgrade' is NOT armed, or the two are measuring overlapping camp lists. campdmg alone is well defined (independence is driven), campgrade alone is unchanged by it.",
   "next_baton": "Replay desk, condition (a): the check point is 'a level >= 12 bot with attack damage <= 80 that reaches a sweep containing an ancient camp takes something else instead'. Use GH #137 §4's own acceptance yardstick, do not invent another; the reverse guardrail is not optional -- total ancient engagements must NOT collapse to 0, the >= 12 strong-attack population is supposed to farm them."
+ },
+ "axecallcrowd_20260916": {
+  "owner": "hero",
+  "date": "2026-09-16T02:xxZ",
+  "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
+  "backlog_item": "hero -185「下一轮主体第一候选」第 1 条 —— `axecallclock` 的 LIMIT 段第 4 条逐字写着「`#hAllyList <= 2` 是另一个 id 的事;一次一根杠杆」,那条欠条从 09-12 起无人接。P4.4 自评 (i):工作单元主体是一个 bots/ 行为改动。",
+  "headline": "⭐ **带线支路的人数帽拒掉的那个状态,同一个 `if` 自己写明了是什么:`#hEnemyList == 0`。** 「几个队友站在兵线里、视野内没有敌方英雄」不是危险,是**抱团推进** —— 而 docs/PROJECT.md 点名这正是 Turbo 比普通模式**更划算**的一件事(塔更脆、局更短、抱团推收益更高)。⇒ 帽子最紧的地方,恰好是本模式自己的教条最想把兵线快点删掉的地方。",
+  "defect": "bots/BotLib/hero_axe.lua X.ConsiderQ 的 带线 出货点里的 `#hAllyList <= 2`。⚠️ **两条腿都把 Axe 自己数进去**:`J.GetAlliesNearLoc`(jmz_func.lua:474)遍历每个活着的队友并保留半径内的,而施法者到自己位置距离 0 ⇒ shipped `<= 2` 读作「Axe + 至多一个队友」。按人头读这个帽子,两条腿都差一。",
+  "not_a_mana_or_safety_term": "与 `axecallclock` 同两条、同理由(§5.1 数出来的):同一个 `if` 已有 `J.IsAllowedToSpam( bot, nManaCost )` ⇒ 再加一个人头形状的配给器是配给两遍;同一个 `if` 已有 `#hEnemyList == 0` ⇒ 那才是直接量度。另加一条机制:Counter Helix 按**挨打次数**触发,队友站在旁边**不降低**它的触发率 ⇒ 队友数不是这条支路的收益项。",
+  "not_the_radius": "⛔ **本轮最该被后人读到的一条:初稿的杠杆是半径,而测量当场把它杀掉了。** 初稿要动 `hAllyList` 的 1600u(hero_axe.lua:426),理由是 1600 ≈ Berserker's Call 自己 315u 的 5 倍 —— 理由是**真的**。但在 16 个 Axe-subject 瞬间上,1600 → 1200 / 900 / 800 / 600 把 `<= 2` 的答案移动了 **0 个**(400 才移动 3 个)⇒ **半径为真但不承重,承重的是帽子**。这条测量以断言形式活在 `tests/test_axe_q_lane_push_crowd.lua` §2.3,专防后人从散文里把这根死杠杆重新推导出来。**先量后写,省掉的是一个构造性零域的 id(GH #838 形状)。**",
+  "fix": "gated helper `X.axe_IsLanePushCrowdOpen( nAllyCount )`(turbo-only,id `axecallcrowd`),帽子写成 `X.nQLanePushAllyCapShipped = 2` / `X.nQLanePushAllyCapTurbo = 4` 两个具名量,测试**从源码读数字**而不是重打(stale-mirror 族)。闸关(或非 turbo)= `#hAllyList <= 2` 逐字节不变。**armed 取 4 不取 5**:4 是「仍留得下一个拒绝」的最大帽子,而 5 会把这个合取项**删掉**;这条支路该不该有人数帽是第二个问题,合在一起会让一次波的读数对谁都不可归因。",
+  "direction": "**WIDENING,严格超集**:任何满足 `<= 2` 的计数必然满足 `<= 4` ⇒ armed 只能**加**带线嘲讽,永远不能删一发、也不能把一发挪到别的目标上。§4.1 在全部 Axe 瞬间上用真实 load 驱动;§4.2 再在 0..6 的**全值域**上驱动一遍(语料只能给出它恰好含有的那些计数)。负向读数只能读成「那些抱团带线嘲讽不值得开」。",
+  "domain": "⛔ **三个域,三个数字,不许当成一个**。**合取层域 = 4 个瞬间**(§3.1):16 个 Axe-subject 瞬间里 shipped 放行 11、armed 放行 15 —— 移动的四个是 `f_260909_215412_axe_cull_viper_348`(4 个队友)、`f_260909_215412_axe_cull_cm_415`(3)、`f_260909_215412_axe_cull_cm_838`(4)、`f_260831_061811_axe_call_tp_channel`(4);第 16 个 `f_260828_124358_axe_cull_promise`(**5**,全队活着且在 1600u 内)**两条腿都拒** —— 即 armed 留下的那个残差**是被占用的,不是理论的**(§3.2 钉住)。**支路层域 = 0,而理由是选样不是稀少**(§6.1):`#hEnemyList == 0` 在 16 个里只成立 **1** 个(`f_260820_043637_axe_ring_alone`,而它 shipped 本来就放行)—— 因为这批帧是为研究 Call / Culling Blade **决策**而采的,即有敌人在场的时刻。**一份打架瞬间的语料量不出一条「无敌人带线」支路,把「这份样本里没有」说成「罕见」正是这条界要挡的错**。**端到端域 = 0 且今天不可能是别的数**(§3.4):支路还要 `#laneCreepList >= 4`,而语料里一个非英雄单位都没有(GH #772)。",
+  "condition_c": "docs/PROJECT.md 自己的 Turbo 教条逐字:「weaker towers, shorter games, grouped pushing pays off more」⇒ 抱团推进在 Turbo 更划算,而这个帽子恰好在抱团时最紧。加上机制项:Counter Helix 按挨打次数触发,队友在旁不摊薄收益。",
+  "independence": "⛔ **不得与 `axecallclock` 同波 arm**:两根杠杆坐在同一个 `if` 的两个合取项上,同 arm 的读数对谁都不可归因;两个 gate 互不点名(pullcad 陷阱),§7.1/§7.2/§7.3 双向钉住。**两者也不冗余**:本 id 移动的 4 个瞬间里 3 个已经过了 shipped 的 6:00,第 4 个(`axe_cull_viper_348`,t=348.0)无论本 id 是否 armed 都会被钟拒掉 —— LIMIT 4 把这一点写出来,而不是把它数两遍。",
+  "tests": "`tests/test_axe_q_lane_push_crowd.lua`(**20 例全绿**;直跑 2.55s,经 `tests/run_tests.lua`(闸用的那条路径)2.743s —— manifest 登记的是后者)。附带:`tests/test_axe_q_lane_push_clock.lua` §5.3 的 `'#hAllyList <= 2'` 一项**退役而非删除** —— 合取项还在支路上,只是改了拼写,pin 跟着合取项走到新拼写上并在注释里写明去向(`-185` 立的那条「欠条写成可执行的」)。该文件复跑 14 例全绿。",
+  "next": "需要一次波买 (a) 证据:抱团带线嘲讽在真实 Turbo 对局里的频率与效果(iterations/queue.json **hero-93**)。冻结期不申请入集。"
  }
 }

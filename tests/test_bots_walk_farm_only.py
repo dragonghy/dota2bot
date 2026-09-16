@@ -225,6 +225,22 @@ UNRESOLVED_HAND_READ = {
         "Hand-read 2026-09-12 (hero desk -- this desk's own walk, from the "
         "axecallclock round, registered in the SAME work unit that landed it "
         "rather than left for whoever starts next: GH #624 / #774)",
+    """tests/test_axe_q_lane_push_crowd.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:96-:97, :152) -- two literals, no "
+        "parameter reaches the loop -- and the walk is the same non-recursive "
+        "`ls` as the lines above, so it never reaches bots/Customize/. "
+        "Hand-read 2026-09-16 (hero desk -- this desk's own walk, from the "
+        "axecallcrowd round, registered in the SAME work unit that landed it: "
+        "GH #624 / #774)",
+    # -- ⚠️ `test_axe_hunger_camp_reach.lua` WAS registered here in the same
+    # -- pass as the crowd walk above, by the hero desk, before the rebase
+    # -- showed the DIRECTOR had already registered it upstream (:134).  The
+    # -- duplicate was dropped rather than kept: a dict literal with the same
+    # -- key twice keeps the LAST value silently, so two hand reads of the same
+    # -- walk do not disagree loudly -- one of them just disappears.  ⇒ The
+    # -- hero desk's own note on that debt lives in its round report
+    # -- (iterations/reports/hero/20260916T021022Z.md §6), not here.
     """tests/test_lion_q_lane_push_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:92-:93, :144) -- two literals, no "

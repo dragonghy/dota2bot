@@ -374,7 +374,17 @@ tests['5.3 nothing else on the branch moved'] = function()
     local body = strip_comments(fn_body(SRC_TEXT, 'ConsiderQ'))
     for _, term in ipairs({
         'J.IsPushing( bot )', 'J.IsDefending( bot )', 'J.IsFarming( bot )',
-        'bot:GetAttackTarget() ~= nil', '#hAllyList <= 2',
+        'bot:GetAttackTarget() ~= nil',
+        -- RETIRED, NOT DELETED, 2026-09-16 (hero, `axecallcrowd`).  This entry
+        -- read `#hAllyList <= 2` until the ally cap became a lever of its own:
+        -- the conjunct is still on the branch, but it is now spelled
+        -- X.axe_IsLanePushCrowdOpen( #hAllyList ) and the literal lives in
+        -- X.nQLanePushAllyCapShipped.  `axecallclock` still does not touch it
+        -- -- which is what this entry was pinning -- so the pin follows the
+        -- conjunct to its new spelling rather than vanishing.  The two ids must
+        -- not be armed in one wave; tests/test_axe_q_lane_push_crowd.lua §7
+        -- carries the independence assertions in both directions.
+        'X.axe_IsLanePushCrowdOpen( #hAllyList )',
         '#laneCreepList >= 4', 'J.IsGlyphVetoClear( laneCreepList )',
     }) do
         assert(body:find(term, 1, true),
