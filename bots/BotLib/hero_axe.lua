@@ -1132,8 +1132,9 @@ function X.ConsiderQ()
 		and X.axe_IsLanePushClockOpen()
 		-- [axecallcrowd] gate off this is `#hAllyList <= 2`, byte for byte.
 		-- See X.axe_IsLanePushCrowdOpen -- the cap refuses a GROUPED PUSH, and
-		-- `#hEnemyList == 0` on the next line is what makes it a push rather
-		-- than a fight.  The count includes Axe himself.
+		-- `#hEnemyList == 0` below the disjunction is what makes it a push
+		-- rather than a fight.  The count includes Axe himself.  (It read "on
+		-- the next line" until axecallnocap put a disjunction between them.)
 		-- [axecallnocap] the SECOND question: whether this conjunct should exist
 		-- at all.  Gate off X.axe_IsLanePushCrowdCapOff() is `false`, so the
 		-- whole disjunction is the cap alone, byte for byte.  Armed it
