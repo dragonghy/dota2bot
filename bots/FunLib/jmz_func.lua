@@ -13591,6 +13591,39 @@ function J.IsRoshanAlive()
     return false
 end
 
+-- [roshdps, strategy 2026-09-16] THE ROSHAN BAR IS A TEAM BAR AND THE NUMBER
+-- COMPARED AGAINST IT IS A PER-HERO MEAN.
+--
+-- J.HasEnoughDPSForRoshan sums every candidate hero's right-click dps into one
+-- accumulator, so `DPS` leaves the loop as the GROUP's damage per second. The
+-- bar it is measured against is `roshanHealth / plannedTimeToKill` -- the dps a
+-- GROUP needs to take Roshan down inside plannedTimeToKill seconds, built from
+-- Roshan's own health curve. Both sides are damage-per-second and they refer to
+-- the same party. Then, between the loop and the comparison, the shipped line
+-- `DPS = DPS / #heroes` turns the group total into a per-hero MEAN and compares
+-- THAT against the group bar -- i.e. it asks every hero to solo Roshan on
+-- schedule, and refuses the pit whenever they cannot. With five alive allies the
+-- bar is five times the damage actually required.
+--
+-- DIRECTION. sum >= sum/n for any n >= 1 exactly when sum >= 0, so arming this
+-- can only make the predicate answer YES more often, never less. A batch reading
+-- that goes the wrong way therefore cannot be read as "the lever made the bots
+-- skip Roshan"; it can only be read as the extra attempts being bad ones.
+--
+-- Turbo is where it bites: Roshan's respawn is on the short timer (J.IsRoshanAlive
+-- above uses 6 min in Turbo vs 11), the Aegis is worth the same, and the heroes
+-- reaching the pit have Turbo item timings rather than 60-minute right clicks.
+--
+-- ⛔ WHAT THIS IS NOT. It does not touch plannedTimeToKill, the armor model, or
+-- the right-click-only damage estimate (spells and summons are still ignored).
+-- One lever: which of "the group's dps" and "the average hero's dps" is compared
+-- against a bar that was derived for the group.
+function J.ShouldRateRoshanDpsAsTeamSum()
+	if not J.IsSoakCandidate( 'roshdps' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	return true
+end
+
 function J.HasEnoughDPSForRoshan(heroes)
     local DPS = 0
     local DPSThreshold = 0
@@ -13615,10 +13648,16 @@ function J.HasEnoughDPSForRoshan(heroes)
         DPS = DPS + dps
     end
 
+    -- The group total, kept before the shipped line divides it away. Un-armed
+    -- nDPS is `DPS / #heroes`, which is the expression that shipped.
+    local nTeamDPS = DPS
     DPS =  DPS / #heroes
 
+    local nDPS = DPS
+    if J.ShouldRateRoshanDpsAsTeamSum() then nDPS = nTeamDPS end
+
     DPSThreshold = roshanHealth / plannedTimeToKill
-    return DPS >= DPSThreshold
+    return nDPS >= DPSThreshold
 end
 
 function J.IsNotSelf(bot, ally)
