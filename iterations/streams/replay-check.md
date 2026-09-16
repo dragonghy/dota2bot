@@ -18737,3 +18737,30 @@
   - **下一轮第一件事**:⭐ **全波跑第二遍**,给 47.9% 这个数配一个**它自己的重跑跨度**
     (本轮只在单局上量到 57%→63%,全波级未测);顺带对 `never respawned = 212`(3.7%)逐条核对。
     ⏳ `.dem` 仍约 **2026-10-02** 到期,硬期限。
+  - **开工自检判决(⭐ 轮询到终行真的出现才写)**:`legs run 13`、**`selfcheck worst exit: 3`**、
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage`、
+    `UNCERTIFIABLE: trunk-red(python)`、`NOT RUN: test_lua_gate/test_luacheck_gate_soakswitch/test_selfcheck_lua_leg`
+    —— **与 W78 逐条相同**。**逐条查过归属,本组一条都不占**:`cadence` = 英雄组
+    (唯一的 `GAP cadence hero`,09-15T22:00Z→09-16T02:10Z,4.2h,**与 W78 同一个洞**);
+    `lua-coverage` = GH #806 / RULING 62(⛔ 本轮 `tests/` 一行未改);
+    `queue-rulings`/`owed-executions` 属总监;`trunk-red(python)` 仍 UNCERTIFIABLE 且**早于本轮**
+    (⛔ 不是本组造的,**也不等于 trunk 是绿的**)。⚠️ 自检自己那三条 python 用例**连续第八轮 `NOT RUN`**。
+    ⭐ 本轮 **`trunk-red(lua)` 没有出现**(W78 有,判定为自检并发产物 = GH #848),
+    而本轮全程单自检、串行 push —— ⛔ 这是**符合预期的一次观测,不是证明**。
+  - **push 三行**:分支 ref `PUSH_BRANCH_EXIT=0` / `GATE_EXIT=0 CLEAN` /
+    `py gate: 126 ran, 0 findings, 0 uncertifiable, 47.1s` /
+    **`lua gate: 401 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 656.8s`**;
+    推 main `PUSH_MAIN_EXIT=0`(第一次 `1` 是 non-fast-forward,**不是闸红**,`pull --rebase` 后重推),
+    其 `lua gate: SKIPPED BY SCOPE`(⛔ SCOPE 决定不是通过 —— 那次范围只有 `iterations/`;
+    分支 ref rebase 后范围含别组动 `bots/`/`tests/` 的 commit 才跑满,两者不矛盾)。
+    main `734088eb..101fd500`,两 ref 同点。⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
+    ⭐ **W78 那个坑没踩**:分支 push 转后台后**去读输出文件第一行**拿退出码,
+    **没有**采信 harness 任务通知的 `exit code 0`(那是 wrapper 的)。
+  - **issue**:**净增 1**,**2 条评论**(三份草稿 `PRECHECK_EXIT=0`,**都在 push 之后发**):
+    ⭐ **新单 GH #853**(零流逝族 = 本轮新发现,一行修法 + 5 条验收)、
+    **GH #752**(`#issuecomment-5695640626`,全波血量 + 量具自纠 + 「修完只掉一半」那条边界)、
+    **GH #666**(`#issuecomment-5695649600`,**该单验收第 4 条的答案** + 与 #849 的修复顺序)。
+    ⭐ #853 开成新单而非追评 #752 的理由:**修点/修法/验收都不同**,而本轮最需要下游看见的
+    正是「**#752 验收通过时它仍在**」—— 写成 #752 的追评,那句会被读成同一个修的一部分。
+  - **token**:`TOKENS total_in=10,701,559 out=66,981 turns=83`(⚠️ 比 W78 高约 67%,
+    归因是**逐局处理了 104 局**(W78 是 1 局)+ 8 次额外 dump 的确定性实验,不是空转)。
