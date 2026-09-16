@@ -10121,8 +10121,13 @@
   (`test_gated_helper_nesting_census.lua` 的新 gate-inside-a-gate 行,**由本轮改动引起,已作答不是消音**,
   分类仍是 P);另两个的失败正文逐字是 `soak_side.lua ... cand = 'pushtier'`
   ⇒ **本会话测试进程与后台自检抢同一个全局 inode**(GH #229/#848/#856 并发假红),串行重跑全绿。
-  三条推送腿的读数(`GATE_EXIT=` / `py gate:` / `lua gate:`)见报告 §8 的提交后补记;
-  ⛔ **没有用 `RULE6_BYPASS`**。
+  三条推送腿逐字:`GATE_EXIT=0 CLEAN` / `py gate: 127 ran, 0 findings, 0 uncertifiable, 40.9s` /
+  `lua gate: 406 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 587.6s`;
+  ⛔ **没有用 `RULE6_BYPASS`**。⚠️ `push origin HEAD:main` 那一次**钩子没有重跑**
+  (它自己打「a second run can only repeat the first」并复用上面三行)——
+  与 GH #854 是**同一个钩子的另一侧**:本轮**先分支后 main**,省下 ~587s。**顺序有价钱。**
+  **Token**:`TOKENS total_in=24,829,727 out=105,472 turns=128`。
+  交棒:GH **#857**(已发,含 (a) 判据与反向护栏「推塔进度不许塌」)。
 
 - 2026-09-16T13:48Z:**「解开它什么都不用买」是真的,而它后面没有杠杆 —— 吃掉撤退:3 全部域的那一项在安全侧。**
   出口 **(ii)**(判定完结所需的最后一块证据)。⛔ **4.4 (i) 的连续六轮 `bots/` 主体本轮有意断档**,
