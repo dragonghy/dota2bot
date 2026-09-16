@@ -9972,7 +9972,16 @@
   `owed_executions.json:wandlimbo_charge_instrument`(**量具类,P4.4 不得作主体**)
   ⇒ 走章程 1b;[strategy] open issue 的球都在录像组/批测台 ⇒ 取 backlog **0NEXT28**。
   报告:`iterations/reports/strategy/20260916T102313Z.md`;`state.json:roshdps_20260916`;
-  交棒 `queue.json:strategy-53`。
+  交棒 `queue.json:strategy-53`;**GH #855**。
+
+  **铁律 6 三条腿**:`GATE_EXIT=0` / `py gate: 127 ran, 0 findings, 39.3s` /
+  `lua gate: 403 ran, 0 findings, 8 unanswered, 6 known-red, 545.6s`;
+  ⛔ **没有用 `RULE6_BYPASS`**。⚠️ 中途 `py gate` 红过一次(`127 ran, 1 findings`),
+  **那是我在 rebase 冲突未解的树上推的** —— 红的是文件里的冲突标记,不是任何测试的判断;
+  `state.json` 的追加型冲突**用程序解不手改标记**
+  (`635 -> 636, added only roshdps_20260916`)。
+  ⚠️ 另一条:`until ! pgrep -f routine_selfcheck` **匹配到这条命令自己** ⇒ 永不退出,
+  而自检其实早就写完了 —— **一个把自己算进读数的探测器,读出来的是「还在跑」**。
 
   **⛔ 先说章程点名的那一格:0NEXT28 (b) 的 W542「empty if」18 条 triage 完了,
   产出 0 根可落地杠杆** —— 8 条是注释掉的 print / `-- full` / `-- do nothing, keep it`,
