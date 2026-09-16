@@ -1783,6 +1783,29 @@ function X.ConsiderR()
 				end
 			end
 
+			-- THE QUORUM IS PRICED AND DELIBERATELY NOT CHANGED (hero desk
+			-- 2026-09-16, tests/test_lion_ult_aoe_quorum.lua).  `nAoeCount`
+			-- counts members of an ENEMY hero list, so its arithmetic ceiling
+			-- is 5; `>= 4` is ceiling minus one, the same shape this tree twice
+			-- ruled "off-switch, not filter" (`zusfightquorum`, `zusultstrand`).
+			-- Measured: over 310 (frame, viewer-team) perspectives the densest
+			-- same-team cluster inside the 325-unit splash reaches 3 twenty-two
+			-- times and 4 five times, so the shipped quorum refuses 17 of the 22
+			-- occasions its own low-HP fallback would accept.  ⚠️ Those counts
+			-- are UPPER BOUNDS on nAoeCount (no immunity or reach filter), which
+			-- is the right direction for calling 4 a ceiling and the wrong one
+			-- for any "would have fired N times" claim.
+			--
+			-- ⛔ WHY NO GATE WAS LANDED ON IT.  This exit is dead on shipped
+			-- defaults for two reasons that have nothing to do with the quorum:
+			-- nRadius reads 0 (GH #162, id `lionsplash`) and no corpus frame
+			-- gives Lion a scepter.  A lone id here would therefore be
+			-- BUNDLE-ONLY -- check_armed_wiring.py would call it WIRED and a
+			-- wave would read "no effect" with nothing raising a hand (GH #606).
+			-- The quorum belongs in the SAME promote-time atom as `lionsplash`
+			-- + `lionraoe`; that is registered in iterations/queue.json (hero-58,
+			-- widened by hero-99), never as a sibling id inside this predicate
+			-- (the pullcad trap).  §4 of the test asserts both absences.
 			if nBestAoeEnemy ~= nil
 				and ( nMaxAoeCount >= 4
 					or ( nMaxAoeCount >= 3 and nHP < 0.46 ) )

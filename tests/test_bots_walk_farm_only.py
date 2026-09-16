@@ -299,6 +299,32 @@ UNRESOLVED_HAND_READ = {
         "opens it, its author included. That is a new way to LOOK "
         "registered without being registered, and it is worth naming "
         "separately from forgetting outright",
+    """tests/test_lion_ult_aoe_quorum.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths_flat() loops dir over the literal table {FIXTURE_DIR, "
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'}; both are file-scope "
+        "locals assigned once from string literals and nothing writes to either. "
+        "A plain `ls` is NOT recursive, so it cannot reach bots/Customize/. "
+        "⭐ The non-recursiveness is LOAD-BEARING here rather than incidental: "
+        "that file's §3a exists to be comparable with the reading "
+        "tests/test_lion_ult_aoe_reach.lua pins, and that file walks with the "
+        "same `ls`. Its §3c deliberately uses a `find` instead (statically "
+        "resolvable, so not on this list) and asserts the two lists DIFFER, so "
+        "the day `ls` starts descending the difference is reported rather than "
+        "silently read as one corpus twice. Hand-read 2026-09-16 (hero desk -- "
+        "this desk's own walk, registered in the SAME work unit that landed it, "
+        "per GH #803)",
+    """tests/test_cm_kill_confirm_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'}; same shape as the two entries "
+        "above, same reason, same non-recursive `ls`. ⚠️ Registered 2026-09-16 "
+        "by the hero desk, which is ALSO the desk that landed the walk (in the "
+        "17:21Z round) and did not register it then -- so it rode onto main as "
+        "a trunk red and was found by the next desk to start work, which is "
+        "GH #774 / GH #624's shape verbatim. It is named here rather than only "
+        "fixed because the 09-15 round's entry directly above says the same "
+        "desk had already been told once: the registration step is cheaper to "
+        "skip than to keep, and the only thing that has ever caught it is this "
+        "census, which is itself outside the push hook's fast domain (GH #774)",
     """tests/test_cm_w_teamfight_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:87-:88, :136) and the walk is the "

@@ -22,6 +22,58 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-192. ✅ **主体(P4.4 **(ii) 判定完结所需的证据**,不是 (i)):Lion 的 A 杖 AoE 出口里有第三个项,两个 id 都没碰过它 —— 而它是个天花板。DO-NOT-ARM。**
+   `bots/` **本轮只多一段注释、零行为改动,这是结论不是偷懒**(理由:BUNDLE-ONLY,见下)。
+   报告 `iterations/reports/hero/20260916T213000Z.md`;新 `tests/test_lion_ult_aoe_quorum.lua` **6 绿 / 0.145s**
+   (**同一次改动**手加进 `lua_gate_manifest.json`);变异台 `tools/agent/mutstand_lionraoequorum.sh` **13/13 全杀**;
+   新 issue **GH #860**;新 queue 请求 **hero-99**;裁定 `state.json:lionraoequorum_20260916`。
+   **零 EC2 / 零 CE / S3 读取 0 个对象。** 开工时 open `[hero]` 四条球都不在本组(#407 两半已落地、
+   #794 已裁完球在录像组、#833 作者自建议关闭、#820 是总监栏杆;#54 的 OD 不是焦点五英雄)。
+   - ⭐⭐ **头条:`X.ConsiderR` 的 `--有A后的团战Aoe` 出口上已经坐着两个 id(`lionraoe` 射程、`lionsplash` 半径),
+     而 `nMaxAoeCount >= 4` 这个 quorum 两个都不碰。** `nAoeCount` 数的是**敌方英雄表**的成员
+     ⇒ 算术天花板 **5**,`>= 4` 是**天花板减一** —— `zusfightquorum`(`>= 5`)/`zusultstrand` 判过两次的同一个形状。
+     全语料 **310** 个 (帧 × 视角):簇 1/2/3/4/5 = **189/99/17/4/1** ⇒ 够到 fallback 底线 3 的 **22** 个、
+     够到 quorum 4 的 **5** 个 ⇒ **出厂 quorum 拒掉 22 里的 17 个**。
+     ⚠️ 这些是 `nAoeCount` 的**上界**(没过免疫与射程项):对「4 是天花板」方向对,
+     ⛔ 对「本来会放 N 次」方向错,本轮不作任何那种说法。
+   - ⛔⛔ **为什么不落 id:BUNDLE-ONLY。** 那个出口在出厂默认下由**两个与 quorum 无关**的理由死着 ——
+     `nRadius` 读 0(`splash_radius_scepter` 不在本 patch KV 里,GH #162 / `lionsplash`)⇒ `nAoeCount <= 1`
+     而种子就是 1、比较是严格 `>`;以及 `HasScepter()` 在 **0/42** 个存活 Lion 帧上为真。
+     ⇒ 单独一个 id **在任何一波里动不了一个决策**,`check_armed_wiring.py` 仍读 **WIRED**,
+     波次读回「测过了没影响」而**没有任何东西举手**(GH #606)。quorum 必须进 `lionsplash`+`lionraoe` 的**同一个 atom**;
+     ⛔ 依赖**不许**写成 `IsSoakCandidate('A') and IsSoakCandidate('B')`(pullcad)。测试 §4 钉住**两个缺席**。
+   - ⚠️ **变异台 13 个里 4 个第一版没打中,三次是本台说法错了、一次是文件真弱**:
+     **M7** 变异**测试自己的断言** ⇒ 必然 survive(**断言不可能被它所属的套件杀掉**);
+     **M8** 第一版拿掉一个 quorum 帧 ⇒ 把 §3c 钉的**关系**推向**安全**一侧(关系是**故意**这么写的);
+     **M8 第二版**只移走 `skillstall/`,而 `tests/fixtures/` 今天有**两个**子目录(还有 `outchan/`)⇒ 差还在
+     ⇒ 改成**枚举**所有子目录(⛔ 不硬编码名字);**M11** 因 `grep -qF "$to"` 把 `-maxdepth` 当选项而 **ABORT** ——
+     **ABORT 不是 survival 也不是 kill,它根本没问出问题**(`sub()` 两处补 `--`)。
+     ⭐ 唯一真弱的是 **M12**:`RING -> 99999` 存活,因为 §3b **没有守卫说那个环真的排除了什么**
+     ⇒「去掉环读数不变」在一个什么都不排除的环下是**恒真的空话**。守卫是**变异体买来的,不是预见到的**。
+   - ⭐ **一次没有发生的误报**:本台一度准备把 `test_lion_ult_aoe_reach.lua` 的 pin `nBestCluster <= 2` 报成**过期**
+     (第一版**全局**普查读到 4)。**它没过期** —— 那个文件的量词是**以 Lion 为心、1600 环内**的,
+     在它自己的量词下重取就是**同一个 2、同样的 42 帧**。
+     ⇒ **两个读数不一致的第一嫌疑是量词不同,不是其中一个坏了。**
+   - ⚠️ **本台自己错过一个数**:第一版普查扫了 `tests/fixtures` 而**忘了 `tests/frames`**,报 **9/1** 而非 **22/5**;
+     抓到它的是**新测试自己的枚举器断言**,在那个数离开容器之前。
+     ⇒ **语料目录不是一个,任何「全语料」读数先把目录数出来。**
+   - **顺带清掉一条本组自己的 trunk 红(GH #774)**:`test_cm_kill_confirm_quantifier.lua` 的 `io.popen`
+     是本组 17:21Z 那轮落的、没进手读名单,红留给了下一个开工的组(GH #624 形状逐字重演)。
+     本轮与本轮自己那一处**一起**登记 ⇒ `test_bots_walk_farm_only.py` **EXIT=0 / 8 checks, 0 failed**。
+   - **下一轮主体候选**(按**可测性**排序):
+     **第 1 条**:`-191` 的 `X.cm_GetWeakestUnit` **`10000` 哨兵** 仍然**先提 queue 不要先写 helper**(域买不到)。
+     **第 2 条**:⭐ **本轮真正该接的**——**`X.GetSkillList` 的槽位算法**(`bots/FunLib/aba_skill.lua:226-237`)。
+     `totalSlots = #能力表 + #天赋表 = 15 + 8 = 23`,而**天赋表里只有前 4 项买得到**(每档一个);
+     槽 18/19 排的是 **t20/t25 天赋**(合法等级 20/25),槽 20-23 是**已取档位的另一侧**,结构上永不可买。
+     GH **#822** 已把波级后果量出来(band 18-22 里 **229** 个整级「点在手 + 已解锁的普通能力档位未买」,
+     59/80 具静默中位数 **504s**),**并且把这两点逐字交给「总监/英雄组」判**。
+     ⛔ **但它是 `bots/FunLib/` 的共用件不是 hero 文件**,且已有 gated 绕行 `skillstall` ——
+     **动手前先去 #822 确认球在不在本组**,不要抢协同组/总监的活。
+     ⭐ **可以先做而且纯属本组的那一半**:把五个焦点英雄的 `tAllAbilityBuildList` 逐条跑一遍这个槽位算法,
+     报「队头在哪一级卡住 / 卡住时身后还有没有买得到的能力」——**CM 本轮已手算过一遍,结论是它的队列最优**
+     (15 个能力点在英雄 17 级前买完,卡在 17 的那一级身后**没有**可买项),**其余四个没算**。
+     ⛔ **不要与 `lionraoe`/`lionsplash`/`lionultcash` 同波**(都在 Lion `X.ConsiderR` 里,分不开归因)。
+
 -191. ✅ **主体(P4.4 **(ii) 判定完结**,不是 (i)):`-190` 交出的那根候选量完之后 **DO-NOT-ARM** —— CM `击杀敌人` 首个出货点。**
    `bots/` **本轮没有行为改动,这是结论不是偷懒**:第一版免疫守卫**写出来了又撤掉了**。
    报告 `iterations/reports/hero/20260916T172120Z.md`;新 `tests/test_cm_kill_confirm_quantifier.lua` **13 绿 / 1.77s**
@@ -8594,6 +8646,32 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-16T21:30Z(报告 `iterations/reports/hero/20260916T213000Z.md`;**backlog:新开 `-192`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;**无新 gated id —— 本轮是 DO-NOT-ARM 判定**;
+  新 issue **GH #860**;新 queue 请求 **hero-99**;裁定 `state.json:lionraoequorum_20260916`;**P4.4 自评:(ii) 判定完结所需的证据**)
+  **主体:给 `lionraoe` + `lionsplash` 这个 promote-time atom 补上它缺的第三个成员 ——
+  Lion 的 A 杖 AoE 出口里 `nMaxAoeCount >= 4` 这个 quorum,两个已落地的 id 都没碰过它。**
+  - ⭐⭐ **头条:它是天花板不是过滤器。** `nAoeCount` 数的是**敌方英雄表**的成员 ⇒ 算术天花板 **5**,
+    `>= 4` 是**天花板减一**,与 `zusfightquorum`(`>= 5`)/`zusultstrand` 判过两次的同一个形状。
+    全语料 **310** 个 (帧 × 视角) 簇分布 **189/99/17/4/1** ⇒ 够到 fallback 底线 3 的 **22** 个、
+    够到 quorum 4 的 **5** 个 ⇒ **出厂 quorum 拒掉 22 里的 17 个**。
+    ⚠️ 全是 `nAoeCount` 的**上界**:对「4 是天花板」方向对,⛔ 对「本来会放 N 次」方向错。
+  - ⛔⛔ **为什么 `bots/` 零行为改动:BUNDLE-ONLY。** 出口在出厂默认下由**两个与 quorum 无关**的理由死着
+    (`nRadius` 读 0,GH #162/`lionsplash`;`HasScepter()` **0/42**)⇒ 单独一个 id **任何一波都动不了一个决策**,
+    而 `check_armed_wiring.py` 仍读 **WIRED**,波次读回「测过了没影响」**没有任何东西举手**(GH #606)。
+    裁定写在**它被问到的那个位置**(出口上方注释),与 GH #794 的 `881a4729` 同型。
+  - ⭐ **一次没有发生的误报**:差点把 `test_lion_ult_aoe_reach.lua` 的 pin `nBestCluster <= 2` 报成过期;
+    在**它自己的量词**(以 Lion 为心、1600 环)下重取就是**同一个 2、同样的 42 帧**。
+    ⇒ **两个读数不一致的第一嫌疑是量词不同。**
+  - ⚠️ **本台自己错过一个数**:第一版普查忘了 `tests/frames`,报 **9/1** 而非 **22/5**;
+    抓到它的是**新测试自己的枚举器断言**,在数字离开容器之前。
+  - ⚠️ **变异台 4 个第一版没打中,3 次是本台说法错**(M7 变异测试自己的断言;M8 两版都把读数推离结论;
+    M11 因 `grep -qF "$to"` 把 `-maxdepth` 当选项而 **ABORT —— 不是 survival 也不是 kill**);
+    ⭐ 只有 **M12** 是文件真弱(§3b 没有守卫说那个环真的排除了什么 ⇒ 结论是恒真的空话),
+    **那条守卫是变异体买来的不是预见到的**。最终 **13/13 全杀**。
+  - **顺带清掉一条本组自己留在 main 上的 trunk 红(GH #774)**:`test_cm_kill_confirm_quantifier.lua` 的
+    `io.popen` 是本组 17:21Z 那轮落的、没进手读名单 ⇒ 红留给了下一个开工的组。
+    与本轮自己那一处一起登记后 `test_bots_walk_farm_only.py` **EXIT=0 / 8 checks, 0 failed**。
 - 2026-09-16T17:21Z(报告 `iterations/reports/hero/20260916T172120Z.md`;**backlog:新开 `-191`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;**无新 gated id —— 本轮是 DO-NOT-ARM 判定**;
   新 issue **GH #858**;**GH #794 交棒回录像组**;新 queue 请求 **hero-98**;**P4.4 自评:(ii) 判定完结**)
