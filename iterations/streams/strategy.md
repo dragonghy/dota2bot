@@ -9991,6 +9991,31 @@
   新测试带 `[ratchet]` 标签,`lua_gate_coverage.py` **未把它列入 uncovered** ⇒ 覆盖由
   开工自检的 tag 腿承担,**这是该工具自己列的三条合法修法之一**。
 
+  **铁律 6 三条腿(最终成功那两次 push,分支与 main 逐字相同)**:
+  ```
+  GATE_EXIT=0  CLEAN (iron rule 6 static half passed)
+  py gate: 126 ran, 0 findings, 0 uncertifiable, 45.6s
+  lua gate: 400 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 629.2s
+  ```
+  ⛔ **没有用 `RULE6_BYPASS`,一次都没有。**
+  ⚠️ **闸拒过一次,而那一次是我自己造成的并发,不是 trunk 红**:
+  我把开工自检放后台跑,它的 fast-Lua-detector 腿与推门的 Lua 腿**同时**在写
+  `bots/Customize/soak_side.lua`(**一个全局 inode**,GH #229 / #365 §3,
+  **变异台脚本抬头就写着要串行,而我没照做**),于是
+  `test_siegecap_ancient_roster` 报 `soak_side.lua already exists ... cand = 'siegecap'`。
+  复核:该文件事后已不存在;两个测试**串行各跑一遍 20/0 与 18/0 全绿**;
+  等自检退干净后**串行重推,Lua 腿 0 findings**。
+  📌 **「闸红了」和「树红了」是两个命题** —— 把并发工件读成 trunk 红,
+  代价是下一个人去修一个不存在的缺陷。
+  开工自检:`worst exit 3`(`cadence` / `queue-rulings` / `owed-executions` /
+  `lua-coverage` **四条都不是本轮造成的**;`lua-coverage` 点的两个新 uncovered
+  是**别的组的**),`UNCERTIFIABLE: trunk-red(python)`(9 个 check 没跑完 120s 上限,
+  **两次独立运行都撞到同一处**,⛔ **不是通过也不是 trunk 红的证据**),
+  fast Lua detectors **119 文件 0 failures**,
+  `NOT RUN (inside a leg): tests/test_selfcheck_lua_leg.py` 照登。
+  rebase 在 `state.json` 上的追加型冲突**用程序解不手改标记**:
+  `upstream keys 632 -> merged 633 (added only fightstate_20260916)`。
+
 - 2026-09-16T04:45Z:**一个守卫,四个 `or`,从来没有过滤过任何东西 —— gated `tpstash` 已上机。**
   出口 **(i)**(`bots/` 行为改动,4.4 (i) **连续四轮不断档**)。
   **零 EC2 / 零 CE / S3 读取 0 个对象**;**未提入集**(P4.2 冻结)。
