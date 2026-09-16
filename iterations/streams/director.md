@@ -733,6 +733,25 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⚠️ `unlanded` 的诚实边界照抄:它自己打 `shallow clone: YES` / `origin/main (50 commits)` /
   `REFUSED below 2026-09-16T04:21:14` ⇒ **它读的是 deepen 之前那棵浅树**(我 15:56Z 才 deepen,自检 15:51Z 起跑),
   **它的 OK 只覆盖 04:21Z 以上**,而本轮要判的几格全在窗口内 ⇒ 结论不受影响。
+  **[同轮收尾追加,push 之后]** **push 记录:四次 push,三条腿每次各跑一遍,⛔ 全程无 `RULE6_BYPASS`** ——
+  ①分支 REFUSED(§五.2 的开关争用假红,lua gate `1 findings`);②分支 `* [new branch]` ⇒ `b16ff578`
+  (`GATE_EXIT=0` / `py 127 ran, 0 findings, 39.2s` / `lua 407 ran, 0 findings, 571.6s`);
+  ③`HEAD:main` **`! [rejected] (non-fast-forward)`**,**闸全绿,纯粹是 main 动了**;
+  `pull --rebase` **`REBASE_EXIT=0`**(干净 2/2)⇒ ④`HEAD:main` ✅ **`d68577aa..743d24a7`**
+  (`py 127/0` / `lua 408 ran, 0 findings, 571.5s`)。
+  ⚠️ **诚实边界**:分支 ref 停在 **rebase 前**的 `b16ff578`,main 上是 `743d24a7` —— **内容同一份工作,sha 不同**;
+  **没有为了对齐 sha 再跑一次十分钟的闸**,这是取舍不是遗漏。
+  **GH 评论三条,发表前 `claim_precheck.sh` 各跑一次,全部 `PRECHECK_EXIT=0` / `clean` / `OK to publish`**:
+  #843(RULING 66 全文)/ #774(第八例已修)/ #848(第二份现场 + §2.6 登记)。
+  ⛔⛔ **§六.1 本轮自己造了一个死锁,照登,它值一条通用教训**:收尾脚本用
+  `while pgrep -f "[g]it push"` 等 push 结束,**等了三十多分钟而那时根本没有 push 在跑** ——
+  `pgrep -f` 匹配**整条命令行**,**等待者自己的命令行里就写着 `git push`**(含我第一次尝试留下的陈旧等待进程)
+  ⇒ **A 等 B,B 等 A**。判别子:`pgrep -f 'git push'` 两个命中,而按 argv 逐位比
+  (`ps -eo pid,args | awk '$2=="git" && $3=="push"'`)**是空的**。
+  📌 **与 13:18Z 条目记的 `pgrep -f routine_selfcheck.sh` 那一发同族,而那一条当时被写成
+  「我的等待方式的缺陷」就收摊了** —— **本轮证明它不是一次性手滑,换一个 pattern 串就复发**。
+  ⇒ **规矩**:等进程结束 ⛔ **不许用 `pgrep -f <命令名>`**,改用按 argv 逐位比,或直接等后台任务自己的退出码。
+  ⚠️ 代价实测 **~30 分钟墙钟**,失效方向是**永远等下去**(不是误报结束)。
   **纪律 3 第三十七发,连续第七轮,两道守卫各拦一次**
   (`| tail` → `timeout` 祖先 → 第三次 `nohup` 才跑成)⇒ 上一轮已把它写进章程,
   **写进去并没有让下一轮少撞一次**,再次印证「**这一条是习惯不是门**」;真读数是**守卫连续七轮都承重**。
