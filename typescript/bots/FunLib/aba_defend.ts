@@ -579,11 +579,38 @@ export function ShouldDefend(bot: Unit, hBuilding: Unit | null, nRadius: number)
         // a quiet building: a precondition, not a knob -- it can only ever
         // REMOVE a defender relative to shipped, never add one.
         //
+        // `creepWeights > 0` IS PART OF THE PRECONDITION, and it is not
+        // redundant with nNearby >= 1. nNearby truncates the creep half:
+        // nNearby = enemyHeroNearby + Math.floor(creepWeights), and a lane
+        // creep is priced at 0.2. So a FULL enemy wave of four creeps sums to
+        // 0.8 and floors to ZERO -- the creep half does not start counting
+        // until the fifth body. A tower being taken by a wave with no hero in
+        // sight is therefore `nNearby == 0`, i.e. "quiet", and without this
+        // disjunct the armed leg would pull its defender off exactly the
+        // building that is being taken. The truncation itself is left alone on
+        // purpose: it feeds the 1/2/3/>=4 role ladder above, and moving it
+        // would move every rung. This disjunct only restores shipped behaviour,
+        // so the one-directional property above still holds verbatim.
+        //
+        // NOT DRIVEN BY THE CORPUS, and that is why it is spelled out here:
+        // tests/mock/replay_fixture.lua answers GetUnitList(UnitType.Enemies)
+        // with {} (measured 2026-09-16: 0 units over all 112 loadable
+        // fixtures), so `creepWeights` is 0 by construction in every sweep this
+        // repo can run. The arithmetic above -- not a corpus reading -- is what
+        // this disjunct rests on; the real-frame half is
+        // tests/test_defquiet_creep_siege.lua, which feeds ShouldDefend the
+        // fixture's OWN creep sample.
+        //
         // NOT TOUCHED, deliberately: the travel-boots/tinker escalation above
         // has the same missing precondition and additionally writes
         // `travel_boots_defender` state on a quiet frame. One lever at a time.
+        // Measured this round and registered rather than fixed: that branch has
+        // a constructive zero domain in this corpus (0 of 1120 (fixture, hero)
+        // pairs hold item_travel_boots or item_travel_boots_2, on a reader that
+        // reads 40 other item names fine), so it cannot be fixture-validated
+        // here at all.
         const bDefQuiet = jmz.IsSoakCandidate("defquiet") && jmz.IsModeTurbo();
-        if ((!bDefQuiet || nNearby >= 1) && !result && pos === GetClosestAllyPos([2, 3], hBuilding.GetLocation())) {
+        if ((!bDefQuiet || nNearby >= 1 || creepWeights > 0) && !result && pos === GetClosestAllyPos([2, 3], hBuilding.GetLocation())) {
             result = true;
         }
     }

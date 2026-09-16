@@ -72,7 +72,7 @@ check() {
     restore
 }
 
-GUARD='if (not bDefQuiet or nNearby >= 1) and not result and pos == GetClosestAllyPos('
+GUARD='if (not bDefQuiet or nNearby >= 1 or creepWeights > 0) and not result and pos == GetClosestAllyPos('
 GATE='local bDefQuiet = jmz.IsSoakCandidate("defquiet") and jmz.IsModeTurbo()'
 
 echo "== mutation stand: defquiet =="
@@ -88,21 +88,21 @@ check "M1 armed arm becomes inert" "$DEF" "MUT1" 1 CAUGHT
 #     that matters most: the whole lever IS the requirement that somebody be
 #     there, and a [gate]-only test file would call this WIRED and measure
 #     nothing.
-sed -i "s/nNearby >= 1) and not result/nNearby >= 0) and not result -- MUT2/" "$DEF"
+sed -i "s/nNearby >= 1 or creepWeights > 0) and not result/nNearby >= 0) and not result -- MUT2/" "$DEF"
 check "M2 precondition weakened to always-true" "$DEF" "MUT2" 1 CAUGHT
 
 # M3  Direction flipped: armed now keeps the QUIET buildings and drops the
 #     threatened one.  A behavioural leg that only checked "the answer moved"
 #     would be fooled here; the control lane inside the bearing frame is what
 #     separates "changed the answer" from "changed it the right way".
-sed -i "s/nNearby >= 1) and not result/nNearby < 1) and not result -- MUT3/" "$DEF"
+sed -i "s/nNearby >= 1 or creepWeights > 0) and not result/nNearby < 1) and not result -- MUT3/" "$DEF"
 check "M3 precondition direction flipped" "$DEF" "MUT3" 1 CAUGHT
 
 # M4  A THRESHOLD smuggled in where a precondition belongs.  At >= 2 the lever
 #     also drops the bot lane of the bearing frame, which has exactly one
 #     enemy -- i.e. it stops being "is anybody there" and becomes a knob about
 #     how many.  Only the control lane sees this.
-sed -i "s/nNearby >= 1) and not result/nNearby >= 2) and not result -- MUT4/" "$DEF"
+sed -i "s/nNearby >= 1 or creepWeights > 0) and not result/nNearby >= 2) and not result -- MUT4/" "$DEF"
 check "M4 precondition becomes a 2-enemy threshold" "$DEF" "MUT4" 1 CAUGHT
 
 # M5  The gate is open for everybody: both the soak id and the turbo conjunct
@@ -134,7 +134,7 @@ python3 - "$DEF" <<'PY'
 import sys
 p = sys.argv[1]
 s = open(p).read()
-i = s.index('if (not bDefQuiet or nNearby >= 1) and not result and pos == GetClosestAllyPos(')
+i = s.index('if (not bDefQuiet or nNearby >= 1 or creepWeights > 0) and not result and pos == GetClosestAllyPos(')
 j = s.index('{2, 3},', i)
 s = s[:j] + '{2, 3, 4}, -- MUT8' + s[j + len('{2, 3},'):]
 open(p, 'w').write(s)

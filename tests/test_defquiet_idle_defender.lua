@@ -262,9 +262,24 @@ tests['[source] the {2,3} role list and the ladder above it are unchanged'] = fu
     local s = slurp(DEFEND_LUA)
     assert(s:find('local bDefQuiet = jmz.IsSoakCandidate("defquiet") and jmz.IsModeTurbo()', 1, true),
         'the gate is turbo-only and named defquiet, as one independent conjunction')
-    assert(s:find('if (not bDefQuiet or nNearby >= 1) and not result and pos == GetClosestAllyPos(', 1, true),
-        'the precondition is exactly "nNearby >= 1", and the clause it guards is '
-        .. 'otherwise the shipped one, verbatim')
+    -- AMENDED 2026-09-16 (the same round that landed this file's successor,
+    -- tests/test_defquiet_creep_siege.lua). The precondition grew a third
+    -- disjunct, `creepWeights > 0`, because `nNearby >= 1` CANNOT see a creep
+    -- wave: nNearby floors the creep sum and a lane creep is priced 0.2, so a
+    -- full four-creep wave weighs 0.8 and reads as zero. Without the disjunct
+    -- this candidate pulls the defender off a tower that is being taken.
+    -- ⛔ The amendment costs this file's measured domain NOTHING and that is
+    -- checked, not asserted by hand: the loader answers
+    -- GetUnitList(UnitType.Enemies) with {} on all 112 fixtures, so
+    -- creepWeights is 0 by construction here, and tests/_defquiet_sweep.lua
+    -- re-run after the change reports the same 3360 / 385 / 193 / 192 it does
+    -- above, split 182 role 3 + 10 role 2.
+    assert(s:find('if (not bDefQuiet or nNearby >= 1 or creepWeights > 0) and not result and pos == GetClosestAllyPos(', 1, true),
+        'the precondition is exactly "nNearby >= 1 or creepWeights > 0", and the '
+        .. 'clause it guards is otherwise the shipped one, verbatim')
+    assert(s:find('local nNearby = enemyHeroNearby + math.floor(creepWeights)', 1, true),
+        'and the truncation that made the third disjunct necessary is itself '
+        .. 'UNTOUCHED -- it feeds the ladder below, so moving it moves every rung')
     assert(s:find('{2, 3},', 1, true),
         'the role list stays {2, 3} -- this candidate does not touch WHICH roles '
         .. 'are eligible, only whether anybody is attacking the building')
@@ -273,8 +288,19 @@ tests['[source] the {2,3} role list and the ladder above it are unchanged'] = fu
             'the shipped ladder branch nNearby == ' .. n .. ' is still there')
     end
     assert(s:find('nNearby >= 4', 1, true), 'and the >= 4 branch')
-    assert(not s:find('nNearby == 0', 1, true),
-        'the ladder still has NO branch for zero -- that absence IS the defect; '
+    -- ⛔ ANCHORED TO THE RUNG, NOT TO THE STRING (fixed 2026-09-16, and it
+    -- had already fired once by then). This used to read
+    -- `not s:find('nNearby == 0')`, which is a claim about the WHOLE FILE,
+    -- comments included -- so the next round's explanatory comment, which has
+    -- to name the value it is talking about, turned this red while the ladder
+    -- was untouched. The failure message said "the ladder has a zero branch";
+    -- the assertion said "the three characters never occur". 0NEXT30's family,
+    -- one storey up: the message named one proposition and the predicate
+    -- tested another, and here BOTH were about the same file, which is why
+    -- nothing about the red looked wrong.
+    assert(not s:find('if nNearby == 0', 1, true)
+        and not s:find('elseif nNearby == 0', 1, true),
+        'the ladder still has NO rung for zero -- that absence IS the defect; '
         .. 'if somebody adds one, this lever needs rereading, not keeping')
 end
 
@@ -294,8 +320,10 @@ tests['[source] the TypeScript source carries the same lever'] = function()
     assert(s:find('jmz.IsSoakCandidate("defquiet") && jmz.IsModeTurbo()', 1, true),
         'aba_defend.lua is transpiler output: a Lua-only lever is silently '
         .. 'reverted by the next regeneration')
-    assert(s:find('(!bDefQuiet || nNearby >= 1) && !result && pos === GetClosestAllyPos([2, 3]', 1, true),
-        'and it must be the SAME precondition, not a paraphrase of it')
+    assert(s:find('(!bDefQuiet || nNearby >= 1 || creepWeights > 0) && !result && pos === GetClosestAllyPos([2, 3]', 1, true),
+        'and it must be the SAME precondition, not a paraphrase of it '
+        .. '(amended 2026-09-16 with the creepWeights disjunct -- see the note '
+        .. 'on the Lua half above)')
 end
 
 return tests
