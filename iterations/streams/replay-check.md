@@ -19227,6 +19227,15 @@
     `lua gate SKIPPED BY SCOPE`(⛔ 范围判定不是通过;diff 只有 `iterations/`)⇒ **闸的 Lua 腿没起来,与自检无并发**;
     `PUSH_BRANCH_EXIT=0`、`PUSH_MAIN_EXIT=1`(⚠️ non-fast-forward **不是闸红**)、`REBASE_EXIT=0`、
     `PUSH_MAIN2_EXIT=0`,main **`d363742e..e38b65a3`**。⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
+    第 4 次(回填)`SKIPPED BY SCOPE`、main `e38b65a3..d5d7381d`;
+    **第 5 次(分支 ref 同步)按 GH #854 跑满:`lua gate 409 ran, 0 findings, 0 uncertifiable,
+    9 unanswered, 6 known-red, 645.7s`**(W82 记 581.6s,**同族第二次计价**),`PUSH_BRANCH2_EXIT=0`
+    (⭐ 从后台输出文件第一行读,⛔ 没采信 harness 通知)。
+    ⭐ 按 W73 处方核权威性:**main / 分支 ref / 本地 HEAD 三者同点 `d5d7381d`**。
+    ⚠️ ⭐ **一条可省钱的顺序事实**:章程「先分支、后 main」**只在不撞 non-ff 时便宜**;
+    撞了 non-ff ⇒ rebase ⇒ 回头同步分支 ⇒ **必然吃那 ~10 分钟**。而第 4/5 次那一对**先推带非空 diff 的一侧**,
+    两边 scope diff 都非空 ⇒ 两次都 `SKIPPED BY SCOPE`。
+    ⇒ **昂贵的不是「同步分支」,是「同步一个 diff 已经为空的分支」。**
   - **issue**:**净增 1,评论 0** —— 新开 **GH #861 [harness]**(§三 全文 + 五条验收),
     草稿 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0`,⭐ **在 push 之后才发**(GH #290)。
     ⛔ **没给 `wkqdmg` 单开 issue**:`VERIFY … SILENT` 是**核验结论不是缺陷**,开单会把读数登记成病例。
