@@ -131,9 +131,26 @@ local T_BOLTDOM = 'tests/test_replay_260819_zuus_boltdom.lua'
 -- snapshot's own 250/375/500 ladder before using it, so a loader that went back
 -- to answering 0 turns that file red instead of quietly re-taking #416's claim.
 local T_NIMBUS = 'tests/test_zuus_nimbus_ult_reserve.lua'
+-- Born 2026-09-16 (hero stream, candidate `zusulte` -- the same reserve wired
+-- to its FIFTH consumer, X.ConsiderE's attacking firing point), i.e. long after
+-- c386d5f3 and with nothing to re-take.  It arms `zusultx` in one section, and
+-- for the OPPOSITE reason to T_NIMBUS's: not to open a window that is otherwise
+-- empty, but to measure how NARROW the widening is here.  Heavenly Jump costs
+-- 50/60/70/80, so the un-widened window [jump cost, ult cost) is already
+-- nonempty at every rank pairing and `zusultx`'s band is only the spend itself
+-- wide -- against ~130 for a Bolt and 275 for a Nimbus.
+-- ⭐ IT DOES NOT NEED §2's ANCHOR FOR THE SAME STRONGER REASON as T_NIMBUS, and
+-- one more besides.  It never injects the ult price: §3 reads GetManaCost off
+-- the real handle and asserts it equals the KV ladder's rank-1 250 before using
+-- it.  And its `zusultx` section asserts the BIDDING handle's price is a
+-- positive number FIRST, saying in its own message that a 0 there would make
+-- the reading UNPRICEABLE rather than narrow -- which is #416's failure mode
+-- named at the one handle #416 was not about.
+local T_JUMP = 'tests/test_zuus_jump_ult_reserve.lua'
 
 local ARMING_FILES = {
     T_CENSUS, T_MANALOCK, T_W2LEAK, T_CROSS, T_TOWERFEAR, T_BOLTDOM, T_NIMBUS,
+    T_JUMP,
 }
 table.sort(ARMING_FILES)
 

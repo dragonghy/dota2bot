@@ -1134,6 +1134,33 @@ local PINNED = {
     -- zusultd + zusultx are NOT the same experiment at rank 1, and neither
     -- may be quoted about the other.
     "zusultd | X.SkillsComplement | X.zuus_ShouldSaveManaForUlt | zusultx | bots/BotLib/hero_zuus.lua",                                    -- P
+    -- [zusulte 20260916] The SAME nesting one dispatch further down, and the
+    -- same answer -- (P) -- for the same reason: `zusult` is promoted, so in
+    -- turbo X.zuus_ShouldSaveManaForUlt runs unconditionally, and with zusultx
+    -- off `nSpend` stays 0 and the mana clause is byte-equivalent to the
+    -- shipped `GetMana() >= nCost`.  Arming 'zusulte' alone runs the shipped
+    -- reserve at a FIFTH call site, X.ConsiderE's attacking firing point.
+    -- ⭐ AND THE ROW ABOVE'S LIMIT DOES NOT TRAVEL TO THIS ONE -- it inverts.
+    -- 'zusultd''s un-armed window is empty at ult rank 1 because a Nimbus bid
+    -- needs mana >= 275 while the reserve only holds below 250.  Heavenly Jump
+    -- costs 50/60/70/80, so this window is [50..80, 250..500): NONEMPTY AT
+    -- EVERY RANK PAIRING, widths 170..450, and the un-armed leg is therefore a
+    -- full lever rather than a rank-bounded partial no-op.
+    -- tests/test_zuus_jump_ult_reserve.lua section 2 drives all twelve
+    -- pairings off the KV and section 3 drives the bounds on a real frame.
+    -- ⛔ WHAT MUST TRAVEL WITH THIS ROW INSTEAD: zusultx is nearly INERT here.
+    -- Its band is [ult cost, ult cost + spend) and the spend is 50..80, against
+    -- ~130 for a Bolt and 275 for a Nimbus -- so a zusultx reading taken at the
+    -- other sites does not size this one, in either direction.  Section 3b
+    -- drives the band and its comparison to the siblings.
+    -- ⚠️ THE SECOND COLUMN IS THE HELPER, NOT X.ConsiderE, and that is a real
+    -- difference from the row above rather than a spelling one: 'zusultd' puts
+    -- its gate in the DISPATCH condition alongside the reserve call, while
+    -- 'zusulte' puts its gate inside a named helper that then calls the
+    -- reserve.  (The draft of this row guessed X.ConsiderE and the census said
+    -- otherwise -- it reads the enclosing function, which is the only thing
+    -- that decides what encloses what.)
+    "zusulte | X.zuus_IsJumpChipHeldForUlt | X.zuus_ShouldSaveManaForUlt | zusultx | bots/BotLib/hero_zuus.lua",                           -- P
     -- ⭐ 'siegecap' is the first row this file has taken whose answer is
     -- POSITIONAL rather than algebraic, so it is written out rather than
     -- labelled.  The two outer ids do not enclose the inner call site, they

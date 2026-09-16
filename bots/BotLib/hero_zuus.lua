@@ -2333,6 +2333,81 @@ function X.zuus_FindRetreatJumpThreat( hBot, tEnemies )
 
 end
 
+
+--- [zusulte] THE FIFTH CONSUMER OF THE RESERVED POOL, AND THE LAST ONE THE
+--- RESERVE IS NOT WIRED TO.  Turbo-only soak candidate, INERT until armed.
+---
+--- ⭐ THE SITE IS THE BOTTOM OF THE DISPATCH, WHICH IS WHAT MAKES IT THE SINK.
+--- X.zuus_ShouldSaveManaForUlt guards ConsiderW, ConsiderW2 and ConsiderQ, and
+--- since `zusultd` it can guard ConsiderD.  X.ConsiderE is dispatched LAST, out
+--- of the same pool, in the same call of X.SkillsComplement.  GH #47 measured
+--- what a reserve wired to a strict subset of a pool's consumers does: it does
+--- not narrow the spend, it RELOCATES it -- there a held ConsiderW bid walked
+--- out through ConsiderW2 on the next line and spent the identical mana on the
+--- identical target.  Every bid the four sites above hold falls through to
+--- HERE, and here nothing is asked.  That is the same shape as `zusultd`, one
+--- dispatch further down, and this is the last one: there is no sixth arm.
+---
+--- ⭐⭐ AND HEAVENLY JUMP IS NOT AN ANALOGY TO THE FOUNDING INCIDENT, IT IS HALF
+--- OF IT.  The `zusult` note above this file's reserve names the watched game
+--- verbatim: 20260819_142047_slot1, Zeus dinged 6 holding 55 mana, then "spent
+--- 94 on Arc Lightning (t=225.5) AND 49 ON HEAVENLY JUMP (t=241.5), both into a
+--- dragon_knight sitting at 971/1072 HP".  Arc Lightning is X.ConsiderQ, guarded
+--- since GH #47.  The other half of that sentence is this dispatch, and it has
+--- been unguarded the whole time.
+---
+--- ⚠️ THE WINDOW HERE IS THE WIDEST OF THE FIVE AND THE SPEND IS THE SMALLEST,
+--- and that is an argument BOTH ways, so it is written out rather than picked.
+--- X.ConsiderE cannot bid unless the jump IsFullyCastable, i.e. mana >= its own
+--- 50/60/70/80 (zuus_heavenly_jump/AbilityManaCost); the reserve cannot hold
+--- unless mana < the ult's 250/375/500.  So the window is [jump cost, ult cost)
+--- -- nonempty at EVERY rank pairing, width 170..450.  Contrast `zusultd`, where
+--- Nimbus's 275 against a rank-1 ult's 250 makes the window EMPTY.  Read one way
+--- that is "the reserve finally covers the leak that is open most often"; read
+--- the other it is "this is the site where the mana saved per refusal is
+--- smallest".  Both are true; which dominates is a corpus question and it is
+--- queue.json hero-95, not a sentence here.
+---
+--- ⚠️ DIRECTION: THIS IS A NARROWING.  Armed, the only reachable effect is the
+--- attacking firing point going HIGH -> NONE; no frame gains a jump.  A negative
+--- wave reading may therefore NOT be read as "worse jump placement" -- the only
+--- thing it can mean is that the jumps this removed were worth more than the
+--- ultimates they were being saved for.
+---
+--- ⭐ THE RETREAT FIRING POINT IS EXEMPT TWICE OVER, and neither reason is this
+--- helper's own doing.  (1) It is not routed through here at all -- the conjunct
+--- lives only on the attacking branch, which is the one branch that HAS a hero
+--- target; the retreat branch escapes from a threat and hands no target to
+--- anybody.  (2) X.zuus_ShouldSaveManaForUlt returns false under
+--- J.IsRetreating, so even a future reader who routes the retreat branch through
+--- here gets the shipped answer.  "Fleeing beats hoarding" is that function's
+--- own sentence and this lever does not touch it.
+---
+--- ⛔ THE GATE NAMES EXACTLY ONE ID.  It must not be conjoined with `zusult`
+--- (PROMOTED 2026-09-11) -- a gate naming a promoted id is frozen FALSE, since a
+--- promoted id appears in no armed string, and check_armed_wiring.py would still
+--- call it WIRED (the `pullcad` trap, AGENTS.md).  It must not be conjoined with
+--- `zusultd` either: that id is a different dispatch site, and arming them
+--- together moves two sites at once, so a bundle read is attributable to
+--- neither.  `zusultx` is not named here for the same reason it is not named at
+--- the Nimbus site: it is read INSIDE the helper, so arming it widens every
+--- wired site together.
+---
+--- ⚠️ `zusultx`'s widening is nearly inert HERE, and that is arithmetic, not a
+--- reading: post-spend differs from pre-spend only while mana sits in
+--- [ult cost, ult cost + spend), and the spend is 50..80 -- against the ~130 of
+--- a Bolt and the 275 of a Nimbus.  Do not quote a `zusultx` wave read from the
+--- other sites as though it sized this one.
+---
+--- Pinned in tests/test_zuus_jump_ult_reserve.lua.
+function X.zuus_IsJumpChipHeldForUlt( hBot, hTarget, hAbility )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'zusulte' ) ) then return false end
+
+	return X.zuus_ShouldSaveManaForUlt( hBot, hTarget, hAbility ) == true
+
+end
+
 function X.ConsiderE()
 
 	if not abilityE:IsFullyCastable()
@@ -2394,9 +2469,16 @@ function X.ConsiderE()
 		-- nCastRange here is the shockwave's SEARCH RADIUS off the landing point,
 		-- not a cast range, and this is the firing point that never asks which
 		-- way the hop goes.
+		-- [zusulte] the reserve's FIFTH consumer, and the only conjunct here that
+		-- is about mana rather than geometry.  Gate off or non-turbo the helper
+		-- returns false, so `not false` leaves the shipped condition byte for
+		-- byte.  Read its header for the sink argument, the window arithmetic,
+		-- the direction and why the retreat branch above is not routed through
+		-- it.
 		if J.IsValidHero( targetHero )
 			and X.zuus_IsJumpTargetInShockwaveReach( bot, targetHero, abilityE, nCastRange )
 			and J.CanCastOnNonMagicImmune( targetHero )
+			and not X.zuus_IsJumpChipHeldForUlt( bot, targetHero, abilityE )
 		then
 			return BOT_ACTION_DESIRE_HIGH
 		end

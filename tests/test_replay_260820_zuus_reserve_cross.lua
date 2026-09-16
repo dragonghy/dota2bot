@@ -427,9 +427,26 @@ tests['tripwire: every consumption point passes the bidding ability handle'] = f
     -- a claim that shipped behaviour changed; it is a claim about how many
     -- places in this function name the reserve.  Argued and driven in
     -- tests/test_zuus_nimbus_ult_reserve.lua.
-    assert(nCalls == 4,
-        'W, W2, Q and the gated Nimbus dispatch are the four consumption points '
-        .. '(GH #47, plus `zusultd` 2026-09-15); found ' .. nCalls)
+    --
+    -- 4 -> 5 on 2026-09-16 (hero stream, soak candidate `zusulte`).  The fifth
+    -- is X.zuus_IsJumpChipHeldForUlt, the gated helper the attacking firing
+    -- point of X.ConsiderE consults -- the LAST arm of X.SkillsComplement, i.e.
+    -- the sink every bid the four sites above hold falls through to.
+    -- ⭐ AND THAT IS WHY THIS TRIPWIRE'S OWN NUMBER IS WORTH READING RATHER
+    -- THAN BUMPING: each time it moves, a consumer of this pool that was NEVER
+    -- ASKED has just been found.  It has now moved twice in two days, both
+    -- times to a site that had been silently spending the reserve since GH #47
+    -- was closed.  With X.ConsiderE wired there is no sixth arm below it
+    -- (tests/test_zuus_jump_ult_reserve.lua section 1.2 drives the ordering),
+    -- so the next move of this number means a new dispatch was ADDED, which is
+    -- a different event and should be read as one.
+    -- ⛔ The fourth and fifth sites are both GATED (`zusultd`, `zusulte`), so
+    -- this number counting 5 is still not a claim that shipped behaviour
+    -- changed.
+    assert(nCalls == 5,
+        'W, W2, Q, the gated Nimbus dispatch and the gated Heavenly Jump hold '
+        .. 'are the five consumption points (GH #47, plus `zusultd` 2026-09-15 '
+        .. 'and `zusulte` 2026-09-16); found ' .. nCalls)
 end
 
 tests['tripwire: the clause subtracts the spend, and only under `zusultx`'] = function()

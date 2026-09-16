@@ -22,6 +22,73 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-188. ✅ **主体:`zusulte`(turbo-only)—— Zeus 的保蓝储备接了同一个蓝池五个消费点里的四个,而没接的那一个是派发链的最底下。**
+   落在 `bots/BotLib/hero_zuus.lua` 的新 `X.zuus_IsJumpChipHeldForUlt( hBot, hTarget, hAbility )`
+   (闸关或非 turbo **恒 false**)+ `X.ConsiderE` **进攻支路**最后一个合取项
+   `and not X.zuus_IsJumpChipHeldForUlt( bot, targetHero, abilityE )`;闸关 = `not false` **逐字节不变**。
+   报告 `iterations/reports/hero/20260916T081500Z.md`;新 `tests/test_zuus_jump_ult_reserve.lua`
+   **13 绿 / 1.51s**;变异台 `tools/agent/mutstand_zusulte.sh` **14/14 全杀**;新 queue 请求 **hero-95**。
+   **零 EC2 / 零 CE / S3 读取 0 个对象。P4.4 自评:(i)**。**换英雄的理由是 `-187` 自己写的禁令**
+   (⛔ 不要再动人数帽)+ 它的两个候选一个被 `-185` 判 UNASKABLE、一个等 GH #772。
+   - ⭐⭐ **本轮头条:这个点位不是对开案现场的类比,它是开案现场的另一半,逐字。** `zusult`
+     (已 promote)的注释点名被观察的那一局,写着 Zeus「spent 94 on Arc Lightning **and 49 ON
+     HEAVENLY JUMP**, both into a dragon_knight sitting at 971/1072 HP」。Arc Lightning = `X.ConsiderQ`,
+     GH #47 起就被守着;**那句话的另一半就是本派发点,一个月里一次都没被接过**。§6.1 钉住:
+     helper 层域的 3 帧里 **2 帧来自这一局**,且**开案句点名的那个 dragon_knight(0.79 血)
+     就是被扣住的目标之一**。结构论证独立成立:`X.ConsiderE` 是 `X.SkillsComplement` 的
+     **最后一条臂**(§1.2 从派发顺序驱动),上面四个点位扣下的出价**同一次调用里**掉到这里。
+   - ⭐⭐ **窗口算术方向与 `zusultd` 相反,而这把刀两面都要写。** 窗口 = `[技能价, 大招价)`:
+     Nimbus 275 对 rank-1 大招 250 ⇒ **空**;Heavenly Jump 50/60/70/80 ⇒ **12 个 rank 配对全非空,
+     宽 170..450** ⇒ `zusultd` 登记在案的「rank-1 由算术域空」**不可搬运,它在这里反过来**。
+     ⚠️ 同一个算术的另一面是**反对**本杠杆的:窗口最宽的点位,**每次拒绝省下的蓝也最少**
+     (50..80 vs Bolt ~130 / Nimbus 275)。哪面占上风 = `hero-95` 第 (4) 格,**不是一句散文**。
+   - ⭐⭐ **本轮最要紧的方法学:一个扫了 19 帧的断言,由构造不可能失败。** 初稿 §5 是「每帧
+     armed ≤ shipped」的全语料扫并自称 direction tripwire —— 而端到端那侧在本语料上**问不出来**,
+     两条腿每帧都答 NONE ⇒ **它是十九次 `0 <= 0`**。发现它的是变异台 **M5**(删掉 `not`,杠杆
+     整个反向),**它能从那条扫上直接走过去**。⇒ §5 拆两半:5.1 按录制原样(**自己写明它是空的**),
+     5.2 **声明式反事实**(注入两个 loader 答不了的 getter,目标取该帧**自己**最健康的可见敌方英雄)
+     ⇒ shipped 出价 **2** / armed 翻转 **1**(`f_260819_222052_zuus_w2_leak`)/ **不翻转的那帧理由具名**
+     (蓝 1496 ≥ 大招价 375 ⇒ 储备自己让路)= 负对照。**M12** 专防 5.2 自己变空。
+   - ⛔ **端到端 0 是 UNASKABLE 不是读数**(`-185` 裁定):`J.IsGoingOnSomeone` 读 `GetActiveMode()`,
+     loader 无 spec ⇒ `^Get -> 0`,而 **0 根本不在 BOT_MODE 名字空间里**(常量从 1001 起)
+     ⇒ **全语料无任何阳性对照**。比 `-185` 便宜:不需要 1314-subject 横扫,**服务的那个值不在被比较的集合里**。
+     **M13** 反向钉住(哪天 loader 学会回答,这个文件必须自己举手)。
+   - ⭐ **M9 第一版 ABORT 不是 SURVIVED —— GH #846 那道闸在干活**:锚点 `base = '50 60 70 80'`
+     在 KV 快照里**出现 2 次**,裸锚会去改另一个技能而台子照样记分。改成先锚技能名再在 600 字节内定位。
+     ⇒ **「anchor not found exactly once」是台子的产出,不是台子的故障。**
+   - ⚠️ **M5b 的 `want` 当场改过,改的是措辞不是结论**:初稿说它由 §5.2 抓,实测**先红的是 §3 的
+     liveness**。⇒ 由此得到该写下的一条:**本台没有任何变异体是 §5.2 单独抓住的**;
+     §5.2 靠「是唯一非空的方向读数」立足,**不靠「是唯一杀死了谁的那一条」**。
+   - **当轮修掉三条自造 trunk 红(都是 GH #624 形状)**:(1) `test_gated_helper_nesting_census.lua`
+     新行,答 **(P)**(`zusult` 已 promote + `zusultx` 关着 ⇒ `nSpend` 恒 0 ⇒ 蓝量项与出货逐字节等价);
+     ⚠️ **第二列是 helper 不是 `X.ConsiderE`,而这是真差别**(`zusultd` 把闸放在派发条件里,本条放在具名
+     helper 里)—— **草稿猜了,普查说了不是**,它读的是外层闭合函数。(2) `test_replay_260820_zuus_reserve_cross.lua`
+     的消费点计数 **4 → 5**;⭐ **这个数值得读不是抬**:它每动一次就是又找到一个从没被问过的同池消费点,
+     **两天动了两次**;接上 `X.ConsiderE` 后**底下没有第六条臂**,所以**下次再动含义就变了**(注释里写明)。
+     (3) `test_zusult_pre_ladder_claim_retake.lua` §1 的 arming-file 集合(新文件带 `'zusultx'` 字面量)。
+     ⭐ **第三条是推送闸自己抓的,靠的恰恰是它对未登记测试的 fail-open**(`400 ran, 1 findings`)
+     ⇒ 同一个 fail-open 既是 GH #804 的超支来源、**也是本轮唯一发现它的路径**,两件事都真,不是一回事。
+     登记时写清它没有 GH #416 欠条:**从不注入大招价**(§3 从真实句柄读并断言等于 KV rank-1 250),
+     ⭐ **还多一条** —— §3b 先断言**出价侧**句柄价是正数,消息写明「0 会让这一节读成 UNPRICEABLE 而不是窄」,
+     那正是 #416 的失效方式落在 #416 没管的那个句柄上。⚠️ 顺带登记一条**不是本轮造成、本轮也不改**的旧账:
+     该节标题写「exactly **five** test files」而本轮之前集合已是 **7**(现 8)——
+     **断言读表是对的,标题是散文且已旧**;改测试名会动 manifest 键,交总监。
+   - ⭐ **闸覆盖:新测试已被自动读者覆盖,且没有往超支的推送闸里再塞一条。** 首行带 `[ratchet]`
+     ⇒ 由**开工自检的 Lua 腿**发现;`lua_gate_coverage.py` 磁盘 485(+1)、`UNCOVERED` **114 不变**。
+     ⛔ **不加 manifest 行,理由是算术**:该闸实测 **711.589s / 预算 520.0s = 137%**
+     —— `-187` 在 **123%** 时以同样理由拒绝加行,**分母从 510 涨到 520 而百分比还是涨了**。交总监(GH #804/#810)。
+   - ⛔ **不代修**:`test_tpscroll_branch_shadow_census.lua`(GH #828,非本组文件)。
+   - **下一轮主体候选**:**第 1 条** —— **Lion `X.ConsiderW`(Hex)的 unread `nManaCost`**。
+     `hero_zuus.lua` 的 `X.ConsiderE` 与它带着**逐字相同**的注册注释(「九个已登记 unread-cost 点位里
+     唯一两个,一个 per-cast 蓝储备会指向本树活着的习语方向」),本轮把 Zeus 那一个从**储备侧**接上了,
+     **Lion 那一个是这两条里没人碰过的**。⚠️ 注意本轮**故意没有消费** `X.ConsiderE` 的那个局部量
+     (走的是 helper 内 `hSpell:GetManaCost()`)⇒ `test_dead_manacost_binding_census.lua` 的登记**不动**,
+     它仍是一条欠条。**第 2 条**(只能当附带,P4.4):**GH #794 的裁读** —— 本组先例已给答案
+     (`test_wk_save_mana_lock_census.lua` §1 早就逐个点名排除无 `abilities` 的行,理由「0 与未学/就绪/免费
+     是同一个整数」)⇒ 大概率判**驱动侧**,但必须连**为什么出货 `hero_skeleton_king.lua:1693` 不该加 nil 防御**
+     一起写(加了会在 nil 不可能出现的世界里悄悄改行为,并**掩盖仪器缺口**);它卡着录像组一份已 12/12 绿的
+     fixture,**每多等一轮多一次重做风险**。⛔ **不要再去动 Axe `X.ConsiderQ` 的那个 `if`**(`-187` 禁令仍有效)。
+
 -187. ✅ **主体:`axecallnocap`(turbo-only)—— `X.ConsiderQ` 带线支路的人数帽**该不该存在**。**
    落在 `bots/BotLib/hero_axe.lua` 的新 `X.axe_IsLanePushCrowdCapOff()`(armed 恒真 / 未 armed 恒假)
    + 出货点改成**两项析取** `( X.axe_IsLanePushCrowdOpen( #hAllyList ) or X.axe_IsLanePushCrowdCapOff() )`;
@@ -8352,6 +8419,43 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-16T08:15Z(报告 `iterations/reports/hero/20260916T081500Z.md`;**backlog:新开 `-188`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`zusulte`**(turbo-only,**未 armed**,
+  P4.2 冻结期不申请入集);新 queue 请求 **hero-95**;**P4.4 自评:(i)**)
+  **主体:Zeus 的保蓝储备接了同一个蓝池五个消费点里的四个 —— 没接的那个是 `X.ConsiderE`
+  (Heavenly Jump),而它是 `X.SkillsComplement` 的最后一条臂,也就是上面四个扣住的出价掉进去的坑。**
+  - ⭐⭐ **头条:这个点位不是对开案现场的类比,是开案现场的另一半,逐字。** `zusult`(已 promote)
+    的注释写着那一局 Zeus「spent 94 on Arc Lightning **and 49 ON HEAVENLY JUMP**, both into a
+    dragon_knight sitting at 971/1072 HP」—— Arc Lightning = `X.ConsiderQ`,GH #47 起就守着;
+    **另一半就是本派发点,一次都没被接过**。§6.1 钉住:域的 3 帧里 **2 帧来自这一局**,
+    **开案句点名的那个 dragon_knight(0.79 血)就是被扣住的目标之一**。
+  - ⭐⭐ **窗口算术方向与 `zusultd` 相反,两面都写**:窗口 `[技能价, 大招价)` —— Nimbus 275 对
+    rank-1 大招 250 ⇒ **空**;Jump 50/60/70/80 ⇒ **12 个配对全非空,宽 170..450**
+    ⇒ 兄弟那条「rank-1 由算术域空」**不可搬运**。⚠️ 反面:**窗口最宽 = 每次拒绝省的蓝最少**
+    (50..80 vs 130 / 275),哪面占上风是 `hero-95` 第 (4) 格。
+  - ⭐⭐ **方法学:一个扫了 19 帧的断言,由构造不可能失败。** 初稿 §5 自称 direction tripwire,
+    实为**十九次 `0 <= 0`**(端到端两腿全 NONE);抓住它的是 **M5**(删 `not` = 杠杆反向),
+    它能从那条扫上**直接走过去**。⇒ 拆成 5.1(自己写明是空的)+ 5.2 **声明式反事实**:
+    shipped 出价 **2** / armed 翻转 **1** / 不翻转那帧**理由具名**(蓝 ≥ 大招价)= 负对照;M12 防它变空。
+  - ⛔ **端到端 0 = UNASKABLE**(`-185`):`GetActiveMode()` 落 `^Get -> 0`,而 **0 不在 BOT_MODE
+    名字空间里**(常量从 1001 起)⇒ 全语料零阳性对照。比 `-185` 便宜:不用横扫 1314 个 subject。M13 反钉。
+  - ⭐ **M9 第一版 ABORT 不是 SURVIVED,那是 GH #846 的闸在干活**:`base = '50 60 70 80'` 在 KV 快照里
+    **出现 2 次** ⇒ 裸锚会改另一个技能而台子照样记分。**「anchor not found exactly once」是产出不是故障。**
+  - ⚠️ **M5b 的 `want` 当场改掉**(先红的是 §3 的 liveness,不是 §5.2)⇒ 记下:**本台没有任何变异体是
+    §5.2 单独抓住的**;它靠「唯一非空的方向读数」立足,不靠「唯一杀死了谁」。
+  - **当轮修掉三条自造 trunk 红**:gate-nesting 普查新行(答 **(P)**;⚠️ 第二列是 **helper** 不是
+    `X.ConsiderE` —— 草稿猜了,普查说了不是)+ arity 绊线 **4 → 5**(⭐ 这个数每动一次就是又找到一个
+    从没被问过的同池消费点,**两天动了两次**;接上之后**没有第六条臂**,下次再动含义就变了)
+    + `test_zusult_pre_ladder_claim_retake.lua` 的 arming-file 集合。
+    ⭐ **第三条是推送闸自己抓的,靠的恰恰是它对未登记测试的 fail-open** ⇒ 同一个 fail-open
+    既是 GH #804 的超支来源、**也是本轮唯一发现它的路径**。
+  - ⭐ **闸覆盖两面都清**:新测试带 `[ratchet]` ⇒ **开工自检 Lua 腿覆盖**(`UNCOVERED` 114 不变);
+    ⛔ **不加 manifest 行**,manifest 实测 **711.589s / 520.0s**、闸实跑 **600.30s / 520.0s = 115%**
+    (未登记 **76 → 77**,本文件就是那个 +1;`-187` 记的是 625.6s/510.0s)⇒ 交总监 GH #804/#810。
+  - ⛔ 不代修两条:`test_tpscroll_branch_shadow_census.lua`(GH #828)、
+    `test_gated_getter_stub_control.lua`(**只在按组跑时红、单独 6/0 绿** = 跨文件 `_G` 泄漏,
+    GH #807;本轮 stash 复跑验过不是本组造成,且推送闸逐文件跑所以看不见它)。
+  - ⚠️ **预跑三条闸腿是串行做的**(GH #229/#848:共用 `soak_side.lua`,并行造假红,方向是凭空多失败)。
 - 2026-09-16T04:53Z(报告 `iterations/reports/hero/20260916T045339Z.md`;**backlog:新开 `-187`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`axecallnocap`**(turbo-only,**未 armed**,
   P4.2 冻结期不申请入集);新 queue 请求 **hero-94**;**P4.4 自评:(i)**)
