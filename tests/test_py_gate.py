@@ -357,12 +357,40 @@ try:
     # about which set it bounds, and 5f below is what keeps that set the whole
     # story.  Same shape as the 5c rounding note: the number was never wrong,
     # it was answering a different question than the one being asked of it.
-    check(row_sum < 18.0,
-          "5d: the SELECTED rows (%.2fs) do not double the Lua static half's "
-          "measured 18s cold (GH #616 acceptance). NOTE this bounds the "
-          "manifest, not the run -- the run's own bound is py_gate.py's "
-          "unmeasured_slack_seconds, and 5f is what keeps the two close"
-          % row_sum)
+    # ⚠️ 2026-09-16 (director, RULING 61): 5d USED TO READ `row_sum < 18.0`, AND
+    # THE PREMISE IT ENCODED HAD EXPIRED 6 DAYS EARLIER.  That 18.0 was GH
+    # #616's acceptance sentence -- "the Lua static half costs 18s cold, this
+    # half should not double it" -- and GH #624 added a THIRD leg to the same
+    # hook on 09-10 (`lua_gate.py`, 500-733s measured across the five streams).
+    # So the check went on policing a ratio against a reference that is now 2%
+    # of the hook, and the 12.0s budget it defended was excluding 30 ratchets
+    # that each satisfied the per-test cap -- the EXPENSIVE end of the
+    # qualifying set, because selection is cheapest-first.  The old 5d was
+    # GREEN throughout: it was never wrong, it was answering a question nobody
+    # was asking any more.  Same shape as the 5c and 5f notes above, one level
+    # up -- there a number answered the wrong question, here a PREMISE did.
+    #
+    # What replaces it is the premise's actual job, stated so it can be read:
+    # `budget_seconds` is a BACKSTOP against this leg growing unwatched, never
+    # a chooser between tests that each already satisfy the per-test cap.  It
+    # is doing that job exactly when it excludes nobody.  When it starts to
+    # bind, that is a decision someone should make on purpose -- so it reddens
+    # here instead of silently evicting the most substantial ratchets, which is
+    # how `tests/test_bots_walk_farm_only.py` came to be outside the gate it is
+    # most often red in (GH #843).
+    by_budget = sorted(k for k, v in rt.items()
+                       if not v["in_gate"] and v["reason"] == "over_cumulative_budget")
+    check(not by_budget,
+          "5d: the cumulative budget (%.1fs, rows %.2fs) is EVICTING %d test(s) "
+          "that each satisfy the %.1fs per-test cap: %s. The budget is a "
+          "backstop, not a chooser -- cheapest-first means the evicted are the "
+          "ones that do the most work. Two causes, and they need different "
+          "answers: the suite genuinely grew (re-derive the backstop in "
+          "tools/agent/py_gate_measure.py and say so), or this container "
+          "measured slow (re-measure on a quiet box before touching the knob). "
+          "⛔ Do NOT resolve this by leaving the eviction in place -- that is "
+          "the silence RULING 61 removed"
+          % (budget, row_sum, len(by_budget), cap, " ".join(by_budget)))
     check(real.get("selected_count") == sum(1 for v in rt.values() if v["in_gate"]),
           "5e: the manifest's own selected_count agrees with its rows -- a "
           "summary that drifts from the data it summarises is how a stale "

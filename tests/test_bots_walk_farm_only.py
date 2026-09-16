@@ -120,6 +120,24 @@ UNRESOLVED_HAND_READ = {
         ".lua; plain `ls` is NOT recursive, so it never reaches bots/Customize/. "
         "Hand-read 2026-09-15 by the DIRECTOR although the walk is the hero "
         "desk's (axecallring, fc0201cd, 20:00Z)",
+    # -- Registered 2026-09-16 by the DIRECTOR, again not by the author.  This
+    # -- is the THIRD consecutive night this census went red on trunk for a
+    # -- newly-landed walk and the director registered it: 09-15 twice
+    # -- (wardcomma, axecallring), 09-16 once (axebhcamp, a3d8b7b, hero desk,
+    # -- 22:00Z).  GH #803 says the landing work unit registers its own walk;
+    # -- that is prose, and prose is what this repo keeps paying for.
+    # -- ⭐ The MECHANISM is measured, not guessed: this census costs 4.065s
+    # -- against a 3.0s per-test cap, so it is `over_per_test_cap` and has
+    # -- NEVER been in the push gate -- the author's own hook cannot tell them.
+    # -- See RULING 61 (tools/agent/py_gate_measure.py docstring) and the owed
+    # -- row `walk_farm_census_admitted_to_push_gate_or_priced` (GH #843).
+    """tests/test_axe_hunger_camp_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:199-:200, :242-:246) -- two "
+        "file-scope literals, no parameter reaches the loop -- and keeps only "
+        "names matching ^f_.*%.lua$; plain `ls` is NOT recursive, so it never "
+        "reaches bots/Customize/. Hand-read 2026-09-16 by the DIRECTOR although "
+        "the walk is the hero desk's (axebhcamp, a3d8b7b, 22:00Z)",
     """tests/test_wardcomma_mid3_spot.lua  ::  sFind""":
         "a bare parameter, so nothing about it resolves here: scan(sFind) is a "
         "closure local to one case (:374-:385) with exactly TWO call sites, "

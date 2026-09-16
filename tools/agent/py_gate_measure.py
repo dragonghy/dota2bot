@@ -25,8 +25,47 @@ Two knobs, both recorded in the manifest so the gate never re-derives them:
   per_test_cap_seconds   a single test slower than this is out, whatever it is
   budget_seconds         cheapest-first, include while the running total fits
 
-The second knob is what keeps the acceptance promise in GH #616: the Lua static
-half costs 18s cold, and this half "should not double it".
+⚠️ 2026-09-16 (director, RULING 61).  THE SECOND KNOB USED TO READ 12.0, AND ITS
+STATED PREMISE HAD EXPIRED.  The premise, written here on 09-08, was GH #616's
+acceptance sentence: "the Lua static half costs 18s cold, and this half should
+not double it".  GH #624 added a THIRD leg to the same hook on 09-10
+(`lua_gate.py`, measured 500-733s across the five streams), so the knob went on
+being calibrated against an 18s reference inside a hook whose wall clock is now
+~765s and 96% one other leg.  Registered as owed `py_gate_budget_premise` on
+09-11 and unpaid for five days.
+
+What the expired knob was actually buying, in arithmetic rather than intent:
+117 of the 134 measured tests satisfied the per-test cap, totalling 46.2s, and
+the 12.0s ceiling admitted 87 of them.  So 30 individually-qualifying ratchets
+were excluded -- and because selection is cheapest-first, they were the
+EXPENSIVE END of the qualifying set (0.424s-2.879s against the admitted 87's
+mean of 0.134s).  A cumulative budget under cheapest-first does not filter out
+slow tests; the per-test cap already does that.  It filters out the tests that
+do the most work.  `tests/test_bots_walk_farm_only.py` -- this repo's
+most-reddened census -- is the canonical casualty (GH #843).
+
+⛔ And the ceiling was never a bound on the hook's real cost anyway: `py_gate.py`
+runs every selected test to completion and runs unmeasured newcomers on top,
+so `budget_seconds` appears only in banner text and in the selection here.  The
+09-15 push log reads `REAL cost 15.96s against a 12.0s budget` -- 33% over, and
+nothing refused.  The only real-time bound on this leg is the PER-TEST
+`hook_timeout_seconds` (15.0).
+
+📌 The sibling leg had already written the indictment down and nobody carried it
+back: `.githooks/pre-push`'s Lua block says, of this very number, that "a
+verbatim copy of the python half's 12s cheapest-first budget would have filled
+the gate with cheap tests, left out every test the issue was opened about, and
+still reported a healthy selected_count".  That is dated 09-10.  Same shape as
+`lua_gate_stale_manifest_refusal_port`: a reading that exists in one leg,
+three lines away, and never reaches the other.
+
+⇒ The knob is re-derived as what it can actually be -- a BACKSTOP against this
+leg growing without anyone looking, NOT a chooser between ratchets that each
+already satisfy the cap.  The rule, stated before the measurement that fills it
+in: **twice the current measured sub-cap total, rounded up to the next 10s.**
+When it binds again, that is a decision someone should make on purpose, so
+`tests/test_py_gate.py:5h` turns it into a red instead of a silent eviction.
+⛔ The per-test cap is untouched: it, not this, is what keeps a slow test out.
 
 Usage:
     python3 tools/agent/py_gate_measure.py            # measure, write manifest
@@ -45,7 +84,16 @@ MANIFEST = os.path.join(ROOT, "tools", "agent", "py_gate_manifest.json")
 # A test slower than this never enters the hook, even if the budget has room.
 PER_TEST_CAP_SECONDS = 3.0
 # Cheapest-first cumulative ceiling for everything the hook runs.
-BUDGET_SECONDS = 12.0
+# ⚠️ A BACKSTOP, not a chooser -- see the docstring (RULING 61).  Derived by the
+# rule stated there: 2x the measured sub-cap total, rounded up to the next 10s.
+# The 09-14 manifest's sub-cap total was 46.2s over 117 tests (reference
+# seconds); the 2026-09-16 pass measured 44.246s over 124 -- i.e. SEVEN more
+# tests for 2s LESS, so the "~1.10x slow container" figure RULING 60 took off
+# four Lua tests does not describe this leg, and the prediction it fed (~55s)
+# was wrong in the safe direction.  2 x 44.246 = 88.5 -> 90.
+# ⛔ Do not lower it back to "whatever today's total happens to be": a backstop
+# that binds at the current value is a chooser again.
+BUDGET_SECONDS = 90.0
 # Hard stop while measuring: a leg like test_selfcheck_lua_leg.py budgets 120s
 # (GH #358) and we do not need its exact number to know it is out.
 MEASURE_TIMEOUT_SECONDS = 20.0

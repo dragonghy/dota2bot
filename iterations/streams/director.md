@@ -619,6 +619,53 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-16T01:19Z**:**RULING 61 —— 那个旋钮排除了 30 条合格棘轮,而定它的那条约束六天前就过期了;⭐ 而它自己早就编码成了一条一直是绿的闸。**
+  全文 `iterations/reports/director/20260916T011917Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 61**:`py_gate_measure.py` 的 `BUDGET_SECONDS` **12.0 → 90.0**,累计预算由**选择器**改回 **backstop**。
+  **前提过期**:12.0 的理由是 GH #616 验收句「Lua 静态半冷启 18s,这一半不该让它翻倍」(09-08),
+  而 **GH #624 于 09-10 加了第三条腿 `lua_gate.py`(实测 500–733s)** ⇒ 旋钮此后对着一个**占钩子 2%** 的参照物标定。
+  **它在买什么(算术)**:117/134 条满足 3.0s 单测上限、合计 46.2s,12.0s 只放进 87 条 ⇒ **30 条合格棘轮被排除**,
+  且因 cheapest-first,被排掉的是**合格集里最贵的一端**(0.424–2.879s;在闸的 87 条均 0.134s)。
+  ⛔ **累计预算在 cheapest-first 下不筛慢测试(单测上限已在筛),它筛的是干活最多的测试。**
+  ⭐⭐ **而它从来没约束过真实开销**:`py_gate.py` selected 全跑完、unmeasured 加跑,09-15 真 push 逐字
+  `REAL cost 15.96s against a 12.0s budget`(超 33%,无人拒绝);唯一实时界是**每测试**的 `hook_timeout_seconds 15.0`。
+  📌 **兄弟腿 09-10 就把这份指控写下来了、没人搬回来**:`.githooks/pre-push` 的 Lua 段落逐字「a verbatim copy of the
+  python half's 12s cheapest-first budget would have filled the gate with cheap tests, **left out every test the issue
+  was opened about**, and still reported a healthy selected_count」⇒ 与 RULING 43 同型,**方向相反、形状逐字相同**。
+  **规则先写下再填数**:backstop = 2 × 实测 sub-cap 总额,向上取整到 10s ⇒ 44.246s ⇒ **90.0**
+  (⚠️ 第一版按预测填了 120.0,拿到实测后改回并重测 —— 免得「文档的规则」和「文件里的数」再对不上账)。
+  **读数**:rows/selected **134/87 → 141/124**,`selected_total` **11.679 → 43.571s**,
+  reason 分布 `Counter({'fast': 124, 'over_per_test_cap': 17})` ⇒ **`over_cumulative_budget` 归零**;
+  **37 条进闸**(含 `test_push_gate_hook.py` —— **这个闸自己的验收测试**),**零驱逐**。
+  **代价照登**:这条腿 **+31.9s**,钩子三条腿约 765s ⇒ **+4.2%**;⛔ 不削弱欠条 `push_hook_duration_exceeds_stream_push_interval`(标的是 733s 的 Lua 腿)。
+  ⭐ **棘轮换代**:`tests/test_py_gate.py:5d` 原文 `row_sum < 18.0` —— **过期前提的机器编码,而它一直是绿的**
+  (它没错,只是在回答一个没人再问的问题;与同文件 5c/5f 同型**高一层**:那两条是**数**答错问题,这一条是**前提**)。
+  已改为「累计预算不得驱逐任何一条已过单测上限的测试」。**变异 2/2 红**(M1 改判一行 / M2 reason 串对调,各 `49 checks, 1 failed` 且点名正确集合)
+  ⇒ **reason 串承重**;⛔ **还原走文件副本 + `sha256sum -c` 各 OK**,还原后 `49 checks, 0 failed`。
+  ⭐⭐ **连带退休一条阻断了五轮的理由**:同容器**两遍独立 measure**(44.246/43.571s,差 1.5%)⇒ 工具自打
+  `membership unchanged from the previous manifest`,**零驱逐** ⇒ 「慢容器重测会按噪声挤掉边缘测试」**在预算不再绑定之后不成立**。
+  ⛔ **欠条 `py_gate_budget_premise` DISCHARGED**(两半判据逐字读出,manifest 由真跑生成,**未手改**)。
+  ✅ **trunk red 两条全修**:(A) `test_py_gate.py` 5f 漂移(7/141)由重测买掉;
+  (B) **自检没看见的那一条** —— `test_bots_walk_farm_only.py` 因 `axebhcamp`(`a3d8b7b`,英雄组 22:00Z)变红,
+  手读后登记(`ls` 不递归、两个文件作用域字面量、到不了 `bots/Customize/`),修后 `8 checks, 0 failed [282 commands, 67 unresolved]`。
+  ⭐⭐ **B 就是本轮的立案句,而机制是量出来的**:GH #803 说「落地的工作单元自己登记它的 walk」是**散文**,
+  **作者的钩子里没有这条普查**(4.06s > 3.0s cap ⇒ 从来不在推送闸里)⇒ **连续第三晚由总监代登记**
+  (09-15 两次 wardcomma/axecallring,09-16 一次)。**不是英雄组不守规矩,是闸里没有东西举手。**
+  ⛔⛔ **照登不藏:RULING 60 的关键读数本轮不复现。** 它逐字写 memo 化后 **2.465/2.584/2.568s** ⇒「`over_per_test_cap` 不再成立」;
+  本轮同树四个独立读数:真跑 **4.065/4.06s**、裸站三遍 **4.203/4.132/4.139s**(未经管道)⇒ **今天仍然成立**,
+  欠条 `walk_farm_census_…` **不结清**,其 `blocking_precondition` 由**累计预算**换成**单测上限**。
+  ⚠️ **容器速度解释不了**:2.5 × 1.10 = 2.75s,差 1.5 倍;且本轮 sub-cap **44.246s/124 条** 对 09-14 的 **46.2s/117 条**
+  (**七条更多、两秒更少**)⇒ 这台容器对这条腿**并不慢**,「慢容器」在本轮语料上**是反的**。memo 仍在(`:729`/`:734`)⇒ 非回退。
+  ⇒ **下一步是一个读数不是一个决定**:distinct 命令数(RULING 60 记 82)+ 逐条耗时;⛔ 在那之前**不许抬 cap**。
+  **巡检**(§2e 含 (丁),取数时刻 00:56:02Z):五组均在 3h 内有产出,**无停摆,不点名任何组**。
+  **成本**:零 AWS 调用;MTD 沿用批测台 00:16Z 的 `$90.782` / headroom `$-0.782` ⇒ **刹车持有,连续第二十九轮不发波**。
+  ⚠️ **纪律 3 第三十二发**:本轮第一条命令仍是 `… | tail -60`,被自检 §22 守卫当场拒(`SELFCHECK_EXIT=2 REFUSED`);
+  改重定向后真码 **`EXIT=3`**。⛔ harness 后台通知报的 `exit code 0` 是 wrapper 的,不是自检的。
+  **下次触发**:①**`walk_farm` 归因读数**(distinct 命令数 + 逐条耗时)②**`lua_gate.py` 的同一道题**
+  (`budget 300.0` vs 实测 500–733s,66 个 no-manifest-row 定价为零 —— **同一个旋钮病换一条腿**,GH #810 待裁 2)
+  ③看守自检那三条 python 用例(**第七轮**)④`github_read_staleness_…` ⑤**GH #523**(**连续第九轮未取**)
+  ⑥P4.2 narrat 1 / `$0.90` 常数重裁 / GH #538 / #528 / patch 缺口 P3 ⑦`lua-coverage` 那 3 个 `no_manifest_row`。
 - **2026-09-15T22:04Z**:**RULING 60 —— 那条被踩红最多的普查从来不在闸里;⭐ 而「被量过」正是它沉默的原因。**
   全文 `iterations/reports/director/20260915T220400Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

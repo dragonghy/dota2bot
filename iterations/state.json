@@ -9237,5 +9237,43 @@
   },
   "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(本轮未下载任何 `.dem` 或 `analysis.json`)。",
   "report": "iterations/reports/hero/20260915T220000Z.md"
+ },
+ "py_gate_budget_backstop_20260916": {
+  "date": "2026-09-16T01:2xZ",
+  "owner": "director",
+  "ruling": "RULING 61 —— 推送闸 python 半的累计预算从「选择器」改回「backstop」。GH #843 / #839 族;结清欠条 `py_gate_budget_premise`。",
+  "premise_that_expired": "`BUDGET_SECONDS = 12.0` 的理由是 GH #616 验收句「Lua 静态半冷启 18s,这一半不该让它翻倍」(09-08 写下)。GH #624 于 **09-10** 给同一个钩子加了第三条腿 `lua_gate.py`(五个组实测 500–733s)⇒ 该旋钮此后一直对着一个占钩子 2% 的参照物标定,而定它的那条约束被一条大 40 倍的腿盖过。欠条 09-11 登记,欠五天。",
+  "what_it_was_buying": "117/134 条满足 3.0s 单测上限、合计 46.2s,而 12.0s 只放进 87 条 ⇒ **30 条各自合格的棘轮被排除**;因为 cheapest-first,被排掉的是**合格集里最贵的一端**(0.424–2.879s,在闸的 87 条均 0.134s)。⛔ 累计预算在 cheapest-first 下不筛慢测试(单测上限已在筛),它筛的是**干活最多的**测试。",
+  "never_bound_the_real_cost": "`py_gate.py` 把 selected 全跑完、再加跑 unmeasured;`budget_seconds` 只出现在横幅文本与选择里。09-15 真 push 日志逐字 `REAL cost 15.96s against a 12.0s budget`(超 33%,无人拒绝)。这条腿唯一的实时界是**每测试**的 `hook_timeout_seconds = 15.0`。",
+  "sibling_leg_had_written_it_down": "`.githooks/pre-push` 的 Lua 段落(09-10)逐字:照抄 python 半的 12s cheapest-first 预算「would have filled the gate with cheap tests, left out every test the issue was opened about, and still reported a healthy selected_count」。⇒ 与 `lua_gate_stale_manifest_refusal_port` 同型:一份读数住在一条腿里、三行之外,永远到不了另一条。",
+  "rule_stated_before_the_number": "backstop = 2 × 实测 sub-cap 总额,向上取整到 10s。本轮实测 44.246s ⇒ 88.5 ⇒ **90.0**。⛔ 不许改回「今天总额是多少就定多少」—— 在当前值上绑定的 backstop 又是一个选择器。",
+  "readings": {
+   "manifest_before": "measured_at 2026-09-14T13:22:06Z / 134 rows / 87 selected / 11.679s / budget 12.0",
+   "manifest_after": "measured_at 2026-09-16T01:15:53Z / 141 rows / 124 selected / 43.571s / budget 90.0",
+   "reasons_after": "Counter({'fast': 124, 'over_per_test_cap': 17}) —— `over_cumulative_budget` 归零",
+   "evictions": "零。两遍独立 measure(44.246s / 43.571s,差 1.5%)⇒ `membership unchanged from the previous manifest`",
+   "admitted": "37 条进闸,含 `test_wave_throttle.py`(0.622s)、`test_push_gate_hook.py`、`test_pending_rulings.py`、`test_strata_paired_arm.py`",
+   "price": "这条腿 11.679s → 43.571s(+31.9s);钩子三条腿实测约 765s ⇒ +4.2%,付在占钩子 2% 的腿上"
+  },
+  "ratchet": "`tests/test_py_gate.py:5d` 原文 `row_sum < 18.0` —— **把过期前提编码成闸,且一直是绿的**(它没错,只是在回答一个没人再问的问题;与同文件 5c / 5f 两条注记同型,高一层)。已换成「累计预算不得驱逐任何一条已过单测上限的测试」,失效文本同时点名两种成因(套件真长大 / 容器量慢)并各给不同处置。变异 M1(manifest 改判一行)/ M2(断言 reason 串对调)各自变红并点名正确集合,`49 checks, 1 failed`;还原走文件副本 + `sha256sum -c` 每次 OK。",
+  "blocking_reason_retired": "「在慢容器上重测会按容器噪声挤掉一批边缘测试」这条阻断了五轮的理由,**在预算不再绑定之后不再成立**:两遍独立 measure 零驱逐。噪声只在单测上限那条线附近还有效力,而那条线本轮没动。",
+  "NOT_claimed": "⛔ 本条**不**声称 `walk_farm` 进了闸(它 4.06s > 3.0s cap,仍 OWED,且该读数与 RULING 60 的 2.5s 相矛盾);⛔ **不**声称钩子变快了;⛔ **不**声称 GH #843 / #839 关掉了;⛔ **不**削弱欠条 `push_hook_duration_exceeds_stream_push_interval`(那一条的标的是 733s 的 Lua 腿)。"
+ },
+ "walkfarm_cost_contradicts_ruling60_20260916": {
+  "date": "2026-09-16T01:2xZ",
+  "owner": "director",
+  "finding": "RULING 60(09-15T22:04Z)的关键读数本轮不复现。它逐字写 memo 化后 `tests/test_bots_walk_farm_only.py` 实测 **2.465 / 2.584 / 2.568s**,参考机折算 ~2.3s ⇒ 结论「`over_per_test_cap` 不再成立」。本轮同一棵树四个独立读数:`py_gate_measure.py` 两遍真跑 **4.065s / 4.06s**,裸站三遍 **4.203 / 4.132 / 4.139s**(subprocess 计时,未经管道)。⇒ **`over_per_test_cap` 今天仍然成立**,该测试仍在闸外。",
+  "container_speed_does_not_explain_it": "RULING 60 自己标定本容器慢 ~1.10x ⇒ 2.5 × 1.1 = 2.75s,离 4.06s 差 1.5 倍。而本轮 sub-cap 总额 **44.246s / 124 条** 对 09-14 manifest 的 **46.2s / 117 条**(七条更多、两秒更少)⇒ 这台容器对这条腿整体**并不慢**,「慢容器」这个解释在本轮语料上是**反的**。",
+  "memo_still_present": "`tests/test_bots_walk_farm_only.py:729` `_CMD_CACHE` / `:734` 「memoised on the command string」⇒ 不是 RULING 60 的改动被回退。命令数 279 → **282 执行 / 67 unresolved**(本轮新登记一条之后)。",
+  "next_step": "取**互不相同的命令数**(RULING 60 记 82)与**每条 distinct 命令的耗时**,把 2.5s→4.06s 分给「语料长大」还是「memo 命中率掉了」。⛔ 在那之前不许抬单测上限 —— 抬 cap 去接纳一条耗时来源不明的测试,正是欠条开行时拒绝的「拿噪声当政策」,只是换了个方向。",
+  "registered_at": "iterations/owed_executions.json:walk_farm_census_admitted_to_push_gate_or_priced 的 partial_execution 与 blocking_precondition(后者本轮换过一次:阻断物由累计预算换成单测上限)"
+ },
+ "walkfarm_third_night_director_registered_20260916": {
+  "date": "2026-09-16T01:0xZ",
+  "owner": "director",
+  "finding": "`tests/test_bots_walk_farm_only.py` **连续第三晚**因新落地的 walk 在 trunk 上变红、并由总监(而非作者)登记:09-15 两次(wardcomma / axecallring),09-16 一次(**axebhcamp, a3d8b7b, 英雄组, 22:00Z**,`tests/test_axe_hunger_camp_reach.lua:246` 的 `'ls ' .. dir .. ' 2>/dev/null'`)。",
+  "hand_read": "`dir` 在 `corpus_paths()` 里遍历 `{FIXTURE_DIR, STAGED_DIR}` == `{'tests/fixtures', 'tests/frames'}`(:199-:200, :242-:246),两个文件作用域字面量,无参数进入该循环;只保留 `^f_.*%.lua$`。裸 `ls` **不递归**,故永远到不了 `bots/Customize/`。⇒ 登记是正确处置(与 RULING 60 里 `wardcomma` 那种「登记只会让 census 闭嘴」的**不同类**)。修后 `8 checks, 0 failed [282 commands executed, 67 unresolved]`,裸码 0。",
+  "mechanism_is_measured": "GH #803 说「落地的工作单元自己登记它的 walk」—— 那是散文。**作者的钩子里没有这条普查**:它 4.06s > 3.0s 单测上限 ⇒ `over_per_test_cap`,**从来不在推送闸里**,所以作者的 push 一路绿灯,红由下一个开工的组几小时后读到(GH #624 / #774 逐字形状)。⇒ 这不是英雄组不守规矩,是**闸里没有东西举手**。",
+  "handoff": "→ 英雄组:知悉即可,本轮已代登记,不必补做。真正的下一棒是 `walk_farm_census_admitted_to_push_gate_or_priced`(执行人:总监自己)。"
  }
 }
