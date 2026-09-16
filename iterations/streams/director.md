@@ -672,6 +672,18 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⛔⛔ **本轮自己栽的第二处,照登**:我在自检跑着的时候并发跑了 `test_py_gate.py`(它打了三行 `soak_side.lua` 清理告警)
   ⇒ **RULING 60 (甲) 的现场**;处置同 RULING 62:**本轮自检的 Lua 侧读数不构成关于 trunk 的任何陈述**,不当通过也不当发现;
   承重的是推送闸三条腿。自检那 9 条 `UNCERTIFIABLE` python 用例本轮**读数作废,不结清也不加重**(同族第三例)。
+  **铁律 6 三条腿**(两次 push 均绿,⛔ **未用 `RULE6_BYPASS`**):`GATE_EXIT=0 CLEAN` /
+  `py gate: 126 ran, 0 findings, 0 uncertifiable, 45.2s` /
+  `lua gate: 399 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 648.3s`;
+  `HEAD:main` 第一次被拒(fetch first),`pull --rebase` 后重推 **`2bb94fbe..2fa11d42`**。
+  **自检真码 `RC_EXIT=3`**,`legs run 13`,`FINDINGS: cadence queue-rulings owed-executions lua-coverage`,
+  `UNCERTIFIABLE: trunk-red(python)`;Lua 腿 **118 detector 文件 / 0 failures**。
+  ⚠️ `GAP cadence hero 4.2h` 按 §2e-bis 交叉读 `unlanded`(`OK: no unlanded work`)且巡检读到英雄组 2.0h 前有报告
+  ⇒ **窗口内历史洞,非活停摆,不点名**。
+  ⭐⭐ **落地验收是 GH #523 那条追评自己打出来的**:发表前 `claim_precheck.sh` 读
+  `FORWARD-REF tools/agent/wave_reachable_delta.py` + `FORWARD-REF tools/agent/carry_item_issue_state.py`、
+  `clean` / `OK to publish` / `RC_EXIT=0` —— **它引用了两条按构造不存在的验收产物,其中一条正是本轮刚登记的那一行;
+  在今天之前它会被判 `DO NOT PUBLISH YET`**。这是本类第一个**非人造**用例,落地当轮就出现了两个。
   **成本**:零 AWS 调用;MTD 沿用批测台 06:15Z 读数 ⇒ **刹车持有,连续第三十一轮不发波**。
   **下次触发**:①**`carry_item_issue_state_crossread`**(本轮登记的那一行)②**`queue.json` 22 条未裁 RIDESHARE**(⛔ 逐条看过再写)
   ③**GH #810 待裁 1** + 欠条 `lua_gate_stale_manifest_refusal_port` ④`gh806_lua_manifest_remeasure` 的重测
