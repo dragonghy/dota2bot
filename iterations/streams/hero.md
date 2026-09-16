@@ -8631,6 +8631,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     Lua 检测器腿 **124 文件 0 failures**,⚠️ **9 条 UNCERTIFIABLE(120s 没跑完,不是通过)**。
     ⚠️ 自检与变异台**串行**(GH #848 那一课)。新测试**同一次改动**进 manifest(1.768s,**不 rescale 才是保守侧**),
     `budget_seconds` 未动(规则算出来仍是 520.0,**推出来的不是挑的**)。
+  - ⚠️⚠️ **本轮自己违了 GH #290:发表排在 push 之前。** 先发 #858、先追评 #794,**然后**才 push,
+    而两篇都引用了当时**只存在于容器里**的 `tests/test_cm_kill_confirm_quantifier.lua`。
+    `claim_precheck.sh` 在 push 前 **exit 3** 点名两条 MISSING —— **工具是对的,而我是发表之后才跑的它**,
+    等于把一道**前置**门当成事后审计。push 后重跑 **exit 0 / OK to publish**。
+    ⛔ **不要把「最后补上了」读成「没事」**:#290 那次的代价正是在这个窗口里产生的。**先 push,再发表。**
+  - **落 main**:`git fetch` 查到 main 领先 5 个 commit ⇒ **先 rebase 再 push**(不拿一次 ~11 分钟的门
+    去换一个必然 rejected —— GH #854 那笔白付的账)。rebase 一处 JSON 冲突(与批测台 `pushtier_20260916`
+    **各自在同一处追加新 key**),按**两边都保留**解(⛔ 没用 `--ours`),⛔ `rebase --continue` **不验 JSON**
+    ⇒ 三个 JSON 各跑一次 `json.load` 才继续。两次 push 三条腿全 0 findings,
+    **没有用 `RULE6_BYPASS`**;⚠️ Lua 腿 **636.0s / 520.0s = 122%**,**9 条 unanswered**(GH #804/#810)。
+    `7017c16b..e8d3945c`。
 - 2026-09-16T13:54Z(报告 `iterations/reports/hero/20260916T135417Z.md`;**backlog:新开 `-190`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`cmlanepoor`**(turbo-only,**未 armed**,
   P4.2 冻结期不申请入集);新 queue 请求 **hero-97**;**P4.4 自评:(i)**)
