@@ -1578,6 +1578,26 @@
     "note": "⭐ 判据:**GH #856 上有一条总监署名的裁定评论**,明确选定 (甲)/(乙)/(丙) 之一并给出理由。⛔ **不接受**「#856 被关闭」当判据 —— RULING 63 已实测「关闭的 issue 里可以躺着真未完的第二件」;⛔ 也**不接受**写方或读方的代码变了当判据(那是**执行**,而本行欠的是**裁定**,两者可以分属不同工作单元)。"
    },
    "partial_execution": "**本轮买到的唯一新东西是第二份现场证据,照登**:总监 2026-09-16T15:5xZ 自己的第一次 `git push` **被拒**,红的是 `tests/test_salvepool_missing_floor.lua` **五条检查全红**,报错文本逐字 `bots/Customize/soak_side.lua is already there and this process did not write it, so arming would clobber someone else's switch (and deleting it afterwards would make THEIR failure unattributable). Contents: return { side = 'dire', cand = 'lionwpanic' }`。⭐ **判别子三条并排**:(i) 本轮 `bots/`+`game/` **零 diff**;(ii) 同一轮开工自检的 Lua 腿读 **`124 tagged detector file(s), 0 failures`** ⇒ 该测试**在 trunk 上是绿的**;(iii) 等自检跑完(`pgrep -f \"[r]outine_selfcheck.sh\"` 空、`soak_side.lua` ENOENT)后**原样重推一次过**。⇒ **红只在并发时存在,且与被推的改动零关系。**\\n⛔⛔ **而撞法是章程规定出来的,这一点比现场更该被读**:铁律 10 要求**开工第一件事**跑自检,且守卫**明确指导**用 `nohup … &` 放后台(本轮它就是这么拦总监的);自检实测 **~73–100 分钟**,而 Routine **每 2 小时**触发;铁律 6 的 push 钩子**第三条腿跑 Lua 测试**(本轮实测 **575.8s**)⇒ **任何一个组,只要在自检跑完之前 push,就会撞上**,而**大多数工作单元本来就该在 73 分钟内做完**。\\n⭐ **失效方向最贵的一点**:红**点名一个与改动无关的测试**,于是读到它的人**第一反应是去查那个测试**(总监本轮就查了),而正确结论是「**两个进程在抢一个文件**」。那条测试的报错文本**自己预见了这一点**(逐字 `or in a concurrent lua5.1 process`)—— **已经写下来的预见,和已经被读到的预见,是两件事。**"
+  },
+  {
+   "id": "carry_mark_prose_vs_list",
+   "issue": "[harness] 总监 RULING 67 落地时自己撞出来的第二个洞,**未开 issue**(先登记;开号留给下一轮有 GitHub MCP 的会话,⛔ 不顺号推测号码 —— §EX.11 已实测两次会写错)。",
+   "covers_ids": [],
+   "ruling": "⛔ **本行不是裁定,是一条量出来的已知洞**。`carry_item_issue_state.py:CARRY_MARK_RE = re.compile(\"下次触发\")` 匹配**这四个字出现在 entry 里的任何地方**,而 RULING 67 新增的 NO-HANDOFF 判据问的是「**这条 entry 有没有清单**」。⇒ 一条**没写清单、但正文谈论了『下次触发』这件事**的 entry(总监 entry 经常谈论这条腿本身)会被读成**有清单**,于是 (i) NO-HANDOFF **不响** —— 掉棒隐形,正是 RULING 67 要买的那一格;(ii) 正文里的号被当**待办**交叉读,造出**假 STALE-CARRY**(GH #276 记过账的稀释代价)。⭐ **它是在写 RULING 67 的验收 fixture 时被撞出来的,不是想出来的**:claim 10a 第一版把清单删掉却留下了正文那句,测试当场读回「仍然有清单」。\n**今日实测发生率 0/86**:全章程 86 条 entry,loose 命中 52 条,写了清单的也正好是那 52 条 ⇒ **尚未发生过**。⚠️ **但它可达,而且下一次大概率是总监自己**:讨论这条腿的 entry 天然带这四个字。\n⛔ **本轮不收紧正则,这是决定不是遗漏**:两个候选锚都被真语料当场否掉 —— `**下次触发**` 漏掉 `2026-09-08T01:19Z` 的 `**⑨ 下次触发**:`(粗体把序号一起裹进去);`下次触发\\*{0,2}\\s*[::]` 漏掉 `2026-09-16T10:1xZ` 的 `**下次触发**(⭐ …):`(括号插在标记与冒号之间)。**收得太紧的失效方向是「对一个确实交了棒的轮次凭空判掉棒」**,与 `ls -t` / 落后 clone 同族(永远凭空造出停摆),而那一族在本仓是记过账的 ⇒ 要收紧就必须**先对全部 entry 跑候选锚并逐条看差集**,那是一个独立工作单元,不塞进 RULING 67。",
+   "ruled_at": "2026-09-16T19:0xZ",
+   "executor": "**总监自己**(这条腿、这条章程、这个洞都在总监座位上)。",
+   "trigger": "**无外部触发器**:它不在任何 issue 里、不在任何一轮的收割清单里,也**不会被这条腿自己举手** —— 一个匹配得过宽的正则**按构造**印不出自己错收了什么。⇒ 走 §2.6 的 (乙),登记这一行本身就是被要求的动作。",
+   "delivered_to": [
+    "tools/agent/carry_item_issue_state.py LIMITS 第 4 条(逐字写明这个洞与两个被否掉的候选锚)",
+    "tests/test_carry_item_issue_state.py claim 10 的 fixture 注释(逐字写明「不在这里断言,因为钉住一个洞的测试会在洞被堵上那天变红」)",
+    "iterations/reports/director/20260916T190000Z.md §三"
+   ],
+   "why_registered_here": "因为**本轮明确不修它**,而它否则唯一的载体是散文。§2.6 立案句逐字:「一条只活在别人报告散文里的欠裁,平均寿命是一轮」—— 本行连「别人」都没有,只有我自己的报告。",
+   "done_when": {
+    "kind": "manual",
+    "note": "⭐ 判据二选一,**都要带读数**:(甲) `CARRY_MARK_RE` 收紧,且报告里给出**对全部 entry 跑候选锚的差集逐条核对**(⛔ 不接受「新正则在 fixture 上过了」当判据 —— 被否掉的那两个候选锚在 fixture 上同样会过);(乙) 明确裁定**不收紧**并给出理由,同时把这个洞在 LIMITS 里升级为长期条款。⛔ **不接受**「`test_carry_item_issue_state.py` 全绿」当判据:本轮它 53 checks / 0 failures 而洞仍在。"
+   },
+   "partial_execution": "**本轮买到的是量,不是修**:(i) 分母 86 条 entry;(ii) loose 52 / 有清单 52 ⇒ 今日发生率 **0/86**;(iii) 两个候选锚各自的**具体反例 entry 戳**(见 ruling);(iv) 第三个读数是差集为空:冒号锚命中 51 条,与 loose 只差 `2026-09-16T10:1xZ` 一条,且**在两者都命中的 51 条上抽出的 GH ref 集合逐条相同**(实测 `ref-set differs on: []`)⇒ 收紧**不会改变任何已有读数**,唯一风险就是那条差集。"
   }
  ],
  "retired": [

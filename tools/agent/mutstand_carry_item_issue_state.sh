@@ -127,8 +127,15 @@ mutate "M4 the whole entry is scanned, not just the carry segment" \
 # list names no issue at all prints a clean exit 0 -- indistinguishable from
 # "every carried ref is open", which is the failure this repo has already had
 # six times (#29 #31 #34 #37 #95 #103).
+# ⚠ The anchor carries the `and handoff_gap is None` tail on purpose.  RULING 67
+# added a SECOND `if total == 0:` (the 8-space disclosure branch inside the
+# findings block), and `perl -0p s///` replaces the FIRST match in the slurped
+# file -- so the short anchor silently started mutating the other line, which no
+# claim asserts, and M5 printed SURVIVED while the guard it names was untouched.
+# A mutant that lands somewhere else is not a weak assertion; it is a stand
+# reading the wrong line (evidence-discipline rule 2, caught on this stand).
 mutate "M5 zero extracted refs exits 0 instead of 2" \
-    's/    if total == 0:/    if False:/'
+    's/    if total == 0 and handoff_gap is None:/    if False:/'
 
 # M6 (NO EXIT CODE MOVES) -- the finding stops denying that a closed issue means
 # finished work.  Every rc in the suite is unchanged; what is lost is the one
@@ -165,6 +172,35 @@ mutate "M9 entries with fuzzy minute digits are skipped" \
 # whole body into scope, and every archival ref in it becomes a finding.
 mutate "M10 the carry segment starts at the first mention, not the last" \
     's/    return entry_text\[hits\[-1\]\.start\(\):\]/    return entry_text[hits[0].start():]/'
+
+# --- RULING 67 (2026-09-16T19:0xZ): NO-HANDOFF + fallback -------------------
+# M11 (MISS) -- the dropped baton is demoted back to UNCERTIFIABLE.  Nothing
+# else changes: the same three true lines print, and they add up to "nothing to
+# check here" while the previous round's list is unguarded.  This is the mutant
+# that reproduces the incident itself.
+mutate "M11 a missing carry list exits 2 (UNCERTIFIABLE) instead of 3" \
+    's/    if findings or handoff_gap is not None:/    if findings:/'
+
+# M12 (MISS) -- the fallback never fires, so the live baton is never read.  The
+# NO-HANDOFF line goes with it; the leg simply has nothing to say on exactly the
+# round where the list stopped being copied forward.
+mutate "M12 no fallback to the last entry that carries a list" \
+    's/    if carry_segment\(entries\[0\]\[1\]\) is None and not any\(/    if False and not any(/'
+
+# M13 (ACCUSE) -- the fallback fires even when the newest entry DOES carry a
+# list.  Claim 6 dies: a superseded list comes back into scope and its long-dead
+# names are reported as live carried work.  The premise of the fallback is that
+# nothing superseded the old list; drop the premise and it is just firing at
+# history.
+mutate "M13 the fallback fires even when the newest entry has a list" \
+    's/    if carry_segment\(entries\[0\]\[1\]\) is None and not any\(/    if True or not any(/'
+
+# M14 (NO EXIT CODE MOVES) -- the fallback distance loses its age when the stamp
+# is fuzzy (`T10:1xZ`, which this charter writes about half the time).  Every rc
+# is unchanged; what is lost is the difference between "fell back one entry" and
+# "fell back thirty hours", printed identically.  Same shape as M6.
+mutate "M14 an uncomputable fallback age prints as nothing" \
+    's/age = ", age not computable \(fuzzy stamp\)"/age = ""/'
 
 restore
 if git diff --quiet -- "$SRC"; then

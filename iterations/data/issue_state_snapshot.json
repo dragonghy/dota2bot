@@ -2,8 +2,8 @@
   "_doc": "issue-state 快照,给 tools/agent/carry_item_issue_state.py 当语料。⛔ 它不是 GitHub 的镜像,也不打算是:里面只有『下次触发』清单点过名的那些号。语料里没有的号,那条腿读作 UNCERTIFIABLE,永不读作 open(RULING 55)。",
   "_refresh": "有 GitHub MCP 的那一轮刷新:对清单里每个号 issue_read(method=get) 点查,把 state / closed_at 原样抄进来,并把 fetched_at 写成本轮 UTC。⭐ 点查优先于 list_issues:RULING 55 实测 list/get_comments 可滞后到 8.8min,而点查不会。",
   "_direction": "滞后的方向是安全的:刚关的号还读作 open ⇒ 那条腿这一轮少说一句话;刚开的号不在语料里 ⇒ UNCERTIFIABLE。⛔ 唯一危险方向(重开的号被说成 closed)由 --max-age-hours 挡住。",
-  "fetched_at": "2026-09-16T10:02:00Z",
-  "source": "mcp__github__issue_read(method=get) dragonghy/dota2bot, 逐号点查",
+  "fetched_at": "2026-09-16T19:14:00Z",
+  "source": "mcp__github__issue_read(method=get) dragonghy/dota2bot, 逐号点查(2026-09-16T19:1x–19:2xZ 本轮重读 810/240/528/466/843/839;523/538 的 closed 行按 _direction 保留 —— ⚠️ 它们是上一轮 10:02Z 的点查读数,本轮未重读:一个已 closed 的号只可能「重开」,而重开的方向由本文件的 fetched_at + --max-age-hours 挡,不由这两行挡)",
   "issues": {
     "523": {
       "state": "closed",
@@ -21,9 +21,9 @@
       "title": "[harness] 语料规模检测器只认得「等于 fixture 数」那一个量(#538 残余之二,归总监)"
     },
     "466": {
-      "state": "open",
-      "closed_at": null,
-      "title": "[bug] GH #106 检测器的误报率是语料规模的函数(#538 残余之一,等总监拍板豁免表形状)"
+      "state": "closed",
+      "closed_at": "2026-09-16T13:44:22Z",
+      "title": "[bug] GH #106 检测器的误报率是语料规模的函数(RULING 65 拍板可关,已 closed/completed)"
     },
     "538": {
       "state": "closed",
@@ -34,6 +34,16 @@
       "state": "open",
       "closed_at": null,
       "title": "[harness] Lua 推送闸的成员资格由「哪台容器最后跑过 measure」决定"
+    },
+    "843": {
+      "state": "open",
+      "closed_at": null,
+      "title": "[bug] main 的 python 闸红了,而抓它的那条测试按设计跑不进 push 钩子(over_per_test_cap)"
+    },
+    "839": {
+      "state": "open",
+      "closed_at": null,
+      "title": "[harness] py_gate manifest 又漂了:7/141 个测试无行,新落的棘轮默认不进闸"
     }
   }
 }

@@ -47,6 +47,26 @@ THE LOAD-BEARING CLAIMS
      remaining work as a machine-read owed row) and explicitly denies that a
      closed issue means the work is finished.  Without this the leg would
      teach exactly the mistake #523 is made of;
+ 10. (RULING 67, 2026-09-16T19:0xZ) a newest entry that ends with **no**
+     『下次触发』list is a FINDING (exit 3), not UNCERTIFIABLE, and the leg
+     falls back to the last entry that does carry one.
+
+     The incident: entry `2026-09-16T15:55Z` (RULING 66) ended without a list.
+     The next round ran this leg and read back three true lines that add up to
+     "nothing to check here" — `no『下次触发』segment` / `0 carry segment(s),
+     0 GH ref(s)` / `UNCERTIFIABLE ... (anti-empty-match)` — while the truth
+     was that the 13:18Z list (10 items, `GH #810/#240/#528`) had stopped being
+     cross-read by anything.  **A missing corpus is "nobody could look this
+     round"; a missing list is "the baton was dropped" — the first fixes itself
+     next round and the second does not, so they must not share an exit code.**
+
+     The fallback is not a violation of claim 6 but its premise failing: an old
+     list is superseded by the NEXT LIST, not by the next round.  When no next
+     list was written, the old one is still the live baton and reading it is
+     the correct scope.  And NO-HANDOFF stands on its own — exit 3 even when
+     every ref in the fallen-back list is open, because what needs fixing is
+     this round writing a list.
+
   9. two corpus shapes this repo actually writes, both found by running the
      leg on the real charter rather than by reading it: an entry stamped
      `T10:1xZ` (fuzzy minute digits) is parsed, and the carry segment is the
@@ -275,6 +295,113 @@ def main():
               "claim 6: --entries 2 reaches the older list on purpose")
         check("2 entries (of 2)" in "\n".join(lines2),
               "claim 6: how far back it looked is printed")
+
+        # --- claim 10: NO-HANDOFF (RULING 67) -------------------------------
+        # The newest entry ends with no list at all.  Everything below the
+        # entry header is narrative, and the previous round's list is still the
+        # live baton.
+        # ⚠️ The narrative line that mentions『下次触发』goes too: with it, the
+        # entry still "has" a segment (the mark is matched anywhere) and the
+        # drop is invisible.  That is a REAL hole in the marker regex, measured
+        # at 0/86 occurrences on today's charter and registered as the owed row
+        # `carry_mark_prose_vs_list` -- it is not asserted here because a test
+        # that pins a hole goes red the day the hole is closed.
+        dropped = os.path.join(root, "dropped.md")
+        write(dropped, CHARTER
+              .replace("  正文谈论『下次触发』这件事本身,顺带引用 GH #901。\n", "")
+              .replace("  **下次触发**:①GH #523 ②GH #810 ③GH #538 / #528 ④裸号 #77",
+                       "  本轮收尾没写清单。"))
+        rc, lines = mod.audit(dropped, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check(rc == 3,
+              "claim 10a: a newest entry with no carry list exits 3, not 2 (got %d)" % rc)
+        check("NO-HANDOFF" in body and "2026-09-16T10:1xZ" in body,
+              "claim 10a: the finding names the entry that dropped the baton")
+        check("CARRY-FROM    2026-09-16T04:05Z" in body,
+              "claim 10b: the fallback names the last entry that carries a list")
+        check("STALE-CARRY   GH #902" in body,
+              "claim 10b: the fallen-back list is actually cross-read")
+        check("1 entry back" in body and "fuzzy stamp" in body,
+              "claim 10c: the distance is printed, and a stamp this repo cannot "
+              "parse (`T10:1xZ`) says so instead of silently dropping the age -- "
+              "'fell back 1 entry' and 'fell back 30 hours' are different readings")
+        # ... and with parseable stamps the hours are actually computed.
+        dropped_num = os.path.join(root, "dropped_num.md")
+        write(dropped_num, open(dropped, encoding="utf-8").read()
+              .replace("2026-09-16T10:1xZ", "2026-09-16T10:15Z"))
+        rc, lines = mod.audit(dropped_num, corpus, 1, 48.0, now=NOW)
+        check("6.2h older" in "\n".join(lines),
+              "claim 10c: a parseable pair of stamps prints the real age")
+        check("anti-empty-match" not in body,
+              "claim 10a: a dropped baton must not print as an empty match")
+
+        # NO-HANDOFF stands alone: exit 3 even when the fallen-back list is clean.
+        clean_back = os.path.join(root, "clean_back.md")
+        write(clean_back, CHARTER
+              .replace("  正文谈论『下次触发』这件事本身,顺带引用 GH #901。\n", "")
+              .replace("  **下次触发**:①GH #523 ②GH #810 ③GH #538 / #528 ④裸号 #77",
+                       "  本轮收尾没写清单。")
+              .replace("  **下次触发**:①GH #902(旧清单,默认不看)",
+                       "  **下次触发**:①GH #810(仍然 open)"))
+        rc, lines = mod.audit(clean_back, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check(rc == 3,
+              "claim 10d: NO-HANDOFF is a finding on its own -- exit 3 even when "
+              "every fallen-back ref is open (got %d)" % rc)
+        check("STALE-CARRY" not in body,
+              "claim 10d: ... and it does not manufacture a stale-carry to get there")
+        check("本轮把『下次触发』写出来" in body,
+              "claim 10d: the finding names the one remedy (write the list)")
+
+        # The corpus guards are about accusing an issue NUMBER.  They say nothing
+        # about a missing list, which is read off the charter -- so a withheld
+        # corpus must not swallow the NO-HANDOFF finding.
+        rc, lines = mod.audit(dropped, missing, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check(rc == 3,
+              "claim 10e: a missing corpus withholds accusations but not the "
+              "NO-HANDOFF finding (got %d)" % rc)
+        check("NO-HANDOFF" in body and "STALE-CARRY" not in body,
+              "claim 10e: ... the two are independent readings")
+
+        # No entry anywhere carries a list: say so, do not crash, still exit 3.
+        none_at_all = os.path.join(root, "none.md")
+        write(none_at_all, CHARTER
+              .replace("  正文谈论『下次触发』这件事本身,顺带引用 GH #901。\n", "")
+              .replace("  **下次触发**:①GH #523 ②GH #810 ③GH #538 / #528 ④裸号 #77",
+                       "  没写。")
+              .replace("  **下次触发**:①GH #902(旧清单,默认不看)", "  也没写。"))
+        rc, lines = mod.audit(none_at_all, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check(rc == 3 and "nothing to fall back to" in body,
+              "claim 10f: no list anywhere is still a finding, and says so (got %d)" % rc)
+
+        # Both at once: baton dropped AND the fallen-back list names no issue.
+        # The finding wins the exit code, and the empty-match denominator is
+        # still disclosed -- neither reading is allowed to swallow the other.
+        both = os.path.join(root, "both.md")
+        write(both, CHARTER
+              .replace("  正文谈论『下次触发』这件事本身,顺带引用 GH #901。\n", "")
+              .replace("  **下次触发**:①GH #523 ②GH #810 ③GH #538 / #528 ④裸号 #77",
+                       "  本轮收尾没写清单。")
+              .replace("  **下次触发**:①GH #902(旧清单,默认不看)",
+                       "  **下次触发**:①把 `walk_farm` 的读数量出来"))
+        rc, lines = mod.audit(both, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check(rc == 3,
+              "claim 10h: NO-HANDOFF plus a ref-less fallback list exits 3, because "
+              "the finding does not depend on what the fallback contained (got %d)" % rc)
+        check("0 GH ref(s)" in body and "回落之后仍然是 0 个 GH ref" in body,
+              "claim 10h: ... and the empty-match denominator is still disclosed")
+
+        # Direction guard: when the newest entry DOES carry a list, nothing falls
+        # back -- the older list stays out of scope exactly as claim 6 requires.
+        rc, lines = mod.audit(charter, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check("NO-HANDOFF" not in body and "CARRY-FROM" not in body,
+              "claim 10g: the fallback fires ONLY when the newest entry has no list")
+        check("#902" not in body,
+              "claim 10g: ... so a superseded list is still out of scope")
 
         # --- CLI wiring: exit code and verdict line survive main() ----------
         # ⚠️ `main()` reads the REAL clock, so the fixture corpus above (dated

@@ -136,6 +136,22 @@ UNRESOLVED_HAND_READ = {
         "15:11Z, red window [14:09Z, 15:5xZ]). That is the subject of owed row "
         "walk_farm_census_admitted_to_push_gate_or_priced / GH #843, and this "
         "entry is its eighth receipt, not its fix",
+    """tests/test_cm_kill_confirm_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:109-:110, :165); "
+        "both are file-scope locals assigned once from string literals and "
+        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
+        "reach bots/Customize/ -- byte-for-byte the shape of the two entries "
+        "above. ⚠️ Registered 2026-09-16T19:0xZ by the DIRECTOR, not by the "
+        "author (hero desk, e8d3945c at 17:21Z). THIRD FILE IN THREE DAYS "
+        "CARRYING ITS OWN OBLIGATION COMMENT (:161-:162, verbatim 'this file "
+        "belongs on the hand-read list of tests/test_bots_walk_farm_only.py "
+        "(GH #774)') AND LANDING WITHOUT MEETING IT, and the run of three is "
+        "the reading: three different authors, one of them this desk's own "
+        "neighbour, all of whom KNEW -- so no amount of telling authors fixes "
+        "it. Red window here [17:21Z, 19:0xZ] ~1.7h. Ninth receipt of owed row "
+        "walk_farm_census_admitted_to_push_gate_or_priced / GH #843; the fix "
+        "is that row's (丙)+(乙), not another entry in this table",
     # -- Registered 2026-09-15 by the DIRECTOR, not by either author.  Both
     # -- walks below landed between the 18:06Z and 21:08Z self-checks and left
     # -- this census RED on trunk for ~3.5h (batch-desk 20260915T210852Z.md

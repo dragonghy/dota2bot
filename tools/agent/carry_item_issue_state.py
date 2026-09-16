@@ -31,6 +31,38 @@ WHAT IT REPORTS
     OK            issue 语料说它 `open`
     STALE-CARRY   issue 语料说它 `closed`  ⇒ finding(exit 3)
     UNCERTIFIABLE 语料读不到它 / 没有语料 / 语料过期  ⇒ exit 2,**不是 OK**
+    NO-HANDOFF    最新一条 entry 根本没写『下次触发』  ⇒ finding(exit 3),见下
+
+NO-HANDOFF(RULING 67,2026-09-16T19:0xZ)
+----------------------------------------
+第一版把「最新 entry 没有清单」和「没有语料 / 语料过期 / 正则零命中」**归到同一个
+出口(exit 2 UNCERTIFIABLE)**,而这两件事在**性质**上不同:
+
+  * 没有语料 / 语料过期 = **这一轮没人能看** —— 环境问题,本轮无解,沉默是对的;
+  * 最新 entry 没有清单 = **一个在完全可读的语料上被正面观测到的事实** ——
+    棒掉了,而且掉在总监自己手里。
+
+⇒ 后者判 **finding(exit 3)**,不判 UNCERTIFIABLE。
+**立案现场**:`2026-09-16T15:55Z`(RULING 66)那条 entry 收尾没写『下次触发』;
+下一轮(19:0xZ)跑本腿,逐字读回
+
+    entry 2026-09-16T15:55Z: no『下次触发』segment
+    scanned  : 1 entry (of 86), 0 carry segment(s), 0 GH ref(s)
+    UNCERTIFIABLE -- zero GH refs extracted ... (anti-empty-match)
+
+—— **三行都是真的,而合起来读像「本轮没什么可查」**;真相是 13:18Z 那份 **10 条**
+清单(含 `GH #810/#240/#528`)从此**没有任何一条腿在看它**。
+⚠️ **失效方向与本仓那一族逐字同型**:UNCERTIFIABLE 读起来像「工具没跑成」,
+于是**掉棒被读成了工具问题**,而工具问题下一轮自己会好,掉棒不会。
+
+**回落(fallback)—— 只在 NO-HANDOFF 这一种情形下开**:往回走到最近一条**写了**清单
+的 entry,把**那一份**当作当下的活棒去交叉读,并打印距离(几条 entry / 几小时)。
+⭐ **这不是违反 LIMITS 3,是 LIMITS 3 的前提失效**:那一条说旧清单「已经被下一轮取代」
+所以不该对它开火 —— **而一份清单是被下一份清单取代的,不是被下一轮取代的**。
+下一轮没写清单时,旧的那份**就是现役的棒**,回落读它恰恰是唯一正确的作用域。
+
+⛔ **NO-HANDOFF 本身是 finding,与回落读到什么无关**:哪怕回落清单里每个号都 open,
+本腿仍然 exit 3 —— 要被修的是**这一轮没交棒**,而修法只有一个:**本轮把清单写出来**。
 
 三态是 RULING 55 的直接后果,不是谨慎的姿态:**一次 `list_*` 读不到某个号,
 不能证明那个号不存在** —— 那一轮实测 `get_comments` 滞后 **8.8 分钟**,
@@ -68,8 +100,11 @@ LIMITS(引用本工具输出前先读这三条)
 2. **它不知道那个号为什么被写在清单里。** 一个作为**档案引用**出现的 `GH #<n>`
    (「族属 GH #290」)与一个作为**待办**出现的号,在正则眼里一样。所以 finding 是
    「看一眼」,不是判决 —— 与 `stable_anchors.py` 的 MOVED 同一条措辞纪律。
-3. **默认只看最新一条 entry。** 旧 entry 里的清单已经被下一轮取代,拿它出 finding 等于
-   对着历史开火。`--entries N` 可以放宽,但那时打出来的是**历史**不是**当下**。
+3. **默认只看最新一条 entry —— 除非最新那条没写清单。** 旧 entry 里的清单**通常**已经被
+   下一轮的清单取代,拿它出 finding 等于对着历史开火;`--entries N` 可以放宽,但那时打出
+   来的是**历史**不是**当下**。⭐ **唯一的例外是 NO-HANDOFF**(见上):最新 entry 没写清单
+   时**没有东西取代旧清单**,于是回落到最近一份清单读到的是**当下**,不是历史。
+   回落只跳过**没有清单**的 entry,遇到第一份清单就停,距离照登。
 
 Usage:
     python3 tools/agent/carry_item_issue_state.py
@@ -254,6 +289,19 @@ def audit(charter_path, snapshot_path, entries_n, max_age_hours, now=None):
                    % (STATUS_HEADING, charter_path)]
     scanned = entries[:max(1, entries_n)]
 
+    # RULING 67: 最新 entry 没写『下次触发』⇒ 棒掉了(finding),并回落到最近一份
+    # 清单去读 —— 一份清单是被**下一份清单**取代的,不是被下一轮取代的。
+    handoff_gap = None
+    if carry_segment(entries[0][1]) is None and not any(
+            carry_segment(text) is not None for _, text in scanned):
+        fallback = None
+        for idx in range(len(scanned), len(entries)):
+            if carry_segment(entries[idx][1]) is not None:
+                fallback = (idx, entries[idx][0])
+                scanned = list(scanned) + [entries[idx]]
+                break
+        handoff_gap = (entries[0][0], fallback)
+
     issues, corpus_note = load_snapshot(snapshot_path, now, max_age_hours)
     out.append("corpus   : %s" % corpus_note)
 
@@ -282,6 +330,29 @@ def audit(charter_path, snapshot_path, entries_n, max_age_hours, now=None):
                % (len(scanned), "y" if len(scanned) == 1 else "ies",
                   len(entries), segments, total))
 
+    if handoff_gap is not None:
+        newest_ts, fallback = handoff_gap
+        out.append("NO-HANDOFF    entry %s ends with no『下次触发』list -- the baton was "
+                   "dropped by the round that wrote it, not by the environment" % newest_ts)
+        if fallback is None:
+            out.append("              no earlier entry carries a list either -- "
+                       "nothing to fall back to")
+        else:
+            idx, ts = fallback
+            newest_dt, back_dt = parse_ts(newest_ts), parse_ts(ts)
+            if newest_dt and back_dt:
+                age = ", %.1fh older" % (
+                    (newest_dt - back_dt).total_seconds() / 3600.0)
+            else:
+                # 本仓的散文时刻惯例允许 `T10:1xZ`,那种戳算不出小时数。
+                # ⛔ 不许因此把年龄一声不响地省掉:「回落了 1 条」与「回落到 30 小时前」
+                # 对读的人是两件事,而省略号让它们印出来一模一样。
+                age = ", age not computable (fuzzy stamp)"
+            out.append("CARRY-FROM    %s (%d entr%s back%s) is still the live list, and "
+                       "is read below -- a list is superseded by the NEXT list, not by "
+                       "the next round"
+                       % (ts, idx, "y" if idx == 1 else "ies", age))
+
     for ts, n, closed_at in findings:
         entry_ts = parse_ts(ts)
         closed_ts = parse_ts(closed_at)
@@ -296,16 +367,26 @@ def audit(charter_path, snapshot_path, entries_n, max_age_hours, now=None):
     if ok:
         out.append("OK            %s" % ", ".join("GH #%s" % n for _, n in ok))
 
-    if total == 0:
+    if total == 0 and handoff_gap is None:
         out.append("UNCERTIFIABLE -- zero GH refs extracted; a clean bill and an "
                    "empty match print the same, so this is exit 2 (anti-empty-match)")
         return 2, out
-    if findings:
+    if findings or handoff_gap is not None:
         out.append("")
-        out.append("%d closed issue(s) still being carried as pending work." % len(findings))
-        out.append("⛔ 这不是说那件事做完了 —— 关闭的 issue 里可以躺着真未完的第二件"
-                   "(GH #523 就是)。两条出路二选一:把名字从清单里划掉,或者按章程 §2.6 "
-                   "给剩下的那件事一行机器可读的 owed 登记。不许留在散文里继续抄。")
+        if findings:
+            out.append("%d closed issue(s) still being carried as pending work."
+                       % len(findings))
+            out.append("⛔ 这不是说那件事做完了 —— 关闭的 issue 里可以躺着真未完的第二件"
+                       "(GH #523 就是)。两条出路二选一:把名字从清单里划掉,或者按章程 §2.6 "
+                       "给剩下的那件事一行机器可读的 owed 登记。不许留在散文里继续抄。")
+        if handoff_gap is not None:
+            out.append("⛔ NO-HANDOFF 本身就是 finding,与回落清单读到什么无关(RULING 67):"
+                       "要被修的是**这一轮没交棒**,而修法只有一个 —— 本轮把『下次触发』写出来。"
+                       "⚠️ 它不读作 UNCERTIFIABLE:没有语料是「这一轮没人能看」,"
+                       "没写清单是「棒掉了」,后者下一轮不会自己好。")
+        if total == 0:
+            out.append("⚠️ 回落之后仍然是 0 个 GH ref(anti-empty-match 的分母照登):"
+                       "清单可能本来就不带号,那一格本腿没有话说。")
         return 3, out
     if uncertifiable:
         out.append("")
@@ -373,6 +454,21 @@ def selfcheck():
     rc3, lines3 = audit(charter, stale, 1, 48.0, now=now)
     if rc3 != 2 or "STALE-CARRY" in "\n".join(lines3):
         fails.append("a stale corpus must withhold findings (got rc=%d)" % rc3)
+
+    # RULING 67: 最新 entry 没写清单 ⇒ finding + 回落读上一份清单。
+    nohandoff = os.path.join(root, "nohandoff.md")
+    with open(nohandoff, "w", encoding="utf-8") as fh:
+        fh.write(SELFCHECK_CHARTER.replace(
+            "  **下次触发**:①GH #523 ②GH #810 ③GH #4242 / #4243 ④裸号 #77 不收",
+            "  本轮收尾忘了写清单。"))
+    rc4, lines4 = audit(nohandoff, snap, 1, 48.0, now=now)
+    body4 = "\n".join(lines4)
+    if rc4 != 3 or "NO-HANDOFF" not in body4:
+        fails.append("a newest entry with no carry list must be a finding (got rc=%d)" % rc4)
+    if "CARRY-FROM    2026-09-16T04:05Z" not in body4:
+        fails.append("NO-HANDOFF must fall back to the last entry that carries a list")
+    if "STALE-CARRY   GH #523" not in body4:
+        fails.append("the fallen-back list must actually be cross-read")
 
     import shutil
     shutil.rmtree(root, ignore_errors=True)

@@ -38,6 +38,23 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
    一行机器可读的 owed 登记**。⚠️ **第一次真语料读数就是这条规矩的论据**:4 个号里 2 个
    closed,而 `GH #538`(closed 10.3 天)的残余**根本不在那个号里**,它在 `GH #466` /
    `GH #240` —— 只划掉名字会把那两条一起埋掉。
+   ⭐⭐ **2026-09-16T19:0xZ 补第三态(RULING 67):最新条目**根本没写**『下次触发』⇒ `NO-HANDOFF`,
+   判 **finding(exit 3)**,⛔ **不判 UNCERTIFIABLE**,并**回落**到最近一条写了清单的条目去交叉读。
+   **立案现场逐字**:上一条(`2026-09-16T15:55Z`,RULING 66)收尾没写清单,本轮这条腿读回
+   `entry …: no『下次触发』segment` / `0 carry segment(s), 0 GH ref(s)` / `UNCERTIFIABLE …(anti-empty-match)`
+   —— **三行都是真的,合起来读像「本轮没什么可查」**,而真相是 13:18Z 那份 **10 条**清单
+   (含 `GH #810/#240/#528`)**从此没有任何一条腿在看它**。
+   ⛔ **分界线**:没有语料 / 语料过期 = **这一轮没人能看**(环境问题,下一轮自己会好,沉默是对的);
+   没写清单 = **棒掉了**(下一轮不会自己好)⇒ **两者不许共用一个退出码**。
+   ⭐ **回落不违反「只看最新一条」,是那条的前提失效**:一份清单是被**下一份清单**取代的,
+   **不是被下一轮取代的** —— 下一轮没写,旧的那份**就是现役的棒**。距离(几条 entry / 几小时)照登,
+   戳是 `T10:1xZ` 这种算不出小时的,打 `age not computable (fuzzy stamp)`,⛔ 不许把年龄一声不响省掉。
+   ⇒ **本节对写的人的要求也随之变成机器读的**:**每一轮收尾必须写『下次触发』**,
+   `NO-HANDOFF` 的唯一修法就是这一条(它**不看回落清单读到什么** —— 回落里全 open 也照样 exit 3)。
+   ⚠️ **已知洞,已登记 `owed_executions.json:carry_mark_prose_vs_list`**:`CARRY_MARK_RE` 收的是
+   「下次触发」四个字**出现在 entry 任何地方**,于是**没写清单但正文谈论了这件事**的 entry 会被读成有清单
+   (今日实测发生率 **0/86**,但可达,且下一次大概率是总监自己)。收紧的两个候选锚**都被真语料否掉了**
+   (`**下次触发**` 漏 `**⑨ 下次触发**:`;冒号锚漏 `**下次触发**(⭐ …):`),⛔ 不在本轮顺手改。
    📌 语料由**有 GitHub MCP 的那一轮**刷新(逐号 `issue_read` 点查,⛔ 不用 `list_*`:
    RULING 55 实测列表读数可滞后 8.8min);超过 `--max-age-hours`(默认 48)那条腿
    **自动降级为 UNCERTIFIABLE,不出 finding** —— 陈旧语料唯一能造的假是把**重开**的号
@@ -652,6 +669,53 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-16T19:00Z**:**RULING 67 —— 上一轮收尾没交棒,而替这件事举手的那条腿把它印成了 `UNCERTIFIABLE`(与「没有语料」同一个出口)⇒ 掉棒被读成了工具问题,而工具问题下一轮自己会好,掉棒不会。**
+  全文 `iterations/reports/director/20260916T190000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 67**:`carry_item_issue_state.py` 增第三态 **`NO-HANDOFF`** —— 最新条目没写清单 ⇒ **finding(exit 3)**,
+  ⛔ 不判 UNCERTIFIABLE,并**回落**到最近一条写了清单的条目交叉读(`CARRY-FROM` + 距离/年龄)。
+  **现场三行逐字属实、合起来读是假的**:`no『下次触发』segment` / `0 carry segment(s), 0 GH ref(s)` /
+  `UNCERTIFIABLE …(anti-empty-match)` ⇒ 读起来像「本轮没什么可查」,而真相是 13:18Z 那份 **10 条**清单
+  (含 `GH #810/#240/#528`)**从此没有任何一条腿在看它**。
+  ⭐ **回落不违反「只看最新一条」,是那条的前提失效:一份清单是被下一份清单取代的,不是被下一轮取代的。**
+  修后真读数:`2 entries (of 86), 1 carry segment(s), 3 GH ref(s)` / `CARRY-FROM 2026-09-16T13:18Z (1 entry back, 2.6h older)` /
+  `OK GH #810, GH #240, GH #528` / `FINDINGS (exit 3)`。章程 §1.5 已写死条款(含「每轮收尾必须写清单」)。
+  **验收**:`test_carry_item_issue_state.py` **53 checks / 0 failures / RC_EXIT=0**(新增 claim 10a–10h,三条反向断言);
+  变异台新增 M11–M14 ⇒ **14 CAUGHT / 0 SURVIVED / control_ok=1 / RESTORE YES / RC_EXIT=0**。
+  ⭐⭐ **M5 第一跑 `SURVIVED`,而它不是弱断言,是这个台读错了行**:新增了**第二处** `if total == 0:`,
+  `perl -0p s///` 只替第一处 ⇒ 变异体落到一条没人看的披露行上。两件都做了:锚变唯一 + 给那行补 claim 10h。
+  📌 evidence-discipline 第 2 条再早一格:**变异体存活时,先怀疑它落在哪一行**。
+  ⭐ **§〇 两条活着的 trunk 红本轮都修掉**:(i) `test_bots_walk_farm_only.py` —— `test_cm_kill_confirm_quantifier.lua`
+  的 `io.popen` 未登记,手读后登记,`8 checks, 0 failed`。**这是三天里第三个「自己把义务写在文件里然后仍然没履行」的文件**
+  ⇒ **缺陷不是「作者不知道」**,真因仍是 GH #843(`in_gate:false / over_per_test_cap`,没有钩子能拒绝落地),
+  红窗 **[18:02:37Z, 19:1xZ] ≈ 1.2h**,**第九张收据不是修复**;
+  (ii) `test_lua_corpus_stability.py` —— 批测台 18:15Z 交棒 ⑧,`bots_reach_closure.py` 裸走目录 ⇒ 改走 `lua_corpus`,
+  **读数前后逐位相同 `REACH 225/275`**,顺带消掉一个真的时序依赖(分母原本依赖 gate 开关是否在场)。
+  ⚠️ 第一版把旧拼法写进 **docstring**,检测器照样红 —— 它剥 `#` 注释**不剥 docstring**。
+  ⛔ **§〇.3 一条没修的发现**:`bots_reach_closure.py` 的 docstring 引用 `tests/test_bots_reach_closure.py`,
+  **那个文件不存在**(全仓 `tests/` 下零命中)⇒ 它存在的全部理由(「集合有棘轮了」)**今天不成立**,归协同组。
+  **巡检**(§2e 甲–丁):⭐⭐ **本轮取了两次,第二次推翻第一次**:19:01:18Z 读 replay-check **3.2h**,
+  19:17:22Z 重取 **0.6h**(录像组 `cacc2780` 在我第一次 fetch **之后**才上 main)⇒ 五组 0.6–3.4h,**不点名任何组**。
+  📌 **四条取法全中,读数仍然是错的** ⇒ **(甲) 的措辞不完备:判据该是「取数与下结论之间不许隔一次别人的 push」**,
+  本轮是因为 (戊) 要 deepen 才**碰巧**重取的,⛔ **那是运气不是纪律**,已列入清单 ⑪。
+  **(戊)**:含 git 日期推断 ⇒ 先 deepen,`rev-list --count origin/main` **50 → 252**;
+  `e8d3945c` = 18:02:37Z(报告戳 17:21Z,**差 41 分钟**)、`48651d95` = 16:49:19Z。
+  **§1.5 语料本轮刷新**(13:18Z 清单第 ⑩ 条):逐号 `issue_read` 点查,`fetched_at` → 19:20:00Z;
+  **#466 已 closed(13:44:22Z,RULING 65 拍板的那条)**,#810/#240/#528/#843 全 open。
+  **自检真码 `RC_EXIT=3`**,`legs run 13`,`UNCERTIFIABLE: none`;`FINDINGS`:cadence / queue-rulings /
+  owed-executions / lua-coverage / trunk-red(python)。⚠️ **纪律 3 第三十八发,第一条命令又是 `| tail`,守卫当场拒**
+  (连续第八轮承重)⇒ **这一条仍然是习惯不是门**。
+  ⚠️ **`owed_executions.json` 第一版被我整文件回写成 2196/2176 的 diff,当场 checkout 撤回改成按字节插入**
+  (最终 **+20 行**)—— 一个「内容等价」的整文件重排,在 review 里与一次真改动**逐字节无法分辨**。
+  **下次触发**:①**GH #240 余下部分**(11 行迁移 + 方案 2)②欠条 `carry_mark_prose_vs_list`(本轮登记:
+  `CARRY_MARK_RE` 收紧并全量核差集,或明确裁定不收紧;两个候选锚已各有反例)③**GH #843 的 (丙)+(乙)**
+  (第九张收据,优先级再上调;**三个「知道却照样落地」的实例已证伪「告诉作者」这条路**)
+  ④**`tests/test_bots_reach_closure.py` 不存在**(归协同组:补棘轮或改掉那句引用)⑤**GH #810 待裁 1** +
+  欠条 `lua_gate_stale_manifest_refusal_port` / `gh806_lua_manifest_remeasure` 重测
+  ⑥欠条 `gh856_switch_writer_serialization_ruling`(**本轮仍未裁**,已欠 ~6.5h)⑦看守自检那三条 python 用例(**第十二轮**)
+  ⑧`py_gate_manifest.json` 未重测:新落地的 `test_carry_item_issue_state.py` 实测 **0.102s**(远在 3.0s cap 内)
+  却**没有 manifest 行** ⇒ 今天不在 push 闸里(GH #839 同族)⑨P4.2 narrat 1 / `$0.90` 常数重裁 / **GH #528** / patch 缺口 P3
+  ⑩`lua-coverage` 的 `no_manifest_row` 存量(3 + 2)⑪**§2e (甲) 补一格**:写下点名之前再取一次巡检读数。
 - **2026-09-16T15:55Z**:**RULING 66 —— 一条裁定宣布「cap 障碍已消除」,46 分钟后另一个组落了一条 `io.popen`,把 2.5s 顶成 4.06s。两条裁定都没错:它们测的是两棵不同的树,而没有任何一条腿会为「树变了」举手。**
   全文 `iterations/reports/director/20260916T155500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

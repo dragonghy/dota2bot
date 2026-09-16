@@ -45,6 +45,9 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lua_corpus  # noqa: E402
+
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BOTS_DIR = os.path.join(REPO_ROOT, "bots")
 
@@ -128,12 +131,22 @@ def closure() -> list[str]:
 
 
 def all_bots_files() -> list[str]:
-    out: list[str] = []
-    for dirpath, _dirnames, filenames in os.walk(BOTS_DIR):
-        for name in sorted(filenames):
-            if name.endswith(".lua"):
-                out.append(os.path.relpath(os.path.join(dirpath, name), REPO_ROOT))
-    return sorted(out)
+    """Every corpus `.lua` under bots/, repo-relative.
+
+    ⚠️ This used to open-code its own directory walk of BOTS_DIR (⛔ the
+    spelling is deliberately not written out here: the detector in
+    tests/test_lua_corpus_stability.py strips `#` comments but NOT docstrings,
+    so quoting the pattern in this very docstring keeps the file red -- measured
+    on the conversion itself), which made the denominator
+    depend on TEST TIMING: `bots/Customize/soak_side.lua` is the gitignored
+    gate switch that 16 Lua gate tests create and delete mid-run (GH #229), so
+    a walk that happens to overlap one of them reads 276 instead of 275 and
+    prints one extra `--unreached` line.  `lua_corpus` holds the single frozen
+    exclusion with its reason attached; that is the whole point of GH #243.
+    Converted 2026-09-16T19:0xZ by the director (trunk red, `[harness]` per
+    iron rule 5); readings before and after are byte-identical: REACH 225/275.
+    """
+    return lua_corpus.bots_lua_relpaths(REPO_ROOT)
 
 
 def main(argv: list[str]) -> int:
