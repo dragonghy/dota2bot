@@ -12255,3 +12255,109 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **补记(push 之后,GH #290 顺序;全文见报告补记 A–H)**:**(A) 铁律 6 三条腿**(四次 push 逐字一致):`luacheck bots game: 0 warnings` / **`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)`** / **`py gate: 91 ran, 0 findings, 0 uncertifiable, 15.0s`** / `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`;`ARM_EXIT=0`;⛔ 未用 `RULE6_BYPASS` ⇒ **无「跳过不是通过」行**;⚠️ **`lua gate` 那行是作用域判定不是绿灯**(它自陈 `This is a SCOPE decision, not a pass`),⛔ 不记成「Lua 测试通过」。⭐ **`py gate` 本轮自报超预算**,逐字 `=> the hook's REAL cost this run is 14.97s against a 12.0s budget.`,成因它自己点名 `4 new test(s) not in the manifest were run anyway` ⇒ **正是 `lua_gate_stale_manifest_refusal_port`(executor=总监)记的账**,⛔ 本台不代修、不改成员资格。**(B) 落地**:`PUSH1_EXIT=0`;**`PUSH2_EXIT=1` 推 main 被拒(推送竞态,hero `a1720112` 抢先)**;`REBASE_EXIT=0`;`PUSH3_EXIT=0` 逐字 `a1720112..e06bfbaa  HEAD -> main`;⚠️ **`PUSH5_EXIT=124` 与结果不一致** —— `ls-remote` 实读分支已是 `e06bfbaa` ⇒ **124 是钟表的码不是 git 的码**,⭐ 登记为 `push_hook_duration_exceeds_stream_push_interval`(executor=总监)的又一例。**独立复核不靠 push 回显**:`HEAD` = `origin/main` = `e06bfbaad29bdef30a8bf4670598b6b2bcc2658d`,`STATUS_LINES=0`,**`TREE_EQUAL=true`**(`5e57bac6...`)。**(C) GitHub**:**已开 `[batch]` GH #832**(§五全文 + §六 hero27 逐字表态 + 两条请裁);发表前 `claim_precheck.sh` **`PRECHECK2_EXIT=0`** 逐字 `OK to publish: every citation resolves on origin/main.`(⭐ 对照**报告本身**那次 `PRECHECK_EXIT=3`,三条 finding **全是「被引作缺席证据」**,见报告 §8-bis,已并入交棒 ⑦);铁律 11 零 `requires approval`、零空转;⛔ 未推 owner(判据两项皆不成立)。**(D) ⛔⛔ 自检真码 `3`,同轮更正正文 §十的「未知」。harness 通知对 `nohup` 那一跑打 `exit code 0`,那不是自检的码** ⇒ ⭐ **本台没抄那个 `0`**(09-14T09:11Z 补记 (D) 同坑,**第三次当场兑付**);真码逐字 `/tmp/sc.log:583` **`selfcheck worst exit: 3`**;横幅逐字 `legs run : 13` / **`FINDINGS (exit 3) : unlanded cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`** / **`UNCERTIFIABLE (exit 2): trunk-red(python)`**;⛔ 未把 exit 3 归给任何单一条腿(GH #267)。**(E) ⭐ `unlanded` 是本轮新出现的 FINDING,而它是时序假象不是掉棒**:该腿点名 **1 个** commit `3466069`(hero,`08:51:13Z`,`CLAIMS-LANDED : 0`),⚠️ **但该腿在本会话最开始就跑了**,hero 随后推上 main ⇒ 现场复核 `git merge-base --is-ancestor 3466069 origin/main` ⇒ **`IS on origin/main now`** ⇒ ⛔ **不是掉棒**,⛔ 不开 issue、⛔ 不点名 hero 组(与该工具 LIMITS 同向)。**(F) `trunk-red(lua)` 是同一条旧红,本轮把自带限定关掉了**:逐字 `RED  test_fieldsip_atom_pricing.lua` / `:562: 961 ... not 944` / `:400: ... 1039 ... not 1021` / `TRUNK RED -- 1 of 109 Lua detector file(s) failing ON THE WORKING TREE.` + 限定 `re-run after ``git stash``;⭐ **本台不用 stash 用更强的一步**:`STATUS_LINES=0` 且 **`TREE_EQUAL=true`** ⇒ **工作树就是 main** ⇒ **main 确实红**;⛔ 本会话 `bots`/`game`/`tests` 一行未改 ⇒ 不可能由本轮引入;⛔ **不开新 issue —— 已在案 GH #814**,且已有 owed 行 `fieldsip_atom_pricing_corpus_rebaseline`(**executor=协同组**),⛔ 本台不代修。⚠️ 登记不归因:分母 `1 of 107` → **`1 of 109`**,**分子仍是 1、仍是同一个文件**,两个数对与上一轮**逐位相同**。**(G) ⚠️ `trunk-red(python)` 在 UNCERTIFIABLE 不是 FINDINGS ⇒ ⛔ 本轮对 python 侧不下判断**:四条 `5a/5d` 断言逐字 `did NOT run`(`120s` 截断,自带说明 `5a in particular would pass vacuously`)⇒ ⭐ 正确说法是「这条腿本轮没跑成」,⛔ 不是「认证 python 侧绿」。**(H) Lua 覆盖**:`UNCOVERED 114 of 470 (24%)` `{no_manifest_row: 52, timed_out: 60, too_slow: 2}`;`NOW COVERED tests/test_fieldsip_atom_pricing.lua`;`UNCOVERED SET GREW -- 2 file(s)`(`test_dusttower_dive_guard.lua` **第七轮**、`test_fieldsip_transfer_receiving_site.lua` **第五轮**)⇒ ⛔ 不重复开 issue;⭐ 对照上一轮 `disk 469→470`、**`UNCOVERED 114→114`(缝没再窄**,上一轮窄了一格)。
   **Token**:`TOKENS total_in=6,436,623 out=45,538 turns=55`(统计后的收尾回合不计入)。
   **补记 II(收尾;全文见报告补记 I–M)**:**(I) ⭐⭐ 分支 push 连挂五次,成因不是网络是闸的第三条腿**:`HEAD:main` 两次秒过,同一个 HEAD 推会话分支 `PUSH9/10/11/12_EXIT=124`(超时 300–550s)。⭐ **看全 `push12.log` 全文才看见**:它停在 `py gate` 之后、**根本没有 `lua gate:` 那一行**,而成功的 main push 是**四行**(第四行 `lua gate: SKIPPED BY SCOPE`)⇒ **挂的是闸不是传输**。📌 **与本轮 GH #832 同型**:本台的 grep 是 `GATE_EXIT|py gate|lua gate|->`,**只显示在场的行,把缺席的那行藏起来** —— **缺席的那行才是全部诊断**。**(J) 放宽超时一次过,拿到硬数**:`PUSH13_EXIT=0` 逐字 `e06bfbaa..0a62331a  HEAD -> claude/great-sagan-hx789z`,`ls-remote` 独立复核分支 ref = `0a62331a` = 本地 HEAD;闸第三腿实测 **`lua gate: 386 ran, 0 findings, 0 uncertifiable, 9 unanswered, 7 known-red, 712.7s`**,自陈 `=> the hook's REAL cost this run is 712.66s against a 300.0s budget.`(`manifest prices 325 at 239.4s; THIS container ran them in 346.8s (1.45x)`;`70 new test(s) not in the manifest were run anyway, costing 365.82s`)⇒ **712.66s = 预算 2.38 倍**,本台此前五次超时**全在这数以下** ⇒ 五次「挂起」都是**被自己的钟表砍掉的正常运行**。**(K) ⚠️⚠️ 真正要交的一条:11.5 分钟那窗不是只在碰三前缀时才开。** 总监立 `push_hook_duration_exceeds_stream_push_interval` 时逐字写「那 11.5 分钟的窗口**只在 push 碰到这三个前缀时才开**」并以「纯报告轮不受影响」作对照组;**本轮是反例,且同一个 commit 同时给出两侧**:`0a62331a` **只动 `iterations/`**(零 `bots`/`game`/`tests`)⇒ 推 `HEAD:main` **`SKIPPED BY SCOPE` 秒过**,推**同一个 HEAD 到会话分支** **`386 ran ... 712.7s` 全跑** ⇒ ⭐ **决定开窗的不只是改了哪些路径,还有推的是哪个 ref**;⚠️ **五条流每轮结尾都推两次(分支+main)⇒ 那一窗每流每轮开一次,账只记在墙钟上没有腿在数**,比原措辞更难当成偶发。⛔ 本台**未改 `lua_gate.py`**(编排权在总监,#810 那半挂总监名下)、⛔ **未用 `--no-verify`/`RULE6_BYPASS` 绕**(闸从来不是挡路的那个)。**(L) ⛔ 同轮更正补记 B 一处归因错误**:补记 B 写「`PUSH5_EXIT=124` … 推送其实已经完成」——**结论对(ref 确实动了)归因错**,动它的**不是 PUSH5 是同期后台无钟表的 push4**;按 §J 硬数,PUSH5 的 500s **不足以**跑完 712.66s ⇒ 逐字更正:**`PUSH5_EXIT=124` 是一次真正没跑完的 push**。📌 evidence-discipline 第 4 条:**对的结论配错的理由,而错的那半会被当成先例。** **(M) 其余登记不归因**:`7 known-red` 自带 `⛔ this list is not an exemption and it is meant to SHRINK.`;⚠️ **`test_fieldsip_atom_pricing.lua` 不在这七条里** ⇒ **闸放行它靠的不是赦免是成员资格**(它在开工自检快腿、不在 push 闸),**与补记 F 结论一致**;`9 new test(s) exceeded the hook budget and were EXCLUDED`,处方逐字 `(re-measure to record them: python3 tools/agent/lua_gate_measure.py)` ⇒ ⛔ 本台未跑(非本台作用域)。
+- 2026-09-16T00:16Z:**刹车第二十九轮持有,零 EC2 未发波;工作单元 = 台账的 `stamp_kind` 缺陷(GH #849)**。
+  **一、成本(RULING 48 三段式)**:**零 EC2 / 零 CE / S3 读取 13 个对象(12 个不同,出网未计价)**
+  —— ⛔ 不写「零支出」。逐项:`s3 ls` 四次(LIST 不是 GET);`s3 cp` **13 次 / 12 个不同对象 / ~108 KB**
+  (`20260912_092739_slot3.analysis.json` 取了两次)。⛔ 本台不自行折算美元。
+  **二、闸 (iii) 仍红**:MTD **$90.782**,headroom **−$0.782** ⇒ ≥ $90 刹车线。GH #801 四行整块照抄:
+  `>= $35, but headroom to the $90.00 brake is $-0.782` / `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).` /
+  `Nothing can launch at this MTD, so confirming it buys nothing.` / `Resumes by itself as soon as headroom >= $1.10.`
+  ⭐ **用默认值真跑打出来的**,⛔ 未用 `COST_CONFIRM_AT=999` 自救。
+  ⭐ **快照第四次冻结**:MTD 与 `budget refreshed 2026-09-15T14:40:18Z` 两量与上一轮**逐位相同** ⇒ **零新支出测量**
+  ⇒ 按判据**未推 owner 通知**。⚠️ 照登不藏:`$90`–`$100` 在 AWS 侧仍可花,挡住它的是 owner 这条线不是 AWS。
+  ⇒ **连续第二十九轮,不发波的原因是闸不是本台的处置。**
+  **三、收割:零欠。** `S3VAL_EXIT=0`,`validation/` **`OBJ_COUNT=592`** 与已登记的 592 逐位相同 ⇒ 零新 verdict。
+  最新对象按 **RULING 47 取法**(`--recursive | sort | tail -1`)仍读作
+  `2026-09-12 10:18:26 validation/lf_rescue+27ids-d177b87026dd_20260912_1018_run.log` ⇒ **仍是 W69**。
+  `recover_verdict.py` 未跑 ——「没得收」不是「漏收」;`--ledger` 仍未被真波行使,
+  欠条 `games_ledger_cross_wave_accounting` **仍 OWED**。
+  **四、⭐⭐⭐ 工作单元(GH #849):上一轮那份测试的语料是它自己造的。**
+  `tests/test_verdict_ledger_write.py:96` 的 `write_run()` 用 `"mirror:%s:s%s:%s"` **造**每一个 stamp,
+  而 `recover_verdict.py:617` 用 `^mirror:(.*):s(\d+):(radiant|dire)$` **读回**它 ⇒ **同一个假设既当输入又当判据**,
+  于是 `m` 为假那条分支(`cand/seed/arm_side` 全 `None`)**一次都没被执行过**。
+  **花 12 个对象买到的事实**(`soak/spot_20260912_092629_1_main_b920b0/`,W69,按名字序前 12 个):
+  **5 个是裸 git SHA `'52ea2be4'`**(槽 1/2/3/4/6)、7 个是真 27-id mirror 串。
+  那 5 个是**暖场局** —— 跑在 `validate_onspot.sh` 写 `soak_side.lua` **之前**,**不属任何一臂**;
+  按本 run 56 个对象算约占 **9%** ⇒ **这个桶从来不是空的**。⭐ 真 27-id 串**能被现有正则读对**,正则本身没坏。
+  **缺陷形状**:`recover_verdict.py:606` 遍历 `sorted(loaded)`,而 `loaded`(:214)**不按 stamp 过滤**
+  ⇒ 暖场局也进台账,带 `None` 臂字段且 `finished=True`(实测那个 slot3 暖场局 `winner='dire'`,**是一局打完的局**)。
+  ⛔ **要害不是暖场局进了台账(那是诚实的),是 `None` 有两个互相看不出来的成因**:
+  (1) 暖场(`None` 正确)、(2) stamp 形状变了正则读不出(`None` 是故障)。两者在行上**逐位相同**,
+  而 (1) 恒占约 9% ⇒ **一次 harness 回归会落进一个永远有人的桶里**,读回来像「这波暖场多了点」。
+  **失效方向是危险那一侧**,与 MTD 滞后、与「shallow clone 空输出被读成无漂移」**同族**。
+  ⚠️ 信息其实在行里(`script_version` 原样留着),但要区分就得在**读的时候**再解析一次 stamp ——
+  那正是上一轮 (乙) 明令禁止的**第二份会漂移的拷贝**。
+  **落地(⛔ `bots`/`game` 一行未改)**:(甲) 每行新带 **`stamp_kind`**,由**同一次**解析在写入时定出四值 ——
+  `mirror` / `warmup`(有 stamp 但不以 `mirror:` 开头)/ **`mirror_unparsed`**(以 `mirror:` 开头却读不出 ⇒ harness 回归,**不是暖场**)/ `absent`;
+  ⛔ 不是布尔,**朝吵的那侧失效**:没见过的形状永远不会被静默归进良性那个值。
+  (乙) 两行 stderr:一行普查,`mirror_unparsed > 0` 时**另起一行 WARNING** ——
+  ⛔ 不折进普查行,**一个要在四个数字里找出来的数就是没人找的数**;verdict 的 `ledger.stamp_kind` 同步带普查。
+  (丙) 新增 case 7,两个 stamp 字面量**逐字节抄自真实语料**(⛔ 不是测试自己造的)+ 构造的形状变更例 + 空串。
+  **证据**:`31 checks, 0 failed`(`TEST_EXIT=0`,⛔ 未经管道读);**变异台四只零幸存**
+  (M5 `mirror_unparsed`→`warmup` / M6 `stamp_kind` 恒为 `mirror` / M7 暖场→误报回归 / M8 删 WARNING 行),
+  每只跑完**从文件副本还原**,末尾 `cmp` 验 **`RESTORE OK`**。
+  ⚠️ **诚实边界**:本轮证明的是**分类正确**,⛔ **不**证明台账在真波上跑通过 —— 那要等刹车解除。
+  **五、⛔⛔ 本节初稿是错的,推它的那道闸当场证伪了它 —— 同轮更正,未发表。**
+  初稿断言「`tests/test_verdict_ledger_write.py` 没有任何自动读者在跑」。push 时闸第二腿逐字:
+  `7 new test(s) not in the manifest were run anyway, costing 2.59s: … tests/test_verdict_ledger_write.py`
+  ⇒ **闸在跑它**,断言**假**。📌 成因正是本轮 §四 在修的那个手法的**镜像**:本台读的是 manifest(**一份名单**)
+  据此断言「没人跑」,而**名单的缺席不等于行为的缺席** —— 与 §四「`None` 的缺席不等于本来就没有」**同形**,
+  ⛔ 本台在同一轮里一边修它一边犯它。
+  **更正后仍成立的两件**:(1) manifest 确实是陈的(`measured_at: 2026-09-14T13:22:06Z` 早于它 09-15 落地),
+  实测 **0.39s** 远在 `per_test_cap_seconds: 3.0` 之下;(2) ⭐ **超预算没有腿在数** ——
+  闸自陈 `REAL cost this run is 15.27s against a 12.0s budget`(**127%,照推不误**)
+  ⇒ **预算线是自陈的不是强制的**;⚠️ 上一轮同一条 `14.97s / 4 个`,本轮 `15.27s / 7 个`,**分子在涨**。
+  ⭐ 闸对没见过的测试**朝安全侧失效**(宁可照跑并自陈超支,也不静默跳过),**恰与 §四 缺陷方向相反**。
+  **五.2 ⭐⭐⭐ 而且早就有一条棘轮在盯这件事,它此刻正红着 —— 本台本来该先看它。**
+  开工自检 `tests/test_py_gate.py` **check 5f** 逐字:`the manifest has drifted from the suite -- 7 of 141
+  on-disk tests are in no row, over the slack of 5, so each one runs fail-open on every push with its cost
+  recorded nowhere. Re-measure (python3 tools/agent/py_gate_measure.py); do not raise the slack.`
+  ⇒ 本台「发现」的那件事**是一条已有棘轮的既有红**,连措辞都更准(「**fail-open**」正是本台初稿说反的方向)。
+  ⚠️ **归因不含糊**:那 7 个**没有一个是本轮新增的**(本轮零新测试文件)⇒ **5f 在本轮之前就在 trunk 上**。
+  ⛔ 本台不代跑 `py_gate_measure.py`(它会重排全部 134 行成员资格,而 GH #839/#843 裁定未下)。
+  ⇒ 交棒 ⓪ 改成更短一句:**处方已经写在红里了,缺的只是谁来执行。**
+  **六、泄漏:五条独立路径全零(⛔ 不合并成一句)**:① `check_costs.sh` 自带区块**空**;
+  ② `describe-instances` 五态**不加 tag 过滤** ⇒ `INST_EXIT=0`、**`LINES=0`**;③ **`alpha = 0`**(account-wide);
+  ④ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏);⑤ **`beta = 0`** ⇒ 按上一轮交棒 ⑥(d),`soak/` 无需因 beta 而列
+  (本轮仍列了,是为 §四取样,不是为泄漏)。⚠️ 本轮**未**买账单侧第六条(逐日 `EC2 - Compute`),理由同 §二。
+  **七、铁律 9**:P4.1 upstream 标尺波**连续第二十二轮欠**,⛔ 唯一阻因是闸 (iii) `exit 3`(预算)。
+  **八、⛔ `bots`/`game` 一行未改**(只动 `tools/batch_test/soak/` 1 个 py + `tests/` 1 个 py + `iterations/`)。
+  **九、自检**:⭐ **管道坑本轮未犯** —— 第一条命令是 `nohup bash tools/agent/routine_selfcheck.sh > <file> 2>&1 &`,
+  **stdout 是文件不是管道**,⛔ 无 harness `timeout`(上一轮交棒 ⑥(a)「照抄字面模板」**本轮做到了**,连续六轮犯法止住)。
+  **自检跑完了**(约 75 分钟),腿级判词逐字:`legs run : 13` /
+  **`FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage trunk-red(python)`** /
+  **`UNCERTIFIABLE (exit 2): none`** / `selfcheck worst exit: 3`。⛔ 未把 exit 3 归给任何单一条腿(GH #267)。
+  ⚠️ 对照上一轮:`trunk-red(python)` 上一轮在 `UNCERTIFIABLE`,**本轮在 `FINDINGS`** ⇒ **本轮它真的被看过了**
+  (内容 = §五.2 的 check 5f,⛔ 不重复计数);上一轮那条未核验状态**本轮已结清**。
+  **Lua 侧干净**:`116 tagged detector file(s), 0 failures`(⚠️ 自带限定照抄:**fast subset 不是全套**)。
+  Lua 覆盖腿:`UNCOVERED 114 of 479 (24%)`,`UNCOVERED SET GREW -- 2 file(s)`
+  (`test_dusttower_dive_guard.lua`、`test_fieldsip_transfer_receiving_site.lua`),`NOW COVERED test_fieldsip_atom_pricing.lua`;
+  反向门普查 `live gate ids 236 armed 25 / FROZEN 0 COUPLED 1` + `no armed id hangs under an unarmed gate -- OK`。
+  ⛔ 本台不代修那两个 Lua 文件(非本台的树),只登记。
+  **十、⭐⭐ 闸(铁律 6):第一次 push 被拒,而拒它的是本台自己制造的并发。**
+  `PUSH1_EXIT=1`。三腿逐字:`luacheck bots game: 0 warnings` / **`GATE_EXIT=0  CLEAN`** /
+  `py gate: 94 ran, 0 findings, 0 uncertifiable, 15.3s` /
+  **`lua gate: 394 ran, 1 findings, 0 uncertifiable, 10 unanswered, 6 known-red, 726.3s`** /
+  `PUSH REFUSED -- iron rule 6 fast LUA TEST leg is RED`。
+  ⛔ **未用 `RULE6_BYPASS`** ⇒ **本轮无「这是跳过不是通过」那一行**;⭐ **闸拒了就是拒了,本台没有绕。**
+  **红的是 `tests/test_denyreach_lane_deny_reach.lua`(2 failures),而失败正文不是断言不成立,是测试拒绝开工**,逐字:
+  `bots/Customize/soak_side.lua is already there and this process did not write it, so arming would clobber
+  someone else's switch … Contents: return { side = 'radiant', cand = 'siegecap' }` ⇒ ⭐ **守卫在正常工作,不是缺陷。**
+  **归因三条独立证据(⛔ 不合并成一句)**:① 本轮 commit **零 `bots/`、零 `game/`、零 `denyreach`**,
+  且 `git diff --name-only origin/main HEAD -- bots game` ⇒ **`TREE_DIFF_LINES=0`**
+  ⇒ 被测树与 `origin/main` **逐字节相同** ⇒ **结构上不可能由本轮引入**;
+  ② 单独跑它**是绿的**:**`DENYREACH_EXIT=0`**(直读,⛔ 未经管道)⇒ ⛔ **不是 trunk 红,不该叫任何组去修**;
+  ③ 自检 Lua 腿同轮独立复核 `116 … 0 failures`。
+  **真因**:本台按 §九 防管道模板把自检放 `nohup … &`,它跑了 **~75 分钟**,而本台**在它没跑完时就 push 了**;
+  自检的腿**为每个候选 arm/解除 `soak_side.lua`**,push 闸的 Lua 腿(726s / 394 文件)**跑在同一棵工作树上** ⇒ 撞车。
+  该文件事后**已不存在**(瞬态)且 **gitignored**(`.gitignore:76`)⇒ ⛔ **事后看 `git status` 永远看不见**。
+  ⭐⭐ **自检自己把机制写在日志里**,逐字:`a killed test left bots/Customize/soak_side.lua ARMED; removed it.` +
+  **`An armed switch reddens ~20 Lua ratchets and is gitignored, so it would not have shown up in git status.`**
+  (另有 `DELETED … put it back` / `REWROTE … put the original back` 两条)。
+  ⭐⭐ **这不只是本台的操作失误**:**防管道的正确做法,和撞车的充分条件,是同一件事** ——
+  铁律 10 的管道坑最干净的解法就是把自检放后台,而铁律 6 的 push 闸在**同一棵工作树**上跑 726s
+  ⇒ **照着建议做就打开一个 ~75 分钟的撞车窗口**,而**每条流每轮都跑自检、每轮结尾都推两次**。
+  ⚠️ **失效方向是危险那一侧**:撞出的红**指着一个与改动毫无关系的文件**(本轮 `denyreach`/`siegecap`)
+  ⇒ **最省事的读法是「trunk 红,告诉英雄组」**,那会**把一次并发假象登记成别人的缺陷** —— 本台本轮差一点就那么写。
+  📌 与 §四、§五 同族:**一个真命题(测试确实红了)被用来回答另一个问题(谁的红)。**
+  详见 `iterations/reports/batch-desk/20260916T001632Z.md`。

@@ -619,6 +619,34 @@ if ledger_path:
         row["cand"] = m.group(1) if m else None
         row["seed"] = m.group(2) if m else None
         row["arm_side"] = m.group(3) if m else None
+        # `stamp_kind` says WHY seed/arm_side/cand are None, at write time, off
+        # the SAME single parse -- so a reader never needs a second copy of this
+        # regex (the drift the one-schema rule exists to prevent).
+        #
+        # Measured on real archived corpus 2026-09-16 (12 objects sampled from
+        # soak/spot_20260912_092629_1_main_b920b0): FIVE of them carry a bare
+        # git SHA ('52ea2be4'), not a mirror stamp.  Those are the warm-up games
+        # -- they run BEFORE validate_onspot.sh writes soak_side.lua, so they
+        # belong to neither arm, and they are ~9% of every run's objects.  The
+        # test corpus never contained one (write_run built every stamp with the
+        # same format string this regex reads back), so the None branch had
+        # never executed at all.
+        #
+        # Why three buckets and not a bool: the unstamped bucket is NEVER empty,
+        # so a future stamp-shape change would land inside a population that
+        # always looks normal and would read back as "more warm-ups this wave".
+        # A stamp that still says `mirror:` but no longer parses is a HARNESS
+        # REGRESSION, not a warm-up, and it gets its own value so it cannot hide
+        # in the benign one.  Fails toward loud: unknown shapes are never
+        # silently called warm-ups.
+        if m:
+            row["stamp_kind"] = "mirror"
+        elif not stamp:
+            row["stamp_kind"] = "absent"
+        elif stamp.startswith("mirror:"):
+            row["stamp_kind"] = "mirror_unparsed"
+        else:
+            row["stamp_kind"] = "warmup"
         # `finished` is the complement of the verdict's `unfinished`, on the
         # same predicate wr() uses (winner in radiant/dire).  It is NOT the
         # verdict's `scored_games`, which is narrower: that one counts finished
@@ -633,15 +661,33 @@ if ledger_path:
 
     added, total = append_ledger.append_rows(ledger_path, ledger_rows)
     fin = sum(1 for r in ledger_rows if r["finished"])
+    kinds = {}
+    for r in ledger_rows:
+        kinds[r["stamp_kind"]] = kinds.get(r["stamp_kind"], 0) + 1
     sys.stderr.write(
         "ledger: %d row(s) appended to %s (%d offered, %d already present; "
         "%d finished / %d unfinished this wave; ledger now holds %d unique "
         "(run_prefix, game_id) key(s))\n"
         % (added, ledger_path, len(ledger_rows), len(ledger_rows) - added,
            fin, len(ledger_rows) - fin, total))
+    sys.stderr.write(
+        "ledger: stamp_kind %s  (mirror = in an arm; warmup = ran before "
+        "soak_side.lua, in neither arm)\n"
+        % ", ".join("%s=%d" % kv for kv in sorted(kinds.items())))
+    # Printed as its own line, not folded into the breakdown above: this one is
+    # a harness regression, and a count that has to be spotted inside a list of
+    # four numbers is a count nobody spots.
+    bad = kinds.get("mirror_unparsed", 0)
+    if bad:
+        sys.stderr.write(
+            "ledger: WARNING -- %d game(s) carry a `mirror:` stamp this tool "
+            "could not parse. Those are NOT warm-ups; the stamp shape changed "
+            "and every arm/seed field on them is None. Fix the parse before "
+            "anyone divides by these rows.\n" % bad)
     v["ledger"] = {"path": ledger_path, "wave": ledger_wave or None,
                    "offered": len(ledger_rows), "appended": added,
-                   "finished": fin, "unique_keys_after": total}
+                   "finished": fin, "unique_keys_after": total,
+                   "stamp_kind": kinds}
 
 g = v["mean"].get("gpm"); d = v["mean"].get("deaths")
 v["suggested"] = ("promote" if (g is not None and g > 5 and complete and
