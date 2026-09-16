@@ -115,10 +115,28 @@ PER_TEST_CAP_SECONDS = 5.5
 # 200.0 the budget bound before the cap did, silently dropping 8 of the 322 and
 # taking trunk-red coverage back from 18/18 down to 14/18 -- a knob set for
 # cost quietly overruling the knob set from the coverage curve, with nothing in
-# the output raising a hand.  300.0 leaves the CAP as the only live selector,
-# which is what the ruling above decided.  If a future sweep raises the cap,
-# re-check this number instead of assuming it still has headroom.
-BUDGET_SECONDS = 300.0
+# the output raising a hand.  If a future sweep raises the cap, re-check this
+# number instead of assuming it still has headroom.
+#
+# ⭐ 510.0, AND THE MARGIN IS NOW THE RULE RATHER THAN A JUDGEMENT CALL
+# (director 2026-09-16, RULING 62).  300.0 satisfied "clear of the cap's own
+# total" by 300.0/250.7 = 1.20x, and a 1.20x margin is not a backstop -- it is
+# one slower container away from being the selector again, in exactly the way
+# the paragraph above says already happened once at 200.0.  What makes that
+# live rather than hypothetical is that the re-measure GH #810 asks for is no
+# longer blocked (RULING 62 discharged its stated blocker), so the next pass
+# WILL re-price all 330 on whatever container runs it; at 1.20x, a container
+# 20% slower than the 2026-09-10 one starts evicting sub-cap tests silently.
+#
+# The number comes from the rule RULING 61 wrote down for the python sibling
+# and did not carry here: BACKSTOP = 2 x the measured sub-cap total, rounded UP
+# to 10s.  2 x 250.7 = 501.4 -> 510.0.  Stating it as a rule is the point --
+# the sibling leg's 12.0 was picked against a reference that had expired six
+# days earlier, and a rule survives a re-measure where a hand-picked number
+# does not.  ⛔ This does NOT relax the per-test cap: the cap is still the only
+# live selector, and `tests/test_lua_gate_budget_backstop.py` now refuses a
+# manifest in which the budget evicted any sub-cap test at all.
+BUDGET_SECONDS = 510.0
 # Hard stop while measuring.  Anything at or over the per-test cap is out
 # regardless, so there is no reason to pay for its exact number.
 MEASURE_TIMEOUT_SECONDS = 6.0
