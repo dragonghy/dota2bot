@@ -19089,7 +19089,30 @@
     —— `test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua`,
     两个都由 **`d913a17f`**(`batch-desk 2026-09-16T06:15Z`)引入);
     `queue-rulings`/`owed-executions` 属总监;`trunk-red(python)` 见上(英雄 + 协同)。
-  - **铁律 6 三行 / push / issue / token**:见报告 §9.3–9.5(收工回填)。
+  - **push 三行(三次 push,⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`)**:
+    三次都 `GATE_EXIT=0 CLEAN`;`py gate: 127→127→128 ran, 0 findings, 0 uncertifiable, 43.0–43.1s`;
+    `lua gate`:分支(**main 之前**)与两次 main 都是 **`SKIPPED BY SCOPE`**(⛔ 范围判定不是通过),
+    而**分支(main 之后、rebase 后同步)那次跑满** —— **`407 ran, 0 findings, 0 uncertifiable,
+    9 unanswered, 6 known-red, 581.6s`**。
+    `PUSH_BRANCH_EXIT=0`;⚠️ `PUSH_MAIN_EXIT=1` = **non-fast-forward 不是闸红**,
+    `pull --rebase`(`REBASE_EXIT=0`,`240412df..e1bc469e`)后 `PUSH_MAIN2_EXIT=0`,
+    main **`e1bc469e..cacc2780`**;`PUSH_BRANCH2_EXIT=0`。
+    ⭐ **第 3 次自证了 GH #854**(main 推到 HEAD ⇒ scope diff 为空 ⇒ `touches_lua()` fail closed
+    ⇒ RUN EVERYTHING);⭐ **而它揭出 #854 的一个新情形,值得写死**:
+    **凡是推 main 撞上 non-ff、rebase 之后回头同步分支 ref,那一次必然跑满约 10 分钟** ——
+    章程写死的「先分支、后 main」只在**不撞 non-ff** 时是便宜的那条。
+    ⭐ **W81 那个坑没踩**:第 3 次转后台后**从输出文件第一行读 `PUSH_BRANCH2_EXIT=0`**,
+    ⛔ 没采信 harness 通知的「exit code 0」(那是 wrapper 的)。
+    ⭐ **W80 最贵那个坑也没踩**:push 排在开工自检**完全跑完之后**,闸的 Lua 腿与自检无并发。
+    ⭐ 按 W73 处方核权威性(`git ls-remote` 问远端):**main / 分支 ref / 本地 HEAD 三者同点 `cacc2780`**。
+  - **issue**:**净增 0**,**2 条评论**(`PRECHECK849_EXIT=0` / `PRECHECK774_EXIT=0`,
+    两份都报 **`local commits not on origin/main: 0`**,⭐ **都在 push 之后发**):
+    **GH #849**(`#issuecomment-5703194567`,正式交付:验收口径 + 能力测试台子)、
+    **GH #774**(`#issuecomment-5703200445`,两条新例 + 归属)。
+    ⛔ **没开新单**:发现都落在 #849 已有范围内(它的**验收口径**),
+    开新单会把一个**口径修正**登记成一个**新缺陷**。
+  - **token**:`TOKENS total_in=17,045,013 out=85,456 turns=103`(⚠️ 比 W81 高约 32%,归因是
+    **五个探针 + 一次真函数 vs 拷贝的交叉核验 + 收尾复核时当场抓住并更正的两处自己的错**,不是空转)。
   - **下一轮第一件事**:1) ⭐⭐ **#849 的验收口径要改**(现写的第 3 条能被五种让消费者全瞎的修法通过),
     建议改成**逐英雄锁定同一个实体**(`roam_conversion.py:311-318` 的口径)+ 加一条**注入暂停必须被看见**的能力测试
     (台子现成,报告附录 A);⛔ 球仍在总监,本轮已追评 #849。
