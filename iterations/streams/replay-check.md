@@ -18548,10 +18548,32 @@
     = 1 `.dem`(24,103,680 B)+ 1 `.demclaim.json` + 1 dumper 二进制(cache HIT,
     key `46fe9c6a2b084f9b`);另 **5 次 `s3 ls`**(LIST 单独登记)。⛔ 不写「零支出」。
   - **开工自检**:⛔ **又**误接管道被它自己挡住(它自报**第 5 次复发**,而上一轮已记过一次
-    ⇒ 同一个坑连续两轮踩中);改重定向重跑。⚠️ **收尾时仍在跑**(进程存活,日志停在
-    `=== trunk health (python test suite) ===`),按本组自己的纪律
-    **「此刻还没有终行」不是判决** ⇒ 本轮状态逐字是**「未取得判决」,不写通过**;
-    容器销毁后日志即失,**下一轮必须重跑**。
+    ⇒ 同一个坑连续两轮踩中);改重定向重跑。⭐ **收尾前跑完了**(约 2h):
+    `legs run 13`、**`selfcheck worst exit: 3`**、
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`、
+    `UNCERTIFIABLE: trunk-red(python)`。**报告初稿写「未取得判决」,已更正** ——
+    与上一轮同一条纪律:**轮询到终行真的出现**,不要用「此刻还没有」下判决。
+  - ⭐⭐ **`trunk-red(lua)` 是自检自己的并发产物,已复核,归 GH #848**(上一轮已立同根因单):
+    两条红(`test_siegecap_ancient_roster` / `test_soakside_shared_switch`)的红文本**自己写着**
+    `bots/Customize/soak_side.lua` 已存在且非本进程所写(`cand` 分别是 `aegisgroup` / `aetherlens`,
+    **两个不同 cand**);`pgrep` 实测**两个** `routine_selfcheck.sh` 进程(1552/2885)并发。
+    **判别子用它自己打的那句**(「re-run on a quiet tree」):树静后该文件**不存在**、
+    两个文件单跑 **`EXIT=0`/`EXIT=0`**。⇒ ⛔ **不记到任何组头上,也不写成 trunk 是绿的。**
+    其余:`lua-coverage`=GH #806;`queue-rulings`/`owed-executions` 属总监;
+    `trunk-red(python)` 仍 UNCERTIFIABLE(三次 push 的 `py gate` 都 `124 ran, 0 findings`,
+    **那条红在闸外**,两句不矛盾)。⚠️ 自检自己那三条 python 用例**连续第六轮** `NOT RUN`。
+  - **push 三行**(三次 push 逐位相同):`GATE_EXIT=0 CLEAN` /
+    `py gate: 124 ran, 0 findings, 0 uncertifiable, ~44s` /
+    `lua gate: SKIPPED BY SCOPE`(⛔ 按它自己打的那句读:**SCOPE 决定,不是通过**;
+    本轮 diff 只有 `iterations/`)。⛔ 全程未用 `RULE6_BYPASS`,**也未用
+    `-c core.hooksPath=/dev/null`**(上一轮 §九 自己记过后者那一笔)。
+    ⚠️ 两次 main 被拒都是 **non-fast-forward**(别组 commit 在前),**不是闸红**;
+    `pull --rebase` 后重推 `EXIT=0`。
+  - **issue**:**净增 0**。**3 条评论**:**GH #849**(`#issuecomment-5691777427`,§四 范围更正
+    = 本轮正式交付)、**GH #666**(`#issuecomment-5691780749`,§三)、**GH #848**(自检并发复现)。
+    ⭐ **两次搜重都省下的是一次错误的归属,不是一个重复单**:#848 开成新单的话,
+    「自检并发染红」会被读成两个不同现象;#849 开成新单的话,
+    「消费侧还没修」这个真信号会被拆成两条各自看起来很新的单。
   - **下一轮第一件事**:⭐ 对 **`d8_return_to_death_spot`** 与
     **`d20_enemy_overchase_unpunished`** 做同款域补课(§一 表里唯二「读快照流但本轮未测」的);
     §四那一修落地后按三条验收在**同一局**复算。⏳ `.dem` 仍约 **2026-10-02** 到期。
