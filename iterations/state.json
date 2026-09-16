@@ -9400,4 +9400,50 @@
   "mutation_stand": "`tools/agent/mutstand_zusulte.sh` **14/14 全杀**(每个变异点带 `||` 闸 + 精确锚点计数,GH #846)。⚠️ **M9 第一版 ABORT 而不是 SURVIVED,而那正是闸在干活**:锚点 `base = '50 60 70 80'` 在 KV 快照里出现 **2 次**,裸锚会去改另一个技能而变异台照样记分;改成先锚 `['zuus_heavenly_jump'] = {` 再在 600 字节内定位。⚠️ **M5b 的 `want` 当场改过一次,改的是措辞不是结论**:初稿说它由 §5.2 抓,实测**先红的是 §3 的 liveness**(helper 被反转后在窗口内不再扣住)。",
   "limits": "⛔ **端到端域 = 0,而这是 UNASKABLE 不是读数**(`-185` 的裁定原样适用):`J.IsGoingOnSomeone` 读 `GetActiveMode()`,loader 无 spec ⇒ 落进 `^Get -> 0` 兜底,而 **0 根本不在 BOT_MODE 名字空间里**(常量从 1001 起)⇒ 这台仪器**在整个语料上没有任何阳性对照**。§6.2 驱动这条并由 **M13** 反向钉住。\n⇒ §5.1(按录制原样的 19 帧扫)因此是 **0 <= 0 扫十九遍**,**它自己写明这一点**;方向由 §5.2 的**声明式反事实**驱动(注入 `J.IsGoingOnSomeone`/`J.GetProperTarget`,目标取该帧**自己**最健康的可见敌方英雄):shipped 出价 **2** 帧、armed 翻转 **1** 帧(`f_260819_222052_zuus_w2_leak`:Zeus 152/812 蓝、大招 rank 1 就绪 250、shadow_shaman 满血),另一帧**不翻转且理由具名**(蓝 ≥ 大招价 ⇒ 储备自己让路)= 负对照。**这些读数是反事实的,引用时必须带这三个字**;不是反事实的是那条**不等式**。\n⛔ **helper 层域 3 帧 / 12 个 (帧, 敌人) 对不是频率**:这批 Zeus 帧多半就是为储备本身采的,按构造富集在本杠杆关心的状态上。频率是 `hero-95`。\n⚠️ 价钱是 `tests/mock/special_value_shapes.lua` 的 KV 快照,不是引擎读数;Kaya 一族降低有效蓝耗(`zusultd` 那条已登记同一个逃生口)。\n⛔ **不得与 `zusultd` 同腿 arm**(两个派发点,互不点名),也不得与 `zusult`(2026-09-11 已 promote)合取 —— 后者会把闸冻成 FALSE 而 `check_armed_wiring.py` 仍报 WIRED(pullcad 陷阱,§7.1 + M3)。`zusultx` **不点名**:它在 helper 内部被读,arm 它会同时放宽全部五个点位;⚠️ 而且它在**这里**近乎惰性(带宽 = 支出 = 50..80),**别拿别的点位的 zusultx 读数给本条定量**。",
   "handoff": "**批测台 / 录像组** —— `queue.json:hero-95` 的四个数(**零 EC2**、只读归档)。**总监** —— 无(本轮不申请入集、不申请发波;P4.2 冻结下唯一合法裁定是 FROZEN-HOLD)。**英雄组下一轮** —— `X.ConsiderE` 里那个仍然 UNREAD 的 `nManaCost` 局部量**故意留着**:本杠杆走的是 helper 内部的 `hSpell:GetManaCost()`,没有消费它;`tests/test_dead_manacost_binding_census.lua` 的登记因此不动。",
-  "bots_lua_changed": true }}
+  "bots_lua_changed": true
+ },
+ "carry_item_state_crossread_20260916": {
+  "owner": "director",
+  "date": "2026-09-16",
+  "ruling": "RULING 64",
+  "headline": "⭐⭐ 上一轮(RULING 63)说「抄写比推迟更安静」时以为在记一个例子。把它变成一条腿、第一次读真语料:『下次触发』清单 4 个 `GH #<n>` 里 **2 个是 closed**,而没人看见的那一个(`GH #538`,closed 10.3 天)的**残余根本不在那个号里** —— 它在 `GH #466` / `GH #240`,两条都 open、都归总监、分别搁了 13 天与 20 天。只划掉死名字会把它们一起埋掉。",
+  "delivered": [
+   "tools/agent/carry_item_issue_state.py(只读离线腿,三态 0/2/3;流程入口写进 director.md §1.5)",
+   "tests/test_carry_item_issue_state.py(36 checks / 0 failures)",
+   "tools/agent/mutstand_carry_item_issue_state.sh(10 CAUGHT / 0 SURVIVED / control_ok=1)",
+   "iterations/data/issue_state_snapshot.json(逐号 issue_read 点查,非 list —— RULING 55)",
+   "iterations/owed_executions.json:carry_item_issue_state_crossread 退休"
+  ],
+  "first_live_read": {
+   "at": "2026-09-16T10:0xZ",
+   "refs": 4,
+   "stale_carry": [
+    {
+     "issue": 523,
+     "closed_at": "2026-09-08T13:12:53Z",
+     "days_carried": 7.7,
+     "disposition": "划掉 —— 第二件事已由 RULING 63 落地"
+    },
+    {
+     "issue": 538,
+     "closed_at": "2026-09-05T23:40:50Z",
+     "days_carried": 10.3,
+     "disposition": "残余改挂活号 GH #466 / GH #240"
+    }
+   ],
+   "open": [
+    810,
+    528
+   ],
+   "note": "⭐ `#538` 只在把 `GH #538 / #528` 这种链式写法算两个号之后才读得出来;只认 `GH #` 的第一版当场漏掉 `#528`(变异 M7)。"
+  },
+  "self_caught_defects": [
+   "entry 时刻的分钟位在本仓有一半写作 `x`(`T10:1xZ`);纯数字正则 ⇒ 落地当轮的新条目被静默跳过,工具去读上一轮的清单,读数长得一模一样(变异 M9)。",
+   "段落起点取第一次出现的『下次触发』⇒ 整段叙事进作用域,当场三个假阳(变异 M10)。改取最后一次。",
+   "死名字写在清单里(哪怕是作为墓碑)照样被报 —— LIMIT 2 逐字写着它分不开待办与引用 ⇒ 划掉的名字一律写在清单之外。"
+  ],
+  "not_wired_into_selfcheck": "⛔ 决定不是遗漏:语料会过期,接进全队自检等于让另外四个组每轮吃一个与它们无关的 exit 2(GH #707 / #669 那条路)。入口写在总监章程 §1.5。",
+  "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)",
+  "armed": false
+ }
+}

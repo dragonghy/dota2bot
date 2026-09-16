@@ -1,0 +1,39 @@
+{
+  "_doc": "issue-state 快照,给 tools/agent/carry_item_issue_state.py 当语料。⛔ 它不是 GitHub 的镜像,也不打算是:里面只有『下次触发』清单点过名的那些号。语料里没有的号,那条腿读作 UNCERTIFIABLE,永不读作 open(RULING 55)。",
+  "_refresh": "有 GitHub MCP 的那一轮刷新:对清单里每个号 issue_read(method=get) 点查,把 state / closed_at 原样抄进来,并把 fetched_at 写成本轮 UTC。⭐ 点查优先于 list_issues:RULING 55 实测 list/get_comments 可滞后到 8.8min,而点查不会。",
+  "_direction": "滞后的方向是安全的:刚关的号还读作 open ⇒ 那条腿这一轮少说一句话;刚开的号不在语料里 ⇒ UNCERTIFIABLE。⛔ 唯一危险方向(重开的号被说成 closed)由 --max-age-hours 挡住。",
+  "fetched_at": "2026-09-16T10:02:00Z",
+  "source": "mcp__github__issue_read(method=get) dragonghy/dota2bot, 逐号点查",
+  "issues": {
+    "523": {
+      "state": "closed",
+      "closed_at": "2026-09-08T13:12:53Z",
+      "title": "[harness] owed_executions:一行 `kind: manual` 在「已执行」与「没人碰过」之间逐字节相同"
+    },
+    "528": {
+      "state": "open",
+      "closed_at": null,
+      "title": "[bug] AWS 账号里那台不属于本项目的实例(fft-cache-v1-attempt3)"
+    },
+    "240": {
+      "state": "open",
+      "closed_at": null,
+      "title": "[harness] 语料规模检测器只认得「等于 fixture 数」那一个量(#538 残余之二,归总监)"
+    },
+    "466": {
+      "state": "open",
+      "closed_at": null,
+      "title": "[bug] GH #106 检测器的误报率是语料规模的函数(#538 残余之一,等总监拍板豁免表形状)"
+    },
+    "538": {
+      "state": "closed",
+      "closed_at": "2026-09-05T23:40:50Z",
+      "title": "[bug] main 的 Lua 检测器腿从绿变红:staybottle 的新测试用 `== 109` 等值钉住语料规模"
+    },
+    "810": {
+      "state": "open",
+      "closed_at": null,
+      "title": "[harness] Lua 推送闸的成员资格由「哪台容器最后跑过 measure」决定"
+    }
+  }
+}
