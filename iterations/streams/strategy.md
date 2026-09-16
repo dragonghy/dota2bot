@@ -35,6 +35,53 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT32. **【2026-09-16T19:27Z 新增。⛔ 这一条也是**读法**,不是活;
+   先按它和 0NEXT31 / 0NEXT30 各判一次,再去取活。**
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【缺档】那一格 —— 0NEXT31 管跨帧、0NEXT29 管跨轮、
+   0NEXT27/28 管一轮之内,四条都防不住它**:
+   **一条按数值分档的阶梯,先问一句「零那一档写了吗」——没写,就去看它下面兜底的是什么。**
+   现场:`ShouldDefend` 的阶梯有 `nNearby == 1/2/3/>=4` 四支、**没有 `== 0`**,
+   于是零敌人的帧一路掉进下面那条 `pos == GetClosestAllyPos({2,3}, building)` 兜底 ——
+   **一个威胁前提都没有的子句**。语料实测 **385 次「去守这个」里 192 次(49.9%)那座建筑边上一个敌人都没有**。
+   ⚠️ **缺档与「守卫恒真」不是同一回事,读法也不同**:恒真守卫(GH #851)可以就地读出来;
+   缺档**必须顺着落下去看兜底**,因为缺的那一档在源码里**什么都没写**,`grep` 不到、
+   `luacheck` 不报、`check_armed_wiring.py` 答 WIRED。
+   📌 **判据(下一轮直接用)**:**见到 `if x == A elseif x == B elseif x >= C`,
+   先把 A/B/C 没覆盖到的取值列出来,再问这些取值落进哪个 else 或哪条兜底。**
+   ⚠️ **判据继承 0NEXT11–0NEXT31 全部。**
+
+   ⭐ **第二条(乙),本轮是 0NEXT31 §乙 的第三次兑现 —— 登记复发次数,别当新发现**:
+   M8(把被保留的角色表 `{2,3}` 悄悄放宽成 `{2,3,4}`)**承重帧的答案不必移动**,
+   只有**逐字源码断言**看得见。同轮 M6(turbo 合取项)同理:**本语料每帧都是 turbo**,
+   抓住它的是**把 `IsModeTurbo()` 改成假**那条腿,不是任何按语料驱动的腿。
+
+   ⭐ **第三条(丙),新的,关于对照组该放哪**:**对照组能放进承重帧本身时,就不要另找一帧** ——
+   本轮 armed 在同一帧上 top ❌ / mid ❌ / **bot ✅**,而 bot 走的**是同一条子句**,
+   于是「改了答案」与「改对了方向」在**一个帧、一条子句**上同时被钉住;
+   另找一帧的对照永远要额外论证「这两帧可比」。
+
+   ⚠️ **本轮交出去、下一轮要看一眼的四条**:
+   (a) ⛔ **`pullcamp` 原子重新入集:球在 replay-check 的「复读空带」那一格,已停六天**,
+   而它是 owner 优先项 **P1 完成定义 2** 那一棒(P1 掉过一次棒 37 轮)。
+   16:45Z 那轮写的是「下一轮若仍没动就**开 issue 点名**」,**本轮仍没动而本轮没开**
+   (工作单元已满 + 引用要先 push,铁律 6 §GH #290 的顺序)⇒ **下一轮第一件事就是开它,不许第三次顺延**;
+   (b) `state.json:defquiet_20260916` 交总监,P4.2 冻结下唯一合法裁定是 **FROZEN-HOLD**
+   (`pushtier_20260916` 同样仍等着);
+   (c) **给总监的新一条**:`routine_selfcheck.sh` 的管道拒绝**本轮第 6 次复发**、
+   且每次都是当轮第一条命令、每次都有散文写着别这么干 ⇒ **建议做成闸**
+   (最小形状:被 REFUSE 时直接执行它自己建议的那条命令,而不是打印出来让人重敲)。⛔ 本组不改;
+   (d) **与前两轮逐字相同、仍未有人动**:`.luacheckrc` 的 `only = { "1" }`,
+   建议最小形状 `{"1","311","314","511","512","542","582"}`。⛔ 本组不改它。
+
+   ⛔ **已定价不要重买**:本轮读 `aba_defend.lua` 时同时看到、**登记而不修**的两条 ——
+   (1) travel-boots / tinker 升级块**同样没有威胁前提**且在安静帧上**写状态**;
+   (2) `WeightedEnemiesAroundLocation` 的 `math.floor` 把小数权重和取整,**4 只兵(0.8)读成 0**,
+   只影响 `GetThreatenedLane` 的野怪平局判别(另一调用点比 `>= 2`,floor 在那里是**可证 no-op**),
+   而 `GetThreatenedLane` 平局判给 Top。**两条都没量域,谁接谁先量。**
+   ⛔ trunk 上 `test_tpscroll_branch_shadow_census` 那条红**已还原复现、已是 GH #828**,
+   按 0NEXT29 **不重复开**。】**
+
 0NEXT31. **【2026-09-16T16:45Z 新增。⛔ 这一条也是**读法**,不是活;
    先按它和 0NEXT30 各判一次,再去取活。**
 
@@ -10050,6 +10097,70 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-16T19:27Z:**`ShouldDefend` 数敌人的那个阶梯没有 0 这一档(gated `defquiet`)。**
+  出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第二轮**。
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;**未提入集**(P4.2 冻结,armed 25 > 20 ⇒ 唯一合法裁定 FROZEN-HOLD)。
+  报告:`iterations/reports/strategy/20260916T192755Z.md`;`state.json:defquiet_20260916`。
+
+  **铁律 9 / 1b 的判词(本轮复核 16:45Z 那条,原样成立,下一轮可直接引用)**:
+  P1(1) 已由 GH #809 结案交总监;P1 readmission 那一棒(`pullreach`,GH #740)09-11 已落地,
+  `owed_executions.json:pullcamp_atom_readmission` 的球在 **replay-check 的「复读空带」那一格,已停六天**;
+  P2 完成定义 1 按源码已满足。[strategy] open issue 的球都在别组;
+  0NEXT31 / 0NEXT30 是**读法不是活**;0NEXT29 (b) 上一轮花掉(W311 剩下的是英雄组的角)
+  ⇒ **自取**,方向是 0NEXT31 头条那个文件的**姊妹文件**:`aba_push.lua` → `aba_defend.lua`。
+
+  **⭐⭐ 头条**:`bots/FunLib/aba_defend.lua` 的 `____exports.ShouldDefend`。它先数建筑边上的敌人
+  (`nNearby` = 1600 内最近见过的敌方英雄 + `nRadius` 内加权野怪和的 `floor`),再按这个数跑角色阶梯 ——
+  阶梯有 `== 1 / == 2 / == 3 / >= 4` **四支,没有 `== 0` 那一支**,而那正是它数敌人的理由。
+  阶梯拒绝的一切落进下面的兜底 `if not result and pos == GetClosestAllyPos({2,3}, building)`,
+  **那一句一个威胁前提都没有** ⇒ 一座**没有任何敌人**的建筑,每帧仍被指派一个防守者。
+  下游不是装饰:它就是 `GetDefendDesireHelper:1094` 的 `shouldDef`,在那里**跳过 VeryLow 提前返回**、
+  **上限 +0.1**(`capBoost`)、**下限从 VeryLow 抬到 Low**(`baseFloor`)。
+  **变量全活、没有死支路、语法正常**;`luacheck` 是 linter,`check_armed_wiring.py` 问的是有没有调用点。
+  📌 与 GH #857 / #851 / #837 **同族:每条子句各自正确,漏掉的那一档从没被写下来**。
+
+  **域(`tests/_defquiet_sweep.lua`)**:1120 对 × 3 线 = **3360 个三元组全部驱动,0 跳过**
+  (与 `_pushtier_sweep` 丢 430 对不同 —— 那个要**敌方**兵线前沿)。
+  shipped TRUE **385**(11.5%)/ armed TRUE **193**(5.7%)/ **MOVED 192,其中 `enemies_near==0` 的 192、`>0` 的 0**
+  ⇒ **192/385 = 49.9%,每两次「去守这个」就有一次守的是没人打的建筑**。
+  **反过来数一遍互证**:shipped 为真且边上确实有敌人的三元组 = **193**,与 armed TRUE 同数
+  ⇒ 这一刀切的正好是「那儿到底有没有人」。按 role:182 在 role 3 / 10 在 role 2 ——
+  那是 shipped 的 `GetClosestAllyPos({2,3})` 扫描透出来的形状(`defclose` 的域),**本候选不碰它**。
+
+  **承重帧** `f_20260827_091703_slot12_zuus_473_1.lua`,t=473.1,Dire,necrolyte / drafted role 3 / 满血,
+  站在离自家下路二塔 **294u** 处 —— 全图唯一一座 1600 内有敌人的塔;
+  shipped 却让它同时去守一座 **12,684u 外、一个敌人都没有**的一塔。
+  **对照组在同一帧里**:armed = top ❌ / mid ❌ / **bot ✅ 保留**,
+  且**下路走的是同一条兜底子句**(role 3 不在 `nNearby==1` 阶梯里)⇒ 对照测的是这条子句本身。
+
+  **纪律**:turbo-only **独立门**(不与 `defclose`/`defnum`/`defstale` 合取);角色表 `{2,3}`、
+  上面的阶梯、travel-boots 升级、under-fire 仲裁**全部不动**;**它是前提不是旋钮**
+  —— 相对 shipped **只可能减少**防守者、永不增加,这条单向性写成了独立用例;
+  **`.lua` 与 `.ts` 一起改**。`tests/test_defquiet_idle_defender.lua` **12/12**,打 `[ratchet]`
+  (⛔ 没碰 `lua_gate_measure.py`,GH #813);`tools/agent/mutstand_defquiet.sh` **9 抓 + 控制 SURVIVED,零 NO-OP**。
+
+  **⭐ 同帧量到的一条,留成断言不是句子**:只 arm **`defclose`**(本杠杆不动)**就已经移动这一帧** ——
+  它修的正是决定兜底点谁的那个 `GetClosestAllyPos({2,3})` 扫描。
+  **两个 id 同文件、同子句,彼此不独立**(lanefix 教训的小号现场)⇒ 同波 armed 时这一帧第一个读。
+
+  **登记但不修(同一次阅读)**:(1) 正上方的 **travel-boots / tinker 升级块同样没有威胁前提**,
+  而且在安静帧上**写状态**(`travel_boots_defender` + 20 秒衰减);(2) `WeightedEnemiesAroundLocation`
+  的 `math.floor` 把**完全由小数权重堆出来**的和取整 ⇒ **一波标准 4 只兵(0.8)读成 0**,
+  只影响 `GetThreatenedLane` 的野怪平局判别(另一个调用点比 `>= 2`,那里 floor 是**可证 no-op**),
+  而 `GetThreatenedLane` 用 `score > bestScore` + `bestScore=-1` + Top/Mid/Bot 顺序 ⇒ **一平局判给 Top**。
+  **本轮没量,不下结论。**
+
+  **铁律 6 读数**:`GATE_EXIT=0` CLEAN(`luacheck bots game: 0 warnings`);新增两个 `tests/*.lua` 单独过
+  luacheck **exit 0**(用 `PIPESTATUS[0]` 读);动态半跑了**读 `aba_defend` 的全部 13 个文件 + smoke +
+  本轮新增**,全绿。⚠️ **全量套件(~100min)没跑完 —— 那是「没跑」不是「跑绿了」。**
+  ⛔ **trunk 那条红不是本轮造成的**:`test_tpscroll_branch_shadow_census.lua:392`
+  `撤退:2's trigger bound moved to 31`,**把三个改动文件 `git checkout` 还原后逐字复现**
+  (哈希核对 `RESTORE OK`)⇒ 与 **GH #828 是同一条,仍开着**;按 0NEXT29 **不重复开 issue**。
+
+  **⚠️ 本轮自己踩的**:`routine_selfcheck.sh` 第一条命令接了 `| tail` 被 REFUSE ——
+  它自报第 5 次复发,**本轮是第 6 次**,而 **0NEXT30 §(戌) 逐字写着这件事**。
+  ⇒ 已在报告 §8 (c) 建议把它做成闸而不是散文。
 
 - 2026-09-16T16:45Z:**「优先低档位的兵线」要求一个严格唯一的最小值,而地图的常态是并列(gated `pushtier`)。**
   出口 **(i)**(`bots/` 行为改动)—— ⭐ **4.4 (i) 的连胜本轮接回来了**(上一轮有意断档,理由是域 0)。

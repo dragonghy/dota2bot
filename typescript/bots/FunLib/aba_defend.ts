@@ -564,7 +564,26 @@ export function ShouldDefend(bot: Unit, hBuilding: Unit | null, nRadius: number)
             }
         }
 
-        if (!result && pos === GetClosestAllyPos([2, 3], hBuilding.GetLocation())) {
+        // [defquiet] The nNearby ladder above -- the reason this function
+        // counts enemies at all -- has branches for 1, 2, 3 and >=4 and NO
+        // branch for 0. Everything it declines lands here, and this last clause
+        // carries no threat precondition whatsoever. So on a building with
+        // nothing near it, the closest of {2, 3} is still named its defender,
+        // every frame, for the whole game. That answer is not cosmetic in
+        // GetDefendDesireHelper: `shouldDef` there skips the bail-out to
+        // VeryLow, adds +0.1 to the desire cap (capBoost) and lifts the desire
+        // floor from VeryLow to Low (baseFloor).
+        //
+        // The clause is kept verbatim for nNearby >= 1, where it is doing the
+        // job it was written for. Armed (turbo only) it simply stops firing on
+        // a quiet building: a precondition, not a knob -- it can only ever
+        // REMOVE a defender relative to shipped, never add one.
+        //
+        // NOT TOUCHED, deliberately: the travel-boots/tinker escalation above
+        // has the same missing precondition and additionally writes
+        // `travel_boots_defender` state on a quiet frame. One lever at a time.
+        const bDefQuiet = jmz.IsSoakCandidate("defquiet") && jmz.IsModeTurbo();
+        if ((!bDefQuiet || nNearby >= 1) && !result && pos === GetClosestAllyPos([2, 3], hBuilding.GetLocation())) {
             result = true;
         }
     }
