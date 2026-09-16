@@ -12255,7 +12255,7 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **补记(push 之后,GH #290 顺序;全文见报告补记 A–H)**:**(A) 铁律 6 三条腿**(四次 push 逐字一致):`luacheck bots game: 0 warnings` / **`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)`** / **`py gate: 91 ran, 0 findings, 0 uncertifiable, 15.0s`** / `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`;`ARM_EXIT=0`;⛔ 未用 `RULE6_BYPASS` ⇒ **无「跳过不是通过」行**;⚠️ **`lua gate` 那行是作用域判定不是绿灯**(它自陈 `This is a SCOPE decision, not a pass`),⛔ 不记成「Lua 测试通过」。⭐ **`py gate` 本轮自报超预算**,逐字 `=> the hook's REAL cost this run is 14.97s against a 12.0s budget.`,成因它自己点名 `4 new test(s) not in the manifest were run anyway` ⇒ **正是 `lua_gate_stale_manifest_refusal_port`(executor=总监)记的账**,⛔ 本台不代修、不改成员资格。**(B) 落地**:`PUSH1_EXIT=0`;**`PUSH2_EXIT=1` 推 main 被拒(推送竞态,hero `a1720112` 抢先)**;`REBASE_EXIT=0`;`PUSH3_EXIT=0` 逐字 `a1720112..e06bfbaa  HEAD -> main`;⚠️ **`PUSH5_EXIT=124` 与结果不一致** —— `ls-remote` 实读分支已是 `e06bfbaa` ⇒ **124 是钟表的码不是 git 的码**,⭐ 登记为 `push_hook_duration_exceeds_stream_push_interval`(executor=总监)的又一例。**独立复核不靠 push 回显**:`HEAD` = `origin/main` = `e06bfbaad29bdef30a8bf4670598b6b2bcc2658d`,`STATUS_LINES=0`,**`TREE_EQUAL=true`**(`5e57bac6...`)。**(C) GitHub**:**已开 `[batch]` GH #832**(§五全文 + §六 hero27 逐字表态 + 两条请裁);发表前 `claim_precheck.sh` **`PRECHECK2_EXIT=0`** 逐字 `OK to publish: every citation resolves on origin/main.`(⭐ 对照**报告本身**那次 `PRECHECK_EXIT=3`,三条 finding **全是「被引作缺席证据」**,见报告 §8-bis,已并入交棒 ⑦);铁律 11 零 `requires approval`、零空转;⛔ 未推 owner(判据两项皆不成立)。**(D) ⛔⛔ 自检真码 `3`,同轮更正正文 §十的「未知」。harness 通知对 `nohup` 那一跑打 `exit code 0`,那不是自检的码** ⇒ ⭐ **本台没抄那个 `0`**(09-14T09:11Z 补记 (D) 同坑,**第三次当场兑付**);真码逐字 `/tmp/sc.log:583` **`selfcheck worst exit: 3`**;横幅逐字 `legs run : 13` / **`FINDINGS (exit 3) : unlanded cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`** / **`UNCERTIFIABLE (exit 2): trunk-red(python)`**;⛔ 未把 exit 3 归给任何单一条腿(GH #267)。**(E) ⭐ `unlanded` 是本轮新出现的 FINDING,而它是时序假象不是掉棒**:该腿点名 **1 个** commit `3466069`(hero,`08:51:13Z`,`CLAIMS-LANDED : 0`),⚠️ **但该腿在本会话最开始就跑了**,hero 随后推上 main ⇒ 现场复核 `git merge-base --is-ancestor 3466069 origin/main` ⇒ **`IS on origin/main now`** ⇒ ⛔ **不是掉棒**,⛔ 不开 issue、⛔ 不点名 hero 组(与该工具 LIMITS 同向)。**(F) `trunk-red(lua)` 是同一条旧红,本轮把自带限定关掉了**:逐字 `RED  test_fieldsip_atom_pricing.lua` / `:562: 961 ... not 944` / `:400: ... 1039 ... not 1021` / `TRUNK RED -- 1 of 109 Lua detector file(s) failing ON THE WORKING TREE.` + 限定 `re-run after ``git stash``;⭐ **本台不用 stash 用更强的一步**:`STATUS_LINES=0` 且 **`TREE_EQUAL=true`** ⇒ **工作树就是 main** ⇒ **main 确实红**;⛔ 本会话 `bots`/`game`/`tests` 一行未改 ⇒ 不可能由本轮引入;⛔ **不开新 issue —— 已在案 GH #814**,且已有 owed 行 `fieldsip_atom_pricing_corpus_rebaseline`(**executor=协同组**),⛔ 本台不代修。⚠️ 登记不归因:分母 `1 of 107` → **`1 of 109`**,**分子仍是 1、仍是同一个文件**,两个数对与上一轮**逐位相同**。**(G) ⚠️ `trunk-red(python)` 在 UNCERTIFIABLE 不是 FINDINGS ⇒ ⛔ 本轮对 python 侧不下判断**:四条 `5a/5d` 断言逐字 `did NOT run`(`120s` 截断,自带说明 `5a in particular would pass vacuously`)⇒ ⭐ 正确说法是「这条腿本轮没跑成」,⛔ 不是「认证 python 侧绿」。**(H) Lua 覆盖**:`UNCOVERED 114 of 470 (24%)` `{no_manifest_row: 52, timed_out: 60, too_slow: 2}`;`NOW COVERED tests/test_fieldsip_atom_pricing.lua`;`UNCOVERED SET GREW -- 2 file(s)`(`test_dusttower_dive_guard.lua` **第七轮**、`test_fieldsip_transfer_receiving_site.lua` **第五轮**)⇒ ⛔ 不重复开 issue;⭐ 对照上一轮 `disk 469→470`、**`UNCOVERED 114→114`(缝没再窄**,上一轮窄了一格)。
   **Token**:`TOKENS total_in=6,436,623 out=45,538 turns=55`(统计后的收尾回合不计入)。
   **补记 II(收尾;全文见报告补记 I–M)**:**(I) ⭐⭐ 分支 push 连挂五次,成因不是网络是闸的第三条腿**:`HEAD:main` 两次秒过,同一个 HEAD 推会话分支 `PUSH9/10/11/12_EXIT=124`(超时 300–550s)。⭐ **看全 `push12.log` 全文才看见**:它停在 `py gate` 之后、**根本没有 `lua gate:` 那一行**,而成功的 main push 是**四行**(第四行 `lua gate: SKIPPED BY SCOPE`)⇒ **挂的是闸不是传输**。📌 **与本轮 GH #832 同型**:本台的 grep 是 `GATE_EXIT|py gate|lua gate|->`,**只显示在场的行,把缺席的那行藏起来** —— **缺席的那行才是全部诊断**。**(J) 放宽超时一次过,拿到硬数**:`PUSH13_EXIT=0` 逐字 `e06bfbaa..0a62331a  HEAD -> claude/great-sagan-hx789z`,`ls-remote` 独立复核分支 ref = `0a62331a` = 本地 HEAD;闸第三腿实测 **`lua gate: 386 ran, 0 findings, 0 uncertifiable, 9 unanswered, 7 known-red, 712.7s`**,自陈 `=> the hook's REAL cost this run is 712.66s against a 300.0s budget.`(`manifest prices 325 at 239.4s; THIS container ran them in 346.8s (1.45x)`;`70 new test(s) not in the manifest were run anyway, costing 365.82s`)⇒ **712.66s = 预算 2.38 倍**,本台此前五次超时**全在这数以下** ⇒ 五次「挂起」都是**被自己的钟表砍掉的正常运行**。**(K) ⚠️⚠️ 真正要交的一条:11.5 分钟那窗不是只在碰三前缀时才开。** 总监立 `push_hook_duration_exceeds_stream_push_interval` 时逐字写「那 11.5 分钟的窗口**只在 push 碰到这三个前缀时才开**」并以「纯报告轮不受影响」作对照组;**本轮是反例,且同一个 commit 同时给出两侧**:`0a62331a` **只动 `iterations/`**(零 `bots`/`game`/`tests`)⇒ 推 `HEAD:main` **`SKIPPED BY SCOPE` 秒过**,推**同一个 HEAD 到会话分支** **`386 ran ... 712.7s` 全跑** ⇒ ⭐ **决定开窗的不只是改了哪些路径,还有推的是哪个 ref**;⚠️ **五条流每轮结尾都推两次(分支+main)⇒ 那一窗每流每轮开一次,账只记在墙钟上没有腿在数**,比原措辞更难当成偶发。⛔ 本台**未改 `lua_gate.py`**(编排权在总监,#810 那半挂总监名下)、⛔ **未用 `--no-verify`/`RULE6_BYPASS` 绕**(闸从来不是挡路的那个)。**(L) ⛔ 同轮更正补记 B 一处归因错误**:补记 B 写「`PUSH5_EXIT=124` … 推送其实已经完成」——**结论对(ref 确实动了)归因错**,动它的**不是 PUSH5 是同期后台无钟表的 push4**;按 §J 硬数,PUSH5 的 500s **不足以**跑完 712.66s ⇒ 逐字更正:**`PUSH5_EXIT=124` 是一次真正没跑完的 push**。📌 evidence-discipline 第 4 条:**对的结论配错的理由,而错的那半会被当成先例。** **(M) 其余登记不归因**:`7 known-red` 自带 `⛔ this list is not an exemption and it is meant to SHRINK.`;⚠️ **`test_fieldsip_atom_pricing.lua` 不在这七条里** ⇒ **闸放行它靠的不是赦免是成员资格**(它在开工自检快腿、不在 push 闸),**与补记 F 结论一致**;`9 new test(s) exceeded the hook budget and were EXCLUDED`,处方逐字 `(re-measure to record them: python3 tools/agent/lua_gate_measure.py)` ⇒ ⛔ 本台未跑(非本台作用域)。
-- 2026-09-16T00:16Z:**刹车第二十九轮持有,零 EC2 未发波;工作单元 = 台账的 `stamp_kind` 缺陷(GH #849)**。
+- 2026-09-16T00:16Z:**刹车第二十九轮持有,零 EC2 未发波;工作单元 = 台账的 `stamp_kind` 缺陷(GH #847)**。
   **一、成本(RULING 48 三段式)**:**零 EC2 / 零 CE / S3 读取 13 个对象(12 个不同,出网未计价)**
   —— ⛔ 不写「零支出」。逐项:`s3 ls` 四次(LIST 不是 GET);`s3 cp` **13 次 / 12 个不同对象 / ~108 KB**
   (`20260912_092739_slot3.analysis.json` 取了两次)。⛔ 本台不自行折算美元。
@@ -12271,7 +12271,7 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   `2026-09-12 10:18:26 validation/lf_rescue+27ids-d177b87026dd_20260912_1018_run.log` ⇒ **仍是 W69**。
   `recover_verdict.py` 未跑 ——「没得收」不是「漏收」;`--ledger` 仍未被真波行使,
   欠条 `games_ledger_cross_wave_accounting` **仍 OWED**。
-  **四、⭐⭐⭐ 工作单元(GH #849):上一轮那份测试的语料是它自己造的。**
+  **四、⭐⭐⭐ 工作单元(GH #847):上一轮那份测试的语料是它自己造的。**
   `tests/test_verdict_ledger_write.py:96` 的 `write_run()` 用 `"mirror:%s:s%s:%s"` **造**每一个 stamp,
   而 `recover_verdict.py:617` 用 `^mirror:(.*):s(\d+):(radiant|dire)$` **读回**它 ⇒ **同一个假设既当输入又当判据**,
   于是 `m` 为假那条分支(`cand/seed/arm_side` 全 `None`)**一次都没被执行过**。
@@ -12361,3 +12361,28 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ⇒ **最省事的读法是「trunk 红,告诉英雄组」**,那会**把一次并发假象登记成别人的缺陷** —— 本台本轮差一点就那么写。
   📌 与 §四、§五 同族:**一个真命题(测试确实红了)被用来回答另一个问题(谁的红)。**
   详见 `iterations/reports/batch-desk/20260916T001632Z.md`。
+  **补记(push 之后,GH #290 顺序)**:**(A) 第一次 push 被拒、第二次绿,而两次是同一棵树** ——
+  `PUSH1_EXIT=1`(`lua gate: 394 ran, **1 findings**, …, 726.3s`,红在 `test_denyreach_lane_deny_reach.lua`);
+  自检跑完后同一个 HEAD 重推 ⇒ `lua gate: 394 ran, **0 findings**, …, 715.0s`、`PUSH2_EXIT=0`
+  ⇒ ⭐⭐ **同样 394 个文件,唯一差别是自检已结束** ⇒ 这是归因的**第四条也是决定性的一条**:
+  ⛔ 不是 trunk 红、⛔ 不是本轮改动、⛔ 不该告诉任何组去修。
+  **(B) 落地**:推 main `GATE_EXIT=0 CLEAN` / `py gate: 94 ran, 0 findings, 15.3s` /
+  `lua gate: 394 ran, 0 findings, 715.0s` / **`25b676c6..634bfa5d  HEAD -> main`** / `PUSH3_EXIT=0`。
+  ⛔ **三次 push 全程未用 `RULE6_BYPASS`** ⇒ **本轮无「这是跳过不是通过」那一行**。
+  **独立复核(⛔ 不靠 push 回显)**:`HEAD` = `origin/main` = **`634bfa5d5b36cbdc18b70f1218596eb528684576`**,`STATUS_LINES=0`。
+  **(C) GitHub:已开两个 issue,发表前都跑了 `claim_precheck.sh`**:
+  **GH #847 `[batch]`**(台账 `stamp_kind` + 4.5 那条开放观测)——
+  ⚠️ `PRECHECK1_EXIT=3`,**唯一 finding 就是 `52ea2be4` 解析不到 main 上**,而**那正是 4.5 的内容**
+  ⇒ 已在 issue 里写明「它是被引作数据的字符串,不是引文」,⛔ 未为消掉这条 finding 而删改正文;
+  **GH #848 `[harness]`**(并发窗口 + 三条修法 + 验收)—— `PRECHECK2_EXIT=0` 逐字
+  `OK to publish: every citation resolves on origin/main.`(`soak_side.lua` 归入 `IGNORED-BY-DESIGN`,
+  自带说明 `matched by trunk's own .gitignore -- absent on purpose, not unpushed`)。
+  铁律 11:全程零 `requires approval`、零空转。
+  **(D) ⭐⭐ 交给总监的最重一件是 GH #848**:**防管道的正确做法和撞车的充分条件是同一件事**
+  ⇒ 该窗口**每条流每轮都可能开一次**,且其红**默认会被归成别组的 trunk 红**(瞬态 + gitignored ⇒ 事后零痕迹)。
+  最小修法:push 闸的 Lua 腿开工先看 `soak_side.lua`,若非本进程所写 ⇒ 打并发警告行并把红
+  **降级成 `uncertifiable`(exit 2)而不是 `findings`(exit 3)** —— ⛔ 不是放行,是**拒绝把它归给推的人**。
+  **(E) 下一轮本台的一条便宜活(§4.5 收口)**:取 W69 的 `run.log`(已在 S3,**1 个对象**)读实例自己的
+  clone 记录,把 (甲)「实例真的 clone 了非 main 的树」与 (乙)「stamp 记的不是 clone 出来的 tip」分开;
+  ⛔ 在分开之前**不许**说「W69 测的不是 main」,也**不许**据此否定 W69 任何读数。
+  **Token**:`TOKENS total_in=15,008,060 out=86,663 turns=99`(统计后的收尾回合不计入)。
