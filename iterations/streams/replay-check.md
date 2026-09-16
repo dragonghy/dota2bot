@@ -77,6 +77,21 @@
    从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
+- **⛔⛔ [2026-09-16 新踩,W83] 等自检的 `until ! pgrep -f …` 循环**会匹配到它自己**,于是永不退出。**
+  W81/W82 把「`pgrep -f` 会匹配到 Claude Code 自己的 Bash 工具 shell」记成一条**观察**
+  (查 PPID 排除掉就完了);**本轮它变成一个我亲手写的死循环**:
+  ```bash
+  until ! pgrep -f routine_selfcheck.sh > /dev/null; do sleep 5; done   # ⛔ 永不退出
+  ```
+  **这条命令自己的 shell 命令行里就含 `routine_selfcheck.sh`** ⇒ `pgrep -f` 永远至少匹配到它自己。
+  **后果实测**:自检**早就跑完了**,而我连续 ~10 分钟读到「RUNNING」,把一个**已完成**的自检
+  当成还在跑,并据此推迟了分支 ref 同步。
+  ⭐ **判别子在同一屏里,比结论早一行**:`ps -o etime= -p <真实PID>` **已经空了**,
+  而 `pgrep -f` **还在匹配** —— **两者矛盾时信 PID,不信 `-f` 模式**。
+  ⭐ **正解**:等已知 PID 用 `while kill -0 <pid> 2>/dev/null; do …; done`;
+  非用 `pgrep` 不可就写 `pgrep -f '[r]outine_selfcheck\.sh'`(方括号把自己排掉)或排除自身 PID。
+  ⭐⭐ **可迁移的那一句,与 W75/W79/W80/W81/W82 同族(第七例)**:
+  **先问「我量到的是不是我以为的那个东西」** —— 这次量到的是**我自己这条命令**,不是那个自检。
 - **⛔⛔ [2026-09-16 新踩,W82] `ls -t` 在 Routine 容器里**永远是错的顺序** ——
   容器每轮**全新 clone**,于是仓库里每个文件的 mtime **都是 clone 那一刻**,彼此相同。
   `ls -t iterations/reports/batch-desk/ | head -3` 本轮给出 `20260914T212233Z.md`,
@@ -19193,7 +19208,28 @@
   - **开工自检**:⛔ **两道闸各挡我一次,都是当轮第一条命令**(章程工具坑里写着,我还是各踩一次,记为本组损耗):
     `… | tail -40` ⇒ `SELFCHECK_EXIT=2 REFUSED`(自报**第 6 次**复发);改 `timeout 300 …` ⇒
     第二道闸 `REFUSED: running under timeout`(自报**第 4 轮**复发);第三次 `nohup … &` 才跑起来。
-    判决与 push 三行见报告 §八 收尾补记。
+    **判决(从输出文件读,⛔ 不采信 harness 通知)**:`legs run 13`、**`selfcheck worst exit: 3`**、
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage`、
+    **`UNCERTIFIABLE: trunk-red(python)`**、
+    `NOT RUN: test_lua_gate/test_luacheck_gate_soakswitch/test_selfcheck_lua_leg`
+    (⚠️ **连续第十二轮**);Lua 检测器腿 **127 文件 0 failures**(自报 FAST SUBSET)。自检实际耗时 **~21 分钟**。
+    ⛔⛔ **`trunk-red(python)` 本轮是 `UNCERTIFIABLE` 不是 finding —— 它没跑成**
+    (干净树那次 `did not finish inside 120s` ⇒ **9 个 check 没跑**,`5a` 会空洞通过)
+    ⇒ **本轮 trunk 的 python 那一侧没人看过**;⛔ 不许写成「本轮没有 trunk red」,也不许归给任何组。
+    **归属逐条查过,本组一条都不占**(只动 `iterations/`):`cadence` = **英雄组**两个洞
+    (`09-15T22:00Z→09-16T02:10Z` 4.2h,**与 W79–W82 同一个**;`09-16T17:21Z→09-16T21:30Z` 4.1h 是新的)
+    ⇒ **英雄组连续第五轮**;`lua-coverage` = **批测台**(两个 `NEW UNCOVERED` 与 W82 文件名逐字相同,仍未修);
+    `queue-rulings`/`owed-executions` 属总监。
+    ⛔ **顺带更正 W82 一处归属,组对 commit 错**:W82 记引入者 `d913a17f`,
+    **实测该 commit 这两个文件一个都没碰**;真正加进来的是 **`734088eb`**(批测台 09-16T09:12Z,+215/+287 行),
+    两条路径各自验过(`--diff-filter=A` 与 `show --stat`)。**组不变(批测台)。**
+    **push 读数**见报告 §8.3/§8.4:前三次 `GATE_EXIT=0 CLEAN` / `py gate 128 ran, 0 findings, 46.5–46.7s` /
+    `lua gate SKIPPED BY SCOPE`(⛔ 范围判定不是通过;diff 只有 `iterations/`)⇒ **闸的 Lua 腿没起来,与自检无并发**;
+    `PUSH_BRANCH_EXIT=0`、`PUSH_MAIN_EXIT=1`(⚠️ non-fast-forward **不是闸红**)、`REBASE_EXIT=0`、
+    `PUSH_MAIN2_EXIT=0`,main **`d363742e..e38b65a3`**。⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
+  - **issue**:**净增 1,评论 0** —— 新开 **GH #861 [harness]**(§三 全文 + 五条验收),
+    草稿 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0`,⭐ **在 push 之后才发**(GH #290)。
+    ⛔ **没给 `wkqdmg` 单开 issue**:`VERIFY … SILENT` 是**核验结论不是缺陷**,开单会把读数登记成病例。
   - **下一轮第一件事**:1) ⭐⭐ **§三 的根因诊断**(35 个槽的原始类名,一次运行)—— dumper 属 [harness],球在总监;
     ⛔ 本轮**只买到现象没买到根因**,不许读成已结清。
     2) ⭐ **§三 影响面的另一半**:有没有 fixture 断言真的依赖天赋折进去的 special value
