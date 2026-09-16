@@ -8456,6 +8456,16 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `test_gated_getter_stub_control.lua`(**只在按组跑时红、单独 6/0 绿** = 跨文件 `_G` 泄漏,
     GH #807;本轮 stash 复跑验过不是本组造成,且推送闸逐文件跑所以看不见它)。
   - ⚠️ **预跑三条闸腿是串行做的**(GH #229/#848:共用 `soak_side.lua`,并行造假红,方向是凭空多失败)。
+  - ⛔ **落 main 付了 4 次完整钩子(约 40 分钟),3 次全绿的钩子里 2 次输在网络那一步**
+    (`cannot lock ref ... is at c07671b1 but expected 5f5cc6b1` / `! [rejected] (fetch first)`)
+    ⇒ `state.json:push_race_measured_hero_20260916` **原样复现**,钩子 ~10 分钟 > main 到达间隔。
+    **没有用 `RULE6_BYPASS`** —— 输的是竞速不是闸。两次 rebase 的 `state.json`/`queue.json` 冲突
+    按**两边都保留**解(⛔ 没用 `--ours`);⚠️ 第二次两侧各缺一个花括号,
+    **`git rebase --continue` 不验 JSON**,是用 `json.load` 验过才继续的。
+  - ⚠️ **容器层面一条,免得重学**:`until ! pgrep -f 'lua_gate.py'; do sleep; done` **永不结束,
+    因为它匹配到自己**(`pgrep -f` 读整条命令行,等待循环自己的命令行里就写着那个名字)⇒
+    三个等待挂着而 `ps aux` 里一个真 gate 进程都没有。用 `pgrep -af` 打出**匹配到的是谁**再信它。
+    ⭐ 这与本轮 §4 的头条是**同一个形状**:一个守卫看起来在守某件事,实际读的是它自己。
 - 2026-09-16T04:53Z(报告 `iterations/reports/hero/20260916T045339Z.md`;**backlog:新开 `-187`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`axecallnocap`**(turbo-only,**未 armed**,
   P4.2 冻结期不申请入集);新 queue 请求 **hero-94**;**P4.4 自评:(i)**)
