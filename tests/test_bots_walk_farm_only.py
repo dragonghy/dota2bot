@@ -117,6 +117,25 @@ UNRESOLVED_HAND_READ = {
         "-- register in the SAME work unit that lands the walk -- is exactly "
         "what was skipped, and a comment naming an obligation is not the "
         "obligation being met",
+    """tests/test_cm_lane_fallback_wallet.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:97-:98, :129); "
+        "both are file-scope locals assigned once from string literals and "
+        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
+        "reach bots/Customize/ -- the entry above, and the "
+        "test_wk_reserve_rank_blind.lua one above that, are the same shape. "
+        "⚠️ Registered 2026-09-16 by the DIRECTOR, not by the author (hero "
+        "desk, be8a9185 at 14:09:23Z). THIS IS THE SECOND FILE IN TWO DAYS "
+        "THAT CARRIES ITS OWN OBLIGATION COMMENT (:125-:126, verbatim 'this "
+        "file belongs on the hand-read list of "
+        "tests/test_bots_walk_farm_only.py (GH #774)') AND LANDED WITHOUT "
+        "MEETING IT -- so the defect is not that authors do not know. It is "
+        "that this census is `in_gate: false` in tools/agent/py_gate_manifest.json, "
+        "so no push hook can refuse the landing, and the red is found hours "
+        "later by whichever desk opens next (here: batch-desk 开工自检 at "
+        "15:11Z, red window [14:09Z, 15:5xZ]). That is the subject of owed row "
+        "walk_farm_census_admitted_to_push_gate_or_priced / GH #843, and this "
+        "entry is its eighth receipt, not its fix",
     # -- Registered 2026-09-15 by the DIRECTOR, not by either author.  Both
     # -- walks below landed between the 18:06Z and 21:08Z self-checks and left
     # -- this census RED on trunk for ~3.5h (batch-desk 20260915T210852Z.md
