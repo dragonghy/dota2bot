@@ -35,7 +35,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT29. **【2026-09-16T10:23Z 新增,**下一轮第一项**。
+0NEXT30. **【2026-09-16T13:48Z 新增。⛔ 这一条是**读法**,不是活;
+   先按它判一次,再去看 0NEXT29。**
+
+   ⭐⭐ **本轮买到的可迁移句,它是 0NEXT27/0NEXT28「解析器/命令行会骗你」那一族在
+   【断言】这一格上的形态,而那两条都防不住它**:
+   **一个挂在 gate 后面的谓词,它的断言默认测的是「gate 关着」,不是「谓词对」。**
+   现场(报告 §3 M6):我断言 `J.HasFieldRegenSource(lina_tower 帧) == false`,
+   失败信息里**责怪的是 `bagsalve` 的背包放宽只收 flask**;
+   然后把放宽从 `item_flask` 改成 `item_faerie_fire` —— **变异活了下来**。
+   因为 `bagsalve` **不在 armed 串里**,背包循环整个没进去,**放宽改成什么都不影响**。
+   ⇒ 那条断言当时**真正**在测的命题是「`bagsalve` 没 armed」,
+   而它**写在失败信息里的**命题是「放宽是 flask-only」——**两者都真,但只有后者是我要的**。
+   📌 **判据(下一轮直接用,排在写断言之后、提交之前)**:
+   **每写一条关于「某个 gated 谓词答什么」的断言,就问一句:这个 id armed 吗?
+   没 armed ⇒ 再在 `armed() .. ',<该 id>'` 的世界里驱动一次。**
+   ⚠️ 这条**不能**靠「变异一发就好」兜住:M6 是我**第六发**变异才撞出来的,
+   前五发全 CAUGHT,而它们 CAUGHT 的是**别的**断言。
+   ⚠️ **判据继承 0NEXT11–0NEXT29 全部**,特别是 0NEXT27「解析器要先自证」、
+   0NEXT28「反向调用必须走同一条命令行」与 (酉)「改对了笔误 ≠ 支路就活了」。
+
+   ⭐ **本轮新增一条(戌),是「零输出 = 通过」那一族的 mock 世界特例**:
+   **`tests/mock/bot_api.lua:415` 把 `print` 置成空函数**(`G.print = function() end`,
+   为了测试输出干净)⇒ **在 mock 世界里写探针必须用 `io.stdout:write`**;
+   用 `print` 的探针会 `EXIT=0` + **零行输出**,而那**与「四个帧都没答案」同形**。
+   同轮第二发同族:`routine_selfcheck.sh` 因我接了 `| tail` 而 **REFUSED**
+   (它自己数到**第 5 次**复发,而且每次都是当轮第一条命令)。
+
+   ⚠️ **本轮交出去、下一轮要看一眼的两条**:
+   (a) `queue.json:strategy-54`(新)球在**批测台/录像组** —— **要一个 per-slot `charges`
+   字段,不要一波也不要一帧**;它是 `owed_executions.json:wandlimbo_charge_instrument`
+   的**加宽**(本轮量出那堵墙**不止挡魔棒**:bottle 与 tango 的充能同样不在 dump 里
+   ⇒ `FieldRegenSipValue` 的 bottle 腿在**任何 fixture 里永远答不了 TRUE**)。
+   **一个字段解三条腿**,与 `strategy-51/52/53` + GH #837 同一堵墙,顺手一起量最省;
+   (b) **P2 的球建议移出本组**(总监落):完成定义 1 按源码已满足
+   (`tprecov`/`tpdeep`/`stayfield2`/`bagtango` 全写完,三个未 armed 卡在 P4.2 冻结)。
+   ⛔ 本组**不得增删** `OWNER_PRIORITIES.md`,只登记在 `state.json:t3_funnel_20260916.p2_ball`。
+
+   ⛔ **已定价不要重买**:撤退:3 上「把 `tpdeep` 的 [0.10,0.18) 带照搬过来」**域 = 0**
+   (zuus 0.158 没东西喝 / centaur 0.096 出带);撤退:3 的**逐合取项漏斗**已钉进
+   `tests/test_t3_funnel_safe_side.lua`(11 例,变异 10 发 9 CAUGHT / 1 声明越界)。】**
+
+0NEXT29. ⏭ **【2026-09-16T10:23Z 新增 → 13:48Z 那轮**一格未动,原样顺延**:
+   该轮按**铁律 9** 做了 owner 优先项 P2(`OWNER_PRIORITIES.md` 写着「当前球在:协同组」),
+   而本条的「下一轮第一项」**排在铁律 9 之下**。⚠️ 这不是掉棒,是**优先级**;
+   下一轮若 P2 的球已被总监移走、且没有别的本组 owner 优先项,再取本条。原文保留在下。**
+   **【2026-09-16T10:23Z 新增,**下一轮第一项**。
    **主体继续留在 `bots/`**(4.4 (i) 连续六轮满足,别让它断)。
 
    ⭐⭐ **本轮买到的可迁移句,它管的是【跨轮】那一格,0NEXT27/0NEXT28 都只管一轮之内**:
@@ -9964,6 +10009,76 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-16T13:48Z:**「解开它什么都不用买」是真的,而它后面没有杠杆 —— 吃掉撤退:3 全部域的那一项在安全侧。**
+  出口 **(ii)**(判定完结所需的最后一块证据)。⛔ **4.4 (i) 的连续六轮 `bots/` 主体本轮有意断档**,
+  理由:唯一有形状的候选杠杆**量出来域 = 0**(见下),而 0NEXT28 (酉) 刚立过
+  「把运算符一改就当 gated fix 落地会是一次诚实性事故」—— **为续一条连胜而落一个域 0 的
+  gated fix 正是那一条禁的事**。
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;**未提入集**(P4.2 冻结,armed 25 > 20)。
+  报告:`iterations/reports/strategy/20260916T134802Z.md`;`state.json:t3_funnel_20260916`;
+  交棒 `queue.json:strategy-54`。
+
+  **铁律 9 本轮真的改了走法**:`OWNER_PRIORITIES.md` 的 **P2「当前球在:协同组」** ⇒ 做 P2,
+  **不走 1b、不取 0NEXT29**。⚠️ 差点又错:0NEXT29 写着「下一轮第一项」,而工作流第 1 步的
+  警示段(09-13T22:45Z 补)**逐字预言了这次**——「两条互相加固,而它们都排在铁律 9 之下」。
+  **0NEXT29 一格未动,原样顺延。**
+
+  **⭐⭐ 头条**:`state.json:stayfield_RETURNED_20260914` 的 CALLSITE-EMPTY 处置附了一句
+  **「⇒ 解开它什么都不用买」**。把它当待验证命题去量:**对「成本」成立,对「有东西可解」不成立。**
+  撤退:3 的 76 个 trigger 帧 → 4 个 `branch_open`,逐合取项分解
+  **lvl 59 / ring 7 / attackally 4 / allies 1 / modifier 1 / flask 0 / name 0 / target 0 / open 4**,
+  **和 = 76 = trigger**(sweep「每个 trigger 帧发一行」契约的**恒等式形式**,也是反真空那一列)。
+  ⇒ **一项吃掉 78%:`bot:GetLevel() >= 9`**。而这八项全是 `and` 进一个**函数体就是回家**
+  (`tpLoc = J.GetTeamFountain()`)的分支头 ⇒ **任一项读 FALSE 都是「不回家」**
+  ⇒ 松开吃掉 78% 的那一项,**多出来的是 TP 回家,不是留在野区**
+  ⇒ **撤退:3 不需要杠杆,它今天的形状是对的**。档案头条(solo_S 24 / live_S 2 /
+  branch_open 4 / margin_solo 1 / margin_live 0)**逐位复现,档案没错** —— 缺的只是这一层。
+
+  **四个幸存帧逐帧驱动,四个不同理由,只有一个是仪器缺口**:zuus 0.158/lvl12
+  (**`item_empty_bottle`** ⇒ 没东西喝,**且**低于 0.18 地板)/ lina 0.257/lvl14
+  (1200 内**真有敌方塔** ⇒ 危险撤退 P2 自己豁免,**且**它的 `item_faerie_fire` **在背包**)/
+  centaur 0.096/lvl11(没东西喝,**且**低于 0.10 算术下界)/ lina 0.318/lvl9
+  (**P2 铁证帧**:`solo_S=true`、`live_S=false`、`SipValue=85`,**只**被 `fieldsip` 量级条款关掉;
+  slot1=`item_magic_wand` ⇒ **85 是下界** ⇒ UNCERTIFIABLE)。
+
+  **⭐⭐⭐ 于是 P2 完成定义 1 的账**:按源码**本组已经交完了**,而且都带 fixture ——
+  TP 腿 `stayfield`(退集,且本轮证明**不该**有域)+ **`tprecov`** [0.18,∞) / **`tpdeep`**
+  [0.10,0.18)(挂在**回复状态**,即语料真正到达的那条分支,31 帧)+ 步行腿 **`stayfield2`**(armed)
+  + 背包可达性 **`bagtango`**(GH #734)。⛔ **`tprecov`/`tpdeep`/`bagtango` 三个都未 armed,
+  原因是 P4.2 入集冻结**,而完成定义 3 的 (a) 证据**必须先入集才买得到**
+  ⇒ **P2「当前球在:协同组」这一行按今天的源码是错的**,卡点是**总监(入集)+ 批测台(取证波)**。
+  ⚠️ 本组**不得增删** `OWNER_PRIORITIES.md`,故只写进报告 §1.3 + `state.json`,由总监落。
+
+  **⭐⭐ 本轮真正学到的东西(M6,evidence-discipline 第 2 条现场)**:
+  我写的断言 `HasFieldRegenSource(lina) == false` 的失败信息**责怪背包放宽**,
+  **而它当时其实在测「`bagsalve` 没 armed」** —— 背包循环整个没进去,
+  所以把放宽从 flask 改成 faerie_fire **一个字都不影响**,变异**活了下来**。
+  📌 **可迁移句(下一轮直接用)**:**一个挂在 gate 后面的谓词,它的断言默认测的是
+  「gate 关着」,不是「谓词对」。** 要测谓词,就得**在那个 gate 真的开着的世界里驱动**
+  (改法:同一帧再驱动一次 `armed() .. ',bagsalve'` ⇒ CAUGHT)。
+  ⚠️ **第二次踩「零输出长得像通过」**:第一版探针 `EXIT=0`、**零行输出**,
+  因 `tests/mock/bot_api.lua:415` 把 `print` 置成空函数 ⇒ **mock 世界里探针必须写
+  `io.stdout:write`**;同轮 `routine_selfcheck.sh` 因我接了 `| tail` 而 **REFUSED**
+  (它自己数到**第 5 次**复发)。**两次都是「读数经过一根管子就没了」。**
+
+  **铁律 6 三条腿**:`GATE_EXIT=0`(luacheck 0 warnings)/
+  `py gate: 127 ran, 0 findings, 0 uncertifiable, 59.1s` /
+  `lua gate: 403 ran, **3 findings**, 0 uncertifiable, 10 unanswered, 6 known-red, 788.0s`;
+  ⛔ **没有用 `RULE6_BYPASS`**。⚠️ **那 3 个不是 trunk 红**:`bbfight`/`bbrespawn`/`bbshort`
+  的 setup error 是 `bots/Customize/soak_side.lua` **被泄漏**(内容 `{side='dire', cand='siegecap'}`)
+  —— 同一轮里另一个测试写了那个**全局** gate 文件没清掉。串行单跑四个文件(含 `siegecap`)
+  **全绿 20/16/21/20**,且该文件现已不存在。
+  **开工自检 `SELFCHECK_EXIT=3`**,findings 逐字
+  `cadence queue-rulings owed-executions lua-coverage trunk-red(python)`;
+  另有 **9 条 UNCERTIFIABLE**(它自己的 Lua 腿在本容器 120s 内没跑完)——**那不是通过**。
+
+  **附带一条(P4.4 允许的至多一条)**:`trunk-red(python)` 本轮修掉 ——
+  `tests/test_bots_walk_farm_only.py` 修前 EXIT=1 / 修后 **8 checks, 0 failed**。
+  红的是 `test_lion_hex_panic_level.lua` 的 io.popen 走查没登进 `UNRESOLVED_HAND_READ`,
+  ⭐ **而该文件 :119-:120 自己的注释就写着它「belongs on the hand-read list … (GH #774)」,
+  然后照样落了地** ⇒ **一句点名义务的注释,不是那个义务被履行**(GH #803)。
+  `py_gate.py` **不覆盖这个文件** ⇒ 没有 push 钩子会拒它,于是由**下一个开工的组**发现。
 
 - 2026-09-16T10:23Z:**Roshan 的门槛是全队的,拿去比的那个数是人均的 —— gated `roshdps` 已上机。**
   出口 **(i)**(`bots/` 行为改动,4.4 (i) **连续六轮不断档**)。

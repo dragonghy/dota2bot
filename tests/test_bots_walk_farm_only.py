@@ -101,6 +101,22 @@ UNRESOLVED_HAND_READ = {
         "cannot reach bots/Customize/. Hand-read 2026-09-15 (hero desk -- this "
         "desk's own walk, from the wkrank0 round, registered in the SAME work "
         "unit that landed it, per GH #803)",
+    """tests/test_lion_hex_panic_level.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:89-:90, :122); "
+        "both are file-scope locals assigned once from string literals and "
+        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
+        "reach bots/Customize/ -- identical in shape to the "
+        "test_wk_reserve_rank_blind.lua entry above. ⚠️ Registered 2026-09-16 "
+        "by the STRATEGY desk, not by the author: the file carries its own "
+        "comment at :119-:120 saying it 'belongs on the hand-read list of "
+        "tests/test_bots_walk_farm_only.py (GH #774)' and landed anyway, so "
+        "this census was RED on trunk across at least three desks' 开工自检 "
+        "(replay-check 20260916T124500Z §self-check named it; py_gate.py does "
+        "NOT cover this file, so no push hook ever refused it). GH #803's rule "
+        "-- register in the SAME work unit that lands the walk -- is exactly "
+        "what was skipped, and a comment naming an obligation is not the "
+        "obligation being met",
     # -- Registered 2026-09-15 by the DIRECTOR, not by either author.  Both
     # -- walks below landed between the 18:06Z and 21:08Z self-checks and left
     # -- this census RED on trunk for ~3.5h (batch-desk 20260915T210852Z.md

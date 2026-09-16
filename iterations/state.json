@@ -9477,5 +9477,23 @@
   "cost_registered": "⚠️ **这根杠杆唯一真正的反对意见,写在 helper 头里而不是辩掉**:该分支**不带任何蓝量配给**(CM 的同名分支也不带),所以低等级的 Lion 可能对一次对线消耗就按下 Hex。这是**频率问题**,是 `queue.json:hero-96` 的 (4b) 格 —— 域大而 (4b) 显示多数是「满血挨一下」⇒ **写 DO-NOT-ARM,不是 promote 也不是 reject**。",
   "aws": "零 EC2 / 零 CE / S3 读取 0 个对象(本轮没有任何 `s3 cp` / `s3 sync` / `.dem` 下载;铁律 1 RULING 48 的三段式)。",
   "next_baton": "`iterations/queue.json:hero-96`(零 EC2、优先级 2、只读归档):载体 / 域 / 对照转化率 / 「是不是对线消耗」四个数,单位是事件不是帧,按种子 × 英雄等级分层,⛔ 不许并池报比例。⚠️ **不要与 `lionwreach` 同波**(两条都落在 `X.ConsiderW`,一收一放,同 arm 的裁定表会写两个名字而只测得到一个合成效果)。"
+ },
+ "t3_funnel_20260916": {
+  "id": "无新 id —— 本轮是一个读数 + 一条处置补充,不是一个 gated fix",
+  "at": "2026-09-16T13:48Z 协同组(strategy)",
+  "owner_priority": "P2(铁律 9;OWNER_PRIORITIES 写「当前球在:协同组」)",
+  "headline": "⭐ `stayfield` 的 CALLSITE-EMPTY 处置里那句「⇒ 解开它**什么都不用买**」对**成本**成立,对**有东西可解**不成立:撤退:3 的域之所以空,压倒性由 `bot:GetLevel() >= 9`(**59/76 = 78%**)造成,而那一项**在安全侧**(它让 bot **不**回家)⇒ 松开它会**制造** owner P2 禁止的病例。**撤退:3 不需要杠杆,它现在的形状是对的。**",
+  "funnel": "1039 live 帧 / live 25 串,`tests/_stayfield_tpleg_sweep.lua` 复跑,档案头条**逐位复现**(solo_S 24 / live_S 2 / branch_open 4 / margin_solo 1 / margin_live 0)。新增的是逐合取项分解:lvl 59 / ring 7 / attackally 4 / allies 1 / modifier 1 / flask 0 / name 0 / target 0 / open 4,**和 = 76 = trigger**(sweep「每个 trigger 帧发一行」契约的恒等式形式)。",
+  "four_survivors": "branch_open 的 4 帧**逐帧驱动**,四个**不同**理由,**只有一个是仪器缺口**:(1) f_181441 zuus 0.158/lvl12 —— `item_empty_bottle`,HasFieldRegenSource=false,**且**低于 0.18 地板;(2) f_260820_103630 lina 0.257/lvl14 —— 1200 内真有敌方塔(危险撤退,P2 自己豁免),**且**它的 `item_faerie_fire` 在**背包**;(3) f_631400 centaur 0.096/lvl11 —— 没东西喝,**且**低于 0.10 算术下界;(4) f_260822_063722 lina 0.318/lvl9 —— P2 铁证帧,solo_S=true / live_S=false / SipValue=85,**只**被 `fieldsip` 量级条款关掉,slot1=`item_magic_wand` ⇒ 85 是下界 ⇒ **UNCERTIFIABLE**(RULING 37 / owed_executions.json:wandlimbo_charge_instrument)。",
+  "p2_ball": "⭐⭐ **P2 完成定义 1 按源码已满足,球不在协同组**:TP 腿 `stayfield`(退集,且本轮证明不该有域)+ `tprecov` [0.18,∞) / `tpdeep` [0.10,0.18)(回复状态 = 语料真正到达的那条,31 帧)+ 步行腿 `stayfield2`(armed)+ 背包可达性 `bagtango`(GH #734)。⛔ `tprecov`/`tpdeep`/`bagtango` **三个都未 armed,原因是 P4.2 入集冻结**(armed 25 > 20),而完成定义 3 的 (a) 证据**必须先入集才买得到** ⇒ 卡点是**总监(入集)+ 批测台(取证波)**,外加铁证帧那格的充能仪器。⚠️ 本组不得增删 OWNER_PRIORITIES.md,故只登记在此 + 报告 §1.3。",
+  "instrument_wall_width": "本轮量出那堵墙比 `wandlimbo` 宽:**bottle 与 tango 的充能同样不在 dump 里** ⇒ `FieldRegenSipValue` 的 bottle 腿在**任何 fixture 里永远答不了 TRUE**(mock `GetCurrentCharges` 默认 0,源码注释已声明)。**一个 per-slot `charges` 字段解三条腿。** 交棒 queue.json:strategy-54(与 strategy-51/52/53 + GH #837 同一堵墙)。",
+  "no_lever_filed_not_bundled": "撤退:3 上唯一有形状的候选杠杆是「把 `tpdeep` 的 [0.10,0.18) 带照搬过来」。**量了:域 = 0**(zuus 0.158 没东西喝 / centaur 0.096 出带)⇒ **不落**。落它会满足 P4.4 (i) 的字面,同时踩中 test_stayfield_callsite_domain 立的陷阱(在实验室正在跑的串上是空的杠杆),也踩中 0NEXT28 (酉)。**4.4 (i) 连续六轮本轮有意断档,主体按 4.4 (ii) 结账。**",
+  "pinned": "tests/test_t3_funnel_safe_side.lua(新,11 例)—— 不重算普查;每跑重新推导 (甲) 计数必须满足的算术、(乙) 方向(源码:八个合取项都在 `and` 链、函数体是 `tpLoc = J.GetTeamFountain()`)、(丙) 四个帧真的驱动。**变异台 10 发,9 CAUGHT,1 声明越界(M9)。**",
+  "mutation_lesson": "⭐⭐ **M6 第一次 SURVIVED,是 evidence-discipline 第 2 条的现场**:断言 `HasFieldRegenSource(lina)==false` 的失败信息**责怪放宽**,而它实际在测「`bagsalve` 没 armed」—— 背包循环整个没进去,所以把放宽从 flask 改成 faerie_fire 一个字都不影响。📌 **可迁移句:一个挂在 gate 后面的谓词,它的断言默认测的是「gate 关着」,不是「谓词对」。** 改法:同一帧再驱动一次 `armed()..',bagsalve'` ⇒ CAUGHT。",
+  "second_lost_reading": "本轮第二次踩「零输出长得像通过」:第一版探针 EXIT=0、**零行输出**,因 `tests/mock/bot_api.lua:415` 把 `print` 置成空函数 ⇒ **mock 世界里探针必须写 `io.stdout:write`**。同族:`routine_selfcheck.sh` 因我接了 `| tail` 而 REFUSED(它自己数到**第 5 次**复发)。两次都是「读数经过一根管子就没了」。",
+  "collateral_trunk_fix": "附带修掉 `trunk-red(python)`:`tests/test_bots_walk_farm_only.py` 修前 EXIT=1 / 修后 **8 checks, 0 failed**。红的是 `test_lion_hex_panic_level.lua` 的 io.popen 走查没登进 `UNRESOLVED_HAND_READ` —— ⭐ **而该文件 :119-:120 自己的注释就写着它「belongs on the hand-read list … (GH #774)」,然后照样落了地** ⇒ **一句点名义务的注释,不是那个义务被履行**(GH #803 要求同一工作单元内登记)。`py_gate.py` **不覆盖这个文件** ⇒ 没有 push 钩子会拒它,于是由**下一个开工的组**发现(GH #624/#806 同族)。安全性先核实:两个目录是文件域字面量、只赋值一次、裸 `ls` 不递归;M10 证明登记**没有消音**(键是命令原文,且普查双向)。",
+  "gate_readings": "GATE_EXIT=0(luacheck 0 warnings)/ py gate: 127 ran, 0 findings, 59.1s / lua gate: 403 ran, **3 findings**, 6 known-red, 788.0s —— ⚠️ **那 3 个不是 trunk 红**:`bbfight`/`bbrespawn`/`bbshort` 三个的 setup error 是 `bots/Customize/soak_side.lua` **被泄漏**(内容 `{side='dire', cand='siegecap'}`),即同一轮里另一个测试写了那个全局 gate 文件没清掉。串行单跑四个文件(含 siegecap)**全绿 20/16/21/20**,且该文件现已不存在。**没有用 RULE6_BYPASS。**",
+  "cost": "零 EC2 / 零 CE / **S3 读取 0 个对象**",
+  "report": "iterations/reports/strategy/20260916T134802Z.md"
  }
 }
