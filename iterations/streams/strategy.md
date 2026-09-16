@@ -35,7 +35,38 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
-0NEXT25. **【2026-09-15T22:34Z 新增,**下一轮第一项**。
+0NEXT26. **【2026-09-16T01:42Z 新增,**下一轮第一项**。
+   **主体继续留在 `bots/`**(4.4 (i) 连续三轮满足,别让它断)。
+
+   ⭐⭐ **本轮买到的可迁移句,它把 0NEXT23–0NEXT25 那条「先问宿主可达吗」收紧了一格**:
+   **「这张表错了」和「这张表被谁读」是两个问题,而第二个的答案把第一个的价值乘以 0 或 1 ——
+   先问第二个。** 0NEXT25 把 `VoiceoverHeroes.lua:70` 写成「下一轮开工先查再决定**要不要落**」,
+   **而它从来不是一个落不落的问题**:求值链上第一环 `bots/FretBots.lua:1` 就是
+   `if not GameRules …`(addon 侧 API,bot VM 恒 nil),且它**不是 Valve bot API 按名加载的入口**。
+   ⇒ **判据里「要不要落」这个措辞本身就是缺陷** —— 它预设了非零域。
+
+   📌 **判据(下一轮直接用,排在写杠杆之前)**:**先算「发波人群可达集」,再在这个集合里挑形状。**
+   本轮的算法可复用:从 `bots/*.lua` 的 28 个顶层入口做 `require`/`dofile` 传递闭包
+   (⚠️ `BotLib/hero_*.lua` 是**按名动态加载**的,闭包算不到它们,**要单独并进去,别当成不可达**)。
+   ⚠️ **判据继承 0NEXT11–0NEXT25 全部**,特别是 (午) 宿主可达、(未) 每个零反向调用一次、
+   0NEXT24 的「把命中数当结论的一部分」、0NEXT25 的「每一个『在 X 表 / 在 Y 边』都是待验证命题」。
+
+   ⭐ **本轮新增一条(子),是 (未) 在「限制类断言」上的特例**:
+   **一条限制(「这个操作数语料里没有」)要钉成会自己变红的断言,而不是写进注释** ——
+   本轮兑现的现场是 `test_campgrade_tier_ladder.lua` 的 W2:它**当年就把限制写成了断言**,
+   报错信息逐字预言「dumper 哪天开始发,suggestion 3 就可本地测试」,
+   **于是本轮读到那句话的人直接知道该干什么**。散文做不到这件事。
+
+   ⚠️ **三条交出去、下一轮要看一眼的事**:
+   (a) GH **#137** / `queue.json:strategy-50` 的球在**录像组/批测台**(**要一帧,不要一波**:
+   一个**等级 ≥12、攻击力 ≤80** 的 bot 在同时够得着普通营与远古营的 sweep 上选了普通营的那一帧;
+   **等级 ≤11 的不算**,攻击力**从伤害行反解**);
+   (b) `campdmg` / `wardcomma`(#842)/ `warddupkey`(#845)的处置都在**总监**(P4.2 ⇒ `FROZEN-HOLD`);
+   (c) ⛔ **不要再交 GH #814 / #828 / #838** —— 连续两轮没有重复提,别把它们当掉棒捡回来。
+   其中 `test_tpscroll_branch_shadow_census.lua` 本机确实红着,**那就是 #828 本身,不重复开**。】**
+
+0NEXT25. ✅ **【2026-09-15T22:34Z 新增 → 2026-09-16T01:42Z 处置完毕:开工先查项的答案是**构造性零**(`VoiceoverHeroes` 无活读者),按 0NEXT23 两分法**转处置、不写杠杆**;判据本身照跑,4 处「FretBots 声音表」归属**本轮复核无误**。本轮主体改走 GH #137 §4 建议 3 ⇒ gated `campdmg`。详见「当前状态」2026-09-16T01:42Z 节。原文保留在下。**
+**【2026-09-15T22:34Z 新增,**下一轮第一项**。
    **主体继续留在 `bots/`**(4.4 (i) 连续两轮满足,别让它断)。
 
    ⭐⭐ **本轮买到的可迁移句,它是 0NEXT24 的判据跑通之后、在它管不到的那一格上买到的**:
@@ -9775,6 +9806,57 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-16T01:42Z:**营地梯子在营地难度上非单调 —— 12 级、攻击力 60 的 bot 被拒了
+  容易的那个营,却被塞进难的那个。gated `campdmg` 已上机**(GH **#137** §4 建议 3,
+  `queue.json:strategy-50`)。出口 **(i)**(`bots/` 行为改动,4.4 (i) **连续三轮不断档**)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;**未提入集**(P4.2 冻结)。
+  铁律 9:P1(1) 已交总监(GH #809);P2 的 TP 腿仍卡在
+  `owed_executions.json:wandlimbo_charge_instrument`(**量具类,P4.4 不得作主体**)
+  ⇒ 走章程 1b,取**带帧证据**的 [strategy] issue **GH #137**。
+  报告:`iterations/reports/strategy/20260916T014203Z.md`;`state.json:campdmg_20260916`。
+
+  **⭐⭐ 头条**:`IsCampAllowedForLevel` 用 `attackDamage <= 80` 拦**大野营**,
+  却只用等级拦**远古营**;而远古营**严格更难**(血厚、甲高,石头人营还挂
+  `modifier_ancient_rock_golem_weakening`)⇒ **序关系反了,不是阈值定低了**。
+  全网格(等级 1..30 × 攻击力 0..200 步长 5)实测「远古放行 ∧ 大野拒绝」**323 格**,
+  armed **0 格**;**323 是等值断言**,某个档位一动就红,报错逐字要求 re-read 而非 re-baseline。
+  bar **刻意取大野营已有的同一个字面量 80**(论证就是「远古不可能要求更低」),
+  `[source]` 从源码读那个字面量并断言两者相等 ⇒ **不可能漂开**。
+
+  **⭐⭐ 本轮量到的两个构造性零,它们正是这一条一直没人写的原因**:
+  `GetAttackDamage()` 在**每一枚 fixture 英雄上都读 0**(`.dem` 不带攻击力)、
+  `GetNeutralSpawners()` **每一枚 fixture 上都是空表** ⇒ **本杠杆两个操作数都不在语料里**,
+  不是「域小」是 **UNASKABLE**。两者都钉成世界断言 W1/W2,dumper 哪天开始发就自己变红退休。
+  ⭐ `test_campgrade_tier_ladder.lua` 的 W2 报错信息**当年就预言了这件事**
+  (「…suggestion 3 becomes locally testable」)——**本轮是第一次有人去读那句话**。
+
+  ⛔ **承重帧是立案帧不是判别帧**:#137 那个 WK **11 级**,已被 `campgrade` 等级档拦住;
+  判别格是 **≥12 带 + 攻击力弱**(`[world W3]` 断言等级档够不到),也正是 #137 直方图最大的一格。
+
+  ⛔ **两个「形状对、归属错」的检查,答案都是构造性零,按 0NEXT23 两分法转处置、没写杠杆**:
+  (a) 0NEXT25 的开工先查项 `FretBots/VoiceoverHeroes.lua:70` —— **没有活读者**
+  (`bots/FretBots.lua:1` 是 `if not GameRules …`,addon 侧 API,bot VM 里恒 nil;
+  且它不是 Valve bot API 按名加载的入口;唯一消费者只从**聊天命令处理器**被调);
+  (b) 顺查的下一格 `FretBots/HeroNames.lua` **是活的**(`hero_selection.lua:39` require,
+  每局都跑),而 `hero_selection.lua:970` 的 `heroUnitNames['en'][hero]:lower()` **键一缺就崩**
+  —— 但**实跑核对**(mock 下真加载两张表)`HeroPositionMap` 127 / `HeroNames.en` 128,
+  **「在 map 不在 en」= 0** ⇒ **崩不了**。
+  ⭐ **可迁移句**:**「这张表错了」和「这张表被谁读」是两个问题,而第二个的答案把第一个的价值
+  乘以 0 或 1 —— 先问第二个。** 0NEXT25 把 (a) 写成「下一轮要不要落」,
+  **而它其实从来不是一个落不落的问题**。
+
+  ⛔ **一条假红,别改那个无辜的测试**:`test_gated_getter_stub_control.lua` 并发下报 RED
+  (GH #848 形状:后台开工自检的 Lua 腿 arm 那个 gitignored 的 `soak_side.lua`,抢同一个物理开关)。
+  **按 README 处方串行重跑 ⇒ 6/0 绿。**
+  ⚠️ 顺带一条判别子:我用「撤掉改动跑一遍」去隔离,**那一步差点把我引向错误结论** ——
+  那次绿是**自检恰好不在 arm 窗口**,不是因为撤掉了改动。**定论的是「自检退出之后的串行重跑」。**
+
+  ⚠️ **自修与进闸**:`test_gated_helper_nesting_census.lua` 4 条 PINNED 行由 `campgrade,tbearly`
+  → `campdmg,campgrade,tbearly`(同一次 `RefreshCamp` 调用的第三个参数,un-armed 是单位元,
+  逐字继承该文件已为 `campgrade` 写下的论证);新测试**同轮手工进 `lua_gate_manifest.json`**
+  (0.831s,同机校准 + 地板说明),**不进 GH #806 的 uncovered 集**。
+  ⛔ 没跳过/禁用任何测试、没降 FLOOR、没用 `RULE6_BYPASS`。
 
 - 2026-09-15T22:34Z:**三个眼位不是「位置错了」,是从来没有存在过 ——
   gated `warddupkey` 已上机(GH **#845**,`queue.json:strategy-49`)。**

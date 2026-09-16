@@ -352,10 +352,24 @@ export const IsCampAllowedForLevel = function (camp: any, botLevel: number, atta
     return true;
 };
 
-export const RefreshCamp = function (bot: Unit, bStrictLadder?: boolean): LuaMultiReturn<[any[], number]> {
+// [GH #137 section 4 suggestion 3] Soak candidate 'campdmg' (turbo-only), a
+// SECOND lever kept out of IsCampAllowedForLevel on purpose: that function is
+// 'campgrade'. The shipped ladder guards the LARGE tier with `attackDamage <=
+// 80` and the ANCIENT tier with level alone, which makes it NON-MONOTONIC in
+// camp difficulty -- a level-12 bot with 60 attack damage is refused the easier
+// camp and handed the harder one. The bar here is deliberately the same 80,
+// not a new unmeasured constant.
+export const ANCIENT_MIN_DAMAGE = 80;
+
+export const IsAncientCampTooTough = function (camp: any, attackDamage: number): boolean {
+    return IsAncientCamp(camp) && attackDamage <= ANCIENT_MIN_DAMAGE;
+};
+
+export const RefreshCamp = function (bot: Unit, bStrictLadder?: boolean, bAncientDamage?: boolean): LuaMultiReturn<[any[], number]> {
     const camps = GetNeutralSpawners();
     const allCampList: any[] = [];
     const botLevel = bot.GetLevel();
+    const attackDamage = bot.GetAttackDamage();
 
     for (const aCamp of Object.values(camps)) {
         const camp = aCamp as any;
@@ -363,7 +377,10 @@ export const RefreshCamp = function (bot: Unit, bStrictLadder?: boolean): LuaMul
         // camp is admitted, exactly as the shipped default always did.
         let bAdmit = true;
         if (bStrictLadder) {
-            bAdmit = IsCampAllowedForLevel(camp, botLevel, bot.GetAttackDamage());
+            bAdmit = IsCampAllowedForLevel(camp, botLevel, attackDamage);
+        }
+        if (bAdmit && bAncientDamage && IsAncientCampTooTough(camp, attackDamage)) {
+            bAdmit = false;
         }
         if (bAdmit) {
             if ((botLevel <= 7 || bot.GetAttackDamage() <= 80) && !IsEnemyCamp(camp) && !IsLargeCamp(camp) && !IsAncientCamp(camp)) {

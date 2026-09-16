@@ -241,7 +241,7 @@ local PINNED = {
     -- 'roshpit' wave has a domain of its own. Pinned in
     -- tests/test_roshan_pit_daynight.lua ([gate] / [call sites]).
     "c12,retnear,towerreach | GetDesireHelper | J.GetCurrentRoshanLocation | roshpit | bots/mode_retreat_generic.lua",                    -- W
-    "campgrade,tbearly | GetDesireHelper | J.GetCurrentRoshanLocation | roshpit | bots/mode_farm_generic.lua",                            -- W
+    "campdmg,campgrade,tbearly | GetDesireHelper | J.GetCurrentRoshanLocation | roshpit | bots/mode_farm_generic.lua",                            -- W
     "roshgate | GetDesireHelper | J.GetCurrentRoshanLocation | roshpit | bots/mode_roshan_generic.lua",                                   -- W
     "c12,retnear,towerreach | GetDesireHelper | J.IsAtRoshanPit | roshdist | bots/mode_retreat_generic.lua",                              -- W
     "c12,retnear,towerreach | GetDesireHelper | J.IsInLaningPhase | c2,c4 | bots/mode_retreat_generic.lua",                               -- W
@@ -633,7 +633,7 @@ local PINNED = {
     -- is armed or promoted, the two heartbeat arms both become live and this
     -- row must be re-read.
     "arbheart,campexit | Think | J.IsCampSwitchSafe | campdanger | bots/mode_farm_generic.lua",                                           -- W
-    "campgrade,tbearly | GetDesireHelper | J.IsInLaningPhase | c2,c4 | bots/mode_farm_generic.lua",                                       -- P
+    "campdmg,campgrade,tbearly | GetDesireHelper | J.IsInLaningPhase | c2,c4 | bots/mode_farm_generic.lua",                                       -- P
     "capmono,divecap | _divecap_CapForLanePush | J.IsInLaningPhase | c2,c4 | bots/mode_team_roam_generic.lua",                            -- P
     "ccburst,lanehyst | J.ShouldRetreatLaneBurst | J.GetReadyHardCc | esaftershock | bots/FunLib/jmz_func.lua",                           -- P
     "ccburst,lanehyst | J.ShouldRetreatLaneBurst | J.IsInLaningPhase | c2,c4 | bots/FunLib/jmz_func.lua",                                 -- P
@@ -1008,7 +1008,7 @@ local PINNED = {
     -- 'tfnull' alone: there the lever really is `outer AND tfnull`, and a zero
     -- measured with only 'campgrade' / 'tbearly' / 'corefarm' / 'roshgate' armed
     -- means "the inner refusal never ran", not "the refusal has no effect".
-    "campgrade,tbearly | GetDesireHelper | J.GetTeamFightLocation | tfnull | bots/mode_farm_generic.lua",                                  -- P
+    "campdmg,campgrade,tbearly | GetDesireHelper | J.GetTeamFightLocation | tfnull | bots/mode_farm_generic.lua",                                  -- P
     "corefarm | J.ShouldCoreKeepFarming | J.GetTeamFightLocation | tfnull | bots/FunLib/jmz_func.lua",                                     -- P
     "roshgate | GetDesireHelper | J.GetTeamFightLocation | tfnull | bots/mode_roshan_generic.lua",                                         -- P
     -- [tombhp 20260910] A third caller of J.IsInLaningPhase, and the identity
@@ -1155,7 +1155,26 @@ local PINNED = {
     -- QUESTION and, until a late-game frame exists, nothing else. That is a
     -- corpus-coverage zero, not GH #831's constructive one; the branch runs for
     -- every drafted hero in every game that lasts. GH #837 / queue strategy-47.
-    "campgrade,tbearly | GetDesireHelper | X.IsUnitAroundLocation | siegecap | bots/mode_farm_generic.lua",                                -- P
+    "campdmg,campgrade,tbearly | GetDesireHelper | X.IsUnitAroundLocation | siegecap | bots/mode_farm_generic.lua",                                -- P
+    -- ⭐ 'campdmg' (GH #137 suggestion 3, 2026-09-16) joined the outer-id list
+    -- of the FOUR rows above without changing any of their answers, and the
+    -- reason is worth writing down once rather than re-deriving per row: it is
+    -- the THIRD parameter of the very same RefreshCamp call the block above
+    -- already reasons about ('campgrade' is the second).  So it inherits that
+    -- reasoning verbatim -- the ids do not enclose the inner call sites, they
+    -- sit in straight-line code in the same enclosing function, and no arming
+    -- state of either can decide whether the inner helper is evaluated.  The
+    -- census question ("un-armed, is the inner helper the identity element?")
+    -- is answered by the call itself: un-armed the argument is `false`, and
+    -- RefreshCamp's `if bAdmit and bAncientDamage and ...` is then a no-op, so
+    -- the camp list is byte-for-byte the shipped one
+    -- (tests/test_campdmg_ancient_damage_tier.lua, '[unarmed is identity]',
+    -- drives all four off combinations on real frames).
+    -- ⚠️ The cost of this shape is that it recurs: a fifth parameter on this
+    -- one call would grow the same four rows again.  That is the GH #624
+    -- structure -- a census assertion whose red is found by the NEXT desk to
+    -- start work -- so it is the ARMING author's job to update these rows in
+    -- the same change, which is what happened here.
 }
 
 local tests = {}

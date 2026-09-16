@@ -437,17 +437,53 @@ ____exports.IsCampAllowedForLevel = function(camp, botLevel, attackDamage)
     end
     return true
 end
-____exports.RefreshCamp = function(bot, bStrictLadder)
+-- [GH #137 §4 suggestion 3] Soak candidate 'campdmg' (turbo-only), a SECOND
+-- lever kept out of IsCampAllowedForLevel on purpose: that function is
+-- 'campgrade', and tests/test_campgrade_tier_ladder.lua asserts attack damage
+-- never reaches its ancient line. The two gates are resolved independently at
+-- the one RefreshCamp call site, so either can be armed without the other and
+-- neither is written as a conjunction of the other's id (the 'pullcad' trap).
+--
+-- WHY THE LADDER NEEDS THIS AT ALL -- the argument is internal, not a new
+-- threshold guess. The shipped ladder guards the LARGE tier with
+-- `attackDamage <= 80` and guards the ANCIENT tier with level alone. An ancient
+-- camp is strictly harder than a large one (more health, more armor, and the
+-- rock-golem camps apply modifier_ancient_rock_golem_weakening on top), so the
+-- ladder as it stands is NON-MONOTONIC in camp difficulty: a level-12 bot with
+-- 60 attack damage is refused the easier camp and handed the harder one. The
+-- number here is therefore deliberately the SAME 80 the large tier already
+-- uses -- an ancient camp cannot need less than a large one -- rather than a
+-- new constant nobody has measured. tests/test_campdmg_ancient_damage_tier.lua
+-- reads the large tier's literal out of the source and asserts the two agree,
+-- and pins the monotonicity property itself over the whole (level, damage)
+-- grid.
+--
+-- LOCAL-VALIDATION LIMIT, DECLARED: GetAttackDamage() is 0 on every fixture
+-- hero (the .dem slice carries no attack damage -- tests/mock/bot_api.lua says
+-- so, and test_campgrade_tier_ladder's world fact W2 asserts it). So the damage
+-- operand below is a DECLARED value in the tests, exactly as the camp table is;
+-- the level/camp half is real. Both limits are asserted rather than described,
+-- so the day the dumper starts carrying attack damage they go red and the
+-- stand-in retires itself.
+____exports.ANCIENT_MIN_DAMAGE = 80
+____exports.IsAncientCampTooTough = function(camp, attackDamage)
+    return ____exports.IsAncientCamp(camp) and attackDamage <= ____exports.ANCIENT_MIN_DAMAGE
+end
+____exports.RefreshCamp = function(bot, bStrictLadder, bAncientDamage)
     local camps = GetNeutralSpawners()
     local allCampList = {}
     local botLevel = bot:GetLevel()
+    local attackDamage = bot:GetAttackDamage()
     for ____, aCamp in ipairs(__TS__ObjectValues(camps)) do
         local camp = aCamp
         -- Unarmed this is `true` and the chain below runs verbatim, i.e. every
         -- camp is admitted, exactly as the shipped default always did.
         local bAdmit = true
         if bStrictLadder then
-            bAdmit = ____exports.IsCampAllowedForLevel(camp, botLevel, bot:GetAttackDamage())
+            bAdmit = ____exports.IsCampAllowedForLevel(camp, botLevel, attackDamage)
+        end
+        if bAdmit and bAncientDamage and ____exports.IsAncientCampTooTough(camp, attackDamage) then
+            bAdmit = false
         end
         if bAdmit then
             if (botLevel <= 7 or bot:GetAttackDamage() <= 80) and not ____exports.IsEnemyCamp(camp) and not ____exports.IsLargeCamp(camp) and not ____exports.IsAncientCamp(camp) then

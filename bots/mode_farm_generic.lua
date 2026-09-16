@@ -317,8 +317,14 @@ function GetDesireHelper()
 		-- is every camp on the map at every level, which is what put an
 		-- 11-level Wraith King with starting items into an ancient camp for
 		-- 31.5s (100% -> 13.5% HP for 166 gold, nearest enemy 4573u away).
+		-- [GH #137 suggestion 3] soak candidate 'campdmg' (turbo-only), resolved
+		-- here and ONLY here, independently of 'campgrade': it drops ancient
+		-- camps for a bot whose attack damage is under the same bar the ladder
+		-- already puts in front of the (easier) large camps. Neither gate is
+		-- written in terms of the other's id.
 		J.Role['availableCampTable'], J.Role['campCount'] =
-			J.Site.RefreshCamp(bot, J.IsModeTurbo() and J.IsSoakCandidate('campgrade'));
+			J.Site.RefreshCamp(bot, J.IsModeTurbo() and J.IsSoakCandidate('campgrade'),
+				J.IsModeTurbo() and J.IsSoakCandidate('campdmg'));
 		J.Role['hasRefreshDone'] = true;
 	end
 	
