@@ -18751,12 +18751,19 @@
     `py gate: 126 ran, 0 findings, 0 uncertifiable, 47.1s` /
     **`lua gate: 401 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 656.8s`**;
     推 main `PUSH_MAIN_EXIT=0`(第一次 `1` 是 non-fast-forward,**不是闸红**,`pull --rebase` 后重推),
-    其 `lua gate: SKIPPED BY SCOPE`(⛔ SCOPE 决定不是通过 —— 那次范围只有 `iterations/`;
-    分支 ref rebase 后范围含别组动 `bots/`/`tests/` 的 commit 才跑满,两者不矛盾)。
+    其 `lua gate: SKIPPED BY SCOPE`(⛔ SCOPE 决定不是通过 —— 那次范围只有 `iterations/`)。
+    ⛔⛔ **「分支那次为什么跑满」我第一版写错了(写成「范围含别组 commit」),当场更正**:
+    `.githooks/pre-push:215` 的范围**永远对 `origin/main` 算**(`git diff --name-only origin/main...HEAD`),
+    而 `touches_lua()` **对空列表 fail closed = RUN EVERYTHING**(钩子注释逐字)
+    ⇒ **main 一旦推到 HEAD,这个 diff 就是空的,分支那次就跑满**。本轮三次 push 自证:
+    分支(**main 之前**)= `SKIPPED BY SCOPE` 秒级;分支(main 之后)= 656.8s / 655.9s。
+    ⇒ ⭐ **章程写死的顺序「先分支、后 main」恰好是便宜的那条**;先推 main 则每次分支 push
+    白付约 11 分钟。已开 **GH #854**。⚠️ W78 §八 对同一现象给的是与我第一版相同的解释,
+    ⛔ 但本轮**没核**它那轮的 push 顺序,**只更正我自己这一条**。
     main `734088eb..101fd500`,两 ref 同点。⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
     ⭐ **W78 那个坑没踩**:分支 push 转后台后**去读输出文件第一行**拿退出码,
     **没有**采信 harness 任务通知的 `exit code 0`(那是 wrapper 的)。
-  - **issue**:**净增 1**,**2 条评论**(三份草稿 `PRECHECK_EXIT=0`,**都在 push 之后发**):
+  - **issue**:**净增 2**(#853、#854),**2 条评论**(三份草稿 `PRECHECK_EXIT=0`,**都在 push 之后发**):
     ⭐ **新单 GH #853**(零流逝族 = 本轮新发现,一行修法 + 5 条验收)、
     **GH #752**(`#issuecomment-5695640626`,全波血量 + 量具自纠 + 「修完只掉一半」那条边界)、
     **GH #666**(`#issuecomment-5695649600`,**该单验收第 4 条的答案** + 与 #849 的修复顺序)。
