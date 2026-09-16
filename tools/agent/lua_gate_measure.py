@@ -136,7 +136,15 @@ PER_TEST_CAP_SECONDS = 5.5
 # does not.  ⛔ This does NOT relax the per-test cap: the cap is still the only
 # live selector, and `tests/test_lua_gate_budget_backstop.py` now refuses a
 # manifest in which the budget evicted any sub-cap test at all.
-BUDGET_SECONDS = 510.0
+# RE-DERIVED 510.0 -> 520.0 on 2026-09-16 (strategy, 'tpstash'), by the rule two
+# paragraphs up and NOT by choice: the sub-cap total moved to 256.379s when a 3.22s
+# ratchet was hand-added in the same change, so 2 x 256.379 = 512.758 -> 520.0.  The
+# first attempt picked 560.0 for 'comfortable headroom', which is the very habit
+# the paragraph above warns about -- a hand-picked number does not survive a
+# re-measure.  ⛔ This constant is declared HERE and in the manifest, and
+# tests/test_lua_gate_budget_backstop.py requires the two to agree, so moving one
+# alone trades one red for another.
+BUDGET_SECONDS = 520.0
 # Hard stop while measuring.  Anything at or over the per-test cap is out
 # regardless, so there is no reason to pay for its exact number.
 MEASURE_TIMEOUT_SECONDS = 6.0

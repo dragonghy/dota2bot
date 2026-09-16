@@ -5354,9 +5354,48 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 	end
 
 	-- Go complete items
+	--
+	-- [strategy 2026-09-16] Soak candidate 'tpstash' (turbo-only). The mode
+	-- guard this branch shipped with is a TAUTOLOGY, not a filter. It read:
+	--
+	--     (m ~= PUSH_TOWER_TOP or m ~= PUSH_TOWER_MID
+	--      or m ~= PUSH_TOWER_BOT or m ~= ATTACK)
+	--
+	-- GetActiveMode() returns ONE value and the four constants are pairwise
+	-- distinct, so at most one disjunct can be false and the chain is the
+	-- literal `true` for EVERY value the engine can return -- including nil,
+	-- since `nil ~= k` is true for all k. The intent is not in doubt (those
+	-- four modes are exactly "I am busy hitting something"), but as written
+	-- the branch is free to fire mid-push: a full inventory plus a recipe in
+	-- the stash TPs the bot to its own fountain (`撤退:1`, DESIRE_HIGH) while
+	-- it is beating on a tower. In Turbo that is a push abandoned for a
+	-- recipe, and Turbo is where inventories fill early enough for it to bite.
+	--
+	-- Armed, the disjunction becomes the conjunction that was meant.
+	-- ⛔ UN-ARMED THE ADDED TERM IS `not false` = `true`. That is a strictly
+	-- stronger inertness claim than the usual superset argument: the shipped
+	-- expression is PROVABLY the constant `true`, so replacing it with `true`
+	-- cannot move un-armed behaviour on any input, not merely on this corpus.
+	-- tests/test_tpstash_mode_tautology.lua walks the WHOLE BOT_MODE_* domain
+	-- and pins both halves as equality assertions (21/21 shipped-true, armed
+	-- false on exactly 4), so neither the proof nor the domain can rot quietly.
+	-- Armed, the TRUE set is a strict SUBSET of the shipped one, so this can
+	-- only ever WITHHOLD a home TP -- it can never emit one the shipped code
+	-- held back.
+	--
+	-- ⛔ THE GATE LIVES IN THE HELPER, NOT HERE -- the rule
+	-- test_tpstale_recover_leak.lua already enforces for 'tpstale' (and
+	-- test_tprecov_recover_trip.lua for 'tprecov'/'tpdeep'): an id named in
+	-- this branch's condition makes this branch's levers jointly armable
+	-- instead of separately. This lever's first draft named it inline and that
+	-- ratchet caught it the same round.
+	--
+	-- `nMode` (line ~5310) is `bot:GetActiveMode()` read once at the top of
+	-- this same call; the shipped line asked the engine the same question four
+	-- more times for the same tick's answer.
 	if X.IsInvFull(bot) and X.GetNumStashItem(bot) >= 1
 	and (X.IsThereRecipeInStash(bot) or (bot:GetStashValue() >= 1000 and bot:GetGold() > 1100))
-	and (bot:GetActiveMode() ~= BOT_MODE_PUSH_TOWER_TOP or bot:GetActiveMode() ~= BOT_MODE_PUSH_TOWER_MID or bot:GetActiveMode() ~= BOT_MODE_PUSH_TOWER_BOT or bot:GetActiveMode() ~= BOT_MODE_ATTACK)
+	and not J.ShouldHoldStashTpWhileBusy( nMode )
 	and not J.IsInTeamFight(bot, 1000)
 	and nEnemyCount == 0
 	then

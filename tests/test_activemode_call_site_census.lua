@@ -144,10 +144,43 @@ tests['[ratchet] call-site census: how much rides on the missing datum'] = funct
     -- counts move by exactly one, and they move TOGETHER: the new site is also a
     -- BOT_MODE_* comparison. If ever only one of the two moves, the new site is
     -- NOT of this shape and deserves its own reading rather than a bumped number.
-    assert(c.get_active_mode == 254,
-        'GetActiveMode() call sites moved from 254 to ' .. c.get_active_mode)
-    assert(c.compare_lines == 210,
-        'lines comparing GetActiveMode() to a BOT_MODE_* moved from 210 to ' .. c.compare_lines)
+    -- RE-TAKEN 254 -> 250 on 2026-09-16 by strategy ('tpstash'), IN THE SAME
+    -- COMMIT that caused it.
+    -- ⛔ THIS IS THE FIRST ENTRY IN THIS FILE WHERE BOTH HALVES MOVE, AND THEY
+    -- MOVE IN OPPOSITE DIRECTIONS -- executable 254 -> 250, prose 8 -> 11. Every
+    -- earlier re-taking moved exactly one half and said which; the note below
+    -- the prose assert says the same thing from the other side. Read them as one
+    -- event or the arithmetic (raw total 262 -> 261 = -4 + 3) looks like a
+    -- scanner fault.
+    -- WHY FOUR CALLS LEAVE AT ONCE: the "Go complete items" branch of
+    -- X.ConsiderItemDesire["item_tpscroll"] carried
+    --     (bot:GetActiveMode() ~= BOT_MODE_PUSH_TOWER_TOP
+    --      or bot:GetActiveMode() ~= BOT_MODE_PUSH_TOWER_MID
+    --      or bot:GetActiveMode() ~= BOT_MODE_PUSH_TOWER_BOT
+    --      or bot:GetActiveMode() ~= BOT_MODE_ATTACK)
+    -- -- FOUR reads of the same tick's answer, on one line, and the whole
+    -- expression is a TAUTOLOGY (one value, four pairwise-distinct constants, so
+    -- at most one disjunct can be false). It is replaced by a single
+    -- `not J.ShouldHoldStashTpWhileBusy( nMode )`, where `nMode` is the
+    -- bot:GetActiveMode() already read at the top of that same invocation, and
+    -- the four comparisons move into the helper as comparisons against
+    -- `nActiveMode` -- a PARAMETER, not a call. So four call sites disappear
+    -- while the four mode comparisons survive verbatim one frame further in.
+    -- ⚠️ THE CENSUS IS RIGHT TO MAKE SOMEBODY LOOK: a drop of four in this count
+    -- would otherwise be indistinguishable from four guards silently deleted.
+    -- What distinguishes them is `compare_lines` below -- see its own note.
+    assert(c.get_active_mode == 250,
+        'GetActiveMode() call sites moved from 250 to ' .. c.get_active_mode)
+    -- 210 -> 209 on 2026-09-16 (strategy, 'tpstash'), and note that it moves by
+    -- ONE while `get_active_mode` moves by FOUR. That is not an inconsistency,
+    -- it is the shape of the edit: this counter counts LINES, and all four of
+    -- the removed reads sat on ONE line. The four comparisons themselves are not
+    -- gone -- they are in J.ShouldHoldStashTpWhileBusy, against a parameter, so
+    -- this counter (which anchors on GetActiveMode()) can no longer see them.
+    -- ⛔ Read together with the -4 above, that is the signature of a MOVE; a -4
+    -- here as well would have been the signature of a DELETION.
+    assert(c.compare_lines == 209,
+        'lines comparing GetActiveMode() to a BOT_MODE_* moved from 209 to ' .. c.compare_lines)
     assert(c.teamfight_consumers == 35,
         'J.GetTeamFightLocation consumers moved from 35 to ' .. c.teamfight_consumers)
 end
@@ -210,8 +243,31 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- That pairing is why this number moved by two and not by one.
     -- ⛔ RE-TAKEN, NOT RAISED: `get_active_mode` is still 253 -- the
     -- 'cmcreepclock' landing adds no GetActiveMode CALL, only prose about one.
-    assert(c.commented_out == 8,
-        'GetActiveMode() mentions inside comments moved from 8 to ' .. c.commented_out ..
+    -- RE-TAKEN 8 -> 11 (THREE at once) on 2026-09-16 by strategy ('tpstash'), IN
+    -- THE SAME COMMIT that caused it.
+    -- ⛔ AND THIS TIME `get_active_mode` MOVED TOO -- 254 -> 250, asserted above.
+    -- That has not happened before in this file: every earlier re-taking here
+    -- was accompanied by the sentence "get_active_mode is still N". The pair is
+    -- still doing its job -- it is precisely because the two counts are kept
+    -- apart that the arithmetic reads as -4 executable and +3 prose rather than
+    -- as one unexplained -1 in the raw total.
+    -- The three new prose mentions are all the 'tpstash' landing, and they are
+    -- NOT three copies of one sentence:
+    --   * bots/FunLib/jmz_func.lua, the helper's header, quotes the shipped
+    --     disjunction in order to PROVE it constant -- one value, four pairwise
+    --     distinct constants, so at most one disjunct is false;
+    --   * bots/ability_item_usage_generic.lua, the call site, quotes the same
+    --     expression for the same proof, because the expression no longer exists
+    --     in the tree and the two headers are now its only record;
+    --   * the same file again, saying that `nMode` IS bot:GetActiveMode() read
+    --     once at the top of that invocation -- i.e. an argument about WHICH
+    --     call the four removed ones were duplicating.
+    -- ⚠️ The first two are deliberately near-duplicates: a proof that lives only
+    -- beside the helper is not readable from the call site, and this branch is
+    -- read far more often than jmz_func is. A counter tallying "distinct
+    -- arguments" off this number would over-count by one.
+    assert(c.commented_out == 11,
+        'GetActiveMode() mentions inside comments moved from 11 to ' .. c.commented_out ..
         ' -- that is a prose change, NOT a call-site change; re-take THIS number, ' ..
         'never fold it into get_active_mode')
     -- 259 -> 260 on 2026-09-11 (strategy), and note WHICH half moved: the
@@ -224,8 +280,14 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- 254 -- that landing adds no GetActiveMode call -- so this total moving by
     -- exactly the prose delta is the arithmetic this pair exists to keep
     -- visible, run in the other direction from the 2026-09-11 entry above.
-    assert(c.get_active_mode + c.commented_out == 262,
-        'executable + commented must equal the raw pattern count (262); if it does ' ..
+    -- 262 -> 261 on 2026-09-16 (strategy, 'tpstash'), and this is the entry to
+    -- read if the pair ever looks broken: BOTH halves moved, in OPPOSITE
+    -- directions -- executable -4, prose +3, net -1. Every earlier entry moved
+    -- one half only. A reader who checked just this total would see "-1" and
+    -- reasonably guess one call site went away; the two asserts above are what
+    -- say that four went away and three sentences arrived.
+    assert(c.get_active_mode + c.commented_out == 261,
+        'executable + commented must equal the raw pattern count (261); if it does ' ..
         'not, strip_line_comment cut somewhere it should not have')
 
     -- Direct unit checks on the cut, including the one the naive `find("--")`

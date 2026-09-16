@@ -6332,6 +6332,51 @@ function J.ShouldDropUnownedRecoverTp( bOwnsDestination )
 	return bOwnsDestination ~= true
 end
 
+-- [tpstash / strategy 2026-09-16] "AM I IN THE MIDDLE OF HITTING SOMETHING?" --
+-- the question the "Go complete items" branch of X.ConsiderItemDesire
+-- ["item_tpscroll"] already meant to ask, and has never once asked.
+--
+-- ⭐ THE DEFECT IS THE OPERATOR, NOT THE OPERANDS.  What shipped there was
+--
+--     (m ~= PUSH_TOWER_TOP or m ~= PUSH_TOWER_MID
+--      or m ~= PUSH_TOWER_BOT or m ~= ATTACK)
+--
+-- and GetActiveMode() returns ONE value while those four constants are pairwise
+-- distinct, so at most one disjunct can be false: the chain is the literal
+-- `true` for EVERY mode the engine can return, and for nil besides.  The author
+-- wanted `and`.  As written the branch is free to fire mid-push -- a full
+-- inventory plus a stash recipe sends the bot to its own fountain (`撤退:1`,
+-- DESIRE_HIGH) while it is beating on a tower.  Turbo is exactly where that
+-- bites: items land early enough to fill an inventory during the push, and
+-- grouped pushing is the thing that pays.
+--
+-- ⛔ NO AUTOMATIC READER COULD HAVE SEEN IT.  The expression is well-formed Lua
+-- with no undefined name, so luacheck (a linter -- it evaluates nothing) is
+-- silent BY CONSTRUCTION, and the file loads, so the smoke loader is silent
+-- too.  Same blind spot as 'wardcomma' and 'warddupkey', a third failure mode:
+-- there the operands were wrong, here the operator is.
+--
+-- This helper invents no policy and no constant -- the four modes are the
+-- caller's own four, in its own order.  Gate-first then turbo, so unarmed it
+-- reaches no engine call at all, and unarmed the caller's `not <this>` is the
+-- literal `true`: the very truth value the shipped expression carried on every
+-- input.  So un-armed behaviour cannot move on ANY frame, not merely on the
+-- fixture corpus -- a strictly stronger claim than the usual superset argument.
+-- Armed, the caller's TRUE set is a strict SUBSET, so this can only ever
+-- WITHHOLD a home TP, never emit one the shipped tree held back.
+-- tests/test_tpstash_mode_tautology.lua walks the whole BOT_MODE_* domain and
+-- pins both halves as equality assertions (21/21 shipped-true, armed false on
+-- exactly 4).  It is a PURE predicate over its argument: it never reads the
+-- unit, so it cannot acquire an opinion the call site did not ask for.
+function J.ShouldHoldStashTpWhileBusy( nActiveMode )
+	if not J.IsSoakCandidate( 'tpstash' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	return nActiveMode == BOT_MODE_PUSH_TOWER_TOP
+		or nActiveMode == BOT_MODE_PUSH_TOWER_MID
+		or nActiveMode == BOT_MODE_PUSH_TOWER_BOT
+		or nActiveMode == BOT_MODE_ATTACK
+end
+
 -- [tpquiet / owner priority P2, 2026-09-08] THE SAME JUDGEMENT, AT THE BRANCH
 -- THAT ACTUALLY REACHES THE FRAME.  This helper is not a new opinion about when
 -- a hurt bot should stay in the field -- 'tpdeep' already formed that opinion

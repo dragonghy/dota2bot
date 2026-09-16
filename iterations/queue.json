@@ -2941,6 +2941,15 @@
    "requested_by": "hero 2026-09-16T04:xxZ",
    "requested_in": "iterations/reports/hero/20260916T045339Z.md",
    "note": "本地已把能离线买到的都买了:`tests/test_axe_q_lane_push_nocap.lua` **22 绿**、`tools/agent/mutstand_axecallnocap.sh` **13/13 全杀**。方向是 **WIDENING 且是两条腿的严格超集**(armed 后该合取项是常真),所以负读数**只能**读成「那些抱团带线嘲讽不值 Call 的冷却」,**永远不能**读成「lever 吃掉了一次出厂释放」。⛔ **谁也不许报一个本 lever 新增的嘲讽数** —— 端到端域在本语料上是 0(GH #772:语料无非英雄单位)。⛔ **不得与 `axecallcrowd` 同波 arm:本 id 支配它**(析取在帽子被问到之前短路为真),同 arm 的一波测的是本 id 一个而裁定表会写两个名字。档案:`state.json:axecallnocap_20260916`。"
+  },
+  {
+   "id": "strategy-51",
+   "stream": "strategy",
+   "bundle": "tpstash(新落地 gated id;**零 EC2,不要为它发波** —— 搭任何一轮归档扫描的顺风车;**不申请入集**,P4.2 冻结下唯一合法裁定是 FROZEN-HOLD)",
+   "priority": 2,
+   "status": "pending",
+   "seeds": [],
+   "question": "⛔ **零 AWS、零 EC2、只读已归档 `.dem`。要的是一帧(或一个 dumper 字段),不是一波。**\n\n一句话:**这根杠杆的判据在有限域上已经穷举证完了,缺的不是把握而是仪器 —— 分支另外两个操作数(仓库格、当前 mode)按构造不在 dump 里。**\n\n杠杆:`bots/ability_item_usage_generic.lua` 的 `X.ConsiderItemDesire['item_tpscroll']` 「Go complete items」支,出货的 mode 守卫是**恒真式**(`m ~= A or m ~= B or m ~= C or m ~= D`,四个常量两两不等 ⇒ 对**一切**取值为 `true`),于是**背着满包 + 仓库里有合成卷轴的 bot 可以在推塔途中 TP 回家**(`撤退:1`,DESIRE_HIGH)。armed 后守卫变成作者本来要写的合取。\n\n**两条路,任一条都能把欠条销掉:**\n\n**(i) 首选 —— dumper 发仓库格。** 仓库是槽位 **9-14**(`X.GetNumStashItem` / `X.IsThereRecipeInStash` 只读这六格),而 dumper 现在恰好只发**随身九格 0-8**。⇒ 全语料 **125 个 fixture / 每个 subject,仓库物品数恒 0**,**这不是稀少,是问不出来**。只要 9-14 开始进 dump,`tests/test_tpstash_mode_tautology.lua` 的 **W1 会自己变红并点名下一步**,这根杠杆就第一次可以端到端钉住。⚠️ 与 GH #837 / `strategy-47` 是**同一堵仪器墙的两面**,顺手一起量最省。\n\n**(ii) 退一步 —— 一帧行为证据。** 归档 `.dem` 里找一帧:主体处于 `BOT_MODE_PUSH_TOWER_TOP/MID/BOT` 或 `BOT_MODE_ATTACK`、随身九格满、1600u 内无敌人,而它**起手了回泉水的 TP**。那是出货行为本身,armed 腿要拿掉的就是它。\n\n⭐ **反向护栏,不是可选项**:`tpstash` 只该拦**推塔/攻击途中**的回家 TP。**armed 腿的合成/出装节奏不许塌** —— 如果 armed 腿的成装时间明显晚于 baseline,那说明它拦掉的不只是「推塔途中」那一类,即**不算通过**。\n\n⛔ **入集不在本条射程内**:P4.2 冻结(armed > 20)下唯一合法裁定是 `FROZEN-HOLD`。\n\n登记:`iterations/state.json:tpstash_20260916`;本地验证 19 tests / 0 failures;变异台 `tools/agent/mutstand_tpstash.sh` 10 抓 + 控制 SURVIVED。"
   }
  ],
  "done": [
