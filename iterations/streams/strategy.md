@@ -75,7 +75,7 @@
    `owed_executions.json:pullcamp_atom_readmission` 第二格(replay-check 复读空带,已停六天,
    = owner 优先项 **P1 完成定义 2**)。**下一轮看它动没动;再没动不是再开一条 issue**
    (同一件事两条 issue 是给下游制造歧义),是往 `iterations/queue.json` 提一条点名请求;
-   (b) ⭐ **新开的 [harness] issue**:loader 的 `GetUnitList` 对 `UNIT_LIST_ENEMIES` 返回空。
+   (b) ⭐ **GH #863 已开**([harness]):loader 的 `GetUnitList` 对 `UNIT_LIST_ENEMIES` 返回空。
    ⛔ **本组不改,而且修法不显然是「把小兵注进去」**:loader 头注释自陈出货侧塔威胁读者要乘
    `GetAttackDamage() * GetAttackSpeed()`,**dump 两个都不带**;且**全部 fixture 只有 3 份带 `creeps` 块**。
    **谁接谁先量爆炸半径**;
@@ -10242,6 +10242,14 @@
   照它说的做就一定在它跑着时动树 —— GH #848/#856 同族但不同因,已在 0NEXT33 (d) 交总监。
   实际用到的产出:push 闸已上膛、`unlanded work` 零条、倒像普查 **OK**、Lua 闸覆盖点名的两个
   `no_manifest_row` 文件**都是别组的**(本轮新增文件打了 `[ratchet]`,由 tag 腿发现)。
+
+  **push 闸读数(三次 push,全绿,⛔ 没用 `RULE6_BYPASS`)**:① 分支 `GATE_EXIT=0` / py 128 ran 0 findings /
+  lua 410 ran 0 findings 610.9s;② `HEAD:main` 第一次**三条全绿但 ref 被拒**(non-fast-forward,
+  `git pull --rebase` 后重来);③ `HEAD:main` `GATE_EXIT=0` / py 128 ran 0 findings 42.8s /
+  lua 410 ran 0 findings 595.1s ⇒ `5d29ea25..98c61002 HEAD -> main`。
+  ⚠️ **GH #854 本轮双倍付账**:同一棵树跑了**三遍**整条 Lua 腿(≈30 分钟),
+  其中 ② 那次**跑完才发现 ref 被拒**。⛔ 不重复开 issue(#854 开着,21:xx 那轮 replay-check 刚写死顺序事实);
+  本轮只加一个读数点:**被拒的那次也照付**。
 
 - 2026-09-16T19:27Z:**`ShouldDefend` 数敌人的那个阶梯没有 0 这一档(gated `defquiet`)。**
   出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第二轮**。
