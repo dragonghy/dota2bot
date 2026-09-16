@@ -718,15 +718,22 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑥欠条 `gh856_switch_writer_serialization_ruling`(**本轮仍未裁**,已欠 ~6.5h)⑦看守自检那三条 python 用例(**第十二轮**)
   ⑧`py_gate_manifest.json` 未重测:新落地的 `test_carry_item_issue_state.py` 实测 **0.102s**(远在 3.0s cap 内)
   却**没有 manifest 行** ⇒ 今天不在 push 闸里(GH #839 同族)⑨P4.2 narrat 1 / `$0.90` 常数重裁 / **GH #528** / patch 缺口 P3
-  ⑩`lua-coverage` 的 `no_manifest_row` 存量(3 + 2)⑪**§2e (甲) 补一格**:写下点名之前再取一次巡检读数。
+  ⑩`lua-coverage` 的 `no_manifest_row` 存量(3 + 2)⑪**§2e (甲) 补一格**:写下点名之前再取一次巡检读数
+  ⑫**把推送顺序修法挪进 `.claude/rules/claude-code.md`**(先 main 后分支;⛔ 不是再提醒一次,是挪到会被读的那一行)。
   **[同轮收尾追加,push 之后]** **push 记录:三次 push,三条腿每次各跑一遍,⛔ 全程无 `RULE6_BYPASS`** ——
   ①分支 `* [new branch]`(`GATE_EXIT=0` / `py 128 ran, 0 findings, 38.1s` / `lua 410 ran, 0 findings, 545.8s`);
   ②`HEAD:main` **`! [rejected] (fetch first)`**,**闸全绿,纯粹是 main 动了**(录像组两个 commit);
   `pull --rebase` **`REBASE_EXIT=0`**(干净 1/1)⇒ ③`HEAD:main` ✅ **`c17b730a..0b4e59f8`**
   (`py 128/0` / `lua 409 ran, 0 findings, 546.0s`)。
   ⭐ **rebase 之后 push 之前,把本轮修的两条普查又跑了一遍**(它们 `in_gate:false`,**闸不会替我跑**):两条都绿。
-  ⚠️ 诚实边界:分支 ref 停在 rebase 前的 `633863fe`,main 上是 `0b4e59f8` —— **同一份工作,sha 不同**,
-  **没有为了对齐 sha 再跑一次九分钟的闸**(取舍,不是遗漏)。
+  ⛔ **④ 自捉:会话分支被强推了一次,照登不藏**(stop-hook 点名后推分支 `PUSHBR_EXIT=1` non-fast-forward,
+  **闸全绿**)⇒ `--force-with-lease` 写死期望旧 hash ⇒ `+ 633863fe...00420e2c (forced update)`,`PUSHBR_EXIT=0`。
+  **零工作丢失是核过的**:`git diff 633863fe 0b4e59f8` 的 653 行全是别的组的文件(rebase 带进来的),我的内容逐字节相同。
+  ⭐⭐ **真正该读的是时间差**:批测台 `e1bc469e`(**19:01:30Z,我开工那一刻**)**自捉了同一个动作并写死了修法** ——
+  「先推 main,main 落地后再推会话分支」⇒ **修法比我的错早 45 分钟,而我照旧犯了**,
+  因为它活在**别人的报告散文**里,而 `.claude/rules/claude-code.md` 的推送路径**逐字仍写着「先推分支、再推 main」**。
+  📌 **与本轮 §〇.1「三个文件自己写下义务却仍落地」同型,这次主体是我**:
+  **写下来过的预见,和挡得住的预见,是两件事** ⇒ 清单 ⑫。
   **GH**:#843 追评(precheck `EXIT=0` / OK to publish)/ **#859 新建** / #839 追评(新棘轮 0.102s 却无 manifest 行)。
   ⭐ **顺号推测号码本轮没犯**:先发 issue 拿真号再回填。**本轮 MCP 可用,未触发铁律 11。**
   **token(铁律 8)**:`TOKENS total_in=18,325,300 out=81,000 turns=108`(统计时刻为止)。
