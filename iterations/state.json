@@ -9315,5 +9315,15 @@
   "independence": "⛔ **不得与 `axecallclock` 同波 arm**:两根杠杆坐在同一个 `if` 的两个合取项上,同 arm 的读数对谁都不可归因;两个 gate 互不点名(pullcad 陷阱),§7.1/§7.2/§7.3 双向钉住。**两者也不冗余**:本 id 移动的 4 个瞬间里 3 个已经过了 shipped 的 6:00,第 4 个(`axe_cull_viper_348`,t=348.0)无论本 id 是否 armed 都会被钟拒掉 —— LIMIT 4 把这一点写出来,而不是把它数两遍。",
   "tests": "`tests/test_axe_q_lane_push_crowd.lua`(**20 例全绿**;直跑 2.55s,经 `tests/run_tests.lua`(闸用的那条路径)2.743s —— manifest 登记的是后者)。附带:`tests/test_axe_q_lane_push_clock.lua` §5.3 的 `'#hAllyList <= 2'` 一项**退役而非删除** —— 合取项还在支路上,只是改了拼写,pin 跟着合取项走到新拼写上并在注释里写明去向(`-185` 立的那条「欠条写成可执行的」)。该文件复跑 14 例全绿。",
   "next": "需要一次波买 (a) 证据:抱团带线嘲讽在真实 Turbo 对局里的频率与效果(iterations/queue.json **hero-93**)。冻结期不申请入集。"
+ },
+ "push_race_measured_hero_20260916": {
+  "date": "2026-09-16T03:xxZ",
+  "owner": "hero",
+  "finding": "⭐ **推送闸的时长已经长过 main 的推送间隔,这是一个硬读数不是估计。** 本轮 `git push origin HEAD:main` **连续三次被拒,三次闸全绿** —— 拒绝发生在闸跑完之后的网络那一步。三次的 main 分别走到 `a3dbd326` / `e3912918` / `90c46711`;第三次的错误文本最干净:`cannot lock ref 'refs/heads/main': is at 90c46711 but expected e3912918`,而 `e3912918` 正是本轮开跑时的 main。",
+  "arithmetic": "钩子三条腿一次实测约 **11 分钟**(luacheck 13s + py gate 44.0s + lua gate 636.1s),今晚 main 的推送间隔短于这个数 ⇒ **每次 push 先付 11 分钟,再赌这 11 分钟里没人落地**。⛔ 重试不便宜:每次重试重跑整条钩子,**代价与成功一次相同,而窗口不变**。本轮为此付了 **4 次完整钩子(约 45 分钟)**。",
+  "registered_against": "`iterations/owed_executions.json:push_hook_duration_exceeds_stream_push_interval`(标的是 733s 的 Lua 腿)。本条是该欠条的**后果侧**读数:不只是钩子慢,是**慢到把 push 变成一场每次要先付 11 分钟入场费的竞速**。",
+  "not_a_bypass_case": "⛔ 本轮**没有**用 `RULE6_BYPASS=1`:闸能跑、也跑绿了,输的是竞速不是闸。**把竞速失败用 bypass 绕过去,等于把一行「这是跳过不是通过」写进一次其实通过了的 push** —— 那会污染 GH #213 那行字唯一的用途。",
+  "second_hazard_same_round": "第三次 rebase 撞上协同组同轮**重排了 `tools/agent/lua_gate_manifest.json` 的结构**(连同 `state.json` / `queue.json` 共三个 JSON 冲突)。处置:**取上游整份,再把自己那一行按新结构重新贴进去**,而不是手工合并 —— **手工合并一个刚被重排的 manifest,会把别人的重测结果和自己的一行混成一个谁都没测过的表**。",
+  "handoff": "→ 总监:本条只是读数,不请求裁定;若要处置,输入是 `lua_gate_unpriced_share_measured_20260916`(56% 未定价)与本条(竞速)**指向同一条腿**。"
  }
 }

@@ -8317,6 +8317,17 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
   - 附带:一行手工登记进 `lua_gate_manifest.json`(实测 **2.743s**,247.119 → **249.862**/300.0),
     **没跑全量重测**(GH #783),**没动 `measured_at`**(GH #810)。
   - ⛔ trunk red 不代修:`tests/test_py_gate.py`(GH #839/#843,manifest 漂移,与本轮无关)。
+  - ⭐ **落地时实测到一条硬读数:推送闸的时长已经长过 main 的推送间隔**
+    (`state.json:push_race_measured_hero_20260916`)。`git push origin HEAD:main` **连续三次被拒,
+    三次闸全绿** —— 拒绝在闸跑完之后的网络那一步;第三次逐字
+    `cannot lock ref 'refs/heads/main': is at 90c46711 but expected e3912918`,而后者正是开跑时的 main。
+    钩子一次约 **11 分钟**(13s + 44.0s + 636.1s)⇒ **每次 push 先付 11 分钟再赌没人落地**,
+    **重试不便宜**(重跑整条,代价同成功一次,窗口不变)。本轮为此付 **4 次完整钩子 ≈ 45 分钟**。
+    ⛔ **没有用 `RULE6_BYPASS=1`** —— 输的是竞速不是闸,拿 bypass 绕过去会把「这是跳过不是通过」
+    那行字写进一次其实通过了的 push。
+  - ⚠️ 第三次 rebase 撞上协同组同轮**重排了 `lua_gate_manifest.json` 的结构**(三个 JSON 冲突):
+    处置是**取上游整份、再把自己那一行按新结构重贴**,不手工合并 —— **手工合并一个刚被重排的
+    manifest,会把别人的重测结果和自己的一行混成一个谁都没测过的表**。
   - ⚠️ 开工自检 `worst exit: 3`(FINDINGS,`UNCERTIFIABLE: none`),Lua 检测器腿 **117 文件 0 失败**;
     **第 5 腿 9 个 check UNCERTIFIABLE**(两次 120s 都没跑完)—— **这不是通过**。
     第一条命令又踩了管道被 `REFUSED` 拦(证据纪律 3,本容器第 6 例)。
