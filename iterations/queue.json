@@ -2928,6 +2928,19 @@
    "acceptance": "在已归档 `.dem` 上(任一含 Axe 的语料;⚠️ 种子名册 888/895/896/906 **零 Axe**,`--find axe` 给 899/910/911 —— 与 hero-2 / hero-13 / hero-89 / hero-91 / hero-92 **同一个承载者阻塞,六条请求可以一次扫完**),数三个量,并按铁律 4 (i-a) 登记两个分层的读数:\n(1) **分母**:扫了几局、几个存活 Axe 瞬间 —— **没有分母的分子不收**。\n(2) **支路前提的联合计数**:活的 Axe 瞬间里同时满足「1600u 内 0 个敌方英雄」**且** DotaTime() > 6:00 的事件数。这是本杠杆唯一真正缺的数。\n(3) **1600u 内存活队友数(含 Axe 自己)的分布**:0/1/2/3/4/5 各占多少,**在 (2) 的子集里再报一次**。按铁律 4 (ii),整数小值域的计数类量**报均值 + 分布,不报中位数**。⇒ 落在 (2,4] 的那一档占比**就是本 lever 效应量的上界**。\n⛔ (2) 的联合计数为 0 时**只许**回填「本语料没有这样的瞬间」并给出所扫路径,**不许**推断「域为 0」(那是「没测到」冒充「不存在」)。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;本组不花 AWS)。",
    "requested_by": "hero 2026-09-16T02:xxZ",
    "requested_in": "iterations/reports/hero/20260916T021022Z.md"
+  },
+  {
+   "id": "hero-94",
+   "stream": "hero",
+   "bundle": "axecallnocap(新落地 gated id;**零 EC2,不要为它发波** —— 搭任何一轮归档扫描的顺风车;**不申请入集**,P4.2 冻结下唯一合法裁定是 FROZEN-HOLD)",
+   "priority": 2,
+   "status": "pending",
+   "seeds": [],
+   "question": "⛔ **零 AWS、零 EC2、只读已归档 `.dem`。要一个分母,不要一波。**\n\n一句话:**这是 hero-93 的同一条支路,但问的是它最右边那一格 —— 五人满编。hero-93 买的是 (2,4] 那一档,本条买的是 5。**\n\n杠杆:`bots/BotLib/hero_axe.lua` 的 `X.ConsiderQ` 带线支路里的人数帽**该不该存在**。shipped 是 `#hAllyList <= 2`,`axecallcrowd` armed 是 `<= 4`,本 id(`axecallnocap`)armed 把这个合取项**删掉**。支路整体是 `( IsPushing or IsDefending or IsFarming ) and IsAllowedToSpam and GetAttackTarget() ~= nil and <钟> and ( <人数帽> or <本 id> ) and #hEnemyList == 0` → `#laneCreepList >= 4` → 嘲讽。\n\n**为什么必须从归档语料买,而且为什么不是 hero-93 的重复**:16 个 Axe-subject 瞬间里,本 id 与 `axecallcrowd` **只在一帧上分得开**(`f_260828_124358_axe_cull_promise`,t=1452.8,五人全活在 1600u 内)—— 而**那一帧 1600u 内有 1 个敌方英雄**,于是 `#hEnemyList == 0` 把支路拒掉了。⇒ **离线语料里有 0 帧是本 id 改变 Axe 行为的**,这不是稀少,是选样:这批帧是为研究 Call / Culling Blade **决策**采的,即**有敌人在场**的时刻。\n\n⭐ **零 EC2 就够**:只要 Axe 的位置、队友/敌人的位置与存活、以及 `GetAttackTarget` 是否非空,行为 dumper 已经导出前两样;**不需要任何 armed 腿** —— 问的是出厂状态下这个状态有多常见,不是 armed 改了什么。",
+   "acceptance": "在已归档 `.dem` 上(任一含 Axe 的语料;⚠️ 种子名册 888/895/896/906 **零 Axe**,`--find axe` 给 899/910/911 —— 与 hero-2 / hero-13 / hero-89 / hero-91 / hero-92 / **hero-93** 同一个承载者阻塞,**七条请求可以一次扫完**,而本条与 hero-93 是**同一次扫描的两列**,不要分两轮扫),数三个量,并按铁律 4 (i-a) 登记两个分层的读数:\n(1) **分母**:扫了几局、几个存活 Axe 瞬间 —— **没有分母的分子不收**。\n(2) **支路前提的联合计数**(与 hero-93 的 (2) 逐字相同,**请复用同一次扫描的输出**):活的 Axe 瞬间里同时满足「1600u 内 0 个敌方英雄」**且** `DotaTime() > 6:00` 的事件数。\n(3) ⭐ **本条独有的那一格**:在 (2) 的子集里,1600u 内**存活队友数(含 Axe 自己)恰好为 5** 的占比。**那个占比就是本 id 相对 `axecallcrowd` 的效应量上界**;hero-93 (3) 报的是落在 (2,4] 的那一档,即它相对 shipped 的上界 —— **两个数不是一个数,不要合并成一行**。按铁律 4 (ii),整数小值域的计数类量**报均值 + 分布,不报中位数**。\n⛔ (2) 或 (3) 为 0 时**只许**回填「本语料没有这样的瞬间」并给出所扫路径,**不许**推断「域为 0」(那是「没测到」冒充「不存在」)。\n⛔ **本条不申请入集、不申请发波**(P4.2 冻结期;本组不花 AWS)。",
+   "requested_by": "hero 2026-09-16T04:xxZ",
+   "requested_in": "iterations/reports/hero/20260916T045339Z.md",
+   "note": "本地已把能离线买到的都买了:`tests/test_axe_q_lane_push_nocap.lua` **22 绿**、`tools/agent/mutstand_axecallnocap.sh` **13/13 全杀**。方向是 **WIDENING 且是两条腿的严格超集**(armed 后该合取项是常真),所以负读数**只能**读成「那些抱团带线嘲讽不值 Call 的冷却」,**永远不能**读成「lever 吃掉了一次出厂释放」。⛔ **谁也不许报一个本 lever 新增的嘲讽数** —— 端到端域在本语料上是 0(GH #772:语料无非英雄单位)。⛔ **不得与 `axecallcrowd` 同波 arm:本 id 支配它**(析取在帽子被问到之前短路为真),同 arm 的一波测的是本 id 一个而裁定表会写两个名字。档案:`state.json:axecallnocap_20260916`。"
   }
  ],
  "done": [

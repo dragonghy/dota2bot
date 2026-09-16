@@ -22,6 +22,54 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-187. ✅ **主体:`axecallnocap`(turbo-only)—— `X.ConsiderQ` 带线支路的人数帽**该不该存在**。**
+   落在 `bots/BotLib/hero_axe.lua` 的新 `X.axe_IsLanePushCrowdCapOff()`(armed 恒真 / 未 armed 恒假)
+   + 出货点改成**两项析取** `( X.axe_IsLanePushCrowdOpen( #hAllyList ) or X.axe_IsLanePushCrowdCapOff() )`;
+   闸关或非 turbo **析取整体塌回 `#hAllyList <= 2` 逐字节不变**。报告
+   `iterations/reports/hero/20260916T045339Z.md`;新 `tests/test_axe_q_lane_push_nocap.lua` **22 绿 / 2.221s**;
+   变异台 `tools/agent/mutstand_axecallnocap.sh` **13/13 全杀**;新 queue 请求 **hero-94**。
+   **零 EC2 / 零 CE / S3 读取 0 个对象。P4.4 自评:(i)**。**接掉的是 `-186` 自己留下的第 1 候选**,
+   而那条欠条**附了验收物**:五人帧 `f_260828_124358_axe_cull_promise` 是两个 id 唯一分得开的一帧。
+   - ⭐⭐ **本轮头条:唯一还没被排除的那条理由,指向反方向。** `axecallcrowd` 排除了法力(同 `if` 已有
+     `IsAllowedToSpam`)与安全(同 `if` 已有 `#hEnemyList == 0`),**没必要**排除第三条 —— 帽子取 4 时
+     它还有地方躲:**冷却**(Call `AbilityCooldown` **18/16/14/12**,读自 `special_value_shapes.lua`,
+     本文件加点到 7 级是 4 级 ⇒ 12s)。⛔ **但出厂帽子把这个配给搞反了**:shipped 在 `<= 2` **开火**
+     (单人/带一个 = 最容易被抓、最需要 Call 打架),在四个队友时**拒绝**(全场最安全)。
+     ⇒ **一个对五人成立的冷却论证,对一人成立得更强** ⇒ 帽子不是在保护冷却。
+     **一条真的反对意见的存在,不是保留合取项的理由,是重新排它方向的理由。**
+   - ⛔ **四个数**:合取层 shipped **11** / `axecallcrowd` **15** / 本 id **16**(16 个 Axe 瞬间)
+     ⇒ 对 shipped 移动 **5**,对 `axecallcrowd` 移动**恰好 1**。**而那一帧只在合取层分得开**:
+     该瞬间 1600u 内有 **1 个**敌人 ⇒ `#hEnemyList == 0` 照样拒掉支路 ⇒ **语料里 0 帧是本 id 改变行为的**,
+     把那个「1」报成行为差**就是凭空的执行核验**(§3.2 把 `enemy == 1` 钉成断言)。支路层 0(选样非稀少,
+     与 `axecallcrowd` bound 3 **同一条,不当新证据再数一遍**);端到端 0(GH #772)。
+   - ⛔ **支配性,比「一次一根」更强的不同 arm 理由**:armed 后析取**在帽子被问到之前短路为真**
+     ⇒ **同 arm 的一波测的是本 id 一个,裁定表会写两个名字**。§7.4 在 16 帧上把它驱动出来,
+     断言消息写明「哪天不再支配,是这条指令过严,先重读 LIMIT 5」。也不得与 `axecallclock` 同波。
+   - ⭐ **变异台 M9 从另一侧复现了 `-186` 的半径结论**:队友环 1600→1200,§3.1/§3.2 的 11/15/16 与
+     「五人帧 5 个队友」**全部不动**,唯一开火的是 §5.3 那条**源码读数** ⇒ **拦住「语料悄悄换了个环」
+     的只有 §5.3**,这就是它必须是源码读数的原因。(M10 同族:敌人环单独收到 800,**两行代码
+     各自都不像错的**。)⚠️ M3 的 `want` 认领 §1.1 的 **arity 计数**而不是下面那个 `names a second id`
+     循环 —— 先开火的那一条才是这次击杀(`-186` 同一教训第二次)。
+   - ⭐ **该测试是故意做便宜的**:初稿 **4.773s**(在 5.5s cap 内但**没余量**,下一个加节的人会把它挤出闸)
+     ⇒ §3.3/§4.1/§7.4 每个 arm 集只 load **一个** world(两个 helper 对 `nAllyCount` 是**纯函数**,
+     帧唯一的贡献是那个计数,而 §3.1 仍为三条腿各付一次逐帧 load)⇒ **2.221s**。
+   - **附带,而且方向与前两次相反**:`lua_gate_manifest.json` 手加行登记 **2.466s** 而非实测 2.221s ——
+     本容器比 `measured_at` 那台**快**(crowd 2.470 vs 2.743 = 0.90x;hunger 4.743 vs 4.927 = 0.96x)
+     ⇒ **自己的实测是乐观侧**。axebhcamp / campdmg 两条注记记的「不缩放就是保守」**是它们那台机器的性质,
+     不是规矩** —— 规矩是**取保守侧**。`measured_at` 照 GH #810 不动。
+   - **附带**:`test_bots_walk_farm_only.py` 的 `UNRESOLVED_HAND_READ` **同轮登记**(GH #803 点名本组的
+     第三发,**这次自己读了**:先跑出红并逐字点名本文件,登记后复跑 **8/0**)。
+   - ⚠️ **开工自检的 python trunk 腿读 `UNCERTIFIABLE`,原因是本轮自己造成的**:自检与本轮对
+     `hero_axe.lua` 的编辑**并发**,那条腿明说要在 quiet tree 上跑 ⇒ **trunk 的那一侧本轮没人看过**
+     (既不是红也不是绿)。同族是 GH #848,本轮据此**等自检跑完再 push**。
+   - **下一轮主体第一候选**:**第 1 条** —— 支路第一个合取项 `( IsPushing or IsDefending or IsFarming )`
+     里的 `J.IsFarming`,`-185` 已量出它**在全语料 1314 个活 subject 上恒 false**(`GetActiveMode()`
+     loader 未实现 **或** TEAM_NEUTRAL 目标)⇒ **这条支路的第一个门在离线语料上是 UNASKABLE**,
+     而本轮与 `-186` 的所有合取层读数都**默认它为真**地绕过了它;先读 `-185` 那条「域 = 0 → UNASKABLE」
+     的改判再动手。**第 2 条**:`#laneCreepList >= 4` 的那个 `4`(端到端域的另一半,**要等 GH #772**)。
+     ⛔ **不要再去动人数帽** —— 它现在有三个 id(`axecallclock` / `axecallcrowd` / `axecallnocap`)
+     坐在同一个 `if` 上,第四个会让任何一波的读数**对谁都不可归因**。
+
 -186. ✅ **主体:`axecallcrowd`(turbo-only)—— `X.ConsiderQ` 带线支路的人数帽拒掉的那个状态,同一个 `if` 自己写明了是「抱团推进」。**
    落在 `bots/BotLib/hero_axe.lua` 的新 `X.axe_IsLanePushCrowdOpen( nAllyCount )`(帽子写成
    `X.nQLanePushAllyCapShipped = 2` / `X.nQLanePushAllyCapTurbo = 4` 两个具名量);闸关或非 turbo =
@@ -8285,6 +8333,30 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-16T04:53Z(报告 `iterations/reports/hero/20260916T045339Z.md`;**backlog:新开 `-187`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`axecallnocap`**(turbo-only,**未 armed**,
+  P4.2 冻结期不申请入集);新 queue 请求 **hero-94**;**P4.4 自评:(i)**)
+  **主体:带线支路的人数帽**该不该存在** —— `axecallcrowd` 抬到 4 后留下的那一个拒绝,
+  正是「全队五人站在兵线里、视野内没有敌人」= 游戏能给出的最不含糊的抱团推进。**
+  - ⭐⭐ **头条:唯一还没被排除的那条理由(冷却)指向反方向。** Call 花真实冷却
+    (`AbilityCooldown` 18/16/14/12 ⇒ 4 级 12s),所以接战前把它扔给兵线是真代价 —— 一条**诚实的**反对意见。
+    ⛔ 但出厂帽子**把这个配给搞反了**:`<= 2` 时**开火**(单人/带一个 = 最容易被抓、最需要 Call 打架),
+    四个队友时**拒绝**(全场最安全)⇒ **对五人成立的冷却论证,对一人成立得更强**。
+    ⇒ **一条真反对意见的存在,不是保留合取项的理由,是重排它方向的理由。**
+  - ⛔ **四个数**:合取层 shipped 11 / `axecallcrowd` 15 / 本 id 16(16 帧)⇒ 对 shipped 移 5、
+    对 sibling 移**恰好 1**;**而那一帧只在合取层分得开** —— 它 1600u 内有 1 个敌人,
+    `#hEnemyList == 0` 照样拒掉支路 ⇒ **语料里 0 帧是本 id 改变行为的**(§3.2 把 `enemy == 1` 钉住)。
+    支路层 0(选样非稀少,**与 sibling 同一条,不当新证据再数**);端到端 0(GH #772)。
+  - ⛔ **支配性**:armed 后析取**在帽子被问到之前短路为真** ⇒ 同 arm 一波**测的是本 id 一个而表上两个名字**
+    (§7.4 驱动)。也不得与 `axecallclock` 同波。
+  - ⭐ **M9 从另一侧复现半径结论**:1600→1200,11/15/16 与五人帧全不动,只有 §5.3 源码读数开火
+    ⇒ **拦住「悄悄换了个环」的只有它**。⚠️ M3 的 `want` 认领**先开火的 arity 计数**,不认领下面那个循环。
+  - ⭐ **测试故意做便宜**:4.773s(cap 5.5,**没余量**)→ **2.221s**,靠每 arm 集一个 world 而非每帧一个。
+  - **附带且方向相反**:manifest 登记 **2.466s** 而非实测 2.221s —— **本机比 `measured_at` 那台快**,
+    自己的实测是**乐观侧**;前两条注记的「不缩放就是保守」是它们那台机器的性质,**规矩是取保守侧**。
+  - **附带**:`test_bots_walk_farm_only.py` 手读**同轮登记**(GH #803 第三发,这次自己读的,8/0)。
+  - ⚠️ **自检 python trunk 腿 `UNCERTIFIABLE`,是本轮自己造成的**(与编辑 `bots/` 并发)
+    ⇒ **trunk 那一侧本轮没人看过**;据 GH #848 **等自检跑完再 push**。
 - 2026-09-16T02:10Z(报告 `iterations/reports/hero/20260916T021022Z.md`;**backlog:新开 `-186`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`axecallcrowd`**(turbo-only,**未 armed**,
   P4.2 冻结期不申请入集);新 queue 请求 **hero-93**;**P4.4 自评:(i)**)

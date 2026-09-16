@@ -834,6 +834,90 @@ function X.axe_IsLanePushCrowdOpen( nAllyCount )
 end
 
 
+--- Whether X.ConsiderQ's 带线 firing point carries an ally-crowd cap AT ALL.
+--- Soak candidate `axecallnocap` (turbo-only, INERT until armed).  STANDALONE:
+--- this function holds exactly one J.IsSoakCandidate call and it names only its
+--- own id.
+---
+--- ⭐ THE DEFECT, and it is the SECOND question X.axe_IsLanePushCrowdOpen's
+--- header wrote down and deliberately did not answer ("whether this branch
+--- should carry a crowd cap AT ALL is a second question").  `axecallcrowd`
+--- raises the cap from 2 to 4, which is the largest cap that still leaves the
+--- conjunct a refusal to make.  The state it keeps refusing is the FULL
+--- FIVE-MAN STACK standing in a lane wave with no enemy hero inside 1600u --
+--- i.e. the single most unambiguous grouped push the game can present, and the
+--- one docs/PROJECT.md names as paying off MORE in Turbo ("weaker towers,
+--- shorter games, grouped pushing pays off more").  This id removes the
+--- conjunct instead of moving it.
+---
+--- ⭐ WHY THE CAP IS NOT A COOLDOWN POLICY EITHER -- the one rationale
+--- X.axe_IsLanePushCrowdOpen's header did NOT have to rule out, because at cap
+--- 4 it still had somewhere to hide.  Berserker's Call costs a real cooldown
+--- (AbilityCooldown 18/16/14/12, tests/mock/special_value_shapes.lua; 12s at
+--- the rank this file's build has by hero level 7), so spending it on a creep
+--- wave seconds before a fight is a genuine cost, and "five allies grouped with
+--- no enemy in view" is a plausible pre-contact state.  But the shipped cap
+--- does not ration that cooldown, it rations it BACKWARDS: shipped fires this
+--- branch at `<= 2` -- Axe alone or with one ally, the state most likely to be
+--- jumped and therefore most likely to need Call for a fight -- and refuses it
+--- at four allies, the safest state on the board.  A cooldown argument that
+--- holds against five allies holds STRICTLY HARDER against one.  Whatever the
+--- cap is, it is not protecting the cooldown.
+---
+--- ⚠️ DIRECTION: THIS IS A WIDENING, and it is a strict superset of BOTH legs
+--- it sits above.  Every ally count admitted by `<= 2` or by `<= 4` is admitted
+--- here, because armed this conjunct is the constant true.  Arming can only ADD
+--- 带线 taunts and can never remove one or move one onto a different target, so
+--- a negative wave reading is attributable to "those grouped lane-push taunts
+--- were not worth the cooldown" and NEVER to a cast this lever refused.  Gate
+--- off (or non-turbo) the whole disjunction at the call site collapses to
+--- `X.axe_IsLanePushCrowdOpen( #hAllyList )`, which gate-off is `#hAllyList <=
+--- 2`, byte for byte.
+---
+--- ⚠️ HONEST BOUNDS, five, none of them rhetorical:
+---   1. CONJUNCT-LAYER DOMAIN, stated as the number it is: over the 16
+---      Axe-subject instants in tests/fixtures/ + tests/frames/, shipped admits
+---      11, `axecallcrowd` armed admits 15, and this id armed admits 16.  So
+---      this lever moves 5 instants against shipped, and exactly ONE against
+---      `axecallcrowd` -- f_260828_124358_axe_cull_promise (t=1452.8, all five
+---      allies alive inside 1600u), the frame that frames the whole question.
+---   2. ⛔ THAT ONE SEPARATING FRAME SEPARATES THE TWO IDS AT THE CONJUNCT
+---      LAYER ONLY, and the reason is on the same `if`: at that instant there
+---      is 1 enemy hero inside 1600u, so `#hEnemyList == 0` refuses the branch
+---      whatever this conjunct answers.  The corpus therefore contains ZERO
+---      frames where this id changes what Axe does, and quoting the "1" as a
+---      behaviour difference would be an execution verification out of thin
+---      air.  §3.2 of the test pins the enemy count so the claim cannot rot.
+---   3. ⛔ THE BRANCH-LEVEL DOMAIN IS 0 ON THIS CORPUS AND THE REASON IS
+---      SELECTION, NOT RARITY -- identical to `axecallcrowd`'s bound 3, and it
+---      does not get to be counted as new evidence here: `#hEnemyList == 0`
+---      holds on exactly 1 of the 16 instants, because these frames were
+---      harvested to study Call and Culling Blade DECISIONS, i.e. moments with
+---      enemies present.  How often a real Turbo game puts a full five-man
+---      stack in a 4-creep wave with no enemy hero in view is a wave question
+---      (iterations/queue.json hero-94).
+---   4. ⛔ END-TO-END DOMAIN IS 0 AND CANNOT BE ANYTHING ELSE TODAY: the branch
+---      also needs `#laneCreepList >= 4`, and the dumped corpus carries no
+---      non-hero units at all (GH #772, state.json:CORPUS_HAS_NO_NONHERO_UNITS_20260912).
+---   5. ⛔ NOT a bundle with `axecallcrowd`, and the reason is stronger than
+---      the usual one-lever-at-a-time: this id DOMINATES it.  Armed, the
+---      disjunction short-circuits true before `axecallcrowd`'s cap is ever
+---      consulted, so a wave that arms both measures THIS id alone while the
+---      verdict table would carry two names.  Also ⛔ not a bundle with
+---      `axecallclock` (a third conjunct of the same `if`).  Neither gate names
+---      another id -- the `pullcad` trap -- and §7 asserts both directions.
+function X.axe_IsLanePushCrowdCapOff()
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'axecallnocap' )
+	then
+		return true
+	end
+
+	return false
+
+end
+
+
 --- Soak candidate `axecallring` (turbo-only, INERT until armed) -- the ANCHOR of
 --- X.ConsiderQ's initiation firing point, which is a different question from the
 --- IMMUNITY of it (`axecallbkb_ii`, above).
@@ -1050,7 +1134,13 @@ function X.ConsiderQ()
 		-- See X.axe_IsLanePushCrowdOpen -- the cap refuses a GROUPED PUSH, and
 		-- `#hEnemyList == 0` on the next line is what makes it a push rather
 		-- than a fight.  The count includes Axe himself.
-		and X.axe_IsLanePushCrowdOpen( #hAllyList )
+		-- [axecallnocap] the SECOND question: whether this conjunct should exist
+		-- at all.  Gate off X.axe_IsLanePushCrowdCapOff() is `false`, so the
+		-- whole disjunction is the cap alone, byte for byte.  Armed it
+		-- short-circuits true and therefore DOMINATES axecallcrowd -- see that
+		-- helper's bound 5; the two must never be armed in one wave.
+		and ( X.axe_IsLanePushCrowdOpen( #hAllyList )
+				or X.axe_IsLanePushCrowdCapOff() )
 		and #hEnemyList == 0
 	then
 		local laneCreepList = bot:GetNearbyLaneCreeps( nRadius - 50, true )

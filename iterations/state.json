@@ -9325,5 +9325,23 @@
   "not_a_bypass_case": "⛔ 本轮**没有**用 `RULE6_BYPASS=1`:闸能跑、也跑绿了,输的是竞速不是闸。**把竞速失败用 bypass 绕过去,等于把一行「这是跳过不是通过」写进一次其实通过了的 push** —— 那会污染 GH #213 那行字唯一的用途。",
   "second_hazard_same_round": "第三次 rebase 撞上协同组同轮**重排了 `tools/agent/lua_gate_manifest.json` 的结构**(连同 `state.json` / `queue.json` 共三个 JSON 冲突)。处置:**取上游整份,再把自己那一行按新结构重新贴进去**,而不是手工合并 —— **手工合并一个刚被重排的 manifest,会把别人的重测结果和自己的一行混成一个谁都没测过的表**。",
   "handoff": "→ 总监:本条只是读数,不请求裁定;若要处置,输入是 `lua_gate_unpriced_share_measured_20260916`(56% 未定价)与本条(竞速)**指向同一条腿**。"
+ },
+ "axecallnocap_20260916": {
+  "owner": "hero",
+  "date": "2026-09-16T04:xxZ",
+  "armed": "NO -- P4.2 入集冻结期,本 id 不申请入集(FROZEN-HOLD 之前不提)。turbo-only,未 armed。",
+  "backlog_item": "hero -186「下一轮主体第一候选」第 1 条 —— `axecallcrowd` 的 ARMED 段逐字写着「这条支路该不该有人数帽 AT ALL 是第二个问题」,而它**当轮就给出了具体验收物**:那个五人帧(`f_260828_124358_axe_cull_promise`)是它和本 id 唯一分得开的一帧。P4.4 自评 (i):工作单元主体是一个 bots/ 行为改动。",
+  "headline": "⭐ **`axecallcrowd` 把帽子抬到 4,留下的那一个拒绝正是「全队五人站在兵线里、视野内没有敌方英雄」 —— 游戏能给出的最不含糊的抱团推进,也正是 docs/PROJECT.md 点名 Turbo 比普通模式更划算的那件事。** 本 id 不是再抬一格,是把这个合取项**删掉**。",
+  "defect": "bots/BotLib/hero_axe.lua `X.ConsiderQ` 带线 出货点的人数帽本身该不该存在。shipped 是 `#hAllyList <= 2`(含 Axe 自己 ⇒ 「Axe + 至多一个」),`axecallcrowd` armed 是 `<= 4`(「Axe + 至多三个」),两者都在五人满编时拒绝。",
+  "cooldown_rationale_points_the_other_way": "⭐ **这是 `axecallcrowd` 唯一没必要排除的那条理由,因为帽子取 4 时它还有地方躲。** Berserker's Call 花一个真实冷却(`AbilityCooldown` **18/16/14/12**,读自 `tests/mock/special_value_shapes.lua`;本文件自己的加点到英雄 7 级是 4 级 ⇒ 12s),所以在开打前几秒把它扔给一波兵是**真代价**,而「五人抱团、视野无敌人」是一个**貌似**接战前夜的状态。⛔ 但出厂帽子**不是在配给这个冷却,而是把它配给反了**:shipped 在 `<= 2` 时开火 —— Axe 单人或带一个,**最容易被抓、因此最可能需要 Call 打架**的状态 —— 而在四个队友时拒绝,**全场最安全**的状态。**一个对五人成立的冷却论证,对一人成立得更强。** ⇒ 帽子无论是什么,它不是在保护冷却。",
+  "fix": "gated helper `X.axe_IsLanePushCrowdCapOff()`(turbo-only,id `axecallnocap`,armed 恒真 / 未 armed 恒假),出货点写成**两项析取**:`( X.axe_IsLanePushCrowdOpen( #hAllyList ) or X.axe_IsLanePushCrowdCapOff() )`。闸关(或非 turbo)析取整体塌回 `X.axe_IsLanePushCrowdOpen( #hAllyList )`,即 `#hAllyList <= 2` **逐字节不变**。两个 helper **各持一个 gate、互不点名**(pullcad 陷阱)。",
+  "direction": "**WIDENING,而且是它上方两条腿的严格超集**:armed 后该合取项是常真,故 `<= 2` 与 `<= 4` 放行的每个计数它都放行 ⇒ armed 只能**加**带线嘲讽,永不删一发、也不把一发挪到别的目标上。§4.1 在全部 16 个 Axe 瞬间上驱动,§4.2 再在 0..6 **全值域**上对**两条**腿各驱动一遍。负向读数只能读成「那些抱团带线嘲讽不值这个冷却」。",
+  "domain": "⛔ **四个域四个数,不许当成一个**。**合取层**(§3.1):16 个 Axe-subject 瞬间里 shipped 放行 **11**、`axecallcrowd` armed 放行 **15**、本 id armed 放行 **16** ⇒ 对 shipped 移动 **5** 个,对 `axecallcrowd` 移动**恰好 1** 个,就是 `f_260828_124358_axe_cull_promise`(t=1452.8,五人全活且在 1600u 内)。⛔ **但那一帧只在合取层分得开,理由在同一个 `if` 上**(§3.2):该瞬间 1600u 内有 **1** 个敌方英雄 ⇒ `#hEnemyList == 0` 无论本合取项答什么都拒掉支路 ⇒ **语料里有 0 帧是本 id 改变 Axe 行为的**,把那个「1」报成行为差就是凭空的执行核验。**支路层 = 0,理由是选样不是稀少**(§6.1,与 `axecallcrowd` bound 3 同一条,**不得在这里当成新证据再数一遍**)。**端到端 = 0 且今天不可能是别的数**(§3.4):还需 `#laneCreepList >= 4`,而语料一个非英雄单位都没有(GH #772)。",
+  "condition_c": "docs/PROJECT.md 的 Turbo 教条逐字:「weaker towers, shorter games, grouped pushing pays off more」。加两条机制:(1) 同一个 `if` 已有 `J.IsAllowedToSpam( bot, nManaCost )`(法力)与 `#hEnemyList == 0`(安全)⇒ 人头形状的第三个配给器没有剩下的职责;(2) Counter Helix 按**挨打次数**触发,队友站在旁边不降低它的触发率 ⇒ 队友数不是这条支路的收益项。剩下的唯一候选理由(冷却)见上一节 —— 它指向相反方向。",
+  "independence": "⛔ **不得与 `axecallcrowd` 同波 arm,而理由比「一次一根杠杆」更强:本 id 支配它。** armed 后析取在帽子被问到之前就短路为真 ⇒ 同 arm 的一波测的是**本 id 一个**,而裁定表上会写两个名字(§7.4 在全部 16 帧上把这条支配性驱动出来)。⛔ 也不得与 `axecallclock` 同波(同一个 `if` 的第三个合取项)。两个 sibling helper 都不点名本 id,本 id 也不点名它们(§7.1/§7.2/§7.3 双向)。",
+  "tests": "`tests/test_axe_q_lane_push_nocap.lua`(**22 例全绿**;经 `tests/run_tests.lua` 本机 best-of-three **2.221s**,manifest 登记 **2.466s** —— ⚠️ 本轮的缩放**方向与前两次相反**:本容器比 `measured_at` 那台**快**(crowd 2.470 vs 登记 2.743 = 0.90x;hunger 4.743 vs 4.927 = 0.96x),所以「自己的实测」是乐观侧,保守侧是**放大后**的 2.466。⚠️ 该文件是**故意做便宜的**:§3.3/§4.1/§7.4 每个 arm 集只 load 一个 world 而不是每帧一个(两个 helper 对 `nAllyCount` 都是纯函数,而 §3.1 仍然为三条腿各付一次逐帧 load),把 4.773s(在 5.5s 上限内但没余量)降到 2.221s。变异台 `tools/agent/mutstand_axecallnocap.sh` **13/13 全杀**(每个变异点都带 `||` 闸 + 锚点计数断言,GH #846)。",
+  "mutstand_findings": "⭐ **M9 买到一条:把队友环 1600 收到 1200,§3.1/§3.2 的 11/15/16 与「五人帧 5 个队友」全部不动 —— 从另一侧复现了 crowd 轮买到的「半径为真但不承重」。** ⇒ 拦住「语料悄悄换了个环」的**只有** §5.3 那条源码读数,这就是它必须是源码读数而不是散文的原因。⚠️ M3 的 `want` 是 §1.1 的**arity 计数**(「must hold exactly ONE IsSoakCandidate call」)而不是它下面那个「names a second id」循环 —— 计数断言排在同一测试体前面、先开火;认领后者等于认领一个没做到的击杀(-186 那轮同一条教训)。",
+  "debts_paid_same_round": "`tests/test_bots_walk_farm_only.py` 的 `UNRESOLVED_HAND_READ` **同轮登记**了本文件的 `io.popen` 走查(GH #803/#774:上一轮正是在这里欠了一条,由别的组替本组读);`tools/agent/lua_gate_manifest.json` **同轮**手加行(GH #806:没人自动跑的测试拒不了 push,它的红由下一个开工的组发现)。",
+  "next": "需要一次归档扫描买 (a) 证据:**五人满编**的抱团带线在真实 Turbo 对局里的频率(`iterations/queue.json` **hero-94**)。⛔ 零 EC2、不为它发波。冻结期不申请入集。"
  }
 }
