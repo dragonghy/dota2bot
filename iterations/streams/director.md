@@ -693,7 +693,10 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **读数前后逐位相同 `REACH 225/275`**,顺带消掉一个真的时序依赖(分母原本依赖 gate 开关是否在场)。
   ⚠️ 第一版把旧拼法写进 **docstring**,检测器照样红 —— 它剥 `#` 注释**不剥 docstring**。
   ⛔ **§〇.3 一条没修的发现**:`bots_reach_closure.py` 的 docstring 引用 `tests/test_bots_reach_closure.py`,
-  **那个文件不存在**(全仓 `tests/` 下零命中)⇒ 它存在的全部理由(「集合有棘轮了」)**今天不成立**,归协同组。
+  **那个文件不存在**(全仓 `tests/` 下零命中)⇒ 它存在的全部理由(「集合有棘轮了」)**今天不成立**,
+  **已开 GH #859** 交协同组(⛔ 不代写)。⚠️ 该 issue 的 `claim_precheck.sh` 是 **`PRECHECK_EXIT=3`**,
+  唯一 finding `MISSING path tests/test_bots_reach_closure.py` **正是它的主张本身** ——
+  该工具盲区的**第三种形状**(前两种:引用错了 / 裁定命令它出现),三者共用同一句文案,照登不读成 0。
   **巡检**(§2e 甲–丁):⭐⭐ **本轮取了两次,第二次推翻第一次**:19:01:18Z 读 replay-check **3.2h**,
   19:17:22Z 重取 **0.6h**(录像组 `cacc2780` 在我第一次 fetch **之后**才上 main)⇒ 五组 0.6–3.4h,**不点名任何组**。
   📌 **四条取法全中,读数仍然是错的** ⇒ **(甲) 的措辞不完备:判据该是「取数与下结论之间不许隔一次别人的 push」**,
@@ -710,12 +713,24 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **下次触发**:①**GH #240 余下部分**(11 行迁移 + 方案 2)②欠条 `carry_mark_prose_vs_list`(本轮登记:
   `CARRY_MARK_RE` 收紧并全量核差集,或明确裁定不收紧;两个候选锚已各有反例)③**GH #843 的 (丙)+(乙)**
   (第九张收据,优先级再上调;**三个「知道却照样落地」的实例已证伪「告诉作者」这条路**)
-  ④**`tests/test_bots_reach_closure.py` 不存在**(归协同组:补棘轮或改掉那句引用)⑤**GH #810 待裁 1** +
+  ④**GH #859**(`tests/test_bots_reach_closure.py` 不存在,归协同组:补棘轮或改掉那句引用)⑤**GH #810 待裁 1** +
   欠条 `lua_gate_stale_manifest_refusal_port` / `gh806_lua_manifest_remeasure` 重测
   ⑥欠条 `gh856_switch_writer_serialization_ruling`(**本轮仍未裁**,已欠 ~6.5h)⑦看守自检那三条 python 用例(**第十二轮**)
   ⑧`py_gate_manifest.json` 未重测:新落地的 `test_carry_item_issue_state.py` 实测 **0.102s**(远在 3.0s cap 内)
   却**没有 manifest 行** ⇒ 今天不在 push 闸里(GH #839 同族)⑨P4.2 narrat 1 / `$0.90` 常数重裁 / **GH #528** / patch 缺口 P3
   ⑩`lua-coverage` 的 `no_manifest_row` 存量(3 + 2)⑪**§2e (甲) 补一格**:写下点名之前再取一次巡检读数。
+  **[同轮收尾追加,push 之后]** **push 记录:三次 push,三条腿每次各跑一遍,⛔ 全程无 `RULE6_BYPASS`** ——
+  ①分支 `* [new branch]`(`GATE_EXIT=0` / `py 128 ran, 0 findings, 38.1s` / `lua 410 ran, 0 findings, 545.8s`);
+  ②`HEAD:main` **`! [rejected] (fetch first)`**,**闸全绿,纯粹是 main 动了**(录像组两个 commit);
+  `pull --rebase` **`REBASE_EXIT=0`**(干净 1/1)⇒ ③`HEAD:main` ✅ **`c17b730a..0b4e59f8`**
+  (`py 128/0` / `lua 409 ran, 0 findings, 546.0s`)。
+  ⭐ **rebase 之后 push 之前,把本轮修的两条普查又跑了一遍**(它们 `in_gate:false`,**闸不会替我跑**):两条都绿。
+  ⚠️ 诚实边界:分支 ref 停在 rebase 前的 `633863fe`,main 上是 `0b4e59f8` —— **同一份工作,sha 不同**,
+  **没有为了对齐 sha 再跑一次九分钟的闸**(取舍,不是遗漏)。
+  **GH**:#843 追评(precheck `EXIT=0` / OK to publish)/ **#859 新建** / #839 追评(新棘轮 0.102s 却无 manifest 行)。
+  ⭐ **顺号推测号码本轮没犯**:先发 issue 拿真号再回填。**本轮 MCP 可用,未触发铁律 11。**
+  **token(铁律 8)**:`TOKENS total_in=18,325,300 out=81,000 turns=108`(统计时刻为止)。
+  ⚠️ 高于常态,归因:1.7MB 章程分段读 + 主活要跑 4 次变异台;**下一轮可省的是分段读那部分**。
 - **2026-09-16T15:55Z**:**RULING 66 —— 一条裁定宣布「cap 障碍已消除」,46 分钟后另一个组落了一条 `io.popen`,把 2.5s 顶成 4.06s。两条裁定都没错:它们测的是两棵不同的树,而没有任何一条腿会为「树变了」举手。**
   全文 `iterations/reports/director/20260916T155500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
