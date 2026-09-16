@@ -228,6 +228,19 @@ UNRESOLVED_HAND_READ = {
         "were both read by somebody else. The registration cost is one entry; "
         "the alternative, twice measured, is a trunk red found by the next desk "
         "to start work",
+    """tests/test_cm_lane_fallback_wallet.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:97-:98, :129) and keeps only "
+        "names matching ^f_.*%.lua$; plain `ls` is NOT recursive, so it never "
+        "reaches bots/Customize/. Hand-read 2026-09-16 by the STRATEGY desk "
+        "although the walk is the hero desk's -- the SEVENTH instance of GH "
+        "#774, and the file's own line 125 already says in so many words that "
+        "it 'belongs on the hand-read list of tests/test_bots_walk_farm_only.py "
+        "(GH #774)'. That comment is what makes this entry worth a sentence: a "
+        "comment naming an obligation is not that obligation being met, and "
+        "nothing in the three push legs can tell the difference, because this "
+        "file measures over the python gate's 3.0s per-test cap and is "
+        "`in_gate: False` (GH #806 is the same defect on the Lua leg)",
     """tests/test_cm_w_creep_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:72-:73, :120) and keeps only "

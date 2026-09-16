@@ -751,7 +751,33 @@ export function WhichLaneToPush(_bot: Unit, _lane: Lane): Lane {
     const midTier = GetLaneBuildingTier(Lane.Mid);
     const botTier = GetLaneBuildingTier(Lane.Bot);
 
-    if (midTier < topTier && midTier < botTier) {
+    // [GH #857] Soak candidate 'pushtier' (turbo-only, STANDALONE gate). The
+    // chain below spells "prefer lanes with lower-tier outer buildings first"
+    // as a STRICTLY UNIQUE minimum, so a tie at the minimum -- the normal
+    // state of a 3-lane map whose tiers are integers in {1,2,3,4} -- runs no
+    // branch at all and drops the objective term out of the lane choice.
+    // Measured on the fixture corpus (69 frames carrying buildings): the
+    // shipped chain fires on 9 and is dead on 60. Armed, every lane at the
+    // minimum tier gets the multiplier; a 3-way tie is then a provable no-op
+    // (a common positive factor cannot reorder the comparison below), so the
+    // live domain is the 2-way tie. The 0.5, the barracks sub-clause and the
+    // direction of the preference are deliberately unchanged, and the chain
+    // below is byte-identical as the else-arm.
+    if (jmz.IsModeTurbo() && jmz.IsSoakCandidate("pushtier")) {
+        const nMinTier = Math.min(topTier, midTier, botTier);
+        if (topTier === nMinTier) {
+            topLaneScore *= 0.5;
+            if (!jmz.Utils.IsAnyBarracksOnLaneAlive(false, Lane.Top)) topLaneScore *= 0.5;
+        }
+        if (midTier === nMinTier) {
+            midLaneScore *= 0.5;
+            if (!jmz.Utils.IsAnyBarracksOnLaneAlive(false, Lane.Mid)) midLaneScore *= 0.5;
+        }
+        if (botTier === nMinTier) {
+            botLaneScore *= 0.5;
+            if (!jmz.Utils.IsAnyBarracksOnLaneAlive(false, Lane.Bot)) botLaneScore *= 0.5;
+        }
+    } else if (midTier < topTier && midTier < botTier) {
         midLaneScore *= 0.5;
         if (!jmz.Utils.IsAnyBarracksOnLaneAlive(false, Lane.Mid)) midLaneScore *= 0.5;
     } else if (topTier < midTier && topTier < botTier) {

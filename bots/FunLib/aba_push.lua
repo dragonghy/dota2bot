@@ -431,7 +431,57 @@ function ____exports.WhichLaneToPush(_bot, _lane)
     local topTier = ____exports.GetLaneBuildingTier(Lane.Top)
     local midTier = ____exports.GetLaneBuildingTier(Lane.Mid)
     local botTier = ____exports.GetLaneBuildingTier(Lane.Bot)
-    if midTier < topTier and midTier < botTier then
+    -- [GH #857] Soak candidate 'pushtier' (turbo-only, STANDALONE gate). The
+    -- chain below states the TS source's intent as "prefer lanes with
+    -- lower-tier outer buildings first", but spells it as a STRICTLY UNIQUE
+    -- minimum: every branch demands the lane beat BOTH others. A lane tier is
+    -- an integer in {1,2,3,4} (GetLaneBuildingTier, same file) over three
+    -- lanes, so a tie at the minimum is not a corner case -- it is the normal
+    -- state of the map, and when it happens NO branch runs and the objective
+    -- term drops out of the lane choice entirely. Measured on this repo's own
+    -- fixture corpus (112 frames, of which 69 carry buildings at all --
+    -- tests/test_pushtier_min_tie.lua [domain]): the shipped chain fires on 9
+    -- of the 69 and is dead on 60.
+    --
+    -- Armed, the multiplier goes to EVERY lane that attains the minimum tier.
+    -- Two consequences, both deliberate:
+    --   * a 3-way tie (43 of the 60 dead frames: 42x {1,1,1}, 1x {2,2,2})
+    --     halves all three scores, and the selector below compares them --
+    --     a common positive factor cannot change an ordering, so those frames
+    --     are a PROVABLE no-op, not a hoped-for one. The barracks sub-clause
+    --     can break that only at tier >= 3, where a tied lane may have lost
+    --     its rax while another has not.
+    --   * the live domain is therefore the 2-WAY tie, 17 of 112 frames, where
+    --     the two tied lanes are preferred over the third exactly as the
+    --     comment says they should be.
+    -- Nothing else moves: not the 0.5, not the barracks sub-clause, not the
+    -- direction of the preference (lower tier = cheaper objective = pushed
+    -- first, which is the shipped intent and is NOT this lever's question).
+    -- The shipped chain below is kept BYTE-IDENTICAL and simply becomes the
+    -- else-arm, so a disarmed bot walks the same branches in the same order.
+    -- Not conjoined with 'c14'/'c15' or any other id (the 'pullcad' trap: a
+    -- conjunction freezes FALSE the day the other id is promoted).
+    if jmz.IsModeTurbo() and jmz.IsSoakCandidate('pushtier') then
+        local nMinTier = math.min(topTier, midTier, botTier)
+        if topTier == nMinTier then
+            topLaneScore = topLaneScore * 0.5
+            if not jmz.Utils.IsAnyBarracksOnLaneAlive(false, Lane.Top) then
+                topLaneScore = topLaneScore * 0.5
+            end
+        end
+        if midTier == nMinTier then
+            midLaneScore = midLaneScore * 0.5
+            if not jmz.Utils.IsAnyBarracksOnLaneAlive(false, Lane.Mid) then
+                midLaneScore = midLaneScore * 0.5
+            end
+        end
+        if botTier == nMinTier then
+            botLaneScore = botLaneScore * 0.5
+            if not jmz.Utils.IsAnyBarracksOnLaneAlive(false, Lane.Bot) then
+                botLaneScore = botLaneScore * 0.5
+            end
+        end
+    elseif midTier < topTier and midTier < botTier then
         midLaneScore = midLaneScore * 0.5
         if not jmz.Utils.IsAnyBarracksOnLaneAlive(false, Lane.Mid) then
             midLaneScore = midLaneScore * 0.5

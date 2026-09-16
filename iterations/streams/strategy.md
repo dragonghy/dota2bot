@@ -35,6 +35,47 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT31. **【2026-09-16T16:45Z 新增。⛔ 这一条也是**读法**,不是活;
+   先按它和 0NEXT30 各判一次,再去取活。**
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【跨帧】那一格 —— 0NEXT29 管跨轮、0NEXT27/28 管一轮之内,
+   三条都防不住它**:
+   **一个缓存下来的普查键,会把「读者的缺陷」印成「关于语料的合理读数」。**
+   现场:`tests/mock/replay_fixture.lua` **按位置**从每一帧解析塔与兵营槽位
+   ⇒ **`TOWER_TOP_1` 这类常量在不同 fixture 之间不是常量**:有塔的帧读 **0..8**,
+   一座塔都没有的帧读**未解析哨兵 1036..**。把第一帧的槽号缓存起来的普查器,
+   会拿着 `1036` 去问后面每一帧 ⇒ 每条兵线都返回空 ⇒ 它打印出来的是
+   **「这份语料一座建筑都没有」** —— 一句**关于语料的、看起来完全合理的话**,
+   **由读者的缺陷生产出来**,`EXIT=0`,零报错。实测:**1120 个对里的 1120 个**读成不可读。
+   📌 **判据(下一轮直接用,排在写普查器之后、读它的输出之前)**:
+   **一个跨帧复用的普查键,先问一句「它在下一帧还是同一个值吗」——
+   按位置解析出来的东西默认不是。**
+   ⚠️ 与 0NEXT29 是同族的两个刻度:那条管跨轮、这条管跨帧,
+   **两条的失效方式都是「一个没有棘轮的读数看起来很正常」**。
+   ⚠️ **判据继承 0NEXT11–0NEXT30 全部。**
+
+   ⭐ **第二条(乙),源码侧,本轮由 M5/M8 两发变异各兑现一次**:
+   **一个只改「值从哪来」的杠杆,它保留下来的判据在 armed 与 unarmed 两条腿上一模一样,
+   所以没有任何行为用例看得见「顺手化简掉一条保留判据」** ——
+   M5(只丢 turbo 合取项;本语料 `IsModeTurbo()` 恒真)与 M8(armed 支丢掉 barracks 子句;
+   它要 tier ≥ 3,本语料够不到)**都只被源码侧的逐字断言抓住**。
+   ⇒ **落这类杠杆时把被保留的判据逐字钉下来**,否则下一个人化简它时没有任何东西会红。
+   (这是 GH #834 §5 立的那条,本轮是它第二次兑现 —— **登记复发次数,别当新发现。**)
+
+   ⚠️ **本轮交出去、下一轮要看一眼的两条**:
+   (a) **`pullcamp` 原子重新入集**:本组那一棒(几何过滤 `pullreach` + fixture)**09-11 就落地了**,
+   `owed_executions.json:pullcamp_atom_readmission` 的执行链是
+   `strategy → replay-check(复读空带)→ director` ⇒ **球在录像组,已停五天**,
+   而它同时是 owner 优先项 **P1 完成定义 2** 的那一棒(⛔ P1 掉过一次棒,37 轮,铁律 9 连带规则的立案现场)。
+   下一轮若仍没动,**开一条 issue 点名**,不要默默顺延;
+   (b) `state.json:pushtier_20260916` 交总监,P4.2 冻结下唯一合法裁定是 **FROZEN-HOLD**。
+
+   ⛔ **已定价不要重买**:W311 在 `bots/ability_item_usage_generic.lua` 的 **155 条(占全部 48%)
+   全是 `hEffectTarget`/`sCastMotive` 的声明后重赋,纯外观** —— 过滤这两个名字后该文件剩 **0 条**。
+   可达集里 W311 共 **321 条**,`jmz_func` 的 13 条上一轮已挖,其余在英雄文件(英雄组的角)。
+   📌 **死存储本身从来不是杠杆,它只是把人领到那个函数门口** —— 本轮与上一轮(`roshdps`)
+   **连续两次**都是这个形状。】**
+
 0NEXT30. **【2026-09-16T13:48Z 新增。⛔ 这一条是**读法**,不是活;
    先按它判一次,再去看 0NEXT29。**
 
@@ -10009,6 +10050,79 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-16T16:45Z:**「优先低档位的兵线」要求一个严格唯一的最小值,而地图的常态是并列(gated `pushtier`)。**
+  出口 **(i)**(`bots/` 行为改动)—— ⭐ **4.4 (i) 的连胜本轮接回来了**(上一轮有意断档,理由是域 0)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;**未提入集**(P4.2 冻结,armed 25 > 20 ⇒ 唯一合法裁定 FROZEN-HOLD)。
+  报告:`iterations/reports/strategy/20260916T164514Z.md`;`state.json:pushtier_20260916`;GH **#857**。
+
+  **铁律 9 的判词(下一轮可直接引用,免得重判)**:`OWNER_PRIORITIES.md` 里属于本组的两项
+  **今天都不在本组手上** —— P1(1) 已由 **GH #809** 结案交总监;P1 的 readmission 那一棒
+  (几何过滤 + fixture)**也已落地**(`pullreach`,GH #740,09-11,
+  `tests/test_pullreach_camp_lane_reach.lua`),`owed_executions.json:pullcamp_atom_readmission`
+  的执行链写的是 `strategy(几何过滤落地 + fixture)→ replay-check(复读空带)→ director`
+  ⇒ **球在「复读空带」那一格,已停五天**;P2 完成定义 1 按源码已满足(13:48Z §1.3)。
+  ⇒ 走章程 **1b**;[strategy] open issue 的球都在别组(#855/#851/#845/#842/#834/#837 的修都已落地,
+  #137 的 `campgrade`/`campdmg` 同样)⇒ 取 backlog **0NEXT29 (b)**。
+
+  **⭐⭐ 头条**:`bots/FunLib/aba_push.lua` 的 `WhichLaneToPush`(**全仓一个调用点 `:311`,上面无 gate**,
+  决定三个推塔 mode 的整块推进 desire 跑不跑)。TS 源注释逐字是
+  「*Prefer lanes with lower-tier outer buildings first*」,实现却是 `midTier < topTier and midTier < botTier`
+  这样的 **严格唯一最小**三支链;而 `GetLaneBuildingTier` 返回 **{1,2,3,4} 的整数**,三条兵线取自四个值
+  ⇒ **并列是常态**,一并列**一支都不跑**,目标项**整个从兵线选择里消失**。
+  **没有 `else`、变量全活、语法完全正常**;`luacheck` 报的是它隔壁(`bestScore` 的 W311),
+  `check_armed_wiring.py` 问的是「有没有调用点」不是「谓词能不能为真」。
+  📌 与 GH #851(四个 `or` 拦不住任何 mode)、GH #837(存在量词只问名单前三格)**同族**。
+
+  **域(`tests/_pushtier_sweep.lua`,1,380 次驱动)**:1120 个 (fixture, 英雄) 对,
+  **430 跳过**(dump 里一座建筑都没有 ⇒ **仪器缺口,单独报,不并进任何一类** —— 「读者看不见塔」
+  不是「塔没了」);可驱动 **690**:唯一最小 **60**(出货链会跑,armed 改 **0**)/
+  两路并列 **165**(出货链死,armed 改 **25**)/ 三路并列 **465**(出货链死,armed 改 **0**)
+  ⇒ **出货的目标项死在 630/690 = 91.3%**,活域就是两路并列。
+  **三路并列是算术不是指望**:选择器只把三个分数互相比 ⇒ 同乘一个正常数不改次序(已驱动,非散文)。
+  **承重帧** `f_260820_103644_necro_pinned_dying.lua` / lina / radiant,敌方档位 **1,2,1** ——
+  **mid 的外塔已经倒了(更贵),出货代码偏偏选 mid**;armed 选 bot,
+  而用例断言的是「**armed 选中的那条其档位 == 最小档位**」(把「改了答案」与「改对了方向」分开)。
+
+  **纪律**:turbo-only **独立门**(不与 `c14`/`c15` 合取);`0.5`、barracks 子句、**偏好方向**都不动;
+  出货链**逐字保留成 else 支**;**`.lua` 与 `.ts` 一起改**(Lua 是转译产物,只改 Lua 会被静默还原)。
+  `tests/test_pushtier_min_tie.lua` **16/16**,打 `[ratchet]`(⛔ 没碰 `lua_gate_measure.py`,GH #813);
+  `tools/agent/mutstand_pushtier.sh` **9 抓 + 控制 SURVIVED,零 NO-OP**。
+
+  **⭐⭐ 本轮买到的可迁移句(管【跨帧】那一格,0NEXT29 只管跨轮)**:
+  **一个缓存下来的普查键,会把「读者的缺陷」印成「关于语料的合理读数」。**
+  现场:`tests/mock/replay_fixture.lua` **按位置**解析塔/兵营槽位 ⇒ **`TOWER_TOP_1` 这类常量
+  在不同 fixture 之间不是常量**(有塔的帧 0..8,没塔的帧未解析哨兵 1036..)。
+  缓存第一帧槽号的普查器会拿 `1036` 去问后面每一帧 ⇒ 每条兵线都空 ⇒ 它打印
+  「**这份语料一座建筑都没有**」:一句**看起来完全合理的、关于语料的话**,
+  由**读者的缺陷**生产出来,`EXIT=0`,零报错。实测 **1120/1120 读成不可读**。
+  📌 **判据**:**一个跨帧复用的普查键,先问「它在下一帧还是同一个值吗」——
+  按位置解析出来的东西默认不是。**
+
+  **附带(量具,4.4 只作附带)**:`tools/agent/bots_reach_closure.py` —— 0NEXT29 判据逐字要求的
+  「落地成文件 + 棘轮」,**本轮读数 225/275**。⚠️ 前三轮读 226/226/227,**差在哪个文件仍无从归因**
+  (三份名单一次都没落地)⇒ **225 是本轮的读数,不与 226/227 比较**(判据后半句)。
+  三条边缺一不可(`require` / `dofile(字面量)` / `pcall(require, …)`),反向锚挑 `aba_minion` 与
+  `aba_matchups`,**不是 `jmz_func`**(人人 require 的锚几乎不含信息)。
+  ⛔ **已定价不要重买**:W311 在 `ability_item_usage_generic.lua` 的 **155 条全是外观**
+  (`hEffectTarget`/`sCastMotive` 声明后重赋),过滤这两个名字后该文件剩 **0**。
+
+  **顺带修掉的 trunk 红(GH #774 第七例)**:`tests/test_bots_walk_farm_only.py` ——
+  `tests/test_cm_lane_fallback_wallet.lua` 的 `io.popen` 走查未登记,而**那个文件自己的第 125 行
+  就写着它「belongs on the hand-read list of ...(GH #774)」然后照样落了地**。
+  📌 **一句点名义务的注释,不是那个义务被履行**;而三条推送腿分不出差别,因为它超 3.0s cap、
+  `in_gate: false`(GH #806 同族)。手读并登记后 **8 checks / 0 failed**。
+
+  **闸**:`luacheck bots game --formatter plain` **exit 0 / 0 warnings**;定向重跑读被改文件的
+  11 个测试全绿;**全量套件没跑**(GH #124)⇒ **不声称「整套又绿了」**。
+  **开工自检 `SELFCHECK_EXIT=3`**,findings 逐字
+  `cadence queue-rulings owed-executions lua-coverage trunk-red(python) trunk-red(lua)`;
+  腿级判词:`trunk-red(python)` 本轮修掉;`trunk-red(lua)` 报 3 个,**逐字核实只有 1 个是真的**
+  (`test_gated_helper_nesting_census.lua` 的新 gate-inside-a-gate 行,**由本轮改动引起,已作答不是消音**,
+  分类仍是 P);另两个的失败正文逐字是 `soak_side.lua ... cand = 'pushtier'`
+  ⇒ **本会话测试进程与后台自检抢同一个全局 inode**(GH #229/#848/#856 并发假红),串行重跑全绿。
+  三条推送腿的读数(`GATE_EXIT=` / `py gate:` / `lua gate:`)见报告 §8 的提交后补记;
+  ⛔ **没有用 `RULE6_BYPASS`**。
 
 - 2026-09-16T13:48Z:**「解开它什么都不用买」是真的,而它后面没有杠杆 —— 吃掉撤退:3 全部域的那一项在安全侧。**
   出口 **(ii)**(判定完结所需的最后一块证据)。⛔ **4.4 (i) 的连续六轮 `bots/` 主体本轮有意断档**,

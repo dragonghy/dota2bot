@@ -590,7 +590,17 @@ local PINNED = {
     -- nFearClock at the shipped 5*60 -- the identity element of the clause it
     -- joined. Arming any outer id alone measures what it measured before.
     "c12,retnear,towerreach | GetDesireHelper | X.ShouldRun | towerfear,towerring | bots/mode_retreat_generic.lua",                       -- W
-    "c14,c15 | ____exports.WhichLaneToPush | J.IsInLaningPhase | c2,c4 | bots/FunLib/aba_push.lua",                                       -- P
+    -- [pushtier 20260916 GH #857] The outer-id column grew a third id and the
+    -- classification does not move, for a reason worth writing down because it
+    -- is NOT the usual "the inner call is the identity element" one: the
+    -- 'pushtier' block does not call J.IsInLaningPhase at all. It is a separate
+    -- statement, ~20 lines ABOVE the c14/c15 blocks, adjusting the three lane
+    -- scores from the tier ladder; the census pairs it with this inner call only
+    -- because both live in the same function. Un-armed it is an else-arm that
+    -- leaves the shipped chain byte-identical, so arming c14 or c15 alone
+    -- measures exactly what it measured before, and arming 'pushtier' alone is a
+    -- real lever rather than a no-op waiting on another id.
+    "c14,c15,pushtier | ____exports.WhichLaneToPush | J.IsInLaningPhase | c2,c4 | bots/FunLib/aba_push.lua",                              -- P
     "c3 | GetDesire | J.IsInLaningPhase | c2,c4 | bots/mode_laning_generic.lua",                                                          -- P
     "c3 | GetDesire | J.ShouldBodyBlockHarass | bodyblock | bots/mode_laning_generic.lua",                                                -- W
     -- [GH #415 20260902] The three rows 'slotpush' arrived in. Read by hand and
