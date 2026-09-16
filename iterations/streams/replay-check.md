@@ -18827,6 +18827,40 @@
     因为它的命令行里含有 `routine_selfcheck.sh` 这个字符串** ⇒ **`pgrep -f` 把提问者自己数了进去**。
     ⭐ **三个包装合成一条**:W78「不带 `-f` 数不到」、W79「`-f` 把自我重入数进去」、
     本轮「`-f` 把提问者数进去」。本轮**没 kill 任何进程**,树干净(`soak_side.lua` 不存在)。
+  - **开工自检判决(⭐ 轮询到终行真的出现才写;一度写成「本轮未取得」,当场更正)**:
+    `legs run 13`、**`selfcheck worst exit: 3`**、
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(python) trunk-red(lua)`、
+    `UNCERTIFIABLE: none`、`NOT RUN: test_lua_gate/test_luacheck_gate_soakswitch/test_selfcheck_lua_leg`
+    (⚠️ 自检自己那三条 python 用例**连续第九轮 `NOT RUN`**)。
+    - ⛔ **`trunk-red(lua)` 是我自己造的**:唯一红文件 `test_siegecap_ancient_roster.lua`,
+      红文本自述撞上 `soak_side.lua`(`cand = 'roshpit'`,**与 W78 的两个都不同 ⇒ 第三个 cand**);
+      **静树上单跑 `SIEGE_EXIT=0`(20 tests, 0 failures)** ⇒ GH #848 并发产物。
+      ⛔ **不记到任何组头上,也不写成 trunk 是绿的。**
+    - ⭐⭐ **`trunk-red(python)` 与 W78/W79 记的那条不是同一条,⛔ 不许继承它们的判词**:
+      那两轮记的是 `UNCERTIFIABLE` 且「早于本轮」;**本轮它是 `FINDINGS`(exit 3)、有具名用例、
+      静树上单独复现**(`python3 tests/test_bots_walk_farm_only.py` ⇒ `WALK2_EXIT=1`)。
+      **归属 = 英雄组**:它点名 `tests/test_lion_hex_panic_level.lua`,由 **`5cc18d6d`**
+      (`hero 2026-09-16T11:30Z: lionwpanic`)引入,**早于本轮约 1 小时**;
+      ⭐ 而**该文件 `:119-120` 自己逐字写着**「this file belongs on the hand-read list of
+      `tests/test_bots_walk_farm_only.py` (GH #774)」⇒ **作者写下了这条义务却没有履行它**。
+      **GH #624 形状的又一例**(推的人的闸里没有这条普查 ⇒ 红留给下一个开工的组)。已追评 GH #774。
+    - `lua-coverage` = GH #806 / RULING 62(⛔ 本轮 `tests/` 一行未改);
+      `queue-rulings`/`owed-executions` 属总监;
+      ⚠️ **`cadence` 本轮未查出具体组** —— ⛔ **不猜,不写成别人的**。
+  - **push 三行**(两次 push 逐位相同):`GATE_EXIT=0 CLEAN` /
+    `py gate: 127 ran, 0 findings, 0 uncertifiable, 47.3s / 48.0s` /
+    `lua gate: SKIPPED BY SCOPE`(⛔ SCOPE 决定不是通过;本轮 diff 只有 `iterations/`)。
+    `PUSH_BRANCH_EXIT=0`;`PUSH_MAIN_EXIT=1` = **non-fast-forward 不是闸红**,
+    `pull --rebase`(`REBASE_EXIT=0`)后 `PUSH_MAIN2_EXIT=0`,main `b30c3990..b3dbb6be`。
+    ⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
+  - ⛔⛔ **本轮最贵的一条是我自己制造的,且与 W77/W78 同一个坑**:我在**自检还没跑完**时丢出分支 ref 的 push,
+    而按 GH #854,**main 推到 HEAD 之后分支那次 scope diff 为空 ⇒ fail closed ⇒ RUN EVERYTHING**
+    ⇒ push 闸的 Lua 腿与自检**并发抢同一个真实文件** ⇒ 上面那条假红。
+    ⭐ **W79 §push 自己写过「本轮只丢串行 push、没有并发,规避了那个坑」—— 它规避掉的,我这轮踩了回去。**
+  - **issue**:**净增 0**,**3 条评论**(三份草稿 `PRECHECK_EXIT=0`,都在 push 之后发):
+    **GH #849**(`#issuecomment-5697769936`,正式交付)、**GH #666**(`#issuecomment-5697785034`)、
+    **GH #774**(`trunk-red(python)` 的新一例 + 归属 + 一行修法)。
+  - **token**:`TOKENS total_in=8,872,753 out=61,194 turns=63`。
   - **下一轮第一件事**:⭐⭐ **先推 #849 的 `detect.py` 那一处落地(球在总监),再谈任何 `detect.py` 的数**;
     W79 的全波第二遍**改成「修完之后跑一遍」**(跨度按构造为 0,只剩买 47.9% 的**值**,出网减半)。
     ⚠️ 本轮**没查**:`creeps`/`buildings` 的「取第一条」消费者是谁(只证顺序动,没查有没有人在取第一条)、
