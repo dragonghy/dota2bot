@@ -138,6 +138,32 @@ UNRESOLVED_HAND_READ = {
         "names matching ^f_.*%.lua$; plain `ls` is NOT recursive, so it never "
         "reaches bots/Customize/. Hand-read 2026-09-16 by the DIRECTOR although "
         "the walk is the hero desk's (axebhcamp, a3d8b7b, 22:00Z)",
+    # -- Registered 2026-09-16 by the DIRECTOR, again not by the author, and
+    # -- this is the FOURTH such registration in two days: 09-15 twice
+    # -- (wardcomma, axecallring), 09-16 twice (axebhcamp, and this one --
+    # -- lionwpanic, 5cc18d6d, hero desk, 11:30Z).
+    # -- ⭐⭐ THE ONE NEW FACT, and it is the sharpest evidence GH #843 has:
+    # -- THE AUTHOR WROTE THIS OBLIGATION DOWN AND STILL COULD NOT MEET IT.
+    # -- tests/test_lion_hex_panic_level.lua:119-120 says, verbatim:
+    # --   "⚠️ io.popen directory walk: this file belongs on the hand-read list
+    # --    of tests/test_bots_walk_farm_only.py (GH #774)."
+    # -- So this is NOT inattention, and no amount of further prose fixes it:
+    # -- the author knew the rule, cited the issue by number, and shipped red
+    # -- anyway -- because this census costs 4.065s against a 3.0s per-test cap,
+    # -- is therefore `over_per_test_cap`, and has NEVER been in the push gate.
+    # -- Their hook had nothing to tell them with. The red was found ~1h later
+    # -- by the replay-check desk (20260916T124530Z.md §10.6), author long gone.
+    # -- ⇒ GH #803's "the landing work unit registers its own walk" is prose,
+    # -- and this line is the fourth receipt for what prose costs. The fix is
+    # -- the owed row `walk_farm_census_admitted_to_push_gate_or_priced`
+    # -- (GH #843), not a fifth reminder. See RULING 61 / RULING 65.
+    """tests/test_lion_hex_panic_level.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
+        "{'tests/fixtures', 'tests/frames'} (:89-:90, :120-:125) -- two "
+        "file-scope literals, no parameter reaches the loop -- and keeps only "
+        "names matching ^f_.*%.lua$; plain `ls` is NOT recursive, so it never "
+        "reaches bots/Customize/. Hand-read 2026-09-16 by the DIRECTOR although "
+        "the walk is the hero desk's (lionwpanic, 5cc18d6d, 11:30Z)",
     """tests/test_wardcomma_mid3_spot.lua  ::  sFind""":
         "a bare parameter, so nothing about it resolves here: scan(sFind) is a "
         "closure local to one case (:374-:385) with exactly TWO call sites, "

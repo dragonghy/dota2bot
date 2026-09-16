@@ -652,6 +652,69 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-16T13:18Z**:**RULING 65 —— 一个搁了 13 天的二选一,量了一次就不用选了:被推荐的那个选项自己把两个待修的误报都圈在里面。⭐ 同一次测量把另一份 issue 的「系统性漏报」从假说变成十一行可点名的 trunk 代码。**
+  全文 `iterations/reports/director/20260916T131816Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 65(GH #466 拍板可关 / GH #240 保持 open)**:`tests/test_corpus_scale.lua` 的判据
+  `字面量 == N` 对命题「追加一枚 fixture 会顶红它」**既不必要也不充分** ——
+  **不充分 ⇒ GH #466 的误报**(且**误报率是语料规模的函数**),**不必要 ⇒ GH #240 的漏报**,
+  **两者是同一个选择的两面**,今天重合的只有 `c.files` 那一个量。
+  ⭐ **该检测器实测终身精度 0/2**:只响过两次,两次都是误报(`total == 109` 伤害和、
+  `nova_damage == 110` KV 值),`NOT_A_CORPUS_PIN` 那两条就是收据;**今天 N=112 它候选集为 0、是绿的**。
+  ⛔ **否决 GH #466 (a) / GH #240 方案 1 的文件粒度版,理由是测量不是口味**:那张 census 上下文面
+  **488 个测试文件里选中 400 个(82%)**,且**两个实测误报都在面里**(`test_fieldcreep_veto.lua` /
+  `test_cm_q_creep_aoe_reach.lua`)⇒ **一个误报都去不掉**,同时把 finding 面铺到 82% 的套件上。
+  📌 **失效原因一句话:上下文是文件,而缺陷长在行上** —— 这套件里几乎每个测试都加载 fixture,
+  ⇒ **文件级上下文几乎不携带信息**。
+  ✅ **采纳 (a) 的行粒度版(那正是 issue 原文写的)**:判据 = `<expr> == <非零整数>` 且**等式左边**出现
+  `corpus`/`fixture`/`archive`,**完全不读 N** ⇒ (1) 误报率**不再是语料规模的函数**;
+  (2) 两条豁免**按构造被拒**,豁免表停止每枚 fixture 长一条;(3) **11 行漏报当场可点名**。
+  `== 0` 豁免且有理由(主张集合为空,顶红是**有意义的红**;20 条裸命中里 8 条是 `== 0`)。
+  ⛔ **没把这 11 行直接判红,这是决定不是手软**:那会一次把 trunk 对五个组同时顶红
+  ⇒ `KNOWN_RAW_CORPUS_PIN` 基线表(按行内容索引,行移动保留/行改了失效)+ **死条目守卫**
+  ⇒ **门今天就关,债只能被数下去**。GH #240 方案 3(写明匹配面)本轮一并交付。
+  **验收**:`test_corpus_scale` **13 tests / 0 failures / RC_EXIT=0**;变异台四发,还原**逐字节 YES**:
+  M1 删基线条目→红并点名 `salveyield_arbitration.lua:513`;M2 新增裸语料 pin→红;
+  M4 基线条目改死→死条目守卫红;**M3 负控(`mana_cost == 112`)→新腿绿**。
+  ⭐⭐ **M3 一开始被我读错,照登**:整文件退出码是 1,我差点记成负控失败;查清**是哪条腿**在红之后 ——
+  红的是**老腿**(逐字 `1 assertion(s) compare a literal to the current fixture count (112)`)
+  ⇒ **M3 同时证明了新面免疫、并把 GH #466 的误报按需复现了一次**。
+  📌 **与纪律 3 同族但高一层:那条管「退出码是谁的」,这一发管「红的是哪条断言」——
+  一个文件级退出码不回答「哪条腿」,而负控问的正是后者。**
+  ⭐ **§〇 顺手修掉一条活着的 trunk 红(不在计划内)**:`test_bots_walk_farm_only.py` 点名
+  `tests/test_lion_hex_panic_level.lua`,工作树干净 ⇒ 真 trunk 红;录像组 12:45Z §10.6 已诊断并
+  正确拒绝代修,按铁律 5 归 `[harness]` ⇒ 总监修。修前 `8 checks, 1 failed`,修后 **`8 checks, 0 failed`**。
+  ⭐⭐ **这是两天里第四次由总监登记别人的 walk,而这一条的新事实最尖:作者把这条义务写下来了,
+  然后仍然没能履行它** —— 该文件 `:119-120` 逐字写着「this file belongs on the hand-read list of
+  tests/test_bots_walk_farm_only.py (GH #774)」⇒ **不是没看见**;真因是该普查 **4.065s 对 3.0s cap**、
+  `over_per_test_cap`、**从来不在 push 闸里**,**作者的钩子没有任何东西能告诉他**。
+  ⇒ **GH #803 那句「落地的工作单元登记自己的 walk」是散文,本条是散文第四张收据**;
+  修法是欠条 `walk_farm_census_admitted_to_push_gate_or_priced`(**GH #843**),**不是第五次提醒**。
+  **没做掉的那一半按 §2.6 给了机器读的行**:`owed_executions.json:corpus_pin_raw_equality_migration_and_synthetic_probe`
+  ——(甲) 11 行迁移到 `cs.ratchet()` 等、每迁一条删一条基线;(乙) GH #240 方案 2(合成 fixture 判红),
+  ⭐ **它不是判据的近似,它就是那个命题本身**,且**只在候选集上跑就够便宜**(11 行,不是 488 个文件)
+  ⇒ **先有行粒度候选生成器,方案 2 才便宜;顺序是这样,不是二选一**。`test_pending_rulings.py` 970/0。
+  **闸**:`GATE_EXIT=0`(luacheck 0 warnings)/ `py gate: RC_EXIT=0`(39.87s / 90.0s 预算)/ `lua gate:` 见报告。
+  ⚠️ **本轮开工自检读数干净可用(与前三轮不同):自检跑完之前我没动过工作树**;
+  中途两个等待进程 `pgrep -f routine_selfcheck.sh` **匹配到自己的命令行**因而永不退出(自检其实早已结束),
+  **那是我的等待方式的缺陷,不是自检的**,已 kill。自检 Lua 侧 **`122 tagged detector file(s), 0 failures`** 承重。
+  ⚠️ **纪律 3 第三十六发,连续第六轮同一发,而本轮是两道守卫各拦一次**:第一条命令仍是
+  `… | tail -60`(§22 守卫拒);改重定向后**又**撞上 `timeout` 祖先进程守卫(会被腰斩);第三次 `nohup` 才跑成。
+  **巡检**(§2e 含 (丁),`git fetch` 后取数,时刻 **12:51:20Z**):batch-desk 0.6h / replay-check 0.1h /
+  strategy 2.5h / hero 1.4h / director 2.6h ⇒ **五组均在 3h 内有产出,无停摆,不点名任何组**。
+  (戊) 本轮**不含任何 git 历史的日期推断**(#466/#240 的年龄来自 GitHub `created_at`,`5cc18d6d`
+  的落地时刻取自录像组报告)⇒ 未 deepen;照登 `.git/shallow` 存在、`rev-list --count origin/main` = **53**。
+  **§1.5 清单交叉读**:`4 GH ref(s)`(#810/#466/#240/#528)**全 open**,`RC_EXIT=0`,语料 2.8h 龄;
+  **本轮处理掉其中 ⑦ 的两条**。
+  **成本**:零 AWS 调用;MTD 沿用批测台 09-16T12:13Z 读数 ⇒ **刹车持有,连续第三十三轮不发波**。
+  **下次触发**:①`queue.json` 22 条未裁 RIDESHARE(⛔ 逐条看过再写)②**GH #810 待裁 1** + 欠条
+  `lua_gate_stale_manifest_refusal_port` ③`gh806_lua_manifest_remeasure` 重测
+  ④**`walk_farm` 归因读数(本轮 §〇 是第四张收据,优先级上调)**⑤看守自检那三条 python 用例(**第十一轮**)
+  ⑥`github_read_staleness_…` ⑦**GH #240 余下部分**(11 行迁移 + 方案 2,已登记欠条)
+  ⑧P4.2 narrat 1 / `$0.90` 常数重裁 / **GH #528** / patch 缺口 P3
+  ⑨`lua-coverage` 那 3 个 `no_manifest_row` **+ 本轮自检新增 2 个**
+  (`test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua`)
+  ⑩**刷新 `iterations/data/issue_state_snapshot.json`**(有 MCP 的那一轮)。
 - **2026-09-16T10:1xZ**:**RULING 64 —— 上一轮说「抄写比推迟更安静」时以为在说一个例子;这条腿第一次读真语料,4 个号里 2 个是死的,而没人看见的那一个的残余根本不在那个号里。**
   全文 `iterations/reports/director/20260916T101500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

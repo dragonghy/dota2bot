@@ -286,7 +286,11 @@ tests['[detector] no test pins the live corpus size with an equality'] = functio
     assert(#hits == 0, string.format(
         '%d assertion(s) compare a literal to the current fixture count (%d). That is the '
         .. 'GH #106 / GH #127 defect: landing the next fixture turns them red without '
-        .. 'anything they measure having changed. Use tests/corpus_scale.lua -- ratchet() '
+        .. 'anything they measure having changed. MATCHING FACE, so a green line here is '
+        .. 'not mistaken for a broader claim than it makes (GH #240 option 3): this leg '
+        .. 'sees ONLY literals equal to the live fixture count, which is one quantity and '
+        .. 'not every pin that a new fixture turns red -- the leg below covers corpus-'
+        .. 'derived SUMS. Use tests/corpus_scale.lua -- ratchet() '
         .. 'for a per-fixture sum, universal() for an "all of them" claim, corpus() for '
         .. 'the size itself.\n  %s', #hits, n, table.concat(hits, '\n  ')))
 end
@@ -362,6 +366,229 @@ tests['[detector] the detector reads code and not prose'] = function()
         'a real pin was missed')
     assert(equality_literals('assert(a == 101 and b == 940, ...)')[2] == 940,
         'a second equality on the same line was missed')
+end
+
+-- ===========================================================================
+-- GH #240 / GH #466 -- the second matching face (director RULING 65, 2026-09-16)
+-- ===========================================================================
+--
+-- The detector above asks "is this literal equal to TODAY'S fixture count".
+-- That predicate is neither NECESSARY nor SUFFICIENT for the proposition it is
+-- said to guard ("appending a fixture turns this assertion red"), and both
+-- failures are measured, not argued:
+--
+--   * NOT SUFFICIENT -> false positives, at a rate that is a FUNCTION OF THE
+--     CORPUS SIZE. Every landing re-aims it at whatever unrelated `== N` the
+--     new count happens to hit. Its two lifetime fires were a summed DAMAGE
+--     total (109) and a Crystal Nova KV VALUE (110) -- measured precision
+--     0/2, and the two NOT_A_CORPUS_PIN entries above are the receipts.
+--   * NOT NECESSARY -> systematic misses. `assert(CORPUS.axe_frames == 29)`
+--     is a raw equality on a per-fixture sum: it goes red the day an Axe
+--     fixture lands, with nothing it measures having changed. That is the
+--     GH #106 / GH #127 defect exactly, and the face above cannot see it,
+--     because 29 is not 112.
+--
+-- ⛔ WHY THE FILE-LEVEL CONTEXT PROPOSAL WAS REJECTED (GH #466 (a) / GH #240
+-- option 1, "only judge inside census-type context"). Measured on today's tree
+-- before ruling: the context face `grep -ln "tests/fixtures\|scan_corpus\|
+-- corpus_scale" tests/test_*.lua` selects 400 of 488 test files (82%), and it
+-- CONTAINS BOTH MEASURED FALSE POSITIVES -- test_fieldcreep_veto.lua and
+-- test_cm_q_creep_aoe_reach.lua are both in it. So at file granularity the
+-- proposal removes NEITHER false positive while widening the finding set to
+-- every `assert(<expr> == <int>)` in 82% of the suite. The context is the
+-- FILE; the defect is the LINE. Nearly every test here loads a fixture, so
+-- file-level context carries almost no information.
+--
+-- ⇒ WHAT IS ADOPTED: the same idea at LINE granularity, which is what GH #466
+-- actually proposed ("同一行/邻近行出现 fixtures、corpus、#files 之类的记号").
+-- The predicate is "the LEFT-HAND SIDE of the equality reads the corpus", and
+-- it drops the dependence on N entirely. Consequences, all of them the point:
+--   * the false-positive rate STOPS being a function of the corpus size --
+--     landing a fixture cannot re-aim a predicate that never reads the count;
+--   * both NOT_A_CORPUS_PIN entries are rejected BY CONSTRUCTION (neither
+--     `total` nor `h:GetSpecialValueInt('nova_damage')` reads the corpus), so
+--     the exemption table stops accreting one entry per fixture;
+--   * the 11 live misses become visible. Two were verified at the source
+--     before this landed: test_axe_t15_payoff.lua's `scan()` and
+--     test_wk_bone_guard_stock_gate.lua's `wk_corpus()` both `ls
+--     tests/fixtures` and accumulate, so those equalities really are pinned
+--     to the corpus.
+--
+-- `== 0` is exempt and that is deliberate: `assert(X == 0)` claims the set is
+-- EMPTY, and a new fixture turning it red is a MEANINGFUL red (something
+-- entered the domain), not a spurious one. 8 of the 20 raw matches are `== 0`.
+--
+-- ⚠️ THE 11 KNOWN LINES ARE A DECLARED BASELINE, NOT AN AMNESTY. Making them
+-- red today would turn trunk red for all five streams at once and be found by
+-- whichever desk starts work next -- the GH #624 failure mode this repo has
+-- already paid for four times. So the door CLOSES today (a new raw corpus pin
+-- is red immediately) and the 11 are enumerated as migration debt under
+-- GH #240. Migrating one is `cs.ratchet()` -- see the helpers in
+-- tests/corpus_scale.lua.
+
+--- True when an equality's left-hand side reads the fixture corpus. This is
+--- the whole matching face, and it is deliberately textual: the alternative
+--- (real data-flow) buys precision this detector does not need, because the
+--- baseline below bounds the over-approximation to a set that is checked.
+local function reads_corpus(lhs)
+    local low = lhs:lower()
+    return low:find('corpus', 1, true) ~= nil
+        or low:find('fixture', 1, true) ~= nil
+        or low:find('archive', 1, true) ~= nil
+end
+
+--- Every `<expr> == <integer literal>` on the line whose left-hand side reads
+--- the corpus, as a list of { value = , lhs = }. Comments and floats are
+--- rejected for the same reasons equality_literals rejects them: a commented
+--- number is prose, and a float is a timestamp rather than a count.
+local function corpus_sum_equalities(line)
+    if line:match('^%s*%-%-') then return {} end
+    local code = line:match('^(.-)%-%-') or line
+    local out = {}
+    local pos = 1
+    while true do
+        local s, e, digits = code:find('==%s*(%d+)', pos)
+        if s == nil then break end
+        if code:sub(e + 1, e + 1) ~= '.' then
+            local v = tonumber(digits)
+            local lhs = code:sub(1, s - 1)
+            if v ~= 0 and reads_corpus(lhs) then
+                out[#out + 1] = { value = v, lhs = lhs }
+            end
+        end
+        pos = e + 1
+    end
+    return out
+end
+
+-- The migration debt GH #240 names, enumerated on 2026-09-16 at N=112. Keyed
+-- by the trimmed CODE of the line, exactly like NOT_A_CORPUS_PIN above: a line
+-- that MOVES keeps its entry, a line whose code CHANGES loses it and comes
+-- back as a finding. Each entry says what the pinned quantity is summed over,
+-- because that is the fact a migrator needs and the fact that makes the entry
+-- auditable.
+local KNOWN_RAW_CORPUS_PIN = {
+    ['assert(CORPUS.axe_frames == 29,'] =
+        'tests/test_axe_t15_payoff.lua: scan() lists tests/fixtures and counts '
+        .. 'Axe hero-slots -- red the day an Axe fixture lands',
+    ['assert(CORPUS.axe_frames_with_modifiers == 19,'] =
+        'tests/test_axe_t15_payoff.lua: same scan(), Axe frames carrying '
+        .. 'modifier data',
+    ['assert(CORPUS.hunger_live == 5,'] =
+        'tests/test_axe_t15_payoff.lua: same scan(), frames with battle_hunger live',
+    ['assert(CORPUS.call_live == 1,'] =
+        'tests/test_axe_t15_payoff.lua: same scan(), frames with berserkers_call live',
+    ['assert(CORPUS.max_level == 14,'] =
+        'tests/test_axe_t15_payoff.lua: same scan(), the highest Axe level in the corpus',
+    ["assert(corpus.max_shown == 1, 'the corpus alone now shows '"] =
+        'tests/test_cm_cmqreach_transit_frame.lua: a per-fixture maximum',
+    ['assert(corpus.complete == 0 and corpus.worst_deficit == 2,'] =
+        'tests/test_cm_cmqreach_transit_frame.lua: worst_deficit is a per-fixture '
+        .. 'extremum (the == 0 conjunct is exempt on its own; this entry is for the 2)',
+    ["assert(#corpus == 3, 'the identity was checked on fewer heroes than claimed')"] =
+        'tests/test_pullchew_camp_commit.lua: the count of heroes the sweep found',
+    ['assert(corpus().heal_units == 9,'] =
+        'tests/test_salveyield_arbitration.lua: a sum over tests/fixtures -- the '
+        .. 'sibling lines in this same file already migrated to cs.ratchet(), '
+        .. 'which is what makes this one the clearest instance of GH #240',
+    ["assert(#corpus == 33, 'the corpus holds ' .. #corpus .. ' live Wraith King '"] =
+        'tests/test_wk_bone_guard_stock_gate.lua: wk_corpus() lists tests/fixtures '
+        .. '-- red the day a Wraith King fixture lands',
+    ["assert(#corpus == 33, 'the priced corpus holds ' .. #corpus .. ' Wraith King '"] =
+        'tests/test_wk_reserve_idle_release.lua: the same wk_corpus() sweep',
+}
+
+tests['[detector] no test pins a corpus-derived sum with a raw equality'] = function()
+    local hits = {}
+    for _, path in ipairs(test_files()) do
+        -- Excluded from its own scan for the same reason the detector above is:
+        -- the baseline table right here is this detector's test DATA and would
+        -- otherwise report itself. The hole is bounded the same way -- this file
+        -- holds no census, so there is nothing here for a corpus pin to be about.
+        if path ~= 'tests/test_corpus_scale.lua' then
+            local fh = assert(io.open(path, 'r'))
+            local lineno = 0
+            for line in fh:lines() do
+                lineno = lineno + 1
+                local code = line:gsub('^%s+', '')
+                if #corpus_sum_equalities(line) > 0
+                    and KNOWN_RAW_CORPUS_PIN[code] == nil then
+                    hits[#hits + 1] = path .. ':' .. lineno .. ': ' .. code
+                end
+            end
+            fh:close()
+        end
+    end
+    assert(#hits == 0, string.format(
+        '%d assertion(s) pin a CORPUS-DERIVED SUM with a raw equality. Landing the '
+        .. 'next fixture turns them red without anything they measure having changed '
+        .. '(GH #106 / GH #127, reached through GH #240). MATCHING FACE, so you can '
+        .. 'tell a real hit from a coincidence: `<expr> == <non-zero integer>` where '
+        .. 'the LEFT-HAND SIDE mentions corpus/fixture/archive. It does NOT read the '
+        .. 'fixture count, so it does not drift when the corpus grows. Fix with '
+        .. 'tests/corpus_scale.lua -- ratchet() for a per-fixture sum, universal() '
+        .. 'for an "all of them" claim, corpus() for the size itself.\n  %s',
+        #hits, table.concat(hits, '\n  ')))
+end
+
+tests['[detector] every declared corpus-pin baseline entry still names a live line'] = function()
+    -- Same rule as the exemption guard above, for the same reason: a baseline
+    -- entry that stops matching anything is a standing licence with no visible
+    -- target. It goes red so it gets deleted -- which is also how GH #240's
+    -- migration debt is counted DOWN rather than quietly kept at 11 forever.
+    for code in pairs(KNOWN_RAW_CORPUS_PIN) do
+        local found = false
+        for _, path in ipairs(test_files()) do
+            local fh = assert(io.open(path, 'r'))
+            for line in fh:lines() do
+                if line:gsub('^%s+', '') == code then found = true break end
+            end
+            fh:close()
+            if found then break end
+        end
+        assert(found, 'a declared corpus-pin baseline entry matches no line in '
+            .. 'tests/ any more -- it was migrated or moved, so delete the entry '
+            .. 'instead of leaving a licence with no target: ' .. code)
+    end
+end
+
+tests['[detector] the second face reads code, not prose, and not the corpus size'] = function()
+    -- Negative controls, because a scanner that matches nothing passes for free.
+    local function n(line) return #corpus_sum_equalities(line) end
+
+    assert(n('-- assert(CORPUS.axe_frames == 29, ...)') == 0, 'a comment line was scanned')
+    assert(n('    local x = 1 -- corpus pinned at == 29 in the prose') == 0,
+        'a trailing comment was scanned')
+    assert(n('assert(corpus.died_after == 101.9, ...)') == 0,
+        'a float timestamp was read as an integer count')
+    assert(n('assert(CORPUS.in_domain == 0, ...)') == 0,
+        'an == 0 emptiness claim was reported -- a new fixture breaking THAT is '
+        .. 'a meaningful red, and exempting it is why this face is usable')
+
+    -- The two shapes the OLD face got wrong, in both directions. These are the
+    -- whole cost argument for this detector, so they are asserted, not asserted
+    -- about in a comment.
+    assert(n('assert(hits == 3 and total == 109,') == 0,
+        'the summed-DAMAGE false positive came back -- its LHS does not read the corpus')
+    assert(n("assert(h:GetSpecialValueInt('nova_damage') == 110, 'nova_damage: pinned 110'") == 0,
+        'the ability-VALUE false positive came back')
+    assert(n('assert(CORPUS.axe_frames == 29,') == 1,
+        'the systematic MISS that motivated GH #240 is still invisible')
+    assert(n("assert(#corpus == 33, 'the corpus holds ')") == 1,
+        'a length-of-corpus pin was missed')
+
+    -- Two equalities on one line are two hits, and the conjunct that is `== 0`
+    -- is not one of them.
+    assert(n('assert(corpus.complete == 0 and corpus.worst_deficit == 2,') == 1,
+        'the == 0 conjunct and the == 2 conjunct were not told apart')
+
+    -- And the face really is independent of the corpus size: a literal equal to
+    -- the live fixture count is NOT a hit unless its LHS reads the corpus. This
+    -- is the identity that ends the "precision is a function of corpus size"
+    -- defect, so it is pinned.
+    assert(n('assert(mana_cost == ' .. fixture_count() .. ', ...)') == 0,
+        'a non-corpus literal that happens to equal the fixture count was reported '
+        .. '-- that is the GH #466 defect, reintroduced')
 end
 
 return tests
