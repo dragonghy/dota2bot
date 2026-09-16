@@ -18576,9 +18576,14 @@
     `iterations/` ⇒ `SKIPPED BY SCOPE`,两者不矛盾)。
     ⛔ **我读的 0 来自后台任务通知的「completed (exit code 0)」= 外层 wrapper 的退出码**,
     而日志第一行逐字就是 `PUSH_BRANCH_EXIT=1`,**我没去读**。
+    ⭐ **本轮共撞 3 次同一形状**(三条后台 push 的通知都报 `exit code 0`,三个输出文件第一行
+    都是 `PUSH_BRANCH_EXIT=1`)⇒ **不是偶发**:**harness 任务通知永远报 wrapper 的码,
+    要判决就去读输出文件那一行。**
     📌 与 evidence-discipline 第 3 条**同一条**,只是包装换成了 **harness 的任务通知**;
     ⭐ 本轮开头那次 `stdout is a pipe` 是同一规矩的另一次触发,**那次有工具挡,这次没有**。
-    (2) **同树同闸两跑 `3 findings` vs `4 findings`**;红的 4 个
+    (2) **同树同闸跑 3 次,findings 数 `3 / 4 / 4`**(三次都 `397 ran`、630±2s,只有
+    findings 数不同;第三次来自收尾后跑完的滞留后台 push ⇒ 独立第三次观测,
+    把「两次不同」抬成**可复现的非确定性**);红的 4 个
     (`bbfight_turbo_respawn_ceiling`/`bbrespawn_double_subtract`/`bbshort_turbo_respawn_floor`/
     `siegecap_ancient_roster`)**静树上逐个复跑全 `EXIT=0`**、`soak_side.lua` 不存在
     ⇒ 并发产物,与 GH #848 同根因,**而这次的并发是我自己丢多条后台 push 造成的**
