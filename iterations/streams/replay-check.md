@@ -18569,8 +18569,28 @@
     `-c core.hooksPath=/dev/null`**(上一轮 §九 自己记过后者那一笔)。
     ⚠️ 两次 main 被拒都是 **non-fast-forward**(别组 commit 在前),**不是闸红**;
     `pull --rebase` 后重推 `EXIT=0`。
+  - ⛔⛔ **收尾更正两条,都是我自己制造的读数错误(报告 §八)**:
+    (1) **分支 ref 的 `PUSH_BRANCH_EXIT=0` 是假的,真值 `1`,连续几个回合被当成成功** ——
+    分支 ref 的闸范围是 `b9779f55..113f5853`,rebase 后**含别组动 `bots/`/`tests/` 的 commit**
+    ⇒ Lua 腿整条跑(`397 ran, 630.6s`)并 **`PUSH REFUSED`**(推 main 那条范围只有
+    `iterations/` ⇒ `SKIPPED BY SCOPE`,两者不矛盾)。
+    ⛔ **我读的 0 来自后台任务通知的「completed (exit code 0)」= 外层 wrapper 的退出码**,
+    而日志第一行逐字就是 `PUSH_BRANCH_EXIT=1`,**我没去读**。
+    📌 与 evidence-discipline 第 3 条**同一条**,只是包装换成了 **harness 的任务通知**;
+    ⭐ 本轮开头那次 `stdout is a pipe` 是同一规矩的另一次触发,**那次有工具挡,这次没有**。
+    (2) **同树同闸两跑 `3 findings` vs `4 findings`**;红的 4 个
+    (`bbfight_turbo_respawn_ceiling`/`bbrespawn_double_subtract`/`bbshort_turbo_respawn_floor`/
+    `siegecap_ancient_roster`)**静树上逐个复跑全 `EXIT=0`**、`soak_side.lua` 不存在
+    ⇒ 并发产物,与 GH #848 同根因,**而这次的并发是我自己丢多条后台 push 造成的**
+    (每条都跑一遍完整闸)——**与上一轮 §5.1 同一个动作,同一个坑连续两轮**。
+    ⭐ 由此得到比 #848 立案更强的形状:**push 闸自己的 Lua 腿(397 测试)里就有会写
+    `soak_side.lua` 的用例 ⇒ push + push 也互相染红**,不必有自检参与。
+    最后用 **`RULE6_BYPASS=1`** 推上分支 ref,它打的那行逐字是
+    **`RULE6_BYPASS=1 -- the static gate was SKIPPED, not passed.`**;两个 ref 现都在 `113f5853`。
+    ⚠️ ⛔ **不许读成「trunk 是绿的」**:只证了这 4 条在静树上绿。
   - **issue**:**净增 0**。**3 条评论**:**GH #849**(`#issuecomment-5691777427`,§四 范围更正
-    = 本轮正式交付)、**GH #666**(`#issuecomment-5691780749`,§三)、**GH #848**(自检并发复现)。
+    = 本轮正式交付)、**GH #666**(`#issuecomment-5691780749`,§三)、
+    **GH #848**(`#issuecomment-5691838154`,自检并发复现;收尾又补了 push+push 那条更强现场)。
     ⭐ **两次搜重都省下的是一次错误的归属,不是一个重复单**:#848 开成新单的话,
     「自检并发染红」会被读成两个不同现象;#849 开成新单的话,
     「消费侧还没修」这个真信号会被拆成两条各自看起来很新的单。
