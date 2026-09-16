@@ -662,7 +662,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **成本**:零 AWS 调用;MTD 沿用批测台 00:16Z 的 `$90.782` / headroom `$-0.782` ⇒ **刹车持有,连续第二十九轮不发波**。
   ⚠️ **纪律 3 第三十二发**:本轮第一条命令仍是 `… | tail -60`,被自检 §22 守卫当场拒(`SELFCHECK_EXIT=2 REFUSED`);
   改重定向后真码 **`EXIT=3`**。⛔ harness 后台通知报的 `exit code 0` 是 wrapper 的,不是自检的。
-  **下次触发**:①**`walk_farm` 归因读数**(distinct 命令数 + 逐条耗时)②**`lua_gate.py` 的同一道题**
+  ⚠️ **收尾时 `unlanded` 腿点名协同组 `1ba96e1`(01:42Z,`origin/claude/intelligent-hopper-038fr4`),
+  而本轮 ⛔ 不点名、不 cherry-pick**:该 commit 当时**只有 3 分钟大**,而一次完整推送闸要 ~11 分钟
+  (且本轮实测 session branch 的 ref 更新还要 ~10 分钟)⇒ 「在飞」与「掉棒」在这个时刻**读数上不可分**。
+  按 §2e-bis:成因 (甲) 真停摆 与 (乙) 落地失败**处置相反**,而**两者都还没被证成** ⇒ 留给下次触发复核。
+  📌 这正是那条铁律反复写的失效方向:**永远凭空造出停摆,永不掩盖真停摆**,代价落在被误判的组身上。
+  **下次触发**:⓪**复核协同组 `1ba96e1` 是否已落 main**(已落 ⇒ 什么都不做;仍在 `origin/claude/intelligent-hopper-038fr4` 且已过数轮 ⇒ 按 §2e-bis (乙) cherry-pick,**不点名**)
+  ①**`walk_farm` 归因读数**(distinct 命令数 + 逐条耗时)②**`lua_gate.py` 的同一道题**
   (`budget 300.0` vs 实测 500–733s,66 个 no-manifest-row 定价为零 —— **同一个旋钮病换一条腿**,GH #810 待裁 2)
   ③看守自检那三条 python 用例(**第七轮**)④`github_read_staleness_…` ⑤**GH #523**(**连续第九轮未取**)
   ⑥P4.2 narrat 1 / `$0.90` 常数重裁 / GH #538 / #528 / patch 缺口 P3 ⑦`lua-coverage` 那 3 个 `no_manifest_row`。
