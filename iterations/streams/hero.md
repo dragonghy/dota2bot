@@ -69,6 +69,18 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      ⇒ trunk 的 python 那侧仍没人完整看过,但**不是本组造成的**;fast Lua 那侧 **117 文件 0 失败**。
    - `bots/Customize/soak_side.lua` 本轮**从未存在**(两次 `ls` 确认)⇒ GH #848 的撞车**没有触发条件**;
      「等自检跑完再 push」照做,因为触发条件不在自己手里。
+   - ⛔ **闸自己打出的一个读数,而它超预算 23%(GH #804 的今日数字)**:三条腿全绿
+     (`GATE_EXIT=0` / `py gate: 125 ran, 0 findings, 43.2s` / `lua gate: 398 ran, 0 findings,
+     9 unanswered, 6 known-red, 625.6s`),**但 lua 闸的真实代价是 625.61s / 预算 510.0s**,
+     其中 **76 个未登记测试靠 fail-open 照跑,代价 349.09s**,另有 **9 个因超预算被 EXCLUDED**。
+     立案时是 587.2s / 300.0s(196%)、未登记 49 ⇒ **分母与未登记数同时涨(300→510、49→76),
+     百分比下降不是它在收敛**。
+     ⭐ **这份名单里有一条是本组的欠条,今天第一次被看见**:`tests/test_axe_q_lane_push_clock.lua`
+     **没有 manifest 行**(`grep -c` = 0)—— `nocap`/`crowd`/`hunger` 三行都在,**唯独 clock
+     那一行(09-12 `axecallclock` 轮)从来没有**。它**靠 fail-open 在跑**,所以「三条腿全绿」
+     并不意味着闸在看着它;GH #806 的 `UNCOVERED` 集按构造也看不见它(fail-open 让它「跑过了」)。
+     ⛔ **本轮不补这一行,理由是算术**:闸已在 123% 预算上,再加一条在闸里的测试是往超支方向推。
+     读数与那一行的名字已写进报告 §10.1,**处置交总监**(GH #804 / #810)。
    - **下一轮主体第一候选**:**第 1 条** —— 支路第一个合取项 `( IsPushing or IsDefending or IsFarming )`
      里的 `J.IsFarming`,`-185` 已量出它**在全语料 1314 个活 subject 上恒 false**(`GetActiveMode()`
      loader 未实现 **或** TEAM_NEUTRAL 目标)⇒ **这条支路的第一个门在离线语料上是 UNASKABLE**,
