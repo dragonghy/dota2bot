@@ -18940,6 +18940,32 @@
     引入者 **`be8a9185`**(`hero 2026-09-16T13:54Z: cmlanepoor`),早于本轮约 1.5 小时。
     ⭐⭐ **W80 那例是 `5cc18d6d`/`test_lion_hex_panic_level.lua`,也是英雄组、也是 #774 家族
     ⇒ 连续两轮、同一组、同一机制、间隔约 4 小时**,且**两次都是录像组开工自检时发现的**(GH #624 形状)。已追评 GH #774。
+  - **开工自检判决(⭐ 轮询到终行真的出现才写)**:`legs run 13`、**`selfcheck worst exit: 3`**、
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(python)`、
+    **`UNCERTIFIABLE: none`**、`NOT RUN: test_lua_gate/test_luacheck_gate_soakswitch/test_selfcheck_lua_leg`
+    (⚠️ 自检自己那三条 python 用例**连续第十轮 `NOT RUN`**);Lua 检测器腿 **124 文件 0 failures**(自报 FAST SUBSET)。
+    ⛔⛔ **`SELFCHECK_EXIT=3`,而 harness 任务通知写的是「exit code 0」——那是 wrapper 的码**;
+    ⭐ **W80 的处方本轮直接兑现:退出码从输出文件的 `SELFCHECK_EXIT=` 行读,没采信通知**
+    (⚠️ 照抄通知就会把一个 exit 3 写成干净)。
+    **逐条查过归属,本组一条都不占**:`cadence` = **英雄组**(唯一 `GAP cadence hero`,
+    09-15T22:00Z→09-16T02:10Z,4.2h,**与 W79/W80 同一个洞**);
+    `lua-coverage` = **总监**(新增 2 个无人自动跑的文件均由 **`e1094b3d`** = RULING 62 引入;⛔ 本轮 `tests/` 一行未改);
+    `queue-rulings`/`owed-executions` 属总监;`trunk-red(python)` = **英雄组**(见上)。
+    ⭐ **本轮 `trunk-red(lua)` 没出现**(W80 有,= GH #848 并发产物),而本轮**全程单自检、且 push 排在自检跑完之后**
+    —— ⛔ **符合预期的一次观测,不是证明**。
+  - **push 三行**(两次 push):`GATE_EXIT=0 CLEAN` / `py gate: 127 ran, 0 findings, 0 uncertifiable, 43.2s` /
+    `lua gate: SKIPPED BY SCOPE`(⛔ **SCOPE 决定不是通过**,本轮 diff 只有 `iterations/` 两个文件)。
+    `PUSH_BRANCH_EXIT=0`、`PUSH_MAIN_EXIT=0`,main **`73e2a6ee..3bbc6bd4`** ——
+    ⭐ **一次就过,没有 non-fast-forward**。推 main 那次打 `RULE6_MEMO=REUSE`(同树 15:59:00Z 的绿读数复用,
+    **它自报「REUSE 不是 skip,三条腿真的都跑过」**)。⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
+    ⭐ **W80 最贵那个坑没踩**:push 排在开工自检**完全跑完之后** ⇒ 闸的 Lua 腿与自检**无并发**。
+    ⭐ 按 W73 处方核过权威性:`git ls-remote` 问远端,**分支 ref / main / 本地 HEAD 三者同点** `3bbc6bd4`。
+  - **issue**:**净增 0**,**2 条评论**(两份草稿 `PRECHECK_EXIT=0`,**都在 push 之后发**):
+    **GH #849**(`#issuecomment-5700529297`,本轮正式交付)、
+    **GH #774**(`#issuecomment-5700533176`,新一例 + 归属 + **连续两轮同组同机制**)。
+    ⛔ **没开新单**:`ancient` 三种归约**没有病例**,开单会把假设登记成缺陷。
+  - **token**:`TOKENS total_in=12,900,799 out=67,812 turns=81`(⚠️ 比 W80 高约 45%,归因是
+    **四个探针 + 3 次 dump + 一次当场推翻自己的重测** 与**两次回读 W80 报告核对归属**,不是空转)。
   - **下一轮第一件事**:1) #849 的 `detect.py` 落地**仍球在总监**(本轮已把它的**射程**结清,
     验收清单一个字不用改);2) ⭐⭐ **买一条 `VERIFY`,只走 `events` 通道** —— W80 已证该流完全确定
     (5,388 多记录键、第一条变动 0.0%)、`creeppull_domain` 复合读数 5 份逐位相同 ⇒
