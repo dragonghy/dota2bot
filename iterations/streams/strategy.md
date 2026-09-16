@@ -9927,6 +9927,27 @@
   **不进 GH #806 uncovered 集**。⛔ **没跑 `lua_gate_measure.py`**(丢 `hand_added_note`,
   且按 GH #810 用本机绝对秒数重选全闸)。
 
+  **铁律 6 三条腿(最终成功那次 push,分支与 main 逐字相同)**:
+  ```
+  GATE_EXIT=0  CLEAN (iron rule 6 static half passed)
+  py gate: 125 ran, 0 findings, 0 uncertifiable, 53.3s
+  lua gate: 398 ran, 0 findings, 0 uncertifiable, 10 unanswered, 6 known-red, 716.7s
+  ```
+  **⛔ 没有用 `RULE6_BYPASS`,一次都没有。** 闸拒过两次,两次都是对的:
+  (1) Lua 腿 `test_activemode_call_site_census` —— **普查在要求登记**(见上,同轮重取);
+  (2) python 腿 `test_lua_gate_budget_backstop.py`(**本日上游新增**)——
+  新棘轮把 sub-cap 合计推到 **256.379s**,规则是 **`budget >= 2 × 合计,向上取整到 10s`**
+  ⇒ `budget_seconds` **510.0 → 520.0**,manifest 与 `lua_gate_measure.py` **两处**(该测试要求一致)。
+  ⛔ **数是推出来的不是挑的**:第一版我挑 560.0「留余量」,**那正是该规则要防的习惯**
+  (模块注释记着 python 腿手挑的 12.0 对着一个**六天前过期**的参照设 ——
+  **规则能活过一次重测,手挑的数不能**)。
+  ⚠️ **自己踩的一个坑**:第一次 push 写成 `git push … | tail -25`,
+  **那几行 `FAIL` 正好被 `tail` 切掉**,只剩「2 tests, 2 failures」——
+  **管道吃掉的不是退出码而是证据**,与 `rc.sh` 防的是同一族。
+  ⚠️ **rebase 三处 JSON 冲突全是追加型,用程序解不手改标记**:取上游 + 重施我那一条,
+  并断言我只新增一个键、上游已有键一个没动、计数按**上游**的数重算 ——
+  上游那轮恰好把 `budget_seconds` 改成 510.0,**沿用 rebase 前的数就会把它改回去**。
+
   ⚠️ **照登一条非本轮造成的 trunk 红,已核实不是我的**:
   `test_activemode_world_assertion :: [reverse] …over-permissive` 在 `known_red`(6 条)里已赦免,
   **且本轮用 `git stash` 在干净树上复现了同一条同一 case** ——
