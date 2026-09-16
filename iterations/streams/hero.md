@@ -22,6 +22,62 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-190. ✅ **主体:`cmlanepoor`(turbo-only)—— CM 的 `--对线期消耗` 块里,最后一个出货点就是第一个出货点把第一个的两个条件都删掉之后的样子,而块是直线的,所以「能走到最后那个点」本身就意味着那两个条件之一刚刚拒绝过。**
+   落在 `bots/BotLib/hero_crystal_maiden.lua` 的新 `X.cm_IsLaneFallbackAffordable( bShippedWallet )`
+   (闸关或非 turbo **恒 true**;armed 逐字返回子分支 1 自己的析取式)+ 子分支 4 外层 `if` 加一个合取项
+   `and X.cm_IsLaneFallbackAffordable( nMP > 0.5 or bot:GetMana() > nKeepMana )`,**块内其余一字未动**。
+   报告 `iterations/reports/hero/20260916T135417Z.md`;新 `tests/test_cm_lane_fallback_wallet.lua` **15 绿 / 3.02s**;
+   变异台 `tools/agent/mutstand_cmlanepoor.sh` **13/13 全杀**;新 queue 请求 **hero-97**。
+   **零 EC2 / 零 CE / S3 读取 0 个对象。P4.4 自评:(i)**。开工时 open `[hero]` 两条球都不在本组
+   (#833 作者自建议关闭;#820 是给总监加 `promote_atoms.json` 栏杆)。
+   - ⭐⭐ **头条是可达性,不是合取项个数。** 同一个主语表达式 `nWeakestEnemyHeroInRange`,相隔六行:
+     第一个出货点是 `(nMP > 0.5 or bot:GetMana() > nKeepMana)`(钱包)`and not J.IsDisabled( target )`(浪费),
+     **在两项都成立时无条件 return**;最后一个只问 `目标血量比 < 0.5`,**此外什么都没有**。
+     ⇒ 出厂规则逐字是「**她付不起,或者目标已经被控住了,那就照放不误 —— 只要目标半血以下**」,
+     即**同一个函数在六行之内推翻了自己的钱包测试**。§1.1 从源码钉住(块切片 + 子分支 1 的两项 + 恰好四个 `return`),
+     **所以它不会在有人重排这个块的那天悄悄变成假话**;**M8** 专打这个前提。
+   - ⭐ **(c) 是这个块自己的算术不是类比**:Frostbite 125/135/145/155 对 `nKeepMana = 220` ⇒ **不到两发**,
+     而块唯一的 mode 项是 `BOT_MODE_LANING`。同文件 `cmqpoke` 头已写过同一句:蓝是 Frostbite 后手的约束。
+   - ⛔ **被删掉的另一项 `not J.IsDisabled` 本轮没有拿,理由是测量不是口味**:19 个「环内有最弱敌人」的瞬间里
+     `J.IsDisabled` 答真 **0** 个 ⇒ arming 它 = arming 一个本语料两条腿都看不见的东西。§4.2 反钉(有了就必须先改 helper 头)。
+   - ⛔ **闸层 17/70(与 castable 的交 3/44)是读数,分支层 0 是语料的**;⛔ **不得报告「少放了 N 次 Frostbite」**。
+     ⭐ **那个 0 配不配说出口要先过 liveness**:§4.2 先断言两个因子各自非空(3 与 5)**再**报 0 ——
+     否则「量到零」与「量了个空枚举器」是同一个整数(**M13** 专打)。
+   - ⭐ **端到端两部分**:§5.1 按录制原样两腿 NONE,**理由是仪器**(`GetActiveMode()` 落 `^Get -> 0`,
+     而 0 不在 BOT_MODE 名字空间里,`BOT_MODE_LANING = 1002`;`test_cm_t10_payoff.lua:229` 同锚);
+     §5.2 **两个注入都具名**(mode、Frostbite 脱冷却),而**杠杆真正关心的两件事是录制原样**——
+     `f_260819_123546_axe_rescue_ok.lua` 上 CM **145/485 蓝**、环内最弱敌人 **Axe 0.25 血**。
+     闸关 **HIGH(0.75) 打 axe** / armed **NONE** / 蓝抬到 400 armed 也 **HIGH** / 非 turbo **HIGH**。
+     ⭐ **靶子由差本身指认,不靠 motive 串**(`X.ConsiderW` 只返回二元组;armed 只改了那一个合取项)。
+     ⚠️ 400 那条负对照说的是「拒绝跟着钱包走」,**不说**出价回到同一个出货点(过了线子分支 1 也开着)。
+   - ⛔ **`-189` 点名的候选(`#nTowers == 0`)先量后写,结论是不改它**:三个出现点里**后两个是死合取项**
+     (`nTowers` 是块外一个 local,`GetNearbyTowers( 900, true )`,块内从不重新赋值)⇒ 改它们是 **no-op**;
+     半径本身的闸层域 **2/70**(700 内更是 70/70,而塔的攻击距离就是 700)。两个读数钉在 §6(b)。
+   - ⭐⭐ **本轮第二条要紧的,因为它和头条是同一个形状**:`--对线期消耗` 的**第三个**出货点靶的是
+     `nEnemysHeroesInView[1]` = **1600 视野环**,是函数里**最松的射程且没有任何距离项** ——
+     而 `cmlaneband` 头里那句「恰好两个点位没有距离项 ⇒ **函数里最松的射程坐在最小的收益下面**」
+     **前半句按它自己的量词为真、后半句为假**:那次普查扫的是 `nEnemysHeroesInBonus`,
+     **这个点位读的是另一个环,由构造不在量词范围里**。⭐ **一个普查按它已经知道的集合去数,最宽的那个看不见。**
+     ⛔ **但它今天是 UNASKABLE 不是零**:`bot:GetNearbyCreeps` 在 **70/70** 个存活 CM 瞬间返回空表,
+     而己方小兵是 `J.GetAllyUnitCountAroundEnemyTarget` 的主要加数 ⇒ **不得读出「那条分支从不触发」**。§6(c) 反钉。
+     **本轮没有改 `cmlaneband` 那段散文**(不代改别轮档案),更正登记在 `state.json:cmlanepoor_20260916.pre_flight_refusal`。
+   - ⚠️ **M12 第一版 SURVIVED,而修的是说法不是分数**:它删 `inject` 的缓存丢弃行(`rawset(h, k, nil)`),
+     套件**照样全绿** —— 本文件所有注入都发生在该方法第一次被调用**之前**,那一行在这里**是防御性的不是承重的**。
+     测试注释已改成这么写(不照抄房规的「承重」),M12 改打真正承重的 spec 写入那一行后被杀。
+     ⭐ evidence-discipline 第 2 条的现场:**变异体活下来先怀疑断言和它的说法**。
+   - ⚠️ **容器层面一条,GH #848 的另一面**:开工自检后台跑 + 变异台前台跑 ⇒ 自检 Lua 腿报了两条**撞车红**
+     (`error loading module './bots/FunLib/jmz_func'`、`replay_fixture.lua:1494: attempt to index local 'J' (a boolean value)`)。
+     染色源**不是** `soak_side.lua` 而是**变异台的 `cp` 回滚**,方向也**反过来**(前台染后台):
+     Lua 腿读到写了一半的 `jmz_func.lua`,`dofile` 返回 `false`,`rf.load` 拿布尔当 `J` 用。
+     ⇒ **自检与任何写工作树的台子必须串行**。
+   - **下一轮主体候选**:**第 1 条** —— **CM `击杀敌人` 首个出货点只问了一个候选**:它取环内**绝对血量最低**的那个,
+     该目标过不了 `J.CanCastOnTargetAdvanced` 就**整条击杀确认放弃**,哪怕环内另有可杀的
+     (存在量词塌缩成单候选,与 GH #837 同族)。⚠️ **这是候选不是发现**:本轮**没有量它的域**
+     (需要「环内 ≥2 敌人 ∧ 最弱者不可施法」的帧),认领的人先做这件事。
+     **第 2 条**(只能当附带):**GH #794 的裁读**(`-188`/`-189` 都留着未做,仍卡着录像组一份 12/12 绿的 fixture)。
+     ⛔ **不要再动 `#nTowers == 0`**(本条禁令);⛔ **1600 环那条要等小兵供给落地**(今天 UNASKABLE 不是零);
+     ⛔ **不要与 `cmlaneband` / `cmqpoke` 同波**(都落在 CM 对线期消耗附近,一收一收,分不开归因)。
+
 -189. ✅ **主体:`lionwpanic`(turbo-only)—— Lion 的 `X.ConsiderW` 保护自己分支有四个合取项,三个在测量情况,第四个在测量英雄等级。**
    落在 `bots/BotLib/hero_lion.lua` 的新 `X.nWPanicLevelShipped = 10` + `X.lion_IsPanicHexLevelOpen( nHeroLevel )`
    (闸关或非 turbo **逐字返回 `nHeroLevel >= X.nWPanicLevelShipped`**;armed 恒真)+ 调用点把出厂的
@@ -8484,6 +8540,37 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-16T13:54Z(报告 `iterations/reports/hero/20260916T135417Z.md`;**backlog:新开 `-190`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`cmlanepoor`**(turbo-only,**未 armed**,
+  P4.2 冻结期不申请入集);新 queue 请求 **hero-97**;**P4.4 自评:(i)**)
+  **主体:CM 的 `X.ConsiderW` `--对线期消耗` 块里,最后一个出货点就是第一个出货点把第一个的
+  两个条件都删掉之后的样子 —— 而块是直线的,所以「能走到最后那个点」本身就意味着那两个条件之一
+  刚刚拒绝过。**
+  - ⭐⭐ **头条是可达性不是合取项个数**:同一个 `nWeakestEnemyHeroInRange`,相隔六行 ——
+    第一个是钱包 `(nMP > 0.5 or GetMana() > nKeepMana)` + 浪费 `not J.IsDisabled`,**两项都成立就无条件 return**;
+    最后一个只问 `血量比 < 0.5`。⇒ 出厂规则逐字是「**付不起、或者目标已被控住,那就照放不误**」,
+    **同一个函数六行之内推翻了自己的钱包测试**。§1.1 从源码钉住(**M8** 专打这个前提)。
+  - ⭐ **(c) 是这个块自己的算术**:Frostbite 125/135/145/155 对 `nKeepMana = 220` ⇒ **不到两发**,
+    而块唯一的 mode 项是 `BOT_MODE_LANING`;同文件 `cmqpoke` 头已写过「蓝是 Frostbite 后手的约束」。
+  - ⛔ **另一项 `not J.IsDisabled` 没有拿,理由是测量不是口味**:19 个「环内有最弱敌人」里它答真 **0** 个。
+  - ⛔ **闸层 17/70(与 castable 的交 3/44)是读数,分支层 0 是语料的**;**不得报告「少放了 N 次」**。
+    ⭐ **那个 0 先过 liveness 才配说出口**(§4.2 先断言两个因子 3 与 5 非空;**M13** 专打)。
+  - ⭐ **端到端两部分**:§5.1 按录制原样两腿 NONE,**理由是仪器**(`GetActiveMode()` 落 0,而 0 不在
+    BOT_MODE 名字空间里);§5.2 两个注入具名,而**杠杆关心的两件事是录制原样**(145/485 蓝、Axe 0.25 血)
+    ⇒ 闸关 **HIGH 打 axe** / armed **NONE** / 蓝抬到 400 armed 也 HIGH / 非 turbo HIGH。
+    ⭐ **靶子由差本身指认,不靠 motive 串**(armed 只改了那一个合取项)。
+  - ⛔ **`-189` 点的 `#nTowers == 0` 先量后写、结论是不改**:后两个出现点是**死合取项**(no-op),
+    半径本身闸层域 **2/70**(700 内 70/70,而塔攻击距离就是 700)。钉在 §6(b)。
+  - ⭐⭐ **第二条与头条同形**:`--对线期消耗` 第三个出货点靶 `nEnemysHeroesInView[1]` = **1600 环**,
+    函数里**最松且无距离项** —— 而 `cmlaneband` 头那句「最松的射程坐在最小的收益下面」**后半句是假的**:
+    那次普查扫的是 `nEnemysHeroesInBonus`,**这个点位读的是另一个环,由构造不在量词范围里**。
+    ⭐ **普查按已知集合去数,最宽的那个看不见。** ⛔ **但它今天是 UNASKABLE 不是零**:
+    `GetNearbyCreeps` 在 **70/70** 个 CM 瞬间返回空表。§6(c) 反钉;散文本轮不代改。
+  - ⚠️ **M12 第一版 SURVIVED,修的是说法不是分数**:`inject` 的缓存丢弃行在本文件**是防御性的不是承重的**
+    (所有注入都在该方法第一次被调用之前),注释已照实改写,M12 改打 spec 写入那一行后被杀。
+  - ⚠️ **GH #848 的另一面**:后台自检 + 前台变异台 ⇒ 自检 Lua 腿两条**撞车红**
+    (`error loading module './bots/FunLib/jmz_func'` / `attempt to index local 'J' (a boolean value)`),
+    染色源是**变异台的 `cp` 回滚**、方向**前台染后台**。⇒ **自检与任何写工作树的台子必须串行**。
 - 2026-09-16T11:30Z(报告 `iterations/reports/hero/20260916T113000Z.md`;**backlog:新开 `-189`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`lionwpanic`**(turbo-only,**未 armed**,
   P4.2 冻结期不申请入集);新 queue 请求 **hero-96**;**P4.4 自评:(i)**)

@@ -1673,6 +1673,74 @@ function X.cm_IsTeamfightClockOpen()
 end
 
 
+--- Soak candidate `cmlanepoor` (turbo-only, INERT until armed).  Written
+--- 2026-09-16 (hero stream) under OWNER_PRIORITIES P4.4 (i).
+---
+--- THE DEFECT, and it is structural: the 对线期消耗 block's LAST firing point is
+--- its FIRST one with both of the first one's conditions deleted.  Shipped, on
+--- the same subject expression `nWeakestEnemyHeroInRange`, six lines apart:
+---
+---     first    (nMP > 0.5 or bot:GetMana() > nKeepMana)   <- a wallet test
+---              and not J.IsDisabled( target )             <- a waste test
+---     last     target health ratio < 0.5                  <- and NOTHING else
+---
+--- ⭐ SO THE ONLY WAY TO REACH THE LAST ONE IS FOR ONE OF THOSE TWO TERMS TO
+--- HAVE REFUSED.  The block is straight-line: sub-branch 1 returns whenever its
+--- two terms hold on a valid target, so control arrives at the last branch --
+--- on the SAME target -- precisely when the wallet said no or the target was
+--- already locked down.  The file therefore ships "if she cannot afford it, or
+--- it is already disabled, cast it anyway provided the target is under half
+--- health".  That is not a fallback, it is an override of the guard above it.
+--- tests/test_cm_lane_fallback_wallet.lua section 1 pins the reachability
+--- argument off the source so it cannot rot when somebody reorders the block.
+---
+--- WHY MANA IS THE ONE WORTH RATIONING HERE.  The block's own mode term is
+--- BOT_MODE_LANING, and this file's own `cmqpoke` header already states the
+--- standing reason in the same words -- Crystal Nova "is her only AoE slow and
+--- her mana is the binding constraint on the Frostbite follow-up".  Frostbite
+--- costs 125/135/145/155; `nKeepMana` is 220, i.e. rather less than two casts.
+--- A lane harass bought below that floor is bought out of the next disable.
+---
+--- WHAT THIS ROUND DELIBERATELY DID NOT TAKE.  The OTHER deleted term,
+--- `not J.IsDisabled( target )`, is the same shape and arguably the cleaner
+--- argument (a single-target disable spent on an already-disabled hero buys
+--- nothing at all).  It is not in this lever, and the reason is a measurement,
+--- not taste: over all 70 live-CM instants in tests/fixtures/ + tests/frames/,
+--- 19 carry a weakest enemy inside Frostbite's ring and J.IsDisabled answers
+--- true on ZERO of them, so arming it would be arming something this corpus
+--- cannot see either leg of.  One lever at a time; that one needs frames first.
+---
+--- DIRECTION IS SINGLE, AND IT IS A PROPERTY OF THE CODE.  Gate off this helper
+--- is the constant `true`, so the conjunct it joins is the shipped conjunction
+--- byte for byte; armed it can only ever turn a shipped TRUE into FALSE.  The
+--- armed admitted set is a strict SUBSET: arming DELETES lane Frostbites and can
+--- never add or re-target one.  ⛔ A negative wave reading may therefore not be
+--- read as "CM cast more".  It also cannot RELOCATE the refused cast inside this
+--- function: every firing point below the 对线期消耗 block takes a different
+--- target class (enemy creeps, then 进攻/撤退/roshan, all of which re-derive
+--- their own target), so a refused lane harass is refused outright.
+---
+--- ⛔ THE SHIPPED DISJUNCTION STAYS AT THE CALL SITE, passed in as
+--- `bShippedWallet` rather than rebuilt here out of (nMP, GetMana, nKeepMana).
+--- It has to: tests/_cm_t10_payoff_sweep.lua parses this file's mana gates out
+--- of the SOURCE TEXT (`nMP <op> <n>` / `GetMana() <op> nKeepMana * <n>`), and a
+--- gate hidden behind a renamed parameter leaves that sweep modelling one gate
+--- fewer with every assertion about THIS lever still green.  Same reason the
+--- `cmqpoke` helper one screen up takes `bShippedSurplus`; GH #650's family.
+---
+--- ⛔ THIS HELPER NAMES EXACTLY ONE ID.  Never conjoin it with `cmlaneband`,
+--- `cmqpoke` or `cmwhit`: a gate that ANDs a sibling id freezes FALSE the day
+--- that sibling is promoted (a promoted id is in no armed string -- the
+--- `pullcad` trap), and check_armed_wiring.py still calls the site WIRED.
+function X.cm_IsLaneFallbackAffordable( bShippedWallet )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'cmlanepoor' ) ) then return true end
+
+	return bShippedWallet
+
+end
+
+
 function X.ConsiderW()
 
 	if not abilityW:IsFullyCastable() then
@@ -1827,7 +1895,13 @@ function X.ConsiderW()
 			end
 		end
 
+		-- [cmlanepoor] gate off, the added conjunct is the constant `true` and
+		-- this `if` is the shipped one.  Armed, the wallet test that sub-branch
+		-- 1 six lines above applies to the SAME target is applied here too --
+		-- see X.cm_IsLaneFallbackAffordable's header for why reaching this
+		-- branch at all means that test has already answered no.
 		if J.IsValid( nWeakestEnemyHeroInRange )
+			and X.cm_IsLaneFallbackAffordable( nMP > 0.5 or bot:GetMana() > nKeepMana )
 		then
 			if nWeakestEnemyHeroInRange:GetHealth()/nWeakestEnemyHeroInRange:GetMaxHealth() < 0.5
 			then
