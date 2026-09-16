@@ -8568,6 +8568,18 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `GetNearbyCreeps` 在 **70/70** 个 CM 瞬间返回空表。§6(c) 反钉;散文本轮不代改。
   - ⚠️ **M12 第一版 SURVIVED,修的是说法不是分数**:`inject` 的缓存丢弃行在本文件**是防御性的不是承重的**
     (所有注入都在该方法第一次被调用之前),注释已照实改写,M12 改打 spec 写入那一行后被杀。
+  - ⛔ **落 main 付了三次完整钩子(≈1740s Lua 腿),第三次成功**:分支 578.2s ✅ /
+    main#1 577.4s 跑完输竞速 `! [rejected] (non-fast-forward)` / main#2 580.2s ✅
+    `2bf1169a..85512ccc`。三次都 `GATE_EXIT=0` + `py 0 findings` + `lua 0 findings`,
+    **没有用 `RULE6_BYPASS`**。⚠️ Lua 腿 **580.2s / 520.0s = 112%**,点名 9 个新测试超预算被排除
+    (两个是本组的)⇒ GH #804/#810 又一个读数。
+  - ⚠️ **rebase 两处 JSON 冲突按「两边都保留」解**(⛔ 没用 `--ours`),⛔ **`rebase --continue` 不验 JSON**
+    ⇒ 两个文件各跑一次 `json.load` 才继续。⚠️ **两侧缺的闭合符号不是同一个**:
+    `state.json` 缺 `}`,而 `queue.json` 是**数组**、缺的是 `},\n  {` —— 第一版只补 `}` ⇒ 队列那侧当场炸。
+  - ⚠️ **`pgrep -f` 自指陷阱本轮又踩一次(第六次)**:`-188` 已写过,我照样写了
+    `until [ "$(pgrep -c -f 'git push')" -eq 0 ]`,它在真 push 结束后仍数到 4、永不结束。
+    ⭐ **正确形状是按 PID 等**(`until ! kill -0 <pid>`)—— PID 不可能匹配到自己。
+    **知道陷阱 ≠ 不掉进去**;管用的是**换一个由构造不自指的谓词**,不是更小心地用同一个。
   - ⚠️ **GH #848 的另一面**:后台自检 + 前台变异台 ⇒ 自检 Lua 腿两条**撞车红**
     (`error loading module './bots/FunLib/jmz_func'` / `attempt to index local 'J' (a boolean value)`),
     染色源是**变异台的 `cp` 回滚**、方向**前台染后台**。⇒ **自检与任何写工作树的台子必须串行**。
