@@ -22,6 +22,71 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-189. ✅ **主体:`lionwpanic`(turbo-only)—— Lion 的 `X.ConsiderW` 保护自己分支有四个合取项,三个在测量情况,第四个在测量英雄等级。**
+   落在 `bots/BotLib/hero_lion.lua` 的新 `X.nWPanicLevelShipped = 10` + `X.lion_IsPanicHexLevelOpen( nHeroLevel )`
+   (闸关或非 turbo **逐字返回 `nHeroLevel >= X.nWPanicLevelShipped`**;armed 恒真)+ 调用点把出厂的
+   `and nLV >= 10` 换成 `and X.lion_IsPanicHexLevelOpen( nLV )`,**其余三项一字未动**。
+   报告 `iterations/reports/hero/20260916T113000Z.md`;新 `tests/test_lion_hex_panic_level.lua` **15 绿 / 4.43s**;
+   变异台 `tools/agent/mutstand_lionwpanic.sh` **13/13 全杀**;新 queue 请求 **hero-96**。
+   **零 EC2 / 零 CE / S3 读取 0 个对象。P4.4 自评:(i)**。开工时 open `[hero]` 三条球都不在本组
+   (#407 两半已落地球在 `hero-86`/`hero-90`;#833 作者自建议关闭;#54 是 OD)。
+   - ⭐⭐ **头条:(c) 的证据不是散文,是同一棵树上的另一份出货代码。** 焦点五里恰好**两个** `--保护自己` 分支,
+     另一个是 CM 的冰封禁制(该英雄唯一可靠的单体控制、同一个 `WasRecentlyDamagedByAnyHero` 触发器)——
+     **她那个没有等级项**,而且已经被写过两根杠杆(`cmwhit`/`cmwface`)**没有一根是关于等级的**
+     ⇒ armed 的形状**不是这里发明的**。§2 读她的源码钉住,**M11** 给她种一个等级项必须红。
+     ⛔ 等级项也**不是在配给蓝或冷却**:`X.ConsiderW` 第一行就 `IsFullyCastable` 早返回。
+     同族 `lionpushclock`(**同文件**)/`cmtfclock`/`axecallclock`。
+   - ⭐⭐ **第二条,两面都要写:出厂的等级项根本不是「早期把 Hex 留在银行里」的那个东西。**
+     42 个存活 Lion 瞬间里「3.0s 内被英雄打过」的 **6 个**,**无一例外**是 Hex 正在冷却
+     (剩 5.2–22.7s,其中 **4 个**剩余超过冷却一半 ⇒ 前几秒刚放掉),被**没有任何等级项**的别的出货点花掉了。
+     读法一「拿掉它的代价比看上去小」/读法二「这根杠杆多半在改**哪一帧**拿到 Hex」——
+     两条都真,哪条占上风是 `hero-96` (4a),**不是一句散文**。
+   - ⭐ **端到端这次是真的翻转,不是声明式反事实的算术**:`f_260819_182855_lion_drain_midchannel`
+     (5 级 / 被打过 / 环 575 内 1 个敌人 / Hex 冷却 18.0s),驱动真 `X.SkillsComplement`,
+     **只注入 Hex 就绪** ⇒ 闸关 **NONE** / armed **HIGH** 且 motive 逐字 **`W-保护自己`**
+     (⭐ 靶子是**哪条分支开的火**)。四条负对照:不注入两腿都沉默 / 等级抬到 10 两腿逐位相同 /
+     别的 id armed 闸不开 / 真 `J.IsSoakCandidate` 认这个字面量(§7.3)——
+     ⚠️ 最后一条**重装模块是承重的**:`tSoakSideCache` 缓存且**从不重读**,不重装会红在与杠杆无关的理由上。
+   - ⛔ **闸层 28/42 是读数,分支层 0 是语料的** —— 两者不许并成一个数;**不得报告「多出了 N 次 Hex」**。
+   - ⚠️ **搬家可能且有界**:`GetActiveMode() ~= BOT_MODE_RETREAT` **不是** `J.IsRetreating` 的补
+     (后者在 EVASIVE_MANEUVERS / 破裂 / FARM 绝对欲望下也真)⇒ 可以拿走撤退分支那次 Hex;
+     **界**是两个循环走同一个 `nInRangeEnemyList` 同一顺序而撤退的过滤器**严格更强**
+     ⇒ 只能落到**同一个环里更靠前**的成员。§6 两侧钉,**M13** 专打。
+   - ⚠️ **唯一真正的反对意见写在 helper 头里**:该分支**不带任何蓝量配给**(CM 的也不带)
+     ⇒ 低级 Lion 可能对一次对线消耗就按下 Hex。是 `hero-96` 的 **(4b)** 格:
+     域大而多数是「满血挨一下」⇒ **写 DO-NOT-ARM,不是 promote 也不是 reject**。
+   - ⭐ **变异台 13 个里最要紧的三个打的是仪器不是杠杆**(头条读数是**计数**,而坏仪器**免费**产出计数):
+     **M9** 语料 walk 悄悄丢掉 `tests/frames/`(`test_lion_ult_reserve_domain.lua` 记录在案的失效方式);
+     **M10** §1.1 读原文而不是去掉行注释的那份 —— helper 头**引用**了它替换掉的比较式,
+     原文里 `nLV >= 10` 出现 **3** 次 ⇒ **剥离是承重的**(上一轮「注释不是调用者」同一课;
+     ⚠️ 限度照抄:只处理行注释,`--[[ ]]` 仍会被数进去);**M12** 枚举器一个都不产出 ⇒
+     「量到零」与「什么都没量」长得一模一样。
+     ⚠️ **M8 第一版 ABORT 不是 SURVIVED**:`nLV >= 15` 文件里出现 **2** 次(一次代码一次文档注释)
+     ⇒ **「anchor not found exactly once」是台子的产出不是故障**(GH #846 连着两轮)。
+   - ⛔ **`-188` 点名的第一候选(Lion `X.ConsiderW` 的 unread `nManaCost`)本轮先量后写,结论是不写**,
+     而这不是复述 09-05 那条「blocked on frame supply」:本轮量到的是**更上游**的一条 ——
+     42 个瞬间里 Hex `IsFullyCastable` 的 **19** 个,**环内有敌方英雄的只有 2 个**,
+     与「被英雄打过」的交集 **0** ⇒ **任何**需要「Hex 能放且环内有人」的新 `X.ConsiderW` 杠杆,
+     今天最多剩 2 帧。它解释了储备 pre-flight 的零,也是本轮改取**闸层**可测点位的理由。
+     ⚠️ 本轮**故意没有消费**那个局部 `nManaCost`(走的是等级项)⇒ `test_dead_manacost_binding_census.lua`
+     的登记**不动**,它仍是一条欠条。
+   - ⛔ **不加 `lua_gate_manifest.json` 行**(该闸已实测超预算,**分母涨了百分比还在涨**;交总监 GH #804/#810);
+     新测试带 `[ratchet]` ⇒ 由开工自检 Lua 腿覆盖(本轮该腿 **120 个文件 0 失败**,下轮是 121)。
+   - ⚠️ **开工自检两次拒绝执行,两次都是对的**:`| tail` ⇒ `REFUSED: stdout is a PIPE`;
+     `timeout 400 bash …` ⇒ `REFUSED: running under timeout`(时钟切口**总切掉同一条尾巴**)。
+     正确形状是 `nohup … > /tmp/sc.log 2>&1 &` 再读日志最后一行。它本轮跑了 **~50 分钟**,
+     期间**没有并行跑任何闸腿**(GH #229/#848)。
+   - **下一轮主体候选**:**第 1 条** —— **CM 的 `--对线期消耗` 分支**(就在本轮读的那个
+     `--保护自己` 下面一行:`GetActiveMode() == BOT_MODE_LANING and #nTowers == 0`),
+     `#nTowers == 0` 这个安全谓词在焦点五里**只出现在 CM 一个文件**(实测 3 处,其余四个英雄 0 处),
+     而同族的直接测量(`#nEnemysHeroesInRange`)就在同一个函数里 —— 与本轮的形状**疑似**同型。
+     ⚠️ **这是候选不是发现**:本轮只数了这个谓词的分布,**没有**读它三个出现点各自的语义,
+     也**没有**量域;认领的人要先做这两件事,域空就换一条(CM 是最近四轮**没被碰过**的焦点英雄,这才是选它的理由)。
+     **第 2 条**(只能当附带,P4.4):**GH #794 的裁读**(`-188` 留下的第 2 候选,本轮仍未做;
+     它卡着录像组一份已 12/12 绿的 fixture,**每多等一轮多一次重做风险**)。
+     ⛔ **不要再动 Axe `X.ConsiderQ` 的那个 `if`**(`-187` 禁令仍有效);
+     ⛔ **不要与 `lionwreach` 同波**(同一个 `X.ConsiderW`,一收一放)。
+
 -188. ✅ **主体:`zusulte`(turbo-only)—— Zeus 的保蓝储备接了同一个蓝池五个消费点里的四个,而没接的那一个是派发链的最底下。**
    落在 `bots/BotLib/hero_zuus.lua` 的新 `X.zuus_IsJumpChipHeldForUlt( hBot, hTarget, hAbility )`
    (闸关或非 turbo **恒 false**)+ `X.ConsiderE` **进攻支路**最后一个合取项
@@ -8419,6 +8484,28 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-16T11:30Z(报告 `iterations/reports/hero/20260916T113000Z.md`;**backlog:新开 `-189`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`lionwpanic`**(turbo-only,**未 armed**,
+  P4.2 冻结期不申请入集);新 queue 请求 **hero-96**;**P4.4 自评:(i)**)
+  **主体:Lion 的 `X.ConsiderW` 保护自己分支有四个合取项,三个在测量这个分支存在的理由,
+  第四个在测量英雄等级 —— 而焦点五里另一个同名分支(CM 的冰封禁制)今天出厂就没有这一项。**
+  - ⭐⭐ **头条:(c) 的证据是同一棵树上的另一份出货代码**(CM 的 `--保护自己`:同类技能、同一个
+    `WasRecentlyDamagedByAnyHero` 触发器、**无等级项**,且写过 `cmwhit`/`cmwface` 两根杠杆**没有一根关于等级**)。
+    等级项也**不是在配给蓝或冷却**(`X.ConsiderW` 第一行 `IsFullyCastable` 早返回)。
+  - ⭐⭐ **出厂的等级项不是「早期把 Hex 留在银行里」的那个东西**:六个「3.0s 内被英雄打过」的瞬间
+    **全部**是 Hex 正在冷却(剩 5.2–22.7s,4 个是前几秒刚放掉)⇒ 两面读法都写下,归 `hero-96` (4a)。
+  - ⭐ **端到端真的翻转**(只注入 Hex 就绪):闸关 NONE / armed HIGH 且 motive 逐字 `W-保护自己`;
+    四条负对照齐(不注入两腿沉默 / 等级抬到 10 逐位相同 / 别的 id 不开闸 / 真 `IsSoakCandidate` 认字面量)。
+    ⚠️ 最后一条的**重装模块是承重的**:`tSoakSideCache` 缓存且从不重读。
+  - ⛔ **闸层 28/42 是读数,分支层 0 是语料的**;**不得报告「多出了 N 次 Hex」**。
+  - ⚠️ **搬家有界**(撤退分支的过滤器严格更强、同一个环同一顺序 ⇒ 只能更靠前);
+    ⚠️ **唯一的反对意见**:该分支不带蓝量配给 ⇒ `hero-96` (4b) 判 DO-NOT-ARM 的那一格。
+  - ⛔ **`-188` 的第一候选(unread `nManaCost`)先量后写、结论是不写**:19 个 Hex 可放的瞬间里
+    **环内有敌人的只有 2 个**,与「被打过」交集 **0** ⇒ 任何需要这两件事的 `X.ConsiderW` 杠杆今天最多 2 帧。
+  - 变异台 **13/13**,其中 **M9/M10/M12 打的是仪器不是杠杆**(计数类头条读数的失效方式);
+    ⚠️ **M8 第一版 ABORT 不是 SURVIVED**(`nLV >= 15` 出现两次,一次在文档注释里)。
+  - 自检 `worst exit: 3`(unlanded/cadence/queue-rulings/owed-executions/lua-coverage;
+    `UNCERTIFIABLE: trunk-red(python)`),⚠️ 它**两次拒绝执行**(管道、`timeout`)——**两次都是对的**。
 - 2026-09-16T08:15Z(报告 `iterations/reports/hero/20260916T081500Z.md`;**backlog:新开 `-188`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象**;新 gated id **`zusulte`**(turbo-only,**未 armed**,
   P4.2 冻结期不申请入集);新 queue 请求 **hero-95**;**P4.4 自评:(i)**)

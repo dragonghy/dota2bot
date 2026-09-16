@@ -266,8 +266,26 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- beside the helper is not readable from the call site, and this branch is
     -- read far more often than jmz_func is. A counter tallying "distinct
     -- arguments" off this number would over-count by one.
-    assert(c.commented_out == 11,
-        'GetActiveMode() mentions inside comments moved from 11 to ' .. c.commented_out ..
+    -- RE-TAKEN 11 -> 13 on 2026-09-16 by hero ('lionwpanic'), IN THE SAME
+    -- COMMIT that caused it.  ⛔ `get_active_mode` is still 250 -- this landing
+    -- adds no GetActiveMode CALL, only prose about one; it wires a LEVEL term,
+    -- and the mode term in the same `if` is quoted rather than touched.
+    -- The two new prose mentions are the same pairing this file has recorded
+    -- twice before, and again they are NOT two copies of one sentence:
+    --   * bots/BotLib/hero_lion.lua, X.lion_IsPanicHexLevelOpen's header,
+    --     QUOTES the whole shipped 保护自己 conjunction (mode term included) to
+    --     show that three of its four terms measure the situation and the
+    --     fourth measures the hero's level;
+    --   * the same header again, arguing that `GetActiveMode() ~=
+    --     BOT_MODE_RETREAT` is NOT the complement of J.IsRetreating -- which is
+    --     what makes that lever's relocation risk real and bounded rather than
+    --     denied.  That sentence is pinned by
+    --     tests/test_lion_hex_panic_level.lua §6 on both sides.
+    -- ⚠️ The second exists BECAUSE the first does, same as the 'tpstash' entry:
+    -- a header that quotes a shipped conjunct has to say in the same breath what
+    -- that conjunct does NOT mean, or the quote reads as an argument it is not.
+    assert(c.commented_out == 13,
+        'GetActiveMode() mentions inside comments moved from 13 to ' .. c.commented_out ..
         ' -- that is a prose change, NOT a call-site change; re-take THIS number, ' ..
         'never fold it into get_active_mode')
     -- 259 -> 260 on 2026-09-11 (strategy), and note WHICH half moved: the
@@ -286,8 +304,13 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- one half only. A reader who checked just this total would see "-1" and
     -- reasonably guess one call site went away; the two asserts above are what
     -- say that four went away and three sentences arrived.
-    assert(c.get_active_mode + c.commented_out == 261,
-        'executable + commented must equal the raw pattern count (261); if it does ' ..
+    -- 261 -> 263 on 2026-09-16 (hero, 'lionwpanic'), and note WHICH half moved:
+    -- the PROSE one, 11 -> 13, asserted above.  `get_active_mode` is still 250,
+    -- so this total moving by exactly the prose delta is the arithmetic this
+    -- pair exists to keep visible -- the ordinary direction, unlike the entry
+    -- immediately above it.
+    assert(c.get_active_mode + c.commented_out == 263,
+        'executable + commented must equal the raw pattern count (263); if it does ' ..
         'not, strip_line_comment cut somewhere it should not have')
 
     -- Direct unit checks on the cut, including the one the naive `find("--")`

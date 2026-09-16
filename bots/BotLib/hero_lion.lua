@@ -1112,6 +1112,103 @@ function X.lion_IsInterruptTargetInReach( hTarget, nCastRange )
 end
 
 
+--- May the 保护自己 (protect-self) Hex firing point fire at this hero level?
+---
+--- Soak candidate `lionwpanic` (turbo-only, INERT until armed).  Written
+--- 2026-09-16 under OWNER_PRIORITIES P4.4 (i).
+---
+--- THE DEFECT, and it is a proxy standing where the direct measurements
+--- already stand.  X.ConsiderW's 保护自己 branch opens with
+---
+---     if bot:WasRecentlyDamagedByAnyHero( 3.0 ) and nLV >= 10
+---         and bot:GetActiveMode() ~= BOT_MODE_RETREAT
+---         and #nInRangeEnemyList >= 1
+---
+--- Three of those four terms measure the situation the branch exists for: a
+--- hero hit me inside the last three seconds, I am not already in the retreat
+--- branch's world, and there is an enemy hero inside Hex's own cast ring.  The
+--- fourth, `nLV >= 10`, measures nothing about the situation.  Nor is it
+--- rationing mana or cooldown: X.ConsiderW's FIRST line is
+--- `if not abilityW:IsFullyCastable() ... then return 0 end`, so trained,
+--- affordable and off cooldown are all established before any branch is
+--- reached.  Same family as `lionpushclock` (GH #758's shape at this file's
+--- 推线 branch), `cmtfclock` and `axecallclock`: a time-shaped proxy sitting
+--- BESIDE the measurement it is a proxy for, and overriding it.
+---
+--- ⭐ THE SIBLING IN THE FOCUS FIVE SHIPS THE OTHER ANSWER.  There are exactly
+--- two 保护自己 branches among the five focus heroes, and the other one is
+--- Crystal Maiden's Frostbite -- the same class of thing as Hex (her one
+--- reliable single-target disable), at the same firing point, with the same
+--- trigger:
+---
+---     bots/BotLib/hero_crystal_maiden.lua
+---     if bot:WasRecentlyDamagedByAnyHero( X.nWSelfDefenseDamageWindow )
+---         and #nEnemysHeroesInRange >= 1
+---
+--- No level term, and nobody has ever proposed adding one (that branch has had
+--- two levers written on it, `cmwhit` and `cmwface`, neither of them about
+--- levels).  So the shape this lever produces is not invented here; it is what
+--- the tree already ships one file over.  Pinned in
+--- tests/test_lion_hex_panic_level.lua §2 so the argument cannot rot silently.
+---
+--- ⚠️ DIRECTION: THIS IS A WIDENING, and it is the first thing a reader needs.
+--- Armed, this predicate is the constant true, so the branch's admitted set is
+--- a strict SUPERSET of the shipped one; arming can only ADD a defensive Hex,
+--- at hero levels 1-9, and can never remove or re-target one.
+---
+--- ⚠️ RELOCATION IS POSSIBLE AND IS BOUNDED, stated rather than argued away.
+--- This branch sits ABOVE 撤退 and 肉山 in the same function, and
+--- `GetActiveMode() ~= BOT_MODE_RETREAT` is NOT the complement of
+--- J.IsRetreating: that helper also answers true under
+--- BOT_MODE_EVASIVE_MANEUVERS, under a bloodseeker rupture, and under
+--- BOT_MODE_FARM at absolute desire (jmz_func.lua:1494).  In those three
+--- shapes an added 保护自己 bid can take the Hex the 撤退 loop would have
+--- taken.  The bound: both loops walk the SAME list (nInRangeEnemyList, the
+--- cast-range ring) in the same order, and 撤退's filter is strictly stronger
+--- (it also demands the enemy damaged Lion inside 4.0s or is within 600u), so
+--- a displaced bid can only move the Hex to a member EARLIER in the same ring
+--- -- never to a target further away, and never out of cast range.
+---
+--- ⚠️ THE COST, registered rather than argued away.  This branch carries no
+--- mana rationer of its own (neither does CM's), so at low levels a Lion who
+--- is merely being poked in lane may spend Hex on the poke.  That is the real
+--- case against arming, it is a frequency question, and it is
+--- iterations/queue.json `hero-96` -- not a sentence here.  What the corpus
+--- DOES say is that the level term is not what is keeping Hex in the bank
+--- early: on all six live-Lion instants that were damaged by a hero inside
+--- 3.0s, Hex was already ON COOLDOWN (5.2s-22.7s remaining, four of them cast
+--- inside the previous six seconds) -- spent by one of the firing points that
+--- has no level term at all.  §4 of the test measures exactly that.
+---
+--- CONDITION (c).  lion_voodoo is 575/600/625/650 cast range, 24/20/16/12s
+--- cooldown, 110-200 mana (game KV via tests/mock/special_value_shapes.lua):
+--- Lion's panic button, and the standard support answer to being jumped is to
+--- spend the hard disable on whoever is on you.  A hero-level gate means that
+--- for the whole laning phase and past it -- in Turbo, level 10 lands around
+--- the halfway mark of a ~20 minute game -- the one branch that exists to save
+--- Lion's own life is the one branch that is switched off.
+---
+--- ⛔ THE DOMAIN IS GATE-LAYER, NOT END-TO-END, and the two must not be quoted
+--- as one number.  Over the 42 live-Lion instants in tests/fixtures/ +
+--- tests/frames/, 28 sit below the shipped line (that is where this predicate's
+--- answer differs) but ZERO carry the whole branch premise, because the six
+--- damaged instants are exactly the ones with Hex on cooldown.  §5 therefore
+--- drives the real dispatch with ONE counterfactual field (Hex off cooldown)
+--- and labels it as one.
+X.nWPanicLevelShipped = 10
+
+function X.lion_IsPanicHexLevelOpen( nHeroLevel )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'lionwpanic' )
+	then
+		return true
+	end
+
+	return nHeroLevel >= X.nWPanicLevelShipped
+
+end
+
+
 function X.ConsiderW()
 
 
@@ -1258,7 +1355,12 @@ function X.ConsiderW()
 
 
 	--保护自己
-	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) and nLV >= 10
+	-- [lionwpanic] gate off (or outside Turbo) this conjunct is `nLV >= 10`,
+	-- byte for byte; armed it is the constant true, which is the shape
+	-- hero_crystal_maiden.lua's own 保护自己 branch already ships.  See
+	-- X.lion_IsPanicHexLevelOpen for the direction, the bounded relocation and
+	-- the registered cost.
+	if bot:WasRecentlyDamagedByAnyHero( 3.0 ) and X.lion_IsPanicHexLevelOpen( nLV )
 		and bot:GetActiveMode() ~= BOT_MODE_RETREAT
 		and #nInRangeEnemyList >= 1
 	then
