@@ -1450,11 +1450,84 @@ function J.HasItemInInventory( hItem )
 	return GetBot():FindItemSlot(hItem) >= 0
 end
 
+-- [fightfoe / strategy 2026-09-17] "AM I IN A TEAM FIGHT" IS ANSWERED WITHOUT
+-- LOOKING AT A SINGLE ENEMY.
+--
+-- ⭐ THE DEFECT, closed form, no sampling needed. J.IsInTeamFight below reads
+-- ONE list: `J.GetNearbyHeroes(bot, nRadius, false, BOT_MODE_ATTACK)`, i.e.
+-- ALLIED heroes (`bEnemy = false`) in attack mode. There is no enemy term
+-- anywhere in the function -- no enemy list, no enemy count, no last-seen
+-- read -- so the predicate cannot distinguish "two allies are fighting the
+-- other team beside me" from "two allies are in attack mode and the ring is
+-- empty". The second one is not a team fight by any definition the callers
+-- use; it is what five bots pushing a lane, clearing a camp or chasing a
+-- creep wave look like.
+--
+-- ⭐⭐ WHY THE REPAIR IS A CONJUNCT AND NOT A NEW NUMBER. The missing term is
+-- asked at `nRadius` -- THE CALLER'S OWN RADIUS, the one argument the function
+-- already takes and already clamps. Every call site picks that radius to mean
+-- "the ring I am asking about", so "is there an enemy hero in the ring" is the
+-- caller's own question asked of the other team. ⛔ No constant is invented
+-- here: 1600 (the clamp), `>= 2` and the ally list are byte-identical to
+-- shipped, and the trailing commented-out `bot:GetActiveMode()` clause -- the
+-- author's own second missing conjunct -- is deliberately left where it is.
+-- One lever at a time; that one is registered in this round's report.
+--
+-- ⛔ DIRECTION IS FIXED BY THE SOURCE, not by a corpus reading. The veto is
+-- guarded by `#attackModeAllyList >= 2`, which is the shipped answer itself,
+-- so the armed predicate can only turn the shipped TRUE into FALSE -- it can
+-- never call a frame a team fight that shipped did not. A frame outside the
+-- shipped TRUE set never reaches the second list at all.
+--
+-- ⛔ BLAST RADIUS, STATED RATHER THAN DISCOVERED LATER. 313 call sites in 133
+-- files read this predicate (16 of them negated) -- counted by masking line
+-- comments and tallying `IsInTeamFight`, which gives 314, minus the one
+-- occurrence that is this function's own `function` line. (A raw grep answers
+-- 330; the difference is prose, and prose is not a call site.)
+-- That is far wider than one
+-- branch, and it is exactly why it ships gated: un-armed `J.IsSoakCandidate`
+-- is the first thing asked, the second engine call is never made, and the
+-- returned expression is the one that shipped. Same shape and same argument as
+-- the sibling lever on J.WeAreStronger ('fightstate', 2026-09-16).
+--
+-- ⭐ WHAT THE CORPUS CAN SAY, AND THE HALF IT CANNOT -- two readings, ⛔ never
+-- merged into one sentence:
+--   (1) GROUND TRUTH. On 521 of 1039 live hero frames there is NO enemy hero
+--       within 1600 of the bot at all (the enemy list is dump ground truth and
+--       vision-limited, tests/mock/replay_fixture.lua). On every one of those
+--       frames the armed conjunct is FALSE and the shipped predicate has no
+--       term that can see it.
+--   (2) AN UPPER BOUND, not a measurement. The loader's GetNearbyHeroes
+--       IGNORES its third argument (the mode filter), so on the corpus the
+--       ally list reads as "allies nearby", never "allies in attack mode".
+--       The shipped predicate therefore reads TRUE on 106 frames where the
+--       true count can only be lower, and the 46 of those with an empty enemy
+--       ring is an UPPER BOUND on the flip set -- ⛔ not a claim that 46
+--       frames flip. Closing it needs a per-hero mode in the dump, which is
+--       the same supply gap as GH #27 and is owed, not worked around here.
+-- Gate first, then turbo, so un-armed this reaches no engine call at all.
+-- Gated STANDALONE -- one id in this function, never a conjunction of two (the
+-- 'pullcad' trap).
+function J.ShouldTeamFightNeedAnEnemy()
+	if not J.IsSoakCandidate( 'fightfoe' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	return true
+end
+
 function J.IsInTeamFight( bot, nRadius )
 
 	if nRadius == nil or nRadius > 1600 then nRadius = 1600 end
 
 	local attackModeAllyList = J.GetNearbyHeroes(bot, nRadius, false, BOT_MODE_ATTACK )
+
+	-- [fightfoe] APPENDED, never inserted, and guarded by the shipped answer
+	-- itself so the one-directional property is readable off this line.
+	if #attackModeAllyList >= 2
+	and J.ShouldTeamFightNeedAnEnemy()
+	and #J.GetNearbyHeroes( bot, nRadius, true, BOT_MODE_NONE ) == 0
+	then
+		return false
+	end
 
 	return #attackModeAllyList >= 2 -- and bot:GetActiveMode() ~= BOT_MODE_RETREAT
 

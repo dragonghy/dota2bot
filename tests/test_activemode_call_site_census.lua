@@ -284,8 +284,26 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- ⚠️ The second exists BECAUSE the first does, same as the 'tpstash' entry:
     -- a header that quotes a shipped conjunct has to say in the same breath what
     -- that conjunct does NOT mean, or the quote reads as an argument it is not.
-    assert(c.commented_out == 13,
-        'GetActiveMode() mentions inside comments moved from 13 to ' .. c.commented_out ..
+    -- RE-TAKEN 13 -> 14 on 2026-09-17 by strategy ('fightfoe'), IN THE SAME
+    -- COMMIT that caused it -- the charter 0NEXT35 §丙 obligation, and this
+    -- round hit it by the route that section describes: the landing grep'd for
+    -- its own shape being counted, found THIS file, and paid it here instead of
+    -- leaving the red for whichever stream opened next (the GH #624 shape).
+    -- ⛔ `get_active_mode` is still 250 -- 'fightfoe' adds no GetActiveMode
+    -- CALL. It appends ONE conjunct built from J.GetNearbyHeroes, and the mode
+    -- clause it mentions is the one already sitting in J.IsInTeamFight AS A
+    -- COMMENT.
+    -- The one new prose mention is worth naming because its REASON is the one
+    -- this file has recorded before (the 'tpstash' and 'lionwpanic' entries
+    -- above): 'fightfoe''s header quotes the shipped trailing
+    -- `-- and bot:GetActiveMode() ~= BOT_MODE_RETREAT` in order to say that the
+    -- author's OWN second missing conjunct is NOT what this lever is -- i.e. a
+    -- "one lever at a time" disclaimer, not an argument from the conjunct.
+    -- tests/test_fightfoe_enemyless_fight.lua §1 pins BOTH halves of that: the
+    -- comment must still be there, and `GetActiveMode` must appear ZERO times
+    -- in the masked body.
+    assert(c.commented_out == 14,
+        'GetActiveMode() mentions inside comments moved from 14 to ' .. c.commented_out ..
         ' -- that is a prose change, NOT a call-site change; re-take THIS number, ' ..
         'never fold it into get_active_mode')
     -- 259 -> 260 on 2026-09-11 (strategy), and note WHICH half moved: the
@@ -309,8 +327,13 @@ tests['[ratchet] GH #267: the census separates prose from code, and says so'] = 
     -- so this total moving by exactly the prose delta is the arithmetic this
     -- pair exists to keep visible -- the ordinary direction, unlike the entry
     -- immediately above it.
-    assert(c.get_active_mode + c.commented_out == 263,
-        'executable + commented must equal the raw pattern count (263); if it does ' ..
+    -- 263 -> 264 on 2026-09-17 (strategy, 'fightfoe'), and note WHICH half
+    -- moved: the PROSE one, 13 -> 14, asserted above.  `get_active_mode` is
+    -- still 250, so this total moving by exactly the prose delta is the
+    -- ordinary direction -- the same arithmetic as the 2026-09-13 and
+    -- 2026-09-16 'lionwpanic' entries, not the two-sided 'tpstash' one.
+    assert(c.get_active_mode + c.commented_out == 264,
+        'executable + commented must equal the raw pattern count (264); if it does ' ..
         'not, strip_line_comment cut somewhere it should not have')
 
     -- Direct unit checks on the cut, including the one the naive `find("--")`
