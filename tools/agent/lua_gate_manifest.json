@@ -9,8 +9,7 @@
     "tests/test_cm_pos5_boots.lua",
     "tests/test_roshdist_pit_truth_operand.lua",
     "tests/test_salveally_missing_floor.lua",
-    "tests/test_wk_level_supply_horizon.lua",
-    "tests/test_wk_q_lane_reach.lua"
+    "tests/test_wk_level_supply_horizon.lua"
   ],
   "known_red_at": "2026-09-14T09:44:10Z",
   "known_red_cases": {
@@ -29,12 +28,9 @@
     "tests/test_wk_level_supply_horizon.lua": [
       "2. the tree holds TWO WK slots above 12 and the glob can see neither",
       "6. the staged slot is level 21 -- and its pool reading is flagged, not usable"
-    ],
-    "tests/test_wk_q_lane_reach.lua": [
-      "§1 the corpus puts an enemy in the band on 6 of 38 Wraith King frames"
     ]
   },
-  "known_red_note": "Red on trunk when this leg landed (GH #624), each confirmed by an individual unloaded re-run. The gate does not refuse a push for these; it refuses for anything NOT on this list. The list is meant to SHRINK -- it is not an exemption, and it is printed by name on every run. `known_red_cases` narrows each entry to the CASES that were failing: a baselined file that starts failing somewhere NEW refuses the push, while ordinary corpus drift inside an already-failing case does not.",
+  "known_red_note": "Red on trunk when this leg landed (GH #624), each confirmed by an individual unloaded re-run. The gate does not refuse a push for these; it refuses for anything NOT on this list. The list is meant to SHRINK -- it is not an exemption, and it is printed by name on every run. `known_red_cases` narrows each entry to the CASES that were failing: a baselined file that starts failing somewhere NEW refuses the push, while ordinary corpus drift inside an already-failing case does not.  2026-09-17 (hero): tests/test_wk_q_lane_reach.lua REMOVED from the baseline, BY HAND rather than by a re-measure (a full re-measure rewrites this whole list -- GH #783 -- and `--set-known-red` only ADDS). The push gate asked for it in those words on the same push that carried the fix: 'baselined test(s) are GREEN again -- take them off the baseline so they start refusing again'. The red it was baselined for was its §1 corpus census (38 live WK frames, corpus grown to 51); that census was re-taken in the same commit, so the file refuses pushes again from here. Removed case(s): [\"§1 the corpus puts an enemy in the band on 6 of 38 Wraith King frames\"]. ⛔ Its sibling tests/test_wk_level_supply_horizon.lua stays on the list -- also this stream's, also named by GH #880, and deliberately NOT fixed in that commit.",
   "measure_timeout_seconds": 6.0,
   "measured_at": "2026-09-10T13:08:31Z",
   "measured_count": 403,

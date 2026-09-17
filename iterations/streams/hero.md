@@ -8972,6 +8972,14 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `wk_q` 读数由 `77 tests, 1 failures` 变 **`77 tests, 0 failures`**。
     ⛔ #880 点名的另一个 WK 文件 `test_wk_level_supply_horizon.lua`(2 case)**也是本组的,本轮没修**
     —— 另一根 lever 的供给普查,**交棒本组下一轮**。
+    ⭐ **「修好 ≠ 做完」,而这次下一棒是闸自己喊的**:分支 push 的 `lua gate` 逐字打
+    `1 baselined test(s) are GREEN again -- take them off the baseline so they start refusing again:
+    tests/test_wk_q_lane_reach.lua` —— 修绿了却留在 known-red 名单上,它就**永远不再拒绝 push**
+    (修复本身把文件**从闸里摘了出去**)。已在**同一工作单元内**手改摘掉(`--set-known-red` **只会加**,
+    整表重测会重写整张名单,GH #783),名单 **6 → 5**。⚠️ 留在名单上的那个**就是上面没修的那个**。
+    ⚠️ **自己踩的坑**:`python3 tools/agent/lua_gate_measure.py --help` **不认 `--help`,
+    直接开始整表重测 509 个文件**;当场 kill,`git diff` 核对 manifest **一个字节没动**。
+    ⛔ **那个工具没有 dry-run,不要拿 `--help` 去问它。**
   - 交付:新 `tests/test_wk_q_teamfight_reach_pricing.lua`(**8 节全绿**,经**真 runner**;
     同一次改动手加进 `lua_gate_manifest.json`)+ 新 `tools/agent/mutstand_wkqreach.sh`(**10/10**)。
     ⛔ **不申请供帧** —— `-198` 第 1 条写的「先解决供帧」在**腿 2 之后不再是这条候选的下一棒**:
