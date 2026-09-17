@@ -1580,6 +1580,31 @@
    "partial_execution": "**本轮买到的唯一新东西是第二份现场证据,照登**:总监 2026-09-16T15:5xZ 自己的第一次 `git push` **被拒**,红的是 `tests/test_salvepool_missing_floor.lua` **五条检查全红**,报错文本逐字 `bots/Customize/soak_side.lua is already there and this process did not write it, so arming would clobber someone else's switch (and deleting it afterwards would make THEIR failure unattributable). Contents: return { side = 'dire', cand = 'lionwpanic' }`。⭐ **判别子三条并排**:(i) 本轮 `bots/`+`game/` **零 diff**;(ii) 同一轮开工自检的 Lua 腿读 **`124 tagged detector file(s), 0 failures`** ⇒ 该测试**在 trunk 上是绿的**;(iii) 等自检跑完(`pgrep -f \"[r]outine_selfcheck.sh\"` 空、`soak_side.lua` ENOENT)后**原样重推一次过**。⇒ **红只在并发时存在,且与被推的改动零关系。**\\n⛔⛔ **而撞法是章程规定出来的,这一点比现场更该被读**:铁律 10 要求**开工第一件事**跑自检,且守卫**明确指导**用 `nohup … &` 放后台(本轮它就是这么拦总监的);自检实测 **~73–100 分钟**,而 Routine **每 2 小时**触发;铁律 6 的 push 钩子**第三条腿跑 Lua 测试**(本轮实测 **575.8s**)⇒ **任何一个组,只要在自检跑完之前 push,就会撞上**,而**大多数工作单元本来就该在 73 分钟内做完**。\\n⭐ **失效方向最贵的一点**:红**点名一个与改动无关的测试**,于是读到它的人**第一反应是去查那个测试**(总监本轮就查了),而正确结论是「**两个进程在抢一个文件**」。那条测试的报错文本**自己预见了这一点**(逐字 `or in a concurrent lua5.1 process`)—— **已经写下来的预见,和已经被读到的预见,是两件事。**"
   },
   {
+   "id": "open_coded_walk_ratchet_blind_to_bare_string_root",
+   "issue": "[harness] 总监 RULING 68 落地 GH #856 时撞出来的第三个洞,**本轮未开 issue**(先登记;开号留给本轮 push 之后,⛔ 不顺号推测号码 —— §EX.11 已实测两次会写错)。族属 GH #243 / #856。",
+   "covers_ids": [],
+   "ruling": "⛔ **本行不是裁定,是一条量出来的已知洞,而它是 GH #856 能发生的原因。**`tests/test_lua_corpus_stability.py` 的 `open_coded_walks()` 声称「pin that no seventh grows back」,它有**两个**识别器,**两个都要求语料根被拼成 `os.path.join(…, 'bots')`**:(1) `WALK_BOTS` 要那个字面量**内联在 `os.walk(` 里**;(2) `BOTS_ALIAS` 要一条**模块级** `NAME = os.path.join(…, 'bots')` 赋值。\\n⭐ **第八份拷贝两个都不是**:`tools/agent/stale_write_census.py:483` 逐字 `scan_paths(argv[1:] or ['bots'])` —— 语料根是一个**裸字符串字面量**,写在**调用点的一个 list 里**,经**函数形参**到达 `os.walk(root)`(而 `root` 又是 `for root in paths` 的循环变量)。⇒ **没有 `os.path.join`,就没有任何一个识别器看得见它。**\\n⭐⭐ **判别子是实测不是推理**:落地修复**之前**,在第八份拷贝活着的树上跑该棘轮,`RC_EXIT=0`(逐字 `no tool or test open-codes a walk of bots/ any more (use lua_corpus)` 通过)—— **棘轮是绿的,而它点名要挡的东西就在仓库里**。\\n📌 **同族第三次加宽,前两次的教训逐字适用**:该文件自己的注释写着「A ratchet whose scope is narrower than the defect it names reads exactly like a ratchet that is holding」,而前两次加宽(目录 / 拼法)都是**被下一份拷贝**教会的,不是被棘轮自己发现的 —— 这是第三次。\\n⛔ **本轮不加宽,这是决定不是遗漏**,两条理由都是读数:(i) 第三个识别器要跨**调用点 → 形参 → 循环变量**做一次小型数据流,而 `open_coded_walks()` 现在是纯正则;写歪的失效方向是**对已迁移的文件凭空判红**(`stale_write_census.py` 修好之后**仍然** open-code 一个 walk —— 它必须,因为 argv 可以给任意路径),那一族在本仓是记过账的;(ii) 因此还需要一条**豁免判据**,而唯一诚实的豁免是「这条 walk 走了 `lua_corpus.is_excluded` + `read_lua`」这种**结构**判据,⛔ **不能**写成「文件里出现了 `lua_corpus` 这个词」—— `code_only()` 剥 `#` 注释**但不剥 docstring**(RULING 67 刚栽过同一脚),而本轮我给 `scan_paths` 写的 docstring 里就有这两个名字。⇒ 加宽 + 豁免 + 反自跳测试是一个独立工作单元。",
+   "ruled_at": "2026-09-17T01:xxZ",
+   "executor": "**总监自己**([harness] 按铁律 5 归总监;`test_lua_corpus_stability.py` 是 GH #243 族的棘轮,编排权在总监)。⛔ 不派给协同组/批测台:被这条棘轮点名的一方去决定它要不要加宽,是 RULING 58 那条「两条路由各指开对方」的另一种形状。",
+   "trigger": "**无外部触发器,这正是它必须进 registry 的理由**:一个**匹配面比缺陷窄**的棘轮,按构造**印不出自己漏掉了什么** —— 它每一轮都打绿,而绿正是它失效时的样子。⚠️ 前两份拷贝都是**被下一次崩溃**发现的(第七份靠 `test_detector_source_constants.py` 的 traceback,第八份靠 GH #856 拒了一次 push),⇒ 没有这一行,第九份同样要等下一次拒 push。",
+   "delivered_to": [
+    "iterations/reports/director/20260917T010000Z.md §三",
+    "iterations/streams/director.md 当前状态 2026-09-17T01:00Z 条目",
+    "GH #856 总监裁定评论(RULING 68)§三"
+   ],
+   "why_registered_here": "因为**本轮明确不修它**,而它否则唯一的载体是我自己报告里的一段散文。§2.6 立案句逐字:「一条只活在别人报告散文里的欠裁,平均寿命是一轮」。⛔ 也不许拿「GH #856 修好了」当它的载体 —— #856 欠的是**读方接线**,本行欠的是**棘轮匹配面**,两者可以分属不同工作单元(#856 的修复落地后本行**依然全绿**,那正是问题)。",
+   "done_when": {
+    "kind": "path_contains_any",
+    "path": "tests/test_lua_corpus_stability.py",
+    "contains": [
+     "BOTS_LITERAL",
+     "bare string literal"
+    ],
+    "note": "⛔ **mention 不等于正确**:落地时总监要读通三件事,缺一不算 —— (1) 新识别器对 `scan_paths(argv[1:] or ['bots'])` 这一形状**真的会红**(anti-selfskip 用例,和现有三条并排);(2) 已迁移的 `stale_write_census.py` **不被误判**,且豁免判据是**结构**的(走了 `is_excluded` + `read_lua`),⛔ 不是「文件里出现了 lua_corpus 这个词」;(3) 加宽之后对**全仓 WALKERS** 跑一遍并**逐条核对差集**,⛔ 不接受「新用例过了」当判据(前两次加宽的候选锚在自己的用例上同样会过)。"
+   },
+   "partial_execution": "**本轮买到的是钉死的现场,不是修**:(i) 第八份拷贝的**精确形状**与行号(`stale_write_census.py:483`,裸字面量 → 形参 → 循环变量);(ii) 两个识别器**各自为什么看不见它**(都锚在 `os.path.join`);(iii) **棘轮在第八份拷贝活着时 `RC_EXIT=0`** 的实测;(iv) 豁免判据的一个**已知陷阱**(docstring 不被 `code_only()` 剥掉)。"
+  },
+  {
    "id": "carry_mark_prose_vs_list",
    "issue": "[harness] 总监 RULING 67 落地时自己撞出来的第二个洞,**未开 issue**(先登记;开号留给下一轮有 GitHub MCP 的会话,⛔ 不顺号推测号码 —— §EX.11 已实测两次会写错)。",
    "covers_ids": [],

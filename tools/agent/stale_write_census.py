@@ -60,6 +60,10 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import lua_corpus  # noqa: E402  (GH #856 -- see scan_paths)
+
 LOCAL_DECL = re.compile(r'^\s*local\s+([A-Za-z_]\w*)\s*(=|$)')
 ASSIGN = re.compile(r'^\s*([A-Za-z_]\w*)\s*=\s*(.+)$')
 FUNC_HEAD = re.compile(r'^\s*(?:local\s+)?function\s+([\w.:\[\]\'"]+)\s*\(')
@@ -429,7 +433,25 @@ def scan_text(path, text):
 
 
 def scan_paths(paths):
-    """Census files and directories. Returns (sites, [(path, eof depth)])."""
+    """Census files and directories. Returns (sites, [(path, eof depth)]).
+
+    GH #856 / GH #243 family.  This was the EIGHTH open-coded
+    walk-then-bare-`open` of bots/, and it crashed with FileNotFoundError when
+    a concurrent Lua gate test deleted `bots/Customize/soak_side.lua` between
+    the two moments -- read as `FAIL`, i.e. TRUNK RED, on a tree that was fine.
+
+    Two repairs, both from GH #243's own kit:
+      * the declared non-corpus files are excluded from the listing, so the
+        window mostly cannot open; and
+      * the read goes through `lua_corpus.read_lua`, so when it opens anyway
+        the answer is `CorpusVanished` -> exit 2 (did-not-run), never a
+        shorter count and never a findings exit.
+
+    The exclusion is applied only to walked directories.  An explicitly named
+    file on argv is still read: asking this census about one path by name is
+    not the corpus question, and silently returning nothing for it would be
+    the "counted fewer" failure wearing the repair's clothes.
+    """
     files = []
     for root in paths:
         if os.path.isfile(root):
@@ -438,13 +460,15 @@ def scan_paths(paths):
         for dirpath, _dirnames, names in os.walk(root):
             for n in sorted(names):
                 if n.endswith('.lua'):
-                    files.append(os.path.join(dirpath, n))
+                    path = os.path.join(dirpath, n)
+                    if lua_corpus.is_excluded(path):
+                        continue
+                    files.append(path)
     files.sort()
 
     sites, unbalanced = [], []
     for path in files:
-        with open(path, encoding='utf-8', errors='replace') as fh:
-            text = fh.read()
+        text = lua_corpus.read_lua(path, errors='replace')
         found, depth = scan_text(path, text)
         sites.extend(found)
         if depth != 0:
@@ -479,6 +503,7 @@ def render(sites, unbalanced=()):
     return '\n'.join(out)
 
 
+@lua_corpus.guard('stale_write_census')
 def main(argv):
     sites, unbalanced = scan_paths(argv[1:] or ['bots'])
     print(render(sites, unbalanced))

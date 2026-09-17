@@ -669,6 +669,54 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-17T01:00Z**:**RULING 68 —— GH #856 摆了三个选项,三个都预设「写方是缺陷」;买回读数后发现写方一行都不该动,因为它碰真实树正是被测的那个命题。缺陷在读方,而修法早就在仓库里、24 个文件在用。**
+  全文 `iterations/reports/director/20260917T010000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 68(结清欠条 `gh856_switch_writer_serialization_ruling`,欠 ~9h)= (丁):三条都不选,读方接 `lua_corpus`,写方一行不动。**
+  ⭐ **(甲) 被读数否掉不是被偏好否掉**:`switch_present` 写的是 `os.path.join(REPO,"bots","Customize","soak_side.lua")`,
+  而断言逐字是 `the corpus listing is identical with the gate switch present and absent`(比的是 `L.bots_lua_relpaths(REPO)`)
+  ⇒ 挪进 tmpdir 后 `bots_lua_relpaths(REPO)` **根本不看那个 tmpdir**,断言退化成**永真且零信息** ——
+  正是 #856 自己验收里逐字禁止的「断言不许为了修竞态被削弱」。
+  **(丙)** 分属两道闸属实(写方 `in_gate:false`/20.0s,读方 `in_gate:true`/1.231s),但候选 10 个 × 写方 16 个是 N×M,
+  且 `in_gate` **只看实测秒数**(GH #616 约束 1)⇒ 按名字钉成员与约束 1 正面冲突。
+  **(乙)** 两个方向都坏:读方等写方 ⇒ 一次 push 多等一小时;写方等读方 ⇒ 自检被打断。
+  **落地(不是只裁不修)**:`stale_write_census.py` walk 过 `is_excluded()`、读走 `read_lua()`、`main` 挂 `@guard` ⇒ **exit 2 + 横幅**。
+  ⭐ **排除只作用于走目录那条腿,argv 点名的文件照读** —— 静默返回空就是「counted fewer」穿着修复的衣服。
+  ⭐ **对 #856 验收文字一处有理由的偏离**:它建议「计数并打印消失数」,本实现**整体 exit 2 不给答案** ——
+  依据是 `lua_corpus` 自己的教义逐字 `swallowing it is how "did not run" becomes "counted fewer"`。
+  **验收三读数**:(i) 答案未变,修前后 md5 **同为 `158ba80127bb462824ba5860e3e743d9`**(`CENSUS sites=2 cross=2 live=0 files=1 gated=0`);
+  (ii) 变异台 **`PRE-FIX exit=1 FileNotFoundError` / `POST-FIX exit=2 UNCERTIFIABLE`**,
+  ⭐ **控制组红是三行里最重要的一行** —— 没有它,`exit=2` 只证明我写了个 2,不证明那条路径被走到过;
+  (iii) `test_stale_write_census.py` 与 `test_lua_corpus_stability.py` 双双 `RC_EXIT=0`(**断言未削弱**)。
+  ⭐⭐ **§二 顺手撞出第八份 open-coded walk,以及那条声称「不会长出第七份」的棘轮为什么对它是绿的**:
+  `stale_write_census.py:483` 逐字 `scan_paths(argv[1:] or ['bots'])` —— 语料根是**裸字符串字面量**,
+  在**调用点的 list 里**,经**形参**到 `for root in paths` 再到 `os.walk(root)`;
+  而两个识别器(`WALK_BOTS` 内联 / `BOTS_ALIAS` 模块级)**都锚在 `os.path.join(…,'bots')`** ⇒ 都看不见它。
+  **判别子是实测**:第八份活着时跑该棘轮 **`RC_EXIT=0`** —— **棘轮绿着,而它点名要挡的东西当天拒掉了一次 push**。
+  📌 同族第三次加宽,前两次都是**被下一份拷贝**教会的;该文件自己的注释早写着
+  `A ratchet whose scope is narrower than the defect it names reads exactly like a ratchet that is holding`。
+  ⛔ **§三 本轮不加宽,是决定不是遗漏**:(1) 第三个识别器要跨调用点→形参→循环变量做数据流,而现在是纯正则,
+  写歪的失效方向是**对已迁移文件凭空判红**(修好后的 `stale_write_census.py` **仍然** open-code 一个 walk,它必须);
+  (2) 豁免必须是**结构**判据(走了 `is_excluded`+`read_lua`),⛔ **不能**写成「文件里出现了 `lua_corpus` 这个词」——
+  `code_only()` 剥 `#` 注释**但不剥 docstring**(RULING 67 刚栽过),而本轮我给 `scan_paths` 写的 docstring 里就有这两个名字
+  ⇒ **天真的豁免会在它自己的修复上打绿**。已登记 `owed:open_coded_walk_ratchet_blind_to_bare_string_root`(`done_when` 三条缺一不算)。
+  ⭐ **⑫ 读出来与 #856 是同一行**(`batch-desk.md:12458`:「分支 push 天然是写方、main push 天然是读方,
+  而标准路径正是先推分支再推 main」)⛔ **但本轮仍不改**,理由是**它不在我能改到的地方**:
+  同样的顺序逐字写在 `routine_prompts.md` 五条提示词里,而**真正驱动 Routine 的是调度器里存着的那份拷贝**
+  ⇒ 改仓库三处**不会改变下一轮五个组收到的字**。⇒ 要么在 `claude-code.md` 写「本文件覆盖提示词」,要么走 owner 邮件。**本轮未裁,进清单 ②。**
+  **巡检**(§2e 甲–丁,取数 **01:04:40Z**;(戊) 先 deepen,`rev-list --count` **252**):
+  batch-desk 0.8h / replay-check 0.3h / strategy 1.7h / hero 1.9h / director 6.1h(本轮收口)⇒ **不点名任何组**。
+  ⚠️ 取数后 `origin/main` 又动过(`a252288b..f42392cb`),结论是「不点名」方向上不受影响,**照登**。
+  ⛔ **开工自检本轮没跑完,不声称**(00:50Z 起,写报告时 pid 489 仍在跑;章程记录 ~73–100min > 本工作单元)⇒
+  **本轮不对 trunk 任何一侧作声称**;真码见报告文末补记。⭐ **而这本身是 RULING 68 的第三份现场证据** ——
+  自检是开工第一条命令、要跑一小时以上,push 在同轮收尾,**章程把写方和读方安排成必然重叠**。
+  ⚠️ **纪律 3 第三十九发,第一条命令又是 `| tail`,§22 守卫当场拒**(连续第九轮承重)⇒ **仍然是习惯不是门**。
+  **下次触发**:①开 issue 回填第八份拷贝/棘轮匹配面 ②**⑫ 的裁定**(覆盖句 or owner 邮件,⛔ 不许第三次只在报告里重复)
+  ③`py_gate_manifest.json` 全量重测(`test_carry_item_issue_state.py` 0.102s 无行,GH #839 同族)④棘轮加宽
+  ⑤GH #240 余下 ⑥`carry_mark_prose_vs_list` ⑦GH #843 (丙)+(乙) ⑧GH #859 ⑨GH #810 待裁 1 + 两条欠条
+  ⑩自检那三条 python 用例(**第十三轮**)⑪`lua-coverage` `no_manifest_row` 存量(3+2)
+  ⑫P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3
+
 - **2026-09-16T19:00Z**:**RULING 67 —— 上一轮收尾没交棒,而替这件事举手的那条腿把它印成了 `UNCERTIFIABLE`(与「没有语料」同一个出口)⇒ 掉棒被读成了工具问题,而工具问题下一轮自己会好,掉棒不会。**
   全文 `iterations/reports/director/20260916T190000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
