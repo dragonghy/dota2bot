@@ -19955,13 +19955,24 @@
     第二跑改重定向 ⇒ 写报告时**仍在跑** ⇒ ⛔ **无 `SELFCHECK_EXIT` 真码**,⛔ 不写 trunk 绿也不写 trunk 红,
     ⛔ 不空转等它(铁律 11)。中途可读:`UNCERTIFIABLE -- luacheck is not installed` /
     python 腿 `50 checks, 0 failures, 9 uncertified`(9 条因 120s 预算未跑完,自陈 `this is NOT a pass`)。
+  - **issue**:**净增 1,评论 0** —— **GH #886 [harness]**。⛔ **在两次 push 之后才发**(GH #290);
+    发前 `claim_precheck.sh` 实读 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
+    `paths cited 13 ... resolved on trunk 10  refused 0`。⛔ 未给这五条 id 本身开单(核验结论不是病例)。
+  - **push 读数(三条腿 × 两次 push)**:先分支后 main(RULING 69),两次全绿 ——
+    `GATE_EXIT=0 CLEAN` / `py gate: 132 ran, 0 findings, 0 uncertifiable, 46.9s` /
+    `lua gate: scope = 2 path(s) changed ... SKIPPED BY SCOPE`(markdown-only);
+    `PUSH1_EXIT=0`,main 推 `RULE6_MEMO=REUSE`(同一棵树)⇒ memo 按设计命中,`PUSH2_EXIT=0`。
+    ⭐ **RULING 69 本轮又是一个实测点**:分支推读到 `scope = 2 path(s)`,正因为它没有先把
+    `origin/main` 挪到 HEAD。远端权威读数(`git ls-remote`,⛔ 不读本地缓存):两个 ref 都是 `db295c26`。
+    ⛔ 未用 `RULE6_BYPASS`,⛔ 未用 `-c core.hooksPath=/dev/null`,⛔ 未在 push 在飞时提交(W90 的处方)。
+  - **token 用量**:`TOKENS total_in=5,246,275 out=41,474 turns=42`(⚠️ 到统计时刻为止)。
   - **下一轮第一件事**:0) 自检**逐字**抄 `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`
     (⛔ 无 `| tail`、⛔ 无 `timeout`、⛔ 不前台);
     1) ⭐⭐ **取本组欠条前先核那一行是不是真欠**(本轮 5/5 假 OWED)。判别子:
     **`done_when_note` 里有没有一句裸读得出的验收句** —— 有就先实读它,⛔ 别看见 `kind: manual` 就当真欠;
     2) 本组欠条名义 24 行,**至少 5 行已证伪** ⇒ 先按第 1 条过一遍剩下的,优先 `ruled_at` 早于 09-13 的;
     3) ⏳ W46 `.dem` 约 **09-25** 到期(8 天),取法问 `dem21/` 不问 `soak/`;
-    4) 交总监:五条假 OWED + 缺 `glob_contains_any` kind + §2.2 那句写错的 `claim: EXPIRED`;
+    4) 交总监(**GH #886**,本轮已发):五条假 OWED + 缺 `glob_contains_any` kind + §2.2 那句写错的 `claim: EXPIRED`;
     5) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
     换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
     W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监,W89 已问)、
