@@ -43,7 +43,7 @@
 -- §2 parses all three rings out of source, so the day one of them moves this
 -- file says so rather than the header quietly going stale.  ⛔ The WK over-reach
 -- is the OPPOSITE sign (it casts out of range where Lion refuses to cast in
--- range); it is NOT this id and is not fixed here -- GH #PENDING-BACKFILL.
+-- range); it is NOT this id and is not fixed here -- GH #873.
 --
 -- ===========================================================================
 -- §0.2  WHAT THIS FILE CAN AND CANNOT BUY
@@ -64,7 +64,7 @@
 -- FOR DAMAGE DEALT TO THE FIXTURE SUBJECT.  It reads 0 for an attacker who did
 -- not connect in that window, which is why subject-facing pins measured 0 and
 -- the coarse sentence survived.  ⛔ It is NOT "the meter is broken", and it is
--- NOT "the meter works": it is retrospective.  GH #PENDING-BACKFILL carries the correction.
+-- NOT "the meter works": it is retrospective.  GH #873 carries the correction.
 --
 -- What still costs a declared number is only the ARMED half (§3.2b), and for
 -- that same retrospective reason: Luna's 0 says she did not connect, not that a
@@ -350,7 +350,7 @@ tests['§2.2 ⭐ and the three rings differ -- the shape travelled, the reach te
     local wkAt = assert(wk:find('local%s+npcMostDangerousEnemy%s*=%s*nil'))
     local wkTail = wk:sub(wkAt)
     assert(not wkTail:find('J%.IsInRange%(%s*bot%s*,%s*npcMostDangerousEnemy'),
-        'skeleton_king grew a winner reach test -- GH #PENDING-BACKFILL may be fixed; if so say so there '
+        'skeleton_king grew a winner reach test -- GH #873 may be fixed; if so say so there '
         .. 'and drop this assertion, do not relax it')
 
     -- Lion: built 300 over, accepted at 50 over.  The outlier.

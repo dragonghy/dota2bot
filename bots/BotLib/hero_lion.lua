@@ -1263,7 +1263,7 @@ end
 ---       -> search ring == castable ring.  CORRECT, and it needs no test.
 ---   hero_skeleton_king.lua:1355   ring `nCastRange + 43` (:1326), no winner
 ---       test -> casts at a winner up to 43 units out of range.  A separate
----       (opposite-signed) lever, NOT this id; registered in GH #PENDING-BACKFILL.
+---       (opposite-signed) lever, NOT this id; registered in GH #873.
 ---   hero_lion.lua:1303            ring `nCastRange + 300`, winner tested at
 ---       `nCastRange + 50` -> this defect.
 ---
@@ -1326,7 +1326,7 @@ end
 --- not be re-measured as a fact about this lever.  Filter Crystal Maiden out and
 --- the only candidate left is Luna at 0, and the argmax SEEDS AT 0 and tests
 --- with a strict `>` -- so the seed eats her and the branch still returns
---- nothing.  The seed is the second defect (see the census in GH #PENDING-BACKFILL; it is
+--- nothing.  The seed is the second defect (see the census in GH #873; it is
 --- the same `= 0` + strict `>` polarity in all three copies) and it has its own
 --- id.  ⛔ Naming that id in this predicate would be the pullcad trap (§1.6
 --- asserts this function does not); the pair is requested as one atom in
@@ -1350,7 +1350,7 @@ end
 ---      an attacker who happened not to connect in that window, and the pins the
 ---      "always 0" claim was measured on are subject-facing frames where that
 ---      was true.  §3.3 pins the luna/crystal_maiden pair so the distinction
----      cannot collapse back into "always 0".  GH #PENDING-BACKFILL carries the correction.
+---      cannot collapse back into "always 0".  GH #873 carries the correction.
 ---   3. WHAT STILL NEEDS A DECLARED NUMBER is only the armed half: the meter is
 ---      RETROSPECTIVE, so Luna's 0 says she did not connect in that window, not
 ---      that a level-appropriate carry at 177u projects nothing.  §3.2b pays ONE

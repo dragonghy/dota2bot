@@ -26,7 +26,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    `bots/BotLib/hero_lion.lua` 有行为改动(新 helper `X.lion_IsHexFightTargetInReach` + 唯一调用点)。报告 `iterations/reports/hero/20260917T075743Z.md`;
    新 `tests/test_lion_w_fight_reach.lua` **18 绿 / 1.545s**(**同一次改动**手加进 `lua_gate_manifest.json`,记 `seconds` **1.6**);
    变异台 `tools/agent/mutstand_lionwfight.sh` **19/19 全杀**(⚠️ **第一版 12/19**,见下);
-   裁定 `state.json:lionwfight_20260917`;新 queue 请求 **hero-102**;新 issue **GH #PENDING-BACKFILL**(push 之后开出来**读回**的号码)。**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。**
+   裁定 `state.json:lionwfight_20260917`;新 queue 请求 **hero-102**;新 issue **GH #873**(push 之后开出来**读回**的号码)。**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。**
    开工时 `OWNER_PRIORITIES` 三处「当前球在」分别是批测台/协同组/协同组,**没有一条在本组**;open `[hero]` 四条(#870/#868/#864/#860)**全是本组自己前几轮的裁定**,球在 `hero-99`/`hero-100`/`hero-101`。⇒ 取 `-195` 候选第 1 条。
    - ⭐⭐ **头条:形状旅行了,让形状安全的那一项没跟着走。** `local npcMostDangerousEnemy = nil` + `nMostDangerousDamage = 0` + 严格 `>` 这段函数体在焦点五英雄里**逐字节相同**地出现三次,而三份的环互不相同:
      **CM `:1805`** 搜 `nCastRange`(**正确**,别动)/ **WK `:1355`** 搜 `nCastRange + 43` 且**从不测胜者**(**超伸 43u**)/ **Lion `:1303`** 搜 `+300` 而准入 `+50`(**自我否决 250u 圆环**)。
@@ -62,7 +62,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
    - **下一轮主体候选**(按**可测性**排序):
      **第 1 条(新,最强)**:⭐ **「0 种子」那个 id**。三份拷贝**极性相同**(`= 0` 起 + 严格 `>` ⇒ 投射恰为 0 的合法候选被静默丢掉;全员为 0 时整条分支返回空)。本轮已证明它**与 `lionwfight` 互相遮蔽** ⇒ 它是**下一轮必须做的那一条,不是可选项**:在它落地之前 `lionwfight` 不能单独入波(hero-102 ⛔ 第 1 条)。
      ⚠️ 落地前**先按上面那条改正过的前提重新问一遍**:端到端域**现在可能是买得到的**。
-     **第 2 条**:**WK 的 43u 超伸**(`hero_skeleton_king.lua:1326/1355`),符号与本轮相反,**未修**,GH #PENDING-BACKFILL;焦点五英雄,归属在本组。⚠️ 先量 43u 值不值一个 id。
+     **第 2 条**:**WK 的 43u 超伸**(`hero_skeleton_king.lua:1326/1355`),符号与本轮相反,**未修**,GH #873;焦点五英雄,归属在本组。⚠️ 先量 43u 值不值一个 id。
      **第 3 条**:那张普查表(hero-102 甲)—— `bots/` 里这段 argmax 一共几份、几份**搜索环 ≠ 准入环**。零支出。⛔ **归属先查**(多数拷贝在非焦点英雄文件里)。
      **第 4 条**:`aba_skill.lua` 槽位算法本体(#822)。⚠️ **连着五轮排它了**;`-194` 说「下一轮要么做要么降」,本轮**又**没做 ⇒ 按它自己的规矩**再降一格**。⛔ 动手前先去 #822 确认球在不在本组。
 
@@ -8846,7 +8846,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 ## 当前状态(每次触发后更新)
 - 2026-09-17T07:57Z(报告 `iterations/reports/hero/20260917T075743Z.md`;**backlog:新开 `-196`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**新 gated id `lionwfight`(`bots/` 有行为改动)**;
-  新 queue 请求 **hero-102**;裁定 `state.json:lionwfight_20260917`;新 issue **GH #PENDING-BACKFILL**;**P4.4 自评:(i) 行为改动**)
+  新 queue 请求 **hero-102**;裁定 `state.json:lionwfight_20260917`;新 issue **GH #873**;**P4.4 自评:(i) 行为改动**)
   **主体:Lion `X.ConsiderW` 团战腿的 reach 项 —— 搜索环 `nCastRange + 300`、准入环 `nCastRange + 50`,
   而那个测试坐在 argmax **之后** ⇒ 250u 圆环里的候选够不着却能赢,赢了不回落,直接把整条分支否掉。
   出货否决在真实帧上被目击,零注入:一个硬控被压在 0.2 个单位上。**
