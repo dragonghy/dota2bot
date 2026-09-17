@@ -517,6 +517,57 @@ function J.GetEnemiesNearLoc(vLoc, nRadius)
 	return enemies
 end
 
+--- [roamring, strategy 2026-09-17] ONE PARITY QUESTION, TWO DIFFERENT RINGS.
+---
+--- mode_team_roam_generic.lua builds both halves of its "am I outnumbered here"
+--- reading on two adjacent lines and gives them DIFFERENT radii -- allies 2200,
+--- enemies 2000 -- and the only consumer of both (the `elseif #nearbyAllies >=
+--- #nearbyEnemies` that opens the roam target picker) compares the two counts
+--- directly. A hero 2150u away is therefore a fighter when it is ours and
+--- invisible when it is theirs. The shell is 21% of the circle's area
+--- (2200^2 / 2000^2) and it only ever adds to OUR side.
+---
+--- NOTHING HERE IS INVENTED: both numbers are the call site's own, and armed,
+--- the enemy half is simply read off the ring the ally half already uses, so
+--- the comparison is between two counts of the SAME neighbourhood.
+---
+--- DIRECTION IS FIXED BY CONSTRUCTION. The wider ring is a SUPERSET, so
+--- #nearbyEnemies can only grow and `#nearbyAllies >= #nearbyEnemies` can only
+--- go TRUE -> FALSE. Armed, this is a pure tightening of the permission to
+--- commit; it cannot open a branch the shipped tree keeps shut. A batch reading
+--- that goes the wrong way therefore cannot be read as "the lever made the bots
+--- stop roaming"; it can only be read as the refused commits having been good.
+---
+--- THE OTHER ASYMMETRY POINTS THE SAME WAY, which is why widening the enemy
+--- ring cannot over-correct: J.GetEnemiesNearLoc walks UNIT_LIST_ENEMY_HEROES
+--- (vision-limited) and drops suspicious illusions and Meepo clones, while
+--- J.GetAlliesNearLoc walks our own roster and keeps everybody alive on it. The
+--- enemy count is already the understated half before any radius is applied.
+---
+--- DOMAIN, measured by tests/_roamring_sweep.lua on 112 fixtures / 1039 live
+--- hero frames (2026-09-17):
+---   eshell_nonempty 57 | shipped_true 954 | wide_true 944 | down 10 | up 0
+--- 57 frames carry an enemy in the 2000-2200 shell; on 10 of them that enemy is
+--- the one that decides the comparison. `up 0` is a reading only because `down`
+--- is 10 in the SAME tally -- a direction column of zeros cannot tell "the
+--- direction holds" from "the tally never ran".
+---
+--- THE OTHER UNIFICATION WAS MEASURED, NOT ASSUMED AWAY: pulling the ALLY ring
+--- down to 2000 is one-directional too and reads `down 2` on the same corpus.
+--- It is registered in the sweep and NOT shipped -- a fifth of the domain, and
+--- it would answer the parity question over a neighbourhood the file itself
+--- does not use for either half today.
+---
+--- WHAT THIS IS NOT. It does not touch the ally radius, the consumer's
+--- operator, the vision rule or the illusion filters, and it makes no claim
+--- that 2200 is the right size for a fight neighbourhood. One lever: whether
+--- the two halves of one comparison are counted over the same circle.
+function J.GetRoamParityRadius( nAllyRadius, nEnemyRadius )
+	if not J.IsSoakCandidate( 'roamring' ) then return nEnemyRadius end
+	if not J.IsModeTurbo() then return nEnemyRadius end
+	return nAllyRadius
+end
+
 function J.GetAnyEnemiesNearLoc(vLoc, nRadius)
 	-- local cacheKey = 'GetAnyEnemiesNearLoc'..tostring(nRadius) ..tostring(J.ToNearest500(vLoc.x))..'-'..tostring(J.ToNearest500(vLoc.y))
 	-- local cache = J.Utils.GetCachedVars(cacheKey, 0.5)

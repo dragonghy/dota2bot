@@ -3100,6 +3100,18 @@
       "result": null,
       "director": null,
       "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。全部本地,不需要任何一波。"
+    },
+    {
+      "id": "strategy-58",
+      "stream": "strategy",
+      "bundle": "`roamring`(新 gated id,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。",
+      "priority": 3,
+      "status": "pending — 预期裁定是 FROZEN-HOLD(登记、不入集、不视为掉棒;armed 25 > 20)",
+      "seeds": "不适用(不发波)",
+      "question": "⛔ **零 AWS、零 EC2、不申请专波、不申请新波** —— 本请求要的是一次登记,不是一次取证;全部工作已在本地做完。\n\n一句话:**`mode_team_roam_generic.lua` 把同一个「我这儿是不是被以多打少」的问题拆成两半、两半用两个不同的圈(盟友 2200 / 敌人 2000),本轮已 gated 修掉并钉在一帧真实帧上;请登记 `roamring`,解冻后排 (a) 证据。**\n\n### 已经钉住的(不要重测)\n- 缺陷:`:285-286` 相邻两行,`J.GetAlliesNearLoc(loc, 2200)` 与 `J.GetEnemiesNearLoc(loc, 2000)`,而两者**唯一**的消费者是 `:398` 的 `elseif #nearbyAllies >= #nearbyEnemies`。⇒ 2150u 外的英雄**是我方就算战力、是敌方就不存在**;那层壳是圆面积的 21%,**只往我方加**。\n- 修法:`J.GetRoamParityRadius(nAllyRadius, nEnemyRadius)`,armed(turbo-only)时敌方那半改读**盟友那半已经在用的那个圈**;disarmed 逐字返回 `nEnemyRadius`。调用点把 2200 **命名一次**,两半都从这个名字取 ⇒ 再漂开就顶红。**没有新常数**。\n- **方向由构造定死**:更大的圈是**超集** ⇒ `#nearbyEnemies` 只能变大 ⇒ 谓词只能 TRUE→FALSE。armed 是对「可以开打」这条许可的**纯收紧**。⇒ 批测读数若反向,**不能**读成「杠杆让 bot 不游走了」,只能读成被拒掉的那些开打本来是好的。\n- ⭐ 另一条不对称**同向**(敌方表受视野限制且滤幻象,我方表走 roster 全收)⇒ 加宽敌圈**不会过度修正**。\n- 域(`tests/_roamring_sweep.lua`,112 fixture / 1039 live 帧):`eshell_nonempty` 57 | `shipped_true` 954 | `wide_true` 944 | **down 10 / up 0**。⛔ `up 0` 是读数**只因为同一个 tally 里 down 是 10**。⭐ 另一种统一法(盟友圈拉到 2000)同日量了:**down 2**,登记在 sweep 里、**不发船**。\n- 测试:`tests/test_roamring_parity_ring.lua` **10/10,零 stub**;真实帧 `f_260819_183613_storm_collapse_lost.lua` / jakiro / t=310.4 —— 唯一活着的队友 7499u 外,dragon_knight 1309.6u、**earthshaker 2151.8u** ⇒ 出厂 `1>=1` TRUE、armed `1>=2` FALSE。变异台 `tools/agent/mutstand_roamring.sh` **8 抓 / 0 存活 / 控制绿 / 退出码 0**。\n\n### ⚠️ 解冻后买 (a) 时要知道的一条仪器限制(现在说,免得那一波去发现)\n`:398` 上游那串守卫是 `bot:GetActiveMode()` 搭的,而它是 bot-VM 状态、`.dem` 不带(GH #27 / STOPPER 4 族)⇒ **fixture 只能到谓词为止**,`down 10` 是**分支改变次数的天花板,不是发生率**。(a) 证据要的是录像组在真实对局里看到「armed 侧在这种壳里不开打、baseline 侧开了」。\n\n### ⛔ 给总监的前置\n**P4.2 冻结**:armed **25 > 20** ⇒ 唯一合法裁定是 **FROZEN-HOLD**。本请求自己就预期这个结果,写在 status 里;本轮**没有新增任何 armed id**,成员串仍 25。",
+      "result": null,
+      "director": null,
+      "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。全部本地,不需要任何一波。"
     }
   ],
   "done": [

@@ -282,8 +282,17 @@ function GetDesireHelper()
         return RemapValClamped(J.GetHP(bot), 0, 0.5, BOT_MODE_DESIRE_NONE, 0.98)
     end
 
-    nearbyAllies = J.GetAlliesNearLoc(bot:GetLocation(), 2200)
-    nearbyEnemies = J.GetEnemiesNearLoc(bot:GetLocation(), 2000)
+    -- [roamring] The two halves of ONE parity question -- the only consumer of
+    -- both is the `#nearbyAllies >= #nearbyEnemies` below -- were read off two
+    -- different rings: allies 2200, enemies 2000. The ally ring is named once
+    -- here so the two halves cannot drift apart again, and the enemy half asks
+    -- J.GetRoamParityRadius which ring to use. Disarmed it answers 2000 and
+    -- this pair is byte-identical to what shipped; the defect, the direction
+    -- argument and the corpus domain are in that helper's header.
+    local nRoamParityAllyRing = 2200
+    nearbyAllies = J.GetAlliesNearLoc(bot:GetLocation(), nRoamParityAllyRing)
+    nearbyEnemies = J.GetEnemiesNearLoc(bot:GetLocation(),
+        J.GetRoamParityRadius(nRoamParityAllyRing, 2000))
 
     target, ShouldHelpAlly = ConsiderHelpAlly()
     if ShouldHelpAlly then

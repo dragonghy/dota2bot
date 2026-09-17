@@ -9877,22 +9877,40 @@
     "report": "iterations/reports/hero/20260917T171205Z.md",
     "p44_self_assessment": "(ii) the last piece of evidence a ruling needs -- NOT (i); bots/ has zero lines changed this round, recorded as such"
   },
-    "wkqreach_ruling_20260917": {
-      "owner": "hero",
-      "date": "2026-09-17T19:51Z",
-      "armed": false,
-      "gated_id": null,
-      "verdict": "DO-NOT-ARM(判定完结,候选退役,不是顺延)",
-      "backlog_item": "章程 backlog `-198` 交出的「下一轮主体候选·第 1 条」:WK 的 43u 超伸(`bots/BotLib/hero_skeleton_king.lua:1326/1355`,GH #873 §四,未修)。该条自己附了两句前置 —— 「先解决供帧再落 id」和「先量 43u 值不值一个 id」。本轮量了,三条互相独立的理由都在源码 + 已提交语料里判完,从头到尾不需要一波。P4.4 自评:(ii) 一个判定完结。`bots/` 零行改动。",
-      "headline": "⭐⭐ **这不是团战腿的缺陷,是那张列表的缺陷 —— 而唯一两个能证明它的帧上,开火的是兜底分支,团战腿是黑的。** `nEnemysHerosInRange` 在 `:1326` 建一次,被十个出货点里的四个遍历(团战 3 / 撤退 6 / 刚受伤 9 / 通用兜底 10),四个都不测它交出去的目标的距离 ⇒ 限定在出货点 3 的 lever 不删除超射程施法,只是把它挪走(`lionrreach` 陷阱,GH #617)。⭐ 而这是驱动出来的不是论证的:语料里仅有的两个 band-only 帧上(sven 536.4u / lion 547.5u),真 `X.SkillsComplement` 都真的出了一次超射程施法,而两帧 `IsInTeamFight(bot,1200)` 都为 false;把只有兜底分支才咨询的合取项 `X.wk_IsCatchAllOddsOk` 关掉,两帧的施法都消失 ⇒ 那两次超伸是出货点 10 的。",
-      "leg1_magnitude": "43 不跟 0 比,跟本函数已出厂的松弛比。`X.ConsiderQ` 自己的准入常数是 +80,出现在两个真测距离的出货点上(`:1341` 击杀确认、`:1407` 打架先手),并第三次出现在 `:993` —— 本组自己落地的 `wkqlane` 的 reach 项,其抬头逐字把它叫做 'the GATE, not the search ring'。⇒ 候选要拒掉的整个 band (nCastRange, nCastRange+43] 坐在本函数另外三处称之为「射程内」的范围里面;arm 它会让团战腿比同函数里每一个真测距离的分支都更严。测试 §2 把 43 与 80 两个数都从源码解析出来再断言 43 < 80(不是手打的)。⭐ 实际超伸比 43 还小:语料最坏一例 lion 超 22.5u = 300 移速下 0.075 秒,发生在一个近战英雄(攻击距离 150)朝着他正在与之团战的敌人走。对照真的换到过一个 id 的那次走位:`wkqlane` 的真实帧是对线期走出自家兵线 56.6u,其 +330 环允许本候选的 7.7 倍。",
-      "leg2_relocation": "`wkqlane` 当初查过 `lionrreach` 陷阱并通过(它的 band 落在其它所有出货点的环之外);本候选的 band 落在后面三个出货点自己遍历的那张列表之内,于是同一项检查它不通过。⛔ 列表级修法(把 `:1326` 从 +43 改成 +0)不是同一个修法换作用域,它一次移动四个出货点 —— AGENTS.md 的 `lanefix` 教训(终审波两次 REJECT)。本轮也不提议它。",
-      "leg3_empty_domain": "两个语料目录 144 帧、WK 在世 51 帧(测试 §3 逐个断言):band 里有敌人 6 帧 / 6 个敌人;其中 band 有而施法环没有(band-only,任何收紧唯一可能把施法变成不施法的帧)2 帧;`IsInTeamFight(bot,1200)` 为真 2 帧;交集 0 帧。⇒ 团战腿限定的 id 在档案里零见证帧,过不了迭代循环里那道强制的、便宜的本地验证。",
-      "correction_to_minus197": "⚠️ 本组自己的读数更正:章程 backlog `-197` 把团战谓词记成「WK 0 个帧」。是 2,两个都在 `tests/frames/`(staged 目录),只枚举 `tests/fixtures` 的普查看不见它们。更正不动结论(要紧的是交集,两种数法下都是 0),但引用「0 个团战帧」的人引的是一个更小语料上的陈读数。该更正写进了 §3 的断言消息里,不只写在报告里。",
-      "ratchet": "tests/test_wk_q_teamfight_reach_pricing.lua(8 节,经真 runner `lua5.1 tests/run_tests.lua` 打 `8 tests, 0 failures`;同一次改动手加进 tools/agent/lua_gate_manifest.json)",
-      "mutation_stand": "tools/agent/mutstand_wkqreach.sh — 10/10 CAUGHT / EXIT=0。含两个台子自身的控制(M6 普查不再区分 band 与 +330 环;M10 inject() 不再丢掉已材料化的方法 ⇒ 注入静默不生效)与 M7(团战谓词恒真 —— 唯一会让候选复活的变异体;台子看不见它,「域是空的」就不可证伪)。",
-      "baton": "GH #873 §四 已回答并追评;⛔ 不申请波次;⛔ 不申请供帧 —— `-198` 第 1 条写的「先解决供帧」在腿 2 之后不再是这条候选的下一棒:即使买到团战帧,branch-scoped lever 仍然只是把施法挪给出货点 10。",
-      "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)",
-      "report": "iterations/reports/hero/20260917T195145Z.md"
-    }
+  "wkqreach_ruling_20260917": {
+    "owner": "hero",
+    "date": "2026-09-17T19:51Z",
+    "armed": false,
+    "gated_id": null,
+    "verdict": "DO-NOT-ARM(判定完结,候选退役,不是顺延)",
+    "backlog_item": "章程 backlog `-198` 交出的「下一轮主体候选·第 1 条」:WK 的 43u 超伸(`bots/BotLib/hero_skeleton_king.lua:1326/1355`,GH #873 §四,未修)。该条自己附了两句前置 —— 「先解决供帧再落 id」和「先量 43u 值不值一个 id」。本轮量了,三条互相独立的理由都在源码 + 已提交语料里判完,从头到尾不需要一波。P4.4 自评:(ii) 一个判定完结。`bots/` 零行改动。",
+    "headline": "⭐⭐ **这不是团战腿的缺陷,是那张列表的缺陷 —— 而唯一两个能证明它的帧上,开火的是兜底分支,团战腿是黑的。** `nEnemysHerosInRange` 在 `:1326` 建一次,被十个出货点里的四个遍历(团战 3 / 撤退 6 / 刚受伤 9 / 通用兜底 10),四个都不测它交出去的目标的距离 ⇒ 限定在出货点 3 的 lever 不删除超射程施法,只是把它挪走(`lionrreach` 陷阱,GH #617)。⭐ 而这是驱动出来的不是论证的:语料里仅有的两个 band-only 帧上(sven 536.4u / lion 547.5u),真 `X.SkillsComplement` 都真的出了一次超射程施法,而两帧 `IsInTeamFight(bot,1200)` 都为 false;把只有兜底分支才咨询的合取项 `X.wk_IsCatchAllOddsOk` 关掉,两帧的施法都消失 ⇒ 那两次超伸是出货点 10 的。",
+    "leg1_magnitude": "43 不跟 0 比,跟本函数已出厂的松弛比。`X.ConsiderQ` 自己的准入常数是 +80,出现在两个真测距离的出货点上(`:1341` 击杀确认、`:1407` 打架先手),并第三次出现在 `:993` —— 本组自己落地的 `wkqlane` 的 reach 项,其抬头逐字把它叫做 'the GATE, not the search ring'。⇒ 候选要拒掉的整个 band (nCastRange, nCastRange+43] 坐在本函数另外三处称之为「射程内」的范围里面;arm 它会让团战腿比同函数里每一个真测距离的分支都更严。测试 §2 把 43 与 80 两个数都从源码解析出来再断言 43 < 80(不是手打的)。⭐ 实际超伸比 43 还小:语料最坏一例 lion 超 22.5u = 300 移速下 0.075 秒,发生在一个近战英雄(攻击距离 150)朝着他正在与之团战的敌人走。对照真的换到过一个 id 的那次走位:`wkqlane` 的真实帧是对线期走出自家兵线 56.6u,其 +330 环允许本候选的 7.7 倍。",
+    "leg2_relocation": "`wkqlane` 当初查过 `lionrreach` 陷阱并通过(它的 band 落在其它所有出货点的环之外);本候选的 band 落在后面三个出货点自己遍历的那张列表之内,于是同一项检查它不通过。⛔ 列表级修法(把 `:1326` 从 +43 改成 +0)不是同一个修法换作用域,它一次移动四个出货点 —— AGENTS.md 的 `lanefix` 教训(终审波两次 REJECT)。本轮也不提议它。",
+    "leg3_empty_domain": "两个语料目录 144 帧、WK 在世 51 帧(测试 §3 逐个断言):band 里有敌人 6 帧 / 6 个敌人;其中 band 有而施法环没有(band-only,任何收紧唯一可能把施法变成不施法的帧)2 帧;`IsInTeamFight(bot,1200)` 为真 2 帧;交集 0 帧。⇒ 团战腿限定的 id 在档案里零见证帧,过不了迭代循环里那道强制的、便宜的本地验证。",
+    "correction_to_minus197": "⚠️ 本组自己的读数更正:章程 backlog `-197` 把团战谓词记成「WK 0 个帧」。是 2,两个都在 `tests/frames/`(staged 目录),只枚举 `tests/fixtures` 的普查看不见它们。更正不动结论(要紧的是交集,两种数法下都是 0),但引用「0 个团战帧」的人引的是一个更小语料上的陈读数。该更正写进了 §3 的断言消息里,不只写在报告里。",
+    "ratchet": "tests/test_wk_q_teamfight_reach_pricing.lua(8 节,经真 runner `lua5.1 tests/run_tests.lua` 打 `8 tests, 0 failures`;同一次改动手加进 tools/agent/lua_gate_manifest.json)",
+    "mutation_stand": "tools/agent/mutstand_wkqreach.sh — 10/10 CAUGHT / EXIT=0。含两个台子自身的控制(M6 普查不再区分 band 与 +330 环;M10 inject() 不再丢掉已材料化的方法 ⇒ 注入静默不生效)与 M7(团战谓词恒真 —— 唯一会让候选复活的变异体;台子看不见它,「域是空的」就不可证伪)。",
+    "baton": "GH #873 §四 已回答并追评;⛔ 不申请波次;⛔ 不申请供帧 —— `-198` 第 1 条写的「先解决供帧」在腿 2 之后不再是这条候选的下一棒:即使买到团战帧,branch-scoped lever 仍然只是把施法挪给出货点 10。",
+    "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)",
+    "report": "iterations/reports/hero/20260917T195145Z.md"
+  },
+  "roamring_20260917": {
+    "date": "2026-09-17T2x:xxZ",
+    "issue": "[strategy] GH #887(本轮开;号码 push 后回填,⛔ 未顺号推测)",
+    "defect": "`bots/mode_team_roam_generic.lua:285-286` 在**相邻两行**上把同一个「我这儿是不是被以多打少」的问题拆成两半,而两半用的是**两个不同的圈**:盟友 2200、敌人 2000;两者**唯一**的消费者是 `:398` 的 `elseif #nearbyAllies >= #nearbyEnemies`。⇒ 一个 2150u 外的英雄,是我方就算战力、是敌方就不存在。那层壳是圆面积的 **21%**(2200²/2000²),而且**只往我方加**。",
+    "fix": "`J.GetRoamParityRadius(nAllyRadius, nEnemyRadius)`(`bots/FunLib/jmz_func.lua`,`J.GetEnemiesNearLoc` 正下方):armed(turbo-only)时敌方那半改读**盟友那半已经在用的那个圈**;disarmed 逐字返回 `nEnemyRadius`。调用点把 2200 **命名一次**(`local nRoamParityAllyRing`),两半都从这个名字取,于是**再漂开就会把测试顶红**。",
+    "one_lever": "只动「同一个比较的两半是不是数同一个圆」。**不碰**盟友半径、不碰比较的算符、不碰视野规则、不碰幻象过滤,也**不主张 2200 是团战邻域的正确大小**。",
+    "direction": "**由构造定死**:更大的圈是**超集** ⇒ `#nearbyEnemies` 只能变大 ⇒ `#nearbyAllies >= #nearbyEnemies` 只能 TRUE→FALSE。armed 是对「可以开打」这条许可的**纯收紧**,开不出出厂树关着的分支。⇒ 批测读数若反向,**不能**读成「这个杠杆让 bot 不游走了」,只能读成被拒掉的那些开打本来是好的。⭐ 另一条不对称**同向**,所以加宽敌圈**不会过度修正**:`J.GetEnemiesNearLoc` 走 `UNIT_LIST_ENEMY_HEROES`(受视野限制)并滤掉可疑幻象/Meepo 分身,`J.GetAlliesNearLoc` 走自家 roster 全收 —— 敌方那半**在半径进场之前就已经是被低估的一半**。",
+    "blast_radius": "`nearbyAllies`/`nearbyEnemies` 在全树只出现在**一个文件、四行**(声明 30、赋值 285-286、消费 398);消费者**恰好 1 个**,并被 `tests/test_roamring_parity_ring.lua` 钉成 1(变异体 M7 就是「长出第二个消费者」)。`J.GetRoamParityRadius` 是新函数,调用点 1 个。无 TypeScript 孪生实现。",
+    "domain_on_this_corpus": "`tests/_roamring_sweep.lua`,112 fixture / **1039** live hero 帧:`eshell_nonempty` **57**(2000-2200 壳里有敌人的帧)| `shipped_true` **954** | `wide_true` **944** | **down 10 / up 0**。⛔ `up 0` 之所以是读数,是因为**同一个 tally** 里 `down` 是 10。⭐ **另一种统一法同日量了、没有假设掉**:把盟友圈拉到 2000 同样是单向的,读作 **down 2** —— 域只有五分之一,且它会把这个问题拿到一个**文件自己两半都不用**的邻域里去答 ⇒ 登记在 sweep 里,**不发船**。⚠️ **这是谓词不是分支**:`:398` 上游那串 `bot:GetActiveMode()` 是 bot-VM 状态,`.dem` 不带(GH #27 / STOPPER 4 族)⇒ **10 是分支改变次数的天花板,不是发生率**。",
+    "local_validation": "`tests/test_roamring_parity_ring.lua` **10/10,0.26s**,**全程零 stub**(整条链就是英雄几何 + 队伍,dump 里是地面真值)。真实帧 `f_260819_183613_storm_collapse_lost.lua` / jakiro / t=310.4:唯一活着的队友在 **7499u** 外(另一个 1114u 处已死),dragon_knight **1309.6u**、earthshaker **2151.8u** ⇒ 出厂 `1 >= 1` TRUE(『人数不吃亏,开』),armed `1 >= 2` FALSE。§1 源码三钉(gate / turbo / 两条 disarmed 路径都返回形参、且函数里**没有自己的半径字面量**)、§2 真实帧 + **壳身份钉**(那名壳内英雄必须是 earthshaker 且距离落在 (2000,2200])、§3 三条惰性(disarmed / 别的 id armed / armed 但非 turbo / 另一侧 armed)、§4 **超集用集合包含检查**而不是数大小、§5 两条 control。",
+    "measurement_trap_bought_this_round": "⭐ **`J.WeAreStronger` 在整份语料上恒 FALSE,而它不会举手**:fixture 的每个英雄 `GetAttackDamage`/`GetAttackSpeed` 都是 0(`.dem` 两者都不带,`tests/mock/bot_api.lua` 自己写着),于是 `ourPower` 与 `enemyPower` **逐位都是 0**,`0 > 0` = false。⇒ 任何挂在 `J.WeAreStronger` 上的杠杆(本轮最先看的是「它把我方塔算进 ourPower、从不把敌方塔算进 enemyPower」这条真实不对称)**在 fixture 上不可测**,而它读起来和「测过了没效果」一模一样。**登记不修**:那条塔的不对称是真的,域买不到。",
+    "mutation_stand": "`tools/agent/mutstand_roamring.sh`:**8 抓 / 0 存活 / 控制绿 / 退出码 0**,restore 的 sha256 round-trip 逐文件验证。⛔ 三个变异体第一轮记成「红但消息不对」——实测后发现**先开火的是另一条断言**,`want` 改成真正开火的那条(M4 特意在注释里写明:**不许断言那条跑不到的行**,否则等于给一个没观察到的变异体记分)。按证据纪律 4 单独复核 M4(把 armed 改成返回出厂圈):红的是真实帧那条,逐字 `the enemy half must see the hero in the 2000-2200 shell; it read 1`。",
+    "collateral": "`tools/agent/lua_gate_manifest.json` **手加一行** `seconds = 0.27`(本机 best-of-three 0.257s,**往大记**;标定件 `test_abil1st_first_unit_reader` 本机 0.601s vs 记录 0.58s ⇒ 本机慢 ~1.04x,折算值 ~0.248s)。`budget_seconds` **不动**,且是**从文件算出来的**:in-gate sub-cap 合计(**rebase 到同小时落地的英雄组那一行之后重算的,不是抄 rebase 前的草稿**)= **266.611**(含本行)⇒ 2x = **533.222** ≤ 540.0;`test_lua_gate_budget_backstop.py` **7 checks / 0 failed**。`measured_at` 不动(GH #810)。",
+    "status": "GATED,未入集(P4.2 冻结期 ⇒ 唯一合法裁定是 FROZEN-HOLD)。**成员串仍 25**,本轮**不新增 armed id**。",
+    "owner_priority": "P4.4 (i):本工作单元的主体是一个 `bots/` 行为改动。",
+    "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。",
+    "next_levers_registered_not_done": "(1) **`J.WeAreStronger` 不数敌方塔**:`jmz_func.lua:13549-13561` 把 `bot:GetNearbyTowers(600, false)` 的我方塔加进 `ourPower`,敌方塔一个都不进 `enemyPower` ⇒ 站在敌塔下和站在空地上读数相同,而站在自家塔下有加成。⛔ **fixture 不可测**(见 measurement_trap 那格),需要 dumper 侧补英雄/建筑的攻击力与攻速。(2) **另一种统一法**(盟友圈拉到 2000,down 2)已量,登记在 `tests/_roamring_sweep.lua`。(3) **累加器声明在 `for` 循环体内 ⇒ 每轮重置**:扫描器报 16 行、**14 行真阴性**(逐轮计数);真缺陷 **3 个站点** —— `bots/BotLib/hero_spectre.lua:468` 与 `:530`(后者扫描器漏了,是读文件发现的 ⇒ **行数不是站点数**)、`bots/BotLib/hero_dawnbreaker.lua:560`(变量叫 `furthestAlly`,拿到的是**最后一个活着的队友**)。[hero] 归英雄组,本轮**未开 issue**(本组按铁律 5 不越界派活,登记在此)。"
+  }
 }

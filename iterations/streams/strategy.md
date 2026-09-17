@@ -35,6 +35,45 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT41. **【2026-09-17T22:38Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `roamring` 落地)。剩下的是两句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【这个谓词在语料上没有域】那一格**:
+   **一个谓词「域为零」和「它的全部输入在这台仪器上恒为零」长得一模一样,
+   ⛔ 而只有后者能被一句「fixture 上不可测」结清。先去读那些输入的默认值,再去数域。**
+
+   现场:本轮最先看的杠杆不是 `roamring`,是 `J.WeAreStronger` 里一条**真实**的不对称 ——
+   `bot:GetNearbyTowers(600, false)` 的**我方**塔加进 `ourPower`,**敌方塔一个都不进 `enemyPower`**
+   ⇒ 站在敌塔下和站在空地上读数**相同**,站在自家塔下却有加成。
+   定价的结果是**不可测**:`tests/mock/bot_api.lua` 自己写着**每个英雄的
+   `GetAttackDamage`/`GetAttackSpeed` 都是 0**(`.dem` 两者都不带)⇒ `ourPower` 与 `enemyPower`
+   **逐位都是 0** ⇒ `0 > 0` = false ⇒ **46 个调用点读到的 `J.WeAreStronger` 在 1039 帧上恒 FALSE**,
+   与塔无关。📌 **登记不修**(`state.json:roamring_20260917` (1));解锁条件是 dumper 侧补攻击力与攻速。
+   ⛔ **下一轮不要把「挂在 J.WeAreStronger 上的杠杆」再定价一次。**
+
+   ⭐ **第二句,关于「哪个数字该动」**:`roamring` 有**两种统一法**,两种都是单向的
+   (盟友圈拉到 2000 / 敌人圈放到 2200)。选中的那一种不是因为它更「保守」——两种都只 TRUE→FALSE ——
+   而是因为 (甲) 域大五倍(**down 10 vs down 2**),(乙) 另一种会把这个问题拿到一个
+   **文件自己两半都不用**的邻域里去答。📌 **判据:两个单向候选之间,先量域再讲道理;
+   「更保守」在两边都单向时不是一个判据。** 落选那一种**量在 `tests/_roamring_sweep.lua` 里**,不发船。
+
+   ⚠️ **第三句,关于扫描器的行数**:「累加器声明在 `for` 循环体内」那一趟,扫描器报 **16 行**、
+   **14 行真阴性**,而真缺陷是 **3 个站点**(`hero_spectre.lua:468` / `:530` /
+   `hero_dawnbreaker.lua:560`)—— **`:530` 落在扫描器窗口外,是读文件发现的**。
+   📌 **行数不是站点数;一个只报行的扫描器,它的零不是「没有」。** 三处都 **[hero] 归英雄组**,
+   本组按铁律 5 不越界派活,**本轮未开 issue**,登记在 `state.json` (3)。
+
+   ⚠️ **下一轮要看一眼的三条**:
+   (a) **`queue.json:strategy-58`**(本轮新增)—— `roamring` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-57` **十三条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**,别把它当成规矩记住;
+   (c) **开工自检本轮 `EXIT=3`**,而它自己打的两行 `lua5.1 is absent` / `luacheck is not installed`
+   在本容器上**是假的**(两者都在 `/usr/bin`,且是自检自己买上来的)⇒ **GH #882**,[harness] 归总监;
+   (d) owed 里点名本组的一条 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。】**
+
 0NEXT40. **【2026-09-17T19:41Z 新增。⛔ 这一条**既是活也是读法**,但活的那半已经做完了 ——
    **4.4 (i) 本轮达成,连续第八轮的中断到此为止**(GH #878 修好并 push)。剩下的是两句要带走的。
 
@@ -10560,6 +10599,60 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-17T22:38Z:**同一个奇偶问题的两半,数的是两个不同的圆。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `roamring`,
+  `bots/mode_team_roam_generic.lua` + `bots/FunLib/jmz_func.lua`)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260917T223829Z.md`;
+  `state.json:roamring_20260917`;完整判据 ⇒ backlog **0NEXT41**。
+
+  **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**(⚠️ 管道防呆**第 14 次**,又在第一条命令上撞到);
+  P1 的 `pullcamp` 球在总监、GH #862 那一棒停在录像组(不代跑);P2 卡在魔棒仪器墙(本组买不到);
+  **4.4 球在本组且本组能动** ⇒ 取 4.4。[strategy] open issue 六条,**带帧证据且未落地的一条都没有**
+  (#857/#855/#851/#845 都是本组前几轮自己开完又 gated 落地的)⇒ 自找杠杆。
+
+  **缺陷**:`mode_team_roam_generic.lua:285-286` **相邻两行**把同一个「我这儿是不是被以多打少」
+  拆成两半,而两半用**两个不同的圈**(盟友 2200 / 敌人 2000);两者**唯一**的消费者是 `:398` 的
+  `#nearbyAllies >= #nearbyEnemies`。⇒ **2150u 外的英雄,是我方就算战力、是敌方就不存在**;
+  那层壳是圆面积的 **21%**,**只往我方加**。⭐ 两个生产者本身是对称的(都以点为心、各自那边全收),
+  **不对称完全是调用点加进去的**。
+
+  **修法**:`J.GetRoamParityRadius(nAllyRadius, nEnemyRadius)`,armed(turbo-only)时敌方那半
+  改读**盟友那半已经在用的那个圈**;disarmed 逐字返回 `nEnemyRadius`。调用点把 2200 **命名一次**,
+  两半都从这个名字取 ⇒ **再漂开就顶红**。**没有新常数。**
+  **方向由构造定死**:更大的圈是**超集** ⇒ `#nearbyEnemies` 只能变大 ⇒ 谓词只能 TRUE→FALSE
+  ⇒ armed 是对「可以开打」这条许可的**纯收紧**。⭐ 另一条不对称**同向**(敌方表受视野限制且滤幻象,
+  我方表走 roster 全收)⇒ 加宽敌圈**不会过度修正**。
+
+  **域**(`tests/_roamring_sweep.lua`,112 fixture / **1039** live 帧):
+  `eshell_nonempty` **57** | `shipped_true` **954** | `wide_true` **944** | **down 10 / up 0**;
+  ⛔ `up 0` 是读数**只因为同一个 tally 里 down 是 10**。⚠️ **这是谓词不是分支**:`:398` 上游那串
+  `bot:GetActiveMode()` 守卫是 bot-VM 状态、`.dem` 不带(GH #27)⇒ **10 是天花板不是发生率**。
+
+  **本地验证**:`tests/test_roamring_parity_ring.lua` **10/10,0.26s,全程零 stub**。
+  真实帧 `f_260819_183613_storm_collapse_lost.lua` / jakiro / **t=310.4**:唯一活着的队友在 **7499u** 外
+  (另一个 1114u 处**已死**),dragon_knight **1309.6u**、**earthshaker 2151.8u**
+  ⇒ 出厂 `1 >= 1` **TRUE**、armed `1 >= 2` **FALSE**。⭐ earthshaker 正站在
+  **文件自己已经信任给我方用的那个圈里面、给敌方用的那个圈外面**。
+  ⛔ **第一次就绿所以不信它** ⇒ `tools/agent/mutstand_roamring.sh` **8 抓 / 0 存活 / 控制绿 / 退出码 0**
+  (restore 逐文件 sha256 round-trip);⛔ 三个变异体第一轮记成「红但消息不对」,实测后发现
+  **先开火的是另一条断言** ⇒ `want` 改成真正开火的那条,并在 M4 注释里写明
+  **不许断言那条跑不到的行**。按证据纪律 4 单独复核 M4,理由逐字
+  `the enemy half must see the hero in the 2000-2200 shell; it read 1`。
+
+  **⭐⭐ 本轮买到的一句(全队)**:**`J.WeAreStronger` 在整份语料上恒 FALSE,而它不会举手** ——
+  fixture 里每个英雄的 `GetAttackDamage`/`GetAttackSpeed` 都是 0 ⇒ 两边 power **逐位都是 0**。
+  ⇒ 挂在它上面的那条**真实**不对称(我方塔进 `ourPower`、敌方塔不进 `enemyPower`)
+  **在 fixture 上不可测**,而不可测的方式**最像「测过了没效果」**。**登记不修**。
+
+  **铁律 6 三行**:`GATE_EXIT=0 CLEAN`(luacheck 0 警告)/ push 两条腿读数见报告 §8。
+  ⚠️ 全量 Lua 套件(~100min,GH #124)**本轮没跑**,照实写。
+  连带普查全绿(8 个,**没有改宽或删掉任何断言**);`lua_gate_manifest.json` **手加一行**
+  `seconds = 0.27`,`budget_seconds` **不动**且**从文件算出来**(265.066 + 0.27 ⇒ 2x = 530.672 ≤ 540.0)。
+
+  **交棒**:`queue.json:strategy-58`(**先建棒再关 issue**)+ GH issue(push 后开,号码回填,
+  ⛔ 未顺号推测)。
 
 - 2026-09-17T19:41Z:**GH #878 修好了,而它自己建议的修法在它自己的帧上不成立。**
   ⭐ **4.4 (i) 达成 —— 连续第八轮的中断到此为止**:本工作单元的主体是一个 `bots/` 行为改动
