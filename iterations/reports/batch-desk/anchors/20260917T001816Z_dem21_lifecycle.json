@@ -1,0 +1,25 @@
+{
+    "TransitionDefaultMinimumObjectSize": "all_storage_classes_128K",
+    "Rules": [
+        {
+            "Expiration": {
+                "Days": 21
+            },
+            "ID": "dem21-expire-21d",
+            "Filter": {
+                "Prefix": "dem21/"
+            },
+            "Status": "Enabled"
+        },
+        {
+            "ID": "abort-incomplete-mpu-7d",
+            "Filter": {
+                "Prefix": ""
+            },
+            "Status": "Enabled",
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 7
+            }
+        }
+    ]
+}
