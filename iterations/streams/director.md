@@ -669,6 +669,91 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-17T22:1xZ**:**RULING 73 —— `stayfield2` 退集(25 → 24),处置 `SIBLING-ABSORBED`(新名);结清 §HK.4 那句只活在散文里的「留给它自己的裁定」。**
+  全文 `iterations/reports/director/20260917T220500Z.md`,档案 `test_set.md §HN`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 73**:本轮现读(`tests/_stayfield2_livedomain_sweep.lua`,1039 live hero frames,真 25 串)逐字
+  `SOLO frames=1039 S=24 T=13 margin=19` / `LIVE frames=1039 S=2 T=13 margin=0` /
+  `DELTA s_lost=22 t_gained=0 margin_lost=19` / `WHYS sip_killed=22 other=0`
+  ⇒ 单独 arm 有 **19** 帧边际域、真串 **0**;22 帧 **100% 归 `fieldsip`**(`other=0`);
+  幸存 2 帧**全部**已被 PROMOTED 的 `J.ShouldStayAndRegen` 吃掉(`t_gained=0`)。
+  ⇒ 条件 (a) 在 `fieldsip` armed 期间**结构上买不到** ⇒ 退集(**非 reject**,gate/谓词/wrapper/两份测试逐字保留)。
+  ⭐⭐ **处置名是新的,因为两个 0 同形而解锁条件不同**:`stayfield`(§HK.1 `CALLSITE-EMPTY`)的 0 是
+  **调用点自己的合取**吃掉的 ⇒ **不可逆**;本条的 0 是**另一条 armed id** 拿走的 ⇒ **可逆,逆向量 = 19 帧**。
+  ⛔ 混写会让下一个人拿配错的钥匙去开。
+  ⭐ **退集当轮付了两笔,都是「跑了才知道」**:
+  (甲) 反向 gate 普查(`pulldrag` 向,RULING 13)改串**前后各跑一次** ——
+  `armed 25 → 24`,两次都 `FROZEN 0 / COUPLED 1`,末行逐字 `no armed id hangs under an unarmed gate -- OK`
+  (`fieldsip` 挂 7 个 gate,`fieldbuy` 仍 armed ⇒ 没冻住任何东西);
+  (乙) `tests/test_stayfield2_live_domain.lua` 的 precondition 断言 `armed_has('stayfield2')`
+  **正是被本裁定顶红的那一条** ⇒ 按它自己的注释「重跑 sweep 不要改数字」照做,并把断言**反转而非删除**
+  (`not armed_has('stayfield2')`,文案点名 RULING 73)⇒ **它会红的场合变多了不是变少了**;
+  变异台 **2/2 全杀**(M1 塞回 / M2 抽走 `fieldsip`),基线绿,`test_set.md` 事后 md5 逐位还原;
+  ⭐ **(丙) 第三笔不是我找到的,是 push 闸找到的**(逐字 `STALE ROW: stayfield2 has a row but is not
+  in the armed string; a 退集/promote must stamp retired_at on its row`,`PUSH REFUSED`)⇒
+  `iterations/armed_since.json` 的 `retired_at`+`retired_note` 已补,`test_arm_since.py` 现读
+  `18 checks, 0 failed`;
+  ⭐⭐ **(丁) 还有第四笔,也不是我找到的** —— 开工自检 Lua 检测器腿在 commit **之后**报
+  `RED test_t3_funnel_safe_side.lua … 'stayfield2' left the member string`:协同组 09-16 那个文件
+  把四个幸存帧的结论挂在它 armed 上,并逐字要求 `re-drive them before quoting any of this`。
+  照做,**而 re-drive 的读数就是它自己**:24 串上该文件 `11 tests, 1 failures`,
+  **唯一 failure 就是这条断言本身**,测试 D(四帧驱动)与其余闭合**全部原样通过** ⇒
+  `stayfield2` 从「必须 armed」表移到「必须不 armed」表(`fieldsip` 留原处),现读 `11 tests, 0 failures`。
+  机制上本就该如此(该文件驱动 **TP 腿**,`stayfield2` gate 的是**走路腿** wrapper)——**但这是测量不是猜**。
+  ⭐⭐⭐ **本轮最该带走的一句**:**一次退集有四笔,我自己数出两笔**;第三笔 push 的 python 腿拦下,
+  第四笔自检的 Lua 腿拦下,**四笔的读者各不相同**,而 (甲)(乙) **没有任何一条腿会替我付**。
+  ⇒ **退集/promote 的检查表从今天起是四格不是两格**,且**第四格只有 commit 之后才会被自检报出来**
+  —— 谁在 commit 前收工,谁就把红留给下一个组。
+  ⚠️ **判定完结 1 < P4.2 要的 2,没凑第二条**:armed 24 里今天没有第二条读数齐备的 id;
+  唯一可裁的 `fieldsip` 要动 `FIELD_SIP_MIN_FRACTION`,而 `jmz_func.lua:6259/6330/7175` 三处逐字写着
+  那是 `lanefix` 捆绑形状(gpm −74.5 / −88.7)⇒ 搭车裁它就是那张账单的开头。
+  🔴🔴🔴 **而本轮真正该升级的不是「没凑够 2」(全文报告 §四-bis / `test_set.md §HN.4-bis`)**:
+  **这个指标已经连续 23 个总监轮为 0**,数出来的不是估的(分子 = `origin/main` 上晚于
+  `20260914T160000Z` 的 director 报告名 **23** 份;分母 = `test_set.md` 第 4–7 行历史行显示
+  成员串 `25` 自 09-14T16:xx **一字未动**)⇒ 铁律 9 的 **12 轮门槛在第 12 轮就该响,没响**。
+  ⭐⭐ **归因结构性,两条**:(甲) 巡检读的是「有没有交报告」不是「报告里有没有那件事」,
+  这 23 轮**每轮都交了报告** ⇒ `cadence` 腿永远绿,而**没有任何一条腿在数判定完结**
+  (📌 与 `pullcad` 同族:自动读者查「东西在不在」,不查「它能不能为真」——
+  今天上午我拿这条教训救了 `fieldsip`,下午发现它套在我自己的产出指标上);
+  (乙) 铁律 9 的升级动作逐字是「**点名该组**」,而这一格里「该组」= **巡检者自己**
+  ⇒ **这条闸在自己身上按构造是开路**,是体系里第一条被记录的**自指开路**条款。
+  **处置**:红色升级已写进 `DECISIONS_NEEDED.md`(攒进 W38,⛔ 不单独发邮件);
+  ⛔ 那条「数判定完结」的自检腿**本轮不顺手造**(第二个工作单元),排成下次触发 ⑧。
+  **巡检**:五组全活(`origin/main` 名字序现读,22:00Z):batch-desk 21:28Z / replay-check 18:44Z /
+  strategy 19:41Z / hero 17:12Z / director 19:35Z —— 无掉棒。⚠️ 本容器 clone **是浅的**
+  (`.git/shallow` 存在,`rev-list --count origin/main` = **50**)⇒ **本轮不落任何日期推断**(RULING 62 戊)。
+  **成本**:零 AWS。批测台 21:28Z 结转 MTD **`$92.001`** > 刹车 `$90` ⇒ 零发波(第四十四轮持有);
+  ⚠️ `forecast $118.091` > `$100` 仍在 `DECISIONS_NEEDED.md`,**W38(09-20)邮件带它**。
+  **自检**:⚠️ **管道坑第 36 次 + `timeout` 坑,当轮前两条命令各中一次,两次都被守卫当场拦下**
+  (逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe` / `REFUSED: routine_selfcheck.sh is running under timeout`),
+  第三跑 `nohup … > /tmp/sc.log 2>&1 &` 才真跑。**读数没被污染,但这是同一条,照登。**
+  ⭐ **`trunk-red(python)` 的 UNCERTIFIABLE 本轮追到底了,而它不是我造的**:`PY_LOG` **零条 FAIL**,
+  9 条 UNCERTIFIABLE 全部出自 `test_selfcheck_lua_leg.py` 的 `BUDGET_S = 120` 对上一条 674s 的腿
+  ⇒ **逐字复现 RULING 72 ⑰ / GH #548**,与本轮并发写无关(§HN 之外另记)。
+  **下次触发**:①GH #856 剩 9 候选 ②GH #867 ③GH #240 余下 ④`carry_mark_prose_vs_list`
+  ⑤GH #843 剩 (乙) ⑥GH #859 ⑦GH #810 待裁 1 + (乙)
+  ⑧🔴**新(硬性,两件)**:(a) **判定完结 ≥1**,第一候选是**给 `fieldsip` 单独定价的那个工作单元**
+  (它现在同时挡着 `stayfield2` 重新入集和 owner P2);(b) **造那条数判定完结的自检腿** ——
+  ⛔ 读 `test_set.md` 的**成员串历史行**,**不是**读报告名(读报告名正是 23 轮全绿的那条路),
+  立案面 = 本条 + `test_set.md §HN.4-bis` + `DECISIONS_NEEDED.md` 末节
+  ⑨GH #548 修法是**砍 Top 10**(集中)不是砍成员数;`BUDGET_S=120` 那 9 条 UNCERTIFIABLE 本轮**第二次**复现
+  ⑩P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3 ⑪`path_contains_any` 那两行
+  ⑫`py_manifest_no_carry_baseline_port`(与 ⑤⑦ 同线)⑬**W38 邮件(09-20)**:15/16/18/19 条 +
+  17 条已撤回 + RULING 70+71+72+**73** + ⚠️`forecast $118.091` ⑭`lua_gate_manifest.json` 已陈旧,⛔重测先读 GH #810
+  ⑮⛔**习惯**:直接 `lua5.1 tests/test_x.lua` = 假绿,唯一入口是 `tests/run_tests.lua <filter>`
+  ⑯⛔**新(习惯)**:**自检在后台跑的时候不要写 `iterations/streams/test_set.md`** —— 本轮变异台
+  在自检运行期间改了它三次(2 秒内还原),**这次没造成损害是运气**(python 腿的 UNCERTIFIABLE 已独立归因到 #548);
+  变异台要么等自检跑完,要么整份 copy 到 `/tmp` 里做
+  ⑯-bis ⛔**新(习惯,收尾事故,报告 §六-bis)**:**结构化数据文件(`state.json` 等)的 rebase 冲突
+  不许按行合并** —— 形状每轮不一样(第二次冲突 HEAD 侧有两个新键、两侧都不以文档 `}` 结尾),
+  我那段按行脚本**断言失败没写文件**,而 `git add` + `rebase --continue` 在它后面独立成行
+  ⇒ **带冲突标记的 `state.json` 被提交了进去**(自查发现:`json.load` 报 `line 9880`,
+  `grep -c '^<<<<<<<'` = 2)。⭐ **没有任何一条闸会替它举手**(不在 luacheck 范围、不是 Lua 测试、
+  py 闸没有一条 `json.load` 它)⇒ 它会一路推到 main 再在下一个组那里炸。
+  **规矩**:用解析器从 `origin/main` 那份**重建**;解冲突与提交**分两条命令**,
+  中间必须有一次 `json.load` / `grep -c '<<<<<<<'` 的显式校验。
+  ⑰`stayfield2` 重新入集的机器行 = `owed_executions.json:stayfield2_readmit_when_fieldsip_moves`,
+  ⛔ 它按设计在 `fieldsip` 仍 armed 的日子里就是 OWED,**不要当成掉棒**
 - **2026-09-17T19:35Z**:**RULING 72 —— 交棒 ⑨ 结清 2/3,而「打标签前 TIME the resulting set」量出的那个数不是关于这 2 条的:GH #548 不是「骑在 120s 刀口上」,是 138 文件 / 671.8s = 预算的 5.6 倍。**
   全文 `iterations/reports/director/20260917T193549Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

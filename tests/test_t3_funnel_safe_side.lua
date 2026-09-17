@@ -426,16 +426,33 @@ tests['[ratchet][arm] neither P2 decision-side id nor the rescuer is armed today
     -- The conclusion this round hands to the director: every id P2 完成定义 1
     -- asks for is WRITTEN, and none of them is in the member string. That is a
     -- statement about the arm string, so it is read off the arm string.
+    --
+    -- ⭐ 2026-09-17 (director, RULING 73 / test_set.md §HN): `stayfield2` MOVED
+    -- from the armed list below to the unarmed list here, because this round
+    -- retired it (25 -> 24, disposition `SIBLING-ABSORBED`).  The move is NOT a
+    -- bookkeeping edit -- this assertion's own instruction is "re-drive them
+    -- before quoting any of this", and that was done:  on the new 24-id string
+    -- this file runs `11 tests, 1 failures`, the ONE failure being this
+    -- assertion itself.  Test D (the four survivor frames, driven on the live
+    -- string) and every other closure here passed UNCHANGED.
+    --
+    -- ⛔ That is a measurement, not a guess, and the mechanism says why: this
+    -- file drives the TP leg (`撤退:3`, J.ShouldRegenNotTpHome, gated
+    -- `stayfield` -- already unarmed), while `stayfield2` gates the WALK leg
+    -- wrapper J.ShouldRegenNotWalkHome (jmz_func.lua:6416).  The four survivors'
+    -- closures never passed through it.  `fieldsip` stays below, because the
+    -- 铁证帧 closure IS attributed to its magnitude clause at SipValue 85.
     local csv = ',' .. armed() .. ','
-    for _, id in ipairs({ 'stayfield', 'tprecov', 'tpdeep', 'bagtango', 'bagsalve' }) do
+    for _, id in ipairs({ 'stayfield', 'stayfield2', 'tprecov', 'tpdeep',
+                          'bagtango', 'bagsalve' }) do
         assert(csv:find(',' .. id .. ',', 1, true) == nil, string.format(
             "'%s' is now ARMED. This file's frames are driven on the live "
             .. 'string and their closures are attributed to it being absent; '
             .. 're-drive them before quoting any of this', id))
     end
-    -- ... and the two that ARE armed, because the lina-tower and 铁证帧
-    -- closures are attributed to them being present.
-    for _, id in ipairs({ 'fieldsip', 'stayfield2' }) do
+    -- ... and the one that IS armed, because the lina-tower and 铁证帧
+    -- closures are attributed to it being present.
+    for _, id in ipairs({ 'fieldsip' }) do
         assert(csv:find(',' .. id .. ',', 1, true) ~= nil, string.format(
             "'%s' left the member string. The live-world closures above are "
             .. 'attributed to it being armed', id))

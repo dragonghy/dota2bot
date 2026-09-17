@@ -191,16 +191,38 @@ tests['[ratchet][source] stayfield2 is the walk-leg wrapper and delegates to S']
         .. 'so S is not its predicate and this reading is about the wrong thing')
 end
 
-tests['[ratchet][precondition] both ids are armed TODAY, or this reading is stale'] = function()
-    -- The reading is a statement about a specific member string. If either id
-    -- leaves it, the statement is not wrong -- it is about a world that no
-    -- longer exists, and the honest response is to re-run the sweep, not to
-    -- edit a number. Going red here is that instruction.
-    assert(armed_has('stayfield2'),
-        'stayfield2 left the member string; re-run tests/_stayfield2_livedomain_sweep.lua')
+tests['[ratchet][precondition] the narrowing mechanism is armed TODAY, or this reading is stale'] = function()
+    -- The reading is a statement about a specific member string. If the id that
+    -- does the narrowing leaves it, the statement is not wrong -- it is about a
+    -- world that no longer exists, and the honest response is to re-run the
+    -- sweep, not to edit a number. Going red here is that instruction.
+    --
+    -- ⭐ 2026-09-17 (director, RULING 73 / test_set.md §HN). The ORIGINAL first
+    -- clause here asserted `armed_has('stayfield2')`, and the person who made it
+    -- false is the director: this file's own zero is what retired the id
+    -- (25 -> 24, disposition `SIBLING-ABSORBED`). That assertion was doing real
+    -- work and is NOT deleted -- it is INVERTED, because after the ruling the
+    -- stale-making event is the opposite one. Re-admitting `stayfield2` without
+    -- re-running the sweep is exactly the move this ratchet exists to refuse,
+    -- and the re-admission trigger is registered machine-readably at
+    -- iterations/owed_executions.json:stayfield2_readmit_when_fieldsip_moves.
+    --
+    -- ⛔ What did NOT change: the sweep is still driven with the LIVE member
+    -- string, and `stayfield2` was never a term in it. The gate at
+    -- bots/FunLib/jmz_func.lua:6416 sits in the WRAPPER
+    -- (J.ShouldRegenNotWalkHome), not in S (J.ShouldRegenNotGoHome), so every
+    -- count below is byte-for-byte what it was on the 25-id string -- measured
+    -- on both sides of the edit the same round, not assumed.
+    assert(not armed_has('stayfield2'),
+        'stayfield2 is back in the member string. RULING 73 retired it BECAUSE '
+        .. 'its live marginal domain is empty; re-admission is a director '
+        .. 'ruling that owes a fresh run of tests/_stayfield2_livedomain_sweep.lua '
+        .. 'first -- this number is about the world that retired it')
     assert(armed_has('fieldsip'),
         'fieldsip left the member string -- the narrowing mechanism is no longer '
-        .. 'live and stayfield2 gets its 19-frame margin back; re-run the sweep')
+        .. 'live and stayfield2 gets its 19-frame margin back; re-run the sweep, '
+        .. 'and RULING 73 says that day is when stayfield2 re-admission becomes '
+        .. 'a live question again')
 end
 
 -- ---------------------------------------------------------------------------

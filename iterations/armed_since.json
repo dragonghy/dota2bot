@@ -127,7 +127,9 @@
     "stayfield2": {
       "armed_since": "2026-08-22",
       "precision": "exact",
-      "source": "state.json:stayfield2_20260822"
+      "source": "state.json:stayfield2_20260822",
+      "retired_at": "2026-09-17",
+      "retired_note": "退回出集(armed 25 → 24;`test_set.md §HN`;`state.json:stayfield2_RETURNED_20260917`)。总监 RULING 73,2026-09-17T2x:xxZ,处置 **SIBLING-ABSORBED**(新名)。条件 (a) 在 `fieldsip` armed 期间结构上买不到:本轮 1039 帧现读 `LIVE frames=1039 S=2 T=13 margin=0`,而分解才是理由 —— solo margin **19**,丢掉的 22 帧 **100% 归 `fieldsip` 的量级子句**(`WHYS other=0`),幸存的 2 帧**全部**已被 PROMOTED 的 `J.ShouldStayAndRegen` 吃掉(`DELTA t_gained=0` ⇒ 没有 armed id 在推吸收器)。⛔ **不是 reject**:gate(`jmz_func.lua:6416`)/ 谓词 / wrapper / 调用点 / 两份测试逐字保留,`bots/`+`game/` 零 diff,(c) 成立。⭐ **与同族的 `stayfield`(`CALLSITE-EMPTY`)解锁条件不同,不许混写**:那条的 0 被**调用点自身合取**吃掉 ⇒ **不可逆**;本条的 0 被**另一条 armed id** 拿走 ⇒ **可逆,逆向量已知 = 19 帧**。`fieldsip` 出串或其 `FIELD_SIP_MIN_FRACTION` 下移那天,重新入集变回活问题;机器读的那一行 = `iterations/owed_executions.json:stayfield2_readmit_when_fieldsip_moves`,会举手的闸 = `tests/test_stayfield2_live_domain.lua` 的 `[ratchet][precondition]` 腿(两半都会红)。"
     },
     "fieldbuy": {
       "armed_since": "2026-08-22",

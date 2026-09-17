@@ -1,6 +1,7 @@
 # 当前测试集(测试版 = 稳定版 + 以下 armed)
-lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,stayfield2,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart
-**成员串 25**(上一行,**220 字节**,md5 `850bdee1fde2c42a00eb3c23fd3e04fb`)。本行 **2026-09-14T16:xxZ 的变动:一条 `RETURNED`(退集,26 → 25,`stayfield`)**,总监裁定全文 **§HK**(§HK.1 处置 `CALLSITE-EMPTY`(**新名,与 `fieldsip` 无关**)/ §HK.2 为什么协同组交棒里那句「P2 在 TP 腿上本来就没有病例」**被否决、没有写进 P2** / §HK.3 为什么 `fieldsip` 的量级门限**本轮特意没动**);判定完结 **1**(⚠️ owner P4.2 要的是 ≥2,本轮**没达标**,理由逐字写在 §HK.4,**不许读成 2**)。⛔ **不是 reject**:核谓词 `J.IsFieldRegenSituation` / `J.ShouldRegenNotGoHome`、TP 腿 wrapper `J.ShouldRegenNotTpHome`(`bots/FunLib/jmz_func.lua`)、`tests/test_stayfield_callsite_domain.lua` / `tests/test_stayfield_tpleg_live_domain.lua` **逐字保留**,`bots/`+`game/` 本轮**零 diff**;退集买的是「不再为一份**结构上**买不到的 (a) 证据付 armed 位与波次成本」,**不是**「这个改动是坏的」——(c) 逻辑依据成立且未被取代。⛔ **退集理由不许与 §HJ.1 `DUMP-SCHEMA-BLIND` / §GC 的 `wandlimbo` 仪器墙混着写**(三者的解锁条件互不相同,见 §HK.1 的处置名表)。
+lf_rescue,ownhalf,overchase,wandbleed,blinkflee,odaoe,fieldbuy,pullcad,tpgap,campfarm,abilanc,bbfight,bbshort,campvoid,wkqdmg,fieldsip,creepthink,lionqdmg,cmqreach,illureal,slotarb,slotdust,wandbleed2,arbheart
+**成员串 24**(上一行,**209 字节**,md5 `f7e1812e718d21f09a8b2e7378d4af3c`)。本行 **2026-09-17T2x:xxZ 的变动:一条 `RETURNED`(退集,25 → 24,`stayfield2`)**,总监裁定全文 **§HN**(§HN.1 处置 `SIBLING-ABSORBED`(**新名**,与 §HK.1 的 `CALLSITE-EMPTY` **解锁条件不同**)/ §HN.2 为什么这条退集**恰恰依赖** `fieldsip` 的处置,而 `stayfield` 那条**不依赖** / §HN.3 退集当轮必须付的两笔:`test_stayfield2_live_domain.lua` 的前置断言 + 反向 gate 普查);判定完结 **1**(⚠️ owner P4.2 要的是 ≥2,本轮**没达标**,理由逐字写在 §HN.4,**不许读成 2**)。⛔ **不是 reject**:gate(`bots/FunLib/jmz_func.lua:6416`)、核谓词 `J.ShouldRegenNotGoHome`、走路腿 wrapper `J.ShouldRegenNotWalkHome`、调用点 `bots/mode_retreat_generic.lua:246`、`tests/test_stayfield2_marginal_domain.lua` / `tests/test_stayfield2_live_domain.lua` **逐字保留**,`bots/`+`game/` 本轮**零 diff**;退集买的是「不再为一份**在 `fieldsip` armed 期间结构上买不到**的 (a) 证据付 armed 位与波次成本」,**不是**「这个改动是坏的」——(c) 逻辑依据成立且未被取代。⛔ **解锁条件与 `stayfield` 不同、不许混写**:`stayfield` 的 0 是**调用点自己的合取**吃掉的(谁也拿不回来);本条的 0 是**另一条 armed id(`fieldsip`)**拿走的(**可以被裁定拿回来**),`fieldsip` 一旦出串或其 `FIELD_SIP_MIN_FRACTION` 下移,本条立刻拿回 **19** 帧的边际域 ⇒ 重新入集是一个**活问题**,机器读的那一行在 `iterations/owed_executions.json:stayfield2_readmit_when_fieldsip_moves`。
+*(上一轮的历史行:**成员串 25**,220 字节,md5 `850bdee1fde2c42a00eb3c23fd3e04fb`,一条 `RETURNED`(26 → 25,`stayfield`),裁定全文 §HK,判定完结 1。)*
 *(上一轮的历史行:**成员串 26**,230 字节,md5 `3a438e729b3960382dfd51a89a7da54e`,一条 `RETURNED`(27 → 26,`aimguard`),裁定全文 §HJ,判定完结 1。)*
 *(上一轮的历史行:**成员串 27**,239 字节,md5 `76a888b622124fc5488503aa36ef6b25`,两条 `RETURNED`(29 → 27,`outlatch` + `rotscope`),裁定全文 §HA,判定完结 2。)*
 *(上一轮同日的历史行:**成员串 29**,257 字节,md5 `33047ce53c029f3901e5f63eab872ecb`,一条 `PROMOTE`(30 → 29,`tpcommit`),裁定全文 §GZ,判定完结 2。)*
@@ -6021,3 +6022,126 @@ batch-desk「⛔ 本台不代修」、协同组自己「**第四轮交出去**;�
 ⇒ **作为率是错的,且会一直绿**。欠条:
 `iterations/owed_executions.json:corpus_denominator_drifts_silently_under_one_sided_ratchet`
 (`executor` = 总监自己),立案 issue **GH #841**。
+
+---
+
+## §HN 2026-09-17T2x:xxZ(总监)**RULING 73 —— `stayfield2` 退集(25 → 24),处置 `SIBLING-ABSORBED`(新名)** —— 本节最该被读的是 **§HN.2:为什么这条退集**恰恰依赖** `fieldsip` 的处置,而三天前 `stayfield` 那条**恰恰不依赖** —— 两个 0 长得一模一样,而解锁它们要买的东西没有一样是一样的**;以及 **§HN.3:退集这个动作本身**当轮就要付两笔**,而其中一笔是我自己刚刚顶红的那条断言**
+
+**结案的是 §HK.4 那句散文**:三天前 RULING 37 退掉 `stayfield` 时,逐字把 `stayfield2` 「**留给它自己的裁定**」,并且**说清了为什么不能搭车**。那句话是对的。⛔ **而它只活在散文里**:`owed_executions.json` 全表零命中,此后四轮的「下次触发」清单里**一条都没有它** —— 这正是章程 §2.6 的立案句(「一条只活在别人报告散文里的欠裁,平均寿命是一轮」)**在我自己身上的第二例**。本节同时把那一半也补上(§HN.5)。
+
+**发波侧无风险**:批测台 09-17T21:28Z 现读 MTD `$92.001` > 刹车 `$90` ⇒ **零发波(第四十四轮持有)**,改成员串期间**没有任何波在空中**。
+
+### §HN.1 读数(本轮现读,不是引用)
+
+`tests/_stayfield2_livedomain_sweep.lua`,1039 live hero frames,**真 25 串**(改串之前取),逐字:
+
+```
+SOLO   frames=1039 S=24 T=13 margin=19
+LIVE   frames=1039 S=2  T=13 margin=0
+DELTA  s_lost=22 t_gained=0 margin_lost=19
+WHYS   sip_killed=22 other=0
+```
+
+| 量 | 值 | 它说的那句话 |
+|---|---|---|
+| `SOLO margin` | **19** | 只 arm `stayfield2` 时,它有 19 帧能改变撤退出价 |
+| `LIVE margin` | **0 / 1039** | 真串上**一帧都没有** |
+| `DELTA s_lost` | 22 | 真串拿走的 S 帧 |
+| `WHYS other` | **0** | 拿走它们的**只有** `fieldsip` 的量级子句,没有第二个机制 |
+| `DELTA t_gained` | **0** | 没有任何 armed id 在推那个 PROMOTED 吸收器 —— 幸存的 2 帧是**出厂就被吃掉的** |
+
+`lua5.1 tests/run_tests.lua stayfield2_live_domain` 在**退集前后各跑一次**,两次都 `8 tests, 0 failures`
+(⛔ 走 runner,不是 `lua5.1 tests/test_*.lua` 那条「0.006s 假绿」的路,RULING 72 §一)。
+
+⇒ **条件 (a) 在 `fieldsip` armed 期间结构上买不到**:没有任何一帧上 arm 它能改变 bot 的行为。
+让录像组去 armed 腿核验它,是**花波次买一个答不出来的问题**。
+
+### §HN.2 ⭐⭐⭐ 处置名为什么是新的:两个 0 同形,解锁条件不同
+
+§HA.3 要求处置名**编码「什么能解开它」**。今天四个名字同时活着:
+
+| 处置名 | 域为什么是空的 | 解开它需要 | 可逆吗 |
+|---|---|---|---|
+| `DUMP-SCHEMA-BLIND`(§HJ,`aimguard`) | 流在位置上完整、语义上全空 | 给 dump 加实体身份/谓词字段 | 要**买仪器** |
+| 仪器墙(§GC,`wandlimbo`) | 谓词第一条合取读 item charges,而 charges 两端都不存在 | 改 `main.go` **且**改 `replay_fixture.lua` | 要**买仪器**(两端) |
+| `CALLSITE-EMPTY`(§HK,`stayfield`) | 域被**调用点自己的合取**吃掉 | **什么都不用买** —— 已经答完,答案是 0 | ⛔ **不可逆** |
+| **`SIBLING-ABSORBED`(本节,`stayfield2`)** | 域被**另一条 armed id**(`fieldsip` 的量级子句)拿走 | **一次对 `fieldsip` 的裁定** —— 出串,或其 `FIELD_SIP_MIN_FRACTION` 下移 | ⭐ **可逆,而且逆向量已知 = 19 帧** |
+
+⭐ **这一格就是 §HK.4 拒绝搭车的那个理由,而它三天后仍然成立**:`stayfield` 的 24 个 solo-S 帧里 **23 个被调用点自己的合取吃掉**,`fieldsip` 根本没上场;本条**反过来**,22/22 全是 `fieldsip`(`other=0`)。
+⇒ **把两条写成同一个名字,下一个人会拿一把配错的钥匙去开**:对 `stayfield` 去动 `fieldsip` 是白费力气,对 `stayfield2` 不动 `fieldsip` 就永远开不了。
+
+⛔ **而本节也不去动 `fieldsip`**,理由与 §HK.3 逐字相同、本轮复核仍在树上:`bots/FunLib/jmz_func.lua` 三处(`:6259` / `:6330` / `:7175`)各自独立写着动那个门限会**在同一次编辑里同时移动 `stayfield` / `stayfield2` / `fieldbuy` 三条**,逐字 `which is the lanefix bundle mistake`,账单 gpm **−74.5 / −88.7**、0/4 comps。**它是独立定价的工作单元,不是本次退集的副作用,也不是本次退集的前提。**
+
+### §HN.3 ⭐⭐ 退集当轮必须付的两笔,而第一笔是我自己顶红的那条断言
+
+**(甲) 反向 gate 普查(`pulldrag` 那一向,RULING 13 / §GS.2)。** 「promote 杀掉点名你的 gate,**retire 杀掉挂在你下面的域**」。`tools/agent/inverse_gate_census.py` **改串前后各跑一次**:
+
+```
+前:INVERSE-GATE CENSUS  live gate ids 251  armed 25   FROZEN 0  COUPLED 1
+后:INVERSE-GATE CENSUS  live gate ids 251  armed 24   FROZEN 0  COUPLED 1
+两次末行逐字:no armed id hangs under an unarmed gate -- OK
+```
+
+`fieldsip` 挂在 **7** 个 gate 下(`buyband`/`buydeep`/`buyring`/`buytower`/`fieldbuy`/`stayfield`/`stayfield2`),其中 **`fieldbuy` 仍 armed** ⇒ 本次退集**没有冻住任何东西**。
+⭐ **这一笔是「跑了才知道」不是「想想就知道」**:同一张表上 `stayfield` 已经是个未 armed 的 gate,而 `fieldsip` 照样 `FROZEN 0` —— 靠数路径的直觉会在这里读错。
+
+**(乙) `tests/test_stayfield2_live_domain.lua` 的 `[ratchet][precondition]` 腿,它的第一条断言逐字是 `armed_has('stayfield2')`,而我这条裁定就是把它变成假的那件事。**
+该腿的注释自己写明了正确反应:**「重跑 sweep,不要改数字」**。本轮照做了(sweep 在改串前跑,8 tests 0 failures 在改串后复跑)。
+⇒ 断言**反转而非删除**:新的是 `not armed_has('stayfield2')`,失败文案点名 RULING 73 并要求先重跑 sweep。
+**它买到的东西比原来那条更贵**:原断言防的是「世界变了而数字没重测」,新断言防的是「**把一个被裁定为空域的 id 悄悄塞回成员串**」——而后者正是 P4.2 冻结期最想拦住的动作。
+另一半 `armed_has('fieldsip')` **逐字保留**,并补上一句:`fieldsip` 出串那一天,就是 `stayfield2` 重新入集变回活问题的那一天。
+
+**变异台 2/2 全杀**(临时改 `test_set.md` 第 2 行,单独 `pcall` 那一条测试体,事后 `md5sum` 逐位还原,仓库文件未被留下任何改动):
+
+```
+M0 基线(stayfield2 未 armed)          ok=true
+M1 把 stayfield2 塞回成员串            ok=false  "stayfield2 is back in the member string. RULING 73 …"
+M2 把 fieldsip 抽出成员串              ok=false  "fieldsip left the member string … RULING 73 says that day is …"
+```
+
+⛔ **不要把 (乙) 读成「为了让我的裁定绿而改别人的测试」**:改法的方向是**增加而不是减少它会红的场合**,而新增的那个场合(重新入集)**恰好是本裁定唯一可逆的那一半**。
+
+### §HN.4 判定完结 **1** < owner P4.2 要的 **2**,如实登记,没凑第二条
+
+本轮完结 1 条(`stayfield2`)。⛔ **没有凑第二条**,而且这次的理由**比 §HK.4 那次更硬**:
+armed 24 里今天**没有第二条读数齐备的 id**。`fieldsip` 自己是可裁的,但裁它要动 `FIELD_SIP_MIN_FRACTION`,
+那是 §HN.2 末段那个 `lanefix` 形状的独立工作单元,**在同一轮里搭车裁它,就是那张 −74.5 / −88.7 的账单的开头**。
+
+### §HN.4-bis 🔴🔴🔴 而本轮真正该升级的不是这一条:**这个指标已经连续 23 个总监轮为 0,而做巡检的就是我自己**
+
+⛔ **本节初稿写的是「连续多轮」,那是散文;数出来是 23。** 取法(可复核,只用文件名与文件内容,**不用 git 历史** —— 本容器 clone 是浅的,RULING 62 戊):
+
+- **分子**:`git ls-tree -r --name-only origin/main iterations/reports/director/` 里晚于 `20260914T160000Z` 的报告名 —— **23 份**(`20260914T163610Z` … `20260917T193549Z`)。
+- **分母 = 0 的证据**:本文件第 4–7 行的历史行逐字给出成员串的全部变动点:`29 → 27 → 26 → 25`(`§GZ`/`§HA`/`§HJ`/`§HK`),**`25` 这一行自 2026-09-14T16:xx 起一字未动到本轮**。⇒ 这 23 轮里 promote / reject / 退集**一条都没有**,而 P4.2 逐字把总监的产出指标定成这三样的计数。
+
+🔴 **升级(铁律 9 的 12 轮门槛,本轮补开)**:该门槛**在第 12 轮(约 09-15T22:04Z 那一份)就该响**,
+**它没响,而且不是因为没人看** —— 每一轮的巡检段我都写了,写的是**别的组**的 `cadence GAP`。
+
+⭐⭐ **归因,而且它是结构性的、不是态度问题**:
+
+1. **巡检的读数是「有没有交报告」,不是「报告里有没有那件事」。** 这 23 轮**每一轮都交了报告**,
+   所以 `cadence` 腿**永远绿**;而 P4.2 的指标是**判定完结数**,**没有任何一条腿在数它**。
+   ⇒ 📌 与 `pullcad` / §HN.3 (甲) 同族第 N 例:**自动读者查的是「东西在不在」,不是「它能不能为真」。**
+2. **铁律 9 的升级动作逐字是「点名该组」,而这一格里「该组」= 巡检者自己。**
+   ⇒ 唯一会举手的人和唯一该被点名的人是同一个,**这条闸在自己身上按构造是开路**。
+
+⇒ **本轮的处置(两件,都当轮落地)**:
+(甲) 本条红色升级写进 `iterations/DECISIONS_NEEDED.md`(攒进 W38 那封,**不单独发邮件**,周上限 1 封);
+(乙) ⛔ **不在本轮顺手造一条「数判定完结」的自检腿** —— 那会是本轮第二个工作单元,
+且它的正确形状(读成员串历史行 vs 读报告)需要自己的设计,**已写进「下次触发」第 ⑧ 条,带这一节的行号作为立案面**。
+
+⛔ **不许把「本轮完结了 1 条」读成这一条已经解决**:1 ≠ 2,而且 23 轮的洞不是被一轮填上的。
+
+### §HN.5 §2.5 / §2.6 三条投递 + 那条本该三天前就存在的机器行
+
+(i) **`iterations/owed_executions.json:stayfield2_readmit_when_fieldsip_moves`** —— 新行,`executor` 总监自己,
+`kind: manual`(理由写在 `done_when_note`:本行的**否定半可读但答案恒为 OWED**、**正半不可读**,
+装 `json_value` 只会让它从落行当天起就绿,正是 `py_manifest_no_carry_baseline_port` 拒绝的同一件事);
+**真正会举手的东西装在测试里不在登记表里**(§HN.3 (乙))。
+(ii) **`iterations/state.json:stayfield2_RETURNED_20260917`** —— 档案。
+(iii) 本节全文 + 第 2/3 行成员串三元组(24 / 209 字节 / md5 `f7e1812e718d21f09a8b2e7378d4af3c`)。
+(iv) 协同组活 issue 线程追评 —— MCP 可用则追评,受限时按铁律 11 写进报告不空转等待。
+
+⛔ **queue.json 本轮没有对应的 `director` 字段可写**:全表没有一条以 `stayfield2` 处置为 claim 的请求行
+(`strategy-7` 的 bundle 含它,但那条问的是 `bagsalve`)。**这不是漏投,是投递面不存在** ——
+而「投递面不存在」正是 §2.6 要求落一行 `owed_executions.json` 的那种情况。
