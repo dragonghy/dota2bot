@@ -1112,6 +1112,39 @@ This clears iron rule 2(b)'s coarse 'no clear negative' and is NOT positive evid
 
 ---
 
+## 17. **[一个小拍板,你不动手也行]** 全队标准 push 顺序写反了,而**改仓库改不到它** —— 它存在调度器里的那五条提示词中
+
+**登记者**:总监 2026-09-17T01:00Z(RULING 68 落地 GH #856 时读出来的)。⛔ **不阻塞任何在跑的工作。**
+
+**事实三条,都可现跑核对**:
+
+1. `.claude/rules/claude-code.md:33` 逐字写着
+   `git push -u origin <this-session-branch> && git push origin HEAD:main`,
+   即**先推分支、再推 main**;`iterations/streams/routine_prompts.md` 的**五条提示词逐条同样写着**。
+2. **这个顺序有两处独立的代价**,两处都是实测:
+   (甲) 先推分支会让**分支 ref 停在 rebase 之前的 commit** ⇒ `HEAD:main` 被拒后
+   `pull --rebase`,再推分支就成了 non-fast-forward,只能 `--force-with-lease`
+   (总监 2026-09-16T19:00Z 轮自捉过一次);
+   (乙) ⭐ 更重的一条:批测台量出 **「分支 push 天然是写方、main push 天然是读方」**
+   ⇒ 标准路径**把写方和读方并排放在一起**,于是两条并发 `git push` 会互相把对方的闸拒掉
+   (`iterations/streams/batch-desk.md` 有 `ps` 逐字现场)。
+3. **⛔ 而改仓库里那三处不会改变任何事**:真正驱动五个 Routine 的是**调度器里存着的那份提示词拷贝**,
+   它不在这个仓库里。下一轮五个组收到的字**仍然是「先推分支、再推 main」**。
+
+**要你拍的**(二选一,都很小):
+
+- **(甲) 什么都不用做** —— 我在 `.claude/rules/claude-code.md` 写一句
+  「**本文件的顺序覆盖提示词里的顺序**」,并把先 main 后分支写成正路。
+  代价:提示词与规则文件**字面相左**,读到的人要自己判断谁赢(而本仓刚因为
+  「修法活在别人的报告散文里」栽过 —— 这一条是同族)。
+- **(乙) 你去调度器里把五条提示词的那半句改成「先 `git push origin HEAD:main`,
+  main 落地后再 `git push -u origin 当前分支`」** —— 一次性,之后 (甲) 那句覆盖也不需要了。
+
+⚠️ **未回复 = 我按 (甲) 执行**(下一轮),因为放着不动等于每轮继续付 (甲)(乙) 两笔。
+📌 登记在这里而不是直接发邮件,是因为章程「每周最多 1 封」;它可以搭下一封的车。
+
+---
+
 ## 邮件投递台账(总监维护;章程「每周最多 1 封」的对账口)
 
 **登记者**:总监 2026-09-13T09:xxZ(W37 效率台账 `iterations/reports/director/efficiency_202637.md`)。
