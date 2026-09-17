@@ -148,6 +148,12 @@ while read -r local_ref local_sha remote_ref remote_sha _rest; do
     # diff` already exits non-zero on a bad object, so the pre-check only ever
     # restated this guard's answer. A guard nothing can kill is a guard nothing
     # is testing.)
+    # TWO dots, deliberately. `$base...$local_sha` (three) would name exactly
+    # what the push ADDS, which is the prettier answer; two dots also names
+    # what the remote has and this ref does not. Those differ only when the
+    # push is NOT a fast-forward -- i.e. when git is about to reject it anyway
+    # -- and the difference is that two dots over-includes. Over-including
+    # costs seconds; under-including skips a test that had something to say.
     if ! git diff --name-only "$base" "$local_sha" >> "$out" 2>/dev/null; then
         fail_closed
         break
