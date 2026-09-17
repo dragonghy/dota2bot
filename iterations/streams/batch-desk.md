@@ -12955,3 +12955,97 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ⛔ 也不据此放宽它们。推的理由是另一类事实:**铁律 2 的三条 promote 条件之一 (b) 在现有语料上恒真**,
   而它是**全队每一次 promote 都要过的那道闸** ⇒ 影响的不是这一轮,是**已经做过的和将要做的每一次 promote 决策**。
   详见 `iterations/reports/batch-desk/20260917T180617Z.md`。
+- 2026-09-17T21:28:13Z:**刹车第四十四轮持有;零发波、零收割欠、零泄漏。⭐⭐⭐ 本轮两件咬合的实质:
+  (甲) 上一轮发的 GH #883 是一次重新发现,当轮已在 issue 上更正;(乙) 把它唯一还剩边际价值的那条
+  「跨波普查」真做了,而普查把它的头号结论翻了个面 —— 断点不在日子上,在估计量上。**
+  **(一) 预算**:闸 (iii) `FENCE_EXIT=3`,逐字 `actual (MTD) : $92.163   <- re-read this run, never cached` /
+  `pending waves : $0.000` / `planned : $1.100` / `projected total : $93.263` /
+  `operative ceiling: $90.00 = min(fence, brake)` / `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence.`;
+  RULING 5/6/7 三行照抄(`17 region(s) read ... COMPLETE` / `records after 2026-09-17T08:41:13Z ... clock from
+  budget snapshot` / `CERTIFIED (0 accruing instances account-wide, read this run)`),⭐ 钟没有降级,⛔ 未传任何 `--no-*`。
+  **⭐ 快照解冻**:MTD `$92.163` / 戳 `2026-09-17T19:59:13Z`,对上一轮(`$92.001` / `13:24:58Z`)**两量都动了**
+  ⇒ **+`$0.162` / +6.5708h = `$0.592/天`**,落在已登记的 `$0.40–0.92/天` 带内 ⇒ 空转日样本 +1,
+  ⛔ 不据一个点收窄该带;月末兜底日 `2026-09-27T00:00Z` 原样结转、⛔ 未收窄。**headroom 对 `$90` = `$-2.163`**。
+  GH #801 四行整块照抄(`>= $35, but headroom to the $90.00 brake is $-2.163` / `< $1.10 (cheapest wave) —
+  CE confirmation SKIPPED, NOT passed (GH #801).` / `Nothing can launch at this MTD, so confirming it buys nothing.` /
+  `Resumes by itself as soon as headroom >= $1.10.`),**SKIP 不是 pass**,欠条
+  `gh801_confirm_headroom_first_live_read` 仍 **OWED**,⛔ 未用 `COST_CONFIRM_AT=999` 自救。`alpha = 0` / `beta = 0` 本轮实读。
+  **(二) 收割零欠**:`validation/` **592 对象**、最新对象仍 `tpcommit+46ids-24c30245be01_20260907_2218_run.log`
+  (`2026-09-07 22:18:52`);`soak/` **72,079 键**,与四十三轮整桶普查**逐位相同** ⇒ 零新对象。
+  `recover_verdict.py` 未跑(**没得收,不是漏收**)。在跑波次:**无**;本月无新波次。
+  **(三) ⭐⭐⭐ GH #883 是重新发现(当轮自我更正,⛔ 不留到下一轮)。** 诊断对,新颖性不对:
+  ① 恒等式本体 = **GH #352**,总监 2026-08-31 裁完(§CT),`recover_verdict.py:367-395` 注释逐字
+  `winrate == 0.500 EXACTLY, whatever the arm does -- an identity, not a measurement`;
+  ② #883 建议 2(饱和守卫 `max ≥ 0.95`)**已落地且更严** —— `recover_verdict.py:556-565`
+  `winrate_channel = "RECOVERED" if share >= 0.20 else "DEGENERATE"`(等价 `max ≥ 0.80`);
+  ③ #883 建议 3 **已是 stderr 硬话** `MUST NOT be cited as rule 2(b) support until the channel recovers`,
+  第二半(`winrate_forced_seeds` / `comps_better.winrate_measurable`)总监 2026-09-10 就 #352 补裁并落地;
+  ④ #883 建议 1(跨波普查)**本流自己交付过** —— `20260912T121100Z.md` §六 **事实 6** 纵向十波
+  W55→W69 合计 radiant **58** / dire **1751**(**0.0321**),读的是各波 `*_verdict.json:winrate_side_census` 未手算;
+  ⑤ #883 (三)(四)分别 = 同报告 **事实 3 / 事实 5**(`econ_winner==winner` **122/224 = 0.5446`;radiant 经济领先
+  **105** 局只赢 **3** = **2.9%**);⑥ ⭐ #883 自陈「未测到机制」,而**机制五天前就分解完了** ——
+  同报告 **事实 2**:按候选臂所在侧分腿,dire 胜率 **0.9928**(臂在 radiant,n=138)vs **0.9839**(臂在 dire,n=62),
+  候选臂自己的胜率从 **0.0072** 跳到 **0.9839** ⇒ **这个通道量的是地图不是臂**;事实 4 还多给了瞄点
+  (radiant 每局丢 **6.20** 塔 vs **4.47**,首塔中位数 **512s** vs **672s**)。
+  ⭐⭐ **失效环节不是「没人跑」是「跑了、发表了、没人读」**:W69 轮跑过 `recover_verdict.py` 并把读数印在报告里
+  (`winrate_side_census` 2 处 / `winrate_measurable` 2 处 / `DEGENERATE` 3 处),而 `20260917T180617Z.md` 里
+  **`W69` / `20260912T1211` / `352` / `winrate_channel` / `winrate_headroom` 全部零命中** ⇒ 与 GH #205/#171/#113
+  同族但换了环节。⛔ 缺的不是立法也不是再跑工具,是**发新 `[batch]` issue 前检索一次既有语料**
+  (`grep -rn winrate_ iterations/reports/batch-desk/` <1s)。⚠️ **本台把这条算在自己头上**(#883 是本座位上一轮发的)。
+  **唯一没有前例的部分照登**:种子 13027「radiant 平均净领先 +30,600 金仍 54/56 负」是**单粒极端值**,
+  是同一现象更刺眼的实例,**不是新现象**。
+  **(四) ⭐⭐⭐ 跨波普查,断点在估计量上不在日子上(零 EC2,只读)。** 方法:`soak/` 30,416 个
+  `analysis.json` 按 **run 分层**,430 个 run × 首/中/末 3 局 = **1,289 局**实读,覆盖 **2026-07-19 → 09-12,31 天**。
+  **表面断点 08-26**:界前(`< 20260826`)600 局 radiant **0.5650**(13 天 / 201 run);
+  界后 686 局 radiant **0.0466**(18 天 / 229 run);逐日 08-24 `0.7222` → 08-25 `0.3958` → **08-26 `0.0417`**,
+  之后 **18 天没有一天 ≥ 0.20**(工具判 RECOVERED 的线),per-day min **0.0000** / max **0.1333**,
+  恰好 0 的日子 = 08-31 / 09-10 / 09-11 / 09-12。
+  **⭐⭐ 但断点是 `winner_by` 换了**:界前 `economy_10min_cap` **528** / `engine_natural` 24 / `engine` 38 / 缺 12,
+  `natural_end` True **24** / 缺 578,`duration_s` 均值 **736s**;界后 `engine_natural` **686** / `engine` 1,
+  `natural_end` True **686**,均值 **1549s** ⇒ 换掉的不是 bot,是**「谁赢」的定义**。这条线 = 在册的
+  `state.json:cap25_boundary_20260825`,其 `boundary_rule` 逐字判**跨线池化 void, not weak**
+  ⇒ ⛔ **一次不分界的「历史全部波次」winrate 普查是作废的,而那正是 #883 建议 1 照字面做会产出的东西。**
+  **⭐⭐⭐ 判别子在界前同一纪元内自证**:界前 600 局里有 **24 局**恰好自然结束(全在 **2026-08-25**,8 个 run):
+  `economy_10min_cap` 528 局 → radiant **0.6193**,`engine_natural` 24 局 → radiant **0.0833**
+  ⇒ **同一纪元、同批 run 时段,两个估计量差一个量级 ⇒ 日子不是混杂因子。**
+  ⇒ ⭐ **结论翻面:这个通道从来没有一天是可测的;cap 10→25 没有弄坏它,只是让它开始量真东西。**
+  界前那段看着健康的 `0.37–0.75` **不是健康通道,是另一个估计量** —— 而它正是 W69 事实 5 证明过的硬币。
+  **披露(⛔ 不是裁定)**:**2026-08-26 之前任何引用过 winrate 的 promote / (b) 判定,引的是「10 分钟封顶的
+  经济代理」不是胜负**;⛔ 本台不点名是哪些、⛔ 不重开任何已关档裁定。⛔ **经济四量不受影响**,本节只针对 winrate。
+  **诚实边界四条**:① 分层抽样 **1,289/30,416 = 4.2%**、每 run 3 局 ⇒ ⛔ 不主张任何单日小数位
+  (但 §4.2 的 `winner_by` 对比 528/602 vs 686/687 是**结构性**的,纪元差 0.565 vs 0.047 也远大于抽样误差);
+  ② **关键格 n=24**(8 run / 1 天)⇒ **薄**,主张的是「和 0.6193 不在一个量级」不是那个小数位;
+  ③ ⛔ **未测到机制**(「bot 打 radiant 更差」vs「harness 侧别假设」本轮**未**推进,与 W69 诚实边界 1 逐字相同);
+  ④ ⛔ **未读那条改 cap 的 commit** —— 界别是从 `winner_by`/`natural_end`/`duration_s` **三字段实读**再与在册界线对上,
+  ⛔ 不主张「是 cap 那一个改动造成的」。
+  **(五) 局数**:本月无新波次;本轮实读 1,289 局(分层抽样,**不是**波次局数)。
+  **(六) 成本(铁律 1 三段式)**:**零 EC2 / 零 CE / S3 读取 `~1,362` 个对象(出网未计价)** ——
+  `s3 ls --recursive` 2 次(592 + 72,079 键 ≈ **73 LIST**,不下载)+ `analysis.json` GET **1,289**(≈**7.4 MB**,
+  单对象 ~5.7 KB)+ 结构探针 1。⚠️ **放弃全量普查的实测理由**:单流 `s3 cp --recursive` 仅 **0.35 obj/s**
+  ⇒ 30,416 局需 ~24h;`xargs -P 24` 实测 **4.2 obj/s**,1,289 局 **~5.5 分钟**。**本轮新增 EC2 计费 `$0.00`**。
+  **(七) 泄漏五条独立路径全零(⛔ 不合并成一句)**:① `check_costs.sh` 自带区块**空**;
+  ② `describe-instances` 五态不加 tag 过滤 ⇒ `INST_EXIT=0` / **`LINES=0`**;
+  ③ `describe-spot-instance-requests State==open` ⇒ `SIR_EXIT=0` / **`SIR_LINES=0`**;
+  ④ 闸 (iii) 账户级 **17 区 COMPLETE** + `CERTIFIED (0 accruing instances account-wide)`;
+  ⑤ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏)。
+  **(八) 开工自检**:⚠️ **管道自卫第 36 次在当轮第一条命令上生效**(逐字 `REFUSED: routine_selfcheck.sh
+  stdout is a pipe; exit 2, nothing checked.`),改重定向后才真跑。收尾仍停在
+  `=== trunk health (fast Lua detectors) ===`(STILL RUNNING);已到手:该腿自述
+  `UNCERTIFIABLE -- luacheck is not installed, so the behavioural half did not run.`,
+  5a0 `NOTE 138 file(s) ... in 120.1s (budget 120s)` ⇒ **5a/5a2/5b/5c/5d/5e/5f/5g 共 9 条 UNCERTIFIABLE**。
+  ⛔ **这不是 pass,也不是 trunk 红**;⛔ 本轮 `bots`/`game`/`tests`/`tools` **一行未改**,故不阻塞交付,⛔ 不空转等它。
+  ⭐ **两条覆盖普查本轮都跑到了(实读,不是结转)**:`LUA GATE COVERAGE disk 508 | push gate 344 | 开工自检 leg 138 |
+  known_red 6`、`UNCOVERED 113 of 508 (22%) {'no_manifest_row': 51, 'timed_out': 60, 'too_slow': 2}`、
+  **`UNCOVERED SET GREW -- 1 file(s)`** → `NEW UNCOVERED no_manifest_row tests/test_fieldsip_transfer_receiving_site.lua`;
+  `PY GATE COVERAGE disk 149 | push gate 130 | leg 149`、`UNCOVERED 0 of 149 (0%)`。
+  对上一轮:Lua `disk 507→508` / `push gate 342→344` / **`UNCOVERED 115→113`**(缝窄了 2)**但新长出 1 个**
+  (`fieldsip_transfer` 家族第七次被点名)⇒ ⛔ **净变化好不等于没有新洞**;Python 侧 `0 of 149` 逐位相同。
+  **(九) 发表纪律**:GH **#883** 已发表更正评论(§三 对照表 + §四 普查);⛔ **未开新 issue**
+  (本轮两件都是对 #883/#352 的补充,**开新 issue 正是本轮在反对的那件事**);⛔ 未追评 #779
+  (戳动了但 `alpha=0`/`beta=0` 无变化,无新事实);`claim_precheck.sh` 读数见报告 §八。⛔ 未用任何 bypass。
+  **(十) 没做的事**:⛔ 未发波;⛔ `bots`/`game`/`tests`/`tools` 一行未改(想过给 `recover_verdict.py` 加
+  「跨 cap 界池化则拒绝出 winrate」的闸,**否掉**:判据与拦截点是总监的事,且本轮全部说服力恰恰来自
+  「仪器已经够了,缺的是读它」);⛔ 未关 #883;⛔ 未做全量 30,416 局普查(理由 §六,已作下一棒);
+  ⛔ 未重开任何已关档 promote 裁定;⛔ 未改 `OWNER_PRIORITIES.md` / `state.json` / `test_set.md`;
+  ⛔ 未删 09-05 两前缀(仍是 #881 验收语料)。
+  详见 `iterations/reports/batch-desk/20260917T212813Z.md`。
