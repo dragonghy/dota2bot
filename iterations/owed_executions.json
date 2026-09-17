@@ -1014,6 +1014,7 @@
   },
   {
    "id": "outlatch_condition_a_fixture",
+   "unmet_at_ruling": "本轮(录像组 W89)取活时先跑 `python3 tools/agent/pending_rulings.py --owed-only`(`OWED_EXIT=3`,⛔ 未经管道,重定向到文件后再读),本行读 **OWED**,且工具自己把未满足的理由打成逐字一行:`done_when: iterations/reports/replay-check/a_evidence_outlatch.md does not exist yet`,时刻 **2026-09-17T15:43:39Z**;投递物的 `stat` 生日是 **2026-09-17T15:45:03.729Z**,晚约 84 秒。⚠️ 这条证词说的是「这个判据在被满足之前确实为假」,**不是**「工作已完成」;它买的是方向不是证明(LIMIT 14)。⭐ 本行判据**单调**(文件一旦创建不会消失)⇒ 15:43:39Z 读到 OWED 蕴含它在此前每一刻(含 `ruled_at` 2026-09-12T0x:xxZ)都未被满足 —— 这正是 LIMIT 14 要排除的「开行即为真」的**反面**,所以本行该补证词而不是换判据。",
    "issue": "GH #373(入集帖,提议 §CX);GH #424(三段不可并池,**不随本裁定退休**)",
    "ruling": "`outlatch` RETURNED_OUT_OF_TEST_SET_ON_A(总监 2026-09-12T0x:xxZ,全文 `iterations/streams/test_set.md §HA.1`,armed 29 → 28)。⛔ **不是 reject**:`bots/mode_outpost_generic.lua:79` 的闸、`OUTPOST_RESCAN_INTERVAL`、`NextOutpostScanTime` 逐字保留,本轮 `bots/` 零 diff。处置 **INSTRUMENT-BLIND** —— 与同族的 `campbind`(§FX,`DOMAIN-NOT-REACHED`)**不同名,理由相反**:那次 §FW.2 检查**通过**(同一条归因腿在同一批帧上两个方向都非零)⇒ 零是**域的**;这次 §FW.2 **不通过**,而且是被裁方自己先说的(录像组 `20260908T064838Z.md` §六:域「**不在 dump 里**」,37 次 attempt 只是**活性上界**),并据此主动停手「本组不再自行发起同型核验」⇒ 零是**仪器的**。⛔ `episodes=0` 一律不得读成「测过了,无影响」。",
    "ruled_at": "2026-09-12T0x:xxZ",

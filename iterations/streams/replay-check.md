@@ -19681,3 +19681,52 @@
     **换句柄英雄**(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、
     W84 §四「折叠 key 合同变成闸」(总监)、W86 §「promoted default 的例行可见性」(总监编排)、
     W87 §「报 ACTIVE 带 arm 必须并排报安慰剂带 arm」(总监编排)。
+- **2026-09-17T15:55Z(W89)**:批测台**连续第四十二轮零发波**(15:19Z 报告逐字「刹车第四十二轮持有;
+  零发波、零收割欠、零泄漏」,MTD `$92.001`)⇒ 无未检新局;按交棒第 0 条先核 owed 行是否已交付,
+  读数逐字 `done_when: iterations/reports/replay-check/a_evidence_outlatch.md does not exist yet`
+  (`OWED_EXIT=3`,15:43:39Z,未经管道)⇒ **真欠**,本轮交付。
+  报告:`iterations/reports/replay-check/20260917T155500Z.md`;投递物
+  `iterations/reports/replay-check/a_evidence_outlatch.md`;测试
+  `tests/test_outlatch_latch_real_frame.lua`(8 tests / 0 failures);
+  变异台 `tools/agent/mutstand_outlatch.sh`(新建)。该行现读 **DONE**,`unmet_at_ruling` 证词已补。
+  - **判词**:`VERIFY id=outlatch verdict=WORKING episodes=1 scope=POSTCONDITION-ON-REAL-FRAME domain=NOT-OBSERVED`。
+    真帧 `20260905_010205_slot7`(**W47**,seed 4763,t=1350.5,subject luna = **baseline 腿**)。
+    **shipped**:空扫之后 6 个游戏秒 / 61 个 tick **只扫过 1 次**,出价恒 `0.000`,
+    **连 outpost 变成可枚举之后也仍是 1 次、仍是 `0.000`** ⇒ `GetClosestOutpost` 此后恒答 `nil`,
+    `Think()` 的 `:117` 连续指令这一局再也到不了,**无报错、无重试、无声音**。
+    **armed**:第一个游戏秒结束时扫 **2** 次(= 间距 1.0s,不是每 tick),
+    第 **3** 次扫描看见 outpost ⇒ **闩关上**、模式活过来、出价 **`0.720`**
+    (断言用 fixture 自己的几何复算 `RemapValClamped(...)` 比到 `1e-9`,不是打进去的常数)。
+    **对照**:第一扫就看见时两腿**逐位相同**(同 1 次扫描、同 `0.720`)⇒ 正常路上零代价。
+  - ⛔ **买不到的两样,写在判词里**:(1) **域** —— 空扫是 loader 声明的供给缺口
+    (`_outpost_gate_sweep.lua` 本轮复跑:112 份 fixture / 1039 条目 / **0 个 outpost**),
+    §HA.1 的 **INSTRUMENT-BLIND 本轮不退休**,`domain=NOT-OBSERVED` 就是这个意思;
+    (2) **可达性** —— `IsEnemyTier2Down` 为真是 harness 事实(切片只带两座 watch tower),
+    两腿相同且 `[frame F1]` **断言它**而不是假设它。⛔ 这行 VERIFY 不得读成「可以 promote」。
+  - ⭐ **同时交掉第二根棒**:`outlatch_three_era_incomparability`(GH #424)的 trigger 逐字是
+    「下一次有人给 `outlatch` 报 VERIFY 行」= 本轮;其 `done_when` 要的「逐字写明取自哪一段」
+    已交付:**第 II 段(W39–W53)**,且 **`episodes=1` 不含任何并池**。
+    ⛔ 本组**不替总监退休**那一行(`kind: manual`,编排权在总监)。
+  - **仪器自证**:变异台 **3 变异 3 CAUGHT / 0 survived**,各自被应该抓它的那一节抓到
+    (M1 回退修复→`[frame F4]`+`[source]`;M2 门恒真→`[frame F3]`+两条 `[gate]`;
+    M3 间距 1.0→100.0→`[frame F4]`);还原 `sha256sum -c` **OK**,未变异对照绿,退出码未经管道。
+  - ⭐⭐ **自检当场改变了交付内容**:`UNCOVERED SET GREW -- 3 file(s)`(全 `no_manifest_row`),
+    **其中一个是本组 W88 自己落的 `test_campbind_poke_real_frame.lua`** ⇒ 新测试**在同一个改动里**
+    手工登记进 `lua_gate_manifest.json`(`seconds=0.18`,混合校准取更大候选;
+    `budget_seconds` 推导后不动:`264.482+0.18=264.662`,`2x=529.324→530.0` = 它现在的值),
+    并加 `[ratchet]` 标签让开工自检的 Lua 腿**也**发现它(两个读者)。
+    ⛔ 未跑全量 `lua_gate_measure.py`(会丢掉整张手加行的来源 + GH #810 会用本机速度重选整道闸)。
+  - **覆盖**:宽扫 **0 局**(零未检新局,语料为空,不是偷懒),代之以语料普查 112 份 fixture;
+    深查 **1 帧**(+ 该帧上 61 tick × 6 条腿的驱动读数)。⚠️ 低于 6 局下限,与 W88 同型理由。
+  - ⛔ `bots/` + `game/` **一行未改**(变异台从副本还原并核 sha256),零新 soak id,零新 fixture(复用)。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 本轮一次 AWS 调用都没有。
+  - **开工自检**:⚠️ **两道闸各挡我一次**(`| tail` 自陈**第 8 次**、`timeout` 自陈**第 6 轮**)
+    ⇒ **W83–W89 连续七轮同形**,而 W88 已把处方写成交棒第 0 条 —— **本轮第三跑才对**。
+    根因:**开工第一条命令发生在读交棒之前**。写报告时自检仍在跑 ⇒ ⛔ **无 `SELFCHECK_EXIT` 真码**,
+    ⛔ 不写 trunk 绿也不写 trunk 红。python 腿读 `UNCERTIFIABLE`(9 checks 未跑),
+    ⚠️ **归因先量再认领**:那条腿跑的时候本轮变异台正在写 `bots/`,⛔ 不排除是我自己弄不安静的。
+  - **下一轮第一件事**:0) **先 `nohup … &` 再读章程**(把自检挪到读文件之前,这是本轮第三次复发的唯一治法);
+    1) 本组 owed 名义清零 ⇒ 自由巡查或补核验最少的 id,批测台解冻则优先宽扫新局;
+    2) 两根棒交总监(GH #424 那行是否退休 / `outlatch` 重新入集只缺域与条件 (b));
+    3) ⚠️ **给 W88 自己落的 `test_campbind_poke_real_frame.lua` 补 manifest 行**(本组的债);
+    4) ⏳ W46 `.dem` 约 09-25 到期(8 天),取法问 `dem21/` 不问 `soak/`。
