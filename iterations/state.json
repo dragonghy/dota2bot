@@ -9618,5 +9618,49 @@
     "cost": "zero EC2 / zero CE / S3 reads 0 objects (iron rule 1, three-part form).",
     "report": "iterations/reports/strategy/20260916T232000Z.md",
     "next": "(1) GH #863 (the loader returns no enemy units) is the instrument this finding could not use. It is NOT this desk's to fix -- and the fix is not obviously 'inject the creeps': the loader's own header explains that the shipped tower-danger reader multiplies GetAttackDamage() * GetAttackSpeed(), neither of which the dump carries, and only 3 of the fixture files carry a `creeps` block at all. Whoever takes it measures the blast radius first. (2) Do NOT read the 192 MOVED triples as 'no enemy within 1600' anywhere -- they are 'no enemy HERO'. Both test files now say so; `state.json:defquiet_20260916`'s `domain` field still carries the older wording and must be read together with this entry. (3) The travel-boots escalation stays registered and unfixed, now with its constructive zero priced. (4) The two items registered-not-fixed last round are untouched and still unmeasured: the travel-boots block's state write, and WeightedEnemiesAroundLocation's own math.floor (a DIFFERENT floor from this one -- that one feeds GetThreatenedLane's neutral-creep tie-break). Whoever takes the second one now has this round's arithmetic to reuse: 4 creeps at 0.2 read as 0. (5) P4.2 freeze unbroken ⇒ nothing submitted for admission; `defquiet_20260916` and `pushtier_20260916` are both still waiting on FROZEN-HOLD and are NOT chased this round."
+  },
+  "cmweaksent_20260917": {
+    "desk": "hero",
+    "when": "2026-09-17",
+    "verdict": "DO-NOT-ARM (no id landed); the standing #1 next-round candidate is RETIRED, not deferred",
+    "subject": "the literal 10000 in X.cm_GetWeakestUnit -- bots/BotLib/hero_crystal_maiden.lua:2867 and bots/FunLib/rubick_hero/crystal_maiden.lua:762",
+    "why_no_id": "TWO INDEPENDENT reasons, both decided from source plus the committed corpus, neither needing a wave. (A) The 10000 is a RETURNED sentinel when nothing is pickable (`nil, 10000`), and that value has NO CONSUMER: all 14 call sites across the two calling files bind the second return value as a dead local, 0 reads in the enclosing function scope. An id on the constant is a no-op on every frame of every wave while check_armed_wiring.py still reads it WIRED -- GH #606 zero-domain shape. (B) The 10000 is also a CAP on the first return value (finite seed, strict `<`), so a unit at >= 10000 current hp can never be picked; the corpus ceiling is max_hp 4343 / hp 4340 over 1550 hero rows, i.e. the sentinel sits at 2.30x the ceiling.",
+    "reading_A": {
+      "call_sites_total": 14,
+      "call_sites_hero_file": 7,
+      "call_sites_rubick_file": 7,
+      "second_binding_reads_in_scope": 0,
+      "control_sibling": "X.cm_GetStrongestUnit -- 4 call sites (2 per file), 4/4 LIVE with 2-3 reads each; this separation is what keeps reading A from being a statement about the reader",
+      "why_the_linter_never_saw_it": ".luacheckrc sets `only = { \"1\" }`, so the 2xx (unused local) family is off by policy"
+    },
+    "reading_B": {
+      "corpus_dirs_holding_fixtures": 4,
+      "corpus_files": 155,
+      "hero_rows": 1550,
+      "max_current_hp": 4340,
+      "max_max_hp": 4343,
+      "max_hp_row": "tests/frames/f_260910_124853_lion_spike_slardar_1416.lua :: npc_dota_hero_bristleback",
+      "hp_histogram": {
+        "<1000": 925,
+        "1000-2000": 508,
+        "2000-3000": 84,
+        "3000-4000": 29,
+        "4000-5000": 4,
+        ">=5000": 0
+      },
+      "sentinel_over_ceiling": 2.3,
+      "LIMIT": "A SAMPLE, NOT A PROOF. 'no row in 1550 reaches 10000' is not 'no hero can'. What makes reading B unarmable is a CONJUNCTION: the corpus ceiling AND the optimization target being TURBO (~20 min games). A 60-minute normal-mode game could plausibly put a fully-itemised carry above the seed."
+    },
+    "headline": "ONE literal, THREE call sites, THREE different and unrelated reasons it is inert, and none of the three is visible where the constant is written: (i) no consumer (reading A), (ii) the domain ceiling is 2.30x below it (reading B), (iii) a DOWNSTREAM THRESHOLD masks it (bots/mode_outpost_generic.lua GetClosestOutpost seeds the same 10000 for a DISTANCE with no search ring -- the corpus's widest building pair is 16026.6u, 1.60x the seed, so that cap IS reachable -- but its sole consumer conjoins `ClosestOutpostDist < 3000`, so the capped answer (nil,10000) and the far answer (>=10000) both reach BOT_ACTION_DESIRE_NONE).",
+    "near_miss": "This desk had the outpost half written up as a LIVE DEFECT before reading its one consumer. The `< 3000` conjunct refutes it. Recorded because the class census handed over in hero-101 must not inherit the wrong claim.",
+    "class_handed_over": "~60 more finite min/max picker seeds in bots/ (9999 / 10000 / 20000 / 99999 / 100000 / 999999), nobody has ever counted which are masked or by what. NOT this desk's: most live in FunLib/ and mode_*. Inside the focus five only hero_axe.lua:1792 (100000, health) and hero_lion.lua:1716 (10000, health) remain; hero_zuus.lua and hero_skeleton_king.lua carry NONE, which is itself a reading.",
+    "bots_change": "zero lines -- this is a derivation + ratchet work unit, not a fix",
+    "artifacts": {
+      "test": "tests/test_cm_weakest_sentinel_domain.lua (6 green, 0.105s measured; hand-added to tools/agent/lua_gate_manifest.json at seconds=0.13 in the same work unit)",
+      "mutation_stand": "tools/agent/mutstand_cmweaksent.sh (16/16 killed, 0 survived, 0 aborted; M16's FIRST version survived because the assertion pattern-matched the literal `3000`, a prefix of the mutant's `30000` -- the numeric-capture guard was bought by that mutant)",
+      "queue": "iterations/queue.json:hero-101 (zero-EC2 archived-corpus read: the min/max sentinel masking census)",
+      "report": "iterations/reports/hero/20260917T015334Z.md"
+    },
+    "cost": "zero EC2 / zero CE / S3 reads 0 objects"
   }
 }
