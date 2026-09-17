@@ -706,7 +706,13 @@ function()
             end
         end
     end
-    assert(nUnits == 1420, 'the archive carried 1420 unit rows when this was '
+    -- 2026-09-17 (replay-check): 1420 -> 1440.  Two staged frames landed in
+    -- tests/frames/ (the `campbind` condition-(a) pair, 10 hero rows each);
+    -- tests/frames/README.md carries the row.  RE-MEASURED, not edited: the two
+    -- counts below did NOT move (9 magic-immunity / 3 invulnerability
+    -- instances), so this is a denominator change and no reading in this file
+    -- is re-decided by it.
+    assert(nUnits == 1440, 'the archive carried 1440 unit rows when this was '
         .. 'measured, now ' .. nUnits .. '; the two counts below are of THAT '
         .. 'population')
     assert(nImm == 9, 'the archive carried 9 magic-immunity modifier instances; '

@@ -218,7 +218,17 @@ local CAST_RANGE_LADDER = { 600, 700, 800, 900 }
 
 -- Corpus readings, measured 2026-09-15.  §1/§2 assert every one of them, so a
 -- grown corpus turns this file red instead of letting a stale number be quoted.
-local N_CORPUS_FILES = 142
+--
+-- 2026-09-17 (replay-check): denominator RE-MEASURED, not edited.  142 -> 144
+-- and the §2 unit rows 1420 -> 1440 because two staged frames landed in
+-- tests/frames/ (`f_260904_125801_campbind_poke_3307/3347.lua`, the `campbind`
+-- condition-(a) pair; tests/frames/README.md carries the row).  Re-measured,
+-- not assumed: that game's draft is centaur / lich / necrolyte /
+-- obsidian_destroyer / pudge / sniper / spirit_breaker / sven / venomancer /
+-- viper -- NO AXE -- so N_AXE_FRAMES stays 40 and every zero in §2 is over the
+-- same Axe population it was measured on.  What moved is the denominator those
+-- zeros are quoted against, which is exactly what this ratchet exists to say.
+local N_CORPUS_FILES = 144
 local N_AXE_FRAMES   = 40
 local RANK_COUNTS    = { [1] = 15, [2] = 4, [3] = 7, [4] = 14 }
 
@@ -661,8 +671,10 @@ tests['§2.3b [zero b] the SECOND disjunct is closed for every subject too'] = f
             end
         end
     end
-    assert(nRows == 1420, string.format(
-        'unit rows across the corpus: %d, was 1420.  Re-measure §2 before '
+    -- 1420 -> 1440 on 2026-09-17: the two staged `campbind` frames carry 10
+    -- hero rows each and no Axe (see the note by N_CORPUS_FILES).
+    assert(nRows == 1440, string.format(
+        'unit rows across the corpus: %d, was 1440.  Re-measure §2 before '
         .. 'trusting any zero in it.', nRows))
     assert(nNonHero == 0, string.format(
         'the dumper now carries a NON-HERO unit row (%s), %d of %d.  Both of '

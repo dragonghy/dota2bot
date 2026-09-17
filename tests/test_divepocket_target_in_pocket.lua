@@ -377,11 +377,18 @@ tests['[divepocket] 2. the corpus drove, and the domain is not empty'] = functio
     assert(SWEEP['load_fail'] == 0,
         SWEEP['load_fail'] .. ' corpus file(s) failed to load. Every count in '
         .. 'this file is then taken over a smaller corpus than it claims.')
-    assert(SWEEP['frames'] == 142,
-        'corpus size moved: ' .. SWEEP['frames'] .. ' frames, was 142. Re-read '
+    -- 2026-09-17 (replay-check): 142 -> 144, the two staged `campbind`
+    -- condition-(a) frames (tests/frames/README.md carries the row).
+    -- RE-MEASURED, not edited: every count below was re-run over the grown
+    -- corpus and is asserted unchanged, so this is a denominator move.
+    assert(SWEEP['frames'] == 144,
+        'corpus size moved: ' .. SWEEP['frames'] .. ' frames, was 144. Re-read '
         .. 'every count below before quoting it.')
-    assert(SWEEP['own'] == 657,
-        'live subject-team rows moved: ' .. SWEEP['own'] .. ', was 657.')
+    -- 657 -> 665 on 2026-09-17: the two staged `campbind` frames each carry 4
+    -- live subject-team hero rows besides the subject.  The guard's own domain
+    -- counts below are asserted unchanged over the grown corpus.
+    assert(SWEEP['own'] == 665,
+        'live subject-team rows moved: ' .. SWEEP['own'] .. ', was 665.')
     assert(SWEEP['raised'] == 0,
         SWEEP['raised'] .. ' drive(s) raised. An arm that errored is not an arm '
         .. 'that answered.')

@@ -374,8 +374,12 @@ tests['[chasering] 2. the corpus drove, and the domain is not empty'] = function
     assert(SWEEP['load_fail'] == 0,
         SWEEP['load_fail'] .. ' corpus file(s) failed to load. Every count in '
         .. 'this file is then taken over a smaller corpus than it claims.')
-    assert(SWEEP['frames'] == 142,
-        'corpus size moved: ' .. SWEEP['frames'] .. ' frames, was 142. Re-read '
+    -- 2026-09-17 (replay-check): 142 -> 144, the two staged `campbind`
+    -- condition-(a) frames (tests/frames/README.md carries the row).
+    -- RE-MEASURED, not edited: every count below was re-run over the grown
+    -- corpus and is asserted unchanged, so this is a denominator move.
+    assert(SWEEP['frames'] == 144,
+        'corpus size moved: ' .. SWEEP['frames'] .. ' frames, was 144. Re-read '
         .. 'every count below before quoting it.')
     assert(SWEEP['raised'] == 0,
         SWEEP['raised'] .. ' drive(s) raised. An arm that errored is not an arm '

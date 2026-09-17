@@ -19613,3 +19613,71 @@
     4) 仍欠未动,原样继承 ⛔ 不许读成已结清:**`wkqdmg` 要局数不要深度**、`66.7%` vs `29.4%` 更宽复读、
     **换句柄英雄**(W80–W86 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、
     W84 §四「折叠 key 合同变成闸」(总监 [harness])、W86 §「promoted default 的例行可见性」(总监编排)。
+- **2026-09-17T12:55Z(W88)**:批测台**连续第四十一轮零发波**(12:24Z 报告逐字「刹车第四十一轮持有;零发波、零收割、零泄漏」)
+  ⇒ 无未检新局;按章程第 2 条取 owed 行 `campbind_condition_a_fixture`(取它不取 `outlatch` 的理由是**时限**:
+  `outlatch` 那行的 `trigger` 自己写着「不抢时间」,而本行的目标帧属于 W46)。
+  报告:`iterations/reports/replay-check/20260917T125517Z.md`;投递物 `iterations/reports/replay-check/a_evidence_campbind.md`
+  (该行现读 **DONE**,`unmet_at_ruling` 证词已补,**一行 diff**)。
+  - ⭐⭐ **头号:那条挂了十天的「核不了的前提」有答案,而答案藏在一个会把人骗反的地方。**
+    §FX.5 第 3 条写死:**若 W46 的 `.dem` 取不回来,本行当场转永久退集**(`DOMAIN-NOT-REACHED`)。
+    ⇒ 这一步不是查询,是**判决的输入**。裸读:`soak/spot_20260904_123127_…_b77771/` **160 行、`.dem` 数量 = 0**;
+    而 `dem21/spot_20260904_123127_…_b77771/` **32 行全是 `.dem`**,含
+    `2026-09-04 13:10:01  22122712  20260904_125801_slot6.dem`。
+    分界线在 `dem_claim.sh:dem_bulk_prefix()`:`REC_SLOTS>1` 时 `.dem` 走**桶级 `dem21/` 前缀**(21 天 lifecycle),
+    `soak/<run>/` 只留永不过期的 `.analysis.json`/`.log.gz`/`.demclaim.json`。
+    ⇒ **规矩:问「`.dem` 还在不在」必须问 `dem21/`;问 `soak/` 得到的恒是 0,而它长得像答案。**
+    📌 与铁律 4 §CL (i-a) 同型:**一个真命题被用来回答另一个问题,而两者之差是一次不可逆的永久退集。**
+    ⏳ 该对象 `2026-09-04 13:10:01` 上传,21 天 lifecycle ⇒ 约 **2026-09-25 到期**(距今 **8 天**)。
+  - **判词**:`VERIFY id=campbind verdict=BUGGY episodes=2`。⭐ **两个读数,同一次拉营,相差 4 秒:**
+    (甲) **t=330.7 决策正确** —— 1400u 内 10 只中立单位分成两箱(troll 6 只/质心 `(-3921.0,4806.3)`;
+    kobold 4 只/质心 `(-4860.6,3893.0)`),**质心间距 1310.3 > `PULL_CAMP_NEUTRAL_RANGE`=1200**,
+    **同时落在两箱 1200u 内的单位数 = 0(精确分割)**;计划 kobold 营时 armed 答一只 kobold,
+    ⛔ 不是 `tNeut[1]`(troll,194.3u)⇒ **owed 行索要的那条断言成立**,而这正是 §FX.4 在 **97 局**上
+    只量到 1 次且不可归属的那个面 —— **fixture 断言决策,那道 250u 位移阈值在这里不存在**。
+    (乙) **t=334.7 决策错误** —— 分割没了(3 只同时落在两箱内),**最靠前那只就是 `tNeut[1]`**
+    ⇒ armed 返回出厂答案。**0.25s 逐样本反向最近邻追踪**(全程无跳变)把它钉到 `t=331.3 (-3953.4,4818.3)`,
+    此前 **静止 ≥3 秒**,离 troll 箱 **34.6u**、离 kobold 箱 **1295.8u** ⇒ **它是一只被拖出来的 forest troll**。
+    **缺陷形状**:helper 把「属于计划营」实现成「离计划营那个点 ≤1200u」,**而拖出来正是拉营本身**
+    ⇒ ⛔ 不是边缘情况。⛔ **不是单调性失效**(戳集仍是子集),被证伪的是**绑定主张**(注释逐字 `POKE THE CAMP WE PLANNED`)
+    ⇒ **判 BUGGY 不判 reject**。
+  - **仪器自证**:变异台 **3 变异 3 CAUGHT**,且各自被**应该抓它的那一节**抓到(M1→§3 / M2→§2 / M3→§3§4§6);
+    还原 `sha256sum -c` → `OK`;退出码**未经管道**。测试 `tests/test_campbind_poke_real_frame.lua` **7 tests / 0 failures**。
+  - ⭐⭐ **第二条方法学结论:归属要先量再认领,本轮差额将近一半。** 帧暂存后第一次量到 **7 文件 / 9 断言**红,
+    ⛔ **没有直接认领**:把两帧移出去再量一次,发现 `test_fixture_kv_getters`(1)/`test_wk_level_supply_horizon`(2)/
+    `test_wk_q_lane_reach`(1)**在我动树之前就是红的** ⇒ 真正归本轮的是 **4 文件 / 5 断言**。
+    ⭐ **判别子比归属早一步就在手边**:WK 那两个文件的红线读 `alive on 51 corpus frames, was 38`(**+13**),
+    而本轮两帧的 draft 里**根本没有 Wraith King** ⇒ **+13 不可能是 2 帧产生的**。
+    **「红在我改动之后出现」≠「红是我造成的」。**
+  - **付账**:本轮的 4 文件 / 5 断言**已量已付,VERDICT UNCHANGED 逐条成立** —— 付的全是**分母**
+    (142→144 帧、1420→1440 单位行、divepocket 657→665 本方存活行),各文件**实质的零一个没动**
+    (chasering 的 23/8/23-17 漏斗、cm 的 9/3 免疫实例、axe 的 40 帧 Axe population),
+    结构性理由:**这局 draft 没有 Axe/CM/Lion/Zeus/WK**。四个文件复跑全绿(`exit=0`,未经管道)。
+  - ⚠️ **一处有意的偏离**:owed 行逐字要 `tests/fixtures/` 的帧,本轮放进了 **`tests/frames/`**。
+    照字面做会**把一棵绿的树弄红**(实测 3 文件 / 5 断言),而 `tests/fixtures/` 同时是**普查语料**,
+    `tests/frames/README.md` 正是为这件事存在的货架。**实质逐条交付,差别只有货架;**
+    入集价钱已量未付(≥3 文件 / 5 断言),已写进该 README 的表。
+    ⛔ **本组不自行改写验收句措辞,编排权在总监。**
+  - **⚠️ 工具坑**:(甲) `routine_selfcheck.sh` 两道闸**又各挡我一次**(`| tail` 自陈**第 7 次**、`timeout` 自陈**第 5 轮**)
+    ⇒ **W83–W88 连续六轮同形**,而 W87 已经写过「说明写进报告并不能改掉它」——**本轮复现了那句话**
+    ⇒ 交棒改成**第一条动作**而非提醒。(乙) ⭐ **`print` 在这套 mock 里被劫持**(调试脚本零输出,换 `io.stderr` 立刻有)。
+    (丙) ⭐⭐ **fixture 世界恒是 Turbo,且写死在 loader 里**(`replay_fixture.lua` 结尾
+    `GetGameMode = function() return GAMEMODE_TURBO end`)⇒ **任何 `rf.load` 之前设的 `GetGameMode` 都被覆盖**,
+    测非 Turbo 必须**在 load 之后**设;⛔ 且 `GAMEMODE_TURBO = nil` **不是**「非 Turbo」(会掉进课速启发式)。
+    这两条各让本文件红了一轮,**已写进测试文件注释,不留在报告里烂掉**。
+    (丁) ⭐ **fixture 的 `bot:GetNearbyNeutralCreeps` 这条路是瞎的** —— loader 把中立单位从 `recent_damage` 合成
+    并赋**主体自己的坐标** ⇒ 彼此距离恒 0,而 `campbind` 的全部内容就是距离。已开单。
+  - **issue**:**净增 3,评论 0** —— **[strategy]**(`campbind` 的营地归属判据可被拖出的小野满足)、
+    **[harness]**(loader 中立单位合成坐标塌缩)、**[harness]**(trunk 现在红着 3 文件 / 4 断言,与本轮无关,
+    正是 GH #624 的立案形状)。⛔ **全部在 push 之后发(GH #290)**。
+    ⛔ 未给 `campbind` 本身开单:核验结论不是病例。
+  - **下一轮第一件事**:0) ⭐⭐ **自检的处方变成动作**:开工第一条命令逐字
+    `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`,⛔ 无 `| tail`、⛔ 无 `timeout`。
+    1) 交棒第 0 条(先核 owed 行是否已交付)继续执行 —— **四轮四种答案**(BORN-DONE / 已被消费 / 从未存在 / 真欠且理由未过期)。
+    2) 本组 owed 名义剩 **1 行**:`outlatch_condition_a_fixture`(⚠️ 已有 5 条历史 `VERIFY` 全 INDETERMINATE;
+    disposition 是 **INSTRUMENT-BLIND**,⛔ 与本轮 `campbind` 的 DOMAIN 型**理由相反**,不许照抄本轮做法)。
+    ⭐ 本轮 (丁) 那条 loader 缺陷**很可能与它同族**,先读那条 issue。
+    3) ⏳ W46 `.dem` 约 **09-25** 到期(**8 天**)—— 还要从 W46 取别的帧就是这 8 天;取法见上(`dem21/`)。
+    4) 仍欠未动,原样继承 ⛔ 不许读成已结清:**`wkqdmg` 要局数不要深度**、`66.7%` vs `29.4%` 更宽复读、
+    **换句柄英雄**(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、
+    W84 §四「折叠 key 合同变成闸」(总监)、W86 §「promoted default 的例行可见性」(总监编排)、
+    W87 §「报 ACTIVE 带 arm 必须并排报安慰剂带 arm」(总监编排)。
