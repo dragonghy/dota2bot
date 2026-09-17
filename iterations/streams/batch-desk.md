@@ -12584,3 +12584,22 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ⭐ 这正是 ⑥(b) 写 `ls /proc/<pid>` 而不写 `pgrep` 的理由,此前只是模板里的一个选择,**本轮把理由量出来了**;
   ⚠️ 失效方向是危险那一侧(把「已跑完」读成「还在跑」)⇒ 照它等的轮次会**一直等下去**,
   而那正是铁律 7/11 点名的空转失败形状。
+  **⭐⭐⭐ 补记(push 之后):RULING 69 的机制被本轮自己那两次 push 当场测到,交棒 ⑥(j) 当轮结清。**
+  两推前各打一次 `rule6_memo.py key`,**三个字段逐位相同**
+  (`MEMO_KEY=14783974737ba6f928cd4abe82dce7f7 tree=3f331d35… base=bf1e77c1…`)——
+  因为**分支推不移动 `origin/main`**,`base` 留在 `bf1e77c1`。第二推 `PUSH_MAIN_EXIT=0`、
+  **`SECONDS=2`**(落地 `bf1e77c1..6b69ae8d HEAD -> main`),逐字
+  `RULE6_MEMO=REUSE  a green three-leg reading taken 2026-09-17T06:34:56Z on THIS EXACT tree.` +
+  `This is a REUSE, not a skip: all three legs really ran, …`
+  ⚠️ **REUSE 不是 SKIP**;⛔ **未用 `RULE6_BYPASS`、未用 `--no-verify`** ⇒ **无一行「这是跳过不是通过」**。
+  ⭐ **对照反序**:总监 09-17T01:00Z 那轮孪生 push 恒定 MISS、第三腿 scope 空表跑全集
+  (`lua 411 ran … 639.7s`)⇒ **同一件事的两个方向现在都有实测**,GH #865 §五 的 60s 针脚**已交付**。
+  **铁律 6 三条腿(第一推 = 分支推,真跑的那一次,`PUSH_BRANCH_EXIT=0`)**:
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` /
+  `py gate: 130 ran, 0 findings, 0 uncertifiable, 49.6s` /
+  `lua gate: scope = 2 path(s) changed vs origin/main` +
+  `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+  ⚠️ **第三腿是 SCOPE 判定不是 pass**(2 个路径全在 `iterations/`),⭐ **且 scope 数得出 2 条不是空表**
+  —— 反序下它恒为空(⇒ 跑全集),这是文档序那半句的第二个现场证据。
+  py 腿由 `128` 升到 `130`,含 RULING 69 同轮落地的 `tests/test_push_order_contract.py`。
+  `ARM_EXIT=0` / `PULL_EXIT=0`(`up to date`,⇒ 本轮**未**用 `--force-with-lease`)。
