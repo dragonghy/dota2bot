@@ -70,6 +70,22 @@
 -- complete (15 abilities + 4 talents = 19 purchasables) and there is genuinely
 -- nothing to buy.  ⛔ Do not "fix" this by widening the look-ahead.
 --
+-- ⚠️ LIMIT D -- §7's LOOK-AHEAD HALF IS REDUNDANT, AND SAYING SO IS THE POINT.
+-- tests/test_skillstall_lookahead.lua already owns that function and covers it
+-- better: its §4 (first spendable entry behind the head), §4b (index 1 never
+-- returned even when the head is upgradable), §4c (nil when nothing behind is
+-- upgradable), §4d (each of the four conditions is load-bearing) and §4e (nil /
+-- non-string entries stepped over) predate this file.  So the positive control
+-- and the three guard assertions below are a SECOND copy, not new coverage --
+-- which also means the two mutants they kill in mutstand_slotpark.sh (`for i = 2`
+-- -> `for i = 1`, and dropping the max-level ceiling) were already killed in the
+-- tree by that file's §4b/§4d.  ⛔ Do not read this file's §7 as evidence that
+-- the look-ahead was unguarded; it was not.
+-- What is NOT redundant, and is why §7 stays: the DEAD-TAIL SHAPE -- that the
+-- tail starts at slot 20, that all four of its entries are talent entries >= 5,
+-- and therefore that a nil there is structural.  That is #822 claim 2's
+-- consequence and it lives nowhere else.
+--
 -- ⚠️ Tagged [ratchet].  §4/§5/§7 assert that the shipped arithmetic still has
 -- this shape.  If the slot loop is rewritten they go red; that is the
 -- notification, and the re-derivation is §6's theorem, not these numbers.
