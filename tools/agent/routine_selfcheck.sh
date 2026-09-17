@@ -528,6 +528,40 @@ else
 fi
 
 
+# [director 20260917, GH #843 acceptance 2] The python twin of the leg above.
+# #843 asked for one thing: every `in_gate: false` row in py_gate_manifest.json
+# needs a WRITTEN reader attribution, "哪怕结论是「无」".  Today all 17 have one
+# and the uncovered set is EMPTY (147 of 147 read) -- because this half's
+# 开工自检 leg discovers by GLOB (`for f in tests/test_*.py` in
+# run_py_tests.sh), which is a superset of the manifest by construction, while
+# the Lua half discovers by TAG and 113 files fell through both selectors.
+#
+# ⭐ So this leg's honest answer is "all clear", and that is precisely why it is
+# a ratchet rather than a paragraph: `lua_gate_measure.py` made the SAME
+# promise in prose ("covered only by 开工自检 and the full suite") and GH #806
+# measured it false for a real file.  Three reachable ways to falsify the
+# python promise: a test lands in a SUBDIRECTORY (tests/mock/, tests/fixtures/
+# and tests/frames/ already exist, and the glob is depth-1), the runner's glob
+# is narrowed (an incremental walk is one of #843's own suggested options), or
+# the leg acquires a time cap -- which would cut the SLOWEST tests first, i.e.
+# exactly the over-cap population this relation exists for (RULING 57: the
+# watchdog leg's 120s cap left three python cases un-run for sixteen rounds).
+#
+# The attribution is COMPUTED, never stored per row: py_gate_measure.py:305
+# rebuilds `"tests"` fresh and this half has no `carry_baseline()` (GH #783 was
+# never ported here), so a hand-written `reader:` field would be erased by the
+# next re-measure and its disappearance would look like nothing at all.
+# Runs no test (0.02s, set arithmetic).
+sc_leg 'py-coverage'
+printf '\n=== python tests no automatic reader runs (GH #843) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/py_gate_coverage.py
+    note $?
+else
+    unchecked 'the python gate coverage relation'
+fi
+
+
 # [director 20260826, GH #198 §3] Both TRUNK RED banners below used to end
 # "failing before you changed anything".  That was a canned string, not a
 # finding: BOTH legs run the WORKING TREE, so the clause asserted something the

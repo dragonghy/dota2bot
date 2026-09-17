@@ -669,6 +669,77 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-17T16:15Z**:**RULING 71 —— GH #843 验收 2 的 python 半结清,采纳 (丙) 并改掉 (丙) 逐字指定的那个落地位置:写进 manifest 行的字段会被下一次 measure 静默擦掉。**
+  全文 `iterations/reports/director/20260917T161500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 71(结清交棒 ⑤ 的 #843 半、退休欠条 `py_gate_evicted_spot_az_spread`)= 采纳 (丙),改其落地位置**:
+  #843 验收逐字要求把读者归属写在 `py_gate_manifest.json` 该行的 `reason` 旁,而
+  **`py_gate_measure.py:305` 逐字 `"tests": dict(sorted(tests.items()))` 从测量结果重建整张表**,
+  且这一半**没有** `BASELINE_KEYS` / `carry_baseline()` / 那条 `REFUSED` 守卫(GH #783 只买了 Lua 那半)
+  ⇒ 手写字段**寿命 = 到下一台容器跑 measure 为止**,**而它消失时长得像什么都没发生**。
+  ⛔ 不抬 cap(甲,GH #616 约束 1);(乙) 迟滞仍在 GH #810 名下。
+  **落地四件**:`tools/agent/py_gate_coverage.py`(新,集合运算,**不跑任何测试**,实测 **0.02s**)、
+  `py_gate_coverage_baseline.json`、钉子 **`tests/test_py_gate_coverage.py`**(**25 checks / 0 failures**,变异台 **5/5**)、
+  开工自检第 **`py-coverage`** 腿(紧邻 Lua 孪生 `lua-coverage`)。
+  **真读数(裸码,走 `rc.sh`)**:`disk 148 | push gate 130 | 开工自检 leg 148`,
+  **UNCOVERED 0 of 148**,**out-of-gate rows with a written reader: 17 of 17** ⇒ 验收 2 对 python 半成立,
+  两个展品(`test_bots_walk_farm_only.py` 3.723s / `test_spot_az_spread.py` 3.756s)都在那 17 行里。
+  ⭐ **答案「全覆盖」是挣来的不是继承的,两半答案不同的理由是选择器的形状,是算术不是口味**:
+  python 腿是 **glob**(`for f in tests/test_*.py`,按构造是 manifest 超集,且该腿无时钟上限)⇒ 0/147;
+  Lua 腿按 **tag** ⇒ `[hero]` 标签的超 cap 文件两边同时漏下去(GH #806)⇒ 115/506 = 23%。
+  ⛔ **所以必须是棘轮不是段落**:`lua_gate_measure.py` 当初用**散文**做过同一个承诺,GH #806 把它**实测为假**。
+  三条可达伪证路径:**(A) 落进子目录**(glob 是深度 1,而 `tests/mock|fixtures|frames/` **已存在**)、
+  **(B) runner 的 glob 被收窄**(增量走查正是 #843 自己列的选项)、**(C) 该腿获得时钟上限**
+  (会**先砍最慢的**,即本关系的全部人口;**RULING 57 是判例**)。**(A)(B) 已做成变异台**;
+  **(C) 按构造不可由集合运算测出 ⇒ 已在文件头逐字写明「不为它假装一条检查」**。
+  ⛔ **选择器不被重新拼写** —— glob 从 `run_py_tests.sh` 里抽,抽不出或歧义就 **exit 2**。
+  ⭐⭐ **变异台 5/5 全死,而 `M4`(无条件记功)只被合成用例杀掉(纪律 2 现场)**:
+  真语料 17 行全部由那条腿读 ⇒ 破规则与正规则**逐字同答**;`§6d/6e` 造了一行「出闸且在收窄后 glob 之外」
+  的测试,唯一正确答案是 `NONE`(**就是 #843 的「哪怕结论是「无」」那一格**),M4 当场死。
+  ⛔ **没有那条合成用例,台子会报 3/4 并读起来像 4/4。** 台子建在**临时目录副本**上,
+  仓库文件全程未被写过(`sha256sum -c` 逐字 `OK`)。
+  ⚠️ **同轮被试两次踩中它自己正在立法的缺陷,方向相反,都照登**:(i) `reader_glob()` 第一版正则把 `;`
+  吃进捕获组 ⇒ 首跑 `UNCERTIFIABLE … found 0 []`、**裸码 2 不是 0**(误判为不可认证);
+  (ii) ⭐ **空语料原本照常给 `0`** —— 本关系**健康时的答案就是 `0 uncovered`**,于是 `tests/` 缺失/清空时
+  工具会打 `0 of 0 (0%)` 并 **exit 0**,**与健康读数逐字符相同的空转通过**(误判为通过)。
+  已加空语料 ⇒ `UNCERTIFIABLE` 且**根本不打那行表头**;`M5` 钉住。
+  ⚠️ **§三 `lua-coverage` 本轮 exit 3,是 3 条不是交棒记的 2 条**:新增
+  `test_campbind_poke_real_frame.lua`(录像组 `47374084` 09-17T13:00Z)、
+  `test_dusttower_dive_guard.lua` + `test_fieldsip_transfer_receiving_site.lua`
+  (**本座位自己** `3ad1a9c3` 09-15T03:55Z)⇒ **三条里两条是我自己落的,不许写成「退回某组」**;
+  已登记 `lua_coverage_uncovered_grew_3files`(`json_value`,`no_manifest_row_count <= 53`,
+  并写明「`<=53` 是『没再长』不是『修完』」)。⛔ 不顺手重测(GH #810 逐字禁止)。
+  ⚠️ **§四 撞出第二条并登记**:`py_manifest_no_carry_baseline_port` —— GH #783 的
+  `carry_baseline()` **从未移植到 python 半**。**今天零代价**(147 行普查:`reader` 字段零命中)
+  ⇒ 潜在不是现行;⭐ **但有真触发器**:**GH #810 的 (乙) 迟滞按构造需要跨 measure 存活的状态**
+  ⇒ **(乙) 落地那一轮必须先付本行**。`kind: manual`(理由:(乙) 以「表里永远没有那种键」为正确答案,
+  `json_value` 判据从落地当天就是绿的,会把「还没做」读成「已办」)。
+  ⛔ **§〇 本轮 `TRUNK RED --(python)` 是假的,而造它的人是我,照登**:
+  `PY_LOG` **102 行、零条 FAIL、没有汇总行**、末行停在字母序中段 ⇒ **被截断不是红**。
+  成因:我另起一个 `run_py_tests.sh` 自量,察觉与自检并发(RULING 56 形状)后
+  `pkill -f 'run_py_tests.sh'` —— **那个模式同时打死了自检自己的那一份**。
+  ⚠️ **这是 RULING 56 第二例,机制不同形状逐字相同:我自己的并发动作造出一条红,红出来的名字是无辜的那个。**
+  📌 共同前提是「自检在后台跑」不可见:`pgrep` 当时只回 `492 bash routine_selfcheck.sh`,
+  **因为那一刻它的 `run_py_tests.sh` 子进程还没起**。⇒ **习惯(不开 issue):后台有自检时
+  任何 `pkill -f <模式>` 先确认不匹配自检的子进程树;要杀自己的就记 PID 杀 PID。**
+  ⚠️ 自检另有两条 python `UNCERTIFIABLE`(`test_lua_gate.py` / `test_luacheck_gate_soakswitch.py`),
+  成因是**它们跑在自检自己装 `lua5.1` 之前**(跑完后 `command -v lua5.1` = `/usr/bin/lua5.1`)
+  ⇒ **是顺序不是缺工具**,这是交棒 ⑧ 上的新信息。
+  **巡检(15:51:44Z 取数,deepen 后 `rev-list --count` = 250)**:五组全活、无 GAP —— batch-desk 0.5h /
+  replay-check 2.9h / strategy 2.3h / hero 4.6h / director 2.3h。
+  **成本**:批测台读 MTD **`$92.001`** > 刹车 `$90` ⇒ 零发波(第四十二轮);新速率点 **`$0.478/天`**
+  落在既有带内不收窄;⚠️ **`forecast $118.091` > 批准线 `$100`** 已在 `DECISIONS_NEEDED`,**W38(09-20)那封带它**。
+  **下次触发**:①GH #856 修法第 3 条剩 9 个候选 ②棘轮加宽(GH #867)③GH #240 余下
+  ④`carry_mark_prose_vs_list` ⑤**GH #843 剩 (乙)**(python 半本轮已结清),⚠️ **新前置见 ⑫**
+  ⑥GH #859 ⑦GH #810 待裁 1 + (乙) ⑧自检那三条 python 用例(**第十七轮**,新信息:是顺序不是缺工具)
+  ⑨**`lua-coverage` 新增 3 条(不是 2 条)**,已登记,⛔ 打标签前先各跑一次确认不红
+  ⑩P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3 ⑪`path_contains_any` 那两行
+  ⑫**新**:`py_manifest_no_carry_baseline_port`,⭐ 与 ⑤⑦ 是**同一条线**(迟滞的前置)
+  ⑬**W38 周日汇总邮件(09-20)**:第 15/16/18/19 条 + 第 17 条已撤回 + **RULING 70 + 71**
+  + ⚠️ **`forecast $118.091` > `$100`** 那一行
+  ⑭`lua_gate_manifest.json` 已陈旧(89 个新测试不在册、9 个 EXCLUDED、真实开销 665.65s vs 预算 530.0s),
+  ⛔ 重测先读 GH #810
+  ⑮**新**:⛔ **后台跑着自检时不要 `pkill -f <模式>`**(§〇 那条假红,RULING 56 第二例),习惯不开 issue
 - **2026-09-17T13:30Z**:**RULING 70 —— GH #865 (A) 落地,但它三条验收里的第 (2) 条被一次真读数改掉:「新 ref ⇒ 跑全集」对 git 是对的、对本仓是错的,因为本仓每一轮的第一次 push 都是新 ref。**
   全文 `iterations/reports/director/20260917T133018Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

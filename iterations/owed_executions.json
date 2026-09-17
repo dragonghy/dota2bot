@@ -1610,23 +1610,46 @@
    "partial_execution": "**本轮买到的是量,不是修**:(i) 分母 86 条 entry;(ii) loose 52 / 有清单 52 ⇒ 今日发生率 **0/86**;(iii) 两个候选锚各自的**具体反例 entry 戳**(见 ruling);(iv) 第三个读数是差集为空:冒号锚命中 51 条,与 loose 只差 `2026-09-16T10:1xZ` 一条,且**在两者都命中的 51 条上抽出的 GH ref 集合逐条相同**(实测 `ref-set differs on: []`)⇒ 收紧**不会改变任何已有读数**,唯一风险就是那条差集。"
   },
   {
-   "id": "py_gate_evicted_spot_az_spread",
-   "issue": "[harness] **不新开 issue,归并进已有的两条**:**GH #843** 第二半(逐字待裁:「`over_per_test_cap` 且作用域是整个 `tests/` 目录的普查,要不要有一条比 cap 更早的读者」,验收逐字「`in_gate: false` 且 `reason: over_per_test_cap` 的行,各自有一条**写下来的**读者归属(哪怕结论是「无」)」)与 **GH #810**(逐字:「推送闸的成员资格由**哪台容器最后跑过 measure**决定 —— 三个旋钮都是绝对秒数」)。立案现场:总监 2026-09-17T13:xxZ 轮 `py_gate_measure.py` 输出逐字 `1 test(s) LEFT the hook -- they were gating before this re-measure and are not any more: tests/test_spot_az_spread.py (3.756s, over_per_test_cap)`。⭐ **#843 立案的那一条就是 `test_bots_walk_farm_only.py` 3.723s > 3.0s** —— 与本行**同一个 cap、同一个 0.7s 量级**,而 #810 是它的 Lua 侧同族。⇒ **本行是 #843 第二半的第二个实例,不是新发现。**",
+   "id": "lua_coverage_uncovered_grew_3files",
+   "issue": "[harness] GH #806 族(`lua-coverage` 腿的棘轮)。⛔ 不新开 issue:这条腿的立案面就是 GH #806,而本行是它**报出来之后没人付**的那一段。交棒清单里前一轮记的是「`no_manifest_row` 2 条」,**本轮实读是 3 条** —— 数字在长,而长的方向正是「没人读」。",
    "covers_ids": [],
-   "ruling": "⚖️ **本轮只登记不处置,理由写明**:`test_spot_az_spread.py` 因**自身实测秒数**(cap 3.0s vs 实测 3.756s)被逐出快 python 闸。⛔ **这不是缺陷,是清单按设计工作**(成员资格只看实测秒数、永不看文件名,GH #616 约束 1);要紧的是**它走了之后没有任何东西会举手** —— 工具自己那行 `Read the list before accepting it` **是打给人看的,而人每轮都换**。\n\n⛔⛔ **更正我自己当轮的第一版措辞,照登**:我先写的是「安静树连测三次 3.735/3.626/3.623s ⇒ **稳定在上限之上、不是抖动**」。那三个数是真的,**而从它们推出的结论超出了它们能支持的范围** —— 读完 **GH #810** 才看见:三个旋钮**全是绝对秒数**,而同一批测试在不同容器上实测中位比 **1.175**(#810 量的;GH #358 另量到 1.34×)。⇒ 我证明的是「**在这台容器上**不是抖动」,**不是**「它真的超过 cap」—— 按 1.175 折回去 ~3.1s,仍过线,但那是**另一个读数**,我没做。📌 **这正是 #810 的立案句在我自己身上复现一次**:`in_gate` 的真值取决于**谁最后跑了 measure**,而我差点把一次容器抽签写成一条关于测试的事实。\n\n⚠️ 不对称照登:逐出按 **per-test cap**,而本轮总预算只用到 **47.84s / 90.0s** ⇒「没有预算」**不是**它离开的原因。⇒ 三个候选里 (甲) 抬 cap **恰好是 #810 明确不推荐的方向**(`py_gate_measure.py` 自己写 `do not raise the slack`),而 #810 的 (乙) **迟滞**(已在闸里的测试除非超 cap 一个余量否则不出闸)**正是为本行这种情形写的** ——⛔ 但那是 #810 的待裁项,不在本工作单元内。",
-   "ruled_at": "2026-09-17T13:xxZ",
-   "executor": "director(本座位;任何愿意动 tools/agent/ 的组也可以取)",
-   "trigger": "没有外部触发器 —— 这正是它进 registry 的理由:它不属于任何一波、任何一个 id,而唯一提过它的那行输出只活在某一轮的终端里。",
+   "ruling": "**本轮只登记 + 点名归属,不处置,理由写明。** 开工自检 `lua-coverage` 腿本轮逐字:\n`UNCOVERED SET GREW -- 3 file(s) that nothing reads automatically:`\n    `no_manifest_row  tests/test_campbind_poke_real_frame.lua`\n    `no_manifest_row  tests/test_dusttower_dive_guard.lua`\n    `no_manifest_row  tests/test_fieldsip_transfer_receiving_site.lua`\n(同一读数里另有一条**已脱离**:`NOW COVERED tests/test_fieldsip_atom_pricing.lua` —— 那是 RULING 41 打 `[ratchet]` 标签的后效,按设计工作。)\n**归属已查(`git log -1 -- <file>`,深化后 `rev-list --count origin/main` = 250)**:`test_campbind_poke_real_frame.lua` = 录像组 `47374084` 09-17T13:00Z;余两条 = **总监本座位自己** `3ad1a9c3` 09-15T03:55Z(RULING 43 那一轮)⇒ ⛔ **三条里两条是我自己落的,不许写成「退回某组」**。三条**都没有** `[detector]`/`[ratchet]` 标签。\n⛔ **不在本轮顺手重测**:GH #810 逐字禁止「随便找台容器跑一遍」—— 成员资格是绝对秒数,而重测买到的 `no_manifest_row = 0` 是**拿闸的覆盖面换来的**,账面上却长得像把棒还了。⇒ 便宜的正解是**打标签**让开工自检的 Lua 腿读它们(tag 选择器与 cap 无关),但**打标签前要先各跑一次确认不红**,否则等于把三条红塞进每个组的开工自检(RULING 41 的后效就是判例)。",
+   "ruled_at": "2026-09-17T16:xxZ",
+   "executor": "director(两条是本座位自己的)+ replay-check(`test_campbind_poke_real_frame.lua` 一条)",
+   "trigger": "没有外部触发器 —— 但**这一条有腿替它举手**:开工自检 `lua-coverage` 每轮 exit 3 并逐名打印。⚠️ 正因为它每轮都红,风险是**被读成家具**(被试文件头自己写了这个失效方向)⇒ 登记一行让它有个结清判据。",
    "delivered_to": [
-    "iterations/streams/director.md 当前状态(2026-09-17T13:30Z 条目 §四)",
-    "iterations/reports/director/20260917T133018Z.md §四"
+    "iterations/streams/director.md 当前状态(2026-09-17T16:xxZ 条目)",
+    "iterations/reports/director/20260917T161500Z.md §三"
    ],
-   "why_registered_here": "⚖️ 章程 2.6:本轮**推迟**了处置(抬 cap / 拆测试 / 接受损失,三选一未裁)。⛔ 不许只写进「当前状态」——那一节是叙事,而没有任何一条腿会替一句散文举手(2.6 立案句)。",
+   "why_registered_here": "⚖️ 章程 2.6 (乙):本轮**推迟**了处置。⛔ 不许只写进「当前状态」或只留在交棒散文里 —— 前一轮就是那么记的(「`lua-coverage` `no_manifest_row` 2 条」),而**一轮之后它变成了 3 条**,没有任何一条腿替那句散文举手。",
+   "done_when": {
+    "kind": "json_value",
+    "path": "tools/agent/lua_gate_coverage_baseline.json",
+    "key": "no_manifest_row_count",
+    "op": "<=",
+    "value": 53
+   },
+   "done_when_note": "⚠️ **判据挂的是基线里那个裸读得出的计数,不是「这三个文件名消失」**,理由是被试自己把它**拆成顶层键**正是为了让 registry 能这么挂(它的 `--update-baseline` 注释逐字写了这一点)。⛔ **`<= 53` 不是「修完」而是「没再长」**:53 是上一次 banked 基线里的 `no_manifest_row` 数,本轮实读 `no_manifest_row: 53` + 3 条新增未 bank。⛔ **不许靠 `--update-baseline` 结清本行** —— 那个命令对**增长**会 `REFUSED`(按设计),但对「先打标签让它脱离、再 bank」是正解;两者的差别只有读裁定的人能分辨,故留 `json_value` + 本注。"
+  },
+  {
+   "id": "py_manifest_no_carry_baseline_port",
+   "issue": "[harness] GH #783 族(Lua 那半的 `BASELINE_KEYS` / `carry_baseline()`)。⛔ 不新开 issue:本行是 RULING 71 落地时**撞出来**的那一条,而它**今天还没有任何代价** —— 登记的理由正是「它不会自己举手」。",
+   "covers_ids": [],
+   "ruling": "**登记,本轮不改,理由写明。** `py_gate_measure.py:305` 逐字 `\"tests\": dict(sorted(tests.items()))` ⇒ 每次 measure **从测量结果重建整张表**,而 `tools/agent/py_gate_manifest.json` 这一半**没有** `BASELINE_KEYS`、没有 `carry_baseline()`、也没有 Lua 那半那条 `REFUSED -- these baseline keys are not in BASELINE_KEYS` 守卫(`lua_gate_measure.py:353/357/376/462`)。\n⭐ **今天为什么零代价**:python manifest 里**当前没有任何基线性质的键** —— 本轮普查 147 行,`reader` 字段零命中,顶层只有测量元数据。**所以这是潜在缺陷不是现行缺陷,照实登记。**\n⛔ **而它正是 RULING 71 改掉 (丙) 落地位置的那条理由**:任何人往这张表里写一个「人写的、measure 不产出的」字段(读者归属、赦免、迟滞状态——`GH #810 (乙)` 的迟滞**恰好需要**一个跨 measure 存活的状态),**下一台容器跑 measure 就静默擦掉它**,而 Lua 那半**两周前就为这件事买了守卫**。⇒ 失效方向:**永远静默,永不误报**。",
+   "ruled_at": "2026-09-17T16:xxZ",
+   "executor": "director(本座位;任何愿意动 tools/agent/ 的组也可以取)",
+   "trigger": "⭐ **有一个真触发器,写明以免它被当成纯理论**:GH #810 的 (乙) 迟滞若被采纳,**按构造需要一个跨 measure 存活的状态**(「已在闸里」这件事本身)⇒ **(乙) 落地的那一轮必须先付本行**,否则迟滞状态会被下一次 measure 擦掉。",
+   "delivered_to": [
+    "iterations/streams/director.md 当前状态(2026-09-17T16:xxZ 条目)",
+    "iterations/reports/director/20260917T161500Z.md §四",
+    "tools/agent/py_gate_coverage.py 文件头(逐字写明这是读者归属不入 manifest 行的理由)"
+   ],
+   "why_registered_here": "⚖️ 章程 2.6 (乙)。⛔ **尤其不许只写进被试的文件头**:那是**散文**,而本行的失效方向是**静默** —— 没有任何一条腿会替一句注释举手(2.6 末句)。",
    "done_when": {
     "kind": "manual",
-    "note": "三选一并落地:(甲) 抬 `per_test_cap_seconds` 并同轮登记抬后进闸/总预算的实测读数(⛔ 注意 #810 与 `py_gate_measure.py` 都明确不推荐这条);(乙) **迟滞**(GH #810 的 (乙)):已在闸里的测试除非超 cap 一个余量否则不出闸 —— 这条**同时**答掉本行与 #810;(丙) 明确接受它不在快闸内,并按 **GH #843 的验收逐字**在 `py_gate_manifest.json` 该行的 `reason` 旁写下**读者归属**(哪怕结论是「无」),说明这是**裁定**不是**漂移**。"
+    "note": "二选一并落地:(甲) 把 `BASELINE_KEYS` + `carry_baseline()` + 那条 `REFUSED` 守卫移植到 `py_gate_measure.py`,并带一个钉子(Lua 那半的 `tests/test_lua_gate_baseline_carryover.py` 是模板);(乙) 明确裁定 python manifest **永不承载**人写的键,并把这条裁定写成 `py_gate_measure.py` 里**一条会红的检查**(发现非白名单顶层键就拒绝写),⛔ 不是一句注释。"
    },
-   "done_when_note": "⛔ **`kind: manual` 是故意的,不是偷懒**:这三条没有一条是 `path_exists` 读得出来的 —— (丙) 甚至以「什么都不做」为正确答案,而一个会自己变绿的判据恰好会把它读成已办。⚠️ 对照:本 registry 上一条 `path_exists` 行(`gh865_prepush_scope_from_stdin`)产物一落地就被 `test_pending_rulings.py` 判 **BORN-DONE**,正是因为那种键**分辨不出「做完了」和「本来就那样」**。"
+   "done_when_note": "⛔ **`kind: manual` 是故意的**:(乙) 以「表里永远没有那种键」为正确答案,而一个 `json_value` 判据在 (乙) 下**从落地当天就是绿的**,会把「还没做」读成「已办」(与 `py_gate_evicted_spot_az_spread` 原行同族,那一行也是为此留 manual)。"
   }
  ],
  "retired": [
@@ -2269,6 +2292,29 @@
     "tests/test_push_order_contract.py(**重锚**:旧断言在 (A) 落地后会靠一条注释保持绿色 —— 纪律 4 的「结论对、理由已不成立」,改为断言 prepush_scope.sh 里的 origin/main 回落这一残余耦合)",
     "iterations/streams/director.md 当前状态(2026-09-17T13:xxZ 条目)"
    ]
+  },
+  {
+   "id": "py_gate_evicted_spot_az_spread",
+   "issue": "[harness] **不新开 issue,归并进已有的两条**:**GH #843** 第二半(逐字待裁:「`over_per_test_cap` 且作用域是整个 `tests/` 目录的普查,要不要有一条比 cap 更早的读者」,验收逐字「`in_gate: false` 且 `reason: over_per_test_cap` 的行,各自有一条**写下来的**读者归属(哪怕结论是「无」)」)与 **GH #810**(逐字:「推送闸的成员资格由**哪台容器最后跑过 measure**决定 —— 三个旋钮都是绝对秒数」)。立案现场:总监 2026-09-17T13:xxZ 轮 `py_gate_measure.py` 输出逐字 `1 test(s) LEFT the hook -- they were gating before this re-measure and are not any more: tests/test_spot_az_spread.py (3.756s, over_per_test_cap)`。⭐ **#843 立案的那一条就是 `test_bots_walk_farm_only.py` 3.723s > 3.0s** —— 与本行**同一个 cap、同一个 0.7s 量级**,而 #810 是它的 Lua 侧同族。⇒ **本行是 #843 第二半的第二个实例,不是新发现。**",
+   "covers_ids": [],
+   "ruling": "⚖️ **本轮只登记不处置,理由写明**:`test_spot_az_spread.py` 因**自身实测秒数**(cap 3.0s vs 实测 3.756s)被逐出快 python 闸。⛔ **这不是缺陷,是清单按设计工作**(成员资格只看实测秒数、永不看文件名,GH #616 约束 1);要紧的是**它走了之后没有任何东西会举手** —— 工具自己那行 `Read the list before accepting it` **是打给人看的,而人每轮都换**。\n\n⛔⛔ **更正我自己当轮的第一版措辞,照登**:我先写的是「安静树连测三次 3.735/3.626/3.623s ⇒ **稳定在上限之上、不是抖动**」。那三个数是真的,**而从它们推出的结论超出了它们能支持的范围** —— 读完 **GH #810** 才看见:三个旋钮**全是绝对秒数**,而同一批测试在不同容器上实测中位比 **1.175**(#810 量的;GH #358 另量到 1.34×)。⇒ 我证明的是「**在这台容器上**不是抖动」,**不是**「它真的超过 cap」—— 按 1.175 折回去 ~3.1s,仍过线,但那是**另一个读数**,我没做。📌 **这正是 #810 的立案句在我自己身上复现一次**:`in_gate` 的真值取决于**谁最后跑了 measure**,而我差点把一次容器抽签写成一条关于测试的事实。\n\n⚠️ 不对称照登:逐出按 **per-test cap**,而本轮总预算只用到 **47.84s / 90.0s** ⇒「没有预算」**不是**它离开的原因。⇒ 三个候选里 (甲) 抬 cap **恰好是 #810 明确不推荐的方向**(`py_gate_measure.py` 自己写 `do not raise the slack`),而 #810 的 (乙) **迟滞**(已在闸里的测试除非超 cap 一个余量否则不出闸)**正是为本行这种情形写的** ——⛔ 但那是 #810 的待裁项,不在本工作单元内。",
+   "ruled_at": "2026-09-17T13:xxZ",
+   "executor": "director(本座位;任何愿意动 tools/agent/ 的组也可以取)",
+   "trigger": "没有外部触发器 —— 这正是它进 registry 的理由:它不属于任何一波、任何一个 id,而唯一提过它的那行输出只活在某一轮的终端里。",
+   "delivered_to": [
+    "iterations/streams/director.md 当前状态(2026-09-17T13:30Z 条目 §四)",
+    "iterations/reports/director/20260917T133018Z.md §四"
+   ],
+   "why_registered_here": "⚖️ 章程 2.6:本轮**推迟**了处置(抬 cap / 拆测试 / 接受损失,三选一未裁)。⛔ 不许只写进「当前状态」——那一节是叙事,而没有任何一条腿会替一句散文举手(2.6 立案句)。",
+   "done_when": {
+    "kind": "manual",
+    "note": "三选一并落地:(甲) 抬 `per_test_cap_seconds` 并同轮登记抬后进闸/总预算的实测读数(⛔ 注意 #810 与 `py_gate_measure.py` 都明确不推荐这条);(乙) **迟滞**(GH #810 的 (乙)):已在闸里的测试除非超 cap 一个余量否则不出闸 —— 这条**同时**答掉本行与 #810;(丙) 明确接受它不在快闸内,并按 **GH #843 的验收逐字**在 `py_gate_manifest.json` 该行的 `reason` 旁写下**读者归属**(哪怕结论是「无」),说明这是**裁定**不是**漂移**。"
+   },
+   "done_when_note": "⛔ **`kind: manual` 是故意的,不是偷懒**:这三条没有一条是 `path_exists` 读得出来的 —— (丙) 甚至以「什么都不做」为正确答案,而一个会自己变绿的判据恰好会把它读成已办。⚠️ 对照:本 registry 上一条 `path_exists` 行(`gh865_prepush_scope_from_stdin`)产物一落地就被 `test_pending_rulings.py` 判 **BORN-DONE**,正是因为那种键**分辨不出「做完了」和「本来就那样」**。",
+   "retired_at": "2026-09-17T16:xxZ",
+   "retired_by": "director RULING 71",
+   "retired_because": "⚖️ **RULING 71 = 裁 (丙),并改 (丙) 的落地形式**(与 RULING 70 对 69 (A) 第 (2) 条同型:结论采纳、其中一句按一次真读数改掉)。**(丙) 的结论对**:`test_spot_az_spread.py`(3.756s)与 `test_bots_walk_farm_only.py`(3.723s)因自身实测秒数留在快 python 闸外,**这是清单按设计工作**(GH #616 约束 1),⛔ 不抬 cap(甲)。(乙) 迟滞仍归 GH #810,本行不代它结清。\n⛔ **改掉的是 (丙) 逐字要求的那个落地位置**:(丙) 写「在 `py_gate_manifest.json` 该行的 `reason` 旁写下读者归属」,而**那个位置会自己擦掉自己** —— `py_gate_measure.py:305` 逐字 `\"tests\": dict(sorted(tests.items()))` **从测量结果重建整张表**,而这一半**根本没有** `BASELINE_KEYS`/`carry_baseline()`(那是 GH #783 给 Lua 那半买的,从未移植)⇒ 手写字段的寿命 = 「到下一台容器跑 measure 为止」,**而它消失时长得像什么都没发生**。📌 这正是本仓最贵的那个形状:一个修复把自己的存活寄托在一张每轮被重写的表上(§2.6 立案句的机器版)。\n⇒ **读者归属改为「算出来 + 棘轮钉住」**:`tools/agent/py_gate_coverage.py`(新,集合运算,实测 **0.02s**,不跑任何测试)+ `tools/agent/py_gate_coverage_baseline.json` + 开工自检第 `py-coverage` 腿。\n**本轮真读数(裸码,未经管道,`rc.sh`)**:`disk 147 | push gate 130 | 开工自检 leg 147`,**UNCOVERED 0 of 147**,**out-of-gate rows with a written reader: 17 of 17** ⇒ **GH #843 验收 2 对 python 这半成立**,两个展品(`test_spot_az_spread.py` / `test_bots_walk_farm_only.py`)都在那 17 行里。\n⭐ **答案「全覆盖」是挣来的不是继承的,而两半答案不同的理由是选择器的形状,是算术不是口味**:开工自检的 python 腿是 `for f in tests/test_*.py`(**glob**,按构造是 manifest 的超集,且该腿无时钟上限),Lua 那半按 **tag** 发现 ⇒ 一个 `[hero]` 标签的超 cap 文件同时从两边漏下去(GH #806,115/506 = 23%)。\n⛔ **所以它必须是棘轮不是段落**:`lua_gate_measure.py` 当初用**散文**做过同一个承诺(「超 cap 的测试只由开工自检和全集覆盖」),GH #806 把那句话**实测为假**。python 这个承诺今天为真、而在本轮之前**没有任何东西在断言它**,三条可达的伪证路径已钉:(A) 测试落进**子目录**(`tests/mock/`、`tests/fixtures/`、`tests/frames/` **已经存在**,而那个 glob 是深度 1)、(B) runner 的 glob 被**收窄**(增量走查正是 #843 自己列的选项之一)、(C) 该腿获得**时钟上限** —— 那会**先砍最慢的**,即本关系存在的全部人口(RULING 57 是判例:看守腿的 120s 上限让三条 python 用例连续十六轮 `did NOT run`)。(A)(B) 是 `tests/test_py_gate_coverage.py` 里的**变异台**;(C) 按构造不可由集合运算测出,**已在被试与钉子的文件头逐字写明「不为它假装一条检查」** —— 假装一条才是同一个缺陷上移一层。\n**钉子 `tests/test_py_gate_coverage.py`:22 checks / 0 failures**;**变异台 4/4 全死**(`M1` 深度-1 走查 / `M2` 硬编码 glob / `M3` 歧义时猜一个 / `M4` 无条件记功),**台子建在临时目录的副本上**(`PY_GATE_COVERAGE_SUBJECT`),**仓库文件全程未被写过**:`sha256sum -c` 逐字 `tools/agent/py_gate_coverage.py: OK`(纪律 1)。\n⭐⭐ **`M4` 是纪律 2 的现场,照登**:它**只被合成用例杀掉**。真语料里 17 行**全部**由那条腿读 ⇒ 「无条件记功」与正确规则**逐字同答**,`§6a` 永远不必判别;`§6d/6e` 造了一行「出闸且在收窄后的 glob 之外」的测试,唯一正确答案是 `NONE`(**就是 #843 的「哪怕结论是「无」」那一格**),M4 当场死。⛔ **没有那条合成用例,这个台子会报 3/4 并读起来像 4/4。**\n⚠️ **同轮自证一次 fail-closed 是真的**:`reader_glob()` 第一版正则把 `;` 吃进捕获组 ⇒ `UNCERTIFIABLE … found 0 []`、**裸码 2**,⛔ **不是 0** —— 读不出别人选择器的那一轮,**没有资格给那个读者记功**。",
+   "outcome": "RULING 71:(丙) 采纳,落地形式改为「算出来 + 棘轮」而非写进 manifest 行。GH #843 验收 2 对 python 半**结清**(17/17 有读者,0/147 无人读);(乙) 迟滞仍在 GH #810 名下,⛔ 本行不代它结清。"
   }
  ],
  "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。",
