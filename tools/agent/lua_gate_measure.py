@@ -136,6 +136,15 @@ PER_TEST_CAP_SECONDS = 5.5
 # does not.  ⛔ This does NOT relax the per-test cap: the cap is still the only
 # live selector, and `tests/test_lua_gate_budget_backstop.py` now refuses a
 # manifest in which the budget evicted any sub-cap test at all.
+# RE-DERIVED 520.0 -> 530.0 on 2026-09-17 (hero, 'lionwfight'), by the same rule and
+# again NOT by choice: the sub-cap total moved to 261.182s when a 1.6s ratchet joined
+# the gate in that change, so 2 x 261.182 = 522.364 -> 530.0.  ⚠️ Only PART of the move
+# was the new row: `selected_count`/`selected_total_seconds` were themselves STALE (335
+# and 258.872 against 337 rows actually carrying `in_gate`, which is the number 开工自检
+# printed as "push gate 337").  So the reading that had been standing in for the sub-cap
+# total was short by two rows before this change touched anything -- one more instance of
+# the (B) shape in tests/test_lua_gate_budget_backstop.py's own header, at the level of
+# the summary field rather than the row.  Re-derived off `--reselect`, not by hand.
 # RE-DERIVED 510.0 -> 520.0 on 2026-09-16 (strategy, 'tpstash'), by the rule two
 # paragraphs up and NOT by choice: the sub-cap total moved to 256.379s when a 3.22s
 # ratchet was hand-added in the same change, so 2 x 256.379 = 512.758 -> 520.0.  The
@@ -144,7 +153,7 @@ PER_TEST_CAP_SECONDS = 5.5
 # re-measure.  ⛔ This constant is declared HERE and in the manifest, and
 # tests/test_lua_gate_budget_backstop.py requires the two to agree, so moving one
 # alone trades one red for another.
-BUDGET_SECONDS = 520.0
+BUDGET_SECONDS = 530.0
 # Hard stop while measuring.  Anything at or over the per-test cap is out
 # regardless, so there is no reason to pay for its exact number.
 MEASURE_TIMEOUT_SECONDS = 6.0

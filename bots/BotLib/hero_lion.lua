@@ -1209,6 +1209,172 @@ function X.lion_IsPanicHexLevelOpen( nHeroLevel )
 end
 
 
+--- Is this teamfight Hex candidate inside the ring the branch is willing to
+--- cast at?
+---
+--- Soak candidate `lionwfight` (turbo-only, INERT until armed).
+---
+--- THE DEFECT, and it is a SCOPE defect, not a threshold one.  X.ConsiderW's
+--- 团战 branch runs a "most dangerous enemy" argmax over `nInBonusEnemyList`
+--- (:1250, `J.GetNearbyHeroes( bot, nCastRange + 300, ... )`) and then applies
+--- its reach test to the WINNER ONLY:
+---
+---     if npcMostDangerousEnemy ~= nil
+---         and J.IsInRange( bot, npcMostDangerousEnemy, nCastRange + 50 )
+---
+--- The search ring is 300 over cast range, the acceptance ring is 50 over it.
+--- The 250 units between them are an annulus in which a candidate cannot be
+--- cast at but CAN WIN THE ARGMAX -- and a winner drawn from it does not fall
+--- through to the next-best in-range enemy, it kills the whole branch.  Lion
+--- stands in a teamfight with Hex up, a legal castable enemy inside 625, and
+--- casts nothing, because someone slightly further out projects more physical
+--- damage at him.  The veto is silent: no desire is bid, so nothing downstream
+--- can tell this apart from "no candidate existed".
+---
+--- ⛔⛔ THE THIRD CONSUMER OF A RING THAT WAS ALREADY BEING RETROFITTED, one
+--- branch over, and the retrofit did not find it.  `lionwreach` (:1008, written
+--- 2026-09-12) says in its own header that X.ConsiderW "draws ONE wide search
+--- ring `nCastRange + 300` and hands it to TWO interrupt sub-branches" with
+--- inconsistent reach terms, and gives both of them `nCastRange + 50`.  THIS
+--- branch reads the SAME `nInBonusEnemyList` (:1391) and wants the SAME bound,
+--- and it was not in that count.
+---
+--- ⭐ WHY A SEARCH FOR THE MISSING TERM WALKED PAST IT: the two interrupt legs
+--- fail by OVER-REACHING (they bid at a hero too far to cast at), so they are
+--- found by looking for a firing point with no distance test.  This leg HAS a
+--- distance test -- `J.IsInRange( bot, npcMostDangerousEnemy, nCastRange + 50 )`
+--- is right there, eight lines down -- and fails by SELF-VETOING, because the
+--- test sits after the argmax instead of inside it.  ⛔ So "does this branch
+--- test distance" is the wrong question for this family; the question is
+--- "is the ring it SEARCHES the ring it will ACCEPT from", and the three legs
+--- of this one function answer it three different ways.
+---
+--- ⛔ This id is `lionwfight`, NOT `lionwreach`.  The first draft reused
+--- `lionwreach` -- it is the obvious name and it was already taken by the
+--- sibling above.  Arming one string would then have armed two levers on two
+--- branches: a bundle wearing one id's clothes (GH #606), with no wave able to
+--- separate them.  §1.6 asserts the two ids stay distinct, and the mutation
+--- stand's M4 collides them on purpose.
+---
+--- ⭐ THE SAME ARGMAX BODY EXISTS THREE TIMES IN THE FOCUS FIVE, BYTE FOR BYTE,
+--- WITH THREE DIFFERENT REACH POSTURES.  This is the copy that lost:
+---
+---   hero_crystal_maiden.lua:1805  ring `nCastRange` (:1761), no winner test
+---       -> search ring == castable ring.  CORRECT, and it needs no test.
+---   hero_skeleton_king.lua:1355   ring `nCastRange + 43` (:1326), no winner
+---       test -> casts at a winner up to 43 units out of range.  A separate
+---       (opposite-signed) lever, NOT this id; registered in GH #PENDING-BACKFILL.
+---   hero_lion.lua:1303            ring `nCastRange + 300`, winner tested at
+---       `nCastRange + 50` -> this defect.
+---
+--- The three bodies are identical from `local npcMostDangerousEnemy = nil`
+--- through the assignment; only the ring each one is handed differs.  So the
+--- shape was copied and the reach term was NOT -- the thing that makes the
+--- copies safe or unsafe is the one thing that did not travel with them.
+--- tests/test_lion_w_fight_reach.lua §2 pins all three rings out of source.
+---
+--- DIRECTION -- one-way, but WIDENING, and that is the opposite sign from this
+--- file's other three reach terms (`lionraoe`, `lionqkill`, `liondrainreach`
+--- all narrow).  Stated as a case split because it is asserted, not hoped for
+--- (§3 drives all three cases).  Let S be the shipped candidate set and
+--- T = S restricted to the acceptance ring:
+---
+---   * shipped CASTS (its winner w is in T): w is the max over S, so it is
+---     still the max over T, so armed picks the SAME target.  Ties cannot move
+---     it either -- a tied member of T ordered before w would already have
+---     blocked w under the strict `>`.  IDENTICAL FRAME.
+---   * shipped is VETOED (w exists but sits in the annulus) and T is non-empty:
+---     armed casts on the most dangerous IN-RANGE enemy.  This is the whole
+---     lever: no-cast becomes cast.
+---   * T is empty: both answer nothing.
+---
+--- ⛔ So a reading of this id may be quoted as "N hexes that shipped play did
+--- not cast", and NEVER as "N hexes moved to a different target" -- armed
+--- cannot retarget a cast shipped play already makes, and cannot bid at a point
+--- outside the acceptance ring, because the reach it applies is the caller's
+--- own `nCastRange + 50` handed in, not a second copy of that number (§1.4
+--- parses both out of source and asserts them equal, so they cannot drift).
+---
+--- The AoE-talent leg is covered by the same term: when X.IsHexAoe() is true
+--- the branch returns `npcMostDangerousEnemy:GetLocation()`, and a point out of
+--- cast range is exactly as uncastable as a unit out of cast range.
+---
+--- CONDITION (c).  Hex is a 575-650 range, 2-3.2s hard disable on a hero with
+--- no other way to survive being jumped; standard support practice is that it
+--- is spent on whoever the fight is actually reachable against, and "the
+--- biggest threat is 30 units too far, so hold it" is not a play anybody makes.
+--- In Turbo the cooldown (24/20/16/12s) comes back fast enough that a spent Hex
+--- on the second-biggest threat beats a held Hex every time.
+---
+--- ⭐ THE VETO IS WITNESSED ON A REAL FRAME WITH NOTHING INJECTED, and the
+--- margin is the part to read twice.  tests/fixtures/f_260820_182906_lion_drain
+--- _survived.lua, Lion the subject, Hex rank 1 (cast range 575, so the rings are
+--- 625 and 875):
+---
+---   npc_dota_hero_luna              177.8u   in the acceptance ring
+---   npc_dota_hero_crystal_maiden    625.2u   in the annulus, by 0.2 UNITS
+---
+--- Both clear the loop's whole filter.  Crystal Maiden projects 144 physical
+--- damage over the window and Luna projects 0, so the shipped argmax picks
+--- Crystal Maiden, the winner test asks for 625 and gets 625.2, and the branch
+--- returns nothing -- with a legal target standing at 177.8u.  A hard disable is
+--- held over two tenths of a unit.  §3.2 of the test drives exactly this with no
+--- injected number.
+---
+--- ⛔⛔ AND ARMING THIS ID ALONE DOES NOT RESCUE THAT FRAME -- the two defects in
+--- these six lines MASK EACH OTHER, which is a fact about wave order and must
+--- not be re-measured as a fact about this lever.  Filter Crystal Maiden out and
+--- the only candidate left is Luna at 0, and the argmax SEEDS AT 0 and tests
+--- with a strict `>` -- so the seed eats her and the branch still returns
+--- nothing.  The seed is the second defect (see the census in GH #PENDING-BACKFILL; it is
+--- the same `= 0` + strict `>` polarity in all three copies) and it has its own
+--- id.  ⛔ Naming that id in this predicate would be the pullcad trap (§1.6
+--- asserts this function does not); the pair is requested as one atom in
+--- iterations/queue.json, never this id alone on a corpus-like frame.
+---
+--- ⚠️ HONEST BOUNDS, four:
+---   1. THE DOMAIN READING IS THIN AND IS QUOTED AS SUCH.  Over 112 fixtures:
+---      25 live-Lion instants, 5 clear J.IsInTeamFight( bot, 1200 ), 1 clears
+---      the branch's own second guard, and that 1 has the drivable shape.
+---      1-of-1 is a RATE OVER ONE FRAME.  §3.1 drives it; it is not evidence
+---      about frequency in play, and nobody may quote it as one.
+---   2. ⚠️ THE PREMISE THIS LEVER WAS DRAFTED ON WAS FALSE, corrected here so it
+---      is not inherited a third time.  Four places in this tree say the mock's
+---      GetEstimatedDamageToTarget "answers 0 on every fixture frame"
+---      (jmz_func.lua:9905, tests/_overchase_sweep.lua:38,
+---      tests/test_focus_decision_reachability.lua §4.3b's prose, and this
+---      header's own first draft).  It does not: the 144 above is a
+---      counterexample.  The accurate statement is the one
+---      tests/test_chasering_target_in_ring.lua:48 already carried -- it answers
+---      GROUND TRUTH FOR DAMAGE DEALT TO THE FIXTURE SUBJECT, so it reads 0 for
+---      an attacker who happened not to connect in that window, and the pins the
+---      "always 0" claim was measured on are subject-facing frames where that
+---      was true.  §3.3 pins the luna/crystal_maiden pair so the distinction
+---      cannot collapse back into "always 0".  GH #PENDING-BACKFILL carries the correction.
+---   3. WHAT STILL NEEDS A DECLARED NUMBER is only the armed half: the meter is
+---      RETROSPECTIVE, so Luna's 0 says she did not connect in that window, not
+---      that a level-appropriate carry at 177u projects nothing.  §3.2b pays ONE
+---      number for that and labels it; the shipped veto above pays none.
+---   4. NOT in this id: the 43-unit over-reach in hero_skeleton_king.lua and
+---      the `nCastRange + 300` ring itself.  Shrinking the SEARCH ring would
+---      also change `#nInBonusEnemyList`, which this branch's entry guard reads
+---      (`#nInBonusEnemyList >= 2`), so it is a different question with a
+---      different blast radius.  This term touches the argmax only.
+function X.lion_IsHexFightTargetInReach( hBot, hTarget, nAcceptReach, bShippedInReach )
+
+	if not bShippedInReach then return bShippedInReach end
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'lionwfight' ) ) then return bShippedInReach end
+
+	if hBot == nil or hTarget == nil then return bShippedInReach end
+
+	if type( nAcceptReach ) ~= 'number' then return bShippedInReach end
+
+	return J.IsInRange( hBot, hTarget, nAcceptReach )
+
+end
+
+
 function X.ConsiderW()
 
 
@@ -1309,6 +1475,11 @@ function X.ConsiderW()
 				and not J.IsDisabled( npcEnemy )
 				and not J.IsTaunted( npcEnemy )
 				and not npcEnemy:IsDisarmed()
+				-- [lionwfight] gate off, this conjunct is the literal `true` the
+				-- shipped loop has here; see X.lion_IsHexFightTargetInReach.
+				-- The reach handed in is the caller's OWN acceptance ring, the
+				-- same `nCastRange + 50` the winner test below uses.
+				and X.lion_IsHexFightTargetInReach( bot, npcEnemy, nCastRange + 50, true )
 			then
 				local npcEnemyDamage = npcEnemy:GetEstimatedDamageToTarget( false, bot, 3.0, DAMAGE_TYPE_PHYSICAL )
 				if ( npcEnemyDamage > nMostDangerousDamage )
