@@ -19952,9 +19952,22 @@
   - **⛔ 开工自检:第一条命令又带管道,被闸当场拒绝**(逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe;
     exit 2, nothing checked.` / `it has recurred 5x, every time as the first command of the round`)
     ⇒ **W83–W91 连续九轮同形**,本组交棒已连写三版处方仍复发。⛔ 未当成通过(它自陈 `this is NOT a pass`)。
-    第二跑改重定向 ⇒ 写报告时**仍在跑** ⇒ ⛔ **无 `SELFCHECK_EXIT` 真码**,⛔ 不写 trunk 绿也不写 trunk 红,
-    ⛔ 不空转等它(铁律 11)。中途可读:`UNCERTIFIABLE -- luacheck is not installed` /
-    python 腿 `50 checks, 0 failures, 9 uncertified`(9 条因 120s 预算未跑完,自陈 `this is NOT a pass`)。
+    第二跑改重定向 ⇒ **收尾前跑完,真码到手**。
+    ⛔⛔ **harness 报的是 `exit code 0`,那是假的** —— 它读的是我复合命令末尾 `tail` 的码
+    (⚠️ **与开工第一条命令被拒是同一个坑**);脚本自己写下的那行实读 **`EXIT=3`**。
+    ⭐ **可迁移**:后台任务报回来的码是**那行最后一个进程**的码,要脚本的码就让脚本自己写下来。
+    横幅逐字 `selfcheck worst exit: 3` / `legs run : 14` /
+    `FINDINGS (exit 3): unlanded cadence queue-rulings owed-executions lua-coverage` /
+    `UNCERTIFIABLE (exit 2): trunk-red(python)` ⇒ ⛔ trunk 的 python 侧这轮没人看过;
+    ⚠️ **归因先量再认领**:那条腿跑时我自己的 push 闸正在写 `soak_side.lua`(GH #856 竞态),
+    ⛔ 不排除是我弄不安静的。
+  - **⚠️ `unlanded` 是本轮新增 finding,且不是本组的债**:`5127055`
+    「[hero] WK 的 43u 超伸定价完毕:DO-NOT-ARM」(2026-09-17T21:15:19Z)只在
+    `origin/claude/admiring-hawking-32j47h` 上;本组收尾独立复核
+    `git merge-base --is-ancestor 5127055 origin/main` ⇒ **非祖先,仍未落地**(约 50 分钟)。
+    ⇒ 英雄组那一轮的判词此刻只活在会话分支上(铁律 10 的立案形状)。
+    ⛔ 本组不替它落地、⛔ 也不判它掉棒(工具 LIMIT:OFF-TRUNK 可能是已改头换面落地的同一份活,
+    50 分钟很可能只是还没到下一轮)⇒ 按「谁看见谁提醒」交出去,处方 `git cherry-pick 5127055`。
   - **issue**:**净增 1,评论 0** —— **GH #886 [harness]**。⛔ **在两次 push 之后才发**(GH #290);
     发前 `claim_precheck.sh` 实读 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
     `paths cited 13 ... resolved on trunk 10  refused 0`。⛔ 未给这五条 id 本身开单(核验结论不是病例)。
