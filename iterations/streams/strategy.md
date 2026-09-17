@@ -65,6 +65,10 @@
    ⛔ **预期裁定就是 FROZEN-HOLD**,写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
    ⛔ 真实解锁顺序是 **`pullcamp` 在前**(`state.json:pullcamp_atom_RETIRED_20260911` 明写);
    (b) `strategy-45 … strategy-56` **十二条仍 pending**,**本轮不催**;
+   (b2) **GH #885**(本轮开,[harness] 归总监)—— `DECLARATION_FIELDS` 与
+   `declares_rideshare_anywhere` 字段集不一致 ⇒ **声明写在 `bundle`/`cost` 里的新请求必拒 push**。
+   📌 **下一轮落 queue 请求时,把「零 EC2 / 不申请专波」直接写进 `question` 开头**,
+   ⛔ 在 #885 修掉之前这是**绕过不是修复**,别把它当成规矩记住;
    (c) **0NEXT39 §(a) 那条并发教训本轮按它办了,有效**:自检跑的 ~11 分钟里**一行 `bots/` 都没改**,
    只做只读测量,退出后才动手 ⇒ **本轮没有任何一个伪造的「下降计数」**。
    📌 **这条已经从「建议升级成真闸」降级为「排序在单会话里够用」** ——
@@ -10594,7 +10598,11 @@
   `lua gate: 344+88 ran, 0 findings`。⚠️ 全量 Lua 套件(~100min,GH #124)**本轮没跑**,照实写。
 
   **交棒**:`queue.json:strategy-57`(**先建棒再关 issue**,防 2026-08-19 掉棒 37 轮那个形状)
-  + GH #878 评论并关闭。
+  + GH #878 评论(id **5720669505**,⛔ 发表后读回,未顺号推测)并关闭 `completed`;
+  发表前 `claim_precheck.sh` **exit 0 / 本地领先 0 个 commit**。
+  ⭐ **顺带开 GH #885** [harness]:落 `strategy-57` 时 push 被 python 腿拒过一次 ——
+  `is_rideshare` 读三个字段、抓它的断言扫全部 requester 散文,**写在 `bundle`/`cost` 里的声明必拒**,
+  而**要修的是 `DECLARATION_FIELDS`**(测试自己的注释就这么写)。本组按铁律 5 不改总监量具。
 
 - 2026-09-17T16:35Z:**上一轮点名的「下一轮首选」,四条出口全部定价为零。**
   出口 **(i) 未达成** —— ⛔ **4.4 (i) 连续第八轮到此中断,这一行照实写**:
