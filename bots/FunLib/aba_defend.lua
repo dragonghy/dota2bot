@@ -409,7 +409,9 @@ function WeightedEnemiesAroundLocation(vLoc, nRadius)
     -- provable no-op (see the GetThreatenedLane block below).
     --
     -- ⛔ THE FLOOR ITSELF IS NOT TOUCHED and neither is `count`: the floored,
-    -- hero-only sum still feeds the `creepWeight >= 2` base-threat re-arm, and
+    -- hero-only sum still feeds the `creepWeight >= 2` base-threat re-arm (that
+    -- call site reads the raw sum too now, under its own id [basecreep] -- the
+    -- FIRST return value there is still this one, byte for byte), and
     -- `math.floor` also guards the ShouldDefend role ladder. Moving either
     -- would move every one of those in a single edit -- the lanefix mistake.
     --
@@ -462,6 +464,10 @@ end
 -- exactly three consumers in this file and two of them are provable no-ops:
 --   * `creepWeight >= 2` (base-threat re-arm, ~line 1085): for any real x,
 --     `math.floor(x) >= 2` iff `x >= 2`. The floor cannot change that answer.
+--     ⚠️ READ THE SCOPE OF THAT SENTENCE: it is about WALL 2 ONLY. WALL 1 is
+--     NOT a no-op there -- that call site is the second consumer of the same
+--     IsValidHero-filtered list, and is repaired separately as [basecreep]
+--     (0NEXT35: the consumer that gets fixed is what hides the rest).
 --   * the ShouldDefend `nNearby` role ladder: `1/2/3/>=4` on an integer sum --
 --     the truncation there is load-bearing and was priced separately last
 --     round ([defcreep], tests/test_defquiet_creep_siege.lua). NOT touched.
@@ -1199,12 +1205,79 @@ function ____exports.GetDefendDesireHelper(bot, lane)
         if heroesNearAncient >= 1 then
             baseThreatUntil = DotaTime() + BASE_THREAT_HOLD
         elseif isBaseThreatActive then
-            local creepWeight = WeightedEnemiesAroundLocation(
+            -- [basecreep / charter 0NEXT35] THE TOP-UP THAT EXISTS FOR CREEPS
+            -- CANNOT SEE A CREEP, AND WHEN IT DOES FIRE IT SHORTENS.
+            --
+            -- The TypeScript source states this branch's policy in its own
+            -- words one line above the arm: "heroes start, creeps can only
+            -- extend". Neither half of that sentence is true of the code.
+            --
+            -- ⭐ HALF 1 -- IT CANNOT SEE A CREEP. This is WALL 1, the list,
+            -- derived in WeightedEnemiesAroundLocation's own block above:
+            -- that function prices off `unitState.enemyHeroes`, which is
+            -- GetUnitList(UnitType.Enemies) already filtered by IsValidHero,
+            -- so its siege / upgraded / IsCreep() rungs are unreachable and a
+            -- creep weighs NOTHING. ⛔ [threatcreep] measured WALL 2 (the
+            -- floor) to be a provable no-op HERE -- `math.floor(x) >= 2` iff
+            -- `x >= 2` -- and that remains true and is still driven in
+            -- tests/test_threatcreep_lane_tiebreak.lua. It says nothing about
+            -- WALL 1, and WALL 1 is the one that bites here: this call site is
+            -- the SECOND consumer of that list, and the first consumer being
+            -- repaired is what took it out of view (0NEXT35).
+            --
+            -- ⇒ closed form. The arm is reached only when
+            -- `heroesNearAncient == 0`, and CountEnemyHeroesNear counts
+            -- exactly the valid enemy heroes inside BASE_THREAT_RADIUS -- the
+            -- same set that feeds the only reachable rung of the sum. So the
+            -- shipped `creepWeight` here is 0 on every frame this line runs,
+            -- except through the <= CACHE_ENEMY_AROUND_LOC_HZ cache, i.e. off
+            -- a hero reading at most 0.35s stale.
+            --
+            -- ⭐ HALF 2 -- AND ON EXACTLY THOSE STALE FRAMES IT SHORTENS. The
+            -- assignment is `=`, not a max. A stale-cache hit means a hero was
+            -- inside the radius under 0.35s ago, i.e. the arm above ran and
+            -- left `DotaTime() + BASE_THREAT_HOLD` (= +4) pending; replacing
+            -- it with +1.5 cuts the hold. So the shipped branch can do only
+            -- two things: nothing, or the opposite of what it is for.
+            --
+            -- ⛔ WHY ONE ID AND NOT TWO (0NEXT34 §乙, the mechanical test:
+            -- land each half alone and ask whether the number moves).
+            --   * raw sum alone, keeping `=`: the number moves, and it moves
+            --     in the one direction this branch is forbidden -- a mega wave
+            --     at the ancient would now cut a live hero hold from +4 to
+            --     +1.5. Not admissible alone.
+            --   * max alone, keeping the hero-only sum: by the closed form the
+            --     condition is false except on the stale frames, and on those
+            --     the pending value is the larger one -- so it is a no-op.
+            -- Neither half is shippable by itself ⇒ one atom, one id.
+            --
+            -- ⛔ STANDALONE GATE, never a conjunction with 'threatcreep' (the
+            -- 'pullcad' trap: a gate naming a second candidate id freezes
+            -- FALSE the day that id is promoted). [threatcreep] gates a
+            -- different call site at a different radius, and the two cache
+            -- keys differ (_keyLoc quantises the radius), so neither reads the
+            -- other's entry.
+            --
+            -- ⛔ THE THRESHOLD 2 IS NOT TOUCHED, and that is the conservative
+            -- side of the arithmetic: at 0.2 a basic wave of four is 0.8 and
+            -- still does not top up. What clears 2 is a siege/mega push
+            -- (0.5 / 0.6 a body), which is the situation the branch names.
+            --
+            -- ⛔ DIRECTION, one-way and arithmetic. rawCount starts FROM the
+            -- unfloored hero sum and only adds non-negative creep terms, and
+            -- `count` is floored after that, so raw >= shipped always ⇒ armed
+            -- can only turn this condition FALSE -> TRUE; and math.max means
+            -- it can only push baseThreatUntil later. Armed can never disarm
+            -- base threat, never shorten a hold, and off the gate this block
+            -- answers byte for byte as shipped.
+            local creepWeight, creepWeightRaw = WeightedEnemiesAroundLocation(
                 ancient:GetLocation(),
                 BASE_THREAT_RADIUS
             )
-            if creepWeight >= 2 then
-                baseThreatUntil = DotaTime() + 1.5
+            local bBaseCreep = jmz.IsSoakCandidate("basecreep") and jmz.IsModeTurbo()
+            if (bBaseCreep and creepWeightRaw or creepWeight) >= 2 then
+                local nTopUp = DotaTime() + 1.5
+                baseThreatUntil = bBaseCreep and math.max(baseThreatUntil or -1, nTopUp) or nTopUp
             end
         end
     end

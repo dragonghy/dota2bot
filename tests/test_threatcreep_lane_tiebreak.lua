@@ -41,6 +41,10 @@
 -- aba_defend and two are provable no-ops:
 --   * `creepWeight >= 2` (base-threat re-arm): `math.floor(x) >= 2` iff
 --     `x >= 2` for any real x. The floor cannot change that answer.
+--     ⚠️ SCOPE: that is about WALL 2 only, and §5 below drives exactly that.
+--     WALL 1 is NOT a no-op at that call site -- it is the second consumer of
+--     the same IsValidHero-filtered list, repaired separately as [basecreep]
+--     (tests/test_basecreep_ancient_rearm.lua).
 --   * the ShouldDefend `nNearby` role ladder: load-bearing there, priced last
 --     round ([defcreep], tests/test_defquiet_creep_siege.lua). NOT touched.
 -- Only the tie-break turns a 0.32 into a 0.00. So the fix builds a PARALLEL

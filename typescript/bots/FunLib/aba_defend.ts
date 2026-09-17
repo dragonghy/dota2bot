@@ -833,9 +833,33 @@ export function GetDefendDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
         if (heroesNearAncient >= 1) {
             baseThreatUntil = DotaTime() + BASE_THREAT_HOLD;
         } else if (isBaseThreatActive) {
-            const creepWeight = WeightedEnemiesAroundLocation(ancient.GetLocation(), BASE_THREAT_RADIUS);
-            if (creepWeight >= 2) {
-                baseThreatUntil = DotaTime() + 1.5; // small top-up only
+            // [basecreep / charter 0NEXT35] The comment on the line above states
+            // this branch's policy -- "heroes start, creeps can only extend" --
+            // and neither half of it is true of the code. See the Lua block for
+            // the full derivation; in short:
+            //   * it cannot see a creep. WALL 1 (the list):
+            //     WeightedEnemiesAroundLocation prices off `enemyHeroes`, which
+            //     is already IsValidHero-filtered, so its creep rungs are
+            //     unreachable. [threatcreep] proved WALL 2 (the floor) a no-op
+            //     HERE; that says nothing about WALL 1, and this call site is
+            //     the second consumer of the same list (0NEXT35).
+            //   * the arm is reached only when heroesNearAncient === 0, and that
+            //     counts the same hero set the only reachable rung sums, so the
+            //     shipped weight is 0 except through the <= 0.35s cache -- i.e.
+            //     off a hero reading, on frames where `=` REPLACES a pending
+            //     +BASE_THREAT_HOLD with +1.5 and shortens the hold.
+            // Neither half is shippable alone (raw sum alone can only move the
+            // number in the forbidden direction; max alone is a no-op), so this
+            // is ONE id, gated STANDALONE -- never conjoined with 'threatcreep'
+            // (the 'pullcad' trap). The threshold 2 is untouched: a basic wave
+            // of four is 0.8 and still does not top up; a siege/mega push does.
+            // Direction is one-way -- raw >= shipped always, and math.max can
+            // only push the deadline later.
+            const [creepWeight, creepWeightRaw] = WeightedEnemiesAroundLocation(ancient.GetLocation(), BASE_THREAT_RADIUS);
+            const bBaseCreep = jmz.IsSoakCandidate("basecreep") && jmz.IsModeTurbo();
+            if ((bBaseCreep ? creepWeightRaw : creepWeight) >= 2) {
+                const nTopUp = DotaTime() + 1.5; // small top-up only
+                baseThreatUntil = bBaseCreep ? math.max(baseThreatUntil || -1, nTopUp) : nTopUp;
             }
         }
     }
