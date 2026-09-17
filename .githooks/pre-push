@@ -214,6 +214,24 @@ esac
 # positive answer, never the absence of one.
 changed=$(git diff --name-only origin/main...HEAD 2>/dev/null) || changed=""
 
+# ANNOUNCE the scope decision BEFORE the leg runs (GH #865 (C), director
+# RULING 69).  Until this line existed the leg printed nothing on its way in,
+# so in the log a leg that HUNG and a leg that SKIPPED were indistinguishable
+# -- and #865's own first draft misattributed four reproducible hangs to "a
+# network/proxy timeout on creating a new remote ref", i.e. turned a fixable
+# harness defect into an unactionable fact about the environment.  This line
+# costs nothing and makes that mistake unavailable.
+if [ -z "$changed" ]; then
+    lua_scope_note="lua gate: scope EMPTY -> running the WHOLE manifest (fail-closed: a skip needs a positive answer, never the absence of one). This is the slow path, minutes not seconds. NOTE: if this push followed a successful 'git push origin HEAD:main', then origin/main already equals HEAD and this empty answer means 'main already has these commits', NOT 'no Lua was touched' -- the two are read as one here (GH #865). The documented order is branch FIRST, then main."
+else
+    lua_scope_note="lua gate: scope = $(printf '%s\n' "$changed" | wc -l | tr -d ' ') path(s) changed vs origin/main"
+fi
+if [ -n "$RULE6_LOG" ]; then
+    printf '%s\n' "$lua_scope_note" | tee -a "$RULE6_LOG"
+else
+    printf '%s\n' "$lua_scope_note"
+fi
+
 if [ -n "$RULE6_LOG" ]; then
     # shellcheck disable=SC2086 -- word splitting on the path list is intended
     python3 tools/agent/lua_gate.py --if-touched $changed 2>&1 | tee -a "$RULE6_LOG"

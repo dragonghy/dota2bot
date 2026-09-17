@@ -1604,6 +1604,18 @@
     "note": "⭐ 判据二选一,**都要带读数**:(甲) `CARRY_MARK_RE` 收紧,且报告里给出**对全部 entry 跑候选锚的差集逐条核对**(⛔ 不接受「新正则在 fixture 上过了」当判据 —— 被否掉的那两个候选锚在 fixture 上同样会过);(乙) 明确裁定**不收紧**并给出理由,同时把这个洞在 LIMITS 里升级为长期条款。⛔ **不接受**「`test_carry_item_issue_state.py` 全绿」当判据:本轮它 53 checks / 0 failures 而洞仍在。"
    },
    "partial_execution": "**本轮买到的是量,不是修**:(i) 分母 86 条 entry;(ii) loose 52 / 有清单 52 ⇒ 今日发生率 **0/86**;(iii) 两个候选锚各自的**具体反例 entry 戳**(见 ruling);(iv) 第三个读数是差集为空:冒号锚命中 51 条,与 loose 只差 `2026-09-16T10:1xZ` 一条,且**在两者都命中的 51 条上抽出的 GH ref 集合逐条相同**(实测 `ref-set differs on: []`)⇒ 收紧**不会改变任何已有读数**,唯一风险就是那条差集。"
+  },
+  {
+   "id": "gh865_prepush_scope_from_stdin",
+   "issue": "GH #865([harness],批测台 2026-09-17T00:16Z 立,四次复现 + 一次 --no-verify 证伪实验)。本行是该 issue §五 的 (A),即结构修法。同轮处置:(D)(批测台 03:34Z 追评补的零代码候选)**采纳并落地**,(C) **落地**,(B) **不买**。⛔ (B) 不是「并进 (A)」—— 批测台 §三 逐字否掉了这个读法:(A) 只动第三腿的作用域,`memo_key()` 一个字没动 ⇒ 孪生 push 照样 MISS;要动的是**键本身**。⭐ 而 (D) 落地之后 (B) 的收益为零(按文档顺序 `base` 不动,键逐位相同,memo 本来就 HIT)。",
+   "covers_ids": [],
+   "ruling": "总监 **RULING 69**(2026-09-17T04:xxZ,全文 `iterations/reports/director/20260917T042000Z.md`,并见 `DECISIONS_NEEDED.md` 第 17 条的「已裁并撤回」节)。**采纳 (A)**:`.githooks/pre-push` 第三腿的 scope 不再用 `origin/main...HEAD`,改用 **git 在 stdin 上交给钩子的那一行的 remote sha**(`<local ref> <local sha> <remote ref> <remote sha>`;新 ref 时为全零 ⇒ 那才是真正的「无从判断 ⇒ 跑全集」)。⭐ **前提已现场核过**:当前钩子**一行 stdin 都没读**,所以那四个字段是可用的,不是要去别处找的。⛔ **fail-closed 方向不许动**:改的是「把一个空答案分成两种」,不是「多一条跳过的理由」—— 写歪的失效方向是**该跑没跑**,正是 GH #624 立案的那一类。⚠️ **本轮只裁不修是决定不是遗漏**:(A) 改的是全队每一次 push 的必经之路,它需要一个真 stand(全零 sha / 非零 sha 无路径 / 非零 sha 有路径 三个入口各一条读数),超出一个总监工作单元。⭐ **同轮已把触发条件拆掉**:文档顺序(先分支后 main)经 RULING 69 保持不变并钉上 `tests/test_push_order_contract.py` ⇒ 按文档走就不会踩到空 scope;(A) 是深度防御,不是唯一防线。",
+   "ruled_at": "2026-09-17T04:xxZ",
+   "executor": "总监(本座位自己;⛔ 不派给批测台 —— #865 §四 逐字写了「本台不猜」,而写入权在总监)",
+   "trigger": "下一个总监工作单元,除非当轮有 [bug] issue 或 promote 判定排在前面",
+   "delivered_to": "GH #865 追评(本轮);`DECISIONS_NEEDED.md` 第 17 条「已裁并撤回」节;`.claude/rules/claude-code.md` 的 `## Push path` 节",
+   "why_registered_here": "⚖️ 章程 2.6:本轮推迟了 (A) 的执行。⛔ 不许把「它还挂在 #865 里」当作不掉棒的论据 —— 一条只活在别人 issue / 报告散文里的欠裁,平均寿命是一轮(2.6 的立案句)。⭐ 本行同时替 #865 §四 收口:那个开放项(`rule6_memo` 为什么没命中)**已由本轮答掉**(键 = `(HEAD^{tree}, origin/main)`,反序把键的后一半换掉 ⇒ 恒定 MISS),⛔ 但**答案不是修复**,(A) 仍欠。",
+   "done_when": "三条同时成立,裸读得出:(1) `.githooks/pre-push` 里 `origin/main...HEAD` **不再**是第三腿 scope 的取数式;(2) 同文件出现从 stdin 读 remote sha 的那一行(`while read` 或等价,且注释写明全零 = 新 ref = 跑全集);(3) `tests/` 下有一条钉子,对三个入口各断言一次(全零 sha ⇒ 跑全集 / 非零 sha 且无 bots-game-tests 路径 ⇒ SKIPPED BY SCOPE / 非零 sha 且有路径 ⇒ 跑该子集),且带一个变异台读数(control 绿 + 每个变异各自死)。⛔ 只做 (1)(2) 不算结清:没有 (3),下一次有人把 scope 改回去时没有任何东西会举手。"
   }
  ],
  "retired": [

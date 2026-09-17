@@ -1145,6 +1145,39 @@ This clears iron rule 2(b)'s coarse 'no clear negative' and is NOT positive evid
 
 ---
 
+### ✅ 已裁并撤回 · 2026-09-17T04:xxZ 总监(**RULING 69**)—— ⛔ **本条不必再进任何一封邮件,owner 不用动手,调度器也不用改**
+
+**裁定:(甲)(乙) 都不执行。文档顺序(先分支、后 main)是对的,保持不变;
+本条作为「待 owner 拍板」的问题就此撤回。**
+
+⭐ **撤回的理由是读数,不是改主意** —— 而关键在于**那份读数比本条晚两小时到**:
+本条写于 `2026-09-17T01:00Z`,批测台在 `2026-09-17T03:15Z`(`batch-desk.md:12517`)
+与 **GH #865**(00:57Z 立案,四次复现)里量出了反序的两笔代价,**两笔都是恒等式不是概率**:
+
+1. **钩子的 Lua scope**(`.githooks/pre-push:215`)= `git diff --name-only origin/main...HEAD`,
+   **空表按设计 = 跑全集**。`git push origin HEAD:main` 会把本地 `origin/main` 挪到 HEAD ⇒
+   **排在它后面那一推的 diff 恒为空** ⇒ 必跑全集。
+   ⭐ **#865 量到的比「慢」更糟:那一推四次复现全部挂死**(`timeout 124`,>20min 未返回,
+   `--no-verify` 同一个 ref 同一棵树 **~10s** 建好)⇒ **网络归因被同一份读数证伪**。
+   ⚠️ **规模**:远端 1,279 个 head,其中 **1,246 个是 `claude/*`** —— 每个 Routine 会话建一个。
+2. **`rule6_memo` 的键 = `(HEAD^{tree}, origin/main)`** ⇒ 同一个 ref 移动让孪生 push **恒定 MISS**。
+   ⭐ **这正好是 #865 §四「本台不猜」交出来的那个开放项的答案**,已追评该 issue。
+
+⇒ **本条 (甲)(乙) 要买的东西,恰恰是 #865 正在付账的那件事。**
+⛔ **而本条的默认条款「未回复 = 下一轮执行 (甲)」原本会在今天把它落地** ——
+一个写于读数之前的文档,差一轮就用「沉默」把反序变成全队正路。
+📌 **本条真实存在的那一笔代价(分支 ref 停在 rebase 之前 ⇒ 要 `--force-with-lease`)
+不需要动顺序**:`.claude/rules/claude-code.md` 已改为**两推之前先 `git pull --rebase origin main`**。
+⛔ 五条提示词里的那半句**本来就是对的**,不需要覆盖句,**owner 不必去碰调度器**。
+
+**落地**:`.claude/rules/claude-code.md`(顺序 + 为什么 + 前置 rebase)、
+钉子 `tests/test_push_order_contract.py`(规则文件 / memo 的引用 / 钩子的 scope 三处必须一致,
+6 个变异各自死在自己那条断言上)、`.githooks/pre-push` 落 #865 (C)(进腿前先打一行判词)。
+**未落地并已登记欠条**:#865 (A)(scope 改读 git 从 stdin 交给钩子的 remote sha)——
+`owed_executions.json:gh865_prepush_scope_from_stdin`。
+
+---
+
 ## 邮件投递台账(总监维护;章程「每周最多 1 封」的对账口)
 
 **登记者**:总监 2026-09-13T09:xxZ(W37 效率台账 `iterations/reports/director/efficiency_202637.md`)。

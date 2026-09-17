@@ -669,6 +669,56 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-17T04:20Z**:**RULING 69 —— 上一轮给自己写的「未回复 = 下一轮执行」差一轮就把推送顺序反过来,而否掉它的读数比它自己晚两小时到。顺序不动,并从散文变成一条会拒 push 的闸。**
+  全文 `iterations/reports/director/20260917T042000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 69(结清清单 ②)= `DECISIONS_NEEDED` 第 17 条 (甲)(乙) 都不执行、该条撤回**:
+  文档顺序(**先分支、后 main**)保持不变,⛔ **owner 不必碰调度器,五条提示词那半句本来就是对的**。
+  ⭐ **否掉它的是两个恒等式,不是偏好**:(1) 钩子第三腿 scope = `git diff --name-only origin/main...HEAD`,
+  **空表按设计 = 跑全集**,而 `push HEAD:main` 把本地 `origin/main` 挪到 HEAD ⇒ **后一推 diff 恒为空**;
+  (2) `rule6_memo` 键 = `(HEAD^{tree}, origin/main)` ⇒ 同一个移动让孪生 push **恒定 MISS**。
+  ⭐⭐ **GH #865 量到的比「慢」重**:反序那一推**四次复现全部挂死**(`timeout 124`,>20min),
+  第五次 `--no-verify` 同 ref 同树 **~10s** 建好 ⇒ **网络归因被同一份读数证伪**;远端 1,246 个 `claude/*`,每会话一个。
+  ⚠️ **要害是时间线不是提议**:#865 立于 `00:57Z`、第 17 条写于 `01:00Z`、批测台交出候选于 `03:15Z`
+  ⇒ **第 17 条不是错的,是过期的**,而「沉默 = 执行」让一份**写于读数之前**的文档在无人再看一眼时变成正路。
+  📌 与章程 2.6 同族:2.6 管**推迟的裁定会消失**,这一条管**推迟的裁定会自己执行**,后者更安静。
+  **落地三件**:`.claude/rules/claude-code.md`(顺序不动 + 写明为什么 + 前置 `pull --rebase` 解掉第 17 条真实那笔代价);
+  钉子 **`tests/test_push_order_contract.py`**(0.017s,13 checks / 0 failures,钉**规则文件 / memo 的引用 / 钩子 scope** 三处一致);
+  `.githooks/pre-push` 落 **#865 (C)**(第三腿**进去之前**先打一行判词)。
+  ⭐ **必须是闸不是散文的理由是实测的**:同一天里**两个组把同一个文件读成了相反的意思** ——
+  第 17 条说它「写反了」,#865 正文逐字写「按 `claude-code.md` 的既定路径,**先 `push HEAD:main`**」,而该文件当时写的是**先分支**。
+  ⭐⭐ **变异台 7 个各自死;而第一版 M1/M2 死得不对,这本身是第二个读数**:它们死在「那一行不见了」这条**形状**断言上 ——
+  **红是对的,理由是错的**(现实里的反序编辑会把两条命令拆成两行)⇒ 顺序断言改为**只看两个裸 token 的位置**。
+  📌 纪律 4「匹配的结论不等于正确的理由」。
+  ⛔ **更正一句我差点署名的话**:#865 §四 的答案**不是我给的** —— 批测台 `03:34:51Z` 追评
+  (`issuecomment-5708068813`)已用 push 前后两次 `rule6_memo.py key` 量完(`tree` 逐位相同、唯一变的是 `base`、
+  `ls .git/rule6_memo/` 只有 PRE-PUSH 那个键 ⇒ **`put` 存了、`get` MISS**)。我的源码推导只是**同一结论的第二条路径**。
+  ⭐ **而 RULING 69 采纳的正是批测台同一条追评里补的第四个候选 (D)「只改顺序,零代码」** —— 两条独立路径撞在同一答案上。
+  **(A) 采纳但降为深度防御、本轮不修** ⇒ 欠条 `gh865_prepush_scope_from_stdin`
+  (前提已核:**当前钩子一行 stdin 都没读**;(D) 之后它仍有值,因为空 scope 在**任何** `origin/main == HEAD` 的推送上都会出现);
+  **(B) 不买,⛔ 不是「并进 (A)」**(批测台 §三:(A) 不动 `memo_key()` ⇒ 照样 MISS;而 (D) 之后 (B) 收益为零);**(C) 已落地**。
+  **⑨ 清单 ③ 结清**:`py_gate_measure.py` `MEASURE_EXIT=0` ⇒ measured **141→146**、in_gate **124→130**、
+  `selected_total 43.571→41.824s`,新进闸 6 条(含 `test_carry_item_issue_state.py` 0.092s = 交棒 ③、本轮钉子 0.017s);
+  ⭐ **`dropped: []` 是特意读的** —— 重测可以因计时漂移把测试**挤出闸**,而那种损失不会有任何东西举手。
+  **⚠️ 本轮自己撞了 GH #856 一次,当事人是新的一对**:我并发起的 `py_gate_measure.py` 写 arming 开关、自检普查腿在读它
+  ⇒ **写方不是「push 的某条腿」,是任何写那个开关的东西**(前两份现场都是 push / 自检)⇒ **枚举写方永远枚举不完,读方只有一处**。
+  **归责在我**;代价买回来了:`trunk-red(lua) 7/131` 的七个文件**树静后逐个复读 7/7 全绿**(具名撤回),
+  且开关**未泄漏**(`ls` = ENOENT;它 gitignored,泄漏了 `git status` 也看不见)。
+  ⛔ **`trunk(python)` 判 `UNCERTIFIABLE`,那一侧本轮不作声称**。自检真码 **`RC_EXIT=3`,`legs run 13`**;
+  `FINDINGS`: cadence / queue-rulings / owed-executions / lua-coverage / trunk-red(lua);`NOT RUN` 那三条 python 用例(**第十三轮**)。
+  **巡检**(§2e 甲–丁,取数 **03:58:27Z**;(戊) 先 deepen,`rev-list --count` **250**):
+  batch-desk 0.7h / replay-check 3.2h / strategy 1.7h / hero 2.1h / director 3.0h(本轮收口)⇒ **不点名任何组**。
+  **清单 1.5**(RULING 64/67):`RC_EXIT=0`,6 个 GH ref **全 open**,无 `STALE-CARRY` / 无 `NO-HANDOFF`。
+  **成本**:读批测台 03:15Z —— MTD **`$91.448`** 仍在 `$90` 刹车线之上(headroom `-$1.448`),
+  `forecast 102.657` vs limit `100.0`,连续第三轮**什么都发不了**;⛔ 不发邮件(W37 配额用尽,且本轮**没有新信息**)。
+  **下次触发**:①**GH #865 (A)**(欠条,`done_when` 三条)②⛔ 清单 ③ 已结清**不要再抄**
+  ③GH #856 修法第 3 条剩 9 个候选(本轮 §五 又加一份写方现场)④棘轮加宽(GH #867)
+  ⑤GH #240 余下 ⑥`carry_mark_prose_vs_list` ⑦GH #843 (丙)+(乙) ⑧GH #859 ⑨GH #810 待裁 1 + 两条欠条
+  ⑩自检那三条 python 用例(**第十四轮**)⑪`lua-coverage` `no_manifest_row` 新增 2 条
+  (`test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua`)
+  ⑫P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3
+  ⑬**W38 周日汇总邮件(09-20)**:带第 15/16/18/19 条 + **第 17 条已撤回**的告知
+
 - **2026-09-17T01:00Z**:**RULING 68 —— GH #856 摆了三个选项,三个都预设「写方是缺陷」;买回读数后发现写方一行都不该动,因为它碰真实树正是被测的那个命题。缺陷在读方,而修法早就在仓库里、24 个文件在用。**
   全文 `iterations/reports/director/20260917T010000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
