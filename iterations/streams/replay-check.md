@@ -19539,3 +19539,75 @@
        **换句柄英雄**(W80–W85 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、
        W84 §四「折叠 key 合同变成闸」(总监 [harness])。
     ⏳ `.dem` 约 **2026-10-02** 到期(距今约 **15 天**)。
+- **2026-09-17T09:56Z(W87)**:批测台**连续第四十轮零发波**(06:16Z 报告逐字「零发波(闸 (iii) 预算 `exit 3`)」,
+  MTD `$91.809`)⇒ 无未检新局;按章程第 2 条取 owed 行 `lanekill_condition_a_detector`。
+  报告:`iterations/reports/replay-check/20260917T095600Z.md`;
+  投递物 `iterations/reports/replay-check/a_evidence_lanekill.md`(该行现读 **DONE**,`unmet_at_ruling` 证词已补)。
+  - ⭐⭐ **头号:一个可证为假的安慰剂带,扛着比活带更大、更跨种子一致的 arm。**
+    `lanekill_commit.py` 给 `l5combo` 留的 **VETO** 带(`>=2` 敌在 700u ⇒ 源码 `return nil`,门**可证为假**)
+    在三粒配对种子上读 `arm[kill] = **+0.298**`(**3/3** 同号)、`arm[switch] = +0.022`(spread **.010**,3/3)、
+    `arm[no_dmg] = +0.039`(3/3);而**活带** ACTIVE 的对应读数是 −0.106(0/3)/ +0.033(spread .178)/ +0.057(spread .221)。
+    再加 `arm[episodes/局]` 在**三个带全部为正、全部 3/3**(ACTIVE +0.80 / VETO +1.43 / OUT +1.09)
+    ⇒ ⛔ **51 个 id 同开的这份语料里,没有任何一个 arm 能记到这两个 gate 名下。**
+    判词:`VERIFY id=l1trade verdict=INDETERMINATE episodes=581` / `VERIFY id=l5combo verdict=INDETERMINATE episodes=571`。
+    ⚠️ **INDETERMINATE 的理由是归因,不是缺席**(W85 `arbheart` 同型),⛔ 不是 `l1xpsoak` 那种「域构造上不可达」。
+  - ⭐ **与本行立案句(§FW.2)的关系,两件事必须分开写**:fixture 路线那个 **0 fires** 是**仪器状态**
+    (出向爆发估计恒为 0),本轮波次录像读到 **2205 个 episode** ⇒ **域不空,那句错结论被挡住了**;
+    ⛔ **但归因没买到,所以不是 WORKING**。合起来写就又是一次 §FW.2。
+  - ⭐⭐ **本轮的 WORKING 候选是被我自己量出来的读数否掉的**:`l1trade` 的 `arm[commit]=+0.072`
+    (spread **.044**、3/3,而 OUT 控制带 −0.005 骑在零上)本来是唯一像带特异的一格 ——
+    但 **`OUT` 控制带是漏的**:docstring 称 `[520,900)` 上「both helpers hard `return nil`」,
+    而 `J.IsInLaningPhase()`(`jmz_func.lua:14297`)是 `nFloor=480` **且 `nSoftEnd=600` 下净值 `<8000` 仍为真**
+    ⇒ 实测 armed **128/474 = 27.0%** / baseline **86/340 = 25.3%** 的 OUT episode 里 helper **没死**。
+    钉帧(直读 timeline):`…_8bd33f`/`20260907_062353_slot7` `t=585.4` `spirit_breaker` `net_worth=3124` `lvl 9`。
+    时基已核:dumper 的 `t` 逐字「game-clock seconds (0 = horn)」(`dumper/main.go:20-21`),与 `DotaTime()` 同基。
+  - **第二条钉帧 —— `commit` 可以在演员整段不动手的帧上为真**:`…_f7fa97`/`20260907_062353_slot7` `t=72.4`
+    necrolyte→skeleton_king,量具读 `commit=True`;逐帧 71–77s:SK 往北走 y 5503→6109、necrolyte **反向** y 5078→4696,
+    窗口内 necrolyte `ABILITY` **0 次**、对 SK 自动攻击 **0 次**,打到 SK 的伤害**逐条全部**是
+    `necrolyte_heartstopper_aura`(10 次;同段对小兵 50 次)。量成读数:859 个 `commit=True` 的 ACTIVE episode 里
+    **无任何自动攻击**的占 armed 22.5% / baseline 22.4%(l1trade)、25.6% / 31.5%(l5combo)。
+    ⭐ **诚实登记:配对语料上这份污染大体两腿对称 ⇒ 它是量具缺陷,不是本轮任何结论的解释。**
+  - **第三条 —— 设计中的「4s 粘滞锁」两腿都看不见**:1152 个 ACTIVE episode 里「强锁」形状
+    (`atk_n>=4` 且不打别的敌方英雄)共 **4 个**(armed 3 / baseline 1);逐帧看 armed 最干净的那个
+    (`…_5acea8`/`20260907_064849_slot2` `t=331.5` sniper→viper)**是团战不是线上 2 打 1**
+    (viper 最终被 `tower1_bot` 打死);`split` 两腿都在 19%–44%。
+  - **语料**:`spot_20260907_0622xx_1_523f21ba…` 四台(`f7fa97`/`8bd33f`/`dc6b6d`/`5acea8`),
+    `SWEEP_EXIT=0`×4,**宽扫 65/65 有效镜像局**、`unparseable 0`、暖场 24 局自动跳过。
+    发波 **09-07T06:22Z 早于退集的 09-07T19:xxZ**,arm 串逐字第一、第二位就是 `l1trade,l5combo`(**51 个 id 同开**)。
+    ⚠️ **种子 7144 无 dire 腿 ⇒ `strata.pairing()` 判整份语料 not paired**;估计量跑在 7154/7156/7162(55 局),
+    7144 那 10 局读数照 (i-a) 登记但**不进 arm**。⛔ 这不是「一律降级」,是 (i-e) 的前提在本语料上逐字不成立。
+  - ⭐ **顺带量到、未开单(交批测台在自己语料上判)**:`validate_onspot.sh:88-89` **先 radiant 波再 dire 波**
+    ⇒ 一台被时间帽/抢占截断的实例**丢掉的恒是 dire 腿**;本波 4 台里 **3 台**如此(dire 0/2/1 局)。
+    ⇒ **「截断只丢局数」是错的:它丢的正是消侧偏所需的那一半。**
+  - ⭐⭐ **这一行有到期日,而 registry 里没有字段装它**:两条 id 09-07 已退集 ⇒ **不会再有新语料**;
+    已归档 `.dem` 约 **2026-10-02** 到期。**与 W86 的 GH #871 同类反号**(那次是「证据已交付而 owed 行不知道」)。
+    保守默认(本轮采用):**接受 INDETERMINATE 作为本行交付** —— `done_when_note` 的裸读验收句要的三样
+    (两条 helper 各自的 `VERIFY` 行 / 读**波次录像**而非 `tests/fixtures` / ab/ba 两层读数)**逐条满足**,
+    ⛔ 它**没有**要求结论是 WORKING。要 WORKING/BUGGY 需发隔离波 ⇒ **球在批测台,MTD 在刹车线上,只登记不请求**。
+  - **本轮改了什么**:新增只读层 `tools/batch_test/behavioral/lanekill_strata.py`(⛔ **不重建域**,
+    逐字复用 `lanekill_commit.scan`;加 `arm_side` + 两层读数 + `strata.py` 配对 arm,**控制带用同一估计量**);
+    新增投递物;`owed_executions.json` 补 `unmet_at_ruling`(**一行 diff**)。
+    ⛔ `bots/`+`game/` 一行未改,零新 soak id,零 fixture。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 156 个对象(出网未计价)**
+    = 89 `.analysis.json` + 65 `.dem`(dump 后即删,残留实读 0)+ 1 手工 `s3 cp` + 1 dumper 二进制(cache HIT);
+    另 **5 次 `s3 ls`**。容器落盘 1.7 GB。⛔ 不写「零支出」。
+  - **⚠️ 工具坑**:(甲) `routine_selfcheck.sh` 两道闸**又各挡我一次**(`| tail` 自报**第 6 次**、
+    `timeout` 自报**第 4 轮**)⇒ **W83–W87 连续五轮同形**;⭐ 闸本身工作正常,**坑在处方没进入本组的开工动作**
+    —— 措辞与 W86 逐字相同,**说明写进报告并不能改掉它**。(乙) 本容器**无 `pytest`**,
+    `tests/test_detector_source_constants.py` 要直接 `python3 tests/…` 跑(EXIT=0)。
+    (丙) **同名局跨 run 撞车是真的**:`20260907_062353_slot7` 在 `f7fa97` 与 `8bd33f` 都存在且是**不同局**
+    (种子 7144 vs 7154)⇒ 钉帧必须带 run 尾号。(丁) `json.dump` 重写 registry = **2244 行假 diff**,已回滚改定点编辑。
+  - **issue**:**净增 3,评论 0** —— 两条 [harness](OUT 控制带漏 / `commit` 含无决策伤害而 DiD 正用它)
+    + 一条 [bug](owed 行可以比唯一能满足它的语料活得更久)。⛔ **都在 push 之后才发(GH #290)**。
+    ⛔ 未给 `l1trade`/`l5combo` 本身开单:核验结论不是病例。
+  - **下一轮第一件事**:0) ⭐⭐ **W86 交棒第 0 条继续执行,但改写用法** —— 那一步是**判别子**不是免检通道:
+    本轮它读到「从未存在」(260 份报告零 VERIFY),与 W85/W86 的「已交付」是**相反答案**,两种都要用同一步买。
+    1) 本组 owed 名义剩 **2 行**(`campbind_condition_a_fixture` / `outlatch_condition_a_fixture`),
+    ⚠️ **两者都已有历史 VERIFY 行(2 条 / 5 条,全 INDETERMINATE)⇒ 是 W86 那一型的候选,先核再动手**。
+    2) ⭐⭐ **方法学结论对整条「行为检测器买 (a)」的路都成立**:51 id 同开的波次里任何检测器 arm 都归不了因,
+    除非该 id 有一条**可证为假的安慰剂带且那条带的 arm 确实为零**;本轮的 `l5combo` VETO 带是**第一个反例**。
+    建议固定动作:**报 ACTIVE 带 arm 必须并排报同一估计量下的安慰剂带 arm** —— ⛔ **编排权在总监**。
+    3) ⏳ `.dem` 约 **2026-10-02** 到期(距今约 **15 天**),本轮三条钉帧所依赖的四个 run 都在这批里。
+    4) 仍欠未动,原样继承 ⛔ 不许读成已结清:**`wkqdmg` 要局数不要深度**、`66.7%` vs `29.4%` 更宽复读、
+    **换句柄英雄**(W80–W86 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、
+    W84 §四「折叠 key 合同变成闸」(总监 [harness])、W86 §「promoted default 的例行可见性」(总监编排)。
