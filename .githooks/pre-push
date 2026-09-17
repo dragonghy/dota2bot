@@ -37,6 +37,25 @@ set -u
 # braces so the hook behaves the same when invoked by hand or by a test.
 cd "$(dirname "$0")/.." 2>/dev/null || true
 
+# STDIN IS READ FIRST, before any leg runs (GH #865 (A), director RULING 70).
+# git hands a pre-push hook one line per ref being updated:
+#
+#     <local ref> <local sha> <remote ref> <remote sha>
+#
+# and that is the only place the sha the REMOTE currently holds is available.
+# It is captured here, at the top, because stdin can be consumed exactly once
+# and three subprocesses run before the scope is needed -- including the memo,
+# which exits the hook outright on a hit. Reading it early costs nothing and
+# makes "some leg ate the ref list" unavailable as a failure mode.
+#
+# `[ -t 0 ]` is the hand-invoked case (a terminal): there is no ref list to
+# read and `cat` would block on the operator. No stdin => no positive answer
+# => the whole manifest runs. See tools/agent/prepush_scope.sh.
+PREPUSH_REFS=""
+if [ ! -t 0 ]; then
+    PREPUSH_REFS=$(cat 2>/dev/null) || PREPUSH_REFS=""
+fi
+
 if [ "${RULE6_BYPASS:-}" = "1" ]; then
     printf 'RULE6_BYPASS=1 -- the static gate was SKIPPED, not passed.\n'
     printf '  This push carries an UNCHECKED iron rule 6 static half (Lua luacheck,\n'
@@ -207,12 +226,32 @@ esac
 # Same 0/2/3 vocabulary, same refusal on BOTH 2 and 3, as the two legs above.
 # ---------------------------------------------------------------------------
 # SCOPE, computed here because only the hook knows what is being pushed.
-# `git diff --name-only <base>..HEAD` against the remote's main; ANY failure or
-# empty answer leaves `changed` empty, and lua_gate.py's --if-touched treats an
-# empty list as RUN EVERYTHING.  The fail-open direction is the one that has
-# cost this repo real reds, so it is not available here: skipping needs a
-# positive answer, never the absence of one.
-changed=$(git diff --name-only origin/main...HEAD 2>/dev/null) || changed=""
+#
+# The base comes from the ref-update lines git put on stdin (captured at the top
+# of this file), NOT from the local `origin/main` ref -- GH #865 (A), director
+# RULING 70.  `git push origin HEAD:main` MOVES local `origin/main` to HEAD, so
+# the old expression `origin/main...HEAD` answered the twin push with an empty
+# diff and bought a whole-manifest run for a tree `main` already had (measured
+# 567.4s, 2026-09-17T04:20Z).  The remote sha git names per ref cannot be moved
+# by an earlier push in the same round.
+#
+# ANY failure or empty answer still leaves `changed` empty, and lua_gate.py's
+# --if-touched treats an empty list as RUN EVERYTHING.  The fail-open direction
+# is the one that has cost this repo real reds, so it is not available here:
+# skipping needs a positive answer, never the absence of one.  The provenance
+# token is printed with the scope line so a reader can tell WHICH question was
+# answered -- a scope reading with no stated base is the shape #865 spent four
+# reproductions misattributing to the network.
+scope_file=$(mktemp 2>/dev/null) || scope_file=""
+if [ -n "$scope_file" ]; then
+    scope_src=$(printf '%s\n' "$PREPUSH_REFS" \
+        | bash tools/agent/prepush_scope.sh "$scope_file" 2>/dev/null) || scope_src="unknown"
+    changed=$(cat "$scope_file" 2>/dev/null) || changed=""
+    rm -f "$scope_file"
+else
+    scope_src="unknown"
+    changed=""
+fi
 
 # ANNOUNCE the scope decision BEFORE the leg runs (GH #865 (C), director
 # RULING 69).  Until this line existed the leg printed nothing on its way in,
@@ -222,9 +261,9 @@ changed=$(git diff --name-only origin/main...HEAD 2>/dev/null) || changed=""
 # harness defect into an unactionable fact about the environment.  This line
 # costs nothing and makes that mistake unavailable.
 if [ -z "$changed" ]; then
-    lua_scope_note="lua gate: scope EMPTY -> running the WHOLE manifest (fail-closed: a skip needs a positive answer, never the absence of one). This is the slow path, minutes not seconds. NOTE: if this push followed a successful 'git push origin HEAD:main', then origin/main already equals HEAD and this empty answer means 'main already has these commits', NOT 'no Lua was touched' -- the two are read as one here (GH #865). The documented order is branch FIRST, then main."
+    lua_scope_note="lua gate: scope EMPTY (base=$scope_src) -> running the WHOLE manifest (fail-closed: a skip needs a positive answer, never the absence of one). This is the slow path, minutes not seconds. base=unknown means git named no usable base for the refs being pushed (no stdin, an all-zero sha with no merge base, or a sha this clone does not have). base=fallback-merge-base with an empty answer means origin/main already contains this tree -- i.e. 'main already has these commits', NOT 'no Lua was touched' (GH #865). The documented order is branch FIRST, then main."
 else
-    lua_scope_note="lua gate: scope = $(printf '%s\n' "$changed" | wc -l | tr -d ' ') path(s) changed vs origin/main"
+    lua_scope_note="lua gate: scope = $(printf '%s\n' "$changed" | wc -l | tr -d ' ') path(s) changed vs the pushed refs' base (base=$scope_src)"
 fi
 if [ -n "$RULE6_LOG" ]; then
     printf '%s\n' "$lua_scope_note" | tee -a "$RULE6_LOG"

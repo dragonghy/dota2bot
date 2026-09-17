@@ -10,14 +10,20 @@ The team's standard push path is two commands, in this order:
 That order is not a style preference.  Two independent pieces of machinery are
 keyed to it, and **both degrade silently — never loudly — when it is flipped**:
 
-  1. `.githooks/pre-push` computes the fast Lua leg's scope as
-     `git diff --name-only origin/main...HEAD`, and an EMPTY answer means RUN
-     EVERYTHING (fail-closed, by design).  `git push origin HEAD:main` moves
-     the local `origin/main` ref to HEAD, so any push that follows it sees an
-     empty diff and pays for the whole Lua set.  Measured on the director's own
-     2026-09-17T01:00Z round, which ran main-first: the main push read
-     `lua gate: SKIPPED BY SCOPE`, the branch push that followed it read
-     `lua 411 ran ... 639.7s`.
+  1. `.githooks/pre-push` computes the fast Lua leg's scope, and an EMPTY
+     answer means RUN EVERYTHING (fail-closed, by design).  `git push origin
+     HEAD:main` moves the local `origin/main` ref to HEAD, so any push that
+     followed it saw an empty diff and paid for the whole Lua set.  Measured on
+     the director's own 2026-09-17T01:00Z round, which ran main-first: the main
+     push read `lua gate: SKIPPED BY SCOPE`, the branch push that followed it
+     read `lua 411 ran ... 639.7s`.
+
+     ⚠️ PARTLY REPAIRED, 2026-09-17 (GH #865 (A), RULING 70).  Scope now comes
+     from the remote sha git hands the hook on stdin, which no earlier push can
+     move, so this cost is gone for pushes to an EXISTING remote ref.  It
+     survives for a NEW one: an all-zero remote sha falls back to the merge
+     base with `origin/main`, and every session pushes a brand-new branch.  So
+     reason 1 is weakened, not retired -- and reason 2 below never was.
   2. `tools/agent/rule6_memo.py` keys one green three-leg reading by
      `(HEAD^{tree}, origin/main)`.  The same ref move changes the second half
      of that key, so the twin push of a byte-identical tree is a **guaranteed**
@@ -54,6 +60,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RULE_FILE = os.path.join(REPO, ".claude", "rules", "claude-code.md")
 MEMO = os.path.join(REPO, "tools", "agent", "rule6_memo.py")
 HOOK = os.path.join(REPO, ".githooks", "pre-push")
+SCOPE = os.path.join(REPO, "tools", "agent", "prepush_scope.sh")
 
 checks = 0
 failures = []
@@ -165,10 +172,39 @@ def main():
           "test silenced)")
 
     hook_text = read(HOOK)
-    check("origin/main...HEAD" in hook_text,
-          ".githooks/pre-push: the Lua leg's scope is still computed against "
-          "`origin/main...HEAD` (this is WHY the order matters; if scope no "
-          "longer depends on that ref, RULING 69's first cost is gone)")
+    scope_text = read(SCOPE)
+    # RE-ANCHORED 2026-09-17, director RULING 70 (GH #865 (A) landed).
+    #
+    # This check used to read `"origin/main...HEAD" in hook_text`, and after (A)
+    # landed it would have stayed GREEN -- on a COMMENT, because the hook still
+    # names the expression it replaced. That is evidence-discipline rule 4 in
+    # its purest form: a matching conclusion reached for a reason that has
+    # stopped being true. The honest move is to re-anchor on what the coupling
+    # actually is now, not to let the old anchor keep passing.
+    #
+    # WHAT CHANGED. Scope now comes from the remote sha git hands the hook on
+    # stdin, which an earlier push in the same round cannot move. RULING 69's
+    # FIRST cost is therefore gone for any push to an EXISTING remote ref.
+    # It is NOT gone for a new one: every Routine session pushes its own branch
+    # (1264 `claude/*` refs on origin, measured), a new ref has an all-zero
+    # remote sha, and the fallback for that case is the merge base with
+    # `origin/main` -- which main-first still poisons into an empty answer, i.e.
+    # a whole-manifest run. Weakened, not removed.
+    #
+    # The SECOND cost (rule6_memo's key) is untouched and remains the load-
+    # bearing reason for the order; it is checked just above.
+    check("origin/main" in scope_text and "merge-base" in scope_text,
+          "tools/agent/prepush_scope.sh: the NEW-ref fallback still resolves "
+          "against `origin/main` via a merge base. That is the residue of "
+          "RULING 69's first cost after (A): a session branch is a new ref on "
+          "every round, so main-first still empties its scope. If this "
+          "fallback ever goes away, re-read RULING 70 -- do not silence this.")
+    check("prepush_scope.sh" in hook_text,
+          ".githooks/pre-push: the Lua leg's scope comes from "
+          "tools/agent/prepush_scope.sh (GH #865 (A)). If the hook goes back "
+          "to computing it inline from a local ref, the defect #865 measured "
+          "is back and tests/test_prepush_scope_from_stdin.py is the file "
+          "that says why.")
     check(re.search(r"empty[^\n]*RUN EVERYTHING|RUN EVERYTHING", hook_text) is not None,
           ".githooks/pre-push: an empty scope still means run-everything. "
           "That fail-closed direction is deliberate (skipping needs a positive "

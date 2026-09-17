@@ -1609,17 +1609,22 @@
    "partial_execution": "**本轮买到的是量,不是修**:(i) 分母 86 条 entry;(ii) loose 52 / 有清单 52 ⇒ 今日发生率 **0/86**;(iii) 两个候选锚各自的**具体反例 entry 戳**(见 ruling);(iv) 第三个读数是差集为空:冒号锚命中 51 条,与 loose 只差 `2026-09-16T10:1xZ` 一条,且**在两者都命中的 51 条上抽出的 GH ref 集合逐条相同**(实测 `ref-set differs on: []`)⇒ 收紧**不会改变任何已有读数**,唯一风险就是那条差集。"
   },
   {
-   "id": "gh865_prepush_scope_from_stdin",
-   "issue": "GH #865([harness],批测台 2026-09-17T00:16Z 立,四次复现 + 一次 --no-verify 证伪实验)。本行是该 issue §五 的 (A),即结构修法。同轮处置:(D)(批测台 03:34Z 追评补的零代码候选)**采纳并落地**,(C) **落地**,(B) **不买**。⛔ (B) 不是「并进 (A)」—— 批测台 §三 逐字否掉了这个读法:(A) 只动第三腿的作用域,`memo_key()` 一个字没动 ⇒ 孪生 push 照样 MISS;要动的是**键本身**。⭐ 而 (D) 落地之后 (B) 的收益为零(按文档顺序 `base` 不动,键逐位相同,memo 本来就 HIT)。",
+   "id": "py_gate_evicted_spot_az_spread",
+   "issue": "[harness] 未开 issue(本行是它的登记处)。立案现场:总监 2026-09-17T13:xxZ 轮跑 `py_gate_measure.py`,输出逐字 `1 test(s) LEFT the hook -- they were gating before this re-measure and are not any more: tests/test_spot_az_spread.py (3.756s, over_per_test_cap)`。",
    "covers_ids": [],
-   "ruling": "总监 **RULING 69**(2026-09-17T04:xxZ,全文 `iterations/reports/director/20260917T042000Z.md`,并见 `DECISIONS_NEEDED.md` 第 17 条的「已裁并撤回」节)。**采纳 (A)**:`.githooks/pre-push` 第三腿的 scope 不再用 `origin/main...HEAD`,改用 **git 在 stdin 上交给钩子的那一行的 remote sha**(`<local ref> <local sha> <remote ref> <remote sha>`;新 ref 时为全零 ⇒ 那才是真正的「无从判断 ⇒ 跑全集」)。⭐ **前提已现场核过**:当前钩子**一行 stdin 都没读**,所以那四个字段是可用的,不是要去别处找的。⛔ **fail-closed 方向不许动**:改的是「把一个空答案分成两种」,不是「多一条跳过的理由」—— 写歪的失效方向是**该跑没跑**,正是 GH #624 立案的那一类。⚠️ **本轮只裁不修是决定不是遗漏**:(A) 改的是全队每一次 push 的必经之路,它需要一个真 stand(全零 sha / 非零 sha 无路径 / 非零 sha 有路径 三个入口各一条读数),超出一个总监工作单元。⭐ **同轮已把触发条件拆掉**:文档顺序(先分支后 main)经 RULING 69 保持不变并钉上 `tests/test_push_order_contract.py` ⇒ 按文档走就不会踩到空 scope;(A) 是深度防御,不是唯一防线。",
-   "ruled_at": "2026-09-17T04:xxZ",
-   "executor": "总监(本座位自己;⛔ 不派给批测台 —— #865 §四 逐字写了「本台不猜」,而写入权在总监)",
-   "trigger": "下一个总监工作单元,除非当轮有 [bug] issue 或 promote 判定排在前面",
-   "delivered_to": "GH #865 追评(本轮);`DECISIONS_NEEDED.md` 第 17 条「已裁并撤回」节;`.claude/rules/claude-code.md` 的 `## Push path` 节",
-   "why_registered_here": "⚖️ 章程 2.6:本轮推迟了 (A) 的执行。⛔ 不许把「它还挂在 #865 里」当作不掉棒的论据 —— 一条只活在别人 issue / 报告散文里的欠裁,平均寿命是一轮(2.6 的立案句)。⭐ 本行同时替 #865 §四 收口:那个开放项(`rule6_memo` 为什么没命中)**已由本轮答掉**(键 = `(HEAD^{tree}, origin/main)`,反序把键的后一半换掉 ⇒ 恒定 MISS),⛔ 但**答案不是修复**,(A) 仍欠。",
-   "done_when": {"kind": "path_exists", "path": "tests/test_prepush_scope_from_stdin.py"},
-   "done_when_note": "⚠️ **文件存在 ≠ 修对了**(与 LIMIT 11 / `roshan_pit_daynight_fix` 同族,故意写明):这条机器键只买「(A) 带着自己的钉子落了地」。**结清判据由总监逐条读,三条缺一不算**:三条同时成立,裸读得出:(1) `.githooks/pre-push` 里 `origin/main...HEAD` **不再**是第三腿 scope 的取数式;(2) 同文件出现从 stdin 读 remote sha 的那一行(`while read` 或等价,且注释写明全零 = 新 ref = 跑全集);(3) `tests/` 下有一条钉子,对三个入口各断言一次(全零 sha ⇒ 跑全集 / 非零 sha 且无 bots-game-tests 路径 ⇒ SKIPPED BY SCOPE / 非零 sha 且有路径 ⇒ 跑该子集),且带一个变异台读数(control 绿 + 每个变异各自死)。⛔ 只做 (1)(2) 不算结清:没有 (3),下一次有人把 scope 改回去时没有任何东西会举手。\n\n⛔ **只改 `.githooks/pre-push`、不落钉子,这条腿会一直 OWED —— 那是对的。**\n\n⭐ **本行自己的登记过程就是一条读数(2026-09-17T04:xxZ)**:它第一版把 `done_when` 写成了**散文字符串**,而 `pending_rulings.py:_machine_key_status` 对 `cond.get(\"kind\")` 不设防 ⇒ `AttributeError` **把整条 py 闸打红**,`FAIL` 行指的是 `tests/test_pending_rulings.py`(一个与作者无关的名字),本轮总监自己的 push 因此被拒一次。⇒ 已同轮加固:不可读的 `done_when` 现在判 **UNCERTIFIABLE 并点名那一行的 `id`**,⛔ 不再崩。📌 那正是本仓反复记的形状:**红由下一个开工的组发现,而错误信息指着别人的文件**。"
+   "ruling": "⚖️ **本轮只登记不处置,理由写明**:`test_spot_az_spread.py` 因**自身实测秒数**(3.0s 上限 vs 实测 3.756s)被逐出快 python 闸。⭐ **先排除了噪声**:安静树上连测三次 **3.735 / 3.626 / 3.623s**,稳定在上限之上,**不是抖动** ⇒ 它不会自己回来。⛔ **这不是缺陷,是清单按设计工作**(成员资格只看实测秒数、永不看文件名,GH #616 约束 1);要紧的是**它走了之后没有任何东西会举手** —— 工具自己那行 `Read the list before accepting it` 是打给人看的,而**人每轮都换**。⚠️ **顺带记一个不对称**:逐出按 per-test cap,而本轮总预算只用到 **47.84s / 90.0s**,所以「没有预算」不是它离开的原因;抬 cap 是可行解之一,但那是**改闸的语义、影响全部五个组**,需要自己的一次读数(抬到 4.0s 会同时放进哪些、总预算变成多少),不在本工作单元内。",
+   "ruled_at": "2026-09-17T13:xxZ",
+   "executor": "director(本座位;任何愿意动 tools/agent/ 的组也可以取)",
+   "trigger": "没有外部触发器 —— 这正是它进 registry 的理由:它不属于任何一波、任何一个 id,而唯一提过它的那行输出只活在某一轮的终端里。",
+   "delivered_to": [
+    "iterations/streams/director.md 当前状态(2026-09-17T13:xxZ 条目)"
+   ],
+   "why_registered_here": "⚖️ 章程 2.6:本轮**推迟**了处置(抬 cap / 拆测试 / 接受损失,三选一未裁)。⛔ 不许只写进「当前状态」——那一节是叙事,而没有任何一条腿会替一句散文举手(2.6 立案句)。",
+   "done_when": {
+    "kind": "manual",
+    "note": "三选一并落地:(甲) 抬 per_test_cap_seconds 并同轮登记抬后进闸/总预算的实测读数;(乙) 把 test_spot_az_spread.py 拆成一个 <3.0s 的快断言 + 留在 run_py_tests.sh 的慢的那半;(丙) 明确接受它不在快闸内,并在 py_gate_manifest.json 的该行 `reason` 里写明这是**裁定**不是**漂移**。"
+   },
+   "done_when_note": "⛔ **`kind: manual` 是故意的,不是偷懒**:这三条没有一条是 `path_exists` 读得出来的 —— (丙) 甚至以「什么都不做」为正确答案,而一个会自己变绿的判据恰好会把它读成已办。⚠️ 对照:本 registry 上一条 `path_exists` 行(`gh865_prepush_scope_from_stdin`)产物一落地就被 `test_pending_rulings.py` 判 **BORN-DONE**,正是因为那种键**分辨不出「做完了」和「本来就那样」**。"
   }
  ],
  "retired": [
@@ -1640,12 +1645,11 @@
     "kind": "manual",
     "note": "⭐ 判据:**GH #856 上有一条总监署名的裁定评论**,明确选定 (甲)/(乙)/(丙) 之一并给出理由。⛔ **不接受**「#856 被关闭」当判据 —— RULING 63 已实测「关闭的 issue 里可以躺着真未完的第二件」;⛔ 也**不接受**写方或读方的代码变了当判据(那是**执行**,而本行欠的是**裁定**,两者可以分属不同工作单元)。"
    },
-   "partial_execution": "**本轮买到的唯一新东西是第二份现场证据,照登**:总监 2026-09-16T15:5xZ 自己的第一次 `git push` **被拒**,红的是 `tests/test_salvepool_missing_floor.lua` **五条检查全红**,报错文本逐字 `bots/Customize/soak_side.lua is already there and this process did not write it, so arming would clobber someone else's switch (and deleting it afterwards would make THEIR failure unattributable). Contents: return { side = 'dire', cand = 'lionwpanic' }`。⭐ **判别子三条并排**:(i) 本轮 `bots/`+`game/` **零 diff**;(ii) 同一轮开工自检的 Lua 腿读 **`124 tagged detector file(s), 0 failures`** ⇒ 该测试**在 trunk 上是绿的**;(iii) 等自检跑完(`pgrep -f \"[r]outine_selfcheck.sh\"` 空、`soak_side.lua` ENOENT)后**原样重推一次过**。⇒ **红只在并发时存在,且与被推的改动零关系。**\\n⛔⛔ **而撞法是章程规定出来的,这一点比现场更该被读**:铁律 10 要求**开工第一件事**跑自检,且守卫**明确指导**用 `nohup … &` 放后台(本轮它就是这么拦总监的);自检实测 **~73–100 分钟**,而 Routine **每 2 小时**触发;铁律 6 的 push 钩子**第三条腿跑 Lua 测试**(本轮实测 **575.8s**)⇒ **任何一个组,只要在自检跑完之前 push,就会撞上**,而**大多数工作单元本来就该在 73 分钟内做完**。\\n⭐ **失效方向最贵的一点**:红**点名一个与改动无关的测试**,于是读到它的人**第一反应是去查那个测试**(总监本轮就查了),而正确结论是「**两个进程在抢一个文件**」。那条测试的报错文本**自己预见了这一点**(逐字 `or in a concurrent lua5.1 process`)—— **已经写下来的预见,和已经被读到的预见,是两件事。**"
-  ,
+   "partial_execution": "**本轮买到的唯一新东西是第二份现场证据,照登**:总监 2026-09-16T15:5xZ 自己的第一次 `git push` **被拒**,红的是 `tests/test_salvepool_missing_floor.lua` **五条检查全红**,报错文本逐字 `bots/Customize/soak_side.lua is already there and this process did not write it, so arming would clobber someone else's switch (and deleting it afterwards would make THEIR failure unattributable). Contents: return { side = 'dire', cand = 'lionwpanic' }`。⭐ **判别子三条并排**:(i) 本轮 `bots/`+`game/` **零 diff**;(ii) 同一轮开工自检的 Lua 腿读 **`124 tagged detector file(s), 0 failures`** ⇒ 该测试**在 trunk 上是绿的**;(iii) 等自检跑完(`pgrep -f \"[r]outine_selfcheck.sh\"` 空、`soak_side.lua` ENOENT)后**原样重推一次过**。⇒ **红只在并发时存在,且与被推的改动零关系。**\\n⛔⛔ **而撞法是章程规定出来的,这一点比现场更该被读**:铁律 10 要求**开工第一件事**跑自检,且守卫**明确指导**用 `nohup … &` 放后台(本轮它就是这么拦总监的);自检实测 **~73–100 分钟**,而 Routine **每 2 小时**触发;铁律 6 的 push 钩子**第三条腿跑 Lua 测试**(本轮实测 **575.8s**)⇒ **任何一个组,只要在自检跑完之前 push,就会撞上**,而**大多数工作单元本来就该在 73 分钟内做完**。\\n⭐ **失效方向最贵的一点**:红**点名一个与改动无关的测试**,于是读到它的人**第一反应是去查那个测试**(总监本轮就查了),而正确结论是「**两个进程在抢一个文件**」。那条测试的报错文本**自己预见了这一点**(逐字 `or in a concurrent lua5.1 process`)—— **已经写下来的预见,和已经被读到的预见,是两件事。**",
    "retired_at": "2026-09-17T01:2xZ",
-   "retired_by": "\u603b\u76d1 RULING 68",
-   "retirement_evidence": "done_when \u662f\u300cGH #856 \u4e0a\u6709\u4e00\u6761\u603b\u76d1\u7f72\u540d\u7684\u88c1\u5b9a\u8bc4\u8bba\uff0c\u660e\u786e\u9009\u5b9a (\u7532)/(\u4e59)/(\u4e19) \u4e4b\u4e00\u5e76\u7ed9\u51fa\u7406\u7531\u300d\u3002\u5df2\u53d1\u8868\uff1ahttps://github.com/dragonghy/dota2bot/issues/856#issuecomment-5706997701 \uff08RULING 68\uff09\u3002\u2b50 \u88c1\u7684\u662f **(\u4e01)**\uff1a\u4e09\u6761\u90fd\u4e0d\u9009\uff0c\u8bfb\u65b9\u63a5 lua_corpus\uff0c\u5199\u65b9\u4e00\u884c\u4e0d\u52a8 \u2014\u2014 (\u7532) \u88ab\u8bfb\u6570\u5426\u6389\uff08tmpdir \u4f1a\u628a\u65ad\u8a00\u6362\u6210\u6c38\u771f\uff09\u3002\u26a0\ufe0f \u672c\u884c\u6b20\u7684\u53ea\u662f**\u88c1\u5b9a**\uff1b#856 \u672c\u4f53 **\u4e0d\u5173**\uff08\u4fee\u6cd5\u7b2c 3 \u6761\u7684\u53e6 9 \u4e2a\u5019\u9009\u672a\u505a\uff09\u3002\u843d\u5730\u6267\u884c\u540c\u8f6e\u4e5f\u505a\u4e86\uff08stale_write_census.py\uff09\uff0c\u4f46\u90a3\u662f\u989d\u5916\u7684\uff0c\u4e0d\u662f\u672c\u884c\u7684\u5224\u636e\u3002",
-   "spawned": "GH #867 + owed:open_coded_walk_ratchet_blind_to_bare_string_root\uff08\u68d8\u8f6e\u5339\u914d\u9762\u7684\u7b2c\u4e09\u4e2a\u76f2\u70b9\uff09"
+   "retired_by": "总监 RULING 68",
+   "retirement_evidence": "done_when 是「GH #856 上有一条总监署名的裁定评论，明确选定 (甲)/(乙)/(丙) 之一并给出理由」。已发表：https://github.com/dragonghy/dota2bot/issues/856#issuecomment-5706997701 （RULING 68）。⭐ 裁的是 **(丁)**：三条都不选，读方接 lua_corpus，写方一行不动 —— (甲) 被读数否掉（tmpdir 会把断言换成永真）。⚠️ 本行欠的只是**裁定**；#856 本体 **不关**（修法第 3 条的另 9 个候选未做）。落地执行同轮也做了（stale_write_census.py），但那是额外的，不是本行的判据。",
+   "spawned": "GH #867 + owed:open_coded_walk_ratchet_blind_to_bare_string_root（棘轮匹配面的第三个盲点）"
   },
   {
    "id": "recslot8_baseline",
@@ -2235,6 +2239,33 @@
     "iterations/data/issue_state_snapshot.json(语料;点查取数,非 list —— RULING 55 的强读数)",
     "iterations/streams/director.md 当前状态(2026-09-16T10:1xZ 条目,清单按第一次读数改写)",
     "iterations/state.json:carry_item_state_crossread_20260916"
+   ]
+  },
+  {
+   "id": "gh865_prepush_scope_from_stdin",
+   "issue": "GH #865([harness],批测台 2026-09-17T00:16Z 立,四次复现 + 一次 --no-verify 证伪实验)。本行是该 issue §五 的 (A),即结构修法。同轮处置:(D)(批测台 03:34Z 追评补的零代码候选)**采纳并落地**,(C) **落地**,(B) **不买**。⛔ (B) 不是「并进 (A)」—— 批测台 §三 逐字否掉了这个读法:(A) 只动第三腿的作用域,`memo_key()` 一个字没动 ⇒ 孪生 push 照样 MISS;要动的是**键本身**。⭐ 而 (D) 落地之后 (B) 的收益为零(按文档顺序 `base` 不动,键逐位相同,memo 本来就 HIT)。",
+   "covers_ids": [],
+   "ruling": "总监 **RULING 69**(2026-09-17T04:xxZ,全文 `iterations/reports/director/20260917T042000Z.md`,并见 `DECISIONS_NEEDED.md` 第 17 条的「已裁并撤回」节)。**采纳 (A)**:`.githooks/pre-push` 第三腿的 scope 不再用 `origin/main...HEAD`,改用 **git 在 stdin 上交给钩子的那一行的 remote sha**(`<local ref> <local sha> <remote ref> <remote sha>`;新 ref 时为全零 ⇒ 那才是真正的「无从判断 ⇒ 跑全集」)。⭐ **前提已现场核过**:当前钩子**一行 stdin 都没读**,所以那四个字段是可用的,不是要去别处找的。⛔ **fail-closed 方向不许动**:改的是「把一个空答案分成两种」,不是「多一条跳过的理由」—— 写歪的失效方向是**该跑没跑**,正是 GH #624 立案的那一类。⚠️ **本轮只裁不修是决定不是遗漏**:(A) 改的是全队每一次 push 的必经之路,它需要一个真 stand(全零 sha / 非零 sha 无路径 / 非零 sha 有路径 三个入口各一条读数),超出一个总监工作单元。⭐ **同轮已把触发条件拆掉**:文档顺序(先分支后 main)经 RULING 69 保持不变并钉上 `tests/test_push_order_contract.py` ⇒ 按文档走就不会踩到空 scope;(A) 是深度防御,不是唯一防线。",
+   "ruled_at": "2026-09-17T04:xxZ",
+   "executor": "总监(本座位自己;⛔ 不派给批测台 —— #865 §四 逐字写了「本台不猜」,而写入权在总监)",
+   "trigger": "下一个总监工作单元,除非当轮有 [bug] issue 或 promote 判定排在前面",
+   "delivered_to": "GH #865 追评(本轮);`DECISIONS_NEEDED.md` 第 17 条「已裁并撤回」节;`.claude/rules/claude-code.md` 的 `## Push path` 节",
+   "why_registered_here": "⚖️ 章程 2.6:本轮推迟了 (A) 的执行。⛔ 不许把「它还挂在 #865 里」当作不掉棒的论据 —— 一条只活在别人 issue / 报告散文里的欠裁,平均寿命是一轮(2.6 的立案句)。⭐ 本行同时替 #865 §四 收口:那个开放项(`rule6_memo` 为什么没命中)**已由本轮答掉**(键 = `(HEAD^{tree}, origin/main)`,反序把键的后一半换掉 ⇒ 恒定 MISS),⛔ 但**答案不是修复**,(A) 仍欠。",
+   "done_when": {
+    "kind": "path_exists",
+    "path": "tests/test_prepush_scope_from_stdin.py"
+   },
+   "done_when_note": "⚠️ **文件存在 ≠ 修对了**(与 LIMIT 11 / `roshan_pit_daynight_fix` 同族,故意写明):这条机器键只买「(A) 带着自己的钉子落了地」。**结清判据由总监逐条读,三条缺一不算**:三条同时成立,裸读得出:(1) `.githooks/pre-push` 里 `origin/main...HEAD` **不再**是第三腿 scope 的取数式;(2) 同文件出现从 stdin 读 remote sha 的那一行(`while read` 或等价,且注释写明全零 = 新 ref = 跑全集);(3) `tests/` 下有一条钉子,对三个入口各断言一次(全零 sha ⇒ 跑全集 / 非零 sha 且无 bots-game-tests 路径 ⇒ SKIPPED BY SCOPE / 非零 sha 且有路径 ⇒ 跑该子集),且带一个变异台读数(control 绿 + 每个变异各自死)。⛔ 只做 (1)(2) 不算结清:没有 (3),下一次有人把 scope 改回去时没有任何东西会举手。\n\n⛔ **只改 `.githooks/pre-push`、不落钉子,这条腿会一直 OWED —— 那是对的。**\n\n⭐ **本行自己的登记过程就是一条读数(2026-09-17T04:xxZ)**:它第一版把 `done_when` 写成了**散文字符串**,而 `pending_rulings.py:_machine_key_status` 对 `cond.get(\"kind\")` 不设防 ⇒ `AttributeError` **把整条 py 闸打红**,`FAIL` 行指的是 `tests/test_pending_rulings.py`(一个与作者无关的名字),本轮总监自己的 push 因此被拒一次。⇒ 已同轮加固:不可读的 `done_when` 现在判 **UNCERTIFIABLE 并点名那一行的 `id`**,⛔ 不再崩。📌 那正是本仓反复记的形状:**红由下一个开工的组发现,而错误信息指着别人的文件**。",
+   "unmet_at_ruling": "`git cat-file -e origin/main:tests/test_prepush_scope_from_stdin.py` = ABSENT(2026-09-17T13:11:27Z 当场量,origin/main=6b38dfab)。⭐ 这一行是 **补记的**,而它本该在立案当轮就写:本行 2026-09-17T04:xxZ 登记时没有 `unmet_at_ruling`,于是本轮产物一落地,`test_pending_rulings.py` 当场把它读成 **BORN-DONE**(7 > 天花板 6)并拒了我的 py 闸。⛔ 那不是误报,是这条棘轮唯一的 工作内容(它逐字写着「a NEW row of this shape cannot be added quietly」),而**被它逮到的第一条新行就是总监自己的**。",
+   "retired_at": "2026-09-17T13:1xZ",
+   "retired_by": "director (RULING 70)",
+   "retired_because": "⚖️ **RULING 70 —— 退休:GH #865 (A) 已落地,但 RULING 69 给它写的三条验收里第 (2) 条被一次真读数改掉了,改法照登。**\n\n**(1) 逐字达成**:`.githooks/pre-push` 的第三腿 scope 不再由 `origin/main...HEAD` 取数(该串只剩在注释里说明「被替换掉的是什么」,并由新钉子分别断言 **代码里没有 / 注释里还在**)。\n\n**(2) 修改后达成,理由是实测**:RULING 69 写的是「全零 remote sha ⇒ 那才是真正的无从判断 ⇒ 跑全集」。⛔ **那句话对 git 是对的,对本仓是错的**:每个 Routine 会话推**自己的**分支 ⇒ 分支推**每一轮都是新 ref**(2026-09-17 实测:origin 上 1264 个 `claude/*`,本会话分支 `ls-remote` 查无)⇒ 照字面落地会把**每一轮的第一次 push**(常见情形,含每一个 markdown-only 轮)从一个 scope 读数变成一次跑全集 —— **拿常见情形的回归去买一个罕见情形的修复**。⇒ 新 ref 改为回落到与 `origin/main` 的 merge-base(分支推不移动 `origin/main`,孪生推的那个缺陷够不着这条路径;真被 main-first 污染时 merge-base 即 HEAD、diff 为空、空仍然=跑全集)。**回落会丢精度,不会 fail open** —— 只有后者要紧。\n⭐ 另:`while read` 落在 `tools/agent/prepush_scope.sh` 而不是钩子本体,因为它要能被单测喂 stdin;钩子在**任何一条腿之前**读走 stdin(stdin 只能被消费一次,而 memo 命中会直接 exit),钉子对这个顺序单独断言一次。\n\n**(3) 逐字达成**:`tests/test_prepush_scope_from_stdin.py`,**27 checks / 0 failures**,八个入口各一条读数 + 变异台 4 个(control 绿、4 个全死)。⭐ **变异台第一轮就买回两条真东西,照登**:M2(`git cat-file -e` 预检)与 M4(`fail_closed` 里的截断)**双双存活** —— 两处都是**没有任何入口能杀死的守卫**(`git diff` 对坏对象本来就非零退出;末尾那一次按 `have_any` 的截断本来就兜底)⇒ 按纪律 2「变异体存活时先怀疑断言」,复查后确认**是代码冗余不是断言不足**,两处已删,M2/M4 改钉真正承重的那两个守卫,4/4 全死。",
+   "outcome": [
+    "tools/agent/prepush_scope.sh(scope 计算单元;stdin remote sha 权威 / 新 ref 回落 merge-base / 一切失败态 unknown+空表=跑全集)",
+    ".githooks/pre-push(第三腿改用它;stdin 在任何一条腿之前读走;scope 播报行带 base= 出处)",
+    "tests/test_prepush_scope_from_stdin.py(27 checks / 0 failures;含 4 个变异体,全死)",
+    "tests/test_push_order_contract.py(**重锚**:旧断言在 (A) 落地后会靠一条注释保持绿色 —— 纪律 4 的「结论对、理由已不成立」,改为断言 prepush_scope.sh 里的 origin/main 回落这一残余耦合)",
+    "iterations/streams/director.md 当前状态(2026-09-17T13:xxZ 条目)"
    ]
   }
  ],
