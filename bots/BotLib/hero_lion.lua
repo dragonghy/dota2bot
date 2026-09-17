@@ -1375,6 +1375,92 @@ function X.lion_IsHexFightTargetInReach( hBot, hTarget, nAcceptReach, bShippedIn
 end
 
 
+--- The seed X.ConsiderW's 团战 argmax starts from.
+---
+--- Soak candidate `lionwseed` (turbo-only, INERT until armed).  Gate off this
+--- returns X.nWFightArgmaxSeedShipped, which is the literal `0` the shipped
+--- loop seeds with, byte for byte.
+---
+--- ⭐ WHAT IS WRONG.  The loop is
+---
+---     local nMostDangerousDamage = 0
+---     ... if ( npcEnemyDamage > nMostDangerousDamage ) then ... end
+---
+--- i.e. the "no candidate yet" sentinel is spelled as A DAMAGE VALUE, and it is
+--- spelled ON the floor of the quantity's own range rather than below it.
+--- GetEstimatedDamageToTarget never returns a negative, so a candidate
+--- projecting exactly 0 can never clear a strict `>` against the seed.  The
+--- consequence is not a mis-ranking, it is a VETO: when every legal candidate
+--- reads 0, npcMostDangerousEnemy stays nil and the whole branch returns
+--- nothing -- Lion holds a hard disable in a teamfight with castable enemies
+--- standing in range.  Armed, the seed moves to -1, which is strictly below the
+--- floor, so "no candidate yet" stops being a candidate.
+---
+--- ⛔ THE CHANGE IS EXACTLY THE ALL-ZERO CASE AND NOTHING ELSE.  If any
+--- candidate projects a positive number, no 0 can ever beat it under `>`, so
+--- the winner is byte-identical to shipped; the seed is only ever read by the
+--- first comparison.  §3.4 drives both halves of that claim on the pin.  The
+--- armed tie-break among all-zero candidates is the FIRST member of the list,
+--- and every member has already cleared the branch's full legality chain, so
+--- the worst armed outcome is a legal Hex instead of no Hex.  §3.5 measures
+--- what that ordering actually is on the corpus rather than assuming the
+--- engine sorts by distance.
+---
+--- ⚠️ WHY THE 0 READING IS COMMON RATHER THAN EXOTIC.  The meter is
+--- RETROSPECTIVE: it answers ground truth for damage the enemy actually dealt
+--- to this bot inside the window (tests/test_chasering_target_in_ring.lua:48;
+--- the "answers 0 on every fixture frame" prose in four other places is false,
+--- GH #873).  So an enemy who has not yet connected on THIS bot reads 0 --
+--- which in a teamfight is the ordinary state of every enemy currently hitting
+--- someone else.  The seed therefore bites on exactly the enemies a support
+--- most wants to Hex.
+---
+--- ⛔⛔ THIS ID DOES NOT RESCUE THE WITNESSED FRAME ON ITS OWN, and that is a
+--- fact about WAVE ORDER, not a weakness.  On f_260820_182906_lion_drain_survived
+--- the annulus member (crystal_maiden, 625.2u, projecting 144) still wins the
+--- argmax with the seed at -1 and still fails the winner test, so the branch is
+--- still vetoed.  `lionwseed` and `lionwfight` MASK EACH OTHER: only the pair
+--- turns that frame into a cast, which §4 drives end to end through the real
+--- X.ConsiderW.  ⛔ Neither may be waved alone on a corpus-like frame and then
+--- written up as "tested, no effect" (the lionqkill / lionqdmg precedent);
+--- iterations/queue.json hero-102 requests them as ONE atom.  ⛔ Naming
+--- `lionwfight` inside this predicate would be the pullcad trap -- a gate
+--- frozen FALSE the day the other id is promoted -- and §1.5 asserts this
+--- function does not do that.
+---
+--- ⛔ THE ONLY DOMAIN THIS CORPUS WITNESSES IS THE PAIRED ONE, said plainly so
+--- nobody reads this lever as carrying its own.  Over 112 fixtures (§3.2): 25
+--- live-Lion instants, 5 clear J.IsInTeamFight( bot, 1200 ), 1 clears the
+--- branch's own `#nInBonusEnemyList >= 2` guard.  On the SEARCH ring the
+--- all-zero set that this seed alone would rescue occurs 0 times; on the
+--- ACCEPTANCE ring -- i.e. after `lionwfight` has filtered -- it occurs once,
+--- and that once is the pin.  ⇒ arming this id alone changes NO decision
+--- anywhere in the corpus (§5.3 drives that as an assertion, not a hope).  Its
+--- witnessed value is entirely as the other id's unmasking partner.  ⚠️ That is
+--- a statement about 112 recorded frames, NOT about how often the all-zero set
+--- arises in play, where the meter is live rather than retrospective; nobody
+--- may quote the 0 as a frequency.
+---
+--- ⚠️ NOT in this id: the same `= 0` seed exists byte for byte in
+--- hero_crystal_maiden.lua:1805 and hero_skeleton_king.lua:1355 (SAME polarity,
+--- unlike the reach postures of `lionwfight`).  Those copies have NO winner
+--- test, so the seed there is unmasked IN SHAPE -- but ⛔ that is a statement
+--- about the code, NOT a domain: §3.3 measures both and this corpus witnesses
+--- NEITHER (crystal_maiden reaches its branch guard on 2 instants, skeleton_king
+--- on 0, and no all-zero candidate set appears in either).  "Easier to buy" was
+--- the draft's wording and the census refuted it; they are next candidates on
+--- SHAPE, each needing its own id and its own frame.  GH #873.
+X.nWFightArgmaxSeedShipped = 0
+
+function X.lion_FightArgmaxSeed()
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'lionwseed' ) ) then return X.nWFightArgmaxSeedShipped end
+
+	return -1
+
+end
+
+
 function X.ConsiderW()
 
 
@@ -1466,7 +1552,10 @@ function X.ConsiderW()
 
 
 		local npcMostDangerousEnemy = nil
-		local nMostDangerousDamage = 0
+		-- [lionwseed] gate off this is the literal `0` the shipped loop seeds
+		-- with; see X.lion_FightArgmaxSeed.  The seed is the argmax's "no
+		-- candidate yet" sentinel and nothing after the loop reads it.
+		local nMostDangerousDamage = X.lion_FightArgmaxSeed()
 		for _, npcEnemy in pairs( nInBonusEnemyList )
 		do
 			if J.IsValid( npcEnemy )

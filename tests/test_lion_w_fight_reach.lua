@@ -183,8 +183,24 @@ tests['§1.1 the teamfight argmax lives in X.ConsiderW and seeds at 0'] = functi
     local body = fn_body(read_file(SRC), 'ConsiderW')
     assert(body:find('local%s+npcMostDangerousEnemy%s*=%s*nil'),
         'X.ConsiderW no longer runs a most-dangerous-enemy argmax -- the whole header is stale')
-    assert(body:find('local%s+nMostDangerousDamage%s*=%s*0'),
-        'the argmax no longer seeds at 0')
+    -- ⚠️ THE SEED MOVED BEHIND A HELPER, and the shipped VALUE is unchanged.
+    -- `lionwseed` (2026-09-17) gates this seed; gate off it still answers the
+    -- literal 0 this assertion was written for, now named
+    -- X.nWFightArgmaxSeedShipped. Both spellings are accepted here so this file
+    -- keeps pricing what it was written to price -- the SEED POLARITY, which
+    -- §0.1's lineage claim rests on -- rather than the line's typography.
+    -- ⛔ The 0 itself is NOT optional: if it is ever a different number the case
+    -- split in §3.2b is wrong. tests/test_lion_w_fight_seed.lua owns the gated
+    -- half; this file must not also assert it, or the two ratchet each other.
+    assert(body:find('local%s+nMostDangerousDamage%s*=%s*0')
+        or body:find('local%s+nMostDangerousDamage%s*=%s*X%.lion_FightArgmaxSeed%(%s*%)'),
+        'the argmax seed is neither the literal 0 nor X.lion_FightArgmaxSeed() -- re-read '
+        .. 'both this file and tests/test_lion_w_fight_seed.lua before trusting either')
+    if body:find('X%.lion_FightArgmaxSeed') then
+        assert(read_file(SRC):find('X%.nWFightArgmaxSeedShipped%s*=%s*0'),
+            'the gated seed helper no longer answers 0 when its gate is off. Shipped play has '
+            .. 'changed underneath this file and every case split below is stale.')
+    end
     assert(body:find('npcEnemyDamage%s*>%s*nMostDangerousDamage'),
         'the argmax no longer uses a strict `>` -- re-read §0 before trusting the case split')
 end
@@ -325,8 +341,13 @@ tests['§2.1 all three copies carry the byte-identical argmax body'] = function(
         assert(body:find('local%s+npcMostDangerousEnemy%s*=%s*nil'),
             pair[1] .. ' X.' .. pair[2] .. ' lost the most-dangerous argmax; the lineage claim '
             .. 'in ' .. SRC .. "'s " .. HELPER .. ' header is stale')
-        assert(body:find('local%s+nMostDangerousDamage%s*=%s*0'),
-            pair[1] .. ' no longer seeds the argmax at 0')
+        -- ⚠️ Lion's seed is gated by `lionwseed` since 2026-09-17 and reads
+        -- X.lion_FightArgmaxSeed(), which answers the same literal 0 with its
+        -- gate off (§1.1 asserts that). The lineage claim is about the SEED
+        -- POLARITY being identical in all three copies, and it still is.
+        assert(body:find('local%s+nMostDangerousDamage%s*=%s*0')
+            or body:find('local%s+nMostDangerousDamage%s*=%s*X%.lion_FightArgmaxSeed%(%s*%)'),
+            pair[1] .. ' no longer seeds the argmax at 0 (nor via the gated seed helper)')
         assert(body:find('GetEstimatedDamageToTarget%(%s*false%s*,%s*bot%s*,%s*3%.0%s*,%s*DAMAGE_TYPE_PHYSICAL%s*%)'),
             pair[1] .. ' no longer measures with GetEstimatedDamageToTarget(false, bot, 3.0, PHYSICAL)')
     end

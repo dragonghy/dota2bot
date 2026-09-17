@@ -132,8 +132,11 @@ mutate "M7 nil-handle guard dropped" "$SRC" \
 mutate "M8 type guard dropped (a string reach would be compared)" "$SRC" \
   "s/\tif type\( nAcceptReach \) ~= 'number' then return bShippedInReach end\n\n//" CAUGHT
 
+# ⚠️ NEEDLE REFRESHED 2026-09-17: the seed line this anchored on became
+# `X.lion_FightArgmaxSeed()` when `lionwseed` gated it.  Anchor on the `for`
+# instead, which neither lever touches.
 mutate "M9 a second call site added on a branch the header does not describe" "$SRC" \
-  "s/\tlocal npcMostDangerousEnemy = nil\n\t\tlocal nMostDangerousDamage = 0\n\t\tfor _, npcEnemy in pairs\( nInBonusEnemyList \)/\tlocal npcMostDangerousEnemy = nil\n\t\tlocal _unused = X.lion_IsHexFightTargetInReach( bot, bot, 650, true )\n\t\tlocal nMostDangerousDamage = 0\n\t\tfor _, npcEnemy in pairs( nInBonusEnemyList )/" CAUGHT
+  "s/\t\tfor _, npcEnemy in pairs\( nInBonusEnemyList \)\n\t\tdo\n\t\t\tif J\.IsValid\( npcEnemy \)/\t\tlocal _unused = X.lion_IsHexFightTargetInReach( bot, bot, 650, true )\n\t\tfor _, npcEnemy in pairs( nInBonusEnemyList )\n\t\tdo\n\t\t\tif J.IsValid( npcEnemy )/" CAUGHT
 
 # --- ⭐ THE DRIFT MUTANT.  §1.4's whole reason to exist: the reach the lever
 # filters at and the reach the branch accepts at must be the SAME number.  Move
@@ -153,8 +156,13 @@ mutate "M12 the search ring narrowed instead (defect fixed ungated)" "$SRC" \
 mutate "M13 the winner acceptance test deleted (branch stops vetoing)" "$SRC" \
   "s/\n\t\t\tand J\.IsInRange\( bot, npcMostDangerousEnemy, nCastRange \+ 50 \)//" CAUGHT
 
-mutate "M14 the argmax seed moved off 0 (the OTHER defect, silently fixed)" "$SRC" \
-  "s/\t\tlocal npcMostDangerousEnemy = nil\n\t\tlocal nMostDangerousDamage = 0\n\t\tfor _, npcEnemy in pairs\( nInBonusEnemyList \)/\t\tlocal npcMostDangerousEnemy = nil\n\t\tlocal nMostDangerousDamage = -1\n\t\tfor _, npcEnemy in pairs( nInBonusEnemyList )/" CAUGHT
+# ⚠️ NEEDLE REFRESHED 2026-09-17, and the mutant means the same thing it always
+# did: "the OTHER defect (the 0 seed) gets silently fixed UNGATED, and this
+# file's case split goes stale without saying so".  Since `lionwseed` landed,
+# the ungated way to do that is to move the helper's GATE-OFF answer, so that is
+# what this now mutates.  §1.1 asserts that answer is still 0.
+mutate "M14 the argmax seed moved off 0 UNGATED (the OTHER defect, silently fixed)" "$SRC" \
+  "s/X\.nWFightArgmaxSeedShipped = 0/X.nWFightArgmaxSeedShipped = -1/" CAUGHT
 
 # --- ⭐ THE LINEAGE MUTANTS.  §2 claims three copies with three reach postures.
 # These are the reason the two sibling files are in the backup list: the claim is
