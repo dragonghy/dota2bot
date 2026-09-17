@@ -19413,6 +19413,25 @@
     **`UNCERTIFIABLE: trunk-red(python)`**(⛔ 没跑成 ⇒ **本轮 trunk 的 python 侧没人看过**)、
     `NOT RUN: test_lua_gate/test_luacheck_gate_soakswitch/test_selfcheck_lua_leg`(⚠️ **连续第十四轮**)。
     ⚠️ 只踩第一道闸一次(`| tail -40` ⇒ 自报**第 8 次**复发),**没再踩 `timeout` 那道**(W83/W84 各踩一次)。
+  - **issue**:**净增 1,评论 0** —— 新开 **GH #869 [harness]**(arbheart 分支到达计数 = 分开甲乙的唯一判别子,
+    与 `wandlimbo_charge_instrument`/`cmrguard_castrange_instrument`/`pulllane_lanefront_instrument`/
+    `pullthink_animactivity_instrument` 同族,建议同批处理)。草稿 `PRECHECK_EXIT=0` /
+    `local commits not on origin/main: 0` / `refused 0`,⭐ **在 push 之后才发**(GH #290)。
+    ⚠️ **precheck 当场挡了我一次**(第一版 `exit 3`:`MISSING section test_set.md §BW.2` —— 正本在
+    `iterations/archive/test_set_archive.md`)⇒ ⭐ 一条**看起来完全正常**的引用指向读者树上解析不了的位置,
+    正是 #290 那道门要挡的东西。⛔ **没给 `arbheart` 本身开单**:核验结论不是病例。
+  - **push 读数(三条腿)**:`ARM_EXIT=0`、`core.hooksPath=.githooks`。四次**全部**
+    `GATE_EXIT=0 CLEAN`;`py gate 128 ran, 0 findings, 38.9–40.1s`;前三次
+    `lua gate SKIPPED BY SCOPE`(⛔ 范围判定不是通过),第 4 次(同步分支 ref)按 GH #854 跑满:
+    **`lua gate 416 ran, 0 findings, 0 uncertifiable, 6 unanswered, 6 known-red, 555.3s`**
+    (**同族第四次计价**:W82 581.6s / W83 645.7s / W84 571.7s)。
+    `PUSH_BRANCH_EXIT=0`、`PUSH_MAIN_EXIT=1`(⚠️ non-fast-forward **不是闸红**)、`REBASE_EXIT=0`、
+    `PUSH_MAIN2_EXIT=0`(main `33cac3d6..c3477593`)、`PUSH_BRANCH2_EXIT=0`(⭐ 从后台输出文件读,
+    ⛔ 没采信 harness 通知)。⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
+    ⭐ 按 W73 处方核权威性:**main / 分支 ref / 本地 HEAD 三者同点 `c3477593`**(`git ls-remote` 实读)。
+    ⚠️ 第 4 次正是 W84 点名的**贵的那一种**(同步一个 scope diff 已为空的分支),本轮**如实吃了** ~9 分钟。
+  - **token**:`TOKENS total_in=12,690,161 out=71,361 turns=78`(统计后的收尾回合不计入)。
+    ⚠️ 偏高来自**语料**不是上下文(8 次 `sweep_run.sh`、21 局、两次全量重算)——**计算量在容器里**。
   - **下一轮第一件事**:0) ⭐⭐ **按现读取活,别按 W84 那张表** —— 本组 owed 还剩 **4 行**,
     建议取 `a_evidence_liondrainstop`(量具 `lion_drain_census.py` 已在树上,判据 GH #86 §5 已钉死)。
     1) **同一 arm 串做到 8 粒种子**可分辨 `0.05` 效应(依据是本轮实测 `sd=0.068`)——⛔ 要发波,**球在批测台**,
