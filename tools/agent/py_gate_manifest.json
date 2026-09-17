@@ -6,9 +6,9 @@
   "measure_timeout_seconds": 20.0,
   "hook_timeout_seconds": 15.0,
   "unmeasured_slack_seconds": 3.0,
-  "selected_total_seconds": 47.844,
-  "selected_count": 130,
-  "measured_count": 147,
+  "selected_total_seconds": 48.872,
+  "selected_count": 131,
+  "measured_count": 148,
   "tests": {
     "tests/test_a_evidence_owed.py": {
       "seconds": 2.114,
@@ -32,6 +32,11 @@
     },
     "tests/test_aoe_radius_source_census.py": {
       "seconds": 0.21,
+      "in_gate": true,
+      "reason": "fast"
+    },
+    "tests/test_argmax_ring_census.py": {
+      "seconds": 1.028,
       "in_gate": true,
       "reason": "fast"
     },

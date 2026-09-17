@@ -22,6 +22,73 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-200. ✅ **主体(P4.4 **(ii) 普查交付**):`-199` 交出的「下一轮主体候选·第 1 条」—— queue `hero-102` **(甲)**、
+   GH **#873** 索要的 argmax **搜索环 / 准入环**普查表。**交付完毕:20 份拷贝,14 份搜索环 ≠ 准入环,
+   其中有代价的 13 份**(OVER-REACH 9 + SELF-VETO 4),CONSISTENT 4,FILTERED 1,UNCOMPARABLE 2。
+   ⭐⭐ 头条是**#873 把 WK 的 43u 写成「与 Lion 符号相反」的孤例,而普查说那个符号是多数派**。**
+   `bots/` **本轮零行改动**(⚠️ 主体是 **(ii)** 不是 **(i)**,照实登记)。报告
+   `iterations/reports/hero/20260917T230308Z.md`;工具 `tools/agent/argmax_ring_census.py`
+   (`--selfcheck` **ALL PASS (14 checks)**);棘轮 `tests/test_argmax_ring_census.py` **14 节全绿 / 1.02s**
+   (直跑 EXIT=0,**同一次改动**手加进 `py_gate_manifest.json`,`seconds` 1.028,汇总字段**从 `in_gate` 重算**
+   130→131 / 47.844→48.872,预算 90.0 不动);变异台 `tools/agent/mutstand_argmaxring.sh` **8 抓 0 存活 / EXIT=0**;
+   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;零 gate id / 零 arm / 零 promote / **不申请波次 / 不申请供帧**。
+   开工时 open `[hero]` 六条(#873/#870/#868/#864/#860/#794)**全是本组自己前几轮的裁定**;
+   `OWNER_PRIORITIES` 里 P4.4 是本组常设配额,不是待认领项 ⇒ 按 `-199` 取第 1 条。
+   - ⭐⭐ **头条:比例反了,而这改的是「先看哪一侧」不是 #873 的结论。** #873 §二 那张三行表读起来像
+     「一份正确、一份超伸、一份自否」三分天下;全树是 **9 份超伸 vs 4 份自否**,而且 9 份里
+     **没有一份有任何距离准入测试**。⇒ 「哪个发火点**没有**距离测试」那个一方向普查找得到的是 **9/13**,
+     **不是一半,是大头**。⛔ #873 「单方向普查必漏」的论证仍然成立。
+   - ⭐ **`43` 不是 WK 的数字,是被抄了三遍的谱系常数**:`skeleton_king:1326`、`jakiro:521`+`:522`、
+     `sven:220`+`:223` 逐位相同。⇒ `-198`/`-199` 把 43u 当成 WK 自己的设计选择来定价,**而它没有作者**。
+     这条**加强** DO-NOT-ARM 不推翻它:动 43 要跨三文件、其中两个不归本组,而本组那一份的列表
+     **另有 4 个出货点在读**。⛔ **不要读成「43 是缺陷所以该修」**。
+   - ⭐ **自否不是 Lion 独有:4 份。** `lich:885` **370u**(⚠️ `J.GetEnemyList` 自己在 `jmz_func.lua:4506`
+     把半径夹到 1600,所以 370 是 `nCastRange+420 <= 1600` 时的准确值)/ `lion:1554` 250u(已 gated
+     `lionwfight`)/ `shadow_shaman:498` 与 `:647` 各 190u(两份**写法逐字相同**,一次改动覆盖两处)。
+     **除 Lion 外全在非焦点文件。**
+   - ⭐⭐ **这一族的「安全写法」树里已经有活着的先例,而且是从语料里找出来的不是发明的。**
+     `silencer:806` 是全树**唯一**一份把 reach 测试放在**循环过滤器内部**的拷贝(`:814`)——
+     落选者根本不会赢 argmax,循环自然回落,于是**两个环差到 1600 vs `nCastRange` 也完全无害**。
+     这正是 `lionwfight` 采用的形状 ⇒ **它条件 (c) 的树内佐证**,比抬头那段「标准辅助打法」更硬。
+     📌 判定因此按**后果**命名而非按「两环相不相等」:`FILTERED` 与 `SELF-VETO` 是同一个「不相等」的两种后果,
+     **差别只在测试坐在循环里还是循环后**;两个读数都登记(`rings_differ` 14 / `costly` 13)。
+   - ⚠️ **2 份 UNCOMPARABLE 不许当成「没问题」**:`necrolyte:643`(环是裸字面量 1600;另注它的「危险度」
+     其实是**周围英雄计数**、种子是 **2** 不是 0 —— 只是**长得像**这个族)与 `riki:693`(环同样裸 1600,
+     且列表 `hEnemyList` 是**文件级 upvalue**、被同文件 **5 个出货点**读 ⇒ **即使是缺陷也不是那条腿的**)。
+   - ⚠️⚠️ **五条自己撞出的工艺缺陷(报告 §四 全文)**:(甲) `^(\w+)$` 匹配 `1600` ⇒ 裸字面量环被读成
+     「裸基底 = 正确」,两行靠**一个字符类**从 UNCOMPARABLE 翻成 CONSISTENT;(乙) 按名字信任 `nCastRange`
+     ⇒ 改成按 provenance(必须由 `GetCastRange()` 赋值过);(丙) ⭐ **fanout 列第一版报 `arc_warden`
+     有 13 个共读者、真值是 0** —— 同一个函数里 `nInRangeEnemy` 被声明了**四次**,name-based 计数
+     把四个变量并成一个,**而这一列的用途正是判断「这个缺口是不是这条腿的」**;
+     (丁) ⭐⭐ **(甲) 的变异体第一次跑 SURVIVED**:退回旧正则后**一个判定都没变**(provenance 闸对
+     名叫 `1600` 的基底同样答 False,两道闸**辖域重叠**),**变的是读者看到的那句话** ——
+     「裸字面量 1600」变成「基底 `1600` 从未由 GetCastRange() 赋值」,后者不是一句能照着办的话
+     ⇒ 补一条钉 `parse_ring('1600')` 身份的断言才杀掉它。**一份普查是拿来读的,诊断句本身是产物。**
+     (戊) 普查第一版 open-code 了 `os.walk(bots/)`+`open()` —— **GH #243/#856 立法禁过的形状**,
+     已改走 `lua_corpus.bots_lua_relpaths()`+`read_lua()`,`CorpusVanished` 转 **exit 2** 而不是更小的计数。
+   - ⛔ **棘轮刻意不钉全树计数**(GH #624 形状:任何组落新分支都会把它顶红,红指着作者没碰过的文件)。
+     它钉**解析器自身的正确性**(与树无关的性质)+ **本组自己的三行**(#873 §二 那张已发表的表,
+     连 fanout 数一起),全树合计**打印不断言**。
+   - ⚠️ **两个实测等价变异体,声明在台子抬头而非藏起来**:(甲) `CombineTwoTable` 只解析第一个操作数 ——
+     两个调用点的两个操作数**都是** `nCastRange + 43`;(乙) `base_is_cast_range()` 按名字答 ——
+     **这条是跑出来 SURVIVED 才知道的**:17 个非字面量基底**全部**既叫 `nCastRange` 又真由
+     `GetCastRange()` 赋值,3 个字面量环在更早一个分支就被挡掉 ⇒ **provenance 规则的「提取」半
+     本语料定不了价**,⛔ 但**判定**半由 M2 杀掉,不等于没被定价。
+   - **交棒**:queue `hero-102` **(甲) 标记已交付**((丙) 前置不变,仍是入集批准 + `lionwfight`/`lionwseed` 成对);
+     GH #873 追评本表,⛔ **不关闭**(§三 那条「四处 always-0 散文改成回溯说法」仍未修且不归本组)。
+     给别组两条登记:`lich:885` 的 370u 自否形状与 `lionwfight` 逐字相同,修法现成;`shadow_shaman`
+     两份 190u 共用一个写法。
+   - **下一轮主体候选**(按**可测性**排序):
+     **第 1 条**:`-199` 候选表第 2 条原样顺延 —— **CM 那份 `= 0` 种子的独立 id**。⚠️ **域先买**,
+     且**在两个语料目录上数**。⭐ 本轮给它加一条**新前置**:普查显示 CM 那份的列表
+     `tableNearbyEnemyHeroes` **没有任何其它读者(0/0)** ⇒ 它是本族**唯一**一份「环正确 + 表独占」的拷贝,
+     **是这三行里唯一一个能落独立 id 而不牵动别人的站点**。
+     **第 2 条**:`-199` 候选表第 3 条原样顺延(`X.ConsiderQ` 通用兜底出货点,点 10),前置不变
+     (先读 `hero_skeleton_king.lua:1546` 起那份 `wkqaim` 的 PRE-FLIGHT 笔记)。
+     **第 3 条(本轮新开,可测性最低)**:把 `silencer` 的 **in-loop 形状**作为本族规范写法钉进某处棘轮。
+     ⚠️ **先量它值不值**(本轮没量过「有多少条腿改成 in-loop 之后行为会变」);
+     ⛔ 且归属说 **14/20 不归本组** ⇒ 很可能它的正确形态是一条 [strategy]/[harness] issue,不是本组的一个 id。
+
 -199. ✅ **主体(P4.4 **(ii) 判定完结**):`-198` 交出的「下一轮主体候选·第 1 条」—— **WK 的 43u 超伸**(GH **#873 §四**)。该条自己附着两句前置(「**先解决供帧再落 id**」「**先量 43u 值不值一个 id**」)。本轮量完:**DO-NOT-ARM,三条互相独立的理由,从头到尾不需要一波**;候选**退役**,不是再顺延。⭐⭐ 头条是**这根本不是团战腿的缺陷,是那张列表的缺陷 —— 而唯一两个能证明它的帧上,开火的是兜底分支,团战腿是黑的**。**
    `bots/` **本轮零行改动**(⚠️ 主体是 **(ii)** 不是 **(i)**,照实登记)。报告 `iterations/reports/hero/20260917T195145Z.md`;裁定 `iterations/state.json:wkqreach_ruling_20260917`;
    新 `tests/test_wk_q_teamfight_reach_pricing.lua` **8 节全绿**(经**真 runner** `lua5.1 tests/run_tests.lua`,打 `8 tests, 0 failures`;⛔ 不是直接 dofile 那条「did-not-run wearing a pass」的路;**同一次改动**手加进 `lua_gate_manifest.json`);
@@ -8930,6 +8997,42 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-17T23:03Z(报告 `iterations/reports/hero/20260917T230308Z.md`;**backlog:新开 `-200`**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮零行改动**;
+  **零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧**;**P4.4 自评:(ii) 普查交付**)
+  **主体:`-199` 交出的「下一轮主体候选·第 1 条」—— queue `hero-102` (甲)、GH #873 索要的那张
+  argmax 搜索环/准入环普查表。交付完毕:20 份拷贝,14 份搜索环 ≠ 准入环,其中有代价的 13 份。**
+  - ⭐⭐ **头条:#873 把 WK 的 43u 写成「与 Lion 符号相反」的孤例,而普查说那个符号是多数派** ——
+    **9 份 OVER-REACH(一份准入测试都没有)vs 4 份 SELF-VETO**;#873 论证的「单方向普查必漏一半」
+    仍然成立,但它漏掉的那一半**是大头不是一半**(9/13)。
+  - ⭐ **`43` 不是 WK 的数字,是被抄了三遍的谱系常数**(`skeleton_king:1326`、`jakiro:521/522`、
+    `sven:220/223` 逐位相同)⇒ **加强**上一轮的 DO-NOT-ARM,不推翻它:动它要跨三文件,其中两个不归本组。
+  - ⭐ **自否不是 Lion 独有:4 份,最大的圆环是 lich 的 370u 不是 Lion 的 250u**
+    (`lich:885` 370u ⚠️ 受 `J.GetEnemyList` 自己 1600 的夹紧 / `lion:1554` 250u / `shadow_shaman` 两份 190u);
+    另外三份**全在非焦点文件**。
+  - ⭐⭐ **「安全写法」树里已有活着的先例,且是从语料找出来的不是发明的**:`silencer:806` 把 reach 测试放在
+    **循环过滤器内部** ⇒ 落选者不赢、argmax 回落,**两个环差 1600 vs nCastRange 也完全无害**。
+    这正是 `lionwfight` 采用的形状 ⇒ 它条件 (c) 的**树内佐证**。
+    📌 判定因此按**后果**命名:`FILTERED`(环不同、无害)与 `SELF-VETO`(环不同、致命)的差别
+    **只在那个测试坐在循环里还是循环后**。
+  - ⚠️ **2 份 UNCOMPARABLE 照实登记**(necrolyte/riki,环是裸字面量 1600,源码答不了)。
+    riki 那份的列表是**文件级 upvalue**、被同文件 **5 个出货点**读 ⇒ **即使是缺陷也不是那条腿的**
+    —— 正是 `-199` 要求加的那一列想说的话。
+  - ⚠️⚠️ **五条自己撞出的工艺缺陷**(详见报告 §四):`^(\w+)$` 匹配 `1600`;按名字而非 provenance 信任
+    `nCastRange`;**fanout 列第一版报 arc_warden 13 个共读者、真值 0**(同一函数里同名 `local` 四份);
+    **M1 第一次跑 SURVIVED,活下来的方式证明「诊断句本身是产物」**(两道闸辖域重叠,判定不变但读者看到的话变了);
+    以及普查第一版 open-code 了 `os.walk(bots/)`+`open()`(GH #243/#856 禁过的形状,已改走 `lua_corpus`)。
+  - 工具 `tools/agent/argmax_ring_census.py`(`--selfcheck` **ALL PASS (14 checks)**);
+    棘轮 `tests/test_argmax_ring_census.py` **14 节全绿 / 1.02s**(经直跑 EXIT=0,**同一次改动**手加进
+    `py_gate_manifest.json`,汇总字段从 `in_gate` 重算 130→131 / 47.844→48.872,预算 90.0 不动);
+    变异台 `tools/agent/mutstand_argmaxring.sh` **8 抓 0 存活 / EXIT=0**,
+    ⚠️ **两个实测等价体声明在台子抬头**(CombineTwoTable 两操作数在两处调用点都是 +43;
+    `base_is_cast_range()` 的**提取半**本语料定不了价 —— 那一条是**跑出来 SURVIVED 才知道的**)。
+  - 闸:`luacheck_gate.sh` **GATE_EXIT=0 CLEAN / 0 warnings**;`py_gate.py` **EXIT=0,133 ran, 0 findings, 58.9s**;
+    开工自检 **worst exit 3**(findings:unlanded / cadence / queue-rulings / owed-executions / lua-coverage /
+    trunk-red(python) —— **全部非本轮、非本组**;`TRUNK RED` 指的是 GH #774)。
+    ⚠️ **GH #882 复发一次**(自检给两个本来是绿的 python 测试打 UNCERTIFIABLE,理由是
+    「lua5.1 absent / luacheck not installed」,而同容器里 `luacheck_gate.sh` 正是用它们跑出 0 警告的)。
 - 2026-09-17T19:51Z(报告 `iterations/reports/hero/20260917T195145Z.md`;**backlog:新开 `-199`**;
   裁定 `iterations/state.json:wkqreach_ruling_20260917`;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮零行改动**;
