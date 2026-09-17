@@ -18,9 +18,9 @@ iterations/reports/replay-check/a_evidence_liondrainstop.md does not exist yet
 
 - `iterations/reports/replay-check/20260909T184000Z.md:242` 逐字带着
   `VERIFY id=liondrainstop verdict=WORKING episodes=36`(W60 语料);
-- 总监 2026-09-11T10:54:30Z 以 commit **`92648c81`** 按 `test_set.md §GU.2`
+- 总监 **2026-09-11** 按 `test_set.md §GU.2`(到秒的 `T10:54:30Z` 来自分支上的 `92648c81`;⚠️ **该哈希只在 `origin/claude/admiring-hawking-*` 会话分支上解析,`claim_precheck.sh` 判 OFF-TRUNK**;本容器 clone 是**浅的**(`origin/main` 仅 52 个 commit,最老 2026-09-16T19:01:30Z),promote 的 main 落地 commit 取不到 ⇒ ⛔ **不作为 main 事实引用**,main 上可解析的等价证据是 `test_set.md §GU.2` + `hero_lion.lua` 的 `PROMOTED` 注记(日期 2026-09-11)。)
   **promote 了 `liondrainstop`**,armed 34 → 32,锚点 `stable-v7`。
-  该 commit 的 diff 逐字:
+  该 promote 的内容逐字(`X.lion_ShouldStopDrain` 首句,门已消失):
   `- if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) then return false end`
   `+ if not J.IsModeTurbo() then return false end`
 
@@ -50,7 +50,7 @@ FAIL: 7 live registry rows read BORN-DONE (a_evidence_liondrainstop, …)
 
 - 该前提在 **2026-09-09T10:xxZ** 成立(立行那一刻);
 - **同日 18:40Z**,即 **8 小时后**,`20260909T184000Z.md:242` 写下了 VERIFY 行 ⇒ **前提变假**;
-- **2026-09-11T10:54:30Z**,总监**以那份证据 promote 了这个 id**;
+- **2026-09-11**,总监**以那份证据 promote 了这个 id**(§GU.2);
 - **而这一行没有被那次 promote 关掉、也没有被更新**,继续以一个已经变假的前提
   向录像组要一份**已经交付并且已经被消费掉**的证据,**要了六天**。
 
@@ -79,8 +79,8 @@ FAIL: 7 live registry rows read BORN-DONE (a_evidence_liondrainstop, …)
 
 - **W69**,4 个 run(`spot_20260912_0926{22,24,27,29}_1_main_*`),`SWEEP_EXIT=0` ×4,
   16 局中 4 局 warmup、**12 局入集**、`unparseable 0`;9 局有 Lion。
-- **post-promote 成立(实测,不是推断)**:promote commit `92648c81` 落于
-  **2026-09-11T10:54:30Z**,W69 发波于 **2026-09-12T09:26Z**,晚 ~22.5 小时;
+- **post-promote 成立(实测,不是推断)**:promote 日期 **2026-09-11**(见上条口径),
+  W69 发波于 **2026-09-12T09:26Z**,**晚于 09-11 整日**;
   run 名里的 `_main_` 即 clone 自 main。
 - arm 串 **27 id,12 局逐字同一串**(`distinct arm strings: 1`),
   **不含 `liondrainstop`**(已 promote)、**不含 `liondrain`**(出厂释放路径两腿相同);

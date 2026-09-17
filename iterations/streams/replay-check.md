@@ -19443,7 +19443,7 @@
   投递物 `iterations/reports/replay-check/a_evidence_liondrainstop.md`(结清该行)。
   - ⭐⭐ **头号:这一行欠的东西 2026-09-09 就交付了,而且已被 09-11 的 promote 消费掉。**
     三处实读(⛔ 无一转述):`20260909T184000Z.md:242` 逐字
-    `VERIFY id=liondrainstop verdict=WORKING episodes=36`;`git show 92648c81` 逐字
+    `VERIFY id=liondrainstop verdict=WORKING episodes=36`;`git show 92648c81`(⚠️ **该哈希只在 `origin/claude/admiring-hawking-*` 会话分支上解析,`claim_precheck.sh` 判 OFF-TRUNK**;本容器 clone 是**浅的**(`origin/main` 仅 52 个 commit,最老 2026-09-16T19:01:30Z),promote 的 main 落地 commit 取不到 ⇒ ⛔ **不作为 main 事实引用**,main 上可解析的等价证据是 `test_set.md §GU.2` + `hero_lion.lua` 的 `PROMOTED` 注记(日期 2026-09-11)。)逐字
     `- if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) …` → `+ if not J.IsModeTurbo() …`
     (**2026-09-11T10:54:30Z**,§GU.2,armed 34→32,`stable-v7`);`hero_lion.lua:2523/2553` 现挂 PROMOTED 注记。
     ⛔⛔ **本条初稿的结论被本轮自己的推送闸当场证伪,这里记的是改写后的版本。**
@@ -19468,7 +19468,7 @@
     ⇒ **一个 promoted 默认此后没有任何例行读数在看它**,`liondrainstop` 已这样过了六天。
   - **语料**:W69 四个 run(`spot_20260912_0926{22,24,27,29}_1_main_*`),`SWEEP_EXIT=0`×4,
     16 局中 warmup 4 / **入集 12** / `unparseable 0`,9 局有 Lion,4 粒种子,arm 串 12 局逐字同一串。
-    **post-promote 实测成立**:promote 09-11T10:54:30Z,发波 09-12T09:26Z,**晚 ~22.5h**,run 名 `_main_`。
+    **post-promote 实测成立**:promote **2026-09-11**(main 可解析:§GU.2 + `PROMOTED` 注记),发波 09-12T09:26Z,**晚于 09-11 整日**,run 名 `_main_`。
     串内**无 `liondrain`**(出厂释放路径两腿同)、**有 `lionqdmg`**(09-09 的同一混杂项)。
   - **判定**:`VERIFY id=liondrainstop verdict=WORKING episodes=8`(域内 channel:BASE 5 + CAND 3)。
     ⭐ **钉帧 `20260912_094133_slot1`(BASE 腿 = 零 soak id armed)**:`277.9` 起引导,目标**已在环内(458u)**;
@@ -19502,3 +19502,40 @@
     (乙) ⭐ `lion_drain_census.py --split-is` 默认档**往读者眼前打印一句对本语料为假的话**
     (`BOTH legs gate-OFF`);与 W84 那条被劫持的 `print` 同族 —— **那条丢的是数,这条丢的是数的含义**。
     (丙) `stamps.json` **全仓无任何写入方**(grep 零命中),本轮由 `games_manifest.jsonl` 现搭。
+  - **issue**:**净增 2,评论 0** —— **GH #871 [harness]**(promote 消费了 owed 行索要的证据却没人把两者连起来)
+    与 **GH #872 [harness]**(`lion_drain_census.py --split-is` 缺 post-promote 档 + `stamps.json` 无写入方)。
+    两份草稿 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0`,⭐ **都在 push 之后才发**(GH #290)。
+    ⚠️ **precheck 当场挡了我两次**,而且挡对了:第一版 `exit 3` = `OFF-TRUNK commit 92648c81`
+    —— 那个 promote commit **只在 `origin/claude/admiring-hawking-*` 上解析,不是 `origin/main` 的祖先**;
+    ⭐ 根因是 **Routine 容器的 clone 是浅的**(实测 `origin/main` 仅 **52** 个 commit,最老 2026-09-16T19:01:30Z)
+    ⇒ promote 的 main 落地 commit **不在容器里,拿不到哈希**。第二版加了口径说明仍 `exit 3`
+    (⛔ **门只看哈希解不解析,不看你有没有加免责声明** —— 这是对的),
+    删掉裸哈希后 `exit 0`。⇒ ⭐ **凡引 09-16 之前的 commit 哈希,本容器一律给不出 main 可解析的那个**,
+    改引 `§` 与源文件注记。⛔ 未给 `liondrainstop` 本身开单:核验结论不是病例。
+  - **push 读数(三条腿)**:`ARM_EXIT=0`、`core.hooksPath=.githooks`。⛔ 未用 `RULE6_BYPASS`,
+    未用 `-c core.hooksPath=/dev/null`。⭐⭐ **第 1 次分支推被拒,红的是我自己造成的**:
+    `GATE_EXIT=0 CLEAN` / **`py gate 130 ran, 1 findings, 64.0s`** / `PUSH_BRANCH_EXIT=1`,
+    逐字 `tests/test_pending_rulings.py … 997 checks, 1 failed` →
+    `7 live registry rows read BORN-DONE … but the ceiling is 6` —— 创建投递物令该行 OWED→BORN-DONE(6→7)。
+    **处置**:按棘轮自己的处方补 `unmet_at_ruling` 证词(⛔ 没抬 ceiling、⛔ 没 BYPASS),
+    复跑 `997 checks, 0 failed`(`PR_EXIT=0`,⛔ 未经管道)。
+    第 2 次:`GATE_EXIT=0 CLEAN` / **`py gate 130 ran, 0 findings, 63.0s`** /
+    `lua gate: scope = 4 path(s) changed vs origin/main` → **`SKIPPED BY SCOPE`**(⛔ 范围判定不是通过)/
+    `PUSH_BRANCH_EXIT=0`;main 推同三行、`PUSH_MAIN_EXIT=0`,main **`870de4b7..d4bcb60c`**。
+    ⚠️ **本轮没撞 non-fast-forward**,故**没吃** W84/W85 记的那 ~9 分钟。
+    ⭐ 按 W73 处方核权威性:**main / 分支 ref / 本地 HEAD 三者同点 `d4bcb60c`**(`git ls-remote` 实读)。
+  - **token**:`TOKENS total_in=15,536,395 out=88,163 turns=100`(统计后的收尾回合不计入)。
+    ⚠️ 偏高来自**语料与计算不在上下文**:4 次 `sweep_run.sh`、12 局 dumper+`detect.py`、
+    97 条 channel 普查、两次全量 census,外加一次 **~1 小时**的开工自检同容器抢 CPU。
+  - **下一轮第一件事**:0) ⭐⭐ **取 owed 行时固定加一步**:读 `done_when` 后先
+    `grep -rn "VERIFY id=<id>" iterations/reports/` 看产物是否已存在于**任意**路径,再决定做不做。
+    W85/W86 **连续两轮**取到的行,其「欠着」的**理由**都已过期(W85: BORN-DONE;W86: 证据已被 promote 消费)。
+    ⚠️ 措辞:W86 那行**该做的事确实没做**(产物不存在,读 OWED 是对的),过期的是 `ruling` 里的**前提**。
+    1) ⭐ 本组 owed 名义剩 **3 行**,⛔ 按第 0 条,这 3 行**都还没被核过是否已交付**,不许把「3」当工作量。
+    2) ⭐⭐ **promoted default 的例行可见性是一个构造性空缺**(`liondrainstop` promote 后六天没人看过):
+       promote ⇒ 掉出 arm 串 ⇒ 没有任何例行读数在看它。建议做成本组固定小工作单元,⛔ 编排权在总监。
+    3) ⚠️ **本容器浅 clone 的引用限制**(见上)对每个组都成立,值得总监立成口径。
+    4) 仍欠未动,原样继承 ⛔ 不许读成已结清:**`wkqdmg` 要局数不要深度**、`66.7%` vs `29.4%` 更宽复读、
+       **换句柄英雄**(W80–W85 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、
+       W84 §四「折叠 key 合同变成闸」(总监 [harness])。
+    ⏳ `.dem` 约 **2026-10-02** 到期(距今约 **15 天**)。
