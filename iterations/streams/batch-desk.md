@@ -12679,3 +12679,89 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   `/proc/<pid>/stat` 的 ppid 把**同名的两个进程**分清(`473` ppid=1、fd/1 → `/tmp/sc.log` 是本台那棵;
   `1957` ppid=473 是子进程)—— ⭐ **这一步 `pgrep` 给不出**:它只把两个都列出来,不告诉你哪个是你的。
   详见 `iterations/reports/batch-desk/20260917T091025Z.md`。
+- 2026-09-17T12:24:10Z:**刹车第四十一轮持有;零发波、零收割、零泄漏。⭐⭐ 本轮的实质不是预算,是
+  P4.1 标尺波「按章程字面发出去会失败」这件事被零成本证伪了。**
+  **(一) 预算快照连续第三轮冻结**:MTD **`$91.809`** / 戳 **`2026-09-17T03:46:42Z`**,与上一轮
+  (`09:10:25Z` 读)**两量逐位相同** ⇒ ⛔ **零速率点、不重算越线日、不收窄 `$0.40–0.92/天` 带**;
+  越线日(`~09-30` / `~09-29`)与兜底日 `2026-09-27T00:00Z` **原样结转**。戳已陈 **`8.624h`**,
+  **仍在滞后带 `4.3–11.3h` 之内** ⇒ ⛔ 不能读成「账上真的没动」;`alpha = 0`(17 区 account-wide 实读)
+  **独立地**说没有东西在计费 ⇒ 冻结的戳本轮不开盲区。闸 (iii) `FENCE_EXIT=3`,逐字
+  `actual (MTD) : $91.809   <- re-read this run, never cached` / `pending waves : $0.000` /
+  `projected total : $92.909`(`--planned 1.10`)/ `operative ceiling: $90.00 = min(fence, brake)` /
+  `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence.`;RULING 5/6/7 三行照抄
+  (`17 region(s) read ... COMPLETE` / `records after 2026-09-16T16:28:42Z ... clock from budget snapshot` /
+  `CERTIFIED (0 accruing instances account-wide, read this run)`),⭐ 钟没有降级,⛔ 未传任何 `--no-*`。
+  GH #801 四行整块照抄,**SKIP 不是 pass**,欠条 `gh801_confirm_headroom_first_live_read` 仍 **OWED**
+  (⛔ 未用 `COST_CONFIRM_AT=999` 自救)。
+  **(二) 收割零欠**:`OBJECT_COUNT=592` 与 09-15 登记逐位相同 ⇒ 无新 verdict(⇒ 未跑
+  `recover_verdict.py`,`--ledger` 无行可写)。RULING 47 两个读数**分开写**:最新对象
+  (`sort|tail`)`lf_rescue…_20260912_1018`,字典序最后一个键(裸 `tail`)`tpcommit…_20260907_2218`
+  ⇒ ⭐ **相差 5 天,本轮亲手复现了 47 立案的那个陷阱**。
+  **(三) ⭐⭐ 工作单元:P4.1 的启动口令是坏的,而修法是换一个词、不是改代码。**
+  链条三段全实测:`aws_run.sh:75-76` 把 ref **写死加 `origin/` 前缀** → `make_ab_build.py:50`
+  跑 `git archive <ref> bots` → 而 `OWNER_PRIORITIES.md:121` 把 baseline 写作**裸 SHA**
+  ⇒ 实际执行 `origin/74727e4a66ab...`,现测 **`ARCHIVE_ORIGIN_SHA_EXIT=128`**
+  (`fatal: not a valid object name`),裸 SHA 则 `=0`。⭐ **失效方向安全但贵**:user-data
+  **只有 `set -x` 没有 `set -e`** ⇒ 一路走到 `ab_guard`,被 [Y1, 2026-09-05] 接住
+  (`FATAL ... refusing to run games` → 传 log → 自终)⇒ **不产假数据**(Y1 有效),
+  **代价是一次发波 + 一轮**,而 P4.1 已欠四十一轮。⛔ 不给美元数(`steamcmd` 时长未测)。
+  **⛔ 自捉(未发表)**:第一版诊断是「铁律 3 的 `stable-vN` tag 根本不存在 ⇒ 只能用 SHA ⇒
+  缺陷不可避免」,证据是 `git ls-remote --tags` 空 + **`ORIGIN_TAG_LINES=0`**;
+  **开工自检当场证伪** —— 锚点腿逐字 `EXISTS ok (refs/heads/stable-v1)` … `stable-v9`,
+  `9 anchor(s) checked -- OK` ⇒ ⭐ **锚点是分支不是 tag**,那条 `--tags` 查询**在原理上答不了这个问题**
+  (📌 `evidence-discipline`「别让对上的结论冒充对的理由」同型:「查不到」被读成「不存在」,
+  而查的是错的命名空间)。改查分支后答案立刻变:**`refs/heads/upstream-baseline` 已在 origin 上,
+  SHA 与 P4.1 要的 baseline 逐位相同** ⇒ 修法 = `--old upstream-baseline`,
+  **不改一行代码、不新建任何 ref**。**零成本预演端到端通过**:`FETCH_EXIT=0` /
+  `REVPARSE_UB_EXIT=0` = `74727e4a66ab…` / **`ARCHIVE_UB_EXIT=0`** / **`MAKE_AB_EXIT=0`**
+  (`275 dispatchers`),`ab_guard` 三目录齐(275/275/274 `.lua`),且 **`DIFFERING_PATHS=70`**
+  ⇒ ⭐ **不是一次 A/A,这一波量的是真东西**。⚠️ 诚实边界:以上在**本容器**成立,⛔ 未在实例上验证
+  (要验证就要发波,而闸 (iii) 是 `exit 3`);传导是**结构性**的(标准 clone 的
+  `refs/remotes/origin/*` 覆盖每个分支)不是运气。
+  **(四) 顺带两件影响发波参数的量(⛔ 本台不定夺,已交总监)**:**(甲)** `aws_run.sh` 是
+  **1 台 + 默认 spot + `MAX_HOURS=12`**,**不是**那个四台 `~$1.10` 的 spot_run.sh 波
+  ⇒ 三个口径 `$0.69–0.75`(脚本自陈公式)/ `$1.67–1.81`(代入 cap-25 局长 2.5x)/
+  **`$3.00`**(看门狗硬顶)—— ⛔ 本台不选一个,⭐ 唯一**有结构性保证**的是 `$3.00`,
+  建议解禁那轮跑 `--planned 3.00`;⚠️ 本月代价为零(headroom `$-1.809`、归零后 ~`$90`
+  ⇒ 三个数判决相同)。⭐ 顺带纠一处散文:章程多处说 `aws_run.sh` 是「老的按需脚本」,
+  **市场类型上与源码不符** —— 它默认 spot(`--on-demand` 才是退出口)⇒ **P4.1 点名的工具
+  本来就合 owner GH #158**。**(乙) ⭐⭐ 12h 看门狗与 `-n 100` 在 cap-25 下只有 1.65x 余量,
+  而截断丢的是 swap 腿**(两方向**串行**:先 fwd 后 rev)⇒ 按铁律 4 (i-a)/(i-c) 与
+  「Radiant 侧偏 ≈ +1.5k gold」,**丢掉的正是消侧偏的那一半** ⇒ ⭐ **截断后的标尺不是精度低,
+  是侧偏与效应无法分离** ⇒ 两条保守出口(⛔ 本台不选):`-n 40`(~2.9h,余量 4x)或
+  `--max-hours 16` 配 `-n 100`;并排登记噪声底免得读成「越小越好」:随机草稿 SD ≈ 600 GPM/局
+  ⇒ `n=40` SE ≈ **95 GPM**、`n=100` ≈ **60 GPM**。
+  **(五) 没做的事**:⛔ **未改 `aws_run.sh`**(想过加 fail-closed 的 ref 预解析守卫,否掉:
+  正解是换一个词,**代码没有错**,为一个不存在的代码缺陷加守卫是把散文错误刻进工具;
+  且**守卫该长什么样取决于总监怎么裁** ⇒ 裁定前造仪器正是本仓库反复点名的顺序错误);
+  ⛔ 未新建任何 ref/tag(`upstream-baseline` 已存在;铁律 3 的版本模型归总监)。
+  **(六) GH #779 owner 零表态第四十一轮**:`state=open` / `comments=19` /
+  `updated_at 2026-09-17T09:43:51Z` ⚠️ **该戳正是上一轮自己那条第 19 评论** ⇒ ⛔ 不是表态。
+  ⛔ **本轮未追评**(零新速率点 + §三 与预算三条路无关 ⇒ 发上去是稀释);§三 另开 issue,
+  **分派正确不是回避**。**⛔ 手机通知:未推** —— 四条判据一条不成立(MTD `$91.809 < $100` /
+  `alpha = 0` / headroom `$-1.809` / 兜底日 `09-27` 未到),⭐ 且「支出动了」这条连冻结都过不去。
+  **(七) 开工自检**:⚠️ **管道坑第 33 次且仍是当轮第一条命令**(自卫逐字
+  `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`),第二跑改重定向裸读
+  但**未带 `nohup`** ⇒ 被挪后台(交棒 ⑥(b) 模板**第十七轮未照抄**)。写报告时**仍在跑**
+  (`ls -d /proc/479` 命中,卡在 `trunk health (fast Lua detectors)`)⇒ ⛔ **本轮无 `SELFCHECK_EXIT`、
+  不写 trunk 绿也不写 trunk 红**,⛔ 不空转等它;⭐ 进程判别照上一轮修法走
+  (`/proc/<pid>/fd/1 → /tmp/sc.log`,**未用 `pgrep`**)。已跑完腿实读:`UNLANDED WORK (1 commit(s))`;
+  **本台无 cadence GAP**(GAP 落在 director×2 / hero×2 / strategy);`RIDESHARE ...: 37`;
+  `total open requests: 145`;`registry rows: 83`;`9 anchor(s) checked -- OK`;
+  **`FROZEN none`**(`pullcad` 陷阱为零);`promote-atom constraints: OK`;
+  `LUA GATE COVERAGE disk 503 | push gate 339 | 开工自检 leg 134 | known_red 6`,
+  `UNCOVERED 114 of 503 (23%)`,`UNCOVERED SET GREW -- 2 file(s)`
+  (`test_dusttower_dive_guard.lua` **第六轮**、`test_fieldsip_transfer_receiving_site.lua` **第四轮**)
+  ⇒ ⭐ 对照上一轮 `disk 465→503` / `leg 102→134` / **`UNCOVERED 115→114`**:
+  **38 个新落地的 Lua 测试里 32 个进了自检腿,缝反而窄了 1**;python 腿 **UNCERTIFIABLE**
+  (`50 checks, 0 failures, 9 uncertified`,脚本自陈 `it is NOT evidence that trunk is red`),
+  ⚠️ `5a0` 的 `134 file(s)` 与上一轮**逐位相同** ⇒ **集合没长,是容器速度**。
+  **零发波**(围栏 `THROTTLED -- brake, not fence`;P4.1 标尺波**连续第四十一轮欠**,
+  ⭐ **但本轮起它不再是「只等钱」** —— §三 的启动口令缺陷本来也会吃掉解禁那一轮)、
+  **零收割欠**(`beta = 0`)、**零泄漏**(五条独立路径:自带区块空 / 五态无 tag 过滤 `LINES=0` /
+  `alpha = 0` / AMI 仍 `ami-0a990a26d89c66547` 一张 / `pending $0.000` 是 `CERTIFIED` 的读数)、
+  ⛔ `bots`/`game`/`tests`/`tools` **一行未改**。
+  **成本(铁律 1 三段式)**:**零 EC2 / 零 CE / S3 读取 `0` 个对象**(零 `cp`/`sync`/零 `.dem`/
+  零 `analysis.json` ⇒ 第三段的 `0` 是**数出来的**);⭐ **另登记一次不下载的调用**(⛔ 不写成零):
+  `s3 ls --recursive` **1 次**、592 键 ⇒ **1 次 LIST ≈ $0.000005**。
+  详见 `iterations/reports/batch-desk/20260917T122410Z.md`。
