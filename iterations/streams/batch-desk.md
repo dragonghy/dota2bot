@@ -13029,9 +13029,16 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ④ 闸 (iii) 账户级 **17 区 COMPLETE** + `CERTIFIED (0 accruing instances account-wide)`;
   ⑤ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏)。
   **(八) 开工自检**:⚠️ **管道自卫第 36 次在当轮第一条命令上生效**(逐字 `REFUSED: routine_selfcheck.sh
-  stdout is a pipe; exit 2, nothing checked.`),改重定向后才真跑。收尾仍停在
-  `=== trunk health (fast Lua detectors) ===`(STILL RUNNING);已到手:该腿自述
-  `UNCERTIFIABLE -- luacheck is not installed, so the behavioural half did not run.`,
+  stdout is a pipe; exit 2, nothing checked.`),改重定向后才真跑。⭐ **本轮最终跑完了**(四十三轮没有):`selfcheck worst exit: 3`,归因块逐字
+  `legs run : 14` / **`FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage`** /
+  `UNCERTIFIABLE (exit 2): trunk-red(python)` / `NOT RUN (inside a leg): tests/test_lua_gate.py
+  tests/test_luacheck_gate_soakswitch.py tests/test_selfcheck_lua_leg.py`
+  ⇒ ⛔ **不写成「exit 3 全是 cadence」**(GH #267 4b:那句手工归因错过 22 小时);
+  四条里有一条是 `lua-coverage` = 下面那个 `UNCOVERED SET GREW`。
+  检测器快腿 `138 tagged detector file(s), 0 failures -- FAST SUBSET, not the full suite.`
+  ⚠️ 快子集不是全集;`trunk-red(python)` 是 **UNCERTIFIABLE 不是红**(该腿自述
+  `NOT a pass ... NOT evidence that trunk is red`)⇒ **trunk 那一侧本轮没人看过**。
+  另有该腿自述 `UNCERTIFIABLE -- luacheck is not installed, so the behavioural half did not run.`,
   5a0 `NOTE 138 file(s) ... in 120.1s (budget 120s)` ⇒ **5a/5a2/5b/5c/5d/5e/5f/5g 共 9 条 UNCERTIFIABLE**。
   ⛔ **这不是 pass,也不是 trunk 红**;⛔ 本轮 `bots`/`game`/`tests`/`tools` **一行未改**,故不阻塞交付,⛔ 不空转等它。
   ⭐ **两条覆盖普查本轮都跑到了(实读,不是结转)**:`LUA GATE COVERAGE disk 508 | push gate 344 | 开工自检 leg 138 |
@@ -13042,7 +13049,13 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   (`fieldsip_transfer` 家族第七次被点名)⇒ ⛔ **净变化好不等于没有新洞**;Python 侧 `0 of 149` 逐位相同。
   **(九) 发表纪律**:GH **#883** 已发表更正评论(§三 对照表 + §四 普查);⛔ **未开新 issue**
   (本轮两件都是对 #883/#352 的补充,**开新 issue 正是本轮在反对的那件事**);⛔ 未追评 #779
-  (戳动了但 `alpha=0`/`beta=0` 无变化,无新事实);`claim_precheck.sh` 读数见报告 §八。⛔ 未用任何 bypass。
+  (戳动了但 `alpha=0`/`beta=0` 无变化,无新事实);**铁律 6 三条腿(两次 push 各一次,读数逐位相同 ⇒ memo 命中)**:`GATE_EXIT=0  CLEAN (iron rule 6
+  static half passed)` / `py gate: 132 ran, 0 findings, 0 uncertifiable, 58.9s` /
+  `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`
+  ⚠️ 第三行工具自述 `This is a SCOPE decision, not a pass and not a skip of a gate that had
+  something to say (GH #624)`。⭐ 「先推分支再推 main」又一个实测旁证:`PUSH1_EXIT=0` /
+  `PUSH2_EXIT=0`(`52959a7a..d902ab30`)且三行**逐位相同** ⇒ 分支推未移动 `origin/main`,
+  第二推问的是同一个问题、memo 免费答掉。`claim_precheck.sh` 读数见报告 §八。⛔ 未用任何 bypass。
   **(十) 没做的事**:⛔ 未发波;⛔ `bots`/`game`/`tests`/`tools` 一行未改(想过给 `recover_verdict.py` 加
   「跨 cap 界池化则拒绝出 winrate」的闸,**否掉**:判据与拦截点是总监的事,且本轮全部说服力恰恰来自
   「仪器已经够了,缺的是读它」);⛔ 未关 #883;⛔ 未做全量 30,416 局普查(理由 §六,已作下一棒);
