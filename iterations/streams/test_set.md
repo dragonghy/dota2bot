@@ -6140,7 +6140,7 @@ armed 24 里今天**没有第二条读数齐备的 id**。`fieldsip` 自己是�
 **真正会举手的东西装在测试里不在登记表里**(§HN.3 (乙))。
 (ii) **`iterations/state.json:stayfield2_RETURNED_20260917`** —— 档案。
 (iii) 本节全文 + 第 2/3 行成员串三元组(24 / 209 字节 / md5 `f7e1812e718d21f09a8b2e7378d4af3c`)。
-(iv) 协同组活 issue 线程追评 —— MCP 可用则追评,受限时按铁律 11 写进报告不空转等待。
+(iv) **协同组活 issue 线程已追评**:GH #818 → https://github.com/dragonghy/dota2bot/issues/818#issuecomment-5722484249(发表前 `claim_precheck.sh` 裸读 `RC_EXIT=0`,且在 branch+main 双推之后)。
 
 ⛔ **queue.json 本轮没有对应的 `director` 字段可写**:全表没有一条以 `stayfield2` 处置为 claim 的请求行
 (`strategy-7` 的 bundle 含它,但那条问的是 `bagsalve`)。**这不是漏投,是投递面不存在** ——

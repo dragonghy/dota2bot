@@ -1666,7 +1666,8 @@
         "iterations/streams/test_set.md 第 2/3 行(成员串 24 + 自校验三元组)",
         "iterations/state.json:stayfield2_20260917_returned",
         "tests/test_stayfield2_live_domain.lua 的 precondition 腿(会红的那一份)",
-        "iterations/reports/director/20260917T220500Z.md"
+        "iterations/reports/director/20260917T220500Z.md",
+        "GH #818 追评 https://github.com/dragonghy/dota2bot/issues/818#issuecomment-5722484249"
       ],
       "why_registered_here": "⚖️ 章程 2.6 (乙)。§HK.4 已经**示范过**不登记的后果:那一轮把 `stayfield2` 逐字「留给它自己的裁定」,写在 test_set.md 的散文里,`owed_executions.json` 里**一行都没有**,于是它在随后的每一轮「下次触发」清单里**一次都没出现**。⛔ 本行不许被读成「还要再裁一次才算完结」:**退集这个判定本轮已完结**,本行管的是它**可逆**的那一半。",
       "done_when": {

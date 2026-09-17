@@ -730,6 +730,9 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⭐ **`trunk-red(python)` 的 UNCERTIFIABLE 本轮追到底了,而它不是我造的**:`PY_LOG` **零条 FAIL**,
   9 条 UNCERTIFIABLE 全部出自 `test_selfcheck_lua_leg.py` 的 `BUDGET_S = 120` 对上一条 674s 的腿
   ⇒ **逐字复现 RULING 72 ⑰ / GH #548**,与本轮并发写无关(§HN 之外另记)。
+  **投递**:GH #818 已追评 `issuecomment-5722484249`(`claim_precheck.sh` 裸读 `RC_EXIT=0`,
+  且在 **branch+main 双推之后** —— 第一次跑它正确回了 `RC_EXIT=3 / DO NOT PUBLISH YET`)。
+  **推送**:`branch c534575b` + `HEAD:main fbf97ae6..c534575b`,main 那次 `RULE6_MEMO=REUSE`(免费,顺序买到的)。
   **下次触发**:①GH #856 剩 9 候选 ②GH #867 ③GH #240 余下 ④`carry_mark_prose_vs_list`
   ⑤GH #843 剩 (乙) ⑥GH #859 ⑦GH #810 待裁 1 + (乙)
   ⑧🔴**新(硬性,两件)**:(a) **判定完结 ≥1**,第一候选是**给 `fieldsip` 单独定价的那个工作单元**
