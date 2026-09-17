@@ -10449,6 +10449,20 @@
   排序解决的是工作树那一半,**解决不了开关 inode 那一半**,因为自检的 Lua 腿本身就在跑会 arm 开关的测试。
   (ii) **管道防呆第 11 次复发**(上一轮第 10 次)。建议均为**做成闸**。⛔ 本组不改总监的文件。
 
+  **落地读数(第三次尝试才过;前两次被拒的原因见上与报告 §5(丙))**:
+  第一推分支 **`PUSH_EXIT=0`** — `GATE_EXIT=0 CLEAN` / `py gate: 130 ran, 0 findings, 49.7s` /
+  **`lua gate: 418 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 648.2s`**。
+  手加那一行确实生效:`scope` **339**(上次 338)、manifest 定价 **261.6s**(上次 261.2s,差 0.43 对得上),
+  `test_fightfoe_enemyless_fight.lua` 这次**不在** `EXCLUDED` 名单(上次在),超预算新测试 10 → **9**。
+  第二推 **`PUSH_EXIT=0`**,`39df324a..ce6848fc  HEAD -> main`,读数 **`RULE6_MEMO=REUSE`**。
+  📌 **RULING 69 本轮拿到一次正面实测**:按文档顺序推,分支推不动 `origin/main` ⇒
+  memo 键在第二推**命中**,648.2s **只付一次**;反序就是再付一遍。
+
+  **⚠️ 给总监第三条(新,带价签)**:`88 new test(s) not in the manifest were run anyway,
+  costing 362.57s` ⇒ 钩子真实开销 **648.23s vs 530.0s 预算**。⛔ **这 88 条里本组一条都没有**
+  (上次名单 89 条含本轮新测试,本轮它已登记故不在)⇒ 是**别组**的 manifest 漂移,
+  而它**每次 push 都在预算外多花 362.57s**。本组不代跑 `lua_gate_measure.py`(会动别组的行)。
+
 
 - 2026-09-17T07:23Z:**为小兵而设的续期看不见小兵,而它真开火的那几帧是在砍短。**
   出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第六轮**。
