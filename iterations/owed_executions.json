@@ -1615,7 +1615,8 @@
    "trigger": "下一个总监工作单元,除非当轮有 [bug] issue 或 promote 判定排在前面",
    "delivered_to": "GH #865 追评(本轮);`DECISIONS_NEEDED.md` 第 17 条「已裁并撤回」节;`.claude/rules/claude-code.md` 的 `## Push path` 节",
    "why_registered_here": "⚖️ 章程 2.6:本轮推迟了 (A) 的执行。⛔ 不许把「它还挂在 #865 里」当作不掉棒的论据 —— 一条只活在别人 issue / 报告散文里的欠裁,平均寿命是一轮(2.6 的立案句)。⭐ 本行同时替 #865 §四 收口:那个开放项(`rule6_memo` 为什么没命中)**已由本轮答掉**(键 = `(HEAD^{tree}, origin/main)`,反序把键的后一半换掉 ⇒ 恒定 MISS),⛔ 但**答案不是修复**,(A) 仍欠。",
-   "done_when": "三条同时成立,裸读得出:(1) `.githooks/pre-push` 里 `origin/main...HEAD` **不再**是第三腿 scope 的取数式;(2) 同文件出现从 stdin 读 remote sha 的那一行(`while read` 或等价,且注释写明全零 = 新 ref = 跑全集);(3) `tests/` 下有一条钉子,对三个入口各断言一次(全零 sha ⇒ 跑全集 / 非零 sha 且无 bots-game-tests 路径 ⇒ SKIPPED BY SCOPE / 非零 sha 且有路径 ⇒ 跑该子集),且带一个变异台读数(control 绿 + 每个变异各自死)。⛔ 只做 (1)(2) 不算结清:没有 (3),下一次有人把 scope 改回去时没有任何东西会举手。"
+   "done_when": {"kind": "path_exists", "path": "tests/test_prepush_scope_from_stdin.py"},
+   "done_when_note": "⚠️ **文件存在 ≠ 修对了**(与 LIMIT 11 / `roshan_pit_daynight_fix` 同族,故意写明):这条机器键只买「(A) 带着自己的钉子落了地」。**结清判据由总监逐条读,三条缺一不算**:三条同时成立,裸读得出:(1) `.githooks/pre-push` 里 `origin/main...HEAD` **不再**是第三腿 scope 的取数式;(2) 同文件出现从 stdin 读 remote sha 的那一行(`while read` 或等价,且注释写明全零 = 新 ref = 跑全集);(3) `tests/` 下有一条钉子,对三个入口各断言一次(全零 sha ⇒ 跑全集 / 非零 sha 且无 bots-game-tests 路径 ⇒ SKIPPED BY SCOPE / 非零 sha 且有路径 ⇒ 跑该子集),且带一个变异台读数(control 绿 + 每个变异各自死)。⛔ 只做 (1)(2) 不算结清:没有 (3),下一次有人把 scope 改回去时没有任何东西会举手。\n\n⛔ **只改 `.githooks/pre-push`、不落钉子,这条腿会一直 OWED —— 那是对的。**\n\n⭐ **本行自己的登记过程就是一条读数(2026-09-17T04:xxZ)**:它第一版把 `done_when` 写成了**散文字符串**,而 `pending_rulings.py:_machine_key_status` 对 `cond.get(\"kind\")` 不设防 ⇒ `AttributeError` **把整条 py 闸打红**,`FAIL` 行指的是 `tests/test_pending_rulings.py`(一个与作者无关的名字),本轮总监自己的 push 因此被拒一次。⇒ 已同轮加固:不可读的 `done_when` 现在判 **UNCERTIFIABLE 并点名那一行的 `id`**,⛔ 不再崩。📌 那正是本仓反复记的形状:**红由下一个开工的组发现,而错误信息指着别人的文件**。"
   }
  ],
  "retired": [

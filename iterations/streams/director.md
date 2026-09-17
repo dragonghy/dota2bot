@@ -711,13 +711,15 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **清单 1.5**(RULING 64/67):`RC_EXIT=0`,6 个 GH ref **全 open**,无 `STALE-CARRY` / 无 `NO-HANDOFF`。
   **成本**:读批测台 03:15Z —— MTD **`$91.448`** 仍在 `$90` 刹车线之上(headroom `-$1.448`),
   `forecast 102.657` vs limit `100.0`,连续第三轮**什么都发不了**;⛔ 不发邮件(W37 配额用尽,且本轮**没有新信息**)。
-  **下次触发**:①**GH #865 (A)**(欠条,`done_when` 三条)②⛔ 清单 ③ 已结清**不要再抄**
+  ⭐ **本轮的闸拒了我自己一次,拒的理由是我新登的那条欠条**:`done_when` 有 schema(`kind` ∈ manual/json_value/path_exists/…),我写成了**散文字符串** ⇒ `pending_rulings.py` `AttributeError` **把整条 py 闸打崩**,而 `FAIL` 行指的是 `tests/test_pending_rulings.py` —— **一个与作者无关的名字**。⇒ 行已改为 `path_exists` + `done_when_note`;**并同轮加固**:不是 dict 的 `done_when` 判 **UNCERTIFIABLE 并点名那一行的 id**(用工具自己已有的词表,不新增语义)。⚠️ **变异台第一次做错了,照登**:控制组是**改完之后**才 `cp` 的 ⇒ **控制组里带着补丁**、于是「没崩」,差点被我读成「本来就不崩」;改用 `git show HEAD:` 取真·修前版本后 **PRE-FIX `CRASHED: AttributeError` / POST-FIX `UNCERTIFIABLE` 点名 id**。📌 纪律 1 说变异台要从**文件副本**恢复,**没说副本要取自哪一刻** —— 今天买到的是那半句。复跑 `test_pending_rulings.py` **997 checks / 0 failed**、`py_gate.py` **130 ran, 0 findings**。
+  ⚠️ 顺手看见不改:`owed` 里 2 行的 `done_when.kind: path_contains_any` **不在白名单内** ⇒ 每轮读 UNCERTIFIABLE,**从未被真读过**(进清单 ⑭)。
+  **下次触发**:①**GH #865 (A)**(欠条 `path_exists: tests/test_prepush_scope_from_stdin.py`,三条判据在 `done_when_note`)②⛔ 清单 ③ 已结清**不要再抄**
   ③GH #856 修法第 3 条剩 9 个候选(本轮 §五 又加一份写方现场)④棘轮加宽(GH #867)
   ⑤GH #240 余下 ⑥`carry_mark_prose_vs_list` ⑦GH #843 (丙)+(乙) ⑧GH #859 ⑨GH #810 待裁 1 + 两条欠条
   ⑩自检那三条 python 用例(**第十四轮**)⑪`lua-coverage` `no_manifest_row` 新增 2 条
   (`test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua`)
   ⑫P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3
-  ⑬**W38 周日汇总邮件(09-20)**:带第 15/16/18/19 条 + **第 17 条已撤回**的告知
+  ⑭`path_contains_any` 那两行 ⑬**W38 周日汇总邮件(09-20)**:带第 15/16/18/19 条 + **第 17 条已撤回**的告知
 
 - **2026-09-17T01:00Z**:**RULING 68 —— GH #856 摆了三个选项,三个都预设「写方是缺陷」;买回读数后发现写方一行都不该动,因为它碰真实树正是被测的那个命题。缺陷在读方,而修法早就在仓库里、24 个文件在用。**
   全文 `iterations/reports/director/20260917T010000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。

@@ -1249,6 +1249,22 @@ def _machine_key_status(row, repo=REPO):
     by the caller, so that this half stays a pure reading of the key.
     """
     cond = row.get("done_when") or {}
+    # A `done_when` that is not an object at all (a prose string is the easy
+    # slip -- the charter asks for "a done_when you can read bare", and prose
+    # reads bare to a human) used to reach `cond.get` and raise
+    # AttributeError. That traceback did not name the offending row: it named
+    # `tests/test_pending_rulings.py`, so one malformed row refused EVERY
+    # stream's push with an error pointing at a file its author never touched.
+    # Measured 2026-09-17, on the director's own push, by the director's own
+    # row. UNCERTIFIABLE is the vocabulary this tool already has for "could
+    # not read"; a row it cannot parse is exactly that, and naming the id is
+    # the difference between a five-minute fix and a bisect.
+    if not isinstance(cond, dict):
+        return ("UNCERTIFIABLE",
+                "row %r has a `done_when` of type %s, not an object with a "
+                "`kind` -- this tool cannot read it (prose belongs in "
+                "`done_when_note`)" % (row.get("id", "<no id>"),
+                                       type(cond).__name__))
     kind = cond.get("kind")
     if kind == "manual":
         return ("OWED",
