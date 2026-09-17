@@ -12525,3 +12525,62 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **铁律 6 三条腿(`git push origin HEAD:main`,`PUSH_MAIN_EXIT=0`,落地 `0eb03ee6..4e2fcf11`)**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN` / `py gate: 128 ran, 0 findings, 0 uncertifiable, 45.6s` / `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.` ⚠️ **第三腿是 SCOPE 判定不是 pass**(4 个路径全在 `iterations/`)。⛔ 该推未用 `RULE6_BYPASS` / `--no-verify` ⇒ **无一行「这是跳过不是通过」**。**开工自检 `EXIT=3`**(取自未经管道的 `echo "EXIT=$?"`):`legs run : 13` / `FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage` / `UNCERTIFIABLE (exit 2): trunk-red(python)` / `selfcheck worst exit: 3` —— ⭐ **两个集合与上一轮逐字相同** ⇒ ⛔ 本轮不产生任何新的 trunk 判断。
   **⛔ 自捉两条**:(甲) 交棒 ⑦(b) 字面模板**第十三轮仍未照抄** —— 开工第一条命令 `timeout 300 … | tail -40` **管道与 `timeout` 同时在场**,被脚本自卫拒绝(逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`,自陈已复发 5 次且每次都是当轮第一条命令);第二次形式正确但**未带 `nohup`**,由 harness 挪进后台才跑完 ⇒ ⭐ **跑完了不是照抄模板的功劳**。(乙) `wave_fence.py` 路径猜错一次(见上)。
   详见 `iterations/reports/batch-desk/20260917T031535Z.md`。
+
+- 2026-09-17T06:16:32Z:**刹车第三十九轮持有。⭐⭐ 本轮两件实质。**
+  **(一) 预算快照在连续两轮冻结后解冻**:MTD **`$91.809`** / 戳 **`2026-09-17T03:46:42Z`**,
+  对上一轮那张冻结快照(`$91.671` / `2026-09-16T20:07:54Z`)**两量都动了** ⇒ **+`$0.138` / +7.6467h**。
+  ⛔ **相邻这一对不是速率点**(`7.6467h < 11.3h`,照登不换算)—— ⭐ 而本轮它自己演示了这条判据
+  为什么存在:硬换算得 **`$0.4331/天`**,**落在已登记的 `$0.40–0.92` 带内、长得完全正常、
+  没有任何东西会举手**,而 MTD 对 EC2 的滞后是 4.3–11.3h,**7.65h 的窗口整个落在滞后区里**。
+  以新右端点重算的**五个合规速率**(`$0.6270` / `$0.6642` / `$0.7488` / `$0.5332` / `$0.5203`)
+  **全部仍在 `$0.40–0.92/天` 带内 ⇒ 不收窄该带**;⛔ **本轮 5 个 + 上一轮 4 个 ≠ 9 个独立样本**
+  (共用同一批左端点,**唯一新信息是右端点**),空转日样本计数本轮不上调。
+  ⭐ **新登记一条规则行为**:`09-16T11:07:38Z` 上一轮被判「短段」(`9.00h`),本轮对新右端点是
+  `16.65h` ⇒ **合规了** —— **11.3h 判据不丢弃端点,只让端点等右端点走远**。
+  `$100` 越线日在两条最长基线(47.47h / 37.11h)上是 **`~09-30` / `~09-29`**,
+  上一轮同口径是 09-28 / 09-29 ⇒ **移动方向是更晚约一天,不是更早**;兜底日 `2026-09-27T00:00Z` 不动
+  (它仍早于全部外推越线日)。`forecast` 由 `102.657` 跳到 **`117.953`**(⛔ 本台不解释也不采信;
+  ⛔ 「它越过 `$100`」不是本台的越线判断,本台的外推走账单侧端点)。**headroom 对 `$90` = `$-1.809`**。
+  **(二) ⭐⭐ 上一轮交棒 ⑥(i) 的推序指令已被总监 RULING 69 反向裁掉。** ⑥(i) 写的是
+  「先 `HEAD:main` 后分支、第二推用 `--no-verify`」;RULING 69(`7359806e`,**`2026-09-17T04:15:29Z`**,
+  GH #865)把**文档序(先分支后 main)**钉成闸,落地时刻**比 ⑥(i) 写下的那一轮晚约一小时**。
+  ⭐ 该提交自己说明了机制:上一轮 `DECISIONS_NEEDED` 第 17 项带着「no reply = I execute (甲) next round」
+  的默认条款,而否掉它的读数**比那一项晚两小时到**,逐字 `item 17 is not wrong, it is stale`
+  ⇒ ⑥(i) 与 item 17 同源、同样 stale。**本轮按 RULING 69 推,⛔ 不按 ⑥(i),⛔ 不用 `--no-verify`**
+  (文档序下分支推不移动 `origin/main` ⇒ 第二推问同一个问题、memo 免费答掉、scope 也不是空表,
+  `--no-verify` 没有对象)。闸自证:`tests/test_push_order_contract.py` 现跑 **`13 checks, 0 failures`**
+  (`POT2_EXIT=0`)⇒ 规则文件 / memo 的引用 / 钩子的 scope 三处一致。⚠️ **诚实边界**:
+  GH #865 §五 的「第二推 60s 内」验收针脚**本轮仍未计时**。
+  **零发波**(闸 (iii) 预算 `exit 3`,P4.1 标尺波**连续第三十九轮欠**,⛔ 唯一阻因是预算)、
+  **零收割欠**(`beta = 0`)、**零泄漏**(`alpha = 0`,`running/pending instances` 节空;
+  常驻成本仍只有 `ami-0a990a26d89c66547`)、⛔ `bots`/`game`/`tests`/`tools` 一行未改。
+  **成本(铁律 1 三段式)**:**零 EC2 / 零 CE / S3 读取 `0` 个对象** —— 本轮未跑任何 `s3 cp`/`s3 sync`,
+  且 `check_costs.sh` 本轮**不含任何 S3 调用**(grep 零命中)⇒ 第三段的 `0` 是**数出来的**。
+  GH #801 四行整块照抄(⛔ 未用 `COST_CONFIRM_AT=999` 自救):
+  `>= $35, but headroom to the $90.00 brake is $-1.809` / `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).`
+  / `Nothing can launch at this MTD, so confirming it buys nothing.` / `Resumes by itself as soon as headroom >= $1.10.`
+  ⚠️ **SKIP 不是 pass**,欠条 `gh801_confirm_headroom_first_live_read` 仍 **OWED**。
+  **GH #779**:现读 `state=open` / `comments=18` / `updated_at 2026-09-16T21:38:01Z`,
+  ⭐ 该戳与上一轮**逐位相同**且第 18 条是本台 `09-16T21:06Z` 自己发的 ⇒ ⛔ **不是 owner 的表态**
+  (零表态第三十九轮);⛔ 本轮未发第三十九条评论(§二 的移动是「越线更晚一天」、§三 是推序机制,
+  两件都不是新论据,发上去是稀释)。**通知判据四条一条不成立 ⇒ 未推手机通知**
+  (⭐ 本轮支出**确实动了**,而判据 1 量的是 MTD 的**绝对位置**不是它动没动;
+  ⛔ 「动了」不是第五条判据,本台不在无授权下加判据)。
+  ⛔ **自捉一条**:交棒 ⑥(b) 字面模板**第十四轮仍未照抄** —— 开工第一条命令
+  `timeout 600 … | tail -40` 管道在场,被脚本自卫逐字拒绝(`REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`,
+  脚本自陈已复发 5 次、每次都是当轮第一条命令,本轮是**第 6 次**);第二次形式正确但**未带 `nohup`**,
+  600s 超时后由 harness 挪进后台才跑完 ⇒ ⭐ **跑完了不是照抄模板的功劳**。
+  详见 `iterations/reports/batch-desk/20260917T061632Z.md`。
+  **开工自检 `EXIT=3`**(取自未经管道的 `echo "EXIT=$?"`;⛔ **不取 harness 报的 `exit code 0`**
+  —— 那条命令末尾还有一个 `tail -50`,**那个 0 是 `tail` 的**)。腿级逐字:`legs run : 13` /
+  `FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage` /
+  `UNCERTIFIABLE (exit 2): trunk-red(python)` / `selfcheck worst exit: 3` ——
+  ⭐ **两个集合与上一轮逐字相同** ⇒ ⛔ 本轮不产生任何新的 trunk 判断。
+  ⛔ **自捉二(⭐⭐ 新,给 ⑥(b) 补上了它一直缺的实测理由)**:等自检用的
+  `pgrep -f routine_selfcheck.sh` 在 `06:32:13Z` 读出 `STILL RUNNING`,**而那时自检早已结束** ——
+  `pgrep -f` 匹配**整条命令行**,于是**等待循环自己那条 `eval 'while pgrep -f routine_selfcheck.sh …'`
+  也被匹配上** ⇒ **探针恒真、循环永不终止**(最后是被 `kill` 掉的,`exit 144`);
+  现场自证:自检进程退出后再跑一次 `pgrep -fa` 仍返回 **1 行**,那一行就是**这次 `pgrep` 自己的包装 shell**。
+  ⭐ 这正是 ⑥(b) 写 `ls /proc/<pid>` 而不写 `pgrep` 的理由,此前只是模板里的一个选择,**本轮把理由量出来了**;
+  ⚠️ 失效方向是危险那一侧(把「已跑完」读成「还在跑」)⇒ 照它等的轮次会**一直等下去**,
+  而那正是铁律 7/11 点名的空转失败形状。
