@@ -360,7 +360,11 @@ function WeightedEnemiesAroundLocation(vLoc, nRadius)
     local key = _keyLoc(vLoc, nRadius)
     local c = _cacheEnemyAroundLoc[key]
     if c and now - c.t <= CACHE_ENEMY_AROUND_LOC_HZ then
-        return c.count
+        -- [threatcreep] Second return value only. `c.raw or c.count` is not a
+        -- default for a missing field -- every writer below sets both -- it is
+        -- the guarantee that an entry written by an older build reads as the
+        -- FLOORED value, i.e. as shipped.
+        return c.count, c.raw or c.count
     end
     local unitState = updateDefendUnitStateCache()
     local count = 0
@@ -382,10 +386,127 @@ function WeightedEnemiesAroundLocation(vLoc, nRadius)
             end
         end
     end
+    -- [threatcreep] SECOND VALUE ONLY -- `count` above and `count` below are
+    -- byte-for-byte the shipped computation, and this adds a parallel sum that
+    -- no unarmed caller reads.
+    --
+    -- ⭐ THE SECOND WALL, and it stands IN FRONT of the floor. The loop above
+    -- walks `unitState.enemyHeroes`, which is built as
+    --     GetUnitList(UnitType.Enemies) filtered by jmz.IsValidHero
+    -- so every unit that reaches the ladder has ALREADY answered IsValidHero --
+    -- and the ladder's first branch takes exactly those. Its `siege` 0.5,
+    -- `upgraded` 0.4/0.6, `warlock_golem` 1 and `IsCreep()` 0.2 rungs are
+    -- therefore UNREACHABLE: a creep is filtered out one struct field earlier
+    -- and never gets priced at all. The judge is in this same file and reads
+    -- the same struct -- ShouldDefend's own creep loop (~line 862) walks
+    -- `unitState.enemyCreeps` for the same ladder. Two loops, same intent, and
+    -- only one of them was given the list it prices.
+    --
+    -- ⇒ fixing the floor ALONE would have shipped a no-op: 0.8 floors to 0, but
+    -- the 0.8 was never there to floor. Both walls belong to one question
+    -- ("can the lane tie-break see a creep wave?") so they are one id, and the
+    -- id is confined to the ONE consumer where the answer is not already a
+    -- provable no-op (see the GetThreatenedLane block below).
+    --
+    -- ⛔ THE FLOOR ITSELF IS NOT TOUCHED and neither is `count`: the floored,
+    -- hero-only sum still feeds the `creepWeight >= 2` base-threat re-arm, and
+    -- `math.floor` also guards the ShouldDefend role ladder. Moving either
+    -- would move every one of those in a single edit -- the lanefix mistake.
+    --
+    -- The rungs below are the ladder above minus the two conditions that are
+    -- already decided by the list: `unitState.enemyCreeps` is filtered on
+    -- `IsCreep() or IsAncientCreep()`, so the hero rung cannot apply and the
+    -- final rung's own `IsCreep()` test is redundant (hence `else`); and
+    -- `siege` needs no `not upgraded` guard because the two `upgraded` rungs
+    -- sit above it in the same elseif chain, exactly as they do above.
+    local rawCount = count
+    for ____, unit in ipairs(unitState.enemyCreeps) do
+        if jmz.IsValid(unit) and GetUnitToLocationDistance(unit, vLoc) <= nRadius then
+            local name = unit:GetUnitName()
+            if __TS__StringIncludes(name, "upgraded_mega") then
+                rawCount = rawCount + 0.6
+            elseif __TS__StringIncludes(name, "upgraded") then
+                rawCount = rawCount + 0.4
+            elseif __TS__StringIncludes(name, "siege") then
+                rawCount = rawCount + 0.5
+            elseif __TS__StringIncludes(name, "warlock_golem") or __TS__StringIncludes(name, "lone_druid_bear") then
+                rawCount = rawCount + 1
+            else
+                rawCount = rawCount + 0.2
+            end
+        end
+    end
     count = math.floor(count)
-    _cacheEnemyAroundLoc[key] = {t = now, count = count}
-    return count
+    _cacheEnemyAroundLoc[key] = {t = now, count = count, raw = rawCount}
+    return count, rawCount
 end
+-- [threatcreep / charter 0NEXT33, registered-and-unmeasured since 2026-09-16]
+-- THE CREEP TIE-BREAK IN THIS FUNCTION CANNOT SEE A CREEP WAVE, SO THIS
+-- FUNCTION ANSWERS "Top" WHENEVER NO ENEMY HERO IS VISIBLE NEAR ANY LANE.
+--
+-- ⭐ THE DEFECT IS TWO WALLS, ONE BEHIND THE OTHER, and only the second one is
+-- visible from here.
+--   WALL 1 (the list). WeightedEnemiesAroundLocation prices its units off
+--     `unitState.enemyHeroes`, which is `GetUnitList(UnitType.Enemies)` already
+--     filtered by IsValidHero -- so its `siege` / `upgraded` / `IsCreep()`
+--     rungs are unreachable and a creep weighs NOTHING. Derivation and the
+--     in-file judge are in that function's own block above.
+--   WALL 2 (the floor). Even with the list fixed, a lane creep is priced 0.2
+--     and a full enemy wave is FOUR creeps: 4 * 0.2 = 0.8, and that function's
+--     last act before returning is `math.floor(count)`. A full wave on our
+--     furthest tower reads ZERO. The creep half does not start counting until
+--     the FIFTH body (5 * 0.2 = 1.0), and a wave is not five.
+-- ⛔ Repairing either one alone ships a no-op, which is why they are ONE id.
+--
+-- ⭐⭐ WHY THAT MATTERS **HERE** AND NOWHERE ELSE, closed form. The floor has
+-- exactly three consumers in this file and two of them are provable no-ops:
+--   * `creepWeight >= 2` (base-threat re-arm, ~line 1085): for any real x,
+--     `math.floor(x) >= 2` iff `x >= 2`. The floor cannot change that answer.
+--   * the ShouldDefend `nNearby` role ladder: `1/2/3/>=4` on an integer sum --
+--     the truncation there is load-bearing and was priced separately last
+--     round ([defcreep], tests/test_defquiet_creep_siege.lua). NOT touched.
+--   * THIS ONE: `math.min(w * 0.4, 0.9)`. Here the two walls are the difference
+--     between 0.32 and 0.00 for a full wave -- and 0.00 is also what an EMPTY
+--     lane scores. So the tie-break's two inputs collapse onto each other.
+-- The loop takes the strict maximum (`score > bestScore`) over {Top, Mid, Bot}
+-- in that order from a `bestScore = -1` seed, so every tie resolves to the
+-- FIRST lane. ⇒ whenever no lane has a visible enemy hero within 1800 of its
+-- anchor -- which is the only situation this branch is even reached in -- the
+-- answer is Top, for every wave smaller than five creeps, on every map, in
+-- every game. The tie-break is not biased; it is INERT, and Top is just what
+-- the seed order hands back.
+--
+-- That answer is consumed three times in ____exports.GetDefendDesireHelper, as
+-- `if lane ~= threatenedLane then return BotModeDesire.VeryLow end` -- so the
+-- lanes this function fails to name are lanes the whole team is told not to
+-- defend.
+--
+-- ⛔ DIRECTION -- this is a SELECTOR, not a veto, and that is said plainly
+-- rather than dressed up as one-directional. Arming can move the answer to a
+-- different lane. What it can NEVER do is bounded, and the bound is arithmetic:
+-- the creep term is capped at 0.9 and a single visible enemy hero is worth 10,
+-- so arming can never move the answer off a lane that has a visible enemy hero
+-- onto one that does not. Inside the hero-quiet set it is monotone -- a lane
+-- with strictly more enemy creep weight can only gain on a lane with less --
+-- and an EXACT tie still resolves to Top exactly as shipped.
+--
+-- Condition (c): "which lane is being pushed" is read from creep pressure at
+-- the defender's own furthest building; that is the standard read when no hero
+-- is on the minimap, and it is the read this code already intends -- the
+-- comment on the capped term in the TS source says so in its own words ("don't
+-- let creeps fully tie heroes"). The cap, the 1200 radius and the 0.4 scale are
+-- all left exactly as they are; this changes only whether the term can be
+-- nonzero at all.
+--
+-- ⛔ WHAT NO SWEEP IN THIS REPO CAN SAY, and it is the same instrument gap
+-- [defcreep] hit last round (GH #863): tests/mock/replay_fixture.lua answers
+-- GetUnitList(UnitType.Enemies) with an empty table, and that list is the sole
+-- input to WeightedEnemiesAroundLocation. Measured over every loadable fixture:
+-- 0 units returned, so this term is 0 BY CONSTRUCTION on the whole corpus and
+-- armed reads baseline-identical there. tests/test_threatcreep_lane_tiebreak.lua
+-- §1 asserts that gap out loud, so the day the loader starts injecting creeps
+-- this file says so instead of silently changing meaning.
+-- Gated STANDALONE -- one id, never a conjunction of two (the 'pullcad' trap).
 function GetThreatenedLane()
     local lanes = {Lane.Top, Lane.Mid, Lane.Bot}
     local bestLane = lanes[1]
@@ -396,8 +517,10 @@ function GetThreatenedLane()
         local enemyHeroCnt = _recentHeroCountNear(anchor, 1800)
         local score = enemyHeroCnt * 10
         if enemyHeroCnt == 0 then
+            local nWeighted, nWeightedRaw = WeightedEnemiesAroundLocation(anchor, 1200)
+            local bThreatCreep = jmz.IsSoakCandidate("threatcreep") and jmz.IsModeTurbo()
             local creepEq = math.min(
-                WeightedEnemiesAroundLocation(anchor, 1200) * 0.4,
+                (bThreatCreep and nWeightedRaw or nWeighted) * 0.4,
                 0.9
             )
             score = score + creepEq

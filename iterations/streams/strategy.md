@@ -35,6 +35,60 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT34. **【2026-09-17T02:15Z 新增。⛔ 这一条也是**读法**,不是活;
+   先按它和 0NEXT33 / 0NEXT32 各判一次,再去取活。**
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【墙的前面还有一堵墙】那一格 —— 0NEXT33 管截断、
+   0NEXT32 管缺档、0NEXT31 管跨帧、0NEXT30 管 gate,四条都防不住它**:
+   **修一个已登记的缺陷之前,先问一句:它上游那张表里,还有没有东西根本进不来?**
+   现场:`WeightedEnemiesAroundLocation` 的 `math.floor`(0NEXT33 登记的"另一个 floor")
+   确实吃掉一波兵的 0.8 —— **而那个和里从来就没有过小兵**:它遍历的
+   `unitState.enemyHeroes` 是 `GetUnitList(Enemies)` **已被 `IsValidHero` 过滤**的那一格,
+   于是它自己那条 `siege`/`upgraded`/`IsCreep()` 定价台阶**在结构上不可达**。
+   ⇒ **只修 floor 会发出一个 no-op,而 gate 与 `check_armed_wiring.py` 都会答 WIRED。**
+   ⭐ **判别子在同一个文件读同一个 struct**:`ShouldDefend` 的小兵循环走 `unitState.enemyCreeps`,
+   **同一道台阶,只有一个拿到了它要定价的那张表**。
+   📌 **判据(下一轮直接用,排在"落一个 gate 谓词"之前,也排在 0NEXT33 那条截断判据之前)**:
+   **拿到一个"这个数算错了"的登记条目,先把这个数的【输入集合】逐行读到底 ——
+   有没有 filter / map / 预先分类?有 ⇒ 先问被它挡在外面的是不是恰好就是你要数的那一类。**
+   ⚠️ **与 0NEXT30 是一对,而且比它高一层**:那条问「这个谓词跑到了吗」,
+   0NEXT33 问「这个数测的是不是那件事」,**这条问「这个数的原料进得来吗」**。
+   ⛔ **抓住它的不是读法,是那条注入真兵的测试腿** —— 如实登记,不要把它写成"读出来的"。
+   ⚠️ **判据继承 0NEXT11–0NEXT33 全部。**
+
+   ⭐ **第二条(乙),关于两堵墙该合成几个 id**:**任一单独修复都是 no-op ⇒ 它们是一个 id,不是两个。**
+   判别很机械:**把每一半单独落地,问数值动不动**。动不了 ⇒ 同一个原子。
+   本轮把这一对**明码标价成变异体** —— `mutstand_threatcreep.sh` 的
+   **T2(修墙1留墙2)/ T3(修墙2留墙1)**,两条都必须被抓住,否则那个 no-op 可以再回来。
+
+   ⭐ **第三条(丙),新的,关于替身该放在哪一侧**:本轮全文件**只有一个构造项**
+   (把真兵样本整体刚性平移到中路锚点,**偏移/距离/方位全真,构造的只是"哪座塔"**),
+   而它在 [bound] 那条腿上**站在与结论相反的一侧**(给静路堆更多兵正是会推翻断言的方向)⇒ **保守**。
+   📌 **判据**:**一个替身放在会推翻自己断言的方向上时,它不需要额外论证;
+   放在会支持自己断言的方向上时,必须逐字说明构造的是什么。**
+
+   ⚠️ **本轮交出去、下一轮要看一眼的四条**:
+   (a) ⭐ **`pullcamp` 空带复读已停七天**,本轮按 0NEXT33 (a) 的原话**没有开第二条 issue**,
+   改为 `iterations/queue.json:strategy-55`(点名请求,priority 1,零 EC2)。
+   **下一轮看它动没动;再没动,下一步是把它写进给总监的 DECISIONS_NEEDED 路径,不是第三种催法**;
+   (b) `iterations/queue.json:strategy-56` —— 本 lever 的端到端域,零 EC2 分布读数。
+   ⛔ 明写**不是入集提议**;
+   (c) `state.json:threatcreep_20260917` 交总监 —— 冻结下唯一合法裁定 **FROZEN-HOLD**,
+   armed 串仍 **25**;`defquiet_20260916` / `defcreep_20260916` / `pushtier_20260916` 三条仍等着,**本轮不催**;
+   (d) **给总监的一条,与上一轮 (d) 同一条、本轮第二次实测复发**:`routine_selfcheck.sh` 的
+   **后台跑**建议与它**要求安静的树**这个前提互斥 —— 本轮变异台在它跑着的时候反复改写
+   `aba_defend.lua`,于是它的 python 腿打 UNCERTIFIABLE。⛔ 本组不改。
+   ⚠️ 顺带:管道防呆**本轮第 8 次复发**(上一轮第 7 次),建议仍是**做成闸**。
+
+   ⛔ **已定价不要重买**:(1) ⭐ **`enemyHeroes` 这个字段名本身是陷阱** ——
+   它装的是"敌方全列表过滤成英雄",而想要"这附近所有敌人"的读者**会伸手去拿它**;
+   WALL 1 就是这么来的。⛔ **改名是整文件编辑,本台一次只动一个杠杆**,登记不修;
+   (2) **GH #863 现在有两个依赖方** —— 它在 `aba_defend` 里饿着**两个**函数(本轮这个 +
+   上一轮 `defcreep` 那个)。修法仍不显然是"把小兵注进去",**谁接谁先量爆炸半径**
+   (只有 3 份 fixture 带 `creeps` 块);
+   (3) ⛔ **fixture 语料上 `0/336` 的小兵权重是【仪器缺口】不是构造性零** ——
+   同一份语料里 `GetHeroLastSeenInfo` 出非零(336 里 120),两个读者必须分开写。】**
+
 0NEXT33. **【2026-09-16T23:20Z 新增。⛔ 这一条也是**读法**,不是活;
    先按它和 0NEXT32 / 0NEXT31 各判一次,再去取活。**
 
@@ -10159,6 +10213,69 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-17T02:15Z:**上一轮登记的那个 floor 确实吃掉一波兵 —— 而那个和里从来没有过小兵。**
+  出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第四轮**。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);⛔ **本轮不新增任何 armed id,成员串仍 25**。
+  报告:`iterations/reports/strategy/20260917T021500Z.md`;`state.json:threatcreep_20260917`;
+  `queue.json:strategy-55`(pullcamp 点名请求)+ `strategy-56`(零 EC2 域读数)。
+
+  **开工第一件事 = 0NEXT33 (a) 的复核**:录像组最近四份报告里 `pullcamp` 出现 **0 次** ⇒ 第二格**仍没动,已停七天**
+  (= owner 优先项 **P1 完成定义 2**)。⛔ **照 0NEXT33 (a) 的原话没有开第二条 issue**(GH #862 上一轮已开),
+  改为 `queue.json:strategy-55` 点名请求,零 EC2,逐字带上 §GS.8 的验收句与那条工具路径钉子。
+
+  **⭐⭐ 头条**:`bots/FunLib/aba_defend.lua` 的 `GetThreatenedLane` 平局项读
+  `WeightedEnemiesAroundLocation`,而那里是**两堵墙**不是一堵 ——
+  **WALL 1(表)**:它遍历 `unitState.enemyHeroes` = `GetUnitList(Enemies)` **已被 `IsValidHero` 过滤**过的那一格
+  ⇒ 它自己的 `siege` 0.5 / `upgraded` 0.4·0.6 / `warlock_golem` 1 / `IsCreep()` 0.2 台阶**结构上不可达**,
+  **一只小兵从来没有被定过价**;**WALL 2(截断)**:单价 0.2 × 一波 4 只 = 0.8,`floor` 吃成 0,与**空路**同分。
+  函数严格取大且 `bestScore = -1` 起步、遍历 {Top, Mid, Bot} ⇒ **一切平局判给 Top**。
+  这个答案在 `GetDefendDesireHelper` 里被消费三次:`if lane ~= threatenedLane then return VeryLow end`。
+  📌 **⛔ 只修一堵墙会发出一个 no-op,而 gate 与 `check_armed_wiring.py` 照样答 WIRED** ⇒ 两堵墙合成**一个** id。
+  ⛔ **抓住 WALL 1 的不是读法,是那条注入真兵的测试腿** —— 本轮第一版修法只修了 WALL 2。
+
+  **修法:一个 id `threatcreep`,turbo-only,单独 gate(绝不与第二个 soak id 合取 —— pullcad 陷阱)。**
+  `WeightedEnemiesAroundLocation` **多返回一个值**:出厂英雄和 **+** 一次 `unitState.enemyCreeps` 遍历(同一道台阶),**不取整**。
+  ⛔ **出厂第一返回值 `count` 与 `math.floor` 逐字未动**(还喂着 `creepWeight >= 2` 本营续期与 `ShouldDefend` 角色阶梯)。
+  **只有 `GetThreatenedLane` 读第二个值,且只在 armed 时读。`.lua` 与 `.ts` 一起改。**
+  **方向 ——⛔ 这是选择器不是否决,原话写出来**:armed 可以挪答案;**边界是算术的**(小兵项封顶 0.9、一个可见敌方英雄值 10)
+  ⇒ **永远不可能把答案从"有可见敌方英雄的路"挪到"没有的路"**;精确平局仍判 Top,与出厂逐字一致。
+
+  **域:两份读数,⛔ 不许并成一句。** `tests/_threatcreep_sweep.lua`,112 帧 / 0 跳过 / 336 个「帧×路」。
+  (1) **平局读数**(`GetHeroLastSeenInfo`,**出非零的那个读者**):三路全静 **47 帧(42.0%)**,
+  **出厂答案 47/47 全是 Top**;336 里 **120** 个「帧×路」带非零英雄数,且有响路时函数**确实答 mid/bot**
+  ⇒ **恒 Top 的退化恰好就是全静那一档**,不是函数瞎了。
+  (2) **小兵读数**(`GetUnitList(Enemies)`,**有缺口的那个读者**,GH #863):336 里 **0 个**非零,**由构造**。
+  ⇒ `armed` 在 **0 / 112** 帧上移动答案:**这个 lever 的价值在本语料上买不到**,⛔ 不是"测过了没效果"。
+
+  **本地验证**:`tests/test_threatcreep_lane_tiebreak.lua` **17/17**,打 `[ratchet]`(⛔ 没碰 `lua_gate_measure.py`,GH #813)。
+  §1 [instrument] 断言 loader 返回 0 个敌方单位**并且**断言另一个读者出非零(0NEXT33 §丙);
+  §2 [tie];§3 [arith] ⭐ **两堵墙都用真兵驱动,坐标真、重数也真** —— `f_20260909_212625_lion_235` dump 自带
+  **5 只**敌方小兵在上路锚点 1200 内(最近 218u),取其**子集** k=1..5(**没有复制任何一只**)⇒
+  `raw = 0.2k`、`floor(raw)` k≤4 为 **0** / k=5 为 **1**,而**出厂那个和全程是 0**(WALL 1 的判别子);
+  §4 [bound];§5 [fix] 承重帧 `f_20260912_094042_sniper_546` + **同帧对照**(不放兵 ⇒ armed 照样答 Top);
+  §6 [gate];§7 [source] **每个锚点都带语法位置,没有裸字符串锚点**(0NEXT33 §乙)。
+  ⛔ **全文件唯一一个构造项**:真兵样本**整体刚性平移**到中路锚点 —— 偏移/距离/方位全真,**构造的只是"哪座塔"**
+  (本语料没有任何一帧在非 Top 路锚点附近带敌方小兵,三份带 `creeps` 的 fixture × 每个 subject 全查过)。
+
+  **怎么够到 file-local**:`GetThreatenedLane` 是文件局部,唯一导出消费者在本语料每帧都在够到它之前就返回 VeryLow。
+  测试与 sweep **读出厂源码文本**,在末行 `return ____exports` 前**插一行** `____exports.__probe = {...}`。
+  被测每一字节都是出厂字节;尾巴变了 assert 会中止。⛔ **这不是源码副本**(evidence-discipline 规则 1)。
+
+  **变异台**:`tools/agent/mutstand_threatcreep.sh` **12 抓 + 控制 SURVIVED,零 NO-OP**
+  (⭐ **T2 = 修墙1留墙2 / T3 = 修墙2留墙1**,本轮那一对;T5 把**被保留的**取整和改喂新和;
+  T7 把 0.9 封顶抬到 99;T11 放宽 `enemyHeroCnt == 0`;T8 把严格取大改 `>=`)。
+  ⚠️ **四条腿第一次报的是 NO-OP 不是 SURVIVED**:`for ____, unit in ipairs(unitState.enemyCreeps) do`
+  **在 `ShouldDefend` 里也有一份**,裸 sed 两处都改(`grep -c = 2`),另两条是 `*` 在 BRE 里没转义 ——
+  **变异台拒绝给没打准的变异记分,正是 GH #846 立的那条**;按 `local rawCount` 锚定改成 python 编辑后 12/12。
+
+  **闸门读数**:`luacheck_gate.sh` **GATE_EXIT=0 CLEAN / 0 warnings**;
+  受影响那一族逐进程 **17/17 + 14/14 + 12/12 + 3/3 + 16/16**,五个 EXIT=0;
+  ⚠️ **全量套件没跑完(~100min,GH #124),这一行不冒充它**。
+  开工自检 **worst exit 3**(`cadence queue-rulings owed-executions lua-coverage`)+
+  `UNCERTIFIABLE trunk-red(python)` —— ⚠️ **那个 UNCERTIFIABLE 是本轮自己造成的**:
+  自检建议后台跑、而它的 python 腿要求安静的树,变异台在它跑着时反复改写 `aba_defend.lua`
+  ⇒ **0NEXT33 (d) 那条互斥,本轮第二次实测复发**。
 
 - 2026-09-16T23:20Z:**上一轮那个 gate 问「这儿有人吗」,而它数的那个数看不见一整波兵(`defquiet` 原地收窄)。**
   出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第三轮**。

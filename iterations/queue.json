@@ -3055,6 +3055,28 @@
       "priority": 3,
       "status": "pending",
       "question": "⛔ **零 AWS、零 EC2。这是一次源码普查 + 一个可选的已归档只读读数,不是一波。**\n\n一句话:**`bots/` 里约有 60 个「有限常数当 min/max 种子」的选择器,本轮定价了其中三个,得到三种互不相同的失效机制 —— 而全队从来没有人数过这个族里哪些是被遮住的、被什么遮住。**\n\n### 已经钉住的(不要重测)\n`tests/test_cm_weakest_sentinel_domain.lua`(本轮落地,6 绿,变异台 `mutstand_cmweaksent.sh` 16/16 全杀),裁定 `iterations/state.json:cmweaksent_20260917`:\n1. `X.cm_GetWeakestUnit` 的 `10000` —— **缺消费者**:14 个调用点的第二绑定全是死局部(作用域内零读)。\n2. 同一个 `10000` 当**盖子** —— **域天花板**:1550 个英雄行天花板 `max_hp` 4343,种子是它的 **2.30 倍**。\n3. `bots/mode_outpost_generic.lua` `GetClosestOutpost()` 的 `local dist = 10000` 量的是**距离、无搜索环**,语料里最远一对建筑 **16026.6u**(种子的 1.60 倍)⇒ **那道盖子碰得到**;**但**唯一消费者合取了 `ClosestOutpostDist < 3000` ⇒ 盖住的 `nil,10000` 与远答案 `>=10000` **两条腿都走到 `BOT_ACTION_DESIRE_NONE`** ⇒ **被下游阈值遮住**。\n⛔ **第 3 条上本台差点发错**:bug 报告写完了才去读那个消费者。**任何继任者不要继承那个错版本。**\n\n### 要的东西(按可交付性排序)\n**(甲) 纯源码普查,零数据**:把 `bots/` 里全部「有限常数 → min/max 种子」的点列出来,逐点回答**三个问题**:\n  - 被最小化/最大化的量是什么**维度**(血量 / 距离 / 法力 / 时间 / 金钱 / 计数)?\n  - 候选集有**搜索环**吗(`GetNearby*(R)` 之类)?有环且环 < 种子 ⇒ **由构造不可达**。\n  - 没有环时,**返回值的消费者**有没有一个**下游阈值**把种子遮住(outpost 那一型)?\n⇒ 产出一张三列表 + **一个数**:这 60 个里**有多少个三条都答不出「已被遮住」**。那个数才是立案面。\n\n**(乙) 只在(甲)剩下非空时才要的只读读数**:对剩下的每一个点,拿已归档 dump / 语料给出**被量的那个量的经验天花板**,与种子比。⛔ **不要为此发波**;搭任何一轮归档扫描。\n\n### ⛔ 三条不许\n1. ⛔ **不许**把「盖子碰得到」写成「这是个 bug」——outpost 那一条就是反例,差别在消费者。\n2. ⛔ **不许**为这个族落一个统一的 helper 或一个总 gated id:本轮三个点的失效机制**互不相同**,一个统一改法会同时是 BUNDLE-ONLY(GH #606)与 lanefix 那种「局部正确、聚合为负」的形状。\n3. ⛔ **不许**把归属算到英雄组:族里大多数在 `bots/FunLib/` 与 `bots/mode_*`(协同组/总监的文件)。焦点五英雄文件里只剩 `hero_axe.lua:1792`(`100000`,血量)与 `hero_lion.lua:1716`(`10000`,血量);`hero_zuus.lua` 与 `hero_skeleton_king.lua` **一个都没有**,这本身是个读数。\n\n### 成本\n**零 EC2 / 零 CE / S3 读取 0 个对象**(本轮);(乙) 若执行,按铁律 1 三段式登记读取对象数。\n\n立案 issue:**GH #868**。\n来源报告:`iterations/reports/hero/20260917T015334Z.md`"
+    },
+    {
+      "id": "strategy-55",
+      "stream": "strategy",
+      "bundle": "(⛔ 不是发波申请 —— 是一条**点名请求**,对象是录像组,零 EC2。涉及的 id 是 `pullcamp` + `pulldrag`,但本条**不申请 arm 它们**:P4.2 冻结下那是 FROZEN-HOLD。)",
+      "priority": 1,
+      "status": "pending",
+      "seeds": [],
+      "question": "⛔ **零 AWS / 零 EC2 / 不发波。要的是一次【复读】,不是一次测量。**\n\n一句话:**`owed_executions.json:pullcamp_atom_readmission` 的第二格(录像组「复读空带」)已经停了七天,而它是 owner 优先项 **P1 完成定义 2** 的那一棒 —— P1 掉过一次棒,37 轮,那正是铁律 9 连带规则的立案现场。**\n\n### 为什么是 queue 请求而不是第二条 issue\n09-16T23:20Z 那轮已经开了 **GH #862** 点名这一格(那本身是顺延两轮后才兑现的)。本轮复核:录像组最近四份报告(`20260916T154705Z` / `20260916T184329Z` / `20260916T214500Z` / `20260917T004719Z`)里 **`pullcamp` 出现 0 次**,⇒ 仍未动。章程 backlog 0NEXT33 (a) 对这种情况写死了处置:**再没动不是再开一条 issue**(同一件事两条 issue 是给下游制造歧义),**是往 `iterations/queue.json` 提一条点名请求**。这就是那一条。\n\n### 要做的事(逐字来自 RULING 13 的验收句)\n用 `tools/batch_test/behavioral/pullcamp_camp_gap.py` 在 **W64** 语料上复读**营地到兵线的垂距空带**。\n⚠️ 钉一条路径免得再找一遍:工具在 `tools/batch_test/behavioral/pullcamp_camp_gap.py`;`tests/test_pullcamp_camp_gap.py` 是**另一个文件**。\n\n### 为什么这一格是真卡点,而不是可以跳过的形式\nRULING 13 的处方那一半**已被同日更晚的语料推翻一次**(§GS.8:两波合计 5 次连上,4 次的营地垂距在 1200 之上,W64 两次都是 **1271**)。验收句逐字是「**一个没有被语料证成的常数落地不算结清**」——⇒ **复读空带是那个上限常数唯一的证成来源**。没有它,协同组这一棒(几何过滤 `pullreach`,09-11 已落地)就永远停在「代码落地了但不算结清」。\n\n### ⛔ 三条不许\n1. ⛔ **不许**把「几何过滤已落地」读成结清 —— 本行买的是**重新入集**,不是那次改动(`done_when_note` 逐字)。\n2. ⛔ **不许**只让一条回来:单独的 `pulldrag` 在结构上恒 no-op,单独的 `pullcamp` 会再次带着一个看不见的空域上路。\n3. ⛔ **不许**把 P4.2 的 FROZEN-HOLD 读成掉棒 —— 那一条 `trigger` 字段里已经写明。本条催的是**第二格**,不是第三格。\n\n立案 issue:**GH #862**(不另开新号)。来源:`iterations/owed_executions.json:pullcamp_atom_readmission`、`iterations/OWNER_PRIORITIES.md` P1、章程 backlog 0NEXT33 (a)。",
+      "result": null,
+      "director": null
+    },
+    {
+      "id": "strategy-56",
+      "stream": "strategy",
+      "bundle": "(⛔ **不申请 arm 任何 id** —— `threatcreep` 本轮落地即 FROZEN-HOLD,armed 串仍 25。⛔ 零 EC2,不要为它发波:要的是一个**对已归档语料的分布读数**,搭任何一轮归档扫描的顺风车。)",
+      "priority": 2,
+      "status": "pending",
+      "seeds": [],
+      "question": "⛔ **零 AWS、零 EC2、只读已归档 `.dem` / dump。要一个分布,不要一波。**\n\n一句话:**本轮落地的 `threatcreep` 的域,在 fixture 语料上是【结构上】买不到的 —— 336 个「帧×路」里 0 个带任何小兵权重,而那个 0 是 GH #863(loader 对 `UNIT_LIST_ENEMIES` 返回空)造出来的,不是 Dota 的事实。**\n\n### 已经钉住的(不要重测)\n`bots/FunLib/aba_defend.lua` 的 `GetThreatenedLane`:三路按 `hero*10 + min(w*0.4, 0.9)` 打分,严格取大且`bestScore = -1` 起步 ⇒ **平局一律判给第一路(Top)**。两堵墙让 `w` 对一波兵恒为 0:\n(1) 它按 `unitState.enemyHeroes` 定价,而那一格是 `GetUnitList(Enemies)` **已经被 `IsValidHero` 过滤过**的 ⇒ 小兵那几级台阶**不可达**;(2) 小兵单价 0.2、一波兵 4 只 ⇒ `floor(0.8) = 0`。\n**本方同文件里的判别子**:`ShouldDefend` 自己的小兵循环走的是 `unitState.enemyCreeps` —— 同一道台阶,只有一个拿到了它要定价的那张表。\nfixture 侧已量(`tests/_threatcreep_sweep.lua`):112 帧里 **47 帧(42.0%)三路全都没有可见敌方英雄** ⇒ 小兵项独自决定,而出厂答案 **47/47 全是 Top**。\n\n### 要的读数(真实对局,band 尽量宽)\n对已归档语料里的每一帧(或任意固定采样率):\n1. 我方三条路**最远建筑**各自 1800 内有没有**可见敌方英雄**(三路全无 = 本 lever 的域);\n2. 落在该域里时,三条路各自的**最远建筑 1200 内敌方小兵只数**(按只数即可,不需要按名字定价);\n3. 其中「恰好一条路有兵、另外两条没有」的占比 —— 那是 armed 与出厂**答案不同**的那一档。\n\n⭐ 为什么这三个量够:出厂在整个 (1) 里答 Top;armed 在 (3) 里答**有兵的那条**。(3) 的占比**就是**这个 lever 的端到端域,不需要跑 armed 腿、不需要 EC2。\n\n### ⛔ 四条不许\n1. ⛔ **不许**把 fixture 上的 `0/336` 写成「真实对局里也没有」—— 那是**仪器缺口**(GH #863),不是构造性零。同一份语料里另一个读者(`GetHeroLastSeenInfo`)**是**出非零的(336 里 120),两者必须分开写。\n2. ⛔ **不许**报一个「本 lever 改善了 N 场胜负」的数 —— 本条只买**域**,不买效果。\n3. ⛔ **不许**顺手把它读成 `defquiet` / `defcreep` 的域:那一族走 `ShouldDefend` 的 `nNearby` 阶梯,是**另一个** floor、**另一个**调用点(`state.json:defcreep_20260916`)。\n4. ⛔ **不许**据此提入集:P4.2 冻结下唯一合法裁定是 FROZEN-HOLD,本条**不是**入集提议。\n\n### 铁律 4(i-a)\n若读的是**同树全员普查**(每局由构造含两队),**如实登记「没有 ab/ba 读数」**;谁要拿去和 armed 波次比**必须自己重新分层**。\n\n来源:`iterations/state.json:threatcreep_20260917`、`iterations/reports/strategy/20260917T021500Z.md`、GH **#863**。",
+      "result": null,
+      "director": null
     }
   ],
   "done": [

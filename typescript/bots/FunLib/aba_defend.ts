@@ -62,7 +62,9 @@ let baseThreatUntil = -1;
 let fTraveBootsDefendTime = 0;
 
 // == Perf caches ==
-type EnemyAroundLocCache = { t: number; count: number };
+// [threatcreep] `raw` is the UNFLOORED weighted sum. Optional so that an entry
+// written by an older build reads back as the floored value, i.e. as shipped.
+type EnemyAroundLocCache = { t: number; count: number; raw?: number };
 const _cacheEnemyAroundLoc: Record<string, EnemyAroundLocCache> = {};
 
 /** Performance cache - avoid redundant calculations between GetDefendDesire (300ms) and Think (every frame) */
@@ -234,11 +236,12 @@ function IsBaseThreatActive(): boolean {
 }
 
 // If any enemy units (weighted) are around location; cached
-function WeightedEnemiesAroundLocation(vLoc: Vector, nRadius: number): number {
+function WeightedEnemiesAroundLocation(vLoc: Vector, nRadius: number): LuaMultiReturn<[number, number]> {
     const now = DotaTime();
     const key = _keyLoc(vLoc, nRadius);
     const c = _cacheEnemyAroundLoc[key];
-    if (c && now - c.t <= CACHE_ENEMY_AROUND_LOC_HZ) return c.count;
+    // [threatcreep] Second return value only; the first is unchanged.
+    if (c && now - c.t <= CACHE_ENEMY_AROUND_LOC_HZ) return $multi(c.count, c.raw ?? c.count);
 
     const unitState = updateDefendUnitStateCache();
     let count = 0;
@@ -267,9 +270,37 @@ function WeightedEnemiesAroundLocation(vLoc: Vector, nRadius: number): number {
         }
     }
 
+    // [threatcreep] SECOND VALUE ONLY. The loop above walks
+    // `unitState.enemyHeroes` -- GetUnitList(UnitType.Enemies) already filtered
+    // by IsValidHero -- so its siege / upgraded / IsCreep() rungs are
+    // UNREACHABLE and a creep weighs nothing. The judge is in this same file:
+    // ShouldDefend's own creep loop walks `unitState.enemyCreeps` for the same
+    // ladder. This parallel sum gives the ladder the list it prices. The rungs
+    // below drop the two conditions the list already decides (no hero rung; no
+    // `not upgraded` guard on siege, since the upgraded rungs sit above it).
+    // ⛔ `count` and the floor are untouched: they still feed the
+    // `creepWeight >= 2` base-threat re-arm. See the Lua block for the full
+    // derivation of why fixing either wall alone is a no-op.
+    let rawCount = count;
+    for (const unit of unitState.enemyCreeps) {
+        if (jmz.IsValid(unit) && GetUnitToLocationDistance(unit, vLoc) <= nRadius) {
+            const name = unit.GetUnitName();
+            if (name.includes("upgraded_mega")) {
+                rawCount += 0.6;
+            } else if (name.includes("upgraded")) {
+                rawCount += 0.4;
+            } else if (name.includes("siege")) {
+                rawCount += 0.5;
+            } else if (name.includes("warlock_golem") || name.includes("lone_druid_bear")) {
+                rawCount += 1;
+            } else {
+                rawCount += 0.2;
+            }
+        }
+    }
     count = math.floor(count);
-    _cacheEnemyAroundLoc[key] = { t: now, count };
-    return count;
+    _cacheEnemyAroundLoc[key] = { t: now, count, raw: rawCount };
+    return $multi(count, rawCount);
 }
 
 function GetThreatenedLane(): Lane {
@@ -288,7 +319,15 @@ function GetThreatenedLane(): Lane {
 
         if (enemyHeroCnt === 0) {
             // don’t let creeps fully tie heroes; smaller radius + cap
-            const creepEq = math.min(WeightedEnemiesAroundLocation(anchor, 1200) * 0.4, 0.9);
+            // [threatcreep] A lane creep is priced 0.2 and a full wave is four
+            // of them: 4 * 0.2 = 0.8, and WeightedEnemiesAroundLocation floors
+            // before returning -- so a wave on our furthest tower reads 0, the
+            // same as an empty lane, and the strict-max loop hands every tie
+            // back to the first lane (Top). Armed, this term reads the
+            // unfloored sum. See the Lua block for the full derivation.
+            const [nWeighted, nWeightedRaw] = WeightedEnemiesAroundLocation(anchor, 1200);
+            const bThreatCreep = jmz.IsSoakCandidate("threatcreep") && jmz.IsModeTurbo();
+            const creepEq = math.min((bThreatCreep ? nWeightedRaw : nWeighted) * 0.4, 0.9);
             score += creepEq;
         }
 
