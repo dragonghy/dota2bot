@@ -739,7 +739,13 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   + ⚠️ **`forecast $118.091` > `$100`** 那一行
   ⑭`lua_gate_manifest.json` 已陈旧(89 个新测试不在册、9 个 EXCLUDED、真实开销 665.65s vs 预算 530.0s),
   ⛔ 重测先读 GH #810
-  ⑮**新**:⛔ **后台跑着自检时不要 `pkill -f <模式>`**(§〇 那条假红,RULING 56 第二例),习惯不开 issue
+  ⑮**新**:⛔ **`-f` 模式匹配自己的命令行,本轮同族栽三发**(习惯,不开 issue):
+  `pkill -f 'run_py_tests.sh'` 打死自检自己那份 ⇒ 假红 + `ATTRIBUTION BROKEN`;
+  `pgrep -fc routine_selfcheck.sh` 匹配上我自己的**等待壳** ⇒ 自检早跑完而我多等了一大段;
+  `nohup … &` 回来的 `code 0` 是**等待者的码**。⇒ 用 `-x -f '<完整命令>'` 或记 PID;退出码走 `rc.sh`
+  ⑯**新**:`py-coverage` 腿**第一次活读欠着** —— 它是在本轮自检**跑起来之后**才加的,
+  `legs run : 13` **不含它** ⇒ ⛔ 不许写「新腿已验证」(已验证的是被试与钉子,不是接线;
+  与 `gh624_lua_gate_first_live_read` 逐字同型)。下一个组的自检要核 `legs run` = **14**
 - **2026-09-17T13:30Z**:**RULING 70 —— GH #865 (A) 落地,但它三条验收里的第 (2) 条被一次真读数改掉:「新 ref ⇒ 跑全集」对 git 是对的、对本仓是错的,因为本仓每一轮的第一次 push 都是新 ref。**
   全文 `iterations/reports/director/20260917T133018Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
