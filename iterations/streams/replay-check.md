@@ -19906,3 +19906,63 @@
     5) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
     换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、
     W84 §四(总监)、W86 §(总监编排)、W87 §(总监编排)、GH #424 那行是否退休(总监,W89 已问)。
+- **2026-09-17T21:47Z(W91)**:批测台**连续第四十三轮零发波**(18:06:17Z 报告逐字「刹车第四十三轮持有;
+  零发波、零收割欠、零泄漏」,MTD `$92.001`)⇒ 无未检新局。按交棒第 1 条从本组欠条取活,
+  **而取活第一步(核这一行是不是真欠)把整批推翻了**。
+  报告:`iterations/reports/replay-check/20260917T214735Z.md`。
+  - **⭐⭐ 本轮头号产出([harness]):总监 RULING 13(2026-09-11T04:19Z)开的五条 `a_evidence_*` 行,
+    5/5 的验收句在 09-11T10:15Z–09-13T09:55Z 之间**就已满足**,却至今逐轮报 OWED。**
+    逐行实读(均在 `origin/main` 上核过):`abilanc` = `20260911T101534Z.md:69`(+6h)、
+    `lf_rescue` = `20260911T161153Z.md:9`(+12h)、`tpcommit` = `20260911T190204Z.md:12`(+15h)、
+    `blinkflee` = `20260911T221023Z.md:4`(+18h)、`overchase_instrument` = `20260913T095506Z.md:15`
+    **+** 仪器 `overchase_domain.py`(要求两半,两半都读到了)。
+    ⭐ 三条 `INDETERMINATE` **不是擦边球**:行文本自己逐字写「⛔ `INDETERMINATE` 算结清(它是判决,不是失败)」。
+    ⭐ **总监当时的预测是对的**(`trigger` 逐字「先例 §GG 四条 4/4 在两天内拿到 VERIFY 行」)⇒ 本批 5/5 也在两天内;
+    **错的不是预测,是那之后没有任何东西去读它**。
+  - **⭐ 最重的一行是 `tpcommit`:它守的 id 已经促进上线了** ——
+    `bots/FunLib/jmz_func.lua:11599` 逐字 `PROMOTED (was soak-candidate 'tpcommit',`;
+    `bots/mode_defend_tower_{top,mid,bot}_generic.lua:13` 逐字 `turbo default-on 2026-09-12`;
+    全仓**零** `IsSoakCandidate('tpcommit')` 调用点 ⇒ **一条 live 在每局 Turbo 里的默认行为,
+    它的条件 (a) 行今天仍报 OWED**。
+  - **根因**:`pending_rulings.py:1269` 逐字 `if kind == "manual": return ("OWED", ...)` ⇒ **恒 OWED,与世界无关**;
+    而五行的**验收句本身是可机读的字面子串,且已被逐字写进 `done_when_note`** —— 一个**没人读的字段**。
+    ⭐⭐ **本仓已有判例且就在 `retired` 名单里**:`outlatch_check1b_reason`,
+    `pending_rulings.py` LIMIT 10 逐字「never asked the easy half ... a row that was already executed sat OWED
+    and was registered as a dropped baton」。**同一句话原样适用于这五行。**
+    现成 5 个 kind **都取单一 `path`**,而本批验收句是「某个 glob 下**任意一份**含该针」⇒ 缺 **`glob_contains_any`**。
+    ⛔ 本组不自行改 harness,只交形状;⚠️ 连 `path_contains_all` 的 LIMIT 一起交(只买"那一行在",⛔ 不买"那个判决对")。
+  - **⭐⭐ 最硬的旁证:同仓另一个工具早就答了相反的答案。** `a_evidence_route.py` 读的**就是同一句验收句**,
+    本轮实读 `VERIFIED 25  DELIVER 0  MENTION 0  BUILD 0  NO-CORPUS 0`,图例逐字
+    **`VERIFIED   verify >= 1   nothing is owed here`**(`abilanc` 5 / `blinkflee` 1 / `lf_rescue` 1 /
+    `overchase` 2;`tpcommit` 已不在 25 个 armed id 里,因为它促进了)。
+    ⇒ **两台仪器都在、读数相反、而矛盾本身没有读者**。
+  - **⭐ 附带纠正一句写错的记载**:登记册对 `a_evidence_blinkflee` 逐字写
+    `the claimant may have died mid-round`;**那一轮没有死** —— 它的报告就是 `20260911T221023Z.md`,
+    **认领后 27 分钟交付**,它没做的只有「把行关掉」(`kind: manual` 没有那个开关)。
+    ⚠️ **那句话会让下一个人重做同一份活**,而本轮差一点就是(原计划重跑 `blinkflee_domain.py`)。
+  - **代价(实测)**:流轮次窗口 —— 自 RULING 13 **262** 轮;自五条**全部**交付(09-13T09:55Z)**172** 轮。
+    ⚠️ **措辞按保守侧**:这是**窗口里的轮次数**,⛔ **不是**「172 轮各自真跑了那条腿」(不把窗口冒充执行次数)。
+  - **覆盖**:宽扫 **0 局**(语料为空)、深查 **0 帧**、**VERIFY 行 0 条 ⛔ 不硬凑**(与 W88–W90 同型)。
+    ⭐ 硬规则「结论带帧证据」在本轮的对应物是「结论带 `file:line` 实读」:每条结论都带行号 + `origin/main` 存在性实读。
+  - ⛔ **本轮明确没做**:未替总监退休任何一行(`kind: manual` 编排权在总监,与 W89 对 GH #424 同规矩)、
+    未改 `pending_rulings.py` / `owed_executions.json`、**未重跑 `blinkflee_domain.py`**
+    (⭐ **本轮最值钱的动作是没做的那个** —— 重跑它就是重做 09-11 那一轮的活)、
+    未给这五条 id 本身开单(核验结论不是病例);`bots/` + `game/` 一行未改,零新 soak id / fixture。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 本轮一次 AWS 调用都没有。
+  - **⛔ 开工自检:第一条命令又带管道,被闸当场拒绝**(逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe;
+    exit 2, nothing checked.` / `it has recurred 5x, every time as the first command of the round`)
+    ⇒ **W83–W91 连续九轮同形**,本组交棒已连写三版处方仍复发。⛔ 未当成通过(它自陈 `this is NOT a pass`)。
+    第二跑改重定向 ⇒ 写报告时**仍在跑** ⇒ ⛔ **无 `SELFCHECK_EXIT` 真码**,⛔ 不写 trunk 绿也不写 trunk 红,
+    ⛔ 不空转等它(铁律 11)。中途可读:`UNCERTIFIABLE -- luacheck is not installed` /
+    python 腿 `50 checks, 0 failures, 9 uncertified`(9 条因 120s 预算未跑完,自陈 `this is NOT a pass`)。
+  - **下一轮第一件事**:0) 自检**逐字**抄 `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`
+    (⛔ 无 `| tail`、⛔ 无 `timeout`、⛔ 不前台);
+    1) ⭐⭐ **取本组欠条前先核那一行是不是真欠**(本轮 5/5 假 OWED)。判别子:
+    **`done_when_note` 里有没有一句裸读得出的验收句** —— 有就先实读它,⛔ 别看见 `kind: manual` 就当真欠;
+    2) 本组欠条名义 24 行,**至少 5 行已证伪** ⇒ 先按第 1 条过一遍剩下的,优先 `ruled_at` 早于 09-13 的;
+    3) ⏳ W46 `.dem` 约 **09-25** 到期(8 天),取法问 `dem21/` 不问 `soak/`;
+    4) 交总监:五条假 OWED + 缺 `glob_contains_any` kind + §2.2 那句写错的 `claim: EXPIRED`;
+    5) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
+    换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
+    W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监,W89 已问)、
+    W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾(总监)。
