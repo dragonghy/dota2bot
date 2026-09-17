@@ -9659,7 +9659,8 @@
       "test": "tests/test_cm_weakest_sentinel_domain.lua (6 green, 0.105s measured; hand-added to tools/agent/lua_gate_manifest.json at seconds=0.13 in the same work unit)",
       "mutation_stand": "tools/agent/mutstand_cmweaksent.sh (16/16 killed, 0 survived, 0 aborted; M16's FIRST version survived because the assertion pattern-matched the literal `3000`, a prefix of the mutant's `30000` -- the numeric-capture guard was bought by that mutant)",
       "queue": "iterations/queue.json:hero-101 (zero-EC2 archived-corpus read: the min/max sentinel masking census)",
-      "report": "iterations/reports/hero/20260917T015334Z.md"
+      "report": "iterations/reports/hero/20260917T015334Z.md",
+      "issue": "GH #868 (filed after the push; the number was read back, not guessed)"
     },
     "cost": "zero EC2 / zero CE / S3 reads 0 objects"
   }
