@@ -669,6 +669,60 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-17T19:35Z**:**RULING 72 —— 交棒 ⑨ 结清 2/3,而「打标签前 TIME the resulting set」量出的那个数不是关于这 2 条的:GH #548 不是「骑在 120s 刀口上」,是 138 文件 / 671.8s = 预算的 5.6 倍。**
+  全文 `iterations/reports/director/20260917T193549Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 72(结清交棒 ⑨ 的 2 条、改测 GH #548)**:交棒 ⑨ 要「3 条各跑一次确认不红再打标签」。
+  ⛔ **第一跑三条全是假绿,形状 = exit 0 + 零输出 + 0.006s**:我把 fixture 测试当可执行脚本跑,
+  而 `tests/run_tests.lua` 头部**逐字写着**「直接跑返回测试 TABLE 而不调用任何东西(exit 0, zero output)…
+  the runner is the only supported entry point」⇒ **0.006s 是它交还一张表的时间**。
+  📌 与 `SKIP 不是 pass`(GH #171)、「零测试体也 exit 0」(GH #200)同族;
+  ⛔ **本轮没造成损害的唯一原因是 0.006s 这个数太离谱,不是有闸拦着**。
+  **改走 runner 的真读数**:campbind `0.293s`/7 tests、dusttower `0.171s`/11 tests、
+  **fieldsip `91.307s`/8 tests** —— **三条都绿,只有两条便宜**。
+  ⇒ **前两条打 `[ratchet]`**(诚实用法:亲兄弟 `test_campbind_coarm_vacuous.lua` 与
+  `test_cm_creep_reach_real_frame.lua` 早就是 `[ratchet]`);
+  ⛔ **fieldsip 不打**,依据是腿自己的头注释逐字「the tag marks what a test CLAIMS, not what it COSTS…
+  the tagged set went from 4.2s to **7m08s**, which is not a 开工 check any more… TIME the resulting set first」
+  —— `[census]` 当年因 7m08s 被否,**本条单条就比它贵**。
+  读数:`leg 136 → 138`、`UNCOVERED 115 → 113 of 508`、`no_manifest_row 53 → 51`。
+  ⛔ **没有 `--update-baseline`**:工具**自己拒绝**记增长(`The baseline records shrinks, never growth`),
+  ⭐ **而我手上正好有「银掉它就清净了」的动机,那正是基线该拦的那件事**;
+  第三个选项(watched elsewhere)**也不成立**——「只有 ~100min 全集读它」恰是 `uncovered` 的定义。
+  ⚠️ **顺手排掉头注释预言的成因,排掉了**:它点名的四个「require >25s」文件**今天仍全未打标签**;
+  且 `fieldsip` 的 **load-only = 0.006s** ⇒ 91.3s **在测试体里不在 require 时** ⇒ 那副药对它不适用。
+  ⭐⭐ **本轮真正的发现(已追评 GH #548)**:静默树干净重量 **`674.004s`(138 文件,红 0)**,
+  逐文件复量 **`671.8s`**(两次独立读数一致 ⇒ 并发无实质污染);我这 2 条合计 **0.464s = 0.07%**。
+  #548 记的是 **84 文件 / 120.1s**,标题逐字「骑在 120s 预算刀口上」⇒ 今天是 **5.6 倍**,
+  ⛔ **不是同一问题的恶化,是换了 regime**:120.1s 那天修法是「砍一点」,671.8s 这天
+  **「fast subset」这个设计前提本身没了**。
+  **它已在静默收费,票据就在本轮自检日志里**:`test_selfcheck_lua_leg.py` 打 **9 条 UNCERTIFIABLE / 0 failure**,
+  逐字 `the clean run did not finish inside 120s`;该文件写死 `BUDGET_S = 120` 并**在注释里预言了这个读数**
+  (逐字 `a timeout produces NINE uncertified and ZERO failures`)⇒ **证成闭合**。
+  ⛔ **而 UNCERTIFIABLE 不长得像红,所以没人追**;那 9 条里含 `5d/5e/5g`
+  ⇒ **「腿会不会在 trunk 红的时候举手」本身今天未核验**,而那是这条腿存在的全部理由(GH #624/#806)。
+  **修法是集中的**:Top10 = **392.2s = 58%**,>10s 仅 **17 个**文件,其余 121 个合计 ~280s;
+  ⭐ **`test_stayfield2_marginal_domain.lua` 单条 119.087s,几乎正好吃光整条 120s 预算**。
+  📌 与 GH **#358**(133.3s/50 文件,78.4s 集中在两个 `[ratchet]`)**逐字同形**:
+  **同一缺陷第三次同样出现 —— 标签按 CLAIM 发、成本按 COST 收,中间没有闸。**
+  **巡检**:五组全活,`GAP` 5 条(director 6.0h/9.2h、hero 4.1h/5.9h、strategy 3.9h),
+  均为触发间隔类空档、非掉棒。**成本**:本轮零 AWS;结转批测台 MTD **`$92.001`** > 刹车 `$90`
+  ⇒ 零发波(第四十二轮);⚠️ `forecast $118.091` > `$100` 在 `DECISIONS_NEEDED.md:1264`,**W38(09-20)带它**。
+  **自检**:真码 **`EXIT=3`**(⚠️ 管道坑第 35 次,被脚本自己拦下);⭐ **`legs run : 14` ⇒ 交棒 ⑯ 结清**
+  (`py-coverage` 腿第一次活读到手,且是被下一个组的自检核的);
+  `trunk-red(python)` 是 **UNCERTIFIABLE 不是红** = GH **#882**(hero 组本日 18:13Z 已开)⇒ **交棒 ⑧ 结清**。
+  **下次触发**:①GH #856 剩 9 候选 ②GH #867 ③GH #240 余下 ④`carry_mark_prose_vs_list`
+  ⑤GH #843 剩 (乙) ⑥GH #859 ⑦GH #810 待裁 1 + (乙) ⑧⛔**已结清(GH #882)**
+  ⑨⛔**结清 2/3;余 fieldsip(91.3s),三条修法全不适用 ⇒ 它是 GH #548 的一个实例、不是独立欠条,
+  #548 修好前不要单独处理它** ⑩P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3
+  ⑪`path_contains_any` 那两行 ⑫`py_manifest_no_carry_baseline_port`(与 ⑤⑦ 同线)
+  ⑬**W38 邮件(09-20)**:15/16/18/19 条 + 17 条已撤回 + RULING 70+71+**72** + ⚠️`forecast $118.091`
+  ⑭`lua_gate_manifest.json` 已陈旧,⛔重测先读 GH #810
+  ⑮⛔**新(习惯,不开 issue)**:**直接 `lua5.1 tests/test_x.lua` = 假绿**;唯一入口是
+  `tests/run_tests.lua <filter>`;**毫秒级 SECONDS + 0 字节输出 ⇒ 先怀疑自己没跑**
+  ⑯⛔**已结清(`legs run : 14`)**
+  ⑰**新**:**GH #548 已改测并追评**;⭐ 下一个动它的人先读该追评 —— 修法是**砍 Top 10**(集中)
+  不是**砍成员数**(弥散);⛔ `BUDGET_S=120` 那 9 条 UNCERTIFIABLE **不是噪声**
 - **2026-09-17T16:15Z**:**RULING 71 —— GH #843 验收 2 的 python 半结清,采纳 (丙) 并改掉 (丙) 逐字指定的那个落地位置:写进 manifest 行的字段会被下一次 measure 静默擦掉。**
   全文 `iterations/reports/director/20260917T161500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

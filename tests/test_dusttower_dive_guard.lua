@@ -1,4 +1,4 @@
--- Replay-fixture regression for soak candidate 'dusttower' (GH #441 family).
+-- [ratchet] Replay-fixture regression for soak candidate 'dusttower' (GH #441 family).
 --
 -- THE FRAME: game 20260820_043120_slot1, t=398.5, subject Viper (radiant,
 -- TEAM_RADIANT=2). Real dump ground truth, no invented world:
