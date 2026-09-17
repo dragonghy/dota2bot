@@ -12873,3 +12873,22 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   推的理由是另一类事实:**owner 最高优先项 P4.1 被报了四十二轮「只欠预算」,而它已经花过一次钱、
   产出 80 局空数据,且下一波在同条件下会再空一次并且这次是无声的** ⇒ **解禁那一轮本来会被它吃掉**。
   详见 `iterations/reports/batch-desk/20260917T151957Z.md`。
+  **⭐ 同轮补记(收尾后自检跑完,真码到手)**:**`EXIT=3`**,`legs run 13` /
+  `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage` /
+  `UNCERTIFIABLE (exit 2): trunk-red(python)` / `NOT RUN (inside a leg)` 三个测试 /
+  `selfcheck worst exit: 3` ⇒ **本轮 §七 登记的「无真码」空缺已结清**。
+  ⛔⛔ 那个码**不是** harness 报的 `completed (exit code 0)`(后者读复合命令末尾 `echo` 的码、恒为 0)——
+  📌 **本轮第一条命令栽的同一个坑在收尾又出现一次**,这次读对了。
+  ⭐ **FINDINGS 集合变了**:上一轮含 `unlanded`,本轮不含(该腿逐字
+  `OK: no unlanded work in the certifiable window.`)⛔ **只登记集合差、不做归因**
+  (脚本同屏禁此读法,GH #267 那 22 小时);⚠️ 本轮四次 push 全落地是**同期事实**,
+  ⛔ 不据此宣布是它让那条腿转绿的。`trunk-red(python)` 仍 `UNCERTIFIABLE`
+  ⇒ ⛔ **仍不写 trunk 绿也不写 trunk 红**。实读:`registry rows: 83` / `9 anchor(s) checked -- OK` /
+  **`FROZEN none`** / `promote-atom constraints: OK` / `RIDESHARE: 37` / `total open requests: 145`;
+  cadence `GAP director×2 / hero×2 / strategy` ⇒ **本台无 GAP**。
+  `LUA GATE COVERAGE disk 506 | push gate 341 | 开工自检 leg 134 | known_red 6`,
+  `UNCOVERED 115 of 506 (23%)`,**`UNCOVERED SET GREW -- 3 file(s)`**
+  (`test_campbind_poke_real_frame.lua` **新**、`test_dusttower_dive_guard.lua` **第七轮**、
+  `test_fieldsip_transfer_receiving_site.lua` **第五轮**)⇒ 对照上一轮 `disk 503→506` /
+  `push gate 339→341` / **`UNCOVERED 114→115`**:**本轮 3 个新落地的 Lua 测试一个都没进自检腿,缝宽了 1**;
+  ⚠️ `leg 134` **连续第三轮逐位相同** ⇒ **集合没长,是容器速度**。
