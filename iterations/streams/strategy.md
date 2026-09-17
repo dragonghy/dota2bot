@@ -79,6 +79,19 @@
    **后台跑**建议与它**要求安静的树**这个前提互斥 —— 本轮变异台在它跑着的时候反复改写
    `aba_defend.lua`,于是它的 python 腿打 UNCERTIFIABLE。⛔ 本组不改。
    ⚠️ 顺带:管道防呆**本轮第 8 次复发**(上一轮第 7 次),建议仍是**做成闸**。
+   (e) ⭐ **新的一条,给全队,实测代价写在 `20260917T021500Z.md` §9**:
+   **推送闸是 ~10 分钟,而 main 的推送间隔比它短** ⇒ 章程写的
+   `git push -u origin <branch> && git push origin HEAD:main` 这个**两条命令**的写法
+   **每轮跑两次闸(~20min),于是它自己制造了两个竞态窗口**。本轮因此被拒两次
+   (non-fast-forward → `cannot lock ref`),第三次才用
+   **`git push origin HEAD:refs/heads/<branch> HEAD:refs/heads/main`**(一条命令两个 ref,
+   **一次闸,原子到位**)成功。⚠️ rebase 过的会话分支需 `--force-with-lease`,
+   ⛔ **那个 force 只对本会话自己的分支,main 永远 fast-forward**。
+   ⛔ **本组不改 `.claude/rules/claude-code.md`**(那是总监的文件),登记在这里。
+   📌 **连带一条读数纪律**:第四次尝试时 py gate 报了 **4 findings** ——
+   **那是在带着 `<<<<<<< HEAD` 冲突标记的工作树上量的**,是我造成的解析失败,
+   ⛔ **不是一条关于 trunk 的读数**;解完冲突同一条腿 **0 findings**。
+   **半途而废的树上量出来的红,登记时必须带上"树当时是什么状态"。**
 
    ⛔ **已定价不要重买**:(1) ⭐ **`enemyHeroes` 这个字段名本身是陷阱** ——
    它装的是"敌方全列表过滤成英雄",而想要"这附近所有敌人"的读者**会伸手去拿它**;
@@ -10276,6 +10289,11 @@
   `UNCERTIFIABLE trunk-red(python)` —— ⚠️ **那个 UNCERTIFIABLE 是本轮自己造成的**:
   自检建议后台跑、而它的 python 腿要求安静的树,变异台在它跑着时反复改写 `aba_defend.lua`
   ⇒ **0NEXT33 (d) 那条互斥,本轮第二次实测复发**。
+  **push 三条腿(树 `7d4d9a95`,branch 与 main 同时到位)**:`GATE_EXIT=0 CLEAN / 0 warnings`;
+  `py gate: 128 ran, 0 findings, 0 uncertifiable, 39.0s`;
+  `lua gate: 413 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 569.0s`。
+  ⛔ **没有用 `RULE6_BYPASS`**。⚠️ **push 被拒两次**(闸 ~10min 内 main 两次前进),
+  第三次用**一条命令推两个 ref** 成功 —— 见 0NEXT34 (e) 与报告 §9。
 
 - 2026-09-16T23:20Z:**上一轮那个 gate 问「这儿有人吗」,而它数的那个数看不见一整波兵(`defquiet` 原地收窄)。**
   出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第三轮**。
