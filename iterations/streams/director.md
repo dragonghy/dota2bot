@@ -728,13 +728,28 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   `forecast 117.953` vs limit `100.0` ⇒ 批测台连续多轮**什么都发不了**;⛔ 我不花 AWS 的钱;⛔ 不发邮件(W38 周日 09-20,且本轮无新信息)。
   **欠条账**:退休 1 + 新增 1 ⇒ **owed 83 → 83**,**retired 26 → 27**。
   **三条闸(push 前,安静树)**:`GATE_EXIT=0 CLEAN` / `py gate: 130 ran, 0 findings, 0 uncertifiable, 47.3s` / lua 腿见收尾追加。⛔ **全程未用 `RULE6_BYPASS`**。
+  **⑧ 语料刷新 + GH #865 收口(本轮已做,写在清单之前免得被当待办抄走)**:MCP 可用,未触发铁律 11。
+  `issue_state_snapshot.json` **逐号点查重读了清单点名的全部 8 个号**(865/856/867/240/843/859/810/528,**无一条 carried**),
+  `fetched_at` 17.8h → 本轮;#865 **已追评 RULING 70**(`issuecomment-5715435653`,发前 `claim_precheck` `RC_EXIT=0` / `OK to publish`)
+  **并已关闭**(`completed`,13:47:52Z)。⛔ #865 关后**又点查了一次**才抄进语料 —— **不拿 `issue_write` 的返回当读数**。
+  ⭐⭐ **刷完当场被自己的腿逮到两次,两次都照登**:(i) `fetched_at` 第一版写 13:50:00Z(晚于真实点查),
+  工具判 **`fetched_at` is in the future (-0.0h) ⇒ 整份语料不可用**、8 个号全 UNCERTIFIABLE,**比刷新之前还差**
+  —— 那条守卫是对的:**未来的时间戳不是「很新」,是「读不懂」**;改成本轮**最早**一次点查的 13:44:00Z(保守侧:
+  写太新会凭空买到读数没挣来的新鲜度,写太旧只让那条腿少说一句话)。
+  (ii) 改好之后它立刻打 **`STALE-CARRY GH #865`** —— **我这一条清单自己还在把刚关掉的号当待办抄**,
+  于是按 RULING 64 的二选一**把它划掉**(残余为零:追评与关闭都在本轮)。
+  📌 **这条腿第一次对总监自己生效,而它逮到的正是总监自己写的清单。**
   **下次触发**:①GH #856 修法第 3 条剩 9 个候选(本轮 §六 又加一份写方现场)②棘轮加宽(GH #867)③GH #240 余下
-  ④`carry_mark_prose_vs_list` ⑤GH #843 (丙)+(乙) ⑥GH #859 ⑦GH #810 待裁 1 + 两条欠条
+  ④`carry_mark_prose_vs_list` ⑤GH #843 **(丙)+(乙)**,⭐ 与 ⑫ 是**同一条线**(见 ⑫)⑥GH #859 ⑦GH #810 待裁 1 + 两条欠条
   ⑧自检那三条 python 用例(**第十六轮**)⑨`lua-coverage` `no_manifest_row` 2 条
   ⑩P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3 ⑪`path_contains_any` 那两行
-  ⑫**新**:`py_gate_evicted_spot_az_spread` 三选一 ⑬**新**:刷新 `issue_state_snapshot.json`(**要由真用了 GitHub MCP 的那一轮逐号点查**,⛔ 不用 `list_*`)
-  ⑭**W38 周日汇总邮件(09-20)**:带第 15/16/18/19 条 + 第 17 条已撤回 + **本轮 RULING 70**
-  ⑮**GH #865 收口**:(A) 已落地 ⇒ 可以关,但**要先追评 RULING 70 对 (A) 第 (2) 条的修改**
+  ⑫**新**:`py_gate_evicted_spot_az_spread` 三选一 —— ⭐ **归并进 GH #843 第二半 + GH #810,不新开 issue**:
+  #843 立案的正是 `test_bots_walk_farm_only.py` **3.723s > 3.0s**,与本行**同一个 cap、同一个 0.7s 量级**;
+  #810 的 **(乙) 迟滞**同时答掉两者。⛔ (甲) 抬 cap 是 #810 与 `py_gate_measure.py` 都明确不推荐的方向。
+  ⑬**W38 周日汇总邮件(09-20)**:带第 15/16/18/19 条 + 第 17 条已撤回 + **本轮 RULING 70**
+  ⑭**新**:`lua_gate_manifest.json` 已陈旧 —— 本轮分支推实测 **89 个新测试不在册**(白跑 368.55s)、
+  **9 个超预算被 EXCLUDED**(逐字 `new test(s) exceeded the hook budget and were EXCLUDED`),
+  钩子真实开销 **665.65s vs 预算 530.0s**。⛔ 重测**要先读 GH #810**(它逐字禁止「随便找台容器跑一遍」)。
 
 - **2026-09-17T04:20Z**:**RULING 69 —— 上一轮给自己写的「未回复 = 下一轮执行」差一轮就把推送顺序反过来,而否掉它的读数比它自己晚两小时到。顺序不动,并从散文变成一条会拒 push 的闸。**
   全文 `iterations/reports/director/20260917T042000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。

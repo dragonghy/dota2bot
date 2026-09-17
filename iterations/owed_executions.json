@@ -1610,19 +1610,20 @@
   },
   {
    "id": "py_gate_evicted_spot_az_spread",
-   "issue": "[harness] 未开 issue(本行是它的登记处)。立案现场:总监 2026-09-17T13:xxZ 轮跑 `py_gate_measure.py`,输出逐字 `1 test(s) LEFT the hook -- they were gating before this re-measure and are not any more: tests/test_spot_az_spread.py (3.756s, over_per_test_cap)`。",
+   "issue": "[harness] **不新开 issue,归并进已有的两条**:**GH #843** 第二半(逐字待裁:「`over_per_test_cap` 且作用域是整个 `tests/` 目录的普查,要不要有一条比 cap 更早的读者」,验收逐字「`in_gate: false` 且 `reason: over_per_test_cap` 的行,各自有一条**写下来的**读者归属(哪怕结论是「无」)」)与 **GH #810**(逐字:「推送闸的成员资格由**哪台容器最后跑过 measure**决定 —— 三个旋钮都是绝对秒数」)。立案现场:总监 2026-09-17T13:xxZ 轮 `py_gate_measure.py` 输出逐字 `1 test(s) LEFT the hook -- they were gating before this re-measure and are not any more: tests/test_spot_az_spread.py (3.756s, over_per_test_cap)`。⭐ **#843 立案的那一条就是 `test_bots_walk_farm_only.py` 3.723s > 3.0s** —— 与本行**同一个 cap、同一个 0.7s 量级**,而 #810 是它的 Lua 侧同族。⇒ **本行是 #843 第二半的第二个实例,不是新发现。**",
    "covers_ids": [],
-   "ruling": "⚖️ **本轮只登记不处置,理由写明**:`test_spot_az_spread.py` 因**自身实测秒数**(3.0s 上限 vs 实测 3.756s)被逐出快 python 闸。⭐ **先排除了噪声**:安静树上连测三次 **3.735 / 3.626 / 3.623s**,稳定在上限之上,**不是抖动** ⇒ 它不会自己回来。⛔ **这不是缺陷,是清单按设计工作**(成员资格只看实测秒数、永不看文件名,GH #616 约束 1);要紧的是**它走了之后没有任何东西会举手** —— 工具自己那行 `Read the list before accepting it` 是打给人看的,而**人每轮都换**。⚠️ **顺带记一个不对称**:逐出按 per-test cap,而本轮总预算只用到 **47.84s / 90.0s**,所以「没有预算」不是它离开的原因;抬 cap 是可行解之一,但那是**改闸的语义、影响全部五个组**,需要自己的一次读数(抬到 4.0s 会同时放进哪些、总预算变成多少),不在本工作单元内。",
+   "ruling": "⚖️ **本轮只登记不处置,理由写明**:`test_spot_az_spread.py` 因**自身实测秒数**(cap 3.0s vs 实测 3.756s)被逐出快 python 闸。⛔ **这不是缺陷,是清单按设计工作**(成员资格只看实测秒数、永不看文件名,GH #616 约束 1);要紧的是**它走了之后没有任何东西会举手** —— 工具自己那行 `Read the list before accepting it` **是打给人看的,而人每轮都换**。\n\n⛔⛔ **更正我自己当轮的第一版措辞,照登**:我先写的是「安静树连测三次 3.735/3.626/3.623s ⇒ **稳定在上限之上、不是抖动**」。那三个数是真的,**而从它们推出的结论超出了它们能支持的范围** —— 读完 **GH #810** 才看见:三个旋钮**全是绝对秒数**,而同一批测试在不同容器上实测中位比 **1.175**(#810 量的;GH #358 另量到 1.34×)。⇒ 我证明的是「**在这台容器上**不是抖动」,**不是**「它真的超过 cap」—— 按 1.175 折回去 ~3.1s,仍过线,但那是**另一个读数**,我没做。📌 **这正是 #810 的立案句在我自己身上复现一次**:`in_gate` 的真值取决于**谁最后跑了 measure**,而我差点把一次容器抽签写成一条关于测试的事实。\n\n⚠️ 不对称照登:逐出按 **per-test cap**,而本轮总预算只用到 **47.84s / 90.0s** ⇒「没有预算」**不是**它离开的原因。⇒ 三个候选里 (甲) 抬 cap **恰好是 #810 明确不推荐的方向**(`py_gate_measure.py` 自己写 `do not raise the slack`),而 #810 的 (乙) **迟滞**(已在闸里的测试除非超 cap 一个余量否则不出闸)**正是为本行这种情形写的** ——⛔ 但那是 #810 的待裁项,不在本工作单元内。",
    "ruled_at": "2026-09-17T13:xxZ",
    "executor": "director(本座位;任何愿意动 tools/agent/ 的组也可以取)",
    "trigger": "没有外部触发器 —— 这正是它进 registry 的理由:它不属于任何一波、任何一个 id,而唯一提过它的那行输出只活在某一轮的终端里。",
    "delivered_to": [
-    "iterations/streams/director.md 当前状态(2026-09-17T13:xxZ 条目)"
+    "iterations/streams/director.md 当前状态(2026-09-17T13:30Z 条目 §四)",
+    "iterations/reports/director/20260917T133018Z.md §四"
    ],
    "why_registered_here": "⚖️ 章程 2.6:本轮**推迟**了处置(抬 cap / 拆测试 / 接受损失,三选一未裁)。⛔ 不许只写进「当前状态」——那一节是叙事,而没有任何一条腿会替一句散文举手(2.6 立案句)。",
    "done_when": {
     "kind": "manual",
-    "note": "三选一并落地:(甲) 抬 per_test_cap_seconds 并同轮登记抬后进闸/总预算的实测读数;(乙) 把 test_spot_az_spread.py 拆成一个 <3.0s 的快断言 + 留在 run_py_tests.sh 的慢的那半;(丙) 明确接受它不在快闸内,并在 py_gate_manifest.json 的该行 `reason` 里写明这是**裁定**不是**漂移**。"
+    "note": "三选一并落地:(甲) 抬 `per_test_cap_seconds` 并同轮登记抬后进闸/总预算的实测读数(⛔ 注意 #810 与 `py_gate_measure.py` 都明确不推荐这条);(乙) **迟滞**(GH #810 的 (乙)):已在闸里的测试除非超 cap 一个余量否则不出闸 —— 这条**同时**答掉本行与 #810;(丙) 明确接受它不在快闸内,并按 **GH #843 的验收逐字**在 `py_gate_manifest.json` 该行的 `reason` 旁写下**读者归属**(哪怕结论是「无」),说明这是**裁定**不是**漂移**。"
    },
    "done_when_note": "⛔ **`kind: manual` 是故意的,不是偷懒**:这三条没有一条是 `path_exists` 读得出来的 —— (丙) 甚至以「什么都不做」为正确答案,而一个会自己变绿的判据恰好会把它读成已办。⚠️ 对照:本 registry 上一条 `path_exists` 行(`gh865_prepush_scope_from_stdin`)产物一落地就被 `test_pending_rulings.py` 判 **BORN-DONE**,正是因为那种键**分辨不出「做完了」和「本来就那样」**。"
   }
