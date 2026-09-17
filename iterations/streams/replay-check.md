@@ -19720,7 +19720,26 @@
     深查 **1 帧**(+ 该帧上 61 tick × 6 条腿的驱动读数)。⚠️ 低于 6 局下限,与 W88 同型理由。
   - ⛔ `bots/` + `game/` **一行未改**(变异台从副本还原并核 sha256),零新 soak id,零新 fixture(复用)。
   - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 本轮一次 AWS 调用都没有。
-  - **开工自检**:⚠️ **两道闸各挡我一次**(`| tail` 自陈**第 8 次**、`timeout` 自陈**第 6 轮**)
+  - **⭐ 推送闸当场抓了一个真缺陷**:第一次 push 被 python 腿拒绝,逐字
+    `1 FAILURE(S): - tools/agent/mutstand_outlatch.sh installs an EXIT trap` ——
+    变异台第一版**没装 EXIT trap**,跑到一半被打断会把变异**留在 `bots/` 里**(GH #418 形状,
+    `fightfoe` 事故同族)。已按 `mutstand_zusmana.sh` 的规矩重写(trap 在第一个变异之前 armed、
+    基线先证绿、锚点不唯一即中止),复跑 3 CAUGHT / 0 survived。
+    ⇒ **这正是 GH #616 立这条腿的理由:红由推的人当场看见。**
+  - **push 读数(三条腿 × 两次 push)**:`GATE_EXIT=0 CLEAN`(luacheck 0 警告)、
+    `py gate: 130 ran, 0 findings, 40.4s`、`lua gate: 424 ran, 0 findings, 7 unanswered, 6 known-red, 582.2s`
+    (scope = 7 path(s) changed);`PUSH1_EXIT=0` / `PUSH2_EXIT=0`,先分支后 main,
+    第二推 `RULE6_MEMO=REUSE`(同一棵树)⇒ memo 按设计命中。
+    ⛔ 未用 `RULE6_BYPASS`,⛔ 未用 `-c core.hooksPath=/dev/null`。
+  - **issue**:净增 0,评论 1 —— GH **#424**(请总监判是否退休 `outlatch_three_era_incomparability`)。
+    草稿 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / 5 处引用全解析,
+    ⭐ **在两次 push 之后才发**(GH #290)。⛔ 未给 `outlatch` 本身开单:核验结论不是病例。
+  - **开工自检**:真码 **`selfcheck worst exit: 3`**(`legs run 13`,
+    `FINDINGS: cadence queue-rulings owed-executions lua-coverage`,
+    **`UNCERTIFIABLE: trunk-red(python)`** ⇒ ⛔ 本轮 trunk 的 python 侧没人看过;
+    `NOT RUN: test_luacheck_gate_soakswitch / test_selfcheck_lua_leg`)。
+    ⚠️ `owed-executions` 那条 finding 点的是**别的行**(缺 `unmet_at_ruling` 证词的那批),本行不在其中。
+    ⚠️ **两道闸各挡我一次**(`| tail` 自陈**第 8 次**、`timeout` 自陈**第 6 轮**)
     ⇒ **W83–W89 连续七轮同形**,而 W88 已把处方写成交棒第 0 条 —— **本轮第三跑才对**。
     根因:**开工第一条命令发生在读交棒之前**。写报告时自检仍在跑 ⇒ ⛔ **无 `SELFCHECK_EXIT` 真码**,
     ⛔ 不写 trunk 绿也不写 trunk 红。python 腿读 `UNCERTIFIABLE`(9 checks 未跑),
