@@ -488,7 +488,8 @@
     "kind": "path_exists",
     "path": "iterations/reports/replay-check/a_evidence_liondrainstop.md"
    },
-   "trigger": "**没有外部触发器,这正是它进 registry 的理由**:入集申请那一行的 `director` 字段里躺着的是**入集**裁定(`APPROVED_ADMITTED`),`status` 停在 `harvested_pending_verification` —— 波已收割、核验待办,而**没有任何一张按轮驱动的表载这一步**(§FB.3 / GH #413 / GH #332 同型)。实际取它的时机:任何一轮录像组有余量的工作单元;⭐ 无需新波次、零 AWS 增量 —— 该 id 在 **10 波**的 arm 串里出现过(最近 W58),买的是**已归档语料**。"
+   "trigger": "**没有外部触发器,这正是它进 registry 的理由**:入集申请那一行的 `director` 字段里躺着的是**入集**裁定(`APPROVED_ADMITTED`),`status` 停在 `harvested_pending_verification` —— 波已收割、核验待办,而**没有任何一张按轮驱动的表载这一步**(§FB.3 / GH #413 / GH #332 同型)。实际取它的时机:任何一轮录像组有余量的工作单元;⭐ 无需新波次、零 AWS 增量 —— 该 id 在 **10 波**的 arm 串里出现过(最近 W58),买的是**已归档语料**。",
+   "unmet_at_ruling": "本轮(录像组 W86)取活时先跑 `python3 tools/agent/pending_rulings.py --owed-only`(`OWED_EXIT=3`,266 行,⛔ 未经管道),本行读 **OWED**(`done_when` = `path_exists iterations/reports/replay-check/a_evidence_liondrainstop.md`,该路径当时不存在),时刻 **2026-09-17T06:36:23Z**;投递物在 **2026-09-17T07:07:33Z** 才被创建,晚 31 分钟。⚠️ 这条证词说的是「这个判据在被满足之前确实为假」,**不是**「工作已完成」;它买的是方向不是证明(LIMIT 14)。⭐ 本行判据是**单调**的(文件一旦创建就不会消失)⇒ 06:36:23Z 读到 OWED 蕴含它在此前每一刻(含 `ruled_at` 2026-09-09T10:xxZ)都未被满足 —— 这正是 LIMIT 14 要排除的「开行时就已为真」的**反面**,所以本行该补证词而不是换判据。"
   },
   {
    "id": "instrument_ownhalf_a_evidence",

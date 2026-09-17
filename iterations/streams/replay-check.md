@@ -19438,3 +19438,67 @@
     MTD 在刹车线上 ⇒ 现在只登记不请求。2) 仍欠未动,原样继承 ⛔ 不许读成已结清:**换句柄英雄**、
     `pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四「折叠 key 合同变成闸」(总监 [harness])。
     ⏳ `.dem` 约 **2026-10-02** 到期(距今约 **15 天**)。
+- **2026-09-17T06:46Z(W86)**:批测台**连续第三十七轮零发波**⇒ 无未检新局;按 W85 交棒第 0 条
+  取 `a_evidence_liondrainstop`。报告:`iterations/reports/replay-check/20260917T064600Z.md`;
+  投递物 `iterations/reports/replay-check/a_evidence_liondrainstop.md`(结清该行)。
+  - ⭐⭐ **头号:这一行欠的东西 2026-09-09 就交付了,而且已被 09-11 的 promote 消费掉。**
+    三处实读(⛔ 无一转述):`20260909T184000Z.md:242` 逐字
+    `VERIFY id=liondrainstop verdict=WORKING episodes=36`;`git show 92648c81` 逐字
+    `- if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'liondrainstop' ) ) …` → `+ if not J.IsModeTurbo() …`
+    (**2026-09-11T10:54:30Z**,§GU.2,armed 34→32,`stable-v7`);`hero_lion.lua:2523/2553` 现挂 PROMOTED 注记。
+    ⛔⛔ **本条初稿的结论被本轮自己的推送闸当场证伪,这里记的是改写后的版本。**
+    初稿写「`done_when` 探文件名 ⇒ 该行在构造上永远读 OWED」;
+    实际上我创建投递物后第一次 push 就被 `tests/test_pending_rulings.py` 拒了
+    (`997 checks, 1 failed`:`7 live registry rows read BORN-DONE … but the ceiling is 6`)
+    ⇒ **这一行可以被结清,我刚刚就结清了** ⇒ **registry 没说谎,读 OWED 是对的**
+    (它要的是一份放在那个路径上的产物,而那份产物今天之前确实不存在)。
+    ⭐ **真正的缺陷在记账链路,不在判据**:本行 `ruling` 的第一个前提逐字是 **`verify=0`**,
+    它在立行后 **8 小时**(09-09T18:40Z 的 VERIFY 行)变假,**两天后**总监正是以那份证据 promote 了该 id,
+    **而这一行六天没被关、没被更新**,继续索要一份已交付且已被消费的证据。
+    ⇒ **缺陷 = 一次 promote 消费了某条 owed 行索要的证据,而没有任何东西把两者连起来。**
+    ⛔ 不是「判据不可满足」,⛔ 也不是 W85 那个 BORN-DONE 的变体。
+    ⭐ **一条对 registry 有利的现场**:LIMIT 14 棘轮**工作正常**,在我结清的同一刻抓住
+    「这一行从没被人看见过 OWED」,逼我把 **2026-09-17T06:36:23Z** 那次真实 OWED 读数记进
+    `unmet_at_ruling`(投递物创建于 07:07:33Z,晚 31 分钟;判据单调 ⇒ 蕴含 `ruled_at` 时亦未满足)。
+    **记账动作是被棘轮逼出来的,不是自觉做的**,照登。
+    ⚠️ **取活路径的风险这半没被证伪**:不核那三处实读就会去「跑量具买 (a)」,而 (a) 早有,
+    且 promote 之后该量具的 armed/base 劈分对这个 id **已在构造上失效** ⇒ 产出一个看着正常、实则无意义的读数。
+  - ⭐⭐ **于是换了问题,买到一个此前没人问过的缺口**:promote 去掉 `IsSoakCandidate` ⇒ 两腿都开
+    ⇒ 任何 armed/baseline 对比**构造性失效** ⇒ 该 id **掉出所有 arm 串**(本轮 27-id 串确无它)
+    ⇒ **一个 promoted 默认此后没有任何例行读数在看它**,`liondrainstop` 已这样过了六天。
+  - **语料**:W69 四个 run(`spot_20260912_0926{22,24,27,29}_1_main_*`),`SWEEP_EXIT=0`×4,
+    16 局中 warmup 4 / **入集 12** / `unparseable 0`,9 局有 Lion,4 粒种子,arm 串 12 局逐字同一串。
+    **post-promote 实测成立**:promote 09-11T10:54:30Z,发波 09-12T09:26Z,**晚 ~22.5h**,run 名 `_main_`。
+    串内**无 `liondrain`**(出厂释放路径两腿同)、**有 `lionqdmg`**(09-09 的同一混杂项)。
+  - **判定**:`VERIFY id=liondrainstop verdict=WORKING episodes=8`(域内 channel:BASE 5 + CAND 3)。
+    ⭐ **钉帧 `20260912_094133_slot1`(BASE 腿 = 零 soak id armed)**:`277.9` 起引导,目标**已在环内(458u)**;
+    `277.9→282.5` **4.6s 不切**(环内有敌但未被英雄伤 ⇒ 第二合取项假)= **段内自带阴性对照**;
+    `282.5` `tidehunter_anchor_smash` 139 伤害、`actor_hero=true`、目标 263u ⇒ 谓词翻真;
+    `282.7` `MODIFIER_REMOVE modifier_lion_mana_drain` ⇒ **0.2s 后释放**。
+    **五条判别子逐条实测**(281.5–283.5 全事件):① Anchor Smash **不带控制**且 Dota 引导
+    **不被单纯伤害打断** ⇒ **引擎侧无机制能在该刻结束它**;② 窗口内 Lion 零 `ABILITY`;
+    ③ Lion 最近 `DEATH` 在 t=576.4(隔 294s);④ 目标活着且 263u;⑤ `lionqdmg` 只在 CAND 腿 armed。
+  - **聚合只定位不判词**:域内 8 条 residual **7/8 ≤0.4s**;域内 **0/8** 打满自然上限
+    (**5.1s**,实测众数 15/97),域外 **19/64 (30%)** 打满;MW 池化 z=−2.81 **p=0.0050**、
+    BASE 腿单独 z=−1.77 **p=0.077**、Fisher 0.100 / 0.302。
+    ⛔ **该对照与结局共因**(域内 = 刚被打过 ⇒ 更易被控被杀 ⇒ 引导机械变短),
+    **正是 2026-08-21 废掉 `span>=2.0s` 的同一条共因换了件衣服**。
+  - **⛔ 三样没买到,逐条写明**:(甲) 钉帧自身只省 **0.3s** < 量具自己的 `MIN_CUT` 0.5;
+    (乙) 效应量 1.71s **< GH #86 §5 的 2.0s**、种子 **4 < 12** ⇒ **不按 §5 重新确立 (a)**
+    (也不需要:(a) 是 09-09 那 36 个 episode 确立的);(丙) 条件 (b) 归批测台。
+    **为什么 WORKING 而非 INDETERMINATE**:后者的用法(W85 `arbheart`)是**两互斥机制都支持同一结论且分不开**;
+    这里判别子已把「不是 gate 干的」逐条关掉,**剩余不确定只在效应量,不在是否执行**。
+  - **铁律 4 (i-a)**:两分层读数全登记(cand/ab n=3 mean 0.333、base/ab n=3 mean 0.167、
+    **cand/ba n=0**、base/ba n=2 mean 0.25);⛔ **不形成 arm 估计量** —— 已 promote ⇒ 两腿都 gate-ON
+    ⇒ cand/base 之差**对这个 id 不是 arm**,(i-c)/(i-e) 在此**无对象**,不编造。
+  - **覆盖**:宽扫 **12/12** 有效镜像局、深查 **1 局逐帧** + 8 条域内 channel 帧级判定 + 97 条 span 普查。
+    ⚠️ **高于**章程 6 局下限。⛔ `bots/`+`game/`+`tests/` **一行未改**,零新 soak id,零 fixture。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 29 个对象(出网未计价)**
+    = 16 `.analysis.json` + 12 `.dem`(dump 后即删)+ 1 dumper 二进制(cache HIT);另 **4 次 `s3 ls`**。
+    容器落盘 307 MB。⛔ 不写「零支出」。
+  - **⚠️ 工具坑**:(甲) `routine_selfcheck.sh` 两道闸**又各挡我一次**(`| tail -40` 自报**第 7 次**、
+    `timeout 400` 自报**第 5 轮**复发)⇒ **W83/W84/W85/W86 连续四轮同形**;
+    ⭐ 两道闸**本身工作正常**(正确拒绝 + 正确处方)——**坑在处方没进入本组的开工动作**,不在闸。
+    (乙) ⭐ `lion_drain_census.py --split-is` 默认档**往读者眼前打印一句对本语料为假的话**
+    (`BOTH legs gate-OFF`);与 W84 那条被劫持的 `print` 同族 —— **那条丢的是数,这条丢的是数的含义**。
+    (丙) `stamps.json` **全仓无任何写入方**(grep 零命中),本轮由 `games_manifest.jsonl` 现搭。
