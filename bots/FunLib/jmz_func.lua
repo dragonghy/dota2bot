@@ -3322,12 +3322,66 @@ function J.ShouldSwitchPTStat( bot, pt )
 end
 
 
+-- [soloclaim / strategy 2026-09-17] THE TARGET-ARBITRATION VETO IS WRITTEN AS
+-- IF THE ALLY LIST CONTAINED ME, AND IT NEVER HAS.
+--
+-- ⭐ THE DEFECT, closed form. `J.GetNearbyHeroes(bot, 800, false, ...)` answers
+-- OTHER heroes near `bot`; the caller is not a member of its own ring. Two
+-- lines below it, though, the population is read as though it were: the guard
+-- says `#hAllyList <= 1 then return false`, which is only a "nobody is here but
+-- me" test if I am one of the entries, and the loop then spends a term on
+-- `ally ~= bot` excluding an entry that cannot be there. Both lines encode ONE
+-- belief -- "the list includes me" -- and the belief is false, so the guard
+-- does not mean "alone", it means "at most one ally", and it throws that one
+-- ally's claim away before the loop can read it.
+--
+-- ⭐⭐ THE DISCRIMINATOR IS THE SIBLING TWENTY LINES DOWN, in this file, on the
+-- same list. `J.IsAllysTarget` builds `J.GetNearbyHeroes(bot, 800, false, ...)`
+-- with the SAME arguments and carries NEITHER line -- no `<= 1` guard and no
+-- `ally ~= bot` term. The two functions cannot both be right about what the
+-- list holds, and the one that scans a lone ally is the one whose reading of it
+-- the corpus confirms.
+--
+-- ⛔ WHAT IS REPAIRED IS THE GUARD, NOT THE RING. The ring is centred on the
+-- ASKER while the question ("has somebody already got this unit") is about the
+-- UNIT, so an ally standing on top of `unit` but 900 from me is invisible to
+-- both predicates. That is a SECOND defect, it is bigger, and it is NOT touched
+-- here -- one lever at a time is what the lanefix bundle cost us. It is
+-- registered in this round's report and backlog. The radius 800, the `ally ~=
+-- bot` term, the illusion test, the `J.GetProperTarget` comparison and the
+-- human-player facing clause are all byte-identical to shipped.
+--
+-- ⛔ DIRECTION IS FIXED BY THE SOURCE, not by a corpus reading. The guard is
+-- the only thing armed removes, and it sits above a loop whose only outcomes
+-- are `return true` or falling through to the same `return false` the guard
+-- already produced. So: `#hAllyList == 0` -> the loop body never runs, both
+-- answers false; `== 1` -> shipped false, armed may be true; `>= 2` -> the
+-- guard never fired, byte-identical. Armed can therefore only turn a shipped
+-- FALSE into TRUE -- it can never claim a target the shipped code deferred on.
+-- Since callers use TRUE as "somebody else has it, leave it alone", arming is a
+-- pure NARROWING of the permission to pile onto a unit, never a widening.
+--
+-- DOMAIN: two readings, ⛔ NOT to be merged into one sentence.
+--   (1) GROUND TRUTH on the frame corpus (tests/_soloclaim_sweep.lua):
+--       `self_in_list` is 0 of 1039 -- the guard's premise is false on EVERY
+--       live hero frame -- and `ally1` is 357 of 1039 (34%), the population
+--       whose single ally's claim is discarded unread.
+--   (2) AN UPPER BOUND, AND IT IS LABELLED. `J.GetProperTarget` answers nil on
+--       1039 of 1039 frames: an attack target is bot-VM state the .dem does not
+--       carry (the GH #27 / STOPPER 4 family, owed and not routed around). So
+--       357 is the CEILING of the flip set, ⛔ NOT "357 frames flip" -- the
+--       corpus cannot say which of those lone allies was actually on the unit.
+--       The test drives the flip with that one read stubbed, and says so.
 function J.IsOtherAllysTarget( unit )
 
 	local bot = GetBot()
 	local hAllyList = J.GetNearbyHeroes(bot, 800, false, BOT_MODE_NONE )
 
-	if #hAllyList <= 1 then return false end
+	if #hAllyList <= 1
+		and not ( J.IsModeTurbo() and J.IsSoakCandidate( 'soloclaim' ) )
+	then
+		return false
+	end
 
 	for _, ally in pairs( hAllyList )
 	do

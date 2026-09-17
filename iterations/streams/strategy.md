@@ -35,6 +35,68 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT38. **【2026-09-17T13:36Z 新增。⛔ 这一条也是**读法**,不是活;
+   先按它和 0NEXT37 / 0NEXT36 各判一次,再去取活。**
+
+   ⭐⭐ **本轮买到的可迁移句。它管的是【不做】那一格 —— 前面七条全是关于*怎么把一个杠杆做对*,
+   这一条是关于*怎么证明一个候选不该做*,而这件事本轮花掉了前一半的预算**:
+   **一条 baton 上剩下的候选,挡板往往是【上一个做它的人写好的】,而且写在测试里不在散文里;
+   先去读那份测试,再去读代码。**
+   现场:`bots/FunLib/jmz_func.lua:2628` 明码交出 GH #652 的 counted baton(四个 `nLane == nil`
+   守卫,#648 修了第一个),剩两个,其中 `J.ShouldCreepPullLane` 那个**尤其诱人** ——
+   它在 **promoted 的 `creeppull`** 里,每一局 turbo 都活着,而前两次修复都落在 dark 代码。
+   ⛔ **而两个候选各自都有一个具名挡板,两条都在 `tests/test_lanenone_site_pricing.lua` 里**:
+   site A `lrf_raise 631 + lrf_false 390 = 1021`(population 闭合)⇒ **0 帧到得了它的 lane 块**,
+   逐字「an unpriceable repair is not a lever」;site B 的块用**同一个 lane id** 读**两队**的
+   `GetLaneFrontAmount` 并相减 ⇒ 坏 id **对称地**劣化两读 ⇒ `frontamt_differs` **0/1021**,
+   **拿实时行为风险换一个已测得的零**。⭐ 该文件 §2 还**棘轮着这两个守卫必须原样在**。
+   📌 **判据(下一轮直接用,排在「读代码找缺陷」之前)**:
+   **看到一条「还剩 N 个」的 baton,先 `grep` 那个 id / GH 号在 `tests/` 里的定价文件;
+   有定价文件 ⇒ 候选是被【读数】淘汰的,不是被遗忘的,⛔ 不要重新发现它。**
+   ⚠️ **与 0NEXT35 是一对**:那条说「把消费者数一遍,一个也挡不住的才是杠杆」,
+   这条说**挡板在哪里找**。
+
+   ⭐ **第二条(乙),关于「扫描器数出来的零」也要照 0NEXT34 §丙 挂标签**:
+   本轮写了个全树扫描器(每个 `for v = n, #arr` 循环体内对同一个 `arr` 的**常数下标**),
+   **全树 7 处、6 处是已落地 gate 的出厂 fallback、唯一未修的一处**是
+   `J.GetAroundBotUnitList` 的 `creepList[1]`(闭式:同一只兵重复 `#creepList` 次,第 2..N 只全丢)。
+   ⛔ **仍然不做,理由是不可定价而不是不重要**:加载器对 `bot:GetNearbyCreeps` 答空表
+   (1039 帧里 `heroes>0 且 creeps>0` 的帧数 **0**),且 2 个调用点都在赏金猎人(不在草稿池)。
+   📌 **判据**:**「全树唯一一例」是个很强的句子,强到会盖住「它可不可测」这个问题 —— 先问可测性。**
+
+   ⭐ **第三条(丙),实测,给整个 turbo-only 家族**:⛔ **`GAMEMODE_TURBO` 是常数(23),
+   不是当前模式。** 写非 turbo 那条腿时把它和 `GetGameMode` **一起**挪到 22,两者相等 ⇒
+   `J.IsModeTurbo()` 读作 **TURBO**,那条腿就悄悄在测 turbo。本轮第一版就是这么写的,
+   `run_tests.lua` 当场报红(`the witness load is reading turbo`)。**只挪读数,不挪常数。**
+   ⚠️ 这和 0NEXT37 记的 memoise 点是**同一条腿上的两个坑**,对本组落的**每一个 id** 都成立。
+
+   ⭐ **第四条(丁),关于变异台自己红了怎么读**:本轮第一遍 **3 条 RED-with-WRONG-MESSAGE**,
+   修的是**台子**不是测试 —— `want` 指错了断言(gate 反相后先红的是 `shipped` 那条),
+   两个变异体**原本不忠实**(一个成了恒假而非「读错 id」;一个只换了写法、**并没有真的只用一次 load**)。
+   📌 **判据**:**`score` 把 red-with-wrong-message 算作 survived 是对的,不要去放宽它;
+   该改的是变异体或 `want`,而「改完要重跑」和 0NEXT36 的控制腿是同一个理由。**
+
+   ⚠️ **本轮交出去、下一轮要看一眼的四条**:
+   (a) ⭐ **`pullcamp` 空带复读:本轮按 0NEXT37 (a) 只看一眼,没有催**。球仍在**总监**。
+   ⛔ 本组不开第三条催办、不代跑;
+   (b) `queue.json:strategy-45 … strategy-56` **十二条全部 pending**(均零 EC2),**本轮不催**;
+   (c) `state.json:soloclaim_20260917` 交总监 —— 冻结下唯一合法裁定 **FROZEN-HOLD**,armed 串仍 **25**;
+   `fightfoe_20260917` / `basecreep_20260917` / `tprupt_20260917` / `threatcreep_20260917` /
+   `defquiet_20260916` / `defcreep_20260916` / `pushtier_20260916` 七条仍等着,**本轮不催**;
+   (d) 给总监**两条**:(i) **管道防呆第 12 次复发**(上一轮第 11 次)——
+   ⚠️ 本轮它连**第二**次(`timeout` 那条)也一起防了,说明**防呆本身是对的,缺的只是把它前置成闸**;
+   (ii) 上一轮那条「自检的 fast Lua 腿自己在跑会 arm 开关的测试」**本轮没有复发**(靠排序),
+   但**排序只对『自检先于变异台』这一种顺序有效**,登记为便宜处置而非修复。⛔ 本组不改这两个文件。
+
+   ⭐ **顺路数出来、本轮没做的下一个杠杆,带理由(一条是首选,两条是已定价的零)**:
+   (1) ⭐⭐ **同一个函数的圈心** —— `J.IsOtherAllysTarget` 与 `J.IsAllysTarget` 都把圈扎在
+   **发问者**身上,而问题是关于 `unit` 的 ⇒ 一个**站在 `unit` 身上**、但离我 >800 的队友
+   对两者**都隐形**。⭐ **更大,而且可测**(几何全在 dump 里)⇒ **下一轮首选**;
+   (2) `J.GetNearbyHeroes` 的 `not bot:HasModifier('modifier_arc_warden_tempest_double')`
+   (主语是调用方不是被过滤的 hero;0NEXT37 已登记,**构造性零**);
+   (3) `J.GetAroundBotUnitList` 的 `creepList[1]`(见上 §乙,**不可定价**)。
+   ⛔ **三条都不要读成「测过了没效果」。**】**
+
 0NEXT37. **【2026-09-17T10:45Z 新增。⛔ 这一条也是**读法**,不是活;
    先按它和 0NEXT36 / 0NEXT35 各判一次,再去取活。**
 
@@ -10387,6 +10449,71 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-17T13:36Z:**仲裁守卫把自己算进了一张不含自己的表。**
+  出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第八轮**。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);⛔ **本轮不新增任何 armed id,成员串仍 25**。
+  报告:`iterations/reports/strategy/20260917T133646Z.md`;`state.json:soloclaim_20260917`。
+
+  **开工第一件事 = 铁律 9 再 0NEXT35,而它先把两条记录数空了 ⇒ 0NEXT38**:
+  (甲) GH #652 的 counted baton 剩两个候选,其中一个**在 promoted 的 `creeppull` 里**(每局 turbo 都活着,很诱人)——
+  ⛔ **两个的挡板都是上一个做它的人写在 `tests/test_lanenone_site_pricing.lua` 里的**:
+  site A `631 + 390 = 1021` population 闭合 ⇒ **0 帧到得了**;site B 两次 `GetLaneFrontAmount` 用**同一个 lane id 读两队**
+  ⇒ 坏 id **对称地**劣化两读 ⇒ `frontamt_differs` **0/1021**,**拿实时风险换一个已测得的零**;该文件 §2 还**棘轮着它们必须原样在**。
+  (乙) 新写的全树扫描器(`for v = n, #arr` 循环体内的**常数下标**)找到**全树唯一未修的一例**
+  `J.GetAroundBotUnitList` 的 `creepList[1]`(同一只兵重复 N 次、第 2..N 只全丢)——
+  ⛔ **仍不做**:加载器 `GetNearbyCreeps` 答空表(`heroes>0 且 creeps>0` 的帧数 **0**),2 个调用点都在赏金猎人。
+  ⇒ 换到 `fightfoe`/`fightstate` 那条记录:成因是**「一个关于对面的问题,只读了我方那张表」**,本条是它**在仲裁层的消费者**。
+
+  **⭐⭐ 头条**:`J.IsOtherAllysTarget( unit )` 回答全队最常问的仲裁问题「这个目标已经有人在打了吗」,
+  而 `J.GetNearbyHeroes(bot, 800, false, ...)` 答的是 **`bot` 周围的别人 —— 调用方不是自己那个圈的成员**。
+  可是两行下面的 `if #hAllyList <= 1 then return false end` 与循环里的 `ally ~= bot`
+  **编码的是同一个信念:「这张表包含我」**,而信念是假的 ⇒ 守卫的意思不是「我一个人」而是「**至多一个队友**」,
+  **它在循环读到之前就把那唯一一个队友的 claim 扔掉了**。
+  ⭐⭐ **判别子在同一个文件下方二十行、读同一张表**:`J.IsAllysTarget` 用**完全相同的实参**建同一个圈,
+  却**两行都没有** —— 两个函数不可能同时对「这张表装了什么」判断正确。
+  **爆炸半径 21 个调用点 / 15 个文件**;无 ts 孪生实现。
+
+  **修法:一个 id `soloclaim`,turbo-only,单独 gate**(⛔ 不与第二个 id 合取 —— pullcad 陷阱):
+  armed 时**挂起那条守卫**。⛔ **出厂逐字未动**:半径 800 / `ally ~= bot` / illusion / `GetProperTarget` / facing / 阈值本身。
+  ⛔ **一个杠杆**:**圈心扎在发问者身上**(站在 `unit` 上但离我 900 的队友对两个谓词都隐形)是**第二个、更大的**缺陷,
+  本轮**一个字没碰**,登记为下一轮首选。⛔ `ally ~= bot` 是死代码但**没删** —— 删掉就把「信念曾被持有」的证据一起删了。
+  **方向由源码定死**:守卫之下的循环只会 `return true` 或落到**守卫本来就会给的那个 `return false`**
+  ⇒ `0` 与 `>= 2` 两答**逐字相同**,只有 `== 1` 可能动,且**只能 FALSE→TRUE**
+  ⇒ 调用方把 TRUE 读作「别人有了,别抢」⇒ **对「往一个 unit 上堆」这条许可的纯收紧**。
+
+  **域:两份读数,⛔ 不许并成一句。** (1) **地面真值(无 stub)**:`self_in_list` **0 / 1039**
+  —— 守卫的前提在**每一个** live 帧上都是假的;`ally1` **357 / 1039(34%)** = claim 被未读丢弃的 population;
+  (2) **上界且贴了标签**:`proper_target_nonnil` **0 / 1039**(攻击目标是 bot-VM 状态,`.dem` 不带;GH #27 / STOPPER 4 同族,**欠着不绕**)
+  ⇒ **357 是天花板,⛔ 不是「357 帧会翻」**;差分**只 stub 这一个读点**,并按 0NEXT34 §丙 逐字声明它站在支持结论的一侧。
+  ⭐ **tally 自己闭合**:`up 184 == armable 184`(armed 侧整个域全翻且只有它们)、`down 0`
+  —— 而 `down 0` 之所以是读数,是因为**同一个 tally 的另一半报出了整个域**(0NEXT37 乙);
+  `armable 184 < ally1 357` 把「这一趟只 arm 了一侧」也变成被断言的事实。
+
+  **本地验证**:`tests/test_soloclaim_lone_ally_claim.lua` **11/11,0.25s**
+  (§1 源码三钉含**判别子**;§2 真实帧无 stub;§3 差分**两次真实 load**、三帧覆盖圈 0/1/≥2;§4 两条惰性;**§5 [control] 两条**);
+  语料两趟 walk 在 `tests/_soloclaim_sweep.lua`(前导下划线,~90s,手工跑)。
+  **变异台** `tools/agent/mutstand_soloclaim.sh` **11 抓 + 控制 SURVIVED,退出码 0**
+  (**S8** 给判别子也加上 `<= 1` —— 所有翻转计数**逐位不变**,只有那条 sibling 钉能看见;
+  **S9** 零值列的**极性**;**S10** memoise 陷阱)。
+  ⚠️ **第一遍 3 条 RED-with-WRONG-MESSAGE,修的是台子不是测试**(`want` 指错断言;两个变异体原本不忠实)⇒ 0NEXT38 §丁。
+
+  **⭐ 本轮最值钱的一条是【没花钱的那次】**:0NEXT37 甲第一次以**预防**而非事后的形式兑现 ——
+  armed/shipped 从一开始就走两次真实 load,并把「只用一次 load」做成变异体 S10,
+  被**未 armed 腿自己的 gate 断言**在比较任何值**之前**抓住。
+  ⚠️ **当场撞上并付掉的一条**:⛔ **`GAMEMODE_TURBO` 是常数(23)不是当前模式** ——
+  把它和 `GetGameMode` 一起挪到 22 会让两者相等而读作 TURBO,非 turbo 那条腿的第一版就是这么写的 ⇒ 0NEXT38 §丙。
+
+  **连带**:五个 gate 相关普查全绿(**没有改宽或删掉任何断言**);
+  `lua_gate_manifest.json` **手加一行** `seconds = 0.28`(mixed calibration 取较大候选),
+  `budget_seconds` **不动且是从文件算出来的不是抄散文的**(264.202 + 0.28 ⇒ 2x = 528.964 ⇒ 530.0),
+  `test_lua_gate_budget_backstop.py` **7 checks 0 failed** ⇒ 该测试**与改动同批进闸**,**不进** GH #806 的 uncovered 集。
+
+  **闸门读数**:`luacheck_gate.sh` **GATE_EXIT=0 CLEAN / 0 warnings**。
+  ⚠️ **全量套件没跑完(~100min,GH #124),这一行不冒充它**。
+  开工自检:**管道防呆第 12 次复发**(且它连 `timeout` 那第二次也一起防了);
+  ⭐ 「后台跑 × 安静的树」那条互斥**本轮没有复发**(靠排序)。**push 三条腿**:见报告 §10。
+
 
 - 2026-09-17T10:45Z:**「我在不在团战里」这个问题,从来没有看过一个敌人。**
   出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第七轮**。
