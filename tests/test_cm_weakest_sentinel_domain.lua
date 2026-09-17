@@ -379,11 +379,27 @@ tests['4. no hero row in the corpus comes within half the sentinel of it'] = fun
         .. SENTINEL .. '" is vacuous here -- it would hold for a reader that '
         .. 'parsed no health at all.  Fix the parse before reading the ceiling.')
 
+    -- ⚠️ WHAT A RED HERE DOES AND DOES NOT MEAN (corrected 2026-09-17, hero;
+    -- trip point deliberately NOT moved -- see tests/test_weakhp_seed_family.lua,
+    -- which pins both this clause and this text).  This is RUNG 1 of three:
+    --   rung 1  any unit at or above the seed      -> the cap REJECTS someone
+    --   rung 2  the MINIMUM over the eligible set  -> the cap can remove the
+    --           at or above the seed                  argmin
+    --   rung 3  ...and that leaves the set empty   -> THE DECISION CHANGES
+    -- Rung 1 is NECESSARY and nowhere near sufficient, and it is the only rung
+    -- this file measures.  The earlier text told the reader of a rung-1 red that
+    -- "the DO-NOT-ARM verdict must be re-decided", which overstates it: rung 1
+    -- crossing means the cap has started rejecting units, not that any decision
+    -- moved.  Rungs 2 and 3 are measured in test_weakhp_seed_family.lua §3 --
+    -- read them here before re-deciding anything.
     assert(nMaxMaxHp > 0 and nMaxMaxHp < SENTINEL,
         'the corpus ceiling is now max_hp ' .. nMaxMaxHp .. ' (' .. sMaxWhere
-        .. '), which is no longer below the ' .. SENTINEL .. ' sentinel.  '
-        .. 'Reading B just became reachable and the DO-NOT-ARM verdict must be '
-        .. 're-decided -- do not loosen this bound.')
+        .. '), which is no longer below the ' .. SENTINEL .. ' sentinel.  Rung 1 '
+        .. 'has been crossed: the cap can now REJECT a unit, which is real news '
+        .. 'and is what this bound exists to deliver.  ⛔ It does NOT on its own '
+        .. 'void the DO-NOT-ARM verdict -- read rungs 2 and 3 in '
+        .. 'tests/test_weakhp_seed_family.lua §3 first, then re-decide.  '
+        .. 'Do not loosen this bound either way.')
     assert(nMaxHp < SENTINEL,
         'the corpus current-hp ceiling is now ' .. nMaxHp .. ', at or above the '
         .. SENTINEL .. ' sentinel; see the max_hp message above.')
@@ -391,10 +407,20 @@ tests['4. no hero row in the corpus comes within half the sentinel of it'] = fun
     -- The margin, asserted rather than noted, because "below the sentinel" and
     -- "nowhere near it" are different verdicts and only the second one retires
     -- a candidate without a wave.
+    --
+    -- ⚠️ This clause trips at max_hp SENTINEL/2 = 5000 against a ceiling of
+    -- 4343 -- 1.15x, i.e. one fat Turbo fixture.  Rung 2 meanwhile sits 3.87x
+    -- from mattering.  So this is the EARLIEST wire in the ladder by a factor of
+    -- 3.4, and a red here is the weakest of the three signals, not the
+    -- strongest.  Same instruction as above: read rungs 2 and 3, do not move
+    -- this bound.
     assert(nMaxMaxHp * 2 < SENTINEL,
         'the corpus ceiling (max_hp ' .. nMaxMaxHp .. ') is now within 2x of the '
         .. SENTINEL .. ' sentinel.  That is still unreachable but it is no longer '
-        .. 'the comfortable margin this verdict was written on -- re-read it.')
+        .. 'the comfortable margin this verdict was written on -- re-read it.  '
+        .. 'This is the earliest of the three rungs; it says the margin shrank, '
+        .. 'not that the cap fires (rung 1) and not that a decision moved '
+        .. '(rungs 2-3, in tests/test_weakhp_seed_family.lua §3).')
 end
 
 --- §5.  Why fourteen dead locals survived every push gate this repo has.

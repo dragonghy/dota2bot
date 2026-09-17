@@ -9694,5 +9694,60 @@
     "collateral": "`tests/test_tpstale_recover_leak.lua` 的函数级 reset 计数从 2 改为 3,并**逐字说明第三个是谁、为什么不削弱它的命题**(本条的 drop 在 回复状态 **下游**;承重的是它那条 slice 断言,不是这个计数)。⛔ 这是 GH #624 那类「别组落一个 gate 就把普查顶红」的红,**在同一个改动里修掉,不留给下一个开工的组**。",
     "status": "FROZEN-HOLD —— P4.2 入集冻结期唯一合法裁定。⛔ **本条不是入集提议**:armed 串仍 25,代码与 gate 落在 main 上但**在真实对局里恒为 no-op**,直到有人解冻并把它入集。",
     "owner_priority": "P2(低血不回家)决策侧的邻域:它守的是「回家 TP 的落点到底是不是这条分支自己选的」,与 P2 第 1 条的 TP 腿同族但**不占 P2 的 DoD** —— P2 要的是「无危险 + 有补给时拦住回城」,本条要的是「别拿别人的塔坐标当逃命落点」。"
+  },
+  "weakhpseed_20260917": {
+    "desk": "hero",
+    "when": "2026-09-17",
+    "verdict": "DO-NOT-ARM for the whole family (no id landed); AND a defect in the ratchet that retired its first member -- the earliest wire trips 3.4x before the decision does and, when it trips, misinstructs the reader",
+    "subject": "the weakest-enemy-CURRENT-HEALTH seed as a FAMILY: `local npcWeakestEnemyHealth = <N>` at 11 shipped sites, of which bots/BotLib/hero_axe.lua:1792 (100000) and bots/BotLib/hero_lion.lua:1716 (10000) are this desk's charter",
+    "family_census": {
+      "reader_definition": "a bare `local <name> = <number>` line under bots/, |number| >= 1000, followed within 40 lines by BOTH a comparison against <name> and a reassignment of <name>",
+      "total_sites": 201,
+      "cap_min_search": 77,
+      "floor_max_search": 124,
+      "focus_five_sites": 9,
+      "note": "201, not the ~60 the backlog estimated -- and the MAJORITY polarity (floor/max-search, 124) is the one none of the three priced samples had. DELIBERATELY NOT RATCHETED ANYWHERE: it is a census over bots/ SOURCE, not over append-only fixtures, so a floor on it reddens for whichever desk next refactors a hero file (the GH #624 structural-red shape). It is a reading and it lives in the test header where a reading belongs."
+    },
+    "headline": {
+      "claim": "one quantity, one variable name, one byte-identical idiom, 11 sites, ALL provably dead locals -- and TWO seeds a factor of ten apart, split 3/8. The domain is identical at all 11 sites, so the factor of ten CANNOT have been chosen by the domain; it was chosen by the copy lineage.",
+      "seed_100000": [
+        "bots/BotLib/hero_axe.lua:1792",
+        "bots/BotLib/hero_slardar.lua:440",
+        "bots/FunLib/rubick_hero/axe.lua:159"
+      ],
+      "seed_10000": [
+        "bots/BotLib/hero_dazzle.lua:439",
+        "bots/BotLib/hero_lina.lua:755",
+        "bots/BotLib/hero_lion.lua:1716",
+        "bots/BotLib/hero_luna.lua:197",
+        "bots/BotLib/hero_ogre_magi.lua:961",
+        "bots/BotLib/hero_phantom_assassin.lua:258",
+        "bots/BotLib/hero_riki.lua:391",
+        "bots/BotLib/hero_warlock.lua:542"
+      ],
+      "dead_local_proof": "EXACTLY 3 comment-stripped occurrences of the name in each of the 11 WHOLE files -- seed, one strict `<`, one reassignment. Three occurrences in a whole file leaves no room for a read anywhere in it, so 'dead local' here is PROVED, not windowed. Consequence: the seed's only effect is the cap.",
+      "control": "nWeakestUnitLowestHealth -- the same quantity and the same idiom under a different name, 3 sites (hero_crystal_maiden.lua:2867, rubick_hero/crystal_maiden.lua:762, hero_silencer.lua:990), EXACTLY 4 occurrences each, the fourth being `return nWeakestUnit, nWeakestUnitLowestHealth`. Three at four, eleven at three, ONE reader: this is what makes the dead-local claim a statement about the FILES rather than about the reader (last round's M12 shape)."
+    },
+    "finding": {
+      "what": "a cap of this shape sits at the bottom of a THREE-RUNG ladder, and the committed ratchet has rung 1 only",
+      "rung_1": "does any unit reach the seed? -> the cap REJECTS someone. Corpus: 0 of 1550 hero rows at or above 10000; ceiling max_hp 4343 / hp 4340; 4 rows at or above 4000 hp.",
+      "rung_2": "is the MINIMUM over the eligible set at or above the seed? -> the cap can remove the argmin. Corpus: 310 live per-team hero groups, largest per-team MINIMUM = 2585 (tests/frames/f_260828_124358_axe_cull_promise.lua team=2 n=5).",
+      "rung_3": "...and does that leave the set empty? -> THE DECISION CHANGES. Corpus group-size distribution 2=>4, 3=>13, 4=>76, 5=>217 -- NOT ONE group of size 1, which is what the cap would need in order to empty a set.",
+      "the_defect": "tests/test_cm_weakest_sentinel_domain.lua §4's margin clause `nMaxMaxHp * 2 < SENTINEL` trips at max_hp 5000 against a ceiling of 4343 -- 1.15x, i.e. ONE fat Turbo fixture. Rung 2 meanwhile sits at 10000/2585 = 3.87x from mattering. So the earliest wire in the ladder is 3.4x ahead of the decision, and its failure text told the next reader that 'Reading B just became reachable and the DO-NOT-ARM verdict must be re-decided' -- with no rung-2 or rung-3 reading anywhere in the repo to re-decide it from.",
+      "remedy": "the TEXT, not the trip point. The bound is byte-for-byte UNCHANGED, on purpose: cs doctrine is explicit that a zero-content claim must redden on its first counter-example, and a rung-1 crossing IS real news (the cap starts rejecting units). What changed is that rungs 2 and 3 are now measured (tests/test_weakhp_seed_family.lua §3) and the sibling's failure text says what a rung-1 red does and does not imply. §4 of the new file pins BOTH halves so neither can silently revert -- mutants M12 (move the bound instead of the text) and M13 (revert the text)."
+    },
+    "bots_lines_changed": 0,
+    "artifacts": {
+      "test": "tests/test_weakhp_seed_family.lua -- 5 green, 0.479s best-of-three",
+      "manifest_row": "tools/agent/lua_gate_manifest.json: seconds 0.49, hand-added in the SAME change (GH #806/#624). budget_seconds NOT moved: 259.002 + 0.49 = 259.492, 2x = 518.984 -> 520.0, which it already held. ⭐ The file was made CHEAP ON PURPOSE to keep it there -- 1.190s -> 0.479s by collapsing two walks over ~500 shipped files into one -- rather than shaving the recorded number, per the axecallnocap/tpstash rule that the budget is DERIVED, not chosen. The stand was RE-RUN after that refactor.",
+      "mutation_stand": "tools/agent/mutstand_weakhpseed.sh",
+      "text_correction": "tests/test_cm_weakest_sentinel_domain.lua §4 failure text only; the `nMaxMaxHp * 2 < SENTINEL` bound is byte-for-byte unchanged"
+    },
+    "limits": {
+      "sample_not_proof": "the corpus readings are a SAMPLE, not a proof. Turbo (~20 min) is why the ceiling sits where it does; a 60-minute normal-mode game can put a fully-slotted carry over a 10000 seed. NEVER write 'impossible'.",
+      "rung_2_is_a_superset": "rung 2 is measured over LIVE hero rows of one team, which is a SUPERSET of the eligible set each shipped loop actually scans (every loop adds its own predicates). A superset's minimum is a LOWER bound on the eligible minimum, so a rung-2 reading below the seed does NOT prove the eligible minimum is below it. What §3 asserts is therefore the direction that IS sound -- the two distances-to-trip and their ordering -- and never 'the decision domain is empty' as a proved claim.",
+      "does_not_reopen": "nothing here re-opens cmweaksent_20260917. That verdict is argued from rung 1 being EMPTY (0 rows at or above the seed), which is sufficient on its own and is untouched by everything above."
+    },
+    "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。"
   }
 }
