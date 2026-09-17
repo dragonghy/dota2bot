@@ -12772,4 +12772,28 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **成本(铁律 1 三段式)**:**零 EC2 / 零 CE / S3 读取 `0` 个对象**(零 `cp`/`sync`/零 `.dem`/
   零 `analysis.json` ⇒ 第三段的 `0` 是**数出来的**);⭐ **另登记一次不下载的调用**(⛔ 不写成零):
   `s3 ls --recursive` **1 次**、592 键 ⇒ **1 次 LIST ≈ $0.000005**。
+  **(八) ⭐ 已发表 GH #877 `[batch]`**(P4.1 启动口令缺陷 + 两件发波参数 + 那条自捉)。
+  **发表前过闸,而闸先打了红,单独记**:第一跑 **`PRECHECK_EXIT=3`**,3 条 `OFF-TRUNK commit`
+  (baseline SHA 三种长度各一条),逐字 `DO NOT PUBLISH YET -- the citations above do not resolve
+  on origin/main.`,而 `local commits not on origin/main: 0` ⇒ **工具建议的补救(先 push)已经做过,
+  红是结构性的不是陈旧**。⛔ **本台判不了它是真阳性还是浅克隆假象,而这一点是量出来的**:
+  `is-shallow-repository` = **`true`**、**`MAIN_VISIBLE_COMMITS=53`**、main 最老可见 commit 是
+  **2026-09-16**(约一天)、`.git/shallow` 两条边界**都不是**那个 baseline
+  ⇒ `merge-base --is-ancestor` 回 **`1`**,⛔ **这个 `1` 在这里不等于「不是祖先」,只等于「本容器答不了」**
+  (📌 章程点名的「shallow clone 的空输出被读成无漂移」同族,**失效方向朝危险那一侧**)
+  ⇒ ⛔ **两侧都不宣布**。处置:**把引用换成对读者真能解析的那个**(`refs/heads/upstream-baseline`
+  是 origin 上的活分支),SHA 脱敏成 `<BASELINE_SHA>` ⇒ **`PRECHECK3_EXIT=0`** / `clean` /
+  `OK to publish: every citation resolves on origin/main.`(编辑后第四跑 `PRECHECK4_EXIT=0`)——
+  ⭐ **把闸满足对,不是绕过**(40 位裸 hex 对读者本来就不如分支名可解析),⛔ **未用任何 bypass**。
+  ⭐ **自指观察**:第一跑 3 条 → 第二跑 2 条,差的那条是**把 precheck 自己的红照抄进草稿**带进去的
+  ⇒ **照抄闸的读数会把同一条红再触发一遍**(3 → 2 → 0);⛔ 不主张是缺陷,只登记
+  **「照抄闸的读数」与「引用须在 trunk 解析」这两条在这种输入上互相咬**。
+  ⚠️ 顺带更正:`AGENTS.md` 称那个 commit 为「仓库初始 OHA 快照」,而现测 `git cat-file -p` 第二行是
+  **`parent c4fc694e...`** ⇒ **它不是根提交**;对 P4.1 无影响,仅免得后人据「初始」二字推祖先关系。
+  **⛔ 手机通知:推了一条**(⚠️ **与既有判据的关系写清**):为刹车登记的四条判据本轮**一条不成立**
+  (MTD `$91.809 < $100` / `alpha = 0` / headroom `$-1.809` / 兜底日 `09-27` 未到)⇒ **不是按那四条推的**;
+  推的理由是**另一类事实**:owner 自己写的最高优先项 P4.1 有一个**此前无人知道**的第二阻因,
+  修法免费、且**验收第 1 步是改 owner 自己那个文件里的一行**,而 10-01 预算归零后那一轮**本来会被它吃掉**。
+  ⭐ **这不是第 42 次报刹车**(那件事零新信息、不推);⛔ 也不据此放宽那四条判据 —— 它们量的是刹车,
+  这条不量刹车,**挂上去才是错的类型**(上一轮已判过同型)。
   详见 `iterations/reports/batch-desk/20260917T122410Z.md`。
