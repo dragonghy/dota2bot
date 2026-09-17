@@ -35,6 +35,78 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT39. **【2026-09-17T16:35Z 新增。⛔ 这一条也是**读法**,不是活;
+   先按它和 0NEXT38 / 0NEXT37 各判一次,再去取活。**
+
+   ⭐⭐ **本轮买到的可迁移句。它管的是【上一轮点名的首选,这一轮不一定还是杠杆】——
+   而本轮整轮预算就是这么花掉的,出口 (i) 没达成,连续第八轮到此中断**:
+   **一条被登记为「更大、而且可测」的杠杆,「可测」和「可做」是两个问题;
+   ⛔ 而「可做」往往被它自己的宿主结构否掉,不是被语料否掉。**
+
+   现场:0NEXT38 把 `J.IsOtherAllysTarget` / `J.IsAllysTarget` 的**圈心扎在发问者身上**
+   点名成「⭐ 更大,而且可测(几何全在 dump 里)⇒ 下一轮首选」。**几何确实在 dump 里,可做性不在**,
+   两个宿主各有一条**不同的、已测得的**理由:
+   (甲) `J.IsOtherAllysTarget`:`ally2plus` **55/1039** ⇒ 出厂守卫 `#hAllyList <= 1` 在 **984/1039** 帧开火;
+   `frame_has_extra` 31(3.0%) 是杠杆原始人口,而 **`frame_has_extra_2plus` = 0/1039**
+   ⇒ **只扩循环 = 0 帧到得了**;**改成让守卫数并集 ⇒ 只在未 promote 的 `soloclaim` 也 armed 时才活 = `pullcad` 合取陷阱**。
+   ⭐ **要记住的那一句**:`#hAllyList <= 1` **数的就是那张圈**,所以在这个函数里
+   **「守卫」和「圈心」不是两个缺陷、是一个** —— 上一轮把圈心写成「第二个、更大的缺陷」时
+   **它已经和 `soloclaim` 耦合了,只是当时没人算这一步**。
+   (乙) `J.IsAllysTarget`(**没有守卫,本该是干净的单杠杆**):**16/16 个调用点传 creep/neutral/tower**,
+   而语料是 **112 fixture / 1120 英雄单位 / 非英雄单位 `0`** ⇒ **它的实参一个都不存在**。
+   ⛔ 外加一道**具名挡板**(照 0NEXT38 §甲 先读测试):
+   `tests/test_soloclaim_lone_ally_claim.lua:130-149` 把它**棘轮成判别子**,
+   **不许**长出 `<= 1` 或 `ally ~= bot`;而修法要用的 `J.GetAlliesNearLoc` **含 bot 自己**
+   ⇒ 去掉自己最自然的写法正是 `ally ~= bot` ⇒ **正面撞棘轮,并拆掉上一轮全部论证的判别子**。
+   📌 **判据**:**「上一轮点名的首选」不享受豁免,照 0NEXT35/38 重新定价一次再动手。**
+
+   ⭐ **第二条(乙),普查数完了,下一轮别重做**:带主语形参而圈画在 `bot` 上 = **230 个函数里 11 处**;
+   名字/flag 不一致 = **2069 个字面量 flag 圈里 13 处**(12 处真阴性)。
+   **全部连理由钉在 `tests/test_ring_subject_census.py`**(新增一处即红)。
+   其中 `J.IsLaneFrontTooDeepToHold` 是**前一轮已定价**的(GH #61)⇒ **不要重新发现**;
+   `J.IsHeroBetweenMeAndLocation` / `J.GetVulnerableUnitNearLoc` 是**出厂就对的**(主语就是发问者 / 圈是施法者射程)。
+   顺路:`J.GetVulnerableUnitNearLoc` 的 `weakestHP = 10000` 硬上限,**语料最大英雄 HP 2646 ⇒ 0/1039 可达**。
+   ⛔ **三类都不要读成「测过了没效果」。**
+
+   ⭐ **第三条(丙),关于 `bEnemy` 这个实参,对全树成立**:
+   **`GetNearbyHeroes` 的 `bEnemy` 相对的是【圈心】,不是执行中的 bot**
+   (仪器逐字:`replay_fixture.lua:1472` `isEnemy = other:GetTeam() ~= self:GetTeam()`)。
+   ⇒ 圈心是敌人时,`true` 交出的是**我方**。**全树 300+ 个非 self 圈心调用点是对的**
+   (判别子:`rattletrap.lua:429-430` / `hero_abyssal_underlord.lua:321-322` 的**成对读数**,
+   同一圈心、两个 flag、名字正好相反),**离群的只有一处** ⇒ 见下。
+
+   ⭐ **第四条(丁),本轮找到并证明、但【登记不发船】的缺陷 + 它的触发器**:
+   `jmz_func.lua:14276` `J.IsAllyHeroBetweenMeAndTarget` 的第二个圈
+   `J.GetNearbyHeroes(hTarget, 1600, true, …)` ⇒ **把队友又数一遍、敌方一个都没枚举**。
+   **归谬(闭式)**:若那表真是敌方,`hTarget` 自己坐在 `vEnd` 上(垂距 0)⇒ **每次都 TRUE ⇒ 分支永不开火**;它会开火。
+   ⛔ **不发船的理由是数**:调用点**恰好 1 个**且在 `rubick_hero/rattletrap.lua`,而
+   **`hero_pool.txt`(42 英雄)里没有 rubick** ⇒ **在场域 0**(与 0NEXT38 §乙 赏金猎人同判据);
+   另外 `PointToLineDistance` **mock 里没实现**,钉真帧还要先买仪器。
+   ⭐ **但停摆理由已装触发器**:`test_parked_reason_is_rederived_not_trusted` **重新推导**那个外部事实,
+   **rubick 一进池就报红**并在失败信息里写好修法(`J.GetEnemiesNearLoc(vEnd,1600)`,排除 `hTarget`/`hSource`,
+   可加 ⇒ 只 FALSE→TRUE ⇒ 纯收紧)。
+   📌 **判据**:**停摆理由若是一个会变的外部事实,就把它写成断言,不要写成散文。**
+
+   ⚠️ **本轮交出去、下一轮要看一眼的四条**:
+   (a) ⛔ **给总监的头等一条,本轮自己踩出来的**:我把**开工自检放后台跑、同时让变异台改写 `jmz_func.lua`**
+   ⇒ 自检 Lua 腿读到正在被改写的树,报出 `jmz_func.lua:16305 '<eof>' expected`(语法错)
+   与 `live hero frames FELL to 1018 (registered 1021)` 等**三个"下降"的计数** ——
+   **而那条断言的文案正是「do not re-baseline」**。⇒ **并发写能伪造「行为改动」的全部外观,
+   且最危险的一面是它劝你去 re-baseline。** 上一轮把这条互斥登记为「靠排序、便宜处置」,
+   **本轮证伪:排序对并发无效**。建议升级成真闸(自检前后对 `bots/` 取指纹,不一致打 `UNCERTIFIABLE`)。
+   ⛔ 本组不改自检文件。⭐ 正确处置仓库里已有:`lua_corpus.read_lua()`/`CorpusVanished`/退出码 2(GH #856);
+   (b) `queue.json:strategy-45 … strategy-56` **十二条全部 pending**,**本轮不催**;
+   (c) `soloclaim_20260917` 等**七条**仍等总监裁定,armed 串仍 **25**,**本轮不催**;
+   (d) **语料欠账,比 GH #648/#652 更靠根**:**dumper 一个非英雄单位都没出过**
+   ⇒ `IsAllysTarget` 一族在今天语料上**永久不可定价**,建议并入同一条语料请求;
+   (e) **给总监**:`py_gate_measure.py` **没有单测量模式**,全量重测会在有负载的容器上
+   **挪动别人的入闸成员资格** ⇒ 新 python ratchet 只能待在 fail-open 里(本轮这个就是)。
+
+   ⚠️ **变异台第二次交学费,三条不忠实变异体(0NEXT38 §丁 复现)**:
+   改名当删除(RED-with-wrong-message)、perl `\t\t\t` 一个字符没匹配(**无匹配也退 0**)、
+   两 tab 版匹配到**另一个函数**里全文件第一处。
+   📌 **判据:变异体锚在被测函数的唯一串上,别锚在同族共享的循环头;「mutate 退 0」≠「mutate 生效」。**】**
+
 0NEXT38. **【2026-09-17T13:36Z 新增。⛔ 这一条也是**读法**,不是活;
    先按它和 0NEXT37 / 0NEXT36 各判一次,再去取活。**
 
@@ -10449,6 +10521,58 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-17T16:35Z:**上一轮点名的「下一轮首选」,四条出口全部定价为零。**
+  出口 **(i) 未达成** —— ⛔ **4.4 (i) 连续第八轮到此中断,这一行照实写**:
+  本轮**没有**落任何 `bots/` 行为改动,不是没找,是**每一条候选都被读数淘汰**。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);⛔ **不新增 armed id,成员串仍 25**。
+  报告:`iterations/reports/strategy/20260917T163521Z.md`;完整判据 ⇒ backlog **0NEXT39**。
+
+  **开工 = 铁律 9**:P1 的 `pullcamp` 球在总监(不代跑);**P2 读源码后作废了我的初判** ——
+  决策侧两条腿**都已存在**(`stayfield` TP 腿已退集 + **`stayfield2` 步行回泉腿 `jmz_func.lua:6415`**,
+  外加 `tpstale`/`tprupt`/`fieldsip`/`fieldbuy`)⇒ P2 卡在**买 (a) 证据**(魔棒仪器墙 + 冻结 + queue 十二条 pending),
+  **本组买不到** ⇒ 本轮对本组无可推进工作单元,**不是被晾**。
+
+  **⭐⭐ 头条**:0NEXT38 把「圈心扎在发问者身上」点名为「更大、而且可测 ⇒ 下一轮首选」。
+  **几何确实在 dump 里,可做性不在**,两个宿主各有一条**不同的**理由:
+  (甲) `J.IsOtherAllysTarget`:`ally2plus` **55/1039** ⇒ 出厂守卫在 **984/1039** 帧开火;
+  `frame_has_extra` **31**(3.0%) 是原始人口,而 **`frame_has_extra_2plus` = 0/1039**
+  ⇒ **只扩循环 = 0 帧到得了**;让守卫数并集 ⇒ **只在未 promote 的 `soloclaim` 也 armed 时才活 = `pullcad` 陷阱**。
+  ⭐ **`#hAllyList <= 1` 数的就是那张圈 ⇒ 在这个函数里「守卫」和「圈心」是一个缺陷不是两个**;
+  (乙) `J.IsAllysTarget`(没有守卫,本该干净):**16/16 调用点传 creep/neutral/tower**,
+  语料 **112 fixture / 1120 英雄单位 / 非英雄单位 0** ⇒ **实参一个都不存在**;
+  且 `test_soloclaim_lone_ally_claim.lua:130-149` 把它**棘轮成判别子**,
+  修法要用的 `J.GetAlliesNearLoc` **含 bot 自己** ⇒ 去自己就得写 `ally ~= bot` ⇒ **撞棘轮并拆掉上一轮的论证**。
+
+  **普查数完(下一轮别重做)**:主语/圈心不一致 **230 函数里 11 处**;名字/flag 不一致 **2069 圈里 13 处**(12 真阴性)。
+  `J.IsLaneFrontTooDeepToHold` **前一轮已定价**(GH #61,不重新发现);
+  `J.IsHeroBetweenMeAndLocation`/`J.GetVulnerableUnitNearLoc` **出厂就对**;
+  后者 `weakestHP = 10000` 硬上限 —— **语料最大英雄 HP 2646 ⇒ 0/1039 可达**。
+
+  **⭐ 找到并证明、登记不发船**:`jmz_func.lua:14276` 的 `J.GetNearbyHeroes(hTarget, 1600, true, …)`
+  ⇒ **`bEnemy` 相对圈心** ⇒ 把队友又数一遍、**敌方一个都没枚举**。四条判别子(仪器
+  `isEnemy = other:GetTeam() ~= self:GetTeam()`、`rattletrap.lua:429-430` 的**成对读数**、
+  同族正确实现 `IsHeroBetweenMeAndLocation`、**归谬**:若真是敌方则 `hTarget` 自己垂距 0 ⇒ 每次 TRUE ⇒ 分支永不开火)。
+  ⛔ **不发船的理由是数**:调用点**恰好 1 个**且在 `rubick_hero/`,**`hero_pool.txt` 里没有 rubick ⇒ 在场域 0**。
+  ⭐ **停摆理由装了触发器**:rubick 一进池,`test_parked_reason_is_rederived_not_trusted` **报红并写好修法**。
+
+  **产物**:`tests/test_ring_subject_census.py` **4 checks / 0.17s**(11 行逐字 + 仪器契约 + 源码三钉 + 停摆理由重推);
+  ⛔ **第一次跑就绿所以不信它** ⇒ `tools/agent/mutstand_ringcensus.sh` **7 抓 / 0 存活 / 控制绿 / 退出码 0**;
+  `tests/_claimring_probe.lua`(定价走查,读数钉在文件头)。
+
+  **⚠️ 本轮自己踩出来、必须给全队的一条**:我把**自检放后台、同时让变异台改写 `jmz_func.lua`**
+  ⇒ 自检 Lua 腿读到正被改写的树,报 `16305 '<eof>' expected` 与**三个"下降"的计数**,
+  **而那条断言的文案正是「do not re-baseline」** ⇒ **并发写能伪造「行为改动」的全部外观**。
+  上一轮登记的「靠排序」**本轮证伪(排序对并发无效)**,建议升级成真闸;⛔ 本组不改自检文件。
+
+  **别人的闸替我逮住两处,都已修**:变异台**必须 sha256 证明 restore round-trip**
+  (`test_mutstand_restore_trap.py`)、**不许 open-code `os.walk(bots/)`**,要走 `lua_corpus`(`test_lua_corpus_stability.py`,GH #856)。
+  **闸门读数**:`luacheck_gate.sh` **GATE_EXIT=0 CLEAN / 0 warnings**;
+  ⚠️ **全量 Lua 套件没跑完(~100min,GH #124),这一行不冒充它**(本轮未改任何出厂 Lua,变异台收尾 sha256 证明逐字复原)。
+  管道防呆**第 13 次**、`timeout` 防呆**第 2 次**,**两条都在第一条命令上撞到**。
+  ⚠️ 新测试**不在 `py_gate_manifest.json`** ⇒ 钩子里 **fail-open**(会跑、拒不了 push),
+  但 `run_py_tests.sh` 按 glob 收它 ⇒ **不属于 GH #806 的 uncovered 集**;
+  不手改 manifest 的理由见 0NEXT39 (e)。**push 三条腿**:见报告 §5。
 
 - 2026-09-17T13:36Z:**仲裁守卫把自己算进了一张不含自己的表。**
   出口 **(i)**(`bots/` 行为改动)—— **4.4 (i) 连续第八轮**。
