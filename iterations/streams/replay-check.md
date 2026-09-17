@@ -19309,7 +19309,49 @@
   - **issue**:**净增 1,评论 0** —— 新开 [bug](§五 的 trunk 红)。
     ⛔ **§一~§四 不开单**:3a 的合同**已存在且被遵守**,今天**没有一条断言是错的**,
     开单会把「合同没有检查器」这个**风险**登记成**病例**;按交棒交总监决定要不要变成闸。
-  - **下一轮第一件事**:1) ⭐⭐ **把 §四 的风险变成闸**(census 断言:驱动那 7 个 key 的消费函数
+  - **⭐⭐ 开工自检(收尾跑,从输出文件读,⛔ 不采信 harness 通知)**:`legs run 13`、
+    **`selfcheck worst exit: 3`**、`FINDINGS: cadence queue-rulings owed-executions lua-coverage`、
+    **`UNCERTIFIABLE: trunk-red(python)`**(⛔ 没跑成 ⇒ **本轮 trunk 的 python 那一侧没人看过**,
+    不许写成「本轮没有 trunk red」)、`NOT RUN: test_lua_gate / test_luacheck_gate_soakswitch /
+    test_selfcheck_lua_leg`(⚠️ **连续第十三轮**)。实测 ~40 分钟 ⚠️ 与 W83 的 ~21 分钟**不可比**
+    (本轮我自己的 Lua 测试同容器抢 CPU)。⚠️ 自检第 596 行 `luacheck is not installed`
+    是**我自己造成的顺序假象**(自检后台启动之后我才装 luacheck),⛔ 不是 trunk 的性质。
+  - **⭐⭐ 归属更正,推翻 W83 一处 —— 而且推翻的是本组自己占着的那一处**:
+    W83 把 `queue-rulings`/`owed-executions` **整体记给总监**。**这一半是错的。**
+    逐行解析自检 owed 段(78 行):**28 行的 `executor=` 点名 `replay-check`/`录像组`**,
+    其中 **7 行自己写着零成本**(`语料已存在` / `零 AWS、零新局、零 EC2`):
+    `capmono_hp_gradient_reread`、`lanekill_condition_a_detector`、`tpreach_bc4_cell_reread`、
+    `a_evidence_pulldrag`、`a_evidence_tpgap`、`a_evidence_liondrainstop`、`a_evidence_arbheart`。
+    ⇒ ⛔⛔ **「批测台没发波 ⇒ 本组没活」这个推理,连续八轮是错的。**
+    不发波挡住的是**新局**,而这 7 行**不需要新局**(`a_evidence_tpgap` 逐字:
+    「域为空也算买到,写成 `VERIFY id=… verdict=… episodes=…` 即可」)。
+    ⭐ **与本轮 §一 同形,也是 RULING 48 / 铁律 4 §CL (i-a) 的第四张脸**:
+    一个**真命题**(没有未检新局)被用来满足**另一个问题**(本组这轮该做什么),
+    **两者之差正是积压到 28 行、其中 7 行零成本的那批欠账**。
+  - **push 读数(三条腿)**:`ARM_EXIT=0`、`core.hooksPath=.githooks`。四次**全部**
+    `GATE_EXIT=0 CLEAN` / `py gate 128 ran, 0 findings, 38.4–38.7s`;
+    前三次 `lua gate SKIPPED BY SCOPE`(⛔ **范围判定不是通过**,diff 只有 `iterations/`),
+    第 4 次(分支 ref 同步)按 GH #854 跑满:**`lua gate 413 ran, 0 findings, 0 uncertifiable,
+    7 unanswered, 6 known-red, 571.7s`**(W82 记 581.6s、W83 记 645.7s,**同族第三次计价**)。
+    `PUSH_BRANCH_EXIT=0`、`PUSH_MAIN_EXIT=1`(⚠️ non-fast-forward **不是闸红**)、
+    `REBASE_EXIT=0`(`2d5ca7a0..64eb3fe7`)、`PUSH_MAIN2_EXIT=0`(main `64eb3fe7..a252288b`)、
+    `PUSH_BRANCH2_EXIT=0`(⭐ 从后台输出文件第一行读,⛔ 没采信 harness 通知)。
+    ⛔ 未用 `RULE6_BYPASS`,未用 `-c core.hooksPath=/dev/null`。
+    ⭐ 按 W73 处方核权威性:**main / 分支 ref / 本地 HEAD 三者同点 `a252288b`**。
+    ⭐⭐ **那条 `413 ran, 0 findings` 正是 GH #866 的现场证据**:闸跑满了报 0 findings,
+    而那个文件同时在干净树上红着 —— 它在 manifest 里是
+    `{"in_gate": false, "reason": "timed_out", "seconds": 6.0}`,**按构造够不着**。
+  - **issue**:**净增 1,评论 0** —— 新开 **GH #866 [bug]**(§五 + §十 的闸证据 + 四条验收),
+    草稿 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `refused 0`,
+    ⭐ **在 push 之后才发**(GH #290)。
+  - **token**:`TOKENS total_in=8,835,205 out=59,949 turns=63`(统计后的收尾回合不计入)。
+    ⚠️ 偏高来自**变异台**(37 文件跑两遍 + 一遍插桩,日志 238,014 行)——
+    **计算量在容器里不在上下文里**;判断是**值**,它把一个八轮没答的问题变成了判决,
+    ⛔ 下一轮不必重跑。
+  - **下一轮第一件事**:0) ⭐⭐⭐ **改口径:先清本组自己的 owed 行,别再默认「没波=补课」。**
+    从上面 7 行零成本里挑**一行**做一个工作单元(建议 `a_evidence_tpgap`,
+    它把验收写死成一行 `VERIFY`,且**域为空也算买到**)。
+    1) ⭐⭐ **把 §四 的风险变成闸**(census 断言:驱动那 7 个 key 的消费函数
     必须自己注入),⛔ 本组不改 `tests/`,**球在总监**[harness]。
     2) ⭐ **间接消费者普查**(经 `J.*` 转手到折叠 key)——**独立工作单元**(本轮边界 3)。
     3) ⭐ **GH #861 的真影响面是边界 2**:修好后第一件事是**从真实局读回那 7 条折叠的实际点取率**,
