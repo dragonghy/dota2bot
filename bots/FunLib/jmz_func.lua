@@ -12356,6 +12356,22 @@ end
 -- re-poking the very creeps it is dragging.
 local PULL_CAMP_NEUTRAL_RANGE = 1200
 
+-- [GH #878] ...and that same breadth is why the radius alone cannot answer
+-- "does this neutral BELONG to the planned camp": a neutral dragged out of the
+-- NEIGHBOURING box satisfies it too, and dragging neutrals out is what a camp
+-- pull IS. So a second, much tighter radius answers the ownership question --
+-- "is it still standing in its own box" -- while 1200 keeps answering the
+-- admission question. This one is MEASURED, not tuned: single-link clustering
+-- (600u) of the team-4 creeps in all 32 fixture frames yields 71 camp boxes,
+-- and 69 of them have every member within 112.2u of their own centroid (median
+-- 70.9, p90 98.0). The two that do not are 359.7u and 695.1u -- and the 695.1u
+-- one IS the defect frame below, where the dragged troll bridges two boxes into
+-- one cluster. So the corpus separates an undisturbed box (<=112u) from a drag
+-- (>=360u) with nothing in between, and any value in (112, 637) decides the
+-- frame identically; 300 is that gap's round middle, ~2.7x the observed box
+-- spread. It is a PREFERENCE, not a filter -- see the two-tier loop below.
+local PULL_CAMP_AT_CAMP_RANGE = 300
+
 -- [OWNER_PRIORITIES P1, 20260904] WHICH NEUTRAL THE CAMP PULL POKES. Soak
 -- candidate 'campbind'.
 --
@@ -12392,6 +12408,24 @@ local PULL_CAMP_NEUTRAL_RANGE = 1200
 -- something it would not have poked, so the failure mode is a pull that does not
 -- start, never a pull that starts somewhere new.
 --
+-- REPAIRED 2026-09-17 (GH #878, condition (a) came back BUGGY on a real frame).
+-- The first cut asked only "is it within 1200 of the plan", and the replay desk
+-- caught that admitting a neutral DRAGGED OUT OF THE OTHER CAMP -- same game,
+-- same pull, 4s apart: at t=330.7 the two boxes partition under 1200 and the
+-- lever binds correctly, at t=334.7 three units satisfy both boxes, the first
+-- of them is tNeut[1], and the helper handed back the shipped answer. The
+-- binding claim, not the safety argument, is what that falsified.
+--
+-- ⛔ AND THE FIX THE ISSUE PROPOSED DOES NOT WORK ON ITS OWN FRAME -- measured,
+-- not argued. #878 suggested "require it be nearer the planned camp than any
+-- other visible camp". The dragged troll at t=334.7 sits 736.2u from the troll
+-- box it came from and 637.2u from the kobold box: under a kobold plan it IS
+-- nearer the planned camp, so that predicate ADMITS it. A dragged neutral walks
+-- toward the puller, i.e. AWAY from its own box, which is precisely the
+-- direction that makes "nearest camp" mislabel it. What actually separates the
+-- two populations is absolute distance to the plan (see PULL_CAMP_AT_CAMP_RANGE),
+-- so the repair is a preference for units still standing in the planned box.
+--
 -- Returns the unit to poke, or nil for "none of the visible neutrals belong to
 -- the camp we planned". Unarmed -- and in any game that is not Turbo -- it
 -- returns tNeut[1] under exactly the validity test the call site already
@@ -12413,16 +12447,35 @@ function J.GetCampPullPokeTarget( tNeut, vCamp )
 	if not J.IsSoakCandidate( 'campbind' ) then return hFirst end
 	if vCamp == nil then return hFirst end
 
+	-- Two tiers over the SAME admitted set, which is what keeps the monotone
+	-- argument above intact: everything returned here is still a member of
+	-- tNeut and still within PULL_CAMP_NEUTRAL_RANGE of the plan, so the poked
+	-- set is unchanged. All that changes is WHICH of the admitted units wins.
+	--   tier 1  a neutral still standing in the planned box (<= AT_CAMP) --
+	--           the nearest such to the bot, tNeut being distance-sorted.
+	--   tier 2  nobody is at the box, so every admitted unit is already being
+	--           dragged: fall back to the nearest one, i.e. exactly what this
+	--           helper returned before. That fallback is load-bearing, not
+	--           politeness -- the 1200 constant exists so the cadence can
+	--           re-poke the very creeps it is dragging, and a tier-1-only rule
+	--           would drop that whole purpose on the floor.
+	local hFallback = nil
+
 	for _, hNeut in pairs( tNeut ) do
-		if J.IsValid( hNeut )
-			and J.GetLocationToLocationDistance( hNeut:GetLocation(), vCamp )
-				<= PULL_CAMP_NEUTRAL_RANGE
-		then
-			return hNeut
+		if J.IsValid( hNeut ) then
+			local nDist = J.GetLocationToLocationDistance( hNeut:GetLocation(), vCamp )
+
+			if nDist <= PULL_CAMP_AT_CAMP_RANGE then
+				return hNeut
+			end
+
+			if hFallback == nil and nDist <= PULL_CAMP_NEUTRAL_RANGE then
+				hFallback = hNeut
+			end
 		end
 	end
 
-	return nil
+	return hFallback
 end
 
 -- [GH #5] Team-fight anti-idle decision. Detected ~7/game: a hero stands

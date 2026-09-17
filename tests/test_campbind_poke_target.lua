@@ -294,6 +294,62 @@ tests['[boundary] the leash is the constant, and it is inclusive'] = function()
     assert(bot ~= nil)
 end
 
+tests['[tier 2] every admitted unit is mid-drag: the cadence re-pokes its own creeps'] = function()
+    -- GH #878 added an ownership tier -- a unit still standing in the planned
+    -- box (<= 300u) wins the poke over one merely inside the 1200u leash.  The
+    -- FALLBACK is what keeps that from breaking the drag: once the pull is
+    -- under way, every creep of the planned camp is hundreds of units from its
+    -- box, no unit satisfies tier 1, and a tier-1-only rule would answer nil
+    -- on every frame of the pull -- i.e. fix the binding by deleting the drag.
+    -- The 1200 constant exists for exactly this re-poke (the desk measured the
+    -- followers' walk at median 742u, max 1170u), so the fallback is the
+    -- constant's purpose, not a courtesy.
+    --
+    -- Synthesised rather than taken from a frame, and that is recorded, not
+    -- hidden: tests/test_campbind_poke_real_frame.lua §6b measures that the
+    -- fixture corpus holds no fully-dragged camp, so this situation cannot be
+    -- put on a real frame today.
+    local J, bot = rf.load(FRAME, SUBJECT)
+    J.IsSoakCandidate = function(sId) return sId == 'campbind' end
+    local vPlan = api.Vector(SHALLOW.x, SHALLOW.y, 0)
+    local function at(d)
+        return api.MakeUnit({ CanBeSeen = true, IsAlive = true,
+            GetLocation = api.Vector(SHALLOW.x + d, SHALLOW.y, 0) })
+    end
+
+    -- nobody at the box; both are inside the leash, 742u being the desk's
+    -- median drag and 1100u a long one.
+    local hNear, hFar = at(742), at(1100)
+    assert(J.GetCampPullPokeTarget({ hNear, hFar }, vPlan) == hNear,
+        'with nobody left at the camp the helper must still answer the nearest '
+        .. 'dragged creep, not nil -- the pull would stall on its own success')
+    assert(J.GetCampPullPokeTarget({ hFar, hNear }, vPlan) == hFar,
+        'tier 2 keeps the shipped rule: the FIRST admitted unit in list order')
+
+    -- and tier 1 outranks list order, which is the repair itself.
+    local hAtCamp = at(120)
+    assert(J.GetCampPullPokeTarget({ hNear, hFar, hAtCamp }, vPlan) == hAtCamp,
+        'a unit standing in the planned box outranks a nearer dragged one')
+    assert(bot ~= nil)
+end
+
+tests['[tier 1] the ownership radius is the constant, and it is inclusive'] = function()
+    local J, bot = rf.load(FRAME, SUBJECT)
+    J.IsSoakCandidate = function(sId) return sId == 'campbind' end
+    local vPlan = api.Vector(SHALLOW.x, SHALLOW.y, 0)
+    local function at(d)
+        return api.MakeUnit({ CanBeSeen = true, IsAlive = true,
+            GetLocation = api.Vector(SHALLOW.x + d, SHALLOW.y, 0) })
+    end
+    -- AT_CAMP is 300; a unit exactly there is "at the camp", 301 is not.
+    local hIn, hOut, hFirst = at(300), at(301), at(900)
+    assert(J.GetCampPullPokeTarget({ hFirst, hIn }, vPlan) == hIn,
+        'a neutral exactly 300u from the plan counts as standing in the box')
+    assert(J.GetCampPullPokeTarget({ hFirst, hOut }, vPlan) == hFirst,
+        'a neutral 301u from the plan does not, so list order decides again')
+    assert(bot ~= nil)
+end
+
 tests['[scope] no plan, no change: the helper answers tNeut[1]'] = function()
     -- Think only reaches this helper inside `if bot.roamCampPull ~= nil`, so a
     -- nil plan cannot happen there today. Pinned anyway, because the failure

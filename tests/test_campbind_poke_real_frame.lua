@@ -64,7 +64,17 @@
 --              planned camp" is implemented as "within 1200u of a point", and
 --              a neutral dragged out of the other camp satisfies that.
 --
--- §6 pins that leak.  It is a defect of the PREDICATE, not of this frame: the
+-- §6 pinned that leak, and since 2026-09-17 it pins the REPAIR (GH #878): the
+-- helper now prefers a neutral still standing in the planned box (<= 300u, a
+-- radius measured off this corpus -- see jmz_func.lua), falling back to the old
+-- nearest-admitted rule only when nobody is left at the camp.  On this frame the
+-- armed answer is therefore a kobold 39.7u from its box, not the troll.  §6b
+-- records why the fallback cannot be asserted on real frames here, and §6c pins
+-- that the fix the ISSUE proposed ("nearer the planned camp than any other
+-- camp") would not have fixed this frame -- the dragged troll is 736.2u from
+-- its own box and 637.2u from the kobold box, i.e. nearer the plan.
+--
+-- It was a defect of the PREDICATE, not of this frame: the
 -- proof that the admitted unit belongs to the other camp is the trace, and the
 -- trace does not depend on which camp was actually planned.  Which camp WAS
 -- planned is not recoverable -- `bot.roamCampPull` comes from
@@ -89,6 +99,7 @@ local F_3307 = 'tests/frames/f_260904_125801_campbind_poke_3307.lua'
 local F_3347 = 'tests/frames/f_260904_125801_campbind_poke_3347.lua'
 
 local PULL_CAMP_NEUTRAL_RANGE = 1200 -- jmz_func.lua, the helper's own constant
+local PULL_CAMP_AT_CAMP_RANGE = 300  -- jmz_func.lua, the GH #878 ownership radius
 local NEUT_QUERY_RADIUS = 1400       -- mode_roam_generic.lua's GetNearbyNeutralCreeps(1400)
 
 local tests = {}
@@ -307,7 +318,7 @@ tests['§5 outside Turbo the lever is inert on this same frame'] = function()
     assert(troll ~= nil)
 end
 
-tests['§6 BUGGY at t=334.7: the planned-camp test admits a neutral from the OTHER camp'] = function()
+tests['§6 REPAIRED at t=334.7 (GH #878): the dragged neutral no longer wins the poke'] = function()
     local troll, kobold = camp_boxes() -- boxes measured on the at-rest 330.7 frame
     local J, _, _, fx = load_frame(F_3347, 'campbind')
     local bx, by = subject_xy(fx)
@@ -325,26 +336,46 @@ tests['§6 BUGGY at t=334.7: the planned-camp test admits a neutral from the OTH
     end
     assert(nBoth == 3, 'three neutrals are inside 1200 of both boxes, got ' .. nBoth)
 
-    -- (b) and the FIRST such unit is tNeut[1], so under the kobold plan the
-    -- armed helper hands back the nearest neutral -- the shipped answer.
-    local h = J.GetCampPullPokeTarget(tNeut, Vector(kobold.x, kobold.y, 0))
-    assert(h == tNeut[1], 'armed answers tNeut[1]: the binding did not bind')
+    -- (b) tNeut[1] is one of those three, so under the OLD predicate ("within
+    -- 1200 of the plan", first hit wins) the armed helper handed back the
+    -- nearest neutral -- the shipped answer, binding nothing.  That is the
+    -- defect GH #878 filed, and this is where it is now pinned FIXED: the
+    -- repaired helper prefers a unit still standing in the planned box, so it
+    -- must refuse the dragged one.
+    local p1 = tNeut[1].__xy
+    assert(dist(p1.x, p1.y, kobold.x, kobold.y) <= PULL_CAMP_NEUTRAL_RANGE,
+        'the old predicate did admit tNeut[1] (it is inside 1200 of the plan)')
 
-    -- (c) and that unit is provably NOT a kobold.  At 330.7 it stood at
-    -- (-3953.4, 4818.3): 34.6u from the troll box, 1295.8u from the kobold
-    -- box, motionless for the preceding 3s.  The fixture carries no ids, so
-    -- what is asserted here is the consequence that made the trace possible --
-    -- no unit at 330.7 was anywhere near where this one now is, i.e. it walked.
+    local h = J.GetCampPullPokeTarget(tNeut, Vector(kobold.x, kobold.y, 0))
+    assert(h ~= nil, 'armed still finds a poke target -- the pull is not cancelled')
+    assert(h ~= tNeut[1], 'armed REFUSES the dragged neutral (GH #878)')
+
+    -- and what it answers instead is a unit still standing in the planned box.
     local p = h.__xy
+    assert(dist(p.x, p.y, kobold.x, kobold.y) <= PULL_CAMP_AT_CAMP_RANGE,
+        'the answer is standing in the PLANNED box, not merely inside 1200 of it')
+    assert(dist(p.x, p.y, troll.x, troll.y) > PULL_CAMP_NEUTRAL_RANGE,
+        'the answer is not in the other box at all')
+
+    -- (c) and the unit it refused is provably NOT a kobold -- which is what
+    -- makes the refusal correct rather than lucky.  THE SUBJECT OF THIS TRACE
+    -- IS tNeut[1], not the answer: before the repair those were the same
+    -- handle, and after it they are deliberately different, so the trace has
+    -- to name the dragged one explicitly or it would silently start proving
+    -- something about a kobold.  At 330.7 tNeut[1] stood at (-3953.4, 4818.3):
+    -- 34.6u from the troll box, 1295.8u from the kobold box, motionless for
+    -- the preceding 3s.  The fixture carries no ids, so what is asserted here
+    -- is the consequence that made the trace possible -- no unit at 330.7 was
+    -- anywhere near where this one now is, i.e. it walked.
     local _, _, fx0 = load_frame(F_3307, 'campbind')
     local nNearIts330Spot = 0
     for _, c in ipairs(fx0.creeps or {}) do
-        if c.team == 4 and dist(c.x, c.y, p.x, p.y) <= 250 then
+        if c.team == 4 and dist(c.x, c.y, p1.x, p1.y) <= 250 then
             nNearIts330Spot = nNearIts330Spot + 1
         end
     end
     assert(nNearIts330Spot == 0,
-        'at 330.7 no neutral stood within 250u of where the admitted unit now is')
+        'at 330.7 no neutral stood within 250u of where the refused unit now is')
     -- the 330.7 position the trace lands on is inside the troll box and
     -- outside the kobold box, which is what makes it a dragged troll.
     assert(dist(-3953.4, 4818.3, troll.x, troll.y) <= PULL_CAMP_NEUTRAL_RANGE,
@@ -353,13 +384,91 @@ tests['§6 BUGGY at t=334.7: the planned-camp test admits a neutral from the OTH
         'the traced origin is outside the kobold box')
 end
 
+tests['§6b LIMIT: the tier-2 fallback is NOT assertable on this corpus, and why'] = function()
+    -- The repair must not become "only ever poke a unit standing in its box":
+    -- PULL_CAMP_NEUTRAL_RANGE is 1200 precisely so the cadence can re-poke the
+    -- creeps it is already dragging, and a tier-1-only rule would return nil
+    -- for every frame of an ongoing pull -- fixing the binding by deleting the
+    -- drag.  That fallback is asserted in tests/test_campbind_poke_target.lua
+    -- ('[tier 2] ...'), on synthesised handles, and THIS section exists to say
+    -- why it is not asserted here instead.
+    --
+    -- A real-frame assertion would need a frame where the PLANNED camp has no
+    -- resident left -- every one of its creeps already dragged.  This corpus
+    -- has none: on both frames both boxes still hold stragglers inside 300u.
+    -- The obvious dodge -- invent a plan point with nobody standing at it --
+    -- was tried and is measured false here: the midpoint of the two boxes has
+    -- a unit inside 300 of it at t=334.7, namely the dragged troll itself,
+    -- which is the whole reason it is mid-drag geometry.  Inventing some other
+    -- point would be asserting the helper against a camp that does not exist,
+    -- so the honest record is this LIMIT plus the synthetic test.
+    local troll, kobold = camp_boxes()
+    local J, _, _, fx = load_frame(F_3347, 'campbind')
+    local bx, by = subject_xy(fx)
+    local tNeut = neutrals_within(J, fx, bx, by, NEUT_QUERY_RADIUS)
+
+    for _, box in ipairs({ troll, kobold }) do
+        local nAtCamp = 0
+        for _, h in ipairs(tNeut) do
+            local p = h.__xy
+            if dist(p.x, p.y, box.x, box.y) <= PULL_CAMP_AT_CAMP_RANGE then
+                nAtCamp = nAtCamp + 1
+            end
+        end
+        assert(nAtCamp > 0,
+            'both boxes still hold a resident at 334.7, so neither is a '
+            .. 'fully-dragged camp: got ' .. nAtCamp)
+    end
+
+    -- and the midpoint dodge, pinned as measured-false rather than argued.
+    local vMid = { x = (troll.x + kobold.x) / 2, y = (troll.y + kobold.y) / 2 }
+    local nAtMid = 0
+    for _, h in ipairs(tNeut) do
+        local p = h.__xy
+        if dist(p.x, p.y, vMid.x, vMid.y) <= PULL_CAMP_AT_CAMP_RANGE then
+            nAtMid = nAtMid + 1
+        end
+    end
+    assert(nAtMid == 1, 'the midpoint has a unit standing at it, got ' .. nAtMid)
+end
+
+tests['§6c the predicate GH #878 PROPOSED would not have fixed its own frame'] = function()
+    -- #878's suggested acceptance was "require it be nearer the planned camp
+    -- than any other visible camp".  Measured on the frame the issue filed:
+    -- the dragged troll is 736.2u from the troll box it came from and 637.2u
+    -- from the kobold box, so under a kobold plan it IS nearer the plan and
+    -- that predicate ADMITS it.  This is not a quibble about one frame -- a
+    -- dragged neutral walks toward the puller, i.e. AWAY from its own box, so
+    -- "nearest camp" mislabels it in exactly the direction the drag moves.
+    -- Pinned so nobody re-derives the discarded fix from the issue text.
+    local troll, kobold = camp_boxes()
+    local J, _, _, fx = load_frame(F_3347, 'campbind')
+    local bx, by = subject_xy(fx)
+    local tNeut = neutrals_within(J, fx, bx, by, NEUT_QUERY_RADIUS)
+
+    local p = tNeut[1].__xy
+    local dTroll = dist(p.x, p.y, troll.x, troll.y)
+    local dKobold = dist(p.x, p.y, kobold.x, kobold.y)
+    assert(dKobold < dTroll, string.format(
+        'the dragged troll is NEARER the kobold plan (%.1f) than its own box (%.1f)',
+        dKobold, dTroll))
+    -- ... and the shipped repair rejects it anyway, because it asks absolute
+    -- distance to the plan, not which plan is closest.
+    assert(dKobold > PULL_CAMP_AT_CAMP_RANGE,
+        'while the ownership radius does separate it from the plan')
+end
+
 tests['§7 LIMIT: the list order is stated, and the plan is not recoverable'] = function()
     -- (i) A .dem carries no list order.  tNeut here is sorted nearest-first on
     -- the engine's documented promise; the helper walks it with `pairs` and
-    -- returns the FIRST member inside the radius, so the answer of §6 depends
-    -- on that order while §3's does not (there, the troll box is excluded
-    -- wholesale, so every order gives a kobold).  Pin the asymmetry so the day
-    -- someone changes the ordering rule this file says which half moved.
+    -- returns the FIRST member satisfying the ownership radius (or, failing
+    -- that, the first inside the leash).  §3's answer does not depend on that
+    -- order (there, the troll box is excluded wholesale, so every order gives a
+    -- kobold).  Nor, SINCE THE GH #878 REPAIR, does §6's: all four units the
+    -- kobold plan now admits at tier 1 are kobolds, so every order answers a
+    -- kobold and the order-dependence §6 used to carry is gone -- which is a
+    -- second, quieter thing the repair bought.  Pinned so the day someone
+    -- changes the ordering rule this file says which half moved.
     local J, _, _, fx = load_frame(F_3307, 'campbind')
     local bx, by = subject_xy(fx)
     local tNeut = neutrals_within(J, fx, bx, by, NEUT_QUERY_RADIUS)
@@ -372,6 +481,25 @@ tests['§7 LIMIT: the list order is stated, and the plan is not recoverable'] = 
         end
     end
     assert(nInPlan == 4, 'exactly the kobold box is eligible at 330.7, any order')
+
+    -- and the same now holds at 334.7, which it did NOT before the repair:
+    -- count the tier-1 units under the kobold plan and check every one of them
+    -- is in the kobold box.  That is the claim "order no longer decides §6",
+    -- asserted rather than asserted-in-a-comment.
+    local J2, _, _, fx2 = load_frame(F_3347, 'campbind')
+    local bx2, by2 = subject_xy(fx2)
+    local tNeut2 = neutrals_within(J2, fx2, bx2, by2, NEUT_QUERY_RADIUS)
+    local troll = camp_boxes()
+    local nTier1 = 0
+    for _, h in ipairs(tNeut2) do
+        local p = h.__xy
+        if dist(p.x, p.y, kobold.x, kobold.y) <= PULL_CAMP_AT_CAMP_RANGE then
+            nTier1 = nTier1 + 1
+            assert(dist(p.x, p.y, troll.x, troll.y) > PULL_CAMP_NEUTRAL_RANGE,
+                'every tier-1 unit at 334.7 is a kobold and nothing else')
+        end
+    end
+    assert(nTier1 == 4, 'four kobolds are still standing in their box, got ' .. nTier1)
 
     -- (ii) The planned camp comes from GetNeutralSpawners(), which is engine
     -- map data; no fixture can carry it.  Assert that the helper reads vCamp
