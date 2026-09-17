@@ -245,15 +245,15 @@ Turbo 的 `IsInLaningPhase()` 硬底是 **480s**、软延到 **600s**,而 Turbo 
 
 ## 6. 本轮开出的单(全文见 issue)
 
-1. **[harness]** `lanekill_commit.py` 的 `OUT` 控制带在 `[520,600)` 上**不是零通道**
+1. **GH #874 [harness]** `lanekill_commit.py` 的 `OUT` 控制带在 `[520,600)` 上**不是零通道**
    —— 27.0% / 25.3% 的 episode 里 `IsInLaningPhase()` 仍为真;钉帧 §5.2。
    建议:`OUT_START` 抬到 **600**,或按 snapshot 的 `net_worth >= 8000` 过滤;
    验收 = 重跑本文件的 §4 OUT 行,漏率读 0。
-2. **[harness]** `commit` 把**无决策伤害**(光环/被动)算作 commit,而 per-seed 表与 DiD
+2. **GH #875 [harness]** `commit` 把**无决策伤害**(光环/被动)算作 commit,而 per-seed 表与 DiD
    用的正是 `commit`;干净的那个量(`commit_attack`)就在同一张表上三行之外。
    建议:加 `commit_decision`(自动攻击 ∪ 定向施法,排除纯光环/被动 inflictor),
    DiD 与 per-seed 表改用它;验收 = §5.1 那 18 例 `heartstopper_aura` 单扛的 episode 读 False。
-3. **[strategy]** 两条 helper 的「只在对线期」限定由 `IsInLaningPhase()` 承担,
+3. **[strategy] (未开单,见下)** 两条 helper 的「只在对线期」限定由 `IsInLaningPhase()` 承担,
    而它在 Turbo 的硬底 480s / 软延 600s 让杠杆活到整局一半;
    域中位时刻 245.5s / 242.5s,37.2% / 36.8% 的 episode 在 300s 之后。
    ⛔ **不是本轮的 (a) 结论**,是复活这两条 id 之前该先谈的作用域问题。
@@ -277,7 +277,7 @@ Turbo 的 `IsInLaningPhase()` 硬底是 **480s**、软延到 **600s**,而 Turbo 
 
 ⇒ **这一行的形状是:一个仍然欠着的条件 (a),它唯一可能的语料有到期日,而 registry 里没有任何字段装那个日期。**
 与 W86 的 GH #871 **同类反号**:那次是「证据已交付而 owed 行不知道」,这次是「证据的**来源**会过期而 owed 行不知道」。
-**已按这一条开单(见本轮报告 §issue),并把处置口径写在这里,免得下一轮重新推导:**
+**已按这一条开单(GH #876 [bug]),并把处置口径写在这里,免得下一轮重新推导:**
 
 - **保守默认(本轮采用)**:**接受 INDETERMINATE 作为本行的交付**。
   本行 `done_when` 只判产物存在(LIMIT 11),其裸读验收句要的是
