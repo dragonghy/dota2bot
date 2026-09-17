@@ -9842,5 +9842,39 @@
     "owner_priority": "P4.4 (i)(一个 `bots/` 行为改动)—— 连续第八轮走出口 (i)。",
     "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。",
     "next_levers_registered_not_done": "(1) ⭐ **同一个函数的圈心**:`J.IsOtherAllysTarget` 与 `J.IsAllysTarget` 都把圈扎在**发问者**身上,而问题是关于 `unit` 的 ⇒ 站在 `unit` 上但离我 >800 的队友对两者都隐形。**更大、可测**(几何全在 dump 里),**下一轮的首选**;(2) `J.GetNearbyHeroes` 的过滤循环写的是 `not bot:HasModifier('modifier_arc_warden_tempest_double')` —— 主语是调用方 `bot` 不是被过滤的 `hero`(0NEXT37 已登记,语料 0 份带奥数,**构造性零**);(3) `J.GetAroundBotUnitList` 的 `creepList[1]`(本轮扫描器新发现,**全树唯一未修实例**,但加载器 `GetNearbyCreeps` 答空表 ⇒ **不可定价**,且 2 个调用点都是赏金猎人)。⛔ **三条都不要读成「测过了没效果」。**"
+  },
+  "slotpark_20260917": {
+    "desk": "hero",
+    "when": "2026-09-17",
+    "verdict": "BOTH of GH #822 §源码算术's two claims are CONFIRMED as source arithmetic and BOTH are EXONERATED as causes of the measured stall: neither can bank a single ability point. No id landed, no bots/ line changed, no wave requested.",
+    "subject": "bots/FunLib/aba_skill.lua X.GetSkillList's default slot loop, X.GetTalentBuild's entries [5..8], and X.FindUpgradableBehindHead (the skillstall look-ahead) -- the two points #822 handed verbatim to 总监/英雄组, deferred six rounds",
+    "claim_1": {
+      "statement": "talents #3/#4 sit at slots below their legal hero level; #822 asked how long that blocks the abilities behind them",
+      "true": "YES, and universally: 173/173 default-branch build rows park at least one talent below its legal level",
+      "focus_five": "identical for all five: t20 pulled slot 20 -> 18, t25 pulled slot 25 -> 19; slots 20-23 are four dead talents",
+      "how_long": "ZERO -- across all 173 rows there is NOT ONE item sitting behind a parked talent that is already legal at the park level",
+      "theorem": "a talent is pulled early ONLY by the loop's second disjunct `ability_idx > #nAbilityBuildList`, i.e. only once the ability row is EXHAUSTED; so the very condition that mis-places the talent guarantees no ability is left behind it. And legal levels are non-decreasing along the queue, so no legal TALENT is blocked either."
+    },
+    "claim_2": {
+      "statement": "nTalentBuildList[5..8] is the other side of tiers already taken, so the head is permanently parked once it reaches slot 20+",
+      "true": "YES -- over all 16 talent-tree shapes, entries [5..8] are exactly the complementary sides of the tiers entries [1..4] pick",
+      "consequence": "ZERO -- at that moment the build is complete (15 abilities + 4 talents = 19 purchasables) and there is genuinely nothing left to buy; the park is correct behaviour, not a defect",
+      "limit_C": "FindUpgradableBehindHead returns nil at the dead tail BY CONSTRUCTION (everything behind a dead talent is also a dead talent). Do NOT 'fix' this by widening the look-ahead."
+    },
+    "consequence_for_822": "The two mechanisms are ruled out as causes of #822's 229/282 PROVEN rows. The whole weight stays on the entry-15 head-park (GH #366); its one surviving question -- IsHidden() vs the level requirement -- is GH #799 acceptance 1, which that issue states is unbuyable offline. This round deliberately asserts nothing about it.",
+    "limits": [
+      "LIMIT A: the census reads the DEFAULT branch only. meepo and invoker have hardcoded tables keyed on the LIVE GetUnitName(), so their own rows are excluded BY NAME rather than averaged in. 125 of 127 heroes take the default branch. The first probe reported 174/177 and read the 3 'exceptions' as meaningful -- all four excluded rows are meepo/invoker; the anti-vacuity assertion in section 4 caught it.",
+      "LIMIT B: #822's LIMIT B inherited verbatim -- DEFERRAL, never waste. No sentence of the form 'N points were thrown away' is licensed. Section 6 returning 0 is NOT a claim that the stall is harmless; it is a claim that THESE TWO MECHANISMS are not the stall.",
+      "LIMIT C: see claim_2."
+    ],
+    "evidence": {
+      "test": "tests/test_skill_slot_talent_park.lua -- 7 sections green, 0.077s via the real runner (lua5.1 tests/run_tests.lua prints `7 tests, 0 failures`); manifest row added in the SAME change, seconds 0.08",
+      "mutation_stand": "tools/agent/mutstand_slotpark.sh -- 14/15 killed, EXIT=0; per-mutant KILLER SECTIONS reported, because a mutant killed only by the literal source anchors (section 1) is barely evidence",
+      "M6": "DEMONSTRATED EQUIVALENT mutant, not a coverage gap: driving GetSkillList over 197 rows (synthetic lengths 1..20 plus all 177 shipped) and diffing the full slot list gives ZERO differing bytes. `sAbilityList[nil]` READS as nil in Lua 5.1 (only a nil-key WRITE raises), so the unguarded assignment stores nil -- byte-identical to not assigning. The guard is defensive code and mutation cannot price it.",
+      "first_stand_run": "11/15. M7 survived because the reader labelled talents by EMISSION ORDER rather than by the emitted value -- a loop that emits the wrong entry was invisible (third instance of the assert-by-identity-not-by-position lesson). M11/M14 survived because section 7 was VACUOUS: the mock's default ability answers CanAbilityBeUpgraded=false and GetLevel==GetMaxLevel==0, so two of the four conjuncts are always false and the look-ahead returns nil whatever the queue holds."
+    },
+    "cost": "zero EC2 / zero CE / S3 reads 0 objects (egress unpriced); zero gate id, zero arm, zero promote, no wave requested",
+    "report": "iterations/reports/hero/20260917T171205Z.md",
+    "p44_self_assessment": "(ii) the last piece of evidence a ruling needs -- NOT (i); bots/ has zero lines changed this round, recorded as such"
   }
 }
