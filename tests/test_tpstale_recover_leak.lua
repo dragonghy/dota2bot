@@ -195,21 +195,26 @@ end
 
 tests['[ratchet][source] nothing clears tpLoc between those assignments and 回复状态'] = function()
     local fn = tp_fn()
-    -- TWO resets exist in the function today and they are not interchangeable.
-    -- The SHIPPED one is the defend branch's ShouldAllowDefendTp clear, which
-    -- runs BEFORE that branch's distance test and so cannot clear a destination
-    -- that failed ON distance. The second is this round's own gated drop. The
-    -- leak claim is that between the first and 回复状态 there is no OTHER,
-    -- ungated reset -- i.e. disarming 'tpstale' restores the leak exactly.
+    -- THREE resets exist in the function today and they are not
+    -- interchangeable. The SHIPPED one is the defend branch's
+    -- ShouldAllowDefendTp clear, which runs BEFORE that branch's distance test
+    -- and so cannot clear a destination that failed ON distance. The second is
+    -- this file's own gated 'tpstale' drop. The third (strategy 2026-09-17) is
+    -- the gated 'tprupt' drop, which sits DOWNSTREAM of 回复状态 on the rupture
+    -- branch and therefore cannot clear anything before this branch reads it --
+    -- the slice assertion below, not this count, is what carries the leak
+    -- claim: between the defend distance test and 回复状态 there is no OTHER,
+    -- ungated reset, i.e. disarming 'tpstale' restores the leak exactly.
     -- `local tpLoc = nil` is the DECLARATION, not a reset; counting it as one
     -- is how this assertion first read 3 and looked like a broken claim.
     local nDecl = count(fn, 'local tpLoc = nil')
     local nResets = count(fn, 'tpLoc = nil') - nDecl
     assert(nDecl == 1, 'tpLoc is no longer declared exactly once in this function')
-    assert(nResets == 2,
+    assert(nResets == 3,
         'the tpscroll function now has ' .. nResets
-        .. ' `tpLoc = nil` resets, expected 2 (the ShouldAllowDefendTp clear '
-        .. 'and the gated tpstale drop) -- re-read the leak before trusting it')
+        .. ' `tpLoc = nil` resets, expected 3 (the ShouldAllowDefendTp clear, '
+        .. 'the gated tpstale drop, the gated tprupt drop) -- re-read the leak '
+        .. 'before trusting it')
     local nReset = fn:find('tpLoc = nil', at(fn, 'local tpLoc = nil') + 20, true) or -1
     local nDefendFire = at(fn, 'nMinTPDistance - 500')
     local nGate = at(fn, 'J.ShouldDropUnownedRecoverTp(')

@@ -6332,6 +6332,69 @@ function J.ShouldDropUnownedRecoverTp( bOwnsDestination )
 	return bOwnsDestination ~= true
 end
 
+-- [tprupt / owner priority P2, strategy 2026-09-17] THE SAME LEAK, AT THE ONE
+-- BRANCH THAT STILL CONSUMES IT -- and this one asks for no low HP at all.
+--
+-- 'tpstale' above closed the 回复状态 branch.  The rupture branch further down
+-- X.ConsiderItemDesire["item_tpscroll"] (the one that reacts to
+-- modifier_bloodseeker_rupture) has the IDENTICAL shape and nothing on it: it
+-- opens on the modifier, computes its own destination inside an INNER
+-- conjunction (at most one ally inside 1000 and X.CanJuke()), and when that
+-- inner conjunction FAILS it neither returns nor clears -- it falls straight
+-- into a non-nil test on the SHARED function-scoped destination local.  The two
+-- upstream writers are the same pair 'tpstale' names (前往守塔 from
+-- X.GetDefendTPLocation, 前往推塔 from X.GetPushTPLocation): both write, both
+-- require a DISTANCE test to fire, and when that half fails the write stands.
+--
+-- ⭐ WHY THIS BRANCH IS WORSE EXPOSED THAN THE ONE 'tpstale' FIXED, and it is
+-- arithmetic on the two heads, not a preference.  回复状态 sits under
+-- `( botHP + botMP < 0.3 or botHP < 0.2 ) and bot:GetLevel() >= 6`, so a leaked
+-- destination only reaches its non-nil test on a hurt, level-6+ bot.  This
+-- branch's head reads the rupture modifier, its remaining time and the enemy
+-- count -- NO HP TERM ANYWHERE.  A bot at FULL health therefore skips the
+-- 回复状态 block entirely (the outer head is false, so the inner non-nil test is
+-- never evaluated and the leak is not consumed there) and arrives here with the
+-- tower destination still set.  ⇒ every frame 'tpstale' cannot reach because
+-- the bot is healthy is a frame this one can.
+--
+-- ⭐ THE CONSEQUENCE, in this branch's own terms.  The branch exists to run
+-- AWAY from a bloodseeker ult -- its own assignment is the team fountain.  On a
+-- leaked frame it instead teleports to a TOWER that a DEFEND or a PUSH branch
+-- computed and then declined to travel to, stamps its own escape motive on it,
+-- and bids DESIRE_HIGH.  That is not a dodge: it spends the scroll to put a
+-- ruptured hero next to the lane it was pushing or defending, where the thing
+-- rupture punishes -- walking -- is exactly what it must then do.  And as with
+-- 'tpstale', every conjunct of the branch is bypassed on such a frame, so the
+-- ally-count and juke conditions the author wrote are dead there whatever they
+-- answer.
+--
+-- THE REPAIR IS THIS BRANCH'S OWN DECLARED POLICY, not a new opinion: the
+-- caller passes TRUE when its own inner conjunction set the destination, and
+-- this helper answers "drop it" only when it did NOT.  Armed, it can turn the
+-- branch's TRUE into FALSE and never the other way -- a NARROWING, on exactly
+-- the frames the branch itself had already declined to choose a destination
+-- for.  It invents no constant and reads no unit.
+--
+-- ⛔ WHAT THE CORPUS CAN AND CANNOT SAY, stated here rather than left to a wave.
+-- The fixture corpus carries NO bloodseeker and no rupture modifier at all, so
+-- this lever's live domain on it is ZERO -- and the zero is the CONSTRUCTIVE
+-- kind, not an instrument gap: the same reader answers non-zero for other
+-- modifiers on the same frames (69 fixtures carry modifier blocks), which is
+-- what tests/test_tprupt_rupture_leak.lua section 4 asserts as a pair.  The
+-- LEAK itself is a closed-form claim about the SOURCE (section 1), never a
+-- frequency, exactly as it is for 'tpstale': X is file-local, so no test can
+-- call X.CanJuke / X.GetDefendTPLocation / X.GetPushTPLocation and no fixture
+-- can show a leak happening.
+--
+-- Gated STANDALONE -- one id in this function, never a conjunction of two (the
+-- 'pullcad' trap).  Gate first, then turbo, so unarmed it reaches no engine call
+-- at all and the shipped answer is byte-identical.
+function J.ShouldDropUnownedRuptureTp( bOwnsDestination )
+	if not J.IsSoakCandidate( 'tprupt' ) then return false end
+	if not J.IsModeTurbo() then return false end
+	return bOwnsDestination ~= true
+end
+
 -- [tpstash / strategy 2026-09-16] "AM I IN THE MIDDLE OF HITTING SOMETHING?" --
 -- the question the "Go complete items" branch of X.ConsiderItemDesire
 -- ["item_tpscroll"] already meant to ask, and has never once asked.

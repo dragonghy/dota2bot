@@ -6220,10 +6220,36 @@ X.ConsiderItemDesire["item_tpscroll"] = function( hItem )
 	if bot:HasModifier( 'modifier_bloodseeker_rupture' ) and nEnemyCount <= 1
 		and J.GetModifierTime( bot, "modifier_bloodseeker_rupture" ) >= 3.1
 	then
+		-- [tprupt / owner priority P2, strategy 2026-09-17] DID THIS BRANCH SET
+		-- THE DESTINATION IT IS ABOUT TO TP TO?  Same question 'tpstale' asks
+		-- one branch up, at the only other place in this function that fires on
+		-- a destination it may not own -- see J.ShouldDropUnownedRuptureTp for
+		-- the closed form, and for why this branch is exposed on frames the
+		-- other one cannot reach (that one sits under a low-HP head, this one
+		-- reads no HP at all).
+		--
+		-- ⛔ NOTE FOR ANYONE EDITING THIS COMMENT: sibling sweeps slice branches
+		-- of this function by finding a head and then the NEXT occurrence of a
+		-- cast-motive assignment on the RAW text.  A comment that spells such an
+		-- assignment out verbatim becomes a false anchor and truncates their
+		-- slice (measured 2026-09-14, five assertions went red).  So this block
+		-- describes the code and quotes no assignment and no bare non-nil test.
+		--
+		-- Gated turbo-only: disarmed, the flag below is written and never read,
+		-- and the shipped answer is unchanged byte for byte.  Direction is a
+		-- NARROWING only -- the flag is true on exactly the frames the inner
+		-- conjunction below already passed.
+		local bRuptureTpIsOurs = false
 		local nAllyCount = J.GetNearbyHeroes(bot, 1000, false, BOT_MODE_NONE )
 		if #nAllyCount <= 1 and X.CanJuke()
 		then
 			tpLoc = J.GetTeamFountain()
+			bRuptureTpIsOurs = true
+		end
+
+		if J.ShouldDropUnownedRuptureTp( bRuptureTpIsOurs )
+		then
+			tpLoc = nil
 		end
 
 		if tpLoc ~= nil

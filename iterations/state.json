@@ -9682,5 +9682,17 @@
     "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。",
     "report": "iterations/reports/strategy/20260917T021500Z.md",
     "next": "(1) ⛔ This lever's value CANNOT be bought from the fixture corpus -- 0 of 336 lane-frames carry a creep weight (GH #863). It needs either that instrument repaired or a batch wave; a named request went into iterations/queue.json this round. (2) GH #863 gains a second dependant: it now starves TWO functions in aba_defend, not one. Whoever takes it still measures the blast radius first (only 3 fixtures carry a `creeps` block). (3) Registered, NOT levered: the `enemyHeroes` field name is itself the trap -- it holds the ENEMY list filtered to heroes, and a reader wanting 'all enemies near here' reaches for it. Renaming it is a whole-file edit and this desk moves one lever at a time."
+  },
+  "tprupt_20260917": {
+    "date": "2026-09-17T04:xxZ",
+    "issue": "协同组自驱(OWNER_PRIORITIES P2 决策侧 / TP 纪律)。族属 `tpstale`(GH #622 的 pullcad 形状:不是 gate 被冻住,是调用点的结果被兄弟分支覆盖)。",
+    "defect": "bots/ability_item_usage_generic.lua, X.ConsiderItemDesire[\"item_tpscroll\"] 的 rupture 分支(读 modifier_bloodseeker_rupture 的那个)。`tpLoc` 是整个 Consider 函数**共用的一个函数级 local**;两个上游分支(前往守塔 <- X.GetDefendTPLocation、前往推塔 <- X.GetPushTPLocation)先写它、再要求一个距离测试才发车,**距离那一半失败时既不发车也不清空**,写入照样留着。rupture 分支自己在一个内层合取(1000 内至多 1 个队友 且 X.CanJuke())里写 team fountain,而**内层合取失败时它同样不 return**,直接落到一个对共用 local 的裸非空测试 => 它会带着**别人算出来的塔坐标**发车,打上自己的逃命动机,出价 DESIRE_HIGH。",
+    "why_not_a_restatement_of_tpstale": "**两个 OUTER head 的算术,不是口味**:`tpstale` 守的 回复状态 分支坐在 `( botHP + botMP < 0.3 or botHP < 0.2 ) and GetLevel() >= 6` 下面 —— 满血的 bot 那个 head 为假,于是它**自己的非空测试根本不被求值**,泄漏**不在那里被消费**,继续往下走;而 rupture 分支的 head 只读 modifier、剩余时间、敌人数,**一个血量项都没有**(tests/test_tprupt_rupture_leak.lua §2 用**解析**两个 head 来断言这件事,不是复述常数)=> **`tpstale` 因为 bot 健康而够不到的每一帧,这一条都够得到**。两条**故意不是一个 id**:各守一个分支,arm 任一条不许移动另一条的读数。",
+    "fix": "`J.ShouldDropUnownedRuptureTp( bOwnsDestination )`(bots/FunLib/jmz_func.lua,gate 在 helper 里、**单独一个 id**、gate-first 然后 turbo、**不读 bot**),调用点加 `local bRuptureTpIsOurs`(内层合取里置 true)+ 一个只会 `tpLoc = nil` 的 gated 块。**方向由构造固定**:flag 恰好在分支自己的合取已经通过的那些帧上为真 => armed 只能把 TRUE 变 FALSE,**永远不能**给一个本来不走的 bot 发车。",
+    "domain_on_this_corpus": "**零,且是构造性零**(0NEXT33 §丙 的读法):118 份 fixture 里带 `modifier_bloodseeker_rupture` 的有 **0** 份,而**同一个读者同一遍**在同一批文件上数出**非零**的对照 modifier(tango_heal / fountain_aura_buff / clarity_potion)=> 是「这份语料没抽到 bloodseeker」,不是「仪器看不见 modifier」。⛔ 因此**这一轮买不到它的价值**,不是「测过了没效果」。泄漏本身是**闭式的源码命题**(§1 棘轮),从来不是一个频次:X 是文件局部,X.CanJuke / X.GetDefendTPLocation / X.GetPushTPLocation 测试里调不到。",
+    "local_validation": "tests/test_tprupt_rupture_leak.lua **15/15**(§1 源码泄漏、§2 两个 head 的算术分离、§3 修法与方向、§4 构造性零+对照非零、§5 真帧驱动的 gate 与 4 条控制腿)。变异台 tools/agent/mutstand_tprupt.sh:**10 抓 + 控制 SURVIVED,零 NO-OP**(M2 = 「flag 无条件置真」那个 no-op;M3 = 唯一不许走的方向;M6 = pullcad 陷阱;M10 = 给 rupture head 加血量项,正是把本条变成 tpstale 重复件的那一步)。⚠️ M9 第一次报 **NO-OP**:兄弟 helper 的函数体最后三行与本条逐字相同,body 锚一次匹配两处 —— 改为按函数名锚定后抓住(GH #846 那条闸在干活)。",
+    "collateral": "`tests/test_tpstale_recover_leak.lua` 的函数级 reset 计数从 2 改为 3,并**逐字说明第三个是谁、为什么不削弱它的命题**(本条的 drop 在 回复状态 **下游**;承重的是它那条 slice 断言,不是这个计数)。⛔ 这是 GH #624 那类「别组落一个 gate 就把普查顶红」的红,**在同一个改动里修掉,不留给下一个开工的组**。",
+    "status": "FROZEN-HOLD —— P4.2 入集冻结期唯一合法裁定。⛔ **本条不是入集提议**:armed 串仍 25,代码与 gate 落在 main 上但**在真实对局里恒为 no-op**,直到有人解冻并把它入集。",
+    "owner_priority": "P2(低血不回家)决策侧的邻域:它守的是「回家 TP 的落点到底是不是这条分支自己选的」,与 P2 第 1 条的 TP 腿同族但**不占 P2 的 DoD** —— P2 要的是「无危险 + 有补给时拦住回城」,本条要的是「别拿别人的塔坐标当逃命落点」。"
   }
 }
