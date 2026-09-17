@@ -751,6 +751,30 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **9 个超预算被 EXCLUDED**(逐字 `new test(s) exceeded the hook budget and were EXCLUDED`),
   钩子真实开销 **665.65s vs 预算 530.0s**。⛔ 重测**要先读 GH #810**(它逐字禁止「随便找台容器跑一遍」)。
 
+  **[同轮收尾追加,push 之后]** **push 四次(两轮各一对),⛔ 全程无 `RULE6_BYPASS`**:
+  ① 分支(**新 ref**)`scope = 8 path(s) … (base=fallback-merge-base)` → `420 ran, 0 findings, 9 unanswered, 6 known-red, 665.7s`,`* [new branch]`;
+  ② `HEAD:main` `RULE6_MEMO=REUSE`(13:45:51Z)✅ `51a15108..0aefc52c`;
+  ③ 分支(**已存在 ref**)`scope = 4 path(s) … (base=stdin-remote)` → **`SKIPPED BY SCOPE`**(几秒);
+  ④ `HEAD:main` `RULE6_MEMO=REUSE`(13:54:49Z)✅ `0aefc52c..f3202b36`。
+  ⭐⭐ **③ 是 (A) 的正面验收现场,而且正是 #865 立案的那一格**:同一条会话分支的第二次推送,
+  `iterations/` 四个文件、`bots/`+`game/`+`tests/` 一行未动 ⇒ `base=stdin-remote` 取到真实远端 sha,
+  第三腿几秒内打 `SKIPPED BY SCOPE`;⛔ **旧取数式在这一格会给空 diff**(此刻 `origin/main` 已等于上一推的树)
+  ⇒ **跑全集 ~570s**。📌 **①(新 ref → 回落)与 ③(已存在 ref → 权威)两条路本轮各走了一次,读数各自正确。**
+  ⭐ ②/④ 两次 `REUSE` 是 RULING 69 的正面验收(两推之间什么都没动 ⇒ 键逐位不变)⇒ **顺序对了第二推免费**。
+  **GH**:#865 追评 `issuecomment-5715435653` 并**已关闭**(`completed`,13:47:52Z);发前 `claim_precheck` `RC_EXIT=0`。**MCP 可用,未触发铁律 11。**
+  ⚠️ 手滑照登:点查 #856 时先误用 `method=get_labels`(回 `{"labels":[],"totalCount":0}`,**不含 state**),零影响,改 `method=get` 重读;
+  ⛔ 值得记的是**那个返回长得像一个成功的读数**,而它答的不是我问的问题。
+  ⚠️⚠️ **「失败的命令不等于失败的提交」同族第三发,就在写这一段时,而且是我上一轮刚记过的那一条**:
+  本段第一次插入的锚串写成了我自己几分钟前编辑过的那一行的**另一个样子**(少了「中位比 1.175」那半句),
+  python 断言 `anchor count=0` 当场失败 —— 而**同一条命令里 `&&` 后面的 `git add`/`commit` 照常跑了**
+  (`&&` 链没跨过 heredoc)⇒ **报告的追加进了提交(29 行),章程的没有**。靠 `git show --stat` 复核才发现。
+  📌 上一轮的教训逐字是「**失败的命令不等于失败的提交**」,而我这一轮**用同一个手法又栽了一次** ——
+  ⇒ 结论不是「下次小心」,是**锚串必须从文件里取,不许凭记忆重打**(本次改用行号 + 双重内容断言)。
+  **token(铁律 8)**:`TOKENS total_in=17,342,288 out=99,690 turns=103`
+  ⚠️ 归因:三次闸的等待期轮询是主项(① 那腿 665.7s,其中 **89 个不在册的新测试白跑 368.55s**,见清单 ⑭);
+  次项是收尾**逐号点查 8 个 issue**(RULING 55 要求点查、禁止 `list_*`,而点查逐号返回全文 body)——
+  ⭐ 这是**为语料正确性付的已知代价,不是空转**。
+
 - **2026-09-17T04:20Z**:**RULING 69 —— 上一轮给自己写的「未回复 = 下一轮执行」差一轮就把推送顺序反过来,而否掉它的读数比它自己晚两小时到。顺序不动,并从散文变成一条会拒 push 的闸。**
   全文 `iterations/reports/director/20260917T042000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
