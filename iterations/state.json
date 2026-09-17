@@ -9876,5 +9876,23 @@
     "cost": "zero EC2 / zero CE / S3 reads 0 objects (egress unpriced); zero gate id, zero arm, zero promote, no wave requested",
     "report": "iterations/reports/hero/20260917T171205Z.md",
     "p44_self_assessment": "(ii) the last piece of evidence a ruling needs -- NOT (i); bots/ has zero lines changed this round, recorded as such"
-  }
+  },
+    "wkqreach_ruling_20260917": {
+      "owner": "hero",
+      "date": "2026-09-17T19:51Z",
+      "armed": false,
+      "gated_id": null,
+      "verdict": "DO-NOT-ARM(判定完结,候选退役,不是顺延)",
+      "backlog_item": "章程 backlog `-198` 交出的「下一轮主体候选·第 1 条」:WK 的 43u 超伸(`bots/BotLib/hero_skeleton_king.lua:1326/1355`,GH #873 §四,未修)。该条自己附了两句前置 —— 「先解决供帧再落 id」和「先量 43u 值不值一个 id」。本轮量了,三条互相独立的理由都在源码 + 已提交语料里判完,从头到尾不需要一波。P4.4 自评:(ii) 一个判定完结。`bots/` 零行改动。",
+      "headline": "⭐⭐ **这不是团战腿的缺陷,是那张列表的缺陷 —— 而唯一两个能证明它的帧上,开火的是兜底分支,团战腿是黑的。** `nEnemysHerosInRange` 在 `:1326` 建一次,被十个出货点里的四个遍历(团战 3 / 撤退 6 / 刚受伤 9 / 通用兜底 10),四个都不测它交出去的目标的距离 ⇒ 限定在出货点 3 的 lever 不删除超射程施法,只是把它挪走(`lionrreach` 陷阱,GH #617)。⭐ 而这是驱动出来的不是论证的:语料里仅有的两个 band-only 帧上(sven 536.4u / lion 547.5u),真 `X.SkillsComplement` 都真的出了一次超射程施法,而两帧 `IsInTeamFight(bot,1200)` 都为 false;把只有兜底分支才咨询的合取项 `X.wk_IsCatchAllOddsOk` 关掉,两帧的施法都消失 ⇒ 那两次超伸是出货点 10 的。",
+      "leg1_magnitude": "43 不跟 0 比,跟本函数已出厂的松弛比。`X.ConsiderQ` 自己的准入常数是 +80,出现在两个真测距离的出货点上(`:1341` 击杀确认、`:1407` 打架先手),并第三次出现在 `:993` —— 本组自己落地的 `wkqlane` 的 reach 项,其抬头逐字把它叫做 'the GATE, not the search ring'。⇒ 候选要拒掉的整个 band (nCastRange, nCastRange+43] 坐在本函数另外三处称之为「射程内」的范围里面;arm 它会让团战腿比同函数里每一个真测距离的分支都更严。测试 §2 把 43 与 80 两个数都从源码解析出来再断言 43 < 80(不是手打的)。⭐ 实际超伸比 43 还小:语料最坏一例 lion 超 22.5u = 300 移速下 0.075 秒,发生在一个近战英雄(攻击距离 150)朝着他正在与之团战的敌人走。对照真的换到过一个 id 的那次走位:`wkqlane` 的真实帧是对线期走出自家兵线 56.6u,其 +330 环允许本候选的 7.7 倍。",
+      "leg2_relocation": "`wkqlane` 当初查过 `lionrreach` 陷阱并通过(它的 band 落在其它所有出货点的环之外);本候选的 band 落在后面三个出货点自己遍历的那张列表之内,于是同一项检查它不通过。⛔ 列表级修法(把 `:1326` 从 +43 改成 +0)不是同一个修法换作用域,它一次移动四个出货点 —— AGENTS.md 的 `lanefix` 教训(终审波两次 REJECT)。本轮也不提议它。",
+      "leg3_empty_domain": "两个语料目录 144 帧、WK 在世 51 帧(测试 §3 逐个断言):band 里有敌人 6 帧 / 6 个敌人;其中 band 有而施法环没有(band-only,任何收紧唯一可能把施法变成不施法的帧)2 帧;`IsInTeamFight(bot,1200)` 为真 2 帧;交集 0 帧。⇒ 团战腿限定的 id 在档案里零见证帧,过不了迭代循环里那道强制的、便宜的本地验证。",
+      "correction_to_minus197": "⚠️ 本组自己的读数更正:章程 backlog `-197` 把团战谓词记成「WK 0 个帧」。是 2,两个都在 `tests/frames/`(staged 目录),只枚举 `tests/fixtures` 的普查看不见它们。更正不动结论(要紧的是交集,两种数法下都是 0),但引用「0 个团战帧」的人引的是一个更小语料上的陈读数。该更正写进了 §3 的断言消息里,不只写在报告里。",
+      "ratchet": "tests/test_wk_q_teamfight_reach_pricing.lua(8 节,经真 runner `lua5.1 tests/run_tests.lua` 打 `8 tests, 0 failures`;同一次改动手加进 tools/agent/lua_gate_manifest.json)",
+      "mutation_stand": "tools/agent/mutstand_wkqreach.sh — 10/10 CAUGHT / EXIT=0。含两个台子自身的控制(M6 普查不再区分 band 与 +330 环;M10 inject() 不再丢掉已材料化的方法 ⇒ 注入静默不生效)与 M7(团战谓词恒真 —— 唯一会让候选复活的变异体;台子看不见它,「域是空的」就不可证伪)。",
+      "baton": "GH #873 §四 已回答并追评;⛔ 不申请波次;⛔ 不申请供帧 —— `-198` 第 1 条写的「先解决供帧」在腿 2 之后不再是这条候选的下一棒:即使买到团战帧,branch-scoped lever 仍然只是把施法挪给出货点 10。",
+      "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)",
+      "report": "iterations/reports/hero/20260917T195145Z.md"
+    }
 }

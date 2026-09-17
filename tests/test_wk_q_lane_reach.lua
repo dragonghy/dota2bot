@@ -72,13 +72,29 @@
 -- §0.3  LIMITS -- load-bearing, quote these with any number above
 -- ===========================================================================
 --
--- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Over both corpus directories (116
---    frames), Wraith King is present and alive on 38; on 6 of those an enemy
+-- 1. THE DOMAIN IS THIN AND §1 COUNTS IT.  Over both corpus directories (144
+--    frames), Wraith King is present and alive on 51; on 8 of those an enemy
 --    hero sits in the band (outside nCastRange + 80, inside nCastRange + 330),
---    6 band members in total; on 11 an enemy sits inside the gate, where this
+--    8 band members in total; on 22 an enemy sits inside the gate, where this
 --    lever is a byte-for-byte no-op.  These counts are ASSERTED, not narrated:
 --    if the corpus grows, §1 goes red and this section is re-taken rather than
 --    quoted.
+--    RE-TAKEN 2026-09-17 (hero), 38 -> 51 live frames.  ⭐ UNLIKE THE 2026-09-09
+--    RE-TAKE BELOW, THIS ONE MOVED THE LEVER'S OWN DOMAIN, not just the
+--    denominator: band 6 -> 8 frames / 6 -> 8 members, gate 11 -> 22 frames.
+--    So "6 of 38" is stale in BOTH numbers and every sentence quoting it has to
+--    be re-read, not just re-based.  The thinness claim survives -- 8/51 is
+--    thinner than 6/38 (15.7% vs 15.8%) -- and the §0.1 frame
+--    f_230545_wk_sven_burst.lua is still one of the band frames, which is what
+--    keeps §2 driving the frame §0.1 describes.
+--    ⚠️ This red was NOT found by the hero stream: the replay-check stream
+--    measured it on trunk and filed GH #880 (three files / four assertions red
+--    on main, attribution MEASURED rather than assumed), whose acceptance 1
+--    hands each file to its owner.  This file is the hero stream's own, and
+--    this is that fix.  The sibling WK red #880 names,
+--    tests/test_wk_level_supply_horizon.lua (2 cases), is ALSO this stream's
+--    and is NOT fixed here -- it is a different lever's supply census, and
+--    conflating them is how a re-take turns into a rewrite.
 --    RE-TAKEN 2026-09-09 (hero, GH #659), 37 -> 38: the staged transit frame
 --    f_260908_094909_cm_cmqreach_transit.lua carries a live level-20 Wraith
 --    King.  ⭐ ONLY THE DENOMINATOR MOVED.  Its nearest enemy hero is ~3.7k
@@ -221,7 +237,7 @@ end
 -- ---------------------------------------------------------------- section 1 --
 -- The domain, counted over the whole corpus.  §0.3 limit 1's evidence.
 
-tests['§1 the corpus puts an enemy in the band on 6 of 38 Wraith King frames'] = function()
+tests['§1 the corpus puts an enemy in the band on 8 of 51 Wraith King frames'] = function()
     local nFiles, nLive = 0, 0
     local nWithBand, nBandEnemies, nWithGate = 0, 0, 0
     local tBandFrames = {}
@@ -254,16 +270,16 @@ tests['§1 the corpus puts an enemy in the band on 6 of 38 Wraith King frames'] 
             end
         end
     end
-    assert(nFiles >= 110, 'the corpus enumerator returned ' .. nFiles
-        .. ' frames, expected >= 110 -- an empty ls and an empty corpus are the '
+    assert(nFiles >= 140, 'the corpus enumerator returned ' .. nFiles
+        .. ' frames, expected >= 140 -- an empty ls and an empty corpus are the '
         .. 'same integer')
-    assert(nLive == 38, 'Wraith King is alive on ' .. nLive .. ' corpus frames, '
-        .. 'was 38 -- re-take §0.3 limit 1 rather than quoting it')
-    assert(nWithBand == 6 and nBandEnemies == 6,
+    assert(nLive == 51, 'Wraith King is alive on ' .. nLive .. ' corpus frames, '
+        .. 'was 51 -- re-take §0.3 limit 1 rather than quoting it')
+    assert(nWithBand == 8 and nBandEnemies == 8,
         'the band domain moved: ' .. nWithBand .. ' frames / ' .. nBandEnemies
-        .. ' enemies, was 6 / 6.  Re-take §0.3 limit 1.')
-    assert(nWithGate == 11, 'the in-gate domain moved: ' .. nWithGate
-        .. ' frames, was 11.  Those are the frames on which this lever is a '
+        .. ' enemies, was 8 / 8.  Re-take §0.3 limit 1.')
+    assert(nWithGate == 22, 'the in-gate domain moved: ' .. nWithGate
+        .. ' frames, was 22.  Those are the frames on which this lever is a '
         .. 'byte-for-byte no-op, and the count belongs in §0.3 limit 1.')
     local bHasFrame = false
     for _, p in ipairs(tBandFrames) do if p == FRAME then bHasFrame = true end end
