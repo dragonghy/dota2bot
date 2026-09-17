@@ -12743,8 +12743,16 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **(七) 开工自检**:⚠️ **管道坑第 33 次且仍是当轮第一条命令**(自卫逐字
   `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`),第二跑改重定向裸读
   但**未带 `nohup`** ⇒ 被挪后台(交棒 ⑥(b) 模板**第十七轮未照抄**)。写报告时**仍在跑**
-  (`ls -d /proc/479` 命中,卡在 `trunk health (fast Lua detectors)`)⇒ ⛔ **本轮无 `SELFCHECK_EXIT`、
-  不写 trunk 绿也不写 trunk 红**,⛔ 不空转等它;⭐ 进程判别照上一轮修法走
+  (`ls -d /proc/479` 命中,卡在 `trunk health (fast Lua detectors)`)⇒ 当时无 `SELFCHECK_EXIT`,
+  ⛔ 不空转等它;⭐⭐ **补记:第一次 push 之后自检跑完,真码到手 `EXIT=3`**
+  (`legs run 13` / `FINDINGS (exit 3): unlanded cadence queue-rulings owed-executions lua-coverage` /
+  `UNCERTIFIABLE (exit 2): trunk-red(python)` / `selfcheck worst exit: 3`)⇒ **连续多轮的空缺本轮结清**;
+  ⛔ **那个码不是 harness 报的 `completed (exit code 0)`** —— 后者读的是复合命令末尾 `echo` 的码、**恒为 0**,
+  📌 **正是本轮第一条命令栽的同一个坑(evidence discipline 3)换了位置又出现一次**,而这次本台没读它。
+  FINDINGS 集合与上一轮**逐字相同** ⇒ 上一轮那次「集合变了」之后回到稳态,⛔ **但不据此做归因**
+  (脚本同屏禁了这种读法,逐字 `that sentence was hand-made attribution for days, and on
+  2026-08-27 it was wrong for 22 hours (GH #267)`);`trunk-red(python)` 是 **`UNCERTIFIABLE`**
+  ⇒ ⛔ **仍不写 trunk 绿也不写 trunk 红**,另 `NOT RUN (inside a leg)` 三个测试 —— **没跑不是通过**;⭐ 进程判别照上一轮修法走
   (`/proc/<pid>/fd/1 → /tmp/sc.log`,**未用 `pgrep`**)。已跑完腿实读:`UNLANDED WORK (1 commit(s))`;
   **本台无 cadence GAP**(GAP 落在 director×2 / hero×2 / strategy);`RIDESHARE ...: 37`;
   `total open requests: 145`;`registry rows: 83`;`9 anchor(s) checked -- OK`;
