@@ -9897,7 +9897,7 @@
   },
   "roamring_20260917": {
     "date": "2026-09-17T2x:xxZ",
-    "issue": "[strategy] GH #887(本轮开;号码 push 后回填,⛔ 未顺号推测)",
+    "issue": "[strategy] **GH #887**(本轮开;号码取自 create 调用自己的返回 `id 5493530479` / `url .../issues/887`,**不是顺号推测**)。",
     "defect": "`bots/mode_team_roam_generic.lua:285-286` 在**相邻两行**上把同一个「我这儿是不是被以多打少」的问题拆成两半,而两半用的是**两个不同的圈**:盟友 2200、敌人 2000;两者**唯一**的消费者是 `:398` 的 `elseif #nearbyAllies >= #nearbyEnemies`。⇒ 一个 2150u 外的英雄,是我方就算战力、是敌方就不存在。那层壳是圆面积的 **21%**(2200²/2000²),而且**只往我方加**。",
     "fix": "`J.GetRoamParityRadius(nAllyRadius, nEnemyRadius)`(`bots/FunLib/jmz_func.lua`,`J.GetEnemiesNearLoc` 正下方):armed(turbo-only)时敌方那半改读**盟友那半已经在用的那个圈**;disarmed 逐字返回 `nEnemyRadius`。调用点把 2200 **命名一次**(`local nRoamParityAllyRing`),两半都从这个名字取,于是**再漂开就会把测试顶红**。",
     "one_lever": "只动「同一个比较的两半是不是数同一个圆」。**不碰**盟友半径、不碰比较的算符、不碰视野规则、不碰幻象过滤,也**不主张 2200 是团战邻域的正确大小**。",

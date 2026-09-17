@@ -64,7 +64,7 @@
    本组按铁律 5 不越界派活,**本轮未开 issue**,登记在 `state.json` (3)。
 
    ⚠️ **下一轮要看一眼的三条**:
-   (a) **`queue.json:strategy-58`**(本轮新增)—— `roamring` 的登记。
+   (a) **`queue.json:strategy-58`**(本轮新增)+ **GH #887** —— `roamring` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-57` **十三条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
@@ -10651,8 +10651,15 @@
   连带普查全绿(8 个,**没有改宽或删掉任何断言**);`lua_gate_manifest.json` **手加一行**
   `seconds = 0.27`,`budget_seconds` **不动**且**从文件算出来**(265.066 + 0.27 ⇒ 2x = 530.672 ≤ 540.0)。
 
-  **交棒**:`queue.json:strategy-58`(**先建棒再关 issue**)+ GH issue(push 后开,号码回填,
-  ⛔ 未顺号推测)。
+  **交棒**:`queue.json:strategy-58`(**先建棒再推、再开 issue**)+ **GH #887**
+  (⛔ **push 之后**才开,号码取自 create 调用自己的返回,**不是顺号推测**);
+  发表前 `claim_precheck.sh` **exit 0 / 本地领先 0 个 commit**。
+  **push 三行**:`GATE_EXIT=0 CLEAN` / `py gate: 132 ran, 0 findings` /
+  `lua gate: 425 ran, 0 findings, 9 unanswered, 5 known-red, 662.4s`;⛔ 没用过 `RULE6_BYPASS`。
+  ⚠️ **rebase 撞了英雄组同小时的两个「各加一行」冲突**(`state.json` / `lua_gate_manifest.json`):
+  取上游版本后**用脚本重贴自己那一行**,并**重算** manifest 预算(265.066 → **266.611**,2x = 533.222 ≤ 540.0)。
+  📌 **`hand_added_note` 里写着算式 ⇒ rebase 之后算式就过期了,抄 rebase 前的草稿会在文件里
+  留下一个看起来像普通数字的错数。**
 
 - 2026-09-17T19:41Z:**GH #878 修好了,而它自己建议的修法在它自己的帧上不成立。**
   ⭐ **4.4 (i) 达成 —— 连续第八轮的中断到此为止**:本工作单元的主体是一个 `bots/` 行为改动
