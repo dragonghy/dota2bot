@@ -1,4 +1,4 @@
--- [replay-check] Condition (a) for the soak candidate `campbind`, bought on a
+-- [ratchet] [replay-check] Condition (a) for the soak candidate `campbind`, bought on a
 -- REAL FRAME instead of a wave's aggregate.  Claims
 -- `owed_executions.json:campbind_condition_a_fixture`, exit (甲).
 --

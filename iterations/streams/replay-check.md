@@ -19749,3 +19749,83 @@
     2) 两根棒交总监(GH #424 那行是否退休 / `outlatch` 重新入集只缺域与条件 (b));
     3) ⚠️ **给 W88 自己落的 `test_campbind_poke_real_frame.lua` 补 manifest 行**(本组的债);
     4) ⏳ W46 `.dem` 约 09-25 到期(8 天),取法问 `dem21/` 不问 `soak/`。
+- **2026-09-17T18:44Z(W90)**:批测台**连续第四十三轮零发波**(18:06:17Z 报告逐字「刹车第四十三轮持有;
+  零发波、零收割欠、零泄漏」,MTD `$92.001`,⚠️ **戳 `13:24:58Z` 与上一轮逐位相同 = 冻结快照**)
+  ⇒ 无未检新局;`a_evidence_owed.py` 实读 `armed 25 verdict 25 owed-row 0`(`OWED_EXIT=0`)⇒ 本组 owed 仍清零。
+  按交棒第 3 条**还本组自己的债**,而还债过程把那笔债的**立案理由**证伪了。
+  报告:`iterations/reports/replay-check/20260917T184400Z.md`。
+  - **交付一(债已还)**:`test_campbind_poke_real_frame.lua`(W88 落的)登记进
+    `lua_gate_manifest.json`(`in_gate: true / fast / 0.324s`,本机 best-of-three,
+    四行标定本机 ~1.09x 慢 ⇒ manifest 等价 ~0.30s,**按保守侧记更大的数**;`measured_at` 不动,GH #810),
+    `selected_count` 343→**344**、`selected_total_seconds` 264.742→**265.066**;
+    并给该文件首行加 `[ratchet]` ⇒ 开工自检 tag 腿 136→**137**(两个读者)。
+    覆盖实读 `UNCOVERED 115→114`、`no_manifest_row 53→52`,测试复跑 **7 tests / 0 failures**。
+    ⛔⛔ **这一格我先写错了,是 push 闸当场改回来的(本轮最值钱的一格)**:初稿逐字写
+    「`budget_seconds` 不是推导出来的,是 `lua_gate_measure.py:156` 的硬编码常量,照 W89 的 `2x` 推导
+    会去改一个不该改的常量,已按常量处理未动」。**第一次 push 被 python 腿拒绝**,逐字
+    `FAIL budget 530.0s >= 2.0x sub-cap total (530.1s)`(`tests/test_lua_gate_budget_backstop.py` case 4,
+    `BACKSTOP_MULTIPLE = 2.0`,总监 RULING 61;case 5 另要求模块与 manifest 两处逐位相等)
+    ⇒ **W89 是对的,我是错的**:那个 `2x` 不是它的**来历**,是它的**约束**。
+    ⭐⭐ **可迁移的那一句:「这个值是硬编码的」不蕴含「这个值可以不动」** ——
+    一个常量可以同时是写死的和被棘轮钉住的;我拿「它不是推导出来的」这个**真命题**,
+    去回答了「它该不该跟着变」这个**别的问题**(⚠️ 与铁律 1 §RULING 48、铁律 4 §CL (i-a) **同型**)。
+    已按它自己 header 的规矩重推(向上取到 10 的整数倍):`2 × 265.066 = 530.132 → **540.0**`,
+    `lua_gate_measure.py:156` 与 manifest **两处一起改**,复跑 `BACKSTOP_EXIT=0` / `7 checks, 0 failed` /
+    `budget 540.0s = 2.04x`。⛔ 未用 `RULE6_BYPASS`,⛔ 未用 `-c core.hooksPath=/dev/null`。
+    ⇒ **这正是 GH #616 立那条腿的理由的现场演示:红由推的人当场看见** ——
+    而这次红的不是代码,是**我已经写下、准备推出去的一句错判断**。
+  - **⭐⭐ 交付二(本轮头号产出,[harness]):`UNCOVERED` 的分类对今天 114 个里的 52 个(46%)是反的。**
+    开工自检逐字说 `no automatic reader runs these` / `A test nobody runs cannot refuse a push`,
+    而 `lua_gate.py:369-378` 有一整个 `for rel in unmeasured:`(`unmeasured` = **恰好就是 `no_manifest_row` 那一类**),
+    跑它并在 `rc != 0` 时进 `findings` ⇒ `exit 3` 拒绝 push。
+    **不靠读源码下结论,用 gate 自己的 `LUA_GATE_ROOT`/`LUA_GATE_MANIFEST` 搭台实测**
+    (⭐ 那是一道**会自己喊出来**的旁路,每跑必打 `LUA GATE REDIRECTED ... (not the repo's own)`):
+    **无行的红 → `STAND_GATE_EXIT=3` + 被点名**;**有行且 `in_gate: false` 的红 → 一次都没跑**、gate 干净放行;
+    **对照轮**(移走无行那条红)`CONTROL_EXIT=0` 把 exit 3 钉死在它身上;
+    **`DIRECT_EXIT=1`** 证明被跳过的那条**是真红不是绿**(否则 `0 findings` 会被读成绿 —— did-not-run wearing a pass)。
+    ⇒ 真正没人自动读的是 `timed_out`(60)+`too_slow`(2)=**62** 个。
+    ⭐ **刀口朝错的方向**:自检开的药方第一条 `measure it under the cap and re-run lua_gate_measure.py`,
+    对一个**跑得完但超 5.5s cap** 的测试会写下 `in_gate: false` ⇒ 它**从"闸在跑"变成"闸不跑"**,
+    此后它的红再也拦不住 push,而覆盖工具此后**如实地**记它 UNCOVERED ⇒ **两边都不会有人喊**。
+    ⛔ **三条限制随引用一起抄**:(甲) Lua 腿只在 push 碰 Lua 时跑,这对两类**同样成立**故对比公平;
+    (乙) 精确判词是「无行 **+ 普通失败** ⇒ 拒 push;无行 **+ 超时** ⇒ 静默排除」(`:358-368` 自陈 `counted NOWHERE`);
+    (丙) ⛔ **本轮不给这个行为定年份** —— 本容器是 **shallow clone(深度 50)**,
+    `git log -S` 只回到边界提交 `f0b5ea4e`,`f0b5ea4e^` 报 `fatal: invalid object name`
+    ⇒ **那是我的视野边界不是它的诞生点**。但仓库里已有**两条互相矛盾的记载**:
+    **GH #806**(09-13T21:06)立案句说「闸根本没跑它」,**GH #804**(09-13T20:22,**早 44 分钟**)
+    标题说「49 个测试未登记靠 fail-open 照跑」——**本轮的台子支持 #804 那一侧**;
+    ⛔ 本组不替总监裁定 #806 的归因。
+  - **覆盖**:宽扫 **0 局**(语料为空,不是偷懒);深查 **0 帧**;⚠️ 低于 6 局下限,与 W88/W89 同型理由。
+    **VERIFY 行 0 条 —— ⛔ 不硬凑**(本轮无任何新帧证据,编不出诚实的一条)。
+    现状实读 `verify_coverage.py --all`:armed **25** / 有 VERIFY 行 **25** / BLIND SPOTS **0**;
+    核验记录最少的六个(各 1 条)= `creepthink` / `fieldsip` / `fieldbuy` / `campvoid` / `blinkflee` / `lf_rescue`,
+    已连同各自的注意事项写进交棒。
+  - ⛔ `bots/` + `game/` **一行未改**,零新 soak id,零新 fixture,零 bot 逻辑改动。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 本轮一次 AWS 调用都没有。
+  - **⛔⛔ 新坑 ×2,同族第九、第十例(都是"我量到的不是我以为的那个东西")**:
+    (甲) `bash tools/agent/ensure_lua_toolchain.sh` **不带参数 = 什么都不装,而且 `exit 0`**
+    (工具名是**参数**;`for t in "$@"` 迭代零次)。本轮容器无 `lua5.1`,我读到 `ENSURE_EXIT=0` 零行输出
+    差点写成"工具链就绪"。⭐ **判别子是 `command -v lua5.1`,⛔ 不是那个退出码。**
+    (乙) `measure_one(root, 'tests/test_x.lua')` 给 **`0.006s`** —— **不是快,是没跑**
+    (过滤器是**文件名子串不是路径**)。⭐ 救场的是**别人装的护栏**:`rc=2` +
+    `NO TESTS RAN -- filter "..." matched 0 of 508 files`(GH #200)。
+    **两条合起来:秒数从不自证,退出码才自证。**
+    ⭐ **本轮三条坑(budget / ensure / measure_one)全部是同一个形状,而三次都是别人预先装好的
+    护栏救的场**(RULING 61 的 backstop 棘轮 / `ensure_lua_tool` 的契约 / GH #200 的零测试体护栏);
+    **本组自己一条都没先发现 —— 都是被拦下来才知道的。**
+  - **⛔ 开工自检:第 9 次撞管道闸、第 7 轮撞 `timeout` 闸,W83–W90 连续八轮同形。**
+    ⭐ **根因本轮判明,而且证明 W88/W89 的两版处方都开错了地方**:W89 的处方是
+    「**先** `nohup … &` **再**读章程」,而我**确实是先跑自检的** —— **先跑的那一条本身就带着管道**
+    ⇒ 处方管的是**时机**,踩的是**写法**。交棒第 0 条已改成**逐字照抄那一行 + 三个 ⛔**。
+    写报告时自检仍在跑(`trunk health (python)` 那条腿)⇒ ⛔ **无 `SELFCHECK_EXIT` 真码**,
+    ⛔ 既不写 trunk 绿也不写 trunk 红,⛔ 不空转等它(铁律 11)。
+  - **下一轮第一件事**:0) 自检**逐字**抄 `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`
+    (⛔ 无 `| tail`、⛔ 无 `timeout`、⛔ 不前台;轮询用 `while kill -0 <PID>`);
+    1) owed 仍 0 ⇒ 批测台若仍冻结,从上面那六个"核验记录最少"的 id 里取一个买条件 (a);
+    2) ⏳ W46 `.dem` 约 09-25 到期(8 天),取法问 `dem21/`;
+    3) 交总监:UNCOVERED 分类那条 + #804/#806 的矛盾归因;⛔ 本组不自行改 `lua_gate_coverage.py`;
+    4) ⚠️ `test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua` 仍在 NEW UNCOVERED
+    名单上(**不是本组的债**);⭐ 提醒别组时**别再抄那句假理由**,它们缺的是**计价**不是覆盖;
+    5) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
+    换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、
+    W84 §四(总监)、W86 §(总监编排)、W87 §(总监编排)、GH #424 那行是否退休(总监,W89 已问)。

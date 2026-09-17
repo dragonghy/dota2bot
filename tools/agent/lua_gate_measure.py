@@ -153,7 +153,16 @@ PER_TEST_CAP_SECONDS = 5.5
 # re-measure.  ⛔ This constant is declared HERE and in the manifest, and
 # tests/test_lua_gate_budget_backstop.py requires the two to agree, so moving one
 # alone trades one red for another.
-BUDGET_SECONDS = 530.0
+# RE-DERIVED 530.0 -> 540.0 on 2026-09-17 (replay-check, `campbind`), by the rule two
+# paragraphs up and NOT by choice: the sub-cap total moved to 265.066s when a 0.324s
+# ratchet was hand-added in the same change, so 2 x 265.066 = 530.132 -> 540.0.
+# ⭐ HOW THIS ONE WAS FOUND IS THE POINT: the round that added the row had written into
+# its own report that this constant is "hard-coded, not derived", and that re-deriving it
+# would mean changing a constant that should not be changed.  The pre-push python leg
+# refused with `budget 530.0s >= 2.0x sub-cap total (530.1s)` -- 0.132s over -- and that
+# refusal is what corrected the claim.  The constant IS hard-coded; it is not FREE, and
+# those are different sentences.  GH #616's stated reason for this leg, exactly.
+BUDGET_SECONDS = 540.0
 # Hard stop while measuring.  Anything at or over the per-test cap is out
 # regardless, so there is no reason to pay for its exact number.
 MEASURE_TIMEOUT_SECONDS = 6.0
