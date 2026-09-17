@@ -13027,7 +13027,7 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ② `describe-instances` 五态不加 tag 过滤 ⇒ `INST_EXIT=0` / **`LINES=0`**;
   ③ `describe-spot-instance-requests State==open` ⇒ `SIR_EXIT=0` / **`SIR_LINES=0`**;
   ④ 闸 (iii) 账户级 **17 区 COMPLETE** + `CERTIFIED (0 accruing instances account-wide)`;
-  ⑤ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏)。
+  ⑤ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏)。收尾复查 `--leak-only` → **`LEAK_EXIT=0`**,区块空。
   **(八) 开工自检**:⚠️ **管道自卫第 36 次在当轮第一条命令上生效**(逐字 `REFUSED: routine_selfcheck.sh
   stdout is a pipe; exit 2, nothing checked.`),改重定向后才真跑。⭐ **本轮最终跑完了**(四十三轮没有):`selfcheck worst exit: 3`,归因块逐字
   `legs run : 14` / **`FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage`** /
@@ -13047,7 +13047,7 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   `PY GATE COVERAGE disk 149 | push gate 130 | leg 149`、`UNCOVERED 0 of 149 (0%)`。
   对上一轮:Lua `disk 507→508` / `push gate 342→344` / **`UNCOVERED 115→113`**(缝窄了 2)**但新长出 1 个**
   (`fieldsip_transfer` 家族第七次被点名)⇒ ⛔ **净变化好不等于没有新洞**;Python 侧 `0 of 149` 逐位相同。
-  **(九) 发表纪律**:GH **#883** 已发表更正评论(§三 对照表 + §四 普查);⛔ **未开新 issue**
+  **(九) 发表纪律**:GH **#883** 已发表更正评论,读回的 id **`5721615501`**(§三 对照表 + §四 普查);⛔ **未开新 issue**
   (本轮两件都是对 #883/#352 的补充,**开新 issue 正是本轮在反对的那件事**);⛔ 未追评 #779
   (戳动了但 `alpha=0`/`beta=0` 无变化,无新事实);**铁律 6 三条腿(两次 push 各一次,读数逐位相同 ⇒ memo 命中)**:`GATE_EXIT=0  CLEAN (iron rule 6
   static half passed)` / `py gate: 132 ran, 0 findings, 0 uncertifiable, 58.9s` /
