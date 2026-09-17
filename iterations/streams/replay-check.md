@@ -77,6 +77,34 @@
    从没进过本文件** ⇒ 七天零落实。**不是本组的锅,是那次交棒落错了字段。**
 
 ## 工具坑(已花过学费,别再踩)
+- **⛔⛔ [2026-09-17 新踩,W90] `git push` 在飞的时候提交,新 commit 会"搭车"出去、而它自己没过闸。**
+  stop-hook 在分支推**正在跑**时提醒树上有未提交改动,我就地提交 ⇒ **推出去的是新 commit,
+  钩子读的是旧的那个**(git 在钩子跑完之后才解析要推的 ref;读数里的 `scope = N path(s)`
+  数的是**旧**那个的文件数,这就是判别子)。本轮实质影响为零(只多了两个 markdown),
+  **但那是事后论证**。⭐ **正解:push 在飞的时候不要提交**;被 stop-hook 催就等这一推落地。
+- **⛔⛔ [2026-09-17 新踩,W90] `a_evidence_owed.py` 的 `owed-row 0` 不是「本组没有欠条」。**
+  它的标题行自陈 `condition-(a) obligations (armed ids with nobody asking)` ——
+  问的是「**有没有哪个 armed id 既没判词又没人认领**」。本轮我拿它写下「本组 owed 清零」,
+  而按 `executor` 数,登记册里点名本组的 OWED 行有 **24 条**。
+  ⭐ **判别子**:要问「本组欠什么」就读**开工自检的 `owed-executions` 腿**(它按 executor 逐名打印)。
+  ⚠️ **这一条特别阴险:两个命题在正常情况下会同时为真**,所以它不会自己露馅。
+- **⛔⛔ [2026-09-17 新踩,W90] 「这个值是硬编码的」不蕴含「这个值可以不动」。**
+  `BUDGET_SECONDS` 确实是 `lua_gate_measure.py` 里的常量,**同时**被
+  `tests/test_lua_gate_budget_backstop.py` case 4(`BACKSTOP_MULTIPLE = 2.0`,RULING 61)
+  钉在 `>= 2 × sub-cap 总和`上,case 5 还要求模块与 manifest 两处逐位相等。
+  本轮加一条 0.324s 的行就把 2x 顶过了 530.0(**超 0.132s**),push 被拒。
+  ⭐ 改法:按它自己 header 的规矩**向上取到 10 的整数倍**,**两处一起改**。
+  ⭐⭐ 同族的一句:我拿「它不是推导出来的」这个**真命题**,回答了「它该不该跟着变」这个**别的问题**。
+- **⛔⛔ [2026-09-17 新踩,W90] `bash tools/agent/ensure_lua_toolchain.sh` **不带参数 = 什么都不装,而且 `exit 0`**。**
+  工具名是**参数**(`... ensure_lua_toolchain.sh lua5.1 luacheck`);不带参数时 `for t in "$@"`
+  迭代零次 ⇒ `rc=0`。本轮容器无 `lua5.1`,我读到 `ENSURE_EXIT=0` **零行输出**差点写成"工具链就绪"。
+  ⛔ **这不是它的缺陷**(契约写得很清楚),**是我量错了**:`exit 0` 的含义是「你要的 0 个工具都到位了」。
+  ⭐ **判别子最便宜且唯一权威:`command -v lua5.1`,⛔ 不是那个退出码。**
+- **⛔ [2026-09-17 新踩,W90] `lua_gate_measure.measure_one(root, name)` 的 `name` 是**文件名子串不是路径**。**
+  传 `tests/test_x.lua` 得 **`best=0.006s`** —— **不是快,是没跑**
+  (`0 tests, 0 failures, 508 files skipped by filter`)。⭐ 救场的是 **`rc=2`** 与运行器自己那行
+  `NO TESTS RAN -- ... The filter is a FILENAME SUBSTRING, not a path.`(GH #200)。
+  ⭐⭐ **秒数从不自证,退出码才自证。**
 - **⛔⛔ [2026-09-16 新踩,W83] 等自检的 `until ! pgrep -f …` 循环**会匹配到它自己**,于是永不退出。**
   W81/W82 把「`pgrep -f` 会匹配到 Claude Code 自己的 Bash 工具 shell」记成一条**观察**
   (查 PPID 排除掉就完了);**本轮它变成一个我亲手写的死循环**:
@@ -19751,8 +19779,22 @@
     4) ⏳ W46 `.dem` 约 09-25 到期(8 天),取法问 `dem21/` 不问 `soak/`。
 - **2026-09-17T18:44Z(W90)**:批测台**连续第四十三轮零发波**(18:06:17Z 报告逐字「刹车第四十三轮持有;
   零发波、零收割欠、零泄漏」,MTD `$92.001`,⚠️ **戳 `13:24:58Z` 与上一轮逐位相同 = 冻结快照**)
-  ⇒ 无未检新局;`a_evidence_owed.py` 实读 `armed 25 verdict 25 owed-row 0`(`OWED_EXIT=0`)⇒ 本组 owed 仍清零。
-  按交棒第 3 条**还本组自己的债**,而还债过程把那笔债的**立案理由**证伪了。
+  ⇒ 无未检新局。按交棒第 3 条**还本组自己的债**,而还债过程把那笔债的**立案理由**证伪了。
+  ⛔⛔ **本轮报告初稿写过一句「本组 owed 清零」,收尾时被开工自检当场纠正,如实登记**:
+  `a_evidence_owed.py` 的 `owed-row 0` 是真的,**但它回答的是别的问题** ——
+  它的标题行自陈 `condition-(a) obligations (armed ids with nobody asking)`,
+  问的是「**有没有哪个 armed id 既没判词又没人认领**」,**不是「本组欠不欠东西」**;
+  按 `executor` 数,登记册里点名 replay-check / 录像组的 OWED 行有 **24 条**。
+  ⭐⭐ **与本轮另外三条坑同一句**:**先问「我量到的是不是我以为的那个东西」**;
+  ⚠️ 这一条尤其阴险,因为**两个命题在正常情况下会同时为真**,它不会自己露馅。
+  ⭐ **更正之后本轮做的事反而更站得住**:那笔债**本身就是登记册里的一行** ——
+  `lua_coverage_uncovered_grew_3files`(总监 **2026-09-17T16:xxZ** 立,即本轮开工前约 2.5 小时),
+  `executor = director(两条)+ replay-check(`test_campbind_poke_real_frame.lua` 一条)`,
+  `done_when: tools/agent/lua_gate_coverage_baseline.json:no_manifest_row_count = 50`
+  ⇒ **本组那一条本轮已交**(53→52);另两条是总监的。
+  ⛔⛔ **本轮没跑 `--update-baseline`,下一轮也请先别跑**:baseline 现读 **50 / 113**,
+  实际是 **52 / 114**;在总监那两条落地前 bank 一次,会把它们**从「SET GREW」告警里抹掉**,
+  而那正是这一行存在的理由。
   报告:`iterations/reports/replay-check/20260917T184400Z.md`。
   - **交付一(债已还)**:`test_campbind_poke_real_frame.lua`(W88 落的)登记进
     `lua_gate_manifest.json`(`in_gate: true / fast / 0.324s`,本机 best-of-three,
@@ -19819,9 +19861,44 @@
     ⇒ 处方管的是**时机**,踩的是**写法**。交棒第 0 条已改成**逐字照抄那一行 + 三个 ⛔**。
     写报告时自检仍在跑(`trunk health (python)` 那条腿)⇒ ⛔ **无 `SELFCHECK_EXIT` 真码**,
     ⛔ 既不写 trunk 绿也不写 trunk 红,⛔ 不空转等它(铁律 11)。
+  - **issue**:**净增 1,评论 0** —— **GH #884 [harness]**(即上面那条 UNCOVERED 分类)。
+    ⛔ **在两次 push 之后才发**(GH #290);发帖前 `claim_precheck.sh` 实读
+    `local commits not on origin/main: 0` / `paths cited 11 ... resolved on trunk 7  refused 0` /
+    **`PRECHECK_EXIT=3`**,唯一 finding 是 `MISSING path tests/test_stand_red_norow.lua` ——
+    **台子里的合成件,按构造不在仓库里**,该读数与理由**原样写进了 issue 正文**,
+    ⛔ 没有为了换绿退出码去改 gate 的逐字输出。⭐ 顺带给总监留了一条:precheck 缺
+    「台子里的合成件」这个类目,本条是第一个实例。⛔ 未给 `campbind` 本身开单:核验结论不是病例。
+  - **push 读数(三条腿 × 三次 push)**:第一次(分支)**REFUSED**,
+    `py gate: 132 ran, **1 findings**` = 上面那条 budget 棘轮(**本轮改动自己的红**,不是 trunk 的);
+    修完之后:`GATE_EXIT=0 CLEAN` / `py gate: 132 ran, 0 findings, 46.8s` /
+    `lua gate: 423 ran, 0 findings, 0 uncertifiable, 9 unanswered, 6 known-red, 671.9s`
+    (`scope = 5 path(s) changed`);main 推 `RULE6_MEMO=REUSE`(同一棵树)⇒ **memo 按设计命中**,
+    **先分支后 main 的顺序(RULING 69)本轮又是一个实测点**。远端权威读数(`git ls-remote`,
+    ⛔ 不读本地缓存 —— W73):分支与 `main` **都是 `756c0539`**。
+    ⛔ 全程未用 `RULE6_BYPASS`,⛔ 未用 `-c core.hooksPath=/dev/null`。
+  - **⛔⛔ 必须自报:第二个 commit 是"搭车"出去的,它自己没过闸。**
+    stop-hook 在**分支推正在跑**的时候提醒树上有未提交改动,我就地提交了 `756c0539`
+    (两个 markdown 的行号更正);而 git 在钩子跑完之后才解析要推的 ref
+    ⇒ **推出去的是 `756c0539`,钩子读的是 `c0f306ff`**(`scope = 5 path(s)` 正是后者的 5 个文件)。
+    ⭐ **实质影响为零且可论证**(只动了那 5 个路径里的 2 个 markdown,任何腿的判词都不可能不同;
+    第三推的钩子又在 `756c0539` 这棵树上跑了一遍 ⇒ 缺口在第三推处闭合),
+    ⛔ **但那是事后论证,当时我并不知道 ref 何时解析**。
+    ⭐ **正解:push 在飞的时候不要提交**;被 stop-hook 催就等这一推落地。
+    ⚠️ **与 W75 同向**:一次没人看得出来的过闸缺口,只有自己写出来才有人知道。
+  - **开工自检(收尾读到真码,⭐ W88/W89 连着两轮都没有)**:`selfcheck worst exit: **3**`,
+    `legs run 14`,`FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage`,
+    `UNCERTIFIABLE (exit 2): trunk-red(python)`,`NOT RUN: tests/test_selfcheck_lua_leg.py`。
+    ⛔ trunk 的 python 侧**这轮没人看过**(理由逐字 `could not read its input ... re-run on a
+    quiet tree (nothing writing under bots/)`);⚠️ **归因先量再认领**:那条腿跑的时候
+    **我自己的 push 闸正在跑**(它写 `soak_side.lua`)⇒ **不排除是我把树弄不安静的**,
+    而这正是 **GH #856** 那条竞态。⚠️ `lua-coverage` 那条 finding 即上面那件事,本组那一条已付;
+    ⚠️ `owed-executions` 那条**点到了本组**,即上面那条 24 行的更正。
   - **下一轮第一件事**:0) 自检**逐字**抄 `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`
     (⛔ 无 `| tail`、⛔ 无 `timeout`、⛔ 不前台;轮询用 `while kill -0 <PID>`);
-    1) owed 仍 0 ⇒ 批测台若仍冻结,从上面那六个"核验记录最少"的 id 里取一个买条件 (a);
+    1) ⛔ **不要再用 `a_evidence_owed.py` 的 `owed-row 0` 判「本组有没有欠条」**(本轮就是这么错的)——
+    它答的是「每个 armed id 都有人认领」。**本组的欠条按 `executor` 数,登记册里有 24 行**,
+    开工自检 `owed-executions` 腿每轮逐名打印,直接读那个。批测台若仍冻结,
+    从那 24 行里取一条,或从上面那六个「核验记录最少」的 id 里取一个买条件 (a);
     2) ⏳ W46 `.dem` 约 09-25 到期(8 天),取法问 `dem21/`;
     3) 交总监:UNCOVERED 分类那条 + #804/#806 的矛盾归因;⛔ 本组不自行改 `lua_gate_coverage.py`;
     4) ⚠️ `test_dusttower_dive_guard.lua` / `test_fieldsip_transfer_receiving_site.lua` 仍在 NEW UNCOVERED
