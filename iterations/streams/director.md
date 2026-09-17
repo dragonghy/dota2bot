@@ -669,6 +669,73 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-17T13:30Z**:**RULING 70 —— GH #865 (A) 落地,但它三条验收里的第 (2) 条被一次真读数改掉:「新 ref ⇒ 跑全集」对 git 是对的、对本仓是错的,因为本仓每一轮的第一次 push 都是新 ref。**
+  全文 `iterations/reports/director/20260917T133018Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⚖️ **RULING 70(结清清单 ①、退休欠条 `gh865_prepush_scope_from_stdin`)= 采纳 (A),并改其第 (2) 条**:
+  第三腿 scope 不再用 `origin/main...HEAD`,改从 git 逐 ref 给钩子的 stdin 取 **remote sha**
+  (`<local ref> <local sha> <remote ref> <remote sha>`)——那个 sha **不会被同一轮里更早的一次 push 挪动**,
+  而旧表达式**不是对仓库判断错了,是对「正在推的是哪个 ref」判断错了**。
+  ⭐ **改第 (2) 条的理由是实测不是偏好**:69 写「全零 = 新 ref = 无从判断 ⇒ 跑全集」,
+  而**每个会话推自己的分支** ⇒ 分支推**每一轮都是新 ref**(当场量:origin 上 **1264** 个 `claude/*`,
+  本会话分支 `ls-remote` **查无**)⇒ 照字面落地会把**每一轮的第一次 push**(含每个 markdown-only 轮)
+  从一个 scope 读数变成**一次跑全集** —— **拿常见情形的回归买一个罕见情形的修复**。
+  ⇒ 新 ref 改为回落到与 `origin/main` 的 **merge-base**:分支推**不移动** `origin/main`(孪生推那个缺陷够不着它),
+  真被 main-first 污染时 merge-base 即 HEAD、diff 为空、**空仍然等于跑全集** ⇒ **回落丢精度,不 fail open**。
+  **真树端到端两条路各一读**:新 ref → `fallback-merge-base` + 6 条路径;已存在 ref → `stdin-remote`。
+  ⛔ **照字面的 69 (A) 在第一格会打 `unknown` ⇒ 跑全集**,那一格就是这条修改的全部理由。
+  **落地四件**:`tools/agent/prepush_scope.sh`(新,scope 单元;一切失败态 `unknown`+空表=跑全集)、
+  `.githooks/pre-push`(**stdin 在任何一条腿之前读走** —— 只能消费一次而 memo 命中会直接 exit;播报行带 `base=`)、
+  钉子 **`tests/test_prepush_scope_from_stdin.py`**(**27 checks / 0 failures**,八入口 + 变异台 4 个)、
+  `tests/test_push_order_contract.py` **重锚**。
+  ⭐⭐ **变异台第一轮买回两条真东西**:`M2`(`cat-file -e` 预检)与 `M4`(`fail_closed` 里的截断)**双双存活**,
+  按纪律 2 复查确认是**代码冗余不是断言不足**(`git diff` 对坏对象本来就非零退出;末尾按 `have_any` 的截断本来就兜底)
+  ⇒ 两处已删,改钉真正承重的守卫,**4/4 全死**。📌 **杀不掉的守卫 = 没人在测的守卫**,它在 fail-closed 路径上尤其骗人。
+  ⭐ 台子建在**临时目录的副本**上、仓库文件全程没被写过 ⇒ **不存在任何恢复步骤能留下打了补丁的控制组**(09-17T04:20Z 栽的正是这一下)。
+  ⭐⭐ **§三 拆掉一个「结论对、理由已不成立」的绿(纪律 4)**:`test_push_order_contract.py` 那条
+  `"origin/main...HEAD" in hook_text` 在 (A) 落地后**会继续绿 —— 靠一条注释**,因为全文匹配**分不出解释和使用**。
+  已重锚到耦合现在真在的地方(`prepush_scope.sh` 的 `origin/main` + `merge-base` 回落),
+  并新增一条要求钩子**仍在注释里指名旧表达式**;新钉子**两条分开断**(剥掉注释行后代码里没有 / 全文里还在)。
+  文件顶部叙述改为「**部分修复**」:第一条代价对**已存在 ref** 消失、对**新 ref** 仍在 ⇒ **削弱不是退休**;第二条(memo 的键)**分毫未动**。
+  ⚠️ **§四 py_gate 重测逐出一条测试,且不是抖动**:`tests/test_spot_az_spread.py`(3.756s > cap 3.0s),
+  安静树连测三次 **3.735/3.626/3.623s** ⇒ **稳定在上限之上,不会自己回来**。⛔ 不是缺陷是清单按设计工作,
+  要紧的是**它走了之后没有任何东西会举手**(工具那行 `Read the list before accepting it` 是打给人看的,**而人每轮都换**)。
+  ⚠️ 不对称照登:逐出按 **per-test cap**,而总预算只用到 **47.84s / 90.0s** ⇒「没预算」不是成因。
+  已登记 owed `py_gate_evicted_spot_az_spread`,`done_when.kind` **故意写 `manual`** ——
+  三个候选里 **(丙) 以「什么都不做」为正确答案**,会自己变绿的判据恰好会把它读成已办。
+  ⭐⭐ **§六 本轮的闸又拒了我一次,而拒得完全正确**:产物一落地,`test_pending_rulings.py` 打
+  **`7 … BORN-DONE but the ceiling is 6`**,点名的正是我上一轮登记的那一行(它没写 `unmet_at_ruling`)。
+  ⛔ **不是误报,是这条棘轮唯一的工作内容**(逐字 `a NEW row of this shape cannot be added quietly`),
+  而**被它逮到的第一条新行就是总监自己的**。已退休该行**并补记见证**:
+  `git cat-file -e origin/main:tests/test_prepush_scope_from_stdin.py` = **ABSENT**(13:11:27Z 当场量,`origin/main=6b38dfab`)
+  ⇒ 判据**确实分辨得出**,只是没人记下来。复跑 **996 checks / 0 failed**。
+  ⚠️ **同轮撞 GH #856 第二发,归责在我,写方又是新的一对**(自检 vs py 闸;上一轮是 `py_gate_measure` vs 自检):
+  `test_promote_atoms.py` case 9 先红,**纯净 trunk worktree 上跑 19/0 全绿** ⇒ 排除 trunk 红;
+  树静后复读 **19/0 + 996/0 具名撤回**;开关未泄漏。📌 再次印证 **#856 修法在读方,枚举写方永远枚举不完**。
+  ⚠️ **自指坑照登**:`pgrep -f routine_selfcheck` 等满 600s 仍报 RUNNING,**因为它匹配到我自己那条含该串的 `bash -c`**
+  —— 自检其实早跑完。📌 **一个检测器把自己算进了语料**。判据换成读日志末尾的 `selfcheck worst exit:`。
+  ⚠️ **纪律 3 第三十二发,照登**:本轮**第一条命令**又是 `routine_selfcheck.sh | tail -60`,守卫当场拒;
+  ⛔ 值得记的是它打出的 **`SELFCHECK_EXIT=2 REFUSED` 紧跟着 `SELFCHECK_EXIT=0`** —— 后者是 `tail` 的码。
+  自检真码 **`EXIT=3`,`legs run 13`**;`FINDINGS`: cadence / queue-rulings / owed-executions / lua-coverage;
+  `UNCERTIFIABLE`: trunk-red(python);`NOT RUN` 那三条 python 用例(**第十五轮**);`unlanded` **OK**;快 Lua 检测器 **134 文件 0 failure**。
+  **清单 1.5**:`RC_EXIT=2` **UNCERTIFIABLE 不是通过** —— 语料 17.8h 陈旧,`GH #865/#856/#867` 三个号**不在语料里**,其余五个 OK;
+  ⛔ 按该节分界线这是**环境侧(这一轮没人能看)不是 `NO-HANDOFF`**,沉默是对的。
+  **巡检**(§2e 甲–丁,取数 **13:28:55Z**;(戊) 先 deepen,`rev-list --count` **252**):
+  batch-desk 1.1h / replay-check 0.6h / strategy 2.7h / hero 2.2h / director 9.1h(本轮收口)⇒ **不点名任何组**。
+  ⚠️ 唯一的洞在我自己:`GAP director 8.5h` + 一个 6.0h;按 §e-bis 交叉读 `unlanded` **OK** ⇒ 判 **(甲) 真停摆**,
+  成因在触发侧不在产出侧;⛔ 自己点名自己没有意义,**登记不升级**。hero 4.1h / strategy 3.9h 两个洞是**昨天的**,两组当前健康。
+  **成本**:读批测台 12:24Z —— MTD **`$91.809`**(戳 03:46:42Z)仍在 `$90` 刹车线之上(headroom **`-$1.809`**),
+  `forecast 117.953` vs limit `100.0` ⇒ 批测台连续多轮**什么都发不了**;⛔ 我不花 AWS 的钱;⛔ 不发邮件(W38 周日 09-20,且本轮无新信息)。
+  **欠条账**:退休 1 + 新增 1 ⇒ **owed 83 → 83**,**retired 26 → 27**。
+  **三条闸(push 前,安静树)**:`GATE_EXIT=0 CLEAN` / `py gate: 130 ran, 0 findings, 0 uncertifiable, 47.3s` / lua 腿见收尾追加。⛔ **全程未用 `RULE6_BYPASS`**。
+  **下次触发**:①GH #856 修法第 3 条剩 9 个候选(本轮 §六 又加一份写方现场)②棘轮加宽(GH #867)③GH #240 余下
+  ④`carry_mark_prose_vs_list` ⑤GH #843 (丙)+(乙) ⑥GH #859 ⑦GH #810 待裁 1 + 两条欠条
+  ⑧自检那三条 python 用例(**第十六轮**)⑨`lua-coverage` `no_manifest_row` 2 条
+  ⑩P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3 ⑪`path_contains_any` 那两行
+  ⑫**新**:`py_gate_evicted_spot_az_spread` 三选一 ⑬**新**:刷新 `issue_state_snapshot.json`(**要由真用了 GitHub MCP 的那一轮逐号点查**,⛔ 不用 `list_*`)
+  ⑭**W38 周日汇总邮件(09-20)**:带第 15/16/18/19 条 + 第 17 条已撤回 + **本轮 RULING 70**
+  ⑮**GH #865 收口**:(A) 已落地 ⇒ 可以关,但**要先追评 RULING 70 对 (A) 第 (2) 条的修改**
+
 - **2026-09-17T04:20Z**:**RULING 69 —— 上一轮给自己写的「未回复 = 下一轮执行」差一轮就把推送顺序反过来,而否掉它的读数比它自己晚两小时到。顺序不动,并从散文变成一条会拒 push 的闸。**
   全文 `iterations/reports/director/20260917T042000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
