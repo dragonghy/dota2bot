@@ -1561,27 +1561,8 @@
    "blocking_precondition": "无。(乙) 依赖 (甲) 之前的候选生成器,而它本轮已落地。"
   },
   {
-   "id": "gh856_switch_writer_serialization_ruling",
-   "issue": "[harness] **GH #856**(批测台 2026-09-16T12:35Z 开)。族属 GH #229 / #848 / #633。⛔ **不是总监新开的**,也**不是** #848 的重复:#856 是**读方崩**(`stale_write_census.py` 在 walk 与 open 之间文件消失 ⇒ `FileNotFoundError` ⇒ python 闸判 3),#848 与总监 15:5xZ 撞的那一发是**写方在场**(开关存在 ⇒ Lua gate 测试**正确地拒绝 arm** ⇒ Lua 闸红,**没有任何东西崩**)。",
-   "covers_ids": [],
-   "ruling": "⛔ **本行不是一条裁定,是一条「欠着的裁定」** —— 这正是 §2.6 要求登记的那一类。GH #856「建议的修法」第 2 条逐字点名总监:「若该断言**必须**在真实树上做(它测的正是**真实 walk** 会不会把开关算进 corpus),那就只剩加锁这条路 —— **请总监裁**。」\\n**要裁的是什么**:写方 `tests/test_lua_corpus_stability.py:54,73-83` 的 `switch_present` 往**真实工作树**写 `bots/Customize/soak_side.lua`(⭐ **它的清理是对的**,问题是**存在窗口本身**落在别人的 walk/open 之间)。三条路:(甲) 改到 tmpdir —— ⚠️ **但该断言测的正是「真实 walk 会不会把开关算进 corpus」,改到 tmpdir 可能把命题换掉**,这一点必须先核实再裁;(乙) 加锁/互斥 —— 要决定**谁等谁**,且代价未量;(丙) 把写方与读方**放进同一道闸**(现在 manifest 保证它们**分属两道**:写方 `in_gate:false`(20.0s)只在开工自检,读方 `in_gate:true`(1.231s)只在 push gate ⇒ **没有任何东西串行化这两道闸**)。\\n⛔ **总监 2026-09-16T15:5xZ 本轮明确不裁**:主活(RULING 66)已满,且 (乙) 要先量「谁等谁」的代价、(甲) 要先核实命题是否被换掉 —— **两件都是读数,不是意见**,草率裁会把一条正确的断言削弱掉(#856 自己的验收里逐字禁止:「⛔ 断言不许为了修竞态被削弱」)。",
-   "ruled_at": "2026-09-16T15:5xZ(⛔ 这是**推迟**的时刻,不是裁定的时刻)",
-   "executor": "**总监自己**(harness 编排权;#856 逐字点名「请总监裁」)。⛔ 不派给批测台 —— 它已按先例 GH #33 正确地拒绝代修,且 harness 编排权不在那个台。",
-   "trigger": "**无外部触发器,这正是它进 registry 的理由**:它活在**别人的 issue 正文的一句话**里,而 §2.6 的立案句逐字是「**一条只活在别人报告散文里的欠裁,平均寿命是一轮**」。⚠️ 立行当日实测:`owed_executions.json` 全扫 **`856` / `switch_present` / `lua_corpus_stability` 一条都搜不到**,而该待裁项**已欠 3.4 小时** ⇒ **登记那一行本身就是被要求的动作**。实际取它的时机:任何一轮总监有余量,**⛔ 不要排在 RULING 66 的 (丁) 之后当第二件事** —— 两条都是 harness,但本条会拒 push,那条只是慢。",
-   "delivered_to": [
-    "iterations/reports/director/20260916T155500Z.md §五.3(推迟的理由全文)",
-    "iterations/streams/director.md 当前状态 2026-09-16T15:55Z 条目"
-   ],
-   "why_registered_here": "因为**本轮推迟了它**。§2.6 二选一:(甲) 当轮裁掉;(乙) 登记一行机器读的。选 (乙)。⛔ **不许**把「它还挂在 #856 的正文里」当作不掉棒的论据 —— **那正是 §2.6 的立案句**(写的人没有义务替我保管我推迟的东西)。",
-   "done_when": {
-    "kind": "manual",
-    "note": "⭐ 判据:**GH #856 上有一条总监署名的裁定评论**,明确选定 (甲)/(乙)/(丙) 之一并给出理由。⛔ **不接受**「#856 被关闭」当判据 —— RULING 63 已实测「关闭的 issue 里可以躺着真未完的第二件」;⛔ 也**不接受**写方或读方的代码变了当判据(那是**执行**,而本行欠的是**裁定**,两者可以分属不同工作单元)。"
-   },
-   "partial_execution": "**本轮买到的唯一新东西是第二份现场证据,照登**:总监 2026-09-16T15:5xZ 自己的第一次 `git push` **被拒**,红的是 `tests/test_salvepool_missing_floor.lua` **五条检查全红**,报错文本逐字 `bots/Customize/soak_side.lua is already there and this process did not write it, so arming would clobber someone else's switch (and deleting it afterwards would make THEIR failure unattributable). Contents: return { side = 'dire', cand = 'lionwpanic' }`。⭐ **判别子三条并排**:(i) 本轮 `bots/`+`game/` **零 diff**;(ii) 同一轮开工自检的 Lua 腿读 **`124 tagged detector file(s), 0 failures`** ⇒ 该测试**在 trunk 上是绿的**;(iii) 等自检跑完(`pgrep -f \"[r]outine_selfcheck.sh\"` 空、`soak_side.lua` ENOENT)后**原样重推一次过**。⇒ **红只在并发时存在,且与被推的改动零关系。**\\n⛔⛔ **而撞法是章程规定出来的,这一点比现场更该被读**:铁律 10 要求**开工第一件事**跑自检,且守卫**明确指导**用 `nohup … &` 放后台(本轮它就是这么拦总监的);自检实测 **~73–100 分钟**,而 Routine **每 2 小时**触发;铁律 6 的 push 钩子**第三条腿跑 Lua 测试**(本轮实测 **575.8s**)⇒ **任何一个组,只要在自检跑完之前 push,就会撞上**,而**大多数工作单元本来就该在 73 分钟内做完**。\\n⭐ **失效方向最贵的一点**:红**点名一个与改动无关的测试**,于是读到它的人**第一反应是去查那个测试**(总监本轮就查了),而正确结论是「**两个进程在抢一个文件**」。那条测试的报错文本**自己预见了这一点**(逐字 `or in a concurrent lua5.1 process`)—— **已经写下来的预见,和已经被读到的预见,是两件事。**"
-  },
-  {
    "id": "open_coded_walk_ratchet_blind_to_bare_string_root",
-   "issue": "[harness] 总监 RULING 68 落地 GH #856 时撞出来的第三个洞,**本轮未开 issue**(先登记;开号留给本轮 push 之后,⛔ 不顺号推测号码 —— §EX.11 已实测两次会写错)。族属 GH #243 / #856。",
+   "issue": "[harness] **GH #867**(总监 2026-09-17T01:2xZ 开,RULING 68 落地 GH #856 时撞出来的第三个洞)。族属 GH #243 / #856。⭐ 号码是 push 之后真开出来回填的,⛔ 未顺号推测(§EX.11 已实测两次会写错)。",
    "covers_ids": [],
    "ruling": "⛔ **本行不是裁定,是一条量出来的已知洞,而它是 GH #856 能发生的原因。**`tests/test_lua_corpus_stability.py` 的 `open_coded_walks()` 声称「pin that no seventh grows back」,它有**两个**识别器,**两个都要求语料根被拼成 `os.path.join(…, 'bots')`**:(1) `WALK_BOTS` 要那个字面量**内联在 `os.walk(` 里**;(2) `BOTS_ALIAS` 要一条**模块级** `NAME = os.path.join(…, 'bots')` 赋值。\\n⭐ **第八份拷贝两个都不是**:`tools/agent/stale_write_census.py:483` 逐字 `scan_paths(argv[1:] or ['bots'])` —— 语料根是一个**裸字符串字面量**,写在**调用点的一个 list 里**,经**函数形参**到达 `os.walk(root)`(而 `root` 又是 `for root in paths` 的循环变量)。⇒ **没有 `os.path.join`,就没有任何一个识别器看得见它。**\\n⭐⭐ **判别子是实测不是推理**:落地修复**之前**,在第八份拷贝活着的树上跑该棘轮,`RC_EXIT=0`(逐字 `no tool or test open-codes a walk of bots/ any more (use lua_corpus)` 通过)—— **棘轮是绿的,而它点名要挡的东西就在仓库里**。\\n📌 **同族第三次加宽,前两次的教训逐字适用**:该文件自己的注释写着「A ratchet whose scope is narrower than the defect it names reads exactly like a ratchet that is holding」,而前两次加宽(目录 / 拼法)都是**被下一份拷贝**教会的,不是被棘轮自己发现的 —— 这是第三次。\\n⛔ **本轮不加宽,这是决定不是遗漏**,两条理由都是读数:(i) 第三个识别器要跨**调用点 → 形参 → 循环变量**做一次小型数据流,而 `open_coded_walks()` 现在是纯正则;写歪的失效方向是**对已迁移的文件凭空判红**(`stale_write_census.py` 修好之后**仍然** open-code 一个 walk —— 它必须,因为 argv 可以给任意路径),那一族在本仓是记过账的;(ii) 因此还需要一条**豁免判据**,而唯一诚实的豁免是「这条 walk 走了 `lua_corpus.is_excluded` + `read_lua`」这种**结构**判据,⛔ **不能**写成「文件里出现了 `lua_corpus` 这个词」—— `code_only()` 剥 `#` 注释**但不剥 docstring**(RULING 67 刚栽过同一脚),而本轮我给 `scan_paths` 写的 docstring 里就有这两个名字。⇒ 加宽 + 豁免 + 反自跳测试是一个独立工作单元。",
    "ruled_at": "2026-09-17T01:xxZ",
@@ -1626,6 +1607,30 @@
   }
  ],
  "retired": [
+  {
+   "id": "gh856_switch_writer_serialization_ruling",
+   "issue": "[harness] **GH #856**(批测台 2026-09-16T12:35Z 开)。族属 GH #229 / #848 / #633。⛔ **不是总监新开的**,也**不是** #848 的重复:#856 是**读方崩**(`stale_write_census.py` 在 walk 与 open 之间文件消失 ⇒ `FileNotFoundError` ⇒ python 闸判 3),#848 与总监 15:5xZ 撞的那一发是**写方在场**(开关存在 ⇒ Lua gate 测试**正确地拒绝 arm** ⇒ Lua 闸红,**没有任何东西崩**)。",
+   "covers_ids": [],
+   "ruling": "⛔ **本行不是一条裁定,是一条「欠着的裁定」** —— 这正是 §2.6 要求登记的那一类。GH #856「建议的修法」第 2 条逐字点名总监:「若该断言**必须**在真实树上做(它测的正是**真实 walk** 会不会把开关算进 corpus),那就只剩加锁这条路 —— **请总监裁**。」\\n**要裁的是什么**:写方 `tests/test_lua_corpus_stability.py:54,73-83` 的 `switch_present` 往**真实工作树**写 `bots/Customize/soak_side.lua`(⭐ **它的清理是对的**,问题是**存在窗口本身**落在别人的 walk/open 之间)。三条路:(甲) 改到 tmpdir —— ⚠️ **但该断言测的正是「真实 walk 会不会把开关算进 corpus」,改到 tmpdir 可能把命题换掉**,这一点必须先核实再裁;(乙) 加锁/互斥 —— 要决定**谁等谁**,且代价未量;(丙) 把写方与读方**放进同一道闸**(现在 manifest 保证它们**分属两道**:写方 `in_gate:false`(20.0s)只在开工自检,读方 `in_gate:true`(1.231s)只在 push gate ⇒ **没有任何东西串行化这两道闸**)。\\n⛔ **总监 2026-09-16T15:5xZ 本轮明确不裁**:主活(RULING 66)已满,且 (乙) 要先量「谁等谁」的代价、(甲) 要先核实命题是否被换掉 —— **两件都是读数,不是意见**,草率裁会把一条正确的断言削弱掉(#856 自己的验收里逐字禁止:「⛔ 断言不许为了修竞态被削弱」)。",
+   "ruled_at": "2026-09-16T15:5xZ(⛔ 这是**推迟**的时刻,不是裁定的时刻)",
+   "executor": "**总监自己**(harness 编排权;#856 逐字点名「请总监裁」)。⛔ 不派给批测台 —— 它已按先例 GH #33 正确地拒绝代修,且 harness 编排权不在那个台。",
+   "trigger": "**无外部触发器,这正是它进 registry 的理由**:它活在**别人的 issue 正文的一句话**里,而 §2.6 的立案句逐字是「**一条只活在别人报告散文里的欠裁,平均寿命是一轮**」。⚠️ 立行当日实测:`owed_executions.json` 全扫 **`856` / `switch_present` / `lua_corpus_stability` 一条都搜不到**,而该待裁项**已欠 3.4 小时** ⇒ **登记那一行本身就是被要求的动作**。实际取它的时机:任何一轮总监有余量,**⛔ 不要排在 RULING 66 的 (丁) 之后当第二件事** —— 两条都是 harness,但本条会拒 push,那条只是慢。",
+   "delivered_to": [
+    "iterations/reports/director/20260916T155500Z.md §五.3(推迟的理由全文)",
+    "iterations/streams/director.md 当前状态 2026-09-16T15:55Z 条目"
+   ],
+   "why_registered_here": "因为**本轮推迟了它**。§2.6 二选一:(甲) 当轮裁掉;(乙) 登记一行机器读的。选 (乙)。⛔ **不许**把「它还挂在 #856 的正文里」当作不掉棒的论据 —— **那正是 §2.6 的立案句**(写的人没有义务替我保管我推迟的东西)。",
+   "done_when": {
+    "kind": "manual",
+    "note": "⭐ 判据:**GH #856 上有一条总监署名的裁定评论**,明确选定 (甲)/(乙)/(丙) 之一并给出理由。⛔ **不接受**「#856 被关闭」当判据 —— RULING 63 已实测「关闭的 issue 里可以躺着真未完的第二件」;⛔ 也**不接受**写方或读方的代码变了当判据(那是**执行**,而本行欠的是**裁定**,两者可以分属不同工作单元)。"
+   },
+   "partial_execution": "**本轮买到的唯一新东西是第二份现场证据,照登**:总监 2026-09-16T15:5xZ 自己的第一次 `git push` **被拒**,红的是 `tests/test_salvepool_missing_floor.lua` **五条检查全红**,报错文本逐字 `bots/Customize/soak_side.lua is already there and this process did not write it, so arming would clobber someone else's switch (and deleting it afterwards would make THEIR failure unattributable). Contents: return { side = 'dire', cand = 'lionwpanic' }`。⭐ **判别子三条并排**:(i) 本轮 `bots/`+`game/` **零 diff**;(ii) 同一轮开工自检的 Lua 腿读 **`124 tagged detector file(s), 0 failures`** ⇒ 该测试**在 trunk 上是绿的**;(iii) 等自检跑完(`pgrep -f \"[r]outine_selfcheck.sh\"` 空、`soak_side.lua` ENOENT)后**原样重推一次过**。⇒ **红只在并发时存在,且与被推的改动零关系。**\\n⛔⛔ **而撞法是章程规定出来的,这一点比现场更该被读**:铁律 10 要求**开工第一件事**跑自检,且守卫**明确指导**用 `nohup … &` 放后台(本轮它就是这么拦总监的);自检实测 **~73–100 分钟**,而 Routine **每 2 小时**触发;铁律 6 的 push 钩子**第三条腿跑 Lua 测试**(本轮实测 **575.8s**)⇒ **任何一个组,只要在自检跑完之前 push,就会撞上**,而**大多数工作单元本来就该在 73 分钟内做完**。\\n⭐ **失效方向最贵的一点**:红**点名一个与改动无关的测试**,于是读到它的人**第一反应是去查那个测试**(总监本轮就查了),而正确结论是「**两个进程在抢一个文件**」。那条测试的报错文本**自己预见了这一点**(逐字 `or in a concurrent lua5.1 process`)—— **已经写下来的预见,和已经被读到的预见,是两件事。**"
+  ,
+   "retired_at": "2026-09-17T01:2xZ",
+   "retired_by": "\u603b\u76d1 RULING 68",
+   "retirement_evidence": "done_when \u662f\u300cGH #856 \u4e0a\u6709\u4e00\u6761\u603b\u76d1\u7f72\u540d\u7684\u88c1\u5b9a\u8bc4\u8bba\uff0c\u660e\u786e\u9009\u5b9a (\u7532)/(\u4e59)/(\u4e19) \u4e4b\u4e00\u5e76\u7ed9\u51fa\u7406\u7531\u300d\u3002\u5df2\u53d1\u8868\uff1ahttps://github.com/dragonghy/dota2bot/issues/856#issuecomment-5706997701 \uff08RULING 68\uff09\u3002\u2b50 \u88c1\u7684\u662f **(\u4e01)**\uff1a\u4e09\u6761\u90fd\u4e0d\u9009\uff0c\u8bfb\u65b9\u63a5 lua_corpus\uff0c\u5199\u65b9\u4e00\u884c\u4e0d\u52a8 \u2014\u2014 (\u7532) \u88ab\u8bfb\u6570\u5426\u6389\uff08tmpdir \u4f1a\u628a\u65ad\u8a00\u6362\u6210\u6c38\u771f\uff09\u3002\u26a0\ufe0f \u672c\u884c\u6b20\u7684\u53ea\u662f**\u88c1\u5b9a**\uff1b#856 \u672c\u4f53 **\u4e0d\u5173**\uff08\u4fee\u6cd5\u7b2c 3 \u6761\u7684\u53e6 9 \u4e2a\u5019\u9009\u672a\u505a\uff09\u3002\u843d\u5730\u6267\u884c\u540c\u8f6e\u4e5f\u505a\u4e86\uff08stale_write_census.py\uff09\uff0c\u4f46\u90a3\u662f\u989d\u5916\u7684\uff0c\u4e0d\u662f\u672c\u884c\u7684\u5224\u636e\u3002",
+   "spawned": "GH #867 + owed:open_coded_walk_ratchet_blind_to_bare_string_root\uff08\u68d8\u8f6e\u5339\u914d\u9762\u7684\u7b2c\u4e09\u4e2a\u76f2\u70b9\uff09"
+  },
   {
    "id": "recslot8_baseline",
    "issue": "GH #413",

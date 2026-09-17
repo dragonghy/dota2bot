@@ -719,6 +719,35 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑩自检那三条 python 用例(**第十三轮**)⑪`lua-coverage` `no_manifest_row` 存量(3+2)
   ⑫P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3
 
+  **[同轮收尾追加,push 之后]** ⑨ **自检真码 `RC_EXIT=3`,`legs run 13`**(01:12:40Z 跑完,比写正文时晚;
+  ⭐ 正文那句「还在跑,不声称」**照留不改** —— 两者必须长得不一样):
+  `FINDINGS`: cadence / queue-rulings / owed-executions / lua-coverage;
+  **`UNCERTIFIABLE (exit 2): trunk-red(python)`** ⇒ ⛔ **trunk 那一侧本轮没人看过,不声称**;
+  `NOT RUN`: 那三条 python 用例(**第十三轮**)。`owed-executions` **本轮自己造的**。
+  快 Lua 检测器 `129 tagged detector file(s), 0 failures`(⚠️ 快子集)。
+  ⑩ ⭐⭐ **自检这一跑给了 RULING 68 第四份证据**:`trunk-red(python)` 判 2 时打的横幅逐字就是
+  `lua_corpus` 那句 `a python test did NOT run … This line is NOT a pass` ⇒
+  **同一机制同一容器,已接线的一侧判 2 并明说「不是红」,未接线的一侧在 #856 当天判 3 并拒 push** ——
+  #856 立案句的第二份现场证据,也是 (丁) 为什么对:**接线的一侧从来没出过错。**
+  ⑪ **push 记录:两次,⛔ 全程无 `RULE6_BYPASS`**。`pull --rebase` `REBASE_EXIT=0`(干净 2/2);
+  ① `HEAD:main` ✅ `81ea3fef..d8564a71`(`GATE_EXIT=0 CLEAN` / `py 128 ran, 0 findings, 45.9s` /
+  **`lua gate: SKIPPED BY SCOPE`**);② 分支 ✅ `* [new branch]`(`GATE_EXIT=0` / `py 128/0, 46.6s` /
+  **`lua 411 ran, 0 findings, 9 unanswered, 6 known-red, 639.7s`**)。
+  ⭐⭐ **两行的 Lua 腿不同 = 批测台量过的「scope 随被推 ref 而变」** ⇒ ⛔ 不许把 ① 读成「Lua 腿绿」,它没跑。
+  📌 **本轮没撞竞态是顺序帮的忙不是运气**(① 的 Lua 腿没起来,② 起跑时自检已 01:12:40Z 退出、`switch ENOENT` 实测),
+  ⛔ 但**不得据此推广成「换序是可靠对策」**(#856 (丙) 已禁止)。
+  ⚠️ **顺序自捉照登**:本轮我**先推 main 再推分支**,即 ⑫ 裁定「下一轮才落地」的那个顺序 ——
+  代码那一行确实没改,是我本人按更好的顺序走的;动因是 stop-hook 在自检跑完前点名 2 个未推 commit,
+  而「完整工作单元躺在分支上」是记过账的最贵失效(§e-bis RULING 41 躺了 ~3 小时)。
+  ⑫ **GH**:#856 追评 `issuecomment-5706997701`(precheck 先 `RC_EXIT=3`(唯一 finding = 报告未上 trunk)⇒ **先 push** ⇒
+  复跑 `RC_EXIT=0` / `OK to publish` 才发);**#867 新建**(第八份拷贝 + 棘轮匹配面),亦 `PRECHECK_EXIT=0` 才发;
+  **#856 ⛔ 不关**(修法第 3 条的另 9 个候选未做)。⭐ **顺号推测本轮没犯**:先 push → 开 issue 拿真号 → 回填 owed 行。
+  **本轮 MCP 可用,未触发铁律 11。**
+  ⑬ **欠条账**:退休 `gh856_switch_writer_serialization_ruling`(退的是**裁定**,执行留在 #856);
+  新增 `open_coded_walk_ratchet_blind_to_bare_string_root`(= #867)。owed **83 → 82**,retired **25 → 26**。
+  ⭐ 两次改动均走**字节级拼接**(`--numstat` `24/19`),⛔ **无整文件 `json.dump` 回写**(上一轮栽过)。
+  **token(铁律 8)**:`TOKENS total_in=10,253,265 out=64,995 turns=68`。
+
 - **2026-09-16T19:00Z**:**RULING 67 —— 上一轮收尾没交棒,而替这件事举手的那条腿把它印成了 `UNCERTIFIABLE`(与「没有语料」同一个出口)⇒ 掉棒被读成了工具问题,而工具问题下一轮自己会好,掉棒不会。**
   全文 `iterations/reports/director/20260916T190000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
