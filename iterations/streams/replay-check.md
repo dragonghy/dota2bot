@@ -19359,3 +19359,63 @@
     4) 仍欠未动,原样继承 ⛔ 不许读成已结清:**`wkqdmg` 要局数不要深度**、`66.7%` vs `29.4%` 更宽复读、
     **换句柄英雄**(W80–W83 边界)、`pullcad` 收紧域(球在总监)、GH #849 验收口径(球在总监)。
     ⏳ `.dem` 约 **2026-10-02** 到期,硬期限(距今约 **15 天**)。
+- **2026-09-17T04:02Z(W85)**:批测台**连续第三十六轮零发波**(最新 `20260917T001646Z.md`)⇒ 无未检新局,
+  按 W84 交棒第 0 条清本组自己的 owed 行。报告:`iterations/reports/replay-check/20260917T040206Z.md`。
+  - ⭐⭐ **头号:W84 点名的那一行现读 BORN-DONE,不是 OWED。** 当场跑 `pending_rulings.py --owed-only`
+    (`OWED_EXIT=3`,266 行,⛔ 未经管道):`a_evidence_tpgap` 与 `a_evidence_pulldrag` **都读 BORN-DONE**,
+    产物 `iterations/reports/replay-check/a_evidence_tpgap.md`(210 行,含
+    `VERIFY id=tpgap verdict=INDETERMINATE episodes=26`)**2026-09-09 就在树上**;两行的处置归**总监**
+    (`born_done_inherited_disposal`,executor=director)。⇒ **W84 数的「本组 7 行零成本 owed」多了两行,
+    真值 5 行**;本轮结清 1 行,**还剩 4 行**。⛔ 不许再按 W84 那张表取活。
+  - **做的是 `a_evidence_arbheart`**(真 OWED、executor=录像组、行内逐字「已经可以做,不等任何新波次、
+    零 AWS 增量」)。该 id **2026-09-04 入集、13 波 armed**(⚠️ 行里写「12 波,最后 W68」,
+    实测 **W69 也 armed**,arm 串逐字核过),而它携带的唯一 VERIFY 行写于入集**前一天**、
+    内容是「在构造上买不到」⇒ **十三波以来第一次真的去买**。
+    ```
+    VERIFY id=arbheart verdict=INDETERMINATE episodes=453
+    ```
+  - ⭐⭐ **逐帧当场推翻了本轮量具的第一版判据(先逐帧后聚合的现场价值)**:第一版把 latch 锚在
+    「持续逼近段」上(故意不锚在到达上,因为 armed 的 arbheart 正是阻止到达 ⇒ 锚在到达上会让 armed 腿的域
+    **按构造**趋零)。理由成立,**设计仍然错**。`20260912_095226_slot1`(seed 13019,**ARMED** 腿)
+    `crystal_maiden` → camp 2:`t=1302.5..1307.5` **hp_pct=0.00 尸体帧**、`t=1308.5` **泉水复活**、
+    `t=1333.3` 才与营地交火,而 `storm_spirit` 的交火区间是 `t=1307.9..1312.7` ——
+    **到达时盟友已经走了 21 秒**。那段「7,232u 逼近」是**一次复活走位**,arbheart **本就该**让她拿。
+    ⛔ 缺陷不在尸体帧(`alive_at` 已滤),在于**结局判据问「30s 内到了没」,从没问「他到的时候盟友还在不在」**。
+    ⭐ **一个已经变假的释放谓词不可能被违反。** 改判据为**争抢到达**(两端全可观测,不需要 latch 代理),
+    并把这一帧的形状 + 正对照**钉进 `--selfcheck`**。
+  - **读数**(量具 `tools/batch_test/behavioral/arbheart_release.py`,本轮新写,`--selfcheck` **7/7 ALL PASS**;
+    `800u`/`1.0s` **从 Lua 读**不手敲;营地 **28 簇**由中立兵流聚类,两半一致、对称 0.96–1.00):
+    W69(27-id 串,12 局)到达 1608 / 争抢 **247**,armed 0.1626 vs baseline 0.1441,**arm `+0.0219`**(sd 0.0678,4 粒);
+    W68(29-id 串,9 局)到达 1284 / 争抢 **206**,armed 0.1731 vs baseline 0.1476,**arm `+0.0148`**(sd 0.0547,3 粒)。
+    两波 `pairing()` **均自证配对**(`unpaired=[]`/`skipped=[]`)⇒ 按 RULING 57 走
+    `strata.py:per_seed_share_arm`,**先每粒 swap-average 再跨种子算术平均**(铁律 4 (i-d)),⛔ 未按局加权;
+    四个 `opposed` 分层照 (i-e) **登记但不否决**。**WORKING 的 arbheart 给负 arm,两波各自都是正的、方向一致。**
+    **跨波演示(⛔ DEMONSTRATION 不是估计量,两波 arm 串 29 vs 27、树不同)**:`arm +0.0188`、`sd 0.0575`、
+    `n=7`、**95% CI `[−0.0326, +0.0703]`** ⇒ **排除的是「减少超过 baseline 争抢占比的 22%」**。
+  - ⭐ **为什么判 INDETERMINATE 而不是 SILENT/BUGGY(判据不是口味)**:没脚印这件事**同时兼容**
+    (甲) 分支根本没被求值(SILENT)与 (乙) 求值了但没效果(BUGGY),而**本台今天分不开**——
+    ⛔ 这不是谨慎修辞:**门自己的注释就点着这个活疑点**(`mode_farm_generic.lua:835-893` 记着宿主模式
+    十个正 desire 出口全 bid NONE,掐死它的 `J.Site.IsTimeToFarm(bot)`(:502)对被钉主体**按 role 恒假**)。
+    按 evidence-discipline 规则 4(**结论对上了不等于理由对了**),两个互斥机制都支持同一结论时**不挑一个写成判词**。
+  - **边界(引数字必须连着引)**:(1) ⛔ **`J.IsFarming` 引擎侧不可离线读**
+    (`cmqreach_domain.py:70`、`sb_charge_target_domain.py:22` 逐字);本轮代理「那个盟友自己在打 C」
+    **既非子集也非超集**(Farm 走过去=漏计;Roam 顺手打=多计)⇒ **误差无符号,任何读数不得引用为界**;
+    (2) 1 Hz:盟友位置取**到 t0 为止最近整秒帧**,⛔ 从不插值;(3) `campgrade` 两波都不在串里 ⇒ 聚类集合与引擎同域;
+    (4) **8 个 run 有 1 个 `games swept: 0`** ⇒ W68 得 9 局,已按 **3 粒**算;(5) ⛔ 跨波池化是演示不是估计量。
+  - **覆盖**:**宽扫 21/21 有效镜像局**(W69 12 + W68 9,`unparseable 0`,`SWEEP_EXIT=0` ×8);
+    **深查 1 局逐帧** + 453 个争抢到达的帧级判定。⚠️ 低于 6 局下限,但本轮**不是**「没新局所以没得看」——
+    逐帧那一局**当场推翻了量具第一版**,那就是它的价值。
+  - ⛔ `bots/`+`game/`+`tests/` **一行未改**,零新 soak id,零 fixture。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 51 个对象(出网未计价)**
+    = 21 个 `.dem`(扫完即删)+ 29 个 `.analysis.json`(含暖场)+ 1 个 dumper 二进制;另 **8 次 `s3 ls`/`sync`**。
+    容器落盘 551 MB。⛔ 不写「零支出」。**近期读得最重的一轮**,因为粒数只能靠语料买。
+  - **开工自检**:`legs run 13`、**`worst exit 3`**、`FINDINGS: cadence queue-rulings owed-executions lua-coverage`、
+    **`UNCERTIFIABLE: trunk-red(python)`**(⛔ 没跑成 ⇒ **本轮 trunk 的 python 侧没人看过**)、
+    `NOT RUN: test_lua_gate/test_luacheck_gate_soakswitch/test_selfcheck_lua_leg`(⚠️ **连续第十四轮**)。
+    ⚠️ 只踩第一道闸一次(`| tail -40` ⇒ 自报**第 8 次**复发),**没再踩 `timeout` 那道**(W83/W84 各踩一次)。
+  - **下一轮第一件事**:0) ⭐⭐ **按现读取活,别按 W84 那张表** —— 本组 owed 还剩 **4 行**,
+    建议取 `a_evidence_liondrainstop`(量具 `lion_drain_census.py` 已在树上,判据 GH #86 §5 已钉死)。
+    1) **同一 arm 串做到 8 粒种子**可分辨 `0.05` 效应(依据是本轮实测 `sd=0.068`)——⛔ 要发波,**球在批测台**,
+    MTD 在刹车线上 ⇒ 现在只登记不请求。2) 仍欠未动,原样继承 ⛔ 不许读成已结清:**换句柄英雄**、
+    `pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四「折叠 key 合同变成闸」(总监 [harness])。
+    ⏳ `.dem` 约 **2026-10-02** 到期(距今约 **15 天**)。
