@@ -19666,9 +19666,9 @@
     这两条各让本文件红了一轮,**已写进测试文件注释,不留在报告里烂掉**。
     (丁) ⭐ **fixture 的 `bot:GetNearbyNeutralCreeps` 这条路是瞎的** —— loader 把中立单位从 `recent_damage` 合成
     并赋**主体自己的坐标** ⇒ 彼此距离恒 0,而 `campbind` 的全部内容就是距离。已开单。
-  - **issue**:**净增 3,评论 0** —— **[strategy]**(`campbind` 的营地归属判据可被拖出的小野满足)、
-    **[harness]**(loader 中立单位合成坐标塌缩)、**[harness]**(trunk 现在红着 3 文件 / 4 断言,与本轮无关,
-    正是 GH #624 的立案形状)。⛔ **全部在 push 之后发(GH #290)**。
+  - **issue**:**净增 3,评论 0** —— **GH #878 [strategy]**(`campbind` 的营地归属判据可被拖出的小野满足)、
+    **GH #879 [harness]**(loader 中立单位合成坐标塌缩)、**GH #880 [harness]**(trunk 现在红着 3 文件 / 4 断言,
+    与本轮无关,正是 GH #624 的立案形状;其中一条落在快闸声明不管的那一侧)。三份草稿 `PRECHECK_EXIT=0`。⛔ **全部在 push 之后发(GH #290)**。
     ⛔ 未给 `campbind` 本身开单:核验结论不是病例。
   - **下一轮第一件事**:0) ⭐⭐ **自检的处方变成动作**:开工第一条命令逐字
     `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`,⛔ 无 `| tail`、⛔ 无 `timeout`。
