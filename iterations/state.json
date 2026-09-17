@@ -9741,7 +9741,8 @@
       "test": "tests/test_weakhp_seed_family.lua -- 5 green, 0.479s best-of-three",
       "manifest_row": "tools/agent/lua_gate_manifest.json: seconds 0.49, hand-added in the SAME change (GH #806/#624). budget_seconds NOT moved: 259.002 + 0.49 = 259.492, 2x = 518.984 -> 520.0, which it already held. ⭐ The file was made CHEAP ON PURPOSE to keep it there -- 1.190s -> 0.479s by collapsing two walks over ~500 shipped files into one -- rather than shaving the recorded number, per the axecallnocap/tpstash rule that the budget is DERIVED, not chosen. The stand was RE-RUN after that refactor.",
       "mutation_stand": "tools/agent/mutstand_weakhpseed.sh",
-      "text_correction": "tests/test_cm_weakest_sentinel_domain.lua §4 failure text only; the `nMaxMaxHp * 2 < SENTINEL` bound is byte-for-byte unchanged"
+      "text_correction": "tests/test_cm_weakest_sentinel_domain.lua §4 failure text only; the `nMaxMaxHp * 2 < SENTINEL` bound is byte-for-byte unchanged",
+      "issue": "GH #870 (opened AFTER the push and the number READ BACK, never guessed from sequence)"
     },
     "limits": {
       "sample_not_proof": "the corpus readings are a SAMPLE, not a proof. Turbo (~20 min) is why the ceiling sits where it does; a 60-minute normal-mode game can put a fully-slotted carry over a 10000 seed. NEVER write 'impossible'.",
