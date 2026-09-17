@@ -10420,10 +10420,20 @@
   ⇒ 出厂读作 TRUE 的 **106** 帧是过计数,其中敌方圈为空的 **46** 帧是**翻转集的上界**,⛔ **不是「46 帧会翻」**
   (补它要 dump 带每英雄模式,GH #27 同族,**欠着不绕**;§3(ii) 出声断言,加载器哪天区分模式该文件报红要求重读)。
 
-  **本地验证**:`tests/test_fightfoe_enemyless_fight.lua` **15/15**(§2 三个**对照真实帧**:2 队友/**0** 敌人 = 翻、
-  2/**2** = 不许动、0/0 = 阈值以下够不到;三个半径全 FALSE;**[control] 三条**)。
-  **变异台** `tools/agent/mutstand_fightfoe.sh`:读数见报告 §7;⛔ **评分栏先于结论读** ——
-  11 条腿里 **4 条与出厂行为等价**,靠源码棘轮抓住,这一点写在脚本头里。
+  **本地验证**:`tests/test_fightfoe_enemyless_fight.lua` **12/12,0.43s**(§2 三个**对照真实帧**:
+  2 队友/**0** 敌人 = 翻、2/**2** = 不许动、0/0 = 阈值以下够不到;三个半径全 FALSE;**[control] 三条**);
+  语料两趟 walk 在 `tests/_fightfoe_sweep.lua`:`live 1039 / enemyless 521 / ally2 106 /
+  ally2_enemyless 46 / flippable 25 / down 25 / up 0`。
+  **变异台** `tools/agent/mutstand_fightfoe.sh` **10 抓 + 控制 SURVIVED**,⚠️ **拆分前后各跑一遍,读数相同**;
+  ⛔ **评分栏先于结论读** —— 11 条腿里 **4 条与出厂行为等价**,靠源码棘轮抓住,这一点写在脚本头里。
+
+  **⭐⭐ 本轮第二贵的一条,闸门替全队挡下来的**:该测试原本 **~120s**,作为**未入 manifest 的新测试**
+  被 `lua_gate.py` 在 **`hook_timeout_seconds` = 20.0** 上**杀掉**,而这一刀落在 `ss.arm` 与 `ss.disarm`
+  **之间** ⇒ `soak_side.lua` 留在盘上 ⇒ **闸门里别人的每一个测试都「gate off」前提失败**,
+  push 被拒、**11 条 findings 没有一条关于被测代码**(早些时候自检那 7 条 `TRUNK RED` 是同一 artifact)。
+  ⇒ **会被半路杀掉的测试是对整个套件的危害**,**per-test cap 就是执行这件事的东西**。
+  修法是 manifest 自己记过的那条:**把文件做便宜**(walk 搬进 sweep,**120s → 0.425s**),
+  ⛔ **不是去改那个秒数**;manifest 手加 `seconds = 0.43`,`budget_seconds` 不动(推导:2×261.612 → 530.0)。
 
   **⭐⭐ 本轮最贵的一条 ⇒ 0NEXT37**:§4 第一版在**同一次 load** 上翻 `GetGameMode` 读 shipped,
   而 `J.IsModeTurbo` 首次调用即 memoise(`jmz_func.lua:13236`)⇒ `shipped` 每帧与 `armed` 逐位相同,

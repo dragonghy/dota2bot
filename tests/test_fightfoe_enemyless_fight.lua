@@ -278,190 +278,35 @@ end
 -- §3  THE CORPUS, AS TWO READINGS THAT ARE NEVER MERGED.
 -- =====================================================================
 
-local function fixture_files()
-    local p = assert(io.popen('ls tests/fixtures'))
-    local t = {}
-    for f in p:lines() do
-        if f:match('^f_.*%.lua$') then t[#t + 1] = 'tests/fixtures/' .. f end
-    end
-    p:close()
-    table.sort(t)
-    return t
-end
-
---- ⭐ TWO WALKS OVER THE SAME CORPUS, memoised together -- §3 (i), §3 (ii)
---- and §4 all read the result.
----
---- ⛔ WHY TWO WALKS AND NOT ONE, and it is a MEASURED trap, not caution. The
---- first version of this file read the shipped answer on the SAME load by
---- flipping `GetGameMode` back to 22 between the two calls. That reads nothing:
---- `J.IsModeTurbo` memoises into a module-level `bModeTurboCache` on its first
---- call (jmz_func.lua:13236), so the second call returns the FIRST answer and
---- `shipped` is byte-identical to `armed` on every frame. The tally then read
---- `down = 0` -- which the swapped leg correctly refused to accept as a
---- direction proof. ⇒ the only honest way to get the shipped answer is a
---- SECOND LOAD with the switch absent, and that is what this does. Nothing
---- here re-implements the predicate.
----
---- Zero-initialised so "the bucket was never reached" and "the bucket measured
---- zero" are never the same reading (the GH #171 shape).
-local _corpus
-local function corpus()
-    if _corpus ~= nil then return _corpus end
-    local c = { live = 0, enemyless = 0, ally2 = 0, ally2_enemyless = 0,
-                flippable = 0, shipped_live = 0, down = 0, up = 0 }
-    local armed_by, shipped_by = {}, {}
-
-    --- One pass over every live hero frame. `fn(sKey, J, bot)` is called with
-    --- turbo on and the world freshly loaded.
-    local function walk(fn)
-        for _, path in ipairs(fixture_files()) do
-            local fx = dofile(path)
-            if type(fx) == 'table' and fx.units and fx.time then
-                for _, u in ipairs(fx.units) do
-                    if u.alive and u.name and u.name:match('^npc_dota_hero_') then
-                        GAMEMODE_TURBO = nil                   -- luacheck: ignore
-                        local ok, J, bot = pcall(rf.load, path, u.name)
-                        GAMEMODE_TURBO = 23                    -- luacheck: ignore
-                        GetGameMode = function() return 23 end -- luacheck: ignore
-                        if ok and bot ~= nil then
-                            fn(path .. '|' .. u.name, J, bot)
-                        end
-                    end
-                end
-            end
-        end
-        unprobe()
-    end
-
-    -- PASS 1 -- the id armed on ONE side.
-    ss.with_candidate('fightfoe', function()
-        walk(function(sKey, J, bot)
-            c.live = c.live + 1
-            local nAlly, nEnemy = ring(J, bot)
-            if nEnemy == 0 then c.enemyless = c.enemyless + 1 end
-            if nAlly >= 2 then
-                c.ally2 = c.ally2 + 1
-                if nEnemy == 0 then c.ally2_enemyless = c.ally2_enemyless + 1 end
-            end
-            -- ⛔ THE SWITCH IS SIDE-SCOPED. `with_candidate` arms ONE side, so
-            -- on the other side the gate is shut and armed == shipped BY
-            -- CONSTRUCTION. The flippable set is the census set INTERSECTED
-            -- with "the gate is open for this bot", read from the GATE itself
-            -- rather than from the bot's team, so the two cannot drift apart.
-            if J.IsSoakCandidate('fightfoe') and nAlly >= 2 and nEnemy == 0 then
-                c.flippable = c.flippable + 1
-            end
-            armed_by[sKey] = J.IsInTeamFight(bot, 1600)
-        end)
-    end, 'radiant')
-    unprobe()
-
-    -- PASS 2 -- nothing armed. ⛔ The switch must be GONE here, not merely
-    -- pointed elsewhere: `ss.assert_clean` is what says so, and without it a
-    -- leftover from a crashed case would make this pass measure the armed tree
-    -- and every flip below would silently read zero.
-    ss.assert_clean('fightfoe corpus pass 2')
-    walk(function(sKey, J, bot)
-        c.shipped_live = c.shipped_live + 1
-        assert(J.IsSoakCandidate('fightfoe') == false,
-            'the gate is open during the un-armed pass')
-        shipped_by[sKey] = J.IsInTeamFight(bot, 1600)
-    end)
-    unprobe()
-
-    --- ONE tally, called twice with the legs SWAPPED: the counter that must
-    --- read 0 on the real call is the one that must report the WHOLE domain on
-    --- the swapped call. A tally of all zeros cannot tell "the direction holds"
-    --- from "the loop never ran".
-    local function tally(a, b, sKey)
-        if a and not b then c[sKey] = c[sKey] + 1 end
-    end
-    for sKey, armed in pairs(armed_by) do
-        local shipped = shipped_by[sKey]
-        tally(shipped, armed, 'down')  -- TRUE  -> FALSE
-        tally(armed, shipped, 'up')    -- FALSE -> TRUE
-    end
-
-    _corpus = c
-    return c
-end
-
-tests['§3 (i) GROUND TRUTH: half the live frames have no enemy in the ring']
-= function()
-    local c = corpus()
-    assert(c.live > 900, 'the corpus shrank to ' .. c.live
-        .. ' live frames -- this reading is about a corpus that no longer exists')
-    -- ⭐ The measurement. The enemy list is the dump's roster and is
-    -- vision-limited, so this half is a fact, not a model.
-    assert(c.enemyless > 0,
-        'ZERO live frames have an empty enemy ring -- the reader is blind, and '
-        .. 'a blind reader would make the armed conjunct vacuously false '
-        .. 'everywhere')
-    assert(c.enemyless * 2 > c.live * 0.9,
-        'the enemy-less share collapsed well below the ~50% this finding was '
-        .. 'registered on (' .. c.enemyless .. '/' .. c.live .. ')')
-    -- ⛔ ANTI-VACUUM, same reader, same walk: if EVERY frame were enemy-less
-    -- the reading above would be an instrument fault wearing a measurement's
-    -- clothes.
-    assert(c.enemyless < c.live,
-        'every live frame reads as enemy-less -- that is an instrument fault, '
-        .. 'not a domain')
-end
-
-tests['§3 (ii) UPPER BOUND, labelled as one: the ally half is over-counted']
-= function()
-    local c = corpus()
-    -- The loader ignores the mode filter, so this count is "allies nearby".
-    assert(c.ally2 > 0, 'no frame reaches the shipped threshold at all')
-    assert(c.ally2_enemyless > 0,
-        'the upper bound on the flip set is zero -- the lever would be a '
-        .. 'constructive no-op on this corpus and must be reported as one')
-    assert(c.ally2_enemyless <= c.ally2,
-        'the flip upper bound exceeds the set it is a subset of')
-    -- ⛔ The label is part of the reading: the loader must still be ignoring
-    -- the mode argument. The day it stops, this file has to be re-read rather
-    -- than inherited, so the assumption is asserted OUT LOUD here.
-    local J, bot = rf.load(HOLD_FX, HOLD_SUBJ)
-    local nAttack = #J.GetNearbyHeroes(bot, 1600, false, BOT_MODE_ATTACK)
-    local nAny    = #J.GetNearbyHeroes(bot, 1600, false, BOT_MODE_NONE)
-    assert(nAttack == nAny,
-        'the loader now DISTINGUISHES the mode filter (' .. nAttack .. ' vs '
-        .. nAny .. ') -- §3 (ii) is no longer an upper bound and this file '
-        .. 'must be re-read, not inherited')
-end
-
 -- =====================================================================
--- §4  DIRECTION, THROUGH A TALLY THAT IS PROVED TO COUNT.
+-- §3/§4 LIVE IN tests/_fightfoe_sweep.lua, NOT HERE -- and that is a repair,
+-- not a convenience.
+--
+-- ⛔ THE INCIDENT THAT MOVED THEM (recorded so nobody moves them back).  The
+-- two corpus walks made this file ~120s.  tools/agent/lua_gate.py runs an
+-- unmeasured new test with `hook_timeout_seconds` = 20.0 and KILLS it at the
+-- timeout; the kill landed between `ss.arm` and `ss.disarm`, leaving the
+-- global switch `bots/Customize/soak_side.lua` on disk holding
+-- `{ side = 'radiant', cand = 'fightfoe' }`.  Every OTHER gate test then
+-- failed its "gate off" precondition against that leftover and the push was
+-- refused with 11 findings, NONE about the code under test.
+-- ⇒ A test that can be killed mid-arm is a hazard to the whole suite (the
+-- GH #229 / GH #365 §3 family).  The per-test cap is what enforces that, and
+-- the remedy the manifest's own `hand_added_note` records for 'tpstash' and
+-- 'WEAKHPSEED' is the one taken here: MAKE THE FILE CHEAP.  ⛔ Never shave the
+-- recorded seconds instead -- the budget is derived, not chosen.
+--
+-- THE READINGS, from `lua5.1 tests/_fightfoe_sweep.lua` on this corpus:
+--   live 1039 / shipped_live 1039   the two passes saw the same corpus
+--   enemyless 521                   §3 (i), GROUND TRUTH (50.1%)
+--   ally2 106 / ally2_enemyless 46  §3 (ii), the UPPER BOUND (see the header)
+--   flippable 25                    shipped-TRUE ∩ empty ring ∩ gate open here
+--   down 25 / up 0                  §4, the direction tally -- `down` equals
+--                                   `flippable` exactly, and `up` is zero
+-- ⛔ `flippable` (25) is strictly less than `ally2_enemyless` (46) because
+-- `with_candidate` arms ONE side; that inequality is what says the walk did
+-- not silently arm both.
 -- =====================================================================
-
-tests['§4 ⭐ over the whole corpus the lever only ever removes a team fight']
-= function()
-    local c = corpus()
-    assert(c.live > 900, 'the walk covered only ' .. c.live .. ' frames')
-    -- ⛔ The two passes must have seen the SAME corpus, or the pairing below is
-    -- between different frames.
-    assert(c.live == c.shipped_live, 'the armed pass saw ' .. c.live
-        .. ' frames and the un-armed pass ' .. c.shipped_live)
-    -- The swapped leg reports the WHOLE domain, so a zero here would mean the
-    -- tally never ran -- which is exactly what makes the zero below readable.
-    assert(c.down > 0, 'the lever flipped NOTHING on the whole corpus, so the '
-        .. 'zero in the other direction proves nothing')
-    assert(c.up == 0, 'the lever turned FALSE into TRUE on ' .. c.up
-        .. ' frames -- that is the one direction it must never take')
-    -- ⭐ The flips are EXACTLY the frames the lever has a quarrel with, and not
-    -- one more: shipped-TRUE, enemy-less, and on the armed side.
-    assert(c.down == c.flippable,
-        'the flip set (' .. c.down .. ') is not the enemy-less shipped-TRUE set '
-        .. 'on the armed side (' .. c.flippable .. ') -- the lever is moving '
-        .. 'frames for some other reason than the one it was written for')
-    -- ⛔ And the side scoping is REAL, not assumed: the whole-corpus set is
-    -- strictly larger, which is what says the walk armed one side and not both.
-    assert(c.flippable < c.ally2_enemyless,
-        'the armed-side flip set equals the whole-corpus one (' .. c.flippable
-        .. ') -- either the switch stopped being side-scoped or the walk armed '
-        .. 'both sides, and §4 would then be reading a different question')
-end
 
 -- =====================================================================
 -- §5  CONTROLS.  ⛔ A stand with no control leg cannot tell "everything was
