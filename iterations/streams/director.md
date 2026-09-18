@@ -669,6 +669,64 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-18T01:15Z**:**交棒 ⑧(b) 落地 —— `verdict-closure` 腿:数判定完结,读成员串历史行不读报告名;RULING 74(自检跑着的时候不许写自检自己)。**
+  全文 `iterations/reports/director/20260918T011500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⭐ **落地四件**:`tools/agent/verdict_closure_stall.py`(新,**0.03s**,不执行任何测试)、
+  `tests/test_verdict_closure_stall.py`(**25 checks / 0 failures**,中位 0.354s)、
+  变异台 `tools/agent/mutstand_verdict_closure_stall.sh`(**5/5 全杀**,主体全程未被写过)、
+  接进 `routine_selfcheck.sh` 第 `verdict-closure` 腿(**紧接 `cadence` 之后 —— 那正是它瞎掉的那一格**)。
+  本轮真读数:`anchor line 3 -- 2026-09-17T2x:xxZ, 判定完结 1` / `STALL 1` / `RC_EXIT=0`。
+  ⭐⭐ **非空是用真语料买的,不是手画的**:把 `6b38dfab`(09-17T12:38Z,仍是 **25 串**)那棵树的
+  `test_set.md` + 它自己的 **247** 个 director 报告名喂回去 ⇒ `STALL 20` / **`RC_EXIT=3`**;
+  且**首次会响的那一轮点得出来** —— 锚点之后第 12 份是 `20260916T011917Z`,于是
+  **`20260916T040544Z` 开工时它就会红**,比 RULING 73 用手在第 23 轮发现**早约 42 小时**。
+  ⭐⭐⭐ **唯一真正的设计判断,而错的那个版本更顺手**:锚点要的是 **`判定完结 ≥ 1`**,不是「成员串动了」——
+  **入集也移动成员串却一个判定都没完结**(`test_set.md:142` 的 `arbheart`+`slotwait` 同轮入集逐字就是那个形状,
+  且**不带** `判定完结`)⇒ 按「串动了」锚定,一次入集就把停摆计数**清零**,
+  **失效方向正是掩盖停摆**。约定若被弃用,它只会**走得更远、更响**;**没有任何输入能让它安静地绿**。
+  同族的两条方向选择:**模糊戳按最早解**(只会多数一轮,`≤1`,阈值 12/24 不敏感)、
+  **空语料 = exit 2 不是 0**(「0」恰恰是长得最像健康的那个答案,RULING 55)。
+  ⚖️ **RULING 74(习惯级,⛔ 不开 issue,现场是我自己造的)**:00:55Z 起的开工自检还在跑时我把新腿接进同一个文件,
+  那次自检**当场死在** `line 809: syntax error near unexpected token 'elif'` / `RC_EXIT=2`,
+  **而文件本身是好的**(改完立刻跑的 `bash -n` 逐字 `SYNTAX OK`)⇒ 成因是
+  **bash 按字节偏移边跑边读脚本**,插入 40 行把偏移挪了,跑着的解释器**读进半条 `if`**。
+  ⇒ 尾部三条腿的读数**被我污染,全部作废**(日志里 `138 tagged detector file(s), 0 failures` 与
+  `NO DETECTORS FOUND -- discovery matched 0 files` **两句都在**),01:11Z 在未再被触碰的树上重跑。
+  ⭐ **这是 RULING 73 ⑯ 的推广且形状更坏**:⑯ 管的是自检**读的数据**(`test_set.md`),
+  这一条管自检**自己的代码**;⚠️ **第一反应是「我刚改的文件有语法错」,而 `bash -n` 说没有** ——
+  两句同时为真,中间那一步(**跑着的进程和磁盘上的文件不是同一份**)没有任何东西会说出口。
+  ⛔ **别把「整份 copy 到 /tmp 里跑」当对策**:本轮试过,第 28 行 `cd "$(dirname "$0")/../.."`
+  把工作目录送到 `/`,十几条腿齐报 `can't open file '//tools/agent/…'` —— **更响的假读数,不是解药**。
+  **py_gate_manifest 故意没改**:新测试 0.354s,`py_gate.py` 对不在 manifest 里的新测试照跑(slack 3.0s);
+  而 `py_gate_measure.py` 会按本容器秒数**重建整张 148 行表** ⇒ 与本单元无关的成员资格洗牌,**起了又杀掉,manifest 逐字节未动**;
+  `py-coverage` 靠 glob ⇒ 新文件天然被覆盖(`UNCOVERED 0 of 150`)。
+  **巡检**(RULING 59 逐字命令,01:02Z):batch-desk 09-18T00:24Z / replay-check 21:47Z / strategy 22:38Z /
+  hero 23:03Z / director 22:05Z —— 五组全活,无掉棒。⚠️ 本容器 clone **是浅的**(`rev-list --count` = **50**)
+  ⇒ RULING 62 (戊):**本轮没做任何 `--follow`/`-S`/`--diff-filter=A` 遍历**,日期论断只来自报告名与已存储 commit date。
+  **成本**:零 AWS;结转批测台 MTD **`$92.001`** > 刹车 `$90` ⇒ 零发波(**第四十五轮持有**);
+  ⚠️ `forecast $118.091` > `$100` 仍在 `DECISIONS_NEEDED.md`,**W38(09-20)带它**。
+  **RULING 64 那条腿**:`RC_EXIT=2`,8 个号里 7 个 OK,`GH #548` **`UNCERTIFIABLE -- not in corpus`**(语料 11.3h 龄)⇒ ⛔ 不读成 pass。
+  **自检**:⚠️ **纪律 3 第 37 发**,又是当轮第一条命令(`| tail -60`,守卫逐字 `REFUSED: … stdout is a pipe; exit 2, nothing checked.`)。
+  ⚠️ **两条存量红,都不是本轮造的**:(1) `TRUNK RED (python)` = `tests/test_bots_walk_farm_only.py`,
+  手读白名单棘轮被 `tests/test_wk_q_teamfight_reach_pricing.lua` 的 `'ls ' .. dir .. ' 2>/dev/null'` 顶红
+  —— 本轮 `bots/` 零 diff 且没动既有测试;(2) `lua-coverage UNCOVERED SET GREW` =
+  `test_fieldsip_transfer_receiving_site.lua`,**RULING 71 §三已登记**,零新增
+  (同行还报 `NOW COVERED test_fieldsip_atom_pricing.lua`);(3) `test_selfcheck_lua_leg.py` 的 9 条
+  UNCERTIFIABLE = **GH #548 第三次复现**。
+  **下次触发**:①GH #856 剩 9 候选 ②GH #867 ③GH #240 余下 ④`carry_mark_prose_vs_list`
+  ⑤GH #843 剩 (乙) ⑥GH #859 ⑦GH #810 待裁 1 + (乙)
+  ⑧**(a) 判定完结 ≥1,第一候选仍是给 `fieldsip` 单独定价的那个工作单元**;
+  ⭐**(b) 已交付** ⇒ 这根棒从今天起**是机器看的**(每轮打 `STALL`,12 轮自己 exit 3 并**点名总监自己**)。
+  ⛔ **它不替我完结判定,它只是让「没完结」不再安静。**
+  ⑨GH #548(砍 Top 10,集中;`fieldsip` 91.3s 是它的实例)⑩P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3
+  ⑪`path_contains_any` 那两行 ⑫`py_manifest_no_carry_baseline_port`
+  ⑬**W38 邮件(09-20)**:15/16/18/19 条 + 17 条已撤回 + RULING 70+71+72+73+**74** + ⚠️`forecast $118.091`
+  ⑭`lua_gate_manifest.json` 已陈旧,⛔重测先读 GH #810
+  ⑮⛔习惯:`lua5.1 tests/test_x.lua` = 假绿,唯一入口是 `tests/run_tests.lua <filter>`
+  ⑯⛔习惯:自检跑着时不要写 `test_set.md`(RULING 73 ⑯)**或 `routine_selfcheck.sh` 自己(RULING 74,新)**
+  ⑰**新**:`tests/test_bots_walk_farm_only.py` 的手读白名单红,**存量,谁先动谁修**
+  ⑱`stayfield2` 重新入集的机器行 = `owed_executions.json:stayfield2_readmit_when_fieldsip_moves`,按设计仍是 OWED,**不要当成掉棒**
 - **2026-09-17T22:1xZ**:**RULING 73 —— `stayfield2` 退集(25 → 24),处置 `SIBLING-ABSORBED`(新名);结清 §HK.4 那句只活在散文里的「留给它自己的裁定」。**
   全文 `iterations/reports/director/20260917T220500Z.md`,档案 `test_set.md §HN`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

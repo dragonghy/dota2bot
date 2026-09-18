@@ -239,6 +239,45 @@ printf '\n=== report cadence + published citations ===\n'
 python3 tools/agent/citation_audit.py --cadence --fetch "${extra[@]+"${extra[@]}"}"
 note $?
 
+# [director 20260918, RULING 73 ⑧(b) / test_set.md §HN.4-bis] The leg ABOVE
+# answers "did the group file a report".  This one answers the question that
+# hid behind it for 23 consecutive director rounds: "did anything CLOSE?"
+#
+# Measured founding case.  `test_set.md`'s head history line stood at 成员串 25
+# from 2026-09-14T16:xx to 2026-09-17T22:0x.  All 23 rounds in between filed a
+# report, so `cadence` was green in every one of them -- and NO leg counted
+# 判定完结.  Iron rule 9's 12-round escalation never fired; the stall was found
+# by hand, in prose, on the 23rd round.  Replayed against the real corpus of
+# that day this leg exits 3 at 20 rounds, and against the report names that
+# existed on 2026-09-16T04:05Z it would have fired at round 12 -- about 43
+# hours before a human noticed.
+#
+# Two reasons it could not have been noticed automatically, both structural:
+#   * `pullcad` family -- an automatic reader checks that a thing EXISTS (a
+#     report), never that it can be TRUE (a verdict closed).
+#   * iron rule 9's escalation action is 「点名该组」, and in this one cell 该组
+#     IS the inspecting seat.  That is the first SELF-REFERENTIAL open circuit
+#     recorded here, and a leg in a script every stream runs is how it closes:
+#     the number now lands in front of four readers who are not the director.
+#
+# ⛔ The trigger is NOT a report name.  Report names are the DENOMINATOR only
+# (how many director rounds went by); filing one can never satisfy this leg,
+# only make its number bigger.  An admission (入集) moves the member string
+# without closing a verdict -- `test_set.md:142` is exactly that -- so the
+# anchor requires `判定完结 >= 1` and walks back past anything else.
+#
+# Like the rest of this script it reports a QUESTION, not a judgement: it does
+# not audit whether a closure was real or worth 1 vs 2, and it says nothing
+# about P4.2's per-round >= 2 rate. But LOOK.
+sc_leg 'verdict-closure'
+printf '\n=== verdict closure stall (has the armed set moved?) ===\n'
+if command -v python3 >/dev/null 2>&1; then
+    python3 tools/agent/verdict_closure_stall.py
+    note $?
+else
+    unchecked 'the verdict-closure stall check'
+fi
+
 # Is trunk itself red?  Added 2026-08-22T14:5xZ (director), after GH #116: a
 # tool landed at 13:15Z re-introduced `team_slot % 5 + 1` -- a hero->position
 # rule this repo had already MEASURED at 47.3% accuracy (GH #57), retired, and
