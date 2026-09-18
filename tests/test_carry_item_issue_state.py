@@ -67,6 +67,27 @@ THE LOAD-BEARING CLAIMS
      every ref in the fallen-back list is open, because what needs fixing is
      this round writing a list.
 
+ 11. (RULING 75, 2026-09-18) the segment is anchored on the **list**, not on
+     the last mention: a『下次触发』mention that comes AFTER the list must not
+     truncate it.  An anchor is a mark that is bolded AND followed by a colon
+     on the same line; a bare bold test and a bare colon test are each refuted
+     by a real shape this charter writes.
+
+     The incident: entry `2026-09-18T01:15Z` ends with a `[同轮收尾追加,push
+     之后]` block whose ⑳ reads `⇒ 进下次触发 ⑭。`.  Taking the LAST mention
+     made the segment that trailing block, and the leg printed `1 carry
+     segment(s), 0 GH ref(s)` + exit 2 while the live list above it carried 8
+     refs.  **Exit 2 is this leg's "nobody could look this round, and it fixes
+     itself next round" — and this one does not fix itself**, because the
+     mention is a permanent part of that entry.  Same failure direction as the
+     one RULING 67 abolished, arriving through the segment picker instead of
+     through the corpus.
+
+     The test below also pins the rule that was tried FIRST and refuted by the
+     corpus — "the latest mention that yields refs" — because on entry
+     `2026-09-11T04:19Z` the list carries no `GH #` at all and that rule walks
+     back past it into a narrative quote and reports two refs nobody carried.
+
   9. two corpus shapes this repo actually writes, both found by running the
      leg on the real charter rather than by reading it: an entry stamped
      `T10:1xZ` (fuzzy minute digits) is parsed, and the carry segment is the
@@ -131,6 +152,81 @@ CHARTER_NO_REFS = """# x
   **下次触发**:①把 `walk_farm` 的读数量出来 ②看守自检那三条 python 用例
 
 ## 别的节
+"""
+
+# RULING 75: the list, then a LATER mention of it.  `#901` sits in the narrative
+# BEFORE the list (it must stay out of scope -- that is the original
+# first-occurrence bug) and `#900` sits in the trailing block AFTER the list
+# (it is inside the segment, because the segment runs to the end of the entry;
+# what must not happen is the trailing block BECOMING the segment).
+CHARTER_SHADOWED = """# x
+
+## 当前状态(每次触发后更新)
+- **2026-09-16T10:1xZ**:正文先谈论『下次触发』这件事,顺带引用 GH #901。
+  **下次触发**:①GH #523 ②GH #810
+
+  **[同轮收尾追加,push 之后]** ⑳ 不顺手重测 ⇒ 进下次触发 ⑭。
+  ㉑ `claim_precheck.sh` 复跑,剩 1 finding。
+"""
+
+# RULING 75, the refuted alternative: "take the latest mention that yields refs".
+# Here the list itself carries no `GH #`, and a narrative quote above it does.
+# That rule walks back past the list and reports `#900` as carried work.
+CHARTER_REFLESS_LIST = """# x
+
+## 当前状态(每次触发后更新)
+- **2026-09-16T10:1xZ**:取活依据:上一轮「下次触发 ①」逐字,见 GH #900。
+  **下次触发**:①把 `walk_farm` 的读数量出来 ②判定完结继续做主体
+  ⇒ 余下进下次触发 ⑭。
+"""
+
+# RULING 75: the two anchor shapes a single-condition test would miss, and the
+# prose-only entry (registered hole `carry_mark_prose_vs_list`).
+CHARTER_ANCHOR_SHAPES = """# x
+
+## 当前状态(每次触发后更新)
+- **2026-09-16T10:1xZ**:本轮。
+  **⑨ 下次触发**:①GH #523
+  尾巴一句 ⇒ 进下次触发 ⑭。
+"""
+
+CHARTER_ANCHOR_PAREN = """# x
+
+## 当前状态(每次触发后更新)
+- **2026-09-16T10:1xZ**:本轮。
+  **下次触发**(⭐ 这一轮多带一条):①GH #523
+  尾巴一句 ⇒ 进下次触发 ⑭。
+"""
+
+# RULING 75, the two ablations.  On the charter as it stands today EITHER
+# condition alone picks the same anchors (measured: 94 entries, 0 disagreements),
+# so the conjunction is defence in depth rather than a present-tense necessity --
+# and these two fixtures are the shapes that make each half earn its keep.  Both
+# are shapes this charter plausibly writes: it bolds prose constantly, and it
+# ends narrative lines with a colon constantly.
+CHARTER_BOLD_PROSE_TAIL = """# x
+
+## 当前状态(每次触发后更新)
+- **2026-09-16T10:1xZ**:本轮。
+  **下次触发**:①GH #523 ②GH #810
+
+  ⚠️ **这一条也进下次触发 ⑭**。
+"""
+
+CHARTER_COLON_PROSE_TAIL = """# x
+
+## 当前状态(每次触发后更新)
+- **2026-09-16T10:1xZ**:本轮。
+  **下次触发**:①GH #523 ②GH #810
+
+  ㉑ 余下进下次触发 ⑭。`claim_precheck.sh` 复跑:resolved on trunk 8 → 11。
+"""
+
+CHARTER_PROSE_ONLY = """# x
+
+## 当前状态(每次触发后更新)
+- **2026-09-16T10:1xZ**:本轮谈论了『下次触发』但没写清单,正文引用 GH #900。
+  收尾又提了一次下次触发 ⑭。
 """
 
 CORPUS = {
@@ -402,6 +498,92 @@ def main():
               "claim 10g: the fallback fires ONLY when the newest entry has no list")
         check("#902" not in body,
               "claim 10g: ... so a superseded list is still out of scope")
+
+        # --- claim 11 (RULING 75): the segment is anchored on the LIST -------
+        shadowed = os.path.join(root, "shadowed.md")
+        write(shadowed, CHARTER_SHADOWED)
+        rc, lines = mod.audit(shadowed, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check(rc == 3,
+              "claim 11: a list followed by a later『下次触发』mention is still "
+              "read (got exit %d)" % rc)
+        check("STALE-CARRY   GH #523" in body,
+              "claim 11: the list's refs survive a trailing prose mention -- "
+              "this is the 2026-09-18 incident, where 8 carried refs read as 0")
+        check("0 GH ref(s)" not in body,
+              "claim 11: the anti-empty-match line is NOT how this entry reads")
+        check("#901" not in body,
+              "claim 11: the anchor rule did not regress to first-occurrence -- "
+              "a mention BEFORE the list still does not widen the segment")
+        check("CARRY-ANCHOR" in body and "1 later prose mention(s)" in body,
+              "claim 11: the shadowing is printed, so a reader can see which "
+              "mark was chosen and why")
+
+        refless = os.path.join(root, "refless.md")
+        write(refless, CHARTER_REFLESS_LIST)
+        rc, lines = mod.audit(refless, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check("#900" not in body,
+              "claim 11: THE REFUTED RULE -- 'the latest mention that yields "
+              "refs' walks back past a ref-less list into the narrative and "
+              "reports refs nobody carried (real entry 2026-09-11T04:19Z)")
+        check(rc == 2 and "anti-empty-match" in body,
+              "claim 11: a list that genuinely carries no ref is still "
+              "anti-empty-match exit 2, not a clean 0 (got %d)" % rc)
+
+        for name, text in (("shape `**⑨ 下次触发**:`", CHARTER_ANCHOR_SHAPES),
+                           ("shape `**下次触发**(…):`", CHARTER_ANCHOR_PAREN)):
+            path = os.path.join(root, "anchor.md")
+            write(path, text)
+            rc, lines = mod.audit(path, corpus, 1, 48.0, now=NOW)
+            body = "\n".join(lines)
+            check(rc == 3 and "STALE-CARRY   GH #523" in body,
+                  "claim 11: %s is an anchor -- a single-condition test "
+                  "(bold only, or colon only) misses one of these two" % name)
+
+        for name, text in (
+                ("a BOLDED colon-less prose tail (the bold half alone would "
+                 "truncate)", CHARTER_BOLD_PROSE_TAIL),
+                ("an unbolded prose tail whose line carries a colon (the colon "
+                 "half alone would truncate)", CHARTER_COLON_PROSE_TAIL)):
+            path = os.path.join(root, "ablate.md")
+            write(path, text)
+            rc, lines = mod.audit(path, corpus, 1, 48.0, now=NOW)
+            body = "\n".join(lines)
+            check(rc == 3 and "STALE-CARRY   GH #523" in body,
+                  "claim 11: the list survives %s" % name)
+
+        prose = os.path.join(root, "prose.md")
+        write(prose, CHARTER_PROSE_ONLY)
+        rc, lines = mod.audit(prose, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check("CARRY-PROSE" in body and "carry_mark_prose_vs_list" in body,
+              "claim 11: an entry that only TALKS about the list is no longer "
+              "silent -- the registered hole prints itself by name")
+        check("NO-HANDOFF" not in body,
+              "claim 11: ...and it is deliberately NOT promoted to a "
+              "NO-HANDOFF accusation (0 of 94 real entries take that branch, "
+              "so there is nothing to calibrate the accusation against)")
+
+        # --- claim 11, real corpus: every mark-bearing entry has an anchor ----
+        # ⭐ This is a census on the director's OWN charter (nobody else writes
+        # that file, so it cannot go red under another group).  It goes red the
+        # day a list is written in a shape the anchor does not recognise -- and
+        # that day the leg would go blind on it, which is exactly the thing
+        # RULING 75 is made of.  Measured the day it landed: 94 entries, 0
+        # anchorless.
+        real = os.path.join(ROOT, "iterations", "streams", "director.md")
+        with open(real, encoding="utf-8") as fh:
+            real_entries = mod.status_entries(fh.read())
+        check(len(real_entries) >= 90,
+              "claim 11: the real charter still parses (got %d entries)"
+              % len(real_entries))
+        anchorless = [ts for ts, text in real_entries
+                      if mod.carry_segment_info(text)[1] == "prose-fallback"]
+        check(not anchorless,
+              "claim 11: every real entry that mentions『下次触发』anchors a "
+              "list (bold + same-line colon); anchorless: %s"
+              % ", ".join(anchorless[:5]))
 
         # --- CLI wiring: exit code and verdict line survive main() ----------
         # ⚠️ `main()` reads the REAL clock, so the fixture corpus above (dated

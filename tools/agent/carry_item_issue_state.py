@@ -188,19 +188,108 @@ def status_entries(charter_text):
     return entries
 
 
-def carry_segment(entry_text):
-    """The『下次触发』tail of one entry, or None when the entry has no list.
+def _line_around(text, pos):
+    """-> (line_text, offset_of_pos_within_line)."""
+    start = text.rfind("\n", 0, pos) + 1
+    end = text.find("\n", pos)
+    if end < 0:
+        end = len(text)
+    return text[start:end], pos - start
 
-    ⚠️ **取最后一次出现,不是第一次。** 清单按惯例是 entry 的尾巴,而 entry 的**正文**
-    经常要谈论这件事本身(本轮这条 entry 就写着「对『下次触发』段里每个 `GH #<n>` 交叉读」)
-    ⇒ 取第一次出现会把整段叙事拖进作用域,叙事里每个引用过的号都变成 finding。
-    第一版就是这么写的,落地当轮自己报了三个假阳(`#523` / `#538` / `#276`),
-    而**稳定假阳是探测器停止被阅读的开始**(GH #276 —— 它本人当场作为假阳出现,是巧合也是佐证)。
+
+def is_list_mark(text, pos):
+    """True when the『下次触发』at `pos` is the anchor of an actual list.
+
+    Two conditions, both read off the line the mark sits on:
+
+      * the mark is **inside a bold run** -- an odd number of `**` before it on
+        that line.  Every list this charter has ever written bolds the mark
+        (`**下次触发**:`, `**⑨ 下次触发**:`, `**下次触发**(⭐ …):`);
+      * a colon (`:` or `:`) follows it **on the same line**.  A list announces
+        itself; a sentence that merely talks about the list does not.
+
+    ⛔ Neither condition alone survives the real corpus, and that is why the
+    registered hole `carry_mark_prose_vs_list` sat OWED with both of its
+    candidate anchors refuted: a bare `**下次触发**` anchor misses
+    `**⑨ 下次触发**:`, and a bare colon anchor misses `**下次触发**(⭐ …):`.
+    The conjunction catches all three shapes and rejects both prose shapes this
+    charter actually writes (`⇒ 进下次触发 ⑭。` and `上一轮「下次触发 ①」逐字…`).
+
+    Measured on the whole charter the day this landed: **94 entries, 0 of them
+    had a carry mark without a qualifying list anchor.**
+    """
+    line, off = _line_around(text, pos)
+    if line[:off].count("**") % 2 == 0:
+        return False
+    tail = line[off + len(u"下次触发"):]
+    return (":" in tail) or (u":" in tail)
+
+
+def carry_segment_info(entry_text):
+    """-> (segment_or_None, kind, n_marks, n_anchors, n_shadowing)
+
+    kind is `"list"` when a real list anchor was found, `"prose-fallback"` when
+    the entry mentions『下次触发』but never anchors a list (then the segment is
+    the LAST mention, i.e. exactly the pre-RULING-75 behaviour), and `None`
+    when the entry has no mention at all (RULING 67's NO-HANDOFF).
+
+    WHY THE ANCHOR, AND NOT "THE LAST MENTION" (RULING 75, 2026-09-18)
+    -----------------------------------------------------------------
+    The first version took the **last**『下次触发』in the entry, because the
+    narrative routinely discusses the list before the list appears and taking
+    the first mention dragged the whole narrative into scope (three false
+    findings on the round that landed this leg).
+
+    That rule has the mirror-image failure and it fired on real corpus: a
+    mention that comes **after** the list truncates the list away.  Entry
+    `2026-09-18T01:15Z` ends with a `[同轮收尾追加,push 之后]` block whose ⑳
+    reads, verbatim, `⇒ 进下次触发 ⑭。` — a later mention with no `GH #` after
+    it.  The leg therefore read:
+
+        scanned  : 1 entry (of 94), 1 carry segment(s), 0 GH ref(s)
+        UNCERTIFIABLE -- zero GH refs extracted ... (anti-empty-match)
+
+    while the live list three lines above it carried **8** refs
+    (`#856 #867 #240 #843 #859 #810 #548 #528`), none of which was cross-read.
+
+    ⚠️ **The exit code is the expensive half.** `1 carry segment(s)` is true,
+    `0 GH ref(s)` is true, and exit 2 says — in this leg's own words (RULING 67)
+    — "nobody could look this round, and that fixes itself next round".  It does
+    not fix itself: the mention is a permanent part of that entry, so every
+    later round reads the same silent 0.  This is the same shape RULING 67 was
+    written to abolish, arriving through the segment picker instead of through
+    the corpus.
+
+    ⛔ **"The latest mention that yields refs" was tried and refuted by the
+    corpus**, which is the only reason this docstring can name a rule at all:
+    on entry `2026-09-11T04:19Z` the list itself carries no `GH #` at all, and
+    that rule walks back past it to a narrative quote (`上一轮「下次触发 ①」`)
+    and reports `#624 / #739` — refs that were never carried.  The anchor test
+    reads that entry correctly (no refs), and over all 94 entries it changes
+    exactly **one** answer: the broken one.
     """
     hits = list(CARRY_MARK_RE.finditer(entry_text))
     if not hits:
-        return None
-    return entry_text[hits[-1].start():]
+        return None, None, 0, 0, 0
+    anchors = [h for h in hits if is_list_mark(entry_text, h.start())]
+    if not anchors:
+        # No list was ever anchored -- fall back to the old rule rather than
+        # accuse.  This is the registered hole `carry_mark_prose_vs_list`: an
+        # entry that only TALKS about the list still reads as if it had one.
+        # ⛔ Deliberately not promoted to NO-HANDOFF here: 0 of 94 real entries
+        # take this branch, so there is no live evidence to calibrate against,
+        # and a false NO-HANDOFF accuses the round that did write its list.
+        # What changed is that the branch is no longer silent (see audit()).
+        return entry_text[hits[-1].start():], "prose-fallback", len(hits), 0, 0
+    chosen = anchors[-1]
+    shadowing = sum(1 for h in hits if h.start() > chosen.start())
+    return (entry_text[chosen.start():], "list", len(hits), len(anchors),
+            shadowing)
+
+
+def carry_segment(entry_text):
+    """The『下次触发』list of one entry, or None when the entry has none."""
+    return carry_segment_info(entry_text)[0]
 
 
 def refs_in(segment):
@@ -308,11 +397,22 @@ def audit(charter_path, snapshot_path, entries_n, max_age_hours, now=None):
     findings, uncertifiable, ok = [], [], []
     segments = 0
     for ts, text in scanned:
-        seg = carry_segment(text)
+        seg, kind, n_marks, n_anchors, shadowing = carry_segment_info(text)
         if seg is None:
             out.append("entry %s: no『下次触发』segment" % ts)
             continue
         segments += 1
+        if kind == "prose-fallback":
+            out.append("CARRY-PROSE   entry %s: %d『下次触发』mention(s), "
+                       "none of them anchors a list (bold + a colon on the same line). "
+                       "Reading the last mention -- registered hole "
+                       "`carry_mark_prose_vs_list`; this is a note, not a finding"
+                       % (ts, n_marks))
+        elif shadowing:
+            out.append("CARRY-ANCHOR  entry %s: %d『下次触发』mention(s), "
+                       "%d of them a list anchor; read from the last anchor, so the "
+                       "%d later prose mention(s) no longer truncate the list "
+                       "(RULING 75)" % (ts, n_marks, n_anchors, shadowing))
         for n in refs_in(seg):
             if issues is None:
                 uncertifiable.append((ts, n, "no usable corpus"))

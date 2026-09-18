@@ -17,6 +17,8 @@
 #     the cost lands on whoever was relying on that carried item.
 #   * MISS (M2, M5, M7) -- the leg goes quiet and the copying resumes, which is
 #     just the pre-RULING-63 world with a green tool on top of it.
+#   * ACCUSE (M13, M16) / MISS (M11, M12, M15, M17, M18) carry the same split
+#     into the RULING 67 and RULING 75 cells; M19 moves no exit code either.
 #   * M6 changes NO exit code anywhere: it makes the finding read as "that work
 #     is done", which is the exact mistake #523 is made of.  Only the printed
 #     text can catch it -- same shape as M5 of mutstand_citation_forward_ref.sh.
@@ -121,7 +123,7 @@ mutate "M3 a ref absent from the corpus reads as closed" \
 # leg turns into a stable false positive, which is how a detector stops being
 # read at all (GH #276).
 mutate "M4 the whole entry is scanned, not just the carry segment" \
-    's/    return entry_text\[hits\[-1\]\.start\(\):\]/    return entry_text/'
+    's/entry_text\[chosen\.start\(\):\]/entry_text/'
 
 # M5 (MISS) -- the anti-empty-match floor.  With it gone, a charter whose carry
 # list names no issue at all prints a clean exit 0 -- indistinguishable from
@@ -171,7 +173,7 @@ mutate "M9 entries with fuzzy minute digits are skipped" \
 # last.  Any entry whose narrative discusses the list (this one's does) drags its
 # whole body into scope, and every archival ref in it becomes a finding.
 mutate "M10 the carry segment starts at the first mention, not the last" \
-    's/    return entry_text\[hits\[-1\]\.start\(\):\]/    return entry_text[hits[0].start():]/'
+    's/    chosen = anchors\[-1\]/    chosen = hits[0]/'
 
 # --- RULING 67 (2026-09-16T19:0xZ): NO-HANDOFF + fallback -------------------
 # M11 (MISS) -- the dropped baton is demoted back to UNCERTIFIABLE.  Nothing
@@ -201,6 +203,45 @@ mutate "M13 the fallback fires even when the newest entry has a list" \
 # "fell back thirty hours", printed identically.  Same shape as M6.
 mutate "M14 an uncomputable fallback age prints as nothing" \
     's/age = ", age not computable \(fuzzy stamp\)"/age = ""/'
+
+# --- RULING 75 (2026-09-18): the segment is anchored on the LIST -------------
+# M15 (MISS) -- the incident itself, reproduced.  Drop the anchor test and the
+# segment is the LAST『下次触发』again, so a mention that comes AFTER the list
+# truncates it away.  On entry 2026-09-18T01:15Z that printed `1 carry
+# segment(s), 0 GH ref(s)` + exit 2 while 8 refs sat unread three lines above --
+# and exit 2 is this leg's own word for "nobody could look, it fixes itself next
+# round", which this one does not.
+mutate "M15 the segment is the last mention again, not the list anchor" \
+    's/    anchors = \[h for h in hits if is_list_mark\(entry_text, h\.start\(\)\)\]/    anchors = list(hits)/'
+
+# M16 (ACCUSE) -- the rule that was tried FIRST and refuted by the corpus:
+# "the latest mention that yields refs".  It walks back past a list that carries
+# no `GH #` (real entry 2026-09-11T04:19Z) into a narrative quote, and reports
+# refs nobody ever carried.  It is the mutant a careful author writes, which is
+# why it is here rather than in a comment.
+mutate "M16 the anchor is 'the latest mention that yields refs'" \
+    's/    anchors = \[h for h in hits if is_list_mark\(entry_text, h\.start\(\)\)\]/    anchors = [h for h in hits if refs_in(entry_text[h.start():])]/'
+
+# M17 (MISS) -- half the anchor: bold only, colon dropped.  ⚠ On the charter as
+# it stands this changes NO real answer (measured: 94 entries, 0 disagreements),
+# so it is caught by a fixture, not by the corpus -- a BOLDED colon-less prose
+# tail (`⚠️ **这一条也进下次触发 ⑭**。`), which this charter writes the
+# ingredients of on every line.
+mutate "M17 anchor loses the colon condition (bold alone)" \
+    's/    tail = line\[off \+ len\(u".*"\)\:\]/    tail = ":"/'
+
+# M18 (MISS) -- the other half: colon only, bold dropped.  Also invisible on the
+# current corpus; caught by the unbolded prose tail whose line happens to end in
+# a colon (`… ⇒ 进下次触发 ⑭。`claim_precheck.sh` 复跑:resolved 8 → 11`).
+mutate "M18 anchor loses the bold condition (colon alone)" \
+    's/    if line\[:off\]\.count\("\*\*"\) % 2 == 0:\n        return False/    if False:\n        return False/'
+
+# M19 (MISS) -- the prose-only branch stops naming itself.  No exit code moves
+# anywhere: what is lost is that the registered hole `carry_mark_prose_vs_list`
+# goes back to being unobservable, which is the whole reason it sat OWED with
+# both of its candidate anchors refuted and nothing measuring how often it fires.
+mutate "M19 the prose-only fallback prints nothing" \
+    's/        if kind == "prose-fallback":/        if False:/'
 
 restore
 if git diff --quiet -- "$SRC"; then

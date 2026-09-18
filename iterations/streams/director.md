@@ -669,6 +669,74 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-18T04:0xZ**:**RULING 75 —— 交棒清单的 segment 锚在「清单」上,不再锚在「最后一次提到清单」;`carry_mark_prose_vs_list` narrow 不结清。**
+  全文 `iterations/reports/director/20260918T040942Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⭐⭐⭐ **取活依据是 §1.5 那条腿在我眼前失效**,不是从 backlog 里挑的。本轮开工它逐字读回
+  `scanned : 1 entry (of 94), 1 carry segment(s), 0 GH ref(s)` / `UNCERTIFIABLE … (anti-empty-match)` ——
+  **三行都是真的**,而上一轮那条 entry 的『下次触发』里躺着 **8 个 `GH #<n>`**,一个都没被交叉读。
+  成因:`carry_segment()` 取**最后一次出现**,而上一轮在清单**后面**还有
+  `[同轮收尾追加]` 的 ⑳ 逐字 `⇒ 进下次触发 ⑭。`(一次散文提及,后面再没有 `GH #`)⇒ 清单被整段截掉。
+  ⭐⭐ **贵的那一半是退出码**:exit 2 在这条腿自己的措辞里(RULING 67)= 「这一轮没人能看,下一轮自己会好」,
+  而那句散文是那条 entry 的**永久部分** ⇒ **每一轮都会读回同一个安静的 0**。
+  **这正是 RULING 67 要废掉的失效方向,只是从 segment 选取那一侧进来的。** ⛔ 而且**不是第一发**:
+  94 条 entry 重放旧规则,`2026-09-11T04:19Z` 同样被截成 0 —— **今天是第二发,前一发没有任何人看见**。
+  ⚖️ **RULING 75**:anchor 判据 = **粗体**(该行标记之前 `**` 计数为奇)**且同一行标记之后有冒号**。
+  合取的理由是 `carry_mark_prose_vs_list` 早已钉死的两个反例(`**下次触发**` 逐字锚漏 `**⑨ 下次触发**:`;
+  冒号锚漏 `**下次触发**(⭐ …):`)—— **两个单条件各漏一个,合取都收得住**。
+  ⛔ **先写的那个更顺手的规则被真语料当场否掉**:「取最后一个能抽出 ref 的 mention」在
+  `2026-09-11T04:19Z`(清单本身一个 `GH #` 都不带)上走回正文引用句,报出 **`#624 / #739` 两个从来没人交棒的号**。
+  **两个规则我都写了,是全 entry 重放否掉的后者,不是我想出来的。**
+  **(甲) 要求的差集,94 条 entry 逐条**:有标记无 anchor **0 条**;答案变化 **1 条**(= 坏掉的那条);
+  bold-only / colon-only / 合取三者分歧 **0** ⇒ 照实说:**合取今天是纵深防御不是当下必需**,
+  两个半边的价钱由两条消融 fixture 钉住(粗体无冒号的散文尾 / 不粗体但同行带冒号的散文尾),M17/M18 各杀一个。
+  **修后真读数**:`CARRY-ANCHOR … 1 later prose mention(s) no longer truncate the list` /
+  `1 carry segment(s), 8 GH ref(s)` / `OK GH #856 #867 #240 #843 #859 #810 #528` /
+  `UNCERTIFIABLE GH #548 -- not in corpus`(语料 14.3h 龄,**第四次复现**)⇒ **仍 exit 2,但是有内容的 exit 2**;
+  ⚠️ **没有 STALE-CARRY** —— 上一轮那 8 条待办没有一条挂在已关闭的号上,**而旧规则下这句话本来问都问不出来**。
+  **落地四件**:`is_list_mark()`/`carry_segment_info()`(`carry_segment()` 留薄壳,旧调用点不动,`--selfcheck ALL PASS`)、
+  `tests/test_carry_item_issue_state.py` **68 checks / 0 failures**(落地前 **53**;
+  ⭐ **HEAD 那份旧测试跑在新工具上 `53 checks, 0 failures`** ⇒ 没推翻任何既有断言)、
+  变异台 M15–M19(**19 CAUGHT / 0 SURVIVED / control_ok=1**)、`owed_executions.json` narrow。
+  ⚠️ **M17 第一版是 `ANCHOR MISS` 不是 `CAUGHT`**:perl `-0pi` 按**字节**跑,`\N{U+…}` 写的 CJK 锚一个字节都没匹配上。
+  ⭐ **若没有那个台子自己的 ANCHOR MISS 守卫,它会印 `SURVIVED`,而我会去改一条根本没错的断言。** 改 ASCII 锚后 19/19。
+  ⭐ **真语料普查写进了测试**:claim 11 末条断言「全章程每条带标记的 entry 都有 anchor」——
+  有人用 anchor 不认识的形状写清单那天它变红,**而那一天这条腿正会对那条 entry 瞎掉**;
+  ⛔ 是总监自己的文件,不顶红别的组(GH #624 约束)。
+  ⛔ **`carry_mark_prose_vs_list` 不结清,只 narrow**:本轮交付的是 **segment 选取**,
+  而那个洞的 (i) 说的是 **NO-HANDOFF 的判据**(至今仍按 mention 判)⇒ 只谈论清单没写清单的 entry 仍被读成有清单。
+  ⛔ **不把 NO-HANDOFF 改挂 anchor,这是决定不是遗漏**:**0/94 意味着没有任何真实现场可以标定这条指控**,
+  而收太紧的失效方向是「对确实交了棒的轮次凭空判掉棒」。**⭐ 但它从今天起不再沉默**:
+  无 anchor 时打 `CARRY-PROSE … registered hole \`carry_mark_prose_vs_list\`; this is a note, not a finding`,
+  M19 专杀这一行(**不动任何退出码**,只让那个洞退回不可观测)。
+  **巡检**:batch-desk 09-18T00:24Z / replay-check 09-17T21:47Z / strategy 22:38Z / hero 23:03Z / director 09-18T01:15Z —— 五组全活,无掉棒。
+  **成本**:零 AWS;结转批测台 MTD **`$92.001`** > 刹车 `$90` ⇒ 零发波(**第四十六轮持有**);
+  ⚠️ `forecast $118.091` > `$100` 仍在 `DECISIONS_NEEDED.md`,**W38(09-20)带它**。
+  **自检**:⭐ **纪律 3 本轮没发**(第一条命令就走 `rc.sh`,真码落文件,无 `| tail`)。
+  ⚠️ 自检本身跑了 **> 600s** 被移到后台,读数从 `RC_LOG` 取不是从终端取。
+  **本轮自检里两条读数值得记**:(1) `trunk health (python)` = **`148 passed, 0 failed, 3 uncertifiable`**
+  ⇒ 上一轮 ⑰ 那条 `test_bots_walk_farm_only.py` 的存量红**本轮已不复现**(见下次触发 ⑰);
+  (2) `UNCOVERED SET GREW -- 2 file(s)`:`test_fieldsip_transfer_receiving_site.lua`(RULING 71 §三已登记)
+  + **`test_lion_w_fight_seed.lua`(`too_slow`,新,英雄组名下)**。
+  ⚠️ **RULING 74 的作用域本轮我踩在边上,照实记**:python 套件那条腿跑的时候我正在写
+  `tests/test_carry_item_issue_state.py` ⇒ **那条腿的 `148 passed` 对这个文件的那一格不可引用**;
+  我在静止树上单独复跑了它(`68 checks / 0 failures`)与旧版(`53 / 0`),**其余 147 个文件本轮我一个字节都没碰**。
+  **下次触发**:①GH #856 剩 9 候选 ②GH #867 ③GH #240 余下 ④**`carry_mark_prose_vs_list` 已 narrow**,
+  剩唯一一格 = NO-HANDOFF 改不改挂 anchor(判据二选一见 `owed_executions.json`,**都要带读数**)
+  ⑤GH #843 剩 (乙) ⑥GH #859 ⑦GH #810 待裁 1 + (乙)
+  ⑧(a) 判定完结 ≥1,第一候选仍是给 `fieldsip` 单独定价的那个工作单元;(b) 已交付,每轮打 `STALL`
+  ⑨GH #548(砍 Top 10,集中;**它本轮第四次以 `not in corpus` 现身,语料 14.3h**)
+  ⑩P4.2 narrat 1 / `$0.90` 重裁 / GH #528 / patch 缺口 P3 ⑪`path_contains_any` 那两行
+  ⑫`py_manifest_no_carry_baseline_port` ⑬**W38 邮件(09-20)**:15/16/18/19 条 + 17 条已撤回 +
+  RULING 70+71+72+73+74+**75** + ⚠️`forecast $118.091` ⑭`lua_gate_manifest.json` 已陈旧,⛔重测先读 GH #810
+  ⑮⛔习惯:`lua5.1 tests/test_x.lua` = 假绿,唯一入口是 `tests/run_tests.lua <filter>`
+  ⑯⛔习惯:自检跑着时不要写它读的数据(`test_set.md`)或它自己(`routine_selfcheck.sh`),
+  **本轮再补一格:也不要写它正在跑的那个套件里的文件**(RULING 74 的作用域,本轮我踩在边上)
+  ⑰**`test_bots_walk_farm_only.py` 的存量红本轮不复现**(`148 passed, 0 failed`)⇒ 从清单**划掉**,
+  ⛔ 但不写成「修好了」:我没有查是谁修的,只量到它今天不红
+  ⑱`stayfield2` 重新入集的机器行 = `owed_executions.json:stayfield2_readmit_when_fieldsip_moves`,按设计仍 OWED,**不要当成掉棒**
+  ⑲**新**:`test_lion_w_fight_seed.lua` 进 `too_slow` 未覆盖集(英雄组名下),归 GH #806 族
+
 - **2026-09-18T01:15Z**:**交棒 ⑧(b) 落地 —— `verdict-closure` 腿:数判定完结,读成员串历史行不读报告名;RULING 74(自检跑着的时候不许写自检自己)。**
   全文 `iterations/reports/director/20260918T011500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
