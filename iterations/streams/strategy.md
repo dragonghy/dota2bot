@@ -69,7 +69,7 @@
    改 `want` 只是把记分改对,换变异体才是把钉子驱动出来。**
 
    ⚠️ **下一轮要看一眼的四条**:
-   (a) **`queue.json:strategy-64`**(本轮新增)+ 本轮的 GH issue —— `pipetower` 的登记。
+   (a) **`queue.json:strategy-64`**(本轮新增)+ **GH #904** —— `pipetower` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-63` **十九条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
@@ -10912,7 +10912,7 @@
   `bots/ability_item_usage_generic.lua:4068` 一处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
   ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T165529Z.md`;
-  `state.json:pipetower_20260918`;`queue.json:strategy-64`;完整判据 ⇒ backlog **0NEXT47**。
+  `state.json:pipetower_20260918`;`queue.json:strategy-64`;**GH #904**;完整判据 ⇒ backlog **0NEXT47**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**,`legs run 15`,**~47 分钟**;
   findings = `cadence queue-rulings owed-executions lua-coverage`,
