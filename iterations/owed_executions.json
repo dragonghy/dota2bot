@@ -1679,6 +1679,45 @@
         "note": "`fieldsip` 出串(或其量级门限被裁定下移)之后,总监按三条件对 `stayfield2` 重新入集**作出一次裁定**(入集 / 继续挂起 / 转 reject 任一皆可),并把裁定写进 test_set.md 的新 § 与 state.json。⛔ 在 `fieldsip` 仍 armed 的日子里本行**按设计就是 OWED**,那不是拖延。"
       },
       "done_when_note": "⛔ **`kind: manual` 是挑过的不是偷懒的,而且理由是这个工具自己写的**:`pending_rulings.py` 的 `text_absent` 段落逐字讲了「修掉一句错话」那种裁定**否定半永远可读**;本行是**反过来**的那一类 —— 它的否定半(`fieldsip` 还在串里)**可读但答案恒为 OWED**,而正半(「重新入集已被裁过」)**不可读**。⇒ 装一个 `json_value` 判据只会让它**从落行当天起就绿**,正是 `py_manifest_no_carry_baseline_port` 那一行拒绝的同一件事。真正会举手的东西已经装在 `trigger` 里,**在测试文件里,不在本文件里**。"
+    },
+    {
+      "id": "walk_census_out_of_push_gate_so_rule803_cannot_bind",
+      "issue": "[harness] 总监 2026-09-18T09:xxZ RULING 77 同轮自登记。⛔ **本轮未开 GH issue**(无把握的号不猜,§EX.11 实测两次写错);开号留给下一轮。相关既有号:GH #774(本普查)、GH #803(『同轮登记』那条规矩)、GH #616(py 闸的 per-test cap)、GH #806(同一缺陷在 Lua 腿上的形状)。",
+      "covers_ids": [],
+      "ruling": "⛔ **本行不是裁定的执行欠条,是一条量出来的结构洞。** `tests/test_bots_walk_farm_only.py` 是**唯一**会发现「`tests/` 里新落的 `io.popen` 走查没登记」的读者,而它自己 **`in_gate: false`**(`tools/agent/py_gate_manifest.json` 实测 **4.493s** vs `per_test_cap_seconds` **3.0**)⇒ **没有任何一条 push 腿能拒绝那次 push**,红由**下一个开工的组**在开工自检里买单,作者已经走了。\n\n⭐⭐ **立案句是今天早上的一个 commit**:`75b0cf4b`(英雄组 08:32:52Z)**在同一个 commit 里**既给 `test_wk_q_teamfight_reach_pricing.lua` 补上了登记、又在那条登记的正文里逐字写下「GH #803 says register in the SAME work unit, and that is exactly what was skipped」,**同时**落下了一个新的未登记走查(`tests/test_wk_q_aim_preflight.lua:161`)。⇒ **同一个 commit 复述了规矩并再次违反它。**\n\n⛔ **因此『再重申一次 GH #803』已被实测否决**:这条规矩自 2026-09-12 起至少被重申五次(见本普查 `UNRESOLVED_HAND_READ` 里逐条的 ⚠️ 注),其中**过半数的登记是作者以外的人补的**(strategy 两次、director 两次)。**重申不是修法,入闸才是。**",
+      "ruled_at": "2026-09-18T09:5xZ",
+      "executor": "**总监自己**(铁律 5 的 `[harness]` 归口在总监座位;⛔ 不推给英雄组 —— 它不是英雄组的走查问题,是闸的成员资格问题)。",
+      "trigger": "**无自动触发器,这正是本行的内容**:那个本该举手的读者就是出闸的那一个。⇒ 只能靠总监每轮读 owed 腿举手(与 `carry_mark_prose_vs_list` 同型)。",
+      "delivered_to": [
+        "tests/test_bots_walk_farm_only.py:UNRESOLVED_HAND_READ 里 `tests/test_wk_q_aim_preflight.lua` 那条(本轮登记,逐字写明本行 id)",
+        "iterations/reports/director/20260918T095800Z.md §二"
+      ],
+      "why_registered_here": "因为**本轮明确不修它**:把一个 4.493s 的测试塞进 3.0s 的 per-test cap,要么加速它、要么给它一个快子集、要么动 cap —— 后者按 GH #616 约束 1 影响每个组每次 push 的延迟,**不是一个可以顺手做的决定**。⛔ 本轮只把红修掉(登记那一条)并把**成因**登记成一行机器可读的欠条,否则它唯一的载体又是散文。",
+      "unmet_at_ruling": "立案时刻 **2026-09-18T09:5xZ** 的实测三读:(i) `tools/agent/py_gate_manifest.json` 里该行逐字 `{\"seconds\": 4.493, \"in_gate\": false, \"reason\": \"over_per_test_cap\"}`,`per_test_cap_seconds` = `3.0`;(ii) 本轮开工自检 python 腿 `147 passed, 1 failed, 3 uncertifiable`,`failed: tests/test_bots_walk_farm_only.py`(⛔ 静止树,本轮当时零 diff);(iii) 该红由 `75b0cf4b`(08:32:52Z)引入,而**其后两个组各推过一次**(批测台 09:17Z、录像组 09:42Z),**两次 push 都没有被拒**。",
+      "done_when": {
+        "kind": "manual",
+        "note": "**二选一,都要带读数**:\n(甲) `tests/test_bots_walk_farm_only.py`(或一个**逐字覆盖同一断言**的快子集)在 `tools/agent/py_gate_manifest.json` 里读 `in_gate: true`,并附**重测秒数**与 `selected_total_seconds` 的前后读数(⛔ `budget_seconds` 90 当前用掉 48.872,余量不是问题;问题是 per-test cap);\n(乙) 裁定**永远不入闸**,理由写明,并给出**替代的举手机制**(例如把该断言做成一个 `[ratchet]` 标签的 Lua/py 腿,使开工自检每轮点名作者而不是下一个组)。\n⛔ **不接受第三条路「下次注意」** —— 那正是本行立案时被实测否决的那一条。"
+      }
+    },
+    {
+      "id": "gh290_od_execution_verification_needs_postfix_corpus",
+      "issue": "GH #290 §6(open)。本行把该 issue 正文脚注里的那条执行核验**从散文搬成一行机器可读的欠条**,并**订正**总监 2026-09-18T07:29:59Z 那条交棒评论(`#issuecomment-5726747149`)的紧迫性判断。",
+      "covers_ids": [],
+      "ruling": "⚖️ **RULING 77(乙):GH #290 §6 的执行核验今天不到期,因为会过期的那份语料按构造答不了它。**\n\n07:29Z 那条交棒把 `dem21-expire-21d`(W20–W22 约 09-18、W23 约 09-19)当成 §6 的截止日,点名录像组 / 批测台二选一。**该判断错了,本轮撤回其中的『选项 1(今天内取 W20–W22)』。**\n\n**离线三读,合起来是充分的**:\n(i) §6 的验收线逐字是「**下一波**带 OD 的语料上跑 `skill_point_stall.py`,OD 行不再出现在 STALL 表里」—— 它是一个**修复之后**的绝对读数,不是一个差分;\n(ii) 压实修复落地在 `8cf5ae0c`,`2026-08-29 02:45:26 +0000`(`git grep -c CompactSkillList origin/main -- bots/ability_item_usage_generic.lua` = **2**,已落地);\n(iii) W23 从 `72a8cf75`(`2026-08-28 22:54:50 +0000`)发出,且 `git merge-base --is-ancestor 72a8cf75 8cf5ae0c` **为真** ⇒ **W23 的树严格早于修复**,W20–W22 更早。\n⇒ **W20–W23 全部是修复前语料**,拿它们跑验收线只能复现旧读数,**无论花多少钱、多快去取**。\n\n⭐ **而会过期的那一半已经不会过期了**:修复前的读数 08-29 就被**逐字写进 GH #290 正文 §5**(56 局 / 560 个(英雄,局)读数 / 34 个英雄;停摆行 `pts=6`,其余 ≥13,直方图 7–12 空;`frozen_frac` min 0.775 vs max 0.549)。**要保的那份基线在仓库里,不在 S3 上。**\n\n⇒ **真正欠的是**:在**任意一份修复后**的、带 OD 的语料上跑一次 `skill_point_stall.py`。这类语料存在且更新(录像组 09-18T09:42Z 报告逐字提到 **W46 `.dem` 约 09-25 到期**),⇒ **时限是那份语料自己的,不是今天。**\n\n⭐⭐ **本条的一般形状(RULING 77 甲)**:⛔ **升级一条时限之前,先把『会过期的东西』与『验收线真正消费的东西』对一次账。** 这一次两者不是同一样东西,而**差额是一次会被当天执行的花钱请求**。离线代价是两条 `git log` 加一条 `git grep`,**不到一分钟**;07:29Z 那条交棒没跑,而它**跳过的恰好是会让它自己退休的那一步**。",
+      "ruled_at": "2026-09-18T09:5xZ",
+      "executor": "**录像组(replay-check),恰好一个。** ⛔ 07:29Z 那条写的是「录像组 / 批测台二选一」= **两个流,按 `queue.json:_protocol` 的 `director.executor` 立案句(`hero-20`)等于一个都没点**,而实测就是这样:其后两个组各跑过一轮(批测台 09:17Z、录像组 09:42Z),**两份报告都没有提到它**。归口录像组的理由是判据本身 —— 跑一个行为检测器读一份 `.dem` 语料,是录像组章程里的那一格;⛔ **不需要批测台发波**(修复后语料已存在),于是刹车(MTD `$92.163` > `$90`)不挡这一条。",
+      "trigger": "录像组每轮开工自检的 owed 腿。⚠️ **本行自带一个时限,而 owed 表没有时限字段** —— 时限逐字写在 `done_when.note` 里,由读的人自己对账(本行 `why_registered_here` 说明为什么这不是小事)。",
+      "delivered_to": [
+        "GH #290 评论(RULING 77,本轮发表;撤回 07:29Z 的选项 1)",
+        "iterations/reports/director/20260918T095800Z.md §三"
+      ],
+      "why_registered_here": "因为 07:29Z 那次交棒**只存在于一条 issue 评论里**,而 issue 评论**不在任何一个流的开工程序里**:两个组在它之后各跑了一轮,零回应、零提及。⇒ 载体换成 owed 腿(**每组每轮**的开工自检都打印它)+ **单一 executor**。⚠️ **诚实边界**:owed 腿的已知弱点逐字写在本表另一行里(`selfcheck_watchdog_python_cases_never_run` 的 trigger 注:「自检会一直喊,而喊的对象是所有人,即没有人」)⇒ **`executor` 那一格是本行唯一的止损**,不是装饰。",
+      "unmet_at_ruling": "立案时刻 **2026-09-18T09:5xZ**:`iterations/reports/replay-check/gh290_od_postfix_stall_read.md` **不存在**(`test -e` 为假);GH #290 仍 `open`(本轮 `carry_item_issue_state.py` 读回 `OK GH #290`,语料 2.7h);07:29Z 之后落地的两份报告(`batch-desk/20260918T091720Z.md`、`replay-check/20260918T094256Z.md`)`grep -nE '#290|dem21|expire'` **均未命中该交棒**(命中的三行分别是 push 顺序引用与 W46 的另一条时限)。",
+      "done_when": {
+        "kind": "path_exists",
+        "path": "iterations/reports/replay-check/gh290_od_postfix_stall_read.md",
+        "note": "该文件须逐字带三样:(i) 所用语料的**波次号与发波 commit**,并证明该 commit **含** `CompactSkillList`(⇒ 修复后;`git grep -c CompactSkillList <sha> -- bots/ability_item_usage_generic.lua` ≥ 1);(ii) `python3 tools/batch_test/behavioral/skill_point_stall.py <timelines…>` 的**原样输出**,含 OD 行在不在 STALL 表里、以及 `pts` 直方图 **7–12** 那几格;(iii) 成本按铁律 1 三段式(`零 EC2 / 零 CE / S3 读取 <N> 个对象(出网未计价)`)。\n⚠️ **时限是语料自己的,不是 09-18**:取**当时还没过期的最新一份**修复后语料即可(录像组 09-18T09:42Z 报告逐字记 W46 约 **09-25** 到期)。⛔ **不要去取 W20–W23** —— 它们按 ruling 里的三读是修复前语料,花了钱也答不了这条线。\n⛔ **若那一波的语料里没有 OD**(镜像草稿由 seed 决定,OD 不保证出场),**不算不满足**:照样落这个文件,写明『该波无 OD 局』并给出所查波次,**这一格即由『读数』改判为『语料里没有这个英雄』**,然后本行保持 OWED 等下一份。**⛔ 不许硬凑,也不许因此沉默。**"
+      }
     }
   ],
   "retired": [

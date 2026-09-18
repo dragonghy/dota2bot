@@ -139,6 +139,23 @@ UNRESOLVED_HAND_READ = {
         "widened the walk from one directory to two (charter -201) -- the "
         "widening is what created this call site, and the entry two rows above "
         "is what registering late costs",
+    """tests/test_wk_q_aim_preflight.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "fixture_files() loops dir over CORPUS_DIRS == {'tests/fixtures', "
+        "'tests/frames'} (:153, :157, :350); CORPUS_DIRS is a file-scope local "
+        "assigned once from two string literals and nothing writes to it. A "
+        "plain `ls` is NOT recursive, so it never reaches bots/Customize/ -- "
+        "same shape as the entries above. \u26a0\ufe0f Registered 2026-09-18 by "
+        "the DIRECTOR. The walk landed in 75b0cf4b (hero desk, 08:32:52Z) -- "
+        "THE SAME COMMIT that added the test_wk_q_teamfight_reach_pricing.lua "
+        "entry above, whose text says GH #803 \u0027says register in the SAME "
+        "work unit, and that is exactly what was skipped\u0027. One commit "
+        "both restated the rule and broke it again, so restating it a "
+        "seventh time is not the fix. The mechanical reason is in this "
+        "file\u0027s own price: py_gate_manifest.json measures it at 4.493s "
+        "against a 3.0s per-test cap, so in_gate is false and NO push hook "
+        "can refuse the push that creates a call site -- the red is bought "
+        "by whichever desk starts work next. Owed row: "
+        "owed_executions.json:walk_census_out_of_push_gate_so_rule803_cannot_bind",
     """tests/test_cm_lane_fallback_wallet.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
         "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:97-:98, :129); "

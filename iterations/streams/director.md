@@ -681,6 +681,74 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-18T09:58Z**:**RULING 77 —— (甲) 升级一条时限之前先对账「会过期的东西」与「验收线消费的东西」;(乙) 限时交棒的载体必须是每组每轮真跑到的腿,且 `executor` 恰好一个流。顺带修掉一条 trunk 红。**
+  全文 `iterations/reports/director/20260918T095800Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP 点查 2 次(免费)。
+  ⭐⭐⭐ **(甲) 的立案现场是我自己上一轮发出去的那条评论**。07:29Z 我在 GH #290 上发限时交棒:
+  `dem21-expire-21d` ⇒ W20–W22 **今天**到期,请录像组 / 批测台今天内取语料。**那条判断是错的,本轮撤回。**
+  **离线三读,一分钟**:(i) §6 验收线逐字要「**下一波**带 OD 的语料」上的**修复后绝对读数**,不是差分;
+  (ii) 压实修复落地在 `8cf5ae0c` `2026-08-29 02:45:26 +0000`(`git grep -c CompactSkillList origin/main
+  -- bots/ability_item_usage_generic.lua` = **2**);(iii) W23 从 `72a8cf75` `2026-08-28 22:54:50 +0000` 发出,
+  **`git merge-base --is-ancestor 72a8cf75 8cf5ae0c` 为真** ⇒ **W20–W23 全是修复前语料**,
+  **花多少钱、多快去取都答不了那条线**。⭐ **而要保的那一半根本不会过期**:修复前读数 08-29 就逐字进了
+  GH #290 正文 §5(56 局 / 560 读数 / 34 英雄;`pts=6` vs 其余 ≥13;直方图 7–12 空)⇒ **基线在仓库里,不在 S3 上**。
+  ⇒ 真正欠的是**任意一份修复后带 OD 的语料**上跑一次 `skill_point_stall.py`(W46 约 **09-25** 到期),
+  **不需要发波** ⇒ 刹车不挡它。📌 与 RULING 75/76 同型:**真命题(语料 21 天到期)满足了别的问题(验收线还剩几天)**,
+  而**跳过的那一步恰好是会让这条交棒自己退休的那一步**。
+  ⭐⭐ **(乙) 的读数**:07:29Z 那条点的是「录像组 / 批测台**二选一**」= **两个流**,
+  按 `queue.json:_protocol` 里 `director.executor` 的立案句(`hero-20`)**等于一个都没点**;实测就是这样 ——
+  其后**批测台 09:17Z、录像组 09:42Z 各跑一轮**,两份报告 `grep -nE '#290|dem21|expire'` **零命中该交棒**。
+  ⛔ **而我上一轮给它的理由正是「这条不属于任何人的清单」** —— 看对了病开错了药:
+  **从 issue 正文脚注搬到同一个 issue 的评论里,读它的人一个都没多。**
+  ⇒ 登记 `owed_executions.json:gh290_od_execution_verification_needs_postfix_corpus`,
+  `executor` = **录像组(恰好一个)**,`done_when = path_exists
+  iterations/reports/replay-check/gh290_od_postfix_stall_read.md`(立案时刻实测**不存在** = LIMIT 14 要的见证)。
+  ⚠️ **owed 表没有时限字段**,时限只能写进 `done_when.note`;⚠️ owed 腿自己的弱点照抄
+  (「喊的对象是所有人,即没有人」)⇒ **`executor` 那一格是唯一止损**。
+  ⚠️ 预裁一格:**该波无 OD 局不算不满足** —— 照样落文件写明,本行保持 OWED,⛔ 不硬凑也不沉默。
+  ⭐⭐ **头条(甲')trunk 红**:开工自检 python 腿 `147 passed, **1 failed**, 3 uncertifiable`,
+  `failed: tests/test_bots_walk_farm_only.py`。成因 `75b0cf4b`(英雄组 08:32:52Z)——
+  **同一个 commit** 既补登了上一个未登记走查、又在那条登记正文里逐字复述
+  「GH #803 says register in the SAME work unit, and that is exactly what was skipped」、
+  **又落下一个新的未登记走查**(`tests/test_wk_q_aim_preflight.lua:161`)。
+  ⇒ **复述规矩的那次提交就是再次违反它的那次提交**,故**本轮不再重申 GH #803**(09-12 起至少五次,过半由作者以外的人补登)。
+  **机械成因在价签上**:`py_gate_manifest.json` 该行 `{"seconds": 4.493, "in_gate": false,
+  "reason": "over_per_test_cap"}`,cap `3.0` ⇒ **唯一会发现这件事的读者自己在闸外** ⇒
+  实测红由 08:32Z 引入后**批测台 09:17Z、录像组 09:42Z 两次 push 都没被拒**,由第三个开工的组买单。
+  **落地**:登记(`CORPUS_DIRS` 两字面量、无写入、裸 `ls` 不递归 ⇒ 够不到 `bots/Customize/`)+
+  变异台 **M1 删条目 / M2 改一字符,2 CAUGHT / 0 SURVIVED / control_ok=1 / `RESTORE: YES`(sha256 -c OK)**,
+  落地后 `8 checks, 0 failed`(落地前 `1 failed`)。⛔ **不修成因**(4.493s 塞进 3.0s cap 要动 GH #616 约束 1)⇒
+  登记 `owed_executions.json:walk_census_out_of_push_gate_so_rule803_cannot_bind`(executor = 总监自己)。
+  ⛔ **两行欠条都未开 GH issue**:不猜号(§EX.11 两次写错),开号留下一轮。
+  **§1.5 交棒腿**:`CARRY_EXIT=0`,`fetched 2026-09-18T07:14:48Z (2.7h old), 15 issues` /
+  `1 carry segment(s), 10 GH ref(s)` / 十个号全 `OK` / **`VERDICT: OK (exit 0)`** —— RULING 76 后第二轮 exit 0。
+  **巡检**(09:58:17Z 取):batch-desk 09:17Z / replay-check 09:42Z / strategy 07:55Z / hero 07:53Z /
+  director 07:15Z —— **五组全活,无掉棒**。
+  **成本**:零 AWS;结转批测台 MTD **`$92.163`** > 刹车 `$90` ⇒ 零发波(**第四十八轮持有**);
+  ⚠️ `forecast $118.091` > `$100` 仍在 `DECISIONS_NEEDED.md`,**W38(09-20)带它**。
+  **自检**:⚠️ **纪律 3 本轮第一条命令又踩了**(`| tail -60` ⇒ `REFUSED … exit 2, nothing checked`,
+  脚本自述 `recurred 5x, every time as the first command of the round`);改重定向后真跑,
+  ⚠️ 再次 > 600s 移到后台,读数从输出文件取。
+  ⭐ **GH #548 跨轮读数本轮这一份**:`NOTE 5a0 cost: **138 file(s)** … in **120.1s** (budget 120s)`,
+  同腿 **9 条 UNCERTIFIABLE**(自述 `this is NOT a pass`);⛔ 不据此断集合变大(GH #358:墙钟分不开)。
+  `UNCOVERED SET GREW -- 2 file(s)`:与前两轮**同两个**,⛔ 非本轮引入(本轮零 Lua diff)。
+  ⚠️ **新发现未修**:`UNRESOLVED_HAND_READ` 里 `tests/test_cm_lane_fallback_wallet.lua`
+  **有两条同键条目**(落地后 `:159` / `:320`,dict 静默只留后一条)—— 进下次触发,不在本工作单元内。
+  **下次触发**:①GH #856 剩 9 候选 ②GH #867 ③GH #240 余下 ④`carry_mark_prose_vs_list` 剩唯一一格
+  ⑤GH #843 剩 (乙) ⑥GH #859 ⑦GH #810 待裁 1 + (乙) ⑧GH #528
+  ⑨**新** `walk_census_out_of_push_gate_so_rule803_cannot_bind` 开号 + 三选一带读数(⛔ 动 cap 先读 GH #616 约束 1)
+  ⑩**新** 看录像组答没答 `gh290_od_execution_verification_needs_postfix_corpus`
+  (⛔ 判据是那个 `.md` 在不在,**不是**报告里提没提;⚠️ W46 约 09-25 到期)
+  ⑪GH #806 族两个未覆盖文件 ⑫(a) 判定完结 ≥1(第一候选 `fieldsip` 单独定价);(b) 每轮打 `STALL`
+  ⑬P4.2 narrat 1 / `$0.90` 重裁 / patch 缺口 P3 ⑭`path_contains_any` 那两行 ⑮`py_manifest_no_carry_baseline_port`
+  ⑯**W38 邮件(09-20)**:15/16/18/19 条 + 17 条已撤回 + RULING 70–76 + **77** + ⚠️`forecast $118.091`
+  ⑰`lua_gate_manifest.json` 已陈旧,⛔ 重测先读 GH #810
+  ⑱⛔习惯:`lua5.1 tests/test_x.lua` = 假绿,唯一入口是 `tests/run_tests.lua <filter>`
+  ⑲⛔习惯:自检跑着时不要写它读的数据 / 它自己 / 它正在跑的套件里的文件(RULING 74)
+  ⑳⛔习惯:变异台的 perl 锚只用 ASCII ㉑⛔习惯:第一条命令走 `rc.sh` 或 `> 文件 2>&1`,⛔ 无 `| tail`、⛔ 无 `timeout`
+  ㉒`stayfield2` 重新入集的机器行按设计仍 OWED,**不要当成掉棒**
+  ㉓**新** `UNRESOLVED_HAND_READ` 的 `test_cm_lane_fallback_wallet.lua` 同键两条,顺手合
+
 - **2026-09-18T07:15Z**:**RULING 76 —— 刷语料的那个集合由工具打,不再是第二份手抄;`--refresh-set` 落地,语料真刷了 9 个号。**
   全文 `iterations/reports/director/20260918T071500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP 点查 9 次(免费)。
