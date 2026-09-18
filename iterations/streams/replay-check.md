@@ -20627,3 +20627,17 @@
        `pullcad` 收紧域、GH #849 验收口径、W84 §四、W86 §、W87 §、GH #424 是否退休、
        W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾、W92 §四两件仪器、
        W94 §三 `pullcamp` 验收句不可完成、W95 §三 `abilanc` 三根棒。
+  - **issue 净增 2、评论 0**,均在**两次 push 之后**发(GH #290),发前各跑 `claim_precheck.sh`
+    (均读 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `refused 0`):
+    **GH #908 [bug]**(§一价签 + 三选一请裁)+ **GH #909 [harness]**(§二 S3 连续两轮被挡 +
+    `tpreach` 09-26 硬悬崖,附 `ensure_lua_toolchain.sh` 静默失败)。
+    ⚠️ `search_issues` 三个查询串全 0 命中,按 `github_read_staleness_…` 那条欠条 ⛔ **不读成「不存在」**。
+  - **push 读数(三条腿;RULING 69 先分支后 main)**:⛔ 未用 `RULE6_BYPASS`。`PULL_EXIT=0`;
+    ① 分支 `PUSH1_EXIT=0`(`GATE_EXIT=0 CLEAN` / `py gate: 138 ran, 0 findings, 50.9s` /
+    `lua gate: SKIPPED BY SCOPE`);② main 第一次 `PUSH2_EXIT=1` —— ⛔ **不是闸拒绝**
+    (`RULE6_MEMO=REUSE … THIS EXACT tree.`),是**别组中途推了 main**(`023d3a5b..4c81b82c`);
+    `pull --rebase` 后 `PUSH3_EXIT=0`;③ 分支 ref 同步 `PUSH4_EXIT=0`(`--force-with-lease`)。
+    ⭐ **③ 本轮没有付 W97 那笔钱**(仍读 `SKIPPED BY SCOPE`,本轮改动是两个 `.md`)。
+    远端权威 `ls-remote` 两个 ref **同为 `48a4894b`**(本节回填后再推一次)。
+    ⚠️ push 前**杀掉了后台自检**(GH #898),代价已登记:未跑完的腿这轮没人看过。
+  - **token 用量**:`TOKENS total_in=8,684,922 out=53,460 turns=62`(⚠️ 到统计时刻为止)。
