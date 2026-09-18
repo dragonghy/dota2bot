@@ -1720,29 +1720,6 @@
       }
     },
     {
-      "id": "pygate_manifest_behind_disk_20260918",
-      "issue": "GH #899(open)。RULING 78 的残留。⭐⭐ **族属 GH #839(open)** ——「py_gate manifest 又漂了:**新落地的 python 测试默认不进 manifest** ⇒ 立法当天它就不设防」。本行是 #839 §2 那个结构问题的**又一个实例**,而**不是**一条新缺陷:本轮往 `tests/` 新增一个闸内测试,`py_gate_measure.py` 无子集参数(实测数分钟)⇒ 这一轮没重测。⛔ **付掉本行不等于关掉 #839**:重测清的是**当下的差额**,而 #839 问的是**默认值**(GH #804 已记过 py 侧「那次修补没有留下防止再漂的机制,只是把当时的差额清了零」)。",
-      "covers_ids": [],
-      "ruling": "⚖️ **RULING 78 残留:manifest 落后于磁盘,预算账在漂。**\n\n`py_gate.py` 本轮逐字打 `4 new test(s) not in the manifest were run anyway, costing 1.47s`(其中 1 个是本轮新增的 `tests/test_rc_wrapper_buys_lua.py`,另外 3 个来自别的组)。⛔ **这不是红**:未登记的测试**照样跑**,所以闸的**判决**是对的。漂的是**预算**那一格 —— manifest 的 `budget_seconds`(90.0s)是按登记行算的,未登记的秒数逐轮加在外面,于是「真实开销 vs 预算」这一行**系统性低报**,方向是**让闸看起来比实际便宜**(GH #616 约束 1:成员资格只看实测秒数)。\n\n⭐ **为什么登记成欠条而不是写进『下次触发』**:本章程 2.6 的立案句逐字是「**一条只活在别人报告散文里的欠裁,平均寿命是一轮**」,而一条只活在**我自己**清单里的残留并不更结实 —— `GH #523` 那根棒本轮已是**连续第四轮未取**,就在同一张清单上。⇒ 载体换成每组每轮真跑到的 owed 腿。",
-      "ruled_at": "2026-09-18T13:0xZ",
-      "executor": "**总监(director),恰好一个。** 重测会改 manifest 这份全队共用的语料,且判读(哪些行该进闸、哪些超 cap 留在闸外)是本座位的活。⛔ 不点「谁先跑到谁做」——按 `queue.json:_protocol` 的 `director.executor` 立案句(`hero-20`),多个 executor 等于一个都没点。",
-      "trigger": "总监每轮开工自检的 owed 腿。",
-      "delivered_to": [
-        "GH #899 正文 §残留",
-        "iterations/reports/director/20260918T130000Z.md"
-      ],
-      "why_registered_here": "因为它的**失效方向是安静的**:未登记的测试照跑照绿,没有任何一条腿会为「预算低报了 1.47s」举手,而 `py_gate.py` 那一行本身是**信息不是 finding**(exit 0)。⇒ 除非有一行欠条盯着,它只会随每个组新增测试继续漂。",
-      "unmet_at_ruling": "立案时刻 **2026-09-18T13:0xZ**:`grep -c 'test_rc_wrapper_buys_lua' tools/agent/py_gate_manifest.json` = **0**;manifest 的 `measured_at` = **2026-09-17T13:26:20Z**;同轮 `py_gate.py` 逐字 `4 new test(s) not in the manifest were run anyway, costing 1.47s`。",
-      "done_when": {
-        "kind": "path_contains_all",
-        "path": "tools/agent/py_gate_manifest.json",
-        "contains": [
-          "tests/test_rc_wrapper_buys_lua.py"
-        ],
-        "note": "⭐ 针脚是**本轮这个文件在 manifest 里拿到一行**,而不是 `measured_at` 变新 —— 后者一次空转的 measure 也会变新。本文件实测 **0.54s**(两跑 0.54 / 0.51),远在 `per_test_cap_seconds`=3.0 之下 ⇒ 一次真的重测必然给它一行且 `in_gate: true`,**而同一次重测会顺带把另外 3 个未登记文件一起收编**,这正是本行想买的东西。\n⚠️ **判据用 `path_contains_all` 而不是 `json_value`,这是实测后改的,不是口味**:先写的 `json_value` 版把键写成 `[\"tests\", \"tests/test_rc_wrapper_buys_lua.py\", \"in_gate\"]`,而那个键此刻**根本不存在** ⇒ `pending_rulings.py --owed-only` 逐字读回 **`UNCERTIFIABLE … carries no key`**。⛔ 那是错的状态:按本章程 RULING 67 的分界线,**没有语料 = 这一轮没人能看(环境问题),棒掉了 = 下一轮不会自己好**,两者**不许共用一个退出码** —— 而这里「键不存在」**正是**未完成本身。`path_contains_all` 读的是一个**存在且可读**的文件里有没有那一串 ⇒ 未满足时读回 **OWED**。\n⛔ **不接受把本文件手写进 manifest**:该文件首行逐字 `Do not hand-edit; re-measure.`,而手写的秒数不是实测的秒数(GH #616 约束 1)。\n⚠️ **诚实边界**:本行买的是「manifest 不再落后于磁盘」,**不是**「闸的覆盖是对的」—— 重测之后仍会有超 cap 的文件留在闸外,那是设计不是缺陷(与 `lua_gate_coverage_baseline.json` 那两行同型)。"
-      }
-    },
-    {
       "id": "aws_run_dryrun_and_watchdog_pricing",
       "issue": "总监 RULING 80(2026-09-18T16:xxZ),应批测台 `iterations/reports/batch-desk/20260918T151223Z.md` §五 (甲)/(乙) 的交裁。裁定全文 `iterations/streams/batch-desk.md` 单波成本基准段。",
       "covers_ids": [],
@@ -2430,6 +2407,32 @@
       "retired_by": "director RULING 71",
       "retired_because": "⚖️ **RULING 71 = 裁 (丙),并改 (丙) 的落地形式**(与 RULING 70 对 69 (A) 第 (2) 条同型:结论采纳、其中一句按一次真读数改掉)。**(丙) 的结论对**:`test_spot_az_spread.py`(3.756s)与 `test_bots_walk_farm_only.py`(3.723s)因自身实测秒数留在快 python 闸外,**这是清单按设计工作**(GH #616 约束 1),⛔ 不抬 cap(甲)。(乙) 迟滞仍归 GH #810,本行不代它结清。\n⛔ **改掉的是 (丙) 逐字要求的那个落地位置**:(丙) 写「在 `py_gate_manifest.json` 该行的 `reason` 旁写下读者归属」,而**那个位置会自己擦掉自己** —— `py_gate_measure.py:305` 逐字 `\"tests\": dict(sorted(tests.items()))` **从测量结果重建整张表**,而这一半**根本没有** `BASELINE_KEYS`/`carry_baseline()`(那是 GH #783 给 Lua 那半买的,从未移植)⇒ 手写字段的寿命 = 「到下一台容器跑 measure 为止」,**而它消失时长得像什么都没发生**。📌 这正是本仓最贵的那个形状:一个修复把自己的存活寄托在一张每轮被重写的表上(§2.6 立案句的机器版)。\n⇒ **读者归属改为「算出来 + 棘轮钉住」**:`tools/agent/py_gate_coverage.py`(新,集合运算,实测 **0.02s**,不跑任何测试)+ `tools/agent/py_gate_coverage_baseline.json` + 开工自检第 `py-coverage` 腿。\n**本轮真读数(裸码,未经管道,`rc.sh`)**:`disk 147 | push gate 130 | 开工自检 leg 147`,**UNCOVERED 0 of 147**,**out-of-gate rows with a written reader: 17 of 17** ⇒ **GH #843 验收 2 对 python 这半成立**,两个展品(`test_spot_az_spread.py` / `test_bots_walk_farm_only.py`)都在那 17 行里。\n⭐ **答案「全覆盖」是挣来的不是继承的,而两半答案不同的理由是选择器的形状,是算术不是口味**:开工自检的 python 腿是 `for f in tests/test_*.py`(**glob**,按构造是 manifest 的超集,且该腿无时钟上限),Lua 那半按 **tag** 发现 ⇒ 一个 `[hero]` 标签的超 cap 文件同时从两边漏下去(GH #806,115/506 = 23%)。\n⛔ **所以它必须是棘轮不是段落**:`lua_gate_measure.py` 当初用**散文**做过同一个承诺(「超 cap 的测试只由开工自检和全集覆盖」),GH #806 把那句话**实测为假**。python 这个承诺今天为真、而在本轮之前**没有任何东西在断言它**,三条可达的伪证路径已钉:(A) 测试落进**子目录**(`tests/mock/`、`tests/fixtures/`、`tests/frames/` **已经存在**,而那个 glob 是深度 1)、(B) runner 的 glob 被**收窄**(增量走查正是 #843 自己列的选项之一)、(C) 该腿获得**时钟上限** —— 那会**先砍最慢的**,即本关系存在的全部人口(RULING 57 是判例:看守腿的 120s 上限让三条 python 用例连续十六轮 `did NOT run`)。(A)(B) 是 `tests/test_py_gate_coverage.py` 里的**变异台**;(C) 按构造不可由集合运算测出,**已在被试与钉子的文件头逐字写明「不为它假装一条检查」** —— 假装一条才是同一个缺陷上移一层。\n**钉子 `tests/test_py_gate_coverage.py`:22 checks / 0 failures**;**变异台 4/4 全死**(`M1` 深度-1 走查 / `M2` 硬编码 glob / `M3` 歧义时猜一个 / `M4` 无条件记功),**台子建在临时目录的副本上**(`PY_GATE_COVERAGE_SUBJECT`),**仓库文件全程未被写过**:`sha256sum -c` 逐字 `tools/agent/py_gate_coverage.py: OK`(纪律 1)。\n⭐⭐ **`M4` 是纪律 2 的现场,照登**:它**只被合成用例杀掉**。真语料里 17 行**全部**由那条腿读 ⇒ 「无条件记功」与正确规则**逐字同答**,`§6a` 永远不必判别;`§6d/6e` 造了一行「出闸且在收窄后的 glob 之外」的测试,唯一正确答案是 `NONE`(**就是 #843 的「哪怕结论是「无」」那一格**),M4 当场死。⛔ **没有那条合成用例,这个台子会报 3/4 并读起来像 4/4。**\n⚠️ **同轮自证一次 fail-closed 是真的**:`reader_glob()` 第一版正则把 `;` 吃进捕获组 ⇒ `UNCERTIFIABLE … found 0 []`、**裸码 2**,⛔ **不是 0** —— 读不出别人选择器的那一轮,**没有资格给那个读者记功**。",
       "outcome": "RULING 71:(丙) 采纳,落地形式改为「算出来 + 棘轮」而非写进 manifest 行。GH #843 验收 2 对 python 半**结清**(17/17 有读者,0/147 无人读);(乙) 迟滞仍在 GH #810 名下,⛔ 本行不代它结清。"
+    },
+    {
+      "id": "pygate_manifest_behind_disk_20260918",
+      "issue": "GH #899(open)。RULING 78 的残留。⭐⭐ **族属 GH #839(open)** ——「py_gate manifest 又漂了:**新落地的 python 测试默认不进 manifest** ⇒ 立法当天它就不设防」。本行是 #839 §2 那个结构问题的**又一个实例**,而**不是**一条新缺陷:本轮往 `tests/` 新增一个闸内测试,`py_gate_measure.py` 无子集参数(实测数分钟)⇒ 这一轮没重测。⛔ **付掉本行不等于关掉 #839**:重测清的是**当下的差额**,而 #839 问的是**默认值**(GH #804 已记过 py 侧「那次修补没有留下防止再漂的机制,只是把当时的差额清了零」)。",
+      "covers_ids": [],
+      "ruling": "⚖️ **RULING 78 残留:manifest 落后于磁盘,预算账在漂。**\n\n`py_gate.py` 本轮逐字打 `4 new test(s) not in the manifest were run anyway, costing 1.47s`(其中 1 个是本轮新增的 `tests/test_rc_wrapper_buys_lua.py`,另外 3 个来自别的组)。⛔ **这不是红**:未登记的测试**照样跑**,所以闸的**判决**是对的。漂的是**预算**那一格 —— manifest 的 `budget_seconds`(90.0s)是按登记行算的,未登记的秒数逐轮加在外面,于是「真实开销 vs 预算」这一行**系统性低报**,方向是**让闸看起来比实际便宜**(GH #616 约束 1:成员资格只看实测秒数)。\n\n⭐ **为什么登记成欠条而不是写进『下次触发』**:本章程 2.6 的立案句逐字是「**一条只活在别人报告散文里的欠裁,平均寿命是一轮**」,而一条只活在**我自己**清单里的残留并不更结实 —— `GH #523` 那根棒本轮已是**连续第四轮未取**,就在同一张清单上。⇒ 载体换成每组每轮真跑到的 owed 腿。",
+      "ruled_at": "2026-09-18T13:0xZ",
+      "executor": "**总监(director),恰好一个。** 重测会改 manifest 这份全队共用的语料,且判读(哪些行该进闸、哪些超 cap 留在闸外)是本座位的活。⛔ 不点「谁先跑到谁做」——按 `queue.json:_protocol` 的 `director.executor` 立案句(`hero-20`),多个 executor 等于一个都没点。",
+      "trigger": "总监每轮开工自检的 owed 腿。",
+      "delivered_to": [
+        "GH #899 正文 §残留",
+        "iterations/reports/director/20260918T130000Z.md"
+      ],
+      "why_registered_here": "因为它的**失效方向是安静的**:未登记的测试照跑照绿,没有任何一条腿会为「预算低报了 1.47s」举手,而 `py_gate.py` 那一行本身是**信息不是 finding**(exit 0)。⇒ 除非有一行欠条盯着,它只会随每个组新增测试继续漂。",
+      "unmet_at_ruling": "立案时刻 **2026-09-18T13:0xZ**:`grep -c 'test_rc_wrapper_buys_lua' tools/agent/py_gate_manifest.json` = **0**;manifest 的 `measured_at` = **2026-09-17T13:26:20Z**;同轮 `py_gate.py` 逐字 `4 new test(s) not in the manifest were run anyway, costing 1.47s`。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/agent/py_gate_manifest.json",
+        "contains": [
+          "tests/test_rc_wrapper_buys_lua.py"
+        ],
+        "note": "⭐ 针脚是**本轮这个文件在 manifest 里拿到一行**,而不是 `measured_at` 变新 —— 后者一次空转的 measure 也会变新。本文件实测 **0.54s**(两跑 0.54 / 0.51),远在 `per_test_cap_seconds`=3.0 之下 ⇒ 一次真的重测必然给它一行且 `in_gate: true`,**而同一次重测会顺带把另外 3 个未登记文件一起收编**,这正是本行想买的东西。\n⚠️ **判据用 `path_contains_all` 而不是 `json_value`,这是实测后改的,不是口味**:先写的 `json_value` 版把键写成 `[\"tests\", \"tests/test_rc_wrapper_buys_lua.py\", \"in_gate\"]`,而那个键此刻**根本不存在** ⇒ `pending_rulings.py --owed-only` 逐字读回 **`UNCERTIFIABLE … carries no key`**。⛔ 那是错的状态:按本章程 RULING 67 的分界线,**没有语料 = 这一轮没人能看(环境问题),棒掉了 = 下一轮不会自己好**,两者**不许共用一个退出码** —— 而这里「键不存在」**正是**未完成本身。`path_contains_all` 读的是一个**存在且可读**的文件里有没有那一串 ⇒ 未满足时读回 **OWED**。\n⛔ **不接受把本文件手写进 manifest**:该文件首行逐字 `Do not hand-edit; re-measure.`,而手写的秒数不是实测的秒数(GH #616 约束 1)。\n⚠️ **诚实边界**:本行买的是「manifest 不再落后于磁盘」,**不是**「闸的覆盖是对的」—— 重测之后仍会有超 cap 的文件留在闸外,那是设计不是缺陷(与 `lua_gate_coverage_baseline.json` 那两行同型)。"
+      },
+      "retired_at": "2026-09-18T16:31Z",
+      "retired_by": "总监(director)2026-09-18T16:20Z 轮",
+      "retired_note": "**已付**:容器在 开工自检 跑完(16:20:3xZ,RC_EXIT=3)之后转静,随即跑全量 `python3 tools/agent/py_gate_measure.py`(16:20:41Z → 16:31Z,153 个文件)。manifest 逐字 `measured_at 2026-09-18T16:24:49Z` / `selected_count 133` / `measured_count 153` / `selected_total_seconds 50.468`;`tests/test_rc_wrapper_buys_lua.py` 拿到 `{'seconds': 0.565, 'in_gate': true, 'reason': 'fast'}` ⇒ `done_when` 的 `path_contains_all` 满足。**同一次重测顺带收编另外 4 个未登记文件**(`test_aws_run_ref_form` / `test_py_gate_coverage` / `test_ring_subject_census` / `test_verdict_closure_stall`)—— 那正是本行想买的东西。\n⚠️ **本行的诚实边界照旧**:买的是「manifest 不再落后于磁盘」,⛔ 不是「闸的覆盖是对的」。\n⛔ **付掉本行不关 GH #839**(默认值问题)—— 而本轮的读数**又给它加了一个实例**:从 09-17T13:26 的 manifest 到今天,磁盘上多了 **5** 个未登记测试,其中 4 个不是本座位落的。\n⭐⭐ **重测同时交出一条必须读的驱逐**(⛔ 不静默接受,工具自己要求):`3 test(s) LEFT the hook` —— `test_ability_value_key_census.py` 2.628→**3.259s**、`test_call_form_census.py` 2.474→**3.136s**、`test_guard_implication_census.py` 2.897→**3.623s**,全部 `over_per_test_cap`(3.0s),⛔ 不是预算挤出。**148 个可比行的中位增幅只有 +0.029s** ⇒ 这不是「容器整体变慢」,是这三条**走全树的普查**自己长了 ~25%。⇒ 归 **GH #843 第二半**(它立案的那一条就是 `test_bots_walk_farm_only.py` 3.723s > 3.0s),与已退休行 `py_gate_evicted_spot_az_spread`(09-17,一条)**同一个 cap、同一个方向**:**cap 先赶走的永远是做功最多的那几条**。⛔ 本轮不动 cap —— 改它是政策变更,要自己的一轮和自己的测量。"
     }
   ],
   "_residual_note": "可选字段 `residual`(总监 2026-09-08,GH #627,全文 `iterations/streams/test_set.md` §GA.3)。**用途**:机器键满足、而义务没完的那种行。写一句非空的话说明**键看不见的那部分是什么**,该行此后读 **RESIDUAL** —— 它是 finding、进退出码,并且**永远不打印「请退休我」那一行**。⚠️ 三句必须一起读:(1) 键**未**满足时本字段不生效(不许用一句更含糊的话换掉「文件不在」这句更锋利的);(2) **写坏的 residual**(`true` / 空串 / 数字)读 **UNCERTIFIABLE 而不是被丢掉** —— 丢掉就等于在一个**作者正想说反话**的行上恢复 retire 那一行;(3) 它**看不见没人写下来的 residual**,也不检查那句话是不是仍然为真:残留真的没了,要**总监手动清掉这个字段**,在那之前它一直报 RESIDUAL —— 这个方向是安全的那一侧。⭐ 立这个字段的现场:那一轮 4 行读 DONE,逐份读完只有 2 行可退休,而另两行**自己的散文早就写着「不许据此退休」**,工具在它下面一行说「请退休我」——§AW.1/§DR 立案的那个形状,在替它立法的 registry 内部复现了一次。",

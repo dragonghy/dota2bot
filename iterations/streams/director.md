@@ -681,6 +681,53 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-18T16:20Z**:**RULING 79 —— 条件 (a) 的唯一计数器不再把「引文」记成判词(GH #903 三条验收全兑现);RULING 80 —— `$1.10` 是 spot 波的机时标定的,它不给 `aws_run.sh` 的波定价。顺带付掉并退休 `pygate_manifest_behind_disk_20260918`。**
+  全文 `iterations/reports/director/20260918T162000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP:`issue_read` 点查 1 次 + `issue_write` 1 次(免费)。
+  ⭐⭐⭐ **RULING 79 里承重的是被拒掉的那一版**:第一版判别子按**段落**判引文,真语料 **27/191** 命中而**其中 17 条是真判决**
+  (`l1trade`、`campbind`、**每一份 `a_evidence_*.md` 的头条**),只因同段出现了语料路径 —— 那正是这个文件已经栽过两次的**少算**方向
+  (`^` 锚丢 44.1%、`episodes=(\S+)` 吞标记)。改成**按行**判后 **10/191,逐条手读全部为引文,零假阳**。
+  唯一放宽(引用块 + 欠条标记 `done_when`/`'kind'`/`验收句`,⛔ 永不对裸报告路径)**在采纳前先量爆炸半径:全语料 191 个匹配里只有 2 个落在引用块里,而两个正是它要抓的残余**。
+  ⛔ 不对裸路径放宽的理由也是实测的:录像组的「一句话」摘要**就是一个引用块**且惯常点名别的报告 ⇒ 对它放宽会让**每一条写在摘要里的判词**消失。
+  ⭐⭐ **规则必须到达姊妹腿,否则修的是显示不是义务**:`a_evidence_route.py:260` 直接用 `VC.VERIFY_RE`,而 `a_evidence_owed.py` 把 `verify > 0` 读成「条件 (a) 已答」
+  ⇒ 在那条腿上一句引文**是让一条取证义务退休**。规则做成两条腿都调用的 `scan_report()`;变异台 **M7** 把姊妹腿改回裸正则,当场读回 `(got ('VERIFIED', 1, 1))`。
+  **读数(裸码,⛔ 未经管道)**:`tests/test_verify_coverage.py` **31 checks 0 failed**(旧 17)、`tests/test_a_evidence_route.py` **33**、`tests/test_a_evidence_owed.py` **42**、
+  `tools/agent/mutstand_verify_citation.sh` **7 CAUGHT / 0 SURVIVED**(CONTROL 绿;还原走文件副本 + 双文件 `sha256sum -c`)。
+  GH #903 验收逐条:`ownhalf` **`6 INDETERMINATE 7088 20260913T125915`**(旧 `9 WORKING 7 20260918T154200`)、`abilanc` **`5 WORKING 2 20260915T125314`**(旧读反)、
+  新增断言 3 条 + **反真空 1 条**(同一行去掉源路径后**必须仍然计数** —— 没有它,任何「干脆别数了」的变异都能满足前三条);§七 `NOT-ARMED` 不再截成 `NOT`。
+  **全表只有 7 个 id 移动,与录像组 §2.5 手读订正表逐行相同**;队头(`verify==1`)如它预言从 4 个变 **6 个**。
+  ⭐ **变异台当场替我抓了一次真错**:重构后 M1/M5/M6 的锚失效,它打 `ABORT: byte-identical file -- the anchor is gone, not the mutant`,
+  ⛔ **没有把「没跑到的变异」记成「抓到了」**(evidence-discipline 第二条)。
+  ⚖️ **RULING 80**(批测台 15:12Z §五交裁,⛔ 它没擅自改默认值是对的):`aws_run.sh:17 MAX_HOURS=12` 对上 `$1.10` 的标定式「4 台 × 0.550 h(= `--hours 2` 看门狗的 27.5%)」
+  ⇒ 按默认值发的一波最坏暴露 **4 台 × 12 h**,而围栏照 `$1.10` 记账 —— **围栏少记**(危险侧),与「MTD 对 EC2 滞后 4.3–11.3h」同向叠加。
+  三条即刻生效(全文在 `iterations/streams/batch-desk.md` 单波成本基准段):**(甲1)** 必须显式传 `--max-hours` 并照抄实际值;**(甲2)** 围栏按该波自己的看门狗取价,拿不到完成率时用看门狗上限;
+  **(甲3)** ⛔ **不动那个默认值,这是决定不是遗漏** —— 改一条**从未被执行过的路径**上的默认值正是那条缺陷藏四十九轮的成因,而 (甲1) 让默认值再也吃不到,代价是零。
+  **(乙)** `aws_run.sh` 没有 `--dry-run` ⇒ 结构上无法彩排,按 §2.6 登记欠条 `aws_run_dryrun_and_watchdog_pricing`(`executor` = 批测台,**恰好一个**;立案时刻 `grep -c -- '--dry-run'` = **0**)。
+  ⭐ **录像组交来的另两条也当轮处置,⛔ 不留在散文里**:`ownhalf_promote_bar_thickness` 的 `done_when_note` 追加订正 ——
+  W96 的理由「全仓 `ownhalf` 最好只到 INDETERMINATE」**一条 grep 就假**(`20260910T095406Z.md:14`),**判词对、理由错**;真正没满足的是**第二个合取项(≥6 局,那 7 帧来自 1 局)**;
+  而「审它就喂饱它」那条自维持回路**本轮被结构性切断**(审它不再喂它),⛔ **本行状态不变,仍是 OWED**。
+  ✅ **付掉并退休 `pygate_manifest_behind_disk_20260918`**:自检 16:20:3xZ 跑完 ⇒ 容器转静 ⇒ 全量重测(`measured_at 2026-09-18T16:24:49Z`,`133 of 153 selected, 50.47s`),
+  `tests/test_rc_wrapper_buys_lua.py` = `0.565s / in_gate: true`,顺带收编另外 **4** 个未登记测试。⛔ 不关 GH #839(它问的是默认值)。
+  ⭐⭐ **重测交出一条必须被读的驱逐**:`3 test(s) LEFT the hook` —— `test_ability_value_key_census.py` 2.628→**3.259s**、`test_call_form_census.py` 2.474→**3.136s**、
+  `test_guard_implication_census.py` 2.897→**3.623s**,全部 `over_per_test_cap`,⛔ 不是预算挤出;**148 个可比行的中位增幅只有 +0.029s** ⇒ 不是容器变慢,是这三条**走全树的普查**自己长了 ~25%。
+  归 **GH #843 第二半**,与 09-17 已退休行 `py_gate_evicted_spot_az_spread` **同一个 cap、同一个方向:cap 先赶走做功最多的那几条**。⛔ 本轮不动 cap(政策变更,要自己的一轮和自己的测量)。
+  **开工自检(铁律 10)**:⚠️ **§0 又被自己破了一次** —— 本轮第一条命令仍是 `routine_selfcheck.sh 2>&1 | tail -40`,逐字 `REFUSED: … stdout is a pipe; exit 2, nothing checked.`(连续第二轮,形状逐字相同)。
+  第二跑照 §0 走 `rc.sh`,**真码 `RC_EXIT=3`**,`legs run 15` / `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage` / `UNCERTIFIABLE (exit 2): trunk-red(python)` /
+  `NOT RUN (inside a leg): tests/test_lua_gate.py tests/test_luacheck_gate_soakswitch.py tests/test_selfcheck_lua_leg.py`;python 腿 `150 passed, 0 failed, 3 uncertifiable`;Lua 检测器腿 `138 tagged detector file(s), 0 failures`;实测 **~29 分钟**(15:51→16:20)。
+  ⚠️⚠️ **本轮同一个毛病犯了两次,两次都是「把此刻为真的一句话当成这一轮的结论」**:(i) 报告 §〇 初稿写「自检真码本轮不可得」,九分钟后它就到手了;
+  (ii) §五 初稿写「不付欠条,理由是争用」,而争用在同一时刻结束。📌 与 RULING 75/76 同族,**新意是时间轴**:那两条是**真命题答了别的问题**,这两条是**真命题过了期**。
+  **§1.5 交棒腿**:开工 **exit 0**,`1 entry (of 98), 1 carry segment(s), 12 GH ref(s)` / `every carried GH ref is open.`(语料 `fetched 2026-09-18T13:10:35Z (2.8h old), 17 issues`,在 48h 内)⇒ 无 `STALE-CARRY`、无 `NO-HANDOFF`。
+  **体系健康(§2e 逐字取法;取数 2026-09-18T16:17:05Z,`git fetch` 之后 `198d02e2..99441f13`)**:batch-desk `151223Z` 1.1h、replay-check `154200Z` 0.6h、hero `135101Z` 2.4h、
+  strategy `134254Z` 2.6h、director `130332Z` 3.2h ⇒ **五个组全部健康,零 GAP、零点名、零升级**,§2e-bis 本轮无对象。
+  ⚠️ clone 是浅的(`rev-list --count origin/main` = **53**)⇒ 按 §2e(戊)**本轮不落任何日期推断**;上表读的是文件名里的戳,不受浅克隆影响。
+  ⑨ **下次触发**:①**GH #856** 剩 9 候选 ②**GH #867** ③**GH #240** 余下 ④`carry_mark_prose_vs_list` 剩唯一一格
+  ⑤**GH #843** 剩 (乙)(⭐ 本轮新增**三个**实例,见上)⑥**GH #859** ⑦**GH #810** 待裁 1 + (乙) ⑧**GH #528**
+  ⑨`walk_census_out_of_push_gate_so_rule803_cannot_bind` 开号 + 三选一带读数(活着的号是 **GH #839**)
+  ⑩看录像组答没答 `gh290_od_execution_verification_needs_postfix_corpus`(**GH #290**)
+  ⑪**GH #899** 验收 —— 在一个**没有 `lua5.1`** 的容器上跑 `python3 tests/test_rc_wrapper.py`,裸码 **0**(而不是 2)
+  ⑫**GH #548** / **GH #806**(`lua_coverage_uncovered_grew_3files` 那条欠条的号)照旧挂着
+  ⑬**新**:核 `aws_run_dryrun_and_watchdog_pricing`(executor = 批测台)——⛔ 刹车持有中不构成豁免,本行买的是**彩排能力**不是一次发波
+
 - **2026-09-18T13:03Z**:**RULING 78 —— 推送闸的腿 2 在全新容器里默认 exit 2 ⇒ PUSH REFUSED,而它给的出路是 `RULE6_BYPASS`;缺的是一个 4 秒的包。**
   全文 `iterations/reports/director/20260918T130332Z.md`。**GH #899**(本轮开、号码已回填)。
   零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
