@@ -13260,3 +13260,25 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ⛔ 未改 `state.json`/`test_set.md`/`OWNER_PRIORITIES.md`/`queue.json`;
   ⛔ 闸 (i)/(ii)/(iv) **未跑**(发波轮的闸;(iii) 已 exit 3)—— **未跑不记成通过**。
   详见 `iterations/reports/batch-desk/20260918T031344Z.md`。
+  **补记(第一次 push 之后,GH #290 顺序;全文见报告「补记」节)**:**(A) 铁律 6 三条腿**(两次 push
+  读数**逐位相同 ⇒ memo 命中**)`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)` /
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 43.9s` / `lua gate: SKIPPED BY SCOPE -- this push
+  touches no bots/game/tests path.` ⚠️ **第三条腿是 SKIPPED BY SCOPE 不是绿**(本轮只改 `iterations/` 两个文件);
+  `ARM_EXIT=0`;**⛔ 未用任何 `RULE6_BYPASS`**;`PULL_EXIT=0`(`up to date` ⇒ 无 rebase、无 `--force-with-lease`);
+  `PUSH1_EXIT=0` / `PUSH2_EXIT=0`(`32330abd..43862a0c`)⇒ ⭐ **按文档顺序先分支后 main**,分支推未移动
+  `origin/main`,第二推 memo 免费答掉(读数逐位相同即证),⛔ 未反序。
+  **(B) 自检真码 ⛔ 本轮仍不可得**:收尾时停在 `=== trunk health (fast Lua detectors) ===`,
+  **收尾三行横幅一个都没打** ⇒ **无 `selfcheck worst exit`,⛔ 不写、⛔ 不读成通过**,按铁律 7/11 ⛔ 不空转等它。
+  已跑完腿补两条:⭐ **python 腿 `148 passed, 0 failed, 3 uncertifiable`** ⇒ **上一轮登记的
+  `TRUNK RED`(`tests/test_bots_walk_farm_only.py`)本轮在工作树上已不红** —— ⚠️ 本台**只登记第一手读到
+  `0 failed`**,⛔ 不主张是谁修的、⛔ 不主张 main 同状态(工具自述 `Whether main is red too is NOT
+  established by this line`);3 条 `uncertifiable` 仍是 `5a0` 的 `120s` 截断一族,收尾逐字
+  `UNCERTIFIABLE -- 9 check(s) did not run; this is NOT a pass.` ⇒ ⛔ 不是 pass 也不是红。
+  **(C) 收尾泄漏复查** `check_costs.sh --leak-only` → **`LEAK_EXIT=0`**,`running/pending instances` 区块**空**,
+  常驻仍只有 AMI 一张 ⇒ 收尾与开工两次读数一致。
+  **(D) 发表**:⛔ 零 issue、零评论 ⇒ `claim_precheck.sh` **未跑** —— **⛔ 这是「没有可发表的东西」,不是「检查通过」。**
+  **(E) token 用量(铁律 8)**:`TOKENS total_in=5,443,624 out=39,334 turns=48`(统计后的收尾回合不计入)。
+  ⚠️ 仍高于常态(`3.56M / 31.1k / 33`),但**低于上一轮**(`5.96M / 54.1k / 52`);⭐ 归因可指认:
+  本轮已照上一轮交棒执行「先 `grep -n "^- 2026-" | tail -N` 定位、再按行区间取」,⛔ 未用固定行窗撞长条目,
+  **这正是比上一轮低 `0.52M` 的来源**;剩下的量是章程本身(2.6 MB)与 185 个 verdict 的读取,
+  ⭐ 后者 token 成本很低(键普查在 python 里聚合,**⛔ 没有把 185 个 JSON 贴进上下文**)。
