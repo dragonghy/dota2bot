@@ -72,9 +72,81 @@ import sys
 #
 # `episodes=(\S+)` swallowed the trailing markup along with the number and
 # reported counts like `5020**` and ``7`。``; `(\d+)` cannot.
+#
+# ⚠️ 2026-09-18 (director, GH-filed by the replay desk 15:42Z).  THIRD DEFECT,
+# AND THE FIRST ONE THAT RAN IN THE OPPOSITE DIRECTION: the two fixes above
+# made verified ids read as unverified (manufactured DEBT, the safe side); this
+# one made an id read as verified when nobody had judged it (manufactured
+# SATISFACTION, and condition (a) is iron law 2's precondition for a promote).
+#
+# The shape: a report that QUOTES another document's VERIFY line -- an evidence
+# table citing `…/20260911T101534Z.md:69`, a pasted `grep` hit, an owed row's
+# acceptance sentence -- scored as a fresh verdict by the round that quoted it.
+# Measured on the live corpus that day, 10 of 191 matches were quotations, in
+# three failure classes of rising cost:
+#   * date drift (7): the verdict word was right, but `last_report` jumped by
+#     up to 6 days, so "how stale is this id's verification" reads too fresh;
+#   * TIME REVERSAL (1): `abilanc`'s 09-17 quotation of a 09-11 INDETERMINATE
+#     overwrote the real 09-15 WORKING -- not an over-count, a wrong answer;
+#   * FABRICATION (1): `ownhalf` read `WORKING` from a round whose own §5 says
+#     verbatim "VERIFY 行 0 条 ⛔ 不硬凑" (zero verdicts this round).  The string
+#     it was quoting is the acceptance sentence of the owed row whose ruling
+#     reads "⛔ 不许拿 `verify > 0` 当促进依据" -- so REVIEWING that row fed the
+#     counter the very evidence the row exists to withhold, once per round,
+#     self-sustaining.
+#
+# ⛔ The `^` anchor cannot come back (see above: it dropped 44.1% of real
+# lines), so the discriminator has to live somewhere else.  It lives on the
+# ROW: a line that also names WHERE ELSE THIS STRING LIVES -- another report's
+# stem or path, an owed row, an acceptance sentence -- is citing, not judging.
+# A desk stating its own verdict does not cite a source for it on the same row.
+#
+# Scope, stated so it is not over-read: LINE scope, not block scope.  Block
+# scope was measured first and is WRONG HERE -- it flagged 27 of 191, and the
+# extra 17 were real verdicts whose paragraph merely happened to name a corpus
+# path (`20260917T095600Z.md:11`, `…T125517Z.md:8`, every `a_evidence_*.md`
+# headline).  That is the under-count direction this file has already been
+# burned by twice, so the wider rule was rejected on the measurement rather
+# than kept for its tidiness.
 VERIFY_RE = re.compile(
-    r"VERIFY\s+id=([A-Za-z0-9_]+)\s+verdict=([A-Z]+)"
+    r"VERIFY\s+id=([A-Za-z0-9_]+)\s+verdict=([A-Z]+(?:-[A-Z]+)*)"
     r"(?:\s+episodes=(\d+))?")
+# THE VERDICT VOCABULARY IS CHARTER STEP 7's, AND A TOKEN OUTSIDE IT IS NOT A
+# VERDICT.  `verdict=([A-Z]+)` truncated `NOT-ARMED` to `NOT` and filed it as a
+# verdict word -- 12 lines on the 2026-09-18 corpus (`skillstall` 9,
+# `outcommit` 3).  Both ids sit outside the armed string today, so the table
+# never showed it; it would have appeared, uncontested, on the day either id
+# entered the set.  Off-vocabulary matches are counted in their own bucket and
+# printed -- never silently dropped, because a parser that discards what it
+# cannot classify is how `NOT` got in here in the first place.
+VERDICT_VOCAB = ("WORKING", "BUGGY", "SILENT", "INDETERMINATE")
+# A row that names where else this string lives.  Each alternative was read off
+# the real corpus, not imagined: report stem, report path (a pasted `grep` hit
+# carries both), the owed registry by name, an owed row's `done_when` field,
+# the `{'kind': …}` cell of the desk's owed-review table, and the desk's own
+# word for an acceptance sentence.
+CITED_RE = re.compile(
+    r"\d{8}T\d{6}Z\.md"
+    r"|iterations/reports/"
+    r"|owed_executions"
+    r"|done_when"
+    r"|['\"]kind['\"]"
+    r"|验收句")
+# THE ONE PLACE THE ROW RULE IS WIDENED, AND ONLY AS FAR AS THE MEASUREMENT
+# SUPPORTS.  An owed row's acceptance sentence gets quoted as a markdown
+# BLOCKQUOTE, and the field name that identifies it ("done_when", the `kind`
+# cell, the desk's word 验收句) then sits on a NEIGHBOURING row of the same
+# quote rather than on the row carrying the VERIFY string.  Those two rows are
+# one block, so the pointer test runs over the whole blockquote -- but only for
+# these markers, never for a bare report path: a summary head naming another
+# report is ordinary practice at this desk and must keep counting.
+# Blast radius, measured on the 2026-09-18 corpus before adopting it: of 191
+# matches, exactly TWO sit inside a blockquote at all, and both are the
+# residue this widening is for (`20260918T154200Z.md:6` and `:82`, the round
+# that reported the defect quoting the acceptance sentence twice).  With it,
+# the census reproduces the desk's hand-read correction table 7 rows out of 7.
+OWED_QUOTE_RE = re.compile(
+    r"owed_executions|done_when|['\"]kind['\"]|验收句")
 VERDICT_WORDS = re.compile(r"WORKING|BUGGY|SILENT|INDETERMINATE")
 NARR_WINDOW = 260          # chars each side of a mention -- deliberately loose
 
@@ -92,6 +164,72 @@ def arm_ids(path):
     return ids
 
 
+def scan_report(text):
+    """Split one report's VERIFY matches into verdicts / citations / off-vocab.
+
+    ⭐ THE ONE PLACE THE RULE LIVES.  `a_evidence_route.py` counts VERIFY lines
+    with this module's regex, and `a_evidence_owed.py` decides VERDICT-vs-OWED
+    off that count -- so a citation rule that lived only in this file's `main()`
+    would fix the census and leave the obligation leg reading a quotation as a
+    discharged debt.  That is this repo's most-repeated defect shape (a reading
+    that exists in one leg and never reaches its sibling three lines away), so
+    the rule is a function both legs call, not a loop one of them owns.
+
+    Returns three lists of `(lineno, id, verdict, episodes_or_None, line)` for
+    the refused ones and `(lineno, id, verdict, episodes_or_None)` for verdicts.
+
+    PER LINE, NOT PER FILE.  The citation test is a property of the ROW a match
+    sits on, so the parser has to know which row that is; scanning the whole
+    blob cannot answer it.  It also stops `\s+` from bridging a newline, which
+    was never an intended match.
+
+    DEDUP WITHIN ONE REPORT.  This desk states its verdict twice in the same
+    file by convention -- once in the report's summary head, once in the body
+    section that argues it.  Those are one verdict, not two.  Before the anchor
+    came off, the head copy was usually the emphasised one and so was invisible,
+    which hid the double-count; counting both now would inflate the ledger's own
+    number in the OPPOSITE direction from the bug the 09-06 fix repairs, and an
+    over-count is the failure mode the docstring calls "worse than the 未单独计
+    it replaced".
+    """
+    verdicts, cited, offvocab = [], [], []
+    seen = set()
+    lines = text.split("\n")
+    for idx, line in enumerate(lines):
+        lineno = idx + 1
+        for m in VERIFY_RE.finditer(line):
+            wid, verdict, eps = m.group(1), m.group(2), m.group(3)
+            if CITED_RE.search(line) or in_owed_quote(lines, idx):
+                cited.append((lineno, wid, verdict, eps, line.strip()))
+                continue
+            if verdict not in VERDICT_VOCAB:
+                offvocab.append((lineno, wid, verdict, eps, line.strip()))
+                continue
+            if (wid, verdict, eps) in seen:
+                continue
+            seen.add((wid, verdict, eps))
+            verdicts.append((lineno, wid, verdict, eps))
+    return verdicts, cited, offvocab
+
+
+def in_owed_quote(lines, idx):
+    """True when this row is inside a blockquote that quotes an owed row.
+
+    The block is the contiguous run of `>`-prefixed rows around `idx`; a row
+    that is not part of a blockquote is never widened, so this cannot reach
+    ordinary prose.  See OWED_QUOTE_RE for why only those markers widen.
+    """
+    if not lines[idx].lstrip().startswith(">"):
+        return False
+    start = idx
+    while start > 0 and lines[start - 1].lstrip().startswith(">"):
+        start -= 1
+    end = idx
+    while end + 1 < len(lines) and lines[end + 1].lstrip().startswith(">"):
+        end += 1
+    return bool(OWED_QUOTE_RE.search("\n".join(lines[start:end + 1])))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--test-set",
@@ -100,6 +238,9 @@ def main():
                     default=os.path.join(REPO, "iterations/reports/replay-check"))
     ap.add_argument("--all", action="store_true",
                     help="print every armed id, not only the uncovered ones")
+    ap.add_argument("--show-citations", action="store_true",
+                    help="list the VERIFY matches that were read as citations "
+                         "or as off-vocabulary tokens, with file and line")
     a = ap.parse_args()
 
     try:
@@ -115,26 +256,20 @@ def main():
 
     verify = {}
     narrat = {}
+    # Two buckets of matches that are NOT verdicts.  They are kept and printed
+    # rather than dropped: this tool's whole history is defects that removed
+    # lines quietly, and a count nobody can see is a count nobody can dispute.
+    cited = []          # a VERIFY string quoted from somewhere else
+    offvocab = []       # a token outside charter step 7's vocabulary
     for path in files:
         stem = os.path.basename(path)
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
-        # DEDUP WITHIN ONE REPORT.  This desk states its verdict twice in the
-        # same file by convention -- once in the report's summary head, once in
-        # the body section that argues it.  Those are one verdict, not two.
-        # Before the anchor came off, the head copy was usually the emphasised
-        # one and so was invisible, which hid the double-count; counting both
-        # now would inflate the ledger's own number in the OPPOSITE direction
-        # from the bug this fix repairs, and an over-count is the failure mode
-        # the tool's docstring calls "worse than the 未单独计 it replaced".
-        seen_here = set()
-        for m in VERIFY_RE.finditer(text):
-            row = (m.group(1), m.group(2), m.group(3))
-            if row in seen_here:
-                continue
-            seen_here.add(row)
-            verify.setdefault(m.group(1), []).append(
-                (stem, m.group(2), m.group(3)))
+        verdicts, cit, off = scan_report(text)
+        cited += [(stem,) + r for r in cit]
+        offvocab += [(stem,) + r for r in off]
+        for _lineno, wid, verdict, eps in verdicts:
+            verify.setdefault(wid, []).append((stem, verdict, eps))
         # Where every armed id is named in this file, so a verdict word can be
         # attributed to the NEAREST id rather than to whichever id happens to
         # sit within the window.  Without this the column over-counts exactly
@@ -169,6 +304,15 @@ def main():
     print("armed ids: %d   reports scanned: %d" % (len(ids), len(files)))
     print("ids with >=1 machine-readable VERIFY line: %d"
           % sum(1 for i in ids if i in verify))
+    print("not counted: %d citation(s), %d off-vocabulary token(s)"
+          % (len(cited), len(offvocab)))
+    if a.show_citations:
+        for stem, lineno, wid, verdict, _eps, line in cited:
+            print("  CITATION      %s:%d  %s %s | %s"
+                  % (stem, lineno, wid, verdict, line[:110]))
+        for stem, lineno, wid, verdict, _eps, line in offvocab:
+            print("  OFF-VOCAB     %s:%d  %s %s | %s"
+                  % (stem, lineno, wid, verdict, line[:110]))
 
     rows = []
     for wid in ids:
@@ -207,6 +351,11 @@ def main():
     print("    chars of the id): generous on purpose, so it over-counts rather")
     print("    than letting a real reading go missing. It is not evidence that")
     print("    condition (a) was bought -- only the VERIFY column counts.")
+    print("  * citations are detected AT LINE SCOPE: a quoted VERIFY string")
+    print("    that names no source on its own row is still counted. Measured")
+    print("    2026-09-18: 2 such lines remained (one report's prose quoting")
+    print("    its own §2 twice). Narrower than the defect, on purpose --")
+    print("    block scope was measured and dropped 17 real verdicts.")
     print("  * an id can be armed and legitimately unverifiable from replays;")
     print("    that is a finding about the instrument, not a debt (see")
     print("    creepthink, report 20260905T09xxZ).")

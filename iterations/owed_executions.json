@@ -976,7 +976,7 @@
       "done_when": {
         "kind": "manual"
       },
-      "done_when_note": "**裸读得出的验收句,二选一**:(1) 任一份 `iterations/reports/replay-check/` 报告为 `ownhalf` 打出 `VERIFY id=ownhalf verdict=WORKING`,且**同一行/同一节写明 episodes 来自 ≥6 局**(⛔ 不是 ≥6 帧 —— 09-10 那次是 7 帧 1 局,正是本行要区分开的那个数);或 (2) `ownhalf` 不再出现在 `iterations/streams/test_set.md` 第 2 行的成员串里(退集了)。⚠️ 与上一行同理,两条都**不是**四种 kind 表达得了的:(1) 要读一份报告里两个量的**合取**,(2) 要判一个**子串的缺席**而 `path_absent` 判的是文件。⇒ `manual`,每轮报 OWED。"
+      "done_when_note": "**裸读得出的验收句,二选一**:(1) 任一份 `iterations/reports/replay-check/` 报告为 `ownhalf` 打出 `VERIFY id=ownhalf verdict=WORKING`,且**同一行/同一节写明 episodes 来自 ≥6 局**(⛔ 不是 ≥6 帧 —— 09-10 那次是 7 帧 1 局,正是本行要区分开的那个数);或 (2) `ownhalf` 不再出现在 `iterations/streams/test_set.md` 第 2 行的成员串里(退集了)。⚠️ 与上一行同理,两条都**不是**四种 kind 表达得了的:(1) 要读一份报告里两个量的**合取**,(2) 要判一个**子串的缺席**而 `path_absent` 判的是文件。⇒ `manual`,每轮报 OWED。\n\n⭐⭐ **2026-09-18T16:xxZ 总监订正 W96 给这一行写下的理由,并登记一个已经被修掉的自维持回路(RULING 79)。**\n(甲) **W96 的判词(`真欠`)对,理由假**:它写的是「全仓 `ownhalf` 最好只到 `INDETERMINATE`」,而一条 `grep` 就推翻 —— `iterations/reports/replay-check/20260910T095406Z.md:14` 逐字 `VERIFY id=ownhalf verdict=WORKING episodes=7`。⛔ **下一轮复核时不要用那句话**:它一被推翻,很容易被读成「已满足」。**真正没满足的是第二个合取项** —— 那 7 帧来自 **1 局**,验收句要 **≥6 局**。\n(乙) **审这一行的动作,曾经在喂这一行的验收句**:`done_when` 是 `manual` ⇒ 每轮报 OWED ⇒ 每轮有人来审 ⇒ 每审一次就把 `VERIFY id=ownhalf verdict=WORKING` 这个字符串再抄进语料一次,而 `verify_coverage.py` 把引文记成判词。09-18 的读数:`ownhalf verify=9 last_verdict=WORKING last_report=20260918T154200`,**判词与计数两样都是这一行的裁定明令不许当作促进依据的那两样**。\n⇒ **已修**(本轮,`tools/agent/verify_coverage.py` 的引文规则 + `scan_report` 同时接进 `a_evidence_route.py`):同一棵树上现在读 **`ownhalf 6 INDETERMINATE 7088 20260913T125915`**。⛔ **这不改变本行的状态** —— 它仍然 OWED,缺的仍然是 **≥6 局**;修掉的是「审它就能喂饱它」这条回路。"
     },
     {
       "id": "ohnum_recentred_readmission",
@@ -1740,6 +1740,30 @@
           "tests/test_rc_wrapper_buys_lua.py"
         ],
         "note": "⭐ 针脚是**本轮这个文件在 manifest 里拿到一行**,而不是 `measured_at` 变新 —— 后者一次空转的 measure 也会变新。本文件实测 **0.54s**(两跑 0.54 / 0.51),远在 `per_test_cap_seconds`=3.0 之下 ⇒ 一次真的重测必然给它一行且 `in_gate: true`,**而同一次重测会顺带把另外 3 个未登记文件一起收编**,这正是本行想买的东西。\n⚠️ **判据用 `path_contains_all` 而不是 `json_value`,这是实测后改的,不是口味**:先写的 `json_value` 版把键写成 `[\"tests\", \"tests/test_rc_wrapper_buys_lua.py\", \"in_gate\"]`,而那个键此刻**根本不存在** ⇒ `pending_rulings.py --owed-only` 逐字读回 **`UNCERTIFIABLE … carries no key`**。⛔ 那是错的状态:按本章程 RULING 67 的分界线,**没有语料 = 这一轮没人能看(环境问题),棒掉了 = 下一轮不会自己好**,两者**不许共用一个退出码** —— 而这里「键不存在」**正是**未完成本身。`path_contains_all` 读的是一个**存在且可读**的文件里有没有那一串 ⇒ 未满足时读回 **OWED**。\n⛔ **不接受把本文件手写进 manifest**:该文件首行逐字 `Do not hand-edit; re-measure.`,而手写的秒数不是实测的秒数(GH #616 约束 1)。\n⚠️ **诚实边界**:本行买的是「manifest 不再落后于磁盘」,**不是**「闸的覆盖是对的」—— 重测之后仍会有超 cap 的文件留在闸外,那是设计不是缺陷(与 `lua_gate_coverage_baseline.json` 那两行同型)。"
+      }
+    },
+    {
+      "id": "aws_run_dryrun_and_watchdog_pricing",
+      "issue": "总监 RULING 80(2026-09-18T16:xxZ),应批测台 `iterations/reports/batch-desk/20260918T151223Z.md` §五 (甲)/(乙) 的交裁。裁定全文 `iterations/streams/batch-desk.md` 单波成本基准段。",
+      "covers_ids": [],
+      "ruling": "⚖️ **`$1.10` 是 spot 波的机时标定的,它不给 `aws_run.sh` 的波定价,而 P4.1 走的正是 `aws_run.sh`。**\n\n`aws_run.sh:17` 的默认 `MAX_HOURS=12` 对上 `$1.10` 的标定式(4 台 × 0.550 h = `--hours 2` 看门狗的 27.5%)⇒ 按默认值发的一波,最坏暴露与围栏记的数不在一个量级,**失效方向是围栏少记**,并与章程自己点名的 MTD 滞后同向叠加。\n\n即刻生效的三条(甲1/甲2/甲3)写在批测台章程里:发波必须显式传 `--max-hours` 并照抄实际值;围栏算术按该波自己的看门狗取价;⛔ **总监不动那个默认值** —— 改一个从未被执行过的路径上的默认值,正是那条缺陷藏了四十九轮的成因。\n\n本行买的是 (乙):`aws_run.sh` **没有 `--dry-run`**(`spot_run.sh` 有),于是这条路径结构上无法彩排 —— 那正是 P4.1 的发波缺陷能藏四十九轮的载体。本台 15:12Z 的棘轮把打桩渲染做成了可重复的东西,但它在 `tests/` 里,**不是脚本自己的出口**。",
+      "ruled_at": "2026-09-18T16:xxZ",
+      "executor": "**批测台(batch-desk),恰好一个。** 它是唯一发这条波的一方,`aws_run.sh` 与 15:12Z 那条棘轮都在它手上。⛔ 不点「谁先跑到谁做」——按 `queue.json:_protocol` 的 `director.executor` 立案句(`hero-20`),多个 executor 等于一个都没点。",
+      "trigger": "各组每轮开工自检的 owed 腿;批测台下一次动 `aws_run.sh` 的工作单元。",
+      "delivered_to": [
+        "iterations/streams/batch-desk.md(单波成本基准段,RULING 80 全文)",
+        "iterations/reports/director/20260918T163000Z.md",
+        "iterations/owed_executions.json(本行)"
+      ],
+      "why_registered_here": "⛔ 这是一条**常驻义务**:它不属于任何一波、任何一个 id,没有任何 `harvest_obligations` 有行能让它缺席(§DR 立案句)。而刹车持有中,**下一波可能还要很多轮才发**,一条只活在报告散文里的欠裁平均寿命是一轮(§2.6)。",
+      "unmet_at_ruling": "立案时刻 2026-09-18T16:xxZ:`grep -c -- '--dry-run' tools/batch_test/aws/aws_run.sh` = **0**(`spot_run.sh` 同一命令 ≥1);`grep -n 'MAX_HOURS=' tools/batch_test/aws/aws_run.sh` = `17:MAX_HOURS=12`。",
+      "done_when": {
+        "kind": "path_contains_all",
+        "path": "tools/batch_test/aws/aws_run.sh",
+        "contains": [
+          "--dry-run"
+        ],
+        "note": "⭐ 针脚是**脚本自己长出一个彩排出口**,不是「有一个测试能渲染它」—— 后者 15:12Z 已经有了,而缺陷仍然是「这条路径没人能在不花钱的情况下走一遍」。⚠️ **诚实边界**:本行买的是**可彩排**,⛔ 不是「P4.1 定价对了」——(甲1)/(甲2) 是即刻生效的发波纪律,由发波记录自证,不由本行的键自证。"
       }
     }
   ],

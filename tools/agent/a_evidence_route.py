@@ -256,13 +256,17 @@ def main():
         stem = os.path.basename(path)
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
-        seen = set()
-        for m in VC.VERIFY_RE.finditer(text):
-            row = (m.group(1), m.group(2), m.group(3))
-            if row in seen:
-                continue
-            seen.add(row)
-            verify.setdefault(m.group(1), []).append(m.group(2))
+        # ⚠️ 2026-09-18 (director): THROUGH `scan_report`, NOT THE BARE REGEX.
+        # The regex alone counts a QUOTED VERIFY line -- an evidence table
+        # citing another report, a pasted `grep` hit, an owed row's acceptance
+        # sentence -- as a fresh verdict.  This leg feeds `a_evidence_owed.py`,
+        # which reads `verify > 0` as "condition (a) is answered", so a
+        # quotation here does not merely mis-display: it retires the demand for
+        # the evidence.  Ten of 191 matches on the 2026-09-18 corpus were
+        # quotations, one of them inventing a WORKING for an id whose owed row
+        # exists precisely to refuse `verify > 0` as promote evidence.
+        for _lineno, wid, verdict, _eps in VC.scan_report(text)[0]:
+            verify.setdefault(wid, []).append(verdict)
             # WHICH REPORT the line came from, carried alongside the verdict
             # word so a reader can ask WHEN it was taken.  The verdict word
             # alone cannot answer "is this reading about the id's CURRENT
@@ -270,7 +274,7 @@ def main():
             # silence -- the one failure direction this census family exists
             # to refuse (a_evidence_owed.py's header, PRE-ARM).  Text output
             # is unchanged on purpose; this is a JSON-only addition.
-            verify_reports.setdefault(m.group(1), []).append(stem)
+            verify_reports.setdefault(wid, []).append(stem)
 
     cls = classify(ids, waves, tools_by_id, verify)
     # PARTITION INVARIANT.  Same discipline as the frame-accounting assertion in

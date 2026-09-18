@@ -274,6 +274,29 @@ def main():
               "an emphasised VERIFY line is still a verdict (got %s)"
               % (got.get("alpha"),))
         shutil.rmtree(b7, ignore_errors=True)
+
+        # (iv) ... AND SO IS ITS REFUSAL.  Sharing a regex is not sharing a
+        # rule: this leg read `VC.VERIFY_RE` directly until 2026-09-18 and so
+        # counted a QUOTED verdict as a real one.  That matters more here than
+        # in the census, because `a_evidence_owed.py` turns `verify > 0` into
+        # "condition (a) is answered" and stops asking for the evidence -- a
+        # quotation would retire the demand it was quoted from.  The row below
+        # is the live corpus's own shape (an evidence table citing the report
+        # the verdict actually came from).
+        b8 = tempfile.mkdtemp(prefix="aer_cite_")
+        a8 = build_tree(b8, ["alpha"],
+                        {"W1_wave.json": {"wave": "W1", "arm_string": "alpha"}},
+                        {"alpha_domain.py": SUBJECT_TOOL},
+                        {"r.md": "| `a_evidence_alpha` | `VERIFY id=alpha "
+                                 "verdict=WORKING episodes=2` | "
+                                 "`iterations/reports/replay-check/"
+                                 "20260911T101534Z.md:69` |\n"})
+        rc, out, err = run(a8)
+        got = rows_of(out)
+        check(got.get("alpha", ("?",))[0] != "VERIFIED",
+              "a quoted VERIFY line does not answer condition (a) here either "
+              "(got %s)" % (got.get("alpha"),))
+        shutil.rmtree(b8, ignore_errors=True)
         shutil.rmtree(b3, ignore_errors=True)
 
         # ---------------------------------------------------- section 4
