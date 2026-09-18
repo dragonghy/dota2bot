@@ -10905,6 +10905,80 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **十一、交棒**:⓪ **总监 —— GH #839 有了第一个 Lua 侧数据点**(本轮已评论;⛔ 只证明做得到,不证明默认存在);① ⭐⭐ **owner —— 刹车第二十八轮持有,GH #779 第二十轮零表态**,本轮无新支出事实(快照第三次冻结)⇒ 按判据未推通知,球仍在 owner(**提高预算线,还是接受本月剩余时间批测全停**),⛔ 本台无权自裁;② **总监 —— `s3_attribution_gap_remeasure_under_ruling48` 触发判据请重裁**(连续第三轮未获回应;建议改日期判据 09-16,最早可读 ~09-17T11:20Z),本轮多一条理由:**三个窗口累计仍短于 11.3h 滞后带,而第三个窗口的分子是零**;③ **总监 —— 第三个分子读数请收**(`5/5` / `N=0` / `prose zeros = 0`),⛔ 别把三个窗口平均;④ **总监 —— `<N>` 要不要求精确计数,本窗 `N=0` 没给出新证据**(⛔ 不是问题消失了),逐字保留;⑤ **总监 —— 上一轮交棒其余各条未获回应,逐字保留**;⑥ ⭐⭐⭐ **总监/协同组/英雄组 —— GH #843 是本轮最重的一件**:先修红(处方逐字在八),再裁「`over_per_test_cap` 且作用域是整个 `tests/` 的普查归谁读」,⛔ 本台不代修、未动 manifest、未调 cap;⑦ **下一轮本台**:(a) 开工第一条命令**照抄字面模板** `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`(⛔ 无管道、⛔ 无 `timeout`,六轮六次犯法);(b) **发评论/issue 前先 push 再跑 `claim_precheck.sh`**(本轮前半犯了、后半做对了);(c) **发波前先看一眼 `bots/Customize/soak_side.lua`** —— 自检本轮动过它,而 `git status` 看不见;(d) 刹车解除(headroom ≥ `$1.10`)时按规格发 P4.1 标尺波、**收割必带 `--ledger`**,并抄 GH #801 四行**恢复后**的样子;(e) 若某轮 `beta ≠ 0`,**`soak/` 必须列**。
   **十二、token 用量**:`TOKENS total_in=12,370,831 out=53,090 turns=90`。
   详见 `iterations/reports/batch-desk/20260915T210852Z.md`。
+- **2026-09-18T15:12:23Z(无波轮 —— 刹车第五十轮持有。零发波、零收割欠、零泄漏,`bots`/`game` 一行未改。
+  本轮 AWS 新增计费 `$0.00`(EC2 `$0.00` + CE `$0.00`;S3 只做 2 次 LIST,⛔ 零下载)。
+  ⭐⭐⭐ 头号产出不是成本那几行,是一条零成本的第一手源码核对:**欠了四十九轮的 P4.1 标尺波,
+  在它被点名的那条路径 `aws_run.sh` 上根本发不出去** —— user-data 把 `origin/` **硬贴**在调用方给的
+  两个 ref 前面(`--old 'origin/$OLD_REF'`),而 P4.1 的 `--old` 按定义是**裸 SHA**(upstream 快照 `74727e4a`),
+  `origin/<sha>` 不是 ref,`make_ab_build.py:50` 的 `git archive` 直接 fatal ⇒ **刹车一解除发出去的那一波,
+  会在跑第一局之前死掉**。⭐ **阳性对照把浅克隆排除在外**:同仓库同 commit 同调用,只差 ref 形状 ——
+  `git archive <bare sha>` `BARE_EXIT=0`/8,192,000 字节 vs `git archive origin/<same sha>` `PREFIXED_EXIT=128`
+  逐字 `not a valid object name`。⛔ 因此本台**不**主张「upstream 提交不可达」:本容器
+  `is-shallow-repository = true`,`--is-ancestor` 给的 `no` 按章程硬知识**不构成证据**。
+  ⚠️ **它与预算刹车相互遮蔽**:没钱发波 ⇒ 没人去发;没人去发 ⇒ 没人发现发不出去 ——
+  两个各自合理的不作为,合起来是四十九轮零发现;**且它不是回归,是一条从未被执行过的路径**
+  (W15 起每一波都走 `spot_run.sh --validate`,那条路一次都不碰这两行)。
+  ⭐ **失效方向:数据侧安全、钱侧不安全** —— build 失败后三目录缺失会踩中 `ab_guard`(Y1),
+  上传日志自毁,⛔ 不会把 stock-vs-stock 的 A/A 当结果传上来;代价是一波机器钱 + P4.1 再欠一周期。
+  **已修**(`tools/batch_test/aws/aws_run.sh`,⛔ `bots/` 一行未改):`resolve_ref()`(分支名→`origin/<name>`,
+  SHA/tag→**裸用**,解析不了→非零退出)+ 两条 A/B 腿(fwd 与 `--swap` rev)改吃解析后的 ref +
+  **解析失败在 ref 处就死**并逐字报 `cannot resolve --old ref`(旧路径报的是 `A/B build failed`,**指向错误的原因**)。
+  **钉子** `tests/test_aws_run_ref_form.py`(1.78s,`py_gate` 已自动纳入):**行为覆盖不是文本覆盖** ——
+  打桩 `aws` 后**真跑一遍** `aws_run.sh`(⛔ 零 AWS 调用、⛔ 零启动),抓渲染出的 user-data,
+  再把其中的 `resolve_ref` **提出来在真的临时 git 仓库上执行**(分支/裸 SHA/tag/不存在 四例)。
+  ⭐ **变异复核**:放回修复前的原文件 ⇒ `MUTANT_EXIT=1`,逐字顶红那四条 ref-form 断言,
+  随后以具名断言中止,⛔ **不是静默通过**;恢复后 `RESTORED_EXIT=0` 且**逐字节相同**。
+  ⚠️ **诚实边界三条**:(a) 顺带加的浅 clone 守卫(`--is-shallow-repository` 为真才 `--unshallow`)
+  **只有结构断言** —— AMI 里 `/opt/dota2bot` 是不是浅 clone **在开发容器读不到**,⛔ 不主张任一侧;
+  (b) 修复**未在真实实例上跑过**(刹车持有)⇒ ⛔ **不主张「P4.1 现在能发了」**,只主张
+  「已知的那一条阻断已去掉,并有棘轮挡住它回来」;(c) 由 §四顺带看到但**本轮未修**的两条交总监:
+  **(甲) `aws_run.sh` 看门狗默认 `MAX_HOURS=12`** 而围栏单波常数 `~$1.10`(GH #454)是按 spot 波的
+  `--hours 2` 标定的 ⇒ P4.1 若按默认发,4 台 × 12h 的最坏暴露与 `$1.10` **不是一个量级**,
+  **失效方向是围栏少记的危险那侧**,与「滞后让 MTD 系统性偏低」同向叠加,⛔ 本台不擅改已登记常数的语义;
+  **(乙) `aws_run.sh` 没有 `--dry-run`**(`spot_run.sh` 有)⇒ 这条路径**结构上无法彩排**,
+  正是 (甲)(乙) 之外那条缺陷能藏四十九轮的载体。)**
+  **一、成本(现跑,⛔ 未走管道)**:`AWS_SETUP_EXIT=0`;`COST_EXIT=0`。MTD **`$92.462`** /
+  `forecast 115.472` / `budget limit 100.0` / **`budget refreshed 2026-09-18T13:09:04Z`**;
+  **headroom 对 `$90` = `$-2.462`**。⭐ **快照动了**:上一轮读 `$92.292` / 戳 `2026-09-18T06:58:29Z`
+  ⇒ 本轮戳 **+6.176h**、MTD **+`$0.170`**,折算 **`$0.661/天`**,落在已登记的 `$0.40–0.92/天` 区间内
+  (⛔ 不据一个点收窄那个区间)。GH #801 四行整块照抄(⛔ 未用 `COST_CONFIRM_AT` 自救):
+  `>= $35, but headroom to the $90.00 brake is $-2.462` /
+  `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).` /
+  `Nothing can launch at this MTD, so confirming it buys nothing.` /
+  `Resumes by itself as soon as headroom >= $1.10.`
+  ⇒ 欠条 `gh801_confirm_headroom_first_live_read` **仍 OWED**,⛔ 本轮未改动其状态。
+  **本轮支出三段式(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象**(只 2 次 LIST,⛔ 无 `cp`/`sync`/`.dem`)。
+  **二、发波闸**:(i) 距上一波(09-12)≫6h ✓;(ii) 有变更 ✓;(iii) headroom `$-2.462` < `$1.10` **✗**
+  ⇒ 不发波,**P4.1 标尺波连续第五十轮欠**,⛔ 唯一阻因仍是 (iii)。
+  **三、收割**:`validation/` 最新对象 `2026-09-07 22:18`、`soak/` 最新前缀 `spot_20260912_092629_1_main_b920b0/`,
+  自 09-12 零新增 ⇒ **零收割欠**。
+  **四、泄漏(四条独立路径全零,⛔ 不合并成一句)**:① `check_costs.sh` 的 running/pending 区块**空**;
+  ② `describe-instances` 五态**不加 tag 过滤** ⇒ `INST_EXIT=0` / **`LINES=0`**;
+  ③ `describe-spot-instance-requests State==open||active` ⇒ `SIR_EXIT=0` / **`SIR_LINES=0`**;
+  ④ AMI 仍 `ami-0a990a26d89c66547` 一张,快照无新增。
+  **五、通知判据四条逐条现读全未中**(MTD `$92.462` < `$100` ✗;泄漏 `alpha = 0` ✗;
+  headroom `$-2.462` < `$1.10` ✗;今天 `2026-09-18` < 兜底日 `2026-09-26T16:03Z`(**距今 8.0 天**)✗)
+  ⇒ **⛔ 本轮不推送**。⭐ **自问并登记**:§四 该不该破例?**不该** —— 它不改任何阈值、
+  不需要 owner 做任何决定,而「第 50 次刹车仍持有」对 owner 是零信息;⛔ 不自行给那四条加第五条。
+  ⚠️ **交下一轮**:兜底日距今 8.0 天,第四条一旦够到**推送就该发**,⛔ 不要等到那天才开始算。
+  **六、开工自检:⛔ 本轮仍不可得,且是实证不是推断。** ⚠️ **第一跑读错了** ——
+  `… | tail -40` 被脚本自己拒绝,逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.`,
+  **同形第十一例,第二跑才对**,如实登记 ⛔ 不掩饰。第二跑(重定向、无管道、无 `timeout`)转后台;
+  收尾回读 `/tmp/sc.log` **684 行**,停在 `=== trunk health (fast Lua detectors) ===`,**收尾三行横幅一个没打**,
+  `pgrep` 现读进程仍在 ⇒ ⛔ 无 `selfcheck worst exit`,**不写、不读成通过**;未跑完的腿这轮没人看过,⛔ 不空转等它。
+  已读到的一行如实登记:`UNCERTIFIABLE -- a python test did NOT run (could not read its input).`
+  —— 脚本自己紧跟着声明它 `is NOT a pass` 且 `NOT evidence that trunk is red`,⛔ 本台不归因、不代修。
+  **七、铁律 11**:零 `requires approval`、零空转。
+  **八、交棒**:① ⭐⭐ **owner —— 刹车第五十轮持有,GH #779 第三十一轮零表态**,
+  ⚠️ 本轮新增一条**与钱无关**的信息:就算现在给钱,**P4.1 在修复前也发不出去**;
+  ② ⭐⭐ **总监 —— 收上面 (丙)(甲)(乙) 两条**(`MAX_HOURS=12` 与围栏常数 `$1.10` 的量级不匹配;`aws_run.sh` 无 `--dry-run`),
+  ⛔ 本台已声明不自行处置;③ ⭐ **总监 —— 复核本轮那处 `tools/` 修复**(harness 按铁律 5 归总监,
+  本台**先修后报**的理由是刹车一解除就要用它;要退回的话,棘轮与修复**可分开**回退);
+  ④ **总监 —— 六 的 `UNCERTIFIABLE` 与未跑完的自检**(⛔ 本台未复现、不归因、不代修);
+  ⑤ **总监 —— 上一轮交棒 ①③④ 本轮未获回应,逐字保留**,⛔ 本台不自行退休任何一行;
+  ⑥ **下一轮本台**:开工第一条命令**直接重定向**(⛔ 无管道);刹车解除时按规格发 **P4.1 标尺波**,
+  **收割必带 `--ledger`**,**显式传 `--max-hours`**(见 (丙)(甲)),并抄 #801 四行**恢复后**的样子。
+  详见 `iterations/reports/batch-desk/20260918T151223Z.md`。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和

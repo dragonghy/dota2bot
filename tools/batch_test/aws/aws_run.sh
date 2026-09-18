@@ -39,8 +39,31 @@ shutdown -h +$((MAX_HOURS * 60))    # watchdog: hard cap
 exec > /var/log/batch_run.log 2>&1
 
 cd /opt/dota2bot
-sudo -u ubuntu git fetch origin '$NEW_REF' '$OLD_REF'
+# The AMI's clone may be shallow, and the P4.1 upstream ruler wave measures
+# against the repo's FIRST commit -- which a shallow clone simply does not
+# have.  Deepen first, but only when shallow: --unshallow on a complete clone
+# is an error.  [batch-desk 2026-09-18]
+if [ "\$(sudo -u ubuntu git rev-parse --is-shallow-repository)" = "true" ]; then
+    sudo -u ubuntu git fetch --unshallow origin || sudo -u ubuntu git fetch origin
+fi
+sudo -u ubuntu git fetch origin '$NEW_REF' '$OLD_REF' || sudo -u ubuntu git fetch origin
 sudo -u ubuntu git checkout '$NEW_REF' && sudo -u ubuntu git pull --ff-only origin '$NEW_REF' || true
+
+# Resolve a caller-supplied ref to a form 'git archive' accepts on THIS clone.
+# A branch name must become origin/<name> (the checkout can be stale); a commit
+# SHA or tag must be used BARE -- 'origin/<sha>' is not a ref at all and git
+# rejects it with "not a valid object name".  Hardcoding the origin/ prefix is
+# what made the P4.1 ruler wave (--old <upstream sha>) unlaunchable: it died in
+# make_ab_build.py before a single game ran.  [batch-desk 2026-09-18]
+resolve_ref() {
+    if sudo -u ubuntu git rev-parse --verify --quiet "origin/\$1^{commit}" >/dev/null 2>&1; then
+        echo "origin/\$1"
+    elif sudo -u ubuntu git rev-parse --verify --quiet "\$1^{commit}" >/dev/null 2>&1; then
+        echo "\$1"
+    else
+        return 1
+    fi
+}
 
 # refresh game files (cached credentials from the AMI bake; /opt/steam_user
 # holds the account name — no password needed for a cached session)
@@ -74,15 +97,30 @@ ab_guard() {
     done
 }
 
+# An unresolvable ref must die HERE, not inside make_ab_build.py: that failure
+# leaves the bots dirs missing, which ab_guard reports as "A/B build failed" --
+# true, but it names the wrong cause and the next reader re-debugs the build.
+OLD_ARCHIVE_REF=\$(resolve_ref '$OLD_REF') || {
+    echo "FATAL: cannot resolve --old ref '$OLD_REF' on this clone"
+    aws s3 cp /var/log/batch_run.log s3://$S3_BUCKET/$RUN_ID/batch_run.log
+    shutdown -h now; exit 1
+}
+NEW_ARCHIVE_REF=\$(resolve_ref '$NEW_REF') || {
+    echo "FATAL: cannot resolve --new ref '$NEW_REF' on this clone"
+    aws s3 cp /var/log/batch_run.log s3://$S3_BUCKET/$RUN_ID/batch_run.log
+    shutdown -h now; exit 1
+}
+echo "resolved refs: old='\$OLD_ARCHIVE_REF' new='\$NEW_ARCHIVE_REF'"
+
 # direction 1: Radiant=NEW
-sudo -u ubuntu python3 tools/batch_test/make_ab_build.py --old 'origin/$OLD_REF' --new 'origin/$NEW_REF' --out /opt/ab_fwd
+sudo -u ubuntu python3 tools/batch_test/make_ab_build.py --old "\$OLD_ARCHIVE_REF" --new "\$NEW_ARCHIVE_REF" --out /opt/ab_fwd
 rm -rf \$VS/bots \$VS/bots_ab_new \$VS/bots_ab_old
 cp -r /opt/ab_fwd/bots /opt/ab_fwd/bots_ab_new /opt/ab_fwd/bots_ab_old \$VS/
 ab_guard
 sudo -u ubuntu tools/batch_test/run_batch.sh -n $HALF -j $PARALLEL -t $TIMESCALE -d /opt/dota2 -o \$OUT/fwd
 
 # direction 2: sides swapped
-sudo -u ubuntu python3 tools/batch_test/make_ab_build.py --old 'origin/$OLD_REF' --new 'origin/$NEW_REF' --swap --out /opt/ab_rev
+sudo -u ubuntu python3 tools/batch_test/make_ab_build.py --old "\$OLD_ARCHIVE_REF" --new "\$NEW_ARCHIVE_REF" --swap --out /opt/ab_rev
 rm -rf \$VS/bots \$VS/bots_ab_new \$VS/bots_ab_old
 cp -r /opt/ab_rev/bots /opt/ab_rev/bots_ab_new /opt/ab_rev/bots_ab_old \$VS/
 ab_guard
