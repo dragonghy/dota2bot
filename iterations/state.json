@@ -10038,6 +10038,7 @@
   "limits": "⛔ **「本语料上是空的」不是「永远不可能有用」**:2 个团战帧在唯一要紧的那根轴上是很小的样本。⛔ 引本条必须连 `queue.json:hero-104`(要那帧的交棒)一起引。⚠️ §2/§5 **转写**了 团战 循环的合法性链(端到端的 §3/§4 不转写),§6.2 是允许这份转写存在的理由。",
   "landed": "`tests/test_wk_q_fight_seed_domain.lua`(新);`tools/agent/mutstand_wkqfightseed.sh`(新);`bots/BotLib/hero_skeleton_king.lua` 团战 分支抬头 **+41 行纯注释**(写明这不是 to-do,是「为什么没写那个明显的修法」);`tools/agent/lua_gate_manifest.json` 手加一行(1.288s,in_gate)**并重算两个汇总字段**;`tests/test_bots_walk_farm_only.py` 登记本文件的 `io.popen`(同一工作单元,GH #803)。",
   "no_arm": "⛔ 零 gate id、零 arm、零 promote、不申请波次。P4.2 冻结期照旧:即便域非空也只会是「落 gated 但不入集」。",
-  "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。"
+  "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。",
+  "issue": "GH #897(本轮开,[hero])。起手来自 GH #870 §5.2。"
  }
 }

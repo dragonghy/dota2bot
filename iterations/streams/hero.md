@@ -22,7 +22,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--204. ✅ **主体(P4.4 **(ii) 判定完结所需的最后一块证据**)**:GH **#870 §5.2** 点名的起手 —— 三个同名 `nMostDangerousDamage = 0` 里**没人量过的那一份**,Wraith King `X.ConsiderQ` 的 团战 argmax。**结论:不落 `wkwseed`**(分支域 **1** 帧、决策域 **0** 帧)。报告 `iterations/reports/hero/20260918T111405Z.md`;裁定 `iterations/state.json:wkqfightseed_domain_20260918`;交棒 `iterations/queue.json:hero-104`。**`bots/` 本轮改动是纯注释、零行为**;**零 gate id / 零 arm / 零 promote / 不申请波次**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+-204. ✅ **主体(P4.4 **(ii) 判定完结所需的最后一块证据**)**:GH **#870 §5.2** 点名的起手 —— 三个同名 `nMostDangerousDamage = 0` 里**没人量过的那一份**,Wraith King `X.ConsiderQ` 的 团战 argmax。**结论:不落 `wkwseed`**(分支域 **1** 帧、决策域 **0** 帧)。报告 `iterations/reports/hero/20260918T111405Z.md`;裁定 `iterations/state.json:wkqfightseed_domain_20260918`;交棒 `iterations/queue.json:hero-104`;开 **GH #897**。**`bots/` 本轮改动是纯注释、零行为**;**零 gate id / 零 arm / 零 promote / 不申请波次**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条是梯子的第三级,不是又一个空域。** `-201` 立的是「分支内的全零集合不是域」(它不问这条腿有没有被走到);本轮立的是它**上面一级**:⛔ **一个「种子确实卡住这条腿、armed 之后这条腿确实开火」的帧,域仍然可以是空的**。`tests/frames/f_260909_215040_wk_blast_sb_661.lua` 上标记位变异台实测:标记 + 出厂种子 0 → **0 帧**到达;标记 + 种子 −1 → **1 帧**(就是它,目标 spirit_breaker);而**无标记的端到端决策在全 51 帧上逐帧相同** —— 因为 **出货点 10(通用兜底)已经用同一个目标先答了**。十个出货点全部返回同一个 `BOT_ACTION_DESIRE_HIGH` ⇒ **唯一可观测量是目标身份**。
    - ⭐ **而这正是 `hero_skeleton_king.lua` 自己抬头为 `wkqdmg` 写下、并逐字标为「closed form, not a corpus reading」的第三条合取项**(*no downstream firing point returns the same target*)⇒ **它现在有了实测实例,并且把遮蔽的那个出货点点了名**(点 10 = `-203` 为 `wkqaim` 研究的同一个)。⛔ 闭式论证没被削弱;变的是它不再是某一轮可能忘记套用的东西。
    - ⛔ **没有 C2 这份结论不成立,而这不是事后补的话**:本轮第一版只做了 C3(种子 0 vs −1 的端到端 diff),读数同样是「无差别」,**理由却是错的**(以为挡路的是上游击杀腿;把击杀腿整条关掉,答案一个字没变)。「没有差别」与「**这个驱动看不见任何差别**」在纸面上一模一样 —— **C2 是把两者分开的阳性对照**。
@@ -9107,7 +9107,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## 当前状态(每次触发后更新)
 - 2026-09-18T11:14Z(报告 `iterations/reports/hero/20260918T111405Z.md`;**backlog:新开 `-204`**;
-  裁定 `iterations/state.json:wkqfightseed_domain_20260918`;交棒 `iterations/queue.json:hero-104`;
+  裁定 `iterations/state.json:wkqfightseed_domain_20260918`;交棒 `iterations/queue.json:hero-104`;**GH #897**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮改动是纯注释、零行为**;
   **零 gate id / 零 arm / 零 promote / 不申请波次**;
   **P4.4 自评:(ii) 判定完结所需的最后一块证据**)
