@@ -10126,8 +10126,8 @@
   "issue": "GH #906"
  },
  "towerpow_20260918": {
-  "date": "2026-09-18T2x:xxZ",
-  "issue": "[strategy] **GH #TBD**(本轮 push 之后才开;GH #290:引用先可解析再发表,`claim_precheck.sh` 按 `origin/main` 解析)。认领依据 = 铁律 9:P1(1) 球在录像组(#862 的复读空带)、P2 卡 `wandlimbo_charge_instrument` 仪器墙且属量具类,**4.4 (i) 球在本组且本组能动** ⇒ 取 4.4。",
+  "date": "2026-09-18T20:05Z",
+  "issue": "[strategy] **GH #907**(本轮 push 之后才开,号码取自 create 调用自己的返回 `id 5504586312` / `url .../issues/907`,**不是顺号推测**;GH #290:引用先可解析再发表,`claim_precheck.sh` 按 `origin/main` 解析)。认领依据 = 铁律 9:P1(1) 球在录像组(#862 的复读空带)、P2 卡 `wandlimbo_charge_instrument` 仪器墙且属量具类,**4.4 (i) 球在本组且本组能动** ⇒ 取 4.4。",
   "defect": "**两栏火力,只有一栏装得下建筑。** `bots/FunLib/jmz_func.lua` `J.WeAreStronger(bot, nRadius)` 以 `local res = nOurPower > enemyPower` 收尾。英雄循环与该比较之间只有**一个**建筑项:`local nAllyTowers = bot:GetNearbyTowers(600, false)` → `ourPower/ourPowerRaw`(glyph 与非 glyph 两支)。**全函数没有任何敌方建筑项**。⇒ 站在**自家**塔下,那座为我们开火的塔被计入(对的);站在**他们**塔下,那座正在打我们的塔**在这个比较里根本不存在**。不对称不在某个常数、半径或算符里 —— 是**两栏之一压根没有这一项可漂**。",
   "why_this_is_not_helpring": "⭐⭐ **它和 `helpring`(同日 07:55Z、同组、天花板 2、**没发船**)的区别不是数字,是缺陷的种类。** `helpring` 问的是「一个比较的两半该不该数同一个圆」= 两个都站得住的数之间的**选择**,所以它需要一个够大的域来支撑「值得动」。本条不是选择:出厂表达式把一个单位的火力**只**计入一个对称比较的其中一栏,而「我们是不是更强」的任何读法都不会让**敌方的塔**变成我方资产或非战斗单位。⇒ 与 `pipetower`(把他们的塔放进我们那一栏)、`bbancient`(域实测 0,仍 gated 落地)同判据:**一个算术遗漏不需要域来证明它错**。",
   "fix": "`J.GetFightPowerEnemyTowers( hBot, nRadius )`(`bots/FunLib/jmz_func.lua`,**`J.WeAreStronger` 正上方**):armed(turbo-only)返回 `hBot:GetNearbyTowers( nRadius, true )`,disarmed 返回 `{}` ⇒ 调用点的 `J.IsValidBuilding(nEnemyTowers[1])` 守卫使 `enemyPower` **逐字**是出厂那个数。调用点半径 **命名一次**(`local nFightTowerRing = 600`),**两半都读它** —— 于是两个圆再漂开就会把测试顶红(`roamring`/`tormring` 的代价)。敌方那一项的算式**逐项镜像**出厂的我方那一项,glyph 支在内。",

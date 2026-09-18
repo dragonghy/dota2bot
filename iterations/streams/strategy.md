@@ -65,7 +65,7 @@
    要么换变异体,要么把你真正想说的那句话排到前面去。**
 
    ⚠️ **下一轮要看一眼的四条**:
-   (a) **`queue.json:strategy-65`**(本轮新增)+ **GH #TBD**(push 之后开,号码取自 create 调用自己的返回,不是顺号推测) —— `towerpow` 的登记。
+   (a) **`queue.json:strategy-65`**(本轮新增)+ **GH #907**(push 之后才开,号码取自 create 调用自己的返回 `id 5504586312` / `url .../issues/907`,**不是顺号推测**) —— `towerpow` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-64` **二十条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
@@ -10978,7 +10978,7 @@
   `J.WeAreStronger` 里两处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
   ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T200519Z.md`;
-  `state.json:towerpow_20260918`;`queue.json:strategy-65`;**GH #TBD**(push 之后开,号码取自 create 调用自己的返回,不是顺号推测);完整判据 ⇒ backlog **0NEXT48**。
+  `state.json:towerpow_20260918`;`queue.json:strategy-65`;**GH #907**(push 之后才开,号码取自 create 调用自己的返回 `id 5504586312` / `url .../issues/907`,**不是顺号推测**);完整判据 ⇒ backlog **0NEXT48**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**,`legs run 15`,**约 110 分钟**;
   findings = `cadence queue-rulings owed-executions lua-coverage trunk-red(python)`,
