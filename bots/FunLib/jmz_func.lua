@@ -15924,6 +15924,79 @@ function J.IsDustDiveBlocked( hEnemy, nRadius, bOwnTower )
 	return tTowers ~= nil and #tTowers > 0
 end
 
+--- [pipetower, strategy 2026-09-18] THE TOWER IN OUR STRENGTH COLUMN IS THEIRS.
+---
+--- Soak candidate 'pipetower' (turbo-only; resolved in exactly one place, the
+--- "protect the team" branch of X.ConsiderItemDesire["item_pipe"] in
+--- bots/ability_item_usage_generic.lua).
+---
+--- THE DEFECT, closed form. That branch asks "do we have a third body here":
+---   local nNearbyAllyTowers = bot:GetNearbyTowers( 1200, true )
+---   if ( #nNearbyAllyHeroes >= 2 and #nNearbyEnemyHeroes >= 2 )
+---     or ( #nNearbyEnemyHeroes >= 2 and #nNearbyAllyHeroes + #nNearbyAllyTowers >= 2 )
+--- `bEnemies` is relative to the ANCHOR, not to the executing bot, and the
+--- anchor is `bot` -- so `true` is the ENEMY's towers. The term that is summed
+--- as a body ON OUR SIDE is the set of towers SHOOTING AT US. Both directions
+--- are wrong at once, and the variable name records the intent the code does
+--- not have:
+---   * standing next to THEIR tower reads as backup, so the bot commits and
+---     spends a 30s team item while it is the weaker side of the fight;
+---   * standing under OUR OWN tower reads as nothing, so the one case the
+---     branch was plainly written for is the one it cannot see.
+---
+--- ⭐⭐ THE REASON IS ALREADY WRITTEN IN THAT FILE -- 4000 LINES ABOVE THE
+--- DEFECT. bots/ability_item_usage_generic.lua:70-73, the DustDiveBlocked
+--- wrapper, says word for word that "GetNearbyTowers answers relative to the
+--- unit it is called on, so the shipped `enemyHero:GetNearbyTowers(700, true)`
+--- reads OUR towers and the guard is inverted in both directions" -- the
+--- rationale for the landed candidate 'dusttower' (GH #441). So one file
+--- carries both the explanation of this contract and a second violation of it,
+--- and the explanation prices the DUST branch: the item_pipe sum appears
+--- nowhere in it. 📌 Reading a comment that explains why an engine contract
+--- gets misused is not evidence that the file honours it -- grep the contract's
+--- other call sites in the same file.
+---
+--- ⛔ DIRECTION IS NOT ONE-DIRECTIONAL (unlike 'helpself' or 'tormring'; same
+--- shape as 'helpnear'). It changes WHO the term counts, so it moves a product:
+--- it can open the branch on frames the shipped tree keeps shut as easily as
+--- the reverse, and the corpus reads both (SHAPE up 18 / down 12). There is
+--- therefore no monotonicity argument to lean on, and the claim is the narrow
+--- one: a sum of bodies on our side may only add units that fire for us. Same
+--- file, :6517, already writes that correctly -- `bot:GetNearbyTowers( 1200,
+--- false )`.
+---
+--- DOMAIN, measured by tests/_pipetower_sweep.lua on 112 fixtures / 1039 live
+--- hero frames (2026-09-18), TWO units of count kept apart on purpose:
+---   LIVE  (subject actually HOLDS a pipe)   pipes 4 | up 0 | down 1
+---   SHAPE (every subject frame)  etower 63 | atower 192 | decides 244
+---                                up 18 | down 12 | fixtures with a change 11
+--- `live down 1` is the witness frame below. ⛔ The 4 is the INSTRUMENT, not the
+--- rarity of the branch: a pipe is a mid-game item and this corpus is capped at
+--- 10-25 game minutes (GH #184 / #291), so the whole archive holds 4 pipe-frames
+--- and all four are the same hero. Neither column is a fire rate -- the branch
+--- also needs the item castable and the earlier "<40% ally" exit to miss.
+---
+--- WHAT THIS IS NOT. It does not touch the 1200 radius (a tower's attack range
+--- is 700, so "does a tower 1150u away fight for us" is a SECOND lever,
+--- registered and not shipped), the `>= 2` threshold, the earlier low-HP-ally
+--- branch, or any of the other eighteen GetNearbyTowers call sites in that file
+--- -- those were read one by one and the ones passing `true` read the answer as
+--- DANGER, which is the right way round.
+--- Driven on real frames by tests/test_pipetower_backup_tower.lua.
+function J.GetBackupTowerCount( hBot, nRadius )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'pipetower' )
+	then
+		-- Armed: the towers that fire FOR us. `bEnemies` is relative to the
+		-- anchor, and the anchor is hBot, so `false` is our own team's.
+		return #hBot:GetNearbyTowers( nRadius, false )
+	end
+
+	-- Disarmed: the shipped expression, verbatim.
+	return #hBot:GetNearbyTowers( nRadius, true )
+
+end
+
 function J.GetXUnitsTowardsLocation2(iLoc, tLoc, nUnits)
     local dir = (tLoc - iLoc):Normalized()
     return iLoc + dir * nUnits

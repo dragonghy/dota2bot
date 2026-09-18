@@ -35,6 +35,70 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT47. **【2026-09-18T16:55Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `pipetower` 落地)。剩下的是三句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【这个文件已经知道这件事了】那一格**:
+   **一段解释「某个引擎契约为什么容易被用错」的注释,不是这个文件守住了那条契约的证据;
+   ⛔ 而它读起来像一份结案报告 —— 于是同一个文件里那条契约的第二处违例,
+   比一个没有任何注释的文件里的同一处违例更难被看见。**
+
+   现场:`bots/ability_item_usage_generic.lua:70-73`(`DustDiveBlocked` 包装器)逐字写着
+   *"GetNearbyTowers answers relative to the unit it is called on, so the shipped
+   `enemyHero:GetNearbyTowers(700, true)` reads OUR towers and the guard is inverted in both
+   directions"* —— **已落地**的 gated id `dusttower`(GH #441)的理由;
+   而**同一个文件 4000 行之下**的 `:4068` 把 `bot:GetNearbyTowers( 1200, true )`(**敌方**的塔)
+   加进**我方**战力那一栏。那段解释**定价的是 dust 分支**,`item_pipe` 的求和在它里面一个字都没有。
+   📌 **判据:读到那种注释之后,不要接着读「它是怎么修的」,要去 grep【这条契约在同一个文件里的
+   其它调用点】。** ⭐ 这是 0NEXT42(注释写着某分支曾数错 ⇒ 去数调用点)与 0NEXT45(已登记 ≠ 已处理)
+   的第三种形态,**也是最便宜的一种** —— 前两次要读别的文件、别的棘轮表,这一次要读的东西**就在同一个文件里**。
+
+   ⭐ **第二句,关于「域太薄」什么时候不是否决理由**:`live down 1` 与 `helpring`(同日 11:xxZ、同组、
+   天花板 2、**没发船**)的数字几乎一样,**而两者的处置相反,分得开它们的不是数字**:
+   `helpring` 是「两个半径该不该统一」= 一个**选择**,要靠域来支撑「值得动」;
+   本轮是**符号错** = 一个单位的火力记在了错的一栏,**它不需要域来证明它错**。
+   与 `bbancient`(域实测 **0**,58 个 ancient 快照全 `hp=1.0`,仍 gated 落地)是同一个判据。
+   ⛔ **别把这句话当成「薄域可以发」的通行证** —— 它只在「谓词自己的算术是错的」那一格成立。
+
+   ⚠️ **第三句,关于变异体**:第一轮 8 抓 6,两个「红了但消息不对」,**两个都不是变异体的问题**,
+   但**处置不同**:M4 是 `want` 指到了**更晚**的断言(计数排在判词前面)⇒ 改 `want`;
+   M8 是**变异体本身测错了钉子**(它把 `nRadius, false` 删掉 ⇒ 先响的是 flag 计数断言,
+   而我想驱动的是那条 `not code:find('1200')`)⇒ **换变异体**(改成一句行为 no-op 的半径 clamp,
+   `J.GetAttackableWeakestUnit` 里就有同样一句)。
+   📌 **一个变异体如果让「更早的断言」先响,它测的就不是你以为的那条钉子;
+   改 `want` 只是把记分改对,换变异体才是把钉子驱动出来。**
+
+   ⚠️ **下一轮要看一眼的四条**:
+   (a) **`queue.json:strategy-64`**(本轮新增)+ 本轮的 GH issue —— `pipetower` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-63` **十九条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检 `EXIT=3`**;findings = `cadence queue-rulings owed-executions lua-coverage`,
+   `UNCERTIFIABLE = trunk-red(python)` —— ⚠️ 本轮它的理由逐字是
+   *"a python test did NOT run (could not read its input)"* 且它**自己**建议「在安静的树上重跑」,
+   而本轮 `bots/` 在自检期间零改动 ⇒ 写 `soak_side.lua` 的是**自检自己的 fast-Lua 腿**(GH #898/#882)。
+   ⭐ 我在动 `bots/` 之前独立跑了 `py_gate.py`(**136 ran / 0 findings**),
+   ⛔ **但那不覆盖自检那条腿盖的 17 个慢 python 测试** ⇒ 别把它读成「python 全绿」;
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。
+
+   ⚠️ **本轮登记、下一轮可以直接做/不要重做的杠杆**:
+   1. **`pipetower` 的第二根**:半径 **1200** vs 塔的 **700** 攻击距离 —— armed 之后那一项
+      仍可能高估**我们**(1150u 外的自家塔不会为这次团战开枪)。**与本杠杆方向叠在一起分不开**
+      ⇒ 等 `pipetower` 有裁定。
+   2. ⛔ **不要重新定价这三条(本轮已读默认值、已证不可测)**:
+      (甲) `J.GetClosestUnit`(`jmz_func.lua:5667`,`helpnear` 的第三份拷贝)—— 唯一生产调用点在
+      `hero_earth_spirit.lua:342`,**非焦点英雄** ⇒ 语料域 0;
+      (乙) `J.ShouldWalkNotTp` 的 refuge 判据(**PROMOTED**)不问避难所在不在追兵那一侧 ——
+      `bChasing` 靠 `GetExtrapolatedLocation(0.5)`,而 `replay_fixture.lua:644` **返回当前位置**
+      ⇒ 语料上恒 FALSE,**整个谓词域 0**(仪器缺口);
+      (丙) `GetBestLastHitCreep`/`GetBestDenyCreep`(「Best」返回第一个)—— **语料一个小兵都没有**。
+   3. `:7612`/`:7627`(`item_smoke_of_deceit`)局部名与所取之物不符,**但消费者当危险读,语义是对的**
+      ⇒ **命名缺陷、零行为**,不开 id、不改(零行为的 diff 混进来会毁掉这一族的归因)。
+   4. 0NEXT46 的两根仍**原样挂着**:`J.GetAlliesNearLoc` 的主语不对称(等 `tormring` 裁定)、
+      `J.GetClosestCore`(等 `corerole` 裁定)。】**
+
 0NEXT46. **【2026-09-18T13:42Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `tormring` 落地)。剩下的是三句要带走的。
 
@@ -10841,6 +10905,77 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-18T16:55Z:**我方战力那一栏里的塔是他们的;而解释这条契约的注释,就写在同一个文件缺陷上方 4000 行处。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `pipetower`,
+  `bots/FunLib/jmz_func.lua` 的新 helper `J.GetBackupTowerCount` +
+  `bots/ability_item_usage_generic.lua:4068` 一处改写)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T165529Z.md`;
+  `state.json:pipetower_20260918`;`queue.json:strategy-64`;完整判据 ⇒ backlog **0NEXT47**。
+
+  **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**,`legs run 15`,**~47 分钟**;
+  findings = `cadence queue-rulings owed-executions lua-coverage`,
+  `UNCERTIFIABLE = trunk-red(python)`(理由逐字是 *"a python test did NOT run (could not read its
+  input)"*,而写 `soak_side.lua` 的是**自检自己的 fast-Lua 腿** ⇒ GH #898/#882 族);
+  `fast Lua detectors` 读 **`138 tagged detector file(s), 0 failures`**;
+  `lua-coverage` 新增 2 条 UNCOVERED **都不是本轮产物**。
+  ⭐ 我在动 `bots/` **之前**独立跑了一次 `py_gate.py`:**136 ran / 0 findings / 0 uncertifiable**
+  —— ⛔ 但 py 闸**不管**那 17 个慢 python 测试,而自检那条腿盖的正是那一侧
+  ⇒ **trunk 的那一侧本轮仍然没人看过**。
+  P1(1) 球在录像组(#862 停在复读空带)/ P2 卡 `wandlimbo_charge_instrument` 且属量具类
+  ⇒ **4.4 球在本组且本组能动**,取 4.4。
+
+  **缺陷**:`bots/ability_item_usage_generic.lua:4068`
+  `local nNearbyAllyTowers = bot:GetNearbyTowers( 1200, true )`,唯一消费者是 `:4070` 的
+  `#nNearbyEnemyHeroes >= 2 and #nNearbyAllyHeroes + #nNearbyAllyTowers >= 2`(为真 ⇒
+  `BOT_ACTION_DESIRE_HIGH`,动机 `'保护团队'`)。`bEnemies` 相对**锚点**成立,锚点就是 `bot`
+  ⇒ `true` 取到的是**敌方**的塔 ⇒ 那一项本该说「有一座塔在帮我们打」,实际说的是
+  「有一座塔在打我们」,而求和把它当成我方的第三具身体。
+  ⛔ **两个方向同时错**:站在敌塔边 = 以为有后援(按下一个 CD 30s 的团队道具,而我们是弱的那边);
+  站在自家塔下 = 看不见真的后援(这个分支本来要抓的那一格抓不到)。
+
+  ⭐⭐ **可迁移句**:`ability_item_usage_generic.lua:70-73` 逐字写着
+  *"GetNearbyTowers answers relative to the unit it is called on … the guard is inverted in both
+  directions"* —— 那是**已落地**的 `dusttower`(GH #441)的理由。⇒ **同一个文件既载着这条契约的
+  完整解释、也载着它的第二处违例**,而那段解释**定价的是 dust 分支**。
+  📌 **读到一段解释「某引擎契约为什么容易被用错」的注释,不要读成「这个文件守住了它」——
+  去 grep 这个契约在同一个文件里的其它调用点。**
+
+  **修法**:`J.GetBackupTowerCount( hBot, nRadius )`(`jmz_func.lua`,**`J.IsDustDiveBlocked`
+  正下方** —— 同一契约的两处违例并排放),armed(turbo-only)数 `false` 那一半;disarmed 逐字是
+  出厂表达式。调用点只剩一次委托,局部名改成 `nBackupTowerCount`(出厂名在 disarmed 时是假的)。
+  **一个杠杆 = 一个布尔实参**:不碰 1200、不碰 `>= 2`、不碰前面那条「<40% 血队友」分支、
+  不碰同文件另外 18 处 `GetNearbyTowers`(⭐ `:6517` 是同一问题**在同一文件里已经写对**的那一份,
+  同时是条件 (c) 的仓内佐证)。
+
+  ⛔ **方向不是单向的**(与 `helpself`/`tormring` 不同,与 `helpnear` 同型):SHAPE 列
+  `up 18 / down 12` ⇒ **没有单调性可倚**,声明写窄:一个「我们有没有第三具身体」的求和,
+  只能加上为我们开火的单位。**批测读数若反向,不能读成「杠杆让 bot 过度保守/过度激进」。**
+
+  **域**(`tests/_pipetower_sweep.lua`,112 fixture / **1039** 活体帧,两种单位分开):
+  **LIVE(主体真的持 pipe)`pipes 4 / up 0 / down 1`**;
+  **SHAPE(全部主体帧)`etower 63 / atower 192 / decides 244 / up 18 / down 12`,11 份 fixture**。
+  ⛔ `4` 是**仪器**不是稀有度(pipe 是中期物品,语料被 cap 在 10–25 游戏分钟,GH #184/#291;
+  四个持 pipe 的帧还都是同一个英雄)。⭐ **`live down 1` 看起来像「太薄不值得发」——
+  而分得开它与 `helpring`(同日早,天花板 2,没发)的不是数字,是缺陷的种类**:
+  那是两个半径该不该统一(一个**选择**,要域来支撑「值得动」),这是**符号错**
+  (火力记在错的一栏,**不需要域来证明它错**)—— 与 `bbancient`(域实测 0,仍 gated 落地)同判据。
+
+  **本地验证** `tests/test_pipetower_backup_tower.lua` **10/10**,零 stub。
+  翻转证人 `f_260819_222559_od_eclipse_pair` / **lich(dire)**,t=631.5:slot 2 真是 `item_pipe`,
+  1 队友(Medusa 122u)/ 2 敌人 / **敌塔 407u、自家塔 4000u 内零座** ⇒ disarmed 发、armed 不发;
+  **该帧上这条分支是唯一能让它发动的路**(另一条出口要 `<0.4` 血队友,Medusa 是 227/230)。
+  ⭐⭐ 同一帧 Medusa 挂着 `modifier_item_pipe_barrier`(`elapsed 1.0`)⇒ **出厂树在这一帧前约 1 秒
+  真的按下了 pipe**;⛔ 按下那一瞬是 t≈630.5、我量的是 631.5 ⇒ **旁证不是归因**。
+  反方向证人是**同一 fixture 另一侧**的 crystal_maiden(敌塔 0 / 自家塔 1),对照 juggernaut(都 0)。
+  变异台 `tools/agent/mutstand_pipetower.sh` **8 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**
+  —— ⚠️ 第一轮两个「红了但消息不对」,**两个都不是变异体的问题**:一个是 `want` 指到了更晚的断言,
+  另一个是**变异体本身测错了钉子**(已换成一句行为 no-op 的半径 clamp,于是只有字面量钉子能看见它)。
+
+  **闸**:`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**;`py_gate.py` **136 ran / 0 findings**;
+  `lua_gate.py` 单独跑会**按设计跑全集**(未提交 ⇒ scope 空 ⇒ fail-closed,RULING 69)⇒ 交给 push 钩子。
+  manifest 手加一行(0.308s),**动表之前先算 2× 后备**:`2 × 267.436 = 534.872 ≤ 540.0`(余量 **2.564s**)。
 
 - 2026-09-18T13:42Z:**同一个形状,符号反过来 —— 于是上一轮的修法不能照抄,能照抄的是它的理由。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `tormring`,

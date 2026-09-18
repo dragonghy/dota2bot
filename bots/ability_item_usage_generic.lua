@@ -4065,9 +4065,14 @@ X.ConsiderItemDesire["item_pipe"] = function( hItem )
 
 	local nNearbyAllyHeroes = J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_NONE )
 	local nNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE )
-	local nNearbyAllyTowers = bot:GetNearbyTowers( 1200, true )
+	-- [pipetower] The shipped name was false: `bot:GetNearbyTowers( 1200, true )`
+	-- is the ENEMY's towers (`bEnemies` is relative to the anchor, and the
+	-- anchor is `bot`), and the sum below adds it to OUR side.  Gated;
+	-- disarmed this is byte-identical to the shipped expression.  See the
+	-- header of J.GetBackupTowerCount in bots/FunLib/jmz_func.lua.
+	local nBackupTowerCount = J.GetBackupTowerCount( bot, 1200 )
 	if ( #nNearbyAllyHeroes >= 2 and #nNearbyEnemyHeroes >= 2 )
-		or ( #nNearbyEnemyHeroes >= 2 and #nNearbyAllyHeroes + #nNearbyAllyTowers >= 2 )
+		or ( #nNearbyEnemyHeroes >= 2 and #nNearbyAllyHeroes + nBackupTowerCount >= 2 )
 	then
 		hEffectTarget = bot
 		sCastMotive = '保护团队'

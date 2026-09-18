@@ -3195,6 +3195,19 @@
    "result": "",
    "director": "",
    "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)"
+  },
+  {
+   "id": "strategy-64",
+   "stream": "strategy",
+   "bundle": "`pipetower`(新 gated id,**GH #TBD**,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。",
+   "priority": 3,
+   "status": "pending — 预期裁定是 FROZEN-HOLD(登记、不入集、不视为掉棒;armed 25 > 20)",
+   "seeds": "不适用(不发波)",
+   "question": "⛔ **零 AWS、零 EC2、零 CE、不申请专波、不申请新波** —— 本请求要的是一次登记,不是一次取证;全部工作已在本地做完。(这一行放在开头是因为 GH #885 未修:声明写在 `bundle`/`cost` 里的新请求会被 push 闸拒掉。)\n\n一句话:**`item_pipe` 的「保护团队」分支把一座**敌方**的塔加进了**我方**战力那一栏;而这条引擎契约(`GetNearbyTowers` 的 `bEnemies` 相对锚点)的解释,已经写在同一个文件缺陷上方 4000 行处、为另一个 id(`dusttower`)写的。请登记 `pipetower`,解冻后排 (a) 证据。**\n\n### 已经钉住的(不要重测)\n- 缺陷:`bots/ability_item_usage_generic.lua:4068` `local nNearbyAllyTowers = bot:GetNearbyTowers( 1200, true )`,唯一消费者 `:4070` `#nNearbyEnemyHeroes >= 2 and #nNearbyAllyHeroes + #nNearbyAllyTowers >= 2`。锚点是 `bot` ⇒ `true` 是**敌方**的塔 ⇒ 那一项说的是「有塔在打我们」,而求和当它是我方第三具身体。**两个方向同时错**。\n- 修法:`J.GetBackupTowerCount( hBot, nRadius )`(`bots/FunLib/jmz_func.lua`,`J.IsDustDiveBlocked` 正下方),armed(turbo-only)数 `false` 那一半;disarmed 逐字是出厂表达式。调用点只剩一次委托。\n- ⛔ **方向不是单向的**(与 `helpself`/`tormring` 不同,与 `helpnear` 同型):它换的是那一项数谁 ⇒ SHAPE 列 `up 18 / down 12`。**批测读数若反向,不能读成「杠杆让 bot 过度保守/过度激进」**。\n- 域(`tests/_pipetower_sweep.lua`,112 fixture / **1039** 活体帧,**两种计数单位**):**LIVE(主体真的持 pipe)`pipes 4 / up 0 / down 1`**;**SHAPE(全部主体帧)`etower 63 / atower 192 / decides 244 / up 18 / down 12`,11 份 fixture**。⛔ `4` 是**仪器**不是稀有度:pipe 是中期物品,语料被 cap 在 10–25 游戏分钟(GH #184 / #291)。两列都不是发生率。\n- 本地验证 `tests/test_pipetower_backup_tower.lua` **10/10**,零 stub。翻转证人 `f_260819_222559_od_eclipse_pair` / **lich(dire)**:slot 2 真是 `item_pipe`,1 队友 / 2 敌人 / **敌塔 407u、自家塔 4000u 内零座** ⇒ disarmed 发、armed 不发;⭐ 同一帧 Medusa 挂着 `modifier_item_pipe_barrier`(`elapsed 1.0`)⇒ **出厂树在这一帧前约 1 秒真的按下了 pipe**(⛔ 按下那一瞬是 t≈630.5,量的是 631.5 ⇒ **旁证不是归因**)。反方向证人是**同一 fixture 另一侧**的 crystal_maiden(radiant,敌塔 0 / 自家塔 1)。对照 juggernaut(两队塔都 0)。变异台 `tools/agent/mutstand_pipetower.sh` **8 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**。\n\n### 要编排做的\n仅**登记**。解冻(armed ≤ 20)之后:(a) 录像组核验真实对局里持 pipe 的支援不再因为「身边有一座**敌方**塔」就判自己人多而按下团队保护道具;(b) 粗粒度胜负无明显负面 —— ⚠️ 读这一条时记住**方向是双向的**;(c) 逻辑依据 = 一个「我们有没有第三具身体」的求和,只能加上为我们开火的单位;同文件 `:6517` `bot:GetNearbyTowers( 1200, false )` 就是同一个问题在同一个文件里已经写对的那一份。\n\n### ⚠️ 顺带登记、**本轮不做**的两条\n1. 半径 **1200** vs 塔的 **700** 攻击距离:armed 之后那一项仍可能高估**我们**(1150u 外的自家塔不会为这次团战开枪)。那是**第二根杠杆**,与本杠杆方向叠在一起分不开 ⇒ 等裁定。\n2. `:7612` / `:7627`(`item_smoke_of_deceit`)局部名与所取之物不符,但消费者当**危险**读 ⇒ 语义对、**命名缺陷零行为**,不开 id。",
+   "acceptance": "登记入编排(`queue.json` 有 director 裁定行)。⛔ 解冻前**不索要任何波次**;解冻后 (a) 证据可**搭车**在任何一波已排定的 Turbo 波上,不需要专波。",
+   "result": "",
+   "director": "",
+   "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)"
   }
  ],
  "done": [
