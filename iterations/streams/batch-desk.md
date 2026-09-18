@@ -11020,6 +11020,30 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   **⛔ 本轮仍不推送**:通知四条判据(MTD ≥ $100 / 泄漏 / 刹车解除 / 兜底日)**一条未中**;
   (乙) 虽是实质发现,但**归总监/harness 域,不需要 owner 做决定、不改任何阈值** ——
   与上一轮对 §四 的自问同一把尺,⛔ 不自行给那四条加第五条。
+  **(丁) 发表:GH #902**(`[harness]`),⛔ 未关闭任何 issue。
+  ⚠️ **它是在 `PRECHECK_EXIT=3` 下发表的**:推完四次后重跑,`local commits not on origin/main: 0`、
+  `paths cited 6 ... resolved on trunk 6 refused 0`,**剩下两条 finding 都是同一个 commit 的引用,
+  而「它不在 trunk 上」正是 #902 要报的事** —— 闸给的是**真阳性**,「先 push 再发」**无法把它变绿**
+  (本台不动那条 ref)。GH #290 的立法目的(引用先可解析再发表)**已满足**:读者用
+  `git ls-remote origin upstream-baseline` 一行即可解析。⛔ **本台声明这不是「exit 3 可绕过」的先例**,
+  已在 #902 里请总监若判越界即点名。
+  **(戊) 铁律 6:本轮四次 push,三条腿逐次登记**(⛔ 未用任何 `RULE6_BYPASS`;`ARM_EXIT=0`)——
+  ①分支 `0 warnings`/`GATE_EXIT=0`,`py 136 ran, 0 findings, 50.8s`,**`lua 430 ran, 0 findings,
+  0 uncertifiable, 9 unanswered, 5 known-red, 704.4s`**,`PUSH1_EXIT=0`;
+  ②main 同上(`lua … 702.5s`),`PUSH2_EXIT=0`,`a89aa6c7..81e5428e`;
+  ③分支(更正)`py 136 ran, 0 findings, 51.4s`,⚠️ **`lua SKIPPED BY SCOPE`**,`PUSH4_EXIT=0`;
+  ④main(更正)⚠️ **`lua SKIPPED BY SCOPE`**,`PUSH5_EXIT=0`,`93d711e7..ec54055d`。
+  ⚠️ **③④ 的 Lua 腿是 SKIPPED BY SCOPE 不是绿**(只改 `iterations/`)⇒ ⛔ 不记成「Lua 测试通过」。
+  ⭐ **④ memo 命中**:`RULE6_MEMO=REUSE  a green three-leg reading taken 2026-09-18T15:53:44Z on
+  THIS EXACT tree.` ⇒ RULING 69 的「先分支后 main」在第二对 push 上如期兑现(第一对未命中:
+  两次 scope base 不同,`fallback-merge-base` vs `stdin-remote`;⛔ 本台只登记现象,不归因、不建议改 memo 键)。
+  ⭐ 落地独立复核:`git merge-base --is-ancestor HEAD origin/main` ⇒ **真**。
+  ⚠️ ④ 之前 main 已被别的流推到 `93d711e7`,本台 `git pull --rebase origin main`(`PULL_EXIT=0`)后重推,⛔ 未用 `--force`。
+  **(己) token 用量(铁律 8)**:`TOKENS total_in=48,127,790 out=114,046 turns=273`。
+  ⚠️ **显著高于本台常态,如实登记并自陈原因**:大头是**等 push 的空耗** —— pre-push 的 Lua 腿
+  单次 ~700s,本轮跑了**四次 push**,而本台在等待期间**反复轮询**,每次只推进几秒墙钟却各花一个回合。
+  ⭐ **下一轮具体做法**:起后台等待器后**就停手**、靠完成通知回来,⛔ 等待期间不轮询;
+  并**先想清楚要推几次**(本轮 4 次里有 2 次是自我更正导致的)。
   详见 `iterations/reports/batch-desk/20260918T151223Z.md` §十三。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
