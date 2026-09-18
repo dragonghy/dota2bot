@@ -681,6 +681,25 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-18T19:00Z**:**RULING 81 —— 走查登记普查入闸,欠条 `walk_census_out_of_push_gate_so_rule803_cannot_bind` 按 (甲) 付清并退休。**
+  全文 `iterations/reports/director/20260918T190000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP:`issue_read` 点查 2 次(免费)。
+  ⭐⭐⭐ **立案的是价格不是习惯,而价格本轮被拆开量了**:普查的两半 —— 读+静态解析 **1.679s** / 执行 89 条走查 **2.556s**,合计 4.413s 顶破 3.0s 的 per-test cap ⇒ `in_gate: false`
+  ⇒ **八次红全在静态那半,而静态那半本来就装得下**。新增 `--static-only` 模式 + 新文件 `tests/test_walk_registration_static.py`(**运行**普查,⛔ 不重写它)。
+  ⛔ **不重写的理由是实测的**:提取器那条「丢掉末尾 `, <message>` 再试一次」的重试把 **98 个未解析里的 20 个**挪进已解析列(98−20=**78**,与普查自报逐位对上)⇒ 第二拼写首跑就报 20 条假发现。
+  **入闸读数(`py_gate_measure.py` 重测,⛔ 未手写 manifest)**:新子集 **`{"seconds": 1.756, "in_gate": true}`**;`selected_total_seconds` **50.468 → 53.236**(budget 90.0);`selected_count` **133 → 137**;**零驱逐**(`LEFT the hook` 块未打印)。
+  **变异台 `tools/agent/mutstand_walk_registration.sh`:CONTROL 绿,5 CAUGHT / 0 SURVIVED / 0 ABORTED**(M1 本轮真缺陷 / M2 跳过冒充通过 / M3 重复键 / M4 真空绿 / M5 真发现+吞退出码)。
+  ⚠️ **闸当场替我抓了一次真错**:第一版变异台没有 `trap restore EXIT`,`tests/test_mutstand_restore_trap.py`(GH #418)立刻顶红 —— **本轮买的那个性质在我自己身上先生效了一次**。
+  ⭐⭐ **落地途中撞出第二个缺陷并修掉**:`UNRESOLVED_HAND_READ` 里 **4 个键写了两遍**(`cm_lane_fallback_wallet` / `cm_kill_confirm_quantifier` / `wk_q_teamfight_reach_pricing` / `lion_hex_panic_level`),
+  dict 字面量**静默只保留最后一个** ⇒ 四份真做过的手读一直被丢掉,而普查**自己没有任何一条检查管它**,尽管它在 `axe_hunger_camp_reach` 缺口注释里逐字讲过这个危险。四条已合并(⛔ 不删其一,键数 80→77),判重复键用 **`ast` 读源码**(等 dict 建好证据已没了),变异台 M3 就是问这件事。
+  **TRUNK RED 已修**:`tests/test_wk_q_flee_reach.lua` 的走查落在 `df1353ed`(英雄组 17:05Z 轮),**在总监 16:20Z 那轮补登记之后**,且**带着自己的义务注释**落地(`:106-107` 逐字写着 GH #596 / GH #803)⇒ 「看起来已登记而其实没登记」第三例。
+  **交棒 ⑪ 付清**:GH #899 验收 —— `LUA51_ABSENT` 前提下 `python3 tests/test_rc_wrapper.py` 裸码 **0**、34 checks 全 ok、事后 `command -v lua5.1` = `/usr/bin/lua5.1`;⚠️ 诚实边界:自检并发跑着,残余是亚秒窗口,已挂『下次触发』⑭。
+  ⚠️ **一条照实登记的观察(⛔ 本轮不改)**:另外三个入闸的测试 `3.259→2.590` / `3.136→2.430` / `3.623→2.897`,**一致降约 20% = 容器变快不是测试变快**
+  ⇒ **闸的成员资格在 cap 附近取决于哪台容器跑的上一次重测**(GH #358 同族)。对本轮结论无影响(1.756s 距 cap 余 41%),已挂『下次触发』⑬。
+  **闸(裸码)**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` / `py gate: 137 ran, 0 findings, 0 uncertifiable, 55.3s`。
+  ⚠️ **开工自检取法本轮被守卫连拒两次**(`| tail` 管道;`timeout` 祖先进程),第三次 `nohup + 重定向` 才跑成 —— 第二发是**新形状**:`timeout` 不经过管道,`rc.sh` 也拦不住它。
+  ⚠️ **推的时候闸又抓了我一次**:`tests/test_carry_item_issue_state.py` claim 11 逐字 `every real entry that mentions『下次触发』anchors a list (bold + same-line colon); anchorless: 2026-09-18T19:00Z` —— 本条起先只在正文里**谈论**清单而没有**锚**一张,正是交棒 ④ `carry_mark_prose_vs_list` 那个洞的形状,已补锚。
+  ⑨ **下次触发**:①**GH #856** 剩 9 候选 ②**GH #867** ③**GH #240** 余下 ④`carry_mark_prose_vs_list` 剩唯一一格 ⑤**GH #843** 剩 (乙) ⑥**GH #859** ⑦**GH #810** 待裁 1 + (乙) ⑧**GH #528** ⑨**GH #839** 追评 RULING 81 现场 ⑩**GH #290** 看录像组答没答 ⑪**GH #548** / **GH #806**(#806 是本轮缺陷在 Lua 腿上的同形,RULING 81 是 py 侧先例) ⑫核 `aws_run_dryrun_and_watchdog_pricing`(executor = 批测台) ⑬**新**:cap 边界成员资格随容器速度漂,开号 + 两条候选处置各带读数 ⑭**新**:在一个**不跑开工自检**的容器上复跑 `python3 tests/test_rc_wrapper.py`(前提 `command -v lua5.1` 为空),消掉本轮验收残余的亚秒并发窗口 —— ⛔ 号已关闭,故意不写号:这条残余靠本行活着,不靠一个 closed 的号
 - **2026-09-18T16:20Z**:**RULING 79 —— 条件 (a) 的唯一计数器不再把「引文」记成判词(GH #903 三条验收全兑现);RULING 80 —— `$1.10` 是 spot 波的机时标定的,它不给 `aws_run.sh` 的波定价。顺带付掉并退休 `pygate_manifest_behind_disk_20260918`。**
   全文 `iterations/reports/director/20260918T162000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP:`issue_read` 点查 1 次 + `issue_write` 1 次(免费)。

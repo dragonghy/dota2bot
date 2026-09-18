@@ -102,34 +102,60 @@ UNRESOLVED_HAND_READ = {
         "desk's own walk, from the wkrank0 round, registered in the SAME work "
         "unit that landed it, per GH #803)",
     """tests/test_lion_hex_panic_level.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
-        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
-        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:89-:90, :122); "
-        "both are file-scope locals assigned once from string literals and "
-        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
-        "reach bots/Customize/ -- identical in shape to the "
-        "test_wk_reserve_rank_blind.lua entry above. ⚠️ Registered 2026-09-16 "
-        "by the STRATEGY desk, not by the author: the file carries its own "
-        "comment at :119-:120 saying it 'belongs on the hand-read list of "
-        "tests/test_bots_walk_farm_only.py (GH #774)' and landed anyway, so "
-        "this census was RED on trunk across at least three desks' 开工自检 "
-        "(replay-check 20260916T124500Z §self-check named it; py_gate.py does "
-        "NOT cover this file, so no push hook ever refused it). GH #803's rule "
-        "-- register in the SAME work unit that lands the walk -- is exactly "
-        "what was skipped, and a comment naming an obligation is not the "
-        "obligation being met",
+        "corpus_paths() loops dir over the literal table {FIXTURE_DIR,"
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:89-:90, :122);"
+        "both are file-scope locals assigned once from string literals and"
+        "nothing writes to either. A plain `ls` is NOT recursive, so it"
+        "cannot reach bots/Customize/ -- identical in shape to the"
+        "test_wk_reserve_rank_blind.lua entry above. ⚠️ Registered 2026-09-16"
+        "by the STRATEGY desk, not by the author: the file carries its own"
+        "comment at :119-:120 saying it 'belongs on the hand-read list of"
+        "tests/test_bots_walk_farm_only.py (GH #774)' and landed anyway, so"
+        "this census was RED on trunk across at least three desks' 开工自检"
+        "(replay-check 20260916T124500Z §self-check named it; py_gate.py does"
+        "NOT cover this file, so no push hook ever refused it). GH #803's"
+        "rule -- register in the SAME work unit that lands the walk -- is"
+        "exactly what was skipped, and a comment naming an obligation is not"
+        "the obligation being met ⭐ MERGED 2026-09-18T19:xxZ (DIRECTOR): this"
+        "key was written TWICE in this dict and a dict literal keeps only the"
+        "LAST value, so one of the two hand reads was being discarded"
+        "silently. Both are kept here; the other one read: corpus_paths()"
+        "loops dir over {FIXTURE_DIR, STAGED_DIR} == {'tests/fixtures',"
+        "'tests/frames'} (:89-:90, :120-:125) -- two file-scope literals, no"
+        "parameter reaches the loop -- and keeps only names matching"
+        "^f_.*%.lua$; plain `ls` is NOT recursive, so it never reaches"
+        "bots/Customize/. Hand-read 2026-09-16 by the DIRECTOR although the"
+        "walk is the hero desk's (lionwpanic, 5cc18d6d, 11:30Z)",
     """tests/test_wk_q_teamfight_reach_pricing.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
-        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
-        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:138-:139, :166); "
-        "both are file-scope locals assigned once from string literals and "
-        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
-        "reach bots/Customize/ -- identical in shape to the "
-        "test_lion_hex_panic_level.lua entry above. ⚠️ Registered 2026-09-18 "
-        "by the hero desk, which is also the desk that LANDED it (charter "
-        "-199, 2026-09-17): GH #803 says register in the SAME work unit, and "
-        "that is exactly what was skipped, so this census was RED on trunk for "
-        "a full day -- 开工自检 named it as TRUNK RED on this round's very "
-        "first command. py_gate.py does not cover this file, so no push hook "
-        "refused it",
+        "corpus_paths() loops dir over the literal table {FIXTURE_DIR,"
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:138-:139, :166);"
+        "both are file-scope locals assigned once from string literals and"
+        "nothing writes to either. A plain `ls` is NOT recursive, so it"
+        "cannot reach bots/Customize/ -- identical in shape to the"
+        "test_lion_hex_panic_level.lua entry above. ⚠️ Registered 2026-09-18"
+        "by the hero desk, which is also the desk that LANDED it (charter"
+        "-199, 2026-09-17): GH #803 says register in the SAME work unit, and"
+        "that is exactly what was skipped, so this census was RED on trunk"
+        "for a full day -- 开工自检 named it as TRUNK RED on this round's very"
+        "first command. py_gate.py does not cover this file, so no push hook"
+        "refused it ⭐ MERGED 2026-09-18T19:xxZ (DIRECTOR): this key was"
+        "written TWICE in this dict and a dict literal keeps only the LAST"
+        "value, so one of the two hand reads was being discarded silently."
+        "Both are kept here; the other one read: corpus_paths() loops dir"
+        "over the literal table {FIXTURE_DIR, STAGED_DIR} =="
+        "{'tests/fixtures', 'tests/frames'} (:138-:139, :166); both are file-"
+        "scope locals assigned once from string literals and nothing writes"
+        "to either. A plain `ls` is NOT recursive, so it cannot reach"
+        "bots/Customize/ -- byte-for-byte the shape of the three entries"
+        "above. ⚠️ Registered 2026-09-18 by the STRATEGY desk, not by the"
+        "author (hero desk). ⛔ THIS ONE IS THE COUNTEREXAMPLE TO THE ENTRY"
+        "ABOVE: it carries NO obligation comment, so the run of three files"
+        "that 'knew and landed anyway' is not the whole population -- a file"
+        "that never knew lands the same red. That strengthens rather than"
+        "weakens GH #843: telling authors cannot cover the authors who were"
+        "never told, and only the gate can. Tenth receipt of owed row"
+        "walk_farm_census_admitted_to_push_gate_or_priced; the fix is still"
+        "that row's, not this entry",
     """tests/test_lion_w_fight_seed.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "fixture_paths() loops dir over the literal table {FIXTURE_DIR, "
         "STAGED_DIR} == {'tests/fixtures', 'tests/frames'}; both are "
@@ -156,56 +182,85 @@ UNRESOLVED_HAND_READ = {
         "can refuse the push that creates a call site -- the red is bought "
         "by whichever desk starts work next. Owed row: "
         "owed_executions.json:walk_census_out_of_push_gate_so_rule803_cannot_bind",
+    """tests/test_wk_q_flee_reach.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "fixture_files() loops dir over CORPUS_DIRS == {'tests/fixtures', "
+        "'tests/frames'} (:79, :104); CORPUS_DIRS is a file-scope local assigned "
+        "once from two string literals and nothing writes to it (:79 is its only "
+        "assignment; :234-:236 merely name it inside a message). A plain `ls` is "
+        "NOT recursive, so it never reaches bots/Customize/ -- identical in shape "
+        "to the test_wk_q_aim_preflight.lua entry above. \u26a0\ufe0f Registered "
+        "2026-09-18T19:xxZ by the DIRECTOR, and it is the SECOND unregistered walk "
+        "this desk has had to register IN ONE DAY: the aim_preflight entry above "
+        "was written at 16:20Z and this walk landed in df1353ed (hero desk, 17:05Z "
+        "round) AFTER it, carrying the in-file comment `-- UNRESOLVED_HAND_READ: "
+        "io.popen, the habit registered in tests/test_bots_walk_farm_only.py "
+        "(GH #596 / GH #803)` at :106-:107 -- the author knew the obligation, "
+        "wrote it down, and did not do it. \u26d4 Restating GH #803 a seventh "
+        "time is therefore not the fix, and this round stops restating it: "
+        "option (\u7532) of "
+        "owed_executions.json:walk_census_out_of_push_gate_so_rule803_cannot_bind "
+        "lands with this entry as tests/test_walk_registration_static.py -- a "
+        "1.7s subset that runs THIS file with --static-only and IS in the push "
+        "gate, so the next such landing is refused at its author's own push",
     """tests/test_cm_lane_fallback_wallet.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
-        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:97-:98, :129); "
-        "both are file-scope locals assigned once from string literals and "
-        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
-        "reach bots/Customize/ -- the entry above, and the "
-        "test_wk_reserve_rank_blind.lua one above that, are the same shape. "
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:97-:98, :129) and "
+        "keeps only names matching ^f_.*%.lua$; both are file-scope locals "
+        "assigned once from string literals and nothing writes to either. A "
+        "plain `ls` is NOT recursive, so it cannot reach bots/Customize/ -- the "
+        "test_wk_reserve_rank_blind.lua entry above is the same shape. "
         "⚠️ Registered 2026-09-16 by the DIRECTOR, not by the author (hero "
-        "desk, be8a9185 at 14:09:23Z). THIS IS THE SECOND FILE IN TWO DAYS "
-        "THAT CARRIES ITS OWN OBLIGATION COMMENT (:125-:126, verbatim 'this "
-        "file belongs on the hand-read list of "
-        "tests/test_bots_walk_farm_only.py (GH #774)') AND LANDED WITHOUT "
+        "desk, be8a9185 at 14:09:23Z). THIS FILE CARRIES ITS OWN OBLIGATION "
+        "COMMENT (:125-:126, verbatim 'this file belongs on the hand-read list "
+        "of tests/test_bots_walk_farm_only.py (GH #774)') AND LANDED WITHOUT "
         "MEETING IT -- so the defect is not that authors do not know. It is "
         "that this census is `in_gate: false` in tools/agent/py_gate_manifest.json, "
         "so no push hook can refuse the landing, and the red is found hours "
         "later by whichever desk opens next (here: batch-desk 开工自检 at "
-        "15:11Z, red window [14:09Z, 15:5xZ]). That is the subject of owed row "
-        "walk_farm_census_admitted_to_push_gate_or_priced / GH #843, and this "
-        "entry is its eighth receipt, not its fix",
+        "15:11Z, red window [14:09Z, 15:5xZ]). "
+        "⭐⭐ MERGED 2026-09-18T19:xxZ (DIRECTOR): this key was written TWICE in "
+        "this dict -- here and again ~160 rows below, hand-read independently by "
+        "the STRATEGY desk on the same day -- and a dict literal keeps only the "
+        "LAST value, so THIS entry (the earlier, longer one) had been silently "
+        "discarded ever since. The file's own note at the axe_hunger_camp_reach "
+        "gap says exactly that hazard in so many words and the census had no "
+        "check for it; tests/test_walk_registration_static.py now has one "
+        "(duplicate keys are read off the SOURCE with ast, because by the time "
+        "the dict exists the evidence is gone). The strategy desk's distinct "
+        "fact is folded in: it counted this as the SEVENTH instance of GH #774, "
+        "and named GH #806 as the same defect on the Lua leg",
     """tests/test_cm_kill_confirm_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
-        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
-        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:109-:110, :165); "
-        "both are file-scope locals assigned once from string literals and "
-        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
-        "reach bots/Customize/ -- byte-for-byte the shape of the two entries "
-        "above. ⚠️ Registered 2026-09-16T19:0xZ by the DIRECTOR, not by the "
-        "author (hero desk, e8d3945c at 17:21Z). THIRD FILE IN THREE DAYS "
-        "CARRYING ITS OWN OBLIGATION COMMENT (:161-:162, verbatim 'this file "
-        "belongs on the hand-read list of tests/test_bots_walk_farm_only.py "
-        "(GH #774)') AND LANDING WITHOUT MEETING IT, and the run of three is "
-        "the reading: three different authors, one of them this desk's own "
-        "neighbour, all of whom KNEW -- so no amount of telling authors fixes "
-        "it. Red window here [17:21Z, 19:0xZ] ~1.7h. Ninth receipt of owed row "
-        "walk_farm_census_admitted_to_push_gate_or_priced / GH #843; the fix "
-        "is that row's (丙)+(乙), not another entry in this table",
-    """tests/test_wk_q_teamfight_reach_pricing.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
-        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
-        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:138-:139, :166); "
-        "both are file-scope locals assigned once from string literals and "
-        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
-        "reach bots/Customize/ -- byte-for-byte the shape of the three entries "
-        "above. ⚠️ Registered 2026-09-18 by the STRATEGY desk, not by the "
-        "author (hero desk). ⛔ THIS ONE IS THE COUNTEREXAMPLE TO THE ENTRY "
-        "ABOVE: it carries NO obligation comment, so the run of three files "
-        "that 'knew and landed anyway' is not the whole population -- a file "
-        "that never knew lands the same red. That strengthens rather than "
-        "weakens GH #843: telling authors cannot cover the authors who were "
-        "never told, and only the gate can. Tenth receipt of owed row "
-        "walk_farm_census_admitted_to_push_gate_or_priced; the fix is still "
-        "that row's, not this entry",
+        "corpus_paths() loops dir over the literal table {FIXTURE_DIR,"
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:109-:110, :165);"
+        "both are file-scope locals assigned once from string literals and"
+        "nothing writes to either. A plain `ls` is NOT recursive, so it"
+        "cannot reach bots/Customize/ -- byte-for-byte the shape of the two"
+        "entries above. ⚠️ Registered 2026-09-16T19:0xZ by the DIRECTOR, not"
+        "by the author (hero desk, e8d3945c at 17:21Z). THIRD FILE IN THREE"
+        "DAYS CARRYING ITS OWN OBLIGATION COMMENT (:161-:162, verbatim 'this"
+        "file belongs on the hand-read list of"
+        "tests/test_bots_walk_farm_only.py (GH #774)') AND LANDING WITHOUT"
+        "MEETING IT, and the run of three is the reading: three different"
+        "authors, one of them this desk's own neighbour, all of whom KNEW --"
+        "so no amount of telling authors fixes it. Red window here [17:21Z,"
+        "19:0xZ] ~1.7h. Ninth receipt of owed row"
+        "walk_farm_census_admitted_to_push_gate_or_priced / GH #843; the fix"
+        "is that row's (丙)+(乙), not another entry in this table ⭐ MERGED"
+        "2026-09-18T19:xxZ (DIRECTOR): this key was written TWICE in this"
+        "dict and a dict literal keeps only the LAST value, so one of the two"
+        "hand reads was being discarded silently. Both are kept here; the"
+        "other one read: corpus_paths() loops dir over {FIXTURE_DIR,"
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'}; same shape as the"
+        "two entries above, same reason, same non-recursive `ls`. ⚠️"
+        "Registered 2026-09-16 by the hero desk, which is ALSO the desk that"
+        "landed the walk (in the 17:21Z round) and did not register it then"
+        "-- so it rode onto main as a trunk red and was found by the next"
+        "desk to start work, which is GH #774 / GH #624's shape verbatim. It"
+        "is named here rather than only fixed because the 09-15 round's entry"
+        "directly above says the same desk had already been told once: the"
+        "registration step is cheaper to skip than to keep, and the only"
+        "thing that has ever caught it is this census, which is itself"
+        "outside the push hook's fast domain (GH #774)",
     # -- Registered 2026-09-15 by the DIRECTOR, not by either author.  Both
     # -- walks below landed between the 18:06Z and 21:08Z self-checks and left
     # -- this census RED on trunk for ~3.5h (batch-desk 20260915T210852Z.md
@@ -262,13 +317,6 @@ UNRESOLVED_HAND_READ = {
     # -- and this line is the fourth receipt for what prose costs. The fix is
     # -- the owed row `walk_farm_census_admitted_to_push_gate_or_priced`
     # -- (GH #843), not a fifth reminder. See RULING 61 / RULING 65.
-    """tests/test_lion_hex_panic_level.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
-        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
-        "{'tests/fixtures', 'tests/frames'} (:89-:90, :120-:125) -- two "
-        "file-scope literals, no parameter reaches the loop -- and keeps only "
-        "names matching ^f_.*%.lua$; plain `ls` is NOT recursive, so it never "
-        "reaches bots/Customize/. Hand-read 2026-09-16 by the DIRECTOR although "
-        "the walk is the hero desk's (lionwpanic, 5cc18d6d, 11:30Z)",
     """tests/test_wardcomma_mid3_spot.lua  ::  sFind""":
         "a bare parameter, so nothing about it resolves here: scan(sFind) is a "
         "closure local to one case (:374-:385) with exactly TWO call sites, "
@@ -317,19 +365,6 @@ UNRESOLVED_HAND_READ = {
         "were both read by somebody else. The registration cost is one entry; "
         "the alternative, twice measured, is a trunk red found by the next desk "
         "to start work",
-    """tests/test_cm_lane_fallback_wallet.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
-        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
-        "{'tests/fixtures', 'tests/frames'} (:97-:98, :129) and keeps only "
-        "names matching ^f_.*%.lua$; plain `ls` is NOT recursive, so it never "
-        "reaches bots/Customize/. Hand-read 2026-09-16 by the STRATEGY desk "
-        "although the walk is the hero desk's -- the SEVENTH instance of GH "
-        "#774, and the file's own line 125 already says in so many words that "
-        "it 'belongs on the hand-read list of tests/test_bots_walk_farm_only.py "
-        "(GH #774)'. That comment is what makes this entry worth a sentence: a "
-        "comment naming an obligation is not that obligation being met, and "
-        "nothing in the three push legs can tell the difference, because this "
-        "file measures over the python gate's 3.0s per-test cap and is "
-        "`in_gate: False` (GH #806 is the same defect on the Lua leg)",
     """tests/test_cm_w_creep_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:72-:73, :120) and keeps only "
@@ -367,18 +402,6 @@ UNRESOLVED_HAND_READ = {
         "silently read as one corpus twice. Hand-read 2026-09-16 (hero desk -- "
         "this desk's own walk, registered in the SAME work unit that landed it, "
         "per GH #803)",
-    """tests/test_cm_kill_confirm_quantifier.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
-        "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
-        "{'tests/fixtures', 'tests/frames'}; same shape as the two entries "
-        "above, same reason, same non-recursive `ls`. ⚠️ Registered 2026-09-16 "
-        "by the hero desk, which is ALSO the desk that landed the walk (in the "
-        "17:21Z round) and did not register it then -- so it rode onto main as "
-        "a trunk red and was found by the next desk to start work, which is "
-        "GH #774 / GH #624's shape verbatim. It is named here rather than only "
-        "fixed because the 09-15 round's entry directly above says the same "
-        "desk had already been told once: the registration step is cheaper to "
-        "skip than to keep, and the only thing that has ever caught it is this "
-        "census, which is itself outside the push hook's fast domain (GH #774)",
     """tests/test_cm_w_teamfight_clock.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over {FIXTURE_DIR, STAGED_DIR} == "
         "{'tests/fixtures', 'tests/frames'} (:87-:88, :136) and the walk is the "
@@ -755,6 +778,28 @@ UNRESOLVED_HAND_READ = {
         "count(pattern) over bots/, content-dependent, see the note above",
 }
 
+# --- `--static-only`: the half that fits in the push gate (GH #839 / RULING 77)
+# The scan has two halves with very different prices, measured 2026-09-18 on a
+# Routine container: reading + statically resolving every tests/ io.popen costs
+# **1.679s**, and executing the 89 distinct read-only walks costs **2.556s**.
+# Only the second half can answer "does a walk reach bots/Customize/".  The
+# first half alone answers "is every unresolvable walk on the hand-read list",
+# and THAT is the check that has reddened trunk eight times, always landed by an
+# author whose own push could not be refused because this file measures over the
+# python gate's 3.0s per-test cap and is therefore `in_gate: false`.
+#
+# ⛔ THE FLAG DOES NOT MAKE THIS FILE CHEAPER.  The full census still runs, in
+# 开工自检, exactly as before.  The flag exists so a SUBSET can be admitted to
+# the gate without a second spelling of the extractor: the retry that drops a
+# trailing `, <message>` argument turns 20 of 98 statically-unresolved sites
+# into resolved ones, and a re-implementation that forgot it would report 20
+# fabricated findings.  One implementation, two entry points.
+#
+# ⛔ AND IT NEVER CLAIMS THE CHECKS IT DID NOT RUN -- it names them, and the
+# subset test asserts that it names them.  A did-not-run wearing a pass is the
+# defect this repo has filed under GH #171 / #198 / #200 / #384.
+STATIC_ONLY = "--static-only" in sys.argv
+
 checks = 0
 failures = []
 
@@ -992,6 +1037,12 @@ for name in sorted(os.listdir(TESTS)):
             continue
         if cmd.startswith("lua5.1 "):
             continue  # a sub-sweep: its own popens are separate rows
+        if STATIC_ONLY:
+            # A site that resolved is a site the extractor still matches, which
+            # is the question `executed >= 100` asks; the walk itself is the
+            # half this mode declines to buy.
+            executed += 1
+            continue
         out = run_walk(cmd)
         if out is _FAILED:
             unresolved.append(key_of(rel, expr))
@@ -1007,24 +1058,38 @@ check(executed >= 100,
       "only %d io.popen commands executed -- the extractor stopped matching, so "
       "'no findings' would mean 'nothing scanned'" % executed)
 
-offenders = [r for r in reaching if r[0] not in READ_SIDE_FILTERED]
-check(not offenders,
-      "a tests/ walk reaches bots/Customize/ without excluding the farm-only "
-      "switches -- add %s to the find, or filter with lua_source_scan."
-      "is_farm_only, or route the walk through lua_source_scan.bots_files(): %s"
-      % (clause, ["%s:%d" % (f, n) for f, n, _ in offenders]))
+NOT_RUN = []
+if STATIC_ONLY:
+    # ⛔ These are SKIPPED, not passed.  `reaching` is empty because no walk was
+    # executed, so both checks below would pass VACUOUSLY (the second would in
+    # fact fail, which is worse: a red that means nothing).  They are named on
+    # stdout instead, and tests/test_walk_registration_static.py asserts that
+    # this naming is present -- the day someone deletes it, that test goes red
+    # rather than this mode quietly growing into "the whole census".
+    NOT_RUN = [
+        "the farm-only reach check (needs the 89 walks executed)",
+        "the READ_SIDE_FILTERED still-reaches checks (%d of them, same reason)"
+        % (2 * len(READ_SIDE_FILTERED)),
+    ]
+else:
+    offenders = [r for r in reaching if r[0] not in READ_SIDE_FILTERED]
+    check(not offenders,
+          "a tests/ walk reaches bots/Customize/ without excluding the farm-only "
+          "switches -- add %s to the find, or filter with lua_source_scan."
+          "is_farm_only, or route the walk through lua_source_scan.bots_files(): %s"
+          % (clause, ["%s:%d" % (f, n) for f, n, _ in offenders]))
 
-# The named read-side exception must still actually reach; if it stops
-# reaching, the entry is stale and should be deleted rather than kept as a
-# standing excuse.
-still_reaching = {r[0] for r in reaching}
-for path in READ_SIDE_FILTERED:
-    check(path in still_reaching,
-          "%s no longer reaches bots/Customize/ -- delete its READ_SIDE_FILTERED "
-          "entry rather than leaving a standing exemption" % path)
-    check("is_farm_only" in open(os.path.join(REPO, path), encoding="utf-8").read(),
-          "%s is exempted on the grounds that it filters on the read side, and it "
-          "no longer calls is_farm_only" % path)
+    # The named read-side exception must still actually reach; if it stops
+    # reaching, the entry is stale and should be deleted rather than kept as a
+    # standing excuse.
+    still_reaching = {r[0] for r in reaching}
+    for path in READ_SIDE_FILTERED:
+        check(path in still_reaching,
+              "%s no longer reaches bots/Customize/ -- delete its READ_SIDE_FILTERED "
+              "entry rather than leaving a standing exemption" % path)
+        check("is_farm_only" in open(os.path.join(REPO, path), encoding="utf-8").read(),
+              "%s is exempted on the grounds that it filters on the read side, and it "
+              "no longer calls is_farm_only" % path)
 
 new_unresolved = [u for u in unresolved if u not in UNRESOLVED_HAND_READ]
 check(not new_unresolved,
@@ -1037,8 +1102,12 @@ check(not stale,
       "UNRESOLVED_HAND_READ names call sites that no longer exist (the line moved "
       "or the walk went away) -- re-read and update: %s" % stale)
 
-print("%d checks, %d failed  [%d commands executed, %d unresolved]"
-      % (checks, len(failures), executed, len(unresolved)))
+print("%s%d checks, %d failed  [%d %s, %d unresolved]"
+      % ("STATIC-ONLY: " if STATIC_ONLY else "", checks, len(failures), executed,
+         "call sites resolved" if STATIC_ONLY else "commands executed",
+         len(unresolved)))
+for n in NOT_RUN:
+    print("NOT RUN (--static-only, this is not a pass): %s" % n)
 for f in failures:
     print("FAIL: %s" % f)
 sys.exit(1 if failures else 0)
