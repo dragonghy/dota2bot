@@ -22,7 +22,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--208. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:`-207` 的候选清单里没有这一条 —— 本轮认领的是 GH **#864** 那张表**留下的行动空间**:它逐个点名了焦点五英雄各自被技能点墙永久钉在 rank 3 的那一个技能,而 Axe 是 `axe_berserkers_call`。落地 gated soak candidate **`axebuild`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260918T225037Z.md`;裁定 `iterations/state.json:axebuild_20260918`。**零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+-208. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:`-207` 的候选清单里没有这一条 —— 本轮认领的是 GH **#864** 那张表**留下的行动空间**:它逐个点名了焦点五英雄各自被技能点墙永久钉在 rank 3 的那一个技能,而 Axe 是 `axe_berserkers_call`。落地 gated soak candidate **`axebuild`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260918T225037Z.md`;裁定 `iterations/state.json:axebuild_20260918`;GH **#911**。**零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条:构筑行不是一张偏好表,它是「哪个技能永远少一级」的唯一自由度 —— 而 Axe 现行行把那一级花在了 Battle Hunger 上、留给了 Berserker's Call。** GH #366 / #822 / #864 把墙的算术定完(队头停第 15 项,13 点按 `{4,4,3,2}` 花完,第 16 项 = 前 13 点留在 rank 3 的那个基础技能的第 4 级)。⭐ **于是「该不该重排构筑行」有一个之前没被问的形状**:重排**消不掉** strand(#864 LIMIT 2,14 行零例外),但它**选得动 strand 是谁**。本轮只做后者。
    - ⭐ **驱动读数,不是数条目(GH #134)**:shipped 行 Call 的梯子 **{3, 13, 14, 16}** ⇒ Axe **从 3 级到 12 级**一直拿着一个 **rank 1 的 Berserker's Call**(2.1s、18s CD),而 Battle Hunger **11 级**就满了({1, 8, 9, 11})。armed 行对调:Call **{3, 8, 9, 11}**、Hunger **{1, 13, 14, 16}**。
    - ⭐ **窄度是承重的**:两行完整 17 级列表逐项比,**首处分歧在英雄 8 级**(1-7 级逐字节相同),**每处分歧只碰 Call/Hunger 两个槽**,**Counter Helix(2/4/5/7)与 Culling Blade(6/12/17)梯子逐位相同** ⇒ 将来的波读数可归因到 Q/W 分配**且只归因到它**。
@@ -9167,7 +9167,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## 当前状态(每次触发后更新)
 - 2026-09-18T22:50Z(报告 `iterations/reports/hero/20260918T225037Z.md`;**backlog:新开 `-208`**;
-  裁定 `iterations/state.json:axebuild_20260918`;GH:本轮新开 [hero] issue,**编号第二次提交回填**;
+  裁定 `iterations/state.json:axebuild_20260918`;GH **#911**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**零 arm / 零 promote / 不申请波次 / 不申请供帧**;
   **P4.4 自评:(i) 一个 `bots/` 行为改动**)
   **主体:焦点英雄 Axe 的构筑行落 gated `axebuild`(turbo-only,未 armed)—— 把技能点墙的 strand 从
@@ -9184,7 +9184,11 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     把「墙被修好了」这个误读封死。
   - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 138 ran, 0 findings, 0 uncertifiable, 63.8s`;
     smoke exit=0;**全部 15 个读构筑行字面量的测试逐个跑过、全 exit=0**;
-    `lua gate` 三条腿读数见报告 §九(push 之后回填)。变异台 **7/7 全杀**,`sha256sum -c` 还原 OK。
+    push 钩子三条腿:`GATE_EXIT=0 CLEAN` / `py gate: 138 ran, 0 findings, 65.4s` /
+    `lua gate: 433 ran, 0 findings, 10 unanswered, 5 known-red, 771.6s`。⛔ **没用过 `RULE6_BYPASS`**;
+    按文档顺序先分支后 main,第二推读 **`RULE6_MEMO=REUSE`**(RULING 69 买的正是这个)。
+    ⚠️ 钩子自报真实开销 **771.63s / 540.0s 预算**(89 个 manifest 外的新测试照跑、10 个被挤出;
+    ⭐ 本轮新加的那个文件两张表都不在,因为它这轮就进了 manifest)。变异台 **7/7 全杀**,`sha256sum -c` 还原 OK。
   - ⚠️ **两处别人的棘轮当轮改完**:`test_build_index_resolution` §8 三→四(⭐ **开工自检抓到的**),
     `test_focus_strand_identity` FOCUS +1 行 + 抬头第 (4) 条日期署名订正(「消不掉」≠「选不动」)。
   - ⚠️⚠️ **开工自检还在跑我就动了 `bots/`**(GH #507/#848/#898 同族)⇒ log 里那条红是**过期读数**;
