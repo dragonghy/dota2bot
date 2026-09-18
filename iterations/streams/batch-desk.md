@@ -13079,7 +13079,25 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **(二) 收割零欠**:`validation/` **592 对象**(逐位相同),最新对象按 RULING 47 取法仍是
   `lf_rescue+27ids-d177b87026dd_20260912_1018_run.log`(`2026-09-12 10:18:26`)= W69;`soak/` **72,079 键**逐位相同。
   在跑波次:**无**。`recover_verdict.py` 未跑(**没得收,不是漏收**)。
-  **(三) ⭐⭐⭐ 机制:裁判的自动投降被 `natural_end` 收下了。**
+  **(三) ⭐⭐⭐ 机制找到了,⛔ 而它是一次重新发现 —— GH #184 早在 2026-08-25 就逐字给出过,本轮当轮更正、不开新 issue。**
+  按上一轮交棒 4「发新 issue 前先检索既有语料」,本轮**检索了而且抓到了**:#184
+  (`[harness] cap=25 下裁判自己会拆遗迹:engine_natural 读 210/210,钉得住的自然结束只有 12/210`,**至今 open**)
+  已含同一机制、同一两处代码、同一建议修法、同一套零 AWS 验收。⇒ **诊断对,新颖性不对**;
+  ⚠️ **本台把这条算在自己头上**(上一轮与 W69 两次把它登记成「⛔ 未测到机制」,而机制在 `[harness]` 区躺了 24 天;
+  与 #883 同形,只换了 issue 号)。⭐ **但检索这道工序本轮起作用了**:上一轮是发完才发现,本轮是发之前。
+  **对照 #184 后真正新的四件**:① #184 只量 W10 一波(210 局/一天),本轮 **284 局跨全部 18 天**
+  ⇒ 不是首波的毛病是**整个界后纪元**的(`cap_min` 284/284=25.0、`winner_by` 284/284=`engine_natural`、
+  `dur_min > cap` **272/272 全判 dire**);② #184 **没有链路 B 这个判别子**(Y1 同窗口读 **0.5750**,
+  一条不经过裁判的路把通道读活,独立坐实缺陷在裁判路不在 bot/地图);③ #184 **没给「修好之后读多少」**
+  (同 272 局按 `econ_winner` = **`0.4890`**);④ ⭐⭐⭐ **最重的一件不是缺陷本身:#184 的 §5 装饰半被修了、
+  §1 承重半没修,而修的那半把误读焊死了** —— `recover_verdict.py:541` 现在读 `by.get("engine_natural", 0)`,
+  其 2026-08-29 修复注释逐字 `would have dismissed the winrate on the one wave where it was fully
+  gold-independent`,**而「`engine_natural` 占比高 = 完全 gold-independent」正是 #184 §1 四天前推翻的那句**
+  (cap=25 上占比高恰恰意味着裁判)⇒ **失效方向被这次修复掉了头**:修前印 `0/210`(**可见地坏**),
+  修后在本轮语料上印 **`272/284`**(**可信地错**);另核 `referee_surrender` 桶名在 `tools/batch_test/soak/`
+  **一处都不存在** ⇒ #184 建议修法**从未落地**。⭐ **形状是新的:只修一个 issue 的装饰半、留着承重半,
+  会把「可见地坏」换成「可信地错」** —— 与 `pullcad` 同族,但这次是**修复**造成的。
+  **以下是本轮的独立复现与加宽(⛔ 不主张首发)。**
   **入口是一个上一轮语料看不见的判别子** —— Y1(P4.1 标尺波,**链路 B**,`aws_run.sh`→`run_batch.sh`,
   产 `.log.stdout` 不产 `analysis.json`,**不在 `soak/` 里**)在 **2026-09-05**(界后窗口之内)读
   radiant **46/80 = 0.5750**,而链路 A 同窗口读 **0.0466** ⇒ **「bot 打 radiant 更差」作为充分解释被排除**。
@@ -13141,4 +13159,13 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   `natural_end` 收紧成 `fort is not None and dur_min < cap_min - 0.5`,**否掉**:判据与拦截点是总监的事,
   先例 GH #33「不自己改 harness」);⛔ 未重开任何已关档 promote 裁定;⛔ 未点名受影响的 (b) 判定;
   ⛔ 未改 `OWNER_PRIORITIES.md` / `state.json` / `test_set.md` / `queue.json`;⛔ 未做 ~4,700 GET 的加厚普查。
+  **(十) 发表纪律**:⛔ **未开新 issue**(本轮检索抓到 #184 = 既有立案,开新的正是本轮在反对的那件事),
+  已在 **GH #184** 追评(对照表 + 18 天加宽 + 链路 B 判别子 + §5/§1 那条反向失效);
+  `claim_precheck.sh` **`PRECHECK_EXIT=0`** 逐字 `OK to publish: every citation resolves on origin/main.`
+  (`local commits not on origin/main: 0` / `paths cited 4 ... resolved on trunk 4 refused 0`)。
+  **铁律 6 三条腿(两次 push 各一次,读数逐位相同 ⇒ memo 命中)**:
+  `GATE_EXIT=0  CLEAN (iron rule 6 static half passed)` / `py gate: 133 ran, 0 findings, 0 uncertifiable, 41.8s` /
+  `lua gate: SKIPPED BY SCOPE -- this push touches no bots/game/tests path.`;
+  `PUSH1_EXIT=0` / `PUSH2_EXIT=0`(`d584c4d0..9fbd2617`)⇒ 分支推未移动 `origin/main`,第二推 memo 免费答掉。
+  ⛔ 未用任何 `RULE6_BYPASS`。
   详见 `iterations/reports/batch-desk/20260918T002401Z.md`。
