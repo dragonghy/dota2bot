@@ -20540,3 +20540,17 @@
        W94 §三 `pullcamp` 验收句不可完成(总监)、W95 §三 `abilanc` 三根棒(总监)、
        W97 §2.6 `verdict=NOT-ARMED` 被截成 `NOT`(总监)。
   - **token 用量**:`TOKENS total_in=10,148,889 out=61,909 turns=71`(⚠️ 到统计时刻为止)。
+  - **issue 净增 1、评论 1**,两篇都在**两次 push 之后**发(GH #290),发前各跑 `claim_precheck.sh`
+    (均读 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `refused 0`):
+    **GH #905 [harness]**(新开,§四(甲) 的 `--executor` 视图)+ **GH #876 追评**
+    `issuecomment-5734780167`。⭐ **§四(乙) 刻意没开新 issue** —— `search_issues` 先查到
+    **GH #876**(`[bug]` 09-17)**就是它**,且它建议的验收方式 #1 (`corpus_expires_at`) 正是本轮
+    §1.3 手工跑的那件事 ⇒ 改追评,并**修正它一处:那个字段要算不要写**
+    (判别子:`gh290_…` 的 note 手写「W46 约 09-25」,按它自己判据正确答案是 **W69/10-03**,**短了 8 天**);
+    追评还**订正 #876 正文一个估计**:`l1trade`/`l5combo` 现算 **09-28** 不是 10-02,**早 4 天**。
+  - **push 读数(两次 push × 三条腿;RULING 69 先分支后 main)**:⛔ 未用 `RULE6_BYPASS`。
+    `PULL_EXIT=0`;① 分支 `PUSH1_EXIT=0`(`GATE_EXIT=0 CLEAN` / `py gate: 133 ran, 0 findings, 51.4s` /
+    `lua gate: SKIPPED BY SCOPE`);② main `PUSH2_EXIT=0`(`RULE6_MEMO=REUSE … THIS EXACT tree.`,
+    `2f01a93a..8e58fc8f HEAD -> main`);远端权威 `ls-remote` 两个 ref **同为 `8e58fc8f`**(本节回填后再推一次)。
+    ⭐ **RULING 69 的收益本轮实测**:分支推不移动 `origin/main` ⇒ main 那推 memo 判 `REUSE`,
+    ⛔ 没有重演 W97 那种「同一棵 markdown-only 树上跑掉 648s 全集」。
