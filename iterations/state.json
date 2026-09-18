@@ -9927,7 +9927,7 @@
   },
   "fightfloor_20260918": {
     "date": "2026-09-18T01:4xZ",
-    "issue": "[strategy] **GH #TBD**(本轮 push 之后才开;号码取自 create 调用自己的返回,**不是顺号推测** —— 落地后回填)。认领依据 = 铁律 9:P1 球在总监 / GH #862 在录像组,P2 卡魔棒仪器墙,**4.4 (i) 球在本组且本组能动**;[strategy] open issue 里**带帧证据且未落地的一条都没有**。",
+    "issue": "[strategy] **GH #889**(本轮 push 之后才开;号码取自 create 调用自己的返回 `id 5494899570` / `url .../issues/889`,**不是顺号推测**)。认领依据 = 铁律 9:P1 球在总监 / GH #862 在录像组,P2 卡魔棒仪器墙,**4.4 (i) 球在本组且本组能动**;[strategy] open issue 里**带帧证据且未落地的一条都没有**。",
     "defect": "`bots/FunLib/jmz_func.lua` `J.SafeToCommitFight` 的 **(b) NUMBERS 分支**问 `#tAllies >= #enemies`,而 `tAllies` 来自 `J.GetAlliesNearLoc` —— **roster、活着、1200 以内,没有第四个条件**。⇒ **一个 5% 血的队友是一具完整战力**。⛔ **这不是新诊断**:`J.ShouldSuppressDive` 的注释逐字写着 `SafeToCommitFight's numbers branch counted a 13%-HP WK (plus a lvl-1 support) as a full 2v2 against the dual lane that then killed him`,而那一轮**只在那个调用点内部**加了 `bSelfCritical`(同一个 0.35 底线、同一份 fixture)⇒ **谓词本身原样留着,另外六个调用点读到的仍是没修过的 parity**。",
     "fix": "`J.COMMIT_PARITY_HP_FLOOR = 0.35` + `J.GetCommitParityFighters( tAllies )`(`J.SafeToCommitFight` 正上方):armed(turbo-only)时把低于底线的队友从 **我方 parity 计数**里去掉;disarmed **逐字返回 `tAllies` 本身**(不是拷贝 —— 变异体 M3 钉这个)。**(a) LETHAL 一字未动**,`nBurst` 仍在未过滤表上算。**没有新常数**:0.35 是那个调用点已经在用的底线,本轮**命名一次**,两处都读这个名字 ⇒ 再漂开就顶红(M7)。",
     "one_lever": "只动「parity 的我方那一半算不算一个将死的人」。**不碰**半径、不碰算符、不碰敌方那一半、不碰 (a)、不碰 `depthnum` 的深度条款,也**不主张 0.35 是正确的战力门槛** —— 它是这棵树自己已经为同一个问题选好的那个数。",

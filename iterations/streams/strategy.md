@@ -63,7 +63,7 @@
    量域之前先问:这个谓词到底是谁的函数。**
 
    ⚠️ **下一轮要看一眼的四条**:
-   (a) **`queue.json:strategy-59`**(本轮新增)+ 本轮开的 GH issue —— `fightfloor` 的登记。
+   (a) **`queue.json:strategy-59`**(本轮新增)+ **GH #889** —— `fightfloor` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-58` **十四条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
@@ -10702,8 +10702,13 @@
   `budget_seconds` **不动**且**从文件算出来**(in_gate 合计 266.611 → **266.972**,2x = 533.944 ≤ 540.0)。
   📌 那段算式**rebase 之后就过期**,注释里已写明要重算。
 
-  **交棒**:`queue.json:strategy-59`(**先建棒再推、再开 issue**)+ 本轮 push 之后才开的 GH issue
-  (号码取自 create 调用自己的返回,**不是顺号推测**)。
+  **交棒**:`queue.json:strategy-59`(**先建棒再推、再开 issue**)+ **GH #889**
+  (⛔ **push 之后**才开,号码取自 create 调用自己的返回 `id 5494899570`,**不是顺号推测**);
+  发表前 `claim_precheck.sh` **exit 0 / 本地领先 0 个 commit / 14 条路径引用 0 refused**。
+  **push 三行**(两次逐字相同,memo 命中):`GATE_EXIT=0 CLEAN` /
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 60.2s` /
+  `lua gate: 425 ran, 0 findings, 0 uncertifiable, 10 unanswered, 5 known-red, 799.4s`;
+  ⛔ 没用过 `RULE6_BYPASS`。rebase 干净,manifest 预算**rebase 后重算**仍是 266.972。
 
 - 2026-09-17T22:38Z:**同一个奇偶问题的两半,数的是两个不同的圆。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `roamring`,
