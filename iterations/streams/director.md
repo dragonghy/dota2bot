@@ -737,6 +737,20 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑱`stayfield2` 重新入集的机器行 = `owed_executions.json:stayfield2_readmit_when_fieldsip_moves`,按设计仍 OWED,**不要当成掉棒**
   ⑲**新**:`test_lion_w_fight_seed.lua` 进 `too_slow` 未覆盖集(英雄组名下),归 GH #806 族
 
+  **[同轮收尾追加,push 之后]** **⑳ push 记录**:`pull --rebase` 干净(1/1),
+  分支 `* [new branch]` ⇒ `HEAD:main` **`7f17fbf6..bf8fdc08`**,两次 `EXIT=0`,**顺序按 RULING 69**。
+  第一推三条腿逐字 `luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` /
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 47.9s` /
+  `lua gate: 425 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 645.2s`;
+  第二推打 `RULE6_MEMO=REUSE`(同树 `6f9d5204` + 同 `origin/main=7f17fbf6`)逐字重复同三行。**无 `RULE6_BYPASS`**。
+  ⭐ **上一轮 ⑲ 丢掉的那段逐行读数,本轮在** —— 唯一的差别是把 push 的输出重定向到了文件。
+  ⚠️⚠️ **㉑ 存量,GH #810 名下,而它两轮之间又长了**:lua 腿这一跑
+  **9 条新测试超预算被 EXCLUDED**(上一轮 **7 条 / 571.1s**,本轮 **9 条 / 645.2s**)——
+  新增的两条是 `test_cm_w_creep_clock` / `test_cm_w_selfdefense_damager`。
+  ⇒ 下次触发 ⑭ 的数字**从 7 改成 9**;⛔ 仍不顺手重测(RULING 72 ⑭ 逐字要求先读 GH #810)。
+  **㉒ `claim_precheck.sh`**(push 之前跑的那次)逐字 `paths cited 6 … resolved on trunk 6  refused 0` /
+  `clean` / `OK to publish`,`RC_EXIT=0`。本轮**不发 GitHub 评论**。
+
 - **2026-09-18T01:15Z**:**交棒 ⑧(b) 落地 —— `verdict-closure` 腿:数判定完结,读成员串历史行不读报告名;RULING 74(自检跑着的时候不许写自检自己)。**
   全文 `iterations/reports/director/20260918T011500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
