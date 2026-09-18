@@ -13671,3 +13671,28 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   本轮**第三跑才对**,同形第十例,⛔ 不许再错;刹车解除(headroom ≥ `$1.10`)时按规格发 **P4.1 标尺波**,
   并把 #801 那四行**恢复后**的样子抄进报告。
   详见 `iterations/reports/batch-desk/20260918T121242Z.md`。
+  **补记(push 之后,GH #290 顺序;全文见报告「补记」节)**:**(A) 铁律 6 三条腿**(两次 push,第二推 memo 命中)
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN (iron rule 6 static half passed)` /
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 49.9s` / `lua gate: SKIPPED BY SCOPE -- this push touches
+  no bots/game/tests path.` ⚠️ **第三条腿是 SKIPPED BY SCOPE 不是绿**(本轮只改 `iterations/` 两个文件)
+  ⇒ ⛔ 不记成「Lua 测试通过」;`ARM_EXIT=0`;**⛔ 未用任何 `RULE6_BYPASS`**;`PULL_EXIT=0`(`up to date`);
+  `PUSH1_EXIT=0` / `PUSH2_EXIT=0`(`60854bd7..bb452ea9`)。⭐ 按文档顺序先分支后 main,memo 逐字
+  `RULE6_MEMO=REUSE  a green three-leg reading taken 2026-09-18T12:17:14Z on THIS EXACT tree.`,⛔ 未反序(RULING 69)。
+  ⭐ 落地独立复核不靠 push 回显:`git merge-base --is-ancestor HEAD origin/main` ⇒ **真**。
+  **(B) ⭐⭐ 发表前 `claim_precheck.sh` 抓到一处真缺陷,错引用未发表。** 第一跑 **`PRECHECK_EXIT=3`**,逐字
+  `MISSING   key     state.json:1214` / `no such key at origin/main` /
+  `DO NOT PUBLISH YET -- the citations above do not resolve on origin/main.`
+  **归因**:本台把一个**行号**写成了 `state.json:<key>` 这个**留给键名**的格式 ⇒ 解析器去找名叫 `1214` 的键。
+  ⚠️ **失效方向是危险那侧**:`state.json:1214` 读起来**像一条精确引用**(还带行号,比键名更像),
+  而读者按它去找**找不到任何东西**,且**肉眼不会起疑** —— 正是 #290 立案时那五处引用的形状。
+  改成 `state.json:cap25_boundary_20260825` 的 `winner_by_semantics` 后第二跑 **`PRECHECK_EXIT=0`**,逐字
+  `local commits not on origin/main: 0` / `paths cited 3 ... resolved on trunk 4 refused 0` / `clean` /
+  `OK to publish: every citation resolves on origin/main.` ⇒ **上一轮交棒 ⑦(b) 本轮从头做对了。**
+  **(C) 发表**:**GH #291** 评论已发(`issues/291#issuecomment-5729873642`),带署名脚注
+  ⇒ 该 issue **20 天来的第一条评论**;⛔ 未关闭它(修法归总监/harness 域)。
+  **(D) 收尾泄漏复查** `check_costs.sh --leak-only` ⇒ **`LEAK_EXIT=0`**,`running/pending instances` 区块**空**,
+  常设成本仍只有 `ami-0a990a26d89c66547` 一张。
+  **(E) 自检真码:⛔ 本轮仍不可得,且是实证不是推断。** 回读输出 **682 行**(比正文那次多 37 行,**还在长**),
+  停在 `=== trunk health (fast Lua detectors) ===`,**收尾三行横幅一个没打**;`pgrep` 现读**进程仍在**
+  ⇒ ⛔ 无 `selfcheck worst exit`,**不写、不读成通过**;未跑完的腿这轮没人看过。⛔ 不空转等它。
+  **(F) token 用量(铁律 8)**:`TOKENS total_in=5,750,774 out=37,520 turns=45`(统计时刻的数,其后收尾回合不计入)。
