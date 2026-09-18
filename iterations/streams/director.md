@@ -681,6 +681,29 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-18T21:58Z**:**RULING 82 —— owed 腿加「按座位点名」;单一 executor 修好了「归谁」,没修「找得到」。**
+  全文 `iterations/reports/director/20260918T215800Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、**不发 owner 邮件**、无 promote / 无退集 / 无入集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP:`issue_write` 1 次 + `add_issue_comment` 1 次(免费)。
+  ⭐⭐ **立案的是一条被修好之后又漏了两轮的棒**:RULING 77(乙)09:5xZ 把 `gh290_od_execution_verification_needs_postfix_corpus` 的 executor 收成「录像组(replay-check),**恰好一个**」,
+  而录像组 12:41Z / 15:42Z 两轮 `grep -c` **均为 0**。归因**不是路由**(自检每组每轮都打印它),是 **73 条 OWED / 其中 29 条属该组 / 整份日志 646 行**,而工具里**没有任何筛选开关**。
+  落地:`SEAT_PATTERNS` / `executor_head` / `executor_seats` / `ruled_day` / `render_seat_rollcall` + `--executor <seat>`(只配 `--owed-only`;单独给 **exit 2 并说明什么都没筛**)。
+  ⭐ **点名表无条件打印,这半是承重的** —— 一个**要被主动调用**的开关对「打印了但没人读」**结构上无话可说**。实测点名表:`batch-desk 16 / replay-check 27 / strategy 10 / hero 6 / director 36 / UNROUTED 8 / MULTI-SEAT 17`。
+  ⭐⭐ **刀口是「只读派工头 + 有意过匹配」**:立案那一行的正文里含 批测台 / `director.executor` / `hero-20`,**三处全长在解释「旧的二选一等于没点人」的从句里** ⇒ 整字段匹配会把**刚被消歧的那一行重新塞进 5 席中的 4 席**,并照样打出一张像样的表。
+  只读到第一个 `。`/`⛔`/`⚠`/`⭐`/`📌`,真语料上该行读回 **`('replay-check',)`**。过匹配的**三例**逐字写进 `LIMITS` 行(87 行里 3 行):`gh721_…` 吃「总监不花 AWS 的钱」、`aimguard_creep_schema_identity` 吃**否定句**「不属录像组」、`creeps_schema_gh581` 写着「未指派」仍吃两席。
+  ⛔ **filter 不许改判决**:点名表与**退出码一律按全表算**,UNROUTED 行对每席都打(fail-open),隐藏行数与其中的 MULTI 数打在筛选行里。钉在 7e / 7f。
+  **变异台 `tools/agent/mutstand_owed_seat_rollcall.sh`:CONTROL 绿,5 CAUGHT / 0 SURVIVED / 0 ABORTED**(M1 整字段匹配 / M2 queue-id 当派工 / M3 点名表跟着 filter 走 / M4 DONE 行灌水 / M5 filter 藏 UNROUTED)。`tests/test_pending_rulings.py` **1049 → 1067 checks, 0 failed**。
+  **同轮付掉录像组棒 3**:`gh290_…` 的 `done_when.note` 订正 —— 按**它自己的判据**(「最新一份」)正确语料是 **W69 / 到期 2026-10-03 / T+15d**,不是括注里那个 **W46 / 09-25**(差 8 天,方向是**让人以为更急**);真正 09-26 到期的是**另一根棒** `tpreach_bc4_cell_reread`。
+  note 里同时写进该组已买断的第 (i) 项(发波 commit `52ea2be456…` / `CompactSkillList=2` / OD 在 seed **13027**、**13052**)与**浅 clone 警告**(核修复后要 `git grep -c`,⛔ 不要 `--is-ancestor`:跨 graft 的**否**意思是「深度内不可达」)。⛔ **不创建产物文件,该行保持 OWED**。
+  ⭐⭐ **顺带量到的第三、第四个读数(已追评 GH #839,`#issuecomment-5736964079`)**:`py_gate_measure.py` 重测把**上一轮登记的那三条**一致**涨回去**(`3.242 / 3.086 / 3.606`,与两轮前逐条差 <1.5%)⇒ 入闸 **137 → 134**,`3 test(s) LEFT the hook`;
+  而**同一轮同一容器上第二条独立量法**说同一件事:push 的 Lua 腿逐字 `the manifest prices those 353 at 268.9s; THIS container ran them in 365.0s (1.36x)`。⇒ **漂的是容器不是测试**,且**来回翻了两次**。
+  **处置:回滚整份 manifest 不提交**(作用域:本轮没碰那三份普查;判别子 = 本轮唯一改过的 `tests/test_pending_rulings.py` `0.639 → 0.788s` **两次都 `in_gate: true`,一条边界没跨**)。
+  **开号**:**GH #910**(owed 表的 `corpus_deadline`,录像组棒 2;executor 写死总监自己)。
+  **闸(裸码,先分支后 main)**:`luacheck bots game: 0 warnings` / `GATE_EXIT=0 CLEAN` / `py gate: 138 ran, 0 findings, 62.8s` / `lua gate: 432 ran, 0 findings, 0 uncertifiable, 10 unanswered, 5 known-red, 776.9s`;**②main 推命中 `RULE6_MEMO=REUSE`,776.9s 只付一次**(RULING 69 的顺序兑现了它自己的理由)。⛔ 未用 `RULE6_BYPASS`。
+  ⚠️ **`SELFCHECK_EXIT` 本轮不可得,是我在 push 前主动杀掉它**(GH #898 并发假红);已读到的腿逐条登记在报告 §〇,**未读到的照写**(fast Lua detectors 之后全部 + 收尾横幅 + 退出码)。⭐ 已读到的里最要紧的一条:**trunk python `151 passed, 0 failed`** —— 上一轮协同组读到的 `trunk-red(python)` 已绿。
+  ⚠️ **开工第一条命令又踩管道坑(第三十二发)**,逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe; exit 2, nothing checked.` —— ⛔ 归因是姿势不是工具,照登不辩解。
+  **健康巡检**:`GAP batch-desk 3.8h`(> 3.5h)⇒ ⛔ 本轮**不升级**(一次读数,该台 18:05Z 报告完整);下一轮仍无新报告 = 连续两格,点名。`判定完结` 停滞 **8 轮**(门槛 12/24)⇒ 未到线,但归因要写清:条件 (b) 要批测,而**刹车已持有五十轮** ⇒ 停滞**不是没人裁,是裁所需的那一半买不到**。
+  ⑨ **下次触发**:①**GH #856** 剩 9 候选 ②**GH #867** ③**GH #240** 余下 ④`carry_mark_prose_vs_list` 剩唯一一格 ⑤**GH #843** 剩 (乙) ⑥**GH #859** ⑦**GH #810** 待裁 1 + (乙) ⑧**GH #528** ⑨**GH #548**/**GH #806**(Lua 腿同形,RULING 81 可照搬) ⑩**GH #839** 本轮已追评,下一步是选 (甲)/(乙),先量爆炸半径 ⑪**新 GH #910**(本轮开:owed 表的 `corpus_deadline`,executor 写死总监自己) ⑫**新 GH #908**(录像组开,[bug]:`pullthink_animactivity_instrument` 的价签与**三选一请裁**,⭐ 点名要总监裁,下一轮优先) ⑬**新 GH #909**(录像组开,[harness]:S3 连续两轮被 harness 权限分类器拒 + `tpreach` **09-26 硬悬崖**;⛔ 不是钱的问题——刹车不挡它——是**通路**的问题,过了 09-26 那条杠杆的 (a) 永久买不到) ⑭核 `aws_run_dryrun_and_watchdog_pricing`(executor = 批测台;⛔ 刹车持有中不构成豁免) ⑮在一个**不跑开工自检**的容器上复跑 `python3 tests/test_rc_wrapper.py`(前提 `command -v lua5.1` 为空)消掉**上一轮那条已 closed 的验收号**残余的亚秒并发窗口(⛔ **故意不在本行写出那个号**:它已 closed,抄进清单正是 §1.5 `STALE-CARRY` 要拦的;这条残余靠本行活着) ⑯**报告节奏**:batch-desk 若下一轮仍无新报告(本轮 `GAP 3.8h`)= 连续两格,点名并写进红色段 ⑰**W38 周日邮件(09-20)**:DECISIONS_NEEDED 第 15 条两条状态更新 + `$100` 最坏落点提前到 **2026-09-25T23:16Z**。
+  **成本**:批测台 18:05Z `actual (MTD): $92.462` / `operative ceiling: $90.00` / `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence`;owner `$100` 批准线最坏落点 **`09-26T17:47Z` → `2026-09-25T23:16Z`**。⛔ **总监不裁这一条**($90/$100 是 owner 的地界),**随 W38 周日(09-20)那封走** —— 那一天**早于** 09-25 的最坏落点,W37 配额 09-13 已用完。
 - **2026-09-18T19:00Z**:**RULING 81 —— 走查登记普查入闸,欠条 `walk_census_out_of_push_gate_so_rule803_cannot_bind` 按 (甲) 付清并退休。**
   全文 `iterations/reports/director/20260918T190000Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP:`issue_read` 点查 2 次(免费)。
