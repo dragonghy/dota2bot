@@ -152,6 +152,21 @@ UNRESOLVED_HAND_READ = {
         "it. Red window here [17:21Z, 19:0xZ] ~1.7h. Ninth receipt of owed row "
         "walk_farm_census_admitted_to_push_gate_or_priced / GH #843; the fix "
         "is that row's (丙)+(乙), not another entry in this table",
+    """tests/test_wk_q_teamfight_reach_pricing.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:138-:139, :166); "
+        "both are file-scope locals assigned once from string literals and "
+        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
+        "reach bots/Customize/ -- byte-for-byte the shape of the three entries "
+        "above. ⚠️ Registered 2026-09-18 by the STRATEGY desk, not by the "
+        "author (hero desk). ⛔ THIS ONE IS THE COUNTEREXAMPLE TO THE ENTRY "
+        "ABOVE: it carries NO obligation comment, so the run of three files "
+        "that 'knew and landed anyway' is not the whole population -- a file "
+        "that never knew lands the same red. That strengthens rather than "
+        "weakens GH #843: telling authors cannot cover the authors who were "
+        "never told, and only the gate can. Tenth receipt of owed row "
+        "walk_farm_census_admitted_to_push_gate_or_priced; the fix is still "
+        "that row's, not this entry",
     # -- Registered 2026-09-15 by the DIRECTOR, not by either author.  Both
     # -- walks below landed between the 18:06Z and 21:08Z self-checks and left
     # -- this census RED on trunk for ~3.5h (batch-desk 20260915T210852Z.md

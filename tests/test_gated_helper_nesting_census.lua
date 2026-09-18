@@ -762,6 +762,24 @@ local PINNED = {
     -- caller handed over. See tests/test_divepocket_target_in_pocket.lua §3,
     -- which counts that argument directly rather than inferring it.
     "divepocket,nodive2 | J.ShouldSuppressDive | J.SafeToCommitFight | depthnum | bots/FunLib/jmz_func.lua",                               -- P
+    -- [fightfloor 20260918] NEW ROW, and it is (P). J.SafeToCommitFight now
+    -- carries a gate of its own ('depthnum', already pinned as the INNER half
+    -- of five rows above) and a second one arrived inside it, so this census
+    -- keyed a row the moment the helper landed -- which is what it is for.
+    -- Hand-read answer to the question it asks: un-armed,
+    -- J.GetCommitParityFighters returns `tAllies`, the very expression the
+    -- numbers branch used to read inline, so `#J.GetCommitParityFighters(
+    -- tAllies )` is byte-for-byte `#tAllies` and arming 'depthnum' alone
+    -- measures exactly what it measured before.
+    -- ⚠️ The pair question (GH #576), answered in the direction that matters:
+    -- the two are NOT conjoined -- the 'depthnum' block is a straight-line
+    -- statement that RETURNS when the engage point is deep, so with BOTH armed
+    -- it pre-empts the numbers branch and 'fightfloor' sees a smaller domain.
+    -- That is a domain interaction, not a `pullcad` conjunction trap: with
+    -- 'depthnum' off (the shipped default, and the state the domain sweep was
+    -- taken in) 'fightfloor' has its full 190-pair / 39-reading domain, so a
+    -- single-arm wave measures something real.
+    "depthnum | J.SafeToCommitFight | J.GetCommitParityFighters | fightfloor | bots/FunLib/jmz_func.lua",                                  -- P
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_crystal_maiden.lua",                        -- P
     "nopush | X._nopush_ShouldSuppressWaveShove | J.IsInLaningPhase | c2,c4 | bots/BotLib/hero_jakiro.lua",                                -- P
     -- [outcommit 20260905] 'outcommit' joined the row 'outlatch' already held,

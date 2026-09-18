@@ -35,6 +35,51 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT42. **【2026-09-18T01:46Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `fightfloor` 落地)。剩下的是三句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【这条缺陷已经有人写过了】那一格**:
+   **一条诊断被写进注释、被 fixture 钉住、并且被修好了,仍然可能只修在它被发现的那一个调用点里;
+   ⛔ 而「已经有注释写着它」正是它最不容易被第二次看见的原因 —— 读到那段注释的人会认为它已经被处理过了。**
+
+   现场:`J.ShouldSuppressDive` 的注释逐字写着
+   `SafeToCommitFight's numbers branch counted a 13%-HP WK (plus a lvl-1 support) as a full 2v2
+   against the dual lane that then killed him`,而当年的修法是在**那个调用点内部**加 `bSelfCritical`
+   (同一个 0.35 底线、同一份 fixture `f_080225_wk_lane`)。**谓词本身原样留着** ⇒ 另外**六个**调用点
+   (对线贴脸 / punish 选目标 / 反打过度追击 / TP 支援 / 团战 help-flee 分叉 / OnArrival)
+   读到的仍是没修过的 parity。📌 **判据:看到「某某分支曾经数错」的注释时,去数那个分支有几个调用点,
+   而不是去读修它的那一段。**
+
+   ⭐ **第二句,关于「为什么只改一边不算不对称」**:`roamring` 那种「一个对称问题的一侧换了把更好的尺」
+   和这一次**不是同一件事**。判据在**谓词自己的结构里**:残血的**敌人**在 `J.SafeToCommitFight` 里
+   **已经有位置**(分支 (a) 直接给目标的血定价,并**抢在一切之前**返回 true),**我方的血一个位置都没有**
+   ⇒ 这是那个问题里**根本没有尺的那一半**。📌 **先去找「对面那半有没有已经存在的入口」,
+   找到了就不必对称,找不到才要论证。** ⚠️ 诚实边界已写进 helper 头:(a) 只给**目标**定价,
+   不管旁边第三个残血敌人 —— 那一格**故意留出厂答案**。
+
+   ⚠️ **第三句,关于域的单位**:本轮 `down` 是 **190**,而 `down_unique` 是 **39**。
+   差别不是抽样,是**谓词完全不用它的 `bot` 形参** ⇒ 同一个 (team, target) 读数**按活着的主语重复一遍**。
+   📌 **一个不用主语的谓词,它的「命中数」按主语数膨胀,而膨胀出来的那份长得和真读数一模一样。
+   量域之前先问:这个谓词到底是谁的函数。**
+
+   ⚠️ **下一轮要看一眼的四条**:
+   (a) **`queue.json:strategy-59`**(本轮新增)+ 本轮开的 GH issue —— `fightfloor` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-58` **十四条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检本轮 `EXIT=3`**,其中 `trunk-red(python)` **本轮修掉了**
+   (`test_bots_walk_farm_only.py`,英雄组 `test_wk_q_teamfight_reach_pricing.lua` 的 `io.popen` 未登记)。
+   ⭐ **那一条是前三次登记的反例**:前三次的读数是「作者都知道、文件里都写着、还是照落」,
+   **这一份没有那句话** ⇒ **「知道却照落」不是全部人口** ⇒ **加强**而不是削弱 GH #843;
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。
+   (e) ⚠️ **自检本轮跑了 ~40 分钟**(没有 timeout 是设计),它的 fast-Lua 腿跑完时本轮已经在改 `bots/`
+   ⇒ **那条腿读的树在它脚下动过**。0NEXT40 §(c) 的「先只读、退出后再动手」这一轮**没能照办**,
+   代价是那条腿的读数要打折;相关普查在改完之后**单独重跑**才是本轮读数。
+   📌 **下一轮:自检放后台,但在它回来之前只做只读测量** —— 这条建议本身没变,变的是它这次没被遵守的理由
+   (自检时长从 ~11 分钟涨到 ~40 分钟,而章程里写的是前者)。】**
+
 0NEXT41. **【2026-09-17T22:38Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `roamring` 落地)。剩下的是两句要带走的。
 
@@ -10599,6 +10644,66 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-18T01:46Z:**同一条修复只修到了它被发现的那一个调用点。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `fightfloor`,
+  `bots/FunLib/jmz_func.lua`)。**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;
+  **未提入集**(P4.2 冻结);⛔ **不新增 armed id,成员串仍 25**。
+  报告:`iterations/reports/strategy/20260918T014613Z.md`;`state.json:fightfloor_20260918`;
+  完整判据 ⇒ backlog **0NEXT42**。
+
+  **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**(⚠️ 管道防呆**第 15 次**,又在第一条命令上撞到);
+  findings = cadence / queue-rulings / owed-executions / lua-coverage / **trunk-red(python)**;
+  fast-Lua 腿 **138 文件 0 failures**,⚠️ 但它跑完时本轮已经在改 `bots/`(自检本轮 **~40 分钟**),
+  **那棵树在它脚下动过** —— 相关普查改完后**单独重跑**的那几条才是本轮读数。
+  P1 球在总监 / GH #862 在录像组;P2 卡魔棒仪器墙;**4.4 球在本组且本组能动** ⇒ 取 4.4。
+  [strategy] open issue 六条,**带帧证据且未落地的一条都没有** ⇒ 自找杠杆。
+
+  **缺陷**:`J.SafeToCommitFight` 的 (b) NUMBERS 分支问 `#tAllies >= #enemies`,而 `tAllies` 是
+  `J.GetAlliesNearLoc` 的「roster / 活着 / 1200 内」—— **没有第四个条件** ⇒ **5% 血的队友是一具完整战力**。
+  ⛔ **不是新诊断**:`J.ShouldSuppressDive` 的注释逐字写着它,而当年只在**那个调用点内部**加了
+  `bSelfCritical`(同一个 0.35、同一份 fixture)⇒ **另外六个调用点原样**。
+
+  **修法**:`J.COMMIT_PARITY_HP_FLOOR = 0.35` + `J.GetCommitParityFighters( tAllies )`,armed(turbo-only)
+  把低于底线的队友从**我方**计数里去掉;disarmed **逐字返回 `tAllies` 本身**(不是拷贝)。
+  **(a) LETHAL 一字未动**。**没有新常数** —— 底线**命名一次**,两处都读这个名字 ⇒ 再漂开就顶红。
+  **方向由构造定死**:子集 ⇒ (b) 只能 TRUE→FALSE;七个调用点无一例外把 TRUE 读成「开/贴/帮/响应」
+  ⇒ armed **只能拿掉开打**。
+
+  **域**(`tests/_fightfloor_sweep.lua`,**零 arm**,112 fixture / **1039** live 帧 / **4840** 对):
+  `lowally_pairs` 365 | `shipped_true` 1354 | `armed_true` 1164 | **down 190 / up 0** |
+  **`down_unique` 39,落在 21/112 份 fixture**。⛔ `up 0` 是读数**只因为同一 tally 里 down 是 190**;
+  ⛔ **190 是「对」不是「情形」**(谓词不用 `bot` 形参 ⇒ 按主语重复)。
+  ⚠️ **仪器限制**:`lethal_true` 全语料 **0**(fixture 的 `GetEstimatedDamageToTarget` 是那个单位打在
+  **主语**身上的伤害,队友一点没打)⇒ **190 是天花板不是发生率**。
+
+  **本地验证**:`tests/test_fightfloor_parity_floor.lua` **11/11,0.36s,全程零 stub**。
+  真实帧 = **写下这条诊断的那一帧**:`f_080225_wk_lane`,WK **12.7%** 血、**6.1 秒后死**;
+  以 Juggernaut 为交战点:出厂 `2>=2` **TRUE**、armed `1>=2` **FALSE**,`J.SafeToCommitFight` 端到端翻面。
+  ⛔ **第一次就绿所以不信它** ⇒ `tools/agent/mutstand_fightfloor.sh` **8 抓 / 0 存活 / 控制绿 / 退出码 0**
+  (restore 逐文件 sha256 round-trip);⛔ M6 第一轮「红但消息不对」——**先开火的是同一用例里排在前面的
+  计数断言**,`want` 改成真正开火的那条,M5/M6 靠 `found 0` / `found 2` 区分。按证据纪律 4 单独复核 M4。
+  ⭐ `tests/test_replay_080225_wk_lane.lua` **原封不动仍 4/4**。
+
+  **`test_gated_helper_nesting_census` 顶红一次,这是它该做的事**:新 gate-inside-a-gate 行
+  (`depthnum | J.SafeToCommitFight | J.GetCommitParityFighters | fightfloor`),手读后按 **(P)** 钉上,
+  并就地答掉 GH #576 的配对问题:两者**不是合取**,`depthnum` 同 armed 时会**抢在 (b) 之前返回**
+  ⇒ 域变小,**但那是域的相互作用不是 `pullcad` 合取陷阱**(`depthnum` 关着时 `fightfloor` 有完整域)。
+
+  **顺手修掉一条 trunk 红(附带,不是主体)**:`tests/test_bots_walk_farm_only.py`
+  (英雄组 `test_wk_q_teamfight_reach_pricing.lua:168` 的 `io.popen` 未登记)⇒ `8 checks, 0 failed`。
+  ⭐ **它是前三条登记的反例**:那三份文件里都写着「本文件属于手读名单」,**这一份没有**
+  ⇒ **「知道却照落」不是全部人口** ⇒ **加强** GH #843(告知覆盖不到没被告知的人,**只有闸能**)。
+
+  **铁律 6**:`GATE_EXIT=0 CLEAN`(luacheck 0 警告)/ `py gate: 133 ran, 0 findings, 0 uncertifiable, 60.3s`
+  / `lua_gate.py` 直跑 exit 0(push 两条腿的实际读数见报告 §九)。
+  ⚠️ 全量 Lua 套件(~100min,GH #124)**本轮没跑**,照实写;⛔ 没用过 `RULE6_BYPASS`。
+  `lua_gate_manifest.json` **手加一行** `seconds = 0.361`(三次里最大的一次,保守侧),
+  `budget_seconds` **不动**且**从文件算出来**(in_gate 合计 266.611 → **266.972**,2x = 533.944 ≤ 540.0)。
+  📌 那段算式**rebase 之后就过期**,注释里已写明要重算。
+
+  **交棒**:`queue.json:strategy-59`(**先建棒再推、再开 issue**)+ 本轮 push 之后才开的 GH issue
+  (号码取自 create 调用自己的返回,**不是顺号推测**)。
 
 - 2026-09-17T22:38Z:**同一个奇偶问题的两半,数的是两个不同的圆。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `roamring`,

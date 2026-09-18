@@ -3112,6 +3112,18 @@
       "result": null,
       "director": null,
       "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。全部本地,不需要任何一波。"
+    },
+    {
+      "id": "strategy-59",
+      "stream": "strategy",
+      "bundle": "`fightfloor`(新 gated id,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。",
+      "priority": 3,
+      "status": "pending — 预期裁定是 FROZEN-HOLD(登记、不入集、不视为掉棒;armed 25 > 20)",
+      "seeds": "不适用(不发波)",
+      "question": "⛔ **零 AWS、零 EC2、零 CE、不申请专波、不申请新波** —— 本请求要的是一次登记,不是一次取证;全部工作已在本地做完。(这一行放在开头是因为 GH #885 未修:声明写在 `bundle`/`cost` 里的新请求会被 push 闸拒掉。)\n\n一句话:**一条已经被写进注释、被 fixture 钉住、并且被修好了的诊断,当年只修在它被发现的那一个调用点里;本轮把它修在谓词上并 gated 起来,请登记 `fightfloor`,解冻后排 (a) 证据。**\n\n### 已经钉住的(不要重测)\n- 缺陷:`J.SafeToCommitFight` 的 (b) NUMBERS 分支问 `#tAllies >= #enemies`,而 `tAllies` = `J.GetAlliesNearLoc` 的「roster / 活着 / 1200 内」**没有第四个条件** ⇒ **5% 血的队友是一具完整战力**。⛔ `J.ShouldSuppressDive` 的注释逐字写着这件事(`counted a 13%-HP WK ... as a full 2v2 against the dual lane that then killed him`),而当年的修法只在**那个调用点内部**加 `bSelfCritical` ⇒ **另外六个调用点原样**。\n- 修法:`J.GetCommitParityFighters( tAllies )` + `J.COMMIT_PARITY_HP_FLOOR = 0.35`;armed(turbo-only)把低于底线的队友从**我方**计数里去掉,disarmed **逐字返回 `tAllies` 本身**。**(a) LETHAL 一字未动**。**没有新常数** —— 0.35 是那个调用点已经在用的底线,本轮命名一次,两处都读这个名字。\n- **方向由构造定死**:子集 ⇒ `#fighters <= #tAllies` ⇒ (b) 只能 TRUE→FALSE;七个调用点无一例外把 TRUE 读成「开/贴/帮/响应」⇒ armed **只能拿掉开打**。⇒ 批测读数若反向,**不能**读成「杠杆让 bot 不打架了」。\n- ⭐ **只过滤我方那一半不是不对称**:残血的**敌人**在这个谓词里已经有位置(分支 (a) 直接给目标的血定价并抢先返回 true),**我方的血一个位置都没有**。⚠️ 边界:(a) 只管**目标**,不管旁边第三个残血敌人 —— 故意留出厂答案。\n- 域(`tests/_fightfloor_sweep.lua`,112 fixture / 1039 live 帧 / 4840 对,**零 arm**):`shipped_true` 1354 | `armed_true` 1164 | **down 190 / up 0** | `down_unique` **39**,落在 **21/112** 份 fixture。⛔ `up 0` 是读数**只因为同一个 tally 里 down 是 190**;⛔ **190 是「对」不是「情形」**(谓词不用 `bot` 形参,同一 (team,target) 读数按主语重复)⇒ 去重后是 39。\n- 测试:`tests/test_fightfloor_parity_floor.lua` **11/11,零 stub**;真实帧 `f_080225_wk_lane` / WK 12.7% 血 / 6.1 秒后死 ⇒ 出厂 `2>=2` TRUE、armed `1>=2` FALSE。变异台 `tools/agent/mutstand_fightfloor.sh` **8 抓 / 0 存活 / 控制绿 / 退出码 0**。\n\n### ⚠️ 解冻后买 (a) 时要知道的两条(现在说,免得那一波去发现)\n1. **fixture 上量不到分支 (a)**:`GetEstimatedDamageToTarget` 在 fixture 里是那个单位**实际打在主语身上**的伤害,队友一点没打 ⇒ `lethal_true` 全语料 0 ⇒ **190 是天花板不是发生率**。\n2. **`depthnum` 同 armed 会抢在 (b) 之前返回** ⇒ `fightfloor` 的域变小。**单臂(只 arm `fightfloor`)测的才是那 190/39**;这是域的相互作用,**不是 `pullcad` 合取陷阱**。\n\n### ⛔ 给总监的前置\n**P4.2 冻结**:armed **25 > 20** ⇒ 唯一合法裁定是 **FROZEN-HOLD**。本请求自己就预期这个结果,写在 status 里;本轮**没有新增任何 armed id**,成员串仍 25。",
+      "result": null,
+      "director": null,
+      "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。全部本地,不需要任何一波。"
     }
   ],
   "done": [

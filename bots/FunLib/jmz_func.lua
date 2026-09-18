@@ -8655,6 +8655,78 @@ function J.ShouldNotTpUnderLethalPressure( bot )
 	return nBandBurst >= bot:GetHealth()
 end
 
+--- [fightfloor, strategy 2026-09-18] PARITY COUNTS A BODY THAT IS ABOUT TO STOP
+--- BEING ONE.
+---
+--- J.SafeToCommitFight's NUMBERS branch (b) asks `#allies >= #enemies` around
+--- the engage point, and the ally half is J.GetAlliesNearLoc: the team ROSTER,
+--- alive, inside 1200, and nothing else. A team-mate at 5% HP is one body,
+--- exactly like a team-mate at 100%.
+---
+--- ⛔ THIS IS NOT A NEW DIAGNOSIS -- IT IS A REPAIR THAT STOPPED AT ONE CALLER.
+--- J.ShouldSuppressDive already says it verbatim ("SafeToCommitFight's numbers
+--- branch counted a 13%-HP WK (plus a lvl-1 support) as a full 2v2 against the
+--- dual lane that then killed him", fixture f_080225_wk_lane) and repairs it
+--- INSIDE ITSELF, with the `bSelfCritical` clause and this same 0.35 floor. The
+--- predicate was left as it was, so the other SIX call sites -- the lane
+--- step-up, the punish picker, the over-chase collapse, the TP response, the
+--- teamfight help/flee fork, the arrival variant -- still read the unrepaired
+--- parity. The dive guard's own frame is the witness for all seven.
+---
+--- WHY THE ALLY SIDE ONLY. A dying ENEMY already has a place in this predicate:
+--- branch (a) prices the target's health directly (`nBurst >= GetHealth() + ...`)
+--- and a secured kill returns true ahead of everything here. Our own health
+--- enters NOWHERE. So this is not one side of a symmetric question being handed
+--- a better ruler (that was roamring); it is the half of the question that has
+--- no ruler at all.
+--- ⚠️ HONEST BOUND: branch (a) prices only the TARGET's health, not a third
+--- enemy standing low beside it. That case keeps the shipped answer on purpose
+--- -- covering it needs a second ruler for "who over there still counts", and
+--- that is a different lever.
+---
+--- DIRECTION, BY CONSTRUCTION, NOT BY TASTE. The list returned is a SUBSET of
+--- the list passed in, so `#fighters <= #allies` and branch (b) can only go
+--- TRUE -> FALSE. All seven call sites read TRUE as "commit / engage / help /
+--- step up / respond" and FALSE as "flee / nil / retreat", so armed can only
+--- REMOVE a commit, never add one. Branch (a) is untouched -- a confirmed burst
+--- kill is still a go, the same carve-out `depthnum` makes.
+---
+--- NO NEW CONSTANT. 0.35 is the floor J.ShouldSuppressDive already uses for
+--- exactly this question on exactly this fixture. It is named ONCE here and
+--- that caller now reads the name, so the two halves of "who is too low to
+--- count" cannot drift apart again.
+---
+--- DOMAIN (tests/_fightfloor_sweep.lua, 112 fixtures / 1039 live hero frames /
+--- 4840 (subject, target) pairs, NOTHING ARMED -- both readings are rebuilt
+--- from the same two producers, so the sweep cannot race the switch on disk):
+---   pairs with a sub-floor ally 365 | shipped_true 1354 | armed_true 1164
+---   down 190 | up 0 | frames_down 121 | down_unique 39 on 21 of 112 fixtures
+--- ⛔ `up 0` is a reading only because `down` is 190 in the SAME tally.
+--- ⛔ 190 IS PAIRS, NOT SITUATIONS. J.SafeToCommitFight ignores its `bot`
+--- argument entirely, so one (team, target) reading repeats once per living
+--- subject; the distinct count is the 39.
+--- ⚠️ INSTRUMENT LIMIT, said here rather than left for a wave to find:
+--- `lethal_true` is 0 over the whole corpus, because a fixture's
+--- GetEstimatedDamageToTarget is the damage that unit actually dealt to the
+--- SUBJECT (replay_fixture.lua:729) and an ALLY dealt none. The sweep therefore
+--- measures branch (b) with branch (a) constantly false. In game (a) fires
+--- first, so 190 is a CEILING on the flips, not a rate.
+J.COMMIT_PARITY_HP_FLOOR = 0.35
+
+function J.GetCommitParityFighters( tAllies )
+	if not J.IsModeTurbo() then return tAllies end
+	if not J.IsSoakCandidate( 'fightfloor' ) then return tAllies end
+
+	local tFighters = {}
+	for _, hAlly in pairs( tAllies ) do
+		if J.GetHP( hAlly ) >= J.COMMIT_PARITY_HP_FLOOR then
+			table.insert( tFighters, hAlly )
+		end
+	end
+
+	return tFighters
+end
+
 -- [GH #4] Lethality-or-numbers gate for committing a fight. Returns true when
 -- it is SAFE to dive toward `target` because EITHER
 --   (a) LETHAL: our combined estimated burst from allies (incl. self) near the
@@ -8704,7 +8776,9 @@ function J.SafeToCommitFight( bot, target )
 	end
 
 	-- (b) numbers: our count near the engage point >= enemy count near it.
-	if #tAllies >= #J.GetEnemiesNearLoc( vLoc, 1200 ) then
+	-- [fightfloor] ...counting only the allies that are still a body. See the
+	-- header of J.GetCommitParityFighters: disarmed this IS `tAllies`.
+	if #J.GetCommitParityFighters( tAllies ) >= #J.GetEnemiesNearLoc( vLoc, 1200 ) then
 		return true
 	end
 
@@ -9958,7 +10032,7 @@ function J.ShouldSuppressDive( bot, vLoc, target )
 	-- chase guard (f_071423_luna_chase): when I am the nearly-dead one, visible
 	-- parity is not safety. Below 35% HP the only exemption is a kill secured
 	-- WITHOUT me (allies excluding self can burst the target down).
-	local bSelfCritical = J.GetHP( bot ) < 0.35
+	local bSelfCritical = J.GetHP( bot ) < J.COMMIT_PARITY_HP_FLOOR
 	if bSelfCritical then
 		local tNearTarget = J.GetAlliesNearLoc( hTarget:GetLocation(), 1200 )
 		local tOthers = {}
