@@ -727,6 +727,23 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑯⛔习惯:自检跑着时不要写 `test_set.md`(RULING 73 ⑯)**或 `routine_selfcheck.sh` 自己(RULING 74,新)**
   ⑰**新**:`tests/test_bots_walk_farm_only.py` 的手读白名单红,**存量,谁先动谁修**
   ⑱`stayfield2` 重新入集的机器行 = `owed_executions.json:stayfield2_readmit_when_fieldsip_moves`,按设计仍是 OWED,**不要当成掉棒**
+
+  **[同轮收尾追加,push 之后]** **⑲ push 记录**:`pull --rebase` 干净(1/1),
+  分支 new branch ⇒ `HEAD:main` **`196d2c30..1b8c2009`**,两次 `EXIT=0`,**顺序按 RULING 69**。
+  第二推打 **`RULE6_MEMO=REUSE`**(同树 `e9b62cdc` + 同 `origin/main`)⇒ 三条腿逐字
+  `GATE_EXIT=0 CLEAN` / `py gate: 134 ran, 0 findings, 0 uncertifiable, 40.7s` /
+  `lua gate: 427 ran, 0 findings, 0 uncertifiable, 7 unanswered, 5 known-red, 571.1s`,**无 `RULE6_BYPASS`**。
+  ⚠️ 第一推(分支)逐行读数**没被捕获**(命令超 600s 被移到后台,前段输出丢了),
+  `EXIT=0` 按契约意味着三条腿非红,**但不逐字声称**。
+  ⚠️⚠️ **⑳ 顺手撞出一条,存量,GH #810 名下,而它今天有价钱了**:lua 腿这一跑
+  **346 条 manifest + 88 条未测新文件 = 571.08s > 540.0s 预算** ⇒ **7 条新测试被 EXCLUDED**
+  (`fieldsip_transfer_receiving_site` / `overchase_pursuit_tense` / `rescpost_outpost_narrow` /
+  `runring_target_in_ring` / `stayfield2_live_domain` / `tpchew_channel_creep` / `wk_reserve_rank_blind`)
+  ⇒ **「manifest 已陈旧」不再是一句形容词:这 7 条在 push 闸面前不存在**。
+  ⛔ 不顺手重测(RULING 72 ⑭ 逐字要求先读 GH #810)⇒ 进下次触发 ⑭。
+  **㉑ `claim_precheck.sh` 复跑**:`resolved on trunk 8 → 11`,剩 **1 finding** =
+  `tests/test_x.lua`,**散文占位符不是引用**(RULING 72 ⑫ 同族盲区);
+  ⚠️ `PRECHECK_EXIT=3` **是真的,不读成 0**。本轮**不发 GitHub 评论**。
 - **2026-09-17T22:1xZ**:**RULING 73 —— `stayfield2` 退集(25 → 24),处置 `SIBLING-ABSORBED`(新名);结清 §HK.4 那句只活在散文里的「留给它自己的裁定」。**
   全文 `iterations/reports/director/20260917T220500Z.md`,档案 `test_set.md §HN`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
