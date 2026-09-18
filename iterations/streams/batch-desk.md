@@ -13370,3 +13370,22 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ⛔ 未点名受影响的 (b) 判定;⛔ 未改 `state.json`/`test_set.md`/`OWNER_PRIORITIES.md`/`queue.json`;
   ⛔ 未自行结清 GH #801 欠条;⛔ 闸 (i)/(ii)/(iv) **未跑**(发波轮的闸;(iii) 已 exit 3)—— **未跑不记成通过**。
   详见 `iterations/reports/batch-desk/20260918T061054Z.md`。
+  **补记(第一次 push 之后,GH #290 顺序;全文见报告「补记」节)**:**(A) 铁律 6 三条腿**(两次 push,
+  第二推 memo 命中)`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)` /
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 41.5s` / `lua gate: SKIPPED BY SCOPE -- this push touches
+  no bots/game/tests path.` ⚠️ **第三条腿是 SKIPPED BY SCOPE 不是绿**(本轮只改 `iterations/` 两个文件);
+  `ARM_EXIT=0`;**⛔ 未用任何 `RULE6_BYPASS`**;`PULL_EXIT=0`(`up to date` ⇒ 无 rebase、无 `--force-with-lease`);
+  `PUSH1_EXIT=0` / `PUSH2_EXIT=0`(`a557e1e2..92062121`)。⭐ **按文档顺序先分支后 main,且本轮 memo 自己把理由
+  打出来了**,逐字 `RULE6_MEMO=REUSE  a green three-leg reading taken 2026-09-18T06:15:34Z on THIS EXACT tree.`
+  ⇒ 分支推未移动 `origin/main`,第二推 memo 免费答掉(~41.5s),⛔ 未反序(RULING 69 / GH #865)。
+  **(B) 自检真码 ⛔ 本轮仍不可得**:收尾停在 `=== trunk health (python test suite) ===`(630 行),
+  **收尾三行横幅一个都没打** ⇒ **无 `selfcheck worst exit`,⛔ 不写、⛔ 不读成通过**,按铁律 7/11 ⛔ 不空转等它。
+  ⚠️ **与 (一) 不矛盾,两件事分开登记**:本轮**起跑**成功(两道自卫都没触发,连续八轮以来第一次),
+  **但整轮跑完仍超出本会话窗口** ⇒ ⛔ 不许用「起跑成功」代替「跑完了」;未跑完的腿这轮没人看过。
+  **(C) 收尾泄漏复查** `check_costs.sh --leak-only` → **`LEAK_EXIT=0`**,`running/pending instances` 区块**空**,
+  常驻仍只有 AMI 一张 ⇒ 收尾与开工两次读数一致。
+  **(D) 发表**:⛔ 零 issue、零评论 ⇒ `claim_precheck.sh` **未跑** —— **⛔ 这是「没有可发表的东西」,不是「检查通过」。**
+  **(E) token 用量(铁律 8)**:`TOKENS total_in=3,156,871 out=28,659 turns=32`(统计后的收尾回合不计入)。
+  ⭐ **回到常态并低于常态**(参考 `3.56M / 31.1k / 33`),**连续两轮下降**:`5.96M/54.1k/52` → `5.44M/39.3k/48`
+  → **`3.16M/28.7k/32`**;归因两条:① 章程只按行区间取(2.6 MB 从不全读);② (六) 那个全量普查
+  **在 python 里聚合后只回传汇总表**,⛔ 没把 920 份报告贴进上下文 ⇒ 全量普查的 token 成本接近零。
