@@ -13519,3 +13519,25 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ⛔ 未收窄速率带(只按算术扩了低侧);⛔ 闸 (i)/(ii)/(iv) **未跑**(发波轮的闸;(iii) 已 exit 3)——
   **未跑不记成通过**。
   详见 `iterations/reports/batch-desk/20260918T091720Z.md`。
+  **补记(第一次 push 之后,GH #290 顺序;全文见报告「补记」节)**:**(A) 铁律 6 三条腿**(两次 push,
+  第二推 memo 命中)`GATE_EXIT=0  CLEAN (iron rule 6 static half passed)` /
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 44.6s` / `lua gate: SKIPPED BY SCOPE -- this push touches
+  no bots/game/tests path.` ⚠️ **第三条腿是 SKIPPED BY SCOPE 不是绿**(本轮只改 `iterations/` 两个文件);
+  `ARM_EXIT=0`;**⛔ 未用任何 `RULE6_BYPASS`**;`PULL_EXIT=0`(`up to date` ⇒ 无 rebase、无 `--force-with-lease`);
+  `PUSH1_EXIT=0` / `PUSH2_EXIT=0`(`75b0cf4b..da79e8e1`)。⭐ 按文档顺序先分支后 main,memo 逐字
+  `RULE6_MEMO=REUSE  a green three-leg reading taken 2026-09-18T09:22:43Z on THIS EXACT tree.`,⛔ 未反序(RULING 69)。
+  **(B) 自检真码:⛔ 本轮不可得,并且这一次是实证不是推断。** 收尾按上一轮的取法回读了输出文件
+  (**675 行**,停在 `=== trunk health (fast Lua detectors) ===`),**收尾三行横幅一个都没打**
+  ⇒ **无 `selfcheck worst exit`,⛔ 不写、⛔ 不读成通过**。⭐ **与上一轮的差别**:上一轮把「我现在读不到」
+  写成了「这轮读不到」再订正;本轮**多做一步** —— `pgrep -af routine_selfcheck` 现读**进程仍在**(pid 513/18665)
+  ⇒ 这句话**有实证支撑**。按铁律 7/11 ⛔ 不空转等它;**未跑完的腿这轮没人看过**。
+  **取法再补一条**:回读之外**再 `pgrep` 一次** ——「文件没写完」与「进程已死」是两件事,
+  只有后者才允许下「这轮跑不完」的结论。
+  **(C) 收尾泄漏复查** `check_costs.sh --leak-only` → **`LEAK_EXIT=0`**,`running/pending instances` 区块**空**,
+  常驻仍只有 AMI 一张 ⇒ 收尾与开工两次读数一致。
+  **(D) 发表**:⛔ 零 issue、零评论 ⇒ `claim_precheck.sh` **未跑** —— **⛔ 这是「没有可发表的东西」,不是「检查通过」。**
+  **(E) token 用量(铁律 8)**:`TOKENS total_in=4,166,466 out=35,566 turns=37`。参考上一轮 `3.16M/28.7k/32`,
+  本轮**回升约 32%**;归因两条、都不是空转:① 章程仍按行区间取,但**本轮有一次取大了**(`10600–10908`,
+  被系统落盘截断)—— **这是一次可避免的浪费,登记下来**;② §五那两个全量普查在 python 里聚合后**只回传汇总表**
+  (925 份报告、129 份语料一份都没贴进上下文)⇒ 普查本身的 token 成本仍接近零。
+  **交下一轮**:章程取行区间前先 `grep -n "^- 2026-.."` 定位,⛔ 不按猜的行号取大段。
