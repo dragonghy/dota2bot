@@ -181,6 +181,15 @@ class TestFocusFiveRows(unittest.TestCase):
     # byte-identical rows.  ⭐ TWICE IN ONE DAY IS THE MEASUREMENT, not the
     # anecdote -- the cost is not "a fragile pin", it is that the desk most
     # likely to annotate this function is the desk this pin bills, every time.
+    # ⚠️⚠️⚠️ THIRD PASS, SAME DAY, AND IT MOVED THE OTHER FILE: +41 comment lines
+    # above X.ConsiderQ's 团战 argmax in hero_skeleton_king.lua (the verdict note
+    # for tests/test_wk_q_fight_seed_domain.lua) moved the WK row 1354 -> 1394 --
+    # two reds, rows again byte-identical.  ⭐ THE THIRD DATUM SHARPENS THE
+    # SECOND rather than repeating it: the bill is not attached to ONE header,
+    # it is attached to EVERY argmax this census pins, so it scales with the
+    # number of pinned sites and not with how chatty any one of them is.  Two
+    # of the three focus-five rows have now been re-taken by hand in a single
+    # day, each by the desk that owns the file.
     # That is the argument for the schema repair below; it is NOT an argument
     # for dropping the line, and until someone makes that change the re-take
     # stays a same-work-unit obligation.
@@ -192,7 +201,7 @@ class TestFocusFiveRows(unittest.TestCase):
     # to whoever next has a reason to touch it.
     EXPECTED = {
         ('bots/BotLib/hero_crystal_maiden.lua', 1804): ('nCastRange', None, 'CONSISTENT'),
-        ('bots/BotLib/hero_skeleton_king.lua', 1354): ('nCastRange + 43', None, 'OVER-REACH'),
+        ('bots/BotLib/hero_skeleton_king.lua', 1394): ('nCastRange + 43', None, 'OVER-REACH'),
         ('bots/BotLib/hero_lion.lua', 1623): ('nCastRange + 300', 'nCastRange + 50', 'SELF-VETO'),
     }
 
@@ -226,7 +235,7 @@ class TestFocusFiveRows(unittest.TestCase):
         is 5.
         """
         rows = rows_by_site()
-        wk = rows[('bots/BotLib/hero_skeleton_king.lua', 1354)]
+        wk = rows[('bots/BotLib/hero_skeleton_king.lua', 1394)]
         self.assertEqual(len(wk['other_reads']), 5, wk['other_reads'])
         self.assertEqual(wk['other_shipping_sites'], 4)
         cm = rows[('bots/BotLib/hero_crystal_maiden.lua', 1804)]

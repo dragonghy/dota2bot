@@ -10024,5 +10024,20 @@
   "registered_not_fixed": "(1) **圈的主语缺陷**(以发问者为心,而问题是关于那个单位的)原样留着 —— `tests/test_ring_subject_census.py` 那一行定价过:16/16 调用点传非英雄单位,语料 0 个非英雄单位 ⇒ 今天不可测。本轮只把该行**迁到新函数名下**并写明「搬家了、被定价的是圈不是闸」。(2) `J.GetAllyList` 的 `#nCandidate <= 1` 早退跳过幻象过滤(0NEXT43 登记)仍不可测,理由不变。",
   "gate_status": "**未提入集**(P4.2 冻结,armed 25 > 20)。预期裁定 **FROZEN-HOLD**。⛔ **gated 的改动不是 live 的**,promote 之前它在真实对局里是 no-op。",
   "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)"
+ },
+ "wkqfightseed_domain_20260918": {
+  "owner": "hero",
+  "date": "2026-09-18",
+  "kind": "DO-NOT-LAND (yet) — Wraith King 那份 `nMostDangerousDamage = 0` argmax 种子(GH #870 §5.2 点名的起手)。零 gate id / 零 arm / `bots/` 纯注释 / 零 AWS。",
+  "headline": "⭐⭐ **分支域 1 帧、决策域 0 帧 —— 而买到的新东西是第三级:「分支确实被种子卡住并且armed 之后确实开火」的帧,域仍然可以是空的。** 章程 `-201` 买的是「分支内的全零集合不是域」(它不问这条腿有没有被走到);本轮买的是它上面那一级:`f_260909_215040_wk_blast_sb_661` 上种子是这条 团战 腿与一次施法之间**唯一**的东西(标记位返回的变异台实测:种子 0 → 标记 0 次到达,种子 -1 → **恰好 1 次**,就是这一帧),**而端到端决策逐帧不变**,因为**出货点 10 用同一个目标先答了**。",
+  "the_conjunct_was_already_written_closed_form": "⭐ 这正是 `hero_skeleton_king.lua` 自己抬头里为 `wkqdmg` 写下、并逐字标为「closed form, not a corpus reading」的第三条合取项:*AND no downstream firing point returns the same target on that frame*。⇒ 它**现在有了一个实测实例,并且把遮蔽的那个出货点点了名**(点 10,通用兜底 —— 正是章程 `-203` 为 `wkqaim` 研究过的同一个)。⛔ 闭式论证没有被削弱;变的是这条合取项从此不再是某一轮可能忘记套用的东西。",
+  "readings": "两个语料目录、144 帧、**51 帧活 WK**,驱动真 `X.SkillsComplement` + 真 `X.ConsiderQ`,⛔ 零注入(不抬冷却、不补 spec、gate 全关):`J.IsInTeamFight(bot,1200)` 为真 **2 帧**;其中合法候选**全部投影 0** 的 **2 帧**(种子确实咬得住);**arming 改变决策的 0 帧**。⚠️ 录制帧计数,⛔ 不得当发生率。",
+  "two_independent_blockers": "⛔ 这不是一个机制被量了两次 —— 两帧各自被**互相独立**的原因挡住:(甲) `f_260909_215040_wk_blast_sb_661` **下游遮蔽**(点 10 以同一个目标先答,十个出货点全部返回同一个 `BOT_ACTION_DESIRE_HIGH` ⇒ **唯一可观测量是目标身份**,而这里身份相同);(乙) `f_260909_215227_zeus_ult_1008` **上游拒绝**(Blast 还剩 2.4s 冷却,`X.ConsiderQ` 在第一行就返回)。修好任一条都不动另一条。",
+  "verification": "`tests/test_wk_q_fight_seed_domain.lua` **11 绿 / 1.288s**(§1.1 COVERAGE 指向 `REQUIRED_DIRS` 而不是 `CORPUS_DIRS` —— 章程 `-203` 的方向教训;§3 端到端零注入;§4 第二条堵点;§5.1/§5.2 **两半 TRIPWIRE**;§6 退役守卫 + 转写守卫)。变异台 `tools/agent/mutstand_wkqfightseed.sh`:**控制 C1=0 / C2=1 / C3 逐帧相同**(⛔ C2 是阳性对照:没有它,「没有差别」和「这个驱动看不见任何差别」读起来一模一样),**6/6 mutants caught**。",
+  "m5_m6_declared_equivalent": "⛔ 两个**实测等价体**,报告但不计分:**M5**(§3.2 的目标比较放松成 `~= nil`)—— 本语料上两个谓词**无法不一致**,而 §5.2 的内容恰恰就是「它们不一致的帧集合为空」;**M6**(§5.1 tripwire 直接关掉)—— ⭐ **一条零断言不可能靠删掉它来杀死**,这是**按构造**的等价而不是本语料的偶然,所以诚实的问法是 M7:把条件放宽到语料**确实满足**的形状,要求 tripwire **真的打印**那句下一轮要照着做的话(caught)。",
+  "limits": "⛔ **「本语料上是空的」不是「永远不可能有用」**:2 个团战帧在唯一要紧的那根轴上是很小的样本。⛔ 引本条必须连 `queue.json:hero-104`(要那帧的交棒)一起引。⚠️ §2/§5 **转写**了 团战 循环的合法性链(端到端的 §3/§4 不转写),§6.2 是允许这份转写存在的理由。",
+  "landed": "`tests/test_wk_q_fight_seed_domain.lua`(新);`tools/agent/mutstand_wkqfightseed.sh`(新);`bots/BotLib/hero_skeleton_king.lua` 团战 分支抬头 **+41 行纯注释**(写明这不是 to-do,是「为什么没写那个明显的修法」);`tools/agent/lua_gate_manifest.json` 手加一行(1.288s,in_gate)**并重算两个汇总字段**;`tests/test_bots_walk_farm_only.py` 登记本文件的 `io.popen`(同一工作单元,GH #803)。",
+  "no_arm": "⛔ 零 gate id、零 arm、零 promote、不申请波次。P4.2 冻结期照旧:即便域非空也只会是「落 gated 但不入集」。",
+  "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。"
  }
 }

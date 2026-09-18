@@ -1349,6 +1349,46 @@ function X.ConsiderQ()
 	end
 
 	--团战中对战力最高的敌人使用
+	--
+	-- ⛔ THE `nMostDangerousDamage = 0` SEED BELOW IS THE KNOWN DEFECT SHAPE, AND
+	-- IT WAS MEASURED HERE 2026-09-18 (hero) AND DELIBERATELY LEFT ALONE.  ⛔ This
+	-- note is NOT a to-do; it is the reason the obvious fix was not written, so a
+	-- later round does not spend a work unit re-deriving it.
+	--
+	-- THE SHAPE.  The argmax's "no candidate yet" sentinel is spelled as A DAMAGE
+	-- VALUE, sitting ON the floor of that quantity's own range instead of below
+	-- it.  GetEstimatedDamageToTarget never returns a negative, so a candidate
+	-- projecting exactly 0 can never clear the strict `>` -- and when EVERY legal
+	-- candidate reads 0, npcMostDangerousEnemy stays nil and this branch is
+	-- vetoed outright.  The meter is RETROSPECTIVE (GH #873), so 0 is the
+	-- ordinary reading for an enemy who has not yet connected on this bot, i.e.
+	-- for every enemy in a teamfight who is hitting somebody else.  hero_lion.lua
+	-- carries the same shape and DID land a gated id for it (`lionwseed`,
+	-- X.lion_FightArgmaxSeed); GH #870 §5.2 handed this copy to this stream.
+	--
+	-- WHY NO ID HERE.  Corpus-wide, both frame directories, 51 live-WK frames,
+	-- real X.SkillsComplement + X.ConsiderQ, nothing injected:
+	--     2 frames clear J.IsInTeamFight, and BOTH carry an all-zero candidate
+	--     set (so the seed really does veto this branch on them),
+	--     and arming the seed moves ZERO decisions.
+	-- The two are blocked for two INDEPENDENT reasons, one each:
+	--   * f_260909_215040_wk_blast_sb_661 -- masked DOWNSTREAM.  Seeded -1 this
+	--     branch fires (a marked-return stand proves it: 0 hits at seed 0, 1 hit
+	--     at seed -1), and firing point 10 already answers with THE SAME TARGET,
+	--     so nothing a caller can observe changes.  ⭐ That is this file's own
+	--     third conjunct, the one written above for `wkqdmg` and labelled "closed
+	--     form, not a corpus reading" -- it now has a measured instance, with the
+	--     masking point named.
+	--   * f_260909_215227_zeus_ult_1008 -- refused UPSTREAM: Blast carries 2.4s
+	--     of cooldown, so X.ConsiderQ returns at its first line.
+	-- ⛔ "Empty on this corpus" is NOT "can never matter": 2 teamfight frames is a
+	-- small sample on the only axis that counts.  The frame that would settle it
+	-- is iterations/queue.json:hero-104.
+	--
+	-- Readings, tripwire and retirement guard: tests/test_wk_q_fight_seed_domain.lua
+	-- (11 cases).  Stand: tools/agent/mutstand_wkqfightseed.sh (controls C1/C2/C3
+	-- are the measurement; 6/6 mutants caught, M5/M6 declared measured
+	-- equivalents).  Verdict: iterations/state.json:wkqfightseed_domain_20260918.
 	if J.IsInTeamFight( bot, 1200 )
 	then
 		local npcMostDangerousEnemy = nil

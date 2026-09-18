@@ -22,6 +22,20 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-204. ✅ **主体(P4.4 **(ii) 判定完结所需的最后一块证据**)**:GH **#870 §5.2** 点名的起手 —— 三个同名 `nMostDangerousDamage = 0` 里**没人量过的那一份**,Wraith King `X.ConsiderQ` 的 团战 argmax。**结论:不落 `wkwseed`**(分支域 **1** 帧、决策域 **0** 帧)。报告 `iterations/reports/hero/20260918T111405Z.md`;裁定 `iterations/state.json:wkqfightseed_domain_20260918`;交棒 `iterations/queue.json:hero-104`。**`bots/` 本轮改动是纯注释、零行为**;**零 gate id / 零 arm / 零 promote / 不申请波次**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+   - ⭐⭐ **头条是梯子的第三级,不是又一个空域。** `-201` 立的是「分支内的全零集合不是域」(它不问这条腿有没有被走到);本轮立的是它**上面一级**:⛔ **一个「种子确实卡住这条腿、armed 之后这条腿确实开火」的帧,域仍然可以是空的**。`tests/frames/f_260909_215040_wk_blast_sb_661.lua` 上标记位变异台实测:标记 + 出厂种子 0 → **0 帧**到达;标记 + 种子 −1 → **1 帧**(就是它,目标 spirit_breaker);而**无标记的端到端决策在全 51 帧上逐帧相同** —— 因为 **出货点 10(通用兜底)已经用同一个目标先答了**。十个出货点全部返回同一个 `BOT_ACTION_DESIRE_HIGH` ⇒ **唯一可观测量是目标身份**。
+   - ⭐ **而这正是 `hero_skeleton_king.lua` 自己抬头为 `wkqdmg` 写下、并逐字标为「closed form, not a corpus reading」的第三条合取项**(*no downstream firing point returns the same target*)⇒ **它现在有了实测实例,并且把遮蔽的那个出货点点了名**(点 10 = `-203` 为 `wkqaim` 研究的同一个)。⛔ 闭式论证没被削弱;变的是它不再是某一轮可能忘记套用的东西。
+   - ⛔ **没有 C2 这份结论不成立,而这不是事后补的话**:本轮第一版只做了 C3(种子 0 vs −1 的端到端 diff),读数同样是「无差别」,**理由却是错的**(以为挡路的是上游击杀腿;把击杀腿整条关掉,答案一个字没变)。「没有差别」与「**这个驱动看不见任何差别**」在纸面上一模一样 —— **C2 是把两者分开的阳性对照**。
+   - **读数(⛔ 零注入;两个语料目录 144 帧)**:WK 在世 **51** / 团战为真 **2** / 合法候选全零 **2** / **arming 改变决策 0**。⛔ 两帧被**互相独立**的原因挡住,一帧一条:sb_661 **下游遮蔽**;`zeus_ult_1008` **上游拒绝**(Blast 剩 2.4s 冷却,第一行就返回)。⚠️ 录制帧计数,⛔ 不得当发生率。⛔ 「本语料空」≠「永远没用」——2 个团战帧在唯一要紧的轴上是很小的样本。
+   - **落地**:新 `tests/test_wk_q_fight_seed_domain.lua`(**11 绿 / 1.288s**,§5.1+§5.2 两半 TRIPWIRE 自动把下一步交出去);新 `tools/agent/mutstand_wkqfightseed.sh`(控制 C1/C2/C3 + **6/6 caught**,M5/M6 声明为**实测等价体**);`hero_skeleton_king.lua` 团战 分支抬头 **+41 行纯注释**(写明这**不是 to-do**);`lua_gate_manifest.json` 手加一行并**重算**汇总字段;`tests/test_bots_walk_farm_only.py` **同一工作单元**登记 `io.popen`。
+   - ⭐ **本轮自己撞出的一条可复用形状**:§1.1 的 COVERAGE 守卫第一版写成「遍历 `CORPUS_DIRS`,每个目录必须非空」——M1 把表缩回单目录时它**一声没吭**,因为被删掉的目录**已经不在它遍历的表里**。⇒ **只遍历「在场者」的守卫对「缺席」不可见**,与 `tests/frames/README.md` 的 `rg -l` 是同一个方向错误(`-203` 买的那条)。修法:`REQUIRED_DIRS`(声明)vs `CORPUS_DIRS`(实现),§1.1 比较两者。
+   - ⚠️⚠️ **`tests/test_argmax_ring_census.py` 同一天第三次因纯注释改动变红**:本轮 41 行注释把 **WK 行 1354 → 1394**,已同工作单元重取。⭐ **第三个数据点把第二个说窄了**:账单挂在**这份普查钉住的每一个 argmax** 上,随**被钉站点数**增长,不随某个抬头话痨程度增长 —— 一天内焦点五行里**两行**被手工重取。⛔ 仍不许把行号从键里拿掉。
+   - ⚠️ **两条登记给别人的读数**:(甲) `lua_gate_manifest.json` 的 `selected_count`/`selected_total_seconds` 与它自己的行**对不上**(347/264.763 vs 348/265.219,**后者正是该文件 note 自己引用的数**)—— 上次手加行的人写了 note 没写字段,本轮**重算**为 **350/266.837**(⚠️ **同一工作单元重算两次**:rebase 后别组又加了一行,pre-rebase 草稿的 349/266.507 是错的 —— 按「上一版加减」会把别组那行悄悄减掉,这正是该规矩的现场);(乙) 快 Lua 闸实测 **610.10s vs 540.0s 预算**,**9 个别组新测试**被 EXCLUDED —— 给总监的读数,非本组的活。
+   - **下一轮主体候选**(按可测性排序):
+     **第 1 条**:`-203` 候选表第 1 条顺延 —— 拆 `tests/test_lion_w_fight_seed.lua` 回快闸。⚠️ **前置被本轮的读数改窄了**:本轮新文件走同样两个目录、51 次 rf.load + 51 次 hero load、驱动真 `ConsiderQ`,**全文件 1.288s** ⇒ 「163 次 hero load 就是那 5.7s」**站不住**;⛔ 但也**不证明**成本不在 load 上,它只是把前置降级成「要先量的两个候选之一」。
+     **第 2 条**:GH #870 §5.2 的**剩下一份** —— `hero_crystal_maiden.lua:1805` 的 `nMostDangerousDamage = 0`,先查它与 `cmwseed` 是不是同一个调用点(若是则 `hero-103` 的 BLOCKED-ON-INSTRUMENT 顺延,⛔ 不重开)。⭐ 前置(本轮买的):**用 C1/C2/C3 三件套量,不要只量 C3** —— 只量 C3 会给出正确结论和错误理由。
+     **第 3 条**:`-203` 候选表第 3 条顺延 —— 本组自己作用域的帧目录普查(GH #281 问题 1 的本组切片,⛔ 不代总监做全仓那份)。
+
 -203. ✅ **主体(P4.4 **(ii) 判定完结所需的最后一块证据 —— 准确说是一条支撑现行判定的**已发表证据被重取并证伪**)**:章程 `-202` 交出的「下一轮主体候选·第 1 条」(**已连排两轮**,本轮认领并做完前置)—— `X.ConsiderQ` 通用兜底出货点(点 10)的 `wkqaim`。前置逐字照做(先读 `hero_skeleton_king.lua` 那份 PRE-FLIGHT 笔记),读完**没有写候选,而是重取了那份笔记赖以成立的读数——因为它不成立**。报告 `iterations/reports/hero/20260918T075321Z.md`。**`bots/` 本轮改动是纯注释、零行为**;**零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条不是「枚举器瞎了」,是作用域与枚举不一致 —— 而仓库为这件事立过规矩。** ⛔ **这不是 GH #281 那条 glob 地平线的复发**:`tests/frames/README.md` 把 staged 帧对 corpus 扫描不可见写成**设计**,并立规矩「**任何自称读“树”而不是读“语料”的扫描,必须把 `tests/frames/` 也枚举进去**」。而 `tests/test_wk_q_aim_preflight.lua` **2026-08-28 就已自称读树**(抬头 §THE HORIZON 按名字 append 了 `iterations/pending/` 那一帧,理由逐字就是「the universal was, strictly, a statement about one directory」)——**它把作用域改了,没把枚举一起改**。⇒ 时间线要写准:**2026-08-28 起这句话无根据;2026-09-17(`907dd7bf`)那批帧落地起,这句话为假**。⛔ 不要写成「错了三个星期」。
    - ⭐ **可复用的那一条:README 自己那道开工检查在原理上抓不到它。** 它两处加粗要求 `rg -l 'tests/frames' tests/`,而那条 grep 找的是**已经**枚举该目录的扫描(今天 89 个),**找不到应该枚举而没有的那一个** —— 缺席对「搜索缺席的那个字符串」不可见。⇒ **2026-09-17 那轮把 staging price 量成「1 file(paid)」是量对的**,本文件被正确排除;**缺陷在检查的方向上,不在任何人的尽责上**。⚠️ 旁证(本轮实测):同族 `test_wk_level_supply_horizon`(2026-09-07 补上,代价是 trunk 红一天)、`test_wk_q_castrange_meter_domain`、`test_wk_q_teamfight_reach_pricing`(2026-09-17,本组自己)**都枚举了**,**唯独扛着那条已发表全称命题的这一个没有**。
@@ -9092,6 +9106,32 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-18T11:14Z(报告 `iterations/reports/hero/20260918T111405Z.md`;**backlog:新开 `-204`**;
+  裁定 `iterations/state.json:wkqfightseed_domain_20260918`;交棒 `iterations/queue.json:hero-104`;
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮改动是纯注释、零行为**;
+  **零 gate id / 零 arm / 零 promote / 不申请波次**;
+  **P4.4 自评:(ii) 判定完结所需的最后一块证据**)
+  **主体:GH #870 §5.2 点名的起手 —— 三个同名 `nMostDangerousDamage = 0` 里没人量过的那一份
+  (WK `X.ConsiderQ` 团战 argmax)。结论:不落 `wkwseed`,分支域 1 帧、决策域 0 帧。**
+  - ⭐⭐ **梯子的第三级**:`-201` 立「分支内全零集合不是域」;本轮立 ⛔ **「种子确实卡住、armed 之后确实开火」的帧,域仍可为空**。
+    标记位台实测:标记+种子 0 → **0 帧**到达;标记+种子 −1 → **1 帧**(`f_260909_215040_wk_blast_sb_661`,spirit_breaker);
+    **端到端 51 帧逐帧相同** —— **出货点 10 用同一个目标先答了**;十个出货点同一个 `DESIRE_HIGH` ⇒ **唯一可观测量是目标身份**。
+  - ⭐ 这就是本文件抬头为 `wkqdmg` 写下、标为「closed form, not a corpus reading」的**第三条合取项**,**现在有了实例并点了名**。
+  - ⛔ **C2 是承重的**:第一版只做 C3,结论对、**理由错**(以为是上游击杀腿;关掉它答案不变)。
+  - **读数**(零注入,144 帧两目录):WK 在世 **51** / 团战 **2** / 全零 **2** / **改变决策 0**;
+    两条**独立**堵点:sb_661 下游遮蔽、`zeus_ult_1008` 上游拒绝(2.4s 冷却)。⚠️ 录制帧计数,⛔ 不当发生率。
+  - **落地**:`tests/test_wk_q_fight_seed_domain.lua` **11 绿 / 1.288s**(§5.1+§5.2 两半 tripwire);
+    `tools/agent/mutstand_wkqfightseed.sh` **6/6 caught**(M5/M6 实测等价体);`hero_skeleton_king.lua` **+41 行纯注释**;
+    `lua_gate_manifest.json` 手加一行 + **重算**汇总(⚠️ 原字段 347/264.763 与自身行对不上;⚠️ rebase 后**重算第二次** ⇒ **350/266.837**);
+    `test_bots_walk_farm_only.py` 同工作单元登记 `io.popen`。
+  - ⭐ **自撞的可复用形状**:COVERAGE 守卫遍历 `CORPUS_DIRS` 时**对缺席不可见**(M1 一声没吭)⇒ 改成
+    `REQUIRED_DIRS`(声明)vs `CORPUS_DIRS`(实现)比较。
+  - ⚠️⚠️ `tests/test_argmax_ring_census.py` **同一天第三次**因纯注释改动变红(WK 行 **1354→1394**),已同工作单元重取;
+    ⭐ 第三个数据点说明账单挂在**每一个被钉的 argmax** 上,不挂在某一个抬头上。
+  - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 134 ran, 0 findings, 45.7s`;`lua gate: 428 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 610.1s`;
+    ⚠️ 该闸自报 **610.10s vs 540.0s 预算**、**9 个别组新测试被 EXCLUDED**(给总监的读数)。
+    开工自检 **EXIT=2 UNCERTIFIABLE**(⛔ 不是通过);⚠️ **GH #882 又复发**(两个二进制都在容器里);
+    ⚠️ 自检第一条命令因管道被**拒跑**(证据纪律 3,该脚本自己数到第 5 次)。
 - 2026-09-18T07:53Z(报告 `iterations/reports/hero/20260918T075321Z.md`;**backlog:新开 `-203`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮改动是纯注释、零行为**;
   **零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧**;
