@@ -190,6 +190,17 @@ class TestFocusFiveRows(unittest.TestCase):
     # number of pinned sites and not with how chatty any one of them is.  Two
     # of the three focus-five rows have now been re-taken by hand in a single
     # day, each by the desk that owns the file.
+    # ⚠️⚠️⚠️⚠️ FOURTH PASS (hero, 2026-09-18, `wkqflee`), AND IT IS THE FIRST ONE
+    # THAT IS NOT A COMMENT: +96 lines in hero_skeleton_king.lua -- a gated
+    # helper, its call site in X.ConsiderQ's 撤退时保护自己 loop, and their
+    # header -- moved the WK row 1394 -> 1484.  ⭐ THE FOURTH DATUM CLOSES A
+    # LOOPHOLE IN THE THIRD'S WORDING: three passes in a row were pure prose, so
+    # "how chatty a header is" was still available as a reading.  This one adds
+    # executable lines to the same function and bills exactly the same, which
+    # leaves only the line-number-in-the-key explanation standing.  ⛔ It is
+    # therefore NOT evidence that annotating is the problem; the desk that lands
+    # a BEHAVIOUR change in a pinned function pays the same toll as the desk
+    # that documents one.
     # That is the argument for the schema repair below; it is NOT an argument
     # for dropping the line, and until someone makes that change the re-take
     # stays a same-work-unit obligation.
@@ -201,7 +212,7 @@ class TestFocusFiveRows(unittest.TestCase):
     # to whoever next has a reason to touch it.
     EXPECTED = {
         ('bots/BotLib/hero_crystal_maiden.lua', 1804): ('nCastRange', None, 'CONSISTENT'),
-        ('bots/BotLib/hero_skeleton_king.lua', 1394): ('nCastRange + 43', None, 'OVER-REACH'),
+        ('bots/BotLib/hero_skeleton_king.lua', 1484): ('nCastRange + 43', None, 'OVER-REACH'),
         ('bots/BotLib/hero_lion.lua', 1623): ('nCastRange + 300', 'nCastRange + 50', 'SELF-VETO'),
     }
 
@@ -235,7 +246,7 @@ class TestFocusFiveRows(unittest.TestCase):
         is 5.
         """
         rows = rows_by_site()
-        wk = rows[('bots/BotLib/hero_skeleton_king.lua', 1394)]
+        wk = rows[('bots/BotLib/hero_skeleton_king.lua', 1484)]
         self.assertEqual(len(wk['other_reads']), 5, wk['other_reads'])
         self.assertEqual(wk['other_shipping_sites'], 4)
         cm = rows[('bots/BotLib/hero_crystal_maiden.lua', 1804)]

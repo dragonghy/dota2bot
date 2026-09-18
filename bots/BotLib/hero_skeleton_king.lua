@@ -995,6 +995,96 @@ function X.wk_IsLaneHarassTargetInReach( npcEnemy, nCastRange )
 end
 
 
+--- The reach term the 撤退时保护自己 (retreat self-defence) firing point of
+--- X.ConsiderQ has never had.  Soak candidate `wkqflee` (turbo-only, INERT
+--- until armed).
+---
+--- THE DEFECT, and it is the SIGN-FLIPPED sibling of `wkqlane` above rather
+--- than a second copy of it.  The retreat branch iterates nEnemysHerosInRange
+--- -- this function's `nCastRange + 43` search ring -- and returns the first
+--- legal member with no distance term of its own.  A member in the band
+--- (nCastRange, nCastRange + 43] is a target Wraith King CANNOT reach standing
+--- still, so X.SkillsComplement's ActionQueue_UseAbilityOnEntity becomes a MOVE
+--- order first (the mechanism `wkqlane`'s note above spells out) -- and this
+--- branch's own precondition is J.IsRetreating( bot ).
+---
+--- ⇒ the order the branch hands the engine is "walk TOWARD the hero you are
+--- fleeing".  ⛔ That is not the same complaint as `wkqlane`'s: there the cost
+--- is an approach the bot chose, here the walk UNDOES the retreat that is
+--- already running, and it re-issues every frame for as long as the desire
+--- holds.  43 units is small (0.13s at 325 movement speed); the cost that makes
+--- it worth a gate is the sign, not the magnitude.
+---
+--- ⭐ 43 UNITS IS THE FLOOR, NOT THE NUMBER.  The `#nEnemysHerosInView == 1`
+--- clause above this ring adds 260 to nCastRange, and J.IsInTeamFight (the only
+--- nearby predicate that could have excluded it) counts ALLIES in ATTACK mode,
+--- never enemies -- so nothing in this function makes the extension and this
+--- branch mutually exclusive.  With it fired the band is (nCastRange,
+--- nCastRange + 303].  nCastRange is passed IN rather than re-read for exactly
+--- that reason, the same composition `wkqlane` documents.
+---
+--- ARMED: the target must be inside `nCastRange` -- the ring the cast actually
+--- reaches with no step at all.  ⛔ NOT this function's `+80` gate: +80 is a
+--- COMMIT allowance (kill-confirm, 打架先手), and a commit allowance is the one
+--- thing a retreat is not spending.  The in-repo reference for "search ring ==
+--- cast ring" is hero_crystal_maiden.lua:1761, the third copy of this same
+--- argmax family and the one GH #873 §二 records as CORRECT.
+---
+--- DIRECTION BY CONSTRUCTION, not by today's data.  The armed predicate is a
+--- strict SUBSET of the shipped one (`true`) for every input, so arming this id
+--- can only REMOVE retreat casts, never add or move one.  A negative wave read
+--- is attributable to "those sub-43-unit steps were worth taking" and NEVER to
+--- a cast this lever created.
+---
+--- RELOCATION IS POSSIBLE HERE -- checked, not assumed, and it is where this
+--- lever differs from `wkqlane` (which proved relocation impossible).  Of the
+--- four firing points BELOW this one, farming and roshan cannot take a hero at
+--- all; 受到伤害时 requires bot:GetActiveMode() ~= BOT_MODE_RETREAT; the
+--- catch-all requires `( GetActiveMode() ~= BOT_MODE_RETREAT or #allyList >= 2 )`
+--- AND nLV >= 7.  ⇒ while the bot is genuinely in RETREAT mode the armed leg is
+--- NO CAST whenever it is retreating alone (allies within 1200 < 2) or below
+--- level 7; with two allies up and level 7+ the catch-all may still answer, and
+--- then the lever moves nothing.  ⛔ Quote that disjunction, not "no cast".
+--- tests/test_wk_q_flee_reach.lua section 3 DRIVES both halves on the real
+--- frame rather than quoting them.
+---
+--- THE REAL FRAME (tests/test_wk_q_flee_reach.lua §3):
+--- tests/frames/f_260909_215040_wk_blast_lion_480.lua, Wraith King the subject
+--- at hero level 9, Q rank 1 and off cooldown, mana 0.81 (so the branch's
+--- `nMP > 0.8` disjunct is TRUE without touching the frame).  The ring holds
+--- exactly ONE enemy, lion at 547.5u -- 22.5u PAST the real cast range of 525
+--- and 20.5u inside the +43 ring, i.e. squarely in the band.  Lion is at full
+--- health and not channelling, so the two firing points ABOVE this branch that
+--- could take a hero decline on their own terms (kill-confirm needs
+--- J.CanKillTarget, measured false against the 168 claim; the interrupt needs
+--- IsChanneling).  One ally within 1200 ⇒ the catch-all is refused too ⇒ the
+--- armed leg is NO CAST end to end, and the file asserts the whole chain.
+---
+--- ⚠️ ONE INJECTION, named: bot:GetActiveMode() -> BOT_MODE_RETREAT (with its
+--- desire).  Mode is bot-VM state and is in no .dem, the 13th-world assertion
+--- this tree already carries; `wkqlane`'s frame needed two injections, this one
+--- needs this one.  Geometry, roster, health, mana, level, ranks and cooldowns
+--- are REAL and untouched -- in particular GetCastRange answers the real 525
+--- here, so the band is a measured band and not a harness artefact.
+---
+--- ⛔ THE BAND IS NOT RARE ON THIS CORPUS, WHICH IS WHY IT IS WORTH A GATE AT
+--- ALL.  Measured 2026-09-18 over both frame directories, 144 frames, 51 with a
+--- live Wraith King: THREE carry an enemy hero in the band, and on ONE of them
+--- (the frame above) the band member is the ring's ONLY occupant.  On the other
+--- two an in-range enemy sorts ahead of it, so the distance-sorted loop reaches
+--- the band member only if the nearer one fails the legality chain.
+function X.wk_IsFleeBlastTargetInReach( npcEnemy, nCastRange )
+
+	if not ( J.IsModeTurbo() and J.IsSoakCandidate( 'wkqflee' ) )
+	then
+		return true
+	end
+
+	return J.IsInRange( npcEnemy, bot, nCastRange )
+
+end
+
+
 --- The local-parity term X.ConsiderQ's CATCH-ALL branch ("通用消耗敌人或受到伤害
 --- 时保护自己", the TENTH and last firing point) does not have.  Gate off this
 --- returns `true`, byte for byte.
@@ -1464,6 +1554,12 @@ function X.ConsiderQ()
 		for _, npcEnemy in pairs( nEnemysHerosInRange )
 		do
 			if J.IsValid( npcEnemy )
+				-- [wkqflee] gate off this is `true`, byte for byte.  See
+				-- X.wk_IsFleeBlastTargetInReach above: this loop walks the
+				-- nCastRange + 43 ring with no reach term of its own, so a band
+				-- member turns the cast order into a MOVE order back toward the
+				-- hero this branch is fleeing.
+				and X.wk_IsFleeBlastTargetInReach( npcEnemy, nCastRange )
 				and ( bot:WasRecentlyDamagedByHero( npcEnemy, 5.0 )
 						or nMP > 0.8
 						or GetUnitToUnitDistance( bot, npcEnemy ) <= 400 )
