@@ -67,7 +67,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      GH #616 约束 1 只看绝对秒数 ⇒ **代价,不是把作用域改回去的理由**。
      ⚠️ 折算噪声大,**分歧写下来而不是挑一个参照**:本机 best-of-three **5.011s**,四个闸内参照给 **0.68x–1.07x**
      ⇒ 区间 **4.66–7.36s**,**三个判超 cap(5.5)、一个判不超**,取保守侧。
-     `selected_count` 346→345、`selected_total_seconds` 266.611→264.021,预算 540.0 与 `measured_at` 均不动(GH #810)。
+     汇总字段**从 `in_gate` 重算**,落地后 **346 / 264.382**(⚠️ 第一稿算出的 345 / 264.021 不是笔误:
+     rebase 时协同组同轮又加了一行进闸 ⇒ **这类字段永远重算,不许从上一版加减**),
+     预算 540.0 与 `measured_at` 均不动(GH #810)。
      (乙) **`tests/test_argmax_ring_census.py` 因一次纯注释改动红了三处** —— 键是 `(file, line)`,
      加了 ~43 行注释把 Lion 那行 **1554→1597**。已重取并把脆弱性写进那张表抬头
      (⛔ 附说明为何**不能**把行号从键里拿掉:`hero_shadow_shaman.lua` 同文件两份只靠行号区分)。
@@ -9093,6 +9095,9 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     红的是本组 `-199` 落的 `io.popen` 未登记 —— **本轮一并登记回绿**。
   - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 133 ran, 0 findings, 0 uncertifiable, 47.3s`;
     `lua gate: 424 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 651.8s`。
+    ⚠️ **那是 push 前直跑的;钩子里真正跑的是 py 134 / lua 425**(rebase 后树上多了别组同轮的测试),
+    两次 push 都 0 findings;⚠️ 会话分支用了一次 **`--force-with-lease`**(第一次推 main 被
+    `fetch first` 挡掉、rebase 之后分支 ref 落后),**顺序始终是先分支后 main**。
     开工自检 **TRUNK RED(已修)** + 9 `UNCERTIFIABLE`(`5a0` 撞 budget,非本组);⚠️ **GH #882 又复发**。
 - 2026-09-17T23:03Z(报告 `iterations/reports/hero/20260917T230308Z.md`;**backlog:新开 `-200`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮零行改动**;
