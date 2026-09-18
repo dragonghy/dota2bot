@@ -10979,6 +10979,48 @@ S3 前缀里根本没有 farm log** ⇒ **干净退出这条路上没有第二�
   ⑥ **下一轮本台**:开工第一条命令**直接重定向**(⛔ 无管道);刹车解除时按规格发 **P4.1 标尺波**,
   **收割必带 `--ledger`**,**显式传 `--max-hours`**(见 (丙)(甲)),并抄 #801 四行**恢复后**的样子。
   详见 `iterations/reports/batch-desk/20260918T151223Z.md`。
+- **2026-09-18T15:4xZ(同轮补记 —— ⛔⛔ 本台推翻自己上一条的框架句,并交出一条更要紧的新发现。
+  触发者是 `claim_precheck.sh` 在发表前拒稿(`PRECHECK_EXIT=3`,逐字 `OFF-TRUNK commit  74727e4a` /
+  `DO NOT PUBLISH YET`)—— ⭐ **那道闸抓到的不是格式问题,是两条实质错误,一条本台的、一条全队的**。)**
+  **(甲) ⛔ 本台错了:「P4.1 发不出去 / 四十九轮零发现」两句都是假的。**
+  本章程**自己**在 2026-09-05 那轮逐字写过同一个根因,并给出可用旁路:
+  「⭐ 但 `git ls-remote origin` 一行就看见 `refs/heads/upstream-baseline` 早已存在且恰好指向
+  `74727e4a…` ⇒ `--old upstream-baseline --new main` **直接可用,零 harness 改动**」;
+  那一轮还**真发射过一次**(失败 ~$0.03,并促成 `ab_guard`)。**现读复核**:
+  `git ls-remote origin upstream-baseline` ⇒ `74727e4a…  refs/heads/upstream-baseline`,**ref 在**。
+  ⇒ ⛔ 传**分支名**那条形状一直可用(`origin/<branch>` 正是硬编码期待的形状);
+  ⇒ ⛔ 不是「从未被执行过的路径」;⇒ **P4.1 未发的原因自始至终是闸 (iii) 预算**。
+  **归因(不推给别人)**:阳性对照与机制描述都对,**错在从「这条形状不 work」跳到
+  「所以 P4.1 发不出去」** —— 少问一句「有没有别的形状能 work」,而答案就在本章程里,`grep` 一次就有。
+  ⚠️ **失效方向**:用一个**真命题**(裸 SHA 解析不了)去满足**另一个问题**(P4.1 为什么没发),
+  与铁律 1 §RULING 48、铁律 4 §CL (i-a) 点名的手法**同型**,只是这次犯的是本台。
+  **修复本身仍成立但降级登记**:`resolve_ref()` 让裸 SHA / tag 也能用、并把死点提前到 ref 上
+  给出正确报错 = **一处真实改进 + 一道棘轮**,⛔ **不是「解除了 P4.1 的阻断」**。
+  上一条章程条目与本轮 commit message 的框架句同样错,以本条更正,⛔ 不改写历史提交。
+  **(乙) ⭐⭐⭐ 新发现(比上一条要紧):`origin/upstream-baseline` 指的不是 upstream。**
+  全队十余处文档(`iterations/streams/README.md:38`、`OWNER_PRIORITIES.md:121`、
+  `state.json:5103`、`DECISIONS_NEEDED.md:959` 等)写 `74727e4a` = 「仓库初始 OHA 快照」。**它不是。**
+  两条独立证据,⛔ 都不依赖本容器的浅 clone:**(i) GitHub 侧提交本体**(第一手 API):标题
+  **`TP trio fix E: shipped defend TP shares the tpcommit landing commitment`**,日期
+  **`2026-07-23T04:46:17Z`**,正文提到 `tpRespondLoc/tpRespondUntil` 与 **`(gated) tpcommit`**
+  —— **本项目自己的 gated 改动**,上游不可能有;**(ii) 该 commit 的树**(浅 fetch 后 `git ls-tree`):
+  顶层含 **`iterations/`、`.claude/`、`CLAUDE.md`** —— 本项目特有,OHA 快照里不会有 `iterations/`。
+  ⇒ **它指向的是本项目 2026-07-23 的自己。**
+  ⚠️⚠️ **后果**:P4.1 是 owner 定的最高优先,要回答「这个项目到底有没有把 bot 变强」(对照上游);
+  按现状发,实际测的是**「main vs 我们自己两个月前的树」** —— 一个**两个月的自比**冒充**累计总进步的标尺**,
+  ⭐ **而这份读数会长得完全正常**(有胜率、有 gpm 差、有局数,没有一行会举手)。
+  与本章程自己登记的「`run_batch.sh` 在 bots 目录不存在时照常开打 ⇒ 一个失败长得跟数据一模一样」**同族**。
+  ⛔ **边界**:⛔ 不主张真正的初始快照是哪个 commit(浅 clone,本轮没深挖,不猜);
+  ⛔ 不动 `refs/heads/upstream-baseline`(改一条被十余处文档引用的基线 ref 是测量语义变更,归总监);
+  ⛔ 不主张那些文档是何时被谁写错的,只主张**现读与它们不符**。
+  ⭐ **可证伪**:`git ls-tree --name-only upstream-baseline | grep iterations` 有输出即本条成立。
+  **(丙) 交棒**:⭐⭐⭐ **总监(最高优先)**:(a) 定出真正的 upstream 快照 commit;
+  (b) 决定重指 `upstream-baseline` 还是改 P4.1 措辞;(c) 修那十余处文档。
+  ⭐ **总监**:(甲) 是本台自己的错误更正,一并复核。
+  **⛔ 本轮仍不推送**:通知四条判据(MTD ≥ $100 / 泄漏 / 刹车解除 / 兜底日)**一条未中**;
+  (乙) 虽是实质发现,但**归总监/harness 域,不需要 owner 做决定、不改任何阈值** ——
+  与上一轮对 §四 的自问同一把尺,⛔ 不自行给那四条加第五条。
+  详见 `iterations/reports/batch-desk/20260918T151223Z.md` §十三。
 
 ## 波次开关策略(owner 2026-08-22 明确指示)
 - **默认波次 = 全测试集 armed**(test_set.md 最新 §x.0 的完整串)。批测和
