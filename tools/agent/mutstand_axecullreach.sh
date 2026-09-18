@@ -256,6 +256,49 @@ sub "$TEST" "        local p = assert(io.popen('ls ' .. dir .. ' 2>/dev/null'))"
 score "M11" "corpus frames carry an Axe"
 
 # ---------------------------------------------------------------------------
+# M12: the census reads a DIFFERENT BAND than the source builds.  Section 10 is
+#      an exact count, so a reader-side ring that no longer matches
+#      `nCastRange + 200` has to name itself rather than quietly report a domain
+#      the lever does not have.
+#
+# ⚠️ DIRECTION MATTERS, AND THE FIRST VERSION PICKED THE ONE THIS CORPUS CANNOT
+#    SEE.  `BONUS = 200 -> 400` SURVIVED on 2026-09-18, and the reason is a
+#    MEASUREMENT rather than a weak assertion (evidence discipline 2 asks which
+#    it is): driven over both corpus directories, the number of sub-threshold
+#    enemies sitting in the added annulus (375, 575] is **0** -- so a widened
+#    reader band admits no new row and the count cannot move.  That mutant was
+#    therefore VACUOUS ON THIS CORPUS, not caught and not survived in any sense
+#    the reader can act on.  The NARROWING direction is in domain: at
+#    `BONUS = 50` the reader band is (175, 225], which drops the rows at +58.3,
+#    +73.3 and +101.9 and takes the count from 6 to 3.
+#    ⛔ If a future fixture ever puts a sub-threshold enemy past 375u, restore
+#    the widening direction as M12b -- it becomes catchable the same day.
+echo
+echo "=== M12: the test-side band no longer matches the shipped pool ==="
+sub "$TEST" "local BONUS = 200" "local BONUS = 50"
+score "M12" "BAND instants, was 6"
+
+# ---------------------------------------------------------------------------
+# M13: THE PRE-REGISTERED LINE IS REDRAWN IN THE READER.  hero-46 fixed the four
+#      buckets before anybody knew the answer; moving a boundary here re-reports
+#      the same six instants under a different question, which is the one way
+#      this section could mislead while staying green on every count.
+echo
+echo "=== M13: a gap bucket boundary is moved ==="
+sub "$TEST" "    if gap <= 25 then return 1 end" "    if gap <= 60 then return 1 end"
+score "M13" "now read"
+
+# ---------------------------------------------------------------------------
+# M14: a control on the STAND ITSELF, twin of M11 one level in.  The three
+#      sections that read the census share one memo; if the memo can answer
+#      empty without a red, the exactness in section 10 is a sentence.
+echo
+echo "=== M14: the census memo answers empty ==="
+sub "$TEST" "    if cull_rows_memo then return cull_rows_memo end" \
+            "    if true then return {} end"
+score "M14" "IN-REACH sub-threshold"
+
+# ---------------------------------------------------------------------------
 echo
 echo "=== $CAUGHT / $TOTAL CAUGHT ==="
 [ "$CAUGHT" -eq "$TOTAL" ]

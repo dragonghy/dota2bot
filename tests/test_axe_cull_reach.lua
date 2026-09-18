@@ -440,42 +440,165 @@ tests['\194\1679 LIMIT: health regen is 0 across the corpus, so the 0.8s budget 
 end
 
 -- --------------------------------------------------------------- section 10 --
--- The domain, on real frames.  A tripwire on a LOWER bound, so adding fixtures
--- can only strengthen it.
+-- The domain, on real frames -- an EXACT census, not a lower bound.
+--
+-- ⭐ WHY THIS SECTION WAS REWRITTEN 2026-09-18 (hero).  It used to assert
+-- `nBand >= 2` with the comment "a tripwire on a LOWER bound, so adding fixtures
+-- can only strengthen it".  That is true of the LEVER and false of the READING.
+-- Four frames carrying this lever's exact shape were staged into tests/frames/
+-- on 2026-09-10 -- two days after this file was written -- and a `>= 2` assert
+-- absorbed all four without a word, while this file's header went on saying
+-- "this round found 2 and both are driven above" and queue.json:hero-46 went on
+-- asking the archive for a domain this tree already held.  A lower bound cannot
+-- go red for growth, and growth is the only thing that was ever going to change
+-- this lever's verdict.  Same shape as GH #281 one level up: the corpus horizon
+-- moved and the readings taken under the old one did not re-take themselves.
+--
+-- ⚠️ THE BUCKETS ARE NOT THIS FILE'S INVENTION.  They are the four the director
+-- pre-registered in queue.json:hero-46's acceptance for column (2)
+-- (0-25 / 25-75 / 75-125 / 125-200u of gap), written there so the answer could
+-- not be reported as a mean (iron rule 4(ii)).  Reporting them here from the
+-- tree costs nothing and makes the archive scan's column (2) comparable to a
+-- number that already exists instead of arriving without one.
+--
+-- ⛔ WHAT A ROW HERE IS AND IS NOT.  A row is an instant where the SHIPPED tree
+-- returns a Culling Blade bid on an enemy inside the shipped pool.  It is NOT a
+-- cast that landed and NOT a kill: three of the six band rows come from frames
+-- cut AT an `axe_culling_blade` combat-log entry (tests/frames/README.md), which
+-- says a cull was cast at that instant, and the unit positions come from the
+-- dumper's own sample grid rather than from the log timestamp -- so the gap here
+-- is the gap the BOT SAW when it decided, not the gap at the moment the spell
+-- went off.  Columns (3) and (4) of hero-46 (did it land, did the target die,
+-- what did the suppressed Berserker's Call cost) are archive-side and are NOT
+-- claimed here.
 
-tests['\194\16710 DOMAIN: the corpus holds at least 2 band frames and 1 in-reach control'] = function()
-    local nBand, nInReach = 0, 0
+--- Every instant in the tree where the shipped X.ConsiderR bids on a
+--- sub-threshold enemy inside the shipped pool, with the gap against the
+--- ability's own reach.  Computed ONCE: three sections read it, and each used to
+--- walk the whole corpus on its own.
+local cull_rows_memo = nil
+local function cull_rows()
+    if cull_rows_memo then return cull_rows_memo end
+    local rows = {}
     for _, path in ipairs(corpus_paths()) do
         local ok, fx = pcall(dofile, path)
         if ok and type(fx) == 'table' and type(fx.units) == 'table' then
             local me = unit_named(fx, AXE)
             if me and me.alive then
-                local _, _, _, _, bot = drive(path, false)
+                local d, hTarget, _, _, bot = drive(path, false)
                 local abilityR = bot:GetAbilityByName(CULLING)
                 if abilityR:IsFullyCastable() then
                     local thr = 150 + 100 * abilityR:GetLevel()
                     local cr = abilityR:GetCastRange()
-                    local band, inreach = false, false
                     for _, u in ipairs(fx.units) do
                         if u.name:match('^npc_dota_hero_') and u.team ~= me.team and u.alive
-                            and u.hp < thr then
-                            local d = dist2d(u, me)
-                            if d <= cr then inreach = true
-                            elseif d <= cr + BONUS then band = true end
+                            and u.hp < thr and dist2d(u, me) <= cr + BONUS then
+                            rows[#rows + 1] = {
+                                path = path,
+                                enemy = u.name,
+                                hp = u.hp,
+                                gap = dist2d(u, me) - cr,
+                                threshold = thr,
+                                reach = cr,
+                                desire = d,
+                                target = hTarget and hTarget:GetUnitName() or nil,
+                            }
                         end
                     end
-                    if band then nBand = nBand + 1 end
-                    if inreach then nInReach = nInReach + 1 end
                 end
             end
         end
     end
-    assert(nBand >= 2, 'only ' .. nBand .. ' corpus frames put a sub-threshold enemy in '
-        .. 'the (cast range, cast range + 200] band; this round found 2 and both are '
-        .. 'driven above.  Below 2 the flip is a single anecdote')
-    assert(nInReach >= 1, 'only ' .. nInReach .. ' corpus frames put a sub-threshold enemy '
-        .. 'INSIDE the cast range; without one there is no negative control and section 4 '
-        .. 'is measuring nothing')
+    table.sort(rows, function(a, b) return a.gap < b.gap end)
+    cull_rows_memo = rows
+    return rows
+end
+
+--- The four gap buckets queue.json:hero-46 pre-registered, in that order.
+local function bucket_of(gap)
+    if gap <= 0 then return 0 end
+    if gap <= 25 then return 1 end
+    if gap <= 75 then return 2 end
+    if gap <= 125 then return 3 end
+    return 4
+end
+
+tests['\194\16710 DOMAIN: the tree holds exactly 6 band instants and 1 in-reach control'] = function()
+    local rows = cull_rows()
+    local nBand, nInReach = 0, 0
+    local seen = {}
+    for _, r in ipairs(rows) do
+        if r.gap > 0 then nBand = nBand + 1 else nInReach = nInReach + 1 end
+        seen[#seen + 1] = string.format('%s %s gap=%+.1f hp=%d thr=%d',
+            r.path, r.enemy:gsub('npc_dota_hero_', ''), r.gap, r.hp, r.threshold)
+    end
+    assert(nInReach == 1, 'the tree now holds ' .. nInReach .. ' IN-REACH sub-threshold '
+        .. 'instants, was 1 (FRAME_PROMISE, oracle at -21.3u).  That is the negative '
+        .. 'control section 4 drives; re-take the count here and say so in a report')
+    assert(nBand == 6, 'the tree now holds ' .. nBand .. ' BAND instants, was 6 on '
+        .. '2026-09-18.  This assert is EXACT on purpose -- the `>= 2` it replaced '
+        .. 'absorbed four new frames in silence for eight days.  A new frame is GOOD '
+        .. 'news: re-derive this lever\'s verdict against it and move the number, do '
+        .. 'not widen the comparison.  Rows now:\n      ' .. table.concat(seen, '\n      '))
+end
+
+tests['\194\16710 DOMAIN: the gap distribution, in hero-46\'s own four buckets'] = function()
+    local counts = { 0, 0, 0, 0 }
+    for _, r in ipairs(cull_rows()) do
+        local b = bucket_of(r.gap)
+        if b >= 1 then counts[b] = counts[b] + 1 end
+    end
+    local got = table.concat({ counts[1], counts[2], counts[3], counts[4] }, '/')
+    assert(got == '3/2/1/0', 'the gap buckets (0-25 / 25-75 / 75-125 / 125-200u) now read '
+        .. got .. ', were 3/2/1/0 on 2026-09-18.  This is column (2) of '
+        .. 'queue.json:hero-46 answered from the tree; if it moves, the archive scan is '
+        .. 'answering a different question than the one this file reported')
+
+    -- ⭐ THE READING THIS FILE OWES ITS OWN HEADER.  hero-46's ruling pre-registers
+    -- a redraw ("例如只拒 gap>75u") as the next baton if the far approaches turn
+    -- out to be worth taking.  Five of the six band instants in the tree sit
+    -- BELOW that line, and the one above it is FRAME_RING -- the frame this
+    -- file's header argues the lever's value from.  So the published evidence
+    -- base for `axecullreach` is, by count, the single most extreme instant the
+    -- tree holds, and the four that arrived on 2026-09-10 are 4/4 below the
+    -- redraw line.  That does not settle the lever; it says the two-frame sample
+    -- it was argued on was not a sample of this tree.
+    assert(counts[1] + counts[2] == 5, 'below the pre-registered 75u redraw line there '
+        .. 'are now ' .. (counts[1] + counts[2]) .. ' band instants, were 5')
+    assert(counts[3] + counts[4] == 1, 'above the pre-registered 75u redraw line there '
+        .. 'are now ' .. (counts[3] + counts[4]) .. ' band instants, was 1 (FRAME_RING)')
+end
+
+-- --------------------------------------------------------------- section 11 --
+-- The four frames that arrived after this file was written, DRIVEN rather than
+-- counted.  Section 10 says how many there are; this says the lever moves them,
+-- which is the half a census cannot answer.
+
+tests['\194\16711 the 2026-09-10 frames: shipped bids, armed does not, on all four'] = function()
+    local LATE = {
+        { 'f_260909_215412_axe_cull_cm_838.lua', 'npc_dota_hero_crystal_maiden' },
+        { 'f_260909_215412_axe_cull_cm_415.lua', 'npc_dota_hero_crystal_maiden' },
+        { 'f_260909_215412_axe_cull_pudge_470.lua', 'npc_dota_hero_pudge' },
+        { 'f_260909_215412_axe_cull_viper_348.lua', 'npc_dota_hero_viper' },
+    }
+    for _, row in ipairs(LATE) do
+        local path = STAGED_DIR .. '/' .. row[1]
+        local dUnarmed, hUnarmed = drive(path, false)
+        assert(dUnarmed > 0, path .. ': the shipped tree no longer bids Culling, got '
+            .. tostring(dUnarmed) .. '.  This frame was staged 2026-09-10 and is one of '
+            .. 'the four section 10 counts; if it stopped firing, section 10 is counting '
+            .. 'a row nothing drives')
+        assert(hUnarmed and hUnarmed:GetUnitName() == row[2], path .. ': the shipped '
+            .. 'target is now ' .. tostring(hUnarmed and hUnarmed:GetUnitName())
+            .. ', was ' .. row[2])
+
+        local dArmed, hArmed = drive(path, true)
+        assert(dArmed == BOT_ACTION_DESIRE_NONE, path .. ': armed still bids '
+            .. tostring(dArmed) .. ' -- the target is outside the 175 reach, so the '
+            .. 'armed pool cannot contain it')
+        assert(hArmed == nil, path .. ': armed still names ' ..
+            tostring(hArmed and hArmed:GetUnitName()))
+    end
 end
 
 return tests
