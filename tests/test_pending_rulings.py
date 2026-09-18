@@ -1689,6 +1689,135 @@ check(any(pr.names_strata(str(r.get("acceptance") or "")) for r in _real_scans),
       "not one approved-SCAN row on the real queue names the ab/ba clause -- "
       "ten did on 2026-09-12, so the markers have drifted off the prose")
 
+# --------------------------------------------- INVARIANT 7: the seat roll-call
+#
+# [harness] baton 1 from `iterations/reports/replay-check/20260918T184821Z.md`
+# §四, ruled by the director 2026-09-18.
+#
+# RULING 77 (乙) gave `gh290_od_execution_verification_needs_postfix_corpus` a
+# SINGLE executor -- "录像组(replay-check),恰好一个。" -- and that stream then
+# missed it in two consecutive rounds (12:41Z and 15:42Z, `grep -c` 0 both
+# times). The measured reason is not routing but FINDING: 73 OWED rows inside
+# a 646-line selfcheck log, of which 29 were theirs.
+#
+# The load-bearing check is 7a. That row's executor prose also contains
+# 批测台, `director.executor` and `hero-20` -- in a clause explaining why the
+# OLD two-stream routing was equivalent to naming nobody. A seat reader that
+# matches the whole field puts this row under FOUR of five seats, i.e. it
+# reproduces the exact ambiguity the ruling removed, and every other check
+# here still passes.
+
+_GH290_EXEC = (u"**录像组(replay-check),恰好一个。** ⛔ 07:29Z 那条写的是"
+               u"「录像组 / 批测台二选一」= **两个流,按 `queue.json:_protocol` 的 "
+               u"`director.executor` 立案句(`hero-20`)等于一个都没点**,而实测就是"
+               u"这样:其后两个组各跑过一轮(批测台 09:17Z、录像组 09:42Z)。")
+
+check(pr.executor_seats({"executor": _GH290_EXEC}) == ("replay-check",),
+      "the founding row read as %r -- its commentary names 批测台 / "
+      "`director.executor` / `hero-20` while EXPLAINING why two streams meant "
+      "nobody, so a whole-field match puts the one row RULING 77 disambiguated "
+      "back under four seats"
+      % (pr.executor_seats({"executor": _GH290_EXEC}),))
+
+# 7b. The citation trap on its own, minus the head cut: queue ids are not
+# seats. `hero-20` / `strategy-55` / `director.executor` are the three that
+# actually occur in the registry.
+for _cite in (u"任何人(见 `hero-20`)", u"任何人(见 `strategy-55`)",
+              u"任何人(见 `director.executor` 立案句)"):
+    check(pr.executor_seats({"executor": _cite}) == (),
+          "a queue-id citation was read as a seat assignment: %r -> %r"
+          % (_cite, pr.executor_seats({"executor": _cite})))
+
+# 7c. UNROUTED is a reading, not a gap. `queue.json:_protocol` already rules
+# that an unnamed executor is no executor; printing it is what makes that
+# ruling visible instead of leaving the row to look like everybody else's.
+check(pr.executor_seats({"executor": u"任何要重新提 `roamidle` 入集的人"}) == (),
+      "an 「任何…的人」 row was routed to a seat it never named")
+check(pr.executor_seats({}) == () and pr.executor_head({}) == "",
+      "a row with no executor field raised or invented a seat")
+
+# 7d. A genuinely multi-party head keeps every party. Over-matching is the
+# chosen direction (see SEAT_PATTERNS); dropping a named party is not.
+check(pr.executor_seats({"executor": u"batch-desk(排波)+ 录像组(读数)。⛔ 不派给协同组"})
+      == ("batch-desk", "replay-check"),
+      "a head naming two seats did not yield both, or the ⛔ clause leaked a third")
+
+# 7e. THE FILTER MUST NOT BE ABLE TO CHANGE THE VERDICT. A view that narrows
+# what you read is worth having; a view that narrows what COUNTS is the
+# defect one layer down -- "my seat is clean" printing as "the registry is
+# clean". So the roll-call and the exit code are registry-wide either way.
+_seat_rows = [
+    dict(_row_413(_jv(_profile("seat_open_1.json", 1))),
+         id="owed_by_hero", executor=u"英雄组(hero)", ruled_at="2026-09-01T10:00Z"),
+    dict(_row_413(_jv(_profile("seat_open_2.json", 1))),
+         id="owed_by_rc", executor=u"录像组(replay-check),恰好一个。⛔ 不派给英雄组",
+         ruled_at="2026-09-02T10:00Z"),
+    dict(_row_413(_jv(_profile("seat_open_3.json", 1))),
+         id="owed_by_nobody", executor=u"任何有余量的人", ruled_at="2026-09-03T10:00Z"),
+]
+_rc_all, _out_all = _render(_seat_rows)
+_buf = io.StringIO()
+with contextlib.redirect_stdout(_buf):
+    _rc_f = pr.render_owed(_seat_rows, now=_now, executor="hero")
+_out_f = _buf.getvalue()
+
+check(_rc_all == _rc_f == 3,
+      "the filtered run returned %r and the full run %r -- an --executor view "
+      "that can flip the exit code lets one seat's silence stand in for the "
+      "registry's" % (_rc_f, _rc_all))
+for _seat_line in ("  hero          owed   1", "  replay-check  owed   1",
+                   "  UNROUTED      owed   1"):
+    check(_seat_line in _out_all and _seat_line in _out_f,
+          "roll-call line %r is missing from the full run or changed under "
+          "--executor hero\nFULL:\n%s\nFILTERED:\n%s"
+          % (_seat_line, _out_all, _out_f))
+
+# 7f. Fail-open: the UNROUTED row prints for a seat that is not named on it.
+# Nobody is pointed at those rows, so hiding them behind a filter is how a
+# baton with no owner acquires a second reason to be missed.
+check("owed_by_nobody" in _out_f,
+      "--executor hero hid the UNROUTED row -- the filter must be fail-open")
+# The id still appears in the filtered output -- as replay-check's `newest:`
+# in the registry-wide roll-call, which is 7e working. What must be gone is
+# the ROW, so the anchor is the row header, not the substring.
+_rowline = re.compile(r"^  \S+\s+owed_by_rc\s", re.M)
+check(_rowline.search(_out_f) is None and _rowline.search(_out_all) is not None,
+      "--executor hero printed another seat's row block, or the unfiltered "
+      "run dropped it")
+check("owed_by_rc" in _out_f,
+      "the roll-call stopped naming another seat's newest baton under a "
+      "filter -- that is 7e's registry-wide reading, not a leak")
+
+# 7g. DONE rows are bookkeeping for the director, not batons to find, so they
+# must not inflate a seat's number. Measured the other way round: a roll-call
+# that counts them makes the one number a stream reads go UP as work lands.
+_done_seat = [dict(_row_413(_jv(_profile("seat_done.json", 8))),
+                   id="already_done", executor=u"英雄组(hero)",
+                   ruled_at="2026-09-01T10:00Z")]
+_rc_d, _out_d = _render(_done_seat)
+check("  hero          owed   0" in _out_d,
+      "a DONE row was counted as owed in the roll-call:\n%s" % _out_d)
+
+# 7h. THE READER MUST BE MEASURING A NON-EMPTY SET ON THE REAL REGISTRY --
+# same sentence and same reason as 7f above (INVARIANT 5). A seat table that
+# silently stopped matching the house vocabulary would print five zeroes and
+# an all-UNROUTED registry, which looks exactly like a quiet round.
+_real_owed = pr.load_owed()
+_real_seated = [r for r in _real_owed if pr.executor_seats(r)]
+check(len(_real_owed) >= 40 and len(_real_seated) >= 0.6 * len(_real_owed),
+      "%d of %d real owed rows name a seat -- 79 of 87 did on 2026-09-18, so "
+      "a collapse this large means the vocabulary drifted off the prose"
+      % (len(_real_seated), len(_real_owed)))
+check(pr.ruled_day({"ruled_at": "2026-09-18T09:5xZ"})
+      == datetime.date(2026, 9, 18),
+      "the house-style FUZZED stamp lost its date -- `ruled_at` is fuzzed on "
+      "most rows, so a date reader that needs a full instant reports `(no "
+      "readable ruled_at)` for the newest baton on the board")
+check(pr.parse_utc("2026-09-18T09:5xZ") is None,
+      "a fuzzed stamp became a full instant -- `ruled_day` reads the DATE on "
+      "purpose and must not have relaxed the claim-TTL parser to do it")
+
+
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:
     print("FAIL: %s" % f)

@@ -423,6 +423,91 @@ CLOSED_STATES = ("done", "rejected")
 # SILENT (two OWED rows that look identical, which is the whole defect).
 CLAIM_TTL_HOURS = 6
 
+# ---------------------------------------------------------------- seats
+# The five Routine seats, and the words each one is actually written with in
+# the registry's `executor` field.
+#
+# WHY THIS EXISTS (director 2026-09-18, [harness] baton 1 from
+# `iterations/reports/replay-check/20260918T184821Z.md` §四)
+# ------------------------------------------------------------------------
+# RULING 77 (乙) fixed "who owes this" by giving
+# `gh290_od_execution_verification_needs_postfix_corpus` a SINGLE executor
+# ("录像组(replay-check),恰好一个。").  It was then missed by that very
+# stream in two consecutive rounds.  The measured reason is not routing, it
+# is FINDING: the owed leg prints 73 OWED rows inside a 646-line selfcheck
+# log, and the reader has to recognise the 29 that are theirs before they can
+# notice the 1 that is new.  A single executor fixed 归谁 and left 找得到
+# untouched -- so this table is the second half, not a second copy.
+#
+# WHAT IT IS NOT.  It is not a parse of the field.  `executor` is prose: it
+# carries prohibitions ("⛔ 不派给协同组"), citations (`hero-20`,
+# `director.executor`) and rationale, and the seats named in THOSE clauses
+# are the opposite of an assignment.  So the matching reads only the
+# ASSIGNMENT HEAD (see `executor_head`), and the roll-call prints its own
+# LIMITS line.  Over-matching is the chosen failure direction: a row shown
+# under a seat that does not owe it costs a glance, a row hidden from the
+# seat that does owe it is the defect being fixed.
+SEAT_PATTERNS = (
+    # (seat, [regexes]) -- ordered so the roll-call prints deterministically.
+    ("batch-desk",   (r"batch[-_]desk(?![a-z0-9_-])", u"批测台", u"批測台")),
+    ("replay-check", (r"replay[-_]check(?![a-z0-9_-])", u"录像组", u"錄像組")),
+    ("strategy",     (r"(?<![a-z_-])strategy(?![a-z0-9_-])", u"协同组", u"協同組")),
+    ("hero",         (r"(?<![a-z_-])hero(?![a-z0-9_-])", u"英雄组", u"英雄組")),
+    ("director",     (r"(?<![a-z_.-])director(?![a-z0-9_.-])", u"总监", u"總監")),
+)
+SEATS = tuple(name for name, _ in SEAT_PATTERNS)
+
+# Where an executor sentence stops being an assignment and starts being
+# commentary.  Every one of these opens a clause that, in the real registry,
+# talks ABOUT other seats rather than pointing at one: `。` ends the
+# assignment sentence, and the four markers open the house style's
+# prohibition / warning / emphasis / pin clauses.
+_HEAD_STOPS = (u"。", u"⛔", u"⚠", u"⭐", u"📌", "\n")
+
+
+def executor_head(row):
+    """The assignment half of the prose `executor` field.
+
+    Returns the text up to the first clause break, or the whole field when
+    that would be empty -- never less than the author wrote, because the
+    conservative direction here is to match too much (see SEAT_PATTERNS).
+    """
+    raw = row.get("executor")
+    if not isinstance(raw, str):
+        return ""
+    cut = len(raw)
+    for stop in _HEAD_STOPS:
+        i = raw.find(stop)
+        if 0 <= i < cut:
+            cut = i
+    head = raw[:cut].strip()
+    return head or raw.strip()
+
+
+def executor_seats(row):
+    """The seats named in a row's assignment head, as an ordered tuple.
+
+    An empty tuple means the head points at nobody this tool can name -- a
+    standing constraint, an "any stream with slack", or a shape nobody
+    anticipated.  That is reported as UNROUTED rather than silently dropped:
+    `queue.json:_protocol` already rules that an unnamed executor is the
+    same as no executor, and this is the reading that makes it visible.
+    """
+    head = executor_head(row)
+    if not head:
+        return ()
+    found = []
+    for seat, pats in SEAT_PATTERNS:
+        for pat in pats:
+            # IGNORECASE is safe for the CJK alternatives (they have no case)
+            # and is what lets `Batch-Desk` / `Director` match.
+            if re.search(pat, head, re.IGNORECASE):
+                found.append(seat)
+                break
+    return tuple(found)
+
+
+
 # The declarations a rideshare proposal makes about itself.  Kept as literal
 # substrings on purpose: these are the exact phrases the streams write, and a
 # looser regex would start classifying dedicated-wave asks as rideshares.
@@ -1506,13 +1591,126 @@ def claim_status(row, now=None):
             % (by, at, age_h, CLAIM_TTL_HOURS))
 
 
-def render_owed(rows, now=None):
-    """Print the OWED_EXECUTION section.  Returns the exit level (0 or 3)."""
+def ruled_day(row):
+    """The DATE a row was ruled, or None.  Deliberately date-only.
+
+    The house style fuzzes the hour (`2026-09-18T09:5xZ`), so `parse_utc`
+    refuses the whole stamp -- correctly, for a claim TTL.  For "which of my
+    batons is new" the DATE is unfuzzed and sufficient, and calling it a date
+    is what keeps this from quietly inventing an instant (RULING 67's `age
+    not computable (fuzzy stamp)` discipline, one field over).
+    """
+    raw = row.get("ruled_at")
+    if not isinstance(raw, str):
+        return None
+    m = re.match(r"\s*\**\s*(\d{4})-(\d{2})-(\d{2})", raw)
+    if not m:
+        return None
+    try:
+        return datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    except ValueError:
+        return None
+
+
+def render_seat_rollcall(entries, now=None):
+    """Print the per-seat roll-call under the OWED section.
+
+    `entries` is a list of (row, shown_state).  Only rows that are still
+    owed in some form are counted -- a DONE row is bookkeeping for the
+    director, not a baton anybody has to find.
+
+    WHY IT IS A COUNT AND NOT A FINDING.  The section above it already
+    returns 3 whenever anything is owed; a second exit level here would add
+    noise to a leg whose whole problem is that it is 73 lines long.  What
+    this block buys is not urgency, it is ADDRESSING: one line per seat, so
+    a stream reads its own number instead of recognising its own rows.
+    """
+    open_states = [e for e in entries if e[1] not in ("DONE", "IN-FLIGHT")]
+    per_seat = {seat: [] for seat in SEATS}
+    unrouted, multi = [], []
+    for row, _shown in open_states:
+        seats = executor_seats(row)
+        if not seats:
+            unrouted.append(row)
+            continue
+        if len(seats) > 1:
+            multi.append(row)
+        for seat in seats:
+            per_seat[seat].append(row)
+
+    def newest(bucket):
+        dated = [(ruled_day(r), r) for r in bucket]
+        dated = [(d, r) for d, r in dated if d is not None]
+        if not dated:
+            return "newest: (no readable ruled_at)"
+        # Tie-broken by id, not by list order: with --executor the hidden
+        # rows join the set at the end, and a roll-call that named a
+        # different row for the same date depending on the flag would look
+        # like the filter had changed the answer.
+        day, row = max(dated, key=lambda t: (t[0], t[1].get("id") or ""))
+        today = (now or datetime.datetime.now(datetime.timezone.utc)).date()
+        return "newest: %s (ruled %s, %dd ago)" % (
+            row.get("id", "?"), day.isoformat(), (today - day).days)
+
+    print("--- owed by seat (assignment head only; a row can name 2+ seats) ---")
+    for seat in SEATS:
+        bucket = per_seat[seat]
+        print("  %-13s owed %3d   %s"
+              % (seat, len(bucket), newest(bucket) if bucket else ""))
+    print("  %-13s owed %3d   head names NO seat -- `queue.json:_protocol`: an "
+          "unnamed executor is no executor" % ("UNROUTED", len(unrouted)))
+    print("  %-13s owed %3d   head names 2+ seats -- the same protocol reads "
+          "that as NOBODY (also counted per seat above)"
+          % ("MULTI-SEAT", len(multi)))
+    print("  LIMITS: `executor` is prose, not a field. Matching reads only the "
+          "assignment head (up to the first 。/⛔/⚠/⭐/📌) and OVER-matches on "
+          "purpose -- measured 2026-09-18, 3 of 87 rows pick up a seat from a "
+          "non-assignment clause (`gh721_...` from 「总监不花 AWS 的钱」, "
+          "`aimguard_creep_schema_identity` from a NEGATION 「不属录像组」, "
+          "`creeps_schema_gh581` despite 「未指派」). A row shown under a seat "
+          "that does not owe it costs a glance; a row hidden from the seat "
+          "that does owe it is the defect this block exists for.")
+
+
+def render_owed(rows, now=None, executor=None):
+    """Print the OWED_EXECUTION section.  Returns the exit level (0 or 3).
+
+    `executor` narrows the printed rows to one seat.  The narrowing is
+    FAIL-OPEN by construction: UNROUTED rows print under every seat (nobody
+    is pointed at them, so everybody has to see them), and the count of what
+    was hidden is printed. A filter that can quietly swallow a baton would be
+    the very defect it was built against, one layer down.
+    """
     print("=== owed executions (rulings delivered; execution still owed) ===")
     print("registry rows: %d" % len(rows))
+    shown_rows, hidden_rows = rows, []
+    if executor is not None:
+        if executor not in SEATS:
+            print("UNCERTIFIABLE -- --executor %r is not one of the five seats "
+                  "(%s). This line is NOT a pass."
+                  % (executor, ", ".join(SEATS)))
+            return 2
+        keep, hidden_multi = [], 0
+        for row in rows:
+            seats = executor_seats(row)
+            if executor in seats or not seats:
+                keep.append(row)
+            else:
+                hidden_rows.append(row)
+                if len(seats) > 1:
+                    hidden_multi += 1
+        print("--executor %s: showing %d row(s) (yours + every UNROUTED row); "
+              "hidden %d that name other seats, %d of which name 2+ seats "
+              "(`queue.json:_protocol` reads those as NOBODY -- re-run without "
+              "the filter to see them). The roll-call below and the EXIT CODE "
+              "are computed over the WHOLE registry either way, so the filter "
+              "cannot change the verdict -- only what you have to read."
+              % (executor, len(keep), len(hidden_rows), hidden_multi))
+        shown_rows = keep
     finding = False
     inflight = 0
-    for row in rows:
+    entries = []
+    for row in shown_rows:
         state, detail = owed_status(row)
         claim, claim_detail = claim_status(row, now=now)
         # The claim can only soften a row that is still owed.  A DONE row's
@@ -1573,8 +1771,21 @@ def render_owed(rows, now=None):
                   "Taking it anyway is allowed -- say in your report why.")
         else:
             finding = True
-    if not rows:
+        entries.append((row, shown))
+    if not shown_rows:
         print("OWED_EXECUTION: none")
+    for row in hidden_rows:
+        # The filter hides rows from the PRINTOUT, never from the roll-call or
+        # the exit code (see the note printed above).  Their state still has
+        # to be read, so this loop pays the same price the print loop does.
+        state, _detail = owed_status(row)
+        claim, _cd = claim_status(row, now=now)
+        entries.append((row, "IN-FLIGHT"
+                        if (state == "OWED" and claim == "IN-FLIGHT") else state))
+    # Recomputed from the full entry set rather than accumulated in the print
+    # loop: with --executor those are different populations, and "my seat is
+    # clean" must not be able to print as "the registry is clean".
+    finding = any(sh not in ("DONE", "IN-FLIGHT") for _r, sh in entries)
     if inflight:
         # Printed because the exit code alone would now under-report: an
         # all-in-flight registry exits 0, and "clean read" must not be
@@ -1582,6 +1793,7 @@ def render_owed(rows, now=None):
         # RIDESHARE/OTHER counters above.
         print("OWED_EXECUTION: %d in flight (claimed within %dh) -- NOT a finding "
               "this round, and NOT executed either" % (inflight, CLAIM_TTL_HOURS))
+    render_seat_rollcall(entries, now=now)
     return 3 if finding else 0
 
 
@@ -1614,6 +1826,10 @@ def main():
     ap.add_argument("--owed-only", action="store_true",
                     help="print ONLY the OWED_EXECUTION section (its own "
                          "selfcheck leg, so GH #267 attribution names it)")
+    ap.add_argument("--executor", default=None, choices=SEATS,
+                    help="with --owed-only: print only the rows whose "
+                         "assignment head names this seat, plus every "
+                         "UNROUTED row (the filter is fail-open on purpose)")
     args = ap.parse_args()
 
     if args.owed_only:
@@ -1629,7 +1845,15 @@ def main():
             print("UNCERTIFIABLE -- could not read %s (%s). This line is NOT a pass."
                   % (args.owed, exc))
             return 2
-        return render_owed(rows)
+        return render_owed(rows, executor=args.executor)
+
+    if args.executor is not None:
+        # Refusing is the honest answer: the flag narrows ONE section, and a
+        # full run that silently ignored it would read as "these are your
+        # rows" over a page that was never filtered.
+        print("--executor only applies with --owed-only. Nothing was filtered; "
+              "this line is NOT a pass.")
+        return 2
 
     requests = load_requests(args.queue)
     ride, other = partition(requests)
