@@ -1053,7 +1053,7 @@
     "tests/test_lion_w_fight_seed.lua": {
       "in_gate": false,
       "reason": "too_slow",
-      "seconds": 5.7
+      "seconds": 5.9
     },
     "tests/test_mid_tp_support.lua": {
       "in_gate": true,

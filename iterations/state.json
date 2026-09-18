@@ -9976,5 +9976,19 @@
     "registered_not_fixed": "⚠️ 本轮**登记不修**的两条:(1) 站点 (甲) 的圈不对称(盟友 1200 / 敌人 1600 绕同一点)—— **两种统一都是放松**,与 `roamring`「两种统一都是收紧」正好相反,而**可以动的是哪一半由「那一半有没有第二份工作」决定**:敌方表同时是 parity 的分母**和**挑选支援目标的迭代域,动它会改变分支的**产物**;盟友表只有一份工作。(2) `J.GetAllyList` 的 `if #nCandidate <= 1 then return nCandidate end` —— 恰好一个候选时**跳过它唯一的过滤**(`not ally:IsIllusion()`),而敌方孪生 `J.GetEnemyList` 的早退是 `nCandidate[1] == nil`(**只跳空表**)⇒ 一个落单的**我方**幻象算一具完整战力,一个落单的**敌方**幻象不算。⛔ **在这台仪器上不可测**:`tests/mock/replay_fixture.lua:856` 自己写着 fixture 单位是 canonical real heroes(幻象在生成时就丢掉了)⇒ 唯一的判别式恒为假,而「域为零」与「输入在这台仪器上恒为零」长得一模一样(0NEXT41 的那一条)。**先读默认值再数域,本轮读了。**",
     "promoted": "NO — gated, turbo-only, 未提入集(P4.2 冻结,armed 25 > 20)。**预期裁定 FROZEN-HOLD**。",
     "cost": "零 EC2 / 零 CE / S3 读取 **0** 个对象(出网未计价)。"
+  },
+  "lionwseed_solodomain_qualification_20260918": {
+    "owner": "hero",
+    "date": "2026-09-18",
+    "kind": "QUALIFICATION — 给同日 `lionwseed_solodomain_correction_20260918` 那条读数加一条具名假设(不是撤回,不是新 id,零 arm,`bots/` 纯注释)",
+    "headline": "⭐⭐ **同一天早些时候发表的「`lionwseed` 有自己的单臂域」是**在一个本语料上只能否证、不能确证的谓词后面**读到的 —— 而 GH #890 把这条告警只放在了 CM(没落 id 的那份)上,没放在 Lion(落了 id、并且已经印进 `bots/BotLib/hero_lion.lua` 的那份)上。** ⛔ 不是撤回:「零注入」逐字仍然成立(没有补过任何 spec)。被降级的是**可达性** —— 从「已测量」降为「在一条具名假设下已测量」。",
+    "the_instrument_gap": "`J.IsInTeamFight`(`bots/FunLib/jmz_func.lua`)**只有一个 return,且没有任何不读 mode 的析取项**:`return #J.GetNearbyHeroes( bot, nRadius, false, BOT_MODE_ATTACK ) >= 2`。fixture 加载器把第三个参数丢掉(`function(self, radius, enemies, _)`,`tests/mock/replay_fixture.lua`)⇒ 本语料上它答的是「附近的队友」而不是「在进攻模式的队友」,**失效方向 fail-OPEN**:可否证、不可确证。⛔ 这条事实**不是本轮发现的**,也没有被本轮重证 —— 第十三条 world assertion(`tests/test_activemode_world_assertion.lua:40`)一直逐字写着它,GH #890 是录像组把它路由回英雄组的 `queue.json:hero-103` 供帧请求。",
+    "what_is_new_the_size_of_the_assumption": "⭐ **没人量过这个假设有多大,而它是最紧的一档。** 谓词的阈值就是 2,于是「1200 环内恰好 2 个队友」的帧要求**那两个人当时都在 `BOT_MODE_ATTACK`**。实测(两个语料目录 144 帧,驱动真 `J.*`):Lion 在世 42 / 团战为真 13 —— **7 个恰好 2 人(零富余)**、6 个 3 人;CM 在世 70 / 团战为真 5 —— **5/5 全部零富余**;WK 在世 51 / 团战为真 2 —— 1 个零富余、1 个 3 人。⇒ **本语料里没有一帧是免除这条假设的**;`-201` 的目击帧 `tests/frames/f_260909_215040_wk_blast_lion_480.lua` 正是 Lion 那 7 个零富余帧之一。⚠️ 这些是 **144 个录制帧**上的计数,⛔ 不得当发生率引用。",
+    "the_asymmetry_runs_the_other_way": "⛔⛔ **#890 把告警放在了不需要它的那一侧。** CM 那份读数是**否定**的(§3.3/§6.2:没有端到端见证),而它的两条堵点 —— Frostbite 冷却 3.2s、以及排在团战腿**上面**的 `击杀敌人` 腿 —— **一个 mode 也不读** ⇒ 模式盲造不出那个否定,CM 的否定对这条仪器缺口是**稳健的**。真正整条挂在盲谓词后面的,是 **Lion 那份肯定读数**。⇒ #890 §4(甲) 那件仪器(让加载器第三参生效 + 加 mode 声明钩子,总监编排)**一次解锁两边**,而先该被它改判的是 Lion 那条,不是 CM 那条。",
+    "verification": "`tests/test_lion_w_fight_seed.lua` **25 绿**(旧 23;新增 §3.4 全语料富余分布、§6.3 目击帧零富余 + 到货探测器;§0.4 抬头写清降级的是可达性不是注入)。⭐ 富余计数挂在**已有的那趟 walk 上,边际成本为零**(帧已经加载过)。变异台 `tools/agent/mutstand_lionwseed.sh` **26/26**(旧 22;新增 M21 零富余计数停摆 / M22 环缩到 600 / M22b **声明的等价变异** / M23 加载器开始认第三参 = 到货探测器,`tests/mock/replay_fixture.lua` 因此进 `SRCS` 备份表)。",
+    "m22b_declared_equivalent": "⚠️ **一个变异体活下来了,理由是买来的不是猜的**:M22b 把富余环从 1200 放宽到 1600,**零失败**。直接量 1200–1600 环带:Lion **3/42** 在世帧、CM **9/70**、WK **1/51** 里有队友 —— **环带不空**;但**团战为真的那 20 帧里 0 帧**有 ⇒ 放宽不移动任何计数。⇒ 台子**在这个方向上定不了价**;管半径的是 §3.4 抬头的源码读法 + M22 的收紧半边。⛔ 后来的人不得把 M22b 的 SURVIVED 读成「半径被覆盖了」。",
+    "landed": "`bots/BotLib/hero_lion.lua` `X.lion_FightArgmaxSeed` 抬头 **+26 行纯注释、零行为**(`git diff` 里全部是 `--- ` 行);`iterations/queue.json:hero-102` notes 顶上加 **第 -1 条**(限定第 0 条,不推翻它;(丁) 追加到 (丙) 上:成对发的 verdict 若写「有一部分是 `lionwseed` 独自做的」,必须一并写上这条假设);`iterations/queue.json:hero-103` 记入 GH #890 的答复并置 **BLOCKED-ON-INSTRUMENT**。",
+    "no_arm": "⛔ 零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧。`cmwseed` **仍然不落**,⛔ 也**不判 DO-NOT-ARM**(买不到域 ≠ 域为空;判死它需要的恰恰是买不到的那个读数)。",
+    "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。"
   }
 }

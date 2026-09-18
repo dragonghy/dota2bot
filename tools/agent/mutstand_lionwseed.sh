@@ -29,16 +29,25 @@ set -u
 # tree reads 6) were both in the TEST's own SCOPE -- one corpus directory out of
 # two, and the branch guard transcribed as its first disjunct.  A stand that can
 # only move the source cannot price a defect that lives in the reader.
+#
+# ⭐⭐ tests/mock/replay_fixture.lua JOINED THE LIST 2026-09-18 (second pass),
+# for M23.  §6.3 promises that this file will SAY SO on the day the loader's
+# dropped mode argument starts reaching the filter -- and a promise about an
+# instrument can only be priced by moving that instrument.  ⛔ It is the most
+# shared file any mutant here touches, which is precisely why it is backed up
+# and restore-proved rather than left out.
 SRCS=(
   bots/BotLib/hero_lion.lua
   bots/BotLib/hero_crystal_maiden.lua
   bots/BotLib/hero_skeleton_king.lua
   tests/test_lion_w_fight_seed.lua
+  tests/mock/replay_fixture.lua
 )
 SRC=bots/BotLib/hero_lion.lua
 CM=bots/BotLib/hero_crystal_maiden.lua
 WK=bots/BotLib/hero_skeleton_king.lua
 TEST=tests/test_lion_w_fight_seed.lua
+LOADER=tests/mock/replay_fixture.lua
 TMP=$(mktemp -d)
 
 declare -A BASE_SHA
@@ -194,6 +203,53 @@ mutate "M19 census walks ONE corpus directory again (the tests/frames half goes 
 
 mutate "M20 branch guard transcribed as its FIRST disjunct only (ally half dropped)" "$TEST" \
   "s/                    local bGuard = \(#set >= 2\)\n                        or \(bAllyDisjunct == true and nAllies >= 3\)/                    local bGuard = (#set >= 2)/" CAUGHT
+
+# --- ⭐⭐ THE INSTRUMENT-CAVEAT MUTANTS (2026-09-18, second pass).  §3.4/§6.3
+# say the branch's ENTRY predicate is blind on this corpus and measure how tight
+# the resulting assumption is.  Both readings are only worth their ink if they
+# bite when the measurement drifts, so both are priced here.
+#
+# ⛔ M21 IS THE ONE THAT MATTERS: the slack partition is what turns "an upper
+# bound" (true of every corpus reading ever taken here, and therefore nearly
+# free) into "zero slack on 12 of 20 frames", which is the sentence the charter
+# and hero_lion.lua now carry.  A counter that quietly stops counting reads back
+# as a comfortable number, not as a red file.
+mutate "M21 the zero-slack counter stops firing (the partition silently unbalances)" "$TEST" \
+  "s/                if nNear == 2 then c\.fight_minimum = c\.fight_minimum \+ 1/                if nNear == 99 then c.fight_minimum = c.fight_minimum + 1/" CAUGHT
+
+# ⭐ M22: the census must ask the ally question at the SAME radius the predicate
+# does, or the slack reading describes a ring J.IsInTeamFight never looked at.
+mutate "M22 the slack ring narrowed to 600 (census and the predicate diverge)" "$TEST" \
+  "s/                local nNear = #J\.GetNearbyHeroes\(bot, 1200, false, BOT_MODE_ATTACK\)/                local nNear = #J.GetNearbyHeroes(bot, 600, false, BOT_MODE_ATTACK)/" CAUGHT
+
+# ⛔⛔ M22b IS A MEASURED EQUIVALENT AND IT IS DECLARED, NOT HIDDEN.  It was
+# written as a CAUGHT twin of M22 (widen instead of narrow) and it came back
+# SURVIVED, so the reason was bought rather than assumed:
+#
+#   allies in the 1200-1600 annulus, over both corpus directories
+#     Lion  3 of 42 live frames carry one   -- 0 of the 13 teamfight-true frames
+#     CM    9 of 70                         -- 0 of the 5
+#     WK    1 of 51                         -- 0 of the 2
+#
+# ⇒ the annulus is NOT empty in this corpus (13 live frames have a body in it);
+# it simply never overlaps the teamfight-true set, so widening the ring moves no
+# count and the stand CANNOT price the radius in that direction.  ⭐ What holds
+# the radius is therefore the source read in §3.4's header (J.IsInTeamFight's
+# one return is at `nRadius`, and the census calls it with 1200), plus M22's
+# narrowing half -- ⛔ not this mutant, and a later round may not read its
+# SURVIVED as "the radius is covered".
+mutate "M22b (declared equivalent) the slack ring widened to 1600 -- no teamfight frame has an ally out there" "$TEST" \
+  "s/                local nNear = #J\.GetNearbyHeroes\(bot, 1200, false, BOT_MODE_ATTACK\)/                local nNear = #J.GetNearbyHeroes(bot, 1600, false, BOT_MODE_ATTACK)/" SURVIVED
+
+# ⭐⭐ M23 IS THE ARRIVAL DETECTOR, and it is the only mutant on this stand that
+# moves the LOADER.  §6.3 promises that the day the mode argument reaches the
+# filter, this file says so instead of quietly re-reading the same numbers under
+# a different instrument.  The mutant makes the third argument matter; if §6.3's
+# control is ever weakened to a tautology, this goes SURVIVED.
+# (⚠️ tests/mock/replay_fixture.lua is in SRCS for exactly this mutant -- the
+# charter's `-195` leak was a mutant editing a file nobody backed up.)
+mutate "M23 the loader's GetNearbyHeroes honours its mode argument (instrument arrives)" "$LOADER" \
+  "s/        rawget\(me, '__spec'\)\.GetNearbyHeroes = function\(self, radius, enemies, _\)\n            local out = \{\}/        rawget(me, '__spec').GetNearbyHeroes = function(self, radius, enemies, mode)\n            local out = {}\n            if mode == BOT_MODE_ATTACK then return out end/" CAUGHT
 
 restore
 echo

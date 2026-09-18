@@ -1462,6 +1462,32 @@ end
 --- npc_dota_hero_skeleton_king through the 团战 branch
 --- (tests/test_lion_w_fight_seed.lua §6).
 ---
+--- ⛔⛔ AND THE ONE CAVEAT THAT PARAGRAPH MAY NOT BE QUOTED WITHOUT (added
+--- 2026-09-18, second pass).  "Nothing injected" is still exactly true -- no
+--- spec is patched.  What it does NOT establish is that the frame is REACHABLE
+--- in play.  The 团战 branch sits behind J.IsInTeamFight, whose ONLY return is
+--- `#J.GetNearbyHeroes( bot, nRadius, false, BOT_MODE_ATTACK ) >= 2` with no
+--- mode-free disjunct anywhere in it, and the fixture loader takes that mode
+--- argument and drops it (`function(self, radius, enemies, _)`).  So on this
+--- corpus the predicate answers "allies nearby", never "allies attacking":
+--- fail-OPEN, falsifiable but never confirmable.  ⛔ Not a new discovery --
+--- tests/test_activemode_world_assertion.lua:40 is the thirteenth world
+--- assertion and has said so all along; GH #890 is the replay group routing it
+--- back at this desk's CM frame-supply request.
+---
+--- ⭐ WHAT IS MEASURED, AND IT IS THE TIGHTEST THE ASSUMPTION CAN BE: on the
+--- witness frame above the ring holds EXACTLY 2 allies -- exactly the
+--- predicate's own threshold -- so the reading needs BOTH of them to have been
+--- in BOT_MODE_ATTACK at t.  Corpus-wide the same is true of 7 of Lion's 13
+--- teamfight-true frames, 5 of CM's 5, and 1 of WK's 2; no frame anywhere in
+--- this corpus is free of the assumption (§3.4, §6.3).  ⇒ this id's SOLO DOMAIN
+--- is measured-up-to-one-named-assumption, not measured.  It is NOT retracted:
+--- shipped really vetoes and the id armed alone really casts on the frame as
+--- recorded.  ⛔ And the asymmetry runs the opposite way to the one #890
+--- implies -- the CM negative below rests on a cooldown and an upstream branch,
+--- neither of which reads a mode, so blindness cannot manufacture it; the
+--- reading that hangs on the blind predicate is this POSITIVE one.
+---
 --- ⭐ TWO SCOPE DEFECTS, BOTH SIGNED THE SAME WAY: the census walked
 --- tests/fixtures alone (tests/frames holds 32 more frames -- the charter's
 --- `-199` bought exactly this correction on the WK row and it was never applied

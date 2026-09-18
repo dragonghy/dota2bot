@@ -176,6 +176,14 @@ class TestFocusFiveRows(unittest.TestCase):
     # published domain reading) and this class went red in three places -- for a
     # change that touched no code, no ring and no verdict.  The pin was re-taken
     # by hand in that same work unit; the rows themselves were byte-identical.
+    # ⚠️⚠️ AND IT HAPPENED AGAIN THE SAME DAY (second pass): +26 more comment
+    # lines in the same header moved the Lion row 1597 -> 1623, three reds, same
+    # byte-identical rows.  ⭐ TWICE IN ONE DAY IS THE MEASUREMENT, not the
+    # anecdote -- the cost is not "a fragile pin", it is that the desk most
+    # likely to annotate this function is the desk this pin bills, every time.
+    # That is the argument for the schema repair below; it is NOT an argument
+    # for dropping the line, and until someone makes that change the re-take
+    # stays a same-work-unit obligation.
     # ⛔ Do NOT "fix" this by dropping the line from the key: the site identity
     # is (file, line) in the census output and two copies inside one file are
     # distinguished by nothing else (hero_shadow_shaman.lua carries two).  The
@@ -185,7 +193,7 @@ class TestFocusFiveRows(unittest.TestCase):
     EXPECTED = {
         ('bots/BotLib/hero_crystal_maiden.lua', 1804): ('nCastRange', None, 'CONSISTENT'),
         ('bots/BotLib/hero_skeleton_king.lua', 1354): ('nCastRange + 43', None, 'OVER-REACH'),
-        ('bots/BotLib/hero_lion.lua', 1597): ('nCastRange + 300', 'nCastRange + 50', 'SELF-VETO'),
+        ('bots/BotLib/hero_lion.lua', 1623): ('nCastRange + 300', 'nCastRange + 50', 'SELF-VETO'),
     }
 
     def test_the_published_table_still_reads_the_way_the_issue_says(self):
@@ -224,11 +232,11 @@ class TestFocusFiveRows(unittest.TestCase):
         cm = rows[('bots/BotLib/hero_crystal_maiden.lua', 1804)]
         self.assertEqual(cm['other_reads'], [])
         self.assertEqual(cm['other_shipping_sites'], 0)
-        lion = rows[('bots/BotLib/hero_lion.lua', 1597)]
+        lion = rows[('bots/BotLib/hero_lion.lua', 1623)]
         self.assertEqual(lion['other_shipping_sites'], 1)
 
     def test_lions_self_veto_annulus_is_the_250_units_the_issue_quotes(self):
-        r = rows_by_site()[('bots/BotLib/hero_lion.lua', 1597)]
+        r = rows_by_site()[('bots/BotLib/hero_lion.lua', 1623)]
         self.assertEqual(r['search_delta'] - r['admission_delta'], 250.0)
         self.assertEqual(r['admission_place'], 'post-loop')
 

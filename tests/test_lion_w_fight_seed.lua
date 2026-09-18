@@ -114,6 +114,45 @@
 -- RETROSPECTIVE.  They are NOT frequencies in play, where the meter is live.
 -- Nobody may quote any of them as one.  (That caveat was right in the old text
 -- and is the one line of it worth keeping.)
+--
+-- ===========================================================================
+-- §0.4  ⭐⭐ AND THE SECOND CAVEAT, ADDED 2026-09-18 (second pass): EVERY
+--       COUNT ABOVE IS AN UPPER BOUND, BECAUSE THE BRANCH'S ENTRY PREDICATE IS
+--       BLIND ON THIS INSTRUMENT
+-- ===========================================================================
+--
+-- `J.IsInTeamFight` has exactly one return and no mode-free disjunct:
+--     return #J.GetNearbyHeroes( bot, nRadius, false, BOT_MODE_ATTACK ) >= 2
+-- and the fixture loader's GetNearbyHeroes drops its mode argument
+-- (`function(self, radius, enemies, _)`).  So on this corpus the predicate
+-- answers "2 allies nearby", never "2 allies attacking": fail-OPEN, falsifiable
+-- but never confirmable.  ⛔ Not this file's discovery -- the thirteenth world
+-- assertion (tests/test_activemode_world_assertion.lua:40) has said it since it
+-- was written, and GH #890 is the replay group routing it back at this group's
+-- CM frame-supply request.
+--
+-- ⭐ WHAT THIS FILE ADDS IS THE SIZE OF THE ASSUMPTION, WHICH IS THE TIGHTEST
+-- IT CAN BE, AND WHOSE READING IT ACTUALLY THREATENS.  §3.4 measures the ally
+-- count on every teamfight-true frame of all three copies:
+--
+--     Lion  13 true:  7 at exactly 2 allies (zero slack),  6 at 3
+--     CM     5 true:  5 at exactly 2 allies (zero slack),  0 with any spare
+--     WK     2 true:  1 at exactly 2,                      1 at 3
+--
+-- 2 is the predicate's own threshold, so a zero-slack frame needs BOTH allies
+-- to have been in BOT_MODE_ATTACK in play.  No frame in this corpus is free of
+-- the assumption.
+--
+-- ⛔⛔ AND THE ASYMMETRY RUNS THE OPPOSITE WAY TO THE ONE GH #890 IMPLIES.  It
+-- put the caveat on CM, the copy no id was landed off.  But the CM reading here
+-- is NEGATIVE (§3.3/§6.2, no end-to-end witness) and its two blockers -- a
+-- cooldown and a branch above -- read no mode at all, so blindness cannot
+-- manufacture it.  The reading that hangs on the blind predicate is the
+-- POSITIVE one: §6's solo domain for `lionwseed`, whose witness frame is one of
+-- the zero-slack seven (§6.3 pins it).  ⇒ §6 stays exactly as strong as it was
+-- about INJECTION (nothing is injected) and is downgraded about REACHABILITY
+-- from measured to measured-up-to-one-named-assumption.  ⛔ Whoever quotes the
+-- headline quotes this paragraph with it.
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
@@ -491,7 +530,7 @@ local function census(unit, ability, nSearch, nAccept, bAllyDisjunct)
     local c = { alive = 0, fight = 0, guard = 0, measured = 0, zero = 0,
                 search_allzero = 0, accept_nonempty = 0, accept_allzero = 0,
                 multi = 0, ascending = 0, argmax_frames = 0, argmax_nonnil = 0,
-                guard_by_ally = 0 }
+                guard_by_ally = 0, fight_minimum = 0, fight_spare = 0 }
     local drivable, divergent = {}, {}
     for _, path in ipairs(fixture_paths()) do
         if frame_has_alive(path, unit) then
@@ -499,6 +538,15 @@ local function census(unit, ability, nSearch, nAccept, bAllyDisjunct)
             local ok, J, bot = pcall(rf.load, path, unit)
             if ok and J.IsInTeamFight(bot, 1200) then
                 c.fight = c.fight + 1
+
+                -- §3.4's question, asked on this same pass (free: the frame is
+                -- already loaded, and this is the same list J.IsInTeamFight
+                -- just built).  How much ROOM does the entry predicate have
+                -- on this frame -- i.e. how many allies would have to have
+                -- been in BOT_MODE_ATTACK for its `>= 2` to hold in play?
+                local nNear = #J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_ATTACK)
+                if nNear == 2 then c.fight_minimum = c.fight_minimum + 1
+                elseif nNear >= 3 then c.fight_spare = c.fight_spare + 1 end
                 local cr = branch_cast_range(J, bot, ability)
                 if cr > 0 then
                     local set = J.GetNearbyHeroes(bot, cr + nSearch, true, BOT_MODE_NONE)
@@ -677,6 +725,70 @@ tests['§3.3 ⭐ the other two copies: all-zero sets DO appear -- and neither is
     -- `cmwseed` id may NOT be landed off this count.  §6.2 drives (2) rather
     -- than asserting it, so this paragraph cannot go stale silently.
     -- (charter hero.md `-201`; the frame-supply request is queue.json hero-103.)
+end
+
+tests['§3.4 ⭐⭐ every teamfight-true frame in this corpus is an UPPER BOUND, and 12 of 20 have ZERO slack'] = function()
+    -- ⛔⛔ THE INSTRUMENT CAVEAT THAT BELONGS ON EVERY READING ABOVE, AND WAS
+    -- NOT ON ANY OF THEM UNTIL 2026-09-18 (second pass).  `J.IsInTeamFight`
+    -- (bots/FunLib/jmz_func.lua) has EXACTLY ONE return and it is
+    --
+    --     return #J.GetNearbyHeroes( bot, nRadius, false, BOT_MODE_ATTACK ) >= 2
+    --
+    -- -- there is NO mode-free disjunct anywhere in it.  The fixture loader's
+    -- GetNearbyHeroes takes the mode argument and drops it on the floor
+    -- (`function(self, radius, enemies, _)`, tests/mock/replay_fixture.lua), so
+    -- on EVERY frame in this corpus that call answers "allies within r", never
+    -- "allies within r who are attacking".  The failure direction is fail-OPEN:
+    -- the predicate can be falsified here, never confirmed.  ⛔ That fact is
+    -- NOT this file's discovery and is not re-proved here -- it is the
+    -- thirteenth world assertion (tests/test_activemode_world_assertion.lua:40,
+    -- verbatim `J.IsInTeamFight reads TRUE on 71 of 872 hero-frames because of
+    -- it`), and GH #890 is the replay group routing it back at the hero group's
+    -- CM frame-supply request (queue.json hero-103).
+    --
+    -- ⭐⭐ WHAT IS NEW HERE IS THE SIZE OF THE ASSUMPTION, WHICH NOBODY HAD
+    -- MEASURED, AND IT IS THE TIGHTEST IT CAN BE.  GH #890 applied the caveat
+    -- to CM -- the copy this group did NOT land an id on -- and left it off the
+    -- Lion reading in §6, which this group DID publish and DID print into
+    -- bots/BotLib/hero_lion.lua.  Measured over the same walk: on the majority
+    -- of the teamfight-true frames the ally count is EXACTLY 2, i.e. exactly
+    -- the predicate's own threshold, so BOTH of those allies must have been in
+    -- BOT_MODE_ATTACK in play or the branch is unreachable.  There is no frame
+    -- anywhere in this corpus where the assumption is free; the only question
+    -- is whether it has one spare body or none.
+    local lion = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET, true)
+    local cm   = census('npc_dota_hero_crystal_maiden', 'crystal_maiden_frostbite', 0, nil)
+    local wk   = census('npc_dota_hero_skeleton_king', 'skeleton_king_hellfire_blast', 43, nil)
+
+    -- The partition is total: a frame that cleared `>= 2` has 2 or more.
+    for label, c in pairs({ Lion = lion, CM = cm, WK = wk }) do
+        assert(c.fight_minimum + c.fight_spare == c.fight, label
+            .. ': ' .. c.fight_minimum .. ' + ' .. c.fight_spare .. ' teamfight frames do not '
+            .. 'add up to ' .. c.fight .. ' -- a frame cleared `>= 2` with fewer than 2 allies, '
+            .. 'which means this census and J.IsInTeamFight are no longer asking the same '
+            .. 'question (different radius? different list?)')
+    end
+
+    -- ⚠️ FLOORS on the zero-slack side and the total, so corpus growth cannot
+    -- turn this red on size alone -- but the CLAIM is the ratio, so it is
+    -- asserted as a claim and not left to the reader.
+    assert(lion.fight_minimum >= 7, 'Lion zero-slack teamfight frames fell to '
+        .. lion.fight_minimum .. ', was 7 of ' .. lion.fight .. '. If the corpus genuinely '
+        .. 'grew slack, re-take the reading in §0.3 and hero_lion.lua rather than deleting '
+        .. 'this line -- a LOOSER predicate is a different claim, not a passing one.')
+    assert(cm.fight_minimum == cm.fight, 'CM no longer reads zero-slack on every one of its '
+        .. cm.fight .. ' teamfight frames (' .. cm.fight_minimum .. '). GH #890 refused the '
+        .. 'CM frame supply on exactly this; if it changed, that refusal is re-openable.')
+    assert(wk.fight_minimum >= 1, 'WK lost its zero-slack teamfight frame')
+
+    -- ⛔ AND THE ASYMMETRY, SAID PLAINLY, BECAUSE IT RUNS THE OPPOSITE WAY TO
+    -- THE ONE GH #890 IMPLIES.  The CM reading this file carries is NEGATIVE
+    -- (§3.3/§6.2: no end-to-end witness), and its two blockers -- Frostbite's
+    -- cooldown and the 击杀敌人 branch sitting above the teamfight branch --
+    -- do not read a mode anywhere, so the mode blindness cannot manufacture
+    -- that negative.  ⭐ The reading that DOES hang on the blind predicate is
+    -- the POSITIVE one: §6's solo domain for `lionwseed`.  §6.3 pins that the
+    -- witness frame is in the zero-slack bucket.
 end
 
 -- ---------------------------------------------------------------- section 4 --
@@ -974,6 +1086,41 @@ tests['§6.1 ⭐⭐ shipped VETOES and the id ALONE casts -- no pairing, no inje
     assert(dOther == 0, OTHER .. ' alone now casts on the solo pin (' .. tostring(dOther)
         .. '), so this frame no longer separates the two ids and cannot support the '
         .. '"' .. CAND .. ' has its OWN domain" reading')
+end
+
+tests['§6.3 ⛔ the solo witness is ZERO-SLACK on the blind predicate -- label it, do not drop it'] = function()
+    -- ⛔⛔ THE ONE SENTENCE §6 MAY NOT BE QUOTED WITHOUT.  §6.0/§6.1 read
+    -- "nothing is injected", and that is still true -- no spec is patched, no
+    -- cooldown lifted.  What they do NOT establish, and never could on this
+    -- instrument, is that the frame is REACHABLE in play: X.ConsiderW's 团战
+    -- branch sits behind J.IsInTeamFight, whose only return counts allies in
+    -- BOT_MODE_ATTACK, and the loader drops that filter (§3.4; the thirteenth
+    -- world assertion; GH #890).
+    --
+    -- ⭐ AND ON THIS FRAME THE ASSUMPTION IS AT ITS MAXIMUM: the ring holds
+    -- EXACTLY 2 allies, which is exactly the threshold, so the §6 headline
+    -- requires BOTH of them to have been attacking at t.  ⛔ This does not
+    -- retract §6.1 -- shipped really does veto and the id armed alone really
+    -- does cast, on the frame as recorded.  It downgrades the claim from
+    -- MEASURED to MEASURED-UP-TO-ONE-NAMED-ASSUMPTION, at the assumption's
+    -- tightest setting, and it is asserted here so the next round cannot quote
+    -- the headline off a file that knows better.
+    local J, bot = rf.load(SOLO_PIN, UNIT)
+    local near = J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_ATTACK)
+    assert(#near == 2, 'the solo pin now carries ' .. #near .. ' allies within 1200, was 2. '
+        .. 'More is not better news by itself -- it changes how many of them have to have '
+        .. 'been attacking, so re-state the caveat with the new number instead of dropping it.')
+
+    -- ⛔ THE CONTROL that makes the line above about the LOADER and not about
+    -- this frame: the two constants differ, so an identical answer under both
+    -- is a dropped argument and not a coincidence.
+    assert(BOT_MODE_ATTACK ~= BOT_MODE_NONE, 'the two mode constants collided, so the probe '
+        .. 'below cannot distinguish a dropped filter from a real one')
+    local none = J.GetNearbyHeroes(bot, 1200, false, BOT_MODE_NONE)
+    assert(#none == #near, 'the loader\'s GetNearbyHeroes answered DIFFERENTLY under '
+        .. 'BOT_MODE_ATTACK (' .. #near .. ') and BOT_MODE_NONE (' .. #none .. ') -- the mode '
+        .. 'argument now reaches the filter. ⭐ That is the instrument GH #890 §4(甲) asks '
+        .. 'for arriving: re-take §3.4, §6.0 and §6.1, and the CM refusal in §6.2 with it.')
 end
 
 tests['§6.2 ⛔ the CM copy has NO end-to-end witness -- the blocker, driven'] = function()

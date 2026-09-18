@@ -22,6 +22,18 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-202. ✅ **主体(P4.4 **(ii) 判定完结 + 一条本组自己已发表读数的限定**):开工时 open `[hero]` 最上面的 GH **#890**(录像组答复 `queue.json:hero-103`)。⭐⭐ 头条是**那条告警放错了一侧 —— 而不对称的方向跟 #890 暗示的相反**:#890 把「fixture 上 `J.IsInTeamFight` 是上界」的告警放在 **CM**(本组**没有**落 id 的那份),而同一件仪器缺口**整条压在 Lion 那份肯定读数上**(本组落了 id、并在同日早些时候印进 `bots/BotLib/hero_lion.lua` 的 `-201` 单臂域)。⛔ **限定不是撤回**:「零注入」逐字仍成立,被降级的是**可达性**。报告 `iterations/reports/hero/20260918T053402Z.md`;裁定 `iterations/state.json:lionwseed_solodomain_qualification_20260918`。**`bots/` 本轮改动是纯注释、零行为**;**零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+   - ⭐⭐ **判别子是「堵点读不读 mode」,不是「哪个英雄」**:CM 的读数是**否定**的,两条堵点(Frostbite 冷却 3.2s、上游 `击杀敌人` 腿)**一个 mode 也不读** ⇒ 模式盲**造不出**那个否定,CM 的否定对这条缺口是**稳健的**;Lion 的读数是**肯定**的,整条坐在 `J.IsInTeamFight` 后面 ⇒ **这才是该挂告警的那一条**。
+   - ⭐ **本轮新买的是那个假设的尺寸,而它是最紧的一档。** `J.IsInTeamFight` **只有一个 return、没有任何不读 mode 的析取项**(`#J.GetNearbyHeroes( bot, nRadius, false, BOT_MODE_ATTACK ) >= 2`),阈值就是 2 ⇒ 「环内恰好 2 人」= **零富余**,要求那两人当时**都**在 `BOT_MODE_ATTACK`。实测(144 帧,驱动真 `J.*`):**Lion 42 在世 / 13 团战为真,其中 7 个零富余、6 个 3 人;CM 70 / 5,5/5 全零富余;WK 51 / 2,1 个零富余**。⇒ **本语料没有一帧免除这条假设**,而 `-201` 的目击帧正是 Lion 那 7 个之一(1200 环内恰好 slardar + spirit_breaker)。⚠️ 42/13、70/5、51/2 与 §3.1/§3.3 已发表读数**逐位对上**(独立复算)。⚠️ 144 个**录制帧**上的计数,⛔ 不得当发生率引用。
+   - ⭐ **一个变异体活下来了,理由是买来的不是猜的**:M22 第一版(富余环 1200→1600)跑出 **SURVIVED**,直接量环带 —— **Lion 3/42、CM 9/70、WK 1/51 在世帧有队友在 1200–1600 里,而团战为真的 20 帧里 0 帧有** ⇒ 环带不空,只是**从不与团战集合相交**,台子**在这个方向定不了价**。处置:改名 **M22b 并声明为实测等价体**(三行读数钉进台子抬头),另加能定价的 **M22**(环收紧到 600)。⛔ 不得把 M22b 的 SURVIVED 读成「半径被覆盖了」。
+   - **落地**:`tests/test_lion_w_fight_seed.lua` 新增 **§3.4**(全语料富余分布 + 分层求和恒等式守卫)与 **§6.3**(目击帧零富余 + **到货探测器**),**§0.4** 抬头;**25 绿**(旧 23),⭐ 富余计数挂在**已有的那趟 walk 上、边际成本为零**。变异台 **26/26**(旧 22;新增 M21/M22/M22b/**M23**),⛔ `tests/mock/replay_fixture.lua` 因 M23 进 `SRCS`。`hero_lion.lua` 抬头 **+26 行纯注释**。`queue.json:hero-102` notes 加 **第 -1 条**((丁) 追加到 (丙):成对发的 verdict 写「有一部分是 `lionwseed` 独自做的」时**必须一并写上这条假设**);`hero-103` 记入 #890 答复并置 **BLOCKED-ON-INSTRUMENT**,⛔ **不判 DO-NOT-ARM**(买不到域 ≠ 域为空),`cmwseed` 保持不落。
+   - ⚠️⚠️ **自己撞出的两件事**:(甲) **容器里 apt 装不上,而原因是镜像 503 不是包名错** —— `archive.ubuntu.com` HTTP 对四个包全返 **503**;⭐ 修法是**换协议**:同样四个 `.deb` 走 **HTTPS(经代理)全部 200**,`dpkg -i` 一次装上 `lua5.1`+`luacheck`,于是**本轮三条闸全部真跑过**。⛔ 这与 GH #205 那条「包名是 `lua-check`」**是不同的失效,别合并**。(乙) **`tests/test_argmax_ring_census.py` 同一天第二次因纯注释改动红三处**(Lion 行 1597→**1623**),已同工作单元重取;⭐ **一天两次是测量不是轶事** —— 代价是**最可能给这个函数写注释的组,正是每次被这根钉子记账的组**;⛔ 仍不许把行号从键里拿掉,诚实修法是换成「函数 + 列表名」的 schema 改动,归下一个有理由动 `argmax_ring_census.py` 的人(已写进该表抬头)。
+   - **闸**:`luacheck_gate.sh` **`GATE_EXIT=0` CLEAN / 0 warnings**;`py_gate.py` **EXIT=0,`134 ran, 0 findings, 0 uncertifiable, 58.6s`**;`lua_gate.py` **EXIT=0,`424 ran, 0 findings, 0 uncertifiable, 10 unanswered, 5 known-red, 759.2s`**。开工自检 **worst exit 3**(`cadence / queue-rulings / owed-executions / lua-coverage / trunk-red(python)`;`trunk-red(lua)` 是 exit 2)——⚠️ `trunk-red(python)` = `tests/test_py_gate_hook.py`,**红的原因就是 (甲) 的 503**;⚠️ `lua-coverage` 点名 `tests/test_lion_w_fight_seed.lua` **NEW UNCOVERED / too_slow**,是 `-201` (甲) 已登记的代价,**本轮没修**,照实写。
+   - **下一轮主体候选**(按可测性排序):
+     **第 1 条**:`-201` 候选表第 1 条原样顺延 —— `X.ConsiderQ` 通用兜底出货点(点 10),前置不变(先读 `hero_skeleton_king.lua:1546` 起那份 `wkqaim` 的 PRE-FLIGHT 笔记)。⚠️ 它已连排两轮。
+     **第 2 条**:`-201` 候选表第 2 条顺延并**加一条实测前置** —— 把 `tests/test_lion_w_fight_seed.lua` 拆成两半让它回快闸。⚠️ 本轮实测 **best-of-three 5.868s**(cap 5.5),而**主成本是 163 次 hero load**(Lion 42 / CM 70 / WK 51)⇒ **⛔ 按「Lion 自己 / CM+WK 同族」拆是不均衡的**(121 vs 42),CM+WK 那半大概率仍超 cap。**先量再拆**。
+     **第 3 条(本轮新开)**:`argmax_ring_census.py` 的**输出 schema** 从 `(file, line)` 换成「所在函数 + 列表名」——(乙) 一天两次的那条。⚠️ 归属存疑([harness] 还是本组),**先问总监再动**。
+
 -201. ✅ **主体(P4.4 **(ii) 判定完结 + 一条已发表读数的更正**):`-200` 交出的「下一轮主体候选·第 1 条」——
    **CM 那份 `= 0` 种子的独立 id**,前置是「**域先买,且在两个语料目录上数**」。
    **买下来的结果有两层,第二层比第一层重要得多:(1) CM 那份的域端到端是空的 ⇒ 本轮没有落 `cmwseed`(前置正是为了这个答案而写);
@@ -9067,6 +9079,41 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-18T05:34Z(报告 `iterations/reports/hero/20260918T053402Z.md`;**backlog:新开 `-202`**;
+  裁定 `iterations/state.json:lionwseed_solodomain_qualification_20260918`;
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮改动是纯注释、零行为**;
+  **零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧**;
+  **P4.4 自评:(ii) 判定完结 + 一条本组自己已发表读数的限定**)
+  **主体:开工时 open `[hero]` 最上面的 GH #890(录像组答复 `queue.json:hero-103`)。
+  头条是那条告警放错了一侧,而不对称的方向跟 #890 暗示的相反。**
+  - ⭐⭐ **#890 把「fixture 上 `J.IsInTeamFight` 只能否证不能确证」的告警放在 CM —— 本组没有落 id 的那份;
+    而同一件仪器缺口整条压在 Lion 那份肯定读数上** —— 本组落了 id、并在同日早些时候印进
+    `bots/BotLib/hero_lion.lua` 的 `-201` 单臂域。**判别子是「堵点读不读 mode」**:
+    CM 是否定读数、两条堵点(冷却 3.2s / 上游 `击杀敌人` 腿)**一个 mode 也不读** ⇒ 盲性**造不出**那个否定;
+    Lion 是肯定读数、整条坐在该谓词后面。⛔ **限定不是撤回**:「零注入」逐字仍成立,
+    被降级的是**可达性**(已测量 → 在一条具名假设下已测量)。
+  - ⭐ **新买的是假设的尺寸,而它是最紧的一档**:`J.IsInTeamFight` **只有一个 return、无不读 mode 的析取项**,
+    阈值就是 2 ⇒ 「环内恰好 2 人」= 零富余。实测 144 帧:**Lion 42 在世 / 13 团战真(7 零富余、6 个 3 人);
+    CM 70 / 5(5/5 全零富余);WK 51 / 2(1 零富余)** ⇒ **没有一帧免除这条假设**,
+    `-201` 目击帧正是 Lion 那 7 个之一。⚠️ 42/13、70/5、51/2 与 §3.1/§3.3 已发表读数**逐位对上**(独立复算);
+    ⚠️ 录制帧计数,⛔ 不得当发生率。
+  - ⭐ **一个变异体活下来,理由是买来的**:M22 第一版(环 1200→1600)**SURVIVED** ⇒ 直接量环带:
+    **Lion 3/42、CM 9/70、WK 1/51 在世帧有人在 1200–1600,而团战为真的 20 帧里 0 帧有**
+    ⇒ 环带不空、只是从不相交,**台子在这个方向定不了价**。改名 **M22b 声明为实测等价体**,另加收紧半边 **M22**。
+  - **落地**:测试新增 **§3.4 / §6.3**(+ §0.4 抬头),**25 绿**(旧 23),富余计数**挂在已有的 walk 上、边际成本零**;
+    变异台 **26/26**(旧 22;新增 M21/M22/M22b/**M23 到货探测器**,`tests/mock/replay_fixture.lua` 因此进 `SRCS`);
+    `hero_lion.lua` 抬头 **+26 行纯注释**;`queue.json:hero-102` 加 **第 -1 条**((丁) 追加到 (丙));
+    `hero-103` 置 **BLOCKED-ON-INSTRUMENT**,⛔ **不判 DO-NOT-ARM**,`cmwseed` 保持不落。
+  - ⚠️⚠️ **两条自撞**:(甲) **apt 装不上的原因是镜像 503 不是包名错** —— HTTP 四个包全 503,
+    ⭐ 走 **HTTPS(经代理)全部 200** + `dpkg -i` 一次装上 ⇒ **本轮三条闸全部真跑过**;
+    ⛔ 与 GH #205 的「包名是 `lua-check`」**是不同的失效,别合并**。
+    (乙) `tests/test_argmax_ring_census.py` **同一天第二次**因纯注释改动红三处(Lion 行 1597→**1623**),
+    已同工作单元重取;⭐ **一天两次是测量不是轶事**;⛔ 仍不许把行号从键里拿掉。
+  - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 134 ran, 0 findings, 0 uncertifiable, 58.6s`;
+    `lua gate: 424 ran, 0 findings, 0 uncertifiable, 10 unanswered, 5 known-red, 759.2s`(EXIT=0)。开工自检 **worst exit 3**(`cadence / queue-rulings / owed-executions /
+    lua-coverage / trunk-red(python)`,另 `trunk-red(lua)` exit 2)——⚠️ `trunk-red(python)`
+    = `tests/test_py_gate_hook.py`,**红的原因就是 (甲) 的 503**;⚠️ `lua-coverage` 点名
+    `tests/test_lion_w_fight_seed.lua` **NEW UNCOVERED / too_slow**(`-201` (甲) 的已登记代价,**本轮没修**)。
 - 2026-09-18T02:16Z(报告 `iterations/reports/hero/20260918T021604Z.md`;**backlog:新开 `-201`**;
   裁定 `iterations/state.json:lionwseed_solodomain_correction_20260918`;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮改动是纯注释、零行为**;
