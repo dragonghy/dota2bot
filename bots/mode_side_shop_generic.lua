@@ -58,7 +58,10 @@ function GetDesireHelper()
 
     local tAllyInTormentorLocation = J.GetAlliesNearLoc(TormentorLocation, 900)
     local tAllyInTormentorWaitLocation = J.GetAlliesNearLoc(vWaitingLocation, 900)
-    local tInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1600)
+    -- [tormring] named once so the two halves of the Tormentor parity
+    -- question below cannot drift onto two different circles again.
+    local nTormentorParityEnemyRing = 1600
+    local tInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), nTormentorParityEnemyRing)
     local nAliveAlly = 0
 
     local nTormentorSpawnInterval = J.IsModeTurbo() and 5 or 10
@@ -217,7 +220,11 @@ function GetDesireHelper()
                 end
 
                 if ally ~= nil and bot == ally and bot.tormentor_state == false then
-                    local tInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)
+                    -- [tormring] armed (turbo-only), our half is counted
+                    -- over the ring the enemy half already uses. Disarmed
+                    -- this is literally 1200. See J.GetTormentorParityRadius.
+                    local tInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(),
+                        J.GetTormentorParityRadius(nTormentorParityEnemyRing, 1200))
                     if not J.IsRealInvisible(bot) and (#tInRangeEnemy > #tInRangeAlly) then
                         return BOT_MODE_DESIRE_LOW
                     else

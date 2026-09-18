@@ -35,6 +35,58 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT46. **【2026-09-18T13:42Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `tormring` 落地)。剩下的是三句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【上一轮的修法能不能照抄】那一格**:
+   **一个缺陷的形状可以逐字重现,而它的【符号】决定了修法;⛔ 而符号不在缺陷里,
+   在两半各自的【别的不对称】里 —— 于是「同一个缺陷的第二个站点」读起来像「同一个修法的第二个站点」,
+   两者在阅读时长得一模一样。**
+
+   现场:`roamring`(盟友 2200 / 敌人 2000)宽的圈是**我们的**,于是它加宽**敌方**那半,
+   并写下「这不会过度修正」的理由 —— 敌方那半受视野限制、滤幻象,**在半径进场前已经是被低估的一半**。
+   `mode_side_shop_generic.lua` 的 Tormentor 提交(敌人 **1600** / 盟友 **1200**,唯一消费者
+   `#tInRangeEnemy > #tInRangeAlly`)是**同一个形状、符号相反**:那条理由**逐字仍为真**,
+   而它的**结论翻了个个儿** ⇒ 照抄 roamring 的动作(收敌圈到 1200)= 统一了圆 + 加重了那个低估。
+   📌 **判据:认出「这是上一个缺陷的同一个形状」之后,不要接着问「上次怎么修的」,
+   要问【上次那条「为什么这个方向不会过度修正」的理由,在这里指向哪一边】 —— 理由可迁移,动作不可。**
+
+   ⭐ **第二句,关于「更大的域」不是选杠杆的判据**:另一种统一(敌圈收到 1200)`down 19` >
+   本杠杆 `down 13`,**且文件自己的习惯站在它那边**(`:274` 用 1200,1600 全文件只出现一次)。
+   仍然不发它:加宽我们那半是**停止丢弃**已有的英雄位置,收窄他们那半是**开始丢弃**已有的英雄位置。
+   ⛔ **两者都让 bail 变少 ⇒ 方向列分不开它们**;分得开的只有「哪一边往比较里加信息」。
+
+   ⚠️ **第三句,管道防呆第 19 次,这次是【等待】本身**:
+   `until ! pgrep -f routine_selfcheck; do sleep 20; done` —— **`pgrep -f` 匹配整条命令行,
+   而等待器自己的命令行里就写着那个字符串** ⇒ **它永远等得到自己**,两个等待器都不可能退出。
+   📌 凡用 `pgrep -f <字符串>` 判「那东西还在不在」,先问**「我这条命令行里有没有这个字符串」**。
+   ⭐ 这是**「探针把自己算进了它要数的集合」**的又一个实例 —— 与 `#allies` 那一族
+   (表以我为心、却被当成不装我)**是同一个错误住在不同的语言里**。
+   改走日志里的 `SELFCHECK_EXIT=` 标记,或前台 `tail -f --pid=<真 pid> /dev/null`(不含 sleep)。
+
+   ⚠️ **下一轮要看一眼的四条**:
+   (a) **`queue.json:strategy-63`**(本轮新增)+ 本轮 push 后开的 GH issue —— `tormring` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-62` **十八条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检 `EXIT=3`**;findings = `cadence queue-rulings owed-executions lua-coverage`,
+   **`UNCERTIFIABLE = trunk-red(python)`** —— ⭐ **与上一轮不同**:python 套件本身读
+   `150 passed, 0 failed, 1 uncertifiable`,那一个是 `tests/test_selfcheck_lua_leg.py`
+   (138 文件 / 120.1s 骑在 120s 刀口上 = **GH #548**),**GH #894 点名的那个文件本轮不红**。
+   0NEXT45 §(c) 的排法本轮照抄并且成立(自检后台 → 只读测量 → 等它退出 → 才改 `bots/`)。
+   ⚠️ 另:`tools/agent/ensure_lua_toolchain.sh` **退出 1 且日志为空**(与 GH #892 的镜像 503 不同形),
+   直接 `apt-get install -y lua5.1 lua-check` 一次成功 —— 登记,未修;
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。
+
+   ⚠️ **本轮登记、下一轮可以直接做的两根杠杆**:
+   1. **`J.GetAlliesNearLoc` 装着发问者、`J.GetEnemiesNearLoc` 不装**(`allyloc_nonempty 1039/1039`)
+      ⇒ 这个比较除了圆不同,**主语也不对称**。本轮不动:它是 `helpself` 族的问题,
+      且会与 `tormring` 的方向**叠在一起分不开** —— 要动它得等 `tormring` 有裁定。
+   2. **`J.GetClosestCore`**(0NEXT44 登记的那根)—— 仍**不要动**,`corerole` 还没有裁定
+      (`state.json` 只有 `corerole_GATE_LANDED_20260822T070xZ`,无 verdict)。】**
+
 0NEXT45. **【2026-09-18T10:16Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `claimlone` 落地)。剩下的是三句要带走的。
 
@@ -10789,6 +10841,58 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-18T13:42Z:**同一个形状,符号反过来 —— 于是上一轮的修法不能照抄,能照抄的是它的理由。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `tormring`,
+  `bots/FunLib/jmz_func.lua` 的新 helper + `bots/mode_side_shop_generic.lua` 的两处改写)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T134254Z.md`;
+  `state.json:tormring_20260918`;完整判据 ⇒ backlog **0NEXT46**。
+
+  **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**;findings = `cadence queue-rulings
+  owed-executions lua-coverage`,**`UNCERTIFIABLE = trunk-red(python)`** —— python 套件自己读
+  `150 passed, 0 failed, 1 uncertifiable`(那一个是 GH #548 的 `test_selfcheck_lua_leg.py`),
+  **GH #894 点名的文件本轮不红**。0NEXT45 §(c) 的排法照抄并成立(自检后台 → 只读测量 →
+  等它退出 → 才改 `bots/`)。⚠️ **管道防呆第 19 次,这次是等待本身**:
+  `pgrep -f routine_selfcheck` 匹配到**等待器自己的命令行** ⇒ 永远等得到自己。
+  P1 球不在本组(#862 停在录像组)/ P2 卡魔棒仪器墙 ⇒ **4.4 球在本组且本组能动**,取 4.4。
+
+  **缺陷**:`bots/mode_side_shop_generic.lua` `:61` 敌人 **1600** / `:220` 盟友 **1200**,
+  两圈同心,唯一消费者 `:221` 的 `#tInRangeEnemy > #tInRangeAlly`(为真 ⇒ `DESIRE_LOW`,
+  放弃这次 Tormentor 提交)⇒ 1400u 外的英雄,是他们的算战力、是我们的不存在;
+  壳是圆面积的 **78%**,且**只往他们那边加**。
+  ⭐⭐ **它是 `roamring` 的形状、符号相反**:roamring 宽的圈是我们的,它加宽敌方那半,
+  理由是敌方那半受视野限制、滤幻象、**进场前已经是被低估的一半** —— **那条理由在这里逐字仍为真,
+  结论却翻了个个儿** ⇒ 照抄它的动作会在统一圆的同时加重那个低估。
+
+  **修法**:`J.GetTormentorParityRadius(nEnemyRadius, nAllyRadius)`(`jmz_func.lua`,
+  `J.GetRoamParityRadius` 正下方),armed(turbo-only)时**盟友**那半改读敌方那半已在用的圈;
+  disarmed 逐字返回 `nAllyRadius`。调用点把 1600 **命名一次**,两半都从这个名字取
+  ⇒ 再漂开就顶红。⛔ **不碰**敌方半径、算符、`J.IsRealInvisible`、视野规则、幻象过滤。
+
+  **方向由构造定死**:超集 ⇒ `#tInRangeAlly` 只能变大 ⇒ 比较只能 TRUE→FALSE。
+  ⚠️ **armed 是放宽不是收紧**(与 roamring 相反):只能放行一次出厂树会 bail 掉的提交。
+
+  **域**(`tests/_tormring_sweep.lua`,112 fixture / **1039** 活体帧):
+  `ashell_nonempty 94` | **`shipped_bail 78`** | **`wide_bail 65` / `wide_down 13` / `wide_up 0`**;
+  13 帧散在 **11 份** fixture 上。⛔ 另一种统一(敌圈收 1200)`tight_down **19**` **更大**、
+  且文件 `:274` 也用 1200 —— **仍然不发**:加宽我们那半是停止丢弃已有信息,收窄他们那半是开始丢弃。
+  两者都让 bail 变少 ⇒ **方向列分不开它们**。两个域只重叠 5 帧。
+  ⛔ **这是谓词不是分支**(Tormentor 链里 `bot.tormentor_state` 等是 `.dem` 不带的 bot-VM 状态,
+  GH #27)⇒ **13 是天花板不是发生率**。
+
+  **本地验证**:`tests/test_tormring_parity_ring.lua` **10/10**,0.255/0.259/0.272s,**零 stub**。
+  翻转证人 `f_260820_043124_axe_blink_flee_529` / **sniper(dire)**:`a1200=1 a1600=3 e1600=3`,
+  两个真队友在 **1426u** 与 **1570u**;空壳对照 `f_011405_jak_rescue_axe` / axe(radiant)。
+  变异台 `tools/agent/mutstand_tormring.sh` **8 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**,**第一轮就干净**。
+
+  **闸**:`luacheck bots game` **0 警告**;`py gate: 134 ran, 0 findings, 0 uncertifiable, 45.4s`;
+  三条腿真码见报告 §七。⭐ 新测试**同轮**手工上了 `lua_gate_manifest.json`
+  (`seconds 0.291`,**rescale 过、方向与前两次手加相反**,理由写进 `hand_added_note`),
+  `selected 350 → 351`,`total 266.837 → 267.128`(预算 540)。
+  ⚠️ `tools/agent/ensure_lua_toolchain.sh` 退出 1 且日志为空(登记,未修)。
+
+  **下一棒**:`queue.json:strategy-63`(预期 FROZEN-HOLD)+ push 后开的 GH issue。
 
 - 2026-09-18T10:16Z:**它不是被漏看的,是被分诊过的 —— 而分诊回答的是关于它的另一个问题。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `claimlone`,

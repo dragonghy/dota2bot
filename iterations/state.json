@@ -10040,5 +10040,23 @@
   "no_arm": "⛔ 零 gate id、零 arm、零 promote、不申请波次。P4.2 冻结期照旧:即便域非空也只会是「落 gated 但不入集」。",
   "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。",
   "issue": "GH #897(本轮开,[hero])。起手来自 GH #870 §5.2。"
+ },
+ "tormring_20260918": {
+  "date": "2026-09-18T1x:xxZ",
+  "issue": "[strategy] **本轮 push 之后才开**(号码取自 create 调用自己的返回,不是顺号推测;GH #290:引用先可解析再发表)。认领依据 = 铁律 9:P1 球在总监(#862,复读空带停在录像组)、P2 卡魔棒仪器墙(`wandlimbo_charge_instrument`),**4.4 (i) 球在本组且本组能动** ⇒ 取 4.4。",
+  "defect": "**同一个奇偶问题的两半数的是两个不同的圆 —— 而这一次宽的那个是【他们的】。** `bots/mode_side_shop_generic.lua`:`:61 tInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1600)` / `:220 tInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)` / `:221 if not J.IsRealInvisible(bot) and (#tInRangeEnemy > #tInRangeAlly) then return BOT_MODE_DESIRE_LOW`。两个圈同心(都以那个被选去打 Tormentor 的非核心 bot 为心),两个计数**只喂这一个比较**,文件里没有第二个消费者。⇒ 一个 1400u 外的英雄,是**他们的**就算战力、是**我们的**就不存在。那层壳是圆面积的 **78%**(1600²/1200²),而且**只往他们那边加**。",
+  "why_this_is_not_roamring_again": "⭐⭐ **它是 roamring 的形状、符号相反,而这正是修法不能照抄的原因。** roamring(`mode_team_roam_generic`,盟友 2200 / 敌人 2000)宽的那个圈是**我们的**,于是修法把敌方那半加宽到它上面。照抄到这里 = 把敌圈**收进** 1200,那会**在统一圆的同时加重一个低估**:敌方那半在半径进场之前就已经是被低估的一半(`J.GetEnemiesNearLoc` 走 `UNIT_LIST_ENEMY_HEROES`,受视野限制,并滤掉可疑幻象/Meepo 分身;`J.GetAlliesNearLoc` 走自家 roster 全收、且**装着发问者自己**)。⇒ 该动的是**我们**那半,往外挪到文件已经用来数他们的那个圈上。",
+  "fix": "`J.GetTormentorParityRadius(nEnemyRadius, nAllyRadius)`(`bots/FunLib/jmz_func.lua`,`J.GetRoamParityRadius` 正下方):armed(turbo-only)时**盟友**那半改读**敌方那半已经在用的那个圈**;disarmed 逐字返回 `nAllyRadius`。调用点把 1600 **命名一次**(`local nTormentorParityEnemyRing`),敌方那半从这个名字取、盟友那半经 helper 取,于是**再漂开就会把测试顶红**。",
+  "one_lever": "只动「同一个比较的两半是不是数同一个圆」。**不碰**敌方半径、不碰比较的算符、不碰 `J.IsRealInvisible` 那一项、不碰视野规则、不碰幻象过滤,也**不主张 1600 是团战邻域的正确大小**。",
+  "direction": "**由构造定死**:更大的圈是**超集** ⇒ `#tInRangeAlly` 只能变大 ⇒ `#tInRangeEnemy > #tInRangeAlly` 只能 TRUE→FALSE。⚠️ **armed 是放宽不是收紧**(与 roamring 方向相反,写明免得被当成同一种杠杆读):它只能放行一次出厂树会 bail 掉的 Tormentor 提交,永远不能 bail 掉出厂树放行的那一次。⇒ 批测读数若反向,只能读成**那些多出来的提交本来是坏的**,不能读成「bot 不打 Tormentor 了」。",
+  "the_other_unification_and_why_it_is_not_shipped": "⭐ **被量了,不是被假设掉的,而且它的域更大。** 把**敌**圈收到 1200 同样是单向的,同一语料读 `tight_down 19`(vs 本杠杆 `wide_down 13`),**而且文件自己的习惯站在它那边**:1200 是这个文件在**另一处**近身读数上用的数(`:274` 的欲望罚项 `nDesire - #nInRangeEnemy * (0.9/5)`),1600 在全文件只出现这一次。**仍然不发它**,理由与「哪个字面量更常见」无关:加宽**我们**那半是**停止丢弃** bot 已经拿到的英雄位置(1400u 上活着的真队友);收窄**他们**那半是**开始丢弃** bot 已经拿到的英雄位置(1400u 上**看得见**的真敌人,几秒就能进到 Tormentor 战场)。一个只往比较里加信息,另一个毁掉一些。⛔ **两者都让 bail 变少,所以方向列分不开它们** —— 分得开的只有这一条。",
+  "domain_on_this_corpus": "`tests/_tormring_sweep.lua`(手跑,112 fixture / **1039** live hero 帧):`allyloc_nonempty 1039`(`J.GetAlliesNearLoc` 装着发问者)| `enemyloc_nonempty 518` | `ashell_nonempty 94`(1200-1600 壳里有队友的帧)| `eshell_nonempty 130` | **`shipped_bail 78`** | **`wide_bail 65` / `wide_down 13` / `wide_up 0`**(本杠杆)| `tight_bail 59` / `tight_down 19` / `tight_up 0`(另一种统一)。13 帧散在 **11 份**不同 fixture 上;两个域**只重叠 5 帧** ⇒ 它们不是同一个杠杆。⛔ `wide_up 0` 之所以是读数,只因为同一张表里 `wide_down` 是 13。",
+  "instrument_wall": "⚠️ **这是谓词不是分支**:消费者坐在 Tormentor 链后面(刷新窗口、核心/辅助平均等级、`bot == ally` 的最近非核心选择,以及 `bot.tormentor_state` / `bot.tormentor_kill_time` 这些 `.dem` 不带的 bot-VM 状态,GH #27 / STOPPER 4 族)⇒ **13 是 bail 改变次数的天花板,不是发生率**。写在这里,不留给一个波去发现。",
+  "local_validation": "`tests/test_tormring_parity_ring.lua` **10/10**,0.255 / 0.259 / 0.272s,**零 stub**(两个 producer 与 helper 全是真实实现跑在真实帧上)。翻转证人:`f_260820_043124_axe_blink_flee_529` / **sniper(dire)** —— `a1200=1 a1600=3 e1600=3`,两个真队友在 1426u(viper)与 1570u(crystal_maiden)⇒ shipped 读 `3 > 1` bail,统一到一个圆是 `3 > 3` 不是被以多打少。空壳对照:`f_011405_jak_rescue_axe` / axe(radiant),`a1200 == a1600 == 2` ⇒ arming 逐字无变化。另有三条 inert 断言(disarmed / 非 turbo / armed 波的另一侧)、一条方向断言(集合包含,不是计数比较)、一条源码断言(helper 里不许出现 1200/1600 字面量、调用点只允许一个消费者)。",
+  "mutation_stand": "`tools/agent/mutstand_tormring.sh`:**8 抓 / 0 存活 / 控制绿 / 恢复 sha256 往返 VERIFIED / 退出码 0**,**第一轮就干净**(与 claimlone 那轮的两个假存活不同)。M4 与 M8 是本轮特意加的两个「形状全对、意思全错」变异体:helper 返回字面量 `1600`(第 1 节全部存在性断言照过,证人帧照翻,而调用点的两个数字已经悄悄不再起作用)、消费者算符翻成 `>=`(**不是**本杠杆的事,测试必须用逐字钉住消费者来说出这一点)。",
+  "blast_radius": "`tInRangeEnemy` / `tInRangeAlly` 都是 `GetDesireHelper` 的局部,全树**只在这一个文件、三行**出现;`mode_side_shop_generic.lua` **没有 TypeScript 孪生实现**(`typescript/bots` 下无同名文件)。`J.GetTormentorParityRadius` 只有这一个调用点。",
+  "registered_not_fixed": "(1) `J.GetAlliesNearLoc` **装着发问者**(`allyloc_nonempty 1039/1039`),而 `J.GetEnemiesNearLoc` 当然不装 ⇒ 这个比较的两半除了圆不同,**主语也不对称**(我们那边多算一个我)。本轮**不动**:它是 `helpself` 族的问题,而且动它会和本杠杆的方向叠在一起、分不开。(2) `:274` 的第二处近身读数(敌人 1200)与本处的 1600 仍然不一致 —— 登记,**不当成缺陷**:那是一个欲望罚项不是奇偶比较,两者没有共同的消费者。",
+  "gate_status": "**未提入集**(P4.2 冻结,armed 25 > 20)。预期裁定 **FROZEN-HOLD**。⛔ **gated 的改动不是 live 的**,promote 之前它在真实对局里是 no-op。",
+  "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)"
  }
 }

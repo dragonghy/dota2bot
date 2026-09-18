@@ -3182,6 +3182,19 @@
    "result": "",
    "director": null,
    "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。不需要任何一波。"
+  },
+  {
+   "id": "strategy-63",
+   "stream": "strategy",
+   "bundle": "`tormring`(新 gated id,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。",
+   "priority": 3,
+   "status": "pending — 预期裁定是 FROZEN-HOLD(登记、不入集、不视为掉棒;armed 25 > 20)",
+   "seeds": "不适用(不发波)",
+   "question": "⛔ **零 AWS、零 EC2、零 CE、不申请专波、不申请新波** —— 本请求要的是一次登记,不是一次取证;全部工作已在本地做完。(这一行放在开头是因为 GH #885 未修:声明写在 `bundle`/`cost` 里的新请求会被 push 闸拒掉。)\n\n一句话:**`roamring` 的形状在 Tormentor 提交那一处原样存在,但符号是反的 —— 宽的那个圈是【他们的】,于是照抄 roamring 的修法会在统一圆的同时加重一个低估。请登记 `tormring`,解冻后排 (a) 证据。**\n\n### 已经钉住的(不要重测)\n- 缺陷:`bots/mode_side_shop_generic.lua` `:61` 敌人 **1600** / `:220` 盟友 **1200**,两圈同心,唯一消费者是 `:221` 的 `#tInRangeEnemy > #tInRangeAlly`(为真 ⇒ `BOT_MODE_DESIRE_LOW`,放弃这次 Tormentor 提交)。⇒ 1400u 外的英雄,是他们的就算战力、是我们的就不存在;壳是圆面积的 **78%**,且**只往他们那边加**。\n- 修法:`J.GetTormentorParityRadius(nEnemyRadius, nAllyRadius)`(`bots/FunLib/jmz_func.lua`),armed(turbo-only)时**盟友**那半改读敌方那半已经在用的圈;disarmed 逐字返回 `nAllyRadius`。调用点把 1600 命名一次,两半都从这个名字取。\n- **方向由构造定死**:超集 ⇒ `#tInRangeAlly` 只能变大 ⇒ 比较只能 TRUE→FALSE。⚠️ **armed 是放宽不是收紧**(与 roamring 相反):只能放行一次出厂树会 bail 掉的提交,不能 bail 掉出厂树放行的。批测读数若反向,只能读成那些多出来的提交本来是坏的。\n- 域(`tests/_tormring_sweep.lua`,112 fixture / **1039** 活体帧):`ashell_nonempty 94` | **`shipped_bail 78`** | **`wide_bail 65` / `wide_down 13` / `wide_up 0`**;13 帧散在 **11 份**不同 fixture 上。⛔ **这是谓词不是分支**:消费者坐在 Tormentor 链(刷新窗口、平均等级、`bot == ally`、`bot.tormentor_state` 这些 `.dem` 不带的 bot-VM 状态,GH #27)后面 ⇒ **13 是天花板不是发生率**。\n- ⭐ **另一种统一(敌圈收到 1200)域更大**(`tight_down 19`)**且文件自己的习惯站在它那边**(`:274` 的欲望罚项用 1200,1600 全文件只出现一次),**仍然不发它**:加宽我们那半是**停止丢弃**已有的英雄位置,收窄他们那半是**开始丢弃**已有的英雄位置(1400u 上看得见的真敌人)。两者都让 bail 变少 ⇒ **方向列分不开它们**,分得开的只有这一条。两个域只重叠 5 帧。\n- 本地验证 `tests/test_tormring_parity_ring.lua` **10/10**,零 stub。翻转证人 `f_260820_043124_axe_blink_flee_529` / sniper(dire):`a1200=1 a1600=3 e1600=3`,两个真队友在 1426u / 1570u。空壳对照 `f_011405_jak_rescue_axe` / axe(radiant)。变异台 `tools/agent/mutstand_tormring.sh` **8 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**。\n\n### 要编排做的\n仅**登记**。解冻(armed ≤ 20)之后:(a) 录像组核验真实对局里那个被派去打 Tormentor 的非核心 bot 不再因为「队友在 1400u 而不是 1100u」就判自己被以多打少;(b) 粗粒度胜负无明显负面 —— ⚠️ 读这一条时记住方向是**放宽**;(c) 逻辑依据 = 一个比较的两半必须数同一个邻域,且 Turbo 里 Tormentor(盾/魔晶)的收益值得一次有队友在场的提交。\n\n### ⚠️ 顺带登记、**本轮不做**的两条\n1. `J.GetAlliesNearLoc` **装着发问者**而 `J.GetEnemiesNearLoc` 不装 ⇒ 这个比较除了圆不同,**主语也不对称**。本轮不动:它是 `helpself` 族的问题,且会与本杠杆方向叠在一起分不开。\n2. `:274` 的第二处近身读数(敌人 1200)与 `:61` 的 1600 不一致 —— 登记,**不当缺陷**:那是欲望罚项不是奇偶比较,两者没有共同消费者。",
+   "acceptance": "登记入编排(`queue.json` 有 director 裁定行)。⛔ 解冻前**不索要任何波次**;解冻后 (a) 证据可**搭车**在任何一波已排定的 Turbo 波上,不需要专波。",
+   "result": "",
+   "director": "",
+   "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)"
   }
  ],
  "done": [

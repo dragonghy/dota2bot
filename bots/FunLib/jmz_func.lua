@@ -568,6 +568,85 @@ function J.GetRoamParityRadius( nAllyRadius, nEnemyRadius )
 	return nAllyRadius
 end
 
+-- [tormring, strategy 2026-09-18] ONE PARITY QUESTION, TWO DIFFERENT CIRCLES --
+-- and this time the wide half is THEIRS.
+--
+-- THE DEFECT. bots/mode_side_shop_generic.lua asks once, before committing the
+-- nearest non-core bot to the Tormentor, whether that bot is outnumbered where
+-- it stands:
+--     :61   local tInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1600)
+--     :220  local tInRangeAlly  = J.GetAlliesNearLoc (bot:GetLocation(), 1200)
+--     :221  if not J.IsRealInvisible(bot) and (#tInRangeEnemy > #tInRangeAlly)
+-- Both rings are centred on the same hero, both counts feed that one comparison
+-- and nothing else in the file reads either list. A hero 1400u away is
+-- therefore a fighter when it is theirs and absent when it is ours. The shell is
+-- 78% of the circle's area (1600^2 / 1200^2) and it only ever adds to THEIR
+-- side.
+--
+-- ⭐ THIS IS THE roamring SHAPE WITH THE SIGN REVERSED, which is the whole
+-- reason the repair is not the same repair. There (mode_team_roam_generic, ally
+-- ring 2200 / enemy ring 2000) the wide ring was ours and the fix widened the
+-- enemy half onto it. Copying that move here -- pulling the enemy ring IN to
+-- 1200 -- would unify the circles and compound an understatement at the same
+-- time, because the enemy half is the understated one BEFORE any radius is
+-- applied: J.GetEnemiesNearLoc walks UNIT_LIST_ENEMY_HEROES (vision-limited)
+-- and drops suspicious illusions and Meepo clones, while J.GetAlliesNearLoc
+-- walks our own roster and keeps everybody alive on it. So the half that moves
+-- is OURS, out onto the ring the file already trusts for theirs.
+--
+-- NOTHING HERE IS INVENTED: both numbers are the call site's own, and armed,
+-- the ally half is simply read off the ring the enemy half already uses, so the
+-- comparison is between two counts of the SAME neighbourhood.
+--
+-- DIRECTION IS FIXED BY CONSTRUCTION. The wider ring is a SUPERSET, so
+-- #tInRangeAlly can only grow and `#tInRangeEnemy > #tInRangeAlly` can only go
+-- TRUE -> FALSE. ⚠️ Armed, this is a LOOSENING: it can only let a Tormentor
+-- commit through that the shipped tree bailed out of, never bail out of one the
+-- shipped tree allows. Said plainly because it is the opposite of roamring's
+-- direction and a batch reading must not be read as if it were the same lever:
+-- a reading that goes the wrong way here means those extra commits were bad,
+-- not that the bots stopped taking Tormentor.
+--
+-- DOMAIN, measured by tests/_tormring_sweep.lua on 112 fixtures / 1039 live
+-- hero frames (2026-09-18):
+--   ashell_nonempty 94 | shipped_bail 78 | wide_bail 65 | down 13 | up 0
+-- 94 frames carry an ally in the 1200-1600 shell; on 13 of them that ally is the
+-- one that decides the comparison. `up 0` is a reading only because `down` is 13
+-- in the SAME tally -- a direction column of zeros cannot tell "the direction
+-- holds" from "the tally never ran".
+--
+-- THE OTHER UNIFICATION WAS MEASURED, NOT ASSUMED AWAY: pulling the ENEMY ring
+-- down to 1200 is one-directional too and reads `down 19` on the same corpus --
+-- ⭐ a BIGGER domain than the lever that ships, and it has the file's own habit
+-- on its side: 1200 is the number this file uses for "enemies near me" at its
+-- OTHER proximity read (:274, the desire penalty `nDesire - #nInRangeEnemy *
+-- 0.18`), and 1600 appears exactly once, here. That argument was weighed and
+-- rejected, on a ground that does not depend on which literal is more popular:
+--   * widening OUR half stops discarding hero positions the bot has (real,
+--     living teammates at 1400u that the 1200 ring threw away);
+--   * narrowing THEIR half starts discarding hero positions the bot has (real,
+--     VISIBLE enemies at 1400u, who reach a Tormentor fight in a few seconds).
+-- One unification only adds information to the comparison; the other destroys
+-- some. Both make the bot bail less often, so the direction column cannot tell
+-- them apart -- only this can.
+--
+-- ⚠️ THIS IS THE PREDICATE, NOT THE BRANCH. The consumer sits behind the
+-- Tormentor chain (spawn window, average core/support levels, `bot == ally`,
+-- and the bot.tormentor_state booleans, which are bot-VM state a .dem does not
+-- carry -- GH #27), so 13 is a CEILING on how often the bail changes, not a
+-- fire rate.
+--
+-- WHAT THIS IS NOT. It does not touch the enemy radius, the consumer's
+-- operator, the invisibility term, the vision rule or the illusion filters, and
+-- it makes no claim that 1600 is the right size for a fight neighbourhood. One
+-- lever: whether the two halves of one comparison are counted over the same
+-- circle.
+function J.GetTormentorParityRadius( nEnemyRadius, nAllyRadius )
+	if not J.IsSoakCandidate( 'tormring' ) then return nAllyRadius end
+	if not J.IsModeTurbo() then return nAllyRadius end
+	return nEnemyRadius;
+end
+
 --- [helpself, strategy 2026-09-18] `+ 1` FOR MYSELF, ADDED TO A LIST I AM
 --- ALREADY IN.
 ---
