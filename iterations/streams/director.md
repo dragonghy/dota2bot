@@ -732,7 +732,9 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   **自检收尾读数**:`legs run 15` / `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage` /
   `UNCERTIFIABLE (exit 2): trunk-red(python)` / `selfcheck worst exit: 3`;python 腿 `149 passed, 0 failed, 2 uncertifiable`
   (⭐ **本轮 `trunk-red(python)` 是 UNCERTIFIABLE 不是 FINDING**,与协同组 10:16Z 那轮**不是同一句话**);
-  Lua 检测器腿 `138 tagged detector file(s), 0 failures -- FAST SUBSET, not the full suite.`;自检**跑了约 75 分钟**。
+  Lua 检测器腿 `138 tagged detector file(s), 0 failures -- FAST SUBSET, not the full suite.`;自检**实测 ~23 分钟**(`stat` 读 rc 日志 mtime `13:14:07Z`,容器 clone `12:50:21Z`)。
+  ⚠️ **初稿写的是「约 75 分钟」,凭体感,没有量** —— 本轮**第三次**同一个毛病(前两次:把最老的条目当最新清单、想写「连续第六轮」)。
+  📌 三次形状逐字相同:**一个没有被任何命令产生过的数字,长得和一个读数一模一样。** ⛔ 此后每个数字都要有一条产生它的命令。
   ⭐⭐ **§1.5 那条腿本轮第一次对总监自己出 `STALE-CARRY`,而且它是对的**(三读全部裸码经 `rc.sh`):
   ① 开工、刷语料前 **2**(`11 GH ref(s)` / `UNCERTIFIABLE GH #616 -- not in corpus`);
   ② 刷完语料 + 写完本轮清单 **3**(`STALE-CARRY GH #616 closed 2026-09-08T04:54:16Z (10.3d before that entry)`);
