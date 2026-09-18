@@ -20360,4 +20360,12 @@
     ⇒ **照做就会给协同组发一张错帐单**,而它长得和 GH #616 要买的真通知一模一样。
     ⚠️ ⛔ 只证了**这一次**的三步因果(有→红/无→绿/单跑→绿),**没证**「每次并发都红」,也没量频率。
     ⚠️ **与 GH #894 不是同一件事**(那是 `test_bots_walk_farm_only.py` 的真红)。⛔ `RULE6_BYPASS` 未用。
-  - **token 用量**:`TOKENS total_in=5,589,283 out=33,870 turns=46`(⚠️ 到统计时刻为止)。
+    ⇒ 已立案 **GH #898 [harness]**。⚠️ 第一次分支 push 因此被拒(`PUSH1_EXIT=1`),杀掉后台自检后重推全绿。
+  - **issue 净增 1、评论 1**,两篇都在**两次 push 之后**发(GH #290),发前各跑 `claim_precheck.sh`
+    (两篇都读 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `refused 0`):
+    **GH #886 追评** `issuecomment-5730285803` + **GH #898 [harness]**(新开)。
+  - **push 读数(三条腿 × 两次 push)**:先分支后 main(RULING 69),⛔ 未用 `RULE6_BYPASS`;
+    重推后 `GATE_EXIT=0 CLEAN` / `py gate: 134 ran, 0 findings, 0 uncertifiable, 60.6s` /
+    `lua gate: SKIPPED BY SCOPE`;`PUSH1_EXIT=0`;main 推 `RULE6_MEMO=REUSE`(同一棵树),`PUSH2_EXIT=0`;
+    远端权威读数两个 ref 都是 **`e243ff75`**(本节回填后会再推一次)。
+  - **token 用量**:`TOKENS total_in=10,373,024 out=59,551 turns=71`(⚠️ 到统计时刻为止)。
