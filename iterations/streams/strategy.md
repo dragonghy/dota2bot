@@ -35,6 +35,57 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT45. **【2026-09-18T10:16Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `claimlone` 落地)。剩下的是三句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【这条缺陷有人看过了】那一格**:
+   **一个函数可以被点名分诊、被写进棘轮、并且每一行理由都为真,而分诊回答的是关于它的另一个问题;
+   ⛔ 于是那一行分诊读起来就是一个已处理的函数 —— 它比没人看过更难被第二次看见。**
+
+   现场:`soloclaim`(前一天、同组)修的是「队友表里装着我」这个信念,而
+   `mode_team_roam_generic.lua` 的 `X.IsAllysTarget`(半径 **1000**,两个引擎 getter)
+   **原样带着同样两行**(`#allies < 2 then return false` + `ally ~= bot`)。
+   ⛔ **它不是被漏看的** —— 同一轮的另一份产物 `tests/test_ring_subject_census.py`
+   **逐字带着它的行**,理由是「16/16 调用点传非英雄单位,语料 0 个非英雄单位」;
+   ⭐ 而那个理由定价的是**圈的主语**(以发问者为心),**闸在那一行里一个字都没有**。
+   📌 **判据:修好一条信念之后,不要只问「还有谁长这样」,要问【谁的名字已经在某张棘轮表里了、
+   而那张表定价的是哪一个缺陷】 —— 已登记 ≠ 已处理,而两者在阅读时长得一模一样。**
+
+   ⭐ **第二句,关于变异体存活**:本轮两个变异体第一轮存活,**两个存活的都不是变异体的问题**。
+   M7 的 perl 模式漏了行尾分号 ⇒ **一个字节都没改**(抓它的是 GH #846 那条「变异必须被证明落地」
+   的守卫,不是人);M3(闸反接)红了但**消息不对** —— 期望「armed 没看见占用」,而反接的闸
+   **先动的是 disarmed 那条腿**,证人测试在 `armed == true` 之前先断言 `shipped == false`
+   ⇒ 那句话到不了。**按证据纪律 2 改的是 want 不是变异体。**
+
+   ⚠️ **第三句,关于 `git checkout`**:复核 M7 之后用 `git checkout <mode 文件>` 还原,
+   **它把本轮未提交的委托改动一起吃掉了**。⛔ **这是 evidence-discipline 1 的现场**,
+   而本轮的变异台**自己就守着这条规矩**(从文件副本还原) —— 踩它的是**变异台之外**的手动复核。
+   📌 **规矩要带出脚本**:凡工作树上有未提交改动,还原只用 `cp` 副本,永不用 `git checkout`。
+
+   ⚠️ **下一轮要看一眼的四条**:
+   (a) **`queue.json:strategy-62`**(本轮新增)+ 本轮的 GH issue —— `claimlone` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-61` **十七条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检 `EXIT=3`**;findings = `cadence queue-rulings owed-executions lua-coverage
+   trunk-red(python)`,**`UNCERTIFIABLE = none`**。⭐⭐ **0NEXT43/44 §(c) 那条建议本轮第一次
+   把读数买回来了**:自检后台起跑后**只做只读测量**,`bots/` 一个字节都不碰,一直等到它退出
+   (约 **80 分钟**)⇒ **三条腿的读数这一轮可以引用**,`trunk-red(python)` 也查得出真身
+   (`tests/test_bots_walk_farm_only.py`,**不是本轮的产物**,批测台已开 **GH #894**)。
+   📌 **下一轮照抄这个排法**:自检后台 → 只读测量(census / 证人挑选 / 写 `tests/`+`tools/`)
+   → 自检退出 → 才改 `bots/` → 变异台。⚠️ **GH #882 原样复发**(自检写 `luacheck is not installed`,
+   而铁律 6 的 gate 在**同一个容器**上把它装上并跑到 0 警告);
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。
+
+   ⚠️ **本轮登记、下一轮可以直接做的两根杠杆**:
+   1. **`J.GetClosestCore`**(0NEXT44 登记的那根)—— 仍**不要动**,`corerole` 还没有裁定
+      (`state.json` 只有 `corerole_GATE_LANDED_20260822T070xZ`,无 verdict)。
+   2. **圈的主语缺陷**(圈以发问者为心,问题却是关于那个单位的):本轮把它的棘轮行迁到
+      `J.IsRoamAllysTarget` 名下并写明「被定价的是圈不是闸」。⛔ 它今天**仍不可测**
+      (16/16 调用点传非英雄单位,语料 0 个非英雄单位)⇒ **要动它得先买语料**,不是先写杠杆。】**
+
 0NEXT44. **【2026-09-18T07:55Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `helpnear` 落地)。剩下的是三句要带走的。
 
@@ -10738,6 +10789,71 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-18T10:16Z:**它不是被漏看的,是被分诊过的 —— 而分诊回答的是关于它的另一个问题。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `claimlone`,
+  `bots/FunLib/jmz_func.lua` + `bots/mode_team_roam_generic.lua` 的一行委托)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T101636Z.md`;
+  `state.json:claimlone_20260918`;完整判据 ⇒ backlog **0NEXT45**。
+
+  **开工 = 铁律 10 再铁律 9**:⚠️ 管道防呆**第 18 次**,又在第一条命令上撞到;改走重定向 + 后台。
+  自检 **`EXIT=3`**(`legs run 15`);findings = `cadence queue-rulings owed-executions lua-coverage
+  trunk-red(python)`,**`UNCERTIFIABLE = none`**。⭐⭐ **本轮把 0NEXT43/44 §(c) 那条建议执行到底**:
+  自检后台起跑后**只做只读测量**,`bots/` 一个字节不碰,等它退出(约 80 分钟)才改 ⇒
+  **三条腿的读数这一轮可以引用**;`trunk-red(python)` = `tests/test_bots_walk_farm_only.py`,
+  **不是本轮的产物**(批测台已开 GH #894)。⚠️ GH #882 原样复发。
+  P1 球在总监 / P2 卡魔棒仪器墙 ⇒ **4.4 球在本组且本组能动**,取 4.4。
+
+  **缺陷**:`X.IsAllysTarget`(`mode_team_roam_generic.lua:1704`)建
+  `bot:GetNearbyHeroes(1000, false, BOT_MODE_NONE)`(以**我**为心、**从不装我**),然后
+  `if #allies < 2 then return false end` 按「装着我」读它,循环又花一个词在 `ally ~= bot` 上
+  ⇒ 闸的意思不是「就我一个」,是「最多一个队友」,**在循环读到之前就把那一个队友的占用扔掉**。
+  ⭐⭐ **它当天被点名分诊过**:同一轮的 `tests/test_ring_subject_census.py` 逐字带着它的行,
+  **但那一行定价的是圈的主语**(soloclaim 头注明确停在那里的第二个缺陷),**闸一个字都没有**
+  ⇒ **一行分诊读起来就是一个已处理的函数**。
+
+  **修法**:函数体逐字搬进 `J.IsRoamAllysTarget`(`X` 是文件局部表,fixture 够不到;
+  gate-plumbing 测试不算本地验证),**闸上**开 gate `J.IsModeTurbo() and J.IsSoakCandidate('claimlone')`;
+  mode 文件只剩一行委托,**五个调用点一个没动**;disarmed 逐字同值。⛔ **不碰圈、不碰半径 1000、
+  不碰占用判据、不碰幻象词**;`ally ~= bot` 这个死词**故意留着**(删掉等于抹掉信念存在过的证据)。
+
+  **方向由源码定死**:闸是 armed 唯一移除的东西,其上的循环只有 `return true` 或落到同一个
+  `return false` ⇒ **armed 只能 FALSE→TRUE**;五个消费者都在 `not` 下把 TRUE 读成
+  「别人已经占了这只兵,让开」⇒ **纯收窄抢刀**。
+
+  **域**(`tests/_claimlone_sweep.lua`,112 fixture / **1039** live 帧,行 = 主语帧):
+  **`self_in_list 0`**(前提每帧为假)| `ally0 588` | **`ally1 378`(36.4%)** | `ally2plus 73` |
+  `armable 199` | **`up 199` / `down 0`**(逐位相同)| **99 / 118 份 fixture** 至少一帧。
+  ⛔ **`target_nonnil 0 / 1039` 是仪器墙(GH #27)⇒ 378 是天花板不是发生率**;测试只补这一个读数。
+
+  **本地验证**:`tests/test_claimlone_roam_lone_ally.lua` **12/12**,0.32/0.33/0.30s。
+  证人 A `f_011405_jak_rescue_axe`/axe、证人 B `f_260903_101254_cm_farm_stealcamp`/silencer
+  (**两份不同 fixture**);空圈 `f_013254_ck_rescue_trade`/ember_spirit 两侧 false;
+  两队友 `f_050713_es_defend_1v3`/lion armed == shipped == true;另有非 turbo / 另一侧 /
+  别的 id / **无 stub control** 四条。
+
+  **变异台** `tools/agent/mutstand_claimlone.sh`:**9 抓 / 0 存活 / 控制绿 / 退出码 0**。
+  ⭐ **两个变异体第一轮存活,存活的都不是变异体的问题**:M7 的 perl 漏了行尾分号(**一个字节没改**,
+  抓它的是 GH #846 的守卫);M3(闸反接)**红了但消息不对** —— 反接的闸**先动 disarmed 那条腿**,
+  证人测试先断言 `shipped == false` ⇒ 期望那句到不了。按证据纪律 2 改 want 不改变异体。
+  按证据纪律 4 单独复核 M7,**读出来的不是猜中的**。
+  ⚠️ 复核后用 `git checkout` 还原,**把本轮未提交的委托改动一起吃掉了** ——
+  ⛔ **evidence-discipline 1 的现场**,而本轮变异台自己守着这条规矩,踩它的是变异台之外的手动复核。
+
+  **铁律 6**:`GATE_EXIT=0 CLEAN`(改动前后各一次,均 0 警告);
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 48.5s`;
+  `lua gate: 428 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 660.9s`。
+  邻近回归全绿(`soloclaim` 11/11、`gate_claim_consistency` 16/16、`gated_helper_nesting_census` 10/10、
+  `roamreach_bounded_chase` 19/19、`helpnear` 12/12、`roamring` 10/10、`smoke_load` 3/3、
+  `ring_subject_census` 4/4)。⚠️ `ring_subject_census` **先红了一次,红得对**(按构造在任何组落新
+  asker-anchored 圈时顶红)—— 处置是补 `J.IsRoamAllysTarget` 行 + 删 `X.IsAllysTarget` 行;
+  ⭐ **红在推的人面前,不是几小时后的下一个组**。⚠️ 全量 Lua 套件(~100min)**没跑**;
+  ⛔ 没用过 `RULE6_BYPASS`。manifest **手加一行** `seconds = 0.33`(三次里最大,**不缩放**);
+  `budget_seconds` 不动且**从文件算出来**(in_gate 349 条 265.549 → 2x = 531.098 ≤ 540.0)。
+
+  **交棒**:`queue.json:strategy-62`(⛔ 预期裁定 **FROZEN-HOLD**,不是掉棒)+ GH issue
+  (push 之后才开,号码取自 create 返回)。
 
 - 2026-09-18T07:55Z:**名字写着「最近」的选择器返回的是「第一个」,而唯一的消费者拿它当锚。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `helpnear`,

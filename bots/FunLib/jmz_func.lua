@@ -3543,6 +3543,93 @@ function J.IsAllysTarget( unit )
 
 end
 
+-- [claimlone / strategy 2026-09-18] THE THIRD COPY OF "THE ALLY LIST CONTAINS
+-- ME", AND IT SAT TWO FILES AWAY FROM THE ROUND THAT REPAIRED THE BELIEF.
+--
+-- ⭐ WHERE THIS BODY CAME FROM.  It is X.IsAllysTarget out of
+-- bots/mode_team_roam_generic.lua, moved here VERBATIM and then gated.  `X` is
+-- a file-local table, so a fixture test cannot reach the function while it
+-- lives there; the mode file now delegates one line to this entry point and the
+-- five call sites inside it are unchanged.  Disarmed, the delegate is
+-- byte-identical to the body that stood there: same raw engine ring, same
+-- radius 1000, same four terms, same two engine getters.
+--
+-- ⭐ THE DEFECT, closed form -- and it is the SAME one 'soloclaim' closed on
+-- 2026-09-17 in J.IsOtherAllysTarget, in a function that round READ.
+-- `bot:GetNearbyHeroes(1000, false, ...)` answers OTHER heroes near `bot`; the
+-- caller is not a member of its own ring.  Two lines below, the population is
+-- read as though it were: `#hAllyList < 2 then return false` is only a "nobody
+-- is here but me" test if I am one of the entries, and the loop then spends a
+-- term on `ally ~= bot` excluding an entry that cannot be there.  Both lines
+-- encode ONE belief -- "the list includes me" -- and the belief is false, so
+-- the guard does not mean "alone", it means "at most one ally", and it throws
+-- that one ally's claim away before the loop can read it.
+--
+-- ⛔ WHY THIS IS A SECOND LEVER AND NOT A DUPLICATE OF 'soloclaim', and the
+-- sharp part: THIS FUNCTION WAS NOT OVERLOOKED, IT WAS TRIAGED.  The same
+-- round's other deliverable, tests/test_ring_subject_census.py, carries a row
+-- for it by name.  ⭐ But the row prices a DIFFERENT defect: the asker-anchored
+-- RING (the "second, bigger defect" the soloclaim header explicitly parks), and
+-- it prices that one to unpriceable -- 16/16 call sites pass a creep, a neutral
+-- or a tower, and the corpus has 0 non-hero units.  The GUARD -- the belief
+-- soloclaim actually repaired -- is not mentioned in that row at all.
+-- ⛔ SO A TRIAGED ROW READS AS A HANDLED FUNCTION.  Both the census row and the
+-- soloclaim header are true where they speak, and between them they answer
+-- every question about this function except the one that had just been answered
+-- next door.  (0NEXT42 bought "a repaired diagnosis can still be repaired only
+-- at the site where it was found"; this is its harder form -- the second site
+-- had been READ, and reading it is what made it look done.)
+--
+-- ⛔ DIRECTION IS FIXED BY THE SOURCE, not by a corpus reading.  The guard is
+-- the only thing armed removes, and it sits above a loop whose only outcomes
+-- are `return true` or falling through to the same `return false` the guard
+-- already produced.  So: `#hAllyList == 0` -> the loop body never runs, both
+-- answers false; `== 1` -> shipped false, armed may be true; `>= 2` -> the
+-- guard never fired, byte-identical.  Armed can therefore only turn a shipped
+-- FALSE into TRUE.  Every one of the five consumers reads the answer under a
+-- `not` as "somebody already has this creep, leave it", so arming is a pure
+-- NARROWING of the permission to pile onto a unit an ally is already killing --
+-- never a widening.
+--
+-- DOMAIN: two readings, ⛔ NOT to be merged into one sentence.
+--   (1) GROUND TRUTH on the frame corpus (tests/_claimlone_sweep.lua):
+--       `self_in_list` is 0 of 1039 -- the guard's premise is false on EVERY
+--       live hero frame -- and `ally1` is 378 of 1039 (36%), the population
+--       whose single ally's claim is discarded unread.  99 of 118 fixtures
+--       carry at least one such frame.
+--   (2) AN UPPER BOUND, AND IT IS LABELLED.  `ally:GetTarget()` and
+--       `ally:GetAttackTarget()` answer nil on 1039 of 1039 frames: an attack
+--       target is bot-VM state the .dem does not carry (the GH #27 / STOPPER 4
+--       family, owed and not routed around).  So 378 is the CEILING of the flip
+--       set, ⛔ NOT "378 frames flip" -- the corpus cannot say which of those
+--       lone allies was actually on the creep.  The test drives the flip with
+--       that one read stubbed, and says so.
+function J.IsRoamAllysTarget( unit )
+
+	local bot = GetBot()
+	local hAllyList = bot:GetNearbyHeroes(1000, false, BOT_MODE_NONE)
+
+	if #hAllyList < 2
+		and not ( J.IsModeTurbo() and J.IsSoakCandidate( 'claimlone' ) )
+	then
+		return false
+	end
+
+	for _, ally in pairs( hAllyList )
+	do
+		if ally ~= bot
+			and not ally:IsIllusion()
+			and ( ally:GetTarget() == unit or ally:GetAttackTarget() == unit )
+		then
+			return true
+		end
+	end
+
+	return false
+
+end
+
+
 function J.ToNearest500(num)
     return math.floor(num / 500 + 0.5) * 500
 end

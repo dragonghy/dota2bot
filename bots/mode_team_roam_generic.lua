@@ -1701,21 +1701,16 @@ function X.GetLastHitHealth(bot,nCreep)
 end
 
 
+-- [claimlone / strategy 2026-09-18] THE BODY MOVED TO J.IsRoamAllysTarget
+-- (bots/FunLib/jmz_func.lua) -- read the defect, the direction argument and the
+-- two domain readings there.  It moved because `X` is a file-local table: a
+-- fixture test cannot reach this function while it lives here, and a
+-- gate-plumbing test is not local validation.  ⛔ Disarmed, the delegate is
+-- byte-identical to the body that stood here (same raw engine ring, same radius
+-- 1000, same four terms, same two engine getters), and the five call sites
+-- below/above are untouched.
 function X.IsAllysTarget(unit)
-	local bot = GetBot();
-	local allies = bot:GetNearbyHeroes(1000,false,BOT_MODE_NONE);
-	if #allies < 2 then return false end;
-	
-	for _,ally in pairs(allies) 
-	do
-		if  ally ~= bot
-			and not ally:IsIllusion()
-			and ( ally:GetTarget() == unit or ally:GetAttackTarget() == unit )
-		then
-			return true;
-		end
-	end
-	return false;
+	return J.IsRoamAllysTarget(unit);
 end
 
 

@@ -69,9 +69,17 @@ ASKER_ANCHORED = {
         'creep ring; corpus has 0 non-hero units',
     ('bots/FunLib/aba_push.lua', 'updateBotStateCache'):
         'creep ring; corpus has 0 non-hero units',
-    ('bots/mode_team_roam_generic.lua', 'X.IsAllysTarget'):
+    ('bots/FunLib/jmz_func.lua', 'J.IsRoamAllysTarget'):
         'third copy of the same shape; args are creeps/neutrals, and '
-        'GetTarget/GetAttackTarget is bot-VM state the .dem omits (GH #27)',
+        'GetTarget/GetAttackTarget is bot-VM state the .dem omits (GH #27).  '
+        'RELOCATED 2026-09-18 (claimlone): this body was '
+        'mode_team_roam_generic.lua X.IsAllysTarget, moved into jmz_func so a '
+        'fixture test could reach it; the mode file now delegates one line and '
+        'has no ring of its own.  The RING-SUBJECT defect this row prices is '
+        'unchanged and still not a lever.  What DID move is a different defect '
+        'in the same function -- the `#allies < 2` lone-ally guard, i.e. the '
+        'one soloclaim repaired in J.IsOtherAllysTarget -- and this row is '
+        'exactly why nobody carried it across: a triaged row reads as handled.',
     ('bots/mode_team_roam_generic.lua', 'X.IsEnemysTarget'):
         'same; J.GetProperTarget is nil on 1039/1039 frames (GH #27)',
 }
