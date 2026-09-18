@@ -1331,13 +1331,30 @@ end
 --- id.  ⛔ Naming that id in this predicate would be the pullcad trap (§1.6
 --- asserts this function does not); the pair is requested as one atom in
 --- iterations/queue.json, never this id alone on a corpus-like frame.
+--- ⚠️ 2026-09-18: the ONE-ATOM request was argued from "neither id has a solo
+--- domain", and that half is now measured false for `lionwseed` -- it moves a
+--- real end-to-end decision by itself on
+--- tests/frames/f_260909_215040_wk_blast_lion_480.lua with nothing injected
+--- (X.lion_FightArgmaxSeed's header; tests/test_lion_w_fight_seed.lua §6).
+--- ⛔ THIS LEVER's own solo domain is NOT thereby bought -- nobody has measured
+--- it and this note is not a licence to read one in.  What changed is the
+--- REASON for the atom, not the atom: queue.json hero-102 now has to say which
+--- of the two it is isolating.
 ---
 --- ⚠️ HONEST BOUNDS, four:
----   1. THE DOMAIN READING IS THIN AND IS QUOTED AS SUCH.  Over 112 fixtures:
----      25 live-Lion instants, 5 clear J.IsInTeamFight( bot, 1200 ), 1 clears
----      the branch's own second guard, and that 1 has the drivable shape.
----      1-of-1 is a RATE OVER ONE FRAME.  §3.1 drives it; it is not evidence
----      about frequency in play, and nobody may quote it as one.
+---   1. THE DOMAIN READING IS THIN AND IS QUOTED AS SUCH.  ⚠️ RE-TAKEN
+---      2026-09-18: the numbers that stood here ("over 112 fixtures: 25
+---      live-Lion instants, 5 clear J.IsInTeamFight( bot, 1200 ), 1 clears the
+---      branch's own second guard") came from a census that walked ONE of the
+---      two corpus directories and transcribed the guard
+---      `( #nInBonusEnemyList >= 2 or #hAllyList >= 3 )` as its first disjunct
+---      only.  Over BOTH directories (144 frames) and the whole guard: 42
+---      live-Lion instants, 13 clear the teamfight predicate, 13 clear the
+---      guard (11 of them through the ALLY count alone), and the acceptance-ring
+---      all-zero set this lever is bought for occurs 5 times, not 1.  §3.1
+---      drives it.  ⛔ Still counts over RECORDED frames with a retrospective
+---      meter -- not evidence about frequency in play, and nobody may quote one
+---      as such.
 ---   2. ⚠️ THE PREMISE THIS LEVER WAS DRAFTED ON WAS FALSE, corrected here so it
 ---      is not inherited a third time.  Four places in this tree say the mock's
 ---      GetEstimatedDamageToTarget "answers 0 on every fixture frame"
@@ -1428,28 +1445,54 @@ end
 --- frozen FALSE the day the other id is promoted -- and §1.5 asserts this
 --- function does not do that.
 ---
---- ⛔ THE ONLY DOMAIN THIS CORPUS WITNESSES IS THE PAIRED ONE, said plainly so
---- nobody reads this lever as carrying its own.  Over 112 fixtures (§3.2): 25
---- live-Lion instants, 5 clear J.IsInTeamFight( bot, 1200 ), 1 clears the
---- branch's own `#nInBonusEnemyList >= 2` guard.  On the SEARCH ring the
---- all-zero set that this seed alone would rescue occurs 0 times; on the
---- ACCEPTANCE ring -- i.e. after `lionwfight` has filtered -- it occurs once,
---- and that once is the pin.  ⇒ arming this id alone changes NO decision
---- anywhere in the corpus (§5.3 drives that as an assertion, not a hope).  Its
---- witnessed value is entirely as the other id's unmasking partner.  ⚠️ That is
---- a statement about 112 recorded frames, NOT about how often the all-zero set
---- arises in play, where the meter is live rather than retrospective; nobody
---- may quote the 0 as a frequency.
+--- ⭐⭐ THIS ID HAS A SOLO DOMAIN.  ⛔ THE PARAGRAPH THAT STOOD HERE UNTIL
+--- 2026-09-18 SAID THE OPPOSITE -- "the only domain this corpus witnesses is the
+--- paired one ... arming this id alone changes NO decision anywhere in the
+--- corpus (§5.3 drives that as an assertion, not a hope)" -- and it was wrong.
+--- The assertion was real; its census was not.  Re-measured over BOTH corpus
+--- directories and against the branch's WHOLE guard, the same walk reads 42
+--- live-Lion instants, 13 clearing J.IsInTeamFight( bot, 1200 ), 13 clearing
+--- `( #nInBonusEnemyList >= 2 or #hAllyList >= 3 )`, and the search-ring
+--- all-zero set -- what this seed ALONE rescues -- occurring 6 times, not 0.
+---
+--- ⭐⭐ And it is settled end to end, with NOTHING injected:
+--- tests/frames/f_260909_215040_wk_blast_lion_480.lua carries Hex at rank 1,
+--- off cooldown, fully castable as recorded; shipped X.ConsiderW bids 0 with no
+--- target, and this id armed ALONE bids BOT_ACTION_DESIRE_HIGH on
+--- npc_dota_hero_skeleton_king through the 团战 branch
+--- (tests/test_lion_w_fight_seed.lua §6).
+---
+--- ⭐ TWO SCOPE DEFECTS, BOTH SIGNED THE SAME WAY: the census walked
+--- tests/fixtures alone (tests/frames holds 32 more frames -- the charter's
+--- `-199` bought exactly this correction on the WK row and it was never applied
+--- here), and it transcribed the guard as its FIRST DISJUNCT only.  11 of the
+--- 13 guard-clearing frames clear it through the ALLY count, the witness above
+--- among them -- so under that transcription the frame was not merely
+--- uncounted, it was unreachable by construction.
+---
+--- ⛔ WHAT SURVIVES, so the repair is not oversold: the MASKING on
+--- f_260820_182906_lion_drain_survived is real and §4 still drives it -- there,
+--- neither id alone casts and the pair does.  What is dead is the general claim
+--- built on it, that masking is ALL this corpus witnesses and hence that the
+--- pair is inseparable.  iterations/queue.json hero-102 requested the two as ONE
+--- atom on that ground; the ground is measured false, and a wave arming the pair
+--- will otherwise attribute to the pair a change this seed makes by itself.
+--- ⚠️ 6 and 42 and 13 are counts over 144 RECORDED frames whose meter is
+--- retrospective; nobody may quote any of them as a frequency in play.
 ---
 --- ⚠️ NOT in this id: the same `= 0` seed exists byte for byte in
 --- hero_crystal_maiden.lua:1805 and hero_skeleton_king.lua:1355 (SAME polarity,
 --- unlike the reach postures of `lionwfight`).  Those copies have NO winner
---- test, so the seed there is unmasked IN SHAPE -- but ⛔ that is a statement
---- about the code, NOT a domain: §3.3 measures both and this corpus witnesses
---- NEITHER (crystal_maiden reaches its branch guard on 2 instants, skeleton_king
---- on 0, and no all-zero candidate set appears in either).  "Easier to buy" was
---- the draft's wording and the census refuted it; they are next candidates on
---- SHAPE, each needing its own id and its own frame.  GH #873.
+--- test, so the seed there is unmasked IN SHAPE.  The same re-measurement finds
+--- all-zero sets in BOTH of them (CM 1, WK 2) where the old text said neither --
+--- ⛔ but a branch-local all-zero set is still NOT a domain, and the CM copy is
+--- where that distinction gets paid: on its one frame Frostbite carries 3.2s of
+--- cooldown, and with that lifted the 击杀敌人 branch ABOVE the teamfight branch
+--- already returns HIGH (spirit_breaker at 172 HP against a rank-4 Frostbite's
+--- 300 magic damage), so the teamfight loop is never entered.  Two independent
+--- blockers, either one enough; §6.2 drives the second.  ⇒ no `cmwseed` may be
+--- landed off that count.  They remain next candidates on SHAPE, each needing
+--- its own id and its own frame.  GH #873; charter hero.md `-201`.
 X.nWFightArgmaxSeedShipped = 0
 
 function X.lion_FightArgmaxSeed()

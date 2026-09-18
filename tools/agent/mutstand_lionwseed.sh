@@ -23,10 +23,17 @@
 # a sibling lever eleven hundred lines away and read back as a SURVIVOR.
 set -u
 
+# ⭐ tests/test_lion_w_fight_seed.lua IS IN THIS LIST from 2026-09-18, and the
+# reason is the round that added M19/M20.  Every mutant above prices the SOURCE;
+# the two defects that made this lever's published domain wrong (`0` where the
+# tree reads 6) were both in the TEST's own SCOPE -- one corpus directory out of
+# two, and the branch guard transcribed as its first disjunct.  A stand that can
+# only move the source cannot price a defect that lives in the reader.
 SRCS=(
   bots/BotLib/hero_lion.lua
   bots/BotLib/hero_crystal_maiden.lua
   bots/BotLib/hero_skeleton_king.lua
+  tests/test_lion_w_fight_seed.lua
 )
 SRC=bots/BotLib/hero_lion.lua
 CM=bots/BotLib/hero_crystal_maiden.lua
@@ -176,6 +183,17 @@ mutate "M17 lineage: skeleton_king's strict > relaxed" "$WK" \
 # no wave can take apart (GH #606).
 mutate "M18 the id leaks into a second hero file (silent bundle)" "$CM" \
   "s/\t\tlocal npcMostDangerousEnemy = nil\n\t\tlocal nMostDangerousDamage = 0\n/\t\tlocal npcMostDangerousEnemy = nil\n\t\tlocal nMostDangerousDamage = J.IsSoakCandidate( 'lionwseed' ) and -1 or 0\n/" CAUGHT
+
+# --- ⭐⭐ THE SCOPE MUTANTS (2026-09-18).  These move the TEST, not the source.
+# Both reproduce a defect this file's census actually carried, and under either
+# one the published reading flips from "6 search-ring all-zero frames, a solo
+# end-to-end witness" back to "0, no solo domain" -- silently, with the file
+# green.  That is the shape they exist to make expensive.
+mutate "M19 census walks ONE corpus directory again (the tests/frames half goes blind)" "$TEST" \
+  "s/    for _, dir in ipairs\(\{ FIXTURE_DIR, STAGED_DIR \}\) do/    for _, dir in ipairs({ FIXTURE_DIR }) do/" CAUGHT
+
+mutate "M20 branch guard transcribed as its FIRST disjunct only (ally half dropped)" "$TEST" \
+  "s/                    local bGuard = \(#set >= 2\)\n                        or \(bAllyDisjunct == true and nAllies >= 3\)/                    local bGuard = (#set >= 2)/" CAUGHT
 
 restore
 echo

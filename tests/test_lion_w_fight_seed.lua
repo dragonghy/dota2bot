@@ -58,27 +58,66 @@
 -- pinning each of those reads.
 --
 -- ===========================================================================
--- §0.3  ⛔ THE DOMAIN, INCLUDING THE PART THAT IS EMPTY
+-- §0.3  ⭐⭐ THE DOMAIN -- AND THE 2026-09-18 CORRECTION OF IT
 -- ===========================================================================
 --
--- This lever's OWN domain is empty on this corpus and that is registered here
--- rather than left for a later round to discover:
+-- ⛔⛔ THE READING THIS SECTION CARRIED UNTIL 2026-09-18 WAS WRONG, IN THE
+-- DIRECTION THAT MADE THE LEVER LOOK INERT.  It said:
 --
---   search ring, all-zero legal set (what this id alone would rescue):  0
---   acceptance ring, all-zero legal set (i.e. AFTER `lionwfight` filters): 1
+--     search ring, all-zero legal set (what this id alone would rescue):  0
+--     acceptance ring, all-zero legal set (after `lionwfight` filters):   1
+--     ⇒ arming `lionwseed` alone changes NO decision anywhere in the corpus
 --
--- ⇒ arming `lionwseed` alone changes no decision anywhere in the corpus (§5.3
--- asserts it), and the one frame it does change requires `lionwfight` armed too.
--- The two ids MASK EACH OTHER; iterations/queue.json hero-102 requests them as
--- ONE atom, and neither may be waved alone on a corpus-like frame and then
--- written up as "tested, no effect" (the lionqkill / lionqdmg precedent).
+-- Re-measured, the same census over the same tree reads:
 --
--- ⚠️ 0 and 1 are counts over 112 RECORDED frames whose meter is retrospective.
--- They are NOT frequencies in play, where the meter is live.  Nobody may quote
--- either number as one.
+--     live-Lion instants                      25 -> 42
+--     J.IsInTeamFight true                     5 -> 13
+--     frames clearing the branch guard          1 -> 13   (11 via the ALLY disjunct)
+--     search ring, all-zero legal set           0 ->  6
+--     acceptance ring, all-zero legal set       1 ->  5
+--
+-- ⭐⭐ AND IT IS NOT A MATTER OF DEGREE: §6 drives the shipped X.ConsiderW on
+-- tests/frames/f_260909_215040_wk_blast_lion_480.lua WITH NO INJECTION AT ALL
+-- (Hex is rank 1, off cooldown, fully castable on the recording) and reads
+--
+--     shipped:                 desire 0, no target
+--     `lionwseed` armed ALONE: BOT_ACTION_DESIRE_HIGH on npc_dota_hero_skeleton_king
+--
+-- ⇒ this id HAS a solo witnessed domain.  Every sentence anywhere claiming it
+-- "changes no decision alone" is false, including the one this file used to
+-- assert and the one hero_lion.lua's helper header used to print.
+--
+-- ⭐ TWO INDEPENDENT SCOPE DEFECTS, BOTH SIGNED THE SAME WAY, WHICH IS WHY THEY
+-- COMPOUNDED INSTEAD OF CANCELLING:
+--
+--   (a) the corpus walk enumerated `tests/fixtures` ALONE, and `tests/frames`
+--       holds 32 more frames -- the charter's `-199` bought exactly this
+--       correction on the WK row of this same family
+--       (「团战谓词的域要在两个语料目录上数」) and it was never applied here;
+--   (b) the branch guard `( #nInBonusEnemyList >= 2 or #hAllyList >= 3 )` was
+--       transcribed as its FIRST DISJUNCT ONLY.  11 of the 13 guard-clearing
+--       frames clear it through the ally count, and the §6 witness is one of
+--       them -- so under (b) alone that frame was not merely uncounted, it was
+--       unreachable by construction.
+--
+-- ⛔ WHAT SURVIVES THE CORRECTION, SAID PLAINLY SO THE REPAIR IS NOT OVERSOLD.
+-- The MASKING on the original pin (f_260820_182906_lion_drain_survived) is
+-- real and §4 still drives it: there, and there specifically, neither id alone
+-- casts and the pair does.  What is dead is the general claim built on top of
+-- it -- that masking is the ONLY thing this corpus witnesses, and hence that
+-- the pair is inseparable.  iterations/queue.json hero-102 requested the two as
+-- ONE atom on that ground; the ground is now measured false, and a wave that
+-- arms the pair and reads back a delta will be attributing to the pair a change
+-- the seed makes by itself on at least one real frame.
+--
+-- ⚠️ 6 / 5 / 1 are counts over 144 RECORDED frames whose meter is
+-- RETROSPECTIVE.  They are NOT frequencies in play, where the meter is live.
+-- Nobody may quote any of them as one.  (That caveat was right in the old text
+-- and is the one line of it worth keeping.)
 
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
+local scale = require('corpus_scale')
 
 local SRC    = 'bots/BotLib/hero_lion.lua'
 local CM_SRC = 'bots/BotLib/hero_crystal_maiden.lua'
@@ -90,6 +129,7 @@ local UNIT   = 'npc_dota_hero_lion'
 local HEX    = 'lion_voodoo'
 
 local FIXTURE_DIR = 'tests/fixtures'
+local STAGED_DIR  = 'tests/frames'
 local PIN = FIXTURE_DIR .. '/f_260820_182906_lion_drain_survived.lua'
 
 -- The branch's two rings, as OFFSETS from nCastRange, and the shipped seed.
@@ -123,15 +163,36 @@ local function code_only(src)
     return (src:gsub('%-%-[^\n]*', ''))
 end
 
+--- ⭐⭐ BOTH corpus directories, and the widening is the 2026-09-18 repair.
+--- This walk enumerated `tests/fixtures` ALONE until then, and §3.3 below is
+--- the row that paid for it: its own assertion message says the CM copy
+--- becomes "the next id to land" the moment an all-zero set appears there --
+--- and one HAS been on the tree, in `tests/frames`, which this walk could not
+--- see.  A ratchet whose message tells the next round what to do, out of a
+--- scope that can never produce that message, is not a thin reading; it is a
+--- reading that cannot move.  Same cause as the charter's `-199` correction
+--- (「团战谓词的域要在两个语料目录上数」), which was bought on the WK row of
+--- this same family and is applied here to the CM row.
+---
+--- ⚠️ Enumerated, never a hardcoded list, so a corpus that GROWS cannot turn
+--- this file red on size alone (the `-145`/`-149` family).  Each directory
+--- must yield at least one frame: a silently-empty second directory would
+--- re-create exactly the defect this widening repairs.
 local function fixture_paths()
     local out = {}
-    -- UNRESOLVED_HAND_READ: io.popen, registered per GH #596's habit.
-    local p = assert(io.popen('ls ' .. FIXTURE_DIR .. ' 2>/dev/null'))
-    for name in p:lines() do
-        if name:match('^f_.*%.lua$') then out[#out + 1] = FIXTURE_DIR .. '/' .. name end
+    for _, dir in ipairs({ FIXTURE_DIR, STAGED_DIR }) do
+        local n = 0
+        -- UNRESOLVED_HAND_READ: io.popen, registered per GH #596's habit.
+        local p = assert(io.popen('ls ' .. dir .. ' 2>/dev/null'))
+        for name in p:lines() do
+            if name:match('^f_.*%.lua$') then
+                out[#out + 1] = dir .. '/' .. name
+                n = n + 1
+            end
+        end
+        p:close()
+        assert(n > 0, 'corpus directory ' .. dir .. ' yielded no f_*.lua frame')
     end
-    p:close()
-    assert(#out > 0, 'corpus directory ' .. FIXTURE_DIR .. ' yielded no f_*.lua frame')
     table.sort(out)
     return out
 end
@@ -400,13 +461,37 @@ local function argmax_winner(J, bot, set, seed)
     return win
 end
 
+--- ⭐⭐ THE BRANCH GUARD IS A DISJUNCTION, AND THE SECOND DISJUNCT IS THE
+--- 2026-09-18 REPAIR.  hero_lion.lua:1541 reads
+---
+---     ( #nInBonusEnemyList >= 2 or #hAllyList >= 3 )
+---
+--- and this census transcribed the FIRST disjunct only.  The frame §6 now
+--- drives end to end carries ONE enemy in the search ring and clears the guard
+--- through the ALLY count -- so under the old transcription it was not merely
+--- uncounted, it was unreachable by construction.  `hAllyList` is the file-level
+--- upvalue X.SkillsComplement fills at hero_lion.lua:413; mirrored here off the
+--- same call rather than re-typed as a radius.
+---
+--- ⚠️ Only the Lion copy has this shape.  CM's and WK's teamfight branches have
+--- no ally disjunct, so `bAllyDisjunct` is nil for them and the guard stays the
+--- enemy count alone -- a shared `>= 3` would have invented a guard neither
+--- file has.
+local ALLY_RADIUS = tonumber(
+    read_file(SRC):match('hAllyList = J%.GetAlliesNearLoc%( bot:GetLocation%(%), (%d+) %)'))
+assert(ALLY_RADIUS ~= nil,
+    'X.SkillsComplement no longer fills hAllyList as '
+    .. 'J.GetAlliesNearLoc( bot:GetLocation(), <n> ) -- this file\'s guard mirror is stale')
+
 local mCENSUS = {}
-local function census(unit, ability, nSearch, nAccept)
+local function census(unit, ability, nSearch, nAccept, bAllyDisjunct)
     local key = unit .. '|' .. ability .. '|' .. nSearch .. '|' .. tostring(nAccept)
+        .. '|' .. tostring(bAllyDisjunct)
     if mCENSUS[key] ~= nil then return mCENSUS[key][1], mCENSUS[key][2], mCENSUS[key][3] end
     local c = { alive = 0, fight = 0, guard = 0, measured = 0, zero = 0,
                 search_allzero = 0, accept_nonempty = 0, accept_allzero = 0,
-                multi = 0, ascending = 0, argmax_frames = 0, argmax_nonnil = 0 }
+                multi = 0, ascending = 0, argmax_frames = 0, argmax_nonnil = 0,
+                guard_by_ally = 0 }
     local drivable, divergent = {}, {}
     for _, path in ipairs(fixture_paths()) do
         if frame_has_alive(path, unit) then
@@ -429,8 +514,17 @@ local function census(unit, ability, nSearch, nAccept)
                             .. tostring(wArm and wArm:GetUnitName()) .. ')'
                     end
 
-                    if #set >= 2 then
+                    local nAllies = 0
+                    if bAllyDisjunct then
+                        nAllies = #J.GetAlliesNearLoc(bot:GetLocation(), ALLY_RADIUS)
+                    end
+                    local bGuard = (#set >= 2)
+                        or (bAllyDisjunct == true and nAllies >= 3)
+                    if bGuard then
                         c.guard = c.guard + 1
+                        if #set < 2 then c.guard_by_ally = c.guard_by_ally + 1 end
+                    end
+                    if #set >= 2 then
                         c.multi = c.multi + 1
                         local mono = true
                         for i = 2, #set do
@@ -469,32 +563,64 @@ local function census(unit, ability, nSearch, nAccept)
     return c, drivable, divergent
 end
 
-tests['§3.1 ⛔ this id\'s OWN domain is EMPTY on this corpus; the paired one is 1 frame'] = function()
-    local c, drivable = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET)
-    assert(c.alive == 25, 'live-Lion instants ' .. c.alive .. ', was 25. The corpus moved; '
-        .. 're-read every count in this section AND in the helper header before quoting one.')
-    assert(c.fight == 5, 'J.IsInTeamFight true on ' .. c.fight .. ' of them, was 5')
-    assert(c.guard == 1, c.guard .. ' frames clear the branch\'s `#nInBonusEnemyList >= 2` '
-        .. 'guard, was 1')
+tests['§3.1 ⭐⭐ this id HAS a solo domain -- 6 search-ring frames, not 0'] = function()
+    local c, drivable = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET, true)
 
-    -- ⛔ THE EMPTY READING, asserted as a number so it cannot quietly become a
-    -- claim of coverage. On the SEARCH ring nothing is all-zero: this id alone
-    -- rescues nothing here.
-    assert(c.search_allzero == 0, 'the search ring now carries ' .. c.search_allzero
-        .. ' all-zero frame(s), was 0. ' .. CAND .. ' has acquired a domain of its OWN and '
-        .. 'the "changes no decision alone" claim in §0.3 and §5.3 must be re-read')
+    -- Corpus-coupled sizes: FLOORS, so growth cannot turn this file red on size
+    -- alone. (The pre-2026-09-18 text pinned these as equalities and then read
+    -- the domain off the same walk; when the walk was too narrow BOTH were
+    -- wrong and only the domain number mattered.)
+    scale.ratchet(c.alive, 42, 'live-Lion instants (both corpus directories)')
+    scale.ratchet(c.fight, 13, 'Lion instants clearing J.IsInTeamFight( bot, 1200 )')
+    scale.ratchet(c.guard, 13, 'Lion instants clearing the branch guard '
+        .. '( #nInBonusEnemyList >= 2 or #hAllyList >= 3 )')
 
-    -- And the paired one, which is the only thing this lever is bought for.
-    assert(c.accept_allzero == 1, 'the acceptance ring carries ' .. c.accept_allzero
-        .. ' all-zero frame(s), was 1. That is the frame §4 drives; if it went to 0 this '
-        .. 'lever lost its only witnessed domain and must be re-priced before any wave.')
-    assert(#drivable == 1 and drivable[1]:find('lion_drain_survived', 1, true) ~= nil,
-        'the drivable frame is no longer f_260820_182906_lion_drain_survived: '
-        .. tostring(drivable[1]))
-    -- ⛔ A RATE OVER ONE FRAME. Not a frequency. See §0.3.
-    assert(c.measured == 2 and c.zero == 1,
-        'the branch-reaching census measures ' .. c.measured .. ' legal candidates of which '
-        .. c.zero .. ' read 0 (was 2 and 1)')
+    -- ⭐⭐ THE CORRECTED DOMAIN. This number was asserted as `== 0` until
+    -- 2026-09-18 and the 0 was an artefact of the walk, not of the tree: one
+    -- corpus directory out of two, and the branch guard transcribed as its
+    -- first disjunct only. See §0.3.
+    scale.ratchet(c.search_allzero, 6, 'search-ring all-zero frames -- what '
+        .. CAND .. ' alone rescues')
+    assert(c.search_allzero >= 1, CAND .. ' has no search-ring all-zero frame left. Its solo '
+        .. 'domain has gone back to empty -- re-read §0.3, §5.3 and §6 before quoting either, '
+        .. 'and do NOT restore the old "changes no decision alone" wording without re-driving '
+        .. '§6 first.')
+
+    -- The acceptance-ring (i.e. post-`lionwfight`) count, which is what the
+    -- PAIR rescues. Still the larger claim; no longer the only one.
+    scale.ratchet(c.accept_allzero, 5, 'acceptance-ring all-zero frames -- what the PAIR '
+        .. 'rescues')
+    local bPin = false
+    for _, path in ipairs(drivable) do
+        if path:find('lion_drain_survived', 1, true) ~= nil then bPin = true end
+    end
+    assert(bPin, 'f_260820_182906_lion_drain_survived left the drivable set (' ..
+        table.concat(drivable, ', ') .. '). That is the frame §4 drives; if it is gone the '
+        .. 'masking reading must be re-taken, not re-fitted.')
+
+    -- ⛔ COUNTS OVER 144 RECORDED FRAMES WITH A RETROSPECTIVE METER. Not a
+    -- frequency in play. See §0.3.
+    scale.ratchet(c.measured, 10, 'legal candidates measured across branch-reaching frames')
+    scale.ratchet(c.zero, 7, 'of those, candidates projecting exactly 0')
+end
+
+tests['§3.1b ⭐ 11 of the 13 guard-clearing frames clear it through the ALLY disjunct'] = function()
+    -- The half of the guard this census used to drop, as its own number. It is
+    -- not a detail: it is the reason the §6 witness was invisible rather than
+    -- merely uncounted -- that frame carries ONE enemy in the search ring, so
+    -- `#nInBonusEnemyList >= 2` is false on it and the old transcription could
+    -- never have reached the decision it is about.
+    local c = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET, true)
+    assert(c.guard_by_ally >= 1, 'no frame clears the branch guard through `#hAllyList >= 3` '
+        .. 'alone any more, so this file can no longer demonstrate WHY the first-disjunct-only '
+        .. 'transcription hid a real frame. Re-read §0.3(b) before trusting it.')
+    scale.ratchet(c.guard_by_ally, 11, 'guard-clearing frames that clear it via the ally count')
+    -- The control: dropping the disjunct must actually lose frames, or this
+    -- section is asserting something the census would satisfy either way.
+    local cNoAlly = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET, false)
+    assert(cNoAlly.guard < c.guard, 'the ally disjunct now adds no frames (' .. cNoAlly.guard
+        .. ' vs ' .. c.guard .. '); the repair in §0.3(b) has become a no-op and this file '
+        .. 'is paying for a census parameter that measures nothing')
 end
 
 tests['§3.2 the armed tie-break is the NEAREST member, measured not assumed'] = function()
@@ -502,7 +628,7 @@ tests['§3.2 the armed tie-break is the NEAREST member, measured not assumed'] =
     -- the FIRST member of the list. Whether that is a good target depends on an
     -- ordering nobody in this tree has written down, so measure it instead of
     -- asserting the engine sorts by distance.
-    local c = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET)
+    local c = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET, true)
     assert(c.multi >= 1, 'no frame carries 2+ candidates, so the ordering is unmeasured here '
         .. 'and the "nearest member" line in ' .. HELPER .. "'s header is unsupported")
     assert(c.ascending == c.multi, 'J.GetNearbyHeroes returned a NON-ascending list on '
@@ -512,22 +638,45 @@ tests['§3.2 the armed tie-break is the NEAREST member, measured not assumed'] =
         .. 'cleared the full legality chain.)')
 end
 
-tests['§3.3 ⛔ the other two copies: measured, and BOTH empty'] = function()
-    -- The draft of this lever's header called the ungated copies "strictly
-    -- easier to buy" because they carry no winner test. That is a statement
-    -- about SHAPE. The corpus refutes it as a statement about DOMAIN, and the
-    -- refutation is pinned here so the next round starts from the number.
+tests['§3.3 ⭐ the other two copies: all-zero sets DO appear -- and neither is buyable'] = function()
+    -- ⛔⛔ THE ASSERTION THIS SECTION USED TO CARRY IS THE EXHIBIT.  It read
+    -- `cm.search_allzero == 0 and wk.search_allzero == 0`, and its own failure
+    -- message told the next round what to do the moment either went positive:
+    -- "that copy is now buyable on a real frame and is the next id to land."
+    -- Both HAD gone positive on the tree (cm 1, wk 2) and the message could
+    -- never print, because the walk under it saw one of the two corpus
+    -- directories and both frames live in the other.  ⭐ A ratchet whose
+    -- message hands the next round its work, out of a scope that cannot
+    -- produce that message, is not a thin reading -- it is a reading that
+    -- cannot move.  That is the defect §0.3(a) repairs, priced here.
     local cm = census('npc_dota_hero_crystal_maiden', 'crystal_maiden_frostbite', 0, nil)
     local wk = census('npc_dota_hero_skeleton_king', 'skeleton_king_hellfire_blast', 43, nil)
-    assert(cm.alive == 51, 'live-CM instants ' .. cm.alive .. ', was 51')
-    assert(wk.alive == 36, 'live-WK instants ' .. wk.alive .. ', was 36')
-    assert(cm.fight == 2, 'CM clears IsInTeamFight on ' .. cm.fight .. ', was 2')
-    assert(wk.fight == 0, 'WK clears IsInTeamFight on ' .. wk.fight .. ', was 0 -- if this is '
-        .. 'now positive, the WK copy just became measurable and GH #873 can be advanced')
-    assert(cm.search_allzero == 0 and wk.search_allzero == 0,
-        'an all-zero set appeared in an ungated copy (cm=' .. cm.search_allzero .. ', wk='
-        .. wk.search_allzero .. '). That copy is now buyable on a real frame and is the next '
-        .. 'id to land -- it does NOT become part of ' .. CAND .. '.')
+    scale.ratchet(cm.alive, 70, 'live-CM instants (both corpus directories)')
+    scale.ratchet(wk.alive, 51, 'live-WK instants (both corpus directories)')
+    scale.ratchet(cm.fight, 5, 'CM instants clearing J.IsInTeamFight( bot, 1200 )')
+    scale.ratchet(wk.fight, 2, 'WK instants clearing J.IsInTeamFight( bot, 1200 )')
+    assert(cm.search_allzero >= 1 and wk.search_allzero >= 1,
+        'an ungated copy lost its all-zero frames (cm=' .. cm.search_allzero .. ', wk='
+        .. wk.search_allzero .. '). The 2026-09-18 reading in §0.3 and in the charter rests '
+        .. 'on both being positive; re-take it rather than re-fitting the number.')
+
+    -- ⛔ AND THE PART THAT MATTERS MORE THAN THE COUNT: a branch-local all-zero
+    -- set is NOT a domain.  The CM copy's single all-zero frame
+    -- (tests/frames/f_260909_215040_wk_blast_sb_661.lua) is blocked END TO END
+    -- by two independent things, either of which alone empties it:
+    --
+    --   (1) Frostbite carries 3.2s of cooldown on the recording, so
+    --       X.ConsiderW returns at its first line;
+    --   (2) with that lifted, the 击杀敌人 branch -- which sits ABOVE the
+    --       teamfight branch -- owns the frame: spirit_breaker is at 172 HP
+    --       against a rank-4 Frostbite's 300 magic damage, so shipped
+    --       X.ConsiderW already returns HIGH on that same enemy and the
+    --       teamfight loop is never entered.
+    --
+    -- ⇒ the CM `= 0` seed has NO end-to-end witness on this corpus and a
+    -- `cmwseed` id may NOT be landed off this count.  §6.2 drives (2) rather
+    -- than asserting it, so this paragraph cannot go stale silently.
+    -- (charter hero.md `-201`; the frame-supply request is queue.json hero-103.)
 end
 
 -- ---------------------------------------------------------------- section 4 --
@@ -678,22 +827,29 @@ tests['§5.2 UNARMED the helper returns the shipped literal -- the gate is the d
         .. tostring(otherOnly) .. '. The two ids are then a BUNDLE no wave can separate.')
 end
 
-tests['§5.3 ⛔ armed alone, NO decision in the corpus changes'] = function()
-    -- §3.1 says the search-ring all-zero set is empty, so this must hold. It is
-    -- driven rather than inferred, over every branch-reaching Lion frame, with
-    -- the shipped and armed argmax computed side by side on the SAME loaded
-    -- frame. A divergence means this lever has grown a solo domain nobody
-    -- priced, which is how a "one lever" wave silently becomes two.
-    local c, _, divergent = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET)
-    assert(#divergent == 0, 'arming ' .. CAND .. ' alone changes the argmax winner on '
-        .. #divergent .. ' frame(s): ' .. table.concat(divergent, '; ') .. '. §0.3 and §3.1 '
-        .. 'claim this cannot happen; one of them is now wrong, and this lever has grown a '
-        .. 'solo domain nobody priced.')
+tests['§5.3 ⭐⭐ armed alone, the argmax winner MOVES on 6 frames'] = function()
+    -- ⛔⛔ THIS SECTION ASSERTED THE OPPOSITE UNTIL 2026-09-18 (`#divergent == 0`,
+    -- "arming this id alone changes NO decision in the corpus"), and that
+    -- assertion is what hero_lion.lua's helper header quoted as settled.  It
+    -- held only because the census under it walked one corpus directory and
+    -- transcribed half the branch guard (§0.3).  Corrected, the same walk finds
+    -- the winner moving on 6 frames -- all 6 in tests/frames, which is exactly
+    -- the half it could not see.
+    local c, _, divergent = census(UNIT, HEX, SEARCH_OFFSET, ACCEPT_OFFSET, true)
+    scale.ratchet(#divergent, 6, 'frames where arming ' .. CAND
+        .. ' alone moves the argmax winner')
+    assert(#divergent >= 1, 'arming ' .. CAND .. ' alone no longer moves the argmax winner '
+        .. 'anywhere. The solo domain this file, §0.3, hero_lion.lua\'s helper header and '
+        .. 'queue.json hero-103 all now rest on has vanished -- re-take the reading.')
 
-    -- ⛔ THE ANTI-VACUITY PAIR. An assertion that "nothing diverged" is free if
-    -- nothing ran, and free again if every frame produced nil under BOTH seeds.
-    assert(c.argmax_frames >= 5, 'only ' .. c.argmax_frames .. ' frames reached the argmax, '
-        .. 'was 5+ -- the comparison above is going vacuous')
+    -- ⛔ A MOVED ARGMAX WINNER IS NOT YET A MOVED DECISION, and conflating the
+    -- two is how this file got its previous reading backwards in the first
+    -- place. The argmax runs inside a branch that may not be entered, behind an
+    -- ability that may be on cooldown, below three earlier exits. §6 settles
+    -- the end-to-end question on the one frame where nothing is injected; this
+    -- number is the SUPPLY for that question, not the answer to it.
+    assert(c.argmax_frames >= 13, 'only ' .. c.argmax_frames .. ' frames reached the argmax, '
+        .. 'was 13+ -- the comparison above is going vacuous')
     assert(c.argmax_nonnil >= 1, 'no frame produced a winner under EITHER seed, so the '
         .. 'comparison above is vacuously true on every frame it ran')
 end
@@ -728,6 +884,134 @@ tests['§5.4 armed, a positive projection still wins -- the delta is all-zero ON
     assert(winner(SHIPPED_SEED) == winner(ARMED_SEED),
         'with every candidate projecting a positive number the two seeds must pick the SAME '
         .. 'winner; they did not')
+end
+
+-- ---------------------------------------------------------------- section 6 --
+-- ⭐⭐ THE SOLO WITNESS, END TO END, WITH NOTHING INJECTED.
+--
+-- §4 pays one labelled counterfactual (Hex on cooldown) to reach its frame.
+-- This one pays NONE: on tests/frames/f_260909_215040_wk_blast_lion_480.lua Hex
+-- is rank 1, off cooldown and fully castable on the recording, Lion clears
+-- J.IsInTeamFight, and the branch guard is cleared through `#hAllyList >= 3`.
+-- ⇒ what this section reads is what shipped Lion does, and what armed Lion
+-- would do, on a frame as recorded.
+
+local SOLO_PIN = STAGED_DIR .. '/f_260909_215040_wk_blast_lion_480.lua'
+
+--- Drive the shipped dispatch + the shipped X.ConsiderW on SOLO_PIN.  ⛔ No
+--- cooldown injection, no ability-spec patching, nothing but the gate table.
+local function drive_solo(tArmed)
+    local J, bot = rf.load(SOLO_PIN, UNIT)
+    J.IsModeTurbo = function() return true end
+    J.IsSoakCandidate = function(id) return tArmed ~= nil and tArmed[id] == true end
+    local X = rf.load_hero('lion')
+    X.SkillsComplement()
+    local nDesire, hTarget, sMotive = X.ConsiderW()
+    return nDesire, hTarget, sMotive, J, bot
+end
+
+tests['§6.0 ⛔ NOTHING is injected on this frame -- pin the reads that make that true'] = function()
+    local J, bot = rf.load(SOLO_PIN, UNIT)
+    local hW = bot:GetAbilityByName(HEX)
+    assert(hW:GetLevel() >= 1, 'Hex is unlearned on the solo pin (' .. hW:GetLevel()
+        .. '); X.ConsiderW cannot reach the branch and §6 is measuring nothing')
+    assert(hW:GetCooldownTimeRemaining() == 0, 'Hex now carries '
+        .. hW:GetCooldownTimeRemaining() .. 's of cooldown on the solo pin. The whole point '
+        .. 'of this section is that it pays NO counterfactual -- if that stopped being true, '
+        .. 'say so, do not start injecting.')
+    assert(hW:IsFullyCastable(), 'Hex is not fully castable on the solo pin as recorded')
+    assert(J.IsInTeamFight(bot, 1200), 'the solo pin no longer clears the branch\'s entry '
+        .. 'predicate')
+
+    -- ⭐ The guard is cleared by the ALLY disjunct, not the enemy count: this is
+    -- the frame §0.3(b) is about, and the reason the old census could not see
+    -- it is asserted here rather than described.
+    local cr = branch_cast_range(J, bot, HEX)
+    local set = J.GetNearbyHeroes(bot, cr + SEARCH_OFFSET, true, BOT_MODE_NONE)
+    assert(#set == 1, 'the solo pin now carries ' .. #set .. ' enemies in the search ring, '
+        .. 'was 1 -- if it reached 2 this frame stopped demonstrating the dropped disjunct')
+    local nAllies = #J.GetAlliesNearLoc(bot:GetLocation(), ALLY_RADIUS)
+    assert(nAllies >= 3, 'the solo pin carries ' .. nAllies .. ' allies within '
+        .. ALLY_RADIUS .. 'u; with fewer than 3 the branch guard fails on BOTH disjuncts and '
+        .. 'this frame is no longer reachable at all')
+
+    -- And the mechanism: the sole legal candidate projects exactly 0, which is
+    -- what the shipped seed eats.
+    local legal = {}
+    for _, e in pairs(set) do
+        if is_legal_candidate(J, e) then legal[#legal + 1] = e end
+    end
+    assert(#legal == 1, 'the solo pin carries ' .. #legal .. ' legal candidates, was 1')
+    assert(projection(bot, legal[1]) == 0, 'the sole candidate now projects '
+        .. projection(bot, legal[1]) .. ', was 0 -- the seed no longer bites here')
+    assert(J.IsInRange(bot, legal[1], cr + ACCEPT_OFFSET),
+        'the sole candidate left the acceptance ring, so the winner test would veto the cast '
+        .. 'and this frame stops separating the two seeds')
+end
+
+tests['§6.1 ⭐⭐ shipped VETOES and the id ALONE casts -- no pairing, no injection'] = function()
+    local dShip, tShip = drive_solo(nil)
+    assert(dShip == 0, 'shipped X.ConsiderW now bids ' .. tostring(dShip) .. ' on the solo '
+        .. 'pin. The veto this id exists for is gone HERE -- re-read §0.3 before quoting it.')
+    assert(tShip == nil, 'shipped returned a target: ' .. tostring(tShip))
+
+    local dSolo, tSolo, mSolo = drive_solo({ [CAND] = true })
+    assert(dSolo == BOT_ACTION_DESIRE_HIGH, CAND .. ' armed ALONE bids ' .. tostring(dSolo)
+        .. ' on the solo pin, expected BOT_ACTION_DESIRE_HIGH. This is the whole claim of '
+        .. '§0.3: the id has a domain of its own.')
+    assert(type(tSolo) == 'table' and tSolo.GetUnitName ~= nil,
+        'the armed leg returned ' .. type(tSolo) .. ', expected a unit handle')
+    assert(tSolo:GetUnitName() == 'npc_dota_hero_skeleton_king',
+        'the armed leg casts on ' .. tSolo:GetUnitName() .. ', expected '
+        .. 'npc_dota_hero_skeleton_king')
+    assert(type(mSolo) == 'string' and mSolo:find('W%-团战'),
+        'the motive is ' .. tostring(mSolo) .. ', expected the 团战 branch\'s own -- a '
+        .. 'different motive means a DIFFERENT branch fired and this section proves nothing')
+
+    -- ⛔ THE CONTROL that makes the above about the GATE and not about the
+    -- frame: the other id alone must leave the veto standing here.
+    local dOther = drive_solo({ [OTHER] = true })
+    assert(dOther == 0, OTHER .. ' alone now casts on the solo pin (' .. tostring(dOther)
+        .. '), so this frame no longer separates the two ids and cannot support the '
+        .. '"' .. CAND .. ' has its OWN domain" reading')
+end
+
+tests['§6.2 ⛔ the CM copy has NO end-to-end witness -- the blocker, driven'] = function()
+    -- §3.3(2), driven rather than described. On CM's one all-zero frame the
+    -- 击杀敌人 branch sits above the teamfight branch and already returns HIGH,
+    -- so no seed id could change that decision. This is why `-201` did NOT land
+    -- a `cmwseed`, and it is asserted here so a later round cannot quietly
+    -- promote the branch-local count in §3.3 into a domain.
+    local CM_PIN = STAGED_DIR .. '/f_260909_215040_wk_blast_sb_661.lua'
+    local CM_UNIT = 'npc_dota_hero_crystal_maiden'
+
+    local J, bot = rf.load(CM_PIN, CM_UNIT)
+    local hW = bot:GetAbilityByName('crystal_maiden_frostbite')
+    assert(hW:GetCooldownTimeRemaining() > 0, 'Frostbite is off cooldown on the CM frame now '
+        .. '-- blocker (1) in §3.3 is gone; re-price the CM copy, do not assume it is still '
+        .. 'unbuyable')
+
+    -- Blocker (2), with (1) lifted so it can be reached at all. ⚠️ THIS IS AN
+    -- INJECTION AND IT IS LABELLED: it exists to show the SECOND blocker is
+    -- independent of the first, i.e. that lifting the cooldown would not buy
+    -- the domain either.
+    local J2, bot2 = rf.load(CM_PIN, CM_UNIT)
+    J2.IsModeTurbo = function() return true end
+    J2.IsSoakCandidate = function() return false end
+    local XCM = rf.load_hero('crystal_maiden')
+    local hW2 = bot2:GetAbilityByName('crystal_maiden_frostbite')
+    local spec = rawget(hW2, '__spec')
+    spec.GetCooldownTimeRemaining = function() return 0 end
+    spec.IsFullyCastable = function() return true end
+    XCM.SkillsComplement()
+    local d, t = XCM.ConsiderW()
+    assert(d == BOT_ACTION_DESIRE_HIGH, 'with the cooldown lifted, shipped CM X.ConsiderW '
+        .. 'bids ' .. tostring(d) .. ' on this frame, expected BOT_ACTION_DESIRE_HIGH from '
+        .. 'the 击杀敌人 branch. If it now bids 0 the teamfight branch IS reachable and the '
+        .. 'CM copy has just become buyable -- that is a `cmwseed` round, not a re-baseline.')
+    assert(type(t) == 'table' and t:GetUnitName() == 'npc_dota_hero_spirit_breaker',
+        'the pre-empting branch now targets ' .. tostring(type(t) == 'table' and t:GetUnitName())
+        .. ', expected npc_dota_hero_spirit_breaker')
 end
 
 return tests

@@ -117,6 +117,28 @@ UNRESOLVED_HAND_READ = {
         "-- register in the SAME work unit that lands the walk -- is exactly "
         "what was skipped, and a comment naming an obligation is not the "
         "obligation being met",
+    """tests/test_wk_q_teamfight_reach_pricing.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:138-:139, :166); "
+        "both are file-scope locals assigned once from string literals and "
+        "nothing writes to either. A plain `ls` is NOT recursive, so it cannot "
+        "reach bots/Customize/ -- identical in shape to the "
+        "test_lion_hex_panic_level.lua entry above. ⚠️ Registered 2026-09-18 "
+        "by the hero desk, which is also the desk that LANDED it (charter "
+        "-199, 2026-09-17): GH #803 says register in the SAME work unit, and "
+        "that is exactly what was skipped, so this census was RED on trunk for "
+        "a full day -- 开工自检 named it as TRUNK RED on this round's very "
+        "first command. py_gate.py does not cover this file, so no push hook "
+        "refused it",
+    """tests/test_lion_w_fight_seed.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
+        "fixture_paths() loops dir over the literal table {FIXTURE_DIR, "
+        "STAGED_DIR} == {'tests/fixtures', 'tests/frames'}; both are "
+        "file-scope locals assigned once from string literals and nothing "
+        "writes to either. A plain `ls` is NOT recursive, so it cannot reach "
+        "bots/Customize/. Registered 2026-09-18 in the SAME work unit that "
+        "widened the walk from one directory to two (charter -201) -- the "
+        "widening is what created this call site, and the entry two rows above "
+        "is what registering late costs",
     """tests/test_cm_lane_fallback_wallet.lua  ::  'ls ' .. dir .. ' 2>/dev/null'""":
         "corpus_paths() loops dir over the literal table {FIXTURE_DIR, "
         "STAGED_DIR} == {'tests/fixtures', 'tests/frames'} (:97-:98, :129); "

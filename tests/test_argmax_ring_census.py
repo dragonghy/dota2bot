@@ -170,10 +170,22 @@ class TestParserCorrectness(unittest.TestCase):
 class TestFocusFiveRows(unittest.TestCase):
     """(2) the three rows GH #873 §二 published, and nothing this group does not own."""
 
+    # ⚠️ THE KEY IS A LINE NUMBER, AND THAT IS A KNOWN FRAGILITY, registered
+    # here rather than discovered a second time.  On 2026-09-18 the hero desk
+    # added ~43 lines of COMMENT above X.lion_FightArgmaxSeed (correcting a
+    # published domain reading) and this class went red in three places -- for a
+    # change that touched no code, no ring and no verdict.  The pin was re-taken
+    # by hand in that same work unit; the rows themselves were byte-identical.
+    # ⛔ Do NOT "fix" this by dropping the line from the key: the site identity
+    # is (file, line) in the census output and two copies inside one file are
+    # distinguished by nothing else (hero_shadow_shaman.lua carries two).  The
+    # honest repair -- key on the enclosing function plus the list name -- is a
+    # change to tools/agent/argmax_ring_census.py's output schema and belongs
+    # to whoever next has a reason to touch it.
     EXPECTED = {
         ('bots/BotLib/hero_crystal_maiden.lua', 1804): ('nCastRange', None, 'CONSISTENT'),
         ('bots/BotLib/hero_skeleton_king.lua', 1354): ('nCastRange + 43', None, 'OVER-REACH'),
-        ('bots/BotLib/hero_lion.lua', 1554): ('nCastRange + 300', 'nCastRange + 50', 'SELF-VETO'),
+        ('bots/BotLib/hero_lion.lua', 1597): ('nCastRange + 300', 'nCastRange + 50', 'SELF-VETO'),
     }
 
     def test_the_published_table_still_reads_the_way_the_issue_says(self):
@@ -212,11 +224,11 @@ class TestFocusFiveRows(unittest.TestCase):
         cm = rows[('bots/BotLib/hero_crystal_maiden.lua', 1804)]
         self.assertEqual(cm['other_reads'], [])
         self.assertEqual(cm['other_shipping_sites'], 0)
-        lion = rows[('bots/BotLib/hero_lion.lua', 1554)]
+        lion = rows[('bots/BotLib/hero_lion.lua', 1597)]
         self.assertEqual(lion['other_shipping_sites'], 1)
 
     def test_lions_self_veto_annulus_is_the_250_units_the_issue_quotes(self):
-        r = rows_by_site()[('bots/BotLib/hero_lion.lua', 1554)]
+        r = rows_by_site()[('bots/BotLib/hero_lion.lua', 1597)]
         self.assertEqual(r['search_delta'] - r['admission_delta'], 250.0)
         self.assertEqual(r['admission_place'], 'post-loop')
 

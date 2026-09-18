@@ -22,6 +22,74 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-201. ✅ **主体(P4.4 **(ii) 判定完结 + 一条已发表读数的更正**):`-200` 交出的「下一轮主体候选·第 1 条」——
+   **CM 那份 `= 0` 种子的独立 id**,前置是「**域先买,且在两个语料目录上数**」。
+   **买下来的结果有两层,第二层比第一层重要得多:(1) CM 那份的域端到端是空的 ⇒ 本轮没有落 `cmwseed`(前置正是为了这个答案而写);
+   (2) ⭐⭐ 而买域的过程顺手证伪了一条已经发表、并且已经印在 `bots/` 里的读数 —— `lionwseed` 有自己的单臂域,档案里写着它没有。**
+   报告 `iterations/reports/hero/20260918T021604Z.md`;裁定 `iterations/state.json:lionwseed_solodomain_correction_20260918`。
+   **`bots/` 本轮改动是纯注释、零行为**;**零 gate id / 零 arm / 零 promote / 不申请波次**;
+   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+   - ⭐⭐ **头条:`lionwseed` 单臂就改变一个真实决策,零注入。**
+     `tests/frames/f_260909_215040_wk_blast_lion_480.lua` 上 Hex **1 级 / 冷却 0 / fully castable 全是录制自带的**:
+     出货 `X.ConsiderW` = **desire 0、无目标**;**只 arm `lionwseed`** = **0.75 (`DESIRE_HIGH`) / `npc_dota_hero_skeleton_king` / `W-团战:骷髅王`**;
+     只 arm `lionwfight`(对照)= **0**。⇒ `hero_lion.lua` 抬头那句
+     「arming this id alone changes **NO decision anywhere in the corpus**」**是假的**。
+     ⛔ **断言本身是真的在驱动的** —— 错的是它下面那个普查的**作用域**。
+   - ⭐ **两处缺陷,同号所以叠加不是抵消**:(a) 语料只走 `tests/fixtures`(`tests/frames` 另有 32 帧);
+     (b) 守卫 `( #nInBonusEnemyList >= 2 or #hAllyList >= 3 )` **只抄了第一个析取项**。
+     **13 个过守卫的帧里 11 个靠盟友数过**,头条那一帧搜索环里**只有 1 个敌人**
+     ⇒ 在旧转写下它**按构造够不着**那个决策 ⇒ **(b) 比 (a) 更狠:(a) 让帧不可见,(b) 让帧不可达**。
+     ⚠️⚠️ **(a) 这条更正本组上一轮自己就买到过** —— `-199` 腿 3 逐字写着「团战谓词的域要在两个语料目录上数」,
+     **却没有被搬到同族的其它行上**。
+   - **重测读数(旧→新)**:live-Lion **25→42**;团战谓词 **5→13**;过守卫 **1→13**(11 靠盟友项);
+     搜索环全零(**单臂**救的)**0→6**;准入环全零(**成对**救的)**1→5**;合法候选 **2→10**、其中读 0 的 **1→7**。
+     ⚠️ 都是 **144 个录制帧**上的计数、量表**回溯**,⛔ 不得当发生率引用。
+   - ⛔ **没被推翻的那一半**:目击帧 `f_260820_182906_lion_drain_survived` 上的**互相遮蔽是真的**(§4 照旧驱动)。
+     死的是**架在它上面的一般化命题**。⛔ 也**不许**反过来说 `lionwfight` 有单臂域 —— **没人量过**。
+     ⇒ `queue.json:hero-102` notes 顶上加了**第 0 条**:(丙) 若仍成对发,verdict **必须**写明
+     读到的差里有一部分是 `lionwseed` 独自做的。
+   - ⭐ **CM 那份:分支内 1 个见证帧,端到端 0 个,两条互相独立的堵点**
+     (`tests/frames/f_260909_215040_wk_blast_sb_661.lua`):(1) Frostbite 还剩 **3.2s** 冷却;
+     (2) 抬掉之后**排在团战腿上面**的 `击杀敌人` 腿直接出货(spirit_breaker **172 HP** vs 4 级 Frostbite 的 **300**)。
+     **任一条单独就足以清空域**;§6.2 **驱动**第二条。
+     ⭐⭐ **教训:分支内的「全零集合」不是域** —— 它不问这条腿有没有被走到。
+     **正确数法是驱动真的 `SkillsComplement()` + 真的 `ConsiderX()` 比返回值。**
+     ⇒ 交棒 `queue.json:hero-103`(供帧请求,五条件逐条写明),**拿到帧之前不落 `cmwseed`**。
+   - ⭐ **判别子在旧断言自己的失败消息里**:它逐字写着「那份拷贝现在在真实帧上买得到了,**是下一个该落的 id**」,
+     而 CM/WK 两份**都已经**满足那个条件(0→1 / 0→2)—— **那句话永远打印不出来**,因为它下面的 walk
+     看不到那两帧所在的目录。**一条把下一轮的活交出去的棘轮,长在产生不了那句话的作用域上,不是读得薄,是读不动。**
+   - **核验**:`tests/test_lion_w_fight_seed.lua` **23 绿**(旧 19;新增 §3.1b 盟友析取项**自带控制**、
+     §6.0/§6.1 零注入端到端、§6.2 CM 第二堵点;§0.3/§3.1/§3.3/§5.3 重写并改用 `corpus_scale.ratchet`)。
+     变异台 `tools/agent/mutstand_lionwseed.sh` **22 抓 0 存活**,⭐ 新增 **M19/M20 是作用域变异、改的是测试不是源码**
+     (退回一个目录 / 退回第一个析取项,各自把本轮结论**静默**翻回旧读数,两个都被抓;`TEST` 已进 `SRCS` 备份表)。
+   - ⚠️⚠️ **自己撞出的三件事,照实登记**:
+     (甲) **修好作用域让那个测试丢了快闸座位**:`fast/2.59` → **`too_slow/5.7`**(walk 112→144 帧、hero load 112→163)。
+     GH #616 约束 1 只看绝对秒数 ⇒ **代价,不是把作用域改回去的理由**。
+     ⚠️ 折算噪声大,**分歧写下来而不是挑一个参照**:本机 best-of-three **5.011s**,四个闸内参照给 **0.68x–1.07x**
+     ⇒ 区间 **4.66–7.36s**,**三个判超 cap(5.5)、一个判不超**,取保守侧。
+     `selected_count` 346→345、`selected_total_seconds` 266.611→264.021,预算 540.0 与 `measured_at` 均不动(GH #810)。
+     (乙) **`tests/test_argmax_ring_census.py` 因一次纯注释改动红了三处** —— 键是 `(file, line)`,
+     加了 ~43 行注释把 Lion 那行 **1554→1597**。已重取并把脆弱性写进那张表抬头
+     (⛔ 附说明为何**不能**把行号从键里拿掉:`hero_shadow_shaman.lua` 同文件两份只靠行号区分)。
+     (丙) **开工自检第一条命令就报 `TRUNK RED`,而红的是本组自己上一轮的文件** ——
+     `tests/test_bots_walk_farm_only.py` 因 `-199` 落的 `tests/test_wk_q_teamfight_reach_pricing.lua` 的
+     `io.popen` 未登记(GH #803 要求**同一工作单元**登记)。本轮连同本轮新增那条一起登记,回绿(**8 checks, 0 failed**)。
+   - **闸**:`luacheck_gate.sh` **`GATE_EXIT=0` CLEAN / 0 warnings**;
+     `py_gate.py` **EXIT=0,`133 ran, 0 findings, 0 uncertifiable, 47.3s`**(⚠️ 第一次 EXIT=3 / 1 findings,就是 (乙));
+     `lua_gate.py` **EXIT=0,`424 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 651.8s`**。
+     开工自检 **`TRUNK RED`**(见 (丙),已修)+ 9 个 `UNCERTIFIABLE`(`5a0` 腿撞 120s budget,非本组);
+     ⚠️ **GH #882 又复发一次**(自检给两个本来是绿的 python 测试打 `UNCERTIFIABLE`,理由是「lua5.1 absent /
+     luacheck not installed」,而同容器里 `luacheck_gate.sh` 正是用它们跑出 0 警告的)。
+   - **下一轮主体候选**(按**可测性**排序):
+     **第 1 条**:`-200` 候选表第 2 条原样顺延 —— `X.ConsiderQ` 通用兜底出货点(点 10),前置不变
+     (先读 `hero_skeleton_king.lua:1546` 起那份 `wkqaim` 的 PRE-FLIGHT 笔记)。
+     **第 2 条(本轮新开)**:把 `tests/test_lion_w_fight_seed.lua` 拆成两个文件(Lion 自己的 / CM+WK 同族的),
+     让两半都回快闸内。⚠️ **先量它值不值**:闸外不等于没人跑(`run_tests.lua` 照跑),
+     ⭐ 但它是本轮结论的唯一棘轮,**闸外意味着 push 钩子不再替下一个人挡**。
+     **第 3 条**:`-200` 候选表第 3 条原样顺延(`silencer` 的 in-loop 形状钉成本族规范写法),前置不变。
+     **⭐ 另开一条队列型候选(不是主体,给任何组)**:**把「两个语料目录」做成一道闸,而不是每轮各自记得** ——
+     本轮是它**第二次**以同样形状咬人(`-199` WK 行、本轮 Lion 行)。⚠️ **先量**:树里还有多少个 census 只走一个目录。
+
 -200. ✅ **主体(P4.4 **(ii) 普查交付**):`-199` 交出的「下一轮主体候选·第 1 条」—— queue `hero-102` **(甲)**、
    GH **#873** 索要的 argmax **搜索环 / 准入环**普查表。**交付完毕:20 份拷贝,14 份搜索环 ≠ 准入环,
    其中有代价的 13 份**(OVER-REACH 9 + SELF-VETO 4),CONSISTENT 4,FILTERED 1,UNCOMPARABLE 2。
@@ -8997,6 +9065,35 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-18T02:16Z(报告 `iterations/reports/hero/20260918T021604Z.md`;**backlog:新开 `-201`**;
+  裁定 `iterations/state.json:lionwseed_solodomain_correction_20260918`;
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮改动是纯注释、零行为**;
+  **零 gate id / 零 arm / 零 promote / 不申请波次**;**P4.4 自评:(ii) 判定完结 + 一条已发表读数的更正**)
+  **主体:`-200` 交出的「下一轮主体候选·第 1 条」—— CM 那份 `= 0` 种子的独立 id,前置「域先买,
+  且在两个语料目录上数」。两层结果:(1) CM 那份端到端域是空的 ⇒ 没有落 `cmwseed`;
+  (2) ⭐⭐ 买域顺手证伪了一条已发表并已印进 `bots/` 的读数 —— `lionwseed` 有自己的单臂域。**
+  - ⭐⭐ **头条:零注入的端到端读数。** `tests/frames/f_260909_215040_wk_blast_lion_480.lua`
+    (Hex 1 级 / 冷却 0 / fully castable **全是录制自带**):出货 **desire 0、无目标**;
+    **只 arm `lionwseed`** = **0.75 / `npc_dota_hero_skeleton_king` / `W-团战:骷髅王`**;只 arm `lionwfight` = **0**。
+  - ⭐ **错的是普查作用域不是断言,两处同号缺陷**:(a) 只走 `tests/fixtures`(另有 `tests/frames` 32 帧);
+    (b) 守卫 `( #nInBonusEnemyList >= 2 or #hAllyList >= 3 )` 只抄第一个析取项 ——
+    **13 个过守卫的帧里 11 个靠盟友数过**,头条那帧搜索环**只有 1 个敌人** ⇒ **按构造够不着**。
+    ⚠️⚠️ (a) 正是 `-199` 自己买到、却没搬到同族其它行上的那条更正。
+  - **旧→新**:live-Lion 25→**42**;团战谓词 5→**13**;过守卫 1→**13**;搜索环全零 **0→6**;准入环全零 1→**5**。
+    ⚠️ 144 个**录制帧**上的计数、量表回溯,⛔ 不得当发生率引用。
+  - ⛔ **遮蔽没被推翻**(§4 照旧驱动目击帧);死的是「遮蔽是唯一见证 ⇒ 这一对不可分」。
+    ⛔ 也**不许**说 `lionwfight` 有单臂域 —— 没人量过。⇒ `queue.json:hero-102` notes 加**第 0 条**。
+  - ⭐ **CM:分支内 1 帧,端到端 0 帧,两条独立堵点**(3.2s 冷却 / 上游 `击杀敌人` 腿先出货,
+    spirit_breaker 172 HP vs 300 魔法伤害)⇒ **「分支内全零集合不是域」**,交棒 `queue.json:hero-103` 供帧。
+  - **核验**:`tests/test_lion_w_fight_seed.lua` **23 绿**(旧 19);变异台 **22 抓 0 存活**,
+    ⭐ 新增 **M19/M20 是作用域变异(改测试不改源码)**。
+  - ⚠️ **三条自撞**:(甲) 修好作用域让该测试丢了快闸座位(`fast/2.59`→`too_slow/5.7`,折算区间
+    4.66–7.36s,三超一不超,取保守侧);(乙) `tests/test_argmax_ring_census.py` 因**纯注释**改动红三处
+    (键是 `(file,line)`,1554→1597,已重取并写进抬头);(丙) 开工自检报 `TRUNK RED`,
+    红的是本组 `-199` 落的 `io.popen` 未登记 —— **本轮一并登记回绿**。
+  - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 133 ran, 0 findings, 0 uncertifiable, 47.3s`;
+    `lua gate: 424 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 651.8s`。
+    开工自检 **TRUNK RED(已修)** + 9 `UNCERTIFIABLE`(`5a0` 撞 budget,非本组);⚠️ **GH #882 又复发**。
 - 2026-09-17T23:03Z(报告 `iterations/reports/hero/20260917T230308Z.md`;**backlog:新开 `-200`**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 本轮零行改动**;
   **零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧**;**P4.4 自评:(ii) 普查交付**)
