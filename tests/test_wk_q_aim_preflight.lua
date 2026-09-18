@@ -122,13 +122,56 @@ end
 -- tests/fixtures/, which is the whole reason it is named here: see THE HORIZON.
 local PARKED = 'iterations/pending/tpgap_159_fixture/f_260826_155416_slardar_tpgap.lua'
 
+-- ⭐ BOTH frame directories, since 2026-09-18, and the reason is a RULE rather
+-- than a preference.  tests/frames/README.md, in its own words:
+--
+--     A frame staged here is invisible to every corpus scan BY DESIGN, and that
+--     cuts both ways. ... Any scan that claims to read "the tree" rather than
+--     "the corpus" has to enumerate tests/frames/ too.
+--
+-- ⛔ THIS FILE CLAIMS THE TREE, AND HAS SINCE 2026-08-28.  That is what THE
+-- HORIZON below is: the round that appended the iterations/pending/ frame BY NAME,
+-- explicitly because "the tripwire's universal was, strictly, a statement about
+-- one directory".  It adopted the scope and did not adopt the enumeration.  The
+-- staged directory was never added, so from 2026-09-17 -- when 907dd7bf staged
+-- the Wraith King blast frames and the Zeus frames -- the TREE held three frames
+-- that falsify this file's published sentence while this file went on publishing
+-- it.  Widening the enumeration here moved section 1 from 0 reachable frames to 3.
+--
+-- ⚠️ WHY THE README'S OWN SAFEGUARD COULD NOT CATCH THIS.  Its prescribed check
+-- before staging a frame is `rg -l 'tests/frames' tests/`.  That grep finds the
+-- scans that ALREADY enumerate the directory (89 of them today) -- it cannot find
+-- a scan that SHOULD enumerate it and does not, because the omission is invisible
+-- to a grep for the string being omitted.  So the staging round's "staging price
+-- 1 file (paid)" was measured correctly and this file was correctly absent from
+-- it.  The gap is in the DIRECTION of the check, not in anyone's diligence.
+-- Section 1's COVERAGE test below is the check pointed the other way.
+--
+-- ⛔ NOTHING IS ADMITTED TO tests/fixtures/ BY THIS.  The staged frames stay
+-- staged; only this file's own scope caught up with its own claim.  The price is
+-- this file's own readings, re-derived in the same round -- the README's standard.
+local CORPUS_DIRS = { 'tests/fixtures', 'tests/frames' }
+
 local function fixture_files()
-    local files = {}
-    local p = assert(io.popen('ls tests/fixtures'))
-    for line in p:lines() do
-        if line:match('^.+%.lua$') then files[#files + 1] = 'tests/fixtures/' .. line end
+    local files, seen = {}, {}
+    for _, dir in ipairs(CORPUS_DIRS) do
+        -- Not `assert`ed per-directory: a corpus directory that has not been
+        -- created yet must not turn every test in this file into an error.  The
+        -- coverage assertion in section 1 is what refuses an empty enumeration.
+        local p = io.popen('ls ' .. dir .. ' 2>/dev/null')
+        if p then
+            for line in p:lines() do
+                -- Dedup by BASENAME, not by path: the same frame staged in one
+                -- directory and landed in the other must be read once, or
+                -- wk_frames (a floor this file leans on) inflates.
+                if line:match('^.+%.lua$') and not seen[line] then
+                    seen[line] = true
+                    files[#files + 1] = dir .. '/' .. line
+                end
+            end
+            p:close()
+        end
     end
-    p:close()
     table.sort(files)
     -- Appended, not globbed: this scan's universal is only as wide as what it
     -- enumerates, and until 2026-08-28 it enumerated one directory while the only
@@ -137,10 +180,7 @@ local function fixture_files()
     -- exactly once whether that landing is a move or a copy -- a frame counted
     -- twice would inflate wk_frames, which is a floor this file leans on.
     local base = PARKED:gsub('.*/', '')
-    local already = false
-    for _, f in ipairs(files) do
-        if f:gsub('.*/', '') == base then already = true; break end
-    end
+    local already = seen[base] or false
     if not already then
         local fh = io.open(PARKED, 'r')
         if fh then
@@ -214,6 +254,12 @@ local function scan()
                             nearest = ring[1].name,
                             weakest = weakest.name,
                             ring = #ring,
+                            -- The candidate's WHOLE behaviour delta: `wkqaim`
+                            -- would swap nEnemysHerosInRange[1] (nearest) for
+                            -- the lowest-health entry.  Where they are the same
+                            -- unit the candidate is byte-identical to shipped,
+                            -- so such a frame is NOT a witness for it.
+                            aim_delta = (ring[1] ~= weakest),
                         }
                     end
                 end
@@ -256,6 +302,20 @@ local function consider_q_body(src)
     return body
 end
 
+-- The catch-all's OWN level gate, parsed rather than quoted.  It is the second
+-- of the two conjuncts that separate "the cast is available" from "this branch
+-- fires", and section 1's partition leans on its value; the day it moves, the
+-- reading is re-taken instead of inherited.
+local function catchall_level_gate(src)
+    local body = consider_q_body(src)
+    local at = assert(body:find('#nEnemysHerosInView > 0 or bot:WasRecentlyDamagedByAnyHero%( 3%.0 %)'),
+        'could not locate the catch-all guard in X.ConsiderQ')
+    local gate = body:sub(at):match('^.-\n%s*and nLV >= (%d+)')
+    assert(gate, 'the catch-all guard no longer carries an `and nLV >= N` conjunct; '
+        .. "section 1's partition counts frames against it and must be re-derived")
+    return tonumber(gate)
+end
+
 local T = {}
 
 -- ---------------------------------------------------------------- section 1 --
@@ -277,50 +337,130 @@ T['section 1: the ring geometry itself occurs -- >=2 enemies inside 568u is not 
         .. RING .. 'u; without one, section 1 proves nothing about the branch')
 end
 
-T['section 1 TRIPWIRE: every ring frame has Wraithfire Blast unavailable, so the branch is never reached'] = function()
+-- ⭐ 2026-09-18: THE ENUMERATION IS THE ASSERTION.  Until this round
+-- fixture_files() read one directory, so this section's universal was a
+-- statement about tests/fixtures/ while tests/frames/ held 32 frames nobody
+-- here could see.  Widening it moved the reading from "no frame reaches the
+-- branch" to three that do.  This test is the guard that keeps it widened, and
+-- it is the one pointed in the direction `rg -l 'tests/frames' tests/` cannot
+-- look: it asks whether THIS file's enumeration covers the directories, not
+-- whether the directory is mentioned somewhere.
+T['section 1 COVERAGE: the enumeration spans every corpus directory, not just tests/fixtures'] = function()
+    local files = fixture_files()
+    for _, dir in ipairs(CORPUS_DIRS) do
+        local n = 0
+        for _, f in ipairs(files) do
+            if f:sub(1, #dir + 1) == dir .. '/' then n = n + 1 end
+        end
+        assert(n >= 1, string.format(
+            'fixture_files() enumerated 0 frames out of %s.  Every reading in this file is a '
+            .. 'universal over what that function returns, so a directory it cannot see is '
+            .. 'reported as a measured zero -- which is exactly how this pre-flight went on '
+            .. 'publishing "not one frame reaches the branch" after 2026-09-17 staged three that '
+            .. 'do.  If the directory genuinely went away, strike it from CORPUS_DIRS in the same '
+            .. 'change that re-takes the numbers in the header.', dir))
+    end
+end
+
+-- ⭐⭐ THE TRIPWIRE, RE-AIMED 2026-09-18.  It used to assert that no ring frame
+-- reaches the catch-all at all.  ⛔ That claim was UNWARRANTED from 2026-08-28
+-- (tree scope adopted, tree enumeration not) and FALSE from 2026-09-17 (the
+-- frames landed): three frames reach it with Wraithfire Blast castable
+-- (f_260909_215040_wk_blast_lane_121, f_260909_215040_wk_blast_sb_1052,
+-- f_260909_215227_zeus_arc_od_79, all in tests/frames/).
+--
+-- ⛔ THE DISPOSITION DOES NOT MOVE, BUT THE REASON IS NARROWER AND MUST BE
+-- QUOTED AS THE NEW ONE.  Reaching the branch is not the same as WITNESSING the
+-- candidate.  `wkqaim`'s whole behaviour delta is swapping the nearest entry for
+-- the lowest-health one, so a witness frame has to clear two further things:
+--
+--   * the branch's OWN level gate (`nLV >= 7`, parsed).  Two of the three are at
+--     hero level 3 and 2.
+--   * nearest ~= weakest.  On the one frame that does clear the gate
+--     (f_260909_215040_wk_blast_sb_1052, hero level 20) both are slardar at
+--     203u, so the candidate is byte-identical to shipped there.
+--
+-- ⇒ WITNESSES = 0, on a corpus 28% larger than the one the old zero was taken
+-- on.  ⚠️ The frame that WOULD have been a witness is the level-3 one
+-- (nearest spirit_breaker 388u, weakest slardar 429u) -- so what is holding the
+-- domain shut on it is the level gate, not aim and not supply.  That is a real
+-- fact about the branch and not an artefact of the corpus, and it is the thing
+-- to quote if anyone asks why this candidate is still unwritten.
+--
+-- Going red here is still GOOD NEWS: the named frame is the real frame
+-- queue.json hero-1 asked someone to find.  Re-read the pre-flight before
+-- treating a red as a regression.
+T['section 1 TRIPWIRE: no ring frame both reaches the catch-all and would be re-aimed by `wkqaim`'] = function()
     local rows = scan()
-    local reachable = {}
+    local gate = catchall_level_gate(read_file(SRC))
+    local witnesses = {}
     for _, r in ipairs(rows) do
-        if r.blocked_by == nil then
-            reachable[#reachable + 1] = string.format(
+        if r.blocked_by == nil and (r.hero_level or 0) >= gate and r.aim_delta then
+            witnesses[#witnesses + 1] = string.format(
                 '%s @t=%.1f (hero level %d, Q level %d, ring %d, nearest=%s weakest=%s)',
                 r.file, r.time, r.hero_level, r.q_level, r.ring,
                 r.nearest:gsub('npc_dota_hero_', ''), r.weakest:gsub('npc_dota_hero_', ''))
         end
     end
-    -- This is the tripwire.  Going red here is GOOD NEWS for `wkqaim`: the frame
-    -- named in the message is a real frame on which the candidate's domain is
-    -- non-empty, which is exactly what queue.json hero-1 asked someone to find.
-    -- Re-read the pre-flight before treating the red as a regression.
-    assert(#reachable == 0, string.format(
-        'the `wkqaim` domain is no longer empty in the fixture library -- %d frame(s) reach '
-        .. 'X.ConsiderQ\'s catch-all with Wraithfire Blast castable:\n  %s\n'
+    assert(#witnesses == 0, string.format(
+        'the `wkqaim` domain is no longer empty -- %d frame(s) reach X.ConsiderQ\'s catch-all with '
+        .. 'Wraithfire Blast castable, at hero level >= %d, AND hold a lowest-health enemy that is '
+        .. 'not the nearest one:\n  %s\n'
         .. 'This does not mean something broke.  It means the pre-flight in this file is stale and '
         .. 'the candidate can now be pinned on a real frame.',
-        #reachable, table.concat(reachable, '\n  ')))
+        #witnesses, gate, table.concat(witnesses, '\n  ')))
 end
 
-T['section 1: each ring frame records WHICH conjunct blocked it, and it is supply every time'] = function()
+-- ⭐ A PARTITION, NOT A MAJORITY.  The predecessor of this test asserted that
+-- supply refuses EVERY ring frame; on the wider corpus that is false (9 of 12).
+-- ⛔ The honest repair is not to loosen it into "mostly supply" -- that would
+-- leave the three exceptions uncounted, which is how the old zero survived.
+-- Every ring frame is assigned to exactly one of three named reasons and the
+-- three are asserted to cover the set, so a frame that escapes all three cannot
+-- be absorbed silently: it is a witness, and the tripwire above names it.
+T['section 1 PARTITION: every ring frame is refused by supply, by the level gate, or is zero-delta'] = function()
     local rows = scan()
+    local gate = catchall_level_gate(read_file(SRC))
+    local supply, level_gated, zero_delta, other = 0, 0, 0, {}
     local by_reason = {}
     for _, r in ipairs(rows) do
         local key = (r.blocked_by or 'REACHED'):gsub('%b()', '(...)')
         by_reason[key] = (by_reason[key] or 0) + 1
+        if key == 'Wraithfire Blast unlearned' or key == 'Wraithfire Blast on cooldown (...)' then
+            supply = supply + 1
+        elseif r.blocked_by ~= nil then
+            -- mana / X.ShouldSaveMana: still supply in spirit, but the header's
+            -- story is specifically about rank and cooldown, so it is NOT folded in.
+            other[#other + 1] = string.format('%s (%s)', r.file, r.blocked_by)
+        elseif (r.hero_level or 0) < gate then
+            level_gated = level_gated + 1
+        elseif not r.aim_delta then
+            zero_delta = zero_delta + 1
+        else
+            other[#other + 1] = string.format('%s (WITNESS)', r.file)
+        end
     end
-    -- The claim under test is specifically that ABILITY SUPPLY is what empties the
-    -- domain -- not the geometry, and not the level gate.  If a ring frame ever
-    -- fails for a mana reason instead, the supply story in the header needs
-    -- rewriting, so pin the shape rather than only the emptiness.
-    local supply = (by_reason['Wraithfire Blast unlearned'] or 0)
-        + (by_reason['Wraithfire Blast on cooldown (...)'] or 0)
-    assert(supply == #rows, string.format(
-        'expected every ring frame to be blocked by Wraithfire Blast being unlearned or on cooldown; '
-        .. 'got %d of %d.  Breakdown: %s', supply, #rows, (function()
+    assert(#other == 0, string.format(
+        'ring frame(s) fall outside the three named reasons: %s.  Breakdown: %s',
+        table.concat(other, '; '), (function()
             local parts = {}
             for k, v in pairs(by_reason) do parts[#parts + 1] = string.format('%s x%d', k, v) end
             table.sort(parts)
             return table.concat(parts, '; ')
         end)()))
+    assert(supply + level_gated + zero_delta == #rows, string.format(
+        'the partition does not cover the ring set: supply %d + level-gated %d + zero-delta %d ~= %d rows',
+        supply, level_gated, zero_delta, #rows))
+    -- Each bucket non-empty is NOT asserted (that would pin the corpus, GH #106).
+    -- What IS asserted is that supply no longer explains the whole set -- because
+    -- the header now says so in those words, and a header that drifts back to
+    -- "supply every time" without this going red is the failure this file exists
+    -- to prevent.
+    assert(supply < #rows, string.format(
+        'supply now refuses all %d ring frames again.  That is the reading this file carried until '
+        .. '2026-09-18, and it was an artefact of enumerating one directory.  Check fixture_files() '
+        .. 'before believing it -- and if it is genuinely true of the wider corpus, the header\'s '
+        .. 'three-bucket story has to be rewritten, not just this assertion relaxed.', #rows))
 end
 
 -- ---------------------------------------------------------------- section 2 --
@@ -498,6 +638,27 @@ T['section 4: on the post-cap frame supply is fine and the RING is what is empty
         .. 'least %du. The emptiness of this ring is not marginal -- it is most of '
         .. 'a map -- and that margin is why one post-cap frame does not reopen the '
         .. 'candidate.', nearest, PARKED_WK.nearest_enemy))
+end
+
+-- ---------------------------------------------------------------- section 5 --
+-- RETIREMENT GUARD (2026-09-18).  Everything above is a verdict file: it is
+-- quoted by later rounds as the reason a candidate is NOT written.  That makes
+-- one silent failure worse than a missing file -- a round lands `wkqaim` for
+-- real while this file goes on explaining why nobody has.  Assert the two halves
+-- agree: no gate by that name exists in the shipped hero, and the pre-flight note
+-- that says so is still there to be read.
+
+T['section 5: no `wkqaim` gate has been landed while this file still reads CANDIDATE NOT WRITTEN'] = function()
+    local src = read_file(SRC)
+    assert(not src:find("IsSoakCandidate%(%s*'wkqaim'%s*%)"), SRC .. " now carries a "
+        .. "J.IsSoakCandidate( 'wkqaim' ) gate, while this file is still the standing "
+        .. 'pre-flight explaining why the candidate was not written.  One of the two is '
+        .. 'stale.  Do not silence this: re-read the pre-flight header, and if the '
+        .. 'candidate really did land, this file becomes its domain evidence rather than '
+        .. 'its refusal.')
+    assert(src:find('PRE%-FLIGHT DONE, CANDIDATE NOT WRITTEN'), SRC .. ' no longer carries the '
+        .. 'pre-flight note this file is the machine-checked half of.  A verdict whose prose '
+        .. 'half has been deleted is a verdict nobody at the call site can find.')
 end
 
 return T

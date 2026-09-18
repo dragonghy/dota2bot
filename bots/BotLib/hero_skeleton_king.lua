@@ -1561,10 +1561,40 @@ function X.ConsiderQ()
 	--   batch cap, and levels 13-27 are ordinary now, so "levels 2-12 is where
 	--   turbo lives" is no longer a supporting argument for anything.  The
 	--   measurement below is untouched by that and still carries the branch.
-	--   Measured
-	--   over the fixture library: every frame carrying a living WK with two or more
-	--   living enemies inside 568u has the Blast unlearned or on cooldown.  The
-	--   branch is not reached on a single one.
+	--
+	--   ⛔ RE-TAKEN 2026-09-18 (hero stream), AND THE OLD SENTENCE WAS FALSE.  It
+	--   read: "every frame carrying a living WK with two or more living enemies
+	--   inside 568u has the Blast unlearned or on cooldown -- the branch is not
+	--   reached on a single one."  It was a claim about THE TREE quantified over ONE
+	--   directory.  tests/frames/README.md states the governing rule: a frame staged
+	--   there is invisible to every corpus scan BY DESIGN, and "any scan that claims
+	--   to read 'the tree' rather than 'the corpus' has to enumerate tests/frames/
+	--   too."  The pre-flight's own test adopted tree scope on 2026-08-28 (it
+	--   appended the iterations/pending/ frame by name for exactly this reason) and
+	--   never adopted the enumeration.  On 2026-09-17 the WK blast frames and the
+	--   Zeus frames were staged, and from that commit the sentence above was simply
+	--   false.
+	--   ⚠ The README's own pre-staging check could not catch it: `rg -l
+	--   'tests/frames' tests/` finds the scans that ALREADY enumerate the directory,
+	--   never one that should and does not.  ⛔ Nothing was admitted to
+	--   tests/fixtures/ by the repair -- the staged frames stay staged.
+	--
+	--   Over BOTH directories (145 frames, living WK on 52, 12 of them with two or
+	--   more living enemies inside 568u): supply refuses 9, not 12.  THREE frames
+	--   reach this branch's doorstep with Wraithfire Blast castable.
+	--
+	--   ⭐ THE DISPOSITION DOES NOT MOVE, but quote the NEW reason, which is
+	--   narrower: reaching the branch is not witnessing the candidate.  `wkqaim`'s
+	--   entire delta is preferring the lowest-health entry over the nearest one, so
+	--   a witness also needs this branch's own `nLV >= 7`, and needs those two to be
+	--   different units.  Of the three: two sit at hero level 3 and 2, and the one
+	--   that clears the gate (hero level 20) has nearest == weakest == slardar at
+	--   203u, where the candidate is byte for byte the shipped behaviour.
+	--   => WITNESSES = 0, on a corpus 28% larger than the one the old zero came off.
+	--   ⚠ What holds the domain shut on the frame that would otherwise have been a
+	--   witness (nearest spirit_breaker 388u vs weakest slardar 429u) is THE LEVEL
+	--   GATE -- not supply, and not aim.  That is a fact about this branch rather
+	--   than about the corpus, and it is the thing to quote next time.
 	--
 	--   SIBLING, UPSTREAM.  The recently-damaged branch just above takes the
 	--   nearest entry of the same list, and it fires on exactly the frames this fix
@@ -1575,7 +1605,13 @@ function X.ConsiderQ()
 	-- If `wkqaim` is ever revived it has to cover the recently-damaged branch too,
 	-- and the deciding read is still the corpus scan hero-1 asked for (153 games
 	-- with .dem from the 2026-08-22 wave) -- a fixture-library zero shows EMPTY,
-	-- never RARE.
+	-- never RARE.  ⛔ And a zero taken over an enumeration shows neither: it shows
+	-- the enumeration.  The 2026-09-18 re-take is machine-checked by
+	-- tests/test_wk_q_aim_preflight.lua, whose section 1 COVERAGE test now refuses
+	-- an enumeration that cannot see a corpus directory, and whose section 1
+	-- PARTITION assigns every ring frame to supply / the level gate / zero-delta so
+	-- that a fourth kind of frame cannot be absorbed silently.  Mutation stand:
+	-- tools/agent/mutstand_wkqaim.sh.
 	if ( #nEnemysHerosInView > 0 or bot:WasRecentlyDamagedByAnyHero( 3.0 ) )
 		and ( bot:GetActiveMode() ~= BOT_MODE_RETREAT or #allyList >= 2 )
 		and #nEnemysHerosInRange >= 1
