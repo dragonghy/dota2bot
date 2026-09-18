@@ -20179,10 +20179,28 @@
     (有意,避开 py 闸预算常数那族学费 —— 断言住在 `--selfcheck` 里)。
     ⚠️ **W93 交棒单第 1 条(继续过欠条)本轮没做**,原样交下一轮。
   - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 一次 AWS 调用都没有。
-  - **⛔ 开工自检**:第一条命令又带了 `| tail`(逐字 `REFUSED: … stdout is a pipe; exit 2, nothing checked.`),
-    第二条改重定向后正常起跑,⛔ 两次都未当成通过。**收尾时仍卡在 `trunk health (fast Lua detectors)` 腿**
-    ⇒ ⛔ **无 `selfcheck worst exit` 真码**,⛔ 既不写 trunk 绿也不写 trunk 红。
-    ⭐ **处方补一句**:前台重定向**会被 600s 工具超时切走**(本轮即如此)⇒ 下一轮用 `nohup … &` 那一版。
+  - **⭐ 开工自检:连续两轮读不到的真码本轮读到了。** 第一条命令仍带 `| tail`(逐字
+    `REFUSED: … stdout is a pipe; exit 2, nothing checked.`,⛔ 未当成通过),第二条改重定向后起跑,
+    被 600s 工具超时挪到后台并**跑完**:`EXIT=3` / `selfcheck worst exit: 3` / `legs run 15` /
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage` /
+    `UNCERTIFIABLE (exit 2): trunk-red(python)` / `NOT RUN: tests/test_lua_gate.py` 等三条。
+    ⛔ 按工具自己的 GH #267 4b 警告**不写成「全是 cadence」**,四条腿本轮**没有逐条追**,原样交下一轮。
+    Lua trunk 腿逐字 `138 tagged detector file(s), 0 failures -- FAST SUBSET`;python trunk 腿
+    UNCERTIFIABLE ⇒ ⛔ 既不写 trunk 绿也不写 trunk 红;`lua-coverage` 腿逐字
+    `1 file(s) left the uncovered set since the baseline`(交总监,GH #806 那族);
+    ⚠️ 120s 预算那腿的发现集**从 50 涨到 138**(`138 file(s) … in 120.1s`)—— 那是 GH #358
+    两个数里**动了的那个**。
+    ⭐ **处方补一句**:前台重定向**会被 600s 工具超时切走**(本轮即如此,靠后台跑完才拿到真码)
+    ⇒ 下一轮直接 `nohup … &`,当轮第一条命令,零附加物。
+  - **push 读数(三条腿 × 两次 push)**:先分支后 main(RULING 69),两次全绿,⛔ 未用 `RULE6_BYPASS` ——
+    `GATE_EXIT=0 CLEAN` / `py gate: 134 ran, 0 findings, 0 uncertifiable, 48.3s` /
+    `lua gate: scope = 3 path(s) … SKIPPED BY SCOPE`(无 bots/game/tests 路径);`PUSH1_EXIT=0`,
+    main 推 `RULE6_MEMO=REUSE`(同一棵树)⇒ 按设计命中,`PUSH2_EXIT=0`;
+    远端权威读数两个 ref 都是 `e87f8292`。
+  - **issue 净增 0、评论 1**:**GH #862 追评** `issuecomment-5726409766`,发在**两次 push 之后**(GH #290),
+    发前 `claim_precheck.sh` 读 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
+    `paths cited 7 … resolved on trunk 7 … refused 0`。⛔ 未开新 issue(同一件事不开第二条)。
+  - **token 用量**:`TOKENS total_in=7,018,131 out=51,077 turns=53`(⚠️ 到统计时刻为止)。
   - **下一轮第一件事**:0) 自检:**当轮第一条命令 = 逐字那一行,零附加物**
     `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`(⛔ 无管道、⛔ 无 `timeout`、⛔ 不前台);
     1) 继续按「先核验收句再取活」过欠条(名义 24 行,**已证伪 8 行**;本轮又给出**第 9 条的形状**
