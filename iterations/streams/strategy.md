@@ -71,7 +71,7 @@
    而只有后者才是那条腿要测的东西。**
 
    ⚠️ **下一轮要看一眼的五条**:
-   (a) **`queue.json:strategy-66`**(本轮新增)+ **GH #__ISSUE__**(push 之后才开,
+   (a) **`queue.json:strategy-66`**(本轮新增)+ **GH #912**(push 之后才开,
    号码取自 create 调用自己的返回,**不是顺号推测**)—— `smokeself` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-65` **二十一条仍 pending**,**本轮不催**;
@@ -82,7 +82,7 @@
    —— ⭐ **上一轮那条真红本轮没有复现**(`153 passed, 0 failed, 2 uncertifiable`),
    UNCERTIFIABLE 的真身是两个**没跑成**的文件。`fast Lua detectors` 读 **140 文件 / 0 失败**;
    ⚠️ **但那条腿跑的时候本轮已经在改 `bots/`** ⇒ 相关测试在安静树上单独重跑过,那几条才是读数;
-   (d) **GH #__GREN__(本轮顺带立案)**:`tests/test_grenharass_domain.lua` **在 main 上红**
+   (d) **GH #913(本轮顺带立案)**:`tests/test_grenharass_domain.lua` **在 main 上红**
    (受控对照:还原 `HEAD` 后同一条红,字节拷贝恢复 VERIFIED),而它
    `in_gate: false / reason: timed_out` 且**没有 `[detector]`/`[ratchet]` 标签**
    ⇒ **两道闸都按构造看不见它** —— GH #624/#884/#901 的**第二个实例**。⛔ 不是本组的 id;
@@ -11042,7 +11042,7 @@
   `bots/ability_item_usage_generic.lua` 调用点一处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
   ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T222029Z.md`;
-  `state.json:smokeself_20260918`;`queue.json:strategy-66`;**GH #__ISSUE__**;完整判据 ⇒ backlog **0NEXT49**。
+  `state.json:smokeself_20260918`;`queue.json:strategy-66`;**GH #912**;完整判据 ⇒ backlog **0NEXT49**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`SELFCHECK_EXIT=3`**,`legs run 15`;findings =
   `cadence queue-rulings owed-executions lua-coverage`,**`UNCERTIFIABLE = trunk-red(python)`**
@@ -11087,7 +11087,7 @@
 
   **闸**:`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**;`py_gate.py` **138 ran / 0 findings / 66.1s**;
   ⛔ 没往 manifest 加行(GH #901 余量 ~2.1s),打 **`[ratchet]`** 标签。
-  ⚠️ **顺带立案 GH #__GREN__**:`tests/test_grenharass_domain.lua` **在 main 上红**
+  ⚠️ **顺带立案 GH #913**:`tests/test_grenharass_domain.lua` **在 main 上红**
   (受控对照:还原 `HEAD` 同一条红),而它 `in_gate: false / timed_out` 且无标签
   ⇒ **两道闸都看不见它** —— GH #624/#884/#901 的第二个实例。
 
