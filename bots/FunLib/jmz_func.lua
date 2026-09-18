@@ -568,6 +568,78 @@ function J.GetRoamParityRadius( nAllyRadius, nEnemyRadius )
 	return nAllyRadius
 end
 
+--- [helpself, strategy 2026-09-18] `+ 1` FOR MYSELF, ADDED TO A LIST I AM
+--- ALREADY IN.
+---
+--- THE DEFECT, closed form. Three sites ask "do we have the numbers to help
+--- this ally", and all three write it as `#allies + 1 >= #enemies` -- the `+ 1`
+--- standing for the asking bot, which the ally list is assumed not to hold.
+--- The assumption is false at every one of them, and for two different reasons:
+---   * mode_team_roam_generic.lua:507 (ConsiderHelpAlly) and :1884
+---     (ConsiderHelpWhenCoreIsTargeted) build it with J.GetAlliesNearLoc, which
+---     walks the team ROSTER around the ALLY's location and excludes nobody --
+---     `bot` is in it whenever `bot` is inside the ring, which for a help
+---     decision is most of the time.
+---   * jmz_func.lua J.EvalTeamfightIdle builds it with
+---     J.GetNearbyHeroes( hFocusedAlly, 1200, false, ... ), whose self-exclusion
+---     is real but drops hFocusedAlly -- NOT `bot`. Its own comment says the
+---     focused ally "is deliberately not counted", and that part is true; the
+---     list excludes a self, just not the one the `+ 1` is for.
+---
+--- ⭐ AT SITE C THE DOUBLE COUNT IS UNCONDITIONAL, by construction rather than
+--- by luck: hFocusedAlly is picked out of J.GetNearbyHeroes( bot, 1000, ... ),
+--- so dist(bot, hFocusedAlly) <= 1000 < 1200 and `bot` is inside the ring on
+--- EVERY frame that branch reaches. The corpus agrees exactly -- self 69 of 69.
+---
+--- ⭐⭐ THE MIRROR OF 'soloclaim' (same file, one day earlier, same group).
+--- There the code believed the ally list HELD the asker and it never does
+--- (J.GetNearbyHeroes centred on the asker); here it believes the list does NOT
+--- hold the asker and it always can. One belief, two polarities, and fixing one
+--- of them is no reason for anybody to go looking for the other: the two
+--- producers of "nearby allies" differ in exactly this and their names do not.
+---
+--- DIRECTION IS FIXED BY CONSTRUCTION. Armed, the answer is `#allies + 1` or
+--- `#allies` -- never more than shipped -- so `>= #enemies` can only go
+--- TRUE -> FALSE. All three consumers read TRUE as "we have the numbers, go
+--- help", so arming can only WITHHOLD a help response; it cannot start one the
+--- shipped tree refuses. A batch reading that goes the wrong way therefore
+--- cannot be read as "the lever made the bots over-commit".
+---
+--- DOMAIN, measured by tests/_helpself_sweep.lua on 112 fixtures / 1039 live
+--- hero frames (2026-09-18), rows = subject frames:
+---   A reached 679  self 448  shipped 673  armed 664  down  9  up 0
+---   B reached 547  self 367  shipped 541  armed 534  down  7  up 0
+---   C reached  69  self  69  shipped  67  armed  40  down 27  up 0
+--- 34 distinct subject frames across 20 fixtures change at least one site.
+--- `up 0` is a reading only because `down` is 43 in the SAME tally -- a
+--- direction column of zeros cannot tell "the direction holds" from "the tally
+--- never ran".
+---
+--- ⚠️ CEILING, NOT A FIRE RATE. Sites A and B sit behind mode/desire chains
+--- (bot:GetActiveModeDesire, J.IsGoingOnSomeone) that a .dem cannot reproduce
+--- (GH #27), and site C behind J.IsGoingOnSomeone / J.IsRetreating. The numbers
+--- above price the PREDICATE on frames where the rest of the branch is assumed
+--- reachable, not how often the branch fires.
+---
+--- WHAT THIS IS NOT. It does not touch either radius, the operator, the
+--- enemy-side producers, or the deliberate exclusion of the focused ally
+--- itself. The ring mismatch at sites A and B (allies 1200, enemies 1600 around
+--- the same point) is a SECOND defect, it points the other way, and it is NOT
+--- touched here -- one lever at a time is what the lanefix bundle cost us. It
+--- is registered in this round's report and backlog.
+function J.GetHelpParityAllyCount( bot, tAllies )
+	local nCount = #tAllies
+	if not J.IsSoakCandidate( 'helpself' ) then return nCount + 1 end
+	if not J.IsModeTurbo() then return nCount + 1 end
+
+	for _, hAlly in pairs( tAllies )
+	do
+		if hAlly == bot then return nCount end
+	end
+
+	return nCount + 1
+end
+
 function J.GetAnyEnemiesNearLoc(vLoc, nRadius)
 	-- local cacheKey = 'GetAnyEnemiesNearLoc'..tostring(nRadius) ..tostring(J.ToNearest500(vLoc.x))..'-'..tostring(J.ToNearest500(vLoc.y))
 	-- local cache = J.Utils.GetCachedVars(cacheKey, 0.5)
@@ -12689,7 +12761,13 @@ function J.EvalTeamfightIdle( bot )
 	-- STRICT help: only when helping actually changes the fight. Numbers parity
 	-- AND the HP/mana to act, OR a lethal-or-numbers safe commit onto the enemy
 	-- on our ally (J.SafeToCommitFight already encodes both). Otherwise flee.
-	local bHaveNumbers   = ( #nAllyNear + 1 ) >= #nEnemyNear
+	-- [helpself] The `+ 1` was for this bot, and nAllyNear already holds it:
+	-- J.GetNearbyHeroes' self-exclusion drops hFocusedAlly, not `bot`, and
+	-- hFocusedAlly was found inside 1000u of `bot`, so `bot` is inside this
+	-- 1200 ring on every frame this line runs (corpus: self 69 of 69).  Gated;
+	-- disarmed this is byte-identical to `#nAllyNear + 1`.  See the header of
+	-- J.GetHelpParityAllyCount.
+	local bHaveNumbers   = J.GetHelpParityAllyCount( bot, nAllyNear ) >= #nEnemyNear
 	local bCanContribute = J.GetHP( bot ) >= 0.5 and J.GetMP( bot ) >= 0.2
 
 	if ( bHaveNumbers and bCanContribute )

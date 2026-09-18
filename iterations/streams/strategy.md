@@ -35,6 +35,50 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT43. **【2026-09-18T04:24Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `helpself` 落地)。剩下的是三句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【这张表里有没有我】那一格**:
+   **「表里有没有我」是一个信念,它有两个极性,而修好其中一个极性**不会**让任何人去找另一个。**
+
+   现场:**`soloclaim`(同一个文件、一天前、同一组)修的是反向的同一个信念** —— 那里代码相信 ally 表
+   **装着**发问者(`#hAllyList <= 1` 当「只有我」、`ally ~= bot` 排一个不存在的条目),而
+   `J.GetNearbyHeroes` 以发问者为心、**从不装它**;本轮的三个站点相信它**不装**,而它总可能装
+   (其中 `J.EvalTeamfightIdle` 那一处**必定**装:`hFocusedAlly` 取自 1000u 扫描、圈是 1200 ⇒
+   语料 `self` **69/69**)。📌 **判据:看到 `+ 1`,先问这张表是以谁为心的;看到 `ally ~= bot`,
+   问同一个问题。** 三个生产者的差别只在这一点上,**而名字看不出来**:
+   `J.GetNearbyHeroes(bot,…)` 以**我**为心(排除我)/ `J.GetAlliesNearLoc(vLoc,…)` 以**一个点**为心
+   (谁都不排除)/ `J.GetNearbyHeroes(ally,…)` 以**别人**为心(排除**别人**)。
+   ⚠️ 顺带:站点 C 的注释写着 focused ally "is deliberately not counted",**那句是真的** ——
+   一个真命题挡住了「那 `+ 1` 补的是哪个自己」这个问题。
+
+   ⭐ **第二句,关于「哪一半可以动」**:站点 A/B 还有一条**圈不对称**(同一点上盟友 1200 / 敌人 1600),
+   ⭐ **与 `roamring` 正好相反 —— 那里两种统一都收紧,这里两种统一都放松**(当前这对是最悲观的配法)。
+   而可以动的是哪一半**不由保守性决定**(两边都单向时它不是判据,0NEXT41 已立),
+   **由「那一半有没有第二份工作」决定**:敌方表同时是 parity 的分母**和**挑选支援目标的迭代域,
+   动它会改变分支的**产物**;盟友表只有一份工作。📌 **本轮登记不修。**
+
+   ⚠️ **第三句,关于「先读默认值再数域」**:`J.GetAllyList` 的 `if #nCandidate <= 1 then return nCandidate end`
+   在**恰好一个**候选时跳过它唯一的过滤(`not ally:IsIllusion()`),而敌方孪生 `J.GetEnemyList` 的早退是
+   `nCandidate[1] == nil`(**只跳空表**)⇒ **落单的我方幻象算战力,落单的敌方幻象不算**。
+   ⛔ **在这台仪器上不可测**:`tests/mock/replay_fixture.lua:856` 自己写着幻象在 fixture 生成时就丢掉了
+   ⇒ 唯一判别式恒为假。**本轮按 0NEXT41 先读了默认值再数域**,所以它被登记成仪器缺口而不是「测过没效果」。
+
+   ⚠️ **下一轮要看一眼的四条**:
+   (a) **`queue.json:strategy-60`**(本轮新增)+ 本轮开的 [strategy] issue —— `helpself` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-59` **十五条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) ⛔⛔ **开工自检本轮没跑完,本报告因此不引用它的退出码** —— 它在 `=== trunk health (fast Lua detectors) ===`
+   上停了两个多小时(时长从 ~11 分钟涨到 ~40 分钟再涨),⚠️ **而且本轮的树不安静**
+   (变异台会临时改 `bots/` 三个文件、fixture 测试会写 `soak_side.lua`,即 GH #856 的读写竞态)
+   ⇒ **它这一轮读到的任何红都不可归因**。📌 **第三次登记同一条建议**(0NEXT40 §(c)、0NEXT42 §(e)):
+   **自检回来之前只做只读测量**,或**把变异台留到自检退出之后**。⭐ 本轮是它第一次**完全没给出读数**,
+   前两次至少还给了个 `EXIT=3` —— 建议该升级成「自检与变异台不同时跑」这条硬规矩;
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。】**
+
 0NEXT42. **【2026-09-18T01:46Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `fightfloor` 落地)。剩下的是三句要带走的。
 
@@ -10644,6 +10688,67 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-18T04:24Z:**`+ 1` 是为「我」加的,而那张表里已经有我。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `helpself`,
+  `bots/FunLib/jmz_func.lua` + `bots/mode_team_roam_generic.lua`)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T042437Z.md`;
+  `state.json:helpself_20260918`;完整判据 ⇒ backlog **0NEXT43**。
+
+  **开工 = 铁律 10 再铁律 9**:⚠️ 管道防呆**第 16 次**,又在第一条命令上撞到;改走重定向 + 后台后
+  ⛔ **自检本轮没跑完**(停在 `trunk health (fast Lua detectors)` 两个多小时)⇒ **本轮不引用它的退出码**,
+  且**本轮的树不安静**(变异台改 `bots/`、fixture 写 `soak_side.lua`,GH #856)⇒ 它读到的红不可归因。
+  P1 球在总监 / GH #862 在录像组;P2 卡魔棒仪器墙;**4.4 球在本组且本组能动** ⇒ 取 4.4。
+  [strategy] open issue 七条,**带帧证据且未落地的一条都没有** ⇒ 自找杠杆。
+
+  **缺陷**:三个「有没有人数去帮这个队友」的站点都写 `#allies + 1 >= #enemies`,`+ 1` 代表发问的 bot ——
+  A `mode_team_roam_generic.lua:507` / B `:1884` 用 `J.GetAlliesNearLoc`(绕**队友的位置**走**花名册**,
+  谁都不排除);C `jmz_func.lua` `J.EvalTeamfightIdle` 用 `J.GetNearbyHeroes( hFocusedAlly, 1200, … )`
+  —— 它**确实**排除了一个自己,**排的是 `hFocusedAlly` 不是 `bot`**。
+  ⭐ **C 的重复计数无条件**:`hFocusedAlly` 取自 1000u 扫描、圈 1200 ⇒ `bot` 必在圈内;语料 **69/69**。
+  ⭐⭐ **这是 `soloclaim`(同文件、一天前、同组)的镜像** —— 同一个信念的两个极性。
+
+  **修法**:`J.GetHelpParityAllyCount( bot, tAllies )`,armed(turbo-only)按**身份**扫一遍,
+  发问者在里面就不加 1;disarmed 两条拒绝路径都**逐字**返回 `#tAllies + 1`。
+  **没有新常数,不是算术**(`#tAllies - 1` 在证人帧上答对、对照帧上答错 ⇒ M7)。
+  **方向由构造定死**:armed ≤ shipped ⇒ 只能 TRUE→FALSE;三个消费者都把 TRUE 读成「有人数,去帮」
+  ⇒ armed **只能收回支援**。
+
+  **域**(`tests/_helpself_sweep.lua`,**零 arm**,112 fixture / **1039** live 帧,**行 = 主语帧**):
+  A `reached 679 / self 448 / down 9 / up 0` | B `reached 547 / self 367 / down 7 / up 0` |
+  C `reached 69 / **self 69** / shipped 67 / armed 40 / **down 27** / up 0`;
+  **34 个主语帧、20 份 fixture** 至少一处变号。⛔ `up 0` 是读数**只因为同一 tally 里 down 合计 43**。
+  ⚠️ 天花板不是发生率(A/B/C 上游都是 `.dem` 不带的 bot-VM 状态,GH #27)。
+
+  **本地验证**:`tests/test_helpself_parity_self.lua` **11/11,0.38s,全程零 stub**。
+  证人帧 `f_260820_162821_lion_drain_lethal` t=307.4 / necrolyte:**端到端**
+  `J.EvalTeamfightIdle` 出厂 **`'help'`** → armed **`'flee'`**(这是 **PROMOTED 的 `fight` 路径**),
+  A/B 同帧 `3>=3` TRUE → `2>=3` FALSE。⭐ **这一帧自己写着判决**:fixture ground truth
+  `died_after = 1.5`、三个敌人 546 burst,而第三个(lina)站在 **1245.8u**,比 1200 圈远 45.8u
+  ⇒ 连敌方那一半也是低估的。⛔ **不主张 armed 能救下谁**。
+  对照帧 `f_080225_wk_lane` / vengeful_spirit 离最近队友 **1853u**(圈外)⇒ `+ 1` 在那里是**对**的,
+  armed 必须 no-op,而 parity 仍在**刀口**(`1+1>=2`)⇒ 「没变」是读数不是「差得远」。
+  ⛔ **第一次就绿所以不信它** ⇒ `tools/agent/mutstand_helpself.sh` **8 抓 / 0 存活 / 控制绿 / 退出码 0**
+  (restore 逐文件 sha256 round-trip);按证据纪律 4 单独复核 **M4** —— 它顶红**四条**真实帧断言,
+  `want` 对应其中 FAIL[3],**是读出来的不是猜中的**。M6 专钉「只修两个孪生里的一个」。
+
+  **⚠️ 登记不修两条**:(1) A/B 的圈不对称(盟友 1200 / 敌人 1600)——
+  ⭐ 与 `roamring` 相反,**两种统一都是放松**,而可以动哪一半由**「那一半有没有第二份工作」**定
+  (敌方表同时是分母和挑目标的迭代域);(2) `J.GetAllyList` 的 `#nCandidate <= 1` 早退跳过它唯一的
+  幻象过滤,而敌方孪生只跳空表 ⇒ **落单的我方幻象算战力,敌方的不算**;⛔ **fixture 语料无幻象
+  (loader 自己写着生成时丢掉)⇒ 不可测**,按 0NEXT41 先读默认值再数域,登记成仪器缺口。
+
+  **铁律 6**:`GATE_EXIT=0 CLEAN`(luacheck 0 警告);`test_gate_claim_consistency` 16/16、
+  `test_gated_helper_nesting_census` 10/10、`test_lua_gate_budget_backstop.py` 7/7、
+  `test_lua_gate_coverage.py` 19/19、`test_queue_reading_census.py` 16/16、`test_pending_rulings.py` 1023/1023。
+  ⚠️ 全量 Lua 套件(~100min,GH #124)**本轮没跑**,照实写;⛔ 没用过 `RULE6_BYPASS`;
+  push 两条腿读数见报告 §十一。`lua_gate_manifest.json` **手加一行** `seconds = 0.381`
+  (三次里最大的一次,**不缩放** —— 同机标定 0.97x 与 0.74x **互相矛盾**,所以不施加因子);
+  `budget_seconds` 不动且**从文件算出来**(in_gate 264.763 → 2x = 529.526 ≤ 540.0)。
+
+  **交棒**:`queue.json:strategy-60`(**先建棒再推、再开 issue**)+ 本轮 [strategy] issue
+  (⛔ **push 之后**才开,号码取自 create 调用自己的返回 `id`,**不是顺号推测**)。
 
 - 2026-09-18T01:46Z:**同一条修复只修到了它被发现的那一个调用点。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `fightfloor`,

@@ -510,7 +510,12 @@ function ConsiderHelpAlly()
         for _, enemyHero in pairs(nInRangeEnemy) do
             if J.IsValidHero(enemyHero)
             and GetUnitToUnitDistance(enemyHero, nClosestAlly) <= 1600
-            and (#nInRangeAlly + 1 >= #nInRangeEnemy) then
+            -- [helpself] nInRangeAlly comes from J.GetAlliesNearLoc, a ROSTER
+            -- walk around the ALLY that excludes nobody, so this bot is in it
+            -- whenever it is inside the 1200 ring and the `+ 1` counts it a
+            -- second time.  Gated; disarmed this is byte-identical to
+            -- `#nInRangeAlly + 1`.  See the header of J.GetHelpParityAllyCount.
+            and (J.GetHelpParityAllyCount(bot, nInRangeAlly) >= #nInRangeEnemy) then
                 if (enemyHero:GetAttackTarget() == nClosestAlly or J.IsChasingTarget(enemyHero, nClosestAlly))
                 or nClosestAlly:WasRecentlyDamagedByHero(enemyHero, 2.5) then
                     return enemyHero, true
@@ -1887,7 +1892,12 @@ function X.ConsiderHelpWhenCoreIsTargeted()
         for _, enemyHero in pairs(nInRangeEnemy) do
             if  J.IsValidHero(enemyHero)
             and GetUnitToUnitDistance(enemyHero, nClosestCore) <= 1600
-            and (#nInRangeAlly + 1 >= #nInRangeEnemy) then
+            -- [helpself] nInRangeAlly comes from J.GetAlliesNearLoc, a ROSTER
+            -- walk around the ALLY that excludes nobody, so this bot is in it
+            -- whenever it is inside the 1200 ring and the `+ 1` counts it a
+            -- second time.  Gated; disarmed this is byte-identical to
+            -- `#nInRangeAlly + 1`.  See the header of J.GetHelpParityAllyCount.
+            and (J.GetHelpParityAllyCount(bot, nInRangeAlly) >= #nInRangeEnemy) then
                 if (enemyHero:GetAttackTarget() == nClosestCore or J.IsChasingTarget(enemyHero, nClosestCore))
                 or nClosestCore:WasRecentlyDamagedByHero(enemyHero, 2.5) then
                     return enemyHero, true

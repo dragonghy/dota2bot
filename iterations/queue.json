@@ -3137,6 +3137,18 @@
       "result": null,
       "director": null,
       "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。不需要任何一波。"
+    },
+    {
+      "id": "strategy-60",
+      "stream": "strategy",
+      "bundle": "`helpself`(新 gated id,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。 立案 issue:**GH #<push 之后开,号码取自 create 返回>**。",
+      "priority": 3,
+      "status": "pending — 预期裁定是 FROZEN-HOLD(登记、不入集、不视为掉棒;armed 25 > 20)",
+      "seeds": "不适用(不发波)",
+      "question": "⛔ **零 AWS、零 EC2、零 CE、不申请专波、不申请新波** —— 本请求要的是一次登记,不是一次取证;全部工作已在本地做完。(这一行放在开头是因为 GH #885 未修:声明写在 `bundle`/`cost` 里的新请求会被 push 闸拒掉。)\n\n一句话:**三个「有没有人数去帮这个队友」的站点都为「我」加了一个 `+ 1`,而三张表里都已经有我 —— 其中一个站点是 PROMOTED 的 `fight` 路径,每一局 Turbo 都活着。请登记 `helpself`,解冻后排 (a) 证据。**\n\n### 已经钉住的(不要重测)\n- 缺陷:`#allies + 1 >= #enemies`,`+ 1` 代表发问的 bot。(甲) `mode_team_roam_generic.lua:507` / `:1884` 用 `J.GetAlliesNearLoc` —— 绕**队友的位置**走**花名册**,谁都不排除;(乙) `jmz_func.lua` `J.EvalTeamfightIdle` 用 `J.GetNearbyHeroes( hFocusedAlly, 1200, false, ... )` —— 它排除的那个自己是 `hFocusedAlly`,**不是 `bot`**。它自己的注释写着 focused ally \"is deliberately not counted\",**那句是真的;表里少的那个自己不是 `+ 1` 要补的那个**。\n- ⭐ **站点 (乙) 的重复计数无条件**:`hFocusedAlly` 取自 `J.GetNearbyHeroes( bot, 1000, ... )` ⇒ `1000 < 1200` ⇒ `bot` 必在圈内。语料逐位同意:`c_self` **69 / 69**。\n- ⭐⭐ **这是 `soloclaim` 的镜像**(同文件、一天前、同组):那边相信 ally 表**装着**发问者而它从不装;这边相信它**不装**而它总可能装。**修好一个极性不会让任何人去找另一个** —— 两个生产者的差别正在这一点上,而名字看不出来。\n- 修法:`J.GetHelpParityAllyCount( bot, tAllies )`,armed(turbo-only)按**身份**扫一遍,发问者在里面就不加 1;disarmed 两条拒绝路径都**逐字**返回 `#tAllies + 1`。**没有新常数,不是算术**(`#tAllies - 1` 在证人帧上答对、在对照帧上答错 —— 变异体 M7)。\n- **方向由构造定死**:armed 的答案 ≤ shipped ⇒ 只能 TRUE→FALSE;三个消费者都把 TRUE 读成「有人数,去帮」⇒ armed **只能收回支援,开不出新的支援**。⇒ 批测读数若反向,**不能**读成「杠杆让 bot 过度支援了」。\n- 域(`tests/_helpself_sweep.lua`,112 fixture / 1039 live 帧,**零 arm**,行 = 主语帧):A `reached 679 / self 448 / down 9 / up 0`;B `reached 547 / self 367 / down 7 / up 0`;C `reached 69 / **self 69** / shipped 67 / armed 40 / **down 27** / up 0`。34 个主语帧、20 份 fixture 至少一处变号。⛔ `up 0` 是读数**只因为同一 tally 里 down 合计 43**。\n- 测试:`tests/test_helpself_parity_self.lua` **11/11,零 stub**;证人帧 `f_260820_162821_lion_drain_lethal` t=307.4 / necrolyte ⇒ **端到端** `J.EvalTeamfightIdle` `'help'` → `'flee'`。变异台 `tools/agent/mutstand_helpself.sh` **8 抓 / 0 存活 / 控制绿 / 退出码 0**;M4 按证据纪律 4 单独复核(它顶红四条真实帧断言,`want` 对应其中一条,**读出来的不是猜的**)。\n\n### ⚠️ 解冻后买 (a) 时要知道的三条(现在说,免得那一波去发现)\n1. **站点 C 是 PROMOTED 的 `fight` 路径**(`J.ResolveTeamfightIdle`,无 candidate gate)⇒ 它的域不需要别的 id 陪跑;站点 A/B 在 `mode_team_roam` 里也**没有 gate**。armed 单臂测的就是这三处。\n2. **天花板不是发生率**:A/B 上游是 `bot:GetActiveModeDesire()` / `J.IsGoingOnSomeone`,C 上游是 `J.IsGoingOnSomeone` / `J.IsRetreating` —— 都是 `.dem` 不带的 bot-VM 状态(GH #27)。\n3. **检测器建议**:这个杠杆预期把 `idle_while_ally_dies` 的反面(赶去一个已经输掉的团)压下去,而**不是**把 idle 本身放回来(`fight` 的 `'flee'` 支仍然会动)。如果录像组要一个判别子,看的是「赶到时队友已死」而不是「站着不动」。\n\n### ⛔ 给总监的前置\n**P4.2 冻结**:armed **25 > 20** ⇒ 唯一合法裁定是 **FROZEN-HOLD**。本请求自己就预期这个结果,写在 status 里;本轮**没有新增任何 armed id**,成员串仍 25。",
+      "result": null,
+      "director": null,
+      "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。全部本地,不需要任何一波。"
     }
   ],
   "done": [
