@@ -87,6 +87,15 @@
 --     treats a shared-file defect one hero at a time -- and, per section 5, it
 --     cannot even do that: the strand is whichever slot ends at rank 3, so any
 --     row that spends thirteen points into {4,4,3,2} strands SOMETHING.
+--     ⚠️ AMENDED 2026-09-19 (hero, gated candidate `axebuild`,
+--     tests/test_axe_call_max_build.lua).  The last clause above is right about
+--     REMOVING the strand and was read as also foreclosing CHOOSING it, which is
+--     a different question and the one a row edit does answer.  Section 5b's own
+--     verb is "it only moves" -- moving is the affordance.  Axe's shipped row
+--     strands `axe_berserkers_call`; the gated row in this file's FOCUS list
+--     strands `axe_battle_hunger` instead, at the same thirteen points and the
+--     same {4,4,3,2}.  Nothing above changes: the wall is untouched, the strand
+--     is not removed, and this file still says no row escapes it.
 --
 -- ⚠️ Tagged [ratchet].  Sections 3-5 assert that the defect is still there and
 -- still has this shape.  The day the wall is fixed they go red; that is the
@@ -114,6 +123,7 @@ local STRANDED_RANK = 3 -- the `3` of {4,4,3,2}: the slot entry 16 would have ma
 --- gets wrong, so the loader below raises rather than skipping on a miss.
 local FOCUS = {
     { hero = 'axe', file = 'hero_axe' },
+    { hero = 'axe', file = 'hero_axe', tbl = 'tCallMaxBuildList' },
     { hero = 'zuus', file = 'hero_zuus' },
     { hero = 'skeleton_king', file = 'hero_skeleton_king' },
     { hero = 'skeleton_king', file = 'hero_skeleton_king', tbl = 'tKillBuildList' },

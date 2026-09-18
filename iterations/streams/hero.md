@@ -22,6 +22,21 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-208. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:`-207` 的候选清单里没有这一条 —— 本轮认领的是 GH **#864** 那张表**留下的行动空间**:它逐个点名了焦点五英雄各自被技能点墙永久钉在 rank 3 的那一个技能,而 Axe 是 `axe_berserkers_call`。落地 gated soak candidate **`axebuild`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260918T225037Z.md`;裁定 `iterations/state.json:axebuild_20260918`。**零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+   - ⭐⭐ **头条:构筑行不是一张偏好表,它是「哪个技能永远少一级」的唯一自由度 —— 而 Axe 现行行把那一级花在了 Battle Hunger 上、留给了 Berserker's Call。** GH #366 / #822 / #864 把墙的算术定完(队头停第 15 项,13 点按 `{4,4,3,2}` 花完,第 16 项 = 前 13 点留在 rank 3 的那个基础技能的第 4 级)。⭐ **于是「该不该重排构筑行」有一个之前没被问的形状**:重排**消不掉** strand(#864 LIMIT 2,14 行零例外),但它**选得动 strand 是谁**。本轮只做后者。
+   - ⭐ **驱动读数,不是数条目(GH #134)**:shipped 行 Call 的梯子 **{3, 13, 14, 16}** ⇒ Axe **从 3 级到 12 级**一直拿着一个 **rank 1 的 Berserker's Call**(2.1s、18s CD),而 Battle Hunger **11 级**就满了({1, 8, 9, 11})。armed 行对调:Call **{3, 8, 9, 11}**、Hunger **{1, 13, 14, 16}**。
+   - ⭐ **窄度是承重的**:两行完整 17 级列表逐项比,**首处分歧在英雄 8 级**(1-7 级逐字节相同),**每处分歧只碰 Call/Hunger 两个槽**,**Counter Helix(2/4/5/7)与 Culling Blade(6/12/17)梯子逐位相同** ⇒ 将来的波读数可归因到 Q/W 分配**且只归因到它**。
+   - **定价**(游戏自己的 KV,§5 逐列钉住 ⇒ 补丁改列时散文**变红**而不是变陈旧 —— `-207` 头条那个缺陷的反面):Call 第 4 级 = 315 半径 **AoE 嘲讽** +0.3s、CD −2s、护甲 +1;Hunger 第 4 级 = **单体** dps +4(12s 共 +48 未减伤)、CD −5s、减速 +4pp。标准 Axe 加点(可检索)= Helix 先满 → **Call 第二** → Hunger 最后留 value point,**armed 行就是这个顺序**。⚠️ **让出去的是真的且落得更早**:Hunger 1→12 级停 rank 1 ⇒ 拿对线骚扰换中期锁人;普通模式未必划算 —— **这就是它 turbo-gated 的理由**。
+   - ⛔ **三件不声称的事**:不修墙(墙在 `ability_item_usage_generic.lua`,127 英雄全跑,已有 `skillstall` / GH #799);**不消 strand**(§3 断言 armed 行**恰好一个槽停在 rank 3**,把「墙被修好了」这个误读用断言封死而不是散文劝阻);**不声称 Axe 变强了**(值不值要一波,本轮不申请)。
+   - **落地**:`bots/BotLib/hero_axe.lua` 新增 gated `tCallMaxBuildList` + 选表块(照 `wkbuild` / GH #17 先例),**shipped 行一个字节没动**;新测试 `tests/test_axe_call_max_build.lua`(5 节 / `[ratchet]` / 本机 best-of-3 **0.106s**,手加进 manifest)。变异台 **7/7 全杀**(armed 行换回 shipped / armed 行挪 Helix / gate 改名 / gate 加第二个 id / shipped 行被偷改 / KV 列被改 / turbo 守卫被删),`sha256sum -c` 还原核验 OK,还原后复跑 exit=0;M1 单独复核 **§3 与 §4 各自独立变红**。
+   - ⚠️ **两处别人的棘轮被顶红,当轮改完**(GH #624 立案形状):(甲) `test_build_index_resolution.lua` §8「恰好三个英雄带第二张构筑表」→ 四个 —— ⭐ **这条是开工自检的快 Lua 腿抓到的**,铁律 10 那句「要看一眼」这轮兑现了;按该断言红字自己的指示,**先核对 §2-5 读数不变**再加(9 节全绿)。(乙) `test_focus_strand_identity.lua` FOCUS +1 行(8 节全绿),并给抬头第 (4) 条加**日期署名的订正** —— 原文「Reordering … **cannot even do that**」对「消不掉」是对的,**被读成也否掉了「选得动」**,而 §5b 自己的动词就是 **"it only moves"**。
+   - ⚠️⚠️ **本轮自己撞的一条**:**开工自检还在跑的时候我就在改 `bots/`** ⇒ 它读到改到一半的工作树(GH #507 / #848 / #898 同族)。这次归因是对的((甲) 确实是我的),但 `/tmp/sc.log` 里那条红是**过期读数**;同一 log 里 **9 条 `UNCERTIFIABLE`** + python 腿一条(逐字 `re-run on a quiet tree (nothing writing under bots/)` —— **树不安静的原因就是我**)⇒ ⛔ **trunk 的那一侧这轮没人看过**。另:误跑两次 `lua_gate_measure.py`(它**没有 `--help`**,直接开始全表重测),两次都在写盘前 `kill -9`,`git status` 核验 manifest 未被脚本改动。
+   - **下一轮主体候选**(按可测性排序):
+     **第 1 条(顺延,`-207` 第 1 条)**:`wkqflee` 带里另外两帧的**供帧请求**(`hero-104` 同族)。
+     **第 2 条(本轮新开)**:同一把尺子量另外四个焦点英雄 —— #864 说 Zeus 被钉住的是 `zuus_heavenly_jump`、Lion 是 `lion_voodoo`(**Hex**)、WK 是 `skeleton_king_hellfire_blast`、CM 是 `crystal_maiden_brilliance_aura`。⭐ **四个里至少两个看起来选错了同一种东西**(Lion 的 Hex 与 WK 的硬控),而 **CM 那个(光环)看起来恰恰选对了** ⇒ ⛔ 先量再落,**一次一个英雄一个 id**,不要打包(`lanefix` 教训)。
+     **第 3 条**:`-207` 第 3 条顺延 —— manifest 剩下的 2 个 `too_slow` 行。
+     **第 4 条**:`-207` 第 4 条顺延 —— `argmax_ring_census.py` 的 schema 改造(归属存疑先问总监)。
+
 -207. ✅ **主体(P4.4 **(ii) 判定完结所需的证据 —— ⛔ 不是最后一块**)**:`-206` 交出的「下一轮主体候选·第 2 条」(本组作用域的帧目录普查,GH #281 的本组切片)认领后**改了形状**——没做全库两轴清单(那是量具工作,P4.4 不许当主体),而是把它落在**一条判决还挂着的杠杆**上,于是产出是一份域读数。报告 `iterations/reports/hero/20260918T194816Z.md`;裁定 `iterations/state.json:axecullreach_domain_retake_20260918`;GH **#906**。**`bots/` 与 `game/` 本轮零改动(一个字节都没动)**;**零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条:下界断言不会为「语料长大」变红,而语料长大是唯一能改这条杠杆判决的事。** `tests/test_axe_cull_reach.lua` §10 是 `assert(nBand >= 2)`,注释逐字写着「a tripwire on a LOWER bound, so adding fixtures can only strengthen it」——**对杠杆是真的,对读数是假的**。该文件写完**两天后**(2026-09-10)`tests/frames/` 进了四帧 `f_260909_215412_axe_cull_{cm_838,cm_415,pudge_470,viper_348}.lua`,**四帧全带这条杠杆的精确形状**,`>= 2` 把四条**一条不剩地吃掉**。八天里该文件抬头一直写「this round found **2**」,而 `queue.json:hero-46` 一直在向档案要一个**本树已经握着**的列。⇒ **真实域 = 6 带内 + 1 射程内对照**(已发表 2 + 1)。⭐⭐ **而且不是「没人看见那些帧」—— 看见了,看的是别的问题**:切帧的正是本组,`iterations/reports/hero/20260910T075559Z.md` 逐字写着 `..._cm_838` 上「出货 `X.ConsiderR` 照样对她 bid HIGH」,**域读数就写在那一行里**,只是那一行在回答 CM 引导的问题 ⇒ 缺的不是观察,是**「新帧到了之后哪些已发表读数要重取」这张表**,而 `>= 2` 让这张表**看起来是空的**。
    - ⭐⭐ **已发表的证据基底,按条数就是本树最极端的那一个瞬间。** 总监在 `hero-46` acceptance 里**先于答案**钉了四个 gap 桶(0-25/25-75/75-125/125-200u,铁律 4(ii))并预登记了岔路「若 (3) 多数真击杀,下一棒是**重新划线**(例如只拒 gap>75u),**不是**判负」。本树答案 **3 / 2 / 1 / 0** ⇒ **六条里五条(83%)在 75u 线以下**,而**唯一在线以上的是 `FRAME_RING`(+101.9u)—— 正是该文件抬头用来论证杠杆价值的那一帧**。⛔ **这不判杠杆的负**,它说的是那个两帧样本**不是这棵树的一个样本**。
@@ -9151,6 +9166,31 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-18T22:50Z(报告 `iterations/reports/hero/20260918T225037Z.md`;**backlog:新开 `-208`**;
+  裁定 `iterations/state.json:axebuild_20260918`;GH:本轮新开 [hero] issue,**编号第二次提交回填**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**零 arm / 零 promote / 不申请波次 / 不申请供帧**;
+  **P4.4 自评:(i) 一个 `bots/` 行为改动**)
+  **主体:焦点英雄 Axe 的构筑行落 gated `axebuild`(turbo-only,未 armed)—— 把技能点墙的 strand 从
+  Berserker's Call 搬到 Battle Hunger。**
+  - ⭐⭐ **构筑行是「哪个技能永远少一级」的唯一自由度。** 第 16 项 = 前 13 点留在 rank 3 的那个基础
+    技能的第 4 级,**谁被选中完全由构筑行这一个字面量决定**。重排**消不掉** strand(#864 LIMIT 2),
+    但**选得动它是谁** —— 这个形状之前没被问过。
+  - ⭐ **驱动读数(不是数条目,GH #134)**:shipped Call 梯子 **{3,13,14,16}** ⇒ Axe **3 级到 12 级**
+    一直拿 **rank 1 的 Berserker's Call**,而 Battle Hunger **11 级**就满。armed 对调为
+    Call **{3,8,9,11}** / Hunger **{1,13,14,16}**。
+  - ⭐ **窄度**:首处分歧 **英雄 8 级**,1-7 级逐字节相同;每处分歧**只碰 Call/Hunger**;
+    **Helix 与 Culling 梯子逐位相同** ⇒ 波读数可归因到 Q/W 分配**且只归因到它**。
+  - ⛔ **不修墙 / 不消 strand / 不声称 Axe 变强了**。§3 用断言(armed 行**恰好一个槽停 rank 3**)
+    把「墙被修好了」这个误读封死。
+  - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 138 ran, 0 findings, 0 uncertifiable, 63.8s`;
+    smoke exit=0;**全部 15 个读构筑行字面量的测试逐个跑过、全 exit=0**;
+    `lua gate` 三条腿读数见报告 §九(push 之后回填)。变异台 **7/7 全杀**,`sha256sum -c` 还原 OK。
+  - ⚠️ **两处别人的棘轮当轮改完**:`test_build_index_resolution` §8 三→四(⭐ **开工自检抓到的**),
+    `test_focus_strand_identity` FOCUS +1 行 + 抬头第 (4) 条日期署名订正(「消不掉」≠「选不动」)。
+  - ⚠️⚠️ **开工自检还在跑我就动了 `bots/`**(GH #507/#848/#898 同族)⇒ log 里那条红是**过期读数**;
+    同 log **9 条 + 1 条 `UNCERTIFIABLE`**(python 腿逐字要求 `a quiet tree` —— 不安静的就是我)
+    ⇒ ⛔ **trunk 那一侧这轮没人看过**。另误跑两次 `lua_gate_measure.py`(它没有 `--help`),
+    两次都在写盘前 `kill -9`,manifest 经 `git status` 核验未被脚本改动。
 - 2026-09-18T19:48Z(报告 `iterations/reports/hero/20260918T194816Z.md`;**backlog:新开 `-207`**;
   裁定 `iterations/state.json:axecullreach_domain_retake_20260918`;GH **#906**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**`bots/` 与 `game/` 本轮零改动(一个字节都没动)**;

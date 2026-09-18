@@ -201,7 +201,95 @@ local tAllAbilityBuildList = {
 	{2,3,1,3,3,6,3,2,2,2,6,1,1,1,6},--pos3
 }
 
-local nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+-- [axebuild] Call-max build (gated, turbo-only).  A PURE PERMUTATION of the row
+-- above -- same fifteen entries, same multiset -- that swaps WHICH of the two
+-- non-Helix basics gets its fourth point inside the first thirteen, and
+-- therefore WHICH one the skill-point wall strands.
+--
+-- WHY A BUILD ROW IS A LEVER AT ALL, and this is the part that is not a
+-- preference.  GH #366 / GH #822 / GH #864 settled that the level-up queue head
+-- parks at entry 15 (the t15 talent) and never moves: thirteen ability points
+-- get spent, in the multiset {4,4,3,2}, and entries 16 and 17 are bought by
+-- nobody.  Entry 17 is always the ultimate's third point; entry 16 is the FOURTH
+-- rank of whichever basic the first thirteen points left at 3, and which basic
+-- that is is decided entirely by this literal.  tests/test_focus_strand_identity
+-- .lua derives it offline and agrees with #822's wave column 8/8.
+--
+-- ⛔ SO THE STRAND CANNOT BE REMOVED -- #864 LIMIT 2, checked over 14 rows in
+-- that file's section 5b.  Thirteen points across three basics and an ultimate
+-- leave exactly one basic at rank 3 no matter how the row is written.  What a row
+-- edit CAN do, and the only thing this candidate claims, is choose WHICH ability
+-- pays.  Anyone quoting this block as "the wall is fixed" has misread it: the
+-- wall itself lives in bots/ability_item_usage_generic.lua (127 heroes) and has
+-- its own gated look-ahead, `skillstall` (GH #799).
+--
+-- WHAT THE SHIPPED ROW CHOOSES.  It strands `axe_berserkers_call`:
+--
+--     shipped   Call   r1@lv3  r2@lv13 r3@lv14 r4@lv16 = NEVER (entry 16)
+--               Hunger r1@lv1  r2@lv8  r3@lv9  r4@lv11
+--
+-- i.e. Axe carries a RANK ONE Berserker's Call -- 2.1s taunt, 18s cooldown --
+-- from hero level 3 to hero level 12, which in Turbo (docs/PROJECT.md: ~20
+-- minute games, doubled XP) is most of the game's fighting window, while Battle
+-- Hunger is finished at level 11.  (These are HERO LEVELS off the driven
+-- GetSkillList, not row indices: level 10 goes on a talent, so entry 10 lands at
+-- level 11 -- GH #134.)
+--
+-- WHAT THIS ROW CHOOSES INSTEAD.  It strands `axe_battle_hunger`:
+--
+--     armed     Call   r1@lv3  r2@lv8  r3@lv9  r4@lv11
+--               Hunger r1@lv1  r2@lv13 r3@lv14 r4@lv16 = NEVER (entry 16)
+--
+-- ⚠️ NARROWNESS, and it is asserted rather than asserted-in-prose
+-- (tests/test_axe_call_max_build.lua §4): Counter Helix and Culling Blade hold
+-- IDENTICAL rank ladders under both rows -- Helix 2/4/5/7, Culling 6/12/17 --
+-- and hero levels 1 through 7 are byte-identical.  The two rows first differ at
+-- hero level 8.  So a wave reading is attributable to the Q/W allocation and to
+-- nothing else in this literal.
+--
+-- THE PRICE OF THE SWAP, off the game's own KV (tests/mock/special_value_shapes
+-- .lua, generated from npc_heroes.txt -- pinned by §5 of the test so a patch that
+-- moves these numbers turns this paragraph red rather than stale):
+--
+--   axe_berserkers_call  duration 2.1/2.4/2.7/3.0   cooldown 18/16/14/12
+--                        bonus_armor 12/13/14/15    radius 315 (flat)
+--   axe_battle_hunger    damage_per_second 12/16/20/24   slow 18/22/26/30
+--                        cooldown 20/15/10/5        duration 12.0 (flat)
+--
+-- The fourth rank of Call is +0.3s on an AoE 315-radius TAUNT and -2s cooldown;
+-- the fourth rank of Hunger is +4 dps on ONE target for 12s (+48 pre-mitigation)
+-- and -5s cooldown on a damage-over-time that does not stop a fight.  Against
+-- Turbo health pools the Hunger rank is rounding; the Call rank is disable, which
+-- is the only currency Axe's whole kit trades in.
+--
+-- ⚠️ WHAT IS GIVEN UP, stated because it is real and lands EARLIER than the gain:
+-- Battle Hunger stays at rank 1 (20s cooldown, 12 dps, 18% slow, 600 cast range)
+-- from level 1 to level 12, where the shipped row has it at rank 2 from level 8
+-- and rank 4 from level 11.
+-- That is laning/chasing harass traded for mid-game lockdown.  In Turbo the lane
+-- phase is the short end of that trade; in normal mode it may not be, which is
+-- exactly why this is `J.IsModeTurbo()`-gated and not a default.
+--
+-- ⚠️ THEORY (rule 2 condition (c), retrievable): standard Axe skill order is
+-- Counter Helix first, Berserker's Call second, Battle Hunger last as a value
+-- point.  This row is that order; the shipped row is not.  Note what is NOT
+-- claimed: no wave has read either row, and this file's own ConsiderQ carries an
+-- entire family of candidates about WHEN to Call (axecallring / axecallcrowd /
+-- axecallnocap / axecallclock / axecallbkb_i / axecallbkb_ii) -- all of them
+-- have been tuning the timing of an ability that is permanently one rank short.
+--
+-- Gated turbo + soak-candidate 'axebuild' so it is inert until an A/B wave says
+-- otherwise; gate-off this file is byte-for-byte the shipped row (§2).
+local tCallMaxBuildList = {
+	{2,3,1,3,3,6,3,1,1,1,6,2,2,2,6},--pos3, Call maxed instead of Battle Hunger
+}
+
+local nAbilityBuildList
+if J.IsModeTurbo() and J.IsSoakCandidate( 'axebuild' ) then
+	nAbilityBuildList = J.Skill.GetRandomBuild( tCallMaxBuildList )
+else
+	nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+end
 
 local nTalentBuildList = J.Skill.GetTalentBuild( tTalentTreeList )
 
