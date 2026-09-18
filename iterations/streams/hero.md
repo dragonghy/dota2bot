@@ -9175,7 +9175,12 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     本文件墙钟 best-of-3 **3.367s**(manifest 记 3.486s)⇒ **manifest 不动**,快闸余量不受影响。
   - ⚠️⚠️ **变异台与开工自检并发跑了**(台子抬头明令禁止,GH #507):自检 Lua 腿读到变异中的
     `hero_axe.lua`,报 `RED test_immguard_dead_filter.lua ... hero_axe.lua:2101` ——
-    **那条红是污染不是 trunk**,还原后单独复跑复核。
+    **那条红是污染不是 trunk**,还原后单独复跑复核(`IMMGUARD_EXIT=0`)。
+    ⭐⭐ **收尾把另一条也追到底:`worst exit: 3` 里两条红都是污染。**
+    `FAIL test_bots_walk_farm_only.py` 单独直跑 **`WFO_EXIT=0` / 8 checks 0 failed** ⇒ 归因
+    **GH #898**(自检在后台跑把 python 闸染成假红),而本轮自检正是 `nohup … &` 跑的
+    (它自己拒绝管道又拒绝 `timeout`)—— 逐字命中 #898,且被它点名的那个文件是绿的。
+    ⛔ **但 3 仍不是通过**:三条 `UNCERTIFIABLE`(GH #548 族)这轮确实没人看过。
 - 2026-09-18T17:05Z(报告 `iterations/reports/hero/20260918T170516Z.md`;**backlog:新开 `-206`**;
   裁定 `iterations/state.json:wkqflee_20260918`;GH **#873** 追评;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;
   **零 arm / 零 promote / 不申请波次 / 不申请供帧**;
