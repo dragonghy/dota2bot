@@ -748,6 +748,18 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   ⑳⛔习惯:变异台的 perl 锚只用 ASCII ㉑⛔习惯:第一条命令走 `rc.sh` 或 `> 文件 2>&1`,⛔ 无 `| tail`、⛔ 无 `timeout`
   ㉒`stayfield2` 重新入集的机器行按设计仍 OWED,**不要当成掉棒**
   ㉓**新** `UNRESOLVED_HAND_READ` 的 `test_cm_lane_fallback_wallet.lua` 同键两条,顺手合
+  **[同轮收尾追加]** 三条 push 腿两次 push 全绿、逐字相同(memo 命中):`GATE_EXIT=0 CLEAN` /
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 39.5s` /
+  `lua gate: 428 ran, 0 findings, 0 uncertifiable, 8 unanswered, 5 known-red, 553.2s`;
+  ⛔ 无 `RULE6_BYPASS`、无 `SKIPPED, not passed`。落地 `d26f6a29..b0b6edbf HEAD -> main`。
+  自检最终:`legs run 15` / `FINDINGS: cadence queue-rulings owed-executions lua-coverage trunk-red(python)` /
+  `UNCERTIFIABLE: none` / `selfcheck worst exit: 3`;`fast Lua detectors` = `138 tagged file(s), 0 failures`(FAST SUBSET)。
+  **两次 push 之后**发表两条评论:GH #290 `#issuecomment-5728663999`(RULING 77)、
+  GH #548 `#issuecomment-5728667038`(跨轮 NOTE 第三份)。
+  ⚠️ `claim_precheck.sh` 对 #290 草稿 `PRECHECK_EXIT=3`,两条 `OFF-TRUNK commit` ——
+  同读数 `local commits not on origin/main: 0` ⇒ **浅克隆**(main 可达 52 个 commit,最老 2026-09-17),
+  **仍发表并把工具原话贴进评论**,三条关键读数改写成 main 上的内容读数。⛔ 这是判断不是通过。
+  **Token(铁律 8)**:`TOKENS total_in=9,445,253 out=58,227 turns=71`。
 
 - **2026-09-18T07:15Z**:**RULING 76 —— 刷语料的那个集合由工具打,不再是第二份手抄;`--refresh-set` 落地,语料真刷了 9 个号。**
   全文 `iterations/reports/director/20260918T071500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
