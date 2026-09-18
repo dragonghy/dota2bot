@@ -35,6 +35,52 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT44. **【2026-09-18T07:55Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `helpnear` 落地)。剩下的是三句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【这个函数叫什么】那一格**:
+   **一个函数的名字可以是它唯一的规格说明;而当调用方拿它当【锚】而不是当【读数】时,
+   名字错了就不是命名问题 —— 问题、证据和目标会一起跟着错,
+   ⛔ 而三者一起错的样子,和「这条分支本来就该这么判」一模一样。**
+
+   现场:`J.GetClosestAlly` 按**花名册顺序**返回**第一个**合格队友,而唯一的生产调用点
+   `ConsiderHelpAlly` 之后**四件事全挂在这个锚上**(血量闸 / 射程闸 / parity 的点 /
+   最后提交的敌人)。语料:答得出人的 **679** 帧里 **100 帧**答的不是最近的(**14.7%**),
+   `gap_max` **3187u**,**21 帧**连下一行的血量闸都跟着翻号。
+   📌 **判据:看到 `GetClosestX` / `GetBestX` / `GetWeakestX`,先读它的循环体里有没有比较,
+   再读调用方拿它干什么。只要调用方在它后面接的是一串【关于它的谓词】(而不是把它放进一个
+   集合里),那么选错了谁 = 整条分支讲错了故事。**
+
+   ⭐ **第二句,关于「只有一个调用点」这个事实的两个方向**:它平时是**安全论证**
+   (本轮正是靠它才敢把闸开在函数内部),**同时也是「没人复核过」的同义词** ——
+   同一个事实两个方向都成立,**而只有一个方向会被写进注释**。
+
+   ⚠️ **第三句,关于假证人**:§八 那条不修的圈不对称,其唯一证人帧 armed 读 `4 >= 3`,
+   而那个 `4` 里有一个是 `helpself` 的**重复计数的自己**。**去掉它仍是 `3 >= 3` 为真**
+   ⇒ 这一帧不依赖那个缺陷。📌 **一个靠【别的缺陷】才成立的证人帧,是最像真证人的假证人;
+   证人帧到手先问一句:它依赖的是我要修的那个缺陷,还是旁边那个?**
+
+   ⚠️ **下一轮要看一眼的四条**:
+   (a) **`queue.json:strategy-61`**(本轮新增)+ 本轮的 GH issue —— `helpnear` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-60` **十六条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检 `EXIT=3`**;findings = `cadence queue-rulings owed-executions lua-coverage`,
+   `UNCERTIFIABLE = trunk-red(python)`。⭐ **0NEXT43 §(c) 那条建议本轮第一次被【执行】**:
+   变异台与最终测试读数**全部推迟到自检退出之后**。⛔ **代价是等** —— 自检本轮又是**一小时量级**,
+   而它最后那条腿(fast-Lua)恰好就是写 `soak_side.lua` 的那条。
+   📌 **下一轮可以试的更省的排法**:开工自检照常后台起,**先做只读测量(sweep / 域)**,
+   把**改 `bots/`** 也压到自检退出之后 —— 本轮 python 腿读不成正是因为改在了前面;
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。
+
+   ⚠️ **本轮登记、下一轮可以直接做的一根杠杆**:**`J.GetClosestCore`
+   (`jmz_func.lua:14407`)有一模一样的花名册顺序缺陷**,同样只有一个生产调用点
+   (`mode_team_roam_generic.lua:1882`,`X.ConsiderHelpWhenCoreIsTargeted`),同样被当锚。
+   ⛔ 本轮**故意不碰**(它身上已挂 `corerole`,一个谓词叠两根杠杆是捆绑的起手式)——
+   **等 `corerole` 有了裁定再动它**,那时它是一根干净的小杠杆。】**
+
 0NEXT43. **【2026-09-18T04:24Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `helpself` 落地)。剩下的是三句要带走的。
 
@@ -10692,6 +10738,79 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-18T07:55Z:**名字写着「最近」的选择器返回的是「第一个」,而唯一的消费者拿它当锚。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `helpnear`,
+  `bots/FunLib/jmz_func.lua` + `bots/mode_team_roam_generic.lua` 的调用点注释)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T075500Z.md`;
+  `state.json:helpnear_20260918`;完整判据 ⇒ backlog **0NEXT44**。
+
+  **开工 = 铁律 10 再铁律 9**:⚠️ 管道防呆**第 17 次**,又在第一条命令上撞到;改走重定向 + 后台。
+  自检 **`EXIT=3`**(`legs run 15`);findings = `cadence queue-rulings owed-executions lua-coverage`,
+  `UNCERTIFIABLE = trunk-red(python)`。⛔ **python 腿没读成,而原因是我** —— 它自己写着
+  `re-run on a quiet tree (nothing writing under bots/)`,而本轮正是我在改 `bots/`;
+  fast-Lua 腿的 `138 tagged detector file(s), 0 failures` **同样不可归因,绿也一样**。
+  ⭐ **但本轮第一次把 0NEXT43 §(c) 那条建议真的执行了**:变异台与最终 12/12 读数**全部推迟到
+  自检退出之后**才取(此前一次读数确实被它写 `soak_side.lua` 打断,报 `cand = 'cmlanepoor'`)。
+  P1 球在总监 / P2 卡魔棒仪器墙 ⇒ **4.4 球在本组且本组能动**,取 4.4。
+
+  **缺陷**:`J.GetClosestAlly(bot, nRadius)`(`jmz_func.lua:4110`)按**队伍花名册顺序**
+  (player slot)对第一个合格队友 `return member`。⭐ **调用方不是读它,是以它为锚**:
+  唯一生产调用点 `mode_team_roam_generic.lua:506`(`ConsiderHelpAlly`)之后的血量闸、
+  射程闸、parity 的**点**、最后提交的**敌人**四件事全挂在这个锚上 ⇒ **选错了谁 = 问题、
+  证据和目标一起错,而每一条断言仍然自洽**。⭐ 仓库自己的 `test_roamreach_bounded_chase.lua:270`
+  把它断言成 `'the closest ally within 3500 is the Centaur'` —— 那句为真**只因为那个 fixture
+  里第一个恰好最近**。
+
+  **修法**:函数内部开闸(`J.IsModeTurbo() and J.IsSoakCandidate('helpnear')`);
+  **disarmed 保留原样的 `if not bNearest then return member end` 早退**(连代价都没变,
+  不是「先算最近的再二选一」);armed 用**同一循环、同一组四条资格条款**取距离最小者,
+  平局保留靠前者。⛔ **故意不碰 `J.GetClosestCore`** —— 一模一样的缺陷,但它身上已经挂着
+  `corerole`,一个谓词叠两根杠杆是捆绑的起手式。
+
+  ⛔ **本轮没有方向列,而且是故意没有**:杠杆动的是**产物**不是分母 ⇒ 既能开出支援也能关掉,
+  **没有单调性可倚靠,本轮也不主张有**;批测读数任何方向都不能当成单调性证据。
+  替代主张钉在测试第 4 节,**两条都断言**:armed 答案 ∈ shipped 资格集合 **且** 集合中没有更近的。
+
+  **域**(`tests/_helpnear_sweep.lua`,**零 arm**,112 fixture / **1039** live 帧,行 = 主语帧):
+  `reached 679` | `same hero 579` | **`differ 100`(= reached 的 14.7%)** |
+  **`fixtures_with_a_difference 48/112`** | **`gap_max 3187u`** | **`hpguard_flip 21`** |
+  `parity_flip 2` | `cand_max 4`。⛔ **是天花板不是发生率**(分支后面是 `.dem` 不带的
+  bot-VM 模式状态,GH #27)。⚠️ 仪器可信度是**读出来的**:`replay_fixture.lua:928-947` 的
+  roster 按 `player_id` 排序,正是引擎报的顺序 ⇒「花名册序 ≠ 距离序」不是仪器造出来的。
+
+  **本地验证**:`tests/test_helpnear_closest_ally.lua` **12/12,0.446/0.456/0.444s,零 stub**。
+  证人 A(radiant)`f_045650_lion_meatgrinder`/obsidian_destroyer:shipped **lina@3192u**(slot 1)
+  → armed **phantom_assassin@252u**(slot 4);⭐ **同帧把下一行血量闸从 TRUE 翻成 FALSE**
+  (`0.648>=0.581` 真 vs `0.648>=1.000` 假)⇒ 缺陷把一次**拒绝**变成 3192u 的跋涉。
+  证人 B(dire)`f_260820_103216_cm_es_aftershock`/zuus:**bristleback@2976u** → **earthshaker@93u**。
+  对照帧 `f_260819_222052_zuus_w2_leak`/dragon_knight:**4 个**候选而 shipped 已是最近的
+  ⇒ armed no-op,**且不是因为没得选**(`#tEligible == 4` 单独断言)。
+
+  **变异台** `tools/agent/mutstand_helpnear.sh`:**9 抓 / 0 存活 / 控制绿 / 退出码 0**。
+  ⭐⭐ **M7 第一轮存活,存活的是断言不是变异体**:调用点 census 用**子串**匹配,于是
+  `… or J.GetClosestCore(bot, nRadius)` 含有那段文本、换掉了锚、并且通过 ⇒ 断言改成钉**整条语句**,
+  变异体换成有行为后果的那个,重跑 9/0。按证据纪律 4 单独复核 **M3**(armed 改挑最远):
+  顶红**四条真实帧断言**,`want` 对应 FAIL[3]/FAIL[4],**读出来的不是猜中的**。
+
+  **⚠️ 登记不修两条**:(1) `J.GetClosestCore` 的同款花名册序缺陷(理由如上);
+  (2) 站点 A/B 的**圈不对称**(盟友 1200 / 敌人 1600)—— 0NEXT43 登记的那条,**本轮量了**:
+  `_helpring_sweep.lua` 读 `up_a 1 / up_b 1 / down 0 / ashell_a 44` ⇒ **天花板 2**,太薄,**不发**。
+  ⭐ 顺带查出:那唯一证人帧 armed 的 `4>=3` 里有一个是 `helpself` 的重复计数自己,
+  **去掉仍是 `3>=3` 为真** ⇒ **不依赖**那个缺陷(**查出来的** —— 靠别的缺陷才成立的证人帧,
+  是最像真证人的假证人)。
+
+  **铁律 6**:`GATE_EXIT=0 CLEAN`(改动前后各一次,均 0 警告);邻近回归全绿
+  (`gate_claim_consistency` 16/16、`gated_helper_nesting_census` 10/10、
+  **`roamreach_bounded_chase` 19/19**、`helpself` 11/11、`roamring` 10/10、`corerole` 8/8、
+  `smoke_load` 3/3);python 棘轮 `lua_gate_budget_backstop` 7/7、`lua_gate_coverage` 19/19、
+  `queue_reading_census` 16/16、`mutstand_restore_trap` 绿。⚠️ 全量 Lua 套件(~100min)**没跑**;
+  ⛔ 没用过 `RULE6_BYPASS`。manifest **手加一行** `seconds = 0.456`(三次里最大,**不缩放**);
+  `budget_seconds` 不动且**从文件算出来**(in_gate 348 条 265.219 → 2x = 530.438 ≤ 540.0)。
+
+  **交棒**:`queue.json:strategy-61`(⛔ 预期裁定 **FROZEN-HOLD**,不是掉棒)+ GH issue
+  (push 之后才开,号码取自 create 返回)。push 与发表读数见报告 §十一。
 
 - 2026-09-18T04:24Z:**`+ 1` 是为「我」加的,而那张表里已经有我。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `helpself`,

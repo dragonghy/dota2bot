@@ -497,6 +497,12 @@ function ConsiderHelpAlly()
 
     local nRadius = 3500
     local nModeDesire = bot:GetActiveModeDesire()
+    -- [helpnear] `nClosestAlly` is not the closest: J.GetClosestAlly returns
+    -- the first eligible ally in team-ROSTER order, and this is its only
+    -- production call site. Everything below anchors on the answer -- the HP
+    -- guard, the 1600 range guard, the parity point and the enemy finally
+    -- committed to. Gated; disarmed the pick is byte-identical to what
+    -- shipped. See the header of J.GetClosestAlly.
     local nClosestAlly = J.GetClosestAlly(bot, nRadius)
 
     if  nClosestAlly ~= nil

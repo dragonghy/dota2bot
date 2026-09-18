@@ -4107,7 +4107,61 @@ function J.GetMostPushLaneDesire()
 
 end
 
+--- [helpnear, strategy 2026-09-18] THE PICKER NAMED "CLOSEST" RETURNS THE
+--- FIRST.
+---
+--- THE DEFECT, closed form. The loop below walks the team ROSTER in player-slot
+--- order and `return member` on the FIRST ally that is alive, not us, not a
+--- suspicious illusion and within nRadius. Roster order is the draft's, not the
+--- world's, so the answer is "an eligible ally", and which one it is depends on
+--- nothing the caller can see. The name says otherwise, and so does every
+--- reader: the only production consumer, ConsiderHelpAlly
+--- (mode_team_roam_generic.lua:500), calls the result `nClosestAlly`, and
+--- tests/test_roamreach_bounded_chase.lua:270 asserts it with the prose "the
+--- closest ally within 3500 is the Centaur" -- true in that fixture only
+--- because first and nearest happen to coincide there.
+---
+--- ⭐ WHY THE NAME MATTERS MORE THAN USUAL HERE: the caller does not just read
+--- the result, it ANCHORS on it. The next four lines gate on the anchor's HP
+--- (`J.GetHP(bot) >= J.GetHP(nClosestAlly)`) and on its range
+--- (`J.IsInRange(bot, nClosestAlly, 1600)`); the parity that follows is counted
+--- around the anchor's LOCATION; and the enemy the mode finally commits to is
+--- the one attacking the anchor. One arbitrary pick therefore decides the
+--- question, the evidence and the target -- and the ally who is actually being
+--- killed 250u away is never considered at all, because nRadius is 3500 and
+--- somebody with a lower player slot was inside it.
+---
+--- ⛔ THIS LEVER IS NOT ONE-DIRECTIONAL, unlike 'roamring' and 'helpself'. It
+--- changes WHICH ally the branch is about, so it moves a product, not a
+--- denominator, and it can open the help branch on frames the shipped tree
+--- keeps shut as easily as the reverse. There is therefore no monotonicity
+--- argument to lean on, and the claim being made is narrower and plainer: the
+--- shipped answer is not the one the name, the caller's variable and the
+--- repo's own test prose all state, and no reading of "help the ally in
+--- trouble" makes an ally 3.4k away the subject while one stands at 252u.
+---
+--- DOMAIN, measured by tests/_helpnear_sweep.lua on 112 fixtures / 1039 live
+--- hero frames (2026-09-18), one row per subject frame:
+---   reached 679 | same hero 579 | differ 100 | fixtures with a difference 48
+---   gap_max 3187u | hpguard_flip 21 | parity_flip 2 | cand_max 4
+--- `differ` is 100 of 679, i.e. the shipped picker answers a hero other than
+--- the nearest on 14.7% of the frames where it answers at all; on 21 of those
+--- the very next guard at the call site (`J.GetHP(bot) >= J.GetHP(anchor)`)
+--- flips with it. Neither column is a fire rate: the branch behind them sits
+--- on bot-VM mode state a .dem does not carry (GH #27), so these are CEILINGS.
+---
+--- WHAT THIS IS NOT. It does not change the eligibility test (alive, not self,
+--- not a suspicious illusion, within nRadius -- all four are the shipped
+--- loop's own, reused verbatim), it does not touch nRadius, and it does not
+--- touch J.GetClosestCore, whose identical roster-order pick is a second
+--- instance of this defect that is left standing on purpose: that function
+--- already carries the 'corerole' candidate, and stacking a second lever on
+--- one predicate is how a bundle starts. One lever: which of the eligible
+--- allies the single consumer is handed.
 function J.GetClosestAlly(bot, nRadius)
+	local bNearest = J.IsModeTurbo() and J.IsSoakCandidate('helpnear')
+	local hNearest, nNearestDist = nil, nil
+
 	for i = 1, #GetTeamPlayers( GetTeam() )
 	do
 		local member = GetTeamMember(i)
@@ -4118,11 +4172,21 @@ function J.GetClosestAlly(bot, nRadius)
 		and GetUnitToUnitDistance(bot, member) <= nRadius
 		and not J.IsSuspiciousIllusion(member)
 		then
-			return member
+			-- Disarmed: the shipped defect, verbatim -- first eligible wins.
+			if not bNearest then return member end
+
+			local nDist = GetUnitToUnitDistance(bot, member)
+			if nNearestDist == nil or nDist < nNearestDist
+			then
+				hNearest, nNearestDist = member, nDist
+			end
 		end
 	end
 
-	return nil
+	-- Disarmed this is the shipped `return nil`: hNearest is never assigned.
+	-- Armed, ties keep the earlier roster entry (strict <), so the answer stays
+	-- a deterministic function of the frame.
+	return hNearest
 end
 
 function J.GetNearestLaneFrontLocation( nUnitLoc, bEnemy, fDeltaFromFront )
