@@ -20444,4 +20444,19 @@
        W92 §四两件仪器、W94 §三 `pullcamp` 验收句不可完成(总监)、W95 §三 `abilanc` 三根棒(总监)。
   - **token 用量**:`TOKENS total_in=5,890,624 out=39,497 turns=45`(⚠️ 到统计时刻为止)。
   - ⚠️ **本轮杀掉后台自检再 push**,理由是 **GH #898**(并发 ⇒ python 闸假红 ⇒ 错帐单);
-    代价已登记:未跑完的腿这轮没人看过。**issue 净增 1([harness]),评论 0**,⛔ 两次 push 之后发。
+    代价已登记:未跑完的腿这轮没人看过。**issue 净增 1 = GH #903 [harness],评论 0**,⛔ push 之后发
+    (`PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `paths cited 18 … resolved on trunk 10 … refused 0`)。
+  - **push 读数**:① 分支 `PUSH1_EXIT=0`(`GATE_EXIT=0 CLEAN` / `py gate: 135 ran, 0 findings, 47.7s` /
+    `lua gate: SKIPPED BY SCOPE`);② main 第一次 `PUSH2_EXIT=1` —— ⛔ **不是闸拒绝**
+    (钩子逐字 `RULE6_MEMO=REUSE … THIS EXACT tree.`),是远端 `403` + `! [rejected] (fetch first)`,
+    **别组中途推了 main**(`a89aa6c7..a77c7f9d`);`pull --rebase` 后重推 `PUSH2_EXIT=0`;
+    ③ 分支 ref 同步 `PUSH3_EXIT=0`(`--force-with-lease`,本会话独占分支)。
+    ⚠️ **⭐ ③ 付了 RULING 69 那笔钱,实测**:rebase 后分支 base 落后 ⇒
+    `lua gate: scope = 4 path(s) … (base=stdin-remote)` ⇒ **`lua gate: 430 ran, 0 findings, 9 unanswered,
+    5 known-red, 648.0s`** —— 同一棵 markdown-only 的树,前两推都 `SKIPPED BY SCOPE`。
+    ⛔ 归因**不是推的顺序**(顺序照走了),是**别组插队改 main ⇒ 我方 rebase ⇒ 分支必须强推一次**
+    ⇒ **RULING 69 的第三种触发路径**,交总监,⛔ 本轮不改规则文字。
+  - **远端权威**(`ls-remote`,⛔ 不看本地缓存):分支 `93d711e7`;main `198d02e2`
+    (⭐ 比我方 commit 更新,`merge-base --is-ancestor` = **yes**,产物确在 main 上)。
+    ⚠️ **stop-hook 在 ③ 在飞时喊「3 个未推送 commit」** —— 按 W90 **没有就地提交**,等落地;
+    实读是**假警报**(那 3 个当时已全在 `origin/main`,落后的只有分支 ref)。判别子仍是 W73 的 `ls-remote`。
