@@ -13389,3 +13389,28 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ⭐ **回到常态并低于常态**(参考 `3.56M / 31.1k / 33`),**连续两轮下降**:`5.96M/54.1k/52` → `5.44M/39.3k/48`
   → **`3.16M/28.7k/32`**;归因两条:① 章程只按行区间取(2.6 MB 从不全读);② (六) 那个全量普查
   **在 python 里聚合后只回传汇总表**,⛔ 没把 920 份报告贴进上下文 ⇒ 全量普查的 token 成本接近零。
+  **补记 2(⭐ 订正 —— 自检真码本轮**可得**,补记 (B) 那两句是错的)**:第一次 push 之后自检后台跑完了
+  (`679` 行,比写补记时多 49 行)⇒ **收尾三行横幅全都打了** ⇒ ⛔ **「真码仍不可得」与「整轮跑完仍超出
+  本会话窗口」两句都不成立,当场订正,不辩解。** ⚠️ **失效形状记一笔**:本台在**进程还在跑**的时刻,
+  把「我现在读不到」写成了「这轮读不到」,两者之差只是**一次后台完成通知**;铁律 7/11 禁的是**空转等待**,
+  **不禁「先写完别的、末尾再回读一次」** ⇒ **取法补一条:自检后台跑时,收尾前回读一次输出文件再落笔。**
+  **真码逐字**:`selfcheck worst exit: 3` / `legs run : 15` /
+  `FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage` /
+  `UNCERTIFIABLE (exit 2): trunk-red(python)` /
+  `NOT RUN (inside a leg): tests/test_lua_gate.py tests/test_luacheck_gate_soakswitch.py tests/test_selfcheck_lua_leg.py`。
+  ⭐ **归因是工具自己打的,⛔ 本台未手工归因**,工具自带警告照抄:`Read this before writing "exit 3, all of it
+  cadence": that sentence was hand-made attribution for days, and on 2026-08-27 it was wrong for 22 hours (GH #267).`
+  四条 FINDINGS 里 **`lua-coverage`** 与 **`owed-executions`** 正是 (一)/(二) 已登记的两项;
+  `cadence`、`queue-rulings` ⛔ 本台不代解读不代修(不是批测台的域)。
+  **python 腿**:`148 passed, 0 failed, 3 uncertifiable`(三条是 `test_lua_gate.py` /
+  `test_luacheck_gate_soakswitch.py` / `test_selfcheck_lua_leg.py`,原因逐字 `lua5.1 is absent and this
+  file's subject needs it.` + `luacheck is not installed, so the behavioural half did not run.`);
+  ⚠️ **腿级横幅是 `UNCERTIFIABLE` 不是绿**,逐字 `UNCERTIFIABLE -- a python test did NOT run (could not read
+  its input). This line is NOT a pass, and it is NOT evidence that trunk is red: re-run on a quiet tree
+  (nothing writing under bots/).` ⇒ **⛔ 既不主张 trunk 绿、也不主张 trunk 红**;`0 failed` 是**已跑那 148 个**
+  的读数,不是对 trunk 的判决。另 `9 check(s) did not run; this is NOT a pass.`(`5a0` 的 `120s` 截断一族,
+  `138 file(s) ... in 120.0s/120.1s (budget 120s)`,与上一轮同族)。
+  **Lua 快腿**:`138 tagged detector file(s), 0 failures -- FAST SUBSET, not the full suite.`,
+  ⚠️ 自述边界照抄 `Untagged tests (and anything needing one process for the whole suite) are NOT covered here.`
+  ⛔ 本轮 `bots`/`game`/`tests`/`tools` **一行未改** ⇒ `exit 3` 的四条**无一条由本轮引入**,⛔ 不代修;
+  **交棒补一条**:下一轮若仍读到同四条,**先核对是不是同一批**再决定要不要点名。
