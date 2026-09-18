@@ -20460,3 +20460,83 @@
     (⭐ 比我方 commit 更新,`merge-base --is-ancestor` = **yes**,产物确在 main 上)。
     ⚠️ **stop-hook 在 ③ 在飞时喊「3 个未推送 commit」** —— 按 W90 **没有就地提交**,等落地;
     实读是**假警报**(那 3 个当时已全在 `origin/main`,落后的只有分支 ref)。判别子仍是 W73 的 `ls-remote`。
+- **2026-09-18T18:48Z(W98)—— ⭐⭐ 被盯了四轮的 `09-25` 是一个**什么都不丢**的日期;
+  而今天新开、点名本组、自带时限的那条欠条,已被本组两轮印过而零提及。**
+  报告:`iterations/reports/replay-check/20260918T184821Z.md`。
+  - **覆盖:宽扫 0/0 局;深查 0 局;VERIFY 行 0 条** —— 批测台 `20260918T180555Z.md` 逐字
+    「刹车第五十轮持有;零发波、零收割欠、零泄漏」⇒ 无未检新局。⛔ **不硬凑 VERIFY 行**;
+    本报告不含帧证据,这是有意的(本轮的问题是语料时限的算术与一条欠条的取活)。
+    ⛔⛔ **S3 本轮不可用**:`session_setup.sh` 被 harness 权限分类器拒(逐字
+    `Permission … denied by the Claude Code auto mode classifier. Reason: [Real-World Transactions]`),
+    按**铁律 11 当场放弃、不空转**;全部读数只来自仓库 + git 对象,**零 AWS 调用**。
+  - **⭐⭐ 头号(§一)**:交棒第 (2) 条「W46 `.dem` 约 09-25 到期」**连续四轮原样传递**,本轮算了出来 ——
+    `W47 set == W46 set` **逐位相同(62/62)**、`W46 ⊆ W48` 且 W48 **晚一天到期(09-26)**
+    ⇒ **09-25 那天没有任何 id 失去它最后一份语料**。⭐ 这是本仓那一族:
+    **一个真命题(W46 09-25 到期)被用来回答另一个问题**(「还要取帧就是这 7 天」),
+    而差额是**四轮的注意力押在一个空日期上,同期真有三个 id 先它而死**。
+  - **§1.3 交出一张 per-id「最后一份语料」到期表(67 id / 46 波)**,取法是**每波从它自己钉的树上
+    `git show <sha>:test_set.md` 取第 2 行、并用该波存的 `arm_md5` 自证**:**36/46 逐位命中 md5**,
+    其余 10 份(W24–W33)**id 数与字节数双双逐位相等**(唯一例外 W29 差 1 字节)。
+    ⚠️ **W38 的 SHA 在 `tree` 里不在 `ref_pin` 里**(后者那格是散文)—— 只读 `ref_pin` 会把它记成不可恢复。
+    ⭐ **真正最早的悬崖**:`fieldcreep` **09-20**(比被盯的那天早 5 天)、`immguard`/`tormself` **09-22**,
+    三者**均无义务**(手读);**第一个带义务的是 09-26 的 `tpreach`**。
+    ⭐ **顺带核掉一个可能的恐慌:armed 24 全部落在 10-03,当前测试集无一面临近期悬崖。**
+    ⚠️ **三条诚实边界**(都在保守侧):这是**按生命周期规则算的日程表不是 S3 清单**(`.dem` 此刻是否真在,本轮核不了);
+    W28/W29/W68 发波日期由相邻波推断 ⇒ **±1 天**;W24–W27 `seeds` 字段缺失 ⇒ 表里 `seeds=0` 是**缺字段不是零**。
+  - **⛔ §1.4 我先算了一个 `owed_rows` 计数,然后手读推翻了它** —— 词边界 grep 把**引文**记成**语料依赖**
+    (`a_evidence_blinkflee` 的 `trigger` 在引先例「更早 §FB 的 `tpdying`/`tpreach` 2/2 约三天」),
+    **与 W97 头号缺陷同型**。09-26 那格四行逐行手读:`p2_pair_arm_stayattr_staysrc` 自陈
+    「此刻没有可违反的对象」;`tpdying_isolation_leg` 要的是**一波还不存在的波次**(09-26 拿不走它需要的东西);
+    只有 **`tpreach_bc4_cell_reread`(executor 本组)是真依赖**——它的验收线要「粒种子数 > 4」且
+    「表由 `tpreach_domain.py` 自己打印」,而该工具吃 `timelines/*.timeline.json`(`:381`)⇒ **要 `.dem`**。
+    ⭐ **`tpreach` 的 88 个种子槽全部在 09-19–09-26 之间到期,09-27 起永久为 0。**
+  - **⭐⭐ §二:总监今天 09:5xZ 新开 `gh290_od_execution_verification_needs_postfix_corpus`,
+    `executor` 逐字「录像组,恰好一个」、且明示刹车不挡它** —— 立案理由正是「07:29Z 那条交棒只活在
+    issue 评论里」。**而换成 owed 腿 + 单一 executor 之后,它又被漏了两次,漏它的是本组**:
+    `grep -cE "gh290_od|od_postfix|skill_point_stall"` 在 09:42Z / 12:41Z / 15:42Z 三份报告上**全为 0**。
+    ⭐ **归因有数字:「印出来了」≠「被读了」** —— owed 腿 **73 条 OWED**、其中**点名本组 29 条**、
+    整份自检日志 **646 行**,而 `pending_rulings.py` **只把 executor 打进表头(:1527-1528),没有任何筛选开关**。
+    ⇒ **单一 executor 修好了「归谁」,没修「找得到」**;该行押的「executor 那格是唯一止损」**本轮被实测穿了两次**。
+  - **§2.3 本轮取活该行,并把验收线第 (i) 项离线买断**:⭐ **正确语料不是 W46 而是 `W69`**
+    (note 里那个 W46 只是举例,而按它自己的判据「最新一份」⇒ **W69,到期 10-03,T+15d,不是 7 天**);
+    发波 commit `52ea2be456…`,**修复后证明** `git grep -c CompactSkillList 52ea2be456… -- bots/ability_item_usage_generic.lua`
+    ⇒ **`…lua:2`(2 ≥ 1 ✔)**;**OD 在不在也离线证了**(镜像草稿由 seed 单独决定,铁律 4 (i-e)):
+    `seed_draft.py --selftest` PASS + `seed_draft.py 13019 13027 13034 13052` ⇒ **13027 dire pos2 / 13052 radiant pos2 带 OD**
+    ⇒ **「该波无 OD 局」那条退路不适用**。备选 W67(10-02,OD 是 `carrier_terms` 闸住项,3/4 粒)。
+    ⛔⛔ **本轮没有创建 `gh290_od_postfix_stall_read.md`** —— 该行 `done_when` 是 **`path_exists`**,
+    在 (ii) 缺席时创建它**就是给欠条制造满足**(与 W97 把引文制造成判词**同一方向**)⇒ **该行保持 OWED**。
+  - **⭐ §三 第三条,独立且轻:这个容器的 clone 是浅的,于是 `--is-ancestor` 的「否」不是否。**
+    `.git/shallow` **2 个 graft**、`rev-list --count origin/main` = **50** ⇒ 跨 graft 的 ancestry 查询恒返回否,
+    含义是**「在已取深度内不可达」不是「不是祖先」**。**判别子在同一屏**:`8cf5ae0c` 连
+    `origin/main` 的祖先都读作**否**,而 `git grep -c CompactSkillList origin/main` = **2** ⇒ **信内容读,不信可达性读**。
+    ⭐ **RULING 77 不受影响**(它用的是一个**为真**的 ancestry 答案;浅 clone 里真答案仍真,只有假答案不可信),
+    ⚠️ **但下一轮很容易反着用**:拿 `--is-ancestor` 核「是不是修复后」会读到假 NO ⇒ **把 W69 这份合格语料判成修复前**。
+  - **⛔ 本轮明确没做**:`bots/`+`game/` 一行未改;零 soak id、零 fixture;⛔ 未改 harness /
+    `owed_executions.json` / `test_set.md` / `queue.json` / `state.json`;⛔ 未替总监退休任何行;
+    ⛔ 零 AWS 调用、未拉任何语料、未对语料跑任何检测器。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象**(S3 不可达)。
+  - **开工自检**:⛔ **真码本轮不可得,连续第四轮同形**(W95/W96/W97/本轮)—— 日志 **646 行**停在
+    `=== trunk health (python test suite) ===`,`pgrep -f '[r]outine_selfcheck\.sh'` 仍读到 **pid 532**
+    ⇒ 无 `selfcheck worst exit` 横幅,⛔ 不读成通过。⚠️ **交棒第 0 条仍未一次到位,连续第四轮**,照登:
+    第一跑吃管道 `REFUSED`(工具自陈 `has recurred 5x, every time as the first command of the round`)、
+    第二跑吃 `timeout` `REFUSED`,第三跑才对;两次逐字**「nothing was checked; this is NOT a pass」**。
+    已跑完的腿逐字:`push gate armed (core.hooksPath=.githooks)`;`OK: no unlanded work in the certifiable window.`;
+    `uncovered set unchanged from the baseline -- OK`;`A-EVIDENCE-OWED armed 24 verdict 24 owed-row 0 UNOWED 0 PRE-ARM 0`
+    (⚠️ 按 W90 工具坑,这个 `owed-row 0` ⛔ **不是「本组没有欠条」**;本组真欠按 executor 数是 **29 条**)。
+  - **下一轮第一件事**:
+    0) 自检:当轮第一条命令 = 逐字那一行、零附加物 `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`;
+    1) ⭐⭐ **`gh290_od_…` 第 (ii) 项**:S3 一恢复就跑 `skill_point_stall.py`,语料 **W69**
+       (`.dem` 问 **`dem21/`** 不问 `soak/`;OD 局在种子 **13027 / 13052**),落 `gh290_od_postfix_stall_read.md`,
+       (i) 直接抄本轮 §2.3、(iii) 按铁律 1 三段式。**T+15d。**
+    2) ⭐ **`tpreach_bc4_cell_reread` 要在 09-26 之前买**(取 W48/W49,合计 8 粒 > 4);⛔ 过了永久买不到。**T+8d。**
+    3) ⛔ **不要再传「W46 09-25」那条棒**(§1.1 证明它是空的);要传就传 §1.3 那张表。
+    4) 交总监:§四三根棒(`pending_rulings.py --executor` 视图 / owed 表加算出来的 `corpus_deadline` /
+       订正 `gh290_…` note 里「W46 09-25」那句)。
+    5) 仍欠未动,原样继承 ⛔ 不许读成已结清:W97 §四三根棒(`verify_coverage.py` 修好前不许当选人依据、
+       `ownhalf` ⛔ 不读成 WORKING、`ownhalf_promote_bar_thickness` 按第二个合取项复核)、W96 §四四根棒、
+       `wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、
+       GH #849 验收口径(总监)、W84 §四(总监)、W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监)、
+       W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾(总监)、W92 §四两件仪器、
+       W94 §三 `pullcamp` 验收句不可完成(总监)、W95 §三 `abilanc` 三根棒(总监)、
+       W97 §2.6 `verdict=NOT-ARMED` 被截成 `NOT`(总监)。
+  - **token 用量**:`TOKENS total_in=10,148,889 out=61,909 turns=71`(⚠️ 到统计时刻为止)。
