@@ -22,7 +22,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--206. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:GH **#873 §四** —— 该 issue 里唯一「未修、归属在本组」的那条。落地 gated soak candidate **`wkqflee`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260918T170516Z.md`;裁定 `iterations/state.json:wkqflee_20260918`。⛔ **本组连续多轮以来第一条 `bots/` 行为改动,也是第一条决策域非空的 lever。** **零 gate arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+-206. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:GH **#873 §四** —— 该 issue 里唯一「未修、归属在本组」的那条。落地 gated soak candidate **`wkqflee`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260918T170516Z.md`;裁定 `iterations/state.json:wkqflee_20260918`;GH **#873** 追评(§四 已答)。⛔ **本组连续多轮以来第一条 `bots/` 行为改动,也是第一条决策域非空的 lever。** **零 gate arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条:要定价的量不是距离,是符号。** §四 交代的是「先给那 43u 超伸定价」,定价做完把**修法换了个分支**。`nEnemysHerosInRange`(`nCastRange + 43`)是**搜索环**,被**四个**出货点消费(团战 / 撤退 / 受伤 / 兜底),四个**都没有自己的距离项**。团战 / 受伤 / 兜底三条腿上 43u 就是 43u(WK 已经在打,0.13s 的步子);**撤退腿(`J.IsRetreating( bot )`)上那 43u 是方向** —— `ActionQueue_UseAbilityOnEntity` 对够不着的目标**先下移动令**(机制是 `wkqlane` 抬头 09-08 就写好的),于是这条腿给引擎的指令逐字是「**朝着你正在逃离的那个英雄走**」,而且 desire 还在就**每帧重下**。⇒ **分腿回答,不是整体回答。**
    - ⭐ **43 是下界不是那个数(#873 没写)**:环上方 `#nEnemysHerosInView == 1` 的 clause 把 `nCastRange` **加 260**(改写变量本身,下游每个环整体右移),而唯一可能把两者互斥掉的谓词 `J.IsInTeamFight` 数的是 **`BOT_MODE_ATTACK` 的盟友、从不数敌人**(`jmz_func.lua:1719`)⇒ **本函数里没有任何东西让它与撤退腿互斥**,带上它时带宽是 `(nCastRange, nCastRange + 303]`。⇒ helper 的射程**传入不重读**,与 extension **组合**;**M7 为这条定价**(硬编码 525 在钉住的帧上行为完全相同)。
    - ⛔⛔ **带是被占着的,不是空域 —— 这是本轮与前三轮的分界。** 两个帧目录 144 帧、gate 全关、**零注入**:**51** 帧 WK 在世 → **3** 帧带里有敌方英雄 → **1** 帧带成员是环里**唯一**住户。钉住的帧 `tests/frames/f_260909_215040_wk_blast_lion_480.lua`:WK **9 级**、Q 一级无 CD、mana **0.81**(分支自己的 `nMP > 0.8` **在真帧上就为真**),lion **547.5u**(真实射程 **525** 之外 22.5u);lion **满血且不在引导** ⇒ 上游两个能吃英雄的出货点**各按自己的条件拒绝**(`J.CanKillTarget` 对 168 实测 **false**;`IsChanneling` false)。**端到端:unarmed = `DESIRE_HIGH`/lion(够不着的目标),armed = `0`/nil。**
@@ -9138,7 +9138,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## 当前状态(每次触发后更新)
 - 2026-09-18T17:05Z(报告 `iterations/reports/hero/20260918T170516Z.md`;**backlog:新开 `-206`**;
-  裁定 `iterations/state.json:wkqflee_20260918`;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;
+  裁定 `iterations/state.json:wkqflee_20260918`;GH **#873** 追评;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;
   **零 arm / 零 promote / 不申请波次 / 不申请供帧**;
   **P4.4 自评:(i) 一个 `bots/` 行为改动**)
   **主体:GH #873 §四 —— 该 issue 里唯一「未修、归属在本组」的那条。落地 gated `wkqflee`(turbo-only,未 armed)。**
@@ -9161,7 +9161,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     ⭐ **第一次是非注释的** ⇒ 只剩「行号在键里」站得住);`activemode_call_site_census`
     散文 **14→17**(⛔ `get_active_mode` 仍 250)。
   - ⛔ **快 Lua 闸余量 2.872s → 1.058s**(约束是 **2× 后备**不是 cap;总数**从行重算**,⛔ 不是加减 —— rebase 里别组也加了一行,`-204` 的教训本轮真撞上),已写进 manifest 的 note。
-  - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: PY_GATE_LINE`;`lua gate: LUA_GATE_LINE`。
+  - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 133 ran, 0 findings, 0 uncertifiable, 43.1s`;`lua gate: 432 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 685.9s`。
     开工自检 **`worst exit: 3`**(⛔ 不是通过);⚠️ GH #548 又打 UNCERTIFIABLE;
     ⚠️ 自检第一条命令因管道**被拒跑**(证据纪律 3,该脚本自己数到**第 6 次**)。
 - 2026-09-18T13:51Z(报告 `iterations/reports/hero/20260918T135101Z.md`;**backlog:新开 `-205`**;
