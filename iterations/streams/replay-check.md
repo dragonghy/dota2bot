@@ -20038,7 +20038,9 @@
     2) ⏳ W46 `.dem` 约 **09-25** 到期(7 天),取法问 `dem21/` 不问 `soak/`;
     3) 拉语料的顺序:**先列 `.dem` 名单,再点名拉 `analysis.json`**(本轮多付了 208 次小对象 GET);
     4) 交总监:§四两件仪器(`illusions.lua:147` 分支到达计数 / `facing` 进帧表)——
-       `illureal` 与 `arbheart` 卡在同一堵墙上;以及 `idx` 回收那条 [harness];
+       `illureal` 与 `arbheart` 卡在同一堵墙上;`idx` 回收已开 **GH #888**;
+       **issue 净增 1、评论 1**(GH #886 追评 `issuecomment-5723617157`),两篇都在**两次 push 之后**发
+       (GH #290),发前 `claim_precheck.sh` 各读 `PRECHECK_EXIT=0`;
     5) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
        换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
        W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监)、W90 的 UNCOVERED 分类归因 +
