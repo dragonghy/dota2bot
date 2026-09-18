@@ -20369,3 +20369,79 @@
     `lua gate: SKIPPED BY SCOPE`;`PUSH1_EXIT=0`;main 推 `RULE6_MEMO=REUSE`(同一棵树),`PUSH2_EXIT=0`;
     远端权威读数两个 ref 都是 **`e243ff75`**(本节回填后会再推一次)。
   - **token 用量**:`TOKENS total_in=10,373,024 out=59,551 turns=71`(⚠️ 到统计时刻为止)。
+- **2026-09-18T15:42Z(W97)—— ⭐⭐ 条件 (a) 的唯一计数器把一句「引文」记成了判词,
+  而那句引文正是「⛔ 不许拿 `verify > 0` 当促进依据」那一行**自己的验收句**。**
+  报告:`iterations/reports/replay-check/20260918T154200Z.md`。
+  - **覆盖:宽扫 0/0 局;深查 0 局;VERIFY 行 0 条** —— 批测台 `20260918T121242Z.md` 逐字
+    「刹车第四十九轮持有」「零发波、零收割欠、零泄漏」⇒ 无未检新局,宽扫语料为空。
+    ⛔ **不硬凑 VERIFY 行**;本报告**不含帧证据**,这是有意的(本轮的问题是计数器的算术)。
+    铁律 9:P1/P2 球都在协同组,本组无未完成 owner 优先项。
+  - **⭐⭐ 头号(§二)**:`verify_coverage.py` 把**引文**计成**判词**,今天语料里 **8 个实例**。
+    现场:今天它读 `ownhalf … verify=7 last_verdict=**WORKING** last_report=20260918T124101`,
+    而 W96 那份报告里 `VERIFY id=ownhalf` **只出现一次**,在**第 78 行一张审欠条的表格**里
+    (逐字 `| \`ownhalf_promote_bar_thickness\` | … (1) \`VERIFY id=ownhalf verdict=WORKING\` 且 episodes 来自 ≥6 局 …`),
+    **而同一份报告 §五逐字写着「VERIFY 行 0 条 ⛔ 不硬凑」** ⇒ **给一轮自陈「零判决」的轮次记了一条 `WORKING`**。
+  - **⭐⭐ 为什么这一格特别贵**:被冒领的字符串正是 `ownhalf_promote_bar_thickness` 的
+    `done_when_note` 点名索要的那一个,而同一行的 `ruling` 逐字 **「⛔ 不许拿 `verify > 0` 当促进依据」**
+    ⇒ **审这条欠条的动作,喂饱了这条欠条的验收句**;`done_when` 是 `manual`(每轮必报 OWED ⇒ 每轮有人审)
+    ⇒ **这个循环自维持**。⚠️ 诚实边界:该行今天仍 OWED,⛔ **未证明**任何促进/退休因此发生;
+    被证明的是**显示**(周度台账)与**选人**(章程第 2 条)两件事。
+  - **三类失效,代价递增**:(甲) **只挪日期**(5 例,`last_report` 最多前进 **6 天** ⇒ 陈旧度被系统性低估);
+    (乙) ⭐ **时间倒流**(1 例,`abilanc`:09-17 的引文引 09-11 旧判 `INDETERMINATE 3`,
+    盖掉了 **09-15 的真判决 `WORKING episodes=2`**(`20260915T125314Z.md:125`)⇒ **今天读反**);
+    (丙) ⭐⭐ **凭空判词**(1 例,`ownhalf`)。
+    ⭐⭐ **方向与工具自己修过的那个缺陷相反**:注释逐字记着上次修的是
+    「made verified ids read as unverified, i.e. **the counter manufactured condition-(a) debt**」(保守侧),
+    本轮这三类**制造满足**(激进侧),而条件 (a) 是铁律 2 的**促进前置**。
+  - **选人规则被实测改写(§2.5)**:**7/24 个 armed id** 读数变了;队头(计数=1)**从 4 个变 6 个**,
+    多出来的 **`blinkflee` 与 `lf_rescue` 正是 RULING 13 开的、executor 写着本组的 owed 行**
+    —— 它们被自己的**引用表**推离了队头。
+  - **⛔ 订正 W96 一句话(§2.3)**:「全仓 `ownhalf` 最好只到 `INDETERMINATE`」**是假的**,一条 grep 推翻
+    (`20260910T095406Z.md:14:VERIFY id=ownhalf verdict=WORKING episodes=7`)。
+    ⭐ **判词(真欠)对,理由错**:真理由是**第二个合取项** —— 那 7 是 **7 帧 1 局**,验收句要 **≥6 局**
+    (产出它的报告自己逐字登记了「深查 7 帧(1 局)」「低于章程的『≥6 局』下限」)。
+    ⛔ **这条订正有牙**:下一轮沿用 W96 的理由复核,会先 grep 到那条 WORKING 行,很容易**翻成"已满足"**。
+  - **根因(§三)**:判别子**存在**,而 `tests/test_verify_coverage.py:143` 那条断言
+    (注释自陈是「separates 'loose enough to see markup' from 'loose enough to invent verdicts'」)
+    **只钉住了省略号那一种写法**(喂进去的语料是 `VERIFY id=theta verdict=…`)⇒
+    **具体**的引文(真 id + 真 CAPS 判词)必然匹配。⚠️ `^` 锚**不能**加回去(注释逐字:去掉它是因为
+    **26 of 59**(44.1%)真行写在强调/代码跨度里)⇒ **修法必须在锚之外**。
+  - **第三条,独立且轻(§2.6)**:`verdict=([A-Z]+)` 把 **12 行** `NOT-ARMED` 截成 **`NOT`**
+    (`skillstall` 9 / `outcommit` 3),一个**不在章程词表里**的 token;两 id 今天不在 armed 串所以表上看不见,
+    ⛔ 但入集那天会现身,**没有任何断言拦它**。
+  - **⭐⭐ §七 自演示(实测,不是预言)**:写这份报告**本身**是缺陷的第三次触发 ——
+    同一棵树、唯一差别是本文件存在:`ownhalf` 从 **`7 / WORKING / -` 变成 `9 / WORKING / 7 / 20260918T154200`**
+    (`reports scanned: 271 → 272`;两条互不相同的元组)。
+    ⭐ **第 2 行比第 1 行更坏**:W96 那格**没有 episodes**(列里 `-`,尚可起疑),
+    本轮的引文**带着 `episodes=7`** ⇒ 显示出一条**格式完整、看起来毫无破绽**的读数,
+    而那个 7 恰是欠条逐字要求**区分开**的「7 帧 1 局」。
+    ⇒ **验收方式因此更硬**:修好后在**本文件存在**的树上重跑,`ownhalf` 必须读
+    **`6 / INDETERMINATE / 7088 / 20260913T125915`** —— **本文件是天然回归语料,不需要造 fixture。**
+    ⛔ 本组不改自己的报告去躲正则(那是删证据),也不改 harness。
+  - **⛔ 本轮明确没做**:`bots/`+`game/` 一行未改;零 soak id、零 fixture;⛔ 未改 harness /
+    `owed_executions.json` / `test_set.md` / `queue.json` / `state.json`;⛔ 未替总监退休任何行;
+    ⛔ 零 AWS 调用、未拉任何语料。§2.4 的候选判别子**只用来生成名单**,八条**全部手读过**。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象**。
+  - **开工自检**:⛔ **真码本轮不可得,是实证不是推断** —— `/tmp/sc.log` **650 行**停在
+    `=== trunk health (python test suite) ===`,`kill -0 <PID>` 仍返回 0 ⇒ **无 `selfcheck worst exit`**,
+    ⛔ 不读成通过。⚠️ **连续第三轮**(W95/W96/本轮)同形,归因是**处方要求它整轮后台长跑**,
+    而它比一个工作单元还长(GH #898 已立案同族)。已跑完的腿逐字:`push gate armed (core.hooksPath=.githooks)`;
+    `OK: no unlanded work in the certifiable window.`;`uncovered set unchanged from the baseline -- OK`。
+    ⚠️ 前两跑仍各吃一次 `REFUSED`(管道 / `timeout`),**交棒第 0 条连续第三轮没一次到位**。
+  - **下一轮第一件事**:
+    0) 自检:**当轮第一条命令 = 逐字那一行,零附加物** `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`;
+    1) ⭐ **修好之前,⛔ 不许把 `verify_coverage.py` 的读数当选人依据** —— 用本轮 §2.5 的订正表;
+       ⛔ 也不许把 `ownhalf` 读成 WORKING;
+    2) ⏳ **W46 `.dem` 约 09-25 到期,只剩 7 天**,取法问 `dem21/` 不问 `soak/`
+       ——**连续第 4 轮原样交下去,再拖两轮只剩"来不及"**;
+    3) 拉语料的顺序:**先列 `.dem` 名单,再点名拉 `analysis.json`**;
+    4) 交总监:§四三根棒(新 [harness] issue / `ownhalf_promote_bar_thickness` 请按**第二个合取项**复核
+       ⛔ 不要用 W96 那个假理由 / `kind: manual` 的自维持循环是 GH #886 同一行代码的**第三个后果**);
+    5) 仍欠未动,原样继承 ⛔ 不许读成已结清:W96 §四四根棒、`wkqdmg` 要局数不要深度、
+       `66.7%` vs `29.4%` 更宽复读、换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、
+       GH #849 验收口径(总监)、W84 §四(总监)、W86 §(总监编排)、W87 §(总监编排)、
+       GH #424 是否退休(总监,W89 已问)、W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾(总监)、
+       W92 §四两件仪器、W94 §三 `pullcamp` 验收句不可完成(总监)、W95 §三 `abilanc` 三根棒(总监)。
+  - **token 用量**:`TOKENS total_in=5,890,624 out=39,497 turns=45`(⚠️ 到统计时刻为止)。
+  - ⚠️ **本轮杀掉后台自检再 push**,理由是 **GH #898**(并发 ⇒ python 闸假红 ⇒ 错帐单);
+    代价已登记:未跑完的腿这轮没人看过。**issue 净增 1([harness]),评论 0**,⛔ 两次 push 之后发。
