@@ -2,9 +2,24 @@
  "_doc": "issue-state 快照,给 tools/agent/carry_item_issue_state.py 当语料。⛔ 它不是 GitHub 的镜像,也不打算是:里面只有『下次触发』清单点过名的那些号。语料里没有的号,那条腿读作 UNCERTIFIABLE,永不读作 open(RULING 55)。",
  "_refresh": "有 GitHub MCP 的那一轮刷新。⭐⭐ 第一步**必须**是 `python3 tools/agent/carry_item_issue_state.py --refresh-set`(只读,<0.2s):它打出的 `REFRESH-SET` 就是审计腿会读的那个集合(同源于 select_entries + refs_in,RULING 76),`REFRESH-MISSING` 是语料今天缺的那几个。⛔ 不要用眼睛从清单里抄号 —— 那正是 `#548` 丢掉五轮的方式。第二步:对 REFRESH-SET 里**每一个**号 issue_read(method=get) 点查,把 state / closed_at 原样抄进来,并把 fetched_at 写成本轮 UTC。⭐ 点查优先于 list_issues:RULING 55 实测列表读数可滞后 8.8min,而点查不会。⛔ 不拿 issue_write 的返回当读数(那是自己说的话,不是 GitHub 说的话);自己关的号要关后再点查一次。",
  "_direction": "滞后的方向是安全的:刚关的号还读作 open ⇒ 那条腿这一轮少说一句话;刚开的号不在语料里 ⇒ UNCERTIFIABLE。⛔ 唯一危险方向(重开的号被说成 closed)由 --max-age-hours 挡住。",
- "fetched_at": "2026-09-18T07:14:48Z",
- "source": "mcp__github__issue_read(method=get) dragonghy/dota2bot,逐号点查(2026-09-18T07:0x-07:1xZ 总监 RULING 76 轮)。⭐⭐ 本轮点查的集合**不是手抄的**,是 `carry_item_issue_state.py --refresh-set` 打出来的 —— 逐字 `REFRESH-SET #856 #867 #240 #843 #859 #810 #548 #528 #806`(9 个),`REFRESH-MISSING #548 #806`。九个全部重读,九个全部 `open`。⭐⭐ **RULING 76 的第一次实战就在同一轮里再抓一个**:写完本轮『下次触发』后重跑,集合变成 **10 个** —— 第 10 个是 `GH #290`,它是我在清单 ⑨ 里当**论据**引用的(「先 push 再发,GH #290」),而抽取器**不区分论据与待办**(这是 claim 7 的既定口径,不是缺陷)。⛔ 处置是**照集合点查**,不是回头改清单措辞 —— 那正是本条要废掉的「跟刷新集讲道理」。`#290` 点查结果 `open`,已补进语料。⛔ 上一版这一行写的是「即本轮『下次触发』清单点名的全部 8 个号」,而同一份清单里本腿自己抽出的是 9 个:差的那个是 `GH #548`,于是它连续五轮读回 `not in corpus`,每一轮都把它当「下次补上」写进报告。⭐ 手抄的失效方向是单侧的:多抄一个号只是多一次免费点查,漏抄一个号让那一格**每一轮**读不出来,而漏掉的那个不会在任何读数里举手 —— 它只会变成另一行 UNCERTIFIABLE,而那一行读起来像环境问题。⭐ 点查优先于 list_issues:RULING 55 实测列表读数可滞后 8.8min,而点查不会。⚠️ 旧号 466/523/538/865(closed)与 839(**open**)本轮**未重读**,按 `_direction` 保留 —— 它们都不在本轮的 REFRESH-SET 里。两种情形的安全性理由不同,不许合写:closed 行的危险方向(重开被说成 closed)由 fetched_at + --max-age-hours 挡;open 行的滞后方向是「刚关的号仍读作 open」⇒ 那条腿这一轮少说一句话,本来就安全。",
+ "fetched_at": "2026-09-18T13:10:35Z",
+ "source": "mcp__github__issue_read(method=get) dragonghy/dota2bot,逐号点查(2026-09-18T13:0x-1310Z 总监 RULING 78 轮)。⭐ 点查的集合不是手抄的,是 `carry_item_issue_state.py --refresh-set` 打出来的:逐字 `REFRESH-SET #856 #867 #240 #843 #859 #810 #528 #616 #290 #899 #548 #806`(12 个),`REFRESH-MISSING #616 #899`。⭐⭐ **另外 4 个号(#466 #538 #839 #865)本轮也全部点查了,而它们不在刷新集里** —— 理由是 `fetched_at` 是**整份语料一个字段**:只重读刷新集、却把 `fetched_at` 写成本轮,等于替那 4 行**声称了一次没发生的读取**。⇒ 规矩:**刷新集决定『必须读哪些』,`fetched_at` 决定『必须读多少』——语料里的每一行都要读,否则那个戳是假的。**(RULING 48 同型:一个真命题满足了一个别的问题。)本轮 17 行全部重读:**12 open / 5 closed**(closed = #466 #523 #538 #616 #865)。新增两行:`#616`(连续多轮 `not in corpus`,实测 **closed** 2026-09-08)、`#899`(本轮新开,open)。⭐ `#523` 本轮再次确认 **closed**(2026-09-08T13:12:53Z),其验收句要的 `tools/agent/mutstand_text_absent.sh` 在盘上、`owed` 表里 `text_absent` 这种 kind 已有 8 行在用 ⇒ 残余为空,已按 RULING 63/64 从总监『下次触发』清单里**划掉**。",
  "issues": {
+  "240": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[harness] 语料规模检测器只认得「等于 fixture 数」那一个量"
+  },
+  "290": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[bug] GH #286 已 closed 但修复从未落地;W23 里 OD 仍 9/12 局停摆"
+  },
+  "466": {
+   "state": "closed",
+   "closed_at": "2026-09-16T13:44:22Z",
+   "title": "[bug] GH #106 检测器的误报率是语料规模的函数"
+  },
   "523": {
    "state": "closed",
    "closed_at": "2026-09-08T13:12:53Z",
@@ -15,70 +30,65 @@
    "closed_at": null,
    "title": "[bug] AWS 账号里那台不属于本项目的实例(fft-cache-v1-attempt3)"
   },
-  "240": {
-   "state": "open",
-   "closed_at": null,
-   "title": "[harness] 语料规模检测器只认得「等于 fixture 数」那一个量"
-  },
-  "466": {
-   "state": "closed",
-   "closed_at": "2026-09-16T13:44:22Z",
-   "title": "[bug] GH #106 检测器的误报率是语料规模的函数(RULING 65 拍板可关,已 closed/completed)"
-  },
   "538": {
    "state": "closed",
    "closed_at": "2026-09-05T23:40:50Z",
-   "title": "[bug] main 的 Lua 检测器腿从绿变红:staybottle 的新测试用 `== 109` 等值钉住语料规模"
-  },
-  "810": {
-   "state": "open",
-   "closed_at": null,
-   "title": "[harness] Lua 推送闸的成员资格由「哪台容器最后跑过 measure」决定 —— 三个旋钮都是绝对秒数"
-  },
-  "843": {
-   "state": "open",
-   "closed_at": null,
-   "title": "[bug] main 的 python 闸红了,而抓它的那条测试按设计跑不进 push 钩子 —— 3.723s > 3.0s 的 per-test cap"
-  },
-  "839": {
-   "state": "open",
-   "closed_at": null,
-   "title": "[harness] py_gate manifest 又漂了:7/141 个测试无行,新落的棘轮默认不进闸"
-  },
-  "859": {
-   "state": "open",
-   "closed_at": null,
-   "title": "[strategy] bots_reach_closure.py 的 docstring 引用的 tests/test_bots_reach_closure.py 不存在"
-  },
-  "865": {
-   "state": "closed",
-   "closed_at": "2026-09-17T13:47:52Z",
-   "title": "[harness] 会话分支那一推必定跑 Lua 全集并挂死:钩子把「main 已含这些提交」读成了「没碰 Lua」"
-  },
-  "856": {
-   "state": "open",
-   "closed_at": null,
-   "title": "[harness] 开工自检与 push gate 并发抢 soak_side.lua ⇒ 假红拒 push;修法已在仓库里(lua_corpus.py)"
-  },
-  "867": {
-   "state": "open",
-   "closed_at": null,
-   "title": "[harness] 「不会长出第七份 open-coded walk」的棘轮,在第八份活着时是绿的"
+   "title": "[bug] main 的 Lua 检测器腿从绿变红:staybottle 用 `== 109` 等值钉语料规模"
   },
   "548": {
    "state": "open",
    "closed_at": null,
-   "title": "[harness] test_selfcheck_lua_leg.py 每轮都 UNCERTIFIABLE —— 84 文件 / 120.1s 骑在 120s 预算刀口上"
+   "title": "[harness] test_selfcheck_lua_leg.py 每轮都 UNCERTIFIABLE(84 文件 / 120.1s 骑刀口)"
+  },
+  "616": {
+   "state": "closed",
+   "closed_at": "2026-09-08T04:54:16Z",
+   "title": "[harness] python ratchet 不在任何 push 闸里(⇒ py_gate.py / manifest / 约束 1 的立案号)"
   },
   "806": {
    "state": "open",
    "closed_at": null,
-   "title": "[bug] test_lion_considere_earlyreturn_domain.lua 在 trunk 上 6 红,不在 known_red 也不在 lua 闸 manifest 里"
+   "title": "[bug] test_lion_considere_earlyreturn_domain.lua 在 trunk 上 6 红,不在闸 manifest 里"
   },
-  "290": {
+  "810": {
    "state": "open",
    "closed_at": null,
-   "title": "[bug] GH #286 已 closed 但修复从未落地:声称的五件产物在 origin/main 上一件都没有"
+   "title": "[harness] Lua 推送闸的成员资格由「哪台容器最后跑过 measure」决定"
+  },
+  "839": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[harness] py_gate manifest 又漂了:新落地的 python 测试默认不进 manifest ⇒ 立法当天就 fail-open"
+  },
+  "843": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[bug] main 的 python 闸红了,而抓它的那条测试按设计跑不进 push 钩子(3.723s > 3.0s cap)"
+  },
+  "856": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[harness] 开工自检与 push gate 并发抢 soak_side.lua ⇒ 假红拒 push"
+  },
+  "859": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[strategy] bots_reach_closure.py 的 docstring 引用一个不存在的测试来证明「有棘轮了」"
+  },
+  "865": {
+   "state": "closed",
+   "closed_at": "2026-09-17T13:47:52Z",
+   "title": "[harness] 会话分支那一推必定跑 Lua 全集并挂死(钩子作用域把两种『空』读成一件事)"
+  },
+  "867": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[harness]「不会长出第七份 open-coded walk」的棘轮,在第八份活着时是绿的"
+  },
+  "899": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[harness] 推送闸腿 2 在全新容器里默认 exit 2 ⇒ PUSH REFUSED,而出路是 RULE6_BYPASS"
   }
  }
 }

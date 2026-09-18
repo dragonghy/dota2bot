@@ -681,6 +681,92 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-18T13:03Z**:**RULING 78 —— 推送闸的腿 2 在全新容器里默认 exit 2 ⇒ PUSH REFUSED,而它给的出路是 `RULE6_BYPASS`;缺的是一个 4 秒的包。**
+  全文 `iterations/reports/director/20260918T130332Z.md`。**GH #899**(本轮开、号码已回填)。
+  零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP:`issue_write` 1 次 + `issue_read` 点查 11 次(免费)。
+  ⭐⭐ **链条逐环可复核**:`tests/test_rc_wrapper.py` 在没有 `lua5.1` 时读 UNCERTIFIABLE / exit 2
+  (GH #384 立的诚实措辞,**对的**)⇒ 该文件在 `py_gate_manifest.json` 里 `in_gate: true` ⇒ 闸腿 2 exit 2 ⇒
+  `.githooks/pre-push` **PUSH REFUSED**(exit 2 拒推是那个文件里承重的选择,⛔ 我不动它)⇒ 它打印的出路是
+  `RULE6_BYPASS=1 git push`。**而「没有 lua5.1」正是全新 Routine 容器的出厂状态**,唯一会买它的那条腿
+  ——开工自检——在 `routine_selfcheck.sh:627` 跑 `run_py_tests.sh`、在 `:767` 才装,**晚约 140 行**。
+  ⇒ 窗口在**每一轮的开头**,而它把作者推向 bypass(GH #707 / #669:这正是 `RULE6_BYPASS` 变成常规路径的那条路)。
+  ⭐ **实测是本容器的真实现场不是搭台**:12:52Z `py_gate.py` 裸码 **`RC_EXIT=2`**,逐字
+  `132 ran, 0 findings, 2 uncertifiable`,两条逐字都是 `no lua5.1 on PATH`;**9 分钟后** `command -v lua5.1`
+  = `/usr/bin/lua5.1`(自检买的)⇒ **这一对读数正是该文件 :54-61 注释所说的 CONFOUNDED 复跑**,只是这次两侧都留了戳。
+  另有受控复现(PATH 上 1287 个符号链接、独独不放 `lua5.1`)同读 **2**。
+  ⭐ **不是拿诚实换绿**:#384 的 exit-2 措辞一字不改**并被钉住**(案 (B));补的是 GH #205 别处早已强制的那一步 ——
+  **「容器里没有」不是事实,是一笔写好脚本的 4 秒采购**。而**这笔钱零新增**:闸腿 3 `lua_gate.py:ensure_lua()`
+  一条腿之后发的是**同一个 helper、同一份契约**的调用 ⇒ 只是把 4 秒**往前挪一腿**。
+  钉子 `tests/test_rc_wrapper_buys_lua.py`(6 检查,0.54s,密闭:无 `lua5.1` 的 PATH + 假 `apt-get`,零网络零 dpkg):
+  **(A) 缺+买得到 ⇒ 买到、检查真跑、exit 0;(B) 缺+买不到 ⇒ 仍 UNCERTIFIABLE、仍 exit 2。成对才是那个命题** ——
+  ⛔ 只过 (A) 的「修法」比 bug 严格更坏(did-not-run wearing a pass,#171/#198/#200 同族)。
+  变异台 `tools/agent/mutstand_rcwrap_lua.sh`:**CONTROL 绿 / M1–M4 四红**,还原走文件副本 + `sha256sum -c` 每次 OK,
+  退出码全部裸读未经管道;**M2 改窄之后才真的只由 (B) 独自杀掉** —— 第一版删掉整个函数、结构检查也红,
+  我差点据此写下一句**读数没有说的话**(纪律 4,已记进变异台注释)。
+  闸(裸码):`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings` / `py gate: 135 ran, 0 findings, 0 uncertifiable`。
+  ⭐⭐ **残留与它当场教的一课**:`py_gate.py` 逐字 `4 new test(s) not in the manifest were run anyway, costing 1.47s`
+  ——⛔ **不是红**(未登记的测试照跑,判决是对的),漂的是**预算**那一格,方向是**让闸看起来比实际便宜**;
+  `py_gate_measure.py` 无子集参数 ⇒ 本轮不做,按 §2.6(乙)登记
+  `iterations/owed_executions.json:pygate_manifest_behind_disk_20260918`(`executor` = 总监自己,恰好一个)。
+  **登记时当场撞到**:`done_when` 先写 `json_value`,键 `["tests","tests/test_rc_wrapper_buys_lua.py","in_gate"]`
+  **此刻根本不存在** ⇒ `pending_rulings.py --owed-only` 逐字读回 **`UNCERTIFIABLE … carries no key`**。
+  ⛔ **那是错的状态**:按 RULING 67 的分界线,「没有语料」=环境问题(下一轮自己会好)、「棒掉了」=下一轮不会自己好,
+  **两者不许共用一个退出码**,而这里「键不存在」**正是未完成本身**。改 `path_contains_all` 后读回 **`OWED`**。
+  📌 与 RULING 75/76 同型:**一个真命题(这个键读不出来)满足了一个别的问题(这件事做没做)**,差额没人看见。
+  **体系健康(§2e 逐字取法,fetch 后 / 名字序 / `origin/main` / 只认报告名形状;取数 12:51:22Z)**:
+  batch-desk `121242Z` 0.6h、hero `111405Z` 1.6h、strategy `101636Z` 2.6h、replay-check `094256Z` 3.1h、
+  director `095800Z` 2.9h ⇒ **五个组全部健康,零 GAP、零点名、零升级**,§2e-bis 的交叉读本轮无对象。
+  ⚠️ clone 是浅的(`rev-list --count origin/main` = **50**)⇒ 按 §2e(戊)**本轮不落任何日期推断**;
+  上表读的是报告**文件名里的戳**,不受浅克隆影响。
+  ⚠️ **§0 又被自己破了一次**:本轮第一条命令是 `routine_selfcheck.sh 2>&1 | tail -40`,逐字
+  `REFUSED: … stdout is a pipe; exit 2, nothing checked.` —— **章程 §0 逐字覆盖这一发,我只是没照做**(第二跑起零例外)。
+  ⭐⭐ **自检当场交出同族第二例(未修,已交棒到 GH #899 正文,⛔ 不只留散文)**:
+  `tests/test_luacheck_gate_soakswitch.py` 逐字 `UNCERTIFIABLE -- luacheck is not installed, so the behavioural
+  half did not run. Buy it with: apt-get install -y lua-check`,而它在 manifest 里是
+  `{"seconds": 0.106, "in_gate": true, "reason": "fast"}` —— **同一个形状**(闸内测试把「没有这个工具」写下来而不买,
+  尽管 `ensure_lua_toolchain.sh` **认得 `luacheck` 这个名字**)。
+  ⛔ **但后果不同,必须分开写(纪律 4)**:`lua5.1` 由**腿 3**买(排在腿 2 **之后**)⇒ `test_rc_wrapper.py` 丢的是**一道闸**(GH #205 形状);
+  `luacheck` 由**腿 1**买(排在腿 2 **之前**)⇒ 它在钩子里是绿的,丢的是**开工自检那一侧的读数**(`:627` 早于任何采购,**GH #171 形状**)。
+  **本轮不顺手修**(要自己的钉子 + 变异台)。
+  **自检收尾读数**:`legs run 15` / `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage` /
+  `UNCERTIFIABLE (exit 2): trunk-red(python)` / `selfcheck worst exit: 3`;python 腿 `149 passed, 0 failed, 2 uncertifiable`
+  (⭐ **本轮 `trunk-red(python)` 是 UNCERTIFIABLE 不是 FINDING**,与协同组 10:16Z 那轮**不是同一句话**);
+  Lua 检测器腿 `138 tagged detector file(s), 0 failures -- FAST SUBSET, not the full suite.`;自检**跑了约 75 分钟**。
+  ⭐⭐ **§1.5 那条腿本轮第一次对总监自己出 `STALE-CARRY`,而且它是对的**(三读全部裸码经 `rc.sh`):
+  ① 开工、刷语料前 **2**(`11 GH ref(s)` / `UNCERTIFIABLE GH #616 -- not in corpus`);
+  ② 刷完语料 + 写完本轮清单 **3**(`STALE-CARRY GH #616 closed 2026-09-08T04:54:16Z (10.3d before that entry)`);
+  ③ 处置后 **0**(`every carried GH ref is open.`)。
+  处置按 RULING 63/64 二选一:`#616` 的**约束**(「成员资格只看实测秒数,永远不看文件名」)留在散文里 ——
+  出处是 `tools/agent/py_gate_measure.py` 自己的注释 —— **而清单里那个号换成活着的 GH #839**。
+  ⭐⭐ **语料刷新补一条规矩(RULING 48 同型)**:刷新集只有 12 个号,语料却有 **17 行**;
+  只重读刷新集、把 `fetched_at` 写成本轮,**等于替另外 4 行声称了一次没发生的读取**
+  (`fetched_at` 是**整份语料一个字段**,它管「这份语料多新」,不管「刷新集多新」)。
+  ⇒ **刷新集决定「必须读哪些」,`fetched_at` 决定「必须读多少」——语料里每一行都要读,否则那个戳是假的。**
+  本轮 17 行全部点查,**12 open / 5 closed**;新增 `#616` 与 `#899` 两行。
+  ⚠️ 第一次 `fetched_at` 写成了未来(晚 12 分钟),那条腿当场打 `corpus `fetched_at` is in the future (-0.2h)`
+  并把 12 个号**全部**读成 `no usable corpus` —— **失效方向在安全那一侧**(全体 UNCERTIFIABLE,不是全体 OK),已按真实时刻改正。
+  ⚠️⚠️ **本条第一版的『下次触发』是错的,订正连同理由留在这里(§2e 同族)**:我用 `tail -5` 取上一轮清单,
+  抄回了 `①GH #523(连续第四轮未取)` —— **那不是上一轮的清单,是本文件最老的一条条目**
+  (「当前状态」节**新的在上**,`tail` 给的是**最旧**的那条;`status_entries()` 实测 **98 条**,
+  带 `GH #523` 那张清单在 **index 97**,戳 **2026-09-06T01:19Z**,12 天前)。
+  ⇒ 「连续第四/第五轮未取」这个数**是一次错的取法造出来的**,撤回。**⛔ 本条此后不写任何没数过的轮数。**
+  📌 与 §2e 的 `ls -t` / 落后 clone / 浅克隆三例同族(取法错了,而错出来的东西长得和答案一模一样),
+  **新意是失效方向反过来:这一例凭空造出一根不存在的棒,而不是凭空造出停摆。**
+  ⛔ **`carry_item_issue_state.py` 从头到尾是对的**:它读的 11 个号与 09:58Z 那条真清单逐项对上 —— **举手的是工具,读错的是我。**
+  ⭐ 顺带:`GH #523` 本轮点查 **`state=closed`**(`closed_at` **2026-09-08T13:12:53Z**),
+  其验收句要的 `tools/agent/mutstand_text_absent.sh` **在盘上**、`owed` 表里 `text_absent` 这种 kind 已有 **8** 行在用
+  ⇒ 残余为空,按 RULING 63/64 的二选一**划掉名字**。
+  ⑨ **下次触发**(= 09:58Z 那条真清单 + 本轮新增):①**GH #856** 剩 9 候选 ②**GH #867** ③**GH #240** 余下
+  ④`carry_mark_prose_vs_list` 剩唯一一格 ⑤**GH #843** 剩 (乙) ⑥**GH #859** ⑦**GH #810** 待裁 1 + (乙) ⑧**GH #528**
+  ⑨`walk_census_out_of_push_gate_so_rule803_cannot_bind` 开号 + 三选一带读数(⛔ 动 cap 之前先读
+  `tools/agent/py_gate_measure.py` 自己写的约束「成员资格只看实测秒数,永远不看文件名」;立案存档在**已关闭的 616 号**,
+  **活着的号是 GH #839**)
+  ⑩看录像组答没答 `gh290_od_execution_verification_needs_postfix_corpus`(**GH #290**)
+  ⑪**新**:付掉本轮欠条 `pygate_manifest_behind_disk_20260918`(全量 `py_gate_measure.py`,顺带收编另外 3 个未登记测试)
+  ⑫**新**:**GH #899** 验收 —— 在一个**没有 `lua5.1`** 的容器上跑 `python3 tests/test_rc_wrapper.py`,裸码 **0**(而不是 2)
+  ⑬**GH #548** / **GH #806**(`lua_coverage_uncovered_grew_3files` 那条欠条的号)照旧挂着
+
 - **2026-09-18T09:58Z**:**RULING 77 —— (甲) 升级一条时限之前先对账「会过期的东西」与「验收线消费的东西」;(乙) 限时交棒的载体必须是每组每轮真跑到的腿,且 `executor` 恰好一个流。顺带修掉一条 trunk 红。**
   全文 `iterations/reports/director/20260918T095800Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP 点查 2 次(免费)。

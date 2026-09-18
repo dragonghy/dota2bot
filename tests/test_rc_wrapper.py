@@ -63,7 +63,52 @@ RC = os.path.join(ROOT, 'tools', 'agent', 'rc.sh')
 # So the honest answer for these two is the file's documented exit-2 word:
 # they did NOT run.  A check that cannot run must not report the tree as
 # broken -- that is what teaches readers to ignore the line.
-HAS_LUA = shutil.which('lua5.1') is not None
+#
+# ⭐ AND THEN BUY IT (director ruling 2026-09-18, GH #899).  #384's exit-2 word
+# is right and stays; what was missing is the step GH #205 made mandatory
+# everywhere else in this repo -- "the container does not have it" is not a
+# fact, it is a 4-second purchase that is already scripted.  The consequence of
+# leaving it unbought is not cosmetic, because THIS file is in the push gate's
+# manifest (tools/agent/py_gate_manifest.json, `in_gate: true`):
+#
+#   leg 2 `py_gate.py` exits 2 <- this file's 2 <- no lua5.1
+#   .githooks/pre-push refuses a push on 2 exactly as it does on 3,
+#   and the remedy it prints is `RULE6_BYPASS=1 git push ...`
+#
+# i.e. a missing 4-second package was steering the author to the bypass -- the
+# road GH #707 / #669 named.  Measured in one Routine container, 2026-09-18:
+# `py_gate.py` read `132 ran, 0 findings, 2 uncertifiable` / bare exit 2 while
+# 开工自检 had not yet reached its own install (it runs run_py_tests.sh at
+# :627 and buys lua5.1 at :767); nine minutes later `command -v lua5.1` was
+# `/usr/bin/lua5.1`.
+#
+# The purchase costs NOTHING NEW on that path: leg 3 `lua_gate.py:ensure_lua()`
+# makes the identical call one leg later, so this moves the 4s earlier by one
+# leg rather than adding it.  When the tool is already present it is one
+# `command -v`.  When it cannot be bought (no apt, no network, not root) the
+# helper is silent and returns 1, HAS_LUA stays False, and #384's UNCERTIFIABLE
+# stands -- the honesty above is preserved, not traded away.
+def _buy_lua():
+    """True if lua5.1 is runnable, buying it once if the container lacks it.
+
+    Same contract and same helper as tools/agent/lua_gate.py:ensure_lua():
+    bounded, guarded, silent on failure.  Never an install when it is present.
+    """
+    if shutil.which('lua5.1') is not None:
+        return True
+    helper = os.path.join(ROOT, 'tools', 'agent', 'ensure_lua_toolchain.sh')
+    if not os.path.isfile(helper):
+        return False
+    try:
+        subprocess.run(['bash', helper, 'lua5.1'], cwd=ROOT,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       timeout=120)
+    except Exception:
+        pass
+    return shutil.which('lua5.1') is not None
+
+
+HAS_LUA = _buy_lua()
 
 fails = []
 uncs = []
