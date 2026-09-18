@@ -185,6 +185,26 @@ check('pulldrag gate is not conjoined with another candidate id',
       not in open(os.path.join(ROOT, 'bots', 'FunLib', 'jmz_func.lua')).read())
 
 
+# ---- `illureal`, the decoy branch's own two numbers (replay-check 2026-09-18)
+# `illureal` only widens WHICH units reach `X.ConfuseEnemyWithIllusions`; the
+# branch body's own guard is what decides whether anything happens, so the
+# reader's domain floor has to BE that guard, not a number that resembles it.
+# The 1200 is pinned beside it because the tool prints enemy/ally counts at
+# exactly that radius as context -- a silently changed radius would relabel
+# every context column while every count still looked plausible.
+ILLU_LUA = os.path.join(ROOT, 'bots', 'FunLib', 'minion_lib', 'illusions.lua')
+import illureal_domain as illu             # noqa: E402
+
+ILLU_HP = literal('X.ConfuseEnemyWithIllusions',
+                  r'J\.GetHP\(\s*bot\s*\)\s*<\s*(?P<n>[\d.]+)', path=ILLU_LUA)
+ILLU_STRONGER = call_arg('X.ConfuseEnemyWithIllusions', 'J.WeAreStronger', 1,
+                         path=ILLU_LUA)
+eq('illureal_domain.HP_CUT mirrors ConfuseEnemyWithIllusions',
+   float(illu.HP_CUT), ILLU_HP)
+eq('illureal_domain.CONTEXT_R mirrors the WeAreStronger radius',
+   float(illu.CONTEXT_R), ILLU_STRONGER)
+
+
 # The GH #90 incident itself, stated as an assertion: the live domain floor is
 # no longer the invented literal.  `LEGACY_ENE_LO` may keep it (archived
 # readings must stay reproducible) but the domain the tool scans may not.
@@ -360,6 +380,7 @@ HP_CENSUS = {
     'detect:WASTE_HP_PCT':               ('INDEPENDENT', 'detector "low HP" for wasteful TP'),
     'detect:OVERCHASE_VICTIM_HP':        ('INDEPENDENT', 'enemy-side victim pick; 0.45 on purpose'),
     'detect:LIMBO_HP':                   ('INDEPENDENT', 'shares 0.40 with the proxy by coincidence'),
+    'illureal_domain:HP_CUT':            ('MIRROR', 'illusions.lua X.ConfuseEnemyWithIllusions `J.GetHP(bot) < 0.4`; pinned above'),
     'bbfloor_domain:CORPSE_HP_MAX':      ('INDEPENDENT', 'corpse-run band, paired with a position test; NOT a liveness proxy -- a live, still hero under it is a KNOWN false positive, asserted in that module\'s selfcheck'),
 }
 
