@@ -63,7 +63,7 @@
    📌 **规矩要带出脚本**:凡工作树上有未提交改动,还原只用 `cp` 副本,永不用 `git checkout`。
 
    ⚠️ **下一轮要看一眼的四条**:
-   (a) **`queue.json:strategy-62`**(本轮新增)+ 本轮的 GH issue —— `claimlone` 的登记。
+   (a) **`queue.json:strategy-62`**(本轮新增)+ **GH #896** —— `claimlone` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-61` **十七条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
@@ -10853,7 +10853,7 @@
   `budget_seconds` 不动且**从文件算出来**(in_gate 349 条 265.549 → 2x = 531.098 ≤ 540.0)。
 
   **交棒**:`queue.json:strategy-62`(⛔ 预期裁定 **FROZEN-HOLD**,不是掉棒)+ GH issue
-  (push 之后才开,号码取自 create 返回)。
+  (**GH #896**)。
 
 - 2026-09-18T07:55Z:**名字写着「最近」的选择器返回的是「第一个」,而唯一的消费者拿它当锚。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `helpnear`,

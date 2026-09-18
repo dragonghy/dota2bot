@@ -10010,7 +10010,7 @@
  },
  "claimlone_20260918": {
   "date": "2026-09-18T10:1xZ",
-  "issue": "[strategy] GH issue 本轮 push 之后才开,号码取自 create 调用自己的返回,不是顺号推测。认领依据 = 铁律 9:P1 球在总监、P2 卡魔棒仪器墙(`wandlimbo_charge_instrument`),**4.4 (i) 球在本组且本组能动** ⇒ 取 4.4。",
+  "issue": "**GH #896**(push 之后才开,号码取自 create 调用自己的返回,不是顺号推测)。认领依据 = 铁律 9:P1 球在总监、P2 卡魔棒仪器墙(`wandlimbo_charge_instrument`),**4.4 (i) 球在本组且本组能动** ⇒ 取 4.4。",
   "defect": "**「这张表里有没有我」的第三份拷贝。** `bots/mode_team_roam_generic.lua` 的 `X.IsAllysTarget(unit)` 建 `bot:GetNearbyHeroes(1000, false, BOT_MODE_NONE)` —— 这张表以**我**为心、**从不装我** —— 然后两行之内按「装着我」读它:`if #allies < 2 then return false end` 只有在我是其中一个条目时才是「这里除了我没别人」,而循环又花一个词在 `ally ~= bot` 上排一个不可能存在的条目。两行编码**同一个信念**,信念是假的 ⇒ 这个闸的意思不是「就我一个」,是「最多一个队友」,**它在循环读到之前就把那一个队友的占用扔掉了**。",
   "why_this_is_not_soloclaim_again": "⭐⭐ **它不是被漏看的,它是被分诊过的。** 同一轮(`soloclaim`,2026-09-17,同组)的另一份产物 `tests/test_ring_subject_census.py` **逐字点名**了 `X.IsAllysTarget`。但那一行定价的是**另一个缺陷** —— 以**发问者**为心的**圈**(soloclaim 头注明确停在那里的「第二个、更大的」那个),并把它定价成不可测(16/16 调用点传的是小兵/野怪/塔,语料 0 个非英雄单位)。**闸(soloclaim 真正修好的那个信念)在那一行里一个字都没有。** ⇒ **一行分诊读起来就是一个已处理的函数**:普查那一行为真、soloclaim 头注也为真,两者合起来回答了关于这个函数的所有问题,**唯独漏掉隔壁刚刚被回答过的那一个**。这是 0NEXT42 那句话的更硬的形态:第二个站点**被读过**,而「被读过」正是它看起来做完了的原因。",
   "fix": "把 shipped 函数体**逐字**搬进 `bots/FunLib/jmz_func.lua` 的 `J.IsRoamAllysTarget( unit )`,并在**闸上**开 gate:`if #hAllyList < 2 and not ( J.IsModeTurbo() and J.IsSoakCandidate( 'claimlone' ) ) then return false end`。`X` 是文件局部表,fixture 测试够不到它 ⇒ 搬家是为了**能在真实帧上驱动**(gate-plumbing 测试不算本地验证);mode 文件只剩一行委托,**五个调用点一个没动**。disarmed 与原体逐字同值:同一张裸引擎表、同一半径 1000、同样四个词、同样两个引擎 getter。",
