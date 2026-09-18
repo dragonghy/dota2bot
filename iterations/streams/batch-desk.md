@@ -13933,3 +13933,37 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   (d) 通知判据按 (四) **收紧后**的四条执行(④ = `2026-09-25T00:00Z`);
   (e) 刹车解除时按规格发 **P4.1 标尺波**,收割必带 `--ledger`,并抄 #801 四行**恢复后**的样子。
   详见 `iterations/reports/batch-desk/20260918T180555Z.md`。
+  **补记(两次 push 之后,GH #290 顺序;全文见报告「补记」节)**:**(A) 铁律 6 三条腿**(两次 push,第二推 memo 命中)
+  `luacheck bots game: 0 warnings` / `GATE_EXIT=0  CLEAN (iron rule 6 static half passed)` /
+  `py gate: 133 ran, 0 findings, 0 uncertifiable, 39.2s` / `lua gate: SKIPPED BY SCOPE -- this push touches
+  no bots/game/tests path.` ⚠️ **第三条腿是 SKIPPED BY SCOPE 不是绿**(本轮只改 `iterations/` 两个文件);
+  ⚠️ **py gate `133 ran`,上一轮 `134 ran`**,⛔ 本台未查少的那一个是什么,只登记差异。`ARM_EXIT=0`;
+  **⛔ 未用任何 `RULE6_BYPASS`**;`PULL_EXIT=0`(`up to date` ⇒ 无 rebase、无 `--force-with-lease`);
+  `PUSH1_EXIT=0` / `PUSH2_EXIT=0`(`50b2b99b..4c3811c8`)。⭐ 按文档顺序先分支后 main,memo 逐字
+  `RULE6_MEMO=REUSE  a green three-leg reading taken 2026-09-18T18:20:10Z on THIS EXACT tree.`,⛔ 未反序(RULING 69);
+  `git merge-base --is-ancestor HEAD origin/main` ⇒ **真**。
+  **(B) 发表**:**GH #779** 第三十二条评论(`issues/779#issuecomment-5734351705`),带署名脚注,
+  按 GH #290 两次 push 都在发表之前完成。`PRECHECK_EXIT=0`(`local commits not on origin/main: 0`),
+  ⚠️ **但中间行要照实读**:`REFUSE  zero citations extracted from 1 source(s)` ⇒ 该评论**零引用**,
+  结论行 `NO CITATIONS -- nothing to certify, nothing to strand.  OK to publish.`
+  ⇒ ⛔ **这是「没有可查的东西」不是「查过且干净」**。
+  **(C) 收尾泄漏复查** `check_costs.sh --leak-only` ⇒ **`LEAK_EXIT=0`**,区块空,常设仍只有 AMI 一张,与开工一致。
+  **(D) ⭐⭐ 自检回读仍「尚未可得」,而取法本轮又差点被自己骗过去(同族第三例)**:回读 **686 行**
+  (正文那次 646,**还在长**),停在 `=== trunk health (fast Lua detectors) ===`,收尾三行横幅一个没打。
+  ⚠️⚠️ 第一次判活死用 `pgrep -c routine_selfcheck` 回 **`0`** 并附警告
+  `pattern that searches for process name longer than 15 characters will result in zero matches`
+  ⇒ **「零匹配」在这里是「问法不对」不是「进程没了」**,而 `0` + 无横幅**恰好凑齐**上一轮订正后
+  「可以写本轮不可得」的条件 —— ⛔ **它是假的**:`pgrep -af` 现读 **pid 516 / 19249 仍在**。
+  ⇒ **取法再补一条(并列不取代)**:判活死**只用 `pgrep -af`**,⛔ `pgrep -c <名字>` 在名字 >15 字符时**恒零**;
+  **先看有没有 warning 行再看数字**。📌 与铁律 1 §RULING 48、铁律 4 §CL (i-a) **同型**。
+  **(E) ⭐ python 腿跑完了:`main` 仍红,且仍是 GH #894 那一条。** 逐字 `149 passed, 1 failed, 3 uncertifiable` /
+  `failed: tests/test_bots_walk_farm_only.py` / `TRUNK RED -- a python test is failing ON THE WORKING TREE.`;
+  工具自带限制 `Whether main is red too is NOT established by this line` **本轮仍被外部条件满足**
+  (`git status --porcelain` 空、`HEAD` 与 `git ls-remote origin main` 同为 `4c3811c84d8a`)⇒ 可升格成「main 红」
+  (⛔ 这一步是本台补的外部证据不是工具说的)。⚠️ 与上一轮 `147 passed, 1 failed, 3 uncertifiable` 相比
+  **通过数 +2、失败的仍是同一个文件** ⇒ **#894 立案约 9 小时后仍未修**;⛔ 不代修(先例 GH #33)、
+  ⛔ 未在 #894 追评(无新事实)。另 Lua 检测器腿 `5a0` 现读 `UNCERTIFIABLE`,
+  `138 file(s) [discovered -- the leg never reached its count line] in 120.0s (budget 120s)` ⇒ ⛔ 未跑不记成通过。
+  **(F) 通知判据收尾复核**:四条预算判据仍全未中;新轴「main 红」与上一轮同题同答**否**(路由是 issue,#894 已在)⇒ ⛔ 不推送。
+  **(G) token 用量**:`TOKENS total_in=4,034,813 out=41,118 turns=38`(⚠️ 正文 §十三 的 `2.31M/29.1k/25`
+  **不是错的是早的**,两个都留着,差值即 push + 发表 + 补记的成本)。
