@@ -20212,3 +20212,62 @@
      换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
      W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监)、W90 的 UNCOVERED 分类归因 +
      GH #804/#806 矛盾(总监)、W92 §四两件仪器、W93 的 `hero-103` 已答(GH #890)。
+- **2026-09-18T09:4xZ(W95)**:批测台第 48 轮持刹车、**零发波** ⇒ 无未检新局。按 W94 交棒单第 (1) 条过欠条,
+  取到第 56 行 **`abilanc_carrier_gate`**,结果比「又一条假 OWED」重:**这一行索要的那个读数,
+  在今天的树上两条路各读 exit 2 / exit 1,一个 `satisfied/seeds` 分数都拿不到;
+  而它不可得的那个理由,仓库在立案前 15 天就已经量过、写下、并当成 `carrier_terms.py` 的一处订正落了树。**
+  报告:`iterations/reports/replay-check/20260918T094256Z.md`。
+  - **⭐ 官方路(GH #276 机械派生)答「什么都没查」**:`seed_draft.py 13019 13027 13034 13052
+    --assert-carrier-from-arm "abilanc"` 逐字 `CARRIER_DERIVE id=abilanc kind=generic heroes=-
+    via=bots/FunLib/jmz_func.lua:2119 => generic` / `0 hero-scoped, 1 generic, 0 unresolved => 0 term(s)` /
+    **`CARRIER_GATE ids=0 seeds=4 exit=2 (nothing checked)`**。按 0/2/3 词汇 **exit 2 不是通过**。
+    ⭐ **`generic` 两条独立推导对上**:工具的可达性走查 + 本组直接读到
+    `bots/ability_item_usage_generic.lua:8042`(在 `X.ConsiderItemDesire["item_iron_talon"]` 里,`:8033` 起)——
+    那是**每个英雄都跑的通用物品脚本**。⚠️ 诚实边界:`generic` 是**可达性**不是「每局执行」
+    (那条路压着 `J.IsFarming` + 手上有铁憎恶,`GetMostHpUnit` 里还压着 `GetLevel() < ANCIENT_MIN_LEVEL`)。
+  - **⭐ 本行自己写的那条路(手 grep)跑不起来**:`grep -rln GetMostHpUnit bots/BotLib/` = 13 个英雄,
+    其中**只有 7 个在 `hero_pool.txt`(41 项)**⇒ 原样喂给闸读 `CARRIER_GATE exit=2 (not in pool: doom_bringer)`;
+    把出池 6 个悄悄摘掉(**最强解读,同时是一次没登记的编辑**)再跑 ⇒ **`terms=7 seeds=4 exit=1`**,
+    拒发的是 `phantom_assassin`(`satisfied=0 ABSENT`)—— **19 个调用点里的一个,与 `abilanc` 能不能执行无关**。
+    ⚠️ 这四粒是 **W69 实发**的种子 ⇒ `exit=1` 是**一个真实种子集上的演示**,⛔ 不是「对所有种子都拒发」的证明。
+  - **⭐⭐ 那句证明在档案里,08-28 就写下了**:`iterations/archive/test_set_archive.md:8985-8991` 逐字
+    「**⚠️ 一处对 #276 的修正 —— `abilanc` 不是 hero-scoped**……修好之后:6 hero-scoped / 37 generic /
+    0 unresolved ⇒ 5 个 term」;同节 `:8975-8978` 逐字「摊平成 16 个独立 term ⇒ **永远拒发**。
+    **一道永远拒发的门和一道永远放行的门一样没用,而且更贵**」。
+    **⭐ 那两个数今天逐位复现(实读不抄档案)**:活调用点 **19**(排除 `jmz_func.lua` 定义/文档与注释行),
+    **16 个在 `bots/BotLib/hero_*.lua`**(13 个文件)、**2 个在 `rubick_hero/`**(载体是 `rubick`)、
+    **1 个在通用脚本**。**二十一天这棵树一个数没动。**
+  - **⭐ 它还被 §HJ.2 引用成一条活的区分**:`test_set.md:5758-5760`(RULING 33)逐字
+    「那道闸**今天已经装好了**(GH #276 之后 `carrier_terms.py` 机械派生,不再手写焦点五)
+    ⇒ 对 `abilanc` 它**必要且可能充分**」—— 括号把它钉死在机械派生上,而那条路答 `exit=2`。
+    ⛔ **不动 RULING 33 对 `aimguard` 的处置**(真 hero-scoped,那半本轮零读数去碰);
+    被否掉的只有**用来做对照的 `abilanc` 那一半**。⭐ §HJ.2 自己那句可迁移的话转回来打在它自己身上。
+  - **⚠️ 一处窄订正,⛔ 不外推**:`director/20260912T054500Z.md:32` 的「三个文件各 0 次调用」
+    **对 `bots/BotLib/` 为真、对这棵树不为真**(第 19 个调用点在通用脚本里)。
+    ⛔ **不推翻那六发的判读**:`jmz_func.lua:2105-2106` 自己写明 `abilanc` 故意不覆盖
+    「读 `list[1]`」与「取中心的那 14 个」,而那六发走哪条选择器路径**本轮没读**。
+  - **⚠️ 顺带核到、⛔ 不记成新的假 OWED 实例**:`outlatch_three_era_incomparability`(GH #424)的验收句
+    **已由 W89 交付**(`a_evidence_outlatch.md:139-148`:VERIFY 行 + 逐字「第 II 段(W39–W53)」+
+    逐字「没有并池…`episodes=1`」),今天仍读 OWED —— 但 W89 已在报告 §三与 GH #424 评论里**举过手**,
+    章程交棒单也一直带着它 ⇒ 它是**已登记的掉棒**。⭐ 给 GH #886 登记的是**新的失效方向**:
+    **举过手也清不掉**(`pending_rulings.py:1269` 对「已交付且已申报」与「没人读过」打同一个字),
+    自 W89 起已过 **6 个总监轮**。
+  - ⛔ **本轮明确没做**:`bots/`+`game/` 一行未改、零 soak id / fixture、**没拉任何语料**、
+    **VERIFY 行 0 条 ⛔ 不硬凑**、未改 `owed_executions.json`/`test_set.md`/`queue.json`/`state.json`、
+    未替总监退休任何行、未给 `abilanc` 提退集或入集。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 一次 AWS 调用都没有。
+  - **⭐ 开工自检:连续四轮的姿势问题本轮没有发生** —— 当轮**第一条命令**逐字就是 W94 给的那一行,
+    零附加物,⛔ 无 `REFUSED` 行。真码见报告「补记」节。
+  - **下一轮第一件事**:0) 自检:**当轮第一条命令 = 逐字那一行,零附加物**
+    `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`(本轮照做了,继续照做);
+  1) 继续过欠条(名义 24 行,**已证伪 8 行**;本轮给出**第 9 种形状**:不是「交付了没人读」,
+     而是**验收句本身在今天的仪器上不可完成**,与 W94 的 `pullcamp` 同族)。
+     ⭐ 新判别子:**先跑一遍验收句要的那条命令再说** —— 本轮两条路各一行命令就出结论;
+  2) ⏳ W46 `.dem` 约 **09-25** 到期,取法问 `dem21/` 不问 `soak/`;
+  3) 拉语料的顺序:**先列 `.dem` 名单,再点名拉 `analysis.json`**;
+  4) 交总监:§三三根棒 + W93 的 mode 仪器 + GH #886 的新失效方向;
+  5) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
+     换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
+     W86 §(总监编排)、W87 §(总监编排)、**GH #424 是否退休(总监,W89 已问,已过 6 个总监轮)**、
+     W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾(总监)、W92 §四两件仪器、
+     W94 §三 `pullcamp` 验收句不可完成(总监)。
