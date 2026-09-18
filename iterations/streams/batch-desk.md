@@ -13062,3 +13062,83 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   ⛔ 未重开任何已关档 promote 裁定;⛔ 未改 `OWNER_PRIORITIES.md` / `state.json` / `test_set.md`;
   ⛔ 未删 09-05 两前缀(仍是 #881 验收语料)。
   详见 `iterations/reports/batch-desk/20260917T212813Z.md`。
+- 2026-09-18T00:24:01Z:**刹车第四十五轮持有;零发波、零收割欠、零泄漏。⭐⭐⭐ 本轮把连续两轮登记为「⛔ 未测到机制」的那个机制测到了,而它不在此前列的三个候选里 —— 它是一个 harness 缺陷:`soak/` 界后 95.8% 的局由裁判在 cap 上强制结束,`analyze_log.py` 把那次强制结束读成了「遗迹被推掉」,于是裁判自己 docstring 里写死的合同(「capped 局由经济领先方判胜」)自 cap 改 25 那天起一次都没执行过。**
+  **(一) 预算**:闸 (iii) `FENCE_EXIT=3`,逐字 `actual (MTD) : $92.163   <- re-read this run, never cached` /
+  `pending waves : $0.000` / `planned : $1.100` / `projected total : $93.263` /
+  `operative ceiling: $90.00 = min(fence, brake)` / `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence.`;
+  RULING 5/6/7 三行照抄(`17 region(s) read ... COMPLETE` / `records after 2026-09-17T08:41:13Z ... clock from budget snapshot` /
+  `CERTIFIED (0 accruing instances account-wide, read this run)`),⭐ 钟没有降级,⛔ 未传任何 `--no-*`。
+  **⭐ 快照连续第二轮冻结**:MTD `$92.163` / 戳 `2026-09-17T19:59:13Z`,与上一轮(21:28Z)**两量逐位相同**
+  ⇒ **零新支出测量**(⛔ 不等于「没花钱」)⇒ **一个速率点都不贡献**,⛔ 不动 `$0.40–0.92/天` 带、
+  月末兜底日 `2026-09-27T00:00Z` 原样结转。**headroom 对 `$90` = `$-2.163`**。
+  GH #801 四行整块照抄(`>= $35, but headroom to the $90.00 brake is $-2.163` /
+  `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).` /
+  `Nothing can launch at this MTD, so confirming it buys nothing.` / `Resumes by itself as soon as headroom >= $1.10.`),
+  **SKIP 不是 pass**,欠条 `gh801_confirm_headroom_first_live_read` 仍 **OWED**,⛔ 未用 `COST_CONFIRM_AT=999` 自救。
+  `alpha = 0` / `beta = 0` 本轮实读;`forecast 118.091` 与戳一同冻结,⛔ 不解释不采信。
+  **(二) 收割零欠**:`validation/` **592 对象**(逐位相同),最新对象按 RULING 47 取法仍是
+  `lf_rescue+27ids-d177b87026dd_20260912_1018_run.log`(`2026-09-12 10:18:26`)= W69;`soak/` **72,079 键**逐位相同。
+  在跑波次:**无**。`recover_verdict.py` 未跑(**没得收,不是漏收**)。
+  **(三) ⭐⭐⭐ 机制:裁判的自动投降被 `natural_end` 收下了。**
+  **入口是一个上一轮语料看不见的判别子** —— Y1(P4.1 标尺波,**链路 B**,`aws_run.sh`→`run_batch.sh`,
+  产 `.log.stdout` 不产 `analysis.json`,**不在 `soak/` 里**)在 **2026-09-05**(界后窗口之内)读
+  radiant **46/80 = 0.5750**,而链路 A 同窗口读 **0.0466** ⇒ **「bot 打 radiant 更差」作为充分解释被排除**。
+  (Y1 读数原文出自 `20260905T180700Z.md` §3.1/§3.2,它当时就写了「这条路的 winrate 通道不退化」,
+  **没有人拿它去对界后的 0.0466** —— 与 #883 那次「跑了、发表了、没人读」同形。)
+  **① 标签假说先被排除**:10 个 `analysis.json`+`log.gz` 配对逐局对 engine 原文,**10/10 一致**
+  (`winner=dire` ⟺ `Winning team = 1` ⟺ `goodguys_fort destroyed`)。
+  **② 但那个 fort 物理上不可能**:slot1 里 dire 五人建筑伤害合计 **95**、**零座 radiant 塔倒下**,
+  而 `npc_dota_goodguys_fort destroyed at 1559.93`;同局 radiant **42 杀对 14**、gold **231,563 对 187,002**。
+  唯一那局真 radiant 胜(slot5)建筑链完整自洽(t1→t2→t3→rax→t4→fort)**且 `dur_min 23.9 < cap 25.0`**;
+  九局假胜 `dur_min` **全在 cap 之上**(25.6–27.1)。
+  **③ 机制**:`referee.py:173-180` 的结束手法**不是推遗迹**,是
+  `dota_surrender_on_disconnect 1` + `dota_auto_surrender_all_disconnected_timeout 1` —— 一次**自动投降**,
+  而 engine 把它写成 `goodguys_fort destroyed` + `Winning team = 1`;
+  `analyze_log.py:94-104` 的分支**第一个问 fort**(`natural_end = fort is not None` ⇒ `engine_natural`),
+  于是 `elif ... dur_min >= cap_min - 0.5: base["winner"] = econ_winner` 这条**裁判合同依赖的覆盖永不执行**。
+  ⚠️ **不是没人想过**:同一处注释逐字写了两个 case「cap=10 上是同一集合、25 上会分开」,并据此把 fort 提前,
+  理由是「`a destroyed ancient is a scoreboard`」—— **防住了「真翻盘长得像伪影」,漏掉了「伪影自己会造一个遗迹」**。
+  与 `pullcad` 同族:**门在,判据被结构性绕开,而绕它的正是本该被它挡住的那个东西**。
+  **④ 结构性读数(284 局,跨 08-26→09-12 全部 18 天;`cap_min` 284/284 = 25.0,`winner_by` 284/284 = `engine_natural`)**:
+  `dur_min > cap_min` **272 局(95.8%)radiant `0/272 = 0.0000`**,按 `econ_winner` 读 **`133/272 = 0.4890`**;
+  `dur_min <= cap_min` 12 局 radiant `2/12 = 0.1667`;全样本 as recorded `2/284 = 0.0070`、按 `econ_winner` `0.4824`。
+  ⇒ ⭐⭐⭐ **`0.0000` 不是「低」是一个常数**,与 GH #352 抓到的 `winrate == 0.500 EXACTLY ... an identity,
+  not a measurement` **是同一种东西换了个数值,被当读数报了 23 天**;⭐⭐ **修好之后通道是活的**(`0.4890`)。
+  ⚠️ 上一轮的 `0.0466` 同轮订正:它是抽样里混进了那 4.2% 的真局,真值是 **272 局恒定 0 + 12 局 0.1667**。
+  **波及面(⛔ 披露不是裁定)**:只波及 winrate 通道(= 铁律 2(b) 那把尺子),时段 **2026-08-26 → 至今**;
+  ⛔ **经济四量不受影响**(出自 signout 记分板);**链路 B 不受影响**(无裁判,被砍的局没有 signout 就是缺席,⛔ 不伪造);
+  ⛔ 本台**不点名**哪些 promote/(b) 引过它、**不重开**已关档裁定、**不改** `state.json`/`test_set.md`/`OWNER_PRIORITIES.md`。
+  **诚实边界五条**:① 抽样非全量,但 `dur_min > cap ⇒ dire` 在样本里 **272/272 无例外**,且物理不自洽是逐局可验的;
+  ② ⛔ **未读 engine 的投降归属代码** —— 主张「272/272 被记成 dire」,不主张「设计上总判 dire」;
+  ③ 裁判的 `state["forced"]` 写在实例本地 sidecar **不上传 S3**,故判别子用的是每个 `analysis.json` 都有的两个字段;
+  ④ `0.1667` **n=12 薄**,⛔ 不主张小数位(做厚需 ~4,700 次 GET,本轮未做);
+  ⑤ Y1 两臂是不同的树,但 `46/80` 是**物理侧计数**且 fwd/rev 各 40 局已 swap 平衡。
+  **(四) 局数**:本月无新波次;本轮实读 **294 局** `analysis.json`(⛔ 不是波次局数)。
+  **(五) 成本(铁律 1 三段式)**:**零 EC2 / 零 CE / S3 读取 `~383` 个对象(出网未计价)** ——
+  `s3 ls --recursive` 2 次(592 + 72,079 键 ≈ **79 LIST**,不下载)+ `analysis.json` GET **294**(≈1.7 MB)
+  + `log.gz` GET **10**(≈0.18 MB)。**本轮新增 EC2 计费 `$0.00`**。
+  **(六) 泄漏五条独立路径全零(⛔ 不合并成一句)**:① `check_costs.sh` 自带区块**空**;
+  ② `describe-instances` 五态不加 tag 过滤 ⇒ `INST_EXIT=0` / **`LINES=0`**;
+  ③ `describe-spot-instance-requests State==open` ⇒ `SIR_EXIT=0` / **`SIR_LINES=0`**;
+  ④ 闸 (iii) 账户级 **17 区 COMPLETE** + `CERTIFIED (0 accruing instances account-wide)`;
+  ⑤ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏)。
+  **(七) 开工自检**:⚠️ **管道自卫第 37 次在当轮第一条命令上生效**(逐字 `REFUSED: routine_selfcheck.sh
+  stdout is a pipe; exit 2, nothing checked.`),**连续第七轮同形**,⛔ 不辩解。
+  ⭐ **`TRUNK RED -- a python test is failing ON THE WORKING TREE.`**,`146 passed, 1 failed, 3 uncertifiable`,
+  失败的是 **`tests/test_bots_walk_farm_only.py`**;⚠️ 工具自述 `Whether main is red too is NOT established
+  by this line` ⇒ ⛔ 本台**不声称 main 红**、**不代修**(⛔ 本轮 `bots`/`game`/`tests`/`tools` 一行未改)。
+  `LUA GATE COVERAGE disk 510 | push gate 346 | leg 138 | known_red 5`、`UNCOVERED 113 of 510 (22%)`、
+  **`UNCOVERED SET GREW -- 1 file(s)`** → `NEW UNCOVERED no_manifest_row tests/test_fieldsip_transfer_receiving_site.lua`
+  (**与上一轮同一个文件**,`fieldsip_transfer` 家族第八次,修复路径仍卡 GH #783);
+  `PY GATE COVERAGE disk 150 | push gate 131 | leg 150`、`UNCOVERED 0 of 150 (0%)`(逐位相同);
+  9 条 `UNCERTIFIABLE`(luacheck 未装 ⇒ 行为半未跑;`5a0 cost: 138 file(s) in 120.1s`)⇒ ⛔ **不是 pass 也不是红**。
+  **(八) ⚠️ 偏离本台自设通知判据,⛔ 自报不辩解**:09-16T18:15Z 收窄的四条本轮**一条未中**
+  (MTD `$92.163` < `$100`、`alpha=0`、headroom `$-2.163`、今天 09-18 < 09-27)⇒ **严格读不该推,而本台推了**。
+  判读:那四条是**为「刹车僵局」这一件事**收窄的,本轮推的是一条**改变量具可信度**的新测量、带日历时限
+  (10-01 预算重置后第一波就要用这把尺子),**不是同形投递**;⛔ **但判据是按穷举写死的**,
+  ⇒ 登记为偏离,交总监裁该不该加第 ⑤ 条(「量具级缺陷」),⛔ 本台不自行改判据。
+  **(九) 没做的事**:⛔ 未发波;⛔ `bots`/`game`/`tests`/`tools` **一行未改**(想过给 `analyze_log.py` 把
+  `natural_end` 收紧成 `fort is not None and dur_min < cap_min - 0.5`,**否掉**:判据与拦截点是总监的事,
+  先例 GH #33「不自己改 harness」);⛔ 未重开任何已关档 promote 裁定;⛔ 未点名受影响的 (b) 判定;
+  ⛔ 未改 `OWNER_PRIORITIES.md` / `state.json` / `test_set.md` / `queue.json`;⛔ 未做 ~4,700 GET 的加厚普查。
+  详见 `iterations/reports/batch-desk/20260918T002401Z.md`。
