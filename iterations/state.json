@@ -9959,8 +9959,8 @@
     "no_arm": "零新 gate id / 零 arm / 零 promote / 不申请波次。`bots/` 的改动是**纯注释**。"
   },
   "helpself_20260918": {
-    "date": "2026-09-18T0x:xxZ",
-    "issue": "[strategy] **GH #<本轮 push 之后才开;号码取自 create 调用自己的返回,不是顺号推测>**。认领依据 = 铁律 9:P1 球在总监 / GH #862 在录像组,P2 卡魔棒仪器墙(`wandlimbo_charge_instrument`),**4.4 (i) 球在本组且本组能动**;[strategy] open issue 六条里**带帧证据且未落地的一条都没有**。",
+    "date": "2026-09-18T04:24Z",
+    "issue": "[strategy] **GH #891**(本轮 push 之后才开;号码取自 create 调用自己的返回 `id 5495746108` / `url .../issues/891`,**不是顺号推测**)。认领依据 = 铁律 9:P1 球在总监 / GH #862 在录像组,P2 卡魔棒仪器墙(`wandlimbo_charge_instrument`),**4.4 (i) 球在本组且本组能动**;[strategy] open issue 七条里**带帧证据且未落地的一条都没有**。",
     "defect": "**`+ 1` 是为「我」加的,而那张表里已经有我。** 三个「有没有人数去帮这个队友」的站点都写成 `#allies + 1 >= #enemies`,`+ 1` 代表发问的 bot,前提是 ally 表里没有它。三处前提都是假的,而且**理由是两个不同的**:(甲) `bots/mode_team_roam_generic.lua:507`(`ConsiderHelpAlly`)与 `:1884`(`X.ConsiderHelpWhenCoreIsTargeted`)用 `J.GetAlliesNearLoc` —— 绕**队友的位置**走**队伍花名册**,谁都不排除,所以 `bot` 只要在圈里就在表里;(乙) `bots/FunLib/jmz_func.lua` `J.EvalTeamfightIdle` 用 `J.GetNearbyHeroes( hFocusedAlly, 1200, false, ... )` —— 它**确实**排除了一个自己,但排除的是 `hFocusedAlly`,**不是 `bot`**。⭐ 它自己的注释写着 focused ally \"is deliberately not counted\",那句是真的;**表里少的那个自己,不是 `+ 1` 要补的那个**。",
     "unconditional_at_site_c": "⭐ **站点 (乙) 的重复计数是无条件的,由构造而非运气**:`hFocusedAlly` 取自 `J.GetNearbyHeroes( bot, 1000, ... )` ⇒ `dist(bot, hFocusedAlly) <= 1000 < 1200` ⇒ `bot` 在那个 1200 圈里,**这条分支能到达的每一帧都成立**。语料逐位同意:`c_self` **69 / 69**。",
     "mirror_of_soloclaim": "⭐⭐ **这是 `soloclaim`(同一文件,一天前,同一组)的镜像。** 那边代码相信 ally 表**装着**发问者而它从不装(`J.GetNearbyHeroes` 以发问者为心);这边相信它**不装**而它总可能装。**同一个信念的两个极性**,而修好其中一个不会让任何人去找另一个 —— 「附近队友」的两个生产者差别正在这一点上,**而它们的名字看不出来**。",

@@ -65,17 +65,21 @@
    ⇒ 唯一判别式恒为假。**本轮按 0NEXT41 先读了默认值再数域**,所以它被登记成仪器缺口而不是「测过没效果」。
 
    ⚠️ **下一轮要看一眼的四条**:
-   (a) **`queue.json:strategy-60`**(本轮新增)+ 本轮开的 [strategy] issue —— `helpself` 的登记。
+   (a) **`queue.json:strategy-60`**(本轮新增)+ **GH #891** —— `helpself` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-59` **十五条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
-   (c) ⛔⛔ **开工自检本轮没跑完,本报告因此不引用它的退出码** —— 它在 `=== trunk health (fast Lua detectors) ===`
-   上停了两个多小时(时长从 ~11 分钟涨到 ~40 分钟再涨),⚠️ **而且本轮的树不安静**
-   (变异台会临时改 `bots/` 三个文件、fixture 测试会写 `soak_side.lua`,即 GH #856 的读写竞态)
-   ⇒ **它这一轮读到的任何红都不可归因**。📌 **第三次登记同一条建议**(0NEXT40 §(c)、0NEXT42 §(e)):
-   **自检回来之前只做只读测量**,或**把变异台留到自检退出之后**。⭐ 本轮是它第一次**完全没给出读数**,
-   前两次至少还给了个 `EXIT=3` —— 建议该升级成「自检与变异台不同时跑」这条硬规矩;
+   (c) **开工自检 `EXIT=3`**;findings = `cadence queue-rulings owed-executions lua-coverage`,
+   `UNCERTIFIABLE = trunk-red(python)`。⛔ **它慢到写报告 §一 时还没跑完**(~11min → ~40min → 本轮 **>2 小时**),
+   初稿据此写了「没跑完、不引用退出码」,**收尾时按实际读数改掉了** —— 📌 下一轮别照抄那句。
+   ⭐ `lua-coverage` 新出现的两条 UNCOVERED(`test_fieldsip_transfer_receiving_site.lua` /
+   `test_lion_w_fight_seed.lua`)**都不是本轮的产物**,而**本轮新增的测试有 manifest 行** ⇒ 没撑大集合。
+   ⚠️ **GH #882 原样复发**(理由写 `lua5.1 is absent` / `luacheck is not installed`,**两者本容器上都在**)。
+   ⛔ **而本轮的树不安静**(变异台改 `bots/` 三个文件、fixture 写 `soak_side.lua`,GH #856,
+   与它的 python / fast-Lua 两条腿并发)⇒ **那两条腿的读数(含 `138 tagged detector file(s), 0 failures`)
+   不可归因,绿也一样**。📌 **第三次登记同一条建议**(0NEXT40 §(c)、0NEXT42 §(e)):
+   **自检回来之前只做只读测量**;⭐ 本轮建议升级成**「自检与变异台不同时跑」**这条硬规矩;
    (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
    本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。】**
 
@@ -10696,9 +10700,14 @@
   ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T042437Z.md`;
   `state.json:helpself_20260918`;完整判据 ⇒ backlog **0NEXT43**。
 
-  **开工 = 铁律 10 再铁律 9**:⚠️ 管道防呆**第 16 次**,又在第一条命令上撞到;改走重定向 + 后台后
-  ⛔ **自检本轮没跑完**(停在 `trunk health (fast Lua detectors)` 两个多小时)⇒ **本轮不引用它的退出码**,
-  且**本轮的树不安静**(变异台改 `bots/`、fixture 写 `soak_side.lua`,GH #856)⇒ 它读到的红不可归因。
+  **开工 = 铁律 10 再铁律 9**:⚠️ 管道防呆**第 16 次**,又在第一条命令上撞到;改走重定向 + 后台。
+  自检 **`EXIT=3`**(⛔ 它慢到写 §一 时还没跑完、收尾才读到 —— ~11min → ~40min → 本轮 **>2 小时**);
+  findings = `cadence queue-rulings owed-executions lua-coverage`,`UNCERTIFIABLE = trunk-red(python)`。
+  ⭐ `lua-coverage` 新出现的两条 UNCOVERED **都不是本轮的产物**,而**本轮新增的测试有 manifest 行**
+  ⇒ 没把集合撑大(读出来的,不是复述设计意图)。⚠️ **GH #882 原样复发**(理由写 `lua5.1 is absent` /
+  `luacheck is not installed`,**两者本容器上都在**)。⛔ **本轮的树不安静**(变异台改 `bots/`、
+  fixture 写 `soak_side.lua`,GH #856,与它的 python / fast-Lua 两条腿并发)⇒ **那两条腿的读数
+  (含 `138 tagged detector file(s), 0 failures`)不可归因,绿也一样**。
   P1 球在总监 / GH #862 在录像组;P2 卡魔棒仪器墙;**4.4 球在本组且本组能动** ⇒ 取 4.4。
   [strategy] open issue 七条,**带帧证据且未落地的一条都没有** ⇒ 自找杠杆。
 
@@ -10747,8 +10756,17 @@
   (三次里最大的一次,**不缩放** —— 同机标定 0.97x 与 0.74x **互相矛盾**,所以不施加因子);
   `budget_seconds` 不动且**从文件算出来**(in_gate 264.763 → 2x = 529.526 ≤ 540.0)。
 
-  **交棒**:`queue.json:strategy-60`(**先建棒再推、再开 issue**)+ 本轮 [strategy] issue
-  (⛔ **push 之后**才开,号码取自 create 调用自己的返回 `id`,**不是顺号推测**)。
+  **交棒**:`queue.json:strategy-60`(**先建棒再推、再开 issue**)+ **GH #891**
+  (⛔ **push 之后**才开,号码取自 create 调用自己的返回 `id 5495746108`,**不是顺号推测**);
+  发表前 `claim_precheck.sh` 两跑 **exit 0**(报告 14 条路径引用 0 refused,
+  1 条 `IGNORED-BY-DESIGN` = gitignore 的 `soak_side.lua`)。
+  **push 四次**:第 2 次推 main 被拒(main 走到 `26005ae5`)⇒ 再 rebase、分支
+  `--force-with-lease` 重推、main 成功落地 `354d7d23`。三条腿:`GATE_EXIT=0 CLEAN` /
+  `py gate: 134 ran, 0 findings, 0 uncertifiable, 50.9s` /
+  **`lua gate: 426 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 675.5s`**(第 1 次);
+  ⚠️ 第 3/4 次 Lua 腿读 **`SKIPPED BY SCOPE`**(`base=stdin-remote`,只 2 条路径)——
+  **照实写,这是跳过不是通过**;完整读数是第 1 次那一行,而 rebase 只换父提交、内容逐字相同。
+  ⛔ 没用过 `RULE6_BYPASS`。manifest 预算两次 rebase 后各重算一次,均为 264.763 → 529.526 ≤ 540.0。
 
 - 2026-09-18T01:46Z:**同一条修复只修到了它被发现的那一个调用点。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `fightfloor`,
