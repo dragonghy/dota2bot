@@ -3,6 +3,7 @@ command -v awsx >/dev/null && aws() { awsx "$@"; }
 # Launch one unattended batch run on a self-terminating Spot instance.
 #
 #   ./aws_run.sh -n 100 --old main --new my-branch [--on-demand] [-t 4] [-j 8]
+#   ./aws_run.sh --dry-run ...            # print the plan + user-data, launch nothing
 #
 # The instance: builds the A/B dirs (normal + swapped sides), runs half the
 # games each way, syncs results to S3, then shuts down (= terminates).
@@ -15,6 +16,14 @@ source aws.env
 N_GAMES=100; OLD_REF=main; NEW_REF=main; TIMESCALE=4; PARALLEL=8
 MARKET="--instance-market-options MarketType=spot"
 MAX_HOURS=12
+MAX_HOURS_EXPLICIT=0    # director RULING 80 (甲1): a real wave must PASS --max-hours
+DRYRUN=0
+# On-demand list price for INSTANCE_TYPE in AWS_REGION, used only by the
+# --dry-run exposure line below. RULING 80 (甲2) prices an aws_run.sh wave at
+# the on-demand rate against its OWN watchdog, not at the $1.10 spot constant.
+# Dated on purpose: a stale price here under-records the fence (the dangerous
+# side), so the dry run prints the date and lets you override it.
+OD_RATE_USD_H=${OD_RATE_USD_H:-0.673}   # c6i.4xlarge / us-west-2, charter 2026-08-24
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -24,7 +33,8 @@ while [ $# -gt 0 ]; do
         -t) TIMESCALE=$2; shift 2 ;;
         -j) PARALLEL=$2; shift 2 ;;
         --on-demand) MARKET=""; shift ;;
-        --max-hours) MAX_HOURS=$2; shift 2 ;;
+        --max-hours) MAX_HOURS=$2; MAX_HOURS_EXPLICIT=1; shift 2 ;;
+        --dry-run) DRYRUN=1; shift ;;
         *) echo "unknown arg $1" >&2; exit 1 ;;
     esac
 done
@@ -131,6 +141,42 @@ aws s3 cp /var/log/batch_run.log s3://$S3_BUCKET/$RUN_ID/batch_run.log
 shutdown -h now
 EOF
 )
+
+# ---- director RULING 80 (乙): the rehearsal exit.
+# This path had no --dry-run while spot_run.sh did, so it could not be walked
+# without spending money -- and that is the carrier the P4.1 launch defect rode
+# for forty-nine rounds (the `origin/<sha>` ref resolution died inside the
+# rendered user-data, where nothing local ever looked).  The user-data is
+# printed in full for exactly that reason: the bugs on this path live in it.
+# LIMITS: this buys REHEARSABILITY. It does not verify that the wave will
+# launch, that the refs resolve on the AMI's clone, or that the price below is
+# what the wave will actually cost -- only AWS and the bill answer those.
+if [ "$DRYRUN" -eq 1 ]; then
+    MARKET_LABEL=$([ -n "$MARKET" ] && echo "spot" || echo "on-demand")
+    WORST=$(awk "BEGIN{printf \"%.2f\", $OD_RATE_USD_H * $MAX_HOURS}")
+    echo "[dry-run] would launch 1 instance for $RUN_ID"
+    echo "          ami=$AMI_ID  type=$INSTANCE_TYPE  region=$AWS_REGION  market=$MARKET_LABEL"
+    echo "          games=$N_GAMES (fwd $HALF / rev $((N_GAMES - HALF)))  -t $TIMESCALE  -j $PARALLEL"
+    echo "          old='$OLD_REF'  new='$NEW_REF'"
+    echo "          S3: s3://$S3_BUCKET/$RUN_ID/"
+    echo
+    if [ "$MAX_HOURS_EXPLICIT" -eq 1 ]; then
+        echo "          watchdog: --max-hours $MAX_HOURS (EXPLICIT -- copy this value into the launch record, RULING 80 (甲1))"
+    else
+        echo "          watchdog: --max-hours $MAX_HOURS (DEFAULTED -- RULING 80 (甲1) forbids this on a real wave; pass it explicitly)"
+    fi
+    echo "          fence price (RULING 80 (甲2)): 1 x \$$OD_RATE_USD_H/h x ${MAX_HOURS}h = \$$WORST"
+    echo "          ^ watchdog CAP at the on-demand rate, NOT a forecast and NOT the \$1.10 spot constant"
+    echo "            (that constant is calibrated on 4 x 0.550h spot machine-hours; it does not price this path)."
+    echo "          ^ \$$OD_RATE_USD_H/h is a charter constant dated 2026-08-24; override with OD_RATE_USD_H=<rate>."
+    echo
+    echo "---- rendered user-data (this is what the instance would run) ----"
+    printf '%s\n' "$USER_DATA"
+    echo "---- end user-data ----"
+    echo
+    echo "(dry-run: nothing launched)"
+    exit 0
+fi
 
 ID=$(aws ec2 run-instances --region "$AWS_REGION" \
     --image-id "$AMI_ID" --instance-type "$INSTANCE_TYPE" \
