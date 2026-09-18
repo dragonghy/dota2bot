@@ -56,7 +56,19 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
    (今日实测发生率 **0/86**,但可达,且下一次大概率是总监自己)。收紧的两个候选锚**都被真语料否掉了**
    (`**下次触发**` 漏 `**⑨ 下次触发**:`;冒号锚漏 `**下次触发**(⭐ …):`),⛔ 不在本轮顺手改。
    📌 语料由**有 GitHub MCP 的那一轮**刷新(逐号 `issue_read` 点查,⛔ 不用 `list_*`:
-   RULING 55 实测列表读数可滞后 8.8min);超过 `--max-age-hours`(默认 48)那条腿
+   RULING 55 实测列表读数可滞后 8.8min)。
+   ⭐⭐ **刷之前先跑 `python3 tools/agent/carry_item_issue_state.py --refresh-set`
+   (只读、离线、<0.2s;RULING 76,2026-09-18T07:xxZ),⛔ 不许用眼睛从清单里抄号。**
+   它打两行:`REFRESH-SET`(审计腿会读的那个集合,与它**同源**于 `select_entries` +
+   `refs_in`,不是第二份手抄)与 `REFRESH-MISSING`(语料今天缺的那几个)。
+   **立案读数**:上一份语料的 `source` 逐字写着「即本轮『下次触发』清单点名的**全部 8 个号**」,
+   而同一份清单里本腿自己抽出的是 **9 个** —— 差的那个是 `GH #548`,于是它**连续五轮**读回
+   `not in corpus`,每一轮都被当成「下次补上」写进报告,而**没有任何一轮怀疑过刷新集本身**。
+   ⭐ 手抄的失效方向是**单侧**的:多抄一个号只是多一次免费点查;漏抄一个号让那一格**每一轮**
+   读不出来,且**漏掉的那个不会在任何读数里举手** —— 它只变成另一行 UNCERTIFIABLE,
+   而那一行按这条腿自己的措辞(RULING 67)读作「环境问题,下一轮自己会好」。
+   ⇒ 与 RULING 75 同型:**真命题满足了一个别的问题**,差额没人看见。
+   超过 `--max-age-hours`(默认 48)那条腿
    **自动降级为 UNCERTIFIABLE,不出 finding** —— 陈旧语料唯一能造的假是把**重开**的号
    说成 closed,而那一刀砍在一条活着的待办上。
    ⛔ **没有把它接进 `routine_selfcheck.sh`,这是决定不是遗漏**:清单是总监自己的那一节,
@@ -669,6 +681,82 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-18T07:15Z**:**RULING 76 —— 刷语料的那个集合由工具打,不再是第二份手抄;`--refresh-set` 落地,语料真刷了 9 个号。**
+  全文 `iterations/reports/director/20260918T071500Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP 点查 9 次(免费)。
+  ⭐⭐⭐ **取活依据仍然是 §1.5 那条腿在我眼前失效**,不是从 backlog 里挑的:本轮开工它读回
+  `9 GH ref(s)` 而其中 **2 个 `not in corpus`**(`#548` 第五次、`#806` 第一次),`VERDICT: UNCERTIFIABLE (exit 2)`。
+  ⛔ **不是语料陈旧**(17.3h < 48h 的门,腿没降级),**是语料里压根没有这两个号**。
+  **成因逐字写在语料自己的 `source` 行里**:上一版说「即本轮『下次触发』清单点名的**全部 8 个号**」,
+  而**同一份清单**里本腿自己的抽取器给出 **9 个** —— 刷语料那一轮**用眼睛数了一遍,数掉了一个**。
+  ⭐⭐ **失效方向是单侧的,这是立法的全部理由**:多抄一个号 = 多一次**免费**点查;
+  漏抄一个号 = 那一格**每一轮**读不出来,且**漏掉的那个不会在任何读数里举手** ——
+  它只变成另一行 `UNCERTIFIABLE`,而那一行按 RULING 67 的措辞读作「环境问题,下一轮自己会好」。
+  **它不会自己好:刷新集是手抄的,下一轮照抄同一份。** ⇒ 与 RULING 75 同型:
+  **一个真命题(点查了 8 个)满足了一个别的问题(清单点名了几个)**,差额五轮没人看见。
+  ⚖️ **RULING 76**:刷语料的第一步**必须**是 `python3 tools/agent/carry_item_issue_state.py --refresh-set`
+  (只读、离线、<0.2s),⛔ **不许用眼睛从清单里抄号**。它打 `REFRESH-SET` / `REFRESH-MISSING` 两行。
+  ⭐ **抽出 `select_entries()` 是承重部分不是重构**:两边各自敲一遍选取逻辑,
+  等于**把手抄的失效方式换个地方重演**;`refresh_set()` 与 `audit()` 从此结构上不可能分岔。
+  **落地四件**:`--refresh-set` + `select_entries()`(`--selfcheck` 仍 ALL PASS)、
+  `--help` epilog 订正(**旧文逐字教人 dump `list_issues(state=all)`,而语料文件自己的 `_refresh` 写的是点查**
+  ⇒ 同一个仓库两份配方,而**滞后的那份在 `--help` 里**;RULING 55)、
+  `tests/test_carry_item_issue_state.py` claim 12(**90 checks / 0 failures**,落地前 **68**;
+  ⭐ **HEAD 那份旧测试跑在新工具上 `68 checks, 0 failures`** ⇒ 没推翻任何既有断言)、
+  变异台 M20–M24(**24 CAUGHT / 0 SURVIVED / control_ok=1**,`RESTORE: YES`)。
+  ⭐ **12a 的写法本身是本条的应用**:refresh 集**不与测试里的字面量比**,而与**审计腿那一次输出**里
+  解析出的号比 —— 写字面量等于在测试里**放第三份手抄**。
+  ⚠️ **M23 第一版打 `ANCHOR MISS` 不是 `CAUGHT`,与上一轮 M17 逐字同因**:`perl -0pi` 按字节跑,
+  `\x{26d4}` 的花括号被读成字面量(`Unescaped left brace in regex is illegal here`)⇒ 锚一次没落。
+  ⭐ **没有那个台子自己的 ANCHOR MISS 守卫,它会印 `SURVIVED`,而我会去改一条根本没错的断言。**
+  改纯 ASCII 锚后 24/24;**同一个坑两轮内第二次**,「ASCII 锚」已写进该台子的注释。
+  **语料真刷了**:逐号 `issue_read(method=get)` 九个(⛔ 无 `list_*`),**九个全 `open`**
+  ⇒ 刷后腿读 `fetched 2026-09-18T07:08:58Z (0.0h old), 14 issues` / `OK` 九个 /
+  `every carried GH ref is open.` / **`VERDICT: OK (exit 0)`** —— **五轮来第一次 exit 0**,且**无 STALE-CARRY**。
+  ⛔ 「全 open」≠「都在推进」;推进由 owed / STALL 那几条腿管。
+  ⭐⭐ **第一次实战在同一轮里**:写完本轮清单后重跑,集合从 9 变 **10** —— 第 10 个是 `GH #290`,
+  我在 ⑨ 里当**论据**引用的号。抽取器**不区分论据与待办**(claim 7 既定口径,不是缺陷)⇒
+  ⛔ **处置是照集合点查,不是回头改清单措辞** —— 后者正是本条要废掉的「跟刷新集讲道理」:
+  手抄出错从来不是因为抄的人不认字,是因为**「哪个号该算」这件事发生在人脑里,不留读数**。
+  `#290` = `open`,已补(15 issues)⇒ **本轮自己写的清单,交出去之前就是 `exit 0`**;
+  上一轮交出去的那份不是,而写它的人不知道。
+  ⚠️ **从 #290 正文读到一条今天到期的时限,照登**:`dem21-expire-21d ⇒ W20–W22 约 2026-09-18 前取;
+  W23 约 09-19`。⛔ 总监本轮不去取(不发波、不替录像组花 S3 的钱),但**这条不属于任何人的清单** ⇒ 进下次触发。
+  **巡检**:batch-desk 09-18T06:10Z / replay-check 03:45Z / strategy 04:24Z / hero 05:34Z / director 04:09Z —— 五组全活,无掉棒。
+  **成本**:零 AWS;结转批测台 MTD **`$92.163`** > 刹车 `$90` ⇒ 零发波(**第四十七轮持有**);
+  ⚠️ `forecast $118.091` > `$100` 仍在 `DECISIONS_NEEDED.md`,**W38(09-20)带它**。
+  **自检**:⭐ **纪律 3 本轮没发**(第一条命令就走 `rc.sh` + 重定向到文件,无 `| tail`、无 `timeout`)。
+  ⚠️ 自检再次 > 600s 被移到后台,读数从 `RC_LOG` 取不是从终端取。`RC_EXIT=3`;
+  `legs run 15`;`FINDINGS: cadence queue-rulings owed-executions lua-coverage`;
+  `UNCERTIFIABLE: trunk-red(python)`。`trunk health (python)` = **`148 passed, 0 failed, 3 uncertifiable`**;
+  `fast Lua detectors` = **138 tagged file(s), 0 failures**(FAST SUBSET,自述边界照抄)。
+  ⚠️ **RULING 74 作用域本轮我又踩在边上**:python 腿跑时我在写 `tests/test_carry_item_issue_state.py`
+  ⇒ **`148 passed` 对那一格不可引用**,已在静止树单独复跑(90 / 68 两份读数见上)。
+  ⚠️ `UNCERTIFIABLE -- a python test did NOT run (could not read its input)` 又现身 = **GH #856** 的并发形状,⛔ 不读成 trunk 红。
+  ⚠️ `UNCOVERED SET GREW -- 2 file(s)`:`test_fieldsip_transfer_receiving_site.lua`(**连续第五轮**)
+  + `test_lion_w_fight_seed.lua`(`too_slow`,英雄组名下);⛔ 两条都不是本轮产物(本轮零 Lua diff)。
+  ⭐⭐ **GH #548 本轮拿到一个新读数**:`NOTE 5a0 cost: **138 file(s)** ... in **120.0s** (budget 120s)`,
+  立案(09-06)时是 **84 文件 / 120.1s**。⛔ 不据此断定「集合涨了 64%」是全部原因(GH #358:
+  墙钟分不开集合变大与容器变慢),但 #548 验收逐字要的就是跨轮 NOTE 读数,本轮这条是其中一份。
+  **下次触发**:①GH #856 剩 9 候选 ②GH #867 ③GH #240 余下 ④`carry_mark_prose_vs_list` 剩唯一一格 =
+  NO-HANDOFF 改不改挂 anchor(判据二选一见 `owed_executions.json`,**都要带读数**)
+  ⑤GH #843 剩 (乙) ⑥GH #859 ⑦GH #810 待裁 1 + (乙) ⑧GH #528
+  ⑨**新**:把本轮 `138 file(s) / 120.0s` 这条 NOTE 读数贴进 **GH #548**(需 GitHub MCP;
+  ⛔ 先 push 再发,GH #290)
+  ⑨b**新且限时**:`GH #290` §6 的 W20–W22 语料 **2026-09-18 到期**、W23 **09-19** ⇒
+  以 issue 评论交棒给**录像组 / 批测台**,说明该条验收线过期后要么等新波(刹车持有中 ⇒ 无)要么作废重设
+  ⑩GH #806 族:`test_lion_w_fight_seed.lua` 进 `too_slow` 未覆盖集
+  ⑪(a) 判定完结 ≥1,第一候选仍是给 `fieldsip` 单独定价的那个工作单元;(b) 已交付,每轮打 `STALL`
+  ⑫P4.2 narrat 1 / `$0.90` 重裁 / patch 缺口 P3 ⑬`path_contains_any` 那两行
+  ⑭`py_manifest_no_carry_baseline_port` ⑮**W38 邮件(09-20)**:15/16/18/19 条 + 17 条已撤回 +
+  RULING 70+71+72+73+74+75+**76** + ⚠️`forecast $118.091`
+  ⑯`lua_gate_manifest.json` 已陈旧(上一轮 lua 腿 **9 条**新测试超预算被 EXCLUDED),⛔ 重测先读 GH #810
+  ⑰⛔习惯:`lua5.1 tests/test_x.lua` = 假绿,唯一入口是 `tests/run_tests.lua <filter>`
+  ⑱⛔习惯:自检跑着时不要写它读的数据(`test_set.md`)、它自己(`routine_selfcheck.sh`),
+  **也不要写它正在跑的那个套件里的文件**(RULING 74;本轮又踩在边上)
+  ⑲⛔习惯:变异台的 perl 锚**只用 ASCII**(M17、M23 两轮内两发)
+  ⑳`stayfield2` 重新入集的机器行 = `owed_executions.json:stayfield2_readmit_when_fieldsip_moves`,按设计仍 OWED,**不要当成掉棒**
+
 - **2026-09-18T04:0xZ**:**RULING 75 —— 交棒清单的 segment 锚在「清单」上,不再锚在「最后一次提到清单」;`carry_mark_prose_vs_list` narrow 不结清。**
   全文 `iterations/reports/director/20260918T040942Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、不发 owner 邮件、无 promote / 无退集 / 无入集。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。

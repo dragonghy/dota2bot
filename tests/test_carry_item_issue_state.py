@@ -104,6 +104,7 @@ import datetime
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -584,6 +585,122 @@ def main():
               "claim 11: every real entry that mentions『下次触发』anchors a "
               "list (bold + same-line colon); anchorless: %s"
               % ", ".join(anchorless[:5]))
+
+        # --- claim 12 (RULING 76): the refresh set is not a second hand-copy --
+        # THE INCIDENT: the corpus is refreshed by hand -- a round with GitHub
+        # MCP reads the carry list with its eyes and point-queries what it saw.
+        # On 2026-09-17T13:44Z that round wrote, verbatim, "即本轮『下次触发』
+        # 清单点名的全部 8 个号", while this leg's own extractor pulls **9**
+        # out of the same list.  The one it missed was `GH #548`, which then
+        # read back `not in corpus` for FIVE consecutive rounds, each of them
+        # writing "next round, add it" into a report.
+        # ⭐ The failure is one-sided: an extra number costs one free query, a
+        # missed number makes that slot unreadable FOREVER -- it never raises a
+        # hand, it just becomes one more UNCERTIFIABLE line, and that line
+        # reads like an environment problem rather than a transcription slip.
+        rc, lines = mod.refresh_set(charter, corpus, 1, 48.0, now=NOW)
+        body = "\n".join(lines)
+        check(rc == 0,
+              "claim 12: a readable charter yields a refresh set (got %d)" % rc)
+
+        # 12a, THE load-bearing one: the set is compared against what the AUDIT
+        # leg actually read, not against a literal written here.  A literal
+        # would be a third transcription of the same list.
+        arc, alines = mod.audit(charter, corpus, 1, 48.0, now=NOW)
+        audited = set(re.findall(r"GH #(\d+)", "\n".join(
+            l for l in alines
+            if l.startswith(("OK", "UNCERTIFIABLE GH", "STALE-CARRY")))))
+        printed = set(re.findall(r"#(\d+)", 
+                                 [l for l in lines
+                                  if l.startswith("REFRESH-SET ")][0]))
+        check(printed == audited,
+              "claim 12a: the refresh set is exactly the set the audit leg "
+              "reads (refresh %s vs audit %s)"
+              % (sorted(printed), sorted(audited)))
+        check(printed,
+              "claim 12a: ...and it is not empty, so the equality above is not "
+              "two empty sets agreeing")
+
+        # 12b: the number the corpus lacks is called out by name.  This is the
+        # line whose absence cost #548 five rounds.
+        check("REFRESH-MISSING" in body and "#523" not in body.split(
+            "REFRESH-MISSING")[1].split("\n")[0],
+              "claim 12b: a ref the corpus HAS is not listed as missing")
+        thin_rc, thin_lines = mod.refresh_set(charter, thin, 1, 48.0, now=NOW)
+        thin_body = "\n".join(thin_lines)
+        missing_line = [l for l in thin_lines
+                        if l.startswith("REFRESH-MISSING")][0]
+        check("#523" in missing_line and "#538" in missing_line,
+              "claim 12b: every ref absent from the corpus is named on the "
+              "REFRESH-MISSING line (got %r)" % missing_line)
+        check("#810" not in missing_line,
+              "claim 12b: ...and a ref the corpus does have is not")
+        check("NOT IN CORPUS" in thin_body,
+              "claim 12b: the per-ref line says which ones need fetching")
+
+        # 12c: an unusable corpus does NOT silence the set.  Refreshing is
+        # exactly what you do when the corpus is missing or stale, so this mode
+        # must keep answering where the audit leg deliberately goes quiet.
+        for label, path in (("missing", missing), ("unparseable", broken),
+                            ("stale", stale)):
+            rc2, lines2 = mod.refresh_set(charter, path, 1, 48.0, now=NOW)
+            body2 = "\n".join(lines2)
+            check(rc2 == 0 and "REFRESH-SET " in body2,
+                  "claim 12c: a %s corpus still yields the set to fetch "
+                  "(got %d)" % (label, rc2))
+            miss2 = [l for l in lines2 if l.startswith("REFRESH-MISSING")][0]
+            check(all(("#" + n) in miss2 for n in ("523", "810", "538", "528")),
+                  "claim 12c: ...and EVERY carried ref is to-fetch, because a "
+                  "%s corpus confirms nothing -- a refresh set that quietly "
+                  "shrinks to nothing here is the one that never repairs the "
+                  "corpus" % label)
+
+        # 12d: anti-empty-match, same rule as claim 5 -- "nothing to refresh"
+        # and "the extractor matched nothing" must not print the same.
+        rc3, lines3 = mod.refresh_set(no_refs, corpus, 1, 48.0, now=NOW)
+        check(rc3 == 2,
+              "claim 12d: a ref-less list exits 2, not a clean 0 (got %d)" % rc3)
+        check("anti-empty-match" in "\n".join(lines3),
+              "claim 12d: ...and says why")
+
+        # 12e: scope follows claim 6 -- the older list is reached only on
+        # purpose, and then it is in the set too.
+        rc4, lines4 = mod.refresh_set(charter, corpus, 2, 48.0, now=NOW)
+        wide = [l for l in lines4 if l.startswith("REFRESH-SET ")][0]
+        check("#902" in wide,
+              "claim 12e: --entries 2 puts the older list's refs in the set")
+        check("#902" not in [l for l in lines
+                             if l.startswith("REFRESH-SET ")][0],
+              "claim 12e: ...and the default scan does not")
+
+        # 12f: the recipe printed is the one RULING 55 requires.  The tool's
+        # own epilog told refreshers to dump `list_issues(state=all)` for weeks
+        # while the corpus file's `_refresh` note said point-query -- two
+        # recipes in one repo, and the lagging one was the one in --help.
+        check("issue_read" in body and "list_issues" in body,
+              "claim 12f: the printed recipe names the method to use and the "
+              "one not to")
+        check("RULING 55" in body,
+              "claim 12f: ...citing why, so it is not folklore")
+
+        live12 = os.path.join(root, "live12.json")
+        blob12 = dict(CORPUS)
+        blob12["fetched_at"] = datetime.datetime.now(
+            datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        write_json(live12, blob12)
+        proc = subprocess.run(
+            [sys.executable, TOOL, "--charter", charter, "--issues", live12,
+             "--refresh-set"], capture_output=True, text=True)
+        check(proc.returncode == 0 and "REFRESH-SET " in proc.stdout,
+              "claim 12: CLI --refresh-set exits 0 and prints the set (got %d)"
+              % proc.returncode)
+        check("VERDICT  : OK (exit 0)" in proc.stdout,
+              "claim 12: CLI --refresh-set prints the verdict line")
+        help_text = subprocess.run([sys.executable, TOOL, "--help"],
+                                   capture_output=True, text=True).stdout
+        check("list_issues" in help_text and "refresh-set" in help_text,
+              "claim 12f: --help carries the corrected recipe, since that is "
+              "where a refreshing round actually looks")
 
         # --- CLI wiring: exit code and verdict line survive main() ----------
         # ⚠️ `main()` reads the REAL clock, so the fixture corpus above (dated

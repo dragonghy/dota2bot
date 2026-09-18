@@ -1,9 +1,9 @@
 {
  "_doc": "issue-state 快照,给 tools/agent/carry_item_issue_state.py 当语料。⛔ 它不是 GitHub 的镜像,也不打算是:里面只有『下次触发』清单点过名的那些号。语料里没有的号,那条腿读作 UNCERTIFIABLE,永不读作 open(RULING 55)。",
- "_refresh": "有 GitHub MCP 的那一轮刷新:对清单里每个号 issue_read(method=get) 点查,把 state / closed_at 原样抄进来,并把 fetched_at 写成本轮 UTC。⭐ 点查优先于 list_issues:RULING 55 实测 list/get_comments 可滞后到 8.8min,而点查不会。",
+ "_refresh": "有 GitHub MCP 的那一轮刷新。⭐⭐ 第一步**必须**是 `python3 tools/agent/carry_item_issue_state.py --refresh-set`(只读,<0.2s):它打出的 `REFRESH-SET` 就是审计腿会读的那个集合(同源于 select_entries + refs_in,RULING 76),`REFRESH-MISSING` 是语料今天缺的那几个。⛔ 不要用眼睛从清单里抄号 —— 那正是 `#548` 丢掉五轮的方式。第二步:对 REFRESH-SET 里**每一个**号 issue_read(method=get) 点查,把 state / closed_at 原样抄进来,并把 fetched_at 写成本轮 UTC。⭐ 点查优先于 list_issues:RULING 55 实测列表读数可滞后 8.8min,而点查不会。⛔ 不拿 issue_write 的返回当读数(那是自己说的话,不是 GitHub 说的话);自己关的号要关后再点查一次。",
  "_direction": "滞后的方向是安全的:刚关的号还读作 open ⇒ 那条腿这一轮少说一句话;刚开的号不在语料里 ⇒ UNCERTIFIABLE。⛔ 唯一危险方向(重开的号被说成 closed)由 --max-age-hours 挡住。",
- "fetched_at": "2026-09-17T13:44:00Z",
- "source": "mcp__github__issue_read(method=get) dragonghy/dota2bot,逐号点查(2026-09-17T13:4x–13:5xZ 总监 RULING 70 轮重读 865/856/867/240/843/859/810/528 —— 即本轮『下次触发』清单点名的全部 8 个号,**无一条是 carried**)。⭐ 点查优先于 list_issues:RULING 55 实测 list/get_comments 可滞后到 8.8min,而点查不会。⚠️ #865 的 `closed` 是本轮总监自己 issue_write(update) 关的,关后**又点查了一次**才抄进来 —— ⛔ 不拿 issue_write 的返回当读数(那是我自己说的话,不是 GitHub 说的话)。⚠️ 旧号 466/523/538(closed)与 839(**open**)本轮**未重读**,按 `_direction` 保留。⛔ 措辞更正照登:本行第一版写的是「旧号……**它们已是 closed**」,而 **839 是 open** ——四个号里错一个,而那一句正是用来论证保留它们为什么安全的。两种情形的安全性理由**不同**,不许合写:closed 行的危险方向(重开被说成 closed)由 fetched_at + --max-age-hours 挡;open 行的滞后方向是「刚关的号仍读作 open」⇒ 那条腿这一轮**少说一句话**,本来就安全。 ⚠️ `fetched_at` 取的是本轮**最早**那一次点查的时刻(13:44Z),不是最后一次 ——⛔ 保守侧:写得太新会**凭空买到**读数没挣来的新鲜度,写得太旧只让那条腿少说一句话。📌 第一版写成 13:50:00Z,被工具当场判 `fetched_at` is in the future (-0.0h) ⇒ **整份语料不可用**,8 个号全判 UNCERTIFIABLE —— 比刷新之前还差。那条守卫是对的:**未来的时间戳不是「很新」,是「读不懂」**。",
+ "fetched_at": "2026-09-18T07:14:48Z",
+ "source": "mcp__github__issue_read(method=get) dragonghy/dota2bot,逐号点查(2026-09-18T07:0x-07:1xZ 总监 RULING 76 轮)。⭐⭐ 本轮点查的集合**不是手抄的**,是 `carry_item_issue_state.py --refresh-set` 打出来的 —— 逐字 `REFRESH-SET #856 #867 #240 #843 #859 #810 #548 #528 #806`(9 个),`REFRESH-MISSING #548 #806`。九个全部重读,九个全部 `open`。⭐⭐ **RULING 76 的第一次实战就在同一轮里再抓一个**:写完本轮『下次触发』后重跑,集合变成 **10 个** —— 第 10 个是 `GH #290`,它是我在清单 ⑨ 里当**论据**引用的(「先 push 再发,GH #290」),而抽取器**不区分论据与待办**(这是 claim 7 的既定口径,不是缺陷)。⛔ 处置是**照集合点查**,不是回头改清单措辞 —— 那正是本条要废掉的「跟刷新集讲道理」。`#290` 点查结果 `open`,已补进语料。⛔ 上一版这一行写的是「即本轮『下次触发』清单点名的全部 8 个号」,而同一份清单里本腿自己抽出的是 9 个:差的那个是 `GH #548`,于是它连续五轮读回 `not in corpus`,每一轮都把它当「下次补上」写进报告。⭐ 手抄的失效方向是单侧的:多抄一个号只是多一次免费点查,漏抄一个号让那一格**每一轮**读不出来,而漏掉的那个不会在任何读数里举手 —— 它只会变成另一行 UNCERTIFIABLE,而那一行读起来像环境问题。⭐ 点查优先于 list_issues:RULING 55 实测列表读数可滞后 8.8min,而点查不会。⚠️ 旧号 466/523/538/865(closed)与 839(**open**)本轮**未重读**,按 `_direction` 保留 —— 它们都不在本轮的 REFRESH-SET 里。两种情形的安全性理由不同,不许合写:closed 行的危险方向(重开被说成 closed)由 fetched_at + --max-age-hours 挡;open 行的滞后方向是「刚关的号仍读作 open」⇒ 那条腿这一轮少说一句话,本来就安全。",
  "issues": {
   "523": {
    "state": "closed",
@@ -64,6 +64,21 @@
    "state": "open",
    "closed_at": null,
    "title": "[harness] 「不会长出第七份 open-coded walk」的棘轮,在第八份活着时是绿的"
+  },
+  "548": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[harness] test_selfcheck_lua_leg.py 每轮都 UNCERTIFIABLE —— 84 文件 / 120.1s 骑在 120s 预算刀口上"
+  },
+  "806": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[bug] test_lion_considere_earlyreturn_domain.lua 在 trunk 上 6 红,不在 known_red 也不在 lua 闸 manifest 里"
+  },
+  "290": {
+   "state": "open",
+   "closed_at": null,
+   "title": "[bug] GH #286 已 closed 但修复从未落地:声称的五件产物在 origin/main 上一件都没有"
   }
  }
 }

@@ -243,6 +243,46 @@ mutate "M18 anchor loses the bold condition (colon alone)" \
 mutate "M19 the prose-only fallback prints nothing" \
     's/        if kind == "prose-fallback":/        if False:/'
 
+# --- RULING 76 (claim 12): the refresh set must not become a second hand-copy -
+# ⚠ ASCII anchors only.  `perl -0pi` matches BYTES, so a CJK anchor written as
+# \N{U+...} never lands and the stand would print ANCHOR MISS (M17's lesson,
+# and the reason that guard exists at all).
+
+# M20 (MISS) -- the divergence itself: the refresh set stops being what the
+# audit leg reads.  This is the incident in one line -- the refreshing round
+# fetches a SUBSET, and every number it drops reads back `not in corpus`
+# forever while looking like an environment problem.
+mutate "M20 refresh set takes only the first ref of each entry" \
+    's/        for n in refs_in\(seg\):\n            if n not in from_entry:/        for n in refs_in(seg)[:1]:\n            if n not in from_entry:/'
+
+# M21 (MISS) -- the to-fetch list stops being populated.  REFRESH-SET still
+# prints, so the mode looks like it works; what is lost is the one line that
+# says WHICH numbers the corpus is missing -- i.e. exactly the signal whose
+# absence let `#548` sit unfetched for five rounds.
+mutate "M21 nothing is ever reported as missing from the corpus" \
+    's/        if missing_here:\n            missing.append\(n\)/        if False:\n            missing.append(n)/'
+
+# M22 (MISS) -- anti-empty-match, same rule as claim 5: "nothing to refresh"
+# and "the extractor matched nothing" print the same clean 0.
+mutate "M22 an empty refresh set exits 0" \
+    's/                   "\(anti-empty-match\)"\)\n        return 2, out/                   "(anti-empty-match)")\n        return 0, out/'
+
+# M23 (MISS) -- the printed recipe drops the method.  The tool then repeats the
+# old epilog's mistake: a refreshing round is told nothing about point-query vs
+# list_issues, and RULING 55 says the list read lags by minutes.
+# ⚠ The first version of M23 anchored on the CJK marker written as \x{26d4} and
+# printed ANCHOR MISS -- perl read the brace as a literal and never matched.
+# The anchor below is pure ASCII and lands on the FIRST occurrence, which is the
+# printed recipe (line ~452); the epilog's copy sits later in the file.
+mutate "M23 the printed recipe stops naming issue_read" \
+    's/issue_read\(method=get\)/issue_seen(method=get)/'
+
+# M24 (MISS) -- an unusable corpus makes everything read as already-known, so
+# the set to fetch collapses to empty exactly when the corpus most needs
+# repair.  The REFRESH-SET line still prints, which is what makes it quiet.
+mutate "M24 an unusable corpus marks every ref as not-missing" \
+    's/            state, missing_here = "corpus unusable", True/            state, missing_here = "corpus unusable", False/'
+
 restore
 if git diff --quiet -- "$SRC"; then
     echo "RESTORE         : YES -- $SRC is byte-identical to the index"

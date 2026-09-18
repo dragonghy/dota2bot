@@ -362,20 +362,16 @@ def state_of(issues, number):
     return st, closed_at
 
 
-def audit(charter_path, snapshot_path, entries_n, max_age_hours, now=None):
-    """-> (exit_code, lines)."""
-    now = now or datetime.datetime.now(datetime.timezone.utc)
-    out = []
-    try:
-        with open(charter_path, encoding="utf-8") as fh:
-            charter = fh.read()
-    except OSError as exc:
-        return 2, ["UNCERTIFIABLE -- charter unreadable: %s" % exc]
+def select_entries(charter_text, entries_n):
+    """-> (entries, scanned, handoff_gap).  一次读的「entry 选取」那一半。
 
-    entries = status_entries(charter)
+    ⭐ 抽出来是为了让 `audit()` 与 `refresh_set()` **结构上不可能分岔**:
+    刷语料那一轮要点查的号,必须就是审计腿会读的号。两边各自敲一遍选取
+    逻辑,等于把手抄语料的失效方式换个地方重演一遍。
+    """
+    entries = status_entries(charter_text)
     if not entries:
-        return 2, ["UNCERTIFIABLE -- no『%s』entries parsed out of %s"
-                   % (STATUS_HEADING, charter_path)]
+        return [], [], None
     scanned = entries[:max(1, entries_n)]
 
     # RULING 67: 最新 entry 没写『下次触发』⇒ 棒掉了(finding),并回落到最近一份
@@ -390,6 +386,90 @@ def audit(charter_path, snapshot_path, entries_n, max_age_hours, now=None):
                 scanned = list(scanned) + [entries[idx]]
                 break
         handoff_gap = (entries[0][0], fallback)
+    return entries, scanned, handoff_gap
+
+
+def refresh_set(charter_path, snapshot_path, entries_n, max_age_hours, now=None):
+    """-> (exit_code, lines).  刷语料的那一轮要点查哪些号,机器可读地列出来。
+
+    ⛔ 立这个模式的现场(2026-09-18T07:xxZ):语料的刷新集一直是**手抄**的 ——
+    快照 `source` 里逐字写着「即本轮『下次触发』清单点名的全部 8 个号」,
+    而同一份清单里本腿自己抽出的是 **9 个**。差的那一个是 `GH #548`,
+    于是它连续五轮读回 `not in corpus`,而每一轮都把它当成「下次补上」写进报告。
+    ⭐ 手抄的失效方向是单侧的:多抄一个号只是多一次点查(免费),
+    漏抄一个号则让那一格**每一轮**读不出来 —— 因为漏的那一个不会在任何
+    读数里举手,它只会变成另一行 UNCERTIFIABLE,而那一行读起来像环境问题。
+    """
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    out = []
+    try:
+        with open(charter_path, encoding="utf-8") as fh:
+            charter = fh.read()
+    except OSError as exc:
+        return 2, ["UNCERTIFIABLE -- charter unreadable: %s" % exc]
+
+    entries, scanned, _handoff = select_entries(charter, entries_n)
+    if not entries:
+        return 2, ["UNCERTIFIABLE -- no『%s』entries parsed out of %s"
+                   % (STATUS_HEADING, charter_path)]
+
+    issues, corpus_note = load_snapshot(snapshot_path, now, max_age_hours)
+    out.append("corpus   : %s" % corpus_note)
+
+    wanted, from_entry = [], {}
+    for ts, text in scanned:
+        seg = carry_segment(text)
+        if seg is None:
+            continue
+        for n in refs_in(seg):
+            if n not in from_entry:
+                from_entry[n] = ts
+                wanted.append(n)
+
+    if not wanted:
+        out.append("UNCERTIFIABLE -- zero GH refs extracted; an empty refresh set and "
+                   "a genuinely ref-free list print the same, so this is exit 2 "
+                   "(anti-empty-match)")
+        return 2, out
+
+    missing = []
+    for n in wanted:
+        if issues is None:
+            state, missing_here = "corpus unusable", True
+        else:
+            st, _closed = state_of(issues, n)
+            state, missing_here = ("NOT IN CORPUS", True) if st is None else (
+                "in corpus as `%s`" % st, False)
+        if missing_here:
+            missing.append(n)
+        out.append("REFRESH  GH #%-5s %-22s [entry %s]" % (n, state, from_entry[n]))
+
+    out.append("")
+    out.append("REFRESH-SET %s" % " ".join("#%s" % n for n in wanted))
+    out.append("REFRESH-MISSING %s"
+               % (" ".join("#%s" % n for n in missing) or "(none)"))
+    out.append("⛔ 点查,不走 list_issues(RULING 55:实测列表读数可滞后 8.8min):"
+               "对上面**每一个**号 issue_read(method=get),把 state / closed_at 原样抄进 "
+               "%s,并把 fetched_at 写成本轮 UTC。" % snapshot_path)
+    out.append("⭐ 这个集合与审计腿读的集合同源(select_entries + refs_in),"
+               "不是另一份手抄。")
+    return 0, out
+
+
+def audit(charter_path, snapshot_path, entries_n, max_age_hours, now=None):
+    """-> (exit_code, lines)."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    out = []
+    try:
+        with open(charter_path, encoding="utf-8") as fh:
+            charter = fh.read()
+    except OSError as exc:
+        return 2, ["UNCERTIFIABLE -- charter unreadable: %s" % exc]
+
+    entries, scanned, handoff_gap = select_entries(charter, entries_n)
+    if not entries:
+        return 2, ["UNCERTIFIABLE -- no『%s』entries parsed out of %s"
+                   % (STATUS_HEADING, charter_path)]
 
     issues, corpus_note = load_snapshot(snapshot_path, now, max_age_hours)
     out.append("corpus   : %s" % corpus_note)
@@ -581,8 +661,10 @@ def selfcheck():
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description=__doc__.split("\n")[0],
-        epilog="refresh recipe (a round that HAS GitHub MCP): dump "
-               "list_issues(state=all) into %s as "
+        epilog="refresh recipe (a round that HAS GitHub MCP): run "
+               "--refresh-set first, then issue_read(method=get) EACH "
+               "number it prints -- never list_issues (RULING 55: list "
+               "reads lag by minutes), never a hand-copied subset -- into %s as "
                '{"fetched_at": "<UTC now>", "issues": {"<n>": {"state": ..., '
                '"closed_at": ...}}}' % DEFAULT_SNAPSHOT)
     ap.add_argument("--charter", default=DEFAULT_CHARTER)
@@ -592,11 +674,23 @@ def main(argv=None):
                     help="how many newest『当前状态』entries to scan (default 1)")
     ap.add_argument("--max-age-hours", type=float, default=48.0,
                     help="older corpus withholds findings (default 48)")
+    ap.add_argument("--refresh-set", action="store_true",
+                    help="print the exact issue numbers a corpus refresh must "
+                         "point-query (same source as the audit leg), then exit")
     ap.add_argument("--selfcheck", action="store_true")
     args = ap.parse_args(argv)
 
     if args.selfcheck:
         return selfcheck()
+
+    if args.refresh_set:
+        rc, lines = refresh_set(args.charter, args.issues, args.entries,
+                                args.max_age_hours)
+        for line in lines:
+            print(line)
+        print("VERDICT  : %s (exit %d)"
+              % ({0: "OK", 2: "UNCERTIFIABLE"}[rc], rc))
+        return rc
 
     rc, lines = audit(args.charter, args.issues, args.entries, args.max_age_hours)
     for line in lines:
