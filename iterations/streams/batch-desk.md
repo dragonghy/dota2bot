@@ -13282,3 +13282,91 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   本轮已照上一轮交棒执行「先 `grep -n "^- 2026-" | tail -N` 定位、再按行区间取」,⛔ 未用固定行窗撞长条目,
   **这正是比上一轮低 `0.52M` 的来源**;剩下的量是章程本身(2.6 MB)与 185 个 verdict 的读取,
   ⭐ 后者 token 成本很低(键普查在 python 里聚合,**⛔ 没有把 185 个 JSON 贴进上下文**)。
+- 2026-09-18T06:10:54Z:**刹车第四十七轮持有;零发波、零收割欠、零泄漏。⭐⭐ 上一轮把复查面从 `validation/` 赶到「报告里」却没给数,本轮量出来了:界后引过 winrate 数字的报告 59 份,其中不带 `DEGENERATE` 横幅的只有 25 份,且窗口只有 2026-08-26→08-31 六天 —— 上界正是 `DEGENERATE` 第一次出现的那一天。⭐ 另一件:管道坑连续八轮的同形本轮断了。**
+  **(一) 开工自检 ⭐ 本轮第一条命令就跑通**:取法是 `bash tools/agent/routine_selfcheck.sh > <文件> 2>&1`
+  —— **既不是管道也不在 `timeout` 下** ⇒ 两道自卫**都没触发**,首行逐字
+  `push gate armed (core.hooksPath=.githooks); \`git push\` now runs the rule 6 static gate`。
+  ⚠️ **不是工具变了,是调用姿势变了**;**取法钉在这里给下一轮直接抄**:`> 文件 2>&1`,⛔ 不加 `timeout`。
+  已跑完腿:`unlanded-commit scan` = `OK: no unlanded work in the certifiable window.`,⚠️ 自述边界照抄
+  `shallow clone: YES` / `REFUSED refs: 1302 of 1325` / `certifiable refs: 23` ⇒ **「窗口内没有」不是「没有」**;
+  `LUA GATE COVERAGE disk 512 | push gate 347 | leg 138 | known_red 5`、`UNCOVERED 114 of 512 (22%)`、
+  **`UNCOVERED SET GREW -- 2 file(s)`** → `test_fieldsip_transfer_receiving_site.lua`(**连续第四轮同一个**,卡 GH #783)
+  + `test_lion_w_fight_seed.lua`(`too_slow`,与上一轮同两个);⭐ `NOW COVERED test_fieldsip_atom_pricing.lua`;
+  `PY GATE COVERAGE disk 151 | push gate 131 | leg 151`、`UNCOVERED 0 of 151 (0%)`、`out-of-gate rows with a written reader: 17 of 17`。
+  ⛔ 本轮 `bots`/`game`/`tests`/`tools` **一行未改** ⇒ 两条 `NEW UNCOVERED` 无一条由本轮引入,⛔ 不代修。
+  **(二) 预算**:闸 (iii) `FENCE_EXIT=3`(**连续第四十七轮是闸拒绝,不是本台的处置**),逐字
+  `actual (MTD) : $92.163   <- re-read this run, never cached` / `pending waves : $0.000` / `planned : $0.000` /
+  `projected total : $92.163` / `fence : $100.00` / `brake : $90.00` /
+  `operative ceiling: $90.00 = min(fence, brake)` / `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence.`;
+  RULING 5/6/7 三行照抄(`17 region(s) read ... COMPLETE` / `records after 2026-09-17T08:41:13Z ... clock from budget snapshot` /
+  `CERTIFIED (0 accruing instances account-wide, read this run)`),⭐ 钟没有降级,⛔ 未传任何 `--no-*`。
+  **⭐⭐ 快照连续第四轮冻结**:MTD `$92.163` / 戳 `2026-09-17T19:59:13Z`,与前三轮(21:28Z、00:24Z、03:13Z)
+  **两量逐位相同** ⇒ **零新支出测量**(⛔ 不等于「没花钱」)⇒ **一个速率点都不贡献**,⛔ 不动 `$0.40–0.92/天` 带、
+  月末兜底日 `2026-09-27T00:00Z` 原样结转。**headroom 对 `$90` = `$-2.163`**(四轮逐位相同,⛔ 不得读成趋势)。
+  ⚠️ 脚本自打一行照抄:`stamp unknown (fresh container) -- alpha and beta are both zero -- a frozen stamp over
+  an idle account opens no blind spot`。GH #801 四行整块照抄(**默认值**跑,⛔ 未用 `COST_CONFIRM_AT=999` 自救):
+  `>= $35, but headroom to the $90.00 brake is $-2.163` / `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).` /
+  `Nothing can launch at this MTD, so confirming it buys nothing.` / `Resumes by itself as soon as headroom >= $1.10.`
+  **SKIP 不是 pass**;`alpha = 0` / `beta = 0` 本轮实读;`forecast 118.091` 与戳一同冻结,⛔ 不解释不采信;
+  `crossing registry: 0 record(s) ... none in force` + `1 retired record(s)`;`budget filters : none`。
+  ⚠️ **欠条 `gh801_confirm_headroom_first_live_read` 登记为仍 OWED,并附一个交总监的一句话自问**:
+  章程说结清判据钉在「以 `Resumes by ...` 开头的那一行,只有用默认值真跑一次才打得出来」,
+  而**那一行本轮(及至少前三轮)都用默认值打出来了**,自检欠条腿却仍读 `UNCERTIFIABLE`。
+  ⛔ **本台不自行结清** —— 「打出来了」≠「欠条该结」,用前者代替后者正是证据纪律 4 禁的那一手
+  ⇒ 要么 `confirm` 是承重词(判据其实是「headroom ≥ $1.10 那轮真付了那 `$0.01`」,**刹车解除前无法结清**),
+  要么判据已满足而账本腿没跟上(那是账本的洞)。**两种都零 AWS 支出。**
+  **(三) 收割零欠**:`validation/` **592 对象**、`soak/` **72,079 键**(均与前三轮逐位相同);
+  最新对象按 RULING 47 取法仍是 `lf_rescue+27ids-d177b87026dd_20260912_1018_run.log`(`2026-09-12 10:18:26`)= **W69**。
+  在跑波次:**无**。`recover_verdict.py` 未跑(**没得收,不是漏收**)。
+  **(四) 交棒 ② —— GH #184 零表态**:现读 `state: open` / **`comments: 3`** / `updated_at 2026-09-18T00:36:03Z`
+  ⇒ 与上一轮**逐位相同** ⇒ **总监/owner 连续两轮零表态**。⚠️ #184 已 open **24 天**,验收是**零 AWS 成本**的。
+  按交棒 ② 严格执行:**只登记戳/评论数,⛔ 不重复发表同一份证据表**;连带交棒 ③(~4,700 GET 加厚)
+  **以总监裁定为前提 ⇒ ⛔ 本轮未做**。
+  **(五) 交棒 ④(b) —— 缺陷现读:没修。** `analyze_log.py` 的 `natural_end = fort is not None`、
+  `winner_by = "engine_natural"` **逐字未动**;`referee_surrender` 在 `tools/batch_test/soak/` 下
+  **仍 0 处**(排除 `__pycache__`)⇒ **#184 §4 建议修法仍未落地** ⇒ 刹车解除后第一波的 `winrate` 仍是裁判伪影。
+  **(六) ⭐⭐ 本轮真正新的一个数:复查面(报告侧)= 59 份引用,其中 25 份无横幅、窗口 6 天。**
+  取法**全量不是抽样**:`iterations/reports/*/YYYYMMDDTHHMMSSZ.md` 界后窗口(`2026-08-26` 起)共 **920** 份,
+  收紧判据(数字**跟在** `winrate` 后 40 字符内)⇒ 引过 winrate 数字 **62** 份,其中 `< 2026-09-17`
+  (缺陷尚未被发现)**59** 份 ⇒ 带 `DEGENERATE` 横幅 **34**、⭐ **不带任何横幅 25**;`>= 09-17` 的 3 份是缺陷已知后的。
+  ⭐ **判别子在数据自己身上**:那 25 份的日期区间是 **`20260826` → `20260831`**,而全库**最早**出现
+  `DEGENERATE` 的报告是 **`director/20260831T095500Z.md`** —— **两个边界同一天** ⇒ 不是散落的遗漏,
+  是**一个连续 6 天的前置窗口**,上界正是 #352 那道闸落地那天。分布 `batch-desk 24` + `director 1`,**其余三流 0**。
+  **两半都要写**:**(甲)** 总监第 2 问现在有**有界答案** = 存档侧 `0/185`(上一轮)+ 报告侧 **25 份 / 6 天**(本轮),
+  ⭐ 且与上一轮 §五 互相印证 —— `DEGENERATE` 闸挂在 `"a wave was counted"` 上、界后 272/272 全 dire
+  ⇒ `share 0.0000 < 0.20` ⇒ **必然触发**,本轮量出它**实际拦住了 34/59**(**闸归因错、拦截对**,上一轮已立);
+  **(乙)** ⛔ **不是「所以没事」**:那 25 份里的数字当时**没有任何东西举手**,且正处在界后纪元最早 6 天
+  (W10 之后、#352 之前),恰是 #184 §3「界后所有 winrate 读数」那段的**最前端**。
+  **诚实边界六条**:① **正则启发式非语义解析**,宽判据给 `69/66/25`、收紧给 `62/59/25`,**两个读数都登记**
+  (铁律 4(iii));宽判据假阳已实见(`0.22 xpm −19.09 … winrate` 这类数字属**邻近**指标);
+  ② **「报告里有 `DEGENERATE`」是报告级读数不是逐数字读数** —— ⛔ 未核对横幅与那个具体数字的相邻性,
+  **25 是「完全无横幅」的形状,34 ≠「34 个数字被覆盖」**;③ ⛔ 未核对那 25 份里的数字是不是界后语料
+  ⇒ **25 是复查面的上界,不是「25 个错数」**;④ ⛔ 不点名任何 promote/(b) 判定引过它们、⛔ 不重开已关档裁定;
+  ⑤ 窗口起点 `2026-08-26` 取自既有界后纪元定义,⛔ 未重新论证;⑥ `malformed report names 7` 那几份不在 920 里,⛔ 未追。
+  **取法可复现(零 AWS,纯本地)**:全量正则 `winrate[^\n]{0,40}?([01]\.\d{2,4})` + `DEGENERATE` 存在性,按文件名日期分层。
+  **(七) 局数**:本月无新波次;本轮**未读 `analysis.json`、未读 `verdict.json`**(⛔ 0 局)。
+  **(八) 成本(铁律 1 三段式)**:**零 EC2 / 零 CE / S3 读取 `~79` 个对象(出网未计价)** ——
+  `s3 ls --recursive` 2 次(592 + 72,079 键 ≈ **79 LIST**,**不下载任何对象**)。**本轮新增 EC2 计费 `$0.00`**;
+  `check_costs.sh` 本轮**未买 CE**(GH #801 SKIP)。⭐ 本轮是界后最便宜的一轮之一 —— (六) 那个新测量
+  **一个 S3 对象都没碰**(语料在仓库里)。
+  **(九) 泄漏五条独立路径全零(⛔ 不合并成一句)**:① `check_costs.sh` 自带区块**空**(`COSTS_EXIT=0`);
+  ② `describe-instances` 五态不加 tag 过滤 ⇒ `INST_EXIT=0` / **`LINES=0`**;
+  ③ `describe-spot-instance-requests State==open||active` ⇒ `SIR_EXIT=0` / **`SIR_LINES=0`**;
+  ④ 闸 (iii) 账户级 **17 区 COMPLETE** + `CERTIFIED (0 accruing instances account-wide)`;
+  ⑤ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏),快照无新增。
+  **(十) 发表纪律:⛔ 本轮零发表**(零 issue、零评论)。⚠️ 自问过该不该把 (六) 发到 #184:**否** ——
+  上一轮那条评论发出至今 **5.6 小时、仍无人读**(`comments` 未动),此刻追第二条长评论**增加的是噪声不是信息**,
+  而这个数**不会过期**(语料在仓库里)⇒ **棒交下一轮**:总监一旦表态,**连同 `0/185` 与本轮 `25 份/6 天` 一起答**。
+  ⇒ 本轮**未跑** `claim_precheck.sh`(⛔ 无草稿可检)—— **⛔ 这是「没有可发表的东西」,不是「检查通过」。**
+  **(十一) 通知判据**:09-16T18:15Z 收窄的四条逐条现读 —— MTD `$92.163` < `$100` ✗;`alpha = 0` ✗;
+  headroom `$-2.163` < `$1.10` ✗;今天 `2026-09-18` < `2026-09-27` ✗ ⇒ **四条一条未中 ⇒ ⛔ 本轮不推送**。
+  ⭐ 与上一轮同样严格:(六) 虽是新测量,但**不改任何阈值、不需要 owner 做任何决定**(刹车僵局的球在
+  **GH #721** 的 owner 侧,已推送过两次)⇒ **第 47 次「刹车仍持有」对 owner 是零信息**;
+  ⚠️ 09-18T00:24Z 那轮自报的偏离、及它交总监的「要不要加第 ⑤ 条(量具级缺陷)」**仍零表态**
+  ⇒ 判据仍是那四条,⛔ 本台不自行改判据。
+  **(十二) 没做的事**:⛔ 未发波(闸 exit 3);⛔ `bots`/`game`/`tests`/`tools` 一行未改
+  (⚠️ **又想过**收紧 `analyze_log.py` 的 `natural_end`,**再次否掉** —— 判据与拦截点是总监的事,先例 GH #33,
+  且 #184 §4 已给两版待选,本台**不代选**);⛔ 未做交棒 ③ 的加厚;⛔ 未重开任何已关档裁定;
+  ⛔ 未点名受影响的 (b) 判定;⛔ 未改 `state.json`/`test_set.md`/`OWNER_PRIORITIES.md`/`queue.json`;
+  ⛔ 未自行结清 GH #801 欠条;⛔ 闸 (i)/(ii)/(iv) **未跑**(发波轮的闸;(iii) 已 exit 3)—— **未跑不记成通过**。
+  详见 `iterations/reports/batch-desk/20260918T061054Z.md`。
