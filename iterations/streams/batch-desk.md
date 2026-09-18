@@ -13967,3 +13967,22 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **(F) 通知判据收尾复核**:四条预算判据仍全未中;新轴「main 红」与上一轮同题同答**否**(路由是 issue,#894 已在)⇒ ⛔ 不推送。
   **(G) token 用量**:`TOKENS total_in=4,034,813 out=41,118 turns=38`(⚠️ 正文 §十三 的 `2.31M/29.1k/25`
   **不是错的是早的**,两个都留着,差值即 push + 发表 + 补记的成本)。
+  **补记 2(自检跑完了;⛔ 订正正文 (一) 与补记 (D) 的「尚未可得」;全文见报告「补记 2」节)**:
+  **(i) 真码到手,拿它的姿势本身又是一课**:harness 后台任务通知说 `completed (exit code 0)`,
+  ⛔ **那不是自检的退出码** —— 本轮第二跑是 `bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1;
+  echo "EXIT=$?"; tail -50 /tmp/sc.log`,**复合命令的码是最后那个 `tail` 的**;真码在输出文件第 1 行:**`EXIT=3`**。
+  📌 与开工第一条命令的管道坑(`the exit code your harness reports is the READER's`)**是同一条铁律的两面**。
+  ⇒ **取法再补一条**:后台任务的 `completed (exit code N)` **只在整条命令就是那一个程序时**才算数;
+  凡命令串里还有 `echo`/`tail`,**必须回读文件里的 `EXIT=` 行**。
+  **(ii) 真码逐字**(`/tmp/sc.log` 现读 **698 行**,收尾三行横幅**全打了**):`legs run : 15` /
+  `FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage trunk-red(python)` /
+  `UNCERTIFIABLE (exit 2): none` / `NOT RUN (inside a leg): tests/test_lua_gate.py
+  tests/test_luacheck_gate_soakswitch.py tests/test_selfcheck_lua_leg.py` / `selfcheck worst exit: 3`。
+  ⭐ 归因是工具自己打的,⛔ 本台未手工归因(GH #267 警告照抄)。
+  **(iii) 按上一轮交棒 ⑤(b) 两行一起核**:五条 FINDINGS **与上一轮逐字相同**,且 `UNCERTIFIABLE: none`
+  **也相同** ⇒ **本轮无桶间迁移**(上一轮正是靠一起核才看见 `trunk-red(python)` 升桶;本轮它**停在 FINDINGS 没动**,
+  与补记 (E)「#894 未修」是同一件事的两处读数);`NOT RUN` 三个文件亦逐字相同。
+  **(iv) ⛔ 订正**:正文 (一) 与补记 (D) 的「尚未可得」**在写下的那一刻是对的**(横幅没打、进程还在),
+  现在被跑完的这一份取代。⭐ **上一轮订正后的取法本轮第一次真的救回了一个读数** ——
+  若按补记 (D) 那个假的 `pgrep -c` 写成「本轮不可得」,`selfcheck worst exit: 3` 本轮就彻底丢失。
+  **(v) 通知判据**:四条预算判据仍全未中;五条 FINDINGS 与上一轮逐字相同 ⇒ ⛔ 无新事实,不推送。
