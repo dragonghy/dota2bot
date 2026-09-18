@@ -20289,3 +20289,75 @@
      W86 §(总监编排)、W87 §(总监编排)、**GH #424 是否退休(总监,W89 已问,已过 6 个总监轮)**、
      W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾(总监)、W92 §四两件仪器、
      W94 §三 `pullcamp` 验收句不可完成(总监)。
+- **2026-09-18T12:41Z(W96)**:批测台第 **49** 轮持刹车、**零发波** ⇒ 无未检新局。按 W95 交棒第 (1) 条过欠条,
+  但**换了取法**:不再一行一行试,而是把 **29 条带「裸读得出的验收句」的登记行一次扫完**。
+  结果:**W91 那次普查只覆盖了 `VERIFY id=…` 那一族(5 行,GH #886),非 VERIFY 那一族从来没有人扫过** ——
+  扫完**又出 3 行已交付却逐轮报 OWED**,其中一行**连新 kind 都不需要**。
+  报告:`iterations/reports/replay-check/20260918T124101Z.md`。
+  - **⭐ 换取法的理由是实测的**:本轮开局仍按旧法逐行试,**头三行全部是已被前几轮证伪过的行**
+    (`a_evidence_arbheart` 已由 09-18T00:57Z 证伪、`capmono_hp_gradient_reread` 已由 09-18T03:45Z 证伪、
+    `abilanc_carrier_gate` 已由 W95 证伪)⇒ **登记册里没有任何地方记得住「这一行已被证伪」**,
+    于是每一轮都重付一次查询钱。⭐ 这与 #886 是**两件事**:#886 是「满足了清不掉」,这条是「**证伪过的结论存不下来**」。
+  - **⭐ 三个新的假 OWED(`WITNESS_AT=2026-09-18T12:41:01.185Z`)**:
+    (1) **`gh729_standing_ruling_registry`** —— note **自己带着那条命令和它当时的答案**,逐字
+    「一句话查:`grep -l 'crossing registry:' …batch-desk/*.md`,**今天是空**」;今天答 **39 个文件**,
+    最早 `batch-desk/20260911T001500Z.md:65`,**比那句话晚 2 小时**,至今 **7 天**。
+    (2) **`gh721_crossing_ruling_first_live_read`** —— 逐字命中它点名的那行
+    `WAVE_FENCE: CLEAR (exit 0) -- gate (iii) passes ONLY BECAUSE OF RULING GH#721/director-20260910.`
+    (`batch-desk/20260911T001500Z.md:57`,`ruled_at` +~5h,至今 7 天);⛔ **不是**它排除的 `DIRECTOR CROSSING: ceiling` 那行。
+    (3) ⭐⭐ **`py_gate_budget_premise`** —— **不需要新 kind**:隔壁登记行
+    `walk_farm_census_admitted_to_push_gate_or_priced` 已在**同一个 JSON 文件**上用
+    `{"kind":"json_value","key":["tests","tests/test_bots_walk_farm_only.py","in_gate"],"equals":true}`;
+    本行要的是 `["tests","tests/test_wave_throttle.py","in_gate"]`,现读 **`True`**;
+    且 `pending_rulings.py:1380-1390` 的嵌套键注释**就是为这个文件写的**。
+    ⚠️ **只有一半可机读**:另一半 `over_cumulative_budget` 计数(现读 **0**,分布 `{'fast':131,'over_per_test_cap':17}`)
+    是聚合,`json_value` 读不了 ⇒ ⛔ 不许写成「今天就能整条变绿」。
+    ⚠️ **⛔ 这一行的「何时开始满足」本轮买不到**:容器是**浅克隆**(`is-shallow`=true,50 个 commit,
+    最老 2026-09-17T23:14:17Z)⇒ 只能证「今天满足、克隆地板那刻也满足」,⛔ 不能写成 `+Nh`。
+  - **⭐ 阴性结果照登(⛔ 不是只报好消息)**:**7 行实读为真欠**,其中 4 行报 OWED **是正确的**
+    (`towerfear_towerring` / `pullcamp_atom` 否决权行、`glyphany` / `lion_aoe` 等解冻行,armed = **24** > 20,
+    `hero-57`=`FROZEN-HOLD`、`hero-58`=`ROUTED-BUT-NOT-AS-AN-ARCHIVE-SCAN`);另 3 行
+    (`gh_hero56_admission_atom` 仍 **12**、`staged_frames_register_lion_row` 仍 **0**、
+    `ownhalf_promote_bar_thickness` 无 WORKING 且仍在集)真欠。
+    ⛔ **不许把本轮读成「登记册整体不可信」** —— 被推翻的是特定 3 行,不是这条腿。
+  - **⭐ 处方要分三桶,不按开行的批次分**:#886 的 5 行需要新 kind `glob_contains_any`;
+    `gh721`/`gh729` **也落在同一个新 kind 上(⇒ #886 那张表低估了收益)**;
+    `py_gate_budget_premise` **现有 kind 就够,#886 的处方修不到它**。
+  - ⛔ **本轮明确没做**:`bots/`+`game/` 一行未改、零 soak id / fixture、**没拉任何语料**、
+    **VERIFY 行 0 条 ⛔ 不硬凑**(零新语料,**本报告不含帧证据,这是有意的** —— 本轮的问题是登记册的算术)、
+    未改 `owed_executions.json`/`test_set.md`/`queue.json`/`state.json`、未替总监退休任何行、未开新 issue。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 一次 AWS 调用都没有。
+  - **⚠️ 开工自检:姿势问题本轮又发生了**(与批测台 09-18T12:12Z 同一天同一个坑)——
+    第一跑带 `| tail` 逐字 `REFUSED: … stdout is a pipe; exit 2, nothing checked.`(+`recurred 5x`),
+    第二跑加 `timeout` 逐字 `REFUSED: … running under \`timeout\`; exit 2, nothing checked.`(+`recurred 3 rounds running`),
+    **第三跑才用对** `nohup … &`;⛔ 两次 REFUSED **均未当成通过**。
+    收尾时仍停在 `=== trunk health (python test suite) ===`,`pgrep -c` = **3** ⇒ ⛔ **无 `selfcheck worst exit` 真码**
+    (W92–W95 同形,本轮第五次),**未跑完的腿这轮没人看过**。已跑完的腿:`OK: no unlanded work…`;
+    `PY GATE COVERAGE … UNCOVERED 0 of 151`;`out-of-gate rows with a written reader: 17 of 17`;
+    ⭐ `uncovered set unchanged from the baseline -- OK`(**与 W95 的 `UNCOVERED SET GREW -- 2 file(s)` 不同**)。
+  - **下一轮第一件事**:0) 自检:**当轮第一条命令 = 逐字那一行,零附加物**
+    `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`(⛔ 无管道、⛔ 无 `timeout`、⛔ 不前台;
+    **W95 说过一次、本轮仍没做到,第一条命令就是它**);
+  1) 过欠条**继续用本轮的批量取法**(按验收句形状分桶),⛔ 不要再一行一行试;
+     ⭐ 还没扫过的:29 条里除本轮 10 条 + W91 的 5 条之外那些(`campgrade` / `outlatch` 三段 /
+     `tpdying` / `tpreach` / `gh242` / `rotscope` / `ohnum` / `outlatch_condition_a_fixture` 等);
+  2) ⏳ **W46 `.dem` 约 09-25 到期,只剩 7 天**,取法问 `dem21/` 不问 `soak/`(W95 起两轮未动);
+  3) 拉语料的顺序:**先列 `.dem` 名单,再点名拉 `analysis.json`**;
+  4) 交总监:§四四根棒(#886 追评已发 / 三行请退休或改键 / 英雄组两行确认真欠 / **证伪结论存不下来**);
+  5) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
+     换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
+     W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监,W89 已问,已过 7 个总监轮)、
+     W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾(总监)、W92 §四两件仪器、
+     W94 §三 `pullcamp` 验收句不可完成(总监)、W95 §三 `abilanc` 三根棒(总监)。
+  - **⭐⭐ 收尾撞出第二个缺陷(实测,报告 §七):开工自检的处方会把铁律 6 的 python 闸染成假红。**
+    自检按处方在后台长跑(收尾仍停在 python 套件),与同轮稍后的 `git push` **并发** ⇒
+    `PUSH1_EXIT=1` / `py gate: 134 ran, **1 findings**` / `FAIL tests/test_tpreach_domain.py (exit 1)`;
+    **单跑该测试 `TEST_EXIT=0` 全 PASS;杀掉后台自检后重跑闸 `PYGATE_EXIT=0` / `0 findings`**(同一棵树)。
+    ⭐ 形状可辨:那份 FAIL **只打出前 4 条 PASS** 就转成 `selfcheck exits clean FAIL` +
+    一串 `battery still runs <name> FAIL` ⇒ **子进程被截断**,不是断言判负 ⇒ 归因是资源争用。
+    ⛔⛔ **最危险的是闸自己的提示语**,逐字 `If the named test is not about your change, the red was
+    ALREADY on trunk: … tell the owning stream` —— 本轮改动确实与它无关(diff = 两个 .md)
+    ⇒ **照做就会给协同组发一张错帐单**,而它长得和 GH #616 要买的真通知一模一样。
+    ⚠️ ⛔ 只证了**这一次**的三步因果(有→红/无→绿/单跑→绿),**没证**「每次并发都红」,也没量频率。
+    ⚠️ **与 GH #894 不是同一件事**(那是 `test_bots_walk_farm_only.py` 的真红)。⛔ `RULE6_BYPASS` 未用。
+  - **token 用量**:`TOKENS total_in=5,589,283 out=33,870 turns=46`(⚠️ 到统计时刻为止)。
