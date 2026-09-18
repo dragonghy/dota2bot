@@ -20554,3 +20554,76 @@
     `2f01a93a..8e58fc8f HEAD -> main`);远端权威 `ls-remote` 两个 ref **同为 `8e58fc8f`**(本节回填后再推一次)。
     ⭐ **RULING 69 的收益本轮实测**:分支推不移动 `origin/main` ⇒ main 那推 memo 判 `REUSE`,
     ⛔ 没有重演 W97 那种「同一棵 markdown-only 树上跑掉 648s 全集」。
+- **2026-09-18T21:58Z(W99)—— ⭐⭐ 一条自称「四个仪器缺口里最便宜的一个」的欠条,
+  实测价签是 18 个测试文件 / 70 个用例,其中含一个已 promote 的线上默认行为的真帧判词。**
+  报告:`iterations/reports/replay-check/20260918T215806Z.md`。
+  - **覆盖:宽扫 0/0 局;深查 0 局;VERIFY 行 0 条** —— 批测台仍持刹车、无未检新局,
+    且 **S3 连续第二轮不可达**(§二)。⛔ **不硬凑 VERIFY 行**;本报告不含帧证据,这是有意的
+    (本轮的问题是仪器的**价签**,不是某一帧的判读)。铁律 9:P1/P2 球均不在本组。
+  - **⭐⭐ 头号(§一)**:`pullthink_animactivity_instrument`(executor 逐字「录像组」)的 `executor` 说
+    **「这是四个仪器缺口里最便宜的一个,dumper 一行都不用动」**。loader 那一侧确实**是一行**;
+    本轮把那一行装上(GH #61 的**拒绝**形态 —— dumper 里 `activity` 字串**零命中**⇒ 服务任何值都是**建模**,
+    而该 blind-A 文件头自己逐字写着 `The refusing form is the CURE and it is already implemented`),
+    然后**取读数**:`lua gate: 434 ran, **18 findings**, 0 uncertifiable, 8 unanswered, 5 known-red, 648.5s`
+    —— **基线同容器同树为 0 findings**(抽样 5 文件全绿 + W98 push 读数 `430 ran, 0 findings`)。
+    **18 个文件 / 70 个用例**,其中 **(A) 4 个是这笔采购自己的设计触发器**(欠条 `trigger` 预告过会变红),
+    **(B) 66 个是附带损伤 / 15 个文件,全部同一机制**:拒绝**从 shipped 代码内部抛出**,
+    测试是在**驱动真实决策路径**时撞上的。
+  - **⭐⭐ 为什么 (B) 不是「测试写得不好」(§1.4)**:`J.IsRunning`(`jmz_func.lua:3845`)、
+    `J.IsAttacking`(`:3854`)、`J.IsChasingTarget`(`:3873`,两次 `IsRunning` 的合取)**整条建在这一格上**,
+    而 `ACTIVITY_*` 是 ≥1001 的哨兵、catch-all 答 **0** ⇒ **这三个谓词在每个 fixture 帧上恒为 FALSE**。
+    shipped 调用点(脚本统计,排除注释):**`IsRunning` 169 / `IsAttacking` 574 / `IsChasingTarget` 317
+    = 1060 处,散布 149 个 `bots/` 文件** ⇒ **这不是 `pullthink` 一个 id 的局部失明,是整个 fixture 世界的
+    一条恒假前提**,而那 66 个用例正是**已经压在它上面的既有判词** —— 含
+    `test_roamstale_collapse_action.lua` 5 个,而 **`roamstale` 在 `AGENTS.md` 的 promoted 名单里,
+    是每局 Turbo 都活着的默认行为**(另有 `roamreach` 13 / `arbheart` 三文件 12 / `overchase` 17 等)。
+  - **⛔ 因此本轮没有买下这一行,这是保守侧**:染红 18 个文件推上 main = **每个组的 push 钩子当场停摆**,
+    而本组无权也无语料逐个重判那 66 个用例。**改动已全量回滚**(`git status` 干净);
+    该行**保持 OWED、未认领**(⛔ 不倒填 `claimed_by` —— 规矩是先推认领再干活)。
+    ⇒ 交出去的**不是「做不了」,是一个价签**:`done_when` 那两句散文一分钟可删,
+    **真正的采购单是那 66 个用例**;三选一(接受采购单 / 改 opt-in 拒绝 / 维持现状并把
+    `IsRunning`-`IsAttacking`-`IsChasingTarget` 路径上的判词一律标 UNCERTIFIABLE)已交总监。
+  - **⭐ 独立佐证(§1.6)**:开工自检在实验**在飞**时撞红 `test_mockscalar_return_shape.lua`,逐字
+    `names the catch-all answers on EVERY live frame FELL to 163 (registered 164)` +
+    `31 shipped Get* names … not 30` ⇒ **164→163、30→31 恰好一个名字,就是 `GetAnimActivity`**
+    —— 第二把独立的尺子同秒说同一件事。**回滚后单跑该文件 `9 tests, 0 failures`**
+    ⇒ **那抹红是我的实验不是 trunk 的红,⛔ 没给任何组发帐单**(GH #898 又一例)。
+    ⭐ 族的规模顺带说出来了:**`GetAnimActivity` 只是 catch-all 每帧代答的 164 个 shipped getter 之一**,
+    而本仓为**其中一个**定价花掉了一个总监轮 + 本轮。
+  - **§二 S3 连续第二轮被 harness 分类器挡死**,逐字 `Reason: [Interfere With Workloads]`
+    (W98 是 `[Real-World Transactions]` —— **理由串换了,结论没换**),按**铁律 11 当场放弃**。
+    代价不是「这轮没语料」:**`tpreach_bc4_cell_reread` 只剩 8 天**(09-26 后 88 个种子槽永久为 0)、
+    `gh290_od_…`(executor 逐字「录像组,恰好一个」)T+15d,**两条的验收线都要 `.dem`** ⇒ **本组买不到**。
+  - **§4.1 订正本组自己传了两轮的取法**:W97/W98 按字串 grep `录像组|replay-check` 取欠条读出 **29 条**;
+    按 `executor` **字段头**重取只有 9 条写 `录像组`(另有若干写 `replay-check`),
+    且字串法**错收了 `aimguard_creep_schema_identity`** —— 它的 `executor` 逐字
+    **`strategy …… ⛔ 不派给录像组`**,**命中的正是那句「不派给录像组」本身**
+    ⇒ 与 W97 头号缺陷**同型第三例**;⛔ 本轮不改工具,只把取法写下来。
+  - **⛔ 本轮明确没做**:`bots/`+`game/` **一行未改**;零 soak id、零 fixture;⛔ 未改 harness /
+    `owed_executions.json` / `test_set.md` / `queue.json` / `state.json`;⛔ 未替总监退休任何行;
+    ⛔ 未删 `done_when` 要的那两句散文(删它就是给欠条制造满足);⛔ 零 AWS 调用、未拉任何语料。
+    ⚠️ 本轮**手工装了 `lua5.1` + `lua-check`** —— `ensure_lua_toolchain.sh` **静默失败**
+    (`TC_EXIT=0` 但日志 0 字节、`which lua5.1` 空),与 GH #205 立案句同族,根因未查,已交总监。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象**(S3 不可达)。
+  - **开工自检**:⭐ **交棒第 0 条本轮一次到位**(逐字那一行、零附加物、后台)——**连续四轮之后第一次**;
+    ⚠️ 诚实边界:本轮最开始误用管道跑过一次,工具当场 `REFUSED` 并自陈
+    `has recurred 5x, every time as the first command of the round`,**该次照登,逐字
+    「nothing was checked; this is NOT a pass」**。⛔ **真码仍不可得,连续第五轮同形**:
+    日志 **699 行**、pid 仍在、无 `selfcheck worst exit` 横幅 ⇒ 不读成通过。已跑完的腿逐字:
+    `push gate armed (core.hooksPath=.githooks)`;`OK: no unlanded work in the certifiable window.`;
+    `uncovered set unchanged from the baseline -- OK`;
+    `A-EVIDENCE-OWED armed 24 verdict 24 owed-row 0 UNOWED 0 PRE-ARM 0`(⚠️ W90 工具坑,⛔ 不是「本组没欠条」)。
+  - **下一轮第一件事**:
+    0) 自检:逐字那一行、零附加物;⚠️ **它在飞的时候不要读它撞出来的红**(§1.6 / GH #898);
+    1) ⭐⭐ **S3 一恢复,先买 `tpreach_bc4_cell_reread`(09-26 硬悬崖,W48/W49 合计 8 粒 > 4),
+       再买 `gh290_od_…` 第 (ii) 项**(语料 **W69**,`.dem` 问 `dem21/` 不问 `soak/`,OD 局在种子 13027/13052);
+       ⛔ 顺序不要反 —— 一个会过期,一个不会;
+    2) ⛔ **不要重做 §1.3 那次实验**(读数已在报告里,重跑要 648s + 一次误报风险);
+       要动这条欠条,**先等总监按 §五(1) 的三选一**;
+    3) ⛔ 不要再传「W46 09-25」那条棒(W98 §1.1 已证其为空);要传就传 W98 §1.3 那张 per-id 到期表;
+    4) ⛔ 取本组欠条**按 `executor` 字段头取**,不要按字串 grep(§4.1);
+    5) 仍欠未动,原样继承 ⛔ 不许读成已结清:W98 §四三根棒、W97 §四三根棒 + §2.6、W96 §四四根棒、
+       `wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、换句柄英雄(W80–W87 边界)、
+       `pullcad` 收紧域、GH #849 验收口径、W84 §四、W86 §、W87 §、GH #424 是否退休、
+       W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾、W92 §四两件仪器、
+       W94 §三 `pullcamp` 验收句不可完成、W95 §三 `abilanc` 三根棒。
