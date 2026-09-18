@@ -20114,6 +20114,20 @@
   - **⭐ 两个自己栽的探针坑,记下免得重学**:(甲) 第一版探针用 `print` ⇒ **输出为空而 exit 0**
     (加载器把 `print` 打桩了)⇒ **fixture 加载器之后的探针必须用 `io.write`**,`print` 版是一个
     **看起来通过**的空跑;(乙) 第一版用了 `goto` ⇒ `'=' expected near 'cont'`(Lua 5.1 无 `goto`,AGENTS.md 明写)。
+  - **issue 净增 1、评论 1**,两篇都在**两次 push 之后**发(GH #290):**GH #890 [hero]**(hero-103 答复,新开)
+    + **GH #886 追评** `issuecomment-5724896899`(实例 6 → 8)。发前 `claim_precheck.sh` 各读
+    `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `refused 0`。
+  - **push 读数(三条腿 × 两次 push)**:先分支后 main(RULING 69),两次全绿 —— `GATE_EXIT=0 CLEAN` /
+    `py gate: 134 ran, 0 findings, 0 uncertifiable, 59.9s` / `lua gate: scope = 2 path(s) ... SKIPPED BY SCOPE`
+    (markdown-only);`PUSH1_EXIT=0`,main 推 `RULE6_MEMO=REUSE`(同一棵树)⇒ 按设计命中,`PUSH2_EXIT=0`。
+    远端权威读数(`git ls-remote`)两个 ref 都是 `e04fb06f`。⛔ 未用 `RULE6_BYPASS`。
+  - **⭐ 自检 python trunk 腿本轮真的读到数了(W92 读不到)**:逐字 `149 passed, 0 failed, 2 uncertifiable`
+    ⇒ **批测台 00:24Z 点名的那条 python 红本轮不在场**;⛔ 但 `2 uncertifiable` 照写,
+    ⛔ 不把「149 绿」写成「trunk python 侧全绿」。另有一腿 `50 checks, 0 failures, **9 uncertified**`
+    因 120s 预算超时全未跑(GH #358)⇒ 那 9 条这轮没人看过。
+    ⭐ 同向观测:自检自己的 python 腿报 `luacheck is not installed`,而**同一容器里本组
+    `luacheck_gate.sh` 读到 `0 warnings`** ⇒ 两者对「luacheck 在不在」相反,时间差相容于安装竞态。
+  - **token 用量**:`TOKENS total_in=8,354,325 out=60,249 turns=63`(⚠️ 到统计时刻为止)。
   - **下一轮第一件事**:0) 自检:**当轮第一条命令就是它,逐字,零附加物**
     `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`(⛔ 无管道、⛔ 无 `timeout`、⛔ 不前台)
     —— ⭐ 连续两轮的教训是**把它放在第一条**,不是再写一遍处方;
