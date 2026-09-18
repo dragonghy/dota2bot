@@ -65,7 +65,7 @@
    改走日志里的 `SELFCHECK_EXIT=` 标记,或前台 `tail -f --pid=<真 pid> /dev/null`(不含 sleep)。
 
    ⚠️ **下一轮要看一眼的四条**:
-   (a) **`queue.json:strategy-63`**(本轮新增)+ 本轮 push 后开的 GH issue —— `tormring` 的登记。
+   (a) **`queue.json:strategy-63`**(本轮新增)+ **GH #900** —— `tormring` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-62` **十八条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
@@ -10892,7 +10892,7 @@
   `selected 350 → 351`,`total 266.837 → 267.128`(预算 540)。
   ⚠️ `tools/agent/ensure_lua_toolchain.sh` 退出 1 且日志为空(登记,未修)。
 
-  **下一棒**:`queue.json:strategy-63`(预期 FROZEN-HOLD)+ push 后开的 GH issue。
+  **下一棒**:`queue.json:strategy-63`(预期 FROZEN-HOLD)+ **GH #900**。
 
 - 2026-09-18T10:16Z:**它不是被漏看的,是被分诊过的 —— 而分诊回答的是关于它的另一个问题。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `claimlone`,

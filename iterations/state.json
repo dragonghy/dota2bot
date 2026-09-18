@@ -10043,7 +10043,7 @@
  },
  "tormring_20260918": {
   "date": "2026-09-18T1x:xxZ",
-  "issue": "[strategy] **本轮 push 之后才开**(号码取自 create 调用自己的返回,不是顺号推测;GH #290:引用先可解析再发表)。认领依据 = 铁律 9:P1 球在总监(#862,复读空带停在录像组)、P2 卡魔棒仪器墙(`wandlimbo_charge_instrument`),**4.4 (i) 球在本组且本组能动** ⇒ 取 4.4。",
+  "issue": "[strategy] **GH #900**(本轮 push 之后才开,号码取自 create 调用自己的返回 `id 5500733217` / `url .../issues/900`,**不是顺号推测**;GH #290:引用先可解析再发表,`claim_precheck.sh` 在 push 后读 clean / exit 0)。认领依据 = 铁律 9:P1 球在录像组(#862 的复读空带)、P2 卡魔棒仪器墙(`wandlimbo_charge_instrument`),**4.4 (i) 球在本组且本组能动** ⇒ 取 4.4。",
   "defect": "**同一个奇偶问题的两半数的是两个不同的圆 —— 而这一次宽的那个是【他们的】。** `bots/mode_side_shop_generic.lua`:`:61 tInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1600)` / `:220 tInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)` / `:221 if not J.IsRealInvisible(bot) and (#tInRangeEnemy > #tInRangeAlly) then return BOT_MODE_DESIRE_LOW`。两个圈同心(都以那个被选去打 Tormentor 的非核心 bot 为心),两个计数**只喂这一个比较**,文件里没有第二个消费者。⇒ 一个 1400u 外的英雄,是**他们的**就算战力、是**我们的**就不存在。那层壳是圆面积的 **78%**(1600²/1200²),而且**只往他们那边加**。",
   "why_this_is_not_roamring_again": "⭐⭐ **它是 roamring 的形状、符号相反,而这正是修法不能照抄的原因。** roamring(`mode_team_roam_generic`,盟友 2200 / 敌人 2000)宽的那个圈是**我们的**,于是修法把敌方那半加宽到它上面。照抄到这里 = 把敌圈**收进** 1200,那会**在统一圆的同时加重一个低估**:敌方那半在半径进场之前就已经是被低估的一半(`J.GetEnemiesNearLoc` 走 `UNIT_LIST_ENEMY_HEROES`,受视野限制,并滤掉可疑幻象/Meepo 分身;`J.GetAlliesNearLoc` 走自家 roster 全收、且**装着发问者自己**)。⇒ 该动的是**我们**那半,往外挪到文件已经用来数他们的那个圈上。",
   "fix": "`J.GetTormentorParityRadius(nEnemyRadius, nAllyRadius)`(`bots/FunLib/jmz_func.lua`,`J.GetRoamParityRadius` 正下方):armed(turbo-only)时**盟友**那半改读**敌方那半已经在用的那个圈**;disarmed 逐字返回 `nAllyRadius`。调用点把 1600 **命名一次**(`local nTormentorParityEnemyRing`),敌方那半从这个名字取、盟友那半经 helper 取,于是**再漂开就会把测试顶红**。",

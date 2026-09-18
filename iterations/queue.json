@@ -3186,7 +3186,7 @@
   {
    "id": "strategy-63",
    "stream": "strategy",
-   "bundle": "`tormring`(新 gated id,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。",
+   "bundle": "`tormring`(新 gated id,**GH #900**,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。",
    "priority": 3,
    "status": "pending — 预期裁定是 FROZEN-HOLD(登记、不入集、不视为掉棒;armed 25 > 20)",
    "seeds": "不适用(不发波)",
