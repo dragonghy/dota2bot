@@ -20257,7 +20257,25 @@
     未替总监退休任何行、未给 `abilanc` 提退集或入集。
   - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 一次 AWS 调用都没有。
   - **⭐ 开工自检:连续四轮的姿势问题本轮没有发生** —— 当轮**第一条命令**逐字就是 W94 给的那一行,
-    零附加物,⛔ 无 `REFUSED` 行。真码见报告「补记」节。
+    零附加物,⛔ **无 `REFUSED` 行**。⛔ 但收尾时它仍在最后一腿(`trunk health (fast Lua detectors)`)
+    ⇒ **无 `selfcheck worst exit` 真码**(W92/W93 同形)。已跑完的腿:`OK: no unlanded work…`;
+    `LUA GATE COVERAGE disk 513 | push gate 348 | leg 138 | known_red 5`、`UNCOVERED 114 of 513 (22%)`、
+    `UNCOVERED SET GREW -- 2 file(s)`(**与批测台 09:17Z 同两个,本轮 `tests/` 一行未改 ⇒ 非本轮引入**);
+    `PY GATE COVERAGE … UNCOVERED 0 of 151`;python trunk 腿 `147 passed, 1 failed, 3 uncertifiable`,
+    逐字 `failed: tests/test_bots_walk_farm_only.py` —— **正是批测台已开 GH #894 的那一条,⛔ 非本组的债、
+    ⛔ 不重复开 issue**;⛔ 按工具自述 `Whether main is red too is NOT established by this line` **不声称 main 红**。
+    ⚠️ 另有 `50 checks, 0 failures, **9 uncertified**`(120s 预算,GH #358)⇒ **那 9 条这轮没人看过**,
+    ⛔ 不把 `147 passed` 写成「trunk python 侧全绿」。
+  - **push 读数(三条腿 × 两次 push)**:先分支后 main(RULING 69),两次全绿,⛔ 未用 `RULE6_BYPASS` ——
+    `GATE_EXIT=0 CLEAN` / `py gate: 134 ran, 0 findings, 0 uncertifiable, 48.3s` /
+    `lua gate: scope = 2 path(s) … SKIPPED BY SCOPE`(markdown-only);`PUSH1_EXIT=0`,
+    main 推逐字 `RULE6_MEMO=REUSE  a green three-leg reading taken 2026-09-18T09:47:39Z on THIS EXACT tree.`
+    ⇒ 按设计命中,`PUSH2_EXIT=0`;远端权威读数两个 ref 都是 **`9a8ff96c`**。
+  - **issue 净增 1、评论 1**,两篇都在**两次 push 之后**发(GH #290),发前各跑 `claim_precheck.sh` ——
+    **GH #895 [harness]**(新开,本轮头号产出;`PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
+    `paths cited 10 … resolved on trunk 8 … refused 0`)+ **GH #886 追评** `issuecomment-5728299769`
+    (新失效方向「举过手也清不掉」,实例形状与前 8 例不同;`PRECHECK_EXIT=0` / `refused 0`)。
+  - **token 用量**:`TOKENS total_in=8,680,009 out=47,949 turns=64`(⚠️ 到统计时刻为止)。
   - **下一轮第一件事**:0) 自检:**当轮第一条命令 = 逐字那一行,零附加物**
     `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`(本轮照做了,继续照做);
   1) 继续过欠条(名义 24 行,**已证伪 8 行**;本轮给出**第 9 种形状**:不是「交付了没人读」,
