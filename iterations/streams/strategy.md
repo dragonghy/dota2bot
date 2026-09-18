@@ -35,6 +35,70 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT49. **【2026-09-18T22:20Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `smokeself` 落地)。剩下的是三句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【这个调用点已经被逐个读过了】那一格**:
+   **一次「我把这个文件里这个契约的全部调用点都读了一遍」的审读,定价的是它当时问的那一个问题 ——
+   而一个「为第一个问题查过」的调用点,和一个「两个问题都查过」的调用点,读起来一模一样。**
+
+   现场:`pipetower`(同文件、同日、往前两轮)的 helper 头逐字写着 *"the other eighteen
+   GetNearbyTowers call sites in that file -- those were read one by one and the ones passing
+   `true` read the answer as DANGER, which is the right way round."* ——
+   诡计之雾那一块的**两处**塔调用**都在那十八个里、都传 `true`,而那句话对它们是真的**。
+   它定价的是**旗标的朝向**;⛔ 而这个读数**能不能够到答案**,那次审读一个字都没有问。
+   实际缺陷是:`isThereEnemyNearby` **全函数唯一的写入点是遍历【队友】的那个循环体**,
+   施法者自己的 `nInRangeEnemy` / `nInRangeTower` **只被用来当那个循环的闸**,
+   而 `J.GetAllyList` **从不返回自己** ⇒ **雾罩着的那个单位正是谓词唯一看不见的那个**。
+   📌 **判据:读到一句「这一族调用点我都读过了」,先问【那次审读定价的是哪一个问题】,
+   再决定要不要自己重读一遍。** 这是 0NEXT45(已登记 ≠ 已处理)与 0NEXT47(解释契约的注释
+   ≠ 文件遵守契约)的**第三种形态**,也是最便宜的一种 —— 要读的东西**就在上一轮自己写下的注释里**。
+
+   ⭐ **第二句,关于「价值的一半不可测」怎么写**:真实道具**在敌方英雄/塔 1025 内不能使用**,
+   而引擎 `IsFullyCastable()`(`J.CanCastAbility` 在 desire 函数之前就读它)有没有建模这一条,
+   **本容器答不了**(语料侧同样答不了:`tests/test_itemdesire_world_assertion.lua` 量出
+   `slot_castable == 0` / `X.ItemUsageThink` 在 928 个可驱动帧上**零动作**)。
+   ⛔ **处置不是把 206 写成零,也不是写成满** —— 是**按最近破雾物距离切**:
+   **`>1025` 33 帧**(施法必然合法 ⇒ 杠杆必然生效)/ **`<=1025` 173 帧**(取决于那个未答的问题),
+   **然后只按 33 主张**。📌 **能切出一个「无论那个未答的问题怎么答都成立」的子集时,
+   就切它;切不出来才叫不可测。**
+
+   ⚠️ **第三句,关于测试台的一个坑**:`unprobe()`(`GAMEMODE_TURBO = nil`)**不等于「非 turbo」** ——
+   `J.IsModeTurbo`(`jmz_func.lua:13786`)在 `GAMEMODE_TURBO == nil` 时**跳过权威分支、
+   掉进信使速度启发式**,于是「helper 在非 turbo 下必须 false」这条腿实测**红了**,
+   而红的原因是回退启发式答了 true,**不是作用域坏了**。修法:用**另一个 mode id**
+   (`GAMEMODE_TURBO = 23` + `GetGameMode() == 1`)。📌 **「没有探针」和「探针答了别的」是两回事,
+   而只有后者才是那条腿要测的东西。**
+
+   ⚠️ **下一轮要看一眼的五条**:
+   (a) **`queue.json:strategy-66`**(本轮新增)+ **GH #__ISSUE__**(push 之后才开,
+   号码取自 create 调用自己的返回,**不是顺号推测**)—— `smokeself` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-65` **二十一条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检 `SELFCHECK_EXIT=3`**,`legs run 15`;findings =
+   `cadence queue-rulings owed-executions lua-coverage`,**`UNCERTIFIABLE = trunk-red(python)`**
+   —— ⭐ **上一轮那条真红本轮没有复现**(`153 passed, 0 failed, 2 uncertifiable`),
+   UNCERTIFIABLE 的真身是两个**没跑成**的文件。`fast Lua detectors` 读 **140 文件 / 0 失败**;
+   ⚠️ **但那条腿跑的时候本轮已经在改 `bots/`** ⇒ 相关测试在安静树上单独重跑过,那几条才是读数;
+   (d) **GH #__GREN__(本轮顺带立案)**:`tests/test_grenharass_domain.lua` **在 main 上红**
+   (受控对照:还原 `HEAD` 后同一条红,字节拷贝恢复 VERIFIED),而它
+   `in_gate: false / reason: timed_out` 且**没有 `[detector]`/`[ratchet]` 标签**
+   ⇒ **两道闸都按构造看不见它** —— GH #624/#884/#901 的**第二个实例**。⛔ 不是本组的 id;
+   (e) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。
+
+   ⚠️ **本轮登记、下一轮可以直接做的三根杠杆**(都**不**与 0NEXT48 那四根叠在一起):
+   1. **圈该不该是 1025 而不是 1200** —— 真实破雾半径是 1025,出厂 1200 是保守侧。
+      这是一个**选择**,要域来支撑「值得动」,且与本轮方向叠在一起 ⇒ 等 `smokeself` 有裁定。
+   2. **闸里那个 `or`**:`(#enemy == 0) or (#tower == 0)` 读起来像「我这边干净」,
+      而它**在两者都非空时为假** —— 那正是最危险的配置。种子落地后它对最终旗标已无害,
+      但**它仍然是一句写反的谓词**;单独改它是另一个杠杆。
+   3. ⛔ **`J.GetAllyList` 的 `if #nCandidate <= 1 then return nCandidate end` 早返回**:
+      恰好 1 个队友时**绕过 `IsAlive` / `IsIllusion` 过滤**。它跨该 helper 的全部消费者,
+      **不是一个小杠杆**,登记、不动。】**
+
 0NEXT48. **【2026-09-18T20:05Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `towerpow` 落地)。剩下的是三句要带走的。
 
@@ -10971,6 +11035,62 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-18T22:20Z:**施法者不在自己的普查里 —— 而这个调用点上一轮刚被逐个读过,并且读对了。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `smokeself`,
+  `bots/FunLib/jmz_func.lua` 新 helper `J.IsSmokeBreakerNearSelf` +
+  `bots/ability_item_usage_generic.lua` 调用点一处改写)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T222029Z.md`;
+  `state.json:smokeself_20260918`;`queue.json:strategy-66`;**GH #__ISSUE__**;完整判据 ⇒ backlog **0NEXT49**。
+
+  **开工 = 铁律 10 再铁律 9**:自检 **`SELFCHECK_EXIT=3`**,`legs run 15`;findings =
+  `cadence queue-rulings owed-executions lua-coverage`,**`UNCERTIFIABLE = trunk-red(python)`**
+  —— ⭐ 上一轮那条真红**没有复现**(`153 passed, 0 failed, 2 uncertifiable`);
+  `fast Lua detectors` **140 文件 / 0 失败**,⚠️ **但那条腿跑的时候本轮已经在改 `bots/`**,
+  相关测试已在安静树上单独重跑(见报告 §七)。
+  P1(1) 球在录像组(#862)/ P2 卡 `wandlimbo_charge_instrument` ⇒ **4.4 球在本组且本组能动**,取 4.4。
+  0NEXT48 点名的四根杠杆**全部在等别的 id 的裁定** ⇒ 自找一根不与它们叠在一起的。
+
+  **缺陷**:`X.ConsiderItemDesire['item_smoke_of_deceit']` 里 `isThereEnemyNearby`
+  **全函数唯一的写入点是遍历【队友】的那个循环体**;施法者自己的 `nInRangeEnemy` /
+  `nInRangeTower`(旗标是对的)**只被用来当那个循环的闸**,而 `J.GetAllyList` =
+  `J.GetNearbyHeroes(bot,…,false,…)` **从不返回自己** ⇒ **雾罩着的那个单位
+  (`hEffectTarget = bot`)正是谓词唯一看不见的那个**。三条互斥失效路
+  **(A) 32 / (B) 153 / (C) 21 = 206 帧**(1039 活体主体帧,84/112 份 fixture),其中 **tower-only 19**。
+
+  ⭐⭐ **可迁移句**:**一次「这一族调用点我都读过了」的审读,定价的是它当时问的那一个问题;
+  而「为第一个问题查过」的调用点和「两个问题都查过」的调用点读起来一模一样。**
+  现场就是 `pipetower` 自己那句「十八个调用点逐个读过、传 `true` 的都读作 DANGER」——
+  **那句话是真的**,它定价的是**朝向**,不是**这个读数够不够得到答案**。
+
+  **修法**:`J.IsSmokeBreakerNearSelf( tEnemyHeroes, tEnemyTowers )`,armed(turbo-only)
+  任一表非空即 true,disarmed **逐字是出厂那个 `false`**。⭐ **传表不传 bot** ⇒
+  「同一个圈、同一个 getter、同一个旗标」由构造为真(`roamring`/`tormring` 的账)。
+  **一个杠杆**:不碰 1200 半径、不碰闸里那个 `or`、不碰队友扫描、不碰 ROAM/GANK/ROSHAN 三支;
+  ⛔ 不与任何别的 id 合取(`pullcad`)。
+  **方向闭式**:旗标唯一的读者是 `if not isThereEnemyNearby then`,而那里每一支都是放雾
+  ⇒ **armed 只能少放,永远不能多放**。**批测读数若反向不能读成「让 bot 放雾更多」。**
+
+  ⛔ **价值的一半 UNCERTIFIABLE,登记成「不可测」不是零也不是满**:真实道具在 **1025** 内不能使用,
+  而 `IsFullyCastable()` 有没有建模这条本容器答不了(语料侧同样答不了 ——
+  `test_itemdesire_world_assertion` 量出 `slot_castable == 0` / `ItemUsageThink` 928 帧零动作)。
+  ⇒ 按最近破雾物距离切:**`>1025` 33 帧**(必然合法 ⇒ 杠杆必然生效)/ **`<=1025` 173 帧**,
+  **只按 33 主张**。📌 **能切出一个「无论那个未答的问题怎么答都成立」的子集时就切它。**
+
+  **本地验证** `tests/test_smokeself_caster_ring.lua` **10/10**,零 stub,四枚真帧证人
+  (含**唯一能分开塔那一半的** zuus 敌塔 727u)+ **同一帧**两枚对照。
+  变异台 `tools/agent/mutstand_smokeself.sh` **11 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**,
+  ⭐ **第一轮就零存活**。
+  ⚠️ 本轮撞到的坑:`unprobe()` 不等于「非 turbo」—— `GAMEMODE_TURBO = nil` 让 `J.IsModeTurbo`
+  **掉进信使速度启发式**,那条腿要用**另一个 mode id**。
+
+  **闸**:`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**;`py_gate.py` **138 ran / 0 findings / 66.1s**;
+  ⛔ 没往 manifest 加行(GH #901 余量 ~2.1s),打 **`[ratchet]`** 标签。
+  ⚠️ **顺带立案 GH #__GREN__**:`tests/test_grenharass_domain.lua` **在 main 上红**
+  (受控对照:还原 `HEAD` 同一条红),而它 `in_gate: false / timed_out` 且无标签
+  ⇒ **两道闸都看不见它** —— GH #624/#884/#901 的第二个实例。
+
 
 - 2026-09-18T20:05Z:**两栏火力,只有一栏装得下建筑 —— 敌方的塔哪一栏都不加。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `towerpow`,

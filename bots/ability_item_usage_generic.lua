@@ -7611,10 +7611,23 @@ X.ConsiderItemDesire['item_smoke_of_deceit'] = function(item)
 	local hEffectTarget = nil
 	local sCastMotive = 'Smoke Of Deceit'
 
-	local isThereEnemyNearby = false
 	local nInRangeAlly = J.GetAllyList(bot, nRadius)
 	local nInRangeEnemy = J.GetNearbyHeroes(bot,nRadius, true, BOT_MODE_NONE)
 	local nInRangeTower = bot:GetNearbyTowers(nRadius, true)
+
+	-- [smokeself 20260918] THE CASTER'S OWN TWO READINGS, ALLOWED TO REACH THE
+	-- ANSWER. They are computed above with the right `bEnemies` flag and the
+	-- shipped code spends them on the GATE of the ally scan below; the scan's
+	-- subject is always an ALLY (J.GetAllyList never returns self), so the unit
+	-- this smoke is centred on -- hEffectTarget = bot -- is the one unit the
+	-- predicate cannot see. Disarmed the helper is the literal `false` that
+	-- shipped here, so nothing moves. Read J.IsSmokeBreakerNearSelf's header in
+	-- bots/FunLib/jmz_func.lua for the closed-form defect, the direction proof
+	-- and what this lever is NOT.
+	-- ⛔ ONE ring: the helper takes the lists built from `nRadius` above rather
+	-- than re-deriving them, so "same ring, same getter, same flag" is true by
+	-- construction and not by review.
+	local isThereEnemyNearby = J.IsSmokeBreakerNearSelf( nInRangeEnemy, nInRangeTower )
 
 	if DotaTime() < 0 and DotaTime() > -60
 	then

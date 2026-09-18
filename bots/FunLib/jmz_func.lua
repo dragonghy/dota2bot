@@ -16098,6 +16098,155 @@ function J.GetBackupTowerCount( hBot, nRadius )
 
 end
 
+--- [smokeself, strategy 2026-09-18] THE CASTER IS MISSING FROM ITS OWN CENSUS.
+---
+--- Soak candidate 'smokeself' (turbo-only; resolved in exactly one place, the
+--- "is anyone around to break this" block of
+--- X.ConsiderItemDesire['item_smoke_of_deceit'] in
+--- bots/ability_item_usage_generic.lua).
+---
+--- THE DEFECT, closed form. That block shipped as:
+---
+---   local isThereEnemyNearby = false
+---   local nInRangeAlly   = J.GetAllyList(bot, 1200)
+---   local nInRangeEnemy  = J.GetNearbyHeroes(bot, 1200, true, BOT_MODE_NONE)
+---   local nInRangeTower  = bot:GetNearbyTowers(1200, true)
+---   if (#nInRangeEnemy == 0) or (#nInRangeTower == 0) then
+---       for _, allyHero in pairs(nInRangeAlly) do
+---           ... if an enemy hero or enemy tower is near THAT ALLY then
+---               isThereEnemyNearby = true            -- the ONLY writer
+---   end
+---   if not isThereEnemyNearby then ... BOT_ACTION_DESIRE_HIGH ... end
+---
+--- The caster's own two readings are computed -- correctly, with the right
+--- `bEnemies` flag -- and then spent on the GATE of the ally scan. Nothing in
+--- the function lets them answer the question the flag asks. And the scan's
+--- subject is always an ALLY: J.GetAllyList is J.GetNearbyHeroes(bot, ...,
+--- false, ...), which never returns self (jmz_func.lua:9997 says so in those
+--- words). So the unit the smoke is centred on -- `hEffectTarget = bot`, four
+--- lines below -- is the one unit whose surroundings the predicate cannot see,
+--- and it fails in three independent ways:
+---   (A) an enemy hero AND an enemy tower within 1200 makes the gate FALSE, so
+---       the scan never runs at all: the most dangerous configuration is the
+---       one that is checked least;
+---   (B) with no ally within 1200 the loop body never executes whatever the
+---       gate said, so a SOLO bot standing beside an enemy reads "clear";
+---   (C) an enemy within 1200 of ME but further than 1200 from every ally is
+---       invisible to a census taken from their positions.
+---
+--- ⭐⭐ THE CALL SITE WAS ALREADY READ, ONE BY ONE, AND READ CORRECTLY.
+--- 'pipetower' (same file, same day, two rounds back) says in its header that
+--- "the other eighteen GetNearbyTowers call sites in that file -- those were
+--- read one by one and the ones passing `true` read the answer as DANGER, which
+--- is the right way round." Both of this block's tower calls are in that
+--- eighteen and both pass `true`, and that sentence is TRUE of them: the flag
+--- points the right way. 📌 What the review priced was the POLARITY of a
+--- reading. Whether the reading is then allowed to reach the answer is a
+--- different question, and a call site that has been checked for the first one
+--- reads exactly like a call site that has been checked for both. Third form of
+--- 0NEXT45's rule (registered != handled) and 0NEXT47's (a comment explaining a
+--- contract is not evidence the file honours it).
+---
+--- ⭐ WHY THIS IS AN OMISSION AND NOT A CHOICE (0NEXT48's discriminant). Ask
+--- first whether the other half HAS the term, then whether its number is right.
+--- Here the other half is the caster, and the caster has no term at all: no
+--- reading of "is anyone nearby who would break my smoke" makes the caster's
+--- own 1200 ring irrelevant while five allies' rings are decisive. So no domain
+--- is needed to show it is wrong -- the domain below prices how often it bites,
+--- not whether it is a defect ('pipetower', 'bbancient', same disposition).
+---
+--- THE GAME RULE THIS IS MEASURED AGAINST (validation condition (c)). Smoke of
+--- Deceit's invisibility is dispelled when the unit comes within 1025 units of
+--- an enemy hero or an enemy BUILDING, and the shipped block's own structure
+--- says the author knew that -- it looks for exactly those two kinds of unit.
+--- 1200 > 1025, so the shipped radius is the conservative side of the real
+--- break radius; this lever does not touch it.
+---
+--- DIRECTION IS FIXED BY CONSTRUCTION. Armed, this helper can only return true
+--- where the shipped initializer was the literal `false`; the flag is never
+--- read anywhere except `if not isThereEnemyNearby then`, and every branch
+--- inside that `if` is a `return BOT_ACTION_DESIRE_HIGH` for smoking. So armed
+--- the item is desired STRICTLY LESS OFTEN, and the set of frames that still
+--- smoke is a subset of the shipped one. A batch reading that goes the wrong
+--- way cannot be read as "the lever made the bots smoke more".
+---
+--- DOMAIN AND DECISION, both measured -- tests/_smokeself_sweep.lua, 112
+--- fixtures / 1039 live subject frames, ring = the shipped 1200 (2026-09-18):
+---   enemy hero within 1200 of the caster   438
+---   enemy tower within 1200 of the caster   63
+---   caster has at least one (armed = true) 469
+---   shipped flag true (ally scan)          292
+---   FLIP (shipped false, armed true)       206  over 84 of 112 fixtures
+---     (A) gate skipped, both > 0            32
+---     (B) gate true, zero allies in 1200   153
+---     (C) gate true, allies scanned, clear   21
+--- (A)+(B)+(C) are disjoint and sum to 206. 19 of the 206 are TOWER-ONLY
+--- (an enemy tower in the ring and no enemy hero) -- the half that no
+--- hero-only witness can tell apart from a dead branch.
+--- ⚠️ Unlike 'towerpow', the PREDICATE is fully measurable here: every input is
+--- geometry plus team membership and the dump carries both, so 206 is a count
+--- of CHANGED ANSWERS. ⛔ It is not a count of changed GAMES: item ownership and
+--- the enclosing desire branches are not walked. ⛔ It is frames-by-subject, not
+--- situations (the predicate is per-bot).
+---
+--- ⛔ AND ONE HALF OF THE VALUE IS UNCERTIFIABLE, REGISTERED AS UNCERTIFIABLE
+--- RATHER THAN AS ZERO OR AS FULL. The real item cannot be USED while an enemy
+--- hero or tower is within 1025, and whether the engine's IsFullyCastable() --
+--- which J.CanCastAbility calls before the desire function is ever reached --
+--- already models that restriction is NOT answerable from this container (no
+--- bot-side debugging; AGENTS.md). So the sweep splits the 206 by the distance
+--- to the nearest breaker:
+---   nearest > 1025   33   cast is LEGAL whatever IsFullyCastable does; the
+---                         smoke is cast and the enemy already standing there
+---                         dispels it on his next step
+---   nearest <= 1025 173   the engine may already refuse the cast; here the
+---                         lever's value depends on the unanswered question
+--- ⇒ 33 flips survive the uncertifiable half on this corpus, and that is the
+--- number the lever is claimed on. ⭐ Note the shipped ring is 1200 > 1025 on
+--- purpose-looking grounds, and this lever does NOT touch it: "should the ring
+--- be the real 1025" is a CHOICE and a separate lever, registered not taken.
+---
+--- ⛔ AND THE FIXTURE CORPUS CANNOT ANSWER IT EITHER, WHICH IS WHY THE PROOF
+--- STOPS AT THE FLAG. tests/test_itemdesire_world_assertion.lua measures
+--- `slot_castable == 0` on every alive frame and X.ItemUsageThink taking ZERO
+--- actions on all 928 drivable frames: the loader wires IsFullyCastable and
+--- only IsFullyCastable, so J.CanCastAbility's IsTrained clause is false for
+--- every item handle a .dem slice can build. An end-to-end smoke witness is
+--- STRUCTURALLY unavailable on this corpus and is not claimed anywhere.
+---
+--- WHY A WRONG `true` COSTS MORE THAN ONE WASTED CAST. X.ItemUsageThink walks
+--- the slots in a fixed order { 5, 4, 3, 2, 1, 0, 15, 16 } and RETURNS at the
+--- first item whose desire is > 0. A smoke desire that should not have been
+--- HIGH therefore pre-empts every item in a later slot for that frame, not just
+--- itself. ⛔ That consequence rides on the same unanswered IsFullyCastable
+--- question and is not counted in the 33.
+---
+--- WHAT THIS IS NOT. It does not touch the 1200 radius, the `or` in the gate
+--- (once the flag is seeded the gate only decides whether a scan that can no
+--- longer change a true answer runs), the ally loop, the DotaTime() < 0 early
+--- return above it, the ROAM/GANK/ROSHAN branches below it, or any other
+--- ConsiderItemDesire. ⛔ It is NOT nested inside another gated helper and it
+--- calls none, so it is a predicate and not a conjunction ('pullcad', GH
+--- #606/#576; tests/test_gated_helper_nesting_census.lua).
+---
+--- WHY IT TAKES THE LISTS AND NOT THE BOT. Re-deriving the two readings inside
+--- the helper would mean a second pair of engine calls with a second copy of
+--- the radius -- two things to keep equal, which is exactly what 'roamring' /
+--- 'tormring' cost. Taking the call site's own lists makes "same ring, same
+--- getter, same flag" true by construction rather than by review.
+--- Driven on real frames by tests/test_smokeself_caster_ring.lua.
+function J.IsSmokeBreakerNearSelf( tEnemyHeroes, tEnemyTowers )
+
+	if not J.IsModeTurbo() then return false end
+	if not J.IsSoakCandidate( 'smokeself' ) then return false end
+
+	if tEnemyHeroes ~= nil and #tEnemyHeroes >= 1 then return true end
+	if tEnemyTowers ~= nil and #tEnemyTowers >= 1 then return true end
+
+	return false
+
+end
+
 function J.GetXUnitsTowardsLocation2(iLoc, tLoc, nUnits)
     local dir = (tLoc - iLoc):Normalized()
     return iLoc + dir * nUnits

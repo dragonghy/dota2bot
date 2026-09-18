@@ -3221,6 +3221,15 @@
    "result": "",
    "director": "",
    "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)"
+  },
+  {
+   "id": "strategy-66",
+   "stream": "strategy",
+   "bundle": "`smokeself`(新 gated id,**GH #__ISSUE__**,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。",
+   "priority": 3,
+   "status": "pending — 预期裁定是 FROZEN-HOLD(登记、不入集、不视为掉棒;armed 25 > 20)",
+   "seeds": "不适用(不发波)",
+   "question": "⛔ **零 AWS、零 EC2、零 CE、不申请专波、不申请新波** —— 本请求要的是一次登记,不是一次取证;全部工作已在本地做完。(这一行放在开头是因为 GH #885 未修:声明写在 `bundle`/`cost` 里的新请求会被 push 闸拒掉。)\n\n一句话:**诡计之雾的「这附近有没有人会拆我的雾」这个谓词,唯一看不见的单位就是雾罩着的那一个 —— 施法者自己。请登记 `smokeself`,解冻后排 (a) 证据。**\n\n### 已经钉住的(不要重测)\n- 缺陷:`bots/ability_item_usage_generic.lua` 的 `X.ConsiderItemDesire['item_smoke_of_deceit']` 里,`isThereEnemyNearby` **唯一的写入点是遍历队友的那个循环体**;施法者自己的 `nInRangeEnemy` / `nInRangeTower` 只被用来当那个循环的闸,而 `J.GetAllyList` **从不返回自己**。三条失效路 (A) 32 / (B) 153 / (C) 21 帧,互斥、相加 = **206**(1039 活体主体帧,84/112 份 fixture)。\n- 修法:`J.IsSmokeBreakerNearSelf( tEnemyHeroes, tEnemyTowers )`,armed(turbo-only)任一表非空即 true,disarmed **逐字是出厂那个 `false`**。**传表不传 bot**,于是「同一个圈、同一个 getter、同一个旗标」由构造为真。\n- ⭐ **方向是闭式的**:armed 只能把 `false` 变成 `true`,而旗标唯一的读者 `if not isThereEnemyNearby then` 里每一支都是「放雾」⇒ **只能少放,不能多放**。**批测读数若反向,不能读成「让 bot 放雾更多」。**\n- ⛔ **价值的一半 UNCERTIFIABLE,登记成不可测不是零**:真实道具在敌方英雄/塔 **1025** 内不能使用,而 `IsFullyCastable()` 有没有建模这条**本容器答不了**。按最近破雾物距离切:**>1025 的 33 帧**是无论如何都合法施法、因而杠杆必然生效的那一半;<=1025 的 173 帧取决于那个未答的问题。**本杠杆只按 33 帧主张。**\n- 本地验证:`tests/test_smokeself_caster_ring.lua` **10/10**,零 stub,四枚真帧证人 + 两枚同帧对照;变异台 `tools/agent/mutstand_smokeself.sh` **11 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**。\n\n### 想要的(解冻之后,不是现在)\n(a) 证据:录像组在真实 Turbo 对局里核验 armed 之后**低价值放雾确实减少**、且**没有出现该放而不放**的病例(方向闭式 ⇒ 只需看「少放的那些是不是本来就该少放」)。⛔ 不需要为它单独发波:**搭任何一波已经在跑的 armed 波即可**。"
   }
  ],
  "done": [
