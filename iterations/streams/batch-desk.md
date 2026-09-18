@@ -13586,3 +13586,88 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   **(vi) token 用量(取代补记 (E) 的数)**:`TOKENS total_in=4,851,929 out=42,530 turns=44`。
   ⚠️ 补记 (E) 那个 `4.17M/35.6k/37` **不是错的是早的**(写补记那一刻的读数),**两个数都留着**,
   差值就是补记 2 这一节的成本。
+- 2026-09-18T12:12:42Z:**刹车第四十九轮持有;零发波、零收割欠、零泄漏。⭐⭐ 本轮把 GH #291 的「经济修正分支不可达」从源码论断变成了存档实测:本台自己归档的 W24–W69 共 3,173 局里 `economy_25min_cap` 是 `0` 局,而聚合器现读是一张不截断的全直方图 ⇒ 有一局也会显出来。**
+  **(一) 开工自检** ⚠️ **第一条命令又踩管道坑(同形第十例)**,逐字 `REFUSED: routine_selfcheck.sh stdout is a pipe;
+  exit 2, nothing checked.`;第二跑改 `timeout` **又被拒**,逐字 `REFUSED: routine_selfcheck.sh is running under
+  \`timeout\`; exit 2, nothing checked.` + `This has recurred 3 rounds running.` ⇒ **第三跑才用对**。
+  ⛔ **归因是姿势不是工具**,且上一轮交棒 ⑥ 逐字已钉死「一次到位」⇒ **本轮没做到**。
+  首行逐字 `push gate armed (core.hooksPath=.githooks); ...`;`OK: no unlanded work in the certifiable window.`
+  **⛔ 自检真码本轮不可得,且是实证不是推断**:回读输出 **645 行**,停在 `=== trunk health (python test suite) ===`,
+  **收尾三行横幅一个没打**;按上一轮补的取法**再 `pgrep` 一次** ⇒ **进程仍在** ⇒ ⛔ 无 `selfcheck worst exit`,
+  **不写、不读成通过**;未跑完的腿这轮没人看过。按铁律 7/11 ⛔ 不空转等它。
+  **(二) 预算 —— ⭐ 快照冻结轮,零新支出测量**:闸 (iii) `FENCE_EXIT=3`(**连续第四十九轮是闸拒绝,不是本台的处置**),
+  逐字 `actual (MTD) : $92.292   <- re-read this run, never cached` / `pending waves : $0.000` / `planned : $0.000` /
+  `projected total : $92.292` / `fence : $100.00` / `brake : $90.00` /
+  `operative ceiling: $90.00 = min(fence, brake)` / `WAVE_FENCE: THROTTLED (exit 3) -- brake, not fence.`;
+  RULING 5/6/7 三行照抄(`17 region(s) read ... COMPLETE` /
+  `records after 2026-09-17T19:40:29Z (= 2026-09-18T06:58:29Z - 11.3h lag, clock from budget snapshot)` /
+  `CERTIFIED (0 accruing instances account-wide, read this run)`),⭐ 钟没有降级,⛔ 未传任何 `--no-*`。
+  **MTD `$92.292` / 戳 `2026-09-18T06:58:29Z` 与上一轮(09:17Z)两量逐位相同** ⇒ **零新支出测量**
+  (⛔ 不等于「没花钱」)⇒ **一个速率点都不贡献**,⛔ 不动 `$0.28–0.92/天` 带、⛔ 不收窄;
+  月末数**逐字结转未重算**(锚点是同一张快照):`$100` 兜底日 **`2026-09-26T16:03Z`**,距今 **8.2 天**。
+  **headroom 对 `$90` = `$-2.292`**(与上一轮逐位相同,本轮**可以**这么说)。`alpha = 0` / `beta = 0` 实读;
+  `forecast 115.334` ⛔ 不解释不采信;`budget filters : none`。GH #801 四行整块照抄(**默认值**跑):
+  `>= $35, but headroom to the $90.00 brake is $-2.292` /
+  `< $1.10 (cheapest wave) — CE confirmation SKIPPED, NOT passed (GH #801).` /
+  `Nothing can launch at this MTD, so confirming it buys nothing.` / `Resumes by itself as soon as headroom >= $1.10.`
+  **SKIP 不是 pass**;欠条 `gh801_confirm_headroom_first_live_read` **仍 OWED**。
+  **(三) 收割零欠**:`validation/` **592 对象**、`soak/` **72,079 键**(均与前六轮逐位相同);最新对象仍是
+  `lf_rescue+27ids-d177b87026dd_20260912_1018_run.log`(`2026-09-12 10:18:26`)= **W69**。在跑波次:**无**。
+  ⭐ **顺带结清上一轮自挂的不一致**:在**逐位相同**的两个键数上独立重算 `ceil(592/1000)+ceil(72079/1000)=1+73=`**74**
+  ⇒ **74 复现**;⛔ 仍不主张 `79` 错(那一轮算法没留下),只登记「74 连续两轮由同一算术得出」。
+  **(四) ⭐⭐ 实质:GH #291 存档侧实测 `0 / 3,173`。** 先办上一轮交棒 ④(b):**现读没修** ——
+  `referee_surrender` 在 `tools/batch_test/soak/` 下仍 **0 处**,`analyze_log.py:96` 逐字 `natural_end = fort is not None`
+  未动 ⇒ 刹车解除后第一波 `winrate` 仍是裁判伪影。**本轮多走一步**:该条此前一直是**源码论断**
+  (GH #291,2026-08-29 立,**至今 0 条评论、20 天无人回应**),而本台有一份**零成本存档语料**可独立检验
+  (`iterations/reports/batch-desk/waves/`,在仓库里,⛔ 不碰 S3)。**机制**(`analyze_log.py:94-116`):裁判在 cap 上
+  强制结束**会把遗迹推掉** ⇒ `towers` 里出现 `_fort` ⇒ `natural_end` 为真 ⇒ **`if natural_end` 这一支恒被取走**,
+  `elif ... economy_{cap}min_cap` 合同分支对被 cap 强制结束的局**结构性不可达**。**实测**:全部 67 个波次文件递归取
+  `winner_by` ⇒ dict 桶表 **20 张**,**全部 20 张里出现过的 distinct 桶键 = `['engine_natural']` 只此一个**;
+  去重(剔 `W28`/`W66W67` 两个 pooled 派生表)后主表 17 张、**3,173 局、100% `engine_natural`**;
+  散文一处 `W25W26_pooled` 逐字 `engine_natural 347/347 -- none of these are the analyze_log.py econ_winner rewrite`
+  ⇒ **`economy_25min_cap` 与 `economy_forcewin_recovery` 各 `0` 局**。界别已核:最早 `W24_wave.json` 现读 **`2026-08-29`**,
+  cap 10→25 界线 **`2026-08-25`** ⇒ **W24–W69 全在界后**。**⭐ 把最危险那条边界关掉了**:若那 20 张表是「只印头号桶」的
+  摘要,则非零少数桶**会隐身**、`0/3,173` **虚高**,方向恰好对本台结论有利 ⇒ 必须先证伪。现读
+  `recover_verdict.py:532-533` 逐字 `by[a.get("winner_by") or "unknown"] = by.get(...) + 1` / `v["winner_by"] = by`
+  ⇒ **逐局全直方图**:无截断、无 top-N、无过滤,连缺值都单开 `unknown` 桶 ⇒ **有一局就会出现那个键**
+  ⇒ **`0/3,173` 站得住:不是没印出来,是没发生过**。**撞出来的那一下**:`state.json:1214` 逐字
+  `engine_natural ... its share IS the natural-end rate` ⇒ 读这 20 张表的人读到 **「100.0% 的局以遗迹被真实推掉告终」**,
+  而 00:24Z 那轮测到 **界后 95.8% 由裁判在 cap 上强制结束** ⇒ **两者不能同真**,机制说明哪个是伪影。
+  **诚实边界四条**:① 本轮**未重测** 95.8%(引用不重算)⇒ 证的是「存档侧 100% 且合同分支 0 局」,**不是**那个数本身对;
+  ② 20 张表是**波次级**聚合,⛔ 未逐局回读 `analysis.json`(要 S3 出网)——但 ④ 已证聚合器不丢桶,**这条边界不朝危险侧失效**;
+  ③ ⛔ 不点名任何 promote/(b) 判定引过这些表(那是上一轮 `15 份/5 天` 那条线在管,本轮不并案);
+  ④ ⛔ 本台**不改 harness**(`tools/` 一行未动),GH #291 归总监/harness 域。
+  **(五) 跨组**:**GH #291** 已按 GH #290 顺序**先 push 后发表**(§四是它的独立存档侧证据);
+  **GH #184** 现读 `open` / `comments: 3` / `updated_at 2026-09-18T00:36:03Z` 三值与前三轮逐位相同,⛔ 只登记不追评;
+  **GH #779** 现读 `open` / **`comments: 19`** / `updated_at 2026-09-17T09:43:51Z`,⚠️ **逐条核过 19 条作者与时间:
+  全部是本台自己历轮发的** ⇒ **owner 第三十轮零表态**,⛔ 未追评(无新预算事实,本轮是冻结轮);
+  **GH #721** `open` / `comments: 2` / `2026-09-10T21:31:57Z` 三值冻结。
+  **(六) 局数**:本月无新波次;本轮**未读 `analysis.json`、未读 `verdict.json`**(⛔ 0 局)。
+  §四那 3,173 局是**仓库里已归档的历史读数**,⛔ 不是本轮新测的局。
+  **(七) 成本(铁律 1 三段式)**:**零 EC2 / 零 CE / S3 读取 `74` 个对象(出网未计价)** ——
+  `s3 ls --recursive` 2 次 = `1 + 73` = **74 LIST**,**不下载任何对象**。本轮新增 EC2 计费 **`$0.00`**;
+  `check_costs.sh` 未买 CE(#801 SKIP)。⭐ **§四那份实质产出一个 S3 对象都没碰**(纯本地聚合)。
+  **(八) 泄漏五条独立路径全零(⛔ 不合并成一句)**:① `check_costs.sh` 自带区块**空**(`COSTS_EXIT=0`);
+  ② `describe-instances` 五态不加 tag 过滤 ⇒ `INST_EXIT=0` / **`LINES=0`**;
+  ③ `describe-spot-instance-requests State==open||active` ⇒ `SIR_EXIT=0` / **`SIR_LINES=0`**;
+  ④ 闸 (iii) 账户级 **17 区 COMPLETE** + `CERTIFIED (0 accruing instances account-wide)`;
+  ⑤ AMI 仍 `ami-0a990a26d89c66547` 一张(常设成本非泄漏)。
+  **(九) 通知判据**:四条逐条现读 —— MTD `$92.292` < `$100` ✗;`alpha = 0` ✗;headroom `$-2.292` < `$1.10` ✗;
+  今天 `2026-09-18` < 兜底日 `2026-09-26T16:03Z`(距今 **8.2 天**)✗ ⇒ **四条一条未中 ⇒ ⛔ 本轮不推送**。
+  ⭐ 同样严格:§四虽是本轮实质产出,但它**不改任何阈值、不需要 owner 做任何决定**(harness 域,球在总监/#291)
+  ⇒ **第 49 次「刹车仍持有」对 owner 是零信息**。⚠️ **交下一轮**:兜底日距今 8.2 天,第四条一旦够到**推送就该发**。
+  **(十) 没做的事**:⛔ 未发波(闸 exit 3);⛔ `bots`/`game`/`tests`/`tools` 一行未改;⛔ 未重开已关档裁定;
+  ⛔ 未改 `state.json`/`test_set.md`/`OWNER_PRIORITIES.md`/`queue.json`;⛔ 未自行结清 #801 欠条;
+  ⛔ 未收窄速率带(冻结轮,一个点都没贡献);⛔ 未重测 95.8%;⛔ 未逐局回读 `analysis.json`;
+  ⛔ 未修 harness;⛔ 闸 (i)/(ii)/(iv) **未跑**(发波轮的闸)——**未跑不记成通过**。
+  **铁律 9**:`P4.1` upstream 标尺波**连续第四十九轮欠**,⛔ 唯一阻因是闸 (iii) `exit 3`(预算)。
+  **(十一) 交棒**:① ⭐⭐ **owner —— 刹车第四十九轮持有,GH #779 第三十轮零表态**(19 条逐条核过全是本台自己发的)
+  ⇒ 球仍在 owner:提高预算线 / 给预算加过滤器 / 接受本月剩余批测全停;
+  ② ⭐ **总监 —— GH #291 请收**:§四把它从源码论断升级成 `0/3,173` 存档实测,并把「聚合器会不会丢桶」这条
+  朝危险侧的边界**关掉了**(`recover_verdict.py:532` 是全直方图);
+  ③ **总监 —— GH #184 连续第四轮零表态**,三值逐位冻结,按交棒 ② 只登记不追评;
+  ④ **总监 —— 上一轮交棒 ①③④⑤ 本轮未获回应,逐字保留**,⛔ 本台不自行退休任何一行;
+  ⑤ **下一轮本台**:开工第一条命令 `nohup … > /tmp/sc.log 2>&1 &`(⛔ 无管道、⛔ 无 `timeout`,**一次到位**)——
+  本轮**第三跑才对**,同形第十例,⛔ 不许再错;刹车解除(headroom ≥ `$1.10`)时按规格发 **P4.1 标尺波**,
+  并把 #801 那四行**恢复后**的样子抄进报告。
+  详见 `iterations/reports/batch-desk/20260918T121242Z.md`。
