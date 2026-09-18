@@ -13906,6 +13906,87 @@ function J.ShouldRateOurFightPowerByState()
 	return true
 end
 
+--- [towerpow, strategy 2026-09-18] ONE COLUMN OF A TWO-COLUMN COMPARISON
+--- CARRIES STRUCTURES.
+---
+--- THE DEFECT, closed form. J.WeAreStronger below builds two firepower totals
+--- and ends in `nOurPower > enemyPower`. Between the hero loop and that
+--- comparison it adds ONE structure term:
+---
+---     local nAllyTowers = bot:GetNearbyTowers(600, false)
+---     if J.IsValidBuilding(nAllyTowers[1]) then
+---         ... ourPower = ourPower + power ; ourPowerRaw = ourPowerRaw + power
+---     end
+---
+--- and there is no counterpart anywhere in the function. So a bot standing
+--- under its OWN tower is credited with the tower that shoots for it -- which
+--- is right -- and a bot standing under THEIRS is credited with nothing for the
+--- tower that shoots at it. The asymmetry is not in a constant, a radius or an
+--- operator: one of the two columns simply has no structure term to drift.
+---
+--- ⭐ WHY THIS IS NOT 'helpring' (same file family, same day, NOT shipped).
+--- helpring asked whether two halves of a comparison should be counted over the
+--- SAME circle -- a choice between two defensible numbers, so it needed a
+--- domain big enough to say "worth moving". This is not a choice: the shipped
+--- expression prices a unit's firepower into exactly one side of a symmetric
+--- comparison, and no reading of "we are stronger" makes the enemy's tower our
+--- asset or a non-combatant. Same disposition as 'pipetower' (the sum that put
+--- their tower in our column) and 'bbancient' (domain measured at 0, landed
+--- gated anyway): an arithmetic omission does not need a domain to be wrong.
+---
+--- DIRECTION IS FIXED BY CONSTRUCTION. The added term is a count times a
+--- `math.sqrt(Max(0, ...))`, i.e. non-negative, and it is added to the RIGHT
+--- side of a strict `>`. So armed, `J.WeAreStronger` can only go TRUE -> FALSE,
+--- never the other way: strictly fewer frames answer "we are stronger". 56 call
+--- sites read this predicate and they read TRUE as permission to fight/commit,
+--- so arming can only WITHHOLD a commitment, never start one the shipped tree
+--- refuses. A batch reading that goes the wrong way therefore cannot be read as
+--- "the lever made the bots over-commit".
+---
+--- ⛔ THE MAGNITUDE IS UNMEASURABLE ON THIS CORPUS, AND IT IS REGISTERED AS
+--- UNMEASURABLE RATHER THAN AS ZERO. Both tower terms are
+--- `GetAttackDamage() * GetAttackSpeed()`, and a .dem slice carries neither
+--- (tests/mock/bot_api.lua:136; tests/mock/replay_fixture.lua:1052 says the same
+--- of structures by name). On fixtures every hero term is sqrt(0) too, so the
+--- shipped predicate is `0 > 0` = false on every frame -- already written down
+--- at tests/test_creeppull_zone_clause.lua:40 ("FALSE on 966/966 frames"). A
+--- flipped-decision witness is therefore structurally unavailable here and is
+--- NOT claimed. What the dump DOES carry is which structures stand where and on
+--- whose team, so what is measured is the DOMAIN.
+---
+--- DOMAIN, tests/_towerpow_sweep.lua on 112 fixtures / 1039 live hero frames
+--- (2026-09-18), rows = subject frames, ring = the shipped 600:
+---   own tower in ring    78   (shipped adds its term here)
+---   ENEMY tower in ring  13   (armed adds a term shipped has nowhere to put)
+---   both at once          0
+--- 13 frames over 7 fixtures. The 78/13 split is itself the shape of the
+--- defect: the structure term fires six times as often for us as it ever could
+--- for them, because only one side has one.
+---
+--- WHAT THIS IS NOT. It does not touch the radius (600, now named once so the
+--- two halves cannot drift apart), the glyph branch's factor, the hero loop,
+--- the illusion terms, the teamfight x1.20 bonus (which is a SECOND one-sided
+--- term -- registered, not touched), or which of ourPower/ourPowerRaw the
+--- comparison reads ('fightstate' owns that). One lever: whether the enemy's
+--- towers appear in the enemy column at all.
+---
+--- NO CONJUNCTION WITH ANOTHER CANDIDATE ID. 'fightstate' also gates inside
+--- J.WeAreStronger, but it switches which OUR-side total is read and this adds
+--- to the enemy total; the two gates are disjoint predicates, never anded. A
+--- gate written `IsSoakCandidate('towerpow') and IsSoakCandidate('fightstate')`
+--- would freeze FALSE the day either is promoted -- the 'pullcad' lesson
+--- (AGENTS.md).
+---
+--- Returns the enemy towers whose firepower belongs in the enemy column, or an
+--- empty list when disarmed -- so the call site's `J.IsValidBuilding(t[1])`
+--- guard reproduces the shipped behaviour byte for byte.
+function J.GetFightPowerEnemyTowers( hBot, nRadius )
+	if hBot == nil or nRadius == nil then return {} end
+	if not J.IsModeTurbo() then return {} end
+	if not J.IsSoakCandidate( 'towerpow' ) then return {} end
+	return hBot:GetNearbyTowers( nRadius, true ) or {}
+end
+
 function J.WeAreStronger(bot, nRadius)
 	local cacheKey = 'WeAreStronger'..tostring(bot:GetPlayerID())..'-'..tostring(nRadius)
 	local cachedVar = J.Utils.GetCachedVars(cacheKey, 0.5)
@@ -13980,7 +14061,11 @@ function J.WeAreStronger(bot, nRadius)
 		end
 	end
 
-	local nAllyTowers = bot:GetNearbyTowers(600, false)
+	-- [towerpow 20260918] ONE ring, read by BOTH halves of this comparison.
+	-- Two copies of this number are two things to keep equal, and a pair of
+	-- rings that drifted apart is exactly what 'roamring'/'tormring' cost.
+	local nFightTowerRing = 600
+	local nAllyTowers = bot:GetNearbyTowers(nFightTowerRing, false)
 	if J.IsValidBuilding(nAllyTowers[1]) then
 		if nAllyTowers[1]:HasModifier('modifier_fountain_glyph') then
 			local power = #nAllyTowers * (math.sqrt(Max(0, nAllyTowers[1]:GetAttackDamage() * nAllyTowers[1]:GetAttackSpeed() * 5.0 * 2)))
@@ -13991,6 +14076,22 @@ function J.WeAreStronger(bot, nRadius)
 			ourPower = ourPower + power
 			ourPowerRaw = ourPowerRaw + power
 		end
+	end
+
+	-- [towerpow 20260918] The half that was never written: THEIR towers, in
+	-- THEIR column, priced by the same expression the ally half above uses.
+	-- Disarmed the helper hands back an empty list, so J.IsValidBuilding(nil)
+	-- is false and enemyPower is the number that shipped.  See the helper's
+	-- header for the direction proof and what the corpus can and cannot say.
+	local nEnemyTowers = J.GetFightPowerEnemyTowers( bot, nFightTowerRing )
+	if J.IsValidBuilding(nEnemyTowers[1]) then
+		local nTowerPower
+		if nEnemyTowers[1]:HasModifier('modifier_fountain_glyph') then
+			nTowerPower = #nEnemyTowers * (math.sqrt(Max(0, nEnemyTowers[1]:GetAttackDamage() * nEnemyTowers[1]:GetAttackSpeed() * 5.0 * 2)))
+		else
+			nTowerPower = #nEnemyTowers * (math.sqrt(Max(0, nEnemyTowers[1]:GetAttackDamage() * nEnemyTowers[1]:GetAttackSpeed() * 5.0)))
+		end
+		enemyPower = enemyPower + nTowerPower
 	end
 
 	if not J.IsEarlyGame() and J.IsInTeamFight(bot, 1600) and #tAllyHeroes >= #tEnemyHeroes then

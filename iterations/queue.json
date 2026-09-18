@@ -3208,6 +3208,19 @@
    "result": "",
    "director": "",
    "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)"
+  },
+  {
+   "id": "strategy-65",
+   "stream": "strategy",
+   "bundle": "`towerpow`(新 gated id,**GH #TBD**,turbo-only,**未提入集**)—— ⛔ **本请求不索要任何一波,零 EC2 / 零 CE**;要的是把这个 id 登记进编排,解冻后按 (a)/(b)/(c) 排队,免得它像 2026-08-19 的拉野死分支那样修好了却从所有队列里消失。",
+   "priority": 3,
+   "status": "pending — 预期裁定是 FROZEN-HOLD(登记、不入集、不视为掉棒;armed 25 > 20)",
+   "seeds": "不适用(不发波)",
+   "question": "⛔ **零 AWS、零 EC2、零 CE、不申请专波、不申请新波** —— 本请求要的是一次登记,不是一次取证;全部工作已在本地做完。(这一行放在开头是因为 GH #885 未修:声明写在 `bundle`/`cost` 里的新请求会被 push 闸拒掉。)\n\n一句话:**`J.WeAreStronger` 的两栏火力里,只有一栏装得下建筑 —— 我方的塔加进我方,敌方的塔哪儿都不加。请登记 `towerpow`,解冻后排 (a) 证据。**\n\n### 已经钉住的(不要重测)\n- 缺陷:`bots/FunLib/jmz_func.lua` `J.WeAreStronger` 以 `nOurPower > enemyPower` 收尾,中间只加了**一个**建筑项 `local nAllyTowers = bot:GetNearbyTowers(600, false)` → `ourPower/ourPowerRaw`,**全函数没有任何敌方建筑项**。⇒ 站在自家塔下被记入「为我开火的塔」(对的),站在敌塔下则**那座正在打我们的塔在比较里不存在**。\n- 修法:`J.GetFightPowerEnemyTowers( hBot, nRadius )`(`J.WeAreStronger` 正上方),armed(turbo-only)返回 `hBot:GetNearbyTowers( nRadius, true )`;disarmed 返回 `{}`,于是调用点的 `J.IsValidBuilding(t[1])` 守卫让 `enemyPower` **逐字**是出厂的那个数。半径 600 在调用点**命名一次**(`nFightTowerRing`),两半都读它。\n- ⭐ **方向是闭式的,不是实测的**:加数是 `#t * math.sqrt(Max(0, ...))` ⇒ 非负,且加在严格 `>` 的**右**边 ⇒ armed 只能 TRUE→FALSE。56 个调用点都把 TRUE 读成「可以打/可以压」⇒ **armed 只能收回一次交战,永远不能发起出厂树拒绝的那一次**。**批测读数若反向,不能读成「杠杆让 bot 过度激进」。**\n- ⛔ **幅度在本语料上不可测,而且是登记成「不可测」不是登记成「零」**:两个塔项都是 `GetAttackDamage() * GetAttackSpeed()`,**.dem 两者都不带**(`tests/mock/bot_api.lua:136`;`tests/mock/replay_fixture.lua:1052` 对建筑逐字同一句)⇒ 本语料上 `J.WeAreStronger` 恒为 `0 > 0` = false(早已写在 `tests/test_creeppull_zone_clause.lua:40`「FALSE on 966/966 frames」)。⇒ **翻转判决的证人在这里结构性地买不到,本请求不声称有**。\n- 域(`tests/_towerpow_sweep.lua`,112 fixture / **1039** 活体帧,ring = 出厂的 600):**自家塔在圈内 78 / 敌塔在圈内 13 / 同时 0**,7 份 fixture。⛔ **78 vs 13 本身就是缺陷的形状**:建筑项为我们开火的频率是它为他们开火的六倍 —— 因为只有一边有这一项。不是发生率。\n- 本地验证 `tests/test_towerpow_enemy_tower_power.lua` **10/10**,零 stub。加法证人 `f_260819_222559_od_eclipse_pair` / **lich(dire)** t=631.5:敌塔 407u、自家塔 600 内零座;第二个加法证人是**同一帧**的 medusa(302u);**旗标证人**是同一帧的 dragon_knight(radiant,自家塔 221u、敌塔 0)—— 它把本修法与「读 `false`」的变异体分开。对照 juggernaut(两队塔都 0)。变异台 `tools/agent/mutstand_towerpow.sh` **10 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**。\n- ⛔ **不与 `fightstate` 合取**:后者换的是**我方**读哪个累加器,本条加的是**敌方**那一栏,两个 gate 互不相交、永不 and 在一起(`pullcad` 教训)。",
+   "acceptance": "登记入编排(`queue.json` 有 director 裁定行)。⛔ 解冻前**不索要任何波次**;解冻后 (a) 证据可**搭车**在任何一波已排定的 Turbo 波上,不需要专波。⚠️ (a) 的核验点要写清楚:**armed 之后 bot 在敌塔下的交战/推进意愿下降**,而不是「`WeAreStronger` 翻了」——后者在录像侧同样读不出幅度。",
+   "result": "",
+   "director": "",
+   "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)"
   }
  ],
  "done": [

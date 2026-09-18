@@ -35,6 +35,72 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT48. **【2026-09-18T20:05Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `towerpow` 落地)。剩下的是三句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【域太薄到底是不是否决理由】那一格**:
+   **一个比较的两半之间的不对称,可以是一个【选择】,也可以是一个【遗漏】——
+   而两者的读数长得一模一样,分开它们的只有「这一半里有没有这一项可漂」。**
+   ⛔ 是选择,就要靠域来支撑「值得动」(`helpring`,同日 07:55Z,天花板 2,**没发船**);
+   是遗漏,**它不需要域来证明它错**(本轮 `towerpow`,`pipetower`,`bbancient` 域实测 0)。
+
+   现场:`J.WeAreStronger` 以 `nOurPower > enemyPower` 收尾,中间只有**一个**建筑项
+   (`bot:GetNearbyTowers(600, false)` → `ourPower/ourPowerRaw`),**全函数没有任何敌方建筑项**。
+   ⇒ 站在自家塔下,为我们开火的那座被计入(对的);站在他们塔下,
+   **正在打我们的那座在这个比较里根本不存在**。域:自家塔 78 帧 / 敌塔 13 帧 / 1039 活体帧 ——
+   ⭐ **78 vs 13 本身就是缺陷的形状**(建筑项为我们开火的频率是为他们的六倍,因为只有一边有这一项),
+   **不是发生率**。
+   📌 **判据:读到「两半不一样」之后,先问【另一半有没有这一项】,再问【这一项的数对不对】 ——
+   前者是遗漏(不需要域),后者才是选择(需要域)。**
+
+   ⭐ **第二句,关于「幅度买不到」怎么写**:两个塔项都是 `GetAttackDamage() * GetAttackSpeed()`,
+   **.dem 两者都不带** ⇒ 本语料上 `J.WeAreStronger` 恒为 `0 > 0` = false,出厂与 armed 皆然。
+   ⛔ **这要登记成「不可测」,不是登记成「零」**(铁律 1 §RULING 48 同型:
+   一个真命题被用来满足一个别的问题)。能买到的是**选择**(哪些塔进哪一栏),
+   因为建筑的队伍与坐标**是** dump 的地面真值 —— 于是证人钉的是**选择**,不是判决。
+
+   ⚠️ **第三句,关于变异体(0NEXT47 只记了前半句)**:M7 是 `want` 指到了更晚的断言 ⇒ 改 `want`
+   **并另加一个只驱动那根钉子的变异体**;M4 是**断言顺序**让更早的计数钉子先响 ⇒
+   **把语义钉子挪到 §1 第一句**。📌 **一个变异体如果让更早的断言先响,改 `want` 只是把记分改对;
+   要么换变异体,要么把你真正想说的那句话排到前面去。**
+
+   ⚠️ **下一轮要看一眼的四条**:
+   (a) **`queue.json:strategy-65`**(本轮新增)+ **GH #TBD**(push 之后开,号码取自 create 调用自己的返回,不是顺号推测) —— `towerpow` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-64` **二十条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检 `EXIT=3`**,`legs run 15`,**约 110 分钟**(上一轮 ~47 分钟 —— 登记,不解释);
+   findings = `cadence queue-rulings owed-executions lua-coverage trunk-red(python)`,
+   **`UNCERTIFIABLE = none`**。`trunk-red(python)` 的真身是 `tests/test_bots_walk_farm_only.py`
+   顶在 `tests/test_wk_q_flee_reach.lua` 的动态 `io.popen` 上 ⇒ **GH #894 族,不是本轮产物**;
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做** ——
+   本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**。
+
+   ⚠️ **本轮登记、下一轮可以直接做/不要重做的杠杆**:
+   1. ⭐ **同一个函数里的第二个单边项**:团战 `ourPower = ourPower * 1.20`
+      (`if not J.IsEarlyGame() and J.IsInTeamFight(bot,1600) and #tAllyHeroes >= #tEnemyHeroes`),
+      **敌方没有对应项**。同函数、同一种不对称,但它是一个**乘数选择**不是一个遗漏的加数
+      ⇒ **另一个杠杆,与本杠杆方向叠在一起分不开** ⇒ 等 `towerpow` 有裁定。
+   2. ⛔ **不要重新开 id 的两条零行为缺陷**:(甲) `J.MultipleAlliesArePushing`(`:1917`)
+      **零消费者**、且表里装着 bot 自己而名字写着 Allies ⇒ 死代码 + 命名缺陷;
+      (乙) `J.IsNonSiegeCreepBetweenMeAndLocation`(`:14543`)两个局部名与 `bEnemies` 实参反着,
+      **但函数扫两半取并集** ⇒ 命名缺陷、零行为(0NEXT47 §3 同判据)。
+   3. ⛔ **本轮已读、已证不可动的两条,不要重做**:(甲) `X.CanAttackTogether`
+      (`mode_team_roam_generic.lua:1731`)的 `#allies >= 2` 里 `bot:GetNearbyHeroes` **不含自己**
+      (`jmz_func.lua:9997` 逐字 *"bot:GetNearbyHeroes never returns self"*)⇒ 那是「两个**别的**队友」,
+      **不是** `helpself` 族的重复计数;(乙) `bots/FunLib/aba_defend.lua` 的 parity 站点全在
+      **TypeScriptToLua 生成文件**里(首行逐字 `Generated with …/TypeScriptToLua`)
+      ⇒ 手改会被下一次生成吃掉,**本组不在那里动杠杆**。
+   4. 0NEXT47 / 0NEXT46 的三根仍**原样挂着**:`pipetower` 的第二根(1200 vs 塔 700 攻击距离)、
+      `J.GetAlliesNearLoc` 的主语不对称(等 `tormring`)、`J.GetClosestCore`(等 `corerole`)。
+
+   ⭐ **闸的余量是本轮的一个新发现,写在这里免得下一台自己撞**:
+   `lua_gate_manifest.json` 的 **2× 后备**是今天的约束 —— **2 × 268.942 = 537.884 ≤ 540.0,
+   全仓只剩 2.116s**(GH #901)。本轮的新测试保守等价 **0.263s**,加进去合法(538.41 ≤ 540)
+   但会把**下一台**压到 **1.59s** ⇒ 改走 manifest 自己列的第二条出路:打 **`[ratchet]`** 标签,
+   由开工自检的快 Lua 腿读。⛔ **那是更弱的保证**:push 钩子不跑它。】**
+
 0NEXT47. **【2026-09-18T16:55Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `pipetower` 落地)。剩下的是三句要带走的。
 
@@ -10905,6 +10971,67 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-18T20:05Z:**两栏火力,只有一栏装得下建筑 —— 敌方的塔哪一栏都不加。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `towerpow`,
+  `bots/FunLib/jmz_func.lua` 的新 helper `J.GetFightPowerEnemyTowers` +
+  `J.WeAreStronger` 里两处改写)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T200519Z.md`;
+  `state.json:towerpow_20260918`;`queue.json:strategy-65`;**GH #TBD**(push 之后开,号码取自 create 调用自己的返回,不是顺号推测);完整判据 ⇒ backlog **0NEXT48**。
+
+  **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**,`legs run 15`,**约 110 分钟**;
+  findings = `cadence queue-rulings owed-executions lua-coverage trunk-red(python)`,
+  **`UNCERTIFIABLE = none`**;`fast Lua detectors` 读 **`138 tagged detector file(s), 0 failures`**。
+  `trunk-red(python)` 的真身是 `tests/test_bots_walk_farm_only.py` 顶在
+  `tests/test_wk_q_flee_reach.lua` 的动态 `io.popen` 上 ⇒ **GH #894 族,不是本轮产物**。
+  ⚠️ 开工第一条命令被工具**拒了两次**(管道读退出码 / `timeout` 砍固定那条腿),
+  **两次都不是我判断错了才被拦下,是我根本没判断**。
+  P1(1) 球在录像组(#862)/ P2 卡 `wandlimbo_charge_instrument` 且属量具类
+  ⇒ **4.4 球在本组且本组能动**,取 4.4。
+
+  **缺陷**:`J.WeAreStronger(bot, nRadius)` 以 `local res = nOurPower > enemyPower` 收尾,
+  英雄循环与那个比较之间只有**一个**建筑项 `local nAllyTowers = bot:GetNearbyTowers(600, false)`
+  → `ourPower/ourPowerRaw`(glyph 与非 glyph 两支),**全函数没有任何敌方建筑项**。
+  ⇒ 站在自家塔下,为我们开火的那座被计入(对的);站在他们塔下,
+  **正在打我们的那座在这个比较里根本不存在**。
+
+  ⭐⭐ **可迁移句**:**一个比较的两半之间的不对称,可以是一个【选择】,也可以是一个【遗漏】——
+  而两者的读数长得一模一样。** 是选择就要靠域来支撑「值得动」(`helpring`,同日早,天花板 2,没发船);
+  是遗漏,**它不需要域来证明它错**(`pipetower`;`bbancient` 域实测 0 仍 gated 落地)。
+  📌 **读到「两半不一样」之后,先问【另一半有没有这一项】,再问【这一项的数对不对】。**
+
+  **修法**:`J.GetFightPowerEnemyTowers( hBot, nRadius )`(**`J.WeAreStronger` 正上方**),
+  armed(turbo-only)返回 `hBot:GetNearbyTowers( nRadius, true )`,disarmed 返回 `{}`
+  ⇒ 调用点的 `J.IsValidBuilding(t[1])` 守卫让 `enemyPower` **逐字**是出厂那个数。
+  半径 600 在调用点**命名一次**(`nFightTowerRing`),**两半都读它**(再漂开就顶红测试)。
+  **一个杠杆**:不碰半径、glyph 因子、英雄循环、幻象项、团战 ×1.20 加成、
+  也不碰比较读哪个累加器(`fightstate` 的杠杆);⛔ **两个 gate 互不相交、永不 and**(`pullcad`)。
+
+  ⭐ **方向是闭式的不是实测的**:非负加数加在严格 `>` 的**右**边 ⇒ armed 只能 TRUE→FALSE;
+  56 个调用点都把 TRUE 读成「可以打」⇒ **只能收回交战,永远不能发起出厂树拒绝的那一次**。
+  **批测读数若反向,不能读成「杠杆让 bot 过度激进」。**
+
+  ⛔ **幅度不可测,而且登记成「不可测」不是登记成「零」**:两个塔项都是
+  `GetAttackDamage() * GetAttackSpeed()`,**.dem 两者都不带**(`bot_api.lua:136` /
+  `replay_fixture.lua:1052`)⇒ 本语料上谓词恒为 `0 > 0` = false,出厂与 armed 皆然
+  (早已写在 `test_creeppull_zone_clause.lua:40`「FALSE on 966/966 frames」)。
+  **域**(`tests/_towerpow_sweep.lua`,112 fixture / **1039** 活体帧,ring = 出厂的 600):
+  **自家塔 78 / 敌塔 13 / 同时 0**,7 份 fixture。⭐ **78 vs 13 本身就是缺陷的形状。**
+
+  **本地验证** `tests/test_towerpow_enemy_tower_power.lua` **10/10**,零 stub。
+  加法证人 `f_260819_222559_od_eclipse_pair` / **lich(dire)** t=631.5(敌塔 407u、自家塔 0);
+  第二加法证人同一帧 **medusa**(302u);⭐ **旗标证人**同一帧 **dragon_knight**(自家塔 221u、敌塔 0)
+  —— 它把本修法与「读 `false`」的变异体分开,而那个变异体正是本缺陷的**镜像**。对照 juggernaut。
+  变异台 `tools/agent/mutstand_towerpow.sh` **10 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**
+  —— ⚠️ 第一轮 8 抓 2「红了但消息不对」,**处置不同**:一个改 `want` 并另加变异体,
+  另一个**把语义钉子挪到 §1 第一句**。
+
+  **闸**:`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**;`py_gate.py` **133 ran / 0 findings / 40.9s**;
+  `lua_gate.py` 交给 push 钩子。⛔ **本轮没往 manifest 加行,理由是算术**:
+  **2 × 268.942 = 537.884 ≤ 540.0,余量只剩 2.116s**(GH #901),本文件保守等价 0.263s
+  ⇒ 加进去会把下一台压到 1.59s ⇒ 改打 **`[ratchet]`** 标签由开工自检的快 Lua 腿读;
+  ⛔ **那是更弱的保证,push 钩子不跑它。**
 
 - 2026-09-18T16:55Z:**我方战力那一栏里的塔是他们的;而解释这条契约的注释,就写在同一个文件缺陷上方 4000 行处。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `pipetower`,
