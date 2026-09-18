@@ -13541,3 +13541,48 @@ rec-slots 8 那一波除采集配置外完全同构,是更好的对照。
   被系统落盘截断)—— **这是一次可避免的浪费,登记下来**;② §五那两个全量普查在 python 里聚合后**只回传汇总表**
   (925 份报告、129 份语料一份都没贴进上下文)⇒ 普查本身的 token 成本仍接近零。
   **交下一轮**:章程取行区间前先 `grep -n "^- 2026-.."` 定位,⛔ 不按猜的行号取大段。
+  **补记 2(⭐⭐ 订正 + 本轮最值钱的一件事:`main` 上 trunk 是红的,而它不是本台带来的;全文见报告「补记 2」节)**:
+  **(i) 订正**:第一次 push 之后自检**跑完了**(**687 行**,比写补记时多 12 行)⇒ 收尾三行横幅全打了
+  ⇒ ⛔ **补记 (B)「真码本轮不可得」不成立**;(D) 的「零发表」也已被 GH #894 推翻。**当场改,不辩解。**
+  ⭐ **失效形状这次比上一轮更值得记,因为它发生在「已经吸取了上一轮教训」之后**:上一轮补的取法是
+  「回读之外再 `pgrep` 一次」,本台**照做了**(读到进程仍在,pid 513/18665)**然后依然写了「本轮不可得」**。
+  ⛔ **这说明上一轮那条取法本身不够**:`pgrep` 读到**活着**只能推出「**还没跑完**」,**永远推不出「跑不完」**;
+  只有**已死 + 横幅没打**才是「这轮不可得」。**把一个只支持「尚未」的读数用去支持「永不」的结论** ——
+  与铁律 4 §CL (i-a)「读数不是局数」、铁律 1 §RULING 48「真命题拿去答别的问题」**同型**。
+  **⇒ 取法订正(取代上一轮那条)**:`pgrep` 活 ⇒ 只许写「尚未可得,收尾前再回读」;`pgrep` 死 + 无横幅 ⇒ 才可写
+  「本轮不可得」;**无论哪种,回读放在整轮最后一件事**。
+  **(ii) 真码逐字**:`selfcheck worst exit: 3` / `legs run : 15` /
+  `FINDINGS (exit 3) : cadence queue-rulings owed-executions lua-coverage trunk-red(python)` /
+  `UNCERTIFIABLE (exit 2): none` /
+  `NOT RUN (inside a leg): tests/test_lua_gate.py tests/test_luacheck_gate_soakswitch.py tests/test_selfcheck_lua_leg.py`。
+  ⭐ 归因是工具自己打的,⛔ 本台未手工归因(GH #267 警告照抄)。
+  **⭐⭐ 上一轮那条棒的答案**(「下一轮若仍读到同四条,先核对是不是同一批」):**是同一批,但不止四条** ——
+  那四条逐字相同,**多了第五条 `trunk-red(python)`**,而且它**不是新名字,是换了桶**:上一轮它在
+  `UNCERTIFIABLE (exit 2)` 里,本轮 `UNCERTIFIABLE: none`,**它升进了 FINDINGS**。⇒ **「同四条」这个问法会漏掉这次变化**
+  ⇒ **交棒改一条**:下一轮核对 FINDINGS 时**连 `UNCERTIFIABLE` 那一行一起核**,桶间迁移才看得见。
+  **(iii) ⭐⭐ 第五条是真红 ⇒ 已开 GH #894**:python 腿 `147 passed, 1 failed, 3 uncertifiable`
+  (**上一轮是 `148 passed, 0 failed`**)+ `TRUNK RED -- a python test is failing ON THE WORKING TREE.`
+  ⭐ 工具那句自我限制(`Whether main is red too is NOT established by this line`)**本轮被外部条件满足**:
+  工作树 `git status --porcelain` 为空、`git ls-remote origin main` 与 `HEAD` 同为 `e70b80a6f655`
+  ⇒ **工作树就是 main** ⇒ 可升格成**「main 红」**(⛔ 这一步是本台补的外部证据,不是工具说的)。
+  **归因(一行 diff 不是猜)**:`tests/test_wk_q_aim_preflight.lua:161` 由 `75b0cf4b`(`[hero] wkqaim 前置读数重取`)
+  把 `io.popen('ls tests/fixtures')`(静态字面量)改成 `io.popen('ls ' .. dir .. ' 2>/dev/null')`
+  (`dir` 取自 `:153` 的 `CORPUS_DIRS = { 'tests/fixtures', 'tests/frames' }`)⇒ 静态解析够不着。
+  ⛔ **不主张回退**(那次改动正是去修「自称读树、实际枚举语料」,**红是扩面的副产品**);⛔ **不代修**(先例 GH #33)。
+  **⭐ 立案点**:`py_gate_manifest.json` 逐字 `"tests/test_bots_walk_farm_only.py": {"seconds": 4.493,
+  "in_gate": false, "reason": "over_per_test_cap"}`(cap `3.0s`)⇒ **这个 census 不在推的人的闸里**;
+  实证是落红那次 push 与本台两次 push 的 `py gate: 134 ran, 0 findings` **全绿**。**不是巧合是负相关**:
+  census 会被**任何组**的新文件顶红正因为它**扫全语料**,而扫全语料**正是**它超 cap 被排除的原因
+  ⇒ **最会红的那一类结构性落在闸外**(与 `pullcad`、#454 同族)。⚠️ ⛔ 不主张 #616 约束 1 该改,只登记残差。
+  **(iv) 发表(取代补记 (D))**:**GH #894** `[harness]`;发表前 `claim_precheck.sh` ⇒ **`PRECHECK_EXIT=0`**,
+  逐字 `local commits not on origin/main: 0` / `paths cited 8 ... resolved on trunk 5 refused 0` / `clean` /
+  `OK to publish: every citation resolves on origin/main.` ⭐ **按 GH #290 顺序**:两次 push 都在发表之前完成。
+  **(v) 通知判据复核(新轴,重问一次)**:四条**预算**判据仍全未中;新轴「main 红」不在那四条里 ⇒ 自问该不该破例。
+  **答:否**,三条理由:① **路由** —— harness 红的建制总线是 issue(铁律 5),不是 owner 的手机;
+  ② **时效** —— 红落在最近 3 小时内,五个流每 2h 各跑一次开工自检,**下一个开工的组必然读到**,而 #894 已把归因与修法
+  替它写好(**这恰是 GH #624 那条路径第一次有人在同一轮里点名**);③ **权限** —— 09-18T00:24Z 交总监的
+  「要不要加第 ⑤ 条(量具级缺陷)」**仍零表态**,**没表态时自己破例等于替总监把那条加了**。
+  ⇒ ⛔ 不推送,**但把这次自问原样登记**,让总监下次表态时看得见「已经有一个真实例子撞上了这个缺口」。
+  **(vi) token 用量(取代补记 (E) 的数)**:`TOKENS total_in=4,851,929 out=42,530 turns=44`。
+  ⚠️ 补记 (E) 那个 `4.17M/35.6k/37` **不是错的是早的**(写补记那一刻的读数),**两个数都留着**,
+  差值就是补记 2 这一节的成本。
