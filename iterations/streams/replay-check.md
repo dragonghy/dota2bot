@@ -19990,3 +19990,56 @@
     换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
     W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监,W89 已问)、
     W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾(总监)。
+- **2026-09-18T00:57Z(W92)**:批测台**连续第四十五轮零发波**(00:24:01Z 报告逐字「零发波、零收割欠、零泄漏」,
+  MTD `$92.163`)⇒ 无未检新局。按交棒第 1 条**先核欠条再取活**,当场逮到第六条假 OWED;
+  剩下的真欠里取 `a_evidence_illureal`,**十六天来第一次真的看了那些帧**。
+  报告:`iterations/reports/replay-check/20260918T005725Z.md`。
+  - **⭐ 头号交付:`illureal` 的条件 (a) 买到了** —— `VERIFY id=illureal verdict=INDETERMINATE episodes=52`
+    (W69 十二局,armed 腿 8 帧 / baseline 腿 44 帧,两层照 (i-a) 全登记)。
+    量具 **`tools/batch_test/behavioral/illureal_domain.py`(本轮新写,已进树)**,`--selfcheck` **7/7 ALL PASS**;
+    `0.40`/`1200` 从 Lua 读不是手敲。⛔ **每个数都是上界不是域**:`J.IsRetreating` 与
+    `J.WeAreStronger(bot,1200)` 不在帧表里,⛔ 本轮**没有**给它们造代理。
+  - **⭐ 判 INDETERMINATE 的那一帧**:`20260912_095226_slot1` Luna `t=998.5..999.5`,
+    两个拷贝 `disp=0` 一步没挪 —— 而同窗口她 `1001.7 -> zuus`、`1004.4 -> skeleton_king`,
+    **在自家塔下打赢 2v2** ⇒ `IsRetreating` 几乎不可能为真 ⇒ 「没看到诱饵位移」同时兼容
+    (甲) 分支没被求值 与 (乙) 求值了没效果,**按 evidence-discipline 规则 4 不许挑一个写成判词**。
+    ⭐ 而且上界本身薄:armed 腿 **0.67 帧/局**、可裁 **4 帧**,⇒ 这是**语料的性质不是判词的谨慎**。
+  - **⭐⭐ 顺带量到全仓从没写下来的一件事:`idx` 会被回收**(3/166 个拷贝)。逐帧证据
+    `luna idx286`:活 856.5–874.5 → 尸体冻结到 898.5 → **同一个 idx 899.5 出现在别处 hp=0.96 又走 17 秒**。
+    ⇒ **一个 idx 在一局之内不是一个单位**。`illumove_pairs.py` 实读 `:146`/`:150` 已滤尸体帧,
+    **不受影响**(且回收后的第二占用者对它要问的问题恰好也是对的)⇒ ⛔ 不替它改,只交事实。
+  - **⭐ 变异台的教训(规则 2 的现场)**:M2(`alive_runs` 退回老形状)**第一次活下来**,
+    因为当时的「尸体不动」断言**根本没经过 `alive_runs`**;补上
+    `every live copy frame lies inside some run` 后 M2 **CAUGHT**(`live=2907 covered=2853`),
+    其余六条在 M2 下全绿。M3(去掉 owner-hp 过滤)**CAUGHT**(`rows 52 -> 2907`)。
+    ⛔ 第 4 条断言(非娜迦/PL)在本语料上**空转**:这 12 局娜迦/PL 一个都没上场,照登不当证据。
+  - **第六条假 OWED**:`a_evidence_arbheart` 的验收句(报告日期 ≥ 09-04 的一条 `VERIFY id=arbheart`)
+    早在 **09-17T04:02Z 由本组自己**满足(`20260917T040206Z.md:9`,`episodes=453`),今天仍报 OWED。
+    根因同 W91:`pending_rulings.py:1269` `if kind == "manual": return ("OWED", ...)` **恒 OWED**。
+    ⇒ GH #886 实例数 5 → **6**。⛔ 本组不自行改 harness。
+  - ⛔ **`bots/` + `game/` 一行未改**,零新 soak id,零新 fixture,零 bot 逻辑改动;
+    ⛔ 未给 `illureal` 开退集/入集申请(核验结论不是病例,且 P4.2 冻结中)。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 238 个对象(出网未计价)** ——
+    1 个 dumper 二进制(缓存 HIT)+ 224 份 `analysis.json` + 13 份 `.dem`(~300MB);另 11 次 `s3 ls`。
+    ⛔ **两笔浪费自报**:224 份里只有 16 份有用(先拉全部再筛,顺序反了);一份 `.dem` 拉了两次。
+    ⭐ 处方:**先 `s3 ls | grep '\.dem$'` 定名单,再点名拉 `analysis.json`**。
+  - **⛔ 开工自检:连续第十轮同形,而且本轮连撞两道闸** —— 第一条命令带 `| tail`(逐字
+    `REFUSED: ... stdout is a pipe; exit 2, nothing checked.`),第二条套 `timeout`(逐字
+    `REFUSED: ... running under timeout; exit 2, nothing checked.`),第三条才真跑。
+    ⚠️ **W91 交棒给的那一行是对的,我抄在第三次**;两次都栽在**自己加的装饰**上
+    ⇒ 处方改成:**当轮第一条命令逐字只有那一行,不许有任何附加物**。
+    收尾时它仍在跑(`trunk health (fast Lua detectors)`)⇒ ⛔ **无 `selfcheck worst exit` 真码**,
+    ⛔ 既不写 trunk 绿也不写 trunk 红。已读到 `TRUNK RED -- a python test is failing ON THE WORKING TREE.`,
+    工具自述逐字 `Whether main is red too is NOT established by this line` ⇒ ⛔ 不声称 main 红;
+    批测台 00:24Z 点名的是 `tests/test_bots_walk_farm_only.py`,**非本组的债**。
+  - **下一轮第一件事**:0) 自检:**当轮第一条命令 = 逐字那一行,零附加物**
+    `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`(⛔ 无管道、⛔ 无 `timeout`、⛔ 不前台);
+    1) 继续按「先核验收句再取活」过剩下的欠条(名义 24 行,已证伪 6 行),优先 `ruled_at` 早于 09-13 的;
+    2) ⏳ W46 `.dem` 约 **09-25** 到期(7 天),取法问 `dem21/` 不问 `soak/`;
+    3) 拉语料的顺序:**先列 `.dem` 名单,再点名拉 `analysis.json`**(本轮多付了 208 次小对象 GET);
+    4) 交总监:§四两件仪器(`illusions.lua:147` 分支到达计数 / `facing` 进帧表)——
+       `illureal` 与 `arbheart` 卡在同一堵墙上;以及 `idx` 回收那条 [harness];
+    5) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
+       换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
+       W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监)、W90 的 UNCOVERED 分类归因 +
+       GH #804/#806 矛盾(总监)、W91 的 GH #886(本轮 +1 实例)。
