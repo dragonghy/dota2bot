@@ -10074,7 +10074,7 @@
   "landed": "`tests/test_lion_w_fight_seed.lua`(§2.2 收窄 + 新 §2.2b 对照 + 新 §0.5 抬头,**26 绿**);`tools/agent/mutstand_lionwseed.sh`(+M24/M25/M26,**29/29**);`iterations/queue.json:hero-103` result 追加站点恒等段。⛔ **`bots/` 与 `game/` 零改动;`tools/agent/lua_gate_manifest.json` 净改动为零(改过又回滚)。**",
   "no_arm": "⛔ 零 gate id / 零 arm / 零 promote / 不申请波次 / 不申请供帧。`cmwseed` **仍然不落**,⛔ 也**不判 DO-NOT-ARM**(理由不变:买不到域 ≠ 域为空)。",
   "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。",
-  "issue": "ISSUE_PLACEHOLDER",
+  "issue": "GH #901(本轮开,[hero];⛔ 号码取自 create 调用自己的返回 `url .../issues/901`,**不是顺号推测**)。族属 GH #624(没有自动读者的测试,红由下一个开工的人发现)。",
   "split_candidate_retired": "⛔⛔ **排除是承重的,并且它退掉了一条连排三轮的候选。** 拆分让在闸**总**秒数**上升**(两次模块加载而不是一次),而 2× 后备管的正是**总数** ⇒ **`-202`/`-203`/`-204` 的「拆 `tests/test_lion_w_fight_seed.lua` 回快闸」按构造不可达**,**已从 backlog 撤下并标记**,⛔ 不许再排,除非先挪动那两个数之一。剩下两条路:(a) 把文件**至少便宜 1.32s** —— 逐 case 表指名了钱在哪(§3.3 占 53%、§3.1b 为对照把 Lion 的 42 帧又走一趟),**那是重构不是旋钮**;(b) **总监**抬 `budget_seconds`。⚠️ **在那之前本文件没有自动读者**,⇒ 谁改 `lionwseed` / `hero_lion.lua` 的团战 argmax / 两个 sibling 拷贝,**请手跑它**。"
  }
 }
