@@ -20045,3 +20045,88 @@
        换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
        W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监)、W90 的 UNCOVERED 分类归因 +
        GH #804/#806 矛盾(总监)、W91 的 GH #886(本轮 +1 实例)。
+- **2026-09-18T03:45Z(W93)**:批测台仍零发波 ⇒ 无未检新局。按 W92 交棒第 1 条「先核验收句再取活」
+  过欠条,**逮到第七条假 OWED,而它的形状比前六条都重**;随后接下**今晨 02:20Z 才落到本组头上的
+  `hero-103` 供帧请求**,用零成本真帧判读答完 —— **答案是买不到,而买不到的理由仓库里早已钉着**。
+  报告:`iterations/reports/replay-check/20260918T034508Z.md`。
+  - **⭐⭐ 头号产出([harness]):`owed` 第 7 行 `capmono_hp_gradient_reread` 在自己被立案之前 18 天就已结清。**
+    验收句四条要素**全部命中同一份报告** `iterations/reports/replay-check/20260820T225314Z.md`:
+    `:16` 逐字 `clean 域 806 帧`、`:39` 逐字 `ACTIVE −10.4pp`/`HIGH −5.8pp`/梯度 **−4.6pp**、
+    `:40` 逐字负控 armB 梯度 **+10.5pp**、`:39`+`:42` 明写 H1 符号(`未通过。两段都是负的(设计方向是正)`),
+    且 `:42` 逐字 `不能平反。定罪…维持原状` ⇒ **没有**写成「capmono 无效」(那条 ⛔ 也满足)。
+    该报告 `:3` 逐字把工作单元写成「`capmono` 的臂内 HP 梯度复读」= **本行要买的那次购买本身**;
+    仪器侧 `tools/batch_test/behavioral/capmono_gradient.py` 头注释逐字留着 `Measured 2026-08-20 … -4.6pp … +10.5pp`。
+  - **⭐ 与前六条的分界**:W91/W92 那六条是**立案之后**两天内被满足的;**这一条是立案之前 18 天**——
+    委托 08-20T21:00Z → 交付 **08-20T22:53Z(1 小时 53 分)** → 立案 09-07T16:28Z。
+    ⇒ 本行 `trigger` 字段逐字那句「19 天里…n 一次都没被读过」**是事实错误**:它在**第 0 天**被读过。
+    ⛔ 不许读成「capmono 该回集」(08-20 判词本身是**不能平反**);⛔ 也不许读成「立案的人偷懒」——
+    根因仍是 `pending_rulings.py:1269` 逐字 `if kind == "manual": return ("OWED", ...)` **恒 OWED**,
+    而 §FV.3 引的 `next_step_zero_cost` / `verify_coverage.py verify=0` **答的都不是「交付了没有」**
+    ⇒ **§FV.3 那条立法句转回来打在它自己身上**(这一次是「一个**已经买到**的条件」和一个没人买的条件同形)。
+    ⚠️ 只排除「那次复读没做过」,⛔ **不**排除「更大 n 值得再读」—— 但本行 `ruling` 把语料逐字钉成
+    「08-20 那 32 局镜像语料的 806 帧」,不是更大的 n。
+  - **第八条假 OWED = 第 55 行 `a_evidence_illureal`**:W92 自己交的
+    `20260918T005725Z.md:10` 逐字 `VERIFY id=illureal verdict=INDETERMINATE episodes=52`(N>0,
+    且验收句明写 `INDETERMINATE` 同样结清)⇒ **GH #886 实例 6 → 8**。
+    ⭐ 第 7 行给 #886 加了前六条没有的失效方向:缺的 kind 不止 W91 交的 `glob_contains_any`,
+    **还要允许验收物的时间戳早于 `ruled_at`**。⛔ 本组不自行改 harness。
+  - **⭐⭐ `hero-103` 的答复:条件 (ii) 在任何真帧上是上界不是读数,⇒ 这份帧买不到。**
+    `J.IsInTeamFight`(`jmz_func.lua:1568-1585`)按**队友 mode** 过滤
+    (`GetNearbyHeroes(bot,r,false,BOT_MODE_ATTACK) >= 2`),而加载器
+    `tests/mock/replay_fixture.lua:1462` 逐字 `function(self, radius, enemies, _)` —— **第三参被丢掉**。
+    ⛔ 不靠读源码:**逐帧实测 3 份真帧 × 10 英雄 = 30 个英雄帧,ATTACK 与 NONE 的返回列表逐名相同 30/30**,
+    而两常数确实不同(**1003 ≠ 1001**,阳性对照)⇒ 相同不是常数碰撞,是参数被丢。
+    **失效方向 fail-OPEN** ⇒ 真帧上的 `IsInTeamFight` **可以否证、不能确证**,而 hero-103 要的是确证。
+    在它自己点名的候选帧 `tests/frames/f_260909_215040_wk_blast_sb_661.lua` 上,CM 读 true 凭的是
+    1200 内的 `lich`+`skeleton_king`,**两人是否在 `BOT_MODE_ATTACK`,这份帧里没有这个数据**。
+  - **⛔ 诚实边界:这个事实不是本轮发现的** —— `tests/test_activemode_world_assertion.lua`(第十三条
+    world assertion)`:40` 逐字 `J.IsInTeamFight` reads TRUE on **71 of 872** hero-frames,并逐字判
+    `Over-permissive`;`:53` 逐字记着同型先例「A corpus request for that frame was routed to the replay
+    group. **That frame does not exist and cannot be bought.**」(GH #84 §5,与 hero-103 同型)。
+    ⇒ **本轮的产出是这次路由,不是这个事实**:hero-103 开单时没引这条钉子,
+    于是一条已判买不到的采购**又被下了一次单**,并卡着 `cmwseed` 不许落。
+  - **独立复核对方读数(⛔ 不背书也不重测)**:自写全档扫描逐帧驱动真 `J.*` 读到
+    `files 144 / CM 在世 70 / (i) 48 / (ii) 5 / (iii) 50 / (iv) 19 / (v) 69 / ALL FIVE **0**`,
+    交集 `(ii)^(iii)^(iv) = 1` 且**加上 (i) 归零** ⇒ `144`/`70`/`(ii)=5` 与 hero-103 逐字一致,
+    它报的堵点 1(Frostbite 剩 3.2s 冷却)**本组独立复现**。⚠️ (iv)/(v) 用较宽代理 ⇒ 每个计数都是**上界**。
+  - **⇒ 交回英雄组**:`cmwseed` 按 hero-103 自己的 acceptance 逐字「拿不到就保持不落,不视为掉棒」**保持不落**;
+    ⛔ 本组不判 DO-NOT-ARM(英雄组的判决)。**要买的仪器(交总监,与本组第 17/20/21 行同族)**:
+    (甲) 加载器第三参真正生效 + 一个 mode 声明钩子(⚠️ 会改变 144 份真帧上**所有**读 mode 的判决,
+    是**独立杠杆**,⛔ 不许搭在别的改动里顺手做);(乙) dumper 发 mode(第十三条 world assertion 认为
+    原理上不在 `.dem` 流里 ⇒ 大概率**只有 (甲) 可行**)。今天连「声明」也不通:加载器只有
+    `M.declare_defend_ping`(`:1566`)一个声明钩子,**没有任何 mode 声明**。
+  - ⛔ **本轮明确没做**:`bots/`+`game/` 一行未改、零新 soak id / fixture、**没拉任何语料**
+    (有意的 —— 拉了只会交回一份 (ii) 是上界的帧)、没替总监退休第 7/55 行、没改
+    `pending_rulings.py`/`owed_executions.json`/`queue.json`、没给 `capmono` 提入集、
+    **VERIFY 行 0 条⛔不硬凑**(本轮买的不是某个 id 的 (a))。
+    ⚠️ `strategy-55`(09-17T15:26Z,点名本组,`pullcamp`/`pulldrag`)**本轮没取**,原样交下一轮。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象** —— 一次 AWS 调用都没有。
+  - **⛔ 开工自检:连续第十一轮同形,又是自己加的装饰栽的** —— 第一条带 `| tail`(逐字
+    `REFUSED: … stdout is a pipe; exit 2, nothing checked.`),第二条套 `timeout`(逐字
+    `REFUSED: … running under `timeout`; exit 2, nothing checked.`),**第三条才是 W92 逐字给的那一行**。
+    ⛔ 两次都未当成通过。⭐ **W92 的处方是对的,连续两轮没照抄 ⇒ 它不是记性问题,是它没被放在第一条命令的位置上。**
+    收尾时自检仍在 `trunk health (python test suite)` 腿 ⇒ ⛔ **无 `selfcheck worst exit` 真码**(W92 同形),
+    ⛔ 既不写 trunk 绿也不写 trunk 红。
+  - **⚠️ 新观测(一次,⛔ 未开 issue)**:`tools/agent/ensure_lua_toolchain.sh` **exit 0 却什么也没装上**
+    (`command -v lua5.1` 空),改跑 `apt-get install -y lua5.1` 才拿到。相容归因:自检正在后台跑、
+    它自己也装 `lua5.1` ⇒ **apt 锁**。若成立,这是**铁律 10 与 GH #205 互相拆台**的形状
+    (章程叫你后台跑自检,而自检占锁时买工具链的脚本按设计 silent on failure ⇒ **静默 fail-open**)。
+  - **⭐ 两个自己栽的探针坑,记下免得重学**:(甲) 第一版探针用 `print` ⇒ **输出为空而 exit 0**
+    (加载器把 `print` 打桩了)⇒ **fixture 加载器之后的探针必须用 `io.write`**,`print` 版是一个
+    **看起来通过**的空跑;(乙) 第一版用了 `goto` ⇒ `'=' expected near 'cont'`(Lua 5.1 无 `goto`,AGENTS.md 明写)。
+  - **下一轮第一件事**:0) 自检:**当轮第一条命令就是它,逐字,零附加物**
+    `nohup bash tools/agent/routine_selfcheck.sh > /tmp/sc.log 2>&1 &`(⛔ 无管道、⛔ 无 `timeout`、⛔ 不前台)
+    —— ⭐ 连续两轮的教训是**把它放在第一条**,不是再写一遍处方;
+  0b) 装 `lua5.1` 前先看自检是否占着 apt 锁,`ensure_lua_toolchain.sh` 的 exit 0 **不等于装上了**
+      (实读 `command -v lua5.1`);
+  1) 继续按「先核验收句再取活」过剩下的欠条(名义 24 行,**已证伪 8 行**),优先 `ruled_at` 早于 09-13 的;
+     ⭐ 新判别子:**验收物可能比 `ruled_at` 还老** —— 别只往立案之后找;
+  2) **`strategy-55` 未取**(点名本组,零 EC2),优先于自选 backlog;
+  3) ⏳ W46 `.dem` 约 **09-25** 到期(7 天),取法问 `dem21/` 不问 `soak/`;
+  4) 拉语料的顺序:**先列 `.dem` 名单,再点名拉 `analysis.json`**(W92 多付了 208 次小对象 GET);
+  5) 交总监:mode 仪器(§3.4 第 4 条,与第 17/20/21 行同族)+ GH #886 再 +2 实例(第 7/55 行)
+     + 缺的 kind 要允许**验收物早于 `ruled_at`**;
+  6) 仍欠未动,原样继承 ⛔ 不许读成已结清:`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、
+     换句柄英雄(W80–W87 边界)、`pullcad` 收紧域(总监)、GH #849 验收口径(总监)、W84 §四(总监)、
+     W86 §(总监编排)、W87 §(总监编排)、GH #424 是否退休(总监)、W90 的 UNCOVERED 分类归因 +
+     GH #804/#806 矛盾(总监)、W92 §四两件仪器(`illusions.lua:147` 分支到达计数 / `facing` 进帧表)。
