@@ -251,6 +251,44 @@ mutate "M22b (declared equivalent) the slack ring widened to 1600 -- no teamfigh
 mutate "M23 the loader's GetNearbyHeroes honours its mode argument (instrument arrives)" "$LOADER" \
   "s/        rawget\(me, '__spec'\)\.GetNearbyHeroes = function\(self, radius, enemies, _\)\n            local out = \{\}/        rawget(me, '__spec').GetNearbyHeroes = function(self, radius, enemies, mode)\n            local out = {}\n            if mode == BOT_MODE_ATTACK then return out end/" CAUGHT
 
+# ===========================================================================
+# M24-M26 -- THE §2.2 BLAST-RADIUS NARROWING (hero, 2026-09-18).
+#
+# §2.2 asked "does a sibling file mention this id" of RAW source until this
+# round.  It went red the day hero_skeleton_king.lua gained a comment CITING
+# `lionwseed` -- a correct cross-reference, landed by this same desk one round
+# earlier -- and nothing noticed, because the file had been amnestied out of the
+# push gate as `too_slow` three rounds before that (GH #624's立案 shape).
+#
+# ⛔ THE NARROWING IS THE PLACE A WEAKENING WOULD HIDE, so all three directions
+# are priced: revert it (M24), hollow it out (M25), and -- the one that matters
+# -- check it still catches a REAL second gate (M26).
+# ---------------------------------------------------------------------------
+
+# M24: §2.2's sibling half back to RAW source.  The live citation at
+# hero_skeleton_king.lua:1366 then turns it red again, which is the regression
+# this narrowing exists to stop.
+mutate "M24 §2.2 reads RAW sibling source again (the 2026-09-18 red, restored)" "$TEST" \
+  "s/        assert\(not mentions_id_in_code\(read_file\(pair\[1\]\), CAND\),/        assert(read_file(pair[1]):find(CAND, 1, true) == nil,/" CAUGHT
+
+# M25: the predicate hollowed out to a constant false.  §2.2 then passes for
+# every possible tree -- a guard that cannot fail.  ⭐ Only §2.2b's POSITIVE half
+# can see this; if §2.2b is ever weakened to the negative direction alone, this
+# goes SURVIVED and the bundle guard is gone without a red.
+mutate "M25 the blast-radius predicate hollowed to a constant false" "$TEST" \
+  "s/local function mentions_id_in_code\(src, id\)\n    return code_only\(src\):find\(id, 1, true\) ~= nil\nend/local function mentions_id_in_code(src, id)\n    local _, _ = src, id\n    return false\nend/" CAUGHT
+
+# M26: ⭐⭐ A REAL SECOND GATE IN A SIBLING FILE -- code, not prose.  This is the
+# thing §2.2 was written to catch, and the whole question the narrowing raises is
+# whether it still catches it.  The inserted line is what a bundle actually looks
+# like: `J.IsSoakCandidate` on this id in a second hero file.
+# ⚠️ M18 already does this on crystal_maiden and it still scores CAUGHT, so this
+# is deliberately its TWIN -- on skeleton_king, the file that actually carries
+# the live prose citation.  The redundancy is the point: the narrowing could
+# only have gone wrong on the file where prose and code now coexist.
+mutate "M26 a REAL second gate on this id lands in skeleton_king (the bundle)" "$WK" \
+  "s/^function X\.ConsiderQ\(\)/function X.ConsiderQ()\n\tif J.IsSoakCandidate( 'lionwseed' ) then return 0 end/m" CAUGHT
+
 restore
 echo
 echo "mutstand lionwseed: $OK/$((OK+BAD))"

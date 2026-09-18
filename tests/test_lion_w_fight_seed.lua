@@ -154,6 +154,62 @@
 -- from measured to measured-up-to-one-named-assumption.  ⛔ Whoever quotes the
 -- headline quotes this paragraph with it.
 
+-- ===========================================================================
+-- §0.5  ⭐⭐ WHY THIS FILE WAS RED ON main FOR THREE ROUNDS, AND WHAT THAT COST
+--       (added 2026-09-18, fourth pass, by the desk that caused it)
+-- ===========================================================================
+--
+-- Sequence, in this file's own history:
+--   * 2026-09-18 (`-201`) widened §3's walk from one corpus directory to two.
+--     That is the repair §0.3 describes, and it TRIPLED the walk -- the file's
+--     measured wall clock went 2.59s -> 5.868s, over `per_test_cap_seconds`
+--     (5.5), so it was amnestied out of the fast push gate as `too_slow`.
+--     Registered at the time as "a cost, not a reason to undo the scope".
+--   * 2026-09-18 (`-204`) landed +41 lines of pure comment in
+--     hero_skeleton_king.lua, one of which CITES `lionwseed` by name as the
+--     sibling that did land a gated id.  A correct, useful cross-reference.
+--   * §2.2 read RAW sibling source, so that comment turned this file RED --
+--     and nothing said so, because the amnesty had removed every automatic
+--     reader.  It was found by the NEXT round's ad-hoc run: GH #624's立案
+--     shape, verbatim, and this time the amnesty, the breakage and the finding
+--     are all the same desk in three consecutive rounds.
+--
+-- ⭐⭐ AND THE FIRST ATTEMPT TO FIX IT WAS WRONG IN THE SAME WAY, WHICH IS THE
+-- PART WORTH KEEPING.  The round that wrote this header first tried to put the
+-- row back in the fast gate, reasoning: the 5.5s `per_test_cap_seconds` only
+-- protects `budget_seconds` (540.0), that had ~273s spare, and what a slow test
+-- can actually do to a pusher is bounded by `hook_timeout_seconds` (20.0) --
+-- so excluding the file traded <=0.4s of budget honesty for ZERO automatic
+-- coverage.  Every sentence of that is true and the conclusion is still FALSE,
+-- because the headroom was computed against the wrong invariant.
+--
+-- `tests/test_lua_gate_budget_backstop.py` case 4 requires the budget to stay a
+-- BACKSTOP rather than a selector: `budget_seconds >= 2 x (in-gate total)`.
+-- Measured, both sides:
+--     before  2 x 266.837 = 533.674 <= 540.0   ok
+--     after   2 x 272.000 = 544.000 >  540.0   REFUSED
+-- ⇒ the real room under that invariant is 540/2 - 266.837 = **3.163s**, not
+-- ~273s, and this file measures 4.478-5.160s.  It does not fit.  The push gate
+-- said so within a minute; the row was reverted in the same work unit.
+--
+-- ⛔ SO THE EXCLUSION IS LOAD-BEARING, and the reason had never been written
+-- down: it is the 2x backstop, not the 5.5s cap.  Two consequences, both
+-- measured rather than argued:
+--   * A SPLIT CANNOT RE-ADMIT THIS FILE EITHER.  Splitting raises the in-gate
+--     total (two module loads instead of one); the invariant is on the total.
+--     That retires the standing "split it back into the gate" candidate --
+--     ⛔ do not re-open it without first moving one of the two numbers.
+--   * The only routes left are (a) make the file >=1.32s cheaper, or (b) the
+--     director raises `budget_seconds`.  §3.3 (the CM+WK sibling census) is
+--     53% of the cost and §3.1b re-walks Lion's 42 frames as a control, so (a)
+--     is not obviously impossible -- but it is a restructuring, not a knob.
+--
+-- ⚠️ Until one of those happens THIS FILE HAS NO AUTOMATIC READER, and the red
+-- above is what that costs.  Whoever changes `lionwseed`, `hero_lion.lua`'s
+-- 团战 argmax, or either sibling's copy: run this file BY HAND.
+--
+-- ⚠️ §2.2's own repair is in `mentions_id_in_code` below; §2.2b is its control.
+
 package.path = 'tests/?.lua;' .. package.path
 local rf = require('mock.replay_fixture')
 local scale = require('corpus_scale')
@@ -200,6 +256,27 @@ end
 --- literals constantly and a raw gsub would score the prose.
 local function code_only(src)
     return (src:gsub('%-%-[^\n]*', ''))
+end
+
+--- ⭐⭐ DOES `id` APPEAR IN THIS FILE AS CODE?  (2026-09-18 repair; see §2.2.)
+--- The blast-radius question §2.2 asks is "can a wave that arms this id move a
+--- second file", and only CODE can do that -- a comment naming the id arms
+--- nothing.  §2.2 nevertheless read RAW source until 2026-09-18, so a sibling
+--- file that merely CITED the id in prose turned it red.  That is not a
+--- hypothetical: the note at hero_skeleton_king.lua:1366 ("hero_lion.lua
+--- carries the same shape and DID land a gated id for it (`lionwseed` ...)")
+--- is a correct and useful cross-reference, and it is the thing that broke
+--- this file.
+---
+--- ⚠️ THE STRIPPER IS THE SCOPE, AND IT IS DELIBERATELY THE SAME ONE `code_only`
+--- ALREADY GAVE THE REST OF SECTION 2.  §2.1 -- the case directly above, asking
+--- about the SAME two sibling files -- has always run through `code_only`, and
+--- so has §2.2's own Lion half.  Only §2.2's sibling half read raw.  The header
+--- of `code_only` states the rule in so many words ("a raw gsub would score the
+--- prose"); this is that rule applied to the one call site that skipped it, not
+--- a loosening bought for convenience.  §2.2b is the positive control.
+local function mentions_id_in_code(src, id)
+    return code_only(src):find(id, 1, true) ~= nil
 end
 
 --- ⭐⭐ BOTH corpus directories, and the widening is the 2026-09-18 repair.
@@ -467,14 +544,57 @@ end
 tests['§2.2 only Lion\'s copy is gated -- the other two are untouched by this id'] = function()
     -- The blast radius, asserted. Arming this id must not reach crystal_maiden
     -- or skeleton_king; they need their own ids and their own frames.
+    --
+    -- ⛔ THE 2026-09-18 CORRECTION, AND THE OLD SENTENCE KEPT SO THE CHANGE IS
+    -- LEGIBLE.  This loop used to read `read_file(pair[1])` and assert
+    -- `src:find(CAND) == nil` -- i.e. the id must not appear in the sibling's
+    -- RAW source.  That sentence is WRONG, and it was wrong from the day it was
+    -- written: what makes two files one bundle is a second GATE, and a gate is
+    -- code.  See `mentions_id_in_code` above for the site that broke it.
+    -- ⛔ This is NOT a weakening of the bundle guard: a real second gate reads
+    -- `J.IsSoakCandidate('lionwseed')`, which survives `code_only` untouched.
+    -- §2.2b drives both directions rather than asserting that claim in prose.
     for _, pair in ipairs({ { CM_SRC, 'crystal_maiden' }, { WK_SRC, 'skeleton_king' } }) do
-        local src = read_file(pair[1])
-        assert(src:find(CAND, 1, true) == nil,
-            pair[2] .. ' now mentions ' .. CAND .. '. This id is one lever in one file; a '
-            .. 'second file makes it a BUNDLE that no wave can take apart (GH #606).')
+        assert(not mentions_id_in_code(read_file(pair[1]), CAND),
+            pair[2] .. ' now mentions ' .. CAND .. ' IN CODE. This id is one lever in one '
+            .. 'file; a second file makes it a BUNDLE that no wave can take apart (GH #606). '
+            .. '(A comment naming the id is allowed and is NOT what tripped this -- see '
+            .. '§2.2b; if you got here from a comment, the stripper is broken.)')
     end
     local _, nGate = code_only(read_file(SRC)):gsub("IsSoakCandidate%( *'" .. CAND .. "' *%)", '')
     assert(nGate == 1, CAND .. ' is gated in ' .. nGate .. ' places in ' .. SRC .. ', expected 1')
+end
+
+tests['§2.2b ⭐ the blast-radius predicate is driven BOTH ways -- code caught, prose not'] = function()
+    -- POSITIVE CONTROL for the 2026-09-18 narrowing in §2.2.  A narrowing that
+    -- is only ever exercised on the negative side is indistinguishable from a
+    -- predicate that answers `false` unconditionally, and that is precisely the
+    -- shape this file's own headers keep flagging elsewhere.  So drive the real
+    -- helper on synthetic sources whose only difference is `--`.
+    local gate_line = "\tif J.IsSoakCandidate( '" .. CAND .. "' ) then return true end\n"
+
+    assert(mentions_id_in_code(gate_line, CAND),
+        'the blast-radius predicate no longer sees a REAL second gate. §2.2 is now vacuous '
+        .. 'and the bundle guard (GH #606) is gone -- fix this before trusting §2.2.')
+
+    assert(not mentions_id_in_code('\t-- ' .. gate_line, CAND),
+        'the blast-radius predicate still scores a COMMENTED-OUT gate as code. Either '
+        .. 'code_only stopped stripping `--`, or §2.2 has silently gone back to reading raw '
+        .. 'source -- the second is what this case was written to stop recurring.')
+
+    -- ⭐ AND THE LIVE INSTANCE, PINNED BY NAME rather than left to the corpus.
+    -- This is the exact prose citation that turned this file red on 2026-09-18
+    -- (hero_skeleton_king.lua, landed by this same desk one round earlier).  If
+    -- it is ever rewritten into code, §2.2 must fail -- so assert BOTH halves:
+    -- the raw file still says the id, and the stripped file does not.
+    local wk = read_file(WK_SRC)
+    assert(wk:find(CAND, 1, true) ~= nil,
+        WK_SRC .. ' no longer cites ' .. CAND .. ' anywhere. That is fine on its own, but '
+        .. 'this case then has no live instance and the §2.2 narrowing is only exercised on '
+        .. 'synthetic strings -- re-point it at whatever sibling now carries the citation.')
+    assert(not mentions_id_in_code(wk, CAND),
+        WK_SRC .. ' cites ' .. CAND .. ' in CODE, not in a comment. §2.2 is the assertion '
+        .. 'that cares; this one only certifies that the live instance is still a citation.')
 end
 
 -- ---------------------------------------------------------------- section 3 --
