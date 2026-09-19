@@ -10178,7 +10178,7 @@
  },
  "smokescan_20260919": {
   "date": "2026-09-19T01:4xZ",
-  "issue": "[strategy] GH #<填于 push 之后,号码取自 create 调用自己的返回,不是顺号推测>(GH #290:引用先可解析再发表)。认领依据 = 铁律 9:P1(1) 球在录像组(#862)、P2 卡 `wandlimbo_charge_instrument` 仪器墙且属量具类 ⇒ **4.4 (i) 球在本组且本组能动**,取 4.4。本轮杠杆取自 backlog **0NEXT49 登记的三根中的第 2 根**(第 1 根等 `smokeself` 裁定,第 3 根跨全部消费者、已登记不动)。",
+  "issue": "[strategy] **GH #915**(push 之后才开,号码取自 create 调用自己的返回 `id 5506943697` / `url .../issues/915`,**不是顺号推测**;GH #290:引用先可解析再发表,`claim_precheck.sh` 按 `origin/main` 解析 —— 本轮读数 `local commits not on origin/main: 0`、`paths cited 18 / resolved on trunk 16 / refused 0`、**OK to publish**)。认领依据 = 铁律 9:P1(1) 球在录像组(#862)、P2 卡 `wandlimbo_charge_instrument` 仪器墙且属量具类 ⇒ **4.4 (i) 球在本组且本组能动**,取 4.4。本轮杠杆取自 backlog **0NEXT49 登记的三根中的第 2 根**(第 1 根等 `smokeself` 裁定,第 3 根跨全部消费者、已登记不动)。",
   "defect": "**闸上那个 `or`,读出来是「我这边干净」,写下来却在最危险的那一格为假。** `bots/ability_item_usage_generic.lua` 的 `X.ConsiderItemDesire['item_smoke_of_deceit']`:`if (#nInRangeEnemy == 0) or (#nInRangeTower == 0) then <遍历队友的扫描> end`。「干净」是 `AND`;写成 `OR` 之后,两个 `== 0` 的析取**恰好在两张表都非空时为假** —— 也就是施法者 1200 内**同时**有敌方英雄和敌方塔的那一格,本函数能被问到的最危险配置。那一格上扫描根本不跑,旗标保持出生时的 `false`,底下的读者于是在一个会走一步就把雾拆掉的英雄面前放雾。",
   "why_skipping_is_not_free": "⭐⭐ **跳过一个单调的循环不是省事,是作答。** 循环体对旗标唯一的语句是 `isThereEnemyNearby = true` —— 它只能把答案往一个方向推。于是「不跑它」并没有在一个已经有答案的问题上省时间,它把那个问题**答成了 FALSE**,而且是朝着「多放雾」的方向。📌 **判据:一个守卫能不能安全地略过一段代码,取决于被略过的那段是不是可能改变答案;单调的循环体意味着略过等于作答,不等于省事。**",
   "fix": "`J.ShouldScanAlliesForSmokeBreaker( tEnemyHeroes, tEnemyTowers )`(`bots/FunLib/jmz_func.lua`,`J.IsSmokeBreakerNearSelf` 正下方):armed(turbo-only)返回 `true`(扫描无条件跑),disarmed **逐字是出厂那个表达式**,两个 `~= nil` 守卫在内、在同一条合取的同一个位置,于是短路顺序不变。⭐ **传表不传 bot** ⇒ 「同一个圈、同一个 getter」由构造为真(`roamring`/`tormring` 的账)。",
@@ -10191,6 +10191,6 @@
   "local_validation": "`tests/test_smokescan_ally_scan_gate.lua` **10/10**,零 stub,五枚真帧证人/对照。变异台 `tools/agent/mutstand_smokescan.sh` **14 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**。⚠️ 第一轮 12 抓 2 活,**两条的处置不同**:M5 是**变异根本没落地**(perl 锚点多了一层缩进;`sha256` 那道「变异必须被证明落地」的闸抓住了它,GH #846),M6 是**红了但消息不对** —— 而它的修法不是改 `want`,是**把方向那条断言挪到 §5 网格的第一句**:一个反转方向的变异体必须死在**点名方向**的那条断言上,不是死在一条恰好排在前面的弱断言上。",
   "test_harness_note": "⚠️ **一个 handle 只能有一种上膛状态。** `J.IsSoakCandidate` 在第一次读取时把开关缓存进模块实例,于是先 disarmed 驱动过的 handle 此后一直答 disarmed —— 而那**恰好表现成「闸没触发」**,正是 `tests/mock/soak_side.lua` 自己写下的、闸测试台绝不能失败的那个方向。本轮的 nil 容忍腿因此用**两次 load**,不是一次。",
   "frozen_hold": "⛔ **未提入集**(OWNER_PRIORITIES P4.2 冻结,armed 25 > 20)。armed 串、`test_set.md` 未动;`queue.json:strategy-67` 只要一次登记,**零 EC2 / 零 CE / S3 读取 0 个对象**,预期裁定 **FROZEN-HOLD**。",
-  "gates": "`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**(经 `tools/agent/rc.sh`,⛔ 不经管道)。"
+  "gates": "`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**(经 `tools/agent/rc.sh`,⛔ 不经管道);push 钩子三条腿:**`GATE_EXIT=0`** / **`py gate: 138 ran, 0 findings, 0 uncertifiable, 48.0s`** / **`lua gate: 437 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 622.4s`**(354 条 manifest + **92 条不在 manifest 里、仍被跑了**,含本轮新增的 `test_smokescan_ally_scan_gate.lua`)。⚠️ 第二对 push(rebase 之后)两条腿读 **`lua gate: SKIPPED BY SCOPE`** —— 那是因为分支 ref 已带着这棵树,**全条腿的绿是第一对 push 买的**,不是这一对。"
  }
 }

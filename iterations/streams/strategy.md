@@ -75,8 +75,8 @@
    语法错误」推出来的** —— 后者会在真红时给出同样自信的错答案。
 
    ⚠️ **下一轮要看一眼的五条**:
-   (a) **`queue.json:strategy-67`** + 本轮 GH issue(push 之后才开,号码取自 create 调用
-   自己的返回,**不是顺号推测**)—— `smokescan` 的登记。
+   (a) **`queue.json:strategy-67`** + **GH #915**(push 之后才开,号码取自 create 调用
+   自己的返回 `id 5506943697` / `url .../issues/915`,**不是顺号推测**)—— `smokescan` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-66` **二十二条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
@@ -11112,7 +11112,7 @@
   `bots/ability_item_usage_generic.lua` 调用点一处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
   ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260919T013110Z.md`;
-  `state.json:smokescan_20260919`;`queue.json:strategy-67`;GH issue 号 push 之后回填;
+  `state.json:smokescan_20260919`;`queue.json:strategy-67`;**GH #915**(push 之后才开,号码取自 create 调用自己的返回 `id 5506943697` / `url .../issues/915`,**不是顺号推测**);
   完整判据 ⇒ backlog **0NEXT50**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**(⛔ 第一次被工具**拒了** ——
@@ -11168,6 +11168,11 @@
   **闸**:`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**(经 `rc.sh`,⛔ 不经管道);
   `test_gate_claim_consistency` 16/16、`test_gated_helper_liveness` 5/5、
   `test_gated_helper_nesting_census` 10/10。⛔ 没往 manifest 加行(GH #901),打 **`[ratchet]`** 标签。
+  push 钩子三条腿(第一对 push):**`GATE_EXIT=0`** / **`py gate: 138 ran, 0 findings, 0 uncertifiable, 48.0s`** /
+  **`lua gate: 437 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 622.4s`**。
+  ⚠️ 第二对 push(main 被拒 → `pull --rebase` 后重推)两条腿读 **`lua gate: SKIPPED BY SCOPE`**,
+  **全条腿的绿是第一对买的**;rebase 后分支那一推用了 `--force-with-lease`(会话独占分支),
+  **顺序仍是先分支后 main**。
 
 
 - 2026-09-18T22:20Z:**施法者不在自己的普查里 —— 而这个调用点上一轮刚被逐个读过,并且读对了。**
