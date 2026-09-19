@@ -78,7 +78,29 @@ for name in ('band-added',
              'illusion-not-a-band-enemy',
              'src-wide-scan',
              'src-reach-buffer',
-             'src-gate'):
+             'src-gate',
+             # The per-seed swap-average battery (owed row
+             # `tpreach_bc4_cell_reread`, director 2026-09-08T10:1xZ).  The
+             # veto's stated precondition is that the TOOL print this table --
+             # the previous BC.4 reading was hand-pooled from `--out` rows,
+             # which is the 4(i-d) shape by name.  Deleting a check here has
+             # to fail this file, not shrink the battery in silence.
+             'byseed-arm-is-the-swap-average',
+             'byseed-registers-both-layers',
+             'byseed-refuses-an-unpaired-seed',
+             'byseed-names-the-unpaired-seed',
+             'byseed-is-an-arithmetic-mean-across-seeds',
+             'byseed-opposed-is-not-a-veto',
+             'byseed-bc4-bar-is-printed',
+             'byseed-retreat-cell-stays-out-of-the-bc4-arm',
+             'byseed-retreat-cell-is-reported-as-counts',
+             'byseed-share-skips-an-empty-denominator',
+             # ...and the wiring, which no corpus in this container can reach.
+             'e2e-main-runs-the-by-seed-table',
+             'e2e-main-pairs-both-seeds',
+             'e2e-main-prints-the-bc4-bar',
+             'e2e-main-prints-the-retreat-count-line',
+             'e2e-main-prints-the-share-line-even-when-unformable'):
     ok('battery still runs %s' % name, name in proc.stdout)
 
 # The floor is the SOURCE's rule, not a tuned threshold, so it has to cut where
@@ -120,6 +142,23 @@ _, degenerate = T.reach_diagnostics({'dp': [6718.0] * T.MIN_ATTACKS},
                                     T.reach_table({'dp': [6718.0] * T.MIN_ATTACKS}))
 ok('a degenerate band is reported, not silently used',
    [h for h, _ in degenerate] == ['dp'])
+
+# The re-entry bar is a number the director set (4 seeds last time, the cell
+# alive on 2 of them), so it is pinned here rather than left to the battery: a
+# future edit that "relaxes" it to >=4 would let the same corpus that failed
+# once satisfy the veto.
+ok('the BC.4 re-entry bar is the seed count the cell was first read on',
+   T.BC4_MIN_SEEDS == 4)
+ok('the BC.4 cell is the non-retreat destination only',
+   [n for n, _ in T.BY_SEED_QUANTITIES] ==
+   ['press/g', 'ADDED/g', 'ADDED:field/g  [BC.4 cell]'])
+# BC.1: the retreat cell must NOT acquire an arm estimator.  A `home` press is
+# one a RETREAT TP made, and the predicate is never consulted on those.
+_field = dict(seed=1, arm_side='radiant', leg='armed', added=True, dest='field')
+_home = dict(_field, dest='home')
+_pred = dict(T.BY_SEED_QUANTITIES)['ADDED:field/g  [BC.4 cell]']
+ok('a retreat-destined ADDED press is outside the BC.4 cell',
+   _pred(_field) and not _pred(_home))
 
 print()
 if fails:

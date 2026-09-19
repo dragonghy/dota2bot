@@ -20641,3 +20641,67 @@
     远端权威 `ls-remote` 两个 ref **同为 `48a4894b`**(本节回填后再推一次)。
     ⚠️ push 前**杀掉了后台自检**(GH #898),代价已登记:未跑完的腿这轮没人看过。
   - **token 用量**:`TOKENS total_in=8,684,922 out=53,460 turns=62`(⚠️ 到统计时刻为止)。
+- **2026-09-19T00:48Z(W100)—— ⭐ S3 连续第三轮被挡(第三个不同的理由串);改为把一条
+  **09-26 硬悬崖欠条自己登记的前置条件**离线买断,并被变异台抓到一个「结论对、理由错」的断言。**
+  报告:`iterations/reports/replay-check/20260919T004859Z.md`。
+  - **覆盖:宽扫 0/0 局;深查 0 局;VERIFY 行 0 条** —— 无语料。⛔ **本报告不含帧证据,这是有意的**
+    (本轮产物是仪器,不是某一帧的判读;⛔ 不拿合成帧冒充真帧)。铁律 9:P1/P2 球均不在本组。
+  - **§一 S3 第三轮不可达,理由串换了第三个**:`session_setup.sh` 逐字
+    `Reason: [Unauthorized Persistence]`(W98 `[Real-World Transactions]`、W99 `[Interfere With Workloads]`)
+    ⇒ ⭐ **三次理由互不相同 = 稳定的能力边界,不是偶发** ⇒ ⛔ **不要按理由串找绕法**(前两轮各白花过一次);
+    按铁律 11 当场放弃,**该拒绝之后零次重试、零次改写命令**。
+    代价在倒数:**`tpreach_bc4_cell_reread` 的验收语料(W48/W49,8 粒)09-26 到期,还剩 7 天**。
+  - **⭐⭐ §二 本轮买的是「前置条件」不是「验收线」,两者在同一条 ruling 里是两句话**:
+    验收线要 **>4 粒种子的读数**(要语料,⛔ 仍 OWED);前置条件逐字是
+    「`tpreach_domain.py` **要自己打每粒 swap-average 表**……上一次是从 `rows.jsonl` **手算**的,
+    那正是铁律 4(i-d) 点名的形状」(不要语料,**本轮买断**)。
+    **选它的理由是时序**:语料 09-26 过期,而**仪器不到位的那一天,语料到手也只能再手算一次**。
+    ⛔ **买断前置条件 ≠ 满足验收线** ⇒ `owed_executions.json` **一行未改**、`claimed_by` **未倒填**。
+  - **落地**(全在 `tools/`,⛔ `bots/`+`game/` 一行未改):`tpreach_domain.py` 接进 `strata.py`
+    (RULING 57 唯一实现),新增 `by_seed()`,⭐ **无条件打印不挂 flag** —— 理由是这条债的形状就是
+    **「上次忘了,于是手算」**,而 **flag 把忘记的路留着**。三个 per-game 估计量走 `per_seed_arm`
+    (`press/g`、`ADDED/g`、**`ADDED:field/g` = §BC.4 那一格**),组成比走 `per_seed_share_arm`(分母=事件);
+    ⛔ **`ADDED:home` 没有估计量**(§BC.1,GH #3 −15 GPM:撤退 TP 从不询问这个谓词 ⇒ 给它 arm
+    就是估计 lever 产生不了的腿差),按**计数**打印;**门槛由工具自己打**
+    `BC.4 re-entry bar: seeds = N, required > 4 -- MET/NOT MET`(⛔ 不让下一个读的人靠「不看」满足这条否决权)。
+    `tests/test_tpreach_domain.py` 钉住 15 个新 check 名 + 3 条直打模块的断言。
+  - **⭐⭐ §三 变异台 5 死 1 活,活着的那个是本轮真正的发现**:M4 = 把**拒绝行**措辞里的
+    `4(i-b)` 引用删掉 ⇒ **断言照样绿**,因为原断言写的是整份输出的子串测试 `'4(i-b)' in out2`,
+    而**表头那一行自己就带着这个引用** ⇒ **表头替被测的那一行满足了断言**。
+    ⭐ **这是证据纪律第 4 条(匹配的结论顶替正确的理由)的实物,且是被变异台抓到的不是被读代码抓到的** ——
+    电池在 M4 之前读作 **52 PASS / 0 FAIL**。已改成**按行取**;改后重跑 M4 ⇒ **死**。
+    其余:M1(按局加权池化,变异体读出 **1.4444** 正是断言点名的数,正解 3.0000)、M3(BC.4 不过滤 `dest`)、
+    M5(不点名未配对种子)、M6(`main()` 不调用)、M7(计数器喂错)、M8(组成比不可形成时不打那一行)**全死**。
+    ⚠️ **诚实边界**:「大赦」方向(`pairing()` 恒 True / 调用侧忽略 `paired`)**两个变异体都是崩溃不是变红**
+    ⇒ 含义好(**拒绝路径是结构性的,没有通往错数字的路**),⛔ **但也意味着**
+    `byseed-refuses-an-unpaired-seed` 钉住的是**措辞与干净的 `None`**,不是「防止一个错数字」;
+    大赦方向的正确台子在 `tests/test_strata_paired_arm.py`(用 patch),**本轮未动它**。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)** —— 连一次 `s3 ls` 都没发出去。
+  - **开工自检**:⛔ **真码仍不可得,连续第六轮同形**(日志 **693 行**、pid **513/515** 仍在、
+    **无 `selfcheck worst exit` 横幅**)⇒ 不读成通过。⚠️ 第一条命令**又吃了管道 `REFUSED`**
+    (工具逐字 `has recurred 5x, every time as the first command of the round`),照登,逐字
+    **「nothing was checked; this is NOT a pass」**。⚠️ 日志里那条
+    `UNCERTIFIABLE -- a python test did NOT run (could not read its input)` **是在我的改动在飞时撞上的**
+    ⇒ 按 GH #898 ⛔ 不算 trunk 的红、不给任何组发帐单,⛔ 同样不读成通过。
+    已跑完的腿逐字:`push gate armed (core.hooksPath=.githooks)`。
+  - **三条闸(push 前手工各跑一次,退出码不经管道)**:`GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`)/
+    `py gate: 138 ran, 0 findings, 0 uncertifiable, 52.8s`(`PY_GATE_EXIT=0`)/
+    `tests/test_tpreach_domain.py` `WRAPPER_TEST_EXIT=0`;`--selfcheck` **57 PASS / 0 FAIL**(基线 42,+15)。
+    ⛔ **未用 `RULE6_BYPASS`。**
+  - **下一轮第一件事**:
+    0) 自检:逐字那一行、零附加物、**后台**;⚠️ 它在飞的时候不要读它撞出来的红(GH #898);
+    1) ⭐⭐ **先试一次 S3**(一次,不重试不改写);通了就**先买 `tpreach`**(09-26 硬悬崖,仪器已就位):
+       `python3 tools/batch_test/behavioral/tpreach_domain.py <W48 dir> <W49 dir> --reach-mode p50`,
+       再跑 `p90` 与 `source`(`done_when_note` 要求说明 p50 以外的组成比行为);
+       ⛔ 顺序不要反 —— 一个会过期,一个(`gh290_od_…`,语料 W69)不会;
+    2) ⛔ **不要重做本轮的变异台**(读数在报告 §三,重跑无新信息);
+    3) ⛔ 取本组欠条**按 `executor` 字段头取**,不要按字串 grep(W99 §4.1);
+    4) ⛔ **不要把本轮读成「`tpreach_bc4_cell_reread` 已结清」** —— 买断的是前置条件,验收线原样 OWED;
+    5) 仍欠未动,原样继承 ⛔ 不许读成已结清:W99 §五三选一(`pullthink` 仪器价签,总监)、W99 §四、
+       W98 §四三根棒、W97 §四三根棒 + §2.6、W96 §四四根棒、`wkqdmg` 要局数不要深度、
+       `66.7%` vs `29.4%` 更宽复读、换句柄英雄(W80–W87 边界)、`pullcad` 收紧域、GH #849 验收口径、
+       W84 §四、W86 §、W87 §、GH #424 是否退休、W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾、
+       W92 §四两件仪器、W94 §三 `pullcamp` 验收句不可完成、W95 §三 `abilanc` 三根棒、
+       `gh290_od_…` 第 (ii) 项(语料 W69,不紧急)。
+  - **token 用量**:`TOKENS total_in=5,926,486 out=47,244 turns=50`(⚠️ 到统计时刻为止)。
+  - **issue 净增 0、评论 1**(GH #909 追评,§五(2) 的棒),在**两次 push 之后**发(GH #290)。

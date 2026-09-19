@@ -62,6 +62,10 @@ the inflation is visible instead of assumed.
 """
 import argparse
 import collections
+import contextlib
+import io
+import shutil
+import tempfile
 import glob
 import json
 import math
@@ -78,7 +82,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from entities import (canon, frames_by_hero, interp,  # noqa: E402
                       alive_interp, HORN_T, DROPPED_ENTITIES)
 from tp_channel_death import fountains, tp_destination  # noqa: E402
+import strata  # noqa: E402  -- iron rule 4(i-e)/(i-d), GH #835 / RULING 54
 
+# Seed count the §BC.4 cell was read on the first time (4 seeds, the cell
+# alive on 2 of them).  The director's re-entry condition is literally
+# "reread this cell with MORE seeds", so the bar is a strict >.
+BC4_MIN_SEEDS = 4
 # Armed scan radius (`bWide and 1200 or 700`).
 WIDE_SCAN_U = 1200.0
 # Factory scan radius, and the CLOSING clause's domain in both configurations.
@@ -403,6 +412,140 @@ def leg_of(row, hero_team):
     return 'armed' if hero_team == cand_team else 'baseline'
 
 
+# ------------------------------------------------------------------ by-seed
+# The three ADDED observables the BC.4 reread is about.  `press` is the
+# denominator the other two live inside; `ADDED:field` IS the BC.4 cell.
+#
+# `ADDED:home` is deliberately NOT here.  Iron rule BC.1 (GH #3 paid -15 GPM
+# for it) says the retreat cell carries no threshold and is reported as raw
+# counts only -- a retreat TP never consults this predicate at all, so an arm
+# estimate on it would be an estimate of a leg delta the lever cannot produce.
+# It is printed below the table, as counts, for exactly that reason.
+BY_SEED_QUANTITIES = (
+    ('press/g', lambda r: True),
+    ('ADDED/g', lambda r: r['added']),
+    ('ADDED:field/g  [BC.4 cell]', lambda r: r['added'] and r['dest'] == 'field'),
+)
+
+
+def by_seed(detail, ngames_seed):
+    """Per-seed swap-average, printed by the tool and never by hand.
+
+    WHY THIS EXISTS (owed row `tpreach_bc4_cell_reread`, director
+    2026-09-08T10:1xZ; upstream `a_evidence_tpreach.md` §8's self-registered
+    debt).  Condition (a) for `tpreach` was judged WORKING, but the §BC.4
+    non-retreat cell -- `ADDED:field` -- was carried at n=3 armed vs 13
+    baseline, on 2 of 4 seeds, and only on the p50 reach table.  The director
+    did not waive it; it was moved to a re-entry veto, and the veto's stated
+    precondition is that THIS TOOL print the per-seed swap-average itself.
+
+    The previous reading was hand-computed from `--out` rows.jsonl.  That is
+    the exact shape iron rule 4(i-d) names: pooling across seeds weighted by
+    games leaks the roster term back in as
+    `arm + roster * (N_ab - N_ba)/(N_ab + N_ba)`, the 0.335 coefficient that
+    read a +26.60 as +9.20 and looked like an ordinary number.  Delegating to
+    `strata.py` (the sole implementation, RULING 57) makes the arithmetic mean
+    structural rather than remembered.
+
+    The per-side table above stays, unchanged: 4(i-a) wants BOTH layer
+    readings registered whatever the estimator does with them.  What changes is
+    which of the two is the READING -- the arm is, and by 4(i-c) an opposed
+    stratum pair is no longer a veto on it.
+    """
+    paired, pseeds, unpaired = strata.pairing(detail, ngames_seed)
+    print('\nper-seed swap-average (4(i-d): per-seed FIRST, then an arithmetic '
+          'mean across seeds -- never weighted by games):')
+    print('  corpus %s -- seeds paired %s%s'
+          % ('PAIRED (opposed layers read as arm+roster, 4(i-e))' if paired
+             else 'NOT PAIRED (opposed layers stay NOISE, 4(i-b))',
+             ', '.join(str(s) for s in pseeds) or 'none',
+             ('; UNPAIRED ' + ', '.join(str(s) for s in unpaired))
+             if unpaired else ''))
+    if not paired:
+        # No estimator is handed back, on purpose: a number formed from seeds
+        # that have no partner is not a swap-average, and printing one anyway
+        # is the failure `strata.py` was written against.
+        print('  no arm estimator: a seed without both arm sides has no roster '
+              'term to cancel against.  Read the per-side table under 4(i-b).')
+        return None
+
+    ests = {}
+    print('  %-7s %-30s %10s %10s %10s' % ('seed', 'quantity', 'ab', 'ba', 'arm'))
+    for name, pred in BY_SEED_QUANTITIES:
+        est = strata.per_seed_arm(detail, ngames_seed, pred)
+        ests[name] = est
+        if est is None:
+            continue
+        for p in est['per_seed']:
+            print('  %-7s %-30s %+10.4f %+10.4f %+10.4f'
+                  % (p['seed'], name, p['d_ab'], p['d_ba'], p['arm']))
+
+    # The composition signal §BC.4's note asks about: of the ADDED presses the
+    # candidate CAN refuse, what share are non-retreat?  Its denominator is
+    # episodes, not games, so it needs the share estimator -- forming it from
+    # `per_seed_arm` would quote a per-game arm as if it were a share arm.
+    comp = strata.per_seed_share_arm(
+        detail, ngames_seed,
+        lambda r: r['added'] and r['dest'] == 'field',
+        lambda r: r['added'])
+    ests['ADDED:field share of ADDED'] = comp
+    if comp is None:
+        # MANDATORY, printed even when empty -- the same rule the melee-floor
+        # header above states.  With no line here, a reader seeing no share row
+        # cannot tell "the composition signal was flat" from "no seed had an
+        # ADDED press in both strata, so there was nothing to difference", and
+        # the second is what an empty BC.4 cell looks like.
+        print('  ADDED:field/ADDED [share]: NOT FORMABLE -- no seed carried an '
+              'ADDED press in both strata on both legs.  This is an absent '
+              'denominator, not a flat share.')
+    else:
+        for p in comp['per_seed']:
+            print('  %-7s %-30s %+10.4f %+10.4f %+10.4f'
+                  % (p['seed'], 'ADDED:field/ADDED [share]',
+                     p['d_ab'], p['d_ba'], p['arm']))
+        if comp['skipped']:
+            print('  (share skipped on seed(s) %s: an empty ADDED denominator '
+                  'in one stratum is absent, not 0.0)'
+                  % ', '.join(str(s) for s in comp['skipped']))
+
+    print('\n  %-30s %10s %8s %10s   %s'
+          % ('quantity', 'mean arm', 'seeds', 'spread', 'note'))
+    for name in [n for n, _ in BY_SEED_QUANTITIES] + \
+                ['ADDED:field share of ADDED']:
+        est = ests.get(name)
+        if est is None:
+            continue
+        # The note is formed on the MEAN pair, not on any one seed's, because
+        # the mean arm is what a verdict would quote.
+        mean_ab = sum(p['d_ab'] for p in est['per_seed']) / est['n_seeds']
+        mean_ba = sum(p['d_ba'] for p in est['per_seed']) / est['n_seeds']
+        print('  %-30s %+10.4f %4d/%-3d %10s   %s'
+              % (name, est['arm'], est['seeds_better'], est['n_seeds'],
+                 ('%.4f' % est['spread']) if est['spread'] is not None
+                 else 'n/a(1 seed)',
+                 strata.note_for(strata.pair_arm(mean_ab, mean_ba), True)))
+
+    n_seeds = ests[BY_SEED_QUANTITIES[0][0]]['n_seeds']
+    # Printed by the tool so a later reader cannot satisfy the veto by not
+    # looking: the director's condition is "more seeds than last time", and
+    # last time was 4 with the cell alive on 2 of them.
+    print('\n  BC.4 re-entry bar: seeds = %d, required > %d -- %s'
+          % (n_seeds, BC4_MIN_SEEDS,
+             'MET' if n_seeds > BC4_MIN_SEEDS else 'NOT MET'))
+
+    # BC.1: the retreat cell, counts only, no threshold, no estimator.
+    home = collections.Counter()
+    for r in detail:
+        if r['added'] and r['dest'] in ('home', 'from_home'):
+            home[(r['arm_side'], r['leg'])] += 1
+    print('  BC.1 retreat cell (counts only, no threshold -- a RETREAT TP '
+          'never consults this predicate): %s'
+          % ('  '.join('%s/%s %d' % (s, l, home[(s, l)])
+                       for s in ('radiant', 'dire')
+                       for l in ('armed', 'baseline')) or 'none'))
+    return ests
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('sweeps', nargs='*', help='sweep_run.sh output dirs')
@@ -468,6 +611,9 @@ def main():
 
     default_reach = MELEE_RANGE_U + REACH_BUFFER_U
     agg = collections.defaultdict(lambda: collections.Counter())
+    # (seed, arm_side) -> games.  One game feeds BOTH legs (the two legs
+    # are the two teams inside it), so this is not per-leg.
+    ngames_seed = collections.Counter()
     detail = []
     for tl, man in zip(timelines, rows_meta):
         _, team = frames_by_hero(tl)
@@ -477,6 +623,10 @@ def main():
             if leg is None:
                 continue
             p['leg'], p['side'], p['seed'] = leg, side, man.get('seed')
+            # `strata.py` names this field `arm_side`; `side` is kept
+            # under its old name so the `--out` rows.jsonl a previous
+            # reading was hand-computed from still parses.
+            p['arm_side'] = side
             detail.append(p)
             k = (side, leg)
             agg[k]['press'] += 1
@@ -497,6 +647,7 @@ def main():
                     agg[k]['waited_field'] += 1
         for leg in ('armed', 'baseline'):
             agg[(side, leg)]['games'] += 1
+        ngames_seed[(man.get('seed'), side)] += 1
 
     banded = sorted(h for h, r in reach.items() if r > NARROW_SCAN_U)
     print('== %s -- %d games, reach-mode %s =='
@@ -551,6 +702,11 @@ def main():
                  a['press'] / a['games'] - b['press'] / b['games'],
                  a['waited'] / a['games'] - b['waited'] / b['games'],
                  a['waited'], b['waited']))
+
+    # Printed unconditionally, not behind a flag.  The debt this pays off is
+    # "the last reading was hand-computed"; a flag would leave the forgetting
+    # path open, and forgetting is what happened.
+    by_seed(detail, ngames_seed)
 
     if args.out:
         with open(args.out, 'w') as fh:
@@ -836,6 +992,160 @@ def selfcheck():
         'reach is still GetAttackRange()+150')
     chk('src-gate', "J.IsModeTurbo() and J.IsSoakCandidate( 'tpreach' )" in src,
         "tpreach is still turbo-only and still gated")
+
+    # --- the by-seed estimator (owed row `tpreach_bc4_cell_reread`) ----------
+    # No corpus is needed to check the arithmetic, and the arithmetic is the
+    # whole subject: the previous §BC.4 reading was hand-pooled, and 4(i-d)
+    # names hand-pooling by games as the way a +26.60 gets read as a +9.20.
+    def rec(seed, side, leg, added=True, dest='field'):
+        return dict(seed=seed, arm_side=side, leg=leg, added=added, dest=dest)
+
+    def cap(detail, ngames):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            est = by_seed(detail, ngames)
+        return est, buf.getvalue()
+
+    # One seed, both arm sides, unequal rates: arm must be the plain mean of
+    # the two stratum deltas.
+    d1 = ([rec(1, 'radiant', 'armed')] * 1 + [rec(1, 'radiant', 'baseline')] * 3
+          + [rec(1, 'dire', 'armed')] * 5 + [rec(1, 'dire', 'baseline')] * 2)
+    n1 = {(1, 'radiant'): 1, (1, 'dire'): 1}
+    est, out = cap(d1, n1)
+    ab, ba = 1 - 3, 5 - 2
+    chk('byseed-arm-is-the-swap-average',
+        est is not None
+        and abs(est['ADDED:field/g  [BC.4 cell]']['arm'] - (ab + ba) / 2.0) < 1e-9,
+        'ab %+d ba %+d -> arm %+.4f'
+        % (ab, ba, est['ADDED:field/g  [BC.4 cell]']['arm'] if est else float('nan')))
+    chk('byseed-registers-both-layers', ' ab ' in out and ' ba ' in out,
+        'rule 4(i-a): both stratum readings on the record, always')
+
+    # A seed dealt games on only ONE arm side has no partner for its roster
+    # term.  The estimator must refuse rather than average what is left.
+    d2 = d1 + [rec(2, 'radiant', 'armed')]
+    n2 = dict(n1)
+    n2[(2, 'radiant')] = 1
+    est2, out2 = cap(d2, n2)
+    # Line-scoped on purpose.  A whole-output `'4(i-b)' in out2` is satisfied
+    # by the header's own citation, so a mutant that strips the rule from the
+    # REFUSAL line survives it -- measured, not imagined (mutation M4 below in
+    # the round report).  The check has to look at the line it is about.
+    refusal = [ln for ln in out2.splitlines() if 'no arm estimator' in ln]
+    chk('byseed-refuses-an-unpaired-seed',
+        est2 is None and 'NOT PAIRED' in out2
+        and len(refusal) == 1 and '4(i-b)' in refusal[0],
+        'an unpaired seed must drop the corpus back to (i-b), not be dropped')
+    chk('byseed-names-the-unpaired-seed', 'UNPAIRED 2' in out2,
+        'a caller that prints "not paired" owes the reader which seed')
+
+    # (i-d) as a mutation-shaped check: two seeds whose GAME counts differ, so
+    # a games-weighted pool and the arithmetic mean of per-seed arms are
+    # different numbers.  The tool must print the second.
+    # A fat seed whose arm is 1.0 and a thin seed whose arm is 5.0: the
+    # arithmetic mean is 3.0, the games-weighted pool is 26/18 = 1.444.  The
+    # two numbers must not be allowed to coincide, or this check is decoration.
+    d3 = ([rec(1, 'radiant', 'armed')] * 8 + [rec(1, 'dire', 'armed')] * 8
+          + [rec(2, 'radiant', 'armed')] * 5 + [rec(2, 'dire', 'armed')] * 5)
+    n3 = {(1, 'radiant'): 8, (1, 'dire'): 8, (2, 'radiant'): 1, (2, 'dire'): 1}
+    est3, _ = cap(d3, n3)
+    arm3 = est3['ADDED:field/g  [BC.4 cell]']['arm']
+    weighted = 26 / 18.0
+    chk('byseed-is-an-arithmetic-mean-across-seeds',
+        abs(arm3 - 3.0) < 1e-9 and abs(arm3 - weighted) > 1.0
+        and est3['ADDED:field/g  [BC.4 cell]']['n_seeds'] == 2,
+        'arm %.4f over %d seeds (games-weighted pool would read %.4f)'
+        % (arm3, est3['ADDED:field/g  [BC.4 cell]']['n_seeds'], weighted))
+
+    # 4(i-c)/(i-e): opposed strata are an identity about this draw's roster
+    # split, NOT a veto.  The arm must survive and be quoted.
+    d4 = ([rec(1, 'radiant', 'armed')] * 3 + [rec(1, 'radiant', 'baseline')] * 1
+          + [rec(1, 'dire', 'armed')] * 1 + [rec(1, 'dire', 'baseline')] * 2
+          + [rec(2, 'radiant', 'armed')] * 3 + [rec(2, 'radiant', 'baseline')] * 1
+          + [rec(2, 'dire', 'armed')] * 1 + [rec(2, 'dire', 'baseline')] * 2)
+    n4 = {(1, 'radiant'): 1, (1, 'dire'): 1, (2, 'radiant'): 1, (2, 'dire'): 1}
+    est4, out4 = cap(d4, n4)
+    p4 = est4['ADDED:field/g  [BC.4 cell]']
+    chk('byseed-opposed-is-not-a-veto',
+        p4['per_seed'][0]['opposed'] and abs(p4['arm'] - 0.5) < 1e-9
+        and 'NOT a veto' in out4,
+        'ab +2 ba -1 -> arm %+.4f, still quoted' % p4['arm'])
+    chk('byseed-bc4-bar-is-printed',
+        'BC.4 re-entry bar' in out4 and 'NOT MET' in out4 and BC4_MIN_SEEDS == 4,
+        '2 seeds must read NOT MET against the bar of >%d' % BC4_MIN_SEEDS)
+
+    # BC.1: the retreat cell is counted, never estimated.  A `home` ADDED press
+    # must not move the BC.4 cell at all.
+    d5 = d1 + [rec(1, 'radiant', 'armed', dest='home')] * 5
+    est5, out5 = cap(d5, n1)
+    chk('byseed-retreat-cell-stays-out-of-the-bc4-arm',
+        abs(est5['ADDED:field/g  [BC.4 cell]']['arm']
+            - est['ADDED:field/g  [BC.4 cell]']['arm']) < 1e-9,
+        'a home-destined ADDED press is one the lever never saw')
+    chk('byseed-retreat-cell-is-reported-as-counts',
+        'BC.1 retreat cell' in out5 and 'radiant/armed 5' in out5,
+        'BC.1: no threshold, but the count is never suppressed')
+
+    # The share observable has episodes, not games, as its denominator; a seed
+    # with an empty ADDED denominator is skipped, not read as 0.0.
+    d6 = d1 + [rec(3, 'radiant', 'armed', added=False),
+               rec(3, 'radiant', 'baseline', added=False),
+               rec(3, 'dire', 'armed', added=False),
+               rec(3, 'dire', 'baseline', added=False)]
+    n6 = dict(n1)
+    n6[(3, 'radiant')] = 1
+    n6[(3, 'dire')] = 1
+    est6, out6 = cap(d6, n6)
+    chk('byseed-share-skips-an-empty-denominator',
+        est6['ADDED:field share of ADDED'] is not None
+        and est6['ADDED:field share of ADDED']['skipped'] == [3]
+        and 'absent, not 0.0' in out6,
+        'an absent share is not a flat share (GH #257)')
+
+    # --- end-to-end wiring: main() must FEED by_seed, not just define it ------
+    # The battery above exercises `by_seed` directly, which leaves the three
+    # lines in `main()` that build its inputs unchecked -- `arm_side` on each
+    # press, the `(seed, arm_side) -> games` counter, and the call itself.
+    # That is the half a corpus would have exercised, and there is no corpus
+    # in a routine container, so it is built here: two seeds x two arm sides,
+    # one game each, one banded press per game.
+    tmp = tempfile.mkdtemp(prefix='tpreach_sc_')
+    try:
+        os.makedirs(os.path.join(tmp, 'timelines'))
+        with open(os.path.join(tmp, 'games_manifest.jsonl'), 'w') as mf:
+            for seed in (11, 22):
+                for sd in ('radiant', 'dire'):
+                    g = 'g%d_%s' % (seed, sd)
+                    mf.write(json.dumps(dict(game=g, seed=seed, side=sd)) + '\n')
+                    json.dump(tl(bot, still(720, 0)),
+                              open(os.path.join(tmp, 'timelines',
+                                                g + '.timeline.json'), 'w'))
+        buf = io.StringIO()
+        argv = sys.argv
+        sys.argv = ['tpreach_domain.py', tmp, '--reach-mode', 'source']
+        try:
+            with contextlib.redirect_stdout(buf):
+                rc = main()
+        finally:
+            sys.argv = argv
+        out = buf.getvalue()
+        chk('e2e-main-runs-the-by-seed-table', rc == 0
+            and 'per-seed swap-average' in out,
+            'main() exit %d' % rc)
+        chk('e2e-main-pairs-both-seeds',
+            'seeds paired 11, 22' in out and 'UNPAIRED' not in out,
+            'the (seed, arm_side) counter must see 2 seeds x 2 sides')
+        chk('e2e-main-prints-the-bc4-bar',
+            'BC.4 re-entry bar: seeds = 2' in out and 'NOT MET' in out,
+            'a 2-seed corpus must read NOT MET, printed by the tool')
+        chk('e2e-main-prints-the-retreat-count-line',
+            'BC.1 retreat cell' in out,
+            'BC.1 is printed even when the cell is empty')
+        chk('e2e-main-prints-the-share-line-even-when-unformable',
+            'ADDED:field/ADDED [share]' in out,
+            'an absent share must say so; silence reads as a flat share')
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
     print('\n%d PASS / %d FAIL' % (len(ran) - len(fails), len(fails)))
     return 1 if fails else 0
