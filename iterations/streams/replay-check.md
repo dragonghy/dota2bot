@@ -20677,12 +20677,21 @@
     `byseed-refuses-an-unpaired-seed` 钉住的是**措辞与干净的 `None`**,不是「防止一个错数字」;
     大赦方向的正确台子在 `tests/test_strata_paired_arm.py`(用 patch),**本轮未动它**。
   - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)** —— 连一次 `s3 ls` 都没发出去。
-  - **开工自检**:⛔ **真码仍不可得,连续第六轮同形**(日志 **693 行**、pid **513/515** 仍在、
-    **无 `selfcheck worst exit` 横幅**)⇒ 不读成通过。⚠️ 第一条命令**又吃了管道 `REFUSED`**
+  - **开工自检 —— ⭐⭐ 六轮以来第一次拿到真码,连续第五轮(W95–W99)的同形断了**:
+    横幅逐字 **`selfcheck worst exit: 3`**,`exit sources` 表逐字
+    `FINDINGS (exit 3): cadence queue-rulings owed-executions lua-coverage` /
+    `UNCERTIFIABLE (exit 2): trunk-red(python)` / `NOT RUN (inside a leg): test_lua_gate.py
+    test_luacheck_gate_soakswitch.py test_selfcheck_lua_leg.py`(⛔ 不手工归因,GH #267)。
+    ⇒ **exit 3 的四条腿没有一条点名本轮改动**(全是存量;`lua-coverage` 自检自己登过
+    「每轮都红,风险是被读成家具」);⚠️ `trunk-red(python)` 那条 exit 2 **是我的改动在飞时撞上的**
+    ⇒ 按 GH #898 ⛔ 不算 trunk 的红、不给任何组发帐单,⛔ 也不读成通过。
+    ⭐ **归因具体**:前五轮都在自检跑完前收尾,本轮只是**改动写完得晚**才等到它。
+    ⚠️ 三个 `NOT RUN` 逐字自陈 `lua5.1 is absent` / `luacheck is not installed` —— 那是**自检那条腿**
+    的容器状态,**与铁律 6 的闸无关**(本轮 `luacheck_gate.sh` 自己装上并读 `GATE_EXIT=0 CLEAN`)。
+    ⚠️ 第一条命令**又吃了管道 `REFUSED`**
     (工具逐字 `has recurred 5x, every time as the first command of the round`),照登,逐字
     **「nothing was checked; this is NOT a pass」**。⚠️ 日志里那条
-    `UNCERTIFIABLE -- a python test did NOT run (could not read its input)` **是在我的改动在飞时撞上的**
-    ⇒ 按 GH #898 ⛔ 不算 trunk 的红、不给任何组发帐单,⛔ 同样不读成通过。
+    `UNCERTIFIABLE -- a python test did NOT run (could not read its input)` 即上面那条 exit 2。
     已跑完的腿逐字:`push gate armed (core.hooksPath=.githooks)`。
   - **三条闸(push 前手工各跑一次,退出码不经管道)**:`GATE_EXIT=0 CLEAN`(`luacheck bots game: 0 warnings`)/
     `py gate: 138 ran, 0 findings, 0 uncertifiable, 52.8s`(`PY_GATE_EXIT=0`)/
@@ -20690,6 +20699,8 @@
     ⛔ **未用 `RULE6_BYPASS`。**
   - **下一轮第一件事**:
     0) 自检:逐字那一行、零附加物、**后台**;⚠️ 它在飞的时候不要读它撞出来的红(GH #898);
+       ⭐ **本轮实测:它跑完要 ~40 分钟,横幅是等得到的** —— 收尾前回头读一次 `selfcheck worst exit`,
+       ⛔ 不要再默认写「真码不可得」(W95–W99 那五轮的成因是收尾太早,不是工具坏了);
     1) ⭐⭐ **先试一次 S3**(一次,不重试不改写);通了就**先买 `tpreach`**(09-26 硬悬崖,仪器已就位):
        `python3 tools/batch_test/behavioral/tpreach_domain.py <W48 dir> <W49 dir> --reach-mode p50`,
        再跑 `p90` 与 `source`(`done_when_note` 要求说明 p50 以外的组成比行为);
@@ -20704,4 +20715,13 @@
        W92 §四两件仪器、W94 §三 `pullcamp` 验收句不可完成、W95 §三 `abilanc` 三根棒、
        `gh290_od_…` 第 (ii) 项(语料 W69,不紧急)。
   - **token 用量**:`TOKENS total_in=5,926,486 out=47,244 turns=50`(⚠️ 到统计时刻为止)。
-  - **issue 净增 0、评论 1**(GH #909 追评,§五(2) 的棒),在**两次 push 之后**发(GH #290)。
+  - **issue 净增 0、评论 1**(GH #909 追评,§五(2) 的棒),在**两次 push 之后**发(GH #290),
+    发前跑 `claim_precheck.sh`。
+  - **push 读数(三条腿;RULING 69 先分支后 main)**:⛔ 未用 `RULE6_BYPASS`。`PULL_EXIT=0`;
+    ① 分支第一推 `PUSH1_EXIT=0`(`GATE_EXIT=0 CLEAN` / `py gate: 138 ran, 0 findings, 53.7s` /
+    **`lua gate: 435 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 685.9s`**)。
+    ⚠️ **这一推付了全价而本轮零行 Lua 改动**,成因是**新分支**(`base=fallback-merge-base`,
+    远端没有可做基的 pushed ref)⇒ ⛔ **不是 RULING 69 的反序代价**(`origin/main` 未被挪动),
+    **是分支第一推自带的**。⭐ 钩子自陈 **90 个不在 manifest 的新测试被照跑,花 377.51s**、
+    `REAL cost 685.87s against a 540.0s budget`,并点名 **9 个超预算被排除**的文件
+    ⇒ **这根棒归总监**(manifest 编排权,GH #616/#624),已照登。
