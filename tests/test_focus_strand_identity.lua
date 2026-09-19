@@ -96,6 +96,14 @@
 --     strands `axe_battle_hunger` instead, at the same thirteen points and the
 --     same {4,4,3,2}.  Nothing above changes: the wall is untouched, the strand
 --     is not removed, and this file still says no row escapes it.
+--     ⚠️ SECOND ONE, same day (hero, gated candidate `lionbuild`,
+--     tests/test_lion_hex_max_build.lua): Lion's shipped row strands
+--     `lion_voodoo` and its gated row strands `lion_mana_drain`.  Two heroes
+--     now carry a row pair whose members strand DIFFERENT abilities, which is
+--     why section 4's well-posedness check is written per TABLE and not per
+--     hero: #822's wave could not see which row a body rolled, and that is a
+--     statement about the two rows inside one table, not about a gated table
+--     that no wave has ever armed.
 --
 -- ⚠️ Tagged [ratchet].  Sections 3-5 assert that the defect is still there and
 -- still has this shape.  The day the wall is fixed they go red; that is the
@@ -128,6 +136,7 @@ local FOCUS = {
     { hero = 'skeleton_king', file = 'hero_skeleton_king' },
     { hero = 'skeleton_king', file = 'hero_skeleton_king', tbl = 'tKillBuildList' },
     { hero = 'lion', file = 'hero_lion' },
+    { hero = 'lion', file = 'hero_lion', tbl = 'tHexMaxBuildList' },
     { hero = 'crystal_maiden', file = 'hero_crystal_maiden' },
 }
 

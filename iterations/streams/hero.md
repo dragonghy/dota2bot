@@ -22,6 +22,20 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
+-209. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:`-208`「下一轮主体候选·**第 2 条**」(同一把尺子量另外四个焦点英雄,**一次一个英雄一个 id**)—— 本轮量 **Lion**。落地 gated soak candidate **`lionbuild`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260919T014653Z.md`;裁定 `iterations/state.json:lionbuild_20260919`;GH **#ISSUE_PLACEHOLDER**。**零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+   - ⭐⭐ **头条:Lion 的构筑行把那唯一一级判给了 `lion_voodoo`(Hex),而 Hex 是 Lion 除大招外唯一的硬控 —— 它的等级买的正是「控制在场时间」(CD **24s → 12s** 减半、时长 **2.0 → 3.2s**)。** ⭐ 而本文件上已经坐着**五个**关于「什么时候 Hex」的候选(`lionwreach` / `lionwpanic` / `lionwfight` / `lionwseed` / `lionhexaoe`)—— 它们一直在调一个**从 4 级到 12 级停在 rank 1、第 4 级永远买不到**的技能的时机。
+   - ⭐ **驱动读数(不是数条目,GH #134)**:shipped Hex 梯子 **{4, 13, 14, 16=永不}** / Mana Drain **{2, 5, 9, 11}**;armed 对调为 Hex **{4, 5, 9, 11}** / Mana Drain **{2, 13, 14, 16=永不}**。
+   - ⭐ **窄度**:首处分歧 **英雄 5 级**(1-4 级逐字节相同,比 Axe 那条早),每处分歧**只碰 Hex/Drain**,**Earth Spike(1/3/7/8)与 Finger(6/12/17)梯子逐位相同** ⇒ 波读数可归因到 W/E 分配**且只归因到它**。
+   - **定价**(游戏自己的 KV,§5 逐列钉住,**收益侧与成本侧都钉**):`lion_voodoo` duration 2/2.4/2.8/3.2、CD 24/20/16/12、射程 575/600/625/650、蓝 110/140/170/200;`lion_mana_drain` mana/s 20/40/60/120、CD 15/12/9/6、减速 15/20/25/30、duration 5.0 flat、射程 850 flat、**`damage_pct = 0`(它不是伤害)**。标准 Lion 加点(可检索)= Spike 先满 → **Hex 吃等级(主要买 CD)** → Drain 留 value point,**armed 行就是这个顺序**。⚠️ **让出去的比 `axebuild` 那条大**:Drain 2→12 级停 rank 1 ⇒ 单次回蓝 ~100 而非 ~300/~600,同时 Hex rank 4 要 200 蓝 ⇒ **抬高蓝账又压低回蓝**;Turbo 里抵消它的是出装时间线 —— **这正是它 turbo-gated 的理由**。⭐ 而**会被合理担心的那个交互源码自己回答了**:`X.ConsiderE` 的「缺蓝抽蓝」阈值是按 `nManaDrain` 自己写的 ⇒ **等级低让阈值更容易过** ⇒ **没有分支变黑**,拿走的是单次回蓝的**量**不是**频率**。
+   - ⛔ **三件不声称的事**:不修墙(`skillstall` / GH #799 管那件事);**不消 strand**(§3 断言 armed 行**恰好一个槽停 rank 3**);**不声称 Lion 变强了**(值不值要一波,本轮不申请)。
+   - **落地**:`bots/BotLib/hero_lion.lua` 新增 gated `tHexMaxBuildList` + 选表块(照 `wkbuild` / `axebuild` 先例),**shipped 行一个字节没动**;新测试 `tests/test_lion_hex_max_build.lua`(5 节 / `[ratchet]` / 本机 best-of-3 **0.081s** 取最大值,手加进 manifest);变异台 `tools/agent/mutstand_lionbuild.sh` **9/9 全杀**(含 **M8 成本侧** —— 只变异收益侧的台子会放过一个只吹不认账的文件),`sha256sum -c` 还原 OK。
+   - ⚠️ **三处别人的棘轮当轮改完**:(甲) `test_build_index_resolution` §8 四→五(按红字指示**先核对 §2-5 不变再改**);(乙) `test_focus_strand_identity` FOCUS +1 行 + 抬头署名说明**为什么 §4 不受影响**(它只比同一张表内的多行;#822 的波看不见 body 掷哪一行,这个理由对**从没 armed 过的 gated 表**不成立 —— 不写清楚会同时判 `axebuild` 与 `lionbuild` 违规);(丙) ⭐⭐ `test_argmax_ring_census.py` Lion 行 **1623 → 1726**(行逐字节相同),该 pin 的**第五次**重取。**第五个 datum 把第四个仅剩的窄读法删掉了**:本轮**没碰那个被 pin 的函数、也没给它加一个字注释**(改动在模块层、上方约 1500 行)⇒ 账是**任何在同一文件更早处插入行**的人付 ⇒ schema 修复不是人体工学,**这个键今天在度量文件长度**。
+   - **下一轮主体候选**(按可测性排序):
+     **第 1 条(顺延,已连排两轮)**:`wkqflee` 带里另外两帧的**供帧请求**(`hero-104` 同族)。
+     **第 2 条**:同一把尺子的剩余三个 —— ⭐ **本轮量 Lion 学到的东西改了排序**:决定值不值的不是「被钉住的是不是硬控」,而是**被钉住的那一级买到什么** ⇒ 下一个应当是 **Zeus**(`zuus_heavenly_jump` 第 4 级看上去是三个里最不值钱的 ⇒ **第一个可能得出「shipped 行选对了」的读数**,而本组一连串「选错了」正需要一个反例来定价)。
+     **第 3 条**:**WK 单独排** —— 它已有 gated `wkbuild`,#864 证明两行 strand 同一个技能 ⇒ 落这把尺子意味着**第三张表**,先问总监归属与形状。
+     **第 4 条**:`argmax_ring_census.py` 的 schema 改造(本轮 (丙) 又给它添了第五个 datum;归属存疑先问总监)+ manifest 剩下的 2 个 `too_slow` 行。
+
 -208. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:`-207` 的候选清单里没有这一条 —— 本轮认领的是 GH **#864** 那张表**留下的行动空间**:它逐个点名了焦点五英雄各自被技能点墙永久钉在 rank 3 的那一个技能,而 Axe 是 `axe_berserkers_call`。落地 gated soak candidate **`axebuild`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260918T225037Z.md`;裁定 `iterations/state.json:axebuild_20260918`;GH **#911**。**零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条:构筑行不是一张偏好表,它是「哪个技能永远少一级」的唯一自由度 —— 而 Axe 现行行把那一级花在了 Battle Hunger 上、留给了 Berserker's Call。** GH #366 / #822 / #864 把墙的算术定完(队头停第 15 项,13 点按 `{4,4,3,2}` 花完,第 16 项 = 前 13 点留在 rank 3 的那个基础技能的第 4 级)。⭐ **于是「该不该重排构筑行」有一个之前没被问的形状**:重排**消不掉** strand(#864 LIMIT 2,14 行零例外),但它**选得动 strand 是谁**。本轮只做后者。
    - ⭐ **驱动读数,不是数条目(GH #134)**:shipped 行 Call 的梯子 **{3, 13, 14, 16}** ⇒ Axe **从 3 级到 12 级**一直拿着一个 **rank 1 的 Berserker's Call**(2.1s、18s CD),而 Battle Hunger **11 级**就满了({1, 8, 9, 11})。armed 行对调:Call **{3, 8, 9, 11}**、Hunger **{1, 13, 14, 16}**。
@@ -9166,6 +9180,32 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
       凡「某某从来没有过」先问一句是不是解析吃掉了它。
 
 ## 当前状态(每次触发后更新)
+- 2026-09-19T01:46Z(报告 `iterations/reports/hero/20260919T014653Z.md`;**backlog:新开 `-209`**;
+  裁定 `iterations/state.json:lionbuild_20260919`;GH **#ISSUE_PLACEHOLDER**;
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**零 arm / 零 promote / 不申请波次 / 不申请供帧**;
+  **P4.4 自评:(i) 一个 `bots/` 行为改动**)
+  **主体:焦点英雄 Lion 的构筑行落 gated `lionbuild`(turbo-only,未 armed)—— 把技能点墙的 strand 从
+  Hex 搬到 Mana Drain。**
+  - ⭐⭐ **shipped 行把那唯一一级判给了 `lion_voodoo`(Hex)** —— Lion 除大招外唯一的硬控,
+    而它的等级买的正是控制在场时间(**CD 24s → 12s 减半**、时长 2.0 → 3.2s)。
+    ⭐ 本文件上已坐着**五个**「什么时候 Hex」的候选(`lionwreach`/`lionwpanic`/`lionwfight`/
+    `lionwseed`/`lionhexaoe`)—— 一直在调一个 **4 级到 12 级停 rank 1、第 4 级永远买不到**的技能。
+  - ⭐ **驱动读数**:shipped Hex **{4,13,14,16}** / Drain **{2,5,9,11}**;armed Hex **{4,5,9,11}** /
+    Drain **{2,13,14,16}**。**窄度**:首处分歧 **英雄 5 级**,每处只碰 Hex/Drain,
+    Spike(1/3/7/8)与 Finger(6/12/17)梯子逐位相同。
+  - ⚠️ **让出去的比 `axebuild` 那条大,照实写**:Drain 停 rank 1 ⇒ 单次回蓝 ~100 而非 ~300/~600,
+    同时 Hex rank 4 要 200 蓝 ⇒ **抬高蓝账又压低回蓝**;⭐ 但**回蓝分支不会变黑** ——
+    `X.ConsiderE` 的阈值按 `nManaDrain` 自己写,等级低反而更容易过。
+  - ⛔ **不修墙 / 不消 strand / 不声称 Lion 变强了**。
+  - **闸**:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 138 ran, 0 findings, 0 uncertifiable, 44.6s`;
+    变异台 **9/9 全杀**(含 M8 成本侧),`sha256sum -c` 还原 OK;push 钩子三条腿见报告 §六 逐字。
+  - ⚠️ **三处别人的棘轮当轮改完**:`test_build_index_resolution` §8 四→五、
+    `test_focus_strand_identity` FOCUS +1 行(+ 抬头说明**为什么 §4 不受影响**)、
+    ⭐⭐ `test_argmax_ring_census.py` Lion 行 **1623→1726**(第五次重取)——
+    **第五个 datum 证明这笔账是「任何在同一文件更早处插入行」的人付的**,不是编辑/注释那个函数的人。
+  - ⚠️ **开工自检本轮没有完整读数**:两次被它自己的防线拒跑(`stdout is a PIPE` / `ancestor is timeout`),
+    第三次 `nohup` 起来后 log 停在 `unlanded work` 那一行 ⇒ ⛔ **后面的腿这轮没人看过**
+    (`UNCERTIFIABLE` 不是通过)。
 - 2026-09-18T22:50Z(报告 `iterations/reports/hero/20260918T225037Z.md`;**backlog:新开 `-208`**;
   裁定 `iterations/state.json:axebuild_20260918`;GH **#911**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**零 arm / 零 promote / 不申请波次 / 不申请供帧**;

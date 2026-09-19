@@ -174,7 +174,110 @@ local tAllAbilityBuildList = {
 						{1,3,1,2,3,6,1,1,3,3,6,2,2,2,6},
 }
 
-local nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+-- [lionbuild] Hex-max build (gated, turbo-only).  A PURE PERMUTATION of the row
+-- above -- same fifteen entries, same multiset -- that swaps WHICH of Hex and
+-- Mana Drain gets its fourth point inside the first thirteen, and therefore
+-- WHICH one the skill-point wall strands.
+--
+-- WHY A BUILD ROW IS A LEVER AT ALL.  GH #366 / GH #822 / GH #864 settled that
+-- the level-up queue head parks at entry 15 (the t15 talent) and never moves:
+-- thirteen ability points get spent, in the multiset {4,4,3,2}, and entries 16
+-- and 17 are bought by nobody.  Entry 17 is always the ultimate's third point;
+-- entry 16 is the FOURTH rank of whichever basic the first thirteen points left
+-- at 3, and which basic that is is decided entirely by this literal.
+-- tests/test_focus_strand_identity.lua derives it offline and agrees with #822's
+-- wave column 8/8.
+--
+-- ⛔ SO THE STRAND CANNOT BE REMOVED -- #864 LIMIT 2, checked over 14 rows in
+-- that file's section 5b.  Thirteen points across three basics and an ultimate
+-- leave exactly one basic at rank 3 no matter how the row is written.  What a
+-- row edit CAN do, and the only thing this candidate claims, is choose WHICH
+-- ability pays.  Anyone quoting this block as "the wall is fixed" has misread
+-- it: the wall itself lives in bots/ability_item_usage_generic.lua (127 heroes)
+-- and has its own gated look-ahead, `skillstall` (GH #799).
+--
+-- WHAT THE SHIPPED ROW CHOOSES.  It strands `lion_voodoo` (Hex):
+--
+--     shipped   Hex    r1@lv4  r2@lv13 r3@lv14 r4@lv16 = NEVER (entry 16)
+--               Drain  r1@lv2  r2@lv5  r3@lv9  r4@lv11
+--
+-- i.e. Lion carries a RANK ONE Hex -- 2.0s, 24s cooldown, 575 cast range --
+-- from hero level 4 to hero level 12, which in Turbo (docs/PROJECT.md: ~20
+-- minute games, doubled XP) is most of the game's fighting window, while Mana
+-- Drain is finished at level 11.  (These are HERO LEVELS off the driven
+-- GetSkillList, not row indices: level 10 goes on a talent, so entry 10 lands at
+-- level 11 -- GH #134.)
+--
+-- ⭐ AND THAT IS THE ABILITY THIS FILE KEEPS TUNING.  `lionwreach`,
+-- `lionwpanic`, `lionwfight`, `lionwseed` and `lionhexaoe` are five separate
+-- candidates about WHEN to Hex; every one of them has been tuning the timing of
+-- a disable that the shipped row holds at rank 1 for nine hero levels and never
+-- buys the fourth rank of at all.
+--
+-- WHAT THIS ROW CHOOSES INSTEAD.  It strands `lion_mana_drain`:
+--
+--     armed     Hex    r1@lv4  r2@lv5  r3@lv9  r4@lv11
+--               Drain  r1@lv2  r2@lv13 r3@lv14 r4@lv16 = NEVER (entry 16)
+--
+-- ⚠️ NARROWNESS, and it is asserted rather than asserted-in-prose
+-- (tests/test_lion_hex_max_build.lua §4): Earth Spike and Finger of Death hold
+-- IDENTICAL rank ladders under both rows -- Spike 1/3/7/8, Finger 6/12/17 --
+-- and hero levels 1 through 4 are byte-identical.  The two rows first differ at
+-- hero level 5.  So a wave reading is attributable to the W/E allocation and to
+-- nothing else in this literal.
+--
+-- THE PRICE OF THE SWAP, off the game's own KV (tests/mock/special_value_shapes
+-- .lua, generated from npc_heroes.txt -- pinned by §5 of the test so a patch that
+-- moves these numbers turns this paragraph red rather than stale):
+--
+--   lion_voodoo      duration 2/2.4/2.8/3.2   cooldown 24/20/16/12
+--                    AbilityCastRange 575/600/625/650   mana 110/140/170/200
+--   lion_mana_drain  mana_per_second 20/40/60/120   cooldown 15/12/9/6
+--                    movespeed 15/20/25/30   duration 5.0 (flat)
+--                    AbilityCastRange 850 (flat)   break_distance 1100 (flat)
+--
+-- Hex is the only hard disable Lion owns outside the Earth Spike stun and the
+-- ultimate, and its ranks buy disable UPTIME: the cooldown halves, 24s -> 12s,
+-- and the duration goes 2.0s -> 3.2s.  Mana Drain is a 5.1s CHANNEL whose ranks
+-- buy mana economy (`damage_pct` is 0 in this patch -- it is not damage) and a
+-- movement slow that only holds while the channel does.
+--
+-- ⚠️ WHAT IS GIVEN UP, stated because it is real and larger than the Axe case
+-- (`axebuild`, the other row candidate in this family): Mana Drain stays at rank
+-- 1 from level 2 to level 12, i.e. ~100 mana per completed channel instead of
+-- the ~300 rank 3 / ~600 rank 4 the shipped row reaches by level 9 / 11, on a
+-- 15s cooldown instead of 9s / 6s.  The armed row therefore RAISES Lion's
+-- per-cast mana bill (Hex 110 -> 200 at rank 4) while LOWERING the refill per
+-- drain.  What offsets it in Turbo and not elsewhere is item timing: the pos_4
+-- buy list below reaches Aether Lens and Guardian Greaves far earlier there.
+--
+-- ⚠️ AND THE REFILL BRANCH DOES NOT GO DARK, which is the interaction a reader
+-- would reasonably fear.  X.ConsiderE's "缺蓝的时候抽蓝" gate is written against
+-- `nManaDrain = mana_per_second * duration` itself (`nLostMana > nManaDrain +
+-- regen*duration + 50`, and the creep filter `nCreep:GetMana() > nManaDrain *
+-- 0.8`), so a LOWER rank makes both thresholds EASIER to clear, not harder.  The
+-- armed row buys disable uptime with refill size, not with refill frequency.
+--
+-- ⚠️ THEORY (rule 2 condition (c), retrievable): the standard Lion skill order
+-- maxes Earth Spike first and takes Hex points for the cooldown, with Mana Drain
+-- held as the value-point ability.  This row is that order; the shipped row is
+-- not.  Note what is NOT claimed: Mana Drain-max Lions are a real build (mana-
+-- hungry lineups, and the shard that makes the drain multi-target), which is why
+-- this is `J.IsModeTurbo()`-gated and not a default -- and no wave has read
+-- either row.
+--
+-- Gated turbo + soak-candidate 'lionbuild' so it is inert until an A/B wave says
+-- otherwise; gate-off this file is byte-for-byte the shipped row (§2).
+local tHexMaxBuildList = {
+						{1,3,1,2,2,6,1,1,2,2,6,3,3,3,6},--Hex maxed instead of Mana Drain
+}
+
+local nAbilityBuildList
+if J.IsModeTurbo() and J.IsSoakCandidate( 'lionbuild' ) then
+	nAbilityBuildList = J.Skill.GetRandomBuild( tHexMaxBuildList )
+else
+	nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+end
 
 local nTalentBuildList = J.Skill.GetTalentBuild( tTalentTreeList )
 

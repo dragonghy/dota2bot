@@ -477,7 +477,7 @@ end
 -- 7. The set of NON-default build tables, pinned so a new one is read on
 --    purpose rather than silently.
 
-tests['[8] exactly four heroes carry a second build table'] = function()
+tests['[8] exactly five heroes carry a second build table'] = function()
     local tExtra = {}
     for sHero, tRec in pairs(CENSUS.heroes) do
         for _, sName in ipairs(tRec.tables or {}) do
@@ -489,6 +489,7 @@ tests['[8] exactly four heroes carry a second build table'] = function()
     table.sort(tExtra)
     local tExpect = {
         'axe:tCallMaxBuildList',                     -- gated 'axebuild', 2026-09-19
+        'lion:tHexMaxBuildList',                     -- gated 'lionbuild', 2026-09-19
         'obsidian_destroyer:tObjurgationBuildList',  -- gated 'odbuild', GH #287 §2
         'skeleton_king:tKillBuildList',              -- gated 'wkbuild'
         'warlock:tLaningAbilityBuildList',           -- selected by lane role
