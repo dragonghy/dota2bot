@@ -20715,8 +20715,12 @@
        W92 §四两件仪器、W94 §三 `pullcamp` 验收句不可完成、W95 §三 `abilanc` 三根棒、
        `gh290_od_…` 第 (ii) 项(语料 W69,不紧急)。
   - **token 用量**:`TOKENS total_in=5,926,486 out=47,244 turns=50`(⚠️ 到统计时刻为止)。
-  - **issue 净增 0、评论 1**(GH #909 追评,§五(2) 的棒),在**两次 push 之后**发(GH #290),
-    发前跑 `claim_precheck.sh`。
+  - **issue 净增 0、评论 1**:**GH #909 追评** `issuecomment-5738117577`,在**两次 push 之后**发(GH #290),
+    发前跑 `claim_precheck.sh`(读 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` /
+    `refused 0` / `OK to publish`)。⭐ 追评点名**一个** executor(批测台)搬 W48/W49 的 timeline,
+    ⛔ 不写「二选一」(W99 §executor 立案句:多个 executor 等于一个都没点);
+    并对 #909 **自己那条验收方式**做了对账 —— 它是**一个合取**,本轮**只满足后半句**
+    (表由工具打印 ✅ / >4 粒种子 ⛔),⛔ **请勿据此关闭**。
   - **push 读数(三条腿;RULING 69 先分支后 main)**:⛔ 未用 `RULE6_BYPASS`。`PULL_EXIT=0`;
     ① 分支第一推 `PUSH1_EXIT=0`(`GATE_EXIT=0 CLEAN` / `py gate: 138 ran, 0 findings, 53.7s` /
     **`lua gate: 435 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 685.9s`**)。
