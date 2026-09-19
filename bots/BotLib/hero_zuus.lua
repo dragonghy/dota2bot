@@ -118,6 +118,58 @@ local tTalentTreeList = {
 						['t10'] = {10, 0},
 }
 
+-- THE BUILD ROW WAS PRICED 2026-09-19 AND DELIBERATELY NOT CHANGED.  Read this
+-- before writing a `zuusbuild`, because two sibling heroes just got one and the
+-- third round is the one that lands a candidate by pattern.
+--
+-- The skill-point wall (GH #366 / #822 / #864) parks the level-up queue head at
+-- entry 15, so thirteen ability points get spent into the multiset {4,4,3,2} and
+-- entries 16 and 17 are bought by nobody.  Entry 17 is always the ultimate's
+-- third point; entry 16 is the FOURTH rank of whichever basic the thirteen
+-- points left at 3 -- and WHICH basic that is is decided entirely by the literal
+-- below.  ⛔ No row can remove the strand (#864 LIMIT 2); a row edit only
+-- chooses who pays, and the wall itself is a shared-file defect with its own
+-- gated look-ahead (`skillstall`, GH #799).
+--
+-- BOTH rows below strand `zuus_heavenly_jump` -- driven, not read off the digits,
+-- in tests/test_zuus_row_strand_priced.lua section 1 -- and that is the RIGHT
+-- choice, which is why no gated row sits here beside them.  The desk landed
+-- `axebuild` (GH #911) and `lionbuild` (GH #916) in the two preceding rounds on
+-- the same ruler; Zeus is where the ruler says no.  Off the game's own KV:
+--
+--     zuus_heavenly_jump  r3->r4  damage  75 -> 100   cooldown 18 -> 14
+--     zuus_arc_lightning  r3->r4  arc_damage 155 -> 180  AND jump_count 9 -> 11
+--     zuus_lightning_bolt r3->r4  damage 300 -> 380
+--
+-- The declined point is the smallest of the three, and the arc's is larger than
+-- its +25 looks: that +25 is paid PER HIT, up to eleven times a cast on a 1.6s
+-- cooldown, while the jump's lands on one unit (two with the t10 talent).
+--
+-- ⭐ AND IT IS CHEAPER STILL THAN THE DAMAGE COLUMNS SAY, which is the reading
+-- that generalises.  Heavenly Jump's CONTROL payload carries no rank ladder at
+-- all -- move_slow 80, aspd_slow 100, duration 1.4, all flat.  Ranks on this
+-- ability buy Zeus damage, cooldown and reach; they buy him no more control.
+-- That is the exact inverse of Lion's Hex, whose ranks buy disable uptime
+-- (cooldown 24 -> 12, duration 2.0 -> 3.2) and nothing else, and it is why the
+-- Lion lever does not transfer here.  ⇒ The ruler is NOT "is the stranded
+-- ability a hard disable" -- it is WHAT THE STRANDED RANK BUYS.  Section 3 of
+-- that test asserts both halves, including the Lion contrast, so this paragraph
+-- goes red rather than stale.
+--
+-- TWO THINGS THIS NOTE DOES NOT SAY.  (1) It does not say the rows are optimal.
+-- The pos_2 row takes its jump value point at hero level 2 while the pos_4/5 row
+-- takes the same point at level 4; swapping entries 2 and 4 of the mid row makes
+-- the two rows hold different ranks on hero levels 2 and 3 and IDENTICAL ranks
+-- from level 4 to the wall (driven, section 5).  A lever with a two-hero-level
+-- domain cannot be read by a wave whichever way it points, so it was declined on
+-- domain, not on direction.  ⭐ That domain is ARITHMETIC and not a property of
+-- these digits: swapping row entries i and j moves the ranks held on exactly
+-- hero levels i..j-1.  ⇒ ANY re-cut of this row that keeps the third basic's
+-- value point at entry 2 has the same two-level domain, so the whole family of
+-- early-order edits is declined here, not just the one that was measured.  (2) A {4,4,2,3} row -- buying the ult's third rank
+-- and leaving a basic at 2 -- is declined on this file's own affordability
+-- reading: the t15 block above records Zeus unable to pay for a RANK ONE ult
+-- (250) on 7 of 16 ready frames, and rank 3 bills 500.
 local tAllAbilityBuildList = {
 						{1,3,1,2,1,6,1,2,2,2,6,3,3,3,6},--pos2
 						{2,1,2,3,2,6,2,1,1,1,6,3,3,3,6},--pos4,5

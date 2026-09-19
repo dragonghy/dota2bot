@@ -10212,5 +10212,26 @@
   "issue": "GH **#916**(本轮新开,号码取自 create 调用自己的返回 `id 5507034036` / `url .../issues/916`,**不是顺号推测** —— #915 当轮被协同组拿走了)",
   "report": "iterations/reports/hero/20260919T014653Z.md",
   "gate_legs": "`luacheck_gate.sh` **`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings`**;`py gate: 138 ran, 0 findings, 0 uncertifiable, 43.5s`;`lua gate: 439 ran, 0 findings, 0 uncertifiable, 8 unanswered, 5 known-red, 571.2s`(scope 行逐字:`10 path(s) changed vs the pushed refs' base (base=fallback-merge-base)`)。⛔ **没有用过 `RULE6_BYPASS`。** 按文档顺序**先推分支再推 main**,第二推读 **`RULE6_MEMO=REUSE`**(逐字:`a green three-leg reading taken 2026-09-19T02:02:58Z on THIS EXACT tree`)⇒ 第二推三条腿全免。main 推 `dbe7aa1f..2997d95f HEAD -> main`,两推均 exit 0。⚠️ **py 闸第一次是红的**:`FAIL tests/test_argmax_ring_census.py` —— 本轮插进 `hero_lion.lua` 的行把那个按行号做键的 pin 顶掉了(见 `ratchet_touched` (丙)),重取后复跑 0 findings。⚠️ **rebase 撞过一次 `iterations/state.json` 冲突**(协同组同轮追加 `smokescan_20260919`),按「两条都留」手工合并,合并后 `json.load` 核验 674 键、两条都在。"
+ },
+ "zuusstrand_20260919": {
+  "owner": "hero",
+  "date": "2026-09-19T04:5xZ",
+  "armed": "N/A —— ⛔ **本轮没有 gate id**。这是同一把尺子量到第三个焦点英雄后的**否定读数**:现行构筑行选对了,所以没有候选可 arm。连续两轮落了 `axebuild`(#911)与 `lionbuild`(#916),**第三轮正是按模式落 `zuusbuild` 的那一轮** —— 量完的答案是不落。",
+  "backlog_item": "章程 `-209`「下一轮主体候选·第 2 条」逐字照做(同一把尺子量剩下的焦点英雄,一次一个)。候选表自己写着为什么排 Zeus:`zuus_heavenly_jump` 第 4 级看上去是三个里最不值钱的 ⇒ **第一个可能得出「shipped 行选对了」的读数**,而本组一连串「选错了」正需要一个反例来定价。",
+  "headline": "⭐⭐ **现行行选对了 —— 而选对的理由不是「被钉住的不是硬控」。** 上一轮(Lion)的工作假设是前者,Zeus 是它的反例。真正的尺子是**被钉住的那一级买到什么**,对着另外两级比:`zuus_heavenly_jump` r3→r4 = damage 75→100 / CD 18→14;`zuus_arc_lightning` r3→r4 = arc_damage 155→180 **且** jump_count 9→11;`zuus_lightning_bolt` r3→r4 = damage 300→380。被让出去的是三者里最小的,而且 Arc 的 +25 被这个比较**低估**(它是每一跳付的,一次施法最多十一跳、1.6s CD;Jump 的 +25 落在一个单位上,t10 之后两个)。\n⭐ **而它比伤害列显示的还便宜,这一条才能外推**:Jump 的**控制载荷根本没有等级梯子** —— `move_slow 80` / `aspd_slow 100` / `duration 1.4` / `hop_duration 0.5` / `vision_duration 3.0` 全平。等级买伤害、冷却、距离,**不买任何额外控制**。与 Lion 的 Hex(CD 24→12、时长 2.0→3.2,等级买的全部就是控制在场时间)**正好相反** ⇒ **Lion 那条杠杆不能迁移到 Zeus**,理由是这个,不是「Zeus 没有硬控」。",
+  "defect": "⛔ **本轮结论是「没有缺陷」**,这是登记的重点。Zeus 是焦点五里唯一按 role 分两行的英雄,`tAllAbilityBuildList` = `{1,3,1,2,1,6,1,2,2,2,6,3,3,3,6}`(pos_2)与 `{2,1,2,3,2,6,2,1,1,1,6,3,3,3,6}`(pos_4,5)。**两行都把 strand 判给 `zuus_heavenly_jump`**,与 `test_focus_strand_identity.lua` §4(多行英雄每行 strand 同一技能)一致 —— 而按上面的定价,那正是三个里最该让出去的一级。",
+  "witness": "⛔ **不是帧,是驱动读数 + 游戏自己的 KV**(本轮没有任何东西在对局里测过)。梯子由 shipped `J.Skill.GetSkillList` 驱动(`tests/skill_level_map.lua`),不是数字面量的第几项(GH #134):pos_2 Arc 1/3/5/7、Bolt 4/8/9/11、**Jump 2/13/14/16=永不**、R 6/12/17;pos_4,5 Bolt 1/3/5/7、Arc 2/8/9/11、**Jump 4/13/14/16=永不**、R 6/12/17。两行墙上都是 {4,4,3,2}。",
+  "fix": "**`bots/BotLib/hero_zuus.lua` 纯注释 48 行,零行为**(两个字面量一个字节没动)。写的是「**为什么这里不落 `zuusbuild`**」,唯一的读者是下一轮准备按模式落候选的那个会话。",
+  "domain": "N/A(无 gate、无行为改动)。⚠️ 但本轮**量了两个会被问到的形状的域**:(甲) `{4,4,2,3}`(墙内买大招第 3 级)被 `zuus_thundergods_wrath` 自己的 mana 列否掉 —— damage `275 425 575` / mana **`250 375 500`**,而 `hero_zuus.lua` 的 t15 段落记着大招「已学且不在冷却」的 16 帧里 Zeus **付不起 7 帧**,那还是 **rank 1、250 的账单**;rank 3 是 **500**。⛔ 这是反对的论证不是测量(语料里没有 rank 3 大招的帧)。(乙) pos_2 行 2 级点 Jump vs 姊妹行 4 级点:对调第 2、4 项后两行在英雄 **2、3 级**持有的等级不同、**4 级起逐位相同**。",
+  "theory": "验证哲学条件 **(c)**,而且是 **(c) 第一次被用来否掉一个改动而不是支持一个改动**。定价全部按游戏自己的 KV(`tests/mock/special_value_shapes.lua`,由 `npc_heroes.txt` 生成),逐列钉在新测试 §2/§3/§4 里 ⇒ 一个改了这些列的补丁把这份读数**顶红**而不是让它变陈旧。⛔ 不声称的三件事写进文件抬头:不修墙(`skillstall` / GH #799 管那件事)、不声称两行是全局最优、**不是波读数**。",
+  "validation": "`tests/test_zuus_row_strand_priced.lua`(新,`[hero] [ratchet]`,5 节,**5/5 绿**,本机 best-of-3 最大 **0.112s**,手加进 `tools/agent/lua_gate_manifest.json`:`selected_count` 355→**356**、`selected_total_seconds` 269.334→**269.446**,`measured_at` 按 GH #810 不动)。变异台 `tools/agent/mutstand_zuusstrand.sh` **9/9 全杀**,含 **M8 成本侧**(把 §4 引用的那句话改写掉 ⇒ 否决变成凭记忆)。铁律 6:`GATE_EXIT=0 CLEAN / 0 warnings`;`py gate: 138 ran, 0 findings, 0 uncertifiable, 43.8s`。",
+  "ratchet_touched": "⭐ **本轮零别人的棘轮被顶红**,而这本身是一个读数:`-209` 当轮改了三处(`test_build_index_resolution` §8、`test_focus_strand_identity` FOCUS、`test_argmax_ring_census.py` Lion 行),本轮改动**没有新增构筑表、没有新增 gated 表**,`hero_zuus.lua` 里也没有被行号 pin 住的 argmax 行。`tools/agent/lua_gate_manifest.json` 是**手加一行**不是被顶红。",
+  "gate_budget": "`lua_gate_manifest.json`:+1 行(0.112s),356 个测试 / 269.446s,`budget_seconds` 540.0 未动;`per_test_cap_seconds` 5.5 未动。",
+  "next": "⭐⭐ **这一条是本轮真正交出去的东西,别只读结论**:尺子现在有了**第三种读数**(选错了 / 选错了 / **选对了**),而判别它的是「被钉住的那一级买到什么」。剩下两个焦点英雄:**Crystal Maiden**(#864 点名 `brilliance_aura` —— ⭐ 它是**光环**,收益不落在施法者身上,是这把尺子还没碰过的第三种形状)与 **WK**(已有 gated `wkbuild`,落这把尺子意味着第三张表,**先问总监归属与形状**)。⛔ 不要在没有量之前给 CM 落候选。",
+  "cost": "**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**(铁律 1 三段式)。",
+  "issue": "GH #919",
+  "report": "iterations/reports/hero/20260919T045044Z.md",
+  "gate_legs": "见报告 §六(三条腿逐字)与 §七(开工自检)。",
+  "p44_selfassessment": "⛔ **未满足**,照实写。本轮主体既不是 (i)(`bots/` 改动是纯注释、零行为)也不是 (ii)(没有挂着的判定被它关掉)。唯一能满足 (i) 的做法是落一个刚刚被论证为**更差**的 `zuusbuild` —— AGENTS.md「locally-correct ≠ emergently-good」与验证哲学条件 (c) 同时禁止。往上凑一条不如把这一条记下来。"
  }
 }
