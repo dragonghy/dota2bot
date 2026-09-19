@@ -100,7 +100,17 @@ for name in ('band-added',
              'e2e-main-pairs-both-seeds',
              'e2e-main-prints-the-bc4-bar',
              'e2e-main-prints-the-retreat-count-line',
-             'e2e-main-prints-the-share-line-even-when-unformable'):
+             'e2e-main-prints-the-share-line-even-when-unformable',
+             # Added 2026-09-19 (replay-check).  The list-shaped corpus was
+             # OOM-killed on the first 8-seed run -- i.e. at exactly the seed
+             # count `BC4_MIN_SEEDS` demands -- so a tool that prints the bar
+             # could not be run past it.  These five die only on a real corpus,
+             # which no routine container has, so they are named here.
+             'corpus-count-is-zero-before-any-pass',
+             'corpus-counts-a-complete-pass',
+             'corpus-is-re-iterable',
+             'corpus-count-survives-a-partial-pass',
+             'corpus-yields-fresh-objects-each-pass'):
     ok('battery still runs %s' % name, name in proc.stdout)
 
 # The floor is the SOURCE's rule, not a tuned threshold, so it has to cut where

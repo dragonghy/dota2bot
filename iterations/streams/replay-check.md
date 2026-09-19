@@ -20729,3 +20729,73 @@
     **是分支第一推自带的**。⭐ 钩子自陈 **90 个不在 manifest 的新测试被照跑,花 377.51s**、
     `REAL cost 685.87s against a 540.0s budget`,并点名 **9 个超预算被排除**的文件
     ⇒ **这根棒归总监**(manifest 编排权,GH #616/#624),已照登。
+- **2026-09-19T04:09Z(W101)—— ⭐⭐ S3 四轮以来第一次通,09-26 硬悬崖那条欠条的六项验收物全部买到;
+  而买到的读数是个否定答案:§BC.4 那一格的 arm **符号由 reach 表决定,不由 armed 腿决定**。
+  ⭐ 这条读数还差点买不到 —— 工具在它自己印的那条门槛上 OOM 被杀。**
+  报告:`iterations/reports/replay-check/20260919T040923Z.md`。
+  - **覆盖:宽扫 148/148 局(W48 4 粒 + W49 4 粒,8 个 run 前缀,`unparseable=0`);
+    深查 15 帧(`source` 表 §BC.4 格全部事件逐条);VERIFY 行 1 条。** 无未检新局
+    (批测台 `20260919T031641Z.md` 逐字「刹车第五十三轮持有;零发波」)⇒ 语料是归档语料。
+  - **⭐⭐ 头号(§二):`tpreach_domain.py` 在 8 粒种子上 OOM 被杀(exit 137,p50/p90/source 三个模式
+    全死,一行都没印出来)** —— 根因是 `main()` 把整个语料**物化成 list**(148 局 × ~28MB timeline,
+    容器 15GB)。⇒ **一个印着 `BC.4 re-entry bar: seeds = N, required > 4` 的工具,在 N > 4 时跑不动**,
+    即「用不回答来回答否决权」。已改成流式 `Corpus`(可重复迭代、一次只驻留一局、`n_games` 只由
+    **完整**的一趟设置),三模式全部 EXIT=0。**变异台 2 死 0 活**:M1 改回缓存 list ⇒
+    `FAIL corpus-yields-fresh-objects-each-pass`;M2 让 `n_games` 逐条递增 ⇒
+    `FAIL corpus-count-survives-a-partial-pass`;两次均 `61 PASS / 1 FAIL`。
+    `--selfcheck` **57 → 62 PASS / 0 FAIL**,五个新 check 名逐个钉进 `tests/test_tpreach_domain.py`。
+    ⛔ `BC4_MIN_SEEDS == 4` 与验收线**一字未动**。
+  - **⭐⭐ §三 读数:同一份 148 局语料,换 reach 表就反号** ——
+    §BC.4 格 arm/局 `p50 −0.0566`(2/8 粒,活 5/8,26 事件)/ `p90 +0.1018`(5/8 粒,活 8/8,120 事件)/
+    `source −0.0080`(3/8 粒,活 4/8,15 事件);组成比同样反号
+    (`−0.2702` / `+0.1973` / `−0.3536`)。**方向约定先于测量**:纯否决式加宽 ⇒ WORKING = arm 为负。
+    ⭐ **成因数出来了不是猜的**:`p50` 那格 **sniper 占 16/26 = 62%**,而 `source` 表里
+    **sniper 根本不在**(`SOURCE_CITED_RANGE` 只有源码点名的四个 + 增程道具)⇒ p50↔source 之差
+    基本就是「sniper 算不算」;`p90` 更糟 —— 工具自己印
+    `reach >= wide scan 1200: medusa 1625, sniper 1314` ⇒ band 测试**按构造退化**,medusa 单独贡献 15 个事件。
+  - **⛔ §3.3 与 4 粒那次相比**:**没变** —— 该格**仍然半数粒种子是空的**(source 4/8 活、p50 5/8 活;
+    4 粒那次 2/4 活)⇒ **粒数翻倍并没有把这一格喂厚**。**变了,且往坏的方向** —— 总监 09-08 判
+    WORKING 的一条支撑是「组成比在两个分层里各自独立复现」,**在 8 粒上分层内仍复现,换一张 reach 表就反号**。
+    ⇒ 本组建议:**否决权维持、但换买法** —— ⛔ 再加粒种子买不到它,能买它的是
+    **`GetAttackRange()` 进 dump**。⛔ 判词归总监,本轮**未改 `owed_executions.json` 一行、未倒填 `claimed_by`**。
+  - **⭐ §四 逐帧**:`source` 表该格 15 个事件全列;armed 腿 8 个,其中 **`dest=field` 且 hp ≥ 0.70 的 4 帧**
+    撤退解释不成立(lion 1.00 ×2、sniper 0.98、lich 0.84)。其中
+    **`20260905_123858_slot1` lion t=921.3 回原始 timeline 手工核对**:press 是真的
+    (`modifier_teleporting` 逐字)、band 敌人**是真身不是幻象**(同秒 drow 开 manta、该局 drow 名下 19 条 idx 流,
+    `entities.frames_by_hero` 按 idx 分流 + `HORN_T` 过滤只留真身 idx 1424;手算 t=920.5 距 **729u**,
+    插值 786u 与工具一致)、lion hp 1.00 / lvl 17 / `tp_cd=0` / dest=field ⇒ `700 < 786 ≤ 915` STRIKE 命中而通道照起。
+    ⛔ **判 `UNCERTIFIABLE` 不判 BUGGY**:bot mode 不在 dump 里 ⇒ 排除不掉 RETREAT 调用路径
+    (另两条替代解释:别的调用点 / `IsSuspiciousIllusion` 判据差异)。
+    ⛔ **不推翻总监 09-08 对 (a) 的 WORKING**(那条建立在 ADDED 总域与 press 体积上,不在这一格上)。
+  - **⭐ §4.3 交总监**:`waited` 被源码逐字称作该 id **唯一的正向证据**
+    (p50 `radiant armed 96 vs base 40`、`dire armed 36 vs base 66`),⛔ **却不在 `BY_SEED_QUANTITIES` 里**
+    ⇒ 永远拿不到每粒 swap-average,只剩两个反号分层,按旧 (i-b) 正好被丢掉 ——
+    **这正是 RULING 54 / GH #835 点名的手法**。本轮**没有自行加它**(计量决定)。
+  - **⛔ 本轮明确没做**:`bots/`+`game/` 一行未改;零 soak id、零 fixture;⛔ 未改
+    `owed_executions.json` / `test_set.md` / `queue.json` / `state.json`;⛔ 未替总监退休任何行;
+    ⛔ 未把 `tpreach` 提回测试集;⛔ 零 EC2、零发波、零 CE。
+  - **成本三段(RULING 48)**:**零 EC2 / 零 CE / S3 读取 ~1 700 个对象(出网未计价)** ——
+    `s3 ls` ~11 次 + 192 个 `.analysis.json` + **148 个 `.dem`**(~20–30MB/个,出网主体)+ dumper 二进制 1 个。
+  - **开工自检**:⛔ **第一条命令又吃了管道**(工具逐字 `has recurred 5x, every time as the first command
+    of the round`),照登逐字「nothing was checked; this is NOT a pass」;第二跑改成 W100 交棒那一行,
+    **跑完并拿到真码**:`selfcheck worst exit: 3`;`FINDINGS (exit 3): cadence queue-rulings owed-executions
+    lua-coverage trunk-red(python)` / `UNCERTIFIABLE (exit 2): none` / 三个 `NOT RUN`。
+    ⭐ **`trunk-red(python)` 不是我的,而且这次能证**:整轮 `git status` 只有两个文件
+    (`tpreach_domain.py` + `test_tpreach_domain.py`),红的是 `tests/test_gated_getter_stub_census.py`
+    (失败行读 `§GF priced GetAnimActivity … the census must reach the same answer from source`,读的是 `bots/`)。
+    ⚠️ 与 W99 §1.6 **方向相反**:那次是自己的实验在飞时撞红,**本轮是在只差两个无关文件的树上红的**
+    ⇒ 这抹红在 main 上,归 §GF 作者,已交总监。
+  - **下一轮第一件事**:
+    0) 自检:逐字那一行、零附加物、后台;⛔ 不要加 `timeout`、⛔ 不要加管道(本轮又犯);
+    1) ⭐⭐ **S3 通了**(`AWS ready: …user/dota2bot-agent`,连续三轮被分类器挡死那条断了)——
+       趁通的时候买 `gh290_od_…` 第 (ii) 项:语料 **W69**、`.dem` 问 `dem21/` 不问 `soak/`、
+       OD 局在种子 **13027 / 13052**,跑 `skill_point_stall.py`,落 `gh290_od_postfix_stall_read.md`;
+    2) ⛔ **不要再为 §BC.4 加粒种子**(8 粒读数已在报告 §三);要动它先等总监按 §八(1) 裁;
+    3) ⭐ 宽扫产物 `tools/batch_test/behavioral/.sweep_out/spot_20260905_*`(8 run / 148 局 timeline /
+       ~4GB,gitignored)**容器一重启就没了**;同会话内复查 W48/W49 不必重下 `.dem`;
+    4) ⛔ 取本组欠条**按 `executor` 字段头取**(本轮读到 13 条 `replay-check` + 5 条 `录像组`),不要字串 grep;
+    5) 仍欠未动,原样继承 ⛔ 不许读成已结清:W100 §五、W99 §四、W98 §四三根棒、W97 §四三根棒 + §2.6、
+       W96 §四四根棒、`wkqdmg` 要局数不要深度、`66.7%` vs `29.4%` 更宽复读、换句柄英雄(W80–W87 边界)、
+       `pullcad` 收紧域、GH #849 验收口径、W84 §四、W86 §、W87 §、GH #424 是否退休、
+       W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾、W92 §四两件仪器、W94 §三 `pullcamp` 验收句不可完成、
+       W95 §三 `abilanc` 三根棒。

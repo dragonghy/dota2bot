@@ -399,6 +399,42 @@ def load_run(d):
         yield tl, man[g]
 
 
+class Corpus(object):
+    """Every swept game, re-iterable, with ONE timeline resident at a time.
+
+    WHY THIS IS NOT A LIST (measured 2026-09-19, replay-check).  The previous
+    shape built `timelines = [...]` and held the whole corpus.  That is fine at
+    the 4 seeds the first §BC.4 reading used (72 games), and it is fatal at the
+    seed count this tool's own re-entry bar demands: the first >4-seed run --
+    W48+W49, 8 seeds, 148 games, ~28 MB of timeline JSON each -- was OOM-killed
+    (exit 137) on a 15 GB container in all three reach modes, BEFORE printing a
+    line.  A tool that prints `BC.4 re-entry bar: seeds = N, required > 4`
+    and then cannot be run at N > 4 answers the veto by not answering it.
+
+    Streaming costs one extra parse pass per consumer (`measure_ranges`, and
+    `range_items_held` in source mode, each re-read the corpus) and bounds the
+    resident set at a single game.  `n_games` is a side effect of a COMPLETE
+    pass, never of a partial one -- a consumer that breaks early must not be
+    able to shrink the denominator the tables are divided by.
+    """
+
+    def __init__(self, dirs):
+        self._dirs = list(dirs)
+        self.n_games = 0
+
+    def __iter__(self):
+        n = 0
+        for d in self._dirs:
+            for tl, man in load_run(d):
+                n += 1
+                yield tl, man
+        self.n_games = n
+
+    def timelines(self):
+        for tl, _ in self:
+            yield tl
+
+
 def leg_of(row, hero_team):
     """Which leg this hero played on: 'armed' if its team is the candidate side.
 
@@ -565,19 +601,14 @@ def main():
     if args.selfcheck:
         return selfcheck()
 
-    timelines = []
-    rows_meta = []
-    for d in args.sweeps:
-        for tl, man in load_run(d):
-            timelines.append(tl)
-            rows_meta.append(man)
-    if not timelines:
+    corpus = Corpus(args.sweeps)
+    dists = measure_ranges(corpus.timelines())
+    if not corpus.n_games:
         print('no swept games found under: %s' % ' '.join(args.sweeps))
         return 1
 
-    dists = measure_ranges(timelines)
     if args.reach_mode == 'source':
-        held = range_items_held(timelines)
+        held = range_items_held(corpus.timelines())
         reach = {h: SOURCE_CITED_RANGE[h] + held.get(h, 0.0) + REACH_BUFFER_U
                  for h in SOURCE_CITED_RANGE}
     else:
@@ -586,7 +617,7 @@ def main():
         reach = reach_table(dists)
 
     if args.ranges:
-        print('measured auto-attack impact distance, %d games' % len(timelines))
+        print('measured auto-attack impact distance, %d games' % corpus.n_games)
         print('%-24s %6s %6s %6s %6s %6s %6s   %s'
               % ('hero', 'n', 'p50', 'p75', 'p90', 'p95', 'max', 'reach=p90+150'))
         for h in sorted(dists, key=lambda k: -(pct(dists[k], RANGE_PCT) or 0)):
@@ -615,7 +646,7 @@ def main():
     # are the two teams inside it), so this is not per-leg.
     ngames_seed = collections.Counter()
     detail = []
-    for tl, man in zip(timelines, rows_meta):
+    for tl, man in corpus:
         _, team = frames_by_hero(tl)
         side = man.get('side')
         for p in presses(tl, reach, default_reach):
@@ -651,7 +682,7 @@ def main():
 
     banded = sorted(h for h, r in reach.items() if r > NARROW_SCAN_U)
     print('== %s -- %d games, reach-mode %s =='
-          % (args.label or 'sweep', len(timelines), args.reach_mode))
+          % (args.label or 'sweep', corpus.n_games, args.reach_mode))
     print('heroes with a blind band (reach > %d): %s'
           % (NARROW_SCAN_U, ', '.join('%s %.0f' % (h, reach[h]) for h in banded)
              or 'NONE -- ADDED is empty by construction'))
@@ -1101,6 +1132,47 @@ def selfcheck():
         and est6['ADDED:field share of ADDED']['skipped'] == [3]
         and 'absent, not 0.0' in out6,
         'an absent share is not a flat share (GH #257)')
+
+    # --- the corpus must STREAM, not materialise (OOM at the bar's own N) ----
+    # `Corpus` exists because the list form was OOM-killed on the first corpus
+    # that could clear `BC4_MIN_SEEDS` (8 seeds / 148 games).  The failure mode
+    # a future edit would reintroduce is invisible to every check above: a
+    # `list(corpus)` passes all of them on a 2-game stand and dies on a real
+    # one.  So the property is pinned directly -- re-iterable, same games each
+    # pass, and a count that only a COMPLETE pass may set.
+    tmp0 = tempfile.mkdtemp(prefix='tpreach_corpus_')
+    try:
+        os.makedirs(os.path.join(tmp0, 'timelines'))
+        with open(os.path.join(tmp0, 'games_manifest.jsonl'), 'w') as mf:
+            for g in ('ga', 'gb', 'gc'):
+                mf.write(json.dumps(dict(game=g, seed=7, side='radiant')) + '\n')
+                json.dump(tl(bot, still(720, 0)),
+                          open(os.path.join(tmp0, 'timelines',
+                                            g + '.timeline.json'), 'w'))
+        c = Corpus([tmp0])
+        chk('corpus-count-is-zero-before-any-pass', c.n_games == 0,
+            'a denominator must not exist before the pass that measures it')
+        first = [t.get('game') for t, _ in c]
+        chk('corpus-counts-a-complete-pass', c.n_games == 3,
+            'n_games %d' % c.n_games)
+        second = [t.get('game') for t, _ in c]
+        chk('corpus-is-re-iterable', first == second == ['ga', 'gb', 'gc'],
+            'first %r second %r' % (first, second))
+        # The partial-pass guard: `measure_ranges` and the press loop both walk
+        # the whole corpus, but a future consumer that breaks early must not be
+        # able to shrink n_games under the tables that divide by it.
+        for _ in c:
+            break
+        chk('corpus-count-survives-a-partial-pass', c.n_games == 3,
+            'a broken pass must leave the last complete count, not 1')
+        # The whole point: one game resident at a time, so the objects a pass
+        # yields are not retained between passes.
+        held = [t for t, _ in c]
+        chk('corpus-yields-fresh-objects-each-pass',
+            all(a is not b for a, b in zip(held, [t for t, _ in c])),
+            'a cached list would hand back the same objects (and the same RAM)')
+    finally:
+        shutil.rmtree(tmp0, ignore_errors=True)
 
     # --- end-to-end wiring: main() must FEED by_seed, not just define it ------
     # The battery above exercises `by_seed` directly, which leaves the three
