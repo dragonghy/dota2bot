@@ -74,8 +74,8 @@
 
    ⚠️ **下一轮要看一眼的五条**:
    (a) **`queue.json:strategy-68`** + 本轮 issue —— `bbalone` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
-   (b) `strategy-45 … strategy-67` **二十三条仍 pending**,**本轮不催**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) ⭐ **`strategy-57..67` 十一条已由总监 RULING 84(`test_set.md §HO`)一次裁完**(十条 FROZEN-HOLD + 一条 REGISTERED),`strategy-67` 的 `director` 块本轮在 rebase 里与本条的 `strategy-68` 撞了一次并已合并;剩下的 `strategy-45 … strategy-56` 仍 pending,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
    (c) **开工自检 `EXIT=3`**,`legs run 15`;findings =
@@ -148,7 +148,7 @@
    ⚠️ **下一轮要看一眼的五条**:
    (a) **`queue.json:strategy-67`** + **GH #915**(push 之后才开,号码取自 create 调用
    自己的返回 `id 5506943697` / `url .../issues/915`,**不是顺号推测**)—— `smokescan` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-66` **二十二条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -214,7 +214,7 @@
    ⚠️ **下一轮要看一眼的五条**:
    (a) **`queue.json:strategy-66`**(本轮新增)+ **GH #912**(push 之后才开,
    号码取自 create 调用自己的返回,**不是顺号推测**)—— `smokeself` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-65` **二十一条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -271,7 +271,7 @@
 
    ⚠️ **下一轮要看一眼的四条**:
    (a) **`queue.json:strategy-65`**(本轮新增)+ **GH #907**(push 之后才开,号码取自 create 调用自己的返回 `id 5504586312` / `url .../issues/907`,**不是顺号推测**) —— `towerpow` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-64` **二十条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -341,7 +341,7 @@
 
    ⚠️ **下一轮要看一眼的四条**:
    (a) **`queue.json:strategy-64`**(本轮新增)+ **GH #904** —— `pipetower` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-63` **十九条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -401,7 +401,7 @@
 
    ⚠️ **下一轮要看一眼的四条**:
    (a) **`queue.json:strategy-63`**(本轮新增)+ **GH #900** —— `tormring` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-62` **十八条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -451,7 +451,7 @@
 
    ⚠️ **下一轮要看一眼的四条**:
    (a) **`queue.json:strategy-62`**(本轮新增)+ **GH #896** —— `claimlone` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-61` **十七条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -500,7 +500,7 @@
 
    ⚠️ **下一轮要看一眼的四条**:
    (a) **`queue.json:strategy-61`**(本轮新增)+ 本轮的 GH issue —— `helpnear` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-60` **十六条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -550,7 +550,7 @@
 
    ⚠️ **下一轮要看一眼的四条**:
    (a) **`queue.json:strategy-60`**(本轮新增)+ **GH #891** —— `helpself` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-59` **十五条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -596,7 +596,7 @@
 
    ⚠️ **下一轮要看一眼的四条**:
    (a) **`queue.json:strategy-59`**(本轮新增)+ **GH #889** —— `fightfloor` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-58` **十四条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**;
@@ -642,7 +642,7 @@
 
    ⚠️ **下一轮要看一眼的三条**:
    (a) **`queue.json:strategy-58`**(本轮新增)+ **GH #887** —— `roamring` 的登记。
-   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),写在它自己的 `status` 里,**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) `strategy-45 … strategy-57` **十三条仍 pending**,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
    ⛔ 这是**绕过不是修复**,别把它当成规矩记住;
@@ -11182,7 +11182,7 @@
   `bots/FunLib/jmz_func.lua` 新 helper `J.IsAncientUndefended` +
   `bots/ability_item_usage_generic.lua` 买活路径 1 调用点一处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260919T044231Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260919T044231Z.md`;
   `state.json:bbalone_20260919`;`queue.json:strategy-68`;**GH #<push 后回填>**;
   完整判据 ⇒ backlog **0NEXT51**。
 
@@ -11239,7 +11239,7 @@
   `bots/FunLib/jmz_func.lua` 新 helper `J.ShouldScanAlliesForSmokeBreaker` +
   `bots/ability_item_usage_generic.lua` 调用点一处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260919T013110Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260919T013110Z.md`;
   `state.json:smokescan_20260919`;`queue.json:strategy-67`;**GH #915**(push 之后才开,号码取自 create 调用自己的返回 `id 5506943697` / `url .../issues/915`,**不是顺号推测**);
   完整判据 ⇒ backlog **0NEXT50**。
 
@@ -11308,7 +11308,7 @@
   `bots/FunLib/jmz_func.lua` 新 helper `J.IsSmokeBreakerNearSelf` +
   `bots/ability_item_usage_generic.lua` 调用点一处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T222029Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260918T222029Z.md`;
   `state.json:smokeself_20260918`;`queue.json:strategy-66`;**GH #912**;完整判据 ⇒ backlog **0NEXT49**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`SELFCHECK_EXIT=3`**,`legs run 15`;findings =
@@ -11364,7 +11364,7 @@
   `bots/FunLib/jmz_func.lua` 的新 helper `J.GetFightPowerEnemyTowers` +
   `J.WeAreStronger` 里两处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T200519Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260918T200519Z.md`;
   `state.json:towerpow_20260918`;`queue.json:strategy-65`;**GH #907**(push 之后才开,号码取自 create 调用自己的返回 `id 5504586312` / `url .../issues/907`,**不是顺号推测**);完整判据 ⇒ backlog **0NEXT48**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**,`legs run 15`,**约 110 分钟**;
@@ -11425,7 +11425,7 @@
   `bots/FunLib/jmz_func.lua` 的新 helper `J.GetBackupTowerCount` +
   `bots/ability_item_usage_generic.lua:4068` 一处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T165529Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260918T165529Z.md`;
   `state.json:pipetower_20260918`;`queue.json:strategy-64`;**GH #904**;完整判据 ⇒ backlog **0NEXT47**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**,`legs run 15`,**~47 分钟**;
@@ -11495,7 +11495,7 @@
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `tormring`,
   `bots/FunLib/jmz_func.lua` 的新 helper + `bots/mode_side_shop_generic.lua` 的两处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T134254Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260918T134254Z.md`;
   `state.json:tormring_20260918`;完整判据 ⇒ backlog **0NEXT46**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**;findings = `cadence queue-rulings
@@ -11547,7 +11547,7 @@
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `claimlone`,
   `bots/FunLib/jmz_func.lua` + `bots/mode_team_roam_generic.lua` 的一行委托)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T101636Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260918T101636Z.md`;
   `state.json:claimlone_20260918`;完整判据 ⇒ backlog **0NEXT45**。
 
   **开工 = 铁律 10 再铁律 9**:⚠️ 管道防呆**第 18 次**,又在第一条命令上撞到;改走重定向 + 后台。
@@ -11612,7 +11612,7 @@
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `helpnear`,
   `bots/FunLib/jmz_func.lua` + `bots/mode_team_roam_generic.lua` 的调用点注释)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T075500Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260918T075500Z.md`;
   `state.json:helpnear_20260918`;完整判据 ⇒ backlog **0NEXT44**。
 
   **开工 = 铁律 10 再铁律 9**:⚠️ 管道防呆**第 17 次**,又在第一条命令上撞到;改走重定向 + 后台。
@@ -11685,7 +11685,7 @@
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `helpself`,
   `bots/FunLib/jmz_func.lua` + `bots/mode_team_roam_generic.lua`)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260918T042437Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260918T042437Z.md`;
   `state.json:helpself_20260918`;完整判据 ⇒ backlog **0NEXT43**。
 
   **开工 = 铁律 10 再铁律 9**:⚠️ 管道防呆**第 16 次**,又在第一条命令上撞到;改走重定向 + 后台。
@@ -11759,7 +11759,7 @@
 - 2026-09-18T01:46Z:**同一条修复只修到了它被发现的那一个调用点。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `fightfloor`,
   `bots/FunLib/jmz_func.lua`)。**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;
-  **未提入集**(P4.2 冻结);⛔ **不新增 armed id,成员串仍 25**。
+  **未提入集**(P4.2 冻结);⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。
   报告:`iterations/reports/strategy/20260918T014613Z.md`;`state.json:fightfloor_20260918`;
   完整判据 ⇒ backlog **0NEXT42**。
 
@@ -11825,7 +11825,7 @@
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `roamring`,
   `bots/mode_team_roam_generic.lua` + `bots/FunLib/jmz_func.lua`)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
-  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260917T223829Z.md`;
+  ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260917T223829Z.md`;
   `state.json:roamring_20260917`;完整判据 ⇒ backlog **0NEXT41**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**(⚠️ 管道防呆**第 14 次**,又在第一条命令上撞到);
@@ -11885,7 +11885,7 @@
 - 2026-09-17T19:41Z:**GH #878 修好了,而它自己建议的修法在它自己的帧上不成立。**
   ⭐ **4.4 (i) 达成 —— 连续第八轮的中断到此为止**:本工作单元的主体是一个 `bots/` 行为改动
   (`J.GetCampPullPokeTarget`,`bots/FunLib/jmz_func.lua`)。
-  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;⛔ **不新增 armed id,成员串仍 25**
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)
   (修的是**已退集**的 `campbind` 自己,不是在它上面再叠一个 id —— 那会是 `pullcad` 合取陷阱,
   且与 P4.2「集合要变小」反向)。报告:`iterations/reports/strategy/20260917T194114Z.md`;
   完整判据 ⇒ backlog **0NEXT40**。
@@ -11928,7 +11928,7 @@
 - 2026-09-17T16:35Z:**上一轮点名的「下一轮首选」,四条出口全部定价为零。**
   出口 **(i) 未达成** —— ⛔ **4.4 (i) 连续第八轮到此中断,这一行照实写**:
   本轮**没有**落任何 `bots/` 行为改动,不是没找,是**每一条候选都被读数淘汰**。
-  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);⛔ **不新增 armed id,成员串仍 25**。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。
   报告:`iterations/reports/strategy/20260917T163521Z.md`;完整判据 ⇒ backlog **0NEXT39**。
 
   **开工 = 铁律 9**:P1 的 `pullcamp` 球在总监(不代跑);**P2 读源码后作废了我的初判** ——
