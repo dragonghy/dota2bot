@@ -680,7 +680,13 @@ local function BuybackUsageComplement()
 	if J.IsAncientBadlyHurt( ancient ) then
 		local nEnemyUnitsAroundAncient = J.GetEnemiesAroundLoc(ancient:GetLocation(), 1500)
 		local nAllyUnitsAroundAncient = J.GetAlliesNearLoc(ancient:GetLocation(), 1500)
-		if nEnemyUnitsAroundAncient > 1 and nAllyUnitsAroundAncient == 0 and nRemainingRespawnTime > 20 then
+		-- `nAllyUnitsAroundAncient == 0` compares a TABLE with a number (the
+		-- sibling local one line up is a count, this one is a list) -- silently
+		-- false on every frame in Lua 5.1. Moved behind J.IsAncientUndefended
+		-- (soak candidate 'bbalone'); unarmed it evaluates the identical
+		-- expression. Must be armed together with 'bbancient' -- see that
+		-- helper's header -- or the enclosing test is still constant-false.
+		if nEnemyUnitsAroundAncient > 1 and J.IsAncientUndefended( nAllyUnitsAroundAncient ) and nRemainingRespawnTime > 20 then
 			J.Role['lastbbtime'] = DotaTime()
 			bot:ActionImmediate_Buyback()
 			return

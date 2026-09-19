@@ -15262,6 +15262,76 @@ function J.IsAncientBadlyHurt( hAncient )
 end
 
 
+-- [bbalone 20260919] IS OUR ANCIENT STANDING THERE WITH NOBODY ALIVE AROUND IT?
+--
+-- THE DEFECT, and it is a TYPE not a threshold. Buyback path 1 in
+-- ability_item_usage_generic.lua reads:
+--
+--     local nEnemyUnitsAroundAncient = J.GetEnemiesAroundLoc( ancientLoc, 1500 )
+--     local nAllyUnitsAroundAncient  = J.GetAlliesNearLoc(   ancientLoc, 1500 )
+--     if nEnemyUnitsAroundAncient > 1 and nAllyUnitsAroundAncient == 0 ...
+--
+-- The two locals are named the same way, are read off the same location with
+-- the same radius on two adjacent lines -- and they are not the same KIND of
+-- thing. J.GetEnemiesAroundLoc returns a NUMBER (a level-weighted unit count,
+-- :15614). J.GetAlliesNearLoc returns a TABLE of heroes (:474). So the first
+-- term is a real comparison and the second one is `{} == 0`.
+--
+-- ⭐ AND THAT IS WHY IT NEVER RAISED A HAND. In Lua 5.1 an ORDER comparison
+-- across types is an error ("attempt to compare number with table"), but
+-- EQUALITY across types is not: values of different types are simply unequal,
+-- silently, every frame. Measured in this container, lua5.1:
+--     ({}) == 0   -->  false          -- no error
+--     ({}) >  1   -->  error          -- would have been caught the first frame
+-- The defect sits on the ONE operator that has no runtime opinion about it, in
+-- a tree whose engine-side error text is unreadable anyway (AGENTS.md: "error
+-- in error handling" masks all Lua error text). Had the author written `<= 0`
+-- instead of `== 0` this would have been a crash on day one.
+--
+-- ⛔⛔ WHAT THIS COSTS IS NOT ONLY THIS TERM. The enclosing `if` is
+-- J.IsAncientBadlyHurt (immediately above), which is itself a repair waiting
+-- for validation: shipped, it compares ABSOLUTE hp against 0.8 and is
+-- constant-false, which is why soak candidate 'bbancient' exists. Arming
+-- 'bbancient' opens the outer test -- and lands on THIS term, which is
+-- constant-false too. So a wave arming 'bbancient' alone measures a branch
+-- that still cannot fire, and reads back "tested, no effect" with nothing
+-- raising a hand. That is the failure shape AGENTS.md already records for
+-- 'pullcad'. ⇒ THE TWO IDS MUST BE ARMED TOGETHER OR NEITHER IS TESTED. That
+-- requirement is registered (state.json, the queue request and the issue) and
+-- deliberately NOT coded as `IsSoakCandidate('bbancient') and
+-- IsSoakCandidate('bbalone')`: a conjunction of two ids freezes FALSE the day
+-- either one is promoted, which is the same AGENTS.md lesson from the other
+-- side.
+--
+-- THE FIX, and its shape. Armed, the term asks the table its SIZE, which is
+-- the question the name, the sibling line and the branch comment all state.
+-- Disarmed, the body is the shipped expression character for character --
+-- table compared to 0 -- so the shipped default keeps answering false.
+-- ⭐ The TABLE is the argument, not the bot: the caller keeps its own
+-- J.GetAlliesNearLoc call, its own location and its own radius, so "same list,
+-- same getter, same ring" is true by construction rather than by review.
+--
+-- DIRECTION, closed form: the branch this term guards only ever ends in
+-- ActionImmediate_Buyback, and the term can only go false -> true. So armed
+-- can only ADD a buyback; it can never remove one the shipped code took. A
+-- batch reading that says "the bots buy back less" cannot be this lever.
+--
+-- WHY THE ANSWER IS WORTH HAVING (validation condition (c)): buying back to
+-- defend an undefended, badly hurt ancient is the textbook use of buyback --
+-- the one case where the gold is uncontroversially better spent than saved.
+-- The shipped tree cannot do it at all.
+function J.IsAncientUndefended( tAlliesNearAncient )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'bbalone' )
+	then
+		return tAlliesNearAncient ~= nil and #tAlliesNearAncient == 0
+	end
+
+	return tAlliesNearAncient == 0
+
+end
+
+
 -- HOW LONG AM I STILL DEAD -- the number every buyback gate is a threshold on,
 -- read twice in fifteen lines and subtracted from itself once.
 --

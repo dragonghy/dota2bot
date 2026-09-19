@@ -35,6 +35,77 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT51. **【2026-09-19T04:42Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `bbalone` 落地)。剩下的是四句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【两个看起来同类的量在比较】那一格**:
+   **一个表和一个数比较,不是一个计数 —— 而 `==` 是唯一对此毫无意见的运算符。**
+   现场:买活路径 1 的 `nEnemyUnitsAroundAncient > 1 and nAllyUnitsAroundAncient == 0`,
+   两个同命名模式的局部量、相邻两行、同一位置同一半径,而前者返回**数**
+   (`J.GetEnemiesAroundLoc`)、后者返回**表**(`J.GetAlliesNearLoc`)⇒ 后一项逐字是 `{} == 0`。
+   本容器实测:`({}) == 0` → **false(不报错)**、`({}) > 1` → **error**。
+   **一个运算符之隔的兄弟项会在第一帧崩掉,这一项永远不会。**
+   📌 **判据:读到一个跨类型的相等比较,先问【这两边真是同一种东西吗】——
+   序比较会替你问,相等比较不会。一个静悄悄的恒假和一个正确的否定,在源码上逐字一样长。**
+
+   ⭐ **第二句,关于命名**:两个局部量命名成同一个模式、写在相邻两行、读同一个位置和
+   同一个半径 —— **命名的对称恰恰是遮住类型不对称的那块布**。
+
+   ⭐⭐ **第三句,关于【第二道恒假闸】**:包住它的外层 `if` 是 `J.IsAncientBadlyHurt`,
+   **已在册的 `bbancient`**,出厂同样恒假。⇒ **一波只 arm `bbancient` 的测量,测的是一条
+   仍然不能触发的分支**,读回「测过了,没效果」而没有任何东西举手。
+   ⇒ **`bbalone` 与 `bbancient` 必须同波 arm**;⛔ 这条依赖**登记在编排里**
+   (`state.json` / `queue.json:strategy-68` / issue),**绝不写进谓词** —— 写成两个 id 的合取
+   会在任一 promote 当天把闸冻成 FALSE(`pullcad`)。
+   📌 **推论,下一轮读别的候选时直接用:arm 一个 id 之前,先读它打开的那条分支的【其余各项】
+   —— 一个 id 的价值上界是它所在合取式里最恒假的那一项。**
+
+   ⚠️ **第四句,关于变异台**:**一条被支配的断言等于没断言。**
+   M9 红了但消息不对,因为为它写的断言被前面的语义钉支配(正模式对任何不是调用点自己那张表的
+   实参都已失败)⇒ 那条断言**永远不会触发**。⛔ 处置**不是改 `want`**,是**删掉被支配的那条**,
+   把没被支配的那一半钉在别处,并换一个能触发它的变异体。
+
+   ⚠️ **仪器侧本轮撞到的一条,记下来免得重学**:`tests/mock/replay_fixture.lua:1289`
+   **只在 fixture 自己带着 ancient 时**才覆盖 `GetAncient`;否则**裸 mock 在地图原点答一个
+   4500hp 替身**。⇒ 任何绕自家遗迹取圈的 sweep **必须自己守卫人口**
+   (本轮 403/1039 帧登记 `refused_no_ancient`)。⚠️ 而且 ancient 在 `fx.buildings` 里,
+   **不在 `fx.units` 里** —— 第一版 sweep 因此把整份语料判成「一个都没有」,**不报错,只给 0**。
+   📌 **那个 0 太整齐,是它自己露的马脚。**
+
+   ⚠️ **下一轮要看一眼的五条**:
+   (a) **`queue.json:strategy-68`** + 本轮 issue —— `bbalone` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-67` **二十三条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检 `EXIT=3`**,`legs run 15`;findings =
+   `cadence queue-rulings owed-executions lua-coverage trunk-red(python)`,
+   **`UNCERTIFIABLE: none`**;`trunk-red(python)` 的真身 `tests/test_gated_getter_stub_census.py`
+   **已由总监立成 GH #917**,登记不代劳;
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做**
+   —— 本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**;
+   (e) P1(1) 球仍在录像组(#862);P2 仍卡 `wandlimbo_charge_instrument`。
+
+   ⚠️ **本轮登记、下一轮可以直接做/不要做的三根**:
+   1. ⭐ **已登记、构造性为零,不修**:`bots/ability_item_usage_generic.lua:8594`
+      `X.ConsiderItemDesire['item_seer_stone']` 的 "For Roshan Scout" 那段,循环变量叫
+      `enemyHero`、计数器叫 `nInSightEnemy`、注释写着敌人,**而它遍历的是
+      `GetUnitList(UNIT_LIST_ALLIED_HEROES)`**(该表含施法者自己)⇒ `nInSightEnemy == 0` 恒假,
+      整支侦查罗生的分支是死的。⛔ **但 `item_seer_stone` 在
+      `bots/FretBots/SettingsNeutralItemTable.lua:147` 与 `bots/Buff/NeutralItems.lua:126`
+      两处都是注释掉的** ⇒ bot 永远拿不到这件中立装 ⇒ **域构造性为零**,按 0NEXT23 的两分法
+      **登记不修**,理由写在这里免得下一轮再发现同一个零。
+   2. ⭐ **同族、值得下一轮动的两根(不在本组作用域,要开 [hero] issue 而不是自己改)**:
+      `bots/BotLib/hero_phantom_assassin.lua:746` 与 `bots/BotLib/hero_bounty_hunter.lua:604`
+      (以及 `bots/FunLib/rubick_hero/bounty_hunter.lua:327`)都写着
+      `nEnemyTowers == 0`,**而 `nEnemyTowers` 是 `bot:GetNearbyTowers(1600,true)` 的表**
+      ⇒ 与本轮同一个静悄悄的恒假,整支分支死。⚠️ PA 那一处还带第二个缺陷:
+      `nEnemies` 与 `nAllies` **两行都传 `true`**(同一张敌人表)。
+      ⛔ **本组不改 `bots/BotLib/`** —— 下一轮开 [hero] issue 交出去。
+   3. ⭐ **一条对全仓有效的扫法,已经跑过一遍,可以再跑**:把「局部量 = 返回表的 getter」
+      与「同名局部量 与 数字比较」对上,全仓只剩这两处(见本轮报告 §二)。
+      ⛔ 注意它**漏报**:声明在使用之后的局部量(BH 那一处)扫不出来,要放宽顺序再跑一遍。】**
+
 0NEXT50. **【2026-09-19T01:31Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `smokescan` 落地)。剩下的是四句要带走的。
 
@@ -11105,6 +11176,63 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-19T04:42Z:**一个表和一个数比较,不是一个计数 —— 而 `==` 是唯一对此毫无意见的运算符。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `bbalone`,
+  `bots/FunLib/jmz_func.lua` 新 helper `J.IsAncientUndefended` +
+  `bots/ability_item_usage_generic.lua` 买活路径 1 调用点一处改写)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260919T044231Z.md`;
+  `state.json:bbalone_20260919`;`queue.json:strategy-68`;**GH #<push 后回填>**;
+  完整判据 ⇒ backlog **0NEXT51**。
+
+  **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**(⛔ 被工具连拒两次:管道一次、`timeout` 一次,
+  第三次按提示 `nohup … > /tmp/sc.log 2>&1 &` 才跑成),`legs run 15`;findings =
+  `cadence queue-rulings owed-executions lua-coverage trunk-red(python)`,
+  **`UNCERTIFIABLE: none`**;fast Lua detectors **144 文件 / 0 失败**。
+  ⭐ `trunk-red(python)` 本轮有名有姓且不是本组的:`tests/test_gated_getter_stub_census.py`
+  = **GH #917**(总监本轮开工前 02:34Z 已立案),登记不代劳。
+  ⚠️ 本轮全程**串行**:自检跑完才动 `bots/`(0NEXT50 第四句的假红教训)。
+  P1(1) 球在录像组(#862)/ P2 卡 `wandlimbo_charge_instrument` 且属量具类
+  ⇒ **4.4 球在本组且本组能动**,取 4.4。
+
+  **缺陷**:`X.ConsiderBuyback` 买活路径 1,
+  `nEnemyUnitsAroundAncient > 1 and nAllyUnitsAroundAncient == 0` —— 两个**同命名模式**的
+  局部量、相邻两行、同一位置同一半径,而 `J.GetEnemiesAroundLoc` 返回**数**、
+  `J.GetAlliesNearLoc` 返回**表** ⇒ 后一项逐字是 `{} == 0`,**恒假,每一帧**。
+  ⭐ **它坐在唯一不会报错的运算符上**:本容器实测 `({}) == 0` → **false(不报错)**、
+  `({}) > 1` → **error**;一个运算符之隔的兄弟项会在第一帧崩掉。
+  ⛔⛔ **它吃掉的不只是自己**:外层 `if` 是**已在册的 `bbancient`**,出厂同样恒假
+  ⇒ 只 arm `bbancient` 的波测的是一条仍然不能触发的分支,读回「测过了,没效果」。
+
+  **修法**:`J.IsAncientUndefended( tAlliesNearAncient )`,armed(turbo-only)问那张表的大小,
+  disarmed **逐字是出厂那个 `tAlliesNearAncient == 0`**。⭐ **传表不传 bot**,且测试钉死
+  **helper 里不出现任何 getter**。**一个杠杆**:不碰兄弟项、不碰 20s 门槛、不碰 1500、
+  不碰外层、不碰后两级买活。
+  ⛔ **同波 arm 的要求登记在编排里,不写进谓词**(`pullcad`;两侧都钉)。
+  **方向闭式**:分支唯一结局是 `ActionImmediate_Buyback`,出厂该项恒假 ⇒ armed 的真值集是
+  空集的严格超集 ⇒ **只能增加买活,永远不能减少**;**批测若读到买活变少,不可能是本条**。
+
+  **域**(`tests/_bbalone_sweep.lua`,112 fixture / 1039 活体帧):
+  ⛔ **403 帧被拒读**(fixture 不带 ancient 时裸 mock 在**地图原点**答替身)。
+  读到的 **636** 帧:出厂项为真 **0**(缺陷本身)、armed 为真 **528** / 为假 **108**。
+  ⛔ **但【分支】的活体域是 0,两项独立坐实**:兄弟项全语料 **0 帧**、
+  **69 个 ancient 全部 hp = 1.0** ⇒ **结构性缺席不是稀有**(forcewin 在围高地之前),
+  **登记为仪器墙**;买 (a) 依赖 **P3(GH #108)** 或专门的围攻语料,本组不索要。
+
+  **本地验证** `tests/test_bbalone_ancient_defenders.lua` **9/9**,零 stub —— 主张证人
+  lion(dire,1500 内零活着的队友)、⭐⭐ **分离对照** crystal_maiden(radiant,队友
+  chaos_knight 在 1063u,**它是唯一能把本修法与「armed 直接返回 true」的 M13 分开的一条**)、
+  同帧第三读 chaos_knight 本人(**活体帧会把主体自己数进去,而调用点上施法者是死的**)、
+  语言事实腿、方向腿、非 turbo 对照、nil 腿(两次 load)。
+  变异台 `tools/agent/mutstand_bbalone.sh` **14 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**。
+  ⚠️ 第一轮 13 抓 1 活,处置**不是改 `want`**:**一条被支配的断言等于没断言** ⇒ 删掉它,
+  把没被支配的那一半钉在别处,并换一个能触发它的变异体。
+
+  **闸**:`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**(经文件重定向,⛔ 不经管道);
+  `test_gate_claim_consistency` 16/16、`test_gated_helper_liveness` 5/5、
+  `test_gated_helper_nesting_census` 10/10、`test_ancient_hp_unit` 9/9。
+  ⛔ 没往 manifest 加行(GH #901),打 **`[ratchet]`** 标签。push 钩子三条腿见报告 §九。
 
 - 2026-09-19T01:31Z:**跳过一个单调的循环不是省事,是作答。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `smokescan`,
