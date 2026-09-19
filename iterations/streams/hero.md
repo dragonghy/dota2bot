@@ -22,7 +22,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--209. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:`-208`「下一轮主体候选·**第 2 条**」(同一把尺子量另外四个焦点英雄,**一次一个英雄一个 id**)—— 本轮量 **Lion**。落地 gated soak candidate **`lionbuild`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260919T014653Z.md`;裁定 `iterations/state.json:lionbuild_20260919`;GH **#ISSUE_PLACEHOLDER**。**零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+-209. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:`-208`「下一轮主体候选·**第 2 条**」(同一把尺子量另外四个焦点英雄,**一次一个英雄一个 id**)—— 本轮量 **Lion**。落地 gated soak candidate **`lionbuild`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260919T014653Z.md`;裁定 `iterations/state.json:lionbuild_20260919`;GH **#916**。**零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条:Lion 的构筑行把那唯一一级判给了 `lion_voodoo`(Hex),而 Hex 是 Lion 除大招外唯一的硬控 —— 它的等级买的正是「控制在场时间」(CD **24s → 12s** 减半、时长 **2.0 → 3.2s**)。** ⭐ 而本文件上已经坐着**五个**关于「什么时候 Hex」的候选(`lionwreach` / `lionwpanic` / `lionwfight` / `lionwseed` / `lionhexaoe`)—— 它们一直在调一个**从 4 级到 12 级停在 rank 1、第 4 级永远买不到**的技能的时机。
    - ⭐ **驱动读数(不是数条目,GH #134)**:shipped Hex 梯子 **{4, 13, 14, 16=永不}** / Mana Drain **{2, 5, 9, 11}**;armed 对调为 Hex **{4, 5, 9, 11}** / Mana Drain **{2, 13, 14, 16=永不}**。
    - ⭐ **窄度**:首处分歧 **英雄 5 级**(1-4 级逐字节相同,比 Axe 那条早),每处分歧**只碰 Hex/Drain**,**Earth Spike(1/3/7/8)与 Finger(6/12/17)梯子逐位相同** ⇒ 波读数可归因到 W/E 分配**且只归因到它**。
@@ -34,7 +34,8 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
      **第 1 条(顺延,已连排两轮)**:`wkqflee` 带里另外两帧的**供帧请求**(`hero-104` 同族)。
      **第 2 条**:同一把尺子的剩余三个 —— ⭐ **本轮量 Lion 学到的东西改了排序**:决定值不值的不是「被钉住的是不是硬控」,而是**被钉住的那一级买到什么** ⇒ 下一个应当是 **Zeus**(`zuus_heavenly_jump` 第 4 级看上去是三个里最不值钱的 ⇒ **第一个可能得出「shipped 行选对了」的读数**,而本组一连串「选错了」正需要一个反例来定价)。
      **第 3 条**:**WK 单独排** —— 它已有 gated `wkbuild`,#864 证明两行 strand 同一个技能 ⇒ 落这把尺子意味着**第三张表**,先问总监归属与形状。
-     **第 4 条**:`argmax_ring_census.py` 的 schema 改造(本轮 (丙) 又给它添了第五个 datum;归属存疑先问总监)+ manifest 剩下的 2 个 `too_slow` 行。
+     **第 4 条(本轮新开,来自开工自检)**:`tests/test_lion_w_fight_seed.lua` 现在落在「**没有任何自动读者**」那一桶里(`UNCOVERED SET GREW`,`too_slow`)—— 它不再只是 GH #901 说的「回不了快闸」,而是**谁也不跑**。三条出路(自检自己列的):量到 cap 之下、打 `[detector]`/`[ratchet]` 标签让开工自检的 Lua 腿跑它、或说明它在别处被谁看着再 `--update-baseline`。⛔ 它是**量具工作**,P4.4 不许当主体,只能当附带一条。
+     **第 5 条**:`argmax_ring_census.py` 的 schema 改造(本轮 (丙) 又给它添了第五个 datum;归属存疑先问总监)+ manifest 剩下的 2 个 `too_slow` 行。
 
 -208. ✅ **主体(P4.4 **(i) 一个 `bots/` 行为改动**)**:`-207` 的候选清单里没有这一条 —— 本轮认领的是 GH **#864** 那张表**留下的行动空间**:它逐个点名了焦点五英雄各自被技能点墙永久钉在 rank 3 的那一个技能,而 Axe 是 `axe_berserkers_call`。落地 gated soak candidate **`axebuild`**(turbo-only,**未 armed**,⛔ 不申请入集 —— P4.2 冻结)。报告 `iterations/reports/hero/20260918T225037Z.md`;裁定 `iterations/state.json:axebuild_20260918`;GH **#911**。**零 arm / 零 promote / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条:构筑行不是一张偏好表,它是「哪个技能永远少一级」的唯一自由度 —— 而 Axe 现行行把那一级花在了 Battle Hunger 上、留给了 Berserker's Call。** GH #366 / #822 / #864 把墙的算术定完(队头停第 15 项,13 点按 `{4,4,3,2}` 花完,第 16 项 = 前 13 点留在 rank 3 的那个基础技能的第 4 级)。⭐ **于是「该不该重排构筑行」有一个之前没被问的形状**:重排**消不掉** strand(#864 LIMIT 2,14 行零例外),但它**选得动 strand 是谁**。本轮只做后者。
@@ -9181,7 +9182,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## 当前状态(每次触发后更新)
 - 2026-09-19T01:46Z(报告 `iterations/reports/hero/20260919T014653Z.md`;**backlog:新开 `-209`**;
-  裁定 `iterations/state.json:lionbuild_20260919`;GH **#ISSUE_PLACEHOLDER**;
+  裁定 `iterations/state.json:lionbuild_20260919`;GH **#916**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**零 arm / 零 promote / 不申请波次 / 不申请供帧**;
   **P4.4 自评:(i) 一个 `bots/` 行为改动**)
   **主体:焦点英雄 Lion 的构筑行落 gated `lionbuild`(turbo-only,未 armed)—— 把技能点墙的 strand 从
@@ -9203,9 +9204,16 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
     `test_focus_strand_identity` FOCUS +1 行(+ 抬头说明**为什么 §4 不受影响**)、
     ⭐⭐ `test_argmax_ring_census.py` Lion 行 **1623→1726**(第五次重取)——
     **第五个 datum 证明这笔账是「任何在同一文件更早处插入行」的人付的**,不是编辑/注释那个函数的人。
-  - ⚠️ **开工自检本轮没有完整读数**:两次被它自己的防线拒跑(`stdout is a PIPE` / `ancestor is timeout`),
-    第三次 `nohup` 起来后 log 停在 `unlanded work` 那一行 ⇒ ⛔ **后面的腿这轮没人看过**
-    (`UNCERTIFIABLE` 不是通过)。
+  - ⭐ **开工自检本轮拿到完整读数**(15 条腿全跑,`UNCERTIFIABLE: none`,worst exit 3;
+    前两次被它自己的防线拒跑 —— `stdout is a PIPE` / `ancestor is timeout` —— 第三次 `nohup` 跑通;
+    ⭐ 而且是在**改动已经推完之后**跑的,与上一轮「自检还在跑我就动 `bots/`」相反)。
+  - ⛔⛔ **它抓到 main 上一个 python 测试是红的,且不是本轮的**:
+    `tests/test_gated_getter_stub_census.py`(`§GF priced GetAnimActivity as the catch-all 0 by hand`)。
+    **二分到 `2cc8f34c`(总监 RULING 83,`declare_anim_activity`)红、其父绿**,两次真跑。
+    ⭐ 这正是 GH #624/#806 形状:该文件**不在 push 钩子的 py 闸里**(两次 push 都读 `138 ran, 0 findings`),
+    只有开工自检跑它 ⇒ 红由**下一个开工的组**(本轮是我,时差 ~1.5h)发现。按铁律 5 开 GH **#917** 交总监,**不自行修**。
+  - ⚠️ 另:`UNCOVERED SET GREW` 两条,其中 **`tests/test_lion_w_fight_seed.lua`(`too_slow`)是本组自己的**
+    (GH #901 量过的那个文件)—— 已排进 backlog,**本轮不动**(量具工作,P4.4 不许当主体)。
 - 2026-09-18T22:50Z(报告 `iterations/reports/hero/20260918T225037Z.md`;**backlog:新开 `-208`**;
   裁定 `iterations/state.json:axebuild_20260918`;GH **#911**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**零 arm / 零 promote / 不申请波次 / 不申请供帧**;

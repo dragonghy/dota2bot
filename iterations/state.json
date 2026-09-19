@@ -10209,8 +10209,8 @@
   "gate_budget": "`selected_count` 354 → **355**,`selected_total_seconds` 269.253 → **269.334**(新行 0.081s)⇒ 2× 后备 **538.668 ≤ 540.0**,余量 **1.332s**。⚠️ `tests/test_focus_strand_identity.lua` 因 FOCUS 多一行而变慢,**本轮没有改它的 manifest 读数**:本机 best-of-3 = 0.566 / 0.566 / 0.605s,表里记 **0.785s** —— 加行后**仍低于表里的数**,改成本机读数只会把预算读得更松,**不改是保守侧**。整表重测仍被 GH #783 挡着,故按 manifest 自己的 `hand_added_note` 手加,`measured_at` **不动**(GH #810)。",
   "next": "(1) ⛔ **不申请入集、不申请波次、不申请供帧**(P4.2 冻结 + 铁律 1)。(2) 下一轮主体候选见报告 §七:同一把尺子的剩余三个焦点英雄,**下一个应当是 Zeus**(`zuus_heavenly_jump` 的第 4 级看上去是三个里最不值钱的 ⇒ 它是**第一个可能得出「shipped 行选对了」的读数**,而本组一连串「选错了」正需要一个反例来定价);**WK 单独排**(已有 gated `wkbuild`,#864 §顺带 证明两行 strand 同一个技能 ⇒ 落这把尺子意味着**第三张表**,先问总监归属与形状)。",
   "cost": "零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)",
-  "issue": "GH **#ISSUE_PLACEHOLDER**(本轮新开)",
+  "issue": "GH **#916**(本轮新开,号码取自 create 调用自己的返回 `id 5507034036` / `url .../issues/916`,**不是顺号推测** —— #915 当轮被协同组拿走了)",
   "report": "iterations/reports/hero/20260919T014653Z.md",
-  "gate_legs": "GATE_LEGS_PLACEHOLDER"
+  "gate_legs": "`luacheck_gate.sh` **`GATE_EXIT=0 CLEAN` / `luacheck bots game: 0 warnings`**;`py gate: 138 ran, 0 findings, 0 uncertifiable, 43.5s`;`lua gate: 439 ran, 0 findings, 0 uncertifiable, 8 unanswered, 5 known-red, 571.2s`(scope 行逐字:`10 path(s) changed vs the pushed refs' base (base=fallback-merge-base)`)。⛔ **没有用过 `RULE6_BYPASS`。** 按文档顺序**先推分支再推 main**,第二推读 **`RULE6_MEMO=REUSE`**(逐字:`a green three-leg reading taken 2026-09-19T02:02:58Z on THIS EXACT tree`)⇒ 第二推三条腿全免。main 推 `dbe7aa1f..2997d95f HEAD -> main`,两推均 exit 0。⚠️ **py 闸第一次是红的**:`FAIL tests/test_argmax_ring_census.py` —— 本轮插进 `hero_lion.lua` 的行把那个按行号做键的 pin 顶掉了(见 `ratchet_touched` (丙)),重取后复跑 0 findings。⚠️ **rebase 撞过一次 `iterations/state.json` 冲突**(协同组同轮追加 `smokescan_20260919`),按「两条都留」手工合并,合并后 `json.load` 核验 674 键、两条都在。"
  }
 }
