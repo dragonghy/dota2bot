@@ -1797,6 +1797,84 @@ def render_owed(rows, now=None, executor=None):
     return 3 if finding else 0
 
 
+# --------------------------------------------------------- FROZEN-HOLD roster
+#
+# WHY THIS LEG EXISTS (2026-09-19, director, test_set.md §HO / RULING 84).
+# A FROZEN-HOLD ruling is the one ruling that makes its own row INVISIBLE to
+# every reader this file has.  The row is ruled, so it leaves the un-ruled
+# buckets above; it is not armed, so `arm_since` / `verify_coverage` never see
+# it; it names no owed execution, because under the freeze there is nothing to
+# execute.  It is parked, correctly, in a place nobody is told to look.
+#
+# That is precisely the shape iron rule 9 is about (the 2026-08-19 pull-camp
+# branch: fixed, then gone from every queue for 37 rounds).  The cohort was 6
+# rows before RULING 84 and 16 after it, and the only thing standing between
+# them and the unfreeze day was the director remembering they exist.
+#
+# Informational BY DESIGN: it never drives the exit code.  A parked row is not
+# a finding -- reddening 5 seats every round over a roster the freeze itself
+# created is how a detector gets ignored (GH #276).  What this leg buys is that
+# the unfreeze day has a LIST instead of a memory.
+FROZEN_PREFIX = "FROZEN-HOLD"
+
+
+def frozen_hold_rows(requests):
+    """(cohort, mentions_only) -- rows PARKED by the admission freeze.
+
+    Anchored at the START of the ruling string, and that anchor is the whole
+    design.  `hero-40`'s ruling is APPROVED, and its ruling field explains, in
+    prose, in the same field, why the FROZEN-HOLD clause does NOT apply to it
+    ("申请方自己写明本条不请求入集，所以不触发…那一条").  A substring match
+    reads that sentence as membership and files an approved scan into the
+    unfreeze queue -- the reading is backwards, and it looks like a hit.
+    Measured, not hypothetical: on 2026-09-19 a substring match returned 17
+    rows for a cohort of 16.
+
+    So the near-misses are RETURNED, not dropped: a ruling that merely mentions
+    the clause is printed under its own heading.  A row parked by a ruling this
+    leg cannot see would otherwise be indistinguishable from no such row.
+    """
+    cohort, mentions = [], []
+    for req in requests:
+        director = req.get("director")
+        if not isinstance(director, dict):
+            continue
+        ruling = str(director.get("ruling") or "").strip()
+        if ruling.startswith(FROZEN_PREFIX):
+            cohort.append(req)
+        elif FROZEN_PREFIX in ruling:
+            mentions.append(req)
+    return cohort, mentions
+
+
+def render_frozen(requests):
+    """Print the roster.  Returns nothing -- it never reddens (see above)."""
+    cohort, mentions = frozen_hold_rows(requests)
+    print("\n=== FROZEN-HOLD cohort (P4.2 unfreeze queue; informational, "
+          "does NOT drive the exit code) ===")
+    if not cohort:
+        print("FROZEN_HOLD: none")
+    else:
+        print("FROZEN_HOLD: %d row(s) parked by the admission freeze -- "
+              "re-queue them when armed <= 20" % len(cohort))
+        for req in cohort:
+            director = req["director"]
+            print("  %-12s at=%-18s %s"
+                  % (req.get("id"), str(director.get("at") or "?"),
+                     str(director.get("ref") or "")[:70]))
+    if mentions:
+        print("MENTIONS-ONLY (ruling names the clause but is NOT a "
+              "FROZEN-HOLD -- deliberately not in the cohort): %d"
+              % len(mentions))
+        for req in mentions:
+            print("  %-12s %s" % (req.get("id"),
+                                  str(req["director"].get("ruling"))[:70]))
+    print("LIMITS: this leg reads the `director.ruling` string, so a row "
+          "parked by a ruling worded some third way is invisible to it; and a "
+          "row IN the cohort is not thereby owed anything today -- the freeze "
+          "is what parked it.")
+
+
 def partition(requests):
     """Open+un-ruled requests, split into (rideshare, other).
 
@@ -1912,6 +1990,8 @@ def main():
             if counts is None:
                 print("  %-12s UNCERTIFIABLE -- the census could not run, so whether "
                       "the hold still stands was NOT read this round" % r.get("id"))
+
+    render_frozen(requests)
 
     print()
     strata_level = render_strata(requests)

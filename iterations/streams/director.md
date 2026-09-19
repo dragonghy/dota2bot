@@ -681,6 +681,21 @@ patch 升级维护。**必须主动发明基建/工具/流程改进**——owner
   所以它是一笔可以等的采购,**不是一个被忽略的洞** —— 等到第一条 UNRESOLVED(armed) 出现那天再买。
 
 ## 当前状态(每次触发后更新)
+- **2026-09-19T04:0xZ**:**RULING 84 —— `strategy-57..67` 十一条一次裁完(十条 FROZEN-HOLD + 一条 REGISTERED);并给 FROZEN-HOLD 这一族装上它一直缺的那个读者。**
+  全文 `iterations/reports/director/20260919T040000Z.md`,档案 `test_set.md §HO`。零 AWS、零波次、`bots/`+`game/` **零 diff**、armed 串 **24 → 24**(md5 `f7e1812e718d21f09a8b2e7378d4af3c` 逐位不变)、**不发 owner 邮件**、无 promote / 无入集 / 无退集。
+  成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+  ⭐ **选题不是口味,是上一轮 ⑱ 自己量出来的**:RIDESHARE 桶入轮 **50**(上一轮 49,一夜 +1)⇒ **流入 ≈ 清算,是一场平局**,而平局的那一侧每天在长。本轮取其中**形状完全相同**的 11 条一次裁完,工具复读 **50 → 39**。
+  ⭐ **一批裁不等于盖章,四条核对逐条现读源码**(全表在 §HO.1):(甲) 闸址 turbo-only 且未 armed **逐字返回出厂值**;(乙) 十一个 id **一个都不在** armed 串里 ⇒ FROZEN-HOLD **不改变 armed 集**;(丙) 每条都有**真帧**测试;(丁) **`pullcad` 陷阱**:整份 `jmz_func.lua` 扫过,带两个 `IsSoakCandidate` 的**代码行**只有 `:9186`(`lanefix` wrapper),⚠️ `:12861`/`:13976`/`:16303` 那三处**是注释不是门**(它们恰恰是为了不写成合取而写的)。
+  ⚠️ **申请方散文里的 `armed 25` 十一条全部过期一格**(09-17 `stayfield2` 退集后是 24)⇒ ⛔ 不代改别组档案(§AW.1),**而结论不依赖那个数**。
+  ⭐ **`strategy-57` 单独裁 `REGISTERED`**(`campbind` 已于 §FX 退集 ⇒ 那条不是入集提议,而是 (a) BUGGY→FIXED 的登记)。⛔⛔ **登记 FIXED ≠ 恢复入集资格**:`test_set.md:30` 写死它挂在 `pullcamp` 之下,**提入集必须先让 `pullcamp` 回串**。
+  ⭐⭐ **本轮最该被读走的一条:FROZEN-HOLD 是唯一一种把自己那一行从所有读者面前藏起来的裁定** —— 被裁过了 ⇒ 离开 `pending_rulings.py` 的两个桶;不 armed ⇒ `arm_since`/`verify_coverage`/载体门/选种**结构上看不见**;不欠执行 ⇒ `owed_executions.json` 里**没有行可以写**(写了就是一条永远 OWED 的行 = 把 exit 3 训练成噪音,GH #276/#707)。⇒ 它被**正确地**停在一个没人被告知要去看的地方,**正是铁律 9 那根掉了 37 轮的棒的形状**。队列 **6 → 16 行**,而站在它与解冻日之间的唯一一样东西是「总监还记得」。
+  **落地**:`pending_rulings.py` 新增 `frozen_hold_rows()` / `render_frozen()`,打印 `FROZEN_HOLD: 16 row(s) ... re-queue them when armed <= 20`。⛔ **有意不驱动退出码**(为冻结自己造的名单每轮顶红五个座位 = 让一条腿被忽略的标准做法)。
+  ⭐⭐ **装腿时当场撞出来的一下**:第一版子串匹配真语料读回 **17**,真值 **16** —— 多出来的 `hero-40` 的 `ruling` 是 **APPROVED**,而同字段的散文逐字解释了**为什么 FROZEN-HOLD 对它不适用** ⇒ **一句「本条不属于这一族」的话被读成了成员证,且长得像一次命中**。修法两半:锚在串首 + ⛔ **近失打出来**(`MENTIONS-ONLY`),否则「不在名单里」与「没有这样一行」**逐字节相同**。棘轮 `tests/test_pending_rulings.py` INVARIANT 8(`1071 checks, 0 failed`),**变异三发全 CAUGHT**,CONTROL 还原 md5 `dd8356777e616737aa98cd76c8af7e4a` 逐位相同。
+  **健康巡检(取数 04:05Z,`git fetch` 之后,名字序,`origin/main`,只认报告名形状)**:batch-desk `031641Z` 0.8h、hero `014653Z` 2.3h、strategy `013110Z` 2.6h、replay-check `004859Z` 3.3h、director `005100Z` 3.2h ⇒ **五组全健康,零 GAP、零点名、零升级**;⚠️ 照 RULING 75/76 口径:读 `origin/main` 而报告**落地晚于写成** ⇒ 这些数是**上界**不是真停摆。⚠️ 本容器 clone **是浅的**,本轮**没有做任何日期推断**故未 deepen。
+  **P4.2**:本轮判定完结 **0**,停滞 **10 轮**(门槛 12/24)⇒ 未到线;归因照写:**不是没人裁,是裁所需的那一半((b) 要批测)买不到**。本轮走的是 ⑱ 那条「刹车下还能动」的通路 —— 它不产出判定完结,但把**解冻日要处理的那张表**从一份记忆变成一张单子。
+  **铁律 1.5**:`RC_EXIT=0`,13 个 carry ref **全 open**,无 `STALE-CARRY` / 无 `NO-HANDOFF`。**§0 纪律 3 本轮零违规。**
+  ⑨ **下次触发**:①**RIDESHARE 余 39**,下一批**同形**的是英雄组的零 EC2 域读数族(`hero-71/77/78/79/81/83/84/85/86/87` …)—— ⚠️ 它们**不是** FROZEN-HOLD 那一档(自述「不请求入集」⇒ 按 hero-40 / §GB.1 先例是 APPROVED-SCAN),**两档不许混着裁** ②**GH #856** 剩 9 候选 ③**GH #867** ④**GH #240** 余下 ⑤`carry_mark_prose_vs_list` 剩唯一一格 ⑥**GH #843** 剩 (乙) ⑦**GH #859** ⑧**GH #810** 待裁 1 + (乙) ⑨**GH #528** ⑩**GH #548**/**GH #806** ⑪**GH #839** 选 (甲)/(乙),先量爆炸半径 ⑫**GH #910**(owed 表 `corpus_deadline`,executor = 总监自己)⑬**GH #909**(录像组 [harness]:S3 被权限分类器拒 + `tpreach` **09-26 硬悬崖**)⑭核 `aws_run_dryrun_and_watchdog_pricing`(executor = 批测台)⑮在一个**不跑开工自检**的容器上复跑 `python3 tests/test_rc_wrapper.py` ⑯**W38 周日邮件(09-20)**:DECISIONS_NEEDED 第 15 条两条状态更新 + `$100` 最坏落点 **2026-09-25T23:16Z** ⑰上一轮 ⑯:按那份**上界式 11 个**逐个下沉到路径作用域(**退回出集不要 (b)**)⑱上一轮 ⑰:RULING 83 只买了 `GetAnimActivity` 一格,另外 **163 个同族 getter** 的政策推广**没有买** ⑲**新**:`strategy-57` 的 `REGISTERED` **不在** FROZEN-HOLD 名册里(新腿 `LIMITS` 已写明「措辞成第三种样子的停泊行它看不见」)—— 这一格今天由 `test_set.md:30` 的散文管着,**要不要给它一个机器读的行,值一次单独的测量**,⛔ 不许顺手加一条永远 OWED 的欠条
+
 - **2026-09-19T00:51Z**:**RULING 83 —— GH #908 三选一判 (2)+(3);「四个仪器缺口里最便宜的一个」是价签错了,不是习惯错了。**
   全文 `iterations/reports/director/20260919T005100Z.md`。零 AWS、零波次、`bots/`+`game/` 零 diff、**不发 owner 邮件**、无 promote / 无退集 / 无入集。
   成本(RULING 48 三段式):**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;GitHub MCP:`issue_read` 点查 1 次 + `add_issue_comment` 1 次(免费)。

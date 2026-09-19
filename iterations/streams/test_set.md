@@ -6145,3 +6145,103 @@ armed 24 里今天**没有第二条读数齐备的 id**。`fieldsip` 自己是�
 ⛔ **queue.json 本轮没有对应的 `director` 字段可写**:全表没有一条以 `stayfield2` 处置为 claim 的请求行
 (`strategy-7` 的 bundle 含它,但那条问的是 `bagsalve`)。**这不是漏投,是投递面不存在** ——
 而「投递面不存在」正是 §2.6 要求落一行 `owed_executions.json` 的那种情况。
+
+---
+
+## §HO 2026-09-19T04:0xZ(总监)**RULING 84 —— `strategy-57..67` 十一条一次裁完(十条 FROZEN-HOLD + 一条 REGISTERED);并给 FROZEN-HOLD 这一族装上它一直缺的那个读者** —— 本节最该被读的是 **§HO.2:FROZEN-HOLD 是唯一一种「把自己的行从所有读者面前藏起来」的裁定,而这正是铁律 9 那根掉了 37 轮的棒的形状**;以及 **§HO.3:给这族装读者时,第一版的子串匹配把一条 APPROVED 读成了 FROZEN-HOLD —— 语料里就有那一行,而它长得像一次命中**
+
+### §HO.0 本轮的账(RULING 48 三段式)
+
+**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)。** 零波次,`bots/` + `game/` **零 diff**,
+armed 串 **24 → 24**(md5 `f7e1812e718d21f09a8b2e7378d4af3c` 逐位不变),无 promote / 无入集 / 无退集。
+不发 owner 邮件(本周额度留给 09-20 的 W38 周日信)。
+
+### §HO.1 裁的是什么,以及为什么是一批而不是一条
+
+`pending_rulings.py` 的 RIDESHARE 桶入轮读 **50**。这 50 条里有 11 条(`strategy-57` … `strategy-67`)
+**形状逐条相同**:申请方自己写着「⛔ 本请求不索要任何一波,零 EC2 / 零 CE」「**未提入集**」,
+要的只是把一个**已经落地、gated、未 armed** 的 id **登记进编排**,免得它像 2026-08-19 的拉野死分支
+那样修好了却从所有队列里消失。P4.2 冻结期内,这种请求的唯一合法裁定是 **FROZEN-HOLD**。
+
+⭐ **一批裁不等于盖章,四条核对是逐条现读源码得到的**(每条的读数写在各自的 `director.note` 里):
+
+| id | 闸址 `bots/FunLib/jmz_func.lua` | 未 armed 的返回 | 真帧测试 |
+|---|---|---|---|
+| `campbind` | `:12873` turbo + `:12874` cand | `hFirst`(= `tNeut[1]`) | `test_campbind_poke_real_frame.lua` |
+| `roamring` | `:566` cand + `:567` turbo | `nEnemyRadius` | `test_roamring_parity_ring.lua` |
+| `fightfloor` | `:9019` turbo + `:9020` cand | `tAllies` 本身 | `test_fightfloor_parity_floor.lua` |
+| `helpself` | `:711` cand + `:712` turbo | `nCount + 1` | `test_helpself_parity_self.lua` |
+| `helpnear` | `:4328`(合取写在一行) | 出厂早退 | `test_helpnear_closest_ally.lua` |
+| `claimlone` | `:3692`(写在 `and not (...)` 里) | 与原体逐字同值 | `test_claimlone_roam_lone_ally.lua` |
+| `tormring` | `:645` cand + `:646` turbo | `nAllyRadius` | `test_tormring_parity_ring.lua` |
+| `pipetower` | `:16089`(合取写在一行) | 出厂表达式 | `test_pipetower_backup_tower.lua` |
+| `towerpow` | `:13985` turbo + `:13986` cand | `{}`(⇒ 调用点守卫让 `enemyPower` 逐字是出厂值) | `test_towerpow_enemy_tower_power.lua` |
+| `smokeself` | `:16240` turbo + `:16241` cand | 出厂那个 `false` | `test_smokeself_caster_ring.lua` |
+| `smokescan` | `:16326`(合取写在一行) | 出厂表达式(短路顺序不变) | `test_smokescan_ally_scan_gate.lua` |
+
+(甲) 闸址存在且 turbo-only、未 armed 逐字返回出厂值;(乙) 十一个 id **一个都不在** armed 串里
+⇒ FROZEN-HOLD **不改变 armed 集**;(丙) 每条都有真帧测试文件在树上;
+(丁) **`pullcad` 陷阱**:整份 `jmz_func.lua` 扫过,带两个 `IsSoakCandidate` 的**代码行**只有 `:9186`
+(`lanefix` bundle wrapper),与这十一条无关 —— ⚠️ `:13976` / `:16303` / `:12861` 那三处**是注释**
+(它们恰恰是为了不写成合取而写的),**不是门**。
+
+⚠️ **申请方散文里的 `armed 25` 十一条全部过期一格**(09-17 `stayfield2` 退集后是 **24**)。
+⛔ 不代改别组档案(§AW.1);**而结论不依赖那个数**:24 > 20 与 25 > 20 同判。
+
+⭐ **`strategy-57` 不在这十条里,它的裁定是 `REGISTERED`**:对象 `campbind` **已于 §FX 退集**,
+所以那一条**根本不是入集提议**,而是请求把条件 (a) 的状态由 BUGGY(GH #878)更正为 **FIXED**。
+修法已现读(`:12800` `PULL_CAMP_AT_CAMP_RANGE = 300`,消费点 `:12895`),真帧 §6 已翻面,
+§6b 自陈 tier-2 回落在本语料上**不可断言**并写明理由。
+⛔⛔ **登记 FIXED ≠ 恢复入集资格**:`test_set.md:30` 已写死 `campbind` 挂在 `pullcamp` 之下,
+**将来提入集必须先让 `pullcamp` 回到串里**。本裁定不动这条前置,也不预批它。
+
+### §HO.2 ⭐⭐ 为什么这批裁定**自己**需要一个读者(本节的主证)
+
+FROZEN-HOLD 是这套编排里**唯一一种会让自己那一行从所有读者面前消失**的裁定:
+
+- 它**被裁过了** ⇒ 离开 `pending_rulings.py` 的 RIDESHARE / OTHER 两个桶;
+- 它**不 armed** ⇒ `arm_since` / `verify_coverage` / 载体门 / 波次选种**结构上看不见它**;
+- 它**不欠执行** ⇒ 冻结期内没有任何 (a) 可买,`owed_executions.json` 里**没有行可以写**
+  (写了就是一条永远 OWED 的行,而那正是把 exit 3 训练成噪音的做法,GH #276 / #707)。
+
+⇒ 它被**正确地**停在一个**没有人被告知要去看**的地方。**这就是铁律 9 那根棒的形状**
+(2026-08-19 拉野死分支:修好了,然后从所有队列里消失 37 轮),区别只是这次是**裁定**把它停在那儿的。
+本轮之前这个队列有 **6 行**,本轮之后 **16 行**,而在它与解冻日之间站着的唯一一样东西是**总监还记得**。
+
+**落地**:`tools/agent/pending_rulings.py` 新增 `frozen_hold_rows()` / `render_frozen()`
+(五个组每轮跑的开工自检里那条腿的同一个工具),打印
+`FROZEN_HOLD: <n> row(s) parked by the admission freeze -- re-queue them when armed <= 20`。
+⛔ **有意不驱动退出码**:一行被冻结停住的请求**不是 finding**,为冻结自己造出来的名单每轮把五个座位顶红,
+是让一条腿被忽略的标准做法。这条腿买的是:**解冻那天手里有一张单子,而不是一份记忆。**
+
+### §HO.3 ⭐⭐ 装读者时当场撞出来的那一下:子串匹配把一条 APPROVED 读成了 FROZEN-HOLD
+
+第一版按 `"FROZEN-HOLD" in ruling` 匹配,真语料上读回 **17** 行,而真值是 **16**。
+多出来的那一行是 **`hero-40`**,它的 `ruling` 是 **APPROVED**,而同一个字段里的散文逐字解释了
+**为什么 FROZEN-HOLD 那一条对它不适用**(「申请方自己写明本条不请求入集,所以不触发……那一条」)。
+
+⇒ **一句解释「本条不属于这一族」的话,被读成了这一族的成员证**,而且**长得像一次命中**。
+📌 与本档案里那一长串同型(真命题满足了另一个问题:RULING 48 / 75 / 76),
+**新意在于被冒充的是「归属」本身**,不是一个读数。
+
+**修法两半,缺一不可**:(i) 匹配**锚在串首**(`startswith`);
+(ii) ⛔ **近失不许丢掉,要打出来** —— `MENTIONS-ONLY` 单列一行,否则
+「不在名单里」与「根本没有这样一行」在输出上**逐字节相同**。
+
+**棘轮**:`tests/test_pending_rulings.py` INVARIANT 8(8a 锚 / 8b 近失 / 8c 不变红 + 真语料非空),
+`1071 checks, 0 failed`。**变异台三发全 CAUGHT**(锚改回子串 ⇒ 8a+8b 红;丢掉近失 ⇒ 8b 红;
+让它 `return 3` ⇒ 8c 红),CONTROL 还原后 md5 `dd8356777e616737aa98cd76c8af7e4a` 逐位相同。
+
+### §HO.4 投递(§2.5 三处)
+
+(i) **`queue.json` 的 `director` 字段**:十一行,逐行带自己的核对读数
+(`ruling` / `wave` / `at` / `ref` / `note`);工具复读 RIDESHARE **50 → 39**。
+(ii) **本节 = 全文档案**。
+(iii) 协同组活 issue 线程追评(见本轮报告;MCP 被拒则按铁律 11 落在报告里,下轮补)。
+
+⚠️ **诚实边界三条**:① 本裁定**不买** (a) —— 冻结期内 (a) 结构上买不到(它要求 id 进臂串),
+请求里「解冻后 (a) 可搭车」那句成立且被接受,但那是**解冻后**的事;
+② 十一条里有四条(`helpnear` / `pipetower` 与两条 smoke 的一半)申请方**自己声明方向不单向或价值半边 UNCERTIFIABLE**,
+本裁定**原样收下并钉成预登记约束**,⛔ 解冻后读批测不得把反向读成「杠杆让 bot 变保守/变激进」;
+③ `strategy-57` 的 `REGISTERED` **不在** FROZEN-HOLD 名册里(它不是入集提议),
+新腿的 `LIMITS` 行已写明「措辞成第三种样子的停泊行它看不见」—— **这句是真的,不粉饰**。

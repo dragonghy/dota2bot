@@ -1818,6 +1818,62 @@ check(pr.parse_utc("2026-09-18T09:5xZ") is None,
       "purpose and must not have relaxed the claim-TTL parser to do it")
 
 
+# ---------------------------------------------------------------------------
+# INVARIANT 8 (§HO / RULING 84, 2026-09-19, director).  The FROZEN-HOLD roster
+# must be ANCHORED, must RETURN its near-misses, and must not redden.
+#
+# The leg exists because a FROZEN-HOLD ruling parks its row where no reader in
+# this file looks: ruled (so it leaves the un-ruled buckets), not armed (so the
+# arm-side tools never see it), nothing owed (so the owed leg is silent).  The
+# three checks below pin the three ways that roster can quietly become wrong.
+
+
+def _frozen_row(rid, ruling):
+    return {"id": rid, "status": "pending",
+            "director": {"ruling": ruling, "at": "2026-09-19T04:0xZ",
+                         "ref": "iterations/streams/test_set.md §HO"}}
+
+
+# 8a. THE ANCHOR.  `hero-40`'s real ruling is APPROVED and explains, inside the
+# same field, why the FROZEN-HOLD clause does not apply to it.  A substring
+# match files that approved scan into the unfreeze queue -- backwards, and it
+# looks like a hit.  This row is that sentence, shortened.
+_mention = ("APPROVED(零 EC2 归档只读扫描)。**不是入集** —— 因为申请方自己"
+            "写明「本条不请求入集」,所以不触发「冻结期唯一合法裁定是 "
+            "FROZEN-HOLD」那一条。")
+_cohort, _mentions = pr.frozen_hold_rows(
+    [_frozen_row("parked", "FROZEN-HOLD(登记,不入集,不视为掉棒)"),
+     _frozen_row("approved", _mention),
+     {"id": "unruled", "status": "pending", "director": None}])
+check([r["id"] for r in _cohort] == ["parked"],
+      "the roster stopped anchoring at the START of the ruling: %s"
+      % [r["id"] for r in _cohort])
+# 8b. THE NEAR-MISS IS RETURNED, NOT DROPPED.  A row the anchor rejects is the
+# one case where "not in the cohort" and "there is no such row" must not look
+# the same.
+check([r["id"] for r in _mentions] == ["approved"],
+      "a ruling that mentions the clause was dropped instead of returned: %s"
+      % [r["id"] for r in _mentions])
+
+# 8c. IT MUST NOT REDDEN, AND IT MUST BE MEASURING A NON-EMPTY SET ON THE REAL
+# QUEUE.  Same sentence as 7f/7h: a roster that silently stopped matching would
+# print `none` on the day the unfreeze list is read, which looks exactly like a
+# clean board.  16 rows on 2026-09-19 (6 before RULING 84 landed 10 more).
+_real_requests = json.load(open(pr.QUEUE, encoding="utf-8"))["requests"]
+_real_cohort, _real_mentions = pr.frozen_hold_rows(_real_requests)
+check(len(_real_cohort) >= 6,
+      "the real FROZEN-HOLD cohort collapsed to %d rows -- 16 were parked on "
+      "2026-09-19, so a drop this large means the ruling vocabulary moved and "
+      "the unfreeze queue is being under-reported" % len(_real_cohort))
+_fbuf = io.StringIO()
+with contextlib.redirect_stdout(_fbuf):
+    _frc = pr.render_frozen(_real_requests)
+check(_frc is None and "FROZEN_HOLD:" in _fbuf.getvalue(),
+      "render_frozen started returning an exit level -- the roster is "
+      "informational by design; the freeze is what parked those rows, and "
+      "reddening five seats every round over it is how a leg gets ignored")
+
+
 print("%d checks, %d failed" % (checks, len(failures)))
 for f in failures:
     print("FAIL: %s" % f)
