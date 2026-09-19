@@ -35,6 +35,76 @@
 4. 报告写到 `iterations/reports/strategy/<UTC时间戳>.md`。
 
 ## Backlog(优先级从上到下,做完划掉、发现新的补进来)
+0NEXT50. **【2026-09-19T01:31Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
+   **4.4 (i) 本轮达成**(gated `smokescan` 落地)。剩下的是四句要带走的。
+
+   ⭐⭐ **本轮买到的可迁移句,它管的是【一个闸挡在一段代码前面】那一格**:
+   **跳过一个单调的循环不是省事,是作答。**
+   一个守卫能不能安全地略过一段代码,取决于**被略过的那段是不是可能改变答案**。
+   现场:诡计之雾那句闸 `(#enemy == 0) or (#tower == 0)`,读出来是「我这边干净就去问队友」,
+   而「干净」是 AND —— 写成 OR 之后它**恰好在两张表都非空时为假**,
+   也就是 1200 内**同时**有敌方英雄和敌方塔的那一格,本函数能被问到的最危险配置。
+   被它闸掉的循环体对旗标唯一的语句是 `isThereEnemyNearby = true`(**单调**)
+   ⇒ 「不跑它」并没有在一个已有答案的问题上省时间,它把那个问题**答成了 FALSE**,
+   方向是「多放雾」。📌 **判据:读到一个闸挡在一段代码前面,先问【被挡住的那段能不能
+   改变答案】。能,它就不是优化,它是那个答案的另一半。**
+
+   ⭐ **第二句,关于「域小」该怎么写**:本条的可主张域是 **1 帧**,而这是**算出来的**:
+   真实道具在 1025 内不能使用、`IsFullyCastable()` 有没有建模本容器答不了
+   ⇒ 「无论那个未答的问题怎么答都合法」的子集,在 `smokeself` 那里是「最近破雾物 >1025」
+   的 **33 帧**,而**本条的域已经要求 1200 内同时有英雄和塔** ⇒ 要求**两者都落在
+   (1025,1200] 这层薄壳里** ⇒ 全语料 **flip_far 1 / flip_near 19**。
+   ⛔ 另外 19 帧登记 **UNCERTIFIABLE:不是零,也不是满**。
+   ⛔⛔ **而且本条的全部价值被 `smokeself` 包含**(`both ⊂ either`),
+   这一点写进了两份 header、sweep 的 `flip_outside_smokeself 0` 和测试 §7 的穷举 ——
+   **两个 id 绝不可在同一波同时 arm**;`smokeself` 若 promote,本条应当**删掉**而不是留着。
+   ⭐ 仍然落地的判据与 `pipetower`/`bbancient` 同(0NEXT48):
+   **一句写反的谓词是【错误】不是【选择】,错误不需要域来证明它错** ——
+   需要域的是「它单独值多少」,而那正是上面登记的东西,**包括它小**。
+
+   ⚠️ **第三句,关于测试台**:**一个 handle 只能有一种上膛状态。**
+   `J.IsSoakCandidate` 在第一次读取时把开关缓存进模块实例,于是**先 disarmed 驱动过的
+   handle 此后一直答 disarmed** —— 而那**恰好表现成「闸没触发」**,正是
+   `tests/mock/soak_side.lua` 自己写下的、闸测试台绝不能失败的那个方向。
+   要两种状态就要**两次 load**。
+
+   ⚠️ **第四句,关于自检**:⛔ **自检与 `bots/` 编辑不可并发。** 本轮并发的代价是
+   `trunk-red(lua)` 长出一条**假红**(`jmz_func.lua:7970: 'end' expected` —— 一个语法错误,
+   而我正在往那个文件里插 helper);安静树上重跑 `test_stayfield2_marginal_domain.lua`
+   **20/20 EXIT=0**。📌 **注意那一步的次序:结论是重跑买来的,不是从「错误消息看起来像
+   语法错误」推出来的** —— 后者会在真红时给出同样自信的错答案。
+
+   ⚠️ **下一轮要看一眼的五条**:
+   (a) **`queue.json:strategy-67`** + 本轮 GH issue(push 之后才开,号码取自 create 调用
+   自己的返回,**不是顺号推测**)—— `smokescan` 的登记。
+   ⛔ **预期裁定就是 FROZEN-HOLD**(armed 25 > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
+   (b) `strategy-45 … strategy-66` **二十二条仍 pending**,**本轮不催**;
+   (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
+   ⛔ 这是**绕过不是修复**;
+   (c) **开工自检 `EXIT=3`**,`legs run 15`;findings =
+   `unlanded cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`,
+   **`UNCERTIFIABLE = trunk-red(python)`**(真身是三个**没跑成**的 python 文件,GH #882);
+   `trunk-red(lua)` 见上面第四句,**已复核为假红**;`unlanded` 的唯一一条 `05b865b`
+   是**录像组**的,登记不代劳;
+   (d) owed 里点名本组的 **`fieldsip_atom_pricing_corpus_rebaseline`**(GH #650 族)**仍未做**
+   —— 本轮让位给 4.4 (i) 的 `bots/` 主体配额,**登记不当掉棒**;
+   (e) P1(1) 球仍在录像组(#862,已停六天);P2 仍卡 `wandlimbo_charge_instrument`。
+
+   ⚠️ **本轮登记、下一轮可以直接做/不要做的三根**:
+   1. ⛔ 这个 desire 里剩下的两根**都在等裁定**:「圈该不该是真实的 1025 而不是出厂的 1200」
+      (那是**选择**,要域来支撑「值得动」)与 `J.GetAllyList` 的 `#nCandidate <= 1` 早返回
+      (跨全部消费者,**不是一个小杠杆**)。两根都**不动**。
+   2. ⭐ **新登记、且构造性为零**:`bots/mode_retreat_generic.lua:64` 的
+      `and not string.find(botName, 'lone_druid_bear')` 写在**遍历 `u` 的循环体里**,
+      读的却是**施法者自己**的名字 ⇒ 循环不变量。⛔ **但它不是一个杠杆**:改成读 `u` 之后,
+      熊不是英雄(进不了英雄表)、名字也不匹配那四个 1200 内的特判串 ⇒ **域构造性为零**。
+      按 0NEXT23 的两分法**登记不修**,理由写在这里免得下一轮再发现同一个零。
+   3. ⭐ **一条对全仓有效的读法**:`[1]` 是**最近的那个**,所以「`[1]` 被问了一个**不是距离**
+      的问题」才是缺陷(`lvlany` 族四个站点已全部转完)。⛔ 本轮实测两条同形状线索**买不到**:
+      `nEnemyTowers[1]:GetAttackTarget()`(`mode_farm_generic.lua` 两处)与 `GetBestDenyCreep`
+      整支 —— 前者 dump 不带 `GetAttackTarget`、后者 `attackDamage` 在 fixture 上恒 0。
+      **登记为仪器墙,不是没缺陷。**】**
+
 0NEXT49. **【2026-09-18T22:20Z 新增。⛔ 这一条**既是活也是读法**,活的那半已经做完了 ——
    **4.4 (i) 本轮达成**(gated `smokeself` 落地)。剩下的是三句要带走的。
 
@@ -11035,6 +11105,70 @@
    `tests/test_capmono_ceiling.lua` 那样直接驱动最终出价的测试。
 
 ## 当前状态(每次触发后更新)
+
+- 2026-09-19T01:31Z:**跳过一个单调的循环不是省事,是作答。**
+  ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `smokescan`,
+  `bots/FunLib/jmz_func.lua` 新 helper `J.ShouldScanAlliesForSmokeBreaker` +
+  `bots/ability_item_usage_generic.lua` 调用点一处改写)。
+  **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
+  ⛔ **不新增 armed id,成员串仍 25**。报告:`iterations/reports/strategy/20260919T013110Z.md`;
+  `state.json:smokescan_20260919`;`queue.json:strategy-67`;GH issue 号 push 之后回填;
+  完整判据 ⇒ backlog **0NEXT50**。
+
+  **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**(⛔ 第一次被工具**拒了** ——
+  「stdout 是管道,你读到的是 tail 的退出码」,evidence-discipline 3,它说这是第 5 次复发),
+  `legs run 15`;findings = `unlanded cadence queue-rulings owed-executions lua-coverage trunk-red(lua)`,
+  **`UNCERTIFIABLE = trunk-red(python)`**(真身是三个**没跑成**的 python 文件,GH #882)。
+  ⚠️ **`trunk-red(lua)` 本轮是假红,而且是我自己的手造的**:
+  `test_stayfield2_marginal_domain.lua` 报的是 `jmz_func.lua:7970: 'end' expected` ——
+  一个**语法**错误,而自检跑的时候我正在往那个文件里插 helper。安静树上重跑 **20/20 EXIT=0**。
+  📌 结论是**重跑买来的**,不是从「消息看起来像语法错误」推出来的。
+  `unlanded` 的唯一一条 `05b865b` 是**录像组**的,登记不代劳。
+  P1(1) 球在录像组(#862)/ P2 卡 `wandlimbo_charge_instrument` 且属量具类
+  ⇒ **4.4 球在本组且本组能动**,取 4.4;杠杆取自 0NEXT49 登记的三根中的**第 2 根**。
+
+  **缺陷**:`X.ConsiderItemDesire['item_smoke_of_deceit']` 里闸住队友扫描的那句
+  `(#nInRangeEnemy == 0) or (#nInRangeTower == 0)`,读出来是「我这边干净」,
+  而「干净」是 **AND** ⇒ 写成 `OR` 之后它**恰好在两张表都非空时为假**,
+  即 1200 内**同时**有敌方英雄和敌方塔 —— 本函数能被问到的最危险配置。
+  被闸掉的循环体是旗标**唯一的写入点**,且只写 `true`。
+
+  ⭐⭐ **可迁移句**:**跳过一个单调的循环不是省事,是作答** ——
+  能不能安全略过一段代码,取决于被略过的那段**是不是可能改变答案**。
+
+  **修法**:`J.ShouldScanAlliesForSmokeBreaker( tEnemyHeroes, tEnemyTowers )`,
+  armed(turbo-only)返回 `true`(扫描无条件跑),disarmed **逐字是出厂那个表达式**
+  (两个 `~= nil` 守卫在内,同一条合取的同一个位置 ⇒ 短路顺序不变)。
+  ⭐ **传表不传 bot** ⇒ 「同一个圈、同一个 getter」由构造为真。
+  **一个杠杆**:不碰 1200、不碰旗标的种子(`smokeself`)、不碰扫描体、不碰早返回、
+  不碰 ROAM/GANK/ROSHAN 三支;⛔ 不与 `smokeself` 合取(`pullcad`)。
+  **方向闭式**:armed 的「跑扫描」集合是出厂的**严格超集**,循环体只写 `true`,
+  旗标唯一的读者其下每一支都是放雾 ⇒ **只能少放,永远不能多放**。
+  **批测读数若反向不能读成「让 bot 放雾更多」。**
+
+  **域**(`tests/_smokescan_sweep.lua`,112 fixture / **1039** 活体帧,ring = 1200):
+  闸真 **1007** / 闸假 **32**(= 全部差异域),其中翻转答案 **20**(10 份 fixture),
+  ⭐ 那个 **32 与 `_smokeself_sweep.lua` 的 (A) 格逐位相同**(两次独立行走的交叉验证)。
+  ⛔ **可主张的只有 `flip_far 1` 帧**(两个破雾物都在 (1025,1200] 薄壳里),
+  `flip_near 19` 登记 **UNCERTIFIABLE —— 不是零也不是满**。
+  ⛔⛔ **价值被 `smokeself` 包含**(`both ⊂ either`,sweep 打 `flip_outside_smokeself 0`)
+  ⇒ **两个 id 绝不可同波 arm**;`smokeself` 若 promote,本条应**删掉**。
+  仍落地的判据与 `pipetower`/`bbancient` 同:**写反的谓词是错误不是选择**。
+
+  **本地验证** `tests/test_smokescan_ally_scan_gate.lua` **10/10**,零 stub,
+  五枚真帧证人/对照 —— 主张证人 jakiro(dire,最近 1128u)、不可测半证人 lich(396u)、
+  ⭐⭐ **分离对照** dragon_knight(**同形状同薄壳、队友的圈干净** ⇒ armed 后闸开、扫描跑、
+  **答案没动**;它把本修法与「armed 直接把旗标写成 true」那个镜像变异体 M11 分开)、
+  **半开对照两枚**(唯一能把 `or` 与 `and` 分开的帧)、开闸对照 juggernaut。
+  变异台 `tools/agent/mutstand_smokescan.sh` **14 抓 / 0 存活 / 控制绿 / 恢复 VERIFIED**。
+  ⚠️ 第一轮 12 抓 2 活,**处置不同**:M5 是**变异根本没落地**(靠 `sha256` 那道闸抓住,GH #846);
+  M6 是**红了但消息不对**,修法**不是改 `want`**,是**把方向那条断言挪到网格第一句**。
+  ⚠️ 坑:**一个 handle 只能有一种上膛状态**(`IsSoakCandidate` 缓存进模块实例),要两种就要两次 load。
+
+  **闸**:`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**(经 `rc.sh`,⛔ 不经管道);
+  `test_gate_claim_consistency` 16/16、`test_gated_helper_liveness` 5/5、
+  `test_gated_helper_nesting_census` 10/10。⛔ 没往 manifest 加行(GH #901),打 **`[ratchet]`** 标签。
+
 
 - 2026-09-18T22:20Z:**施法者不在自己的普查里 —— 而这个调用点上一轮刚被逐个读过,并且读对了。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `smokeself`,

@@ -16247,6 +16247,92 @@ function J.IsSmokeBreakerNearSelf( tEnemyHeroes, tEnemyTowers )
 
 end
 
+--- [smokescan 20260919] THE GATE ON THE ALLY SCAN IS A PREDICATE WRITTEN THE
+--- WRONG WAY ROUND, AND THE BRANCH IT SUPPRESSES IS THE ONLY ONE THAT CAN SAY
+--- "SOMEONE CAN SEE US".
+---
+---     -- bots/ability_item_usage_generic.lua,
+---     -- X.ConsiderItemDesire['item_smoke_of_deceit']
+---     if (nInRangeEnemy ~= nil and #nInRangeEnemy == 0)
+---     or (nInRangeTower ~= nil and #nInRangeTower == 0)
+---     then
+---         for _, allyHero in pairs(nInRangeAlly) do ...
+---             isThereEnemyNearby = true          -- the ONLY writer
+---     end
+---     if not isThereEnemyNearby then ... return BOT_ACTION_DESIRE_HIGH ... end
+---
+--- Read aloud the gate says "my own ring is clean, so let me go ask my allies".
+--- "Clean" is `#enemy == 0 AND #tower == 0`; what is written is `OR`, and an OR
+--- of two "== 0" tests is FALSE exactly when BOTH lists are non-empty -- an
+--- enemy hero AND an enemy tower within 1200 of the caster, which is the most
+--- dangerous configuration this function can be asked about. On those frames
+--- the scan never runs, `isThereEnemyNearby` keeps the `false` it was born
+--- with, and the reader below spends a smoke in front of a hero who will walk
+--- one step and dispel it.
+---
+--- ⛔ WHY SKIPPING THE SCAN IS NOT A SAFE OPTIMISATION. Suppressing a loop is
+--- only free when the suppressed branch could not have changed the answer. The
+--- loop body assigns `true` and nothing else -- it is MONOTONE -- so skipping it
+--- does not "save time on a question already answered", it answers FALSE. The
+--- gate is therefore load-bearing in the direction that casts more smoke.
+---
+--- DIRECTION, CLOSED FORM, NOT MEASURED. Armed the helper returns `true`, so the
+--- scan runs on every frame the shipped tree scanned plus the ones it skipped:
+--- armed's scan set is a strict SUPERSET of shipped's. The body only ever writes
+--- `true`, and the flag's only reader is `if not isThereEnemyNearby then`, under
+--- which every single return is a smoke cast. ⇒ arming can only ever WITHHOLD a
+--- smoke the shipped tree would have considered, and can never produce one the
+--- shipped tree refused. **A batch reading that goes the other way cannot be
+--- read as "this lever made the bot smoke more."** Same safety shape as
+--- 'smokeself', arrived at independently: this one is about the GATE, that one
+--- about the FLAG's seed.
+---
+--- ⛔ ITS VALUE IS SUBSUMED BY 'smokeself' AND THAT IS REGISTERED HERE, NOT LEFT
+--- FOR THE READER TO DERIVE. 'smokeself' (same call site, 2026-09-18) seeds the
+--- flag `true` whenever EITHER of the caster's lists is non-empty; this lever's
+--- whole differing domain needs BOTH non-empty. Both-non-empty ⊂ either-non-empty
+--- ⇒ with 'smokeself' armed, this lever changes nothing, and with it promoted
+--- this helper is dead weight that should be removed rather than kept. It is
+--- worth landing anyway for the same reason 'pipetower' and 'bbancient' were:
+--- a backwards predicate is a MISTAKE, not a CHOICE, and a mistake does not need
+--- a domain to prove it is wrong (0NEXT48). ⛔ What it does need, and what the
+--- sweep below prices, is an honest count of what it is worth ON ITS OWN.
+---
+--- ⛔ AND IT IS NOT CONJOINED WITH 'smokeself'. The two ids sit on two different
+--- expressions of the same function and neither gate reads the other -- a gate
+--- written as `IsSoakCandidate('smokescan') and IsSoakCandidate('smokeself')`
+--- would freeze FALSE the day either is promoted ('pullcad', GH #606/#576;
+--- tests/test_gated_helper_nesting_census.lua). Because their domains nest, a
+--- wave that arms BOTH cannot attribute anything to this one; arm it alone.
+---
+--- DOMAIN, measured by tests/_smokescan_sweep.lua and stated there before any
+--- count is read, not asserted here. ⚠️ Half the value is UNCERTIFIABLE for the
+--- same reason 'smokeself' recorded: the real item cannot be USED with an enemy
+--- hero or tower inside 1025, and whether the engine's IsFullyCastable() already
+--- models that is not answerable from this container (no bot-side debugging;
+--- AGENTS.md). ⛔ And here that question bites HARDER than it did for
+--- 'smokeself': this lever's domain requires an enemy hero AND an enemy tower
+--- inside 1200, so a frame where the cast is legal whatever the engine does
+--- needs BOTH of them in the shell (1025, 1200]. The sweep counts that shell
+--- separately and the lever claims only it.
+---
+--- WHY IT TAKES THE LISTS AND NOT THE BOT: identical reason to
+--- J.IsSmokeBreakerNearSelf directly above -- re-deriving the two readings here
+--- would mean a second copy of the radius to keep equal, which is what
+--- 'roamring' / 'tormring' cost. Driven on real frames by
+--- tests/test_smokescan_ally_scan_gate.lua.
+function J.ShouldScanAlliesForSmokeBreaker( tEnemyHeroes, tEnemyTowers )
+
+	if J.IsModeTurbo() and J.IsSoakCandidate( 'smokescan' )
+	then
+		return true
+	end
+
+	return (tEnemyHeroes ~= nil and #tEnemyHeroes == 0)
+		or (tEnemyTowers ~= nil and #tEnemyTowers == 0)
+
+end
+
 function J.GetXUnitsTowardsLocation2(iLoc, tLoc, nUnits)
     local dir = (tLoc - iLoc):Normalized()
     return iLoc + dir * nUnits

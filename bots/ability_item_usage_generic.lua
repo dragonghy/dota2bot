@@ -7634,8 +7634,22 @@ X.ConsiderItemDesire['item_smoke_of_deceit'] = function(item)
 		return BOT_ACTION_DESIRE_HIGH, hEffectTarget, sCastType, sCastMotive
 	end
 
-	if (nInRangeEnemy ~= nil and #nInRangeEnemy == 0)
-	or (nInRangeTower ~= nil and #nInRangeTower == 0)
+	-- [smokescan 20260919] THE GATE ON THE ALLY SCAN, READ ALOUD, SAYS "MY OWN
+	-- RING IS CLEAN"; what it is written as is an OR of two `== 0` tests, which
+	-- is FALSE exactly when BOTH of the caster's lists are non-empty -- the most
+	-- dangerous configuration this function can be asked about. The loop it
+	-- guards is MONOTONE (its body's only statement about the flag is
+	-- `isThereEnemyNearby = true`), so skipping it does not save work on a
+	-- question already answered: it answers FALSE. Disarmed the helper is the
+	-- shipped expression term for term, in this slot, so the short-circuit order
+	-- and shipped play are unchanged. Read J.ShouldScanAlliesForSmokeBreaker's
+	-- header in bots/FunLib/jmz_func.lua for the closed-form direction, the
+	-- uncertifiable half, and -- registered there rather than left to be
+	-- rediscovered -- the fact that 'smokeself' above SUBSUMES this lever's
+	-- domain, so the two must never be armed in the same wave.
+	-- ⛔ ONE ring, and it is the same one the seed above reads: the helper takes
+	-- the lists built from `nRadius` rather than re-deriving them.
+	if J.ShouldScanAlliesForSmokeBreaker( nInRangeEnemy, nInRangeTower )
 	then
 		for _, allyHero in pairs(nInRangeAlly)
 		do
