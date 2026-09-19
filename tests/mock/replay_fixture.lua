@@ -1575,6 +1575,98 @@ function M.declare_defend_ping(J, state)
     return stamped
 end
 
+--- The activity words a fixture test may declare, mapped to the engine
+--- constant the shipped predicates compare against.  The value is looked up
+--- through _G at CALL time, not captured here, so it resolves through the
+--- installed mock world (bot_api's ALL_CAPS __index, counter seeded at 1000)
+--- rather than being frozen at require() time when that world may not exist.
+local ANIM_ACTIVITY_WORDS = {
+    run     = 'ACTIVITY_RUN',
+    attack  = 'ACTIVITY_ATTACK',
+    attack2 = 'ACTIVITY_ATTACK2',
+    idle    = 'ACTIVITY_IDLE',
+}
+
+--- Declare, for THIS fixture VM, which animation activity each unit is in.
+---
+--- GH #908, director RULING 83 (option 2 + 3).  `bot:GetAnimActivity()` is not
+--- in the dump -- `grep -i 'activity\|anim' dumper/main.go` is zero hits -- and
+--- it cannot be reconstructed from neighbouring frames without modelling, the
+--- thing GH #61 refused.  Until this function existed the loader had no third
+--- option: bot_api.lua's `key:find('^Get') then return 0` catch-all answered a
+--- fabricated 0 on every handle of every frame, and 0 is no ACTIVITY_* the
+--- engine ever sends, so
+---
+---     J.IsRunning       (jmz_func.lua:3845)  == ACTIVITY_RUN
+---     J.IsAttacking     (jmz_func.lua:3854)  ~= ACTIVITY_ATTACK/ATTACK2
+---     J.IsChasingTarget (jmz_func.lua:3873)  = IsRunning and IsRunning
+---
+--- were identically FALSE in the whole corpus, across 1060 shipped call sites
+--- in 149 files.  Not one verdict in tests/ had ever observed the true branch.
+---
+--- ⛔ THIS IS OPT-IN AND STAYS OPT-IN, AND THAT IS A RULING, NOT AN OVERSIGHT.
+--- Installing the refusing getter on every handle unconditionally was measured
+--- (replay-check 20260918T215806Z): 18 files / 70 cases red, among them the
+--- real-frame verdict of a PROMOTED id.  Those cases are not WRONG -- they are
+--- verdicts taken on the not-running/not-attacking branch, which is a state a
+--- real hero is in most of the time -- they are merely UNDECLARED.  Reddening
+--- them all at once would stop every stream's pre-push hook to re-ask a
+--- question none of them was asking.  GetAnimActivity is 1 of the 164 shipped
+--- getters that catch-all answers for (tests/test_mockscalar_return_shape.lua
+--- counts them), so the unconditional form is not a bounded 70-case purchase
+--- either; it is the first instalment of 164.
+---
+--- ⭐ WHAT OPT-IN DOES *NOT* MEAN: it does not mean "and otherwise fall back to
+--- 0".  Once a test opts in, every unit it did NOT name REFUSES, exactly like
+--- GH #61's GetLaneFrontLocation.  A test asking about a chase must declare
+--- BOTH sides, because J.IsChasingTarget reads both -- and a test that wants
+--- the pre-#908 stub must say `idle` out loud, which is a declared non-zero
+--- activity and not the fabricated 0.
+---
+--- `heroes` is the third return of M.load().  `tState` maps unit name to one
+--- of 'run' / 'attack' / 'attack2' / 'idle'.  An unknown unit name or an
+--- unknown word raises rather than being silently ignored -- a typo that
+--- no-ops would put the caller straight back in the world this function
+--- exists to leave.  Returns { declared = n, refused = m } so a test can
+--- assert it named who it meant to name.
+function M.declare_anim_activity(heroes, tState)
+    if type(heroes) ~= 'table' then
+        error('declare_anim_activity: pass the heroes table from M.load()', 2)
+    end
+    tState = tState or {}
+    for sName, sWord in pairs(tState) do
+        if heroes[sName] == nil then
+            error('declare_anim_activity: no unit named ' .. tostring(sName)
+                .. ' in this fixture', 2)
+        end
+        if ANIM_ACTIVITY_WORDS[sWord] == nil then
+            error("declare_anim_activity: " .. tostring(sName) .. " -> "
+                .. tostring(sWord) .. "; want 'run', 'attack', 'attack2' or"
+                .. " 'idle'", 2)
+        end
+    end
+    local nDeclared, nRefused = 0, 0
+    for sName, h in pairs(heroes) do
+        local spec = rawget(h, '__spec')
+        local sWord = tState[sName]
+        if sWord then
+            local sConst = ANIM_ACTIVITY_WORDS[sWord]
+            spec.GetAnimActivity = function() return _G[sConst] end
+            nDeclared = nDeclared + 1
+        else
+            spec.GetAnimActivity = function()
+                error('LOADER REFUSES: GetAnimActivity is unresolved (GH #908)'
+                    .. ' for ' .. sName .. '. The dump does not carry animation'
+                    .. ' state; do not compare against 0. Declare your'
+                    .. " assumption with rf.declare_anim_activity(heroes,"
+                    .. " { ['" .. sName .. "'] = 'run' }).", 2)
+            end
+            nRefused = nRefused + 1
+        end
+    end
+    return { declared = nDeclared, refused = nRefused }
+end
+
 --- Load a full hero script (bots/BotLib/hero_<part>.lua) into the installed
 --- fixture world and return its module table (X). Must be called after load().
 function M.load_hero(part)
