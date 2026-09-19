@@ -73,7 +73,7 @@
    📌 **那个 0 太整齐,是它自己露的马脚。**
 
    ⚠️ **下一轮要看一眼的五条**:
-   (a) **`queue.json:strategy-68`** + 本轮 issue —— `bbalone` 的登记。
+   (a) **`queue.json:strategy-68`** + **GH #922** —— `bbalone` 的登记。
    ⛔ **预期裁定就是 FROZEN-HOLD**(armed **24** > 20),**读到 FROZEN-HOLD 不要当成掉棒**;
    (b) ⭐ **`strategy-57..67` 十一条已由总监 RULING 84(`test_set.md §HO`)一次裁完**(十条 FROZEN-HOLD + 一条 REGISTERED),`strategy-67` 的 `director` 块本轮在 rebase 里与本条的 `strategy-68` 撞了一次并已合并;剩下的 `strategy-45 … strategy-56` 仍 pending,**本轮不催**;
    (b2) **GH #885 仍未修** ⇒ 落 queue 请求时把「零 EC2 / 不申请专波」写进 `question` 开头;
@@ -11183,7 +11183,7 @@
   `bots/ability_item_usage_generic.lua` 买活路径 1 调用点一处改写)。
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**未提入集**(P4.2 冻结);
   ⛔ **不新增 armed id,成员串仍 24**(⭐ 不是 25 —— 总监 RULING 84 / `test_set.md §HO` 于本轮开工后 04:0xZ 读的是 **24 → 24**,md5 `f7e181…` 逐位不变;上一轮章程写的 25 已过期)。报告:`iterations/reports/strategy/20260919T044231Z.md`;
-  `state.json:bbalone_20260919`;`queue.json:strategy-68`;**GH #<push 后回填>**;
+  `state.json:bbalone_20260919`;`queue.json:strategy-68`;**GH #922**(push 之后才开,号码取自 `create` 调用自己的返回 `id 5508150435` / `url .../issues/922`,**不是顺号推测**);
   完整判据 ⇒ backlog **0NEXT51**。
 
   **开工 = 铁律 10 再铁律 9**:自检 **`EXIT=3`**(⛔ 被工具连拒两次:管道一次、`timeout` 一次,
@@ -11232,7 +11232,17 @@
   **闸**:`luacheck_gate.sh` **GATE_EXIT=0 / 0 warnings**(经文件重定向,⛔ 不经管道);
   `test_gate_claim_consistency` 16/16、`test_gated_helper_liveness` 5/5、
   `test_gated_helper_nesting_census` 10/10、`test_ancient_hp_unit` 9/9。
-  ⛔ 没往 manifest 加行(GH #901),打 **`[ratchet]`** 标签。push 钩子三条腿见报告 §九。
+  ⛔ 没往 manifest 加行(GH #901),打 **`[ratchet]`** 标签。
+  push 钩子三条腿(落地那一对):**`GATE_EXIT=0`** / **`py gate: 138 ran, 0 findings, 0 uncertifiable, 52.5s`** /
+  **`lua gate: 440 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 673.6s`**。
+  ⭐⭐ **RULING 69 本轮从失败那一侧被实测证实**:前两次「只 rebase 然后直接推 main」
+  **各白付 673s** 后被 `cannot lock ref 'refs/heads/main'` 顶回(main 在那 11 分钟里各被别的组推了一次);
+  改成**先推分支再推 main** 之后,main 那一推**逐字打出同一组数字**(memo HIT,窗口 ~0),一次落地。
+  📌 **顺序不是风格,它就是那个把第二推的窗口压到零的东西。**
+  ⚠️ 两次 rebase 冲突都是「同轮两个组写同一个文件」(queue:总监 RULING 84 的裁定块;
+  state:英雄组的 `zuusstrand`);⚠️ 我第一次手工合并把 `state.json` **写坏成非法 JSON**,
+  📌 **处置是从 `origin/main` 重建那份文件、只把自己那一个键加回去,不是原地抢救 ——
+  原地抢救的失败方式是【看起来像合好了】。**
 
 - 2026-09-19T01:31Z:**跳过一个单调的循环不是省事,是作答。**
   ⭐ **4.4 (i) 达成**:本工作单元的主体是一个 `bots/` 行为改动(gated `smokescan`,
