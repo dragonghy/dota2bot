@@ -206,8 +206,17 @@ DEFAULT_TRUNK = "main"
 # happily "finds" paths inside URLs, log lines and prose.
 REPO_ROOTS = ("iterations", "tools", "tests", "bots", "game", "docs", ".github")
 
+# `jsonl` MUST precede `json` in the alternation: Python alternation is
+# leftmost-first, so `json` would match the first five characters of `.jsonl`
+# and hand the auditor a path that ends one character early.  The measured
+# cost of leaving it out (batch-desk 2026-09-19): every citation of
+# iterations/games_ledger.jsonl -- the one file the games-ledger obligation is
+# about -- was reported MISSING, on a path that is on trunk.  A false MISSING
+# fails the dangerous way: it says "do not publish" about a correct citation,
+# and the way past it is to stop citing the file.
+
 PATH_RE = re.compile(
-    r"(?<![\w/.-])((?:%s)(?:/[\w.+-]+)+\.(?:md|lua|py|sh|json|txt|yml|yaml))"
+    r"(?<![\w/.-])((?:%s)(?:/[\w.+-]+)+\.(?:md|lua|py|sh|jsonl|json|txt|yml|yaml))"
     % "|".join(re.escape(r) for r in REPO_ROOTS)
 )
 HEX_RE = re.compile(r"(?<![\w])([0-9a-f]{7,40})(?![\w])")

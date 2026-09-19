@@ -120,6 +120,11 @@ def make_origin(root):
     write(os.path.join(origin, "iterations/archive/test_set_archive.md"),
           "# archive\n\n## §AA archived ruling\ntext\n\n"
           "## §BB a second claimant, in the other half\ntext\n")
+    # A `.jsonl` on trunk: the games ledger's real extension.  Before
+    # 2026-09-19 `jsonl` was absent from PATH_RE, so `json` matched the first
+    # five characters and the auditor looked up a path one character short.
+    write(os.path.join(origin, "iterations/games_ledger.jsonl"),
+          '{"game_id": "x", "run_prefix": "soak/r"}\n')
     git(["add", "-A"], origin)
     git(["commit", "-qm", "landed report"], origin)
     git(["checkout", "-qb", "claude/session-x"], origin)
@@ -460,6 +465,28 @@ def main():
         check(code == 2, "an undated corpus refuses too")
         code, out = run(["--repo", work, "--fetch", "--comments", cf], work)
         check(code == 0, "...but only when --comments-max-age asked for the check")
+
+        # 14. a .jsonl path on trunk resolves (batch-desk 2026-09-19).
+        # The failure this pins is a FALSE MISSING: `json` matching the head of
+        # `.jsonl` made the auditor refuse publication over a correct citation
+        # of iterations/games_ledger.jsonl, and the only way past it was to
+        # stop citing the file.  Both halves are asserted -- that the .jsonl
+        # resolves, AND that a genuinely absent .jsonl is still reported --
+        # because a regex that simply stopped extracting .jsonl paths would
+        # pass the first half alone.
+        print("\ncase 14: a .jsonl citation is extracted whole, not truncated")
+        cf = comments_file(root, "c14.json", [
+            "the rows landed in iterations/games_ledger.jsonl this round"])
+        code, out = run(["--repo", work, "--comments", cf], work)
+        check(code == 0, "exit 0 -- a .jsonl on trunk is not MISSING")
+        check("paths cited 1" in out, "the .jsonl was extracted, not skipped")
+        check("games_ledger.json " not in out and "games_ledger.json\n" not in out,
+              "the truncated path never appears")
+        cf = comments_file(root, "c14b.json", [
+            "see iterations/no_such_ledger.jsonl for the rows"])
+        code, out = run(["--repo", work, "--comments", cf], work)
+        check(code == 3, "an absent .jsonl is still a finding")
+        check("no_such_ledger.jsonl" in out, "names it with the full extension")
 
     finally:
         shutil.rmtree(root, ignore_errors=True)
