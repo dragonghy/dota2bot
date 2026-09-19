@@ -10229,7 +10229,7 @@
   "gate_budget": "`lua_gate_manifest.json`:+1 行(0.112s),356 个测试 / 269.446s,`budget_seconds` 540.0 未动;`per_test_cap_seconds` 5.5 未动。",
   "next": "⭐⭐ **这一条是本轮真正交出去的东西,别只读结论**:尺子现在有了**第三种读数**(选错了 / 选错了 / **选对了**),而判别它的是「被钉住的那一级买到什么」。剩下两个焦点英雄:**Crystal Maiden**(#864 点名 `brilliance_aura` —— ⭐ 它是**光环**,收益不落在施法者身上,是这把尺子还没碰过的第三种形状)与 **WK**(已有 gated `wkbuild`,落这把尺子意味着第三张表,**先问总监归属与形状**)。⛔ 不要在没有量之前给 CM 落候选。",
   "cost": "**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**(铁律 1 三段式)。",
-  "issue": "GH #919",
+  "issue": "GH #921",
   "report": "iterations/reports/hero/20260919T045044Z.md",
   "gate_legs": "见报告 §六(三条腿逐字)与 §七(开工自检)。",
   "p44_selfassessment": "⛔ **未满足**,照实写。本轮主体既不是 (i)(`bots/` 改动是纯注释、零行为)也不是 (ii)(没有挂着的判定被它关掉)。唯一能满足 (i) 的做法是落一个刚刚被论证为**更差**的 `zuusbuild` —— AGENTS.md「locally-correct ≠ emergently-good」与验证哲学条件 (c) 同时禁止。往上凑一条不如把这一条记下来。"

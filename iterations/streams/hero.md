@@ -22,7 +22,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## Backlog(做完划掉,补新的)
 
--210. ✅ **主体(P4.4 **⛔ 未满足,照实写** —— 既不是 (i) 也不是 (ii),理由见下)**:`-209`「下一轮主体候选·**第 2 条**」逐字照做(同一把尺子量剩下的焦点英雄,一次一个)—— 本轮量 **Zeus**。⛔ **没有落 gated 候选,而且这是主体不是残留**。报告 `iterations/reports/hero/20260919T045044Z.md`;裁定 `iterations/state.json:zuusstrand_20260919`;GH **#919**。**零 arm / 零 promote / 零新 gate id / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
+-210. ✅ **主体(P4.4 **⛔ 未满足,照实写** —— 既不是 (i) 也不是 (ii),理由见下)**:`-209`「下一轮主体候选·**第 2 条**」逐字照做(同一把尺子量剩下的焦点英雄,一次一个)—— 本轮量 **Zeus**。⛔ **没有落 gated 候选,而且这是主体不是残留**。报告 `iterations/reports/hero/20260919T045044Z.md`;裁定 `iterations/state.json:zuusstrand_20260919`;GH **#921**。**零 arm / 零 promote / 零新 gate id / 不申请波次 / 不申请供帧**;**零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**。
    - ⭐⭐ **头条:现行构筑行选对了 —— 而选对的理由不是「被钉住的不是硬控」。** 上一轮(Lion)的工作假设是前者,**Zeus 是它的反例**。真正的尺子是**被钉住的那一级买到什么**,对着另外两级比:`zuus_heavenly_jump` r3→r4 = damage 75→100 / CD 18→14;`zuus_arc_lightning` r3→r4 = arc_damage 155→180 **且** jump_count 9→11;`zuus_lightning_bolt` r3→r4 = damage 300→380。被让出去的是三者里最小的,而 Arc 的 +25 还被这个比较**低估**(每一跳付,一次最多十一跳、1.6s CD;Jump 的 +25 落一个单位上,t10 后两个)。
    - ⭐ **比伤害列显示的还便宜,这一条才能外推**:Jump 的**控制载荷根本没有等级梯子** —— `move_slow 80` / `aspd_slow 100` / `duration 1.4` / `hop_duration 0.5` / `vision_duration 3.0` 全平。等级买伤害、冷却、距离,**不买任何额外控制**;与 Lion 的 Hex(CD 24→12、时长 2.0→3.2)**正好相反** ⇒ **Lion 那条杠杆不能迁移到 Zeus**,理由是这个,不是「Zeus 没有硬控」。
    - ⭐ **驱动读数(不是数条目,GH #134)**:Zeus 是焦点五里**唯一按 role 分两行**的,所以每条读数对两行都成立。pos_2 Arc 1/3/5/7、Bolt 4/8/9/11、**Jump 2/13/14/16=永不**、R 6/12/17;pos_4,5 Bolt 1/3/5/7、Arc 2/8/9/11、**Jump 4/13/14/16=永不**、R 6/12/17;两行墙上都是 {4,4,3,2},**两行都 strand Jump**。
@@ -9197,7 +9197,7 @@ Crystal Maiden。技能释放时机、物品构筑、天赋、个体微操。
 
 ## 当前状态(每次触发后更新)
 - 2026-09-19T04:50Z(报告 `iterations/reports/hero/20260919T045044Z.md`;**backlog:新开 `-210`**;
-  裁定 `iterations/state.json:zuusstrand_20260919`;GH **#919**;
+  裁定 `iterations/state.json:zuusstrand_20260919`;GH **#921**;
   **零 EC2 / 零 CE / S3 读取 0 个对象(出网未计价)**;**零 arm / 零 promote / 零新 gate id /
   不申请波次 / 不申请供帧**;**P4.4 自评:⛔ 未满足,理由写在报告与 backlog 里,不往上凑**)
   **主体:同一把尺子量到第三个焦点英雄 Zeus —— 第一次量出「现行构筑行选对了」,所以本轮不落候选。**
