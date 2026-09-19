@@ -20799,3 +20799,23 @@
        `pullcad` 收紧域、GH #849 验收口径、W84 §四、W86 §、W87 §、GH #424 是否退休、
        W90 的 UNCOVERED 分类归因 + GH #804/#806 矛盾、W92 §四两件仪器、W94 §三 `pullcamp` 验收句不可完成、
        W95 §三 `abilanc` 三根棒。
+  - **issue 净增 2、评论 1**,均在**推 main 之后**发(GH #290),发前各跑 `claim_precheck.sh`
+    (均读 `PRECHECK_EXIT=0` / `local commits not on origin/main: 0` / `refused 0` / `OK to publish`):
+    **GH #919 [bug]**(§BC.4 8 粒重读 + reach 代理决定符号 + 帧证据 + 请裁买法)、
+    **GH #920 [harness]**(工具在自己印的门槛上 OOM / `waited` 拿不到 arm / main 上那抹 python trunk 红)、
+    **GH #909 追评** `issuecomment-5739421708`(S3 恢复 + 该 issue 验收合取的**两半现在都满足**,
+    ⛔ 明写**请勿据此关闭**,判词在 #919)。⚠️ `search_issues` 查 §BC.4 **0 命中**,
+    按 `github_read_staleness_…` ⛔ **不读成「不存在」**,所以 #909 走追评不新开。
+  - **push 读数(四推 × 三条腿;RULING 69 先分支后 main)**:⛔ 未用 `RULE6_BYPASS`。`PULL_EXIT=0`;
+    ① 分支(新建)`PUSH1_EXIT=0`(`GATE_EXIT=0 CLEAN` / `py gate: 138 ran, 0 findings, 63.5s` /
+    **`lua gate: 438 ran, 0 findings, 0 uncertifiable, 9 unanswered, 5 known-red, 695.5s`**);
+    ② main 第一次 `PUSH2_EXIT=1` —— ⛔ **不是闸拒绝**(`RULE6_MEMO=REUSE … THIS EXACT tree.`),
+    逐字 `! [rejected] HEAD -> main (fetch first)`,**别组中途推了 main**(`e500a5cf..6ecd2af5`);
+    ③ `pull --rebase`(`PULL2_EXIT=0`)后 `PUSH3_EXIT=0`,`6ecd2af5..614676db HEAD -> main`
+    (`lua gate: 438 ran, 0 findings, 694.1s`);④ 分支 ref 同步 `PUSH4_EXIT=0`
+    (`--force-with-lease`,`+ 19885e22...614676db (forced update)`,`lua gate: 438 ran, 0 findings, 681.3s`)。
+    ⚠️ **本轮付了三次 lua 全价(≈34.5 分钟)而零行 Lua 改动**。归因**不是推的顺序**
+    (RULING 69 的顺序照走了):① 是**新分支自带的**(`base=fallback-merge-base`,与 W100 同形);
+    ③④ 是**别组插队改 main ⇒ 我方 rebase ⇒ 树变 ⇒ memo 恒 MISS**,即 **RULING 69 自己点名的第三种路径**。
+    ⛔ 本轮不改规则文字,照登交总监。**远端权威 `ls-remote` 两个 ref 同为 `614676db`**(本节回填后再推一次)。
+  - **token 用量**:`TOKENS total_in=25,876,921 out=74,469 turns=159`(⚠️ 到统计时刻为止)。
